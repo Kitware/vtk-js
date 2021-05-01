@@ -267,21 +267,21 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
   // of the entire depth bufer. We could realloc hardware selection textures
   // based on the passed in size etc but it gets messy so for now we always
   // render the full size window and copy it to the buffers.
-  publicAPI.getSourceDataAsync = async (renderer) => {
+  publicAPI.getSourceDataAsync = (renderer) => {
     if (!renderer || !model.WebGPURenderWindow) {
       vtkErrorMacro('Renderer and view must be set before calling Select.');
-      return false;
+      return Promise.resolve(false);
     }
 
     const webGPURenderer = model.WebGPURenderWindow.getViewNodeFor(renderer);
 
     if (!webGPURenderer) {
-      return false;
+      return Promise.resolve(false);
     }
 
     if (!model.WebGPURenderWindow.getInitialized()) {
       model.WebGPURenderWindow.initialize();
-      return false;
+      return Promise.resolve(false);
     }
 
     // Initialize renderer for selection.
@@ -378,24 +378,35 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
     }
     device.submitCommandEncoder(cmdEnc);
 
-    /* eslint-disable no-undef */
-    const cLoad = colorBuffer.mapAsync(GPUMapMode.READ);
-    if (model.captureZValues) {
-      const zLoad = zbuffer.mapAsync(GPUMapMode.READ);
-      await Promise.all([cLoad, zLoad]);
-      result.depthValues = new Float32Array(zbuffer.getMappedRange().slice());
-      zbuffer.unmap();
-    } else {
-      await cLoad;
-    }
-    /* eslint-enable no-undef */
+    return new Promise((resolve, reject) => {
+      /* eslint-disable no-undef */
+      const cLoad = colorBuffer.mapAsync(GPUMapMode.READ);
+      cLoad
+        .then(() => {
+          if (model.captureZValues) {
+            const zLoad = zbuffer.mapAsync(GPUMapMode.READ);
+            zLoad.then(() => {
+              result.depthValues = new Float32Array(
+                zbuffer.getMappedRange().slice()
+              );
+              zbuffer.unmap();
+            });
+            return zLoad;
+          }
+          return Promise.resolve();
+        })
+        .then(() => {
+          result.colorValues = new Uint32Array(
+            colorBuffer.getMappedRange().slice()
+          );
+          colorBuffer.unmap();
 
-    result.colorValues = new Uint32Array(colorBuffer.getMappedRange().slice());
-    colorBuffer.unmap();
-
-    result.generateSelection = (fx1, fy1, fx2, fy2) =>
-      generateSelectionWithData(result, fx1, fy1, fx2, fy2);
-    return result;
+          result.generateSelection = (fx1, fy1, fx2, fy2) =>
+            generateSelectionWithData(result, fx1, fy1, fx2, fy2);
+          resolve(result);
+        });
+      /* eslint-enable no-undef */
+    });
   };
 }
 

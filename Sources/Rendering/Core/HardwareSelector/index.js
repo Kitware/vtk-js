@@ -14,21 +14,20 @@ function vtkHardwareSelector(publicAPI, model) {
   // must be called at least once before calling generateSelection. In
   // raster based backends this method will capture the buffers. You can
   // call this once and then make multiple calls to generateSelection.
-  publicAPI.getSourceDataAsync = async (renderer, fx1, fy1, fx2, fy2) => {};
+  publicAPI.getSourceDataAsync = (renderer, fx1, fy1, fx2, fy2) => {};
 
-  publicAPI.selectAsync = async (renderer, fx1, fy1, fx2, fy2) => {
-    const srcData = await publicAPI.getSourceDataAsync(
-      renderer,
-      fx1,
-      fy1,
-      fx2,
-      fy2
-    );
-    if (srcData) {
-      return srcData.generateSelection(fx1, fy1, fx2, fy2);
-    }
-    return [];
-  };
+  publicAPI.selectAsync = (renderer, fx1, fy1, fx2, fy2) =>
+    new Promise((resolve, reject) => {
+      publicAPI
+        .getSourceDataAsync(renderer, fx1, fy1, fx2, fy2)
+        .then((srcData) => {
+          if (srcData) {
+            resolve(srcData.generateSelection(fx1, fy1, fx2, fy2));
+          } else {
+            resolve([]);
+          }
+        });
+    });
 }
 
 // ----------------------------------------------------------------------------

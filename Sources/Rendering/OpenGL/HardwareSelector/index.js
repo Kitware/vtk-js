@@ -358,7 +358,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     return sel;
   };
 
-  publicAPI.getSourceDataAsync = async (renderer, fx1, fy1, fx2, fy2) => {
+  publicAPI.getSourceDataAsync = (renderer, fx1, fy1, fx2, fy2) => {
     // assign the renderer
     model.renderer = renderer;
 
@@ -385,7 +385,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     };
     result.generateSelection = (...args) =>
       generateSelectionWithData(result, ...args);
-    return result;
+    return Promise.resolve(result);
   };
 
   //----------------------------------------------------------------------------

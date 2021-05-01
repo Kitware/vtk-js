@@ -163,12 +163,16 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 
   publicAPI.getFramebufferSize = () => model.size;
 
-  publicAPI.create3DContextAsync = async () => {
+  publicAPI.create3DContextAsync = () => {
     // Get a GPU device to render with
-    model.adapter = await navigator.gpu.requestAdapter();
-    model.device = vtkWebGPUDevice.newInstance();
-    model.device.initialize(await model.adapter.requestDevice());
-    model.context = model.canvas.getContext('gpupresent');
+    navigator.gpu.requestAdapter().then((adapter) => {
+      model.adapter = adapter;
+      model.device = vtkWebGPUDevice.newInstance();
+      adapter.requestDevice().then((device) => {
+        model.device.initialize(device);
+        model.context = model.canvas.getContext('gpupresent');
+      });
+    });
   };
 
   publicAPI.restoreContext = () => {
@@ -193,55 +197,56 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     }
   };
 
-  async function getCanvasDataURL(format = model.imageFormat) {
+  function getCanvasDataURL(format = model.imageFormat) {
     // Copy current canvas to not modify the original
     const temporaryCanvas = document.createElement('canvas');
     const temporaryContext = temporaryCanvas.getContext('2d');
     temporaryCanvas.width = model.canvas.width;
     temporaryCanvas.height = model.canvas.height;
 
-    const result = await publicAPI.getPixelsAsync();
-    const imageData = new ImageData(
-      result.colorValues,
-      result.width,
-      result.height
-    );
-    // temporaryCanvas.putImageData(imageData, 0, 0);
-    temporaryContext.putImageData(imageData, 0, 0);
+    publicAPI.getPixelsAsync().then((result) => {
+      const imageData = new ImageData(
+        result.colorValues,
+        result.width,
+        result.height
+      );
+      // temporaryCanvas.putImageData(imageData, 0, 0);
+      temporaryContext.putImageData(imageData, 0, 0);
 
-    // Get current client rect to place canvas
-    const mainBoundingClientRect = model.canvas.getBoundingClientRect();
+      // Get current client rect to place canvas
+      const mainBoundingClientRect = model.canvas.getBoundingClientRect();
 
-    const renderWindow = model.renderable;
-    const renderers = renderWindow.getRenderers();
-    renderers.forEach((renderer) => {
-      const viewProps = renderer.getViewProps();
-      viewProps.forEach((viewProp) => {
-        // Check if the prop has a container that should have canvas
-        if (viewProp.getContainer) {
-          const container = viewProp.getContainer();
-          const canvasList = container.getElementsByTagName('canvas');
-          // Go throughout all canvas and copy it into temporary main canvas
-          for (let i = 0; i < canvasList.length; i++) {
-            const currentCanvas = canvasList[i];
-            const boundingClientRect = currentCanvas.getBoundingClientRect();
-            const newXPosition =
-              boundingClientRect.x - mainBoundingClientRect.x;
-            const newYPosition =
-              boundingClientRect.y - mainBoundingClientRect.y;
-            temporaryContext.drawImage(
-              currentCanvas,
-              newXPosition,
-              newYPosition
-            );
+      const renderWindow = model.renderable;
+      const renderers = renderWindow.getRenderers();
+      renderers.forEach((renderer) => {
+        const viewProps = renderer.getViewProps();
+        viewProps.forEach((viewProp) => {
+          // Check if the prop has a container that should have canvas
+          if (viewProp.getContainer) {
+            const container = viewProp.getContainer();
+            const canvasList = container.getElementsByTagName('canvas');
+            // Go throughout all canvas and copy it into temporary main canvas
+            for (let i = 0; i < canvasList.length; i++) {
+              const currentCanvas = canvasList[i];
+              const boundingClientRect = currentCanvas.getBoundingClientRect();
+              const newXPosition =
+                boundingClientRect.x - mainBoundingClientRect.x;
+              const newYPosition =
+                boundingClientRect.y - mainBoundingClientRect.y;
+              temporaryContext.drawImage(
+                currentCanvas,
+                newXPosition,
+                newYPosition
+              );
+            }
           }
-        }
+        });
       });
-    });
 
-    const screenshot = temporaryCanvas.toDataURL(format);
-    temporaryCanvas.remove();
-    publicAPI.invokeImageReady(screenshot);
+      const screenshot = temporaryCanvas.toDataURL(format);
+      temporaryCanvas.remove();
+      publicAPI.invokeImageReady(screenshot);
+    });
   }
 
   publicAPI.captureNextImage = (format = 'image/png') => {
@@ -324,75 +329,80 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     return null;
   };
 
-  publicAPI.getPixelsAsync = async () => {
-    const device = model.device;
-    const texture = model.renderPasses[0].getOpaquePass().getColorTexture();
+  publicAPI.getPixelsAsync = () =>
+    new Promise((resolve, reject) => {
+      const device = model.device;
+      const texture = model.renderPasses[0].getOpaquePass().getColorTexture();
 
-    // as this is async we really don't want to store things in
-    // the class as multiple calls may start before resolving
-    // so anything specific to this request gets put into the
-    // result object (by value in most cases)
-    const result = {
-      width: texture.getWidth(),
-      height: texture.getHeight(),
-    };
+      // as this is async we really don't want to store things in
+      // the class as multiple calls may start before resolving
+      // so anything specific to this request gets put into the
+      // result object (by value in most cases)
+      const result = {
+        width: texture.getWidth(),
+        height: texture.getHeight(),
+      };
 
-    // must be a multiple of 256 bytes, so 64 texels with rgba8
-    result.colorBufferWidth = 64 * Math.floor((result.width + 63) / 64);
-    result.colorBufferSizeInBytes = result.colorBufferWidth * result.height * 4;
-    const colorBuffer = vtkWebGPUBuffer.newInstance();
-    colorBuffer.setDevice(device);
-    /* eslint-disable no-bitwise */
-    /* eslint-disable no-undef */
-    colorBuffer.create(
-      result.colorBufferSizeInBytes,
-      GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
-    );
-    /* eslint-enable no-bitwise */
-    /* eslint-enable no-undef */
+      // must be a multiple of 256 bytes, so 64 texels with rgba8
+      result.colorBufferWidth = 64 * Math.floor((result.width + 63) / 64);
+      result.colorBufferSizeInBytes =
+        result.colorBufferWidth * result.height * 4;
+      const colorBuffer = vtkWebGPUBuffer.newInstance();
+      colorBuffer.setDevice(device);
+      /* eslint-disable no-bitwise */
+      /* eslint-disable no-undef */
+      colorBuffer.create(
+        result.colorBufferSizeInBytes,
+        GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
+      );
+      /* eslint-enable no-bitwise */
+      /* eslint-enable no-undef */
 
-    const cmdEnc = model.device.createCommandEncoder();
-    cmdEnc.copyTextureToBuffer(
-      {
-        texture: texture.getHandle(),
-      },
-      {
-        buffer: colorBuffer.getHandle(),
-        bytesPerRow: 4 * result.colorBufferWidth,
-        rowsPerImage: result.height,
-      },
-      {
-        width: result.width,
-        height: result.height,
-        depthOrArrayLayers: 1,
-      }
-    );
-    device.submitCommandEncoder(cmdEnc);
+      const cmdEnc = model.device.createCommandEncoder();
+      cmdEnc.copyTextureToBuffer(
+        {
+          texture: texture.getHandle(),
+        },
+        {
+          buffer: colorBuffer.getHandle(),
+          bytesPerRow: 4 * result.colorBufferWidth,
+          rowsPerImage: result.height,
+        },
+        {
+          width: result.width,
+          height: result.height,
+          depthOrArrayLayers: 1,
+        }
+      );
+      device.submitCommandEncoder(cmdEnc);
 
-    /* eslint-disable no-undef */
-    const cLoad = colorBuffer.mapAsync(GPUMapMode.READ);
-    await cLoad;
-    /* eslint-enable no-undef */
+      /* eslint-disable no-undef */
+      const cLoad = colorBuffer.mapAsync(GPUMapMode.READ);
+      /* eslint-enable no-undef */
 
-    result.colorValues = new Uint8ClampedArray(
-      colorBuffer.getMappedRange().slice()
-    );
-    colorBuffer.unmap();
-    // repack the array
-    const tmparray = new Uint8ClampedArray(result.height * result.width * 4);
-    for (let y = 0; y < result.height; y++) {
-      for (let x = 0; x < result.width; x++) {
-        const doffset = (y * result.width + x) * 4;
-        const soffset = (y * result.colorBufferWidth + x) * 4;
-        tmparray[doffset] = result.colorValues[soffset + 2];
-        tmparray[doffset + 1] = result.colorValues[soffset + 1];
-        tmparray[doffset + 2] = result.colorValues[soffset];
-        tmparray[doffset + 3] = result.colorValues[soffset + 3];
-      }
-    }
-    result.colorValues = tmparray;
-    return result;
-  };
+      cLoad.then(() => {
+        result.colorValues = new Uint8ClampedArray(
+          colorBuffer.getMappedRange().slice()
+        );
+        colorBuffer.unmap();
+        // repack the array
+        const tmparray = new Uint8ClampedArray(
+          result.height * result.width * 4
+        );
+        for (let y = 0; y < result.height; y++) {
+          for (let x = 0; x < result.width; x++) {
+            const doffset = (y * result.width + x) * 4;
+            const soffset = (y * result.colorBufferWidth + x) * 4;
+            tmparray[doffset] = result.colorValues[soffset + 2];
+            tmparray[doffset + 1] = result.colorValues[soffset + 1];
+            tmparray[doffset + 2] = result.colorValues[soffset];
+            tmparray[doffset + 3] = result.colorValues[soffset + 3];
+          }
+        }
+        result.colorValues = tmparray;
+        resolve(result);
+      });
+    });
 
   publicAPI.delete = macro.chain(publicAPI.delete, publicAPI.setViewStream);
 }
