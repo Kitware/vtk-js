@@ -20,8 +20,8 @@ fn main(
 //VTK::IOStructs::Output
 {
   var output: vertexOutput;
-  output.tcoordVS = vec2<f32>(vertexMC.x * 0.5 + 0.5, 1.0 - vertexMC.y * 0.5 - 0.5);
-  output.Position = vec4<f32>(vertexMC, 1.0);
+  output.tcoordVS = vec2<f32>(vertexBC.x * 0.5 + 0.5, 1.0 - vertexBC.y * 0.5 - 0.5);
+  output.Position = vec4<f32>(vertexBC, 1.0);
   return output;
 }
 `;
@@ -187,7 +187,7 @@ function vtkWebGPUFullScreenQuad(publicAPI, model) {
     model.renderEncoder = renderEncoder;
 
     const buff = device.getBufferManager().getFullScreenQuadBuffer();
-    vertexInput.addBuffer(buff, ['vertexMC']);
+    vertexInput.addBuffer(buff, ['vertexBC']);
 
     let pipeline = device.getPipeline(model.pipelineHash);
 
@@ -242,7 +242,7 @@ function vtkWebGPUFullScreenQuad(publicAPI, model) {
 
       // bind the vertex input
       pipeline.bindVertexInput(renderEncoder, primHelper.vertexInput);
-      const vbo = primHelper.vertexInput.getBuffer('vertexMC');
+      const vbo = primHelper.vertexInput.getBuffer('vertexBC');
       renderEncoder.draw(
         vbo.getSizeInBytes() / vbo.getStrideInBytes(),
         1,

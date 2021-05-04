@@ -63,7 +63,7 @@ fn main(
 
   var output : vertexOutput;
 
-  var vertexVC: vec4<f32> = rendererUBO.WCVCMatrix * vec4<f32>(vertexMC.x, vertexMC.y, vertexMC.z, 1.0);
+  var vertexVC: vec4<f32> = rendererUBO.SCVCMatrix * mapperUBO.BCSCMatrix * vec4<f32>(vertexBC.x, vertexBC.y, vertexBC.z, 1.0);
 
   //VTK::Color::Impl
 
@@ -291,7 +291,7 @@ function vtkWebGPUStickMapper(publicAPI, model) {
       }
       buffRequest.nativeArray = tmpVBO;
       const buff = device.getBufferManager().getBuffer(buffRequest);
-      vertexInput.addBuffer(buff, ['vertexMC'], 'instance');
+      vertexInput.addBuffer(buff, ['vertexBC'], 'instance');
     }
 
     // compute offset VBO

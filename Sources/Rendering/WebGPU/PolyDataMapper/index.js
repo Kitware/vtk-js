@@ -2,8 +2,6 @@ import { mat3, mat4 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macro';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-// import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
-// import vtkWebGPUTexture from 'vtk.js/Sources/Rendering/WebGPU/Texture';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
@@ -18,7 +16,6 @@ import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 const { BufferUsage, PrimitiveTypes } = vtkWebGPUBufferManager;
 const { Representation } = vtkProperty;
 const { ScalarMode } = vtkMapper;
-// const { Filter, Wrap } = vtkWebGPUTexture;
 const StartEvent = { type: 'StartEvent' };
 const EndEvent = { type: 'EndEvent' };
 
@@ -43,7 +40,7 @@ fn main(
 {
   var output : vertexOutput;
 
-  var vertex: vec4<f32> = vertexMC;
+  var vertex: vec4<f32> = vertexBC;
 
   //VTK::Color::Impl
 
@@ -147,6 +144,11 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       ppty.getMTime() > utime ||
       model.renderable.getMTime() > utime
     ) {
+      const keyMats = model.WebGPUActor.getKeyMatrices(model.WebGPURenderer);
+      model.UBO.setArray('BCWCMatrix', keyMats.bcwc);
+      model.UBO.setArray('BCSCMatrix', keyMats.bcsc);
+      model.UBO.setArray('MCWCNormals', keyMats.normalMatrix);
+
       let aColor = ppty.getAmbientColorByReference();
       model.UBO.setValue('AmbientIntensity', ppty.getAmbient());
       model.UBO.setArray('AmbientColor', [
@@ -294,7 +296,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
     let code = vDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
-      '    output.Position = rendererUBO.WCPCMatrix*vertexMC;',
+      '    output.Position = rendererUBO.SCPCMatrix*mapperUBO.BCSCMatrix*vertexBC;',
     ]).result;
     vDesc.setCode(code);
   };
@@ -305,7 +307,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       vDesc.addOutput('vec3<f32>', 'normalVC');
       let code = vDesc.getCode();
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
-        '  output.normalVC = normalize((rendererUBO.WCVCNormals * normalMC).xyz);',
+        '  output.normalVC = normalize((rendererUBO.WCVCNormals * mapperUBO.MCWCNormals * normalMC).xyz);',
       ]).result;
       vDesc.setCode(code);
 
@@ -459,6 +461,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     // points
     const points = pd.getPoints();
     if (points) {
+      const shift = model.WebGPUActor.getBufferShift(model.WebGPURenderer);
       const buffRequest = {
         hash: hash + points.getMTime(),
         dataArray: points,
@@ -466,15 +469,20 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
         cells,
         primitiveType: primType,
         representation,
-        time: Math.max(points.getMTime(), cells.getMTime()),
+        time: Math.max(
+          points.getMTime(),
+          cells.getMTime(),
+          model.WebGPUActor.getKeyMatricesTime().getMTime()
+        ),
+        shift,
         usage: BufferUsage.PointArray,
         format: 'float32x4',
         packExtra: true,
       };
       const buff = device.getBufferManager().getBuffer(buffRequest);
-      vertexInput.addBuffer(buff, ['vertexMC']);
+      vertexInput.addBuffer(buff, ['vertexBC']);
     } else {
-      vertexInput.removeBufferIfPresent('vertexMC');
+      vertexInput.removeBufferIfPresent('vertexBC');
     }
 
     // normals, only used for surface rendering
@@ -728,7 +736,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
         // default to one instance and computed number of verts
         primHelper.numberOfInstances = 1;
-        const vbo = primHelper.vertexInput.getBuffer('vertexMC');
+        const vbo = primHelper.vertexInput.getBuffer('vertexBC');
         primHelper.numberOfVertices =
           vbo.getSizeInBytes() / vbo.getStrideInBytes();
 
@@ -817,7 +825,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.UBO = vtkWebGPUUniformBuffer.newInstance();
   model.UBO.setName('mapperUBO');
-  model.UBO.addEntry('MCVCMatrix', 'mat4x4<f32>');
+  model.UBO.addEntry('BCWCMatrix', 'mat4x4<f32>');
+  model.UBO.addEntry('BCSCMatrix', 'mat4x4<f32>');
+  model.UBO.addEntry('MCWCNormals', 'mat4x4<f32>');
   model.UBO.addEntry('AmbientColor', 'vec4<f32>');
   model.UBO.addEntry('DiffuseColor', 'vec4<f32>');
   model.UBO.addEntry('AmbientIntensity', 'f32');
@@ -827,12 +837,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('Opacity', 'f32');
   model.UBO.addEntry('SpecularPower', 'f32');
   model.UBO.addEntry('PropID', 'u32');
-
-  //   [[offset(0)]] MCVCMatrix: mat4x4<f32>;
-  //   [[offset(64)]] normalMatrix: mat4x4<f32>;
-  //   [[offset(192)]] Metallic: f32;
-  //   [[offset(196)]] Roughness: f32;
-  //   [[offset(200)]] EmissiveFactor: f32;
 
   model.samplers = [];
   model.textures = [];

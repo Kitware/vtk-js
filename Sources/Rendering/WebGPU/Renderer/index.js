@@ -1,5 +1,5 @@
 import * as macro from 'vtk.js/Sources/macro';
-import { mat4 } from 'gl-matrix';
+import { vec3, mat4 } from 'gl-matrix';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -58,6 +58,50 @@ function vtkWebGPURenderer(publicAPI, model) {
       publicAPI.addMissingNode(model.renderable.getActiveCamera());
       publicAPI.addMissingNodes(model.renderable.getViewPropsWithNestedProps());
       publicAPI.removeUnusedNodes();
+      publicAPI.updateStabilizedMatrix();
+    }
+  };
+
+  publicAPI.updateStabilizedMatrix = () => {
+    // This method is designed to help with floating point
+    // issues when rendering datasets that push the limits of
+    // resolutions on float.
+    //
+    // One of the most common cases is when the dataset is located far
+    // away from the origin relative to the clipping range we are looking
+    // at. For that case we want to perform the floating point sensitive
+    // multiplications on the CPU in double. To this end we want the
+    // vertex rendering ops to look something like
+    //
+    // Compute shifted points and load those into the VBO
+    // pointCoordsSC = WorldToStabilizedMatrix * pointCoords;
+    //
+    // In the vertex shader do the following
+    // positionVC = StabilizedToDeviceMatrix * ModelToStabilizedMatrix*vertexIn;
+    //
+    // We use two matrices because it is expensive to change the
+    // WorldToStabilized matrix as we have to reupload all pointCoords
+    // So that matrix (MCSCMatrix) is fairly static, the Stabilized to
+    // Device matrix is the one that gets updated every time the camera
+    // changes.
+    //
+    // The basic idea is that we should translate the data so that
+    // when the center of the view frustum moves a lot
+    // we recenter it. The center of the view frustum is roughly
+    // camPos + dirOfProj*(far + near)*0.5
+    const cam = model.renderable.getActiveCamera();
+    const clipRange = cam.getClippingRange();
+    const pos = cam.getPositionByReference();
+    const dop = cam.getDirectionOfProjectionByReference();
+    const center = [];
+    const offset = [];
+    vec3.scale(offset, dop, 0.5 * (clipRange[0] + clipRange[1]));
+    vec3.add(center, pos, offset);
+    vec3.sub(offset, center, model.stabilizedCenter);
+    const length = vec3.len(offset);
+    if (length / (clipRange[1] - clipRange[0]) > model.recenterThreshold) {
+      model.stabilizedCenter = center;
+      model.stabilizedTime.modified();
     }
   };
 
@@ -105,8 +149,9 @@ function vtkWebGPURenderer(publicAPI, model) {
       model.renderable.getMTime() > utime
     ) {
       const keyMats = webgpuCamera.getKeyMatrices(publicAPI);
-      model.UBO.setArray('WCPCMatrix', keyMats.wcpc);
       model.UBO.setArray('WCVCMatrix', keyMats.wcvc);
+      model.UBO.setArray('SCPCMatrix', keyMats.scpc);
+      model.UBO.setArray('SCVCMatrix', keyMats.scvc);
       model.UBO.setArray('VCPCMatrix', keyMats.vcpc);
       model.UBO.setArray('WCVCNormals', keyMats.normalMatrix);
       model.UBO.setValue('cameraParallel', cam.getParallelProjection());
@@ -381,6 +426,8 @@ const DEFAULT_VALUES = {
   context: null,
   selector: null,
   renderEncoder: null,
+  recenterThreshold: 20.0,
+  stabilizedCenter: [0.0, 0.0, 0.0],
 };
 
 // ----------------------------------------------------------------------------
@@ -393,15 +440,21 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.UBO = vtkWebGPUUniformBuffer.newInstance();
   model.UBO.setName('rendererUBO');
-  model.UBO.addEntry('WCPCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('WCVCMatrix', 'mat4x4<f32>');
+  model.UBO.addEntry('SCPCMatrix', 'mat4x4<f32>');
+  model.UBO.addEntry('SCVCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('VCPCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('WCVCNormals', 'mat4x4<f32>');
   model.UBO.addEntry('cameraParallel', 'u32');
 
   model.tmpMat4 = mat4.identity(new Float64Array(16));
 
+  model.stabilizedTime = {};
+  macro.obj(model.stabilizedTime, { mtime: 0 });
+
   // Build VTK API
+  macro.get(publicAPI, model, ['stabilizedTime']);
+  macro.getArray(publicAPI, model, ['stabilizedCenter']);
   macro.setGet(publicAPI, model, ['renderEncoder', 'selector', 'UBO']);
 
   // Object methods

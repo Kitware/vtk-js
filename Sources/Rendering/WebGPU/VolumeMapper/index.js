@@ -37,8 +37,8 @@ fn main(
   // position is the device coords reduced to the
   // x y area covered by the volume
   output.Position = vec4<f32>(
-    mapperUBO.DCXMin + 0.5 * (vertexMC.x + 1.0) * mapperUBO.DCXSize,
-    mapperUBO.DCYMin + 0.5 * (vertexMC.y + 1.0) * mapperUBO.DCYSize,
+    mapperUBO.DCXMin + 0.5 * (vertexBC.x + 1.0) * mapperUBO.DCXSize,
+    mapperUBO.DCYMin + 0.5 * (vertexBC.y + 1.0) * mapperUBO.DCYSize,
     -1.0,
     1.0);
 
@@ -47,7 +47,7 @@ fn main(
 
   output.Position.z = 0.0;
 
-  // tcoordVS = vec2<f32>(vertexMC.x * 0.5 + 0.5, 1.0 - vertexMC.y * 0.5 - 0.5);
+  // tcoordVS = vec2<f32>(vertexBC.x * 0.5 + 0.5, 1.0 - vertexBC.y * 0.5 - 0.5);
   return output;
 }
 `;
@@ -288,7 +288,7 @@ function vtkWebGPUVolumeMapper(publicAPI, model) {
     const renderEncoder = model.renderEncoder;
 
     const buff = device.getBufferManager().getFullScreenQuadBuffer();
-    vertexInput.addBuffer(buff, ['vertexMC']);
+    vertexInput.addBuffer(buff, ['vertexBC']);
 
     model.pipelineHash = 'volr'; // haha
 
@@ -353,7 +353,7 @@ function vtkWebGPUVolumeMapper(publicAPI, model) {
 
     // bind the vertex input
     pipeline.bindVertexInput(renderEncoder, primHelper.vertexInput);
-    const vbo = primHelper.vertexInput.getBuffer('vertexMC');
+    const vbo = primHelper.vertexInput.getBuffer('vertexBC');
     renderEncoder.draw(vbo.getSizeInBytes() / vbo.getStrideInBytes(), 1, 0, 0);
   };
 
