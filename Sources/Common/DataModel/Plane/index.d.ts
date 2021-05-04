@@ -8,15 +8,16 @@ interface IPlaneInitialValues {
 	origin?: number[];
 }
 
-interface IRet {
+interface IIntersectWithLine {
 	intersection: boolean;
 	betweenPoints: boolean;
 	t: number;
-	x: Array<any>;
+	x: number[];
 }
 
 
 export interface vtkPlane extends VtkObject {
+
 	/**
 	 * Return the distance of a point x to a plane defined by n (x-p0) = 0.
 	 * The normal n must be magnitude = 1.
@@ -37,12 +38,12 @@ export interface vtkPlane extends VtkObject {
 	getNormalByReference(): number[];
 
 	/**
-	 * 
+	 * Get the origin of the plane
 	 */
 	getOrigin(): number[];
 
 	/**
-	 * 
+	 * Get the origin of the plane
 	 */
 	getOriginByReference(): number[];
 
@@ -130,9 +131,9 @@ export interface vtkPlane extends VtkObject {
 	 * Number.MAX_VALUE.
 	 * @param {Number[]} p1 
 	 * @param {Number[]} p2 
-	 * @return {IRet} 
+	 * @return {IIntersectWithLine} 
 	 */
-	intersectWithLine(p1: number[], p2: number[]): IRet;
+	intersectWithLine(p1: number[], p2: number[]): IIntersectWithLine;
 
 	/**
 	 * Given a planes defined by the normals n0 & n1 and origin points p0 & p1,
@@ -153,7 +154,7 @@ export interface vtkPlane extends VtkObject {
 	 * @param {Number[]} planeOrigin 
 	 * @param {Number[]} planeNormal 
 	 */
-	intersectWithPlane(planeOrigin: number[], planeNormal: number[]): IRet;
+	intersectWithPlane(planeOrigin: number[], planeNormal: number[]): IIntersectWithLine;
 
 	/**
 	 * Set the normal of the plane.
@@ -290,9 +291,9 @@ export function generalizedProjectPoint(x: any, origin: number[], normal: number
  * @param {Number[]} p2 
  * @param {Number[]} origin 
  * @param {Number[]} normal 
- * @return {IRet} 
+ * @return {IIntersectWithLine} 
  */
-export function intersectWithLine(p1: number[], p2: number[], origin: number[], normal: number[]): IRet;
+export function intersectWithLine(p1: number[], p2: number[], origin: number[], normal: number[]): IIntersectWithLine;
 
 
 /**
@@ -316,9 +317,9 @@ export function intersectWithLine(p1: number[], p2: number[], origin: number[], 
  * @param {Number[]} plane1Normal 
  * @param {Number[]} plane2Origin 
  * @param {Number[]} plane2Normal 
- * @return {IRet} 
+ * @return {IIntersectWithLine} 
  */
-export function intersectWithPlane(plane1Origin: number[], plane1Normal: number[], plane2Origin: number[], plane2Normal: number[]): IRet;
+export function intersectWithPlane(plane1Origin: number[], plane1Normal: number[], plane2Origin: number[], plane2Normal: number[]): IIntersectWithLine;
 
 /**
  * Constants for the `intersectWithPlane` function.
