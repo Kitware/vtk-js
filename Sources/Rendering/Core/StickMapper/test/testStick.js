@@ -3,20 +3,20 @@ import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
-import vtkSphereMapper from 'vtk.js/Sources/Rendering/Core/SphereMapper';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkStickMapper from 'vtk.js/Sources/Rendering/Core/StickMapper';
 
 import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
-import baseline from './testSphere.png';
+import baseline from './testStick.png';
 
-test.onlyIfWebGL('Test SphereMapper', (t) => {
+test('Test StickMapper', (t) => {
   const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkOpenGLSphereMapper testSphere');
+  t.ok('rendering', 'vtkStickMapper testStick');
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -37,7 +37,7 @@ test.onlyIfWebGL('Test SphereMapper', (t) => {
 
   const planeSource = gc.registerResource(vtkPlaneSource.newInstance());
   const simpleFilter = gc.registerResource(vtkCalculator.newInstance());
-  const mapper = gc.registerResource(vtkSphereMapper.newInstance());
+  const mapper = gc.registerResource(vtkStickMapper.newInstance());
   const actor = gc.registerResource(vtkActor.newInstance());
 
   simpleFilter.setFormula({
@@ -47,9 +47,9 @@ test.onlyIfWebGL('Test SphereMapper', (t) => {
         // Generate two output arrays:
         {
           location: FieldDataTypes.POINT, // This array will be point-data ...
-          name: 'pressure', // ... with the given name ...
+          name: 'orientation', // ... with the given name ...
           dataType: 'Float32Array', // ... of this type ...
-          numberOfComponents: 1, // ... with this many components ...
+          numberOfComponents: 3, // ... with this many components ...
         },
         {
           location: FieldDataTypes.POINT, // This array will be field data ...
@@ -58,23 +58,43 @@ test.onlyIfWebGL('Test SphereMapper', (t) => {
           attribute: AttributeTypes.SCALARS, // ... and will be marked as the default scalars.
           numberOfComponents: 1, // ... with this many components ...
         },
+        {
+          location: FieldDataTypes.POINT, // This array will be field data ...
+          name: 'pressure', // ... with the given name ...
+          dataType: 'Float32Array', // ... of this type ...
+          numberOfComponents: 2, // ... with this many components ...
+        },
       ],
     }),
     evaluate: (arraysIn, arraysOut) => {
       // Convert in the input arrays of vtkDataArrays into variables
       // referencing the underlying JavaScript typed-data arrays:
       const [coords] = arraysIn.map((d) => d.getData());
-      const [press, temp] = arraysOut.map((d) => d.getData());
+      const [orient, temp, press] = arraysOut.map((d) => d.getData());
 
       // Since we are passed coords as a 3-component array,
       // loop over all the points and compute the point-data output:
       for (let i = 0, sz = coords.length / 3; i < sz; ++i) {
-        press[i] =
-          ((coords[3 * i] - 0.5) * (coords[3 * i] - 0.5) +
-            (coords[3 * i + 1] - 0.5) * (coords[3 * i + 1] - 0.5) +
-            0.125) *
-          0.1;
+        orient[i * 3] =
+          (coords[3 * i] - 0.5) * (coords[3 * i] - 0.5) +
+          (coords[3 * i + 1] - 0.5) * (coords[3 * i + 1] - 0.5);
+        orient[i * 3 + 1] =
+          (coords[3 * i] - 0.5) * (coords[3 * i] - 0.5) +
+          (coords[3 * i + 1] - 0.5) * (coords[3 * i + 1] - 0.5);
+        orient[i * 3 + 2] = 1.0;
+
         temp[i] = coords[3 * i + 1];
+
+        press[i * 2] =
+          (coords[3 * i] * coords[3 * i] +
+            coords[3 * i + 1] * coords[3 * i + 1]) *
+            0.05 +
+          0.05;
+        press[i * 2 + 1] =
+          (coords[3 * i] * coords[3 * i] +
+            coords[3 * i + 1] * coords[3 * i + 1]) *
+            0.01 +
+          0.01;
       }
       // Mark the output vtkDataArray as modified
       arraysOut.forEach((x) => x.modified());
@@ -85,6 +105,8 @@ test.onlyIfWebGL('Test SphereMapper', (t) => {
   simpleFilter.setInputConnection(planeSource.getOutputPort());
 
   mapper.setInputConnection(simpleFilter.getOutputPort());
+
+  mapper.setOrientationArray('orientation');
   mapper.setScaleArray('pressure');
 
   actor.setMapper(mapper);
@@ -98,17 +120,19 @@ test.onlyIfWebGL('Test SphereMapper', (t) => {
   // modify objects in your browser's developer console:
   // -----------------------------------------------------------
 
-  // create something to view it, in this case webgl
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  // create something to view it
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
+  renderer.getActiveCamera().setClippingRange(1.0, 10.0);
+  renderer.getActiveCamera().azimuth(10.0);
 
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,
       [baseline],
-      'Rendering/OpenGL/SphereMapper',
+      'Rendering/Core/StickMapper',
       t,
       1,
       gc.releaseResources
