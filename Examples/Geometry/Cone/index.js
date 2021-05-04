@@ -43,7 +43,10 @@ fullScreenRenderer.setResizeCallback(fpsMonitor.update);
 // this
 // ----------------------------------------------------------------------------
 
-const coneSource = vtkConeSource.newInstance({ height: 1.0 });
+const coneSource = vtkConeSource.newInstance({
+  center: [0, 500000, 0],
+  height: 1.0,
+});
 const filter = vtkCalculator.newInstance();
 
 filter.setInputConnection(coneSource.getOutputPort());
@@ -73,6 +76,7 @@ mapper.setInputConnection(filter.getOutputPort());
 
 const actor = vtkActor.newInstance();
 actor.setMapper(mapper);
+actor.setPosition(500000.0, 0.0, 0.0);
 
 renderer.addActor(actor);
 renderer.resetCamera();

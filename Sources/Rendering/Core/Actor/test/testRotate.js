@@ -2,7 +2,7 @@ import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
@@ -10,9 +10,9 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
 import baseline from './testRotate.png';
 
-test.onlyIfWebGL('Test Actor', (t) => {
+test('Test Actor', (t) => {
   const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkOpenGLActor testRotate');
+  t.ok('rendering', 'vtkActor testRotate');
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -48,8 +48,8 @@ test.onlyIfWebGL('Test Actor', (t) => {
   // modify objects in your browser's developer console:
   // -----------------------------------------------------------
 
-  // create something to view it, in this case webgl
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  // create something to view it
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
@@ -58,7 +58,7 @@ test.onlyIfWebGL('Test Actor', (t) => {
     testUtils.compareImages(
       image,
       [baseline],
-      'Rendering/OpenGL/Actor',
+      'Rendering/Core/Actor',
       t,
       1,
       gc.releaseResources

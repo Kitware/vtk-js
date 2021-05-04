@@ -20,9 +20,9 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
     vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
     let code = vDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
-      '    output.Position = rendererUBO.WCPCMatrix',
+      '    output.Position = rendererUBO.SCPCMatrix*mapperUBO.BCSCMatrix',
       '      *glyphSSBO.values[input.instanceIndex].matrix',
-      '      *vertexMC;',
+      '      *vertexBC;',
     ]).result;
     vDesc.setCode(code);
   };
@@ -32,8 +32,9 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
       const vDesc = pipeline.getShaderDescription('vertex');
       let code = vDesc.getCode();
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
-        '  output.normalVC = normalize((rendererUBO.WCVCNormals *',
-        '    glyphSSBO.values[input.instanceIndex].normal*normalMC).xyz);',
+        '  output.normalVC = normalize((rendererUBO.WCVCNormals',
+        ' * mapperUBO.MCWCNormals',
+        ' * glyphSSBO.values[input.instanceIndex].normal*normalMC).xyz);',
       ]).result;
       vDesc.setCode(code);
     }

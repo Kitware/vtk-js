@@ -14,7 +14,7 @@ Chrome Canary when WebGPU is enabled. You have to set --enable-unsafe-webgpu
 there is a test target named test:webgpu that will specificly try to run
 tests using chrome canary.
 
-Note that as of APril 2021 WebGPU is changing daily, so this code may
+Note that as of April 2021 WebGPU is changing daily, so this code may
 break daily as they change and interate on the API.
 
 Lots of capabilities are currently not implemented.
@@ -24,9 +24,7 @@ instead calling renderWindow.newAPISpecificView('WebGPU') should be all that
 is needed.
 
 # ToDo
-
 - PBR lighting to replace the simple model currently coded
-- actor matrix support with auto shift (handle in renderer?)
 - eventually switch to using IBOs and flat interpolation
 - cropping planes for polydata mapper
 - update widgets to use the new async hardware selector API
@@ -44,7 +42,7 @@ Waiting on fixes/dev in WebGPU spec
 - single volume rendering (abandon)
 
 # Recently ToDone
-
+- actor matrix support with auto shift (handle in renderer?)
 - add an example of customizing WebGPU
 - make all shader replacements programatic, generate
   publicAPI.replaceShader\* invocations from shader code

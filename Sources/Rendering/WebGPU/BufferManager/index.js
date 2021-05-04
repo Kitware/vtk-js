@@ -115,8 +115,23 @@ function packArray(
     return result;
   }
 
-  const shift = options.shift ? options.shift : 0;
-  const scale = options.scale ? options.scale : 1;
+  // setup shift and scale
+  let shift = [0.0, 0.0, 0.0, 0.0];
+  if (options.shift) {
+    if (options.shift.length) {
+      shift = options.shift;
+    } else {
+      shift.fill(options.shift);
+    }
+  }
+  let scale = [1.0, 1.0, 1.0, 1.0];
+  if (options.scale) {
+    if (options.scale.length) {
+      scale = options.scale;
+    } else {
+      scale.fill(options.scale);
+    }
+  }
   const packExtra = Object.prototype.hasOwnProperty.call(options, 'packExtra')
     ? options.packExtra
     : false;
@@ -212,32 +227,40 @@ function packArray(
   // add data based on number of components
   if (numComp === 1) {
     addAPoint = function addAPointFunc(i, cellid) {
-      packedVBO[vboidx++] = scale * getData(i, cellid) + shift;
+      packedVBO[vboidx++] = scale[0] * getData(i, cellid) + shift[0];
     };
   } else if (numComp === 2) {
     addAPoint = function addAPointFunc(i, cellid) {
-      packedVBO[vboidx++] = scale * getData(i * 2, cellid * 2) + shift;
-      packedVBO[vboidx++] = scale * getData(i * 2 + 1, cellid * 2 + 1) + shift;
+      packedVBO[vboidx++] = scale[0] * getData(i * 2, cellid * 2) + shift[0];
+      packedVBO[vboidx++] =
+        scale[1] * getData(i * 2 + 1, cellid * 2 + 1) + shift[1];
     };
   } else if (numComp === 3 && !packExtra) {
     addAPoint = function addAPointFunc(i, cellid) {
-      packedVBO[vboidx++] = scale * getData(i * 3, cellid * 3) + shift;
-      packedVBO[vboidx++] = scale * getData(i * 3 + 1, cellid * 3 + 1) + shift;
-      packedVBO[vboidx++] = scale * getData(i * 3 + 2, cellid * 3 + 2) + shift;
+      packedVBO[vboidx++] = scale[0] * getData(i * 3, cellid * 3) + shift[0];
+      packedVBO[vboidx++] =
+        scale[1] * getData(i * 3 + 1, cellid * 3 + 1) + shift[1];
+      packedVBO[vboidx++] =
+        scale[2] * getData(i * 3 + 2, cellid * 3 + 2) + shift[2];
     };
   } else if (numComp === 3 && packExtra) {
     addAPoint = function addAPointFunc(i, cellid) {
-      packedVBO[vboidx++] = scale * getData(i * 3, cellid * 3) + shift;
-      packedVBO[vboidx++] = scale * getData(i * 3 + 1, cellid * 3 + 1) + shift;
-      packedVBO[vboidx++] = scale * getData(i * 3 + 2, cellid * 3 + 2) + shift;
-      packedVBO[vboidx++] = scale * 1.0 + shift;
+      packedVBO[vboidx++] = scale[0] * getData(i * 3, cellid * 3) + shift[0];
+      packedVBO[vboidx++] =
+        scale[1] * getData(i * 3 + 1, cellid * 3 + 1) + shift[1];
+      packedVBO[vboidx++] =
+        scale[2] * getData(i * 3 + 2, cellid * 3 + 2) + shift[2];
+      packedVBO[vboidx++] = scale[3] * 1.0 + shift[3];
     };
   } else if (numComp === 4) {
     addAPoint = function addAPointFunc(i, cellid) {
-      packedVBO[vboidx++] = scale * getData(i * 4, cellid * 4) + shift;
-      packedVBO[vboidx++] = scale * getData(i * 4 + 1, cellid * 4 + 1) + shift;
-      packedVBO[vboidx++] = scale * getData(i * 4 + 2, cellid * 4 + 2) + shift;
-      packedVBO[vboidx++] = scale * getData(i * 4 + 3, cellid * 4 + 3) + shift;
+      packedVBO[vboidx++] = scale[0] * getData(i * 4, cellid * 4) + shift[0];
+      packedVBO[vboidx++] =
+        scale[1] * getData(i * 4 + 1, cellid * 4 + 1) + shift[1];
+      packedVBO[vboidx++] =
+        scale[2] * getData(i * 4 + 2, cellid * 4 + 2) + shift[2];
+      packedVBO[vboidx++] =
+        scale[3] * getData(i * 4 + 3, cellid * 4 + 3) + shift[3];
     };
   }
 

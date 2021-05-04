@@ -16,10 +16,13 @@ function vtkWebGPUCamera(publicAPI, model) {
     const ren = webGPURenderer.getRenderable();
     const webGPURenderWindow = webGPURenderer.getParent();
     if (
-      webGPURenderWindow.getMTime() > model.keyMatrixTime.getMTime() ||
-      publicAPI.getMTime() > model.keyMatrixTime.getMTime() ||
-      ren.getMTime() > model.keyMatrixTime.getMTime() ||
-      model.renderable.getMTime() > model.keyMatrixTime.getMTime()
+      Math.max(
+        webGPURenderWindow.getMTime(),
+        publicAPI.getMTime(),
+        ren.getMTime(),
+        model.renderable.getMTime(),
+        webGPURenderer.getStabilizedTime().getMTime()
+      ) > model.keyMatrixTime.getMTime()
     ) {
       const wcvc = model.renderable.getViewMatrix();
 
@@ -34,6 +37,9 @@ function vtkWebGPUCamera(publicAPI, model) {
       );
       mat4.transpose(model.keyMatrices.wcvc, wcvc);
 
+      const center = webGPURenderer.getStabilizedCenterByReference();
+      mat4.translate(model.keyMatrices.scvc, model.keyMatrices.wcvc, center);
+
       const aspectRatio = webGPURenderer.getAspectRatio();
 
       const vcpc = model.renderable.getProjectionMatrix(aspectRatio, -1, 1);
@@ -46,9 +52,9 @@ function vtkWebGPUCamera(publicAPI, model) {
       model.keyMatrices.vcpc[14] = 0.5 * vcpc[11] + 0.5 * vcpc[15];
 
       mat4.multiply(
-        model.keyMatrices.wcpc,
+        model.keyMatrices.scpc,
         model.keyMatrices.vcpc,
-        model.keyMatrices.wcvc
+        model.keyMatrices.scvc
       );
 
       model.keyMatrixTime.modified();
@@ -84,7 +90,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     normalMatrix: new Float64Array(16),
     vcpc: new Float64Array(16),
     wcvc: new Float64Array(16),
-    wcpc: new Float64Array(16),
+    scpc: new Float64Array(16),
+    scvc: new Float64Array(16),
   };
 
   // Build VTK API
