@@ -144,7 +144,7 @@ function vtkHttpDataSetReader(publicAPI, model) {
 
   // Internal method to fetch Array
   function fetchArray(array, options = {}) {
-    const arrayId = array.ref.id;
+    const arrayId = `${array.ref.id}|${array.vtkClass}`;
     if (!cachedArrays[arrayId]) {
       // Cache the promise while fetching
       cachedArrays[arrayId] = model.dataAccessHelper
