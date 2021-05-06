@@ -64,6 +64,25 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
     fDesc.setCode(code);
   };
 
+  publicAPI.replaceShaderSelect = (hash, pipeline, vertexInput) => {
+    if (hash.includes('sel')) {
+      const vDesc = pipeline.getShaderDescription('vertex');
+      vDesc.addOutput('u32', 'compositeID');
+      let code = vDesc.getCode();
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Select::Impl', [
+        '  output.compositeID = input.instanceIndex;',
+      ]).result;
+      vDesc.setCode(code);
+
+      const fDesc = pipeline.getShaderDescription('fragment');
+      code = fDesc.getCode();
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Select::Impl', [
+        'var compositeID: u32 = input.compositeID;',
+      ]).result;
+      fDesc.setCode(code);
+    }
+  };
+
   publicAPI.buildPrimitives = () => {
     model.currentInput = model.renderable.getInputData(1);
 

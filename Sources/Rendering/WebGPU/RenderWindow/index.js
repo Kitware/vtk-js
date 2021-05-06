@@ -113,7 +113,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 
       publicAPI.create3DContextAsync().then(() => {
         model.initialized = true;
-        publicAPI.traverseAllPasses();
+        publicAPI.invokeInitialized();
       });
     }
   };
@@ -264,6 +264,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
   publicAPI.traverseAllPasses = () => {
     if (!model.initialized) {
       publicAPI.initialize();
+      publicAPI.onInitialized(publicAPI.traverseAllPasses);
     } else {
       if (model.renderPasses) {
         for (let index = 0; index < model.renderPasses.length; ++index) {
@@ -456,6 +457,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   }
 
   macro.event(publicAPI, model, 'imageReady');
+  macro.event(publicAPI, model, 'initialized');
 
   // Build VTK API
   macro.get(publicAPI, model, [

@@ -52,7 +52,6 @@ function getPixelInformationWithData(
     }
 
     const info = {};
-    info.valid = true;
 
     info.propID = actorid;
 
@@ -66,9 +65,11 @@ function getPixelInformationWithData(
       compositeID = 0;
     }
     info.compositeID = compositeID;
+
     if (buffdata.captureZValues) {
       const offset =
-        inDisplayPosition[1] * buffdata.zbufferBufferWidth +
+        (buffdata.height - inDisplayPosition[1] - 1) *
+          buffdata.zbufferBufferWidth +
         inDisplayPosition[0];
       info.zValue = buffdata.depthValues[offset];
       info.displayPosition = inDisplayPosition;
@@ -86,7 +87,7 @@ function getPixelInformationWithData(
     0,
     outSelectedPosition
   );
-  if (info && info.valid) {
+  if (info) {
     return info;
   }
   for (let dist = 1; dist < maxDist; ++dist) {
@@ -105,7 +106,7 @@ function getPixelInformationWithData(
           0,
           outSelectedPosition
         );
-        if (info && info.valid) {
+        if (info) {
           return info;
         }
       }
@@ -116,7 +117,7 @@ function getPixelInformationWithData(
         0,
         outSelectedPosition
       );
-      if (info && info.valid) {
+      if (info) {
         return info;
       }
     }
@@ -135,7 +136,7 @@ function getPixelInformationWithData(
           0,
           outSelectedPosition
         );
-        if (info && info.valid) {
+        if (info) {
           return info;
         }
       }
@@ -146,7 +147,7 @@ function getPixelInformationWithData(
         0,
         outSelectedPosition
       );
-      if (info && info.valid) {
+      if (info) {
         return info;
       }
     }
@@ -223,7 +224,7 @@ function generateSelectionWithData(buffdata, fx1, fy1, fx2, fy2) {
         0,
         outSelectedPosition
       );
-      if (info && info.valid) {
+      if (info) {
         const hash = getInfoHash(info);
         if (!dataMap.has(hash)) {
           dataMap.set(hash, {
@@ -273,26 +274,28 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
       return false;
     }
 
+    if (!model.WebGPURenderWindow.getInitialized()) {
+      model.WebGPURenderWindow.initialize();
+      await new Promise((resolve) =>
+        model.WebGPURenderWindow.onInitialized(resolve)
+      );
+    }
+
     const webGPURenderer = model.WebGPURenderWindow.getViewNodeFor(renderer);
 
     if (!webGPURenderer) {
       return false;
     }
 
-    if (!model.WebGPURenderWindow.getInitialized()) {
-      model.WebGPURenderWindow.initialize();
-      return false;
-    }
-
     // Initialize renderer for selection.
     // change the renderer's background to black, which will indicate a miss
-    const originalBackground = renderer.getBackground();
-    renderer.setBackground(0.0, 0.0, 0.0);
+    const originalSuppress = webGPURenderer.getSuppressClear();
+    webGPURenderer.setSuppressClear(true);
 
     model._selectionPass.traverse(model.WebGPURenderWindow, webGPURenderer);
 
     // restore original background
-    renderer.setBackground(originalBackground);
+    webGPURenderer.setSuppressClear(originalSuppress);
 
     const device = model.WebGPURenderWindow.getDevice();
     const texture = model._selectionPass.getColorTexture();

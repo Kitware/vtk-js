@@ -215,7 +215,7 @@ function vtkWebGPURenderer(publicAPI, model) {
   };
 
   publicAPI.clear = () => {
-    if (model.renderable.getTransparent()) {
+    if (model.renderable.getTransparent() || model.suppressClear) {
       return;
     }
 
@@ -427,6 +427,7 @@ const DEFAULT_VALUES = {
   selector: null,
   renderEncoder: null,
   recenterThreshold: 20.0,
+  suppressClear: false,
   stabilizedCenter: [0.0, 0.0, 0.0],
 };
 
@@ -455,7 +456,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.get(publicAPI, model, ['stabilizedTime']);
   macro.getArray(publicAPI, model, ['stabilizedCenter']);
-  macro.setGet(publicAPI, model, ['renderEncoder', 'selector', 'UBO']);
+  macro.setGet(publicAPI, model, [
+    'renderEncoder',
+    'selector',
+    'suppressClear',
+    'UBO',
+  ]);
 
   // Object methods
   vtkWebGPURenderer(publicAPI, model);
