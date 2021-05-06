@@ -62,17 +62,12 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
     }
 
     model.selectionRenderEncoder.attachTextureViews();
-    const renDesc = model.selectionRenderEncoder.getDescription();
-    renDesc.colorAttachments[0].loadValue = [0.0, 0.0, 0.0, 0.0];
     renNode.setRenderEncoder(model.selectionRenderEncoder);
-    renNode.traverse(publicAPI);
 
-    // check for both opaque and volume actors
     publicAPI.setCurrentOperation('cameraPass');
     renNode.traverse(publicAPI);
-    // always do opaque pass to get a valid color and zbuffer, even if empty
+    // opaque pass is used for selection
     publicAPI.setCurrentOperation('opaquePass');
-    renNode.setRenderEncoder(model.selectionRenderEncoder);
     renNode.traverse(publicAPI);
   };
 
@@ -87,12 +82,14 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
       code = vtkWebGPUShaderCache.substitute(
         code,
         '//VTK::RenderEncoder::Impl',
-        [
-          'output.outColor = vec4<u32>(mapperUBO.PropID,0u,0u,mapperUBO.PropID);',
-        ]
+        ['output.outColor = vec4<u32>(mapperUBO.PropID, compositeID, 0u, 0u);']
       ).result;
       fDesc.setCode(code);
     });
+    const renDesc = model.selectionRenderEncoder.getDescription();
+    renDesc.colorAttachments[0].loadValue = [0.0, 0.0, 0.0, 0.0];
+    renDesc.depthStencilAttachment.stencilLoadValue = 'load';
+
     model.selectionRenderEncoder.setPipelineSettings({
       primitive: { cullMode: 'none' },
       depthStencil: {

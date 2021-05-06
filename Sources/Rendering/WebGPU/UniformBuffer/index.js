@@ -191,7 +191,6 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
           },
         ],
       });
-      model.sendTime.modified();
       model.sendDirty = false;
     }
 
@@ -206,9 +205,12 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
           0,
           model.sizeInBytes
         );
-      model.sendTime.modified();
       model.sendDirty = false;
     }
+
+    // always updated as mappers depend on this time
+    // it is more of a sentIfNeededTime
+    model.sendTime.modified();
   };
 
   publicAPI.createView = (type) => {
@@ -230,10 +232,11 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
     const entry = model.bufferEntries[idx];
     publicAPI.createView(entry.nativeType);
     const view = model[entry.nativeType];
-    if (view[entry.offset / view.BYTES_PER_ELEMENT] !== val) {
+    if (entry.lastValue !== val) {
       view[entry.offset / view.BYTES_PER_ELEMENT] = val;
       model.sendDirty = true;
     }
+    entry.lastValue = val;
   };
 
   publicAPI.setArray = (name, arr) => {
@@ -246,31 +249,17 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
     const entry = model.bufferEntries[idx];
     publicAPI.createView(entry.nativeType);
     const view = model[entry.nativeType];
+    let changed = false;
     for (let i = 0; i < arr.length; i++) {
-      if (view[entry.offset / view.BYTES_PER_ELEMENT + i] !== arr[i]) {
+      if (!entry.lastValue || entry.lastValue[i] !== arr[i]) {
         view[entry.offset / view.BYTES_PER_ELEMENT + i] = arr[i];
-        model.sendDirty = true;
+        changed = true;
       }
     }
-  };
-
-  publicAPI.getNativeView = (name) => {
-    publicAPI.sortBufferEntries();
-    const idx = model._bufferEntryNames.get(name);
-    if (idx === undefined) {
-      vtkErrorMacro(`entry named ${name} not found in UBO`);
-      return undefined;
+    if (changed) {
+      model.sendDirty = true;
+      entry.lastValue = [...arr];
     }
-    const entry = model.bufferEntries[idx];
-    publicAPI.createView(entry.nativeType);
-    const bpe = model[entry.nativeType].BYTES_PER_ELEMENT;
-    model.sendDirty = true;
-    return macro.newTypedArray(
-      entry.nativeType,
-      model.arrayBuffer,
-      entry.offset,
-      entry.sizeInBytes / bpe
-    );
   };
 
   publicAPI.getSendTime = () => model.sendTime.getMTime();

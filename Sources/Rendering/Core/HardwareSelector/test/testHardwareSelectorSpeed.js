@@ -1,8 +1,7 @@
 import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -28,9 +27,9 @@ function addActor(gc, renderer, size) {
   mapper.setInputConnection(source.getOutputPort());
 }
 
-test.onlyIfWebGL('Test HardwareSelector', (tapeContext) => {
+test('Test HardwareSelector', (tapeContext) => {
   const gc = testUtils.createGarbageCollector(tapeContext);
-  tapeContext.ok('rendering', 'vtkOpenGLHardwareSelector TestHardwareSelector');
+  tapeContext.ok('rendering', 'vtkHardwareSelector TestHardwareSelector');
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -51,42 +50,44 @@ test.onlyIfWebGL('Test HardwareSelector', (tapeContext) => {
   }
 
   // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
   console.time('first normal render');
   let previousTime = Date.now();
+  glwindow.captureNextImage().then(() => {
+    const taTime = Date.now() - previousTime;
+    console.timeEnd('first normal render');
+
+    console.time('second normal render');
+    previousTime = Date.now();
+    glwindow.captureNextImage().then(() => {
+      const tbTime = Date.now() - previousTime;
+      console.timeEnd('second normal render');
+
+      const sel = glwindow.getSelector();
+      sel.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_POINTS);
+
+      console.time('hardware render');
+      previousTime = Date.now();
+      sel.selectAsync(renderer, 200, 200, 300, 300).then((res) => {
+        const tcTime = Date.now() - previousTime;
+        console.timeEnd('hardware render');
+
+        console.log(taTime, tbTime, tcTime);
+
+        tapeContext.ok(
+          // should take about 3 normal renders but we give it some wiggle room
+          tcTime < tbTime * 6,
+          `Hardware selector takes less than six normal renders (${taTime}, ${tbTime}, ${tcTime})`
+        );
+
+        gc.releaseResources();
+      });
+    });
+    glwindow.traverseAllPasses();
+  });
   glwindow.traverseAllPasses();
-  const taTime = Date.now() - previousTime;
-  console.timeEnd('first normal render');
-
-  console.time('second normal render');
-  previousTime = Date.now();
-  glwindow.traverseAllPasses();
-  const tbTime = Date.now() - previousTime;
-  console.timeEnd('second normal render');
-
-  const sel = gc.registerResource(vtkOpenGLHardwareSelector.newInstance());
-  sel.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_POINTS);
-  sel.attach(glwindow, renderer);
-
-  sel.setArea(200, 200, 300, 300);
-  sel.select();
-  console.time('hardware render');
-  previousTime = Date.now();
-  sel.select();
-  const tcTime = Date.now() - previousTime;
-  console.timeEnd('hardware render');
-
-  console.log(taTime, tbTime, tcTime);
-
-  tapeContext.ok(
-    // should take about 3 normal renders but we give it some wiggle room
-    tcTime < tbTime * 6,
-    `Hardware selector takes less than six normal renders (${taTime}, ${tbTime}, ${tcTime})`
-  );
-
-  gc.releaseResources();
 });

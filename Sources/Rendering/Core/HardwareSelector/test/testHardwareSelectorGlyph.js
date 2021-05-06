@@ -2,8 +2,7 @@ import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
@@ -17,7 +16,7 @@ import {
   FieldDataTypes,
 } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
-test.onlyIfWebGL('Test HardwareSelectorGlyph', (tapeContext) => {
+test('Test HardwareSelectorGlyph', (tapeContext) => {
   const gc = testUtils.createGarbageCollector(tapeContext);
   tapeContext.ok('rendering', 'TestHardwareSelectorGlyph');
 
@@ -97,28 +96,29 @@ test.onlyIfWebGL('Test HardwareSelectorGlyph', (tapeContext) => {
   actor.setMapper(mapper);
 
   // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
-  glwindow.traverseAllPasses();
+  renderer.resetCamera();
   renderer.getActiveCamera().zoom(1.4);
+  glwindow.traverseAllPasses();
 
-  const sel = gc.registerResource(vtkOpenGLHardwareSelector.newInstance());
+  const sel = glwindow.getSelector();
   sel.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_POINTS);
-  sel.attach(glwindow, renderer);
 
-  sel.setArea(200, 200, 250, 300);
-  const res = sel.select();
-  console.log(res[0].get());
-  const allGood = res.length === 7 && res[0].getProperties().prop === actor;
+  sel.selectAsync(renderer, 200, 200, 250, 300).then((res) => {
+    console.log(res);
+    console.log(res[0].get());
+    const allGood = res.length === 7 && res[0].getProperties().prop === actor;
 
-  tapeContext.ok(res.length === 7, 'Seven glyphs selected');
-  tapeContext.ok(
-    res[0].getProperties().compositeID === 71,
-    'glyph 71 was the first selected'
-  );
-  tapeContext.ok(allGood, 'Correct prop was selected');
+    tapeContext.ok(res.length === 7, 'Seven glyphs selected');
+    tapeContext.ok(
+      res[0].getProperties().compositeID === 71,
+      'glyph 71 was the first selected'
+    );
+    tapeContext.ok(allGood, 'Correct prop was selected');
 
-  gc.releaseResources();
+    gc.releaseResources();
+  });
 });

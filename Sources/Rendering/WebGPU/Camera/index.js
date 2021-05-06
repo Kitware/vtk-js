@@ -59,7 +59,6 @@ function vtkWebGPUCamera(publicAPI, model) {
 
       model.keyMatrixTime.modified();
     }
-
     return model.keyMatrices;
   };
 }

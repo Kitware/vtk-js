@@ -40,7 +40,6 @@ function vtkWebGPUPipeline(publicAPI, model) {
       }
     }
 
-    // console.log(JSON.stringify(pipelineDesc));
     model.handle = device.getHandle().createRenderPipeline(pipelineDesc);
   };
 

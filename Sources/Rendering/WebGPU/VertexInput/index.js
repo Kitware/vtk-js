@@ -27,12 +27,27 @@ function vtkWebGPUVertexInput(publicAPI, model) {
     // only add if it is a new setting
     for (let i = 0; i < model.inputs.length; i++) {
       if (arraysEqual(model.inputs[i].names, names)) {
-        if (model.inputs[i].buffer === buffer) return;
-        model.inputs.splice(i, 1);
+        if (model.inputs[i].buffer === buffer) {
+          return;
+        }
+        model.inputs[i].buffer = buffer;
+        return;
       }
     }
 
+    // when adding a new entry, make sure we sort the array
+    // as the order is important to the shader and must always
+    // be the same, so alphabetical is an easy option
     model.inputs.push({ buffer, stepMode, names });
+    model.inputs = model.inputs.sort((v1, v2) => {
+      if (v1.names[0] < v2.names[0]) {
+        return -1;
+      }
+      if (v1.names[0] > v2.names[0]) {
+        return 1;
+      }
+      return 0;
+    });
   };
 
   publicAPI.removeBufferIfPresent = (name) => {

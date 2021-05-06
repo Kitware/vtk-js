@@ -28,6 +28,8 @@ const vtkWebGPUPolyDataVS = `
 
 //VTK::TCoord::Dec
 
+//VTK::Select::Dec
+
 //VTK::Mapper::Dec
 
 //VTK::IOStructs::Dec
@@ -48,6 +50,8 @@ fn main(
 
   //VTK::TCoord::Impl
 
+  //VTK::Select::Impl
+
   //VTK::Position::Impl
 
   return output;
@@ -63,6 +67,8 @@ const vtkWebGPUPolyDataFS = `
 //VTK::Normal::Dec
 
 //VTK::TCoord::Dec
+
+//VTK::Select::Dec
 
 //VTK::RenderEncoder::Dec
 
@@ -94,6 +100,8 @@ fn main(
      opacity);
 
   //VTK::TCoord::Impl
+
+  //VTK::Select::Impl
 
   if (computedColor.a == 0.0) { discard; };
 
@@ -176,7 +184,6 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       ]);
       model.UBO.setValue('Opacity', ppty.getOpacity());
       model.UBO.setValue('PropID', model.WebGPUActor.getPropID());
-
       const device = model.WebGPURenderWindow.getDevice();
       model.UBO.sendIfNeeded(device, device.getMapperBindGroupLayout());
     }
@@ -399,6 +406,18 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       ]).result;
     }
     fDesc.setCode(code);
+  };
+
+  publicAPI.replaceShaderSelect = (hash, pipeline, vertexInput) => {
+    if (hash.includes('sel')) {
+      const fDesc = pipeline.getShaderDescription('fragment');
+      let code = fDesc.getCode();
+      // by default there are no composites, so just 0
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Select::Impl', [
+        '  var compositeID: u32 = 0u;',
+      ]).result;
+      fDesc.setCode(code);
+    }
   };
 
   publicAPI.getUsage = (rep, i) => {
@@ -694,6 +713,9 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     }
     if (model.textures.length) {
       pipelineHash += `tx${model.textures.length}`;
+    }
+    if (model.SSBO) {
+      pipelineHash += `ssbo`;
     }
     const uhash = publicAPI.getHashFromUsage(usage);
     pipelineHash += uhash;
