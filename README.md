@@ -9,9 +9,7 @@
 ![node-version-requirement](https://img.shields.io/badge/node->=8.0.0-brightgreen.svg)
 [![DOI](https://zenodo.org/badge/57900965.svg)](https://zenodo.org/badge/latestdoi/57900965)
 
-
-Introduction
-============
+### Introduction
 
 VTK is an open-source software system for image processing, 3D
 graphics, volume rendering and visualization. VTK includes many
@@ -32,7 +30,7 @@ communities.
 
 vtk.js aims to be a subset of VTK and provide 3D rendering using WebGL (+WebGPU) for both geometry and volume rendering.
 
-## What is the difference with VTK/C++?
+### What is the difference with VTK/C++?
 
 VTK.js is a complete rewrite of VTK/C++ using plain JavaScript (ES6).
 The focus of the rewrite, so far, has been the rendering pipeline for ImageData and PolyData, the pipeline infrastructure, and frequently used readers (obj, stl, vtp, vti). Some filters are also provided as demonstrations. We are not aiming for vtk.js to provide the same set of filters that is available in VTK/C++, but vtk.js does provide the infrastructure needed to define pipelines and filters.
@@ -43,26 +41,8 @@ In general if you want to stay in the pure JavaScript land, then vtk.js is perha
 
 On top of the rendering capabilities of vtk.js, the library provides helper classes to connect to a remote VTK/ParaView server to enable remote-rendering and/or synchronized C++/RenderWindow content with a local vtk.js RenderWindow by pushing the geometry from the server to the client and only involve rendering on the client side.
 
-Reporting Bugs
-==============
-
-If you have found a bug:
-
-1. If you have a patch, please read the [CONTRIBUTING.md][] document.
-
-2. Otherwise, please join the one of the [VTK Mailing Lists][] and ask
-   about the expected and observed behaviors to determine if it is
-   really a bug.
-
-3. Finally, if the issue is not resolved by the above steps, open
-   an entry in the [VTK Issue Tracker][].
-
-[CONTRIBUTING.md]: CONTRIBUTING.md
-[VTK Mailing Lists]: https://www.vtk.org/mailing-lists/
-[VTK Issue Tracker]: https://github.com/Kitware/vtk-js/issues
-
-Requirements
-============
+## Using vtk.js
+### Requirements
 
 In general VTK tries to be as portable as possible; the specific configurations below are known to work and tested.
 
@@ -74,21 +54,28 @@ vtk.js supports the following development environments:
 and we use [@babel/preset-env](https://www.npmjs.com/package/@babel/preset-env) with the [defaults](https://github.com/Kitware/vtk-js/blob/master/.browserslistrc) set of [browsers target](https://browserl.ist/?q=defaults).
 But when built from source this could be adjusted to support any browser as long they provide WebGL.
 
-Documentation
-=============
+### Documentation
 
-See the [documentation](https://kitware.github.io/vtk-js) for a
-getting started guide, advanced documentation, and API descriptions.
+- [High-level documentation](https://kitware.github.io/vtk-js/docs/)
+- [API descriptions](https://kitware.github.io/vtk-js/api/)
+- [Examples](https://kitware.github.io/vtk-js/examples/)
 
-Contributing
-============
+### Feature requests and Bug reports
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for instructions to contribute.
+Submit an issue to report bugs or missing features in vtk.js.
+### Help and Support
 
-License
-=======
+* [VTK/Web discourse forum](https://discourse.vtk.org/c/web/9) is here to help you find existing questions or ask your own.
+* [Kitware](https://www.kitware.com/) offers advanced software R&D solutions and services. Find out how we can help with your next project.
+
+### License
 
 VTK is distributed under the OSI-approved BSD 3-clause License.
 See [Copyright.txt][] for details.
 
 [Copyright.txt]: Copyright.txt
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for instructions on how to contribute.
+

@@ -1,26 +1,24 @@
 ---
-name: Feature request
+name: 💡 Feature request
 about: Suggest an idea for the project.
 title: ''
-labels: ''
+labels: 'type: feature request 💡'
 assignees: ''
 
 ---
+<!--
+👋 Hello, and thank you for starting this contribution!
+❓ If you are trying to submit a question for general support, please reach out on our discourse forum instead: https://discourse.vtk.org/c/web/9
+💡 If you do want to suggest a change or request a feature, please follow the template below to increase the chances of your report being looked at.
+🧱 If adequate, assign one of the `Module: XXX` labels to your issue when creating it.
+-->
 
-<!-- Ignoring this template may result in your feature request getting deleted -->
+### Need
+<!-- A clear and concise description of what need or problem you're trying to address. -->
 
-**Is your feature request related to a problem? Please describe.**
-
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
-
-**Describe the solution you'd like**
-
-A clear and concise description of what you want to happen.
-
-**Describe alternatives you've considered**
-
-A clear and concise description of any alternative solutions or features you've considered.
-
-**Additional context**
-
-Add any other context or screenshots about the feature request here.
+### Feature
+<!--
+A clear and concise description of a feature/enhancement you'd like to see being added. If applicable, use:
+  * potential alternatives
+  * screenshots
+-->
