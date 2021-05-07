@@ -1,7 +1,7 @@
 import { mat4 } from 'gl-matrix';
 import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 
 import vtkBufferObject from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -11,6 +11,8 @@ import vtkOpenGLPolyDataMapper from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMap
 
 import vtkSphereMapperVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkSphereMapperVS.glsl';
 import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
+
+import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
 const { vtkErrorMacro } = macro;
 
@@ -342,3 +344,6 @@ export const newInstance = macro.newInstance(extend, 'vtkOpenGLSphereMapper');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to OpenGL backend if imported
+registerOverride('vtkSphereMapper', newInstance);

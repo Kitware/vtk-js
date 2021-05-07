@@ -1,6 +1,8 @@
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+
+import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
 const { vtkDebugMacro } = macro;
 
@@ -225,3 +227,6 @@ export const newInstance = macro.newInstance(extend, 'vtkOpenGLRenderer');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to OpenGL backend if imported
+registerOverride('vtkRenderer', newInstance);

@@ -1,5 +1,8 @@
 import 'vtk.js/Sources/favicon';
 
+// Load the rendering pieces we want to use (for both WebGL and WebGPU)
+import 'vtk.js/Sources/Rendering/Profiles/All';
+
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkResliceCursor from 'vtk.js/Sources/Interaction/Widgets/ResliceCursor/ResliceCursor';

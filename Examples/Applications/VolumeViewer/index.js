@@ -3,6 +3,9 @@
 
 import 'vtk.js/Sources/favicon';
 
+// Load the rendering pieces we want to use (for both WebGL and WebGPU)
+import 'vtk.js/Sources/Rendering/Profiles/Volume';
+
 import macro from 'vtk.js/Sources/macro';
 import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';

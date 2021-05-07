@@ -1,6 +1,9 @@
 import 'vtk.js/Sources/favicon';
 
-import macro from 'vtk.js/Sources/macro';
+// Load the rendering pieces we want to use (for both WebGL and WebGPU)
+import 'vtk.js/Sources/Rendering/Profiles/All';
+
+import * as macro from 'vtk.js/Sources/macro';
 import vtk from 'vtk.js/Sources/vtk';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';

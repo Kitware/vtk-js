@@ -5,6 +5,8 @@ import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQuad';
 
+import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+
 const { vtkDebugMacro } = macro;
 
 const clearFragTemplate = `
@@ -474,3 +476,6 @@ export const newInstance = macro.newInstance(extend, 'vtkWebGPURenderer');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to WebGPU backend if imported
+registerOverride('vtkRenderer', newInstance);

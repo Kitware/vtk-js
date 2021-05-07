@@ -1,6 +1,6 @@
 import { mat4 } from 'gl-matrix';
 import Constants from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
@@ -18,6 +18,8 @@ import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/ImageProperty/C
 import vtkPolyDataVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/ReplacementShaderMapper';
+
+import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
 const { vtkErrorMacro } = macro;
 
@@ -1005,3 +1007,6 @@ export const newInstance = macro.newInstance(extend, 'vtkOpenGLImageMapper');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to OpenGL backend if imported
+registerOverride('vtkImageMapper', newInstance);

@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 import { vec3, mat3, mat4 } from 'gl-matrix';
 // import vtkBoundingBox       from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
@@ -23,6 +23,8 @@ import { BlendMode } from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants'
 
 import vtkVolumeVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeVS.glsl';
 import vtkVolumeFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeFS.glsl';
+
+import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
 const { vtkWarningMacro, vtkErrorMacro } = macro;
 
@@ -1515,3 +1517,6 @@ export const newInstance = macro.newInstance(extend, 'vtkOpenGLVolumeMapper');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to OpenGL backend if imported
+registerOverride('vtkVolumeMapper', newInstance);
