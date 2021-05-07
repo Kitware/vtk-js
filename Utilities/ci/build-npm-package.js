@@ -59,6 +59,8 @@ function prepareUMD() {
     ...glob.sync('*.md'),
     'LICENSE',
     'package.json',
+    '.babelrc',
+    '.browserslistrc',
     '.npmignore',
   ]) {
     fs.copyFileSync(entry, path.join(pkgdir, entry));
