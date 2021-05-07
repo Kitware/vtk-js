@@ -9,6 +9,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import eslint from '@rollup/plugin-eslint';
 import ignore from 'rollup-plugin-ignore';
 import json from '@rollup/plugin-json';
+import nodePolyfills from 'rollup-plugin-polyfill-node';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import postcss from 'rollup-plugin-postcss';
 import replace from 'rollup-plugin-re';
@@ -125,7 +126,6 @@ export default {
     alias({
       entries: [
         { find: 'vtk.js', replacement: path.resolve(__dirname) },
-        { find: 'stream', replacement: require.resolve('stream-browserify') },
       ],
     }),
     // ignore crypto module
@@ -151,17 +151,12 @@ export default {
       }),
     // commonjs should be before babel
     commonjs({
-      dynamicRequireTargets: [
-        // handle a dynamic require circular dependencies
-        'node_modules/readable-stream/lib/_stream_duplex.js',
-        // Do not handle these circular dependencies, as downstream will get
-        // runtime errors related to commonjs require.
-        // 'node_modules/jszip/lib/base64.js',
-      ],
       // dynamicRequireTargets implies transformMixedEsModules because
       // dynamicRequireTargets generates mixed modules
       transformMixedEsModules: true,
     }),
+    // should be after commonjs
+    nodePolyfills(),
     babel({
       include: 'Sources/**',
       exclude: 'node_modules/**',

@@ -100,6 +100,7 @@
     "resemblejs": "3.2.5",
     "rollup": "2.45.0",
     "rollup-plugin-ignore": "1.0.9",
+    "rollup-plugin-polyfill-node": "^0.6.2",
     "rollup-plugin-postcss": "4.0.0",
     "rollup-plugin-re": "1.0.7",
     "rollup-plugin-string": "3.0.0",
