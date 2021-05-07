@@ -2,6 +2,7 @@ import 'vtk.js/Sources/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import 'vtk.js/Sources/Rendering/Profiles/Glyph';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
