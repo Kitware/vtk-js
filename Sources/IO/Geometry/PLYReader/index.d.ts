@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 interface IPLYReaderOptions {
 	binary?: boolean;
@@ -11,7 +11,7 @@ interface IPLYReaderOptions {
  */
 interface IPLYReaderInitialValues {}
 
-type vtkPLYReaderBase = VtkObject & Omit<VtkAlgorithm,
+type vtkPLYReaderBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
 	| 'setInputData'
 	| 'setInputConnection'

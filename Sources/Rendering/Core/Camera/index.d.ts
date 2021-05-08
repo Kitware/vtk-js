@@ -1,7 +1,7 @@
 /// <reference path='../../../types.ts' />
 
 import { mat4 } from 'gl-matrix';
-import { VtkObject } from 'vtk.js/Sources/macro';
+import { vtkObject } from "vtk.js/Sources/interfaces" ;
 
 /**
  * 
@@ -29,7 +29,7 @@ interface ICameraInitialValues {
 	physicalViewNorth?: number[];
 }
 
-export interface vtkCamera extends VtkObject {
+export interface vtkCamera extends vtkObject {
 
 	/**
 	 * Apply a transform to the camera.

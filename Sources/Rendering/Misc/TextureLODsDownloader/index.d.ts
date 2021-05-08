@@ -1,4 +1,4 @@
-import { VtkObject } from "vtk.js/Sources/macro";
+import { vtkObject } from "vtk.js/Sources/interfaces";
 import vtkTexture from "vtk.js/Sources/Rendering/Core/Texture";
 
 declare type CrossOrigin = '' | 'anonymous' | 'use-credentials';
@@ -8,7 +8,7 @@ declare type CrossOrigin = '' | 'anonymous' | 'use-credentials';
  */
 interface ITextureLODsDownloaderInitialValues {
 	baseUrl?: string;
-	crossOrigin?: CrossOrigin | null;
+	crossOrigin?: CrossOrigin;
 	files?: string[];
 	maxTextureLODSize?: number;
 	texture?: vtkTexture;
@@ -18,7 +18,7 @@ interface ITextureLODsDownloaderInitialValues {
 }
 
 
-export interface vtkTextureLODsDownloader extends VtkObject {
+export interface vtkTextureLODsDownloader extends vtkObject {
 
 	/**
 	 * Get the base of the url

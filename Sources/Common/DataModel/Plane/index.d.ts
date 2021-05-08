@@ -1,4 +1,4 @@
-import { VtkObject } from 'vtk.js/Sources/macro';
+import { vtkObject } from "vtk.js/Sources/interfaces" ;
 
 /**
  *
@@ -16,7 +16,7 @@ interface IIntersectWithLine {
 }
 
 
-export interface vtkPlane extends VtkObject {
+export interface vtkPlane extends vtkObject {
 
 	/**
 	 * Return the distance of a point x to a plane defined by n (x-p0) = 0.

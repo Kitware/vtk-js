@@ -1,4 +1,4 @@
-import { VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 interface ILightInitialValues {
     switch?: boolean;
@@ -16,7 +16,7 @@ interface ILightInitialValues {
     directionMTime?: number;
 }
 
-export interface vtkLight extends VtkObject {
+export interface vtkLight extends vtkObject {
 
     /**
      * 

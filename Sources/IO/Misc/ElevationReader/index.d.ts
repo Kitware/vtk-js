@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject, VtkSubscription } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject, vtkSubscription } from "vtk.js/Sources/interfaces";
 
 
 interface IElevationReaderOptions {
@@ -20,7 +20,7 @@ interface IElevationReaderInitialValues {
 	requestCount?: number;
 }
 
-type vtkElevationReaderBase = VtkObject & Omit<VtkAlgorithm,
+type vtkElevationReaderBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
 	| 'setInputData'
 	| 'setInputConnection'
@@ -86,7 +86,7 @@ export interface vtkElevationReader extends vtkElevationReaderBase {
 	 * 
 	 * @param busy 
 	 */
-	onBusy(busy: boolean): VtkSubscription;
+	onBusy(busy: boolean): vtkSubscription;
 
 	/**
 	 * Parse data as text.

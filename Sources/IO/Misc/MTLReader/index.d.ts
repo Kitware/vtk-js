@@ -1,4 +1,4 @@
-import { VtkObject, VtkSubscription } from "vtk.js/Sources/macro";
+import { vtkObject, vtkSubscription } from "vtk.js/Sources/interfaces";
 import vtkActor from "vtk.js/Sources/Rendering/Core/Actor";
 
 
@@ -18,7 +18,7 @@ interface IMTLReaderInitialValues {
 	interpolateTextures?: boolean;
 }
 
-export interface vtkMTLReader extends VtkObject {
+export interface vtkMTLReader extends vtkObject {
 
 	applyMaterialToActor(name: string, actor: vtkActor): void;
 	/**
@@ -82,7 +82,7 @@ export interface vtkMTLReader extends VtkObject {
 	 * 
 	 * @param busy 
 	 */
-	onBusy(busy: boolean): VtkSubscription;
+	onBusy(busy: boolean): vtkSubscription;
 
 	/**
 	 * Parse data as text.

@@ -1,5 +1,5 @@
 
-import { VtkObject } from 'vtk.js/Sources/macro';
+import { vtkObject } from "vtk.js/Sources/interfaces" ;
 import vtkActor2D from 'vtk.js/Sources/Rendering/Core/Actor2D';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 
@@ -14,7 +14,7 @@ interface IViewportInitialValues {
     actors2D?: vtkActor2D[];
 }
 
-export interface vtkViewport extends VtkObject {
+export interface vtkViewport extends vtkObject {
 
 
     /**

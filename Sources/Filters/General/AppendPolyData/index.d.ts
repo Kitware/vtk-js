@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 export enum DesiredOutputPrecision {
 	/**
@@ -24,7 +24,7 @@ interface IAppendPolyDataInitialValues {
 	outputPointsPrecision?: DesiredOutputPrecision;
 }
 
-type vtkAppendPolyDataBase = VtkObject & VtkAlgorithm;
+type vtkAppendPolyDataBase = vtkObject & vtkAlgorithm;
 
 export interface vtkAppendPolyData extends vtkAppendPolyDataBase {
 

@@ -1,4 +1,4 @@
-import { VtkObject } from 'vtk.js/Sources/macro';
+import { vtkObject } from "vtk.js/Sources/interfaces" ;
 
 
 interface ISphereInitialValues {
@@ -6,7 +6,7 @@ interface ISphereInitialValues {
 	center?: number[];
 }
 
-export interface vtkSphere extends VtkObject {
+export interface vtkSphere extends vtkObject {
 
 	/**
 	 * Given the point xyz (three floating value) evaluate the sphere

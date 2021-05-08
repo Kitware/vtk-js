@@ -1,4 +1,4 @@
-import { VtkObject, VtkSubscription } from "vtk.js/Sources/macro";
+import { vtkObject, vtkSubscription } from "vtk.js/Sources/interfaces";
 import vtkRenderer from "vtk.js/Sources/Rendering/Core/Renderer";
 import vtkRenderWindow from "vtk.js/Sources/Rendering/Core/RenderWindow";
 import vtkRenderWindowInteractor from "vtk.js/Sources/Rendering/Core/RenderWindowInteractor";
@@ -15,7 +15,7 @@ interface IGenericRenderWindowInitialValues {
 	container?: HTMLElement,
 }
 
-export interface vtkGenericRenderWindow extends VtkObject {
+export interface vtkGenericRenderWindow extends vtkObject {
 
 	/**
 	 * Release GL context
@@ -53,7 +53,7 @@ export interface vtkGenericRenderWindow extends VtkObject {
 	 * @param callback function
 	 * @returns subscription object so you can easily unsubscribe later on
 	 */
-	onResize(callback: (instance: VtkObject) => any): VtkSubscription;
+	onResize(callback: (instance: vtkObject) => any): vtkSubscription;
 
 	/**
 	 * Handle window resize

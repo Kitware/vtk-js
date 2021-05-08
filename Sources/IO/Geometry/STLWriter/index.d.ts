@@ -1,6 +1,6 @@
 import { mat4 } from "gl-matrix";
 import vtkPolyData from "vtk.js/Sources/Common/DataModel/PolyData";
-import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 export enum FormatTypes {
 	ASCII,

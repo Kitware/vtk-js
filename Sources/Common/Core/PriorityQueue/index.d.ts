@@ -1,4 +1,4 @@
-import { VtkObject } from "vtk.js/Sources/macro";
+import { vtkObject } from "vtk.js/Sources/interfaces";
 
 /**
  *
@@ -7,7 +7,7 @@ interface IPriorityQueueInitialValues {
 	elements?: Array<any>;
 }
 
-export interface vtkPriorityQueue extends VtkObject {
+export interface vtkPriorityQueue extends vtkObject {
 
 	/**
 	 * Push an element to the queue while defining a priority.

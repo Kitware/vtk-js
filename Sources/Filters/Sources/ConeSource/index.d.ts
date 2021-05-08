@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 /**
  *
@@ -13,7 +13,7 @@ interface IConeSourceInitialValues {
 	pointType?: string;
 }
 
-type vtkConeSourceBase = VtkObject & Omit<VtkAlgorithm,
+type vtkConeSourceBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
 	| 'setInputData'
 	| 'setInputConnection'

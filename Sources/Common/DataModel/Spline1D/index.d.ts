@@ -1,9 +1,9 @@
-import { VtkObject } from 'vtk.js/Sources/macro';
+import { vtkObject } from "vtk.js/Sources/interfaces" ;
 
 
 interface ISpline1DInitialValues {}
 
-export interface vtkSpline1D extends VtkObject {
+export interface vtkSpline1D extends vtkObject {
 
 	/**
 	 * 

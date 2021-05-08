@@ -1,11 +1,11 @@
-import { VtkObject } from 'vtk.js/Sources/macro';
+import { vtkObject } from "vtk.js/Sources/interfaces" ;
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer'
 
 /**
  * 
  */
-export interface vtkAbstractPicker extends VtkObject {
+export interface vtkAbstractPicker extends vtkObject {
 
 	/**
 	 * 

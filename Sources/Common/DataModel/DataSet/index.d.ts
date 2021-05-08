@@ -1,4 +1,4 @@
-import { VtkObject } from 'vtk.js/Sources/macro';
+import { vtkObject } from "vtk.js/Sources/interfaces" ;
 import vtkDataSetAttributes from 'vtk.js/Sources/Common/DataModel/DataSetAttributes';
 
 export enum FieldDataTypes {
@@ -34,7 +34,7 @@ export enum FieldAssociations {
  */
 interface IDataSetInitialValues {}
 
-export interface vtkDataSet extends VtkObject {
+export interface vtkDataSet extends vtkObject {
 
 	/**
 	 * Get dataset's cell data

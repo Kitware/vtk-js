@@ -1,6 +1,5 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 import { DesiredOutputPrecision } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
-import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 export enum VaryRadius {
 	VARY_RADIUS_OFF,
@@ -20,86 +19,22 @@ export enum GenerateTCoords {
  *
  */
 interface ITubeFilterInitialValues {
-	/**
-	 *
-	 * @default DesiredOutputPrecision.DEFAULT
-	 */
 	outputPointsPrecision?: DesiredOutputPrecision,
-
-	/**
-	 *
-	 * @default 0.5
-	 */
 	radius?: number;
-
-	/**
-	 *
-	 * @default VaryRadius.VARY_RADIUS_OFF
-	 */
 	varyRadius?: VaryRadius,
-
-	/**
-	 *
-	 * @default 3
-	 */
 	numberOfSides?: number;
-
-	/**
-	 *
-	 * @default 10
-	 */
 	radiusFactor?: number;
-
-	/**
-	 *
-	 * @default [0, 0, 1]
-	 */
 	defaultNormal?: number[];
-
-	/**
-	 *
-	 * @default false
-	 */
 	useDefaultNormal?: boolean;
-
-	/**
-	 *
-	 * @default true
-	 */
 	sidesShareVertices?: boolean;
-
-	/**
-	 *
-	 * @default false
-	 */
 	capping?: boolean;
-
-	/**
-	 *
-	 * @default 1
-	 */
 	onRatio?: number;
-
-	/**
-	 *
-	 * @default 0
-	 */
 	offset?: number;
-
-	/**
-	 *
-	 * @default GenerateTCoords.TCOORDS_OFF
-	 */
 	generateTCoords?: GenerateTCoords,
-
-	/**
-	 *
-	 * @default 1.0
-	 */
 	textureLength?: number;
 }
 
-type vtkTubeFilterBase = VtkObject & VtkAlgorithm;
+type vtkTubeFilterBase = vtkObject & vtkAlgorithm;
 
 export interface vtkTubeFilter extends vtkTubeFilterBase {
 

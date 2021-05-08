@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 export const BOUNDS_MAP: number[];
 
@@ -10,7 +10,7 @@ export const LINE_ARRAY: number[];
 interface IOutlineFilterInitialValues {
 }
 
-type vtkOutlineFilterBase = VtkObject & VtkAlgorithm;
+type vtkOutlineFilterBase = vtkObject & vtkAlgorithm;
 
 export interface vtkOutlineFilter extends vtkOutlineFilterBase {
 

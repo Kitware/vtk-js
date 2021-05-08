@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
@@ -18,7 +18,7 @@ interface ICursor3DInitialValues {
 	translationMode?: boolean;
 }
 
-type vtkCursor3DBase = VtkObject & Omit<VtkAlgorithm,
+type vtkCursor3DBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
 	| 'setInputData'
 	| 'setInputConnection'

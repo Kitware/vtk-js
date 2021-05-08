@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 /**
  *
@@ -7,7 +7,7 @@ interface ITriangleFilterInitialValues {
 	errorCount?: number;
 }
 
-type vtkTriangleFilterBase = VtkObject & VtkAlgorithm;
+type vtkTriangleFilterBase = vtkObject & vtkAlgorithm;
 
 export interface vtkTriangleFilter extends vtkTriangleFilterBase {
 

@@ -1,25 +1,13 @@
-import { VtkAlgorithm } from "vtk.js/Sources/macro";
+import { vtkAlgorithm } from "vtk.js/Sources/interfaces";
 
 interface ITextureInitialValues {
-	/**
-	 * 
-	 */
-	repeat: boolean;
-	/**
-	 * 
-	 */
-	interpolate: boolean;
-	/**
-	 * 
-	 */
-	edgeClamp: boolean;
-	/**
-	 * 
-	 */
-	imageLoaded: boolean;
+	repeat?: boolean;
+	interpolate?: boolean;
+	edgeClamp?: boolean;
+	imageLoaded?: boolean;
 }
 
-export interface vtkTexture extends VtkAlgorithm {
+export interface vtkTexture extends vtkAlgorithm {
 
 	/**
 	 * 

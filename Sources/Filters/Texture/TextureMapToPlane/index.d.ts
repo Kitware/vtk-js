@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 /**
  *
@@ -13,7 +13,7 @@ interface ITextureMapToPlane {
 	automaticPlaneGeneration?: number;
 }
 
-type vtkTextureMapToPlaneBase = VtkObject & VtkAlgorithm;
+type vtkTextureMapToPlaneBase = vtkObject & vtkAlgorithm;
 
 export interface vtkTextureMapToPlane extends vtkTextureMapToPlaneBase {
 

@@ -21,3 +21,5 @@ declare type HSVColor = [number, number, number];
 declare type RGBColor = [number, number, number];
 declare type RGBAColor = [number, number, number, number];
 declare type Color = HSLColor | HSVColor | RGBColor | RGBAColor;
+
+declare type vtkPipelineConnection = () => any | vtkOutputPort;

@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 /*
  * 
@@ -8,7 +8,7 @@ interface IImageSliceFilterInitialValues {
     sliceIndex?: number
 }
 
-type vtkImageSliceFilterBase = VtkObject & VtkAlgorithm;
+type vtkImageSliceFilterBase = vtkObject & vtkAlgorithm;
 
 export interface vtkImageSliceFilter extends vtkImageSliceFilterBase {
 

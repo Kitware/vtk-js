@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 
 interface ISTLReaderOptions {
@@ -12,7 +12,7 @@ interface ISTLReaderOptions {
  */
 interface ISTLReaderInitialValues {}
 
-type vtkSTLReaderBase = VtkObject & Omit<VtkAlgorithm,
+type vtkSTLReaderBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
 	| 'setInputData'
 	| 'setInputConnection'

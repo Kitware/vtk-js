@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 
 interface IDracoReaderOptions {
@@ -12,7 +12,7 @@ interface IDracoReaderOptions {
  */
 interface IDracoReaderInitialValues { }
 
-type vtkDracoReaderBase = VtkObject & Omit<VtkAlgorithm,
+type vtkDracoReaderBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
 	| 'setInputData'
 	| 'setInputConnection'
