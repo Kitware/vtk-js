@@ -151,8 +151,6 @@ export default {
       }),
     // commonjs should be before babel
     commonjs({
-      // dynamicRequireTargets implies transformMixedEsModules because
-      // dynamicRequireTargets generates mixed modules
       transformMixedEsModules: true,
     }),
     // should be after commonjs
