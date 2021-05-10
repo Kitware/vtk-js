@@ -1,11 +1,11 @@
-import { VtkObject } from 'vtk.js/Sources/macro';
+import { vtkObject } from "vtk.js/Sources/interfaces" ;
 
 
 interface IConeInitialValues {
 	angle?: number;
 }
 
-export interface vtkCone extends VtkObject {
+export interface vtkCone extends vtkObject {
 
 	/**
 	 * Given the point x evaluate the cone equation.

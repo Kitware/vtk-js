@@ -1,4 +1,4 @@
-import { VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 interface IProperty2DInitialValues{
 	color?: number[];
@@ -8,7 +8,7 @@ interface IProperty2DInitialValues{
 	displayLocation?: string;
 }
 
-export interface vtkProperty2D extends VtkObject {
+export interface vtkProperty2D extends vtkObject {
 
 	/**
      * Get the color of the object.

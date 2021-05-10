@@ -1,4 +1,4 @@
-import { VtkObject } from 'vtk.js/Sources/macro';
+import { vtkObject } from "vtk.js/Sources/interfaces" ;
 
 
 /**
@@ -19,7 +19,7 @@ interface IArrayWithIndex {
 	index: number;
 }
 
-export interface vtkFieldData extends VtkObject {
+export interface vtkFieldData extends vtkObject {
 
 	/**
 	 * 

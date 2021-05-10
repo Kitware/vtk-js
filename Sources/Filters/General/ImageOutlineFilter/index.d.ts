@@ -1,22 +1,14 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
-/*
+/**
  * 
  */
 interface IImageOutlineFilterInitialValues {
-    
-    /**
-     * 
-     */
     slicingMode?: number;
-
-    /**
-     * 
-     */
     background?: number;
 }
 
-type vtkImageOutlineFilterBase = VtkObject & VtkAlgorithm;
+type vtkImageOutlineFilterBase = vtkObject & vtkAlgorithm;
 
 export interface vtkImageOutlineFilter extends vtkImageOutlineFilterBase {
 

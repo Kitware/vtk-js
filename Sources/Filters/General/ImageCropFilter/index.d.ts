@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 /**
  *
@@ -7,7 +7,7 @@ interface IImageCropFilterInitialValues {
 	croppingPlanes?: any;
 }
 
-type vtkImageCropFilterBase = VtkObject & VtkAlgorithm;
+type vtkImageCropFilterBase = vtkObject & vtkAlgorithm;
 
 export interface vtkImageCropFilter extends vtkImageCropFilterBase {
 

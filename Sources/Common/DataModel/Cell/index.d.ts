@@ -1,4 +1,4 @@
-import { VtkObject } from 'vtk.js/Sources/macro';
+import { vtkObject } from "vtk.js/Sources/interfaces" ;
 import vtkPoints from 'vtk.js/Sources/Core/Points';
 
 interface ICellInitialValues {
@@ -6,7 +6,7 @@ interface ICellInitialValues {
 	pointsIds?: number[];
 }
 
-export interface vtkCell extends VtkObject {
+export interface vtkCell extends vtkObject {
 
 	/**
 	 * Copy this cell by completely copying internal data structures.

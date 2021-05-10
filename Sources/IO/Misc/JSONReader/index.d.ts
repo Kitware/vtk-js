@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject, VtkSubscription } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject, vtkSubscription } from "vtk.js/Sources/interfaces";
 
 
 interface IJSONReaderOptions {
@@ -12,7 +12,7 @@ interface IJSONReaderOptions {
  */
 interface IJSONReaderInitialValues { }
 
-type vtkJSONReaderBase = VtkObject & Omit<VtkAlgorithm,
+type vtkJSONReaderBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
 	| 'setInputData'
 	| 'setInputConnection'
@@ -53,7 +53,7 @@ export interface vtkJSONReader extends vtkJSONReaderBase {
 	 * 
 	 * @param busy 
 	 */
-	onBusy(busy: boolean): VtkSubscription;
+	onBusy(busy: boolean): vtkSubscription;
 
 	/**
 	 * Parse data as text.

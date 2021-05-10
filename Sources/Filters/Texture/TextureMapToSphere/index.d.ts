@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 /**
  *
@@ -9,7 +9,7 @@ interface ITextureMapToSphere {
 	preventSeam?: number;
 }
 
-type vtkTextureMapToSphereBase = VtkObject & VtkAlgorithm;
+type vtkTextureMapToSphereBase = vtkObject & vtkAlgorithm;
 
 export interface vtkTextureMapToSphere extends vtkTextureMapToSphereBase {
 

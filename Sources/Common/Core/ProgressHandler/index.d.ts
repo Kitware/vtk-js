@@ -1,4 +1,4 @@
-import { VtkObject } from "vtk.js/Sources/macro";
+import { vtkObject } from "vtk.js/Sources/interfaces";
 
 
 /**
@@ -8,7 +8,7 @@ interface IProgressHandlerInitialValues {
 	workCount?: number;
 }
 
-export interface vtkProgressHandler extends VtkObject {
+export interface vtkProgressHandler extends vtkObject {
 	
 	/**
 	 * 

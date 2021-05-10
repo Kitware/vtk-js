@@ -1,4 +1,4 @@
-import { VtkObject } from 'vtk.js/Sources/macro';
+import { vtkObject } from "vtk.js/Sources/interfaces" ;
 import {
 	vtkFieldData
 } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/FieldData';

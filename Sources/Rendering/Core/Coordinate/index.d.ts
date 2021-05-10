@@ -1,4 +1,6 @@
-import { VtkObject, VtkProperty } from "vtk.js/Sources/macro";
+import { VtkProperty } from "vtk.js/Sources/macro";
+import { vtkObject } from "vtk.js/Sources/interfaces";
+
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 
 export enum Coordinate {
@@ -24,7 +26,7 @@ interface ICoordinateInitialValues {
 	computedDoubleDisplayValue?: number[],
 }
 
-export interface vtkCoordinate extends VtkObject {
+export interface vtkCoordinate extends vtkObject {
 
 
 	/**

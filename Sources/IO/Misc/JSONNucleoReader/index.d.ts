@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 interface IJSONNucleoReaderOptions {
 	binary?: boolean;
@@ -11,7 +11,7 @@ interface IJSONNucleoReaderOptions {
  */
 interface IJSONNucleoReaderInitialValues {}
 
-type vtkJSONNucleoReaderBase = VtkObject & Omit<VtkAlgorithm,
+type vtkJSONNucleoReaderBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
 	| 'setInputData'
 	| 'setInputConnection'

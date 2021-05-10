@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 /**
  *
@@ -6,7 +6,7 @@ import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
 interface ILineFilterInitialValues {
 }
 
-type vtkLineFilterBase = VtkObject & VtkAlgorithm;
+type vtkLineFilterBase = vtkObject & vtkAlgorithm;
 
 export interface vtkLineFilter extends vtkLineFilterBase {
 

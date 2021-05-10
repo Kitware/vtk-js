@@ -1,5 +1,5 @@
 import { vec3 } from 'gl-matrix';
-import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 /**
  * 
@@ -13,7 +13,7 @@ interface IPlaneSourceInitialValues {
 	pointType?: string;
 }
 
-type vtkPlaneSourceBase = VtkObject & Omit<VtkAlgorithm,
+type vtkPlaneSourceBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
 	| 'setInputData'
 	| 'setInputConnection'

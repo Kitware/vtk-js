@@ -1,4 +1,4 @@
-import { VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 export enum InterpolationType {
 	NEAREST,
@@ -21,7 +21,7 @@ interface IImageMapperInitialValues {
 	componentData: IComponentData[];
 }
 
-export interface vtkImageProperty extends VtkObject {
+export interface vtkImageProperty extends vtkObject {
 
 	/**
 	 * 
