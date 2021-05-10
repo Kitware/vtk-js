@@ -1,4 +1,4 @@
-import { VtkObject, VtkSubscription } from "vtk.js/Sources/macro";
+import { vtkObject, vtkSubscription } from "vtk.js/Sources/interfaces";
 import vtkRenderer from "vtk.js/Sources/Rendering/Core/Renderer";
 import vtkRenderWindowInteractor from "vtk.js/Sources/Rendering/Core/RenderWindowInteractor";
 // import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
@@ -34,7 +34,7 @@ export const enum DEFAULT_VIEW_API {
 	'WebGPU'
 }
 
-export interface vtkRenderWindow extends VtkObject {
+export interface vtkRenderWindow extends vtkObject {
 
 	/**
 	 * Add renderer
@@ -115,7 +115,7 @@ export interface vtkRenderWindow extends VtkObject {
 	 * 
 	 * @param callback 
 	 */
-	onCompletion(callback: (instance: VtkObject) => any): VtkSubscription;
+	onCompletion(callback: (instance: vtkObject) => any): vtkSubscription;
 
 	/**
 	 * 

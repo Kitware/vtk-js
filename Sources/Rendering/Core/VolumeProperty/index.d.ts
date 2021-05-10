@@ -1,4 +1,4 @@
-import { VtkObject } from "vtk.js/Sources/macro";
+import { vtkObject } from "vtk.js/Sources/interfaces";
 
 export enum InterpolationType {
 	NEAREST,
@@ -22,7 +22,7 @@ interface IVolumePropertyInitialValues  {
 	labelOutlineThickness?: number;
 }
 
-export interface vtkVolumeProperty extends VtkObject {
+export interface vtkVolumeProperty extends vtkObject {
 
 	/**
 	 * Get the ambient lighting coefficient.

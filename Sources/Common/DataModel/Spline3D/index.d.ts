@@ -1,4 +1,4 @@
-import { VtkObject } from 'vtk.js/Sources/macro';
+import { vtkObject } from "vtk.js/Sources/interfaces" ;
 
 export enum splineKind {
 	CARDINAL_SPLINE,
@@ -15,7 +15,7 @@ interface ISpline3DInitialValues {
 	bias?: number;
 }
 
-export interface vtkSpline3D extends VtkObject {
+export interface vtkSpline3D extends vtkObject {
 	/**
 	 * 
 	 * @param points 

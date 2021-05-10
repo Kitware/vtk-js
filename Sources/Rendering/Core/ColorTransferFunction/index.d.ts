@@ -1,4 +1,4 @@
-import { VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 export enum ColorSpace {
 	RGB,
@@ -13,7 +13,7 @@ export enum Scale {
 }
 
 /* TODO: use VtkScalarsToColors instead of VtkObject */
-export interface vtkColorTransferFunction extends VtkObject {
+export interface vtkColorTransferFunction extends vtkObject {
 
 	/**
 	 * Add a point defined in RGB

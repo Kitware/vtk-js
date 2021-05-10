@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 /**
  * 
@@ -8,7 +8,7 @@ interface IITKImageReaderInitialValues {
 	arrayName?: string;
 }
 
-type vtkITKImageReaderBase = VtkObject & Omit<VtkAlgorithm,
+type vtkITKImageReaderBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
 	| 'setInputData'
 	| 'setInputConnection'

@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 /**
  * 
@@ -8,7 +8,7 @@ interface IITKPolyDataReaderInitialValues {
 	arrayName?: string;
 }
 
-type vtkITKPolyDataReaderBase = VtkObject & Omit<VtkAlgorithm,
+type vtkITKPolyDataReaderBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
 	| 'setInputData'
 	| 'setInputConnection'

@@ -1,6 +1,6 @@
 /// <reference path='../../../types.ts' />
 
-import { VtkObject, vtkRange } from "vtk.js/Sources/macro";
+import { vtkObject, vtkRange } from "vtk.js/Sources/interfaces";
 
 /**
  * Output of the rangeHelper instance
@@ -22,7 +22,7 @@ interface vtkRangeHelper {
 	getRange(): vtkRange;
 }
 
-export interface vtkDataArray extends VtkObject {
+export interface vtkDataArray extends vtkObject {
 
 	/**
 	 * Get the size, in bytes, of the lowest-level element of an array.

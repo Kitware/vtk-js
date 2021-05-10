@@ -1,4 +1,4 @@
-import { VtkObject } from "vtk.js/Sources/macro";
+import { vtkObject } from "vtk.js/Sources/interfaces";
 import vtkRenderer from "vtk.js/Sources/Rendering/Core/Renderer";
 
 export enum Device {
@@ -40,7 +40,7 @@ interface IPosition {
     type: string;
 }
 
-export interface vtkRenderWindowInteractor extends VtkObject {
+export interface vtkRenderWindowInteractor extends vtkObject {
 
     /**
      * 

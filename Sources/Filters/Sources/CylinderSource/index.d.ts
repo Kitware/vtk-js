@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 /**
  *
@@ -13,7 +13,7 @@ interface ICylinderSourceInitialValues {
 	pointType?: string;
 }
 
-type vtkCylinderSourceBase = VtkObject & Omit<VtkAlgorithm,
+type vtkCylinderSourceBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
 	| 'setInputData'
 	| 'setInputConnection'

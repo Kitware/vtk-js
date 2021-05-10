@@ -1,4 +1,4 @@
-import { VtkObject } from 'vtk.js/Sources/macro';
+import { vtkObject } from "vtk.js/Sources/interfaces" ;
 
 
 interface ICylinderInitialValues {
@@ -7,7 +7,7 @@ interface ICylinderInitialValues {
 	axis?: number[];
 }
 
-export interface vtkCylinder extends VtkObject {
+export interface vtkCylinder extends vtkObject {
 
 	/**
 	 * Given the point xyz (three floating value) evaluate the cylinder

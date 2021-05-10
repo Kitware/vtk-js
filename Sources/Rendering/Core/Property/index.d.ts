@@ -1,4 +1,4 @@
-import { VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 export enum Shading {
     FLAT,
@@ -38,7 +38,7 @@ interface IPropertyValues {
     shading?: boolean;
 }
 
-export interface vtkProperty extends VtkObject {
+export interface vtkProperty extends vtkObject {
 
 
     /**

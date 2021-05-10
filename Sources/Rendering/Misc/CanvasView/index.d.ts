@@ -1,6 +1,6 @@
 ///<reference path='../../../types.ts' />
 
-import { VtkObject } from "vtk.js/Sources/macro";
+import { vtkObject } from "vtk.js/Sources/interfaces";
 
 
 /**
@@ -16,7 +16,7 @@ interface ICanvasViewInitialValues {
 }
 
 
-export interface vtkCanvasView extends VtkObject {
+export interface vtkCanvasView extends vtkObject {
 
 	/**
 	 * Get the canvas element

@@ -1,4 +1,4 @@
-import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 
 export enum ShapeType {
 	TRIANGLE,
@@ -21,7 +21,7 @@ interface IArrow2DSourceInitialValues {
 	direction?: number[];
 }
 
-type vtkArrow2DSourceBase = VtkObject & Omit<VtkAlgorithm,
+type vtkArrow2DSourceBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
 	| 'setInputData'
 	| 'setInputConnection'

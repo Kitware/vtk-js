@@ -1,4 +1,4 @@
-import { VtkObject } from "vtk.js/Sources/macro";
+import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
 import vtkActor from "vtk.js/Sources/Rendering/Core/Actor";
 import vtkActor2D from "vtk.js/Sources/Rendering/Core/Actor2D";
 import vtkTexture from "vtk.js/Sources/Rendering/Core/Texture";
@@ -62,7 +62,7 @@ interface IPropInitialValues {
     textures?: Array<any>;
 }
 
-export interface vtkProp extends VtkObject {
+export interface vtkProp extends vtkObject {
 
     /**
      * 

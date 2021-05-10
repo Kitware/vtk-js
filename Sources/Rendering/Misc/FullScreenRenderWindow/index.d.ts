@@ -1,4 +1,4 @@
-import { VtkObject } from "vtk.js/Sources/macro";
+import { vtkObject } from "vtk.js/Sources/interfaces";
 import vtkRenderer from "vtk.js/Sources/Rendering/Core/Renderer";
 import vtkRenderWindow from "vtk.js/Sources/Rendering/Core/RenderWindow";
 import vtkRenderWindowInteractor from "vtk.js/Sources/Rendering/Core/RenderWindowInteractor";
@@ -20,7 +20,7 @@ interface IFullScreenRenderWindowInitialValues {
 }
 
 
-export interface vtkFullScreenRenderWindow extends VtkObject {
+export interface vtkFullScreenRenderWindow extends vtkObject {
 
 	/**
 	 * 
