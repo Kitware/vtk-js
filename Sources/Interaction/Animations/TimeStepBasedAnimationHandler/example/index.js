@@ -3,6 +3,8 @@ import 'vtk.js/Sources/favicon';
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import 'vtk.js/Sources/Rendering/Profiles/All';
 
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
+
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkHttpSceneLoader from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
