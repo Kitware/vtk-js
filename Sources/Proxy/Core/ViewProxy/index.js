@@ -263,7 +263,8 @@ function vtkViewProxy(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.captureImage = () => model.renderWindow.captureImages()[0];
+  publicAPI.captureImage = ({ format = 'image/png', ...opts } = {}) =>
+    model.renderWindow.captureImages(format, opts)[0];
 
   // --------------------------------------------------------------------------
 
