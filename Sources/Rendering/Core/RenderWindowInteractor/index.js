@@ -264,15 +264,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     );
     model.container.removeEventListener('mousemove', publicAPI.handleMouseMove);
     model.container.removeEventListener('mousedown', publicAPI.handleMouseDown);
-    document
-      .querySelector('body')
-      .removeEventListener('keypress', publicAPI.handleKeyPress);
-    document
-      .querySelector('body')
-      .removeEventListener('keydown', publicAPI.handleKeyDown);
-    document
-      .querySelector('body')
-      .removeEventListener('keyup', publicAPI.handleKeyUp);
+    document.removeEventListener('keypress', publicAPI.handleKeyPress);
+    document.removeEventListener('keydown', publicAPI.handleKeyDown);
+    document.removeEventListener('keyup', publicAPI.handleKeyUp);
     document.removeEventListener(
       'pointerlockchange',
       publicAPI.handlePointerLockChange
