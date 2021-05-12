@@ -11,6 +11,8 @@ import vtkInteractorStyleManipulator from 'vtk.js/Sources/Interaction/Style/Inte
 
 import Manipulators from 'vtk.js/Sources/Interaction/Manipulators';
 
+import controlPanel from './controlPanel.html';
+
 const { SlicingMode } = vtkImageMapper;
 
 // ----------------------------------------------------------------------------
@@ -44,24 +46,33 @@ const range = data.getPointData().getScalars().getRange();
 const wMin = 1;
 const wMax = range[1] - range[0];
 const wGet = actor.getProperty().getColorWindow;
-const wSet = actor.getProperty().setColorWindow;
+const wSet = (w) => {
+  document.querySelector('.wWidth').textContent = w;
+  actor.getProperty().setColorWindow(w);
+};
 const lMin = range[0];
 const lMax = range[1];
 const lGet = actor.getProperty().getColorLevel;
-const lSet = actor.getProperty().setColorLevel;
+const lSet = (l) => {
+  document.querySelector('.wLevel').textContent = l;
+  actor.getProperty().setColorLevel(l);
+};
 const extent = data.getExtent();
 const kMin = extent[4];
 const kMax = extent[5];
 const kGet = mapper.getSlice;
-const kSet = mapper.setSlice;
+const kSet = (k) => {
+  document.querySelector('.sliceNumber').textContent = k;
+  mapper.setSlice(k);
+};
 
 const rangeManipulator = Manipulators.vtkMouseRangeManipulator.newInstance({
   button: 1,
   scrollEnabled: true,
 });
-rangeManipulator.setVerticalListener(wMin, wMax, 1, wGet, wSet);
-rangeManipulator.setHorizontalListener(lMin, lMax, 1, lGet, lSet);
-rangeManipulator.setScrollListener(kMin, kMax, 1, kGet, kSet);
+rangeManipulator.setVerticalListener(wMin, wMax, 1, wGet, wSet, 1);
+rangeManipulator.setHorizontalListener(lMin, lMax, 1, lGet, lSet, 1);
+rangeManipulator.setScrollListener(kMin, kMax, 1, kGet, kSet, 1);
 
 const iStyle = vtkInteractorStyleManipulator.newInstance();
 iStyle.addMouseManipulator(rangeManipulator);
@@ -71,6 +82,29 @@ renderer.getActiveCamera().setParallelProjection(true);
 renderer.addActor(actor);
 renderer.resetCamera();
 renderWindow.render();
+
+// -----------------------------------------------------------
+// UI control handling
+// -----------------------------------------------------------
+
+fullScreenRenderer.addController(controlPanel);
+
+document.querySelector('.wWidth').textContent = wGet();
+document.querySelector('.wLevel').textContent = lGet();
+document.querySelector('.sliceNumber').textContent = kGet();
+
+document.querySelector('.slicingScale').addEventListener('input', (e) => {
+  const scale = Number(e.target.value);
+  rangeManipulator.setScrollListener(kMin, kMax, 1, kGet, kSet, scale);
+});
+document.querySelector('.wWidthScale').addEventListener('input', (e) => {
+  const scale = Number(e.target.value);
+  rangeManipulator.setVerticalListener(wMin, wMax, 1, wGet, wSet, scale);
+});
+document.querySelector('.wLevelScale').addEventListener('input', (e) => {
+  const scale = Number(e.target.value);
+  rangeManipulator.setHorizontalListener(lMin, lMax, 1, lGet, lSet, scale);
+});
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
