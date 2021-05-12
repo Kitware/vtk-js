@@ -90,7 +90,7 @@ export default function widgetBehavior(publicAPI, model) {
           manipulator.setNormal(transformVec3(edgeAxis, indexToWorldT));
           worldCoords = manipulator.handleEvent(
             callData,
-            model.apiSPecificRenderWindow
+            model.apiSpecificRenderWindow
           );
         }
 
