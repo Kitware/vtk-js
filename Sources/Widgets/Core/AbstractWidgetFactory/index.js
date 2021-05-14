@@ -31,10 +31,15 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
         camera,
       } = extractRenderingComponents(renderer);
       const widgetModel = {};
-      const widgetPublicAPI = {
+      const widgetPublicAPI = {};
+
+      macro.obj(widgetPublicAPI, widgetModel);
+      Object.assign(widgetPublicAPI, {
         onWidgetChange: publicAPI.onWidgetChange,
-      };
-      Object.assign(widgetModel, model, {
+      });
+      Object.assign(widgetModel, {
+        widgetState: model.widgetState,
+        manipulator: model.manipulator,
         viewType,
         renderer,
         camera,
