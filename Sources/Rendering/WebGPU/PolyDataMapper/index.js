@@ -873,8 +873,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     };
     const primHelper = model.primitives[i];
 
-    model.primitives[i].renderForPipeline = (pipeline) => {
-      const renderEncoder = model.WebGPURenderer.getRenderEncoder();
+    model.primitives[i].renderForPipeline = (renderEncoder) => {
+      const pipeline = renderEncoder.getBoundPipeline();
 
       // bind the mapper UBO
       const midx = pipeline.getBindGroupLayoutCount(model.UBO.getName());

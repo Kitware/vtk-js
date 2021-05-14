@@ -19,23 +19,19 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
     model.handle.endPass();
   };
 
-  publicAPI.replaceShaderCode = (pipeline) => {
-    model.replaceShaderCodeFunction(pipeline);
+  publicAPI.setPipeline = (pl) => {
+    model.handle.setPipeline(pl.getHandle());
+    model.boundPipeline = pl;
   };
 
-  publicAPI.setColorTexture = (idx, tex) => {
-    if (model.colorTextures[idx] === tex) {
-      return;
-    }
-    model.colorTextures[idx] = tex;
-    model.colorTextureViews[idx] = tex.createView();
+  publicAPI.replaceShaderCode = (pipeline) => {
+    model.replaceShaderCodeFunction(pipeline);
   };
 
   publicAPI.setColorTextureView = (idx, view) => {
     if (model.colorTextureViews[idx] === view) {
       return;
     }
-    model.colorTextures[idx] = view.getTexture();
     model.colorTextureViews[idx] = view;
   };
 
@@ -57,22 +53,6 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
     }
   };
 
-  publicAPI.setDepthTexture = (tex) => {
-    if (model.depthTexture === tex) {
-      return;
-    }
-    model.depthTexture = tex;
-    model.depthTextureView = tex.createView();
-  };
-
-  publicAPI.setDepthTextureView = (view) => {
-    if (model.depthTextureView === view) {
-      return;
-    }
-    model.depthTexture = view.getTexture();
-    model.depthTextureView = view;
-  };
-
   // simple forwarders
   for (let i = 0; i < forwarded.length; i++) {
     publicAPI[forwarded[i]] = (...args) => model.handle[forwarded[i]](...args);
@@ -85,10 +65,10 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
 const DEFAULT_VALUES = {
   description: null,
   handle: null,
+  boundPipeline: null,
   pipelineHash: null,
   pipelineSettings: null,
   replaceShaderCodeFunction: null,
-  depthTexture: null,
   depthTextureView: null,
 };
 
@@ -133,7 +113,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     depthStencil: {
       depthWriteEnabled: true,
       depthCompare: 'less-equal',
-      format: 'depth24plus-stencil8',
+      format: 'depth32float',
     },
     fragment: {
       targets: [
@@ -151,17 +131,12 @@ export function extend(publicAPI, model, initialValues = {}) {
     },
   };
 
-  model.colorTextures = [];
   model.colorTextureViews = [];
 
-  macro.get(publicAPI, model, [
-    'colorTextures',
-    'colorTextureViews',
-    'depthTexture',
-    'depthTextureView',
-  ]);
+  macro.get(publicAPI, model, ['boundPipeline', 'colorTextureViews']);
 
   macro.setGet(publicAPI, model, [
+    'depthTextureView',
     'description',
     'handle',
     'pipelineHash',

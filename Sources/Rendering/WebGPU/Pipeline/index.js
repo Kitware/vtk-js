@@ -51,6 +51,16 @@ function vtkWebGPUPipeline(publicAPI, model) {
     return null;
   };
 
+  publicAPI.addBindGroupLayout2 = (buffObj) => {
+    if (!buffObj) {
+      return;
+    }
+    model.layouts.push({
+      layout: buffObj.getBindGroupLayout(model.device),
+      name: buffObj.getName(),
+    });
+  };
+
   publicAPI.addBindGroupLayout = (layout, lname) => {
     model.layouts.push({ layout, name: lname });
   };
@@ -61,11 +71,8 @@ function vtkWebGPUPipeline(publicAPI, model) {
         return i;
       }
     }
+    console.log(`didn't find ${lname} in ${JSON.stringify(model.layouts)}`);
     return 0;
-  };
-
-  publicAPI.bind = (renderEncoder) => {
-    renderEncoder.getHandle().setPipeline(model.handle);
   };
 
   publicAPI.bindVertexInput = (renderEncoder, vInput) => {
@@ -95,6 +102,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.layouts = [];
   model.shaderDescriptions = [];
 
+  macro.get(publicAPI, model, ['handle']);
   macro.setGet(publicAPI, model, [
     'device',
     'renderEncoder',

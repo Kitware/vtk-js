@@ -22,9 +22,10 @@ fn main(
 {
   var output: fragmentOutput;
 
-  var reveal: f32 = textureSample(Texture1, Sampler1, input.tcoordVS).r;
+  var tcoord: vec2<i32> = vec2<i32>(i32(input.fragPos.x), i32(input.fragPos.y));
+  var reveal: f32 = textureLoad(oitpAccumTexture, tcoord, 0).r;
   if (reveal == 1.0) { discard; }
-  var tcolor: vec4<f32> = textureSample(Texture0, Sampler0, input.tcoordVS);
+  var tcolor: vec4<f32> = textureLoad(oitpColorTexture, tcoord, 0);
   var total: f32 = max(tcolor.a, 0.01);
   var computedColor: vec4<f32> = vec4<f32>(tcolor.r/total, tcolor.g/total, tcolor.b/total, 1.0 - reveal);
 
@@ -63,6 +64,10 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
         /* eslint-disable no-bitwise */
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,
       });
+      const v1 = model.translucentColorTexture.createView();
+      v1.setName('oitpColorTexture');
+      model.translucentRenderEncoder.setColorTextureView(0, v1);
+
       model.translucentAccumulateTexture = vtkWebGPUTexture.newInstance();
       model.translucentAccumulateTexture.create(device, {
         width: viewNode.getCanvas().width,
@@ -72,14 +77,9 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
         /* eslint-disable no-bitwise */
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,
       });
-      model.translucentRenderEncoder.setColorTexture(
-        0,
-        model.translucentColorTexture
-      );
-      model.translucentRenderEncoder.setColorTexture(
-        1,
-        model.translucentAccumulateTexture
-      );
+      const v2 = model.translucentAccumulateTexture.createView();
+      v2.setName('oitpAccumTexture');
+      model.translucentRenderEncoder.setColorTextureView(1, v2);
       model.fullScreenQuad = vtkWebGPUFullScreenQuad.newInstance();
       model.fullScreenQuad.setDevice(viewNode.getDevice());
       model.fullScreenQuad.setPipelineHash('oitpfsq');
@@ -113,26 +113,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
     renNode.setRenderEncoder(model.translucentFinalEncoder);
     model.translucentFinalEncoder.begin(viewNode.getCommandEncoder());
     // set viewport
-    const tsize = renNode.getYInvertedTiledSizeAndOrigin();
-    model.translucentFinalEncoder
-      .getHandle()
-      .setViewport(
-        tsize.lowerLeftU,
-        tsize.lowerLeftV,
-        tsize.usize,
-        tsize.vsize,
-        0.0,
-        1.0
-      );
-    // set scissor
-    model.translucentFinalEncoder
-      .getHandle()
-      .setScissorRect(
-        tsize.lowerLeftU,
-        tsize.lowerLeftV,
-        tsize.usize,
-        tsize.vsize
-      );
+    renNode.scissorAndViewport(model.translucentFinalEncoder);
     model.fullScreenQuad.render(
       model.translucentFinalEncoder,
       viewNode.getDevice()
@@ -182,7 +163,6 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
           'var w: f32 = 1.0 - input.fragPos.z * 0.9;',
           'output.outColor = vec4<f32>(computedColor.rgb*computedColor.a, computedColor.a) * w;',
           'output.outAccum = computedColor.a;',
-          'output.outAccum = computedColor.a;',
         ]
       ).result;
       fDesc.setCode(code);
@@ -193,7 +173,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       depthStencil: {
         depthWriteEnabled: false,
         depthCompare: 'less',
-        format: 'depth24plus-stencil8',
+        format: 'depth32float',
       },
       fragment: {
         targets: [
@@ -236,6 +216,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
     model.translucentFinalEncoder.setReplaceShaderCodeFunction((pipeline) => {
       const fDesc = pipeline.getShaderDescription('fragment');
       fDesc.addOutput('vec4<f32>', 'outColor');
+      fDesc.addBuiltinInput('vec4<f32>', '[[builtin(position)]] fragPos');
       let code = fDesc.getCode();
       code = vtkWebGPUShaderCache.substitute(
         code,

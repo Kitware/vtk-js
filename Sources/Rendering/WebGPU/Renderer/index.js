@@ -163,6 +163,29 @@ function vtkWebGPURenderer(publicAPI, model) {
     }
   };
 
+  publicAPI.scissorAndViewport = (encoder) => {
+    const tsize = publicAPI.getYInvertedTiledSizeAndOrigin();
+    encoder
+      .getHandle()
+      .setViewport(
+        tsize.lowerLeftU,
+        tsize.lowerLeftV,
+        tsize.usize,
+        tsize.vsize,
+        0.0,
+        1.0
+      );
+    // set scissor
+    encoder
+      .getHandle()
+      .setScissorRect(
+        tsize.lowerLeftU,
+        tsize.lowerLeftV,
+        tsize.usize,
+        tsize.vsize
+      );
+  };
+
   // Renders myself
   publicAPI.opaquePass = (prepass) => {
     if (prepass) {
@@ -173,28 +196,7 @@ function vtkWebGPURenderer(publicAPI, model) {
 
       publicAPI.updateUBO();
     } else {
-      // bind our BindGroup
-      // set viewport
-      const tsize = publicAPI.getYInvertedTiledSizeAndOrigin();
-      model.renderEncoder
-        .getHandle()
-        .setViewport(
-          tsize.lowerLeftU,
-          tsize.lowerLeftV,
-          tsize.usize,
-          tsize.vsize,
-          0.0,
-          1.0
-        );
-      // set scissor
-      model.renderEncoder
-        .getHandle()
-        .setScissorRect(
-          tsize.lowerLeftU,
-          tsize.lowerLeftV,
-          tsize.usize,
-          tsize.vsize
-        );
+      publicAPI.scissorAndViewport(model.renderEncoder);
 
       publicAPI.clear();
 
@@ -203,12 +205,12 @@ function vtkWebGPURenderer(publicAPI, model) {
         const pStruct = model.pipelineCallbacks[i];
         const pl = pStruct.pipeline;
 
-        pl.bind(model.renderEncoder);
+        model.renderEncoder.setPipeline(pl);
         const uboidx = pl.getBindGroupLayoutCount(model.UBO.getName());
         model.renderEncoder.setBindGroup(uboidx, model.UBO.getBindGroup());
 
         for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
-          pStruct.callbacks[cb](pl);
+          pStruct.callbacks[cb](model.renderEncoder);
         }
       }
 
@@ -247,43 +249,21 @@ function vtkWebGPURenderer(publicAPI, model) {
       model.pipelineCallbacks = [];
 
       model.renderEncoder.begin(model.parent.getCommandEncoder());
-
-      publicAPI.updateUBO();
     } else {
-      // set viewport
-      const tsize = publicAPI.getYInvertedTiledSizeAndOrigin();
-      model.renderEncoder
-        .getHandle()
-        .setViewport(
-          tsize.lowerLeftU,
-          tsize.lowerLeftV,
-          tsize.usize,
-          tsize.vsize,
-          0.0,
-          1.0
-        );
-      // set scissor
-      model.renderEncoder
-        .getHandle()
-        .setScissorRect(
-          tsize.lowerLeftU,
-          tsize.lowerLeftV,
-          tsize.usize,
-          tsize.vsize
-        );
+      publicAPI.scissorAndViewport(model.renderEncoder);
 
       // loop over registered pipelines
       for (let i = 0; i < model.pipelineCallbacks.length; i++) {
         const pStruct = model.pipelineCallbacks[i];
         const pl = pStruct.pipeline;
 
-        pl.bind(model.renderEncoder);
+        model.renderEncoder.setPipeline(pl);
         const uboidx = pl.getBindGroupLayoutCount(model.UBO.getName());
         model.renderEncoder.setBindGroup(uboidx, model.UBO.getBindGroup());
         // bind our BindGroup
 
         for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
-          pStruct.callbacks[cb](pl);
+          pStruct.callbacks[cb](model.renderEncoder);
         }
       }
 
@@ -291,49 +271,27 @@ function vtkWebGPURenderer(publicAPI, model) {
     }
   };
 
-  publicAPI.volumePass = (prepass) => {
+  publicAPI.volumeDepthRangePass = (prepass) => {
     if (prepass) {
       // clear last pipelines
       model.pipelineCallbacks = [];
 
       model.renderEncoder.begin(model.parent.getCommandEncoder());
-
-      publicAPI.updateUBO();
     } else {
-      // set viewport
-      const tsize = publicAPI.getYInvertedTiledSizeAndOrigin();
-      model.renderEncoder
-        .getHandle()
-        .setViewport(
-          tsize.lowerLeftU,
-          tsize.lowerLeftV,
-          tsize.usize,
-          tsize.vsize,
-          0.0,
-          1.0
-        );
-      // set scissor
-      model.renderEncoder
-        .getHandle()
-        .setScissorRect(
-          tsize.lowerLeftU,
-          tsize.lowerLeftV,
-          tsize.usize,
-          tsize.vsize
-        );
+      publicAPI.scissorAndViewport(model.renderEncoder);
 
       // loop over registered pipelines
       for (let i = 0; i < model.pipelineCallbacks.length; i++) {
         const pStruct = model.pipelineCallbacks[i];
         const pl = pStruct.pipeline;
 
-        pl.bind(model.renderEncoder);
+        model.renderEncoder.setPipeline(pl);
         const uboidx = pl.getBindGroupLayoutCount(model.UBO.getName());
         model.renderEncoder.setBindGroup(uboidx, model.UBO.getBindGroup());
         // bind our BindGroup
 
         for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
-          pStruct.callbacks[cb](pl);
+          pStruct.callbacks[cb](model.renderEncoder);
         }
       }
 
@@ -449,6 +407,15 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('VCPCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('WCVCNormals', 'mat4x4<f32>');
   model.UBO.addEntry('cameraParallel', 'u32');
+  model.UBO.setBindGroupDescription({
+    entries: [
+      {
+        buffer: {
+          type: 'uniform',
+        },
+      },
+    ],
+  });
 
   model.tmpMat4 = mat4.identity(new Float64Array(16));
 

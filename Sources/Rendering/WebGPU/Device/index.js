@@ -22,6 +22,37 @@ function vtkWebGPUDevice(publicAPI, model) {
   publicAPI.getShaderModule = (sd) => model.shaderCache.getShaderModule(sd);
 
   /* eslint-disable no-bitwise */
+  /* eslint-disable no-undef */
+  publicAPI.getBindGroupLayout = (val) => {
+    if (!val.entries) {
+      return null;
+    }
+
+    // add in basic required values if missing
+    for (let i = 0; i < val.entries.length; i++) {
+      const ent = val.entries[i];
+      ent.binding = ent.binding || 0;
+      ent.visibility =
+        ent.visibility || GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT;
+    }
+
+    // do we already have one?
+    const sval = JSON.stringify(val);
+    for (let i = 0; i < model.bindGroupLayouts.length; i++) {
+      if (model.bindGroupLayouts[i].sval === sval) {
+        return model.bindGroupLayouts[i].layout;
+      }
+    }
+
+    // create one and store it
+    const layout = model.handle.createBindGroupLayout(val);
+
+    // we actuall yonly store the stringified version
+    // as that is what we always compare against
+    model.bindGroupLayouts.push({ sval, layout });
+    return layout;
+  };
+
   publicAPI.getRendererBindGroupLayout = () => {
     if (!model.rendererBindGroupLayout) {
       const descriptor = {
@@ -177,6 +208,7 @@ const DEFAULT_VALUES = {
   samplerBindGroupLayout: null,
   storageBindGroupLayout: null,
   textureBindGroupLayout: null,
+  bindGroupLayouts: null,
   bufferManager: null,
   textureManager: null,
 };
@@ -197,6 +229,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.shaderCache = vtkWebGPUShaderCache.newInstance();
   model.shaderCache.setDevice(publicAPI);
+
+  model.bindGroupLayouts = [];
 
   model.bufferManager = vtkWebGPUBufferManager.newInstance();
   model.bufferManager.setDevice(publicAPI);

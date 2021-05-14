@@ -37,16 +37,25 @@ function vtkWebGPUOpaquePass(publicAPI, model) {
           GPUTextureUsage.SAMPLED |
           GPUTextureUsage.COPY_SRC,
       });
-      model.renderEncoder.setColorTexture(0, model.colorTexture);
-      model.depthFormat = 'depth24plus-stencil8';
+      const ctView = model.colorTexture.createView();
+      ctView.setName('opaquePassColorTexture');
+      model.renderEncoder.setColorTextureView(0, ctView);
+
+      // model.depthFormat = 'depth24plus-stencil8';
+      model.depthFormat = 'depth32float';
       model.depthTexture = vtkWebGPUTexture.newInstance();
       model.depthTexture.create(device, {
         width: viewNode.getCanvas().width,
         height: viewNode.getCanvas().height,
         format: model.depthFormat,
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        usage:
+          GPUTextureUsage.RENDER_ATTACHMENT |
+          GPUTextureUsage.SAMPLED |
+          GPUTextureUsage.COPY_SRC,
       });
-      model.renderEncoder.setDepthTexture(model.depthTexture);
+      const dView = model.depthTexture.createView();
+      dView.setName('opaquePassDepthTexture');
+      model.renderEncoder.setDepthTextureView(dView);
     } else {
       model.colorTexture.resize(
         viewNode.getCanvas().width,
