@@ -3,7 +3,11 @@ docs:
     overview: index.html
     external: intro_vtk_as_external_script.html
     es6_dep: intro_vtk_as_es6_dependency.html
+    react_usage: vtk_react.html
+    vue_usage: vtk_vue.html
+    vanilla_usage: vtk_vanilla.html
     tutorial: tutorial.html
+    old_es6_docs: old_intro_vtk_es6.html
 
   develop:
     requirement: develop_requirement.html

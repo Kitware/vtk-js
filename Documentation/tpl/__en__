@@ -50,3 +50,7 @@ sidebar:
     testing: Testing
     tests: Tests
     coverage: Coverage
+    react_usage: vtk.js + React
+    vue_usage: vtk.js + vue.js
+    vanilla_usage: Vanilla vtk.js
+    old_es6_docs: ES6 usage (Non-ESM build)
