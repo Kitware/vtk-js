@@ -1,17 +1,19 @@
 title: Requirements
 ---
 
-Installing and developing vtk.js is quite easy, there are just two dependencies: 
+Installing and developing vtk.js is quite easy, there are just two dependencies:
 
 - [Node.js](http://nodejs.org/)
 - [Git](http://git-scm.com/) - only necessary for developing and committing to the library.
 
-Instructions for installing these are located at the bottom of this page. If your computer already has these, congratulations! 
+Instructions for installing these are located at the bottom of this page. If your computer already has these, congratulations!
 
 To install vtk.js within your project:
 
 ```sh
 $ npm install vtk.js --save
+# or for the ESM build
+$ npm install @kitware/vtk.js --save
 ```
 
 If you're developing for vtk.js, then clone the repository using git:
@@ -22,7 +24,7 @@ $ cd vtk-js
 $ npm install
 ```
 
-Further instructions on vtk.js development can be found on the [contributing page](https://kitware.github.io/vtk-js/docs/misc_contributing.html). 
+Further instructions on vtk.js development can be found on the [contributing page](https://kitware.github.io/vtk-js/docs/misc_contributing.html).
 
 ### Git
 

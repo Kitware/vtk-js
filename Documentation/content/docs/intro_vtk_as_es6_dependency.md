@@ -1,243 +1,76 @@
 title: Using vtk.js as an ES6 dependency
 ---
 
-This guide illustrates how to build an application using vtk.js as a dependency using a modern toolsets such as Webpack, NPM.
+This guide illustrates how to consume vtk.js as an ES dependency.
 
-## Creation of the Project structure
+## Starting a new vtk.js project
+
+There are several ways to start a new vtk.js project. Below lists a few ways you can begin using vtk.js with your favorite project build tool.
+
+- [vtk.js from scratch (with webpack)](./vtk_vanilla.html)
+- [vtk.js with React](./vtk_react.html)
+- [vtk.js with vue](./vtk_vue.html)
+
+## Adding vtk.js to an existing project
+
+You can add vtk.js to an existing project as follows:
 
 ```sh
-$ mkdir MyWebProject
-$ cd MyWebProject
-$ npm init
+$ npm install --save @kitware/vtk.js
+```
 
-  This utility will walk you through creating a package.json file.
-  It only covers the most common items, and tries to guess sensible defaults.
+### Package differences between `vtk.js` vs `@kitware/vtk.js`
 
-  See `npm help json` for definitive documentation on these fields
-  and exactly what they do.
+Both packages are updated to the same version, so using one or the other will not affect the features provided. They do differ in how they are consumed.
 
-  Use `npm install <pkg> --save` afterwards to install a package and
-  save it as a dependency in the package.json file.
+`@kitware/vtk.js` is the ES module build of vtk.js. This build is designed to remove the additional build config required to use the original `vtk.js.`. You will most likely want to use this package, as there are no extra build config steps required after installation.
 
-  Press ^C at any time to quit.
-  name: (MyWebProject) your-project-name
-  version: (1.0.0) 0.0.1
-  description: vtk.js application
-  entry point: (index.js) src/index.js
-  test command:
-  git repository:
-  keywords: Web visualization using VTK
-  author:
-  license: (ISC) BSD-2-Clause
-  About to write to /.../MyWebProject/package.json:
+**Important**: Please refer to the "Migrating from vtk.js to @kitware/vtk.js" section below on some information regarding changes to import paths.
 
-  {
-    "name": "your-project-name",
-    "version": "0.0.1",
-    "description": "vtk.js application",
-    "main": "src/index.js",
-    "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "keywords": [
-      "Web",
-      "visualization",
-      "using",
-      "VTK"
-    ],
-    "author": "",
-    "license": "BSD-2-Clause"
+`vtk.js` provides the UMD package, but for a while provided the older means of consuming vtk.js. The older approach required additional webpack configuration in order to process the glsl, worker, and js files in vtk.js. It is strongly recommended to instead use `@kitware/vtk.js`, but if you cannot migrate or need to use the original `vtk.js` package, then check out [how to use the old `vtk.js` package](./old_intro_vtk_es6.html).
+
+### Migrating from `vtk.js` to `@kitware/vtk.js`
+
+The `@kitware/vtk.js` package makes some slight, yet major, changes to how vtk.js components are imported. Instead of importing from `/Sources/`, all component paths are relative to the package root, like so:
+
+```diff
+-import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
++import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer';
+```
+
+**Important**: For every vtk.js example you encounter, be sure to rewrite the imports to match the vtk.js package that you are using.
+
+Furthermore, you no longer need to require and add `vtkRules` into your webpack config.
+
+```diff
+-var vtkRules = require('vtk.js/Utilities/config/dependency.js').webpack.core.rules;
+ module.exports = {
+   module: {
+-    rules: [...yourRules, ...vtkRules],
++    rules: yourRules,
   }
-
-
-  Is this ok? (yes)
+ }
 ```
 
-Then install and save your dependencies
+## Using vtk.js
 
-```sh
-$ npm install vtk.js --save
-$ npm install kw-web-suite --save-dev
+vtk.js is comprised of many different modules that are organized in several different folders. Below is an overview of where you can find certain classes.
+
+- Common: core classes including vtkImageData and vtkPolyData
+- Filters: data processing, manipulation, and generation
+- Interaction: interaction helpers
+- IO: reading and writing common data types
+- Rendering: rendering core
+- Widgets: interactive widget manipulation
+
+For example, to use the vtkPolyData class, you will need the following import:
+
+```js
+import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
 ```
 
-## Webpack config
-
-``` js ./webpack.config.js
-var path = require('path');
-var webpack = require('webpack');
-var vtkRules = require('vtk.js/Utilities/config/dependency.js').webpack.core.rules;
-
-// Optional if you want to load *.css and *.module.css files
-// var cssRules = require('vtk.js/Utilities/config/dependency.js').webpack.css.rules;
-
-var entry = path.join(__dirname, './src/index.js');
-const sourcePath = path.join(__dirname, './src');
-const outputPath = path.join(__dirname, './dist');
-
-module.exports = {
-  entry,
-  output: {
-    path: outputPath,
-    filename: 'MyWebApp.js',
-  },
-  module: {
-    rules: [
-        { test: /\.html$/, loader: 'html-loader' },
-    ].concat(vtkRules),
-  },
-  resolve: {
-    modules: [
-      path.resolve(__dirname, 'node_modules'),
-      sourcePath,
-    ],
-  },
-};
-```
-
-## package.json
-
-You should extend the generated **package.json** file with the following set of scripts.
-
-```json ./package.json
-{
-  [...],
-  "scripts": {
-    "build": "webpack --progress --colors --mode development",
-    "build:release": "webpack --progress --colors --mode production",
-    "start": "webpack-dev-server --content-base ./dist",
-
-    "commit": "git cz",
-    "semantic-release": "semantic-release"
-  }
-}
-```
-
-## Application
-
-Here is an example of a vtk.js application similar to an [example](https://kitware.github.io/vtk-js/examples/ConeSource.html) available within the source code.
-
-```js ./src/index.js
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-
-import vtkActor           from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCalculator      from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkConeSource      from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkMapper          from 'vtk.js/Sources/Rendering/Core/Mapper';
-import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
-
-import controlPanel from './controller.html';
-
-// ----------------------------------------------------------------------------
-// Standard rendering code setup
-// ----------------------------------------------------------------------------
-
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
-const renderer = fullScreenRenderer.getRenderer();
-const renderWindow = fullScreenRenderer.getRenderWindow();
-
-// ----------------------------------------------------------------------------
-// Example code
-// ----------------------------------------------------------------------------
-
-const coneSource = vtkConeSource.newInstance({ height: 1.0 });
-const filter = vtkCalculator.newInstance();
-
-filter.setInputConnection(coneSource.getOutputPort());
-filter.setFormula({
-  getArrays: inputDataSets => ({
-    input: [],
-    output: [
-      { location: FieldDataTypes.CELL, name: 'Random', dataType: 'Float32Array', attribute: AttributeTypes.SCALARS },
-    ],
-  }),
-  evaluate: (arraysIn, arraysOut) => {
-    const [scalars] = arraysOut.map(d => d.getData());
-    for (let i = 0; i < scalars.length; i++) {
-      scalars[i] = Math.random();
-    }
-  },
-});
-
-const mapper = vtkMapper.newInstance();
-mapper.setInputConnection(filter.getOutputPort());
-
-const actor = vtkActor.newInstance();
-actor.setMapper(mapper);
-
-renderer.addActor(actor);
-renderer.resetCamera();
-renderWindow.render();
-
-// -----------------------------------------------------------
-// UI control handling
-// -----------------------------------------------------------
-
-fullScreenRenderer.addController(controlPanel);
-const representationSelector = document.querySelector('.representations');
-const resolutionChange = document.querySelector('.resolution');
-
-representationSelector.addEventListener('change', (e) => {
-  const newRepValue = Number(e.target.value);
-  actor.getProperty().setRepresentation(newRepValue);
-  renderWindow.render();
-});
-
-resolutionChange.addEventListener('input', (e) => {
-  const resolution = Number(e.target.value);
-  coneSource.setResolution(resolution);
-  renderWindow.render();
-});
-```
-
-The control template:
-
-```html ./src/controller.html
-<table>
-  <tr>
-    <td>
-      <select class='representations' style="width: 100%">
-        <option value='0'>Points</option>
-        <option value='1'>Wireframe</option>
-        <option value='2' selected>Surface</option>
-      </select>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <input class='resolution' type='range' min='4' max='80' value='6' />
-    </td>
-  </tr>
-</table>
-```
-
-The main web page loading the generated application.
-
-```html ./dist/index.html
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head>
-  <body>
-    <script type="text/javascript" src="MyWebApp.js"></script>
-  </body>
-</html>
-```
-## Build the application
-
-```sh
-$ npm run build
-```
-
-## Start a dev WebServer
-
-```sh
-$ npm start
-```
-
-Open your browser at `http://localhost:8080/`
+To see actual usage of vtk.js, check out one of the [start-from-scratch links](#Starting-a-new-vtk-js-project).
+To learn more about vtk.js, check out our [tutorials](./tutorial.html).
 
 ## How to try another example
 
