@@ -20,6 +20,17 @@ function prepareESM() {
   // make ESM exports available at top-level
   fs.copySync('./dist/esm', pkgdir);
 
+  // copy typescript defs
+  for (const entry of glob.sync('Sources/**/*.ts')) {
+    let target = entry.replace(/^Sources\//, '');
+    if (path.basename(entry) === 'index.d.ts') {
+      const parentName = path.dirname(path.dirname(target));
+      const moduleName = path.basename(path.dirname(target));
+      target = path.join(parentName, `${moduleName}.d.ts`);
+    }
+    fs.copyFileSync(entry, path.join(pkgdir, target));
+  }
+
   // copy misc files
   for (const entry of [
     ...glob.sync('*.txt'),
