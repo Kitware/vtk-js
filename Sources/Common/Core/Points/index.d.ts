@@ -1,4 +1,5 @@
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkDataArray from '../../../Common/Core/DataArray';
+import { Bounds } from '../../../types';
 
 /**
  *
@@ -18,9 +19,9 @@ export interface vtkPoints extends vtkDataArray {
 
 	/**
 	 * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-	 * @return {Number[]} The bounds for the mapper.
+	 * @return {Bounds} The bounds for the mapper.
 	 */
-	getBounds(): number[];
+	getBounds(): Bounds;
 
 	/**
 	 * Get the coordinate of a point.

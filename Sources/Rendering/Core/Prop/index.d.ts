@@ -1,64 +1,19 @@
-import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
-import vtkActor from "vtk.js/Sources/Rendering/Core/Actor";
-import vtkActor2D from "vtk.js/Sources/Rendering/Core/Actor2D";
-import vtkTexture from "vtk.js/Sources/Rendering/Core/Texture";
-import vtkVolume from "vtk.js/Sources/Rendering/Core/Volume";
+import { vtkObject } from "../../../interfaces";
+import vtkActor from "../Actor";
+import vtkActor2D from "../Actor2D";
+import vtkTexture from "../Texture";
+import vtkVolume from "../Volume";
 
 
 interface IPropInitialValues {
-
-    /**
-     * Set/Get visibility of this vtkProp. Initial value is true.
-     */
     visibility?: boolean;
-
-    /**
-     * Set/Get the pickable instance variable. This determines if the vtkProp
-     * can be picked (typically using the mouse). Also see dragable.
-     * @default true.
-     */
     pickable?: boolean;
-
-    /**
-     * This determines if an Prop, once picked, can be dragged (translated) through space.
-     * This is typically done through an interactive mouse interface.
-     * This does not affect methods such as SetPosition, which will continue
-     * to work. It is just intended to prevent some vtkProp’ss from being
-     * dragged from within a user interface.
-     * @default true.
-     */
     dragable?: boolean;
-
-    /**
-     * In case the Visibility flag is true, tell if the bounds of this prop
-     * should be taken into account or ignored during the computation of other
-     * bounding boxes, like in vtkRenderer::ResetCamera().
-     */
     useBounds?: boolean;
-
-    /**
-     * 
-     */
     allocatedRenderTime?: number;
-
-    /**
-     * 
-     */
     estimatedRenderTime?: number;
-
-    /**
-     * 
-     */
     savedEstimatedRenderTime?: number;
-
-    /**
-     * 
-     */
     renderTimeMultiplier?: number;
-
-    /**
-     * 
-     */
     textures?: Array<any>;
 }
 

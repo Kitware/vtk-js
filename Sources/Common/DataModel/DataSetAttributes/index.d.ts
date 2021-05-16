@@ -1,8 +1,6 @@
-import { vtkObject } from "vtk.js/Sources/interfaces" ;
-import {
-	vtkFieldData
-} from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/FieldData';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import { vtkObject } from "../../../interfaces" ;
+import { vtkFieldData } from './FieldData';
+import vtkDataArray from '../../Core/DataArray';
 
 export enum AttributeTypes {
 	SCALARS,
@@ -276,7 +274,7 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 	 * @param debug (default: false) if true feedback will be provided when mismatch happen
 	 * @override
 	 */
-	shallowCopy(other: VtkObject, debug?: boolean): void;
+	shallowCopy(other: vtkObject, debug?: boolean): void;
 
 	/**
 	 *

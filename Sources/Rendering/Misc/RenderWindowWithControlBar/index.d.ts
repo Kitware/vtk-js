@@ -1,14 +1,13 @@
 
-///<reference path='../../../types.ts' />
-
-import vtkGenericRenderWindow from "vtk.js/Sources/Rendering/Misc/GenericRenderWindow";
+import { Placement } from "../../../types";
+import vtkGenericRenderWindow from "../GenericRenderWindow";
 
 /**
  *
  */
 interface IRenderWindowWithControlBarInitialValues {
 	rootContainer?: HTMLElement,
-	controlPosition?: Position;
+	controlPosition?: Placement;
 	controlSize?: number;
 }
 
@@ -43,9 +42,9 @@ export interface vtkRenderWindowWithControlBar extends vtkGenericRenderWindow {
 
 	/**
 	 * Set control container element
-	 * @param {Position} position Position of the control bar.
+	 * @param {Placement} position Position of the control bar.
 	 */
-	setControlPosition(position: Position): void;
+	setControlPosition(position: Placement): void;
 }
 
 /**

@@ -1,4 +1,5 @@
-import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
+import { vtkObject } from "../../../interfaces";
+import vtkColorTransferFunction from "../ColorTransferFunction";
 
 export enum InterpolationType {
 	NEAREST,
@@ -11,32 +12,32 @@ interface IComponentData {
 }
 
 interface IImageMapperInitialValues {
-	independentComponents: boolean;
-	interpolationType: InterpolationType;
-	colorWindow: number;
-	colorLevel: number;
-	ambient: number;
-	diffuse: number;
-	opacity: number;
-	componentData: IComponentData[];
+	independentComponents?: boolean;
+	interpolationType?: InterpolationType;
+	colorWindow?: number;
+	colorLevel?: number;
+	ambient?: number;
+	diffuse?: number;
+	opacity?: number;
+	componentData?: IComponentData[];
 }
 
 export interface vtkImageProperty extends vtkObject {
 
 	/**
-	 * 
+     * Get the lighting coefficient.
 	 * @default 1.0
 	 */
 	getAmbient(): number;
 
 	/**
-	 * 
+	 * Get the level value for window/level.
 	 * @default 127.5
 	 */
 	getColorLevel(): number;
 
 	/**
-	 * 
+	 * Get the window value for window/level.
 	 * @default 255
 	 */
 	getColorWindow(): number;
@@ -48,7 +49,7 @@ export interface vtkImageProperty extends vtkObject {
 	getComponentWeight(index: number): number;
 
 	/**
-	 * 
+     * Get the diffuse lighting coefficient.
 	 * @default 1.0
 	 */
 	getDiffuse(): number;
@@ -60,89 +61,94 @@ export interface vtkImageProperty extends vtkObject {
 	getIndependentComponents(): boolean;
 
 	/**
-	 * 
+	 * Get the interpolation type
 	 */
-	getInterpolationTypeAsString(): InterpolationType;
+	getInterpolationType(): InterpolationType;
 
 	/**
-	 * 
+	 * Get the interpolation type as a string
 	 */
 	getInterpolationTypeAsString(): string;
 
 	/**
-	 * 
+     * Get the opacity of the object.
 	 * @default 1.0
 	 */
 	getOpacity(): number;
 
 	/**
 	 * Get the component weighting function.
-	 * @param idx 
+	 * @param {Number} [idx]
 	 */
-	getPiecewiseFunction(idx: number): number;
+	getPiecewiseFunction(idx?: number): any;
 
 	/**
 	 * Get the currently set RGB transfer function.
-	 * @param {Number} idx
+	 * @param {Number} [idx]
 	 */
-	getRGBTransferFunction(idx: number): any;
+	getRGBTransferFunction(idx?: number): any;
 
 	/**
 	 * Alias to get the piecewise function (backwards compatibility)
-	 * @param idx 
+	 * @param {Number} [idx]
 	 */
-	getScalarOpacity(idx: any): number;
+	getScalarOpacity(idx: number): number;
 
     /**
-     * Set the lighting coefficient.
-     * @param {Number} ambient 
+	 * Set the ambient lighting coefficient.
+     * @param {Number} ambient The ambient lighting coefficient.
      */
-	setAmbient(ambient: number): boolean;
+    setAmbient(ambient: number): boolean;
 
 	/**
-	 * 
+	 * Set the level value for window/level.
+	 * @param {Number} colorLevel The level value for window/level.
 	 */
 	setColorLevel(colorLevel: number): boolean;
 
 	/**
-	 * 
+	 * Set the window value for window/level.
+	 * @param {Number} colorWindow The window value for window/level.
 	 */
 	setColorWindow(colorWindow: number): boolean;
 
 	/**
 	 * 
 	 * @param {Number} index 
-	 * @param value 
+	 * @param {Number} value 
 	 */
 	setComponentWeight(index: number, value: number): boolean;
 
-	/**
-	 * 
-	 */
-	setDiffuse(diffse: number): boolean;
+    /**
+     * Set the diffuse lighting coefficient.
+     * @param {Number} diffuse  The diffuse lighting coefficient.
+     */
+    setDiffuse(diffuse: number): boolean;
 
 	/**
 	 * 
+	 * @param {Boolean} independentComponents 
 	 */
 	setIndependentComponents(independentComponents: boolean): boolean;
 
 	/**
-	 * 
+	 * Set the interpolation type.
+	 * @param {InterpolationType} interpolationType The interpolation type.
 	 */
 	setInterpolationType(interpolationType: InterpolationType): boolean;
 
 	/**
-	 * 
+	 * Set `interpolationType` to `InterpolationType.LINEAR`.
 	 */
 	setInterpolationTypeToLinear(): boolean;
 
 	/**
-	 * 
+	 * Set `interpolationType` to `InterpolationType.NEAREST`.
 	 */
 	setInterpolationTypeToNearest(): boolean;
 
 	/**
-	 * 
+     * Set the opacity of the object
 	 * @param {Number} opacity The opacity value.
 	 */
 	setOpacity(opacity: number): boolean;
@@ -157,10 +163,9 @@ export interface vtkImageProperty extends vtkObject {
 	/**
 	 * Set the color of a volume to an RGB transfer function
 	 * @param {Number} index 
-	 * @param func 
+	 * @param {vtkColorTransferFunction} func 
 	 */
-	setRGBTransferFunction(index: number, func: any): boolean;
-
+	setRGBTransferFunction(index: number, func: vtkColorTransferFunction): boolean;
 
 	/**
 	 * Alias to set the piecewise function

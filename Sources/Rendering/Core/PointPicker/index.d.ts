@@ -1,10 +1,10 @@
-import vtkPicker from "vtk.js/Sources/Rendering/Core/Picker";
-import vtkMapper from "vtk.js/Sources/Rendering/Core/Mapper";
+import vtkPicker from "../Picker";
+import vtkMapper from "../Mapper";
 
 interface IPointPickerInitialValues {
-	pointId: number;
-	pointIJK: number[];
-	useCells: boolean;
+	pointId?: number;
+	pointIJK?: number[];
+	useCells?: boolean;
 }
 
 export interface vtkPointPicker extends vtkPicker {

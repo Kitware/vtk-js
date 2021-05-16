@@ -1,5 +1,5 @@
-import { vtkObject } from "vtk.js/Sources/interfaces" ;
-import vtkDataSetAttributes from 'vtk.js/Sources/Common/DataModel/DataSetAttributes';
+import { vtkObject } from "../../../interfaces" ;
+import vtkDataSetAttributes from '../DataSetAttributes';
 
 export enum FieldDataTypes {
 	UNIFORM,

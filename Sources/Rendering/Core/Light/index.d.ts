@@ -1,4 +1,4 @@
-import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
+import { vtkObject } from "../../../interfaces";
 
 interface ILightInitialValues {
     switch?: boolean;

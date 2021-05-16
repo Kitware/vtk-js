@@ -1,6 +1,6 @@
 import { vec3 } from 'gl-matrix';
-import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
-import vtkPointSet from 'vtk.js/Sources/Common/DataModel/PointSet';
+import vtkCellArray from '../../Core/CellArray';
+import vtkPointSet from '../PointSet';
 
 /**
  *

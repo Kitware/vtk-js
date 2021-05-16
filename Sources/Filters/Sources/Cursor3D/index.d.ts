@@ -1,6 +1,6 @@
-import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
+import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkPolyData from '../../../Common/DataModel/PolyData';
 
 
 /**

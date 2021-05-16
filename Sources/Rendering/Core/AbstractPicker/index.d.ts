@@ -1,6 +1,6 @@
-import { vtkObject } from "vtk.js/Sources/interfaces" ;
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer'
+import { vtkObject } from "../../../interfaces" ;
+import vtkActor from '../Actor';
+import vtkRenderer from '../Renderer'
 
 /**
  * 

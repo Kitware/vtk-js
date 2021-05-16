@@ -1,4 +1,4 @@
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkActor from '../Actor';
 
 /**
  * 

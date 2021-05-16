@@ -1,7 +1,6 @@
-import { vtkObject } from "vtk.js/Sources/interfaces";
-import vtkTexture from "vtk.js/Sources/Rendering/Core/Texture";
-
-declare type CrossOrigin = '' | 'anonymous' | 'use-credentials';
+import { vtkObject } from "../../../interfaces";
+import { CrossOrigin } from "../../../types";
+import vtkTexture from "../../Core/Texture";
 
 /**
  *

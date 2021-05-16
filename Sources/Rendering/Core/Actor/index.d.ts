@@ -1,6 +1,7 @@
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkProp3D from 'vtk.js/Sources/Rendering/Core/Prop3D';
-import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
+import { Bounds } from '../../../types';
+import vtkMapper from '../Mapper';
+import vtkProp3D from '../Prop3D';
+import vtkProperty from '../Property';
 
 /**
  * 
@@ -38,9 +39,9 @@ export interface vtkActor extends vtkProp3D {
 
 	/**
      * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-	 * @return {Number[]} The bounds for the mapper.
+	 * @return {Bounds} The bounds for the mapper.
 	 */
-	getBounds(): number[];
+	getBounds(): Bounds;
 
     /**
      * Check whether the opaque is forced or not.

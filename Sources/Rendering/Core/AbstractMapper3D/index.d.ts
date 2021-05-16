@@ -1,5 +1,6 @@
 import { mat4 } from 'gl-matrix';
-import vtkAbstractMapper from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
+import { Bounds } from '../../../types';
+import vtkAbstractMapper from '../AbstractMapper';
 
 /**
  * 
@@ -13,9 +14,9 @@ export interface vtkAbstractMapper3D extends vtkAbstractMapper {
 	/**
      * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
 	 * @default 0
-	 * @return {Number[]} The bounds for the mapper.
+	 * @return {Bounds} The bounds for the mapper.
 	 */
-	getBounds(): number[];
+	getBounds(): Bounds;
 
 		
 	/**

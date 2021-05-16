@@ -1,4 +1,4 @@
-import vtkImageData from "vtk.js/Sources/Common/DataModel/ImageData";
+import vtkImageData from "../../../Common/DataModel/ImageData";
 
 interface ITransform {
 	flipX: boolean;

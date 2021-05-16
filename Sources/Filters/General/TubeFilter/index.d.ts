@@ -1,5 +1,5 @@
-import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
-import { DesiredOutputPrecision } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
+import { vtkAlgorithm, vtkObject } from "../../../interfaces";
+import { DesiredOutputPrecision } from "../../../Common/DataModel/DataSetAttributes";
 
 export enum VaryRadius {
 	VARY_RADIUS_OFF,

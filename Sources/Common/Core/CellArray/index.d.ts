@@ -1,5 +1,5 @@
-/// <reference path='../../../types.ts' />
-import vtkDataArray from "vtk.js/Sources/Common/Core/DataArray";
+import { TypedArray } from "../../../types";
+import vtkDataArray from "../../Core/DataArray";
 
 
 /**

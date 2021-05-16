@@ -1,6 +1,6 @@
-import vtkMapper  from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPicker from 'vtk.js/Sources/Rendering/Core/Picker';
-import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkMapper  from '../Mapper';
+import vtkPicker from '../Picker';
+import vtkRenderer from '../Renderer';
 
 /**
  * 

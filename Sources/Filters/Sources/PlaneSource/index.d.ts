@@ -1,5 +1,5 @@
 import { vec3 } from 'gl-matrix';
-import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
+import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 
 /**
  * 

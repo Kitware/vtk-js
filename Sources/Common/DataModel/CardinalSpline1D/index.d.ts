@@ -1,4 +1,4 @@
-import vtkSpline1D from 'vtk.js/Sources/Common/DataModel/Spline1D';
+import vtkSpline1D from '../Spline1D';
 
 
 interface ICardinalSpline1DInitialValues {}

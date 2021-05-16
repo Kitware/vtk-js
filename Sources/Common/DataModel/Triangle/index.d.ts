@@ -1,4 +1,4 @@
-import vtkCell from 'vtk.js/Sources/Common/DataModel/Cell';
+import vtkCell from '../Cell';
 
 interface ITriangleInitialValues { }
 

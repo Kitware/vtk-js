@@ -1,4 +1,4 @@
-import { vtkObject } from "vtk.js/Sources/interfaces" ;
+import { vtkObject } from "../../../interfaces" ;
 
 /**
  *

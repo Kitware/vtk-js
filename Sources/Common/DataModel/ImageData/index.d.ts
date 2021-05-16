@@ -1,5 +1,6 @@
 import { mat3, mat4, ReadonlyVec3, vec3 } from 'gl-matrix';
-import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
+import { Bounds } from '../../../types';
+import vtkDataSet from '../DataSet';
 
 /**
  *
@@ -88,9 +89,9 @@ export interface vtkImageData extends vtkDataSet {
 	 * 9]` for a 10x10x10 image. Calling `setDimensions(10,10,10)` does exactly
 	 * the same thing as `setExtent(0,9,0,9,0,9)` but you should always do the
 	 * latter to be explicit about where your extent starts.
-	 * @return {Number[]} The bounds for the mapper.
+	 * @return {Bounds} The bounds for the mapper.
 	 */
-	getBounds(): number[];
+	getBounds(): Bounds;
 
 	/**
 	 * Get the `[x,y,z]` location of the center of the imageData.

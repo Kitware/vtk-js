@@ -1,4 +1,4 @@
-import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
+import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 
 export const BOUNDS_MAP: number[];
 

@@ -1,4 +1,5 @@
-import vtkDataArray from "vtk.js/Sources/Common/Core/DataArray";
+import vtkDataArray from "./Common/Core/DataArray";
+import { vtkPipelineConnection } from "./types";
 
 /**
  * Object returned on any subscription call
@@ -211,3 +212,10 @@ export interface vtkObject {
 	 */
 	shallowCopy(other: vtkObject, debug?: boolean): void;
 }
+
+export interface vtkProperty {
+	name: string;
+	children?: Array<vtkProperty>;
+}
+
+export interface vtkPropertyDomain {}

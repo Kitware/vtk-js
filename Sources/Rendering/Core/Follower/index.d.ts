@@ -1,5 +1,5 @@
-import vtkActor from "vtk.js/Sources/Rendering/Core/Actor";
-import vtkCamera  from 'vtk.js/Sources/Rendering/Core/Camera';
+import vtkActor from "../Actor";
+import vtkCamera  from '../Camera';
 
 /**
  * 

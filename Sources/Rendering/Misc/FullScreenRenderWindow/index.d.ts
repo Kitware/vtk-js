@@ -1,10 +1,10 @@
-import { vtkObject } from "vtk.js/Sources/interfaces";
-import vtkRenderer from "vtk.js/Sources/Rendering/Core/Renderer";
-import vtkRenderWindow from "vtk.js/Sources/Rendering/Core/RenderWindow";
-import vtkRenderWindowInteractor from "vtk.js/Sources/Rendering/Core/RenderWindowInteractor";
+import { vtkObject } from "../../../interfaces";
+import vtkRenderer from "../../Core/Renderer";
+import vtkRenderWindow from "../../Core/RenderWindow";
+import vtkRenderWindowInteractor from "../../Core/RenderWindowInteractor";
 
-// import vtkOpenGLRenderWindow from "vtk.js/Sources/Rendering/OpenGL/RenderWindow";
-// import vtkWebGPURenderWindow from "vtk.js/Sources/Rendering/WebGPU/RenderWindow";
+// import vtkOpenGLRenderWindow from "../../../OpenGL/RenderWindow";
+// import vtkWebGPURenderWindow from "../../../WebGPU/RenderWindow";
 
 
 /**

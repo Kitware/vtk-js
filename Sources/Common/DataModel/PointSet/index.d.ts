@@ -1,6 +1,5 @@
-import { vec3 } from 'gl-matrix';
-import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
-import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
+import vtkPoints from '../../Core/Points';
+import vtkDataSet from '../DataSet';
 
 /**
  *
@@ -17,9 +16,9 @@ export interface vtkPointSet extends vtkDataSet {
 
 	/**
      * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-	 * @return {Number[]} The bounds for the mapper.
+	 * @return {Bounds} The bounds for the mapper.
 	 */
-	getBounds(): number[];
+	getBounds(): Bounds;
 
 	/**
 	 *

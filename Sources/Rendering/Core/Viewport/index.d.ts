@@ -1,7 +1,7 @@
 
-import { vtkObject } from "vtk.js/Sources/interfaces" ;
-import vtkActor2D from 'vtk.js/Sources/Rendering/Core/Actor2D';
-import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
+import { vtkObject } from "../../../interfaces";
+import vtkActor2D from '../Actor2D';
+import vtkProp from '../Prop';
 
 interface IViewportInitialValues {
     background?: number[];

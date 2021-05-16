@@ -1,4 +1,5 @@
-import vtkMapper from "vtk.js/Sources/Rendering/Core/Mapper";
+import { Bounds } from "../../../types";
+import vtkMapper from "../Mapper";
 
 export enum OrientationModes {
 	DIRECTION,
@@ -82,9 +83,9 @@ export interface vtkGlyph3DMapper extends vtkMapper {
 
 	/**
      * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-	 * @return {Number[]} The bounds for the mapper.
+	 * @return {Bounds} The bounds for the mapper.
 	 */
-	getBounds(): number[];
+	getBounds(): Bounds;
 
 	/**
 	 * 

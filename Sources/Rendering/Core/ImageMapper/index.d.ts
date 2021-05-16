@@ -1,5 +1,6 @@
 import vtkCamera from "../Camera";
 import vtkAbstractMapper from "../AbstractMapper";
+import { Bounds } from "../../../types";
 
 export enum SlicingMode {
 	NONE,
@@ -53,9 +54,9 @@ export interface vtkImageMapper extends vtkAbstractMapper {
 
 	/**
      * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-	 * @return {Number[]} The bounds for the mapper.
+	 * @return {Bounds} The bounds for the mapper.
 	 */
-	getBounds(): number[];
+	getBounds(): Bounds;
 
 	/**
 	 * Get the bounds for a given slice as [xmin, xmax, ymin, ymax,zmin, zmax].
