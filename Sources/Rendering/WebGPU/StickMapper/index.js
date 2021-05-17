@@ -1,7 +1,6 @@
 import * as macro from 'vtk.js/Sources/macro';
 import vtkWebGPUPolyDataMapper from 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
-import vtkWebGPUPipeline from 'vtk.js/Sources/Rendering/WebGPU/Pipeline';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
@@ -240,7 +239,7 @@ function vtkWebGPUStickMapper(publicAPI, model) {
   // compute a unique hash for a pipeline, this needs to be unique enough to
   // capture any pipeline code changes (which includes shader changes)
   // or vertex input changes/ bind groups/ etc
-  publicAPI.computePipelineHash = (vertexInput, usage) => {
+  publicAPI.computePipelineHash = (vertexInput) => {
     let pipelineHash = 'stm';
     if (vertexInput.hasAttribute(`colorVI`)) {
       pipelineHash += `c`;
@@ -267,10 +266,10 @@ function vtkWebGPUStickMapper(publicAPI, model) {
     const pointArray = points.getData();
     const primHelper = model.primitives[i];
 
-    primHelper.numberOfInstances = numPoints;
-    primHelper.numberOfVertices = 12;
+    primHelper.setNumberOfInstances(numPoints);
+    primHelper.setNumberOfVertices(12);
 
-    const vertexInput = model.primitives[i].vertexInput;
+    const vertexInput = model.primitives[i].getVertexInput();
 
     let buffRequest = {
       hash: points.getMTime(),
@@ -419,40 +418,11 @@ function vtkWebGPUStickMapper(publicAPI, model) {
       vertexInput.removeBufferIfPresent('colorVI');
     }
 
-    const pipelineHash = publicAPI.computePipelineHash(primHelper.vertexInput);
-    let pipeline = device.getPipeline(pipelineHash);
-
-    // build VBO for this primitive
-    // build the pipeline if needed
-    if (!pipeline) {
-      pipeline = vtkWebGPUPipeline.newInstance();
-      pipeline.addBindGroupLayout(
-        device.getRendererBindGroupLayout(),
-        `rendererUBO`
-      );
-      pipeline.addBindGroupLayout(
-        device.getMapperBindGroupLayout(),
-        `mapperUBO`
-      );
-      publicAPI.generateShaderDescriptions(
-        pipelineHash,
-        pipeline,
-        primHelper.vertexInput
-      );
-      pipeline.setTopology('triangle-list');
-      pipeline.setRenderEncoder(model.renderEncoder);
-      pipeline.setVertexState(
-        primHelper.vertexInput.getVertexInputInformation()
-      );
-      device.createPipeline(pipelineHash, pipeline);
-    }
-
-    if (pipeline) {
-      model.WebGPURenderer.registerPipelineCallback(
-        pipeline,
-        primHelper.renderForPipeline
-      );
-    }
+    primHelper.setPipelineHash(publicAPI.computePipelineHash(vertexInput));
+    primHelper.setWebGPURenderer(model.WebGPURenderer);
+    primHelper.setTopology('triangle-list');
+    primHelper.build(model.renderEncoder, device);
+    primHelper.registerToDraw();
   };
 }
 
@@ -470,10 +440,16 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkWebGPUPolyDataMapper.extend(publicAPI, model, initialValues);
 
-  model.vertexShaderTemplate = vtkWebGPUStickMapperVS;
+  model.primitives[PrimitiveTypes.Triangles].setVertexShaderTemplate(
+    vtkWebGPUStickMapperVS
+  );
 
   // Object methods
   vtkWebGPUStickMapper(publicAPI, model);
+
+  const sr = model.primitives[PrimitiveTypes.Triangles].getShaderReplacements();
+  sr.set('replaceShaderPosition', publicAPI.replaceShaderPosition);
+  sr.set('replaceShaderNormal', publicAPI.replaceShaderNormal);
 }
 
 // ----------------------------------------------------------------------------

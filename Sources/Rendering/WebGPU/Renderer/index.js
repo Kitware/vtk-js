@@ -159,7 +159,7 @@ function vtkWebGPURenderer(publicAPI, model) {
       model.UBO.setValue('cameraParallel', cam.getParallelProjection());
 
       const device = model.parent.getDevice();
-      model.UBO.sendIfNeeded(device, device.getRendererBindGroupLayout());
+      model.UBO.sendIfNeeded(device);
     }
   };
 
@@ -237,9 +237,7 @@ function vtkWebGPURenderer(publicAPI, model) {
 
     const background = model.renderable.getBackgroundByReference();
     model.clearFSQ.getUBO().setArray('BackgroundColor', background);
-    model.clearFSQ
-      .getUBO()
-      .sendIfNeeded(device, device.getMapperBindGroupLayout());
+    model.clearFSQ.getUBO().sendIfNeeded(device);
     model.clearFSQ.render(model.renderEncoder, device);
   };
 

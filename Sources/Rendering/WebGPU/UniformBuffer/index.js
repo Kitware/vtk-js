@@ -172,7 +172,7 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
     model.sortDirty = false;
   };
 
-  publicAPI.sendIfNeeded = (device, layout) => {
+  publicAPI.sendIfNeeded = (device) => {
     if (!model.UBO) {
       const req = {
         nativeArray: model.Float32Array,
@@ -181,7 +181,7 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
       };
       model.UBO = device.getBufferManager().getBuffer(req);
       model.bindGroup = device.getHandle().createBindGroup({
-        layout,
+        layout: publicAPI.getBindGroupLayout(device),
         entries: [
           {
             binding: model.binding,

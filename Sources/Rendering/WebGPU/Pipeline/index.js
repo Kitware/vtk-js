@@ -71,7 +71,6 @@ function vtkWebGPUPipeline(publicAPI, model) {
         return i;
       }
     }
-    console.log(`didn't find ${lname} in ${JSON.stringify(model.layouts)}`);
     return 0;
   };
 
