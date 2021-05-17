@@ -154,7 +154,6 @@ function vtkWebGPUActor(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  context: null,
   keyMatricesTime: null,
   keyMatrices: null,
   propID: undefined,
@@ -176,9 +175,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     bcwc: new Float64Array(16),
     bcsc: new Float64Array(16),
   };
-
-  // Build VTK API
-  macro.setGet(publicAPI, model, ['context']);
 
   macro.get(publicAPI, model, ['propID', 'keyMatricesTime']);
 

@@ -70,7 +70,6 @@ function vtkWebGPUCamera(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  context: null,
   keyMatrixTime: null,
   keyMatrices: null,
 };
@@ -96,7 +95,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   };
 
   // Build VTK API
-  macro.setGet(publicAPI, model, ['context', 'keyMatrixTime']);
+  macro.setGet(publicAPI, model, ['keyMatrixTime']);
 
   // Object methods
   vtkWebGPUCamera(publicAPI, model);
