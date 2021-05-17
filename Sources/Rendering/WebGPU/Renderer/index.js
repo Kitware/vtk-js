@@ -381,7 +381,6 @@ function vtkWebGPURenderer(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  context: null,
   selector: null,
   renderEncoder: null,
   recenterThreshold: 20.0,
