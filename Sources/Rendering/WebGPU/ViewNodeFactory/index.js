@@ -1,5 +1,4 @@
 import macro from 'vtk.js/Sources/macro';
-
 import vtkViewNodeFactory from 'vtk.js/Sources/Rendering/SceneGraph/ViewNodeFactory';
 
 const CLASS_MAPPING = Object.create(null);

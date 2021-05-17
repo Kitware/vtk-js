@@ -2,8 +2,10 @@ import * as macro from 'vtk.js/Sources/macro';
 import vtkWebGPUPolyDataMapper from 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper';
 import vtkWebGPUStorageBuffer from 'vtk.js/Sources/Rendering/WebGPU/StorageBuffer';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
-
+import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+
+const { PrimitiveTypes } = vtkWebGPUBufferManager;
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUSphereMapper methods
@@ -121,7 +123,7 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
         );
       }
 
-      model.SSBO.send(device, device.getStorageBindGroupLayout());
+      model.SSBO.send(device);
       model.glyphBOBuildTime.modified();
     }
 
@@ -129,7 +131,7 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
 
     for (let i = 0; i < model.primitives.length; i++) {
       const primHelper = model.primitives[i];
-      primHelper.numberOfInstances = numInstances;
+      primHelper.setNumberOfInstances(numInstances);
     }
   };
 }
@@ -156,6 +158,15 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkWebGPUGlyph3DMapper(publicAPI, model);
+
+  for (let i = PrimitiveTypes.Start; i < PrimitiveTypes.End; i++) {
+    model.primitives[i].setSSBO(model.SSBO);
+    const sr = model.primitives[i].getShaderReplacements();
+    sr.set('replaceShaderPosition', publicAPI.replaceShaderPosition);
+    sr.set('replaceShaderNormal', publicAPI.replaceShaderNormal);
+    sr.set('replaceShaderSelect', publicAPI.replaceShaderSelect);
+    sr.set('replaceShaderColor', publicAPI.replaceShaderColor);
+  }
 }
 
 // ----------------------------------------------------------------------------

@@ -172,7 +172,7 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
     model.sortDirty = false;
   };
 
-  publicAPI.sendIfNeeded = (device, layout) => {
+  publicAPI.sendIfNeeded = (device) => {
     if (!model.UBO) {
       const req = {
         nativeArray: model.Float32Array,
@@ -181,7 +181,7 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
       };
       model.UBO = device.getBufferManager().getBuffer(req);
       model.bindGroup = device.getHandle().createBindGroup({
-        layout,
+        layout: publicAPI.getBindGroupLayout(device),
         entries: [
           {
             binding: model.binding,
@@ -262,6 +262,9 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
     }
   };
 
+  publicAPI.getBindGroupLayout = (device) =>
+    device.getBindGroupLayout(model.bindGroupDescription);
+
   publicAPI.getSendTime = () => model.sendTime.getMTime();
   publicAPI.getShaderCode = (pipeline) => {
     // sort the entries
@@ -291,6 +294,7 @@ const DEFAULT_VALUES = {
   sizeInBytes: 0,
   name: null,
   binding: 0,
+  bindGroupDescription: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -305,6 +309,17 @@ export function extend(publicAPI, model, initialValues = {}) {
   model._bufferEntryNames = new Map();
   model.bufferEntries = [];
 
+  // default UBO desc
+  model.bindGroupDescription = model.bindGroupDescription || {
+    entries: [
+      {
+        buffer: {
+          type: 'uniform',
+        },
+      },
+    ],
+  };
+
   model.sendTime = {};
   macro.obj(model.sendTime, { mtime: 0 });
 
@@ -312,7 +327,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.sortDirty = true;
 
   macro.get(publicAPI, model, ['bindGroup']);
-  macro.setGet(publicAPI, model, ['binding', 'device', 'name', 'sizeInBytes']);
+  macro.setGet(publicAPI, model, [
+    'binding',
+    'bindGroupDescription',
+    'device',
+    'name',
+    'sizeInBytes',
+  ]);
 
   // Object methods
   vtkWebGPUUniformBuffer(publicAPI, model);

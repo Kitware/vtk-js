@@ -5,12 +5,9 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
-import vtkWebGPUPipeline from 'vtk.js/Sources/Rendering/WebGPU/Pipeline';
-import vtkWebGPUSampler from 'vtk.js/Sources/Rendering/WebGPU/Sampler';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
-import vtkWebGPUShaderDescription from 'vtk.js/Sources/Rendering/WebGPU/ShaderDescription';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
-import vtkWebGPUVertexInput from 'vtk.js/Sources/Rendering/WebGPU/VertexInput';
+import vtkWebGPUMapperHelper from 'vtk.js/Sources/Rendering/WebGPU/MapperHelper';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
@@ -187,7 +184,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       model.UBO.setValue('Opacity', ppty.getOpacity());
       model.UBO.setValue('PropID', model.WebGPUActor.getPropID());
       const device = model.WebGPURenderWindow.getDevice();
-      model.UBO.sendIfNeeded(device, device.getMapperBindGroupLayout());
+      model.UBO.sendIfNeeded(device);
     }
   };
 
@@ -205,99 +202,6 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
     // update descriptor sets
     publicAPI.updateUBO();
-  };
-
-  publicAPI.generateShaderDescriptions = (hash, pipeline, vertexInput) => {
-    // create the shader descriptions
-    const vDesc = vtkWebGPUShaderDescription.newInstance({
-      type: 'vertex',
-      hash,
-      code: model.vertexShaderTemplate,
-    });
-    const fDesc = vtkWebGPUShaderDescription.newInstance({
-      type: 'fragment',
-      hash,
-      code: model.fragmentShaderTemplate,
-    });
-
-    // add them to the pipeline
-    const sdrs = pipeline.getShaderDescriptions();
-    sdrs.push(vDesc);
-    sdrs.push(fDesc);
-
-    // look for replacements to invoke
-    const scode = model.vertexShaderTemplate + model.fragmentShaderTemplate;
-    const re = new RegExp('//VTK::[^:]*::', 'g');
-    const unique = scode.match(re).filter((v, i, a) => a.indexOf(v) === i);
-    const fnames = unique.map(
-      (v) => `replaceShader${v.substring(7, v.length - 2)}`
-    );
-
-    // now invoke shader replacement functions
-    for (let i = 0; i < fnames.length; i++) {
-      const fname = fnames[i];
-      if (fname !== 'replaceShaderIOStructs' && publicAPI[fname]) {
-        publicAPI[fname](hash, pipeline, vertexInput);
-      }
-    }
-
-    // always replace the IOStructs last as other replacement funcs may
-    // add inputs or outputs
-    publicAPI.replaceShaderIOStructs(hash, pipeline, vertexInput);
-
-    // console.log(vDesc.getCode());
-    // console.log(fDesc.getCode());
-  };
-
-  publicAPI.replaceShaderRenderEncoder = (hash, pipeline, vertexInput) => {
-    model.renderEncoder.replaceShaderCode(pipeline);
-  };
-
-  publicAPI.replaceShaderIOStructs = (hash, pipeline, vertexInput) => {
-    const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.replaceShaderCode(null, vertexInput);
-    const fDesc = pipeline.getShaderDescription('fragment');
-    fDesc.replaceShaderCode(vDesc);
-  };
-
-  publicAPI.replaceShaderRenderer = (hash, pipeline, vertexInput) => {
-    const ubocode = model.WebGPURenderer.getUBO().getShaderCode(pipeline);
-
-    const vDesc = pipeline.getShaderDescription('vertex');
-    let code = vDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Renderer::Dec', [
-      ubocode,
-    ]).result;
-    vDesc.setCode(code);
-
-    const fDesc = pipeline.getShaderDescription('fragment');
-    code = fDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Renderer::Dec', [
-      ubocode,
-    ]).result;
-    fDesc.setCode(code);
-  };
-
-  publicAPI.replaceShaderMapper = (hash, pipeline, vertexInput) => {
-    let ubocode = model.UBO.getShaderCode(pipeline);
-    if (model.SSBO) {
-      ubocode += `\n ${model.SSBO.getShaderCode(pipeline)}`;
-    }
-
-    const vDesc = pipeline.getShaderDescription('vertex');
-    let code = vDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::Dec', [
-      ubocode,
-    ]).result;
-    vDesc.setCode(code);
-
-    const fDesc = pipeline.getShaderDescription('fragment');
-    fDesc.addBuiltinInput('bool', '[[builtin(front_facing)]] frontFacing');
-    code = fDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::Dec', [
-      ubocode,
-    ]).result;
-    fDesc.setCode(code);
   };
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
@@ -464,7 +368,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     const representation = actor.getProperty().getRepresentation();
     const device = model.WebGPURenderWindow.getDevice();
 
-    const vertexInput = model.primitives[primType].vertexInput;
+    const vertexInput = model.primitives[primType].getVertexInput();
 
     // hash = all things that can change the values on the buffer
     // since mtimes are unique we can use
@@ -638,6 +542,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       }
     }
 
+    let usedCount = 0;
     for (let i = 0; i < newTextures.length; i++) {
       const srcTexture = newTextures[i];
       const treq = {};
@@ -654,37 +559,24 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
         let found = false;
         for (let t = 0; t < model.textures.length; t++) {
           if (model.textures[t] === newTex) {
+            usedCount++;
             found = true;
             usedTextures[t] = true;
           }
         }
         if (!found) {
           usedTextures[model.textures.length] = true;
+          const tview = newTex.createView();
+          tview.setName(`Texture${usedCount++}`);
           model.textures.push(newTex);
-
-          const newSamp = vtkWebGPUSampler.newInstance();
+          model.textureViews.push(tview);
           const interpolate = srcTexture.getInterpolate()
             ? 'linear'
             : 'nearest';
-          newSamp.create(model.device, {
-            magFilter: interpolate,
+          tview.addSampler(model.device, {
             minFilter: interpolate,
+            maxFilter: interpolate,
           });
-          model.samplers.push(newSamp);
-          const newBG = model.device.getHandle().createBindGroup({
-            layout: model.device.getTextureBindGroupLayout(),
-            entries: [
-              {
-                binding: 0,
-                resource: newTex.getHandle().createView(),
-              },
-              {
-                binding: 1,
-                resource: newSamp.getHandle(),
-              },
-            ],
-          });
-          model.textureBindGroups.push(newBG);
         }
       }
     }
@@ -693,8 +585,6 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     for (let i = model.textures.length - 1; i >= 0; i--) {
       if (!usedTextures[i]) {
         model.textures.splice(i, 1);
-        model.samplers.splice(i, 1);
-        model.textureBindGroups.splice(i, 1);
       }
     }
   };
@@ -753,64 +643,42 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
         const primHelper = model.primitives[i];
 
         publicAPI.buildVertexInput(model.currentInput, prims[i], i);
-        const pipelineHash = publicAPI.computePipelineHash(
-          primHelper.vertexInput,
-          usage
+        primHelper.setPipelineHash(
+          publicAPI.computePipelineHash(primHelper.getVertexInput(), usage)
         );
 
-        // default to one instance and computed number of verts
-        primHelper.numberOfInstances = 1;
-        const vbo = primHelper.vertexInput.getBuffer('vertexBC');
-        primHelper.numberOfVertices =
-          vbo.getSizeInBytes() / vbo.getStrideInBytes();
-
-        let pipeline = device.getPipeline(pipelineHash);
-
-        // build VBO for this primitive
-        // build the pipeline if needed
-        if (!pipeline) {
-          pipeline = vtkWebGPUPipeline.newInstance();
-          pipeline.addBindGroupLayout(
-            device.getRendererBindGroupLayout(),
-            model.WebGPURenderer.getUBO().getName()
-          );
-          pipeline.addBindGroupLayout(
-            device.getMapperBindGroupLayout(),
-            model.UBO.getName()
-          );
-          if (model.SSBO) {
-            pipeline.addBindGroupLayout(
-              device.getStorageBindGroupLayout(),
-              model.SSBO.getName()
-            );
-          }
-          // add texture BindGroupLayouts
-          for (let t = 0; t < model.textures.length; t++) {
-            pipeline.addBindGroupLayout(
-              device.getTextureBindGroupLayout(),
-              `Texture${t}`
-            );
-          }
-          publicAPI.generateShaderDescriptions(
-            pipelineHash,
-            pipeline,
-            primHelper.vertexInput
-          );
-          pipeline.setTopology(publicAPI.getTopologyFromUsage(usage));
-          pipeline.setRenderEncoder(model.renderEncoder);
-          pipeline.setVertexState(
-            primHelper.vertexInput.getVertexInputInformation()
-          );
-          device.createPipeline(pipelineHash, pipeline);
-        }
-
-        if (pipeline) {
-          model.WebGPURenderer.registerPipelineCallback(
-            pipeline,
-            primHelper.renderForPipeline
-          );
-        }
+        primHelper.setTextureViews(model.textureViews);
+        primHelper.setWebGPURenderer(model.WebGPURenderer);
+        primHelper.setNumberOfInstances(1);
+        const vbo = primHelper.getVertexInput().getBuffer('vertexBC');
+        primHelper.setNumberOfVertices(
+          vbo.getSizeInBytes() / vbo.getStrideInBytes()
+        );
+        primHelper.setTopology(publicAPI.getTopologyFromUsage(usage));
+        primHelper.build(model.renderEncoder, device);
+        primHelper.registerToDraw();
       }
+    }
+  };
+
+  publicAPI.setShaderReplacement = (name, func) => {
+    for (let i = PrimitiveTypes.Start; i < PrimitiveTypes.End; i++) {
+      const sr = model.primitives[i].getShaderReplacements();
+      sr.set(name, func);
+    }
+  };
+
+  publicAPI.setFragmentShaderTemplate = (val) => {
+    model.fragmentShaderTemplate = val;
+    for (let i = PrimitiveTypes.Start; i < PrimitiveTypes.End; i++) {
+      model.primitives[i].setFragmentShaderTemplate(val);
+    }
+  };
+
+  publicAPI.setVertexShaderTemplate = (val) => {
+    model.fragmentShaderTemplate = val;
+    for (let i = PrimitiveTypes.Start; i < PrimitiveTypes.End; i++) {
+      model.primitives[i].setVertexShaderTemplate(val);
     }
   };
 }
@@ -823,8 +691,7 @@ const DEFAULT_VALUES = {
   colorTexture: null,
   renderEncoder: null,
   textures: null,
-  samplers: null,
-  textureBindGroups: null,
+  textureViews: null,
   primitives: null,
   tmpMat4: null,
   fragmentShaderTemplate: null,
@@ -862,57 +729,56 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('SpecularPower', 'f32');
   model.UBO.addEntry('PropID', 'u32');
 
-  model.samplers = [];
-  model.textures = [];
-  model.textureBindGroups = [];
-  model.primitives = [];
-  for (let i = PrimitiveTypes.Start; i < PrimitiveTypes.End; i++) {
-    model.primitives[i] = {
-      primitiveType: i,
-      vertexInput: vtkWebGPUVertexInput.newInstance(),
-    };
-    const primHelper = model.primitives[i];
-
-    model.primitives[i].renderForPipeline = (pipeline) => {
-      const renderEncoder = model.WebGPURenderer.getRenderEncoder();
-
-      // bind the mapper UBO
-      const midx = pipeline.getBindGroupLayoutCount(model.UBO.getName());
-      renderEncoder.setBindGroup(midx, model.UBO.getBindGroup());
-
-      if (model.SSBO) {
-        const sidx = pipeline.getBindGroupLayoutCount(model.SSBO.getName());
-        renderEncoder.setBindGroup(sidx, model.SSBO.getBindGroup());
-      }
-
-      // bind any textures and samplers
-      for (let t = 0; t < model.textures.length; t++) {
-        const tcount = pipeline.getBindGroupLayoutCount(`Texture${t}`);
-        renderEncoder.setBindGroup(tcount, model.textureBindGroups[t]);
-      }
-
-      // bind the vertex input
-      pipeline.bindVertexInput(renderEncoder, primHelper.vertexInput);
-      renderEncoder.draw(
-        primHelper.numberOfVertices,
-        primHelper.numberOfInstances,
-        0,
-        0
-      );
-    };
-  }
-
   // Build VTK API
-  macro.setGet(publicAPI, model, [
-    'context',
+  macro.get(publicAPI, model, [
     'fragmentShaderTemplate',
     'vertexShaderTemplate',
-    'renderEncoder',
     'UBO',
   ]);
+  macro.setGet(publicAPI, model, ['renderEncoder']);
+
+  model.textures = [];
+  model.textureViews = [];
+  model.primitives = [];
 
   // Object methods
   vtkWebGPUPolyDataMapper(publicAPI, model);
+
+  for (let i = PrimitiveTypes.Start; i < PrimitiveTypes.End; i++) {
+    model.primitives[i] = vtkWebGPUMapperHelper.newInstance();
+    model.primitives[i].setUBO(model.UBO);
+    model.primitives[i].setVertexShaderTemplate(
+      publicAPI.getVertexShaderTemplate()
+    );
+    model.primitives[i].setFragmentShaderTemplate(
+      publicAPI.getFragmentShaderTemplate()
+    );
+  }
+
+  publicAPI.setShaderReplacement(
+    'replaceShaderPosition',
+    publicAPI.replaceShaderPosition
+  );
+  publicAPI.setShaderReplacement(
+    'replaceShaderLight',
+    publicAPI.replaceShaderLight
+  );
+  publicAPI.setShaderReplacement(
+    'replaceShaderTCoord',
+    publicAPI.replaceShaderTCoord
+  );
+  publicAPI.setShaderReplacement(
+    'replaceShaderNormal',
+    publicAPI.replaceShaderNormal
+  );
+  publicAPI.setShaderReplacement(
+    'replaceShaderSelect',
+    publicAPI.replaceShaderSelect
+  );
+  publicAPI.setShaderReplacement(
+    'replaceShaderColor',
+    publicAPI.replaceShaderColor
+  );
 }
 
 // ----------------------------------------------------------------------------

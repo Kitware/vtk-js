@@ -43,7 +43,7 @@ function vtkForwardPass(publicAPI, model) {
           // check for both opaque and volume actors
           model.opaqueActorCount = 0;
           model.translucentActorCount = 0;
-          model.volumeCount = 0;
+          model.volumes = [];
           publicAPI.setCurrentOperation('queryPass');
 
           renNode.traverse(publicAPI);
@@ -69,16 +69,17 @@ function vtkForwardPass(publicAPI, model) {
           }
 
           // optional volume pass
-          if (model.volumeCount > 0) {
+          if (model.volumes.length > 0) {
             if (!model.volumePass) {
               model.volumePass = vtkWebGPUVolumePass.newInstance();
             }
             model.volumePass.setColorTextureView(
-              model.opaqueRenderEncoder.getColorTextureViews()[0]
+              model.opaquePass.getColorTextureView()
             );
             model.volumePass.setDepthTextureView(
-              model.opaqueRenderEncoder.getDepthTextureView()
+              model.opaquePass.getDepthTextureView()
             );
+            model.volumePass.setVolumes(model.volumes);
             model.volumePass.traverse(renNode, viewNode);
           }
         }
@@ -108,7 +109,9 @@ function vtkForwardPass(publicAPI, model) {
   publicAPI.incrementOpaqueActorCount = () => model.opaqueActorCount++;
   publicAPI.incrementTranslucentActorCount = () =>
     model.translucentActorCount++;
-  publicAPI.incrementVolumeCount = () => model.volumeCount++;
+  publicAPI.addVolume = (volume) => {
+    model.volumes.push(volume);
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -118,7 +121,7 @@ function vtkForwardPass(publicAPI, model) {
 const DEFAULT_VALUES = {
   opaqueActorCount: 0,
   translucentActorCount: 0,
-  volumeCount: 0,
+  volumes: null,
   opaqueRenderEncoder: null,
   translucentPass: null,
   volumePass: null,

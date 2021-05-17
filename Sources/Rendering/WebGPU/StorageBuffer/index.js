@@ -38,7 +38,7 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
     model.sizeInBytes += sizeInBytes;
   };
 
-  publicAPI.send = (device, layout) => {
+  publicAPI.send = (device) => {
     if (!model._buffer) {
       const req = {
         nativeArray: model.Float32Array,
@@ -47,7 +47,7 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
       };
       model._buffer = device.getBufferManager().getBuffer(req);
       model.bindGroup = device.getHandle().createBindGroup({
-        layout,
+        layout: publicAPI.getBindGroupLayout(device),
         entries: [
           {
             binding: model.binding,
@@ -193,11 +193,17 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
     return lines.join('\n');
   };
 
+  publicAPI.getBindGroupLayout = (device) =>
+    device.getBindGroupLayout(model.bindGroupDescription);
+
   publicAPI.clearData = () => {
     model.numberOfInstances = 0;
     model.sizeInBytes = 0;
     model.bufferEntries = [];
     model._bufferEntryNames = new Map();
+    model._buffer = null;
+    delete model.arrayBuffer;
+    delete model.Float32Array;
   };
 }
 
@@ -228,6 +234,17 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model._sendTime = {};
   macro.obj(model._sendTime, { mtime: 0 });
+
+  // default SSBO desc
+  model.bindGroupDescription = model.bindGroupDescription || {
+    entries: [
+      {
+        buffer: {
+          type: 'read-only-storage',
+        },
+      },
+    ],
+  };
 
   macro.get(publicAPI, model, ['bindGroup']);
   macro.setGet(publicAPI, model, [

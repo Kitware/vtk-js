@@ -24,6 +24,8 @@ instead calling renderWindow.newAPISpecificView('WebGPU') should be all that
 is needed.
 
 # ToDo
+- create background class to encapsulate, background clear,
+  gradient background, texture background, skybox etc
 - PBR lighting to replace the simple model currently coded
 - eventually switch to using IBOs and flat interpolation
 - cropping planes for polydata mapper
@@ -98,3 +100,13 @@ Note that vtk.js already had a notion of a render pass which is a bit different 
 what WebGPU uses. So to avoid confusion we call WebGPU render passes "render encoders".
 This matches WebGPU terminology as they are encoders and sometimes called render pass
 encoders in the WebGPU spec.
+
+There is a notion of bindable things in this implementation. The mapper helper keeps an array of
+bindable things that it uses/manages. Right now these unclude UBOs, SSBOs, and TextureViews. TextureViews
+may also include a sampler in them. A bindable thing must answer to the following interface
+```
+set/getName
+getBindGroupLayout(device)
+getBindGroup()
+getShaderCode(pipeline)
+```

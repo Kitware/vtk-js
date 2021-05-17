@@ -339,9 +339,9 @@ function vtkWebGPUVolumeMapper(publicAPI, model) {
     }
   };
 
-  publicAPI.renderForPipeline = (pipeline) => {
-    const renderEncoder = model.WebGPURenderer.getRenderEncoder();
+  publicAPI.renderForPipeline = (renderEncoder) => {
     const primHelper = model._triangles;
+    const pipeline = renderEncoder.getBoundPipeline();
 
     // bind the mapper UBO
     const uboidx = pipeline.getBindGroupLayoutCount(model.UBO.getName());

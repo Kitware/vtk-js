@@ -25,7 +25,6 @@ function vtkWebGPUActor(publicAPI, model) {
       if (model.propID === undefined) {
         model.propID = model.WebGPURenderWindow.getUniquePropID();
       }
-      model.context = model.WebGPURenderWindow.getContext();
       publicAPI.prepareNodes();
       publicAPI.addMissingNode(model.renderable.getMapper());
       publicAPI.removeUnusedNodes();

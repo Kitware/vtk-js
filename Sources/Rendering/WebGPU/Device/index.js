@@ -22,131 +22,35 @@ function vtkWebGPUDevice(publicAPI, model) {
   publicAPI.getShaderModule = (sd) => model.shaderCache.getShaderModule(sd);
 
   /* eslint-disable no-bitwise */
-  publicAPI.getRendererBindGroupLayout = () => {
-    if (!model.rendererBindGroupLayout) {
-      const descriptor = {
-        entries: [
-          {
-            binding: 0,
-            /* eslint-disable no-undef */
-            visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-            /* eslint-enable no-undef */
-            buffer: {
-              type: 'uniform',
-              hasDynamicOffset: false,
-              minBindingSize: 0,
-            },
-          },
-        ],
-      };
-      model.rendererBindGroupLayout = model.handle.createBindGroupLayout(
-        descriptor
-      );
+  /* eslint-disable no-undef */
+  publicAPI.getBindGroupLayout = (val) => {
+    if (!val.entries) {
+      return null;
     }
-    return model.rendererBindGroupLayout;
-  };
 
-  publicAPI.getMapperBindGroupLayout = () => {
-    if (!model.mapperBindGroupLayout) {
-      const descriptor = {
-        entries: [
-          {
-            binding: 0,
-            /* eslint-disable no-undef */
-            visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-            /* eslint-enable no-undef */
-            buffer: {
-              type: 'uniform',
-              hasDynamicOffset: false,
-              minBindingSize: 0,
-            },
-          },
-        ],
-      };
-      model.mapperBindGroupLayout = model.handle.createBindGroupLayout(
-        descriptor
-      );
+    // add in basic required values if missing
+    for (let i = 0; i < val.entries.length; i++) {
+      const ent = val.entries[i];
+      ent.binding = ent.binding || 0;
+      ent.visibility =
+        ent.visibility || GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT;
     }
-    return model.mapperBindGroupLayout;
-  };
 
-  publicAPI.getStorageBindGroupLayout = () => {
-    if (!model.storageBindGroupLayout) {
-      const descriptor = {
-        entries: [
-          {
-            binding: 0,
-            /* eslint-disable no-undef */
-            visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-            /* eslint-enable no-undef */
-            buffer: {
-              type: 'read-only-storage',
-              hasDynamicOffset: false,
-              minBindingSize: 0,
-            },
-          },
-        ],
-      };
-      model.storageBindGroupLayout = model.handle.createBindGroupLayout(
-        descriptor
-      );
+    // do we already have one?
+    const sval = JSON.stringify(val);
+    for (let i = 0; i < model.bindGroupLayouts.length; i++) {
+      if (model.bindGroupLayouts[i].sval === sval) {
+        return model.bindGroupLayouts[i].layout;
+      }
     }
-    return model.storageBindGroupLayout;
-  };
 
-  publicAPI.getSamplerBindGroupLayout = () => {
-    if (!model.samplerBindGroupLayout) {
-      const descriptor = {
-        entries: [
-          {
-            binding: 0,
-            /* eslint-disable no-undef */
-            visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-            /* eslint-enable no-undef */
-            sampler: {
-              // type: 'filtering',
-            },
-          },
-        ],
-      };
-      model.samplerBindGroupLayout = model.handle.createBindGroupLayout(
-        descriptor
-      );
-    }
-    return model.samplerBindGroupLayout;
-  };
+    // create one and store it
+    const layout = model.handle.createBindGroupLayout(val);
 
-  publicAPI.getTextureBindGroupLayout = () => {
-    if (!model.textureBindGroupLayout) {
-      const descriptor = {
-        entries: [
-          {
-            binding: 0,
-            /* eslint-disable no-undef */
-            visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-            /* eslint-enable no-undef */
-            texture: {
-              // sampleType: 'float',
-              // viewDimension: '2d',
-              // multisampled: false,
-            },
-          },
-          {
-            binding: 1,
-            /* eslint-disable no-undef */
-            visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-            /* eslint-enable no-undef */
-            sampler: {
-              // type: 'filtering',
-            },
-          },
-        ],
-      };
-      model.textureBindGroupLayout = model.handle.createBindGroupLayout(
-        descriptor
-      );
-    }
-    return model.textureBindGroupLayout;
+    // we actuall yonly store the stringified version
+    // as that is what we always compare against
+    model.bindGroupLayouts.push({ sval, layout });
+    return layout;
   };
 
   publicAPI.getPipeline = (hash) => {
@@ -172,11 +76,7 @@ const DEFAULT_VALUES = {
   handle: null,
   pipelines: null,
   shaderCache: null,
-  rendererBindGroupLayout: null,
-  mapperBindGroupLayout: null,
-  samplerBindGroupLayout: null,
-  storageBindGroupLayout: null,
-  textureBindGroupLayout: null,
+  bindGroupLayouts: null,
   bufferManager: null,
   textureManager: null,
 };
@@ -197,6 +97,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.shaderCache = vtkWebGPUShaderCache.newInstance();
   model.shaderCache.setDevice(publicAPI);
+
+  model.bindGroupLayouts = [];
 
   model.bufferManager = vtkWebGPUBufferManager.newInstance();
   model.bufferManager.setDevice(publicAPI);

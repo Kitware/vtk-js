@@ -68,9 +68,11 @@ const newWebGPUCustomMapper = macro.newInstance(
     vtkWebGPUPolyDataMapper.extend(publicAPI, model, initialValues);
 
     // update the Shader code template so we can add in our own stuff
-    model.fragmentShaderTemplate = model.fragmentShaderTemplate.replace(
-      '//VTK::Normal::Impl',
-      '//VTK::Normal::Impl\n\n//VTK::Wonkyness::Impl'
+    publicAPI.setFragmentShaderTemplate(
+      model.fragmentShaderTemplate.replace(
+        '//VTK::Normal::Impl',
+        '//VTK::Normal::Impl\n\n//VTK::Wonkyness::Impl'
+      )
     );
 
     // add a new entry into the UBO
@@ -107,6 +109,10 @@ const newWebGPUCustomMapper = macro.newInstance(
         fDesc.setCode(code);
       }
     };
+    publicAPI.setShaderReplacement(
+      'replaceShaderWonkyness',
+      publicAPI.replaceShaderWonkyness
+    );
   },
   'vtkWebGPUCustomMapper'
 );

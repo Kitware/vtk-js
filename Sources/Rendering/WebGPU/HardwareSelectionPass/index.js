@@ -40,7 +40,9 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
         /* eslint-disable no-bitwise */
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
       });
-      model.selectionRenderEncoder.setColorTexture(0, model.colorTexture);
+      const v1 = model.colorTexture.createView();
+      v1.setName('hardwareSelectColorTexture');
+      model.selectionRenderEncoder.setColorTextureView(0, v1);
 
       // create depth texture
       model.depthTexture = vtkWebGPUTexture.newInstance();
@@ -52,7 +54,9 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
         /* eslint-disable no-bitwise */
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
       });
-      model.selectionRenderEncoder.setDepthTexture(model.depthTexture);
+      const v2 = model.depthTexture.createView();
+      v2.setName('hardwareSelectDepthTexture');
+      model.selectionRenderEncoder.setDepthTextureView(v2);
     } else {
       model.colorTexture.resize(
         viewNode.getCanvas().width,

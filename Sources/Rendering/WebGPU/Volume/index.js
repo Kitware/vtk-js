@@ -1,4 +1,4 @@
-import { mat3, mat4 } from 'gl-matrix';
+import { mat4 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macro';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
@@ -40,7 +40,35 @@ function vtkWebGPUVolume(publicAPI, model) {
       if (!model.renderable || !model.renderable.getVisibility()) {
         return;
       }
-      renderPass.incrementVolumeCount();
+
+      // Check for the special case when the mapper's bounds are unknown
+      const bds = model.renderable.getMapper().getBounds();
+      if (!bds || bds.length !== 6 || bds[0] > bds[1]) {
+        return;
+      }
+
+      renderPass.addVolume(publicAPI);
+    }
+  };
+
+  publicAPI.getBoundingCubePoints = (result, offset) => {
+    const bounds = model.renderable.getMapper().getBounds();
+    const m = model.renderable.getMatrix();
+
+    let count = 0;
+    for (let iz = 4; iz < 6; iz++) {
+      const z = bounds[iz];
+      for (let iy = 2; iy < 4; iy++) {
+        const y = bounds[iy];
+        for (let ix = 0; ix < 2; ix++) {
+          const x = bounds[ix];
+          let poffset = offset + count * 3;
+          result[poffset++] = m[0] * x + m[1] * y + m[2] * z + m[3];
+          result[poffset++] = m[4] * x + m[5] * y + m[6] * z + m[7];
+          result[poffset++] = m[8] * x + m[9] * y + m[10] * z + m[11];
+          count++;
+        }
+      }
     }
   };
 
@@ -60,23 +88,33 @@ function vtkWebGPUVolume(publicAPI, model) {
     publicAPI.apply(renderPass, false);
   };
 
-  publicAPI.getKeyMatrices = () => {
-    // has the actor changed?
-    if (model.renderable.getMTime() > model.keyMatrixTime.getMTime()) {
+  publicAPI.getKeyMatrices = (wgpuRen) => {
+    // has the actor or stabilization center changed?
+    if (
+      Math.max(
+        model.renderable.getMTime(),
+        wgpuRen.getStabilizedTime().getMTime()
+      ) > model.keyMatricesTime.getMTime()
+    ) {
       model.renderable.computeMatrix();
-      mat4.copy(model.MCWCMatrix, model.renderable.getMatrix());
-      mat4.transpose(model.MCWCMatrix, model.MCWCMatrix);
 
-      if (model.renderable.getIsIdentity()) {
-        mat3.identity(model.normalMatrix);
-      } else {
-        mat3.fromMat4(model.normalMatrix, model.MCWCMatrix);
-        mat3.invert(model.normalMatrix, model.normalMatrix);
-      }
-      model.keyMatrixTime.modified();
+      const mcwc = model.renderable.getMatrix();
+
+      // compute the net shift
+      const center = wgpuRen.getStabilizedCenterByReference();
+      mat4.transpose(model.keyMatrices.bcwc, mcwc);
+
+      // to get to stabilized we also need the center
+      mat4.translate(model.keyMatrices.bcsc, model.keyMatrices.bcwc, [
+        -center[0],
+        -center[1],
+        -center[2],
+      ]);
+
+      model.keyMatricesTime.modified();
     }
 
-    return { mcwc: model.MCWCMatrix, normalMatrix: model.normalMatrix };
+    return model.keyMatrices;
   };
 }
 
@@ -86,9 +124,7 @@ function vtkWebGPUVolume(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   propID: undefined,
-  // keyMatrixTime: null,
-  // normalMatrix: null,
-  // MCWCMatrix: null,
+  keyMatricesTime: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -99,13 +135,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
 
-  model.keyMatrixTime = {};
-  macro.obj(model.keyMatrixTime, { mtime: 0 });
-  // always set by getter
-  model.normalMatrix = new Float64Array(9);
-  model.MCWCMatrix = new Float64Array(16);
+  model.keyMatricesTime = {};
+  macro.obj(model.keyMatricesTime, { mtime: 0 });
+  model.keyMatrices = {
+    bcwc: new Float64Array(16),
+    bcsc: new Float64Array(16),
+  };
 
-  macro.get(publicAPI, model, ['propID']);
+  macro.get(publicAPI, model, ['propID', 'keyMatricesTime']);
 
   // Object methods
   vtkWebGPUVolume(publicAPI, model);
