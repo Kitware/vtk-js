@@ -1,3 +1,8 @@
+## From 17.x to 18
+
+Explicit import needs to be performed to enable rendering implementation. Profiles
+have been created to simplify that task. See vtk.js/Sources/Rendering/OpenGL|WebGPU/Profiles/*.
+
 ## From 16.x to 17
 
 vtkBoundingBox has been redesigned to be more light weight with static methods.
