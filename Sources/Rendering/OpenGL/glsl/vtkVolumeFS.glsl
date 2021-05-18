@@ -636,7 +636,27 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
 return tColor;
 }
 
-
+bool valueWithinScalarRange(vec4 val, vec4 min, vec4 max) {
+  bool withinRange = false;
+  #if vtkNumComponents >= 1
+    if (val.r > min.r && val.r < max.r) {
+      withinRange = true;
+    }
+  #endif
+  #if defined(vtkIndependentComponentsOn) && vtkNumComponents == 2
+     if (val.r > min.r && val.r < max.r &&
+        val.g > min.g && val.g < max.g) {
+      withinRange = true;
+    }
+  #endif
+  #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 3
+    if (all(greaterThanEqual(val, averageIPScalarRangeMin)) &&
+        all(lessThanEqual(val, averageIPScalarRangeMax))) {
+      withinRange = true;
+    }
+  #endif
+  return withinRange;
+}
 
 //=======================================================================
 // Apply the specified blend mode operation along the ray's path.
@@ -791,8 +811,7 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
     averageIPScalarRangeMin.a = tValue.a;
     averageIPScalarRangeMax.a = tValue.a;
 
-    if (all(greaterThanEqual(tValue, averageIPScalarRangeMin)) &&
-    all(lessThanEqual(tValue, averageIPScalarRangeMax))) {
+    if (valueWithinScalarRange(tValue, averageIPScalarRangeMin, averageIPScalarRangeMax)) {
       sum += tValue;
     }
 
@@ -826,8 +845,7 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
       //   we could write an 'anyRGB' function and see if that is faster.
       averageIPScalarRangeMin.a = tValue.a;
       averageIPScalarRangeMax.a = tValue.a;
-      if (any(lessThan(tValue, averageIPScalarRangeMin)) ||
-          any(greaterThan(tValue, averageIPScalarRangeMax))) {
+      if (!valueWithinScalarRange(tValue, averageIPScalarRangeMin, averageIPScalarRangeMax)) {
         continue;
       }
 
@@ -847,8 +865,7 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
     tValue = getTextureValue(posIS);
 
     // One can control the scalar range by setting the AverageIPScalarRange to disregard scalar values, not in the range of interest, from the average computation
-    if (all(greaterThanEqual(tValue, averageIPScalarRangeMin)) &&
-        all(lessThanEqual(tValue, averageIPScalarRangeMax))) {
+    if (valueWithinScalarRange(tValue, averageIPScalarRangeMin, averageIPScalarRangeMax)) {
       sum += tValue;
 
       stepsTraveled++;
