@@ -97,6 +97,7 @@ function updateScalarMin(event) {
     event.target.value,
     parseFloat(mapper.getAverageIPScalarRange()[1])
   );
+  renderWindow.render();
 }
 
 function updateScalarMax(event) {
@@ -104,6 +105,7 @@ function updateScalarMax(event) {
     mapper.getAverageIPScalarRange()[0],
     parseFloat(event.target.value)
   );
+  renderWindow.render();
 }
 
 reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
@@ -118,9 +120,9 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
     const el = document.querySelector('.blendMode');
     el.addEventListener('change', updateBlendMode);
     const scalarMinEl = document.querySelector('.scalarMin');
-    scalarMinEl.addEventListener('change', updateScalarMin);
+    scalarMinEl.addEventListener('input', updateScalarMin);
     const scalarMaxEl = document.querySelector('.scalarMax');
-    scalarMaxEl.addEventListener('change', updateScalarMax);
+    scalarMaxEl.addEventListener('input', updateScalarMax);
   });
 });
 
