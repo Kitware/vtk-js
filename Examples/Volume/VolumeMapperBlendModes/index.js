@@ -79,7 +79,7 @@ function updateBlendMode(event) {
     // Show average scalar ui
     for (let i = 0; i < averageIPScalarEls.length; i += 1) {
       const el = averageIPScalarEls[i];
-      el.style.display = 'block';
+      el.style.display = 'table-row';
     }
   } else {
     // Hide average scalar ui
