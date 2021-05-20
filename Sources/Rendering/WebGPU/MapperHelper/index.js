@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
+import vtkWebGPUBindGroup from 'vtk.js/Sources/Rendering/WebGPU/BindGroup';
 import vtkWebGPUPipeline from 'vtk.js/Sources/Rendering/WebGPU/Pipeline';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUShaderDescription from 'vtk.js/Sources/Rendering/WebGPU/ShaderDescription';
@@ -157,7 +158,7 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
     if (!model.WebGPURenderer) {
       return;
     }
-    const ubocode = model.WebGPURenderer.getUBO().getShaderCode(pipeline);
+    const ubocode = model.WebGPURenderer.getBindGroup().getShaderCode(pipeline);
 
     const vDesc = pipeline.getShaderDescription('vertex');
     let code = vDesc.getCode();
@@ -179,14 +180,7 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
   );
 
   publicAPI.replaceShaderMapper = (hash, pipeline, vertexInput) => {
-    let ubocode;
-    if (model.UBO) {
-      ubocode = model.UBO.getShaderCode(pipeline);
-    }
-    if (model.SSBO) {
-      ubocode += `\n ${model.SSBO.getShaderCode(pipeline)}`;
-    }
-
+    const ubocode = model.bindGroup.getShaderCode(pipeline);
     const vDesc = pipeline.getShaderDescription('vertex');
     let code = vDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::Dec', [
@@ -224,19 +218,6 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
   publicAPI.replaceShaderTCoord = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
     vDesc.addOutput('vec2<f32>', 'tcoordVS');
-
-    const fDesc = pipeline.getShaderDescription('fragment');
-    let code = fDesc.getCode();
-    const tcinput = [];
-
-    for (let t = 0; t < model.textureViews.length; t++) {
-      tcinput.push(model.textureViews[t].getShaderCode(pipeline));
-    }
-
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Dec', tcinput)
-      .result;
-
-    fDesc.setCode(code);
   };
   model.shaderReplacements.set(
     'replaceShaderTCoord',
@@ -254,24 +235,8 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
   publicAPI.renderForPipeline = (renderEncoder) => {
     const pipeline = renderEncoder.getBoundPipeline();
 
-    // bind the mapper UBO
-    if (model.UBO) {
-      const midx = pipeline.getBindGroupLayoutCount(model.UBO.getName());
-      renderEncoder.setBindGroup(midx, model.UBO.getBindGroup());
-    }
-
-    if (model.SSBO) {
-      const sidx = pipeline.getBindGroupLayoutCount(model.SSBO.getName());
-      renderEncoder.setBindGroup(sidx, model.SSBO.getBindGroup());
-    }
-
-    // bind any textures and samplers
-    for (let t = 0; t < model.textureViews.length; t++) {
-      const tcount = pipeline.getBindGroupLayoutCount(
-        model.textureViews[t].getName()
-      );
-      renderEncoder.setBindGroup(tcount, model.textureViews[t].getBindGroup());
-    }
+    // bind the mapper bind group
+    renderEncoder.activateBindGroup(model.bindGroup);
 
     // bind the vertex input
     pipeline.bindVertexInput(renderEncoder, model.vertexInput);
@@ -290,6 +255,9 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
   publicAPI.render = (renderEncoder, device) => {
     publicAPI.build(renderEncoder, device);
     renderEncoder.setPipeline(model.pipeline);
+    if (model.WebGPURenderer) {
+      model.WebGPURenderer.bindUBO(renderEncoder);
+    }
     publicAPI.renderForPipeline(renderEncoder);
   };
 
@@ -299,33 +267,35 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
 
     model.pipeline = device.getPipeline(model.pipelineHash);
 
+    // todo handle removing a bindable
+    if (model.UBO) {
+      model.bindGroup.addBindable(model.UBO);
+    }
+
+    if (model.SSBO) {
+      model.bindGroup.addBindable(model.SSBO);
+    }
+
+    // add texture BindGroupLayouts
+    for (let t = 0; t < model.textureViews.length; t++) {
+      model.bindGroup.addBindable(model.textureViews[t]);
+      const samp = model.textureViews[t].getSampler();
+      if (samp) {
+        model.bindGroup.addBindable(samp);
+      }
+    }
+
     // build VBO for this primitive
     // build the pipeline if needed
     if (!model.pipeline) {
       model.pipeline = vtkWebGPUPipeline.newInstance();
       model.pipeline.setDevice(device);
 
-      model.BindGroups = [];
       if (model.WebGPURenderer) {
-        model.BindGroups.push(model.WebGPURenderer.getUBO());
+        model.pipeline.addBindGroupLayout(model.WebGPURenderer.getBindGroup());
       }
 
-      if (model.UBO) {
-        model.BindGroups.push(model.UBO);
-      }
-
-      if (model.SSBO) {
-        model.BindGroups.push(model.SSBO);
-      }
-
-      // add texture BindGroupLayouts
-      for (let t = 0; t < model.textureViews.length; t++) {
-        model.BindGroups.push(model.textureViews[t]);
-      }
-
-      for (let bgi = 0; bgi < model.BindGroups.length; bgi++) {
-        model.pipeline.addBindGroupLayout2(model.BindGroups[bgi]);
-      }
+      model.pipeline.addBindGroupLayout(model.bindGroup);
 
       publicAPI.generateShaderDescriptions(
         model.pipelineHash,
@@ -347,6 +317,7 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  bindGroup: null,
   device: null,
   fragmentShaderTemplate: null,
   numberOfInstances: 1,
@@ -371,6 +342,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.textureViews = [];
   model.vertexInput = vtkWebGPUVertexInput.newInstance();
+
+  model.bindGroup = vtkWebGPUBindGroup.newInstance();
+  model.bindGroup.setName('mapperBG');
 
   model.fragmentShaderTemplate =
     model.fragmentShaderTemplate || vtkWebGPUMapperHelperFS;

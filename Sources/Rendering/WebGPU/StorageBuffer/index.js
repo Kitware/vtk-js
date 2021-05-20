@@ -46,17 +46,7 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
         usage: BufferUsage.Storage,
       };
       model._buffer = device.getBufferManager().getBuffer(req);
-      model.bindGroup = device.getHandle().createBindGroup({
-        layout: publicAPI.getBindGroupLayout(device),
-        entries: [
-          {
-            binding: model.binding,
-            resource: {
-              buffer: model._buffer.getHandle(),
-            },
-          },
-        ],
-      });
+      model.bindGroupTime.modified();
       model._sendTime.modified();
       return;
     }
@@ -174,8 +164,7 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
   };
 
   publicAPI.getSendTime = () => model.sendTime.getMTime();
-  publicAPI.getShaderCode = (pipeline) => {
-    const bgroup = pipeline.getBindGroupLayoutCount(model.name);
+  publicAPI.getShaderCode = (binding, group) => {
     const lines = [`struct ${model.name}StructEntry\n{`];
     for (let i = 0; i < model.bufferEntries.length; i++) {
       const entry = model.bufferEntries[i];
@@ -187,14 +176,20 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
 {
   values: array<${model.name}StructEntry>;
 };
-[[binding(${model.binding}), group(${bgroup})]] var<storage> ${model.name}: [[access(read)]] ${model.name}Struct;
+[[binding(${binding}), group(${group})]] var<storage> ${model.name}: [[access(read)]] ${model.name}Struct;
 `);
 
     return lines.join('\n');
   };
 
-  publicAPI.getBindGroupLayout = (device) =>
-    device.getBindGroupLayout(model.bindGroupDescription);
+  publicAPI.getBindGroupEntry = () => {
+    const foo = {
+      resource: {
+        buffer: model._buffer.getHandle(),
+      },
+    };
+    return foo;
+  };
 
   publicAPI.clearData = () => {
     model.numberOfInstances = 0;
@@ -216,7 +211,6 @@ const DEFAULT_VALUES = {
   bufferEntryNames: null,
   sizeInBytes: 0,
   name: null,
-  binding: 0,
   numberOfInstances: 1,
 };
 
@@ -235,21 +229,20 @@ export function extend(publicAPI, model, initialValues = {}) {
   model._sendTime = {};
   macro.obj(model._sendTime, { mtime: 0 });
 
+  model.bindGroupTime = {};
+  macro.obj(model.bindGroupTime, { mtime: 0 });
+
   // default SSBO desc
-  model.bindGroupDescription = model.bindGroupDescription || {
-    entries: [
-      {
-        buffer: {
-          type: 'read-only-storage',
-        },
-      },
-    ],
+  model.bindGroupLayoutEntry = model.bindGroupLayoutEntry || {
+    buffer: {
+      type: 'read-only-storage',
+    },
   };
 
-  macro.get(publicAPI, model, ['bindGroup']);
+  macro.get(publicAPI, model, ['bindGroupTime']);
   macro.setGet(publicAPI, model, [
-    'binding',
     'device',
+    'bindGroupLayoutEntry',
     'name',
     'numberOfInstances',
     'sizeInBytes',
