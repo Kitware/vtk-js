@@ -290,24 +290,11 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
     const fDesc = pipeline.getShaderDescription('fragment');
     code = fDesc.getCode();
-    const tcinput = [];
 
-    for (let t = 0; t < model.textures.length; t++) {
-      const tcount = pipeline.getBindGroupLayoutCount(`Texture${t}`);
-      tcinput.push(
-        `[[binding(0), group(${tcount})]] var Texture${t}: texture_2d<f32>;`
-      );
-      tcinput.push(
-        `[[binding(1), group(${tcount})]] var Sampler${t}: sampler;`
-      );
-    }
-
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Dec', tcinput)
-      .result;
-
+    // todo handle multiple textures? Blend multiply ?
     if (model.textures.length) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Impl', [
-        'var tcolor: vec4<f32> = textureSample(Texture0, Sampler0, input.tcoordVS);',
+        'var tcolor: vec4<f32> = textureSample(Texture0, Texture0Sampler, input.tcoordVS);',
         'computedColor = computedColor*tcolor;',
       ]).result;
     }
@@ -585,6 +572,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     for (let i = model.textures.length - 1; i >= 0; i--) {
       if (!usedTextures[i]) {
         model.textures.splice(i, 1);
+        model.textureViews.splice(i, 1);
       }
     }
   };

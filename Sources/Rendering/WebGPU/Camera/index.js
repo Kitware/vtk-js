@@ -59,6 +59,8 @@ function vtkWebGPUCamera(publicAPI, model) {
         model.keyMatrices.scvc
       );
 
+      mat4.invert(model.keyMatrices.pcsc, model.keyMatrices.scpc);
+
       model.keyMatrixTime.modified();
     }
     return model.keyMatrices;
@@ -89,6 +91,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.keyMatrices = {
     normalMatrix: new Float64Array(16),
     vcpc: new Float64Array(16),
+    pcsc: new Float64Array(16),
     wcvc: new Float64Array(16),
     scpc: new Float64Array(16),
     scvc: new Float64Array(16),

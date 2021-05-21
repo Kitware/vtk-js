@@ -18,42 +18,15 @@ function vtkWebGPUTextureView(publicAPI, model) {
     model.handle = model.textureHandle.createView(model.options);
   };
 
-  publicAPI.getBindGroupLayout = (device) =>
-    device.getBindGroupLayout(model.bindGroupDescription);
-
-  publicAPI.getBindGroup = () => {
-    // if we don't have a bind group or if our handle changed
-    const handle = publicAPI.getHandle();
-    if (!model.bindGroup || model.lastBindGroupHandle !== handle) {
-      const device = model.texture.getDevice();
-      const bgp = {
-        layout: publicAPI.getBindGroupLayout(device),
-        entries: [
-          {
-            binding: 0,
-            resource: handle,
-          },
-        ],
-      };
-      if (model.sampler) {
-        bgp.entries.push({
-          binding: 1,
-          resource: model.sampler.getHandle(),
-        });
-      }
-      model.lastBindGroupHandle = handle;
-      model.bindGroup = device.getHandle().createBindGroup(bgp);
-    }
-    return model.bindGroup;
+  publicAPI.getBindGroupEntry = () => {
+    const foo = {
+      resource: publicAPI.getHandle(),
+    };
+    return foo;
   };
 
-  publicAPI.getShaderCode = (pipeline) => {
-    const bgroup = pipeline.getBindGroupLayoutCount(model.name);
-
-    let result = `[[binding(0), group(${bgroup})]] var ${model.name}: texture_2d<f32>;`;
-    if (model.sampler) {
-      result += `[[binding(1), group(${bgroup})]] var ${model.name}Sampler: sampler;`;
-    }
+  publicAPI.getShaderCode = (binding, group) => {
+    const result = `[[binding(${binding}), group(${group})]] var ${model.name}: texture_2d<f32>;`;
     return result;
   };
 
@@ -61,26 +34,18 @@ function vtkWebGPUTextureView(publicAPI, model) {
     const newSamp = vtkWebGPUSampler.newInstance();
     newSamp.create(device, options);
     publicAPI.setSampler(newSamp);
+    model.sampler.setName(`${model.name}Sampler`);
   };
 
-  publicAPI.setSampler = (samp) => {
-    if (model.sampler === samp) {
+  publicAPI.setName = (val) => {
+    if (model.sampler) {
+      model.sampler.setName(`${val}Sampler`);
+    }
+    if (model.name === val) {
       return;
     }
-
-    model.sampler = samp;
-
-    if (model.sampler) {
-      model.bindGroupDescription.entries.push({
-        binding: 1,
-        /* eslint-disable no-undef */
-        visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-        /* eslint-enable no-undef */
-        sampler: {
-          // type: 'filtering',
-        },
-      });
-    }
+    model.name = val;
+    publicAPI.modified();
   };
 
   // if the texture has changed then get a new view
@@ -88,6 +53,7 @@ function vtkWebGPUTextureView(publicAPI, model) {
     if (model.texture.getHandle() !== model.textureHandle) {
       model.textureHandle = model.texture.getHandle();
       model.handle = model.textureHandle.createView(model.options);
+      model.bindGroupTime.modified();
     }
     return model.handle;
   };
@@ -112,24 +78,22 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   macro.obj(publicAPI, model);
 
-  model.bindGroupDescription = {
-    entries: [
-      {
-        binding: 0,
-        /* eslint-disable no-undef */
-        visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-        /* eslint-enable no-undef */
-        texture: {
-          // sampleType: 'float',
-          // viewDimension: '2d',
-          // multisampled: false,
-        },
-      },
-    ],
+  model.bindGroupLayoutEntry = {
+    /* eslint-disable no-undef */
+    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+    /* eslint-enable no-undef */
+    texture: {
+      // sampleType: 'float',
+      // viewDimension: '2d',
+      // multisampled: false,
+    },
   };
 
-  macro.get(publicAPI, model, ['texture']);
-  macro.setGet(publicAPI, model, ['name', 'sampler']);
+  model.bindGroupTime = {};
+  macro.obj(model.bindGroupTime, { mtime: 0 });
+
+  macro.get(publicAPI, model, ['bindGroupTime', 'name', 'texture']);
+  macro.setGet(publicAPI, model, ['bindGroupLayoutEntry', 'sampler']);
 
   vtkWebGPUTextureView(publicAPI, model);
 }

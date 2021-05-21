@@ -35,6 +35,14 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
     model.colorTextureViews[idx] = view;
   };
 
+  publicAPI.activateBindGroup = (bg) => {
+    const midx = model.boundPipeline.getBindGroupLayoutCount(bg.getName());
+    model.handle.setBindGroup(
+      midx,
+      bg.getBindGroup(model.boundPipeline.getDevice())
+    );
+  };
+
   publicAPI.attachTextureViews = () => {
     // for each texture create a view if we do not already have one
     for (let i = 0; i < model.colorTextureViews.length; i++) {

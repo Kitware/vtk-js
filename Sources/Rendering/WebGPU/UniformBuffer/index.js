@@ -180,17 +180,7 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
         usage: BufferUsage.UniformArray,
       };
       model.UBO = device.getBufferManager().getBuffer(req);
-      model.bindGroup = device.getHandle().createBindGroup({
-        layout: publicAPI.getBindGroupLayout(device),
-        entries: [
-          {
-            binding: model.binding,
-            resource: {
-              buffer: model.UBO.getHandle(),
-            },
-          },
-        ],
-      });
+      model.bindGroupTime.modified();
       model.sendDirty = false;
     }
 
@@ -262,15 +252,19 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
     }
   };
 
-  publicAPI.getBindGroupLayout = (device) =>
-    device.getBindGroupLayout(model.bindGroupDescription);
+  publicAPI.getBindGroupEntry = () => {
+    const foo = {
+      resource: {
+        buffer: model.UBO.getHandle(),
+      },
+    };
+    return foo;
+  };
 
   publicAPI.getSendTime = () => model.sendTime.getMTime();
-  publicAPI.getShaderCode = (pipeline) => {
+  publicAPI.getShaderCode = (binding, group) => {
     // sort the entries
     publicAPI.sortBufferEntries();
-
-    const bgroup = pipeline.getBindGroupLayoutCount(model.name);
 
     const lines = [`[[block]] struct ${model.name}Struct\n{`];
     for (let i = 0; i < model.bufferEntries.length; i++) {
@@ -278,7 +272,7 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
       lines.push(`  ${entry.name}: ${entry.type};`);
     }
     lines.push(
-      `};\n[[binding(${model.binding}), group(${bgroup})]] var<uniform> ${model.name}: ${model.name}Struct;`
+      `};\n[[binding(${binding}), group(${group})]] var<uniform> ${model.name}: ${model.name}Struct;`
     );
     return lines.join('\n');
   };
@@ -293,8 +287,8 @@ const DEFAULT_VALUES = {
   bufferEntryNames: null,
   sizeInBytes: 0,
   name: null,
-  binding: 0,
-  bindGroupDescription: null,
+  bindGroupLayoutEntry: null,
+  bindGroupEntry: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -310,26 +304,24 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.bufferEntries = [];
 
   // default UBO desc
-  model.bindGroupDescription = model.bindGroupDescription || {
-    entries: [
-      {
-        buffer: {
-          type: 'uniform',
-        },
-      },
-    ],
+  model.bindGroupLayoutEntry = model.bindGroupLayoutEntry || {
+    buffer: {
+      type: 'uniform',
+    },
   };
 
   model.sendTime = {};
   macro.obj(model.sendTime, { mtime: 0 });
 
+  model.bindGroupTime = {};
+  macro.obj(model.bindGroupTime, { mtime: 0 });
+
   model.sendDirty = true;
   model.sortDirty = true;
 
-  macro.get(publicAPI, model, ['bindGroup']);
+  macro.get(publicAPI, model, ['binding', 'bindGroupTime']);
   macro.setGet(publicAPI, model, [
-    'binding',
-    'bindGroupDescription',
+    'bindGroupLayoutEntry',
     'device',
     'name',
     'sizeInBytes',

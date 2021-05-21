@@ -117,12 +117,14 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     model.finalEncoder.begin(viewNode.getCommandEncoder());
     // set viewport
     renNode.scissorAndViewport(model.finalEncoder);
+    model.fullScreenQuad.setWebGPURenderer(renNode);
+    model.fullScreenQuad.setVolumes(model.volumes);
     model.fullScreenQuad.render(model.finalEncoder, viewNode.getDevice());
     model.finalEncoder.end();
   };
 
   publicAPI.renderDepthBounds = (renNode, viewNode) => {
-    publicAPI.updateDepthPolyData();
+    publicAPI.updateDepthPolyData(renNode);
 
     const pd = model._boundsPoly;
     const cells = pd.getPolys();
@@ -150,7 +152,10 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     publicAPI.drawDepthRange(renNode, viewNode);
   };
 
-  publicAPI.updateDepthPolyData = () => {
+  publicAPI.updateDepthPolyData = (renNode) => {
+    // todo also check stabilized time
+    const center = renNode.getStabilizedCenterByReference();
+
     // check mtimes first
     let update = false;
     for (let i = 0; i < model.volumes.length; i++) {
@@ -183,6 +188,12 @@ function vtkWebGPUVolumePass(publicAPI, model) {
         polys[cellIdx++] = offset + cubeFaceTriangles[t][1];
         polys[cellIdx++] = offset + cubeFaceTriangles[t][2];
       }
+    }
+
+    for (let p = 0; p < points.length; p += 3) {
+      points[p] -= center[0];
+      points[p + 1] -= center[1];
+      points[p + 2] -= center[2];
     }
 
     model._boundsPoly.getPoints().setData(points, 3);
@@ -348,7 +359,7 @@ function vtkWebGPUVolumePass(publicAPI, model) {
             format: 'bgra8unorm',
             blend: {
               color: {
-                srcFactor: 'src-alpha',
+                srcFactor: 'one',
                 dstFactor: 'one-minus-src-alpha',
               },
               alpha: { srcfactor: 'one', dstFactor: 'one-minus-src-alpha' },
