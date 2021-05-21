@@ -1,3 +1,5 @@
+import { vec3, quat, mat4 } from 'gl-matrix';
+
 import 'vtk.js/Sources/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
@@ -13,7 +15,7 @@ import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransfe
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-import vtkImageCropFilter from 'vtk.js/Sources/Filters/General/ImageCropFilter';
+import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
 // Force the loading of HttpDataAccessHelper to support gzip decompression
 import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
@@ -125,25 +127,53 @@ actor.getProperty().setDiffuse(0.7);
 actor.getProperty().setSpecular(0.3);
 actor.getProperty().setSpecularPower(8.0);
 
-const cropFilter = vtkImageCropFilter.newInstance();
-cropFilter.setInputConnection(reader.getOutputPort());
-mapper.setInputConnection(cropFilter.getOutputPort());
+mapper.setInputConnection(reader.getOutputPort());
 
 // -----------------------------------------------------------
 // Get data
 // -----------------------------------------------------------
 
+function getCroppingPlanes(imageData, ijkPlanes) {
+  const rotation = quat.create();
+  mat4.getRotation(rotation, imageData.getIndexToWorld());
+
+  const rotateVec = (vec) => {
+    const out = [0, 0, 0];
+    vec3.transformQuat(out, vec, rotation);
+    return out;
+  };
+
+  const [iMin, iMax, jMin, jMax, kMin, kMax] = ijkPlanes;
+  const origin = imageData.indexToWorld([iMin, jMin, kMin]);
+  // opposite corner from origin
+  const corner = imageData.indexToWorld([iMax, jMax, kMax]);
+  return [
+    // X min/max
+    vtkPlane.newInstance({ normal: rotateVec([1, 0, 0]), origin }),
+    vtkPlane.newInstance({ normal: rotateVec([-1, 0, 0]), origin: corner }),
+    // Y min/max
+    vtkPlane.newInstance({ normal: rotateVec([0, 1, 0]), origin }),
+    vtkPlane.newInstance({ normal: rotateVec([0, -1, 0]), origin: corner }),
+    // X min/max
+    vtkPlane.newInstance({ normal: rotateVec([0, 0, 1]), origin }),
+    vtkPlane.newInstance({ normal: rotateVec([0, 0, -1]), origin: corner }),
+  ];
+}
+
 reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
   reader.loadData().then(() => {
     const image = reader.getOutputData();
-    cropFilter.setCroppingPlanes(...image.getExtent());
 
     // update crop widget
     widget.copyImageDataDescription(image);
-    window.asdf = widget;
     const cropState = widget.getWidgetState().getCroppingPlanes();
     cropState.onModified(() => {
-      cropFilter.setCroppingPlanes(cropState.getPlanes());
+      const planes = getCroppingPlanes(image, cropState.getPlanes());
+      mapper.removeAllClippingPlanes();
+      planes.forEach((plane) => {
+        mapper.addClippingPlane(plane);
+      });
+      mapper.modified();
     });
 
     // add volume to renderer
