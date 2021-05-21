@@ -93,7 +93,9 @@ function vtkOpenGLSurfaceLICMapper(publicAPI, model) {
 
     shaders.Fragment = FSSource;
     superClass.replaceShaderValues(shaders, ren, actor);
-    model.lastBoundBO.set({ lastLightComplexity: prevComplexity }, true);
+    if (prevComplexity > 0) {
+      model.lastBoundBO.set({ lastLightComplexity: prevComplexity }, true);
+    }
   };
 
   publicAPI.setMapperShaderParameters = (cellBO, ren, actor) => {
@@ -122,6 +124,7 @@ function vtkOpenGLSurfaceLICMapper(publicAPI, model) {
       [gl.BLEND]: gl.isEnabled(gl.BLEND),
       [gl.DEPTH_TEST]: gl.isEnabled(gl.DEPTH_TEST),
       [gl.SCISSOR_TEST]: gl.isEnabled(gl.SCISSOR_TEST),
+      [gl.CULL_FACE]: gl.isEnabled(gl.CULL_FACE),
     };
   };
 
@@ -131,6 +134,7 @@ function vtkOpenGLSurfaceLICMapper(publicAPI, model) {
     apply(gl.BLEND);
     apply(gl.DEPTH_TEST);
     apply(gl.SCISSOR_TEST);
+    apply(gl.CULL_FACE);
   };
 
   publicAPI.renderPiece = (ren, actor) => {
@@ -199,6 +203,20 @@ function vtkOpenGLSurfaceLICMapper(publicAPI, model) {
       return;
     }
 
+    // apply faceCulling
+    const gl = model.context;
+    const backfaceCulling = actor.getProperty().getBackfaceCulling();
+    const frontfaceCulling = actor.getProperty().getFrontfaceCulling();
+    if (!backfaceCulling && !frontfaceCulling) {
+      model.openGLRenderWindow.disableCullFace();
+    } else if (frontfaceCulling) {
+      model.openGLRenderWindow.enableCullFace();
+      gl.cullFace(gl.FRONT);
+    } else {
+      model.openGLRenderWindow.enableCullFace();
+      gl.cullFace(gl.BACK);
+    }
+
     const windowSize = model.openGLRenderWindow.getSize();
     const size = windowSize.map((i) =>
       Math.round(i * licInterface.getViewPortScale())
@@ -223,6 +241,7 @@ function vtkOpenGLSurfaceLICMapper(publicAPI, model) {
     publicAPI.pushState(model.context);
     model.VBOBuildTime.modified();
     model.openGLLicInterface.completedGeometry();
+    model.context.disable(model.context.CULL_FACE);
     model.openGLLicInterface.applyLIC();
     model.openGLLicInterface.combineColorsAndLIC();
     model.openGLLicInterface.copyToScreen(windowSize);
