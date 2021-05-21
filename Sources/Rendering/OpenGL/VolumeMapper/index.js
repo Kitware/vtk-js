@@ -232,21 +232,14 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     ).result;
 
     const averageIPScalarRange = model.renderable.getAverageIPScalarRange();
-    let min;
-    let max;
+    let min = averageIPScalarRange[0];
+    let max = averageIPScalarRange[1];
 
     // If min or max is not already a float.
     // make them into floats for glsl
-    if (Number.isInteger(averageIPScalarRange[0])) {
-      min = `${averageIPScalarRange[0]}.0`;
-    } else {
-      min = `${averageIPScalarRange[0]}`;
-    }
-    if (Number.isInteger(averageIPScalarRange[1])) {
-      max = `${averageIPScalarRange[1]}.0`;
-    } else {
-      max = `${averageIPScalarRange[1]}`;
-    }
+    min = Number.isInteger(min) ? min.toFixed(1).toString() : min.toString();
+    max = Number.isInteger(max) ? max.toFixed(1).toString() : max.toString();
+
     FSSource = vtkShaderProgram.substitute(
       FSSource,
       '//VTK::AverageIPScalarRangeMin',
