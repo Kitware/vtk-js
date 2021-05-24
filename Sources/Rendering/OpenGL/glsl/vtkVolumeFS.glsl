@@ -638,14 +638,14 @@ return tColor;
 
 bool valueWithinScalarRange(vec4 val, vec4 min, vec4 max) {
   bool withinRange = false;
-  #if vtkNumComponents >= 1
-    if (val.r > min.r && val.r < max.r) {
+  #if vtkNumComponents == 1
+    if (val.r >= min.r && val.r <= max.r) {
       withinRange = true;
     }
   #endif
   #if defined(vtkIndependentComponentsOn) && vtkNumComponents == 2
-     if (val.r > min.r && val.r < max.r &&
-        val.g > min.g && val.g < max.g) {
+     if (val.r >= min.r && val.r <= max.r &&
+        val.g >= min.g && val.g <= max.g) {
       withinRange = true;
     }
   #endif
