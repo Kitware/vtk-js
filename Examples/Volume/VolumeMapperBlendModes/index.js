@@ -69,11 +69,45 @@ mapper.setInputConnection(reader.getOutputPort());
 
 function updateBlendMode(event) {
   const blendMode = parseInt(event.target.value, 10);
+  const averageIPScalarEls = document.querySelectorAll('.averageIPScalar');
 
   mapper.setBlendMode(blendMode);
+  mapper.setAverageIPScalarRange(0.0, 1.0);
+
+  // if average blend mode
+  if (blendMode === 3) {
+    // Show average scalar ui
+    for (let i = 0; i < averageIPScalarEls.length; i += 1) {
+      const el = averageIPScalarEls[i];
+      el.style.display = 'table-row';
+    }
+  } else {
+    // Hide average scalar ui
+    for (let i = 0; i < averageIPScalarEls.length; i += 1) {
+      const el = averageIPScalarEls[i];
+      el.style.display = 'none';
+    }
+  }
 
   renderWindow.render();
 }
+
+function updateScalarMin(event) {
+  mapper.setAverageIPScalarRange(
+    event.target.value,
+    parseFloat(mapper.getAverageIPScalarRange()[1])
+  );
+  renderWindow.render();
+}
+
+function updateScalarMax(event) {
+  mapper.setAverageIPScalarRange(
+    mapper.getAverageIPScalarRange()[0],
+    parseFloat(event.target.value)
+  );
+  renderWindow.render();
+}
+
 reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
   reader.loadData().then(() => {
     renderer.addVolume(actor);
@@ -85,6 +119,10 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
 
     const el = document.querySelector('.blendMode');
     el.addEventListener('change', updateBlendMode);
+    const scalarMinEl = document.querySelector('.scalarMin');
+    scalarMinEl.addEventListener('input', updateScalarMin);
+    const scalarMaxEl = document.querySelector('.scalarMax');
+    scalarMaxEl.addEventListener('input', updateScalarMax);
   });
 });
 
