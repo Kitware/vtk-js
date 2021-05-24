@@ -11,11 +11,11 @@ function vtkWebGPUPipeline(publicAPI, model) {
 
   publicAPI.initialize = (device) => {
     // start with the renderencoder settings
-    const pipelineDesc = model.renderEncoder.getPipelineSettings();
+    model.pipelineDescription = model.renderEncoder.getPipelineSettings();
 
-    pipelineDesc.primitive.topology = model.topology;
+    model.pipelineDescription.primitive.topology = model.topology;
 
-    pipelineDesc.vertex = model.vertexState;
+    model.pipelineDescription.vertex = model.vertexState;
 
     // add in bind group layouts
     const bindGroupLayouts = [];
@@ -25,22 +25,24 @@ function vtkWebGPUPipeline(publicAPI, model) {
     model.pipelineLayout = device
       .getHandle()
       .createPipelineLayout({ bindGroupLayouts });
-    pipelineDesc.layout = model.pipelineLayout;
+    model.pipelineDescription.layout = model.pipelineLayout;
 
     for (let i = 0; i < model.shaderDescriptions.length; i++) {
       const sd = model.shaderDescriptions[i];
       const sm = device.getShaderModule(sd);
       if (sd.getType() === 'vertex') {
-        pipelineDesc.vertex.module = sm.getHandle();
-        pipelineDesc.vertex.entryPoint = 'main';
+        model.pipelineDescription.vertex.module = sm.getHandle();
+        model.pipelineDescription.vertex.entryPoint = 'main';
       }
       if (sd.getType() === 'fragment') {
-        pipelineDesc.fragment.module = sm.getHandle();
-        pipelineDesc.fragment.entryPoint = 'main';
+        model.pipelineDescription.fragment.module = sm.getHandle();
+        model.pipelineDescription.fragment.entryPoint = 'main';
       }
     }
 
-    model.handle = device.getHandle().createRenderPipeline(pipelineDesc);
+    model.handle = device
+      .getHandle()
+      .createRenderPipeline(model.pipelineDescription);
   };
 
   publicAPI.getShaderDescription = (stype) => {
@@ -87,6 +89,7 @@ const DEFAULT_VALUES = {
   shaderDescriptions: null,
   vertexState: null,
   topology: null,
+  pipelineDescription: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -99,7 +102,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.layouts = [];
   model.shaderDescriptions = [];
 
-  macro.get(publicAPI, model, ['handle']);
+  macro.get(publicAPI, model, ['handle', 'pipelineDescription']);
   macro.setGet(publicAPI, model, [
     'device',
     'renderEncoder',
