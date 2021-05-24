@@ -267,23 +267,24 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
 
     model.pipeline = device.getPipeline(model.pipelineHash);
 
-    // todo handle removing a bindable
+    const bindables = [];
     if (model.UBO) {
-      model.bindGroup.addBindable(model.UBO);
+      bindables.push(model.UBO);
     }
 
     if (model.SSBO) {
-      model.bindGroup.addBindable(model.SSBO);
+      bindables.push(model.SSBO);
     }
 
     // add texture BindGroupLayouts
     for (let t = 0; t < model.textureViews.length; t++) {
-      model.bindGroup.addBindable(model.textureViews[t]);
+      bindables.push(model.textureViews[t]);
       const samp = model.textureViews[t].getSampler();
       if (samp) {
-        model.bindGroup.addBindable(samp);
+        bindables.push(samp);
       }
     }
+    model.bindGroup.setBindables(bindables);
 
     // build VBO for this primitive
     // build the pipeline if needed

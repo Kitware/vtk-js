@@ -21,6 +21,11 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
 
   publicAPI.setPipeline = (pl) => {
     model.handle.setPipeline(pl.getHandle());
+    // todo check attachment state?
+    // console.log(
+    //   `bound pipeline for ${model.pipelineHash} ${JSON.stringify(pl.get())}`
+    // );
+    // console.log(model.description);
     model.boundPipeline = pl;
   };
 
@@ -36,11 +41,22 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
   };
 
   publicAPI.activateBindGroup = (bg) => {
+    const device = model.boundPipeline.getDevice();
     const midx = model.boundPipeline.getBindGroupLayoutCount(bg.getName());
-    model.handle.setBindGroup(
-      midx,
-      bg.getBindGroup(model.boundPipeline.getDevice())
+    model.handle.setBindGroup(midx, bg.getBindGroup(device));
+    // verify bind group layout matches
+    const bgl1 = device.getBindGroupLayoutDescription(
+      bg.getBindGroupLayout(device)
     );
+    const bgl2 = device.getBindGroupLayoutDescription(
+      model.boundPipeline.getBindGroupLayout(midx)
+    );
+    if (bgl1 !== bgl2) {
+      console.log(
+        `renderEncoder ${model.pipelineHash} mismatched bind group layouts bind group has\n${bgl1}\n versus pipeline\n${bgl2}\n`
+      );
+      console.trace();
+    }
   };
 
   publicAPI.attachTextureViews = () => {

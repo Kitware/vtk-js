@@ -53,6 +53,17 @@ function vtkWebGPUDevice(publicAPI, model) {
     return layout;
   };
 
+  publicAPI.getBindGroupLayoutDescription = (layout) => {
+    for (let i = 0; i < model.bindGroupLayouts.length; i++) {
+      if (model.bindGroupLayouts[i].layout === layout) {
+        return model.bindGroupLayouts[i].sval;
+      }
+    }
+    vtkErrorMacro('layout not found');
+    console.trace();
+    return null;
+  };
+
   publicAPI.getPipeline = (hash) => {
     if (hash in model.pipelines) {
       return model.pipelines[hash];

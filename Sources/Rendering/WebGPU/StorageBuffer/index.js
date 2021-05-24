@@ -163,7 +163,7 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
     }
   };
 
-  publicAPI.getSendTime = () => model.sendTime.getMTime();
+  publicAPI.getSendTime = () => model._sendTime.getMTime();
   publicAPI.getShaderCode = (binding, group) => {
     const lines = [`struct ${model.name}StructEntry\n{`];
     for (let i = 0; i < model.bufferEntries.length; i++) {

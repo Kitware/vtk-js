@@ -31,15 +31,16 @@ is needed.
 - cropping planes for polydata mapper
 - update widgets to use the new async hardware selector API
 
+- create new volume renderer built for multivolume rendering - in progress
+  - traverse all volumes and register with volume pass - done
+  - render all volumes hexahedra to get depth buffer near and far
+    merged with opaque pass depth buffer - done
+  - render all volumes in single mapper using prior near/far depth textures - in progress
+
 Waiting on fixes/dev in WebGPU spec
 
 - 3d textures (as of April 21 2021 Dawn lacks support for 1d and 3d)
 - image display (use 3d texture)
-- create new volume renderer built for multivolume rendering
-  - traverse all volumes and register with volume pass
-  - render all volumes hexahedra to get depth buffer near and far
-    merged with opaque pass depth buffer
-  - render all volumes in single mapper using prior near/far depth textures
 - more cross platform testing and bug fixing
 - single volume rendering (abandon)
 
@@ -53,7 +54,7 @@ Waiting on fixes/dev in WebGPU spec
 
 # Developer Notes
 
-If you want to extend WebGPU most of the work is done in the mapper classes such as WebGPUPolyDataMapper so probably that is where you should start. It has some subclasses that extend it such as Sphere/Stick/Glyph3d mapper. There is also an example of user code creating a new mapper in the CustomWebGPUCone example. If you are interested in render passes then ForwardPass is the main entry point and makes use of other passes by default.
+If you want to extend WebGPU most of the work is done in the mapper classes. The simplest mapper is WebGPUMapperHelper which is the base for all mappers (either directly as a superclass or as a member variable) so probably that is where you should start. It has some subclasses that extend it or use it such as Sphere/Stick/Glyph3d mapper. There is also an example of user code creating a new mapper in the CustomWebGPUCone example. If you are interested in render passes then ForwardPass is the main entry point and makes use of other passes by default.
 
 Here are some quick notes on the WebGPU classes and how they work together. Classes that typically have one instance are described as such even though you can have multiple instances of them.
 
@@ -67,7 +68,9 @@ Here are some quick notes on the WebGPU classes and how they work together. Clas
 
 - Texture - many instances, a structured chunk of memory typically 1 to 3 dimensions with optional support for mipmapping, etc. Can be created from a buffer or a JS image. Often created by mappers or render passes.
 
-- Sampler - many instances - something that can be used to sample a texture, typically linear or nearest, etc. Requested often by mappers using textures.
+- TextureView - many instances, a view of a texture, lightweight and a bindable
+
+- Sampler - many instances - something that can be used to sample a texture, typically linear or nearest, etc. Requested often by mappers using textures. a bindable
 
 - ShaderCache - one instance, caches many shader modules, owned by the Device. Requested typically by mappers.
 
@@ -90,9 +93,12 @@ can be used to run a pipeline on those fragment destinations.
 
 - Mapper - maps vtkDataSet to graphics primitives (draws them) Creates many objects to get the job done including VertexInputs, Pipelines, Buffers, Textures, Samplers. Typically sets up everything and then registers pipelines to call it back when they render. For example, a single mapper when it renders with lines and triangles would request two pipelines and set up their vertex input etc, and then register a reuqest for those pipelines to call it back when the pipelines render. Later on after all mappers have "rendered" the resulting pipelines would be executed by the renderer and for each pipeline all mappers using that pipeline would get a callback so they can bind and draw their primitives. This is different from OpenGL where each mapper would draw during its render pass lines then triangles. With WebGPU (essentially) all lines are drawn together for all mappers, then all triangles for all mappers.
 
-- UniformBuffer - a UBO in a class, mappers and renderers have them by default
+- Bind Group - hold bindables (textures samplers, UBOs SSBOs) and organizes them
+so they can be bound as needed. Typically one for each renderer and one for each mapper.
 
-- StorageBuffer - a SSBO that can be used when you need a SSBO
+- UniformBuffer - a UBO in a class, mappers and renderers have them by default, a bindable
+
+- StorageBuffer - a SSBO that can be used when you need a SSBO, a bindable
 
 The buffer and texture managers also cache their objects so that these large GPU objects can be shared betwen mappers. Both of them take a request and return something from the cache. In both cases the source property of the request indicates what object is holding onto the buffer/texture.
 
@@ -101,12 +107,12 @@ what WebGPU uses. So to avoid confusion we call WebGPU render passes "render enc
 This matches WebGPU terminology as they are encoders and sometimes called render pass
 encoders in the WebGPU spec.
 
-There is a notion of bindable things in this implementation. The mapper helper keeps an array of
-bindable things that it uses/manages. Right now these unclude UBOs, SSBOs, and TextureViews. TextureViews
-may also include a sampler in them. A bindable thing must answer to the following interface
+There is a notion of bindable things in this implementation. BingGroups keep an array of
+bindable things that it uses/manages. Right now these unclude UBOs, SSBOs, and TextureViews and Smaplers. A bindable thing must answer to the following interface
 ```
 set/getName
-getBindGroupLayout(device)
-getBindGroup()
-getShaderCode(pipeline)
+getBindGroupLayoutEntry()
+getBindGroupEntry()
+getBindGroupTime()
+getShaderCode(group, binding)
 ```
