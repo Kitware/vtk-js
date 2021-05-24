@@ -834,9 +834,6 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
       // - We are comparing all values in the texture to see if any of them
       //   are outside of the scalar range. In the future we might want to allow
       //   scalar ranges for each component.
-      // - There might be a better way to do this. I'm not sure if there is an
-      //   equivalent of 'any' which only operates on RGB, though I suppose
-      //   we could write an 'anyRGB' function and see if that is faster.
       if (valueWithinScalarRange(tValue, averageIPScalarRangeMin, averageIPScalarRangeMax)) {
         // Sum the values across each step in the path
         sum += tValue;
