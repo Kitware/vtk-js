@@ -21,11 +21,39 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
 
   publicAPI.setPipeline = (pl) => {
     model.handle.setPipeline(pl.getHandle());
-    // todo check attachment state?
-    // console.log(
-    //   `bound pipeline for ${model.pipelineHash} ${JSON.stringify(pl.get())}`
-    // );
-    // console.log(model.description);
+    const pd = pl.getPipelineDescription();
+
+    // check attachment state
+    if (model.colorTextureViews.length !== pd.fragment.targets.length) {
+      console.log(
+        `mismatched attachment counts on pipeline ${pd.fragment.targets.length} while encoder has ${model.colorTextureViews.length}`
+      );
+      console.trace();
+    } else {
+      for (let i = 0; i < model.colorTextureViews.length; i++) {
+        const fmt = model.colorTextureViews[i].getTexture().getFormat();
+        if (fmt !== pd.fragment.targets[i].format) {
+          console.log(
+            `mismatched attachments for attachment ${i} on pipeline ${pd.fragment.targets[i].format} while encoder has ${fmt}`
+          );
+          console.trace();
+        }
+      }
+    }
+
+    // check depth buffer
+    if (!model.depthTextureView !== !('depthStencil' in pd)) {
+      console.log('mismatched depth attachments');
+      console.trace();
+    } else if (model.depthTextureView) {
+      const dfmt = model.depthTextureView.getTexture().getFormat();
+      if (dfmt !== pd.depthStencil.format) {
+        console.log(
+          `mismatched depth attachments on pipeline ${pd.depthStencil.format} while encoder has ${dfmt}`
+        );
+        console.trace();
+      }
+    }
     model.boundPipeline = pl;
   };
 
