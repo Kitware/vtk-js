@@ -1,9 +1,10 @@
-import * as macro from 'vtk.js/Sources/macro';
 import { vec3, mat4 } from 'gl-matrix';
-import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
-import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import * as macro from 'vtk.js/Sources/macro';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import vtkWebGPUBindGroup from 'vtk.js/Sources/Rendering/WebGPU/BindGroup';
 import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQuad';
+import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
@@ -153,6 +154,7 @@ function vtkWebGPURenderer(publicAPI, model) {
       const keyMats = webgpuCamera.getKeyMatrices(publicAPI);
       model.UBO.setArray('WCVCMatrix', keyMats.wcvc);
       model.UBO.setArray('SCPCMatrix', keyMats.scpc);
+      model.UBO.setArray('PCSCMatrix', keyMats.pcsc);
       model.UBO.setArray('SCVCMatrix', keyMats.scvc);
       model.UBO.setArray('VCPCMatrix', keyMats.vcpc);
       model.UBO.setArray('WCVCNormals', keyMats.normalMatrix);
@@ -186,6 +188,10 @@ function vtkWebGPURenderer(publicAPI, model) {
       );
   };
 
+  publicAPI.bindUBO = (renderEncoder) => {
+    renderEncoder.activateBindGroup(model.bindGroup);
+  };
+
   // Renders myself
   publicAPI.opaquePass = (prepass) => {
     if (prepass) {
@@ -206,8 +212,7 @@ function vtkWebGPURenderer(publicAPI, model) {
         const pl = pStruct.pipeline;
 
         model.renderEncoder.setPipeline(pl);
-        const uboidx = pl.getBindGroupLayoutCount(model.UBO.getName());
-        model.renderEncoder.setBindGroup(uboidx, model.UBO.getBindGroup());
+        publicAPI.bindUBO(model.renderEncoder);
 
         for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
           pStruct.callbacks[cb](model.renderEncoder);
@@ -256,9 +261,7 @@ function vtkWebGPURenderer(publicAPI, model) {
         const pl = pStruct.pipeline;
 
         model.renderEncoder.setPipeline(pl);
-        const uboidx = pl.getBindGroupLayoutCount(model.UBO.getName());
-        model.renderEncoder.setBindGroup(uboidx, model.UBO.getBindGroup());
-        // bind our BindGroup
+        publicAPI.bindUBO(model.renderEncoder);
 
         for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
           pStruct.callbacks[cb](model.renderEncoder);
@@ -284,9 +287,7 @@ function vtkWebGPURenderer(publicAPI, model) {
         const pl = pStruct.pipeline;
 
         model.renderEncoder.setPipeline(pl);
-        const uboidx = pl.getBindGroupLayoutCount(model.UBO.getName());
-        model.renderEncoder.setBindGroup(uboidx, model.UBO.getBindGroup());
-        // bind our BindGroup
+        publicAPI.bindUBO(model.renderEncoder);
 
         for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
           pStruct.callbacks[cb](model.renderEncoder);
@@ -381,6 +382,7 @@ function vtkWebGPURenderer(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  bindGroup: null,
   selector: null,
   renderEncoder: null,
   recenterThreshold: 20.0,
@@ -400,19 +402,15 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.setName('rendererUBO');
   model.UBO.addEntry('WCVCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('SCPCMatrix', 'mat4x4<f32>');
+  model.UBO.addEntry('PCSCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('SCVCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('VCPCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('WCVCNormals', 'mat4x4<f32>');
   model.UBO.addEntry('cameraParallel', 'u32');
-  model.UBO.setBindGroupDescription({
-    entries: [
-      {
-        buffer: {
-          type: 'uniform',
-        },
-      },
-    ],
-  });
+
+  model.bindGroup = vtkWebGPUBindGroup.newInstance();
+  model.bindGroup.setName('rendererBG');
+  model.bindGroup.addBindable(model.UBO);
 
   model.tmpMat4 = mat4.identity(new Float64Array(16));
 
@@ -420,7 +418,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(model.stabilizedTime, { mtime: 0 });
 
   // Build VTK API
-  macro.get(publicAPI, model, ['stabilizedTime']);
+  macro.get(publicAPI, model, ['bindGroup', 'stabilizedTime']);
   macro.getArray(publicAPI, model, ['stabilizedCenter']);
   macro.setGet(publicAPI, model, [
     'renderEncoder',

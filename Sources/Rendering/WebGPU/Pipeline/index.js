@@ -51,18 +51,14 @@ function vtkWebGPUPipeline(publicAPI, model) {
     return null;
   };
 
-  publicAPI.addBindGroupLayout2 = (buffObj) => {
-    if (!buffObj) {
+  publicAPI.addBindGroupLayout = (bindGroup) => {
+    if (!bindGroup) {
       return;
     }
     model.layouts.push({
-      layout: buffObj.getBindGroupLayout(model.device),
-      name: buffObj.getName(),
+      layout: bindGroup.getBindGroupLayout(model.device),
+      name: bindGroup.getName(),
     });
-  };
-
-  publicAPI.addBindGroupLayout = (layout, lname) => {
-    model.layouts.push({ layout, name: lname });
   };
 
   publicAPI.getBindGroupLayoutCount = (lname) => {

@@ -1,10 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 
-// const { ObjectType } = Constants;
-
-// ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
+/* eslint-disable no-bitwise */
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUSampler methods
@@ -20,6 +16,19 @@ function vtkWebGPUSampler(publicAPI, model) {
       magFilter: options.magFilter ? options.magFilter : 'nearest',
       minFilter: options.minFilter ? options.minFilter : 'nearest',
     });
+    model.bindGroupTime.modified();
+  };
+
+  publicAPI.getShaderCode = (binding, group) => {
+    const result = `[[binding(${binding}), group(${group})]] var ${model.name}: sampler;`;
+    return result;
+  };
+
+  publicAPI.getBindGroupEntry = () => {
+    const foo = {
+      resource: model.handle,
+    };
+    return foo;
   };
 }
 
@@ -30,6 +39,7 @@ function vtkWebGPUSampler(publicAPI, model) {
 const DEFAULT_VALUES = {
   device: null,
   handle: null,
+  name: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -40,8 +50,20 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   macro.obj(publicAPI, model);
 
-  macro.get(publicAPI, model, ['handle']);
-  macro.setGet(publicAPI, model, ['device']);
+  model.bindGroupLayoutEntry = {
+    /* eslint-disable no-undef */
+    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+    /* eslint-enable no-undef */
+    sampler: {
+      // type: 'filtering',
+    },
+  };
+
+  model.bindGroupTime = {};
+  macro.obj(model.bindGroupTime, { mtime: 0 });
+
+  macro.get(publicAPI, model, ['bindGroupTime', 'handle']);
+  macro.setGet(publicAPI, model, ['bindGroupLayoutEntry', 'device', 'name']);
 
   vtkWebGPUSampler(publicAPI, model);
 }

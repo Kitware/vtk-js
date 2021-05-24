@@ -47,7 +47,7 @@ function vtkWebGPUDevice(publicAPI, model) {
     // create one and store it
     const layout = model.handle.createBindGroupLayout(val);
 
-    // we actuall yonly store the stringified version
+    // we actually only store the stringified version
     // as that is what we always compare against
     model.bindGroupLayouts.push({ sval, layout });
     return layout;

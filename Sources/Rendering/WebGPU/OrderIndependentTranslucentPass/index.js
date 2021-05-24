@@ -8,6 +8,8 @@ import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQ
 // ----------------------------------------------------------------------------
 
 const oitpFragTemplate = `
+//VTK::Mapper::Dec
+
 //VTK::TCoord::Dec
 
 //VTK::RenderEncoder::Dec
