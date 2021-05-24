@@ -64,6 +64,7 @@ import './Rendering/Core/SphereMapper/test/testSphere';
 import './Rendering/Core/StickMapper/test/testStick';
 import './Rendering/Misc/GenericRenderWindow/test/testGenericRenderWindowCreateDelete';
 import './Rendering/OpenGL/ImageMapper/test/testImage';
+import './Rendering/OpenGL/ImageMapper/test/testImageCroppingPlanes';
 import './Rendering/OpenGL/ImageMapper/test/testImageNearestNeighbor';
 import './Rendering/OpenGL/ImageMapper/test/testImageColorTransferFunction';
 import './Rendering/OpenGL/PolyDataMapper/test/testAddShaderReplacements';
