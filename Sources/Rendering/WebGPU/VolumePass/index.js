@@ -115,7 +115,6 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     model.finalEncoder.attachTextureViews();
     renNode.setRenderEncoder(model.finalEncoder);
     model.finalEncoder.begin(viewNode.getCommandEncoder());
-    // set viewport
     renNode.scissorAndViewport(model.finalEncoder);
     model.fullScreenQuad.setWebGPURenderer(renNode);
     model.fullScreenQuad.setVolumes(model.volumes);
@@ -252,7 +251,6 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     model._mapper.build(model.depthRangeEncoder, device);
     model._mapper.registerToDraw();
 
-    // model._mapper.render(model.depthRangeEncoder, device);
     renNode.volumeDepthRangePass(false);
   };
 
@@ -323,9 +321,9 @@ function vtkWebGPUVolumePass(publicAPI, model) {
   publicAPI.createFinalEncoder = (viewNode) => {
     model.fullScreenQuad = vtkWebGPUVolumePassFSQ.newInstance();
     model.fullScreenQuad.setDevice(viewNode.getDevice());
-    model.fullScreenQuad.setTextureViews(
-      model.depthRangeEncoder.getColorTextureViews()
-    );
+    model.fullScreenQuad.setTextureViews([
+      ...model.depthRangeEncoder.getColorTextureViews(),
+    ]);
 
     model.finalEncoder = vtkWebGPURenderEncoder.newInstance();
     model.finalEncoder.setDescription({

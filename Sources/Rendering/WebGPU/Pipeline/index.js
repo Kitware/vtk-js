@@ -61,6 +61,8 @@ function vtkWebGPUPipeline(publicAPI, model) {
     });
   };
 
+  publicAPI.getBindGroupLayout = (idx) => model.layouts[idx].layout;
+
   publicAPI.getBindGroupLayoutCount = (lname) => {
     for (let i = 0; i < model.layouts.length; i++) {
       if (model.layouts[i].name === lname) {

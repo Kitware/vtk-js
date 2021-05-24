@@ -27,15 +27,42 @@ function vtkWebGPUTextureManager(publicAPI, model) {
   //
 
   publicAPI.getTexture = (req) => {
+    // fill in values based on imageData if the request has it
     if (req.imageData) {
       req.dataArray = req.imageData.getPointData().getScalars();
+      // todo remove use of address and use hash and nativeArray
       req.address = req.imageData.getPointData().getScalars();
       req.time = req.address.getMTime();
+      const dims = req.imageData.getDimensions();
+      req.width = dims[0];
+      req.height = dims[1];
+      req.depth = dims[2];
+      const numComp = req.dataArray.getNumberOfComponents();
+      switch (numComp) {
+        case 1:
+          req.format = 'r8unorm';
+          break;
+        case 2:
+          req.format = 'rg8unorm';
+          break;
+        default:
+        case 3:
+        case 4:
+          req.format = 'rgba8unorm';
+          break;
+      }
     }
+
+    // fill in values based on image if the request has it
     if (req.image) {
       req.address = req.image;
       req.time = 0;
+      req.width = req.address.width;
+      req.height = req.address.height;
+      req.depth = 1;
+      req.format = 'rgba8unorm';
     }
+
     if (req.source) {
       // if a matching texture already exists then return it
       if (model.textures.has(req.source)) {
@@ -50,42 +77,17 @@ function vtkWebGPUTextureManager(publicAPI, model) {
 
     const newTex = vtkWebGPUTexture.newInstance();
 
-    let dims = [];
-    let numComp = 4;
-    let format = 'rgba8unorm';
-
-    if (req.imageData) {
-      dims = req.imageData.getDimensions();
-      numComp = req.dataArray.getNumberOfComponents();
-    }
-
-    if (req.image) {
-      dims[0] = req.address.width;
-      dims[1] = req.address.height;
-      dims[2] = 1;
-      numComp = 4;
-    }
-
-    switch (numComp) {
-      case 1:
-        format = 'r8unorm';
-        break;
-      case 2:
-        format = 'rg8unorm';
-        break;
-      default:
-      case 3:
-      case 4:
-        format = 'rgba8unorm';
-        break;
-    }
-
     newTex.create(model.device, {
-      width: dims[0],
-      height: dims[1],
-      depth: dims[2],
-      format,
+      width: req.width,
+      height: req.height,
+      depth: req.depth,
+      format: req.format,
     });
+
+    // fill the texture if we have data
+    if (req.dataArray || req.nativeArray || req.image) {
+      newTex.writeImageData(req);
+    }
 
     // cache the texture if we have a source
     // We create a new req that only has the fields required for
@@ -94,9 +96,6 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       if (!model.textures.has(req.source)) {
         model.textures.set(req.source, []);
       }
-
-      // fill the texture
-      newTex.writeImageData(req);
 
       const dabuffers = model.textures.get(req.source);
       dabuffers.push({

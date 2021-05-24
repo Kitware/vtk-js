@@ -1,6 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
 import vtkWebGPUTextureView from 'vtk.js/Sources/Rendering/WebGPU/TextureView';
+import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 
 const { BufferUsage } = vtkWebGPUBufferManager;
 
@@ -57,32 +58,49 @@ function vtkWebGPUTexture(publicAPI, model) {
   // set the data
   publicAPI.writeImageData = (req) => {
     let bufferBytesPerRow = model.width * 4;
-    if (req.dataArray) {
+    if (req.dataArray || req.nativeArray) {
       // create and write the buffer
       const buffRequest = {
-        dataArray: req.dataArray,
-        time: req.dataArray.getMTime(),
         /* eslint-disable no-undef */
         usage: BufferUsage.Texture,
         /* eslint-enable no-undef */
+        // todo this needs to be computed from the texture format
         format: 'unorm8x4',
       };
 
+      if (req.dataArray) {
+        buffRequest.dataArray = req.dataArray;
+        buffRequest.time = req.dataArray.getMTime();
+      }
+      if (req.nativeArray) {
+        buffRequest.nativeArray = req.nativeArray;
+      }
+
       // bytesPerRow must be a multiple of 256 so we might need to rebuild
-      // the data here before passing to the buffer. If it is unorm8x4 then
+      // the data here before passing to the buffer. e.g. if it is unorm8x4 then
       // we need to have width be a multiple of 64
-      if (model.width % 64) {
+      const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(model.format);
+      const currWidthInBytes = model.width * tDetails.stride;
+      if (currWidthInBytes % 256) {
         const oArray = req.dataArray.getData();
-        const bufferWidth = 64 * Math.floor((model.width + 63) / 64);
-        const nArray = new Uint8Array(bufferWidth * model.height * 4);
+        const bufferWidthInBytes =
+          256 * Math.floor((currWidthInBytes + 255) / 256);
+        const bufferWidth = bufferWidthInBytes / oArray.BYTES_PER_ELEMENT;
+        const oWidth = currWidthInBytes / oArray.BYTES_PER_ELEMENT;
+
+        const nArray = macro.newTypedArray(
+          oArray.name,
+          bufferWidth * model.height
+        );
+
         for (let v = 0; v < model.height; v++) {
           nArray.set(
-            oArray.subarray(v * 4 * model.width, (v + 1) * 4 * model.width),
-            v * 4 * bufferWidth
+            oArray.subarray(v * oWidth, (v + 1) * oWidth),
+            v * bufferWidth
           );
         }
         buffRequest.nativeArray = nArray;
-        bufferBytesPerRow = bufferWidth * 4;
+        bufferBytesPerRow = bufferWidthInBytes;
       }
       const buff = model.device.getBufferManager().getBuffer(buffRequest);
       model.buffer = buff;

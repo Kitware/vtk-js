@@ -16,7 +16,7 @@ const volFragTemplate = `
 
 //VTK::IOStructs::Dec
 
-fn processVolume(vNum: i32, posSC: vec4<f32>) -> vec4<f32>
+fn processVolume(vNum: i32, posSC: vec4<f32>, tfunRows: f32) -> vec4<f32>
 {
   var outColor: vec4<f32> = vec4<f32>(0.0, 0.0, 0.0, 0.0);
 
@@ -26,7 +26,16 @@ fn processVolume(vNum: i32, posSC: vec4<f32>) -> vec4<f32>
   if (tpos.x < 0.0 || tpos.y < 0.0 || tpos.z < 0.0 ||
       tpos.x > 1.0 || tpos.y > 1.0 || tpos.z > 1.0) { return outColor; }
 
-  outColor = vec4<f32>(f32(vNum), 0.0, 1.0 - f32(vNum), 0.01);
+  var scalar: f32 = 512.0 * f32(vNum) + 180.0 * tpos.z;
+
+  // todo correct V coord calcs based on components etc
+  var coord: vec2<f32> =
+    vec2<f32>(scalar * volumeSSBO.values[vNum].cScale + volumeSSBO.values[vNum].cShift,
+      (0.5 + 2.0 * f32(vNum)) / tfunRows);
+  var color: vec4<f32> = textureSampleLevel(tfunTexture, tfunTextureSampler, coord, 0.0);
+  coord.x = scalar * volumeSSBO.values[vNum].oScale + volumeSSBO.values[vNum].oShift;
+  var opacity: f32 = textureSampleLevel(ofunTexture, tfunTextureSampler, coord, 0.0).r;
+  outColor = vec4<f32>(color.rgb, opacity);
 
   //VTK::Volume::Process
 
@@ -50,6 +59,9 @@ fn main(
   {
     var winDimsI32: vec2<i32> = textureDimensions(minTexture);
     var winDims: vec2<f32> = vec2<f32>(f32(winDimsI32.x), f32(winDimsI32.y));
+
+    // how many rows (tfuns) do we have in our tfunTexture
+    var tfunRows: f32 = f32(textureDimensions(tfunTexture).y);
 
     // compute start and end ray positions in view coordinates
     var minPosSC: vec4<f32> = rendererUBO.PCSCMatrix*vec4<f32>(2.0*input.fragPos.x/winDims.x - 1.0, 1.0 - 2.0 * input.fragPos.y/winDims.y, rayMin, 1.0);
@@ -125,7 +137,9 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     let code = fDesc.getCode();
     const calls = [];
     for (let i = 0; i < model.volumes.length; i++) {
-      calls.push(`      sampleColor = processVolume(${i}, rayPosSC);`);
+      calls.push(
+        `      sampleColor = processVolume(${i}, rayPosSC, tfunRows);`
+      );
       calls.push(`      computedColor = vec4<f32>(
         sampleColor.a * sampleColor.rgb * (1.0 - computedColor.a) + computedColor.rgb,
         (1.0 - computedColor.a)*sampleColor.a + computedColor.a);`);
@@ -139,43 +153,200 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     publicAPI.replaceShaderVolume
   );
 
-  publicAPI.updateUBO = (device) => {
-    const utime = model.UBO.getSendTime();
-    if (publicAPI.getMTime() > utime) {
-      const center = model.WebGPURenderer.getStabilizedCenterByReference();
+  publicAPI.updateLUTImage = (device) => {
+    // rebuild color tfun?
+    // const toString = `${vprop.getMTime()}`;
+    // if (model.colorTextureString !== toString) {
 
-      // compute the min step size
-      let sampleDist = model.volumes[0]
-        .getRenderable()
-        .getMapper()
-        .getSampleDistance();
-      for (let i = 0; i < model.volumes.length; i++) {
-        const vol = model.volumes[i];
-        const volMapr = vol.getRenderable().getMapper();
-        const sd = volMapr.getSampleDistance();
-        if (sd < sampleDist) {
-          sampleDist = sd;
+    // first determine how large the image should be
+    model.numRows = 0;
+    for (let vidx = 0; vidx < model.volumes.length; vidx++) {
+      const webgpuvol = model.volumes[vidx];
+      const actor = webgpuvol.getRenderable();
+      const volMapr = actor.getMapper();
+      const vprop = actor.getProperty();
+      const image = volMapr.getInputData();
+      const scalars = image.getPointData() && image.getPointData().getScalars();
+
+      const numComp = scalars.getNumberOfComponents();
+      const iComps = vprop.getIndependentComponents();
+      const numIComps = iComps ? numComp : 1;
+      model.numRows += numIComps;
+    }
+
+    // allocate the image array
+    const colorArray = new Uint8Array(model.numRows * 2 * model.rowLength * 4);
+    const opacityArray = new Float32Array(model.numRows * 2 * model.rowLength);
+
+    let imgRow = 0;
+    const tmpTable = new Float32Array(model.rowLength * 3);
+    const rowLength = model.rowLength;
+    for (let vidx = 0; vidx < model.volumes.length; vidx++) {
+      const webgpuvol = model.volumes[vidx];
+      const actor = webgpuvol.getRenderable();
+      const volMapr = actor.getMapper();
+      const vprop = actor.getProperty();
+      const image = volMapr.getInputData();
+      const scalars = image.getPointData() && image.getPointData().getScalars();
+
+      const numComp = scalars.getNumberOfComponents();
+      const iComps = vprop.getIndependentComponents();
+      const numIComps = iComps ? numComp : 1;
+
+      for (let c = 0; c < numIComps; ++c) {
+        const cfun = vprop.getRGBTransferFunction(c);
+        const cRange = cfun.getRange();
+        cfun.getTable(cRange[0], cRange[1], rowLength, tmpTable, 1);
+        let ioffset = imgRow * rowLength * 4;
+        for (let i = 0; i < rowLength; ++i) {
+          colorArray[ioffset + i * 4] = 255.0 * tmpTable[i * 3];
+          colorArray[ioffset + i * 4 + 1] = 255.0 * tmpTable[i * 3 + 1];
+          colorArray[ioffset + i * 4 + 2] = 255.0 * tmpTable[i * 3 + 2];
+          colorArray[ioffset + i * 4 + 3] = 255.0;
+          for (let co = 0; co < 4; co++) {
+            colorArray[ioffset + (rowLength + i) * 4 + co] =
+              colorArray[ioffset + i * 4 + co];
+          }
         }
+
+        const ofun = vprop.getScalarOpacity(c);
+        const opacityFactor =
+          model.sampleDist / vprop.getScalarOpacityUnitDistance(c);
+
+        const oRange = ofun.getRange();
+        ofun.getTable(oRange[0], oRange[1], rowLength, tmpTable, 1);
+        // adjust for sample distance etc
+        ioffset = imgRow * rowLength;
+        for (let i = 0; i < rowLength; ++i) {
+          opacityArray[ioffset + i] =
+            1.0 - (1.0 - tmpTable[i]) ** opacityFactor;
+          opacityArray[ioffset + i + rowLength] = opacityArray[ioffset + i];
+        }
+        imgRow += 2;
       }
+    }
+
+    {
+      const treq = {
+        nativeArray: colorArray,
+        width: model.rowLength,
+        height: model.numRows * 2,
+        depth: 1,
+        format: 'rgba8unorm',
+      };
+      const newTex = device.getTextureManager().getTexture(treq);
+      const tview = newTex.createView();
+      tview.setName('tfunTexture');
+      model.textureViews[2] = tview;
+      tview.addSampler(device, {
+        minFilter: 'linear',
+        maxFilter: 'linear',
+      });
+    }
+
+    {
+      const treq = {
+        nativeArray: opacityArray,
+        width: model.rowLength,
+        height: model.numRows * 2,
+        depth: 1,
+        format: 'r32float',
+      };
+      const newTex = device.getTextureManager().getTexture(treq);
+      const tview = newTex.createView();
+      tview.setName('ofunTexture');
+      model.textureViews[3] = tview;
+    }
+
+    model.colorTextureString = toString;
+  };
+
+  publicAPI.updateBuffers = (device) => {
+    // compute the min step size
+    let sampleDist = model.volumes[0]
+      .getRenderable()
+      .getMapper()
+      .getSampleDistance();
+    for (let i = 0; i < model.volumes.length; i++) {
+      const vol = model.volumes[i];
+      const volMapr = vol.getRenderable().getMapper();
+      const sd = volMapr.getSampleDistance();
+      if (sd < sampleDist) {
+        sampleDist = sd;
+      }
+    }
+    if (model.sampleDist !== sampleDist) {
+      model.sampleDist = sampleDist;
       model.UBO.setValue('SampleDistance', sampleDist);
       model.UBO.sendIfNeeded(device);
+    }
+
+    // depends on
+    // - center time
+    // - volumes array (length and values)
+    // - matrix of each volume
+    // - worldtoindex of each volume mapper's data
+    const center = model.WebGPURenderer.getStabilizedCenterByReference();
+    if (publicAPI.getMTime() > model.SSBO.getSendTime()) {
+      // todo need a good check here for everything
+      // that can change, break into pieces each with their
+      // own check move out of this block
+      publicAPI.updateLUTImage(device);
 
       model.SSBO.clearData();
       model.SSBO.setNumberOfInstances(model.volumes.length);
 
-      // create SCTC matrices
+      // create SCTC matrices  SC -> world -> model -> index -> tcoord
       //
-      // SC -> world -> model -> index -> tcoord
-      // when doing coord conversions from A to C
+      // when doing coord conversions from A to C recall
       // the order is mat4.mult(AtoC, BtoC, AtoB);
       //
       const marray = new Float64Array(model.volumes.length * 16);
-      for (let i = 0; i < model.volumes.length; i++) {
+      const cScaleArray = new Float64Array(model.numRows);
+      const cShiftArray = new Float64Array(model.numRows);
+      const oScaleArray = new Float64Array(model.numRows);
+      const oShiftArray = new Float64Array(model.numRows);
+      let rowIdx = 0;
+      for (let vidx = 0; vidx < model.volumes.length; vidx++) {
+        const webgpuvol = model.volumes[vidx];
+        const actor = webgpuvol.getRenderable();
+        const volMapr = actor.getMapper();
+        const vprop = actor.getProperty();
+        const image = volMapr.getInputData();
+        const scalars =
+          image.getPointData() && image.getPointData().getScalars();
+
+        const numComp = scalars.getNumberOfComponents();
+        const iComps = vprop.getIndependentComponents();
+        // const numIComps = iComps ? numComp : 1;
+
+        const volInfo = { scale: [1.0], offset: [0.0] };
+        // three levels of shift scale combined into one
+        // for performance in the fragment shader
+        for (let compIdx = 0; compIdx < numComp; compIdx++) {
+          const target = iComps ? compIdx : 0;
+          const sscale = volInfo.scale[compIdx];
+          const ofun = vprop.getScalarOpacity(target);
+          const oRange = ofun.getRange();
+          const oscale = sscale / (oRange[1] - oRange[0]);
+          const oshift =
+            (volInfo.offset[compIdx] - oRange[0]) / (oRange[1] - oRange[0]);
+          oShiftArray[rowIdx] = oshift;
+          oScaleArray[rowIdx] = oscale;
+
+          const cfun = vprop.getRGBTransferFunction(target);
+          const cRange = cfun.getRange();
+          cShiftArray[rowIdx] =
+            (volInfo.offset[compIdx] - cRange[0]) / (cRange[1] - cRange[0]);
+          cScaleArray[rowIdx] = sscale / (cRange[1] - cRange[0]);
+          rowIdx++;
+        }
+
         mat4.identity(tmpMat4);
         mat4.translate(tmpMat4, tmpMat4, center);
         // tmpMat4 is now SC->World
 
-        const vol = model.volumes[i];
+        const vol = model.volumes[vidx];
         const mcwcmat = vol.getRenderable().getMatrix();
         mat4.transpose(tmp2Mat4, mcwcmat);
         mat4.invert(tmp2Mat4, tmp2Mat4);
@@ -184,8 +355,6 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         mat4.multiply(tmpMat4, tmp2Mat4, tmpMat4);
         // tmp4Mat is now SC->Model
 
-        const volMapr = vol.getRenderable().getMapper();
-        const image = volMapr.getInputData();
         // the method on the data is world to index but the volume is in
         // model coordinates so really in this context it is model to index
         const modelToIndex = image.getWorldToIndex();
@@ -204,18 +373,33 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         // tmpMat4 is now SC -> Tcoord
 
         for (let j = 0; j < 16; j++) {
-          marray[i * 16 + j] = tmpMat4[j];
+          marray[vidx * 16 + j] = tmpMat4[j];
         }
       }
+
       model.SSBO.addEntry('SCTCMatrix', 'mat4x4<f32>');
+      model.SSBO.addEntry('cScale', 'f32');
+      model.SSBO.addEntry('cShift', 'f32');
+      model.SSBO.addEntry('oScale', 'f32');
+      model.SSBO.addEntry('oShift', 'f32');
       model.SSBO.setAllInstancesFromArray('SCTCMatrix', marray);
+      model.SSBO.setAllInstancesFromArray('cScale', cScaleArray);
+      model.SSBO.setAllInstancesFromArray('cShift', cShiftArray);
+      model.SSBO.setAllInstancesFromArray('oScale', oScaleArray);
+      model.SSBO.setAllInstancesFromArray('oShift', oShiftArray);
       model.SSBO.send(device);
     }
   };
 
+  publicAPI.computePipelineHash = () => {
+    model.pipelineHash = `volfsq${model.volumes.length}`;
+  };
+
   const superclassBuild = publicAPI.build;
   publicAPI.build = (renderEncoder, device) => {
-    publicAPI.updateUBO(device);
+    publicAPI.computePipelineHash();
+    publicAPI.updateBuffers(device);
+
     superclassBuild(renderEncoder, device);
   };
 }
@@ -226,6 +410,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   volumes: null,
+  rowLength: 1024,
 };
 
 // ----------------------------------------------------------------------------
@@ -237,10 +422,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkWebGPUFullScreenQuad.extend(publicAPI, model, initialValues);
 
   model.fragmentShaderTemplate = volFragTemplate;
-
-  // todo need to compute a hash in this class as
-  // the pipeline will change due to num volumes etc
-  publicAPI.setPipelineHash('volfsq');
 
   model.UBO = vtkWebGPUUniformBuffer.newInstance();
   model.UBO.setName('mapperUBO');
