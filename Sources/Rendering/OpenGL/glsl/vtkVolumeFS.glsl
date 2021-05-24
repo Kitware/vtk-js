@@ -799,17 +799,14 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
       //VTK::AverageIPScalarRangeMin,
       //VTK::AverageIPScalarRangeMin,
       //VTK::AverageIPScalarRangeMin,
-      1.0);
+      //VTK::AverageIPScalarRangeMax);
     vec4 averageIPScalarRangeMax = vec4(
       //VTK::AverageIPScalarRangeMax,
       //VTK::AverageIPScalarRangeMax,
       //VTK::AverageIPScalarRangeMax,
-      1.0);
+      //VTK::AverageIPScalarRangeMax);
 
     vec4 sum = vec4(0.);
-
-    averageIPScalarRangeMin.a = tValue.a;
-    averageIPScalarRangeMax.a = tValue.a;
 
     if (valueWithinScalarRange(tValue, averageIPScalarRangeMin, averageIPScalarRangeMax)) {
       sum += tValue;
@@ -837,22 +834,13 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
       // - We are comparing all values in the texture to see if any of them
       //   are outside of the scalar range. In the future we might want to allow
       //   scalar ranges for each component.
-      // - We are setting the alpha channel for averageIPScalarRangeMin and
-      //   averageIPScalarRangeMax so that we do not trigger this 'continue'
-      //   based on the alpha channel comparison.
       // - There might be a better way to do this. I'm not sure if there is an
       //   equivalent of 'any' which only operates on RGB, though I suppose
       //   we could write an 'anyRGB' function and see if that is faster.
-      averageIPScalarRangeMin.a = tValue.a;
-      averageIPScalarRangeMax.a = tValue.a;
-      if (!valueWithinScalarRange(tValue, averageIPScalarRangeMin, averageIPScalarRangeMax)) {
-        continue;
+      if (valueWithinScalarRange(tValue, averageIPScalarRangeMin, averageIPScalarRangeMax)) {
+        // Sum the values across each step in the path
+        sum += tValue;
       }
-
-      // Sum the values across each step in the path
-      sum += tValue;
-
-      // Otherwise, continue along the ray
       stepsTraveled++;
       posIS += stepIS;
     }
