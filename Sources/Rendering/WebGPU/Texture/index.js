@@ -58,23 +58,19 @@ function vtkWebGPUTexture(publicAPI, model) {
   // set the data
   publicAPI.writeImageData = (req) => {
     let bufferBytesPerRow = model.width * 4;
-    if (req.dataArray || req.nativeArray) {
+    if (req.nativeArray) {
       // create and write the buffer
       const buffRequest = {
         /* eslint-disable no-undef */
         usage: BufferUsage.Texture,
         /* eslint-enable no-undef */
-        // todo this needs to be computed from the texture format
-        format: 'unorm8x4',
       };
 
       if (req.dataArray) {
         buffRequest.dataArray = req.dataArray;
         buffRequest.time = req.dataArray.getMTime();
       }
-      if (req.nativeArray) {
-        buffRequest.nativeArray = req.nativeArray;
-      }
+      buffRequest.nativeArray = req.nativeArray;
 
       // bytesPerRow must be a multiple of 256 so we might need to rebuild
       // the data here before passing to the buffer. e.g. if it is unorm8x4 then

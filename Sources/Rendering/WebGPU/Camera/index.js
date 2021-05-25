@@ -23,7 +23,7 @@ function vtkWebGPUCamera(publicAPI, model) {
         publicAPI.getMTime(),
         ren.getMTime(),
         model.renderable.getMTime(),
-        webGPURenderer.getStabilizedTime().getMTime()
+        webGPURenderer.getStabilizedTime()
       ) > model.keyMatrixTime.getMTime()
     ) {
       const wcvc = model.renderable.getViewMatrix();

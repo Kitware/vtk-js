@@ -7,8 +7,8 @@ import vtkWebGPUTexture from 'vtk.js/Sources/Rendering/WebGPU/Texture';
 
 function requestMatches(req1, req2) {
   if (req1.time !== req2.time) return false;
-  if (req1.address !== req2.address) return false;
-  //  if (req1.format !== req2.format) return false;
+  if (req1.nativeArray !== req2.nativeArray) return false;
+  if (req1.format !== req2.format) return false;
   return true;
 }
 
@@ -30,9 +30,8 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     // fill in values based on imageData if the request has it
     if (req.imageData) {
       req.dataArray = req.imageData.getPointData().getScalars();
-      // todo remove use of address and use hash and nativeArray
-      req.address = req.imageData.getPointData().getScalars();
-      req.time = req.address.getMTime();
+      req.time = req.dataArray.getMTime();
+      req.nativeArray = req.dataArray.getData();
       const dims = req.imageData.getDimensions();
       req.width = dims[0];
       req.height = dims[1];
@@ -55,10 +54,9 @@ function vtkWebGPUTextureManager(publicAPI, model) {
 
     // fill in values based on image if the request has it
     if (req.image) {
-      req.address = req.image;
       req.time = 0;
-      req.width = req.address.width;
-      req.height = req.address.height;
+      req.width = req.image.width;
+      req.height = req.image.height;
       req.depth = 1;
       req.format = 'rgba8unorm';
     }
@@ -85,7 +83,7 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     });
 
     // fill the texture if we have data
-    if (req.dataArray || req.nativeArray || req.image) {
+    if (req.nativeArray || req.image) {
       newTex.writeImageData(req);
     }
 
@@ -101,8 +99,8 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       dabuffers.push({
         request: {
           time: req.time,
-          address: req.address,
-          // format: req.format,
+          nativeArray: req.nativeArray,
+          format: req.format,
         },
         texture: newTex,
       });

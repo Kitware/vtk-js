@@ -367,6 +367,8 @@ function vtkWebGPURenderer(publicAPI, model) {
     return null;
   };
 
+  publicAPI.getStabilizedTime = () => model.stabilizedTime.getMTime();
+
   publicAPI.releaseGraphicsResources = () => {
     if (model.selector !== null) {
       model.selector.releaseGraphicsResources();
