@@ -21,6 +21,39 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
 
   publicAPI.setPipeline = (pl) => {
     model.handle.setPipeline(pl.getHandle());
+    const pd = pl.getPipelineDescription();
+
+    // check attachment state
+    if (model.colorTextureViews.length !== pd.fragment.targets.length) {
+      console.log(
+        `mismatched attachment counts on pipeline ${pd.fragment.targets.length} while encoder has ${model.colorTextureViews.length}`
+      );
+      console.trace();
+    } else {
+      for (let i = 0; i < model.colorTextureViews.length; i++) {
+        const fmt = model.colorTextureViews[i].getTexture().getFormat();
+        if (fmt !== pd.fragment.targets[i].format) {
+          console.log(
+            `mismatched attachments for attachment ${i} on pipeline ${pd.fragment.targets[i].format} while encoder has ${fmt}`
+          );
+          console.trace();
+        }
+      }
+    }
+
+    // check depth buffer
+    if (!model.depthTextureView !== !('depthStencil' in pd)) {
+      console.log('mismatched depth attachments');
+      console.trace();
+    } else if (model.depthTextureView) {
+      const dfmt = model.depthTextureView.getTexture().getFormat();
+      if (dfmt !== pd.depthStencil.format) {
+        console.log(
+          `mismatched depth attachments on pipeline ${pd.depthStencil.format} while encoder has ${dfmt}`
+        );
+        console.trace();
+      }
+    }
     model.boundPipeline = pl;
   };
 
@@ -36,11 +69,22 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
   };
 
   publicAPI.activateBindGroup = (bg) => {
+    const device = model.boundPipeline.getDevice();
     const midx = model.boundPipeline.getBindGroupLayoutCount(bg.getName());
-    model.handle.setBindGroup(
-      midx,
-      bg.getBindGroup(model.boundPipeline.getDevice())
+    model.handle.setBindGroup(midx, bg.getBindGroup(device));
+    // verify bind group layout matches
+    const bgl1 = device.getBindGroupLayoutDescription(
+      bg.getBindGroupLayout(device)
     );
+    const bgl2 = device.getBindGroupLayoutDescription(
+      model.boundPipeline.getBindGroupLayout(midx)
+    );
+    if (bgl1 !== bgl2) {
+      console.log(
+        `renderEncoder ${model.pipelineHash} mismatched bind group layouts bind group has\n${bgl1}\n versus pipeline\n${bgl2}\n`
+      );
+      console.trace();
+    }
   };
 
   publicAPI.attachTextureViews = () => {

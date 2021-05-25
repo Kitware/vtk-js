@@ -12,6 +12,263 @@ import { vtkErrorMacro } from 'vtk.js/Sources/macro';
 //  - texture types such as rgba32float
 // ----------------------------------------------------------------------------
 
+// see https://gpuweb.github.io/gpuweb/#texture-formats
+// for possible formats, there are a lot of them
+const textureDetails = {
+  // 8-bit formats
+  r8unorm: {
+    numComponents: 1,
+    nativeType: Uint8Array,
+    stride: 1,
+    elementSize: 1,
+  },
+  r8snorm: {
+    numComponents: 1,
+    nativeType: Int8Array,
+    stride: 1,
+    elementSize: 1,
+  },
+  r8uint: {
+    numComponents: 1,
+    nativeType: Uint8Array,
+    stride: 1,
+    elementSize: 1,
+  },
+  r8sint: {
+    numComponents: 1,
+    nativeType: Int8Array,
+    stride: 1,
+    elementSize: 1,
+  },
+
+  // 16-bit formats
+  r16uint: {
+    numComponents: 1,
+    nativeType: Uint16Array,
+    stride: 2,
+    elementSize: 2,
+  },
+  r16sint: {
+    numComponents: 1,
+    nativeType: Int16Array,
+    stride: 2,
+    elementSize: 2,
+  },
+  r16float: {
+    numComponents: 1,
+    nativeType: Float32Array,
+    stride: 2,
+    elementSize: 2,
+  },
+  rg8unorm: {
+    numComponents: 2,
+    nativeType: Uint8Array,
+    stride: 2,
+    elementSize: 1,
+  },
+  rg8snorm: {
+    numComponents: 2,
+    nativeType: Int8Array,
+    stride: 2,
+    elementSize: 1,
+  },
+  rg8uint: {
+    numComponents: 2,
+    nativeType: Uint8Array,
+    stride: 2,
+    elementSize: 1,
+  },
+  rg8sint: {
+    numComponents: 2,
+    nativeType: Int8Array,
+    stride: 2,
+    elementSize: 1,
+  },
+
+  // 32-bit formats
+  r32uint: {
+    numComponents: 1,
+    nativeType: Uint32Array,
+    stride: 4,
+    elementSize: 4,
+  },
+  r32sint: {
+    numComponents: 1,
+    nativeType: Int32Array,
+    stride: 4,
+    elementSize: 4,
+  },
+  r32float: {
+    numComponents: 1,
+    nativeType: Float32Array,
+    stride: 4,
+    elementSize: 4,
+  },
+  rg16uint: {
+    numComponents: 2,
+    nativeType: Uint16Array,
+    stride: 4,
+    elementSize: 2,
+  },
+  rg16sint: {
+    numComponents: 2,
+    nativeType: Int16Array,
+    stride: 4,
+    elementSize: 2,
+  },
+  rg16float: {
+    numComponents: 2,
+    nativeType: Float32Array,
+    stride: 4,
+    elementSize: 2,
+  },
+  rgba8unorm: {
+    numComponents: 4,
+    nativeType: Uint8Array,
+    stride: 4,
+    elementSize: 1,
+  },
+  'rgba8unorm-srgb': {
+    numComponents: 4,
+    nativeType: Uint8Array,
+    stride: 4,
+    elementSize: 1,
+  },
+  rgba8snorm: {
+    numComponents: 4,
+    nativeType: Int8Array,
+    stride: 4,
+    elementSize: 1,
+  },
+  rgba8uint: {
+    numComponents: 4,
+    nativeType: Uint8Array,
+    stride: 4,
+    elementSize: 1,
+  },
+  rgba8sint: {
+    numComponents: 4,
+    nativeType: Int8Array,
+    stride: 4,
+    elementSize: 1,
+  },
+  bgra8unorm: {
+    numComponents: 4,
+    nativeType: Uint8Array,
+    stride: 4,
+    elementSize: 1,
+  },
+  'bgra8unorm-srgb': {
+    numComponents: 4,
+    nativeType: Uint8Array,
+    stride: 4,
+    elementSize: 1,
+  },
+  // Packed 32-bit formats
+  rgb9e5ufloat: { numComponents: 4, nativeType: Uint32Array, stride: 4 },
+  rgb10a2unorm: { numComponents: 4, nativeType: Uint32Array, stride: 4 },
+  rg11b10ufloat: { numComponents: 4, nativeType: Float32Array, stride: 4 },
+
+  // 64-bit formats
+  rg32uint: {
+    numComponents: 2,
+    nativeType: Uint32Array,
+    stride: 8,
+    elementSize: 4,
+  },
+  rg32sint: {
+    numComponents: 2,
+    nativeType: Int32Array,
+    stride: 8,
+    elementSize: 4,
+  },
+  rg32float: {
+    numComponents: 2,
+    nativeType: Float32Array,
+    stride: 8,
+    elementSize: 4,
+  },
+  rgba16uint: {
+    numComponents: 4,
+    nativeType: Uint16Array,
+    stride: 8,
+    elementSize: 2,
+  },
+  rgba16sint: {
+    numComponents: 4,
+    nativeType: Int16Array,
+    stride: 8,
+    elementSize: 2,
+  },
+  rgba16float: {
+    numComponents: 4,
+    nativeType: Float32Array,
+    stride: 8,
+    elementSize: 2,
+  },
+
+  // 128-bit formats
+  rgba32uint: {
+    numComponents: 4,
+    nativeType: Uint32Array,
+    stride: 16,
+    elementSize: 4,
+  },
+  rgba32sint: {
+    numComponents: 4,
+    nativeType: Int32Array,
+    stride: 16,
+    elementSize: 4,
+  },
+  rgba32float: {
+    numComponents: 4,
+    nativeType: Float32Array,
+    stride: 16,
+    elementSize: 4,
+  },
+
+  // Depth and stencil formats
+  stencil8: {
+    numComponents: 1,
+    nativeType: Uint8Array,
+    stride: 1,
+    elementSize: 1,
+  },
+  depth16unorm: {
+    numComponents: 1,
+    nativeType: Uint16Array,
+    stride: 2,
+    elementSize: 2,
+  },
+  depth24plus: {
+    numComponents: 1,
+    nativeType: Uint32Array,
+    stride: 4,
+    elementSize: 3,
+  },
+  'depth24plus-stencil8': {
+    numComponents: 2,
+    nativeType: Uint32Array,
+    stride: 4,
+  },
+  depth32float: {
+    numComponents: 1,
+    nativeType: Float32Array,
+    stride: 4,
+    elementSize: 4,
+  },
+};
+
+function getDetailsFromTextureFormat(format) {
+  if (!format || format.length < 6) return 0;
+
+  if (format in textureDetails === true) {
+    return textureDetails[format];
+  }
+  vtkErrorMacro(`unknown format ${format}`);
+  return null;
+}
+
 // see https://gpuweb.github.io/gpuweb/#enumdef-gpuvertexformat
 // for possible formats
 function getByteStrideFromBufferFormat(format) {
@@ -33,6 +290,19 @@ function getByteStrideFromBufferFormat(format) {
   }
   const typeSize = 5 - num / 2;
   return numComp * typeSize;
+}
+
+// see https://gpuweb.github.io/gpuweb/#enumdef-gpuvertexformat
+// for possible formats
+function getNumberOfComponentsFromBufferFormat(format) {
+  if (!format || format.length < 5) return 0;
+
+  // options are x2, x3, x4 or nothing
+  let numComp = 1;
+  if (format[format.length - 2] === 'x') {
+    numComp = format[format.length - 1];
+  }
+  return numComp;
 }
 
 // see https://gpuweb.github.io/gpuweb/#enumdef-gpuvertexformat
@@ -115,7 +385,9 @@ function getNativeTypeFromShaderFormat(format) {
 }
 
 export default {
+  getDetailsFromTextureFormat,
   getByteStrideFromBufferFormat,
+  getNumberOfComponentsFromBufferFormat,
   getNativeTypeFromBufferFormat,
   getShaderTypeFromBufferFormat,
   getByteStrideFromShaderFormat,

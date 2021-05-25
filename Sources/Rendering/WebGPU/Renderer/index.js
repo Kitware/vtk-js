@@ -199,7 +199,6 @@ function vtkWebGPURenderer(publicAPI, model) {
       model.pipelineCallbacks = [];
 
       model.renderEncoder.begin(model.parent.getCommandEncoder());
-
       publicAPI.updateUBO();
     } else {
       publicAPI.scissorAndViewport(model.renderEncoder);
@@ -250,7 +249,6 @@ function vtkWebGPURenderer(publicAPI, model) {
     if (prepass) {
       // clear last pipelines
       model.pipelineCallbacks = [];
-
       model.renderEncoder.begin(model.parent.getCommandEncoder());
     } else {
       publicAPI.scissorAndViewport(model.renderEncoder);
@@ -276,7 +274,6 @@ function vtkWebGPURenderer(publicAPI, model) {
     if (prepass) {
       // clear last pipelines
       model.pipelineCallbacks = [];
-
       model.renderEncoder.begin(model.parent.getCommandEncoder());
     } else {
       publicAPI.scissorAndViewport(model.renderEncoder);
@@ -410,7 +407,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.bindGroup = vtkWebGPUBindGroup.newInstance();
   model.bindGroup.setName('rendererBG');
-  model.bindGroup.addBindable(model.UBO);
+  model.bindGroup.setBindables([model.UBO]);
 
   model.tmpMat4 = mat4.identity(new Float64Array(16));
 

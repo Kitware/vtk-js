@@ -232,18 +232,24 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     ).result;
 
     const averageIPScalarRange = model.renderable.getAverageIPScalarRange();
+    let min = averageIPScalarRange[0];
+    let max = averageIPScalarRange[1];
 
-    // TODO: Adding the .0 at the end feels hacky
+    // If min or max is not already a float.
+    // make them into floats for glsl
+    min = Number.isInteger(min) ? min.toFixed(1).toString() : min.toString();
+    max = Number.isInteger(max) ? max.toFixed(1).toString() : max.toString();
+
     FSSource = vtkShaderProgram.substitute(
       FSSource,
       '//VTK::AverageIPScalarRangeMin',
-      `${averageIPScalarRange[0]}.0`
+      min
     ).result;
 
     FSSource = vtkShaderProgram.substitute(
       FSSource,
       '//VTK::AverageIPScalarRangeMax',
-      `${averageIPScalarRange[1]}.0`
+      max
     ).result;
 
     shaders.Fragment = FSSource;

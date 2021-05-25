@@ -11,6 +11,13 @@ import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
 const IS_CHROME = navigator.userAgent.indexOf('Chrome') !== -1;
+const SCREENSHOT_PLACEHOLDER = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  width: '100%',
+  height: '100%',
+};
 
 function checkRenderTargetSupport(gl, format, type) {
   // create temporary frame buffer and texture
@@ -522,7 +529,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     publicAPI.invokeImageReady(screenshot);
   }
 
-  publicAPI.captureNextImage = (format = 'image/png') => {
+  publicAPI.captureNextImage = (
+    format = 'image/png',
+    { resetCamera = false, size = null, scale = 1 } = {}
+  ) => {
     if (model.deleted) {
       return null;
     }
@@ -530,11 +540,91 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     const previous = model.notifyStartCaptureImage;
     model.notifyStartCaptureImage = true;
 
+    model._screenshot = {
+      size:
+        !!size || scale !== 1
+          ? size || model.size.map((val) => val * scale)
+          : null,
+    };
+
     return new Promise((resolve, reject) => {
       const subscription = publicAPI.onImageReady((imageURL) => {
-        model.notifyStartCaptureImage = previous;
-        subscription.unsubscribe();
-        resolve(imageURL);
+        if (model._screenshot.size === null) {
+          model.notifyStartCaptureImage = previous;
+          subscription.unsubscribe();
+          if (model._screenshot.placeHolder) {
+            // resize the main canvas back to its original size and show it
+            model.size = model._screenshot.originalSize;
+
+            // process the resize
+            publicAPI.modified();
+
+            // restore the saved camera parameters, if applicable
+            if (model._screenshot.cameras) {
+              model._screenshot.cameras.forEach(({ restoreParamsFn, arg }) =>
+                restoreParamsFn(arg)
+              );
+            }
+
+            // Trigger a render at the original size
+            publicAPI.traverseAllPasses();
+
+            // Remove and clean up the placeholder, revealing the original
+            model.el.removeChild(model._screenshot.placeHolder);
+            model._screenshot.placeHolder.remove();
+            model._screenshot = null;
+          }
+          resolve(imageURL);
+        } else {
+          // Create a placeholder image overlay while we resize and render
+          const tmpImg = document.createElement('img');
+          tmpImg.style = SCREENSHOT_PLACEHOLDER;
+          tmpImg.src = imageURL;
+          model._screenshot.placeHolder = model.el.appendChild(tmpImg);
+
+          // hide the main canvas
+          model.canvas.style.display = 'none';
+
+          // remember the main canvas original size, then resize it
+          model._screenshot.originalSize = model.size;
+          model.size = model._screenshot.size;
+          model._screenshot.size = null;
+
+          // process the resize
+          publicAPI.modified();
+
+          if (resetCamera) {
+            // If resetCamera was requested, we first save camera parameters
+            // from all the renderers, so we can restore them later
+            model._screenshot.cameras = model.renderable
+              .getRenderers()
+              .map((renderer) => {
+                const camera = renderer.getActiveCamera();
+                const params = camera.get(
+                  'focalPoint',
+                  'position',
+                  'parallelScale'
+                );
+
+                return {
+                  resetCameraFn: renderer.resetCamera,
+                  restoreParamsFn: camera.set,
+                  // "clone" the params so we don't keep refs to properties
+                  arg: JSON.parse(JSON.stringify(params)),
+                };
+              });
+
+            // Perform the resetCamera() on each renderer only after capturing
+            // the params from all active cameras, in case there happen to be
+            // linked cameras among the renderers.
+            model._screenshot.cameras.forEach(({ resetCameraFn }) =>
+              resetCameraFn()
+            );
+          }
+
+          // Trigger a render at the custom size
+          publicAPI.traverseAllPasses();
+        }
       });
     });
   };

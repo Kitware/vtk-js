@@ -8,14 +8,22 @@ function vtkWebGPUBindGroup(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUBindGroup');
 
-  publicAPI.addBindable = (bindable) => {
-    // only add new bindables
-    for (let i = 0; i < model.bindables.length; i++) {
-      if (model.bindables[i] === bindable) {
+  publicAPI.setBindables = (bindables) => {
+    // is there a difference between the old and new list?
+    if (model.bindables.length === bindables.length) {
+      let allMatch = true;
+      for (let i = 0; i < model.bindables.length; i++) {
+        if (model.bindables[i] !== bindables[i]) {
+          allMatch = false;
+        }
+      }
+      if (allMatch) {
         return;
       }
     }
-    model.bindables.push(bindable);
+
+    // there is a difference
+    model.bindables = bindables;
     publicAPI.modified();
   };
 
@@ -33,7 +41,7 @@ function vtkWebGPUBindGroup(publicAPI, model) {
     // check mtime
     let mtime = publicAPI.getMTime();
     for (let i = 0; i < model.bindables.length; i++) {
-      const tm = model.bindables[i].getBindGroupTime();
+      const tm = model.bindables[i].getBindGroupTime().getMTime();
       mtime = tm > mtime ? tm : mtime;
     }
     if (mtime < model.bindGroupTime.getMTime()) {

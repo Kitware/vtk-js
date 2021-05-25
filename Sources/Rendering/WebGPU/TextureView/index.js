@@ -48,6 +48,16 @@ function vtkWebGPUTextureView(publicAPI, model) {
     publicAPI.modified();
   };
 
+  publicAPI.getBindGroupTime = () => {
+    // check if the handle changed
+    if (model.texture.getHandle() !== model.textureHandle) {
+      model.textureHandle = model.texture.getHandle();
+      model.handle = model.textureHandle.createView(model.options);
+      model.bindGroupTime.modified();
+    }
+    return model.bindGroupTime;
+  };
+
   // if the texture has changed then get a new view
   publicAPI.getHandle = () => {
     if (model.texture.getHandle() !== model.textureHandle) {
