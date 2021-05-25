@@ -430,8 +430,6 @@ function vtkWebGPUBufferManager(publicAPI, model) {
     const buffer = vtkWebGPUBuffer.newInstance();
     buffer.setDevice(model.device);
 
-    const stride = vtkWebGPUTypes.getByteStrideFromBufferFormat(req.format);
-    const arrayType = vtkWebGPUTypes.getNativeTypeFromBufferFormat(req.format);
     let gpuUsage = null;
 
     // handle uniform buffers
@@ -456,12 +454,17 @@ function vtkWebGPUBufferManager(publicAPI, model) {
       gpuUsage = GPUBufferUsage.COPY_SRC;
       /* eslint-enable no-bitwise */
       buffer.createAndWrite(req.nativeArray, gpuUsage);
-      buffer.setArrayInformation([{ offset: 0, format: req.format }]);
     }
+
+    // all of the below types that have gpuUsage = VERTEX require format
+    // to be provided.
 
     // handle point data
     if (req.usage === BufferUsage.PointArray) {
       gpuUsage = GPUBufferUsage.VERTEX;
+      const arrayType = vtkWebGPUTypes.getNativeTypeFromBufferFormat(
+        req.format
+      );
       const result = packArray(
         req.cells,
         req.primitiveType,
@@ -478,7 +481,9 @@ function vtkWebGPUBufferManager(publicAPI, model) {
       );
       // console.log(result);
       buffer.createAndWrite(result.nativeArray, gpuUsage);
-      buffer.setStrideInBytes(stride);
+      buffer.setStrideInBytes(
+        vtkWebGPUTypes.getByteStrideFromBufferFormat(req.format)
+      );
       buffer.setArrayInformation([{ offset: 0, format: req.format }]);
     }
 
@@ -492,14 +497,18 @@ function vtkWebGPUBufferManager(publicAPI, model) {
         req.dataArray
       );
       buffer.createAndWrite(normals, gpuUsage);
-      buffer.setStrideInBytes(stride);
+      buffer.setStrideInBytes(
+        vtkWebGPUTypes.getByteStrideFromBufferFormat(req.format)
+      );
       buffer.setArrayInformation([{ offset: 0, format: req.format }]);
     }
 
     if (req.usage === BufferUsage.RawVertex) {
       gpuUsage = GPUBufferUsage.VERTEX;
       buffer.createAndWrite(req.nativeArray, gpuUsage);
-      buffer.setStrideInBytes(stride);
+      buffer.setStrideInBytes(
+        vtkWebGPUTypes.getByteStrideFromBufferFormat(req.format)
+      );
       buffer.setArrayInformation([{ offset: 0, format: req.format }]);
     }
 

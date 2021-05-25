@@ -23,7 +23,7 @@ function vtkWebGPUPixelSpaceCallbackMapper(publicAPI, model) {
     const texels = null;
 
     if (model.renderable.getUseZValues()) {
-      // Todo
+      // Todo return zvalues? async?
     }
 
     model.renderable.invokeCallback(

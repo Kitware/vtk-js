@@ -152,9 +152,6 @@ function vtkWebGPUVolumePass(publicAPI, model) {
   };
 
   publicAPI.updateDepthPolyData = (renNode) => {
-    // todo also check stabilized time
-    const center = renNode.getStabilizedCenterByReference();
-
     // check mtimes first
     let update = false;
     for (let i = 0; i < model.volumes.length; i++) {
@@ -165,12 +162,23 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       }
     }
 
+    // also check stabilized time
+    const stime = renNode.getStabilizedTime();
+    if (
+      !model._lastMTimes[model.volumes.length] ||
+      stime !== model._lastMTimes[model.volumes.length]
+    ) {
+      update = true;
+      model._lastMTimes[model.volumes.length] = stime;
+    }
+
     // if no need to update then return
     if (!update) {
       return;
     }
 
     // rebuild
+    const center = renNode.getStabilizedCenterByReference();
     const numPts = model.volumes.length * 8;
     const points = new Float64Array(numPts * 3);
     const numTris = model.volumes.length * 12;
@@ -227,8 +235,8 @@ function vtkWebGPUVolumePass(publicAPI, model) {
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,
       });
       const minView = model.depthRangeTexture2.createView();
-      minView.addSampler(device);
       minView.setName('minTexture');
+      // shares the maxTextureSampler
       model.depthRangeEncoder.setColorTextureView(1, minView);
       model._mapper.setDevice(viewNode.getDevice());
       model._mapper.setTextureViews([model.depthTextureView]);
@@ -367,6 +375,22 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       },
     });
   };
+
+  // marks modified when needed
+  publicAPI.setVolumes = (val) => {
+    if (!model.volumes || model.volumes.length !== val.length) {
+      model.volumes = [...val];
+      publicAPI.modified();
+      return;
+    }
+    for (let i = 0; i < val.length; i++) {
+      if (val[i] !== model.volumes[i]) {
+        model.volumes = [...val];
+        publicAPI.modified();
+        return;
+      }
+    }
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -399,11 +423,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model._boundsPoly = vtkPolyData.newInstance();
   model._lastMTimes = [];
 
-  macro.setGet(publicAPI, model, [
-    'colorTextureView',
-    'depthTextureView',
-    'volumes',
-  ]);
+  macro.setGet(publicAPI, model, ['colorTextureView', 'depthTextureView']);
 
   // Object methods
   vtkWebGPUVolumePass(publicAPI, model);

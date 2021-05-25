@@ -42,9 +42,9 @@ Waiting on fixes/dev in WebGPU spec
 - 3d textures (as of April 21 2021 Dawn lacks support for 1d and 3d)
 - image display (use 3d texture)
 - more cross platform testing and bug fixing
-- single volume rendering (abandon)
 
 # Recently ToDone
+- added bind groups
 - actor matrix support with auto shift (handle in renderer?)
 - add an example of customizing WebGPU
 - make all shader replacements programatic, generate

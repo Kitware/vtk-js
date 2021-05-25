@@ -92,10 +92,8 @@ function vtkWebGPUActor(publicAPI, model) {
   publicAPI.getKeyMatrices = (wgpuRen) => {
     // has the actor or stabilization center changed?
     if (
-      Math.max(
-        model.renderable.getMTime(),
-        wgpuRen.getStabilizedTime().getMTime()
-      ) > model.keyMatricesTime.getMTime()
+      Math.max(model.renderable.getMTime(), wgpuRen.getStabilizedTime()) >
+      model.keyMatricesTime.getMTime()
     ) {
       model.renderable.computeMatrix();
 
