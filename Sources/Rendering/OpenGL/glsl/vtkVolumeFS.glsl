@@ -794,7 +794,7 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
     // Now map through opacity and color
     gl_FragData[0] = getColorForValue(value, posIS, tstep);
   #endif
-  #if vtkBlendMode == 3 //AVERAGE_INTENSITY_BLEND
+  #if vtkBlendMode == 3 || vtkBlendMode == 4 //AVERAGE_INTENSITY_BLEND || ADDITIVE_BLEND
     vec4 averageIPScalarRangeMin = vec4 (
       //VTK::AverageIPScalarRangeMin,
       //VTK::AverageIPScalarRangeMin,
@@ -856,7 +856,9 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
       stepsTraveled++;
     }
 
-    sum /= vec4(stepsTraveled, stepsTraveled, stepsTraveled, 1.0);
+    #if vtkBlendMode == 3 // Average
+      sum /= vec4(stepsTraveled, stepsTraveled, stepsTraveled, 1.0);
+    #endif
 
     gl_FragData[0] = getColorForValue(sum, posIS, tstep);
   #endif
