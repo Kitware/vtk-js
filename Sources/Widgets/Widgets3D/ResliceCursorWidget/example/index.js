@@ -32,6 +32,9 @@ import { SlabMode } from 'vtk.js/Sources/Imaging/Core/ImageReslice/Constants';
 import { xyzToViewType } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 import controlPanel from './controlPanel.html';
 
+// Force the loading of HttpDataAccessHelper to support gzip decompression
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+
 // ----------------------------------------------------------------------------
 // Define main attributes
 // ----------------------------------------------------------------------------
