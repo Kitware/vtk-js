@@ -14,8 +14,10 @@ function vtkWebGPUTextureView(publicAPI, model) {
   publicAPI.create = (texture, options) => {
     model.texture = texture;
     model.options = options;
+    model.options.dimension = model.options.dimension || '2d';
     model.textureHandle = texture.getHandle();
     model.handle = model.textureHandle.createView(model.options);
+    model.bindGroupLayoutEntry.texture.viewDimension = model.options.dimension;
   };
 
   publicAPI.getBindGroupEntry = () => {
@@ -26,7 +28,7 @@ function vtkWebGPUTextureView(publicAPI, model) {
   };
 
   publicAPI.getShaderCode = (binding, group) => {
-    const result = `[[binding(${binding}), group(${group})]] var ${model.name}: texture_2d<f32>;`;
+    const result = `[[binding(${binding}), group(${group})]] var ${model.name}: texture_${model.options.dimension}<f32>;`;
     return result;
   };
 
@@ -94,7 +96,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     /* eslint-enable no-undef */
     texture: {
       // sampleType: 'float',
-      // viewDimension: '2d',
+      viewDimension: '2d',
       // multisampled: false,
     },
   };

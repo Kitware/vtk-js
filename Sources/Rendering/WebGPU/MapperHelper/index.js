@@ -261,12 +261,7 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
     publicAPI.renderForPipeline(renderEncoder);
   };
 
-  publicAPI.build = (renderEncoder, device) => {
-    // handle per primitive type
-    model.renderEncoder = renderEncoder;
-
-    model.pipeline = device.getPipeline(model.pipelineHash);
-
+  publicAPI.getBindables = () => {
     const bindables = [];
     if (model.UBO) {
       bindables.push(model.UBO);
@@ -284,7 +279,17 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
         bindables.push(samp);
       }
     }
-    model.bindGroup.setBindables(bindables);
+
+    return bindables;
+  };
+
+  publicAPI.build = (renderEncoder, device) => {
+    // handle per primitive type
+    model.renderEncoder = renderEncoder;
+
+    model.pipeline = device.getPipeline(model.pipelineHash);
+
+    model.bindGroup.setBindables(publicAPI.getBindables());
 
     // build VBO for this primitive
     // build the pipeline if needed

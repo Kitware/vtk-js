@@ -24,6 +24,7 @@ instead calling renderWindow.newAPISpecificView('WebGPU') should be all that
 is needed.
 
 # ToDo
+- add device.lost handler
 - create background class to encapsulate, background clear,
   gradient background, texture background, skybox etc
 - PBR lighting to replace the simple model currently coded

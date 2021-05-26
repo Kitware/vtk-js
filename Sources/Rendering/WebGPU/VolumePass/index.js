@@ -224,7 +224,6 @@ function vtkWebGPUVolumePass(publicAPI, model) {
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,
       });
       const maxView = model.depthRangeTexture.createView();
-      maxView.addSampler(device);
       maxView.setName('maxTexture');
       model.depthRangeEncoder.setColorTextureView(0, maxView);
       model.depthRangeTexture2 = vtkWebGPUTexture.newInstance();
@@ -236,7 +235,6 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       });
       const minView = model.depthRangeTexture2.createView();
       minView.setName('minTexture');
-      // shares the maxTextureSampler
       model.depthRangeEncoder.setColorTextureView(1, minView);
       model._mapper.setDevice(viewNode.getDevice());
       model._mapper.setTextureViews([model.depthTextureView]);

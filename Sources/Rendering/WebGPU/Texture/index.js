@@ -57,7 +57,8 @@ function vtkWebGPUTexture(publicAPI, model) {
 
   // set the data
   publicAPI.writeImageData = (req) => {
-    let bufferBytesPerRow = model.width * 4;
+    const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(model.format);
+    let bufferBytesPerRow = model.width * tDetails.stride;
     if (req.nativeArray) {
       // create and write the buffer
       const buffRequest = {
@@ -75,7 +76,6 @@ function vtkWebGPUTexture(publicAPI, model) {
       // bytesPerRow must be a multiple of 256 so we might need to rebuild
       // the data here before passing to the buffer. e.g. if it is unorm8x4 then
       // we need to have width be a multiple of 64
-      const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(model.format);
       const currWidthInBytes = model.width * tDetails.stride;
       if (currWidthInBytes % 256) {
         const oArray = req.dataArray.getData();
@@ -86,10 +86,10 @@ function vtkWebGPUTexture(publicAPI, model) {
 
         const nArray = macro.newTypedArray(
           oArray.name,
-          bufferWidth * model.height
+          bufferWidth * model.height * model.depth
         );
 
-        for (let v = 0; v < model.height; v++) {
+        for (let v = 0; v < model.height * model.depth; v++) {
           nArray.set(
             oArray.subarray(v * oWidth, (v + 1) * oWidth),
             v * bufferWidth
@@ -190,7 +190,11 @@ function vtkWebGPUTexture(publicAPI, model) {
     }
   };
 
-  publicAPI.createView = (options) => {
+  publicAPI.createView = (options = {}) => {
+    // if options is missing values try to add them in
+    if (!options.dimension) {
+      options.dimension = model.depth === 1 ? '2d' : '3d';
+    }
     const view = vtkWebGPUTextureView.newInstance();
     view.create(publicAPI, options);
     return view;
