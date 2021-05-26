@@ -37,6 +37,8 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       req.height = dims[1];
       req.depth = dims[2];
       const numComp = req.dataArray.getNumberOfComponents();
+      // todo pick format based on native type
+      // todo fix handling of 3 component
       switch (numComp) {
         case 1:
           req.format = 'r8unorm';

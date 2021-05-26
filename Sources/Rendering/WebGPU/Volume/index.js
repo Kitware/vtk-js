@@ -30,7 +30,8 @@ function vtkWebGPUVolume(publicAPI, model) {
         model.propID = model.WebGPURenderWindow.getUniquePropID();
       }
       publicAPI.prepareNodes();
-      publicAPI.addMissingNode(model.renderable.getMapper());
+      model.renderable.getMapper().update();
+      // publicAPI.addMissingNode(model.renderable.getMapper());
       publicAPI.removeUnusedNodes();
     }
   };

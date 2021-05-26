@@ -173,6 +173,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
   publicAPI.create3DContextAsync = async () => {
     // Get a GPU device to render with
     model.adapter = await navigator.gpu.requestAdapter();
+    // console.log([...model.adapter.features]);
     model.device = vtkWebGPUDevice.newInstance();
     model.device.initialize(await model.adapter.requestDevice());
     model.context = model.canvas.getContext('gpupresent');
