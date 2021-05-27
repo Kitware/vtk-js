@@ -50,6 +50,11 @@ function vtkVolumeMapper(publicAPI, model) {
     publicAPI.setBlendMode(BlendMode.ADDITIVE_INTENSITY_BLEND);
   };
 
+  publicAPI.setAverageIPScalarRange = (range) => {
+    console.warn('setAverageIPScalarRange is deprecated use setIpScalarRange');
+    publicAPI.setIpScalarRange(range);
+  };
+
   publicAPI.getBlendModeAsString = () =>
     macro.enumToString(BlendMode, model.blendMode);
 }
@@ -66,7 +71,7 @@ const DEFAULT_VALUES = {
   maximumSamplesPerRay: 1000,
   autoAdjustSampleDistances: true,
   blendMode: BlendMode.COMPOSITE_BLEND,
-  averageIPScalarRange: [-1000000.0, 1000000.0],
+  ipScalarRange: [-1000000.0, 1000000.0],
 };
 
 // ----------------------------------------------------------------------------
@@ -88,7 +93,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'blendMode',
   ]);
 
-  macro.setGetArray(publicAPI, model, ['averageIPScalarRange'], 2);
+  macro.setGetArray(publicAPI, model, ['ipScalarRange'], 2);
 
   macro.event(publicAPI, model, 'lightingActivated');
 
