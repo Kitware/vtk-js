@@ -1,7 +1,7 @@
-import { vtkObject, vtkSubscription } from "vtk.js/Sources/interfaces";
-import vtkRenderer from "vtk.js/Sources/Rendering/Core/Renderer";
-import vtkRenderWindowInteractor from "vtk.js/Sources/Rendering/Core/RenderWindowInteractor";
-// import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import { vtkObject, vtkSubscription } from "../../../interfaces";
+import vtkRenderer from "../Renderer";
+import vtkRenderWindowInteractor from "../RenderWindowInteractor";
+// import vtkOpenGLRenderWindow from "../../../OpenGL/RenderWindow";
 
 interface IRenderWindowInitialValues {	
 	renderers?: vtkRenderer[],
@@ -50,9 +50,10 @@ export interface vtkRenderWindow extends vtkObject {
 
 	/**
 	 * 
-	 * @param format 
+	 * @param {String} format 
+	 * @param {*} opts 
 	 */
-	captureImages(format: string): void;
+	captureImages(format?: string, opts?: any): void;
 
 	/**
 	 * 

@@ -1,5 +1,6 @@
-import { vtkObject } from "vtk.js/Sources/interfaces" ;
-import vtkPoints from 'vtk.js/Sources/Core/Points';
+import { vtkObject } from "../../../interfaces" ;
+import { Bounds } from "../../../types";
+import vtkPoints from '../../Core/Points';
 
 interface ICellInitialValues {
 	bounds?: number[];
@@ -16,6 +17,7 @@ export interface vtkCell extends vtkObject {
 
 	/**
 	 * Initialize the cell with point coordinates and cell point ids, example :
+	 * 
 	 * ```js
 	 * const points = vtkPoints.newInstance();
 	 * points.setData(Float32Array.from([0, 0, 0, 0, 0, 1, ..., 255, 255, 255]));
@@ -25,6 +27,7 @@ export interface vtkCell extends vtkObject {
 	 * // Initialize cell
 	 * triangle.initialize(points, pointIdsList);
 	 * ```
+	 * 
 	 * If pointIdsList is null, points are shallow copied and pointIdsList is
 	 * generated as such: [0, 1, ..., N-1] where N is the number of points. If
 	 * pointIdsList is not null, only pointIdsList point coordinates are copied into
@@ -36,9 +39,9 @@ export interface vtkCell extends vtkObject {
 
 	/**
 	 * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-	 * @return {Number[]} The bounds for the mapper.
+	 * @return {Bounds} The bounds for the mapper.
 	 */
-	getBounds(): number[];
+	getBounds(): Bounds;
 
 	/**
 	 * Compute Length squared of cell (i.e., bounding box diagonal squared).

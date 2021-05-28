@@ -1,14 +1,13 @@
-import { vtkObject } from "vtk.js/Sources/interfaces" ;
-
+import { vtkObject } from "../../../interfaces" ;
 
 /**
  * 
  */
 interface IFieldDataInitialValues {
-	arrays: Array<any>;
-	copyFieldFlags: Array<any>;
-	doCopyAllOn: boolean;
-	doCopyAllOff: boolean;
+	arrays?: Array<any>;
+	copyFieldFlags?: Array<any>;
+	doCopyAllOn?: boolean;
+	doCopyAllOff?: boolean;
 }
 
 /**

@@ -1,7 +1,5 @@
-import { VtkProperty } from "vtk.js/Sources/macro";
-import { vtkObject } from "vtk.js/Sources/interfaces";
-
-import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import { vtkObject, vtkProperty } from "../../../interfaces";
+import vtkRenderer from '../Renderer';
 
 export enum Coordinate {
 	DISPLAY,
@@ -145,7 +143,7 @@ export interface vtkCoordinate extends vtkObject {
 	 *
 	 * @param property 
 	 */
-	setProperty(property: VtkProperty): boolean;
+	setProperty(property: vtkProperty): boolean;
 
 	/**
 	 *

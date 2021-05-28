@@ -1,10 +1,7 @@
-import vtkActor from "vtk.js/Sources/Rendering/Core/Actor";
+import vtkActor from "../Actor";
 
 interface ISkyboxInitialValues {
-    /**
-     * 
-     */
-    format: string;
+    format?: string;
 }
 
 export interface vtkSkybox extends vtkActor {

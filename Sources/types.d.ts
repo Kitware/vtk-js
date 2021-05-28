@@ -1,4 +1,4 @@
-/// <reference types="gl-matrix" />
+import { vtkOutputPort } from "./interfaces";
 
 declare type TypedArray =
     | number[]
@@ -13,8 +13,9 @@ declare type TypedArray =
     | Float32Array;
 
 declare type Bounds = [number, number, number, number, number, number];
-declare type Position = 'top' | 'left' | 'right' | 'bottom';
+declare type Placement = 'top' | 'left' | 'right' | 'bottom';
 declare type Size = [number, number];
+declare type Range = [number, number];
 declare type Point = [number, number, number];
 declare type HSLColor = [number, number, number];
 declare type HSVColor = [number, number, number];
@@ -23,3 +24,5 @@ declare type RGBAColor = [number, number, number, number];
 declare type Color = HSLColor | HSVColor | RGBColor | RGBAColor;
 
 declare type vtkPipelineConnection = () => any | vtkOutputPort;
+
+declare type CrossOrigin = '' | 'anonymous' | 'use-credentials';

@@ -1,6 +1,5 @@
-///<reference path='../../../types.ts' />
-
-import { vtkObject } from "vtk.js/Sources/interfaces";
+import { vtkObject } from "../../../interfaces";
+import { Size } from "../../../types";
 
 
 /**
@@ -36,27 +35,27 @@ export interface vtkCanvasView extends vtkObject {
 	/**
 	 * Get the interactor
 	 */
-	getInteractor(): boolean;
+	getInteractor(): any;
 
 	/**
 	 * 
 	 */
-	getRenderable(): boolean;
+	getRenderable(): any;
 
 	/**
 	 * 
 	 */
-	getRenderers(): boolean;
+	getRenderers(): any[];
 
 	/**
 	 * 
 	 */
-	getRenderersByReference(): boolean;
+	getRenderersByReference(): any[];
 
 	/**
 	 * Get the size of the canvas view
 	 */
-	getSize(): boolean;
+	getSize(): Size;
 
 	/**
 	 * Get the size of the canvas view

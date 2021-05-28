@@ -1,4 +1,4 @@
-import { vtkSubscription } from "vtk.js/Sources/interfaces";
+import { vtkSubscription, vtkProperty, vtkPropertyDomain } from "./interfaces";
 
 /**
  * Allow user to redefine vtkXXXMacro method call.
@@ -361,14 +361,6 @@ export function keystore(publicAPI: object, model: object, initialKeystore?: obj
 export interface VtkProxyManager {
 }
 
-export interface VtkProperty {
-  name: string;
-  children?: Array<VtkProperty>;
-}
-
-export interface VtkPropertyDomain {
-}
-
 export interface VtkProxySection {
   id: string;
   name: string;
@@ -397,7 +389,7 @@ export interface VtkProxy extends VtkKeyStore {
   getProxyManager: () => VtkProxyManager;
 
   updateUI: (ui: object) => void;
-  listProxyProperties: (groupName: string) => Array<VtkProperty>;
+  listProxyProperties: (groupName: string) => Array<vtkProperty>;
   updateProxyProperty: (propertyName: string, propUI: object) => void;
   activate: () => void;
   registerPropertyLinkForGC: (otherLink: VtkLink, type: string) => void;
@@ -416,8 +408,8 @@ export interface VtkProxy extends VtkKeyStore {
    */
   getProperties(groupName?: string): Array<any>;
   listPropertyNames: () => Array<string>;
-  getPropertyByName: (name: string) => VtkProperty;
-  getPropertyDomainByName: (name: string) => VtkPropertyDomain;
+  getPropertyByName: (name: string) => vtkProperty;
+  getPropertyDomainByName: (name: string) => vtkPropertyDomain;
 
   getProxySection: () => VtkProxySection;
   delete: () => void;

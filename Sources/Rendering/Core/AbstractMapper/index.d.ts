@@ -1,5 +1,5 @@
-import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
-import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
+import { vtkAlgorithm, vtkObject } from "../../../interfaces";
+import vtkPlane from "../../../Common/DataModel/Plane";
 
 /**
  * 

@@ -1,18 +1,9 @@
-import vtkDataArray from "vtk.js/Sources/Common/Core/DataArray";
-import vtkCamera from "vtk.js/Sources/Rendering/Camera";
-import vtkMapper from "vtk.js/Sources/Rendering/Core/Mapper";
+import vtkCamera from "../Camera";
+import vtkMapper from "../Mapper";
 
 interface IPixelSpaceCallbackMapperInitialValues {
-
-	/**
-	 * 
-	 */
-	callback: any,
-
-	/**
-	 * 
-	 */
-	useZValues: boolean;
+	callback?: any,
+	useZValues?: boolean;
 }
 
 interface IWindowSize {

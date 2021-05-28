@@ -1,4 +1,5 @@
-import vtkAbstractMapper from "vtk.js/Sources/Rendering/Core/AbstractMapper";
+import { Bounds } from "../../../types";
+import vtkAbstractMapper from "../AbstractMapper";
 
 export enum BlendMode {
 	COMPOSITE_BLEND,
@@ -24,9 +25,9 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 
 	/**
      * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-	 * @return {Number[]} The bounds for the mapper.
+	 * @return {Bounds} The bounds for the mapper.
 	 */
-	getBounds(): number[];
+	getBounds(): Bounds;
 
 	/**
 	 * 

@@ -1,4 +1,4 @@
-import { vtkAlgorithm, vtkObject, vtkSubscription } from "vtk.js/Sources/interfaces";
+import { vtkAlgorithm, vtkObject, vtkSubscription } from "../../../interfaces";
 
 
 interface IPDBReaderOptions {

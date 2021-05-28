@@ -1,11 +1,12 @@
-import { VtkProperty } from "vtk.js/Sources/macro";
-import vtkMapper from "vtk.js/Sources/Rendering/Core/Mapper";
-import vtkProp3D from "vtk.js/Sources/Rendering/Core/Prop3D";
+import { Bounds } from "../../../types";
+import vtkImageProperty from "../ImageProperty";
+import vtkMapper from "../Mapper";
+import vtkProp3D from "../Prop3D";
 
-interface IImageSliceInitialValues{
-	mapper: null | vtkMapper;
-	property: null| VtkProperty;
-	bounds: number[];
+interface IImageSliceInitialValues {
+	mapper?: vtkMapper;
+	property?: vtkImageProperty;
+	bounds?: Bounds;
 }
 
 
@@ -17,9 +18,9 @@ export interface vtkImageSlice extends vtkProp3D {
 
 	/**
      * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-	 * @return {Number[]} The bounds for the mapper.
+	 * @return {Bounds} The bounds for the mapper.
 	 */
-	getBounds(): number[];
+	getBounds(): Bounds;
 
 	/**
 	 * Get the bounds for a given slice as [xmin, xmax, ymin, ymax,zmin, zmax].
@@ -42,7 +43,7 @@ export interface vtkImageSlice extends vtkProp3D {
 	/**
 	 * 
 	 */
-	getProperty(): VtkProperty;
+	getProperty(): vtkImageProperty;
 
 	/**
 	 * 

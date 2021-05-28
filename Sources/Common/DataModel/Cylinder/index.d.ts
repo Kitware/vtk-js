@@ -1,6 +1,8 @@
-import { vtkObject } from "vtk.js/Sources/interfaces" ;
+import { vtkObject } from "../../../interfaces" ;
 
-
+/**
+ * 
+ */
 interface ICylinderInitialValues {
 	radius?: number;
 	center?: number[];

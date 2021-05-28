@@ -1,4 +1,4 @@
-import { vtkAlgorithm } from "vtk.js/Sources/interfaces";
+import { vtkAlgorithm } from "../../../interfaces";
 
 interface ITextureInitialValues {
 	repeat?: boolean;

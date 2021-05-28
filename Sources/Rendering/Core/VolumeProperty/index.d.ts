@@ -1,4 +1,4 @@
-import { vtkObject } from "vtk.js/Sources/interfaces";
+import { vtkObject } from "../../../interfaces";
 
 export enum InterpolationType {
 	NEAREST,
@@ -144,13 +144,13 @@ export interface vtkVolumeProperty extends vtkObject {
 
 	/**
 	 * Set the ambient lighting coefficient.
-	 * @param {Number} ambient
+	 * @param {Number} ambient The ambient lighting coefficient.
 	 */
 	setAmbient(ambient: number): boolean;
 
 	/**
 	 * Set the diffuse lighting coefficient.
-	 * @param {Number} diffuse
+	 * @param {Number} diffuse The diffuse lighting coefficient.
 	 */
 	setDiffuse(diffuse: number): boolean;
 

@@ -1,34 +1,14 @@
-import vtkAbstractPicker from "vtk.js/Sources/Rendering/Core/AbstractPicker";
-import vtkActor from "vtk.js/Sources/Rendering/Core/Actor";
-import vtkMapper  from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkAbstractPicker from "../AbstractPicker";
+import vtkActor from "../Actor";
+import vtkMapper  from '../Mapper';
+import vtkRenderer from '../Renderer';
 
 
 interface IPickerInitialValues {
-
-	/**
-	 * 
-	 */
 	tolerance?: number;
-
-	/**
-	 * 
-	 */
 	mapperPosition?: number[];
-
-	/**
-	 * 
-	 */
 	actors?: vtkActor[];
-
-	/**
-	 * 
-	 */
 	pickedPositions?: Array<any>;
-
-	/**
-	 * 
-	 */
 	globalTMin?: number;
 }
 

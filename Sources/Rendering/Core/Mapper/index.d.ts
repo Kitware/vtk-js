@@ -1,6 +1,5 @@
-///<reference path='../../../types.ts' />
-
-import vtkAbstractMapper3D from "vtk.js/Sources/Rendering/Core/AbstractMapper3D";
+import { Bounds } from "../../../types";
+import vtkAbstractMapper3D from "../AbstractMapper3D";
 
 export enum ColorMode {
 	DEFAULT,

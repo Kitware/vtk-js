@@ -1,22 +1,12 @@
-import vtkVolumeMapper from "vtk.js/Sources/Rendering/Core/VolumeMapper";
-import vtkProp3D from "vtk.js/Sources/Rendering/Core/Prop3D";
-import vtkProperty from "vtk.js/Sources/Rendering/Core/Property";
+import { Bounds } from "../../../types";
+import vtkProp3D from "../Prop3D";
+import vtkVolumeMapper from "../VolumeMapper";
+import vtkVolumeProperty from "../VolumeProperty";
 
 interface IVolumeInitialValues {
-	/**
-	 * 
-	 */
-	mapper?: any;
-
-	/**
-	 * 
-	 */
-	property?: any;
-
-	/**
-	 * 
-	 */
-	bounds?: number[];
+	mapper?: vtkVolumeMapper;
+	property?: vtkVolumeProperty;
+	bounds?: Bounds;
 }
 
 /**
@@ -25,33 +15,34 @@ interface IVolumeInitialValues {
 export interface vtkVolume extends vtkProp3D {
 
 	/**
-	 * 
+	 * Get the volume mapper
 	 */
 	getMapper(): vtkVolumeMapper;
 
 	/**
-	 * 
+	 * For some exporters and other other operations we must be able to collect
+	 * all the actors or volumes.
 	 */
-	getVolumes(): vtkVolume;
+	getVolumes(): vtkVolume[];
 
 	/**
-	 * 
+	 * Get the volume property
 	 */
-	getProperty(): vtkProperty;
+	getProperty(): vtkVolumeProperty;
 
 	/**
-     * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-	 * @return {Number[]} The bounds for the mapper.
+	 * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * @return {Bounds} The bounds for the mapper.
 	 */
-	getBounds(): number[];
+	getBounds(): Bounds;
 
 	/**
 	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
 	 */
-	getBoundsByReference(): number[];
+	getBoundsByReference(): Bounds;
 
 	/**
-	 * Return the `Modified Time` which is a monotonic increasing integer
+	 * Get the `Modified Time` which is a monotonic increasing integer
 	 * global for all vtkObjects.
 	 *
 	 * This allow to solve a question such as:
@@ -63,7 +54,8 @@ export interface vtkVolume extends vtkProp3D {
 	getMTime(): number;
 
 	/**
-	 * 
+	 * Get the mtime of anything that would cause the rendered image to appear
+	 * differently
 	 */
 	getRedrawMTime(): number;
 
@@ -73,14 +65,16 @@ export interface vtkVolume extends vtkProp3D {
 	makeProperty(): void;
 
 	/**
-	  * 
-	  */
-	setMapper(mapper: vtkVolumeMapper | null): boolean;
+	 * Set the volume mapper
+	 * @param {vtkVolumeMapper} mapper 
+	 */
+	setMapper(mapper: vtkVolumeMapper): boolean;
 
 	/**
-	  * 
-	  */
-	setProperty(property: vtkProperty): boolean;
+	 * Set the volume property
+	 * @param {vtkVolumeProperty} property 
+	 */
+	setProperty(property: vtkVolumeProperty): boolean;
 }
 
 /**

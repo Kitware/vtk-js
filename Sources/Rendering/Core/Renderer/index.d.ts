@@ -1,198 +1,201 @@
-import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
-import vtkLight from 'vtk.js/Sources/Rendering/Core/Light';
-import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkProp3D from 'vtk.js/Sources/Rendering/Core/Prop3D';
-import vtkViewport from 'vtk.js/Sources/Rendering/Core/Viewport';
-import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
+import { Bounds } from '../../../types';
+
+import vtkCamera from '../Camera';
+import vtkLight from '../Light';
+import vtkRenderWindow from '../RenderWindow';
+import vtkProp3D from '../Prop3D';
+import vtkViewport from '../Viewport';
+import vtkVolume from '../Volume';
+import vtkTexture from '../Texture';
 
 
 interface IRendererInitialValues {
-    allBounds?: Array<any>;
-    ambient?: number[];
-    allocatedRenderTime?: number;
-    timeFactor?: number;
-    automaticLightCreation?: boolean;
-    twoSidedLighting?: boolean;
-    lastRenderTimeInSeconds?: number;
-    lights?: vtkLight[];
-    actors?: vtkProp3D[];
-    volumes?: vtkVolume[];
-    lightFollowCamera?: boolean;
-    numberOfPropsRendered?: number;
-    layer?: number;
-    preserveColorBuffer?: boolean;
-    preserveDepthBuffer?: boolean;
-    interactive?: boolean;
-    nearClippingPlaneTolerance?: number;
-    clippingRangeExpansion?: number;
-    erase?: boolean;
-    draw?: boolean;
-    useShadows?: boolean;
-    useDepthPeeling?: boolean;
-    occlusionRatio?: number;
-    maximumNumberOfPeels?: number;
-    texturedBackground?: boolean;
-    pass?: number;
+	allBounds?: Bounds[];
+	ambient?: number[];
+	allocatedRenderTime?: number;
+	timeFactor?: number;
+	automaticLightCreation?: boolean;
+	twoSidedLighting?: boolean;
+	lastRenderTimeInSeconds?: number;
+	lights?: vtkLight[];
+	actors?: vtkProp3D[];
+	volumes?: vtkVolume[];
+	lightFollowCamera?: boolean;
+	numberOfPropsRendered?: number;
+	layer?: number;
+	preserveColorBuffer?: boolean;
+	preserveDepthBuffer?: boolean;
+	interactive?: boolean;
+	nearClippingPlaneTolerance?: number;
+	clippingRangeExpansion?: number;
+	erase?: boolean;
+	draw?: boolean;
+	useShadows?: boolean;
+	useDepthPeeling?: boolean;
+	occlusionRatio?: number;
+	maximumNumberOfPeels?: number;
+	texturedBackground?: boolean;
+	pass?: number;
 }
 
 export interface vtkRenderer extends vtkViewport {
 
-    /**
-     * 
-     */
-    isActiveCameraCreated(): boolean;
-    /**
-     * 
-     * @param actor 
-     */
-    addActor(actor: vtkProp3D | null): boolean;
+	/**
+	 * 
+	 */
+	isActiveCameraCreated(): boolean;
 
-    /**
-     * Add a light to the list of lights.
-     * @param light 
-     */
-    addLight(light: vtkLight): void;
+	/**
+	 * 
+	 * @param actor 
+	 */
+	addActor(actor: vtkProp3D): boolean;
 
-    /**
-     * Not Implemented yet
-     */
-    allocateTime(): any;
+	/**
+	 * Add a light to the list of lights.
+	 * @param light 
+	 */
+	addLight(light: vtkLight): void;
 
-    /**
-     * 
-     * @param volume 
-     */
-    addVolume(volume: vtkVolume): boolean;
+	/**
+	 * Not Implemented yet
+	 */
+	allocateTime(): any;
 
-    /**
-     * Create and add a light to renderer.
-     */
-    createLight(): vtkLight;
+	/**
+	 * 
+	 * @param volume 
+	 */
+	addVolume(volume: vtkVolume): boolean;
 
-    /**
-     * 
-     */
-    computeVisiblePropBounds(): number[];
+	/**
+	 * Create and add a light to renderer.
+	 */
+	createLight(): vtkLight;
 
-    /**
-     * Get the active camera
-     */
-    getActiveCamera(): vtkCamera;
+	/**
+	 * 
+	 */
+	computeVisiblePropBounds(): number[];
 
-    /**
-     * 
-     */
-    getActiveCameraAndResetIfCreated(): vtkCamera;
+	/**
+	 * Get the active camera
+	 */
+	getActiveCamera(): vtkCamera;
 
-    /**
-     * Return any actors in this renderer.
-     *   
-     */
-    getActors(): vtkProp3D[];
+	/**
+	 * 
+	 */
+	getActiveCameraAndResetIfCreated(): vtkCamera;
 
-    /**
-     * Return any actors in this renderer.
-     *   
-     */
-    getActorsByReference(): vtkProp3D[];
+	/**
+	 * Return any actors in this renderer.
+	 *   
+	 */
+	getActors(): vtkProp3D[];
 
-    /**
-     * 
-     * @default 100
-     */
-    getAllocatedRenderTime(): number;
+	/**
+	 * Return any actors in this renderer.
+	 *   
+	 */
+	getActorsByReference(): vtkProp3D[];
 
-    /**
-     * 
-     */
-    getAutomaticLightCreation(): boolean;
+	/**
+	 * 
+	 * @default 100
+	 */
+	getAllocatedRenderTime(): number;
 
-    /**
-     * 
-     * @default null
-     */
-    getBackgroundTexture(): null | vtkTexture;
+	/**
+	 * 
+	 */
+	getAutomaticLightCreation(): boolean;
 
-    /**
-     * 
-     * @default null
-     */
-    getBackingStore(): any;
+	/**
+	 * 
+	 * @default null
+	 */
+	getBackgroundTexture(): vtkTexture | null;
 
-    /**
-     * 
-     */
-    getClippingRangeExpansion(): number;
-    /**
-     * 
-     * @default null
-     */
-    getDelegate(): any;
+	/**
+	 * 
+	 * @default null
+	 */
+	getBackingStore(): any;
 
-    /**
-     * 
-     * @default true
-     */
-    getDraw(): boolean;
+	/**
+	 * 
+	 */
+	getClippingRangeExpansion(): number;
+	/**
+	 * 
+	 * @default null
+	 */
+	getDelegate(): any;
 
-    /**
-     * 
-     * @default true
-     */
-    getErase(): boolean;
+	/**
+	 * 
+	 * @default true
+	 */
+	getDraw(): boolean;
 
-    /**
-     * 
-     * @default true
-     */
-    getInteractive(): boolean;
+	/**
+	 * 
+	 * @default true
+	 */
+	getErase(): boolean;
 
-    /**
-     * 
-     * @default -1
-     */
-    getLastRenderTimeInSeconds(): number;
+	/**
+	 * 
+	 * @default true
+	 */
+	getInteractive(): boolean;
 
-    /**
-     * 
-     * @default 0
-     */
-    getNumberOfPropsRendered(): number;
+	/**
+	 * 
+	 * @default -1
+	 */
+	getLastRenderTimeInSeconds(): number;
 
-    /**
-     * 
-     * @default 
-     */
-    getLastRenderingUsedDepthPeeling(): any
+	/**
+	 * 
+	 * @default 0
+	 */
+	getNumberOfPropsRendered(): number;
 
-    /**
-     * 
-     * @default 0
-     */
-    getLayer(): number;
+	/**
+	 * 
+	 * @default 
+	 */
+	getLastRenderingUsedDepthPeeling(): any
 
-    /**
-     * 
-     * @default true
-     */
-    getLightFollowCamera(): boolean;
+	/**
+	 * 
+	 * @default 0
+	 */
+	getLayer(): number;
 
-    /**
-     * 
-     */
-    getLights(): vtkLight[];
+	/**
+	 * 
+	 * @default true
+	 */
+	getLightFollowCamera(): boolean;
 
-    /**
-     * 
-     */
-    getLightsByReference(): vtkLight[];
+	/**
+	 * 
+	 */
+	getLights(): vtkLight[];
 
-    /**
-     * 
-     * @default 4
-     */
-    getMaximumNumberOfPeels(): number;
+	/**
+	 * 
+	 */
+	getLightsByReference(): vtkLight[];
+
+	/**
+	 * 
+	 * @default 4
+	 */
+	getMaximumNumberOfPeels(): number;
 
 	/**
 	 * Return the `Modified Time` which is a monotonic increasing integer
@@ -204,380 +207,380 @@ export interface vtkRenderer extends vtkViewport {
 	 *
 	 * @return {Number} the global modified time.
 	 */
-    getMTime(): number;
+	getMTime(): number;
 
-    /**
-     * 
-     * @default 0
-     */
-    getNearClippingPlaneTolerance(): number;
+	/**
+	 * 
+	 * @default 0
+	 */
+	getNearClippingPlaneTolerance(): number;
 
-    /**
-     * 
-     * @default 0
-     */
-    getOcclusionRatio(): number;
+	/**
+	 * 
+	 * @default 0
+	 */
+	getOcclusionRatio(): number;
 
-    /**
-     * 
-     * @default null
-     */
-    getRenderWindow(): null | vtkRenderWindow;
+	/**
+	 * 
+	 * @default null
+	 */
+	getRenderWindow(): vtkRenderWindow | null;
 
-    /**
-     * 
-     * @default 0
-     */
-    getPass(): number;
+	/**
+	 * 
+	 * @default 0
+	 */
+	getPass(): number;
 
-    /**
-     * 
-     * @default false
-     */
-    getPreserveColorBuffer(): boolean;
+	/**
+	 * 
+	 * @default false
+	 */
+	getPreserveColorBuffer(): boolean;
 
-    /**
-     * 
-     * @default false
-     */
-    getPreserveDepthBuffer(): boolean;
+	/**
+	 * 
+	 * @default false
+	 */
+	getPreserveDepthBuffer(): boolean;
 
-    /**
-     * 
-     * @default null
-     */
-    getSelector(): any;
+	/**
+	 * 
+	 * @default null
+	 */
+	getSelector(): any;
 
-    /**
-     * 
-     * @default 1
-     */
-    getTimeFactor(): number;
+	/**
+	 * 
+	 * @default 1
+	 */
+	getTimeFactor(): number;
 
-    /**
-     * 
-     * @default true
-     */
-    getTransparent(): boolean;
+	/**
+	 * 
+	 * @default true
+	 */
+	getTransparent(): boolean;
 
-    /**
-     * 
-     * @default false
-     */
-    getTexturedbackground(): boolean;
+	/**
+	 * 
+	 * @default false
+	 */
+	getTexturedbackground(): boolean;
 
-    /**
-     * 
-     * @default true
-     */
-    getTwosidedlighting(): boolean;
+	/**
+	 * 
+	 * @default true
+	 */
+	getTwosidedlighting(): boolean;
 
-    /**
-     * 
-     * @default false
-     */
-    getUsedepthpeeling(): boolean;
+	/**
+	 * 
+	 * @default false
+	 */
+	getUsedepthpeeling(): boolean;
 
-    /**
-     * 
-     * @default false
-     */
-    getUseshadows(): boolean;
+	/**
+	 * 
+	 * @default false
+	 */
+	getUseshadows(): boolean;
 
-    /**
-    * 
-    */
-    getVTKWindow(): vtkRenderWindow;
+	/**
+	* 
+	*/
+	getVTKWindow(): vtkRenderWindow;
 
-    /**
-     * Return the collection of volumes.
-     *  
-     */
-    getVolumes(): vtkVolume[];
+	/**
+	 * Return the collection of volumes.
+	 *  
+	 */
+	getVolumes(): vtkVolume[];
 
-    /**
-     * Return the collection of volumes.
-     *  
-     */
-    getVolumesByReference(): vtkVolume[];
+	/**
+	 * Return the collection of volumes.
+	 *  
+	 */
+	getVolumesByReference(): vtkVolume[];
 
-    /**
-     * Create a new Camera sutible for use with this type of Renderer.
-     */
-    makeCamera(): vtkCamera;
+	/**
+	 * Create a new Camera sutible for use with this type of Renderer.
+	 */
+	makeCamera(): vtkCamera;
 
-    /**
-     * Create a new Light sutible for use with this type of Renderer.
-     */
-    makeLight(): vtkLight;
+	/**
+	 * Create a new Light sutible for use with this type of Renderer.
+	 */
+	makeLight(): vtkLight;
 
-    /**
-     * requires the aspect ratio of the viewport as X/Y
-     * @param {Number} x The x coordinate.
-     * @param {Number} y The y coordinate.
-     * @param {Number} z The z coordinate.
-     * @param {Number} aspect 
-     */
-    normalizedDisplayToWorld(x: number, y: number, z: number, aspect: number): number[];
+	/**
+	 * requires the aspect ratio of the viewport as X/Y
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
+	 * @param {Number} aspect 
+	 */
+	normalizedDisplayToWorld(x: number, y: number, z: number, aspect: number): number[];
 
-    /**
-     * 
-     * @param {Number} x The x coordinate.
-     * @param {Number} y The y coordinate.
-     * @param {Number} z The z coordinate.
-     * @param {Number} aspect 
-     */
-    projectionToView(x: number, y: number, z: number, aspect: number): number[];
+	/**
+	 * 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
+	 * @param {Number} aspect 
+	 */
+	projectionToView(x: number, y: number, z: number, aspect: number): number[];
 
-    /**
-     * Specify the camera to use for this renderer.
-     * @param {vtkCamera} camera The camera object to use.
-     */
-    setActiveCamera(camera: vtkCamera | null): boolean;
+	/**
+	 * Specify the camera to use for this renderer.
+	 * @param {vtkCamera} camera The camera object to use.
+	 */
+	setActiveCamera(camera: vtkCamera | null): boolean;
 
-    /**
-     * 
-     * @param {Boolean} automaticLightCreation 
-     */
-    setAutomaticLightCreation(automaticLightCreation: boolean): boolean;
+	/**
+	 * 
+	 * @param {Boolean} automaticLightCreation 
+	 */
+	setAutomaticLightCreation(automaticLightCreation: boolean): boolean;
 
-    /**
-     * 
-     * @param {vtkTexture} backgroundTexture 
-     */
-    setBackgroundTexture(backgroundTexture: vtkTexture): boolean;
+	/**
+	 * 
+	 * @param {vtkTexture} backgroundTexture 
+	 */
+	setBackgroundTexture(backgroundTexture: vtkTexture): boolean;
 
-    /**
-     * 
-     * @param {*} backingStore 
-     */
-    setBackingStore(backingStore: any): boolean;
+	/**
+	 * 
+	 * @param {*} backingStore 
+	 */
+	setBackingStore(backingStore: any): boolean;
 
-    /**
-     * 
-     * @param {Number} clippingRangeExpansion 
-     */
-    setClippingRangeExpansion(clippingRangeExpansion: number): boolean;
+	/**
+	 * 
+	 * @param {Number} clippingRangeExpansion 
+	 */
+	setClippingRangeExpansion(clippingRangeExpansion: number): boolean;
 
-    /**
-     * 
-     * @param delegate 
-     */
-    setDelegate(delegate: any): boolean;
+	/**
+	 * 
+	 * @param delegate 
+	 */
+	setDelegate(delegate: any): boolean;
 
-    /**
-     * 
-     * @param {Boolean} draw 
-     */
-    setDraw(draw: boolean): boolean;
+	/**
+	 * 
+	 * @param {Boolean} draw 
+	 */
+	setDraw(draw: boolean): boolean;
 
-    /**
-     * 
-     * @param {Boolean} erase 
-     */
-    setErase(erase: boolean): boolean;
+	/**
+	 * 
+	 * @param {Boolean} erase 
+	 */
+	setErase(erase: boolean): boolean;
 
-    /**
-     * 
-     * @param {Boolean} interactive 
-     */
-    setInteractive(interactive: boolean): boolean;
+	/**
+	 * 
+	 * @param {Boolean} interactive 
+	 */
+	setInteractive(interactive: boolean): boolean;
 
-    /**
-     * 
-     * @param {Number} layer 
-     */
-    setLayer(layer: number): void;
+	/**
+	 * 
+	 * @param {Number} layer 
+	 */
+	setLayer(layer: number): void;
 
-    /**
-     * Set the collection of lights.
-     * @param {vtkLight[]} lights 
-     */
-    setLightCollection(lights: vtkLight[]): void;
+	/**
+	 * Set the collection of lights.
+	 * @param {vtkLight[]} lights 
+	 */
+	setLightCollection(lights: vtkLight[]): void;
 
-    /**
-     * 
-     * @param {Boolean} lightFollowCamera 
-     */
-    setLightFollowCamera(lightFollowCamera: boolean): boolean;
+	/**
+	 * 
+	 * @param {Boolean} lightFollowCamera 
+	 */
+	setLightFollowCamera(lightFollowCamera: boolean): boolean;
 
-    /**
-     * 
-     * @param {Number} maximumNumberOfPeels 
-     */
-    setMaximumNumberOfPeels(maximumNumberOfPeels: number): boolean;
+	/**
+	 * 
+	 * @param {Number} maximumNumberOfPeels 
+	 */
+	setMaximumNumberOfPeels(maximumNumberOfPeels: number): boolean;
 
-    /**
-     * 
-     * @param {Number} nearClippingPlaneTolerance 
-     */
-    setNearClippingPlaneTolerance(nearClippingPlaneTolerance: number): boolean;
+	/**
+	 * 
+	 * @param {Number} nearClippingPlaneTolerance 
+	 */
+	setNearClippingPlaneTolerance(nearClippingPlaneTolerance: number): boolean;
 
-    /**
-     * 
-     * @param {Number} occlusionRatio 
-     */
-    setOcclusionRatio(occlusionRatio: number): boolean;
+	/**
+	 * 
+	 * @param {Number} occlusionRatio 
+	 */
+	setOcclusionRatio(occlusionRatio: number): boolean;
 
-    /**
-     * 
-     * @param {Number} pass 
-     */
-    setPass(pass: number): boolean;
+	/**
+	 * 
+	 * @param {Number} pass 
+	 */
+	setPass(pass: number): boolean;
 
-    /**
-     * 
-     * @param {Boolean} preserveColorBuffer 
-     */
-    setPreserveColorbuffer(preserveColorBuffer: boolean): boolean;
+	/**
+	 * 
+	 * @param {Boolean} preserveColorBuffer 
+	 */
+	setPreserveColorbuffer(preserveColorBuffer: boolean): boolean;
 
-    /**
-     * 
-     * @param {Boolean} preserveDepthBuffer 
-     */
-    setPreserveDepthbuffer(preserveDepthBuffer: boolean): boolean;
+	/**
+	 * 
+	 * @param {Boolean} preserveDepthBuffer 
+	 */
+	setPreserveDepthbuffer(preserveDepthBuffer: boolean): boolean;
 
-    /**
-     * 
-     * @param {Boolean} texturedBackground 
-     */
-    setTexturedBackground(texturedBackground: boolean): boolean;
+	/**
+	 * 
+	 * @param {Boolean} texturedBackground 
+	 */
+	setTexturedBackground(texturedBackground: boolean): boolean;
 
-    /**
-     * 
-     * @param {Boolean} twoSidedLighting 
-     */
-    setTwoSidedLighting(twoSidedLighting: boolean): boolean;
+	/**
+	 * 
+	 * @param {Boolean} twoSidedLighting 
+	 */
+	setTwoSidedLighting(twoSidedLighting: boolean): boolean;
 
-    /**
-     * 
-     * @param {Boolean} useDepthPeeling 
-     */
-    setUseDepthPeeling(useDepthPeeling: boolean): boolean;
+	/**
+	 * 
+	 * @param {Boolean} useDepthPeeling 
+	 */
+	setUseDepthPeeling(useDepthPeeling: boolean): boolean;
 
-    /**
-     * 
-     * @param {Boolean} useShadows 
-     */
-    setUseShadows(useShadows: boolean): boolean;
+	/**
+	 * 
+	 * @param {Boolean} useShadows 
+	 */
+	setUseShadows(useShadows: boolean): boolean;
 
-    /**
-     * 
-     * @param {vtkRenderWindow} renderWindow 
-     */
-    setRenderWindow(renderWindow: vtkRenderWindow): void;
+	/**
+	 * 
+	 * @param {vtkRenderWindow} renderWindow 
+	 */
+	setRenderWindow(renderWindow: vtkRenderWindow): void;
 
-    /**
-     * 
-     * @param {vtkProp3D | null} actor 
-     */
-    removeActor(actor: vtkProp3D | null): void;
+	/**
+	 * 
+	 * @param {vtkProp3D | null} actor 
+	 */
+	removeActor(actor: vtkProp3D | null): void;
 
-    /**
-     * 
-     */
-    removeAllActors(): void;
+	/**
+	 * 
+	 */
+	removeAllActors(): void;
 
-    /**
-     * 
-     * @param {vtkVolume} volume 
-     */
-    removeVolume(volume: vtkVolume): void;
+	/**
+	 * 
+	 * @param {vtkVolume} volume 
+	 */
+	removeVolume(volume: vtkVolume): void;
 
-    /**
-     * 
-     */
-    removeAllVolumes(): void;
+	/**
+	 * 
+	 */
+	removeAllVolumes(): void;
 
-    /**
-     * Remove a light from the list of lights.
-     * @param {vtkLight} light The light object to remove.
-     */
-    removeLight(light: vtkLight): void;
+	/**
+	 * Remove a light from the list of lights.
+	 * @param {vtkLight} light The light object to remove.
+	 */
+	removeLight(light: vtkLight): void;
 
-    /**
-     * Remove all lights from the list of lights.
-     */
-    removeAllLights(): void;
+	/**
+	 * Remove all lights from the list of lights.
+	 */
+	removeAllLights(): void;
 
-    /**
-     * requires the aspect ratio of the viewport as X/Y
-     * @param {Number} x The x coordinate.
-     * @param {Number} y The y coordinate.
-     * @param {Number} z The z coordinate.
-     * @param {Number} aspect 
-     */
-    worldToNormalizedDisplay(x: number, y: number, z: number, aspect: number): number[];
+	/**
+	 * requires the aspect ratio of the viewport as X/Y
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
+	 * @param {Number} aspect 
+	 */
+	worldToNormalizedDisplay(x: number, y: number, z: number, aspect: number): number[];
 
-    /**
-     * requires the aspect ratio of the viewport as X/Y
-     * @param {Number} x The x coordinate.
-     * @param {Number} y The y coordinate.
-     * @param {Number} z The z coordinate.
-     */
-    viewToWorld(x: number, y: number, z: number): number[];
+	/**
+	 * requires the aspect ratio of the viewport as X/Y
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
+	 */
+	viewToWorld(x: number, y: number, z: number): number[];
 
-    /**
-     * Convert world point coordinates to view coordinates.
-     * @param {Number} x The x coordinate.
-     * @param {Number} y The y coordinate.
-     * @param {Number} z The z coordinate.
-     */
-    worldToView(x: number, y: number, z: number): number[];
+	/**
+	 * Convert world point coordinates to view coordinates.
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
+	 */
+	worldToView(x: number, y: number, z: number): number[];
 
-    /**
-     * Convert world point coordinates to view coordinates.
-     * requires the aspect ratio of the viewport as X/Y
-     * @param {Number} x The x coordinate.
-     * @param {Number} y The y coordinate.
-     * @param {Number} z The z coordinate.
-     * @param {Number} aspect 
-     */
-    viewToProjection(x: number, y: number, z: number, aspect: number): number[];
+	/**
+	 * Convert world point coordinates to view coordinates.
+	 * requires the aspect ratio of the viewport as X/Y
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
+	 * @param {Number} aspect 
+	 */
+	viewToProjection(x: number, y: number, z: number, aspect: number): number[];
 
-    /**
-     * 
-     * @param {Number[]} [bounds] 
-     */
-    resetCamera(bounds?: number[]): boolean;
+	/**
+	 * 
+	 * @param {Number[]} [bounds] 
+	 */
+	resetCamera(bounds?: number[]): boolean;
 
-    /**
-     * 
-     * @param {Number[]} [bounds] 
-     */
-    resetCameraClippingRange(bounds?: number[]): boolean;
+	/**
+	 * 
+	 * @param {Number[]} [bounds] 
+	 */
+	resetCameraClippingRange(bounds?: number[]): boolean;
 
-    /**
-     * 
-     */
-    visibleActorCount(): void;
+	/**
+	 * 
+	 */
+	visibleActorCount(): void;
 
-    /**
-     * Not Implemented yet
-     */
-    updateGeometry(): any;
+	/**
+	 * Not Implemented yet
+	 */
+	updateGeometry(): any;
 
-    /**
-     * 
-     */
-    updateCamera(): boolean;
+	/**
+	 * 
+	 */
+	updateCamera(): boolean;
 
-    /**
-     * Ask the lights in the scene that are not in world space
-     * (for instance, Headlights or CameraLights that are attached to the
-     * camera) to update their geometry to match the active camera.
-     */
-    updateLightsGeometryToFollowCamera(): void;
+	/**
+	 * Ask the lights in the scene that are not in world space
+	 * (for instance, Headlights or CameraLights that are attached to the
+	 * camera) to update their geometry to match the active camera.
+	 */
+	updateLightsGeometryToFollowCamera(): void;
 
-    /**
-     * 
-     */
-    updateLightGeometry(): boolean;
+	/**
+	 * 
+	 */
+	updateLightGeometry(): boolean;
 
-    /**
-     * Not Implemented yet
-     */
-    visibleVolumeCount(): any;
+	/**
+	 * Not Implemented yet
+	 */
+	visibleVolumeCount(): any;
 }
 
 /**
@@ -603,7 +606,7 @@ export function newInstance(initialValues?: IRendererInitialValues): vtkRenderer
  * on top of each other as well.
  */
 export declare const vtkRenderer: {
-    newInstance: typeof newInstance,
-    extend: typeof extend,
+	newInstance: typeof newInstance,
+	extend: typeof extend,
 };
 export default vtkRenderer;

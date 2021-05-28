@@ -1,7 +1,5 @@
-/// <reference path='../../../types.ts' />
-
 import { mat4 } from 'gl-matrix';
-import { vtkObject } from "vtk.js/Sources/interfaces" ;
+import { vtkObject } from "../../../interfaces" ;
 
 /**
  * 

@@ -1,5 +1,3 @@
-/// <reference path='../../../types.ts' />
-
 import { mat3, vec2, vec3 } from "gl-matrix";
 
 /**

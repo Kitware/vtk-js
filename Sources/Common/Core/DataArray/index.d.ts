@@ -1,6 +1,6 @@
-/// <reference path='../../../types.ts' />
+import { vtkObject, vtkRange } from "../../../interfaces";
+import { TypedArray } from "../../../types";
 
-import { vtkObject, vtkRange } from "vtk.js/Sources/interfaces";
 
 /**
  * Output of the rangeHelper instance

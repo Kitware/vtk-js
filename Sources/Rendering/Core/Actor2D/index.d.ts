@@ -1,7 +1,8 @@
-import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
-import vtkCoordinate from 'vtk.js/Sources/Rendering/Core/Coordinate';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
+import vtkProp from '../Prop';
+import vtkCoordinate from '../Coordinate';
+import vtkMapper from '../Mapper';
+import vtkProperty from '../Property';
+import { Bounds } from '../../../types';
 
 /**
  * 
@@ -75,9 +76,9 @@ export interface vtkActor2D extends vtkProp {
 
 	/**
 	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
-	 * @return {Number[]} The bounds for the mapper.
+	 * @return {Bounds} The bounds for the mapper.
 	 */
-	getBounds(): number[];
+	getBounds(): Bounds;
 
 	/**
 	 * Return the actual vtkCoordinate reference that the mapper should use

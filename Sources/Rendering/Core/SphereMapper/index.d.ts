@@ -1,10 +1,7 @@
-import vtkMapper from "vtk.js/Sources/Rendering/Core/Mapper";
+import vtkMapper from "../Mapper";
 
 interface ISphereInitialValues {
-    /**
-     * 
-     */
-    radius: number;
+    radius?: number;
 }
 
 export interface vtkSphereMapper extends vtkMapper {

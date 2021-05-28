@@ -1,5 +1,6 @@
-import { vtkObject, vtkSubscription } from "vtk.js/Sources/interfaces";
-import vtkActor from "vtk.js/Sources/Rendering/Core/Actor";
+import { vtkObject, vtkSubscription } from "../../../interfaces";
+
+import vtkActor from "../../../Rendering/Core/Actor";
 
 
 interface IMTLReaderOptions {

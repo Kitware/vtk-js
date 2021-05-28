@@ -1,5 +1,6 @@
 import { mat4 } from "gl-matrix";
-import vtkProp from "vtk.js/Sources/Rendering/Core/Prop";
+import { Bounds } from "../../../types";
+import vtkProp from "../Prop";
 
 interface IProp3DInitialValues {
     origin?: number[];
@@ -20,9 +21,9 @@ export interface vtkProp3D extends vtkProp {
 
     /**
 	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
-	 * @return {Number[]} The bounds for the mapper.
+	 * @return {Bounds} The bounds for the mapper.
      */
-    getBounds(): number[];
+    getBounds(): Bounds;
 
     /**
      * Check if there was a modification or transformation.

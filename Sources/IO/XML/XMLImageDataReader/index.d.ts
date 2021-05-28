@@ -1,4 +1,4 @@
-import vtkXMLReader from "vtk.js/Sources/IO/XML/XMLReader";
+import vtkXMLReader from "../XMLReader";
 
 /**
  * 

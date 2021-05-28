@@ -1,4 +1,4 @@
-import vtkMapper from "vtk.js/Sources/Rendering/Core/Mapper";
+import vtkMapper from "../Mapper";
 
 interface IStickMappereInitialValues {
 	/**

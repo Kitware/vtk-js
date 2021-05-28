@@ -1,6 +1,5 @@
-/// <reference path='../../../types.ts' />
-
 import { mat4 } from 'gl-matrix';
+import { TypedArray } from '../../../types';
 
 declare interface Transform {
 

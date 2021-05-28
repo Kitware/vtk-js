@@ -1,4 +1,5 @@
-import { vtkAlgorithm, vtkObject } from "vtk.js/Sources/interfaces";
+import { vtkObject } from "../../../interfaces";
+import { Color } from "../../../types";
 
 interface IProperty2DInitialValues{
 	color?: number[];
@@ -11,93 +12,86 @@ interface IProperty2DInitialValues{
 export interface vtkProperty2D extends vtkObject {
 
 	/**
-     * Get the color of the object.
-     * @return the color of the object
-     */
-    getColor(): number[];
+	 * Get the color of the object.
+	 */
+	getColor(): Color;
 
 	/**
-     * Get the color of the object.
-     */
-    getColorByReference(): number[];
+	 * Get the color of the object.
+	 */
+	getColorByReference(): Color;
 
 	/**
-     * Get the display location of the object.
+	 * Get the display location of the object.
 	 * @default 'Foreground'
-     * @returns
-     */
-    getDisplayLocation(): string;
+	 */
+	getDisplayLocation(): string;
 
 	/**
-     * Get the width of a Line. The width is expressed in screen units.
-	 * @return 
-     */
-    getLineWidth(): number;
+	 * Get the width of a Line. 
+	 * The width is expressed in screen units.
+	 */
+	getLineWidth(): number;
 
-    /**
-     * Get the opacity of the object.
-	 * @return 
-     */
-    getOpacity(): number;
+	/**
+	 * Get the opacity of the object.
+	 */
+	getOpacity(): number;
 
-    /**
-     * Get the diameter of a point. The size is expressed in screen units.
-	 * @return 
-     */
-    getPointSize(): number;
+	/**
+	 * Get the diameter of a point. 
+	 * The size is expressed in screen units.
+	 */
+	getPointSize(): number;
 	
 	/**
-     * Set the color of the object. Has the side effect of setting the
+	 * Set the color of the object. Has the side effect of setting the
 	 * ambient diffuse and specular colors as well. This is basically
 	 * a quick overall color setting method.
-     * @param {Number} r Defines the red component (between 0 and 1).
-     * @param {Number} g Defines the green component (between 0 and 1).
-     * @param {Number} b Defines the blue component (between 0 and 1).
-     */
-    setColor(r: number, g: number, b: number): boolean;
+	 * @param {Number} r Defines the red component (between 0 and 1).
+	 * @param {Number} g Defines the green component (between 0 and 1).
+	 * @param {Number} b Defines the blue component (between 0 and 1).
+	 */
+	setColor(r: number, g: number, b: number): boolean;
 
 	/**
-     * Set the color of the object. Has the side effect of setting the
+	 * Set the color of the object. Has the side effect of setting the
 	 * ambient diffuse and specular colors as well. This is basically
 	 * a quick overall color setting method.
-     * @param {Number} r Defines the red component (between 0 and 1).
-     * @param {Number} g Defines the green component (between 0 and 1).
-     * @param {Number} b Defines the blue component (between 0 and 1).
-     */
-    setColorFrom(color: number[]): boolean;
+	 * @param {Number} r Defines the red component (between 0 and 1).
+	 * @param {Number} g Defines the green component (between 0 and 1).
+	 * @param {Number} b Defines the blue component (between 0 and 1).
+	 */
+	setColorFrom(color: number[]): boolean;
 
 	/**
-     * Set the display location of the object.
-	 * @param displayLocation
-     * @returns
-     */
-    setDisplayLocation(displayLocation: string): boolean;
+	 * Set the display location of the object.
+	 * @param {String} displayLocation
+	 */
+	setDisplayLocation(displayLocation: string): boolean;
 
 	/**
 	 * Set the width of a Line. The width is expressed in screen units.
 	 * This is only implemented for OpenGL.
-	 * @param {Number} lineWidth 
+	 * @param {Number} lineWidth The width of the Line.
 	 * @default 1.0
-	 * @return 
 	 */
-    setLineWidth(lineWidth: number): boolean;
+	setLineWidth(lineWidth: number): boolean;
 
 	/**
-	 * Set/Get the object’s opacity. 1.0 is totally opaque and 0.0 is 
+	 * Set the object’s opacity. 1.0 is totally opaque and 0.0 is 
 	 * completely transparent.
-	 * @param {Number} opacity  
-	 * @return 
+	 * @param {Number} opacity The opacity value.
 	 */
-    setOpacity(opacity: number): boolean;
+	setOpacity(opacity: number): boolean;
 
 	/**
 	 * Set the diameter of a point. The size is expressed in screen units.
 	 * This is only implemented for OpenGL.
-	 * @param pointSize 
+	 * @param {Number} pointSize The diameter of the point.
 	 * @default 1.0
-	 * @return 
 	 */
-    setPointSize(pointSize: number): boolean;
+	setPointSize(pointSize: number): boolean;
 }
 
 /**
@@ -128,7 +122,7 @@ export function newInstance(initialValues?: IProperty2DInitialValues): vtkProper
  * like backface properties can be set and manipulated with this object.
  */
 export declare const vtkProperty2D: {
-    newInstance: typeof newInstance,
-    extend: typeof extend,
+	newInstance: typeof newInstance,
+	extend: typeof extend,
 };
 export default vtkProperty2D;
