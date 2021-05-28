@@ -165,6 +165,22 @@ function vtkWSLinkClient(publicAPI, model) {
       model.connection = null;
     }
   };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.registerProtocol = (name, protocol) => {
+    model.remote[name] = busyWrap(
+      protocol(model.connection.getSession()),
+      updateBusy,
+      model.notBusyList
+    );
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.unregisterProtocol = (name) => {
+    delete model.remote[name];
+  };
 }
 
 // ----------------------------------------------------------------------------
