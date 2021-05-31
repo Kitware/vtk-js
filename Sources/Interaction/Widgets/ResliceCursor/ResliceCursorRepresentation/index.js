@@ -205,11 +205,7 @@ function vtkResliceCursorRepresentation(publicAPI, model) {
     publicAPI.computeReslicePlaneOrigin();
 
     // Compute view up to configure camera later on
-    const bottomLeftPoint = model.planeSource.getOrigin();
-    const topLeftPoint = model.planeSource.getPoint2();
-    const viewUp = vtkMath.subtract(topLeftPoint, bottomLeftPoint, [0, 0, 0]);
-    vtkMath.normalize(viewUp);
-    model.viewUpFromViewType[planeNormalType] = viewUp;
+    const viewUp = publicAPI.getResliceCursor().getViewUp(planeNormalType);
 
     transformPlane(
       model.planeSource,
@@ -344,6 +340,7 @@ function vtkResliceCursorRepresentation(publicAPI, model) {
       publicAPI.modified();
     }
     buildTime.modified();
+    publicAPI.resetCamera();
   };
 
   publicAPI.setResliceParameters = (
@@ -476,7 +473,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     1.0,
     1.0
   );
-  model.viewUpFromViewType = {};
   model.planeInitialized = false;
 
   macro.setGet(publicAPI, model, [

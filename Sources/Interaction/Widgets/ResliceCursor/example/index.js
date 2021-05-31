@@ -12,6 +12,9 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 
+// Force the loading of HttpDataAccessHelper to support gzip decompression
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------

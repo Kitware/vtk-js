@@ -129,6 +129,9 @@ function vtkResliceCursor(publicAPI, model) {
     model.xAxis = [1, 0, 0];
     model.yAxis = [0, 1, 0];
     model.zAxis = [0, 0, 1];
+    model.xViewUp = [0, 0, 1];
+    model.yViewUp = [0, 0, 1];
+    model.zViewUp = [0, -1, 0];
 
     if (publicAPI.getImage()) {
       model.center = publicAPI.getImage().getCenter();
@@ -228,6 +231,17 @@ function vtkResliceCursor(publicAPI, model) {
     return model.zAxis;
   };
 
+  publicAPI.getViewUp = (i) => {
+    if (i === 0) {
+      return model.xViewUp;
+    }
+    if (i === 1) {
+      return model.yViewUp;
+    }
+
+    return model.zViewUp;
+  };
+
   publicAPI.getMTime = () => {
     let mTime = superClass.getMTime();
 
@@ -253,6 +267,9 @@ const DEFAULT_VALUES = {
   xAxis: [1, 0, 0],
   yAxis: [0, 1, 0],
   zAxis: [0, 0, 1],
+  xViewUp: [0, 0, 1],
+  yViewUp: [0, 0, 1],
+  zViewUp: [0, -1, 0],
 };
 
 // ----------------------------------------------------------------------------
@@ -262,7 +279,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, ['image']);
-  macro.setGetArray(publicAPI, model, ['xAxis', 'yAxis', 'zAxis'], 3);
+  macro.setGetArray(
+    publicAPI,
+    model,
+    ['xAxis', 'yAxis', 'zAxis', 'xViewUp', 'yViewUp', 'zViewUp'],
+    3
+  );
   macro.getArray(publicAPI, model, ['center'], 3);
 
   model.reslicePlanes = [];

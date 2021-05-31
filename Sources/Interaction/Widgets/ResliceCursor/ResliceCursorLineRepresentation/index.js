@@ -321,6 +321,7 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
       .getReslicePlaneNormal();
 
     const planeToBeRotated = resliceCursor.getPlane(axis);
+    const viewUp = resliceCursor.getViewUp(axis);
     const vectorToBeRotated = planeToBeRotated.getNormal();
 
     const normalPlane = resliceCursor.getPlane(resliceCursorPlaneId);
@@ -331,6 +332,8 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
       .buildFromRadian()
       .rotate(angle, aboutAxis)
       .apply(rotatedVector);
+
+    vtkMatrixBuilder.buildFromRadian().rotate(angle, aboutAxis).apply(viewUp);
 
     planeToBeRotated.setNormal(rotatedVector);
   };
@@ -430,13 +433,12 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
    */
   publicAPI.resetCamera = () => {
     if (model.renderer) {
-      const bounds = publicAPI.getBounds();
-      const center = [
-        (bounds[0] + bounds[1]) / 2,
-        (bounds[2] + bounds[3]) / 2,
-        (bounds[4] + bounds[5]) / 2,
-      ];
-
+      const normalAxis = publicAPI.getCursorAlgorithm().getReslicePlaneNormal();
+      const normal = publicAPI
+        .getResliceCursor()
+        .getPlane(normalAxis)
+        .getNormal();
+      const viewUp = publicAPI.getResliceCursor().getViewUp(normalAxis);
       const focalPoint = model.renderer.getActiveCamera().getFocalPoint();
       const position = model.renderer.getActiveCamera().getPosition();
 
@@ -445,49 +447,23 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
         vtkMath.distance2BetweenPoints(position, focalPoint)
       );
 
-      const normalAxis = publicAPI.getCursorAlgorithm().getReslicePlaneNormal();
-      const normal = publicAPI
-        .getResliceCursor()
-        .getPlane(normalAxis)
-        .getNormal();
-
-      const estimatedFocalPoint = center;
-      const estimatedCameraPosition = [
-        estimatedFocalPoint[0] + distance * normal[0],
-        estimatedFocalPoint[1] + distance * normal[1],
-        estimatedFocalPoint[2] + distance * normal[2],
+      const newCameraPosition = [
+        focalPoint[0] + distance * normal[0],
+        focalPoint[1] + distance * normal[1],
+        focalPoint[2] + distance * normal[2],
       ];
 
       model.renderer
         .getActiveCamera()
-        .setFocalPoint(
-          estimatedFocalPoint[0],
-          estimatedFocalPoint[1],
-          estimatedFocalPoint[2]
+        .setPosition(
+          newCameraPosition[0],
+          newCameraPosition[1],
+          newCameraPosition[2]
         );
 
       model.renderer
         .getActiveCamera()
-        .setPosition(
-          estimatedCameraPosition[0],
-          estimatedCameraPosition[1],
-          estimatedCameraPosition[2]
-        );
-
-      const planeNormalType = publicAPI
-        .getCursorAlgorithm()
-        .getReslicePlaneNormal();
-      if (model.viewUpFromViewType[planeNormalType]) {
-        model.renderer
-          .getActiveCamera()
-          .setViewUp(...model.viewUpFromViewType[planeNormalType]);
-      }
-
-      // Project focalPoint onto image plane and preserve distance
-      publicAPI.updateCamera();
-
-      // Reset clipping range
-      publicAPI.updateCamera();
+        .setViewUp(viewUp[0], viewUp[1], viewUp[2]);
     }
   };
 }
