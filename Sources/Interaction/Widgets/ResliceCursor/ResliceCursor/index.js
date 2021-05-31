@@ -303,7 +303,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.reslicePlanes[0].setNormal([1, 0, 0]);
   model.reslicePlanes[1].setNormal([0, -1, 0]);
-  model.reslicePlanes[2].setNormal([0, 0, 1]);
+  model.reslicePlanes[2].setNormal([0, 0, -1]);
 
   publicAPI.buildCursorTopology();
 }
