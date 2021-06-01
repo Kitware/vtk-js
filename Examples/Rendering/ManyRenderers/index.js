@@ -39,28 +39,28 @@ addMesh('Cylinder', vtkCylinderSource.newInstance());
 
 const properties = [
   {
-    name: '- Solid Red',
-    properties: { color: [1, 0, 0] },
+    name: '- Red',
+    properties: { color: [1, 0.6, 0.6] },
   },
   {
-    name: 'Edge - Solid Blue',
-    properties: { edgeVisibility: true, color: [0, 0, 1] },
+    name: 'Edge - Red',
+    properties: { edgeVisibility: true, color: [1, 0.6, 0.6] },
   },
   {
-    name: '- Solid Green',
-    properties: { color: [0, 1, 0] },
+    name: '- Blue',
+    properties: { color: [0.6, 0.6, 1] },
   },
   {
-    name: 'Edge - Solid Red',
-    properties: { edgeVisibility: true, color: [1, 0, 0] },
+    name: 'Edge - Green',
+    properties: { edgeVisibility: true, color: [0.6, 1, 0.6] },
   },
   {
-    name: '- Solid Blue',
-    properties: { color: [0, 0, 1] },
+    name: '- Green',
+    properties: { color: [0.6, 1, 0.6] },
   },
   {
-    name: 'Edge - Solid Green',
-    properties: { edgeVisibility: true, color: [0, 1, 0] },
+    name: 'Edge - Blue',
+    properties: { edgeVisibility: true, color: [0.6, 0.6, 1] },
   },
 ];
 
@@ -69,12 +69,13 @@ const properties = [
 // ----------------------------------------------------------------------------
 
 const colors = [
-  [0, 0, 0],
-  [1, 0, 0],
-  [0, 1, 0],
-  [0, 0, 1],
-  [0.5, 0.5, 0.5],
-  [1, 1, 1],
+  [0.2, 0.2, 0.2],
+  [0.4, 0.2, 0.3],
+  [0.2, 0.4, 0.3],
+  [0.6, 0.6, 0.6],
+  [0.2, 0.4, 0.4],
+  [0.3, 0.4, 0.2],
+  [0.3, 0.2, 0.4],
 ];
 
 // ----------------------------------------------------------------------------
@@ -109,9 +110,9 @@ function updateViewPort(element, renderer) {
   const { x, y, width, height } = element.getBoundingClientRect();
   const viewport = [
     x / innerWidth,
-    1 - y / innerHeight,
-    (x + width) / innerWidth,
     1 - (y + height) / innerHeight,
+    (x + width) / innerWidth,
+    1 - y / innerHeight,
   ];
   // console.log(viewport);
   renderer.setViewport(...viewport);
@@ -182,6 +183,10 @@ function addRenderer() {
   const actor = vtkActor.newInstance();
   actor.setMapper(mesh.mapper);
   actor.getProperty().set(prop.properties);
+  actor.getProperty().setDiffuse(0.9);
+  actor.getProperty().setSpecular(0.2);
+  actor.getProperty().setSpecularPower(30);
+  actor.getProperty().setSpecularColor(1.0, 1.0, 1.0);
   const renderer = vtkRenderer.newInstance({ background });
   container.innerHTML = `${mesh.name} ${prop.name}`;
 
@@ -205,19 +210,19 @@ for (let i = 0; i < 64; i++) {
   addRenderer();
 }
 
-// function updateCamera(renderer) {
-//   const camera = renderer.getActiveCamera();
-//   camera.azimuth(2);
-// }
+function updateCamera(renderer) {
+  const camera = renderer.getActiveCamera();
+  camera.azimuth(2);
+  renderer.resetCameraClippingRange();
+}
 
-// function animate() {
-//   console.log('animate');
-//   Object.values(RENDERERS).forEach(updateCamera);
-//   renderWindow.render();
-//   window.requestAnimationFrame(animate);
-// }
+function animate() {
+  Object.values(RENDERERS).forEach(updateCamera);
+  renderWindow.render();
+  window.requestAnimationFrame(animate);
+}
 
-// window.requestAnimationFrame(animate);
+window.requestAnimationFrame(animate);
 
 // ----------------------------------------------------------------------------
 // Globals

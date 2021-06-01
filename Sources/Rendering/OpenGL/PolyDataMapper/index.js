@@ -1573,6 +1573,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     let sColor = ppty.getSpecularColorByReference();
     program.setUniform3fArray('specularColorUniform', sColor);
     program.setUniformf('specularPowerUniform', specularPower);
+    program.setUniformf('specular', sIntensity);
 
     // now set the backface properties if we have them
     if (program.isUniformUsed('ambientIntensityBF')) {

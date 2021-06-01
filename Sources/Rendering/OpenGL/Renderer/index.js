@@ -1,6 +1,5 @@
 import * as macro from 'vtk.js/Sources/macro';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
@@ -103,8 +102,8 @@ function vtkOpenGLRenderer(publicAPI, model) {
 
     // find the lower left corner of the viewport, taking into account the
     // lower left boundary of this tile
-    const vpu = vtkMath.clampValue(vport[0] - tileViewPort[0], 0.0, 1.0);
-    const vpv = vtkMath.clampValue(vport[1] - tileViewPort[1], 0.0, 1.0);
+    const vpu = vport[0] - tileViewPort[0];
+    const vpv = vport[1] - tileViewPort[1];
 
     // store the result as a pixel value
     const ndvp = model.parent.normalizedDisplayToDisplay(vpu, vpv);
@@ -113,15 +112,8 @@ function vtkOpenGLRenderer(publicAPI, model) {
 
     // find the upper right corner of the viewport, taking into account the
     // lower left boundary of this tile
-    let vpu2 = vtkMath.clampValue(vport[2] - tileViewPort[0], 0.0, 1.0);
-    let vpv2 = vtkMath.clampValue(vport[3] - tileViewPort[1], 0.0, 1.0);
-    // also watch for the upper right boundary of the tile
-    if (vpu2 > tileViewPort[2] - tileViewPort[0]) {
-      vpu2 = tileViewPort[2] - tileViewPort[0];
-    }
-    if (vpv2 > tileViewPort[3] - tileViewPort[1]) {
-      vpv2 = tileViewPort[3] - tileViewPort[1];
-    }
+    const vpu2 = vport[2] - tileViewPort[0];
+    const vpv2 = vport[3] - tileViewPort[1];
     const ndvp2 = model.parent.normalizedDisplayToDisplay(vpu2, vpv2);
 
     // now compute the size of the intersection of the viewport with the
