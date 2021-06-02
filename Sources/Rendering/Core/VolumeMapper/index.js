@@ -50,9 +50,9 @@ function vtkVolumeMapper(publicAPI, model) {
     publicAPI.setBlendMode(BlendMode.ADDITIVE_INTENSITY_BLEND);
   };
 
-  publicAPI.setAverageIPScalarRange = (range) => {
+  publicAPI.setAverageIPScalarRange = (min, max) => {
     console.warn('setAverageIPScalarRange is deprecated use setIpScalarRange');
-    publicAPI.setIpScalarRange(range);
+    publicAPI.setIpScalarRange(min, max);
   };
 
   publicAPI.getBlendModeAsString = () =>
