@@ -18,7 +18,7 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
-const openGLRenderWindow = fullScreenRenderer.getOpenGLRenderWindow();
+const openGLRenderWindow = fullScreenRenderer.getApiSpecificRenderWindow();
 
 // ----------------------------------------------------------------------------
 // 2D overlay rendering
