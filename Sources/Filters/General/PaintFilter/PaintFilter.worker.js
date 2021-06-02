@@ -38,38 +38,40 @@ function handlePaintRectangle({ point1, point2 }) {
 }
 
 // --------------------------------------------------------------------------
-
+// center and scale3 are in IJK coordinates
 function handlePaintEllipse({ center, scale3 }) {
   const radius3 = [...scale3];
+  const indexCenter = center.map((val) => Math.round(val));
+
   if (globals.slicingMode != null && globals.slicingMode !== SlicingMode.NONE) {
     const sliceAxis = globals.slicingMode % 3;
-    radius3[sliceAxis] = 0.25;
+    radius3[sliceAxis] = 0;
   }
 
   const yStride = globals.dimensions[0];
   const zStride = globals.dimensions[0] * globals.dimensions[1];
 
-  const zmin = Math.round(Math.max(center[2] - radius3[2], 0));
+  const zmin = Math.round(Math.max(indexCenter[2] - radius3[2], 0));
   const zmax = Math.round(
-    Math.min(center[2] + radius3[2], globals.dimensions[2] - 1)
+    Math.min(indexCenter[2] + radius3[2], globals.dimensions[2] - 1)
   );
 
   for (let z = zmin; z <= zmax; z++) {
-    const dz = (center[2] - z) / radius3[2];
+    const dz = (indexCenter[2] - z) / radius3[2];
     const ay = radius3[1] * Math.sqrt(1 - dz * dz);
 
-    const ymin = Math.round(Math.max(center[1] - ay, 0));
+    const ymin = Math.round(Math.max(indexCenter[1] - ay, 0));
     const ymax = Math.round(
-      Math.min(center[1] + ay, globals.dimensions[1] - 1)
+      Math.min(indexCenter[1] + ay, globals.dimensions[1] - 1)
     );
 
     for (let y = ymin; y <= ymax; y++) {
-      const dy = (center[1] - y) / radius3[1];
+      const dy = (indexCenter[1] - y) / radius3[1];
       const ax = radius3[0] * Math.sqrt(1 - dy * dy - dz * dz);
 
-      const xmin = Math.round(Math.max(center[0] - ax, 0));
+      const xmin = Math.round(Math.max(indexCenter[0] - ax, 0));
       const xmax = Math.round(
-        Math.min(center[0] + ax, globals.dimensions[0] - 1)
+        Math.min(indexCenter[0] + ax, globals.dimensions[0] - 1)
       );
       if (xmin <= xmax) {
         const index = y * yStride + z * zStride;
