@@ -29,10 +29,13 @@ test('Test vtkTubeFilter instance', (t) => {
   t.end();
 });
 
-vtkMath.randomSeed(15322);
 const numSegments = 3;
 
 function initializePolyData(dType) {
+  const seed = 15322;
+  if (vtkMath.getSeed() !== seed) {
+    vtkMath.randomSeed(seed);
+  }
   let pointType = VtkDataTypes.FLOAT;
   if (dType === DesiredOutputPrecision.SINGLE) {
     pointType = VtkDataTypes.FLOAT;

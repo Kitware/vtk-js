@@ -59,7 +59,7 @@ function vtkMouseCameraUnicamManipulator(publicAPI, model) {
     // Get shortest distance 'l' between the viewing position and
     // plane parallel to the projection plane that contains the 'downPoint'.
     const atV = camera.getViewPlaneNormal();
-    vtkMath.normalize(atV, interactor);
+    vtkMath.normalize(atV);
     const l = vtkMath.dot(cameraToPointVec, atV);
     const viewAngle = vtkMath.radiansFromDegrees(camera.getViewAngle());
     const [width, height] = interactor.getView().getSize();
@@ -73,8 +73,8 @@ function vtkMouseCameraUnicamManipulator(publicAPI, model) {
     vtkMath.cross(upV, atV, rightV);
     // (Make sure 'upV' is orthogonal to 'atV' & 'rightV')
     vtkMath.cross(atV, rightV, upV);
-    vtkMath.normalize(rightV, interactor);
-    vtkMath.normalize(upV, interactor);
+    vtkMath.normalize(rightV);
+    vtkMath.normalize(upV);
 
     vtkMath.multiplyScalar(rightV, scaleX);
     vtkMath.multiplyScalar(upV, scaleY);
