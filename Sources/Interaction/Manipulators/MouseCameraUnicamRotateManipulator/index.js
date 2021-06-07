@@ -127,9 +127,9 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
     const loe = oesq > radsq ? 0 : Math.sqrt(radsq - oesq);
 
     const nop = [op[0], 0, lop];
-    vtkMath.normalize(nop, interactor);
+    vtkMath.normalize(nop);
     const noe = [oe[0], 0, loe];
-    vtkMath.normalize(noe, interactor);
+    vtkMath.normalize(noe);
 
     const dot = vtkMath.dot(nop, noe);
     if (Math.abs(dot) > 0.0001) {
@@ -142,7 +142,7 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
       const camera = renderer.getActiveCamera();
 
       const upVec = model.useWorldUpVec ? model.worldUpVec : camera.getViewUp();
-      vtkMath.normalize(upVec, interactor);
+      vtkMath.normalize(upVec);
 
       rotateCamera(camera, ...center, ...upVec, angle);
 
@@ -153,13 +153,13 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
       let rDist =
         (normalizedPosition.y - normalizedPreviousPosition.y) *
         publicAPI.getRotationFactor();
-      vtkMath.normalize(dVec, interactor);
+      vtkMath.normalize(dVec);
 
       const atV = camera.getViewPlaneNormal();
       const upV = camera.getViewUp();
       const rightV = [];
       vtkMath.cross(upV, atV, rightV);
-      vtkMath.normalize(rightV, interactor);
+      vtkMath.normalize(rightV);
 
       //
       // The following two tests try to prevent chaotic camera movement
@@ -217,7 +217,7 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
     }
 
     const atV = camera.getDirectionOfProjection();
-    vtkMath.normalize(atV, interactor);
+    vtkMath.normalize(atV);
 
     // Scales the focus dot so it always appears the same size
     const scale =
@@ -278,7 +278,8 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
     }
 
     if (selections && selections.length !== 0) {
-      return selections[0].getProperties().worldPosition;
+      // convert Float64Array to regular array
+      return Array.from(selections[0].getProperties().worldPosition);
     }
     return pickWithPointPicker(interactor, position);
   };
