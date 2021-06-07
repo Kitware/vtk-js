@@ -650,8 +650,8 @@ bool valueWithinScalarRange(vec4 val, vec4 min, vec4 max) {
     }
   #endif
   #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 3
-    if (all(greaterThanEqual(val, averageIPScalarRangeMin)) &&
-        all(lessThanEqual(val, averageIPScalarRangeMax))) {
+    if (all(greaterThanEqual(val, ipScalarRangeMin)) &&
+        all(lessThanEqual(val, ipScalarRangeMax))) {
       withinRange = true;
     }
   #endif
@@ -794,21 +794,21 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
     // Now map through opacity and color
     gl_FragData[0] = getColorForValue(value, posIS, tstep);
   #endif
-  #if vtkBlendMode == 3 //AVERAGE_INTENSITY_BLEND
-    vec4 averageIPScalarRangeMin = vec4 (
-      //VTK::AverageIPScalarRangeMin,
-      //VTK::AverageIPScalarRangeMin,
-      //VTK::AverageIPScalarRangeMin,
-      //VTK::AverageIPScalarRangeMax);
-    vec4 averageIPScalarRangeMax = vec4(
-      //VTK::AverageIPScalarRangeMax,
-      //VTK::AverageIPScalarRangeMax,
-      //VTK::AverageIPScalarRangeMax,
-      //VTK::AverageIPScalarRangeMax);
+  #if vtkBlendMode == 3 || vtkBlendMode == 4 //AVERAGE_INTENSITY_BLEND || ADDITIVE_BLEND
+    vec4 ipScalarRangeMin = vec4 (
+      //VTK::IPScalarRangeMin,
+      //VTK::IPScalarRangeMin,
+      //VTK::IPScalarRangeMin,
+      //VTK::IPScalarRangeMax);
+    vec4 ipScalarRangeMax = vec4(
+      //VTK::IPScalarRangeMax,
+      //VTK::IPScalarRangeMax,
+      //VTK::IPScalarRangeMax,
+      //VTK::IPScalarRangeMax);
 
     vec4 sum = vec4(0.);
 
-    if (valueWithinScalarRange(tValue, averageIPScalarRangeMin, averageIPScalarRangeMax)) {
+    if (valueWithinScalarRange(tValue, ipScalarRangeMin, ipScalarRangeMax)) {
       sum += tValue;
     }
 
@@ -834,7 +834,7 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
       // - We are comparing all values in the texture to see if any of them
       //   are outside of the scalar range. In the future we might want to allow
       //   scalar ranges for each component.
-      if (valueWithinScalarRange(tValue, averageIPScalarRangeMin, averageIPScalarRangeMax)) {
+      if (valueWithinScalarRange(tValue, ipScalarRangeMin, ipScalarRangeMax)) {
         // Sum the values across each step in the path
         sum += tValue;
       }
@@ -849,14 +849,16 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
     // compute the scalar
     tValue = getTextureValue(posIS);
 
-    // One can control the scalar range by setting the AverageIPScalarRange to disregard scalar values, not in the range of interest, from the average computation
-    if (valueWithinScalarRange(tValue, averageIPScalarRangeMin, averageIPScalarRangeMax)) {
+    // One can control the scalar range by setting the IPScalarRange to disregard scalar values, not in the range of interest, from the average computation
+    if (valueWithinScalarRange(tValue, ipScalarRangeMin, ipScalarRangeMax)) {
       sum += tValue;
 
       stepsTraveled++;
     }
 
-    sum /= vec4(stepsTraveled, stepsTraveled, stepsTraveled, 1.0);
+    #if vtkBlendMode == 3 // Average
+      sum /= vec4(stepsTraveled, stepsTraveled, stepsTraveled, 1.0);
+    #endif
 
     gl_FragData[0] = getColorForValue(sum, posIS, tstep);
   #endif

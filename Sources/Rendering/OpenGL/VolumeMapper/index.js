@@ -231,9 +231,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       `${model.renderable.getBlendMode()}`
     ).result;
 
-    const averageIPScalarRange = model.renderable.getAverageIPScalarRange();
-    let min = averageIPScalarRange[0];
-    let max = averageIPScalarRange[1];
+    const ipScalarRange = model.renderable.getIpScalarRange();
+    let min = ipScalarRange[0];
+    let max = ipScalarRange[1];
 
     // If min or max is not already a float.
     // make them into floats for glsl
@@ -242,13 +242,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     FSSource = vtkShaderProgram.substitute(
       FSSource,
-      '//VTK::AverageIPScalarRangeMin',
+      '//VTK::IPScalarRangeMin',
       min
     ).result;
 
     FSSource = vtkShaderProgram.substitute(
       FSSource,
-      '//VTK::AverageIPScalarRangeMax',
+      '//VTK::IPScalarRangeMax',
       max
     ).result;
 
@@ -434,7 +434,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       maxSamples,
       useGradientOpacity: actor.getProperty().getUseGradientOpacity(0),
       blendMode: model.renderable.getBlendMode(),
-      averageIPScalarMode: model.renderable.getAverageIPScalarRange(),
+      ipScalarMode: model.renderable.getIpScalarRange(),
       proportionalComponents,
     };
 
@@ -451,10 +451,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.previousState.maxSamples !== state.maxSamples ||
       model.previousState.useGradientOpacity !== state.useGradientOpacity ||
       model.previousState.blendMode !== state.blendMode ||
-      !arrayEquals(
-        model.previousState.averageIPScalarMode,
-        state.averageIPScalarMode
-      ) ||
+      !arrayEquals(model.previousState.ipScalarMode, state.ipScalarMode) ||
       !arrayEquals(
         model.previousState.proportionalComponents,
         state.proportionalComponents

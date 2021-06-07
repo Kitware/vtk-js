@@ -69,22 +69,22 @@ mapper.setInputConnection(reader.getOutputPort());
 
 function updateBlendMode(event) {
   const blendMode = parseInt(event.target.value, 10);
-  const averageIPScalarEls = document.querySelectorAll('.averageIPScalar');
+  const ipScalarEls = document.querySelectorAll('.ipScalar');
 
   mapper.setBlendMode(blendMode);
-  mapper.setAverageIPScalarRange(0.0, 1.0);
+  mapper.setIpScalarRange(0.0, 1.0);
 
-  // if average blend mode
-  if (blendMode === 3) {
-    // Show average scalar ui
-    for (let i = 0; i < averageIPScalarEls.length; i += 1) {
-      const el = averageIPScalarEls[i];
+  // if average or additive blend mode
+  if (blendMode === 3 || blendMode === 4) {
+    // Show scalar ui
+    for (let i = 0; i < ipScalarEls.length; i += 1) {
+      const el = ipScalarEls[i];
       el.style.display = 'table-row';
     }
   } else {
-    // Hide average scalar ui
-    for (let i = 0; i < averageIPScalarEls.length; i += 1) {
-      const el = averageIPScalarEls[i];
+    // Hide scalar ui
+    for (let i = 0; i < ipScalarEls.length; i += 1) {
+      const el = ipScalarEls[i];
       el.style.display = 'none';
     }
   }
@@ -93,16 +93,16 @@ function updateBlendMode(event) {
 }
 
 function updateScalarMin(event) {
-  mapper.setAverageIPScalarRange(
+  mapper.setIpScalarRange(
     event.target.value,
-    parseFloat(mapper.getAverageIPScalarRange()[1])
+    parseFloat(mapper.getIpScalarRange()[1])
   );
   renderWindow.render();
 }
 
 function updateScalarMax(event) {
-  mapper.setAverageIPScalarRange(
-    mapper.getAverageIPScalarRange()[0],
+  mapper.setIpScalarRange(
+    mapper.getIpScalarRange()[0],
     parseFloat(event.target.value)
   );
   renderWindow.render();
