@@ -90,10 +90,9 @@ renderWindow.addView(openglRenderWindow);
 
 const rootContainer = document.createElement('div');
 rootContainer.style.position = 'fixed';
+rootContainer.style.zIndex = -1;
 rootContainer.style.left = 0;
 rootContainer.style.top = 0;
-rootContainer.style.bottom = 0;
-rootContainer.style.right = 0;
 rootContainer.style.pointerEvents = 'none';
 document.body.appendChild(rootContainer);
 
@@ -106,7 +105,7 @@ interactor.bindEvents(document.body);
 interactor.setInteractorStyle(vtkInteractorStyleTrackballCamera.newInstance());
 
 function updateViewPort(element, renderer) {
-  const { innerWidth, innerHeight } = window;
+  const { innerHeight, innerWidth } = window;
   const { x, y, width, height } = element.getBoundingClientRect();
   const viewport = [
     x / innerWidth,
@@ -114,7 +113,6 @@ function updateViewPort(element, renderer) {
     (x + width) / innerWidth,
     1 - y / innerHeight,
   ];
-  // console.log(viewport);
   renderer.setViewport(...viewport);
 }
 
@@ -130,6 +128,7 @@ function recomputeViewports() {
 }
 
 function resize() {
+  rootContainer.style.width = `${window.innerWidth}px`;
   openglRenderWindow.setSize(window.innerWidth, window.innerHeight);
   recomputeViewports();
   // Object.values(RENDERERS).forEach((r) => r.resetCamera());
@@ -137,7 +136,6 @@ function resize() {
 
 window.addEventListener('resize', resize);
 document.addEventListener('scroll', recomputeViewports);
-resize();
 
 // ----------------------------------------------------------------------------
 // Renderers
@@ -209,6 +207,7 @@ function addRenderer() {
 for (let i = 0; i < 64; i++) {
   addRenderer();
 }
+resize();
 
 function updateCamera(renderer) {
   const camera = renderer.getActiveCamera();
