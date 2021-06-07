@@ -64,8 +64,11 @@ const handledEvents = [
 ];
 
 function preventDefault(event) {
-  event.stopPropagation();
-  event.preventDefault();
+  if (event.cancelable) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
   return false;
 }
 
@@ -141,7 +144,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   publicAPI.startEventLoop = () => vtkWarningMacro('empty event loop');
 
   function updateCurrentRenderer(x, y) {
-    model.currentRenderer = publicAPI.findPokedRenderer(x, y);
+    if (!model._forcedRenderer) {
+      model.currentRenderer = publicAPI.findPokedRenderer(x, y);
+    }
   }
 
   publicAPI.getCurrentRenderer = () => {
@@ -300,8 +305,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
 
     interactionRegistration(true);
-    event.stopPropagation();
-    event.preventDefault();
+    preventDefault(event);
 
     const callData = {
       ...getModifierKeysFor(event),
@@ -468,8 +472,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.handleMouseMove = (event) => {
     // Do not consume event for move
-    // event.stopPropagation();
-    // event.preventDefault();
+    // preventDefault(event);
 
     const callData = {
       ...getModifierKeysFor(event),
@@ -505,8 +508,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleWheel = (event) => {
-    event.stopPropagation();
-    event.preventDefault();
+    preventDefault(event);
 
     /**
      * wheel event values can vary significantly across browsers, platforms
@@ -563,8 +565,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.handleMouseUp = (event) => {
     interactionRegistration(false);
-    event.stopPropagation();
-    event.preventDefault();
+    preventDefault(event);
 
     const callData = {
       ...getModifierKeysFor(event),
@@ -588,8 +589,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.handleTouchStart = (event) => {
     interactionRegistration(true);
-    event.stopPropagation();
-    event.preventDefault();
+    preventDefault(event);
 
     // If multitouch
     if (model.recognizeGestures && event.touches.length > 1) {
@@ -620,8 +620,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleTouchMove = (event) => {
-    event.stopPropagation();
-    event.preventDefault();
+    preventDefault(event);
 
     if (model.recognizeGestures && event.touches.length > 1) {
       const positions = getTouchEventPositionsFor(event.touches);
@@ -639,8 +638,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleTouchEnd = (event) => {
-    event.stopPropagation();
-    event.preventDefault();
+    preventDefault(event);
 
     if (model.recognizeGestures) {
       // No more fingers down
@@ -978,6 +976,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.handleVisibilityChange = () => {
     model.lastFrameStart = Date.now();
+  };
+
+  publicAPI.setCurrentRenderer = (r) => {
+    model._forcedRenderer = !!r;
+    model.currentRenderer = r;
   };
 
   // Stop animating if the renderWindowInteractor is deleted.
