@@ -2,6 +2,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const glob = require('glob');
 
+const importRegex = /(?:import|from) ['"]([^'"]*)['"]/g;
 const rootdir = 'pkg';
 
 // assumes src and dst are directories
@@ -21,14 +22,33 @@ function prepareESM() {
   fs.copySync('./dist/esm', pkgdir);
 
   // copy typescript defs
-  for (const entry of glob.sync('Sources/**/*.ts')) {
+  for (const entry of glob.sync('Sources/**/*.d.ts')) {
+    const parentPath = path.dirname(entry);
+    let sourceCode = fs.readFileSync(entry, 'utf8');
+    let m;
+
     let target = entry.replace(/^Sources\//, '');
     if (path.basename(entry) === 'index.d.ts') {
       const parentName = path.dirname(path.dirname(target));
       const moduleName = path.basename(path.dirname(target));
       target = path.join(parentName, `${moduleName}.d.ts`);
     }
-    fs.copyFileSync(entry, path.join(pkgdir, target));
+
+    const moduleDest = path.join(pkgdir, target);
+
+    while ((m = importRegex.exec(sourceCode)) !== null) {
+      // This is necessary to avoid infinite loops with zero-width matches
+      if (m.index === importRegex.lastIndex) {
+        importRegex.lastIndex++;
+      }
+
+      if (m[1].startsWith('../') || m[1].startsWith('./')) {
+        // Join parent folder with the relative path then replace 'Sources' with '@kitware/vtk.js'
+        const modulePath = path.join(parentPath, m[1]).replace('Sources', '@kitware/vtk.js');
+        sourceCode = sourceCode.replace(m[0], `from '${modulePath}'`);
+      }
+    }
+    fs.writeFileSync(moduleDest, sourceCode);
   }
 
   // copy misc files
@@ -63,6 +83,27 @@ function prepareUMD() {
   copyDirSync('./Utilities', pkgdir);
 
   fs.copySync('./dist/umd', pkgdir);
+
+  // copy typescript defs
+  for (const entry of glob.sync(`${pkgdir}/Sources/**/*.d.ts`)) {
+    const parentPath = path.dirname(entry);
+    let sourceCode = fs.readFileSync(entry, 'utf8');
+    let m;
+
+    while ((m = importRegex.exec(sourceCode)) !== null) {
+      // This is necessary to avoid infinite loops with zero-width matches
+      if (m.index === importRegex.lastIndex) {
+        importRegex.lastIndex++;
+      }
+
+      if (m[1].startsWith('../') || m[1].startsWith('./')) {
+        // Join parent folder with the relative path then replace pkgdir with 'vtk.js'
+        const modulePath = path.join(parentPath, m[1]).replace(pkgdir,'vtk.js')
+        sourceCode = sourceCode.replace(m[0], `from '${modulePath}'`);
+      }
+    }
+    fs.writeFileSync(entry, sourceCode);
+  }
 
   // copy misc files
   for (const entry of [
