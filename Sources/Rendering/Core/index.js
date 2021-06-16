@@ -34,6 +34,7 @@ import vtkProperty2D from './Property2D';
 import vtkRenderer from './Renderer';
 import vtkRenderWindow from './RenderWindow';
 import vtkRenderWindowInteractor from './RenderWindowInteractor';
+import vtkScalarBarActor from './ScalarBarActor';
 import vtkSkybox from './Skybox';
 import vtkSphereMapper from './SphereMapper';
 import vtkStickMapper from './StickMapper';
@@ -76,6 +77,7 @@ export default {
   vtkRenderer,
   vtkRenderWindow,
   vtkRenderWindowInteractor,
+  vtkScalarBarActor,
   vtkSkybox,
   vtkSphereMapper,
   vtkStickMapper,
