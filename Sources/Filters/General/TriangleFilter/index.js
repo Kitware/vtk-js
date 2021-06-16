@@ -27,8 +27,15 @@ function vtkTriangleFilter(publicAPI, model) {
 
     if (polys) {
       let npts = 0;
+      let isLastPointDuplicated = false;
       for (let c = 0; c < polys.length; c += npts + 1) {
         npts = polys[c];
+        // If the first point is duplicated at the end of the cell, ignore it
+        isLastPointDuplicated = polys[c + 1] === polys[c + npts];
+        if (isLastPointDuplicated) {
+          --npts;
+        }
+
         // We can't use cell.map here, it doesn't seems to work properly with Uint32Arrays ...
         const cellPoints = [];
         cellPoints.length = npts;
@@ -66,6 +73,9 @@ function vtkTriangleFilter(publicAPI, model) {
             newCells.push(3, newIdStart, newIdStart + 1, newIdStart + 2);
             newPoints.push(...triPts);
           }
+        }
+        if (isLastPointDuplicated) {
+          ++npts;
         }
       }
     }
