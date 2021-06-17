@@ -47,11 +47,14 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
     if (model.useWorldUpVec) {
       const centerOfRotation = new Float64Array(3);
       vec3.copy(centerOfRotation, model.worldUpVec);
+
+      // Compute projection of cameraPos onto worldUpVec
       vtkMath.multiplyScalar(
         centerOfRotation,
         vtkMath.dot(cameraPos, model.worldUpVec) /
           vtkMath.dot(model.worldUpVec, model.worldUpVec)
       );
+
       mat4.translate(trans, trans, centerOfRotation);
       mat4.rotate(
         trans,
@@ -60,11 +63,12 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
         model.worldUpVec
       );
 
-      centerNeg[0] = -centerOfRotation[0];
-      centerNeg[1] = -centerOfRotation[1];
-      centerNeg[2] = -centerOfRotation[2];
-      mat4.translate(trans, trans, centerNeg);
-      mat4.translate(trans, trans, center);
+      // Translate back
+      mat4.translate(
+        trans,
+        trans,
+        vtkMath.subtract(center, centerOfRotation, centerOfRotation)
+      );
     } else {
       mat4.translate(trans, trans, center);
       mat4.rotate(
@@ -122,7 +126,7 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  useWorldUpVec: false,
+  useWorldUpVec: true,
   // set WorldUpVector to be y-axis by default
   worldUpVec: [0, 1, 0],
 };
