@@ -126,7 +126,7 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  useWorldUpVec: true,
+  useWorldUpVec: false,
   // set WorldUpVector to be y-axis by default
   worldUpVec: [0, 1, 0],
 };
