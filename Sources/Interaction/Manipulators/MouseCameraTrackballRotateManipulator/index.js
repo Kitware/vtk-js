@@ -147,7 +147,7 @@ const DEFAULT_VALUES = {
   useWorldUpVec: false,
   // set WorldUpVector to be y-axis by default
   worldUpVec: [0, 1, 0],
-  useFocalPointAsCOR: true,
+  useFocalPointAsCOR: false,
 };
 
 // ----------------------------------------------------------------------------
