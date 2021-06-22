@@ -37,6 +37,12 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
 
     const { center, rotationFactor } = model;
 
+    if (model.useFocalPointAsCOR) {
+      center[0] = cameraFp[0];
+      center[1] = cameraFp[1];
+      center[2] = cameraFp[2];
+    }
+
     const dx = model.previousPosition.x - position.x;
     const dy = model.previousPosition.y - position.y;
 
@@ -55,6 +61,10 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
           vtkMath.dot(model.worldUpVec, model.worldUpVec)
       );
 
+      if (model.useFocalPointAsCOR) {
+        vtkMath.add(center, centerOfRotation, centerOfRotation);
+      }
+
       mat4.translate(trans, trans, centerOfRotation);
       mat4.rotate(
         trans,
@@ -64,11 +74,19 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
       );
 
       // Translate back
-      mat4.translate(
-        trans,
-        trans,
-        vtkMath.subtract(center, centerOfRotation, centerOfRotation)
-      );
+      if (model.useFocalPointAsCOR) {
+        centerOfRotation[0] = -centerOfRotation[0];
+        centerOfRotation[1] = -centerOfRotation[1];
+        centerOfRotation[2] = -centerOfRotation[2];
+        mat4.translate(trans, trans, centerOfRotation);
+        mat4.translate(trans, trans, center);
+      } else {
+        mat4.translate(
+          trans,
+          trans,
+          vtkMath.subtract(center, centerOfRotation, centerOfRotation)
+        );
+      }
     } else {
       mat4.translate(trans, trans, center);
       mat4.rotate(
@@ -129,6 +147,7 @@ const DEFAULT_VALUES = {
   useWorldUpVec: false,
   // set WorldUpVector to be y-axis by default
   worldUpVec: [0, 1, 0],
+  useFocalPointAsCOR: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -144,6 +163,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create get-set macro
   macro.setGet(publicAPI, model, ['useWorldUpVec']);
   macro.setGetArray(publicAPI, model, ['worldUpVec'], 3);
+  macro.setGet(publicAPI, model, ['useFocalPointAsCOR']);
 
   // Object specific methods
   vtkMouseCameraTrackballRotateManipulator(publicAPI, model);
