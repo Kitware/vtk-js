@@ -37,7 +37,7 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
 
     const { center, rotationFactor } = model;
 
-    if (model.useFocalPointAsCOR) {
+    if (model.useFocalPointAsCenterOfRotation) {
       center[0] = cameraFp[0];
       center[1] = cameraFp[1];
       center[2] = cameraFp[2];
@@ -61,7 +61,7 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
           vtkMath.dot(model.worldUpVec, model.worldUpVec)
       );
 
-      if (model.useFocalPointAsCOR) {
+      if (model.useFocalPointAsCenterOfRotation) {
         vtkMath.add(center, centerOfRotation, centerOfRotation);
       }
 
@@ -74,7 +74,7 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
       );
 
       // Translate back
-      if (model.useFocalPointAsCOR) {
+      if (model.useFocalPointAsCenterOfRotation) {
         centerOfRotation[0] = -centerOfRotation[0];
         centerOfRotation[1] = -centerOfRotation[1];
         centerOfRotation[2] = -centerOfRotation[2];
@@ -147,7 +147,7 @@ const DEFAULT_VALUES = {
   useWorldUpVec: false,
   // set WorldUpVector to be y-axis by default
   worldUpVec: [0, 1, 0],
-  useFocalPointAsCOR: false,
+  useFocalPointAsCenterOfRotation: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -163,7 +163,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create get-set macro
   macro.setGet(publicAPI, model, ['useWorldUpVec']);
   macro.setGetArray(publicAPI, model, ['worldUpVec'], 3);
-  macro.setGet(publicAPI, model, ['useFocalPointAsCOR']);
+  macro.setGet(publicAPI, model, ['useFocalPointAsCenterOfRotation']);
 
   // Object specific methods
   vtkMouseCameraTrackballRotateManipulator(publicAPI, model);
