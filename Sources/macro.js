@@ -1,4 +1,5 @@
 import vtk from './vtk';
+import ClassHierarchy from './Common/Core/ClassHierarchy';
 
 let globalMTime = 0;
 
@@ -214,7 +215,12 @@ export function obj(publicAPI = {}, model = {}) {
   if (!Number.isInteger(model.mtime)) {
     model.mtime = ++globalMTime;
   }
-  model.classHierarchy = ['vtkObject'];
+
+  if (!('classHierarchy' in model)) {
+    model.classHierarchy = new ClassHierarchy('vtkObject');
+  } else if (!(model.classHierarchy instanceof ClassHierarchy)) {
+    model.classHierarchy = ClassHierarchy.from(model.classHierarchy);
+  }
 
   function off(index) {
     callbacks[index] = null;
