@@ -12,6 +12,9 @@ import vtkWindowedSincPolyDataFilter from 'vtk.js/Sources/Filters/General/Window
 
 import controlPanel from './controller.html';
 
+// Force DataAccessHelper to have access to various data source
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
