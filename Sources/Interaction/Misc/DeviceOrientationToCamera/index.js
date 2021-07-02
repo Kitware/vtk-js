@@ -89,7 +89,7 @@ function addCameraToSynchronize(
   listeners.push(listener);
 
   if (orientation.update) {
-    listener.renderWindowInteractor.requestAnimation();
+    listener.renderWindowInteractor.requestAnimation(listener);
   }
 
   return listenerId;
@@ -100,7 +100,7 @@ function removeCameraToSynchronize(id, cancelAnimation = true) {
   if (listener) {
     listener.subscription.unsubscribe();
     if (cancelAnimation) {
-      listener.renderWindowInteractor.cancelAnimation();
+      listener.renderWindowInteractor.cancelAnimation(listener);
     }
   }
   listeners[id] = null;

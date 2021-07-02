@@ -236,7 +236,7 @@ function createVisualization(container, mapReader) {
     distPass.setCameraCenterX1(-eyeSpacing);
     distPass.setCameraCenterX2(eyeSpacing);
     distPass.setDelegates([vtkForwardPass.newInstance()]);
-    fullScreenRenderer.getOpenGLRenderWindow().setRenderPasses([distPass]);
+    fullScreenRenderer.getAPISpecificRenderWindow().setRenderPasses([distPass]);
 
     // Hide any controller
     fullScreenRenderer.setControllerVisibility(false);
@@ -278,10 +278,10 @@ function createVisualization(container, mapReader) {
     mainRenderer.addActor(actor);
 
     // add vr option button if supported
-    fullScreenRenderer.getOpenGLRenderWindow().onHaveVRDisplay(() => {
+    fullScreenRenderer.getApiSpecificRenderWindow().onHaveVRDisplay(() => {
       if (
-        fullScreenRenderer.getOpenGLRenderWindow().getVrDisplay().capabilities
-          .canPresent
+        fullScreenRenderer.getApiSpecificRenderWindow().getVrDisplay()
+          .capabilities.canPresent
       ) {
         const button = document.createElement('button');
         button.style.position = 'absolute';
