@@ -58,7 +58,7 @@ function imageToImageData(
   ctx.translate(canvas.width / 2, canvas.height / 2);
   ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
   ctx.rotate((rotate * Math.PI) / 180);
-  ctx.drawImage(image, -image.width / 2, -image.width / 2);
+  ctx.drawImage(image, -image.width / 2, -image.height / 2);
 
   return canvasToImageData(canvas);
 }
