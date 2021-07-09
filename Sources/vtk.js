@@ -1,3 +1,7 @@
+import globalThisShim from 'globalthis';
+
+export const vtkGlobal = globalThisShim(); // returns native globalThis if compliant
+
 const factoryMapping = {
   vtkObject: () => null,
 };
@@ -10,15 +14,15 @@ export default function vtk(obj) {
     return obj;
   }
   if (!obj.vtkClass) {
-    if (global.console && global.console.error) {
-      global.console.error('Invalid VTK object');
+    if (vtkGlobal.console && vtkGlobal.console.error) {
+      vtkGlobal.console.error('Invalid VTK object');
     }
     return null;
   }
   const constructor = factoryMapping[obj.vtkClass];
   if (!constructor) {
-    if (global.console && global.console.error) {
-      global.console.error(
+    if (vtkGlobal.console && vtkGlobal.console.error) {
+      vtkGlobal.console.error(
         `No vtk class found for Object of type ${obj.vtkClass}`
       );
     }
