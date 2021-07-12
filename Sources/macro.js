@@ -985,7 +985,7 @@ export function traverseInstanceTree(
 
 export function debounce(func, wait, immediate) {
   let timeout;
-  return (...args) => {
+  const debounced = (...args) => {
     const context = this;
     const later = () => {
       timeout = null;
@@ -1000,6 +1000,10 @@ export function debounce(func, wait, immediate) {
       func.apply(context, args);
     }
   };
+
+  debounced.cancel = () => clearTimeout(timeout);
+
+  return debounced;
 }
 
 // ----------------------------------------------------------------------------

@@ -16,6 +16,14 @@ export interface vtkRange {
 	max: number;
 }
 
+/**
+ * Represents a debounced function.
+ */
+export interface vtkDebouncedFunction {
+  (...args: any) : any;
+  cancel() : void;
+}
+
 export interface vtkOutputPort {
 	filter: vtkAlgorithm;
 }
