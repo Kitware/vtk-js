@@ -51,7 +51,6 @@ function vtkSplineWidget(publicAPI, model) {
   // initialization
   // --------------------------------------------------------------------------
 
-  model.moveHandle = model.widgetState.getMoveHandle();
   // Default manipulator
   model.manipulator = vtkPlanePointManipulator.newInstance();
 }
@@ -59,12 +58,11 @@ function vtkSplineWidget(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  keysDown: {},
   freehandMinDistance: 0.1,
   allowFreehand: true,
-  resolution: 32,
+  resolution: 32, // propagates to SplineContextRepresentation
   defaultCursor: 'pointer',
-  handleSizeInPixels: 10,
+  handleSizeInPixels: 10, // propagates to SplineContextRepresentation
 };
 
 // ----------------------------------------------------------------------------
