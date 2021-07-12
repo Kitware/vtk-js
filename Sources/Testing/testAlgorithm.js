@@ -63,3 +63,50 @@ test('Macro methods algo tests', (t) => {
 
   t.end();
 });
+
+test('Macro shouldUpdate returns true if output is deleted', (t) => {
+  const algo = {
+    publicAPI: {},
+    model: {},
+  };
+  const input1 = {
+    publicAPI: {},
+    model: {},
+  };
+
+  const input2 = {
+    publicAPI: {},
+    model: {},
+  };
+
+  macro.obj(algo.publicAPI, algo.model);
+  macro.algo(algo.publicAPI, algo.model, 1, 1);
+
+  macro.obj(input1.publicAPI, input1.model);
+  macro.obj(input2.publicAPI, input2.model);
+
+  // trivial producer
+  algo.publicAPI.requestData = (inData, outData) => {
+    outData[0] = inData[0];
+  };
+
+  algo.publicAPI.setInputData(input1.publicAPI, 0);
+  t.equal(
+    input1.publicAPI,
+    algo.publicAPI.getOutputData(),
+    'Trivial producer outputs first input data'
+  );
+
+  // delete output data
+  algo.publicAPI.getOutputData().delete();
+
+  // set new data
+  algo.publicAPI.setInputData(input2.publicAPI, 0);
+  t.equal(
+    input2.publicAPI,
+    algo.publicAPI.getOutputData(),
+    'Trivial producer outputs second input data'
+  );
+
+  t.end();
+});
