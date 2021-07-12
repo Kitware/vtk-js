@@ -31,6 +31,14 @@ function vtkProp(publicAPI, model) {
   publicAPI.pick = notImplemented('pick');
   publicAPI.hasKey = notImplemented('hasKey');
 
+  publicAPI.computeVisibility = () =>
+    model.visibility &&
+    (!model.parentProp || model.parentProp.computeVisibility());
+  publicAPI.computePickable = () =>
+    model.pickable && (!model.parentProp || model.parentProp.computePickable());
+  publicAPI.computeDragable = () =>
+    model.dragable && (!model.parentProp || model.parentProp.computeDragable());
+
   publicAPI.getRedrawMTime = () => model.mtime;
 
   publicAPI.setEstimatedRenderTime = (t) => {
@@ -108,6 +116,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'dragable',
     'useBounds',
     'renderTimeMultiplier',
+    'parentProp',
   ]);
 
   // Object methods

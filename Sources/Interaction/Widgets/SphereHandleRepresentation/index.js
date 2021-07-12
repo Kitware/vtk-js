@@ -364,7 +364,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.sphere.setPhiResolution(8);
   model.mapper = vtkMapper.newInstance();
   model.mapper.setInputConnection(model.sphere.getOutputPort());
-  model.actor = vtkActor.newInstance();
+  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
   model.actor.setMapper(model.mapper);
 
   publicAPI.setHandleSize(15);

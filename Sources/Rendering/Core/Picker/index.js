@@ -234,7 +234,7 @@ function vtkPicker(publicAPI, model) {
     const scale = [];
     props.forEach((prop) => {
       const mapper = prop.getMapper();
-      pickable = prop.getPickable() && prop.getVisibility();
+      pickable = prop.computePickable() && prop.computeVisibility();
       if (prop.getProperty().getOpacity() <= 0.0) {
         pickable = false;
       }

@@ -351,7 +351,7 @@ function vtkWidgetManager(publicAPI, model) {
         } else {
           for (let i = 0; i < model.widgets.length; i++) {
             const w = model.widgets[i];
-            if (w === widget && w.getPickable()) {
+            if (w === widget && w.computePickable()) {
               w.activateHandle({ selectedState, representation });
               model.activeWidget = w;
             } else {

@@ -40,9 +40,10 @@ function vtkOpenGLImageSlice(publicAPI, model) {
   publicAPI.traverseOpaquePass = (renderPass) => {
     if (
       !model.renderable ||
-      !model.renderable.getVisibility() ||
+      !model.renderable.computeVisibility() ||
       !model.renderable.getIsOpaque() ||
-      (model.openGLRenderer.getSelector() && !model.renderable.getPickable())
+      (model.openGLRenderer.getSelector() &&
+        !model.renderable.computePickable())
     ) {
       return;
     }
@@ -58,9 +59,10 @@ function vtkOpenGLImageSlice(publicAPI, model) {
   publicAPI.traverseTranslucentPass = (renderPass) => {
     if (
       !model.renderable ||
-      !model.renderable.getVisibility() ||
+      !model.renderable.computeVisibility() ||
       model.renderable.getIsOpaque() ||
-      (model.openGLRenderer.getSelector() && !model.renderable.getPickable())
+      (model.openGLRenderer.getSelector() &&
+        !model.renderable.computePickable())
     ) {
       return;
     }

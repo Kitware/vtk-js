@@ -40,7 +40,7 @@ function vtkOutlineContextRepresentation(publicAPI, model) {
   model.mapper = vtkMapper.newInstance({
     scalarVisibility: false,
   });
-  model.actor = vtkActor.newInstance();
+  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
   model.actor.getProperty().setEdgeColor(...model.edgeColor);
   model.mapper.setInputConnection(publicAPI.getOutputPort());
   model.actor.setMapper(model.mapper);

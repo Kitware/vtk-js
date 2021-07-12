@@ -35,9 +35,10 @@ function vtkWebGPUActor(publicAPI, model) {
   publicAPI.traverseOpaquePass = (renderPass) => {
     if (
       !model.renderable ||
-      !model.renderable.getVisibility() ||
+      !model.renderable.computeVisibility() ||
       !model.renderable.getIsOpaque() ||
-      (model.WebGPURenderer.getSelector() && !model.renderable.getPickable())
+      (model.WebGPURenderer.getSelector() &&
+        !model.renderable.computePickable())
     ) {
       return;
     }
@@ -55,9 +56,10 @@ function vtkWebGPUActor(publicAPI, model) {
   publicAPI.traverseTranslucentPass = (renderPass) => {
     if (
       !model.renderable ||
-      !model.renderable.getVisibility() ||
+      !model.renderable.computeVisibility() ||
       model.renderable.getIsOpaque() ||
-      (model.WebGPURenderer.getSelector() && !model.renderable.getPickable())
+      (model.WebGPURenderer.getSelector() &&
+        !model.renderable.computePickable())
     ) {
       return;
     }

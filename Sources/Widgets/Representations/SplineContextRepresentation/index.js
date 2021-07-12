@@ -21,12 +21,12 @@ function vtkSplineContextRepresentation(publicAPI, model) {
 
   model.pipelines = {
     area: {
-      actor: vtkActor.newInstance(),
+      actor: vtkActor.newInstance({ parentProp: publicAPI }),
       mapper: vtkMapper.newInstance(),
       triangleFilter: vtkTriangleFilter.newInstance(),
     },
     border: {
-      actor: vtkActor.newInstance(),
+      actor: vtkActor.newInstance({ parentProp: publicAPI }),
       mapper: vtkMapper.newInstance(),
       lineFilter: vtkLineFilter.newInstance(),
     },
@@ -115,11 +115,10 @@ function vtkSplineContextRepresentation(publicAPI, model) {
 
     if (model.outputBorder) {
       polydata.getLines().setData(outCells);
-      model.pipelines.border.actor.setVisibility(true);
     } else {
       polydata.getLines().setData([]);
-      model.pipelines.border.actor.setVisibility(false);
     }
+    model.pipelines.border.actor.setVisibility(model.outputBorder);
 
     outData[0] = polydata;
 

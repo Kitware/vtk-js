@@ -40,8 +40,9 @@ function vtkOpenGLVolume(publicAPI, model) {
   publicAPI.traverseVolumePass = (renderPass) => {
     if (
       !model.renderable ||
-      !model.renderable.getVisibility() ||
-      (model.openGLRenderer.getSelector() && !model.renderable.getPickable())
+      !model.renderable.computeVisibility() ||
+      (model.openGLRenderer.getSelector() &&
+        !model.renderable.computePickable())
     ) {
       return;
     }
