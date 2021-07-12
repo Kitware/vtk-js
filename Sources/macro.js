@@ -705,6 +705,11 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
       if (!model.output[count]) {
         return true;
       }
+
+      if (model.output[count].isDeleted()) {
+        return true;
+      }
+
       const mt = model.output[count].getMTime();
       if (mt < localMTime) {
         return true;
