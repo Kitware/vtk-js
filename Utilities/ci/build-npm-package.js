@@ -12,6 +12,18 @@ function copyDirSync(src, dst) {
   return fs.copySync(src, path.join(dst, dirname));
 }
 
+function applyBabelPluginMacroWorkaround(srcRoot, pkgName) {
+  fs.moveSync(path.join(srcRoot, 'macro.js'), path.join(srcRoot, 'macros.js'));
+
+  const shim = fs.readFileSync(path.join('Utilities', 'ci', 'macro-shim.js'), {
+    encoding: 'utf8',
+    flag: 'r',
+  });
+  const preparedShim = shim.replace('{{ packageName }}', pkgName);
+
+  fs.writeFileSync(path.join(srcRoot, 'macro.js'), preparedShim);
+}
+
 function prepareESM() {
   const pkgdir = path.join(rootdir, 'esm');
   fs.ensureDirSync(pkgdir);
@@ -73,6 +85,8 @@ function prepareESM() {
   pkgInfo.module = './index.js';
 
   fs.writeFileSync(packageJson, JSON.stringify(pkgInfo, null, 2));
+
+  applyBabelPluginMacroWorkaround(pkgdir, '@kitware/vtk.js');
 }
 
 function prepareUMD() {
@@ -127,6 +141,8 @@ function prepareUMD() {
   delete pkgInfo.module;
 
   fs.writeFileSync(packageJson, JSON.stringify(pkgInfo, null, 2));
+
+  applyBabelPluginMacroWorkaround(path.join(pkgdir, 'Sources'), 'vtk.js');
 }
 
 fs.removeSync(rootdir);
