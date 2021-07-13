@@ -428,3 +428,16 @@ test('Macro methods keystore tests', (t) => {
 
   t.end();
 });
+
+test('Macro debounce can be cancelled', (t) => {
+  const func = () => {
+    t.fail('Should not call cancelled debounce function');
+  };
+
+  const debFunc = macro.debounce(func, 5);
+  debFunc();
+  debFunc.cancel();
+
+  // end the test after the debounce phase
+  setTimeout(() => t.end(), 10);
+});

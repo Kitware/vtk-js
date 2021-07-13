@@ -705,6 +705,11 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
       if (!model.output[count]) {
         return true;
       }
+
+      if (model.output[count].isDeleted()) {
+        return true;
+      }
+
       const mt = model.output[count].getMTime();
       if (mt < localMTime) {
         return true;
@@ -985,7 +990,7 @@ export function traverseInstanceTree(
 
 export function debounce(func, wait, immediate) {
   let timeout;
-  return (...args) => {
+  const debounced = (...args) => {
     const context = this;
     const later = () => {
       timeout = null;
@@ -1000,6 +1005,10 @@ export function debounce(func, wait, immediate) {
       func.apply(context, args);
     }
   };
+
+  debounced.cancel = () => clearTimeout(timeout);
+
+  return debounced;
 }
 
 // ----------------------------------------------------------------------------
