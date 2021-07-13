@@ -321,6 +321,28 @@ function processFieldData(
 }
 
 // ----------------------------------------------------------------------------
+function handleFieldDataArrays(
+  fieldDataElem,
+  compressor,
+  byteOrder,
+  headerType,
+  binaryBuffer
+) {
+  return [...fieldDataElem.getElementsByTagName('DataArray')].map((daElem) =>
+    vtkDataArray.newInstance(
+      processDataArray(
+        Number(daElem.getAttribute('NumberOfTuples')),
+        daElem,
+        compressor,
+        byteOrder,
+        headerType,
+        binaryBuffer
+      )
+    )
+  );
+}
+
+// ----------------------------------------------------------------------------
 // vtkXMLReader methods
 // ----------------------------------------------------------------------------
 
@@ -513,6 +535,27 @@ function vtkXMLReader(publicAPI, model) {
     }
 
     publicAPI.parseXML(rootElem, type, compressor, byteOrder, headerType);
+
+    const datasetElem = rootElem.getElementsByTagName(type)[0];
+    const fieldDataElem = datasetElem.getElementsByTagName('FieldData')[0];
+
+    if (fieldDataElem) {
+      const fieldDataArrays = handleFieldDataArrays(
+        fieldDataElem,
+        compressor,
+        byteOrder,
+        headerType,
+        model.binaryBuffer
+      );
+
+      for (let i = 0; i < model.output.length; i++) {
+        const fieldData = model.output[i].getFieldData();
+        for (let j = 0; j < fieldDataArrays.length; j++) {
+          fieldData.addArray(fieldDataArrays[j]);
+        }
+      }
+    }
+
     return true;
   };
 

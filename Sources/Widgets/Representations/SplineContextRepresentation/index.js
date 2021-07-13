@@ -1,6 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
+import vtkContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ContextRepresentation';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkSpline3D from 'vtk.js/Sources/Common/DataModel/Spline3D';
@@ -154,7 +154,7 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  vtkHandleRepresentation.extend(publicAPI, model, initialValues);
+  vtkContextRepresentation.extend(publicAPI, model, initialValues);
   macro.get(publicAPI, model, ['mapper']);
   macro.setGet(publicAPI, model, [
     'resolution',

@@ -1,4 +1,4 @@
-import vtk from './vtk';
+import vtk, { vtkGlobal } from './vtk';
 import ClassHierarchy from './Common/Core/ClassHierarchy';
 
 let globalMTime = 0;
@@ -33,14 +33,14 @@ consoleMethods.forEach((methodName) => {
   fakeConsole[methodName] = noOp;
 });
 
-global.console = console.hasOwnProperty('log') ? console : fakeConsole;
+vtkGlobal.console = console.hasOwnProperty('log') ? console : fakeConsole;
 
 const loggerFunctions = {
   debug: noOp, // Don't print debug by default
-  error: global.console.error || noOp,
-  info: global.console.info || noOp,
-  log: global.console.log || noOp,
-  warn: global.console.warn || noOp,
+  error: vtkGlobal.console.error || noOp,
+  info: vtkGlobal.console.info || noOp,
+  log: vtkGlobal.console.log || noOp,
+  warn: vtkGlobal.console.warn || noOp,
 };
 
 export function setLoggerFunction(name, fn) {
@@ -705,6 +705,11 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
       if (!model.output[count]) {
         return true;
       }
+
+      if (model.output[count].isDeleted()) {
+        return true;
+      }
+
       const mt = model.output[count].getMTime();
       if (mt < localMTime) {
         return true;
@@ -985,7 +990,7 @@ export function traverseInstanceTree(
 
 export function debounce(func, wait, immediate) {
   let timeout;
-  return (...args) => {
+  const debounced = (...args) => {
     const context = this;
     const later = () => {
       timeout = null;
@@ -1000,6 +1005,10 @@ export function debounce(func, wait, immediate) {
       func.apply(context, args);
     }
   };
+
+  debounced.cancel = () => clearTimeout(timeout);
+
+  return debounced;
 }
 
 // ----------------------------------------------------------------------------
