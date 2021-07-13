@@ -316,20 +316,19 @@ export default function widgetBehavior(publicAPI, model) {
     );
 
     const center = model.widgetState.getCenter();
-    const previousWorldPosition = activeLine[
-      `get${model.widgetState.getActiveRotationPointName()}`
-    ]();
-
-    const previousVectorToOrigin = [0, 0, 0];
-    vtkMath.subtract(previousWorldPosition, center, previousVectorToOrigin);
-    vtkMath.normalize(previousVectorToOrigin);
+    const previousLineDirection = vtkMath.subtract(
+      activeLine.getPoint1(),
+      activeLine.getPoint2(),
+      []
+    );
+    vtkMath.normalize(previousLineDirection);
 
     const currentVectorToOrigin = [0, 0, 0];
     vtkMath.subtract(worldCoords, center, currentVectorToOrigin);
     vtkMath.normalize(currentVectorToOrigin);
 
     const radianAngle = vtkMath.signedAngleBetweenVectors(
-      previousVectorToOrigin,
+      previousLineDirection,
       currentVectorToOrigin,
       planeNormal
     );

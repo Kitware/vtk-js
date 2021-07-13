@@ -132,7 +132,7 @@ export function rotateVector(vectorToBeRotated, axis, angle) {
 }
 
 // Update the extremities and the rotation point coordinate of the line
-function updateLine(lineState, center, axis, lineLength, rotationLength) {
+function updateLine(lineState, center, axis, lineLength) {
   const p1 = [
     center[0] - lineLength * axis[0],
     center[1] - lineLength * axis[1],
@@ -143,21 +143,9 @@ function updateLine(lineState, center, axis, lineLength, rotationLength) {
     center[1] + lineLength * axis[1],
     center[2] + lineLength * axis[2],
   ];
-  const rotationP1 = [
-    center[0] - rotationLength * axis[0],
-    center[1] - rotationLength * axis[1],
-    center[2] - rotationLength * axis[2],
-  ];
-  const rotationP2 = [
-    center[0] + rotationLength * axis[0],
-    center[1] + rotationLength * axis[1],
-    center[2] + rotationLength * axis[2],
-  ];
 
   lineState.setPoint1(p1);
   lineState.setPoint2(p2);
-  lineState.setRotationPoint1(rotationP1);
-  lineState.setRotationPoint2(rotationP2);
 }
 
 // Update the reslice cursor state according to the three planes normals and the origin
@@ -173,12 +161,6 @@ export function updateState(widgetState) {
 
   const bounds = widgetState.getImage().getBounds();
   const center = widgetState.getCenter();
-  // Factor used to define where the rotation point will be displayed
-  // according to the plane size where there will be visible
-  const factor = 0.5 * 0.85;
-  const xRotationLength = (bounds[1] - bounds[0]) * factor;
-  const yRotationLength = (bounds[3] - bounds[2]) * factor;
-  const zRotationLength = (bounds[5] - bounds[4]) * factor;
 
   // Length of the principal diagonal.
   const pdLength = 20 * 0.5 * vtkBoundingBox.getDiagonalLength(bounds);
@@ -187,45 +169,39 @@ export function updateState(widgetState) {
     widgetState.getAxisXinY(),
     center,
     xyIntersectionLineAxis,
-    pdLength,
-    zRotationLength
+    pdLength
   );
   updateLine(
     widgetState.getAxisYinX(),
     center,
     xyIntersectionLineAxis,
-    pdLength,
-    zRotationLength
+    pdLength
   );
 
   updateLine(
     widgetState.getAxisYinZ(),
     center,
     yzIntersectionLineAxis,
-    pdLength,
-    xRotationLength
+    pdLength
   );
   updateLine(
     widgetState.getAxisZinY(),
     center,
     yzIntersectionLineAxis,
-    pdLength,
-    xRotationLength
+    pdLength
   );
 
   updateLine(
     widgetState.getAxisXinZ(),
     center,
     xzIntersectionLineAxis,
-    pdLength,
-    yRotationLength
+    pdLength
   );
   updateLine(
     widgetState.getAxisZinX(),
     center,
     xzIntersectionLineAxis,
-    pdLength,
-    yRotationLength
+    pdLength
   );
 }
 

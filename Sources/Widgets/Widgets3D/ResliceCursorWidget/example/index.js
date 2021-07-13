@@ -7,6 +7,7 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
+import vtkGenericRenderWindow from 'vtk.js/Sources/Rendering/Misc/GenericRenderWindow';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageReslice from 'vtk.js/Sources/Imaging/Core/ImageReslice';
@@ -15,11 +16,7 @@ import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/Interactor
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkOutlineFilter from 'vtk.js/Sources/Filters/General/OutlineFilter';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
-import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 import vtkResliceCursorWidget from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget';
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 
@@ -59,25 +56,9 @@ const showDebugActors = true;
 // ----------------------------------------------------------------------------
 
 const container = document.querySelector('body');
-const table = document.createElement('table');
-table.setAttribute('id', 'table');
-container.appendChild(table);
-
-// Define first line that will contains control panel
-const trLine0 = document.createElement('tr');
-trLine0.setAttribute('id', 'line0');
-table.appendChild(trLine0);
 const controlContainer = document.createElement('div');
-trLine0.appendChild(controlContainer);
 controlContainer.innerHTML = controlPanel;
-
-const trLine1 = document.createElement('tr');
-trLine1.setAttribute('id', 'line1');
-table.appendChild(trLine1);
-
-const trLine2 = document.createElement('tr');
-trLine2.setAttribute('id', 'line2');
-table.appendChild(trLine2);
+container.appendChild(controlContainer);
 
 // ----------------------------------------------------------------------------
 // Setup rendering code
@@ -125,25 +106,28 @@ function createRGBStringFromRGBValues(rgb) {
 }
 
 widgetState.setOpacity(0.6);
+widgetState.setSphereRadius(10);
 
 const initialPlanesState = { ...widgetState.getPlanes() };
 
 let view3D = null;
 
 for (let i = 0; i < 4; i++) {
-  const element = document.createElement('td');
+  const element = document.createElement('div');
+  element.setAttribute('class', 'view');
+  element.style.width = '50%';
+  element.style.height = '300px';
+  element.style.display = 'inline-block';
+  container.appendChild(element);
 
-  if (i % 2 === 0) {
-    trLine2.appendChild(element);
-  } else {
-    trLine1.appendChild(element);
-  }
-
+  const grw = vtkGenericRenderWindow.newInstance();
+  grw.setContainer(element);
+  grw.resize();
   const obj = {
-    renderWindow: vtkRenderWindow.newInstance(),
-    renderer: vtkRenderer.newInstance(),
-    GLWindow: vtkOpenGLRenderWindow.newInstance(),
-    interactor: vtkRenderWindowInteractor.newInstance(),
+    renderWindow: grw.getRenderWindow(),
+    renderer: grw.getRenderer(),
+    GLWindow: grw.getOpenGLRenderWindow(),
+    interactor: grw.getInteractor(),
     widgetManager: vtkWidgetManager.newInstance(),
   };
 
@@ -152,7 +136,6 @@ for (let i = 0; i < 4; i++) {
   obj.renderWindow.addRenderer(obj.renderer);
   obj.renderWindow.addView(obj.GLWindow);
   obj.renderWindow.setInteractor(obj.interactor);
-  obj.GLWindow.setContainer(element);
   obj.interactor.setView(obj.GLWindow);
   obj.interactor.initialize();
   obj.interactor.bindEvents(element);
