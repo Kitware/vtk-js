@@ -113,12 +113,7 @@ function vtkSplineContextRepresentation(publicAPI, model) {
       polydata.getPolys().setData(outCells);
     }
 
-    if (model.outputBorder) {
-      polydata.getLines().setData(outCells);
-    } else {
-      polydata.getLines().setData([]);
-    }
-    model.pipelines.border.actor.setVisibility(model.outputBorder);
+    polydata.getLines().setData(model.outputBorder ? outCells : []);
 
     outData[0] = polydata;
 
@@ -134,6 +129,13 @@ function vtkSplineContextRepresentation(publicAPI, model) {
   };
 
   publicAPI.getSelectedState = (prop, compositeID) => model.state;
+
+  publicAPI.setFill = macro.chain(publicAPI.setFill, (v) =>
+    model.pipelines.area.actor.setVisibility(v)
+  );
+  publicAPI.setOutputBorder = macro.chain(publicAPI.setOutputBorder, (v) =>
+    model.pipelines.border.actor.setVisibility(v)
+  );
 }
 
 // ----------------------------------------------------------------------------

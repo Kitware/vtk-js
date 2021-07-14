@@ -101,9 +101,6 @@ test.onlyIfWebGL('Test vtkSplineWidget rendering and picking', (t) => {
   renderer.resetCamera();
 
   function testRender() {
-    // TODO: There is a refresh problem that must be fixed somehow
-    glwindow.traverseAllPasses();
-    glwindow.traverseAllPasses();
     let resolve;
     const promise = new Promise((res) => {
       console.log('resolved');
