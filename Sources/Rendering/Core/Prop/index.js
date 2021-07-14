@@ -31,13 +31,15 @@ function vtkProp(publicAPI, model) {
   publicAPI.pick = notImplemented('pick');
   publicAPI.hasKey = notImplemented('hasKey');
 
-  publicAPI.computeVisibility = () =>
+  publicAPI.getNestedVisibility = () =>
     model.visibility &&
-    (!model.parentProp || model.parentProp.computeVisibility());
-  publicAPI.computePickable = () =>
-    model.pickable && (!model.parentProp || model.parentProp.computePickable());
-  publicAPI.computeDragable = () =>
-    model.dragable && (!model.parentProp || model.parentProp.computeDragable());
+    (!model.parentProp || model.parentProp.getNestedVisibility());
+  publicAPI.getNestedPickable = () =>
+    model.pickable &&
+    (!model.parentProp || model.parentProp.getNestedPickable());
+  publicAPI.getNestedDragable = () =>
+    model.dragable &&
+    (!model.parentProp || model.parentProp.getNestedDragable());
 
   publicAPI.getRedrawMTime = () => model.mtime;
 

@@ -39,7 +39,7 @@ export interface vtkProp extends vtkObject {
 
     /**
      * Get the value of the dragable instance variable.
-     * @see computeDragable
+     * @see getNestedDragable
      * @see getPickable
      */
     getDragable(): boolean;
@@ -50,11 +50,11 @@ export interface vtkProp extends vtkObject {
      * @see getDragable
      * @see getParentProp
      */
-    computeDragable(): boolean;
+    getNestedDragable(): boolean;
 
     /**
      * Get visibility of this vtkProp.
-     * @see computeVisibility
+     * @see getNestedVisibility
      * @see getPickable
      */
     getVisibility(): boolean;
@@ -65,11 +65,11 @@ export interface vtkProp extends vtkObject {
      * @see getVisibility
      * @see getParentProp
      */
-    computeVisibility(): boolean;
+    getNestedVisibility(): boolean;
 
     /**
      * Get the pickable instance variable.
-     * @see computePickable
+     * @see getNestedPickable
      * @see getDragable
      */
     getPickable(): boolean;
@@ -80,7 +80,7 @@ export interface vtkProp extends vtkObject {
      * @see getPickable
      * @see getParentProp
      */
-    computePickable(): boolean;
+    getNestedPickable(): boolean;
 
     /**
      * Return the mtime of anything that would cause the rendered image to appear differently. 

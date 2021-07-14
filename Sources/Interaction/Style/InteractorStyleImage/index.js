@@ -224,7 +224,9 @@ function vtkInteractorStyleImage(publicAPI, model) {
 
     function propMatch(j, prop, targetIndex) {
       return (
-        prop.isA('vtkImageSlice') && j === targetIndex && prop.computePickable()
+        prop.isA('vtkImageSlice') &&
+        j === targetIndex &&
+        prop.getNestedPickable()
       );
     }
 

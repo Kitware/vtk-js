@@ -161,9 +161,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'close',
     'fill',
     'outputBorder',
-    'borderColor',
-    'errorBorderColor',
   ]);
+  macro.setGetArray(publicAPI, model, ['borderColor', 'errorBorderColor'], 3);
 
   // Object specific methods
   vtkSplineContextRepresentation(publicAPI, model);

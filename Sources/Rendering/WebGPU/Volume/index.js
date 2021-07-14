@@ -76,9 +76,9 @@ function vtkWebGPUVolume(publicAPI, model) {
   publicAPI.traverseVolumePass = (renderPass) => {
     if (
       !model.renderable ||
-      !model.renderable.computeVisibility() ||
+      !model.renderable.getNestedVisibility() ||
       (model.WebGPURenderer.getSelector() &&
-        !model.renderable.computePickable())
+        !model.renderable.getNestedPickable())
     ) {
       return;
     }

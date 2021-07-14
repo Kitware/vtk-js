@@ -32,13 +32,14 @@ test.onlyIfWebGL('Test vtkSplineWidget rendering and picking', (t) => {
   interactor.setView(glwindow);
   interactor.initialize();
 
-  const widgetManager = vtkWidgetManager.newInstance();
+  const widgetManager = gc.registerResource(vtkWidgetManager.newInstance());
   widgetManager.setRenderer(renderer);
 
-  // Create 3 widgets:
-  // - widget[0] is not visible but pickable
-  // - widget[1] is visible and pickable
-  // - widget[2] is visible but not pickable
+  // Create 4 widgets:
+  // - widget[0] is visible, pickable and area pickable
+  // - widget[1] is not visible, pickable and area pickable
+  // - widget[2] is visible, pickable but not area pickable (default)
+  // - widget[3] is visible, not pickable but area pickable
   const widgetPoints = [
     [
       [-1, 0, 0],
@@ -58,10 +59,14 @@ test.onlyIfWebGL('Test vtkSplineWidget rendering and picking', (t) => {
       [0, -0.5, 0],
       [-1, 0.5, 0],
     ],
+    [
+      [-1, 0, 0],
+      [-1, -1, 0],
+      [0, -0.5, 0],
+      [1, 0.5, 0],
+    ],
   ];
-  const widgets = [];
-
-  widgetPoints.forEach((points) => {
+  const widgets = widgetPoints.map((points) => {
     const widgetFactory = vtkSplineWidget.newInstance();
     const widget = widgetManager.addWidget(widgetFactory);
     widget.reset();
@@ -72,33 +77,67 @@ test.onlyIfWebGL('Test vtkSplineWidget rendering and picking', (t) => {
     });
     widget.setFill(true);
     widget.setOutputBorder(true);
-    widgets.push(widget);
+    return widget;
   });
-  widgets[0].setVisibility(false);
-  widgets[1].setBorderColor([0, 0, 1, 1]);
-  widgets[2].setPickable(false);
+  // - widget[0] is visible, pickable and area pickable
+  widgets[0].setBorderColor(1, 0, 0);
+  widgets[0].getRepresentations()[1].setPickable(true);
+
+  // - widget[1] is not visible, pickable and area pickable
+  widgets[1].setBorderColor(0, 0, 1);
+  widgets[1].setVisibility(false);
+  widgets[1].getRepresentations()[1].setPickable(true);
+
+  // - widget[2] is visible, pickable but not area pickable (default)
+  widgets[2].setBorderColor(0, 1, 1);
+
+  // - widget[3] is visible, not pickable but area pickable
+  widgets[3].setBorderColor(1, 0, 1);
+  widgets[3].setPickable(false);
+  widgets[3].getRepresentations()[1].setPickable(true);
+
+  widgets.forEach((widget) => widget.getWidgetState().modified());
 
   renderer.resetCamera();
+
+  function testRender() {
+    // TODO: There is a refresh problem that must be fixed somehow
+    glwindow.traverseAllPasses();
+    glwindow.traverseAllPasses();
+    let resolve;
+    const promise = new Promise((res) => {
+      console.log('resolved');
+      resolve = res;
+    });
+    glwindow.captureNextImage().then((image) => {
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Widgets/Widgets3D/SplineWidget/test/testSplineWidget',
+        t,
+        2.5,
+        resolve
+      );
+    });
+    // Trigger a next image
+    glwindow.traverseAllPasses();
+    return promise;
+  }
 
   function testSelect() {
     const sel = glwindow.getSelector();
 
-    sel.selectAsync(renderer, 200, 200, 210, 210).then((res) => {
+    return sel.selectAsync(renderer, 200, 200, 210, 210).then((res) => {
       t.equal(res.length, 1);
-      t.equal(res[0].getProperties().propID, 2);
-      gc.releaseResources();
+      t.equal(
+        res[0].getProperties().prop.getParentProp(),
+        widgets[0].getRepresentations()[1]
+      );
     });
   }
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Widgets/Widgets3D/SplineWidget/test/testSplineWidget',
-      t,
-      2.5,
-      testSelect
-    );
-  });
-  renderWindow.render();
+  [testRender, testSelect, gc.releaseResources].reduce(
+    (current, next) => current.then(next),
+    Promise.resolve()
+  );
 });
