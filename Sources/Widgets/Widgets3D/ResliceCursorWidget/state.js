@@ -3,7 +3,6 @@ import { ScrollingMethods } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursor
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 const factor = 1;
-const rotationFactor = 1;
 const axisXColor = [1, 0, 0];
 const axisYColor = [0, 1, 0];
 const axisZColor = [0, 0, 1];
@@ -13,8 +12,6 @@ const generateAxisXinY = () =>
     .createBuilder()
     .addField({ name: 'point1', initialValue: [0, 0, -factor] })
     .addField({ name: 'point2', initialValue: [0, 0, factor] })
-    .addField({ name: 'rotationPoint1', initialValue: [0, 0, -rotationFactor] })
-    .addField({ name: 'rotationPoint2', initialValue: [0, 0, rotationFactor] })
     .addField({ name: 'color', initialValue: axisXColor })
     .addField({ name: 'name', initialValue: 'AxisXinY' })
     .addField({ name: 'viewType', initialValue: ViewTypes.YZ_PLANE })
@@ -26,8 +23,6 @@ const generateAxisXinZ = () =>
     .createBuilder()
     .addField({ name: 'point1', initialValue: [0, -factor, 0] })
     .addField({ name: 'point2', initialValue: [0, factor, 0] })
-    .addField({ name: 'rotationPoint1', initialValue: [0, -rotationFactor, 0] })
-    .addField({ name: 'rotationPoint2', initialValue: [0, rotationFactor, 0] })
     .addField({ name: 'color', initialValue: axisXColor })
     .addField({ name: 'name', initialValue: 'AxisXinZ' })
     .addField({ name: 'viewType', initialValue: ViewTypes.YZ_PLANE })
@@ -39,8 +34,6 @@ const generateAxisYinX = () =>
     .createBuilder()
     .addField({ name: 'point1', initialValue: [0, 0, -factor] })
     .addField({ name: 'point2', initialValue: [0, 0, factor] })
-    .addField({ name: 'rotationPoint1', initialValue: [0, 0, -rotationFactor] })
-    .addField({ name: 'rotationPoint2', initialValue: [0, 0, rotationFactor] })
     .addField({ name: 'color', initialValue: axisYColor })
     .addField({ name: 'name', initialValue: 'AxisYinX' })
     .addField({ name: 'viewType', initialValue: ViewTypes.XZ_PLANE })
@@ -52,8 +45,6 @@ const generateAxisYinZ = () =>
     .createBuilder()
     .addField({ name: 'point1', initialValue: [-factor, 0, 0] })
     .addField({ name: 'point2', initialValue: [factor, 0, 0] })
-    .addField({ name: 'rotationPoint1', initialValue: [-rotationFactor, 0, 0] })
-    .addField({ name: 'rotationPoint2', initialValue: [rotationFactor, 0, 0] })
     .addField({ name: 'color', initialValue: axisYColor })
     .addField({ name: 'name', initialValue: 'AxisYinZ' })
     .addField({ name: 'viewType', initialValue: ViewTypes.XZ_PLANE })
@@ -65,8 +56,6 @@ const generateAxisZinX = () =>
     .createBuilder()
     .addField({ name: 'point1', initialValue: [0, -factor, 0] })
     .addField({ name: 'point2', initialValue: [0, factor, 0] })
-    .addField({ name: 'rotationPoint1', initialValue: [0, -rotationFactor, 0] })
-    .addField({ name: 'rotationPoint2', initialValue: [0, rotationFactor, 0] })
     .addField({ name: 'color', initialValue: axisZColor })
     .addField({ name: 'name', initialValue: 'AxisZinX' })
     .addField({ name: 'viewType', initialValue: ViewTypes.XY_PLANE })
@@ -78,8 +67,6 @@ const generateAxisZinY = () =>
     .createBuilder()
     .addField({ name: 'point1', initialValue: [-factor, 0, 0] })
     .addField({ name: 'point2', initialValue: [factor, 0, 0] })
-    .addField({ name: 'rotationPoint1', initialValue: [-rotationFactor, 0, 0] })
-    .addField({ name: 'rotationPoint2', initialValue: [rotationFactor, 0, 0] })
     .addField({ name: 'color', initialValue: axisZColor })
     .addField({ name: 'name', initialValue: 'AxisZinY' })
     .addField({ name: 'viewType', initialValue: ViewTypes.XY_PLANE })
@@ -122,7 +109,6 @@ export default function generateState() {
     .addField({ name: 'center', initialValue: [0, 0, 0] })
     .addField({ name: 'opacity', initialValue: 1 })
     .addField({ name: 'activeLineState', initialValue: null })
-    .addField({ name: 'activeRotationPointName', initialValue: null })
     .addField({ name: 'image', initialValue: null })
     .addField({ name: 'activeViewType', initialValue: null })
     .addField({ name: 'lineThickness', initialValue: 2 })

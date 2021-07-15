@@ -4,12 +4,15 @@ import { vec3 } from 'gl-matrix';
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkSplineWidgetProp');
 
+  model.keysDown = {};
+  model.moveHandle = model.widgetState.getMoveHandle();
+
   // --------------------------------------------------------------------------
   // Private methods
   // --------------------------------------------------------------------------
 
   const updateHandlesSize = () => {
-    if (model.handleSizeInPixels !== null) {
+    if (model.handleSizeInPixels != null) {
       const scale =
         model.handleSizeInPixels *
         vec3.distance(
@@ -104,21 +107,19 @@ export default function widgetBehavior(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  const superSetHandleSizeInPixels = publicAPI.setHandleSizeInPixels;
   publicAPI.setHandleSizeInPixels = (size) => {
-    superSetHandleSizeInPixels(size);
+    model.factory.setHandleSizeInPixels(size);
     updateHandlesSize();
   };
-  publicAPI.setHandleSizeInPixels(model.handleSizeInPixels); // set initial value
+  publicAPI.setHandleSizeInPixels(model.factory.getHandleSizeInPixels()); // set initial value
 
   // --------------------------------------------------------------------------
 
-  const superSetResolution = publicAPI.setResolution;
   publicAPI.setResolution = (resolution) => {
-    superSetResolution(resolution);
-    model.representations[1].setResolution(model.resolution);
+    model.factory.setResolution(resolution);
+    model.representations[1].setResolution(resolution);
   };
-  publicAPI.setResolution(model.resolution); // set initial value
+  publicAPI.setResolution(model.factory.getResolution()); // set initial value
 
   // --------------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-import { vtkSubscription, vtkProperty, vtkPropertyDomain } from "./interfaces";
+import { vtkSubscription, vtkDebouncedFunction, vtkProperty, vtkPropertyDomain } from "./interfaces";
 
 /**
  * Allow user to redefine vtkXXXMacro method call.
@@ -305,8 +305,10 @@ export function traverseInstanceTree(
  * @param func
  * @param wait
  * @param immediate (default false)
+ * @returns vtkDebouncedFunction A debounced function that can be called.
+ *          Use .cancel() to clear any pending debounced call.
  */
-export function debounce(func: (...args: any) => any, wait: number, immediate?: boolean): (...args: any) => any;
+export function debounce(func: (...args: any) => any, wait: number, immediate?: boolean): vtkDebouncedFunction;
 
 /**
  * Creates a throttled function that only invokes `func` at most once per

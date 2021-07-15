@@ -150,8 +150,29 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     const length = vtkMath.normalize(vector);
     axis.line.source.setDirection(vector);
     axis.line.source.setHeight(length);
-    axis.rotation1.source.setCenter(state.getRotationPoint1());
-    axis.rotation2.source.setCenter(state.getRotationPoint2());
+
+    // Rotation handles
+    const pixelWorldHeight = publicAPI.getPixelWorldHeightAtCoord(center);
+    const { rendererPixelDims } = model.displayScaleParams;
+    const minDim = Math.min(rendererPixelDims[0], rendererPixelDims[1]);
+    const ratio = 0.5;
+    const distance =
+      (window.devicePixelRatio * (pixelWorldHeight * ratio * minDim)) / 2;
+    const rotationHandlePosition = [];
+    vtkMath.multiplyAccumulate(
+      center,
+      vector,
+      distance,
+      rotationHandlePosition
+    );
+    axis.rotation1.source.setCenter(rotationHandlePosition);
+    vtkMath.multiplyAccumulate(
+      center,
+      vector,
+      -distance,
+      rotationHandlePosition
+    );
+    axis.rotation2.source.setCenter(rotationHandlePosition);
   }
 
   /**
@@ -247,7 +268,6 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     const axis2State = state[getAxis2]();
 
     let activeLineState = null;
-    let activeRotationPointName = '';
     let methodName = '';
 
     switch (prop) {
@@ -261,22 +281,18 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
         break;
       case model.pipelines.axes[0].rotation1.actor:
         activeLineState = axis1State;
-        activeRotationPointName = 'RotationPoint1';
         methodName = InteractionMethodsName.RotateLine;
         break;
       case model.pipelines.axes[0].rotation2.actor:
         activeLineState = axis1State;
-        activeRotationPointName = 'RotationPoint2';
         methodName = InteractionMethodsName.RotateLine;
         break;
       case model.pipelines.axes[1].rotation1.actor:
         activeLineState = axis2State;
-        activeRotationPointName = 'RotationPoint1';
         methodName = InteractionMethodsName.RotateLine;
         break;
       case model.pipelines.axes[1].rotation2.actor:
         activeLineState = axis2State;
-        activeRotationPointName = 'RotationPoint2';
         methodName = InteractionMethodsName.RotateLine;
         break;
       default:
@@ -285,7 +301,6 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     }
 
     state.setActiveLineState(activeLineState);
-    state.setActiveRotationPointName(activeRotationPointName);
     state.setUpdateMethodName(methodName);
 
     return state;
@@ -296,33 +311,39 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  axis1Name: '',
-  axis2Name: '',
-  coincidentTopologyParameters: {
-    Point: {
-      factor: -1.0,
-      offset: -1.0,
+function defaultValues(initialValues) {
+  return {
+    axis1Name: '',
+    axis2Name: '',
+    coincidentTopologyParameters: {
+      Point: {
+        factor: -1.0,
+        offset: -1.0,
+      },
+      Line: {
+        factor: -1.5,
+        offset: -1.5,
+      },
+      Polygon: {
+        factor: -2.0,
+        offset: -2.0,
+      },
     },
-    Line: {
-      factor: -1.5,
-      offset: -1.5,
-    },
-    Polygon: {
-      factor: -2.0,
-      offset: -2.0,
-    },
-  },
-  rotationEnabled: true,
-  scaleInPixels: true,
-  viewType: null,
-};
+    rotationEnabled: true,
+    rotationHandlePosition: 0.5,
+    scaleInPixels: true,
+    viewType: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, defaultValues(initialValues));
   vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+
+  macro.setGet(publicAPI, model, ['rotationHandlePosition']);
 
   // Object specific methods
   vtkResliceCursorContextRepresentation(publicAPI, model);
