@@ -99,7 +99,9 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     let scaledLineThickness = lineThickness;
     if (publicAPI.getScaleInPixels()) {
       const centerCoords = model.pipelines.center.source.getCenter();
-      scaledLineThickness *= publicAPI.getPixelWorldHeightAtCoord(centerCoords);
+      scaledLineThickness *=
+        window.devicePixelRatio *
+        publicAPI.getPixelWorldHeightAtCoord(centerCoords);
     }
     model.pipelines.axes[0].line.source.setRadius(scaledLineThickness);
     model.pipelines.axes[1].line.source.setRadius(scaledLineThickness);
@@ -129,7 +131,9 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     let scaledRadius = radius;
     if (publicAPI.getScaleInPixels()) {
       const centerCoords = source.getCenter();
-      scaledRadius *= publicAPI.getPixelWorldHeightAtCoord(centerCoords);
+      scaledRadius *=
+        window.devicePixelRatio *
+        publicAPI.getPixelWorldHeightAtCoord(centerCoords);
     }
     source.setRadius(scaledRadius);
   };
