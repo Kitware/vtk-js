@@ -126,6 +126,7 @@ function vtkSTLReader(publicAPI, model) {
     model.baseURL = path.join('/');
 
     model.compression = option.compression;
+    model.progressCallback = option.progressCallback;
 
     // Fetch metadata
     return publicAPI.loadData({
