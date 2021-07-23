@@ -103,8 +103,14 @@ function vtkSTLReader(publicAPI, model) {
 
   // Internal method to fetch Array
   function fetchData(url, option = {}) {
-    const compression = option.compression || model.compression;
-    const progressCallback = option.progressCallback || model.progressCallback;
+    const compression =
+      option.compression !== 'undefined'
+        ? option.compression
+        : model.compression;
+    const progressCallback =
+      option.progressCallback !== 'undefined'
+        ? option.progressCallback
+        : model.progressCallback;
 
     if (option.binary) {
       return model.dataAccessHelper.fetchBinary(url, {
