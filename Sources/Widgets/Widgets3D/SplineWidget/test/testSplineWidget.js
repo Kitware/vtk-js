@@ -72,7 +72,6 @@ test.onlyIfWebGL('Test vtkSplineWidget rendering and picking', (t) => {
     widget.reset();
     points.forEach((point) => {
       const lastHandle = widgetFactory.getWidgetState().addHandle();
-      lastHandle.setVisible(true);
       lastHandle.setOrigin(...point);
     });
     widget.setFill(true);
