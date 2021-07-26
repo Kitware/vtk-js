@@ -143,7 +143,7 @@ function updateLine(lineState, center, axis, lineLength) {
     center[1] + lineLength * axis[1],
     center[2] + lineLength * axis[2],
   ];
-
+  // FIXME: p1 and p2 should be placed on the boundaries of the volume.
   lineState.setPoint1(p1);
   lineState.setPoint2(p2);
 }
@@ -163,7 +163,7 @@ export function updateState(widgetState) {
   const center = widgetState.getCenter();
 
   // Length of the principal diagonal.
-  const pdLength = 20 * 0.5 * vtkBoundingBox.getDiagonalLength(bounds);
+  const pdLength = 0.5 * vtkBoundingBox.getDiagonalLength(bounds);
 
   updateLine(
     widgetState.getAxisXinY(),

@@ -150,18 +150,26 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     vtkMath.subtract(state.getPoint2(), state.getPoint1(), vector);
     const center = [0, 0, 0];
     vtkMath.multiplyAccumulate(state.getPoint1(), vector, 0.5, center);
-    axis.line.source.setCenter(center);
     const length = vtkMath.normalize(vector);
+    axis.line.source.setCenter(center);
     axis.line.source.setDirection(vector);
-    axis.line.source.setHeight(length);
+    axis.line.source.setHeight(20 * length); // make it an infinite line
 
     // Rotation handles
-    const pixelWorldHeight = publicAPI.getPixelWorldHeightAtCoord(center);
-    const { rendererPixelDims } = model.displayScaleParams;
-    const minDim = Math.min(rendererPixelDims[0], rendererPixelDims[1]);
-    const ratio = 0.5;
-    const distance =
-      (window.devicePixelRatio * (pixelWorldHeight * ratio * minDim)) / 2;
+    const handleDistanceToCenter = 0.5;
+    let distance = 0;
+    if (publicAPI.getScaleInPixels()) {
+      const pixelWorldHeight = publicAPI.getPixelWorldHeightAtCoord(center);
+      const { rendererPixelDims } = model.displayScaleParams;
+      const minDim = Math.min(rendererPixelDims[0], rendererPixelDims[1]);
+      distance =
+        (window.devicePixelRatio *
+          (handleDistanceToCenter * pixelWorldHeight * minDim)) /
+        2;
+    } else {
+      distance = (handleDistanceToCenter * length) / 2;
+    }
+
     const rotationHandlePosition = [];
     vtkMath.multiplyAccumulate(
       center,
