@@ -14,6 +14,9 @@ import vtkXMLImageDataReader from 'vtk.js/Sources/IO/XML/XMLImageDataReader';
 import vtkXMLImageDataWriter from 'vtk.js/Sources/IO/XML/XMLImageDataWriter';
 import vtkXMLWriter from 'vtk.js/Sources/IO/XML/XMLWriter';
 
+// use full HttpDataAccessHelper
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------

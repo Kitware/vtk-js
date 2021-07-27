@@ -12,6 +12,9 @@ import vtkXMLPolyDataReader from 'vtk.js/Sources/IO/XML/XMLPolyDataReader';
 import vtkXMLPolyDataWriter from 'vtk.js/Sources/IO/XML/XMLPolyDataWriter';
 import vtkXMLWriter from 'vtk.js/Sources/IO/XML/XMLWriter';
 
+// use full HttpDataAccessHelper
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
