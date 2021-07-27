@@ -117,8 +117,8 @@ function vtkRenderWindowViewNode(publicAPI, model) {
     return [x, y, z];
   };
 
-  publicAPI.normalizedViewportToViewport = (x, y, z) => {
-    const size = publicAPI.getFramebufferSize();
+  publicAPI.normalizedViewportToViewport = (x, y, z, renderer) => {
+    const size = publicAPI.getViewportSize(renderer);
     return [x * (size[0] - 1.0), y * (size[1] - 1.0), z];
   };
 

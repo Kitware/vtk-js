@@ -320,7 +320,54 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     shaders.Vertex = VSSource;
     shaders.Fragment = FSSource;
 
+    publicAPI.replaceShaderClip(shaders, ren, actor);
     publicAPI.replaceShaderCoincidentOffset(shaders, ren, actor);
+  };
+
+  publicAPI.replaceShaderClip = (shaders, ren, actor) => {
+    let VSSource = shaders.Vertex;
+    let FSSource = shaders.Fragment;
+
+    if (model.renderable.getNumberOfClippingPlanes()) {
+      let numClipPlanes = model.renderable.getNumberOfClippingPlanes();
+      if (numClipPlanes > 6) {
+        macro.vtkErrorMacro('OpenGL has a limit of 6 clipping planes');
+        numClipPlanes = 6;
+      }
+      VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Clip::Dec', [
+        'uniform int numClipPlanes;',
+        'uniform vec4 clipPlanes[6];',
+        'varying float clipDistancesVSOutput[6];',
+      ]).result;
+
+      VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Clip::Impl', [
+        'for (int planeNum = 0; planeNum < 6; planeNum++)',
+        '    {',
+        '    if (planeNum >= numClipPlanes)',
+        '        {',
+        '        break;',
+        '        }',
+        '    clipDistancesVSOutput[planeNum] = dot(clipPlanes[planeNum], vertexMC);',
+        '    }',
+      ]).result;
+      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Clip::Dec', [
+        'uniform int numClipPlanes;',
+        'varying float clipDistancesVSOutput[6];',
+      ]).result;
+
+      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Clip::Impl', [
+        'for (int planeNum = 0; planeNum < 6; planeNum++)',
+        '    {',
+        '    if (planeNum >= numClipPlanes)',
+        '        {',
+        '        break;',
+        '        }',
+        '    if (clipDistancesVSOutput[planeNum] < 0.0) discard;',
+        '    }',
+      ]).result;
+    }
+    shaders.Vertex = VSSource;
+    shaders.Fragment = FSSource;
   };
 
   publicAPI.getNeedToRebuildShaders = (cellBO, ren, actor) => {
@@ -509,6 +556,33 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     const texOpacityUnit = model.pwfTexture.getTextureUnit();
     cellBO.getProgram().setUniformi('pwfTexture1', texOpacityUnit);
+
+    if (model.renderable.getNumberOfClippingPlanes()) {
+      // add all the clipping planes
+      let numClipPlanes = model.renderable.getNumberOfClippingPlanes();
+      if (numClipPlanes > 6) {
+        macro.vtkErrorMacro('OpenGL has a limit of 6 clipping planes');
+        numClipPlanes = 6;
+      }
+      const image = model.currentInput;
+      const w2imat4 = image.getWorldToIndex();
+      mat4.multiply(model.imagematinv, w2imat4, actor.getMatrix());
+      const planeEquations = [];
+      for (let i = 0; i < numClipPlanes; i++) {
+        const planeEquation = [];
+        model.renderable.getClippingPlaneInDataCoords(
+          model.imagematinv,
+          i,
+          planeEquation
+        );
+
+        for (let j = 0; j < 4; j++) {
+          planeEquations.push(planeEquation[j]);
+        }
+      }
+      cellBO.getProgram().setUniformi('numClipPlanes', numClipPlanes);
+      cellBO.getProgram().setUniform4fv('clipPlanes', 6, planeEquations);
+    }
   };
 
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
@@ -963,6 +1037,7 @@ const DEFAULT_VALUES = {
   openGLTexture: null,
   tris: null,
   imagemat: null,
+  imagematinv: null,
   colorTexture: null,
   pwfTexture: null,
   lastHaveSeenDepthRequest: false,
@@ -989,6 +1064,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.pwfTexture = vtkOpenGLTexture.newInstance();
 
   model.imagemat = mat4.identity(new Float64Array(16));
+  model.imagematinv = mat4.identity(new Float64Array(16));
 
   // Build VTK API
   macro.setGet(publicAPI, model, []);

@@ -50,6 +50,15 @@ export interface vtkAbstractMapper extends vtkAbstractMapperBase {
     setClippingPlanes(planes: vtkPlane[]): void;
 
     /**
+     * Get the ith clipping plane as a homogeneous plane equation.
+     * Use getNumberOfClippingPlanes() to get the number of planes.
+     * @param {mat4} propMatrix
+     * @param {Number} i
+     * @param {Number[]} hnormal
+     */
+    getClippingPlaneInDataCoords(propMatrix : mat4, i : number, hnormal : number[]): void;
+
+    /**
      * 
      */
     update(): void;

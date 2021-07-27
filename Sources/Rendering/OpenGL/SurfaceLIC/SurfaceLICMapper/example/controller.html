@@ -1,6 +1,6 @@
 <table>
   <tr>
-    <td><h3>LIC Configuration</h3></td>
+    <th colspan="2">LIC Configuration</th>
   </tr>
   <tr>
     <td><label for="enableLIC">Enable LIC:</label></td>
@@ -8,11 +8,11 @@
   </tr>
   <tr>
     <td><label for="numberOfSteps">Number of steps:</label></td>
-    <td><input id="numberOfSteps" type="number" min="0" max="100" step="1" value="40" required/></td>
+    <td><input id="numberOfSteps" type="number" min="0" max="100" step="1" value="30" required/></td>
   </tr>
   <tr>
     <td><label for="stepSize">Step size:</label></td>
-    <td><input id="stepSize" type="number" min="0" max="100" step="0.1" value="0.25" required/></td>
+    <td><input id="stepSize" type="number" min="0" max="100" step="0.1" value="0.5" required/></td>
   </tr>
   <tr>
     <td><label for="normalizeVectors">Normalize vectors:</label></td>
@@ -34,7 +34,7 @@
     </select></td>
   </tr>
   <td><label for="antiAlias">Anti aliasing steps:<label></td>
-    <td><input id="antiAlias" type="number" min="0"  step="1" value="1" required/></td>
+    <td><input id="antiAlias" type="number" min="0" max="100" step="1" value="1" required/></td>
   <tr>
     <td><label for="contrast">Contrast enhance:</label></td>
     <td><select id="contrast">
@@ -48,7 +48,7 @@
     <td><label for="viewPortScale">Viewport scale<label></td>
     <td><input id="viewPortScale" type="number" min="0" max="1" step="0.1" value="1.0" required/></td>
   </tr>
-  <tr><td><h3>Noise texture</h3></td></tr>
+  <tr><th colspan="2">Noise texture</th></tr>
   <tr>
     <td><label for="noiseType">Noise texture type:<label></td>
     <td><select id="noiseType">
@@ -82,9 +82,9 @@
   </tr>
   <tr>
     <td><label for="noiseSeed">RNG seed:<label></td>
-    <td><input id="noiseSeed" type="number"  step="1" value="0" required/></td>
+    <td><input id="noiseSeed" type="number" step="1" min="0" max="1000" value="0" required/></td>
   </tr>
   <tr>
-    <td><button id="rebuildNoise" type="button">Rebuild noise texture</button></td>
+    <td colspan="2" align="center"><button id="rebuildNoise" type="button">Rebuild noise texture</button></td>
   </tr>
 </table>
