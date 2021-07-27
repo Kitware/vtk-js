@@ -3,6 +3,7 @@ import macro from 'vtk.js/Sources/macro';
 import {
   AXES,
   transformVec3,
+  rotateVec3,
   handleTypeFromName,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ImageCroppingWidget/helpers';
 
@@ -76,7 +77,7 @@ export default function widgetBehavior(publicAPI, model) {
 
           // manipulator should be a line manipulator
           manipulator.setOrigin(transformVec3(center, indexToWorldT));
-          manipulator.setNormal(constraintAxis);
+          manipulator.setNormal(rotateVec3(constraintAxis, indexToWorldT));
           worldCoords = manipulator.handleEvent(
             callData,
             model.apiSpecificRenderWindow
@@ -87,7 +88,7 @@ export default function widgetBehavior(publicAPI, model) {
           // constrain to a plane with a normal parallel to the edge
           const edgeAxis = index.map((a) => (a === 1 ? a : 0));
 
-          manipulator.setNormal(edgeAxis);
+          manipulator.setNormal(rotateVec3(edgeAxis, indexToWorldT));
           worldCoords = manipulator.handleEvent(
             callData,
             model.apiSpecificRenderWindow
