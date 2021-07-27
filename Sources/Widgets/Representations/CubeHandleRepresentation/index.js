@@ -46,7 +46,7 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
     colorByArrayName: 'color',
     scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
   });
-  model.actor = vtkActor.newInstance();
+  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
   model.glyph = vtkCubeSource.newInstance();
 
   model.mapper.setInputConnection(publicAPI.getOutputPort(), 0);

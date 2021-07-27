@@ -348,7 +348,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     }
   });
 
-  model.actor = vtkActor.newInstance();
+  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
   model.actor.setMapper(model.mapper);
   model.actorVisibility = true;
 

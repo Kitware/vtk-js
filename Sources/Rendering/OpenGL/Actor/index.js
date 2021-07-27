@@ -53,9 +53,10 @@ function vtkOpenGLActor(publicAPI, model) {
   publicAPI.traverseOpaquePass = (renderPass) => {
     if (
       !model.renderable ||
-      !model.renderable.getVisibility() ||
+      !model.renderable.getNestedVisibility() ||
       !model.renderable.getIsOpaque() ||
-      (model.openGLRenderer.getSelector() && !model.renderable.getPickable())
+      (model.openGLRenderer.getSelector() &&
+        !model.renderable.getNestedPickable())
     ) {
       return;
     }
@@ -71,9 +72,10 @@ function vtkOpenGLActor(publicAPI, model) {
   publicAPI.traverseTranslucentPass = (renderPass) => {
     if (
       !model.renderable ||
-      !model.renderable.getVisibility() ||
+      !model.renderable.getNestedVisibility() ||
       model.renderable.getIsOpaque() ||
-      (model.openGLRenderer.getSelector() && !model.renderable.getPickable())
+      (model.openGLRenderer.getSelector() &&
+        !model.renderable.getNestedPickable())
     ) {
       return;
     }

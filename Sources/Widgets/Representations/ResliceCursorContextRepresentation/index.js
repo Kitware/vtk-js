@@ -24,7 +24,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   model.mapper = vtkMapper.newInstance();
-  model.actor = vtkActor.newInstance();
+  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
   model.mapper.setInputConnection(publicAPI.getOutputPort());
   model.actor.setMapper(model.mapper);
   publicAPI.addActor(model.actor);
@@ -33,7 +33,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
   model.pipelines.center = {
     source: vtkSphereSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance(),
+    actor: vtkActor.newInstance({ parentProp: publicAPI }),
   };
   model.pipelines.axes = [];
   // Create axis 1
@@ -41,34 +41,34 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
   axis1.line = {
     source: vtkCylinderSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true }),
+    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
   };
   axis1.rotation1 = {
     source: vtkSphereSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true }),
+    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
   };
   axis1.rotation2 = {
     source: vtkSphereSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true }),
+    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
   };
   // Create axis 2
   const axis2 = {};
   axis2.line = {
     source: vtkCylinderSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true }),
+    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
   };
   axis2.rotation1 = {
     source: vtkSphereSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true }),
+    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
   };
   axis2.rotation2 = {
     source: vtkSphereSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true }),
+    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
   };
 
   model.pipelines.axes.push(axis1);
@@ -211,17 +211,10 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     outData[0] = vtkPolyData.newInstance();
   };
 
-  publicAPI.updateActorVisibility = (
-    renderingType,
-    wVisible,
-    ctxVisible,
-    hVisible
-  ) => {
+  publicAPI.updateActorVisibility = (renderingType, ctxVisible, hVisible) => {
     const state = model.inputData[0];
     const visibility =
-      renderingType === RenderingTypes.PICKING_BUFFER
-        ? wVisible
-        : wVisible && hVisible;
+      hVisible || renderingType === RenderingTypes.PICKING_BUFFER;
 
     publicAPI.getActors().forEach((actor) => {
       actor.getProperty().setOpacity(state.getOpacity());

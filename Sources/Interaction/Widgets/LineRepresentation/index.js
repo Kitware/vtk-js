@@ -473,7 +473,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.lineSource.setResolution(5);
   model.lineMapper = vtkMapper.newInstance();
   model.lineMapper.setInputConnection(model.lineSource.getOutputPort());
-  model.lineActor = vtkActor.newInstance();
+  model.lineActor = vtkActor.newInstance({ parentProp: publicAPI });
   model.lineActor.setMapper(model.lineMapper);
 
   // Default properties

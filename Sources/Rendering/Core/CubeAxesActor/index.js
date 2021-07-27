@@ -757,7 +757,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.tmMapper.setInputData(model.tmPolyData);
   model.tmTexture = vtkTexture.newInstance();
   model.tmTexture.setInterpolate(false);
-  model.tmActor = vtkActor.newInstance();
+  model.tmActor = vtkActor.newInstance({ parentProp: publicAPI });
   model.tmActor.setMapper(model.tmMapper);
   model.tmActor.addTexture(model.tmTexture);
   model.tmCanvas = document.createElement('canvas');
@@ -773,7 +773,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     model.lastSize = size;
     model.lastAspectRatio = size[0] / size[1];
   });
-  model.pixelActor = vtkActor.newInstance();
+  model.pixelActor = vtkActor.newInstance({ parentProp: publicAPI });
   model.pixelActor.setMapper(model.pixelMapper);
 
   macro.setGet(publicAPI, model, [
