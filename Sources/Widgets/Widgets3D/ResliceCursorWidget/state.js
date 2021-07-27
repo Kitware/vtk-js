@@ -109,6 +109,7 @@ export default function generateState() {
     .addField({ name: 'center', initialValue: [0, 0, 0] })
     .addField({ name: 'opacity', initialValue: 1 })
     .addField({ name: 'activeLineState', initialValue: null })
+    .addField({ name: 'activeRotationPointName', initialValue: '' })
     .addField({ name: 'image', initialValue: null })
     .addField({ name: 'activeViewType', initialValue: null })
     .addField({ name: 'lineThickness', initialValue: 2 })

@@ -280,6 +280,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     const axis2State = state[getAxis2]();
 
     let activeLineState = null;
+    let activeRotationPointName = '';
     let methodName = '';
 
     switch (prop) {
@@ -293,18 +294,22 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
         break;
       case model.pipelines.axes[0].rotation1.actor:
         activeLineState = axis1State;
+        activeRotationPointName = 'point1';
         methodName = InteractionMethodsName.RotateLine;
         break;
       case model.pipelines.axes[0].rotation2.actor:
         activeLineState = axis1State;
+        activeRotationPointName = 'point2';
         methodName = InteractionMethodsName.RotateLine;
         break;
       case model.pipelines.axes[1].rotation1.actor:
         activeLineState = axis2State;
+        activeRotationPointName = 'point1';
         methodName = InteractionMethodsName.RotateLine;
         break;
       case model.pipelines.axes[1].rotation2.actor:
         activeLineState = axis2State;
+        activeRotationPointName = 'point2';
         methodName = InteractionMethodsName.RotateLine;
         break;
       default:
@@ -313,6 +318,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     }
 
     state.setActiveLineState(activeLineState);
+    state.setActiveRotationPointName(activeRotationPointName);
     state.setUpdateMethodName(methodName);
 
     return state;
