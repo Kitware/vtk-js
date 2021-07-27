@@ -69,7 +69,6 @@ function vtkAbstractWidget(publicAPI, model) {
       const representation = model.representations[i];
       representation.updateActorVisibility(
         renderingType,
-        model.visibility,
         model.contextVisibility,
         model.handleVisibility
       );

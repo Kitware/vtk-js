@@ -26,7 +26,7 @@ export interface vtkProp extends vtkObject {
     addEstimatedRenderTime(estimatedRenderTime: number): void;
 
     /**
-     * Not implemented yet
+     * To be reimplemented by subclasses.
      * For some exporters and other other operations we must be able
      * to collect all the actors or volumes.
      */
@@ -39,18 +39,48 @@ export interface vtkProp extends vtkObject {
 
     /**
      * Get the value of the dragable instance variable.
+     * @see getNestedDragable
+     * @see getPickable
      */
     getDragable(): boolean;
 
     /**
+     * Combine dragabe property with optional ancestor props dragable properties.
+     * It is used to decide whether the prop can be mouse dragged.
+     * @see getDragable
+     * @see getParentProp
+     */
+    getNestedDragable(): boolean;
+
+    /**
      * Get visibility of this vtkProp.
+     * @see getNestedVisibility
+     * @see getPickable
      */
     getVisibility(): boolean;
 
     /**
+     * Combine visibility property with optional ancestor props visibility properties.
+     * It is used to decide whether the prop should be rendered.
+     * @see getVisibility
+     * @see getParentProp
+     */
+    getNestedVisibility(): boolean;
+
+    /**
      * Get the pickable instance variable.
+     * @see getNestedPickable
+     * @see getDragable
      */
     getPickable(): boolean;
+
+    /**
+     * Combine pickable property with optional ancestor props pickable properties.
+     * It is used to decide whether the prop should be rendered during a selection rendering.
+     * @see getPickable
+     * @see getParentProp
+     */
+    getNestedPickable(): boolean;
 
     /**
      * Return the mtime of anything that would cause the rendered image to appear differently. 
@@ -81,6 +111,12 @@ export interface vtkProp extends vtkObject {
      * 
      */
     getNestedProps(): null;
+
+    /**
+     * Return parent prop set by setParentProp
+     * @see setParentProp
+     */
+    getParentProp(): vtkProp;
 
     /**
      * 
@@ -139,9 +175,12 @@ export interface vtkProp extends vtkObject {
     setAllocatedRenderTime(allocatedRenderTime: number): void;
 
     /**
-     * 
+     * Set whether prop is dragable.
+     * Even if true, prop may not be dragable if an ancestor prop is not dragable.
      * @param dragable 
      * @default true
+     * @see getDragable
+     * @see combineDragable
      */
     setDragable(dragable: boolean): boolean;
 
@@ -152,18 +191,34 @@ export interface vtkProp extends vtkObject {
     setEstimatedRenderTime(estimatedRenderTime: number): void;
 
     /**
-     * 
-     * @param visibility 
-     * @default true
+     * Set parent prop used by combineVisibility(), combinePickable(), combineDragable()
+     * @param parentProp
+     * @see combineVisibility
+     * @see combinePickable
+     * @see combineDragable
+     * @default null
      */
-    setVisibility(visibility: boolean): boolean;
+     setParentProp(parentProp: vtkProp): void;
 
     /**
-     * 
-     * @param pickable 
+     * Set whether prop is pickable.
+     * Even if true, prop may not be pickable if an ancestor prop is not pickable.
+     * @param pickable
      * @default true
+     * @see getPickable
+     * @see combinePickable
      */
-    setPickable(pickable: boolean): boolean;
+     setPickable(pickable: boolean): boolean;
+
+     /**
+      * Set whether prop is visible.
+      * Even if true, prop may not be visible if an ancestor prop is not visible.
+      * @param visibility
+      * @default true
+      * @see getVisibility
+      * @see combineVisibility
+      */
+    setVisibility(visibility: boolean): boolean;
 
     /**
      * In case the Visibility flag is true, tell if the bounds of this prop should be taken into 

@@ -66,7 +66,10 @@ function vtkSVGRepresentation(publicAPI, model) {
 
   let deferred = null;
 
-  model.psActor = vtkActor.newInstance({ pickable: false });
+  model.psActor = vtkActor.newInstance({
+    pickable: false,
+    parentProp: publicAPI,
+  });
   model.psMapper = vtkPixelSpaceCallbackMapper.newInstance();
   model.points = vtkPolyData.newInstance();
 
@@ -125,14 +128,13 @@ function vtkSVGRepresentation(publicAPI, model) {
 
   publicAPI.updateActorVisibility = (
     renderingType = RenderingTypes.FRONT_BUFFER,
-    widgetVisible = true,
     ctxVisible = true,
     handleVisible = true
   ) => {
     if (model.behavior === Behavior.CONTEXT) {
-      publicAPI.setVisibility(widgetVisible && ctxVisible);
+      publicAPI.setVisibility(ctxVisible);
     } else if (model.behavior === Behavior.HANDLE) {
-      publicAPI.setVisibility(widgetVisible && handleVisible);
+      publicAPI.setVisibility(handleVisible);
     }
   };
 

@@ -223,14 +223,11 @@ function vtkInteractorStyleImage(publicAPI, model) {
     model.currentImageNumber = i;
 
     function propMatch(j, prop, targetIndex) {
-      if (
+      return (
         prop.isA('vtkImageSlice') &&
         j === targetIndex &&
-        prop.getPickable()
-      ) {
-        return true;
-      }
-      return false;
+        prop.getNestedPickable()
+      );
     }
 
     const props = renderer.getViewProps();
@@ -239,11 +236,10 @@ function vtkInteractorStyleImage(publicAPI, model) {
       targetIndex += props.length;
     }
     let imageProp = null;
-    let foundImageProp = false;
-    for (let j = 0; j < props.length && !foundImageProp; j++) {
+    for (let j = 0; j < props.length; ++j) {
       if (propMatch(j, props[j], targetIndex)) {
-        foundImageProp = true;
         imageProp = props[j];
+        break;
       }
     }
 

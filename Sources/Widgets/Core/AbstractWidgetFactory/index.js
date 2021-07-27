@@ -56,6 +56,7 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
         .getRepresentationsForViewType(viewType)
         .map(({ builder, labels, initialValues }) =>
           builder.newInstance({
+            parentProp: widgetPublicAPI,
             labels,
             ...initialValues,
             ...widgetInitialValues,

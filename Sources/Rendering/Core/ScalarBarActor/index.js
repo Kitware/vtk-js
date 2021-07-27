@@ -812,7 +812,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.barMapper.setInterpolateScalarsBeforeMapping(true);
   model.polyData = vtkPolyData.newInstance();
   model.barMapper.setInputData(model.polyData);
-  model.barActor = vtkActor.newInstance();
+  model.barActor = vtkActor.newInstance({ parentProp: publicAPI });
   model.barActor.setMapper(model.barMapper);
   model.barActor.setProperty(publicAPI.getProperty());
 
@@ -829,7 +829,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.tmMapper.setInputData(model.tmPolyData);
   model.tmTexture = vtkTexture.newInstance();
   model.tmTexture.setInterpolate(false);
-  model.tmActor = vtkActor.newInstance();
+  model.tmActor = vtkActor.newInstance({ parentProp: publicAPI });
   model.tmActor.setMapper(model.tmMapper);
   model.tmActor.addTexture(model.tmTexture);
   model.tmActor.setProperty(publicAPI.getProperty());
