@@ -333,6 +333,11 @@ function vtkCubeAxesActor(publicAPI, model) {
   // main method to rebuild the cube axes, gets called on camera modify
   // and changes to key members
   publicAPI.update = () => {
+    // Can't do anything if we don't have a camera...
+    if (!model.camera) {
+      return;
+    }
+
     // compute what faces to draw
     const facesChanged = publicAPI.computeFacesToDraw();
     const facesToDraw = model.lastFacesToDraw;

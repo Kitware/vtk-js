@@ -23,6 +23,8 @@ import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageProperty from 'vtk.js/Sources/Rendering/Core/ImageProperty';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
+import vtkCubeAxesActor from 'vtk.js/Sources/Rendering/Core/CubeAxesActor';
+import vtkScalarBarActor from 'vtk.js/Sources/Rendering/Core/ScalarBarActor';
 
 // ----------------------------------------------------------------------------
 // Some internal, module-level variables and methods
@@ -577,6 +579,14 @@ const DEFAULT_MAPPING = {
   vtkPiecewiseFunction: {
     build: vtkPiecewiseFunction.newInstance,
     update: piecewiseFunctionUpdater,
+  },
+  vtkCubeAxesActor: {
+    build: vtkCubeAxesActor.newInstance,
+    update: genericUpdater,
+  },
+  vtkScalarBarActor: {
+    build: vtkScalarBarActor.newInstance,
+    update: genericUpdater,
   },
 };
 
