@@ -2,7 +2,7 @@ import pako from 'pako';
 
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import Base64 from 'vtk.js/Sources/Common/Core/Base64';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import BinaryHelper from 'vtk.js/Sources/IO/Core/BinaryHelper';
 

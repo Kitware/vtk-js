@@ -1,6 +1,6 @@
 import { mat4 } from 'gl-matrix';
 
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
@@ -35,9 +35,10 @@ function vtkWebGPUActor(publicAPI, model) {
   publicAPI.traverseOpaquePass = (renderPass) => {
     if (
       !model.renderable ||
-      !model.renderable.getVisibility() ||
+      !model.renderable.getNestedVisibility() ||
       !model.renderable.getIsOpaque() ||
-      (model.WebGPURenderer.getSelector() && !model.renderable.getPickable())
+      (model.WebGPURenderer.getSelector() &&
+        !model.renderable.getNestedPickable())
     ) {
       return;
     }
@@ -55,9 +56,10 @@ function vtkWebGPUActor(publicAPI, model) {
   publicAPI.traverseTranslucentPass = (renderPass) => {
     if (
       !model.renderable ||
-      !model.renderable.getVisibility() ||
+      !model.renderable.getNestedVisibility() ||
       model.renderable.getIsOpaque() ||
-      (model.WebGPURenderer.getSelector() && !model.renderable.getPickable())
+      (model.WebGPURenderer.getSelector() &&
+        !model.renderable.getNestedPickable())
     ) {
       return;
     }

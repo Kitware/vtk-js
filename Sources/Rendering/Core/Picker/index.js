@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkAbstractPicker from 'vtk.js/Sources/Rendering/Core/AbstractPicker';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -234,7 +234,7 @@ function vtkPicker(publicAPI, model) {
     const scale = [];
     props.forEach((prop) => {
       const mapper = prop.getMapper();
-      pickable = prop.getPickable() && prop.getVisibility();
+      pickable = prop.getNestedPickable() && prop.getNestedVisibility();
       if (prop.getProperty().getOpacity() <= 0.0) {
         pickable = false;
       }

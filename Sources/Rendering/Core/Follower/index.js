@@ -1,5 +1,5 @@
 import { vec3, mat4 } from 'gl-matrix';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 
 // ----------------------------------------------------------------------------

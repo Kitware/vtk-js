@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkCanvasView from 'vtk.js/Sources/Rendering/Misc/CanvasView';
 import vtkImageStream from 'vtk.js/Sources/IO/Core/ImageStream';
 import vtkInteractorStyleRemoteMouse from 'vtk.js/Sources/Interaction/Style/InteractorStyleRemoteMouse';

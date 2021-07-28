@@ -1,5 +1,5 @@
 import { vec3, mat4 } from 'gl-matrix';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkCompositeCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeCameraManipulator';
 import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeMouseManipulator';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';

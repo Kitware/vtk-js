@@ -1,6 +1,6 @@
 /* eslint-disable arrow-body-style */
 import otherStaticMethods from 'vtk.js/Sources/Rendering/Core/Mapper/Static';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 
 function addCoincidentTopologyMethods(publicAPI, model, nameList) {
   nameList.forEach((item) => {

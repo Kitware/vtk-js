@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import ImageHelper from 'vtk.js/Sources/Common/Core/ImageHelper';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 

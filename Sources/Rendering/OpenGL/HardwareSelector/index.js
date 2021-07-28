@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import Constants from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector/Constants';
 import vtkHardwareSelector from 'vtk.js/Sources/Rendering/Core/HardwareSelector';
 import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';

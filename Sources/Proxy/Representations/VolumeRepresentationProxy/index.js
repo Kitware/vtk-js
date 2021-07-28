@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkImageCropFilter from 'vtk.js/Sources/Filters/General/ImageCropFilter';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';

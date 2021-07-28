@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkMolecule from 'vtk.js/Sources/Common/DataModel/Molecule';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 

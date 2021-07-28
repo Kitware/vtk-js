@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkCoordinate from 'vtk.js/Sources/Rendering/Core/Coordinate';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 import vtkProperty2D from 'vtk.js/Sources/Rendering/Core/Property2D';

@@ -2,7 +2,7 @@
 // and inspired from Paul Kaplan (https://gist.github.com/paulkaplan/6d5f0ab2c7e8fdc68a61).
 
 import { vec3 } from 'gl-matrix';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 import { FormatTypes } from 'vtk.js/Sources/IO/Geometry/STLWriter/Constants';
 

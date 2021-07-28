@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
@@ -49,7 +49,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
    */
 
   model.displayMapper = vtkPixelSpaceCallbackMapper.newInstance();
-  model.displayActor = vtkActor.newInstance();
+  model.displayActor = vtkActor.newInstance({ parentProp: publicAPI });
   // model.displayActor.getProperty().setOpacity(0); // don't show in 3D
   model.displayActor.setMapper(model.displayMapper);
   model.displayMapper.setInputConnection(publicAPI.getOutputPort());
@@ -61,7 +61,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     colorByArrayName: 'color',
     scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
   });
-  model.actor = vtkActor.newInstance();
+  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
   model.glyph = vtkSphereSource.newInstance({
     phiResolution: model.glyphResolution,
     thetaResolution: model.glyphResolution,

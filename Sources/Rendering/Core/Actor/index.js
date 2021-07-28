@@ -1,5 +1,5 @@
 import { vec3, mat4 } from 'gl-matrix';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkProp3D from 'vtk.js/Sources/Rendering/Core/Prop3D';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';

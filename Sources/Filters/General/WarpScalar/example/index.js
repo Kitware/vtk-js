@@ -4,7 +4,7 @@ import 'vtk.js/Sources/favicon';
 import 'vtk.js/Sources/Rendering/Profiles/Geometry';
 
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtk from 'vtk.js/Sources/vtk';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
