@@ -99,6 +99,7 @@ uniform int cameraParallel;
 
 // values describing the volume geometry
 uniform vec3 vOriginVC;
+uniform vec3 vOriginPlusHalfVoxelVC;
 uniform vec3 vSpacing;
 uniform ivec3 volumeDimensions; // 3d texture dimensions
 uniform vec3 vPlaneNormal0;
@@ -873,6 +874,8 @@ void getRayPointIntersectionBounds(
   inout vec2 tbounds, vec3 vPlaneX, vec3 vPlaneY,
   float vSize1, float vSize2)
 {
+  vec3 halfVoxel = vOriginPlusHalfVoxelVC - vOriginVC;
+
   float result = dot(rayDir, planeDir);
   if (result == 0.0)
   {
@@ -880,7 +883,7 @@ void getRayPointIntersectionBounds(
   }
   result = -1.0 * (dot(rayPos, planeDir) + planeDist) / result;
   vec3 xposVC = rayPos + rayDir*result;
-  vec3 vxpos = xposVC - vOriginVC;
+  vec3 vxpos = xposVC - vOriginVC + halfVoxel;
   vec2 vpos = vec2(
     dot(vxpos, vPlaneX),
     dot(vxpos, vPlaneY));
@@ -914,7 +917,7 @@ vec2 computeRayDistances(vec3 rayDir, vec3 tdims)
 {
   vec2 dists = vec2(100.0*camFar, -1.0);
 
-  vec3 vSize = vSpacing*(tdims - 1.0);
+  vec3 vSize = vSpacing*(tdims);
 
   // all this is in View Coordinates
   getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
@@ -959,7 +962,9 @@ vec2 computeRayDistances(vec3 rayDir, vec3 tdims)
 void computeIndexSpaceValues(out vec3 pos, out vec3 endPos, out float sampleDistanceIS, vec3 rayDir, vec2 dists)
 {
   // compute starting and ending values in volume space
-  pos = vertexVCVSOutput + dists.x*rayDir;
+  vec3 halfVoxel = vOriginPlusHalfVoxelVC - vOriginVC;
+
+  pos = vertexVCVSOutput + dists.x*rayDir + halfVoxel;
   pos = pos - vOriginVC;
   // convert to volume basis and origin
   pos = vec3(
@@ -967,7 +972,7 @@ void computeIndexSpaceValues(out vec3 pos, out vec3 endPos, out float sampleDist
     dot(pos, vPlaneNormal2),
     dot(pos, vPlaneNormal4));
 
-  endPos = vertexVCVSOutput + dists.y*rayDir;
+  endPos = vertexVCVSOutput + dists.y*rayDir + halfVoxel;
   endPos = endPos - vOriginVC;
   endPos = vec3(
     dot(endPos, vPlaneNormal0),

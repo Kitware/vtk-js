@@ -581,7 +581,16 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     program.setUniformf('camFar', crange[1]);
 
     const bounds = model.currentInput.getBounds();
+    const spc = model.currentInput.getSpacing();
     const dims = model.currentInput.getDimensions();
+
+    const physicalBounds = [...bounds];
+    physicalBounds[0] -= 0.5 * spc[0];
+    physicalBounds[1] += 0.5 * spc[0];
+    physicalBounds[2] -= 0.5 * spc[1];
+    physicalBounds[3] += 0.5 * spc[1];
+    physicalBounds[4] -= 0.5 * spc[2];
+    physicalBounds[5] += 0.5 * spc[2];
 
     // compute the viewport bounds of the volume
     // we will only render those fragments.
@@ -595,9 +604,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     for (let i = 0; i < 8; ++i) {
       vec3.set(
         pos,
-        bounds[i % 2],
-        bounds[2 + (Math.floor(i / 2) % 2)],
-        bounds[4 + Math.floor(i / 4)]
+        physicalBounds[i % 2],
+        physicalBounds[2 + (Math.floor(i / 2) % 2)],
+        physicalBounds[4 + Math.floor(i / 4)]
       );
       vec3.transformMat4(pos, pos, model.modelToView);
       if (!cam.getParallelProjection()) {
@@ -630,7 +639,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     }
 
     const ext = model.currentInput.getExtent();
-    const spc = model.currentInput.getSpacing();
     const vsize = new Float64Array(3);
     vec3.set(
       vsize,
@@ -645,6 +653,12 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     vec3.transformMat4(pos, pos, model.modelToView);
     program.setUniform3f('vOriginVC', pos[0], pos[1], pos[2]);
+
+    vec3.set(pos, ext[0] + 0.5, ext[2] + 0.5, ext[4] + 0.5);
+    model.currentInput.indexToWorldVec3(pos, pos);
+
+    vec3.transformMat4(pos, pos, model.modelToView);
+    program.setUniform3f('vOriginPlusHalfVoxelVC', pos[0], pos[1], pos[2]);
 
     // apply the image directions
     const i2wmat4 = model.currentInput.getIndexToWorld();
@@ -697,27 +711,27 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         default:
         case 0:
           vec3.set(normal, 1.0, 0.0, 0.0);
-          vec3.set(pos2, ext[1], ext[3], ext[5]);
+          vec3.set(pos2, ext[1] + 0.5, ext[3] + 0.5, ext[5] + 0.5);
           break;
         case 1:
           vec3.set(normal, -1.0, 0.0, 0.0);
-          vec3.set(pos2, ext[0], ext[2], ext[4]);
+          vec3.set(pos2, ext[0] - 0.5, ext[2] - 0.5, ext[4] - 0.5);
           break;
         case 2:
           vec3.set(normal, 0.0, 1.0, 0.0);
-          vec3.set(pos2, ext[1], ext[3], ext[5]);
+          vec3.set(pos2, ext[1] + 0.5, ext[3] + 0.5, ext[5] + 0.5);
           break;
         case 3:
           vec3.set(normal, 0.0, -1.0, 0.0);
-          vec3.set(pos2, ext[0], ext[2], ext[4]);
+          vec3.set(pos2, ext[0] - 0.5, ext[2] - 0.5, ext[4] - 0.5);
           break;
         case 4:
           vec3.set(normal, 0.0, 0.0, 1.0);
-          vec3.set(pos2, ext[1], ext[3], ext[5]);
+          vec3.set(pos2, ext[1] + 0.5, ext[3] + 0.5, ext[5] + 0.5);
           break;
         case 5:
           vec3.set(normal, 0.0, 0.0, -1.0);
-          vec3.set(pos2, ext[0], ext[2], ext[4]);
+          vec3.set(pos2, ext[0] - 0.5, ext[2] - 0.5, ext[4] - 0.5);
           break;
       }
       vec3.transformMat3(normal, normal, model.idxNormalMatrix);
