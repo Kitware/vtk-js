@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkDistanceRepresentation from 'vtk.js/Sources/Interaction/Widgets/DistanceRepresentation';
 import vtkLabelWidget from 'vtk.js/Sources/Interaction/Widgets/LabelWidget';
 import vtkLineWidget from 'vtk.js/Sources/Interaction/Widgets/LineWidget';

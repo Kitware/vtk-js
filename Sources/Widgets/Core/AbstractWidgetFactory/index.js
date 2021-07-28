@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkAbstractWidget from 'vtk.js/Sources/Widgets/Core/AbstractWidget';
 import { extractRenderingComponents } from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 

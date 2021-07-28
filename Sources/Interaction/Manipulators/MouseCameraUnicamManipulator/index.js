@@ -3,7 +3,7 @@ import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulator
 import vtkInteractorStyleConstants from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 import vtkMouseCameraUnicamRotateManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraUnicamRotateManipulator';
 
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { States } = vtkInteractorStyleConstants;

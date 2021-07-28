@@ -3,7 +3,7 @@ import 'vtk.js/Sources/Common/DataModel/ImageData';
 import 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import vtk from 'vtk.js/Sources/vtk';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkStringArray from 'vtk.js/Sources/Common/Core/StringArray';

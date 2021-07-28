@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 
 export default function addViewHandlingAPI(publicAPI, model) {
   publicAPI.create3DView = (options) =>

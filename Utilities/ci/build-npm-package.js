@@ -12,6 +12,11 @@ function copyDirSync(src, dst) {
   return fs.copySync(src, path.join(dst, dirname));
 }
 
+function applyMacroShim(srcRoot) {
+  fs.copySync(path.join('Utilities', 'ci', 'macro-shim.js'), path.join(srcRoot, 'macro.js'));
+  fs.copySync(path.join('Utilities', 'ci', 'macro-shim.d.ts'), path.join(srcRoot, 'macro.d.ts'));
+}
+
 function prepareESM() {
   const pkgdir = path.join(rootdir, 'esm');
   fs.ensureDirSync(pkgdir);
@@ -73,6 +78,8 @@ function prepareESM() {
   pkgInfo.module = './index.js';
 
   fs.writeFileSync(packageJson, JSON.stringify(pkgInfo, null, 2));
+
+  applyMacroShim(pkgdir);
 }
 
 function prepareUMD() {
@@ -127,6 +134,8 @@ function prepareUMD() {
   delete pkgInfo.module;
 
   fs.writeFileSync(packageJson, JSON.stringify(pkgInfo, null, 2));
+
+  applyMacroShim(path.join(pkgdir, 'Sources'));
 }
 
 fs.removeSync(rootdir);

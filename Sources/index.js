@@ -8,7 +8,7 @@ import VTKProxy from './Proxy';
 import ThirdParty from './ThirdParty';
 import Widgets from './Widgets';
 
-import macro from './macro';
+import macro from './macros';
 
 import vtk from './vtk';
 

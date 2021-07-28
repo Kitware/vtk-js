@@ -1,5 +1,5 @@
 import HandleRepConstants from 'vtk.js/Sources/Interaction/Widgets/HandleRepresentation/Constants';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkAbstractWidget from 'vtk.js/Sources/Interaction/Widgets/AbstractWidget';
 import vtkHandleWidget from 'vtk.js/Sources/Interaction/Widgets/HandleWidget';
 import vtkLineRepresentation from 'vtk.js/Sources/Interaction/Widgets/LineRepresentation';

@@ -1,4 +1,4 @@
-import * as macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macros';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUTextureManager from 'vtk.js/Sources/Rendering/WebGPU/TextureManager';
@@ -119,7 +119,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.pipelines = {};
 
-  // For more macro methods, see "Sources/macro.js"
+  // For more macro methods, see "Sources/macros.js"
   // Object specific methods
   vtkWebGPUDevice(publicAPI, model);
 }

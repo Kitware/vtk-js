@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkWebGPUShaderModule from 'vtk.js/Sources/Rendering/WebGPU/ShaderModule';
 
 // perform in place string substitutions, indicate if a substitution was done

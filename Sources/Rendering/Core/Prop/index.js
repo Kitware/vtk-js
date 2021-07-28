@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 
 function notImplemented(method) {
   return () => macro.vtkErrorMacro(`vtkProp::${method} - NOT IMPLEMENTED`);

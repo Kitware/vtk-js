@@ -1,7 +1,7 @@
 import { vec3 } from 'gl-matrix';
 import WebworkerPromise from 'webworker-promise';
 
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPolygon from 'vtk.js/Sources/Common/DataModel/Polygon';

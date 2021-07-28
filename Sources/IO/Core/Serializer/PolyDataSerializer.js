@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkFieldDataSerializer from 'vtk.js/Sources/IO/Core/Serializer/FieldDataSerializer';
 

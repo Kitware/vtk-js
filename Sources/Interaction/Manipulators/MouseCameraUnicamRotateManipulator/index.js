@@ -8,7 +8,7 @@ import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 import { mat4, vec3 } from 'gl-matrix';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { States } = vtkInteractorStyleConstants;
