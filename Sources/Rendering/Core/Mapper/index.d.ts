@@ -500,6 +500,11 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	 *
 	 */
 	valueToColor(): void;
+
+	/**
+	 *
+	 */
+	setInterpolateScalarsBeforeMapping(interpolateScalarsBeforeMapping: boolean): boolean;
 }
 
 /**

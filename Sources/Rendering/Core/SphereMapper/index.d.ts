@@ -20,7 +20,7 @@ export interface vtkSphereMapper extends vtkMapper {
      * 
      * @param {Number} radius 
      */
-    setRaduis(radius: number): boolean;
+    setRadius(radius: number): boolean;
 
     /**
      * 
