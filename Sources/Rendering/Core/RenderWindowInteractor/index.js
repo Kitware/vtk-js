@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import Constants from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
@@ -1070,7 +1070,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'picker',
   ]);
 
-  // For more macro methods, see "Sources/macro.js"
+  // For more macro methods, see "Sources/macros.js"
 
   // Object specific methods
   vtkRenderWindowInteractor(publicAPI, model);

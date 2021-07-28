@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
 export function intersectDisplayWithPlane(

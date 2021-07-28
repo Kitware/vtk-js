@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import Constants from 'vtk.js/Sources/Common/DataModel/Line/Constants';
 import vtkCell from 'vtk.js/Sources/Common/DataModel/Cell';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';

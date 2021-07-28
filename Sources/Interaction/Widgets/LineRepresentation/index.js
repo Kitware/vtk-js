@@ -1,5 +1,5 @@
 import Constants from 'vtk.js/Sources/Interaction/Widgets/LineRepresentation/Constants';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';

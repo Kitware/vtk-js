@@ -6,7 +6,7 @@ import 'vtk.js/Sources/favicon';
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import 'vtk.js/Sources/Rendering/Profiles/Volume';
 
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';

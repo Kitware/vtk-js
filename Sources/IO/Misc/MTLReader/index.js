@@ -1,4 +1,4 @@
-import * as macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macros';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 

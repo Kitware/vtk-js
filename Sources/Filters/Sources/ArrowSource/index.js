@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkAppendPolyData from 'vtk.js/Sources/Filters/General/AppendPolyData';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';

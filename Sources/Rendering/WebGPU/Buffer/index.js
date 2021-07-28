@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import Constants from 'vtk.js/Sources/Rendering/WebGPU/BufferManager/Constants';
 
 // methods we forward to the handle

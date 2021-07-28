@@ -1,4 +1,4 @@
-import * as macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macros';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 
 function arraysEqual(a, b) {
@@ -172,7 +172,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, ['created', 'device', 'handle']);
 
-  // For more macro methods, see "Sources/macro.js"
+  // For more macro methods, see "Sources/macros.js"
   // Object specific methods
   vtkWebGPUVertexInput(publicAPI, model);
 }

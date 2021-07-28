@@ -1,5 +1,5 @@
 import Constants from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/Constants';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math/';
 import {
   calculateTextPosition,

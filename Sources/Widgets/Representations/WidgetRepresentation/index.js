@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 import { subtract, dot } from 'vtk.js/Sources/Common/Core/Math';
 

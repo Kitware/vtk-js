@@ -1,7 +1,7 @@
 import { vec3, mat4 } from 'gl-matrix';
 import * as d3 from 'd3-scale';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';

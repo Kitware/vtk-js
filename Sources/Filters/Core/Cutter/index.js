@@ -1,4 +1,4 @@
-import * as macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macros';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 const { vtkErrorMacro } = macro;

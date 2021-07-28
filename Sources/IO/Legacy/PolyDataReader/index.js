@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import vtkLegacyAsciiParser from 'vtk.js/Sources/IO/Legacy/LegacyAsciiParser';
 

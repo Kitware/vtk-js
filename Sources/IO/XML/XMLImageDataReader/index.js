@@ -1,5 +1,5 @@
 import vtkXMLReader from 'vtk.js/Sources/IO/XML/XMLReader';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 
 // ----------------------------------------------------------------------------

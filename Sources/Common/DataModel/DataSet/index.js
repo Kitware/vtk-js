@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtk from 'vtk.js/Sources/vtk';
 import vtkDataSetAttributes from 'vtk.js/Sources/Common/DataModel/DataSetAttributes';
 import Constants from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';

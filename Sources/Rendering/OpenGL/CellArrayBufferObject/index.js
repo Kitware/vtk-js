@@ -1,6 +1,6 @@
 import { mat4, quat, vec3 } from 'gl-matrix';
 
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkBufferObject from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
 import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';

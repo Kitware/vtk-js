@@ -1,5 +1,5 @@
 import vtk from 'vtk.js/Sources/vtk';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 

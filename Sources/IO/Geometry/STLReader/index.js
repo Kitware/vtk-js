@@ -1,6 +1,6 @@
 import BinaryHelper from 'vtk.js/Sources/IO/Core/BinaryHelper';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';

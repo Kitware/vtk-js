@@ -1,6 +1,6 @@
 import { radiansFromDegrees } from 'vtk.js/Sources/Common/Core/Math';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkSelectionNode from 'vtk.js/Sources/Common/DataModel/SelectionNode';
 import Constants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import vtkSVGRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGRepresentation';
