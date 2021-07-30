@@ -99,9 +99,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     let scaledLineThickness = lineThickness;
     if (publicAPI.getScaleInPixels()) {
       const centerCoords = model.pipelines.center.source.getCenter();
-      scaledLineThickness *=
-        window.devicePixelRatio *
-        publicAPI.getPixelWorldHeightAtCoord(centerCoords);
+      scaledLineThickness *= publicAPI.getPixelWorldHeightAtCoord(centerCoords);
     }
     model.pipelines.axes[0].line.source.setRadius(scaledLineThickness);
     model.pipelines.axes[1].line.source.setRadius(scaledLineThickness);
@@ -131,9 +129,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     let scaledRadius = radius;
     if (publicAPI.getScaleInPixels()) {
       const centerCoords = source.getCenter();
-      scaledRadius *=
-        window.devicePixelRatio *
-        publicAPI.getPixelWorldHeightAtCoord(centerCoords);
+      scaledRadius *= publicAPI.getPixelWorldHeightAtCoord(centerCoords);
     }
     source.setRadius(scaledRadius);
   };
@@ -162,10 +158,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
       const pixelWorldHeight = publicAPI.getPixelWorldHeightAtCoord(center);
       const { rendererPixelDims } = model.displayScaleParams;
       const minDim = Math.min(rendererPixelDims[0], rendererPixelDims[1]);
-      distance =
-        (window.devicePixelRatio *
-          (handleDistanceToCenter * pixelWorldHeight * minDim)) /
-        2;
+      distance = (handleDistanceToCenter * pixelWorldHeight * minDim) / 2;
     } else {
       distance = (handleDistanceToCenter * length) / 2;
     }

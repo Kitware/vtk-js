@@ -222,7 +222,7 @@ function vtkWidgetRepresentation(publicAPI, model) {
     }
 
     const rHeight = rendererPixelDims[1];
-    return scale / rHeight;
+    return (window.devicePixelRatio * scale) / rHeight;
   };
 
   // Make sure setting the labels at build time works with string/array...
