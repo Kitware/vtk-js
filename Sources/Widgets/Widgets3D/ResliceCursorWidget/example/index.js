@@ -143,6 +143,7 @@ for (let i = 0; i < 4; i++) {
   if (i < 3) {
     obj.interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
     obj.widgetInstance = obj.widgetManager.addWidget(widget, xyzToViewType[i]);
+    obj.widgetInstance.setScaleInPixels(true);
     obj.widgetManager.enablePicking();
     // Use to update all renderers buffer when actors are moved
     obj.widgetManager.setCaptureOn(CaptureOn.MOUSE_MOVE);
@@ -398,6 +399,14 @@ checkboxRotation.addEventListener('change', (ev) => {
 const checkboxTranslation = document.getElementById('checkboxTranslation');
 checkboxTranslation.addEventListener('change', (ev) => {
   widgetState.setEnableTranslation(checkboxTranslation.checked);
+});
+
+const checkboxScaleInPixels = document.getElementById('checkboxScaleInPixels');
+checkboxScaleInPixels.addEventListener('change', (ev) => {
+  viewAttributes.forEach((obj) => {
+    obj.widgetInstance.setScaleInPixels(checkboxScaleInPixels.checked);
+    obj.interactor.render();
+  });
 });
 
 const optionSlabModeMin = document.getElementById('slabModeMin');
