@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkPointPicker from 'vtk.js/Sources/Rendering/Core/PointPicker';
 
 const MAX_POINTS = 3;

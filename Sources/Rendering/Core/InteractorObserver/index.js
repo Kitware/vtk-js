@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 
 const { vtkErrorMacro, VOID } = macro;
@@ -170,7 +170,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create get-set macros
   macro.setGet(publicAPI, model, ['priority', 'processEvents']);
 
-  // For more macro methods, see "Sources/macro.js"
+  // For more macro methods, see "Sources/macros.js"
 
   // Object specific methods
   vtkInteractorObserver(publicAPI, model);

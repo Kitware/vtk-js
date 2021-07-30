@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkHardwareSelector from 'vtk.js/Sources/Rendering/Core/HardwareSelector';
 import vtkWebGPUBuffer from 'vtk.js/Sources/Rendering/WebGPU/Buffer';
 import vtkWebGPUHardwareSelectionPass from 'vtk.js/Sources/Rendering/WebGPU/HardwareSelectionPass';

@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkAbstractImageInterpolator from 'vtk.js/Sources/Imaging/Core/AbstractImageInterpolator';
 import {
   vtkInterpolationWeights,

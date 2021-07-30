@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCellPicker from 'vtk.js/Sources/Rendering/Core/CellPicker';
 import vtkHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets/HandleRepresentation';
@@ -364,7 +364,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.sphere.setPhiResolution(8);
   model.mapper = vtkMapper.newInstance();
   model.mapper.setInputConnection(model.sphere.getOutputPort());
-  model.actor = vtkActor.newInstance();
+  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
   model.actor.setMapper(model.mapper);
 
   publicAPI.setHandleSize(15);

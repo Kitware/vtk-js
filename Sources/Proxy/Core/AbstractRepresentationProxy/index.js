@@ -1,4 +1,4 @@
-import * as macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macros';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';

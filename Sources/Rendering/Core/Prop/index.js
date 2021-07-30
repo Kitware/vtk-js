@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 
 function notImplemented(method) {
   return () => macro.vtkErrorMacro(`vtkProp::${method} - NOT IMPLEMENTED`);
@@ -30,6 +30,16 @@ function vtkProp(publicAPI, model) {
 
   publicAPI.pick = notImplemented('pick');
   publicAPI.hasKey = notImplemented('hasKey');
+
+  publicAPI.getNestedVisibility = () =>
+    model.visibility &&
+    (!model.parentProp || model.parentProp.getNestedVisibility());
+  publicAPI.getNestedPickable = () =>
+    model.pickable &&
+    (!model.parentProp || model.parentProp.getNestedPickable());
+  publicAPI.getNestedDragable = () =>
+    model.dragable &&
+    (!model.parentProp || model.parentProp.getNestedDragable());
 
   publicAPI.getRedrawMTime = () => model.mtime;
 
@@ -108,6 +118,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'dragable',
     'useBounds',
     'renderTimeMultiplier',
+    'parentProp',
   ]);
 
   // Object methods

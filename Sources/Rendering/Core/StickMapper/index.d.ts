@@ -37,7 +37,7 @@ export interface vtkStickMapper extends vtkMapper {
      * 
      * @param {Number} radius 
      */
-    setRaduis(radius: number): boolean;
+    setRadius(radius: number): boolean;
 
     /**
      * 

@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkAbstractWidget from 'vtk.js/Sources/Widgets/Core/AbstractWidget';
 import { extractRenderingComponents } from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 
@@ -56,6 +56,7 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
         .getRepresentationsForViewType(viewType)
         .map(({ builder, labels, initialValues }) =>
           builder.newInstance({
+            parentProp: widgetPublicAPI,
             labels,
             ...initialValues,
             ...widgetInitialValues,

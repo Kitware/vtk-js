@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import { vec3 } from 'gl-matrix';
 
 export default function widgetBehavior(publicAPI, model) {
@@ -42,6 +42,7 @@ export default function widgetBehavior(publicAPI, model) {
         model.freehandMinDistance * model.freehandMinDistance
     ) {
       model.lastHandle = model.widgetState.addHandle();
+      model.lastHandle.setVisible(false);
       model.lastHandle.setOrigin(...model.moveHandle.getOrigin());
       model.lastHandle.setColor(model.moveHandle.getColor());
       model.lastHandle.setScale1(model.moveHandle.getScale1());

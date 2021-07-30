@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';

@@ -88,7 +88,7 @@
     "karma-tap": "4.2.0",
     "karma-tap-pretty-reporter": "4.2.0",
     "karma-webpack": "5.0.0",
-    "kw-doc": "3.0.6",
+    "kw-doc": "3.0.7",
     "lodash": "^4.17.21",
     "magic-string": "0.25.7",
     "moment": "2.29.1",

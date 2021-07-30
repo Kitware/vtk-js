@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';

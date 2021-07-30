@@ -1,6 +1,6 @@
 import { quat, vec3, vec4, mat4 } from 'gl-matrix';
 
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { vtkDebugMacro } = macro;

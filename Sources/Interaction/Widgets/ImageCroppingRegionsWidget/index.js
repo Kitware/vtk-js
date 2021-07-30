@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkAbstractWidget from 'vtk.js/Sources/Interaction/Widgets/AbstractWidget';

@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 
 // ----------------------------------------------------------------------------
@@ -412,7 +412,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create get-set macros
   macro.setGet(publicAPI, model, ['forceEmulation']);
 
-  // For more macro methods, see "Sources/macro.js"
+  // For more macro methods, see "Sources/macros.js"
 
   // Object specific methods
   vtkOpenGLVertexArrayObject(publicAPI, model);

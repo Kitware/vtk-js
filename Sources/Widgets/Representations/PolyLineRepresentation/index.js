@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -65,7 +65,7 @@ function vtkPolyLineRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   model.mapper = vtkMapper.newInstance();
-  model.actor = vtkActor.newInstance();
+  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
   model.tubes = vtkTubeFilter.newInstance({
     radius: model.lineThickness,
     numberOfSides: 12,
@@ -151,12 +151,7 @@ function vtkPolyLineRepresentation(publicAPI, model) {
    */
   publicAPI.getSelectedState = (prop, compositeID) => model.inputData[0];
 
-  publicAPI.updateActorVisibility = (
-    renderingType,
-    wVisible,
-    ctxVisible,
-    hVisible
-  ) => {
+  publicAPI.updateActorVisibility = (renderingType, ctxVisible, hVisible) => {
     const state = model.inputData[0];
 
     // Make lines/tubes thicker for picking
@@ -172,7 +167,6 @@ function vtkPolyLineRepresentation(publicAPI, model) {
 
     return superClass.updateActorVisibility(
       renderingType,
-      wVisible && isValid,
       ctxVisible && isValid,
       hVisible && isValid
     );

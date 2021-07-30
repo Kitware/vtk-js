@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
@@ -66,7 +66,10 @@ function vtkSVGRepresentation(publicAPI, model) {
 
   let deferred = null;
 
-  model.psActor = vtkActor.newInstance({ pickable: false });
+  model.psActor = vtkActor.newInstance({
+    pickable: false,
+    parentProp: publicAPI,
+  });
   model.psMapper = vtkPixelSpaceCallbackMapper.newInstance();
   model.points = vtkPolyData.newInstance();
 
@@ -125,14 +128,13 @@ function vtkSVGRepresentation(publicAPI, model) {
 
   publicAPI.updateActorVisibility = (
     renderingType = RenderingTypes.FRONT_BUFFER,
-    widgetVisible = true,
     ctxVisible = true,
     handleVisible = true
   ) => {
     if (model.behavior === Behavior.CONTEXT) {
-      publicAPI.setVisibility(widgetVisible && ctxVisible);
+      publicAPI.setVisibility(ctxVisible);
     } else if (model.behavior === Behavior.HANDLE) {
-      publicAPI.setVisibility(widgetVisible && handleVisible);
+      publicAPI.setVisibility(handleVisible);
     }
   };
 

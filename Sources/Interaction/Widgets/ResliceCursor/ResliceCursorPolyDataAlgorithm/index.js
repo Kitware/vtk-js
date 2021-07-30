@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 
 import { PlaneNormal } from 'vtk.js/Sources/Interaction/Widgets/ResliceCursor/ResliceCursorActor/Constants';
 

@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkCellPicker from 'vtk.js/Sources/Rendering/Core/CellPicker';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';

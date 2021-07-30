@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
@@ -137,7 +137,9 @@ export function extend(publicAPI, model, initialValues = {}) {
       i
     ].setResolveCoincidentTopologyLineOffsetParameters(-1.0, -1.0);
 
-    model.cursorCenterlineActor[i] = vtkActor.newInstance();
+    model.cursorCenterlineActor[i] = vtkActor.newInstance({
+      parentProp: publicAPI,
+    });
     model.cursorCenterlineActor[i].setMapper(model.cursorCenterlineMapper[i]);
 
     model.centerlineProperty[i] = vtkProperty.newInstance();

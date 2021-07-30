@@ -94,3 +94,4 @@ import './Widgets/Widgets3D/ResliceCursorWidget/test/testBoundPlane';
 import './Widgets/Widgets3D/ResliceCursorWidget/test/testHelper';
 import './Widgets/Widgets3D/ResliceCursorWidget/test/testMultipleRotationPlanes';
 import './Widgets/Widgets3D/ResliceCursorWidget/test/testRotateVector';
+import './Widgets/Widgets3D/SplineWidget/test/testSplineWidget';

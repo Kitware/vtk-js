@@ -1,6 +1,6 @@
 import { mat4, vec3 } from 'gl-matrix';
 
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 // ----------------------------------------------------------------------------

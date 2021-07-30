@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import { States } from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
@@ -223,7 +223,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
     model.currentImageNumber = i;
 
     function propMatch(j, prop, targetIndex) {
-      return j === targetIndex && prop.getPickable();
+      return j === targetIndex && prop.getNestedPickable();
     }
 
     const props = renderer
@@ -280,7 +280,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, ['interactionMode']);
   macro.get(publicAPI, model, ['currentImageProperty']);
 
-  // For more macro methods, see "Sources/macro.js"
+  // For more macro methods, see "Sources/macros.js"
 
   // Object specific methods
   vtkInteractorStyleImage(publicAPI, model);

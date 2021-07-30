@@ -1,4 +1,4 @@
-import * as macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macros';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 
 // methods we forward to the handle
@@ -196,7 +196,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'replaceShaderCodeFunction',
   ]);
 
-  // For more macro methods, see "Sources/macro.js"
+  // For more macro methods, see "Sources/macros.js"
   // Object specific methods
   vtkWebGPURenderEncoder(publicAPI, model);
 }

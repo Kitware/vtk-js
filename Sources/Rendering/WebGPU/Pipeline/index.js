@@ -1,4 +1,4 @@
-import * as macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macros';
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUPipeline methods
@@ -110,7 +110,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'vertexState',
   ]);
 
-  // For more macro methods, see "Sources/macro.js"
+  // For more macro methods, see "Sources/macros.js"
   // Object specific methods
   vtkWebGPUPipeline(publicAPI, model);
 }
