@@ -1,6 +1,6 @@
 import BinaryHelper from 'vtk.js/Sources/IO/Core/BinaryHelper';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
@@ -103,7 +103,13 @@ function vtkSTLReader(publicAPI, model) {
 
   // Internal method to fetch Array
   function fetchData(url, option = {}) {
-    const { compression, progressCallback } = model;
+    const compression =
+      option.compression !== undefined ? option.compression : model.compression;
+    const progressCallback =
+      option.progressCallback !== undefined
+        ? option.progressCallback
+        : model.progressCallback;
+
     if (option.binary) {
       return model.dataAccessHelper.fetchBinary(url, {
         compression,
@@ -125,13 +131,8 @@ function vtkSTLReader(publicAPI, model) {
     path.pop();
     model.baseURL = path.join('/');
 
-    model.compression = option.compression;
-
     // Fetch metadata
-    return publicAPI.loadData({
-      progressCallback: option.progressCallback,
-      binary: !!option.binary,
-    });
+    return publicAPI.loadData(option);
   };
 
   // Fetch the actual data arrays

@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkSerializer from 'vtk.js/Sources/IO/Core/Serializer';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 

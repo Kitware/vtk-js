@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 import { subtract, dot } from 'vtk.js/Sources/Common/Core/Math';
 
@@ -129,7 +129,6 @@ function vtkWidgetRepresentation(publicAPI, model) {
 
   publicAPI.updateActorVisibility = (
     renderingType = RenderingTypes.FRONT_BUFFER,
-    widgetVisible = true,
     ctxVisible = true,
     handleVisible = true
   ) => {
@@ -140,13 +139,13 @@ function vtkWidgetRepresentation(publicAPI, model) {
           renderingType === RenderingTypes.PICKING_BUFFER || handleVisible;
         break;
       case Behavior.CONTEXT:
-        otherFlag = renderingType === RenderingTypes.FRONT_BUFFER && ctxVisible;
+        otherFlag = ctxVisible;
         break;
       default:
         otherFlag = true;
         break;
     }
-    const visibilityFlag = widgetVisible && otherFlag;
+    const visibilityFlag = otherFlag;
     for (let i = 0; i < model.actors.length; i++) {
       if (model.visibilityFlagArray) {
         model.actors[i].setVisibility(

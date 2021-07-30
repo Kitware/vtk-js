@@ -2,7 +2,7 @@ import { create } from 'xmlbuilder2';
 import { fromByteArray } from 'base64-js';
 import pako from 'pako';
 
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import {
   FormatTypes,
   TYPED_ARRAY,

@@ -1,7 +1,7 @@
 import { mat3, mat4 } from 'gl-matrix';
 import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 
-import * as macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macros';
 
 import vtkBufferObject from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
 import vtkStickMapperVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkStickMapperVS.glsl';

@@ -1,4 +1,4 @@
-import { vtkErrorMacro } from 'vtk.js/Sources/macro';
+import { vtkErrorMacro } from 'vtk.js/Sources/macros';
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUDevice static functions

@@ -1,6 +1,6 @@
 import md5 from 'blueimp-md5';
 
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 
 // ----------------------------------------------------------------------------

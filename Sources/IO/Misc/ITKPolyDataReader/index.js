@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtk from 'vtk.js/Sources/vtk';
 
 let readPolyDataArrayBuffer = null;

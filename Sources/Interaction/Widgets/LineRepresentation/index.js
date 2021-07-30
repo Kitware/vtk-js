@@ -1,5 +1,5 @@
 import Constants from 'vtk.js/Sources/Interaction/Widgets/LineRepresentation/Constants';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
@@ -473,7 +473,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.lineSource.setResolution(5);
   model.lineMapper = vtkMapper.newInstance();
   model.lineMapper.setInputConnection(model.lineSource.getOutputPort());
-  model.lineActor = vtkActor.newInstance();
+  model.lineActor = vtkActor.newInstance({ parentProp: publicAPI });
   model.lineActor.setMapper(model.lineMapper);
 
   // Default properties

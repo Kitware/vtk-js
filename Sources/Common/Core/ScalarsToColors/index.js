@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import Constants from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper/Constants'; // Need to go inside Constants otherwise dependency loop
@@ -554,7 +554,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create get macros for array
   macro.getArray(publicAPI, model, ['mappingRange']);
 
-  // For more macro methods, see "Sources/macro.js"
+  // For more macro methods, see "Sources/macros.js"
 
   // Object specific methods
   vtkScalarsToColors(publicAPI, model);

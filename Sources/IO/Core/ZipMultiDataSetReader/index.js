@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 
 // Enable data soure for DataAccessHelper
 // import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper';// Just need HTTP

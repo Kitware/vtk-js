@@ -113,6 +113,169 @@ test('Test vtkCoordinate publicAPI', (t) => {
   viewPort = [50.0, 50.0];
   testGetters(coord, renderer, testVal, world, display, localDisplay, viewPort);
 
+  // --------------------- Multi Renderers
+  // In my previous test, some view ports were normal and some not. so create a 2x2 grid view to test.
+  const renderers = new Array(4);
+  for (let i = 0; i < renderers.length; i++) {
+    const ren = gc.registerResource(vtkRenderer.newInstance());
+    /* index order
+    0 1
+    2 3
+    */
+    const x = (i % 2) * 0.5;
+    const y = 1 - Math.floor(i / 2) * 0.5;
+    ren.setViewport(x, y - 0.5, x + 0.5, y);
+    ren.setActiveCamera(vtkCamera.newInstance());
+    renderWindow.addRenderer(ren);
+    renderers[i] = ren;
+  }
+
+  coord.setCoordinateSystemToWorld();
+  testVal = [0.0, 0.0, 0.0];
+  world = [0.0, 0.0, 0.0];
+  let displays = [
+    [25.0, 75.0],
+    [75.0, 75.0],
+    [25.0, 25.0],
+    [75.0, 25.0],
+  ];
+  let localDisplays = [
+    [25.0, 24.0],
+    [75.0, 24.0],
+    [25.0, 74.0],
+    [75.0, 74.0],
+  ];
+  viewPort = [25.0, 25.0];
+
+  for (let i = 0; i < renderers.length; i++) {
+    testGetters(
+      coord,
+      renderers[i],
+      testVal,
+      world,
+      displays[i],
+      localDisplays[i],
+      viewPort
+    );
+  }
+
+  coord.setCoordinateSystemToDisplay();
+  testVal = [
+    [25.0, 75.0],
+    [75.0, 75.0],
+    [25.0, 25.0],
+    [75.0, 25.0],
+  ];
+  world = [0.0, 0.0, 0.99];
+  displays = [
+    [25.0, 75.0],
+    [75.0, 75.0],
+    [25.0, 25.0],
+    [75.0, 25.0],
+  ];
+  localDisplays = [
+    [25.0, 24.0],
+    [75.0, 24.0],
+    [25.0, 74.0],
+    [75.0, 74.0],
+  ];
+  viewPort = [25.0, 25.0];
+  for (let i = 0; i < renderers.length; i++) {
+    testGetters(
+      coord,
+      renderers[i],
+      testVal[i],
+      world,
+      displays[i],
+      localDisplays[i],
+      viewPort
+    );
+  }
+
+  coord.setCoordinateSystemToViewport();
+  testVal = [25.0, 25.0, 0.0];
+  world = [0.0, 0.0, 0.99];
+  displays = [
+    [25.0, 75.0],
+    [75.0, 75.0],
+    [25.0, 25.0],
+    [75.0, 25.0],
+  ];
+  localDisplays = [
+    [25.0, 24.0],
+    [75.0, 24.0],
+    [25.0, 74.0],
+    [75.0, 74.0],
+  ];
+  viewPort = [25.0, 25.0];
+  for (let i = 0; i < renderers.length; i++) {
+    testGetters(
+      coord,
+      renderers[i],
+      testVal,
+      world,
+      displays[i],
+      localDisplays[i],
+      viewPort
+    );
+  }
+
+  coord.setCoordinateSystemToNormalizedViewport();
+  testVal = [0.5, 0.5, 0.0];
+  world = [0.0, 0.0, 0.99];
+  displays = [
+    [25.0, 75.0],
+    [75.0, 75.0],
+    [25.0, 25.0],
+    [75.0, 25.0],
+  ];
+  localDisplays = [
+    [25.0, 24.0],
+    [75.0, 24.0],
+    [25.0, 74.0],
+    [75.0, 74.0],
+  ];
+  viewPort = [25.0, 25.0];
+  for (let i = 0; i < renderers.length; i++) {
+    testGetters(
+      coord,
+      renderers[i],
+      testVal,
+      world,
+      displays[i],
+      localDisplays[i],
+      viewPort
+    );
+  }
+
+  coord.setCoordinateSystemToView();
+  testVal = [0.0, 0.0, 0.0];
+  world = [0.0, 0.0, 1.0];
+  displays = [
+    [25.0, 75.0],
+    [75.0, 75.0],
+    [25.0, 25.0],
+    [75.0, 25.0],
+  ];
+  localDisplays = [
+    [25.0, 24.0],
+    [75.0, 24.0],
+    [25.0, 74.0],
+    [75.0, 74.0],
+  ];
+  viewPort = [25.0, 25.0];
+  for (let i = 0; i < renderers.length; i++) {
+    testGetters(
+      coord,
+      renderers[i],
+      testVal,
+      world,
+      displays[i],
+      localDisplays[i],
+      viewPort
+    );
+  }
+
   // --------------------- Add a specific renderer
   coord.setRenderer(renderer);
 

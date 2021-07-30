@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import Constants from 'vtk.js/Sources/Rendering/Core/Coordinate/Constants';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
@@ -428,7 +428,12 @@ function vtkCoordinate(publicAPI, model) {
         val = renderer.viewToProjection(val[0], val[1], val[2], aspect);
 
         val = renderer.projectionToNormalizedViewport(val[0], val[1], val[2]);
-        val = view.normalizedViewportToViewport(val[0], val[1], val[2]);
+        val = view.normalizedViewportToViewport(
+          val[0],
+          val[1],
+          val[2],
+          renderer
+        );
         val = view.viewportToNormalizedDisplay(
           val[0],
           val[1],
@@ -441,7 +446,12 @@ function vtkCoordinate(publicAPI, model) {
       case Coordinate.VIEW: {
         val = renderer.viewToProjection(val[0], val[1], val[2], aspect);
         val = renderer.projectionToNormalizedViewport(val[0], val[1], val[2]);
-        val = view.normalizedViewportToViewport(val[0], val[1], val[2]);
+        val = view.normalizedViewportToViewport(
+          val[0],
+          val[1],
+          val[2],
+          renderer
+        );
         val = view.viewportToNormalizedDisplay(
           val[0],
           val[1],
@@ -453,7 +463,12 @@ function vtkCoordinate(publicAPI, model) {
       }
       case Coordinate.PROJECTION: {
         val = renderer.projectionToNormalizedViewport(val[0], val[1], val[2]);
-        val = view.normalizedViewportToViewport(val[0], val[1], val[2]);
+        val = view.normalizedViewportToViewport(
+          val[0],
+          val[1],
+          val[2],
+          renderer
+        );
         val = view.viewportToNormalizedDisplay(
           val[0],
           val[1],
@@ -464,7 +479,12 @@ function vtkCoordinate(publicAPI, model) {
         break;
       }
       case Coordinate.NORMALIZED_VIEWPORT: {
-        val = view.normalizedViewportToViewport(val[0], val[1], val[2]);
+        val = view.normalizedViewportToViewport(
+          val[0],
+          val[1],
+          val[2],
+          renderer
+        );
 
         if (model.referenceCoordinate) {
           const refValue = model.referenceCoordinate.getComputedDoubleViewportValue(

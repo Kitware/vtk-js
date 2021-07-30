@@ -127,6 +127,8 @@ function rebuildNoiseTexture() {
 }
 
 function initControls() {
+  document.querySelector('#viewPortScale').value = 1 / window.devicePixelRatio;
+
   const ids = [
     '#enableLIC',
     '#numberOfSteps',

@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import Constants from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget/Constants';
 

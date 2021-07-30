@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 
 import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
@@ -486,7 +486,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     initialValues
   );
 
-  model.resliceCursorActor = vtkResliceCursorActor.newInstance();
+  model.resliceCursorActor = vtkResliceCursorActor.newInstance({
+    parentProp: publicAPI,
+  });
   model.startPickPosition = null;
   model.startCenterPosition = null;
 

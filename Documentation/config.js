@@ -18,6 +18,7 @@ module.exports = {
     root: '/vtk-js/',
     github: 'kitware/vtk-js',
     google_analytics: 'UA-90338862-1',
+    google_analytics_4: 'G-5XH2Z0Y9LQ',
   },
   parallelWebpack: {
     maxConcurrentWorkers: 2,

@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import DefaultProtocol from 'vtk.js/Sources/IO/Core/ImageStream/DefaultProtocol';
 import ViewStream from 'vtk.js/Sources/IO/Core/ImageStream/ViewStream';
 

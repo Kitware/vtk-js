@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ContextRepresentation';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
@@ -46,7 +46,7 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
   model.mapper = vtkMapper.newInstance({
     scalarVisibility: false,
   });
-  model.actor = vtkActor.newInstance();
+  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
   model.actor.getProperty().setOpacity(model.opacity);
 
   model.mapper.setInputConnection(publicAPI.getOutputPort());
@@ -95,7 +95,6 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
   const superUpdateActorVisibility = publicAPI.updateActorVisibility;
   publicAPI.updateActorVisibility = (
     renderingType = RenderingTypes.FRONT_BUFFER,
-    widgetVisible = true,
     ctxVisible = true,
     handleVisible = true
   ) => {
@@ -112,12 +111,7 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
         model.actor.getProperty().setOpacity(model.opacity);
         break;
     }
-    superUpdateActorVisibility(
-      renderingType,
-      widgetVisible,
-      ctxVisible,
-      handleVisible
-    );
+    superUpdateActorVisibility(renderingType, ctxVisible, handleVisible);
   };
 }
 

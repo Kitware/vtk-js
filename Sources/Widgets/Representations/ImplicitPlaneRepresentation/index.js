@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkClosedPolyLineToSurfaceFilter from 'vtk.js/Sources/Filters/General/ClosedPolyLineToSurfaceFilter';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
@@ -107,31 +107,31 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
   model.pipelines.outline = {
     source: vtkCubeSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: false }),
+    actor: vtkActor.newInstance({ pickable: false, parentProp: publicAPI }),
   };
 
   model.pipelines.plane = {
     source: vtkClosedPolyLineToSurfaceFilter.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true }),
+    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
   };
 
   model.pipelines.origin = {
     source: vtkSphereSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true }),
+    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
   };
 
   model.pipelines.normal = {
     source: vtkCylinderSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true }),
+    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
   };
 
   model.pipelines.display2D = {
     source: publicAPI,
     mapper: vtkPixelSpaceCallbackMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: false }),
+    actor: vtkActor.newInstance({ pickable: false, parentProp: publicAPI }),
   };
 
   // Plane generation pipeline
@@ -264,12 +264,7 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
   // WidgetRepresentation API
   // --------------------------------------------------------------------------
 
-  publicAPI.updateActorVisibility = (
-    renderingType,
-    wVisible,
-    ctxVisible,
-    hVisible
-  ) => {
+  publicAPI.updateActorVisibility = (renderingType, ctxVisible, hVisible) => {
     const {
       planeVisible,
       originVisible,
@@ -277,24 +272,16 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
       outlineVisible,
     } = model;
     if (renderingType === RenderingTypes.PICKING_BUFFER) {
-      model.pipelines.plane.actor.setVisibility(planeVisible && wVisible);
-      model.pipelines.origin.actor.setVisibility(originVisible && wVisible);
-      model.pipelines.normal.actor.setVisibility(normalVisible && wVisible);
+      model.pipelines.plane.actor.setVisibility(planeVisible);
+      model.pipelines.origin.actor.setVisibility(originVisible);
+      model.pipelines.normal.actor.setVisibility(normalVisible);
       //
       model.pipelines.plane.actor.getProperty().setOpacity(1);
     } else {
-      model.pipelines.outline.actor.setVisibility(
-        outlineVisible && wVisible && ctxVisible
-      );
-      model.pipelines.plane.actor.setVisibility(
-        planeVisible && wVisible && hVisible
-      );
-      model.pipelines.origin.actor.setVisibility(
-        originVisible && wVisible && hVisible
-      );
-      model.pipelines.normal.actor.setVisibility(
-        normalVisible && wVisible && hVisible
-      );
+      model.pipelines.outline.actor.setVisibility(outlineVisible && ctxVisible);
+      model.pipelines.plane.actor.setVisibility(planeVisible && hVisible);
+      model.pipelines.origin.actor.setVisibility(originVisible && hVisible);
+      model.pipelines.normal.actor.setVisibility(normalVisible && hVisible);
       //
       const state = model.inputData[0];
       if (state) {

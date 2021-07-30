@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 
 import vtkWidgetState from 'vtk.js/Sources/Widgets/Core/WidgetState';
 

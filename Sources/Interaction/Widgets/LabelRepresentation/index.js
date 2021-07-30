@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -348,7 +348,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     }
   });
 
-  model.actor = vtkActor.newInstance();
+  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
   model.actor.setMapper(model.mapper);
   model.actorVisibility = true;
 

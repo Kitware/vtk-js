@@ -1,7 +1,7 @@
 import { mat4 } from 'gl-matrix';
 import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 
-import * as macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macros';
 
 import vtkBufferObject from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';

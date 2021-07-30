@@ -379,7 +379,7 @@ test('Test rendering when several rotations plane', (t) => {
       // Check Z view
       updateAndCompareView(ViewTypes.XY_PLANE, ZView45);
 
-      t.end();
+      gc.releaseResources();
     });
   });
 });
