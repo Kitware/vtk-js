@@ -16,7 +16,6 @@ import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkPaintFilter from 'vtk.js/Sources/Filters/General/PaintFilter';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 // Force the loading of HttpDataAccessHelper to support gzip decompression
 import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
@@ -25,10 +24,6 @@ import {
   BehaviorCategory,
   ShapeBehavior,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
-import {
-  TextAlign,
-  VerticalAlign,
-} from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation/Constants';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
@@ -83,9 +78,14 @@ scene.widgetManager.setRenderer(scene.renderer);
 // Widgets
 const widgets = {};
 widgets.paintWidget = vtkPaintWidget.newInstance();
-widgets.rectangleWidget = vtkRectangleWidget.newInstance();
-widgets.ellipseWidget = vtkEllipseWidget.newInstance();
+widgets.rectangleWidget = vtkRectangleWidget.newInstance({
+  resetAfterPointPlacement: true,
+});
+widgets.ellipseWidget = vtkEllipseWidget.newInstance({
+  resetAfterPointPlacement: true,
+});
 widgets.circleWidget = vtkEllipseWidget.newInstance({
+  resetAfterPointPlacement: true,
   modifierBehavior: {
     None: {
       [BehaviorCategory.PLACEMENT]:
@@ -230,28 +230,17 @@ reader
 
     updateControlPanel(image.imageMapper, data);
 
-    scene.circleHandle.setLabelTextCallback((worldBounds, screenBounds) => {
-      const center = vtkBoundingBox.getCenter(screenBounds);
-      const radius =
-        vec3.distance(center, [
-          screenBounds[0],
-          screenBounds[2],
-          screenBounds[4],
-        ]) / 2;
-      const position = [0, 0, 0];
-      vec3.scaleAndAdd(position, center, [1, 1, 1], radius);
+    // set text display callback
+    scene.circleHandle.onInteractionEvent(() => {
+      const worldBounds = scene.circleHandle.getBounds();
 
-      return {
-        text: `radius: ${(
-          vec3.distance(
-            [worldBounds[0], worldBounds[2], worldBounds[4]],
-            [worldBounds[1], worldBounds[3], worldBounds[5]]
-          ) / 2
-        ).toFixed(2)}`,
-        position,
-        textAlign: TextAlign.CENTER,
-        verticalAlign: VerticalAlign.CENTER,
-      };
+      const text = `radius: ${(
+        vec3.distance(
+          [worldBounds[0], worldBounds[2], worldBounds[4]],
+          [worldBounds[1], worldBounds[3], worldBounds[5]]
+        ) / 2
+      ).toFixed(2)}`;
+      widgets.circleWidget.getWidgetState().getText().setText(text);
     });
 
     scene.splineHandle

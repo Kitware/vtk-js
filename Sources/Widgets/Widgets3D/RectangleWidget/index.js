@@ -1,12 +1,11 @@
 import macro from 'vtk.js/Sources/macros';
-import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
 import vtkPlanePointManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
+import vtkShapeWidget from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget';
 import vtkSphereHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/SphereHandleRepresentation';
 import vtkRectangleContextRepresentation from 'vtk.js/Sources/Widgets/Representations/RectangleContextRepresentation';
+import vtkSVGLandmarkRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGLandmarkRepresentation';
 import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/RectangleWidget/behavior';
 import stateGenerator from 'vtk.js/Sources/Widgets/Widgets3D/RectangleWidget/state';
-
-import SHAPE_DEFAULT_VALUES from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget';
 
 import {
   BehaviorCategory,
@@ -23,6 +22,7 @@ function vtkRectangleWidget(publicAPI, model) {
   model.classHierarchy.push('vtkRectangleWidget');
 
   model.methodsToLink = [
+    ...model.methodsToLink,
     'activeScaleFactor',
     'activeColor',
     'useActiveColor',
@@ -47,6 +47,15 @@ function vtkRectangleWidget(publicAPI, model) {
             builder: vtkRectangleContextRepresentation,
             labels: ['rectangleHandle'],
           },
+          {
+            builder: vtkSVGLandmarkRepresentation,
+            initialValues: {
+              showCircle: false,
+              offsetText: true,
+              text: '',
+            },
+            labels: ['SVGtext'],
+          },
         ];
     }
   };
@@ -58,44 +67,36 @@ function vtkRectangleWidget(publicAPI, model) {
   // Default manipulator
   model.manipulator = vtkPlanePointManipulator.newInstance();
   model.widgetState = stateGenerator();
-  model.shapeHandle = model.widgetState.getRectangleHandle();
-  model.point1Handle = model.widgetState.getPoint1Handle();
-  model.point2Handle = model.widgetState.getPoint2Handle();
-  model.point1Handle.setManipulator(model.manipulator);
-  model.point2Handle.setManipulator(model.manipulator);
 }
 
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  modifierBehavior: {
-    None: {
-      [BehaviorCategory.PLACEMENT]:
-        ShapeBehavior[BehaviorCategory.PLACEMENT].CLICK_AND_DRAG,
-      [BehaviorCategory.POINTS]:
-        ShapeBehavior[BehaviorCategory.POINTS].CORNER_TO_CORNER,
-      [BehaviorCategory.RATIO]: ShapeBehavior[BehaviorCategory.RATIO].FREE,
+function defaultValues(initalValues) {
+  return {
+    modifierBehavior: {
+      None: {
+        [BehaviorCategory.PLACEMENT]:
+          ShapeBehavior[BehaviorCategory.PLACEMENT].CLICK_AND_DRAG,
+        [BehaviorCategory.POINTS]:
+          ShapeBehavior[BehaviorCategory.POINTS].CORNER_TO_CORNER,
+        [BehaviorCategory.RATIO]: ShapeBehavior[BehaviorCategory.RATIO].FREE,
+      },
+      Shift: {
+        [BehaviorCategory.RATIO]: ShapeBehavior[BehaviorCategory.RATIO].FIXED,
+      },
+      Control: {
+        [BehaviorCategory.POINTS]:
+          ShapeBehavior[BehaviorCategory.POINTS].CENTER_TO_CORNER,
+      },
     },
-    Shift: {
-      [BehaviorCategory.RATIO]: ShapeBehavior[BehaviorCategory.RATIO].FIXED,
-    },
-    Control: {
-      [BehaviorCategory.POINTS]:
-        ShapeBehavior[BehaviorCategory.POINTS].CENTER_TO_CORNER,
-    },
-  },
-};
+    ...initalValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(
-    model,
-    { ...SHAPE_DEFAULT_VALUES.DEFAULT_VALUES, ...DEFAULT_VALUES },
-    initialValues
-  );
-
-  vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
+  vtkShapeWidget.extend(publicAPI, model, defaultValues(initialValues));
   macro.setGet(publicAPI, model, ['manipulator', 'widgetState']);
 
   vtkRectangleWidget(publicAPI, model);

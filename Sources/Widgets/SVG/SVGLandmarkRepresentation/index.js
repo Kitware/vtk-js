@@ -80,28 +80,34 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
+/**
+ * textProps can contain any "svg" attribute (e.g. text-anchor, text-align,
+ * alignment-baseline...)
+ * @param {*} initialValues
+ * @returns
+ */
 function defaultValues(initialValues) {
   return {
+    ...initialValues,
     circleProps: {
       r: 5,
       stroke: 'red',
       fill: 'red',
+      ...initialValues.circleProps,
     },
     textProps: {
       fill: 'white',
-      dx: 12,
-      dy: -12,
+      dx: 0,
+      dy: 0,
+      ...initialValues.textProps,
     },
-    ...initialValues,
   };
 }
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, defaultValues(initialValues));
-
-  vtkSVGRepresentation.extend(publicAPI, model, initialValues);
+  vtkSVGRepresentation.extend(publicAPI, model, defaultValues(initialValues));
 
   macro.setGet(publicAPI, model, [
     'circleProps',

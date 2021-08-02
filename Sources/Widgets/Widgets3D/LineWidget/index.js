@@ -129,6 +129,10 @@ function vtkLineWidget(publicAPI, model) {
               isVisible: false,
               offsetText: true,
               text: '',
+              textProps: {
+                dx: 12,
+                dy: -12,
+              },
             },
             labels: ['SVGtext'],
           },
