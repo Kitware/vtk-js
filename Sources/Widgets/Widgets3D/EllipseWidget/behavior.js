@@ -2,6 +2,12 @@ import shapeBehavior from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/behavior
 import { vec3 } from 'gl-matrix';
 
 export default function widgetBehavior(publicAPI, model) {
+  model.shapeHandle = model.widgetState.getEllipseHandle();
+  model.point1Handle = model.widgetState.getPoint1Handle();
+  model.point2Handle = model.widgetState.getPoint2Handle();
+  model.point1Handle.setManipulator(model.manipulator);
+  model.point2Handle.setManipulator(model.manipulator);
+
   // We inherit shapeBehavior
   shapeBehavior(publicAPI, model);
   const superClass = { ...publicAPI };

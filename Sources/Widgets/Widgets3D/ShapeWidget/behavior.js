@@ -27,6 +27,8 @@ function makeBoundsFromPoints(point1, point2) {
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkShapeWidgetProp');
 
+  model.keysDown = {};
+
   const superClass = { ...publicAPI };
 
   // --------------------------------------------------------------------------
@@ -39,17 +41,20 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
   // Public methods
   // --------------------------------------------------------------------------
+  publicAPI.setResetAfterPointPlacement =
+    model.factory.setResetAfterPointPlacement;
+  publicAPI.getResetAfterPointPlacement =
+    model.factory.getResetAfterPointPlacement;
 
-  publicAPI.setModifierBehavior = (behavior) => {
-    Object.assign(model.modifierBehavior, behavior);
-  };
+  publicAPI.setModifierBehavior = model.factory.setModifierBehavior;
+  publicAPI.getModifierBehavior = model.factory.getModifierBehavior;
 
   publicAPI.isBehaviorActive = (category, flag) =>
     Object.keys(model.keysDown).some(
       (key) =>
         model.keysDown[key] &&
-        model.modifierBehavior[key] &&
-        model.modifierBehavior[key][category] === flag
+        publicAPI.getModifierBehavior()[key] &&
+        publicAPI.getModifierBehavior()[key][category] === flag
     );
 
   publicAPI.isOppositeBehaviorActive = (category, flag) =>
@@ -63,7 +68,7 @@ export default function widgetBehavior(publicAPI, model) {
       (flag) =>
         publicAPI.isBehaviorActive(category, flag) ||
         (!publicAPI.isOppositeBehaviorActive(category, flag) &&
-          model.modifierBehavior.None[category] === flag)
+          publicAPI.getModifierBehavior().None[category] === flag)
     );
 
   publicAPI.isRatioFixed = () =>
@@ -85,19 +90,11 @@ export default function widgetBehavior(publicAPI, model) {
       BehaviorCategory.PLACEMENT,
       ShapeBehavior[BehaviorCategory.PLACEMENT].DRAG
     ) ||
-    model.modifierBehavior.None[BehaviorCategory.PLACEMENT] ===
+    publicAPI.getModifierBehavior().None[BehaviorCategory.PLACEMENT] ===
       ShapeBehavior[BehaviorCategory.PLACEMENT].DRAG;
-
-  publicAPI.setVisibleOnFocus = (visibleOnFocus) => {
-    model.visibleOnFocus = visibleOnFocus;
-  };
 
   publicAPI.setLabelTextCallback = (callback) => {
     model.labelTextCallback = callback;
-  };
-
-  publicAPI.setResetAfterPointPlacement = (reset) => {
-    model.resetAfterPointPlacement = reset;
   };
 
   publicAPI.getPoint1 = () => model.point1;
@@ -126,15 +123,11 @@ export default function widgetBehavior(publicAPI, model) {
       model.point2Handle.activate();
       model.activeState = model.point2Handle;
 
-      if (model.useHandles) {
-        model.point2Handle.setVisible(true);
-      }
+      model.point2Handle.setVisible(true);
 
       publicAPI.updateShapeBounds();
 
-      if (model.visibleOnFocus) {
-        model.shapeHandle.setVisible(true);
-      }
+      model.shapeHandle.setVisible(true);
     }
   };
 
@@ -145,7 +138,7 @@ export default function widgetBehavior(publicAPI, model) {
 
       publicAPI.updateShapeBounds();
 
-      if (model.resetAfterPointPlacement) {
+      if (publicAPI.getResetAfterPointPlacement()) {
         publicAPI.reset();
       } else {
         publicAPI.loseFocus();
@@ -153,32 +146,8 @@ export default function widgetBehavior(publicAPI, model) {
     }
   };
 
-  publicAPI.setPixelScale = (pixelScale) => {
-    model.pixelScale = pixelScale;
-    publicAPI.updateHandlesSize();
-  };
-
-  publicAPI.updateHandlesSize = () => {
-    if (model.pixelScale !== null) {
-      const scale =
-        model.pixelScale *
-        vec3.distance(
-          model.apiSpecificRenderWindow.displayToWorld(0, 0, 0, model.renderer),
-          model.apiSpecificRenderWindow.displayToWorld(1, 0, 0, model.renderer)
-        );
-
-      model.point1Handle.setScale1(scale);
-      model.point2Handle.setScale1(scale);
-    }
-  };
-
   publicAPI.setVisibility = (visibility) => {
-    let modified = false;
-    if (model.useHandles) {
-      modified = superClass.setVisibility(visibility) || modified;
-    } else {
-      modified = model.shapeHandle.setVisible(visibility) || modified;
-    }
+    let modified = superClass.setVisibility(visibility);
 
     if (model.label) {
       if (visibility) {
@@ -400,7 +369,7 @@ export default function widgetBehavior(publicAPI, model) {
         model.point2 = worldCoords;
         publicAPI.updateShapeBounds();
       }
-    } else if (model.useHandles && model.isDragging) {
+    } else if (model.isDragging) {
       if (model.activeState === model.point1Handle) {
         model.point1Handle.setOrigin(worldCoords);
         model.point1 = worldCoords;
@@ -498,7 +467,7 @@ export default function widgetBehavior(publicAPI, model) {
           publicAPI.invokeInteractionEvent();
           publicAPI.invokeEndInteractionEvent();
 
-          if (model.resetAfterPointPlacement) {
+          if (publicAPI.getResetAfterPointPlacement()) {
             publicAPI.reset();
           } else {
             publicAPI.loseFocus();
@@ -564,33 +533,22 @@ export default function widgetBehavior(publicAPI, model) {
       model.point1Handle.activate();
       model.activeState = model.point1Handle;
 
-      if (model.useHandles) {
-        model.point1Handle.setVisible(true);
-      }
+      model.point1Handle.setVisible(true);
       model.shapeHandle.setVisible(false);
       model.interactor.requestAnimation(publicAPI);
     }
 
-    publicAPI.updateHandlesSize();
-
-    model.hasFocus = true;
+    superClass.grabFocus();
   };
 
   // --------------------------------------------------------------------------
 
   publicAPI.loseFocus = () => {
     if (model.hasFocus) {
-      if (model.visibleOnFocus && !model.useHandles) {
-        model.shapeHandle.setVisible(false);
-      }
       model.interactor.cancelAnimation(publicAPI);
     }
 
-    if (model.label && !model.useHandles) {
-      model.label.setContainer(null);
-    }
-
-    if (!model.useHandles || !model.point1) {
+    if (!model.point1) {
       model.point1Handle.setVisible(false);
       model.point2Handle.setVisible(false);
     }
@@ -602,6 +560,6 @@ export default function widgetBehavior(publicAPI, model) {
     model.interactor.render();
     model.widgetManager.enablePicking();
 
-    model.hasFocus = false;
+    superClass.loseFocus();
   };
 }
