@@ -1949,6 +1949,7 @@ export function uninitializeBounds(bounds) {
   bounds[3] = -1.0;
   bounds[4] = 1.0;
   bounds[5] = -1.0;
+  return bounds;
 }
 
 export function areBoundsInitialized(bounds) {
@@ -1962,6 +1963,7 @@ export function computeBoundsFromPoints(point1, point2, bounds) {
   bounds[3] = Math.max(point1[1], point2[1]);
   bounds[4] = Math.min(point1[2], point2[2]);
   bounds[5] = Math.max(point1[2], point2[2]);
+  return bounds;
 }
 
 export function clampValue(value, minValue, maxValue) {

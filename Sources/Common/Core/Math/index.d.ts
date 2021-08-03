@@ -657,10 +657,10 @@ export function rgb2lab(rgb: number[], lab: number[]): void;
 export function lab2rgb(lab: number[], rgb: number[]): void;
 
 /**
- *
- * @param {Number[]} bounds 
+ * Returns bounds.
+ * @param {Number[]} bounds Output array that hold bounds, optionally empty.
  */
-export function uninitializeBounds(bounds: number[]): void;
+export function uninitializeBounds(bounds: number[]): number[];
 
 /**
  *
@@ -669,12 +669,12 @@ export function uninitializeBounds(bounds: number[]): void;
 export function areBoundsInitialized(bounds: number[]): boolean;
 
 /**
- *
- * @param {Number[]} point1 
- * @param {Number[]} point2 
- * @param {Number[]} bounds 
+ * Returns bounds.
+ * @param {Number[]} point1
+ * @param {Number[]} point2
+ * @param {Number[]} bounds Output array that hold bounds, optionally empty.
  */
-export function computeBoundsFromPoints(point1: number[], point2: number[], bounds: number[]): void;
+export function computeBoundsFromPoints(point1: number[], point2: number[], bounds: number[]): number[];
 
 /**
  *
