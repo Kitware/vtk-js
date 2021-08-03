@@ -8,7 +8,7 @@ import {
 function vtkShapeWidget(publicAPI, model) {
   model.classHierarchy.push('vtkShapeWidget');
 
-  model.methodsToLink = ['scaleInPixels'];
+  model.methodsToLink = ['scaleInPixels', 'textProps'];
 }
 
 function defaultValues(initialValues) {

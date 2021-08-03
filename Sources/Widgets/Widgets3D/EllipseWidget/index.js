@@ -1,8 +1,9 @@
 import macro from 'vtk.js/Sources/macros';
-import vtkShapeWidget from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget';
-import vtkPlanePointManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
-import vtkSphereHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/SphereHandleRepresentation';
 import vtkCircleContextRepresentation from 'vtk.js/Sources/Widgets/Representations/CircleContextRepresentation';
+import vtkPlanePointManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
+import vtkShapeWidget from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget';
+import vtkSphereHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/SphereHandleRepresentation';
+import vtkSVGLandmarkRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGLandmarkRepresentation';
 import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/EllipseWidget/behavior';
 import stateGenerator from 'vtk.js/Sources/Widgets/Widgets3D/EllipseWidget/state';
 
@@ -23,6 +24,7 @@ function vtkEllipseWidget(publicAPI, model) {
   // --- Widget Requirement ---------------------------------------------------
 
   model.methodsToLink = [
+    ...model.methodsToLink,
     'activeScaleFactor',
     'activeColor',
     'useActiveColor',
@@ -46,6 +48,15 @@ function vtkEllipseWidget(publicAPI, model) {
           {
             builder: vtkCircleContextRepresentation,
             labels: ['ellipseHandle'],
+          },
+          {
+            builder: vtkSVGLandmarkRepresentation,
+            initialValues: {
+              showCircle: false,
+              offsetText: true,
+              text: '',
+            },
+            labels: ['SVGtext'],
           },
         ];
     }

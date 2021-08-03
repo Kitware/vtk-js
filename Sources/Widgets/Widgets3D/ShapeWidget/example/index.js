@@ -15,19 +15,12 @@ import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkSphere from 'vtk.js/Sources/Common/DataModel/Sphere';
-import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 import {
   BehaviorCategory,
-  ShapeBehavior,
   HorizontalTextPosition,
-  VerticalTextPosition,
-  computeTextPosition,
+  ShapeBehavior,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
-import {
-  TextAlign,
-  VerticalAlign,
-} from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation/Constants';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
@@ -105,12 +98,20 @@ widgets.circleWidget = vtkEllipseWidget.newInstance({
 });
 // Make a large handle for demo purpose
 widgets.circleWidget.getWidgetState().getPoint1Handle().setScale1(20);
+widgets.circleWidget
+  .getWidgetState()
+  .setHorizontalTextPosition(HorizontalTextPosition.OUTSIDE_RIGHT);
 
 scene.rectangleHandle = scene.widgetManager.addWidget(
   widgets.rectangleWidget,
   ViewTypes.SLICE
 );
 scene.rectangleHandle.setHandleVisibility(false);
+scene.rectangleHandle.setTextProps({
+  fill: 'white',
+  'text-anchor': 'middle',
+  'alignment-baseline': 'middle',
+});
 scene.ellipseHandle = scene.widgetManager.addWidget(
   widgets.ellipseWidget,
   ViewTypes.SLICE
@@ -210,88 +211,47 @@ reader
     scene.ellipseHandle.getRepresentations()[1].setOpacity(1);
 
     // set text display callback
-    scene.ellipseHandle.setLabelTextCallback(
-      (worldBounds, screenBounds, labelRep) => {
-        const { average, minimum, maximum } = image.data.computeHistogram(
-          worldBounds,
-          vtkSphere.isPointIn3DEllipse
-        );
+    scene.ellipseHandle.onInteractionEvent(() => {
+      const worldBounds = scene.ellipseHandle.getBounds();
+      const { average, minimum, maximum } = image.data.computeHistogram(
+        worldBounds,
+        vtkSphere.isPointIn3DEllipse
+      );
 
-        const text = `average: ${average.toFixed(
-          0
-        )} \nmin: ${minimum} \nmax: ${maximum} `;
+      const text = `average: ${average.toFixed(
+        0
+      )} \nmin: ${minimum} \nmax: ${maximum} `;
 
-        const { width, height } = labelRep.computeTextDimensions(text);
-        labelRep.setDisplayPosition(
-          computeTextPosition(
-            screenBounds,
-            HorizontalTextPosition.OUTSIDE_RIGHT,
-            VerticalTextPosition.INSIDE_TOP,
-            width,
-            height
-          )
-        );
+      widgets.ellipseWidget.getWidgetState().getText().setText(text);
+    });
 
-        labelRep.setLabelText(text);
-      }
-    );
+    scene.circleHandle.onInteractionEvent(() => {
+      const worldBounds = scene.circleHandle.getBounds();
 
-    scene.circleHandle.setLabelTextCallback(
-      (worldBounds, screenBounds, labelRep) => {
-        const center = vtkBoundingBox.getCenter(screenBounds);
-        const radius =
-          vec3.distance(center, [
-            screenBounds[0],
-            screenBounds[2],
-            screenBounds[4],
-          ]) / 2;
+      const text = `radius: ${(
+        vec3.distance(
+          [worldBounds[0], worldBounds[2], worldBounds[4]],
+          [worldBounds[1], worldBounds[3], worldBounds[5]]
+        ) / 2
+      ).toFixed(2)}`;
+      widgets.circleWidget.getWidgetState().getText().setText(text);
+    });
 
-        const position = [0, 0, 0];
-        vec3.scaleAndAdd(position, center, [1, 1, 1], radius);
-        labelRep.setDisplayPosition(position);
+    scene.rectangleHandle.onInteractionEvent(() => {
+      const worldBounds = scene.rectangleHandle.getBounds();
 
-        labelRep.setLabelText(
-          `radius: ${(
-            vec3.distance(
-              [worldBounds[0], worldBounds[2], worldBounds[4]],
-              [worldBounds[1], worldBounds[3], worldBounds[5]]
-            ) / 2
-          ).toFixed(2)}`
-        );
+      const dx = Math.abs(worldBounds[0] - worldBounds[1]);
+      const dy = Math.abs(worldBounds[2] - worldBounds[3]);
+      const dz = Math.abs(worldBounds[4] - worldBounds[5]);
 
-        labelRep.setTextAlign(TextAlign.CENTER);
-        labelRep.setVerticalAlign(VerticalAlign.CENTER);
-      }
-    );
+      const perimeter = 2 * (dx + dy + dz);
+      const area = dx * dy + dy * dz + dz * dx;
 
-    scene.rectangleHandle.setLabelTextCallback(
-      (worldBounds, screenBounds, labelRep) => {
-        const dx = Math.abs(worldBounds[0] - worldBounds[1]);
-        const dy = Math.abs(worldBounds[2] - worldBounds[3]);
-        const dz = Math.abs(worldBounds[4] - worldBounds[5]);
-
-        const perimeter = 2 * (dx + dy + dz);
-        const area = dx * dy + dy * dz + dz * dx;
-
-        const text = `perimeter: ${perimeter.toFixed(
-          1
-        )}mm\narea: ${area.toFixed(1)}mm²`;
-
-        const { width, height } = labelRep.computeTextDimensions(text);
-        labelRep.setDisplayPosition(
-          computeTextPosition(
-            screenBounds,
-            HorizontalTextPosition.OUTSIDE_RIGHT,
-            VerticalTextPosition.INSIDE_TOP,
-            width,
-            height
-          )
-        );
-        labelRep.setLabelText(text);
-
-        labelRep.setTextAlign(TextAlign.RIGHT);
-      }
-    );
+      const text = `perimeter: ${perimeter.toFixed(1)}mm\narea: ${area.toFixed(
+        1
+      )}mm²`;
+      widgets.rectangleWidget.getWidgetState().getText().setText(text);
+    });
 
     const update = () => {
       const slicingMode = image.imageMapper.getSlicingMode() % 3;

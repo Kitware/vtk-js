@@ -1,28 +1,16 @@
 import macro from 'vtk.js/Sources/macros';
-
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import {
   BehaviorCategory,
   ShapeBehavior,
+  computeTextPosition,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
-
-import vtkLabelRepresentation from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation';
 
 import { vec3 } from 'gl-matrix';
 
 const { vtkErrorMacro } = macro;
 
 const EPSILON = 1e-6;
-
-function makeBoundsFromPoints(point1, point2) {
-  return [
-    Math.min(point1[0], point2[0]),
-    Math.max(point1[0], point2[0]),
-    Math.min(point1[1], point2[1]),
-    Math.max(point1[1], point2[1]),
-    Math.min(point1[2], point2[2]),
-    Math.max(point1[2], point2[2]),
-  ];
-}
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkShapeWidgetProp');
@@ -37,6 +25,12 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.setDisplayCallback = (callback) =>
     model.representations[0].setDisplayCallback(callback);
+
+  publicAPI.setText = (text) => {
+    model.widgetState.getText().setText(text);
+    // Recompute position
+    model.interactor.render();
+  };
 
   // --------------------------------------------------------------------------
   // Public methods
@@ -93,10 +87,6 @@ export default function widgetBehavior(publicAPI, model) {
     publicAPI.getModifierBehavior().None[BehaviorCategory.PLACEMENT] ===
       ShapeBehavior[BehaviorCategory.PLACEMENT].DRAG;
 
-  publicAPI.setLabelTextCallback = (callback) => {
-    model.labelTextCallback = callback;
-  };
-
   publicAPI.getPoint1 = () => model.point1;
   publicAPI.getPoint2 = () => model.point2;
 
@@ -145,22 +135,6 @@ export default function widgetBehavior(publicAPI, model) {
       }
     }
   };
-
-  publicAPI.setVisibility = (visibility) => {
-    let modified = superClass.setVisibility(visibility);
-
-    if (model.label) {
-      if (visibility) {
-        modified =
-          model.label.setContainer(model.interactor.getContainer()) || modified;
-      } else {
-        modified = model.label.setContainer(null) || modified;
-      }
-    }
-    return modified;
-  };
-
-  publicAPI.getLabel = () => model.label;
 
   // --------------------------------------------------------------------------
   // Private methods
@@ -231,27 +205,15 @@ export default function widgetBehavior(publicAPI, model) {
     return getCornersFromRadius(center, point1);
   };
 
+  // TODO: move to ShapeWidget/index.js
+  publicAPI.getBounds = () =>
+    model.point1 && model.point2
+      ? vtkMath.computeBoundsFromPoints(model.point1, model.point2, [])
+      : vtkMath.uninitializeBounds([]);
+
+  // To be reimplemented by subclass
   publicAPI.setCorners = (point1, point2) => {
-    if (model.label && model.labelTextCallback) {
-      const bounds = makeBoundsFromPoints(point1, point2);
-      const screenPoint1 = model.apiSpecificRenderWindow.worldToDisplay(
-        ...point1,
-        model.renderer
-      );
-      const screenPoint2 = model.apiSpecificRenderWindow.worldToDisplay(
-        ...point2,
-        model.renderer
-      );
-      const screenBounds = [
-        Math.min(screenPoint1[0], screenPoint2[0]),
-        Math.max(screenPoint1[0], screenPoint2[0]),
-        Math.min(screenPoint1[1], screenPoint2[1]),
-        Math.max(screenPoint1[1], screenPoint2[1]),
-        Math.min(screenPoint1[2], screenPoint2[2]),
-        Math.max(screenPoint1[2], screenPoint2[2]),
-      ];
-      model.labelTextCallback(bounds, screenBounds, model.label);
-    }
+    publicAPI.updateTextPosition(point1, point2);
   };
 
   publicAPI.updateShapeBounds = () => {
@@ -294,6 +256,35 @@ export default function widgetBehavior(publicAPI, model) {
     }
   };
 
+  publicAPI.updateTextPosition = (point1, point2) => {
+    const bounds = vtkMath.computeBoundsFromPoints(point1, point2, []);
+    // // const screenPoint1 = model.apiSpecificRenderWindow.worldToDisplay(...point1, model.renderer);
+    // const screenPoint1 = publicAPI.computeWorldToDisplay(
+    //   model.renderer,
+    //   ...point1
+    // );
+    // // const screenPoint2 = model.apiSpecificRenderWindow.worldToDisplay(...point2, model.renderer);
+    // const screenPoint2 = publicAPI.computeWorldToDisplay(
+    //   model.renderer,
+    //   ...point2
+    // );
+    // const screenBounds = vtkMath.computeBoundsFromPoints(
+    //   screenPoint1,
+    //   screenPoint2,
+    //   []
+    // );
+    const screenPosition = computeTextPosition(
+      bounds,
+      model.widgetState.getHorizontalTextPosition(),
+      model.widgetState.getVerticalTextPosition(),
+      0, // FIXME
+      0 // FIXME
+    );
+    const textHandle = model.widgetState.getText();
+    textHandle.setOrigin(screenPosition);
+    // textHandle.setOrigin(50, 10, 0);
+  };
+
   /*
    * If the widget has the focus, this method reset the widget
    * to it's state just after it grabbed the focus. Otherwise
@@ -309,9 +300,7 @@ export default function widgetBehavior(publicAPI, model) {
     model.point1 = null;
     model.point2 = null;
 
-    if (model.label) {
-      model.label.setLabelText('');
-    }
+    model.widgetState.getText().setVisible(false);
 
     model.point1Handle.setOrigin(model.point2Handle.getOrigin());
     model.point2Handle.setVisible(false);
@@ -368,6 +357,7 @@ export default function widgetBehavior(publicAPI, model) {
         model.point2Handle.setOrigin(worldCoords);
         model.point2 = worldCoords;
         publicAPI.updateShapeBounds();
+        publicAPI.invokeInteractionEvent();
       }
     } else if (model.isDragging) {
       if (model.activeState === model.point1Handle) {
@@ -520,15 +510,6 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.grabFocus = () => {
     if (!model.hasFocus) {
       publicAPI.reset();
-
-      if (!model.label) {
-        model.label = vtkLabelRepresentation.newInstance();
-      }
-
-      model.label.setRenderer(model.renderer);
-      model.label.buildRepresentation();
-      model.renderer.addViewProp(model.label);
-      model.label.setContainer(model.interactor.getContainer());
 
       model.point1Handle.activate();
       model.activeState = model.point1Handle;
