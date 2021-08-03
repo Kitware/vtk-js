@@ -112,14 +112,13 @@ function createNewArrayHandler(instance, arrayMetadata, arraysToBind) {
 
 function update(type, instance, props, context) {
   if (!instance) {
-    return;
+    return Promise.reject(new Error(`No instance provided.`));
   }
   const handler = TYPE_HANDLERS[type];
   if (handler && handler.update) {
-    handler.update(instance, props, context);
-  } else {
-    console.log('no updater for', type);
+    return handler.update(instance, props, context);
   }
+  return Promise.reject(new Error(`No updater for ${type}`));
 }
 
 // ----------------------------------------------------------------------------
@@ -244,6 +243,7 @@ function genericUpdater(instance, state, context) {
   }
 
   // if some arrays need to be be fetch
+  const dependencies = [];
   if (state.arrays) {
     const arraysToBind = [];
     const promises = state.arrays.map((arrayMetadata) => {
@@ -261,20 +261,24 @@ function genericUpdater(instance, state, context) {
         .finally(context.end); // -> end(arrays)
     });
     context.start(); // -> start(arraysToBind)
-    Promise.all(promises)
-      .then(() => {
-        bindArrays(arraysToBind);
-      })
-      .catch((error) => {
-        console.error(
-          'Error in array handling for state',
-          JSON.stringify(state),
-          error
-        );
-      })
-      .finally(context.end); // -> end(arraysToBind)
+    dependencies.push(
+      Promise.all(promises)
+        .then(() => {
+          bindArrays(arraysToBind);
+          return true;
+        })
+        .catch((error) => {
+          console.error(
+            'Error in array handling for state',
+            JSON.stringify(state),
+            error
+          );
+        })
+        .finally(context.end) // -> end(arraysToBind)
+    );
   }
   context.end(); // -> end(generic-updater)
+  return Promise.all(dependencies);
 }
 
 // ----------------------------------------------------------------------------
@@ -449,10 +453,11 @@ function createDataSetUpdate(piecesToFetch = []) {
     instance.getCellData().removeAllArrays();
 
     // Generic handling
-    genericUpdater(instance, state, context);
+    const res = genericUpdater(instance, state, context);
 
     // Finish what we started
     context.end(); // -> end(dataset-update)
+    return res;
   };
 }
 
