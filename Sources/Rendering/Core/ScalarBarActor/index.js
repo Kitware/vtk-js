@@ -34,22 +34,23 @@ function applyTextStyle(ctx, style) {
   ctx.font = `${style.fontStyle} ${style.fontSize}px ${style.fontFamily}`;
 }
 
-function vtkScalarBarActor(publicAPI, model) {
-  // Set our className
-  model.classHierarchy.push('vtkScalarBarActor');
+// ----------------------------------------------------------------------------
+// Default autoLayout function
+// ----------------------------------------------------------------------------
 
-  // compute good values to use based on window size etc
-  // a bunch of heuristics here with hand tuned constants
-  // These values worked for me but really this method
-  // could be redically changed. The basic gist is
-  // 1) compute a resonable font size
-  // 2) render the text atlas using those font sizes
-  // 3) pick horizontal or vertical bsed on window size
-  // 4) based on the size of the title and tick labels rendered
-  //    compute the box size and position such that
-  //    the text will all fit nicely and the bar will be a resonable size
-  // 5) compute the bar segments based on the above settings
-  publicAPI.computeAndApplyAutomatedSettings = () => {
+// compute good values to use based on window size etc
+// a bunch of heuristics here with hand tuned constants
+// These values worked for me but really this method
+// could be redically changed. The basic gist is
+// 1) compute a resonable font size
+// 2) render the text atlas using those font sizes
+// 3) pick horizontal or vertical bsed on window size
+// 4) based on the size of the title and tick labels rendered
+//    compute the box size and position such that
+//    the text will all fit nicely and the bar will be a resonable size
+// 5) compute the bar segments based on the above settings
+function defaultAutoLayout(publicAPI, model) {
+  return () => {
     // we don't do a linear scale, the proportions for
     // a 700 pixel window differ from a 1400
     const xAxisAdjust = (model.lastSize[0] / 700) ** 0.8;
@@ -119,6 +120,11 @@ function vtkScalarBarActor(publicAPI, model) {
     // recomute bar segments based on positioning
     publicAPI.recomputeBarSegments(textSizes);
   };
+}
+
+function vtkScalarBarActor(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkScalarBarActor');
 
   // main method to rebuild the scalarBar when something has changed
   // tracks modified times
@@ -149,7 +155,7 @@ function vtkScalarBarActor(publicAPI, model) {
       model.tickStrings = model.ticks.map(format);
 
       if (model.automated) {
-        publicAPI.computeAndApplyAutomatedSettings();
+        model.autoLayout();
       } else {
         // rebuild the texture only when force or changed bounds, face
         // visibility changes do to change the atlas
@@ -757,6 +763,10 @@ function vtkScalarBarActor(publicAPI, model) {
     model.barActor.setVisibility,
     model.tmActor.setVisibility
   );
+
+  publicAPI.resetAutoLayoutToDefault = () => {
+    model.autoLayout = defaultAutoLayout(publicAPI, model);
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -766,6 +776,7 @@ function vtkScalarBarActor(publicAPI, model) {
 function defaultValues(initialValues) {
   return {
     automated: true,
+    autoLayout: null,
     axisLabel: 'Scalar Value',
     barPosition: [0, 0],
     barSize: [0, 0],
@@ -794,6 +805,8 @@ function defaultValues(initialValues) {
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, defaultValues(initialValues));
+
+  if (!model.autoLayout) model.autoLayout = defaultAutoLayout(publicAPI, model);
 
   // Inheritance
   vtkActor.extend(publicAPI, model, initialValues);
@@ -857,6 +870,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, [
     'automated',
+    'autoLayout',
     'axisTitlePixelOffset',
     'axisLabel',
     'scalarsToColors',
