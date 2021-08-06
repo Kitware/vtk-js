@@ -383,33 +383,32 @@ scene.paintHandle.onInteractionEvent(() => {
 });
 initializeHandle(scene.paintHandle);
 
-scene.rectangleHandle.onEndInteractionEvent((pointPlaced) => {
-  if (pointPlaced) {
-    const rectangleHandle = scene.rectangleHandle
-      .getWidgetState()
-      .getRectangleHandle();
+scene.rectangleHandle.onEndInteractionEvent(() => {
+  const rectangleHandle = scene.rectangleHandle
+    .getWidgetState()
+    .getRectangleHandle();
 
-    painter.paintRectangle(
-      rectangleHandle.getOrigin(),
-      rectangleHandle.getCorner()
-    );
+  const origin = rectangleHandle.getOrigin();
+  const corner = rectangleHandle.getCorner();
+
+  if (origin && corner) {
+    painter.paintRectangle(origin, corner);
   }
 });
 initializeHandle(scene.rectangleHandle);
 
-scene.ellipseHandle.onEndInteractionEvent((pointPlaced) => {
-  if (pointPlaced) {
-    const center = scene.ellipseHandle
-      .getWidgetState()
-      .getEllipseHandle()
-      .getOrigin();
-    const point2 = scene.ellipseHandle
-      .getWidgetState()
-      .getPoint2Handle()
-      .getOrigin();
+scene.ellipseHandle.onEndInteractionEvent(() => {
+  const center = scene.ellipseHandle
+    .getWidgetState()
+    .getEllipseHandle()
+    .getOrigin();
+  const point2 = scene.ellipseHandle
+    .getWidgetState()
+    .getPoint2Handle()
+    .getOrigin();
 
+  if (center && point2) {
     let corner = [];
-
     if (
       scene.ellipseHandle.isBehaviorActive(
         BehaviorCategory.RATIO,
@@ -431,20 +430,20 @@ scene.ellipseHandle.onEndInteractionEvent((pointPlaced) => {
 });
 initializeHandle(scene.ellipseHandle);
 
-scene.circleHandle.onEndInteractionEvent((pointPlaced) => {
-  if (pointPlaced) {
-    const center = scene.circleHandle
-      .getWidgetState()
-      .getEllipseHandle()
-      .getOrigin();
-    const point2 = scene.circleHandle
-      .getWidgetState()
-      .getPoint2Handle()
-      .getOrigin();
+scene.circleHandle.onEndInteractionEvent(() => {
+  const center = scene.circleHandle
+    .getWidgetState()
+    .getEllipseHandle()
+    .getOrigin();
+  const point2 = scene.circleHandle
+    .getWidgetState()
+    .getPoint2Handle()
+    .getOrigin();
 
+  if (center && point2) {
     const radius = vec3.distance(center, point2);
-
     const corner = [radius, radius, radius];
+
     painter.paintEllipse(center, corner);
   }
 });

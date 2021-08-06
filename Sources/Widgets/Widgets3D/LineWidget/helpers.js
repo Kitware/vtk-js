@@ -4,6 +4,9 @@ export function calculateTextPosition(model) {
   const vector = [0, 0, 0];
   const handle1WorldPos = model.widgetState.getHandle1().getOrigin();
   const handle2WorldPos = model.widgetState.getHandle2().getOrigin();
+  if (!handle1WorldPos || !handle2WorldPos) {
+    return null;
+  }
   let statePositionOnLine = model.widgetState
     .getPositionOnLine()
     .getPosOnLine();
@@ -22,13 +25,13 @@ export function updateTextPosition(model) {
 export function isHandlePlaced(handleIndex, widgetState) {
   const handle1Origin = widgetState.getHandle1().getOrigin();
   if (handleIndex === 0) {
-    return handle1Origin.length > 0;
+    return handle1Origin != null;
   }
 
   const handle2Origin = widgetState.getHandle2().getOrigin();
   return (
-    handle1Origin.length > 0 &&
-    handle2Origin.length > 0 &&
+    handle1Origin &&
+    handle2Origin &&
     !vtkMath.areEquals(handle1Origin, handle2Origin, 0)
   );
 }
@@ -46,7 +49,7 @@ export function getPoint(handleIndex, widgetState, moveHandle = true) {
       ? widgetState.getMoveHandle()
       : widgetState[`getHandle${handleIndex + 1}`]();
   const origin = handle.getOrigin();
-  return origin.length ? origin : null;
+  return origin || null;
 }
 
 /**

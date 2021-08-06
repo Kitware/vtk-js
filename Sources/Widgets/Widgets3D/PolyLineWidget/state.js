@@ -10,17 +10,15 @@ export default function generateState() {
       initialValues: {
         // when scaleInPixels=true, the handles have 30px height
         scale1: 30,
-        origin: [-1, -1, -1],
         visible: false,
       },
     })
     .addDynamicMixinState({
       labels: ['handles'],
-      mixins: ['origin', 'color', 'scale1'],
+      mixins: ['origin', 'color', 'scale1', 'visible'],
       name: 'handle',
       initialValues: {
         scale1: 30,
-        origin: [-1, -1, -1],
       },
     })
     .build();

@@ -89,7 +89,7 @@ function vtkPolyLineRepresentation(publicAPI, model) {
       .getRepresentationStates(state)
       .reduce((subStates, subState) => {
         const subStateOrigin =
-          subState.getOrigin && subState.getOrigin().length
+          subState.getOrigin && subState.getOrigin()
             ? subState.getOrigin()
             : null;
         const previousSubStateOrigin =

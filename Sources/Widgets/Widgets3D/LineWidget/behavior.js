@@ -59,10 +59,13 @@ export default function widgetBehavior(publicAPI, model) {
     const pos2 = publicAPI.getHandle(1).getOrigin();
 
     let dySign = 1;
-    if (pos1[0] <= pos2[0]) {
-      dySign = pos1[1] <= pos2[1] ? 1 : -1;
-    } else {
-      dySign = pos1[1] <= pos2[1] ? -1 : 1;
+
+    if (pos1 && pos2) {
+      if (pos1[0] <= pos2[0]) {
+        dySign = pos1[1] <= pos2[1] ? 1 : -1;
+      } else {
+        dySign = pos1[1] <= pos2[1] ? -1 : 1;
+      }
     }
     return dySign;
   }
@@ -123,7 +126,7 @@ export default function widgetBehavior(publicAPI, model) {
     const point2 = callData
       ? computeMousePosition(point1, callData)
       : getPoint(1 - handleIndex, model.widgetState);
-    return getLineDirection(point1, point2);
+    return point1 && point2 ? getLineDirection(point1, point2) : null;
   }
 
   /**

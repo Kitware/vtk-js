@@ -423,24 +423,24 @@ export default function widgetBehavior(publicAPI, model) {
    * it resets the widget to its state before it grabbed the focus.
    */
   publicAPI.reset = () => {
-    if (!model.hasFocus) {
-      model.point1Handle.setVisible(false);
-    }
-
-    model.shapeHandle.setVisible(false);
-
     model.point1 = null;
     model.point2 = null;
 
     model.widgetState.getText().setVisible(false);
 
-    model.point1Handle.setOrigin(model.point2Handle.getOrigin());
+    model.point1Handle.setOrigin(null);
+    model.point2Handle.setOrigin(null);
+    model.shapeHandle.setOrigin(null);
+
+    model.shapeHandle.setVisible(false);
     model.point2Handle.setVisible(false);
     model.point2Handle.deactivate();
+
     if (model.hasFocus) {
       model.point1Handle.activate();
       model.activeState = model.point1Handle;
     } else {
+      model.point1Handle.setVisible(false);
       model.point1Handle.deactivate();
       model.activeState = null;
     }

@@ -59,7 +59,9 @@ function vtkCroppingOutlineRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
-    const list = publicAPI.getRepresentationStates(inData[0]);
+    const list = publicAPI
+      .getRepresentationStates(inData[0])
+      .filter((state) => state.getOrigin && state.getOrigin());
     if (list.length === 8) {
       let pi = 0;
       for (let i = 0; i < list.length; i++) {

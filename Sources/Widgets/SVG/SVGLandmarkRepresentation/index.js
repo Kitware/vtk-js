@@ -19,10 +19,19 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
   publicAPI.render = () => {
     const list = publicAPI.getRepresentationStates();
 
-    const coords = list.map((state) => state.getOrigin());
-    const texts = list.map((state, index) =>
-      state.getText ? state.getText() : `L${index}`
-    );
+    const coords = [];
+    const texts = [];
+    list.forEach((state, index) => {
+      if (
+        state.getOrigin &&
+        state.getOrigin() &&
+        state.getVisible &&
+        state.getVisible()
+      ) {
+        coords.push(state.getOrigin());
+        texts.push(state.getText ? state.getText() : `L${index}`);
+      }
+    });
 
     return publicAPI.worldPointsToPixelSpace(coords).then((pixelSpace) => {
       const points2d = pixelSpace.coords;

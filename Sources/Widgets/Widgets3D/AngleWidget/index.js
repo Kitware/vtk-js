@@ -55,7 +55,13 @@ function vtkAngleWidget(publicAPI, model) {
     if (handles.length !== 3) {
       return 0;
     }
-
+    if (
+      !handles[0].getOrigin() ||
+      !handles[1].getOrigin() ||
+      !handles[2].getOrigin()
+    ) {
+      return 0;
+    }
     const vec1 = [0, 0, 0];
     const vec2 = [0, 0, 0];
     vtkMath.subtract(handles[0].getOrigin(), handles[1].getOrigin(), vec1);
