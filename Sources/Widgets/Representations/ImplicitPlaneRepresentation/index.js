@@ -156,6 +156,9 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
   publicAPI.requestData = (inData, outData) => {
     const state = inData[0];
     const origin = state.getOrigin();
+    if (!origin) {
+      return;
+    }
     const normal = state.getNormal();
     const bounds = state.getBounds();
     model.plane.setOrigin(origin);

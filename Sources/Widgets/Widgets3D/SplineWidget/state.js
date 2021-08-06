@@ -15,7 +15,7 @@ export default function generateState() {
       name: 'moveHandle',
       initialValues: {
         scale1: 0.05,
-        origin: [],
+        origin: null,
         visible: false,
       },
     })
@@ -25,7 +25,7 @@ export default function generateState() {
       name: 'handle',
       initialValues: {
         scale1: 0.05,
-        origin: [],
+        origin: null,
       },
     })
     .build();

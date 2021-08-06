@@ -132,52 +132,64 @@ function vtkCircleContextRepresentation(publicAPI, model) {
       direction: direction.getData(),
     };
 
-    for (let i = 0; i < list.length; i++) {
-      const state = list[i];
+    let i = 0;
+    list.forEach((state) => {
       const isActive = state.getActive();
       const scaleFactor = isActive ? model.activeScaleFactor : 1;
 
       const coord = state.getOrigin();
-      typedArray.points[i * 3 + 0] = coord[0];
-      typedArray.points[i * 3 + 1] = coord[1];
-      typedArray.points[i * 3 + 2] = coord[2];
+      if (coord) {
+        typedArray.points[i * 3 + 0] = coord[0];
+        typedArray.points[i * 3 + 1] = coord[1];
+        typedArray.points[i * 3 + 2] = coord[2];
 
-      const right = state.getRight ? state.getRight() : [1, 0, 0];
-      const up = state.getUp ? state.getUp() : [0, 1, 0];
-      const dir = state.getDirection ? state.getDirection() : [0, 0, 1];
-      const rotation = [...right, ...up, ...dir];
+        const right = state.getRight ? state.getRight() : [1, 0, 0];
+        const up = state.getUp ? state.getUp() : [0, 1, 0];
+        const dir = state.getDirection ? state.getDirection() : [0, 0, 1];
+        const rotation = [...right, ...up, ...dir];
 
-      let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
-      scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
+        let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
+        scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
 
-      // Reorient rotation and scale3 since the circle source faces X instead of Z
-      const reorientCircleSource4 = vtkMatrixBuilder
-        .buildFromDegree()
-        .rotateFromDirections([1, 0, 0], [0, 0, 1]) // from X to Z
-        .getMatrix();
-      const reorientCircleSource3 = [];
-      mat3.fromMat4(reorientCircleSource3, reorientCircleSource4);
-      vec3.transformMat4(scale3, scale3, reorientCircleSource4);
-      mat3.multiply(rotation, rotation, reorientCircleSource3);
+        // Reorient rotation and scale3 since the circle source faces X instead of Z
+        const reorientCircleSource4 = vtkMatrixBuilder
+          .buildFromDegree()
+          .rotateFromDirections([1, 0, 0], [0, 0, 1]) // from X to Z
+          .getMatrix();
+        const reorientCircleSource3 = [];
+        mat3.fromMat4(reorientCircleSource3, reorientCircleSource4);
+        vec3.transformMat4(scale3, scale3, reorientCircleSource4);
+        mat3.multiply(rotation, rotation, reorientCircleSource3);
 
-      for (let j = 0; j < 9; j += 1) {
-        typedArray.direction[i * 9 + j] = rotation[j];
+        for (let j = 0; j < 9; j += 1) {
+          typedArray.direction[i * 9 + j] = rotation[j];
+        }
+
+        const scale1 =
+          (state.getScale1 ? state.getScale1() : model.defaultScale) / 2;
+
+        let sFactor = scaleFactor;
+        if (state.getVisible && !state.getVisible()) {
+          sFactor = 0;
+        }
+
+        typedArray.scale[i * 3 + 0] = scale1 * sFactor * scale3[0];
+        typedArray.scale[i * 3 + 1] = scale1 * sFactor * scale3[1];
+        typedArray.scale[i * 3 + 2] = scale1 * sFactor * scale3[2];
+
+        typedArray.color[i] =
+          model.useActiveColor && isActive
+            ? model.activeColor
+            : state.getColor();
+
+        ++i;
       }
+    });
 
-      const scale1 =
-        (state.getScale1 ? state.getScale1() : model.defaultScale) / 2;
-
-      let sFactor = scaleFactor;
-      if (state.getVisible && !state.getVisible()) {
-        sFactor = 0;
-      }
-
-      typedArray.scale[i * 3 + 0] = scale1 * sFactor * scale3[0];
-      typedArray.scale[i * 3 + 1] = scale1 * sFactor * scale3[1];
-      typedArray.scale[i * 3 + 2] = scale1 * sFactor * scale3[2];
-
-      typedArray.color[i] =
-        model.useActiveColor && isActive ? model.activeColor : state.getColor();
+    if (i !== totalCount) {
+      typedArray.points = typedArray.points.subarray(0, 3 * i);
+      typedArray.scale = typedArray.scale.subarray(0, i);
+      typedArray.color = typedArray.color.subarray(0, i);
     }
 
     model.internalPolyData.modified();

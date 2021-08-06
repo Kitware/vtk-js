@@ -58,7 +58,7 @@ function vtkRectangleContextRepresentation(publicAPI, model) {
 
     const dataset = vtkPolyData.newInstance();
 
-    if (state.getVisible()) {
+    if (state.getVisible() && state.getOrigin()) {
       const point1 = state.getOrigin();
       const point2 = state.getCorner();
       const diagonal = [0, 0, 0];

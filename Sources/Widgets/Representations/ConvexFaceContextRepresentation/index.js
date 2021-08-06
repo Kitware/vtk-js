@@ -58,11 +58,12 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
 
   publicAPI.requestData = (inData, outData) => {
     const list = publicAPI.getRepresentationStates(inData[0]);
+    const validState = list.filter((state) => state.getOrigin());
 
-    const points = allocateSize(list.length);
+    const points = allocateSize(validState.length);
 
-    for (let i = 0; i < list.length; i++) {
-      const coords = list[i].getOrigin();
+    for (let i = 0; i < validState.length; i++) {
+      const coords = validState[i].getOrigin();
       points[i * 3] = coords[0];
       points[i * 3 + 1] = coords[1];
       points[i * 3 + 2] = coords[2];

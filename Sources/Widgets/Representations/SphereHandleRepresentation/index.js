@@ -123,27 +123,39 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
       color: color.getData(),
     };
 
-    for (let i = 0; i < list.length; i++) {
-      const state = list[i];
+    let i = 0;
+    list.forEach((state) => {
       const isActive = state.getActive();
       const scaleFactor = isActive ? model.activeScaleFactor : 1;
 
       const coord = state.getOrigin();
-      typedArray.points[i * 3 + 0] = coord[0];
-      typedArray.points[i * 3 + 1] = coord[1];
-      typedArray.points[i * 3 + 2] = coord[2];
+      if (coord) {
+        typedArray.points[i * 3 + 0] = coord[0];
+        typedArray.points[i * 3 + 1] = coord[1];
+        typedArray.points[i * 3 + 2] = coord[2];
 
-      typedArray.scale[i] =
-        scaleFactor *
-        (!state.isVisible || state.isVisible() ? 1 : 0) *
-        (state.getScale1 ? state.getScale1() : model.defaultScale);
+        typedArray.scale[i] =
+          scaleFactor *
+          (!state.isVisible || state.isVisible() ? 1 : 0) *
+          (state.getScale1 ? state.getScale1() : model.defaultScale);
 
-      if (publicAPI.getScaleInPixels()) {
-        typedArray.scale[i] *= publicAPI.getPixelWorldHeightAtCoord(coord);
+        if (publicAPI.getScaleInPixels()) {
+          typedArray.scale[i] *= publicAPI.getPixelWorldHeightAtCoord(coord);
+        }
+
+        typedArray.color[i] =
+          model.useActiveColor && isActive
+            ? model.activeColor
+            : state.getColor();
+
+        i++;
       }
+    });
 
-      typedArray.color[i] =
-        model.useActiveColor && isActive ? model.activeColor : state.getColor();
+    if (i !== totalCount) {
+      typedArray.points = typedArray.points.subarray(0, 3 * i);
+      typedArray.scale = typedArray.scale.subarray(0, i);
+      typedArray.color = typedArray.color.subarray(0, i);
     }
 
     model.internalPolyData.modified();

@@ -55,7 +55,9 @@ function vtkOutlineContextRepresentation(publicAPI, model) {
 
     for (let i = 0; i < list.length; i++) {
       const pt = list[i].getOrigin();
-      vtkBoundingBox.addPoint(model.bbox, ...pt);
+      if (pt) {
+        vtkBoundingBox.addPoint(model.bbox, ...pt);
+      }
     }
 
     // BOUNDS_MAP.length should equal model.points.length

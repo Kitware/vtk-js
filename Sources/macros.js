@@ -511,7 +511,8 @@ export function setGet(publicAPI, model, fieldNames) {
 
 export function getArray(publicAPI, model, fieldNames) {
   fieldNames.forEach((field) => {
-    publicAPI[`get${capitalize(field)}`] = () => [].concat(model[field]);
+    publicAPI[`get${capitalize(field)}`] = () =>
+      model[field] ? [].concat(model[field]) : model[field];
     publicAPI[`get${capitalize(field)}ByReference`] = () => model[field];
   });
 }
@@ -530,6 +531,12 @@ export function setArray(
   defaultVal = undefined
 ) {
   fieldNames.forEach((field) => {
+    if (model[field] && size && model[field].length !== size) {
+      throw new RangeError(
+        `Invalid initial number of values for array (${field})`
+      );
+    }
+
     publicAPI[`set${capitalize(field)}`] = (...args) => {
       if (model.deleted) {
         vtkErrorMacro('instance deleted - cannot call any method');
@@ -537,33 +544,40 @@ export function setArray(
       }
 
       let array = args;
-      // allow an array passed as a single arg.
-      if (array.length === 1 && array[0].length) {
+      let changeDetected;
+      // allow null or an array to be passed as a single arg.
+      if (array.length === 1 && (array[0] == null || array[0].length >= 0)) {
         /* eslint-disable prefer-destructuring */
         array = array[0];
         /* eslint-enable prefer-destructuring */
       }
-
-      if (array.length !== size) {
-        if (array.length < size && defaultVal !== undefined) {
+      if (array == null) {
+        changeDetected = model[field] !== array;
+      } else {
+        if (size && array.length !== size) {
+          if (array.length < size && defaultVal !== undefined) {
+            array = Array.from(array);
+            while (array.length < size) array.push(defaultVal);
+          } else {
+            throw new RangeError(
+              `Invalid number of values for array setter (${field})`
+            );
+          }
+        }
+        changeDetected =
+          model[field] == null ||
+          model[field].some((item, index) => item !== array[index]) ||
+          model[field].length !== array.length;
+        if (changeDetected && !Array.isArray(array)) {
           array = Array.from(array);
-          while (array.length < size) array.push(defaultVal);
-        } else {
-          throw new RangeError(
-            `Invalid number of values for array setter (${field})`
-          );
         }
       }
-      const changeDetected = model[field].some(
-        (item, index) => item !== array[index]
-      );
 
-      if (changeDetected || model[field].length !== array.length) {
-        model[field] = Array.from(array);
+      if (changeDetected) {
+        model[field] = array;
         publicAPI.modified();
-        return true;
       }
-      return false;
+      return changeDetected;
     };
 
     publicAPI[`set${capitalize(field)}From`] = (otherArray) => {

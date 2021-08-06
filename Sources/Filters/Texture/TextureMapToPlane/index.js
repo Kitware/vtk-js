@@ -284,9 +284,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGetArray(
     publicAPI,
     model,
-    ['origin', 'point1', 'point2', 'normal', 'sRange', 'tRange'],
+    ['origin', 'point1', 'point2', 'normal'],
     3
   );
+  macro.setGetArray(publicAPI, model, ['sRange', 'tRange'], 2);
   macro.setGet(publicAPI, model, ['automaticPlaneGeneration']);
 
   macro.algo(publicAPI, model, 1, 1);

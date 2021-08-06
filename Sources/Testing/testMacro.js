@@ -30,6 +30,8 @@ const DEFAULT_VALUES = {
   myProp6: [0.1, 0.2, 0.3, 0.4, 0.5],
   myProp7: MY_ENUM.FIRST,
   myProp8: [1, 2, 3],
+  myProp9: null,
+  // myProp10: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -57,6 +59,12 @@ function extend(publicAPI, model, initialValues = {}) {
 
   // setArray macros with default value
   macro.setGetArray(publicAPI, model, ['myProp8'], 3, 0);
+
+  // setArray macros with no initial value
+  macro.setGetArray(publicAPI, model, ['myProp9'], 3);
+
+  // setArray macros with no size
+  macro.setGetArray(publicAPI, model, ['myProp10']);
 
   // Object specific methods
   myClass(publicAPI, model);
@@ -180,12 +188,24 @@ test('Macro methods array tests', (t) => {
 
   // Test default values
   t.ok(myTestClass.setMyProp8(), 'OK to set no argument');
-  t.ok(myTestClass.setMyProp8(1), 'OK to set not enough argument');
-  t.ok(myTestClass.setMyProp8([2, 3]), 'OK to set too-short array argument');
-  t.ok(
-    myTestClass.setMyProp8(new Float64Array(2)),
+  t.equal(
+    myTestClass.setMyProp8([]),
+    false,
+    'OK to set same empty array as argument'
+  );
+  t.equal(
+    myTestClass.setMyProp8(new Uint8Array()),
+    false,
+    'OK to set same empty typedarray as argument'
+  );
+  t.ok(myTestClass.setMyProp8(10), 'OK to set not enough argument');
+  t.equal(
+    myTestClass.setMyProp8(new Float64Array([10])),
+    false,
     'OK to set too short typed array argument'
   );
+  t.ok(myTestClass.setMyProp8([2, 3]), 'OK to set too-short array argument');
+
   t.throws(
     () => myTestClass.setMyProp8(1, 2, 3, 4),
     /RangeError/,
@@ -200,6 +220,38 @@ test('Macro methods array tests', (t) => {
     () => myTestClass.setMyProp8(new Float32Array(4)),
     /RangeError/,
     'Too large array should throw'
+  );
+
+  t.throws(
+    () => newInstance({ myProp9: [] }),
+    /RangeError/,
+    'Empty array should throw'
+  );
+
+  t.equal(myTestClass.setMyProp9(null), false);
+  t.equal(myTestClass.setMyProp9([0, 1, 2]), true);
+  t.throws(
+    () => myTestClass.setMyProp9(),
+    /RangeError/,
+    'Empty array should throw'
+  );
+  t.throws(
+    () => myTestClass.setMyProp9([]),
+    /RangeError/,
+    'Empty array should throw'
+  );
+
+  t.ok(
+    myTestClass.setMyProp10([0, 1, 2]),
+    'Test setting array from undefined to unlimited size'
+  );
+  t.ok(
+    myTestClass.setMyProp10([0, 1, 2, 3]),
+    'Test setting larger array for unlimited size array'
+  );
+  t.ok(
+    myTestClass.setMyProp10([0, 1, 2]),
+    'Test setting smaller array for unlimited size array'
   );
 
   t.end();
