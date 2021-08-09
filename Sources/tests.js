@@ -89,6 +89,7 @@ import './Testing/testIf';
 import './Testing/testMacro';
 import './Testing/testSerialization';
 import './Testing/testProxy';
+import './Widgets/Core/WidgetManager/test/testWidgetManager';
 import './Widgets/Widgets3D/ResliceCursorWidget/test/testBoundPlane';
 import './Widgets/Widgets3D/ResliceCursorWidget/test/testHelper';
 import './Widgets/Widgets3D/ResliceCursorWidget/test/testMultipleRotationPlanes';
