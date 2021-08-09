@@ -29,7 +29,7 @@ function vtkMouseCameraSliceManipulator(publicAPI, model) {
     // scale the interaction by the height of the viewport
     let viewportHeight = 0.0;
     if (camera.getParallelProjection()) {
-      viewportHeight = camera.getParallelScale();
+      viewportHeight = 2.0 * camera.getParallelScale();
     } else {
       const angle = vtkMath.radiansFromDegrees(camera.getViewAngle());
       viewportHeight = 2.0 * distance * Math.tan(0.5 * angle);

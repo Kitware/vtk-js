@@ -482,7 +482,7 @@ function vtkRenderer(publicAPI, model) {
     // this is for cases such as 2D images which may have zero range
     let minGap = 0.0;
     if (model.activeCamera.getParallelProjection()) {
-      minGap = 0.1 * model.activeCamera.getParallelScale();
+      minGap = 0.2 * model.activeCamera.getParallelScale();
     } else {
       const angle = vtkMath.radiansFromDegrees(
         model.activeCamera.getViewAngle()

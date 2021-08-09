@@ -158,7 +158,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
       const pixelWorldHeight = publicAPI.getPixelWorldHeightAtCoord(center);
       const { rendererPixelDims } = model.displayScaleParams;
       const minDim = Math.min(rendererPixelDims[0], rendererPixelDims[1]);
-      distance = (handleDistanceToCenter * pixelWorldHeight * minDim) / 2;
+      distance = handleDistanceToCenter * pixelWorldHeight * minDim;
     } else {
       distance = (handleDistanceToCenter * length) / 2;
     }
