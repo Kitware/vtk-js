@@ -18,6 +18,9 @@ import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransfe
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
+// Force the loading of HttpDataAccessHelper to support gzip decompression
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+
 import {
   BehaviorCategory,
   ShapeBehavior,
