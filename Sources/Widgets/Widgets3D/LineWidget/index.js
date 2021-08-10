@@ -127,7 +127,6 @@ function vtkLineWidget(publicAPI, model) {
             initialValues: {
               showCircle: false,
               isVisible: false,
-              offsetText: true,
               text: '',
               textProps: {
                 dx: 12,

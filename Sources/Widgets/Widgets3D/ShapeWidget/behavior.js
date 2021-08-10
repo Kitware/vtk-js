@@ -1,10 +1,14 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import {
   BehaviorCategory,
   ShapeBehavior,
-  computeTextPosition,
+  TextPosition,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
+
+import { boundPlane } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
 import { vec3 } from 'gl-matrix';
 
@@ -256,18 +260,161 @@ export default function widgetBehavior(publicAPI, model) {
     }
   };
 
+  const computePositionVector = (textPosition, minPoint, maxPoint) => {
+    const positionVector = [0, 0, 0];
+    switch (textPosition) {
+      case TextPosition.MIN:
+        break;
+      case TextPosition.MAX:
+        vtkMath.subtract(maxPoint, minPoint, positionVector);
+        break;
+      case TextPosition.CENTER:
+      default:
+        vtkMath.subtract(maxPoint, minPoint, positionVector);
+        vtkMath.multiplyScalar(positionVector, 0.5);
+        break;
+    }
+    return positionVector;
+  };
+
+  const computeTextPosition = (worldBounds, textPosition, worldMargin = 0) => {
+    const viewPlaneOrigin = model.manipulator.getOrigin();
+    const viewPlaneNormal = model.manipulator.getNormal();
+    const viewUp = model.renderer.getActiveCamera().getViewUp();
+
+    const positionMargin = Array.isArray(worldMargin)
+      ? [...worldMargin]
+      : [worldMargin, worldMargin, viewPlaneOrigin ? worldMargin : 0];
+
+    // Map bounds from world positions to display positions
+    const minPoint = model.apiSpecificRenderWindow.worldToDisplay(
+      ...vtkBoundingBox.getMinPoint(worldBounds),
+      model.renderer
+    );
+    const maxPoint = model.apiSpecificRenderWindow.worldToDisplay(
+      ...vtkBoundingBox.getMaxPoint(worldBounds),
+      model.renderer
+    );
+    const displayBounds = vtkMath.computeBoundsFromPoints(
+      minPoint,
+      maxPoint,
+      []
+    );
+
+    let planeOrigin = [];
+    let p1 = [];
+    let p2 = [];
+    let p3 = [];
+
+    // If we are in a 2D projection
+    if (
+      viewPlaneOrigin &&
+      viewPlaneNormal &&
+      viewUp &&
+      vtkBoundingBox.intersectPlane(
+        displayBounds,
+        viewPlaneOrigin,
+        viewPlaneNormal
+      )
+    ) {
+      // Map plane origin from world positions to display positions
+      const displayPlaneOrigin = model.apiSpecificRenderWindow.worldToDisplay(
+        ...viewPlaneOrigin,
+        model.renderer
+      );
+      // Map plane normal from world positions to display positions
+      const planeNormalPoint = vtkMath.add(
+        viewPlaneOrigin,
+        viewPlaneNormal,
+        []
+      );
+      const displayPlaneNormalPoint =
+        model.apiSpecificRenderWindow.worldToDisplay(
+          ...planeNormalPoint,
+          model.renderer
+        );
+      const displayPlaneNormal = vtkMath.subtract(
+        displayPlaneNormalPoint,
+        displayPlaneOrigin
+      );
+
+      // Project view plane into bounding box
+      const largeDistance =
+        10 * vtkBoundingBox.getDiagonalLength(displayBounds);
+
+      vtkPlane.projectPoint(
+        vtkBoundingBox.getCenter(displayBounds),
+        displayPlaneOrigin,
+        displayPlaneNormal,
+        planeOrigin
+      );
+
+      const planeU = vtkMath.cross(viewUp, displayPlaneNormal, []);
+      vtkMath.normalize(planeU); // u
+      vtkMath.normalize(viewUp); // v
+      vtkMath.normalize(displayPlaneNormal); // w
+
+      vtkMath.multiplyAccumulate(
+        planeOrigin,
+        viewUp,
+        -largeDistance,
+        planeOrigin
+      );
+      vtkMath.multiplyAccumulate(
+        planeOrigin,
+        planeU,
+        -largeDistance,
+        planeOrigin
+      );
+
+      p1 = vtkMath.multiplyAccumulate(
+        planeOrigin,
+        planeU,
+        2 * largeDistance,
+        []
+      );
+      p2 = vtkMath.multiplyAccumulate(
+        planeOrigin,
+        viewUp,
+        2 * largeDistance,
+        []
+      );
+      p3 = planeOrigin;
+
+      boundPlane(displayBounds, planeOrigin, p1, p2);
+    } else {
+      planeOrigin = [displayBounds[0], displayBounds[2], displayBounds[4]];
+      p1 = [displayBounds[1], displayBounds[2], displayBounds[4]];
+      p2 = [displayBounds[0], displayBounds[3], displayBounds[4]];
+      p3 = [displayBounds[0], displayBounds[2], displayBounds[5]];
+    }
+
+    // Compute horizontal, vertical and depth position
+    const u = computePositionVector(textPosition[0], planeOrigin, p1);
+    const v = computePositionVector(textPosition[1], planeOrigin, p2);
+    const w = computePositionVector(textPosition[2], planeOrigin, p3);
+
+    const finalPosition = planeOrigin;
+    vtkMath.add(finalPosition, u, finalPosition);
+    vtkMath.add(finalPosition, v, finalPosition);
+    vtkMath.add(finalPosition, w, finalPosition);
+    vtkMath.add(finalPosition, positionMargin, finalPosition);
+
+    return model.apiSpecificRenderWindow.displayToWorld(
+      ...finalPosition,
+      model.renderer
+    );
+  };
+
   publicAPI.updateTextPosition = (point1, point2) => {
     const bounds = vtkMath.computeBoundsFromPoints(point1, point2, []);
     const screenPosition = computeTextPosition(
       bounds,
-      model.widgetState.getHorizontalTextPosition(),
-      model.widgetState.getVerticalTextPosition(),
-      0, // FIXME
-      0 // FIXME
+      model.widgetState.getTextPosition(),
+      model.widgetState.getTextWorldMargin()
     );
     const textHandle = model.widgetState.getText();
     textHandle.setOrigin(screenPosition);
-    // textHandle.setOrigin(50, 10, 0);
   };
 
   /*

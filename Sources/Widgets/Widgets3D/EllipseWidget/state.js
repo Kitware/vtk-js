@@ -1,8 +1,5 @@
 import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
-import {
-  HorizontalTextPosition,
-  VerticalTextPosition,
-} from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
+import { TextPosition } from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
 
 export default function generateState() {
   return (
@@ -52,13 +49,16 @@ export default function generateState() {
       })
       // FIXME: to move in text handle sub state
       .addField({
-        name: 'horizontalTextPosition',
-        initialValue: HorizontalTextPosition.MIDDLE,
+        name: 'textPosition',
+        initialValue: [
+          TextPosition.CENTER,
+          TextPosition.CENTER,
+          TextPosition.CENTER,
+        ],
       })
-      // FIXME: to move in text handle sub state
       .addField({
-        name: 'verticalTextPosition',
-        initialValue: VerticalTextPosition.MIDDLE,
+        name: 'textWorldMargin',
+        initialValue: 0,
       })
       .build()
   );
