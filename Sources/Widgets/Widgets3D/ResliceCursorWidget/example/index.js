@@ -48,6 +48,8 @@ const widget = vtkResliceCursorWidget.newInstance();
 const widgetState = widget.getWidgetState();
 widgetState.setKeepOrthogonality(true);
 widgetState.setOpacity(0.6);
+widgetState.setSphereRadius(10);
+widgetState.setLineThickness(5);
 
 const showDebugActors = true;
 
@@ -104,9 +106,6 @@ function createRGBStringFromRGBValues(rgb) {
     rgb[2] * 255
   ).toString()})`;
 }
-
-widgetState.setOpacity(0.6);
-widgetState.setSphereRadius(10);
 
 const initialPlanesState = { ...widgetState.getPlanes() };
 
