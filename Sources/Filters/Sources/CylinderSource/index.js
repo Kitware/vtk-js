@@ -57,9 +57,11 @@ function vtkCylinderSource(publicAPI, model) {
     const xtop = [0.0, 0.0, 0.0];
     const tcbot = [0.0, 0.0];
     const tctop = [0.0, 0.0];
+    const otherRadius =
+      model.otherRadius == null ? model.radius : model.otherRadius;
     for (let i = 0; i < model.resolution; i++) {
       // x coordinate
-      nbot[0] = Math.cos(i * angle);
+      nbot[0] = Math.cos(i * angle + model.initAngle);
       ntop[0] = nbot[0];
       xbot[0] = model.radius * nbot[0] + model.center[0];
       xtop[0] = xbot[0];
@@ -73,9 +75,9 @@ function vtkCylinderSource(publicAPI, model) {
       tctop[1] = 1.0;
 
       // z coordinate
-      nbot[2] = -Math.sin(i * angle);
+      nbot[2] = -Math.sin(i * angle + model.initAngle);
       ntop[2] = nbot[2];
-      xbot[2] = model.radius * nbot[2] + model.center[2];
+      xbot[2] = otherRadius * nbot[2] + model.center[2];
       xtop[2] = xbot[2];
 
       const pointIdx = 2 * i;
@@ -105,7 +107,7 @@ function vtkCylinderSource(publicAPI, model) {
       // Generate points for top/bottom polygons
       for (let i = 0; i < model.resolution; i++) {
         // x coordinate
-        xbot[0] = model.radius * Math.cos(i * angle);
+        xbot[0] = model.radius * Math.cos(i * angle + model.initAngle);
         xtop[0] = xbot[0];
         tcbot[0] = xbot[0];
         tctop[0] = xbot[0];
@@ -119,7 +121,7 @@ function vtkCylinderSource(publicAPI, model) {
         xtop[1] = -0.5 * model.height + model.center[1];
 
         // z coordinate
-        xbot[2] = -model.radius * Math.sin(i * angle);
+        xbot[2] = -otherRadius * Math.sin(i * angle + model.initAngle);
         xtop[2] = xbot[2];
         tcbot[1] = xbot[2];
         tctop[1] = xbot[2];
@@ -178,6 +180,7 @@ function vtkCylinderSource(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   height: 1.0,
+  initAngle: 0,
   radius: 1.0,
   resolution: 6,
   center: [0, 0, 0],
@@ -193,7 +196,14 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['height', 'radius', 'resolution', 'capping']);
+  macro.setGet(publicAPI, model, [
+    'height',
+    'initAngle',
+    'otherRadius',
+    'radius',
+    'resolution',
+    'capping',
+  ]);
   macro.setGetArray(publicAPI, model, ['center', 'direction'], 3);
   macro.algo(publicAPI, model, 0, 1);
   vtkCylinderSource(publicAPI, model);
