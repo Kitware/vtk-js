@@ -1,3 +1,4 @@
+import { Bounds } from '../../../types';
 import vtkPoints from '../../Core/Points';
 import vtkDataSet from '../DataSet';
 
