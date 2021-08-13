@@ -35,7 +35,7 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
     mat4.identity(trans);
 
     const { center, rotationFactor } = model;
-    const useCenterOfRotation = vec3.length(model.centerOfRotation) !== 0.f;
+    const useCenterOfRotation = vec3.length(model.centerOfRotation) !== 0.0;
 
     if (useCenterOfRotation) {
       center[0] = model.centerOfRotation[0];
