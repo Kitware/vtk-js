@@ -31,11 +31,12 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
 
     const camera = renderer.getActiveCamera();
     const cameraPos = camera.getPosition();
+    const cameraFp = camera.getFocalPoint();
 
     mat4.identity(trans);
 
     const { center, rotationFactor } = model;
-    const useCenterOfRotation = vec3.length(model.centerOfRotation) !== 0.0;
+	const useCenterOfRotation = vec3.length(model.centerOfRotation) !== 0.f;
 
     if (useCenterOfRotation) {
       center[0] = model.centerOfRotation[0];
