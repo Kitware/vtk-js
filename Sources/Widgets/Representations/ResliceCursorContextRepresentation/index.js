@@ -161,15 +161,16 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     axis.line.actor.setUserMatrix(mat);
 
     // Rotation handles
-    const handleDistanceToCenter = 0.5;
     let distance = 0;
     if (publicAPI.getScaleInPixels()) {
       const pixelWorldHeight = publicAPI.getPixelWorldHeightAtCoord(center);
       const { rendererPixelDims } = model.displayScaleParams;
-      const minDim = Math.min(rendererPixelDims[0], rendererPixelDims[1]);
-      distance = handleDistanceToCenter * pixelWorldHeight * minDim;
+      const totalSize =
+        Math.min(rendererPixelDims[0], rendererPixelDims[1]) / 2;
+      distance =
+        publicAPI.getRotationHandlePosition() * pixelWorldHeight * totalSize;
     } else {
-      distance = (handleDistanceToCenter * length) / 2;
+      distance = (publicAPI.getRotationHandlePosition() * length) / 2;
     }
 
     const rotationHandlePosition = [];

@@ -82,7 +82,7 @@ export interface vtkGlyph3DMapper extends vtkMapper {
 	getScaleArrayData(): number[];
 
 	/**
-     * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
 	 * @return {Bounds} The bounds for the mapper.
 	 */
 	getBounds(): Bounds;
