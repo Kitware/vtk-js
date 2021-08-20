@@ -51,6 +51,7 @@ function vtkImageStream(publicAPI, model) {
     model.protocol = protocol(session);
     model.protocol
       .subscribeToImageStream(onImage)
+      .promise // new API in wslink 1.0.5+
       .then((subscription) => {
         model.renderTopicSubscription = subscription;
         model.connected = true;
