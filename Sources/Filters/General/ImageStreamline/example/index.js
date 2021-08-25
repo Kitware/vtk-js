@@ -12,7 +12,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 
 import controlPanel from './controller.html';
 

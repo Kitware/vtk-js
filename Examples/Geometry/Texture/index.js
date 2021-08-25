@@ -5,7 +5,7 @@ import 'vtk.js/Sources/Rendering/Profiles/Geometry';
 
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkImageGridSource from 'vtk.js/Sources/Filters/Sources/ImageGridSource';

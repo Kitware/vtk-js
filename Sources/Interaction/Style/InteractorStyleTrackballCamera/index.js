@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkInteractorStyle from 'vtk.js/Sources/Rendering/Core/InteractorStyle';
 import vtkInteractorStyleConstants from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -440,7 +440,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create get-set macros
   macro.setGet(publicAPI, model, ['motionFactor']);
 
-  // For more macro methods, see "Sources/macro.js"
+  // For more macro methods, see "Sources/macros.js"
 
   // Object specific methods
   vtkInteractorStyleTrackballCamera(publicAPI, model);

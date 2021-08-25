@@ -1,6 +1,6 @@
 import { vec4, mat4 } from 'gl-matrix';
 
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';

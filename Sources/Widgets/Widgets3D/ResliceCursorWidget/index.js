@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
@@ -27,6 +27,8 @@ const { vtkErrorMacro } = macro;
 
 function vtkResliceCursorWidget(publicAPI, model) {
   model.classHierarchy.push('vtkResliceCursorWidget');
+
+  model.methodsToLink = ['scaleInPixels', 'rotationHandlePosition'];
 
   // --------------------------------------------------------------------------
   // Private methods

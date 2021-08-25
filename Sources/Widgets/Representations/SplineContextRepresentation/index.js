@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ContextRepresentation';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
@@ -21,12 +21,12 @@ function vtkSplineContextRepresentation(publicAPI, model) {
 
   model.pipelines = {
     area: {
-      actor: vtkActor.newInstance(),
+      actor: vtkActor.newInstance({ parentProp: publicAPI }),
       mapper: vtkMapper.newInstance(),
       triangleFilter: vtkTriangleFilter.newInstance(),
     },
     border: {
-      actor: vtkActor.newInstance(),
+      actor: vtkActor.newInstance({ parentProp: publicAPI }),
       mapper: vtkMapper.newInstance(),
       lineFilter: vtkLineFilter.newInstance(),
     },
@@ -113,13 +113,7 @@ function vtkSplineContextRepresentation(publicAPI, model) {
       polydata.getPolys().setData(outCells);
     }
 
-    if (model.outputBorder) {
-      polydata.getLines().setData(outCells);
-      model.pipelines.border.actor.setVisibility(true);
-    } else {
-      polydata.getLines().setData([]);
-      model.pipelines.border.actor.setVisibility(false);
-    }
+    polydata.getLines().setData(model.outputBorder ? outCells : []);
 
     outData[0] = polydata;
 
@@ -135,6 +129,13 @@ function vtkSplineContextRepresentation(publicAPI, model) {
   };
 
   publicAPI.getSelectedState = (prop, compositeID) => model.state;
+
+  publicAPI.setFill = macro.chain(publicAPI.setFill, (v) =>
+    model.pipelines.area.actor.setVisibility(v)
+  );
+  publicAPI.setOutputBorder = macro.chain(publicAPI.setOutputBorder, (v) =>
+    model.pipelines.border.actor.setVisibility(v)
+  );
 }
 
 // ----------------------------------------------------------------------------
@@ -162,9 +163,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'close',
     'fill',
     'outputBorder',
-    'borderColor',
-    'errorBorderColor',
   ]);
+  macro.setGetArray(publicAPI, model, ['borderColor', 'errorBorderColor'], 3);
 
   // Object specific methods
   vtkSplineContextRepresentation(publicAPI, model);

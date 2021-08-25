@@ -7,7 +7,7 @@ import 'vtk.js/Sources/Rendering/Profiles/Geometry';
 
 import JSZip from 'jszip';
 
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 
 import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';

@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import { registerViewConstructor } from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkForwardPass from 'vtk.js/Sources/Rendering/OpenGL/ForwardPass';
 import vtkOpenGLViewNodeFactory from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
@@ -253,8 +253,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           model.vrDisplay.depthNear = 0.01; // meters
           model.vrDisplay.depthFar = 100.0; // meters
           publicAPI.invokeHaveVRDisplay();
+        } else {
+          vtkErrorMacro('No WebVR display found');
         }
       });
+    } else {
+      vtkErrorMacro('WebVR is not available');
     }
 
     // prevent default context lost handler

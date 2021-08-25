@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';
 import Constants from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/Constants';
@@ -1256,7 +1256,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'aboveRangeColor',
   ]);
 
-  // For more macro methods, see "Sources/macro.js"
+  // For more macro methods, see "Sources/macros.js"
 
   // Object specific methods
   vtkColorTransferFunction(publicAPI, model);

@@ -1,7 +1,7 @@
 import { vec3, mat4 } from 'gl-matrix';
 import * as d3 from 'd3-scale';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
@@ -333,6 +333,11 @@ function vtkCubeAxesActor(publicAPI, model) {
   // main method to rebuild the cube axes, gets called on camera modify
   // and changes to key members
   publicAPI.update = () => {
+    // Can't do anything if we don't have a camera...
+    if (!model.camera) {
+      return;
+    }
+
     // compute what faces to draw
     const facesChanged = publicAPI.computeFacesToDraw();
     const facesToDraw = model.lastFacesToDraw;
@@ -757,7 +762,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.tmMapper.setInputData(model.tmPolyData);
   model.tmTexture = vtkTexture.newInstance();
   model.tmTexture.setInterpolate(false);
-  model.tmActor = vtkActor.newInstance();
+  model.tmActor = vtkActor.newInstance({ parentProp: publicAPI });
   model.tmActor.setMapper(model.tmMapper);
   model.tmActor.addTexture(model.tmTexture);
   model.tmCanvas = document.createElement('canvas');
@@ -773,7 +778,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     model.lastSize = size;
     model.lastAspectRatio = size[0] / size[1];
   });
-  model.pixelActor = vtkActor.newInstance();
+  model.pixelActor = vtkActor.newInstance({ parentProp: publicAPI });
   model.pixelActor.setMapper(model.pixelMapper);
 
   macro.setGet(publicAPI, model, [

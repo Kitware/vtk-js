@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
@@ -19,7 +19,7 @@ function vtkRectangleContextRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   model.mapper = vtkMapper.newInstance();
-  model.actor = vtkActor.newInstance();
+  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
 
   model.mapper.setInputConnection(publicAPI.getOutputPort());
   model.actor.setMapper(model.mapper);

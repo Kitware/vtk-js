@@ -5,6 +5,8 @@ import { vtkAlgorithm, vtkObject } from "../../../interfaces";
  */
 interface ICylinderSourceInitialValues {
 	height?: number;
+	initAngle?: number;
+	otherRadius?: number;
 	radius?: number;
 	resolution?: number;
 	center?: number[];
@@ -58,8 +60,24 @@ export interface vtkCylinderSource extends vtkCylinderSourceBase {
 	getHeight(): number;
 
 	/**
+	 * Get the initial angle along direction
+	 * @default 0
+	 * @see getDirection
+	 */
+	getInitAngle(): number;
+
+	/**
+	 * Get the radius on Z axis. If not null and different from radius,
+	 * the cylinder base becomes an ellipse instead of a circle.
+	 * @default null
+	 * @see getRadius()
+	 */
+	getOtherRadius(): number;
+
+	/**
 	 * Get the base radius of the cylinder.
 	 * @default 0.5
+	 * @see getOtherRadius()
 	 */
 	getRadius(): number;
 
@@ -125,8 +143,22 @@ export interface vtkCylinderSource extends vtkCylinderSourceBase {
 	setHeight(height: number): boolean;
 
 	/**
+	 * Set the initial angle along direction.
+	 * @param {Number} initAngle The initial angle in radian.
+	 */
+	setInitAngle(radianAngle: number): boolean;
+
+	/**
+	 * Set the base Z radius of the cylinder.
+	 * @param {Number} radius The radius of the cylinder in Z.
+	 * @see setRadius()
+	 */
+	setOtherRadius(radius: number): boolean;
+
+	/**
 	 * Set the base radius of the cylinder.
 	 * @param {Number} radius The radius of the cylinder.
+	 * @see setOtherRadius()
 	 */
 	setRadius(radius: number): boolean;
 
@@ -135,6 +167,7 @@ export interface vtkCylinderSource extends vtkCylinderSourceBase {
 	 * @param {Number} resolution The number of facets used to represent the cylinder.
 	 */
 	setResolution(resolution: number): boolean;
+
 }
 
 /**

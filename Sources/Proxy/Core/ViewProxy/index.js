@@ -1,4 +1,4 @@
-import * as macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macros';
 
 import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor';
 import vtkAxesActor from 'vtk.js/Sources/Rendering/Core/AxesActor';

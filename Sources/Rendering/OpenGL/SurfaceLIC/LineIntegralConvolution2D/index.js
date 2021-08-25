@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 
 /* eslint-disable camelcase */
 import vtkLineIntegralConvolution2D_LIC0 from 'vtk.js/Sources/Rendering/OpenGL/SurfaceLIC/glsl/vtkLineIntegralConvolution2D_LIC0.glsl';

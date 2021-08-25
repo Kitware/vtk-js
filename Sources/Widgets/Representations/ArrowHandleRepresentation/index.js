@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkArrow2DSource from 'vtk.js/Sources/Filters/Sources/Arrow2DSource/';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
@@ -134,7 +134,7 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
   // allowing objects to be 'rendered' internally in a VTK scene without
   // being visible on the final output.
   model.displayMapper = vtkPixelSpaceCallbackMapper.newInstance();
-  model.displayActor = vtkActor.newInstance();
+  model.displayActor = vtkActor.newInstance({ parentProp: publicAPI });
   // model.displayActor.getProperty().setOpacity(0); // don't show in 3D
   model.displayActor.setMapper(model.displayMapper);
   model.displayMapper.setInputConnection(publicAPI.getOutputPort());
@@ -151,7 +151,7 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
   model.mapper.setOrientationModeToMatrix();
   model.mapper.setInputConnection(publicAPI.getOutputPort());
 
-  model.actor = vtkActor.newInstance();
+  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
   model.actor.setMapper(model.mapper);
   publicAPI.addActor(model.actor);
 
@@ -319,14 +319,12 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
 
   publicAPI.updateActorVisibility = (
     renderingType = RenderingTypes.FRONT_BUFFER,
-    widgetVisible = true,
     ctxVisible = true,
     handleVisible = true
   ) => {
     const state = publicAPI.getRepresentationStates()[0];
     superClass.updateActorVisibility(
       renderingType,
-      widgetVisible,
       ctxVisible,
       handleVisible && state.isVisible()
     );

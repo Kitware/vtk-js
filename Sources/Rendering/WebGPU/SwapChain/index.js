@@ -1,4 +1,4 @@
-import * as macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macros';
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUSwapChain methods
@@ -55,7 +55,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['colorFormat']);
   macro.setGet(publicAPI, model, ['created', 'device', 'handle']);
 
-  // For more macro methods, see "Sources/macro.js"
+  // For more macro methods, see "Sources/macros.js"
   // Object specific methods
   vtkWebGPUSwapChain(publicAPI, model);
 }

@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 
 const { vtkErrorMacro } = macro;
 
@@ -580,7 +580,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create get macros for array
   macro.getArray(publicAPI, model, ['range']);
 
-  // For more macro methods, see "Sources/macro.js"
+  // For more macro methods, see "Sources/macros.js"
 
   // Object specific methods
   vtkPiecewiseFunction(publicAPI, model);

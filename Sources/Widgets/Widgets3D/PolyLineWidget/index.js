@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
 import vtkPlanePointManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
 import vtkPolyLineRepresentation from 'vtk.js/Sources/Widgets/Representations/PolyLineRepresentation';
@@ -27,6 +27,7 @@ function vtkPolyLineWidget(publicAPI, model) {
     'glyphResolution',
     'lineThickness',
     'useActiveColor',
+    'scaleInPixels',
   ];
   model.behavior = widgetBehavior;
   model.widgetState = stateGenerator();

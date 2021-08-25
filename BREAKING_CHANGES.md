@@ -1,3 +1,8 @@
+## From 18.x to 19
+
+vtkWidgetRepresentation.updateActorVisibility(...) lost the widgetVisibility parameter.
+Overrides should no longer define that parameter.
+
 ## From 17.x to 18
 
 Explicit import needs to be performed to enable rendering implementation. Profiles

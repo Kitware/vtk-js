@@ -1,6 +1,6 @@
 import { mat3, mat4, vec3 } from 'gl-matrix';
 
-import * as macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macros';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -587,8 +587,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
               FSSource,
               '//VTK::UniformFlow::Impl',
               [
-                '  vec3 fdx = vec3(dFdx(vertexVC.x),dFdx(vertexVC.y),dFdx(vertexVC.z));',
-                '  vec3 fdy = vec3(dFdy(vertexVC.x),dFdy(vertexVC.y),dFdy(vertexVC.z));',
+                '  vec3 fdx = dFdx(vertexVC.xyz);',
+                '  vec3 fdy = dFdy(vertexVC.xyz);',
                 '  //VTK::UniformFlow::Impl',
               ] // For further replacements
             ).result;
@@ -597,11 +597,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
               '//VTK::Normal::Impl',
               [
                 'vec3 normalVCVSOutput;',
-                '  fdx = normalize(fdx);',
-                '  fdy = normalize(fdy);',
                 '  if (abs(fdx.x) > 0.0)',
-                '    { normalVCVSOutput = normalize(cross(vec3(fdx.y, -fdx.x, 0.0), fdx)); }',
-                '  else { normalVCVSOutput = normalize(cross(vec3(fdy.y, -fdy.x, 0.0), fdy));}',
+                '    { fdx = normalize(fdx); normalVCVSOutput = normalize(cross(vec3(fdx.y, -fdx.x, 0.0), fdx)); }',
+                '  else { fdy = normalize(fdy); normalVCVSOutput = normalize(cross(vec3(fdy.y, -fdy.x, 0.0), fdy));}',
               ]
             ).result;
           } else {

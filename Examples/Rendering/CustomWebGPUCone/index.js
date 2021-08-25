@@ -3,7 +3,7 @@ import 'vtk.js/Sources/favicon';
 // Load the rendering pieces we want to use (for WebGPU)
 import 'vtk.js/Sources/Rendering/WebGPU/Profiles/Geometry';
 
-import * as macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';

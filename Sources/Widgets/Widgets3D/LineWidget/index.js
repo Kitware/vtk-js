@@ -1,5 +1,5 @@
 import { distance2BetweenPoints } from 'vtk.js/Sources/Common/Core/Math';
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import stateGenerator from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/state';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
 import vtkArrowHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/ArrowHandleRepresentation';

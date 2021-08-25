@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCutter from 'vtk.js/Sources/Filters/Core/Cutter';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';

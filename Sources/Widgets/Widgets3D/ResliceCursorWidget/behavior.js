@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import vtkPlaneManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
@@ -322,6 +322,9 @@ export default function widgetBehavior(publicAPI, model) {
       []
     );
     vtkMath.normalize(previousLineDirection);
+    if (model.widgetState.getActiveRotationPointName() === 'point1') {
+      vtkMath.multiplyScalar(previousLineDirection, -1);
+    }
 
     const currentVectorToOrigin = [0, 0, 0];
     vtkMath.subtract(worldCoords, center, currentVectorToOrigin);

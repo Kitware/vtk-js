@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkCardinalSpline1D from 'vtk.js/Sources/Common/DataModel/CardinalSpline1D';
 import vtkKochanekSpline1D from 'vtk.js/Sources/Common/DataModel/KochanekSpline1D';
 

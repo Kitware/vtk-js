@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkSphereMapper from 'vtk.js/Sources/Rendering/Core/SphereMapper';
 import vtkStickMapper from 'vtk.js/Sources/Rendering/Core/StickMapper';

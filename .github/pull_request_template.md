@@ -4,6 +4,13 @@
 ❗️ Please follow the template below to help other contributors review your work.
 -->
 
+### PR and Code Checklist
+<!--
+NOTE: We will not merge if the following steps have not been completed!
+-->
+- [ ] [semantic-release](https://github.com/semantic-release/semantic-release) commit messages
+- [ ] Run `npm run reformat` to have correctly formatted code
+
 ### Context
 <!--
 Explain why this change is needed. Please include relevant links supporting this change, such as:

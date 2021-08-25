@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCircleSource from 'vtk.js/Sources/Filters/Sources/CircleSource';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
@@ -68,7 +68,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
         colorByArrayName: 'color',
         scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
       }),
-      actor: vtkActor.newInstance({ pickable: false }),
+      actor: vtkActor.newInstance({ pickable: false, parentProp: publicAPI }),
     },
   };
 

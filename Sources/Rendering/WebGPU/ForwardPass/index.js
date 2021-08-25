@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkWebGPUOpaquePass from 'vtk.js/Sources/Rendering/WebGPU/OpaquePass';
 import vtkWebGPUOrderIndepenentTranslucentPass from 'vtk.js/Sources/Rendering/WebGPU/OrderIndependentTranslucentPass';
 import vtkWebGPUVolumePass from 'vtk.js/Sources/Rendering/WebGPU/VolumePass';

@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import DefaultProtocol from 'vtk.js/Sources/IO/Core/ImageStream/DefaultProtocol';
 import ViewStream from 'vtk.js/Sources/IO/Core/ImageStream/ViewStream';
 
@@ -51,6 +51,7 @@ function vtkImageStream(publicAPI, model) {
     model.protocol = protocol(session);
     model.protocol
       .subscribeToImageStream(onImage)
+      .promise // new API in wslink 1.0.5+
       .then((subscription) => {
         model.renderTopicSubscription = subscription;
         model.connected = true;

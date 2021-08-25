@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkGenericRenderWindow from 'vtk.js/Sources/Rendering/Misc/GenericRenderWindow';
 import style from 'vtk.js/Sources/Rendering/Misc/RenderWindowWithControlBar/RenderWindowWithControlBar.module.css';
 

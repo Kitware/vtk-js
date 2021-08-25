@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 
 import vtkCompositeCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeCameraManipulator';
 import vtkCompositeGestureManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeGestureManipulator';

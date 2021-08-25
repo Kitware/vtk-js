@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 
@@ -69,7 +69,6 @@ function vtkAbstractWidget(publicAPI, model) {
       const representation = model.representations[i];
       representation.updateActorVisibility(
         renderingType,
-        model.visibility,
         model.contextVisibility,
         model.handleVisibility
       );

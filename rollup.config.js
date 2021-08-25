@@ -38,7 +38,7 @@ function ignoreFile(name, ignoreList = IGNORE_LIST) {
 }
 
 const entryPoints = [
-  path.join('Sources', 'macro.js'),
+  path.join('Sources', 'macros.js'),
   path.join('Sources', 'vtk.js'),
   path.join('Sources', 'favicon.js'),
   ...glob.sync('Sources/**/*.js').filter((file) => !ignoreFile(file)),

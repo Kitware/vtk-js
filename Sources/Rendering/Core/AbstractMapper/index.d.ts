@@ -1,5 +1,6 @@
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 import vtkPlane from "../../../Common/DataModel/Plane";
+import { mat4 } from "gl-matrix";
 
 /**
  * 

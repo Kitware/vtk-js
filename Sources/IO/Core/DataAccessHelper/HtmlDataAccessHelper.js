@@ -1,6 +1,6 @@
 import pako from 'pako';
 
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import Base64 from 'vtk.js/Sources/Common/Core/Base64';
 import Endian from 'vtk.js/Sources/Common/Core/Endian';
 import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';

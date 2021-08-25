@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 import vtkShader from 'vtk.js/Sources/Rendering/OpenGL/Shader';
 
 const { vtkErrorMacro } = macro;
