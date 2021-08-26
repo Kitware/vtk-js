@@ -33,7 +33,7 @@ function fetchBinary(url, options = {}) {
     vtkErrorMacro('Supported algorithms are: [gz]');
     vtkErrorMacro(`Unkown compression algorithm: ${options.compression}`);
   }
-  
+
   return new Promise((resolve, reject) => {
     const xhr = openAsyncXHR('GET', url, options);
 
@@ -42,7 +42,8 @@ function fetchBinary(url, options = {}) {
         if (xhr.status === 200 || xhr.status === 0) {
           if (options.compression) {
             resolve(
-              pako.inflate(new Uint8Array(xhr.response), { to: 'arraybuffer' }).buffer
+              pako.inflate(new Uint8Array(xhr.response), { to: 'arraybuffer' })
+                .buffer
             );
           } else {
             resolve(xhr.response);
