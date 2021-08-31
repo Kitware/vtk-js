@@ -96,10 +96,10 @@ resolutionChange.addEventListener('input', (e) => {
 
 vrbutton.addEventListener('click', (e) => {
   if (vrbutton.textContent === 'Send To VR') {
-    fullScreenRenderer.getOpenGLRenderWindow().startVR();
+    fullScreenRenderer.getApiSpecificRenderWindow().startVR();
     vrbutton.textContent = 'Return From VR';
   } else {
-    fullScreenRenderer.getOpenGLRenderWindow().stopVR();
+    fullScreenRenderer.getApiSpecificRenderWindow().stopVR();
     vrbutton.textContent = 'Send To VR';
   }
 });

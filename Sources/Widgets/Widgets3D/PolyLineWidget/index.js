@@ -27,6 +27,7 @@ function vtkPolyLineWidget(publicAPI, model) {
     'glyphResolution',
     'lineThickness',
     'useActiveColor',
+    'scaleInPixels',
   ];
   model.behavior = widgetBehavior;
   model.widgetState = stateGenerator();

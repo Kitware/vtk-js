@@ -29,13 +29,25 @@ function openAsyncXHR(method, url, options = {}) {
 }
 
 function fetchBinary(url, options = {}) {
+  if (options && options.compression && options.compression !== 'gz') {
+    vtkErrorMacro('Supported algorithms are: [gz]');
+    vtkErrorMacro(`Unkown compression algorithm: ${options.compression}`);
+  }
+
   return new Promise((resolve, reject) => {
     const xhr = openAsyncXHR('GET', url, options);
 
     xhr.onreadystatechange = (e) => {
       if (xhr.readyState === 4) {
         if (xhr.status === 200 || xhr.status === 0) {
-          resolve(xhr.response);
+          if (options.compression) {
+            resolve(
+              pako.inflate(new Uint8Array(xhr.response), { to: 'arraybuffer' })
+                .buffer
+            );
+          } else {
+            resolve(xhr.response);
+          }
         } else {
           reject({ xhr, e });
         }

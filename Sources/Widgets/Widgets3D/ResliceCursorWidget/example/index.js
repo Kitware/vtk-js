@@ -48,6 +48,8 @@ const widget = vtkResliceCursorWidget.newInstance();
 const widgetState = widget.getWidgetState();
 widgetState.setKeepOrthogonality(true);
 widgetState.setOpacity(0.6);
+widgetState.setSphereRadius(10);
+widgetState.setLineThickness(5);
 
 const showDebugActors = true;
 
@@ -105,9 +107,6 @@ function createRGBStringFromRGBValues(rgb) {
   ).toString()})`;
 }
 
-widgetState.setOpacity(0.6);
-widgetState.setSphereRadius(10);
-
 const initialPlanesState = { ...widgetState.getPlanes() };
 
 let view3D = null;
@@ -144,6 +143,7 @@ for (let i = 0; i < 4; i++) {
     obj.interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
     obj.widgetInstance = obj.widgetManager.addWidget(widget, xyzToViewType[i]);
     obj.widgetInstance.setScaleInPixels(true);
+    obj.widgetInstance.setRotationHandlePosition(0.75);
     obj.widgetManager.enablePicking();
     // Use to update all renderers buffer when actors are moved
     obj.widgetManager.setCaptureOn(CaptureOn.MOUSE_MOVE);

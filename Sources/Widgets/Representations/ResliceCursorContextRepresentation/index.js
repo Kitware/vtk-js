@@ -36,10 +36,17 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     actor: vtkActor.newInstance({ parentProp: publicAPI }),
   };
   model.pipelines.axes = [];
+
+  const squarishCylinderProperties = {
+    initAngle: Math.PI / 4,
+    otherRadius: 0,
+    resolution: 4,
+  };
+
   // Create axis 1
   const axis1 = {};
   axis1.line = {
-    source: vtkCylinderSource.newInstance(),
+    source: vtkCylinderSource.newInstance(squarishCylinderProperties),
     mapper: vtkMapper.newInstance(),
     actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
   };
@@ -56,7 +63,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
   // Create axis 2
   const axis2 = {};
   axis2.line = {
-    source: vtkCylinderSource.newInstance(),
+    source: vtkCylinderSource.newInstance(squarishCylinderProperties),
     mapper: vtkMapper.newInstance(),
     actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
   };
@@ -77,10 +84,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
   // Improve actors rendering
   model.pipelines.center.actor.getProperty().setAmbient(1, 1, 1);
   model.pipelines.center.actor.getProperty().setDiffuse(0, 0, 0);
-
-  // Render it squarish
-  model.pipelines.axes[0].line.source.setResolution(4);
-  model.pipelines.axes[1].line.source.setResolution(4);
+  model.pipelines.center.actor.getProperty().setBackfaceCulling(true);
 
   model.pipelines.axes.forEach((axis) => {
     Object.values(axis).forEach((lineOrRotationHandle) => {
@@ -88,6 +92,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
       const actor = lineOrRotationHandle.actor;
       actor.getProperty().setAmbient(1, 1, 1);
       actor.getProperty().setDiffuse(0, 0, 0);
+      actor.getProperty().setBackfaceCulling(true);
       publicAPI.addActor(actor);
     });
   });
@@ -147,20 +152,25 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     const center = [0, 0, 0];
     vtkMath.multiplyAccumulate(state.getPoint1(), vector, 0.5, center);
     const length = vtkMath.normalize(vector);
-    axis.line.source.setCenter(center);
-    axis.line.source.setDirection(vector);
     axis.line.source.setHeight(20 * length); // make it an infinite line
+    // Rotate the cylinder to be along vector
+    const viewNormal = model.inputData[0].getPlanes()[state.getInViewType()]
+      .normal;
+    const x = vtkMath.cross(vector, viewNormal, []);
+    const mat = [...x, 0, ...vector, 0, ...viewNormal, 0, ...center, 1];
+    axis.line.actor.setUserMatrix(mat);
 
     // Rotation handles
-    const handleDistanceToCenter = 0.5;
     let distance = 0;
     if (publicAPI.getScaleInPixels()) {
       const pixelWorldHeight = publicAPI.getPixelWorldHeightAtCoord(center);
       const { rendererPixelDims } = model.displayScaleParams;
-      const minDim = Math.min(rendererPixelDims[0], rendererPixelDims[1]);
-      distance = (handleDistanceToCenter * pixelWorldHeight * minDim) / 2;
+      const totalSize =
+        Math.min(rendererPixelDims[0], rendererPixelDims[1]) / 2;
+      distance =
+        publicAPI.getRotationHandlePosition() * pixelWorldHeight * totalSize;
     } else {
-      distance = (handleDistanceToCenter * length) / 2;
+      distance = (publicAPI.getRotationHandlePosition() * length) / 2;
     }
 
     const rotationHandlePosition = [];
@@ -319,6 +329,11 @@ function defaultValues(initialValues) {
   return {
     axis1Name: '',
     axis2Name: '',
+    rotationEnabled: true,
+    rotationHandlePosition: 0.5,
+    scaleInPixels: true,
+    viewType: null,
+    ...initialValues,
     coincidentTopologyParameters: {
       Point: {
         factor: -1.0,
@@ -332,12 +347,8 @@ function defaultValues(initialValues) {
         factor: -2.0,
         offset: -2.0,
       },
+      ...initialValues.coincidentTopologyParameters,
     },
-    rotationEnabled: true,
-    rotationHandlePosition: 0.5,
-    scaleInPixels: true,
-    viewType: null,
-    ...initialValues,
   };
 }
 
