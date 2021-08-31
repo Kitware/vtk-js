@@ -61,9 +61,7 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
           vtkMath.dot(model.worldUpVec, model.worldUpVec)
       );
 
-      if (model.useFocalPointAsCenterOfRotation) {
-        vtkMath.add(center, centerOfRotation, centerOfRotation);
-      }
+      vtkMath.add(center, centerOfRotation, centerOfRotation);
 
       mat4.translate(trans, trans, centerOfRotation);
       mat4.rotate(
@@ -74,19 +72,11 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
       );
 
       // Translate back
-      if (model.useFocalPointAsCenterOfRotation) {
-        centerOfRotation[0] = -centerOfRotation[0];
-        centerOfRotation[1] = -centerOfRotation[1];
-        centerOfRotation[2] = -centerOfRotation[2];
-        mat4.translate(trans, trans, centerOfRotation);
-        mat4.translate(trans, trans, center);
-      } else {
-        mat4.translate(
-          trans,
-          trans,
-          vtkMath.subtract(center, centerOfRotation, centerOfRotation)
-        );
-      }
+      centerOfRotation[0] = -centerOfRotation[0];
+      centerOfRotation[1] = -centerOfRotation[1];
+      centerOfRotation[2] = -centerOfRotation[2];
+      mat4.translate(trans, trans, centerOfRotation);
+      mat4.translate(trans, trans, center);
     } else {
       mat4.translate(trans, trans, center);
       mat4.rotate(
