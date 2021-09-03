@@ -129,7 +129,7 @@
     "xml2js": "0.4.23"
   },
   "peerDependencies": {
-    "wslink": "0.1.15"
+    "wslink": "^1.0.5"
   },
   "scripts": {
     "validate": "prettier --config ./prettier.config.js --list-different \"Sources/**/*.js\" \"Examples/**/*.js\"",
