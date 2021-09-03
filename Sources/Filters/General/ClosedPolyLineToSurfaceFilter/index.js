@@ -31,7 +31,7 @@ class SegmentAgregator {
           }
         } else {
           for (let i = 1; i < segment.length - 1; i++) {
-            seg.push(segment[segment.length - 1 - i]);
+            seg.unshift(segment[segment.length - 1 - i]);
           }
         }
 
@@ -72,7 +72,7 @@ class SegmentAgregator {
         // our segment should be reverted and put on the front of the existing one
         const seg = this.segments[-mappingFirst];
         // record new head
-        this.segmentMapping[last] = -mappingFirst;
+        this.segmentMapping[last] = mappingFirst;
 
         for (let i = 1; i < segment.length; i++) {
           seg.unshift(segment[i]);
@@ -94,7 +94,7 @@ class SegmentAgregator {
         const seg = this.segments[-mappingLast];
 
         // record new head
-        this.segmentMapping[first] = -mappingLast;
+        this.segmentMapping[first] = mappingLast;
 
         for (let i = 1; i < segment.length; i++) {
           seg.unshift(segment[segment.length - i - 1]);
@@ -125,13 +125,13 @@ function vtkClosedPolyLineToSurfaceFilter(publicAPI, model) {
   publicAPI.requestData = (inData, outData) => {
     // implement requestData
     const input = inData[0];
-    const output = vtkPolyData.newInstance();
-    output.shallowCopy(input);
-
     if (!input) {
       vtkErrorMacro('Invalid or missing input');
       return;
     }
+
+    const output = vtkPolyData.newInstance();
+    output.shallowCopy(input);
 
     // Extract faces
     const agregator = new SegmentAgregator();
