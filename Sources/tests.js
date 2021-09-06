@@ -24,6 +24,7 @@ import './Common/DataModel/Triangle/test/testTriangle';
 import './Filters/Core/Cutter/test/testCutter';
 import './Filters/General/AppendPolyData/test/testAppendPolyData';
 import './Filters/General/Calculator/test/testCalculator';
+import './Filters/General/ClosedPolyLineToSurfaceFilter/test/testClosedPolyLineToSurfaceFilter';
 import './Filters/General/ImageStreamline/test/testStreamline';
 import './Filters/General/MoleculeToRepresentation/test/testMultipleBonds';
 import './Filters/General/PaintFilter/test/testPaintEllipse';
