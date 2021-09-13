@@ -1,3 +1,24 @@
+## From 21.x to 22
+
+All old-style widgets except OrientationMarkerWidget and PiecewiseGaussianWidget have been removed.
+
+| **Old-style/deprecated widget** | **New-style widget**   |
+|---------------------------------|------------------------|
+| DistanceWidget			            | DistanceWidget         |
+| HandleWidget				            | *not implemented (1)*  |
+| ImageCroppingRegionsWidget      | ImageCroppingWidget    |
+| LabelWidget                     | LabelWidget            |
+| LineWidget                      | LineWidget             |
+| OrientationMarkerWidget (kept)  | *not implemented*      |
+| PiecewiseGaussianWidget (kept)  | *not implemented*      |
+| ResliceCursor                   | ResliceCursorWidget    |
+
+(1): Not re-implemented as if, but a similar behavior can be achieved with the PolyLineWidget.
+
+## From 20.x to 21
+
+SplineWidget's handles now scale up automatically.
+
 ## From 19.x to 20
 
 In ShapeWidget: 
