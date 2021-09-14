@@ -223,25 +223,19 @@ function vtkInteractorStyleImage(publicAPI, model) {
     model.currentImageNumber = i;
 
     function propMatch(j, prop, targetIndex) {
-      return (
-        prop.isA('vtkImageSlice') &&
-        j === targetIndex &&
-        prop.getNestedPickable()
-      );
+      return j === targetIndex && prop.getNestedPickable();
     }
 
-    const props = renderer.getViewProps();
+    const props = renderer
+      .getViewProps()
+      .filter((prop) => prop.isA('vtkImageSlice'));
     let targetIndex = i;
     if (i < 0) {
       targetIndex += props.length;
     }
-    let imageProp = null;
-    for (let j = 0; j < props.length; ++j) {
-      if (propMatch(j, props[j], targetIndex)) {
-        imageProp = props[j];
-        break;
-      }
-    }
+    const imageProp = props.find((prop, index) =>
+      propMatch(index, prop, targetIndex)
+    );
 
     if (imageProp) {
       publicAPI.setCurrentImageProperty(imageProp.getProperty());
@@ -263,7 +257,7 @@ const DEFAULT_VALUES = {
   windowLevelCurrentPosition: [0, 0],
   lastSlicePosition: 0,
   windowLevelInitial: [1.0, 0.5],
-  currentImageProperty: 0,
+  // currentImageProperty: null,
   currentImageNumber: -1,
   interactionMode: 'IMAGE2D',
   xViewRightVector: [0, 1, 0],
@@ -284,6 +278,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Create get-set macros
   macro.setGet(publicAPI, model, ['interactionMode']);
+  macro.get(publicAPI, model, ['currentImageProperty']);
 
   // For more macro methods, see "Sources/macros.js"
 
