@@ -40,7 +40,7 @@ function vtkImageMarchingCubes(publicAPI, model) {
   };
 
   // Retrieve voxel coordinates. i-j-k is origin of voxel.
-  publicAPI.getVoxelPoints = (i, j, k, dims, origin, spacing) => {
+  publicAPI.getVoxelPoints = (i, j, k, origin, spacing) => {
     // (i,i+1),(j,j+1),(k,k+1) - i varies fastest; then j; then k
     voxelPts[0] = origin[0] + i * spacing[0]; // 0
     voxelPts[1] = origin[1] + j * spacing[1];
@@ -198,6 +198,7 @@ function vtkImageMarchingCubes(publicAPI, model) {
     i,
     j,
     k,
+    extent,
     slice,
     dims,
     origin,
@@ -229,7 +230,13 @@ function vtkImageMarchingCubes(publicAPI, model) {
       return; // don't get the voxel coordinates, nothing to do
     }
 
-    publicAPI.getVoxelPoints(i, j, k, dims, origin, spacing);
+    publicAPI.getVoxelPoints(
+      i + extent[0],
+      j + extent[2],
+      k + extent[4],
+      origin,
+      spacing
+    );
     if (model.computeNormals) {
       publicAPI.getVoxelGradients(i, j, k, dims, slice, spacing, scalars);
     }
@@ -320,6 +327,7 @@ function vtkImageMarchingCubes(publicAPI, model) {
     const nBuffer = [];
 
     // Loop over all voxels, determine case and process
+    const extent = input.getExtent();
     const slice = dims[0] * dims[1];
     for (let k = 0; k < dims[2] - 1; ++k) {
       for (let j = 0; j < dims[1] - 1; ++j) {
@@ -329,6 +337,7 @@ function vtkImageMarchingCubes(publicAPI, model) {
             i,
             j,
             k,
+            extent,
             slice,
             dims,
             origin,

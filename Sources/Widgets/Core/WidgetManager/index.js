@@ -219,7 +219,7 @@ function vtkWidgetManager(publicAPI, model) {
       const cameraDir = camera.getDirectionOfProjection();
       const isParallel = camera.getParallelProjection();
       const dispHeightFactor = isParallel
-        ? camera.getParallelScale()
+        ? 2 * camera.getParallelScale()
         : 2 * Math.tan(radiansFromDegrees(camera.getViewAngle()) / 2);
 
       model.widgets.forEach((w) => {

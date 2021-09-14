@@ -874,7 +874,7 @@ void getRayPointIntersectionBounds(
   float vSize1, float vSize2)
 {
   float result = dot(rayDir, planeDir);
-  if (result == 0.0)
+  if (abs(result) < 1e-6)
   {
     return;
   }

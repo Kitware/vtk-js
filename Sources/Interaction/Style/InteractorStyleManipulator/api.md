@@ -1,6 +1,6 @@
 ## Introduction
 
-vtkPVInteractorStyle allows the user to interactively manipulate the camera,
+InteractorStyleManipulator allows the user to interactively manipulate the camera,
 the viewpoint of the scene.  The left button is for rotation; shift + left
 button is for rolling; the right button is for panning; and shift + right
 button is for zooming.  This class fires vtkCommand::StartInteractionEvent

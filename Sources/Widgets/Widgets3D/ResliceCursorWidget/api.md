@@ -24,6 +24,8 @@ These sub states contain :
 
 - activeLineState: Used in the behavior.js file in order to get the attribute of the selected line
 
+- activeRotationPointName: Used in the behavior.js file in order to get the selected rotation point
+
 - image: vtkImage used to place the reslice cursor
 
 - activeViewType: Used in the behavior.js file in order to get the current view
