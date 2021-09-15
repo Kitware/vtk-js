@@ -10,15 +10,19 @@ const settings = require('./webpack.settings.js');
 // Configure the webpack-dev-server
 function configureDevServer(port) {
   return {
-    contentBase: path.resolve(__dirname, settings.paths.dist.base),
-    public: settings.devServerConfig.public(),
+    static: {
+      directory: path.resolve(__dirname, settings.paths.dist.base),
+    },
+    client: {
+      overlay: true,
+      webSocketURL: settings.devServerConfig.ws,
+    },
     host: settings.devServerConfig.host(),
     port: port,
-    quiet: true,
-    hot: true,
-    hotOnly: true,
-    overlay: true,
-    stats: 'errors-only',
+    hot: 'only',
+    devMiddleware: {
+      stats: 'errors-only',
+    },
     headers: {
       'Access-Control-Allow-Origin': '*',
     },
@@ -28,21 +32,8 @@ function configureDevServer(port) {
 const port = settings.devServerConfig.port();
 
 // Development module exports
-module.exports = [
-  merge(common.baseConfig, {
-    mode: 'development',
-    devtool: 'inline-source-map',
-    devServer: configureDevServer(port),
-    plugins: [
-      new webpack.HotModuleReplacementPlugin(),
-    ],
-  }),
-  merge(common.liteConfig, {
-    mode: 'development',
-    devtool: 'inline-source-map',
-    devServer: configureDevServer(port + 1),
-    plugins: [
-      new webpack.HotModuleReplacementPlugin(),
-    ],
-  }),
-];
+module.exports = merge(common.baseConfig, {
+  mode: 'development',
+  devtool: 'inline-source-map',
+  devServer: configureDevServer(port),
+});
