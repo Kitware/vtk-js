@@ -15,6 +15,8 @@ program.version('1.0.0')
   .option('--sample-data [path]', 'Convert sample data from ParaViewData\n')
   .parse(process.argv);
 
+const options = program.opts();
+
 // ----------------------------------------------------------------------------
 // Need argument otherwise print help/usage
 // ----------------------------------------------------------------------------
@@ -31,7 +33,7 @@ const pvPossibleBasePath = [];
 
 if(!paraview) {
     paraview = [];
-    [program.paraview].concat(pvPossibleBasePath).forEach(function(directory){
+    [options.paraview].concat(pvPossibleBasePath).forEach(function(directory){
         try {
             if(fs.statSync(directory).isDirectory()) {
                 paraview.push(directory);
@@ -42,7 +44,7 @@ if(!paraview) {
     });
 }
 
-if (!process.argv.slice(2).length || !program.help || paraview.length === 0) {
+if (!process.argv.slice(2).length || !options.help || paraview.length === 0) {
   program.outputHelp();
   process.exit(0);
 }
@@ -51,12 +53,12 @@ var pvPythonExecs = shell.find(paraview).filter(function(file) { return file.mat
 if(pvPythonExecs.length < 1) {
     console.log('Could not find pvpython in your ParaView HOME directory ($PARAVIEW_HOME)');
     program.outputHelp();
-} else if (program.sampleData) {
+} else if (options.sampleData) {
   console.log('Extract sample datasets');
   const cmdLineSample = [
     pvPythonExecs[0], '-dr',
     path.normalize(path.join(__dirname, 'vtk-data-converter.py')),
-    '--sample-data', program.sampleData,
+    '--sample-data', options.sampleData,
     '--output', path.normalize(path.join(__dirname, '../../Data')),,
   ];
   console.log('\n===============================================================================');
@@ -68,15 +70,15 @@ if(pvPythonExecs.length < 1) {
     const cmdLine = [
         pvPythonExecs[0], '-dr',
         path.normalize(path.join(__dirname, 'vtk-data-converter.py')),
-        '--input', program.input,
-        '--output', program.output,
+        '--input', options.input,
+        '--output', options.output,
     ];
 
-    if (program.extractSurface) {
+    if (options.extractSurface) {
       cmdLine.push('--extract-surface');
     }
 
-    if (program.merge) {
+    if (options.merge) {
       cmdLine.push('--merge');
     }
 
