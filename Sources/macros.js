@@ -1203,9 +1203,8 @@ export function proxy(publicAPI, model) {
         return null;
       }
 
-      const newValue = sourceLink.instance[
-        `get${capitalize(sourceLink.propertyName)}`
-      ]();
+      const newValue =
+        sourceLink.instance[`get${capitalize(sourceLink.propertyName)}`]();
       if (!shallowEquals(newValue, value) || force) {
         value = newValue;
         updateInProgress = true;
@@ -1340,9 +1339,8 @@ export function proxy(publicAPI, model) {
     // Allow dynamic registration of links at the application level
     if (model.links) {
       for (let i = 0; i < model.links.length; i++) {
-        const { link, property, persistent, updateOnBind, type } = model.links[
-          i
-        ];
+        const { link, property, persistent, updateOnBind, type } =
+          model.links[i];
         if (type === 'application') {
           const sLink = model.proxyManager.getPropertyLink(link, persistent);
           publicAPI.registerPropertyLinkForGC(sLink, 'application');

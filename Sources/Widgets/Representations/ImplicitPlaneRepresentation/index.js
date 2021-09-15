@@ -265,12 +265,8 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.updateActorVisibility = (renderingType, ctxVisible, hVisible) => {
-    const {
-      planeVisible,
-      originVisible,
-      normalVisible,
-      outlineVisible,
-    } = model;
+    const { planeVisible, originVisible, normalVisible, outlineVisible } =
+      model;
     if (renderingType === RenderingTypes.PICKING_BUFFER) {
       model.pipelines.plane.actor.setVisibility(planeVisible);
       model.pipelines.origin.actor.setVisibility(originVisible);

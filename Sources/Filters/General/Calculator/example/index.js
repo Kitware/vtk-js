@@ -156,10 +156,11 @@ function applyFormula() {
       simpleFilter.update();
 
       // Update UI with new range
-      const [
-        min,
-        max,
-      ] = simpleFilter.getOutputData().getPointData().getScalars().getRange();
+      const [min, max] = simpleFilter
+        .getOutputData()
+        .getPointData()
+        .getScalars()
+        .getRange();
       document.querySelector('.min').value = min;
       document.querySelector('.max').value = max;
       lookupTable.setMappingRange(min, max);

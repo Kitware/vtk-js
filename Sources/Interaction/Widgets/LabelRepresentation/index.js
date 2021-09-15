@@ -90,12 +90,13 @@ function vtkLabelRepresentation(publicAPI, model) {
       );
       const focalDepth = displayCenter[2];
 
-      const worldStartEventPosition = vtkInteractorObserver.computeDisplayToWorld(
-        model.renderer,
-        model.lastEventPosition[0],
-        model.lastEventPosition[1],
-        focalDepth
-      );
+      const worldStartEventPosition =
+        vtkInteractorObserver.computeDisplayToWorld(
+          model.renderer,
+          model.lastEventPosition[0],
+          model.lastEventPosition[1],
+          focalDepth
+        );
 
       const worldCurrentPosition = vtkInteractorObserver.computeDisplayToWorld(
         model.renderer,
@@ -217,13 +218,8 @@ function vtkLabelRepresentation(publicAPI, model) {
           ? model.selectLabelStyle
           : model.labelStyle;
 
-        const {
-          width,
-          height,
-          lineSpace,
-          padding,
-          lines,
-        } = publicAPI.computeTextDimensions(model.labelText);
+        const { width, height, lineSpace, padding, lines } =
+          publicAPI.computeTextDimensions(model.labelText);
 
         model.canvas.height = Math.round(height);
         model.canvas.width = width + 2 * padding;

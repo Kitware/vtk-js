@@ -76,15 +76,15 @@ document.querySelector('#txtIpt').addEventListener('keyup', updateText);
 
 function observeDistance() {
   lineWidget.onInteractionEvent(() => {
-    document.getElementById(
-      'distance'
-    ).innerHTML = widget.getDistance().toFixed(2);
+    document.getElementById('distance').innerHTML = widget
+      .getDistance()
+      .toFixed(2);
   });
 
   lineWidget.onEndInteractionEvent(() => {
-    document.getElementById(
-      'distance'
-    ).innerHTML = widget.getDistance().toFixed(2);
+    document.getElementById('distance').innerHTML = widget
+      .getDistance()
+      .toFixed(2);
   });
 }
 
@@ -206,15 +206,18 @@ document.querySelector('#addWidget').addEventListener('click', () => {
       getHandle[1].getShape() === '' ? 'sphere' : getHandle[1].getShape();
     document.getElementById('idh2').value =
       getHandle[1].getShape() === '' ? 'sphere' : getHandle[2].getShape();
-    document.getElementById(
-      'visiH1'
-    ).checked = lineWidget.getWidgetState().getHandle1().getVisible();
-    document.getElementById(
-      'visiH2'
-    ).checked = lineWidget.getWidgetState().getHandle2().getVisible();
-    document.getElementById(
-      'txtIpt'
-    ).value = lineWidget.getWidgetState().getText().getText();
+    document.getElementById('visiH1').checked = lineWidget
+      .getWidgetState()
+      .getHandle1()
+      .getVisible();
+    document.getElementById('visiH2').checked = lineWidget
+      .getWidgetState()
+      .getHandle2()
+      .getVisible();
+    document.getElementById('txtIpt').value = lineWidget
+      .getWidgetState()
+      .getText()
+      .getText();
   });
 });
 

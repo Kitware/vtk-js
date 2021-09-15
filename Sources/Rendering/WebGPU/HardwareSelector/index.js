@@ -188,12 +188,13 @@ function convertSelection(fieldassociation, dataMap, buffdata) {
         value.info.displayPosition[1],
         value.info.zValue,
       ];
-      child.getProperties().worldPosition = buffdata.webGPURenderWindow.displayToWorld(
-        value.info.displayPosition[0],
-        value.info.displayPosition[1],
-        value.info.zValue,
-        buffdata.renderer
-      );
+      child.getProperties().worldPosition =
+        buffdata.webGPURenderWindow.displayToWorld(
+          value.info.displayPosition[0],
+          value.info.displayPosition[1],
+          value.info.zValue,
+          buffdata.renderer
+        );
     }
 
     child.setSelectionList(value.attributeIDs);

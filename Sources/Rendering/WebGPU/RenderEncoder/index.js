@@ -95,13 +95,13 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
           view: model.colorTextureViews[i].getHandle(),
         };
       } else {
-        model.description.colorAttachments[i].view = model.colorTextureViews[
-          i
-        ].getHandle();
+        model.description.colorAttachments[i].view =
+          model.colorTextureViews[i].getHandle();
       }
     }
     if (model.depthTextureView) {
-      model.description.depthStencilAttachment.view = model.depthTextureView.getHandle();
+      model.description.depthStencilAttachment.view =
+        model.depthTextureView.getHandle();
     }
   };
 

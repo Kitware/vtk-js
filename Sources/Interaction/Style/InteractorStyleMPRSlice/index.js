@@ -44,11 +44,10 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkInteractorStyleMPRSlice');
 
-  model.trackballManipulator = vtkMouseCameraTrackballRotateManipulator.newInstance(
-    {
+  model.trackballManipulator =
+    vtkMouseCameraTrackballRotateManipulator.newInstance({
       button: 1,
-    }
-  );
+    });
   model.panManipulator = vtkMouseCameraTrackballPanManipulator.newInstance({
     button: 1,
     shift: true,

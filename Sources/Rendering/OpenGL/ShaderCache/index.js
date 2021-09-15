@@ -24,8 +24,11 @@ function vtkShaderCache(publicAPI, model) {
 
     let nFSSource = FSSource;
     if (GSSource.length > 0) {
-      nFSSource = vtkShaderProgram.substitute(nFSSource, 'VSOut', 'GSOut')
-        .result;
+      nFSSource = vtkShaderProgram.substitute(
+        nFSSource,
+        'VSOut',
+        'GSOut'
+      ).result;
     }
 
     const gl2 = model.openGLRenderWindow.getWebgl2();
@@ -83,10 +86,16 @@ function vtkShaderCache(publicAPI, model) {
     ).result;
 
     if (gl2) {
-      nVSSource = vtkShaderProgram.substitute(nVSSource, 'varying', 'out')
-        .result;
-      nFSSource = vtkShaderProgram.substitute(nFSSource, 'varying', 'in')
-        .result;
+      nVSSource = vtkShaderProgram.substitute(
+        nVSSource,
+        'varying',
+        'out'
+      ).result;
+      nFSSource = vtkShaderProgram.substitute(
+        nFSSource,
+        'varying',
+        'in'
+      ).result;
       nFSSource = vtkShaderProgram.substitute(
         nFSSource,
         'gl_FragData\\[0\\]',

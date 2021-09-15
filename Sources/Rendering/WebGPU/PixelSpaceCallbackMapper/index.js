@@ -11,9 +11,8 @@ function vtkWebGPUPixelSpaceCallbackMapper(publicAPI, model) {
   model.classHierarchy.push('vtkWebGPUPixelSpaceCallbackMapper');
 
   publicAPI.opaquePass = (prepass, renderPass) => {
-    model.WebGPURenderer = publicAPI.getFirstAncestorOfType(
-      'vtkWebGPURenderer'
-    );
+    model.WebGPURenderer =
+      publicAPI.getFirstAncestorOfType('vtkWebGPURenderer');
     model.WebGPURenderWindow = model.WebGPURenderer.getParent();
     const aspectRatio = model.WebGPURenderer.getAspectRatio();
     const camera = model.WebGPURenderer

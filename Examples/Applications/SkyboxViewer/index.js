@@ -313,11 +313,12 @@ function createVisualization(container, mapReader) {
   // Update camera control
   if (vtkDeviceOrientationToCamera.isDeviceOrientationSupported()) {
     vtkDeviceOrientationToCamera.addWindowListeners();
-    const cameraListenerId = vtkDeviceOrientationToCamera.addCameraToSynchronize(
-      interactor,
-      camera,
-      updateCameraCallBack
-    );
+    const cameraListenerId =
+      vtkDeviceOrientationToCamera.addCameraToSynchronize(
+        interactor,
+        camera,
+        updateCameraCallBack
+      );
     interactor.requestAnimation('deviceOrientation');
     // Test again after 100ms
     setTimeout(() => {

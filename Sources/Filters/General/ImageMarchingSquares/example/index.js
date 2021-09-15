@@ -58,10 +58,11 @@ mapper.setInputConnection(mSquares.getOutputPort());
 // Update the pipeline to obtain metadata (range) about scalars
 sample.update();
 const cValues = [];
-const [
-  min,
-  max,
-] = sample.getOutputData().getPointData().getScalars().getRange();
+const [min, max] = sample
+  .getOutputData()
+  .getPointData()
+  .getScalars()
+  .getRange();
 for (let i = 0; i < 20; ++i) {
   cValues[i] = min + (i / 19) * (max - min);
 }

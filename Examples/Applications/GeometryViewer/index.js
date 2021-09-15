@@ -240,11 +240,9 @@ function createPipeline(fileName, fileContents) {
   // --------------------------------------------------------------------
 
   function updateRepresentation(event) {
-    const [
-      visibility,
-      representation,
-      edgeVisibility,
-    ] = event.target.value.split(':').map(Number);
+    const [visibility, representation, edgeVisibility] = event.target.value
+      .split(':')
+      .map(Number);
     actor.getProperty().set({ representation, edgeVisibility });
     actor.setVisibility(!!visibility);
     renderWindow.render();
@@ -299,9 +297,8 @@ function createPipeline(fileName, fileContents) {
     let scalarMode = ScalarMode.DEFAULT;
     const scalarVisibility = location.length > 0;
     if (scalarVisibility) {
-      const newArray = source[`get${location}`]().getArrayByName(
-        colorByArrayName
-      );
+      const newArray =
+        source[`get${location}`]().getArrayByName(colorByArrayName);
       activeArray = newArray;
       const newDataRange = activeArray.getRange();
       dataRange[0] = newDataRange[0];

@@ -180,14 +180,13 @@ function vtkDataSetAttributes(publicAPI, model) {
     Object.keys(AttributeCopyOperations)
       .filter((op) => op !== 'ALLCOPY')
       .forEach((attCopyOp) => {
-        model.copyAttributeFlags[
-          AttributeCopyOperations[attCopyOp]
-        ] = Object.keys(AttributeTypes)
-          .filter((ty) => ty !== 'NUM_ATTRIBUTES')
-          .reduce((a, b) => {
-            a[AttributeTypes[b]] = true;
-            return a;
-          }, []);
+        model.copyAttributeFlags[AttributeCopyOperations[attCopyOp]] =
+          Object.keys(AttributeTypes)
+            .filter((ty) => ty !== 'NUM_ATTRIBUTES')
+            .reduce((a, b) => {
+              a[AttributeTypes[b]] = true;
+              return a;
+            }, []);
       });
     // Override some operations where we don't want to copy:
     model.copyAttributeFlags[AttributeCopyOperations.COPYTUPLE][

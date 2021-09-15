@@ -40,8 +40,10 @@ function vtkProgressHandler(publicAPI, model) {
     });
   };
 
-  publicAPI.wrapPromiseFunction = (fn) => (...args) =>
-    publicAPI.wrapPromise(fn(...args));
+  publicAPI.wrapPromiseFunction =
+    (fn) =>
+    (...args) =>
+      publicAPI.wrapPromise(fn(...args));
 }
 
 // ----------------------------------------------------------------------------

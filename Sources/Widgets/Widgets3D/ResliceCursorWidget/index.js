@@ -191,11 +191,11 @@ function vtkResliceCursorWidget(publicAPI, model) {
       );
 
       const realOffset = model.widgetState.getCameraOffsets()[viewType];
-      const displayFocal = vtkMath.add(displayResliceCenter, realOffset, [
-        0,
-        0,
-        0,
-      ]);
+      const displayFocal = vtkMath.add(
+        displayResliceCenter,
+        realOffset,
+        [0, 0, 0]
+      );
 
       const worldFocal = renderer.normalizedDisplayToWorld(
         ...displayFocal,

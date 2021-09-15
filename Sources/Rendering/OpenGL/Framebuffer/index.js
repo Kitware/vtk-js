@@ -26,7 +26,8 @@ function vtkFramebuffer(publicAPI, model) {
     model.previousDrawBinding = gl.getParameter(
       model.context.FRAMEBUFFER_BINDING
     );
-    model.previousActiveFramebuffer = model.openGLRenderWindow.getActiveFramebuffer();
+    model.previousActiveFramebuffer =
+      model.openGLRenderWindow.getActiveFramebuffer();
   };
 
   publicAPI.saveCurrentBuffers = (modeIn) => {

@@ -328,12 +328,8 @@ function vtkWidgetManager(publicAPI, model) {
           return;
         }
         publicAPI.updateSelectionFromXY(position.x, position.y);
-        const {
-          requestCount,
-          selectedState,
-          representation,
-          widget,
-        } = publicAPI.getSelectedData();
+        const { requestCount, selectedState, representation, widget } =
+          publicAPI.getSelectedData();
 
         if (requestCount) {
           // Call activate only once
@@ -478,11 +474,9 @@ function vtkWidgetManager(publicAPI, model) {
 
   publicAPI.updateSelectionFromMouseEvent = (event) => {
     const { pageX, pageY } = event;
-    const {
-      top,
-      left,
-      height,
-    } = model.apiSpecificRenderWindow.getCanvas().getBoundingClientRect();
+    const { top, left, height } = model.apiSpecificRenderWindow
+      .getCanvas()
+      .getBoundingClientRect();
     const x = pageX - left;
     const y = height - (pageY - top);
     publicAPI.updateSelectionFromXY(x, y);

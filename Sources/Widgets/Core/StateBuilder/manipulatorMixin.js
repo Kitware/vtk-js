@@ -6,12 +6,8 @@ function vtkManipulatorMixin(publicAPI, model) {
   publicAPI.updateManipulator = () => {
     if (model.manipulator) {
       const { origin, normal, direction } = model;
-      const {
-        setOrigin,
-        setCenter,
-        setNormal,
-        setDirection,
-      } = model.manipulator;
+      const { setOrigin, setCenter, setNormal, setDirection } =
+        model.manipulator;
 
       if (origin && setOrigin) {
         setOrigin(origin);

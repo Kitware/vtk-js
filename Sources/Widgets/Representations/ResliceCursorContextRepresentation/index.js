@@ -154,8 +154,8 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     const length = vtkMath.normalize(vector);
     axis.line.source.setHeight(20 * length); // make it an infinite line
     // Rotate the cylinder to be along vector
-    const viewNormal = model.inputData[0].getPlanes()[state.getInViewType()]
-      .normal;
+    const viewNormal =
+      model.inputData[0].getPlanes()[state.getInViewType()].normal;
     const x = vtkMath.cross(vector, viewNormal, []);
     const mat = [...x, 0, ...vector, 0, ...viewNormal, 0, ...center, 1];
     axis.line.actor.setUserMatrix(mat);

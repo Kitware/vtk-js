@@ -48,9 +48,8 @@ function loadZipContent(zipContent, container) {
       }
 
       // Synchronize context
-      const synchronizerContext = vtkSynchronizableRenderWindow.getSynchronizerContext(
-        CONTEXT_NAME
-      );
+      const synchronizerContext =
+        vtkSynchronizableRenderWindow.getSynchronizerContext(CONTEXT_NAME);
       synchronizerContext.setFetchArrayFunction(getArray);
 
       // openGLRenderWindow
