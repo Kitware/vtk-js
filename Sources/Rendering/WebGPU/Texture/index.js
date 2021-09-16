@@ -28,7 +28,7 @@ function vtkWebGPUTexture(publicAPI, model) {
     /* eslint-disable no-bitwise */
     model.usage = options.usage
       ? options.usage
-      : GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_DST;
+      : GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST;
     /* eslint-enable no-undef */
     /* eslint-enable no-bitwise */
     model.handle = model.device.getHandle().createTexture({
@@ -50,7 +50,7 @@ function vtkWebGPUTexture(publicAPI, model) {
     /* eslint-disable no-bitwise */
     model.usage = options.usage
       ? options.usage
-      : GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_DST;
+      : GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST;
     /* eslint-enable no-undef */
     /* eslint-enable no-bitwise */
   };

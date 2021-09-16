@@ -176,7 +176,7 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
 {
   values: array<${model.name}StructEntry>;
 };
-[[binding(${binding}), group(${group})]] var<storage> ${model.name}: [[access(read)]] ${model.name}Struct;
+[[binding(${binding}), group(${group})]] var<storage, read> ${model.name}: ${model.name}Struct;
 `);
 
     return lines.join('\n');
