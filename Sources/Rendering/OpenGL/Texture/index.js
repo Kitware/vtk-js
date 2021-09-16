@@ -374,7 +374,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     result = model._openGLRenderWindow.getDefaultTextureInternalFormat(
       vtktype,
       numComps,
-      false
+      false, // useFloat
+      model.useNorm16
     );
     if (result) {
       return result;
@@ -384,7 +385,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     result = this._openGLRenderWindow.getDefaultTextureInternalFormat(
       vtktype,
       numComps,
-      true
+      true, // useFloat
+      model.useNorm16
     );
 
     if (!result) {
