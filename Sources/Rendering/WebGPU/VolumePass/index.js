@@ -221,7 +221,8 @@ function vtkWebGPUVolumePass(publicAPI, model) {
         width: viewNode.getCanvas().width,
         height: viewNode.getCanvas().height,
         format: 'r16float',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,
+        usage:
+          GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
       });
       const maxView = model.depthRangeTexture.createView();
       maxView.setName('maxTexture');
@@ -231,7 +232,8 @@ function vtkWebGPUVolumePass(publicAPI, model) {
         width: viewNode.getCanvas().width,
         height: viewNode.getCanvas().height,
         format: 'r16float',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,
+        usage:
+          GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
       });
       const minView = model.depthRangeTexture2.createView();
       minView.setName('minTexture');

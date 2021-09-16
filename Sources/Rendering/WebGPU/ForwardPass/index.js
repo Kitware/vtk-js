@@ -87,8 +87,7 @@ function vtkForwardPass(publicAPI, model) {
     }
 
     // blit the result into the swap chain
-    const swapChain = viewNode.getSwapChain();
-    const sctex = swapChain.getCurrentTexture();
+    const sctex = viewNode.getCurrentTexture();
     const optex = model.opaquePass.getColorTexture();
     const cmdEnc = viewNode.getCommandEncoder();
     cmdEnc.copyTextureToTexture(
