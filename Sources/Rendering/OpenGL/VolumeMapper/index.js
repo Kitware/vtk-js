@@ -1502,7 +1502,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         numComp,
         scalars.getDataType(),
         scalars.getData(),
-        model.renderable.getPreferSizeOverAccuracy()
+        model.renderable.getPreferSizeOverAccuracy(),
+        model.renderable.getUseExperimentalNorm16Texture()
       );
       model.scalarTextureString = toString;
     }
