@@ -44,7 +44,7 @@ fn main(
 )
 //VTK::IOStructs::Output
 {
-  let offsetsArray: array<vec3<f32>, 12> = array<vec3<f32>, 12>(
+  var offsetsArray: array<vec3<f32>, 12> = array<vec3<f32>, 12>(
     vec3<f32>(-1.0, -1.0, -1.0),
     vec3<f32>(1.0, -1.0, -1.0),
     vec3<f32>(1.0, -1.0, 1.0),
