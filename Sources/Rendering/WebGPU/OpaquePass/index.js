@@ -34,7 +34,7 @@ function vtkWebGPUOpaquePass(publicAPI, model) {
         /* eslint-disable no-bitwise */
         usage:
           GPUTextureUsage.RENDER_ATTACHMENT |
-          GPUTextureUsage.SAMPLED |
+          GPUTextureUsage.TEXTURE_BINDING |
           GPUTextureUsage.COPY_SRC,
       });
       const ctView = model.colorTexture.createView();
@@ -50,7 +50,7 @@ function vtkWebGPUOpaquePass(publicAPI, model) {
         format: model.depthFormat,
         usage:
           GPUTextureUsage.RENDER_ATTACHMENT |
-          GPUTextureUsage.SAMPLED |
+          GPUTextureUsage.TEXTURE_BINDING |
           GPUTextureUsage.COPY_SRC,
       });
       const dView = model.depthTexture.createView();

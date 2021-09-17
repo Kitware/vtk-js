@@ -64,7 +64,8 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
         format: 'rgba16float',
         /* eslint-disable no-undef */
         /* eslint-disable no-bitwise */
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,
+        usage:
+          GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
       });
       const v1 = model.translucentColorTexture.createView();
       v1.setName('oitpColorTexture');
@@ -77,7 +78,8 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
         format: 'r16float',
         /* eslint-disable no-undef */
         /* eslint-disable no-bitwise */
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,
+        usage:
+          GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
       });
       const v2 = model.translucentAccumulateTexture.createView();
       v2.setName('oitpAccumTexture');

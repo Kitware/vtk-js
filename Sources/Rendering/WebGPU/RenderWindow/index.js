@@ -4,7 +4,6 @@ import vtkForwardPass from 'vtk.js/Sources/Rendering/WebGPU/ForwardPass';
 import vtkWebGPUBuffer from 'vtk.js/Sources/Rendering/WebGPU/Buffer';
 import vtkWebGPUDevice from 'vtk.js/Sources/Rendering/WebGPU/Device';
 import vtkWebGPUHardwareSelector from 'vtk.js/Sources/Rendering/WebGPU/HardwareSelector';
-import vtkWebGPUSwapChain from 'vtk.js/Sources/Rendering/WebGPU/SwapChain';
 import vtkWebGPUViewNodeFactory from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderWindowViewNode';
@@ -67,13 +66,23 @@ function vtkWebGPURenderWindow(publicAPI, model) {
   publicAPI.onModified(updateWindow);
 
   publicAPI.recreateSwapChain = () => {
-    model.swapChain.releaseGraphicsResources();
-    if (!model.swapChain.getCreated()) {
-      model.swapChain.create(model.device, publicAPI);
-      // model.commandBufferIndexes.clear();
-      // model.commandBufferIndexes.resize(this->Swapchain->GetMaximumFramesInFlight(), -1);
+    if (model.context) {
+      const presentationFormat = model.context.getPreferredFormat(
+        model.adapter
+      );
+
+      /* eslint-disable no-undef */
+      /* eslint-disable no-bitwise */
+      model.context.configure({
+        device: model.device.getHandle(),
+        format: presentationFormat,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST,
+        size: model.size,
+      });
     }
   };
+
+  publicAPI.getCurrentTexture = () => model.context.getCurrentTexture();
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
@@ -88,8 +97,8 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 
       publicAPI.initialize();
     } else if (model.initialized) {
-      if (!model.swapChain.getCreated()) {
-        model.swapChain.create(model.device, publicAPI);
+      if (!model.context.validConfiguration) {
+        publicAPI.recreateSwapChain();
       }
       model.commandEncoder = model.device.createCommandEncoder();
     }
@@ -176,7 +185,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     // console.log([...model.adapter.features]);
     model.device = vtkWebGPUDevice.newInstance();
     model.device.initialize(await model.adapter.requestDevice());
-    model.context = model.canvas.getContext('gpupresent');
+    model.context = model.canvas.getContext('webgpu');
   };
 
   publicAPI.restoreContext = () => {
@@ -499,7 +508,6 @@ const DEFAULT_VALUES = {
   adapter: null,
   device: null,
   canvas: null,
-  swapChain: null,
   cursorVisibility: true,
   cursor: 'pointer',
   containerSize: null,
@@ -529,8 +537,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.bgImage.style.height = '100%';
   model.bgImage.style.zIndex = '-1';
 
-  model.swapChain = vtkWebGPUSwapChain.newInstance();
-
   // Inheritance
   vtkRenderWindowViewNode.extend(publicAPI, model, initialValues);
 
@@ -552,7 +558,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.get(publicAPI, model, [
-    'swapChain',
     'commandEncoder',
     'device',
     'useBackgroundImage',
