@@ -253,12 +253,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           model.vrDisplay.depthNear = 0.01; // meters
           model.vrDisplay.depthFar = 100.0; // meters
           publicAPI.invokeHaveVRDisplay();
-        } else {
-          vtkErrorMacro('No WebVR display found');
         }
       });
-    } else {
-      vtkErrorMacro('WebVR is not available');
     }
 
     // prevent default context lost handler
