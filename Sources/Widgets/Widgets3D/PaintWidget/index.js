@@ -36,6 +36,7 @@ function widgetBehavior(publicAPI, model) {
       model.widgetState.clearTrailList();
     }
     model.painting = false;
+    return model.hasFocus ? macro.EVENT_ABORT : macro.VOID;
   };
 
   publicAPI.handleEvent = (callData) => {
