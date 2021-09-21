@@ -75,9 +75,8 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
       renderWindows[j].setInteractor(interactors[j]);
 
       resliceCursorWidgets[j] = vtkResliceCursorWidget.newInstance();
-      resliceCursorRepresentations[
-        j
-      ] = vtkResliceCursorLineRepresentation.newInstance();
+      resliceCursorRepresentations[j] =
+        vtkResliceCursorLineRepresentation.newInstance();
       resliceCursorWidgets[j].setWidgetRep(resliceCursorRepresentations[j]);
       resliceCursorRepresentations[j].getReslice().setInputData(image);
       resliceCursorRepresentations[j]

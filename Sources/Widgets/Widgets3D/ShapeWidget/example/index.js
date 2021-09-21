@@ -46,7 +46,8 @@ scene.fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
 
 scene.renderer = scene.fullScreenRenderer.getRenderer();
 scene.renderWindow = scene.fullScreenRenderer.getRenderWindow();
-scene.openGLRenderWindow = scene.fullScreenRenderer.getApiSpecificRenderWindow();
+scene.openGLRenderWindow =
+  scene.fullScreenRenderer.getApiSpecificRenderWindow();
 scene.camera = scene.renderer.getActiveCamera();
 
 // setup 2D view

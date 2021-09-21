@@ -25,11 +25,8 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
         return null;
       }
 
-      const {
-        interactor,
-        apiSpecificRenderWindow,
-        camera,
-      } = extractRenderingComponents(renderer);
+      const { interactor, apiSpecificRenderWindow, camera } =
+        extractRenderingComponents(renderer);
       const widgetModel = {};
       const widgetPublicAPI = {};
 

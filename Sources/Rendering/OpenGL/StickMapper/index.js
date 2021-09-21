@@ -151,8 +151,11 @@ function vtkOpenGLStickMapper(publicAPI, model) {
     ]).result;
 
     // Strip out the normal line -- the normal is computed as part of the depth
-    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Normal::Impl', '')
-      .result;
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
+      '//VTK::Normal::Impl',
+      ''
+    ).result;
 
     if (model.haveSeenDepthRequest) {
       // special depth impl

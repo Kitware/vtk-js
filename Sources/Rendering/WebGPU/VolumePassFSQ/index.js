@@ -199,8 +199,11 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         sampleColor.a * sampleColor.rgb * (1.0 - computedColor.a) + computedColor.rgb,
         (1.0 - computedColor.a)*sampleColor.a + computedColor.a);`);
     }
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Volume::Calls', calls)
-      .result;
+    code = vtkWebGPUShaderCache.substitute(
+      code,
+      '//VTK::Volume::Calls',
+      calls
+    ).result;
     if (model.blendMode === BlendMode.COMPOSITE_BLEND) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Volume::Loop', [
         'var computedColor: vec4<f32> = composite(rayLengthSC, minPosSC, rayStepSC);',

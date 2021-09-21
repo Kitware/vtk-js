@@ -57,7 +57,8 @@ function vtkForwardPass(publicAPI, model) {
           // optional translucent pass
           if (model.translucentActorCount > 0) {
             if (!model.translucentPass) {
-              model.translucentPass = vtkWebGPUOrderIndepenentTranslucentPass.newInstance();
+              model.translucentPass =
+                vtkWebGPUOrderIndepenentTranslucentPass.newInstance();
             }
             model.translucentPass.setColorTextureView(
               model.opaquePass.getColorTextureView()

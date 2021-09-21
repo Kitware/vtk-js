@@ -1,8 +1,27 @@
-import resemble from 'resemblejs';
+import pixelmatch from 'pixelmatch';
 
 let REMOVE_DOM_ELEMENTS = true;
 
-function compareImages(
+function createCanvasContext() {
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  return { canvas, context };
+}
+
+function getImageDataFromURI(imageDataURI) {
+  return new Promise((resolve, reject) => {
+    const { context } = createCanvasContext();
+    const img = new Image();
+    img.addEventListener('load', () => {
+      context.drawImage(img, 0, 0);
+      resolve(context.getImageData(0, 0, img.width, img.height));
+    });
+    img.addEventListener('error', reject);
+    img.src = imageDataURI;
+  });
+}
+
+async function compareImages(
   image,
   baselines,
   testName,
@@ -10,47 +29,59 @@ function compareImages(
   threshold = 0.5,
   nextCallback = null
 ) {
-  const nbBaselines = baselines.length;
   let minDelta = 100;
   let minDiff = '';
   let isSameDimensions = false;
+  let minIndex = 0;
 
-  function done() {
-    tapeContext.ok(minDelta < threshold, `Matching image - delta ${minDelta}%`);
-    tapeContext.ok(isSameDimensions, 'Image match resolution');
-    if (minDelta >= threshold) {
-      tapeContext.comment(
-        `new image <img src="${image}" /> vs baseline <img src="${baselines[0]}" /> === <img src="${minDiff}" />`
-      );
-      tapeContext.fail(`for ${testName} the images were different`);
-    }
+  const imageUnderTest = await getImageDataFromURI(image);
+  const baselineImages = await Promise.all(
+    baselines.map((baseline) => getImageDataFromURI(baseline))
+  );
 
-    if (nextCallback) {
-      nextCallback();
-    } else {
-      tapeContext.end();
+  baselineImages.forEach((baseline, idx) => {
+    const { canvas, context } = createCanvasContext();
+    const { width, height } = baseline;
+    const diff = context.createImageData(width, height);
+    const mismatched = pixelmatch(
+      imageUnderTest.data,
+      baseline.data,
+      diff.data,
+      width,
+      height,
+      {
+        alpha: 0.5,
+        includeAA: false,
+        threshold,
+      }
+    );
+    const percentage = (mismatched / (width * height)) * 100;
+    if (minDelta >= percentage) {
+      minDelta = percentage;
+      minDiff = canvas.toDataURL();
+      isSameDimensions =
+        width === imageUnderTest.width && height === imageUnderTest.height;
+      minIndex = idx;
     }
+  });
+
+  tapeContext.ok(
+    minDelta < threshold,
+    `Matching image - delta ${minDelta.toFixed(2)}%`
+  );
+  tapeContext.ok(isSameDimensions, 'Image match resolution');
+  if (minDelta >= threshold) {
+    tapeContext.comment(
+      `new image <img src="${image}" /> vs baseline <img src="${baselines[minIndex]}" /> === <img src="${minDiff}" />`
+    );
+    tapeContext.fail(`for ${testName} the images were different`);
   }
 
-  resemble.outputSettings({
-    transparency: 0.5,
-  });
-  baselines.forEach((baseline, idx) => {
-    resemble(baseline)
-      .compareTo(image)
-      .ignoreAntialiasing()
-      .onComplete((data) => {
-        if (minDelta >= data.misMatchPercentage) {
-          minDelta = data.misMatchPercentage;
-          minDiff = data.getImageDataUrl();
-        }
-        isSameDimensions = isSameDimensions || data.isSameDimensions;
-
-        if (idx + 1 === nbBaselines) {
-          done();
-        }
-      });
-  });
+  if (nextCallback) {
+    nextCallback();
+  } else {
+    tapeContext.end();
+  }
 }
 
 function createGarbageCollector(testContext) {

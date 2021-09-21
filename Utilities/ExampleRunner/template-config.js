@@ -53,15 +53,17 @@ module.exports = {
   },
 
   devServer: {
-    contentBase: '${root.replace(/\\/g, '\\\\')}',
+    static: {
+      directory: '${root.replace(/\\/g, '\\\\')}',
+    },
     port: ${settings.devServerConfig.port()},
     host: '${settings.devServerConfig.host()}',
-    disableHostCheck: true,
+    allowedHosts: 'all',
     hot: false,
-    quiet: false,
-    noInfo: false,
-    stats: {
-      colors: true,
+    devMiddleware: {
+      stats: {
+        colors: true,
+      },
     },
     proxy: {
       '/data/**': {

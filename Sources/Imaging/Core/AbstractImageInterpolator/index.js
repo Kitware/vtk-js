@@ -76,9 +76,8 @@ function vtkAbstractImageInterpolator(publicAPI, model) {
 
     model.interpolationInfo.scalarType = model.scalars.dataType;
     model.interpolationInfo.dataTypeSize = 1; // model.scalars.getElementComponentSize();
-    model.interpolationInfo.numberOfComponents = publicAPI.computeNumberOfComponents(
-      ncomp
-    );
+    model.interpolationInfo.numberOfComponents =
+      publicAPI.computeNumberOfComponents(ncomp);
 
     model.interpolationInfo.borderMode = model.borderMode;
     publicAPI.internalUpdate();

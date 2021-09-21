@@ -23,9 +23,8 @@ function vtkOpenGLSkybox(publicAPI, model) {
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.openGLRenderer = publicAPI.getFirstAncestorOfType(
-        'vtkOpenGLRenderer'
-      );
+      model.openGLRenderer =
+        publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       model.openGLRenderWindow = model.openGLRenderer.getParent();
       model.context = model.openGLRenderWindow.getContext();
       model.tris.setOpenGLRenderWindow(model.openGLRenderWindow);

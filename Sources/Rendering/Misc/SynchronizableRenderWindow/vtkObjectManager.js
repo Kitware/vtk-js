@@ -339,8 +339,9 @@ function rendererUpdater(instance, state, context) {
         // representation dependency ids which we can then use our synchronizer context
         // to unregister
         extractInstanceIds(call[1]).forEach((vpId) => {
-          const deps = context.getInstance(vpId).get('flattenedDepIds')
-            .flattenedDepIds;
+          const deps = context
+            .getInstance(vpId)
+            .get('flattenedDepIds').flattenedDepIds;
           if (deps) {
             // Consider each dependency for un-registering
             deps.forEach((depId) => unregisterCandidates.add(depId));

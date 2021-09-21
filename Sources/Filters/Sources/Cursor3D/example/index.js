@@ -48,11 +48,9 @@ renderWindow.render();
 // -----------------------------------------------------------
 
 fullScreenRenderer.addController(controlPanel);
-const focalPointRanges = [
-  'focalPointX',
-  'focalPointY',
-  'focalPointZ',
-].map((id) => document.getElementById(id));
+const focalPointRanges = ['focalPointX', 'focalPointY', 'focalPointZ'].map(
+  (id) => document.getElementById(id)
+);
 const handleFocalPointInput = (e) => {
   cursor3D.setFocalPoint([
     focalPointRanges[0].value,

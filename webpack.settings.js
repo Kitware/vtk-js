@@ -20,9 +20,13 @@ module.exports = {
     vtk: 'index.js',
   },
   devServerConfig: {
-    public: () => process.env.DEVSERVER_PUBLIC || 'http://localhost:8080',
     host: () => process.env.DEVSERVER_HOST || '0.0.0.0',
     port: () => process.env.DEVSERVER_PORT || 9999,
+    ws: {
+      hostname: 'localhost',
+      pathname: '/ws',
+      port: 8080,
+    },
   },
   options: {
     openAnalyzer: () => process.env.BUNDLE_ANALYZER || false,

@@ -4,12 +4,8 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import Constants from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
 
 const { Device, Input } = Constants;
-const {
-  vtkWarningMacro,
-  vtkErrorMacro,
-  normalizeWheel,
-  vtkOnceErrorMacro,
-} = macro;
+const { vtkWarningMacro, vtkErrorMacro, normalizeWheel, vtkOnceErrorMacro } =
+  macro;
 
 // ----------------------------------------------------------------------------
 // Global methods

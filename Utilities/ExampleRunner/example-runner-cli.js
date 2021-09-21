@@ -17,7 +17,8 @@ program
   .option('--no-browser', 'Do not open the browser')
   .parse(process.argv);
 
-var configFilePath = path.join(process.cwd(), program.config.replace(/\//g, path.sep));
+const options = program.opts();
+var configFilePath = path.join(process.cwd(), options.config.replace(/\//g, path.sep));
 var configuration = require(configFilePath);
 
 function getSplitedPath(filePath) {

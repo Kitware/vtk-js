@@ -46,9 +46,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
       model.openGLActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
-      model.openGLRenderer = model.openGLActor.getFirstAncestorOfType(
-        'vtkOpenGLRenderer'
-      );
+      model.openGLRenderer =
+        model.openGLActor.getFirstAncestorOfType('vtkOpenGLRenderer');
       model.openGLRenderWindow = model.openGLRenderer.getParent();
       model.openGLCamera = model.openGLRenderer.getViewNodeFor(
         model.openGLRenderer.getRenderable().getActiveCamera()
@@ -341,9 +340,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       'lastLightComplexity'
     );
 
-    const lastLightCount = model.lastBoundBO.getReferenceByName(
-      'lastLightCount'
-    );
+    const lastLightCount =
+      model.lastBoundBO.getReferenceByName('lastLightCount');
 
     let sstring = [];
 
@@ -1065,9 +1063,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const lastLightComplexity = model.lastBoundBO.getReferenceByName(
       'lastLightComplexity'
     );
-    const lastLightCount = model.lastBoundBO.getReferenceByName(
-      'lastLightCount'
-    );
+    const lastLightCount =
+      model.lastBoundBO.getReferenceByName('lastLightCount');
     if (
       lastLightComplexity !== lightComplexity ||
       lastLightCount !== numberOfLights
@@ -1136,8 +1133,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     publicAPI.setCameraShaderParameters(cellBO, ren, actor);
     publicAPI.setLightingShaderParameters(cellBO, ren, actor);
 
-    const listCallbacks = model.renderable.getViewSpecificProperties()
-      .ShadersCallbacks;
+    const listCallbacks =
+      model.renderable.getViewSpecificProperties().ShadersCallbacks;
     if (listCallbacks) {
       listCallbacks.forEach((object) => {
         object.callback(object.userData, cellBO, ren, actor);

@@ -250,7 +250,8 @@ function defineLoadFuctionForReader(type) {
         } else {
           // Set it on the scene item so it can be accessed later, for
           // doing things like setting a callback function.
-          sceneItem.textureLODsDownloader = vtkTextureLODsDownloader.newInstance();
+          sceneItem.textureLODsDownloader =
+            vtkTextureLODsDownloader.newInstance();
           const textureDownloader = sceneItem.textureLODsDownloader;
 
           const texture = vtkTexture.newInstance();

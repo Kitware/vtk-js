@@ -48,15 +48,11 @@ img.src = `${__BASE_PATH__}/data/elevation/dem.jpg`;
 
 // The default camera is just a nice starting point...
 const defaultFocalPoint = [
-  1.9991999864578247,
-  -2.007040023803711,
-  0.15954573452472687,
+  1.9991999864578247, -2.007040023803711, 0.15954573452472687,
 ];
 
 const defaultPosition = [
-  4.109420299530029,
-  -3.632676601409912,
-  0.3706766664981842,
+  4.109420299530029, -3.632676601409912, 0.3706766664981842,
 ];
 
 const defaultViewUp = [0, 0, 1];
@@ -73,10 +69,12 @@ reader.setUrl(`${__BASE_PATH__}/data/elevation/dem.csv`).then(() => {
   renderWindow.render();
 });
 
-const keyboardManipulator = Manipulators.vtkKeyboardCameraManipulator.newInstance(
-  { movementSpeed: 0.02 }
-);
-const mouseManipulator = Manipulators.vtkMouseCameraTrackballFirstPersonManipulator.newInstance();
+const keyboardManipulator =
+  Manipulators.vtkKeyboardCameraManipulator.newInstance({
+    movementSpeed: 0.02,
+  });
+const mouseManipulator =
+  Manipulators.vtkMouseCameraTrackballFirstPersonManipulator.newInstance();
 
 const iStyle = vtkInteractorStyleManipulator.newInstance();
 iStyle.addKeyboardManipulator(keyboardManipulator);

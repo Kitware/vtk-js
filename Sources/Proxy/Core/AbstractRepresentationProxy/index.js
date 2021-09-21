@@ -31,17 +31,15 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
 
     if (model.input) {
       updateConnectivity();
-      model.sourceSubscription = model.input.onDatasetChange(
-        updateConnectivity
-      );
+      model.sourceSubscription =
+        model.input.onDatasetChange(updateConnectivity);
     }
 
     // Allow dynamic registration of links at the source level
     if (model.links) {
       for (let i = 0; i < model.links.length; i++) {
-        const { link, property, persistent, updateOnBind, type } = model.links[
-          i
-        ];
+        const { link, property, persistent, updateOnBind, type } =
+          model.links[i];
         if (type === undefined || type === 'source') {
           const sLink = source.getPropertyLink(link, persistent);
           publicAPI.registerPropertyLinkForGC(sLink, 'source');
@@ -192,17 +190,13 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
       return [];
     }
     const result = [];
-    const {
-      colorByArrayName,
-      colorMode,
-      scalarMode,
-      scalarVisibility,
-    } = model.mapper.get(
-      'colorByArrayName',
-      'colorMode',
-      'scalarMode',
-      'scalarVisibility'
-    );
+    const { colorByArrayName, colorMode, scalarMode, scalarVisibility } =
+      model.mapper.get(
+        'colorByArrayName',
+        'colorMode',
+        'scalarMode',
+        'scalarVisibility'
+      );
 
     if (scalarVisibility && colorByArrayName) {
       result.push(colorByArrayName);

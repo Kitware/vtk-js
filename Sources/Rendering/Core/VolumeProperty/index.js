@@ -86,9 +86,8 @@ function vtkVolumeProperty(publicAPI, model) {
   // Get the currently set gray transfer function. Create one if none set.
   publicAPI.getGrayTransferFunction = (index) => {
     if (model.componentData[index].grayTransferFunction === null) {
-      model.componentData[
-        index
-      ].grayTransferFunction = vtkPiecewiseFunction.newInstance();
+      model.componentData[index].grayTransferFunction =
+        vtkPiecewiseFunction.newInstance();
       model.componentData[index].grayTransferFunction.addPoint(0, 0.0);
       model.componentData[index].grayTransferFunction.addPoint(1024, 1.0);
       if (model.componentData[index].colorChannels !== 1) {
@@ -122,9 +121,8 @@ function vtkVolumeProperty(publicAPI, model) {
   // Get the currently set RGB transfer function. Create one if none set.
   publicAPI.getRGBTransferFunction = (index) => {
     if (model.componentData[index].rGBTransferFunction === null) {
-      model.componentData[
-        index
-      ].rGBTransferFunction = vtkColorTransferFunction.newInstance();
+      model.componentData[index].rGBTransferFunction =
+        vtkColorTransferFunction.newInstance();
       model.componentData[index].rGBTransferFunction.addRGBPoint(
         0,
         0.0,
@@ -159,9 +157,8 @@ function vtkVolumeProperty(publicAPI, model) {
   // Get the scalar opacity transfer function. Create one if none set.
   publicAPI.getScalarOpacity = (index) => {
     if (model.componentData[index].scalarOpacity === null) {
-      model.componentData[
-        index
-      ].scalarOpacity = vtkPiecewiseFunction.newInstance();
+      model.componentData[index].scalarOpacity =
+        vtkPiecewiseFunction.newInstance();
       model.componentData[index].scalarOpacity.addPoint(0, 1.0);
       model.componentData[index].scalarOpacity.addPoint(1024, 1.0);
       publicAPI.modified();

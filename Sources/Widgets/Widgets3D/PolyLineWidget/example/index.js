@@ -46,6 +46,7 @@ widgetManager.addWidget(widget);
 
 renderer.resetCamera();
 widgetManager.enablePicking();
+widgetManager.grabFocus(widget);
 
 // -----------------------------------------------------------
 // UI control handling

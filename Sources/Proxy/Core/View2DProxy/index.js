@@ -153,9 +153,8 @@ function vtkView2DProxy(publicAPI, model) {
       );
       if (representation.getWindowWidth) {
         const update = () => setWindowWidth(representation.getWindowWidth());
-        const windowWidth = representation.getPropertyDomainByName(
-          'windowWidth'
-        );
+        const windowWidth =
+          representation.getPropertyDomainByName('windowWidth');
         const { min, max } = windowWidth;
 
         let { step } = windowWidth;
@@ -178,9 +177,8 @@ function vtkView2DProxy(publicAPI, model) {
       }
       if (representation.getWindowLevel) {
         const update = () => setWindowLevel(representation.getWindowLevel());
-        const windowLevel = representation.getPropertyDomainByName(
-          'windowLevel'
-        );
+        const windowLevel =
+          representation.getPropertyDomainByName('windowLevel');
         const { min, max } = windowLevel;
 
         let { step } = windowLevel;

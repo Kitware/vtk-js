@@ -148,9 +148,8 @@ function vtkImagePointDataIterator(publicAPI, model) {
         model.extent[2] <= model.extent[3] &&
         model.extent[4] <= model.extent[5]
       ) {
-        model.spanCountPointer = stencil.extentListLengths.subarray(
-          startOffset
-        );
+        model.spanCountPointer =
+          stencil.extentListLengths.subarray(startOffset);
 
         model.spanListPointer = stencil.extentLists.subarray(startOffset);
 

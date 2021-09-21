@@ -175,9 +175,8 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
       model.interactionState = InteractionState.ON_AXIS2;
     }
 
-    model.startPickPosition = publicAPI.displayToReslicePlaneIntersection(
-      displayPos
-    );
+    model.startPickPosition =
+      publicAPI.displayToReslicePlaneIntersection(displayPos);
 
     if (model.startPickPosition === null) {
       model.startPickPosition = [0, 0, 0];
@@ -218,9 +217,8 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
 
     // Depending on the state, perform different operations
     if (model.interactionState === InteractionState.ON_CENTER) {
-      const intersectionPos = publicAPI.displayToReslicePlaneIntersection(
-        displayPosition
-      );
+      const intersectionPos =
+        publicAPI.displayToReslicePlaneIntersection(displayPosition);
 
       if (intersectionPos !== null) {
         const newCenter = [];
@@ -263,9 +261,8 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
 
     // Intersect with the viewing vector. We will use this point and the
     // start event point to compute the rotation angle
-    const currentIntersectionPos = publicAPI.displayToReslicePlaneIntersection(
-      displayPos
-    );
+    const currentIntersectionPos =
+      publicAPI.displayToReslicePlaneIntersection(displayPos);
     const lastIntersectionPos = publicAPI.displayToReslicePlaneIntersection(
       model.lastEventPosition
     );

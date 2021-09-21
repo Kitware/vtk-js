@@ -288,11 +288,9 @@ function createPipeline(fileName, fileContents) {
   // --------------------------------------------------------------------
 
   function updateRepresentation(event) {
-    const [
-      visibility,
-      representation,
-      edgeVisibility,
-    ] = event.target.value.split(':').map(Number);
+    const [visibility, representation, edgeVisibility] = event.target.value
+      .split(':')
+      .map(Number);
     tubeActor.getProperty().set({ representation, edgeVisibility });
     tubeActor.setVisibility(!!visibility);
     renderWindow.render();

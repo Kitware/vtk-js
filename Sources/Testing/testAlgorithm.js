@@ -46,18 +46,22 @@ test('Macro methods algo tests', (t) => {
 
   publicAPI.update();
   let output = publicAPI.getOutputData(0);
-  t.deepEqual(output, { 0: 3, 1: 5, 2: 7 }, 'Add two input arrays');
+  t.deepEqual(output, new Float32Array([3, 5, 7]), 'Add two input arrays');
 
   output = publicAPI.getOutputData(1);
-  t.deepEqual(output, { 0: 3, 1: 3, 2: 3 }, 'Subtract two input arrays');
+  t.deepEqual(output, new Float32Array([3, 3, 3]), 'Subtract two input arrays');
 
   output = publicAPI.getOutputData(2);
-  t.deepEqual(output, { 0: 0, 1: 4, 2: 10 }, 'Multiply two input arrays');
+  t.deepEqual(
+    output,
+    new Float32Array([0, 4, 10]),
+    'Multiply two input arrays'
+  );
 
   const outputPort = publicAPI.getOutputPort(3);
   t.deepEqual(
     outputPort(),
-    { 0: Infinity, 1: 4, 2: 2.5 },
+    new Float32Array([Infinity, 4, 2.5]),
     'Divide two input arrays, using outputPort'
   );
 
