@@ -561,7 +561,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
             : 'nearest';
           tview.addSampler(model.device, {
             minFilter: interpolate,
-            maxFilter: interpolate,
+            magFilter: interpolate,
           });
         }
       }

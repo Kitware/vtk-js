@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkWebGPUSampler from 'vtk.js/Sources/Rendering/WebGPU/Sampler';
+import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUTextureView methods
@@ -18,6 +19,10 @@ function vtkWebGPUTextureView(publicAPI, model) {
     model.textureHandle = texture.getHandle();
     model.handle = model.textureHandle.createView(model.options);
     model.bindGroupLayoutEntry.texture.viewDimension = model.options.dimension;
+    const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(
+      model.texture.getFormat()
+    );
+    model.bindGroupLayoutEntry.texture.sampleType = tDetails.sampleType;
   };
 
   publicAPI.getBindGroupEntry = () => {
@@ -28,7 +33,16 @@ function vtkWebGPUTextureView(publicAPI, model) {
   };
 
   publicAPI.getShaderCode = (binding, group) => {
-    const result = `[[binding(${binding}), group(${group})]] var ${model.name}: texture_${model.options.dimension}<f32>;`;
+    let ttype = 'f32';
+    if (model.bindGroupLayoutEntry.texture.sampleType === 'sint') {
+      ttype = 'i32';
+    } else if (model.bindGroupLayoutEntry.texture.sampleType === 'uint') {
+      ttype = 'u32';
+    }
+    let result = `[[binding(${binding}), group(${group})]] var ${model.name}: texture_${model.options.dimension}<${ttype}>;`;
+    if (model.bindGroupLayoutEntry.texture.sampleType === 'depth') {
+      result = `[[binding(${binding}), group(${group})]] var ${model.name}: texture_depth_${model.options.dimension};`;
+    }
     return result;
   };
 
@@ -95,7 +109,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
     /* eslint-enable no-undef */
     texture: {
-      // sampleType: 'float',
+      sampleType: 'float',
       viewDimension: '2d',
       // multisampled: false,
     },

@@ -75,7 +75,7 @@ fn main(
 
   // use the minimum (closest) of the current value and the zbuffer
   // the blend func will then take the max to find the farthest stop value
-  var stopval: f32 = min(input.fragPos.z, textureLoad(opaquePassDepthTexture, vec2<i32>(i32(input.fragPos.x), i32(input.fragPos.y)), 0).r);
+  var stopval: f32 = min(input.fragPos.z, textureLoad(opaquePassDepthTexture, vec2<i32>(i32(input.fragPos.x), i32(input.fragPos.y)), 0));
 
   //VTK::RenderEncoder::Impl
   return output;

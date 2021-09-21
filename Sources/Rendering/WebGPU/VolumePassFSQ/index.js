@@ -15,15 +15,16 @@ const volFragTemplate = `
 
 //VTK::TCoord::Dec
 
+//VTK::Volume::Dec
+
 //VTK::RenderEncoder::Dec
 
 //VTK::IOStructs::Dec
 
-// dummy for now till they support 3d textures
 fn getTextureValue(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32) -> f32
 {
-  return textureSampleLevel(vTex, clampSampler, tpos.xyz, 0.0).a;
-  // 512.0 * f32(vNum) + 20.0 * trunc(10.0 * tpos.z);
+  // todo multicomponent support
+  return textureSampleLevel(vTex, clampSampler, tpos.xyz, 0.0).r;
 }
 
 fn getGradient(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32, scalar: f32) -> vec4<f32>
@@ -40,7 +41,7 @@ fn getGradient(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32, scalar: f32) -
 
   var grad: f32 = length(result.xyz);
 
-  // // rotate to View Coords
+  // // rotate to View Coords, needed for lighting and shading
   // result.xyz =
   //   result.x * vPlaneNormal0 +
   //   result.y * vPlaneNormal2 +
@@ -62,7 +63,6 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, cNum: i32, posSC: vec4<f32>, 
 
   // convert to tcoords and reject if outside the volume
   var tpos: vec4<f32> = volumeSSBO.values[vNum].SCTCMatrix*posSC;
-  // var tpos: vec4<f32> = posSC*0.003;
   if (tpos.x < 0.0 || tpos.y < 0.0 || tpos.z < 0.0 ||
       tpos.x > 1.0 || tpos.y > 1.0 || tpos.z > 1.0) { return outColor; }
 
@@ -72,7 +72,6 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, cNum: i32, posSC: vec4<f32>, 
     vec2<f32>(scalar * componentSSBO.values[cNum].cScale + componentSSBO.values[cNum].cShift,
       (0.5 + 2.0 * f32(vNum)) / tfunRows);
   var color: vec4<f32> = textureSampleLevel(tfunTexture, clampSampler, coord, 0.0);
-  coord.x = scalar * componentSSBO.values[cNum].oScale + componentSSBO.values[cNum].oShift;
 
   var gofactor: f32 = 1.0;
   if (componentSSBO.values[cNum].gomin <  1.0)
@@ -81,8 +80,15 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, cNum: i32, posSC: vec4<f32>, 
     gofactor = clamp(normal.a*componentSSBO.values[cNum].goScale + componentSSBO.values[cNum].goShift,
       componentSSBO.values[cNum].gomin, componentSSBO.values[cNum].gomax);
   }
-  var opacity: f32 = gofactor*textureSampleLevel(ofunTexture, clampSampler, coord, 0.0).r;
-  outColor = vec4<f32>(color.rgb, opacity);
+
+  // since float32 is unfilterable we have to manually interpolate
+  var oPos : f32 = rowLength * (scalar * componentSSBO.values[cNum].oScale + componentSSBO.values[cNum].oShift);
+  var opacity: f32 = textureLoad(ofunTexture, vec2<i32>(i32(oPos), 2*vNum), 0).r;
+  var opacityHigh: f32 = textureLoad(ofunTexture, vec2<i32>(i32(oPos) + 1, 2*vNum), 0).r;
+  oPos = oPos - floor(oPos);
+  opacity = opacityHigh*oPos + opacity*(1.0 - oPos);
+
+  outColor = vec4<f32>(color.rgb, gofactor * opacity);
 
   //VTK::Volume::Process
 
@@ -209,6 +215,9 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         'var computedColor: vec4<f32> = composite(rayLengthSC, minPosSC, rayStepSC);',
       ]).result;
     }
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Volume::Dec', [
+      `let rowLength: f32 = ${model.rowLength}.0;`,
+    ]).result;
     fDesc.setCode(code);
   };
   model.shaderReplacements.set(
@@ -599,7 +608,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       model.clampSampler.setName('clampSampler');
       model.clampSampler.create(device, {
         minFilter: 'linear',
-        maxFilter: 'linear',
+        magFilter: 'linear',
       });
     }
 

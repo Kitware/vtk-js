@@ -1,5 +1,8 @@
 import macro from 'vtk.js/Sources/macros';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkWebGPUTexture from 'vtk.js/Sources/Rendering/WebGPU/Texture';
+
+const { VtkDataTypes } = vtkDataArray;
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -37,20 +40,34 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       req.height = dims[1];
       req.depth = dims[2];
       const numComp = req.dataArray.getNumberOfComponents();
-      // todo pick format based on native type
       // todo fix handling of 3 component
       switch (numComp) {
         case 1:
-          req.format = 'r8unorm';
+          req.format = 'r';
           break;
         case 2:
-          req.format = 'rg8unorm';
+          req.format = 'rg';
           break;
         default:
         case 3:
         case 4:
-          req.format = 'rgba8unorm';
+          req.format = 'rgba';
           break;
+      }
+
+      const dataType = req.dataArray.getDataType();
+      switch (dataType) {
+        case VtkDataTypes.UNSIGNED_CHAR:
+          req.format += '8unorm';
+          break;
+        case VtkDataTypes.FLOAT:
+        case VtkDataTypes.UNSIGNED_INT:
+        case VtkDataTypes.INT:
+        case VtkDataTypes.DOUBLE:
+        case VtkDataTypes.UNSIGNED_SHORT:
+        case VtkDataTypes.SHORT:
+        default:
+          console.log('unsupported data type in texture');
       }
     }
 

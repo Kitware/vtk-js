@@ -41,7 +41,6 @@ function vtkWebGPUOpaquePass(publicAPI, model) {
       ctView.setName('opaquePassColorTexture');
       model.renderEncoder.setColorTextureView(0, ctView);
 
-      // model.depthFormat = 'depth24plus-stencil8';
       model.depthFormat = 'depth32float';
       model.depthTexture = vtkWebGPUTexture.newInstance();
       model.depthTexture.create(device, {

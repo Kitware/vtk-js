@@ -185,13 +185,22 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     // console.log([...model.adapter.features]);
     model.device = vtkWebGPUDevice.newInstance();
     model.device.initialize(await model.adapter.requestDevice());
+    // model.device.getHandle().lost.then((info) => {
+    //   console.log(`${info.message}`);
+    //   publicAPI.releaseGraphicsResources();
+    // });
     model.context = model.canvas.getContext('webgpu');
   };
 
-  publicAPI.restoreContext = () => {
+  publicAPI.releaseGraphicsResources = () => {
     const rp = vtkRenderPass.newInstance();
     rp.setCurrentOperation('Release');
     rp.traverse(publicAPI, null);
+    model.adapter = null;
+    model.device = null;
+    model.context = null;
+    model.initialized = false;
+    model.initializing = false;
   };
 
   publicAPI.setBackgroundImage = (img) => {

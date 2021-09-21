@@ -78,7 +78,7 @@ function vtkWebGPUTexture(publicAPI, model) {
       // we need to have width be a multiple of 64
       const currWidthInBytes = model.width * tDetails.stride;
       if (currWidthInBytes % 256) {
-        const oArray = req.dataArray.getData();
+        const oArray = req.nativeArray;
         const bufferWidthInBytes =
           256 * Math.floor((currWidthInBytes + 255) / 256);
         const bufferWidth = bufferWidthInBytes / oArray.BYTES_PER_ELEMENT;
