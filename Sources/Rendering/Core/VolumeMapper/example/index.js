@@ -38,7 +38,7 @@ const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 
 const actor = vtkVolume.newInstance();
 const mapper = vtkVolumeMapper.newInstance();
-mapper.setSampleDistance(1.1);
+mapper.setSampleDistance(1.3);
 actor.setMapper(mapper);
 
 // create color and opacity transfer functions
@@ -75,6 +75,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
     renderer.resetCamera();
     renderer.getActiveCamera().zoom(1.5);
     renderer.getActiveCamera().elevation(70);
+    renderer.resetCamera();
     renderWindow.render();
   });
 });
