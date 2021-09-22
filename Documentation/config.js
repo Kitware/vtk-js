@@ -26,6 +26,9 @@ module.exports = {
     templatePath: path.resolve(
       path.join(__dirname, '../Utilities/ExampleRunner/template.html')
     ),
+    output: {
+      publicPath: '',
+    },
     plugins: [],
     rules: [
       `
