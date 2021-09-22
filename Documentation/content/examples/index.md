@@ -22,7 +22,7 @@ title: Examples
   }
 
   .gallery img {
-    width: 16%;
+    width: 32%;
     display: inline-block;
     padding: 2px;
   }
