@@ -28,6 +28,7 @@ sidebar:
     requirement: Requirements
     class: Create class
     example: Create example
+    webgpu: WebGPU Examples
     test: Create test
     build: Build library
     concepts: Concepts
