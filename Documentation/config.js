@@ -67,7 +67,7 @@ module.exports = {
       },
       {
         test: /\\.svg$/,
-        use: [{ loader: 'raw-loader' }],
+        type: 'asset/source',
       },
       {
         test: /\\.worker\\.js$/,
@@ -78,7 +78,7 @@ module.exports = {
           },
         ],
       },
-      { test: /\\.(png|jpg)$/, use: 'url-loader?limit=81920' },
+      { test: /\\.(png|jpg)$/, type: 'asset' },
       { test: /\\.html$/, loader: 'html-loader' },
       { test: /\\.cjson$/, loader: 'hson-loader' },
       { test: /\\.hson$/, loader: 'hson-loader' },
