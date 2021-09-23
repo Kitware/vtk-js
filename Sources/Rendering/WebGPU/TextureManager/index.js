@@ -60,6 +60,8 @@ function vtkWebGPUTextureManager(publicAPI, model) {
         case VtkDataTypes.UNSIGNED_CHAR:
           req.format += '8unorm';
           break;
+        // todo extend to other types that are not filterable
+        // as they can be useful
         case VtkDataTypes.FLOAT:
         case VtkDataTypes.UNSIGNED_INT:
         case VtkDataTypes.INT:
@@ -67,7 +69,8 @@ function vtkWebGPUTextureManager(publicAPI, model) {
         case VtkDataTypes.UNSIGNED_SHORT:
         case VtkDataTypes.SHORT:
         default:
-          console.log('unsupported data type in texture');
+          req.format += '16float';
+          break;
       }
     }
 
