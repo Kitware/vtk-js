@@ -7,7 +7,7 @@ The library can be built with webpack automatically. Webpack can either gather a
 
 ## Building vtk.js
 
-In order to build the library you can run `npm run build` for quick development usage or `npm run build:release` for production usage.
+In order to build the library you can run `npm run dev` for quick development usage or `npm run build` for production usage.
 
 Either of these commands will generate a `dist/vtk.js` file that can then be used as an external script.
 

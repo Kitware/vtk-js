@@ -67,7 +67,7 @@ function configureVtkRules() {
     },
     {
       test: /\.svg$/,
-      use: [{ loader: 'raw-loader' }],
+      type: 'asset/source',
     },
     {
       test: /\.worker\.js$/,
