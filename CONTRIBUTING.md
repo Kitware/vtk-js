@@ -40,6 +40,19 @@ Please follow the coding style:
     $ edit file1 file2 file3
     $ git add file1 file2 file3
     ```
+    
+4.5 (Optional) Make an example and use the ExampleRunner to test your changes. 
+    ```
+    $ npm run example # List all available examples
+    $ edit MyCoolExample
+    $ npm run example -- MyCoolExample
+    ```
+    The example now should be visible in a browser at localhost:9999. You can hack on your 
+    example's dependencies and the ExampleRunner will listen for your changes.
+    ```
+    $ edit MyCoolFeature
+    $ git add MyCoolFeature MyCoolExample # Cool example contributions are welcome!
+    ```
 
 5. Use Commitizen to create commits
 
