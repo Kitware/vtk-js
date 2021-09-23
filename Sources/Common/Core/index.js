@@ -2,6 +2,7 @@ import vtkBase64 from './Base64';
 import vtkCellArray from './CellArray';
 import vtkDataArray from './DataArray';
 import vtkEndian from './Endian';
+import vtkHalfFloat from './HalfFloat';
 import vtkImageHelper from './ImageHelper';
 import vtkLookupTable from './LookupTable';
 import * as vtkMath from './Math';
@@ -18,6 +19,7 @@ export default {
   vtkCellArray,
   vtkDataArray,
   vtkEndian,
+  vtkHalfFloat,
   vtkImageHelper,
   vtkLookupTable,
   vtkMath,

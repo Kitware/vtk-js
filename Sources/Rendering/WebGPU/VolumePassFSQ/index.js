@@ -5,6 +5,7 @@ import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffe
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUStorageBuffer from 'vtk.js/Sources/Rendering/WebGPU/StorageBuffer';
 import vtkWebGPUSampler from 'vtk.js/Sources/Rendering/WebGPU/Sampler';
+import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 
 import { BlendMode } from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
@@ -397,8 +398,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       // the method on the data is world to index but the volume is in
       // model coordinates so really in this context it is model to index
       const modelToIndex = image.getWorldToIndex();
-      mat4.transpose(tmp2Mat4, modelToIndex);
-      mat4.multiply(tmpMat4, tmp2Mat4, tmpMat4);
+      mat4.multiply(tmpMat4, modelToIndex, tmpMat4);
       // tmpMat4 is now SC -> Index
 
       const dims = image.getDimensions();
@@ -459,7 +459,17 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       const iComps = vprop.getIndependentComponents();
       // const numIComps = iComps ? numComp : 1;
 
+      // half float
+      const tformat = model.textureViews[vidx + 4].getTexture().getFormat();
+      const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(tformat);
+      const halfFloat =
+        tDetails.elementSize === 2 && tDetails.sampleType === 'float';
+
       const volInfo = { scale: [255.0], offset: [0.0] };
+      if (halfFloat) {
+        volInfo.scale[0] = 1.0;
+      }
+
       // three levels of shift scale combined into one
       // for performance in the fragment shader
       for (let compIdx = 0; compIdx < numComp; compIdx++) {
@@ -545,10 +555,6 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       model.UBO.sendIfNeeded(device);
     }
 
-    publicAPI.updateLUTImage(device);
-
-    publicAPI.updateSSBO(device);
-
     // add in 3d volume textures
     for (let vidx = 0; vidx < model.volumes.length; vidx++) {
       const webgpuvol = model.volumes[vidx];
@@ -570,6 +576,10 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         model.textureViews[vidx + 4] = tview;
       }
     }
+
+    publicAPI.updateLUTImage(device);
+
+    publicAPI.updateSSBO(device);
   };
 
   publicAPI.computePipelineHash = () => {
