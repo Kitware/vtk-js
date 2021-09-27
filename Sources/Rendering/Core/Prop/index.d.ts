@@ -5,7 +5,7 @@ import vtkTexture from "../Texture";
 import vtkVolume from "../Volume";
 
 
-interface IPropInitialValues {
+export interface IPropInitialValues {
     visibility?: boolean;
     pickable?: boolean;
     dragable?: boolean;

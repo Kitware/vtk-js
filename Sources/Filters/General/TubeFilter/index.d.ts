@@ -18,7 +18,7 @@ export enum GenerateTCoords {
 /**
  *
  */
-interface ITubeFilterInitialValues {
+export interface ITubeFilterInitialValues {
 	outputPointsPrecision?: DesiredOutputPrecision,
 	radius?: number;
 	varyRadius?: VaryRadius,
@@ -105,14 +105,14 @@ export interface vtkTubeFilter extends vtkTubeFilterBase {
 
 	/**
 	 *
-	 * @param inData
-	 * @param outData
+	 * @param inData 
+	 * @param outData 
 	 */
 	requestData(inData: any, outData: any): void;
 
 	/**
 	 * Set the desired precision for the output types.
-	 * @param outputPointsPrecision
+	 * @param {DesiredOutputPrecision} outputPointsPrecision 
 	 */
 	setOutputPointsPrecision(outputPointsPrecision: DesiredOutputPrecision): boolean;
 
@@ -124,32 +124,32 @@ export interface vtkTubeFilter extends vtkTubeFilterBase {
 
 	/**
 	 * Enable or disable variation of tube radius with scalar or vector values.
-	 * @param varyRadius
+	 * @param {VaryRadius} varyRadius 
 	 */
 	setVaryRadius(varyRadius: VaryRadius): boolean;
 
 	/**
 	 * Set the number of sides for the tube. At a minimum, number of sides is 3.
-	 * @param numberOfSides
+	 * @param {Number} numberOfSides 
 	 */
 	setNumberOfSides(numberOfSides: number): boolean;
 
 	/**
 	 * Set the maximum tube radius in terms of a multiple of the minimum radius.
-	 * @param {Number} radiusFactor
+	 * @param {Number} radiusFactor 
 	 */
 	setRadiusFactor(radiusFactor: number): boolean;
 
 	/**
 	 * Set the default normal to use if no normals are supplied. Requires that
 	 * useDefaultNormal is set.
-	 * @param defaultNormal
+	 * @param defaultNormal 
 	 */
 	setDefaultNormal(defaultNormal: number[]): boolean;
 
 	/**
 	 * Control whether to use the defaultNormal.
-	 * @param useDefaultNormal
+	 * @param {Boolean} useDefaultNormal 
 	 */
 	setUseDefaultNormal(useDefaultNormal: boolean): boolean;
 
@@ -157,20 +157,20 @@ export interface vtkTubeFilter extends vtkTubeFilterBase {
 	 * Control whether the tube sides should share vertices. This creates
 	 * independent strips, with constant normals so the tube is always faceted
 	 * in appearance.
-	 * @param sidesShareVertices
+	 * @param {Boolean} sidesShareVertices 
 	 */
 	setSidesShareVertices(sidesShareVertices: boolean): boolean;
 
 	/**
 	 * Enable / disable capping the ends of the tube with polygons.
-	 * @param capping
+	 * @param {Boolean} capping 
 	 */
 	setCapping(capping: boolean): boolean;
 
 	/**
 	 * Control the stripping of tubes. If OnRatio is greater than 1, then every
 	 * nth tube side is turned on, beginning with the offset side.
-	 * @param onRatio
+	 * @param {Number} onRatio 
 	 */
 	setOnRatio(onRatio: number): boolean;
 
@@ -178,7 +178,7 @@ export interface vtkTubeFilter extends vtkTubeFilterBase {
 	 * Control the stripping of tubes. The offset sets the first tube side that
 	 * is visible. Offset is generally used with onRatio to create nifty
 	 * stripping effects.
-	 * @param offset
+	 * @param {Number} offset 
 	 */
 	setOffset(offset: number): boolean;
 
@@ -187,7 +187,7 @@ export interface vtkTubeFilter extends vtkTubeFilterBase {
 	 * for stripping the tube with length textures, etc. If you use scalars to
 	 * create the texture, the scalars are assumed to be monotonically
 	 * increasing (or decreasing).
-	 * @param generateTCoords
+	 * @param {GenerateTCoords} generateTCoords 
 	 */
 	setGenerateTCoords(generateTCoords: GenerateTCoords): boolean;
 
@@ -195,7 +195,7 @@ export interface vtkTubeFilter extends vtkTubeFilterBase {
 	 * Control the conversion of units during texture coordinates calculation.
 	 * The texture length indicates what length (whether calculated from scalars
 	 * or length) is mapped to [0, 1) texture space.
-	 * @param textureLength
+	 * @param {Number} textureLength 
 	 */
 	setTextureLength(textureLength: number): boolean;
 }

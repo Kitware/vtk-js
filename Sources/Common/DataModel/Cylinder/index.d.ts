@@ -1,9 +1,10 @@
 import { vtkObject } from "../../../interfaces" ;
+import { Vector3 } from "../../../types";
 
 /**
  * 
  */
-interface ICylinderInitialValues {
+export interface ICylinderInitialValues {
 	radius?: number;
 	center?: number[];
 	axis?: number[];
@@ -14,16 +15,16 @@ export interface vtkCylinder extends vtkObject {
 	/**
 	 * Given the point xyz (three floating value) evaluate the cylinder
 	 * equation.
-	 * @param {Number} xyz The point coordinate.
+	 * @param {Vector3} xyz The point coordinate.
 	 */
-	evaluateFunction(xyz: number[]): number[];
+	evaluateFunction(xyz: Vector3): number[];
 
 	/**
 	 * Given the point xyz (three floating values) evaluate the equation for the
 	 * cylinder gradient.
-	 * @param {Number[]} xyz The point coordinate.
+	 * @param {Vector3} xyz The point coordinate.
 	 */
-	evaluateGradient(xyz: number[]): number[];
+	evaluateGradient(xyz: Vector3): number[];
 
 	/**
 	 * Get the angle of the cone.

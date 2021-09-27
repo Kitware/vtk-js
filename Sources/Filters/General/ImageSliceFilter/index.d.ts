@@ -3,43 +3,43 @@ import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 /*
  * 
  */
-interface IImageSliceFilterInitialValues {
-    sliceIndex?: number
+export interface IImageSliceFilterInitialValues {
+	sliceIndex?: number
 }
 
 type vtkImageSliceFilterBase = vtkObject & vtkAlgorithm;
 
 export interface vtkImageSliceFilter extends vtkImageSliceFilterBase {
 
-    /**
-     * 
-     */
-    getOrientation(): any;
+	/**
+	 * 
+	 */
+	getOrientation(): any;
 
-    /**
-     * 
-     * @default 0
-     */
-    getSliceIndex(): number;
+	/**
+	 * 
+	 * @default 0
+	 */
+	getSliceIndex(): number;
 
-    /**
-     *
-     * @param inData 
-     * @param outData 
-     */
-    requestData(inData: any, outData: any): void;
+	/**
+	 *
+	 * @param inData 
+	 * @param outData 
+	 */
+	requestData(inData: any, outData: any): void;
 
-     /**
-      * 
-      * @param orientation 
-      */
-    setOrientation(orientation: any): boolean; 
+	 /**
+	  * 
+	  * @param orientation 
+	  */
+	setOrientation(orientation: any): boolean; 
 
-    /**
-     * 
-     * @param sliceIndex 
-     */
-    setSliceIndex(sliceIndex: number): boolean;
+	/**
+	 * 
+	 * @param sliceIndex 
+	 */
+	setSliceIndex(sliceIndex: number): boolean;
 }
 
 /**
@@ -62,7 +62,7 @@ export function newInstance(initialValues?: IImageSliceFilterInitialValues): vtk
  *
  */
 export declare const vtkImageSliceFilter: {
-    newInstance: typeof newInstance;
-    extend: typeof extend;
+	newInstance: typeof newInstance;
+	extend: typeof extend;
 }
 export default vtkImageSliceFilter;

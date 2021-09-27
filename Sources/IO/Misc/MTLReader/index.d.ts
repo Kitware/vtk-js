@@ -12,7 +12,7 @@ interface IMTLReaderOptions {
 /**
  * 
  */
-interface IMTLReaderInitialValues {
+export interface IMTLReaderInitialValues {
 	numberOfOutputs?: number;
 	requestCount?: number;
 	materials?: object;
@@ -21,7 +21,13 @@ interface IMTLReaderInitialValues {
 
 export interface vtkMTLReader extends vtkObject {
 
+	/**
+	 * 
+	 * @param {String} name 
+	 * @param {vtkActor} actor 
+	 */
 	applyMaterialToActor(name: string, actor: vtkActor): void;
+
 	/**
 	 * 
 	 */
@@ -39,6 +45,7 @@ export interface vtkMTLReader extends vtkObject {
 
 	/**
 	 * 
+	 * @param {String} name The name of the material.
 	 */
 	getMaterial(name: string): object;
 

@@ -1,5 +1,5 @@
 import { vtkObject } from "../../../interfaces" ;
-import { vtkFieldData } from './FieldData';
+import { IFieldDataInitialValues, vtkFieldData } from './FieldData';
 import vtkDataArray from '../../Core/DataArray';
 
 export enum AttributeTypes {
@@ -88,7 +88,7 @@ export enum DesiredOutputPrecision {
 /**
  *
  */
-interface IDataSetAttributesInitialValues {
+export interface IDataSetAttributesInitialValues extends IFieldDataInitialValues {
 	activeScalars?: number;
 	activeVectors?: number;
 	activeTensors?: number;

@@ -10,7 +10,7 @@ interface IDracoReaderOptions {
 /**
  * 
  */
-interface IDracoReaderInitialValues { }
+export interface IDracoReaderInitialValues { }
 
 type vtkDracoReaderBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'

@@ -32,7 +32,7 @@ export enum FieldAssociations {
 /**
  *
  */
-interface IDataSetInitialValues {}
+export interface IDataSetInitialValues {}
 
 export interface vtkDataSet extends vtkObject {
 

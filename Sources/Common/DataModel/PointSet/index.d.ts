@@ -1,11 +1,11 @@
 import { Bounds } from '../../../types';
 import vtkPoints from '../../Core/Points';
-import vtkDataSet from '../DataSet';
+import vtkDataSet, { IDataSetInitialValues } from '../DataSet';
 
 /**
  *
  */
-interface IPointSetInitialValues {
+export interface IPointSetInitialValues extends IDataSetInitialValues {
 }
 
 export interface vtkPointSet extends vtkDataSet {
@@ -16,7 +16,7 @@ export interface vtkPointSet extends vtkDataSet {
 	computeBounds(): void;
 
 	/**
-     * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
 	 * @return {Bounds} The bounds for the mapper.
 	 */
 	getBounds(): Bounds;

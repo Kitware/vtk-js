@@ -3,7 +3,7 @@ import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 /**
  *
  */
-interface ILineFilterInitialValues {
+export interface ILineFilterInitialValues {
 }
 
 type vtkLineFilterBase = vtkObject & vtkAlgorithm;

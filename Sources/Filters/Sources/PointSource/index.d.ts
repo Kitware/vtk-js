@@ -3,7 +3,7 @@ import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 /**
  * 
  */
-interface IPointSourceInitialValues {
+export interface IPointSourceInitialValues {
 	numberOfPoints?: number;
 	center?: number[];
 	radius?: number;

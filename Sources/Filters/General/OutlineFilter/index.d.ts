@@ -7,7 +7,7 @@ export const LINE_ARRAY: number[];
 /*
  * 
  */
-interface IOutlineFilterInitialValues {
+export interface IOutlineFilterInitialValues {
 }
 
 type vtkOutlineFilterBase = vtkObject & vtkAlgorithm;

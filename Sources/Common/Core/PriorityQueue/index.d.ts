@@ -3,7 +3,7 @@ import { vtkObject } from "../../../interfaces" ;
 /**
  *
  */
-interface IPriorityQueueInitialValues {
+export interface IPriorityQueueInitialValues {
 	elements?: Array<any>;
 }
 

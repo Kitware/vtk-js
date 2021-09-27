@@ -1,4 +1,5 @@
 import { vtkObject, vtkSubscription } from "../../../interfaces";
+import { RGBColor } from "../../../types";
 import vtkRenderer from "../../Core/Renderer";
 import vtkRenderWindow from "../../Core/RenderWindow";
 import vtkRenderWindowInteractor from "../../Core/RenderWindowInteractor";
@@ -9,8 +10,8 @@ import vtkRenderWindowInteractor from "../../Core/RenderWindowInteractor";
 /**
  *
  */
-interface IGenericRenderWindowInitialValues {
-	background?: number[];	
+export interface IGenericRenderWindowInitialValues {
+	background?: RGBColor;
 	listenWindowResize?: boolean;
 	container?: HTMLElement,
 }

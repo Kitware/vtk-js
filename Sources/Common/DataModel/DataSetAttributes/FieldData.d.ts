@@ -3,7 +3,7 @@ import { vtkObject } from "../../../interfaces" ;
 /**
  * 
  */
-interface IFieldDataInitialValues {
+export interface IFieldDataInitialValues {
 	arrays?: Array<any>;
 	copyFieldFlags?: Array<any>;
 	doCopyAllOn?: boolean;

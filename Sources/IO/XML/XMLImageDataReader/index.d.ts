@@ -1,9 +1,9 @@
-import vtkXMLReader from "../XMLReader";
+import vtkXMLReader, { IXMLReaderInitialValues } from "../XMLReader";
 
 /**
  * 
  */
-interface IXMLImageDataReaderInitialValues { 
+export interface IXMLImageDataReaderInitialValues extends IXMLReaderInitialValues { 
 	dataType?: string;
 }
 

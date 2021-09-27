@@ -1,7 +1,8 @@
-import vtkSpline1D from '../Spline1D';
+import { Vector3 } from '../../../types';
+import vtkSpline1D, { ISpline1DInitialValues } from '../Spline1D';
 
 
-interface ICardinalSpline1DInitialValues {}
+export interface ICardinalSpline1DInitialValues extends ISpline1DInitialValues {}
 
 export interface vtkCardinalSpline1D extends vtkSpline1D {
 
@@ -9,20 +10,20 @@ export interface vtkCardinalSpline1D extends vtkSpline1D {
 	 * 
 	 * @param {Number} size 
 	 * @param {Float32Array} work 
-	 * @param {Number[]} x 
-	 * @param {Number[]} y 
+	 * @param {Vector3} x 
+	 * @param {Vector3} y 
 	 */
-	computeCloseCoefficients(size: number, work: Float32Array, x: number[], y: number[]): void;
-		
+	computeCloseCoefficients(size: number, work: Float32Array, x: Vector3, y: Vector3): void;
+
 	/**
 	 * 
 	 * @param {Number} size 
 	 * @param {Float32Array} work 
-	 * @param {Number[]} x 
-	 * @param {Number[]} y 
+	 * @param {Vector3} x 
+	 * @param {Vector3} y 
 	 */
-	computeOpenCoefficients(size: number, work: Float32Array, x: number[], y: number[]): void;
-		
+	computeOpenCoefficients(size: number, work: Float32Array, x: Vector3, y: Vector3): void;
+
 	/**
 	 * 
 	 * @param {Number} intervalIndex 
@@ -47,9 +48,9 @@ export function extend(publicAPI: object, model: object, initialValues?: ICardin
 export function newInstance(initialValues?: ICardinalSpline1DInitialValues): vtkCardinalSpline1D;
 
 /**
- * vtkCardinalSpline1D provides methods for creating a 1D cubic spline object from given
- * parameters, and allows for the calculation of the spline value and derivative
- * at any given point inside the spline intervals.
+ * vtkCardinalSpline1D provides methods for creating a 1D cubic spline object
+ * from given parameters, and allows for the calculation of the spline value and
+ * derivative at any given point inside the spline intervals.
  */
 export declare const vtkCardinalSpline1D: {
 	newInstance: typeof newInstance,

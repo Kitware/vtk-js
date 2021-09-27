@@ -10,7 +10,7 @@ export enum ShapeType {
 /**
  *
  */
-interface IArrow2DSourceInitialValues {
+export interface IArrow2DSourceInitialValues {
 	base?: number;
 	height?: number;
 	width?: number;
@@ -30,6 +30,7 @@ type vtkArrow2DSourceBase = vtkObject & Omit<vtkAlgorithm,
 	| 'addInputData'>;
 
 export interface vtkArrow2DSource extends vtkArrow2DSourceBase {
+
 	/**
 	 * Get the cap the base of the cone with a polygon.
 	 * @default 0
@@ -106,7 +107,7 @@ export interface vtkArrow2DSource extends vtkArrow2DSourceBase {
 	 * It is located at the middle of the axis of the cone.
 	 * !!! warning
 	 *     This is not the center of the base of the cone!
-	 * @param {Number[]}  center 
+	 * @param {Number[]} center The center of the cone coordinates.
 	 * @default [0, 0, 0]
 	 */
 	setCenterFrom(center: number[]): boolean;
@@ -140,13 +141,13 @@ export interface vtkArrow2DSource extends vtkArrow2DSourceBase {
 
 	/**
 	 * Set the base thickness of the cone.
-	 * @param {Number} thickness 
+	 * @param {Number} thickness The thickness value.
 	 */
 	setThickness(thickness: number): boolean;
 
 	/**
 	 * Set the number of facets used to represent the cone.
-	 * @param {Number} width 
+	 * @param {Number} width The width value.
 	 */
 	setWidth(width: number): boolean;
 }

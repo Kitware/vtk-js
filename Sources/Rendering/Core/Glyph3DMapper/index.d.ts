@@ -1,5 +1,5 @@
 import { Bounds } from "../../../types";
-import vtkMapper from "../Mapper";
+import vtkMapper, { IMapperInitialValues } from "../Mapper";
 
 export enum OrientationModes {
 	DIRECTION,
@@ -20,7 +20,7 @@ interface IPrimitiveCount {
 	triangles: number;
 }
 
-interface IGlyph3DMapperInitialValues {
+export interface IGlyph3DMapperInitialValues extends IMapperInitialValues {
 	orient?: boolean,
 	orientationMode?: OrientationModes,
 	orientationArray?: number[],

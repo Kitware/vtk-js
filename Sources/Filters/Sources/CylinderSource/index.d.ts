@@ -3,7 +3,7 @@ import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 /**
  *
  */
-interface ICylinderSourceInitialValues {
+export interface ICylinderSourceInitialValues {
 	height?: number;
 	initAngle?: number;
 	otherRadius?: number;

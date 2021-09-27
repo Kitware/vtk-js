@@ -10,7 +10,7 @@ interface IJSONReaderOptions {
 /**
  * 
  */
-interface IJSONReaderInitialValues { }
+export interface IJSONReaderInitialValues { }
 
 type vtkJSONReaderBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'

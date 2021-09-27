@@ -1,11 +1,11 @@
-import { vec3 } from 'gl-matrix';
+import { Vector3 } from '../../../types';
 import vtkCellArray from '../../Core/CellArray';
-import vtkPointSet from '../PointSet';
+import vtkPointSet, { IPointSetInitialValues } from '../PointSet';
 
 /**
  *
  */
-interface IPolyDataInitialValues {
+export interface IPolyDataInitialValues extends IPointSetInitialValues {
 }
 
 
@@ -19,28 +19,28 @@ export interface vtkPolyData extends vtkPointSet {
 	/**
 	 * Create upward links from points to cells that use each point. Enables
 	 * topologically complex queries.
-	 * @param initialSize {Number}
+	 * @param {Number} initialSize 
 	 */
 	buildLinks(initialSize?: number): void;
 
 	/**
 	 * If you know the type of cell, you may provide it to improve performances.
-	 * @param cellId
-	 * @param cellHint
+	 * @param {Number} cellId 
+	 * @param cellHint 
 	 */
-	getCell(cellId: any, cellHint: any): void;
+	getCell(cellId: number, cellHint: any): void;
 
 	/**
 	 * Get the neighbors at an edge.
-	 * @param cellId
-	 * @param point1
-	 * @param point2
+	 * @param {Number} cellId The Id of the cell.
+	 * @param {Vector3} point1 The first point coordinate.
+	 * @param {Vector3} point2 The second point coordinate.
 	 */
-	getCellEdgeNeighbors(cellId: any, point1: any, point2: any): void;
+	getCellEdgeNeighbors(cellId: number, point1: Vector3, point2: Vector3): void;
 
 	/**
 	 * Get a list of point ids that define a cell.
-	 * @param cellId {Number}
+	 * @param {Number} cellId The Id of the cell.
 	 * @return an object made of the cellType and a subarray `cellPointIds` of the cell points.
 	 */
 	getCellPoints(cellId: number): object;
@@ -107,32 +107,33 @@ export interface vtkPolyData extends vtkPointSet {
 	getStrips(): vtkCellArray;
 
 	/**
-	 * Get the cell array defining vertices. If there are no vertices, an empty
-	 * array will be returned (convenience to simplify traversal).
+	 * Get the cell array defining vertices.
+	 * If there are no vertices, an empty array will be returned (convenience to
+	 * simplify traversal).
 	 */
 	getVerts(): vtkCellArray;
 
 	/**
 	 * Set the cell array defining lines. 
-	 * @param lines {vtkCellArray}
+	 * @param {vtkCellArray} lines The cell array defining lines.
 	 */
 	setLines(lines: vtkCellArray): boolean;
 
 	/**
 	 * Set the cell array defining polys. 
-	 * @param polys {vtkCellArray}
+	 * @param {vtkCellArray} polys The cell array defining polys.
 	 */
 	setPolys(polys: vtkCellArray): boolean;
 
 	/**
 	 * Set the cell array defining strips. 
-	 * @param strips {vtkCellArray}
+	 * @param {vtkCellArray} strips The cell array defining strips.
 	 */
 	setStrips(strips: vtkCellArray): boolean;
 
 	/**
 	 * Set the cell array defining vertices.
-	 * @param verts {vtkCellArray}
+	 * @param {vtkCellArray} verts The cell array defining vertices.
 	 */
 	setVerts(verts: vtkCellArray): boolean;
 }

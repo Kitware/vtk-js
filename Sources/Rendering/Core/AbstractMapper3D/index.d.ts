@@ -1,13 +1,12 @@
-import { mat4 } from 'gl-matrix';
-import { Bounds } from '../../../types';
-import vtkAbstractMapper from '../AbstractMapper';
+import { Bounds, Vector3 } from '../../../types';
+import vtkAbstractMapper, { IAbstractMapperInitialValues } from '../AbstractMapper';
 
 /**
  * 
  */
-interface IAbstractMapper3DInitialValues {
-	bounds?: number[];
-	center?: number[];
+export interface IAbstractMapper3DInitialValues extends IAbstractMapperInitialValues {
+	bounds?: Bounds;
+	center?: Vector3;
 }
 
 export interface vtkAbstractMapper3D extends vtkAbstractMapper {
@@ -21,9 +20,9 @@ export interface vtkAbstractMapper3D extends vtkAbstractMapper {
 		
 	/**
 	 * Get the center of this mapper’s data.
-	 * @return {Number[]} The center of the mapper's data.
+	 * @return {Vector3} The center of the mapper's data.
 	 */
-	getCenter(): number[];
+	getCenter(): Vector3;
 		
 	/**
 	 * Get the diagonal length of this mappers bounding box.

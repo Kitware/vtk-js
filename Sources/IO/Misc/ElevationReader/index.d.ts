@@ -10,7 +10,7 @@ interface IElevationReaderOptions {
 /**
  * 
  */
-interface IElevationReaderInitialValues {
+export interface IElevationReaderInitialValues {
 	origin?: number[];
 	xSpacing?: number;
 	ySpacing?: number;

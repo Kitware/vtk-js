@@ -1,9 +1,10 @@
 import { vtkObject } from "../../../interfaces";
+import { Color } from "../../../types";
 
-interface ILightInitialValues {
+export interface ILightInitialValues {
     switch?: boolean;
     intensity?: number;
-    color?: number[];
+    color?: Color;
     position?: number[];
     focalPoint?: number[];
     positional?: boolean;
@@ -31,12 +32,12 @@ export interface vtkLight extends vtkObject {
     /**
      * 
      */
-    getColor(): number[];
+    getColor(): Color;
     
     /**
      * 
      */
-    getColorByReference(): number[];
+    getColorByReference(): Color;
     
     /**
      * 

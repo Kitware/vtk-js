@@ -1,10 +1,10 @@
-import vtkActor from "../Actor";
+import vtkActor, { IActorInitialValues } from "../Actor";
 import vtkCamera  from '../Camera';
 
 /**
  * 
  */
-interface IFollowerInitialValues {
+export interface IFollowerInitialValues extends IActorInitialValues {
 	viewUp?: number[],
 	useViewUp?: boolean,
 	camera?: vtkCamera,
@@ -14,6 +14,7 @@ interface IFollowerInitialValues {
  * 
  */
 export interface vtkFollower extends vtkActor {
+
 	/**
 	 * Generate the matrix based on ivars.
 	 */
@@ -57,7 +58,6 @@ export interface vtkFollower extends vtkActor {
 	 * @param {Number[]} viewUp The view up vector.
 	 */
 	setViewUp(viewUp: number[]): boolean;
-
 }
 
 /**

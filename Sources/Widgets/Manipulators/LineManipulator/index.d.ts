@@ -3,7 +3,7 @@ import { vtkObject } from "../../../interfaces";
 /**
  *
  */
-interface ILineManipulatorInitialValues {
+export interface ILineManipulatorInitialValues {
 	origin?: number[];
 	normal?: number[];
 }

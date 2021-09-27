@@ -1,4 +1,5 @@
 import { vtkObject } from "../../../interfaces";
+import { RGBColor } from "../../../types";
 import vtkRenderer from "../../Core/Renderer";
 import vtkRenderWindow from "../../Core/RenderWindow";
 import vtkRenderWindowInteractor from "../../Core/RenderWindowInteractor";
@@ -10,8 +11,8 @@ import vtkRenderWindowInteractor from "../../Core/RenderWindowInteractor";
 /**
  *
  */
-interface IFullScreenRenderWindowInitialValues {
-	background?: number[];	
+export interface IFullScreenRenderWindowInitialValues {
+	background?: RGBColor;
 	containerStyle?: object;
 	controlPanelStyle?: object,
 	listenWindowResize?: boolean;

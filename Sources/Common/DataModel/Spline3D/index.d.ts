@@ -4,9 +4,9 @@ export enum splineKind {
 	CARDINAL_SPLINE,
 	KOCHANEK_SPLINE,
 }
-  
 
-interface ISpline3DInitialValues {
+
+export interface ISpline3DInitialValues {
 	close?: boolean;
 	intervals?: any;
 	kind?: splineKind,
@@ -16,18 +16,19 @@ interface ISpline3DInitialValues {
 }
 
 export interface vtkSpline3D extends vtkObject {
+
 	/**
 	 * 
 	 * @param points 
 	 */
-	computeCoefficients(points : number[]): void;
+	computeCoefficients(points: number[]): void;
 		
 	/**
 	 * 
-	 * @param intervalIndex 
-	 * @param t 
+	 * @param {Number} intervalIndex 
+	 * @param {Number} t 
 	 */
-	getPoint(intervalIndex : number, t : number): number[];
+	getPoint(intervalIndex: number, t: number): number[];
 }
 
 /**

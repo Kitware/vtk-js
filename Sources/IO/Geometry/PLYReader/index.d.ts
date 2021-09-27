@@ -9,7 +9,7 @@ interface IPLYReaderOptions {
 /**
  * 
  */
-interface IPLYReaderInitialValues {}
+export interface IPLYReaderInitialValues {}
 
 type vtkPLYReaderBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
