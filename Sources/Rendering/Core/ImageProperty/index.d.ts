@@ -11,7 +11,7 @@ interface IComponentData {
 	componentWeight: number;
 }
 
-interface IImageMapperInitialValues {
+export interface IImageMapperInitialValues {
 	independentComponents?: boolean;
 	interpolationType?: InterpolationType;
 	colorWindow?: number;

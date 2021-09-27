@@ -1,6 +1,6 @@
-import vtkActor from '../Actor';
+import vtkActor, { IActorInitialValues } from '../Actor';
 
-export interface IFaceProperty {
+export interface IStyle {
 	text?: string;
 	faceColor?: string;
 	faceRotation?: number;
@@ -12,18 +12,23 @@ export interface IFaceProperty {
 	edgeColor?: string;
 }
 
+export interface IFaceProperty {
+	text?: string;
+	faceRotation?: number;
+}
+
 /**
  * 
  */
-interface IAnnotatedCubeActorInitialValues {
+export interface IAnnotatedCubeActorInitialValues extends IActorInitialValues {
 }
 
 export interface vtkAnnotatedCubeActor extends vtkActor {
 	/**
 	 * Set the default style.
-	 * @param style
+	 * @param {IStyle} style
 	 */
-	setDefaultStyle(style: any): boolean;
+	setDefaultStyle(style: IStyle): boolean;
 
 	/**
 	 * The +X face property.

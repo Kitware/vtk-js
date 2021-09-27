@@ -1,3 +1,4 @@
+import { Vector3 } from '../../../types';
 import vtkCell from '../Cell';
 
 export enum IntersectionState {
@@ -42,25 +43,13 @@ export interface vtkLine extends vtkCell {
 	 *   t: tolerance of the intersection
 	 * }
 	 * ```
-	 * @param p1 
-	 * @param p2 
-	 * @param tol 
-	 * @param x 
-	 * @param pcoords 
-	 * @return {IIntersectWithLine} 
+	 * @param {Vector3} p1 The first point coordinate.
+	 * @param {Vector3} p2 The second point coordinate.
+	 * @param {Number} tol The tolerance to use.
+	 * @param {Vector3} x The point which intersect triangle.
+	 * @param {Vector3} pcoords The parametric coordinates.
 	 */
-	intersectWithLine(p1: number[], p2: number[], tol: number, x: number[], pcoords: number[]): IIntersectWithLine;
-
-	/**
-	 * 
-	 * @param x 
-	 * @param closestPoint 
-	 * @param subId 
-	 * @param pcoords 
-	 * @param dist2 
-	 * @param weights 
-	 */
-	evaluatePosition(x: any, closestPoint: any, subId: any, pcoords: any, dist2: any, weights: any): void;
+	intersectWithLine(p1: Vector3, p2: Vector3, tol: number, x: Vector3, pcoords: Vector3): IIntersectWithLine;
 }
 
 /**
@@ -90,12 +79,12 @@ export function newInstance(initialValues?: ILineInitialValues): vtkLine;
  * }
  * 
  * @static
- * @param {Number[]} x 
- * @param {Number[]} p1 
- * @param {Number[]} p2 
- * @param {Number[]} [closestPoint] 
+ * @param {Vector3} x 
+ * @param {Vector3} p1 
+ * @param {Vector3} p2 
+ * @param {Vector3} [closestPoint] 
  */
-export function distanceToLine(x: number[], p1: number[], p2: number[], closestPoint?: number[]): IDistanceToLine;
+export function distanceToLine(x: Vector3, p1: Vector3, p2: Vector3, closestPoint?: Vector3): IDistanceToLine;
 
 /**
  * Performs intersection of two finite 3D lines. An intersection is found if the
@@ -112,15 +101,16 @@ export function distanceToLine(x: number[], p1: number[], p2: number[], closestP
  *    YES_INTERSECTION,
  *    ON_LINE
  * }
+ * ```
  * @static
- * @param  {Number[]} a1 
- * @param {Number[]} a2 
- * @param {Number[]} b1 
- * @param {Number[]} b2 
- * @param {Number[]} u 
- * @param {Number[]} v 
+ * @param  {Vector3} a1 
+ * @param {Vector3} a2 
+ * @param {Vector3} b1 
+ * @param {Vector3} b2 
+ * @param {Vector3} u 
+ * @param {Vector3} v 
  */
-export function intersection(a1: number[], a2: number[], b1: number[], b2: number[], u: number[], v: number[]): IntersectionState;
+export function intersection(a1: Vector3, a2: Vector3, b1: Vector3, b2: Vector3, u: Vector3, v: Vector3): IntersectionState;
 
 /** 
  * vtkLine is a cell which representant a line.

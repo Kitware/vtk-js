@@ -3,7 +3,7 @@ import { vtkObject } from "../../../interfaces" ;
 /**
  *
  */
-interface IProgressHandlerInitialValues {
+export interface IProgressHandlerInitialValues {
 	workCount?: number;
 }
 

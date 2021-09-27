@@ -4,7 +4,7 @@ import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 /**
  * 
  */
-interface IPlaneSourceInitialValues {
+export interface IPlaneSourceInitialValues {
 	xResolution?: number;
 	yResolution?: number;
 	origin?: number[];

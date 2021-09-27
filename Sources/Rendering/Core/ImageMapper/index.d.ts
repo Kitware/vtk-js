@@ -1,6 +1,6 @@
 import vtkCamera from "../Camera";
-import vtkAbstractMapper from "../AbstractMapper";
-import { Bounds } from "../../../types";
+import vtkAbstractMapper, { IAbstractMapperInitialValues } from "../AbstractMapper";
+import { Bounds, Vector3 } from "../../../types";
 
 export enum SlicingMode {
 	NONE,
@@ -22,7 +22,7 @@ interface ICoincidentTopology {
 	offset: number;
 }
 
-interface IImageMapperInitialValues {
+export interface IImageMapperInitialValues extends IAbstractMapperInitialValues {
 	displayExtent?: number[];
 	customDisplayExtent?: number[];
 	useCustomExtents?: boolean;
@@ -36,15 +36,15 @@ export interface vtkImageMapper extends vtkAbstractMapper {
 
 	/**
 	 *
-	 * @param {Number} pos
+	 * @param {Number} pos The position value.
 	 */
 	getSliceAtPosition(pos: number): number;
 
 	/**
 	 *
-	 * @param {Number[]} pos
+	 * @param {Vector3} pos The position value.
 	 */
-	getSliceAtPosition(pos: number[]): number;
+	getSliceAtPosition(pos: Vector3): number;
 
 	/**
 	 * Get the closest IJK axis
@@ -141,14 +141,15 @@ export interface vtkImageMapper extends vtkAbstractMapper {
 	 * @param {IClosestIJKAxis} closestIJKAxis The axis object.
 	 */
 	setClosestIJKAxis(closestIJKAxis: IClosestIJKAxis): boolean;
+
 	/**
 	 *
-	 * @param x1 The x coordinate of the first point.
-	 * @param x2 The x coordinate of the second point.
-	 * @param y1 The y coordinate of the first point.
-	 * @param y2 The y coordinate of the second point.
-	 * @param z1 The z coordinate of the first point.
-	 * @param z2 The z coordinate of the second point.
+	 * @param {Number} x1 The x coordinate of the first point.
+	 * @param {Number} x2 The x coordinate of the second point.
+	 * @param {Number} y1 The y coordinate of the first point.
+	 * @param {Number} y2 The y coordinate of the second point.
+	 * @param {Number} z1 The z coordinate of the first point.
+	 * @param {Number} z2 The z coordinate of the second point.
 	 */
 	setCustomDisplayExtent(x1: number, x2: number, y1: number, y2: number, z1: number, z2: number): boolean;
 

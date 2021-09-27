@@ -10,7 +10,7 @@ export enum FormatTypes {
 /**
  * 
  */
-interface ISTLWriterInitialValues { }
+export interface ISTLWriterInitialValues { }
 
 type vtkSTLWriterBase = vtkObject & vtkAlgorithm;
 
@@ -35,13 +35,13 @@ export interface vtkSTLWriter extends vtkSTLWriterBase {
 
 	/**
 	 * 
-	 * @param format 
+	 * @param {FormatTypes} format 
 	 */
 	setFormat(format: FormatTypes): boolean;
 
 	/**
 	 * 
-	 * @param format 
+	 * @param {mat4} transform Tranformation matrix.
 	 */
 	setTransform(transform: mat4): boolean;
 }
@@ -63,8 +63,11 @@ export function newInstance(initialValues?: ISTLWriterInitialValues): vtkSTLWrit
 
 /**
  * 
+ * @param {vktPolyData} polyData 
+ * @param {FormatTypes} [format] 
+ * @param {mat4} [transform] 
  */
-export function writeSTL(polyData: vtkPolyData, format?: FormatTypes, transform?: mat4): any;
+export function writeSTL(polyData: vtkPolyData, format?: FormatTypes, transform?: mat4): vtkPolyData;
 
 
 /**

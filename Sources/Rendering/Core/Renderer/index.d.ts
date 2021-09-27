@@ -4,12 +4,12 @@ import vtkCamera from '../Camera';
 import vtkLight from '../Light';
 import vtkRenderWindow from '../RenderWindow';
 import vtkProp3D from '../Prop3D';
-import vtkViewport from '../Viewport';
+import vtkViewport, { IViewportInitialValues } from '../Viewport';
 import vtkVolume from '../Volume';
 import vtkTexture from '../Texture';
 
 
-interface IRendererInitialValues {
+export interface IRendererInitialValues extends IViewportInitialValues {
 	allBounds?: Bounds[];
 	ambient?: number[];
 	allocatedRenderTime?: number;

@@ -10,7 +10,7 @@ interface IPDBReaderOptions {
 /**
  * 
  */
-interface IPDBReaderInitialValues {
+export interface IPDBReaderInitialValues {
 	numberOfAtoms?: number;
 	requestCount?: number;
 }

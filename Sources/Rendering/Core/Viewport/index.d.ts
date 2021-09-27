@@ -1,11 +1,12 @@
 
 import { vtkObject } from "../../../interfaces";
+import { RGBColor } from "../../../types";
 import vtkActor2D from '../Actor2D';
 import vtkProp from '../Prop';
 
-interface IViewportInitialValues {
-    background?: number[];
-    background2?: number[];
+export interface IViewportInitialValues {
+    background?: RGBColor;
+    background2?: RGBColor;
     gradientBackground?: boolean;
     viewport?: number[];
     aspect?: number[];
@@ -15,7 +16,6 @@ interface IViewportInitialValues {
 }
 
 export interface vtkViewport extends vtkObject {
-
 
     /**
      * Not Implemented yet

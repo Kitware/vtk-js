@@ -5,7 +5,7 @@ import vtkDataArray from "../../Core/DataArray";
 /**
  *
  */
-interface ICellArrayInitialValues {
+export interface ICellArrayInitialValues {
 	empty?: boolean;
 	numberOfComponents?: number;
 }

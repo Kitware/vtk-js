@@ -3,7 +3,7 @@ import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 /**
  *
  */
-interface ITriangleFilterInitialValues {
+export interface ITriangleFilterInitialValues {
 	errorCount?: number;
 }
 

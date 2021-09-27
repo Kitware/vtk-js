@@ -3,7 +3,7 @@ import vtkRenderer from "../Renderer";
 import vtkRenderWindowInteractor from "../RenderWindowInteractor";
 // import vtkOpenGLRenderWindow from "../../../OpenGL/RenderWindow";
 
-interface IRenderWindowInitialValues {	
+export interface IRenderWindowInitialValues {	
 	renderers?: vtkRenderer[],
 	views?: vtkRenderWindow[],
 	interactor?: any,

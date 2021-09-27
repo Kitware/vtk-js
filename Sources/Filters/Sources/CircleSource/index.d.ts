@@ -3,7 +3,7 @@ import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 /**
  *
  */
-interface ICircleSourceInitialValues {
+export interface ICircleSourceInitialValues {
 	radius?: number;
 	resolution?: number;
 	center?: number[];

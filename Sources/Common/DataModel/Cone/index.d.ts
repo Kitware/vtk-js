@@ -1,9 +1,10 @@
 import { vtkObject } from "../../../interfaces" ;
+import { Vector3 } from "../../../types";
 
 /**
  * 
  */
-interface IConeInitialValues {
+export interface IConeInitialValues {
 	angle?: number;
 }
 
@@ -11,15 +12,15 @@ export interface vtkCone extends vtkObject {
 
 	/**
 	 * Given the point x evaluate the cone equation.
-	 * @param {Number[]} x The point coordinate.
+	 * @param {Vector3} x The point coordinate.
 	 */
-	evaluateFunction(x: number[]): number[];
+	evaluateFunction(x: Vector3): number[];
 
 	/**
 	 * Given the point x evaluate the equation for the cone gradient.
-	 * @param {Number[]} x The point coordinate.
+	 * @param {Vector3} x The point coordinate.
 	 */
-	evaluateGradient(x: number[]): number[];
+	evaluateGradient(x: Vector3): number[];
 
 	/**
 	 * Get the angle of the cone.

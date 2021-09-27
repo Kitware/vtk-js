@@ -1,11 +1,11 @@
 import { mat3, mat4, ReadonlyVec3, vec3 } from 'gl-matrix';
-import { Bounds } from '../../../types';
-import vtkDataSet from '../DataSet';
+import { Bounds, Vector3 } from '../../../types';
+import vtkDataSet, { IDataSetInitialValues } from '../DataSet';
 
 /**
  *
  */
-interface IImageDataInitialValues {
+export interface IImageDataInitialValues extends IDataSetInitialValues {
 	spacing?: number[];
 	origin?: number[];
 	extent?: number[];
@@ -189,14 +189,14 @@ export interface vtkImageData extends vtkDataSet {
 	 * `worldToIndex` is the inverse matrix of `indexToWorld`. Both are made
 	 * with `Float64Array`.
 	 */
-	getIndexToWorld(): null | mat4;
+	getIndexToWorld(): mat4;
 
 	/**
 	 * Returns the `mat4` matrices used to convert between world and index.
 	 * `worldToIndex` is the inverse matrix of `indexToWorld`. Both are made
 	 * with `Float64Array`.
 	 */
-	getWorldToIndex(): null | mat4;
+	getWorldToIndex(): mat4;
 
 	/**
 	 * this is the fast version, requires vec3 arguments
@@ -266,49 +266,49 @@ export interface vtkImageData extends vtkDataSet {
 
 	/**
 	 * Set the extent.
-	 * @param extent
+	 * @param extent 
 	 */
 	setExtent(extent: number[]): boolean;
 
 	/**
 	 *
-	 * @param x1
-	 * @param x2
-	 * @param y1
-	 * @param y2
-	 * @param z1
-	 * @param z2
+	 * @param {Number} x1 The x coordinate of the first point.
+	 * @param {Number} x2 The x coordinate of the second point.
+	 * @param {Number} y1 The y coordinate of the first point.
+	 * @param {Number} y2 The y coordinate of the second point.
+	 * @param {Number} z1 The z coordinate of the first point.
+	 * @param {Number} z2 The z coordinate of the second point.
 	 */
 	setExtent(x1: number, x2: number, y1: number, y2: number, z1: number, z2: number): void;
 
 	/**
-	 *
-	 * @param origin
+	 * Set the origin of the image.
+	 * @param {Vector3} origin The coordinate of the origin point.
 	 */
-	setOrigin(origin: number[]): boolean;
+	setOrigin(origin: Vector3): boolean;
+
+	/**
+	 * Set the origin of the image.
+	 * @param {Vector3} origin The coordinate of the origin point.
+	 */
+	setOriginFrom(origin: Vector3): boolean;
 
 	/**
 	 *
-	 * @param origin
-	 */
-	setOriginFrom(origin: number[]): boolean;
-
-	/**
-	 *
-	 * @param spacing
+	 * @param spacing 
 	 */
 	setSpacing(spacing: number[]): boolean;
 
 	/**
 	 *
-	 * @param spacing
+	 * @param spacing 
 	 */
 	setSpacingFrom(spacing: number[]): boolean;
 
 	/**
 	 * this is the fast version, requires vec3 arguments
-	 * @param vin
-	 * @param vout
+	 * @param vin 
+	 * @param vout 
 	 */
 	worldToIndexVec3(vin: ReadonlyVec3, vout: vec3): vec3;
 
@@ -316,8 +316,8 @@ export interface vtkImageData extends vtkDataSet {
 	 * Converts the input world vector `[x,y,z]` to approximate index values
 	 * `[i,j,k]`. Should be rounded to integers before attempting to access the
 	 * index. Modifies the out vector array in place, but also returns it.
-	 * @param ain
-	 * @param aout
+	 * @param ain 
+	 * @param aout 
 	 */
 	worldToIndex(ain: ReadonlyVec3, aout: vec3): vec3;
 

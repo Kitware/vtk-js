@@ -5,7 +5,7 @@ import { Size } from "../../../types";
 /**
  *
  */
-interface ICanvasViewInitialValues {
+export interface ICanvasViewInitialValues {
 	canvas?: HTMLCanvasElement;
 	size?: Size;
 	cursorVisibility?: boolean;

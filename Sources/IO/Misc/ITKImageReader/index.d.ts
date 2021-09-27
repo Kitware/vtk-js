@@ -3,7 +3,7 @@ import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 /**
  * 
  */
-interface IITKImageReaderInitialValues {
+export interface IITKImageReaderInitialValues {
 	fileName?: string;
 	arrayName?: string;
 }

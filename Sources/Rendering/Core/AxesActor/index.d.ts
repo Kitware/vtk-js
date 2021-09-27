@@ -1,99 +1,99 @@
-import vtkActor from '../Actor';
+import vtkActor, { IActorInitialValues } from '../Actor';
 
 /**
  * 
  */
-interface IAxesActorInitialValues {}
+export interface IAxesActorInitialValues extends IActorInitialValues {}
 
 export interface vtkAxesActor extends vtkActor {
 
-    /**
-     * 
-     */
-    getConfig(): object;
+	/**
+	 * 
+	 */
+	getConfig(): object;
 
-    /**
-     * 
-     */
-    getXAxisColor(): number[];
+	/**
+	 * 
+	 */
+	getXAxisColor(): number[];
 
-    /**
-     * 
-     */
-    getXAxisColorByReference(): number[];
+	/**
+	 * 
+	 */
+	getXAxisColorByReference(): number[];
 
-    /**
-     * 
-     */
-    getYAxisColor(): number[];
+	/**
+	 * 
+	 */
+	getYAxisColor(): number[];
 
-    /**
-     * 
-     */
-    getYAxisColorByReference(): number[];
+	/**
+	 * 
+	 */
+	getYAxisColorByReference(): number[];
 
-    /**
-     * 
-     */
-    getZAxisColor(): number[];
+	/**
+	 * 
+	 */
+	getZAxisColor(): number[];
 
-    /**
-     * 
-     */
-    getZAxisColorByReference(): number[];
+	/**
+	 * 
+	 */
+	getZAxisColorByReference(): number[];
 
-    /**
-     * 
-     * @param config 
-     */
-    setConfig(config: object): boolean;
+	/**
+	 * 
+	 * @param config 
+	 */
+	setConfig(config: object): boolean;
 
-    /**
-     * Set X axis color.
-     * @param {Number} r Defines the red component (between 0 and 1).
-     * @param {Number} g Defines the green component (between 0 and 1).
-     * @param {Number} b Defines the blue component (between 0 and 1).
-     */
-    setXAxisColor(r: number, g: number, b: number): boolean;
+	/**
+	 * Set X axis color.
+	 * @param {Number} r Defines the red component (between 0 and 1).
+	 * @param {Number} g Defines the green component (between 0 and 1).
+	 * @param {Number} b Defines the blue component (between 0 and 1).
+	 */
+	setXAxisColor(r: number, g: number, b: number): boolean;
 
-    /**
-     * Set X axis color.
-     * @param XAxisColor 
-     */
-    setXAxisColorFrom(XAxisColor: number[]): boolean;
+	/**
+	 * Set X axis color.
+	 * @param XAxisColor 
+	 */
+	setXAxisColorFrom(XAxisColor: number[]): boolean;
 
-    /**
-     * Set Y axis color.
-     * @param {Number} r Defines the red component (between 0 and 1).
-     * @param {Number} g Defines the green component (between 0 and 1).
-     * @param {Number} b Defines the blue component (between 0 and 1).
-     */
-    setYAxisColor(r: number, g: number, b: number): boolean;
+	/**
+	 * Set Y axis color.
+	 * @param {Number} r Defines the red component (between 0 and 1).
+	 * @param {Number} g Defines the green component (between 0 and 1).
+	 * @param {Number} b Defines the blue component (between 0 and 1).
+	 */
+	setYAxisColor(r: number, g: number, b: number): boolean;
 
-    /**
-     * Set Y axis color.
-     * @param YAxisColor 
-     */
-    setYAxisColorFrom(YAxisColor: number[]): boolean;
+	/**
+	 * Set Y axis color.
+	 * @param YAxisColor 
+	 */
+	setYAxisColorFrom(YAxisColor: number[]): boolean;
 
-    /**
-     * Set Z axis color.
-     * @param {Number} r Defines the red component (between 0 and 1).
-     * @param {Number} g Defines the green component (between 0 and 1).
-     * @param {Number} b Defines the blue component (between 0 and 1).
-     */
-    setZAxisColor(r: number, g: number, b: number): boolean;
+	/**
+	 * Set Z axis color.
+	 * @param {Number} r Defines the red component (between 0 and 1).
+	 * @param {Number} g Defines the green component (between 0 and 1).
+	 * @param {Number} b Defines the blue component (between 0 and 1).
+	 */
+	setZAxisColor(r: number, g: number, b: number): boolean;
 
-    /**
-     * Set E axis color.
-     * @param ZAxisColor 
-     */
-    setZAxisColorFrom(ZAxisColor: number[]): boolean;
+	/**
+	 * Set E axis color.
+	 * @param ZAxisColor 
+	 */
+	setZAxisColorFrom(ZAxisColor: number[]): boolean;
 
-    /**
-     * 
-     */
-    update(): void;
+	/**
+	 * 
+	 */
+	update(): void;
 }
 
 /**
@@ -125,7 +125,7 @@ export function newInstance(initialValues?: IAxesActorInitialValues): vtkAxesAct
  * @see [vtkOrientationMarkerWidget](./Interaction_Widgets_OrientationMarkerWidget.html)
  */
 export declare const vtkAxesActor: {
-    newInstance: typeof newInstance,
-    extend: typeof extend,
+	newInstance: typeof newInstance,
+	extend: typeof extend,
 };
 export default vtkAxesActor;

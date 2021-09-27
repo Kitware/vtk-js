@@ -1,4 +1,4 @@
-import vtkProp from '../Prop';
+import vtkProp, { IPropInitialValues } from '../Prop';
 import vtkCoordinate from '../Coordinate';
 import vtkMapper from '../Mapper';
 import vtkProperty from '../Property';
@@ -7,12 +7,12 @@ import { Bounds } from '../../../types';
 /**
  * 
  */
-interface IActor2DInitialValues {
+export interface IActor2DInitialValues extends IPropInitialValues {
 	mapper?: vtkMapper;
 	property?: vtkProperty;
 	layerNumber?: number;
-	positionCoordinate?: any;
-	positionCoordinate2?: any;
+	positionCoordinate?: vtkCoordinate;
+	positionCoordinate2?: vtkCoordinate;
 }
 
 export interface vtkActor2D extends vtkProp {
@@ -40,12 +40,10 @@ export interface vtkActor2D extends vtkProp {
 
 	/**
 	 * 
-	 * @return  
 	 */
 	hasTranslucentPolygonalGeometry(): boolean;
 
 	/**
-	 * ----------------------------------------------------------------------------
 	 * Set the Prop2D's position in display coordinates.
 	 * @param XPos 
 	 * @param YPos 
@@ -53,24 +51,24 @@ export interface vtkActor2D extends vtkProp {
 	setDisplayPosition(XPos: any, YPos: any): void;
 
 	/**
-	 * ----------------------------------------------------------------------------
+	 * 
 	 * @param w 
 	 */
 	setWidth(w: number): void;
 
 	/**
-	 * ----------------------------------------------------------------------------
+	 * 
 	 * @param w 
 	 */
 	setHeight(h: number): void;
 
 	/**
-	 * ----------------------------------------------------------------------------
+	 * 
 	 */
 	getWidth(): number;
 
 	/**
-	 * ----------------------------------------------------------------------------
+	 * 
 	 */
 	getHeight(): number;
 

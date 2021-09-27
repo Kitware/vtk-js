@@ -3,7 +3,7 @@ import { vtkObject } from "../../../interfaces" ;
 /**
  *
  */
-interface IStringArrayInitialValues {
+export interface IStringArrayInitialValues {
 	name?: string;
 	numberOfComponents?: number;
 	size: number;

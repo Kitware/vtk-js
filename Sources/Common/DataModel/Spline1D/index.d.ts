@@ -1,7 +1,7 @@
 import { vtkObject } from "../../../interfaces" ;
 
 
-interface ISpline1DInitialValues {}
+export interface ISpline1DInitialValues {}
 
 export interface vtkSpline1D extends vtkObject {
 

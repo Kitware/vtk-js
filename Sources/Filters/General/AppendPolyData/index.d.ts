@@ -20,7 +20,7 @@ export enum DesiredOutputPrecision {
 /**
  *
  */
-interface IAppendPolyDataInitialValues {
+export interface IAppendPolyDataInitialValues {
 	outputPointsPrecision?: DesiredOutputPrecision;
 }
 

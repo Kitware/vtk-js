@@ -5,7 +5,7 @@ import vtkTexture from "../../Core/Texture";
 /**
  *
  */
-interface ITextureLODsDownloaderInitialValues {
+export interface ITextureLODsDownloaderInitialValues {
 	baseUrl?: string;
 	crossOrigin?: CrossOrigin;
 	files?: string[];

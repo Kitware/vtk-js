@@ -16,7 +16,7 @@ interface IRet {
 /**
  * 
  */
-interface IXMLReaderInitialValues { }
+export interface IXMLReaderInitialValues { }
 
 type vtkXMLReaderBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'

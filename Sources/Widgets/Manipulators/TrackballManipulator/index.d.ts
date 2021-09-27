@@ -3,7 +3,7 @@ import { vtkObject } from "../../../interfaces";
 /**
  *
  */
-interface ITrackballManipulatorInitialValues {
+export interface ITrackballManipulatorInitialValues {
 	normal?: number[];
 }
 

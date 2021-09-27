@@ -1,7 +1,8 @@
-import vtkPicker from "../Picker";
+import vtkPicker, { IPickerInitialValues } from "../Picker";
 import vtkMapper from "../Mapper";
+import { Vector3 } from "../../../types";
 
-interface IPointPickerInitialValues {
+interface IPointPickerInitialValues extends IPickerInitialValues {
 	pointId?: number;
 	pointIJK?: number[];
 	useCells?: boolean;
@@ -32,21 +33,21 @@ export interface vtkPointPicker extends vtkPicker {
 
 	/**
 	 * 
-	 * @param {Number[]} p1 
-	 * @param {Number[]} p2 
+	 * @param {Vector3} p1 
+	 * @param {Vector3} p2 
 	 * @param {Number} tol 
 	 * @param {vtkMapper} mapper 
 	 */
-	intersectWithLine(p1: number[], p2: number[], tol: number, mapper: vtkMapper): number;
+	intersectWithLine(p1: Vector3, p2: Vector3, tol: number, mapper: vtkMapper): number;
 
 	/**
 	 * 
-	 * @param {Number[]} p1 
-	 * @param {Number[]} p2 
+	 * @param {Vector3} p1 
+	 * @param {Vector3} p2 
 	 * @param {Number} tol 
 	 * @param {vtkMapper} mapper 
 	 */
-	intersectActorWithLine(p1: number[], p2: number[], tol: number, mapper: vtkMapper): number;
+	intersectActorWithLine(p1: Vector3, p2: Vector3, tol: number, mapper: vtkMapper): number;
 
 	/**
 	 * Specify whether the point search should be based on cell points or directly on the point list.
