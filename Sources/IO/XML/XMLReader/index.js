@@ -1,3 +1,4 @@
+import { create } from 'xmlbuilder2';
 import pako from 'pako';
 
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
@@ -16,13 +17,17 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper'; // Ju
 // Global methods
 // ----------------------------------------------------------------------------
 
-function stringToXML(xmlStr) {
-  if (window.ActiveXObject) {
-    const oXML = new window.ActiveXObject('Microsoft.XMLDOM');
-    oXML.loadXML(xmlStr);
-    return oXML;
-  }
-  return new DOMParser().parseFromString(xmlStr, 'application/xml');
+export function findAllTags(node, tagName) {
+  return [...node.getElementsByTagName(tagName)];
+}
+
+export function findFirstTag(node, tagName) {
+  return findAllTags(node, tagName)[0];
+}
+
+function parseXML(xmlStr) {
+  // see xmlbuilder2 docs on the object format
+  return create(xmlStr);
 }
 
 function extractAppendedData(buffer) {
@@ -392,8 +397,8 @@ function vtkXMLReader(publicAPI, model) {
     model.binaryBuffer = binaryBuffer;
 
     // Parse data here...
-    const doc = stringToXML(content);
-    const rootElem = doc.firstChild;
+    const doc = parseXML(content);
+    const rootElem = doc.root().node;
     const type = rootElem.getAttribute('type');
     const compressor = rootElem.getAttribute('compressor');
     const byteOrder = rootElem.getAttribute('byte_order');
@@ -416,10 +421,10 @@ function vtkXMLReader(publicAPI, model) {
     }
 
     // appended format
-    if (rootElem.querySelector('AppendedData')) {
-      const appendedDataElem = rootElem.querySelector('AppendedData');
+    if (findFirstTag(rootElem, 'AppendedData')) {
+      const appendedDataElem = findFirstTag(rootElem, 'AppendedData');
       const encoding = appendedDataElem.getAttribute('encoding');
-      const arrayElems = rootElem.querySelectorAll('DataArray');
+      const arrayElems = findAllTags(rootElem, 'DataArray');
 
       let appendedBuffer = model.binaryBuffer;
 
