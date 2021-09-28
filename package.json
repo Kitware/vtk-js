@@ -210,13 +210,13 @@
       [
         "@semantic-release/npm",
         {
-          "pkgRoot": "./pkg/umd"
+          "pkgRoot": "./dist/umd"
         }
       ],
       [
         "@semantic-release/npm",
         {
-          "pkgRoot": "./pkg/esm"
+          "pkgRoot": "./dist/esm"
         }
       ],
       "@semantic-release/github"
