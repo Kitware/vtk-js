@@ -77,7 +77,7 @@ function vtkWebGPUTexture(publicAPI, model) {
       // bytesPerRow must be a multiple of 256 so we might need to rebuild
       // the data here before passing to the buffer. e.g. if it is unorm8x4 then
       // we need to have width be a multiple of 64
-      const currWidthInBytes = model.width * tDetails.stride;
+      const currWidthInBytes = model.width * req.nativeArray.BYTES_PER_ELEMENT;
 
       // is this a half float texture?
       const halfFloat =
