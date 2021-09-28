@@ -2,6 +2,7 @@
 const { merge } = require('webpack-merge');
 const moment = require('moment');
 const webpack = require('webpack');
+const TerserPlugin = require("terser-webpack-plugin");
 
 // webpack plugins
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
@@ -43,6 +44,15 @@ function configureBundleAnalyzer(name) {
 function configureOptimization() {
   return {
     minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        exclude: [
+          // do not minify Sources/ and Utilities/ dirs
+          /Sources\//,
+          /Utilities\//,
+        ],
+      }),
+    ],
   };
 }
 

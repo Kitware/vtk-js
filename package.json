@@ -64,6 +64,7 @@
     "babel-plugin-istanbul": "6.0.0",
     "buffer": "6.0.3",
     "commitizen": "4.2.4",
+    "copy-webpack-plugin": "9.0.1",
     "cross-env": "7.0.3",
     "css-loader": "6.2.0",
     "dotenv": "10.0.0",
