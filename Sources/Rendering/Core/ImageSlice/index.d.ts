@@ -1,9 +1,9 @@
 import { Bounds } from "../../../types";
 import vtkImageProperty from "../ImageProperty";
 import vtkMapper from "../Mapper";
-import vtkProp3D from "../Prop3D";
+import vtkProp3D, { IProp3DInitialValues } from "../Prop3D";
 
-interface IImageSliceInitialValues {
+interface IImageSliceInitialValues extends IProp3DInitialValues{
 	mapper?: vtkMapper;
 	property?: vtkImageProperty;
 	bounds?: Bounds;
@@ -11,13 +11,14 @@ interface IImageSliceInitialValues {
 
 
 export interface vtkImageSlice extends vtkProp3D {
+
 	/**
 	 * 
 	 */
 	getActors(): any;
 
 	/**
-     * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
 	 * @return {Bounds} The bounds for the mapper.
 	 */
 	getBounds(): Bounds;
@@ -26,9 +27,9 @@ export interface vtkImageSlice extends vtkProp3D {
 	 * Get the bounds for a given slice as [xmin, xmax, ymin, ymax,zmin, zmax].
 	 * @param {Number} slice The slice index.
 	 * @param {Number} [thickness] The slice thickness.
-	 * @return {Number[]} The bounds for a given slice.
+	 * @return {Bounds} The bounds for a given slice.
 	 */
-	getBoundsForSlice(slice: number, thickness?: number): number[];
+	getBoundsForSlice(slice: number, thickness?: number): Bounds;
 
 	/**
 	 * 

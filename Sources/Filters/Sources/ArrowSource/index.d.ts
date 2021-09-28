@@ -10,7 +10,7 @@ export enum ShapeType {
 /**
  *
  */
-interface IArrowSourceInitialValues {
+export interface IArrowSourceInitialValues {
 	tipResolution?: number;
 	tipRadius?: number;
 	tipLength?: number;

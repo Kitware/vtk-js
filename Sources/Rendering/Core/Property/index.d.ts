@@ -1,4 +1,5 @@
 import { vtkObject } from "../../../interfaces";
+import { Color } from "../../../types";
 
 export enum Shading {
 	FLAT,
@@ -19,11 +20,11 @@ export enum Interpolation {
 }
 
 interface IPropertyValues {
-	color?: number[];
-	ambientColor?: number[];
-	diffuseColor?: number[];
-	specularColor?: number[];
-	edgeColor?: number[];
+	color?: Color;
+	ambientColor?: Color;
+	diffuseColor?: Color;
+	specularColor?: Color;
+	edgeColor?: Color;
 	ambient?: number;
 	diffuse?: number;
 	specular?: number;
@@ -62,14 +63,14 @@ export interface vtkProperty extends vtkObject {
 	 * and diffuse colors. From a physical standpoint it really doesn't make too
 	 * much sense to have both. For the rendering libraries that don't support
 	 * both, the diffuse color is used.
-	 * @return {Number[]} Array of RGB color.
+	 * @return {Color} Array of RGB color.
 	 */
-	getAmbientColor(): number[];
+	getAmbientColor(): Color;
 
 	/**
 	 * 
 	 */
-	getAmbientColorByReference(): number[];
+	getAmbientColorByReference(): Color;
 
 	/**
 	 * 
@@ -79,7 +80,7 @@ export interface vtkProperty extends vtkObject {
 	/**
 	 * Get the color of the object.the color of the object
 	 */
-	getColor(): number[];
+	getColor(): Color;
 
 	/**
 	 * Get the diffuse lighting coefficient.
@@ -89,23 +90,23 @@ export interface vtkProperty extends vtkObject {
 
 	/**
 	 * Get the diffuse surface color.
-	 * @return {Number[]} Array of RGB color.
+	 * @return {Color} Array of RGB color.
 	 */
-	getDiffuseColor(): number[];
+	getDiffuseColor(): Color;
 	/**
 	 * 
 	 */
-	getDiffuseColorByReference(): number[];
+	getDiffuseColorByReference(): Color;
 
 	/**
 	 * 
 	 */
-	getEdgeColor(): number[];
+	getEdgeColor(): Color;
 
 	/**
 	 * 
 	 */
-	getEdgeColorByReference(): number[];
+	getEdgeColorByReference(): Color;
 
 	/**
 	 * 
@@ -179,14 +180,14 @@ export interface vtkProperty extends vtkObject {
 
 	/**
 	 * Get the specular surface color.
-	 * @return {Number[]} Array of RGB color.
+	 * @return {Color} Array of RGB color.
 	 */
-	getSpecularColor(): number[];
+	getSpecularColor(): Color;
 
 	/**
 	 * 
 	 */
-	getSpecularColorByReference(): number[];
+	getSpecularColorByReference(): Color;
 
 	/**
 	 * Get the specular power.
@@ -217,15 +218,15 @@ export interface vtkProperty extends vtkObject {
 	 * ambient and diffuse colors. From a physical standpoint it really
 	 * doesn't make too much sense to have both. For the rendering
 	 * libraries that don’t support both, the diffuse color is used.
-	 * @param {Number[]} ambientColor An Array of the RGB color.
+	 * @param {Color} ambientColor An Array of the RGB color.
 	 */
-	setAmbientColor(ambientColor: number[]): boolean;
+	setAmbientColor(ambientColor: Color): boolean;
 
 	/**
 	 * Set the ambient surface color from an RGB array
-	 * @param {Number[]} ambientColor An Array of the RGB color.
+	 * @param {Color} ambientColor An Array of the RGB color.
 	 */
-	setAmbientColorFrom(ambientColor: number[]): boolean;
+	setAmbientColorFrom(ambientColor: Color): boolean;
 
 	/**
 	 * Turn on/off fast culling of polygons based on orientation of normal
@@ -249,9 +250,9 @@ export interface vtkProperty extends vtkObject {
 	 * Set the color of the object. Has the side effect of setting the
 	 * ambient diffuse and specular colors as well. This is basically
 	 * a quick overall color setting method.
-	 * @param {Number[]} color An Array of the RGB color.
+	 * @param {Color} color An Array of the RGB color.
 	 */
-	setColor(color: number[]): boolean;
+	setColor(color: Color): boolean;
 
 	/**
 	 * Set the diffuse lighting coefficient.
@@ -269,15 +270,15 @@ export interface vtkProperty extends vtkObject {
 
 	/**
 	 * Set the diffuse surface color.
-	 * @param {Number[]} diffuseColor An Array of the RGB color.
+	 * @param {Color} diffuseColor An Array of the RGB color.
 	 */
-	setDiffuseColor(diffuseColor: number[]): boolean;
+	setDiffuseColor(diffuseColor: Color): boolean;
 
 	/**
 	 * Set the diffuse surface color from an RGB array
-	 * @param {Number[]} diffuseColor An Array of the RGB color.
+	 * @param {Color} diffuseColor An Array of the RGB color.
 	 */
-	setDiffuseColorFrom(diffuseColor: number[]): boolean;
+	setDiffuseColorFrom(diffuseColor: Color): boolean;
 
 	/**
 	 * Set the color of primitive edges (if edge visibility is enabled).
@@ -289,15 +290,15 @@ export interface vtkProperty extends vtkObject {
 
 	/**
 	 * Set the color of primitive edges (if edge visibility is enabled).
-	 * @param {Number[]} edgeColor An Array of the RGB color.
+	 * @param {Color} edgeColor An Array of the RGB color.
 	 */
-	setEdgeColor(edgeColor: number[]): boolean;
+	setEdgeColor(edgeColor: Color): boolean;
 
 	/**
 	 * Set the color of primitive edges from an RGB array.
-	 * @param {Number[]} edgeColor An Array of the RGB color.
+	 * @param {Color} edgeColor An Array of the RGB color.
 	 */
-	setEdgeColorFrom(edgeColor: number[]): boolean;
+	setEdgeColorFrom(edgeColor: Color): boolean;
 
 	/**
 	 * Turn on/off the visibility of edges. On some renderers it is
@@ -411,15 +412,15 @@ export interface vtkProperty extends vtkObject {
 
 	/**
 	 * Set the specular surface color from an RGB array
-	 * @param {Number[]} specularColor An Array of the RGB color.
+	 * @param {Color} specularColor An Array of the RGB color.
 	 */
-	setSpecularColor(specularColor: number[]): boolean;
+	setSpecularColor(specularColor: Color): boolean;
 
 	/**
 	 * Set the specular surface color from an RGB array
-	 * @param {Number[]} specularColor An Array of the RGB color.
+	 * @param {Color} specularColor An Array of the RGB color.
 	 */
-	setSpecularColorFrom(specularColor: number[]): boolean;
+	setSpecularColorFrom(specularColor: Color): boolean;
 
 	/**
 	 * Set the specular power.

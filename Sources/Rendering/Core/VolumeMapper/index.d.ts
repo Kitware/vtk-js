@@ -1,5 +1,5 @@
-import { Bounds } from "../../../types";
-import vtkAbstractMapper from "../AbstractMapper";
+import { Bounds, Range } from "../../../types";
+import vtkAbstractMapper, { IAbstractMapperInitialValues } from "../AbstractMapper";
 
 export enum BlendMode {
 	COMPOSITE_BLEND,
@@ -11,14 +11,14 @@ export enum BlendMode {
 /**
  * 
  */
-interface IVolumeMapperInitialValues {
-	bounds?: number[];
+interface IVolumeMapperInitialValues extends IAbstractMapperInitialValues {
+	bounds?: Bounds;
 	blendMode?: BlendMode;
 	sampleDistance?: number;
 	imageSampleDistance?: number;
 	maximumSamplesPerRay?: number;
 	autoAdjustSampleDistances?: boolean;
-	averageIPScalarRange?: number[];
+	averageIPScalarRange?: Range;
 }
 
 export interface vtkVolumeMapper extends vtkAbstractMapper {
@@ -69,12 +69,12 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	/**
 	 * 
 	 */
-	getAverageIPScalarRange(): number[];
+	getAverageIPScalarRange(): Range;
 
 	/**
 	 * 
 	 */
-	getAverageIPScalarRangeByReference(): number[];
+	getAverageIPScalarRangeByReference(): Range;
 
 	/**
 	 * 
@@ -85,13 +85,13 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 
 	/**
 	 * 
-	 * @param averageIPScalarRange 
+	 * @param {Range} averageIPScalarRange 
 	 */
-	setAverageIPScalarRangeFrom(averageIPScalarRange: number[]): boolean;
+	setAverageIPScalarRangeFrom(averageIPScalarRange: Range): boolean;
 
 	/**
 	 * Set blend mode to COMPOSITE_BLEND
-	 * @param blendMode 
+	 * @param {BlendMode} blendMode 
 	 */
 	setBlendMode(blendMode: BlendMode): void;
 

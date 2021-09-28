@@ -3,7 +3,7 @@ import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 /**
  * 
  */
-interface IITKPolyDataReaderInitialValues {
+export interface IITKPolyDataReaderInitialValues {
 	fileName?: string;
 	arrayName?: string;
 }

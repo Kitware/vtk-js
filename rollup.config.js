@@ -73,12 +73,12 @@ export default {
     chunkFileNames(chunkInfo) {
       let name = chunkInfo.name;
 
-      if (name.includes('node_modules')) {
-        return name.replace('node_modules', 'vendor');
-      }
-
       if (!name.endsWith('.js')) {
         name += '.js';
+      }
+
+      if (name.includes('node_modules')) {
+        return name.replace('node_modules', 'vendor');
       }
 
       // throw all subscript prefixed chunks into a virtual folder

@@ -1,9 +1,12 @@
 import { Bounds } from "../../../types";
-import vtkProp3D from "../Prop3D";
+import vtkProp3D, { IProp3DInitialValues } from "../Prop3D";
 import vtkVolumeMapper from "../VolumeMapper";
 import vtkVolumeProperty from "../VolumeProperty";
 
-interface IVolumeInitialValues {
+/**
+ * 
+ */
+export interface IVolumeInitialValues extends IProp3DInitialValues {
 	mapper?: vtkVolumeMapper;
 	property?: vtkVolumeProperty;
 	bounds?: Bounds;

@@ -6,7 +6,7 @@ import vtkPolyData from '../../../Common/DataModel/PolyData';
 /**
  *
  */
-interface ICursor3DInitialValues {
+export interface ICursor3DInitialValues {
 	modelBounds?: number[];
 	focalPoint?: number[];
 	outline?: boolean;

@@ -18,7 +18,7 @@ export enum Input {
 /**
  *
  */
-interface IRenderWindowInteractorInitialValues {
+export interface IRenderWindowInteractorInitialValues {
 	initialized?: boolean;
 	enabled?: boolean;
 	enableRender?: boolean;

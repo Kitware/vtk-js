@@ -3,7 +3,7 @@ import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 /**
  *
  */
-interface IConeSourceInitialValues {
+export interface IConeSourceInitialValues {
 	height?: number;
 	radius?: number;
 	resolution?: number;

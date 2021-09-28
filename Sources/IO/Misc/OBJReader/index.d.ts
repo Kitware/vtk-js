@@ -10,7 +10,7 @@ interface IOBJReaderOptions {
 /**
  * 
  */
-interface IElevationReaderInitialValues {
+export interface IElevationReaderInitialValues {
 	numberOfOutputs?: number;
 	requestCount?: number;
 	splitMode?: null | string;

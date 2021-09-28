@@ -3,7 +3,7 @@ import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 /**
  * 
  */
-interface ISphereSourceInitialValues {
+export interface ISphereSourceInitialValues {
 	radius?: number;
 	latLongTessellation?: boolean;
 	thetaResolution?: number;

@@ -1,6 +1,7 @@
-import vtkCell from '../Cell';
+import { Vector3 } from '../../../types';
+import vtkCell, { ICellInitialValues } from '../Cell';
 
-interface ITriangleInitialValues { }
+export interface ITriangleInitialValues extends ICellInitialValues {}
 
 interface IIntersectWithLine {
 	intersect: number;
@@ -33,13 +34,13 @@ export interface vtkTriangle extends vtkCell {
 	 * }
 	 * ```
 	 * 
-	 * @param {Number[]} p1 The first point coordinate.
-	 * @param {Number[]} p2 The second point coordinate.
+	 * @param {Vector3} p1 The first point coordinate.
+	 * @param {Vector3} p2 The second point coordinate.
 	 * @param {Number} tol The tolerance to use.
-	 * @param {Number[]} x is the point which intersect triangle
-	 * @param {Number[]} pcoords The parametric coordinates.
+	 * @param {Vector3} x The point which intersect triangle.
+	 * @param {Vector3} pcoords The parametric coordinates.
 	 */
-	intersectWithLine(p1: number[], p2: number[], tol: number, x: number[], pcoords: number[]): IIntersectWithLine;
+	intersectWithLine(p1: Vector3, p2: Vector3, tol: number, x: Vector3, pcoords: Vector3): IIntersectWithLine;
 
 	/**
 	 * Evaluate the position of x in relation with triangle. 
@@ -60,26 +61,26 @@ export interface vtkTriangle extends vtkCell {
 	 * }
 	 * ```
 	 * 
-	 * @param {Number[]} x 
-	 * @param {Number[]} closestPoint 
-	 * @param {Number[]} pcoords The parametric coordinates.
+	 * @param {Vector3} x The x point coordinate.
+	 * @param {Vector3} closestPoint The closest point coordinate.
+	 * @param {Vector3} pcoords The parametric coordinates.
 	 * @param {Number[]} weights The number of weights.
 	 */
-	evaluatePosition(x: number[], closestPoint: number[], pcoords: number[], weights: number[]): IIntersectWithLine
+	evaluatePosition(x: Vector3, closestPoint: Vector3, pcoords: Vector3, weights: number[]): IIntersectWithLine
 
 	/**
 	 * Determine global coordinate (x]) from subId and parametric coordinates.
-	 * @param {Number[]} pcoords The parametric coordinates.
-	 * @param {Number[]} x 
+	 * @param {Vector3} pcoords The parametric coordinates.
+	 * @param {Vector3} x The x point coordinate.
 	 * @param {Number[]} weights The number of weights.
 	 */
-	evaluateLocation(pcoords: number[], x: number[], weights: number[]): void;
+	evaluateLocation(pcoords: Vector3, x: Vector3, weights: number[]): void;
 
 	/**
 	 * Get the distance of the parametric coordinate provided to the cell.
-	 * @param {Number[]} pcoords The parametric coordinates.
+	 * @param {Vector3} pcoords The parametric coordinates.
 	 */
-	getParametricDistance(pcoords: number[]): number;
+	getParametricDistance(pcoords: Vector3): number;
 }
 
 /**
@@ -101,22 +102,22 @@ export function newInstance(initialValues?: ITriangleInitialValues): vtkTriangle
 /**
  * Compute the normal direction according to the three vertex which composed a
  * triangle. The normal is not normalized. The normal is returned in normal.
- * @param {Number[]} v1 The first point coordinate.
- * @param {Number[]} v2 The second point coordinate.
- * @param {Number[]} v3 The third point coordinate.
- * @param {Number[]} n The normal coordinate.
+ * @param {Vector3} v1 The first point coordinate.
+ * @param {Vector3} v2 The second point coordinate.
+ * @param {Vector3} v3 The third point coordinate.
+ * @param {Vector3} n The normal coordinate.
  */
-export function computeNormalDirection(v1: number[], v2: number[], v3: number[], n: number[]): void;
+export function computeNormalDirection(v1: Vector3, v2: Vector3, v3: Vector3, n: Vector3): void;
 
 /**
  * Compute the normalized normal of a triangle composed of three points. The
  * normal is returned in normal.
- * @param {Number[]} v1 The first point coordinate.
- * @param {Number[]} v2 The second point coordinate.
- * @param {Number[]} v3 The third point coordinate.
- * @param {Number[]} n The normal coordinate.
+ * @param {Vector3} v1 The first point coordinate.
+ * @param {Vector3} v2 The second point coordinate.
+ * @param {Vector3} v3 The third point coordinate.
+ * @param {Vector3} n The normal coordinate.
  */
-export function computeNormal(v1: number[], v2: number[], v3: number[], n: number[]): void;
+export function computeNormal(v1: Vector3, v2: Vector3, v3: Vector3, n: Vector3): void;
 
 /**
  * vtkTriangle is a cell which representant a triangle. It contains static

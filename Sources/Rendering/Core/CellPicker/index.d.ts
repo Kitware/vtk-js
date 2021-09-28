@@ -1,13 +1,15 @@
-import vtkMapper  from '../Mapper';
-import vtkPicker from '../Picker';
+import vtkCell from '../../../Common/DataModel/Cell';
+import { Vector3 } from '../../../types';
+import vtkMapper from '../Mapper';
+import vtkPicker, { IPickerInitialValues } from '../Picker';
 import vtkRenderer from '../Renderer';
 
 /**
  * 
  */
-interface ICellPickerInitialValues {
+export interface ICellPickerInitialValues extends IPickerInitialValues {
 	cellId?: number;
-	pCoords?: number[];
+	pCoords?: Vector3;
 	cellIJK?: number[];
 	pickNormal?: number[];
 	mapperNormal?: number[];
@@ -21,7 +23,7 @@ export interface vtkCellPicker extends vtkPicker {
 	getCellIJK(): number[];
 
 	/**
-	 * 
+	 * Get the structured coordinates of the cell at the PickPosition.
 	 */
 	getCellIJKByReference(): number[];
 
@@ -58,38 +60,38 @@ export interface vtkCellPicker extends vtkPicker {
 	/**
 	 * 
 	 * @param data 
-	 * @param cell 
-	 * @param weights 
-	 * @param normal 
+	 * @param {vtkCell} cell 
+	 * @param {Number[]} weights 
+	 * @param {Number[]} normal 
 	 */
-	computeSurfaceNormal(data: any, cell: any, weights: number[], normal: number[]): boolean;
+	computeSurfaceNormal(data: any, cell: vtkCell, weights: number[], normal: number[]): boolean;
 
 	/**
 	 * 
 	 * @param selection 
-	 * @param renderer 
+	 * @param {vtkRenderer} renderer 
 	 */
 	pick(selection: any, renderer: vtkRenderer): void;
 
 	/**
 	 * 
-	 * @param p1 
-	 * @param p2 
-	 * @param tol 
-	 * @param mapper 
+	 * @param {Vector3} p1 
+	 * @param {Vector3} p2 
+	 * @param {Number} tol 
+	 * @param {vtkMapper} mapper 
 	 */
-	intersectWithLine(p1: number[], p2: number[], tol: number, mapper: vtkMapper): number;
+	intersectWithLine(p1: Vector3, p2: Vector3, tol: number, mapper: vtkMapper): number;
 
 	/**
 	 * 
-	 * @param p1 
-	 * @param p2 
-	 * @param t1 
-	 * @param t2 
-	 * @param tol 
-	 * @param mapper 
+	 * @param {Vector3} p1 
+	 * @param {Vector3} p2 
+	 * @param {Number} t1 
+	 * @param {Number} t2 
+	 * @param {Number} tol 
+	 * @param {vtkMapper} mapper 
 	 */
-	intersectActorWithLine(p1:  number[], p2:  number[], t1: number, t2: number, tol: number, mapper: vtkMapper): number;
+	intersectActorWithLine(p1: Vector3, p2: Vector3, t1: number, t2: number, tol: number, mapper: vtkMapper): number;
 }
 
 /**

@@ -4,10 +4,10 @@ import { Bounds } from '../../../types';
 /**
  *
  */
-interface IPointsInitialValues {
+export interface IPointsInitialValues {
 	empty?: boolean;
 	numberOfComponents?: number;
-	bounds?: number[];
+	bounds?: Bounds;
 }
 
 export interface vtkPoints extends vtkDataArray {
@@ -15,7 +15,7 @@ export interface vtkPoints extends vtkDataArray {
 	/**
 	 * Trigger the computation of bounds
 	 */
-	computeBounds(): number[];
+	computeBounds(): Bounds;
 
 	/**
 	 * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
@@ -26,7 +26,7 @@ export interface vtkPoints extends vtkDataArray {
 	/**
 	 * Get the coordinate of a point.
 	 * @param {Number} idx The index of point.
-	 * @param {Number[]} [tupleToFill]
+	 * @param {Number[]} [tupleToFill] 
 	 * @default []
 	 */
 	getPoint(idx: number, tupleToFill?: number[]): number[];
@@ -45,8 +45,8 @@ export interface vtkPoints extends vtkDataArray {
 	 * points.getData()[2] = z;
 	 * ```
 	 * 
-	 * @param {Number} nbPoints
-	 * @param {Number} [dimension]
+	 * @param {Number} nbPoints 
+	 * @param {Number} [dimension] 
 	 */
 	setNumberOfPoints(nbPoints: number, dimension?: number): void;
 

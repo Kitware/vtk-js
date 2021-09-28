@@ -1,6 +1,18 @@
 import { vtkObject } from "../../../interfaces" ;
+import { Vector3 } from "../../../types";
 import vtkActor from '../Actor';
 import vtkRenderer from '../Renderer'
+
+/**
+ * 
+ */
+export interface IAbstractPickerInitialValues {
+	renderer?: vtkRenderer,
+	selectionPoint?: Vector3,
+	pickPosition?: Vector3,
+	pickFromList?: number,
+	pickList?: vtkActor[],
+}
 
 /**
  * 
@@ -9,19 +21,18 @@ export interface vtkAbstractPicker extends vtkObject {
 
 	/**
 	 * 
-	 * @param actor 
+	 * @param {vtkActor} actor 
 	 */
 	addPickList(actor : vtkActor): void;
 
 	/**
 	 * 
-	 * @param actor 
+	 * @param {vtkActor} actor 
 	 */
 	deletePickList(actor : vtkActor): void;
 
 	/**
 	 * 
-	 *
 	 */
 	getPickFromList(): boolean;
 
@@ -32,18 +43,16 @@ export interface vtkAbstractPicker extends vtkObject {
 
 	/**
 	 * Get the picked position
-	 * @return 
 	 * @default [0.0, 0.0, 0.0]
 	 */
-	getPickPosition(): number[];
+	getPickPosition(): Vector3;
 
 	/**
 	 * 
 	 * Get the picked position
-	 * @return 
 	 * @default [0.0, 0.0, 0.0]
 	 */
-	getPickPositionByReference(): number[];
+	getPickPositionByReference(): Vector3;
 	
 	/**
 	 * 
@@ -52,17 +61,15 @@ export interface vtkAbstractPicker extends vtkObject {
 
 	/**
 	 * 
-	 * @return 
 	 * @default [0.0, 0.0, 0.0]
 	 */
-	getSelectionPoint(): number[];
+	getSelectionPoint(): Vector3;
 
 	/**
 	 * 
-	 * @return 
 	 * @default [0.0, 0.0, 0.0]
 	 */
-	getSelectionPointByReference(): number[];
+	getSelectionPointByReference(): Vector3;
 
 	/**
 	 * 
@@ -76,14 +83,14 @@ export interface vtkAbstractPicker extends vtkObject {
 
 	/**
 	 * 
-	 * @param pickFromList 
+	 * @param {Number}  pickFromList 
 	 * @default 0
 	 */
 	setPickFromList(pickFromList: number): boolean;
 
 	/**
 	 * 
-	 * @param pickList 
+	 * @param {vtkActor[]} pickList 
 	 * @default []
 	 */
 	setPickList(pickList: vtkActor[]): boolean;
@@ -94,9 +101,9 @@ export interface vtkAbstractPicker extends vtkObject {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param {object} [initialValues] (default: {})
+ * @param {IAbstractPickerInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: object): void;
+export function extend(publicAPI: IAbstractPickerInitialValues, model: object, initialValues?: object): void;
 
 /**
  * vtkAbstractPicker is an abstract superclass that defines a minimal API for its concrete subclasses.

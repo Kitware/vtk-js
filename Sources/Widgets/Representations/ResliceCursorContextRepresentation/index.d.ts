@@ -1,6 +1,6 @@
 import {vtkWidgetRepresentation, IWidgetRepresentationInitialValues} from "../WidgetRepresentation";
 
-interface IResliceCursorContextRepresentationInitialValues extends IWidgetRepresentationInitialValues {
+export interface IResliceCursorContextRepresentationInitialValues extends IWidgetRepresentationInitialValues {
 	axis1Name?: string,
 	axis2Name?: string,
 	rotationEnabled?: boolean,

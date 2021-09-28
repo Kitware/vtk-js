@@ -5,64 +5,64 @@ import { mat4 } from "gl-matrix";
 /**
  * 
  */
-interface IAbstractMapperInitialValues {
+export interface IAbstractMapperInitialValues {
 	clippingPlanes?: vtkPlane[];
 }
 
 type vtkAbstractMapperBase = vtkObject & Omit<vtkAlgorithm,
-    | 'getOutputData'
-    | 'getOutputPort'> ;
+	| 'getOutputData'
+	| 'getOutputPort'> ;
 
 export interface vtkAbstractMapper extends vtkAbstractMapperBase {
 
-    /**
-     * Added plane needs to be a vtkPlane object.
-     * @param {vtkPlane} plane
-     */
-    addClippingPlane(plane: vtkPlane): void;
+	/**
+	 * Added plane needs to be a vtkPlane object.
+	 * @param {vtkPlane} plane
+	 */
+	addClippingPlane(plane: vtkPlane): void;
 
-    /**
-     * Get number of clipping planes.
-     * @return {Number} The number of clipping planes.
-     */
-    getNumberOfClippingPlanes(): number;
+	/**
+	 * Get number of clipping planes.
+	 * @return {Number} The number of clipping planes.
+	 */
+	getNumberOfClippingPlanes(): number;
 
-    /**
-     * Get all clipping planes.
-     * @return {vtkPlane[]} An array of the clipping planes objects
-     */
-    getClippingPlanes(): vtkPlane[];
+	/**
+	 * Get all clipping planes.
+	 * @return {vtkPlane[]} An array of the clipping planes objects
+	 */
+	getClippingPlanes(): vtkPlane[];
 
-    /**
-     * Remove all clipping planes.
-     */
-    removeAllClippingPlanes(): void;
+	/**
+	 * Remove all clipping planes.
+	 */
+	removeAllClippingPlanes(): void;
 
-    /**
-     * Remove clipping plane at index i.
-     * @param {Number} i 
-     */
-    removeClippingPlane(i: number): void;
+	/**
+	 * Remove clipping plane at index i.
+	 * @param {Number} i 
+	 */
+	removeClippingPlane(i: number): void;
 
-    /**
-     * Set clipping planes.
-     * @param {vtkPlane[]} planes
-     */
-    setClippingPlanes(planes: vtkPlane[]): void;
+	/**
+	 * Set clipping planes.
+	 * @param {vtkPlane[]} planes
+	 */
+	setClippingPlanes(planes: vtkPlane[]): void;
 
-    /**
-     * Get the ith clipping plane as a homogeneous plane equation.
-     * Use getNumberOfClippingPlanes() to get the number of planes.
-     * @param {mat4} propMatrix
-     * @param {Number} i
-     * @param {Number[]} hnormal
-     */
-    getClippingPlaneInDataCoords(propMatrix : mat4, i : number, hnormal : number[]): void;
+	/**
+	 * Get the ith clipping plane as a homogeneous plane equation.
+	 * Use getNumberOfClippingPlanes() to get the number of planes.
+	 * @param {mat4} propMatrix
+	 * @param {Number} i
+	 * @param {Number[]} hnormal
+	 */
+	getClippingPlaneInDataCoords(propMatrix : mat4, i : number, hnormal : number[]): void;
 
-    /**
-     * 
-     */
-    update(): void;
+	/**
+	 * 
+	 */
+	update(): void;
 }
 
 /**
@@ -81,6 +81,6 @@ export function extend(publicAPI: object, model: object, initialValues?: IAbstra
  * data.
  */
 export declare const vtkAbstractMapper: {
-    extend: typeof extend,
+	extend: typeof extend,
 };
 export default vtkAbstractMapper;

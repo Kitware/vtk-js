@@ -1,10 +1,11 @@
-import vtkAbstractPicker from "../AbstractPicker";
+import { Vector3 } from "../../../types";
+import vtkAbstractPicker, { IAbstractPickerInitialValues } from "../AbstractPicker";
 import vtkActor from "../Actor";
-import vtkMapper  from '../Mapper';
+import vtkMapper from '../Mapper';
 import vtkRenderer from '../Renderer';
 
 
-interface IPickerInitialValues {
+export interface IPickerInitialValues extends IAbstractPickerInitialValues {
 	tolerance?: number;
 	mapperPosition?: number[];
 	actors?: vtkActor[];
@@ -13,6 +14,7 @@ interface IPickerInitialValues {
 }
 
 export interface vtkPicker extends vtkAbstractPicker {
+
 	/**
 	 * Get a collection of all the actors that were intersected.
 	 */
@@ -21,7 +23,7 @@ export interface vtkPicker extends vtkAbstractPicker {
 	/**
 	 * Get a pointer to the dataset that was picked (if any).
 	 */
-	getDataSet(): any
+	getDataSet(): any;
 
 	/**
 	 * Get mapper that was picked (if any)
@@ -61,17 +63,17 @@ export interface vtkPicker extends vtkAbstractPicker {
 	/**
 	 * Intersect data with specified ray.
 	 * Project the center point of the mapper onto the ray and determine its parametric value
-	 * @param p1 
-	 * @param p2 
-	 * @param tol 
-	 * @param mapper 
+	 * @param {Vector3} p1 
+	 * @param {Vector3} p2 
+	 * @param {Number} tol 
+	 * @param {vtkMapper} mapper 
 	 */
-	intersectWithLine(p1:  number[], p2:  number[], tol: number, mapper: vtkMapper): number;
+	intersectWithLine(p1: Vector3, p2: Vector3, tol: number, mapper: vtkMapper): number;
 
 	/**
 	 * Perform pick operation with selection point provided.
 	 * @param selection 
-	 * @param renderer 
+	 * @param {vtkRenderer} renderer 
 	 */
 	pick(selection: any, renderer: vtkRenderer): any;
 
@@ -85,13 +87,13 @@ export interface vtkPicker extends vtkAbstractPicker {
 
 	/**
 	 * 
-	 * @param mapperPosition 
+	 * @param {Vector3} mapperPosition 
 	 */
-	setMapperPositionFrom(mapperPosition: number[]): boolean;
+	setMapperPositionFrom(mapperPosition: Vector3): boolean;
 
 	/**
 	 * Specify tolerance for performing pick operation.
-	 * @param tolerance 
+	 * @param {Number} tolerance 
 	 */
 	setTolerance(tolerance: number): boolean;
 }

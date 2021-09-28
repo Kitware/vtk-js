@@ -1,7 +1,7 @@
-import vtkSpline1D from '../Spline1D';
+import vtkSpline1D, { ISpline1DInitialValues } from '../Spline1D';
 
 
-interface IKochanekSpline1DInitialValues {
+export interface IKochanekSpline1DInitialValues extends ISpline1DInitialValues {
 	tension?: number;
 	bias?: number;
 	continuity?: number;

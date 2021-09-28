@@ -1,36 +1,36 @@
-import vtkActor from "../Actor";
+import vtkActor, { IActorInitialValues } from "../Actor";
 
-interface ISkyboxInitialValues {
-    format?: string;
+export interface ISkyboxInitialValues extends IActorInitialValues {
+	format?: string;
 }
 
 export interface vtkSkybox extends vtkActor {
 
-    /**
-     * 
-     */
-    getFromat(): string;
+	/**
+	 * 
+	 */
+	getFromat(): string;
 
-    /**
-     * 
-     */
-    getIsOpaque(): boolean;
+	/**
+	 * 
+	 */
+	getIsOpaque(): boolean;
 
-    /**
-     * 
-     */
-    getSupportsSelection(): boolean;
+	/**
+	 * 
+	 */
+	getSupportsSelection(): boolean;
 
-    /**
-     * 
-     */
-    hasTranslucentPolygonalGeometry(): boolean;
+	/**
+	 * 
+	 */
+	hasTranslucentPolygonalGeometry(): boolean;
 
-    /**
-     * 
-     * @param format 
-     */
-    setFromat(format: string): boolean;
+	/**
+	 * 
+	 * @param format 
+	 */
+	setFromat(format: string): boolean;
 }
 
 /**
@@ -51,7 +51,7 @@ export interface vtkSkybox extends vtkActor {
   * 
   */
  export declare const vtkSkybox: {
-     newInstance: typeof newInstance,
-     extend: typeof extend,
+	 newInstance: typeof newInstance,
+	 extend: typeof extend,
  };
  export default vtkSkybox;

@@ -1,49 +1,35 @@
-import vtkMapper from "../Mapper";
+import vtkMapper, { IMapperInitialValues } from "../Mapper";
 
-interface IStickMappereInitialValues {
-	/**
-	 * 
-	 */
-	radius: number;
-	 /**
-	  * 
-	  */
-	length: number;
-
-	/**
-	 * 
-	 */
-	scaleArray: number[],
-
-	/**
-	 * 
-	 */
-	orientationArray: number[],
+interface IStickMappereInitialValues extends IMapperInitialValues{
+	radius?: number;
+	length?: number;
+	scaleArray?: number[],
+	orientationArray?: number[],
 }
 
 export interface vtkStickMapper extends vtkMapper {
 
-    /**
-     * 
-     */
-    getRadius(): number;
+	/**
+	 * 
+	 */
+	getRadius(): number;
 
-    /**
-     * 
-     */
-    getScaleArray(): number[];
+	/**
+	 * 
+	 */
+	getScaleArray(): number[];
 
-    /**
-     * 
-     * @param {Number} radius 
-     */
-    setRadius(radius: number): boolean;
+	/**
+	 * 
+	 * @param {Number} radius 
+	 */
+	setRadius(radius: number): boolean;
 
-    /**
-     * 
-     * @param scaleArray 
-     */
-    setScaleArray(scaleArray: number[]): boolean;
+	/**
+	 * 
+	 * @param scaleArray 
+	 */
+	setScaleArray(scaleArray: number[]): boolean;
 }
 
 /**
@@ -62,9 +48,11 @@ export interface vtkStickMapper extends vtkMapper {
  
  /** 
   * vtkStickMapper inherits from vtkMapper.
+  * 
+  * @see vtkMapper
   */
  export declare const vtkStickMapper: {
-     newInstance: typeof newInstance,
-     extend: typeof extend,
+	 newInstance: typeof newInstance,
+	 extend: typeof extend,
  };
  export default vtkStickMapper;

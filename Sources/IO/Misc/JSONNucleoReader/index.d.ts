@@ -9,7 +9,7 @@ interface IJSONNucleoReaderOptions {
 /**
  * 
  */
-interface IJSONNucleoReaderInitialValues {}
+export interface IJSONNucleoReaderInitialValues {}
 
 type vtkJSONNucleoReaderBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'

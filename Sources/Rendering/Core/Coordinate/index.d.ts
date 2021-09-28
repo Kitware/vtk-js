@@ -14,7 +14,7 @@ export enum Coordinate {
 /**
  *
  */
-interface ICoordinateInitialValues {
+export interface ICoordinateInitialValues {
 	coordinateSystem?: number,
 	value?: number[],
 	renderer?: vtkRenderer,
@@ -25,7 +25,6 @@ interface ICoordinateInitialValues {
 }
 
 export interface vtkCoordinate extends vtkObject {
-
 
 	/**
 	 *
@@ -94,13 +93,13 @@ export interface vtkCoordinate extends vtkObject {
 	/**
 	 * Get mapper that was picked (if any)
 	 */
-	getRenderer(): null | vtkRenderer;
+	getRenderer(): vtkRenderer;
 
 	/**
 	 * Set the coordinate system which this coordinate is defined in. The
 	 * options are Display, Normalized Display, Viewport, Normalized Viewport,
 	 * View, and World.
-	 * @param coordinateSystem 
+	 * @param {Coordinate} coordinateSystem 
 	 */
 	setCoordinateSystem(coordinateSystem: Coordinate): boolean
 
@@ -141,25 +140,25 @@ export interface vtkCoordinate extends vtkObject {
 
 	/**
 	 *
-	 * @param property 
+	 * @param {vtkProperty} property 
 	 */
 	setProperty(property: vtkProperty): boolean;
 
 	/**
 	 *
-	 * @param referenceCoordinate 
+	 * @param {vtkCoordinate} referenceCoordinate 
 	 */
 	setReferenceCoordinate(referenceCoordinate: vtkCoordinate): boolean;
 
 	/**
 	 *
-	 * @param renderer 
+	 * @param {vtkRenderer} renderer 
 	 */
 	setRenderer(renderer: vtkRenderer): boolean;
 
 	/**
 	 * Set the value of this coordinate.
-	 * @param ...args 
+	 * @param value 
 	 */
 	setValue(value: number[]): boolean;
 }

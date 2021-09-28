@@ -1,11 +1,11 @@
 
 import { Placement } from "../../../types";
-import vtkGenericRenderWindow from "../GenericRenderWindow";
+import vtkGenericRenderWindow, { IGenericRenderWindowInitialValues } from "../GenericRenderWindow";
 
 /**
  *
  */
-interface IRenderWindowWithControlBarInitialValues {
+export interface IRenderWindowWithControlBarInitialValues extends IGenericRenderWindowInitialValues{
 	rootContainer?: HTMLElement,
 	controlPosition?: Placement;
 	controlSize?: number;

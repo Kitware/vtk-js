@@ -10,7 +10,7 @@ interface ISTLReaderOptions {
 /**
  * 
  */
-interface ISTLReaderInitialValues {}
+export interface ISTLReaderInitialValues {}
 
 type vtkSTLReaderBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'

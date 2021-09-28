@@ -1,20 +1,16 @@
 import vtkCamera from "../Camera";
-import vtkMapper from "../Mapper";
+import vtkMapper, { IMapperInitialValues } from "../Mapper";
 
-interface IPixelSpaceCallbackMapperInitialValues {
+/**
+ * 
+ */
+export interface IPixelSpaceCallbackMapperInitialValues extends IMapperInitialValues {
 	callback?: any,
 	useZValues?: boolean;
 }
 
 interface IWindowSize {
-	/**
-	 * Width
-	 */
 	usize: number;
-    
-	/**
-	 * Height
-	 */
 	vsize: number;
 }
 
@@ -80,7 +76,6 @@ export interface vtkPixelSpaceCallbackMapper extends vtkMapper {
 	 * @param useZValues 
 	 */
 	setUseZValues(useZValues: boolean): boolean
-	
 }
 
 

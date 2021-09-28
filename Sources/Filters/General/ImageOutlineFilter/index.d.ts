@@ -3,7 +3,7 @@ import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 /**
  * 
  */
-interface IImageOutlineFilterInitialValues {
+export interface IImageOutlineFilterInitialValues {
     slicingMode?: number;
     background?: number;
 }

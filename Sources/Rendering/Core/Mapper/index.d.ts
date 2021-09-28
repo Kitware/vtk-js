@@ -1,5 +1,5 @@
-import { Bounds } from "../../../types";
-import vtkAbstractMapper3D from "../AbstractMapper3D";
+import { Bounds, Range } from "../../../types";
+import vtkAbstractMapper3D, { IAbstractMapper3DInitialValues } from "../AbstractMapper3D";
 
 export enum ColorMode {
 	DEFAULT,
@@ -32,7 +32,6 @@ interface IAbstractScalars {
 	cellFlag: boolean;
 }
 
-
 interface ICoincidentTopology {
 	factor: number;
 	offset: number;
@@ -43,10 +42,10 @@ interface IScalarToTextureCoordinate {
 	texCoordT: number;
 }
 
-interface IMapperInitialValues {
+export interface IMapperInitialValues extends IAbstractMapper3DInitialValues{
 	static?: boolean;
 	scalarVisibility?: boolean;
-	scalarRange?: number[];
+	scalarRange?: Range;
 	useLookupTableScalarRange?: boolean;
 	colorMode?: number;
 	scalarMode?: number;

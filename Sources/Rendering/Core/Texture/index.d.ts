@@ -1,6 +1,6 @@
 import { vtkAlgorithm } from "../../../interfaces";
 
-interface ITextureInitialValues {
+export interface ITextureInitialValues {
 	repeat?: boolean;
 	interpolate?: boolean;
 	edgeClamp?: boolean;
