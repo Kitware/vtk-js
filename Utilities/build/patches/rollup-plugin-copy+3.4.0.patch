@@ -1,0 +1,22 @@
+diff --git a/node_modules/rollup-plugin-copy/dist/index.commonjs.js b/node_modules/rollup-plugin-copy/dist/index.commonjs.js
+index 477d73e..585e4cd 100644
+--- a/node_modules/rollup-plugin-copy/dist/index.commonjs.js
++++ b/node_modules/rollup-plugin-copy/dist/index.commonjs.js
+@@ -43,7 +43,7 @@ async function generateCopyTarget(src, dest, {
+     src,
+     dest: path.join(destinationFolder, rename ? renameTarget(base, rename, src) : base),
+     ...(transform && {
+-      contents: await transform(await fs.readFile(src), base)
++      contents: await transform(await fs.readFile(src), src)
+     }),
+     renamed: rename,
+     transformed: transform
+@@ -131,7 +131,7 @@ function copy(options = {}) {
+           if (transformed) {
+             await fs.outputFile(dest, contents, restPluginOptions);
+           } else {
+-            await fs.copy(src, dest, restPluginOptions);
++            await fs.copySync(src, dest, restPluginOptions);
+           }
+ 
+           if (verbose) {

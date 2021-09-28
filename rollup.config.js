@@ -16,8 +16,11 @@ import replace from 'rollup-plugin-re';
 import { string } from 'rollup-plugin-string';
 import svgo from 'rollup-plugin-svgo';
 import webworkerLoader from 'rollup-plugin-web-worker-loader';
+import copy from 'rollup-plugin-copy';
 
 import { rewriteFilenames } from './Utilities/rollup/plugin-rewrite-filenames';
+
+const absolutifyImports = require('./Utilities/build/absolutify-imports.js');
 
 const IGNORE_LIST = [
   /[/\\]example_?[/\\]/,
@@ -49,10 +52,12 @@ entryPoints.forEach((entry) => {
   entries[entry.replace(/^Sources[/\\]/, '')] = entry;
 });
 
+const outputDir = path.resolve('dist', 'esm');
+
 export default {
   input: entries,
   output: {
-    dir: 'dist/esm/',
+    dir: outputDir,
     format: 'es',
     hoistTransitiveImports: false,
     entryFileNames(chunkInfo) {
@@ -177,6 +182,65 @@ export default {
     rewriteFilenames({
       find: /:/g,
       replace: '_',
+    }),
+    // copy package assets
+    copy({
+      flatten: false,
+      targets: [
+        {
+          src: 'Sources/**/*.d.ts',
+          dest: outputDir,
+          rename(name, ext, fullPath) {
+            const filename = `${name}.${ext}`;
+            if (filename === 'index.d.ts') {
+              const moduleName = path.basename(path.dirname(fullPath));
+              return `../${moduleName}.d.ts`;
+            }
+            return `${name}.${ext}`;
+          },
+          transform(content, base) {
+            // transforms typescript defs to use absolute package imports
+            if (base.endsWith('.d.ts')) {
+              return absolutifyImports(content.toString(), (relImport) => {
+                const importPath = path.join(path.dirname(base), relImport);
+                const relativeStart = path.join(__dirname, 'Sources');
+                // rollup builds are for the @kitware/vtk.js package
+                return path.join(
+                  '@kitware/vtk.js',
+                  path.relative(relativeStart, importPath)
+                );
+              });
+            }
+            return content;
+          },
+        },
+      ],
+    }),
+    copy({
+      flatten: true,
+      targets: [
+        { src: 'Utilities/XMLConverter', dest: `${outputDir}/Utilities` },
+        { src: 'Utilities/DataGenerator', dest: `${outputDir}/Utilities` },
+        { src: 'Utilities/prepare.js', dest: `${outputDir}/Utilities` },
+        { src: 'Utilities/config/*', dest: `${outputDir}/Utilities/config` },
+        { src: 'Utilities/build/macro-shim.d.ts', dest: outputDir, rename: 'macro.d.ts' },
+        { src: 'Utilities/build/macro-shim.js', dest: outputDir, rename: 'macro.js' },
+        { src: '*.txt', dest: outputDir },
+        { src: '*.md', dest: outputDir },
+        { src: '.npmignore', dest: outputDir },
+        { src: 'LICENSE', dest: outputDir },
+        {
+          src: 'package.json',
+          dest: outputDir,
+          transform(content) {
+            const pkg = JSON.parse(content);
+            pkg.name = '@kitware/vtk.js';
+            pkg.main = './index.js';
+            pkg.module = './index.js';
+            return JSON.stringify(pkg, null, 2);
+          },
+        },
+      ],
     }),
   ],
 };

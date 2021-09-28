@@ -38,6 +38,7 @@
     "globalthis": "1.0.2",
     "jszip": "3.7.1",
     "pako": "2.0.4",
+    "patch-package": "6.4.7",
     "seedrandom": "3.0.5",
     "shader-loader": "1.3.1",
     "shelljs": "0.8.4",
@@ -102,6 +103,7 @@
     "prettier": "2.4.0",
     "process": "0.11.10",
     "rollup": "2.56.3",
+    "rollup-plugin-copy": "3.4.0",
     "rollup-plugin-ignore": "1.0.10",
     "rollup-plugin-polyfill-node": "0.7.0",
     "rollup-plugin-postcss": "4.0.1",
@@ -155,7 +157,8 @@
     "test:firefox-debug": "karma start ./karma.conf.js --browsers Firefox --no-single-run",
     "commit": "git cz",
     "semantic-release": "semantic-release",
-    "prepare": "node ./Utilities/prepare.js"
+    "prepare": "node ./Utilities/prepare.js",
+    "postinstall": "patch-package --patch-dir ./Utilities/build/patches"
   },
   "config": {
     "commitizen": {
