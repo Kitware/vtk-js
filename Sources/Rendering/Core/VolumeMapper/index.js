@@ -3,7 +3,7 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 import vtkAbstractMapper from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
 
-const { BlendMode } = Constants;
+const { BlendMode, FilterMode } = Constants;
 
 // ----------------------------------------------------------------------------
 // vtkVolumeMapper methods
@@ -50,13 +50,28 @@ function vtkVolumeMapper(publicAPI, model) {
     publicAPI.setBlendMode(BlendMode.ADDITIVE_INTENSITY_BLEND);
   };
 
+  publicAPI.getBlendModeAsString = () =>
+    macro.enumToString(BlendMode, model.blendMode);
+
   publicAPI.setAverageIPScalarRange = (min, max) => {
     console.warn('setAverageIPScalarRange is deprecated use setIpScalarRange');
     publicAPI.setIpScalarRange(min, max);
   };
 
-  publicAPI.getBlendModeAsString = () =>
-    macro.enumToString(BlendMode, model.blendMode);
+  publicAPI.getFilterModeAsString = () =>
+    macro.enumToString(FilterMode, model.filterMode);
+
+  publicAPI.setFilterModeToOff = () => {
+    publicAPI.setFilterMode(FilterMode.OFF);
+  };
+
+  publicAPI.setFilterModeToNormalized = () => {
+    publicAPI.setFilterMode(FilterMode.NORMALIZED);
+  };
+
+  publicAPI.setFilterModeToRaw = () => {
+    publicAPI.setFilterMode(FilterMode.RAW);
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -72,6 +87,7 @@ const DEFAULT_VALUES = {
   autoAdjustSampleDistances: true,
   blendMode: BlendMode.COMPOSITE_BLEND,
   ipScalarRange: [-1000000.0, 1000000.0],
+  filterMode: FilterMode.OFF, // ignored by WebGL so no behavior change
 };
 
 // ----------------------------------------------------------------------------
@@ -91,6 +107,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'maximumSamplesPerRay',
     'autoAdjustSampleDistances',
     'blendMode',
+    'filterMode',
   ]);
 
   macro.setGetArray(publicAPI, model, ['ipScalarRange'], 2);
