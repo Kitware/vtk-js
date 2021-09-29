@@ -230,27 +230,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       `${model.renderable.getBlendMode()}`
     ).result;
 
-    const ipScalarRange = model.renderable.getIpScalarRange();
-    let min = ipScalarRange[0];
-    let max = ipScalarRange[1];
-
-    // If min or max is not already a float.
-    // make them into floats for glsl
-    min = Number.isInteger(min) ? min.toFixed(1).toString() : min.toString();
-    max = Number.isInteger(max) ? max.toFixed(1).toString() : max.toString();
-
-    FSSource = vtkShaderProgram.substitute(
-      FSSource,
-      '//VTK::IPScalarRangeMin',
-      min
-    ).result;
-
-    FSSource = vtkShaderProgram.substitute(
-      FSSource,
-      '//VTK::IPScalarRangeMax',
-      max
-    ).result;
-
     shaders.Fragment = FSSource;
 
     publicAPI.replaceShaderLight(shaders, ren, actor);
@@ -433,7 +412,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       maxSamples,
       useGradientOpacity: actor.getProperty().getUseGradientOpacity(0),
       blendMode: model.renderable.getBlendMode(),
-      ipScalarMode: model.renderable.getIpScalarRange(),
       proportionalComponents,
     };
 
@@ -450,7 +428,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.previousState.maxSamples !== state.maxSamples ||
       model.previousState.useGradientOpacity !== state.useGradientOpacity ||
       model.previousState.blendMode !== state.blendMode ||
-      !arrayEquals(model.previousState.ipScalarMode, state.ipScalarMode) ||
       !arrayEquals(
         model.previousState.proportionalComponents,
         state.proportionalComponents
@@ -550,6 +527,38 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     program.setUniformi('texture1', model.scalarTexture.getTextureUnit());
     program.setUniformf('sampleDistance', model.renderable.getSampleDistance());
+
+    const volInfo = model.scalarTexture.getVolumeInfo();
+    const ipScalarRange = model.renderable.getIpScalarRange();
+
+    const minVals = [];
+    const maxVals = [];
+    for (let i = 0; i < 4; i++) {
+      // convert iprange from 0-1 into data range values
+      minVals[i] =
+        ipScalarRange[0] * volInfo.dataComputedScale[i] +
+        volInfo.dataComputedOffset[i];
+      maxVals[i] =
+        ipScalarRange[1] * volInfo.dataComputedScale[i] +
+        volInfo.dataComputedOffset[i];
+      // convert data ranges into texture values
+      minVals[i] = (minVals[i] - volInfo.offset[i]) / volInfo.scale[i];
+      maxVals[i] = (maxVals[i] - volInfo.offset[i]) / volInfo.scale[i];
+    }
+    program.setUniform4f(
+      'ipScalarRangeMin',
+      minVals[0],
+      minVals[1],
+      minVals[2],
+      minVals[3]
+    );
+    program.setUniform4f(
+      'ipScalarRangeMax',
+      maxVals[0],
+      maxVals[1],
+      maxVals[2],
+      maxVals[3]
+    );
 
     // if we have a zbuffer texture then set it
     if (model.zBufferTexture !== null) {

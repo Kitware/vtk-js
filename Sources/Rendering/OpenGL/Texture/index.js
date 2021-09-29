@@ -1215,6 +1215,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     // compute min and max values
     const { offset: computedOffset, scale: computedScale } =
       computeScaleOffsets(numComps, numPixelsIn, data);
+    model.volumeInfo.dataComputedScale = computedScale;
+    model.volumeInfo.dataComputedOffset = computedOffset;
 
     const useHalfFloat = checkUseHalfFloat(
       dataType,
