@@ -31,20 +31,20 @@ is needed.
 - eventually switch to using IBOs and flat interpolation
 - cropping planes for polydata mapper
 - update widgets to use the new async hardware selector API
+- image display (use 3d texture)
+- add rgb texture support to volume renderer
+- add lighting to volume rendering
 
-- create new volume renderer built for multivolume rendering - in progress
+Waiting on fixes/dev in WebGPU spec
+- more cross platform testing and bug fixing
+
+# Recently ToDone
+- create new volume renderer built for multivolume rendering
   - traverse all volumes and register with volume pass - done
   - render all volumes hexahedra to get depth buffer near and far
     merged with opaque pass depth buffer - done
   - render all volumes in single mapper using prior near/far depth textures - in progress
-
-Waiting on fixes/dev in WebGPU spec
-
-- 3d textures (as of April 21 2021 Dawn lacks support for 1d and 3d)
-- image display (use 3d texture)
-- more cross platform testing and bug fixing
-
-# Recently ToDone
+- 3d textures
 - added bind groups
 - actor matrix support with auto shift (handle in renderer?)
 - add an example of customizing WebGPU
