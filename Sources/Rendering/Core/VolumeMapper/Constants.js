@@ -6,6 +6,13 @@ export const BlendMode = {
   ADDITIVE_INTENSITY_BLEND: 4,
 };
 
+export const FilterMode = {
+  OFF: 0,
+  NORMALIZED: 1,
+  RAW: 2,
+};
+
 export default {
   BlendMode,
+  FilterMode,
 };

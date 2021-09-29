@@ -16,13 +16,13 @@ const volFragTemplate = `
 
 //VTK::TCoord::Dec
 
-//VTK::Volume::Dec
+//VTK::Volume::TraverseDec
 
 //VTK::RenderEncoder::Dec
 
 //VTK::IOStructs::Dec
 
-fn getTextureValue(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32) -> f32
+fn getTextureValue(vTex: texture_3d<f32>, tpos: vec4<f32>) -> f32
 {
   // todo multicomponent support
   return textureSampleLevel(vTex, clampSampler, tpos.xyz, 0.0).r;
@@ -33,9 +33,9 @@ fn getGradient(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32, scalar: f32) -
   var result: vec4<f32>;
 
   var tstep: vec4<f32> = volumeSSBO.values[vNum].tstep;
-  result.x = getTextureValue(vTex, tpos + vec4<f32>(tstep.x, 0.0, 0.0, 1.0), vNum) - scalar;
-  result.y = getTextureValue(vTex, tpos + vec4<f32>(0.0, tstep.y, 0.0, 1.0), vNum) - scalar;
-  result.z = getTextureValue(vTex, tpos + vec4<f32>(0.0, 0.0, tstep.z, 1.0), vNum) - scalar;
+  result.x = getTextureValue(vTex, tpos + vec4<f32>(tstep.x, 0.0, 0.0, 1.0)) - scalar;
+  result.y = getTextureValue(vTex, tpos + vec4<f32>(0.0, tstep.y, 0.0, 1.0)) - scalar;
+  result.z = getTextureValue(vTex, tpos + vec4<f32>(0.0, 0.0, tstep.z, 1.0)) - scalar;
 
   // divide by spacing
   result = result / volumeSSBO.values[vNum].spacing;
@@ -67,7 +67,7 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, cNum: i32, posSC: vec4<f32>, 
   if (tpos.x < 0.0 || tpos.y < 0.0 || tpos.z < 0.0 ||
       tpos.x > 1.0 || tpos.y > 1.0 || tpos.z > 1.0) { return outColor; }
 
-  var scalar: f32 = getTextureValue(vTex, tpos, vNum);
+  var scalar: f32 = getTextureValue(vTex, tpos);
 
   var coord: vec2<f32> =
     vec2<f32>(scalar * componentSSBO.values[cNum].cScale + componentSSBO.values[cNum].cShift,
@@ -82,18 +82,238 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, cNum: i32, posSC: vec4<f32>, 
       componentSSBO.values[cNum].gomin, componentSSBO.values[cNum].gomax);
   }
 
-  // since float32 is unfilterable we have to manually interpolate
-  var oPos : f32 = rowLength * (scalar * componentSSBO.values[cNum].oScale + componentSSBO.values[cNum].oShift);
-  var opacity: f32 = textureLoad(ofunTexture, vec2<i32>(i32(oPos), 2*vNum), 0).r;
-  var opacityHigh: f32 = textureLoad(ofunTexture, vec2<i32>(i32(oPos) + 1, 2*vNum), 0).r;
-  oPos = oPos - floor(oPos);
-  opacity = opacityHigh*oPos + opacity*(1.0 - oPos);
+  coord.x = (scalar * componentSSBO.values[cNum].oScale + componentSSBO.values[cNum].oShift);
+  var opacity: f32 = textureSampleLevel(ofunTexture, clampSampler, coord, 0.0).r;
 
   outColor = vec4<f32>(color.rgb, gofactor * opacity);
 
-  //VTK::Volume::Process
+//VTK::Volume::Process
 
   return outColor;
+}
+
+// adjust the start and end point of a raycast such that it intersects the unit cube.
+// This function is used to take a raycast starting point and step vector
+// and numSteps and return the startijng and ending steps for intersecting the
+// unit cube. Recall for a 3D texture, the unit cube is the range of texture coordsinates
+// that have valid values. So this funtion can be used to take a ray in texture coordinates
+// and bound it to intersecting the texture.
+//
+fn adjustBounds(tpos: vec4<f32>, tstep: vec4<f32>, numSteps: f32) -> vec2<f32>
+{
+  var result: vec2<f32> = vec2<f32>(0.0, numSteps);
+  var tpos2: vec4<f32> = tpos + tstep*numSteps;
+
+  // move tpos to the start of the volume
+  var adjust: f32 =
+    min(
+      max(tpos.x/tstep.x, (tpos.x - 1.0)/tstep.x),
+      min(
+        max((tpos.y - 1.0)/tstep.y, tpos.y/tstep.y),
+        max((tpos.z - 1.0)/tstep.z, tpos.z/tstep.z)));
+  if (adjust < 0.0)
+  {
+    result.x = result.x - adjust;
+  }
+
+  // adjust length to the end
+  adjust =
+    max(
+      min(tpos2.x/tstep.x, (tpos2.x - 1.0)/tstep.x),
+      max(
+        min((tpos2.y - 1.0)/tstep.y, tpos2.y/tstep.y),
+        min((tpos2.z - 1.0)/tstep.z, tpos2.z/tstep.z)));
+  if (adjust > 0.0)
+  {
+    result.y = result.y - adjust;
+  }
+
+  return result;
+}
+
+fn getSimpleColor(scalar: f32, vNum: i32, cNum: i32) -> vec4<f32>
+{
+  // how many rows (tfuns) do we have in our tfunTexture
+  var tfunRows: f32 = f32(textureDimensions(tfunTexture).y);
+
+  var coord: vec2<f32> =
+    vec2<f32>(scalar * componentSSBO.values[cNum].cScale + componentSSBO.values[cNum].cShift,
+      (0.5 + 2.0 * f32(vNum)) / tfunRows);
+  var color: vec4<f32> = textureSampleLevel(tfunTexture, clampSampler, coord, 0.0);
+  coord.x = (scalar * componentSSBO.values[cNum].oScale + componentSSBO.values[cNum].oShift);
+  var opacity: f32 = textureSampleLevel(ofunTexture, clampSampler, coord, 0.0).r;
+  return vec4<f32>(color.rgb, opacity);
+}
+
+fn traverseMax(vTex: texture_3d<f32>, vNum: i32, cNum: i32, rayLengthSC: f32, minPosSC: vec4<f32>, rayStepSC: vec4<f32>)
+{
+  // convert to tcoords and reject if outside the volume
+  var numSteps: f32 = rayLengthSC/mapperUBO.SampleDistance;
+  var tpos: vec4<f32> = volumeSSBO.values[vNum].SCTCMatrix*minPosSC;
+  var tpos2: vec4<f32> = volumeSSBO.values[vNum].SCTCMatrix*(minPosSC + rayStepSC);
+  var tstep: vec4<f32> = tpos2 - tpos;
+
+  var rayBounds: vec2<f32> = adjustBounds(tpos, tstep, numSteps);
+
+  // did we hit anything
+  if (rayBounds.x >= rayBounds.y)
+  {
+    traverseVals[vNum] = vec4<f32>(0.0,0.0,0.0,0.0);
+    return;
+  }
+
+  tpos = tpos + tstep*rayBounds.x;
+  var curDist: f32 = rayBounds.x;
+  var maxVal: f32 = -1.0e37;
+  loop
+  {
+    var scalar: f32 = getTextureValue(vTex, tpos);
+    if (scalar > maxVal)
+    {
+      maxVal = scalar;
+    }
+
+    // increment position
+    curDist = curDist + 1.0;
+    tpos = tpos + tstep;
+
+    // check if we have reached a terminating condition
+    if (curDist > rayBounds.y) { break; }
+  }
+
+  // process to get the color and opacity
+  traverseVals[vNum] = getSimpleColor(maxVal, vNum, cNum);
+}
+
+fn traverseMin(vTex: texture_3d<f32>, vNum: i32, cNum: i32, rayLengthSC: f32, minPosSC: vec4<f32>, rayStepSC: vec4<f32>)
+{
+  // convert to tcoords and reject if outside the volume
+  var numSteps: f32 = rayLengthSC/mapperUBO.SampleDistance;
+  var tpos: vec4<f32> = volumeSSBO.values[vNum].SCTCMatrix*minPosSC;
+  var tpos2: vec4<f32> = volumeSSBO.values[vNum].SCTCMatrix*(minPosSC + rayStepSC);
+  var tstep: vec4<f32> = tpos2 - tpos;
+
+  var rayBounds: vec2<f32> = adjustBounds(tpos, tstep, numSteps);
+
+  // did we hit anything
+  if (rayBounds.x >= rayBounds.y)
+  {
+    traverseVals[vNum] = vec4<f32>(0.0,0.0,0.0,0.0);
+    return;
+  }
+
+  tpos = tpos + tstep*rayBounds.x;
+  var curDist: f32 = rayBounds.x;
+  var minVal: f32 = 1.0e37;
+  loop
+  {
+    var scalar: f32 = getTextureValue(vTex, tpos);
+    if (scalar < minVal)
+    {
+      minVal = scalar;
+    }
+
+    // increment position
+    curDist = curDist + 1.0;
+    tpos = tpos + tstep;
+
+    // check if we have reached a terminating condition
+    if (curDist > rayBounds.y) { break; }
+  }
+
+  // process to get the color and opacity
+  traverseVals[vNum] = getSimpleColor(minVal, vNum, cNum);
+}
+
+fn traverseAverage(vTex: texture_3d<f32>, vNum: i32, cNum: i32, rayLengthSC: f32, minPosSC: vec4<f32>, rayStepSC: vec4<f32>)
+{
+  // convert to tcoords and reject if outside the volume
+  var numSteps: f32 = rayLengthSC/mapperUBO.SampleDistance;
+  var tpos: vec4<f32> = volumeSSBO.values[vNum].SCTCMatrix*minPosSC;
+  var tpos2: vec4<f32> = volumeSSBO.values[vNum].SCTCMatrix*(minPosSC + rayStepSC);
+  var tstep: vec4<f32> = tpos2 - tpos;
+
+  var rayBounds: vec2<f32> = adjustBounds(tpos, tstep, numSteps);
+
+  // did we hit anything
+  if (rayBounds.x >= rayBounds.y)
+  {
+    traverseVals[vNum] = vec4<f32>(0.0,0.0,0.0,0.0);
+    return;
+  }
+
+  let ipRange: vec4<f32> = volumeSSBO.values[vNum].ipScalarRange;
+  tpos = tpos + tstep*rayBounds.x;
+  var curDist: f32 = rayBounds.x;
+  var avgVal: f32 = 0.0;
+  var sampleCount: f32 = 0.0;
+  loop
+  {
+    var sample: f32 = getTextureValue(vTex, tpos);
+    // right now leave filtering off until WebGL changes get merged
+    // if (ipRange.z == 0.0 || sample >= ipRange.x && sample <= ipRange.y)
+    // {
+      avgVal = avgVal + sample;
+      sampleCount = sampleCount + 1.0;
+    // }
+
+    // increment position
+    curDist = curDist + 1.0;
+    tpos = tpos + tstep;
+
+    // check if we have reached a terminating condition
+    if (curDist > rayBounds.y) { break; }
+  }
+
+  if (sampleCount <= 0.0)
+  {
+    traverseVals[vNum] = vec4<f32>(0.0,0.0,0.0,0.0);
+  }
+
+  // process to get the color and opacity
+  traverseVals[vNum] = getSimpleColor(avgVal/sampleCount, vNum, cNum);
+}
+
+fn traverseAdditive(vTex: texture_3d<f32>, vNum: i32, cNum: i32, rayLengthSC: f32, minPosSC: vec4<f32>, rayStepSC: vec4<f32>)
+{
+  // convert to tcoords and reject if outside the volume
+  var numSteps: f32 = rayLengthSC/mapperUBO.SampleDistance;
+  var tpos: vec4<f32> = volumeSSBO.values[vNum].SCTCMatrix*minPosSC;
+  var tpos2: vec4<f32> = volumeSSBO.values[vNum].SCTCMatrix*(minPosSC + rayStepSC);
+  var tstep: vec4<f32> = tpos2 - tpos;
+
+  var rayBounds: vec2<f32> = adjustBounds(tpos, tstep, numSteps);
+
+  // did we hit anything
+  if (rayBounds.x >= rayBounds.y)
+  {
+    traverseVals[vNum] = vec4<f32>(0.0,0.0,0.0,0.0);
+    return;
+  }
+
+  let ipRange: vec4<f32> = volumeSSBO.values[vNum].ipScalarRange;
+  tpos = tpos + tstep*rayBounds.x;
+  var curDist: f32 = rayBounds.x;
+  var sumVal: f32 = 0.0;
+  loop
+  {
+    var sample: f32 = getTextureValue(vTex, tpos);
+    // right now leave filtering off until WebGL changes get merged
+    // if (ipRange.z == 0.0 || sample >= ipRange.x && sample <= ipRange.y)
+    // {
+      sumVal = sumVal + sample;
+    // }
+
+    // increment position
+    curDist = curDist + 1.0;
+    tpos = tpos + tstep;
+
+    // check if we have reached a terminating condition
+    if (curDist > rayBounds.y) { break; }
+  }
+
+  // process to get the color and opacity
+  traverseVals[vNum] = getSimpleColor(sumVal, vNum, cNum);
 }
 
 fn composite(rayLengthSC: f32, minPosSC: vec4<f32>, rayStepSC: vec4<f32>) -> vec4<f32>
@@ -107,11 +327,12 @@ fn composite(rayLengthSC: f32, minPosSC: vec4<f32>, rayStepSC: vec4<f32>) -> vec
   var curDist: f32 = 0.0;
   var computedColor: vec4<f32> = vec4<f32>(0.0, 0.0, 0.0, 0.0);
   var sampleColor: vec4<f32>;
+//VTK::Volume::TraverseCalls
+
   loop
   {
     // for each volume, sample and accumulate color
-
-//VTK::Volume::Calls
+//VTK::Volume::CompositeCalls
 
     // increment position
     curDist = curDist + mapperUBO.SampleDistance;
@@ -152,13 +373,11 @@ fn main(
     var rayStepSC: vec4<f32> = (maxPosSC - minPosSC)*(mapperUBO.SampleDistance/rayLengthSC);
     rayStepSC.w = 0.0;
 
-    //VTK::Volume::Loop
+    var computedColor: vec4<f32>;
 
-    // var computedColor: vec4<f32> = vec4<f32>(rayMin, rayMax, 0.0, min(100.0*(rayMax - rayMin), 1.0));
-    // computedColor = vec4<f32>(rayLengthSC / 500.0, 1.0, 0.0, 1.0);
-    // computedColor = vec4<f32>(maxPosSC.xyz*0.01, 1.0);
+//VTK::Volume::Loop
 
-    //VTK::RenderEncoder::Impl
+//VTK::RenderEncoder::Impl
   }
 
   return output;
@@ -196,29 +415,82 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
   publicAPI.replaceShaderVolume = (hash, pipeline, vertexInput) => {
     const fDesc = pipeline.getShaderDescription('fragment');
     let code = fDesc.getCode();
-    const calls = [];
+    const compositeCalls = [];
+    const traverseCalls = [];
     for (let i = 0; i < model.volumes.length; i++) {
       // todo pass rowPos
-      calls.push(
-        `      sampleColor = processVolume(volTexture${i}, ${i}, ${model.rowStarts[i]}, rayPosSC, tfunRows);`
-      );
-      calls.push(`      computedColor = vec4<f32>(
-        sampleColor.a * sampleColor.rgb * (1.0 - computedColor.a) + computedColor.rgb,
-        (1.0 - computedColor.a)*sampleColor.a + computedColor.a);`);
+      const blendMode = model.volumes[i]
+        .getRenderable()
+        .getMapper()
+        .getBlendMode();
+      if (blendMode === BlendMode.COMPOSITE_BLEND) {
+        compositeCalls.push(
+          `    sampleColor = processVolume(volTexture${i}, ${i}, ${model.rowStarts[i]}, rayPosSC, tfunRows);`
+        );
+        compositeCalls.push(`    computedColor = vec4<f32>(
+          sampleColor.a * sampleColor.rgb * (1.0 - computedColor.a) + computedColor.rgb,
+          (1.0 - computedColor.a)*sampleColor.a + computedColor.a);`);
+      } else {
+        traverseCalls.push(`  sampleColor = traverseVals[${i}];`);
+        traverseCalls.push(`  computedColor = vec4<f32>(
+          sampleColor.a * sampleColor.rgb * (1.0 - computedColor.a) + computedColor.rgb,
+          (1.0 - computedColor.a)*sampleColor.a + computedColor.a);`);
+      }
     }
     code = vtkWebGPUShaderCache.substitute(
       code,
-      '//VTK::Volume::Calls',
-      calls
+      '//VTK::Volume::CompositeCalls',
+      compositeCalls
     ).result;
-    if (model.blendMode === BlendMode.COMPOSITE_BLEND) {
+    code = vtkWebGPUShaderCache.substitute(
+      code,
+      '//VTK::Volume::TraverseCalls',
+      traverseCalls
+    ).result;
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Volume::TraverseDec', [
+      `var<private> traverseVals: array<vec4<f32>,${model.volumes.length}>;`,
+    ]).result;
+
+    // call the full and partial methods as needed
+    let compositeWhileTraversing = false;
+    for (let vidx = 0; vidx < model.volumes.length; vidx++) {
+      const blendMode = model.volumes[vidx]
+        .getRenderable()
+        .getMapper()
+        .getBlendMode();
+      if (blendMode === BlendMode.COMPOSITE_BLEND) {
+        compositeWhileTraversing = true;
+      } else if (blendMode === BlendMode.MAXIMUM_INTENSITY_BLEND) {
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Volume::Loop', [
+          `    traverseMax(volTexture${vidx}, ${vidx}, ${vidx}, rayLengthSC, minPosSC, rayStepSC);`,
+          `    computedColor = traverseVals[${vidx}];`,
+          '//VTK::Volume::Loop',
+        ]).result;
+      } else if (blendMode === BlendMode.MINIMUM_INTENSITY_BLEND) {
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Volume::Loop', [
+          `    traverseMin(volTexture${vidx}, ${vidx}, ${vidx}, rayLengthSC, minPosSC, rayStepSC);`,
+          `    computedColor = traverseVals[${vidx}];`,
+          '//VTK::Volume::Loop',
+        ]).result;
+      } else if (blendMode === BlendMode.AVERAGE_INTENSITY_BLEND) {
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Volume::Loop', [
+          `    traverseAverage(volTexture${vidx}, ${vidx}, ${vidx}, rayLengthSC, minPosSC, rayStepSC);`,
+          `    computedColor = traverseVals[${vidx}];`,
+          '//VTK::Volume::Loop',
+        ]).result;
+      } else if (blendMode === BlendMode.ADDITIVE_INTENSITY_BLEND) {
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Volume::Loop', [
+          `    traverseAdditive(volTexture${vidx}, ${vidx}, ${vidx}, rayLengthSC, minPosSC, rayStepSC);`,
+          `    computedColor = traverseVals[${vidx}];`,
+          '//VTK::Volume::Loop',
+        ]).result;
+      }
+    }
+    if (compositeWhileTraversing) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Volume::Loop', [
-        'var computedColor: vec4<f32> = composite(rayLengthSC, minPosSC, rayStepSC);',
+        '    computedColor = composite(rayLengthSC, minPosSC, rayStepSC);',
       ]).result;
     }
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Volume::Dec', [
-      `let rowLength: f32 = ${model.rowLength}.0;`,
-    ]).result;
     fDesc.setCode(code);
   };
   model.shaderReplacements.set(
@@ -332,7 +604,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         width: model.rowLength,
         height: model.numRows * 2,
         depth: 1,
-        format: 'r32float',
+        format: 'r16float',
       };
       const newTex = device.getTextureManager().getTexture(treq);
       const tview = newTex.createView();
@@ -356,8 +628,14 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     );
     for (let i = 0; i < model.volumes.length; i++) {
       const vol = model.volumes[i].getRenderable();
-      const image = vol.getMapper().getInputData();
-      mtime = Math.max(mtime, vol.getMTime(), image.getMTime());
+      const volMapr = vol.getMapper();
+      const image = volMapr.getInputData();
+      mtime = Math.max(
+        mtime,
+        vol.getMTime(),
+        image.getMTime(),
+        volMapr.getMTime()
+      );
     }
     if (mtime < model.SSBO.getSendTime()) {
       return;
@@ -376,6 +654,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     const marray = new Float64Array(model.volumes.length * 16);
     const tstepArray = new Float64Array(model.volumes.length * 4);
     const spacingArray = new Float64Array(model.volumes.length * 4);
+    const ipScalarRangeArray = new Float64Array(model.volumes.length * 4);
     for (let vidx = 0; vidx < model.volumes.length; vidx++) {
       const webgpuvol = model.volumes[vidx];
       const actor = webgpuvol.getRenderable();
@@ -425,13 +704,26 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       spacingArray[vidx * 4 + 1] = spacing[1];
       spacingArray[vidx * 4 + 2] = spacing[2];
       spacingArray[vidx * 4 + 3] = 1.0;
+
+      // handle filteringMode
+      const tformat = model.textureViews[vidx + 4].getTexture().getFormat();
+      const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(tformat);
+      const halfFloat =
+        tDetails.elementSize === 2 && tDetails.sampleType === 'float';
+      const tScale = halfFloat ? 1.0 : 255.0;
+      const ipScalarRange = volMapr.getIpScalarRange();
+      ipScalarRangeArray[vidx * 4] = ipScalarRange[0] / tScale;
+      ipScalarRangeArray[vidx * 4 + 1] = ipScalarRange[1] / tScale;
+      ipScalarRangeArray[vidx * 4 + 2] = volMapr.getFilterMode();
     }
     model.SSBO.addEntry('SCTCMatrix', 'mat4x4<f32>');
     model.SSBO.addEntry('tstep', 'vec4<f32>');
     model.SSBO.addEntry('spacing', 'vec4<f32>');
+    model.SSBO.addEntry('ipScalarRange', 'vec4<f32>');
     model.SSBO.setAllInstancesFromArray('SCTCMatrix', marray);
     model.SSBO.setAllInstancesFromArray('tstep', tstepArray);
     model.SSBO.setAllInstancesFromArray('spacing', spacingArray);
+    model.SSBO.setAllInstancesFromArray('ipScalarRange', ipScalarRangeArray);
     model.SSBO.send(device);
 
     // now create the componentSSBO
@@ -459,7 +751,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       const iComps = vprop.getIndependentComponents();
       // const numIComps = iComps ? numComp : 1;
 
-      // half float
+      // half float?
       const tformat = model.textureViews[vidx + 4].getTexture().getFormat();
       const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(tformat);
       const halfFloat =
@@ -577,19 +869,29 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       }
     }
 
+    // clear any old leftovers
+    if (model.volumes.length < model.lastVolumeLength) {
+      model.textureViews.splice(
+        model.volumes.length,
+        model.lastVolumeLength - model.volumes.length
+      );
+    }
+    model.lastVolumeLength = model.volumes.length;
+
     publicAPI.updateLUTImage(device);
 
     publicAPI.updateSSBO(device);
   };
 
   publicAPI.computePipelineHash = () => {
-    const blendMode = model.volumes[0]
-      .getRenderable()
-      .getMapper()
-      .getBlendMode();
-    model.blendMode = blendMode;
-
-    model.pipelineHash = `volfsq${model.volumes.length}b${model.blendMode}`;
+    model.pipelineHash = 'volfsq';
+    for (let vidx = 0; vidx < model.volumes.length; vidx++) {
+      const blendMode = model.volumes[vidx]
+        .getRenderable()
+        .getMapper()
+        .getBlendMode();
+      model.pipelineHash += `${blendMode}`;
+    }
   };
 
   // marks modified when needed
@@ -641,6 +943,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
 const DEFAULT_VALUES = {
   volumes: null,
   rowLength: 1024,
+  lastVolumeLength: 0,
 };
 
 // ----------------------------------------------------------------------------
