@@ -51,21 +51,33 @@ function vtkWebGPUVolume(publicAPI, model) {
     }
   };
 
+  // used in the method below
+  const idx = new Float64Array(3);
+  const vout = new Float64Array(3);
+
   publicAPI.getBoundingCubePoints = (result, offset) => {
-    const bounds = model.renderable.getMapper().getBounds();
+    const input = model.renderable.getMapper().getInputData();
+    if (!input) {
+      return;
+    }
+    const extent = input.getExtent();
     const m = model.renderable.getMatrix();
 
     let count = 0;
     for (let iz = 4; iz < 6; iz++) {
-      const z = bounds[iz];
+      idx[2] = extent[iz];
       for (let iy = 2; iy < 4; iy++) {
-        const y = bounds[iy];
+        idx[1] = extent[iy];
         for (let ix = 0; ix < 2; ix++) {
-          const x = bounds[ix];
+          idx[0] = extent[ix];
+          input.indexToWorld(idx, vout);
           let poffset = offset + count * 3;
-          result[poffset++] = m[0] * x + m[1] * y + m[2] * z + m[3];
-          result[poffset++] = m[4] * x + m[5] * y + m[6] * z + m[7];
-          result[poffset++] = m[8] * x + m[9] * y + m[10] * z + m[11];
+          result[poffset++] =
+            m[0] * vout[0] + m[1] * vout[1] + m[2] * vout[2] + m[3];
+          result[poffset++] =
+            m[4] * vout[0] + m[5] * vout[1] + m[6] * vout[2] + m[7];
+          result[poffset++] =
+            m[8] * vout[0] + m[9] * vout[1] + m[10] * vout[2] + m[11];
           count++;
         }
       }
