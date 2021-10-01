@@ -5,7 +5,7 @@
  * expect proper Unicode or any other encoding.
  */
 function arrayBufferToString(arrayBuffer) {
-  if ('TextDecoder' in window) {
+  if (typeof 'TextDecoder' !== 'undefined') {
     const decoder = new TextDecoder('latin1');
     return decoder.decode(arrayBuffer);
   }
