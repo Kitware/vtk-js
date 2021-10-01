@@ -28,8 +28,6 @@ jobs:
         run: npm run validate
       - name: Test
         run: npm run test:headless
-      - name: Create package folder
-        run: npm run release:create-packages
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

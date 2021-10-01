@@ -3,12 +3,18 @@ const path = require('path');
 const { merge } = require('webpack-merge');
 
 // webpack plugins
+const CopyPlugin = require('copy-webpack-plugin');
 const WebpackNotifierPlugin = require('webpack-notifier');
 const ESLintWebpackPlugin = require('eslint-webpack-plugin');
 
 // config files
 const pkg = require('./package.json');
 const settings = require('./webpack.settings.js');
+
+const absolutifyImports = require('./Utilities/build/absolutify-imports.js');
+
+// basic regex for matching imports
+const importRegex = /(?:import|from) ['"]([^'"]*)['"]/g;
 
 // Configure Entries
 const configureEntries = () => {
@@ -96,6 +102,53 @@ const baseConfig = {
   },
   plugins: [
     !process.env.NOLINT && new ESLintWebpackPlugin(),
+    new CopyPlugin({
+      patterns: [
+        {
+          from: 'Sources/**/*',
+          globOptions: {
+            dot: true,
+            gitignore: true,
+            ignore: [
+              '**/test/**',
+              '**/example/**',
+              '**/example_/**',
+              '**/*.md',
+            ],
+          },
+          transform(content, absoluteFrom) {
+            // transforms typescript defs to use absolute imports
+            if (absoluteFrom.endsWith('.d.ts')) {
+              return absolutifyImports(content.toString(), (relImport) => {
+                const importPath = path.join(path.dirname(absoluteFrom), relImport);
+                return path.join('vtk.js', path.relative(__dirname, importPath));
+              });
+            }
+            return content;
+          }
+        },
+        { from: 'Utilities/prepare.js', to: 'Utilities/prepare.js' },
+        { from: 'Utilities/XMLConverter', to: 'Utilities/XMLConverter' },
+        { from: 'Utilities/DataGenerator', to: 'Utilities/DataGenerator' },
+        { from: 'Utilities/config', to: 'Utilities/config' },
+        { from: 'Utilities/build/macro-shim.d.ts', to: 'Sources/macro.d.ts' },
+        { from: 'Utilities/build/macro-shim.js', to: 'Sources/macro.js' },
+        { from: '*.txt' },
+        { from: '*.md' },
+        { from: 'LICENSE' },
+        { from: '.npmignore' },
+        {
+          from: 'package.json',
+          transform(content) {
+            const pkg = JSON.parse(content);
+            pkg.name = 'vtk.js';
+            pkg.main = './vtk.js';
+            delete pkg.module;
+            return JSON.stringify(pkg, null, 2);
+          }
+        },
+      ],
+    }),
     new WebpackNotifierPlugin({
       title: 'Webpack - vtk.js',
       excludeWarnings: true,

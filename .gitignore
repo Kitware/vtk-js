@@ -9,4 +9,3 @@ dist/
 coverage/
 .env
 Utilities/TestResults
-pkg
