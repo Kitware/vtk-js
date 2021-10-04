@@ -40,6 +40,7 @@ const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 const actor = vtkVolume.newInstance();
 const mapper = vtkVolumeMapper.newInstance();
 mapper.setSampleDistance(1.3);
+mapper.setPreferSizeOverAccuracy(true);
 actor.setMapper(mapper);
 
 // create color and opacity transfer functions
@@ -93,18 +94,12 @@ function updateBlendMode(event) {
 }
 
 function updateScalarMin(event) {
-  mapper.setIpScalarRange(
-    event.target.value,
-    parseFloat(mapper.getIpScalarRange()[1])
-  );
+  mapper.setIpScalarRange(event.target.value, mapper.getIpScalarRange()[1]);
   renderWindow.render();
 }
 
 function updateScalarMax(event) {
-  mapper.setIpScalarRange(
-    mapper.getIpScalarRange()[0],
-    parseFloat(event.target.value)
-  );
+  mapper.setIpScalarRange(mapper.getIpScalarRange()[0], event.target.value);
   renderWindow.render();
 }
 

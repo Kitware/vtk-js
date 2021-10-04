@@ -88,6 +88,7 @@ const DEFAULT_VALUES = {
   blendMode: BlendMode.COMPOSITE_BLEND,
   ipScalarRange: [-1000000.0, 1000000.0],
   filterMode: FilterMode.OFF, // ignored by WebGL so no behavior change
+  preferSizeOverAccuracy: false, // Whether to use halfFloat representation of float, when it is inaccurate
 };
 
 // ----------------------------------------------------------------------------
@@ -108,6 +109,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'autoAdjustSampleDistances',
     'blendMode',
     'filterMode',
+    'preferSizeOverAccuracy',
   ]);
 
   macro.setGetArray(publicAPI, model, ['ipScalarRange'], 2);
