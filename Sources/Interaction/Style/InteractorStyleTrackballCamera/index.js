@@ -395,7 +395,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.handleMouseWheel = (callData) => {
-    const dyf = 1 - callData.spinY / 10; // divide by 10 to lower the zoom factor
+    const dyf = 1 - callData.spinY / model.zoomFactor;
     publicAPI.dollyByFactor(callData.pokedRenderer, dyf);
   };
 
@@ -427,6 +427,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   motionFactor: 10.0,
+  zoomFactor: 10.0,
 };
 
 // ----------------------------------------------------------------------------
@@ -438,7 +439,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkInteractorStyle.extend(publicAPI, model, initialValues);
 
   // Create get-set macros
-  macro.setGet(publicAPI, model, ['motionFactor']);
+  macro.setGet(publicAPI, model, ['motionFactor', 'zoomFactor']);
 
   // For more macro methods, see "Sources/macros.js"
 
