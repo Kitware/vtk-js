@@ -45,7 +45,19 @@ function vtkOpenGLActor(publicAPI, model) {
   };
 
   publicAPI.traverseOpaqueZBufferPass = (renderPass) => {
-    publicAPI.traverseOpaquePass(renderPass);
+    if (
+      !model.renderable ||
+      !model.renderable.getNestedVisibility() ||
+      (model.openGLRenderer.getSelector() &&
+        !model.renderable.getNestedPickable())
+    ) {
+      return;
+    }
+
+    publicAPI.apply(renderPass, true);
+    model.oglmapper.traverse(renderPass);
+
+    publicAPI.apply(renderPass, false);
   };
 
   // we draw textures, then mapper, then post pass textures
