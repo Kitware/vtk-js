@@ -13,9 +13,9 @@ import 'vtk.js/Sources/Rendering/WebGPU/Texture';
 import 'vtk.js/Sources/Rendering/WebGPU/Glyph3DMapper';
 
 // Volume
-// import 'vtk.js/Sources/Rendering/WebGPU/ImageMapper';
-// import 'vtk.js/Sources/Rendering/WebGPU/ImageSlice';
-// import 'vtk.js/Sources/Rendering/WebGPU/Volume';
+import 'vtk.js/Sources/Rendering/WebGPU/ImageMapper';
+import 'vtk.js/Sources/Rendering/WebGPU/ImageSlice';
+import 'vtk.js/Sources/Rendering/WebGPU/Volume';
 // import 'vtk.js/Sources/Rendering/WebGPU/VolumeMapper';
 
 // Pixel mapping
