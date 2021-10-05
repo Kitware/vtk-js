@@ -6,6 +6,7 @@ import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
@@ -60,6 +61,31 @@ test('Test vtkAppendPolyData execution', (t) => {
     outNumPolys === expNumPolys,
     'Make sure the number of polys is correct.'
   );
+
+  t.end();
+});
+
+test('Test addInputData edge case', (t) => {
+  const gc = testUtils.createGarbageCollector(t);
+  const appender = gc.registerResource(vtkAppendPolyData.newInstance());
+  const input = gc.registerResource(vtkPolyData.newInstance());
+
+  appender.addInputData(input);
+  const output = appender.getOutputData();
+
+  t.ok(input === output, 'Single add input matches output');
+  t.ok(appender.getNumberOfInputPorts() === 1, 'Expect 1 port after 1 add');
+
+  const input2 = gc.registerResource(vtkPolyData.newInstance());
+  appender.addInputData(input2);
+  const output2 = appender.getOutputData();
+
+  t.ok(
+    output2 !== input && output2 !== input2,
+    'Multiple input distinct from output'
+  );
+
+  t.ok(appender.getNumberOfInputPorts() === 2, 'Expect 2 ports after 2 adds');
 
   t.end();
 });
