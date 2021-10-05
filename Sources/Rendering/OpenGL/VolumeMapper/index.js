@@ -165,7 +165,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     // We do a break so most systems will gracefully
     // early terminate, but it is always possible
     // a system will execute every step regardless
-    const ext = model.currentInput.getExtent();
+    const ext = model.currentInput.getSpatialExtent();
     const spc = model.currentInput.getSpacing();
     const vsize = new Float64Array(3);
     vec3.set(
@@ -389,7 +389,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
     }
 
-    const ext = model.currentInput.getExtent();
+    const ext = model.currentInput.getSpatialExtent();
     const spc = model.currentInput.getSpacing();
     const vsize = new Float64Array(3);
     vec3.set(
@@ -636,14 +636,14 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformi('cameraParallel', cam.getParallelProjection());
     }
 
-    const ext = model.currentInput.getExtent();
+    const ext = model.currentInput.getSpatialExtent();
     const spc = model.currentInput.getSpacing();
     const vsize = new Float64Array(3);
     vec3.set(
       vsize,
-      (ext[1] - ext[0] + 1) * spc[0],
-      (ext[3] - ext[2] + 1) * spc[1],
-      (ext[5] - ext[4] + 1) * spc[2]
+      (ext[1] - ext[0]) * spc[0],
+      (ext[3] - ext[2]) * spc[1],
+      (ext[5] - ext[4]) * spc[2]
     );
     program.setUniform3f('vSpacing', spc[0], spc[1], spc[2]);
 
