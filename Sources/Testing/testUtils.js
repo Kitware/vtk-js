@@ -52,7 +52,7 @@ async function compareImages(
       {
         alpha: 0.5,
         includeAA: false,
-        threshold,
+        threshold: 0,
       }
     );
     const percentage = (mismatched / (width * height)) * 100;
