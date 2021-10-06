@@ -32,8 +32,8 @@ function vtkLineSource(publicAPI, model) {
     }
 
     // hand create a line with special scalars
-    const xres = model.resolution;
-    const numPts = xres + 1;
+    const res = model.resolution;
+    const numPts = res + 1;
 
     // Points
     const points = macro.newTypedArray(pointDataType, numPts * 3);
@@ -45,8 +45,8 @@ function vtkLineSource(publicAPI, model) {
 
     let idx = 0;
     let t = 0.0;
-    for (let i = 0; i < xres + 1; i++) {
-      t = i / xres;
+    for (let i = 0; i < res + 1; i++) {
+      t = i / res;
 
       points[idx * 3] = model.point1[0] + t * v21[0];
       points[idx * 3 + 1] = model.point1[1] + t * v21[1];
