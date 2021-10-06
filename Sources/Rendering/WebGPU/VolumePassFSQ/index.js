@@ -665,8 +665,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       mat4.translate(tmpMat4, tmpMat4, center);
       // tmpMat4 is now SC->World
 
-      const vol = model.volumes[vidx];
-      const mcwcmat = vol.getRenderable().getMatrix();
+      const mcwcmat = actor.getMatrix();
       mat4.transpose(tmp2Mat4, mcwcmat);
       mat4.invert(tmp2Mat4, tmp2Mat4);
       // tmp2Mat4 is now world to model
@@ -706,11 +705,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       spacingArray[vidx * 4 + 3] = 1.0;
 
       // handle filteringMode
-      const tformat = model.textureViews[vidx + 4].getTexture().getFormat();
-      const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(tformat);
-      const halfFloat =
-        tDetails.elementSize === 2 && tDetails.sampleType === 'float';
-      const tScale = halfFloat ? 1.0 : 255.0;
+      const tScale = model.textureViews[vidx + 4].getTexture().getScale();
       const ipScalarRange = volMapr.getIpScalarRange();
       ipScalarRangeArray[vidx * 4] = ipScalarRange[0] / tScale;
       ipScalarRangeArray[vidx * 4 + 1] = ipScalarRange[1] / tScale;

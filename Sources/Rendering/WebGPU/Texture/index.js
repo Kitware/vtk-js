@@ -172,6 +172,21 @@ function vtkWebGPUTexture(publicAPI, model) {
     model.ready = true;
   };
 
+  // when data is pulled out of this texture what scale must be applied to
+  // get back to the original source data. For formats such as r8unorm we
+  // have to multiply by 255.0, for formats such as r16float it is 1.0
+  publicAPI.getScale = () => {
+    const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(model.format);
+    const halfFloat =
+      tDetails.elementSize === 2 && tDetails.sampleType === 'float';
+    return halfFloat ? 1.0 : 255.0;
+  };
+
+  publicAPI.getNumberOfComponents = () => {
+    const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(model.format);
+    return tDetails.numComponents;
+  };
+
   publicAPI.resizeToMatch = (tex) => {
     if (
       tex.getWidth() !== model.width ||
