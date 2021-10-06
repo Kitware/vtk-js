@@ -44,6 +44,7 @@ varying vec3 vertexVCVSOutput;
 
 #ifdef vtkImageLabelOutlineOn
 uniform int outlineThickness;
+uniform float outlineOpacity;
 uniform float vpWidth;
 uniform float vpHeight;
 uniform mat4 PCWCMatrix;
@@ -465,7 +466,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
 
     // If I am on the border, I am displayed at full opacity
     if (pixelOnBorder == true) {
-      tColor.a = 1.0;
+      tColor.a = outlineOpacity;
     }
   }
 

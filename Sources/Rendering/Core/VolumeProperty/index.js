@@ -253,6 +253,7 @@ const DEFAULT_VALUES = {
   specularPower: 10.0,
   useLabelOutline: false,
   labelOutlineThickness: 1,
+  labelOutlineOpacity: 1.0,
 };
 
 // ----------------------------------------------------------------------------
@@ -295,6 +296,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'specularPower',
     'useLabelOutline',
     'labelOutlineThickness',
+    'labelOutlineOpacity',
   ]);
 
   // Object methods
