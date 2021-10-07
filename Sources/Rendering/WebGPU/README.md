@@ -29,9 +29,8 @@ is needed.
   gradient background, texture background, skybox etc
 - PBR lighting to replace the simple model currently coded
 - eventually switch to using IBOs and flat interpolation
-- cropping planes for polydata mapper
+- cropping planes for polydata, image, volume mappers
 - update widgets to use the new async hardware selector API
-- image display (use 3d texture)
 - add rgb texture support to volume renderer
 - add lighting to volume rendering
 
@@ -39,6 +38,7 @@ Waiting on fixes/dev in WebGPU spec
 - more cross platform testing and bug fixing
 
 # Recently ToDone
+- image display (use 3d texture)
 - create new volume renderer built for multivolume rendering
   - traverse all volumes and register with volume pass - done
   - render all volumes hexahedra to get depth buffer near and far
@@ -117,3 +117,12 @@ getBindGroupEntry()
 getBindGroupTime()
 getShaderCode(group, binding)
 ```
+
+## Private API
+Note that none of the classes in the WebGPU directory are meant to be accessed directly by application code. These classes implement one view of the data (WebGPU as opposed to WebGL). Typical applicaiton code will interface with the RenderWindowViewNode superclass (in the SceneGraph) directory as the main entry point for a view such as WebGL or WebGPU. As such, changes to the API of the WebGPU classes are considered private changes, internal to the implementation of this view.
+
+## Volume Rendering Approach
+
+The volume renderer in WebGPU starts in the ForwardPass, which if it detects volumes invokes a volume pass. The volume pass requests bounding boxes from all volumes and renders them, along with the opaque polygonal depth buffer to create min and max ray depth textures. These textures are bounds for each fragment's ray casting. Then the VolumePassFSQ gets invoked with these two bounding textures to actually perfom the ray casting of the voxels between the min and max.
+
+The ray casting is done for all volumes at once and the VolumePassFSQ class is where all the complexity and work is done.
