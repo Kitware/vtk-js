@@ -44,7 +44,13 @@ function vtkEllipseWidget(publicAPI, model) {
       case ViewTypes.VOLUME:
       default:
         return [
-          { builder: vtkSphereHandleRepresentation, labels: ['moveHandle'] },
+          {
+            builder: vtkSphereHandleRepresentation,
+            labels: ['moveHandle'],
+            initialValues: {
+              scaleInPixels: true,
+            },
+          },
           {
             builder: vtkCircleContextRepresentation,
             labels: ['ellipseHandle'],
