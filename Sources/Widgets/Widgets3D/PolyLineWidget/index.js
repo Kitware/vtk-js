@@ -54,7 +54,16 @@ function vtkPolyLineWidget(publicAPI, model) {
               scaleInPixels: true,
             },
           },
-          { builder: vtkSVGLandmarkRepresentation, labels: ['handles'] },
+          {
+            builder: vtkSVGLandmarkRepresentation,
+            initialValues: {
+              textProps: {
+                dx: 12,
+                dy: -12,
+              },
+            },
+            labels: ['handles'],
+          },
           {
             builder: vtkPolyLineRepresentation,
             labels: ['handles', 'moveHandle'],
