@@ -262,7 +262,7 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
   };
 
   publicAPI.getBindables = () => {
-    const bindables = [];
+    const bindables = [...model.additionalBindables];
     if (model.UBO) {
       bindables.push(model.UBO);
     }
@@ -323,6 +323,7 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  additionalBindables: undefined,
   bindGroup: null,
   device: null,
   fragmentShaderTemplate: null,
@@ -352,6 +353,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.bindGroup = vtkWebGPUBindGroup.newInstance();
   model.bindGroup.setName('mapperBG');
 
+  model.additionalBindables = [];
+
   model.fragmentShaderTemplate =
     model.fragmentShaderTemplate || vtkWebGPUMapperHelperFS;
   model.vertexShaderTemplate =
@@ -362,6 +365,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.get(publicAPI, model, ['vertexInput']);
   macro.setGet(publicAPI, model, [
+    'additionalBindables',
     'device',
     'fragmentShaderTemplate',
     'interpolate',

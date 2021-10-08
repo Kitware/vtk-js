@@ -1,9 +1,9 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCircleSource from 'vtk.js/Sources/Filters/Sources/CircleSource';
+import vtkContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ContextRepresentation';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
-import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
@@ -90,7 +90,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
 
   publicAPI.setGlyphResolution = macro.chain(
     publicAPI.setGlyphResolution,
-    (r) => model.glyph.setResolution(r)
+    (r) => model.pipelines.circle.glyph.setResolution(r)
   );
 
   // --------------------------------------------------------------------------
@@ -187,8 +187,6 @@ function vtkCircleContextRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
   // Initialization
   // --------------------------------------------------------------------------
-
-  publicAPI.setActiveScaleFactor(1);
 }
 
 // ----------------------------------------------------------------------------
@@ -207,7 +205,7 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  vtkHandleRepresentation.extend(publicAPI, model, initialValues);
+  vtkContextRepresentation.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, ['glyphResolution', 'defaultScale']);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
 

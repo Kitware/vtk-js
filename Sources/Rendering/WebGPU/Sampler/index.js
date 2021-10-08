@@ -12,10 +12,9 @@ function vtkWebGPUSampler(publicAPI, model) {
 
   publicAPI.create = (device, options = {}) => {
     model.device = device;
-    model.handle = model.device.getHandle().createSampler({
-      magFilter: options.magFilter ? options.magFilter : 'nearest',
-      minFilter: options.minFilter ? options.minFilter : 'nearest',
-    });
+    model.options.magFilter = options.magFilter ? options.magFilter : 'nearest';
+    model.options.minFilter = options.minFilter ? options.minFilter : 'nearest';
+    model.handle = model.device.getHandle().createSampler(model.options);
     model.bindGroupTime.modified();
   };
 
@@ -40,6 +39,7 @@ const DEFAULT_VALUES = {
   device: null,
   handle: null,
   name: null,
+  options: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -50,6 +50,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   macro.obj(publicAPI, model);
 
+  model.options = {};
   model.bindGroupLayoutEntry = {
     /* eslint-disable no-undef */
     visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
@@ -62,7 +63,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.bindGroupTime = {};
   macro.obj(model.bindGroupTime, { mtime: 0 });
 
-  macro.get(publicAPI, model, ['bindGroupTime', 'handle']);
+  macro.get(publicAPI, model, ['bindGroupTime', 'handle', 'options']);
   macro.setGet(publicAPI, model, ['bindGroupLayoutEntry', 'device', 'name']);
 
   vtkWebGPUSampler(publicAPI, model);

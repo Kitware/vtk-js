@@ -1,6 +1,11 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkSVGRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGRepresentation';
 
+import {
+  VerticalTextAlignment,
+  fontSizeToPixels,
+} from 'vtk.js/Sources/Widgets/SVG/SVGLandmarkRepresentation/Constants';
+
 const { createSvgElement } = vtkSVGRepresentation;
 
 // ----------------------------------------------------------------------------
@@ -45,23 +50,31 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
           texts[i] = '';
         }
         const splitText = texts[i].split('\n');
-        const newlineOffset =
-          model.fontProperties != null && model.fontProperties.fontSize
-            ? model.fontProperties.fontSize
-            : 15;
+        const fontSize = fontSizeToPixels(model.fontProperties);
         splitText.forEach((subText, j) => {
           const text = publicAPI.createListenableSvgElement('text', i);
           Object.keys(model.textProps || {}).forEach((prop) => {
-            let propValue = model.textProps[prop];
-            if (model.offsetText === true && prop === 'dy') {
-              propValue = model.textProps.dy + newlineOffset * j;
-            }
-            text.setAttribute(prop, propValue);
+            text.setAttribute(prop, model.textProps[prop]);
           });
           text.setAttribute('x', x);
           text.setAttribute('y', y);
+          // Vertical offset (dy) calculation based on VerticalTextAlignment
+          let dy = model.textProps.dy ? model.textProps.dy : 0;
+          switch (model.textProps.verticalAlign) {
+            case VerticalTextAlignment.MIDDLE:
+              dy -= fontSize * (0.5 * splitText.length - j - 1);
+              break;
+            case VerticalTextAlignment.TOP:
+              dy += fontSize * (j + 1);
+              break;
+            case VerticalTextAlignment.BOTTOM:
+            default:
+              dy -= fontSize * (splitText.length - j - 1);
+              break;
+          }
+          text.setAttribute('dy', dy);
           if (model.fontProperties != null) {
-            text.setAttribute('font-size', model.fontProperties.fontSize);
+            text.setAttribute('font-size', fontSize);
             text.setAttribute('font-family', model.fontProperties.fontFamily);
             text.setAttribute('font-weight', model.fontProperties.fontStyle);
             text.setAttribute('fill', model.fontProperties.fontColor);
@@ -80,28 +93,32 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
+/**
+ * textProps can contain any "svg" attribute (e.g. text-anchor, text-align,
+ * alignment-baseline...)
+ * @param {*} initialValues
+ * @returns
+ */
 function defaultValues(initialValues) {
   return {
+    ...initialValues,
     circleProps: {
       r: 5,
       stroke: 'red',
       fill: 'red',
+      ...initialValues.circleProps,
     },
     textProps: {
       fill: 'white',
-      dx: 12,
-      dy: -12,
+      ...initialValues.textProps,
     },
-    ...initialValues,
   };
 }
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, defaultValues(initialValues));
-
-  vtkSVGRepresentation.extend(publicAPI, model, initialValues);
+  vtkSVGRepresentation.extend(publicAPI, model, defaultValues(initialValues));
 
   macro.setGet(publicAPI, model, [
     'circleProps',

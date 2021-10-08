@@ -1,6 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
+import vtkContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ContextRepresentation';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
@@ -116,7 +116,7 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  vtkHandleRepresentation.extend(publicAPI, model, initialValues);
+  vtkContextRepresentation.extend(publicAPI, model, initialValues);
   macro.setGetArray(publicAPI, model, ['color'], 1);
 
   macro.get(publicAPI, model, ['mapper', 'actor']);
