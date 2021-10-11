@@ -33,4 +33,4 @@ If you are looking for general information on VTK pipelines, data structures, an
 
 </center>
 
-[Book]: ./books_VTK_guide.png
+[Book]: ./books_VTK_textbook.png
