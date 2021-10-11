@@ -337,9 +337,9 @@ export declare const vtkPlane: {
 	extend: typeof extend,
 	evaluate: typeof evaluate,
 	distanceToPlane: typeof distanceToPlane,
-	projectPoint: typeof projectVector3,
+	projectPoint: typeof projectPoint,
 	projectVector: typeof projectVector,
-	generalizedProjectPoint: typeof generalizedProjectVector3,
+	generalizedProjectPoint: typeof generalizedProjectPoint,
 	intersectWithLine: typeof intersectWithLine,
 	intersectWithPlane: typeof intersectWithPlane,
 };

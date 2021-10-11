@@ -3,6 +3,9 @@ import 'vtk.js/Sources/favicon';
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import 'vtk.js/Sources/Rendering/Profiles/All';
 
+// Force the loading of HttpDataAccessHelper to support gzip decompression
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 import vtkRectangleWidget from 'vtk.js/Sources/Widgets/Widgets3D/RectangleWidget';
@@ -12,19 +15,14 @@ import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkSphere from 'vtk.js/Sources/Common/DataModel/Sphere';
-import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 import {
   BehaviorCategory,
   ShapeBehavior,
-  HorizontalTextPosition,
-  VerticalTextPosition,
-  computeTextPosition,
+  TextPosition,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
-import {
-  TextAlign,
-  VerticalAlign,
-} from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation/Constants';
+
+import { VerticalTextAlignment } from 'vtk.js/Sources/Widgets/SVG/SVGLandmarkRepresentation/Constants';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
@@ -61,10 +59,11 @@ function setCamera(sliceMode, renderer, data) {
   const ijk = [0, 0, 0];
   const position = [0, 0, 0];
   const focalPoint = [0, 0, 0];
+  const viewUp = sliceMode === 1 ? [0, 0, 1] : [0, 1, 0];
   data.indexToWorld(ijk, focalPoint);
   ijk[sliceMode] = 1;
   data.indexToWorld(ijk, position);
-  renderer.getActiveCamera().set({ focalPoint, position });
+  renderer.getActiveCamera().set({ focalPoint, position, viewUp });
   renderer.resetCamera();
 }
 
@@ -78,8 +77,7 @@ scene.widgetManager.setRenderer(scene.renderer);
 // Widgets
 const widgets = {};
 widgets.rectangleWidget = vtkRectangleWidget.newInstance({
-  resetAfterPointPlacement: false,
-  useHandles: true,
+  resetAfterPointPlacement: true,
 });
 widgets.ellipseWidget = vtkEllipseWidget.newInstance({
   modifierBehavior: {
@@ -91,8 +89,6 @@ widgets.ellipseWidget = vtkEllipseWidget.newInstance({
       [BehaviorCategory.RATIO]: ShapeBehavior[BehaviorCategory.RATIO].FREE,
     },
   },
-  resetAfterPointPlacement: false,
-  useHandles: true,
 });
 widgets.circleWidget = vtkEllipseWidget.newInstance({
   modifierBehavior: {
@@ -103,22 +99,50 @@ widgets.circleWidget = vtkEllipseWidget.newInstance({
       [BehaviorCategory.RATIO]: ShapeBehavior[BehaviorCategory.RATIO].FREE,
     },
   },
-  resetAfterPointPlacement: false,
-  useHandles: true,
 });
+// Make a large handle for demo purpose
+widgets.circleWidget.getWidgetState().getPoint1Handle().setScale1(20);
+widgets.circleWidget
+  .getWidgetState()
+  .setTextPosition([
+    TextPosition.MAX,
+    TextPosition.CENTER,
+    TextPosition.CENTER,
+  ]);
 
 scene.rectangleHandle = scene.widgetManager.addWidget(
   widgets.rectangleWidget,
   ViewTypes.SLICE
 );
+scene.rectangleHandle.setHandleVisibility(false);
+scene.rectangleHandle.setTextProps({
+  ...scene.rectangleHandle.getTextProps(),
+  'text-anchor': 'middle',
+  verticalAlign: VerticalTextAlignment.MIDDLE,
+});
+widgets.rectangleWidget
+  .getWidgetState()
+  .setTextPosition([
+    TextPosition.CENTER,
+    TextPosition.CENTER,
+    TextPosition.CENTER,
+  ]);
+
 scene.ellipseHandle = scene.widgetManager.addWidget(
   widgets.ellipseWidget,
   ViewTypes.SLICE
 );
+scene.ellipseHandle.setTextProps({
+  ...scene.ellipseHandle.getTextProps(),
+  'text-anchor': 'middle',
+  verticalAlign: VerticalTextAlignment.MIDDLE,
+});
+
 scene.circleHandle = scene.widgetManager.addWidget(
   widgets.circleWidget,
   ViewTypes.SLICE
 );
+scene.circleHandle.setGlyphResolution(64);
 
 scene.widgetManager.grabFocus(widgets.ellipseWidget);
 let activeWidget = 'ellipseWidget';
@@ -148,6 +172,20 @@ function updateControlPanel(im, ds) {
   document
     .querySelector('.slice')
     .setAttribute('max', extent[slicingMode * 2 + 1]);
+}
+
+function updateWidgetVisibility(widget, slicePos, i, widgetIndex) {
+  /* testing if the widget is on the slice and has been placed to modify visibility */
+  const widgetVisibility =
+    !scene.widgetManager.getWidgets()[widgetIndex].getPoint1() ||
+    widget.getWidgetState().getPoint1Handle().getOrigin()[i] === slicePos[i];
+  return widget.setVisibility(widgetVisibility);
+}
+
+function updateWidgetsVisibility(slicePos, slicingMode) {
+  updateWidgetVisibility(widgets.rectangleWidget, slicePos, slicingMode, 0);
+  updateWidgetVisibility(widgets.ellipseWidget, slicePos, slicingMode, 1);
+  updateWidgetVisibility(widgets.circleWidget, slicePos, slicingMode, 2);
 }
 
 // ----------------------------------------------------------------------------
@@ -194,128 +232,67 @@ reader
     scene.ellipseHandle.getRepresentations()[1].setDrawFace(false);
     scene.ellipseHandle.getRepresentations()[1].setOpacity(1);
 
-    scene.rectangleHandle.updateHandlesSize();
-    scene.circleHandle.updateHandlesSize();
-    scene.ellipseHandle.updateHandlesSize();
-
     // set text display callback
-    scene.ellipseHandle.setLabelTextCallback(
-      (worldBounds, screenBounds, labelRep) => {
-        const { average, minimum, maximum } = image.data.computeHistogram(
-          worldBounds,
-          vtkSphere.isPointIn3DEllipse
-        );
+    scene.ellipseHandle.onInteractionEvent(() => {
+      const worldBounds = scene.ellipseHandle.getBounds();
+      const { average, minimum, maximum } = image.data.computeHistogram(
+        worldBounds,
+        vtkSphere.isPointIn3DEllipse
+      );
 
-        const text = `average: ${average.toFixed(
-          0
-        )} \nmin: ${minimum} \nmax: ${maximum} `;
+      const text = `average: ${average.toFixed(
+        0
+      )} \nmin: ${minimum} \nmax: ${maximum} `;
 
-        const { width, height } = labelRep.computeTextDimensions(text);
-        labelRep.setDisplayPosition(
-          computeTextPosition(
-            screenBounds,
-            HorizontalTextPosition.OUTSIDE_RIGHT,
-            VerticalTextPosition.INSIDE_TOP,
-            width,
-            height
-          )
-        );
+      widgets.ellipseWidget.getWidgetState().getText().setText(text);
+    });
 
-        labelRep.setLabelText(text);
-      }
-    );
+    scene.circleHandle.onInteractionEvent(() => {
+      const worldBounds = scene.circleHandle.getBounds();
 
-    scene.circleHandle.setLabelTextCallback(
-      (worldBounds, screenBounds, labelRep) => {
-        const center = vtkBoundingBox.getCenter(screenBounds);
-        const radius =
-          vec3.distance(center, [
-            screenBounds[0],
-            screenBounds[2],
-            screenBounds[4],
-          ]) / 2;
+      const text = `radius: ${(
+        vec3.distance(
+          [worldBounds[0], worldBounds[2], worldBounds[4]],
+          [worldBounds[1], worldBounds[3], worldBounds[5]]
+        ) / 2
+      ).toFixed(2)}`;
+      widgets.circleWidget.getWidgetState().getText().setText(text);
+    });
 
-        const position = [0, 0, 0];
-        vec3.scaleAndAdd(position, center, [1, 1, 1], radius);
-        labelRep.setDisplayPosition(position);
+    scene.rectangleHandle.onInteractionEvent(() => {
+      const worldBounds = scene.rectangleHandle.getBounds();
 
-        labelRep.setLabelText(
-          `radius: ${(
-            vec3.distance(
-              [worldBounds[0], worldBounds[2], worldBounds[4]],
-              [worldBounds[1], worldBounds[3], worldBounds[5]]
-            ) / 2
-          ).toFixed(2)}`
-        );
+      const dx = Math.abs(worldBounds[0] - worldBounds[1]);
+      const dy = Math.abs(worldBounds[2] - worldBounds[3]);
+      const dz = Math.abs(worldBounds[4] - worldBounds[5]);
 
-        labelRep.setTextAlign(TextAlign.CENTER);
-        labelRep.setVerticalAlign(VerticalAlign.CENTER);
-      }
-    );
+      const perimeter = 2 * (dx + dy + dz);
+      const area = dx * dy + dy * dz + dz * dx;
 
-    scene.rectangleHandle.setLabelTextCallback(
-      (worldBounds, screenBounds, labelRep) => {
-        const dx = Math.abs(worldBounds[0] - worldBounds[1]);
-        const dy = Math.abs(worldBounds[2] - worldBounds[3]);
-        const dz = Math.abs(worldBounds[4] - worldBounds[5]);
-
-        const perimeter = 2 * (dx + dy + dz);
-        const area = dx * dy + dy * dz + dz * dx;
-
-        const text = `perimeter: ${perimeter.toFixed(
-          1
-        )}mm\narea: ${area.toFixed(1)}mm²`;
-
-        const { width, height } = labelRep.computeTextDimensions(text);
-        labelRep.setDisplayPosition(
-          computeTextPosition(
-            screenBounds,
-            HorizontalTextPosition.OUTSIDE_RIGHT,
-            VerticalTextPosition.INSIDE_TOP,
-            width,
-            height
-          )
-        );
-
-        labelRep.setTextAlign(TextAlign.RIGHT);
-      }
-    );
-
-    const updateWidgetVisibility = (widget, slicePos, i, widgetIndex) => {
-      /* testing if the widget is on the slice and has been placed to modify visibility */
-      const widgetVisibility =
-        widget.getWidgetState().getPoint1Handle().getOrigin()[i] ===
-          slicePos[i] ||
-        !scene.widgetManager.getWidgets()[widgetIndex].getPoint1();
-      return widget.setVisibility(widgetVisibility);
-    };
-
-    const updateWidgetsVisibility = (position, slicingMode) => {
-      updateWidgetVisibility(widgets.rectangleWidget, position, slicingMode, 0);
-      updateWidgetVisibility(widgets.ellipseWidget, position, slicingMode, 1);
-      updateWidgetVisibility(widgets.circleWidget, position, slicingMode, 2);
-    };
+      const text = `perimeter: ${perimeter.toFixed(1)}mm\narea: ${area.toFixed(
+        1
+      )}mm²`;
+      widgets.rectangleWidget.getWidgetState().getText().setText(text);
+    });
 
     const update = () => {
       const slicingMode = image.imageMapper.getSlicingMode() % 3;
 
       if (slicingMode > -1) {
         const ijk = [0, 0, 0];
-        const position = [0, 0, 0];
+        const slicePos = [0, 0, 0];
 
         // position
         ijk[slicingMode] = image.imageMapper.getSlice();
-        data.indexToWorld(ijk, position);
+        data.indexToWorld(ijk, slicePos);
 
-        widgets.rectangleWidget.getManipulator().setOrigin(position);
-        widgets.ellipseWidget.getManipulator().setOrigin(position);
-        widgets.circleWidget.getManipulator().setOrigin(position);
+        widgets.rectangleWidget.getManipulator().setOrigin(slicePos);
+        widgets.ellipseWidget.getManipulator().setOrigin(slicePos);
+        widgets.circleWidget.getManipulator().setOrigin(slicePos);
 
-        updateWidgetsVisibility(position, slicingMode);
+        updateWidgetsVisibility(slicePos, slicingMode);
 
-        scene.rectangleHandle.updateRepresentationForRender();
-        scene.ellipseHandle.updateRepresentationForRender();
-        scene.circleHandle.updateRepresentationForRender();
+        scene.renderWindow.render();
 
         // update UI
         document
@@ -342,7 +319,8 @@ function resetWidgets() {
   scene.rectangleHandle.reset();
   scene.ellipseHandle.reset();
   scene.circleHandle.reset();
-  widgets[activeWidget].setVisibility(true);
+  const slicingMode = image.imageMapper.getSlicingMode() % 3;
+  updateWidgetsVisibility(null, slicingMode);
   scene.widgetManager.grabFocus(widgets[activeWidget]);
 }
 
@@ -360,8 +338,16 @@ document.querySelector('.axis').addEventListener('input', (ev) => {
 });
 
 document.querySelector('.widget').addEventListener('input', (ev) => {
+  // For demo purpose, hide ellipse handles when the widget loses focus
+  if (activeWidget === 'ellipseWidget') {
+    widgets.ellipseWidget.setHandleVisibility(false);
+  }
   scene.widgetManager.grabFocus(widgets[ev.target.value]);
   activeWidget = ev.target.value;
+  if (activeWidget === 'ellipseWidget') {
+    widgets.ellipseWidget.setHandleVisibility(true);
+    scene.ellipseHandle.updateRepresentationForRender();
+  }
 });
 
 document.querySelector('.reset').addEventListener('click', () => {
