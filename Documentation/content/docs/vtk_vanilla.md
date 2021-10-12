@@ -55,7 +55,7 @@ Inside `package.json`, add the following lines in the scripts object.
 ```diff
    "scripts": {
 +    "build": "webpack --progress --mode=development",
-+    "start": "webpack serve --progress --mode=development --content-base=dist",
++    "start": "webpack serve --progress --mode=development --static=dist",
      "test": "echo \"Error: no test specified\" && exit 1"
    }
 ```
