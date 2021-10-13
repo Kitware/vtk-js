@@ -87,8 +87,21 @@ function parseLine(line) {
 function end(model) {
   const hasTcoords = !!data.vt.length;
   const hasNormals = !!data.vn.length;
+
+  const pushPoint = (vIdx, tcIdx, nIdx, pts, tc, normals, map, pointKey) => {
+    pushVector(data.v, vIdx * 3, pts, 3);
+    map[vIdx][pointKey] = pts.length / 3 - 1;
+    if (hasTcoords) {
+      pushVector(data.vt, tcIdx * 2, tc, 2);
+    }
+    if (hasNormals) {
+      pushVector(data.vn, nIdx * 3, normals, 3);
+    }
+  };
+
   if (model.splitMode) {
     model.numberOfOutputs = data.size;
+
     for (let idx = 0; idx < data.size; idx++) {
       const ctMapping = {};
       const polydata = vtkPolyData.newInstance({ name: data.pieces[idx] });
@@ -100,26 +113,66 @@ function end(model) {
       const polyIn = data.f[idx];
       const nbElems = polyIn.length;
       let offset = 0;
+
+      const cellToAddAtTheEnd = [];
       while (offset < nbElems) {
         const cellSize = polyIn[offset];
-        polys.push(cellSize);
+        const cellPoints = []; // Array containing cell points Ids.
+
         for (let pIdx = 0; pIdx < cellSize; pIdx++) {
           const [vIdx, tcIdx, nIdx] = polyIn[offset + pIdx + 1];
-          const key = `${vIdx}/${tcIdx}/${nIdx}`;
-          if (ctMapping[key] === undefined) {
-            ctMapping[key] = pts.length / 3;
-            pushVector(data.v, vIdx * 3, pts, 3);
-            if (hasTcoords) {
-              pushVector(data.vt, tcIdx * 2, tc, 2);
-            }
-            if (hasNormals) {
-              pushVector(data.vn, nIdx * 3, normals, 3);
+          const pointKey = `${tcIdx}/${nIdx}`;
+          if (ctMapping[vIdx] === undefined) {
+            ctMapping[vIdx] = {};
+            pushPoint(vIdx, tcIdx, nIdx, pts, tc, normals, ctMapping, pointKey);
+          } else if (ctMapping[vIdx][pointKey] === undefined) {
+            // There is already a point with index vIdx but with a different texture and/or normal index.
+            // This point will be duplicated.
+            // To avoid issue with point indexation (ie points in .obj file
+            // should keep their indices when a polydata is created), the duplicated point will be added
+            // once .obj points are all created once.
+            // The cell containing this duplicated point should also be added afterwards.
+            if (!cellToAddAtTheEnd.includes(offset)) {
+              cellToAddAtTheEnd.push(offset);
             }
           }
-          polys.push(ctMapping[key]);
+
+          // Push points ids that will compose the cell.
+          // It is possible to push undefined values if the cell is composed
+          // of points that need to be duplicated at the end.
+          cellPoints.push(ctMapping[vIdx][pointKey]);
+        }
+
+        // Push cell information only if every point of it are defined.
+        if (!cellPoints.includes(undefined)) {
+          polys.push(cellSize);
+          polys.push(...cellPoints);
         }
         offset += cellSize + 1;
       }
+
+      // Duplicate points and define cells
+      cellToAddAtTheEnd.forEach((offset2) => {
+        const cellSize = polyIn[offset2];
+        polys.push(cellSize);
+        for (let pIdx = 0; pIdx < cellSize; pIdx++) {
+          const [vIdx, tcIdx, nIdx] = polyIn[offset2 + pIdx + 1];
+          const pointKey = `${tcIdx}/${nIdx}`;
+
+          if (ctMapping[vIdx][pointKey] === undefined) {
+            // Duplicate point
+            pushPoint(vIdx, tcIdx, nIdx, pts, tc, normals, ctMapping, pointKey);
+          }
+
+          polys.push(ctMapping[vIdx][pointKey]);
+        }
+      });
+
+      // Define a points map with key = original pointId and
+      // value = list of point ids that duplicates the original
+      Object.keys(ctMapping).forEach((pointId) => {
+        model.mappingPoints[pointId] = Object.values(ctMapping[pointId]);
+      });
 
       polydata.getPoints().setData(Float32Array.from(pts), 3);
       polydata.getPolys().setData(Uint32Array.from(polys));
@@ -267,9 +320,11 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
+  model.mappingPoints = {};
+
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, ['url', 'baseURL']);
+  macro.get(publicAPI, model, ['url', 'baseURL', 'mappingPoints']);
   macro.setGet(publicAPI, model, ['dataAccessHelper', 'splitMode']);
   macro.algo(publicAPI, model, 0, 1);
   macro.event(publicAPI, model, 'busy');
