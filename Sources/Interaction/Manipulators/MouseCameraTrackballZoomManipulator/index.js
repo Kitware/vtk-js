@@ -109,7 +109,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkCompositeMouseManipulator.extend(publicAPI, model, initialValues);
   vtkCompositeCameraManipulator.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['zoomScale', 'flipDirection']);
+  macro.setGet(publicAPI, model, ['flipDirection']);
 
   // Object specific methods
   vtkMouseCameraTrackballZoomManipulator(publicAPI, model);
