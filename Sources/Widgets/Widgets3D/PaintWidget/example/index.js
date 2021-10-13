@@ -298,8 +298,6 @@ reader
     image.imageMapper.onModified(update);
     // trigger initial update
     update();
-
-    //    readyAll();
   });
 
 // register readyAll to resize event
@@ -370,13 +368,10 @@ function initializeHandle(handle) {
   handle.onStartInteractionEvent(() => {
     painter.startStroke();
   });
-
   handle.onEndInteractionEvent(() => {
     painter.endStroke();
   });
 }
-
-initializeHandle(scene.paintHandle);
 
 scene.paintHandle.onStartInteractionEvent(() => {
   painter.startStroke();
@@ -386,82 +381,91 @@ scene.paintHandle.onStartInteractionEvent(() => {
 scene.paintHandle.onInteractionEvent(() => {
   painter.addPoint(widgets.paintWidget.getWidgetState().getTrueOrigin());
 });
+initializeHandle(scene.paintHandle);
 
+scene.rectangleHandle.onEndInteractionEvent((pointPlaced) => {
+  if (pointPlaced) {
+    const rectangleHandle = scene.rectangleHandle
+      .getWidgetState()
+      .getRectangleHandle();
+
+    painter.paintRectangle(
+      rectangleHandle.getOrigin(),
+      rectangleHandle.getCorner()
+    );
+  }
+});
 initializeHandle(scene.rectangleHandle);
 
-scene.rectangleHandle.onInteractionEvent(() => {
-  const rectangleHandle = scene.rectangleHandle
-    .getWidgetState()
-    .getRectangleHandle();
+scene.ellipseHandle.onEndInteractionEvent((pointPlaced) => {
+  if (pointPlaced) {
+    const center = scene.ellipseHandle
+      .getWidgetState()
+      .getEllipseHandle()
+      .getOrigin();
+    const point2 = scene.ellipseHandle
+      .getWidgetState()
+      .getPoint2Handle()
+      .getOrigin();
 
-  painter.paintRectangle(
-    rectangleHandle.getOrigin(),
-    rectangleHandle.getCorner()
-  );
+    let corner = [];
+
+    if (
+      scene.ellipseHandle.isBehaviorActive(
+        BehaviorCategory.RATIO,
+        ShapeBehavior[BehaviorCategory.RATIO].FIXED
+      )
+    ) {
+      const radius = vec3.distance(center, point2);
+      corner = [radius, radius, radius];
+    } else {
+      corner = [
+        center[0] - point2[0],
+        center[1] - point2[1],
+        center[2] - point2[2],
+      ];
+    }
+
+    painter.paintEllipse(center, corner);
+  }
 });
-
 initializeHandle(scene.ellipseHandle);
 
-scene.ellipseHandle.onInteractionEvent(() => {
-  const center = scene.ellipseHandle
-    .getWidgetState()
-    .getEllipseHandle()
-    .getOrigin();
-  const point2 = scene.ellipseHandle
-    .getWidgetState()
-    .getPoint2Handle()
-    .getOrigin();
+scene.circleHandle.onEndInteractionEvent((pointPlaced) => {
+  if (pointPlaced) {
+    const center = scene.circleHandle
+      .getWidgetState()
+      .getEllipseHandle()
+      .getOrigin();
+    const point2 = scene.circleHandle
+      .getWidgetState()
+      .getPoint2Handle()
+      .getOrigin();
 
-  const corner = [
-    center[0] - point2[0],
-    center[1] - point2[1],
-    center[2] - point2[2],
-  ];
-  painter.paintEllipse(center, corner);
+    const radius = vec3.distance(center, point2);
+
+    const corner = [radius, radius, radius];
+    painter.paintEllipse(center, corner);
+  }
 });
-
 initializeHandle(scene.circleHandle);
-
-scene.circleHandle.onInteractionEvent(() => {
-  const center = scene.circleHandle
-    .getWidgetState()
-    .getEllipseHandle()
-    .getOrigin();
-  const point2 = scene.circleHandle
-    .getWidgetState()
-    .getPoint1Handle()
-    .getOrigin();
-
-  const radius = vec3.distance(center, point2);
-
-  const corner = [radius, radius, radius];
-  painter.paintEllipse(center, corner);
-});
-
-scene.splineHandle.onStartInteractionEvent(() => {
-  painter.startStroke();
-});
 
 scene.splineHandle.onEndInteractionEvent(() => {
   const points = scene.splineHandle.getPoints();
   painter.paintPolygon(points);
-  painter.endStroke();
 
   scene.splineHandle.reset();
   scene.splineHandle.updateRepresentationForRender();
   scene.widgetManager.grabFocus(widgets.splineWidget);
 });
-
-scene.polygonHandle.onStartInteractionEvent(() => {
-  painter.startStroke();
-});
+initializeHandle(scene.splineHandle);
 
 scene.polygonHandle.onEndInteractionEvent(() => {
   const points = scene.polygonHandle.getPoints();
   painter.paintPolygon(points);
-  painter.endStroke();
 
   scene.polygonHandle.reset();
   scene.polygonHandle.updateRepresentationForRender();
   scene.widgetManager.grabFocus(widgets.polygonWidget);
 });
+initializeHandle(scene.polygonHandle);

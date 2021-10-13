@@ -38,6 +38,9 @@ function vtkSplineWidget(publicAPI, model) {
           {
             builder: vtkSphereHandleRepresentation,
             labels: ['handles', 'moveHandle'],
+            initialValues: {
+              scaleInPixels: true,
+            },
           },
           {
             builder: vtkSplineContextRepresentation,

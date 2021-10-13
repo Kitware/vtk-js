@@ -526,7 +526,7 @@ export default function widgetBehavior(publicAPI, model) {
       } else {
         publicAPI.placePoint2(model.point2Handle.getOrigin());
         publicAPI.invokeInteractionEvent();
-        publicAPI.invokeEndInteractionEvent();
+        publicAPI.invokeEndInteractionEvent(true);
       }
 
       return macro.EVENT_ABORT;
@@ -558,7 +558,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.apiSpecificRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
       model.interactor.cancelAnimation(publicAPI);
-      publicAPI.invokeEndInteractionEvent();
+      publicAPI.invokeEndInteractionEvent(true);
 
       return macro.EVENT_ABORT;
     }
@@ -587,7 +587,7 @@ export default function widgetBehavior(publicAPI, model) {
 
         if (distance > maxDistance || publicAPI.isDraggingForced()) {
           publicAPI.invokeInteractionEvent();
-          publicAPI.invokeEndInteractionEvent();
+          publicAPI.invokeEndInteractionEvent(true);
 
           if (publicAPI.getResetAfterPointPlacement()) {
             publicAPI.reset();
@@ -608,7 +608,7 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleKeyDown = ({ key }) => {
     if (key === 'Escape') {
       if (model.hasFocus) {
-        publicAPI.invokeEndInteractionEvent();
+        publicAPI.invokeEndInteractionEvent(false);
         publicAPI.reset();
         publicAPI.loseFocus();
       }

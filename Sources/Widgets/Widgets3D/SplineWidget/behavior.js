@@ -356,7 +356,6 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState.activate();
       model.activeState.setVisible(true);
       model.interactor.requestAnimation(publicAPI);
-      publicAPI.invokeStartInteractionEvent();
       updateHandlesSize();
     }
 
