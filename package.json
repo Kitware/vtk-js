@@ -31,7 +31,6 @@
   "module": "./dist/esm/index.js",
   "dependencies": {
     "@babel/runtime": "7.15.4",
-    "base64-js": "1.5.1",
     "blueimp-md5": "2.18.0",
     "commander": "8.2.0",
     "d3-scale": "4.0.0",
