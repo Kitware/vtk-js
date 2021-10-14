@@ -16,6 +16,7 @@ import { string } from 'rollup-plugin-string';
 import svgo from 'rollup-plugin-svgo';
 import webworkerLoader from 'rollup-plugin-web-worker-loader';
 import copy from 'rollup-plugin-copy';
+import autoExternal from 'rollup-plugin-auto-external';
 
 import packageJSON from './package.json';
 
@@ -98,6 +99,7 @@ export default {
   },
   external: Object.keys(packageJSON.dependencies).map((name) => new RegExp(`^${name}`)),
   plugins: [
+    autoExternal(),
     alias({
       entries: [
         { find: 'vtk.js', replacement: path.resolve(__dirname) },
