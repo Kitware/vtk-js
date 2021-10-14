@@ -677,8 +677,18 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
       vtkErrorMacro('instance deleted - cannot call any method');
       return;
     }
-    model.numberOfInputs++;
-    setInputConnection(outputPort, model.numberOfInputs - 1);
+    let portToFill = model.numberOfInputs;
+    while (
+      portToFill &&
+      !model.inputData[portToFill - 1] &&
+      !model.inputConnection[portToFill - 1]
+    ) {
+      portToFill--;
+    }
+    if (portToFill === model.numberOfInputs) {
+      model.numberOfInputs++;
+    }
+    setInputConnection(outputPort, portToFill);
   }
 
   function addInputData(dataset) {
@@ -686,8 +696,18 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
       vtkErrorMacro('instance deleted - cannot call any method');
       return;
     }
-    model.numberOfInputs++;
-    setInputData(dataset, model.numberOfInputs - 1);
+    let portToFill = model.numberOfInputs;
+    while (
+      portToFill &&
+      !model.inputData[portToFill - 1] &&
+      !model.inputConnection[portToFill - 1]
+    ) {
+      portToFill--;
+    }
+    if (portToFill === model.numberOfInputs) {
+      model.numberOfInputs++;
+    }
+    setInputData(dataset, portToFill);
   }
 
   function getOutputData(port = 0) {
