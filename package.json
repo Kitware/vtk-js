@@ -31,6 +31,7 @@
   "module": "./dist/esm/index.js",
   "dependencies": {
     "@babel/runtime": "7.15.4",
+    "base64-js": "1.5.1",
     "blueimp-md5": "2.18.0",
     "commander": "8.2.0",
     "d3-scale": "4.0.0",
@@ -108,7 +109,6 @@
     "rollup-plugin-ignore": "1.0.10",
     "rollup-plugin-polyfill-node": "0.7.0",
     "rollup-plugin-postcss": "4.0.1",
-    "rollup-plugin-re": "1.0.7",
     "rollup-plugin-string": "3.0.0",
     "rollup-plugin-svgo": "1.1.0",
     "rollup-plugin-web-worker-loader": "1.6.1",
