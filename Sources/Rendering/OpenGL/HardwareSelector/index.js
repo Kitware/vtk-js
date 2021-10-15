@@ -399,6 +399,10 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       model.renderer
     );
 
+    // todo revisit making selection part of core
+    // then we can do this in core
+    model.openGLRenderWindow.getRenderable().preRender();
+
     // int rgba[4];
     // rwin.getColorBufferSizes(rgba);
     // if (rgba[0] < 8 || rgba[1] < 8 || rgba[2] < 8) {

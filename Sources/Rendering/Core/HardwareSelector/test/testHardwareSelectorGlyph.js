@@ -102,7 +102,7 @@ test('Test HardwareSelectorGlyph', (tapeContext) => {
   glwindow.setSize(400, 400);
   renderer.resetCamera();
   renderer.getActiveCamera().zoom(1.4);
-  glwindow.traverseAllPasses();
+  renderWindow.render();
 
   const sel = glwindow.getSelector();
   sel.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_POINTS);

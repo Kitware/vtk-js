@@ -69,7 +69,7 @@ test('Test HardwareSelector', (tapeContext) => {
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
-  glwindow.traverseAllPasses();
+  renderWindow.render();
 
   const sel = glwindow.getSelector();
   sel.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_POINTS);

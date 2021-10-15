@@ -87,7 +87,7 @@ test('Test HardwareSelector', (tapeContext) => {
         gc.releaseResources();
       });
     });
-    glwindow.traverseAllPasses();
+    renderWindow.render();
   });
-  glwindow.traverseAllPasses();
+  renderWindow.render();
 });
