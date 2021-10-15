@@ -41,9 +41,6 @@ fn main(
   var output: fragmentOutput;
 
   //VTK::Image::Sample
-  computedColor.g = computedColor.r;
-  computedColor.b = computedColor.r;
-  computedColor.a = 1.0;
 
   // var computedColor: vec4<f32> = vec4<f32>(1.0,0.7, 0.5, 1.0);
 
@@ -300,13 +297,14 @@ function vtkWebGPUImageMapper(publicAPI, model) {
             }
           } else {
             for (let i = 0; i < model.rowLength; i++) {
-              colorArray[c * model.rowLength * 8 + i * 4] =
-                255.0 * tmpTable[i * 3];
-              colorArray[c * model.rowLength * 8 + i * 4 + 1] =
-                255.0 * tmpTable[i * 3 + 1];
-              colorArray[c * model.rowLength * 8 + i * 4 + 2] =
-                255.0 * tmpTable[i * 3 + 2];
-              colorArray[c * model.rowLength * 8 + i * 4 + 3] = 255.0;
+              const idx = c * model.rowLength * 8 + i * 4;
+              colorArray[idx] = 255.0 * tmpTable[i * 3];
+              colorArray[idx + 1] = 255.0 * tmpTable[i * 3 + 1];
+              colorArray[idx + 2] = 255.0 * tmpTable[i * 3 + 2];
+              colorArray[idx + 3] = 255.0;
+              for (let j = 0; j < 4; j++) {
+                colorArray[idx + model.rowLength * 4 + j] = colorArray[idx + j];
+              }
             }
           }
         }

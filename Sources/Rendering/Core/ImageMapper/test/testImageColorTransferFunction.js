@@ -11,9 +11,9 @@ import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransfe
 
 import baseline from './testImageColorTransferFunction.png';
 
-test('Test ImageMapper', (t) => {
+test('Test ImageMapper Color TFun', (t) => {
   const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkImageMapper testImage');
+  t.ok('rendering', 'vtkImageMapper Color Transfer Function testImage');
 
   // Create some control UI
   const container = document.querySelector('body');
