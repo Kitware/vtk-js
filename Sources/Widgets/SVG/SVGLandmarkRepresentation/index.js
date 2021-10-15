@@ -73,8 +73,8 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
               break;
           }
           text.setAttribute('dy', dy);
+          text.setAttribute('font-size', fontSize);
           if (model.fontProperties != null) {
-            text.setAttribute('font-size', fontSize);
             text.setAttribute('font-family', model.fontProperties.fontFamily);
             text.setAttribute('font-weight', model.fontProperties.fontStyle);
             text.setAttribute('fill', model.fontProperties.fontColor);
