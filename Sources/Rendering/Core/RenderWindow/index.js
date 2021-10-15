@@ -75,7 +75,18 @@ function vtkRenderWindow(publicAPI, model) {
 
   publicAPI.hasView = (view) => model.views.indexOf(view) !== -1;
 
+  // handle any pre render initializations
+  publicAPI.preRender = () => {
+    model.renderers.forEach((ren) => {
+      // make sure we have a camera
+      if (!ren.isActiveCameraCreated()) {
+        ren.resetCamera();
+      }
+    });
+  };
+
   publicAPI.render = () => {
+    publicAPI.preRender();
     if (model.interactor) {
       model.interactor.render();
     } else {

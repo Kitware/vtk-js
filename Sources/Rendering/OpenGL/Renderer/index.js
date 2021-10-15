@@ -21,10 +21,6 @@ function vtkOpenGLRenderer(publicAPI, model) {
         return;
       }
 
-      // make sure we have a camera
-      if (!model.renderable.isActiveCameraCreated()) {
-        model.renderable.resetCamera();
-      }
       publicAPI.updateLights();
       publicAPI.prepareNodes();
       publicAPI.addMissingNode(model.renderable.getActiveCamera());

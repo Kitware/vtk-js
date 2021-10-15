@@ -275,6 +275,10 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
       return false;
     }
 
+    // todo revisit making selection part of core
+    // then we can do this in core
+    model.WebGPURenderWindow.getRenderable().preRender();
+
     if (!model.WebGPURenderWindow.getInitialized()) {
       model.WebGPURenderWindow.initialize();
       await new Promise((resolve) =>
