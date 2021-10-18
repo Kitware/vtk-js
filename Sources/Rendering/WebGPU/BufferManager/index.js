@@ -71,7 +71,9 @@ function getPrimitiveName(primType) {
     case PrimitiveTypes.Lines:
       return 'lines';
     case PrimitiveTypes.Triangles:
+    case PrimitiveTypes.TriangleEdges:
       return 'polys';
+    case PrimitiveTypes.TriangleStripEdges:
     case PrimitiveTypes.TriangleStrips:
       return 'strips';
     default:

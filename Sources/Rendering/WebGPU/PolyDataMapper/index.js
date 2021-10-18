@@ -109,6 +109,11 @@ fn main(
 }
 `;
 
+function isEdges(hash) {
+  // edge pipelines have "edge" in them
+  return hash.indexOf('edge') >= 0;
+}
+
 // ----------------------------------------------------------------------------
 // vtkWebGPUPolyDataMapper methods
 // ----------------------------------------------------------------------------
@@ -180,6 +185,8 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
         aColor[2],
         1.0,
       ]);
+      aColor = ppty.getEdgeColorByReference();
+      model.UBO.setArray('EdgeColor', [aColor[0], aColor[1], aColor[2], 1.0]);
       model.UBO.setValue('Opacity', ppty.getOpacity());
       model.UBO.setValue('PropID', model.WebGPUActor.getPropID());
       const device = model.WebGPURenderWindow.getDevice();
@@ -256,6 +263,17 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderColor = (hash, pipeline, vertexInput) => {
+    if (isEdges(hash)) {
+      const fDesc = pipeline.getShaderDescription('fragment');
+      let code = fDesc.getCode();
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
+        'ambientColor = mapperUBO.EdgeColor;',
+        'diffuseColor = mapperUBO.EdgeColor;',
+      ]).result;
+      fDesc.setCode(code);
+      return;
+    }
+
     if (!vertexInput.hasAttribute('colorVI')) return;
 
     const vDesc = pipeline.getShaderDescription('vertex');
@@ -313,26 +331,35 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.getUsage = (rep, i) => {
-    if (rep === Representation.POINTS || i === 0) {
+    if (rep === Representation.POINTS || i === PrimitiveTypes.Points) {
       return BufferUsage.Verts;
     }
 
-    if (i === 1) {
+    if (i === PrimitiveTypes.Lines) {
       return BufferUsage.Lines;
     }
 
     if (rep === Representation.WIREFRAME) {
-      if (i === 2) {
+      if (i === PrimitiveTypes.Triangles) {
         return BufferUsage.LinesFromTriangles;
       }
       return BufferUsage.LinesFromStrips;
     }
 
-    if (i === 2) {
+    if (i === PrimitiveTypes.Triangles) {
       return BufferUsage.Triangles;
     }
 
-    return BufferUsage.Strips;
+    if (i === PrimitiveTypes.TriangleStrips) {
+      return BufferUsage.Strips;
+    }
+
+    if (i === PrimitiveTypes.TriangleEdges) {
+      return BufferUsage.LinesFromTriangles;
+    }
+
+    // only strip edges left which are lines
+    return BufferUsage.LinesFromStrips;
   };
 
   publicAPI.getHashFromUsage = (usage) => `pt${usage}`;
@@ -351,8 +378,13 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
   publicAPI.buildVertexInput = (pd, cells, primType) => {
     const actor = model.WebGPUActor.getRenderable();
-    const representation = actor.getProperty().getRepresentation();
+    let representation = actor.getProperty().getRepresentation();
     const device = model.WebGPURenderWindow.getDevice();
+    let edges = false;
+    if (primType === PrimitiveTypes.TriangleEdges) {
+      edges = true;
+      representation = Representation.WIREFRAME;
+    }
 
     const vertexInput = model.primitives[primType].getVertexInput();
 
@@ -436,7 +468,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     let haveColors = false;
     if (model.renderable.getScalarVisibility()) {
       const c = model.renderable.getColorMapColors();
-      if (c) {
+      if (c && !edges) {
         const scalarMode = model.renderable.getScalarMode();
         let haveCellScalars = false;
         // We must figure out how the scalars should be mapped to the polydata.
@@ -481,7 +513,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     } else {
       tcoords = pd.getPointData().getTCoords();
     }
-    if (tcoords) {
+    if (tcoords && !edges) {
       const buffRequest = {
         hash: hash + tcoords.getMTime(),
         dataArray: tcoords,
@@ -579,20 +611,25 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
   // compute a unique hash for a pipeline, this needs to be unique enough to
   // capture any pipeline code changes (which includes shader changes)
   // or vertex input changes/ bind groups/ etc
-  publicAPI.computePipelineHash = (vertexInput, usage) => {
+  publicAPI.computePipelineHash = (vertexInput, usage, edges) => {
     let pipelineHash = 'pd';
-    if (vertexInput.hasAttribute(`normalMC`)) {
-      pipelineHash += `n`;
+    if (edges) {
+      pipelineHash += 'edge';
+    } else {
+      if (vertexInput.hasAttribute(`normalMC`)) {
+        pipelineHash += `n`;
+      }
+      if (vertexInput.hasAttribute(`colorVI`)) {
+        pipelineHash += `c`;
+      }
+      if (vertexInput.hasAttribute(`tcoord`)) {
+        pipelineHash += `t`;
+      }
+      if (model.textures.length) {
+        pipelineHash += `tx${model.textures.length}`;
+      }
     }
-    if (vertexInput.hasAttribute(`colorVI`)) {
-      pipelineHash += `c`;
-    }
-    if (vertexInput.hasAttribute(`tcoord`)) {
-      pipelineHash += `t`;
-    }
-    if (model.textures.length) {
-      pipelineHash += `tx${model.textures.length}`;
-    }
+
     if (model.SSBO) {
       pipelineHash += `ssbo`;
     }
@@ -620,30 +657,70 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     // handle textures
     publicAPI.updateTextures();
 
+    const actor = model.WebGPUActor.getRenderable();
+    const rep = actor.getProperty().getRepresentation();
+    const edgeVisibility = actor.getProperty().getEdgeVisibility();
+
     // handle per primitive type
     for (let i = PrimitiveTypes.Points; i <= PrimitiveTypes.Triangles; i++) {
       if (prims[i].getNumberOfValues() > 0) {
-        const actor = model.WebGPUActor.getRenderable();
-        const rep = actor.getProperty().getRepresentation();
-        const usage = publicAPI.getUsage(rep, i);
+        {
+          const usage = publicAPI.getUsage(rep, i);
+          const primHelper = model.primitives[i];
 
-        const primHelper = model.primitives[i];
+          publicAPI.buildVertexInput(model.currentInput, prims[i], i);
+          primHelper.setPipelineHash(
+            publicAPI.computePipelineHash(
+              primHelper.getVertexInput(),
+              usage,
+              false
+            )
+          );
 
-        publicAPI.buildVertexInput(model.currentInput, prims[i], i);
-        primHelper.setPipelineHash(
-          publicAPI.computePipelineHash(primHelper.getVertexInput(), usage)
-        );
+          primHelper.setTextureViews(model.textureViews);
+          primHelper.setWebGPURenderer(model.WebGPURenderer);
+          primHelper.setNumberOfInstances(1);
+          const vbo = primHelper.getVertexInput().getBuffer('vertexBC');
+          primHelper.setNumberOfVertices(
+            vbo.getSizeInBytes() / vbo.getStrideInBytes()
+          );
+          primHelper.setTopology(publicAPI.getTopologyFromUsage(usage));
+          primHelper.build(model.renderEncoder, device);
+          primHelper.registerToDraw();
+        }
 
-        primHelper.setTextureViews(model.textureViews);
-        primHelper.setWebGPURenderer(model.WebGPURenderer);
-        primHelper.setNumberOfInstances(1);
-        const vbo = primHelper.getVertexInput().getBuffer('vertexBC');
-        primHelper.setNumberOfVertices(
-          vbo.getSizeInBytes() / vbo.getStrideInBytes()
-        );
-        primHelper.setTopology(publicAPI.getTopologyFromUsage(usage));
-        primHelper.build(model.renderEncoder, device);
-        primHelper.registerToDraw();
+        // also handle edge visibility if turned on
+        if (
+          edgeVisibility &&
+          rep === Representation.SURFACE &&
+          i === PrimitiveTypes.Triangles
+        ) {
+          const primHelper = model.primitives[PrimitiveTypes.TriangleEdges];
+          const usage = publicAPI.getUsage(rep, PrimitiveTypes.TriangleEdges);
+
+          publicAPI.buildVertexInput(
+            model.currentInput,
+            prims[PrimitiveTypes.Triangles],
+            PrimitiveTypes.TriangleEdges
+          );
+          primHelper.setPipelineHash(
+            publicAPI.computePipelineHash(
+              primHelper.getVertexInput(),
+              usage,
+              true
+            )
+          );
+
+          primHelper.setWebGPURenderer(model.WebGPURenderer);
+          primHelper.setNumberOfInstances(1);
+          const vbo = primHelper.getVertexInput().getBuffer('vertexBC');
+          primHelper.setNumberOfVertices(
+            vbo.getSizeInBytes() / vbo.getStrideInBytes()
+          );
+          primHelper.setTopology(publicAPI.getTopologyFromUsage(usage));
+          primHelper.build(model.renderEncoder, device);
+          primHelper.registerToDraw();
+        }
       }
     }
   };
@@ -708,6 +785,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('MCWCNormals', 'mat4x4<f32>');
   model.UBO.addEntry('AmbientColor', 'vec4<f32>');
   model.UBO.addEntry('DiffuseColor', 'vec4<f32>');
+  model.UBO.addEntry('EdgeColor', 'vec4<f32>');
   model.UBO.addEntry('AmbientIntensity', 'f32');
   model.UBO.addEntry('DiffuseIntensity', 'f32');
   model.UBO.addEntry('SpecularColor', 'vec4<f32>');
