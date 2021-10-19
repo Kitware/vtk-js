@@ -93,7 +93,7 @@ function vtkWebGPUTexture(publicAPI, model) {
         const inWidth = currWidthInBytes / inArray.BYTES_PER_ELEMENT;
 
         const outArray = macro.newTypedArray(
-          inArray.constructor.name,
+          halfFloat ? 'Uint16Array' : inArray.constructor.name,
           bufferWidth * model.height * model.depth
         );
 
