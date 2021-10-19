@@ -1,5 +1,5 @@
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
-import { Vector3 } from "../../../types";
+import { Vector2, Vector3 } from "../../../types";
 
 /**
  *
@@ -297,6 +297,42 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param stream 
 	 */
 	setViewStream(stream : any): boolean;
+
+	/**
+	 * 
+	 * @param size 
+	 */
+	 setSize(size : Vector2): void;
+
+	/**
+	 * 
+	 * @param x 
+	 * @param y 
+	 */
+	 setSize(x : number, y : number): void;
+
+	/**
+	 * 
+	 */
+	 getSize(): Vector2;
+
+	/**
+	 * 
+	 * @param size 
+	 */
+	 setVrResolution(size : Vector2): void;
+
+	/**
+	 * 
+	 * @param x 
+	 * @param y 
+	 */
+	 setVrResolution(x : number, y : number): void;
+
+	/**
+	 * 
+	 */
+	 getVrResolution(): Vector2;
 }
 
 /**
