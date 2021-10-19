@@ -1,9 +1,9 @@
 import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
@@ -14,9 +14,9 @@ import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
 import baseline from './testMaximumIntensityProjection.png';
 
-test.onlyIfWebGL('Test Maximum Intensity Projection Volume Rendering', (t) => {
+test('Test Maximum Intensity Projection Volume Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkOpenGLVolumeMapper MIP');
+  t.ok('rendering', 'vtkVolumeMapper MIP');
   // testUtils.keepDOM();
 
   // Create some control UI
@@ -63,8 +63,8 @@ test.onlyIfWebGL('Test Maximum Intensity Projection Volume Rendering', (t) => {
 
   mapper.setInputConnection(reader.getOutputPort());
 
-  // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  // now create something to view it
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
@@ -85,7 +85,7 @@ test.onlyIfWebGL('Test Maximum Intensity Projection Volume Rendering', (t) => {
         testUtils.compareImages(
           image,
           [baseline],
-          'Rendering/OpenGL/VolumeMapper/testMaximumIntensityProjection',
+          'Rendering/Core/VolumeMapper/testMaximumIntensityProjection',
           t,
           1.5,
           gc.releaseResources

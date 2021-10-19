@@ -77,42 +77,45 @@ function vtkWebGPUTexture(publicAPI, model) {
       // bytesPerRow must be a multiple of 256 so we might need to rebuild
       // the data here before passing to the buffer. e.g. if it is unorm8x4 then
       // we need to have width be a multiple of 64
-      const currWidthInBytes = model.width * req.nativeArray.BYTES_PER_ELEMENT;
+      const inWidthInBytes =
+        (req.nativeArray.length / (model.height * model.depth)) *
+        req.nativeArray.BYTES_PER_ELEMENT;
 
       // is this a half float texture?
       const halfFloat =
         tDetails.elementSize === 2 && tDetails.sampleType === 'float';
 
       // if we need to copy the data
-      if (halfFloat || currWidthInBytes % 256) {
+      if (halfFloat || inWidthInBytes % 256) {
         const inArray = req.nativeArray;
-        const bufferWidthInBytes =
-          256 * Math.floor((currWidthInBytes + 255) / 256);
+        const inWidth = inWidthInBytes / inArray.BYTES_PER_ELEMENT;
 
-        const bufferWidth = bufferWidthInBytes / tDetails.elementSize;
-        const inWidth = currWidthInBytes / inArray.BYTES_PER_ELEMENT;
+        const outBytesPerElement = tDetails.elementSize;
+        const outWidthInBytes =
+          256 * Math.floor((inWidth * outBytesPerElement + 255) / 256);
+        const outWidth = outWidthInBytes / outBytesPerElement;
 
         const outArray = macro.newTypedArray(
           halfFloat ? 'Uint16Array' : inArray.constructor.name,
-          bufferWidth * model.height * model.depth
+          outWidth * model.height * model.depth
         );
 
         for (let v = 0; v < model.height * model.depth; v++) {
           if (halfFloat) {
             for (let i = 0; i < inWidth; i++) {
-              outArray[v * bufferWidth + i] = HalfFloat.toHalf(
+              outArray[v * outWidth + i] = HalfFloat.toHalf(
                 inArray[v * inWidth + i]
               );
             }
           } else {
             outArray.set(
               inArray.subarray(v * inWidth, (v + 1) * inWidth),
-              v * bufferWidth
+              v * outWidth
             );
           }
         }
         buffRequest.nativeArray = outArray;
-        bufferBytesPerRow = bufferWidthInBytes;
+        bufferBytesPerRow = outWidthInBytes;
       }
       const buff = model.device.getBufferManager().getBuffer(buffRequest);
       model.buffer = buff;
