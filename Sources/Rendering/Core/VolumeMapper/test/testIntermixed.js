@@ -1,9 +1,9 @@
 import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -17,9 +17,9 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import baseline1 from './testIntermixed.png';
 import baseline2 from './testIntermixed_2.png';
 
-test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
+test('Test Composite Volume Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkOpenGLVolumeMapper Intermixed');
+  t.ok('rendering', 'vtkVolumeMapper Intermixed');
   // testUtils.keepDOM();
 
   // Create some control UI
@@ -58,8 +58,8 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
 
   vmapper.setInputConnection(reader.getOutputPort());
 
-  // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  // now create something to view it
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
@@ -101,7 +101,7 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
         testUtils.compareImages(
           image,
           [baseline1, baseline2],
-          'Rendering/OpenGL/VolumeMapper/testComposite',
+          'Rendering/Core/VolumeMapper/testComposite',
           t,
           1.8,
           gc.releaseResources

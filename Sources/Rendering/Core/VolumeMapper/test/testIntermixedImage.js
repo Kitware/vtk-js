@@ -1,13 +1,13 @@
 import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkImageGridSource from 'vtk.js/Sources/Filters/Sources/ImageGridSource';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
@@ -21,9 +21,9 @@ import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeAc
 import baseline1 from './testIntermixedImage.png';
 // import baseline2 from './testIntermixedImage_1.png';
 
-test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
+test('Test Composite Volume Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkOpenGLVolumeMapper IntermixedImage');
+  t.ok('rendering', 'vtkVolumeMapper IntermixedImage');
   // testUtils.keepDOM();
 
   // Create some control UI
@@ -62,8 +62,8 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
 
   vmapper.setInputConnection(reader.getOutputPort());
 
-  // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  // now create something to view it
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
@@ -169,7 +169,7 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
         testUtils.compareImages(
           image,
           [baseline1],
-          'Rendering/OpenGL/VolumeMapper/testIntermixedImage',
+          'Rendering/Core/VolumeMapper/testIntermixedImage',
           t,
           1.8,
           gc.releaseResources
