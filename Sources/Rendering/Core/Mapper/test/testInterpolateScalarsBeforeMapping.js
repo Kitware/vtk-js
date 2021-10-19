@@ -1,7 +1,7 @@
 import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
@@ -12,9 +12,9 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import baseline from './testInterpolateScalarsBeforeMapping.png';
 
-test.onlyIfWebGL('Test Interpolate Scalars Before Mapping', (t) => {
+test('Test Interpolate Scalars Before Mapping', (t) => {
   const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkOpenGLPolyDataMapper InterpolateScalarsBeforeColors');
+  t.ok('rendering', 'vtkMapper InterpolateScalarsBeforeColors');
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -97,8 +97,8 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Mapping', (t) => {
   mapper.setInputData(pd);
   mapper.setInterpolateScalarsBeforeMapping(true);
 
-  // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  // now create something to view it
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
@@ -107,7 +107,7 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Mapping', (t) => {
     testUtils.compareImages(
       image,
       [baseline],
-      'Rendering/OpenGL/PolyDataMapper/testInterpolateScalarsBeforeMapping',
+      'Rendering/Core/Mapper/testInterpolateScalarsBeforeMapping',
       t,
       1.5,
       gc.releaseResources

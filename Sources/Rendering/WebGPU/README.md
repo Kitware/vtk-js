@@ -14,7 +14,7 @@ Chrome Canary when WebGPU is enabled. You have to set --enable-unsafe-webgpu
 there is a test target named test:webgpu that will specificly try to run
 tests using chrome canary.
 
-Note that as of April 2021 WebGPU is changing daily, so this code may
+Note that as of October 2021 WebGPU is changing daily, so this code may
 break daily as they change and interate on the API.
 
 Lots of capabilities are currently not implemented.
@@ -33,9 +33,11 @@ is needed.
 - update widgets to use the new async hardware selector API
 - add rgb texture support to volume renderer
 - add lighting to volume rendering
+- add line zbuffer offset to handle coincident
+- possibly change the zbuffer equation to be linear float30
 
 Waiting on fixes/dev in WebGPU spec
-- more cross platform testing and bug fixing
+- more cross platform testing and bug fixing, firefox and safari
 
 # Recently ToDone
 - image display (use 3d texture)

@@ -32,7 +32,7 @@ title: WebGPU Examples
   }
 </style>
 
-WebGPU is the upcoming high performance rendering API coming soon to browsers across all major platforms. vtk.js has preliminary support for WebGPU and you can explore some of its features in the examples below. Note that both WebGPU and our support for it are still under development so these example may break as the API changes. Most of these examples have been tested with Chrome Canary on Windows and MacOS.
+WebGPU is the upcoming high performance rendering API coming soon to browsers across all major platforms. vtk.js has preliminary support for WebGPU and you can explore some of its features in the examples below. Note that both WebGPU and our support for it are still under development so these examples may break as the API changes. Most of these examples have been tested with Chrome Canary on Windows and MacOS.
 
 <div class="gallery">
 
@@ -43,7 +43,9 @@ WebGPU is the upcoming high performance rendering API coming soon to browsers ac
 [![HttpSceneLoader Example][HttpSceneLoader]](../examples/HttpSceneLoader.html)
 [![CubeAxes Example][CubeAxes]](../examples/CubeAxes.html)
 [![OBJReader Example][OBJReader]](../examples/OBJReader.html)
-
+[![MultiSliceImageMapper Example][MultiSliceImageMapper]](../examples/MultiSliceImageMapper.html)
+[![ZipHttpReader Example][ZipHttpReader]](../examples/ZipHttpReader.html)
+[![GeometryViewer Example][GeometryViewer]](../examples/GeometryViewer.html?fileURL=https://data.kitware.com/api/v1/item/59de9de58d777f31ac641dc5/download)
 
 </div>
 
@@ -54,3 +56,6 @@ WebGPU is the upcoming high performance rendering API coming soon to browsers ac
 [CubeAxes]: ../docs/gallery/CubeAxes.jpg
 [OBJReader]: ../docs/gallery/OBJReader.jpg
 [HttpSceneLoader]: ../docs/gallery/HttpSceneLoader.jpg
+[MultiSliceImageMapper]: ../docs/gallery/MultiSliceImageMapper.jpg
+[GeometryViewer]: ../docs/gallery/GeometryViewer.jpg
+[ZipHttpReader]: ../docs/gallery/ZipHttpReader.jpg
