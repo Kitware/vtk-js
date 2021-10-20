@@ -12,11 +12,13 @@ import json from '@rollup/plugin-json';
 import nodePolyfills from 'rollup-plugin-polyfill-node';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import postcss from 'rollup-plugin-postcss';
-import replace from 'rollup-plugin-re';
 import { string } from 'rollup-plugin-string';
 import svgo from 'rollup-plugin-svgo';
 import webworkerLoader from 'rollup-plugin-web-worker-loader';
 import copy from 'rollup-plugin-copy';
+import autoExternal from 'rollup-plugin-auto-external';
+
+import packageJSON from './package.json';
 
 import { rewriteFilenames } from './Utilities/rollup/plugin-rewrite-filenames';
 
@@ -95,39 +97,9 @@ export default {
       return name.replace(/^Sources[/\\]/, '');
     },
   },
-  external: [/@babel\/runtime/],
+  external: Object.keys(packageJSON.dependencies).map((name) => new RegExp(`^${name}`)),
   plugins: [
-    // should be before commonjs
-    replace({
-      patterns: [
-        {
-          // match against jszip/lib/load.js
-          // Workaround until https://github.com/Stuk/jszip/pull/731 is merged
-          include: path.resolve(
-            __dirname,
-            'node_modules',
-            'jszip',
-            'lib',
-            'load.js'
-          ),
-          test: /'use strict';\nvar utils = require\('.\/utils'\);/m,
-          replace: "'use strict'",
-        },
-        {
-          // match against jszip/lib/compressedObject.js
-          // Workaround until https://github.com/Stuk/jszip/pull/731 is merged
-          include: path.resolve(
-            __dirname,
-            'node_modules',
-            'jszip',
-            'lib',
-            'compressedObject.js'
-          ),
-          test: /Crc32Probe'\);\nvar DataLengthProbe = require\('.\/stream\/DataLengthProbe'\);/m,
-          replace: "Crc32Probe');\n",
-        },
-      ],
-    }),
+    autoExternal(),
     alias({
       entries: [
         { find: 'vtk.js', replacement: path.resolve(__dirname) },

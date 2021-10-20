@@ -119,7 +119,7 @@ function writeChunk(b64Str, chunk, dstOffset, uint8) {
   return offset;
 }
 
-function toArrayBuffer(b64Str) {
+export function toArrayBuffer(b64Str) {
   const chunks = extractChunks(b64Str);
   const totalEncodedLength = chunks[chunks.length - 1].end + 1;
   const padding = (4 - (totalEncodedLength % 4)) % 4; // -length mod 4
@@ -138,6 +138,45 @@ function toArrayBuffer(b64Str) {
   return arrayBuffer;
 }
 
+function encodeTriplet(v1, v2, v3) {
+  const triplet = (v1 << 16) + (v2 << 8) + v3;
+  return (
+    BASE64_CODE[triplet >> 18] +
+    BASE64_CODE[(triplet >> 12) & 0x3f] +
+    BASE64_CODE[(triplet >> 6) & 0x3f] +
+    BASE64_CODE[triplet & 0x3f]
+  );
+}
+
+export function fromArrayBuffer(ab) {
+  const uint8 = new Uint8Array(ab);
+  const leftoverLength = ab.byteLength % 3;
+  const maxTripletIndex = ab.byteLength - leftoverLength;
+  const segments = Array(maxTripletIndex / 3);
+  for (let i = 0; i < segments.length; i++) {
+    const bufOffset = i * 3;
+    segments[i] = encodeTriplet(
+      uint8[bufOffset],
+      uint8[bufOffset + 1],
+      uint8[bufOffset + 2]
+    );
+  }
+  if (leftoverLength > 0) {
+    const segment = encodeTriplet(
+      uint8[maxTripletIndex],
+      uint8[maxTripletIndex + 1] || 0,
+      uint8[maxTripletIndex + 2] || 0
+    );
+    if (leftoverLength === 1) {
+      segments.push(`${segment.substr(0, 2)}==`);
+    } else if (leftoverLength === 2) {
+      segments.push(`${segment.substr(0, 3)}=`);
+    }
+  }
+  return segments.join('');
+}
+
 export default {
   toArrayBuffer,
+  fromArrayBuffer,
 };

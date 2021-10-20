@@ -4,7 +4,19 @@
 
 /**
  * Convert a Base64 string to an ArrayBuffer.
- * @param {string} b64Str 
+ * @param {string} b64Str
  * @return An ArrayBuffer object.
  */
-export default function toArrayBuffer(b64Str: string): ArrayBuffer;
+export function toArrayBuffer(b64Str: string): ArrayBuffer;
+
+/**
+ * Convert a Base64 string to an ArrayBuffer.
+ * @param {string} b64Str
+ * @return An ArrayBuffer object.
+ */
+export function fromArrayBuffer(ab: ArrayBuffer): string;
+
+export default {
+  toArrayBuffer,
+  fromArrayBuffer,
+};

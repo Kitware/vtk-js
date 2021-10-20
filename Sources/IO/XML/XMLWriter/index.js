@@ -1,8 +1,8 @@
 import { create } from 'xmlbuilder2';
-import { fromByteArray } from 'base64-js';
 import pako from 'pako';
 
 import macro from 'vtk.js/Sources/macros';
+import { fromArrayBuffer } from 'vtk.js/Sources/Common/Core/Base64';
 import {
   FormatTypes,
   TYPED_ARRAY,
@@ -75,7 +75,9 @@ function processDataArray(
         uint8.set(blocks[blockId], uint8Offset);
         uint8Offset += header[3 + blockId];
       }
-      return fromByteArray(headerUint8) + fromByteArray(uint8);
+      return (
+        fromArrayBuffer(headerUint8.buffer) + fromArrayBuffer(uint8.buffer)
+      );
     }
     throw new Error('Only vtkZLibDataCompressor is supported');
   }

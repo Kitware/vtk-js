@@ -5,17 +5,8 @@
  * expect proper Unicode or any other encoding.
  */
 function arrayBufferToString(arrayBuffer) {
-  if (typeof 'TextDecoder' !== 'undefined') {
-    const decoder = new TextDecoder('latin1');
-    return decoder.decode(arrayBuffer);
-  }
-  // fallback on platforms w/o TextDecoder
-  const byteArray = new Uint8Array(arrayBuffer);
-  const strArr = [];
-  for (let i = 0; i < byteArray.length; ++i) {
-    strArr[i] = String.fromCharCode(byteArray[i]);
-  }
-  return strArr.join('');
+  const decoder = new TextDecoder('latin1');
+  return decoder.decode(arrayBuffer);
 }
 
 /**
