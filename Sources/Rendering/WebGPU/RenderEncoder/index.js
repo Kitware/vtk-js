@@ -141,7 +141,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     ],
     depthStencilAttachment: {
       view: undefined,
-      depthLoadValue: 1.0,
+      depthLoadValue: 0.0,
       depthStoreOp: 'store',
       stencilLoadValue: 0,
       stencilStoreOp: 'store',
@@ -164,7 +164,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     primitive: { cullMode: 'none' },
     depthStencil: {
       depthWriteEnabled: true,
-      depthCompare: 'less-equal',
+      depthCompare: 'greater-equal',
       format: 'depth32float',
     },
     fragment: {
