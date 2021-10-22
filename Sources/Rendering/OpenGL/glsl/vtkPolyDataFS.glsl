@@ -77,9 +77,9 @@ void main()
   // Generate the normal if we are not passed in one
   //VTK::Normal::Impl
 
-  //VTK::Light::Impl
-
   //VTK::TCoord::Impl
+
+  //VTK::Light::Impl
 
   if (gl_FragData[0].a <= 0.0)
     {

@@ -782,9 +782,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
                 FSSource,
                 '//VTK::TCoord::Impl',
                 [
-                  'vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
-                  'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
-                  '  vec4(tcolor.r,tcolor.r,tcolor.r,1.0);',
+                  '  vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
+                  '  ambientColor = ambientColor*tcolor.r;',
+                  '  diffuseColor = diffuseColor*tcolor.r;',
                 ]
               ).result;
               break;
@@ -793,9 +793,10 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
                 FSSource,
                 '//VTK::TCoord::Impl',
                 [
-                  'vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
-                  'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
-                  '  vec4(tcolor.r,tcolor.r,tcolor.r,tcolor.g);',
+                  '  vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
+                  '  ambientColor = ambientColor*tcolor.r;',
+                  '  diffuseColor = diffuseColor*tcolor.r;',
+                  '  opacity = opacity * tcolor.g;',
                 ]
               ).result;
               break;
@@ -803,7 +804,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
               FSSource = vtkShaderProgram.substitute(
                 FSSource,
                 '//VTK::TCoord::Impl',
-                'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*texture2D(texture1, tcoordVCVSOutput.st);'
+                [
+                  '  vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
+                  '  ambientColor = ambientColor*tcolor.rgb;',
+                  '  diffuseColor = diffuseColor*tcolor.rgb;',
+                  '  opacity = opacity * tcolor.a;',
+                ]
               ).result;
           }
         }
@@ -832,9 +838,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
               FSSource,
               '//VTK::TCoord::Impl',
               [
-                'vec4 tcolor = textureCube(texture1, tcoordVCVSOutput);',
-                'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
-                '  vec4(tcolor.r,tcolor.r,tcolor.r,1.0);',
+                '  vec4 tcolor = textureCube(texture1, tcoordVCVSOutput);',
+                '  ambientColor = ambientColor*tcolor.r;',
+                '  diffuseColor = diffuseColor*tcolor.r;',
               ]
             ).result;
             break;
@@ -843,9 +849,10 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
               FSSource,
               '//VTK::TCoord::Impl',
               [
-                'vec4 tcolor = textureCube(texture1, tcoordVCVSOutput);',
-                'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
-                '  vec4(tcolor.r,tcolor.r,tcolor.r,tcolor.g);',
+                '  vec4 tcolor = textureCube(texture1, tcoordVCVSOutput);',
+                '  ambientColor = ambientColor*tcolor.r;',
+                '  diffuseColor = diffuseColor*tcolor.r;',
+                '  opacity = opacity * tcolor.g;',
               ]
             ).result;
             break;
@@ -853,7 +860,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
             FSSource = vtkShaderProgram.substitute(
               FSSource,
               '//VTK::TCoord::Impl',
-              'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*textureCube(texture1, tcoordVCVSOutput);'
+              [
+                '  vec4 tcolor = textureCube(texture1, tcoordVCVSOutput);',
+                '  ambientColor = ambientColor*tcolor.rgb;',
+                '  diffuseColor = diffuseColor*tcolor.rgb;',
+                '  opacity = opacity * tcolor.a;',
+              ]
             ).result;
         }
       }
