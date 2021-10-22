@@ -118,6 +118,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState = model.point2Handle;
 
       model.point2Handle.setVisible(true);
+      model.widgetState.getText().setVisible(true);
 
       publicAPI.updateShapeBounds();
 
@@ -131,12 +132,6 @@ export default function widgetBehavior(publicAPI, model) {
       model.point2Handle.setOrigin(model.point2);
 
       publicAPI.updateShapeBounds();
-
-      if (publicAPI.getResetAfterPointPlacement()) {
-        publicAPI.reset();
-      } else {
-        publicAPI.loseFocus();
-      }
     }
   };
 
@@ -526,7 +521,13 @@ export default function widgetBehavior(publicAPI, model) {
       } else {
         publicAPI.placePoint2(model.point2Handle.getOrigin());
         publicAPI.invokeInteractionEvent();
-        publicAPI.invokeEndInteractionEvent(true);
+        publicAPI.invokeEndInteractionEvent();
+
+        if (publicAPI.getResetAfterPointPlacement()) {
+          publicAPI.reset();
+        } else {
+          publicAPI.loseFocus();
+        }
       }
 
       return macro.EVENT_ABORT;
@@ -558,7 +559,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.apiSpecificRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
       model.interactor.cancelAnimation(publicAPI);
-      publicAPI.invokeEndInteractionEvent(true);
+      publicAPI.invokeEndInteractionEvent();
 
       return macro.EVENT_ABORT;
     }
@@ -578,8 +579,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
 
     if (model.point1) {
-      model.point2 = model.point2Handle.getOrigin();
-      publicAPI.updateShapeBounds();
+      publicAPI.placePoint2(model.point2Handle.getOrigin());
 
       if (publicAPI.isDraggingEnabled()) {
         const distance = vec3.squaredDistance(model.point1, model.point2);
@@ -587,7 +587,7 @@ export default function widgetBehavior(publicAPI, model) {
 
         if (distance > maxDistance || publicAPI.isDraggingForced()) {
           publicAPI.invokeInteractionEvent();
-          publicAPI.invokeEndInteractionEvent(true);
+          publicAPI.invokeEndInteractionEvent();
 
           if (publicAPI.getResetAfterPointPlacement()) {
             publicAPI.reset();
@@ -608,9 +608,9 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleKeyDown = ({ key }) => {
     if (key === 'Escape') {
       if (model.hasFocus) {
-        publicAPI.invokeEndInteractionEvent(false);
         publicAPI.reset();
         publicAPI.loseFocus();
+        publicAPI.invokeEndInteractionEvent();
       }
     } else {
       model.keysDown[key] = true;

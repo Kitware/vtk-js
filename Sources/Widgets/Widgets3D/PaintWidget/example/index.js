@@ -99,8 +99,11 @@ widgets.circleWidget = vtkEllipseWidget.newInstance({
     },
   },
 });
-widgets.splineWidget = vtkSplineWidget.newInstance();
+widgets.splineWidget = vtkSplineWidget.newInstance({
+  resetAfterPointPlacement: true,
+});
 widgets.polygonWidget = vtkSplineWidget.newInstance({
+  resetAfterPointPlacement: true,
   resolution: 1,
 });
 
@@ -243,18 +246,16 @@ reader
       widgets.circleWidget.getWidgetState().getText().setText(text);
     });
 
-    scene.splineHandle
-      .getWidgetState()
-      .getMoveHandle()
-      .setScale1(2 * Math.max(...image.data.getSpacing()));
+    scene.splineHandle.setHandleSizeInPixels(
+      2 * Math.max(...image.data.getSpacing())
+    );
     scene.splineHandle.setFreehandMinDistance(
       4 * Math.max(...image.data.getSpacing())
     );
 
-    scene.polygonHandle
-      .getWidgetState()
-      .getMoveHandle()
-      .setScale1(2 * Math.max(...image.data.getSpacing()));
+    scene.polygonHandle.setHandleSizeInPixels(
+      2 * Math.max(...image.data.getSpacing())
+    );
     scene.polygonHandle.setFreehandMinDistance(
       4 * Math.max(...image.data.getSpacing())
     );
@@ -453,9 +454,7 @@ scene.splineHandle.onEndInteractionEvent(() => {
   const points = scene.splineHandle.getPoints();
   painter.paintPolygon(points);
 
-  scene.splineHandle.reset();
   scene.splineHandle.updateRepresentationForRender();
-  scene.widgetManager.grabFocus(widgets.splineWidget);
 });
 initializeHandle(scene.splineHandle);
 
@@ -463,8 +462,6 @@ scene.polygonHandle.onEndInteractionEvent(() => {
   const points = scene.polygonHandle.getPoints();
   painter.paintPolygon(points);
 
-  scene.polygonHandle.reset();
   scene.polygonHandle.updateRepresentationForRender();
-  scene.widgetManager.grabFocus(widgets.polygonWidget);
 });
 initializeHandle(scene.polygonHandle);

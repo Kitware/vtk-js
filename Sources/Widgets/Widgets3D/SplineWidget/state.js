@@ -24,7 +24,6 @@ export default function generateState() {
       name: 'handle',
       initialValues: {
         scale1: 0.05,
-        visible: true,
       },
     })
     .build();
