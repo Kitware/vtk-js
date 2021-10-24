@@ -42,6 +42,7 @@ import './Filters/Texture/TextureMapToPlane/test/testTextureMapToPlane';
 import './Filters/Texture/TextureMapToSphere/test/testTextureMapToSphere';
 import './Imaging/Core/ImageReslice/test/testImageReslice';
 import './Interaction/Style/InteractorStyleImage/test/testInteractorStyleImage';
+import './IO/Misc/OBJReader/test/testOBJReader';
 import './IO/Misc/PDBReader/test/testMolecule';
 import './Proxy/Core/PiecewiseFunctionProxy/test/testPiecewiseFunctionProxy';
 import './Rendering/Core/AbstractMapper/test/testAbstractMapper';
