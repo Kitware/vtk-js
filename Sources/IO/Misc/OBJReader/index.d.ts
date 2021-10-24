@@ -10,10 +10,10 @@ interface IOBJReaderOptions {
 /**
  * 
  */
-export interface IElevationReaderInitialValues {
+export interface IOBJReaderInitialValues {
 	numberOfOutputs?: number;
 	requestCount?: number;
-	splitMode?: null | string;
+	splitMode?: string;
 }
 
 type vtkOBJReaderBase = vtkObject & Omit<vtkAlgorithm,
@@ -74,6 +74,7 @@ export interface vtkOBJReader extends vtkOBJReaderBase {
 	 * @param {String} content The content to parse. 
 	 */
 	parseAsText(content: string): void;
+
 	/**
 	 *
 	 * @param inData 
@@ -89,9 +90,9 @@ export interface vtkOBJReader extends vtkOBJReaderBase {
 
 	/**
 	 * 
-	 * @param {Null | String} splitMode 
+	 * @param {String} splitMode 
 	 */
-	setSplitMode(splitMode: null | string): boolean;
+	setSplitMode(splitMode: string): boolean;
 
 	/**
 	 * Set the url of the object to load.
@@ -106,15 +107,15 @@ export interface vtkOBJReader extends vtkOBJReaderBase {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param {IElevationReaderInitialValues} [initialValues] (default: {})
+ * @param {IOBJReaderInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IElevationReaderInitialValues): void;
+export function extend(publicAPI: object, model: object, initialValues?: IOBJReaderInitialValues): void;
 
 /**
  * Method used to create a new instance of vtkOBJReader
- * @param {IElevationReaderInitialValues} [initialValues] for pre-setting some of its content
+ * @param {IOBJReaderInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: IElevationReaderInitialValues): vtkOBJReader;
+export function newInstance(initialValues?: IOBJReaderInitialValues): vtkOBJReader;
 
 
 /**
