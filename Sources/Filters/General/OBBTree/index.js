@@ -1,16 +1,18 @@
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macros';
 
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkOBBNode from 'vtk.js/Sources/Filters/General/OBBTree/OBBNode';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 
 import {
   getCellTriangles,
-  Float32Concat,
+  pushArray,
   // eslint-disable-next-line import/named
 } from 'vtk.js/Sources/Filters/General/OBBTree/helper';
 
@@ -363,138 +365,57 @@ function vtkOBBTree(publicAPI, model) {
 
   function generatePolygons(obbNode, level, repLevel, points, cells) {
     if (level === repLevel || (repLevel < 0 && obbNode.getKids())) {
-      let pointsData = points.getData();
       let nbPoints = points.getNumberOfPoints();
-      let cellsData = cells.getData();
-      const x = new Float32Array(3);
-      const cubeIds = new Array(8);
-      const ptIds = new Float32Array(4);
+      const newPoints = [];
+      const newCells = [];
+      const cubeIds = [];
 
-      x[0] = obbNode.getCorner()[0];
-      x[1] = obbNode.getCorner()[1];
-      x[2] = obbNode.getCorner()[2];
-      pointsData = Float32Concat(pointsData, x);
+      newPoints.push(...obbNode.getCorner());
       cubeIds[0] = nbPoints++;
 
-      x[0] = obbNode.getCorner()[0] + obbNode.getAxes()[0][0];
-      x[1] = obbNode.getCorner()[1] + obbNode.getAxes()[0][1];
-      x[2] = obbNode.getCorner()[2] + obbNode.getAxes()[0][2];
-      pointsData = Float32Concat(pointsData, x);
+      const x = [];
+      newPoints.push(
+        ...vtkMath.add(obbNode.getCorner(), obbNode.getAxis(0), x)
+      );
       cubeIds[1] = nbPoints++;
 
-      x[0] = obbNode.getCorner()[0] + obbNode.getAxes()[1][0];
-      x[1] = obbNode.getCorner()[1] + obbNode.getAxes()[1][1];
-      x[2] = obbNode.getCorner()[2] + obbNode.getAxes()[1][2];
-      pointsData = Float32Concat(pointsData, x);
+      const y = [];
+      newPoints.push(
+        ...vtkMath.add(obbNode.getCorner(), obbNode.getAxis(1), y)
+      );
       cubeIds[2] = nbPoints++;
 
-      x[0] =
-        obbNode.getCorner()[0] +
-        obbNode.getAxes()[0][0] +
-        obbNode.getAxes()[1][0];
-      x[1] =
-        obbNode.getCorner()[1] +
-        obbNode.getAxes()[0][1] +
-        obbNode.getAxes()[1][1];
-      x[2] =
-        obbNode.getCorner()[2] +
-        obbNode.getAxes()[0][2] +
-        obbNode.getAxes()[1][2];
-      pointsData = Float32Concat(pointsData, x);
+      const xy = [];
+      newPoints.push(...vtkMath.add(x, obbNode.getAxis(1), xy));
       cubeIds[3] = nbPoints++;
 
-      x[0] = obbNode.getCorner()[0] + obbNode.getAxes()[2][0];
-      x[1] = obbNode.getCorner()[1] + obbNode.getAxes()[2][1];
-      x[2] = obbNode.getCorner()[2] + obbNode.getAxes()[2][2];
-      pointsData = Float32Concat(pointsData, x);
+      const z = [];
+      newPoints.push(
+        ...vtkMath.add(obbNode.getCorner(), obbNode.getAxis(2), z)
+      );
       cubeIds[4] = nbPoints++;
 
-      x[0] =
-        obbNode.getCorner()[0] +
-        obbNode.getAxes()[0][0] +
-        obbNode.getAxes()[2][0];
-      x[1] =
-        obbNode.getCorner()[1] +
-        obbNode.getAxes()[0][1] +
-        obbNode.getAxes()[2][1];
-      x[2] =
-        obbNode.getCorner()[2] +
-        obbNode.getAxes()[0][2] +
-        obbNode.getAxes()[2][2];
-      pointsData = Float32Concat(pointsData, x);
+      const xz = [];
+      newPoints.push(...vtkMath.add(x, obbNode.getAxis(2), xz));
       cubeIds[5] = nbPoints++;
 
-      x[0] =
-        obbNode.getCorner()[0] +
-        obbNode.getAxes()[1][0] +
-        obbNode.getAxes()[2][0];
-      x[1] =
-        obbNode.getCorner()[1] +
-        obbNode.getAxes()[1][1] +
-        obbNode.getAxes()[2][1];
-      x[2] =
-        obbNode.getCorner()[2] +
-        obbNode.getAxes()[1][2] +
-        obbNode.getAxes()[2][2];
-      pointsData = Float32Concat(pointsData, x);
+      const yz = [];
+      newPoints.push(...vtkMath.add(y, obbNode.getAxis(2), yz));
       cubeIds[6] = nbPoints++;
 
-      x[0] =
-        obbNode.getCorner()[0] +
-        obbNode.getAxes()[0][0] +
-        obbNode.getAxes()[1][0] +
-        obbNode.getAxes()[2][0];
-      x[1] =
-        obbNode.getCorner()[1] +
-        obbNode.getAxes()[0][1] +
-        obbNode.getAxes()[1][1] +
-        obbNode.getAxes()[2][1];
-      x[2] =
-        obbNode.getCorner()[2] +
-        obbNode.getAxes()[0][2] +
-        obbNode.getAxes()[1][2] +
-        obbNode.getAxes()[2][2];
-      pointsData = Float32Concat(pointsData, x);
+      const xyz = [];
+      newPoints.push(...vtkMath.add(xy, obbNode.getAxis(2), xyz));
       cubeIds[7] = nbPoints++;
 
-      ptIds[0] = cubeIds[0];
-      ptIds[1] = cubeIds[2];
-      ptIds[2] = cubeIds[3];
-      ptIds[3] = cubeIds[1];
-      cellsData = Float32Concat(cellsData, [4, ...cubeIds]);
+      newCells.push(4, cubeIds[0], cubeIds[2], cubeIds[3], cubeIds[1]);
+      newCells.push(4, cubeIds[0], cubeIds[1], cubeIds[5], cubeIds[4]);
+      newCells.push(4, cubeIds[0], cubeIds[4], cubeIds[6], cubeIds[2]);
+      newCells.push(4, cubeIds[1], cubeIds[3], cubeIds[7], cubeIds[5]);
+      newCells.push(4, cubeIds[4], cubeIds[5], cubeIds[7], cubeIds[6]);
+      newCells.push(4, cubeIds[2], cubeIds[6], cubeIds[7], cubeIds[3]);
 
-      ptIds[0] = cubeIds[0];
-      ptIds[1] = cubeIds[1];
-      ptIds[2] = cubeIds[5];
-      ptIds[3] = cubeIds[4];
-      cellsData = Float32Concat(cellsData, [4, ...cubeIds]);
-
-      ptIds[0] = cubeIds[0];
-      ptIds[1] = cubeIds[4];
-      ptIds[2] = cubeIds[6];
-      ptIds[3] = cubeIds[2];
-      cellsData = Float32Concat(cellsData, [4, ...cubeIds]);
-
-      ptIds[0] = cubeIds[1];
-      ptIds[1] = cubeIds[3];
-      ptIds[2] = cubeIds[7];
-      ptIds[3] = cubeIds[5];
-      cellsData = Float32Concat(cellsData, [4, ...cubeIds]);
-
-      ptIds[0] = cubeIds[4];
-      ptIds[1] = cubeIds[5];
-      ptIds[2] = cubeIds[7];
-      ptIds[3] = cubeIds[6];
-      cellsData = Float32Concat(cellsData, [4, ...cubeIds]);
-
-      ptIds[0] = cubeIds[2];
-      ptIds[1] = cubeIds[6];
-      ptIds[2] = cubeIds[7];
-      ptIds[3] = cubeIds[3];
-      cellsData = Float32Concat(cellsData, [4, ...cubeIds]);
-
-      points.setData(pointsData);
-      cells.setData(cellsData);
+      points.setData(pushArray(points.getData(), newPoints));
+      cells.setData(pushArray(cells.getData(), newCells));
     } else if ((level < repLevel || repLevel < 0) && obbNode.getKids()) {
       generatePolygons(
         obbNode.getKids()[0],
@@ -510,31 +431,6 @@ function vtkOBBTree(publicAPI, model) {
         points,
         cells
       );
-    }
-  }
-
-  /**
-   * Copy a vtkOBBNode into an other one
-   * @param {vtkOBBNode} nodeSource
-   * @param {vtkOBBNode} nodeTarget
-   */
-  function copyOBBNode(nodeSource, nodeTarget) {
-    nodeTarget.setCorner(nodeSource.getCorner());
-    const axes = nodeSource.getAxes();
-    const newAxes = [[...axes[0]], [...axes[1]], [...axes[2]]];
-    nodeTarget.setAxes(newAxes);
-    nodeTarget.setCells([...nodeSource.getCells()]);
-
-    if (nodeSource.getKids()) {
-      const kids0 = vtkOBBNode.newInstance();
-      kids0.setParent(nodeTarget);
-      const kids1 = vtkOBBNode.newInstance();
-      kids1.setParent(nodeTarget);
-
-      copyOBBNode(nodeSource.getKids()[0], kids0);
-      copyOBBNode(nodeSource.getKids()[1], kids1);
-
-      nodeTarget.setKids([kids0, kids1]);
     }
   }
 
@@ -562,9 +458,9 @@ function vtkOBBTree(publicAPI, model) {
       const node = obbStack[depth];
 
       const corner = node.getCorner();
-      const max = node.getAxes()[0];
-      const mid = node.getAxes()[1];
-      const min = node.getAxes()[2];
+      const max = node.getAxis(0);
+      const mid = node.getAxis(1);
+      const min = node.getAxis(2);
 
       transform.apply(corner);
       transformVector.apply(max);
@@ -603,7 +499,7 @@ function vtkOBBTree(publicAPI, model) {
     const root = tree.getTree();
     if (root) {
       model.tree = vtkOBBNode.newInstance();
-      copyOBBNode(root, model.tree);
+      model.tree.deepCopy(root);
     }
   };
 
@@ -671,24 +567,24 @@ function vtkOBBTree(publicAPI, model) {
       ]);
       // Clean this up when the bug input MultiplyVectors is fixed!
       for (let ii = 0; ii < 3; ii++) {
-        pB.getAxes()[0][ii] = nodeB.getCorner()[ii] + nodeB.getAxes()[0][ii];
-        pB.getAxes()[1][ii] = nodeB.getCorner()[ii] + nodeB.getAxes()[1][ii];
-        pB.getAxes()[2][ii] = nodeB.getCorner()[ii] + nodeB.getAxes()[2][ii];
+        pB.getAxis(0)[ii] = nodeB.getCorner()[ii] + nodeB.getAxis(0)[ii];
+        pB.getAxis(1)[ii] = nodeB.getCorner()[ii] + nodeB.getAxis(1)[ii];
+        pB.getAxis(2)[ii] = nodeB.getCorner()[ii] + nodeB.getAxis(2)[ii];
       }
       for (let ii = 0; ii < 3; ii++) {
-        input[0] = pB.getAxes()[ii][0];
-        input[1] = pB.getAxes()[ii][1];
-        input[2] = pB.getAxes()[ii][2];
+        input[0] = pB.getAxis(ii)[0];
+        input[1] = pB.getAxis(ii)[1];
+        input[2] = pB.getAxis(ii)[2];
         input[3] = 1.0;
         vec4.transformMat4(output, input, XformBtoA);
-        pB.getAxes()[ii][0] = output[0] / output[3];
-        pB.getAxes()[ii][1] = output[1] / output[3];
-        pB.getAxes()[ii][2] = output[2] / output[3];
+        pB.getAxis(ii)[0] = output[0] / output[3];
+        pB.getAxis(ii)[1] = output[1] / output[3];
+        pB.getAxis(ii)[2] = output[2] / output[3];
       }
       for (let ii = 0; ii < 3; ii++) {
-        pB.getAxes()[0][ii] = pB.getAxes()[0][ii] - pB.getCorner()[ii];
-        pB.getAxes()[1][ii] = pB.getAxes()[1][ii] - pB.getCorner()[ii];
-        pB.getAxes()[2][ii] = pB.getAxes()[2][ii] - pB.getCorner()[ii];
+        pB.getAxis(0)[ii] = pB.getAxis(0)[ii] - pB.getCorner()[ii];
+        pB.getAxis(1)[ii] = pB.getAxis(1)[ii] - pB.getCorner()[ii];
+        pB.getAxis(2)[ii] = pB.getAxis(2)[ii] - pB.getCorner()[ii];
       }
     } else {
       pB = nodeB;
@@ -699,10 +595,10 @@ function vtkOBBTree(publicAPI, model) {
     for (let ii = 0; ii < 3; ii++) {
       centerA[ii] =
         pA.getCorner()[ii] +
-        0.5 * (pA.getAxes()[0][ii] + pA.getAxes()[1][ii] + pA.getAxes()[2][ii]);
+        0.5 * (pA.getAxis(0)[ii] + pA.getAxis(1)[ii] + pA.getAxis(2)[ii]);
       centerB[ii] =
         pB.getCorner()[ii] +
-        0.5 * (pB.getAxes()[0][ii] + pB.getAxes()[1][ii] + pB.getAxes()[2][ii]);
+        0.5 * (pB.getAxis(0)[ii] + pB.getAxis(1)[ii] + pB.getAxis(2)[ii]);
       AtoB[ii] = centerB[ii] - centerA[ii];
     }
 
@@ -715,7 +611,7 @@ function vtkOBBTree(publicAPI, model) {
     let dotB = 0;
     for (let ii = 0; ii < 3; ii++) {
       // compute A range
-      dotA = vtkMath.dot(pA.getAxes()[ii], AtoB);
+      dotA = vtkMath.dot(pA.getAxis(ii), AtoB);
       if (dotA > 0) {
         rangeAmax += dotA;
       } else {
@@ -723,7 +619,7 @@ function vtkOBBTree(publicAPI, model) {
       }
 
       // compute B range
-      dotB = vtkMath.dot(pB.getAxes()[ii], AtoB);
+      dotB = vtkMath.dot(pB.getAxis(ii), AtoB);
       if (dotB > 0) {
         rangeBmax += dotB;
       } else {
@@ -736,18 +632,18 @@ function vtkOBBTree(publicAPI, model) {
 
     // now check for a separation plane parallel to the faces of B
     for (let ii = 0; ii < 3; ii++) {
-      // plane is normal to pB.getAxes()[ii]
+      // plane is normal to pB.getAxis(ii)
       // computing B range is easy...
-      rangeBmin = vtkMath.dot(pB.getCorner(), pB.getAxes()[ii]);
+      rangeBmin = vtkMath.dot(pB.getCorner(), pB.getAxis(ii));
       rangeBmax = rangeBmin;
-      rangeBmax += vtkMath.dot(pB.getAxes()[ii], pB.getAxes()[ii]);
+      rangeBmax += vtkMath.dot(pB.getAxis(ii), pB.getAxis(ii));
 
       // compute A range...
-      rangeAmin = vtkMath.dot(pA.getCorner(), pB.getAxes()[ii]);
+      rangeAmin = vtkMath.dot(pA.getCorner(), pB.getAxis(ii));
       rangeAmax = rangeAmin;
       for (let jj = 0; jj < 3; jj++) {
         // (note: we are saving all 9 dotproducts for future use)
-        dotA = vtkMath.dot(pB.getAxes()[ii], pA.getAxes()[jj]);
+        dotA = vtkMath.dot(pB.getAxis(ii), pA.getAxis(jj));
         dotAB[ii][jj] = dotA;
         if (dotA > 0) {
           rangeAmax += dotA;
@@ -762,14 +658,14 @@ function vtkOBBTree(publicAPI, model) {
 
     // now check for a separation plane parallel to the faces of A
     for (let ii = 0; ii < 3; ii++) {
-      // plane is normal to pA.getAxes()[ii]
+      // plane is normal to pA.getAxis(ii)
       // computing A range is easy...
-      rangeAmin = vtkMath.dot(pA.getCorner(), pA.getAxes()[ii]);
+      rangeAmin = vtkMath.dot(pA.getCorner(), pA.getAxis(ii));
       rangeAmax = rangeAmin;
-      rangeAmax += vtkMath.dot(pA.getAxes()[ii], pA.getAxes()[ii]);
+      rangeAmax += vtkMath.dot(pA.getAxis(ii), pA.getAxis(ii));
 
       // compute B range...
-      rangeBmin = vtkMath.dot(pB.getCorner(), pA.getAxes()[ii]);
+      rangeBmin = vtkMath.dot(pB.getCorner(), pA.getAxis(ii));
       rangeBmax = rangeBmin;
       for (let jj = 0; jj < 3; jj++) {
         // (note: we are using the 9 dotproducts computed earlier)
@@ -789,15 +685,15 @@ function vtkOBBTree(publicAPI, model) {
     // to one edge from A and one edge from B.
     for (let ii = 0; ii < 3; ii++) {
       for (let jj = 0; jj < 3; jj++) {
-        // the plane is normal to pA.getAxes()[ii] X pB.getAxes()[jj]
-        vtkMath.cross(pA.getAxes()[ii], pB.getAxes()[jj], AtoB);
+        // the plane is normal to pA.getAxis(ii) X pB.getAxis(jj)
+        vtkMath.cross(pA.getAxis(ii), pB.getAxis(jj), AtoB);
         rangeAmin = vtkMath.dot(pA.getCorner(), AtoB);
         rangeAmax = rangeAmin;
         rangeBmin = vtkMath.dot(pB.getCorner(), AtoB);
         rangeBmax = rangeBmin;
         for (let kk = 0; kk < 3; kk++) {
           // compute A range
-          dotA = vtkMath.dot(pA.getAxes()[kk], AtoB);
+          dotA = vtkMath.dot(pA.getAxis(kk), AtoB);
           if (dotA > 0) {
             rangeAmax += dotA;
           } else {
@@ -805,7 +701,7 @@ function vtkOBBTree(publicAPI, model) {
           }
 
           // compute B range
-          dotB = vtkMath.dot(pB.getAxes()[kk], AtoB);
+          dotB = vtkMath.dot(pB.getAxis(kk), AtoB);
           if (dotB > 0) {
             rangeBmax += dotB;
           } else {
@@ -828,12 +724,15 @@ function vtkOBBTree(publicAPI, model) {
    * For each intersecting leaf node pair, call callback.
    * OBBTreeB is optionally transformed by XformBtoA before testing
    * @param {vtkOBBTree} obbTreeB
-   * @param {mat4} XformBtoA
-   * @param {function} callback Compared function that takes in argument:
+   * @param {mat4|null|undefined} XformBtoA
+   * @param {function|null|undefined} callback Compared function that takes in argument:
    * nodeA (vtkOBBNode), nodeB (vtkOBBNode), XForm (mat4), arg
-   * @param {*} dataArg
    */
-  publicAPI.intersectWithOBBTree = (obbTreeB, XformBtoA, callback, dataArg) => {
+  publicAPI.intersectWithOBBTree = (
+    obbTreeB,
+    XformBtoA,
+    onIntersect = () => -1
+  ) => {
     let maxDepth = model.level;
     let minDepth = obbTreeB.getLevel();
     if (minDepth > maxDepth) {
@@ -847,7 +746,8 @@ function vtkOBBTree(publicAPI, model) {
     OBBStackA[0] = model.tree;
     OBBStackB[0] = obbTreeB.getTree();
     let depth = 1;
-    const returnValue = 0;
+    let count = 0;
+    let returnValue = 0;
     // simulate recursion without overhead of real recursion.
     while (depth > 0 && returnValue > -1) {
       depth--;
@@ -857,14 +757,16 @@ function vtkOBBTree(publicAPI, model) {
         // Collision
         if (!nodeA.getKids()) {
           if (!nodeB.getKids()) {
-            return true;
+            returnValue = onIntersect(nodeA, nodeB, XformBtoA);
+            count += Math.abs(returnValue);
+          } else {
+            // A is a leaf, but B goes deeper.
+            OBBStackA[depth] = nodeA;
+            OBBStackB[depth] = nodeB.getKids()[0];
+            OBBStackA[depth + 1] = nodeA;
+            OBBStackB[depth + 1] = nodeB.getKids()[1];
+            depth += 2;
           }
-          // A is a leaf, but B goes deeper.
-          OBBStackA[depth] = nodeA;
-          OBBStackB[depth] = nodeB.getKids()[0];
-          OBBStackA[depth + 1] = nodeA;
-          OBBStackB[depth + 1] = nodeB.getKids()[1];
-          depth += 2;
         } else if (!nodeB.getKids()) {
           // B is a leaf, but A goes deeper.
           OBBStackB[depth] = nodeB;
@@ -887,7 +789,403 @@ function vtkOBBTree(publicAPI, model) {
       }
     }
 
-    return false;
+    return count;
+  };
+
+  publicAPI.triangleIntersectsNode = (nodeA, p0, p1, p2, XformBtoA) => {
+    const eps = model.tolerance;
+    const pA = nodeA;
+    const pB = [[...p0], [...p1], [...p2]];
+    if (XformBtoA) {
+      // Here we assume that XformBtoA is an orthogonal matrix
+      const input = [0, 0, 0, 1];
+      const output = [];
+      for (let ii = 0; ii < 3; ii++) {
+        input[0] = pB[ii][0];
+        input[1] = pB[ii][1];
+        input[2] = pB[ii][2];
+        vec4.transformMat4(output, input, XformBtoA);
+        pB[ii][0] = output[0] / output[3];
+        pB[ii][1] = output[1] / output[3];
+        pB[ii][2] = output[2] / output[3];
+      }
+    }
+
+    // now check for a separation plane parallel to the triangle
+    const v0 = [];
+    const v1 = [];
+    for (let ii = 0; ii < 3; ii++) {
+      // plane is normal to the triangle
+      v0[ii] = pB[1][ii] - pB[0][ii];
+      v1[ii] = pB[2][ii] - pB[0][ii];
+    }
+    const xprod = vtkMath.cross(v0, v1, []);
+    // computing B range is easy...
+    let rangeBmax = vtkMath.dot(pB[0], xprod);
+    let rangeBmin = rangeBmax;
+    // compute A range...
+    let rangeAmax = vtkMath.dot(pA.getCorner(), xprod);
+    let rangeAmin = rangeAmax;
+    let dotA;
+    for (let jj = 0; jj < 3; jj++) {
+      dotA = vtkMath.dot(xprod, pA.getAxis(jj));
+      if (dotA > 0) {
+        rangeAmax += dotA;
+      } else {
+        rangeAmin += dotA;
+      }
+    }
+    if (rangeAmax + eps < rangeBmin || rangeBmax + eps < rangeAmin) {
+      return 0; // A and B are Disjoint by the 1st test.
+    }
+
+    // now check for a separation plane parallel to the faces of A
+    for (let ii = 0; ii < 3; ii++) {
+      // plane is normal to pA->Axes[ii]
+      // computing A range is easy...
+      rangeAmax = vtkMath.dot(pA.getCorner(), pA.getAxis(ii));
+      rangeAmin = rangeAmax;
+      rangeAmax += vtkMath.dot(pA.getAxis(ii), pA.getAxis(ii));
+
+      // compute B range...
+      rangeBmax = vtkMath.dot(pB[0], pA.getAxis(ii));
+      rangeBmin = rangeBmax;
+      let dotB = vtkMath.dot(pB[1], pA.getAxis(ii));
+      if (dotB > rangeBmax) {
+        rangeBmax = dotB;
+      } else {
+        rangeBmin = dotB;
+      }
+
+      dotB = vtkMath.dot(pB[2], pA.getAxis(ii));
+      if (dotB > rangeBmax) {
+        rangeBmax = dotB;
+      } else if (dotB < rangeBmin) {
+        rangeBmin = dotB;
+      }
+
+      if (rangeAmax + eps < rangeBmin || rangeBmax + eps < rangeAmin) {
+        return 0; // A and B are Disjoint by the 2nd test.
+      }
+    }
+
+    // Bad luck: now we must look for a separation plane parallel
+    // to one edge from A and one edge from B.
+    const AtoB = [];
+    let dotB;
+    for (let ii = 0; ii < 3; ii++) {
+      for (let jj = 0; jj < 3; jj++) {
+        // the plane is normal to pA->Axes[ii] X (pB[jj+1]-pB[jj])
+        v0[0] = pB[(jj + 1) % 3][0] - pB[jj][0];
+        v0[1] = pB[(jj + 1) % 3][1] - pB[jj][1];
+        v0[2] = pB[(jj + 1) % 3][2] - pB[jj][2];
+        vtkMath.cross(pA.getAxis(ii), v0, AtoB);
+        rangeAmax = vtkMath.dot(pA.getCorner(), AtoB);
+        rangeAmin = rangeAmax;
+        rangeBmax = vtkMath.dot(pB[jj], AtoB);
+        rangeBmin = rangeBmax;
+        for (let kk = 0; kk < 3; kk++) {
+          // compute A range
+          dotA = vtkMath.dot(pA.getAxis(kk), AtoB);
+          if (dotA > 0) {
+            rangeAmax += dotA;
+          } else {
+            rangeAmin += dotA;
+          }
+        }
+        // compute B range
+        dotB = vtkMath.dot(pB[(jj + 2) % 3], AtoB);
+        if (dotB > rangeBmax) {
+          rangeBmax = dotB;
+        } else {
+          rangeBmin = dotB;
+        }
+
+        if (rangeAmax + eps < rangeBmin || rangeBmax + eps < rangeAmin) {
+          return 0; // A and B are Disjoint by the 3rd test.
+        }
+      }
+    }
+
+    // if we fall through to here, the OBB overlaps the triangle.
+    return 1;
+  };
+
+  /**
+   *
+   * @param {*} info must be an object with { obbTree1, intersectionLines }
+   * @param {*} node0
+   * @param {*} node1
+   * @param {*} transform
+   * @returns the number of intersection lines found
+   */
+  publicAPI.findTriangleIntersections = (info, node0, node1, transform) => {
+    // Set up local structures to hold Impl array information
+    // vtkOBBTree* obbTree1 = info->OBBTree1;
+    // vtkCellArray* intersectionLines = info->IntersectionLines;
+    // vtkIdTypeArray* intersectionSurfaceId = info->SurfaceId;
+    // vtkIdTypeArray* intersectionCellIds0 = info->CellIds[0];
+    // vtkIdTypeArray* intersectionCellIds1 = info->CellIds[1];
+    // vtkPointLocator* pointMerger = info->PointMerger;
+    // double tolerance = info->Tolerance;
+    const mesh0 = publicAPI.getDataset();
+    const mesh1 = info.obbTree1.getDataset();
+    const pointOffset = info.intersectionLines.getPoints().getNumberOfPoints();
+    const intersectionPoints = [];
+    const intersectionLines = [];
+
+    // The number of cells in OBBTree
+    const numCells0 = node0.getCells().length;
+
+    for (let id0 = 0; id0 < numCells0; id0++) {
+      const cellId0 = node0.getCells()[id0];
+      const type0 = mesh0.getCellType(cellId0);
+
+      // Make sure the cell is a triangle
+      if (type0 === CellType.VTK_TRIANGLE) {
+        const { cellPointIds: triPtIds0 } = mesh0.getCellPoints(cellId0);
+        const triPts0 = [[], [], []];
+        for (let id = 0; id < triPtIds0.length; id++) {
+          mesh0.getPoints().getPoint(triPtIds0[id], triPts0[id]);
+        }
+        if (
+          info.obbTree1.triangleIntersectsNode(
+            node1,
+            triPts0[0],
+            triPts0[1],
+            triPts0[2],
+            transform
+          )
+        ) {
+          const numCells1 = node1.getCells().length;
+          for (let id1 = 0; id1 < numCells1; id1++) {
+            const cellId1 = node1.getCells()[id1];
+            const type1 = mesh1.getCellType(cellId1);
+            if (type1 === CellType.VTK_TRIANGLE) {
+              // See if the two cells actually intersect. If they do,
+              // add an entry into the intersection maps and add an
+              // intersection line.
+              const { cellPointIds: triPtIds1 } = mesh1.getCellPoints(cellId1);
+              const triPts1 = [[], [], []];
+              for (let id = 0; id < triPtIds1.length; id++) {
+                mesh1.getPoints().getPoint(triPtIds1[id], triPts1[id]);
+              }
+
+              const {
+                intersect,
+                coplanar,
+                pt1: outpt0,
+                pt2: outpt1,
+                // surfaceId,
+              } = vtkTriangle.intersectWithTriangle(
+                ...triPts0,
+                ...triPts1,
+                model.tolerance
+              );
+
+              if (intersect && !coplanar) {
+                const pointId = intersectionPoints.length / 3;
+                intersectionPoints.push(...outpt0, ...outpt1);
+                intersectionLines.push(
+                  2,
+                  pointOffset + pointId,
+                  pointOffset + pointId + 1
+                );
+              }
+
+              // If actual intersection, add point and cell to edge, line,
+              // and surface maps!
+              /*
+              if (coplanar) {
+                // Coplanar triangle intersection is not handled.
+                // This intersection will not be included in the output. TODO
+                // vtkDebugMacro(<<"Coplanar");
+                intersects = false;
+                continue;
+              }
+              if (intersects)
+              {
+                vtkIdType lineId = info.intersectionLines->GetNumberOfCells();
+  
+                vtkIdType ptId0, ptId1;
+                int unique[2];
+                unique[0] = pointMerger->InsertUniquePoint(outpt0, ptId0);
+                unique[1] = pointMerger->InsertUniquePoint(outpt1, ptId1);
+  
+                int addline = 1;
+                if (ptId0 == ptId1)
+                {
+                  addline = 0;
+                }
+  
+                if (ptId0 == ptId1 && surfaceid[0] != surfaceid[1])
+                {
+                  intersectionSurfaceId->InsertValue(ptId0, 3);
+                }
+                else
+                {
+                  if (unique[0])
+                  {
+                    intersectionSurfaceId->InsertValue(ptId0, surfaceid[0]);
+                  }
+                  else
+                  {
+                    if (intersectionSurfaceId->GetValue(ptId0) != 3)
+                    {
+                      intersectionSurfaceId->InsertValue(ptId0, surfaceid[0]);
+                    }
+                  }
+                  if (unique[1])
+                  {
+                    intersectionSurfaceId->InsertValue(ptId1, surfaceid[1]);
+                  }
+                  else
+                  {
+                    if (intersectionSurfaceId->GetValue(ptId1) != 3)
+                    {
+                      intersectionSurfaceId->InsertValue(ptId1, surfaceid[1]);
+                    }
+                  }
+                }
+  
+                info->IntersectionPtsMap[0]->insert(std::make_pair(ptId0, cellId0));
+                info->IntersectionPtsMap[1]->insert(std::make_pair(ptId0, cellId1));
+                info->IntersectionPtsMap[0]->insert(std::make_pair(ptId1, cellId0));
+                info->IntersectionPtsMap[1]->insert(std::make_pair(ptId1, cellId1));
+  
+                // Check to see if duplicate line. Line can only be a duplicate
+                // line if both points are not unique and they don't
+                // equal each other
+                if (!unique[0] && !unique[1] && ptId0 != ptId1)
+                {
+                  vtkSmartPointer<vtkPolyData> lineTest = vtkSmartPointer<vtkPolyData>::New();
+                  lineTest->SetPoints(pointMerger->GetPoints());
+                  lineTest->SetLines(intersectionLines);
+                  lineTest->BuildLinks();
+                  int newLine = info->CheckLine(lineTest, ptId0, ptId1);
+                  if (newLine == 0)
+                  {
+                    addline = 0;
+                  }
+                }
+                if (addline)
+                {
+                  // If the line is new and does not consist of two identical
+                  // points, add the line to the intersection and update
+                  // mapping information
+                  intersectionLines->InsertNextCell(2);
+                  intersectionLines->InsertCellPoint(ptId0);
+                  intersectionLines->InsertCellPoint(ptId1);
+  
+                  intersectionCellIds0->InsertNextValue(cellId0);
+                  intersectionCellIds1->InsertNextValue(cellId1);
+  
+                  info->PointCellIds[0]->InsertValue(ptId0, cellId0);
+                  info->PointCellIds[0]->InsertValue(ptId1, cellId0);
+                  info->PointCellIds[1]->InsertValue(ptId0, cellId1);
+                  info->PointCellIds[1]->InsertValue(ptId1, cellId1);
+  
+                  info->IntersectionMap[0]->insert(std::make_pair(cellId0, lineId));
+                  info->IntersectionMap[1]->insert(std::make_pair(cellId1, lineId));
+  
+                  // Check which edges of cellId0 and cellId1 outpt0 and
+                  // outpt1 are on, if any.
+                  int isOnEdge = 0;
+                  int m0p0 = 0, m0p1 = 0, m1p0 = 0, m1p1 = 0;
+                  for (vtkIdType edgeId = 0; edgeId < 3; edgeId++)
+                  {
+                    isOnEdge = info->AddToPointEdgeMap(
+                      0, ptId0, outpt0, mesh0, cellId0, edgeId, lineId, triPtIds0);
+                    if (isOnEdge != -1)
+                    {
+                      m0p0++;
+                    }
+                    isOnEdge = info->AddToPointEdgeMap(
+                      0, ptId1, outpt1, mesh0, cellId0, edgeId, lineId, triPtIds0);
+                    if (isOnEdge != -1)
+                    {
+                      m0p1++;
+                    }
+                    isOnEdge = info->AddToPointEdgeMap(
+                      1, ptId0, outpt0, mesh1, cellId1, edgeId, lineId, triPtIds1);
+                    if (isOnEdge != -1)
+                    {
+                      m1p0++;
+                    }
+                    isOnEdge = info->AddToPointEdgeMap(
+                      1, ptId1, outpt1, mesh1, cellId1, edgeId, lineId, triPtIds1);
+                    if (isOnEdge != -1)
+                    {
+                      m1p1++;
+                    }
+                  }
+                  // Special cases caught by tolerance and not from the Point
+                  // Merger
+                  if (m0p0 > 0 && m1p0 > 0)
+                  {
+                    intersectionSurfaceId->InsertValue(ptId0, 3);
+                  }
+                  if (m0p1 > 0 && m1p1 > 0)
+                  {
+                    intersectionSurfaceId->InsertValue(ptId1, 3);
+                  }
+                }
+                // Add information about origin surface to std::maps for
+                // checks later
+                if (intersectionSurfaceId->GetValue(ptId0) == 1)
+                {
+                  info->IntersectionPtsMap[0]->insert(std::make_pair(ptId0, cellId0));
+                }
+                else if (intersectionSurfaceId->GetValue(ptId0) == 2)
+                {
+                  info->IntersectionPtsMap[1]->insert(std::make_pair(ptId0, cellId1));
+                }
+                else
+                {
+                  info->IntersectionPtsMap[0]->insert(std::make_pair(ptId0, cellId0));
+                  info->IntersectionPtsMap[1]->insert(std::make_pair(ptId0, cellId1));
+                }
+                if (intersectionSurfaceId->GetValue(ptId1) == 1)
+                {
+                  info->IntersectionPtsMap[0]->insert(std::make_pair(ptId1, cellId0));
+                }
+                else if (intersectionSurfaceId->GetValue(ptId1) == 2)
+                {
+                  info->IntersectionPtsMap[1]->insert(std::make_pair(ptId1, cellId1));
+                }
+                else
+                {
+                  info->IntersectionPtsMap[0]->insert(std::make_pair(ptId1, cellId0));
+                  info->IntersectionPtsMap[1]->insert(std::make_pair(ptId1, cellId1));
+                }
+              }
+              */
+            }
+          }
+        }
+      }
+    }
+
+    if (intersectionPoints.length) {
+      const points = vtkPoints.newInstance();
+      points.setData(
+        pushArray(
+          info.intersectionLines.getPoints().getData(),
+          intersectionPoints
+        )
+      );
+      info.intersectionLines.setPoints(points);
+
+      const lines = vtkCellArray.newInstance();
+      lines.setData(
+        pushArray(
+          info.intersectionLines.getLines().getData(),
+          intersectionLines
+        )
+      );
+      info.intersectionLines.setLines(lines);
+    }
+    return intersectionLines.length / 3;
   };
 
   /**
@@ -938,9 +1236,6 @@ function vtkOBBTree(publicAPI, model) {
 
     const cellList = Array.from({ length: numCells }, (_, i) => i);
 
-    if (model.tree) {
-      model.tree = null;
-    }
     model.tree = vtkOBBNode.newInstance();
     model.level = 0;
 

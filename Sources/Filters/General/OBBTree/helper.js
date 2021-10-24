@@ -49,14 +49,14 @@ export function getCellTriangles(cellPtsIds, type, idx) {
 }
 
 /**
- * Method to concaten two Float32 array into a new one
- * @param {Float32Array} first
- * @param {Float32Array} second
- * @return {Float32Array}
+ * Concatenate second typed array to the first typed array.
+ * @param {TypedArray} first
+ * @param {TypedArray} second Must be of the same type as first
+ * @return {TypedArray}
  */
-export function Float32Concat(first, second) {
+export function pushArray(first, second) {
   const firstLength = first.length;
-  const result = new Float32Array(firstLength + second.length);
+  const result = new first.constructor(firstLength + second.length);
 
   result.set(first);
   result.set(second, firstLength);

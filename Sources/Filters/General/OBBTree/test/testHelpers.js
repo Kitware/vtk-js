@@ -1,7 +1,7 @@
 import test from 'tape-catch';
 
 import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
-import getCellTriangles from 'vtk.js/Sources/Filters/General/OBBTree/helper';
+import { getCellTriangles } from 'vtk.js/Sources/Filters/General/OBBTree/helper';
 
 test('Test getCellTriangles', (t) => {
   function compareObjects(comparedObject, expectedObject) {
@@ -10,10 +10,7 @@ test('Test getCellTriangles', (t) => {
     t.equal(comparedObject.ptId2, expectedObject.ptId2);
   }
 
-  const array = [];
-  for (let i = 0; i < 10; i++) {
-    array.push(i);
-  }
+  const array = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
   const objPyramid = getCellTriangles(array, CellType.VTK_PYRAMID, 2);
   compareObjects(objPyramid, { ptId0: -1, ptId1: -1, ptId2: -1 });

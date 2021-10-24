@@ -4,9 +4,11 @@ import vtkArrowSource from 'vtk.js/Sources/Filters/Sources/ArrowSource';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkOBBTree from 'vtk.js/Sources/Filters/General/OBBTree';
-import vtkMatrixBuilder from '../../../../Common/Core/MatrixBuilder';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkTriangleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter';
 
-const PRECISION = 4;
+const epsilon = 0.0001;
 
 test('Test OBB tree constructor', (t) => {
   const source = vtkArrowSource.newInstance();
@@ -25,10 +27,10 @@ test('Test OBB tree constructor', (t) => {
   const size = [0, 0, 0];
   const computedValues = [corner, max, mid, min, size];
   const expectedValues = [
-    { name: 'corner', value: [-0.325, -0.1, -0.0866025] },
-    { name: 'max', value: [1, -2.23691e-18, 1.98581e-19] },
-    { name: 'mid', value: [4.47383e-19, 0.2, -4.16085e-11] },
-    { name: 'min', value: [-3.43953e-20, 3.6034e-11, 0.173205] },
+    { name: 'corner', value: [0.675, -0.1366, 0] },
+    { name: 'max', value: [-1, 0, 0] },
+    { name: 'mid', value: [0, 0.1366, 0.1366] },
+    { name: 'min', value: [0, 0.1366, -0.1366] },
     { name: 'size', value: [0.0658262, 0.00126738, 0.00126738] },
   ];
 
@@ -36,11 +38,7 @@ test('Test OBB tree constructor', (t) => {
 
   computedValues.forEach((value, index) => {
     const expected = expectedValues[index];
-    t.deepEqual(
-      vtkMath.roundVector(value, [], PRECISION),
-      vtkMath.roundVector(expected.value, [], PRECISION),
-      expected.name
-    );
+    t.ok(vtkMath.areEquals(value, expected.value, epsilon), expected.name);
   });
 
   t.end();
@@ -73,11 +71,7 @@ test('Test OBB tree transform', (t) => {
   ];
   computedValues.forEach((value, index) => {
     const expected = expectedValues[index];
-    t.deepEqual(
-      vtkMath.roundVector(value, [], PRECISION),
-      vtkMath.roundVector(expected.value, [], PRECISION),
-      expected.name
-    );
+    t.ok(vtkMath.areEquals(value, expected.value, epsilon), expected.name);
   });
 
   const translation = [10, 0, 0];
@@ -97,11 +91,7 @@ test('Test OBB tree transform', (t) => {
 
   translatedComputedValues.forEach((value, index) => {
     const expected = expectedValues[index];
-    t.deepEqual(
-      vtkMath.roundVector(value, [], PRECISION),
-      vtkMath.roundVector(expected.value, [], PRECISION),
-      expected.name
-    );
+    t.ok(vtkMath.areEquals(value, expected.value, epsilon), expected.name);
   });
   t.end();
 });
@@ -150,5 +140,41 @@ test('Test OBB tree deep copy', (t) => {
     'Cells per node'
   );
 
+  t.end();
+});
+
+test('Test OBB tree collision', (t) => {
+  const source1 = vtkCubeSource.newInstance();
+  source1.setCenter(0.8, 0, 0);
+  const triangleFilter1 = vtkTriangleFilter.newInstance();
+  triangleFilter1.setInputConnection(source1.getOutputPort());
+  triangleFilter1.update();
+
+  const obbTree1 = vtkOBBTree.newInstance();
+  obbTree1.setDataset(triangleFilter1.getOutputData());
+  obbTree1.buildLocator();
+
+  const source2 = vtkCubeSource.newInstance();
+  source2.setCenter(1.0, 0, 0);
+  source2.update();
+  const triangleFilter2 = vtkTriangleFilter.newInstance();
+  triangleFilter2.setInputConnection(source2.getOutputPort());
+  triangleFilter2.update();
+
+  const obbTree2 = vtkOBBTree.newInstance();
+  obbTree2.setDataset(triangleFilter2.getOutputData());
+  obbTree2.buildLocator();
+
+  const intersection = {
+    obbTree1: obbTree2,
+    intersectionLines: vtkPolyData.newInstance(),
+  };
+  const intersect = obbTree1.intersectWithOBBTree(
+    obbTree2,
+    null,
+    obbTree1.findTriangleIntersections.bind(null, intersection)
+  );
+  t.equal(intersect, 40);
+  t.equal(intersection.intersectionLines.getLines().getNumberOfCells(), 40);
   t.end();
 });
