@@ -32,6 +32,195 @@ function computeNormal(v1, v2, v3, n) {
   }
 }
 
+function intersectWithTriangle(p1, q1, r1, p2, q2, r2, tolerance = 1e-6) {
+  let coplanar = false;
+  const pt1 = [];
+  const pt2 = [];
+  const surfaceId = [];
+
+  const n1 = [];
+  const n2 = [];
+
+  // Compute supporting plane normals.
+  computeNormal(p1, q1, r1, n1);
+  computeNormal(p2, q2, r2, n2);
+  const s1 = -vtkMath.dot(n1, p1);
+  const s2 = -vtkMath.dot(n2, p2);
+
+  // Compute signed distances of points p1, q1, r1 from supporting
+  // plane of second triangle.
+  const dist1 = [
+    vtkMath.dot(n2, p1) + s2,
+    vtkMath.dot(n2, q1) + s2,
+    vtkMath.dot(n2, r1) + s2,
+  ];
+
+  // If signs of all points are the same, all the points lie on the
+  // same side of the supporting plane, and we can exit early.
+  if (dist1[0] * dist1[1] > tolerance && dist1[0] * dist1[2] > tolerance) {
+    // vtkDebugMacro(<<"Same side supporting plane 1!");
+    return { intersect: false, coplanar, pt1, pt2, surfaceId };
+  }
+  // Do the same for p2, q2, r2 and supporting plane of first
+  // triangle.
+  const dist2 = [
+    vtkMath.dot(n1, p2) + s1,
+    vtkMath.dot(n1, q2) + s1,
+    vtkMath.dot(n1, r2) + s1,
+  ];
+
+  // If signs of all points are the same, all the points lie on the
+  // same side of the supporting plane, and we can exit early.
+  if (dist2[0] * dist2[1] > tolerance && dist2[0] * dist2[2] > tolerance) {
+    // vtkDebugMacro(<<"Same side supporting plane 2!");
+    return { intersect: false, coplanar, pt1, pt2, surfaceId };
+  }
+  // Check for coplanarity of the supporting planes.
+  if (
+    Math.abs(n1[0] - n2[0]) < 1e-9 &&
+    Math.abs(n1[1] - n2[1]) < 1e-9 &&
+    Math.abs(n1[2] - n2[2]) < 1e-9 &&
+    Math.abs(s1 - s2) < 1e-9
+  ) {
+    coplanar = true;
+    // vtkDebugMacro(<<"Coplanar!");
+    return { intersect: false, coplanar, pt1, pt2, surfaceId };
+  }
+
+  // There are more efficient ways to find the intersection line (if
+  // it exists), but this is clear enough.
+  const pts1 = [p1, q1, r1];
+  const pts2 = [p2, q2, r2];
+
+  // Find line of intersection (L = p + t*v) between two planes.
+  const n1n2 = vtkMath.dot(n1, n2);
+  const a = (s1 - s2 * n1n2) / (n1n2 * n1n2 - 1.0);
+  const b = (s2 - s1 * n1n2) / (n1n2 * n1n2 - 1.0);
+  const p = [
+    a * n1[0] + b * n2[0],
+    a * n1[1] + b * n2[1],
+    a * n1[2] + b * n2[2],
+  ];
+  const v = vtkMath.cross(n1, n2, []);
+  vtkMath.normalize(v);
+
+  let index1 = 0;
+  let index2 = 0;
+  const t1 = [];
+  const t2 = [];
+  let ts1 = 50;
+  let ts2 = 50;
+  for (let i = 0; i < 3; i++) {
+    const id1 = i;
+    const id2 = (i + 1) % 3;
+
+    // Find t coordinate on line of intersection between two planes.
+    const val1 = vtkPlane.intersectWithLine(pts1[id1], pts1[id2], p2, n2);
+    if (val1.intersection && val1.t > 0 - tolerance && val1.t < 1 + tolerance) {
+      if (val1.t < 1 + tolerance && val1.t > 1 - tolerance) {
+        ts1 = index1;
+      }
+      t1[index1++] = vtkMath.dot(val1.x, v) - vtkMath.dot(p, v);
+    }
+
+    const val2 = vtkPlane.intersectWithLine(pts2[id1], pts2[id2], p1, n1);
+    if (val2.intersection && val2.t > 0 - tolerance && val2.t < 1 + tolerance) {
+      if (val2.t < 1 + tolerance && val2.t > 1 - tolerance) {
+        ts2 = index2;
+      }
+      t2[index2++] = vtkMath.dot(val2.x, v) - vtkMath.dot(p, v);
+    }
+  }
+
+  // If the value of the index is greater than 2, the intersecting point
+  // actually is intersected by all three edges. In this case, set the two
+  // edges to the two edges where the intersecting point is not the end point
+  if (index1 > 2) {
+    index1--;
+    // swap
+    const t12 = t1[2];
+    t1[2] = t1[ts1];
+    t1[ts1] = t12;
+  }
+  if (index2 > 2) {
+    index2--;
+    const t22 = t2[2];
+    t2[2] = t2[ts2];
+    t2[ts2] = t22;
+  }
+  // Check if only one edge or all edges intersect the supporting
+  // planes intersection.
+  if (index1 !== 2 || index2 !== 2) {
+    // vtkDebugMacro(<<"Only one edge intersecting!");
+    return { intersect: false, coplanar, pt1, pt2, surfaceId };
+  }
+
+  // Check for NaNs
+  if (
+    Number.isNaN(t1[0]) ||
+    Number.isNaN(t1[1]) ||
+    Number.isNaN(t2[0]) ||
+    Number.isNaN(t2[1])
+  ) {
+    // vtkWarningMacro(<<"NaNs!");
+    return { intersect: false, coplanar, pt1, pt2, surfaceId };
+  }
+
+  if (t1[0] > t1[1]) {
+    // swap
+    const t11 = t1[1];
+    t1[1] = t1[0];
+    t1[0] = t11;
+  }
+  if (t2[0] > t2[1]) {
+    // swap
+    const t21 = t2[1];
+    t2[1] = t2[0];
+    t2[0] = t21;
+  }
+  // Handle the different interval configuration cases.
+  let tt1;
+  let tt2;
+  if (t1[1] < t2[0] || t2[1] < t1[0]) {
+    // vtkDebugMacro(<<"No Overlap!");
+    return { intersect: false, coplanar, pt1, pt2, surfaceId }; // No overlap
+  }
+  if (t1[0] < t2[0]) {
+    if (t1[1] < t2[1]) {
+      // First point on surface 2, second point on surface 1
+      surfaceId[0] = 2;
+      surfaceId[1] = 1;
+      tt1 = t2[0];
+      tt2 = t1[1];
+    } else {
+      // Both points belong to lines on surface 2
+      surfaceId[0] = 2;
+      surfaceId[1] = 2;
+      tt1 = t2[0];
+      tt2 = t2[1];
+    }
+  } // t1[0] >= t2[0]
+  else if (t1[1] < t2[1]) {
+    // Both points belong to lines on surface 1
+    surfaceId[0] = 1;
+    surfaceId[1] = 1;
+    tt1 = t1[0];
+    tt2 = t1[1];
+  } else {
+    // First point on surface 1, second point on surface 2
+    surfaceId[0] = 1;
+    surfaceId[1] = 2;
+    tt1 = t1[0];
+    tt2 = t2[1];
+  }
+
+  // Create actual intersection points.
+  vtkMath.multiplyAccumulate(p, v, tt1, pt1);
+  vtkMath.multiplyAccumulate(p, v, tt2, pt2);
+
+  return { intersect: true, coplanar, pt1, pt2, surfaceId };
+}
+
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
@@ -39,6 +228,7 @@ function computeNormal(v1, v2, v3, n) {
 export const STATIC = {
   computeNormalDirection,
   computeNormal,
+  intersectWithTriangle,
 };
 
 // ----------------------------------------------------------------------------

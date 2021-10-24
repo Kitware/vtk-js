@@ -5,6 +5,8 @@ import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkOBBTree from 'vtk.js/Sources/Filters/General/OBBTree';
 import vtkMatrixBuilder from '../../../../Common/Core/MatrixBuilder';
+import vtkPolyData from '../../../../Common/DataModel/PolyData';
+import vtkTriangleFilter from '../../TriangleFilter';
 
 const PRECISION = 4;
 
@@ -151,4 +153,39 @@ test('Test OBB tree deep copy', (t) => {
   );
 
   t.end();
+});
+
+test('Test OBB tree collision', (t) => {
+  const source1 = vtkCubeSource.newInstance();
+  source1.setCenter(0.8, 0, 0);
+  const triangleFilter1 = vtkTriangleFilter.newInstance();
+  triangleFilter1.setInputConnection(source1.getOutputPort());
+  triangleFilter1.update();
+
+  const obbTree1 = vtkOBBTree.newInstance();
+  obbTree1.setDataset(triangleFilter1.getOutputData());
+  obbTree1.buildLocator();
+
+  const source2 = vtkCubeSource.newInstance();
+  source2.setCenter(1.0, 0, 0);
+  source2.update();
+  const triangleFilter2 = vtkTriangleFilter.newInstance();
+  triangleFilter2.setInputConnection(source2.getOutputPort());
+  triangleFilter2.update();
+
+  const obbTree2 = vtkOBBTree.newInstance();
+  obbTree2.setDataset(triangleFilter2.getOutputData());
+  obbTree2.buildLocator();
+
+  const intersection = {
+    obbTree1: obbTree2,
+    intersectionLines: vtkPolyData.newInstance(),
+  };
+  const intersect = obbTree1.intersectWithOBBTree(
+    obbTree2,
+    null,
+    obbTree1.findTriangleIntersections.bind(null, intersection)
+  );
+  t.equal(intersect, 43);
+  t.equal(intersection.intersectionLines.getLines().getNumberOfCells(), 43);
 });
