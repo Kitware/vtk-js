@@ -86,14 +86,14 @@ export interface vtkPicker extends vtkAbstractPicker {
 	setMapperPosition(x: number, y: number, z: number): boolean;
 
 	/**
-	 * 
-	 * @param {Vector3} mapperPosition 
+	 * Set position in mapper coordinates of pick point.
+	 * @param {Vector3} mapperPosition The mapper coordinates of pick point.
 	 */
 	setMapperPositionFrom(mapperPosition: Vector3): boolean;
 
 	/**
 	 * Specify tolerance for performing pick operation.
-	 * @param {Number} tolerance 
+	 * @param {Number} tolerance The tolerance value.
 	 */
 	setTolerance(tolerance: number): boolean;
 }
@@ -103,7 +103,7 @@ export interface vtkPicker extends vtkAbstractPicker {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param {IPickerInitialValues} initialValues 
+ * @param {IPickerInitialValues} [initialValues] 
  */
 export function extend(publicAPI: object, model: object, initialValues?: IPickerInitialValues): void;
 
@@ -111,7 +111,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IPicker
  * Method use to create a new instance of vtkPicker with its focal point at the origin, 
  * and position=(0,0,1). The view up is along the y-axis, view angle is 30 degrees, 
  * and the clipping range is (.1,1000).
- * @param {IPickerInitialValues} initialValues for pre-setting some of its content
+ * @param {IPickerInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IPickerInitialValues): vtkPicker;
 
