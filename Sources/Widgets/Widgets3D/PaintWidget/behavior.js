@@ -2,8 +2,21 @@ import macro from 'vtk.js/Sources/macros';
 import { vec3 } from 'gl-matrix';
 
 export default function widgetBehavior(publicAPI, model) {
+  // --------------------------------------------------------------------------
+  // Interactor events
+  // --------------------------------------------------------------------------
+
+  function ignoreKey(e) {
+    return e.altKey || e.controlKey || e.shiftKey;
+  }
+
   publicAPI.handleLeftButtonPress = (callData) => {
-    if (!model.activeState || !model.activeState.getActive()) {
+    // if (!model.activeState || !model.activeState.getActive()) {
+    if (
+      !model.activeState ||
+      !model.activeState.getActive() ||
+      ignoreKey(callData)
+    ) {
       return macro.VOID;
     }
 
