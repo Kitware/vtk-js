@@ -11,7 +11,6 @@ export default function widgetBehavior(publicAPI, model) {
   }
 
   publicAPI.handleLeftButtonPress = (callData) => {
-    // if (!model.activeState || !model.activeState.getActive()) {
     if (
       !model.activeState ||
       !model.activeState.getActive() ||
