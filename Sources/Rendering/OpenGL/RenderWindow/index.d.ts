@@ -138,7 +138,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param z 
 	 * @param renderer 
 	 */
-	normalizedDisplayToViewport(x : number, y : number, z : number, renderer : vtRenderer): Vector3;
+	normalizedDisplayToViewport(x : number, y : number, z : number, renderer : vtkRenderer): Vector3;
 
 	/**
 	 * 
@@ -172,7 +172,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param z 
 	 * @param renderer 
 	 */
-	viewportToNormalizedDisplay(x : number, y number, z : number, renderer : vtkRenderer): Vector3;
+	viewportToNormalizedDisplay(x : number, y : number, z : number, renderer : vtkRenderer): Vector3;
 
 	/**
 	 * 
