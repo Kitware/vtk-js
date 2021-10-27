@@ -758,11 +758,12 @@ function vtkScalarBarActor(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.setVisibility = macro.chain(
+  const setVisibility = macro.chain(
     publicAPI.setVisibility,
     model.barActor.setVisibility,
     model.tmActor.setVisibility
   );
+  publicAPI.setVisibility = (...args) => setVisibility(...args).some(Boolean);
 
   publicAPI.resetAutoLayoutToDefault = () => {
     model.autoLayout = defaultAutoLayout(publicAPI, model);
