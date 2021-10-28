@@ -49,7 +49,7 @@ function vtkOpenGLSkybox(publicAPI, model) {
     if (prepass && !model.openGLRenderer.getSelector()) {
       publicAPI.updateBufferObjects();
 
-      model.openGLRenderWindow.enableDepthMask();
+      model.context.depthMask(true);
 
       model.openGLRenderWindow
         .getShaderCache()
