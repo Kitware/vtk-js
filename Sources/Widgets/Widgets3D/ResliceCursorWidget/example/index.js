@@ -20,6 +20,8 @@ import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/Orien
 import vtkResliceCursorWidget from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget';
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 
+import vtkFPSMonitor from 'vtk.js/Sources/Interaction/UI/FPSMonitor';
+
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import { CaptureOn } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
@@ -138,6 +140,7 @@ for (let i = 0; i < 4; i++) {
     GLWindow: grw.getOpenGLRenderWindow(),
     interactor: grw.getInteractor(),
     widgetManager: vtkWidgetManager.newInstance(),
+    fpsMonitor: vtkFPSMonitor.newInstance(),
   };
 
   obj.renderer.getActiveCamera().setParallelProjection(true);
@@ -149,6 +152,15 @@ for (let i = 0; i < 4; i++) {
   obj.interactor.initialize();
   obj.interactor.bindEvents(element);
   obj.widgetManager.setRenderer(obj.renderer);
+  obj.fpsMonitor.setContainer(element);
+  obj.fpsMonitor.setRenderWindow(obj.renderWindow);
+  obj.fpsMonitor.setAddOnStats();
+  const fpsElm = obj.fpsMonitor.getFpsMonitorContainer();
+  fpsElm.style.left = '10px';
+  fpsElm.style.bottom = '10px';
+  fpsElm.style.background = 'rgba(255,255,255,255)';
+  fpsElm.style.borderRadius = '5px';
+  fpsElm.style.display = 'inline-block';
   if (i < 3) {
     obj.interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
     obj.widgetInstance = obj.widgetManager.addWidget(widget, xyzToViewType[i]);
@@ -382,6 +394,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
                 computeFocalPointOffset,
                 sphereSources: obj.sphereSources,
               });
+              obj.fpsMonitor.update();
             }
           );
         });
