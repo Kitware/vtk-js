@@ -62,6 +62,16 @@ const controlContainer = document.createElement('div');
 controlContainer.innerHTML = controlPanel;
 container.appendChild(controlContainer);
 
+const style = document.createElement('style');
+style.innerHTML = `.pre {outline: 2px solid #ccc; padding: 5px; margin: 5px; }
+.string { color: teal; }
+.number { color: red; }
+.boolean { color: blue; }
+.null { color: magenta; }
+.key { color: darkred;}
+.tt { color: deepblue; font-weight: bold; }
+`;
+document.head.appendChild(style);
 // ----------------------------------------------------------------------------
 // Setup rendering code
 // ----------------------------------------------------------------------------
@@ -241,6 +251,40 @@ for (let i = 0; i < 4; i++) {
   orientationWidget.setMinPixelSize(100);
   orientationWidget.setMaxPixelSize(300);
 }
+
+function output(inp) {
+  const header = `<span class="tt">WebGL Information</span>\n`;
+  container.appendChild(document.createElement('pre')).innerHTML = header + inp;
+}
+
+function syntaxHighlight(json) {
+  const out = json
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  return out.replace(
+    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
+    (match) => {
+      let cls = 'number';
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) {
+          cls = 'key';
+        } else {
+          cls = 'string';
+        }
+      } else if (/true|false/.test(match)) {
+        cls = 'boolean';
+      } else if (/null/.test(match)) {
+        cls = 'null';
+      }
+      return `<span class="${cls}">${match}</span>`;
+    }
+  );
+}
+
+const allInfo = view3D.GLWindow.getGLInformations();
+console.log(allInfo);
+output(syntaxHighlight(JSON.stringify(allInfo, undefined, 4)));
 
 // ----------------------------------------------------------------------------
 // Load image
