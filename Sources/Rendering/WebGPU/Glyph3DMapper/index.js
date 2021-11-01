@@ -71,7 +71,7 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
   publicAPI.replaceShaderSelect = (hash, pipeline, vertexInput) => {
     if (hash.includes('sel')) {
       const vDesc = pipeline.getShaderDescription('vertex');
-      vDesc.addOutput('u32', 'compositeID');
+      vDesc.addOutput('u32', 'compositeID', 'flat');
       let code = vDesc.getCode();
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Select::Impl', [
         '  output.compositeID = input.instanceIndex;',

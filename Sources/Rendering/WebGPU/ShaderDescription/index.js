@@ -13,9 +13,10 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
 
   publicAPI.hasOutput = (name) => model.outputNames.includes(name);
 
-  publicAPI.addOutput = (type, name) => {
+  publicAPI.addOutput = (type, name, interpolation = undefined) => {
     model.outputTypes.push(type);
     model.outputNames.push(name);
+    model.outputInterpolations.push(interpolation);
   };
 
   publicAPI.addBuiltinOutput = (type, name) => {
@@ -42,10 +43,18 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
       if (priorStage) {
         const inputNames = priorStage.getOutputNamesByReference();
         const inputTypes = priorStage.getOutputTypesByReference();
+        const inputInterpolations =
+          priorStage.getOutputInterpolationsByReference();
         for (let i = 0; i < inputNames.length; i++) {
-          inputStruct.push(
-            `  [[location(${i})]] ${inputNames[i]} : ${inputTypes[i]};`
-          );
+          if (inputInterpolations[i] !== undefined) {
+            inputStruct.push(
+              `  [[location(${i}), interpolate(${inputInterpolations[i]})]] ${inputNames[i]} : ${inputTypes[i]};`
+            );
+          } else {
+            inputStruct.push(
+              `  [[location(${i})]] ${inputNames[i]} : ${inputTypes[i]};`
+            );
+          }
         }
       }
       for (let i = 0; i < model.builtinInputNames.length; i++) {
@@ -71,9 +80,15 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
     if (model.outputNames.length + model.builtinOutputNames.length) {
       const outputStruct = [`struct ${model.type}Output\n{`];
       for (let i = 0; i < model.outputNames.length; i++) {
-        outputStruct.push(
-          `  [[location(${i})]] ${model.outputNames[i]} : ${model.outputTypes[i]};`
-        );
+        if (model.outputInterpolations[i] !== undefined) {
+          outputStruct.push(
+            `  [[location(${i}), interpolate(${model.outputInterpolations[i]})]] ${model.outputNames[i]} : ${model.outputTypes[i]};`
+          );
+        } else {
+          outputStruct.push(
+            `  [[location(${i})]] ${model.outputNames[i]} : ${model.outputTypes[i]};`
+          );
+        }
       }
       for (let i = 0; i < model.builtinOutputNames.length; i++) {
         outputStruct.push(
@@ -116,6 +131,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.outputNames = [];
   model.outputTypes = [];
+  model.outputInterpolations = [];
   model.builtinOutputNames = [];
   model.builtinOutputTypes = [];
   model.builtinInputNames = [];
@@ -124,7 +140,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, ['type', 'hash', 'code']);
-  macro.getArray(publicAPI, model, ['outputTypes', 'outputNames']);
+  macro.getArray(publicAPI, model, [
+    'outputTypes',
+    'outputNames',
+    'outputInterpolations',
+  ]);
 
   // Object methods
   vtkWebGPUShaderDescription(publicAPI, model);

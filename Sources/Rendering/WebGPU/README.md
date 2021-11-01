@@ -128,3 +128,43 @@ Note that none of the classes in the WebGPU directory are meant to be accessed d
 The volume renderer in WebGPU starts in the ForwardPass, which if it detects volumes invokes a volume pass. The volume pass requests bounding boxes from all volumes and renders them, along with the opaque polygonal depth buffer to create min and max ray depth textures. These textures are bounds for each fragment's ray casting. Then the VolumePassFSQ gets invoked with these two bounding textures to actually perfom the ray casting of the voxels between the min and max.
 
 The ray casting is done for all volumes at once and the VolumePassFSQ class is where all the complexity and work is done.
+
+
+## Zbuffer implementation and calculations
+
+The depth buffer is stored as a 32bit float and ranges from 1.0 to 0.0. The distance to the near clipping plane is by far the largest factor determining the accuracy of the zbuffer. The farther out you can place the near plane the better. See https://zero-radiance.github.io/post/z-buffer/ for a more detailed analysis of why we use this approach.
+
+### Orthographic
+
+For orthographic projections the zbuffer ranges from 1.0 at the near plane to 0.0 at the far plane. The depth value in both the vertex and fragment shader is given as
+
+```position.z = (zVC + f)/(f - n)```
+
+within the fragment shader you can get the z value (in view coordinates)
+
+```zVC = position.z * (far - near) - far```
+
+The depth valus are linear in depth.
+
+### Perspective
+
+For perspective we use a reverse infinite far clip projection which ranges from 1.0 at the near plane to 0.0 at infinity. The depth value in the vertex shader is
+
+```position.z = near```
+```position.w = -zVC```
+
+and in the fragment after division by w as
+
+```position.z = -near / zVC```
+
+within the shader you can get the z value (in view coordinates)
+
+```zVC = -near / position.z```
+
+The depth values are not linear in depth.
+
+You can offset geometry by a factor cF ranging from 0.0 to 1.0 using the following forumla
+
+```z' = 1.0 - (1.0 - cF)*(1.0 - z)```
+```z' = z + cF - cF*z```
+```z' = (1.0 - cF)*z + cF```
