@@ -51,11 +51,15 @@ function vtkWebGPURenderer(publicAPI, model) {
         return;
       }
 
+      model.camera = model.renderable.getActiveCamera();
+
       publicAPI.updateLights();
       publicAPI.prepareNodes();
-      publicAPI.addMissingNode(model.renderable.getActiveCamera());
+      publicAPI.addMissingNode(model.camera);
       publicAPI.addMissingNodes(model.renderable.getViewPropsWithNestedProps());
       publicAPI.removeUnusedNodes();
+
+      model.webgpuCamera = publicAPI.getViewNodeFor(model.camera);
       publicAPI.updateStabilizedMatrix();
     }
   };
@@ -87,10 +91,9 @@ function vtkWebGPURenderer(publicAPI, model) {
     // when the center of the view frustum moves a lot
     // we recenter it. The center of the view frustum is roughly
     // camPos + dirOfProj*(far + near)*0.5
-    const cam = model.renderable.getActiveCamera();
-    const clipRange = cam.getClippingRange();
-    const pos = cam.getPositionByReference();
-    const dop = cam.getDirectionOfProjectionByReference();
+    const clipRange = model.camera.getClippingRange();
+    const pos = model.camera.getPositionByReference();
+    const dop = model.camera.getDirectionOfProjectionByReference();
     const center = [];
     const offset = [];
     vec3.scale(offset, dop, 0.5 * (clipRange[0] + clipRange[1]));
@@ -137,23 +140,27 @@ function vtkWebGPURenderer(publicAPI, model) {
   publicAPI.updateUBO = () => {
     // make sure the data is up to date
     // has the camera changed?
-    const cam = model.renderable.getActiveCamera();
-    const webgpuCamera = publicAPI.getViewNodeFor(cam);
     const utime = model.UBO.getSendTime();
     if (
       model.parent.getMTime() > utime ||
       publicAPI.getMTime() > utime ||
-      cam.getMTime() > utime ||
+      model.camera.getMTime() > utime ||
       model.renderable.getMTime() > utime
     ) {
-      const keyMats = webgpuCamera.getKeyMatrices(publicAPI);
+      const keyMats = model.webgpuCamera.getKeyMatrices(publicAPI);
       model.UBO.setArray('WCVCMatrix', keyMats.wcvc);
       model.UBO.setArray('SCPCMatrix', keyMats.scpc);
       model.UBO.setArray('PCSCMatrix', keyMats.pcsc);
       model.UBO.setArray('SCVCMatrix', keyMats.scvc);
       model.UBO.setArray('VCPCMatrix', keyMats.vcpc);
       model.UBO.setArray('WCVCNormals', keyMats.normalMatrix);
-      model.UBO.setValue('cameraParallel', cam.getParallelProjection());
+
+      const tsize = publicAPI.getYInvertedTiledSizeAndOrigin();
+      model.UBO.setArray('viewportSize', [tsize.usize, tsize.vsize]);
+      model.UBO.setValue(
+        'cameraParallel',
+        model.camera.getParallelProjection()
+      );
 
       const device = model.parent.getDevice();
       model.UBO.sendIfNeeded(device);
@@ -299,6 +306,9 @@ function vtkWebGPURenderer(publicAPI, model) {
     );
   };
 
+  publicAPI.convertToOpenGLDepth = (val) =>
+    model.webgpuCamera.convertToOpenGLDepth(val);
+
   publicAPI.getYInvertedTiledSizeAndOrigin = () => {
     const res = publicAPI.getTiledSizeAndOrigin();
     const size = model.parent.getSizeByReference();
@@ -393,6 +403,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('SCVCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('VCPCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('WCVCNormals', 'mat4x4<f32>');
+  model.UBO.addEntry('viewportSize', 'vec2<f32>');
   model.UBO.addEntry('cameraParallel', 'u32');
 
   model.bindGroup = vtkWebGPUBindGroup.newInstance();

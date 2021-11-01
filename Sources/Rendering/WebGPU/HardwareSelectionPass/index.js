@@ -98,7 +98,7 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
       primitive: { cullMode: 'none' },
       depthStencil: {
         depthWriteEnabled: true,
-        depthCompare: 'less',
+        depthCompare: 'greater',
         format: 'depth32float',
       },
       fragment: {

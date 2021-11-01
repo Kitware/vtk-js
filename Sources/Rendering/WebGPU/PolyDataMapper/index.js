@@ -104,6 +104,8 @@ fn main(
 
   if (computedColor.a == 0.0) { discard; };
 
+  //VTK::Position::Impl
+
   //VTK::RenderEncoder::Impl
   return output;
 }
@@ -214,9 +216,23 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     const vDesc = pipeline.getShaderDescription('vertex');
     vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
     let code = vDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
-      '    output.Position = rendererUBO.SCPCMatrix*mapperUBO.BCSCMatrix*vertexBC;',
-    ]).result;
+    if (isEdges(hash)) {
+      vDesc.addBuiltinInput('u32', '[[builtin(instance_index)]] instanceIndex');
+      // widen the edge
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
+        '    var tmpPos: vec4<f32> = rendererUBO.SCPCMatrix*mapperUBO.BCSCMatrix*vertexBC;',
+        '    var tmpPos2: vec3<f32> = tmpPos.xyz / tmpPos.w;',
+        '    tmpPos2.x = tmpPos2.x + 1.4*(f32(input.instanceIndex % 2u) - 0.5)/rendererUBO.viewportSize.x;',
+        '    tmpPos2.y = tmpPos2.y + 1.4*(f32(input.instanceIndex / 2u) - 0.5)/rendererUBO.viewportSize.y;',
+        '    tmpPos2.z = tmpPos2.z + 0.00001;', // could become a setting
+        '    output.Position = vec4<f32>(tmpPos2.xyz * tmpPos.w, tmpPos.w);',
+      ]).result;
+    } else {
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
+        '    output.Position = rendererUBO.SCPCMatrix*mapperUBO.BCSCMatrix*vertexBC;',
+      ]).result;
+    }
+
     vDesc.setCode(code);
   };
 
@@ -712,7 +728,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
           );
 
           primHelper.setWebGPURenderer(model.WebGPURenderer);
-          primHelper.setNumberOfInstances(1);
+          primHelper.setNumberOfInstances(4);
           const vbo = primHelper.getVertexInput().getBuffer('vertexBC');
           primHelper.setNumberOfVertices(
             vbo.getSizeInBytes() / vbo.getStrideInBytes()
