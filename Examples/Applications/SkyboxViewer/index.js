@@ -41,7 +41,7 @@ let autoInit = true;
 const cameraFocalPoint = userParams.direction || [0, 0, -1];
 const cameraViewUp = userParams.up || [0, 1, 0];
 const cameraViewAngle = userParams.viewAngle || 100;
-const enableVR = !!userParams.vr;
+const enableXR = !!userParams.xr;
 const eyeSpacing = userParams.eye || 0.0;
 const grid = userParams.debug || false;
 const autoIncrementTimer = userParams.timer || 0;
@@ -189,13 +189,7 @@ function createVisualization(container, mapReader) {
     updateSkybox(allPositions[nextIdx]);
   }
 
-  if (enableVR && vtkDeviceOrientationToCamera.isDeviceOrientationSupported()) {
-    // vtkMobileVR.getVRHeadset().then((headset) => {
-    //   console.log('got headset');
-    //   console.log(headset);
-    //   console.log(vtkMobileVR.hardware);
-    // });
-
+  if (enableXR && navigator.xr.isSessionSupported('immersive-vr')) {
     leftRenderer = vtkRenderer.newInstance();
     rightRenderer = vtkRenderer.newInstance();
 
@@ -236,7 +230,7 @@ function createVisualization(container, mapReader) {
     distPass.setCameraCenterX1(-eyeSpacing);
     distPass.setCameraCenterX2(eyeSpacing);
     distPass.setDelegates([vtkForwardPass.newInstance()]);
-    fullScreenRenderer.getAPISpecificRenderWindow().setRenderPasses([distPass]);
+    fullScreenRenderer.getApiSpecificRenderWindow().setRenderPasses([distPass]);
 
     // Hide any controller
     fullScreenRenderer.setControllerVisibility(false);
@@ -278,29 +272,27 @@ function createVisualization(container, mapReader) {
     mainRenderer.addActor(actor);
 
     // add vr option button if supported
-    fullScreenRenderer.getApiSpecificRenderWindow().onHaveVRDisplay(() => {
-      if (
-        fullScreenRenderer.getApiSpecificRenderWindow().getVrDisplay()
-          .capabilities.canPresent
-      ) {
-        const button = document.createElement('button');
-        button.style.position = 'absolute';
-        button.style.left = '10px';
-        button.style.bottom = '10px';
-        button.style.zIndex = 10000;
-        button.textContent = 'Send To VR';
-        document.querySelector('body').appendChild(button);
-        button.addEventListener('click', () => {
-          if (button.textContent === 'Send To VR') {
-            fullScreenRenderer.getApiSpecificRenderWindow().startVR();
-            button.textContent = 'Return From VR';
-          } else {
-            fullScreenRenderer.getApiSpecificRenderWindow().stopVR();
-            button.textContent = 'Send To VR';
-          }
-        });
-      }
-    });
+    if (
+      navigator.xr !== undefined &&
+      navigator.xr.isSessionSupported('immersive-vr')
+    ) {
+      const button = document.createElement('button');
+      button.style.position = 'absolute';
+      button.style.left = '10px';
+      button.style.bottom = '10px';
+      button.style.zIndex = 10000;
+      button.textContent = 'Send To VR';
+      document.querySelector('body').appendChild(button);
+      button.addEventListener('click', () => {
+        if (button.textContent === 'Send To VR') {
+          fullScreenRenderer.getApiSpecificRenderWindow().startXR();
+          button.textContent = 'Return From VR';
+        } else {
+          fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
+          button.textContent = 'Send To VR';
+        }
+      });
+    }
   }
 
   renderWindow.render();
