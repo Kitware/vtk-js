@@ -1300,9 +1300,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         }
       }
       cellBO.getProgram().setUniformi('numClipPlanes', numClipPlanes);
-      cellBO
-        .getProgram()
-        .setUniform4fv('clipPlanes', numClipPlanes, planeEquations); // Note that numClipPlanes doesn't do anything here
+      cellBO.getProgram().setUniform4fv('clipPlanes', planeEquations);
     }
 
     if (
