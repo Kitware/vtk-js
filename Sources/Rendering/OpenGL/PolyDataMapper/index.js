@@ -880,19 +880,15 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     let FSSource = shaders.Fragment;
 
     if (model.renderable.getNumberOfClippingPlanes()) {
-      let numClipPlanes = model.renderable.getNumberOfClippingPlanes();
-      if (numClipPlanes > 6) {
-        macro.vtkErrorMacro('OpenGL has a limit of 6 clipping planes');
-        numClipPlanes = 6;
-      }
+      const numClipPlanes = model.renderable.getNumberOfClippingPlanes();
       VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Clip::Dec', [
         'uniform int numClipPlanes;',
-        'uniform vec4 clipPlanes[6];',
-        'varying float clipDistancesVSOutput[6];',
+        `uniform vec4 clipPlanes[${numClipPlanes}];`,
+        `varying float clipDistancesVSOutput[${numClipPlanes}];`,
       ]).result;
 
       VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Clip::Impl', [
-        'for (int planeNum = 0; planeNum < 6; planeNum++)',
+        `for (int planeNum = 0; planeNum < ${numClipPlanes}; planeNum++)`,
         '    {',
         '    if (planeNum >= numClipPlanes)',
         '        {',
@@ -903,11 +899,11 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       ]).result;
       FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Clip::Dec', [
         'uniform int numClipPlanes;',
-        'varying float clipDistancesVSOutput[6];',
+        `varying float clipDistancesVSOutput[${numClipPlanes}];`,
       ]).result;
 
       FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Clip::Impl', [
-        'for (int planeNum = 0; planeNum < 6; planeNum++)',
+        `for (int planeNum = 0; planeNum < ${numClipPlanes}; planeNum++)`,
         '    {',
         '    if (planeNum >= numClipPlanes)',
         '        {',
@@ -1289,11 +1285,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     if (model.renderable.getNumberOfClippingPlanes()) {
       // add all the clipping planes
-      let numClipPlanes = model.renderable.getNumberOfClippingPlanes();
-      if (numClipPlanes > 6) {
-        macro.vtkErrorMacro('OpenGL has a limit of 6 clipping planes');
-        numClipPlanes = 6;
-      }
+      const numClipPlanes = model.renderable.getNumberOfClippingPlanes();
       const planeEquations = [];
       for (let i = 0; i < numClipPlanes; i++) {
         const planeEquation = [];
@@ -1308,7 +1300,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         }
       }
       cellBO.getProgram().setUniformi('numClipPlanes', numClipPlanes);
-      cellBO.getProgram().setUniform4fv('clipPlanes', 6, planeEquations);
+      cellBO
+        .getProgram()
+        .setUniform4fv('clipPlanes', numClipPlanes, planeEquations); // Note that numClipPlanes doesn't do anything here
     }
 
     if (
