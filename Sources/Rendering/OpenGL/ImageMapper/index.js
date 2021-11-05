@@ -850,11 +850,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const { ijkMode } = model.renderable.getClosestIJKAxis();
 
     // Find the IJK slice
-    let nSlice = model.renderable.getSlice();
+    let slice = model.renderable.getSlice();
     if (ijkMode !== model.renderable.getSlicingMode()) {
       // If not IJK slicing, get the IJK slice from the XYZ position/slice
-      nSlice = model.renderable.getSliceAtPosition(nSlice);
+      slice = model.renderable.getSliceAtPosition(slice);
     }
+
+    const nSlice = Math.round(slice);
 
     // Find sliceOffset
     const ext = image.getExtent();
@@ -870,7 +872,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     }
 
     // rebuild the VBO if the data has changed
-    const toString = `${nSlice}A${image.getMTime()}A${imgScalars.getMTime()}B${publicAPI.getMTime()}C${model.renderable.getSlicingMode()}D${actor
+    const toString = `${slice}A${image.getMTime()}A${imgScalars.getMTime()}B${publicAPI.getMTime()}C${model.renderable.getSlicingMode()}D${actor
       .getProperty()
       .getMTime()}`;
     if (model.VBOBuildString !== toString) {
@@ -922,16 +924,16 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         }
         dims[0] = dims[1];
         dims[1] = dims[2];
-        ptsArray[0] = nSlice;
+        ptsArray[0] = slice;
         ptsArray[1] = ext[2];
         ptsArray[2] = ext[4];
-        ptsArray[3] = nSlice;
+        ptsArray[3] = slice;
         ptsArray[4] = ext[3];
         ptsArray[5] = ext[4];
-        ptsArray[6] = nSlice;
+        ptsArray[6] = slice;
         ptsArray[7] = ext[2];
         ptsArray[8] = ext[5];
-        ptsArray[9] = nSlice;
+        ptsArray[9] = slice;
         ptsArray[10] = ext[3];
         ptsArray[11] = ext[5];
       } else if (ijkMode === SlicingMode.J) {
@@ -947,16 +949,16 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         }
         dims[1] = dims[2];
         ptsArray[0] = ext[0];
-        ptsArray[1] = nSlice;
+        ptsArray[1] = slice;
         ptsArray[2] = ext[4];
         ptsArray[3] = ext[1];
-        ptsArray[4] = nSlice;
+        ptsArray[4] = slice;
         ptsArray[5] = ext[4];
         ptsArray[6] = ext[0];
-        ptsArray[7] = nSlice;
+        ptsArray[7] = slice;
         ptsArray[8] = ext[5];
         ptsArray[9] = ext[1];
-        ptsArray[10] = nSlice;
+        ptsArray[10] = slice;
         ptsArray[11] = ext[5];
       } else if (ijkMode === SlicingMode.K || ijkMode === SlicingMode.NONE) {
         scalars = basicScalars.subarray(
@@ -965,16 +967,16 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         );
         ptsArray[0] = ext[0];
         ptsArray[1] = ext[2];
-        ptsArray[2] = nSlice;
+        ptsArray[2] = slice;
         ptsArray[3] = ext[1];
         ptsArray[4] = ext[2];
-        ptsArray[5] = nSlice;
+        ptsArray[5] = slice;
         ptsArray[6] = ext[0];
         ptsArray[7] = ext[3];
-        ptsArray[8] = nSlice;
+        ptsArray[8] = slice;
         ptsArray[9] = ext[1];
         ptsArray[10] = ext[3];
-        ptsArray[11] = nSlice;
+        ptsArray[11] = slice;
       } else {
         vtkErrorMacro('Reformat slicing not yet supported.');
       }
