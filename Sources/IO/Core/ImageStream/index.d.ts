@@ -7,7 +7,7 @@ import { Size } from "../../../types";
  */
 export interface IImageStreamInitialValues {
 	viewStreams?: any[],
-  	serverAnimationFPS?: number,
+	serverAnimationFPS?: number,
 }
 
 

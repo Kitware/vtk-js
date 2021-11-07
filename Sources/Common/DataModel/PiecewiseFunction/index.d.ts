@@ -3,8 +3,8 @@ import { Range } from "../../../types";
 
 export interface IPiecewiseFunctionInitialValues {
 	range?: Range,
-  	clamping?: boolean,
-  	allowDuplicateScalars?: boolean,
+	clamping?: boolean,
+	allowDuplicateScalars?: boolean,
 }
 
 export interface vtkPiecewiseFunction extends vtkObject {
