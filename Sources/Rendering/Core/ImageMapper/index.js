@@ -51,19 +51,17 @@ function vtkImageMapper(publicAPI, model) {
     switch (ijkMode) {
       case SlicingMode.I:
         slice = vtkMath.clampValue(ijk[0], ex[0], ex[1]);
-        slice = Math.round(slice);
         break;
       case SlicingMode.J:
         slice = vtkMath.clampValue(ijk[1], ex[2], ex[3]);
-        slice = Math.round(slice);
         break;
       case SlicingMode.K:
         slice = vtkMath.clampValue(ijk[2], ex[4], ex[5]);
-        slice = Math.round(slice);
         break;
       default:
         return 0;
     }
+
     return slice;
   };
 

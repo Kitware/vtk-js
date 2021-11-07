@@ -34,17 +34,11 @@ export interface IImageMapperInitialValues extends IAbstractMapperInitialValues 
 
 export interface vtkImageMapper extends vtkAbstractMapper {
 
-	/**
-	 *
-	 * @param {Number} pos The position value.
-	 */
-	getSliceAtPosition(pos: number): number;
-
-	/**
-	 *
-	 * @param {Vector3} pos The position value.
-	 */
-	getSliceAtPosition(pos: Vector3): number;
+  /**
+   * Returns the IJK slice value from a world position or XYZ slice value
+   * @param {Vector3 | number} [pos] World point or XYZ slice value
+   */
+	getSliceAtPosition(pos: Vector3 | number): number;
 
 	/**
 	 * Get the closest IJK axis

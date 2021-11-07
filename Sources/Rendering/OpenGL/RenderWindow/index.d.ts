@@ -287,16 +287,6 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	/**
 	 * 
 	 */
-	disableDepthMask(): void;
-
-	/**
-	 * 
-	 */
-	enableDepthMask(): void;
-
-	/**
-	 * 
-	 */
 	disableCullFace(): void;
 
 	/**

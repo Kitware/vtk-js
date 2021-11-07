@@ -19,8 +19,12 @@ function vtkOpenGLVolume(publicAPI, model) {
       return;
     }
     if (prepass) {
+      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType(
+        'vtkOpenGLRenderWindow'
+      );
       model.openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+      model.context = model.openGLRenderWindow.getContext();
       publicAPI.prepareNodes();
       publicAPI.addMissingNode(model.renderable.getMapper());
       publicAPI.removeUnusedNodes();
@@ -58,14 +62,7 @@ function vtkOpenGLVolume(publicAPI, model) {
     if (!model.renderable || !model.renderable.getVisibility()) {
       return;
     }
-    if (prepass) {
-      model.context = publicAPI
-        .getFirstAncestorOfType('vtkOpenGLRenderWindow')
-        .getContext();
-      model.context.depthMask(false);
-    } else {
-      model.context.depthMask(true);
-    }
+    model.context.depthMask(!prepass);
   };
 
   publicAPI.getKeyMatrices = () => {
