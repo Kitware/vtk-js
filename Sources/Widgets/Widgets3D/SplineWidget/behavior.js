@@ -137,6 +137,14 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   // --------------------------------------------------------------------------
+  // Interactor events
+  // --------------------------------------------------------------------------
+
+  function ignoreKey(e) {
+    return e.altKey || e.controlKey || e.shiftKey;
+  }
+
+  // --------------------------------------------------------------------------
   // Right click: Delete handle
   // --------------------------------------------------------------------------
 
@@ -144,7 +152,8 @@ export default function widgetBehavior(publicAPI, model) {
     if (
       !model.activeState ||
       !model.activeState.getActive() ||
-      !model.pickable
+      !model.pickable ||
+      ignoreKey(e)
     ) {
       return macro.VOID;
     }
@@ -179,7 +188,8 @@ export default function widgetBehavior(publicAPI, model) {
     if (
       !model.activeState ||
       !model.activeState.getActive() ||
-      !model.pickable
+      !model.pickable ||
+      ignoreKey(e)
     ) {
       return macro.VOID;
     }

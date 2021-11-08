@@ -507,6 +507,14 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   // --------------------------------------------------------------------------
+  // Interactor events
+  // --------------------------------------------------------------------------
+
+  function ignoreKey(e) {
+    return e.altKey || e.controlKey || e.shiftKey;
+  }
+
+  // --------------------------------------------------------------------------
   // Left click: Add point / End interaction
   // --------------------------------------------------------------------------
 
@@ -514,7 +522,8 @@ export default function widgetBehavior(publicAPI, model) {
     if (
       !model.activeState ||
       !model.activeState.getActive() ||
-      !model.pickable
+      !model.pickable ||
+      ignoreKey(e)
     ) {
       return macro.VOID;
     }
