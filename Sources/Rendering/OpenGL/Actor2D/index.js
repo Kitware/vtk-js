@@ -17,8 +17,12 @@ function vtkOpenGLActor2D(publicAPI, model) {
       if (!model.renderable) {
         return;
       }
+      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType(
+        'vtkOpenGLRenderWindow'
+      );
       model.openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+      model.context = model.openGLRenderWindow.getContext();
       publicAPI.prepareNodes();
       publicAPI.addMissingNodes(model.renderable.getTextures());
       publicAPI.addMissingNode(model.renderable.getMapper());
@@ -84,9 +88,6 @@ function vtkOpenGLActor2D(publicAPI, model) {
   // Renders myself
   publicAPI.opaquePass = (prepass, renderPass) => {
     if (prepass) {
-      model.context = publicAPI
-        .getFirstAncestorOfType('vtkOpenGLRenderWindow')
-        .getContext();
       model.context.depthMask(true);
       publicAPI.activateTextures();
     } else {
@@ -100,9 +101,6 @@ function vtkOpenGLActor2D(publicAPI, model) {
   // Renders myself
   publicAPI.translucentPass = (prepass, renderPass) => {
     if (prepass) {
-      model.context = publicAPI
-        .getFirstAncestorOfType('vtkOpenGLRenderWindow')
-        .getContext();
       model.context.depthMask(false);
       publicAPI.activateTextures();
     } else {
