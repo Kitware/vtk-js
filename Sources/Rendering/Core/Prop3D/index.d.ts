@@ -52,7 +52,8 @@ export interface vtkProp3D extends vtkProp {
 	getOrientationWXYZ(): number[];
 
 	/**
-	 * Get the origin of the Prop3D. This is the point about which all rotations take place.
+	 * Get the origin of the Prop3D. This is the point about which all rotations
+	 * take place.
 	 */
 	getOrigin(): number[];
 
