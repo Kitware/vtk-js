@@ -421,6 +421,7 @@ function vtkImageData(publicAPI, model) {
       average,
       variance,
       sigma,
+      count: inum,
     };
   };
 

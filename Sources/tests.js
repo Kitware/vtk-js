@@ -17,6 +17,7 @@ import './Common/DataModel/Box/test/testBox';
 import './Common/DataModel/Cell/test/testCell';
 import './Common/DataModel/Cone/test/testConeImplicitFunction';
 import './Common/DataModel/DataSetAttributes/test/testDataSetAttributes';
+import './Common/DataModel/ImageData/test/testImageData';
 import './Common/DataModel/Line/test/testLine';
 import './Common/DataModel/Plane/test/testPlane';
 import './Common/DataModel/PolyData/test/testPolyData';
