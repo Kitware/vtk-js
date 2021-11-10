@@ -17,7 +17,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 
 /* eslint-disable no-lonely-if */
 
-const primTypes = {
+export const primTypes = {
   Start: 0,
   Points: 0,
   Lines: 1,
@@ -1983,7 +1983,7 @@ export const newInstance = macro.newInstance(extend, 'vtkOpenGLPolyDataMapper');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, primTypes };
 
 // Register ourself to OpenGL backend if imported
 registerOverride('vtkMapper', newInstance);

@@ -27,7 +27,7 @@ function vtkActor2D(publicAPI, model) {
     isOpaque = isOpaque && (!model.texture || !model.texture.isTranslucent());
 
     // are we using an opaque scalar array, if any?
-    isOpaque = isOpaque && (!model.mapper || model.mapper.getIsOpaque());
+    // isOpaque = isOpaque && (!model.mapper || model.mapper.getIsOpaque());
 
     return isOpaque;
   };
