@@ -78,6 +78,7 @@ import './Rendering/Core/VolumeMapper/test/testMaximumIntensityProjection';
 import './Rendering/Core/VolumeMapper/test/testMinimumIntensityProjection';
 import './Rendering/Misc/GenericRenderWindow/test/testGenericRenderWindowCreateDelete';
 import './Rendering/OpenGL/ImageMapper/test/testImageCroppingPlanes';
+import './Rendering/OpenGL/ImageMapper/test/testImageIntermediateZSlice';
 import './Rendering/OpenGL/PolyDataMapper/test/testAddShaderReplacements';
 import './Rendering/OpenGL/PolyDataMapper/test/testClearShaderReplacements';
 import './Rendering/OpenGL/PolyDataMapper/test/testClippingPlanes';

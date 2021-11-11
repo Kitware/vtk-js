@@ -27,7 +27,7 @@ varying vec3 vertexVCVSOutput;
 // always set vtkNumComponents 1,2,3,4
 //VTK::NumComponents
 
-// possibly define vtkUseTriliear
+// possibly define vtkTrilinearOn
 //VTK::TrilinearOn
 
 // possibly define vtkIndependentComponents
@@ -224,8 +224,8 @@ uniform int xreps;
 uniform int xstride;
 uniform int ystride;
 
-// if computing triliear values from multiple z slices
-#ifdef vtkTriliearOn
+// if computing trilinear values from multiple z slices
+#ifdef vtkTrilinearOn
 vec4 getTextureValue(vec3 ijk)
 {
   float zoff = 1.0/float(volumeDimensions.z);

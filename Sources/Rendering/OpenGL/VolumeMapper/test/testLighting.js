@@ -101,7 +101,7 @@ test.onlyIfWebGL('Test Lighted Volume Rendering', (t) => {
           [baseline1, baseline2],
           'Rendering/OpenGL/VolumeMapper/testMultiComponentComposite',
           t,
-          1.5,
+          0.05,
           gc.releaseResources
         );
       });

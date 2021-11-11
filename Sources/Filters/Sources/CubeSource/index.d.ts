@@ -1,4 +1,5 @@
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
+import { Bounds, Point } from "../../../types";
 
 /**
  *
@@ -7,7 +8,7 @@ export interface ICircleSourceInitialValues {
 	xLength?: number;
 	yLength?: number;
 	zLength?: number;
-	center?: number[];
+	center?: Point;
 	rotations?: number[];
 	pointType?: string;
 	generate3DTextureCoordinates?: boolean;
@@ -27,12 +28,12 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
 	 * Get the center of the cube.
 	 * @default [0.0, 0.0, 0.0]
 	 */
-	getCenter(): number[];
+	getCenter(): Point;
 
 	/**
 	 * Get the center of the cube.
 	 */
-	getCenterByReference(): number[];
+	getCenterByReference(): Point;
 
 	/**
 	 *
@@ -90,9 +91,9 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
 
 	/**
 	 * Convenience methods allows creation of cube by specifying bounding box.
-	 * @param bounds
+	 * @param {Bounds} bounds The bounds for the cube.
 	 */
-	setBounds(bounds: number[]): boolean;
+	setBounds(bounds: Bounds): boolean;
 
 	/**
 	 * Set the center of the cube.
@@ -108,7 +109,7 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
 	 * @param center
 	 * @default [0, 0, 0]
 	 */
-	setCenterFrom(center: number[]): boolean;
+	setCenterFrom(center: Point): boolean;
 
 	/**
 	 *

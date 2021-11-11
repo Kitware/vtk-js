@@ -72,6 +72,7 @@ function getPixelInformationWithData(
           buffdata.zbufferBufferWidth +
         inDisplayPosition[0];
       info.zValue = buffdata.depthValues[offset];
+      info.zValue = buffdata.webGPURenderer.convertToOpenGLDepth(info.zValue);
       info.displayPosition = inDisplayPosition;
     }
     return info;

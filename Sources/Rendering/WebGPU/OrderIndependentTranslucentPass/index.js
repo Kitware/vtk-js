@@ -176,7 +176,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       primitive: { cullMode: 'none' },
       depthStencil: {
         depthWriteEnabled: false,
-        depthCompare: 'less',
+        depthCompare: 'greater',
         format: 'depth32float',
       },
       fragment: {

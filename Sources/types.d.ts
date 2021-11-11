@@ -13,6 +13,7 @@ declare type TypedArray =
     | Float32Array;
 
 declare type Bounds = [number, number, number, number, number, number];
+declare type Extent = [number, number, number, number, number, number];
 declare type Placement = 'top' | 'left' | 'right' | 'bottom';
 declare type Size = [number, number];
 declare type Range = [number, number];

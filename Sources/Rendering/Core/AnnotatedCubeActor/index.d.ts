@@ -38,31 +38,31 @@ export interface vtkAnnotatedCubeActor extends vtkActor {
 
 	/**
 	 * The -X face property.
-	 * @param {IFaceProperty} prop -X  face property
+	 * @param {IFaceProperty} prop The -X face property.
 	 */
 	setXMinusFaceProperty(prop: IFaceProperty): boolean;
 
 	/**
 	 * The +Y face property.
-	 * @param {IFaceProperty} prop +Y face property
+	 * @param {IFaceProperty} prop The +Y face property.
 	 */
 	setYPlusFaceProperty(prop: IFaceProperty): boolean;
 
 	/**
 	 * The -Y face property.
-	 * @param {IFaceProperty} prop -Y ace property
+	 * @param {IFaceProperty} prop The -Y ace property.
 	 */
 	setYMinusFaceProperty(prop: IFaceProperty): boolean;
 
 	/**
 	 * The +Z face property.
-	 * @param {IFaceProperty} prop +Z face property
+	 * @param {IFaceProperty} prop The +Z face property.
 	 */
 	setZPlusFaceProperty(prop: IFaceProperty): boolean;
 
 	/**
 	 * The -Z face property.
-	 * @param {IFaceProperty} prop -Z face property
+	 * @param {IFaceProperty} prop The -Z face property.
 	 */
 	setZMinusFaceProperty(prop: IFaceProperty): boolean;
 }
@@ -103,4 +103,3 @@ export declare const vtkAnnotatedCubeActor: {
 	extend: typeof extend,
 };
 export default vtkAnnotatedCubeActor;
-

@@ -292,10 +292,10 @@ function createVisualization(container, mapReader) {
         document.querySelector('body').appendChild(button);
         button.addEventListener('click', () => {
           if (button.textContent === 'Send To VR') {
-            fullScreenRenderer.getOpenGLRenderWindow().startVR();
+            fullScreenRenderer.getApiSpecificRenderWindow().startVR();
             button.textContent = 'Return From VR';
           } else {
-            fullScreenRenderer.getOpenGLRenderWindow().stopVR();
+            fullScreenRenderer.getApiSpecificRenderWindow().stopVR();
             button.textContent = 'Send To VR';
           }
         });

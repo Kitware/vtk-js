@@ -110,7 +110,7 @@ export interface vtkProp extends vtkObject {
     /**
      * 
      */
-    getNestedProps(): null;
+    getNestedProps(): any;
 
     /**
      * Return parent prop set by setParentProp

@@ -59,7 +59,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
       if (!model.renderable.getPreserveDepthBuffer()) {
         gl.clearDepth(1.0);
         clearMask |= gl.DEPTH_BUFFER_BIT;
-        gl.depthMask(true);
+        model.context.depthMask(true);
       }
 
       const ts = publicAPI.getTiledSizeAndOrigin();
@@ -146,7 +146,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
     if (!model.renderable.getPreserveDepthBuffer()) {
       gl.clearDepth(1.0);
       clearMask |= gl.DEPTH_BUFFER_BIT;
-      gl.depthMask(true);
+      model.context.depthMask(true);
     }
 
     gl.colorMask(true, true, true, true);

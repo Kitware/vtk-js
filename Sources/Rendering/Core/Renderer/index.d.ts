@@ -7,6 +7,7 @@ import vtkProp3D from '../Prop3D';
 import vtkViewport, { IViewportInitialValues } from '../Viewport';
 import vtkVolume from '../Volume';
 import vtkTexture from '../Texture';
+import vtkActor from '../Actor';
 
 
 export interface IRendererInitialValues extends IViewportInitialValues {
@@ -49,11 +50,11 @@ export interface vtkRenderer extends vtkViewport {
 	 * 
 	 * @param actor 
 	 */
-	addActor(actor: vtkProp3D): boolean;
+	addActor(actor: vtkActor): boolean;
 
 	/**
 	 * Add a light to the list of lights.
-	 * @param light 
+	 * @param light The vtkLight instance.
 	 */
 	addLight(light: vtkLight): void;
 
@@ -63,8 +64,8 @@ export interface vtkRenderer extends vtkViewport {
 	allocateTime(): any;
 
 	/**
-	 * 
-	 * @param volume 
+	 * Add a volume to the renderer..
+	 * @param volume The vtkVolume instance.
 	 */
 	addVolume(volume: vtkVolume): boolean;
 
@@ -92,13 +93,13 @@ export interface vtkRenderer extends vtkViewport {
 	 * Return any actors in this renderer.
 	 *   
 	 */
-	getActors(): vtkProp3D[];
+	getActors(): vtkActor[];
 
 	/**
 	 * Return any actors in this renderer.
 	 *   
 	 */
-	getActorsByReference(): vtkProp3D[];
+	getActorsByReference(): vtkActor[];
 
 	/**
 	 * 
@@ -115,7 +116,7 @@ export interface vtkRenderer extends vtkViewport {
 	 * 
 	 * @default null
 	 */
-	getBackgroundTexture(): vtkTexture | null;
+	getBackgroundTexture(): vtkTexture;
 
 	/**
 	 * 
@@ -472,9 +473,9 @@ export interface vtkRenderer extends vtkViewport {
 
 	/**
 	 * 
-	 * @param {vtkProp3D | null} actor 
+	 * @param {vtkActor} actor 
 	 */
-	removeActor(actor: vtkProp3D | null): void;
+	removeActor(actor: vtkActor): void;
 
 	/**
 	 * 
@@ -539,19 +540,23 @@ export interface vtkRenderer extends vtkViewport {
 	viewToProjection(x: number, y: number, z: number, aspect: number): number[];
 
 	/**
+	 * Automatically set up the camera based on the visible actors.
 	 * 
-	 * @param {Number[]} [bounds] 
+	 * The camera will reposition itself to view the center point of the actors,
+	 * and move along its initial view plane normal (i.e., vector defined from
+	 * camera position to focal point) so that all of the actors can be seen.
+	 * @param {Bounds} [bounds] 
 	 */
-	resetCamera(bounds?: number[]): boolean;
+	resetCamera(bounds?: Bounds): boolean;
 
 	/**
-	 * 
-	 * @param {Number[]} [bounds] 
+	 * Reset the camera clipping range based on a bounding box.
+	 * @param {Bounds} [bounds] 
 	 */
-	resetCameraClippingRange(bounds?: number[]): boolean;
+	resetCameraClippingRange(bounds?: Bounds): boolean;
 
 	/**
-	 * 
+	 * Get the number of visible actors.
 	 */
 	visibleActorCount(): void;
 
@@ -561,7 +566,7 @@ export interface vtkRenderer extends vtkViewport {
 	updateGeometry(): any;
 
 	/**
-	 * 
+	 * Ask the active camera to do whatever it needs to do prior to rendering.
 	 */
 	updateCamera(): boolean;
 
@@ -573,7 +578,9 @@ export interface vtkRenderer extends vtkViewport {
 	updateLightsGeometryToFollowCamera(): void;
 
 	/**
-	 * 
+	 * Update the geometry of the lights in the scene that are not in world
+	 * space (for instance, Headlights or CameraLights that are attached to the
+	 * camera).
 	 */
 	updateLightGeometry(): boolean;
 

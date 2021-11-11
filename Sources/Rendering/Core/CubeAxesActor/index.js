@@ -682,11 +682,12 @@ function vtkCubeAxesActor(publicAPI, model) {
     publicAPI.update();
   });
 
-  publicAPI.setVisibility = macro.chain(
+  const setVisibility = macro.chain(
     publicAPI.setVisibility,
     model.pixelActor.setVisibility,
     model.tmActor.setVisibility
   );
+  publicAPI.setVisibility = (...args) => setVisibility(...args).some(Boolean);
 
   publicAPI.setTickTextStyle = (tickStyle) => {
     model.tickTextStyle = { ...model.tickTextStyle, ...tickStyle };

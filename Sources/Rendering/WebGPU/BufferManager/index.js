@@ -548,12 +548,12 @@ function vtkWebGPUBufferManager(publicAPI, model) {
 
     // prettier-ignore
     const array = new Float32Array([
-      -1.0, -1.0, 1.0,
-       1.0, -1.0, 1.0,
-       1.0, 1.0, 1.0,
-      -1.0, -1.0, 1.0,
-       1.0, 1.0, 1.0,
-      -1.0, 1.0, 1.0,
+      -1.0, -1.0, 0.0,
+       1.0, -1.0, 0.0,
+       1.0, 1.0, 0.0,
+      -1.0, -1.0, 0.0,
+       1.0, 1.0, 0.0,
+      -1.0, 1.0, 0.0,
     ]);
     model.fullScreenQuadBuffer.createAndWrite(array, GPUBufferUsage.VERTEX);
     model.fullScreenQuadBuffer.setStrideInBytes(12);
