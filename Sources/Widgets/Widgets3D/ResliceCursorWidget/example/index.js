@@ -437,7 +437,7 @@ sliderSlabNumberofSlices.addEventListener('change', (ev) => {
 
 const buttonReset = document.getElementById('buttonReset');
 buttonReset.addEventListener('click', () => {
-  widgetState.setPlanes(initialPlanesState);
+  widgetState.setPlanes({ ...initialPlanesState });
   widget.setCenter(widget.getWidgetState().getImage().getCenter());
   updateViews();
 });
