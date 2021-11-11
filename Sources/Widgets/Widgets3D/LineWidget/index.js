@@ -126,7 +126,6 @@ function vtkLineWidget(publicAPI, model) {
             builder: vtkSVGLandmarkRepresentation,
             initialValues: {
               showCircle: false,
-              isVisible: false,
               text: '',
               textProps: {
                 dx: 12,

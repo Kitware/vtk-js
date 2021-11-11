@@ -19,10 +19,19 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
   publicAPI.render = () => {
     const list = publicAPI.getRepresentationStates();
 
-    const coords = list.map((state) => state.getOrigin());
-    const texts = list.map((state, index) =>
-      state.getText ? state.getText() : `L${index}`
-    );
+    const coords = [];
+    const texts = [];
+    list.forEach((state, index) => {
+      if (
+        state.getOrigin &&
+        state.getOrigin() &&
+        state.getVisible &&
+        state.getVisible()
+      ) {
+        coords.push(state.getOrigin());
+        texts.push(state.getText ? state.getText() : `L${index}`);
+      }
+    });
 
     return publicAPI.worldPointsToPixelSpace(coords).then((pixelSpace) => {
       const points2d = pixelSpace.coords;
@@ -73,8 +82,8 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
               break;
           }
           text.setAttribute('dy', dy);
+          text.setAttribute('font-size', fontSize);
           if (model.fontProperties != null) {
-            text.setAttribute('font-size', fontSize);
             text.setAttribute('font-family', model.fontProperties.fontFamily);
             text.setAttribute('font-weight', model.fontProperties.fontStyle);
             text.setAttribute('fill', model.fontProperties.fontColor);

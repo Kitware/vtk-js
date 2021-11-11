@@ -20,18 +20,15 @@ export default function generateState(radius) {
       name: 'handle',
       initialValues: {
         scale1: radius * 2,
-        origin: [0, 0, 0],
         orientation: [1, 0, 0, 0, 1, 0, 0, 0, 1],
-        visible: true,
       },
     })
     .addDynamicMixinState({
       labels: ['trail'],
-      mixins: ['origin', 'color', 'scale1', 'orientation'],
+      mixins: ['origin', 'color', 'scale1', 'orientation', 'visible'],
       name: 'trail',
       initialValues: {
         scale1: radius * 2,
-        origin: [0, 0, 0],
         orientation: [1, 0, 0, 0, 1, 0, 0, 0, 1],
       },
     })

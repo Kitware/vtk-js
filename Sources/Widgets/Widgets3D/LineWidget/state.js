@@ -20,7 +20,6 @@ export default function generateState() {
       name: 'moveHandle',
       initialValues: {
         scale1: 50,
-        origin: [],
         visible: true,
       },
     })
@@ -30,7 +29,6 @@ export default function generateState() {
       name: 'handle1',
       initialValues: {
         scale1: 50,
-        origin: [],
       },
     })
     .addStateFromMixin({
@@ -39,7 +37,6 @@ export default function generateState() {
       name: 'handle2',
       initialValues: {
         scale1: 50,
-        origin: [],
       },
     })
     .addStateFromMixin({
@@ -50,8 +47,6 @@ export default function generateState() {
         /* text is empty to set a text filed in the SVGLayer and to avoid
          * displaying text before positioning the handles */
         text: '',
-        visible: false,
-        origin: [0, 0, 0],
       },
     })
     .addStateFromInstance({ name: 'positionOnLine', instance: linePosState })

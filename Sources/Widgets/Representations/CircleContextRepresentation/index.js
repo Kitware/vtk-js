@@ -115,7 +115,15 @@ function vtkCircleContextRepresentation(publicAPI, model) {
 
   publicAPI.requestData = (inData, outData) => {
     const { points, scale, color, direction } = model.internalArrays;
-    const list = publicAPI.getRepresentationStates(inData[0]);
+    const list = publicAPI
+      .getRepresentationStates(inData[0])
+      .filter(
+        (state) =>
+          state.getOrigin &&
+          state.getOrigin() &&
+          state.isVisible &&
+          state.isVisible()
+      );
     const totalCount = list.length;
 
     if (color.getNumberOfValues() !== totalCount) {
@@ -132,7 +140,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
       direction: direction.getData(),
     };
 
-    for (let i = 0; i < list.length; i++) {
+    for (let i = 0; i < totalCount; i++) {
       const state = list[i];
       const isActive = state.getActive();
       const scaleFactor = isActive ? model.activeScaleFactor : 1;
@@ -167,14 +175,9 @@ function vtkCircleContextRepresentation(publicAPI, model) {
       const scale1 =
         (state.getScale1 ? state.getScale1() : model.defaultScale) / 2;
 
-      let sFactor = scaleFactor;
-      if (state.getVisible && !state.getVisible()) {
-        sFactor = 0;
-      }
-
-      typedArray.scale[i * 3 + 0] = scale1 * sFactor * scale3[0];
-      typedArray.scale[i * 3 + 1] = scale1 * sFactor * scale3[1];
-      typedArray.scale[i * 3 + 2] = scale1 * sFactor * scale3[2];
+      typedArray.scale[i * 3 + 0] = scale1 * scaleFactor * scale3[0];
+      typedArray.scale[i * 3 + 1] = scale1 * scaleFactor * scale3[1];
+      typedArray.scale[i * 3 + 2] = scale1 * scaleFactor * scale3[2];
 
       typedArray.color[i] =
         model.useActiveColor && isActive ? model.activeColor : state.getColor();

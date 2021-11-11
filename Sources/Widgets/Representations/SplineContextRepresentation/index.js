@@ -68,7 +68,13 @@ function vtkSplineContextRepresentation(publicAPI, model) {
 
     const list = publicAPI
       .getRepresentationStates(widgetState)
-      .filter((state) => state.getVisible && state.getVisible());
+      .filter(
+        (state) =>
+          state.getVisible &&
+          state.getVisible() &&
+          state.getOrigin &&
+          state.getOrigin()
+      );
 
     const inPoints = list.map((state) => state.getOrigin());
     if (inPoints.length <= 1) {

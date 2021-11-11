@@ -11,7 +11,6 @@ export default function generateState() {
         name: 'point1Handle',
         initialValues: {
           scale1: 10,
-          origin: [undefined, undefined, undefined],
           visible: false,
         },
       })
@@ -21,7 +20,6 @@ export default function generateState() {
         name: 'point2Handle',
         initialValues: {
           scale1: 10,
-          origin: [undefined, undefined, undefined],
           visible: false,
         },
       })
@@ -43,8 +41,6 @@ export default function generateState() {
           /* text is empty to set a text filed in the SVGLayer and to avoid
            * displaying text before positioning the handles */
           text: '',
-          visible: false,
-          origin: [0, 0, 0],
         },
       })
       // FIXME: to move in text handle sub state

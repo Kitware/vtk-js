@@ -12,13 +12,8 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   const updateHandlesSize = () => {
-    if (model.handleSizeInPixels != null) {
-      const scale =
-        model.handleSizeInPixels *
-        vec3.distance(
-          model.apiSpecificRenderWindow.displayToWorld(0, 0, 0, model.renderer),
-          model.apiSpecificRenderWindow.displayToWorld(1, 0, 0, model.renderer)
-        );
+    if (publicAPI.getHandleSizeInPixels() != null) {
+      const scale = publicAPI.getHandleSizeInPixels();
 
       model.moveHandle.setScale1(scale);
       model.widgetState.getHandleList().forEach((handle) => {
@@ -39,7 +34,7 @@ export default function widgetBehavior(publicAPI, model) {
         model.moveHandle.getOrigin(),
         model.lastHandle.getOrigin()
       ) >
-        model.freehandMinDistance * model.freehandMinDistance
+        publicAPI.getFreehandMinDistance() * publicAPI.getFreehandMinDistance()
     ) {
       model.lastHandle = model.widgetState.addHandle();
       model.lastHandle.setVisible(false);
@@ -59,6 +54,13 @@ export default function widgetBehavior(publicAPI, model) {
 
   const getHoveredHandle = () => {
     const handles = model.widgetState.getHandleList();
+
+    const scale =
+      model.moveHandle.getScale1() *
+      vec3.distance(
+        model.apiSpecificRenderWindow.displayToWorld(0, 0, 0, model.renderer),
+        model.apiSpecificRenderWindow.displayToWorld(1, 0, 0, model.renderer)
+      );
 
     return handles.reduce(
       ({ closestHandle, closestDistance }, handle) => {
@@ -81,8 +83,7 @@ export default function widgetBehavior(publicAPI, model) {
       },
       {
         closestHandle: null,
-        closestDistance:
-          model.moveHandle.getScale1() * model.moveHandle.getScale1(),
+        closestDistance: scale * scale,
       }
     ).closestHandle;
   };
@@ -98,13 +99,25 @@ export default function widgetBehavior(publicAPI, model) {
   // Public methods
   // --------------------------------------------------------------------------
 
-  macro.setGet(publicAPI, model, [
-    'freehandMinDistance',
-    'allowFreehand',
-    'resolution',
-    'defaultCursor',
-    'handleSizeInPixels',
-  ]);
+  publicAPI.setResetAfterPointPlacement =
+    model.factory.setResetAfterPointPlacement;
+  publicAPI.getResetAfterPointPlacement =
+    model.factory.getResetAfterPointPlacement;
+  publicAPI.setResetAfterPointPlacement(
+    publicAPI.getResetAfterPointPlacement()
+  );
+
+  publicAPI.setFreehandMinDistance = model.factory.setFreehandMinDistance;
+  publicAPI.getFreehandMinDistance = model.factory.getFreehandMinDistance;
+  publicAPI.setFreehandMinDistance(publicAPI.getFreehandMinDistance());
+
+  publicAPI.setAllowFreehand = model.factory.setAllowFreehand;
+  publicAPI.getAllowFreehand = model.factory.getAllowFreehand;
+  publicAPI.setAllowFreehand(publicAPI.getAllowFreehand());
+
+  publicAPI.setDefaultCursor = model.factory.setDefaultCursor;
+  publicAPI.getDefaultCursor = model.factory.getDefaultCursor;
+  publicAPI.setDefaultCursor(publicAPI.getDefaultCursor());
 
   // --------------------------------------------------------------------------
 
@@ -112,6 +125,7 @@ export default function widgetBehavior(publicAPI, model) {
     model.factory.setHandleSizeInPixels(size);
     updateHandlesSize();
   };
+  publicAPI.getHandleSizeInPixels = model.factory.getHandleSizeInPixels;
   publicAPI.setHandleSizeInPixels(model.factory.getHandleSizeInPixels()); // set initial value
 
   // --------------------------------------------------------------------------
@@ -202,7 +216,7 @@ export default function widgetBehavior(publicAPI, model) {
         }
       }
 
-      model.freeHand = model.allowFreehand && !model.isDragging;
+      model.freeHand = publicAPI.getAllowFreehand() && !model.isDragging;
     } else {
       model.isDragging = true;
       model.apiSpecificRenderWindow.setCursor('grabbing');
@@ -244,7 +258,13 @@ export default function widgetBehavior(publicAPI, model) {
               model.moveHandle.getScale1() * model.moveHandle.getScale1()
           ) {
             model.lastHandle.setVisible(true);
-            publicAPI.loseFocus();
+            publicAPI.invokeEndInteractionEvent();
+
+            if (publicAPI.getResetAfterPointPlacement()) {
+              publicAPI.reset();
+            } else {
+              publicAPI.loseFocus();
+            }
           }
         }
 
@@ -325,11 +345,18 @@ export default function widgetBehavior(publicAPI, model) {
 
     if (key === 'Enter') {
       if (model.widgetState.getHandleList().length > 0) {
-        publicAPI.loseFocus();
+        publicAPI.invokeEndInteractionEvent();
+
+        if (publicAPI.getResetAfterPointPlacement()) {
+          publicAPI.reset();
+        } else {
+          publicAPI.loseFocus();
+        }
       }
     } else if (key === 'Escape') {
       publicAPI.reset();
       publicAPI.loseFocus();
+      publicAPI.invokeEndInteractionEvent();
     } else if (key === 'Delete' || key === 'Backspace') {
       if (model.lastHandle) {
         model.widgetState.removeHandle(model.lastHandle);
@@ -356,7 +383,6 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState.activate();
       model.activeState.setVisible(true);
       model.interactor.requestAnimation(publicAPI);
-      publicAPI.invokeStartInteractionEvent();
       updateHandlesSize();
     }
 
@@ -368,7 +394,6 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.loseFocus = () => {
     if (model.hasFocus) {
       model.interactor.cancelAnimation(publicAPI);
-      publicAPI.invokeEndInteractionEvent();
     }
 
     model.widgetState.deactivate();
