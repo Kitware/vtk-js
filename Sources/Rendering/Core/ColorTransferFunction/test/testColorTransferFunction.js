@@ -114,7 +114,7 @@ test('Test Color Transfer Function', (t) => {
       [baseline],
       'Rendering/Core/ColorTransferFunction/testColorTransferFunction',
       t,
-      1.5,
+      5,
       gc.releaseResources
     );
   });

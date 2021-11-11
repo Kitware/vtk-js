@@ -58,7 +58,7 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
           [noScaleInPixelsWithPerspectiveBaseline],
           'Widgets/Core/WidgetManager/test/testNoScaleInPixelsWithPerspective',
           t,
-          2.5,
+          0.5,
           resolve
         );
       });
@@ -88,7 +88,7 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
           [noScaleInPixelsWithParallelBaseline],
           'Widgets/Core/WidgetManager/test/testNoScaleInPixelsWithParallel',
           t,
-          2.5,
+          0.5,
           resolve
         );
       });
@@ -118,7 +118,7 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
           [scaleInPixelsWithPerspectiveBaseline],
           'Widgets/Core/WidgetManager/test/testScaleInPixelsWithPerspective',
           t,
-          2.5,
+          0.5,
           resolve
         );
       });
@@ -148,7 +148,7 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
           [scaleInPixelsWithParallelBaseline],
           'Widgets/Core/WidgetManager/test/scaleInPixelsWithParallel',
           t,
-          2.5,
+          0.5,
           resolve
         );
       });

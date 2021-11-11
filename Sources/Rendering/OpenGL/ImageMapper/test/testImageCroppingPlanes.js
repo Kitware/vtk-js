@@ -134,7 +134,7 @@ test.onlyIfWebGL('Test ImageMapper ClippingPlanes', (t) => {
       [baseline],
       'Rendering/OpenGL/ImageMapper',
       t,
-      1,
+      2,
       gc.releaseResources
     );
   });

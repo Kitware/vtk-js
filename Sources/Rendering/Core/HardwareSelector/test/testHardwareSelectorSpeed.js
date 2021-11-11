@@ -76,8 +76,6 @@ test('Test HardwareSelector', (tapeContext) => {
         const tcTime = Date.now() - previousTime;
         console.timeEnd('hardware render');
 
-        console.log(taTime, tbTime, tcTime);
-
         tapeContext.ok(
           // should take about 3 normal renders but we give it some wiggle room
           tcTime < tbTime * 6,

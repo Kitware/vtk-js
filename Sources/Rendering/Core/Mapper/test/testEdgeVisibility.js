@@ -50,7 +50,7 @@ test('Test Edge Visibility', (t) => {
       [baseline],
       'Rendering/Core/Mapper/testEdgeVisibility.js',
       t,
-      5,
+      1,
       gc.releaseResources
     );
   });

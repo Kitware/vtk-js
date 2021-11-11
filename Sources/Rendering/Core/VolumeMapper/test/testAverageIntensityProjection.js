@@ -87,7 +87,11 @@ test('Test Average Intensity Projection Volume Rendering', (t) => {
           [baseline],
           'Rendering/Core/VolumeMapper/testAverageIntensityProjection',
           t,
-          1.5,
+          {
+            // be stricter here
+            pixelThreshold: 0.01,
+            mismatchTolerance: 1.0,
+          },
           gc.releaseResources
         );
       });

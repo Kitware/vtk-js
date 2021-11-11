@@ -72,7 +72,7 @@ test('Test ImageMapper Color TFun', (t) => {
       [baseline],
       'Rendering/Core/ImageMapper',
       t,
-      1,
+      5.0,
       gc.releaseResources
     );
   });
