@@ -1,0 +1,163 @@
+<!doctype html>
+<html>
+  <head>
+    <style type="text/css">
+      * {
+          margin: 0;
+      }
+      body {
+          padding: 4px;
+      }
+      figcaption {
+          text-align: center;
+      }
+
+      .container {
+          display: flex;
+          flex-flow: column;
+      }
+      .line {
+          border: 1px solid grey;
+          font-family: sans-serif;
+          font-size: 1em;
+          padding: 6px 8px;
+          display: flex;
+          flex-flow: row;
+          align-items: center;
+      }
+      .browser {
+          display: block;
+          background: white;
+          font-size: 1.25em;
+      }
+      .browser li {
+          font-size: 0.8em;
+      }
+      .test {
+          margin-left: 32px;
+          font-size: 1.1em;
+      }
+      .test.success {
+          background: #98ff98;
+      }
+      .test.fail {
+          background: #ee0000;
+      }
+      .spec {
+          margin-left: 64px;
+      }
+      .spec.success {
+          background: #98ff9888;
+      }
+      .spec.fail {
+          background: #ee000088;
+      }
+      .skip {
+          background: #efefef;
+      }
+      .badge {
+          font-size: 0.9rem;
+          border-radius: 4px;
+          border: 1px solid #333;
+          background-color: rgba(255, 255, 255, 0.4);
+          padding: 4px;
+      }
+      .details {
+          margin-left: 96px;
+          padding: 8px;
+          background: #eee;
+      }
+      .imagediff {
+          display: flex;
+          flex-flow: row;
+      }
+      .ml-8 {
+          margin-left: 8px;
+      }
+      .hidden {
+          display: none;
+      }
+      #controls {
+          padding: 8px;
+      }
+    </style>
+    <script type="text/javascript">
+      let showPassing = false;
+
+      function togglePassingVisible(forceFlag = undefined) {
+        showPassing = forceFlag === undefined ? !showPassing : forceFlag;
+        Array.from(document.querySelectorAll('.skip, .success')).forEach((el) => {
+          if (showPassing) {
+            el.classList.remove('hidden');
+          } else {
+            el.classList.add('hidden');
+          }
+        });
+        document.getElementById('passingVisibleBtn').innerText = showPassing
+          ? 'hide passing tests'
+          : 'show passing tests';
+      }
+
+      window.onload = () => {
+        togglePassingVisible(true);
+      };
+    </script>
+  </head>
+  <body>
+    <h1>vtk.js Test Results</h1>
+    <div id="controls">
+      <button id="passingVisibleBtn" onclick="togglePassingVisible()">loading</button>
+    </div>
+    {{#each browsers}}
+    <div class="line browser">
+      <div>{{name}}</div>
+      <ul>
+        <li>Failed: {{summary.failed}}</li>
+        <li>Passed: {{summary.passed}}</li>
+        <li>Skipped: {{summary.skipped}}</li>
+        <li>Total: {{summary.total}}</li>
+      </ul>
+    </div>
+        {{#each tests}}
+        <div class="line test {{#if success}}success{{else}}fail{{/if}}">
+          {{name}}
+          {{#if success}}
+          <div class="ml-8 badge">passing</div>
+          {{else}}
+          <div class="ml-8 badge">failing</div>
+          {{/if}}
+        </div>
+            {{#each specs}}
+            <div class="line spec {{#if skipped}}skip{{else if success}}success{{else}}fail{{/if}}">
+              <div>{{description}}</div>
+              {{#if skipped}}
+              <div class="ml-8 badge">skipped</div>
+              {{else if success}}
+              <div class="ml-8 badge">passing</div>
+              {{else}}
+              <div class="ml-8 badge">failing</div>
+              {{/if}}
+            </div>
+            {{#unless success}}
+            <div class="details">
+            {{#with details}}
+            {{#if (equals operator "imagediff")}}
+              {{! Image diff structure: see testUtils.compareImage }}
+              <div>Mismatch count tolerance: {{expected}}%</div>
+              <div class="imagediff">
+                <figure><img src="{{actual.outputImage}}"><figcaption>Output</figcaption></figure>
+                <figure><img src="{{actual.expectedImage}}"><figcaption>Expected</figcaption></figure>
+                <figure><img src="{{actual.diffImage}}"><figcaption>Difference</figcaption></figure>
+              </div>
+            {{else}}
+              <div>Output: <code>{{details.actual}}</code></div>
+              <div>Expected: <code>{{details.expected}}</code></div>
+            {{/if}}
+            {{/with}}
+            </div>
+            {{/unless}}
+            {{/each}}
+        {{/each}}
+    {{/each}}
+  </body>
+</html>
