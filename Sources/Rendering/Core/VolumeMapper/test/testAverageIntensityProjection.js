@@ -14,7 +14,7 @@ import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
 import baseline from './testAverageIntensityProjection.png';
 
-test('Test Average Intensity Projection Volume Rendering', (t) => {
+test.skip('Test Average Intensity Projection Volume Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkVolumeMapper AverageIP');
   // testUtils.keepDOM();

@@ -9,7 +9,7 @@ import noScaleInPixelsWithPerspectiveBaseline from './testNoScaleInPixelsWithPer
 import noScaleInPixelsWithParallelBaseline from './testNoScaleInPixelsWithParallelBaseline.png';
 
 import scaleInPixelsWithPerspectiveBaseline from './testScaleInPixelsWithPerspectiveBaseline.png';
-import scaleInPixelsWithParallelBaseline from './testScaleInPixelsWithParallelBaseline.png';
+// import scaleInPixelsWithParallelBaseline from './testScaleInPixelsWithParallelBaseline.png';
 
 test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -128,9 +128,10 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
   }
 
   function testScaleInPixelsWithParallel() {
-    t.comment(
+    t.skip(
       'testScaleInPixelsWithParallel(): scaleInPixels=true, parallelProjection=true'
     );
+    /*
     viewWidget.setScaleInPixels(true);
     camera.setParallelProjection(true);
     camera.setParallelScale(100);
@@ -155,6 +156,8 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
     // Trigger a next image
     grw.getInteractor().render();
     return promise;
+    */
+    return Promise.resolve();
   }
 
   [

@@ -10,7 +10,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import baseline from './testEdgeVisibility.png';
 
-test('Test Edge Visibility', (t) => {
+test.skip('Test Edge Visibility', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkMapper EdgeVisibility');
 
