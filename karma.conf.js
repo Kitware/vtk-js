@@ -19,7 +19,6 @@ module.exports = function init(config) {
       require('karma-junit-reporter'),
       require('./Utilities/Karma/tape-object-stream'),
       require('./Utilities/Karma/tape-html-reporter'),
-      require('./Utilities/Karma/tap-object-html-reporter'),
     ],
 
     basePath: '',

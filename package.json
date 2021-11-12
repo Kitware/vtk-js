@@ -94,8 +94,6 @@
     "karma-coverage": "2.0.3",
     "karma-firefox-launcher": "2.1.1",
     "karma-junit-reporter": "2.0.1",
-    "karma-tap": "4.2.0",
-    "karma-tap-pretty-reporter": "4.2.0",
     "karma-webpack": "5.0.0",
     "kw-doc": "3.1.2",
     "lodash": "4.17.21",

@@ -73,6 +73,12 @@ var TapeHTMLReporter = function(baseReporterDecorator, rootConfig, logger, helpe
       browser.tests.forEach((test) => {
         test.success = test.specs.reduce((yn, spec) => yn && spec.success, true);
       });
+
+      console.info(`Browser: ${browser.name}`);
+      console.info(`\tSuccess:\t${browser.summary.passed}`);
+      console.info(`\tSkipped:\t${browser.summary.skipped}`);
+      console.info(`\tFailed:\t${browser.summary.failed}`);
+      console.info(`\tTotal:\t${browser.summary.total}`);
     });
 
     // render out html
