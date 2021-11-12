@@ -24,14 +24,14 @@ module.exports = function init(config) {
     basePath: '',
     frameworks: ['tape-object-stream', 'webpack'],
     files: [
-      'Sources/tests.js',
       'Sources/Testing/setupTestEnv.js',
+      'Sources/**/test*.js',
       { pattern: 'Data/**', watched: false, served: true, included: false },
     ],
 
     preprocessors: {
-      'Sources/tests.js': ['webpack'],
       'Sources/Testing/setupTestEnv.js': ['webpack'],
+      'Sources/**/test*.js': ['webpack'],
     },
 
     webpack: {

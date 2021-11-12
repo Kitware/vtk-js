@@ -1,5 +1,13 @@
 import test from 'tape-catch';
 
+// Load default classes for tests
+import '../IO/Core/DataAccessHelper/HtmlDataAccessHelper';
+import '../IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import '../IO/Core/DataAccessHelper/JSZipDataAccessHelper';
+
+// Load the rendering pieces we want to use (for both WebGL and WebGPU)
+import '../Rendering/Profiles/All';
+
 /**
  * Buffers written objects until a reader attaches,
  * after which all writes go to the reader.
