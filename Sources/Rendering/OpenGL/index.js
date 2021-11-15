@@ -4,6 +4,7 @@ import vtkBufferObject from './BufferObject';
 import vtkCamera from './Camera';
 import vtkCellArrayBufferObject from './CellArrayBufferObject';
 import vtkConvolution2DPass from './Convolution2DPass';
+import vtkForwardPass from './ForwardPass';
 import vtkFramebuffer from './Framebuffer';
 import vtkGlyph3DMapper from './Glyph3DMapper';
 import vtkHardwareSelector from './HardwareSelector';
@@ -34,6 +35,7 @@ export default {
   vtkCamera,
   vtkCellArrayBufferObject,
   vtkConvolution2DPass,
+  vtkForwardPass,
   vtkFramebuffer,
   vtkGlyph3DMapper,
   vtkHardwareSelector,
