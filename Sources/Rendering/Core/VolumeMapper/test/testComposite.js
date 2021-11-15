@@ -82,7 +82,7 @@ test('Test Composite Volume Rendering', (t) => {
           [baseline1, baseline2],
           'Rendering/Core/VolumeMapper/testComposite',
           t,
-          1.5,
+          3.0,
           gc.releaseResources
         );
       });

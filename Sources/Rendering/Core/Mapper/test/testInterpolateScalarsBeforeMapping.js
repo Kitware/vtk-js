@@ -109,7 +109,7 @@ test('Test Interpolate Scalars Before Mapping', (t) => {
       [baseline],
       'Rendering/Core/Mapper/testInterpolateScalarsBeforeMapping',
       t,
-      1.5,
+      5,
       gc.releaseResources
     );
   });

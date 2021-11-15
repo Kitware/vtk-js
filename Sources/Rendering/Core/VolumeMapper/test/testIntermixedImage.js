@@ -21,7 +21,7 @@ import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeAc
 import baseline1 from './testIntermixedImage.png';
 // import baseline2 from './testIntermixedImage_1.png';
 
-test('Test Composite Volume Rendering', (t) => {
+test('Test Composite Volume Rendering: intermixed image', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkVolumeMapper IntermixedImage');
   // testUtils.keepDOM();
@@ -171,7 +171,7 @@ test('Test Composite Volume Rendering', (t) => {
           [baseline1],
           'Rendering/Core/VolumeMapper/testIntermixedImage',
           t,
-          1.8,
+          5.0,
           gc.releaseResources
         );
       });

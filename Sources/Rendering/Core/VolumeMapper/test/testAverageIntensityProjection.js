@@ -14,7 +14,7 @@ import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
 import baseline from './testAverageIntensityProjection.png';
 
-test('Test Average Intensity Projection Volume Rendering', (t) => {
+test.skip('Test Average Intensity Projection Volume Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkVolumeMapper AverageIP');
   // testUtils.keepDOM();
@@ -87,7 +87,11 @@ test('Test Average Intensity Projection Volume Rendering', (t) => {
           [baseline],
           'Rendering/Core/VolumeMapper/testAverageIntensityProjection',
           t,
-          1.5,
+          {
+            // be stricter here
+            pixelThreshold: 0.01,
+            mismatchTolerance: 1.0,
+          },
           gc.releaseResources
         );
       });
