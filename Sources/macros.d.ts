@@ -186,8 +186,8 @@ export function getArray(publicAPI: object, model: object, fields: Array<string>
  * without calling modified.
  *
  * ```
- * set{FieldName}(a, b, c) / set{FieldName}(abc)
- * set{FieldName}From(abc)
+ * set{FieldName}(a, b, c) / set{FieldName}([a, b, c]) / set{FieldName}(new Uint8Array(...)) / set{FieldName}(null)
+ * set{FieldName}From([a, b, c])
  * ```
  *
  * @param publicAPI

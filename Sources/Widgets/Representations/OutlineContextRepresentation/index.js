@@ -50,12 +50,16 @@ function vtkOutlineContextRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
-    const list = publicAPI.getRepresentationStates(inData[0]);
+    const list = publicAPI
+      .getRepresentationStates(inData[0])
+      .filter((state) => state.getOrigin && state.getOrigin());
     vtkBoundingBox.reset(model.bbox);
 
     for (let i = 0; i < list.length; i++) {
       const pt = list[i].getOrigin();
-      vtkBoundingBox.addPoint(model.bbox, ...pt);
+      if (pt) {
+        vtkBoundingBox.addPoint(model.bbox, ...pt);
+      }
     }
 
     // BOUNDS_MAP.length should equal model.points.length

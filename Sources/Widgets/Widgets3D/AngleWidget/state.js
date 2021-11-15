@@ -9,17 +9,15 @@ export default function generateState() {
       name: 'moveHandle',
       initialValues: {
         scale1: 0.1,
-        origin: [-1, -1, -1],
         visible: false,
       },
     })
     .addDynamicMixinState({
       labels: ['handles'],
-      mixins: ['origin', 'color', 'scale1'],
+      mixins: ['origin', 'color', 'scale1', 'visible'],
       name: 'handle',
       initialValues: {
         scale1: 0.1,
-        origin: [-1, -1, -1],
       },
     })
     .build();

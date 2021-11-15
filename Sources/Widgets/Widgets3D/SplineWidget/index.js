@@ -38,6 +38,9 @@ function vtkSplineWidget(publicAPI, model) {
           {
             builder: vtkSphereHandleRepresentation,
             labels: ['handles', 'moveHandle'],
+            initialValues: {
+              scaleInPixels: true,
+            },
           },
           {
             builder: vtkSplineContextRepresentation,
@@ -63,6 +66,7 @@ const DEFAULT_VALUES = {
   resolution: 32, // propagates to SplineContextRepresentation
   defaultCursor: 'pointer',
   handleSizeInPixels: 10, // propagates to SplineContextRepresentation
+  resetAfterPointPlacement: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -78,6 +82,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'resolution',
     'defaultCursor',
     'handleSizeInPixels',
+    'resetAfterPointPlacement',
   ]);
 
   vtkSplineWidget(publicAPI, model);

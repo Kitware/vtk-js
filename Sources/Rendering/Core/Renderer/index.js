@@ -21,11 +21,6 @@ function vtkRenderer(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderer');
 
-  // make sure background has 4 entries. Default to opaque black
-  if (!model.background) model.background = [0, 0, 0, 1];
-  while (model.background.length < 3) model.background.push(0);
-  if (model.background.length === 3) model.background.push(1);
-
   // Events
   const COMPUTE_VISIBLE_PROP_BOUNDS_EVENT = {
     type: 'ComputeVisiblePropBoundsEvent',
@@ -629,6 +624,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkViewport.extend(publicAPI, model, initialValues);
+
+  // make sure background has 4 entries. Default to opaque black
+  if (!model.background) model.background = [0, 0, 0, 1];
+  while (model.background.length < 3) model.background.push(0);
+  if (model.background.length === 3) model.background.push(1);
 
   // Build VTK API
   macro.get(publicAPI, model, [

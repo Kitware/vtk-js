@@ -108,7 +108,15 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
   publicAPI.requestData = (inData, outData) => {
     const { points, scale, color } = model.internalArrays;
-    const list = publicAPI.getRepresentationStates(inData[0]);
+    const list = publicAPI
+      .getRepresentationStates(inData[0])
+      .filter(
+        (state) =>
+          state.getOrigin &&
+          state.getOrigin() &&
+          state.isVisible &&
+          state.isVisible()
+      );
     const totalCount = list.length;
 
     if (color.getNumberOfValues() !== totalCount) {
@@ -123,7 +131,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
       color: color.getData(),
     };
 
-    for (let i = 0; i < list.length; i++) {
+    for (let i = 0; i < totalCount; i++) {
       const state = list[i];
       const isActive = state.getActive();
       const scaleFactor = isActive ? model.activeScaleFactor : 1;
@@ -135,7 +143,6 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
       typedArray.scale[i] =
         scaleFactor *
-        (!state.isVisible || state.isVisible() ? 1 : 0) *
         (state.getScale1 ? state.getScale1() : model.defaultScale);
 
       if (publicAPI.getScaleInPixels()) {
