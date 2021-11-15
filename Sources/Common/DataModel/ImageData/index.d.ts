@@ -22,7 +22,7 @@ interface IComputeHistogram {
 export interface vtkImageData extends vtkDataSet {
 
 	/**
-	 * Returns an object with `{ minimum, maximum, average, variance, sigma }`
+	 * Returns an object with `{ minimum, maximum, average, variance, sigma, count }`
 	 * of the imageData points found within the provided `worldBounds`.
 	 *
 	 * `voxelFunc(index, bounds)` is an optional function that is called with

@@ -410,7 +410,9 @@ function vtkImageData(publicAPI, model) {
     }
 
     const average = inum > 0 ? isum / inum : 0;
-    const variance = sumOfSquares - average * average;
+    const variance = inum
+      ? Math.abs(sumOfSquares / inum - average * average)
+      : 0;
     const sigma = Math.sqrt(variance);
 
     return {
@@ -419,6 +421,7 @@ function vtkImageData(publicAPI, model) {
       average,
       variance,
       sigma,
+      count: inum,
     };
   };
 
