@@ -8,6 +8,10 @@ In ShapeWidget:
 
 RectangleWidget and EllipseWidget handles now scale up automatically.
 
+## From 19.2 to 19.3
+
+Node >=12 is required
+
 ## From 18.x to 19
 
 vtkWidgetRepresentation.updateActorVisibility(...) lost the widgetVisibility parameter.
