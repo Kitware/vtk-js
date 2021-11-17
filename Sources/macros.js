@@ -394,6 +394,12 @@ export function obj(publicAPI = {}, model = {}) {
     publicAPI.modified();
   };
 
+  // This function will get called when one invoke JSON.stringify(vtkObject)
+  // JSON.stringify will only stringify the return value of this function
+  publicAPI.toJSON = function vtkObjToJSON() {
+    return publicAPI.getState();
+  };
+
   // Allow usage as decorator
   return publicAPI;
 }

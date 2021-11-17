@@ -53,6 +53,14 @@ function ignoreMTime(json) {
   return JSON.stringify(json).replace(/"mtime":[0-9]+/g, '"mtime":0');
 }
 
+function assertSameSerializedContent(t, state, state2) {
+  t.deepEqual(
+    ignoreMTime(state),
+    ignoreMTime(state2),
+    'But same serialized content'
+  );
+}
+
 classToTest.forEach((testName) => {
   const klass =
     SERIALIZABLE_CLASSES[testName].class || SERIALIZABLE_CLASSES[testName];
@@ -66,6 +74,7 @@ classToTest.forEach((testName) => {
 
     const state = instance.getState();
     t.ok(instance, 'Make sure we can get serialize data');
+
     const instance2 = vtk(state);
     t.ok(instance, 'Make sure we can get deserialize data');
     const state2 = instance2.getState();
@@ -75,11 +84,26 @@ classToTest.forEach((testName) => {
     }
 
     t.notEqual(instance, instance2, 'We have two different instances');
-    t.deepEqual(
-      ignoreMTime(state),
-      ignoreMTime(state2),
-      'But same serialized content'
+    assertSameSerializedContent(t, state, state2);
+
+    /* Test JSON.stringify and JSON.parse behavior */
+    const jsonFromStringify = JSON.stringify(instance);
+    const jsonFromGetState = JSON.stringify(state);
+
+    t.equal(
+      jsonFromStringify,
+      jsonFromGetState,
+      'We have the same json string.'
     );
+
+    const state3 = JSON.parse(jsonFromStringify);
+    const instance3 = vtk(state3);
+    const state4 = JSON.parse(jsonFromGetState);
+    const instance4 = vtk(state4);
+
+    t.ok(instance3, 'Make sure we get a valid instance');
+    t.notEqual(instance3, instance4, 'We have two different instances');
+    assertSameSerializedContent(t, state3, state4);
 
     t.end();
   });
