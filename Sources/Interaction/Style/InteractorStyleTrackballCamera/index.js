@@ -94,7 +94,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const speed = ed.gamepad.axes[1];
 
     // 0.05 meters / frame movement
-    const pscale = (speed * 0.05) / camera.getPhysicalScale();
+    const pscale = speed * 0.05 * camera.getPhysicalScale();
 
     // convert orientation to world coordinate direction
     const dir = camera.physicalOrientationToWorldDirection(ed.orientation);
