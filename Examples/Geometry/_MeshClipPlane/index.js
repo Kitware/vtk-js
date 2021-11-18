@@ -94,7 +94,6 @@ const rotationMatrix = [
 const normal = [1, 0, 0];
 const origin = [0, 0, 0];
 
-// let el = document.querySelector('.togglePlanesButton');
 document.querySelector('.addClippingPlane').addEventListener('click', (e) => {
   vtkMath.multiplyAccumulate([0, 0, 0], normal, -0.8, origin);
   addClippingPlaneToScene(
