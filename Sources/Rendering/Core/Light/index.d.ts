@@ -1,10 +1,10 @@
 import { vtkObject } from "../../../interfaces";
-import { Color } from "../../../types";
+import { RGBColor } from "../../../types";
 
 export interface ILightInitialValues {
     switch?: boolean;
     intensity?: number;
-    color?: Color;
+    color?: RGBColor;
     position?: number[];
     focalPoint?: number[];
     positional?: boolean;
@@ -32,12 +32,12 @@ export interface vtkLight extends vtkObject {
     /**
      * 
      */
-    getColor(): Color;
+    getColor(): RGBColor;
     
     /**
      * 
      */
-    getColorByReference(): Color;
+    getColorByReference(): RGBColor;
     
     /**
      * 
@@ -113,19 +113,41 @@ export interface vtkLight extends vtkObject {
      */
     setAttenuationValuesFrom(attenuationValues: number[]): boolean;
 
-    /**
-     * Set the color of the object
-     * @param {Number} r Defines the red component (between 0 and 1).
-     * @param {Number} g Defines the green component (between 0 and 1).
-     * @param {Number} b Defines the blue component (between 0 and 1).
-     */
-    setColor(r: number, g: number, b: number): boolean;
+	/**
+	 * Set the color of the object. Has the side effect of setting the
+	 * ambient diffuse and specular colors as well. This is basically
+	 * a quick overall color setting method.
+	 * @param {Number} r Defines the red component (between 0 and 1).
+	 * @param {Number} g Defines the green component (between 0 and 1).
+	 * @param {Number} b Defines the blue component (between 0 and 1).
+	 */
+	setColor(r: number, g: number, b: number): boolean;
 
-    /**
-     * 
-     * @param {Number[]} color 
-     */
-    setColorFrom(color: number[]): boolean;
+	/**
+	 * Set the color of the object. Has the side effect of setting the
+	 * ambient diffuse and specular colors as well. This is basically
+	 * a quick overall color setting method.
+	 * @param {RGBColor} color Defines the RGB color array..
+	 */
+	setColor(color: RGBColor): boolean;
+
+	/**
+	 * Set the color of the object. Has the side effect of setting the
+	 * ambient diffuse and specular colors as well. This is basically
+	 * a quick overall color setting method.
+	 * @param {Number} r Defines the red component (between 0 and 1).
+	 * @param {Number} g Defines the green component (between 0 and 1).
+	 * @param {Number} b Defines the blue component (between 0 and 1).
+	 */
+	setColorFrom(r: number, g: number, b: number): boolean;
+
+	/**
+	 * Set the color of the object. Has the side effect of setting the
+	 * ambient diffuse and specular colors as well. This is basically
+	 * a quick overall color setting method.
+	 * @param {RGBColor} color Defines the RGB color array..
+	 */
+	setColorFrom(color: RGBColor): boolean;
 
     /**
      * Set the lighting cone angle of a positional light in degrees.
