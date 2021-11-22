@@ -169,7 +169,7 @@ export function newInstance(initialValues?: IArrowSourceInitialValues): vtkArrow
  * 
  * @example
  * ```js
- * import vtkArrowSource from 'vtk.js/Sources/Filters/Sources/ArrowSource';
+ * import vtkArrowSource from '@kitware/vtk.js/Filters/Sources/ArrowSource';
  * 
  * const arrow = vtkArrowSource.newInstance({
  *   tipResolution: 6,

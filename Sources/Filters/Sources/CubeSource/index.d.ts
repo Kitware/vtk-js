@@ -171,10 +171,10 @@ export function newInstance(initialValues?: ICircleSourceInitialValues): vtkCube
  * 
  * @example
  * ```js
- * import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
+ * import vtkCubeSource from '@kitware/vtk.js/Filters/Sources/CubeSource';
  * 
  * const cubeSource = vtkCubeSource.newInstance({ xLength: 5, yLength: 5, zLength: 5 });
- * const cubePolydata = cubeSource.getOutputData();
+ * const polydata = cubeSource.getOutputData();
  * ```
  */
 export declare const vtkCubeSource: {

@@ -193,7 +193,7 @@ export function newInstance(initialValues?: ISphereSourceInitialValues): vtkSphe
  * 
  * @example
  * ```js
- * import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+ * import vtkSphereSource from '@kitware/vtk.js/Filters/Sources/SphereSource';
  * 
  * const sphere = vtkSphereSource.newInstance();
  * const polydata = sphere.getOutputData();

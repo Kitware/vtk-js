@@ -121,6 +121,15 @@ export function newInstance(initialValues?: IVolumeInitialValues): vtkVolume;
  * 
  * @example
  * ```js
+ * // Load the rendering pieces we want to use (for both WebGL and WebGPU)
+ * import 'vtk.js/Sources/Rendering/Profiles/Volume';
+ * 
+ * import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
+ * import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
+ * 
+ * import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
+ * import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
+
  * const vol = vtkVolume.newInstance();
  * const mapper = vtkVolumeMapper.newInstance();
  * mapper.setSampleDistance(2.0);

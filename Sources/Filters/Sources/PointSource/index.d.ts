@@ -111,7 +111,7 @@ export function newInstance(initialValues?: IPointSourceInitialValues): vtkPoint
  * 
  * @example
  * ```js
- * import vtkPointSource from 'vtk.js/Sources/Filters/Sources/PointSource';
+ * import vtkPointSource from '@kitware/vtk.js/Filters/Sources/PointSource';
  * 
  * const point = vtkPointSource.newInstance({ numberOfPoints: 10 });
  * const polydata = point.getOutputData();

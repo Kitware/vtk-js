@@ -235,7 +235,7 @@ export function newInstance(initialValues?: IPlaneSourceInitialValues): vtkPlane
  * 
  * @example
  * ```js
- * import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
+ * import vtkPlaneSource from '@kitware/vtk.js/Filters/Sources/PlaneSource';
  * 
  * const plane = vtkPlaneSource.newInstance({ xResolution: 10, yResolution: 10 });
  * const polydata = plane.getOutputData();

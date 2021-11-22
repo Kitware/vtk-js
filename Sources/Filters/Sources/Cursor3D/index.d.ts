@@ -204,7 +204,7 @@ export function newInstance(initialValues?: ICursor3DInitialValues): vtkCursor3D
  * 
  * @example
  * ```js
- * import vtkCursor3D from 'vtk.js/Sources/Filters/Sources/vtkCursor3D';
+ * import vtkCursor3D from '@kitware/vtk.js/Filters/Sources/vtkCursor3D';
  * 
  * const cursor = vtkCursor3D.newInstance({focalPoint: [0, 0, 0], modelBounds: [-100, 100, -100, 100, -100, 100]});
  * const polyData = cursor.getOutputData();

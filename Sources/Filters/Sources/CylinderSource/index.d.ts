@@ -195,7 +195,7 @@ export function newInstance(initialValues?: ICylinderSourceInitialValues): vtkCy
  * 
  * @example
  * ```js
- * import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
+ * import vtkCylinderSource from '@kitware/vtk.js/Filters/Sources/CylinderSource';
  * 
  * const cylinder = vtkCylinderSource.newInstance({ height: 2, radius: 1, resolution: 80 });
  * const polydata = cylinder.getOutputData();

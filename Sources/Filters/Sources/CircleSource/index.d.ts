@@ -158,7 +158,7 @@ export function newInstance(initialValues?: ICircleSourceInitialValues): vtkCirc
  * 
  * @example
  * ```js
- * import vtkCircleSource from 'vtk.js/Sources/Filters/Sources/CircleSource';
+ * import vtkCircleSource from '@kitware/vtk.js/Filters/Sources/CircleSource';
  * 
  * const circle = vtkCircleSource.newInstance({ radius: 1, resolution: 80 });
  * const polydata = circle.getOutputData();

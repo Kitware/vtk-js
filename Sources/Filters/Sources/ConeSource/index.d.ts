@@ -189,7 +189,7 @@ export function newInstance(initialValues ? : IConeSourceInitialValues): vtkCone
  * 
  * @example
  * ```js
- * import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+ * import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
  * 
  * const cone = vtkConeSource.newInstance({ height: 2, radius: 1, resolution: 80 });
  * const polydata = cone.getOutputData();
