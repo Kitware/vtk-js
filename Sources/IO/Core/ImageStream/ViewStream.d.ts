@@ -1,10 +1,12 @@
 import { vtkObject } from '../../../interfaces';
-
+import { Size } from '../../../types';
+import vtkCamera from '../../../Rendering/Core/Camera';
+import DefaultProtocol from './DefaultProtocol';
 /**
  *
  */
 export interface IViewStreamInitialValues {
-  protocol?: any;
+  protocol?: typeof DefaultProtocol;
   api?: any;
   cameraUpdateRate?: number;
   decodeImage?: boolean;
@@ -13,11 +15,24 @@ export interface IViewStreamInitialValues {
   interactiveRatio?: number;
   isAnimating?: boolean;
   mimeType?: string;
-  size?: number[];
+  size?: Size;
   stillQuality?: number;
   stillRatio?: number;
   useCameraParameters?: boolean;
   viewId?: string;
+}
+
+interface IMetaData {
+  size: Size,
+  id: string,
+  memory: number,
+  workTime: number,
+}
+
+interface IEvent {
+  url: string,
+  fps: number[],
+  metadata: IMetaData,
 }
 
 export interface vtkViewStream extends vtkObject {
@@ -35,28 +50,28 @@ export interface vtkViewStream extends vtkObject {
   /**
    *
    */
-  getSize(): number[];
+  getSize(): Size;
 
   /**
    *
    */
-  getFps(): any;
+  getFps(): number[];
 
   /**
    *
    */
-  getLastImageEvent(): any;
+  getLastImageEvent(): IEvent;
 
   /**
    *
    */
-  getCamera(): any;
+  getCamera(): vtkCamera;
 
   /**
    *
    * @param camera
    */
-  setCamera(camera: any): boolean;
+  setCamera(camera: vtkCamera): boolean;
 
   /**
    *
@@ -72,7 +87,7 @@ export interface vtkViewStream extends vtkObject {
   /**
    *
    */
-  getDecodeImage(): any;
+  getDecodeImage(): boolean;
 
   /**
    *

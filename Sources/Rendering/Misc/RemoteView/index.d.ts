@@ -1,8 +1,9 @@
 import { vtkObject } from '../../../interfaces';
-import { vtkCanvasView } from '../CanvasView';
+import vtkCanvasView from '../CanvasView';
+import vtkViewStream from '../../../IO/Core/ImageStream/ViewStream';
 
 interface IRemoteViewInitialValues {
-  viewId?: number;
+  viewId?: string;
   interactiveQuality?: number;
   interactiveRatio?: number;
   stillQuality?: number;
@@ -21,7 +22,7 @@ export interface vtkRemoteView extends vtkObject {
   /**
    *
    */
-  getViewStream(): any;
+  getViewStream(): vtkViewStream;
 
   /**
    *
@@ -111,7 +112,7 @@ export interface vtkRemoteView extends vtkObject {
    *
    * @param viewStream
    */
-  setViewStream(viewStream: any): boolean; // viewStream is vtkViewStream
+  setViewStream(viewStream: vtkViewStream): boolean;
 
   /**
    *
