@@ -15,6 +15,8 @@ All old-style widgets except OrientationMarkerWidget and PiecewiseGaussianWidget
 
 (1): Not re-implemented as if, but a similar behavior can be achieved with the PolyLineWidget.
 
+- In SVGLandmarkRepresentation: `model.showCircle` is replaced by `model.circleProps.visible`
+
 ## From 20.x to 21
 
 SplineWidget's handles now scale up automatically.
