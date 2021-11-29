@@ -661,10 +661,7 @@ function vtkTubeFilter(publicAPI, model) {
       size: numNewPts * 3,
       numberOfComponents: 3,
     });
-    let numNormals = 3 * numNewPts;
-    if (model.capping) {
-      numNormals = 3 * (numNewPts + 2 * model.numberOfSides);
-    }
+    const numNormals = 3 * numNewPts;
     const newNormalsData = new Float32Array(numNormals);
     const newNormals = vtkDataArray.newInstance({
       numberOfComponents: 3,
