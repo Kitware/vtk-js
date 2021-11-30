@@ -6,10 +6,7 @@ import 'vtk.js/Sources/Rendering/Profiles/Geometry';
 import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import macro from 'vtk.js/Sources/macros';
 import vtkDeviceOrientationToCamera from 'vtk.js/Sources/Interaction/Misc/DeviceOrientationToCamera';
-import vtkForwardPass from 'vtk.js/Sources/Rendering/OpenGL/ForwardPass';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkRadialDistortionPass from 'vtk.js/Sources/Rendering/OpenGL/RadialDistortionPass';
-import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkSkybox from 'vtk.js/Sources/Rendering/Core/Skybox';
 import vtkSkyboxReader from 'vtk.js/Sources/IO/Misc/SkyboxReader';
 import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
@@ -41,14 +38,9 @@ let autoInit = true;
 const cameraFocalPoint = userParams.direction || [0, 0, -1];
 const cameraViewUp = userParams.up || [0, 1, 0];
 const cameraViewAngle = userParams.viewAngle || 100;
-const enableXR = !!userParams.xr;
 const eyeSpacing = userParams.eye || 0.0;
 const grid = userParams.debug || false;
 const autoIncrementTimer = userParams.timer || 0;
-const disableTouchNext = userParams.disableTouch || false;
-const distk1 = userParams.k1 || 0.2;
-const distk2 = userParams.k2 || 0.0;
-const cameraCenterY = userParams.centerY || 0.0;
 
 const body = document.querySelector('body');
 let fullScreenMetod = null;
@@ -151,10 +143,8 @@ function createVisualization(container, mapReader) {
   const mainRenderer = fullScreenRenderer.getRenderer();
   const interactor = fullScreenRenderer.getInteractor();
   const actor = vtkSkybox.newInstance();
-  let camera = mainRenderer.getActiveCamera();
-  let leftRenderer = null;
-  let rightRenderer = null;
-  let updateCameraCallBack = mainRenderer.resetCameraClippingRange;
+  const camera = mainRenderer.getActiveCamera();
+  const updateCameraCallBack = mainRenderer.resetCameraClippingRange;
 
   // Connect viz pipeline
   actor.addTexture(mapReader.getOutputData());
@@ -189,110 +179,30 @@ function createVisualization(container, mapReader) {
     updateSkybox(allPositions[nextIdx]);
   }
 
-  if (enableXR && navigator.xr.isSessionSupported('immersive-vr')) {
-    leftRenderer = vtkRenderer.newInstance();
-    rightRenderer = vtkRenderer.newInstance();
+  camera.set(cameraConfiguration);
+  mainRenderer.addActor(actor);
 
-    // Configure left/right renderers
-    leftRenderer.setViewport(0, 0, 0.5, 1);
-    leftRenderer.addActor(actor);
-    const leftCamera = leftRenderer.getActiveCamera();
-    leftCamera.set(cameraConfiguration);
-    leftCamera.setWindowCenter(-eyeSpacing, -cameraCenterY);
-
-    rightRenderer.setViewport(0.5, 0, 1, 1);
-    rightRenderer.addActor(actor);
-    const rightCamera = rightRenderer.getActiveCamera();
-    rightCamera.set(cameraConfiguration);
-    rightCamera.setWindowCenter(eyeSpacing, -cameraCenterY);
-
-    // Provide custom update callback + fake camera
-    updateCameraCallBack = () => {
-      leftRenderer.resetCameraClippingRange();
-      rightRenderer.resetCameraClippingRange();
-    };
-    camera = {
-      setDeviceAngles(alpha, beta, gamma, screen) {
-        leftCamera.setDeviceAngles(alpha, beta, gamma, screen);
-        rightCamera.setDeviceAngles(alpha, beta, gamma, screen);
-      },
-    };
-
-    // Reconfigure render window
-    renderWindow.addRenderer(leftRenderer);
-    renderWindow.addRenderer(rightRenderer);
-    renderWindow.removeRenderer(mainRenderer);
-
-    const distPass = vtkRadialDistortionPass.newInstance();
-    distPass.setK1(distk1);
-    distPass.setK2(distk2);
-    distPass.setCameraCenterY(cameraCenterY);
-    distPass.setCameraCenterX1(-eyeSpacing);
-    distPass.setCameraCenterX2(eyeSpacing);
-    distPass.setDelegates([vtkForwardPass.newInstance()]);
-    fullScreenRenderer.getApiSpecificRenderWindow().setRenderPasses([distPass]);
-
-    // Hide any controller
-    fullScreenRenderer.setControllerVisibility(false);
-
-    // Remove window interactions
-    interactor.unbindEvents();
-
-    // Attach touch control
-    if (!disableTouchNext) {
-      fullScreenRenderer
-        .getRootContainer()
-        .addEventListener('touchstart', nextPosition, true);
-      if (fullScreenMetod) {
-        fullScreenRenderer.getRootContainer().addEventListener(
-          'touchend',
-          (e) => {
-            body[fullScreenMetod]();
-          },
-          true
-        );
+  // add vr option button if supported
+  if (
+    navigator.xr !== undefined &&
+    navigator.xr.isSessionSupported('immersive-vr')
+  ) {
+    const button = document.createElement('button');
+    button.style.position = 'absolute';
+    button.style.left = '10px';
+    button.style.bottom = '10px';
+    button.style.zIndex = 10000;
+    button.textContent = 'Send To VR';
+    document.querySelector('body').appendChild(button);
+    button.addEventListener('click', () => {
+      if (button.textContent === 'Send To VR') {
+        fullScreenRenderer.getApiSpecificRenderWindow().startXR();
+        button.textContent = 'Return From VR';
+      } else {
+        fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
+        button.textContent = 'Send To VR';
       }
-    }
-
-    // Warning if browser does not support fullscreen
-    /* eslint-disable */
-    if (navigator.userAgent.match('CriOS')) {
-      alert(
-        'Chrome on iOS does not support fullscreen. Please use Safari instead.'
-      );
-    }
-    if (navigator.userAgent.match('FxiOS')) {
-      alert(
-        'Firefox on iOS does not support fullscreen. Please use Safari instead.'
-      );
-    }
-    /* eslint-enable */
-  } else {
-    camera.set(cameraConfiguration);
-    mainRenderer.addActor(actor);
-
-    // add vr option button if supported
-    if (
-      navigator.xr !== undefined &&
-      navigator.xr.isSessionSupported('immersive-vr')
-    ) {
-      const button = document.createElement('button');
-      button.style.position = 'absolute';
-      button.style.left = '10px';
-      button.style.bottom = '10px';
-      button.style.zIndex = 10000;
-      button.textContent = 'Send To VR';
-      document.querySelector('body').appendChild(button);
-      button.addEventListener('click', () => {
-        if (button.textContent === 'Send To VR') {
-          fullScreenRenderer.getApiSpecificRenderWindow().startXR();
-          button.textContent = 'Return From VR';
-        } else {
-          fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
-          button.textContent = 'Send To VR';
-        }
-      });
-    }
+    });
   }
 
   renderWindow.render();
