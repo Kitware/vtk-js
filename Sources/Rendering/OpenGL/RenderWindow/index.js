@@ -354,6 +354,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.xrRender = async (t, frame) => {
     const xrSession = frame.session;
 
+    model.renderable
+      .getInteractor()
+      .updateXRGamepads(xrSession, frame, model.xrReferenceSpace);
+
     model.xrSceneFrame = model.xrSession.requestAnimationFrame(
       publicAPI.xrRender
     );
