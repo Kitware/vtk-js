@@ -580,7 +580,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         }
       }
       cellBO.getProgram().setUniformi('numClipPlanes', numClipPlanes);
-      cellBO.getProgram().setUniform4fv('clipPlanes', 6, planeEquations);
+      cellBO.getProgram().setUniform4fv('clipPlanes', planeEquations);
     }
   };
 
