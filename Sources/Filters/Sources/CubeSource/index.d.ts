@@ -1,5 +1,5 @@
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
-import { Bounds, Point } from "../../../types";
+import { Bounds, Vector3 } from "../../../types";
 
 /**
  *
@@ -8,8 +8,8 @@ export interface ICircleSourceInitialValues {
 	xLength?: number;
 	yLength?: number;
 	zLength?: number;
-	center?: Point;
-	rotations?: number[];
+	center?: Vector3;
+	rotations?: Vector3;
 	pointType?: string;
 	generate3DTextureCoordinates?: boolean;
 }
@@ -28,12 +28,12 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
 	 * Get the center of the cube.
 	 * @default [0.0, 0.0, 0.0]
 	 */
-	getCenter(): Point;
+	getCenter(): Vector3;
 
 	/**
 	 * Get the center of the cube.
 	 */
-	getCenterByReference(): Point;
+	getCenterByReference(): Vector3;
 
 	/**
 	 *
@@ -45,13 +45,13 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
 	 *
 	 * @default [0.0, 0.0, 0.0]
 	 */
-	getRotations(): number[];
+	getRotations(): Vector3;
 
 	/**
 	 *
-	 * @default false
+	 * @default [0.0, 0.0, 0.0]
 	 */
-	getRotationsByReference(): boolean;
+	getRotationsByReference(): Vector3;
 
 	/**
 	 * Get the length of the cube in the x-direction.
@@ -80,12 +80,12 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
 
 	/**
 	 * Convenience methods allows creation of cube by specifying bounding box.
-	 * @param xMin
-	 * @param xMax
-	 * @param yMin
-	 * @param yMax
-	 * @param zMin
-	 * @param zMax
+	 * @param {Number} xMin 
+	 * @param {Number} xMax 
+	 * @param {Number} yMin 
+	 * @param {Number} yMax 
+	 * @param {Number} zMin 
+	 * @param {Number} zMax 
 	 */
 	setBounds(xMin: number, xMax: number, yMin: number, yMax: number, zMin: number, zMax: number): boolean;
 
@@ -109,7 +109,7 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
 	 * @param center
 	 * @default [0, 0, 0]
 	 */
-	setCenterFrom(center: Point): boolean;
+	setCenterFrom(center: Vector3): boolean;
 
 	/**
 	 *
@@ -127,9 +127,9 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
 
 	/**
 	 *
-	 * @param rotations
+	 * @param {Vector3} rotations
 	 */
-	setRotationsFrom(rotations: number[]): boolean;
+	setRotationsFrom(rotations: Vector3): boolean;
 
 	/**
 	 * Set the length of the cube in the x-direction.
@@ -171,10 +171,10 @@ export function newInstance(initialValues?: ICircleSourceInitialValues): vtkCube
  * 
  * @example
  * ```js
- * import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
+ * import vtkCubeSource from '@kitware/vtk.js/Filters/Sources/CubeSource';
  * 
  * const cubeSource = vtkCubeSource.newInstance({ xLength: 5, yLength: 5, zLength: 5 });
- * const cubePolydata = cubeSource.getOutputData();
+ * const polydata = cubeSource.getOutputData();
  * ```
  */
 export declare const vtkCubeSource: {

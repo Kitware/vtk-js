@@ -119,7 +119,7 @@ export function newInstance(initialValues?: ILineSourceInitialValues): vtkLineSo
  * 
  * @example
  * ```js
- * import vtkLineSource from 'vtk.js/Sources/Filters/Sources/LineSource';
+ * import vtkLineSource from '@kitware/vtk.js/Filters/Sources/LineSource';
  * 
  * const line = vtkLineSource.newInstance({ resolution: 10 });
  * const polydata = line.getOutputData();

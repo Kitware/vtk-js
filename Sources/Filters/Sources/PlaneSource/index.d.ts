@@ -1,5 +1,6 @@
 import { vec3 } from 'gl-matrix';
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
+import { Vector3 } from '../../../types';
 
 /**
  * 
@@ -7,9 +8,9 @@ import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 export interface IPlaneSourceInitialValues {
 	xResolution?: number;
 	yResolution?: number;
-	origin?: number[];
-	point1?: number[];
-	point2?: number[];
+	origin?: Vector3;
+	point1?: Vector3;
+	point2?: Vector3;
 	pointType?: string;
 }
 
@@ -27,56 +28,56 @@ export interface vtkPlaneSource extends vtkPlaneSourceBase {
 	 * Get the center of the plane.
 	 * @default [0, 0, 0]
 	 */
-	getCenter(): number[];
+	getCenter(): Vector3;
 
 	/**
 	 * Get the center of the plane.
 	 */
-	getCenterByReference(): number[];
+	getCenterByReference(): Vector3;
 
 	/**
 	 * Get the normal of the plane.
 	 * @default [0, 0, 1]
 	 */
-	getNormal(): number[];
+	getNormal(): Vector3;
 
 	/**
 	 * Get the normal of the plane.
 	 */
-	getNormalByReference(): number[];
+	getNormalByReference(): Vector3;
 
 	/**
 	 * Get the origin of the plane, lower-left corner.
 	 * @default [0, 0, 0]
 	 */
-	getOrigin(): number[];
+	getOrigin(): Vector3;
 
 	/**
 	 * Get the origin of the plane, lower-left corner.
 	 */
-	getOriginByReference(): number[];
+	getOriginByReference(): Vector3;
 
 	/**
 	 * Get the x axes of the plane.
 	 * @default [1, 0, 0]
 	 */
-	getPoint1(): number[];
+	getPoint1(): Vector3;
 
 	/**
 	 * Get the x axes of the plane.
 	 */
-	getPoint1ByReference(): number[];
+	getPoint1ByReference(): Vector3;
 
 	/**
 	 * Get the y axes of the plane.
 	 * @default [0, 1, 0]
 	 */
-	getPoint2(): number[];
+	getPoint2(): Vector3;
 
 	/**
 	 * Get the y axes of the plane.
 	 */
-	getPoint2ByReference(): number[];
+	getPoint2ByReference(): Vector3;
 
 	/**
 	 * Get the x resolution of the plane.
@@ -114,15 +115,15 @@ export interface vtkPlaneSource extends vtkPlaneSourceBase {
 
 	/**
 	 * Set the center of the plane.
-	 * @param {Number[]} center The coordinate of the center point.
+	 * @param {Vector3} center The coordinate of the center point.
 	 */
-	setCenter(center: number[]): void;
+	setCenter(center: Vector3): void;
 
 	/**
 	 * Set the normal of the plane.
-	 * @param {Number[]} normal The normal coordinate.
+	 * @param {Vector3} normal The normal coordinate.
 	 */
-	setNormal(normal: number[]): boolean;
+	setNormal(normal: Vector3): boolean;
 
 	/**
 	 * Set the normal of the plane.
@@ -134,15 +135,15 @@ export interface vtkPlaneSource extends vtkPlaneSourceBase {
 
 	/**
 	 * Set the normal of the plane.
-	 * @param {Number[]} normal The normal coordinate.
+	 * @param {Vector3} normal The normal coordinate.
 	 */
-	setNormalFrom(normal: number[]): boolean;
+	setNormalFrom(normal: Vector3): boolean;
 
 	/**
 	 * Set the origin of the plane.
-	 * @param {Number[]} origin The coordinate of the origin point.
+	 * @param {Vector3} origin The coordinate of the origin point.
 	 */
-	setOrigin(origin: number[]): boolean;
+	setOrigin(origin: Vector3): boolean;
 
 	/**
 	 * Set the origin of the plane.
@@ -154,9 +155,9 @@ export interface vtkPlaneSource extends vtkPlaneSourceBase {
 
 	/**
 	 * Set the origin of the plane.
-	 * @param {Number[]} origin The coordinate of the origin point.
+	 * @param {Vector3} origin The coordinate of the origin point.
 	 */
-	setOriginFrom(origin: number[]): boolean;
+	setOriginFrom(origin: Vector3): boolean;
 
 	/**
 	 * Specify a point defining the first axis of the plane.
@@ -168,9 +169,9 @@ export interface vtkPlaneSource extends vtkPlaneSourceBase {
 
 	/**
 	 * Specify a point defining the first axis of the plane.
-	 * @param {Number[]} point1 
+	 * @param {Vector3} point1 
 	 */
-	setPoint1(point1: number[]): boolean;
+	setPoint1(point1: Vector3): boolean;
 
 	/**
 	 * Specify a point defining the second axis of the plane.
@@ -182,9 +183,9 @@ export interface vtkPlaneSource extends vtkPlaneSourceBase {
 
 	/**
 	 * Specify a point defining the second axis of the plane.
-	 * @param {Number[]} point2 
+	 * @param {Vector3} point2 
 	 */
-	setPoint2(point2: number[]): boolean;
+	setPoint2(point2: Vector3): boolean;
 
 	/**
 	 * Set the number of facets used to represent the cone.
@@ -234,7 +235,7 @@ export function newInstance(initialValues?: IPlaneSourceInitialValues): vtkPlane
  * 
  * @example
  * ```js
- * import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
+ * import vtkPlaneSource from '@kitware/vtk.js/Filters/Sources/PlaneSource';
  * 
  * const plane = vtkPlaneSource.newInstance({ xResolution: 10, yResolution: 10 });
  * const polydata = plane.getOutputData();

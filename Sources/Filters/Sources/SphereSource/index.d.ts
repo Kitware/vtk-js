@@ -1,4 +1,5 @@
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
+import { Vector3 } from "../../../types";
 
 /**
  * 
@@ -12,7 +13,7 @@ export interface ISphereSourceInitialValues {
 	phiResolution?: number;
 	startPhi?: number;
 	endPhi?: number;
-	center?: number[];
+	center?: Vector3;
 	pointType?: string;
 }
 
@@ -30,12 +31,12 @@ export interface vtkSphereSource extends vtkSphereSourceBase {
 	 * Get the center of the sphere.
 	 * @default [0, 0, 0]
 	 */
-	getCenter(): number[];
+	getCenter(): Vector3;
 
 	/**
 	 * Get the center of the sphere.
 	 */
-	getCenterByReference(): number[];
+	getCenterByReference(): Vector3;
 
 
 	/**
@@ -103,15 +104,15 @@ export interface vtkSphereSource extends vtkSphereSourceBase {
 
 	/**
 	 * Set the center of the sphere.
-	 * @param {Number[]} center The center point's coordinates.
+	 * @param {Vector3} center The center point's coordinates.
 	 */
-	setCenter(center: number[]): boolean;
+	setCenter(center: Vector3): boolean;
 
 	/**
 	 * Set the center of the sphere.
-	 * @param {Number[]} center The center point's coordinates.
+	 * @param {Vector3} center The center point's coordinates.
 	 */
-	setCenterFrom(center: number[]): boolean;
+	setCenterFrom(center: Vector3): boolean;
 
 	/**
 	 * Set the ending latitude angle.
@@ -192,7 +193,7 @@ export function newInstance(initialValues?: ISphereSourceInitialValues): vtkSphe
  * 
  * @example
  * ```js
- * import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+ * import vtkSphereSource from '@kitware/vtk.js/Filters/Sources/SphereSource';
  * 
  * const sphere = vtkSphereSource.newInstance();
  * const polydata = sphere.getOutputData();
