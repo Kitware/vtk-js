@@ -1,16 +1,16 @@
+import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import macro from 'vtk.js/Sources/macros';
 import { registerViewConstructor } from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkForwardPass from 'vtk.js/Sources/Rendering/OpenGL/ForwardPass';
+import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
+import vtkShaderCache from 'vtk.js/Sources/Rendering/OpenGL/ShaderCache';
+import vtkOpenGLTextureUnitManager from 'vtk.js/Sources/Rendering/OpenGL/TextureUnitManager';
 import vtkOpenGLViewNodeFactory from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
-import vtkShaderCache from 'vtk.js/Sources/Rendering/OpenGL/ShaderCache';
 import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderWindowViewNode';
-import vtkOpenGLTextureUnitManager from 'vtk.js/Sources/Rendering/OpenGL/TextureUnitManager';
-import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
-import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
-const IS_CHROME = navigator.userAgent.indexOf('Chrome') !== -1;
+
 const SCREENSHOT_PLACEHOLDER = {
   position: 'absolute',
   top: 0,
@@ -227,6 +227,14 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   ) => {
     let result = null;
 
+    // Do we have webxr support
+    if (
+      navigator.xr !== undefined &&
+      navigator.xr.isSessionSupported('immersive-vr')
+    ) {
+      publicAPI.invokeHaveVRDisplay();
+    }
+
     const webgl2Supported = typeof WebGL2RenderingContext !== 'undefined';
     model.webgl2 = false;
     if (model.defaultToWebgl2 && webgl2Supported) {
@@ -241,20 +249,6 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       result =
         model.canvas.getContext('webgl', options) ||
         model.canvas.getContext('experimental-webgl', options);
-    }
-
-    // Do we have webvr support
-    if (navigator.getVRDisplays) {
-      navigator.getVRDisplays().then((displays) => {
-        if (displays.length > 0) {
-          // take the first display for now
-          model.vrDisplay = displays[0];
-          // set the clipping ranges
-          model.vrDisplay.depthNear = 0.01; // meters
-          model.vrDisplay.depthFar = 100.0; // meters
-          publicAPI.invokeHaveVRDisplay();
-        }
-      });
     }
 
     // prevent default context lost handler
@@ -275,111 +269,131 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     return result;
   };
 
-  publicAPI.startVR = () => {
-    model.oldCanvasSize = model.size.slice();
-    if (model.vrDisplay.capabilities.canPresent) {
-      model.vrDisplay
-        .requestPresent([{ source: model.canvas }])
-        .then(() => {
-          if (
-            model.el &&
-            model.vrDisplay.capabilities.hasExternalDisplay &&
-            model.hideCanvasInVR
-          ) {
-            model.el.style.display = 'none';
-          }
-          if (model.queryVRSize) {
-            const leftEye = model.vrDisplay.getEyeParameters('left');
-            const rightEye = model.vrDisplay.getEyeParameters('right');
-            const width = Math.floor(
-              leftEye.renderWidth + rightEye.renderWidth
-            );
-            const height = Math.floor(
-              Math.max(leftEye.renderHeight, rightEye.renderHeight)
-            );
-            publicAPI.setSize(width, height);
-          } else {
-            publicAPI.setSize(model.vrResolution);
-          }
+  // Request an XR session on the user device with WebXR,
+  // typically in response to a user request such as a button press
+  publicAPI.startXR = () => {
+    if (navigator.xr === undefined) {
+      throw new Error('WebXR is not available');
+    }
 
-          const ren = model.renderable.getRenderers()[0];
-          ren.resetCamera();
-          model.vrFrameData = new VRFrameData();
-          model.renderable.getInteractor().switchToVRAnimation();
-
-          model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
-            publicAPI.vrRender
-          );
-          // If Broswer is chrome we need to request animation again to canvas update
-          if (IS_CHROME) {
-            model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
-              publicAPI.vrRender
-            );
-          }
-        })
-        .catch(() => {
-          console.error('failed to requestPresent');
+    if (!navigator.xr.isSessionSupported('immersive-vr')) {
+      throw new Error('VR display is not available');
+    }
+    if (model.xrSession === null) {
+      navigator.xr
+        .requestSession('immersive-vr')
+        .then(publicAPI.enterXR, () => {
+          throw new Error('Failed to create VR session!');
         });
     } else {
-      vtkErrorMacro('vrDisplay is not connected');
+      throw new Error('VR Session already exists!');
     }
   };
 
-  publicAPI.stopVR = () => {
-    model.renderable.getInteractor().returnFromVRAnimation();
-    model.vrDisplay.exitPresent();
-    model.vrDisplay.cancelAnimationFrame(model.vrSceneFrame);
+  // When an XR session is available, set up the XRWebGLLayer
+  // and request the first animation frame for the device
+  publicAPI.enterXR = async (xrSession) => {
+    model.xrSession = xrSession;
+    model.oldCanvasSize = model.size.slice();
 
-    publicAPI.setSize(...model.oldCanvasSize);
-    if (model.el && model.vrDisplay.capabilities.hasExternalDisplay) {
-      model.el.style.display = 'block';
+    if (model.xrSession !== null) {
+      const gl = publicAPI.get3DContext();
+      await gl.makeXRCompatible();
+
+      const glLayer = new global.XRWebGLLayer(model.xrSession, gl);
+      publicAPI.setSize(glLayer.framebufferWidth, glLayer.framebufferHeight);
+
+      model.xrSession.updateRenderState({
+        baseLayer: glLayer,
+      });
+
+      model.xrSession.requestReferenceSpace('local').then((refSpace) => {
+        model.xrReferenceSpace = refSpace;
+      });
+
+      model.renderable.getInteractor().switchToXRAnimation();
+      model.xrSceneFrame = model.xrSession.requestAnimationFrame(
+        publicAPI.xrRender
+      );
+    } else {
+      throw new Error('Failed to enter VR with a null xrSession.');
+    }
+  };
+
+  publicAPI.stopXR = async () => {
+    if (navigator.xr === undefined) {
+      // WebXR polyfill not available so nothing to do
+      return;
     }
 
+    if (model.xrSession !== null) {
+      model.xrSession.cancelAnimationFrame(model.xrSceneFrame);
+      model.renderable.getInteractor().returnFromXRAnimation();
+      const gl = publicAPI.get3DContext();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+      await model.xrSession.end().catch((error) => {
+        if (!(error instanceof DOMException)) {
+          throw error;
+        }
+      });
+      model.xrSession = null;
+    }
+
+    publicAPI.setSize(...model.oldCanvasSize);
+
+    // Reset to default canvas
     const ren = model.renderable.getRenderers()[0];
     ren.getActiveCamera().setProjectionMatrix(null);
+    ren.resetCamera();
 
     ren.setViewport(0.0, 0, 1.0, 1.0);
     publicAPI.traverseAllPasses();
   };
 
-  publicAPI.vrRender = () => {
-    // If not presenting for any reason, we do not submit frame
-    if (!model.vrDisplay.isPresenting) {
-      return;
-    }
-    model.renderable.getInteractor().updateGamepads(model.vrDisplay.displayId);
-    model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
-      publicAPI.vrRender
+  publicAPI.xrRender = async (t, frame) => {
+    const xrSession = frame.session;
+
+    model.xrSceneFrame = model.xrSession.requestAnimationFrame(
+      publicAPI.xrRender
     );
-    model.vrDisplay.getFrameData(model.vrFrameData);
 
-    // get the first renderer
-    const ren = model.renderable.getRenderers()[0];
+    const xrPose = frame.getViewerPose(model.xrReferenceSpace);
 
-    // do the left eye
-    ren.setViewport(0, 0, 0.5, 1.0);
-    ren
-      .getActiveCamera()
-      .computeViewParametersFromPhysicalMatrix(
-        model.vrFrameData.leftViewMatrix
-      );
-    ren
-      .getActiveCamera()
-      .setProjectionMatrix(model.vrFrameData.leftProjectionMatrix);
-    publicAPI.traverseAllPasses();
+    if (xrPose) {
+      const gl = publicAPI.get3DContext();
+      const glLayer = xrSession.renderState.baseLayer;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.clear(gl.DEPTH_BUFFER_BIT);
 
-    ren.setViewport(0.5, 0, 1.0, 1.0);
-    ren
-      .getActiveCamera()
-      .computeViewParametersFromPhysicalMatrix(
-        model.vrFrameData.rightViewMatrix
-      );
-    ren
-      .getActiveCamera()
-      .setProjectionMatrix(model.vrFrameData.rightProjectionMatrix);
-    publicAPI.traverseAllPasses();
+      // get the first renderer
+      const ren = model.renderable.getRenderers()[0];
 
-    model.vrDisplay.submitFrame();
+      // Do a render pass for each eye
+      xrPose.views.forEach((view) => {
+        const viewport = glLayer.getViewport(view);
+
+        gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+        if (view.eye === 'left') {
+          ren.setViewport(0, 0, 0.5, 1.0);
+        } else if (view.eye === 'right') {
+          ren.setViewport(0.5, 0, 1.0, 1.0);
+        } else {
+          // No handling for non-eye viewport
+          return;
+        }
+
+        ren
+          .getActiveCamera()
+          .computeViewParametersFromPhysicalMatrix(
+            view.transform.inverse.matrix
+          );
+        ren.getActiveCamera().setProjectionMatrix(view.projectionMatrix);
+
+        publicAPI.traverseAllPasses();
+      });
+    }
   };
 
   publicAPI.restoreContext = () => {
@@ -1115,11 +1129,9 @@ const DEFAULT_VALUES = {
   notifyStartCaptureImage: false,
   webgl2: false,
   defaultToWebgl2: true, // attempt webgl2 on by default
-  vrResolution: [2160, 1200],
-  queryVRSize: false,
-  hideCanvasInVR: true,
   activeFramebuffer: null,
-  vrDisplay: null,
+  xrSession: null,
+  xrReferenceSpace: null,
   imageFormat: 'image/png',
   useOffScreen: false,
   useBackgroundImage: false,
@@ -1185,8 +1197,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'notifyStartCaptureImage',
     'defaultToWebgl2',
     'cursor',
-    'queryVRSize',
-    'hideCanvasInVR',
     'useOffScreen',
     // might want to make this not call modified as
     // we change the active framebuffer a lot. Or maybe
@@ -1195,7 +1205,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'activeFramebuffer',
   ]);
 
-  macro.setGetArray(publicAPI, model, ['size', 'vrResolution'], 2);
+  macro.setGetArray(publicAPI, model, ['size'], 2);
 
   // Object methods
   vtkOpenGLRenderWindow(publicAPI, model);

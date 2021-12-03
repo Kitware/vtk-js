@@ -366,7 +366,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       return;
     }
     animationRequesters.add(requestor);
-    if (animationRequesters.size === 1) {
+    if (animationRequesters.size === 1 && !model.xrAnimation) {
       model.lastFrameTime = 0.1;
       model.lastFrameStart = Date.now();
       model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
@@ -375,7 +375,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.isAnimating = () =>
-    model.vrAnimation || model.animationRequest !== null;
+    model.xrAnimation || model.animationRequest !== null;
 
   publicAPI.cancelAnimation = (requestor, skipWarning = false) => {
     if (!animationRequesters.has(requestor)) {
@@ -398,17 +398,17 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
-  publicAPI.switchToVRAnimation = () => {
+  publicAPI.switchToXRAnimation = () => {
     // cancel existing animation if any
     if (model.animationRequest) {
       cancelAnimationFrame(model.animationRequest);
       model.animationRequest = null;
     }
-    model.vrAnimation = true;
+    model.xrAnimation = true;
   };
 
-  publicAPI.returnFromVRAnimation = () => {
-    model.vrAnimation = false;
+  publicAPI.returnFromXRAnimation = () => {
+    model.xrAnimation = false;
     if (animationRequesters.size !== 0) {
       model.FrameTime = -1;
       model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
@@ -756,7 +756,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   // do not want extra renders as the make the apparent interaction
   // rate slower.
   publicAPI.render = () => {
-    if (model.animationRequest === null && !model.inRender) {
+    if (!publicAPI.isAnimating() && !model.inRender) {
       forceRender();
     }
   };
