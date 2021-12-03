@@ -1,11 +1,12 @@
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
+import { Vector3 } from "../../../types";
 
 /**
  * 
  */
 export interface IPointSourceInitialValues {
 	numberOfPoints?: number;
-	center?: number[];
+	center?: Vector3;
 	radius?: number;
 	pointType?: string;
 }
@@ -24,12 +25,12 @@ export interface vtkPointSource extends vtkPointSourceBase {
 	 * Get the center of the plane.
 	 * @default [0, 0, 0]
 	 */
-	getCenter(): number[];
+	getCenter(): Vector3;
 
 	/**
 	 * Get the center of the plane.
 	 */
-	getCenterByReference(): number[];
+	getCenterByReference(): Vector3;
 
 	/**
 	 * Get the number of points to generate.
@@ -60,15 +61,15 @@ export interface vtkPointSource extends vtkPointSourceBase {
 
 	/**
 	 * Set the center of the point cloud.
-	 * @param {Number[]} center The center point's coordinates.
+	 * @param {Vector3} center The center point's coordinates.
 	 */
-	setCenter(center: number[]): boolean;
+	setCenter(center: Vector3): boolean;
 
 	/**
 	 * Set the center of the point cloud.
-	 * @param {Number[]} center The center point's coordinates.
+	 * @param {Vector3} center The center point's coordinates.
 	 */
-	setCenterFrom(center: number[]): boolean;
+	setCenterFrom(center: Vector3): boolean;
 
 	/**
 	 * Set the number of points to generate.
@@ -110,7 +111,7 @@ export function newInstance(initialValues?: IPointSourceInitialValues): vtkPoint
  * 
  * @example
  * ```js
- * import vtkPointSource from 'vtk.js/Sources/Filters/Sources/PointSource';
+ * import vtkPointSource from '@kitware/vtk.js/Filters/Sources/PointSource';
  * 
  * const point = vtkPointSource.newInstance({ numberOfPoints: 10 });
  * const polydata = point.getOutputData();

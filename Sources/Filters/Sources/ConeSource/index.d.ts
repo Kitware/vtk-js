@@ -1,4 +1,5 @@
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
+import { Vector3 } from "../../../types";
 
 /**
  *
@@ -7,8 +8,8 @@ export interface IConeSourceInitialValues {
 	height?: number;
 	radius?: number;
 	resolution?: number;
-	center?: number[] ;
-	direction?: number[];
+	center?: Vector3 ;
+	direction?: Vector3;
 	capping?: boolean;
 	pointType?: string;
 }
@@ -33,23 +34,23 @@ export interface vtkConeSource extends vtkConeSourceBase {
 	 * Get the center of the cone.
 	 * @default [0, 0, 0]
 	 */
-	getCenter(): number[];
+	getCenter(): Vector3;
 
 	/**
 	 * Get the center of the cone.
 	 */
-	getCenterByReference(): number[];
+	getCenterByReference(): Vector3;
 
 	/**
 	 * Get the orientation vector of the cone.
 	 * @default [1.0, 0.0, 0.0]
 	 */
-	getDirection(): number[];
+	getDirection(): Vector3;
 
 	/**
 	 * Get the orientation vector of the cone.
 	 */
-	getDirectionByReference(): number[];
+	getDirectionByReference(): Vector3;
 
 	/**
 	 * Get the height of the cone.
@@ -99,20 +100,20 @@ export interface vtkConeSource extends vtkConeSourceBase {
 	 * It is located at the middle of the axis of the cone.
 	 * !!! warning
 	 *     This is not the center of the base of the cone!
-	 * @param {Number[]} center 
+	 * @param {Vector3} center 
 	 * @default [0, 0, 0]
 	 */
-	setCenter(center: number[]): boolean;
+	setCenter(center: Vector3): boolean;
 
 	/**
 	 * Set the center of the cone.
 	 * It is located at the middle of the axis of the cone.
 	 * !!! warning
 	 *     This is not the center of the base of the cone!
-	 * @param {Number[]} center 
+	 * @param {Vector3} center 
 	 * @default [0, 0, 0]
 	 */
-	setCenterFrom(center: number[]): boolean;
+	setCenterFrom(center: Vector3): boolean;
 
 	/**
 	 * Set the direction for the cone.
@@ -125,23 +126,23 @@ export interface vtkConeSource extends vtkConeSourceBase {
 
 	/**
 	 * Set the direction for the cone.
-	 * @param {Number[]} direction The direction coordinates.
+	 * @param {Vector3} direction The direction coordinates.
 	 */
-	setDirection(direction: number[]): boolean;
+	setDirection(direction: Vector3): boolean;
 
 	/**
 	 * Set the direction for the cone.
-	 * @param {Number[]} direction 
+	 * @param {Vector3} direction 
 	 * @default [1, 0, 0]
 	 */
-	setDirection(direction: number[]): boolean;
+	setDirection(direction: Vector3): boolean;
 
 	/**
 	 * Set the direction for the cone.
-	 * @param {Number[]} direction 
+	 * @param {Vector3} direction 
 	 * @default [1, 0, 0]
 	 */
-	setDirectionFrom(direction: number[]): boolean;
+	setDirectionFrom(direction: Vector3): boolean;
 
 	/**
 	 * Set the height of the cone.
@@ -188,7 +189,7 @@ export function newInstance(initialValues ? : IConeSourceInitialValues): vtkCone
  * 
  * @example
  * ```js
- * import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+ * import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
  * 
  * const cone = vtkConeSource.newInstance({ height: 2, radius: 1, resolution: 80 });
  * const polydata = cone.getOutputData();

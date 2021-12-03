@@ -1,4 +1,5 @@
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
+import { Vector3 } from "../../../types";
 
 export enum ShapeType {
 	TRIANGLE,
@@ -17,7 +18,7 @@ export interface IArrowSourceInitialValues {
 	shaftResolution?: number;
 	shaftRadius?: number;
 	invert?: boolean;
-	direction?: number[];
+	direction?: Vector3;
 	pointType?: string;
 }
 
@@ -35,12 +36,12 @@ export interface vtkArrowSource extends vtkArrowSourceBase {
 	 * Get the orientation vector of the cone.
 	 * @default [1.0, 0.0, 0.0]
 	 */
-	getDirection(): number[];
+	getDirection(): Vector3;
 
 	/**
 	 * Get the orientation vector of the cone.
 	 */
-	getDirectionByReference(): number[];
+	getDirectionByReference(): Vector3;
 
 	/**
 	 *
@@ -95,15 +96,15 @@ export interface vtkArrowSource extends vtkArrowSourceBase {
 
 	/**
 	 * Set the direction for the arrow.
-	 * @param {Number[]} direction The direction coordinates.
+	 * @param {Vector3} direction The direction coordinates.
 	 */
-	setDirection(direction: number[]): boolean;
+	setDirection(direction: Vector3): boolean;
 
 	/**
 	 * Set the direction for the arrow.
-	 * @param {Number[]} direction The direction coordinates.
+	 * @param {Vector3} direction The direction coordinates.
 	 */
-	setDirectionFrom(direction: number[]): boolean;
+	setDirectionFrom(direction: Vector3): boolean;
 
 	/**
 	 * Inverts the arrow direction.
@@ -168,7 +169,7 @@ export function newInstance(initialValues?: IArrowSourceInitialValues): vtkArrow
  * 
  * @example
  * ```js
- * import vtkArrowSource from 'vtk.js/Sources/Filters/Sources/ArrowSource';
+ * import vtkArrowSource from '@kitware/vtk.js/Filters/Sources/ArrowSource';
  * 
  * const arrow = vtkArrowSource.newInstance({
  *   tipResolution: 6,

@@ -1,4 +1,4 @@
-import { vtkObject, vtkSubscription } from "../../../interfaces";
+import { vtkObject, vtkSubscription } from '../../../interfaces';
 
 /**
  * Bind optional dependency from WSLink to our current class.
@@ -14,7 +14,6 @@ import { vtkObject, vtkSubscription } from "../../../interfaces";
  * @param smartConnectClass
  */
 export function setSmartConnectClass(smartConnectClass: object): void;
-
 
 export interface vtkWSLinkClient extends vtkObject {
 
@@ -117,21 +116,45 @@ export interface vtkWSLinkClient extends vtkObject {
    */
   getConfigDecorator(): (config: object) => object;
 
-  getConnection(): object;
-  getCongig(): object;
+  /**
+   *
+   */
+  getConnection(): any;
+
+  /**
+   *
+   */
+  getConfig(): object;
+
+  /**
+   *
+   */
   getRemote(): object;
+
+  /**
+   *
+   */
   getImageStream(): object;
 
+  /**
+   *
+   * @param callback
+   * @param priority
+   */
   onBusyChange(callback: Function, priority: number): vtkSubscription;
+
+  /**
+   *
+   */
   invokeBusyChange(): void;
 
-  onConnectionReady(callback: () => void): vtkSubscription;
+  onConnectionReady(callback: (httpReq: any) => void): vtkSubscription;
   // invokeConnectionReady(): void
 
-  onConnectionError(callback: () => void): vtkSubscription;
+  onConnectionError(callback: (httpReq: any) => void): vtkSubscription;
   // invokeConnectionError(): void
 
-  onConnectionClose(callback: () => void): vtkSubscription;
+  onConnectionClose(callback: (httpReq: any) => void): vtkSubscription;
   // invokeConnectionClose(): void
 }
 

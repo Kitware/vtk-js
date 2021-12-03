@@ -1,8 +1,8 @@
 import { vtkObject } from "../../../interfaces";
-import { Color } from "../../../types";
+import { RGBColor } from "../../../types";
 
 interface IProperty2DInitialValues{
-	color?: number[];
+	color?: RGBColor;
 	opacity?: number;
 	pointSize?: number;
 	lineWidth?: number;
@@ -14,12 +14,12 @@ export interface vtkProperty2D extends vtkObject {
 	/**
 	 * Get the color of the object.
 	 */
-	getColor(): Color;
+	getColor(): RGBColor;
 
 	/**
 	 * Get the color of the object.
 	 */
-	getColorByReference(): Color;
+	getColorByReference(): RGBColor;
 
 	/**
 	 * Get the display location of the object.
@@ -58,11 +58,27 @@ export interface vtkProperty2D extends vtkObject {
 	 * Set the color of the object. Has the side effect of setting the
 	 * ambient diffuse and specular colors as well. This is basically
 	 * a quick overall color setting method.
+	 * @param {RGBColor} color Defines the RGB color array..
+	 */
+	setColor(color: RGBColor): boolean;
+
+	/**
+	 * Set the color of the object. Has the side effect of setting the
+	 * ambient diffuse and specular colors as well. This is basically
+	 * a quick overall color setting method.
 	 * @param {Number} r Defines the red component (between 0 and 1).
 	 * @param {Number} g Defines the green component (between 0 and 1).
 	 * @param {Number} b Defines the blue component (between 0 and 1).
 	 */
-	setColorFrom(color: number[]): boolean;
+	setColorFrom(r: number, g: number, b: number): boolean;
+
+	/**
+	 * Set the color of the object. Has the side effect of setting the
+	 * ambient diffuse and specular colors as well. This is basically
+	 * a quick overall color setting method.
+	 * @param {RGBColor} color Defines the RGB color array..
+	 */
+	setColorFrom(color: RGBColor): boolean;
 
 	/**
 	 * Set the display location of the object.

@@ -1,4 +1,5 @@
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
+import { Vector3 } from "../../../types";
 
 export enum ShapeType {
 	TRIANGLE,
@@ -15,10 +16,10 @@ export interface IArrow2DSourceInitialValues {
 	height?: number;
 	width?: number;
 	thickness?: number;
-	center?: number[];
+	center?: Vector3;
 	pointType?: string;
-	origin?: number[];
-	direction?: number[];
+	origin?: Vector3;
+	direction?: Vector3;
 }
 
 type vtkArrow2DSourceBase = vtkObject & Omit<vtkAlgorithm,
@@ -41,23 +42,23 @@ export interface vtkArrow2DSource extends vtkArrow2DSourceBase {
 	 * Get the center of the cone.
 	 * @default [0, 0, 0]
 	 */
-	getCenter(): number[];
+	getCenter(): Vector3;
 
 	/**
 	 * Get the center of the cone.
 	 */
-	getCenterByReference(): number[];
+	getCenterByReference(): Vector3;
 
 	/**
 	 * Get the orientation vector of the cone.
 	 * @default [1.0, 0.0, 0.0]
 	 */
-	getDirection(): number[];
+	getDirection(): Vector3;
 
 	/**
 	 * Get the orientation vector of the cone.
 	 */
-	getDirectionByReference(): number[];
+	getDirectionByReference(): Vector3;
 
 	/**
 	 * Get the height of the cone.
@@ -107,10 +108,10 @@ export interface vtkArrow2DSource extends vtkArrow2DSourceBase {
 	 * It is located at the middle of the axis of the cone.
 	 * !!! warning
 	 *     This is not the center of the base of the cone!
-	 * @param {Number[]} center The center of the cone coordinates.
+	 * @param {Vector3} center The center of the cone coordinates.
 	 * @default [0, 0, 0]
 	 */
-	setCenterFrom(center: number[]): boolean;
+	setCenterFrom(center: Vector3): boolean;
 
 	/**
 	 * Set the direction for the arrow.
@@ -122,15 +123,15 @@ export interface vtkArrow2DSource extends vtkArrow2DSourceBase {
 
 	/**
 	 * Set the direction for the arrow 2D.
-	 * @param {Number[]} direction The direction coordinates.
+	 * @param {Vector3} direction The direction coordinates.
 	 */
-	setDirection(direction: number[]): boolean;
+	setDirection(direction: Vector3): boolean;
 
 	/**
 	 * Set the direction for the arrow 2D.
-	 * @param {Number[]} direction The direction coordinates.
+	 * @param {Vector3} direction The direction coordinates.
 	 */
-	setDirectionFrom(direction: number[]): boolean;
+	setDirectionFrom(direction: Vector3): boolean;
 
 	/**
 	 * Set the height of the cone.
