@@ -24,6 +24,7 @@ import vtkInteractorObserver from './InteractorObserver';
 import vtkInteractorStyle from './InteractorStyle';
 import vtkLight from './Light';
 import vtkMapper from './Mapper';
+import vtkMapper2D from './Mapper2D';
 import vtkPicker from './Picker';
 import vtkPixelSpaceCallbackMapper from './PixelSpaceCallbackMapper';
 import vtkPointPicker from './PointPicker';
@@ -67,6 +68,7 @@ export default {
   vtkInteractorStyle,
   vtkLight,
   vtkMapper,
+  vtkMapper2D,
   vtkPicker,
   vtkPixelSpaceCallbackMapper,
   vtkPointPicker,
