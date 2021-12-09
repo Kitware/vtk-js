@@ -16,9 +16,8 @@ import { string } from 'rollup-plugin-string';
 import svgo from 'rollup-plugin-svgo';
 import webworkerLoader from 'rollup-plugin-web-worker-loader';
 import copy from 'rollup-plugin-copy';
-import autoExternal from 'rollup-plugin-auto-external';
 
-import packageJSON from './package.json';
+import pkg from './package.json';
 
 import { rewriteFilenames } from './Utilities/rollup/plugin-rewrite-filenames';
 
@@ -55,6 +54,9 @@ entryPoints.forEach((entry) => {
 });
 
 const outputDir = path.resolve('dist', 'esm');
+
+const dependencies = Object.keys(pkg.dependencies || []);
+const peerDependencies = Object.keys(pkg.peerDependencies || []);
 
 export default {
   input: entries,
@@ -97,9 +99,11 @@ export default {
       return name.replace(/^Sources[/\\]/, '');
     },
   },
-  external: Object.keys(packageJSON.dependencies).map((name) => new RegExp(`^${name}`)),
+  external: [
+    ...dependencies.map((name) => new RegExp(`^${name}`)),
+    ...peerDependencies.map((name) => new RegExp(`^${name}`)),
+  ],
   plugins: [
-    autoExternal(),
     alias({
       entries: [
         { find: 'vtk.js', replacement: path.resolve(__dirname) },
@@ -112,9 +116,10 @@ export default {
       targetPlatform: 'browser',
       // needs to match the full import statement path
       pattern: /^.+\.worker(?:\.js)?$/,
-      // inline: true,
-      // preserveSource: true,
-      // outputFolder: 'WebWorkers',
+      // inline externals for webworkers
+      external: [],
+      inline: true,
+      preserveSource: true,
     }),
     nodeResolve({
       // don't rely on node builtins for web
