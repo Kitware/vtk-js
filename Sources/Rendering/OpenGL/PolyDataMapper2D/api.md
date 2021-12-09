@@ -4,11 +4,11 @@ vtkWebGLPolyDataMapper2D is designed to view/render a vtkPolyDataMapper2D
 ## Methods
 ### build(prepass)
 
-preparefor rendering
+Prepare for rendering.
 
 ### render(prepass)
 
-do the rendering
+Do the rendering.
 
 ## Shader customization
 

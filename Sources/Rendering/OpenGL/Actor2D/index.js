@@ -14,9 +14,6 @@ function vtkOpenGLActor2D(publicAPI, model) {
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType(
-        'vtkOpenGLRenderWindow'
-      );
       if (!model.renderable) {
         return;
       }
@@ -60,6 +57,7 @@ function vtkOpenGLActor2D(publicAPI, model) {
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverseOpaquePass = (renderPass) => {
     if (
+      !model.oglmapper ||
       !model.renderable ||
       !model.renderable.getNestedVisibility() ||
       !model.renderable.getIsOpaque() ||
@@ -78,6 +76,7 @@ function vtkOpenGLActor2D(publicAPI, model) {
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverseTranslucentPass = (renderPass) => {
     if (
+      !model.oglmapper ||
       !model.renderable ||
       !model.renderable.getNestedVisibility() ||
       model.renderable.getIsOpaque() ||
@@ -95,6 +94,7 @@ function vtkOpenGLActor2D(publicAPI, model) {
 
   publicAPI.traverseOverlayPass = (renderPass) => {
     if (
+      !model.oglmapper ||
       !model.renderable ||
       !model.renderable.getNestedVisibility() ||
       (model.openGLRenderer.getSelector() &&
