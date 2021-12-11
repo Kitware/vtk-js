@@ -1,5 +1,4 @@
-import { mat2, mat3, vec2, vec3, vec4 } from "gl-matrix";
-import { Bounds, Extent, RGBAColor, RGBColor } from "../../../types";
+import { Bounds, Extent, HSVColor, RGBAColor, RGBColor, Matrix, Matrix3x3, Range, Vector2, Vector3, Vector4 } from "../../../types";
 
 /**
  *
@@ -156,102 +155,102 @@ export function random(minValue: number, maxValue: number): number;
 
 /**
  * Addition of two 3-vectors.
- * @param {vec3} a The first 3D vector.
- * @param {vec3} b The second 3D vector.
- * @param {vec3} out The output 3D vector.
+ * @param {Vector3} a The first 3D vector.
+ * @param {Vector3} b The second 3D vector.
+ * @param {Vector3} out The output 3D vector.
  * @example
  * ```js
  * a[3] + b[3] => out[3]
  * ```
  */
-export function add(a: vec3, b: vec3, out: vec3): vec3;
+export function add(a: Vector3, b: Vector3, out: Vector3): Vector3;
 
 /**
  * Subtraction of two 3-vectors.
- * @param {vec3} a The first 3D vector.
- * @param {vec3} b The second 3D vector.
- * @param {vec3} out The output 3D vector.
+ * @param {Vector3} a The first 3D vector.
+ * @param {Vector3} b The second 3D vector.
+ * @param {Vector3} out The output 3D vector.
  * @example
  * ```js
  * a[3] - b[3] => out[3]
  * ```
  */
-export function subtract(a: vec3, b: vec3, out: vec3): vec3;
+export function subtract(a: Vector3, b: Vector3, out: Vector3): Vector3;
 
 /**
  *
- * @param {vec3} vec 
+ * @param {Vector3} vec 
  * @param {Number} scalar 
  * @example
  * ```js
  * vec[3] * scalar => vec[3]
  * ```
  */
-export function multiplyScalar(vec: vec3, scalar: number): vec3;
+export function multiplyScalar(vec: Vector3, scalar: number): Vector3;
 
 /**
  *
- * @param {vec2} vec 
+ * @param {Vector2} vec 
  * @param {Number} scalar 
  * @example
  * ```js
  * vec[3] * scalar => vec[3]
  * ```
  */
-export function multiplyScalar2D(vec: vec2, scalar: number): vec2;
+export function multiplyScalar2D(vec: Vector2, scalar: number): Vector2;
 
 /**
  *
- * @param {vec3} a
- * @param {vec3} b 
+ * @param {Vector3} a
+ * @param {Vector3} b 
  * @param {Number} scalar
- * @param {vec3} out
+ * @param {Vector3} out
  * @example
  * ```js
  * a[3] +  b[3] * scalar => out[3]
  * ```
  */
-export function multiplyAccumulate(a: vec3, b: vec3, scalar: number, out: vec3): vec3;
+export function multiplyAccumulate(a: Vector3, b: Vector3, scalar: number, out: Vector3): Vector3;
 
 /**
  *
- * @param {vec2} a
- * @param {vec2} b
+ * @param {Vector2} a
+ * @param {Vector2} b
  * @param {Number} scalar 
- * @param {vec2} out
+ * @param {Vector2} out
  * @example
  * ```js
  * a[2] + b[2] * scalar => out[2]
  * ```
  */
-export function multiplyAccumulate2D(a: vec2, b: vec2, scalar: number, out: vec2): vec2;
+export function multiplyAccumulate2D(a: Vector2, b: Vector2, scalar: number, out: Vector2): Vector2;
 
 /**
  *
- * @param {vec3} x
- * @param {vec3} y
+ * @param {Vector3} x
+ * @param {Vector3} y
  * @example
  * ```js
  * a[2] + b[2] * scalar => out[2]
  * ```
  */
-export function dot(x: vec3, y: vec3): number;
+export function dot(x: Vector3, y: Vector3): number;
 
 /**
  * Outer product of two 3-vectors.
- * @param {vec3} x The first 3D vector.
- * @param {vec3} y The second 3D vector.
- * @param {mat3} out_3x3 The output 3x3 matrix.
+ * @param {Vector3} x The first 3D vector.
+ * @param {Vector3} y The second 3D vector.
+ * @param {Matrix3x3} out_3x3 The output 3x3 matrix.
  */
-export function outer(x: vec3, y: vec3, out_3x3: mat3): void;
+export function outer(x: Vector3, y: Vector3, out_3x3: Matrix3x3): void;
 
 /**
  * Computes cross product of 3D vectors x and y.
- * @param {vec3} x The first 3D vector.
- * @param {vec3} y The second 3D vector.
- * @param {vec3} out The output 3D vector.
+ * @param {Vector3} x The first 3D vector.
+ * @param {Vector3} y The second 3D vector.
+ * @param {Vector3} out The output 3D vector.
  */
-export function cross(x: vec3, y: vec3, out: vec3): vec3;
+export function cross(x: Vector3, y: Vector3, out: Vector3): Vector3;
 
 /**
  *
@@ -262,56 +261,56 @@ export function norm(x: number[], n: number): number;
 
 /**
  * Normalize in place. Returns norm.
- * @param {vec3} x The vector to normlize.
+ * @param {Vector3} x The vector to normlize.
  */
-export function normalize(x: vec3): number;
+export function normalize(x: Vector3): number;
 
 /**
  * Given a unit vector v1, find two unit vectors v2 and v3 such that v1 cross v2 = v3
- * @param {vec3} x The first vector.
- * @param {vec3} y The second vector.
- * @param {vec3} z The third vector.
+ * @param {Vector3} x The first vector.
+ * @param {Vector3} y The second vector.
+ * @param {Vector3} z The third vector.
  * @param {Number} theta
  */
-export function perpendiculars(x: vec3, y: vec3, z: vec3, theta: number): void;
+export function perpendiculars(x: Vector3, y: Vector3, z: Vector3, theta: number): void;
 
 /**
  *
- * @param {vec3} a
- * @param {vec3} b
- * @param {vec3} projection
+ * @param {Vector3} a
+ * @param {Vector3} b
+ * @param {Vector3} projection
  */
-export function projectVector(a: vec3, b: vec3, projection: vec3): boolean;
+export function projectVector(a: Vector3, b: Vector3, projection: Vector3): boolean;
 
 /**
  *
- * @param {vec2} x
- * @param {vec2} y
+ * @param {Vector2} x
+ * @param {Vector2} y
  */
-export function dot2D(x: vec2, y: vec2): number;
+export function dot2D(x: Vector2, y: Vector2): number;
 
 /**
  * Compute the projection of 2D vector `a` on 2D vector `b` and returns the
  * result in projection vector.
- * @param {vec2} a The first 2D vector.
- * @param {vec2} b The second 2D vector.
- * @param {vec2} projection The projection 2D vector.
+ * @param {Vector2} a The first 2D vector.
+ * @param {Vector2} b The second 2D vector.
+ * @param {Vector2} projection The projection 2D vector.
  */
-export function projectVector2D(a: vec2, b: vec2, projection: vec2): boolean;
+export function projectVector2D(a: Vector2, b: Vector2, projection: Vector2): boolean;
 
 /**
  * Compute distance squared between two points p1 and p2.
- * @param {vec3} x The first 3D vector.
- * @param {vec3} y The second 3D vector.
+ * @param {Vector3} x The first 3D vector.
+ * @param {Vector3} y The second 3D vector.
  */
-export function distance2BetweenPoints(x: vec3, y: vec3): number;
+export function distance2BetweenPoints(x: Vector3, y: Vector3): number;
 
 /**
  * Angle between 3D vectors.
- * @param {vec3} v1 The first 3D vector.
- * @param {vec3} v2 The second 3D vector.
+ * @param {Vector3} v1 The first 3D vector.
+ * @param {Vector3} v2 The second 3D vector.
  */
-export function angleBetweenVectors(v1: vec3, v2: vec3): number;
+export function angleBetweenVectors(v1: Vector3, v2: Vector3): number;
 
 
 /**
@@ -319,11 +318,11 @@ export function angleBetweenVectors(v1: vec3, v2: vec3): number;
  * angle between v1 and v2 with regards to plane defined by normal vN.Signed
  * angle between v1 and v2 with regards to plane defined by normal
  * vN.t3(mat_3x3, in_3, out_3)
- * @param {vec3} v1 The first 3D vector.
- * @param {vec3} v2 The second 3D vector.
- * @param {vec3} vN 
+ * @param {Vector3} v1 The first 3D vector.
+ * @param {Vector3} v2 The second 3D vector.
+ * @param {Vector3} vN 
  */
-export function signedAngleBetweenVectors(v1: vec3, v2: vec3, vN: vec3): number;
+export function signedAngleBetweenVectors(v1: Vector3, v2: Vector3, vN: Vector3): number;
 
 
 /**
@@ -345,121 +344,121 @@ export function gaussianWeight(mean: number, variance: number, position: number)
 
 /**
  * Outer product of two 2-vectors.
- * @param {vec2} x The first 2D vector.
- * @param {vec2} y The second 2D vector.
- * @param {mat2} out_2x2 The output 2x2 matrix.
+ * @param {Vector2} x The first 2D vector.
+ * @param {Vector2} y The second 2D vector.
+ * @param {Matrix} out_2x2 The output 2x2 matrix.
  */
-export function outer2D(x: vec2, y: vec2, out_2x2: mat2): void;
+export function outer2D(x: Vector2, y: Vector2, out_2x2: Matrix): void;
 
 /**
  * Compute the norm of a 2-vector.
- * @param {vec2} x2D x The 2D vector.
+ * @param {Vector2} x2D x The 2D vector.
  */
-export function norm2D(x2D: vec2): number;
+export function norm2D(x2D: Vector2): number;
 
 /**
  * Normalize (in place) a 2-vector.
- * @param {vec2} x The 2D vector.
+ * @param {Vector2} x The 2D vector.
  */
-export function normalize2D(x: vec2): number;
+export function normalize2D(x: Vector2): number;
 
 /**
  *
- * @param {Number[]} args 
+ * @param {Number[][]|Number[]} args 
  */
-export function determinant2x2(args: number[]): number;
+export function determinant2x2(args: number[][]|number[]): number;
 
 /**
  * LU Factorization of a 3x3 matrix.
- * @param {mat3} mat_3x3 
- * @param {vec3} index_3 
+ * @param {Matrix3x3} mat_3x3 
+ * @param {Vector3} index_3 
  */
-export function LUFactor3x3(mat_3x3: mat3, index_3: vec3): void;
+export function LUFactor3x3(mat_3x3: Matrix3x3, index_3: Vector3): void;
 
 /**
  * LU back substitution for a 3x3 matrix.
- * @param {mat3} mat_3x3 
- * @param {vec3} index_3 
- * @param {vec3} x_3 
+ * @param {Matrix3x3} mat_3x3 
+ * @param {Vector3} index_3 
+ * @param {Vector3} x_3 
  */
-export function LUSolve3x3(mat_3x3: mat3, index_3: vec3, x_3: vec3): void;
+export function LUSolve3x3(mat_3x3: Matrix3x3, index_3: Vector3, x_3: Vector3): void;
 
 /**
  * Solve mat_3x3y_3 = x_3 for y and place the result in y.
- * @param {mat3} mat_3x3 
- * @param {vec3} x_3 
- * @param {vec3} y_3 
+ * @param {Matrix3x3} mat_3x3 
+ * @param {Vector3} x_3 
+ * @param {Vector3} y_3 
  */
-export function linearSolve3x3(mat_3x3: mat3, x_3: vec3, y_3: vec3): void;
+export function linearSolve3x3(mat_3x3: Matrix3x3, x_3: Vector3, y_3: Vector3): void;
 
 /**
  *
- * @param {mat3} mat_3x3 
- * @param {vec3} in_3 
- * @param {vec3} out_3 
+ * @param {Matrix3x3} mat_3x3 
+ * @param {Vector3} in_3 
+ * @param {Vector3} out_3 
  */
-export function multiply3x3_vect3(mat_3x3: mat3, in_3: vec3, out_3: vec3): void;
+export function multiply3x3_vect3(mat_3x3: Matrix3x3, in_3: Vector3, out_3: Vector3): void;
 
 /**
  *
- * @param {mat3} a_3x3 
- * @param {mat3} b_3x3 
- * @param {mat3} out_3x3 
+ * @param {Matrix3x3} a_3x3 
+ * @param {Matrix3x3} b_3x3 
+ * @param {Matrix3x3} out_3x3 
  */
-export function multiply3x3_mat3(a_3x3: mat3, b_3x3: mat3, out_3x3: mat3): void;
+export function multiply3x3_mat3(a_3x3: Matrix3x3, b_3x3: Matrix3x3, out_3x3: Matrix3x3): void;
 
 /**
- *
- * @param {Number[]} a 
- * @param {Number[]} b 
+ * Multiply two matrices.
+ * @param {Matrix} a 
+ * @param {Matrix} b 
  * @param {Number} rowA 
  * @param {Number} colA 
  * @param {Number} rowB 
  * @param {Number} colB 
- * @param {Number[]} out_rowXcol 
+ * @param {Matrix} out_rowXcol 
  */
-export function multiplyMatrix(a: number[], b: number[], rowA: number, colA: number, rowB: number, colB: number, out_rowXcol: number[]): void;
+export function multiplyMatrix(a: Matrix, b: Matrix, rowA: number, colA: number, rowB: number, colB: number, out_rowXcol: Matrix): void;
 
 /**
  * Transpose a 3x3 matrix.
- * @param {mat3} in_3x3 The input 3x3 matrix.
- * @param {mat3} outT_3x3 The output 3x3 matrix.
+ * @param {Matrix3x3} in_3x3 The input 3x3 matrix.
+ * @param {Matrix3x3} outT_3x3 The output 3x3 matrix.
  */
-export function transpose3x3(in_3x3: mat3, outT_3x3: mat3): void;
+export function transpose3x3(in_3x3: Matrix3x3, outT_3x3: Matrix3x3): void;
 
 /**
  * Invert a 3x3 matrix.
- * @param {mat3} in_3x3 The input 3x3 matrix.
- * @param {mat3} outI_3x3 The output 3x3 matrix.
+ * @param {Matrix3x3} in_3x3 The input 3x3 matrix.
+ * @param {Matrix3x3} outI_3x3 The output 3x3 matrix.
  */
-export function invert3x3(in_3x3: mat3, outI_3x3: mat3): void;
+export function invert3x3(in_3x3: Matrix3x3, outI_3x3: Matrix3x3): void;
 
 /**
  * Set mat_3x3 to the identity matrix.
- * @param {mat3} mat_3x3 The input 3x3 matrix.
+ * @param {Matrix3x3} mat_3x3 The input 3x3 matrix.
  */
-export function identity3x3(mat_3x3: mat3): void;
+export function identity3x3(mat_3x3: Matrix3x3): void;
 
 /**
  * Calculate the determinant of a 3x3 matrix.
- * @param {mat3} mat_3x3 The input 3x3 matrix.
+ * @param {Matrix3x3} mat_3x3 The input 3x3 matrix.
  */
-export function determinant3x3(mat_3x3: mat3): number;
+export function determinant3x3(mat_3x3: Matrix3x3): number;
 
 /**
  *
- * @param {vec4} quat_4
- * @param {mat3} mat_3x3 
+ * @param {Vector4} quat_4
+ * @param {Matrix3x3} mat_3x3 
  */
-export function quaternionToMatrix3x3(quat_4: vec4, mat_3x3: mat3): void;
+export function quaternionToMatrix3x3(quat_4: Vector4, mat_3x3: Matrix3x3): void;
 
 /**
- *
- * @param {Number[]} a 
- * @param {Number[]} b 
- * @param {Number} eps 
+ * Returns true if elements of both arrays are equals.
+ * @param {Number[]} a An array of numbers (vector, point, matrix...)
+ * @param {Number[]} b An array of numbers (vector, point, matrix...)
+ * @param {Number} [eps] The tolerance value.
  */
-export function areEquals(a: number[], b: number[], eps: number): boolean;
+export function areEquals(a: number[], b: number[], eps?: number): boolean;
 
 /**
  *
@@ -470,213 +469,229 @@ export function roundNumber(num: number, digits?: number): number;
 
 /**
  *
- * @param {vec3} vector 
- * @param {vec3} [out]  
+ * @param {Vector3} vector 
+ * @param {Vector3} [out]  
  * @param {Number} [digits] 
  */
-export function roundVector(vector: vec3, out?: vec3, digits?: number): vec3;
+export function roundVector(vector: Vector3, out?: Vector3, digits?: number): Vector3;
 
 /**
  *
- * @param {Number[]} a 
+ * @param {Matrix} a 
  * @param {Number} n 
  * @param {Number[]} w 
  * @param {Number[]} v 
  */
-export function jacobiN(a: number[], n: number, w: number[], v: number[]): number;
+export function jacobiN(a: Matrix, n: number, w: number[], v: number[]): number;
 
 /**
  *
- * @param {mat3} mat_3x3 
- * @param {vec4} quat_4 
+ * @param {Matrix3x3} mat_3x3 
+ * @param {Vector4} quat_4 
  */
-export function matrix3x3ToQuaternion(mat_3x3: mat3, quat_4: vec4): void;
+export function matrix3x3ToQuaternion(mat_3x3: Matrix3x3, quat_4: Vector4): void;
 
 /**
  *
- * @param {vec4} quat_1 
- * @param {vec4} quat_2 
- * @param {vec4} quat_out 
+ * @param {Vector4} quat_1 
+ * @param {Vector4} quat_2 
+ * @param {Vector4} quat_out 
  */
-export function multiplyQuaternion(quat_1: vec4, quat_2: vec4, quat_out: vec4): void;
+export function multiplyQuaternion(quat_1: Vector4, quat_2: Vector4, quat_out: Vector4): void;
 
 /**
  *
- * @param {mat3} a_3x3 
- * @param {mat3} out_3x3 
+ * @param {Matrix3x3} a_3x3 
+ * @param {Matrix3x3} out_3x3 
  */
-export function orthogonalize3x3(a_3x3: mat3, out_3x3: mat3): void;
+export function orthogonalize3x3(a_3x3: Matrix3x3, out_3x3: Matrix3x3): void;
 
 /**
  *
- * @param {mat3} a_3x3 
- * @param {vec3} w_3 
- * @param {mat3} v_3x3 
+ * @param {Matrix3x3} a_3x3 
+ * @param {Vector3} w_3 
+ * @param {Matrix3x3} v_3x3 
  */
-export function diagonalize3x3(a_3x3: mat3, w_3: vec3, v_3x3: mat3): void;
+export function diagonalize3x3(a_3x3: Matrix3x3, w_3: Vector3, v_3x3: Matrix3x3): void;
 
 /**
  *
- * @param {mat3} a_3x3 
- * @param {mat3} u_3x3 
- * @param {vec3} w_3 
- * @param {mat3} vT_3x3 
+ * @param {Matrix3x3} a_3x3 
+ * @param {Matrix3x3} u_3x3 
+ * @param {Vector3} w_3 
+ * @param {Matrix3x3} vT_3x3 
  */
-export function singularValueDecomposition3x3(a_3x3: mat3, u_3x3: mat3, w_3: vec3, vT_3x3: mat3): void;
+export function singularValueDecomposition3x3(a_3x3: Matrix3x3, u_3x3: Matrix3x3, w_3: Vector3, vT_3x3: Matrix3x3): void;
 
 /**
  *
- * @param {Number[]} A 
+ * @param {Matrix} A 
  * @param {Number[]} index 
  * @param {Number} size 
  */
-export function luFactorLinearSystem(A: number[], index: number[], size: number): number;
+export function luFactorLinearSystem(A: Matrix, index: number[], size: number): number;
 
 /**
  *
- * @param {Number[]} A 
+ * @param {Matrix} A 
  * @param {Number[]} index 
  * @param {Number[]} x 
  * @param {Number} size 
  */
-export function luSolveLinearSystem(A: number[], index: number[], x: number[], size: number): void;
+export function luSolveLinearSystem(A: Matrix, index: number[], x: number[], size: number): void;
 
 /**
  *
- * @param {Number[]} A 
+ * @param {Matrix} A 
  * @param {Number[]} x 
  * @param {Number} size 
  */
-export function solveLinearSystem(A: number[], x: number[], size: number): number;
+export function solveLinearSystem(A: Matrix, x: number[], size: number): number;
 
 /**
  *
- * @param {Number[]} A 
- * @param {Number[]} AI 
- * @param {Number} size 
- * @param {?} [index] 
- * @param {?} [column] 
+ * @param {Matrix} A 
+ * @param {Matrix} AI 
+ * @param {Number} [size] 
+ * @param {Number[]} [index] 
+ * @param {Number[]} [column] 
  */
-export function invertMatrix(A: number[], AI: number[], size: number, index?: any, column?: any): number;
+export function invertMatrix(A: Matrix, AI: Matrix, size?: number, index?: number[], column?: number[]): number;
 
 /**
  *
- * @param {Number[]} A 
+ * @param {Matrix} A 
  * @param {Number} size 
  */
-export function estimateMatrixCondition(A: number[], size: number): number;
+export function estimateMatrixCondition(A: Matrix, size: number): number;
 
 /**
  *
- * @param {mat3} a_3x3 
+ * @param {Matrix3x3} a_3x3 
  * @param {Number[]} w 
  * @param {Number[]} v 
  */
-export function jacobi(a_3x3: mat3, w: number[], v: number[]): number;
+export function jacobi(a_3x3: Matrix3x3, w: number[], v: number[]): number;
 
 /**
- *
+ * Solves for the least squares best fit matrix for the homogeneous equation
+ * X'M' = 0'. Uses the method described on pages 40-41 of Computer Vision by
+ * Forsyth and Ponce, which is that the solution is the eigenvector associated
+ * with the minimum eigenvalue of T(X)X, where T(X) is the transpose of X. The
+ * inputs and output are transposed matrices. Dimensions: X' is numberOfSamples
+ * by xOrder, M' dimension is xOrder by yOrder. M' should be pre-allocated. All
+ * matrices are row major. The resultant matrix M' should be pre-multiplied to
+ * X' to get 0', or transposed and then post multiplied to X to get 0
  * @param {Number} numberOfSamples 
- * @param {Number[]} xt 
+ * @param {Matrix} xt 
  * @param {Number} xOrder 
- * @param {Number[]} mt 
+ * @param {Matrix} mt 
  */
-export function solveHomogeneousLeastSquares(numberOfSamples: number, xt: number[], xOrder: number, mt: number[]): number;
+export function solveHomogeneousLeastSquares(numberOfSamples: number, xt: Matrix, xOrder: number, mt: Matrix): number;
 
 /**
- *
+ * Solves for the least squares best fit matrix for the equation X'M' = Y'. Uses
+ * pseudoinverse to get the ordinary least squares. The inputs and output are
+ * transposed matrices. Dimensions: X' is numberOfSamples by xOrder, Y' is
+ * numberOfSamples by yOrder, M' dimension is xOrder by yOrder. M' should be
+ * pre-allocated. All matrices are row major. The resultant matrix M' should be
+ * pre-multiplied to X' to get Y', or transposed and then post multiplied to X
+ * to get Y By default, this method checks for the homogeneous condition where
+ * Y==0, and if so, invokes SolveHomogeneousLeastSquares. For better performance
+ * when the system is known not to be homogeneous, invoke with
+ * checkHomogeneous=0.
  * @param {Number} numberOfSamples 
- * @param {Number[]} xt 
+ * @param {Matrix} xt 
  * @param {Number} xOrder 
- * @param {Number[]} yt 
+ * @param {Matrix} yt 
  * @param {Number} yOrder 
- * @param {Number[]} mt 
- * @param {Boolean} checkHomogeneous 
+ * @param {Matrix} mt 
+ * @param {Boolean} [checkHomogeneous] 
  */
-export function solveLeastSquares(numberOfSamples: number, xt: number[], xOrder: number, yt: number[], yOrder: number, mt: number[], checkHomogeneous: boolean): number;
+export function solveLeastSquares(numberOfSamples: number, xt: Matrix, xOrder: number, yt: Matrix, yOrder: number, mt: Matrix, checkHomogeneous?: boolean): number;
 
 /**
  *
  * @param {String} hexStr 
- * @param {Number[]} outFloatArray 
+ * @param {Number[]} [outFloatArray] 
  */
-export function hex2float(hexStr: string, outFloatArray: number[]): number[];
+export function hex2float(hexStr: string, outFloatArray?: number[]): number[];
 
 /**
  *
- * @param {vec3} rgb An Array of the RGB color.
- * @param {vec3} hsv An Array of the HSV color.
+ * @param {RGBColor} rgb An Array of the RGB color.
+ * @param {HSVColor} hsv An Array of the HSV color.
  */
-export function rgb2hsv(rgb: vec3, hsv: vec3): void;
+export function rgb2hsv(rgb: RGBColor, hsv: HSVColor): void;
 
 /**
  *
- * @param {vec3} hsv An Array of the HSV color.
- * @param {vec3} rgb An Array of the RGB color.
+ * @param {HSVColor} hsv An Array of the HSV color.
+ * @param {RGBColor} rgb An Array of the RGB color.
  */
-export function hsv2rgb(hsv: vec3, rgb: vec3): void;
+export function hsv2rgb(hsv: HSVColor, rgb: RGBColor): void;
 
 /**
  *
- * @param {vec3} lab 
- * @param {vec3} xyz 
+ * @param {Vector3} lab 
+ * @param {Vector3} xyz 
  */
-export function lab2xyz(lab: vec3, xyz: vec3): void;
+export function lab2xyz(lab: Vector3, xyz: Vector3): void;
 
 /**
  *
- * @param {vec3} xyz 
- * @param {vec3} lab 
+ * @param {Vector3} xyz 
+ * @param {Vector3} lab 
  */
-export function xyz2lab(xyz: vec3, lab: vec3): void;
+export function xyz2lab(xyz: Vector3, lab: Vector3): void;
 
 /**
  *
- * @param {vec3} xyz 
- * @param {vec3} rgb An Array of the RGB color.
+ * @param {Vector3} xyz 
+ * @param {RGBColor} rgb An Array of the RGB color.
  */
-export function xyz2rgb(xyz: vec3, rgb: vec3): void;
+export function xyz2rgb(xyz: Vector3, rgb: RGBColor): void;
 
 /**
  *
- * @param {vec3} rgb An Array of the RGB color.
- * @param {vec3} xyz 
+ * @param {RGBColor} rgb An Array of the RGB color.
+ * @param {Vector3} xyz 
  */
-export function rgb2xyz(rgb: vec3, xyz: vec3): void;
+export function rgb2xyz(rgb: RGBColor, xyz: Vector3): void;
 
 /**
  *
- * @param {vec3} rgb 
- * @param {vec3} lab 
+ * @param {RGBColor} rgb 
+ * @param {Vector3} lab 
  */
-export function rgb2lab(rgb: vec3, lab: vec3): void;
+export function rgb2lab(rgb: RGBColor, lab: Vector3): void;
 
 /**
  *
- * @param {vec3} lab 
- * @param {vec3} rgb An Array of the RGB color.
+ * @param {Vector3} lab 
+ * @param {RGBColor} rgb An Array of the RGB color.
  */
-export function lab2rgb(lab: vec3, rgb: vec3): void;
+export function lab2rgb(lab: Vector3, rgb: RGBColor): void;
 
 /**
  * Returns bounds.
- * @param {Number[]} bounds Output array that hold bounds, optionally empty.
+ * @param {Bounds} bounds Output array that hold bounds, optionally empty.
  */
-export function uninitializeBounds(bounds: number[]): number[];
+export function uninitializeBounds(bounds: Bounds): Bounds;
 
 /**
  *
- * @param {vec2} bounds The bounds to check.
+ * @param {Bounds} bounds The bounds to check.
  */
-export function areBoundsInitialized(bounds: vec2): boolean;
+export function areBoundsInitialized(bounds: Bounds): boolean;
 
 /**
  * Compute the bounds from points.
- * @param {vec3} point1 The coordinate of the first point.
- * @param {vec3} point2 The coordinate of the second point.
- * @param {Number[]} bounds Output array that hold bounds, optionally empty.
+ * @param {Vector3} point1 The coordinate of the first point.
+ * @param {Vector3} point2 The coordinate of the second point.
+ * @param {Bounds} bounds Output array that hold bounds, optionally empty.
  */
-export function computeBoundsFromPoints(point1: vec3, point2: vec3, bounds: number[]): number[];
+export function computeBoundsFromPoints(point1: Vector3, point2: Vector3, bounds: Bounds): Bounds;
 
 /**
  * Clamp some value against a range.
@@ -688,26 +703,26 @@ export function clampValue(value: number, minValue: number, maxValue: number): n
 
 /**
  * Clamp some vector against a range.
- * @param {vec3} vector The vector to clamp.
- * @param {vec3} minVector The minimum vector.
- * @param {vec3} maxVector The maximum vector.
- * @param {vec3} out The output vector.
+ * @param {Vector3} vector The vector to clamp.
+ * @param {Vector3} minVector The minimum vector.
+ * @param {Vector3} maxVector The maximum vector.
+ * @param {Vector3} out The output vector.
  */
-export function clampVector(vector: vec3, minVector: vec3, maxVector: vec3, out: vec3): vec3;
+export function clampVector(vector: Vector3, minVector: Vector3, maxVector: Vector3, out: Vector3): Vector3;
 
 /**
  *
- * @param {vec3} vector 
- * @param {vec3} out 
+ * @param {Vector3} vector 
+ * @param {Vector3} out 
  */
-export function roundVector(vector: vec3, out: vec3): vec3;
+export function roundVector(vector: Vector3, out: Vector3): Vector3;
 
 /**
  *
  * @param {Number} value 
- * @param {vec2} range 
+ * @param {Range} range 
  */
-export function clampAndNormalizeValue(value: number, range: vec2): number;
+export function clampAndNormalizeValue(value: number, range: Range): number;
 
 /**
  * Get the scalar type that is most likely to have enough precision to store a
@@ -731,17 +746,17 @@ export function extentIsWithinOtherExtent(extent1: Extent, extent2: Extent): num
  * Check if first 3D bounds is within the second 3D bounds.
  * @param {Bounds} bounds1_6 The first bounds.
  * @param {Bounds} bounds2_6 The second bounds.
- * @param {vec3} delta_3 The error margin along each axis.
+ * @param {Vector3} delta_3 The error margin along each axis.
  */
-export function boundsIsWithinOtherBounds(bounds1_6: Bounds, bounds2_6: Bounds, delta_3: vec3): number;
+export function boundsIsWithinOtherBounds(bounds1_6: Bounds, bounds2_6: Bounds, delta_3: Vector3): number;
 
 /**
  * Check if point is within the given 3D bounds.
- * @param {vec3} point_3 The coordinate of the point.
+ * @param {Vector3} point_3 The coordinate of the point.
  * @param {Bounds} bounds_6 The bounds.
- * @param {vec3} delta_3 The error margin along each axis.
+ * @param {Vector3} delta_3 The error margin along each axis.
  */
-export function pointIsWithinBounds(point_3: vec3, bounds_6: Bounds, delta_3: vec3): number;
+export function pointIsWithinBounds(point_3: Vector3, bounds_6: Bounds, delta_3: Vector3): number;
 
 /**
  * In Euclidean space, there is a unique circle passing through any given three
@@ -752,12 +767,12 @@ export function pointIsWithinBounds(point_3: vec3, bounds_6: Bounds, delta_3: ve
  * and center of the circle. See:
  * http://en.wikipedia.org/wiki/Circumscribed_circle and more specifically the
  * section Barycentric coordinates from cross- and dot-products
- * @param {vec3} p1 The coordinate of the first point.
- * @param {vec3} p2 The coordinate of the second point.
- * @param {vec3} p3 The coordinate of the third point.
- * @param {vec3} center The coordinate of the center point.
+ * @param {Vector3} p1 The coordinate of the first point.
+ * @param {Vector3} p2 The coordinate of the second point.
+ * @param {Vector3} p3 The coordinate of the third point.
+ * @param {Vector3} center The coordinate of the center point.
  */
-export function solve3PointCircle(p1: vec3, p2: vec3, p3: vec3, center: vec3): number;
+export function solve3PointCircle(p1: Vector3, p2: Vector3, p3: Vector3, center: Vector3): number;
 
 /**
  * Determines whether the passed value is a infinite number.
@@ -784,10 +799,10 @@ export function floatToHex2(value: number): string;
 
 /**
  *
- * @param {Number[]} rgbArray 
+ * @param {RGBColor} rgbArray 
  * @param {string} [prefix] 
  */
-export function floatRGB2HexCode(rgbArray: number[], prefix?: string): string;
+export function floatRGB2HexCode(rgbArray: RGBColor | RGBAColor, prefix?: string): string;
 
 /**
  * Convert RGB or RGBA color array to CSS representation
