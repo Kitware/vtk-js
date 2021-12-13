@@ -397,18 +397,6 @@ function vtkCamera(publicAPI, model) {
 
     mat4.scale(result, result, tmpvec1);
     mat4.translate(result, result, model.physicalTranslation);
-
-    // let rot = mat4.identity(new Float64Array(16));
-    //mat4.fromRotation(rot, model.physicalYawAngle / 180 * 3.14, model.physicalViewUp);
-    //// mat4.invert(rot, rot);
-    //mat4.mul(result, rot, result);
-
-    //let tmpRot = mat4.identity(new Float64Array(16));
-    //let matInv = mat4.identity(new Float64Array(16));
-    //mat4.rotateY(tmpRot, tmpRot, model.physicalYawAngle / 180 * 3.14);
-    //mat4.transpose(tmpRot, tmpRot);
-    //mat4.invert(matInv, )
-    // mat4.mul(result, tmpRot, result);
   };
 
   publicAPI.applyPhysicalYaw = (angle) => {
@@ -422,48 +410,18 @@ function vtkCamera(publicAPI, model) {
 
   publicAPI.computeViewParametersFromViewMatrix = (vmat) => {
     // invert to get view to world
-    let worldToViewPos = new Float64Array(4);
     let viewToWorldPos = new Float64Array(4);
     let v2wMatrix = new Float64Array(16);
-    worldToViewPos[0] = vmat[12];
-    worldToViewPos[1] = vmat[13];
-    worldToViewPos[2] = vmat[14];
-    worldToViewPos[3] = 1;
     mat4.invert(v2wMatrix, vmat);
+
     viewToWorldPos[0] = v2wMatrix[12];
     viewToWorldPos[1] = v2wMatrix[13];
     viewToWorldPos[2] = v2wMatrix[14];
     viewToWorldPos[3] = 1;
+
     mat4.copy(tmpMatrix, v2wMatrix);
-    //console.log('View -> World');
-    //console.log(v2wMatrix);
-    //mat4.copy(tmpMatrix, vmat);
-    //v[0] = tmpMatrix[12];    //tmpMatrix[12] = 0;
-    //tmpMatrix[13] = 0;
-    //tmpMatrix[14] = 0;
-    //mat4.invert(tmpMatrix, tmpMatrix);
 
-    ////
-    ////
-    //// mat4.invert(tmpMatrix, tmpMatrix);
-    //// mat4.rotateY(tmpMatrix, tmpMatrix, model.physicalYawAngle / 180 * 3.14);
-    //// mat4.translate(tmpMatrix, tmpMatrix, [-v[0], -v[1], -v[2]]);
-
-    ////// Correct center of rotation, incorrect view translation
-    ////mat4.invert(tmpMatrix, tmpMatrix);
-    ////mat4.rotateY(tmpMatrix, tmpMatrix, model.physicalYawAngle / 180 * 3.14);
-
-    //// Correct view translation, incorrect center of rotation
-    //// mat4.invert(tmpMatrix, tmpMatrix););
-    ////let tmp = mat4.identity(new Float64Array(16));
-    ////tmpMatrix[12] = 0;
-    ////tmpMatrix[14] = 0;
-    //mat4.invert(tmpMatrix, tmpMatrix);
-
-    let w2vTranslate = mat4.identity(new Float64Array(16));
     let rotate = mat4.identity(new Float64Array(16));
-    let rotateRev = mat4.identity(new Float64Array(16));
-    let w2vTranslateReverse = mat4.identity(new Float64Array(16));
     let v2wTranslate = mat4.identity(new Float64Array(16));
     let v2wTranslateReverse = mat4.identity(new Float64Array(16));
 
@@ -473,48 +431,11 @@ function vtkCamera(publicAPI, model) {
       -viewToWorldPos[2],
     ]);
     mat4.rotateY(rotate, rotate, (model.physicalYawAngle / 180) * 3.14);
-    mat4.rotateY(
-      rotateRev,
-      rotateRev,
-      ((-1 * model.physicalYawAngle) / 180) * 3.14
-    );
     mat4.translate(v2wTranslateReverse, v2wTranslateReverse, viewToWorldPos);
-    mat4.translate(w2vTranslate, w2vTranslate, [
-      -worldToViewPos[0],
-      -worldToViewPos[1],
-      -worldToViewPos[2],
-    ]);
-    mat4.translate(w2vTranslateReverse, w2vTranslateReverse, worldToViewPos);
 
-    //mat4.mul(tmpMatrix, w2vTranslate, vmat);
-    //mat4.mul(tmpMatrix, rotate, tmpMatrix);
-    //mat4.mul(tmpMatrix, w2vTranslateReverse, tmpMatrix);
-    //mat4.invert(tmpMatrix, tmpMatrix);
-
-    // FIXME works post-snap? mat4.mul(v2wTranslateReverse, v2wTranslate, rotate);
-    // mat4.mul(v2wTranslate, v2wTranslate, rotate);
-    //mat4.mul(v2wTranslateReverse, v2wTranslateReverse, rotate);
-    mat4.mul(v2wTranslateReverse, v2wTranslate, rotate);
-    mat4.mul(tmpMatrix, v2wTranslateReverse, v2wMatrix);
+    mat4.mul(tmpMatrix, v2wTranslate, v2wMatrix);
     mat4.mul(tmpMatrix, tmpMatrix, rotate);
-    mat4.mul(tmpMatrix, v2wTranslate, tmpMatrix);
-
-    //mat4.rotateY(tmpMatrix, tmpMatrix, -1 * model.physicalYawAngle / 180 * 3.14);
-    //mat4.translate(tmpMatrix, tmpMatrix, [0, 0, 0.01 * model.physicalYawAngle]);
-    //mat4.translate(tmpMatrix, tmpMatrix, v);
-    //mat4.invert(tmpMatrix, tmpMatrix);
-    ////
-    //mat4.invert(tmpMatrix, tmpMatrix);
-    //tmpMatrix[12] = v[0];
-    //tmpMatrix[13] = v[1];
-    //tmpMatrix[14] = v[2];
-
-    // FIXME try pushing through the cone position at <0,0,-1>
-    //v[0] = 0;
-    //v[1] = 0;
-    //v[1] = -1;
-    //vec3.transformMat4(tmpvec1, v, tmpMatrix);
-    // console.log(v);
+    mat4.mul(tmpMatrix, v2wTranslateReverse, tmpMatrix);
 
     // note with glmatrix operations happen in
     // the reverse order
