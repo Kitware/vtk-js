@@ -3,6 +3,7 @@ import vtkInteractorStyle from 'vtk.js/Sources/Rendering/Core/InteractorStyle';
 import vtkInteractorStyleConstants from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import {
+  Axis,
   Device,
   Input,
 } from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
@@ -58,7 +59,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
       ed &&
       ed.pressed &&
       ed.device === Device.RightController &&
-      (ed.input === Input.Trigger || ed.input === Input.TrackPad)
+      ed.input === Input.Trigger // || ed.input === Input.TrackPad)
     ) {
       publicAPI.startCameraPose();
       return;
@@ -67,24 +68,46 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
       ed &&
       !ed.pressed &&
       ed.device === Device.RightController &&
-      (ed.input === Input.Trigger || ed.input === Input.TrackPad) &&
+      ed.input === Input.Trigger && // || ed.input === Input.TrackPad) &&
       model.state === States.IS_CAMERA_POSE
     ) {
       publicAPI.endCameraPose();
       // return;
+    }
+    if (
+      ed &&
+      ed.device === Device.RightController &&
+      ed.input &&
+      (ed.input === Axis.ThumbstickX || Input.TrackPad)
+    ) {
+      publicAPI.updateCameraOrientation(ed);
+    }
+    if (ed && ed.input && (ed.input === Axis.ThumbstickX || Input.TrackPad)) {
+      publicAPI.updateCameraOrientation(ed);
     }
   };
 
   publicAPI.handleMove3D = (ed) => {
     switch (model.state) {
       case States.IS_CAMERA_POSE:
-        publicAPI.updateCameraPose(ed);
+        publicAPI.updateCameraPosition(ed);
         break;
       default:
     }
   };
 
-  publicAPI.updateCameraPose = (ed) => {
+  publicAPI.updateCameraOrientation = (ed) => {
+    // rotate the world in the direction
+    // of the controller
+    const camera = ed.pokedRenderer.getActiveCamera();
+    let worldMatrix = new Float64Array(16);
+    camera.getWorldToPhysicalMatrix(worldMatrix);
+
+    const angle = ed.device === Device.LeftController ? -22.5 : 22.5;
+    camera.applyPhysicalYaw(angle);
+  };
+
+  publicAPI.updateCameraPosition = (ed) => {
     // move the world in the direction of the
     // controller
     const camera = ed.pokedRenderer.getActiveCamera();

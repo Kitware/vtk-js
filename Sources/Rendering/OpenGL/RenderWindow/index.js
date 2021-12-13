@@ -388,11 +388,11 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           return;
         }
 
-        ren
-          .getActiveCamera()
-          .computeViewParametersFromPhysicalMatrix(
-            view.transform.inverse.matrix
-          );
+        ren.getActiveCamera().computeViewParametersFromViewMatrix(
+          // FIXME use pose for each eye
+          //view.transform.inverse.matrix
+          xrPose.transform.inverse.matrix
+        );
         ren.getActiveCamera().setProjectionMatrix(view.projectionMatrix);
 
         publicAPI.traverseAllPasses();
