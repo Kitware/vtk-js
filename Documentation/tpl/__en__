@@ -29,6 +29,7 @@ sidebar:
     class: Create class
     example: Create example
     webgpu: WebGPU Examples
+    webxr: WebXR Examples
     test: Create test
     build: Build library
     concepts: Concepts
