@@ -41,7 +41,7 @@ function vtkImageCropFilter(publicAPI, model) {
 
     const extent = input.getExtent();
     const cropped =
-      model.croppingPlanes.length === 6
+      model.croppingPlanes && model.croppingPlanes.length === 6
         ? extent.map((e, i) => {
             if (i % 2 === 0) {
               // min plane
@@ -130,7 +130,7 @@ function vtkImageCropFilter(publicAPI, model) {
   };
 
   publicAPI.isResetAvailable = () => {
-    if (model.croppingPlanes.length === 0) {
+    if (model.croppingPlanes == null || model.croppingPlanes.length === 0) {
       return false;
     }
     const data = publicAPI.getInputData();
@@ -150,7 +150,7 @@ function vtkImageCropFilter(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  croppingPlanes: [],
+  // croppingPlanes: null,
 };
 
 // ----------------------------------------------------------------------------
