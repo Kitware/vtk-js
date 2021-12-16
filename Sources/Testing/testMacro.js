@@ -134,10 +134,11 @@ test('Macro methods array tests', (t) => {
   const mtime1 = myTestClass.getMTime();
   myArray[0] = 99.9;
   t.ok(myTestClass.setMyProp5(myArray), 'OK to set a single array argument');
+  const mtime2 = myTestClass.getMTime();
   t.deepEqual(myTestClass.getMyProp5(), myArray, 'Array set should match get');
 
-  const mtime2 = myTestClass.getMTime();
   t.ok(mtime2 > mtime1, 'mtime should increase after set');
+
   // set a too-short array, separate args
   t.throws(
     () => myTestClass.setMyProp6(1, 2, 3),
@@ -152,6 +153,15 @@ test('Macro methods array tests', (t) => {
 
   const mtime3 = myTestClass.getMTime();
   t.ok(mtime3 === mtime2, 'mtime should not increase after idempotent set');
+  t.ok(!myTestClass.setMyProp5(myArray), 'False if set same array');
+  t.ok(!myTestClass.setMyProp5(...myArray), 'False if set same array');
+  t.ok(!myTestClass.setMyProp5([...myArray]), 'False if set same array');
+  t.ok(
+    !myTestClass.setMyProp5(new Float64Array(myArray)),
+    'False if set same array'
+  );
+  const mtime4 = myTestClass.getMTime();
+  t.ok(mtime4 === mtime3, 'mtime should not increase after same set');
 
   // set a too-long array, single array arg
   t.throws(
@@ -252,6 +262,18 @@ test('Macro methods array tests', (t) => {
   t.ok(
     myTestClass.setMyProp10([0, 1, 2]),
     'Test setting smaller array for unlimited size array'
+  );
+
+  const a = [2, 3, 4];
+  myTestClass.setMyProp10(a);
+  t.ok(
+    myTestClass.getReferenceByName('myProp10') !== a,
+    'Test setting array make a copy'
+  );
+  a[0] = 3;
+  t.ok(
+    myTestClass.getMyProp10()[0] === 2,
+    'Test setting array do not hold reference'
   );
 
   t.end();
