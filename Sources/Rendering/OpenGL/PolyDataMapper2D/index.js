@@ -2,7 +2,6 @@
 import { mat4 } from 'gl-matrix';
 
 import * as macro from 'vtk.js/Sources/macros';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
 import vtkMapper2D from 'vtk.js/Sources/Rendering/Core/Mapper2D';
 import vtkOpenGLPolyDataMapper from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
@@ -12,6 +11,8 @@ import vtkPolyData2DVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyData2DV
 import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/ReplacementShaderMapper';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+
+import { round } from 'vtk.js/Sources/Common/Core/Math';
 
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 import { DisplayLocation } from 'vtk.js/Sources/Rendering/Core/Property2D/Constants';
@@ -751,20 +752,16 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
     if (visVP[1] >= visVP[3]) {
       return;
     }
-    size.usize = vtkMath.round(
+    size.usize = round(
       (size.usize * (visVP[2] - visVP[0])) / (vport[2] - vport[0])
     );
-    size.vsize = vtkMath.round(
+    size.vsize = round(
       (size.vsize * (visVP[3] - visVP[1])) / (vport[3] - vport[1])
     );
 
     const winSize = model.openGLRenderer.getParent().getSize();
-    const xoff = vtkMath.round(
-      actorPos[0] - (visVP[0] - vport[0]) * winSize[0]
-    );
-    const yoff = vtkMath.round(
-      actorPos[1] - (visVP[1] - vport[1]) * winSize[1]
-    );
+    const xoff = round(actorPos[0] - (visVP[0] - vport[0]) * winSize[0]);
+    const yoff = round(actorPos[1] - (visVP[1] - vport[1]) * winSize[1]);
 
     // set ortho projection
     const left = -xoff;

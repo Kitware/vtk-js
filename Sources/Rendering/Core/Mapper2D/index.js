@@ -50,7 +50,7 @@ function vtkMapper2D(publicAPI, model) {
     let scalars = null;
     let cellFlag = false;
 
-    // get and scalar data according to scalar mode
+    // get scalar data and point/cell attribute according to scalar mode
     if (scalarMode === ScalarMode.DEFAULT) {
       scalars = input.getPointData().getScalars();
       if (!scalars) {
