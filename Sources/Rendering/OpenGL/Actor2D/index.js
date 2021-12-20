@@ -27,12 +27,37 @@ function vtkOpenGLActor2D(publicAPI, model) {
       publicAPI.addMissingNodes(model.renderable.getTextures());
       publicAPI.addMissingNode(model.renderable.getMapper());
       publicAPI.removeUnusedNodes();
+
+      // we store textures and mapper
+      model.ogltextures = null;
+      model.activeTextures = null;
+      for (let index = 0; index < model.children.length; index++) {
+        const child = model.children[index];
+        if (child.isA('vtkOpenGLTexture')) {
+          if (!model.ogltextures) {
+            model.ogltextures = [];
+          }
+          model.ogltextures.push(child);
+        } else {
+          model.oglmapper = child;
+        }
+      }
+    }
+  };
+
+  publicAPI.queryPass = (prepass, renderPass) => {
+    if (prepass) {
+      if (!model.renderable || !model.renderable.getVisibility()) {
+        return;
+      }
+      renderPass.incrementOverlayActorCount();
     }
   };
 
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverseOpaquePass = (renderPass) => {
     if (
+      !model.oglmapper ||
       !model.renderable ||
       !model.renderable.getNestedVisibility() ||
       !model.renderable.getIsOpaque() ||
@@ -43,17 +68,15 @@ function vtkOpenGLActor2D(publicAPI, model) {
     }
 
     publicAPI.apply(renderPass, true);
-    model.children.forEach((child) => {
-      if (!child.isA('vtkOpenGLTexture')) {
-        child.traverse(renderPass);
-      }
-    });
+    model.oglmapper.traverse(renderPass);
+
     publicAPI.apply(renderPass, false);
   };
 
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverseTranslucentPass = (renderPass) => {
     if (
+      !model.oglmapper ||
       !model.renderable ||
       !model.renderable.getNestedVisibility() ||
       model.renderable.getIsOpaque() ||
@@ -64,25 +87,41 @@ function vtkOpenGLActor2D(publicAPI, model) {
     }
 
     publicAPI.apply(renderPass, true);
-    model.children.forEach((child) => {
-      if (!child.isA('vtkOpenGLTexture')) {
-        child.traverse(renderPass);
-      }
-    });
+    model.oglmapper.traverse(renderPass);
+
+    publicAPI.apply(renderPass, false);
+  };
+
+  publicAPI.traverseOverlayPass = (renderPass) => {
+    if (
+      !model.oglmapper ||
+      !model.renderable ||
+      !model.renderable.getNestedVisibility() ||
+      (model.openGLRenderer.getSelector() &&
+        !model.renderable.getNestedPickable)
+    ) {
+      return;
+    }
+    publicAPI.apply(renderPass, true);
+    model.oglmapper.traverse(renderPass);
+
     publicAPI.apply(renderPass, false);
   };
 
   publicAPI.activateTextures = () => {
     // always traverse textures first, then mapper
+    if (!model.ogltextures) {
+      return;
+    }
+
     model.activeTextures = [];
-    model.children.forEach((child) => {
-      if (child.isA('vtkOpenGLTexture')) {
-        child.render();
-        if (child.getHandle()) {
-          model.activeTextures.push(child);
-        }
+    for (let index = 0; index < model.ogltextures.length; index++) {
+      const child = model.ogltextures[index];
+      child.render();
+      if (child.getHandle()) {
+        model.activeTextures.push(child);
       }
-    });
+    }
   };
 
   // Renders myself
@@ -90,11 +129,11 @@ function vtkOpenGLActor2D(publicAPI, model) {
     if (prepass) {
       model.context.depthMask(true);
       publicAPI.activateTextures();
-    } else {
+    } else if (model.activeTextures) {
       // deactivate textures
-      model.activeTextures.forEach((child) => {
-        child.deactivate();
-      });
+      for (let index = 0; index < model.activeTextures.length; index++) {
+        model.activeTextures[index].deactivate();
+      }
     }
   };
 
@@ -103,12 +142,23 @@ function vtkOpenGLActor2D(publicAPI, model) {
     if (prepass) {
       model.context.depthMask(false);
       publicAPI.activateTextures();
-    } else {
-      // deactivate textures
-      model.activeTextures.forEach((child) => {
-        child.deactivate();
-      });
+    } else if (model.activeTextures) {
+      for (let index = 0; index < model.activeTextures.length; index++) {
+        model.activeTextures[index].deactivate();
+      }
+    }
+  };
+
+  // Renders myself
+  publicAPI.overlayPass = (prepass, renderPass) => {
+    if (prepass) {
       model.context.depthMask(true);
+      publicAPI.activateTextures();
+    } else if (model.activeTextures) {
+      // deactivate textures
+      for (let index = 0; index < model.activeTextures.length; index++) {
+        model.activeTextures[index].deactivate();
+      }
     }
   };
 }
@@ -119,7 +169,7 @@ function vtkOpenGLActor2D(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   context: null,
-  activeTextures: [],
+  activeTextures: null,
 };
 
 // ----------------------------------------------------------------------------

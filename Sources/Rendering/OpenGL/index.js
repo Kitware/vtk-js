@@ -13,6 +13,7 @@ import vtkImageMapper from './ImageMapper';
 import vtkImageSlice from './ImageSlice';
 import vtkPixelSpaceCallbackMapper from './PixelSpaceCallbackMapper';
 import vtkPolyDataMapper from './PolyDataMapper';
+import vtkPolyDataMapper2D from './PolyDataMapper2D';
 import vtkRenderer from './Renderer';
 import vtkRenderWindow from './RenderWindow';
 import vtkShader from './Shader';
@@ -44,6 +45,7 @@ export default {
   vtkImageSlice,
   vtkPixelSpaceCallbackMapper,
   vtkPolyDataMapper,
+  vtkPolyDataMapper2D,
   vtkRenderer,
   vtkRenderWindow,
   vtkShader,

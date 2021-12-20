@@ -1,4 +1,9 @@
 import macro from 'vtk.js/Sources/macros';
+import Constants from 'vtk.js/Sources/Rendering/Core/Property2D/Constants';
+
+import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+
+const { DisplayLocation } = Constants;
 
 // ----------------------------------------------------------------------------
 // vtkProperty2D methods
@@ -7,6 +12,20 @@ import macro from 'vtk.js/Sources/macros';
 function vtkProperty2D(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkProperty2D');
+
+  publicAPI.setDisplayLocationToBackground = () =>
+    publicAPI.setDisplayLocation(DisplayLocation.BACKGROUND);
+  publicAPI.setDisplayLocationToForeground = () =>
+    publicAPI.setDisplayLocation(DisplayLocation.FOREGROUND);
+
+  publicAPI.setRepresentationToWireframe = () =>
+    publicAPI.setRepresentation(Representation.WIREFRAME);
+  publicAPI.setRepresentationToSurface = () =>
+    publicAPI.setRepresentation(Representation.SURFACE);
+  publicAPI.setRepresentationToPoints = () =>
+    publicAPI.setRepresentation(Representation.POINTS);
+  publicAPI.getRepresentationAsString = () =>
+    macro.enumToString(Representation, model.representation);
 }
 
 // ----------------------------------------------------------------------------
@@ -17,7 +36,8 @@ const DEFAULT_VALUES = {
   opacity: 1,
   pointSize: 1,
   lineWidth: 1,
-  displayLocation: 'Foreground',
+  representation: Representation.SURFACE,
+  displayLocation: DisplayLocation.FOREGROUND,
 };
 
 // ----------------------------------------------------------------------------
@@ -32,6 +52,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'lineWidth',
     'pointSize',
     'displayLocation',
+    'representation',
   ]);
   macro.setGetArray(publicAPI, model, ['color'], 3);
 
