@@ -16,7 +16,21 @@ import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
 import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
 import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
+import vtkResourceLoader from 'vtk.js/Sources/IO/Core/ResourceLoader';
+
 import style from './SkyboxViewer.module.css';
+
+// Dynamically load WebXR polyfill from CDN for WebVR and Cardboard API backwards compatibility
+if (navigator.xr === undefined) {
+  vtkResourceLoader
+    .loadScript(
+      'https://cdn.jsdelivr.net/npm/webxr-polyfill@latest/build/webxr-polyfill.js'
+    )
+    .then(() => {
+      // eslint-disable-next-line no-unused-vars, no-undef
+      const polyfill = new WebXRPolyfill();
+    });
+}
 
 // ----------------------------------------------
 // Possible URL parameters to look for:
