@@ -12,11 +12,13 @@ const { vtkWarningMacro, vtkErrorMacro, normalizeWheel, vtkOnceErrorMacro } =
 // ----------------------------------------------------------------------------
 
 const deviceInputMap = {
-  'OpenVR Gamepad': [
-    Input.TrackPad,
+  'xr-standard': [
     Input.Trigger,
     Input.Grip,
-    Input.ApplicationMenu,
+    Input.TrackPad,
+    Input.Thumbstick,
+    Input.A,
+    Input.B,
   ],
 };
 
@@ -415,55 +417,58 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
-  publicAPI.updateGamepads = (displayId) => {
-    const gamepads = navigator.getGamepads();
-
+  publicAPI.updateXRGamepads = (xrSession, xrFrame, xrRefSpace) => {
     // watch for when buttons change state and fire events
-    for (let i = 0; i < gamepads.length; ++i) {
-      const gp = gamepads[i];
-      if (gp && gp.displayId === displayId) {
+    xrSession.inputSources.forEach((inputSource) => {
+      const pose = xrFrame.getPose(inputSource.gripSpace, xrRefSpace);
+      const gp = inputSource.gamepad;
+      const hand = inputSource.handedness;
+      if (gp) {
         if (!(gp.index in model.lastGamepadValues)) {
-          model.lastGamepadValues[gp.index] = { buttons: {} };
+          model.lastGamepadValues[gp.index] = {
+            left: { buttons: {} },
+            right: { buttons: {} },
+          };
         }
         for (let b = 0; b < gp.buttons.length; ++b) {
-          if (!(b in model.lastGamepadValues[gp.index].buttons)) {
-            model.lastGamepadValues[gp.index].buttons[b] = false;
+          if (!(b in model.lastGamepadValues[gp.index][hand].buttons)) {
+            model.lastGamepadValues[gp.index][hand].buttons[b] = false;
           }
           if (
-            model.lastGamepadValues[gp.index].buttons[b] !==
+            model.lastGamepadValues[gp.index][hand].buttons[b] !==
             gp.buttons[b].pressed
           ) {
             publicAPI.button3DEvent({
               gamepad: gp,
-              position: gp.pose.position,
-              orientation: gp.pose.orientation,
+              position: pose.transform.position,
+              orientation: pose.transform.orientation,
               pressed: gp.buttons[b].pressed,
               device:
-                gp.hand === 'left'
+                inputSource.handedness === 'left'
                   ? Device.LeftController
                   : Device.RightController,
               input:
-                deviceInputMap[gp.id] && deviceInputMap[gp.id][b]
-                  ? deviceInputMap[gp.id][b]
+                deviceInputMap[gp.mapping] && deviceInputMap[gp.mapping][b]
+                  ? deviceInputMap[gp.mapping][b]
                   : Input.Trigger,
             });
-            model.lastGamepadValues[gp.index].buttons[b] =
+            model.lastGamepadValues[gp.index][hand].buttons[b] =
               gp.buttons[b].pressed;
           }
-          if (model.lastGamepadValues[gp.index].buttons[b]) {
+          if (model.lastGamepadValues[gp.index][hand].buttons[b]) {
             publicAPI.move3DEvent({
               gamepad: gp,
-              position: gp.pose.position,
-              orientation: gp.pose.orientation,
+              position: pose.transform.position,
+              orientation: pose.transform.orientation,
               device:
-                gp.hand === 'left'
+                inputSource.handedness === 'left'
                   ? Device.LeftController
                   : Device.RightController,
             });
           }
         }
       }
-    }
+    });
   };
 
   publicAPI.handleMouseMove = (event) => {

@@ -58,7 +58,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
       ed &&
       ed.pressed &&
       ed.device === Device.RightController &&
-      ed.input === Input.TrackPad
+      (ed.input === Input.Trigger || ed.input === Input.TrackPad)
     ) {
       publicAPI.startCameraPose();
       return;
@@ -67,7 +67,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
       ed &&
       !ed.pressed &&
       ed.device === Device.RightController &&
-      ed.input === Input.TrackPad &&
+      (ed.input === Input.Trigger || ed.input === Input.TrackPad) &&
       model.state === States.IS_CAMERA_POSE
     ) {
       publicAPI.endCameraPose();
@@ -91,13 +91,18 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const oldTrans = camera.getPhysicalTranslation();
 
     // look at the y axis to determine how fast / what direction to move
-    const speed = ed.gamepad.axes[1];
+    const speed = 0.5; // ed.gamepad.axes[1];
 
     // 0.05 meters / frame movement
     const pscale = speed * 0.05 * camera.getPhysicalScale();
 
     // convert orientation to world coordinate direction
-    const dir = camera.physicalOrientationToWorldDirection(ed.orientation);
+    const dir = camera.physicalOrientationToWorldDirection([
+      ed.orientation.x,
+      ed.orientation.y,
+      ed.orientation.z,
+      ed.orientation.w,
+    ]);
 
     camera.setPhysicalTranslation(
       oldTrans[0] + dir[0] * pscale,
