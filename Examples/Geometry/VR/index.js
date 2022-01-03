@@ -28,8 +28,8 @@ if (navigator.xr === undefined) {
       'https://cdn.jsdelivr.net/npm/webxr-polyfill@latest/build/webxr-polyfill.js'
     )
     .then(() => {
-      // eslint-disable-next-line no-unused-vars, no-undef
-      const polyfill = new WebXRPolyfill();
+      // eslint-disable-next-line no-new, no-undef
+      new WebXRPolyfill();
     });
 }
 
