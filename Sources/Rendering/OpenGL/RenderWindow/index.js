@@ -354,6 +354,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.xrRender = async (t, frame) => {
     const xrSession = frame.session;
 
+    model.renderable
+      .getInteractor()
+      .updateXRGamepads(xrSession, frame, model.xrReferenceSpace);
+
     model.xrSceneFrame = model.xrSession.requestAnimationFrame(
       publicAPI.xrRender
     );
@@ -384,11 +388,11 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           return;
         }
 
-        ren
-          .getActiveCamera()
-          .computeViewParametersFromPhysicalMatrix(
-            view.transform.inverse.matrix
-          );
+        ren.getActiveCamera().computeViewParametersFromViewMatrix(
+          // FIXME use pose for each eye
+          //view.transform.inverse.matrix
+          xrPose.transform.inverse.matrix
+        );
         ren.getActiveCamera().setProjectionMatrix(view.projectionMatrix);
 
         publicAPI.traverseAllPasses();

@@ -36,7 +36,7 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // this
 // ----------------------------------------------------------------------------
 
-const coneSource = vtkConeSource.newInstance({ height: 100.0, radius: 50 });
+const coneSource = vtkConeSource.newInstance({ height: 1.0, radius: 0.5 });
 const filter = vtkCalculator.newInstance();
 
 filter.setInputConnection(coneSource.getOutputPort());
@@ -66,7 +66,7 @@ mapper.setInputConnection(filter.getOutputPort());
 
 const actor = vtkActor.newInstance();
 actor.setMapper(mapper);
-actor.setPosition(0.0, 0.0, -20.0);
+actor.setPosition(0.0, 0.0, -1.0);
 
 renderer.addActor(actor);
 renderer.resetCamera();

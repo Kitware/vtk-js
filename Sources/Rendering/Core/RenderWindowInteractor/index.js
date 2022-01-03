@@ -3,7 +3,7 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import Constants from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
 
-const { Device, Input } = Constants;
+const { Axis, Device, Input } = Constants;
 const { vtkWarningMacro, vtkErrorMacro, normalizeWheel, vtkOnceErrorMacro } =
   macro;
 
@@ -12,12 +12,17 @@ const { vtkWarningMacro, vtkErrorMacro, normalizeWheel, vtkOnceErrorMacro } =
 // ----------------------------------------------------------------------------
 
 const deviceInputMap = {
-  'OpenVR Gamepad': [
-    Input.TrackPad,
-    Input.Trigger,
-    Input.Grip,
-    Input.ApplicationMenu,
-  ],
+  'xr-standard': {
+    button: [
+      Input.Trigger,
+      Input.Grip,
+      Input.TrackPad,
+      Input.Thumbstick,
+      Input.A,
+      Input.B,
+    ],
+    axis: [Axis.TouchpadX, Axis.TouchpadY, Axis.ThumbstickX, Axis.ThumbstickY],
+  },
 };
 
 const handledEvents = [
@@ -415,55 +420,107 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
-  publicAPI.updateGamepads = (displayId) => {
-    const gamepads = navigator.getGamepads();
-
+  publicAPI.updateXRGamepads = (xrSession, xrFrame, xrRefSpace) => {
+    // Fire binary events when axis magnitude crosses threshold
+    const axisThreshold = 0.9;
     // watch for when buttons change state and fire events
-    for (let i = 0; i < gamepads.length; ++i) {
-      const gp = gamepads[i];
-      if (gp && gp.displayId === displayId) {
-        if (!(gp.index in model.lastGamepadValues)) {
-          model.lastGamepadValues[gp.index] = { buttons: {} };
+    xrSession.inputSources.forEach((inputSource) => {
+      const gp = inputSource.gamepad;
+      if (gp === null) return;
+
+      const pose = xrFrame.getPose(inputSource.gripSpace, xrRefSpace);
+      const hand = inputSource.handedness;
+
+      // Init
+      if (!(gp.index in model.lastGamepadValues)) {
+        model.lastGamepadValues[gp.index] = {
+          left: {
+            buttons: {},
+            axes: {},
+          },
+          right: {
+            buttons: {},
+            axes: {},
+          },
+        };
+      }
+
+      // Query buttons
+      for (let b = 0; b < gp.buttons.length; ++b) {
+        // Init
+        if (!(b in model.lastGamepadValues[gp.index][hand].buttons)) {
+          model.lastGamepadValues[gp.index][hand].buttons[b] = false;
         }
-        for (let b = 0; b < gp.buttons.length; ++b) {
-          if (!(b in model.lastGamepadValues[gp.index].buttons)) {
-            model.lastGamepadValues[gp.index].buttons[b] = false;
-          }
-          if (
-            model.lastGamepadValues[gp.index].buttons[b] !==
-            gp.buttons[b].pressed
-          ) {
-            publicAPI.button3DEvent({
-              gamepad: gp,
-              position: gp.pose.position,
-              orientation: gp.pose.orientation,
-              pressed: gp.buttons[b].pressed,
-              device:
-                gp.hand === 'left'
-                  ? Device.LeftController
-                  : Device.RightController,
-              input:
-                deviceInputMap[gp.id] && deviceInputMap[gp.id][b]
-                  ? deviceInputMap[gp.id][b]
-                  : Input.Trigger,
-            });
-            model.lastGamepadValues[gp.index].buttons[b] =
-              gp.buttons[b].pressed;
-          }
-          if (model.lastGamepadValues[gp.index].buttons[b]) {
-            publicAPI.move3DEvent({
-              gamepad: gp,
-              position: gp.pose.position,
-              orientation: gp.pose.orientation,
-              device:
-                gp.hand === 'left'
-                  ? Device.LeftController
-                  : Device.RightController,
-            });
-          }
+
+        // State change
+        if (
+          model.lastGamepadValues[gp.index][hand].buttons[b] !==
+          gp.buttons[b].pressed
+        ) {
+          publicAPI.button3DEvent({
+            gamepad: gp,
+            position: pose.transform.position,
+            orientation: pose.transform.orientation,
+            pressed: gp.buttons[b].pressed,
+            device:
+              hand === 'left' ? Device.LeftController : Device.RightController,
+            input:
+              deviceInputMap[gp.mapping] &&
+              deviceInputMap[gp.mapping]['button'][b]
+                ? deviceInputMap[gp.mapping]['button'][b]
+                : Input.Trigger,
+          });
+          model.lastGamepadValues[gp.index][hand].buttons[b] =
+            gp.buttons[b].pressed;
+        }
+
+        // State
+        if (gp.buttons[b].pressed) {
+          publicAPI.move3DEvent({
+            gamepad: gp,
+            position: pose.transform.position,
+            orientation: pose.transform.orientation,
+            device:
+              hand === 'left' ? Device.LeftController : Device.RightController,
+            input:
+              deviceInputMap[gp.mapping] &&
+              deviceInputMap[gp.mapping]['button'][b]
+                ? deviceInputMap[gp.mapping]['button'][b]
+                : Input.Unknown,
+          });
         }
       }
-    }
+
+      for (let a = 0; a < gp.axes.length; ++a) {
+        // Init
+        if (!(a in model.lastGamepadValues[gp.index][hand].axes)) {
+          model.lastGamepadValues[gp.index][hand].axes[a] = 0.0;
+        }
+
+        // State change
+        if (
+          gp.axes[a] > axisThreshold &&
+          model.lastGamepadValues[gp.index][hand].axes[a] < axisThreshold
+        ) {
+        }
+
+        // State
+        // TODO debounce
+        if (gp.axes[a] > axisThreshold) {
+          //model.rotate3DEvent({
+          //  gamepad: gp,
+          //  position: pose.transform.position,
+          //  orientation: pose.transform.orientation,
+          //  device:
+          //    hand === 'left' ? Device.LeftController : Device.RightController,
+          //  input: deviceInputMap[gp.mapping] && deviceInputMap[gp.mapping]['axis'][a]
+          //    ? deviceInputMap[gp.mapping]['axis'][a]
+          //    : Axis.Unknown,
+          //  value: gp.axes[a],
+          //});
+        }
+      }
+    });
   };
 
   publicAPI.handleMouseMove = (event) => {

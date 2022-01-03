@@ -399,9 +399,43 @@ function vtkCamera(publicAPI, model) {
     mat4.translate(result, result, model.physicalTranslation);
   };
 
+  publicAPI.applyPhysicalYaw = (angle) => {
+    model.physicalYawAngle += angle;
+    if (model.physicalYawAngle > 360) {
+      model.physicalYawAngle -= 360;
+    } else if (model.physicalYawAngle < 0) {
+      model.physicalYawAngle += 360;
+    }
+  };
+
   publicAPI.computeViewParametersFromViewMatrix = (vmat) => {
     // invert to get view to world
-    mat4.invert(tmpMatrix, vmat);
+    let viewToWorldPos = new Float64Array(4);
+    let v2wMatrix = new Float64Array(16);
+    mat4.invert(v2wMatrix, vmat);
+
+    viewToWorldPos[0] = v2wMatrix[12];
+    viewToWorldPos[1] = v2wMatrix[13];
+    viewToWorldPos[2] = v2wMatrix[14];
+    viewToWorldPos[3] = 1;
+
+    mat4.copy(tmpMatrix, v2wMatrix);
+
+    let rotate = mat4.identity(new Float64Array(16));
+    let v2wTranslate = mat4.identity(new Float64Array(16));
+    let v2wTranslateReverse = mat4.identity(new Float64Array(16));
+
+    mat4.translate(v2wTranslate, v2wTranslate, [
+      -viewToWorldPos[0],
+      -viewToWorldPos[1],
+      -viewToWorldPos[2],
+    ]);
+    mat4.rotateY(rotate, rotate, (model.physicalYawAngle / 180) * 3.14);
+    mat4.translate(v2wTranslateReverse, v2wTranslateReverse, viewToWorldPos);
+
+    mat4.mul(tmpMatrix, v2wTranslate, v2wMatrix);
+    mat4.mul(tmpMatrix, tmpMatrix, rotate);
+    mat4.mul(tmpMatrix, v2wTranslateReverse, tmpMatrix);
 
     // note with glmatrix operations happen in
     // the reverse order
@@ -443,6 +477,27 @@ function vtkCamera(publicAPI, model) {
     // world -> view
     mat4.multiply(tmpMatrix, mat, tmpMatrix);
 
+    console.log('orig');
+    console.log(tmpMatrix);
+    let rot = mat4.identity(new Float64Array(16));
+    let v = new Float64Array(3);
+    v[0] = tmpMatrix[12];
+    v[1] = tmpMatrix[13];
+    v[2] = tmpMatrix[14];
+    //mat4.rotateY(rot, rot, model.physicalYawAngle / 180 * 3.14);
+    // mat4.transpose(rot, rot);
+    //mat4.translate(tmpMatrix, tmpMatrix, [-v[0], -v[1], -v[2]]);
+    mat4.mul(tmpMatrix, tmpMatrix, rot);
+    tmpMatrix[12] = v[0];
+    tmpMatrix[13] = v[1];
+    tmpMatrix[14] = v[2];
+    //mat4.mul(tmpMatrix, rot, tmpMatrix);
+    //mat4.translate(tmpMatrix, tmpMatrix, v);
+
+    console.log(tmpMatrix);
+    let tmp = tmpMatrix[12];
+    //tmpMatrix[12] = tmpMatrix[14];
+    //tmpMatrix[14] = tmp;
     publicAPI.computeViewParametersFromViewMatrix(tmpMatrix);
   };
 
@@ -721,6 +776,8 @@ export const DEFAULT_VALUES = {
   physicalScale: 1.0,
   physicalViewUp: [0, 1, 0],
   physicalViewNorth: [0, 0, -1],
+
+  physicalYawAngle: 0,
 };
 
 // ----------------------------------------------------------------------------
