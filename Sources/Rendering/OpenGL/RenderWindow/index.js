@@ -1154,6 +1154,7 @@ const DEFAULT_VALUES = {
   xrSession: null,
   xrSessionIsAR: false,
   xrReferenceSpace: null,
+  xrSupported: true,
   imageFormat: 'image/png',
   useOffScreen: false,
   useBackgroundImage: false,
@@ -1209,6 +1210,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'webgl2',
     'vrDisplay',
     'useBackgroundImage',
+    'xrSupported',
   ]);
 
   macro.setGet(publicAPI, model, [

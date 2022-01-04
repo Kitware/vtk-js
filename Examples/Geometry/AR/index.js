@@ -78,6 +78,9 @@ renderWindow.render();
 
 fullScreenRenderer.addController(controlPanel);
 const arbutton = document.querySelector('.arbutton');
+arbutton.disabled = !fullScreenRenderer
+  .getApiSpecificRenderWindow()
+  .getXrSupported();
 
 const SESSION_IS_AR = true;
 arbutton.addEventListener('click', (e) => {

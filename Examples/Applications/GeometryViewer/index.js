@@ -210,7 +210,8 @@ function createPipeline(fileName, fileContents) {
 
   if (
     navigator.xr !== undefined &&
-    navigator.xr.isSessionSupported('immersive-ar')
+    navigator.xr.isSessionSupported('immersive-ar') &&
+    fullScreenRenderWindow.getApiSpecificRenderWindow().getXrSupported()
   ) {
     controlContainer.appendChild(immersionSelector);
   }
