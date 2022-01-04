@@ -33,6 +33,7 @@ import icon from '../../../Documentation/content/icon/favicon-96x96.png';
 
 let autoInit = true;
 let background = [0, 0, 0];
+let fullScreenRenderWindow;
 let renderWindow;
 let renderer;
 let scalarBarActor;
@@ -115,13 +116,13 @@ function emptyContainer(container) {
 // ----------------------------------------------------------------------------
 
 function createViewer(container) {
-  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  fullScreenRenderWindow = vtkFullScreenRenderWindow.newInstance({
     background,
     rootContainer: container,
     containerStyle: { height: '100%', width: '100%', position: 'absolute' },
   });
-  renderer = fullScreenRenderer.getRenderer();
-  renderWindow = fullScreenRenderer.getRenderWindow();
+  renderer = fullScreenRenderWindow.getRenderer();
+  renderWindow = fullScreenRenderWindow.getRenderWindow();
   renderWindow.getInteractor().setDesiredUpdateRate(15);
 
   container.appendChild(rootControllerContainer);
@@ -139,7 +140,7 @@ function createViewer(container) {
     }
     fpsMonitor.setRenderWindow(renderWindow);
     fpsMonitor.setContainer(container);
-    fullScreenRenderer.setResizeCallback(fpsMonitor.update);
+    fullScreenRenderWindow.setResizeCallback(fpsMonitor.update);
   }
 }
 
@@ -194,6 +195,10 @@ function createPipeline(fileName, fileContents) {
   labelSelector.setAttribute('class', selectorClass);
   labelSelector.innerHTML = fileName;
 
+  const immersionSelector = document.createElement('button');
+  immersionSelector.setAttribute('class', selectorClass);
+  immersionSelector.innerHTML = 'Start AR';
+
   const controlContainer = document.createElement('div');
   controlContainer.setAttribute('class', style.control);
   controlContainer.appendChild(labelSelector);
@@ -202,6 +207,14 @@ function createPipeline(fileName, fileContents) {
   controlContainer.appendChild(colorBySelector);
   controlContainer.appendChild(componentSelector);
   controlContainer.appendChild(opacitySelector);
+
+  if (
+    navigator.xr !== undefined &&
+    navigator.xr.isSessionSupported('immersive-ar') &&
+    fullScreenRenderWindow.getApiSpecificRenderWindow().getXrSupported()
+  ) {
+    controlContainer.appendChild(immersionSelector);
+  }
   rootControllerContainer.appendChild(controlContainer);
 
   // VTK pipeline
@@ -363,6 +376,26 @@ function createPipeline(fileName, fileContents) {
     }
   }
   componentSelector.addEventListener('change', updateColorByComponent);
+
+  // --------------------------------------------------------------------
+  // Immersion handling
+  // --------------------------------------------------------------------
+
+  function toggleAR() {
+    const SESSION_IS_AR = true;
+    if (immersionSelector.textContent === 'Start AR') {
+      fullScreenRenderWindow.setBackground([...background, 0]);
+      fullScreenRenderWindow
+        .getApiSpecificRenderWindow()
+        .startXR(SESSION_IS_AR);
+      immersionSelector.textContent = 'Exit AR';
+    } else {
+      fullScreenRenderWindow.setBackground([...background, 255]);
+      fullScreenRenderWindow.getApiSpecificRenderWindow().stopXR(SESSION_IS_AR);
+      immersionSelector.textContent = 'Start AR';
+    }
+  }
+  immersionSelector.addEventListener('click', toggleAR);
 
   // --------------------------------------------------------------------
   // Pipeline handling

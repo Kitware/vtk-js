@@ -271,22 +271,26 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   // Request an XR session on the user device with WebXR,
   // typically in response to a user request such as a button press
-  publicAPI.startXR = () => {
+  publicAPI.startXR = (isAR) => {
     if (navigator.xr === undefined) {
       throw new Error('WebXR is not available');
     }
 
-    if (!navigator.xr.isSessionSupported('immersive-vr')) {
-      throw new Error('VR display is not available');
+    model.xrSessionIsAR = isAR;
+    const sessionType = isAR ? 'immersive-ar' : 'immersive-vr';
+    if (!navigator.xr.isSessionSupported(sessionType)) {
+      if (isAR) {
+        throw new Error('Device does not support AR session');
+      } else {
+        throw new Error('VR display is not available');
+      }
     }
     if (model.xrSession === null) {
-      navigator.xr
-        .requestSession('immersive-vr')
-        .then(publicAPI.enterXR, () => {
-          throw new Error('Failed to create VR session!');
-        });
+      navigator.xr.requestSession(sessionType).then(publicAPI.enterXR, () => {
+        throw new Error('Failed to create XR session!');
+      });
     } else {
-      throw new Error('VR Session already exists!');
+      throw new Error('XR Session already exists!');
     }
   };
 
@@ -340,7 +344,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       model.xrSession = null;
     }
 
-    publicAPI.setSize(...model.oldCanvasSize);
+    if (model.oldCanvasSize !== undefined) {
+      publicAPI.setSize(...model.oldCanvasSize);
+    }
 
     // Reset to default canvas
     const ren = model.renderable.getRenderers()[0];
@@ -366,6 +372,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
     if (xrPose) {
       const gl = publicAPI.get3DContext();
+
+      if (model.xrSessionIsAR && model.oldCanvasSize !== undefined) {
+        gl.canvas.width = model.oldCanvasSize[0];
+        gl.canvas.height = model.oldCanvasSize[1];
+      }
+
       const glLayer = xrSession.renderState.baseLayer;
       gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
       gl.clear(gl.COLOR_BUFFER_BIT);
@@ -379,13 +391,18 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         const viewport = glLayer.getViewport(view);
 
         gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
-        if (view.eye === 'left') {
-          ren.setViewport(0, 0, 0.5, 1.0);
-        } else if (view.eye === 'right') {
-          ren.setViewport(0.5, 0, 1.0, 1.0);
-        } else {
-          // No handling for non-eye viewport
-          return;
+
+        // TODO: Appropriate handling for AR passthrough on HMDs
+        // with two eyes will require further investigation.
+        if (!model.xrSessionIsAR) {
+          if (view.eye === 'left') {
+            ren.setViewport(0, 0, 0.5, 1.0);
+          } else if (view.eye === 'right') {
+            ren.setViewport(0.5, 0, 1.0, 1.0);
+          } else {
+            // No handling for non-eye viewport
+            return;
+          }
         }
 
         ren
@@ -1135,7 +1152,9 @@ const DEFAULT_VALUES = {
   defaultToWebgl2: true, // attempt webgl2 on by default
   activeFramebuffer: null,
   xrSession: null,
+  xrSessionIsAR: false,
   xrReferenceSpace: null,
+  xrSupported: true,
   imageFormat: 'image/png',
   useOffScreen: false,
   useBackgroundImage: false,
@@ -1191,6 +1210,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'webgl2',
     'vrDisplay',
     'useBackgroundImage',
+    'xrSupported',
   ]);
 
   macro.setGet(publicAPI, model, [
