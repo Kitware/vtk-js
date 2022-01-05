@@ -278,9 +278,8 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
 
   publicAPI.renderPieceDraw = (ren, actor) => {
     const representation = actor.getProperty().getRepresentation();
-    const drawSurfaceWithEdges = false;
     const gl = model.context;
-    gl.lineWidth(actor.getProperty().getLineWidth());
+    // gl.lineWidth(actor.getProperty().getLineWidth());
     gl.depthMask(true);
 
     // for every primitive type
@@ -289,11 +288,18 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
       const cabo = model.primitives[i].getCABO();
       if (cabo.getElementCount()) {
         // are we drawing edges
-        model.drawingEdges =
-          drawSurfaceWithEdges &&
-          (i === primTypes.TrisEdges || i === primTypes.TriStripsEdges);
         const mode = publicAPI.getOpenGLMode(representation, i);
-        if (!model.drawingEdges || !model.renderDepth) {
+        model.drawingEdges = mode === gl.LINES;
+        const wideLines = publicAPI.haveWideLines(ren, actor);
+        if (model.drawingEdges && wideLines) {
+          publicAPI.updateShaders(model.primitives[i], ren, actor);
+          gl.drawArraysInstanced(
+            mode,
+            0,
+            cabo.getElementCount(),
+            2 * Math.ceil(actor.getProperty().getLineWidth())
+          );
+        } else {
           publicAPI.updateShaders(model.primitives[i], ren, actor);
           gl.drawArrays(mode, 0, cabo.getElementCount());
         }
@@ -303,7 +309,7 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
       }
     }
     // reset the line width
-    gl.lineWidth(1);
+    // gl.lineWidth(1);
   };
 
   publicAPI.renderPieceFinish = (ren, actor) => {
@@ -514,6 +520,37 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
     const GSSource = shaders.Geometry;
     const FSSource = shaders.Fragment;
 
+    if (publicAPI.haveWideLines(ren, actor)) {
+      VSSource = vtkShaderProgram.substitute(
+        VSSource,
+        '//VTK::PositionVC::Dec',
+        [
+          '//VTK::PositionVC::Dec',
+          'uniform vec2 viewportSize;',
+          'uniform float lineWidthStepSize;',
+          'uniform float halfLineWidth;',
+        ]
+      ).result;
+      VSSource = vtkShaderProgram.substitute(
+        VSSource,
+        '//VTK::PositionVC::Impl',
+        [
+          '//VTK::PositionVC::Impl',
+          ' if (gl_InstanceID != 0)',
+          ' {',
+          '   float inst = float(gl_InstanceID);',
+          '   float offset = 0.5 * inst * lineWidthStepSize - halfLineWidth;',
+          '   float sign = mod(inst, 2.0) * 2.0 - 1.0;',
+          '   vec4 tmpPos = gl_Position;',
+          '   vec3 tmpPos2 = tmpPos.xyz / tmpPos.w;',
+          '   tmpPos2.x = tmpPos2.x + sign*offset/viewportSize[0];',
+          '   tmpPos2.y = tmpPos2.y + -1.0 * sign * offset / viewportSize[1];',
+          '   gl_Position = vec4(tmpPos2.xyz * tmpPos.w, tmpPos.w);',
+          ' }',
+        ]
+      ).result;
+    }
+
     // for points make sure to add in the point size
     if (
       actor.getProperty().getRepresentation() === Representation.POINTS ||
@@ -679,12 +716,16 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
 
       // handle wide lines
       if (publicAPI.haveWideLines(ren, actor)) {
-        const gl = model.context;
-        const vp = gl.getParameter(gl.VIEWPORT);
-        const lineWidth = [1, 1];
-        lineWidth[0] = (2.0 * actor.getProperty().getLineWidth()) / vp[2];
-        lineWidth[1] = (2.0 * actor.getProperty().getLineWidth()) / vp[3];
-        cellBO.getProgram().setUniform2f('lineWidthNVC', lineWidth);
+        const size = model.openGLRenderer.getTiledSizeAndOrigin();
+        cellBO
+          .getProgram()
+          .setUniform2f('viewportSize', size.usize, size.vsize);
+        const lineWidth = parseFloat(actor.getProperty().getLineWidth());
+        const halfLineWidth = lineWidth / 2.0;
+        cellBO
+          .getProgram()
+          .setUniformf('lineWidthStepSize', lineWidth / Math.ceil(lineWidth));
+        cellBO.getProgram().setUniformf('halfLineWidth', halfLineWidth);
       }
 
       const selector = model.openGLRenderer.getSelector();
@@ -800,15 +841,9 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
 
   publicAPI.haveWideLines = (ren, actor) => {
     if (
-      model.lastBoundBO === model.lines &&
+      // model.lastBoundBO.getPrimitiveType() === primTypes.Lines &&
       actor.getProperty().getLineWidth() > 1.0
     ) {
-      // we have wide lines, but the OpenGL implementation may
-      // actually support them, check the range to see if we
-      // really need have to implement our own wide lines
-      // vtkOpenGLRenderWindow* renWin = vtkOpenGLRenderWindow::SafeDownCast(ren->GetVTKWindow());
-      // return !(
-      //   renWin && renWin->GetMaximumHardwareLineWidth() >= actor->GetProperty()->GetLineWidth());
       return true;
     }
     return false;

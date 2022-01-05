@@ -96,6 +96,7 @@ const actor2D = vtkActor2D.newInstance();
 actor2D.setMapper(mapper2D);
 actor2D.getProperty().setColor([1, 0, 0]);
 actor2D.getProperty().setOpacity(0.5);
+actor2D.getProperty().setLineWidth(3);
 actor2D.getProperty().setDisplayLocation(DisplayLocation.FOREGROUND);
 actor2D.getProperty().setRepresentation(Representation.SURFACE);
 
