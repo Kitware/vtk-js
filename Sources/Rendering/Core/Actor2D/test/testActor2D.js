@@ -16,7 +16,7 @@ import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants
 
 import baseline from './testActor2D.png';
 
-test.only('Test Actor2D', (t) => {
+test('Test Actor2D', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkActor2D');
 
