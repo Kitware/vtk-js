@@ -88,6 +88,33 @@ function bindArrays(arraysToBind) {
 
 function createNewArrayHandler(instance, arrayMetadata, arraysToBind) {
   return (values) => {
+    const regMethod = arrayMetadata.registration
+      ? arrayMetadata.registration
+      : 'addArray';
+    const location = arrayMetadata.location
+      ? instance.getReferenceByName(arrayMetadata.location)
+      : instance;
+
+    // Try to prevent unncessary modified
+    let previousArray = null;
+    if (arrayMetadata.location) {
+      previousArray = instance
+        .getReferenceByName(arrayMetadata.location)
+        .getArray(arrayMetadata.name);
+    } else {
+      previousArray = instance[`get${regMethod.substring(3)}`]();
+    }
+
+    if (previousArray) {
+      if (previousArray.getData() !== values) {
+        arraysToBind.push([
+          previousArray.setData,
+          [values, arrayMetadata.numberOfComponents],
+        ]);
+      }
+      return previousArray;
+    }
+
     const vtkClass = arrayMetadata.vtkClass
       ? arrayMetadata.vtkClass
       : 'vtkDataArray';
@@ -95,12 +122,7 @@ function createNewArrayHandler(instance, arrayMetadata, arraysToBind) {
       ...arrayMetadata,
       values,
     });
-    const regMethod = arrayMetadata.registration
-      ? arrayMetadata.registration
-      : 'addArray';
-    const location = arrayMetadata.location
-      ? instance.getReferenceByName(arrayMetadata.location)
-      : instance;
+
     arraysToBind.push([location[regMethod], [array]]);
     return array;
   };
@@ -264,6 +286,10 @@ function genericUpdater(instance, state, context) {
     dependencies.push(
       Promise.all(promises)
         .then(() => {
+          // Since some arrays are getting updated, we should modify our dataset
+          if (arraysToBind.length) {
+            instance.modified();
+          }
           bindArrays(arraysToBind);
           return true;
         })
@@ -403,8 +429,6 @@ function colorTransferFunctionUpdater(instance, state, context) {
     ([x, r, g, b, midpoint, sharpness]) => ({ x, r, g, b, midpoint, sharpness })
   );
   instance.set({ ...state.properties, nodes }, true);
-  instance.sortAndUpdateRange();
-  instance.modified();
   context.end(); // -> end(colorTransferFunctionUpdater)
 }
 
@@ -418,11 +442,26 @@ function piecewiseFunctionUpdater(instance, state, context) {
   }));
   instance.set({ ...state.properties, nodes }, true);
   instance.sortAndUpdateRange();
-  instance.modified();
+  // instance.modified();
   context.end(); // -> end(piecewiseFunctionUpdater)
 }
 
 // ----------------------------------------------------------------------------
+
+function removeUnavailableArrays(fields, availableNames) {
+  const namesToDelete = [];
+  const size = fields.getNumberOfArrays();
+  for (let i = 0; i < size; i++) {
+    const array = fields.getArray(i);
+    const name = array.getName();
+    if (!availableNames.has(name)) {
+      namesToDelete.push(name);
+    }
+  }
+  for (let i = 0; i < namesToDelete.length; i++) {
+    fields.removeArray(namesToDelete[i]);
+  }
+}
 
 function createDataSetUpdate(piecesToFetch = []) {
   return (instance, state, context) => {
@@ -450,8 +489,16 @@ function createDataSetUpdate(piecesToFetch = []) {
     delete state.properties.fields;
 
     // Reset any pre-existing fields array
-    instance.getPointData().removeAllArrays();
-    instance.getCellData().removeAllArrays();
+    const arrayToKeep = {
+      pointData: new Set(),
+      cellData: new Set(),
+      fieldData: new Set(),
+    };
+    fieldsArrays.forEach(({ location, name }) => {
+      arrayToKeep[location].add(name);
+    });
+    removeUnavailableArrays(instance.getPointData(), arrayToKeep.pointData);
+    removeUnavailableArrays(instance.getCellData(), arrayToKeep.cellData);
 
     // Generic handling
     const res = genericUpdater(instance, state, context);

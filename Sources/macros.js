@@ -298,8 +298,8 @@ export function obj(publicAPI = {}, model = {}) {
             `Warning: Set value to model directly ${name}, ${map[name]}`
           );
         }
+        ret = model[name] !== map[name] || ret;
         model[name] = map[name];
-        ret = true;
       }
     });
     return ret;
