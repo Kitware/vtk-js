@@ -687,15 +687,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     program.setUniform3f('vVCToIJK', vctoijk[0], vctoijk[1], vctoijk[2]);
     program.setUniform3i('volumeDimensions', dims[0], dims[1], dims[2]);
 
-    if (!model.openGLRenderWindow.getWebgl2()) {
-      const volInfo = model.scalarTexture.getVolumeInfo();
-      program.setUniformf('texWidth', model.scalarTexture.getWidth());
-      program.setUniformf('texHeight', model.scalarTexture.getHeight());
-      program.setUniformi('xreps', volInfo.xreps);
-      program.setUniformi('xstride', volInfo.xstride);
-      program.setUniformi('ystride', volInfo.ystride);
-    }
-
     // map normals through normal matrix
     // then use a point on the plane to compute the distance
     const normal = new Float64Array(3);
@@ -1309,35 +1300,17 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.opacityTexture.setMinificationFilter(Filter.LINEAR);
       model.opacityTexture.setMagnificationFilter(Filter.LINEAR);
 
-      // use float texture where possible because we really need the resolution
+      // use float texture because we really need the resolution
       // for this table. Errors in low values of opacity accumulate to
       // visible artifacts. High values of opacity quickly terminate without
       // artifacts.
-      if (
-        model.openGLRenderWindow.getWebgl2() ||
-        (model.context.getExtension('OES_texture_float') &&
-          model.context.getExtension('OES_texture_float_linear'))
-      ) {
-        model.opacityTexture.create2DFromRaw(
-          oWidth,
-          2 * numIComps,
-          1,
-          VtkDataTypes.FLOAT,
-          ofTable
-        );
-      } else {
-        const oTable = new Uint8Array(oSize);
-        for (let i = 0; i < oSize; ++i) {
-          oTable[i] = 255.0 * ofTable[i];
-        }
-        model.opacityTexture.create2DFromRaw(
-          oWidth,
-          2 * numIComps,
-          1,
-          VtkDataTypes.UNSIGNED_CHAR,
-          oTable
-        );
-      }
+      model.opacityTexture.create2DFromRaw(
+        oWidth,
+        2 * numIComps,
+        1,
+        VtkDataTypes.FLOAT,
+        ofTable
+      );
       model.opacityTextureString = toString;
     }
 

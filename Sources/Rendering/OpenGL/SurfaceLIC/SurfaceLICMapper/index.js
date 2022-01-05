@@ -139,12 +139,6 @@ function vtkOpenGLSurfaceLICMapper(publicAPI, model) {
 
   publicAPI.renderPiece = (ren, actor) => {
     let canDrawLIC = true;
-    // Check for gl compatibility
-    const gl2 = model.openGLRenderWindow.getWebgl2();
-    if (!gl2) {
-      vtkErrorMacro('SurfaceLICMapper Requires WebGL 2');
-      canDrawLIC = false;
-    }
 
     // Check for required extensions
     if (

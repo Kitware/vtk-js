@@ -31,7 +31,7 @@ function vtkFramebuffer(publicAPI, model) {
   };
 
   publicAPI.saveCurrentBuffers = (modeIn) => {
-    // noop on webgl 1
+    // noop on webgl
   };
 
   publicAPI.restorePreviousBindingsAndBuffers = (modeIn) => {
@@ -50,7 +50,7 @@ function vtkFramebuffer(publicAPI, model) {
   };
 
   publicAPI.restorePreviousBuffers = (modeIn) => {
-    // currently a noop on webgl1
+    // currently a noop
   };
 
   publicAPI.bind = () => {
@@ -75,14 +75,7 @@ function vtkFramebuffer(publicAPI, model) {
 
     let glAttachment = gl.COLOR_ATTACHMENT0;
     if (attachment > 0) {
-      if (model.openGLRenderWindow.getWebgl2()) {
-        glAttachment += attachment;
-      } else {
-        macro.vtkErrorMacro(
-          'Using multiple framebuffer attachments requires WebGL 2'
-        );
-        return;
-      }
+      glAttachment += attachment;
     }
     model.colorTexture = texture;
     gl.framebufferTexture2D(
@@ -99,14 +92,7 @@ function vtkFramebuffer(publicAPI, model) {
 
     let glAttachment = gl.COLOR_ATTACHMENT0;
     if (attachment > 0) {
-      if (model.openGLRenderWindow.getWebgl2()) {
-        glAttachment += attachment;
-      } else {
-        macro.vtkErrorMacro(
-          'Using multiple framebuffer attachments requires WebGL 2'
-        );
-        return;
-      }
+      glAttachment += attachment;
     }
 
     gl.framebufferTexture2D(
@@ -119,37 +105,25 @@ function vtkFramebuffer(publicAPI, model) {
   };
 
   publicAPI.setDepthBuffer = (texture) => {
-    if (model.openGLRenderWindow.getWebgl2()) {
-      const gl = model.context;
-      gl.framebufferTexture2D(
-        gl.FRAMEBUFFER,
-        gl.DEPTH_ATTACHMENT,
-        gl.TEXTURE_2D,
-        texture.getHandle(),
-        0
-      );
-    } else {
-      macro.vtkErrorMacro(
-        'Attaching depth buffer textures to fbo requires WebGL 2'
-      );
-    }
+    const gl = model.context;
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER,
+      gl.DEPTH_ATTACHMENT,
+      gl.TEXTURE_2D,
+      texture.getHandle(),
+      0
+    );
   };
 
   publicAPI.removeDepthBuffer = () => {
-    if (model.openGLRenderWindow.getWebgl2()) {
-      const gl = model.context;
-      gl.framebufferTexture2D(
-        gl.FRAMEBUFFER,
-        gl.DEPTH_ATTACHMENT,
-        gl.TEXTURE_2D,
-        null,
-        0
-      );
-    } else {
-      macro.vtkErrorMacro(
-        'Attaching depth buffer textures to framebuffers requires WebGL 2'
-      );
-    }
+    const gl = model.context;
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER,
+      gl.DEPTH_ATTACHMENT,
+      gl.TEXTURE_2D,
+      null,
+      0
+    );
   };
 
   publicAPI.getGLFramebuffer = () => model.glFramebuffer;
