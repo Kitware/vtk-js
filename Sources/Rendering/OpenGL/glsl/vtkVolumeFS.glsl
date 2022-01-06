@@ -87,10 +87,6 @@ uniform float gomax3;
 #endif
 #endif
 
-// if you want to see the raw tiled
-// data in webgl1 uncomment the following line
-// #define debugtile
-
 // camera values
 uniform float camThick;
 uniform float camNear;
@@ -191,10 +187,6 @@ uniform vec4 ipScalarRangeMax;
 // Lighting values
 //VTK::Light::Dec
 
-//=======================================================================
-// Webgl2 specific version of functions
-#if __VERSION__ == 300
-
 uniform highp sampler3D texture1;
 
 vec4 getTextureValue(vec3 pos)
@@ -211,80 +203,6 @@ vec4 getTextureValue(vec3 pos)
 #endif
   return tmp;
 }
-
-//=======================================================================
-// WebGL1 specific version of functions
-#else
-
-uniform sampler2D texture1;
-
-uniform float texWidth;
-uniform float texHeight;
-uniform int xreps;
-uniform int xstride;
-uniform int ystride;
-
-// if computing trilinear values from multiple z slices
-#ifdef vtkTrilinearOn
-vec4 getTextureValue(vec3 ijk)
-{
-  float zoff = 1.0/float(volumeDimensions.z);
-  vec4 val1 = getOneTextureValue(ijk);
-  vec4 val2 = getOneTextureValue(vec3(ijk.xy, ijk.z + zoff));
-
-  float indexZ = float(volumeDimensions)*ijk.z;
-  float zmix =  indexZ - floor(indexZ);
-
-  return mix(val1, val2, zmix);
-}
-
-vec4 getOneTextureValue(vec3 ijk)
-#else // nearest or fast linear
-vec4 getTextureValue(vec3 ijk)
-#endif
-{
-  vec3 tdims = vec3(volumeDimensions);
-
-#ifdef debugtile
-  vec2 tpos = vec2(ijk.x, ijk.y);
-  vec4 tmp = texture2D(texture1, tpos);
-  tmp.a = 1.0;
-
-#else
-  int z = int(ijk.z * tdims.z);
-  int yz = z / xreps;
-  int xz = z - yz*xreps;
-
-  int tileWidth = volumeDimensions.x/xstride;
-  int tileHeight = volumeDimensions.y/ystride;
-
-  xz *= tileWidth;
-  yz *= tileHeight;
-
-  float ni = float(xz) + (ijk.x*float(tileWidth));
-  float nj = float(yz) + (ijk.y*float(tileHeight));
-
-  vec2 tpos = vec2(ni/texWidth, nj/texHeight);
-
-  vec4 tmp = texture2D(texture1, tpos);
-
-#if vtkNumComponents == 1
-  tmp.a = tmp.r;
-#endif
-#if vtkNumComponents == 2
-  tmp.g = tmp.a;
-#endif
-#if vtkNumComponents == 3
-  tmp.a = length(tmp.rgb);
-#endif
-#endif
-
-  return tmp;
-}
-
-// End of Webgl1 specific code
-//=======================================================================
-#endif
 
 //=======================================================================
 // compute the normal and gradient magnitude for a position

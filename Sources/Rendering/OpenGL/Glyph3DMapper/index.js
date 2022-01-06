@@ -3,7 +3,6 @@ import { mat3, mat4 } from 'gl-matrix';
 import * as macro from 'vtk.js/Sources/macros';
 
 import vtkBufferObject from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
-import vtkHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkOpenGLPolyDataMapper from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
@@ -13,7 +12,6 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 const { vtkErrorMacro } = macro;
 const { Representation } = vtkProperty;
 const { ObjectType } = vtkBufferObject;
-const { PassTypes } = vtkHardwareSelector;
 
 const StartEvent = { type: 'StartEvent' };
 const EndEvent = { type: 'EndEvent' };
@@ -52,16 +50,7 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
 
     // apply faceCulling
     const gl = model.context;
-    if (model.openGLRenderWindow.getWebgl2()) {
-      model.hardwareSupport = true;
-      model.extension = null;
-    } else if (!model.extension) {
-      model.extension = model.context.getExtension('ANGLE_instanced_arrays');
-      model.hardwareSupport = !!model.extension;
-    }
-    // to test without extension support uncomment the next two lines
-    // model.extension = null;
-    // model.hardwareSupport = !!model.extension;
+    model.hardwareSupport = true;
 
     const backfaceCulling = actor.getProperty().getBackfaceCulling();
     const frontfaceCulling = actor.getProperty().getFrontfaceCulling();
@@ -137,39 +126,33 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderNormal = (shaders, ren, actor) => {
-    if (model.hardwareSupport) {
-      const lastLightComplexity = model.lastBoundBO.getReferenceByName(
-        'lastLightComplexity'
-      );
+    const lastLightComplexity = model.lastBoundBO.getReferenceByName(
+      'lastLightComplexity'
+    );
 
-      if (lastLightComplexity > 0) {
-        let VSSource = shaders.Vertex;
+    if (lastLightComplexity > 0) {
+      let VSSource = shaders.Vertex;
 
-        if (model.lastBoundBO.getCABO().getNormalOffset()) {
-          VSSource = vtkShaderProgram.substitute(
-            VSSource,
-            '//VTK::Normal::Dec',
-            [
-              'attribute vec3 normalMC;',
-              'attribute mat3 gNormal;',
-              'uniform mat3 normalMatrix;',
-              'varying vec3 normalVCVSOutput;',
-            ]
-          ).result;
-          VSSource = vtkShaderProgram.substitute(
-            VSSource,
-            '//VTK::Normal::Impl',
-            ['normalVCVSOutput = normalMatrix * gNormal * normalMC;']
-          ).result;
-        }
-        shaders.Vertex = VSSource;
+      if (model.lastBoundBO.getCABO().getNormalOffset()) {
+        VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Normal::Dec', [
+          'attribute vec3 normalMC;',
+          'attribute mat3 gNormal;',
+          'uniform mat3 normalMatrix;',
+          'varying vec3 normalVCVSOutput;',
+        ]).result;
+        VSSource = vtkShaderProgram.substitute(
+          VSSource,
+          '//VTK::Normal::Impl',
+          ['normalVCVSOutput = normalMatrix * gNormal * normalMC;']
+        ).result;
       }
+      shaders.Vertex = VSSource;
     }
     superClass.replaceShaderNormal(shaders, ren, actor);
   };
 
   publicAPI.replaceShaderColor = (shaders, ren, actor) => {
-    if (model.hardwareSupport && model.renderable.getColorArray()) {
+    if (model.renderable.getColorArray()) {
       let VSSource = shaders.Vertex;
       let GSSource = shaders.Geometry;
       let FSSource = shaders.Fragment;
@@ -260,74 +243,68 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderPositionVC = (shaders, ren, actor) => {
-    if (model.hardwareSupport) {
-      let VSSource = shaders.Vertex;
+    let VSSource = shaders.Vertex;
 
-      // do we need the vertex in the shader in View Coordinates
-      const lastLightComplexity = model.lastBoundBO.getReferenceByName(
-        'lastLightComplexity'
-      );
-      if (lastLightComplexity > 0) {
-        VSSource = vtkShaderProgram.substitute(
-          VSSource,
-          '//VTK::PositionVC::Impl',
-          [
-            'vec4 gVertexMC = gMatrix * vertexMC;',
-            'vertexVCVSOutput = MCVCMatrix * gVertexMC;',
-            '  gl_Position = MCPCMatrix * gVertexMC;',
-          ]
-        ).result;
-        VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Camera::Dec', [
-          'attribute mat4 gMatrix;',
-          'uniform mat4 MCPCMatrix;',
-          'uniform mat4 MCVCMatrix;',
-        ]).result;
-      } else {
-        VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Camera::Dec', [
-          'attribute mat4 gMatrix;',
-          'uniform mat4 MCPCMatrix;',
-        ]).result;
-        VSSource = vtkShaderProgram.substitute(
-          VSSource,
-          '//VTK::PositionVC::Impl',
-          [
-            'vec4 gVertexMC = gMatrix * vertexMC;',
-            '  gl_Position = MCPCMatrix * gVertexMC;',
-          ]
-        ).result;
-      }
-      shaders.Vertex = VSSource;
+    // do we need the vertex in the shader in View Coordinates
+    const lastLightComplexity = model.lastBoundBO.getReferenceByName(
+      'lastLightComplexity'
+    );
+    if (lastLightComplexity > 0) {
+      VSSource = vtkShaderProgram.substitute(
+        VSSource,
+        '//VTK::PositionVC::Impl',
+        [
+          'vec4 gVertexMC = gMatrix * vertexMC;',
+          'vertexVCVSOutput = MCVCMatrix * gVertexMC;',
+          '  gl_Position = MCPCMatrix * gVertexMC;',
+        ]
+      ).result;
+      VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Camera::Dec', [
+        'attribute mat4 gMatrix;',
+        'uniform mat4 MCPCMatrix;',
+        'uniform mat4 MCVCMatrix;',
+      ]).result;
+    } else {
+      VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Camera::Dec', [
+        'attribute mat4 gMatrix;',
+        'uniform mat4 MCPCMatrix;',
+      ]).result;
+      VSSource = vtkShaderProgram.substitute(
+        VSSource,
+        '//VTK::PositionVC::Impl',
+        [
+          'vec4 gVertexMC = gMatrix * vertexMC;',
+          '  gl_Position = MCPCMatrix * gVertexMC;',
+        ]
+      ).result;
     }
+    shaders.Vertex = VSSource;
     superClass.replaceShaderPositionVC(shaders, ren, actor);
   };
 
   publicAPI.replaceShaderPicking = (shaders, ren, actor) => {
-    if (model.hardwareSupport) {
-      let FSSource = shaders.Fragment;
-      let VSSource = shaders.Vertex;
-      VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Picking::Dec', [
-        'attribute vec3 mapperIndexVS;',
-        'varying vec3 mapperIndexVSOutput;',
-      ]).result;
-      VSSource = vtkShaderProgram.substitute(
-        VSSource,
-        '//VTK::Picking::Impl',
-        '  mapperIndexVSOutput = mapperIndexVS;'
-      ).result;
-      shaders.Vertex = VSSource;
-      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Picking::Dec', [
-        'varying vec3 mapperIndexVSOutput;',
-        'uniform vec3 mapperIndex;',
-        'uniform int picking;',
-      ]).result;
-      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Picking::Impl', [
-        '  vec4 pickColor = picking == 2 ? vec4(mapperIndexVSOutput,1.0) : vec4(mapperIndex,1.0);',
-        '  gl_FragData[0] = picking != 0 ? pickColor : gl_FragData[0];',
-      ]).result;
-      shaders.Fragment = FSSource;
-    } else {
-      superClass.replaceShaderPicking(shaders, ren, actor);
-    }
+    let FSSource = shaders.Fragment;
+    let VSSource = shaders.Vertex;
+    VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Picking::Dec', [
+      'attribute vec3 mapperIndexVS;',
+      'varying vec3 mapperIndexVSOutput;',
+    ]).result;
+    VSSource = vtkShaderProgram.substitute(
+      VSSource,
+      '//VTK::Picking::Impl',
+      '  mapperIndexVSOutput = mapperIndexVS;'
+    ).result;
+    shaders.Vertex = VSSource;
+    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Picking::Dec', [
+      'varying vec3 mapperIndexVSOutput;',
+      'uniform vec3 mapperIndex;',
+      'uniform int picking;',
+    ]).result;
+    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Picking::Impl', [
+      '  vec4 pickColor = picking == 2 ? vec4(mapperIndexVSOutput,1.0) : vec4(mapperIndex,1.0);',
+      '  gl_FragData[0] = picking != 0 ? pickColor : gl_FragData[0];',
+    ]).result;
+    shaders.Fragment = FSSource;
   };
 
   publicAPI.updateGlyphShaderParameters = (
@@ -438,19 +415,7 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
     mat4.multiply(model.mcvcMatrix, keyMats.wcvc, actMats.mcwc);
 
     const garray = model.renderable.getMatrixArray();
-    const narray = model.renderable.getNormalArray();
-    const carray = model.renderable.getColorArray();
     const numPts = garray.length / 16;
-
-    let compositePass = false;
-    if (model.openGLRenderer.getSelector()) {
-      if (
-        model.openGLRenderer.getSelector().getCurrentPass() ===
-        PassTypes.COMPOSITE_INDEX_PASS
-      ) {
-        compositePass = true;
-      }
-    }
 
     // for every primitive type
     for (let i = model.primTypes.Start; i < model.primTypes.End; i++) {
@@ -463,42 +428,9 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
           (i === model.primTypes.TrisEdges ||
             i === model.primTypes.TriStripsEdges);
         publicAPI.updateShaders(model.primitives[i], ren, actor);
-        const program = model.primitives[i].getProgram();
 
         const mode = publicAPI.getOpenGLMode(representation, i);
-        const normalMatrixUsed = program.isUniformUsed('normalMatrix');
-        const mcvcMatrixUsed = program.isUniformUsed('MCVCMatrix');
-
-        if (model.hardwareSupport) {
-          if (model.extension) {
-            model.extension.drawArraysInstancedANGLE(
-              mode,
-              0,
-              cabo.getElementCount(),
-              numPts
-            );
-          } else {
-            gl.drawArraysInstanced(mode, 0, cabo.getElementCount(), numPts);
-          }
-        } else {
-          // draw the array multiple times with different cam matrix
-          for (let p = 0; p < numPts; ++p) {
-            if (compositePass) {
-              model.openGLRenderer.getSelector().renderCompositeIndex(p);
-            }
-            publicAPI.updateGlyphShaderParameters(
-              normalMatrixUsed,
-              mcvcMatrixUsed,
-              model.primitives[i],
-              carray,
-              garray,
-              narray,
-              p,
-              compositePass ? model.openGLRenderer.getSelector() : null
-            );
-            gl.drawArrays(mode, 0, cabo.getElementCount());
-          }
-        }
+        gl.drawArraysInstanced(mode, 0, cabo.getElementCount(), numPts);
       }
     }
   };

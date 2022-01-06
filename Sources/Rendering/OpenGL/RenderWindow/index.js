@@ -248,7 +248,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
     const webgl2Supported = typeof WebGL2RenderingContext !== 'undefined';
     model.webgl2 = false;
-    if (model.defaultToWebgl2 && webgl2Supported) {
+    if (webgl2Supported) {
       result = model.canvas.getContext('webgl2', options);
       if (result) {
         model.webgl2 = true;
@@ -256,10 +256,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       }
     }
     if (!result) {
-      vtkDebugMacro('using webgl1');
-      result =
-        model.canvas.getContext('webgl', options) ||
-        model.canvas.getContext('experimental-webgl', options);
+      vtkErrorMacro('required webgl2 support is missing');
     }
 
     // prevent default context lost handler
@@ -514,47 +511,32 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.getDefaultTextureInternalFormat = (vtktype, numComps, useFloat) => {
-    if (model.webgl2) {
-      switch (vtktype) {
-        case VtkDataTypes.UNSIGNED_CHAR:
-          switch (numComps) {
-            case 1:
-              return model.context.R8;
-            case 2:
-              return model.context.RG8;
-            case 3:
-              return model.context.RGB8;
-            case 4:
-            default:
-              return model.context.RGBA8;
-          }
-        default:
-        case VtkDataTypes.FLOAT:
-          switch (numComps) {
-            case 1:
-              return model.context.R16F;
-            case 2:
-              return model.context.RG16F;
-            case 3:
-              return model.context.RGB16F;
-            case 4:
-            default:
-              return model.context.RGBA16F;
-          }
-      }
-    }
-
-    // webgl1 only supports four types
-    switch (numComps) {
-      case 1:
-        return model.context.LUMINANCE;
-      case 2:
-        return model.context.LUMINANCE_ALPHA;
-      case 3:
-        return model.context.RGB;
-      case 4:
+    switch (vtktype) {
+      case VtkDataTypes.UNSIGNED_CHAR:
+        switch (numComps) {
+          case 1:
+            return model.context.R8;
+          case 2:
+            return model.context.RG8;
+          case 3:
+            return model.context.RGB8;
+          case 4:
+          default:
+            return model.context.RGBA8;
+        }
       default:
-        return model.context.RGBA;
+      case VtkDataTypes.FLOAT:
+        switch (numComps) {
+          case 1:
+            return model.context.R16F;
+          case 2:
+            return model.context.RG16F;
+          case 3:
+            return model.context.RGB16F;
+          case 4:
+          default:
+            return model.context.RGBA16F;
+        }
     }
   };
 
@@ -1109,7 +1091,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         glDebugRendererInfo &&
           gl.getParameter(glDebugRendererInfo.UNMASKED_VENDOR_WEBGL),
       ],
-      ['WebGL Version', 'WEBGL_VERSION', model.webgl2 ? 2 : 1],
+      ['WebGL Version', 'WEBGL_VERSION', 2],
     ];
 
     const result = {};
