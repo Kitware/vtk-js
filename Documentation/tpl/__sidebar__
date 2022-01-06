@@ -17,6 +17,7 @@ docs:
     build: develop_build.html
     widget: develop_widget.html
     webgpu: develop_webgpu.html
+    webxr: develop_webxr.html
 
   concepts:
     widgets: concepts_widgets.html
