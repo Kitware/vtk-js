@@ -62,7 +62,7 @@ Please follow the coding style:
 If committing changes to `vtk.js@next` or `vtk.js@next-major`, then set your base branch to be `next`
 or `next-major`, respectively. For more info see the section on release channels below.
 
-8. vtk.js uses GitHub for code review and Travis-CI to test proposed patches before they are merged.
+8. vtk.js uses GitHub for code review and Github Actions to validate proposed patches before they are merged.
 
 ## Release Channels
 
@@ -110,7 +110,7 @@ you are satisfied with the staging branch changes, you can then merge into eithe
 
 To create and debug a test:
 - Create a testFuncNameToTest.js in a "test" folder of the class to test.
-- Add the test path into Sources/tests.js and temporarily comment the other tests
+- If you want to run just your test, use `test.only(...)` instead of `test(...)`.
 - Run `npm run test:debug`
 - In the opened window, click the Debug button and place breakpoints in browser debugger.
 
