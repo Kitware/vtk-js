@@ -275,8 +275,8 @@ function vtkWebGPUVolumePass(publicAPI, model) {
         code,
         '//VTK::RenderEncoder::Impl',
         [
-          'output.outColor1 = vec4<f32>(stopval, 0.0, 0.0, 0.0);',
-          'output.outColor2 = vec4<f32>(input.fragPos.z, 0.0, 0.0, 0.0);',
+          'output.outColor1 = vec4<f32>(input.fragPos.z, 0.0, 0.0, 0.0);',
+          'output.outColor2 = vec4<f32>(stopval, 0.0, 0.0, 0.0);',
         ]
       ).result;
       fDesc.setCode(code);
