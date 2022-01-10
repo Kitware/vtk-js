@@ -32,10 +32,10 @@ function vtkOpenGLBufferObject(publicAPI, model) {
         }
       /* eslint-disable no-fallthrough */
       // Intentional fallthrough in case there is no TEXTURE_BUFFER in WebGL
-      default:
-      /* eslint-enable no-fallthrough */
       case ObjectType.ARRAY_BUFFER:
+      default:
         return model.context.ARRAY_BUFFER;
+      /* eslint-enable no-fallthrough */
     }
   }
 

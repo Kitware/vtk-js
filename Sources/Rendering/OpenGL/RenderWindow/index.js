@@ -528,8 +528,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
             default:
               return model.context.RGBA8;
           }
-        default:
         case VtkDataTypes.FLOAT:
+        default:
           switch (numComps) {
             case 1:
               return model.context.R16F;

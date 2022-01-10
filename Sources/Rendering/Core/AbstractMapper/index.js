@@ -5,16 +5,21 @@ import macro from 'vtk.js/Sources/macros';
 // ----------------------------------------------------------------------------
 
 function vtkAbstractMapper(publicAPI, model) {
+  model.classHierarchy.push('vtkAbstractMapper');
   publicAPI.update = () => {
     publicAPI.getInputData();
   };
 
   publicAPI.addClippingPlane = (plane) => {
-    if (plane.getClassName() !== 'vtkPlane') {
-      return;
+    if (!plane.isA('vtkPlane')) {
+      return false;
     }
-    model.clippingPlanes.push(plane);
-    publicAPI.modified();
+    if (!model.clippingPlanes.includes(plane)) {
+      model.clippingPlanes.push(plane);
+      publicAPI.modified();
+      return true;
+    }
+    return false;
   };
 
   publicAPI.getNumberOfClippingPlanes = () => model.clippingPlanes.length;
@@ -23,11 +28,14 @@ function vtkAbstractMapper(publicAPI, model) {
     model.clippingPlanes.length = 0;
   };
 
-  publicAPI.removeClippingPlane = (i) => {
-    if (i < 0 || i >= 6) {
-      return;
+  publicAPI.removeClippingPlane = (clippingPlane) => {
+    const i = model.clippingPlanes.indexOf(clippingPlane);
+    if (i === -1) {
+      return false;
     }
     model.clippingPlanes.splice(i, 1);
+    publicAPI.modified();
+    return true;
   };
 
   publicAPI.getClippingPlanes = () => model.clippingPlanes;

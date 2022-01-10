@@ -56,7 +56,7 @@ function fetchBinary(url, options = {}) {
   });
 }
 
-function fetchArray(instance = {}, baseURL, array, options = {}) {
+function fetchArray(instance, baseURL, array, options = {}) {
   if (options && options.compression) {
     return REJECT_COMPRESSION();
   }
@@ -69,7 +69,7 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
       xhr.onreadystatechange = (e) => {
         if (xhr.readyState === 1) {
           array.ref.pending = true;
-          if (++requestCount === 1 && instance.invokeBusy) {
+          if (++requestCount === 1 && instance?.invokeBusy) {
             instance.invokeBusy(true);
           }
         }
@@ -101,10 +101,10 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
 
             // Done with the ref and work
             delete array.ref;
-            if (--requestCount === 0 && instance.invokeBusy) {
+            if (--requestCount === 0 && instance?.invokeBusy) {
               instance.invokeBusy(false);
             }
-            if (instance.modified) {
+            if (instance?.modified) {
               instance.modified();
             }
             resolve(array);
@@ -125,7 +125,7 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
 
 // ----------------------------------------------------------------------------
 
-function fetchJSON(instance = {}, url, options = {}) {
+function fetchJSON(instance, url, options = {}) {
   if (options && options.compression) {
     return REJECT_COMPRESSION();
   }
@@ -135,12 +135,12 @@ function fetchJSON(instance = {}, url, options = {}) {
 
     xhr.onreadystatechange = (e) => {
       if (xhr.readyState === 1) {
-        if (++requestCount === 1 && instance.invokeBusy) {
+        if (++requestCount === 1 && instance?.invokeBusy) {
           instance.invokeBusy(true);
         }
       }
       if (xhr.readyState === 4) {
-        if (--requestCount === 0 && instance.invokeBusy) {
+        if (--requestCount === 0 && instance?.invokeBusy) {
           instance.invokeBusy(false);
         }
         if (xhr.status === 200 || xhr.status === 0) {
@@ -159,7 +159,7 @@ function fetchJSON(instance = {}, url, options = {}) {
 
 // ----------------------------------------------------------------------------
 
-function fetchText(instance = {}, url, options = {}) {
+function fetchText(instance, url, options = {}) {
   if (options && options.compression) {
     return REJECT_COMPRESSION();
   }
@@ -169,12 +169,12 @@ function fetchText(instance = {}, url, options = {}) {
 
     xhr.onreadystatechange = (e) => {
       if (xhr.readyState === 1) {
-        if (++requestCount === 1 && instance.invokeBusy) {
+        if (++requestCount === 1 && instance?.invokeBusy) {
           instance.invokeBusy(true);
         }
       }
       if (xhr.readyState === 4) {
-        if (--requestCount === 0 && instance.invokeBusy) {
+        if (--requestCount === 0 && instance?.invokeBusy) {
           instance.invokeBusy(false);
         }
         if (xhr.status === 200 || xhr.status === 0) {
@@ -193,7 +193,7 @@ function fetchText(instance = {}, url, options = {}) {
 
 // ----------------------------------------------------------------------------
 
-function fetchImage(instance = {}, url, options = {}) {
+function fetchImage(instance, url, options = {}) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     if (options.crossOrigin) {

@@ -282,9 +282,9 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
 
     if (!model.WebGPURenderWindow.getInitialized()) {
       model.WebGPURenderWindow.initialize();
-      await new Promise((resolve) =>
-        model.WebGPURenderWindow.onInitialized(resolve)
-      );
+      await new Promise((resolve) => {
+        model.WebGPURenderWindow.onInitialized(resolve);
+      });
     }
 
     const webGPURenderer = model.WebGPURenderWindow.getViewNodeFor(renderer);

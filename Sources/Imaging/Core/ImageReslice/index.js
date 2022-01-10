@@ -835,10 +835,6 @@ function vtkImageReslice(publicAPI, model) {
     switch (dataType) {
       case 'Int8Array':
         return { min: -128, max: 127 };
-      case 'Uint8Array':
-      case 'Uint8ClampedArray':
-      default:
-        return { min: 0, max: 255 };
       case 'Int16Array':
         return { min: -32768, max: 32767 };
       case 'Uint16Array':
@@ -851,6 +847,10 @@ function vtkImageReslice(publicAPI, model) {
         return { min: -1.2e38, max: 1.2e38 };
       case 'Float64Array':
         return { min: -1.2e38, max: 1.2e38 };
+      case 'Uint8Array':
+      case 'Uint8ClampedArray':
+      default:
+        return { min: 0, max: 255 };
     }
   };
 

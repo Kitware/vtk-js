@@ -111,7 +111,7 @@ function create(createOptions) {
     }
   });
   return {
-    fetchArray(instance = {}, baseURL, array, options = {}) {
+    fetchArray(instance, baseURL, array, options = {}) {
       return new Promise((resolve, reject) => {
         if (!ready) {
           vtkErrorMacro('ERROR!!! zip not ready...');
@@ -124,17 +124,17 @@ function create(createOptions) {
           ].join('/')
         );
 
-        if (++requestCount === 1 && instance.invokeBusy) {
+        if (++requestCount === 1 && instance?.invokeBusy) {
           instance.invokeBusy(true);
         }
 
         function doneCleanUp() {
           // Done with the ref and work
           delete array.ref;
-          if (--requestCount === 0 && instance.invokeBusy) {
+          if (--requestCount === 0 && instance?.invokeBusy) {
             instance.invokeBusy(false);
           }
-          if (instance.modified) {
+          if (instance?.modified) {
             instance.modified();
           }
           resolve(array);
@@ -153,7 +153,7 @@ function create(createOptions) {
       });
     },
 
-    fetchJSON(instance = {}, url, options = {}) {
+    fetchJSON(instance, url, options = {}) {
       const path = cleanUpPath(url);
       if (!ready) {
         vtkErrorMacro('ERROR!!! zip not ready...');
@@ -177,7 +177,7 @@ function create(createOptions) {
         .then((str) => Promise.resolve(JSON.parse(str)));
     },
 
-    fetchText(instance = {}, url, options = {}) {
+    fetchText(instance, url, options = {}) {
       const path = cleanUpPath(url);
       if (!ready) {
         vtkErrorMacro('ERROR!!! zip not ready...');
@@ -202,7 +202,7 @@ function create(createOptions) {
         .then((str) => Promise.resolve(str));
     },
 
-    fetchImage(instance = {}, url, options = {}) {
+    fetchImage(instance, url, options = {}) {
       const path = cleanUpPath(url);
       if (!ready) {
         vtkErrorMacro('ERROR!!! zip not ready...');
@@ -222,7 +222,7 @@ function create(createOptions) {
       });
     },
 
-    fetchBinary(instance = {}, url, options = {}) {
+    fetchBinary(instance, url, options = {}) {
       const path = cleanUpPath(url);
       if (!ready) {
         vtkErrorMacro('ERROR!!! zip not ready...');
