@@ -98,10 +98,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkAbstractMapper.extend(publicAPI, model, initialValues);
 
-  // Build VTK API
-  macro.obj(publicAPI, model);
-  macro.algo(publicAPI, model, 1, 0);
-
   macro.setGet(publicAPI, model, [
     'sampleDistance',
     'imageSampleDistance',
