@@ -386,8 +386,8 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
         return 'triangle-list';
       case BufferUsage.Verts:
         return 'point-list';
-      default:
       case BufferUsage.Lines:
+      default:
         return 'line-list';
     }
   };

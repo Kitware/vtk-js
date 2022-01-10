@@ -114,6 +114,7 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
 
     // look for replacements to invoke
     const scode = model.vertexShaderTemplate + model.fragmentShaderTemplate;
+    // eslint-disable-next-line prefer-regex-literals
     const re = new RegExp('//VTK::[^:]*::', 'g');
     const unique = scode.match(re).filter((v, i, a) => a.indexOf(v) === i);
     const fnames = unique.map(

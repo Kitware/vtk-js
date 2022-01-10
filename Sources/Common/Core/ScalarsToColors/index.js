@@ -351,8 +351,16 @@ function vtkScalarsToColors(publicAPI, model) {
         break;
       }
 
-      default:
-      case VectorMode.MAGNITUDE: {
+      case VectorMode.RGBCOLORS: {
+        // publicAPI.mapColorsToColors(
+        //   input, output, inComponents, vectorSize,
+        //   outputFormat);
+        break;
+      }
+
+      // MAGNITUDE is considered default
+      case VectorMode.MAGNITUDE:
+      default: {
         const magValues = vtkDataArray.newInstance({
           numberOfComponents: 1,
           values: new Float32Array(input.getNumberOfTuples()),
@@ -360,13 +368,6 @@ function vtkScalarsToColors(publicAPI, model) {
 
         publicAPI.mapVectorsToMagnitude(input, magValues, vectorSize);
         publicAPI.mapScalarsThroughTable(magValues, output, outputFormat, 0);
-        break;
-      }
-
-      case VectorMode.RGBCOLORS: {
-        // publicAPI.mapColorsToColors(
-        //   input, output, inComponents, vectorSize,
-        //   outputFormat);
         break;
       }
     }

@@ -243,10 +243,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const shadowFactor = '';
 
     switch (model.lastLightComplexity) {
-      default:
-      case 0: // no lighting, tcolor is fine as is
-        break;
-
       case 1: // headlight
       case 2: // light kit
       case 3: {
@@ -287,7 +283,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
             lightNum++;
           }
         });
+        break;
       }
+      case 0: // no lighting, tcolor is fine as is
+      default:
     }
 
     shaders.Fragment = FSSource;
@@ -702,11 +701,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const pos2 = new Float64Array(3);
     for (let i = 0; i < 6; ++i) {
       switch (i) {
-        default:
-        case 0:
-          vec3.set(normal, 1.0, 0.0, 0.0);
-          vec3.set(pos2, ext[1], ext[3], ext[5]);
-          break;
         case 1:
           vec3.set(normal, -1.0, 0.0, 0.0);
           vec3.set(pos2, ext[0], ext[2], ext[4]);
@@ -726,6 +720,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         case 5:
           vec3.set(normal, 0.0, 0.0, -1.0);
           vec3.set(pos2, ext[0], ext[2], ext[4]);
+          break;
+        case 0:
+        default:
+          vec3.set(normal, 1.0, 0.0, 0.0);
+          vec3.set(pos2, ext[1], ext[3], ext[5]);
           break;
       }
       vec3.transformMat3(normal, normal, model.idxNormalMatrix);
@@ -759,10 +758,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     // handle lighting values
     switch (model.lastLightComplexity) {
-      default:
-      case 0: // no lighting, tcolor is fine as is
-        break;
-
       case 1: // headlight
       case 2: // light kit
       case 3: {
@@ -799,7 +794,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           }
         });
         // mat3.transpose(keyMats.normalMatrix, keyMats.normalMatrix);
+        break;
       }
+      case 0: // no lighting, tcolor is fine as is
+      default:
+        break;
     }
   };
 

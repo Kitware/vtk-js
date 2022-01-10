@@ -48,9 +48,9 @@ function vtkWebGPUTextureManager(publicAPI, model) {
         case 2:
           req.format = 'rg';
           break;
-        default:
         case 3:
         case 4:
+        default:
           req.format = 'rgba';
           break;
       }
