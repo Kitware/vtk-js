@@ -23,7 +23,7 @@ function removeLeadingSlash(str) {
   return str[0] === '/' ? str.substr(1) : str;
 }
 
-function fetchText(instance = {}, url, options = {}) {
+function fetchText(instance, url, options = {}) {
   return new Promise((resolve, reject) => {
     const txt = getContent(url);
     if (txt === null) {
@@ -34,7 +34,7 @@ function fetchText(instance = {}, url, options = {}) {
   });
 }
 
-function fetchJSON(instance = {}, url, options = {}) {
+function fetchJSON(instance, url, options = {}) {
   return new Promise((resolve, reject) => {
     const txt = getContent(removeLeadingSlash(url));
     if (txt === null) {
@@ -45,7 +45,7 @@ function fetchJSON(instance = {}, url, options = {}) {
   });
 }
 
-function fetchArray(instance = {}, baseURL, array, options = {}) {
+function fetchArray(instance, baseURL, array, options = {}) {
   return new Promise((resolve, reject) => {
     const url = removeLeadingSlash(
       [
@@ -105,10 +105,10 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
 
       // Done with the ref and work
       delete array.ref;
-      if (--requestCount === 0 && instance.invokeBusy) {
+      if (--requestCount === 0 && instance?.invokeBusy) {
         instance.invokeBusy(false);
       }
-      if (instance.modified) {
+      if (instance?.modified) {
         instance.modified();
       }
 
@@ -119,7 +119,7 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
 
 // ----------------------------------------------------------------------------
 
-function fetchImage(instance = {}, url, options = {}) {
+function fetchImage(instance, url, options = {}) {
   return new Promise((resolve, reject) => {
     const img = getElement(url);
     if (img) {

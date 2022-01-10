@@ -31,15 +31,9 @@ export default function createMethods(session) {
       session.call('viewport.image.animation.start', [viewId]),
     stopAnimation: (viewId = -1) =>
       session.call('viewport.image.animation.stop', [viewId]),
-    updateCamera: (
-      viewId = -1,
-      focalPoint,
-      viewUp,
-      position,
-      forceUpdate = true
-    ) =>
+    updateCamera: (viewId, focalPoint, viewUp, position, forceUpdate = true) =>
       session.call('viewport.camera.update', [
-        viewId,
+        viewId ?? -1,
         focalPoint,
         viewUp,
         position,
