@@ -279,7 +279,6 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
   publicAPI.renderPieceDraw = (ren, actor) => {
     const representation = actor.getProperty().getRepresentation();
     const gl = model.context;
-    // gl.lineWidth(actor.getProperty().getLineWidth());
     gl.depthMask(true);
 
     // for every primitive type
@@ -300,6 +299,7 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
             2 * Math.ceil(actor.getProperty().getLineWidth())
           );
         } else {
+          gl.lineWidth(actor.getProperty().getLineWidth());
           publicAPI.updateShaders(model.primitives[i], ren, actor);
           gl.drawArrays(mode, 0, cabo.getElementCount());
         }
@@ -309,7 +309,7 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
       }
     }
     // reset the line width
-    // gl.lineWidth(1);
+    gl.lineWidth(1);
   };
 
   publicAPI.renderPieceFinish = (ren, actor) => {
@@ -520,7 +520,13 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
     const GSSource = shaders.Geometry;
     const FSSource = shaders.Fragment;
 
-    if (publicAPI.haveWideLines(ren, actor)) {
+    if (
+      publicAPI.getOpenGLMode(
+        actor.getProperty().getRepresentation(),
+        model.lastBoundBO.getPrimitiveType()
+      ) === model.context.LINES &&
+      publicAPI.haveWideLines(ren, actor)
+    ) {
       VSSource = vtkShaderProgram.substitute(
         VSSource,
         '//VTK::PositionVC::Dec',
@@ -536,17 +542,16 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
         '//VTK::PositionVC::Impl',
         [
           '//VTK::PositionVC::Impl',
-          ' if (gl_InstanceID != 0)',
-          ' {',
+          ' if (halfLineWidth > 0.0)',
+          '   {',
           '   float inst = float(gl_InstanceID);',
           '   float offset = 0.5 * inst * lineWidthStepSize - halfLineWidth;',
-          '   float sign = mod(inst, 2.0) * 2.0 - 1.0;',
           '   vec4 tmpPos = gl_Position;',
           '   vec3 tmpPos2 = tmpPos.xyz / tmpPos.w;',
-          '   tmpPos2.x = tmpPos2.x + sign*offset/viewportSize[0];',
-          '   tmpPos2.y = tmpPos2.y + -1.0 * sign * offset / viewportSize[1];',
+          '   tmpPos2.x = tmpPos2.x + 2.0 * mod(inst, 2.0) * offset / viewportSize[0];',
+          '   tmpPos2.y = tmpPos2.y + 2.0 * mod(inst + 1.0, 2.0) * offset / viewportSize[1];',
           '   gl_Position = vec4(tmpPos2.xyz * tmpPos.w, tmpPos.w);',
-          ' }',
+          '   }',
         ]
       ).result;
     }
@@ -840,10 +845,18 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
   };
 
   publicAPI.haveWideLines = (ren, actor) => {
-    if (
-      // model.lastBoundBO.getPrimitiveType() === primTypes.Lines &&
-      actor.getProperty().getLineWidth() > 1.0
-    ) {
+    if (actor.getProperty().getLineWidth() > 1.0) {
+      // we have wide lines, but the OpenGL implementation may
+      // actually support them, check the range to see if we
+      // really need have to implement our own wide lines
+      if (model.openGLRenderWindow) {
+        if (
+          model.openGLRenderWindow.getHardwareMaximumLineWidth() >=
+          actor.getProperty().getLineWidth()
+        ) {
+          return false;
+        }
+      }
       return true;
     }
     return false;
