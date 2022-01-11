@@ -866,10 +866,10 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
 
     // clear any old leftovers
     if (model.volumes.length < model.lastVolumeLength) {
-      model.textureViews.splice(
-        model.volumes.length,
-        model.lastVolumeLength - model.volumes.length
-      );
+      // we may have gaps in the array right now so no splice
+      for (let i = model.volumes.length; i < model.lastVolumeLength; i++) {
+        model.textureViews.pop();
+      }
     }
     model.lastVolumeLength = model.volumes.length;
 
