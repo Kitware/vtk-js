@@ -214,22 +214,29 @@ function vtkColorTransferFunction(publicAPI, model) {
   // Set nodes directly
   publicAPI.setNodes = (nodes) => {
     if (model.nodes !== nodes) {
+      const before = JSON.stringify(model.nodes);
       model.nodes = nodes;
-      publicAPI.sortAndUpdateRange();
+      const after = JSON.stringify(model.nodes);
+      return publicAPI.sortAndUpdateRange() || before !== after;
     }
+    return false;
   };
 
   //----------------------------------------------------------------------------
   // Sort the vector in increasing order, then fill in
   // the Range
   publicAPI.sortAndUpdateRange = () => {
+    const before = JSON.stringify(model.nodes);
     model.nodes.sort((a, b) => a.x - b.x);
+    const after = JSON.stringify(model.nodes);
 
     const modifiedInvoked = publicAPI.updateRange();
     // If range is updated, Modified() has been called, don't call it again.
-    if (!modifiedInvoked) {
+    if (!modifiedInvoked && before !== after) {
       publicAPI.modified();
+      return true;
     }
+    return modifiedInvoked;
   };
 
   //----------------------------------------------------------------------------

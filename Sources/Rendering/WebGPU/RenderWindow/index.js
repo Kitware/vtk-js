@@ -545,6 +545,7 @@ const DEFAULT_VALUES = {
   useOffScreen: false,
   useBackgroundImage: false,
   nextPropID: 1,
+  xrSupported: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -589,6 +590,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'commandEncoder',
     'device',
     'useBackgroundImage',
+    'xrSupported',
   ]);
 
   macro.setGet(publicAPI, model, [

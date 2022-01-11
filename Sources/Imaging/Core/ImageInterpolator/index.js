@@ -93,15 +93,15 @@ function vtkImageInterpolator(publicAPI, model) {
 
   publicAPI.interpolatePoint = (interpolationInfo, point, value) => {
     switch (model.interpolationMode) {
-      case InterpolationMode.NEAREST:
-      default:
-        publicAPI.interpolateNearest(interpolationInfo, point, value);
-        break;
       case InterpolationMode.LINEAR:
         console.log('LINEAR not implemented');
         break;
       case InterpolationMode.CUBIC:
         console.log('CUBIC not implemented');
+        break;
+      case InterpolationMode.NEAREST:
+      default:
+        publicAPI.interpolateNearest(interpolationInfo, point, value);
         break;
     }
   };
@@ -124,15 +124,15 @@ function vtkImageInterpolator(publicAPI, model) {
 
   publicAPI.interpolateRow = (weights, xIdx, yIdx, zIdx, value, n) => {
     switch (model.interpolationMode) {
-      case InterpolationMode.NEAREST:
-      default:
-        publicAPI.interpolateRowNearest(weights, xIdx, yIdx, zIdx, value, n);
-        break;
       case InterpolationMode.LINEAR:
         console.log('LINEAR not implemented');
         break;
       case InterpolationMode.CUBIC:
         console.log('CUBIC not implemented');
+        break;
+      case InterpolationMode.NEAREST:
+      default:
+        publicAPI.interpolateRowNearest(weights, xIdx, yIdx, zIdx, value, n);
         break;
     }
   };

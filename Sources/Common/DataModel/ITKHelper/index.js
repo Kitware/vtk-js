@@ -4,8 +4,8 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 const { vtkErrorMacro } = macro;
 
-// see itk.js/PixelTypes.js
-const ITKPixelTypes = {
+// see itk.js PixelTypes.js
+const ITKJSPixelTypes = {
   Unknown: 0,
   Scalar: 1,
   RGB: 2,
@@ -24,6 +24,26 @@ const ITKPixelTypes = {
   VariableSizeMatrix: 15,
 };
 
+// itk-wasm pixel types from https://github.com/InsightSoftwareConsortium/itk-wasm/blob/master/src/core/PixelTypes.ts
+const ITKWASMPixelTypes = {
+  Unknown: 'Unknown',
+  Scalar: 'Scalar',
+  RGB: 'RGB',
+  RGBA: 'RGBA',
+  Offset: 'Offset',
+  Vector: 'Vector',
+  Point: 'Point',
+  CovariantVector: 'CovariantVector',
+  SymmetricSecondRankTensor: 'SymmetricSecondRankTensor',
+  DiffusionTensor3D: 'DiffusionTensor3D',
+  Complex: 'Complex',
+  FixedArray: 'FixedArray',
+  Array: 'Array',
+  Matrix: 'Matrix',
+  VariableLengthVector: 'VariableLengthVector',
+  VariableSizeMatrix: 'VariableSizeMatrix',
+};
+
 /**
  * Converts an itk.js image to a vtk.js image.
  *
@@ -38,6 +58,10 @@ function convertItkToVtkImage(itkImage, options = {}) {
   const dimensions = [1, 1, 1];
   const direction = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 
+  // Check whether itkImage is an itk.js Image or an itk-wasm Image?
+  const isITKWasm = itkImage.direction.data === undefined;
+  const ITKPixelTypes = isITKWasm ? ITKWASMPixelTypes : ITKJSPixelTypes;
+
   for (let idx = 0; idx < itkImage.imageType.dimension; ++idx) {
     vtkImage.origin[idx] = itkImage.origin[idx];
     vtkImage.spacing[idx] = itkImage.spacing[idx];
@@ -47,8 +71,13 @@ function convertItkToVtkImage(itkImage, options = {}) {
       // matrix on the vtkImageData is a webGL matrix, which uses a
       // column-major data layout. Transpose the direction matrix from
       // itkImage when instantiating that vtkImageData direction matrix.
-      direction[col + idx * 3] =
-        itkImage.direction.data[idx + col * itkImage.imageType.dimension];
+      if (isITKWasm) {
+        direction[col + idx * 3] =
+          itkImage.direction[idx + col * itkImage.imageType.dimension];
+      } else {
+        direction[col + idx * 3] =
+          itkImage.direction.data[idx + col * itkImage.imageType.dimension];
+      }
     }
   }
 
@@ -70,7 +99,7 @@ function convertItkToVtkImage(itkImage, options = {}) {
 
   // Associate the point data that are 3D vectors / tensors
   // Refer to itk-js/src/PixelTypes.js for numerical values
-  switch (itkImage.imageType.pixelType) {
+  switch (ITKPixelTypes[itkImage.imageType.pixelType]) {
     case ITKPixelTypes.Scalar:
       break;
     case ITKPixelTypes.RGB:
@@ -155,7 +184,7 @@ function convertVtkToItkImage(vtkImage, copyData = false) {
   const itkImage = {
     imageType: {
       dimension: 3,
-      pixelType: ITKPixelTypes.Scalar,
+      pixelType: ITKJSPixelTypes.Scalar,
       componentType: '',
       components: 1,
     },
@@ -187,10 +216,10 @@ function convertVtkToItkImage(vtkImage, copyData = false) {
 
   let vtkArray;
   if (pointData.getTensors() !== null) {
-    itkImage.imageType.pixelType = ITKPixelTypes.DiffusionTensor3D;
+    itkImage.imageType.pixelType = ITKJSPixelTypes.DiffusionTensor3D;
     vtkArray = pointData.getTensors();
   } else if (pointData.getVectors() != null) {
-    itkImage.imageType.pixelType = ITKPixelTypes.Vector;
+    itkImage.imageType.pixelType = ITKJSPixelTypes.Vector;
     vtkArray = pointData.getVectors();
   } else {
     vtkArray = pointData.getScalars();

@@ -8,6 +8,7 @@ import vtkWebGPURenderEncoder from 'vtk.js/Sources/Rendering/WebGPU/RenderEncode
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUTexture from 'vtk.js/Sources/Rendering/WebGPU/Texture';
 import vtkWebGPUVolumePassFSQ from 'vtk.js/Sources/Rendering/WebGPU/VolumePassFSQ';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { Representation } = vtkProperty;
 const { BufferUsage, PrimitiveTypes } = vtkWebGPUBufferManager;
@@ -99,25 +100,72 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     // we just render our delegates in order
     model.currentParent = viewNode;
 
-    // first render the boxes to generate a min max depth
-    // map for all the volumes
-    publicAPI.renderDepthBounds(renNode, viewNode);
-
     // then perform the ray casting using the depth bounds texture
     if (!model.finalEncoder) {
       publicAPI.createFinalEncoder(viewNode);
     }
-    publicAPI.finalPass(viewNode, renNode);
+
+    // first render the boxes to generate a min max depth
+    // map for all the volumes
+    publicAPI.renderDepthBounds(renNode, viewNode);
+
+    if (!model.fullScreenQuad) {
+      model.fullScreenQuad = vtkWebGPUVolumePassFSQ.newInstance();
+      model.fullScreenQuad.setDevice(viewNode.getDevice());
+      model.fullScreenQuad.setTextureViews([
+        ...model.depthRangeEncoder.getColorTextureViews(),
+      ]);
+    }
+
+    const device = viewNode.getDevice();
+    // -4 because we use know we use textures for min, max, ofun and tfun
+    const maxVolumes =
+      device.getHandle().limits.maxSampledTexturesPerShaderStage - 4;
+
+    const cameraPos = renNode.getRenderable().getActiveCamera().getPosition();
+    if (model.volumes.length > maxVolumes) {
+      // sort from back to front based on volume centroid
+      const distances = [];
+      for (let v = 0; v < model.volumes.length; v++) {
+        const bounds = model.volumes[v].getRenderable().getBounds();
+        const centroid = [
+          0.5 * (bounds[1] + bounds[0]),
+          0.5 * (bounds[3] + bounds[2]),
+          0.5 * (bounds[5] + bounds[4]),
+        ];
+        distances[v] = vtkMath.distance2BetweenPoints(centroid, cameraPos);
+      }
+
+      // sort by distance
+      const volumeOrder = [...Array(model.volumes.length).keys()];
+      volumeOrder.sort((a, b) => distances[b] - distances[a]);
+
+      // render in chunks back to front
+      let volumesToRender = [];
+      // start with smallest chunk so that the last (closest) chunk
+      // has a full maxVolumes;
+      let chunkSize = volumeOrder.length % maxVolumes;
+      for (let v = 0; v < volumeOrder.length; v++) {
+        volumesToRender.push(model.volumes[volumeOrder[v]]);
+        if (volumesToRender.length >= chunkSize) {
+          publicAPI.finalPass(viewNode, renNode, volumesToRender);
+          volumesToRender = [];
+          chunkSize = maxVolumes;
+        }
+      }
+    } else {
+      publicAPI.finalPass(viewNode, renNode, model.volumes);
+    }
   };
 
-  publicAPI.finalPass = (viewNode, renNode) => {
+  publicAPI.finalPass = (viewNode, renNode, volumes) => {
     model.finalEncoder.setColorTextureView(0, model.colorTextureView);
     model.finalEncoder.attachTextureViews();
     renNode.setRenderEncoder(model.finalEncoder);
     model.finalEncoder.begin(viewNode.getCommandEncoder());
     renNode.scissorAndViewport(model.finalEncoder);
     model.fullScreenQuad.setWebGPURenderer(renNode);
-    model.fullScreenQuad.setVolumes(model.volumes);
+    model.fullScreenQuad.setVolumes(volumes);
     model.fullScreenQuad.render(model.finalEncoder, viewNode.getDevice());
     model.finalEncoder.end();
   };
@@ -165,7 +213,7 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     // also check stabilized time
     const stime = renNode.getStabilizedTime();
     if (
-      !model._lastMTimes[model.volumes.length] ||
+      model._lastMTimes.length <= model.volumes.length ||
       stime !== model._lastMTimes[model.volumes.length]
     ) {
       update = true;
@@ -275,8 +323,8 @@ function vtkWebGPUVolumePass(publicAPI, model) {
         code,
         '//VTK::RenderEncoder::Impl',
         [
-          'output.outColor1 = vec4<f32>(stopval, 0.0, 0.0, 0.0);',
-          'output.outColor2 = vec4<f32>(input.fragPos.z, 0.0, 0.0, 0.0);',
+          'output.outColor1 = vec4<f32>(input.fragPos.z, 0.0, 0.0, 0.0);',
+          'output.outColor2 = vec4<f32>(stopval, 0.0, 0.0, 0.0);',
         ]
       ).result;
       fDesc.setCode(code);
@@ -327,12 +375,6 @@ function vtkWebGPUVolumePass(publicAPI, model) {
   };
 
   publicAPI.createFinalEncoder = (viewNode) => {
-    model.fullScreenQuad = vtkWebGPUVolumePassFSQ.newInstance();
-    model.fullScreenQuad.setDevice(viewNode.getDevice());
-    model.fullScreenQuad.setTextureViews([
-      ...model.depthRangeEncoder.getColorTextureViews(),
-    ]);
-
     model.finalEncoder = vtkWebGPURenderEncoder.newInstance();
     model.finalEncoder.setDescription({
       colorAttachments: [

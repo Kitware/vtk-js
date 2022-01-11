@@ -19,6 +19,11 @@ declare type Size = [number, number];
 declare type Range = [number, number];
 declare type Vector2 = [number, number];
 declare type Vector3 = [number, number, number];
+declare type Vector4 = [number, number, number, number];
+
+declare type Matrix = number[][];
+declare type Matrix2x2 = [Vector2, Vector2];
+declare type Matrix3x3 = [Vector3, Vector3, Vector3];
 /**
  * @deprecated The `Point` type is depracted, please use `Vector3` instead.
  */

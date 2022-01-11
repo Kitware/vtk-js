@@ -18,3 +18,5 @@ jobs:
         run: npm run validate
       - name: Lint commits
         run: npx commitlint --from=${{ github.event.pull_request.base.sha }}
+      - name: Tests must not use test.only
+        run: bash .github/workflows/test-only-check.sh

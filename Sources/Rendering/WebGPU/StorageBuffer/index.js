@@ -172,7 +172,7 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
     }
     lines.push(`
 };
-[[block]] struct ${model.name}Struct
+struct ${model.name}Struct
 {
   values: array<${model.name}StructEntry>;
 };

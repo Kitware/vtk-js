@@ -12,8 +12,9 @@ module.exports = function buildConfig(
   exampleBasePath
 ) {
   return `
-var rules = [].concat(require('../config/rules-vtk.js'), require('../config/rules-examples.js'), require('../config/rules-linter.js'));
+var rules = [].concat(require('../config/rules-vtk.js'), require('../config/rules-examples.js'));
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var ESLintPlugin = require('eslint-webpack-plugin');
 var webpack = require('webpack');
 var path = require('path');
 
@@ -21,6 +22,7 @@ module.exports = {
   mode: 'development',
   devtool: 'inline-source-map',
   plugins: [
+    new ESLintPlugin(),
     new HtmlWebpackPlugin({
       template: '${root.replace(
         /\\/g,
