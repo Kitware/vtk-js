@@ -115,7 +115,6 @@
     "semantic-release": "18.0.1",
     "string-replace-loader": "3.1.0",
     "style-loader": "3.3.1",
-    "tap-markdown": "1.2.1",
     "tap-spec": "5.0.0",
     "tape": "5.4.0",
     "tape-catch": "1.0.6",
