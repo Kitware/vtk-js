@@ -701,7 +701,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.getFirstRenderer = () =>
-    model.view.getRenderable().getRenderersByReference()[0];
+    model.view?.getRenderable()?.getRenderersByReference()?.[0];
 
   publicAPI.findPokedRenderer = (x = 0, y = 0) => {
     if (!model.view) {
@@ -709,7 +709,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
     // The original order of renderers needs to remain as
     // the first one is the one we want to manipulate the camera on.
-    const rc = model.view.getRenderable().getRenderers();
+    const rc = model.view?.getRenderable()?.getRenderers();
+    if (!rc) {
+      return null;
+    }
     rc.sort((a, b) => a.getLayer() - b.getLayer());
     let interactiveren = null;
     let viewportren = null;
