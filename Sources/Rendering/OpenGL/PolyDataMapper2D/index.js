@@ -4,7 +4,6 @@ import { mat4 } from 'gl-matrix';
 import * as macro from 'vtk.js/Sources/macros';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
 import vtkMapper2D from 'vtk.js/Sources/Rendering/Core/Mapper2D';
-import vtkOpenGLPolyDataMapper from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData2DFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyData2DFS.glsl';
 import vtkPolyData2DVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyData2DVS.glsl';
@@ -14,12 +13,11 @@ import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import { round } from 'vtk.js/Sources/Common/Core/Math';
 
-import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 import { DisplayLocation } from 'vtk.js/Sources/Rendering/Core/Property2D/Constants';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
-const { primTypes } = vtkOpenGLPolyDataMapper;
+const { primTypes } = vtkHelper;
 const { ScalarMode } = vtkMapper2D;
 const { vtkErrorMacro } = macro;
 const StartEvent = { type: 'StartEvent' };
@@ -144,9 +142,6 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
     // input modified
     // light complexity changed
     if (
-      cellBO.getProgram() === 0 ||
-      cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
-      cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
       cellBO.getShaderSourceTime().getMTime() < model.renderable.getMTime() ||
       cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime()
     ) {
@@ -177,21 +172,6 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
       return true;
     }
     return false;
-  };
-
-  publicAPI.getOpenGLMode = (rep, type) => {
-    if (rep === Representation.POINTS || type === primTypes.Points) {
-      return model.context.POINTS;
-    }
-    if (
-      rep === Representation.WIREFRAME ||
-      type === primTypes.Lines ||
-      type === primTypes.TrisEdges ||
-      type === primTypes.TriStripsEdges
-    ) {
-      return model.context.LINES;
-    }
-    return model.context.TRIANGLES;
   };
 
   publicAPI.buildBufferObjects = (ren, actor) => {
@@ -286,35 +266,20 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
       // if there are entries
       const cabo = model.primitives[i].getCABO();
       if (cabo.getElementCount()) {
-        // are we drawing edges
-        const mode = publicAPI.getOpenGLMode(representation, i);
-        model.drawingEdges = mode === gl.LINES;
-        const wideLines = publicAPI.haveWideLines(ren, actor);
-        if (model.drawingEdges && wideLines) {
-          publicAPI.updateShaders(model.primitives[i], ren, actor);
-          gl.drawArraysInstanced(
-            mode,
-            0,
-            cabo.getElementCount(),
-            2 * Math.ceil(actor.getProperty().getLineWidth())
-          );
-        } else {
-          gl.lineWidth(actor.getProperty().getLineWidth());
-          publicAPI.updateShaders(model.primitives[i], ren, actor);
-          gl.drawArrays(mode, 0, cabo.getElementCount());
-        }
-        const stride =
-          (mode === gl.POINTS ? 1 : 0) || (mode === gl.LINES ? 2 : 3);
-        model.primitiveIDOffset += cabo.getElementCount() / stride;
+        model.lastBoundBO = model.primitives[i];
+        model.primitiveIDOffset += model.primitives[i].drawArrays(
+          ren,
+          actor,
+          representation,
+          publicAPI
+        );
       }
     }
-    // reset the line width
-    gl.lineWidth(1);
   };
 
   publicAPI.renderPieceFinish = (ren, actor) => {
-    if (model.LastBoundBO) {
-      model.LastBoundBO.getVAO().release();
+    if (model.lastBoundBO) {
+      model.lastBoundBO.getVAO().release();
     }
   };
 
@@ -516,103 +481,11 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
   };
 
   publicAPI.replaceShaderPositionVC = (shaders, ren, actor) => {
-    let VSSource = shaders.Vertex;
-    const GSSource = shaders.Geometry;
-    const FSSource = shaders.Fragment;
-
-    if (
-      publicAPI.getOpenGLMode(
-        actor.getProperty().getRepresentation(),
-        model.lastBoundBO.getPrimitiveType()
-      ) === model.context.LINES &&
-      publicAPI.haveWideLines(ren, actor)
-    ) {
-      VSSource = vtkShaderProgram.substitute(
-        VSSource,
-        '//VTK::PositionVC::Dec',
-        [
-          '//VTK::PositionVC::Dec',
-          'uniform vec2 viewportSize;',
-          'uniform float lineWidthStepSize;',
-          'uniform float halfLineWidth;',
-        ]
-      ).result;
-      VSSource = vtkShaderProgram.substitute(
-        VSSource,
-        '//VTK::PositionVC::Impl',
-        [
-          '//VTK::PositionVC::Impl',
-          ' if (halfLineWidth > 0.0)',
-          '   {',
-          '   float inst = float(gl_InstanceID);',
-          '   float offset = 0.5 * inst * lineWidthStepSize - halfLineWidth;',
-          '   vec4 tmpPos = gl_Position;',
-          '   vec3 tmpPos2 = tmpPos.xyz / tmpPos.w;',
-          '   tmpPos2.x = tmpPos2.x + 2.0 * mod(inst, 2.0) * offset / viewportSize[0];',
-          '   tmpPos2.y = tmpPos2.y + 2.0 * mod(inst + 1.0, 2.0) * offset / viewportSize[1];',
-          '   gl_Position = vec4(tmpPos2.xyz * tmpPos.w, tmpPos.w);',
-          '   }',
-        ]
-      ).result;
-    }
-
-    // for points make sure to add in the point size
-    if (
-      actor.getProperty().getRepresentation() === Representation.POINTS ||
-      model.lastBoundBO.getPrimitiveType() === primTypes.Points
-    ) {
-      VSSource = vtkShaderProgram.substitute(
-        VSSource,
-        '//VTK::PositionVC::Impl',
-        [
-          '//VTK::PositionVC::Impl',
-          `  gl_PointSize = ${actor.getProperty().getPointSize()}.0;`,
-        ],
-        false
-      ).result;
-    }
-    shaders.Vertex = VSSource;
-    shaders.Geometry = GSSource;
-    shaders.Fragment = FSSource;
+    // replace common shader code
+    model.lastBoundBO.replaceShaderPositionVC(shaders, ren, actor);
   };
 
-  publicAPI.updateShaders = (cellBO, ren, actor) => {
-    model.lastBoundBO = cellBO;
-
-    // has something changed that would require us to recreate the shader?
-    if (publicAPI.getNeedToRebuildShaders(cellBO, ren, actor)) {
-      const shaders = { Vertex: null, Fragment: null, Geometry: null };
-      publicAPI.buildShaders(shaders, ren, actor);
-
-      // compile and bind the program if needed
-      const newShader = model._openGLRenderWindow
-        .getShaderCache()
-        .readyShaderProgramArray(
-          shaders.Vertex,
-          shaders.Fragment,
-          shaders.Geometry
-        );
-
-      // if the shader changed reinitialize the VAO
-      if (newShader !== cellBO.getProgram()) {
-        cellBO.setProgram(newShader);
-        // reset the VAO as the shader has changed
-        cellBO.getVAO().releaseGraphicsResources();
-      }
-
-      cellBO.getShaderSourceTime().modified();
-    } else {
-      model._openGLRenderWindow
-        .getShaderCache()
-        .readyShaderProgram(cellBO.getProgram());
-    }
-
-    cellBO.getVAO().bind();
-
-    publicAPI.setMapperShaderParameters(cellBO, ren, actor);
-    publicAPI.setPropertyShaderParameters(cellBO, ren, actor);
-    publicAPI.setCameraShaderParameters(cellBO, ren, actor);
-
+  publicAPI.invokeShaderCallbacks = (cellBO, ren, actor) => {
     const listCallbacks =
       model.renderable.getViewSpecificProperties().ShadersCallbacks;
     if (listCallbacks) {
@@ -720,18 +593,11 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
       }
 
       // handle wide lines
-      if (publicAPI.haveWideLines(ren, actor)) {
-        const size = model.openGLRenderer.getTiledSizeAndOrigin();
-        cellBO
-          .getProgram()
-          .setUniform2f('viewportSize', size.usize, size.vsize);
-        const lineWidth = parseFloat(actor.getProperty().getLineWidth());
-        const halfLineWidth = lineWidth / 2.0;
-        cellBO
-          .getProgram()
-          .setUniformf('lineWidthStepSize', lineWidth / Math.ceil(lineWidth));
-        cellBO.getProgram().setUniformf('halfLineWidth', halfLineWidth);
-      }
+      cellBO.setMapperShaderParameters(
+        ren,
+        actor,
+        model.openGLRenderer.getTiledSizeAndOrigin()
+      );
 
       const selector = model.openGLRenderer.getSelector();
       cellBO
@@ -756,6 +622,10 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
       const diffuseColor = [dColor[0], dColor[1], dColor[2], opacity];
       program.setUniform4f('diffuseColor', diffuseColor);
     }
+  };
+
+  publicAPI.setLightingShaderParameters = (cellBO, ren, actor) => {
+    // no-op
   };
 
   function safeMatrixMultiply(matrixArray, matrixType, tmpMat) {
@@ -842,24 +712,6 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
         model.tmpMat4
       )
     );
-  };
-
-  publicAPI.haveWideLines = (ren, actor) => {
-    if (actor.getProperty().getLineWidth() > 1.0) {
-      // we have wide lines, but the OpenGL implementation may
-      // actually support them, check the range to see if we
-      // really need have to implement our own wide lines
-      if (model.openGLRenderWindow) {
-        if (
-          model.openGLRenderWindow.getHardwareMaximumLineWidth() >=
-          actor.getProperty().getLineWidth()
-        ) {
-          return false;
-        }
-      }
-      return true;
-    }
-    return false;
   };
 }
 
