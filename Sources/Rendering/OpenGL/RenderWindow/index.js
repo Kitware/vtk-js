@@ -311,6 +311,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     model.xrSession = xrSession;
     model.oldCanvasSize = model.size.slice();
 
+    model.renderable.getInteractor().bindXREvents(xrSession);
+
     if (model.xrSession !== null) {
       const gl = publicAPI.get3DContext();
       await gl.makeXRCompatible();
@@ -384,6 +386,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     }
 
     if (model.xrSession !== null) {
+      model.renderable.getInteractor().unbindXREvents();
+
       model.xrSession.cancelAnimationFrame(model.xrSceneFrame);
       model.renderable.getInteractor().returnFromXRAnimation();
       const gl = publicAPI.get3DContext();

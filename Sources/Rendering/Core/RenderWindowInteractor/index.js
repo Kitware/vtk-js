@@ -59,6 +59,12 @@ const handledEvents = [
   'StartInteraction',
   'Interaction',
   'EndInteraction',
+  'StartXrSelect',
+  'XrSelect',
+  'EndXrSelect',
+  'StartXrSqueeze',
+  'XrSqueeze',
+  'EndXrSqueeze',
 ];
 
 function preventDefault(event) {
@@ -247,6 +253,16 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     container.addEventListener('touchstart', publicAPI.handleTouchStart, false);
   };
 
+  publicAPI.bindXREvents = (xrSession) => {
+    model.xrSession = xrSession;
+    xrSession.addEventListener('selectstart', publicAPI.handleXRSelectStart);
+    xrSession.addEventListener('select', publicAPI.handleXRSelect);
+    xrSession.addEventListener('selectend', publicAPI.handleXRSelectEnd);
+    xrSession.addEventListener('squeezestart', publicAPI.handleXRSqueezeStart);
+    xrSession.addEventListener('squeeze', publicAPI.handleXRSqueeze);
+    xrSession.addEventListener('squeezeend', publicAPI.handleXRSqueezeEnd);
+  };
+
   publicAPI.unbindEvents = () => {
     // force unbinding listeners
     interactionRegistration(false, true);
@@ -279,6 +295,28 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       publicAPI.handleTouchStart
     );
     model.container = null;
+  };
+
+  publicAPI.unbindXREvents = () => {
+    model.xrSession.removeEventListener(
+      'selectstart',
+      publicAPI.handleXRSelectStart
+    );
+    model.xrSession.removeEventListener('select', publicAPI.handleXRSelect);
+    model.xrSession.removeEventListener(
+      'selectend',
+      publicAPI.handleXRSelectEnd
+    );
+    model.xrSession.removeEventListener(
+      'squeezestart',
+      publicAPI.handleXRSqueezeStart
+    );
+    model.xrSession.removeEventListener('squeeze', publicAPI.handleXRSqueeze);
+    model.xrSession.removeEventListener(
+      'squeezeend',
+      publicAPI.handleXRSqueezeEnd
+    );
+    model.xrSession = null;
   };
 
   publicAPI.handleKeyPress = (event) => {
@@ -323,6 +361,26 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         vtkErrorMacro(`Unknown mouse button pressed: ${event.button}`);
         break;
     }
+  };
+
+  publicAPI.handleXRSelect = (event) => {
+    publicAPI.xrSelectEvent({ xrEvent: event });
+  };
+
+  publicAPI.handleXRSelectStart = (event) => {
+    publicAPI.startXrSelectEvent({ xrEvent: event });
+  };
+  publicAPI.handleXRSelectEnd = (event) => {
+    publicAPI.endXrSelectEvent({ xrEvent: event });
+  };
+  publicAPI.handleXRSqueezeStart = (event) => {
+    publicAPI.startXrSqueezeEvent({ xrEvent: event });
+  };
+  publicAPI.handleXRSqueeze = (event) => {
+    publicAPI.xrSqueezeEvent({ xrEvent: event });
+  };
+  publicAPI.handleXRSqueezeEnd = (event) => {
+    publicAPI.endXrSqueezeEvent({ xrEvent: event });
   };
 
   //----------------------------------------------------------------------
@@ -1043,6 +1101,7 @@ const DEFAULT_VALUES = {
   wheelTimeoutID: 0,
   moveTimeoutID: 0,
   lastGamepadValues: {},
+  xrSession: null,
 };
 
 // ----------------------------------------------------------------------------
