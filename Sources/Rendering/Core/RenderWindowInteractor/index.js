@@ -420,7 +420,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   publicAPI.updateXRGamepads = (xrSession, xrFrame, xrRefSpace) => {
     // watch for when buttons change state and fire events
     xrSession.inputSources.forEach((inputSource) => {
-      const pose = xrFrame.getPose(inputSource.gripSpace, xrRefSpace);
+      const gripPose =
+        inputSource.gripSpace == null
+          ? null
+          : xrFrame.getPose(inputSource.gripSpace, xrRefSpace);
       const gp = inputSource.gamepad;
       const hand = inputSource.handedness;
       if (gp) {
@@ -436,12 +439,13 @@ function vtkRenderWindowInteractor(publicAPI, model) {
           }
           if (
             model.lastGamepadValues[gp.index][hand].buttons[b] !==
-            gp.buttons[b].pressed
+              gp.buttons[b].pressed &&
+            gripPose != null
           ) {
             publicAPI.button3DEvent({
               gamepad: gp,
-              position: pose.transform.position,
-              orientation: pose.transform.orientation,
+              position: gripPose.transform.position,
+              orientation: gripPose.transform.orientation,
               pressed: gp.buttons[b].pressed,
               device:
                 inputSource.handedness === 'left'
@@ -455,11 +459,14 @@ function vtkRenderWindowInteractor(publicAPI, model) {
             model.lastGamepadValues[gp.index][hand].buttons[b] =
               gp.buttons[b].pressed;
           }
-          if (model.lastGamepadValues[gp.index][hand].buttons[b]) {
+          if (
+            model.lastGamepadValues[gp.index][hand].buttons[b] &&
+            gripPose != null
+          ) {
             publicAPI.move3DEvent({
               gamepad: gp,
-              position: pose.transform.position,
-              orientation: pose.transform.orientation,
+              position: gripPose.transform.position,
+              orientation: gripPose.transform.orientation,
               device:
                 inputSource.handedness === 'left'
                   ? Device.LeftController
