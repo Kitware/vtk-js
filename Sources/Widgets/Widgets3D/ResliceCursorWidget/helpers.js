@@ -18,6 +18,7 @@ const EPSILON = 0.00001;
  * @param {Array} origin
  * @param {Array} p1
  * @param {Array} p2
+ * @return {Boolean} false if no bounds have been found, else true
  */
 export function boundPlane(bounds, origin, p1, p2) {
   const v1 = [];
@@ -32,12 +33,16 @@ export function boundPlane(bounds, origin, p1, p2) {
   vtkMath.cross(v1, v2, n);
   vtkMath.normalize(n);
 
+  // Inflate bounds in order to avoid precision error when cutting cubesource
+  const inflatedBounds = [...bounds];
+  vtkBoundingBox.inflate(inflatedBounds, EPSILON);
+
   const plane = vtkPlane.newInstance();
   plane.setOrigin(...origin);
   plane.setNormal(...n);
 
   const cubeSource = vtkCubeSource.newInstance();
-  cubeSource.setBounds(bounds);
+  cubeSource.setBounds(inflatedBounds);
 
   const cutter = vtkCutter.newInstance();
   cutter.setCutFunction(plane);
@@ -45,7 +50,7 @@ export function boundPlane(bounds, origin, p1, p2) {
 
   const cutBounds = cutter.getOutputData();
   if (cutBounds.getNumberOfPoints() === 0) {
-    return;
+    return false;
   }
   const localBounds = STATIC.computeLocalBounds(
     cutBounds.getPoints(),
@@ -61,6 +66,7 @@ export function boundPlane(bounds, origin, p1, p2) {
     p2[i] =
       localBounds[0] * v1[i] + localBounds[3] * v2[i] + localBounds[4] * n[i];
   }
+  return true;
 }
 // Project point (inPoint) to the bounds of the image according to a plane
 // defined by two vectors (v1, v2)
