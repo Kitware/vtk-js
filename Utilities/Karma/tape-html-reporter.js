@@ -6,7 +6,7 @@ Handlebars.registerHelper('equals', function(a, b) {
   return a === b;
 });
 
-var TapeHTMLReporter = function(baseReporterDecorator, rootConfig, logger, helper) {
+var TapeHTMLReporter = function(baseReporterDecorator, rootConfig, logger) {
   const log = logger.create('tape-html-reporter');
   const config = rootConfig.tapeHTMLReporter || {};
 
@@ -91,19 +91,21 @@ var TapeHTMLReporter = function(baseReporterDecorator, rootConfig, logger, helpe
     const template = Handlebars.compile(templateHTML);
 
     if (outputFile) {
-      helper.mkdirIfNotExists(path.dirname(outputFile), (err) => {
-        try {
-          if (!err) {
-            fs.writeFileSync(outputFile, template(testData), { encoding: 'utf8' });
-            log.info(`report written to file ${outputFile}`);
-          }
-        } catch (e) {
-          err = e;
+      try {
+        fs.mkdirSync(path.dirname(outputFile), { recursive: true });
+      } catch (e) {
+        if (e.code !== 'EEXIST') {
+          log.error(`error creating test results folder: ${e}`);
+          return;
         }
-        if (err) {
-          return log.error(`error writing report to file ${outputFile}: ${err}`);
-        }
-      });
+      }
+
+      try {
+        fs.writeFileSync(outputFile, template(testData), { encoding: 'utf8' });
+        log.info(`report written to file ${outputFile}`);
+      } catch (e) {
+        log.error(`error writing report to file ${outputFile}: ${e}`);
+      }
     }
   };
 };
@@ -112,7 +114,6 @@ TapeHTMLReporter.$inject = [
   'baseReporterDecorator',
   'config',
   'logger',
-  'helper',
 ];
 
 module.exports = {
