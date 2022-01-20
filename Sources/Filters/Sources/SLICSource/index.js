@@ -7,7 +7,7 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 // ----------------------------------------------------------------------------
 
 function generateCoordinates(origin, dimensions, spacing) {
-  const coordinates = new Float32Array(
+  const coordinates = new Float64Array(
     dimensions[0] * dimensions[1] * dimensions[2] * 3
   );
   let offset = 0;
@@ -45,7 +45,7 @@ function vtkSLICSource(publicAPI, model) {
   ) => {
     const id = model.clusters.length;
     model.clusters.push(
-      new Float32Array([
+      new Float64Array([
         centerX,
         centerY,
         centerZ,
@@ -80,7 +80,7 @@ function vtkSLICSource(publicAPI, model) {
     fnDfDz
   ) => {
     if (!model.clusters[id]) {
-      model.clusters[id] = new Float32Array(7);
+      model.clusters[id] = new Float64Array(7);
     }
     model.clusters[id][0] = centerX;
     model.clusters[id][1] = centerY;

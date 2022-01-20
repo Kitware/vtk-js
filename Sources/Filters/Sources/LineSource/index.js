@@ -22,9 +22,9 @@ function vtkLineSource(publicAPI, model) {
     // Check input
     const pointDataType = dataset
       ? dataset.getPoints().getDataType()
-      : 'Float32Array';
+      : model.pointType;
     const pd = vtkPolyData.newInstance();
-    const v21 = new Float32Array(3);
+    const v21 = [];
     vtkMath.subtract(model.point2, model.point1, v21);
     if (vtkMath.norm(v21) <= 0.0) {
       vtkWarningMacro('Zero-length line definition');
@@ -76,7 +76,7 @@ const DEFAULT_VALUES = {
   resolution: 10,
   point1: [-1, 0, 0],
   point2: [1, 0, 0],
-  pointType: 'Float32Array',
+  pointType: 'Float64Array',
 };
 
 // ----------------------------------------------------------------------------
