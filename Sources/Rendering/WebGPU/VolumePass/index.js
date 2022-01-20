@@ -7,6 +7,7 @@ import vtkWebGPUMapperHelper from 'vtk.js/Sources/Rendering/WebGPU/MapperHelper'
 import vtkWebGPURenderEncoder from 'vtk.js/Sources/Rendering/WebGPU/RenderEncoder';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUTexture from 'vtk.js/Sources/Rendering/WebGPU/Texture';
+import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQuad';
 import vtkWebGPUVolumePassFSQ from 'vtk.js/Sources/Rendering/WebGPU/VolumePassFSQ';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -104,7 +105,7 @@ fn main(
   var output: fragmentOutput;
 
   var computedColor: vec4<f32> = textureSample(volumePassSmallColorTexture,
-    volumePassSmallColorTextureSampler, input.tcoordVS);
+    volumePassSmallColorTextureSampler, mapperUBO.tscale*input.tcoordVS);
 
   //VTK::RenderEncoder::Impl
   return output;
@@ -122,12 +123,12 @@ function vtkWebGPUVolumePass(publicAPI, model) {
 
   // create the required textures, encoders, FSQ etc
   publicAPI.initialize = (viewNode) => {
-    if (!model._mergeEncoder) {
-      publicAPI.createMergeEncoder(viewNode);
-    }
-
     if (!model._clearEncoder) {
       publicAPI.createClearEncoder(viewNode);
+    }
+
+    if (!model._mergeEncoder) {
+      publicAPI.createMergeEncoder(viewNode);
     }
 
     if (!model._copyEncoder) {
@@ -151,6 +152,11 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       model._volumeCopyQuad.setPipelineHash('volpassfsq');
       model._volumeCopyQuad.setDevice(viewNode.getDevice());
       model._volumeCopyQuad.setFragmentShaderTemplate(volumeCopyFragTemplate);
+      model._copyUBO = vtkWebGPUUniformBuffer.newInstance();
+      model._copyUBO.setName('mapperUBO');
+      model._copyUBO.addEntry('tscale', 'vec2<f32>');
+      model._volumeCopyQuad.setUBO(model._copyUBO);
+      model._volumeCopyQuad.setTextureViews([model._colorTextureView]);
     }
   };
 
@@ -222,11 +228,6 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     }
 
     // copy back to the original color buffer
-    if (model.small) {
-      model._volumeCopyQuad.setTextureViews([model._smallColorTextureView]);
-    } else {
-      model._volumeCopyQuad.setTextureViews([model._largeColorTextureView]);
-    }
 
     // final composite
     model._copyEncoder.setColorTextureView(0, model.colorTextureView);
@@ -235,6 +236,17 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     model._copyEncoder.begin(viewNode.getCommandEncoder());
     renNode.scissorAndViewport(model._copyEncoder);
     model._volumeCopyQuad.setWebGPURenderer(renNode);
+    if (model._useSmallViewport) {
+      const width = model._colorTextureView.getTexture().getWidth();
+      const height = model._colorTextureView.getTexture().getHeight();
+      model._copyUBO.setArray('tscale', [
+        model._smallViewportWidth / width,
+        model._smallViewportHeight / height,
+      ]);
+    } else {
+      model._copyUBO.setArray('tscale', [1.0, 1.0]);
+    }
+    model._copyUBO.sendIfNeeded(device);
     model._volumeCopyQuad.render(model._copyEncoder, viewNode.getDevice());
     model._copyEncoder.end();
   };
@@ -248,22 +260,25 @@ function vtkWebGPUVolumePass(publicAPI, model) {
   }, publicAPI.delete);
 
   publicAPI.computeTiming = (viewNode) => {
-    model.small = false;
+    model._useSmallViewport = false;
     const rwi = viewNode.getRenderable().getInteractor();
 
     if (rwi.isAnimating() && model._lastScale > 1.5) {
-      model.small = true;
+      if (!model._smallViewportHeight) {
+        model._smallViewportWidth = Math.ceil(
+          viewNode.getCanvas().width / Math.sqrt(model._lastScale)
+        );
+        model._smallViewportHeight = Math.ceil(
+          viewNode.getCanvas().height / Math.sqrt(model._lastScale)
+        );
+      }
+      model._useSmallViewport = true;
     }
 
-    if (model.small) {
-      model._activeColorTextureView = model._smallColorTextureView;
-    } else {
-      model._largeColorTexture.resize(
-        viewNode.getCanvas().width,
-        viewNode.getCanvas().height
-      );
-      model._activeColorTextureView = model._largeColorTextureView;
-    }
+    model._colorTexture.resize(
+      viewNode.getCanvas().width,
+      viewNode.getCanvas().height
+    );
 
     if (!model._animationRateSubscription) {
       // when the animation frame rate changes recompute the scale factor
@@ -272,38 +287,22 @@ function vtkWebGPUVolumePass(publicAPI, model) {
         const targetScale =
           (model._lastScale * rwi.getDesiredUpdateRate()) / frate;
 
-        // Do we need a resize? The values below are to provide some stickyness
-        // so that we are not changing texture size every second. Instead the targhet scale
-        // has to be a certain amount larger or smaller than the current value to force a
-        // change in texture size
-        if (
-          targetScale > 1.4 * model._lastScale ||
-          targetScale < 0.7 * model._lastScale
-        ) {
-          model._lastScale = targetScale;
-          // clamp scale to some reasonable values.
-          // Below 1.5 we will just be using full resolution as that is close enough
-          // Above 400 seems like a lot so we limit to that 1/20th per axis
-          if (model._lastScale > 400) {
-            model._lastScale = 400;
-          }
-          if (model._lastScale < 1.5) {
-            model._lastScale = 1.5;
-          } else {
-            const targetSmallWidth =
-              64 *
-              Math.ceil(
-                viewNode.getCanvas().width / (Math.sqrt(model._lastScale) * 64)
-              );
-            const targetSmallHeight = Math.ceil(
-              (targetSmallWidth * viewNode.getCanvas().height) /
-                viewNode.getCanvas().width
-            );
-            model._smallColorTexture.resize(
-              targetSmallWidth,
-              targetSmallHeight
-            );
-          }
+        model._lastScale = targetScale;
+        // clamp scale to some reasonable values.
+        // Below 1.5 we will just be using full resolution as that is close enough
+        // Above 400 seems like a lot so we limit to that 1/20th per axis
+        if (model._lastScale > 400) {
+          model._lastScale = 400;
+        }
+        if (model._lastScale < 1.5) {
+          model._lastScale = 1.5;
+        } else {
+          model._smallViewportWidth = Math.ceil(
+            viewNode.getCanvas().width / Math.sqrt(model._lastScale)
+          );
+          model._smallViewportHeight = Math.ceil(
+            viewNode.getCanvas().height / Math.sqrt(model._lastScale)
+          );
         }
       });
     }
@@ -313,12 +312,15 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     const encoder = model._firstGroup
       ? model._clearEncoder
       : model._mergeEncoder;
-    encoder.setColorTextureView(0, model._activeColorTextureView);
     encoder.attachTextureViews();
     renNode.setRenderEncoder(encoder);
     encoder.begin(viewNode.getCommandEncoder());
-    const width = model._activeColorTextureView.getTexture().getWidth();
-    const height = model._activeColorTextureView.getTexture().getHeight();
+    let width = model._colorTextureView.getTexture().getWidth();
+    let height = model._colorTextureView.getTexture().getHeight();
+    if (model._useSmallViewport) {
+      width = model._smallViewportWidth;
+      height = model._smallViewportHeight;
+    }
     encoder.getHandle().setViewport(0, 0, width, height, 0.0, 1.0);
     // set scissor
     encoder.getHandle().setScissorRect(0, 0, width, height);
@@ -531,35 +533,8 @@ function vtkWebGPUVolumePass(publicAPI, model) {
   };
 
   publicAPI.createClearEncoder = (viewNode) => {
-    model._smallColorTexture = vtkWebGPUTexture.newInstance();
-    // multiple of 64 pixels to help with texture alignment/size issues
-    // as webgpu textures have to be multiples of 256 bytes wide
-    // for data transfers (just in case)
-    const targetSmallWidth =
-      64 * Math.ceil((0.7 * viewNode.getCanvas().width) / 64);
-    model._smallColorTexture.create(viewNode.getDevice(), {
-      width: targetSmallWidth,
-      height: Math.ceil(
-        (targetSmallWidth * viewNode.getCanvas().height) /
-          viewNode.getCanvas().width
-      ),
-      format: 'bgra8unorm',
-      /* eslint-disable no-undef */
-      /* eslint-disable no-bitwise */
-      usage:
-        GPUTextureUsage.RENDER_ATTACHMENT |
-        GPUTextureUsage.TEXTURE_BINDING |
-        GPUTextureUsage.COPY_SRC,
-    });
-    model._smallColorTextureView = model._smallColorTexture.createView();
-    model._smallColorTextureView.setName('volumePassSmallColorTexture');
-    model._smallColorTextureView.addSampler(viewNode.getDevice(), {
-      minFilter: 'linear',
-      magFilter: 'linear',
-    });
-
-    model._largeColorTexture = vtkWebGPUTexture.newInstance();
-    model._largeColorTexture.create(viewNode.getDevice(), {
+    model._colorTexture = vtkWebGPUTexture.newInstance();
+    model._colorTexture.create(viewNode.getDevice(), {
       width: viewNode.getCanvas().width,
       height: viewNode.getCanvas().height,
       format: 'bgra8unorm',
@@ -570,14 +545,15 @@ function vtkWebGPUVolumePass(publicAPI, model) {
         GPUTextureUsage.TEXTURE_BINDING |
         GPUTextureUsage.COPY_SRC,
     });
-    model._largeColorTextureView = model._largeColorTexture.createView();
-    model._largeColorTextureView.setName('volumePassSmallColorTexture');
-    model._largeColorTextureView.addSampler(viewNode.getDevice(), {
+    model._colorTextureView = model._colorTexture.createView();
+    model._colorTextureView.setName('volumePassSmallColorTexture');
+    model._colorTextureView.addSampler(viewNode.getDevice(), {
       minFilter: 'linear',
       magFilter: 'linear',
     });
 
     model._clearEncoder = vtkWebGPURenderEncoder.newInstance();
+    model._clearEncoder.setColorTextureView(0, model._colorTextureView);
     model._clearEncoder.setDescription({
       colorAttachments: [
         {
@@ -640,6 +616,7 @@ function vtkWebGPUVolumePass(publicAPI, model) {
 
   publicAPI.createMergeEncoder = (viewNode) => {
     model._mergeEncoder = vtkWebGPURenderEncoder.newInstance();
+    model._mergeEncoder.setColorTextureView(0, model._colorTextureView);
     model._mergeEncoder.setDescription({
       colorAttachments: [
         {
