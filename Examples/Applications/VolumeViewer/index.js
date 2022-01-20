@@ -68,7 +68,7 @@ function createViewer(rootContainer, fileContents, options) {
   });
   const renderer = fullScreenRenderer.getRenderer();
   const renderWindow = fullScreenRenderer.getRenderWindow();
-  renderWindow.getInteractor().setDesiredUpdateRate(15);
+  renderWindow.getInteractor().setDesiredUpdateRate(30);
 
   const vtiReader = vtkXMLImageDataReader.newInstance();
   vtiReader.parseAsArrayBuffer(fileContents);

@@ -947,107 +947,84 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     }
   };
 
+  // unsubscribe from our listeners
+  publicAPI.delete = macro.chain(() => {
+    if (model._animationRateSubscription) {
+      model._animationRateSubscription.unsubscribe();
+      model._animationRateSubscription = null;
+    }
+  }, publicAPI.delete);
+
   publicAPI.getRenderTargetSize = () => {
-    if (model.lastXYF > 1.43) {
-      const sz = model.framebuffer.getSize();
-      return [model.fvp[0] * sz[0], model.fvp[1] * sz[1]];
+    if (model._useSmallViewport) {
+      return [model._smallViewportWidth, model._smallViewportHeight];
     }
     return model.openGLRenderWindow.getFramebufferSize();
   };
 
   publicAPI.renderPieceStart = (ren, actor) => {
-    if (model.renderable.getAutoAdjustSampleDistances()) {
-      const rwi = ren.getVTKWindow().getInteractor();
-      const rft = rwi.getLastFrameTime();
-      // console.log(`last frame time ${Math.floor(1.0 / rft)}`);
+    const rwi = ren.getVTKWindow().getInteractor();
 
-      // frame time is typically for a couple frames prior
-      // which makes it messy, so keep long running averages
-      // of frame times and pixels rendered
-      model.avgFrameTime = 0.97 * model.avgFrameTime + 0.03 * rft;
-      model.avgWindowArea =
-        0.97 * model.avgWindowArea + 0.03 / (model.lastXYF * model.lastXYF);
+    model._useSmallViewport = false;
+    if (rwi.isAnimating() && model._lastScale > 1.5) {
+      model._useSmallViewport = true;
+    }
 
-      if (ren.getVTKWindow().getInteractor().isAnimating()) {
-        // compute target xy factor
-        let txyf = Math.sqrt(
-          (model.avgFrameTime * rwi.getDesiredUpdateRate()) /
-            model.avgWindowArea
-        );
+    if (!model._animationRateSubscription) {
+      // when the animation frame rate changes recompute the scale factor
+      model._animationRateSubscription = rwi.onAnimationFrameRateUpdate(() => {
+        if (model.renderable.getAutoAdjustSampleDistances()) {
+          const frate = rwi.getRecentAnimationFrameRate();
+          const adjustment = rwi.getDesiredUpdateRate() / frate;
 
-        // limit subsampling to a factor of 10
-        if (txyf > 10.0) {
-          txyf = 10.0;
+          // only change if we are off by 15%
+          if (adjustment > 1.15 || adjustment < 0.85) {
+            model._lastScale *= adjustment;
+          }
+          // clamp scale to some reasonable values.
+          // Below 1.5 we will just be using full resolution as that is close enough
+          // Above 400 seems like a lot so we limit to that 1/20th per axis
+          if (model._lastScale > 400) {
+            model._lastScale = 400;
+          }
+          if (model._lastScale < 1.5) {
+            model._lastScale = 1.5;
+          }
+        } else {
+          model._lastScale =
+            model.renderable.getImageSampleDistance() *
+            model.renderable.getImageSampleDistance();
         }
-
-        model.targetXYF = txyf;
-      } else {
-        model.targetXYF = Math.sqrt(
-          (model.avgFrameTime * rwi.getStillUpdateRate()) / model.avgWindowArea
+        const size = model.openGLRenderWindow.getFramebufferSize();
+        model._smallViewportWidth = Math.ceil(
+          size[0] / Math.sqrt(model._lastScale)
         );
-      }
-
-      // have some inertia to change states around 1.43
-      if (model.targetXYF < 1.53 && model.targetXYF > 1.33) {
-        model.targetXYF = model.lastXYF;
-      }
-
-      // and add some inertia to change at all
-      if (Math.abs(1.0 - model.targetXYF / model.lastXYF) < 0.1) {
-        model.targetXYF = model.lastXYF;
-      }
-      model.lastXYF = model.targetXYF;
-    } else {
-      model.lastXYF = model.renderable.getImageSampleDistance();
+        model._smallViewportHeight = Math.ceil(
+          size[1] / Math.sqrt(model._lastScale)
+        );
+      });
     }
 
-    // only use FBO beyond this value
-    if (model.lastXYF <= 1.43) {
-      model.lastXYF = 1.0;
-    }
+    // use/create/resize framebuffer if needed
+    if (model._useSmallViewport) {
+      const size = model.openGLRenderWindow.getFramebufferSize();
 
-    // console.log(`last target  ${model.lastXYF} ${model.targetXYF}`);
-    // console.log(`awin aft  ${model.avgWindowArea} ${model.avgFrameTime}`);
-    const xyf = model.lastXYF;
-
-    const size = model.openGLRenderWindow.getFramebufferSize();
-    // const newSize = [
-    //   Math.floor((size[0] / xyf) + 0.5),
-    //   Math.floor((size[1] / xyf) + 0.5)];
-
-    // const diag = vtkBoundingBox.getDiagonalLength(model.currentInput.getBounds());
-
-    // // so what is the resulting sample size roughly
-    // console.log(`sam size ${diag / newSize[0]} ${diag / newSize[1]} ${model.renderable.getImageSampleDistance()}`);
-
-    // // if the sample distance is getting far from the image sample dist
-    // if (2.0 * diag / (newSize[0] + newSize[1]) > 4 * model.renderable.getSampleDistance()) {
-    //   model.renderable.setSampleDistance(4.0 * model.renderable.getSampleDistance());
-    // }
-    // if (2.0 * diag / (newSize[0] + newSize[1]) < 0.25 * model.renderable.getSampleDistance()) {
-    //   model.renderable.setSampleDistance(0.25 * model.renderable.getSampleDistance());
-    // }
-
-    // create/resize framebuffer if needed
-    if (xyf > 1.43) {
+      // adjust viewportSize to always be at most the dest fo size
+      if (model._smallViewportHeight > size[1]) {
+        model._smallViewportHeight = size[1];
+      }
+      if (model._smallViewportWidth > size[0]) {
+        model._smallViewportWidth = size[0];
+      }
       model.framebuffer.saveCurrentBindingsAndBuffers();
 
       if (model.framebuffer.getGLFramebuffer() === null) {
-        model.framebuffer.create(
-          Math.floor(size[0] * 0.7),
-          Math.floor(size[1] * 0.7)
-        );
+        model.framebuffer.create(size[0], size[1]);
         model.framebuffer.populateFramebuffer();
       } else {
         const fbSize = model.framebuffer.getSize();
-        if (
-          fbSize[0] !== Math.floor(size[0] * 0.7) ||
-          fbSize[1] !== Math.floor(size[1] * 0.7)
-        ) {
-          model.framebuffer.create(
-            Math.floor(size[0] * 0.7),
-            Math.floor(size[1] * 0.7)
-          );
+        if (fbSize[0] !== size[0] || fbSize[1] !== size[1]) {
+          model.framebuffer.create(size[0], size[1]);
           model.framebuffer.populateFramebuffer();
         }
       }
@@ -1056,10 +1033,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       gl.clearColor(0.0, 0.0, 0.0, 0.0);
       gl.colorMask(true, true, true, true);
       gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.viewport(0, 0, size[0] / xyf, size[1] / xyf);
+      gl.viewport(0, 0, model._smallViewportWidth, model._smallViewportHeight);
       model.fvp = [
-        Math.floor(size[0] / xyf) / Math.floor(size[0] * 0.7),
-        Math.floor(size[1] / xyf) / Math.floor(size[1] * 0.7),
+        model._smallViewportWidth / size[0],
+        model._smallViewportHeight / size[1],
       ];
     }
     model.context.disable(model.context.DEPTH_TEST);
@@ -1116,7 +1093,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.zBufferTexture.deactivate();
     }
 
-    if (model.lastXYF > 1.43) {
+    if (model._useSmallViewport) {
       // now copy the framebuffer with the volume into the
       // regular buffer
       model.framebuffer.restorePreviousBindingsAndBuffers();
@@ -1174,7 +1151,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       const tex = model.framebuffer.getColorTexture();
       tex.activate();
       model.copyShader.setUniformi('texture', tex.getTextureUnit());
-
       model.copyShader.setUniform2f('tfactor', model.fvp[0], model.fvp[1]);
 
       const gl = model.context;
@@ -1388,7 +1364,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         scalars.getData(),
         model.renderable.getPreferSizeOverAccuracy()
       );
-      // console.log(model.scalarTexture.get());
       model.scalarTextureString = toString;
     }
 
@@ -1513,6 +1488,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.modelToView = mat4.identity(new Float64Array(16));
   model.projectionToView = mat4.identity(new Float64Array(16));
   model.projectionToWorld = mat4.identity(new Float64Array(16));
+
+  model._lastScale = 1.0;
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['context']);
