@@ -99,7 +99,11 @@ function convertItkToVtkImage(itkImage, options = {}) {
 
   // Associate the point data that are 3D vectors / tensors
   // Refer to itk-js/src/PixelTypes.js for numerical values
-  switch (ITKPixelTypes[itkImage.imageType.pixelType]) {
+  switch (
+    isITKWasm
+      ? ITKPixelTypes[itkImage.imageType.pixelType]
+      : itkImage.imageType.pixelType
+  ) {
     case ITKPixelTypes.Scalar:
       break;
     case ITKPixelTypes.RGB:
