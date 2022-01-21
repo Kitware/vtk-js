@@ -72,8 +72,12 @@ function vtkMouseBoxSelectionManipulator(publicAPI, model) {
         view = interactor.getView();
       }
 
-      if (!container && view) {
+      if (!container && view?.getContainer) {
         container = view.getContainer();
+      }
+
+      if (!container) {
+        container = model.container;
       }
 
       if (!div) {
@@ -145,6 +149,7 @@ function vtkMouseBoxSelectionManipulator(publicAPI, model) {
 
 function DEFAULT_VALUES(initialValues) {
   return {
+    // container: null,
     renderSelection: true,
     ...initialValues,
     selectionStyle: {
@@ -164,7 +169,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkCompositeMouseManipulator.extend(publicAPI, model, initialValues);
   macro.event(publicAPI, model, 'BoxSelectChange'); // Trigger at release
   macro.event(publicAPI, model, 'BoxSelectInput'); // Trigger while dragging
-  macro.setGet(publicAPI, model, ['renderSelection', 'selectionStyle']);
+  macro.setGet(publicAPI, model, [
+    'renderSelection',
+    'selectionStyle',
+    'container',
+  ]);
 
   // Object specific methods
   vtkMouseBoxSelectionManipulator(publicAPI, model);
