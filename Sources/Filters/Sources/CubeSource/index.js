@@ -192,7 +192,7 @@ function vtkCubeSource(publicAPI, model) {
       .apply(points);
 
     // Define quads
-    const polys = macro.newTypedArray(model.pointType, numberOfPolys * 5);
+    const polys = new Uint16Array(numberOfPolys * 5);
     polyData.getPolys().setData(polys, 1);
 
     let polyIndex = 0;
@@ -273,7 +273,7 @@ const DEFAULT_VALUES = {
   zLength: 1.0,
   center: [0.0, 0.0, 0.0],
   rotations: [0.0, 0.0, 0.0],
-  pointType: 'Float32Array',
+  pointType: 'Float64Array',
   generate3DTextureCoordinates: false,
 };
 
