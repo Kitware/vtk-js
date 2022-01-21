@@ -51,12 +51,10 @@ function vtkMouseBoxSelectionManipulator(publicAPI, model) {
       return;
     }
     const [viewWidth, viewHeight] = view.getSize();
-    const { width, height, top, left } = container.getBoundingClientRect();
+    const { width, height } = container.getBoundingClientRect();
     const [xMin, xMax, yMin, yMax] = getBounds();
-    const xShift = left + window.scrollX;
-    const yShift = top + window.scrollY;
-    div.style.left = `${xShift + (width * xMin) / viewWidth}px`;
-    div.style.top = `${yShift + height - (height * yMax) / viewHeight}px`;
+    div.style.left = `${(width * xMin) / viewWidth}px`;
+    div.style.top = `${height - (height * yMax) / viewHeight}px`;
     div.style.width = `${(width * (xMax - xMin)) / viewWidth}px`;
     div.style.height = `${(height * (yMax - yMin)) / viewHeight}px`;
   }
