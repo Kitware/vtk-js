@@ -1177,6 +1177,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     return true;
   };
 
+  publicAPI.createSelector = () => {
+    const ret = vtkOpenGLHardwareSelector.newInstance();
+    ret.setOpenGLRenderWindow(publicAPI);
+    return ret;
+  };
+
   publicAPI.delete = macro.chain(
     publicAPI.delete,
     publicAPI.setViewStream,

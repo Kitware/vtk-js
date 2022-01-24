@@ -7,7 +7,7 @@ import vtkSVGRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGRepresentation';
 import { diff } from './vdom';
 
 const { ViewTypes, RenderingTypes, CaptureOn } = Constants;
-const { vtkErrorMacro } = macro;
+const { vtkErrorMacro, vtkWarningMacro } = macro;
 const { createSvgElement, createSvgDomElement } = vtkSVGRepresentation;
 
 let viewIdCount = 1;
@@ -256,26 +256,35 @@ function vtkWidgetManager(publicAPI, model) {
     model.widgets.forEach(updateWidgetForRender);
   }
 
-  function captureBuffers(x1, y1, x2, y2) {
+  async function captureBuffers(x1, y1, x2, y2) {
+    if (model._captureInProgress) {
+      return;
+    }
+    model._captureInProgress = true;
     renderPickingBuffer();
 
-    model.selector.setArea(x1, y1, x2, y2);
-    model.selector.releasePixBuffers();
-
+    model._capturedBuffers = null;
+    model._capturedBuffers = await model.selector.getSourceDataAsync(
+      model.renderer,
+      x1,
+      y1,
+      x2,
+      y2
+    );
     model.previousSelectedData = null;
-    return model.selector.captureBuffers();
+    renderFrontBuffer();
+    model._captureInProgress = false;
   }
 
   publicAPI.enablePicking = () => {
     model.pickingEnabled = true;
-    model.pickingAvailable = true;
     publicAPI.renderWidgets();
   };
 
   publicAPI.renderWidgets = () => {
     if (model.pickingEnabled && model.captureOn === CaptureOn.MOUSE_RELEASE) {
       const [w, h] = model.apiSpecificRenderWindow.getSize();
-      model.pickingAvailable = captureBuffers(0, 0, w, h);
+      captureBuffers(0, 0, w, h);
     }
 
     renderFrontBuffer();
@@ -284,7 +293,6 @@ function vtkWidgetManager(publicAPI, model) {
 
   publicAPI.disablePicking = () => {
     model.pickingEnabled = false;
-    model.pickingAvailable = false;
   };
 
   publicAPI.setRenderer = (renderer) => {
@@ -293,11 +301,10 @@ function vtkWidgetManager(publicAPI, model) {
       subscriptions.pop().unsubscribe();
     }
 
-    model.selector = model.apiSpecificRenderWindow.getSelector();
+    model.selector = model.apiSpecificRenderWindow.createSelector();
     model.selector.setFieldAssociation(
       FieldAssociations.FIELD_ASSOCIATION_POINTS
     );
-    model.selector.attach(model.apiSpecificRenderWindow, model.renderer);
 
     subscriptions.push(model.interactor.onRenderEvent(updateSvg));
 
@@ -323,13 +330,18 @@ function vtkWidgetManager(publicAPI, model) {
     );
 
     subscriptions.push(
-      model.interactor.onMouseMove(({ position }) => {
-        if (model.isAnimating || !model.pickingAvailable) {
+      model.interactor.onMouseMove(async ({ position }) => {
+        if (
+          model.isAnimating ||
+          !model.pickingEnabled ||
+          model._selectionInProgress
+        ) {
           return;
         }
-        publicAPI.updateSelectionFromXY(position.x, position.y);
+        model._selectionInProgress = true;
         const { requestCount, selectedState, representation, widget } =
-          publicAPI.getSelectedData();
+          await publicAPI.getSelectedDataForXY(position.x, position.y);
+        model._selectionInProgress = false;
 
         if (requestCount) {
           // Call activate only once
@@ -364,7 +376,6 @@ function vtkWidgetManager(publicAPI, model) {
     publicAPI.modified();
 
     if (model.pickingEnabled) {
-      // also sets pickingAvailable
       publicAPI.enablePicking();
     }
 
@@ -440,7 +451,50 @@ function vtkWidgetManager(publicAPI, model) {
     }
   };
 
+  publicAPI.getSelectedDataForXY = async (x, y) => {
+    model.selections = null;
+    if (model.pickingEnabled) {
+      // First pick SVG representation
+      for (let i = 0; i < model.widgets.length; ++i) {
+        const widget = model.widgets[i];
+        const hoveredSVGReps = widget
+          .getRepresentations()
+          .filter((r) => r.isA('vtkSVGRepresentation') && r.getHover() != null);
+        if (hoveredSVGReps.length) {
+          const selection = vtkSelectionNode.newInstance();
+          selection.getProperties().compositeID = hoveredSVGReps[0].getHover();
+          selection.getProperties().widget = widget;
+          selection.getProperties().representation = hoveredSVGReps[0];
+          model.selections = [selection];
+          return publicAPI.getSelectedData();
+        }
+      }
+
+      // do we require a new capture?
+      if (!model._capturedBuffers || model.captureOn === CaptureOn.MOUSE_MOVE) {
+        await captureBuffers(x, y, x, y);
+      }
+
+      // or do we need a pixel that is outside the last capture?
+      const capturedRegion = model._capturedBuffers.area;
+      if (
+        x < capturedRegion[0] ||
+        x > capturedRegion[2] ||
+        y < capturedRegion[1] ||
+        y > capturedRegion[3]
+      ) {
+        await captureBuffers(x, y, x, y);
+      }
+
+      model.selections = model._capturedBuffers.generateSelection(x, y, x, y);
+    }
+    return publicAPI.getSelectedData();
+  };
+
   publicAPI.updateSelectionFromXY = (x, y) => {
+    vtkWarningMacro(
+      'updateSelectionFromXY is deprecated, please use getSelectedDataForXY'
+    );
     if (model.pickingEnabled) {
       // First pick SVG representation
       for (let i = 0; i < model.widgets.length; ++i) {
@@ -459,20 +513,16 @@ function vtkWidgetManager(publicAPI, model) {
       }
 
       // Then pick regular representations.
-      let pickingAvailable = model.pickingAvailable;
-
       if (model.captureOn === CaptureOn.MOUSE_MOVE) {
-        pickingAvailable = captureBuffers(x, y, x, y);
-        renderFrontBuffer();
-      }
-
-      if (pickingAvailable) {
-        model.selections = model.selector.generateSelection(x, y, x, y);
+        captureBuffers(x, y, x, y);
       }
     }
   };
 
   publicAPI.updateSelectionFromMouseEvent = (event) => {
+    vtkWarningMacro(
+      'updateSelectionFromMouseEvent is deprecated, please use getSelectedDataForXY'
+    );
     const { pageX, pageY } = event;
     const { top, left, height } = model.apiSpecificRenderWindow
       .getCanvas()
@@ -574,7 +624,6 @@ const DEFAULT_VALUES = {
   widgets: [],
   renderer: null,
   viewType: ViewTypes.DEFAULT,
-  pickingAvailable: false,
   isAnimating: false,
   pickingEnabled: true,
   selections: null,
