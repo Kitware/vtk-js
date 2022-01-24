@@ -414,7 +414,7 @@ const DEFAULT_VALUES = {
   direction: [0.0, 0.0, 1.0],
   skipInnerFaces: true,
   mask: null, // If present, array to know if a layer should be skipped(=true)
-  pointType: 'Float32Array',
+  pointType: 'Float64Array',
 };
 
 // ----------------------------------------------------------------------------
