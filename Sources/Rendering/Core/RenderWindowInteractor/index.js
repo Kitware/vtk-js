@@ -372,8 +372,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     if (animationRequesters.size === 1 && !model.xrAnimation) {
       model._animationStartTime = Date.now();
       model._animationFrameCount = 0;
-      model.lastFrameTime = 0.1;
-      model.lastFrameStart = Date.now();
       model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
       publicAPI.startAnimationEvent();
     }
@@ -415,7 +413,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   publicAPI.returnFromXRAnimation = () => {
     model.xrAnimation = false;
     if (animationRequesters.size !== 0) {
-      model.FrameTime = -1;
+      model.recentAnimationFrameRate = 10.0;
       model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
     }
   };
@@ -514,17 +512,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       model.recentAnimationFrameRate =
         (1000.0 * (model._animationFrameCount - 1)) /
         (currTime - model._animationStartTime);
+      model.lastFrameTime = 1.0 / model.recentAnimationFrameRate;
       publicAPI.animationFrameRateUpdateEvent();
       model._animationStartTime = currTime;
       model._animationFrameCount = 1;
     }
-    if (model.FrameTime === -1.0) {
-      model.lastFrameTime = 0.1;
-    } else {
-      model.lastFrameTime = (currTime - model.lastFrameStart) / 1000.0;
-    }
-    model.lastFrameTime = Math.max(0.01, model.lastFrameTime);
-    model.lastFrameStart = currTime;
     publicAPI.animationEvent();
     forceRender();
     model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
@@ -1001,7 +993,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleVisibilityChange = () => {
-    model.lastFrameStart = Date.now();
     model._animationStartTime = Date.now();
     model._animationFrameCount = 0;
   };
@@ -1027,7 +1018,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   // Use the Page Visibility API to detect when we switch away from or back to
-  // this tab, and reset the lastFrameStart. When tabs are not active, browsers
+  // this tab, and reset the animationFrameStart. When tabs are not active, browsers
   // will stop calling requestAnimationFrame callbacks.
   if (typeof document.hidden !== 'undefined') {
     document.addEventListener(
