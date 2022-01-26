@@ -67,6 +67,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 
   publicAPI.recreateSwapChain = () => {
     if (model.context) {
+      model.context.unconfigure();
       const presentationFormat = model.context.getPreferredFormat(
         model.adapter
       );
@@ -79,6 +80,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST,
         size: model.size,
       });
+      model._configured = true;
     }
   };
 
@@ -97,7 +99,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 
       publicAPI.initialize();
     } else if (model.initialized) {
-      if (!model.context.validConfiguration) {
+      if (!model._configured) {
         publicAPI.recreateSwapChain();
       }
       model.commandEncoder = model.device.createCommandEncoder();

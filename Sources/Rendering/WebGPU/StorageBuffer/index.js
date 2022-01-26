@@ -176,7 +176,7 @@ struct ${model.name}Struct
 {
   values: array<${model.name}StructEntry>;
 };
-[[binding(${binding}), group(${group})]] var<storage, read> ${model.name}: ${model.name}Struct;
+@binding(${binding}) @group(${group}) var<storage, read> ${model.name}: ${model.name}Struct;
 `);
 
     return lines.join('\n');

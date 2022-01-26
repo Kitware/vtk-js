@@ -16,7 +16,7 @@ const oitpFragTemplate = `
 
 //VTK::IOStructs::Dec
 
-[[stage(fragment)]]
+@stage(fragment)
 fn main(
 //VTK::IOStructs::Input
 )
@@ -157,7 +157,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       const fDesc = pipeline.getShaderDescription('fragment');
       fDesc.addOutput('vec4<f32>', 'outColor');
       fDesc.addOutput('f32', 'outAccum');
-      fDesc.addBuiltinInput('vec4<f32>', '[[builtin(position)]] fragPos');
+      fDesc.addBuiltinInput('vec4<f32>', '@builtin(position) fragPos');
       let code = fDesc.getCode();
       code = vtkWebGPUShaderCache.substitute(
         code,
@@ -220,7 +220,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
     model.translucentFinalEncoder.setReplaceShaderCodeFunction((pipeline) => {
       const fDesc = pipeline.getShaderDescription('fragment');
       fDesc.addOutput('vec4<f32>', 'outColor');
-      fDesc.addBuiltinInput('vec4<f32>', '[[builtin(position)]] fragPos');
+      fDesc.addBuiltinInput('vec4<f32>', '@builtin(position) fragPos');
       let code = fDesc.getCode();
       code = vtkWebGPUShaderCache.substitute(
         code,

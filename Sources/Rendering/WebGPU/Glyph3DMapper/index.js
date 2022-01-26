@@ -20,8 +20,8 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addBuiltinInput('u32', '[[builtin(instance_index)]] instanceIndex');
-    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
+    vDesc.addBuiltinInput('u32', '@builtin(instance_index) instanceIndex');
+    vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
     let code = vDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
       '    output.Position = rendererUBO.SCPCMatrix*mapperUBO.BCSCMatrix',

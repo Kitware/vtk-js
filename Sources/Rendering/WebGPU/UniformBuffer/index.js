@@ -287,7 +287,7 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
       lines.push(`  ${entry.name}: ${entry.type};`);
     }
     lines.push(
-      `};\n[[binding(${binding}), group(${group})]] var<uniform> ${model.name}: ${model.name}Struct;`
+      `};\n@binding(${binding}) @group(${group}) var<uniform> ${model.name}: ${model.name}Struct;`
     );
     return lines.join('\n');
   };

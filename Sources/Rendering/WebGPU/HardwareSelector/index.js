@@ -312,6 +312,7 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
     // so anything specific to this request gets put into the
     // result object (by value in most cases)
     const result = {
+      area: [0, 0, texture.getWidth() - 1, texture.getHeight() - 1],
       captureZValues: model.captureZValues,
       fieldAssociation: model.fieldAssociation,
       renderer,
