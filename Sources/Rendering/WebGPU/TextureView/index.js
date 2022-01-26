@@ -39,9 +39,9 @@ function vtkWebGPUTextureView(publicAPI, model) {
     } else if (model.bindGroupLayoutEntry.texture.sampleType === 'uint') {
       ttype = 'u32';
     }
-    let result = `[[binding(${binding}), group(${group})]] var ${model.name}: texture_${model.options.dimension}<${ttype}>;`;
+    let result = `@binding(${binding}) @group(${group}) var ${model.name}: texture_${model.options.dimension}<${ttype}>;`;
     if (model.bindGroupLayoutEntry.texture.sampleType === 'depth') {
-      result = `[[binding(${binding}), group(${group})]] var ${model.name}: texture_depth_${model.options.dimension};`;
+      result = `@binding(${binding}) @group(${group}) var ${model.name}: texture_depth_${model.options.dimension};`;
     }
     return result;
   };

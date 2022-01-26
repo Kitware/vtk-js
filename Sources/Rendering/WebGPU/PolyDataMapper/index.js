@@ -33,7 +33,7 @@ const vtkWebGPUPolyDataVS = `
 
 //VTK::IOStructs::Dec
 
-[[stage(vertex)]]
+@stage(vertex)
 fn main(
 //VTK::IOStructs::Input
 )
@@ -75,7 +75,7 @@ const vtkWebGPUPolyDataFS = `
 
 //VTK::IOStructs::Dec
 
-[[stage(fragment)]]
+@stage(fragment)
 fn main(
 //VTK::IOStructs::Input
 )
@@ -214,10 +214,10 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
+    vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
     let code = vDesc.getCode();
     if (isEdges(hash)) {
-      vDesc.addBuiltinInput('u32', '[[builtin(instance_index)]] instanceIndex');
+      vDesc.addBuiltinInput('u32', '@builtin(instance_index) instanceIndex');
       // widen the edge
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
         '    var tmpPos: vec4<f32> = rendererUBO.SCPCMatrix*mapperUBO.BCSCMatrix*vertexBC;',

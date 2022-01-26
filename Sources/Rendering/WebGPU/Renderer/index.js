@@ -20,7 +20,7 @@ const clearFragTemplate = `
 
 //VTK::IOStructs::Dec
 
-[[stage(fragment)]]
+@stage(fragment)
 fn main(
 //VTK::IOStructs::Input
 )

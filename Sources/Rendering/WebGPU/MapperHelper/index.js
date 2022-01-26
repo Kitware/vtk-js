@@ -20,7 +20,7 @@ const vtkWebGPUMapperHelperVS = `
 
 //VTK::IOStructs::Dec
 
-[[stage(vertex)]]
+@stage(vertex)
 fn main(
 //VTK::IOStructs::Input
 )
@@ -61,7 +61,7 @@ const vtkWebGPUMapperHelperFS = `
 
 //VTK::IOStructs::Dec
 
-[[stage(fragment)]]
+@stage(fragment)
 fn main(
 //VTK::IOStructs::Input
 )
@@ -190,7 +190,7 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
     vDesc.setCode(code);
 
     const fDesc = pipeline.getShaderDescription('fragment');
-    fDesc.addBuiltinInput('bool', '[[builtin(front_facing)]] frontFacing');
+    fDesc.addBuiltinInput('bool', '@builtin(front_facing) frontFacing');
     code = fDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::Dec', [
       ubocode,
@@ -204,7 +204,7 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
+    vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
     let code = vDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
       '    output.Position = rendererUBO.SCPCMatrix*vertexBC;',

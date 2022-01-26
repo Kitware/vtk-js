@@ -19,7 +19,7 @@ function vtkWebGPUSampler(publicAPI, model) {
   };
 
   publicAPI.getShaderCode = (binding, group) => {
-    const result = `[[binding(${binding}), group(${group})]] var ${model.name}: sampler;`;
+    const result = `@binding(${binding}) @group(${group}) var ${model.name}: sampler;`;
     return result;
   };
 

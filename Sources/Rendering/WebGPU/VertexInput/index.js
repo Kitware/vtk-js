@@ -97,7 +97,7 @@ function vtkWebGPUVertexInput(publicAPI, model) {
         if (nameCount > 0) {
           result += ',\n';
         }
-        result = `${result}  [[location(${nameCount})]] ${model.inputs[i].names[nm]} : ${type}`;
+        result = `${result}  @location(${nameCount}) ${model.inputs[i].names[nm]} : ${type}`;
         nameCount++;
       }
     }

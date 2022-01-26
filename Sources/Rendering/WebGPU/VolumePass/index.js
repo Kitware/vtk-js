@@ -62,7 +62,7 @@ const DepthBoundsFS = `
 
 //VTK::IOStructs::Dec
 
-[[stage(fragment)]]
+@stage(fragment)
 fn main(
 //VTK::IOStructs::Input
 )
@@ -96,7 +96,7 @@ const volumeCopyFragTemplate = `
 
 //VTK::IOStructs::Dec
 
-[[stage(fragment)]]
+@stage(fragment)
 fn main(
 //VTK::IOStructs::Input
 )
@@ -699,7 +699,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     .getShaderReplacements()
     .set('replaceShaderVolumePass', (hash, pipeline, vertexInput) => {
       const fDesc = pipeline.getShaderDescription('fragment');
-      fDesc.addBuiltinInput('vec4<f32>', '[[builtin(position)]] fragPos');
+      fDesc.addBuiltinInput('vec4<f32>', '@builtin(position) fragPos');
     });
 
   model._boundsPoly = vtkPolyData.newInstance();
