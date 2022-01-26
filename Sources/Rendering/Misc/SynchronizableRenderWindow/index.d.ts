@@ -1,7 +1,5 @@
 import { vtkRenderWindow, IRenderWindowInitialValues } from '../../Rendering/Core/RenderWindow';
 
-type ViewId = string;
-
 // Keeps state for client / server scene synchronization.
 export interface SynchContext {
     // Set a function that fetches the data array for the given object.
@@ -20,8 +18,8 @@ export interface SynchContext {
 
     // sceneMtimeHandler
     getMtime(): number;
-    incrementMtime(viewId: ViewId): number;
-    setActiveViewId(viewId: ViewId): void;
+    incrementMtime(viewId: string): number;
+    setActiveViewId(viewId: string): void;
     getActiveViewId(): string;
 
     // TODO: fill progresshandler
@@ -57,7 +55,7 @@ export interface vtkSynchronizableRenderWindowInstance extends vtkRenderWindow {
 
   // methods added by createSyncFunction
   synchronize(state: ViewState): Promise<boolean>;
-  setSynchronizedViewId(viewId: ViewId): void;
+  setSynchronizedViewId(viewId: string): void;
   getSynchronizedViewId(): string;
   updateGarbageCollectorThreshold(v: number): void;
   getManagedInstanceIds(): Array<string>;
