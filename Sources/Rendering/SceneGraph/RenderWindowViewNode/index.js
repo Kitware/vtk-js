@@ -139,6 +139,11 @@ function vtkRenderWindowViewNode(publicAPI, model) {
     macro.vtkErrorMacro('not implemented');
     return undefined;
   };
+
+  publicAPI.createSelector = () => {
+    macro.vtkErrorMacro('not implemented');
+    return undefined;
+  };
 }
 
 // ----------------------------------------------------------------------------
