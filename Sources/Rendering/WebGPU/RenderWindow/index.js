@@ -525,6 +525,12 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     return result;
   };
 
+  publicAPI.createSelector = () => {
+    const ret = vtkWebGPUHardwareSelector.newInstance();
+    ret.setWebGPURenderWindow(publicAPI);
+    return ret;
+  };
+
   publicAPI.delete = macro.chain(publicAPI.delete, publicAPI.setViewStream);
 }
 
