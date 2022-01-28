@@ -64,16 +64,21 @@ export default function widgetBehavior(publicAPI, model) {
 
     return handles.reduce(
       ({ closestHandle, closestDistance }, handle) => {
-        const distance = vec3.squaredDistance(
-          model.moveHandle.getOrigin(),
+        if (
+          handle !== model.moveHandle &&
+          model.moveHandle.getOrigin() &&
           handle.getOrigin()
-        );
-        if (handle !== model.moveHandle) {
-          return {
-            closestHandle: distance < closestDistance ? handle : closestHandle,
-            closestDistance:
-              distance < closestDistance ? distance : closestDistance,
-          };
+        ) {
+          const distance = vec3.squaredDistance(
+            model.moveHandle.getOrigin(),
+            handle.getOrigin()
+          );
+          if (distance < closestDistance) {
+            return {
+              closestHandle: handle,
+              closestDistance: distance,
+            };
+          }
         }
 
         return {
