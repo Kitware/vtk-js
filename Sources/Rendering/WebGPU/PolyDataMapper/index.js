@@ -558,7 +558,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     const idata = model.renderable.getColorTextureMap(); // returns an imagedata
     if (idata) {
       if (!model.colorTexture) {
-        model.colorTexture = vtkTexture.newInstance();
+        model.colorTexture = vtkTexture.newInstance({ label: 'polyDataColor' });
       }
       model.colorTexture.setInputData(idata);
       newTextures.push(model.colorTexture);
@@ -600,8 +600,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
         }
         if (!found) {
           usedTextures[model.textures.length] = true;
-          const tview = newTex.createView();
-          tview.setName(`Texture${usedCount++}`);
+          const tview = newTex.createView(`Texture${usedCount++}`);
           model.textures.push(newTex);
           model.textureViews.push(tview);
           const interpolate = srcTexture.getInterpolate()
@@ -794,8 +793,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.vertexShaderTemplate =
     model.vertexShaderTemplate || vtkWebGPUPolyDataVS;
 
-  model.UBO = vtkWebGPUUniformBuffer.newInstance();
-  model.UBO.setName('mapperUBO');
+  model.UBO = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
   model.UBO.addEntry('BCWCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('BCSCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('MCWCNormals', 'mat4x4<f32>');

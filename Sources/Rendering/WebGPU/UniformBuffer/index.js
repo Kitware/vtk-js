@@ -193,6 +193,7 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
         nativeArray: model.Float32Array,
         time: 0,
         usage: BufferUsage.UniformArray,
+        label: model.label,
       };
       model.UBO = device.getBufferManager().getBuffer(req);
       model.bindGroupTime.modified();
@@ -281,13 +282,13 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
     // sort the entries
     publicAPI.sortBufferEntries();
 
-    const lines = [`struct ${model.name}Struct\n{`];
+    const lines = [`struct ${model.label}Struct\n{`];
     for (let i = 0; i < model.bufferEntries.length; i++) {
       const entry = model.bufferEntries[i];
       lines.push(`  ${entry.name}: ${entry.type};`);
     }
     lines.push(
-      `};\n@binding(${binding}) @group(${group}) var<uniform> ${model.name}: ${model.name}Struct;`
+      `};\n@binding(${binding}) @group(${group}) var<uniform> ${model.label}: ${model.label}Struct;`
     );
     return lines.join('\n');
   };
@@ -301,7 +302,7 @@ const DEFAULT_VALUES = {
   bufferEntries: null,
   bufferEntryNames: null,
   sizeInBytes: 0,
-  name: null,
+  label: null,
   bindGroupLayoutEntry: null,
   bindGroupEntry: null,
 };
@@ -338,7 +339,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'bindGroupLayoutEntry',
     'device',
-    'name',
+    'label',
     'sizeInBytes',
   ]);
 

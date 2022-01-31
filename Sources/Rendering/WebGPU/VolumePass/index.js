@@ -104,8 +104,8 @@ fn main(
 {
   var output: fragmentOutput;
 
-  var computedColor: vec4<f32> = textureSample(volumePassSmallColorTexture,
-    volumePassSmallColorTextureSampler, mapperUBO.tscale*input.tcoordVS);
+  var computedColor: vec4<f32> = textureSample(volumePassColorTexture,
+    volumePassColorTextureSampler, mapperUBO.tscale*input.tcoordVS);
 
   //VTK::RenderEncoder::Impl
   return output;
@@ -152,8 +152,9 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       model._volumeCopyQuad.setPipelineHash('volpassfsq');
       model._volumeCopyQuad.setDevice(viewNode.getDevice());
       model._volumeCopyQuad.setFragmentShaderTemplate(volumeCopyFragTemplate);
-      model._copyUBO = vtkWebGPUUniformBuffer.newInstance();
-      model._copyUBO.setName('mapperUBO');
+      model._copyUBO = vtkWebGPUUniformBuffer.newInstance({
+        label: 'mapperUBO',
+      });
       model._copyUBO.addEntry('tscale', 'vec2<f32>');
       model._volumeCopyQuad.setUBO(model._copyUBO);
       model._volumeCopyQuad.setTextureViews([model._colorTextureView]);
@@ -443,8 +444,9 @@ function vtkWebGPUVolumePass(publicAPI, model) {
 
   publicAPI.createDepthRangeEncoder = (viewNode) => {
     const device = viewNode.getDevice();
-    model._depthRangeEncoder = vtkWebGPURenderEncoder.newInstance();
-
+    model._depthRangeEncoder = vtkWebGPURenderEncoder.newInstance({
+      label: 'VolumePass DepthRange',
+    });
     model._depthRangeEncoder.setPipelineHash('volr');
     model._depthRangeEncoder.setReplaceShaderCodeFunction((pipeline) => {
       const fDesc = pipeline.getShaderDescription('fragment');
@@ -506,7 +508,9 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     });
 
     // and the textures it needs
-    model._depthRangeTexture = vtkWebGPUTexture.newInstance();
+    model._depthRangeTexture = vtkWebGPUTexture.newInstance({
+      label: 'volumePassMaxDepth',
+    });
     model._depthRangeTexture.create(device, {
       width: viewNode.getCanvas().width,
       height: viewNode.getCanvas().height,
@@ -514,10 +518,11 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       usage:
         GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
     });
-    const maxView = model._depthRangeTexture.createView();
-    maxView.setName('maxTexture');
+    const maxView = model._depthRangeTexture.createView('maxTexture');
     model._depthRangeEncoder.setColorTextureView(0, maxView);
-    model._depthRangeTexture2 = vtkWebGPUTexture.newInstance();
+    model._depthRangeTexture2 = vtkWebGPUTexture.newInstance({
+      label: 'volumePassDepthMin',
+    });
     model._depthRangeTexture2.create(device, {
       width: viewNode.getCanvas().width,
       height: viewNode.getCanvas().height,
@@ -525,15 +530,16 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       usage:
         GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
     });
-    const minView = model._depthRangeTexture2.createView();
-    minView.setName('minTexture');
+    const minView = model._depthRangeTexture2.createView('minTexture');
     model._depthRangeEncoder.setColorTextureView(1, minView);
     model._mapper.setDevice(viewNode.getDevice());
     model._mapper.setTextureViews([model.depthTextureView]);
   };
 
   publicAPI.createClearEncoder = (viewNode) => {
-    model._colorTexture = vtkWebGPUTexture.newInstance();
+    model._colorTexture = vtkWebGPUTexture.newInstance({
+      label: 'volumePassColor',
+    });
     model._colorTexture.create(viewNode.getDevice(), {
       width: viewNode.getCanvas().width,
       height: viewNode.getCanvas().height,
@@ -545,14 +551,17 @@ function vtkWebGPUVolumePass(publicAPI, model) {
         GPUTextureUsage.TEXTURE_BINDING |
         GPUTextureUsage.COPY_SRC,
     });
-    model._colorTextureView = model._colorTexture.createView();
-    model._colorTextureView.setName('volumePassSmallColorTexture');
+    model._colorTextureView = model._colorTexture.createView(
+      'volumePassColorTexture'
+    );
     model._colorTextureView.addSampler(viewNode.getDevice(), {
       minFilter: 'linear',
       magFilter: 'linear',
     });
 
-    model._clearEncoder = vtkWebGPURenderEncoder.newInstance();
+    model._clearEncoder = vtkWebGPURenderEncoder.newInstance({
+      label: 'VolumePass Clear',
+    });
     model._clearEncoder.setColorTextureView(0, model._colorTextureView);
     model._clearEncoder.setDescription({
       colorAttachments: [
@@ -584,7 +593,9 @@ function vtkWebGPUVolumePass(publicAPI, model) {
   };
 
   publicAPI.createCopyEncoder = (viewNode) => {
-    model._copyEncoder = vtkWebGPURenderEncoder.newInstance();
+    model._copyEncoder = vtkWebGPURenderEncoder.newInstance({
+      label: 'volumePassCopy',
+    });
     model._copyEncoder.setDescription({
       colorAttachments: [
         {
@@ -615,7 +626,9 @@ function vtkWebGPUVolumePass(publicAPI, model) {
   };
 
   publicAPI.createMergeEncoder = (viewNode) => {
-    model._mergeEncoder = vtkWebGPURenderEncoder.newInstance();
+    model._mergeEncoder = vtkWebGPURenderEncoder.newInstance({
+      label: 'volumePassMerge',
+    });
     model._mergeEncoder.setColorTextureView(0, model._colorTextureView);
     model._mergeEncoder.setDescription({
       colorAttachments: [
