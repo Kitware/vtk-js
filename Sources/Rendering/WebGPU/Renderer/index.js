@@ -235,8 +235,7 @@ function vtkWebGPURenderer(publicAPI, model) {
       model.clearFSQ.setDevice(device);
       model.clearFSQ.setPipelineHash('clearfsq');
       model.clearFSQ.setFragmentShaderTemplate(clearFragTemplate);
-      const ubo = vtkWebGPUUniformBuffer.newInstance();
-      ubo.setName('mapperUBO');
+      const ubo = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
       ubo.addEntry('BackgroundColor', 'vec4<f32>');
       model.clearFSQ.setUBO(ubo);
     }
@@ -395,8 +394,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
 
-  model.UBO = vtkWebGPUUniformBuffer.newInstance();
-  model.UBO.setName('rendererUBO');
+  model.UBO = vtkWebGPUUniformBuffer.newInstance({ label: 'rendererUBO' });
   model.UBO.addEntry('WCVCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('SCPCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('PCSCMatrix', 'mat4x4<f32>');
@@ -406,8 +404,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('viewportSize', 'vec2<f32>');
   model.UBO.addEntry('cameraParallel', 'u32');
 
-  model.bindGroup = vtkWebGPUBindGroup.newInstance();
-  model.bindGroup.setName('rendererBG');
+  model.bindGroup = vtkWebGPUBindGroup.newInstance({ label: 'rendererBG' });
   model.bindGroup.setBindables([model.UBO]);
 
   model.tmpMat4 = mat4.identity(new Float64Array(16));

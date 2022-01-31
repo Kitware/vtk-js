@@ -351,8 +351,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.textureViews = [];
   model.vertexInput = vtkWebGPUVertexInput.newInstance();
 
-  model.bindGroup = vtkWebGPUBindGroup.newInstance();
-  model.bindGroup.setName('mapperBG');
+  model.bindGroup = vtkWebGPUBindGroup.newInstance({ label: 'mapperBG' });
 
   model.additionalBindables = [];
 

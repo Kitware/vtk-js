@@ -429,7 +429,7 @@ function vtkWebGPUBufferManager(publicAPI, model) {
     }
 
     // create one
-    const buffer = vtkWebGPUBuffer.newInstance();
+    const buffer = vtkWebGPUBuffer.newInstance({ label: req.label });
     buffer.setDevice(model.device);
 
     let gpuUsage = null;

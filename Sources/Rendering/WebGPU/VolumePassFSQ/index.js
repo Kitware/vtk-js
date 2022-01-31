@@ -590,8 +590,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         format: 'rgba8unorm',
       };
       const newTex = device.getTextureManager().getTexture(treq);
-      const tview = newTex.createView();
-      tview.setName('tfunTexture');
+      const tview = newTex.createView('tfunTexture');
       model.textureViews[2] = tview;
     }
 
@@ -604,8 +603,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         format: 'r16float',
       };
       const newTex = device.getTextureManager().getTexture(treq);
-      const tview = newTex.createView();
-      tview.setName('ofunTexture');
+      const tview = newTex.createView('ofunTexture');
       model.textureViews[3] = tview;
     }
 
@@ -855,8 +853,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         !model.textureViews[vidx + 4] ||
         model.textureViews[vidx + 4].getTexture() !== newTex
       ) {
-        const tview = newTex.createView();
-        tview.setName(`volTexture${vidx}`);
+        const tview = newTex.createView(`volTexture${vidx}`);
         model.textureViews[vidx + 4] = tview;
       }
     }
@@ -908,8 +905,9 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     publicAPI.updateBuffers(device);
 
     if (!model.clampSampler) {
-      model.clampSampler = vtkWebGPUSampler.newInstance();
-      model.clampSampler.setName('clampSampler');
+      model.clampSampler = vtkWebGPUSampler.newInstance({
+        label: 'clampSampler',
+      });
       model.clampSampler.create(device, {
         minFilter: 'linear',
         magFilter: 'linear',
@@ -948,15 +946,14 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.fragmentShaderTemplate = volFragTemplate;
 
-  model.UBO = vtkWebGPUUniformBuffer.newInstance();
-  model.UBO.setName('mapperUBO');
+  model.UBO = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
   model.UBO.addEntry('SampleDistance', 'f32');
 
-  model.SSBO = vtkWebGPUStorageBuffer.newInstance();
-  model.SSBO.setName('volumeSSBO');
+  model.SSBO = vtkWebGPUStorageBuffer.newInstance({ label: 'volumeSSBO' });
 
-  model.componentSSBO = vtkWebGPUStorageBuffer.newInstance();
-  model.componentSSBO.setName('componentSSBO');
+  model.componentSSBO = vtkWebGPUStorageBuffer.newInstance({
+    label: 'componentSSBO',
+  });
 
   model.lutBuildTime = {};
   macro.obj(model.lutBuildTime, { mtime: 0 });

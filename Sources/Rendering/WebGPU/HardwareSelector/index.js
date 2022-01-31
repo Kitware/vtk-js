@@ -326,7 +326,9 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
     result.colorBufferWidth = 16 * Math.floor((result.width + 15) / 16);
     result.colorBufferSizeInBytes =
       result.colorBufferWidth * result.height * 4 * 4;
-    const colorBuffer = vtkWebGPUBuffer.newInstance();
+    const colorBuffer = vtkWebGPUBuffer.newInstance({
+      label: 'hardwareSelectColorBuffer',
+    });
     colorBuffer.setDevice(device);
     /* eslint-disable no-bitwise */
     /* eslint-disable no-undef */
@@ -357,7 +359,9 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
     let zbuffer;
     if (model.captureZValues) {
       result.zbufferBufferWidth = 64 * Math.floor((result.width + 63) / 64);
-      zbuffer = vtkWebGPUBuffer.newInstance();
+      zbuffer = vtkWebGPUBuffer.newInstance({
+        label: 'hardwareSelectDepthBuffer',
+      });
       zbuffer.setDevice(device);
       result.zbufferSizeInBytes = result.height * result.zbufferBufferWidth * 4;
       /* eslint-disable no-bitwise */

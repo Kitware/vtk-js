@@ -57,7 +57,9 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
     if (!model.translucentRenderEncoder) {
       publicAPI.createRenderEncoder();
       publicAPI.createFinalEncoder();
-      model.translucentColorTexture = vtkWebGPUTexture.newInstance();
+      model.translucentColorTexture = vtkWebGPUTexture.newInstance({
+        label: 'translucentPassColor',
+      });
       model.translucentColorTexture.create(device, {
         width: viewNode.getCanvas().width,
         height: viewNode.getCanvas().height,
@@ -67,11 +69,12 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
         usage:
           GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
       });
-      const v1 = model.translucentColorTexture.createView();
-      v1.setName('oitpColorTexture');
+      const v1 = model.translucentColorTexture.createView('oitpColorTexture');
       model.translucentRenderEncoder.setColorTextureView(0, v1);
 
-      model.translucentAccumulateTexture = vtkWebGPUTexture.newInstance();
+      model.translucentAccumulateTexture = vtkWebGPUTexture.newInstance({
+        label: 'translucentPassAccumulate',
+      });
       model.translucentAccumulateTexture.create(device, {
         width: viewNode.getCanvas().width,
         height: viewNode.getCanvas().height,
@@ -81,8 +84,8 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
         usage:
           GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
       });
-      const v2 = model.translucentAccumulateTexture.createView();
-      v2.setName('oitpAccumTexture');
+      const v2 =
+        model.translucentAccumulateTexture.createView('oitpAccumTexture');
       model.translucentRenderEncoder.setColorTextureView(1, v2);
       model.fullScreenQuad = vtkWebGPUFullScreenQuad.newInstance();
       model.fullScreenQuad.setDevice(viewNode.getDevice());
@@ -131,7 +134,9 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
   ];
 
   publicAPI.createRenderEncoder = () => {
-    model.translucentRenderEncoder = vtkWebGPURenderEncoder.newInstance();
+    model.translucentRenderEncoder = vtkWebGPURenderEncoder.newInstance({
+      label: 'translucentRender',
+    });
     const rDesc = model.translucentRenderEncoder.getDescription();
     rDesc.colorAttachments = [
       {
@@ -207,7 +212,9 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
   };
 
   publicAPI.createFinalEncoder = () => {
-    model.translucentFinalEncoder = vtkWebGPURenderEncoder.newInstance();
+    model.translucentFinalEncoder = vtkWebGPURenderEncoder.newInstance({
+      label: 'translucentFinal',
+    });
     model.translucentFinalEncoder.setDescription({
       colorAttachments: [
         {

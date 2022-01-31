@@ -44,6 +44,7 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
         nativeArray: model.Float32Array,
         time: 0,
         usage: BufferUsage.Storage,
+        label: model.label,
       };
       model._buffer = device.getBufferManager().getBuffer(req);
       model.bindGroupTime.modified();
@@ -165,18 +166,18 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
 
   publicAPI.getSendTime = () => model._sendTime.getMTime();
   publicAPI.getShaderCode = (binding, group) => {
-    const lines = [`struct ${model.name}StructEntry\n{`];
+    const lines = [`struct ${model.label}StructEntry\n{`];
     for (let i = 0; i < model.bufferEntries.length; i++) {
       const entry = model.bufferEntries[i];
       lines.push(`  ${entry.name}: ${entry.type};`);
     }
     lines.push(`
 };
-struct ${model.name}Struct
+struct ${model.label}Struct
 {
-  values: array<${model.name}StructEntry>;
+  values: array<${model.label}StructEntry>;
 };
-@binding(${binding}) @group(${group}) var<storage, read> ${model.name}: ${model.name}Struct;
+@binding(${binding}) @group(${group}) var<storage, read> ${model.label}: ${model.label}Struct;
 `);
 
     return lines.join('\n');
@@ -210,7 +211,7 @@ const DEFAULT_VALUES = {
   bufferEntries: null,
   bufferEntryNames: null,
   sizeInBytes: 0,
-  name: null,
+  label: null,
   numberOfInstances: 1,
 };
 
@@ -243,7 +244,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'device',
     'bindGroupLayoutEntry',
-    'name',
+    'label',
     'numberOfInstances',
     'sizeInBytes',
   ]);

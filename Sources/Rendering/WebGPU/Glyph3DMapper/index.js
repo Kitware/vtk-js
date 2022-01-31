@@ -153,8 +153,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.glyphBOBuildTime = {};
   macro.obj(model.glyphBOBuildTime, { mtime: 0 });
 
-  model.SSBO = vtkWebGPUStorageBuffer.newInstance();
-  model.SSBO.setName('glyphSSBO');
+  model.SSBO = vtkWebGPUStorageBuffer.newInstance({ label: 'glyphSSBO' });
 
   // Object methods
   vtkWebGPUGlyph3DMapper(publicAPI, model);
