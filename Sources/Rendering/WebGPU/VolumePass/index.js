@@ -284,16 +284,23 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     if (!model._animationRateSubscription) {
       // when the animation frame rate changes recompute the scale factor
       model._animationRateSubscription = rwi.onAnimationFrameRateUpdate(() => {
-        const frate = rwi.getRecentAnimationFrameRate();
-        const targetScale =
-          (model._lastScale * rwi.getDesiredUpdateRate()) / frate;
+        const firstMapper = model.volumes[0].getRenderable().getMapper();
+        if (firstMapper.getAutoAdjustSampleDistances()) {
+          const frate = rwi.getRecentAnimationFrameRate();
+          const targetScale =
+            (model._lastScale * rwi.getDesiredUpdateRate()) / frate;
 
-        model._lastScale = targetScale;
-        // clamp scale to some reasonable values.
-        // Below 1.5 we will just be using full resolution as that is close enough
-        // Above 400 seems like a lot so we limit to that 1/20th per axis
-        if (model._lastScale > 400) {
-          model._lastScale = 400;
+          model._lastScale = targetScale;
+          // clamp scale to some reasonable values.
+          // Below 1.5 we will just be using full resolution as that is close enough
+          // Above 400 seems like a lot so we limit to that 1/20th per axis
+          if (model._lastScale > 400) {
+            model._lastScale = 400;
+          }
+        } else {
+          model._lastScale =
+            firstMapper.getImageSampleDistance() *
+            firstMapper.getImageSampleDistance();
         }
         if (model._lastScale < 1.5) {
           model._lastScale = 1.5;

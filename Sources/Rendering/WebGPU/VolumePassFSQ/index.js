@@ -36,23 +36,22 @@ fn getGradient(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32, scalar: f32) -
   result.x = getTextureValue(vTex, tpos + vec4<f32>(tstep.x, 0.0, 0.0, 1.0)) - scalar;
   result.y = getTextureValue(vTex, tpos + vec4<f32>(0.0, tstep.y, 0.0, 1.0)) - scalar;
   result.z = getTextureValue(vTex, tpos + vec4<f32>(0.0, 0.0, tstep.z, 1.0)) - scalar;
+  result.w = 0.0;
 
-  // divide by spacing
+  // divide by spacing as that is our delta
   result = result / volumeSSBO.values[vNum].spacing;
+  // now we have a gradient in unit tcoords
 
   var grad: f32 = length(result.xyz);
-
-  // // rotate to View Coords, needed for lighting and shading
-  // result.xyz =
-  //   result.x * vPlaneNormal0 +
-  //   result.y * vPlaneNormal2 +
-  //   result.z * vPlaneNormal4;
-
   if (grad > 0.0)
   {
-    result = result * (1.0 / grad);
+    // rotate to View Coords, needed for lighting and shading
+    var nMat: mat4x4<f32> = rendererUBO.SCVCMatrix * volumeSSBO.values[vNum].planeNormals;
+    result = nMat * result;
+    result = result / length(result);
   }
 
+  // store gradient magnitude in .w
   result.w = grad;
 
   return result;
@@ -75,19 +74,26 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, cNum: i32, posSC: vec4<f32>, 
   var color: vec4<f32> = textureSampleLevel(tfunTexture, clampSampler, coord, 0.0);
 
   var gofactor: f32 = 1.0;
-  if (componentSSBO.values[cNum].gomin <  1.0)
+  var normal: vec4<f32> = vec4<f32>(0.0,0.0,0.0,0.0);
+  if (componentSSBO.values[cNum].gomin <  1.0 || volumeSSBO.values[vNum].shade[0] > 0.0)
   {
-    var normal: vec4<f32> = getGradient(vTex, tpos, vNum, scalar);
-    gofactor = clamp(normal.a*componentSSBO.values[cNum].goScale + componentSSBO.values[cNum].goShift,
+    normal = getGradient(vTex, tpos, vNum, scalar);
+    if (componentSSBO.values[cNum].gomin <  1.0)
+    {
+      gofactor = clamp(normal.a*componentSSBO.values[cNum].goScale + componentSSBO.values[cNum].goShift,
       componentSSBO.values[cNum].gomin, componentSSBO.values[cNum].gomax);
+    }
   }
 
   coord.x = (scalar * componentSSBO.values[cNum].oScale + componentSSBO.values[cNum].oShift);
   var opacity: f32 = textureSampleLevel(ofunTexture, clampSampler, coord, 0.0).r;
 
-  outColor = vec4<f32>(color.rgb, gofactor * opacity);
+  if (volumeSSBO.values[vNum].shade[0] > 0.0)
+  {
+    color = color*abs(normal.z);
+  }
 
-//VTK::Volume::Process
+  outColor = vec4<f32>(color.rgb, gofactor * opacity);
 
   return outColor;
 }
@@ -647,7 +653,9 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     // the order is mat4.mult(AtoC, BtoC, AtoB);
     //
     const marray = new Float64Array(model.volumes.length * 16);
+    const vPlaneArray = new Float64Array(model.volumes.length * 16);
     const tstepArray = new Float64Array(model.volumes.length * 4);
+    const shadeArray = new Float64Array(model.volumes.length * 4);
     const spacingArray = new Float64Array(model.volumes.length * 4);
     const ipScalarRangeArray = new Float64Array(model.volumes.length * 4);
     for (let vidx = 0; vidx < model.volumes.length; vidx++) {
@@ -688,10 +696,22 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         marray[vidx * 16 + j] = tmpMat4[j];
       }
 
+      mat4.invert(tmpMat4, tmpMat4);
+      // now it is Tcoord To SC
+
+      for (let j = 0; j < 4; j++) {
+        vPlaneArray[vidx * 16 + j * 4] = tmpMat4[j * 4];
+        vPlaneArray[vidx * 16 + j * 4 + 1] = tmpMat4[j * 4 + 1];
+        vPlaneArray[vidx * 16 + j * 4 + 2] = tmpMat4[j * 4 + 2];
+        vPlaneArray[vidx * 16 + j * 4 + 3] = 0.0;
+      }
+
       tstepArray[vidx * 4] = 1.0 / dims[0];
       tstepArray[vidx * 4 + 1] = 1.0 / dims[1];
       tstepArray[vidx * 4 + 2] = 1.0 / dims[2];
       tstepArray[vidx * 4 + 3] = 1.0;
+
+      shadeArray[vidx * 4] = actor.getProperty().getShade() ? 1.0 : 0.0;
 
       const spacing = image.getSpacing();
       spacingArray[vidx * 4] = spacing[0];
@@ -707,10 +727,14 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       ipScalarRangeArray[vidx * 4 + 2] = volMapr.getFilterMode();
     }
     model.SSBO.addEntry('SCTCMatrix', 'mat4x4<f32>');
+    model.SSBO.addEntry('planeNormals', 'mat4x4<f32>');
+    model.SSBO.addEntry('shade', 'vec4<f32>');
     model.SSBO.addEntry('tstep', 'vec4<f32>');
     model.SSBO.addEntry('spacing', 'vec4<f32>');
     model.SSBO.addEntry('ipScalarRange', 'vec4<f32>');
     model.SSBO.setAllInstancesFromArray('SCTCMatrix', marray);
+    model.SSBO.setAllInstancesFromArray('planeNormals', vPlaneArray);
+    model.SSBO.setAllInstancesFromArray('shade', shadeArray);
     model.SSBO.setAllInstancesFromArray('tstep', tstepArray);
     model.SSBO.setAllInstancesFromArray('spacing', spacingArray);
     model.SSBO.setAllInstancesFromArray('ipScalarRange', ipScalarRangeArray);
