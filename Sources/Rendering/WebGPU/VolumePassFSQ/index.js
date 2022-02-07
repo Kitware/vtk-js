@@ -36,23 +36,22 @@ fn getGradient(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32, scalar: f32) -
   result.x = getTextureValue(vTex, tpos + vec4<f32>(tstep.x, 0.0, 0.0, 1.0)) - scalar;
   result.y = getTextureValue(vTex, tpos + vec4<f32>(0.0, tstep.y, 0.0, 1.0)) - scalar;
   result.z = getTextureValue(vTex, tpos + vec4<f32>(0.0, 0.0, tstep.z, 1.0)) - scalar;
+  result.w = 0.0;
 
-  // divide by spacing
+  // divide by spacing as that is our delta
   result = result / volumeSSBO.values[vNum].spacing;
+  // now we have a gradient in unit tcoords
 
   var grad: f32 = length(result.xyz);
-
-  // // rotate to View Coords, needed for lighting and shading
-  // result.xyz =
-  //   result.x * vPlaneNormal0 +
-  //   result.y * vPlaneNormal2 +
-  //   result.z * vPlaneNormal4;
-
   if (grad > 0.0)
   {
-    result = result * (1.0 / grad);
+    // rotate to View Coords, needed for lighting and shading
+    var nMat: mat4x4<f32> = rendererUBO.SCVCMatrix * volumeSSBO.values[vNum].planeNormals;
+    result = nMat * result;
+    result = result / length(result);
   }
 
+  // store gradient magnitude in .w
   result.w = grad;
 
   return result;
@@ -75,19 +74,26 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, cNum: i32, posSC: vec4<f32>, 
   var color: vec4<f32> = textureSampleLevel(tfunTexture, clampSampler, coord, 0.0);
 
   var gofactor: f32 = 1.0;
-  if (componentSSBO.values[cNum].gomin <  1.0)
+  var normal: vec4<f32> = vec4<f32>(0.0,0.0,0.0,0.0);
+  if (componentSSBO.values[cNum].gomin <  1.0 || volumeSSBO.values[vNum].shade[0] > 0.0)
   {
-    var normal: vec4<f32> = getGradient(vTex, tpos, vNum, scalar);
-    gofactor = clamp(normal.a*componentSSBO.values[cNum].goScale + componentSSBO.values[cNum].goShift,
+    normal = getGradient(vTex, tpos, vNum, scalar);
+    if (componentSSBO.values[cNum].gomin <  1.0)
+    {
+      gofactor = clamp(normal.a*componentSSBO.values[cNum].goScale + componentSSBO.values[cNum].goShift,
       componentSSBO.values[cNum].gomin, componentSSBO.values[cNum].gomax);
+    }
   }
 
   coord.x = (scalar * componentSSBO.values[cNum].oScale + componentSSBO.values[cNum].oShift);
   var opacity: f32 = textureSampleLevel(ofunTexture, clampSampler, coord, 0.0).r;
 
-  outColor = vec4<f32>(color.rgb, gofactor * opacity);
+  if (volumeSSBO.values[vNum].shade[0] > 0.0)
+  {
+    color = color*abs(normal.z);
+  }
 
-//VTK::Volume::Process
+  outColor = vec4<f32>(color.rgb, gofactor * opacity);
 
   return outColor;
 }
@@ -345,7 +351,7 @@ fn composite(rayLengthSC: f32, minPosSC: vec4<f32>, rayStepSC: vec4<f32>) -> vec
   return computedColor;
 }
 
-[[stage(fragment)]]
+@stage(fragment)
 fn main(
 //VTK::IOStructs::Input
 )
@@ -360,13 +366,10 @@ fn main(
   if (rayMax <= rayMin) { discard; }
   else
   {
-    var winDimsI32: vec2<i32> = textureDimensions(minTexture);
-    var winDims: vec2<f32> = vec2<f32>(f32(winDimsI32.x), f32(winDimsI32.y));
-
     // compute start and end ray positions in view coordinates
-    var minPosSC: vec4<f32> = rendererUBO.PCSCMatrix*vec4<f32>(2.0*input.fragPos.x/winDims.x - 1.0, 1.0 - 2.0 * input.fragPos.y/winDims.y, rayMax, 1.0);
+    var minPosSC: vec4<f32> = rendererUBO.PCSCMatrix*vec4<f32>(2.0 * input.tcoordVS.x - 1.0, 1.0 - 2.0 * input.tcoordVS.y, rayMax, 1.0);
     minPosSC = minPosSC * (1.0 / minPosSC.w);
-    var maxPosSC: vec4<f32> = rendererUBO.PCSCMatrix*vec4<f32>(2.0*input.fragPos.x/winDims.x - 1.0, 1.0 - 2.0 * input.fragPos.y/winDims.y, rayMin, 1.0);
+    var maxPosSC: vec4<f32> = rendererUBO.PCSCMatrix*vec4<f32>(2.0 * input.tcoordVS.x - 1.0, 1.0 - 2.0 * input.tcoordVS.y, rayMin, 1.0);
     maxPosSC = maxPosSC * (1.0 / maxPosSC.w);
 
     var rayLengthSC: f32 = distance(minPosSC.xyz, maxPosSC.xyz);
@@ -397,7 +400,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
+    vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
     let code = vDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
       'output.tcoordVS = vec2<f32>(vertexBC.x * 0.5 + 0.5, 1.0 - vertexBC.y * 0.5 - 0.5);',
@@ -405,7 +408,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     ]).result;
     vDesc.setCode(code);
     const fDesc = pipeline.getShaderDescription('fragment');
-    fDesc.addBuiltinInput('vec4<f32>', '[[builtin(position)]] fragPos');
+    fDesc.addBuiltinInput('vec4<f32>', '@builtin(position) fragPos');
   };
   model.shaderReplacements.set(
     'replaceShaderPosition',
@@ -593,8 +596,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         format: 'rgba8unorm',
       };
       const newTex = device.getTextureManager().getTexture(treq);
-      const tview = newTex.createView();
-      tview.setName('tfunTexture');
+      const tview = newTex.createView('tfunTexture');
       model.textureViews[2] = tview;
     }
 
@@ -607,8 +609,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         format: 'r16float',
       };
       const newTex = device.getTextureManager().getTexture(treq);
-      const tview = newTex.createView();
-      tview.setName('ofunTexture');
+      const tview = newTex.createView('ofunTexture');
       model.textureViews[3] = tview;
     }
 
@@ -652,7 +653,9 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     // the order is mat4.mult(AtoC, BtoC, AtoB);
     //
     const marray = new Float64Array(model.volumes.length * 16);
+    const vPlaneArray = new Float64Array(model.volumes.length * 16);
     const tstepArray = new Float64Array(model.volumes.length * 4);
+    const shadeArray = new Float64Array(model.volumes.length * 4);
     const spacingArray = new Float64Array(model.volumes.length * 4);
     const ipScalarRangeArray = new Float64Array(model.volumes.length * 4);
     for (let vidx = 0; vidx < model.volumes.length; vidx++) {
@@ -693,10 +696,22 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         marray[vidx * 16 + j] = tmpMat4[j];
       }
 
+      mat4.invert(tmpMat4, tmpMat4);
+      // now it is Tcoord To SC
+
+      for (let j = 0; j < 4; j++) {
+        vPlaneArray[vidx * 16 + j * 4] = tmpMat4[j * 4];
+        vPlaneArray[vidx * 16 + j * 4 + 1] = tmpMat4[j * 4 + 1];
+        vPlaneArray[vidx * 16 + j * 4 + 2] = tmpMat4[j * 4 + 2];
+        vPlaneArray[vidx * 16 + j * 4 + 3] = 0.0;
+      }
+
       tstepArray[vidx * 4] = 1.0 / dims[0];
       tstepArray[vidx * 4 + 1] = 1.0 / dims[1];
       tstepArray[vidx * 4 + 2] = 1.0 / dims[2];
       tstepArray[vidx * 4 + 3] = 1.0;
+
+      shadeArray[vidx * 4] = actor.getProperty().getShade() ? 1.0 : 0.0;
 
       const spacing = image.getSpacing();
       spacingArray[vidx * 4] = spacing[0];
@@ -712,10 +727,14 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       ipScalarRangeArray[vidx * 4 + 2] = volMapr.getFilterMode();
     }
     model.SSBO.addEntry('SCTCMatrix', 'mat4x4<f32>');
+    model.SSBO.addEntry('planeNormals', 'mat4x4<f32>');
+    model.SSBO.addEntry('shade', 'vec4<f32>');
     model.SSBO.addEntry('tstep', 'vec4<f32>');
     model.SSBO.addEntry('spacing', 'vec4<f32>');
     model.SSBO.addEntry('ipScalarRange', 'vec4<f32>');
     model.SSBO.setAllInstancesFromArray('SCTCMatrix', marray);
+    model.SSBO.setAllInstancesFromArray('planeNormals', vPlaneArray);
+    model.SSBO.setAllInstancesFromArray('shade', shadeArray);
     model.SSBO.setAllInstancesFromArray('tstep', tstepArray);
     model.SSBO.setAllInstancesFromArray('spacing', spacingArray);
     model.SSBO.setAllInstancesFromArray('ipScalarRange', ipScalarRangeArray);
@@ -858,8 +877,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         !model.textureViews[vidx + 4] ||
         model.textureViews[vidx + 4].getTexture() !== newTex
       ) {
-        const tview = newTex.createView();
-        tview.setName(`volTexture${vidx}`);
+        const tview = newTex.createView(`volTexture${vidx}`);
         model.textureViews[vidx + 4] = tview;
       }
     }
@@ -911,8 +929,9 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     publicAPI.updateBuffers(device);
 
     if (!model.clampSampler) {
-      model.clampSampler = vtkWebGPUSampler.newInstance();
-      model.clampSampler.setName('clampSampler');
+      model.clampSampler = vtkWebGPUSampler.newInstance({
+        label: 'clampSampler',
+      });
       model.clampSampler.create(device, {
         minFilter: 'linear',
         magFilter: 'linear',
@@ -951,15 +970,14 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.fragmentShaderTemplate = volFragTemplate;
 
-  model.UBO = vtkWebGPUUniformBuffer.newInstance();
-  model.UBO.setName('mapperUBO');
+  model.UBO = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
   model.UBO.addEntry('SampleDistance', 'f32');
 
-  model.SSBO = vtkWebGPUStorageBuffer.newInstance();
-  model.SSBO.setName('volumeSSBO');
+  model.SSBO = vtkWebGPUStorageBuffer.newInstance({ label: 'volumeSSBO' });
 
-  model.componentSSBO = vtkWebGPUStorageBuffer.newInstance();
-  model.componentSSBO.setName('componentSSBO');
+  model.componentSSBO = vtkWebGPUStorageBuffer.newInstance({
+    label: 'componentSSBO',
+  });
 
   model.lutBuildTime = {};
   macro.obj(model.lutBuildTime, { mtime: 0 });

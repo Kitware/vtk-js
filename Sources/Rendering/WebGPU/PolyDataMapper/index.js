@@ -33,7 +33,7 @@ const vtkWebGPUPolyDataVS = `
 
 //VTK::IOStructs::Dec
 
-[[stage(vertex)]]
+@stage(vertex)
 fn main(
 //VTK::IOStructs::Input
 )
@@ -75,7 +75,7 @@ const vtkWebGPUPolyDataFS = `
 
 //VTK::IOStructs::Dec
 
-[[stage(fragment)]]
+@stage(fragment)
 fn main(
 //VTK::IOStructs::Input
 )
@@ -214,10 +214,10 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
+    vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
     let code = vDesc.getCode();
     if (isEdges(hash)) {
-      vDesc.addBuiltinInput('u32', '[[builtin(instance_index)]] instanceIndex');
+      vDesc.addBuiltinInput('u32', '@builtin(instance_index) instanceIndex');
       // widen the edge
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
         '    var tmpPos: vec4<f32> = rendererUBO.SCPCMatrix*mapperUBO.BCSCMatrix*vertexBC;',
@@ -558,7 +558,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     const idata = model.renderable.getColorTextureMap(); // returns an imagedata
     if (idata) {
       if (!model.colorTexture) {
-        model.colorTexture = vtkTexture.newInstance();
+        model.colorTexture = vtkTexture.newInstance({ label: 'polyDataColor' });
       }
       model.colorTexture.setInputData(idata);
       newTextures.push(model.colorTexture);
@@ -600,8 +600,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
         }
         if (!found) {
           usedTextures[model.textures.length] = true;
-          const tview = newTex.createView();
-          tview.setName(`Texture${usedCount++}`);
+          const tview = newTex.createView(`Texture${usedCount++}`);
           model.textures.push(newTex);
           model.textureViews.push(tview);
           const interpolate = srcTexture.getInterpolate()
@@ -794,8 +793,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.vertexShaderTemplate =
     model.vertexShaderTemplate || vtkWebGPUPolyDataVS;
 
-  model.UBO = vtkWebGPUUniformBuffer.newInstance();
-  model.UBO.setName('mapperUBO');
+  model.UBO = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
   model.UBO.addEntry('BCWCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('BCSCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('MCWCNormals', 'mat4x4<f32>');

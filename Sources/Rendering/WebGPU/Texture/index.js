@@ -36,6 +36,7 @@ function vtkWebGPUTexture(publicAPI, model) {
       size: [model.width, model.height, model.depth],
       format: model.format, // 'rgba8unorm',
       usage: model.usage,
+      label: model.label,
       dimension,
     });
   };
@@ -203,6 +204,7 @@ function vtkWebGPUTexture(publicAPI, model) {
         size: [model.width, model.height, model.depth],
         format: model.format,
         usage: model.usage,
+        label: model.label,
       });
     }
   };
@@ -220,16 +222,17 @@ function vtkWebGPUTexture(publicAPI, model) {
         size: [model.width, model.height, model.depth],
         format: model.format,
         usage: model.usage,
+        label: model.label,
       });
     }
   };
 
-  publicAPI.createView = (options = {}) => {
+  publicAPI.createView = (label, options = {}) => {
     // if options is missing values try to add them in
     if (!options.dimension) {
       options.dimension = model.depth === 1 ? '2d' : '3d';
     }
-    const view = vtkWebGPUTextureView.newInstance();
+    const view = vtkWebGPUTextureView.newInstance({ label });
     view.create(publicAPI, options);
     return view;
   };
@@ -244,6 +247,7 @@ const DEFAULT_VALUES = {
   handle: null,
   buffer: null,
   ready: false,
+  label: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -263,7 +267,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'format',
     'usage',
   ]);
-  macro.setGet(publicAPI, model, ['device']);
+  macro.setGet(publicAPI, model, ['device', 'label']);
 
   vtkWebGPUTexture(publicAPI, model);
 }

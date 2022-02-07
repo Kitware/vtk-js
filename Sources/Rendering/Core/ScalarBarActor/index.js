@@ -382,21 +382,18 @@ function vtkScalarBarActor(publicAPI, model) {
       });
       startPos[barAxis] += segSize[barAxis] + segSpace;
     }
-
-    if (typeof model.scalarsToColors.getNanColor === 'function') {
+    if (model.drawNanAnnotation && model.scalarsToColors.getNanColor) {
       pushSeg('NaN', [NaN, NaN, NaN, NaN]);
     }
 
     if (
-      typeof model.scalarsToColors.getUseBelowRangeColor === 'function' &&
-      model.scalarsToColors.getUseBelowRangeColor()
+      model.drawBelowRangeSwatch &&
+      model.scalarsToColors.getUseBelowRangeColor?.()
     ) {
       pushSeg('Below', [-0.1, -0.1, -0.1, -0.1]);
     }
 
-    const haveAbove =
-      typeof model.scalarsToColors.getUseAboveRangeColor === 'function' &&
-      model.scalarsToColors.getUseAboveRangeColor();
+    const haveAbove = model.scalarsToColors.getUseAboveRangeColor?.();
 
     // extra space around the ticks section
     startPos[barAxis] += segSpace;
@@ -411,7 +408,7 @@ function vtkScalarBarActor(publicAPI, model) {
       model.vertical ? [0, 0, 0.995, 0.995] : [0, 0.995, 0.995, 0]
     );
 
-    if (haveAbove) {
+    if (model.drawAboveRangeSwatch && haveAbove) {
       segSize[barAxis] = oldSegSize;
       startPos[barAxis] += segSpace;
       pushSeg('Above', [1.1, 1.1, 1.1, 1.1]);
@@ -682,12 +679,24 @@ function vtkScalarBarActor(publicAPI, model) {
     mat4.transpose(cmat, cmat);
     mat4.invert(invmat, cmat);
 
-    const haveExtraColors =
-      typeof model.scalarsToColors.getNanColor === 'function' &&
-      typeof model.scalarsToColors.getAboveRangeColor === 'function' &&
-      typeof model.scalarsToColors.getBelowRangeColor === 'function';
+    let numberOfExtraColors = 0;
+    if (model.drawNanAnnotation && model.scalarsToColors.getNanColor) {
+      numberOfExtraColors += 1;
+    }
+    if (
+      model.drawBelowRangeSwatch &&
+      model.scalarsToColors.getUseBelowRangeColor?.()
+    ) {
+      numberOfExtraColors += 1;
+    }
+    if (
+      model.drawAboveRangeSwatch &&
+      model.scalarsToColors.getUseAboveRangeColor?.()
+    ) {
+      numberOfExtraColors += 1;
+    }
 
-    const numPts = 4 + (haveExtraColors ? 12 : 0);
+    const numPts = 4 * (1 + numberOfExtraColors);
     const numQuads = numPts;
 
     // handle vector component mode
@@ -798,6 +807,9 @@ function defaultValues(initialValues) {
       fontSize: 14,
       fontFamily: 'serif',
     },
+    drawNanAnnotation: true,
+    drawBelowRangeSwatch: true,
+    drawAboveRangeSwatch: true,
     ...initialValues,
   };
 }
@@ -876,6 +888,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     'axisLabel',
     'scalarsToColors',
     'tickLabelPixelOffset',
+    'drawNanAnnotation',
+    'drawBelowRangeSwatch',
+    'drawAboveRangeSwatch',
   ]);
   macro.get(publicAPI, model, ['axisTextStyle', 'tickTextStyle']);
   macro.getArray(publicAPI, model, ['boxPosition', 'boxSize']);

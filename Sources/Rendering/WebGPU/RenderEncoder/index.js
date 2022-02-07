@@ -13,9 +13,15 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
 
   publicAPI.begin = (encoder) => {
     model.handle = encoder.beginRenderPass(model.description);
+    if (model.label) {
+      model.handle.pushDebugGroup(model.label);
+    }
   };
 
   publicAPI.end = () => {
+    if (model.label) {
+      model.handle.popDebugGroup();
+    }
     model.handle.endPass();
   };
 
@@ -70,7 +76,7 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
 
   publicAPI.activateBindGroup = (bg) => {
     const device = model.boundPipeline.getDevice();
-    const midx = model.boundPipeline.getBindGroupLayoutCount(bg.getName());
+    const midx = model.boundPipeline.getBindGroupLayoutCount(bg.getLabel());
     model.handle.setBindGroup(midx, bg.getBindGroup(device));
     // verify bind group layout matches
     const bgl1 = device.getBindGroupLayoutDescription(
@@ -122,6 +128,7 @@ const DEFAULT_VALUES = {
   pipelineSettings: null,
   replaceShaderCodeFunction: null,
   depthTextureView: null,
+  label: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -191,6 +198,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'depthTextureView',
     'description',
     'handle',
+    'label',
     'pipelineHash',
     'pipelineSettings',
     'replaceShaderCodeFunction',

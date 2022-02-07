@@ -38,7 +38,10 @@ export interface IScalarBarActorInitialValues extends IActorInitialValues {
 	axisTitlePixelOffset?: number,
 	axisTextStyle?: IStyle,
 	tickLabelPixelOffset?: number,
-	tickTextStyle?: IStyle
+	tickTextStyle?: IStyle,
+	drawNanAnnotation?: boolean,
+	drawBelowRangeSwatch?: boolean,
+	drawAboveRangeSwatch?: boolean,
 }
 
 export interface vtkScalarBarActor extends vtkActor {
@@ -136,6 +139,21 @@ export interface vtkScalarBarActor extends vtkActor {
 	getScalarsToColors(): vtkScalarsToColors;
 
 	/**
+	 *
+	 */
+	getDrawNanAnnotation(): boolean
+
+	/**
+	 *
+	 */
+	getDrawBelowRangeSwatch(): boolean
+
+	/**
+	 *
+	 */
+	getDrawAboveRangeSwatch(): boolean
+
+	/**
 	 * 
 	 */
 	getTickTextStyle(): IStyle;
@@ -212,8 +230,26 @@ export interface vtkScalarBarActor extends vtkActor {
 	setScalarsToColors(scalarsToColors: vtkScalarsToColors): boolean;
 
 	/**
-	 * 
-	 * @param tickLabelPixelOffset 
+	 * Set whether the NaN annotation should be rendered or not.
+	 * @param {Boolean} drawNanAnnotation
+	 */
+	 setDrawNanAnnotation(drawNanAnnotation: boolean): boolean;
+
+	/**
+	 * Set whether the Below range swatch should be rendered or not
+	 * @param {Boolean} drawBelowRangeSwatch
+	 */
+	setDrawBelowRangeSwatch(drawBelowRangeSwatch: boolean): boolean;
+
+	/**
+	 * Set whether the Above range swatch should be rendered or not
+	 * @param {Boolean} drawAboveRangeSwatch
+	 */
+	setDrawAboveRangeSwatch(drawAboveRangeSwatch: boolean): boolean;
+
+	/**
+	 *
+	 * @param tickLabelPixelOffset
 	 */
 	setTickLabelPixelOffset(tickLabelPixelOffset: number): boolean;
 

@@ -38,7 +38,7 @@ const vtkWebGPUStickMapperVS = `
 
 //VTK::IOStructs::Dec
 
-[[stage(vertex)]]
+@stage(vertex)
 fn main(
 //VTK::IOStructs::Input
 )
@@ -131,10 +131,10 @@ function vtkWebGPUStickMapper(publicAPI, model) {
     vDesc.addOutput('vec3<f32>', 'orientVC');
     vDesc.addOutput('f32', 'radiusVC');
     vDesc.addOutput('f32', 'lengthVC');
-    vDesc.addBuiltinInput('u32', '[[builtin(vertex_index)]] vertexIndex');
+    vDesc.addBuiltinInput('u32', '@builtin(vertex_index) vertexIndex');
 
     const fDesc = pipeline.getShaderDescription('fragment');
-    fDesc.addBuiltinOutput('f32', '[[builtin(frag_depth)]] fragDepth');
+    fDesc.addBuiltinOutput('f32', '@builtin(frag_depth) fragDepth');
     const stickFrag = `
     // compute the eye position and unit direction
     var vertexVC: vec4<f32>;
@@ -228,7 +228,7 @@ function vtkWebGPUStickMapper(publicAPI, model) {
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
+    vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
     let code = vDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
       '  output.Position = rendererUBO.VCPCMatrix*vertexVC;',

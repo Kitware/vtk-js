@@ -72,7 +72,7 @@ function vtkWebGPUDevice(publicAPI, model) {
   };
 
   publicAPI.createPipeline = (hash, pipeline) => {
-    pipeline.initialize(publicAPI);
+    pipeline.initialize(publicAPI, hash);
     model.pipelines[hash] = pipeline;
   };
 

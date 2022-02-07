@@ -38,7 +38,6 @@
     "globalthis": "1.0.2",
     "jszip": "3.7.1",
     "pako": "2.0.4",
-    "patch-package": "6.4.7",
     "seedrandom": "3.0.5",
     "shader-loader": "1.3.1",
     "shelljs": "0.8.5",
@@ -98,6 +97,7 @@
     "lodash": "4.17.21",
     "magic-string": "0.25.7",
     "moment": "2.29.1",
+    "patch-package": "6.4.7",
     "pixelmatch": "5.2.1",
     "postcss-loader": "6.2.1",
     "prettier": "2.5.1",
@@ -112,10 +112,9 @@
     "rollup-plugin-string": "3.0.0",
     "rollup-plugin-svgo": "1.1.0",
     "rollup-plugin-web-worker-loader": "1.6.1",
-    "semantic-release": "18.0.1",
+    "semantic-release": "19.0.2",
     "string-replace-loader": "3.1.0",
     "style-loader": "3.3.1",
-    "tap-spec": "5.0.0",
     "tape": "5.4.0",
     "tape-catch": "1.0.6",
     "webpack": "5.65.0",
@@ -145,7 +144,7 @@
     "dev:esm": "npm run build:esm -- -w",
     "dev:umd": "webpack --watch --config webpack.dev.js --progress",
     "build": "npm run build:release",
-    "build:esm": "rollup -c rollup.config.js",
+    "build:esm": "npm run patch-build-deps && rollup -c rollup.config.js",
     "build:umd": "webpack --config webpack.prod.js --progress",
     "build:release": "npm run lint && concurrently \"cross-env NOLINT=1 npm run build:esm\" \"cross-env NOLINT=1 npm run build:umd\"",
     "release:create-packages": "node ./Utilities/ci/build-npm-package.js",
@@ -158,7 +157,7 @@
     "commit": "git cz",
     "semantic-release": "semantic-release",
     "prepare": "node ./Utilities/prepare.js",
-    "postinstall": "patch-package --patch-dir ./Utilities/build/patches"
+    "patch-build-deps": "patch-package --patch-dir ./Utilities/build/patches"
   },
   "config": {
     "commitizen": {

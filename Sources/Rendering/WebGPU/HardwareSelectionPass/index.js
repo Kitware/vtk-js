@@ -31,7 +31,9 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
       publicAPI.createRenderEncoder();
 
       // create color texture
-      model.colorTexture = vtkWebGPUTexture.newInstance();
+      model.colorTexture = vtkWebGPUTexture.newInstance({
+        label: 'hardwareSelectorColor',
+      });
       model.colorTexture.create(device, {
         width: viewNode.getCanvas().width,
         height: viewNode.getCanvas().height,
@@ -40,12 +42,13 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
         /* eslint-disable no-bitwise */
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
       });
-      const v1 = model.colorTexture.createView();
-      v1.setName('hardwareSelectColorTexture');
+      const v1 = model.colorTexture.createView('hardwareSelectColorTexture');
       model.selectionRenderEncoder.setColorTextureView(0, v1);
 
       // create depth texture
-      model.depthTexture = vtkWebGPUTexture.newInstance();
+      model.depthTexture = vtkWebGPUTexture.newInstance({
+        label: 'hardwareSelectorDepth',
+      });
       model.depthTexture.create(device, {
         width: viewNode.getCanvas().width,
         height: viewNode.getCanvas().height,
@@ -54,8 +57,7 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
         /* eslint-disable no-bitwise */
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
       });
-      const v2 = model.depthTexture.createView();
-      v2.setName('hardwareSelectDepthTexture');
+      const v2 = model.depthTexture.createView('hardwareSelectDepthTexture');
       model.selectionRenderEncoder.setDepthTextureView(v2);
     } else {
       model.colorTexture.resize(
@@ -76,7 +78,9 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
   };
 
   publicAPI.createRenderEncoder = () => {
-    model.selectionRenderEncoder = vtkWebGPURenderEncoder.newInstance();
+    model.selectionRenderEncoder = vtkWebGPURenderEncoder.newInstance({
+      label: 'HardwareSelectionPass',
+    });
     // default settings are fine for this
     model.selectionRenderEncoder.setPipelineHash('sel');
     model.selectionRenderEncoder.setReplaceShaderCodeFunction((pipeline) => {

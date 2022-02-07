@@ -3,6 +3,7 @@ import { Size, Vector2, Vector3 } from '../../../types';
 import { vtkRenderer } from '../../../Rendering/Core/Renderer';
 import { VtkDataTypes } from '../../../Common/Core/DataArray';
 import vtkTexture from '../../Core/Texture';
+import vtkViewStream from '../../../IO/Core/ImageStream/ViewStream';
 
 /**
  *
@@ -18,7 +19,7 @@ export interface IOptions {
 	resetCamera: boolean,
 	size: Size,
 	scale: number
-} 
+}
 
 type vtkOpenGLRenderWindowBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
@@ -32,7 +33,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 
 	/**
 	 * Builds myself.
-	 * @param {Boolean} prepass 
+	 * @param {Boolean} prepass
 	 */
 	buildPass(prepass: boolean): void;
 
@@ -45,12 +46,12 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	initialize(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	makeCurrent(): void;
 
 	/**
-	 * 
+	 *
 	 * @param {HTMLElement} el The container element.
 	 */
 	setContainer(el: HTMLElement): void;
@@ -91,170 +92,170 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	getViewportCenter(viewport: vtkRenderer): Vector2;
 
 	/**
-	 * 
-	 * @param {Number} x 
-	 * @param {Number} y 
-	 * @param {Number} z 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
 	 */
 	displayToNormalizedDisplay(x: number, y: number, z: number): Vector3;
 
 	/**
-	 * 
-	 * @param {Number} x 
-	 * @param {Number} y 
-	 * @param {Number} z 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
 	 */
 	normalizedDisplayToDisplay(x: number, y: number, z: number): Vector3;
 
 	/**
-	 * 
-	 * @param {Number} x 
-	 * @param {Number} y 
-	 * @param {Number} z 
-	 * @param {vtkRenderer} renderer 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
+	 * @param {vtkRenderer} renderer
 	 */
 	worldToView(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
 	/**
-	 * 
-	 * @param {Number} x 
-	 * @param {Number} y 
-	 * @param {Number} z 
-	 * @param {vtkRenderer} renderer 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
+	 * @param {vtkRenderer} renderer
 	 */
 	viewToWorld(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
 	/**
-	 * 
-	 * @param {Number} x 
-	 * @param {Number} y 
-	 * @param {Number} z 
-	 * @param {vtkRenderer} renderer 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
+	 * @param {vtkRenderer} renderer
 	 */
 	worldToDisplay(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
 	/**
-	 * 
-	 * @param {Number} x 
-	 * @param {Number} y 
-	 * @param {Number} z 
-	 * @param {vtkRenderer} renderer 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
+	 * @param {vtkRenderer} renderer
 	 */
 	displayToWorld(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
 	/**
-	 * 
-	 * @param {Number} x 
-	 * @param {Number} y 
-	 * @param {Number} z 
-	 * @param {vtkRenderer} renderer 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
+	 * @param {vtkRenderer} renderer
 	 */
 	normalizedDisplayToViewport(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
 	/**
-	 * 
-	 * @param {Number} x 
-	 * @param {Number} y 
-	 * @param {Number} z 
-	 * @param {vtkRenderer} renderer 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
+	 * @param {vtkRenderer} renderer
 	 */
 	viewportToNormalizedViewport(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
 	/**
-	 * 
-	 * @param {Number} x 
-	 * @param {Number} y 
-	 * @param {Number} z 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
 	 */
 	normalizedViewportToViewport(x: number, y: number, z: number): Vector3;
 
 	/**
-	 * 
-	 * @param {Number} x 
-	 * @param {Number} y 
-	 * @param {Number} z 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
 	 */
 	displayToLocalDisplay(x: number, y: number, z: number): Vector3;
 
 	/**
-	 * 
-	 * @param {Number} x 
-	 * @param {Number} y 
-	 * @param {Number} z 
-	 * @param {vtkRenderer} renderer 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
+	 * @param {vtkRenderer} renderer
 	 */
 	viewportToNormalizedDisplay(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
 	/**
-	 * 
-	 * @param {Number} x1 
-	 * @param {Number} y1 
-	 * @param {Number} x2 
-	 * @param {Number} y2 
+	 *
+	 * @param {Number} x1
+	 * @param {Number} y1
+	 * @param {Number} x2
+	 * @param {Number} y2
 	 */
 	getPixelData(x1: number, y1: number, x2: number, y2: number): Uint8Array;
 
 	/**
-	 * 
-	 * @param options 
+	 *
+	 * @param options
 	 */
 	get3DContext(options: object): WebGLRenderingContext | null;
 
 	/**
-	 * 
+	 *
 	 */
 	startVR(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	stopVR(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	vrRender(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	restoreContext(): void;
 
 	/**
-	 * 
-	 * @param {vtkTexture} texture 
+	 *
+	 * @param {vtkTexture} texture
 	 */
 	activateTexture(texture: vtkTexture): void;
 
 	/**
-	 * 
-	 * @param {vtkTexture} texture 
+	 *
+	 * @param {vtkTexture} texture
 	 */
 	deactivateTexture(texture: vtkTexture): void;
 
 	/**
-	 * 
-	 * @param {vtkTexture} texture 
+	 *
+	 * @param {vtkTexture} texture
 	 */
 	getTextureUnitForTexture(texture: vtkTexture): number;
 
 	/**
-	 * 
-	 * @param vtktype 
-	 * @param numComps 
-	 * @param useFloat 
+	 *
+	 * @param vtktype
+	 * @param numComps
+	 * @param useFloat
 	 */
 	getDefaultTextureInternalFormat(vtktype: VtkDataTypes, numComps: number, useFloat: boolean): void;
 
 	/**
-	 * 
-	 * @param {HTMLImageElement} img 
+	 *
+	 * @param {HTMLImageElement} img
 	 */
 	setBackgroundImage(img: HTMLImageElement): void;
 
 	/**
-	 * 
-	 * @param {Boolean} value 
+	 *
+	 * @param {Boolean} value
 	 */
 	setUseBackgroundImage(value: boolean): void;
 
@@ -269,70 +270,70 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * size.  If no `size` or `scale` are provided, the current renderwindow
 	 * size is assumed.  The default format is "image/png". Returns a promise
 	 * that resolves to the captured screenshot.
-	 * @param {String} format 
-	 * @param {IOptions} options 
+	 * @param {String} format
+	 * @param {IOptions} options
 	 */
 	captureNextImage(format: string, options: IOptions): Promise<string> | null;
 
 	/**
-	 * 
+	 *
 	 */
 	getGLInformations(): object;
 
 	/**
-	 * 
+	 *
 	 */
 	traverseAllPasses(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	disableCullFace(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	enableCullFace(): void;
 
 	/**
-	 * 
-	 * @param stream 
+	 *
+	 * @param stream
 	 */
-	setViewStream(stream: any): boolean;
+	setViewStream(stream: vtkViewStream): boolean;
 
 	/**
-	 * 
-	 * @param {Vector2} size 
+	 *
+	 * @param {Vector2} size
 	 */
 	setSize(size: Vector2): void;
 
 	/**
-	 * 
-	 * @param {Number} x 
-	 * @param {Number} y 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
 	 */
 	setSize(x: number, y: number): void;
 
 	/**
-	 * 
+	 *
 	 */
 	getSize(): Vector2;
 
 	/**
-	 * 
-	 * @param {Vector2} size 
+	 *
+	 * @param {Vector2} size
 	 */
 	setVrResolution(size: Vector2): void;
 
 	/**
-	 * 
-	 * @param {Number} x 
-	 * @param {Number} y  
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
 	 */
 	setVrResolution(x: number, y: number): void;
 
 	/**
-	 * 
+	 *
 	 */
 	getVrResolution(): Vector2;
 }
@@ -353,20 +354,20 @@ export function extend(publicAPI: object, model: object, initialValues?: IOpenGL
 export function newInstance(initialValues?: IOpenGLRenderWindowInitialValues): vtkOpenGLRenderWindow;
 
 /**
- * 
- * @param cb 
+ *
+ * @param cb
  */
 export function pushMonitorGLContextCount(cb: any): void;
 
 /**
- * 
- * @param cb 
+ *
+ * @param cb
  */
 export function popMonitorGLContextCount(cb: any): void;
 
 /**
  * WebGL rendering window
- * 
+ *
  * vtkOpenGLRenderWindow is designed to view/render a vtkRenderWindow.
  */
 export declare const vtkOpenGLRenderWindow: {
