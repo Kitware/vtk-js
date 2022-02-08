@@ -498,7 +498,7 @@ export default function widgetBehavior(publicAPI, model) {
       publicAPI.invokeInteractionEvent();
     }
 
-    return model.hasFocus ? macro.EVENT_ABORT : macro.VOID;
+    return model.hasFocus || model.isDragging ? macro.EVENT_ABORT : macro.VOID;
   };
 
   // --------------------------------------------------------------------------

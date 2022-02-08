@@ -63,11 +63,18 @@ function fetchBinary(url, options = {}) {
 function fetchArray(instance, baseURL, array, options = {}) {
   if (array.ref && !array.ref.pending) {
     return new Promise((resolve, reject) => {
-      const url = [
-        baseURL,
-        array.ref.basepath,
-        options.compression ? `${array.ref.id}.gz` : array.ref.id,
-      ].join('/');
+      let url = null;
+
+      if (array.ref.url) {
+        url = array.ref.url;
+      } else {
+        url = [
+          baseURL,
+          array.ref.basepath,
+          options.compression ? `${array.ref.id}.gz` : array.ref.id,
+        ].join('/');
+      }
+
       const xhr = openAsyncXHR('GET', url, options);
 
       xhr.onreadystatechange = (e) => {
