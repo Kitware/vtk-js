@@ -199,6 +199,10 @@ The widget behavior has also access to the renderer, openGLRenderWindow and inte
 
 ##### Focus
 
+"Focus" as a widget concept means that a particular widget should be the only one interactable. This use-case arises when there is a primary widget.
+
+An example is the paint widget needs focus, since when it's active it shouldn't be possible to move rulers, crosshairs, etc. The widget manager should only allow the paint state to be active, and not activate any other state.
+
 When a widget is given the focus, the widget behavior is notified through the `grabFocus()` method. This is usually the place to setup complex interaction states such as initializing the widget behavior's internal state (distinct from the widget state), starting animations (see Animations) or setting up the active state (see Active State).
 
 The `loseFocus()` method is called when the widget manager removes the focus from the widget. It can also be called by the widget behavior itself if necessary. For example, a widget might decide to lose the focus after the escape key was pressed.
