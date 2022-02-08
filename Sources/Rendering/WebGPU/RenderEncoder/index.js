@@ -142,15 +142,17 @@ export function extend(publicAPI, model, initialValues = {}) {
     colorAttachments: [
       {
         view: undefined,
-        loadValue: 'load',
+        loadOp: 'load',
         storeOp: 'store',
       },
     ],
     depthStencilAttachment: {
       view: undefined,
-      depthLoadValue: 0.0,
+      depthLoadOp: 'clear',
+      depthClearValue: 0.0,
       depthStoreOp: 'store',
-      stencilLoadValue: 0,
+      stencilLoadOp: 'clear',
+      stencilClearValue: 0,
       stencilStoreOp: 'store',
     },
   };

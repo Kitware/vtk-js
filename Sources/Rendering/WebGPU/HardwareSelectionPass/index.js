@@ -95,8 +95,8 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
       fDesc.setCode(code);
     });
     const renDesc = model.selectionRenderEncoder.getDescription();
-    renDesc.colorAttachments[0].loadValue = [0.0, 0.0, 0.0, 0.0];
-    renDesc.depthStencilAttachment.stencilLoadValue = 'load';
+    renDesc.colorAttachments[0].clearValue = [0.0, 0.0, 0.0, 0.0];
+    renDesc.depthStencilAttachment.stencilLoadOp = 'load';
 
     model.selectionRenderEncoder.setPipelineSettings({
       primitive: { cullMode: 'none' },

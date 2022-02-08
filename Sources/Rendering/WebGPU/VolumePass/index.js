@@ -474,12 +474,14 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       colorAttachments: [
         {
           view: null,
-          loadValue: [0.0, 0.0, 0.0, 0.0],
+          clearValue: [0.0, 0.0, 0.0, 0.0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
         {
           view: null,
-          loadValue: [1.0, 1.0, 1.0, 1.0],
+          clearValue: [1.0, 1.0, 1.0, 1.0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -574,7 +576,8 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       colorAttachments: [
         {
           view: null,
-          loadValue: [0.0, 0.0, 0.0, 0.0],
+          clearValue: [0.0, 0.0, 0.0, 0.0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -607,7 +610,7 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       colorAttachments: [
         {
           view: null,
-          loadValue: 'load',
+          loadOp: 'load',
           storeOp: 'store',
         },
       ],
@@ -641,7 +644,7 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       colorAttachments: [
         {
           view: null,
-          loadValue: 'load',
+          loadOp: 'load',
           storeOp: 'store',
         },
       ],
