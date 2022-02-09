@@ -49,6 +49,8 @@ vtk.js supports virtual and augmented reality rendering via the [WebXR device AP
 
 [![AR Cone Example][ArCone]](../examples/AR.html)
 [![GeometryViewer Example][GeometryViewer]](../examples/GeometryViewer.html?fileURL=https://data.kitware.com/api/v1/item/59de9de58d777f31ac641dc5/download)
+[![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer/GeometryViewer.html?fileURL=[https://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download])
+[![GeometryViewer Chest CT][GeometryViewerchestCT]](../examples/GeometryViewer/GeometryViewer.html?fileURL=[https://data.kitware.com/api/v1/file/61f044354acac99f42c30276/download,https://data.kitware.com/api/v1/file/61f0440f4acac99f42c30191/download,https://data.kitware.com/api/v1/file/61f044204acac99f42c30267/download])
 
 </div>
 
@@ -66,5 +68,7 @@ While WebXR has broad industry support, it is not yet implemented in all browser
 
 [ArCone]: ../docs/gallery/ArCone.jpg
 [GeometryViewer]: ../docs/gallery/GeometryViewer.jpg
+[GeometryViewerBrainBloodVessels]: ../docs/gallery/GeometryViewerBrainBloodVessels.jpg
+[GeometryViewerChestCT]: ../docs/gallery/GeometryViewerChestCT.jpg
 [SkyboxViewerVR]: ../docs/gallery/SkyboxViewerVR.jpg
 [VrCone]: ../docs/gallery/VrCone.jpg
