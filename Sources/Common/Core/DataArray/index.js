@@ -11,7 +11,7 @@ const TUPLE_HOLDER = [];
 
 // Original source from https://www.npmjs.com/package/compute-range
 // Modified to accept type arrays
-function fastComputeRange(arr) {
+function fastComputeRange(arr, offset, numberOfComponents) {
   const len = arr.length;
   let min;
   let max;
@@ -19,11 +19,11 @@ function fastComputeRange(arr) {
   let i;
 
   if (len === 0) {
-    return null;
+    return { min: Number.MAX_VALUE, max: -Number.MAX_VALUE };
   }
-  min = arr[0];
+  min = arr[offset];
   max = min;
-  for (i = 1; i < len; i++) {
+  for (i = offset; i < len; i += numberOfComponents) {
     x = arr[i];
     if (x < min) {
       min = x;
@@ -75,10 +75,14 @@ function computeRange(values, component = 0, numberOfComponents = 1) {
       }
       data[i] **= 0.5;
     }
-    return fastComputeRange(data);
+    return fastComputeRange(data, 0, 1);
   }
 
-  return fastComputeRange(values);
+  return fastComputeRange(
+    values,
+    component < 0 ? 0 : component,
+    numberOfComponents
+  );
 }
 
 function ensureRangeSize(rangeArray, size = 0) {

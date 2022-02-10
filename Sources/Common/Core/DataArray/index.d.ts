@@ -163,8 +163,10 @@ export function computeRange(values: number[], component?: number, numberOfCompo
  * Compute range of a given array, it only supports 1D arrays.
  *
  * @param {Number[]} values Array to go through to extract the range from
+ * @param {Number} offset offset index to select the desired component in the tuple
+ * @param {Number} numberOfComponents size of tuple in a multi-channel array
  */
-export function fastComputeRange(values: number[]): vtkRange;
+export function fastComputeRange(values: number[], offset: number, numberOfComponents: number): vtkRange;
 
 /**
  * @deprecated please use `fastComputeRange` instead
