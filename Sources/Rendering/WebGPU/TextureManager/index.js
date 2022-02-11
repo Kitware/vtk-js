@@ -8,13 +8,6 @@ const { VtkDataTypes } = vtkDataArray;
 // Global methods
 // ----------------------------------------------------------------------------
 
-function requestMatches(req1, req2) {
-  if (req1.time !== req2.time) return false;
-  if (req1.nativeArray !== req2.nativeArray) return false;
-  if (req1.format !== req2.format) return false;
-  return true;
-}
-
 // ----------------------------------------------------------------------------
 // vtkWebGPUTextureManager methods
 // ----------------------------------------------------------------------------
@@ -23,13 +16,8 @@ function vtkWebGPUTextureManager(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUTextureManager');
 
-  // The keys fields of a request are
-  // - source, this is what owns the data and when it does away
-  //   the data should be freed
-  // - imageData - when provided use as the source of the data
-  //
-
-  publicAPI.getTexture = (req) => {
+  // fills in request values based on what is missing/provided
+  function _fillRequest(req) {
     // fill in values based on imageData if the request has it
     if (req.imageData) {
       req.dataArray = req.imageData.getPointData().getScalars();
@@ -82,19 +70,10 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       req.depth = 1;
       req.format = 'rgba8unorm';
     }
+  }
 
-    if (req.source) {
-      // if a matching texture already exists then return it
-      if (model.textures.has(req.source)) {
-        const dabuffers = model.textures.get(req.source);
-        for (let i = 0; i < dabuffers.length; i++) {
-          if (requestMatches(dabuffers[i].request, req)) {
-            return dabuffers[i].texture;
-          }
-        }
-      }
-    }
-
+  // create a texture (used by getTexture)
+  function _createTexture(req) {
     const newTex = vtkWebGPUTexture.newInstance();
 
     newTex.create(model.device, {
@@ -108,26 +87,22 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     if (req.nativeArray || req.image) {
       newTex.writeImageData(req);
     }
-
-    // cache the texture if we have a source
-    // We create a new req that only has the fields required for
-    // a comparison to avoid GC cycles
-    if (req.source) {
-      if (!model.textures.has(req.source)) {
-        model.textures.set(req.source, []);
-      }
-
-      const dabuffers = model.textures.get(req.source);
-      dabuffers.push({
-        request: {
-          time: req.time,
-          nativeArray: req.nativeArray,
-          format: req.format,
-        },
-        texture: newTex,
-      });
-    }
     return newTex;
+  }
+
+  // get a texture or create it if not cached.
+  // this is the main entry point
+  publicAPI.getTexture = (req) => {
+    // if we have a source the get/create/cache the texture
+    if (req.owner) {
+      // fill out the req time and format based on imageData/image
+      _fillRequest(req);
+      // if a matching texture already exists then return it
+      const hash = req.time + req.format;
+      return model.device.getCachedObject(req.owner, hash, _createTexture, req);
+    }
+
+    return _createTexture(req);
   };
 }
 
@@ -136,7 +111,6 @@ function vtkWebGPUTextureManager(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  textures: null,
   handle: null,
   device: null,
 };
@@ -148,9 +122,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
-
-  // this is a cache, and a cache with GC pretty much means WeakMap
-  model.textures = new WeakMap();
 
   macro.setGet(publicAPI, model, ['device']);
 
