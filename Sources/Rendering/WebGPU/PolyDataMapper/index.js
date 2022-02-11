@@ -403,6 +403,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     }
 
     const vertexInput = model.primitives[primType].getVertexInput();
+    const hash = `R${representation}P${primType}`;
 
     // hash = all things that can change the values on the buffer
     // since mtimes are unique we can use
@@ -416,26 +417,25 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     // - packExtra - covered by format
     // - prim type (vert/lines/polys/strips) - covered by cells mtime
 
-    const hash = cells.getMTime() + representation;
     // points
     const points = pd.getPoints();
     if (points) {
       const shift = model.WebGPUActor.getBufferShift(model.WebGPURenderer);
       const buffRequest = {
-        hash: hash + points.getMTime(),
-        dataArray: points,
-        source: points,
-        cells,
-        primitiveType: primType,
-        representation,
+        owner: points,
+        usage: BufferUsage.PointArray,
+        format: 'float32x4',
         time: Math.max(
           points.getMTime(),
           cells.getMTime(),
           model.WebGPUActor.getKeyMatricesTime().getMTime()
         ),
+        hash,
+        dataArray: points,
+        cells,
+        primitiveType: primType,
+        representation,
         shift,
-        usage: BufferUsage.PointArray,
-        format: 'float32x4',
         packExtra: true,
       };
       const buff = device.getBufferManager().getBuffer(buffRequest);
@@ -449,26 +449,25 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     if (usage === BufferUsage.Triangles || usage === BufferUsage.Strips) {
       const normals = pd.getPointData().getNormals();
       const buffRequest = {
+        format: 'snorm8x4',
+        hash,
         cells,
         representation,
         primitiveType: primType,
-        format: 'snorm8x4',
         packExtra: true,
         shift: 0,
         scale: 127,
       };
       if (normals) {
-        buffRequest.hash = hash + normals.getMTime();
+        buffRequest.owner = normals;
         buffRequest.dataArray = normals;
-        buffRequest.source = normals;
         buffRequest.time = Math.max(normals.getMTime(), cells.getMTime());
         buffRequest.usage = BufferUsage.PointArray;
         const buff = device.getBufferManager().getBuffer(buffRequest);
         vertexInput.addBuffer(buff, ['normalMC']);
       } else if (primType === PrimitiveTypes.Triangles) {
-        buffRequest.hash = hash + points.getMTime();
+        buffRequest.owner = points;
         buffRequest.dataArray = points;
-        buffRequest.source = points;
         buffRequest.time = Math.max(points.getMTime(), cells.getMTime());
         buffRequest.usage = BufferUsage.NormalsFromPoints;
         const buff = device.getBufferManager().getBuffer(buffRequest);
@@ -499,15 +498,15 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
           haveCellScalars = true;
         }
         const buffRequest = {
-          hash: hash + points.getMTime(),
+          owner: c,
+          usage: BufferUsage.PointArray,
+          format: 'unorm8x4',
+          time: Math.max(c.getMTime(), cells.getMTime(), points.getMTime()),
+          hash: hash + haveCellScalars,
           dataArray: c,
-          source: c,
           cells,
           primitiveType: primType,
           representation,
-          time: Math.max(c.getMTime(), cells.getMTime()),
-          usage: BufferUsage.PointArray,
-          format: 'unorm8x4',
           cellData: haveCellScalars,
           cellOffset: 0,
         };
@@ -531,15 +530,15 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     }
     if (tcoords && !edges) {
       const buffRequest = {
-        hash: hash + tcoords.getMTime(),
+        owner: tcoords,
+        usage: BufferUsage.PointArray,
+        format: 'float32x2',
+        time: Math.max(tcoords.getMTime(), cells.getMTime()),
+        hash,
         dataArray: tcoords,
-        source: tcoords,
         cells,
         primitiveType: primType,
         representation,
-        time: Math.max(tcoords.getMTime(), cells.getMTime()),
-        usage: BufferUsage.PointArray,
-        format: 'float32x2',
       };
       const buff = device.getBufferManager().getBuffer(buffRequest);
       vertexInput.addBuffer(buff, ['tcoord']);
@@ -582,10 +581,10 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       const treq = {};
       if (srcTexture.getInputData()) {
         treq.imageData = srcTexture.getInputData();
-        treq.source = treq.imageData;
+        treq.owner = treq.imageData.getPointData().getScalars();
       } else if (srcTexture.getImage()) {
         treq.image = srcTexture.getImage();
-        treq.source = treq.image;
+        treq.owner = treq.image;
       }
       const newTex = model.device.getTextureManager().getTexture(treq);
       if (newTex.getReady()) {
