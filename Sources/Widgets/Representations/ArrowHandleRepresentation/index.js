@@ -199,7 +199,6 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
     const baseDir = [0, 1, 0];
 
     vec3.transformMat3(displayOrientation, model.orientation, viewMatrixInv);
-    displayOrientation[2] = 0;
 
     const displayMatrix = vtkMatrixBuilder
       .buildFromDegree()
