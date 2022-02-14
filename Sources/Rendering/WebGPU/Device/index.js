@@ -78,6 +78,69 @@ function vtkWebGPUDevice(publicAPI, model) {
 
   publicAPI.onSubmittedWorkDone = () =>
     model.handle.queue.onSubmittedWorkDone();
+
+  // The Device has an object cache that can be used to cache buffers,
+  // textures and other objects that can be shared. The basic approach is to
+  // call getCachedObject with a request and a create function. The request
+  // must have two fields a hash and an owner. The owner is what the weak
+  // map uses to hold onto the cached object. When the owner is deleted the
+  // cached object will be freed from the cache. The cache lookup just
+  // returns any entry that has a matching owner and hash. If a match isn't
+  // found then the create function is called with any extra arguments.
+  //
+  // For best memory management it is important that the owner be as close
+  // to the underlying object as possible. For example for a point data buffer
+  // you would want the actual vtkDataArray to be the owner, not the polydata
+  // or even worse the actor. As the points data array could be freed wihtout
+  // the polydata or actor being freed.
+
+  // is the object already cached?
+  publicAPI.hasCachedObject = (owner, hash) => {
+    if (!owner) {
+      return false;
+    }
+
+    // if a matching request already exists then return true
+    if (model.objectCache.has(owner)) {
+      const objects = model.objectCache.get(owner);
+      for (let i = 0; i < objects.length; i++) {
+        if (hash === objects[i].hash) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  publicAPI.getCachedObject = (owner, hash, creator, ...args) => {
+    if (!owner || !hash) {
+      vtkErrorMacro('attempt to cache an object without an owner or hash');
+      return null;
+    }
+
+    // if a matching request already exists then return the cached object
+    if (model.objectCache.has(owner)) {
+      const objects = model.objectCache.get(owner);
+      for (let i = 0; i < objects.length; i++) {
+        if (hash === objects[i].hash) {
+          return objects[i].object;
+        }
+      }
+    }
+
+    // otherwise create the object and cache it
+    const createdObject = creator(...args);
+    if (!model.objectCache.has(owner)) {
+      model.objectCache.set(owner, []);
+    }
+    const objects = model.objectCache.get(owner);
+    objects.push({
+      hash,
+      object: createdObject,
+    });
+
+    return createdObject;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -105,6 +168,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     'shaderCache',
     'textureManager',
   ]);
+
+  // this is a cache, and a cache with GC pretty much means WeakMap
+  model.objectCache = new WeakMap();
 
   model.shaderCache = vtkWebGPUShaderCache.newInstance();
   model.shaderCache.setDevice(publicAPI);

@@ -173,8 +173,8 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
     const vertexInput = model.primitives[i].getVertexInput();
 
     let buffRequest = {
-      hash: points.getMTime(),
-      source: points,
+      owner: points,
+      hash: 'spm',
       time: points.getMTime(),
       usage: BufferUsage.RawVertex,
       format: 'float32x3',
@@ -215,8 +215,8 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
     const defaultRadius = model.renderable.getRadius();
     if (scales || defaultRadius !== model._lastRadius) {
       buffRequest = {
-        hash: scales,
-        source: scales,
+        owner: scales,
+        hash: 'spm',
         time: scales
           ? pointData.getArray(model.renderable.getScaleArray()).getMTime()
           : 0,
@@ -255,8 +255,8 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
       const c = model.renderable.getColorMapColors();
       if (c) {
         buffRequest = {
-          hash: c,
-          source: c,
+          owner: c,
+          hash: 'spm',
           time: c.getMTime(),
           usage: BufferUsage.RawVertex,
           format: 'unorm8x4',

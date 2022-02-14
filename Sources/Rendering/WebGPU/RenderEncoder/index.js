@@ -22,7 +22,7 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
     if (model.label) {
       model.handle.popDebugGroup();
     }
-    model.handle.endPass();
+    model.handle.end();
   };
 
   publicAPI.setPipeline = (pl) => {

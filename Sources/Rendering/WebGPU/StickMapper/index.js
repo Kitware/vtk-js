@@ -272,8 +272,8 @@ function vtkWebGPUStickMapper(publicAPI, model) {
     const vertexInput = model.primitives[i].getVertexInput();
 
     let buffRequest = {
-      hash: points.getMTime(),
-      source: points,
+      owner: points,
+      hash: 'stm',
       time: points.getMTime(),
       usage: BufferUsage.RawVertex,
       format: 'float32x3',
@@ -307,8 +307,8 @@ function vtkWebGPUStickMapper(publicAPI, model) {
     const defaultRadius = model.renderable.getRadius();
     if (scales || defaultRadius !== model._lastRadius) {
       buffRequest = {
-        hash: scales,
-        source: scales,
+        owner: scales,
+        hash: 'stm',
         time: scales
           ? pointData.getArray(model.renderable.getScaleArray()).getMTime()
           : 0,
@@ -349,8 +349,8 @@ function vtkWebGPUStickMapper(publicAPI, model) {
     }
 
     buffRequest = {
-      hash: scales,
-      source: orientationArray,
+      owner: orientationArray,
+      hash: 'stm',
       time: pointData
         .getArray(model.renderable.getOrientationArray())
         .getMTime(),
@@ -386,8 +386,8 @@ function vtkWebGPUStickMapper(publicAPI, model) {
       const c = model.renderable.getColorMapColors();
       if (c) {
         buffRequest = {
-          hash: c,
-          source: c,
+          owner: c,
+          hash: 'stm',
           time: c.getMTime(),
           usage: BufferUsage.RawVertex,
           format: 'unorm8x4',

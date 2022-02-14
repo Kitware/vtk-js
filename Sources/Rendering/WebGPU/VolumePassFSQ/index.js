@@ -870,7 +870,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
 
       const treq = {
         imageData: image,
-        source: image,
+        owner: image.getPointData().getScalars(),
       };
       const newTex = device.getTextureManager().getTexture(treq);
       if (
