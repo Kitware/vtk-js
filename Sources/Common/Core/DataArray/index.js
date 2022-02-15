@@ -13,17 +13,25 @@ const TUPLE_HOLDER = [];
 // Modified to accept type arrays
 function fastComputeRange(arr, offset, numberOfComponents) {
   const len = arr.length;
-  let min;
-  let max;
-  let x;
-  let i;
 
   if (len === 0) {
     return { min: Number.MAX_VALUE, max: -Number.MAX_VALUE };
   }
-  min = arr[offset];
-  max = min;
-  for (i = offset; i < len; i += numberOfComponents) {
+
+  if (numberOfComponents === 1) {
+    const offsetArr = offset !== 0 ? arr.slice(offset) : arr;
+    const sorted = offsetArr.sort();
+
+    const min = sorted[0];
+    const max = sorted[sorted.length - 1];
+    return { min, max };
+  }
+
+  let x;
+  let min = arr[offset];
+  let max = min;
+
+  for (let i = offset; i < len; i += numberOfComponents) {
     x = arr[i];
     if (x < min) {
       min = x;
