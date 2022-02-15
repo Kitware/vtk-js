@@ -1,4 +1,4 @@
-import { vtkRenderWindow, IRenderWindowInitialValues } from '../../Rendering/Core/RenderWindow';
+import vtkRenderWindow, { IRenderWindowInitialValues } from "../../Core/RenderWindow";
 
 // Keeps state for client / server scene synchronization.
 export interface SynchContext {
@@ -33,7 +33,7 @@ export interface IInitialValues extends IRenderWindowInitialValues {
 
 // Server-side view state.
 export interface ViewState {
-  id: ViewId;
+  id: string;
   // vtk object type.
   type: string;
   // vtk object mtime.
