@@ -567,7 +567,11 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     const actor = model.WebGPUActor.getRenderable();
     const textures = actor.getTextures();
     for (let i = 0; i < textures.length; i++) {
-      if (textures[i].getInputData()) {
+      if (
+        textures[i].getInputData() ||
+        textures[i].getJsImageData() ||
+        textures[i].getCanvas()
+      ) {
         newTextures.push(textures[i]);
       }
       if (textures[i].getImage() && textures[i].getImageLoaded()) {
@@ -578,13 +582,19 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     let usedCount = 0;
     for (let i = 0; i < newTextures.length; i++) {
       const srcTexture = newTextures[i];
-      const treq = {};
+      const treq = { time: srcTexture.getMTime() };
       if (srcTexture.getInputData()) {
         treq.imageData = srcTexture.getInputData();
         treq.owner = treq.imageData.getPointData().getScalars();
       } else if (srcTexture.getImage()) {
         treq.image = srcTexture.getImage();
         treq.owner = treq.image;
+      } else if (srcTexture.getJsImageData()) {
+        treq.jsImageData = srcTexture.getJsImageData();
+        treq.owner = treq.jsImageData;
+      } else if (srcTexture.getCanvas()) {
+        treq.canvas = srcTexture.getCanvas();
+        treq.owner = treq.canvas;
       }
       const newTex = model.device.getTextureManager().getTexture(treq);
       if (newTex.getReady()) {

@@ -64,11 +64,36 @@ function vtkWebGPUTextureManager(publicAPI, model) {
 
     // fill in values based on image if the request has it
     if (req.image) {
-      req.time = 0;
       req.width = req.image.width;
       req.height = req.image.height;
       req.depth = 1;
       req.format = 'rgba8unorm';
+    }
+
+    // fill in based on js imageData
+    if (req.jsImageData) {
+      req.width = req.jsImageData.width;
+      req.height = req.jsImageData.height;
+      req.depth = 1;
+      req.format = 'rgba8unorm';
+      req.flip = true;
+      req.nativeArray = req.jsImageData.data;
+    }
+
+    if (req.canvas) {
+      req.width = req.canvas.width;
+      req.height = req.canvas.height;
+      req.depth = 1;
+      req.format = 'rgba8unorm';
+      req.flip = true;
+      /* eslint-disable no-undef */
+      /* eslint-disable no-bitwise */
+      req.usage =
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.RENDER_ATTACHMENT;
+      /* eslint-enable no-undef */
+      /* eslint-enable no-bitwise */
     }
   }
 
@@ -81,10 +106,11 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       height: req.height,
       depth: req.depth,
       format: req.format,
+      usage: req.usage,
     });
 
     // fill the texture if we have data
-    if (req.nativeArray || req.image) {
+    if (req.nativeArray || req.image || req.canvas) {
       newTex.writeImageData(req);
     }
     return newTex;

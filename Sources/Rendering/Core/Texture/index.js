@@ -14,14 +14,52 @@ function vtkTexture(publicAPI, model) {
     publicAPI.modified();
   };
 
+  publicAPI.setJsImageData = (imageData) => {
+    if (model.jsImageData === imageData) {
+      return;
+    }
+
+    // clear other entries
+    if (imageData !== null) {
+      publicAPI.setInputData(null);
+      publicAPI.setInputConnection(null);
+      model.image = null;
+      model.canvas = null;
+    }
+
+    model.jsImageData = imageData;
+    model.imageLoaded = true;
+    publicAPI.modified();
+  };
+
+  publicAPI.setCanvas = (canvas) => {
+    if (model.canvas === canvas) {
+      return;
+    }
+
+    // clear other entries
+    if (canvas !== null) {
+      publicAPI.setInputData(null);
+      publicAPI.setInputConnection(null);
+      model.image = null;
+      model.jsImageData = null;
+    }
+
+    model.canvas = canvas;
+    publicAPI.modified();
+  };
+
   publicAPI.setImage = (image) => {
     if (model.image === image) {
       return;
     }
 
+    // clear other entries
     if (image !== null) {
       publicAPI.setInputData(null);
       publicAPI.setInputConnection(null);
+      model.canvas = null;
+      model.jsImageData = null;
     }
 
     model.image = image;
@@ -46,7 +84,9 @@ const DEFAULT_VALUES = {
   interpolate: false,
   edgeClamp: false,
   image: null,
+  canvas: null,
   imageLoaded: false,
+  jsImageData: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -58,14 +98,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   macro.algo(publicAPI, model, 6, 0);
 
-  macro.get(publicAPI, model, ['imageLoaded']);
-
-  macro.setGet(publicAPI, model, [
-    'repeat',
-    'edgeClamp',
-    'interpolate',
+  macro.get(publicAPI, model, [
+    'canvas',
     'image',
+    'jsImageData',
+    'imageLoaded',
   ]);
+
+  macro.setGet(publicAPI, model, ['repeat', 'edgeClamp', 'interpolate']);
 
   vtkTexture(publicAPI, model);
 }

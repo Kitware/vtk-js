@@ -9,6 +9,8 @@ import vtkCustomScalarBarActor from 'vtk.js/Sources/Rendering/Core/ScalarBarActo
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 
 import baseline from './testScalarBar.png';
+import baseline2 from './testScalarBar2.png';
+import baseline3 from './testScalarBar3.png';
 
 test.onlyIfWebGL('Test vtkScalarBarActor Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -55,7 +57,7 @@ test.onlyIfWebGL('Test vtkScalarBarActor Rendering', (t) => {
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,
-      [baseline],
+      [baseline, baseline2, baseline3],
       'Rendering/Core/ScalarBarActor/testScalarBarActor',
       t,
       0.5,
