@@ -19,14 +19,6 @@ const { vtkDebugMacro } = macro;
 
 export const STATIC = {};
 
-function requestMatches(req1, req2) {
-  if (req1.time !== req2.time) return false;
-  if (req1.format !== req2.format) return false;
-  if (req1.usage !== req2.usage) return false;
-  if (req1.hash !== req2.hash) return false;
-  return true;
-}
-
 const cellCounters = {
   // easy, every input point becomes an output point
   anythingToPoints(numPoints, cellPts) {
@@ -390,39 +382,7 @@ function vtkWebGPUBufferManager(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUBufferManager');
 
-  // is the buffer already present?
-  publicAPI.hasBuffer = (req) => {
-    if (req.source) {
-      // if a matching buffer already exists then return true
-      if (model.buffers.has(req.source)) {
-        const dabuffers = model.buffers.get(req.source);
-        for (let i = 0; i < dabuffers.length; i++) {
-          if (requestMatches(dabuffers[i].request, req)) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  };
-
-  // we cache based on the passed in source, when the source is
-  // garbage collected then the cache entry is removed. If a source
-  // is not provided then the buffer is NOT cached and you are on your own
-  // if you want to share it etc
-  publicAPI.getBuffer = (req) => {
-    if (req.source) {
-      // if a matching buffer already exists then return it
-      if (model.buffers.has(req.source)) {
-        const dabuffers = model.buffers.get(req.source);
-        for (let i = 0; i < dabuffers.length; i++) {
-          if (requestMatches(dabuffers[i].request, req)) {
-            return dabuffers[i].buffer;
-          }
-        }
-      }
-    }
-
+  function _createBuffer(req) {
     // if a dataArray is provided set the nativeArray
     if (req.dataArray && !req.nativeArray) {
       req.nativeArray = req.dataArray.getData();
@@ -481,7 +441,6 @@ function vtkWebGPUBufferManager(publicAPI, model) {
           cellOffset: req.cellOffset,
         }
       );
-      // console.log(result);
       buffer.createAndWrite(result.nativeArray, gpuUsage);
       buffer.setStrideInBytes(
         vtkWebGPUTypes.getByteStrideFromBufferFormat(req.format)
@@ -516,26 +475,28 @@ function vtkWebGPUBufferManager(publicAPI, model) {
 
     buffer.setSourceTime(req.time);
 
-    // cache the buffer if we have a dataArray.
-    // We create a new req that only has the 4 fields required for
-    // a comparison to avoid GC cycles
-    if (req.source) {
-      if (!model.buffers.has(req.source)) {
-        model.buffers.set(req.source, []);
-      }
-
-      const dabuffers = model.buffers.get(req.source);
-      dabuffers.push({
-        request: {
-          time: req.time,
-          format: req.format,
-          usage: req.usage,
-          hash: req.hash,
-        },
-        buffer,
-      });
-    }
     return buffer;
+  }
+
+  // is the buffer already present?
+  publicAPI.hasBuffer = (req) => {
+    if (req.owner) {
+      // if a matching buffer already exists then return true
+      const hash = req.time + req.format + req.usage + req.hash;
+      return model.device.hasCachedObject(req.owner, hash);
+    }
+    return false;
+  };
+
+  publicAPI.getBuffer = (req) => {
+    // if we have a source the get/create/cache the buffer
+    if (req.owner) {
+      // if a matching buffer already exists then return it
+      const hash = req.time + req.format + req.usage + req.hash;
+      return model.device.getCachedObject(req.owner, hash, _createBuffer, req);
+    }
+
+    return _createBuffer(req);
   };
 
   publicAPI.getFullScreenQuadBuffer = () => {
@@ -580,9 +541,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
-
-  // this is a cache, and a cache with GC pretty much means WeakMap
-  model.buffers = new WeakMap();
 
   macro.setGet(publicAPI, model, ['device']);
 

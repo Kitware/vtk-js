@@ -31,21 +31,21 @@ export interface vtkDataArray extends vtkObject {
 
 	/**
 	 * Get the component for a given tupleIdx.
-	 * @param {Number} tupleIdx 
+	 * @param {Number} tupleIdx
 	 * @param {Number} [componentIndex] (default: 0)
 	 */
 	getComponent(tupleIdx: number, componentIndex?: number): number;
 
 	/**
 	 * Set the component value for a given tupleIdx and componentIndex.
-	 * @param {Number} tupleIdx 
-	 * @param {Number} componentIndex 
-	 * @param {Number} value 
+	 * @param {Number} tupleIdx
+	 * @param {Number} componentIndex
+	 * @param {Number} value
 	 */
 	setComponent(tupleIdx: number, componentIndex: number, value: number): void;
 
 	/**
-	 * 
+	 *
 	 */
 	getData(): TypedArray;
 
@@ -57,22 +57,22 @@ export interface vtkDataArray extends vtkObject {
 	getRange(componentIndex?: number): vtkRange;
 
 	/**
-	 * 
-	 * @param {vtkRange} rangeValue 
-	 * @param {Number} componentIndex 
+	 *
+	 * @param {vtkRange} rangeValue
+	 * @param {Number} componentIndex
 	 */
 	setRange(rangeValue: vtkRange, componentIndex: number): [number, number];
 
 	/**
-	 * 
-	 * @param {Number} idx 
-	 * @param {Number[]} tuple 
+	 *
+	 * @param {Number} idx
+	 * @param {Number[]} tuple
 	 */
 	setTuple(idx: number, tuple: number[]): void;
 
 	/**
 	 *
-	 * @param {Number} idx 
+	 * @param {Number} idx
 	 * @param {Number[]} [tupleToFill] (default [])
 	 */
 	getTuple(idx: number, tupleToFill?: number[]): number[];
@@ -99,42 +99,42 @@ export interface vtkDataArray extends vtkObject {
 	getNumberOfTuples(): number;
 
 	/**
-	 * 
+	 *
 	 */
 	getDataType(): string;
 
 	/**
-	 * 
+	 *
 	 */
 	newClone(): vtkDataArray;
 
 	/**
-	 * 
+	 *
 	 */
 	getName(): string;
 
 	/**
-	 * 
-	 * @param {TypedArray} typedArray 
-	 * @param {Number} [numberOfComponents] 
+	 *
+	 * @param {TypedArray} typedArray
+	 * @param {Number} [numberOfComponents]
 	 */
 	setData(typedArray: TypedArray, numberOfComponents?: number): void;
 
 	/**
-	 * 
+	 *
 	 */
 	getState(): object;
 
 	// --- via macro --
 
 	/**
-	 * 
+	 *
 	 */
 	setName(name: string): boolean;
 
 	/**
 	 * Set the dimension (n) of the components.
-	 * @param {Number} numberOfComponents 
+	 * @param {Number} numberOfComponents
 	 */
 	setNumberOfComponents(numberOfComponents: number): boolean;
 }
@@ -160,6 +160,16 @@ export interface vtkDataArray extends vtkObject {
 export function computeRange(values: number[], component?: number, numberOfComponents?: number): vtkRange;
 
 /**
+ * Compute range of a given array, it only supports 1D arrays.
+ *
+ * @param {Number[]} values Array to go through to extract the range from
+ * @param {Number} offset offset index to select the desired component in the tuple
+ * @param {Number} numberOfComponents size of tuple in a multi-channel array
+ */
+export function fastComputeRange(values: number[], offset: number, numberOfComponents: number): vtkRange;
+
+/**
+ * @deprecated please use `fastComputeRange` instead
  * Create helper object that can be used to gather min, max, count, sum of
  * a set of values.
  */
@@ -242,6 +252,7 @@ export declare const vtkDataArray: {
 	// static
 	computeRange: typeof computeRange,
 	createRangeHelper: typeof createRangeHelper,
+  fastComputeRange: typeof fastComputeRange,
 	getDataType: typeof getDataType,
 	getMaxNorm: typeof getMaxNorm,
 	// constants

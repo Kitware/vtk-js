@@ -16,6 +16,7 @@ import vtkPolyDataMapper from './PolyDataMapper';
 import vtkPolyDataMapper2D from './PolyDataMapper2D';
 import vtkRenderer from './Renderer';
 import vtkRenderWindow from './RenderWindow';
+import './ScalarBarActor';
 import vtkShader from './Shader';
 import vtkShaderCache from './ShaderCache';
 import vtkShaderProgram from './ShaderProgram';

@@ -344,19 +344,18 @@ function vtkWebGPUVolumePass(publicAPI, model) {
 
     const pd = model._boundsPoly;
     const cells = pd.getPolys();
-    const hash = cells.getMTime();
     // points
     const points = pd.getPoints();
     const buffRequest = {
-      hash: hash + points.getMTime(),
+      owner: points,
+      usage: BufferUsage.PointArray,
+      format: 'float32x4',
+      time: Math.max(points.getMTime(), cells.getMTime()),
+      hash: 'vp',
       dataArray: points,
-      source: points,
       cells,
       primitiveType: PrimitiveTypes.Triangles,
       representation: Representation.SURFACE,
-      time: Math.max(points.getMTime(), cells.getMTime()),
-      usage: BufferUsage.PointArray,
-      format: 'float32x4',
       packExtra: true,
     };
     const buff = viewNode.getDevice().getBufferManager().getBuffer(buffRequest);
@@ -474,12 +473,14 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       colorAttachments: [
         {
           view: null,
-          loadValue: [0.0, 0.0, 0.0, 0.0],
+          clearValue: [0.0, 0.0, 0.0, 0.0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
         {
           view: null,
-          loadValue: [1.0, 1.0, 1.0, 1.0],
+          clearValue: [1.0, 1.0, 1.0, 1.0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -574,7 +575,8 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       colorAttachments: [
         {
           view: null,
-          loadValue: [0.0, 0.0, 0.0, 0.0],
+          clearValue: [0.0, 0.0, 0.0, 0.0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -607,7 +609,7 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       colorAttachments: [
         {
           view: null,
-          loadValue: 'load',
+          loadOp: 'load',
           storeOp: 'store',
         },
       ],
@@ -641,7 +643,7 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       colorAttachments: [
         {
           view: null,
-          loadValue: 'load',
+          loadOp: 'load',
           storeOp: 'store',
         },
       ],
