@@ -72,6 +72,15 @@ function vtkWebGPUTexture(publicAPI, model) {
       return;
     }
 
+    if (req.jsImageData && !req.nativeArray) {
+      req.width = req.jsImageData.width;
+      req.height = req.jsImageData.height;
+      req.depth = 1;
+      req.format = 'rgba8unorm';
+      req.flip = true;
+      req.nativeArray = req.jsImageData.data;
+    }
+
     const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(model.format);
     let bufferBytesPerRow = model.width * tDetails.stride;
     if (req.nativeArray) {

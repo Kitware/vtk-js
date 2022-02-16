@@ -340,7 +340,6 @@ function vtkScalarBarActorHelper(publicAPI, model) {
       model.tmContext.fillText(key, 1, value.startingHeight + value.height - 1);
     });
 
-    model.tmContext.getImageData(0, 0, maxWidth, totalHeight);
     model.tmTexture.setCanvas(model.tmCanvas);
     // mark as modified since the canvas typically doesn't change
     model.tmTexture.modified();
