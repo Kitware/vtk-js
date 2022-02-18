@@ -75,6 +75,7 @@ test('Proxy activation via config', (t) => {
   });
   proxy.activate();
 
+  proxy.getState();
   t.end();
 });
 

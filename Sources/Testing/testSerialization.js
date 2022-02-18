@@ -86,7 +86,7 @@ classToTest.forEach((testName) => {
     t.notEqual(instance, instance2, 'We have two different instances');
     assertSameSerializedContent(t, state, state2);
 
-    /* Test JSON.stringify and JSON.parse behavior */
+    // Test JSON.stringify and JSON.parse behavior
     const jsonFromStringify = JSON.stringify(instance);
     const jsonFromGetState = JSON.stringify(state);
 
@@ -105,6 +105,15 @@ classToTest.forEach((testName) => {
     t.notEqual(instance3, instance4, 'We have two different instances');
     assertSameSerializedContent(t, state3, state4);
 
+    t.end();
+  });
+
+  test(`Test ${testName} serialization on deleted object`, (t) => {
+    t.ok(klass, 'Make sure the class definition exist');
+    const instance = klass.newInstance(initData);
+    t.ok(instance, 'Make sure the instance exist');
+    instance.delete();
+    t.equal(JSON.stringify(instance), 'null');
     t.end();
   });
 });

@@ -195,7 +195,7 @@ function enumToString(e, value) {
 }
 
 function getStateArrayMapFunc(item) {
-  if (item.isA) {
+  if (item && item.isA) {
     return item.getState();
   }
   return item;
@@ -331,6 +331,9 @@ export function obj(publicAPI = {}, model = {}) {
 
   // Add serialization support
   publicAPI.getState = () => {
+    if (model.deleted) {
+      return null;
+    }
     const jsonArchive = { ...model, vtkClass: publicAPI.getClassName() };
 
     // Convert every vtkObject to its serializable form
@@ -1362,6 +1365,9 @@ export function proxy(publicAPI, model) {
     );
     parentDelete();
   };
+
+  // @todo fix infinite recursion due to active source
+  publicAPI.getState = () => null;
 
   function registerLinks() {
     // Allow dynamic registration of links at the application level
