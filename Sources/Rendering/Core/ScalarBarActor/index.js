@@ -251,21 +251,6 @@ function vtkScalarBarActorHelper(publicAPI, model) {
     }
   };
 
-  // The text atlas is an image and as loading images is async we call this when
-  // the promise resolves. The old texture is used until then
-  publicAPI.completedImage = (doUpdate) => {
-    if (model.nextImage && model.nextImage.complete) {
-      model.tmTexture.setImage(model.nextImage);
-      model.nextImage = null;
-      model._tmAtlas = model._nextAtlas;
-      model._nextAtlas = null;
-      if (doUpdate) {
-        model.forceViewUpdate = true;
-        model.renderWindow.render();
-      }
-    }
-  };
-
   // create the texture map atlas that contains the rendering of
   // all the text strings. Only needs to be called when the text strings
   // have changed (labels and ticks)
@@ -355,17 +340,10 @@ function vtkScalarBarActorHelper(publicAPI, model) {
       model.tmContext.fillText(key, 1, value.startingHeight + value.height - 1);
     });
 
-    const image = new Image();
-    image.src = model.tmCanvas.toDataURL('image/png');
-    model.nextImage = image;
-    model._nextAtlas = newTmAtlas;
-    if (image.complete) {
-      publicAPI.completedImage(false);
-    } else {
-      image.addEventListener('load', () => {
-        publicAPI.completedImage(true);
-      });
-    }
+    model.tmTexture.setCanvas(model.tmCanvas);
+    // mark as modified since the canvas typically doesn't change
+    model.tmTexture.modified();
+    model._tmAtlas = newTmAtlas;
 
     return results;
   };
