@@ -34,7 +34,7 @@ function vtkFramebuffer(publicAPI, model) {
       model.context.FRAMEBUFFER_BINDING
     );
     model.previousActiveFramebuffer =
-      model.openGLRenderWindow.getActiveFramebuffer();
+      model._openGLRenderWindow.getActiveFramebuffer();
   };
 
   publicAPI.saveCurrentBuffers = (modeIn) => {
@@ -58,7 +58,7 @@ function vtkFramebuffer(publicAPI, model) {
 
     const gl = model.context;
     gl.bindFramebuffer(gl.FRAMEBUFFER, model.previousDrawBinding);
-    model.openGLRenderWindow.setActiveFramebuffer(
+    model._openGLRenderWindow.setActiveFramebuffer(
       model.previousActiveFramebuffer
     );
   };
@@ -76,7 +76,7 @@ function vtkFramebuffer(publicAPI, model) {
     for (let i = 0; i < model.colorBuffers.length; i++) {
       model.colorBuffers[i].bind();
     }
-    model.openGLRenderWindow.setActiveFramebuffer(publicAPI);
+    model._openGLRenderWindow.setActiveFramebuffer(publicAPI);
   };
 
   publicAPI.create = (width, height) => {
@@ -104,7 +104,7 @@ function vtkFramebuffer(publicAPI, model) {
 
     let glAttachment = gl.COLOR_ATTACHMENT0;
     if (attachment > 0) {
-      if (model.openGLRenderWindow.getWebgl2()) {
+      if (model._openGLRenderWindow.getWebgl2()) {
         glAttachment += attachment;
       } else {
         macro.vtkErrorMacro(
@@ -135,7 +135,7 @@ function vtkFramebuffer(publicAPI, model) {
 
     let glAttachment = gl.COLOR_ATTACHMENT0;
     if (attachment > 0) {
-      if (model.openGLRenderWindow.getWebgl2()) {
+      if (model._openGLRenderWindow.getWebgl2()) {
         glAttachment += attachment;
       } else {
         macro.vtkErrorMacro(
@@ -164,7 +164,7 @@ function vtkFramebuffer(publicAPI, model) {
       return;
     }
 
-    if (model.openGLRenderWindow.getWebgl2()) {
+    if (model._openGLRenderWindow.getWebgl2()) {
       const gl = model.context;
       gl.framebufferTexture2D(
         gl.FRAMEBUFFER,
@@ -188,7 +188,7 @@ function vtkFramebuffer(publicAPI, model) {
       return;
     }
 
-    if (model.openGLRenderWindow.getWebgl2()) {
+    if (model._openGLRenderWindow.getWebgl2()) {
       const gl = model.context;
       gl.framebufferTexture2D(
         gl.FRAMEBUFFER,
@@ -207,14 +207,14 @@ function vtkFramebuffer(publicAPI, model) {
   publicAPI.getGLFramebuffer = () => model.glFramebuffer;
 
   publicAPI.setOpenGLRenderWindow = (rw) => {
-    if (model.openGLRenderWindow === rw) {
+    if (model._openGLRenderWindow === rw) {
       return;
     }
     publicAPI.releaseGraphicsResources();
-    model.openGLRenderWindow = rw;
+    model._openGLRenderWindow = rw;
     model.context = null;
     if (rw) {
-      model.context = model.openGLRenderWindow.getContext();
+      model.context = model._openGLRenderWindow.getContext();
     }
   };
 
@@ -245,7 +245,7 @@ function vtkFramebuffer(publicAPI, model) {
     const gl = model.context;
 
     const texture = vtkOpenGLTexture.newInstance();
-    texture.setOpenGLRenderWindow(model.openGLRenderWindow);
+    texture.setOpenGLRenderWindow(model._openGLRenderWindow);
     texture.setMinificationFilter(Filter.LINEAR);
     texture.setMagnificationFilter(Filter.LINEAR);
     texture.create2DFromRaw(
@@ -283,7 +283,7 @@ function vtkFramebuffer(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 const DEFAULT_VALUES = {
-  openGLRenderWindow: null,
+  // _openGLRenderWindow: null,
   glFramebuffer: null,
   colorBuffers: null,
   depthTexture: null,

@@ -42,7 +42,7 @@ export default function widgetBehavior(publicAPI, model) {
       ...model.manipulator.handleEvent(callData, model.apiSpecificRenderWindow),
     ];
     model.apiSpecificRenderWindow.setCursor('grabbing');
-    model.interactor.requestAnimation(publicAPI);
+    model._interactor.requestAnimation(publicAPI);
   }
 
   // --------------------------------------------------------------------------
@@ -80,12 +80,12 @@ export default function widgetBehavior(publicAPI, model) {
     const textPropsCp = { ...model.representations[3].getTextProps() };
     textPropsCp.dy = dySign * Math.abs(textPropsCp.dy);
     model.representations[3].setTextProps(textPropsCp);
-    model.interactor.render();
+    model._interactor.render();
   };
 
   publicAPI.setText = (text) => {
     model.widgetState.getText().setText(text);
-    model.interactor.render();
+    model._interactor.render();
   };
 
   // --------------------------------------------------------------------------
@@ -178,7 +178,7 @@ export default function widgetBehavior(publicAPI, model) {
       visibility && handle.getShape() !== ShapeType.NONE,
     ]);
     model.representations[handleIndex].updateActorVisibility();
-    model.interactor.render();
+    model._interactor.render();
   };
 
   /**
@@ -318,7 +318,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState = null;
 
       if (!wasTextActive) {
-        model.interactor.cancelAnimation(publicAPI);
+        model._interactor.cancelAnimation(publicAPI);
       }
       model.apiSpecificRenderWindow.setCursor('pointer');
 
@@ -326,7 +326,7 @@ export default function widgetBehavior(publicAPI, model) {
 
       publicAPI.invokeEndInteractionEvent();
       model.widgetManager.enablePicking();
-      model.interactor.render();
+      model._interactor.render();
     }
 
     if (
@@ -348,7 +348,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState.setShape(publicAPI.getHandle(0).getShape());
       publicAPI.setMoveHandleVisibility(true);
       model.activeState.activate();
-      model.interactor.requestAnimation(publicAPI);
+      model._interactor.requestAnimation(publicAPI);
       publicAPI.invokeStartInteractionEvent();
     }
     model.hasFocus = true;
@@ -358,7 +358,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.loseFocus = () => {
     if (model.hasFocus) {
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
       publicAPI.invokeEndInteractionEvent();
     }
     model.widgetState.deactivate();
@@ -366,6 +366,6 @@ export default function widgetBehavior(publicAPI, model) {
     model.activeState = null;
     model.hasFocus = false;
     model.widgetManager.enablePicking();
-    model.interactor.render();
+    model._interactor.render();
   };
 }

@@ -38,7 +38,7 @@ function vtkInteractorStyle(publicAPI, model) {
         return;
       }
       model.state = stateNames[key];
-      model.interactor.requestAnimation(publicAPI);
+      model._interactor.requestAnimation(publicAPI);
       publicAPI.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
       publicAPI[`invokeStart${key}Event`]({ type: `Start${key}Event` });
     };
@@ -48,16 +48,16 @@ function vtkInteractorStyle(publicAPI, model) {
         return;
       }
       model.state = States.IS_NONE;
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
       publicAPI.invokeEndInteractionEvent({ type: 'EndInteractionEvent' });
       publicAPI[`invokeEnd${key}Event`]({ type: `End${key}Event` });
-      model.interactor.render();
+      model._interactor.render();
     };
   });
 
   //----------------------------------------------------------------------------
   publicAPI.handleKeyPress = (callData) => {
-    const rwi = model.interactor;
+    const rwi = model._interactor;
     let ac = null;
     switch (callData.key) {
       case 'r':

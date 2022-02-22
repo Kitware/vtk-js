@@ -49,7 +49,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       model.openGLActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
       model.openGLRenderer =
         model.openGLActor.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model.openGLRenderWindow = model.openGLRenderer.getParent();
+      model._openGLRenderWindow = model.openGLRenderer.getParent();
       model.openGLCamera = model.openGLRenderer.getViewNodeFor(
         model.openGLRenderer.getRenderable().getActiveCamera()
       );
@@ -80,11 +80,11 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.render = () => {
-    const ctx = model.openGLRenderWindow.getContext();
+    const ctx = model._openGLRenderWindow.getContext();
     if (model.context !== ctx) {
       model.context = ctx;
       for (let i = primTypes.Start; i < primTypes.End; i++) {
-        model.primitives[i].setOpenGLRenderWindow(model.openGLRenderWindow);
+        model.primitives[i].setOpenGLRenderWindow(model._openGLRenderWindow);
       }
     }
     const actor = model.openGLActor.getRenderable();
@@ -1134,7 +1134,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       publicAPI.buildShaders(shaders, ren, actor);
 
       // compile and bind the program if needed
-      const newShader = model.openGLRenderWindow
+      const newShader = model._openGLRenderWindow
         .getShaderCache()
         .readyShaderProgramArray(
           shaders.Vertex,
@@ -1151,7 +1151,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
       cellBO.getShaderSourceTime().modified();
     } else {
-      model.openGLRenderWindow
+      model._openGLRenderWindow
         .getShaderCache()
         .readyShaderProgram(cellBO.getProgram());
     }
@@ -1750,12 +1750,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const backfaceCulling = actor.getProperty().getBackfaceCulling();
     const frontfaceCulling = actor.getProperty().getFrontfaceCulling();
     if (!backfaceCulling && !frontfaceCulling) {
-      model.openGLRenderWindow.disableCullFace();
+      model._openGLRenderWindow.disableCullFace();
     } else if (frontfaceCulling) {
-      model.openGLRenderWindow.enableCullFace();
+      model._openGLRenderWindow.enableCullFace();
       gl.cullFace(gl.FRONT);
     } else {
-      model.openGLRenderWindow.enableCullFace();
+      model._openGLRenderWindow.enableCullFace();
       gl.cullFace(gl.BACK);
     }
 
@@ -1855,7 +1855,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       tex.setMagnificationFilter(Filter.NEAREST);
       tex.setWrapS(Wrap.CLAMP_TO_EDGE);
       tex.setWrapT(Wrap.CLAMP_TO_EDGE);
-      tex.setOpenGLRenderWindow(model.openGLRenderWindow);
+      tex.setOpenGLRenderWindow(model._openGLRenderWindow);
 
       const input = model.renderable.getColorTextureMap();
       const ext = input.getExtent();
@@ -1936,10 +1936,10 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       } else {
         // otherwise free them
         model.primitives[primTypes.TrisEdges].releaseGraphicsResources(
-          model.openGLRenderWindow
+          model._openGLRenderWindow
         );
         model.primitives[primTypes.TriStripsEdges].releaseGraphicsResources(
-          model.openGLRenderWindow
+          model._openGLRenderWindow
         );
       }
 

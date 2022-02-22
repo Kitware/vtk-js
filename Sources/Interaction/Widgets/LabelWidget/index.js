@@ -29,8 +29,8 @@ function vtkLabelWidget(publicAPI, model) {
     superClass.setEnabled(enabling);
 
     if (enabling) {
-      const container = model.interactor
-        ? model.interactor.getContainer()
+      const container = model._interactor
+        ? model._interactor.getContainer()
         : null;
       model.widgetRep.setContainer(container);
     }

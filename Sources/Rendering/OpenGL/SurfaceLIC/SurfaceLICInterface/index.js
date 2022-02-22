@@ -79,7 +79,7 @@ function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
     let VAO = model.licQuadVAO;
     if (!VAO) {
       VAO = vtkVertexArrayObject.newInstance();
-      VAO.setOpenGLRenderWindow(model.openGLRenderWindow);
+      VAO.setOpenGLRenderWindow(model._openGLRenderWindow);
       model.licQuadVAO = VAO;
     }
 
@@ -267,7 +267,7 @@ function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
         maxLevel: 0,
         autoParameters: false,
       });
-      texture.setOpenGLRenderWindow(model.openGLRenderWindow);
+      texture.setOpenGLRenderWindow(model._openGLRenderWindow);
       texture.create2DFromRaw(length, length, 4, 'Float32Array', values);
       texture.activate();
       texture.sendParameters();
@@ -278,7 +278,7 @@ function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
   };
 
   publicAPI.buildAShader = (fSource) =>
-    model.openGLRenderWindow
+    model._openGLRenderWindow
       .getShaderCache()
       .readyShaderProgramArray(
         vtkLineIntegralConvolution2D_quadVS,
@@ -289,7 +289,7 @@ function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
   publicAPI.allocateTextures = () => {
     const nearest = vtkOpenGLTexture.Filter.NEAREST;
     const linear = vtkOpenGLTexture.Filter.LINEAR;
-    const rw = model.openGLRenderWindow;
+    const rw = model._openGLRenderWindow;
     if (!model.geometryImage) {
       model.geometryImage = publicAPI.allocateTexture(rw, nearest);
     }
@@ -354,7 +354,7 @@ function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
     if (!model.framebuffer) {
       model.licHelper = null; // All buffers need rebuilding
       const fb = vtkFrameBuffer.newInstance();
-      fb.setOpenGLRenderWindow(model.openGLRenderWindow);
+      fb.setOpenGLRenderWindow(model._openGLRenderWindow);
       fb.saveCurrentBindingsAndBuffers();
       fb.create(...model.size);
       fb.populateFramebuffer();
@@ -394,7 +394,7 @@ function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
     publicAPI.allocateTextures();
     publicAPI.buildAllShaders();
     if (!model.licQuad) {
-      model.licQuad = getQuadPoly(model.openGLRenderWindow);
+      model.licQuad = getQuadPoly(model._openGLRenderWindow);
     }
     if (!model.licHelper) {
       model.licHelper = vtkLineIntegralConvolution2D.newInstance();
@@ -441,7 +441,7 @@ function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
       publicAPI.initializeResources();
     }
     const copyPass = model.licCopyPass;
-    model.openGLRenderWindow.getShaderCache().readyShaderProgram(copyPass);
+    model._openGLRenderWindow.getShaderCache().readyShaderProgram(copyPass);
 
     const gl = model.context;
     gl.viewport(0, 0, ...windowSize);
@@ -483,7 +483,7 @@ function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
       publicAPI.initializeResources();
     }
     const colorPass = model.licColorPass;
-    model.openGLRenderWindow.getShaderCache().readyShaderProgram(colorPass);
+    model._openGLRenderWindow.getShaderCache().readyShaderProgram(colorPass);
     colorPass.setUniformi('texVectors', model.vectorImage.getTextureUnit());
     colorPass.setUniformi(
       'texGeomColors',
@@ -549,7 +549,7 @@ function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
         publicAPI.initializeResources();
       }
       const { enhanceContrastPass } = model;
-      model.openGLRenderWindow
+      model._openGLRenderWindow
         .getShaderCache()
         .readyShaderProgram(enhanceContrastPass);
       enhanceContrastPass.setUniformi(
@@ -597,7 +597,7 @@ function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
       model.vectorImage,
       model.maskVectorImage,
       model.noiseTexture,
-      model.openGLRenderWindow,
+      model._openGLRenderWindow,
       options
     );
 
@@ -661,7 +661,7 @@ function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   context: null,
-  openGLRenderWindow: null,
+  // _openGLRenderWindow: null,
   shadersNeedBuilding: true,
   reallocateTextures: true,
   size: null,
@@ -679,11 +679,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, [
     'context',
-    'openGLRenderWindow',
+    '_openGLRenderWindow',
     'reallocateTextures',
     'licInterface',
     'size',
   ]);
+  macro.moveToProtected(publicAPI, model, ['openGLRenderWindow']);
 
   // Object methods
   vtkOpenGLSurfaceLICInterface(publicAPI, model);

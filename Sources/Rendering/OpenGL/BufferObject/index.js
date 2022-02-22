@@ -105,14 +105,14 @@ function vtkOpenGLBufferObject(publicAPI, model) {
   };
 
   publicAPI.setOpenGLRenderWindow = (rw) => {
-    if (model.openGLRenderWindow === rw) {
+    if (model._openGLRenderWindow === rw) {
       return;
     }
     publicAPI.releaseGraphicsResources();
-    model.openGLRenderWindow = rw;
+    model._openGLRenderWindow = rw;
     model.context = null;
     if (rw) {
-      model.context = model.openGLRenderWindow.getContext();
+      model.context = model._openGLRenderWindow.getContext();
     }
   };
 
@@ -125,7 +125,7 @@ function vtkOpenGLBufferObject(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   objectType: ObjectType.ARRAY_BUFFER,
-  openGLRenderWindow: null,
+  // _openGLRenderWindow: null,
   context: null,
 };
 
@@ -137,7 +137,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   macro.obj(publicAPI, model);
 
-  macro.get(publicAPI, model, ['openGLRenderWindow']);
+  macro.get(publicAPI, model, ['_openGLRenderWindow']);
+  macro.moveToProtected(publicAPI, model, ['openGLRenderWindow']);
 
   vtkOpenGLBufferObject(publicAPI, model);
 }

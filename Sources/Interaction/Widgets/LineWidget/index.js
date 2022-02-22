@@ -22,11 +22,11 @@ function vtkLineWidget(publicAPI, model) {
   publicAPI.setCursor = (state) => {
     switch (state) {
       case State.OUTSIDE: {
-        model.interactor.getView().setCursor('default');
+        model._interactor.getView().setCursor('default');
         break;
       }
       default: {
-        model.interactor.getView().setCursor('pointer');
+        model._interactor.getView().setCursor('pointer');
       }
     }
   };
@@ -38,8 +38,8 @@ function vtkLineWidget(publicAPI, model) {
   publicAPI.setInteractor = (i) => {
     superClass.setInteractor(i);
 
-    model.point1Widget.setInteractor(model.interactor);
-    model.point2Widget.setInteractor(model.interactor);
+    model.point1Widget.setInteractor(model._interactor);
+    model.point2Widget.setInteractor(model._interactor);
 
     publicAPI.modified();
   };

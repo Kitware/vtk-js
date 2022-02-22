@@ -2,7 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 import { vec3 } from 'gl-matrix';
 
 export default function widgetBehavior(publicAPI, model) {
-  model.painting = model.factory.getPainting();
+  model.painting = model._factory.getPainting();
 
   publicAPI.handleLeftButtonPress = (callData) => {
     if (!model.activeState || !model.activeState.getActive()) {
@@ -77,7 +77,7 @@ export default function widgetBehavior(publicAPI, model) {
     if (!model.hasFocus) {
       model.activeState = model.widgetState.getHandle();
       model.activeState.activate();
-      model.interactor.requestAnimation(publicAPI);
+      model._interactor.requestAnimation(publicAPI);
 
       const canvas = model.apiSpecificRenderWindow.getCanvas();
       canvas.onmouseenter = () => {
@@ -102,7 +102,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.loseFocus = () => {
     if (model.hasFocus) {
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
     }
     model.widgetState.deactivate();
     model.widgetState.getHandle().deactivate();

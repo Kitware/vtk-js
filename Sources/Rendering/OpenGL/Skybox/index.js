@@ -25,10 +25,10 @@ function vtkOpenGLSkybox(publicAPI, model) {
     if (prepass) {
       model.openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model.openGLRenderWindow = model.openGLRenderer.getParent();
-      model.context = model.openGLRenderWindow.getContext();
-      model.tris.setOpenGLRenderWindow(model.openGLRenderWindow);
-      model.openGLTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model._openGLRenderWindow = model.openGLRenderer.getParent();
+      model.context = model._openGLRenderWindow.getContext();
+      model.tris.setOpenGLRenderWindow(model._openGLRenderWindow);
+      model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       const ren = model.openGLRenderer.getRenderable();
       model.openGLCamera = model.openGLRenderer.getViewNodeFor(
         ren.getActiveCamera()
@@ -51,11 +51,11 @@ function vtkOpenGLSkybox(publicAPI, model) {
 
       model.context.depthMask(true);
 
-      model.openGLRenderWindow
+      model._openGLRenderWindow
         .getShaderCache()
         .readyShaderProgram(model.tris.getProgram());
 
-      model.openGLTexture.render(model.openGLRenderWindow);
+      model.openGLTexture.render(model._openGLRenderWindow);
 
       const texUnit = model.openGLTexture.getTextureUnit();
       model.tris.getProgram().setUniformi('sbtexture', texUnit);
@@ -140,7 +140,7 @@ function vtkOpenGLSkybox(publicAPI, model) {
         // https://stackoverflow.com/questions/11685608/convention-of-faces-in-opengl-cubemapping
         //
         model.tris.setProgram(
-          model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(
+          model._openGLRenderWindow.getShaderCache().readyShaderProgramArray(
             `//VTK::System::Dec
              attribute vec3 vertexMC;
              uniform mat4 IMCPCMatrix;
@@ -179,7 +179,7 @@ function vtkOpenGLSkybox(publicAPI, model) {
       if (model.lastFormat === 'background') {
         // maps the texture to the window
         model.tris.setProgram(
-          model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(
+          model._openGLRenderWindow.getShaderCache().readyShaderProgramArray(
             `//VTK::System::Dec
              attribute vec3 vertexMC;
              uniform mat4 IMCPCMatrix;
@@ -229,7 +229,7 @@ function vtkOpenGLSkybox(publicAPI, model) {
       vtkErrorMacro('vtkSkybox requires a texture map');
     }
     if (model.openGLTexture.getRenderable() !== tmaps[0]) {
-      model.openGLTexture.releaseGraphicsResources(model.openGLRenderWindow);
+      model.openGLTexture.releaseGraphicsResources(model._openGLRenderWindow);
       model.openGLTexture.setRenderable(tmaps[0]);
     }
   };

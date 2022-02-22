@@ -11,6 +11,24 @@ import noScaleInPixelsWithParallelBaseline from './testNoScaleInPixelsWithParall
 import scaleInPixelsWithPerspectiveBaseline from './testScaleInPixelsWithPerspectiveBaseline.png';
 // import scaleInPixelsWithParallelBaseline from './testScaleInPixelsWithParallelBaseline.png';
 
+test('Test vtkWidgetManager', (t) => {
+  const container = document.querySelector('body');
+  const rwContainer = document.createElement('div');
+  container.appendChild(rwContainer);
+  const grw = vtkGenericRenderWindow.newInstance({ listenWindowResize: false });
+  grw.setContainer(rwContainer);
+
+  const widgetManager = vtkWidgetManager.newInstance();
+  widgetManager.setRenderer(grw.getRenderer());
+
+  const widget = vtkPolyLineWidget.newInstance();
+  widgetManager.addWidget(widget);
+  widgetManager.getState();
+  t.end();
+
+  container.removeChild(rwContainer);
+});
+
 test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
   const gc = testUtils.createGarbageCollector(t);
 

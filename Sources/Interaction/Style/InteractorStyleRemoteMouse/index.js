@@ -32,7 +32,7 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
     const action = buttonLeft || buttonMiddle || buttonRight ? 'down' : 'up';
 
     // Fixme x / y
-    const [width, height] = model.interactor.getView().getSizeByReference();
+    const [width, height] = model._interactor.getView().getSizeByReference();
     let { x, y } = callData.position;
     x /= width;
     y /= height;
@@ -95,7 +95,7 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.onButtonDown = (button, callData) => {
-    model.interactor.requestAnimation(publicAPI.onButtonDown);
+    model._interactor.requestAnimation(publicAPI.onButtonDown);
     publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
     publicAPI.invokeRemoteMouseEvent(createRemoteEvent(callData));
   };
@@ -104,13 +104,13 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
   publicAPI.onButtonUp = (button, callData) => {
     publicAPI.invokeRemoteMouseEvent(createRemoteEvent(callData));
     publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
-    model.interactor.cancelAnimation(publicAPI.onButtonDown);
+    model._interactor.cancelAnimation(publicAPI.onButtonDown);
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleStartMouseWheel = (callData) => {
     const { spinY, altKey, controlKey, shiftKey } = callData;
-    model.interactor.requestAnimation(publicAPI.handleStartMouseWheel);
+    model._interactor.requestAnimation(publicAPI.handleStartMouseWheel);
     publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
     publicAPI.invokeRemoteWheelEvent({
       type: 'StartMouseWheel',
@@ -142,7 +142,7 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
       type: 'EndMouseWheel',
       ...model.remoteEventAddOn,
     });
-    model.interactor.cancelAnimation(publicAPI.handleStartMouseWheel);
+    model._interactor.cancelAnimation(publicAPI.handleStartMouseWheel);
     publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
   };
 
@@ -173,7 +173,7 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
   publicAPI.handleStartPinch = (callData) => {
     publicAPI.startDolly();
     const { scale } = callData;
-    model.interactor.requestAnimation(publicAPI.handleStartPinch);
+    model._interactor.requestAnimation(publicAPI.handleStartPinch);
     publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
     publicAPI.invokeRemoteGestureEvent({
       type: 'StartPinch',
@@ -201,7 +201,7 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
       type: 'EndPinch',
       ...model.remoteEventAddOn,
     });
-    model.interactor.cancelAnimation(publicAPI.handleStartPinch);
+    model._interactor.cancelAnimation(publicAPI.handleStartPinch);
     publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
   };
 
@@ -210,7 +210,7 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
   publicAPI.handleStartRotate = (callData) => {
     publicAPI.startRotate();
     const { rotation } = callData;
-    model.interactor.requestAnimation(publicAPI.handleStartRotate);
+    model._interactor.requestAnimation(publicAPI.handleStartRotate);
     publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
     publicAPI.invokeRemoteGestureEvent({
       type: 'StartRotate',
@@ -238,7 +238,7 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
       type: 'EndRotate',
       ...model.remoteEventAddOn,
     });
-    model.interactor.cancelAnimation(publicAPI.handleStartRotate);
+    model._interactor.cancelAnimation(publicAPI.handleStartRotate);
     publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
   };
 
@@ -247,7 +247,7 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
   publicAPI.handleStartPan = (callData) => {
     publicAPI.startPan();
     const { translation } = callData;
-    model.interactor.requestAnimation(publicAPI.handleStartPan);
+    model._interactor.requestAnimation(publicAPI.handleStartPan);
     publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
     publicAPI.invokeRemoteGestureEvent({
       type: 'StartPan',
@@ -275,7 +275,7 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
       type: 'EndPan',
       ...model.remoteEventAddOn,
     });
-    model.interactor.cancelAnimation(publicAPI.handleStartPan);
+    model._interactor.cancelAnimation(publicAPI.handleStartPan);
     publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
   };
 }

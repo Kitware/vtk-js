@@ -142,7 +142,7 @@ function vtkWebGPURenderer(publicAPI, model) {
     // has the camera changed?
     const utime = model.UBO.getSendTime();
     if (
-      model.parent.getMTime() > utime ||
+      model._parent.getMTime() > utime ||
       publicAPI.getMTime() > utime ||
       model.camera.getMTime() > utime ||
       model.renderable.getMTime() > utime
@@ -162,7 +162,7 @@ function vtkWebGPURenderer(publicAPI, model) {
         model.camera.getParallelProjection()
       );
 
-      const device = model.parent.getDevice();
+      const device = model._parent.getDevice();
       model.UBO.sendIfNeeded(device);
     }
   };
@@ -200,7 +200,7 @@ function vtkWebGPURenderer(publicAPI, model) {
       // clear last pipelines
       model.pipelineCallbacks = [];
 
-      model.renderEncoder.begin(model.parent.getCommandEncoder());
+      model.renderEncoder.begin(model._parent.getCommandEncoder());
       publicAPI.updateUBO();
     } else {
       publicAPI.scissorAndViewport(model.renderEncoder);
@@ -229,7 +229,7 @@ function vtkWebGPURenderer(publicAPI, model) {
       return;
     }
 
-    const device = model.parent.getDevice();
+    const device = model._parent.getDevice();
     if (!model.clearFSQ) {
       model.clearFSQ = vtkWebGPUFullScreenQuad.newInstance();
       model.clearFSQ.setDevice(device);
@@ -250,7 +250,7 @@ function vtkWebGPURenderer(publicAPI, model) {
     if (prepass) {
       // clear last pipelines
       model.pipelineCallbacks = [];
-      model.renderEncoder.begin(model.parent.getCommandEncoder());
+      model.renderEncoder.begin(model._parent.getCommandEncoder());
     } else {
       publicAPI.scissorAndViewport(model.renderEncoder);
 
@@ -275,7 +275,7 @@ function vtkWebGPURenderer(publicAPI, model) {
     if (prepass) {
       // clear last pipelines
       model.pipelineCallbacks = [];
-      model.renderEncoder.begin(model.parent.getCommandEncoder());
+      model.renderEncoder.begin(model._parent.getCommandEncoder());
     } else {
       publicAPI.scissorAndViewport(model.renderEncoder);
 
@@ -297,7 +297,7 @@ function vtkWebGPURenderer(publicAPI, model) {
   };
 
   publicAPI.getAspectRatio = () => {
-    const size = model.parent.getSizeByReference();
+    const size = model._parent.getSizeByReference();
     const viewport = model.renderable.getViewportByReference();
     return (
       (size[0] * (viewport[2] - viewport[0])) /
@@ -310,7 +310,7 @@ function vtkWebGPURenderer(publicAPI, model) {
 
   publicAPI.getYInvertedTiledSizeAndOrigin = () => {
     const res = publicAPI.getTiledSizeAndOrigin();
-    const size = model.parent.getSizeByReference();
+    const size = model._parent.getSizeByReference();
     res.lowerLeftV = size[1] - res.vsize - res.lowerLeftV;
     return res;
   };
@@ -327,7 +327,7 @@ function vtkWebGPURenderer(publicAPI, model) {
     const vpv = vport[1] - tileViewPort[1];
 
     // store the result as a pixel value
-    const ndvp = model.parent.normalizedDisplayToDisplay(vpu, vpv);
+    const ndvp = model._parent.normalizedDisplayToDisplay(vpu, vpv);
     const lowerLeftU = Math.round(ndvp[0]);
     const lowerLeftV = Math.round(ndvp[1]);
 
@@ -335,7 +335,7 @@ function vtkWebGPURenderer(publicAPI, model) {
     // lower left boundary of this tile
     const vpu2 = vport[2] - tileViewPort[0];
     const vpv2 = vport[3] - tileViewPort[1];
-    const ndvp2 = model.parent.normalizedDisplayToDisplay(vpu2, vpv2);
+    const ndvp2 = model._parent.normalizedDisplayToDisplay(vpu2, vpv2);
 
     // now compute the size of the intersection of the viewport with the
     // current tile

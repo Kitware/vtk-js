@@ -73,7 +73,7 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
     if (model.context.getExtension('EXT_frag_depth')) {
       fragString = 'gl_FragDepthEXT = (pos.z / pos.w + 1.0) / 2.0;\n';
     }
-    if (model.openGLRenderWindow.getWebgl2()) {
+    if (model._openGLRenderWindow.getWebgl2()) {
       fragString = 'gl_FragDepth = (pos.z / pos.w + 1.0) / 2.0;\n';
     }
     FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Depth::Impl', [
@@ -246,7 +246,7 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
       if (!vbo.getColorBO()) {
         vbo.setColorBO(vtkBufferObject.newInstance());
       }
-      vbo.getColorBO().setOpenGLRenderWindow(model.openGLRenderWindow);
+      vbo.getColorBO().setOpenGLRenderWindow(model._openGLRenderWindow);
     } else if (vbo.getColorBO()) {
       vbo.setColorBO(null);
     }

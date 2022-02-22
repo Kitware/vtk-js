@@ -16,7 +16,7 @@ function vtkOpenGLScalarBarActor(publicAPI, model) {
     if (prepass) {
       model.openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model.openGLRenderWindow = model.openGLRenderer.getParent();
+      model._openGLRenderWindow = model.openGLRenderer.getParent();
 
       if (!model.scalarBarActorHelper.getRenderable()) {
         model.scalarBarActorHelper.setRenderable(model.renderable);
@@ -39,7 +39,7 @@ function vtkOpenGLScalarBarActor(publicAPI, model) {
       model.scalarBarActorHelper.updateAPISpecificData(
         [tsize.usize, tsize.vsize],
         camera,
-        model.openGLRenderWindow.getRenderable()
+        model._openGLRenderWindow.getRenderable()
       );
     }
   };

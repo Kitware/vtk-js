@@ -484,7 +484,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   );
 
   model.resliceCursorActor = vtkResliceCursorActor.newInstance({
-    parentProp: publicAPI,
+    _parentProp: publicAPI,
   });
   model.startPickPosition = null;
   model.startCenterPosition = null;

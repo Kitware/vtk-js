@@ -22,8 +22,8 @@ function vtkAbstractWidget(publicAPI, model) {
       return;
     }
 
-    if (model.interactor) {
-      const renderer = model.interactor.getCurrentRenderer();
+    if (model._interactor) {
+      const renderer = model._interactor.getCurrentRenderer();
       if (renderer && model.widgetRep) {
         renderer.removeViewProp(model.widgetRep);
       }
@@ -34,10 +34,10 @@ function vtkAbstractWidget(publicAPI, model) {
 
     if (enable) {
       // Add representation to new interactor's renderer
-      if (!model.interactor) {
+      if (!model._interactor) {
         return;
       }
-      const renderer = model.interactor.getCurrentRenderer();
+      const renderer = model._interactor.getCurrentRenderer();
       if (!renderer) {
         return;
       }
@@ -50,13 +50,13 @@ function vtkAbstractWidget(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.render = () => {
-    if (!model.parent && model.interactor) {
-      model.interactor.render();
+    if (!model._parent && model._interactor) {
+      model._interactor.render();
     }
   };
 
   publicAPI.isDragable = () =>
-    model.dragable && (model.parent ? model.parent.isDragable() : true);
+    model.dragable && (model._parent ? model._parent.isDragable() : true);
 }
 
 // ----------------------------------------------------------------------------
@@ -67,7 +67,7 @@ const DEFAULT_VALUES = {
   enabled: false, // Make widgets disabled by default
   priority: 0.5, // Use a priority of 0.5, since default priority from vtkInteractorObserver is 0.0.
   widgetRep: null,
-  parent: null,
+  // _parent: null,
   dragable: true,
 };
 
@@ -79,7 +79,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkInteractorObserver.extend(publicAPI, model, newDefault);
 
-  macro.setGet(publicAPI, model, ['widgetRep', 'parent', 'dragable']);
+  macro.setGet(publicAPI, model, ['widgetRep', '_parent', 'dragable']);
+  macro.moveToProtected(publicAPI, model, ['parent']);
 
   // Object methods
   vtkAbstractWidget(publicAPI, model);

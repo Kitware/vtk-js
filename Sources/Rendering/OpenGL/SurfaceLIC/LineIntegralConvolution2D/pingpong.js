@@ -106,24 +106,24 @@ function allocateVectorBuffer(openGLRenderWindow, size) {
 
 function vtkLICPingPongBufferManager(publicAPI, model) {
   model.classHierarchy.push('vtkLICPingPongBufferManager');
-  if (!model.openGLRenderWindow) {
+  if (!model._openGLRenderWindow) {
     console.error('Pass renderwindow to ping pong manager');
     return;
   }
 
   // Don't handle bind/restoring framebuffers, assume it has been done upstream
 
-  model.quad = getQuadPoly(model.openGLRenderWindow);
-  model.context = model.openGLRenderWindow.getContext();
-  model.licTexture0 = allocateLICBuffer(model.openGLRenderWindow, model.size);
-  model.seedTexture0 = allocateLICBuffer(model.openGLRenderWindow, model.size);
-  model.licTexture1 = allocateLICBuffer(model.openGLRenderWindow, model.size);
-  model.seedTexture1 = allocateLICBuffer(model.openGLRenderWindow, model.size);
+  model.quad = getQuadPoly(model._openGLRenderWindow);
+  model.context = model._openGLRenderWindow.getContext();
+  model.licTexture0 = allocateLICBuffer(model._openGLRenderWindow, model.size);
+  model.seedTexture0 = allocateLICBuffer(model._openGLRenderWindow, model.size);
+  model.licTexture1 = allocateLICBuffer(model._openGLRenderWindow, model.size);
+  model.seedTexture1 = allocateLICBuffer(model._openGLRenderWindow, model.size);
   model.eeTexture = model.doEEPass
-    ? allocateNoiseBuffer(model.openGLRenderWindow, model.size)
+    ? allocateNoiseBuffer(model._openGLRenderWindow, model.size)
     : null;
   model.imageVectorTexture = model.doVTPass
-    ? allocateVectorBuffer(model.openGLRenderWindow, model.size)
+    ? allocateVectorBuffer(model._openGLRenderWindow, model.size)
     : null;
 
   model.pingTextures[0] = model.licTexture0;
@@ -144,7 +144,7 @@ function vtkLICPingPongBufferManager(publicAPI, model) {
     let VAO = model.quadVAO;
     if (!VAO) {
       VAO = vtkVertexArrayObject.newInstance();
-      VAO.setOpenGLRenderWindow(model.openGLRenderWindow);
+      VAO.setOpenGLRenderWindow(model._openGLRenderWindow);
       model.quadVAO = VAO;
     }
 
@@ -445,7 +445,7 @@ function vtkLICPingPongBufferManager(publicAPI, model) {
 }
 
 const DEFAULT_VALUES = {
-  openGLRenderWindow: null,
+  // _openGLRenderWindow: null,
   vectorTexture: null,
   maskVectorTexture: null,
   noiseTexture: null,
@@ -470,13 +470,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'doEEPass',
     'doVTPass',
-    'openGLRenderWindow',
+    '_openGLRenderWindow',
     'vectorTexture',
     'maskVectorTexture',
     'noiseTexture',
     'framebuffer',
     'size',
   ]);
+  macro.moveToProtected(publicAPI, model, ['openGLRenderWindow']);
 
   // Object methods
   vtkLICPingPongBufferManager(publicAPI, model);

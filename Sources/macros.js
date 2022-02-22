@@ -108,11 +108,15 @@ export function newTypedArrayFrom(type, ...args) {
 }
 
 // ----------------------------------------------------------------------------
-// capitilze provided string
+// capitilize provided string
 // ----------------------------------------------------------------------------
 
 export function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export function _capitalize(str) {
+  return capitalize(str[0] === '_' ? str.slice(1) : str);
 }
 
 export function uncapitalize(str) {
@@ -414,9 +418,9 @@ export function obj(publicAPI = {}, model = {}) {
 export function get(publicAPI, model, fieldNames) {
   fieldNames.forEach((field) => {
     if (typeof field === 'object') {
-      publicAPI[`get${capitalize(field.name)}`] = () => model[field.name];
+      publicAPI[`get${_capitalize(field.name)}`] = () => model[field.name];
     } else {
-      publicAPI[`get${capitalize(field)}`] = () => model[field];
+      publicAPI[`get${_capitalize(field)}`] = () => model[field];
     }
   });
 }
@@ -494,12 +498,12 @@ function findSetter(field) {
 export function set(publicAPI, model, fields) {
   fields.forEach((field) => {
     if (typeof field === 'object') {
-      publicAPI[`set${capitalize(field.name)}`] = findSetter(field)(
+      publicAPI[`set${_capitalize(field.name)}`] = findSetter(field)(
         publicAPI,
         model
       );
     } else {
-      publicAPI[`set${capitalize(field)}`] = findSetter(field)(
+      publicAPI[`set${_capitalize(field)}`] = findSetter(field)(
         publicAPI,
         model
       );
@@ -523,9 +527,9 @@ export function setGet(publicAPI, model, fieldNames) {
 
 export function getArray(publicAPI, model, fieldNames) {
   fieldNames.forEach((field) => {
-    publicAPI[`get${capitalize(field)}`] = () =>
+    publicAPI[`get${_capitalize(field)}`] = () =>
       model[field] ? [].concat(model[field]) : model[field];
-    publicAPI[`get${capitalize(field)}ByReference`] = () => model[field];
+    publicAPI[`get${_capitalize(field)}ByReference`] = () => model[field];
   });
 }
 
@@ -549,7 +553,7 @@ export function setArray(
       );
     }
 
-    publicAPI[`set${capitalize(field)}`] = (...args) => {
+    publicAPI[`set${_capitalize(field)}`] = (...args) => {
       if (model.deleted) {
         vtkErrorMacro('instance deleted - cannot call any method');
         return false;
@@ -595,7 +599,7 @@ export function setArray(
       return changeDetected;
     };
 
-    publicAPI[`set${capitalize(field)}From`] = (otherArray) => {
+    publicAPI[`set${_capitalize(field)}From`] = (otherArray) => {
       const target = model[field];
       otherArray.forEach((v, i) => {
         target[i] = v;
@@ -619,6 +623,15 @@ export function setGetArray(
   setArray(publicAPI, model, fieldNames, size, defaultVal);
 }
 
+export function moveToProtected(publicAPI, model, fieldNames) {
+  for (let i = 0; i < fieldNames.length; i++) {
+    const fieldName = fieldNames[i];
+    if (model[fieldName] !== undefined) {
+      model[`_${fieldName}`] = model[fieldName];
+      delete model[fieldName];
+    }
+  }
+}
 // ----------------------------------------------------------------------------
 // vtkAlgorithm: setInputData(), setInputConnection(), getOutputData(), getOutputPort()
 // ----------------------------------------------------------------------------
@@ -909,9 +922,9 @@ export function event(publicAPI, model, eventName) {
     /* eslint-enable prefer-rest-params */
   }
 
-  publicAPI[`invoke${capitalize(eventName)}`] = invoke;
+  publicAPI[`invoke${_capitalize(eventName)}`] = invoke;
 
-  publicAPI[`on${capitalize(eventName)}`] = (callback, priority = 0.0) => {
+  publicAPI[`on${_capitalize(eventName)}`] = (callback, priority = 0.0) => {
     if (!callback.apply) {
       console.error(`Invalid callback for event ${eventName}`);
       return null;
@@ -1178,7 +1191,7 @@ export function proxy(publicAPI, model) {
 
   publicAPI.activate = () => {
     if (model.proxyManager) {
-      const setActiveMethod = `setActive${capitalize(
+      const setActiveMethod = `setActive${_capitalize(
         publicAPI.getProxyGroup().slice(0, -1)
       )}`;
       if (model.proxyManager[setActiveMethod]) {
@@ -1235,7 +1248,7 @@ export function proxy(publicAPI, model) {
       }
 
       const newValue =
-        sourceLink.instance[`get${capitalize(sourceLink.propertyName)}`]();
+        sourceLink.instance[`get${_capitalize(sourceLink.propertyName)}`]();
       if (!shallowEquals(newValue, value) || force) {
         value = newValue;
         updateInProgress = true;
@@ -1321,7 +1334,7 @@ export function proxy(publicAPI, model) {
     const propertyNames = listProxyProperties(groupName) || [];
     for (let i = 0; i < propertyNames.length; i++) {
       const name = propertyNames[i];
-      const method = publicAPI[`get${capitalize(name)}`];
+      const method = publicAPI[`get${_capitalize(name)}`];
       const value = method ? method() : undefined;
       const prop = {
         id,
@@ -1407,8 +1420,8 @@ export function proxyPropertyMapping(publicAPI, model, map) {
   while (count--) {
     const propertyName = propertyNames[count];
     const { modelKey, property, modified = true } = map[propertyName];
-    const methodSrc = capitalize(property);
-    const methodDst = capitalize(propertyName);
+    const methodSrc = _capitalize(property);
+    const methodDst = _capitalize(propertyName);
     publicAPI[`get${methodDst}`] = model[modelKey][`get${methodSrc}`];
     publicAPI[`set${methodDst}`] = model[modelKey][`set${methodSrc}`];
     if (modified) {
@@ -1470,7 +1483,7 @@ export function proxyPropertyState(
 
     // Add set method
     const mapping = state[key];
-    publicAPI[`set${capitalize(key)}`] = (value) => {
+    publicAPI[`set${_capitalize(key)}`] = (value) => {
       if (value !== model[key]) {
         model[key] = value;
         const propValues = mapping[value];
@@ -1687,6 +1700,7 @@ export default {
   getStateArrayMapFunc,
   isVtkObject,
   keystore,
+  moveToProtected,
   newInstance,
   newTypedArray,
   newTypedArrayFrom,

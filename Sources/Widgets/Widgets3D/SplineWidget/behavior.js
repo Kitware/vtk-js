@@ -105,41 +105,41 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.setResetAfterPointPlacement =
-    model.factory.setResetAfterPointPlacement;
+    model._factory.setResetAfterPointPlacement;
   publicAPI.getResetAfterPointPlacement =
-    model.factory.getResetAfterPointPlacement;
+    model._factory.getResetAfterPointPlacement;
   publicAPI.setResetAfterPointPlacement(
     publicAPI.getResetAfterPointPlacement()
   );
 
-  publicAPI.setFreehandMinDistance = model.factory.setFreehandMinDistance;
-  publicAPI.getFreehandMinDistance = model.factory.getFreehandMinDistance;
+  publicAPI.setFreehandMinDistance = model._factory.setFreehandMinDistance;
+  publicAPI.getFreehandMinDistance = model._factory.getFreehandMinDistance;
   publicAPI.setFreehandMinDistance(publicAPI.getFreehandMinDistance());
 
-  publicAPI.setAllowFreehand = model.factory.setAllowFreehand;
-  publicAPI.getAllowFreehand = model.factory.getAllowFreehand;
+  publicAPI.setAllowFreehand = model._factory.setAllowFreehand;
+  publicAPI.getAllowFreehand = model._factory.getAllowFreehand;
   publicAPI.setAllowFreehand(publicAPI.getAllowFreehand());
 
-  publicAPI.setDefaultCursor = model.factory.setDefaultCursor;
-  publicAPI.getDefaultCursor = model.factory.getDefaultCursor;
+  publicAPI.setDefaultCursor = model._factory.setDefaultCursor;
+  publicAPI.getDefaultCursor = model._factory.getDefaultCursor;
   publicAPI.setDefaultCursor(publicAPI.getDefaultCursor());
 
   // --------------------------------------------------------------------------
 
   publicAPI.setHandleSizeInPixels = (size) => {
-    model.factory.setHandleSizeInPixels(size);
+    model._factory.setHandleSizeInPixels(size);
     updateHandlesSize();
   };
-  publicAPI.getHandleSizeInPixels = model.factory.getHandleSizeInPixels;
-  publicAPI.setHandleSizeInPixels(model.factory.getHandleSizeInPixels()); // set initial value
+  publicAPI.getHandleSizeInPixels = model._factory.getHandleSizeInPixels;
+  publicAPI.setHandleSizeInPixels(model._factory.getHandleSizeInPixels()); // set initial value
 
   // --------------------------------------------------------------------------
 
   publicAPI.setResolution = (resolution) => {
-    model.factory.setResolution(resolution);
+    model._factory.setResolution(resolution);
     model.representations[1].setResolution(resolution);
   };
-  publicAPI.setResolution(model.factory.getResolution()); // set initial value
+  publicAPI.setResolution(model._factory.getResolution()); // set initial value
 
   // --------------------------------------------------------------------------
 
@@ -169,11 +169,11 @@ export default function widgetBehavior(publicAPI, model) {
     }
 
     if (model.activeState !== model.moveHandle) {
-      model.interactor.requestAnimation(publicAPI);
+      model._interactor.requestAnimation(publicAPI);
       model.activeState.deactivate();
       model.widgetState.removeHandle(model.activeState);
       model.activeState = null;
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
     } else {
       const handle = getHoveredHandle();
       if (handle) {
@@ -225,7 +225,7 @@ export default function widgetBehavior(publicAPI, model) {
     } else {
       model.isDragging = true;
       model.apiSpecificRenderWindow.setCursor('grabbing');
-      model.interactor.requestAnimation(publicAPI);
+      model._interactor.requestAnimation(publicAPI);
       publicAPI.invokeStartInteractionEvent();
     }
 
@@ -241,7 +241,7 @@ export default function widgetBehavior(publicAPI, model) {
       if (!model.hasFocus) {
         model.apiSpecificRenderWindow.setCursor(model.defaultCursor);
         model.widgetState.deactivate();
-        model.interactor.cancelAnimation(publicAPI);
+        model._interactor.cancelAnimation(publicAPI);
         publicAPI.invokeEndInteractionEvent();
       } else {
         model.moveHandle.setOrigin(...model.activeState.getOrigin());
@@ -273,7 +273,7 @@ export default function widgetBehavior(publicAPI, model) {
           }
         }
 
-        model.interactor.render();
+        model._interactor.render();
       }
     } else if (model.activeState !== model.moveHandle) {
       model.widgetState.deactivate();
@@ -387,7 +387,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState = model.moveHandle;
       model.activeState.activate();
       model.activeState.setVisible(true);
-      model.interactor.requestAnimation(publicAPI);
+      model._interactor.requestAnimation(publicAPI);
       updateHandlesSize();
     }
 
@@ -398,14 +398,14 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.loseFocus = () => {
     if (model.hasFocus) {
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
     }
 
     model.widgetState.deactivate();
     model.moveHandle.deactivate();
     model.moveHandle.setVisible(false);
     model.activeState = null;
-    model.interactor.render();
+    model._interactor.render();
 
     model.hasFocus = false;
   };

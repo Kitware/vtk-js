@@ -43,6 +43,12 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
         apiSpecificRenderWindow,
         factory: publicAPI,
       });
+      macro.moveToProtected(widgetPublicAPI, widgetModel, [
+        'renderer',
+        'camera',
+        'apiSpecificRenderWindow',
+        'factory',
+      ]);
       macro.safeArrays(widgetModel);
       vtkAbstractWidget.extend(widgetPublicAPI, widgetModel, initialValues);
 
@@ -53,7 +59,7 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
         .getRepresentationsForViewType(viewType)
         .map(({ builder, labels, initialValues }) =>
           builder.newInstance({
-            parentProp: widgetPublicAPI,
+            _parentProp: widgetPublicAPI,
             labels,
             ...initialValues,
             ...widgetInitialValues,

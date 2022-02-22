@@ -68,7 +68,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
         colorByArrayName: 'color',
         scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
       }),
-      actor: vtkActor.newInstance({ pickable: false, parentProp: publicAPI }),
+      actor: vtkActor.newInstance({ pickable: false, _parentProp: publicAPI }),
     },
   };
 

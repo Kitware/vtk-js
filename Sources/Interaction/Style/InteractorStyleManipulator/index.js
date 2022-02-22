@@ -345,11 +345,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       }
       model.currentManipulator.startInteraction();
       model.currentManipulator.onButtonDown(
-        model.interactor,
+        model._interactor,
         callData.pokedRenderer,
         callData.position
       );
-      model.interactor.requestAnimation(publicAPI.onButtonDown);
+      model._interactor.requestAnimation(publicAPI.onButtonDown);
       publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
     } else {
       vtkDebugMacro('No manipulator found');
@@ -415,10 +415,10 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       model.currentManipulator.getButton &&
       model.currentManipulator.getButton() === button
     ) {
-      model.currentManipulator.onButtonUp(model.interactor);
+      model.currentManipulator.onButtonUp(model._interactor);
       model.currentManipulator.endInteraction();
       model.currentManipulator = null;
-      model.interactor.cancelAnimation(publicAPI.onButtonDown);
+      model._interactor.cancelAnimation(publicAPI.onButtonDown);
       publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
     }
   };
@@ -447,12 +447,12 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     if (manipulator) {
       model.currentWheelManipulator = manipulator;
       model.currentWheelManipulator.onStartScroll(
-        model.interactor,
+        model._interactor,
         callData.pokedRenderer,
         callData.spinY
       );
       model.currentWheelManipulator.startInteraction();
-      model.interactor.requestAnimation(publicAPI.handleStartMouseWheel);
+      model._interactor.requestAnimation(publicAPI.handleStartMouseWheel);
       publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
     } else {
       vtkDebugMacro('No manipulator found');
@@ -465,10 +465,10 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       return;
     }
     if (model.currentWheelManipulator.onEndScroll) {
-      model.currentWheelManipulator.onEndScroll(model.interactor);
+      model.currentWheelManipulator.onEndScroll(model._interactor);
       model.currentWheelManipulator.endInteraction();
       model.currentWheelManipulator = null;
-      model.interactor.cancelAnimation(publicAPI.handleStartMouseWheel);
+      model._interactor.cancelAnimation(publicAPI.handleStartMouseWheel);
       publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
     }
   };
@@ -480,7 +480,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       model.currentWheelManipulator.onScroll
     ) {
       model.currentWheelManipulator.onScroll(
-        model.interactor,
+        model._interactor,
         callData.pokedRenderer,
         callData.spinY,
         model.cachedMousePosition
@@ -494,7 +494,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     model.cachedMousePosition = callData.position;
     if (model.currentManipulator && model.currentManipulator.onMouseMove) {
       model.currentManipulator.onMouseMove(
-        model.interactor,
+        model._interactor,
         callData.pokedRenderer,
         callData.position
       );
@@ -510,7 +510,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       .filter((m) => m.onKeyPress)
       .forEach((manipulator) => {
         manipulator.onKeyPress(
-          model.interactor,
+          model._interactor,
           callData.pokedRenderer,
           callData.key
         );
@@ -524,7 +524,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       .filter((m) => m.onKeyDown)
       .forEach((manipulator) => {
         manipulator.onKeyDown(
-          model.interactor,
+          model._interactor,
           callData.pokedRenderer,
           callData.key
         );
@@ -538,7 +538,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       .filter((m) => m.onKeyUp)
       .forEach((manipulator) => {
         manipulator.onKeyUp(
-          model.interactor,
+          model._interactor,
           callData.pokedRenderer,
           callData.key
         );
@@ -556,11 +556,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     while (count--) {
       const manipulator = model.gestureManipulators[count];
       if (manipulator && manipulator.isPinchEnabled()) {
-        manipulator.onStartPinch(model.interactor, callData.scale);
+        manipulator.onStartPinch(model._interactor, callData.scale);
         manipulator.startInteraction();
       }
     }
-    model.interactor.requestAnimation(publicAPI.handleStartPinch);
+    model._interactor.requestAnimation(publicAPI.handleStartPinch);
     publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
   };
 
@@ -571,11 +571,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     while (count--) {
       const manipulator = model.gestureManipulators[count];
       if (manipulator && manipulator.isPinchEnabled()) {
-        manipulator.onEndPinch(model.interactor);
+        manipulator.onEndPinch(model._interactor);
         manipulator.endInteraction();
       }
     }
-    model.interactor.cancelAnimation(publicAPI.handleStartPinch);
+    model._interactor.cancelAnimation(publicAPI.handleStartPinch);
     publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
   };
 
@@ -586,11 +586,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     while (count--) {
       const manipulator = model.gestureManipulators[count];
       if (manipulator && manipulator.isRotateEnabled()) {
-        manipulator.onStartRotate(model.interactor, callData.rotation);
+        manipulator.onStartRotate(model._interactor, callData.rotation);
         manipulator.startInteraction();
       }
     }
-    model.interactor.requestAnimation(publicAPI.handleStartRotate);
+    model._interactor.requestAnimation(publicAPI.handleStartRotate);
     publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
   };
 
@@ -601,11 +601,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     while (count--) {
       const manipulator = model.gestureManipulators[count];
       if (manipulator && manipulator.isRotateEnabled()) {
-        manipulator.onEndRotate(model.interactor);
+        manipulator.onEndRotate(model._interactor);
         manipulator.endInteraction();
       }
     }
-    model.interactor.cancelAnimation(publicAPI.handleStartRotate);
+    model._interactor.cancelAnimation(publicAPI.handleStartRotate);
     publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
   };
 
@@ -616,11 +616,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     while (count--) {
       const manipulator = model.gestureManipulators[count];
       if (manipulator && manipulator.isPanEnabled()) {
-        manipulator.onStartPan(model.interactor, callData.translation);
+        manipulator.onStartPan(model._interactor, callData.translation);
         manipulator.startInteraction();
       }
     }
-    model.interactor.requestAnimation(publicAPI.handleStartPan);
+    model._interactor.requestAnimation(publicAPI.handleStartPan);
     publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
   };
 
@@ -631,11 +631,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     while (count--) {
       const manipulator = model.gestureManipulators[count];
       if (manipulator && manipulator.isPanEnabled()) {
-        manipulator.onEndPan(model.interactor);
+        manipulator.onEndPan(model._interactor);
         manipulator.endInteraction();
       }
     }
-    model.interactor.cancelAnimation(publicAPI.handleStartPan);
+    model._interactor.cancelAnimation(publicAPI.handleStartPan);
     publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
   };
 
@@ -647,7 +647,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       const manipulator = model.gestureManipulators[count];
       if (manipulator && manipulator.isPinchEnabled()) {
         manipulator.onPinch(
-          model.interactor,
+          model._interactor,
           callData.pokedRenderer,
           callData.scale
         );
@@ -667,7 +667,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       const manipulator = model.gestureManipulators[count];
       if (manipulator && manipulator.isPanEnabled()) {
         manipulator.onPan(
-          model.interactor,
+          model._interactor,
           callData.pokedRenderer,
           callData.translation
         );
@@ -687,7 +687,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       const manipulator = model.gestureManipulators[count];
       if (manipulator && manipulator.isRotateEnabled()) {
         manipulator.onRotate(
-          model.interactor,
+          model._interactor,
           callData.pokedRenderer,
           callData.rotation
         );

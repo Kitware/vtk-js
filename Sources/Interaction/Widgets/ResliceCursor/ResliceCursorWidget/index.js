@@ -28,11 +28,11 @@ function vtkResliceCursorWidget(publicAPI, model) {
       case InteractionState.ON_AXIS1:
       case InteractionState.ON_AXIS2:
       case InteractionState.ON_CENTER: {
-        model.interactor.getView().setCursor('pointer');
+        model._interactor.getView().setCursor('pointer');
         break;
       }
       default: {
-        model.interactor.getView().setCursor('default');
+        model._interactor.getView().setCursor('default');
       }
     }
   };
@@ -126,7 +126,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
   publicAPI.setInteractor = (i) => {
     superClass.setInteractor(i);
 
-    model.imageInteractorStyle.setInteractor(model.interactor);
+    model.imageInteractorStyle.setInteractor(model._interactor);
     model.imageInteractorStyle.setEnabled(false);
   };
 }
