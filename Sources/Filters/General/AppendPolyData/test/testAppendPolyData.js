@@ -66,9 +66,8 @@ test('Test vtkAppendPolyData execution', (t) => {
 });
 
 test('Test addInputData edge case', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
-  const appender = gc.registerResource(vtkAppendPolyData.newInstance());
-  const input = gc.registerResource(vtkPolyData.newInstance());
+  const appender = vtkAppendPolyData.newInstance();
+  const input = vtkPolyData.newInstance();
 
   appender.addInputData(input);
   const output = appender.getOutputData();
@@ -76,7 +75,7 @@ test('Test addInputData edge case', (t) => {
   t.ok(input === output, 'Single add input matches output');
   t.ok(appender.getNumberOfInputPorts() === 1, 'Expect 1 port after 1 add');
 
-  const input2 = gc.registerResource(vtkPolyData.newInstance());
+  const input2 = vtkPolyData.newInstance();
   appender.addInputData(input2);
   const output2 = appender.getOutputData();
 
