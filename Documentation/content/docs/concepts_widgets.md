@@ -162,4 +162,9 @@ Below is a table that summarizes some widget feature needs and their availabilit
 | Mouse pick      | Yes |   | Yes | WidgetManager, [ImageCroppingWidget](https://kitware.github.io/vtk-js/examples/ImageCroppingWidget.html) | Yes | [LineWidget](https://kitware.github.io/vtk-js/examples/LineWidget.html) (text handle is pickable)
 | Mouse drag      | Yes |   | Yes | [ImageCroppingWidget](https://kitware.github.io/vtk-js/examples/ImageCroppingWidget.html)  | No |
 
+The SVG layer is provided as a proof-of-concept for SVG integration within VTK.JS.
+It is limited by its current virtual DOM implementation. We do not advise to rely on it.
+You may instead want to rely on the DOM capabilities of your JS framework (e.g. React, Vue...)
+For these reasons, efforts will be made to have 3D widgets rather than SVG widgets (that should belong to applications).
+
 [WidgetsDiagram]: ./gallery/widgets_diagram.png
