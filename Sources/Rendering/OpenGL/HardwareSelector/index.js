@@ -65,7 +65,7 @@ function getPixelInformationWithData(
       buffdata.pixBuffer[PassTypes.ACTOR_PASS],
       buffdata.area
     );
-    if (actorid <= 0) {
+    if (actorid <= 0 || actorid - idOffset >= buffdata.props.length) {
       // the pixel did not hit any actor.
       return null;
     }
@@ -585,7 +585,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
         model.pixBuffer[PassTypes.ACTOR_PASS],
         model.area
       );
-      if (actorid <= 0) {
+      if (actorid <= 0 || actorid - idOffset >= model.props.length) {
         // the pixel did not hit any actor.
         return null;
       }
