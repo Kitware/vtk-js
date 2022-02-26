@@ -682,6 +682,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           publicAPI.modified();
 
           if (resetCamera) {
+            const isUserResetCamera = resetCamera !== true;
+
             // If resetCamera was requested, we first save camera parameters
             // from all the renderers, so we can restore them later
             model._screenshot.cameras = model.renderable
@@ -695,7 +697,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
                 );
 
                 return {
-                  resetCameraFn: renderer.resetCamera,
+                  resetCameraArgs: isUserResetCamera ? { renderer } : undefined,
+                  resetCameraFn: isUserResetCamera
+                    ? resetCamera
+                    : renderer.resetCamera,
                   restoreParamsFn: camera.set,
                   // "clone" the params so we don't keep refs to properties
                   arg: JSON.parse(JSON.stringify(params)),
@@ -705,8 +710,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
             // Perform the resetCamera() on each renderer only after capturing
             // the params from all active cameras, in case there happen to be
             // linked cameras among the renderers.
-            model._screenshot.cameras.forEach(({ resetCameraFn }) =>
-              resetCameraFn()
+            model._screenshot.cameras.forEach(
+              ({ resetCameraFn, resetCameraArgs }) =>
+                resetCameraFn(resetCameraArgs)
             );
           }
 
