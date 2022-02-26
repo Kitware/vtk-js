@@ -1,6 +1,7 @@
 import vtkRenderWindow from './RenderWindow';
 import './Actor';
 import './Camera';
+import './CubeAxesActor';
 import './ForwardPass';
 import './Glyph3DMapper';
 import './HardwareSelector';
