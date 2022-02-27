@@ -4,7 +4,7 @@ import 'vtk.js/Sources/Rendering/WebGPU/Renderer';
 
 // Geometry
 import 'vtk.js/Sources/Rendering/WebGPU/Actor';
-// import 'vtk.js/Sources/Rendering/WebGPU/Actor2D';
+import 'vtk.js/Sources/Rendering/WebGPU/CubeAxesActor';
 import 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper';
 // import 'vtk.js/Sources/Rendering/WebGPU/Skybox';
 import 'vtk.js/Sources/Rendering/WebGPU/ScalarBarActor';
