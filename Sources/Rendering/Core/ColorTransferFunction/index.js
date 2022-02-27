@@ -217,7 +217,10 @@ function vtkColorTransferFunction(publicAPI, model) {
       const before = JSON.stringify(model.nodes);
       model.nodes = nodes;
       const after = JSON.stringify(model.nodes);
-      return publicAPI.sortAndUpdateRange() || before !== after;
+      if (publicAPI.sortAndUpdateRange() || before !== after) {
+        publicAPI.modified();
+        return true;
+      }
     }
     return false;
   };
