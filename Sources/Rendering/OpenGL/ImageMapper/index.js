@@ -565,7 +565,20 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       }
       const image = model.currentInput;
       const w2imat4 = image.getWorldToIndex();
-      mat4.multiply(model.imagematinv, w2imat4, actor.getMatrix());
+
+      const shiftScaleEnabled = cellBO.getCABO().getCoordShiftAndScaleEnabled();
+      const inverseShiftScaleMatrix = shiftScaleEnabled
+        ? cellBO.getCABO().getInverseShiftAndScaleMatrix()
+        : null;
+      const mat = inverseShiftScaleMatrix
+        ? mat4.copy(model.imagematinv, actor.getMatrix())
+        : actor.getMatrix();
+      if (inverseShiftScaleMatrix) {
+        mat4.transpose(mat, mat);
+        mat4.multiply(mat, mat, inverseShiftScaleMatrix);
+        mat4.transpose(mat, mat);
+      }
+      mat4.multiply(model.imagematinv, mat, w2imat4);
       const planeEquations = [];
       for (let i = 0; i < numClipPlanes; i++) {
         const planeEquation = [];

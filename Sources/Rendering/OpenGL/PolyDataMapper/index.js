@@ -1287,13 +1287,23 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       // add all the clipping planes
       const numClipPlanes = model.renderable.getNumberOfClippingPlanes();
       const planeEquations = [];
+
+      const shiftScaleEnabled = cellBO.getCABO().getCoordShiftAndScaleEnabled();
+      const inverseShiftScaleMatrix = shiftScaleEnabled
+        ? cellBO.getCABO().getInverseShiftAndScaleMatrix()
+        : null;
+      const mat = inverseShiftScaleMatrix
+        ? mat4.copy(model.tmpMat4, actor.getMatrix())
+        : actor.getMatrix();
+      if (inverseShiftScaleMatrix) {
+        mat4.transpose(mat, mat);
+        mat4.multiply(mat, mat, inverseShiftScaleMatrix);
+        mat4.transpose(mat, mat);
+      }
+
       for (let i = 0; i < numClipPlanes; i++) {
         const planeEquation = [];
-        model.renderable.getClippingPlaneInDataCoords(
-          actor.getMatrix(),
-          i,
-          planeEquation
-        );
+        model.renderable.getClippingPlaneInDataCoords(mat, i, planeEquation);
 
         for (let j = 0; j < 4; j++) {
           planeEquations.push(planeEquation[j]);
