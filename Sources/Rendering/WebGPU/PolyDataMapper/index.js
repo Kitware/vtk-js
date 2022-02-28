@@ -33,7 +33,7 @@ const vtkWebGPUPolyDataVS = `
 
 //VTK::IOStructs::Dec
 
-[[stage(vertex)]]
+@stage(vertex)
 fn main(
 //VTK::IOStructs::Input
 )
@@ -75,7 +75,7 @@ const vtkWebGPUPolyDataFS = `
 
 //VTK::IOStructs::Dec
 
-[[stage(fragment)]]
+@stage(fragment)
 fn main(
 //VTK::IOStructs::Input
 )
@@ -214,10 +214,10 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
+    vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
     let code = vDesc.getCode();
     if (isEdges(hash)) {
-      vDesc.addBuiltinInput('u32', '[[builtin(instance_index)]] instanceIndex');
+      vDesc.addBuiltinInput('u32', '@builtin(instance_index) instanceIndex');
       // widen the edge
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
         '    var tmpPos: vec4<f32> = rendererUBO.SCPCMatrix*mapperUBO.BCSCMatrix*vertexBC;',
@@ -403,6 +403,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     }
 
     const vertexInput = model.primitives[primType].getVertexInput();
+    const hash = `R${representation}P${primType}`;
 
     // hash = all things that can change the values on the buffer
     // since mtimes are unique we can use
@@ -416,26 +417,25 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     // - packExtra - covered by format
     // - prim type (vert/lines/polys/strips) - covered by cells mtime
 
-    const hash = cells.getMTime() + representation;
     // points
     const points = pd.getPoints();
     if (points) {
       const shift = model.WebGPUActor.getBufferShift(model.WebGPURenderer);
       const buffRequest = {
-        hash: hash + points.getMTime(),
-        dataArray: points,
-        source: points,
-        cells,
-        primitiveType: primType,
-        representation,
+        owner: points,
+        usage: BufferUsage.PointArray,
+        format: 'float32x4',
         time: Math.max(
           points.getMTime(),
           cells.getMTime(),
           model.WebGPUActor.getKeyMatricesTime().getMTime()
         ),
+        hash,
+        dataArray: points,
+        cells,
+        primitiveType: primType,
+        representation,
         shift,
-        usage: BufferUsage.PointArray,
-        format: 'float32x4',
         packExtra: true,
       };
       const buff = device.getBufferManager().getBuffer(buffRequest);
@@ -449,26 +449,25 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     if (usage === BufferUsage.Triangles || usage === BufferUsage.Strips) {
       const normals = pd.getPointData().getNormals();
       const buffRequest = {
+        format: 'snorm8x4',
+        hash,
         cells,
         representation,
         primitiveType: primType,
-        format: 'snorm8x4',
         packExtra: true,
         shift: 0,
         scale: 127,
       };
       if (normals) {
-        buffRequest.hash = hash + normals.getMTime();
+        buffRequest.owner = normals;
         buffRequest.dataArray = normals;
-        buffRequest.source = normals;
         buffRequest.time = Math.max(normals.getMTime(), cells.getMTime());
         buffRequest.usage = BufferUsage.PointArray;
         const buff = device.getBufferManager().getBuffer(buffRequest);
         vertexInput.addBuffer(buff, ['normalMC']);
       } else if (primType === PrimitiveTypes.Triangles) {
-        buffRequest.hash = hash + points.getMTime();
+        buffRequest.owner = points;
         buffRequest.dataArray = points;
-        buffRequest.source = points;
         buffRequest.time = Math.max(points.getMTime(), cells.getMTime());
         buffRequest.usage = BufferUsage.NormalsFromPoints;
         const buff = device.getBufferManager().getBuffer(buffRequest);
@@ -499,15 +498,15 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
           haveCellScalars = true;
         }
         const buffRequest = {
-          hash: hash + points.getMTime(),
+          owner: c,
+          usage: BufferUsage.PointArray,
+          format: 'unorm8x4',
+          time: Math.max(c.getMTime(), cells.getMTime(), points.getMTime()),
+          hash: hash + haveCellScalars,
           dataArray: c,
-          source: c,
           cells,
           primitiveType: primType,
           representation,
-          time: Math.max(c.getMTime(), cells.getMTime()),
-          usage: BufferUsage.PointArray,
-          format: 'unorm8x4',
           cellData: haveCellScalars,
           cellOffset: 0,
         };
@@ -531,15 +530,15 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     }
     if (tcoords && !edges) {
       const buffRequest = {
-        hash: hash + tcoords.getMTime(),
+        owner: tcoords,
+        usage: BufferUsage.PointArray,
+        format: 'float32x2',
+        time: Math.max(tcoords.getMTime(), cells.getMTime()),
+        hash,
         dataArray: tcoords,
-        source: tcoords,
         cells,
         primitiveType: primType,
         representation,
-        time: Math.max(tcoords.getMTime(), cells.getMTime()),
-        usage: BufferUsage.PointArray,
-        format: 'float32x2',
       };
       const buff = device.getBufferManager().getBuffer(buffRequest);
       vertexInput.addBuffer(buff, ['tcoord']);
@@ -558,7 +557,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     const idata = model.renderable.getColorTextureMap(); // returns an imagedata
     if (idata) {
       if (!model.colorTexture) {
-        model.colorTexture = vtkTexture.newInstance();
+        model.colorTexture = vtkTexture.newInstance({ label: 'polyDataColor' });
       }
       model.colorTexture.setInputData(idata);
       newTextures.push(model.colorTexture);
@@ -568,7 +567,11 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     const actor = model.WebGPUActor.getRenderable();
     const textures = actor.getTextures();
     for (let i = 0; i < textures.length; i++) {
-      if (textures[i].getInputData()) {
+      if (
+        textures[i].getInputData() ||
+        textures[i].getJsImageData() ||
+        textures[i].getCanvas()
+      ) {
         newTextures.push(textures[i]);
       }
       if (textures[i].getImage() && textures[i].getImageLoaded()) {
@@ -579,13 +582,19 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     let usedCount = 0;
     for (let i = 0; i < newTextures.length; i++) {
       const srcTexture = newTextures[i];
-      const treq = {};
+      const treq = { time: srcTexture.getMTime() };
       if (srcTexture.getInputData()) {
         treq.imageData = srcTexture.getInputData();
-        treq.source = treq.imageData;
+        treq.owner = treq.imageData.getPointData().getScalars();
       } else if (srcTexture.getImage()) {
         treq.image = srcTexture.getImage();
-        treq.source = treq.image;
+        treq.owner = treq.image;
+      } else if (srcTexture.getJsImageData()) {
+        treq.jsImageData = srcTexture.getJsImageData();
+        treq.owner = treq.jsImageData;
+      } else if (srcTexture.getCanvas()) {
+        treq.canvas = srcTexture.getCanvas();
+        treq.owner = treq.canvas;
       }
       const newTex = model.device.getTextureManager().getTexture(treq);
       if (newTex.getReady()) {
@@ -600,8 +609,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
         }
         if (!found) {
           usedTextures[model.textures.length] = true;
-          const tview = newTex.createView();
-          tview.setName(`Texture${usedCount++}`);
+          const tview = newTex.createView(`Texture${usedCount++}`);
           model.textures.push(newTex);
           model.textureViews.push(tview);
           const interpolate = srcTexture.getInterpolate()
@@ -794,8 +802,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.vertexShaderTemplate =
     model.vertexShaderTemplate || vtkWebGPUPolyDataVS;
 
-  model.UBO = vtkWebGPUUniformBuffer.newInstance();
-  model.UBO.setName('mapperUBO');
+  model.UBO = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
   model.UBO.addEntry('BCWCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('BCSCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('MCWCNormals', 'mat4x4<f32>');

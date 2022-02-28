@@ -96,7 +96,7 @@ const DEFAULT_VALUES = {
   radius: 1,
   spacing: 2,
   width: 4,
-  pointType: 'Float32Array',
+  pointType: 'Float64Array',
 };
 
 // ----------------------------------------------------------------------------

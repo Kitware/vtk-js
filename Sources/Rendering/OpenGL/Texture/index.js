@@ -68,7 +68,45 @@ function vtkOpenGLTexture(publicAPI, model) {
           model.textureBuildTime.modified();
         }
       }
-      // if we have Inputdata
+      // if we have a canvas
+      if (model.renderable.getCanvas() !== null) {
+        if (model.renderable.getInterpolate()) {
+          model.generateMipmap = true;
+          publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
+        }
+        const canvas = model.renderable.getCanvas();
+        publicAPI.create2DFromRaw(
+          canvas.width,
+          canvas.height,
+          4,
+          VtkDataTypes.UNSIGNED_CHAR,
+          canvas,
+          true
+        );
+        publicAPI.activate();
+        publicAPI.sendParameters();
+        model.textureBuildTime.modified();
+      }
+      // if we have jsImageData
+      if (model.renderable.getJsImageData() !== null) {
+        const jsid = model.renderable.getJsImageData();
+        if (model.renderable.getInterpolate()) {
+          model.generateMipmap = true;
+          publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
+        }
+        publicAPI.create2DFromRaw(
+          jsid.width,
+          jsid.height,
+          4,
+          VtkDataTypes.UNSIGNED_CHAR,
+          jsid.data,
+          true
+        );
+        publicAPI.activate();
+        publicAPI.sendParameters();
+        model.textureBuildTime.modified();
+      }
+      // if we have InputData
       const input = model.renderable.getInputData(0);
       if (input && input.getPointData().getScalars()) {
         const ext = input.getExtent();
@@ -722,7 +760,14 @@ function vtkOpenGLTexture(publicAPI, model) {
   }
 
   //----------------------------------------------------------------------------
-  publicAPI.create2DFromRaw = (width, height, numComps, dataType, data) => {
+  publicAPI.create2DFromRaw = (
+    width,
+    height,
+    numComps,
+    dataType,
+    data,
+    flip = false
+  ) => {
     // Now determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(dataType);
     publicAPI.getInternalFormat(dataType, numComps);
@@ -749,7 +794,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     const scaledData = scaleTextureToHighestPowerOfTwo(pixData);
 
     // Source texture data from the PBO.
-    // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    model.context.pixelStorei(model.context.UNPACK_FLIP_Y_WEBGL, flip);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     model.context.texImage2D(
@@ -766,6 +811,11 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);
+    }
+
+    // always reset the flip
+    if (flip) {
+      model.context.pixelStorei(model.context.UNPACK_FLIP_Y_WEBGL, false);
     }
 
     publicAPI.deactivate();
@@ -968,13 +1018,6 @@ function vtkOpenGLTexture(publicAPI, model) {
       canvas.width,
       canvas.height
     );
-    // In Chrome 69 on Windows and Ubuntu, there is a bug that prevents some
-    // canvases from working properly with webGL textures.  By getting any
-    // image data from the canvas, this works around the bug.  See
-    // https://bugs.chromium.org/p/chromium/issues/detail?id=896307
-    if (navigator.userAgent.indexOf('Chrome/69') >= 0) {
-      ctx.getImageData(0, 0, 1, 1);
-    }
     const safeImage = canvas;
 
     model.context.texImage2D(

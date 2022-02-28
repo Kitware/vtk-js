@@ -20,8 +20,8 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addBuiltinInput('u32', '[[builtin(instance_index)]] instanceIndex');
-    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
+    vDesc.addBuiltinInput('u32', '@builtin(instance_index) instanceIndex');
+    vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
     let code = vDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
       '    output.Position = rendererUBO.SCPCMatrix*mapperUBO.BCSCMatrix',
@@ -153,8 +153,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.glyphBOBuildTime = {};
   macro.obj(model.glyphBOBuildTime, { mtime: 0 });
 
-  model.SSBO = vtkWebGPUStorageBuffer.newInstance();
-  model.SSBO.setName('glyphSSBO');
+  model.SSBO = vtkWebGPUStorageBuffer.newInstance({ label: 'glyphSSBO' });
 
   // Object methods
   vtkWebGPUGlyph3DMapper(publicAPI, model);

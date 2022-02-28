@@ -9,6 +9,34 @@ const TUPLE_HOLDER = [];
 // Global methods
 // ----------------------------------------------------------------------------
 
+// Original source from https://www.npmjs.com/package/compute-range
+// Modified to accept type arrays
+function fastComputeRange(arr, offset, numberOfComponents) {
+  const len = arr.length;
+  let min;
+  let max;
+  let x;
+  let i;
+
+  if (len === 0) {
+    return { min: Number.MAX_VALUE, max: -Number.MAX_VALUE };
+  }
+  min = arr[offset];
+  max = min;
+  for (i = offset; i < len; i += numberOfComponents) {
+    x = arr[i];
+    if (x < min) {
+      min = x;
+    } else if (x > max) {
+      max = x;
+    }
+  }
+  return { min, max };
+}
+
+/**
+ * @deprecated please use fastComputeRange instead
+ */
 function createRangeHelper() {
   let min = Number.MAX_VALUE;
   let max = -Number.MAX_VALUE;
@@ -36,29 +64,25 @@ function createRangeHelper() {
 }
 
 function computeRange(values, component = 0, numberOfComponents = 1) {
-  const helper = createRangeHelper();
-  const size = values.length;
-  let value = 0;
-
   if (component < 0 && numberOfComponents > 1) {
     // Compute magnitude
-    for (let i = 0; i < size; i += numberOfComponents) {
-      value = 0;
-      for (let j = 0; j < numberOfComponents; j++) {
-        value += values[i + j] * values[i + j];
+    const size = values.length;
+    const numberOfValues = size / numberOfComponents;
+    const data = new Float64Array(numberOfValues);
+    for (let i = 0, j = 0; i < numberOfValues; ++i) {
+      for (let nextJ = j + numberOfComponents; j < nextJ; ++j) {
+        data[i] += values[j] * values[j];
       }
-      value **= 0.5;
-      helper.add(value);
+      data[i] **= 0.5;
     }
-    return helper.getRange();
+    return fastComputeRange(data, 0, 1);
   }
 
-  const offset = component < 0 ? 0 : component;
-  for (let i = offset; i < size; i += numberOfComponents) {
-    helper.add(values[i]);
-  }
-
-  return helper.getRange();
+  return fastComputeRange(
+    values,
+    component < 0 ? 0 : component,
+    numberOfComponents
+  );
 }
 
 function ensureRangeSize(rangeArray, size = 0) {
@@ -94,6 +118,7 @@ function getMaxNorm(normArray) {
 export const STATIC = {
   computeRange,
   createRangeHelper,
+  fastComputeRange,
   getDataType,
   getMaxNorm,
 };

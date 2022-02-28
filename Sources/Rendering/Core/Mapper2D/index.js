@@ -133,7 +133,11 @@ function vtkMapper2D(publicAPI, model) {
     if (lut) {
       // Ensure that the lookup table is built
       lut.build();
-      model.colorMapColors = lut.mapScalars(scalars, model.colorMode, -1);
+      model.colorMapColors = lut.mapScalars(
+        scalars,
+        model.colorMode,
+        model.fieldDataTupleId
+      );
     }
     model.colorBuildString = `${publicAPI.getMTime()}${scalars.getMTime()}${alpha}`;
   };

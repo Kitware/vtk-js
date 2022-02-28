@@ -28,10 +28,10 @@ function vtkPlaneSource(publicAPI, model) {
     // Check input
     const pointDataType = dataset
       ? dataset.getPoints().getDataType()
-      : 'Float32Array';
+      : model.pointType;
     const pd = vtkPolyData.newInstance();
-    const v10 = new Float32Array(3);
-    const v20 = new Float32Array(3);
+    const v10 = [];
+    const v20 = [];
     vtkMath.subtract(model.point1, model.origin, v10);
     vtkMath.subtract(model.point2, model.origin, v20);
 
@@ -266,7 +266,7 @@ const DEFAULT_VALUES = {
   origin: [0, 0, 0],
   point1: [1, 0, 0],
   point2: [0, 1, 0],
-  pointType: 'Float32Array',
+  pointType: 'Float64Array',
 };
 
 // ----------------------------------------------------------------------------

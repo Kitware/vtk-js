@@ -187,7 +187,7 @@ function defaultValues(initialValues) {
     center: [0, 0, 0],
     height: 1.0,
     direction: [1, 0, 0],
-    pointType: 'Float32Array',
+    pointType: 'Float64Array',
     thickness: 0,
     width: 1.0,
     ...initialValues,

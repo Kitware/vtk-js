@@ -49,7 +49,7 @@ test('Test vtkAppendPolyData execution', (t) => {
     'Make sure the number of points is correct.'
   );
   t.ok(
-    outPD.getPoints().getDataType() === VtkDataTypes.FLOAT,
+    outPD.getPoints().getDataType() === VtkDataTypes.DOUBLE,
     'Make sure the output data type is correct.'
   );
   const expNumPolys = [cone, cylinder].reduce(
