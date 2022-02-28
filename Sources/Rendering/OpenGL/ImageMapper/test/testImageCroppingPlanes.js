@@ -21,7 +21,8 @@ function testClippingPlanes(
   gridDirection,
   polyDataRotation,
   clipPlaneNormal,
-  baseline
+  baseline,
+  description
 ) {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkOpenGLImageMapper testImage');
@@ -139,9 +140,9 @@ function testClippingPlanes(
     testUtils.compareImages(
       image,
       [baseline],
-      'Rendering/OpenGL/ImageMapper',
+      `Rendering/OpenGL/ImageMapper${description}`,
       t,
-      2,
+      3,
       gc.releaseResources
     );
   });
@@ -153,12 +154,14 @@ test.onlyIfWebGL('Test ImageMapper ClippingPlanes No Rotation', (t) => {
   const direction = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0];
   const rotation = 0.0;
   const clipPlaneNormal = [1.0, 0.0, 0.0];
+  const description = 'NoRotation';
   testClippingPlanes(
     t,
     direction,
     rotation,
     clipPlaneNormal,
-    baselineNoRotation
+    baselineNoRotation,
+    description
   );
 });
 
@@ -166,18 +169,28 @@ test.onlyIfWebGL('Test ImageMapper ClippingPlanes Rotation', (t) => {
   const direction = [0.866, 0.5, 0, -0.5, 0.866, 0, 0, 0, 1];
   const rotation = 30.0;
   const clipPlaneNormal = [1.0, 0.0, 0.0];
-  testClippingPlanes(t, direction, rotation, clipPlaneNormal, baselineRotation);
+  const description = 'Rotation';
+  testClippingPlanes(
+    t,
+    direction,
+    rotation,
+    clipPlaneNormal,
+    baselineRotation,
+    description
+  );
 });
 
 test.onlyIfWebGL('Test ImageMapper ClippingPlanes Rotation Clip Plane', (t) => {
   const direction = [0.866, 0.5, 0, -0.5, 0.866, 0, 0, 0, 1];
   const rotation = 30.0;
   const clipPlaneNormal = [0.707, 0.707, 0.0];
+  const description = 'RotationClipPlane';
   testClippingPlanes(
     t,
     direction,
     rotation,
     clipPlaneNormal,
-    baselineRotationClipPlane
+    baselineRotationClipPlane,
+    description
   );
 });
