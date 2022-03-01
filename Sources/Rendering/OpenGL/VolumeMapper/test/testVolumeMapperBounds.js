@@ -13,9 +13,9 @@ import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindo
 
 import baseline1 from './testVolumeMapperBounds.png';
 
-test.onlyIfWebGL.only('Test Volume Mapper Bounds', (t) => {
+test.onlyIfWebGL('Test Volume Mapper Bounds', (t) => {
   const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkVolumeMapper Composite');
+  t.ok('rendering', 'vtkVolumeMapper Bounds');
   // testUtils.keepDOM();
 
   // Create some control UI
