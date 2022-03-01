@@ -750,6 +750,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
         program.setUniformf('vpWidth', size[0]);
         program.setUniformf('vpHeight', size[1]);
+
+        const offset = publicAPI.getRenderTargetOffset();
+        program.setUniformf('vpOffsetX', offset[0] / size[0]);
+        program.setUniformf('vpOffsetY', offset[1] / size[1]);
       }
     }
 
@@ -959,7 +963,17 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (model._useSmallViewport) {
       return [model._smallViewportWidth, model._smallViewportHeight];
     }
-    return model.openGLRenderWindow.getFramebufferSize();
+
+    const { usize, vsize } = model.openGLRenderer.getTiledSizeAndOrigin();
+
+    return [usize, vsize];
+  };
+
+  publicAPI.getRenderTargetOffset = () => {
+    const { lowerLeftU, lowerLeftV } =
+      model.openGLRenderer.getTiledSizeAndOrigin();
+
+    return [lowerLeftU, lowerLeftV];
   };
 
   publicAPI.renderPieceStart = (ren, actor) => {
