@@ -6,7 +6,6 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 
@@ -16,6 +15,16 @@ const { VectorMode } = vtkScalarsToColors;
 // vtkScalarBarActor
 //
 // Note log scales are currently not supported
+//
+// Developer note: This class is broken into the main class and a helper
+// class. The main class holds view independent properties (those properties
+// that do not change as the view's resolution/aspect ratio change). The
+// helper class is instantiated one per view and holds properties that can
+// depend on view specific values such as resolution. The helper class code
+// could have been left to the View specific implementation (such as
+// vtkWebGPUScalarBarActor) but is instead placed here to it can be shared by
+// multiple rendering backends.
+//
 // ----------------------------------------------------------------------------
 
 // some shared temp variables to reduce heap allocs
@@ -38,10 +47,9 @@ function applyTextStyle(ctx, style) {
 // Default autoLayout function
 // ----------------------------------------------------------------------------
 
-// compute good values to use based on window size etc
-// a bunch of heuristics here with hand tuned constants
-// These values worked for me but really this method
-// could be redically changed. The basic gist is
+// compute good values to use based on window size etc a bunch of heuristics
+// here with hand tuned constants These values worked for me but really this
+// method could be redically changed. The basic gist is
 // 1) compute a resonable font size
 // 2) render the text atlas using those font sizes
 // 3) pick horizontal or vertical bsed on window size
@@ -49,100 +57,150 @@ function applyTextStyle(ctx, style) {
 //    compute the box size and position such that
 //    the text will all fit nicely and the bar will be a resonable size
 // 5) compute the bar segments based on the above settings
+//
+// Note that this function can and should read values from the
+// ScalarBarActor but should only write values to the view dependent helper
+// instance that is provided as those values are the ones that will be used
+// for rendering.
+//
 function defaultAutoLayout(publicAPI, model) {
-  return () => {
+  return (helper) => {
     // we don't do a linear scale, the proportions for
     // a 700 pixel window differ from a 1400
-    const xAxisAdjust = (model.lastSize[0] / 700) ** 0.8;
-    const yAxisAdjust = (model.lastSize[1] / 700) ** 0.8;
+    const lastSize = helper.getLastSize();
+    const xAxisAdjust = (lastSize[0] / 700) ** 0.8;
+    const yAxisAdjust = (lastSize[1] / 700) ** 0.8;
     const minAdjust = Math.min(xAxisAdjust, yAxisAdjust);
 
+    const axisTextStyle = helper.getAxisTextStyle();
+    const tickTextStyle = helper.getTickTextStyle();
+    Object.assign(axisTextStyle, model.axisTextStyle);
+    Object.assign(tickTextStyle, model.tickTextStyle);
+
     // compute a reasonable font size first
-    model.axisTextStyle.fontSize = Math.max(24 * minAdjust, 12);
-    if (model.lastAspectRatio > 1.0) {
-      model.tickTextStyle.fontSize = Math.max(20 * minAdjust, 10);
+    axisTextStyle.fontSize = Math.max(24 * minAdjust, 12);
+    if (helper.getLastAspectRatio() > 1.0) {
+      tickTextStyle.fontSize = Math.max(20 * minAdjust, 10);
     } else {
-      model.tickTextStyle.fontSize = Math.max(16 * minAdjust, 10);
+      tickTextStyle.fontSize = Math.max(16 * minAdjust, 10);
     }
 
     // rebuild the text atlas
-    const textSizes = publicAPI.updateTextureAtlas();
+    const textSizes = helper.updateTextureAtlas();
 
     // now compute the boxSize and pixel offsets, different algorithm
     // for horizonal versus vertical
-    model.topTitle = false;
+    helper.setTopTitle(false);
+
+    const boxSize = helper.getBoxSizeByReference();
+
     // if vertical
-    if (model.lastAspectRatio > 1.0) {
-      model.tickLabelPixelOffset = 0.4 * model.tickTextStyle.fontSize;
+    if (helper.getLastAspectRatio() > 1.0) {
+      helper.setTickLabelPixelOffset(0.4 * tickTextStyle.fontSize);
       const tickWidth =
-        (2.0 * (textSizes.tickWidth + model.tickLabelPixelOffset)) /
-        model.lastSize[0];
-      model.axisTitlePixelOffset = 0.8 * model.axisTextStyle.fontSize;
+        (2.0 * (textSizes.tickWidth + helper.getTickLabelPixelOffset())) /
+        lastSize[0];
+      helper.setAxisTitlePixelOffset(0.8 * axisTextStyle.fontSize);
       // width required if the title is vertical
       const titleWidth =
-        (2.0 * (textSizes.titleHeight + model.axisTitlePixelOffset)) /
-        model.lastSize[0];
+        (2.0 * (textSizes.titleHeight + helper.getAxisTitlePixelOffset())) /
+        lastSize[0];
 
       // if the title will fit within the width of the bar then that looks
-      // nicer to put it at the top (model.topTitle), otherwise rotate it
+      // nicer to put it at the top (helper.topTitle), otherwise rotate it
       // and place it sideways
       if (
         tickWidth + 0.4 * titleWidth >
-        (2.0 * textSizes.titleWidth) / model.lastSize[0]
+        (2.0 * textSizes.titleWidth) / lastSize[0]
       ) {
-        model.topTitle = true;
-        model.boxSize[0] = tickWidth + 0.4 * titleWidth;
-        model.boxPosition = [0.98 - model.boxSize[0], -0.92];
+        helper.setTopTitle(true);
+        boxSize[0] = tickWidth + 0.4 * titleWidth;
+        helper.setBoxPosition([0.98 - boxSize[0], -0.92]);
       } else {
-        model.boxSize[0] = tickWidth + 1.4 * titleWidth;
-        model.boxPosition = [0.99 - model.boxSize[0], -0.92];
+        boxSize[0] = tickWidth + 1.4 * titleWidth;
+        helper.setBoxPosition([0.99 - boxSize[0], -0.92]);
       }
-      model.boxSize[1] = Math.max(1.2, Math.min(1.84 / yAxisAdjust, 1.84));
+      boxSize[1] = Math.max(1.2, Math.min(1.84 / yAxisAdjust, 1.84));
     } else {
       // horizontal
-      model.axisTitlePixelOffset = 2.0 * model.tickTextStyle.fontSize;
-      model.tickLabelPixelOffset = 0.5 * model.tickTextStyle.fontSize;
+      helper.setAxisTitlePixelOffset(2.0 * tickTextStyle.fontSize);
+      helper.setTickLabelPixelOffset(0.5 * tickTextStyle.fontSize);
       const tickHeight =
-        (2.0 * (textSizes.tickHeight + model.tickLabelPixelOffset)) /
-        model.lastSize[1];
+        (2.0 * (textSizes.tickHeight + helper.getTickLabelPixelOffset())) /
+        lastSize[1];
       const titleHeight =
-        (2.0 * (textSizes.titleHeight + model.axisTitlePixelOffset)) /
-        model.lastSize[1];
-      const tickWidth = (2.0 * textSizes.tickWidth) / model.lastSize[0];
-      model.boxSize[0] = Math.min(
+        (2.0 * (textSizes.titleHeight + helper.getAxisTitlePixelOffset())) /
+        lastSize[1];
+      const tickWidth = (2.0 * textSizes.tickWidth) / lastSize[0];
+      boxSize[0] = Math.min(
         1.9,
-        Math.max(1.4, 1.4 * tickWidth * (model.ticks.length + 3))
+        Math.max(1.4, 1.4 * tickWidth * (helper.getTicks().length + 3))
       );
-      model.boxSize[1] = tickHeight + titleHeight;
-      model.boxPosition = [-0.5 * model.boxSize[0], -0.97];
+      boxSize[1] = tickHeight + titleHeight;
+      helper.setBoxPosition([-0.5 * boxSize[0], -0.97]);
     }
 
     // recomute bar segments based on positioning
-    publicAPI.recomputeBarSegments(textSizes);
+    helper.recomputeBarSegments(textSizes);
   };
 }
 
-function vtkScalarBarActor(publicAPI, model) {
+// many properties of this actor depend on the API specific view The main
+// dependency being the resolution as that drives what font sizes to use.
+// Bacause of this we need to do some of the calculations in a API specific
+// subclass. But... we don't want a lot of duplicated code between WebGL and
+// WebGPU for example so we have this helper class, that is designed to be
+// fairly API independent so that API specific views can call this to do
+// most of the work.
+function vtkScalarBarActorHelper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkScalarBarActor');
+  model.classHierarchy.push('vtkScalarBarActorHelper');
 
-  // main method to rebuild the scalarBar when something has changed
-  // tracks modified times
-  publicAPI.update = () => {
-    if (!model.scalarsToColors || !model.visibility) {
+  publicAPI.setRenderable = (renderable) => {
+    if (model.renderable === renderable) {
+      return;
+    }
+    model.renderable = renderable;
+    model.barActor.setProperty(renderable.getProperty());
+    model.barActor.setParentProp(renderable);
+    model.tmActor.setProperty(renderable.getProperty());
+    model.tmActor.setParentProp(renderable);
+
+    model.axisTextStyle = { ...renderable.getAxisTextStyle() };
+    model.tickTextStyle = { ...renderable.getTickTextStyle() };
+
+    publicAPI.modified();
+  };
+
+  publicAPI.updateAPISpecificData = (size, camera, renderWindow) => {
+    // has the size changed?
+    if (model.lastSize[0] !== size[0] || model.lastSize[1] !== size[1]) {
+      model.lastSize[0] = size[0];
+      model.lastSize[1] = size[1];
+      model.lastAspectRatio = size[0] / size[1];
+      model.forceUpdate = true;
+    }
+
+    const scalarsToColors = model.renderable.getScalarsToColors();
+    if (!scalarsToColors || !model.renderable.getVisibility()) {
       return;
     }
 
     // make sure the lut is assigned to our mapper
-    model.barMapper.setLookupTable(model.scalarsToColors);
+    model.barMapper.setLookupTable(scalarsToColors);
+
+    // camera should be the same for all views
+    model.camera = camera;
+
+    model.renderWindow = renderWindow;
 
     // did something significant change? If so rebuild a lot of things
     if (
       model.forceUpdate ||
-      Math.max(model.scalarsToColors.getMTime(), publicAPI.getMTime()) >
+      Math.max(scalarsToColors.getMTime(), publicAPI.getMTime()) >
         model.lastRebuildTime.getMTime()
     ) {
-      const range = model.scalarsToColors.getMappingRange();
+      const range = scalarsToColors.getMappingRange();
       model.lastTickBounds = [...range];
       model.barMapper.setScalarRange(model.lastTickBounds);
 
@@ -152,11 +210,21 @@ function vtkScalarBarActor(publicAPI, model) {
         .domain([model.lastTickBounds[0], model.lastTickBounds[1]]);
       model.ticks = scale.ticks(5);
       const format = scale.tickFormat(5);
-      model.tickStrings = model.ticks.map(format);
+      model.tickstrings = model.ticks.map(format);
 
-      if (model.automated) {
-        model.autoLayout();
+      if (model.renderable.getAutomated()) {
+        model.renderable.getAutoLayout()(publicAPI);
       } else {
+        // copy values from renderable
+        model.axisTextStyle = { ...model.renderable.getAxisTextStyle() };
+        model.tickTextStyle = { ...model.renderable.getTickTextStyle() };
+        model.barPosition = [...model.renderable.getBarPosition()];
+        model.barSize = [...model.renderable.getBarSize()];
+        model.boxPosition = [...model.renderable.getBoxPosition()];
+        model.boxSize = [...model.renderable.getBoxSize()];
+        model.axisTitlePixelOffset = model.renderable.getAxisTitlePixelOffset();
+        model.tickLabelPixelOffset = model.renderable.getTickLabelPixelOffset();
+
         // rebuild the texture only when force or changed bounds, face
         // visibility changes do to change the atlas
         const textSizes = publicAPI.updateTextureAtlas();
@@ -183,21 +251,6 @@ function vtkScalarBarActor(publicAPI, model) {
     }
   };
 
-  // The text atlas is an image and as loading images is async we call this when
-  // the promise resolves. The old texture is used until then
-  publicAPI.completedImage = (doUpdate) => {
-    if (model.nextImage && model.nextImage.complete) {
-      model.tmTexture.setImage(model.nextImage);
-      model.nextImage = null;
-      model._tmAtlas = model._nextAtlas;
-      model._nextAtlas = null;
-      if (doUpdate) {
-        model.forceViewUpdate = true;
-        publicAPI.update();
-      }
-    }
-  };
-
   // create the texture map atlas that contains the rendering of
   // all the text strings. Only needs to be called when the text strings
   // have changed (labels and ticks)
@@ -214,14 +267,14 @@ function vtkScalarBarActor(publicAPI, model) {
     let maxWidth = 0;
     let totalHeight = 1; // start one pixel in so we have a border
     applyTextStyle(model.tmContext, model.axisTextStyle);
-    let metrics = model.tmContext.measureText(model.axisLabel);
+    let metrics = model.tmContext.measureText(model.renderable.getAxisLabel());
     let entry = {
       height: metrics.actualBoundingBoxAscent + 2,
       startingHeight: totalHeight,
       width: metrics.width + 2,
       textStyle: model.axisTextStyle,
     };
-    newTmAtlas.set(model.axisLabel, entry);
+    newTmAtlas.set(model.renderable.getAxisLabel(), entry);
     totalHeight += entry.height;
     maxWidth = entry.width;
     results.titleWidth = entry.width;
@@ -231,7 +284,7 @@ function vtkScalarBarActor(publicAPI, model) {
     results.tickWidth = 0;
     results.tickHeight = 0;
     applyTextStyle(model.tmContext, model.tickTextStyle);
-    const strings = [...model.tickStrings, 'NaN', 'Below', 'Above'];
+    const strings = [...model.tickstrings, 'NaN', 'Below', 'Above'];
     for (let t = 0; t < strings.length; t++) {
       if (!newTmAtlas.has(strings[t])) {
         metrics = model.tmContext.measureText(strings[t]);
@@ -287,17 +340,10 @@ function vtkScalarBarActor(publicAPI, model) {
       model.tmContext.fillText(key, 1, value.startingHeight + value.height - 1);
     });
 
-    const image = new Image();
-    image.src = model.tmCanvas.toDataURL('image/png');
-    model.nextImage = image;
-    model._nextAtlas = newTmAtlas;
-    if (image.complete) {
-      publicAPI.completedImage(false);
-    } else {
-      image.addEventListener('load', () => {
-        publicAPI.completedImage(true);
-      });
-    }
+    model.tmTexture.setCanvas(model.tmCanvas);
+    // mark as modified since the canvas typically doesn't change
+    model.tmTexture.modified();
+    model._tmAtlas = newTmAtlas;
 
     return results;
   };
@@ -382,21 +428,23 @@ function vtkScalarBarActor(publicAPI, model) {
       });
       startPos[barAxis] += segSize[barAxis] + segSpace;
     }
-
-    if (typeof model.scalarsToColors.getNanColor === 'function') {
+    if (
+      model.renderable.getDrawNanAnnotation() &&
+      model.renderable.getScalarsToColors().getNanColor()
+    ) {
       pushSeg('NaN', [NaN, NaN, NaN, NaN]);
     }
 
     if (
-      typeof model.scalarsToColors.getUseBelowRangeColor === 'function' &&
-      model.scalarsToColors.getUseBelowRangeColor()
+      model.renderable.getDrawBelowRangeSwatch() &&
+      model.renderable.getScalarsToColors().getUseBelowRangeColor?.()
     ) {
       pushSeg('Below', [-0.1, -0.1, -0.1, -0.1]);
     }
 
-    const haveAbove =
-      typeof model.scalarsToColors.getUseAboveRangeColor === 'function' &&
-      model.scalarsToColors.getUseAboveRangeColor();
+    const haveAbove = model.renderable
+      .getScalarsToColors()
+      .getUseAboveRangeColor?.();
 
     // extra space around the ticks section
     startPos[barAxis] += segSpace;
@@ -411,7 +459,7 @@ function vtkScalarBarActor(publicAPI, model) {
       model.vertical ? [0, 0, 0.995, 0.995] : [0, 0.995, 0.995, 0]
     );
 
-    if (haveAbove) {
+    if (model.renderable.getDrawAboveRangeSwatch() && haveAbove) {
       segSize[barAxis] = oldSegSize;
       startPos[barAxis] += segSpace;
       pushSeg('Above', [1.1, 1.1, 1.1, 1.1]);
@@ -532,7 +580,7 @@ function vtkScalarBarActor(publicAPI, model) {
     }
 
     // update the polydata
-    const numLabels = model.tickStrings.length + model.barSegments.length;
+    const numLabels = model.tickstrings.length + model.barSegments.length;
     const numPts = numLabels * 4;
     const numTris = numLabels * 2;
     const points = new Float64Array(numPts * 3);
@@ -561,7 +609,7 @@ function vtkScalarBarActor(publicAPI, model) {
 
         // write the axis label
         publicAPI.createPolyDataForOneLabel(
-          model.axisLabel,
+          model.renderable.getAxisLabel(),
           ptv3,
           xDir,
           yDir,
@@ -577,7 +625,7 @@ function vtkScalarBarActor(publicAPI, model) {
         // write the axis label
         vec3.scale(xDir, xDir, -1);
         publicAPI.createPolyDataForOneLabel(
-          model.axisLabel,
+          model.renderable.getAxisLabel(),
           ptv3,
           yDir,
           xDir,
@@ -593,7 +641,7 @@ function vtkScalarBarActor(publicAPI, model) {
       tmpv3[1] = model.barPosition[1] + model.barSize[1];
       vec3.transformMat4(ptv3, tmpv3, invmat);
       publicAPI.createPolyDataForOneLabel(
-        model.axisLabel,
+        model.renderable.getAxisLabel(),
         ptv3,
         xDir,
         yDir,
@@ -650,7 +698,7 @@ function vtkScalarBarActor(publicAPI, model) {
       tmp2v3[spacedAxis] = tickSegmentStart + tickSegmentSize * tickPos;
       vec3.transformMat4(ptv3, tmp2v3, invmat);
       publicAPI.createPolyDataForOneLabel(
-        model.tickStrings[t],
+        model.tickstrings[t],
         ptv3,
         xDir,
         yDir,
@@ -682,18 +730,34 @@ function vtkScalarBarActor(publicAPI, model) {
     mat4.transpose(cmat, cmat);
     mat4.invert(invmat, cmat);
 
-    const haveExtraColors =
-      typeof model.scalarsToColors.getNanColor === 'function' &&
-      typeof model.scalarsToColors.getAboveRangeColor === 'function' &&
-      typeof model.scalarsToColors.getBelowRangeColor === 'function';
+    const scalarsToColors = model.renderable.getScalarsToColors();
+    let numberOfExtraColors = 0;
+    if (
+      model.renderable.getDrawNanAnnotation() &&
+      scalarsToColors.getNanColor()
+    ) {
+      numberOfExtraColors += 1;
+    }
+    if (
+      model.renderable.getDrawBelowRangeSwatch() &&
+      scalarsToColors.getUseBelowRangeColor?.()
+    ) {
+      numberOfExtraColors += 1;
+    }
+    if (
+      model.renderable.getDrawAboveRangeSwatch() &&
+      scalarsToColors.getUseAboveRangeColor?.()
+    ) {
+      numberOfExtraColors += 1;
+    }
 
-    const numPts = 4 + (haveExtraColors ? 12 : 0);
+    const numPts = 4 * (1 + numberOfExtraColors);
     const numQuads = numPts;
 
     // handle vector component mode
     let numComps = 1;
-    if (model.scalarsToColors.getVectorMode() === VectorMode.COMPONENT) {
-      numComps = model.scalarsToColors.getVectorComponent() + 1;
+    if (scalarsToColors.getVectorMode() === VectorMode.COMPONENT) {
+      numComps = scalarsToColors.getVectorComponent() + 1;
     }
 
     // create the colored bars
@@ -743,10 +807,83 @@ function vtkScalarBarActor(publicAPI, model) {
     model.polyData.getPolys().modified();
     model.polyData.modified();
   };
+}
 
-  publicAPI.getActors = () => [model.barActor, model.tmActor];
+const newScalarBarActorHelper = macro.newInstance(
+  (publicAPI, model, initialValues = { renderable: null }) => {
+    Object.assign(model, {}, initialValues);
 
-  publicAPI.getNestedProps = () => publicAPI.getActors();
+    // Inheritance
+    macro.obj(publicAPI, model);
+
+    macro.setGet(publicAPI, model, [
+      'axisTitlePixelOffset',
+      'tickLabelPixelOffset',
+      'renderable',
+      'topTitle',
+    ]);
+    macro.get(publicAPI, model, [
+      'lastSize',
+      'lastAspectRatio',
+      'axisTextStyle',
+      'tickTextStyle',
+      'barActor',
+      'tmActor',
+      'ticks',
+    ]);
+    macro.getArray(publicAPI, model, ['boxPosition', 'boxSize']);
+    macro.setArray(publicAPI, model, ['boxPosition', 'boxSize'], 2);
+
+    model.forceUpdate = false;
+    model.lastRedrawTime = {};
+    macro.obj(model.lastRedrawTime, { mtime: 0 });
+    model.lastRebuildTime = {};
+    macro.obj(model.lastRebuildTime, { mtime: 0 });
+    model.lastSize = [-1, -1];
+
+    model.tmCanvas = document.createElement('canvas');
+    model.tmContext = model.tmCanvas.getContext('2d');
+    model._tmAtlas = new Map();
+
+    model.barMapper = vtkMapper.newInstance();
+    model.barMapper.setInterpolateScalarsBeforeMapping(true);
+    model.polyData = vtkPolyData.newInstance();
+    model.barMapper.setInputData(model.polyData);
+    model.barActor = vtkActor.newInstance();
+    model.barActor.setMapper(model.barMapper);
+
+    // for texture atlas
+    model.tmPolyData = vtkPolyData.newInstance();
+    model.tmMapper = vtkMapper.newInstance();
+    model.tmMapper.setInputData(model.tmPolyData);
+    model.tmTexture = vtkTexture.newInstance();
+    model.tmTexture.setInterpolate(false);
+    model.tmActor = vtkActor.newInstance({ parentProp: publicAPI });
+    model.tmActor.setMapper(model.tmMapper);
+    model.tmActor.addTexture(model.tmTexture);
+
+    model.barPosition = [0, 0];
+    model.barSize = [0, 0];
+    model.boxPosition = [0.88, -0.92];
+    model.boxSize = [0.1, 1.1];
+
+    // internal variables
+    model.lastTickBounds = [];
+
+    vtkScalarBarActorHelper(publicAPI, model);
+  },
+  'vtkScalarBarActorHelper'
+);
+
+//
+// Now we define the public class that the application sets view independent
+// properties on. This class is fairly small as it mainly just holds
+// properties setter and getters leaving all calculations to the helper
+// class.
+//
+function vtkScalarBarActor(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkScalarBarActor');
 
   publicAPI.setTickTextStyle = (tickStyle) => {
     model.tickTextStyle = { ...model.tickTextStyle, ...tickStyle };
@@ -757,13 +894,6 @@ function vtkScalarBarActor(publicAPI, model) {
     model.axisTextStyle = { ...model.axisTextStyle, ...axisStyle };
     publicAPI.modified();
   };
-
-  const setVisibility = macro.chain(
-    publicAPI.setVisibility,
-    model.barActor.setVisibility,
-    model.tmActor.setVisibility
-  );
-  publicAPI.setVisibility = (...args) => setVisibility(...args).some(Boolean);
 
   publicAPI.resetAutoLayoutToDefault = () => {
     model.autoLayout = defaultAutoLayout(publicAPI, model);
@@ -798,6 +928,9 @@ function defaultValues(initialValues) {
       fontSize: 14,
       fontFamily: 'serif',
     },
+    drawNanAnnotation: true,
+    drawBelowRangeSwatch: true,
+    drawAboveRangeSwatch: true,
     ...initialValues,
   };
 }
@@ -815,60 +948,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   publicAPI.getProperty().setDiffuse(0.0);
   publicAPI.getProperty().setAmbient(1.0);
 
-  model._tmAtlas = new Map();
-
-  // internal variables
-  model.lastSize = [800, 800];
-  model.lastAspectRatio = 1.0;
-  model.textValues = [];
-  model.lastTickBounds = [];
-  model.barMapper = vtkMapper.newInstance();
-  model.barMapper.setInterpolateScalarsBeforeMapping(true);
-  model.polyData = vtkPolyData.newInstance();
-  model.barMapper.setInputData(model.polyData);
-  model.barActor = vtkActor.newInstance({ parentProp: publicAPI });
-  model.barActor.setMapper(model.barMapper);
-  model.barActor.setProperty(publicAPI.getProperty());
-
-  model.lastRedrawTime = {};
-  macro.obj(model.lastRedrawTime, { mtime: 0 });
-  model.lastRebuildTime = {};
-  macro.obj(model.lastRebuildTime, { mtime: 0 });
-
-  model.textPolyData = vtkPolyData.newInstance();
-
-  // for texture atlas
-  model.tmPolyData = vtkPolyData.newInstance();
-  model.tmMapper = vtkMapper.newInstance();
-  model.tmMapper.setInputData(model.tmPolyData);
-  model.tmTexture = vtkTexture.newInstance();
-  model.tmTexture.setInterpolate(false);
-  model.tmActor = vtkActor.newInstance({ parentProp: publicAPI });
-  model.tmActor.setMapper(model.tmMapper);
-  model.tmActor.addTexture(model.tmTexture);
-  model.tmActor.setProperty(publicAPI.getProperty());
-  model.tmCanvas = document.createElement('canvas');
-  model.tmContext = model.tmCanvas.getContext('2d');
-
-  // PixelSpaceCallbackMapper - we do need an empty polydata
-  // really just used to get the window size which we need to do
-  // proper text positioning and scaling.
-  model.mapper = vtkPixelSpaceCallbackMapper.newInstance();
-  model.pixelMapperPolyData = vtkPolyData.newInstance();
-  model.mapper.setInputData(model.pixelMapperPolyData);
-  model.mapper.setCallback((coords, camera, aspect, depthValues, size) => {
-    model.camera = camera;
-    if (model.lastSize[0] !== size[0] || model.lastSize[1] !== size[1]) {
-      model.lastSize[0] = size[0];
-      model.lastSize[1] = size[1];
-      model.lastAspectRatio = size[0] / size[1];
-      // we could use modified, but really the public state is not
-      // modified
-      model.forceUpdate = true;
-    }
-    publicAPI.update();
-  });
-
   macro.setGet(publicAPI, model, [
     'automated',
     'autoLayout',
@@ -876,6 +955,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     'axisLabel',
     'scalarsToColors',
     'tickLabelPixelOffset',
+    'drawNanAnnotation',
+    'drawBelowRangeSwatch',
+    'drawAboveRangeSwatch',
   ]);
   macro.get(publicAPI, model, ['axisTextStyle', 'tickTextStyle']);
   macro.getArray(publicAPI, model, ['boxPosition', 'boxSize']);
@@ -891,4 +973,4 @@ export const newInstance = macro.newInstance(extend, 'vtkScalarBarActor');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, newScalarBarActorHelper };

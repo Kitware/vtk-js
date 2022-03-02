@@ -119,7 +119,7 @@ declare function buildFromRadian(): Transform;
  * @example
  * ```js
  * let point = [2,5,12];
- * vtkMatrixBuilder.buildfromDegree().translate(1,0,2).rotateZ(45).apply(point);
+ * vtkMatrixBuilder.buildFromDegree().translate(1,0,2).rotateZ(45).apply(point);
  * ```
  * 
  * The vtkMatrixBuilder class has two functions, `vtkMatrixBuilder.buildFromDegree()` and

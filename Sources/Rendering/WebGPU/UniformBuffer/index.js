@@ -46,6 +46,19 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
     let currOffset = 0;
     const newEntries = [];
 
+    // compute the max alignment, this is required as WebGPU defines a UBO to have
+    // a size that is a multiple of the maxAlignment
+    let maxAlignment = 4;
+    for (let i = 0; i < model.bufferEntries.length; i++) {
+      const entry = model.bufferEntries[i];
+      if (entry.sizeInBytes % 16 === 0) {
+        maxAlignment = Math.max(16, maxAlignment);
+      }
+      if (entry.sizeInBytes % 8 === 0) {
+        maxAlignment = Math.max(8, maxAlignment);
+      }
+    }
+
     // pack anything whose size is a multiple of 16 bytes first
     // this includes a couple types that don't require 16 byte alignment
     // such as mat2x2<f32> but that is OK
@@ -169,6 +182,8 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
       model._bufferEntryNames.set(model.bufferEntries[i].name, i);
     }
     model.sizeInBytes = currOffset;
+    model.sizeInBytes =
+      maxAlignment * Math.ceil(model.sizeInBytes / maxAlignment);
     model.sortDirty = false;
   };
 
@@ -178,6 +193,7 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
         nativeArray: model.Float32Array,
         time: 0,
         usage: BufferUsage.UniformArray,
+        label: model.label,
       };
       model.UBO = device.getBufferManager().getBuffer(req);
       model.bindGroupTime.modified();
@@ -266,13 +282,13 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
     // sort the entries
     publicAPI.sortBufferEntries();
 
-    const lines = [`[[block]] struct ${model.name}Struct\n{`];
+    const lines = [`struct ${model.label}Struct\n{`];
     for (let i = 0; i < model.bufferEntries.length; i++) {
       const entry = model.bufferEntries[i];
       lines.push(`  ${entry.name}: ${entry.type};`);
     }
     lines.push(
-      `};\n[[binding(${binding}), group(${group})]] var<uniform> ${model.name}: ${model.name}Struct;`
+      `};\n@binding(${binding}) @group(${group}) var<uniform> ${model.label}: ${model.label}Struct;`
     );
     return lines.join('\n');
   };
@@ -286,7 +302,7 @@ const DEFAULT_VALUES = {
   bufferEntries: null,
   bufferEntryNames: null,
   sizeInBytes: 0,
-  name: null,
+  label: null,
   bindGroupLayoutEntry: null,
   bindGroupEntry: null,
 };
@@ -323,7 +339,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'bindGroupLayoutEntry',
     'device',
-    'name',
+    'label',
     'sizeInBytes',
   ]);
 

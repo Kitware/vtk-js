@@ -19,6 +19,17 @@ const SCREENSHOT_PLACEHOLDER = {
   height: '100%',
 };
 
+const DEFAULT_RESET_FACTORS = {
+  vr: {
+    rescaleFactor: 1.0,
+    translateZ: -0.7, // 0.7 m forward from the camera
+  },
+  ar: {
+    rescaleFactor: 0.25, // scale down AR for viewing comfort by default
+    translateZ: -0.5, // 0.5 m forward from the camera
+  },
+};
+
 function checkRenderTargetSupport(gl, format, type) {
   // create temporary frame buffer and texture
   const framebuffer = gl.createFramebuffer();
@@ -315,6 +326,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         model.xrReferenceSpace = refSpace;
       });
 
+      publicAPI.resetXRScene();
+
       model.renderable.getInteractor().switchToXRAnimation();
       model.xrSceneFrame = model.xrSession.requestAnimationFrame(
         publicAPI.xrRender
@@ -322,6 +335,46 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     } else {
       throw new Error('Failed to enter VR with a null xrSession.');
     }
+  };
+
+  publicAPI.resetXRScene = (
+    inputRescaleFactor = DEFAULT_RESET_FACTORS.vr.rescaleFactor,
+    inputTranslateZ = DEFAULT_RESET_FACTORS.vr.translateZ
+  ) => {
+    // Adjust world-to-physical parameters for different modalities
+    // Default parameter values are for VR (model.xrSessionIsAR == false)
+    let rescaleFactor = inputRescaleFactor;
+    let translateZ = inputTranslateZ;
+
+    if (
+      model.xrSessionIsAR &&
+      rescaleFactor === DEFAULT_RESET_FACTORS.vr.rescaleFactor
+    ) {
+      // Scale down by default in AR
+      rescaleFactor = DEFAULT_RESET_FACTORS.ar.rescaleFactor;
+    }
+
+    if (
+      model.xrSessionIsAR &&
+      translateZ === DEFAULT_RESET_FACTORS.vr.translateZ
+    ) {
+      // Default closer to the camera in AR
+      translateZ = DEFAULT_RESET_FACTORS.ar.translateZ;
+    }
+
+    const ren = model.renderable.getRenderers()[0];
+    ren.resetCamera();
+
+    const camera = ren.getActiveCamera();
+    let physicalScale = camera.getPhysicalScale();
+    const physicalTranslation = camera.getPhysicalTranslation();
+
+    physicalScale /= rescaleFactor;
+    translateZ *= physicalScale;
+    physicalTranslation[2] += translateZ;
+
+    camera.setPhysicalScale(physicalScale);
+    camera.setPhysicalTranslation(physicalTranslation);
   };
 
   publicAPI.stopXR = async () => {
@@ -475,8 +528,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
             default:
               return model.context.RGBA8;
           }
-        default:
         case VtkDataTypes.FLOAT:
+        default:
           switch (numComps) {
             case 1:
               return model.context.R16F;
@@ -629,6 +682,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           publicAPI.modified();
 
           if (resetCamera) {
+            const isUserResetCamera = resetCamera !== true;
+
             // If resetCamera was requested, we first save camera parameters
             // from all the renderers, so we can restore them later
             model._screenshot.cameras = model.renderable
@@ -642,7 +697,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
                 );
 
                 return {
-                  resetCameraFn: renderer.resetCamera,
+                  resetCameraArgs: isUserResetCamera ? { renderer } : undefined,
+                  resetCameraFn: isUserResetCamera
+                    ? resetCamera
+                    : renderer.resetCamera,
                   restoreParamsFn: camera.set,
                   // "clone" the params so we don't keep refs to properties
                   arg: JSON.parse(JSON.stringify(params)),
@@ -652,8 +710,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
             // Perform the resetCamera() on each renderer only after capturing
             // the params from all active cameras, in case there happen to be
             // linked cameras among the renderers.
-            model._screenshot.cameras.forEach(({ resetCameraFn }) =>
-              resetCameraFn()
+            model._screenshot.cameras.forEach(
+              ({ resetCameraFn, resetCameraArgs }) =>
+                resetCameraFn(resetCameraArgs)
             );
           }
 
@@ -1122,6 +1181,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       publicAPI.modified();
     }
     return true;
+  };
+
+  publicAPI.createSelector = () => {
+    const ret = vtkOpenGLHardwareSelector.newInstance();
+    ret.setOpenGLRenderWindow(publicAPI);
+    return ret;
   };
 
   publicAPI.delete = macro.chain(

@@ -6,7 +6,6 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 
@@ -55,6 +54,17 @@ const faceAxes = [
   [0, 1],
 ];
 
+//
+// Developer note: This class is broken into the main class and a helper
+// class. The main class holds view independent properties (those properties
+// that do not change as the view's resolution/aspect ratio change). The
+// helper class is instantiated one per view and holds properties that can
+// depend on view specific values such as resolution. The helper class code
+// could have been left to the View specific implementation (such as
+// vtkWebGPUCubeAxesActor) but is instead placed here to it can be shared by
+// multiple rendering backends.
+//
+
 // some shared temp variables to reduce heap allocs
 const ptv3 = new Float64Array(3);
 const pt2v3 = new Float64Array(3);
@@ -70,6 +80,274 @@ function applyTextStyle(ctx, style) {
   ctx.fillStyle = style.fontColor;
   ctx.font = `${style.fontStyle} ${style.fontSize}px ${style.fontFamily}`;
 }
+
+// many properties of this actor depend on the API specific view The main
+// dependency being the resolution as that drives what font sizes to use.
+// Bacause of this we need to do some of the calculations in a API specific
+// subclass. But... we don't want a lot of duplicated code between WebGL and
+// WebGPU for example so we have this helper class, that is designed to be
+// fairly API independent so that API specific views can call this to do
+// most of the work.
+function vtkCubeAxesActorHelper(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkCubeAxesActorHelper');
+
+  publicAPI.setRenderable = (renderable) => {
+    if (model.renderable === renderable) {
+      return;
+    }
+    model.renderable = renderable;
+    model.tmActor.addTexture(model.renderable.getTmTexture());
+    model.tmActor.setProperty(renderable.getProperty());
+    model.tmActor.setParentProp(renderable);
+
+    publicAPI.modified();
+  };
+
+  // called by updateTexturePolyData
+  publicAPI.createPolyDataForOneLabel = (
+    text,
+    pos,
+    cmat,
+    imat,
+    dir,
+    offset,
+    results
+  ) => {
+    const value = model.renderable.get_tmAtlas().get(text);
+    if (!value) {
+      return;
+    }
+    const coords = model.renderable.getTextPolyData().getPoints().getData();
+
+    // compute pixel to distance factors
+    const size = model.lastSize;
+    ptv3[0] = coords[pos * 3];
+    ptv3[1] = coords[pos * 3 + 1];
+    ptv3[2] = coords[pos * 3 + 2];
+    vec3.transformMat4(tmpv3, ptv3, cmat);
+    // moving 0.1 in NDC
+    tmpv3[0] += 0.1;
+    vec3.transformMat4(pt2v3, tmpv3, imat);
+    // results in WC move of
+    vec3.subtract(xDir, pt2v3, ptv3);
+    tmpv3[0] -= 0.1;
+    tmpv3[1] += 0.1;
+    vec3.transformMat4(pt2v3, tmpv3, imat);
+    // results in WC move of
+    vec3.subtract(yDir, pt2v3, ptv3);
+    for (let i = 0; i < 3; i++) {
+      xDir[i] /= 0.5 * 0.1 * size[0];
+      yDir[i] /= 0.5 * 0.1 * size[1];
+    }
+
+    // have to find the four corners of the texture polygon for this label
+    // convert anchor point to View Coords
+    let ptIdx = results.ptIdx;
+    let cellIdx = results.cellIdx;
+    ptv3[0] = coords[pos * 3];
+    ptv3[1] = coords[pos * 3 + 1];
+    ptv3[2] = coords[pos * 3 + 2];
+    // horizontal left, right, or middle alignment based on dir[0]
+    if (dir[0] < -0.5) {
+      vec3.scale(tmpv3, xDir, dir[0] * offset - value.width);
+    } else if (dir[0] > 0.5) {
+      vec3.scale(tmpv3, xDir, dir[0] * offset);
+    } else {
+      vec3.scale(tmpv3, xDir, dir[0] * offset - value.width / 2.0);
+    }
+    vec3.add(ptv3, ptv3, tmpv3);
+    vec3.scale(tmpv3, yDir, dir[1] * offset - value.height / 2.0);
+    vec3.add(ptv3, ptv3, tmpv3);
+    results.points[ptIdx * 3] = ptv3[0];
+    results.points[ptIdx * 3 + 1] = ptv3[1];
+    results.points[ptIdx * 3 + 2] = ptv3[2];
+    results.tcoords[ptIdx * 2] = value.tcoords[0];
+    results.tcoords[ptIdx * 2 + 1] = value.tcoords[1];
+    ptIdx++;
+    vec3.scale(tmpv3, xDir, value.width);
+    vec3.add(ptv3, ptv3, tmpv3);
+    results.points[ptIdx * 3] = ptv3[0];
+    results.points[ptIdx * 3 + 1] = ptv3[1];
+    results.points[ptIdx * 3 + 2] = ptv3[2];
+    results.tcoords[ptIdx * 2] = value.tcoords[2];
+    results.tcoords[ptIdx * 2 + 1] = value.tcoords[3];
+    ptIdx++;
+    vec3.scale(tmpv3, yDir, value.height);
+    vec3.add(ptv3, ptv3, tmpv3);
+    results.points[ptIdx * 3] = ptv3[0];
+    results.points[ptIdx * 3 + 1] = ptv3[1];
+    results.points[ptIdx * 3 + 2] = ptv3[2];
+    results.tcoords[ptIdx * 2] = value.tcoords[4];
+    results.tcoords[ptIdx * 2 + 1] = value.tcoords[5];
+    ptIdx++;
+    vec3.scale(tmpv3, xDir, value.width);
+    vec3.subtract(ptv3, ptv3, tmpv3);
+    results.points[ptIdx * 3] = ptv3[0];
+    results.points[ptIdx * 3 + 1] = ptv3[1];
+    results.points[ptIdx * 3 + 2] = ptv3[2];
+    results.tcoords[ptIdx * 2] = value.tcoords[6];
+    results.tcoords[ptIdx * 2 + 1] = value.tcoords[7];
+    ptIdx++;
+
+    // add the two triangles to represent the quad
+    results.polys[cellIdx * 4] = 3;
+    results.polys[cellIdx * 4 + 1] = ptIdx - 4;
+    results.polys[cellIdx * 4 + 2] = ptIdx - 3;
+    results.polys[cellIdx * 4 + 3] = ptIdx - 2;
+    cellIdx++;
+    results.polys[cellIdx * 4] = 3;
+    results.polys[cellIdx * 4 + 1] = ptIdx - 4;
+    results.polys[cellIdx * 4 + 2] = ptIdx - 2;
+    results.polys[cellIdx * 4 + 3] = ptIdx - 1;
+
+    results.ptIdx += 4;
+    results.cellIdx += 2;
+  };
+
+  // update the polydata associated with drawing the text labels
+  // specifically the quads used for each label and their associated tcoords
+  // etc. This changes every time the camera viewpoint changes
+  publicAPI.updateTexturePolyData = () => {
+    const cmat = model.camera.getCompositeProjectionMatrix(
+      model.lastAspectRatio,
+      -1,
+      1
+    );
+    mat4.transpose(cmat, cmat);
+
+    // update the polydata
+    const numLabels = model.renderable.getTextValues().length;
+    const numPts = numLabels * 4;
+    const numTris = numLabels * 2;
+    const points = new Float64Array(numPts * 3);
+    const polys = new Uint16Array(numTris * 4);
+    const tcoords = new Float32Array(numPts * 2);
+
+    mat4.invert(invmat, cmat);
+
+    const results = {
+      ptIdx: 0,
+      cellIdx: 0,
+      polys,
+      points,
+      tcoords,
+    };
+    let ptIdx = 0;
+    let textIdx = 0;
+    let axisIdx = 0;
+    const coords = model.renderable.getTextPolyData().getPoints().getData();
+    const textValues = model.renderable.getTextValues();
+    while (ptIdx < coords.length / 3) {
+      // compute the direction to move out
+      ptv3[0] = coords[ptIdx * 3];
+      ptv3[1] = coords[ptIdx * 3 + 1];
+      ptv3[2] = coords[ptIdx * 3 + 2];
+      vec3.transformMat4(tmpv3, ptv3, cmat);
+      ptv3[0] = coords[ptIdx * 3 + 3];
+      ptv3[1] = coords[ptIdx * 3 + 4];
+      ptv3[2] = coords[ptIdx * 3 + 5];
+      vec3.transformMat4(tmp2v3, ptv3, cmat);
+      vec3.subtract(tmpv3, tmpv3, tmp2v3);
+      const dir = [tmpv3[0], tmpv3[1]];
+      vtkMath.normalize2D(dir);
+
+      // write the axis label
+      publicAPI.createPolyDataForOneLabel(
+        textValues[textIdx],
+        ptIdx,
+        cmat,
+        invmat,
+        dir,
+        model.renderable.getAxisTitlePixelOffset(),
+        results
+      );
+      ptIdx += 2;
+      textIdx++;
+
+      // write the tick labels
+      for (let t = 0; t < model.renderable.getTickCounts()[axisIdx]; t++) {
+        publicAPI.createPolyDataForOneLabel(
+          textValues[textIdx],
+          ptIdx,
+          cmat,
+          invmat,
+          dir,
+          model.renderable.getTickLabelPixelOffset(),
+          results
+        );
+        ptIdx++;
+        textIdx++;
+      }
+      axisIdx++;
+    }
+
+    const tcoordDA = vtkDataArray.newInstance({
+      numberOfComponents: 2,
+      values: tcoords,
+      name: 'TextureCoordinates',
+    });
+    model.tmPolyData.getPointData().setTCoords(tcoordDA);
+    model.tmPolyData.getPoints().setData(points, 3);
+    model.tmPolyData.getPoints().modified();
+    model.tmPolyData.getPolys().setData(polys, 1);
+    model.tmPolyData.getPolys().modified();
+    model.tmPolyData.modified();
+  };
+
+  publicAPI.updateAPISpecificData = (size, camera, renderWindow) => {
+    // has the size changed?
+    if (model.lastSize[0] !== size[0] || model.lastSize[1] !== size[1]) {
+      model.lastSize[0] = size[0];
+      model.lastSize[1] = size[1];
+      model.lastAspectRatio = size[0] / size[1];
+      model.forceUpdate = true;
+    }
+
+    model.camera = camera;
+
+    // compute bounds for label quads whenever the camera changes
+    publicAPI.updateTexturePolyData();
+  };
+}
+
+const newCubeAxesActorHelper = macro.newInstance(
+  (publicAPI, model, initialValues = { renderable: null }) => {
+    Object.assign(model, {}, initialValues);
+
+    // Inheritance
+    macro.obj(publicAPI, model);
+
+    model.tmPolyData = vtkPolyData.newInstance();
+    model.tmMapper = vtkMapper.newInstance();
+    model.tmMapper.setInputData(model.tmPolyData);
+    model.tmActor = vtkActor.newInstance({ parentProp: publicAPI });
+    model.tmActor.setMapper(model.tmMapper);
+
+    macro.setGet(publicAPI, model, ['renderable']);
+    macro.get(publicAPI, model, [
+      'lastSize',
+      'lastAspectRatio',
+      'axisTextStyle',
+      'tickTextStyle',
+      'tmActor',
+      'ticks',
+    ]);
+
+    model.forceUpdate = false;
+    model.lastRedrawTime = {};
+    macro.obj(model.lastRedrawTime, { mtime: 0 });
+    model.lastRebuildTime = {};
+    macro.obj(model.lastRebuildTime, { mtime: 0 });
+    model.lastSize = [-1, -1];
+
+    // internal variables
+    model.lastTickBounds = [];
+
+    vtkCubeAxesActorHelper(publicAPI, model);
+  },
+  'vtkCubeAxesActorHelper'
+);
 
 function vtkCubeAxesActor(publicAPI, model) {
   // Set our className
@@ -389,8 +667,6 @@ function vtkCubeAxesActor(publicAPI, model) {
       }
     }
 
-    // compute bounds for label quads whenever the camera changes
-    publicAPI.updateTexturePolyData();
     model.forceUpdate = false;
   };
 
@@ -476,218 +752,15 @@ function vtkCubeAxesActor(publicAPI, model) {
       model.tmContext.fillText(key, 1, value.startingHeight + value.height - 1);
     });
 
-    const image = new Image();
-    image.src = model.tmCanvas.toDataURL('image/png');
-    model.tmTexture.setImage(image);
+    model.tmTexture.setCanvas(model.tmCanvas);
     model.tmTexture.modified();
   };
-
-  // called by updateTexturePolyData
-  publicAPI.createPolyDataForOneLabel = (
-    text,
-    pos,
-    cmat,
-    imat,
-    dir,
-    offset,
-    results
-  ) => {
-    const value = model._tmAtlas.get(text);
-    if (!value) {
-      return;
-    }
-    const coords = model.textPolyData.getPoints().getData();
-
-    // compute pixel to distance factors
-    const size = model.lastSize;
-    ptv3[0] = coords[pos * 3];
-    ptv3[1] = coords[pos * 3 + 1];
-    ptv3[2] = coords[pos * 3 + 2];
-    vec3.transformMat4(tmpv3, ptv3, cmat);
-    // moving 0.1 in NDC
-    tmpv3[0] += 0.1;
-    vec3.transformMat4(pt2v3, tmpv3, imat);
-    // results in WC move of
-    vec3.subtract(xDir, pt2v3, ptv3);
-    tmpv3[0] -= 0.1;
-    tmpv3[1] += 0.1;
-    vec3.transformMat4(pt2v3, tmpv3, imat);
-    // results in WC move of
-    vec3.subtract(yDir, pt2v3, ptv3);
-    for (let i = 0; i < 3; i++) {
-      xDir[i] /= 0.5 * 0.1 * size[0];
-      yDir[i] /= 0.5 * 0.1 * size[1];
-    }
-
-    // have to find the four corners of the texture polygon for this label
-    // convert anchor point to View Coords
-    let ptIdx = results.ptIdx;
-    let cellIdx = results.cellIdx;
-    ptv3[0] = coords[pos * 3];
-    ptv3[1] = coords[pos * 3 + 1];
-    ptv3[2] = coords[pos * 3 + 2];
-    // horizontal left, right, or middle alignment based on dir[0]
-    if (dir[0] < -0.5) {
-      vec3.scale(tmpv3, xDir, dir[0] * offset - value.width);
-    } else if (dir[0] > 0.5) {
-      vec3.scale(tmpv3, xDir, dir[0] * offset);
-    } else {
-      vec3.scale(tmpv3, xDir, dir[0] * offset - value.width / 2.0);
-    }
-    vec3.add(ptv3, ptv3, tmpv3);
-    vec3.scale(tmpv3, yDir, dir[1] * offset - value.height / 2.0);
-    vec3.add(ptv3, ptv3, tmpv3);
-    results.points[ptIdx * 3] = ptv3[0];
-    results.points[ptIdx * 3 + 1] = ptv3[1];
-    results.points[ptIdx * 3 + 2] = ptv3[2];
-    results.tcoords[ptIdx * 2] = value.tcoords[0];
-    results.tcoords[ptIdx * 2 + 1] = value.tcoords[1];
-    ptIdx++;
-    vec3.scale(tmpv3, xDir, value.width);
-    vec3.add(ptv3, ptv3, tmpv3);
-    results.points[ptIdx * 3] = ptv3[0];
-    results.points[ptIdx * 3 + 1] = ptv3[1];
-    results.points[ptIdx * 3 + 2] = ptv3[2];
-    results.tcoords[ptIdx * 2] = value.tcoords[2];
-    results.tcoords[ptIdx * 2 + 1] = value.tcoords[3];
-    ptIdx++;
-    vec3.scale(tmpv3, yDir, value.height);
-    vec3.add(ptv3, ptv3, tmpv3);
-    results.points[ptIdx * 3] = ptv3[0];
-    results.points[ptIdx * 3 + 1] = ptv3[1];
-    results.points[ptIdx * 3 + 2] = ptv3[2];
-    results.tcoords[ptIdx * 2] = value.tcoords[4];
-    results.tcoords[ptIdx * 2 + 1] = value.tcoords[5];
-    ptIdx++;
-    vec3.scale(tmpv3, xDir, value.width);
-    vec3.subtract(ptv3, ptv3, tmpv3);
-    results.points[ptIdx * 3] = ptv3[0];
-    results.points[ptIdx * 3 + 1] = ptv3[1];
-    results.points[ptIdx * 3 + 2] = ptv3[2];
-    results.tcoords[ptIdx * 2] = value.tcoords[6];
-    results.tcoords[ptIdx * 2 + 1] = value.tcoords[7];
-    ptIdx++;
-
-    // add the two triangles to represent the quad
-    results.polys[cellIdx * 4] = 3;
-    results.polys[cellIdx * 4 + 1] = ptIdx - 4;
-    results.polys[cellIdx * 4 + 2] = ptIdx - 3;
-    results.polys[cellIdx * 4 + 3] = ptIdx - 2;
-    cellIdx++;
-    results.polys[cellIdx * 4] = 3;
-    results.polys[cellIdx * 4 + 1] = ptIdx - 4;
-    results.polys[cellIdx * 4 + 2] = ptIdx - 2;
-    results.polys[cellIdx * 4 + 3] = ptIdx - 1;
-
-    results.ptIdx += 4;
-    results.cellIdx += 2;
-  };
-
-  // update the polydata associated with drawing the text labels
-  // specifically the quads used for each label and their associated tcoords
-  // etc. This changes every time the camera viewpoint changes
-  publicAPI.updateTexturePolyData = () => {
-    const cmat = model.camera.getCompositeProjectionMatrix(
-      model.lastAspectRatio,
-      -1,
-      1
-    );
-    mat4.transpose(cmat, cmat);
-
-    // update the polydata
-    const numLabels = model.textValues.length;
-    const numPts = numLabels * 4;
-    const numTris = numLabels * 2;
-    const points = new Float64Array(numPts * 3);
-    const polys = new Uint16Array(numTris * 4);
-    const tcoords = new Float32Array(numPts * 2);
-
-    mat4.invert(invmat, cmat);
-
-    const results = {
-      ptIdx: 0,
-      cellIdx: 0,
-      polys,
-      points,
-      tcoords,
-    };
-    let ptIdx = 0;
-    let textIdx = 0;
-    let axisIdx = 0;
-    const coords = model.textPolyData.getPoints().getData();
-    while (ptIdx < coords.length / 3) {
-      // compute the direction to move out
-      ptv3[0] = coords[ptIdx * 3];
-      ptv3[1] = coords[ptIdx * 3 + 1];
-      ptv3[2] = coords[ptIdx * 3 + 2];
-      vec3.transformMat4(tmpv3, ptv3, cmat);
-      ptv3[0] = coords[ptIdx * 3 + 3];
-      ptv3[1] = coords[ptIdx * 3 + 4];
-      ptv3[2] = coords[ptIdx * 3 + 5];
-      vec3.transformMat4(tmp2v3, ptv3, cmat);
-      vec3.subtract(tmpv3, tmpv3, tmp2v3);
-      const dir = [tmpv3[0], tmpv3[1]];
-      vtkMath.normalize2D(dir);
-
-      // write the axis label
-      publicAPI.createPolyDataForOneLabel(
-        model.textValues[textIdx],
-        ptIdx,
-        cmat,
-        invmat,
-        dir,
-        model.axisTitlePixelOffset,
-        results
-      );
-      ptIdx += 2;
-      textIdx++;
-
-      // write the tick labels
-      for (let t = 0; t < model.tickCounts[axisIdx]; t++) {
-        publicAPI.createPolyDataForOneLabel(
-          model.textValues[textIdx],
-          ptIdx,
-          cmat,
-          invmat,
-          dir,
-          model.tickLabelPixelOffset,
-          results
-        );
-        ptIdx++;
-        textIdx++;
-      }
-      axisIdx++;
-    }
-
-    const tcoordDA = vtkDataArray.newInstance({
-      numberOfComponents: 2,
-      values: tcoords,
-      name: 'TextureCoordinates',
-    });
-    model.tmPolyData.getPointData().setTCoords(tcoordDA);
-    model.tmPolyData.getPoints().setData(points, 3);
-    model.tmPolyData.getPoints().modified();
-    model.tmPolyData.getPolys().setData(polys, 1);
-    model.tmPolyData.getPolys().modified();
-    model.tmPolyData.modified();
-  };
-
-  publicAPI.getActors = () => [model.pixelActor, model.tmActor];
-
-  publicAPI.getNestedProps = () => publicAPI.getActors();
 
   // Make sure the data is correct
   publicAPI.onModified(() => {
     model.forceUpdate = true;
     publicAPI.update();
   });
-
-  const setVisibility = macro.chain(
-    publicAPI.setVisibility,
-    model.pixelActor.setVisibility,
-    model.tmActor.setVisibility
-  );
-  publicAPI.setVisibility = (...args) => setVisibility(...args).some(Boolean);
 
   publicAPI.setTickTextStyle = (tickStyle) => {
     model.tickTextStyle = { ...model.tickTextStyle, ...tickStyle };
@@ -738,49 +811,32 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkActor.extend(publicAPI, model, initialValues);
 
   // internal variables
-  model.lastSize = [800, 800];
-  model.lastAspectRatio = 1.0;
   model.lastFacesToDraw = [false, false, false, false, false, false];
   model.axisLabels = ['X-Axis', 'Y-Axis', 'Z-Axis'];
   model.tickCounts = [];
   model.textValues = [];
   model.lastTickBounds = [];
 
+  model.tmCanvas = document.createElement('canvas');
+  model.tmContext = model.tmCanvas.getContext('2d');
   model._tmAtlas = new Map();
 
-  model.mapper = vtkMapper.newInstance();
-  model.polyData = vtkPolyData.newInstance();
-  model.mapper.setInputData(model.polyData);
+  // for texture atlas
+  model.tmTexture = vtkTexture.newInstance();
+  model.tmTexture.setInterpolate(false);
 
   publicAPI.getProperty().setDiffuse(0.0);
   publicAPI.getProperty().setAmbient(1.0);
 
+  model.gridMapper = vtkMapper.newInstance();
+  model.polyData = vtkPolyData.newInstance();
+  model.gridMapper.setInputData(model.polyData);
+  model.gridActor = vtkActor.newInstance();
+  model.gridActor.setMapper(model.gridMapper);
+  model.gridActor.setProperty(publicAPI.getProperty());
+  model.gridActor.setParentProp(publicAPI);
+
   model.textPolyData = vtkPolyData.newInstance();
-
-  // for texture atlas
-  model.tmPolyData = vtkPolyData.newInstance();
-  model.tmMapper = vtkMapper.newInstance();
-  model.tmMapper.setInputData(model.tmPolyData);
-  model.tmTexture = vtkTexture.newInstance();
-  model.tmTexture.setInterpolate(false);
-  model.tmActor = vtkActor.newInstance({ parentProp: publicAPI });
-  model.tmActor.setMapper(model.tmMapper);
-  model.tmActor.addTexture(model.tmTexture);
-  model.tmCanvas = document.createElement('canvas');
-  model.tmContext = model.tmCanvas.getContext('2d');
-
-  // PixelSpaceCallbackMapper - we do need an empty polydata
-  // really just used to get the window size which we need to do
-  // proper text positioning and scaling.
-  model.pixelMapper = vtkPixelSpaceCallbackMapper.newInstance();
-  model.pixelMapperPolyData = vtkPolyData.newInstance();
-  model.pixelMapper.setInputData(model.pixelMapperPolyData);
-  model.pixelMapper.setCallback((coords, camera, aspect, depthValues, size) => {
-    model.lastSize = size;
-    model.lastAspectRatio = size[0] / size[1];
-  });
-  model.pixelActor = vtkActor.newInstance({ parentProp: publicAPI });
-  model.pixelActor.setMapper(model.pixelMapper);
 
   macro.setGet(publicAPI, model, [
     'axisTitlePixelOffset',
@@ -791,7 +847,17 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGetArray(publicAPI, model, ['dataBounds'], 6);
   macro.setGetArray(publicAPI, model, ['axisLabels'], 3);
-  macro.get(publicAPI, model, ['axisTextStyle', 'tickTextStyle', 'camera']);
+  macro.get(publicAPI, model, [
+    'axisTextStyle',
+    'tickTextStyle',
+    'camera',
+    'tmTexture',
+    'textValues',
+    'textPolyData',
+    '_tmAtlas',
+    'tickCounts',
+    'gridActor',
+  ]);
 
   // Object methods
   vtkCubeAxesActor(publicAPI, model);
@@ -803,4 +869,4 @@ export const newInstance = macro.newInstance(extend, 'vtkCubeAxesActor');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, newCubeAxesActorHelper };

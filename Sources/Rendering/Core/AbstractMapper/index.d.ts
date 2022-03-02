@@ -19,7 +19,7 @@ export interface vtkAbstractMapper extends vtkAbstractMapperBase {
 	 * Added plane needs to be a vtkPlane object.
 	 * @param {vtkPlane} plane
 	 */
-	addClippingPlane(plane: vtkPlane): void;
+	addClippingPlane(plane: vtkPlane): boolean;
 
 	/**
 	 * Get number of clipping planes.
@@ -39,10 +39,10 @@ export interface vtkAbstractMapper extends vtkAbstractMapperBase {
 	removeAllClippingPlanes(): void;
 
 	/**
-	 * Remove clipping plane at index i.
-	 * @param {Number} i 
+	 * Remove clipping plane.
+	 * @param {vtkPlane} plane
 	 */
-	removeClippingPlane(i: number): void;
+	removeClippingPlane(plane: vtkPlane): boolean;
 
 	/**
 	 * Set clipping planes.

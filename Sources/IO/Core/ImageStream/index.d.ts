@@ -1,6 +1,6 @@
 import { vtkObject } from "../../../interfaces";
 import { Size } from "../../../types";
-
+import vtkViewStream from './ViewStream';
 
 /**
  *
@@ -10,54 +10,56 @@ export interface IImageStreamInitialValues {
 	serverAnimationFPS?: number,
 }
 
+// Return type of wslink/src/WebsocketConnection, getSession() method.
+type WebsocketSession = any;
 
 export interface vtkImageStream extends vtkObject {
 
 	/**
-	 * 
+	 *
 	 */
-	connect(): void;
+	connect(session: WebsocketSession): void;
 
 	/**
-	 * 
-	 * @param {Number} [viewId] The ID of the view.
-	 * @param {Size} [size] The size of the view. 
+	 *
+	 * @param {String} [viewId] The ID of the view.
+	 * @param {Size} [size] The size of the view.
 	 */
-	createViewStream(viewId?: number, size?: Size): any;
+	createViewStream(viewId?: string, size?: Size): vtkViewStream;
 
 	/**
-	 * 
+	 *
 	 */
 	delete(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	disconnect(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	getProtocol(): any;
 
 	/**
-	 * 
+	 *
 	 */
 	getServerAnimationFPS(): number;
 
 	/**
-	 * 
+	 *
 	 */
 	registerViewStream(): void;
 
 	/**
-	 * 
-	 * @param serverAnimationFPS 
+	 *
+	 * @param serverAnimationFPS
 	 */
 	setServerAnimationFPS(serverAnimationFPS: number): boolean;
 
 	/**
-	 * 
+	 *
 	 */
 	unregisterViewStream(): void;
 }

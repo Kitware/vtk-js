@@ -282,9 +282,9 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
 
     if (!model.WebGPURenderWindow.getInitialized()) {
       model.WebGPURenderWindow.initialize();
-      await new Promise((resolve) =>
-        model.WebGPURenderWindow.onInitialized(resolve)
-      );
+      await new Promise((resolve) => {
+        model.WebGPURenderWindow.onInitialized(resolve);
+      });
     }
 
     const webGPURenderer = model.WebGPURenderWindow.getViewNodeFor(renderer);
@@ -312,6 +312,7 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
     // so anything specific to this request gets put into the
     // result object (by value in most cases)
     const result = {
+      area: [0, 0, texture.getWidth() - 1, texture.getHeight() - 1],
       captureZValues: model.captureZValues,
       fieldAssociation: model.fieldAssociation,
       renderer,
@@ -325,7 +326,9 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
     result.colorBufferWidth = 16 * Math.floor((result.width + 15) / 16);
     result.colorBufferSizeInBytes =
       result.colorBufferWidth * result.height * 4 * 4;
-    const colorBuffer = vtkWebGPUBuffer.newInstance();
+    const colorBuffer = vtkWebGPUBuffer.newInstance({
+      label: 'hardwareSelectColorBuffer',
+    });
     colorBuffer.setDevice(device);
     /* eslint-disable no-bitwise */
     /* eslint-disable no-undef */
@@ -356,7 +359,9 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
     let zbuffer;
     if (model.captureZValues) {
       result.zbufferBufferWidth = 64 * Math.floor((result.width + 63) / 64);
-      zbuffer = vtkWebGPUBuffer.newInstance();
+      zbuffer = vtkWebGPUBuffer.newInstance({
+        label: 'hardwareSelectDepthBuffer',
+      });
       zbuffer.setDevice(device);
       result.zbufferSizeInBytes = result.height * result.zbufferBufferWidth * 4;
       /* eslint-disable no-bitwise */

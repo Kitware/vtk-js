@@ -32,7 +32,7 @@ const imgFragTemplate = `
 
 //VTK::IOStructs::Dec
 
-[[stage(fragment)]]
+@stage(fragment)
 fn main(
 //VTK::IOStructs::Input
 )
@@ -330,8 +330,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
           format: 'rgba8unorm',
         };
         const newTex = device.getTextureManager().getTexture(treq);
-        const tview = newTex.createView();
-        tview.setName('tfunTexture');
+        const tview = newTex.createView('tfunTexture');
         const tViews = model.helper.getTextureViews();
         tViews[1] = tview;
       }
@@ -343,14 +342,13 @@ function vtkWebGPUImageMapper(publicAPI, model) {
   publicAPI.updateBuffers = (device) => {
     const treq = {
       imageData: model.currentInput,
-      source: model.currentInput,
+      owner: model.currentInput.getPointData().getScalars(),
     };
     const newTex = device.getTextureManager().getTexture(treq);
     const tViews = model.helper.getTextureViews();
 
     if (!tViews[0] || tViews[0].getTexture() !== newTex) {
-      const tview = newTex.createView();
-      tview.setName(`imgTexture`);
+      const tview = newTex.createView('imgTexture');
       tViews[0] = tview;
     }
 
@@ -373,8 +371,9 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       !model.clampSampler ||
       iType !== model.clampSampler.getOptions().minFilter
     ) {
-      model.clampSampler = vtkWebGPUSampler.newInstance();
-      model.clampSampler.setName('clampSampler');
+      model.clampSampler = vtkWebGPUSampler.newInstance({
+        label: 'clampSampler',
+      });
       model.clampSampler.create(device, {
         minFilter: iType,
         magFilter: iType,
@@ -398,7 +397,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
+    vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
     let code = vDesc.getCode();
     const lines = [
       'var pos: vec4<f32> = mapperUBO.Origin +',
@@ -492,8 +491,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.helper = vtkWebGPUFullScreenQuad.newInstance();
   model.helper.setFragmentShaderTemplate(imgFragTemplate);
 
-  model.UBO = vtkWebGPUUniformBuffer.newInstance();
-  model.UBO.setName('mapperUBO');
+  model.UBO = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
   model.UBO.addEntry('SCTCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('Origin', 'vec4<f32>');
   model.UBO.addEntry('Axis2', 'vec4<f32>');
@@ -502,11 +500,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('cShift', 'vec4<f32>');
   model.helper.setUBO(model.UBO);
 
-  model.SSBO = vtkWebGPUStorageBuffer.newInstance();
-  model.SSBO.setName('volumeSSBO');
+  model.SSBO = vtkWebGPUStorageBuffer.newInstance({ label: 'volumeSSBO' });
 
-  model.componentSSBO = vtkWebGPUStorageBuffer.newInstance();
-  model.componentSSBO.setName('componentSSBO');
+  model.componentSSBO = vtkWebGPUStorageBuffer.newInstance({
+    label: 'componentSSBO',
+  });
 
   model.lutBuildTime = {};
   macro.obj(model.lutBuildTime, { mtime: 0 });

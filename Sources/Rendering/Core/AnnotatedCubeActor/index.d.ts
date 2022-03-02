@@ -10,15 +10,16 @@ export interface IStyle {
 	fontSizeScale?: (res: number) => number;
 	edgeThickness?: number;
 	edgeColor?: string;
+	resolution?: number;
 }
 
-export interface IFaceProperty {
+export interface IFaceProperty extends IStyle {
 	text?: string;
 	faceRotation?: number;
 }
 
 /**
- * 
+ *
  */
 export interface IAnnotatedCubeActorInitialValues extends IActorInitialValues {
 }

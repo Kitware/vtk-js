@@ -1,3 +1,6 @@
+// For streamlined VR development install the WebXR emulator extension
+// https://github.com/MozillaReality/WebXR-emulator-extension
+
 import 'vtk.js/Sources/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)

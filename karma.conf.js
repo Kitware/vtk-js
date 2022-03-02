@@ -3,7 +3,7 @@ const path = require('path');
 
 const webpack = require('webpack');
 const testsRules = require('./Utilities/config/rules-tests');
-const linterRules = require('./Utilities/config/rules-linter');
+const ESLintPlugin = require('eslint-webpack-plugin');
 
 const sourcePath = path.join(__dirname, './Sources');
 
@@ -37,7 +37,7 @@ module.exports = function init(config) {
     webpack: {
       mode: 'development',
       module: {
-        rules: [].concat(testsRules, linterRules),
+        rules: [].concat(testsRules),
       },
       resolve: {
         modules: [path.resolve(__dirname, 'node_modules'), sourcePath],
@@ -52,6 +52,7 @@ module.exports = function init(config) {
         },
       },
       plugins: [
+	new ESLintPlugin(),
         new webpack.DefinePlugin({
           __BASE_PATH__: "'/base'",
         }),

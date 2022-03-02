@@ -18,7 +18,7 @@ const vtkWebGPUSphereMapperVS = `
 
 //VTK::IOStructs::Dec
 
-[[stage(vertex)]]
+@stage(vertex)
 fn main(
 //VTK::IOStructs::Input
 )
@@ -73,7 +73,7 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
     vDesc.addOutput('f32', 'radiusVC');
 
     const fDesc = pipeline.getShaderDescription('fragment');
-    fDesc.addBuiltinOutput('f32', '[[builtin(frag_depth)]] fragDepth');
+    fDesc.addBuiltinOutput('f32', '@builtin(frag_depth) fragDepth');
     const sphereFrag = `
     // compute the eye position and unit direction
     var vertexVC: vec4<f32>;
@@ -129,7 +129,7 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
+    vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
     let code = vDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
       '  output.Position = rendererUBO.VCPCMatrix*vertexVC;',
@@ -173,8 +173,8 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
     const vertexInput = model.primitives[i].getVertexInput();
 
     let buffRequest = {
-      hash: points.getMTime(),
-      source: points,
+      owner: points,
+      hash: 'spm',
       time: points.getMTime(),
       usage: BufferUsage.RawVertex,
       format: 'float32x3',
@@ -215,8 +215,8 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
     const defaultRadius = model.renderable.getRadius();
     if (scales || defaultRadius !== model._lastRadius) {
       buffRequest = {
-        hash: scales,
-        source: scales,
+        owner: scales,
+        hash: 'spm',
         time: scales
           ? pointData.getArray(model.renderable.getScaleArray()).getMTime()
           : 0,
@@ -255,8 +255,8 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
       const c = model.renderable.getColorMapColors();
       if (c) {
         buffRequest = {
-          hash: c,
-          source: c,
+          owner: c,
+          hash: 'spm',
           time: c.getMTime(),
           usage: BufferUsage.RawVertex,
           format: 'unorm8x4',

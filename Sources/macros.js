@@ -74,6 +74,7 @@ export function vtkWarningMacro(...args) {
 }
 
 const ERROR_ONCE_MAP = {};
+
 export function vtkOnceErrorMacro(str) {
   if (!ERROR_ONCE_MAP[str]) {
     loggerFunctions.error(str);
@@ -132,6 +133,7 @@ export function formatBytesToProperUnit(size, precision = 2, chunkSize = 1000) {
   }
   return `${value.toFixed(precision)} ${currentUnit}`;
 }
+
 // ----------------------------------------------------------------------------
 // Convert thousand number with proper separator
 // ----------------------------------------------------------------------------
@@ -234,6 +236,7 @@ export function obj(publicAPI = {}, model = {}) {
     function unsubscribe() {
       off(index);
     }
+
     return Object.freeze({
       unsubscribe,
     });
@@ -689,11 +692,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     return model.inputConnection[port];
   }
 
-  function addInputConnection(outputPort) {
-    if (model.deleted) {
-      vtkErrorMacro('instance deleted - cannot call any method');
-      return;
-    }
+  function getPortToFill() {
     let portToFill = model.numberOfInputs;
     while (
       portToFill &&
@@ -705,7 +704,15 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     if (portToFill === model.numberOfInputs) {
       model.numberOfInputs++;
     }
-    setInputConnection(outputPort, portToFill);
+    return portToFill;
+  }
+
+  function addInputConnection(outputPort) {
+    if (model.deleted) {
+      vtkErrorMacro('instance deleted - cannot call any method');
+      return;
+    }
+    setInputConnection(outputPort, getPortToFill());
   }
 
   function addInputData(dataset) {
@@ -713,18 +720,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
       vtkErrorMacro('instance deleted - cannot call any method');
       return;
     }
-    let portToFill = model.numberOfInputs;
-    while (
-      portToFill &&
-      !model.inputData[portToFill - 1] &&
-      !model.inputConnection[portToFill - 1]
-    ) {
-      portToFill--;
-    }
-    if (portToFill === model.numberOfInputs) {
-      model.numberOfInputs++;
-    }
-    setInputData(dataset, portToFill);
+    setInputData(dataset, getPortToFill());
   }
 
   function getOutputData(port = 0) {
@@ -740,17 +736,13 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
 
   publicAPI.shouldUpdate = () => {
     const localMTime = publicAPI.getMTime();
-    let count = numberOfOutputs;
     let minOutputMTime = Infinity;
+
+    let count = numberOfOutputs;
     while (count--) {
-      if (!model.output[count]) {
+      if (!model.output[count] || model.output[count].isDeleted()) {
         return true;
       }
-
-      if (model.output[count].isDeleted()) {
-        return true;
-      }
-
       const mt = model.output[count].getMTime();
       if (mt < localMTime) {
         return true;
@@ -763,22 +755,13 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     count = model.numberOfInputs;
     while (count--) {
       if (
-        model.inputConnection[count] &&
-        model.inputConnection[count].filter.shouldUpdate()
+        model.inputConnection[count]?.filter.shouldUpdate() ||
+        publicAPI.getInputData(count)?.getMTime() > minOutputMTime
       ) {
         return true;
       }
     }
 
-    count = model.numberOfInputs;
-    while (count--) {
-      if (
-        publicAPI.getInputData(count) &&
-        publicAPI.getInputData(count).getMTime() > minOutputMTime
-      ) {
-        return true;
-      }
-    }
     return false;
   };
 
@@ -882,6 +865,7 @@ export function event(publicAPI, model, eventName) {
     function unsubscribe() {
       off(callbackID);
     }
+
     return Object.freeze({
       unsubscribe,
     });
@@ -1157,6 +1141,7 @@ export function proxy(publicAPI, model) {
       }
     }
   }
+
   registerProperties(model.ui, ROOT_GROUP_NAME);
 
   publicAPI.updateUI = (ui) => {
@@ -1386,6 +1371,7 @@ export function proxy(publicAPI, model) {
       }
     }
   }
+
   setImmediateVTK(registerLinks);
 }
 

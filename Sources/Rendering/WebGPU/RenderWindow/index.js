@@ -67,6 +67,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 
   publicAPI.recreateSwapChain = () => {
     if (model.context) {
+      model.context.unconfigure();
       const presentationFormat = model.context.getPreferredFormat(
         model.adapter
       );
@@ -79,6 +80,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST,
         size: model.size,
       });
+      model._configured = true;
     }
   };
 
@@ -97,7 +99,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 
       publicAPI.initialize();
     } else if (model.initialized) {
-      if (!model.context.validConfiguration) {
+      if (!model._configured) {
         publicAPI.recreateSwapChain();
       }
       model.commandEncoder = model.device.createCommandEncoder();
@@ -345,6 +347,8 @@ function vtkWebGPURenderWindow(publicAPI, model) {
           publicAPI.modified();
 
           if (resetCamera) {
+            const isUserResetCamera = resetCamera !== true;
+
             // If resetCamera was requested, we first save camera parameters
             // from all the renderers, so we can restore them later
             model._screenshot.cameras = model.renderable
@@ -358,7 +362,10 @@ function vtkWebGPURenderWindow(publicAPI, model) {
                 );
 
                 return {
-                  resetCameraFn: renderer.resetCamera,
+                  resetCameraArgs: isUserResetCamera ? { renderer } : undefined,
+                  resetCameraFn: isUserResetCamera
+                    ? resetCamera
+                    : renderer.resetCamera,
                   restoreParamsFn: camera.set,
                   // "clone" the params so we don't keep refs to properties
                   arg: JSON.parse(JSON.stringify(params)),
@@ -368,8 +375,9 @@ function vtkWebGPURenderWindow(publicAPI, model) {
             // Perform the resetCamera() on each renderer only after capturing
             // the params from all active cameras, in case there happen to be
             // linked cameras among the renderers.
-            model._screenshot.cameras.forEach(({ resetCameraFn }) =>
-              resetCameraFn()
+            model._screenshot.cameras.forEach(
+              ({ resetCameraFn, resetCameraArgs }) =>
+                resetCameraFn(resetCameraArgs)
             );
           }
 
@@ -521,6 +529,12 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     }
     result.colorValues = tmparray;
     return result;
+  };
+
+  publicAPI.createSelector = () => {
+    const ret = vtkWebGPUHardwareSelector.newInstance();
+    ret.setWebGPURenderWindow(publicAPI);
+    return ret;
   };
 
   publicAPI.delete = macro.chain(publicAPI.delete, publicAPI.setViewStream);
