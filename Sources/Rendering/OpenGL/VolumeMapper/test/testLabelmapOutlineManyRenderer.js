@@ -5,7 +5,6 @@ import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import 'vtk.js/Sources/Rendering/Profiles/Volume';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
-// Force DataAccessHelper to have access to various data source
 import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
 import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
@@ -49,34 +48,25 @@ function recomputeViewports(renderWindow) {
   renderWindow.render();
 }
 
-function resize(renderWindow, openglRenderWindow, rootContainer) {
+function resize(renderWindow, glwindow, rootContainer) {
   rootContainer.style.width = `${window.innerWidth}px`;
-  openglRenderWindow.setSize(window.innerWidth, window.innerHeight);
+  glwindow.setSize(window.innerWidth, window.innerHeight);
+  // rootContainer.style.width = `${800}px`;
+  // glwindow.setSize(800, 1000);
   recomputeViewports(renderWindow);
-  // Object.values(RENDERERS).forEach((r) => r.resetCamera());
 }
 
-function applyStyle(element) {
-  element.classList.add('renderer');
-  element.style.width = '400px';
-  element.style.height = '400px';
-  element.style.margin = '20px';
-  element.style.border = 'solid 1px #333';
-  element.style.display = 'inline-block';
-  element.style.boxSizing = 'border';
-  element.style.textAlign = 'center';
-  return element;
-}
-
-function createLabelPipeline(backgroundImageData) {
+function createLabelPipeline(backgroundImageData, gc) {
   // Create a labelmap image the same dimensions as our background volume.
-  const labelMapData = vtkImageData.newInstance();
+  const labelMapData = gc.registerResource(vtkImageData.newInstance());
 
   const values = new Uint8Array(backgroundImageData.getNumberOfPoints());
-  const dataArray = vtkDataArray.newInstance({
-    numberOfComponents: 1, // labelmap with single component
-    values,
-  });
+  const dataArray = gc.registerResource(
+    vtkDataArray.newInstance({
+      numberOfComponents: 1, // labelmap with single component
+      values,
+    })
+  );
   labelMapData.getPointData().setScalars(dataArray);
 
   labelMapData.setDimensions(...backgroundImageData.getDimensions());
@@ -87,8 +77,8 @@ function createLabelPipeline(backgroundImageData) {
   labelMapData.computeTransforms();
 
   const labelMap = {
-    actor: vtkVolume.newInstance(),
-    mapper: vtkVolumeMapper.newInstance(),
+    actor: gc.registerResource(vtkVolume.newInstance()),
+    mapper: gc.registerResource(vtkVolumeMapper.newInstance()),
     imageData: labelMapData,
     cfun: vtkColorTransferFunction.newInstance(),
     ofun: vtkPiecewiseFunction.newInstance(),
@@ -157,7 +147,6 @@ test.onlyIfWebGL.only('Test Labelmap Outline with many renderers', (t) => {
   const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
   const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
   renderWindow.addView(glwindow);
-  // renderWindow.setBackground(0.32, 0.34, 0.43);
 
   // Create some control UI
   const bodyElement = document.querySelector('body');
@@ -169,7 +158,6 @@ test.onlyIfWebGL.only('Test Labelmap Outline with many renderers', (t) => {
   rootContainer.style.pointerEvents = 'none';
 
   bodyElement.appendChild(rootContainer);
-
   glwindow.setContainer(rootContainer);
 
   const interactor = gc.registerResource(
@@ -177,9 +165,7 @@ test.onlyIfWebGL.only('Test Labelmap Outline with many renderers', (t) => {
   );
   interactor.setView(glwindow);
   interactor.initialize();
-  interactor.bindEvents(document.body);
 
-  // todo:
   resize(renderWindow, glwindow, rootContainer);
 
   // ----------------------------------------------------------------------------
@@ -195,16 +181,20 @@ test.onlyIfWebGL.only('Test Labelmap Outline with many renderers', (t) => {
     .setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`, { loadData: true })
     .then(() => {
       const data = reader.getOutputData();
-      const labelMap = createLabelPipeline(data);
+      const labelMap = createLabelPipeline(data, gc);
       fillBlobForThreshold(labelMap.imageData, data);
 
       for (let i = 0; i < 2; i++) {
-        const mapper = vtkVolumeMapper.newInstance();
+        const mapper = gc.registerResource(vtkVolumeMapper.newInstance());
         mapper.setInputData(data);
         const el = gc.registerDOMElement(document.createElement('div'));
-        const elContainer = applyStyle(el);
-        elContainer.id = rendererId++;
-        bodyElement.appendChild(elContainer);
+        el.classList.add('renderer');
+        el.style.width = '400px';
+        el.style.height = '400px';
+        // el.style.display = 'inline-block';
+
+        el.id = rendererId++;
+        bodyElement.appendChild(el);
 
         const actor = gc.registerResource(vtkVolume.newInstance());
         actor.getProperty().setInterpolationTypeToNearest();
@@ -284,27 +274,26 @@ test.onlyIfWebGL.only('Test Labelmap Outline with many renderers', (t) => {
         camera.setClippingRange(dist, dist + 0.1);
         camera.setParallelScale(20);
 
-        updateViewPort(elContainer, renderer);
+        updateViewPort(el, renderer);
         renderer.getActiveCamera().setViewUp(1, 0, 0);
         renderWindow.render();
 
         // Keep track of renderer
-        RENDERERS[elContainer.id] = renderer;
+        RENDERERS[el.id] = renderer;
       }
 
       glwindow.captureNextImage().then((image) => {
-        debugger;
         console.log(image);
         testUtils.compareImages(
           image,
           [baseline1],
-          'Rendering/OpenGL/VolumeMapper/testProportionalComponents',
+          'Rendering/OpenGL/VolumeMapper/testLabelmapOutlineManyRenderer',
           t,
           1.5,
           gc.releaseResources
         );
       });
 
-      resize(renderWindow, glwindow, rootContainer);
+      recomputeViewports(renderWindow);
     });
 });
