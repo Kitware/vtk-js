@@ -23,16 +23,21 @@ import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow'
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 
+import baseline1 from './testLabelmapOutlineManyRenderer.png';
+
+// This test is mainly the Examples/Rendering/ManyRenderers demo but for labelmapOutlines
+
 const RENDERERS = {};
+const glWindowWidth = 400;
+const glWindowHeight = 800;
 
 function updateViewPort(element, renderer) {
-  const { innerHeight, innerWidth } = window;
   const { x, y, width, height } = element.getBoundingClientRect();
   const viewport = [
-    x / innerWidth,
-    1 - (y + height) / innerHeight,
-    (x + width) / innerWidth,
-    1 - y / innerHeight,
+    x / glWindowWidth,
+    1 - (y + height) / glWindowHeight,
+    (x + width) / glWindowWidth,
+    1 - y / glWindowHeight,
   ];
   renderer.setViewport(...viewport);
 }
@@ -48,11 +53,11 @@ function recomputeViewports(renderWindow) {
   renderWindow.render();
 }
 
-function resize(renderWindow, glwindow, rootContainer) {
-  rootContainer.style.width = `${window.innerWidth}px`;
-  glwindow.setSize(window.innerWidth, window.innerHeight);
-  // rootContainer.style.width = `${800}px`;
-  // glwindow.setSize(800, 1000);
+function resize(renderWindow, glwindow) {
+  // Manually settings the size of the render window since we don't want
+  // to compare a rendered image to be page-size dependent since we need
+  // to compare the rendered image to a baseline image.
+  glwindow.setSize(400, 800);
   recomputeViewports(renderWindow);
 }
 
@@ -140,7 +145,7 @@ function fillBlobForThreshold(imageData, backgroundImageData) {
   imageData.getPointData().getScalars().setData(values);
 }
 
-test.onlyIfWebGL.only('Test Labelmap Outline with many renderers', (t) => {
+test.onlyIfWebGL('Test Labelmap Outline with many renderers', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'LabelmapOutline manyRenderers');
 
@@ -150,6 +155,8 @@ test.onlyIfWebGL.only('Test Labelmap Outline with many renderers', (t) => {
 
   // Create some control UI
   const bodyElement = document.querySelector('body');
+  bodyElement.style.margin = 0;
+
   const rootContainer = gc.registerDOMElement(document.createElement('div'));
   rootContainer.style.position = 'fixed';
   rootContainer.style.zIndex = -1;
@@ -166,7 +173,7 @@ test.onlyIfWebGL.only('Test Labelmap Outline with many renderers', (t) => {
   interactor.setView(glwindow);
   interactor.initialize();
 
-  resize(renderWindow, glwindow, rootContainer);
+  resize(renderWindow, glwindow);
 
   // ----------------------------------------------------------------------------
   // Renderers
@@ -191,7 +198,6 @@ test.onlyIfWebGL.only('Test Labelmap Outline with many renderers', (t) => {
         el.classList.add('renderer');
         el.style.width = '400px';
         el.style.height = '400px';
-        // el.style.display = 'inline-block';
 
         el.id = rendererId++;
         bodyElement.appendChild(el);
@@ -283,7 +289,6 @@ test.onlyIfWebGL.only('Test Labelmap Outline with many renderers', (t) => {
       }
 
       glwindow.captureNextImage().then((image) => {
-        console.log(image);
         testUtils.compareImages(
           image,
           [baseline1],
