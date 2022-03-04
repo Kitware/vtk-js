@@ -138,6 +138,7 @@ const DEFAULT_VALUES = {
   ambient: 1.0,
   diffuse: 0.0,
   opacity: 1.0,
+  useLookupTableScalarRange: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -167,6 +168,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'ambient',
     'diffuse',
     'opacity',
+    'useLookupTableScalarRange',
   ]);
 
   // Object methods
