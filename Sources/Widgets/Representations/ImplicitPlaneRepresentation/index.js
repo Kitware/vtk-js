@@ -184,12 +184,18 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
     // Update normal parameters
     // --------------------------------
 
+    let pixelScale = 1;
+    if (model.scaleInPixels) {
+      pixelScale = publicAPI.getPixelWorldHeightAtCoord(origin);
+    }
+
     model.pipelines.normal.source.set({
       height: Math.max(xRange, yRange, zRange),
       radius:
         model.handleSizeRatio *
         Math.min(xRange, yRange, zRange) *
-        model.axisScale,
+        model.axisScale *
+        pixelScale,
       resolution: model.sphereResolution,
     });
     const yAxis = model.pipelines.normal.source.getOutputData();
@@ -212,7 +218,7 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
 
     model.pipelines.origin.actor.setPosition(origin);
     const handleScale =
-      model.handleSizeRatio * Math.min(xRange, yRange, zRange);
+      model.handleSizeRatio * Math.min(xRange, yRange, zRange) * pixelScale;
     model.pipelines.origin.actor.setScale(
       handleScale,
       handleScale,
