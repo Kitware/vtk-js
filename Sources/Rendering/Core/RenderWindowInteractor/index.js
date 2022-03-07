@@ -369,7 +369,28 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       return;
     }
     animationRequesters.add(requestor);
-    if (animationRequesters.size === 1 && !model.xrAnimation) {
+    if (
+      !model.animationRequest &&
+      animationRequesters.size === 1 &&
+      !model.xrAnimation
+    ) {
+      model._animationStartTime = Date.now();
+      model._animationFrameCount = 0;
+      model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
+      publicAPI.startAnimationEvent();
+    }
+  };
+
+  // continue animating for at least the specified duration of
+  // milliseconds.
+  publicAPI.extendAnimation = (duration) => {
+    const newEnd = Date.now() + duration;
+    model._animationExtendedEnd = Math.max(model._animationExtendedEnd, newEnd);
+    if (
+      !model.animationRequest &&
+      animationRequesters.size === 0 &&
+      !model.xrAnimation
+    ) {
       model._animationStartTime = Date.now();
       model._animationFrameCount = 0;
       model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
@@ -393,7 +414,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       return;
     }
     animationRequesters.delete(requestor);
-    if (model.animationRequest && animationRequesters.size === 0) {
+    if (
+      model.animationRequest &&
+      animationRequesters.size === 0 &&
+      Date.now() > model._animationExtendedEnd
+    ) {
       cancelAnimationFrame(model.animationRequest);
       model.animationRequest = null;
       publicAPI.endAnimationEvent();
@@ -519,7 +544,17 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
     publicAPI.animationEvent();
     forceRender();
-    model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
+    if (
+      animationRequesters.size > 0 ||
+      Date.now() < model._animationExtendedEnd
+    ) {
+      model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
+    } else {
+      cancelAnimationFrame(model.animationRequest);
+      model.animationRequest = null;
+      publicAPI.endAnimationEvent();
+      publicAPI.render();
+    }
   };
 
   publicAPI.handleWheel = (event) => {
@@ -556,9 +591,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
     // start a timer to keep us animating while we get wheel events
     model.wheelTimeoutID = setTimeout(() => {
+      publicAPI.extendAnimation(600);
       publicAPI.endMouseWheelEvent();
       model.wheelTimeoutID = 0;
-    }, 800);
+    }, 200);
   };
 
   publicAPI.handleMouseEnter = (event) => {
@@ -1064,6 +1100,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
+
+  // run animation at least until this time
+  model._animationExtendedEnd = 0;
 
   macro.event(publicAPI, model, 'RenderEvent');
   handledEvents.forEach((eventName) =>
