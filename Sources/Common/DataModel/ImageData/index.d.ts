@@ -201,17 +201,18 @@ export interface vtkImageData extends vtkDataSet {
 	/**
 	 * this is the fast version, requires vec3 arguments
 	 * @param {ReadonlyVec3} vin 
-	 * @param {vec3} vout 
+	 * @param {vec3} [vout] 
 	 */
-	indexToWorldVec3(vin: ReadonlyVec3, vout: vec3): vec3;
+	indexToWorldVec3(vin: ReadonlyVec3, vout?: vec3): vec3;
 
 	/**
-	 * Converts the input index vector `[i,j,k]` to world values `[x,y,z]`.
-	 * Modifies the out vector array in place, but also returns it.
+	 * Converts the input index vector `[i,j,k]` to world values `[x,y,z]`. 
+	 * If an out vector is not provided, a new one is created. If provided, it
+	 * modifies the out vector array in place, but also returns it.
 	 * @param {ReadonlyVec3} ain 
-	 * @param {vec3} aout 
+	 * @param {vec3} [aout] 
 	 */
-	indexToWorld(ain: ReadonlyVec3, aout: vec3): vec3;
+	indexToWorld(ain: ReadonlyVec3, aout?: vec3): vec3;
 
 	/**
 	 * Calculate the corresponding world bounds for the given index bounds
@@ -308,18 +309,19 @@ export interface vtkImageData extends vtkDataSet {
 	/**
 	 * this is the fast version, requires vec3 arguments
 	 * @param vin 
-	 * @param vout 
+	 * @param [vout] 
 	 */
-	worldToIndexVec3(vin: ReadonlyVec3, vout: vec3): vec3;
+	worldToIndexVec3(vin: ReadonlyVec3, vout?: vec3): vec3;
 
 	/**
 	 * Converts the input world vector `[x,y,z]` to approximate index values
 	 * `[i,j,k]`. Should be rounded to integers before attempting to access the
-	 * index. Modifies the out vector array in place, but also returns it.
+	 * index. If an out vector is not provided, a new one is created. If provided, it
+	 * modifies the out vector array in place, but also returns it.
 	 * @param ain 
-	 * @param aout 
+	 * @param [aout] 
 	 */
-	worldToIndex(ain: ReadonlyVec3, aout: vec3): vec3;
+	worldToIndex(ain: ReadonlyVec3, aout?: vec3): vec3;
 
 	/**
 	 * Calculate the corresponding index bounds for the given world bounds

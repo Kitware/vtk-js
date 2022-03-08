@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix';
-import { TypedArray } from '../../../types';
+import { TypedArray, Vector3 } from '../../../types';
 
 declare interface Transform {
 
@@ -22,9 +22,9 @@ declare interface Transform {
 	 * Normalizes the axis of rotation then rotates the current matrix `angle`
 	 * degrees/radians around the provided axis.
 	 * @param {Number} angle 
-	 * @param {Number} axis 
+	 * @param {Vector3} axis 
 	 */
-	rotate(angle: number, axis: number): Transform
+	rotate(angle: number, axis: Vector3): Transform
 
 	/**
 	 * Rotates `angle` degrees/radians around the X axis.
