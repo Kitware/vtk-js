@@ -17,6 +17,7 @@ export enum Corners {
 export interface IOrientationMarkerWidgetInitialValues {
 	actor?: vtkAnnotatedCubeActor | vtkAxesActor,
 	interactor?: vtkRenderWindowInteractor,
+	parentRenderer?: vtkRenderer,
 	viewportCorner?: Corners,
 	viewportSize?: number,
 	minPixelSize?: number,
@@ -43,6 +44,11 @@ export interface vtkOrientationMarkerWidget extends vtkObject {
 	 * 
 	 */
 	getActor(): vtkAnnotatedCubeActor | vtkAxesActor;
+
+	/**
+	 * Gets the parent renderer, if any.
+	 */
+	getParentRenderer(): vtkRenderer | null;
 
 	/**
 	 * Get wheter the orientation marker is enabled.
@@ -86,6 +92,12 @@ export interface vtkOrientationMarkerWidget extends vtkObject {
 	 * @param actor 
 	 */
 	setActor(actor: vtkAnnotatedCubeActor | vtkAxesActor): void;
+
+	/**
+	 * Sets the parent renderer
+	 * @param ren The parent renderer
+	 */
+	setParentRenderer(ren: vtkRenderer): boolean;
 
 	/**
 	 * Set the widget enabled status, i.e. to show the widget or not.
