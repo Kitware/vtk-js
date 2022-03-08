@@ -63,10 +63,9 @@ test.onlyIfWebGL('Test Volume Mapper Bounds', (t) => {
   interactor.initialize();
   interactor.bindEvents(renderWindowContainer);
 
-  // Todo: replace the data with vtk-js-datasets after fixing the access problem
   reader
     .setUrl(
-      'https://sedghi.github.io/dicom-test/src/data/synthetic_dicom_11Slices_1mm.vti'
+      'https://kitware.github.io/vtk-js-datasets/data/vti/syntheticSlicesData.vti/'
     )
     .then(() => {
       reader.loadData().then(() => {
