@@ -1,6 +1,6 @@
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 
-/*
+/**
  * 
  */
 export interface IImageSliceFilterInitialValues {
