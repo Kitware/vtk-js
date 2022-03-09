@@ -1,4 +1,8 @@
 import { vtkAlgorithm, vtkObject, vtkSubscription } from "../../../interfaces";
+import HtmlDataAccessHelper from "../../Core/DataAccessHelper/HtmlDataAccessHelper";
+import HttpDataAccessHelper from "../../Core/DataAccessHelper/HttpDataAccessHelper";
+import JSZipDataAccessHelper from "../../Core/DataAccessHelper/JSZipDataAccessHelper";
+import LiteHttpDataAccessHelper from "../../Core/DataAccessHelper/LiteHttpDataAccessHelper";
 
 
 interface IElevationReaderOptions {
@@ -33,7 +37,7 @@ export interface vtkElevationReader extends vtkElevationReaderBase {
 	/**
 	 * 
 	 */
-	getDataAccessHelper(): any;
+	getDataAccessHelper(): HtmlDataAccessHelper | HttpDataAccessHelper | JSZipDataAccessHelper | LiteHttpDataAccessHelper;
 
 	/**
 	 * Get the url of the object to load.
@@ -84,15 +88,16 @@ export interface vtkElevationReader extends vtkElevationReaderBase {
 
 	/**
 	 * 
-	 * @param busy 
+	 * @param callback 
 	 */
-	onBusy(busy: boolean): vtkSubscription;
+	onBusy(callback: (busy: boolean) => any): vtkSubscription;
 
 	/**
 	 * Parse data as text.
 	 * @param {String} content The content to parse. 
 	 */
 	parseAsText(content: string): void;
+
 	/**
 	 *
 	 * @param inData 
@@ -104,14 +109,14 @@ export interface vtkElevationReader extends vtkElevationReaderBase {
 	 * 
 	 * @param dataAccessHelper 
 	 */
-	setDataAccessHelper(dataAccessHelper: any): boolean;
+	setDataAccessHelper(dataAccessHelper: HtmlDataAccessHelper | HttpDataAccessHelper | JSZipDataAccessHelper | LiteHttpDataAccessHelper): boolean;
 
 	/**
 	 * Set the url of the object to load.
 	 * @param {String} url the url of the object to load.
 	 * @param {IElevationReaderOptions} [option] The Elevation reader options.
 	 */
-	setUrl(url: string, option?: IElevationReaderOptions): boolean;
+	setUrl(url: string, option?: IElevationReaderOptions): Promise<any>;
 
 	/**
 	 * 

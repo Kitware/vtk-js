@@ -47,14 +47,14 @@ export interface vtkRenderer extends vtkViewport {
 	isActiveCameraCreated(): boolean;
 
 	/**
-	 * 
-	 * @param actor 
+	 * Add different types of props to the renderer.
+	 * @param {vtkActor} actor The vtkActor instance.
 	 */
 	addActor(actor: vtkActor): boolean;
 
 	/**
 	 * Add a light to the list of lights.
-	 * @param light The vtkLight instance.
+	 * @param {vtkLight} light The vtkLight instance.
 	 */
 	addLight(light: vtkLight): void;
 
@@ -75,9 +75,9 @@ export interface vtkRenderer extends vtkViewport {
 	createLight(): vtkLight;
 
 	/**
-	 * 
+	 * Compute the bounding box of all the visible props Used in ResetCamera() and ResetCameraClippingRange()
 	 */
-	computeVisiblePropBounds(): number[];
+	computeVisiblePropBounds(): Bounds;
 
 	/**
 	 * Get the active camera
