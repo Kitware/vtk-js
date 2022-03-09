@@ -176,7 +176,9 @@ export interface vtkImageProperty extends vtkObject {
 	setScalarOpacity(index: any, func: any): boolean;
 
 	/**
-	 *
+	 * Use the range that is set on the lookup table, instead of setting the range from the
+         * ColorWindow/ColorLevel settings
+         * @default false
 	 * @param {Boolean} useLookupTableScalarRange
 	 */
 	setUseLookupTableScalarRange(useLookupTableScalarRange: boolean): boolean;
