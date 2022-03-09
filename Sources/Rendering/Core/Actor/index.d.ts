@@ -31,7 +31,8 @@ export interface vtkActor extends vtkProp3D {
 	getActors(): vtkActor[];
 
 	/**
-	 * 
+	 * Get the property object that controls this actors backface surface
+	 * properties.
 	 * @return {vtkProperty} the backface property.
 	 */
 	getBackfaceProperty(): vtkProperty;
@@ -59,7 +60,7 @@ export interface vtkActor extends vtkProp3D {
 	getIsOpaque(): boolean;
 
 	/**
-	 * 
+	 * Get the Mapper that this actor is getting its data from.
 	 */
 	getMapper(): null | vtkMapper;
 
@@ -85,32 +86,34 @@ export interface vtkActor extends vtkProp3D {
 	makeProperty(): vtkProperty;
 
 	/**
-	 * 
-	 * @param backfaceProperty 
+	 * Set the property object that controls this actors backface surface
+	 * properties.
+	 * @param {vtkProperty} backfaceProperty The backfaceProperty instance.
 	 */
 	setBackfaceProperty(backfaceProperty: vtkProperty): boolean;
 
 	/**
-	 * 
-	 * @param forceOpaque 
+	 * Force the actor to be treated as opaque or translucent.
+	 * @param {Boolean} forceOpaque 
 	 */
-	setForceOpaque(forceOpaque: vtkProperty): boolean;
+	setForceOpaque(forceOpaque: boolean): boolean;
 
 	/**
-	 * 
-	 * @param forceTranslucent 
+	 * Force the actor to be treated as opaque or translucent.
+	 * @param {Boolean} forceTranslucent 
 	 */
 	setForceTranslucent(forceTranslucent: boolean): boolean;
 
 	/**
-	 * 
-	 * @param mapper 
+	 * This is the method that is used to connect an actor to the end of a
+	 * visualization pipeline, i.e. the mapper.
+	 * @param {vtkMapper} mapper The vtkMapper instance.
 	 */
-	setMapper(mapper: null | vtkMapper): boolean;
+	setMapper(mapper: vtkMapper): boolean;
 
 	/**
-	 * 
-	 * @param property 
+	 * Set the property object that controls this actors surface properties.
+	 * @param {vtkProperty} property The vtkProperty instance.
 	 */
 	setProperty(property: vtkProperty): boolean;
 }

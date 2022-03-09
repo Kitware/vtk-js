@@ -51,9 +51,9 @@ export interface vtkJSONReader extends vtkJSONReaderBase {
 
 	/**
 	 * 
-	 * @param busy 
+	 * @param callback 
 	 */
-	onBusy(busy: boolean): vtkSubscription;
+	onBusy(callback: (busy: boolean) => any): vtkSubscription;
 
 	/**
 	 * Parse data as text.
@@ -72,7 +72,7 @@ export interface vtkJSONReader extends vtkJSONReaderBase {
 	 * @param {String} url the url of the object to load.
 	 * @param {IJSONReaderOptions} [option] The JSON reader options.
 	 */
-	setUrl(url: string, option?: IJSONReaderOptions): boolean;
+	setUrl(url: string, option?: IJSONReaderOptions): Promise<string>;
 }
 
 /**

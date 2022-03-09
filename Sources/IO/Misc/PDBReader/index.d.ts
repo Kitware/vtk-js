@@ -1,4 +1,8 @@
 import { vtkAlgorithm, vtkObject, vtkSubscription } from "../../../interfaces";
+import HtmlDataAccessHelper from "../../Core/DataAccessHelper/HtmlDataAccessHelper";
+import HttpDataAccessHelper from "../../Core/DataAccessHelper/HttpDataAccessHelper";
+import JSZipDataAccessHelper from "../../Core/DataAccessHelper/JSZipDataAccessHelper";
+import LiteHttpDataAccessHelper from "../../Core/DataAccessHelper/LiteHttpDataAccessHelper";
 
 
 interface IPDBReaderOptions {
@@ -33,7 +37,7 @@ export interface vtkPDBReader extends vtkPDBReaderBase {
 	/**
 	 * 
 	 */
-	getDataAccessHelper(): any;
+	getDataAccessHelper(): HtmlDataAccessHelper | HttpDataAccessHelper | JSZipDataAccessHelper | LiteHttpDataAccessHelper;
 
 	/**
 	 * Get the url of the object to load.
@@ -69,9 +73,9 @@ export interface vtkPDBReader extends vtkPDBReaderBase {
 
 	/**
 	 * 
-	 * @param busy 
+	 * @param callback 
 	 */
-	onBusy(busy: boolean): vtkSubscription;
+	onBusy(callback: (busy: boolean) => any): vtkSubscription;
 
 	/**
 	 * Parse data as text.
@@ -89,14 +93,14 @@ export interface vtkPDBReader extends vtkPDBReaderBase {
 	 * 
 	 * @param dataAccessHelper 
 	 */
-	setDataAccessHelper(dataAccessHelper: any): boolean;
+	setDataAccessHelper(dataAccessHelper: HtmlDataAccessHelper | HttpDataAccessHelper | JSZipDataAccessHelper | LiteHttpDataAccessHelper): boolean;
 
 	/**
 	 * Set the url of the object to load.
 	 * @param {String} url the url of the object to load.
 	 * @param {IPDBReaderOptions} [option] The PDB reader options.
 	 */
-	setUrl(url: string, option?: IPDBReaderOptions): boolean;
+	setUrl(url: string, option?: IPDBReaderOptions): Promise<string>;
 }
 
 /**

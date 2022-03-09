@@ -1,4 +1,8 @@
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
+import HtmlDataAccessHelper from "../../Core/DataAccessHelper/HtmlDataAccessHelper";
+import HttpDataAccessHelper from "../../Core/DataAccessHelper/HttpDataAccessHelper";
+import JSZipDataAccessHelper from "../../Core/DataAccessHelper/JSZipDataAccessHelper";
+import LiteHttpDataAccessHelper from "../../Core/DataAccessHelper/LiteHttpDataAccessHelper";
 
 
 interface IXMLReaderOptions {
@@ -36,7 +40,7 @@ export interface vtkXMLReader extends vtkXMLReaderBase {
 	/**
 	 * 
 	 */
-	getDataAccessHelper(): any;
+	getDataAccessHelper(): HtmlDataAccessHelper | HttpDataAccessHelper | JSZipDataAccessHelper | LiteHttpDataAccessHelper;
 
 	/**
 	 * Get the url of the object to load.
@@ -74,17 +78,17 @@ export interface vtkXMLReader extends vtkXMLReaderBase {
 	requestData(inData: any, outData: any): void;
 
 	/**
+	 * 
+	 * @param dataAccessHelper 
+	 */
+	setDataAccessHelper(dataAccessHelper: HtmlDataAccessHelper | HttpDataAccessHelper | JSZipDataAccessHelper | LiteHttpDataAccessHelper): boolean;
+
+	/**
 	 * Set the url of the object to load.
 	 * @param {String} url the url of the object to load.
 	 * @param {IXMLReaderOptions} [option] The XML reader options.
 	 */
-	setUrl(url: string, option?: IXMLReaderOptions): boolean;
-
-	/**
-	 * 
-	 * @param dataAccessHelper 
-	 */
-	setDataAccessHelper(dataAccessHelper: any): boolean;
+	setUrl(url: string, option?: IXMLReaderOptions): Promise<any>;
 }
 
 /**
@@ -98,34 +102,34 @@ export function extend(publicAPI: object, model: object, initialValues?: IXMLRea
 
 /**
  * @param {Number} size 
- * @param dataArrayElem 
+ * @param {HTMLElement} dataArrayElem 
  * @param {String} compressor 
  * @param {String} byteOrder 
  * @param {String} headerType 
  * @param {ArrayBuffer} binaryBuffer 
  */
-export function processDataArray(size: number, dataArrayElem: any, compressor: string, byteOrder: string, headerType: string, binaryBuffer: ArrayBuffer): IRet;
+export function processDataArray(size: number, dataArrayElem: HTMLElement, compressor: string, byteOrder: string, headerType: string, binaryBuffer: ArrayBuffer): IRet;
 
 /**
  * @param {Number} size 
- * @param containerElem 
+ * @param {HTMLElement} containerElem 
  * @param {String} compressor 
  * @param {String} byteOrder 
  * @param {String} headerType 
  * @param {ArrayBuffer} binaryBuffer 
  */
-export function processCells(size: number, containerElem: any, compressor: string, byteOrder: string, headerType: string, binaryBuffer: ArrayBuffer): Uint32Array;
+export function processCells(size: number, containerElem: HTMLElement, compressor: string, byteOrder: string, headerType: string, binaryBuffer: ArrayBuffer): Uint32Array;
 
 /**
  * @param {Number} size 
- * @param fieldElem 
- * @param fieldContainer 
+ * @param {HTMLElement} fieldElem 
+ * @param {HTMLElement} fieldContainer 
  * @param {String} compressor 
  * @param {String} byteOrder 
  * @param {String} headerType 
  * @param {ArrayBuffer} binaryBuffer 
  */
-export function processFieldData(size: number, fieldElem: any, fieldContainer: any, compressor: string, byteOrder: string, headerType: string, binaryBuffer: ArrayBuffer): void;
+export function processFieldData(size: number, fieldElem: HTMLElement, fieldContainer: HTMLElement, compressor: string, byteOrder: string, headerType: string, binaryBuffer: ArrayBuffer): void;
 
 
 /**

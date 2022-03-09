@@ -1,5 +1,5 @@
 import { mat3, mat4, ReadonlyVec3, vec3 } from 'gl-matrix';
-import { Bounds, Vector3 } from '../../../types';
+import { Bounds, Extent, Vector3 } from '../../../types';
 import vtkDataSet, { IDataSetInitialValues } from '../DataSet';
 
 /**
@@ -28,29 +28,29 @@ export interface vtkImageData extends vtkDataSet {
 	 * `voxelFunc(index, bounds)` is an optional function that is called with
 	 * the `[i,j,k]` index and index `bounds`, expected to return truthy if the
 	 * data point should be counted in the histogram, and falsey if not.
-	 * @param {Number[]} worldBounds The bounds of the world.
+	 * @param {Bounds} worldBounds The bounds of the world.
 	 * @param [voxelFunc] 
 	 */
-	computeHistogram(worldBounds: number[], voxelFunc?: any): IComputeHistogram;
+	computeHistogram(worldBounds: Bounds, voxelFunc?: any): IComputeHistogram;
 
 	/**
 	 * Returns an `array[3]` of values to multiply an `[i,j,k]` index to convert
 	 * into the actual data array index, from the provided extent.
 	 * `numberOfComponents` should match the Scalar components.
 	 * @internal
-	 * @param {Number[]} extent 
+	 * @param {Extent} extent 
 	 * @param {Number} [numberOfComponents] 
 	 */
-	computeIncrements(extent: number[], numberOfComponents?: number): number[]
+	computeIncrements(extent: Extent, numberOfComponents?: number): number[]
 
 	/**
 	 * Converts an `[i,j,k]` index to the flat data array index. Returns `NaN`
 	 * if any of the i,j,k bounds are outside the data Extent.
 	 * @internal
-	 * @param {Number[]} ijk The localized `[i,j,k]` pixel array position. Float values will be rounded.
+	 * @param {Vector3} ijk The localized `[i,j,k]` pixel array position. Float values will be rounded.
 	 * @return {Number} the corresponding flattened index in the scalar array
 	 */
-	computeOffsetIndex(ijk: number[]): number;
+	computeOffsetIndex(ijk: Vector3): number;
 
 	/**
 	 * Calculates the `indexToWorld` and `worldToIndex` conversion matrices from
@@ -64,9 +64,9 @@ export interface vtkImageData extends vtkDataSet {
 	 * Returns a bounds array from a given Extent, useful if you need to
 	 * calculate the world bounds of a subset of the imageData's data.
 	 * @internal
-	 * @param {Number[]} ex 
+	 * @param {Extent} ex 
 	 */
-	extentToBounds(ex: number[]): number[];
+	extentToBounds(ex: Extent): Bounds;
 
 	/**
 	 * The Bounds of a vtkImage are returned as pairs of world coordinates
@@ -96,14 +96,14 @@ export interface vtkImageData extends vtkDataSet {
 	/**
 	 * Get the `[x,y,z]` location of the center of the imageData.
 	 */
-	getCenter(): number[];
+	getCenter(): Vector3;
 
 	/**
 	 * Get dimensions of this structured points dataset. It is the number of
 	 * points on each axis. Dimensions are computed from Extents during this
 	 * call.
 	 */
-	getDimensions(): number[];
+	getDimensions(): Vector3;
 
 	/**
 	 * Direction is a `mat3` matrix corresponding to the axes directions in
@@ -116,20 +116,20 @@ export interface vtkImageData extends vtkDataSet {
 	 * The maximal extent of the projection.
 	 * @default [0, -1, 0, -1, 0, -1]
 	 */
-	getExtent(): number[];
+	getExtent(): Extent;
 
 	/**
 	 *
 	 * @default [0, -1, 0, -1, 0, -1]
 	 */
-	getExtentByReference(): number[];
+	getExtentByReference(): Extent;
 
 	/**
 	 * Returns the data array index for the point at the provided world position.
-	 * @param {Number[]} xyz The [x,y,z] array in world coordinates.
-	 * @return {number|NaN} the corresponding pixel's index in the scalar array.
+	 * @param {Vector3} xyz The [x,y,z] array in world coordinates.
+	 * @return {number} the corresponding pixel's index in the scalar array.
 	 */
-	getOffsetIndexFromWorld(xyz: number[]): number;
+	getOffsetIndexFromWorld(xyz: Vector3): number;
 
 	/**
 	 *
@@ -144,9 +144,9 @@ export interface vtkImageData extends vtkDataSet {
 	/**
 	 * Get the world position of a data point. Index is the point's index in the
 	 * 1D data array.
-	 * @param index
+	 * @param {Number} index 
 	 */
-	getPoint(index: number): number[];
+	getPoint(index: number): Vector3;
 
 	/**
 	 * Get the origin of the dataset. The origin is the position in world
@@ -156,33 +156,33 @@ export interface vtkImageData extends vtkDataSet {
 	 * box. The origin plus spacing determine the position in space of the
 	 * points.
 	 */
-	getOrigin(): number[];
+	getOrigin(): Vector3;
 
 	/**
 	 * Get the origin of the dataset. The origin is the position in world
 	 */
-	getOriginByReference(): number[];
+	getOriginByReference(): Vector3;
 
 	/**
 	 * Returns the scalar value for the point at the provided world position, or
 	 * `NaN` if the world bounds are outside the volumeData bounds. `comp` is
 	 * the scalar component index, for multi-component scalar data.
-	 * @param {Number[]} xyz The [x,y,z] array in world coordinates.
+	 * @param {Vector3} xyz The [x,y,z] array in world coordinates.
 	 * @param {Number} [comp] The scalar component index for multi-component scalars.
 	 * @return {number|NaN} The corresponding pixel's scalar value.
 	 */
-	getScalarValueFromWorld(xyz: number[], comp?: number): number;
+	getScalarValueFromWorld(xyz: Vector3, comp?: number): number;
 
 	/**
 	 * Set the spacing [width, height, length] of the cubical cells that compose
 	 * the data set.
 	 */
-	getSpacing(): number[];
+	getSpacing(): Vector3;
 
 	/**
 	 *
 	 */
-	getSpacingByReference(): number[];
+	getSpacingByReference(): Vector3;
 
 	/**
 	 * Returns the `mat4` matrices used to convert between world and index.
@@ -201,26 +201,27 @@ export interface vtkImageData extends vtkDataSet {
 	/**
 	 * this is the fast version, requires vec3 arguments
 	 * @param {ReadonlyVec3} vin 
-	 * @param {vec3} vout 
+	 * @param {vec3} [vout] 
 	 */
-	indexToWorldVec3(vin: ReadonlyVec3, vout: vec3): vec3;
+	indexToWorldVec3(vin: ReadonlyVec3, vout?: vec3): vec3;
 
 	/**
-	 * Converts the input index vector `[i,j,k]` to world values `[x,y,z]`.
-	 * Modifies the out vector array in place, but also returns it.
+	 * Converts the input index vector `[i,j,k]` to world values `[x,y,z]`. 
+	 * If an out vector is not provided, a new one is created. If provided, it
+	 * modifies the out vector array in place, but also returns it.
 	 * @param {ReadonlyVec3} ain 
-	 * @param {vec3} aout 
+	 * @param {vec3} [aout] 
 	 */
-	indexToWorld(ain: ReadonlyVec3, aout: vec3): vec3;
+	indexToWorld(ain: ReadonlyVec3, aout?: vec3): vec3;
 
 	/**
 	 * Calculate the corresponding world bounds for the given index bounds
 	 * `[i_min, i_max, j_min, j_max, k_min, k_max]`. Modifies `out` in place if
 	 * provided, or returns a new array.
-	 * @param {Number[]} bin 
-	 * @param {Number[]} [bout] 
+	 * @param {Bounds} bin 
+	 * @param {Bounds} [bout] 
 	 */
-	indexToWorldBounds(bin: number[], bout?: number[]): number[];
+	indexToWorldBounds(bin: Bounds, bout?: Bounds): Bounds;
 
 	/**
 	 * Set the values of the extent, from `0` to `(i-1)`, etc.
@@ -230,9 +231,9 @@ export interface vtkImageData extends vtkDataSet {
 
 	/**
 	 * Set the values of the extent, from `0` to `(i-1)`, etc.
-	 * @param i
-	 * @param j
-	 * @param k
+	 * @param {Number} i 
+	 * @param {Number} j 
+	 * @param {Number} k 
 	 */
 	setDimensions(i: number, j: number, k: number): void;
 
@@ -266,9 +267,9 @@ export interface vtkImageData extends vtkDataSet {
 
 	/**
 	 * Set the extent.
-	 * @param extent 
+	 * @param {Extent} extent 
 	 */
-	setExtent(extent: number[]): boolean;
+	setExtent(extent: Extent): boolean;
 
 	/**
 	 *
@@ -308,27 +309,28 @@ export interface vtkImageData extends vtkDataSet {
 	/**
 	 * this is the fast version, requires vec3 arguments
 	 * @param vin 
-	 * @param vout 
+	 * @param [vout] 
 	 */
-	worldToIndexVec3(vin: ReadonlyVec3, vout: vec3): vec3;
+	worldToIndexVec3(vin: ReadonlyVec3, vout?: vec3): vec3;
 
 	/**
 	 * Converts the input world vector `[x,y,z]` to approximate index values
 	 * `[i,j,k]`. Should be rounded to integers before attempting to access the
-	 * index. Modifies the out vector array in place, but also returns it.
+	 * index. If an out vector is not provided, a new one is created. If provided, it
+	 * modifies the out vector array in place, but also returns it.
 	 * @param ain 
-	 * @param aout 
+	 * @param [aout] 
 	 */
-	worldToIndex(ain: ReadonlyVec3, aout: vec3): vec3;
+	worldToIndex(ain: ReadonlyVec3, aout?: vec3): vec3;
 
 	/**
 	 * Calculate the corresponding index bounds for the given world bounds
 	 * `[x_min, x_max, y_min, y_max, z_min, z_max]`. Modifies `out` in place if
 	 * provided, or returns a new array.
-	 * @param {Number[]} bin 
-	 * @param {Number[]} [bout] 
+	 * @param {Bounds} bin 
+	 * @param {Bounds} [bout] 
 	 */
-	worldToIndexBounds(bin: number[], bout?: number[]): number[];
+	worldToIndexBounds(bin: Bounds, bout?: Bounds): number[];
 }
 
 /**
