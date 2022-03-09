@@ -1,4 +1,8 @@
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
+import HtmlDataAccessHelper from "../../Core/DataAccessHelper/HtmlDataAccessHelper";
+import HttpDataAccessHelper from "../../Core/DataAccessHelper/HttpDataAccessHelper";
+import JSZipDataAccessHelper from "../../Core/DataAccessHelper/JSZipDataAccessHelper";
+import LiteHttpDataAccessHelper from "../../Core/DataAccessHelper/LiteHttpDataAccessHelper";
 
 interface IPLYReaderOptions {
 	binary?: boolean;
@@ -29,7 +33,7 @@ export interface vtkPLYReader extends vtkPLYReaderBase {
 	/**
 	 * 
 	 */
-	getDataAccessHelper(): any;
+	getDataAccessHelper(): HtmlDataAccessHelper | HttpDataAccessHelper | JSZipDataAccessHelper | LiteHttpDataAccessHelper;
 
 	/**
 	 * Get the url of the object to load.
@@ -67,17 +71,17 @@ export interface vtkPLYReader extends vtkPLYReaderBase {
 	requestData(inData: any, outData: any): void;
 
 	/**
+	 * 
+	 * @param dataAccessHelper 
+	 */
+	setDataAccessHelper(dataAccessHelper: HtmlDataAccessHelper | HttpDataAccessHelper | JSZipDataAccessHelper | LiteHttpDataAccessHelper): boolean;
+
+	/**
 	 * Set the url of the object to load.
 	 * @param {String} url the url of the object to load.
 	 * @param {IPLYReaderOptions} [option] The PLY reader options.
 	 */
-	setUrl(url: string, option?: IPLYReaderOptions): boolean;
-
-	/**
-	 * 
-	 * @param dataAccessHelper 
-	 */
-	setDataAccessHelper(dataAccessHelper: any): boolean;
+	setUrl(url: string, option?: IPLYReaderOptions): Promise<string | any>;
 }
 
 /**
