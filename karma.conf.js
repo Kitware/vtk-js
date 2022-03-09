@@ -2,8 +2,8 @@
 const path = require('path');
 
 const webpack = require('webpack');
-const testsRules = require('./Utilities/config/rules-tests');
 const ESLintPlugin = require('eslint-webpack-plugin');
+const testsRules = require('./Utilities/config/rules-tests');
 
 const sourcePath = path.join(__dirname, './Sources');
 
@@ -52,7 +52,7 @@ module.exports = function init(config) {
         },
       },
       plugins: [
-	new ESLintPlugin(),
+        new ESLintPlugin(),
         new webpack.DefinePlugin({
           __BASE_PATH__: "'/base'",
         }),
