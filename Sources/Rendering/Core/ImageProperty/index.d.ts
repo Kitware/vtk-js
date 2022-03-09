@@ -20,6 +20,7 @@ export interface IImageMapperInitialValues {
 	diffuse?: number;
 	opacity?: number;
 	componentData?: IComponentData[];
+        useLookupTableScalarRange?: boolean;
 }
 
 export interface vtkImageProperty extends vtkObject {
@@ -173,6 +174,14 @@ export interface vtkImageProperty extends vtkObject {
 	 * @param func 
 	 */
 	setScalarOpacity(index: any, func: any): boolean;
+
+	/**
+	 * Use the range that is set on the lookup table, instead of setting the range from the
+         * ColorWindow/ColorLevel settings
+         * @default false
+	 * @param {Boolean} useLookupTableScalarRange
+	 */
+	setUseLookupTableScalarRange(useLookupTableScalarRange: boolean): boolean;
 }
 
 /**
