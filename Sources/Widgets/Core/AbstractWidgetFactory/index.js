@@ -175,9 +175,11 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
 
   // Defer after object instantiation so model.widgetState actually exist
   setTimeout(() => {
-    unsubscribe = model.widgetState.onModified(() =>
-      publicAPI.invokeWidgetChange(model.widgetState)
-    ).unsubscribe;
+    if (model.widgetState) {
+      unsubscribe = model.widgetState.onModified(() =>
+        publicAPI.invokeWidgetChange(model.widgetState)
+      ).unsubscribe;
+    }
   }, 0);
 }
 
