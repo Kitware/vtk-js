@@ -19,14 +19,11 @@ jobs:
       - name: Build
         run: npm run build:release
       - name: Test
-        if: ${{ runner.os == 'Linux' }}
-        run: |
-          # Allow writing Documentation/content/coverage/tests.md
-          sudo chmod 777 Documentation/content/coverage
-          # Allow karma to write to Documentation/build-tmp/
-          sudo mkdir -p Documentation/build-tmp
-          sudo chmod 777 Documentation/build-tmp
-          # Allow writing Utilities/TestResults/TESTS-*.xml
-          sudo chmod 777 Utilities/
-          # To debug, run `./Utilities/ci/run-tests-in-docker.sh -d`
-          ./Utilities/ci/run-tests-in-docker.sh
+        run: npm run test:headless
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: Utilities/TestResults/Test-Report.html
+          retention-days: 15

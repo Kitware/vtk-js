@@ -28,6 +28,13 @@ jobs:
         run: npm run validate
       - name: Test
         run: npm run test:headless
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: Utilities/TestResults/Test-Report.html
+          retention-days: 15
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
