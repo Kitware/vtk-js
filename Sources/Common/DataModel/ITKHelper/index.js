@@ -44,10 +44,21 @@ const ITKWASMPixelTypes = {
   VariableSizeMatrix: 'VariableSizeMatrix',
 };
 
+const vtkArrayTypeToItkComponentType = new Map([
+  ['Uint8Array', 'uint8'],
+  ['Int8Array', 'int8'],
+  ['Uint16Array', 'uint16'],
+  ['Int16Array', 'int16'],
+  ['Uint32Array', 'uint32'],
+  ['Int32Array', 'int32'],
+  ['Float32Array', 'float32'],
+  ['Float64Array', 'float64'],
+]);
+
 /**
- * Converts an itk.js image to a vtk.js image.
+ * Converts an itk-wasm Image to a vtk.js vtkImageData.
  *
- * Requires an itk.js image as input.
+ * Requires an itk-wasm Image as input.
  */
 function convertItkToVtkImage(itkImage, options = {}) {
   const vtkImage = {
@@ -168,50 +179,34 @@ function convertItkToVtkImage(itkImage, options = {}) {
   return imageData;
 }
 
-const vtkArrayTypeToItkComponentType = new Map([
-  ['Uint8Array', 'uint8_t'],
-  ['Int8Array', 'int8_t'],
-  ['Uint16Array', 'uint16_t'],
-  ['Int16Array', 'int16_t'],
-  ['Uint32Array', 'uint32_t'],
-  ['Int32Array', 'int32_t'],
-  ['Float32Array', 'float'],
-  ['Float64Array', 'double'],
-]);
-
 /**
- * Converts a vtk.js image to an itk.js image.
+ * Converts a vtk.js vtkImageData to an itk-wasm Image.
  *
- * Requires a vtk.js image as input.
+ * Requires a vtk.js vtkImageData as input.
+ *
  */
 function convertVtkToItkImage(vtkImage, copyData = false) {
+  const dimension = 3;
   const itkImage = {
     imageType: {
-      dimension: 3,
-      pixelType: ITKJSPixelTypes.Scalar,
+      dimension,
+      pixelType: ITKWASMPixelTypes.Scalar,
       componentType: '',
       components: 1,
     },
-    name: 'name',
+    name: 'vtkImageData',
     origin: vtkImage.getOrigin(),
     spacing: vtkImage.getSpacing(),
-    direction: {
-      data: [1, 0, 0, 0, 1, 0, 0, 0, 1],
-    },
+    direction: new Float64Array(9),
     size: vtkImage.getDimensions(),
   };
 
   const direction = vtkImage.getDirection();
 
-  const dimension = itkImage.size.length;
-  itkImage.imageType.dimension = dimension;
-  itkImage.direction.rows = dimension;
-  itkImage.direction.columns = dimension;
-
   // Transpose the direction matrix from column-major to row-major
   for (let idx = 0; idx < dimension; ++idx) {
     for (let idy = 0; idy < dimension; ++idy) {
-      itkImage.direction.data[idx + idy * dimension] =
+      itkImage.direction[idx + idy * dimension] =
         direction[idy + idx * dimension];
     }
   }
@@ -220,10 +215,10 @@ function convertVtkToItkImage(vtkImage, copyData = false) {
 
   let vtkArray;
   if (pointData.getTensors() !== null) {
-    itkImage.imageType.pixelType = ITKJSPixelTypes.DiffusionTensor3D;
+    itkImage.imageType.pixelType = ITKWASMPixelTypes.DiffusionTensor3D;
     vtkArray = pointData.getTensors();
   } else if (pointData.getVectors() != null) {
-    itkImage.imageType.pixelType = ITKJSPixelTypes.Vector;
+    itkImage.imageType.pixelType = ITKWASMPixelTypes.Vector;
     vtkArray = pointData.getVectors();
   } else {
     vtkArray = pointData.getScalars();
