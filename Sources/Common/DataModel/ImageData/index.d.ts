@@ -102,6 +102,8 @@ export interface vtkImageData extends vtkDataSet {
 	 * 9]` for a 10x10x10 image. Calling `setDimensions(10,10,10)` does exactly
 	 * the same thing as `setExtent(0,9,0,9,0,9)` but you should always do the
 	 * latter to be explicit about where your extent starts.
+	 * Such an image of dimensions [10, 10, 10], origin [0, 0, 0] and voxel-spacing of 1.0,
+	 * will result in bounds equal to [-0.5, 9.5, -0.5, 9.5, -0.5, 9.5].
 	 * @return {Bounds} The bounds for the mapper.
 	 */
 	getBounds(): Bounds;
@@ -230,7 +232,9 @@ export interface vtkImageData extends vtkDataSet {
 	/**
 	 * Calculate the corresponding world bounds for the given index bounds
 	 * `[i_min, i_max, j_min, j_max, k_min, k_max]`. Modifies `out` in place if
-	 * provided, or returns a new array.
+	 * provided, or returns a new array. Returned bounds are NOT padded based
+	 * on voxel spacing (see getBounds). The output is merely a bounding box
+	 * calculated considering voxels as grid points.
 	 * @param {Bounds} bin 
 	 * @param {Bounds} [bout] 
 	 */
