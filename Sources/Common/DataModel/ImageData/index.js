@@ -234,8 +234,6 @@ function vtkImageData(publicAPI, model) {
     return bounds;
   };
 
-  // Get array extents as float / spatial coordinates
-  // without scaling for voxel/pixel spacing.
   publicAPI.getSpatialExtent = () => {
     const boundingBox = vtkBoundingBox.newInstance();
     boundingBox.setBounds(model.extent);

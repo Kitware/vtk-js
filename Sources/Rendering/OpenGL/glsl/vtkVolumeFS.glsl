@@ -908,7 +908,7 @@ vec2 computeRayDistances(vec3 rayDir, vec3 tdims)
 {
   vec2 dists = vec2(100.0*camFar, -1.0);
 
-  vec3 vSize = vSpacing*(tdims);
+  vec3 vSize = vSpacing*tdims;
 
   // all this is in View Coordinates
   getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
