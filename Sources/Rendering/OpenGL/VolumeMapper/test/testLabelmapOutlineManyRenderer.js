@@ -145,7 +145,7 @@ function fillBlobForThreshold(imageData, backgroundImageData) {
   imageData.getPointData().getScalars().setData(values);
 }
 
-test.onlyIfWebGL('Test Labelmap Outline with many renderers', (t) => {
+test.skip('Test Labelmap Outline with many renderers', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'LabelmapOutline manyRenderers');
 
