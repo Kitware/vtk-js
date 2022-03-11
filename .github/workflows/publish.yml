@@ -21,13 +21,22 @@ jobs:
         with:
           node-version: 14
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          sudo apt-get install xvfb
       - name: Build
         run: npm run build:release
       - name: Validate
         run: npm run validate
-      - name: Test
-        run: npm run test:headless
+      - name: Chrome and Firefox tests
+        run: xvfb-run --auto-servernum npm run test -- --browsers Chrome,Firefox
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: Utilities/TestResults/Test-Report.html
+          retention-days: 15
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

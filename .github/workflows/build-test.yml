@@ -2,11 +2,11 @@ name: Build and Test
 on: [pull_request]
 
 jobs:
-  build:
+  build-test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04, macos-10.15, windows-2019]
+        os: [ubuntu-18.04]
         node: [12, 14, 16]
     name: ${{ matrix.os }} and node ${{ matrix.node }}
     steps:
@@ -15,18 +15,19 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
-      - run: npm ci
+          cache: 'npm'
+      - name: Install dependencies
+        run: |
+          npm ci
+          sudo apt-get install xvfb
       - name: Build
         run: npm run build:release
-      - name: Test
-        if: ${{ runner.os == 'Linux' }}
-        run: |
-          # Allow writing Documentation/content/coverage/tests.md
-          sudo chmod 777 Documentation/content/coverage
-          # Allow karma to write to Documentation/build-tmp/
-          sudo mkdir -p Documentation/build-tmp
-          sudo chmod 777 Documentation/build-tmp
-          # Allow writing Utilities/TestResults/TESTS-*.xml
-          sudo chmod 777 Utilities/
-          # To debug, run `./Utilities/ci/run-tests-in-docker.sh -d`
-          ./Utilities/ci/run-tests-in-docker.sh
+      - name: Chrome and Firefox tests
+        run: xvfb-run --auto-servernum npm run test -- --browsers Chrome,Firefox
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: Utilities/TestResults/Test-Report.html
+          retention-days: 15

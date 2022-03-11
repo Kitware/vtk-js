@@ -6,6 +6,10 @@ Handlebars.registerHelper('equals', function(a, b) {
   return a === b;
 });
 
+Handlebars.registerHelper('json', function(obj) {
+  return JSON.stringify(obj);
+});
+
 var TapeHTMLReporter = function(baseReporterDecorator, rootConfig, logger) {
   const log = logger.create('tape-html-reporter');
   const config = rootConfig.tapeHTMLReporter || {};

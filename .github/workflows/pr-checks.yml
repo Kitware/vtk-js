@@ -2,7 +2,7 @@ name: PR Checks
 on: pull_request
 
 jobs:
-  build:
+  pr-checks:
     runs-on: ubuntu-20.04
     name: Check and lint PR
     steps:
