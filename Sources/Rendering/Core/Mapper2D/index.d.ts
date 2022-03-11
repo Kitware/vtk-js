@@ -1,3 +1,4 @@
+import { Nullable } from "../../../types";
 import vtkAbstractMapper, { IAbstractMapperInitialValues } from "../AbstractMapper";
 
 export enum ColorMode {
@@ -73,12 +74,12 @@ export interface vtkMapper2D extends vtkAbstractMapper {
 	/**
 	 * Get the array name to color by.
 	 */
-	getColorByArrayName(): string | null;
+	getColorByArrayName(): Nullable<string>;
 
 	/**
 	 * Provide read access to the color array.
 	 */
-	getColorMapColors(): Uint8Array | null;
+	getColorMapColors(): Nullable<Uint8Array>;
 
 	/**
 	 * Return the method of coloring scalar data.

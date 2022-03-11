@@ -1,5 +1,5 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
-import { Size, Vector2, Vector3 } from '../../../types';
+import { Nullable, Size, Vector2, Vector3 } from '../../../types';
 import { vtkRenderer } from '../../../Rendering/Core/Renderer';
 import { VtkDataTypes } from '../../../Common/Core/DataArray';
 import vtkTexture from '../../Core/Texture';
@@ -199,7 +199,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 *
 	 * @param options
 	 */
-	get3DContext(options: object): WebGLRenderingContext | null;
+	get3DContext(options: object): Nullable<WebGLRenderingContext>;
 
 	/**
 	 *
@@ -241,20 +241,20 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 
 	/**
 	 *
-	 * @param vtktype
-	 * @param numComps
-	 * @param useFloat
+	 * @param {VtkDataTypes} vtktype 
+	 * @param {Number} numComps 
+	 * @param {Boolean} useFloat 
 	 */
 	getDefaultTextureInternalFormat(vtktype: VtkDataTypes, numComps: number, useFloat: boolean): void;
 
 	/**
-	 *
-	 * @param {HTMLImageElement} img
+	 * 
+	 * @param {HTMLImageElement} img The background image.
 	 */
 	setBackgroundImage(img: HTMLImageElement): void;
 
 	/**
-	 *
+	 * 
 	 * @param {Boolean} value
 	 */
 	setUseBackgroundImage(value: boolean): void;
@@ -273,7 +273,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {String} format
 	 * @param {IOptions} options
 	 */
-	captureNextImage(format: string, options: IOptions): Promise<string> | null;
+	captureNextImage(format: string, options: IOptions): Nullable<Promise<string>>;
 
 	/**
 	 *
@@ -297,20 +297,20 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 
 	/**
 	 *
-	 * @param stream
+	 * @param {vtkViewStream} stream The vtkViewStream instance.
 	 */
 	setViewStream(stream: vtkViewStream): boolean;
 
 	/**
 	 *
-	 * @param {Vector2} size
+	 * @param {Vector2} size 
 	 */
 	setSize(size: Vector2): void;
 
 	/**
 	 *
-	 * @param {Number} x
-	 * @param {Number} y
+	 * @param {Number} x 
+	 * @param {Number} y 
 	 */
 	setSize(x: number, y: number): void;
 

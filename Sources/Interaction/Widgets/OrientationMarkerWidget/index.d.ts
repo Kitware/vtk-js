@@ -3,6 +3,7 @@ import vtkAnnotatedCubeActor from "../../../Rendering/Core/AnnotatedCubeActor";
 import vtkAxesActor from "../../../Rendering/Core/AxesActor";
 import vtkRenderer from "../../../Rendering/Core/Renderer";
 import vtkRenderWindowInteractor from "../../../Rendering/Core/RenderWindowInteractor";
+import { Nullable } from "../../../types";
 
 export enum Corners {
 	TOP_LEFT,
@@ -48,7 +49,7 @@ export interface vtkOrientationMarkerWidget extends vtkObject {
 	/**
 	 * Gets the parent renderer, if any.
 	 */
-	getParentRenderer(): vtkRenderer | null;
+	getParentRenderer(): Nullable<vtkRenderer>;
 
 	/**
 	 * Get wheter the orientation marker is enabled.
@@ -89,13 +90,13 @@ export interface vtkOrientationMarkerWidget extends vtkObject {
 	
 	/**
 	 * Get the actor associated with the widget.
-	 * @param actor 
+	 * @param {vtkAnnotatedCubeActor | vtkAxesActor} actor The actor instance.
 	 */
 	setActor(actor: vtkAnnotatedCubeActor | vtkAxesActor): void;
 
 	/**
 	 * Sets the parent renderer
-	 * @param ren The parent renderer
+	 * @param {vtkRenderer} ren The parent renderer
 	 */
 	setParentRenderer(ren: vtkRenderer): boolean;
 
@@ -135,9 +136,10 @@ export interface vtkOrientationMarkerWidget extends vtkObject {
 	setViewportCorner(viewportCorner: Corners): boolean;
 
 	/**
-	 * Set the viewport size. The sizeFactor should be between 0.0 and 1.0.
+	 * Set the viewport size.
+	 * The sizeFactor should be between 0.0 and 1.0.
 	 * It says how much of the main render window to color.
-	 * @param sizeFactor 
+	 * @param {Number} sizeFactor 
 	 * @default 0.2
 	 */
 	setViewportSize(sizeFactor: number): void;

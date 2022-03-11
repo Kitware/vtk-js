@@ -1,5 +1,26 @@
 import { vtkOutputPort } from "./interfaces";
 
+/** Alias type for value that can be null */
+declare type Nullable<T> = T | null;
+
+/**
+ * Alias type for number that are floats
+ * @ignorenaming
+ */
+declare type float = number;
+
+/**
+ * Alias type for number that are doubles.
+ * @ignorenaming
+ */
+declare type double = number;
+
+/**
+ * Alias type for number that are integer
+ * @ignorenaming
+ */
+declare type int = number;
+
 declare type TypedArray =
     | number[]
     | Uint32Array

@@ -1,4 +1,4 @@
-import { Bounds } from '../../../types';
+import { Bounds, Nullable } from '../../../types';
 
 import vtkCamera from '../Camera';
 import vtkLight from '../Light';
@@ -128,6 +128,7 @@ export interface vtkRenderer extends vtkViewport {
 	 * 
 	 */
 	getClippingRangeExpansion(): number;
+
 	/**
 	 * 
 	 * @default null
@@ -226,7 +227,7 @@ export interface vtkRenderer extends vtkViewport {
 	 * 
 	 * @default null
 	 */
-	getRenderWindow(): vtkRenderWindow | null;
+	getRenderWindow(): Nullable<vtkRenderWindow>;
 
 	/**
 	 * 
@@ -337,7 +338,7 @@ export interface vtkRenderer extends vtkViewport {
 	 * Specify the camera to use for this renderer.
 	 * @param {vtkCamera} camera The camera object to use.
 	 */
-	setActiveCamera(camera: vtkCamera | null): boolean;
+	setActiveCamera(camera: vtkCamera): boolean;
 
 	/**
 	 * 

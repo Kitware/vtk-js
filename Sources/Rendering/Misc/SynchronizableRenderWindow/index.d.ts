@@ -1,3 +1,4 @@
+import { Nullable } from "../../../types";
 import vtkRenderWindow, { IRenderWindowInitialValues } from "../../Core/RenderWindow";
 
 // Keeps state for client / server scene synchronization.
@@ -27,8 +28,8 @@ export interface ISynchronizerContext {
 
 export interface ISynchronizableRenderWindowInitialValues extends IRenderWindowInitialValues {
   synchronizerContextName?: string; // default: 'default':
-  synchronizerContext?: ISynchronizerContext | null;
-  synchronizedViewId?: string | null;
+  synchronizerContext?: Nullable<ISynchronizerContext>;
+  synchronizedViewId?: Nullable<string>;
 }
 
 // Server-side view state.
