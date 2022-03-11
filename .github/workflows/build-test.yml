@@ -2,11 +2,11 @@ name: Build and Test
 on: [pull_request]
 
 jobs:
-  build:
+  build-test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04, macos-10.15, windows-2019]
+        os: [ubuntu-18.04]
         node: [12, 14, 16]
     name: ${{ matrix.os }} and node ${{ matrix.node }}
     steps:
@@ -15,11 +15,15 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
-      - run: npm ci
+          cache: 'npm'
+      - name: Install dependencies
+        run: |
+          npm ci
+          sudo apt-get install xvfb
       - name: Build
         run: npm run build:release
-      - name: Test
-        run: npm run test:headless
+      - name: Chrome and Firefox tests
+        run: xvfb-run --auto-servernum npm run test -- --browsers Chrome,Firefox
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
