@@ -151,9 +151,6 @@ export function extend(publicAPI, model, initialValues = {}) {
       depthLoadOp: 'clear',
       depthClearValue: 0.0,
       depthStoreOp: 'store',
-      stencilLoadOp: 'clear',
-      stencilClearValue: 0,
-      stencilStoreOp: 'store',
     },
   };
 
