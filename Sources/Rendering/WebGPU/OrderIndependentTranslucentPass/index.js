@@ -156,8 +156,6 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       view: undefined,
       depthLoadOp: 'load',
       depthStoreOp: 'store',
-      stencilLoadOp: 'load',
-      stencilStoreOp: 'store',
     };
 
     model.translucentRenderEncoder.setReplaceShaderCodeFunction((pipeline) => {
