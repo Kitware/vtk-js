@@ -9,6 +9,11 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkMouseRangeManipulator');
 
+  const internal = {
+    interactor: null,
+    renderer: null,
+  };
+
   // Keep track of delta that is below the value
   // of one step to progressively increment it
   const incrementalDelta = new Map();
@@ -164,6 +169,70 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     const size = glRenderWindow.getViewportSize(renderer);
     // rescale size to match mouse event position
     model.containerSize = size.map((v) => v * ratio);
+
+    if (model.usePointerLock && !interactor.isPointerLocked()) {
+      Object.assign(internal, { interactor, renderer });
+      interactor.requestPointerLock();
+      publicAPI.startPointerLockInteraction();
+    }
+  };
+
+  publicAPI.onButtonUp = () => {
+    document.exitPointerLock();
+  };
+
+  publicAPI.bindEvents = (container) => {
+    document.addEventListener(
+      'pointerlockchange',
+      publicAPI.handlePointerLockChange
+    );
+  };
+
+  //--------------------------------------------------------------------------
+
+  publicAPI.startPointerLockInteraction = () => {
+    const { interactor } = internal;
+
+    // TODO: at some point, this should perhaps be done in
+    // RenderWindowInteractor instead of here.
+    // We need to hook into mousemove directly for two reasons:
+    // 1. We need to keep receiving mouse move events after the mouse button
+    //    is released. This is currently not possible with
+    //    vtkInteractorStyleManipulator.
+    // 2. Since the mouse is stationary in pointer lock mode, we need the
+    //    event.movementX and event.movementY info, which are not currently
+    //    passed via interactor.onMouseMove.
+    document.addEventListener('mousemove', publicAPI.onPointerLockMove);
+
+    let subscription = null;
+    const endInteraction = () => {
+      document.removeEventListener('mousemove', publicAPI.onPointerLockMove);
+      subscription?.unsubscribe();
+    };
+    subscription = interactor?.onEndPointerLock(endInteraction);
+  };
+
+  publicAPI.onPointerLockMove = (e) => {
+    model.previousPosition.x += e.movementX;
+    model.previousPosition.y += e.movementY;
+
+    publicAPI.onMouseMove(
+      internal.interactor,
+      internal.renderer,
+      model.previousPosition
+    );
+  };
+
+  publicAPI.exitPointerLock = () => document.exitPointerLock();
+
+  publicAPI.isPointerLocked = () => !!document.pointerLockElement;
+
+  publicAPI.handlePointerLockChange = () => {
+    if (publicAPI.isPointerLocked()) {
+      publicAPI.startPointerLockEvent();
+    } else {
+      publicAPI.endPointerLockEvent();
+    }
   };
 
   //-------------------------------------------------------------------------
