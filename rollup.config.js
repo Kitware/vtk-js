@@ -22,7 +22,7 @@ import pkg from './package.json';
 import { rewriteFilenames } from './Utilities/rollup/plugin-rewrite-filenames';
 import { generateDtsReferences } from './Utilities/rollup/plugin-generate-references';
 
-const absolutifyImports = require('./Utilities/build/absolutify-imports.js');
+const relatifyImports = require('./Utilities/build/rewrite-imports.js');
 
 const IGNORE_LIST = [
   /[/\\]example_?[/\\]/,
@@ -182,14 +182,16 @@ export default {
           transform(content, base) {
             // transforms typescript defs to use absolute package imports
             if (base.endsWith('.d.ts')) {
-              return absolutifyImports(content.toString(), (relImport) => {
-                const importPath = path.join(path.dirname(base), relImport);
-                const relativeStart = path.join(__dirname, 'Sources');
-                // rollup builds are for the @kitware/vtk.js package
-                return path.join(
-                  '@kitware/vtk.js',
-                  path.relative(relativeStart, importPath)
-                );
+              return relatifyImports(content.toString(), (relImport) => {
+                let importPath = relImport;
+                if (relImport.startsWith('../')) {
+                  importPath = relImport.slice(3);
+                }
+
+                if (!importPath.startsWith('../')) {
+                  importPath = `./${importPath}`;
+                }
+                return importPath;
               });
             }
             return content;

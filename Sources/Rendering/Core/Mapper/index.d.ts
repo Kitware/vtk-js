@@ -1,4 +1,4 @@
-import { Bounds, Range } from "../../../types";
+import { Bounds, Nullable, Range } from "../../../types";
 import vtkAbstractMapper3D, { IAbstractMapper3DInitialValues } from "../AbstractMapper3D";
 
 export enum ColorMode {
@@ -151,17 +151,17 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	/**
 	 * Get the array name to color by.
 	 */
-	getColorByArrayName(): string | null;
+	getColorByArrayName(): Nullable<string>;
 
 	/**
 	 * Provide read access to the color texture coordinate array
 	 */
-	getColorCoordinates(): Float32Array | null;
+	getColorCoordinates(): Nullable<Float32Array>;
 
 	/**
 	 * Provide read access to the color array.
 	 */
-	getColorMapColors(): Uint8Array | null;
+	getColorMapColors(): Nullable<Uint8Array>;
 
 	/**
 	 * Return the method of coloring scalar data.

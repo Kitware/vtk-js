@@ -1,5 +1,5 @@
 import { vtkObject } from "../../../interfaces";
-import { CrossOrigin } from "../../../types";
+import { CrossOrigin, Nullable } from "../../../types";
 import vtkTexture from "../../Core/Texture";
 
 /**
@@ -27,7 +27,7 @@ export interface vtkTextureLODsDownloader extends vtkObject {
 	/**
 	 * Get the crossorigin attribute
 	 */
-	getCrossOrigin(): CrossOrigin | null;
+	getCrossOrigin(): Nullable<CrossOrigin>;
 
 	/**
 	 * Get the list of files to download
