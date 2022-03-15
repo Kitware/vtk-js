@@ -172,7 +172,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   };
 
   publicAPI.onButtonUp = () => {
-    document.exitPointerLock();
+    publicAPI.exitPointerLock();
   };
 
   publicAPI.bindEvents = (container) => {
