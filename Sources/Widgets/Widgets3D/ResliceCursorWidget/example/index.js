@@ -441,3 +441,11 @@ buttonReset.addEventListener('click', () => {
   widget.setCenter(widget.getWidgetState().getImage().getCenter());
   updateViews();
 });
+
+const selectInterpolationMode = document.getElementById('selectInterpolation');
+selectInterpolationMode.addEventListener('change', (ev) => {
+  viewAttributes.forEach((obj) => {
+    obj.reslice.setInterpolationMode(Number(ev.target.selectedIndex));
+  });
+  updateViews();
+});

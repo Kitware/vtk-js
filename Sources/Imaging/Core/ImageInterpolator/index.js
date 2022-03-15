@@ -91,10 +91,99 @@ function vtkImageInterpolator(publicAPI, model) {
     }
   };
 
+  publicAPI.interpolateLinear = (interpolationInfo, point, value) => {
+    const inExt = interpolationInfo.extent;
+    const inInc = interpolationInfo.increments;
+    const numscalars = interpolationInfo.numberOfComponents;
+
+    const floorX = vtkInterpolationMathFloor(point[0]);
+    const floorY = vtkInterpolationMathFloor(point[1]);
+    const floorZ = vtkInterpolationMathFloor(point[2]);
+
+    let inIdX0 = floorX.floored;
+    let inIdY0 = floorY.floored;
+    let inIdZ0 = floorZ.floored;
+    const fx = floorX.error;
+    const fy = floorY.error;
+    const fz = floorZ.error;
+    let inIdX1 = inIdX0 + (fx !== 0);
+    let inIdY1 = inIdY0 + (fy !== 0);
+    let inIdZ1 = inIdZ0 + (fz !== 0);
+
+    switch (interpolationInfo.borderMode) {
+      case ImageBorderMode.REPEAT:
+        inIdX0 = vtkInterpolationMathWrap(inIdX0, inExt[0], inExt[1]);
+        inIdY0 = vtkInterpolationMathWrap(inIdY0, inExt[2], inExt[3]);
+        inIdZ0 = vtkInterpolationMathWrap(inIdZ0, inExt[4], inExt[5]);
+
+        inIdX1 = vtkInterpolationMathWrap(inIdX1, inExt[0], inExt[1]);
+        inIdY1 = vtkInterpolationMathWrap(inIdY1, inExt[2], inExt[3]);
+        inIdZ1 = vtkInterpolationMathWrap(inIdZ1, inExt[4], inExt[5]);
+        break;
+      case ImageBorderMode.MIRROR:
+        inIdX0 = vtkInterpolationMathMirror(inIdX0, inExt[0], inExt[1]);
+        inIdY0 = vtkInterpolationMathMirror(inIdY0, inExt[2], inExt[3]);
+        inIdZ0 = vtkInterpolationMathMirror(inIdZ0, inExt[4], inExt[5]);
+
+        inIdX1 = vtkInterpolationMathMirror(inIdX1, inExt[0], inExt[1]);
+        inIdY1 = vtkInterpolationMathMirror(inIdY1, inExt[2], inExt[3]);
+        inIdZ1 = vtkInterpolationMathMirror(inIdZ1, inExt[4], inExt[5]);
+        break;
+      default:
+        inIdX0 = vtkInterpolationMathClamp(inIdX0, inExt[0], inExt[1]);
+        inIdY0 = vtkInterpolationMathClamp(inIdY0, inExt[2], inExt[3]);
+        inIdZ0 = vtkInterpolationMathClamp(inIdZ0, inExt[4], inExt[5]);
+
+        inIdX1 = vtkInterpolationMathClamp(inIdX1, inExt[0], inExt[1]);
+        inIdY1 = vtkInterpolationMathClamp(inIdY1, inExt[2], inExt[3]);
+        inIdZ1 = vtkInterpolationMathClamp(inIdZ1, inExt[4], inExt[5]);
+        break;
+    }
+
+    const factX0 = inIdX0 * inInc[0];
+    const factX1 = inIdX1 * inInc[0];
+    const factY0 = inIdY0 * inInc[1];
+    const factY1 = inIdY1 * inInc[1];
+    const factZ0 = inIdZ0 * inInc[2];
+    const factZ1 = inIdZ1 * inInc[2];
+
+    const i00 = factY0 + factZ0;
+    const i01 = factY0 + factZ1;
+    const i10 = factY1 + factZ0;
+    const i11 = factY1 + factZ1;
+
+    const rx = 1 - fx;
+    const ry = 1 - fy;
+    const rz = 1 - fz;
+
+    const ryrz = ry * rz;
+    const fyrz = fy * rz;
+    const ryfz = ry * fz;
+    const fyfz = fy * fz;
+
+    const inPtr = interpolationInfo.pointer;
+    const inPtr0 = inPtr.subarray(factX0);
+    const inPtr1 = inPtr.subarray(factX1);
+
+    for (let i = 0; i < numscalars; ++i) {
+      value[i] =
+        rx *
+          (ryrz * inPtr0[i00 + i * 4] +
+            ryfz * inPtr0[i01 + i * 4] +
+            fyrz * inPtr0[i10 + i * 4] +
+            fyfz * inPtr0[i11 + i * 4]) +
+        fx *
+          (ryrz * inPtr1[i00 + i * 4] +
+            ryfz * inPtr1[i01 + i * 4] +
+            fyrz * inPtr1[i10 + i * 4] +
+            fyfz * inPtr1[i11 + i * 4]);
+    }
+  };
+
   publicAPI.interpolatePoint = (interpolationInfo, point, value) => {
     switch (model.interpolationMode) {
       case InterpolationMode.LINEAR:
-        console.log('LINEAR not implemented');
+        publicAPI.interpolateLinear(interpolationInfo, point, value);
         break;
       case InterpolationMode.CUBIC:
         console.log('CUBIC not implemented');
@@ -122,10 +211,149 @@ function vtkImageInterpolator(publicAPI, model) {
     }
   };
 
+  publicAPI.interpolateRowLinear = (weights, idX, idY, idZ, outPtr, n) => {
+    console.log('interpolate row linear');
+    const stepX = weights.kernelSize[0];
+    const stepY = weights.kernelSize[1];
+    const stepZ = weights.kernelSize[2];
+    const idXtemp = idX * stepX;
+    const idYtemp = idY * stepY;
+    const idZtemp = idZ * stepZ;
+    let fX = weights.weights[0].subarray(idXtemp);
+    const fY = weights.weights[1].subarray(idYtemp);
+    const fZ = weights.weights[2].subarray(idZtemp);
+    let iX = weights.positions[0].subarray(idXtemp);
+    const iY = weights.positions[1].subarray(idYtemp);
+    const iZ = weights.positions[2].subarray(idZtemp);
+    const inPtr = weights.pointer;
+
+    // get the number of components per pixel
+    const numscalars = weights.numberOfComponents;
+
+    // create a 2x2 bilinear kernel in local variables
+    const i00 = iY.subarray(iZ[0]);
+    let i01 = i00;
+    let i10 = i00;
+    let i11 = i00;
+
+    let ry = 1;
+    let fy = 0;
+    let rz = 1;
+    let fz = 0;
+
+    if (stepY === 2) {
+      i10 = iY[1].subarray(iZ[0]);
+      i11 = i10;
+      ry = fY[0];
+      fy = fY[1];
+    }
+
+    if (stepZ === 2) {
+      i01 = iY[0].subarray(iZ[1]);
+      i11 = i01;
+      rz = fZ[0];
+      fz = fZ[1];
+    }
+
+    if (stepY + stepZ === 4) {
+      i11 = iY[1].subarray(iZ[1]);
+    }
+
+    const ryrz = ry * rz;
+    const ryfz = ry * fz;
+    const fyrz = fy * rz;
+    const fyfz = fy * fz;
+
+    if (stepX === 1) {
+      if (fy === 0 && fz === 0) {
+        // no interpolation needed at all
+        const inPtr1 = inPtr.subarray(i00);
+        for (let i = n; i > 0; --i) {
+          const inPtr0 = inPtr1.subarray(iX[n - i]);
+          const m = numscalars;
+          for (let j = 0; j < m; j++) {
+            outPtr[j + n - i] = inPtr0[j];
+          }
+        }
+      } else if (fy === 0) {
+        // only need linear z interpolation
+        for (let i = n; i > 0; --i) {
+          const inPtr0 = inPtr.subarray(iX[n - i]);
+          const m = numscalars;
+          for (let j = 0; j < m; j++) {
+            outPtr[j + n - i] =
+              rz * inPtr0[i00 + j * 4] + fz * inPtr0[i01 + j * 4];
+          }
+        }
+      } else {
+        // interpolate in y and z but not in x
+        for (let i = n; i > 0; --i) {
+          const inPtr0 = inPtr.subarray(iX[n - i]);
+          const m = numscalars;
+          for (let j = 0; j < m; j++) {
+            outPtr[j + n - i] =
+              ryrz * inPtr0[i00 + j * 4] +
+              ryfz * inPtr0[i01 + j * 4] +
+              fyrz * inPtr0[i10 + j * 4] +
+              fyfz * inPtr0[i11 + j * 4];
+          }
+        }
+      }
+    } else if (fz === 0) {
+      // bilinear interpolation in x,y
+      for (let i = n; i > 0; --i) {
+        const rx = fX[0];
+        const fx = fX[1];
+        fX = fX.subarray(2);
+
+        const t0 = iX[0];
+        const t1 = iX[1];
+        iX = iX.subarray(2);
+
+        const inPtr0 = inPtr.subarray(t0);
+        const inPtr1 = inPtr.subarray(t1);
+        const m = numscalars;
+        for (let j = 0; j < m; j++) {
+          outPtr[j + n - i] =
+            rx * (ry * inPtr0[i00 + j * 4] + fy * inPtr0[i10 + j * 4]) +
+            fx * (ry * inPtr1[i00 + j * 4] + fy * inPtr1[i10 + j * 4]);
+        }
+      }
+    } else {
+      // do full trilinear interpolation
+      for (let i = n; i > 0; --i) {
+        const rx = fX[0];
+        const fx = fX[1];
+        fX = fX.subarray(2);
+
+        const t0 = iX[0];
+        const t1 = iX[1];
+        iX = iX.subarray(2);
+
+        const inPtr0 = inPtr.subarray(t0);
+        const inPtr1 = inPtr.subarray(t1);
+        const m = numscalars;
+        for (let j = 0; j < m; j++) {
+          outPtr[j] =
+            rx *
+              (ryrz * inPtr0[i00 + j * 4] +
+                ryfz * inPtr0[i01 + j * 4] +
+                fyrz * inPtr0[i10 + j * 4] +
+                fyfz * inPtr0[i11 + j * 4]) +
+            fx *
+              (ryrz * inPtr1[i00 + j * 4] +
+                ryfz * inPtr1[i01 + j * 4] +
+                fyrz * inPtr1[i10 + j * 4] +
+                fyfz * inPtr1[i11 + j * 4]);
+        }
+      }
+    }
+  };
+
   publicAPI.interpolateRow = (weights, xIdx, yIdx, zIdx, value, n) => {
     switch (model.interpolationMode) {
       case InterpolationMode.LINEAR:
-        console.log('LINEAR not implemented');
+        publicAPI.interpolateRowLinear(weights, xIdx, yIdx, zIdx, value, n);
         break;
       case InterpolationMode.CUBIC:
         console.log('CUBIC not implemented');

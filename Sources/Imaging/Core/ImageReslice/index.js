@@ -1122,6 +1122,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'slabTrapezoidIntegration',
     'slabNumberOfSlices',
     'slabSliceSpacingFraction',
+    'interpolationMode',
   ]);
 
   macro.setGetArray(publicAPI, model, ['outputOrigin', 'outputSpacing'], 3);
