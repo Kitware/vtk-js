@@ -9,11 +9,6 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkMouseRangeManipulator');
 
-  const internal = {
-    interactor: null,
-    renderer: null,
-  };
-
   // Keep track of delta that is below the value
   // of one step to progressively increment it
   const incrementalDelta = new Map();
@@ -171,9 +166,8 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     model.containerSize = size.map((v) => v * ratio);
 
     if (model.usePointerLock && !interactor.isPointerLocked()) {
-      Object.assign(internal, { interactor, renderer });
       interactor.requestPointerLock();
-      publicAPI.startPointerLockInteraction();
+      publicAPI.startPointerLockInteraction(interactor);
     }
   };
 
@@ -190,9 +184,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
 
   //--------------------------------------------------------------------------
 
-  publicAPI.startPointerLockInteraction = () => {
-    const { interactor } = internal;
-
+  publicAPI.startPointerLockInteraction = (interactor) => {
     // TODO: at some point, this should perhaps be done in
     // RenderWindowInteractor instead of here.
     // We need to hook into mousemove directly for two reasons:
@@ -216,11 +208,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     model.previousPosition.x += e.movementX;
     model.previousPosition.y += e.movementY;
 
-    publicAPI.onMouseMove(
-      internal.interactor,
-      internal.renderer,
-      model.previousPosition
-    );
+    publicAPI.onMouseMove(null, null, model.previousPosition);
   };
 
   publicAPI.exitPointerLock = () => document.exitPointerLock();
