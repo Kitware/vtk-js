@@ -175,16 +175,11 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     publicAPI.exitPointerLock();
   };
 
-  publicAPI.bindEvents = (container) => {
-    document.addEventListener(
-      'pointerlockchange',
-      publicAPI.handlePointerLockChange
-    );
-  };
-
   //--------------------------------------------------------------------------
 
-  publicAPI.startPointerLockInteraction = (interactor) => {
+  publicAPI.exitPointerLock = () => document.exitPointerLock();
+
+  publicAPI.startPointerLockEvent = (interactor) => {
     // TODO: at some point, this should perhaps be done in
     // RenderWindowInteractor instead of here.
     // We need to hook into mousemove directly for two reasons:
@@ -209,18 +204,6 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     model.previousPosition.y += e.movementY;
 
     publicAPI.onMouseMove(null, null, model.previousPosition);
-  };
-
-  publicAPI.exitPointerLock = () => document.exitPointerLock();
-
-  publicAPI.isPointerLocked = () => !!document.pointerLockElement;
-
-  publicAPI.handlePointerLockChange = () => {
-    if (publicAPI.isPointerLocked()) {
-      publicAPI.startPointerLockEvent();
-    } else {
-      publicAPI.endPointerLockEvent();
-    }
   };
 
   //-------------------------------------------------------------------------
