@@ -45,6 +45,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
+      model.currentRenderPass = null;
       model.openGLActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
       model.openGLRenderer =
         model.openGLActor.getFirstAncestorOfType('vtkOpenGLRenderer');
@@ -56,8 +57,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
   };
 
   // Renders myself
-  publicAPI.translucentPass = (prepass) => {
+  publicAPI.translucentPass = (prepass, renderPass) => {
     if (prepass) {
+      model.currentRenderPass = renderPass;
       publicAPI.render();
     }
   };
@@ -92,6 +94,11 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.buildShaders = (shaders, ren, actor) => {
     publicAPI.getShaderTemplate(shaders, ren, actor);
+
+    // apply any renderPassReplacements
+    if (model.lastRenderPassShaderReplacement) {
+      model.lastRenderPassShaderReplacement(shaders);
+    }
 
     // user specified pre replacements
     const openGLSpec = model.renderable.getViewSpecificProperties().OpenGL;
@@ -1079,6 +1086,21 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     ) {
       model.lastBoundBO.set({ lastLightComplexity: lightComplexity }, true);
       model.lastBoundBO.set({ lastLightCount: numberOfLights }, true);
+      needRebuild = true;
+    }
+
+    // has the render pass shader replacement changed? Two options
+    if (!model.currentRenderPass && model.lastRenderPassShaderReplacement) {
+      needRebuild = true;
+      model.lastRenderPassShaderReplacement = null;
+    }
+    if (
+      model.currentRenderPass &&
+      model.currentRenderPass.getShaderReplacement() !==
+        model.lastRenderPassShaderReplacement
+    ) {
+      model.lastRenderPassShaderReplacement =
+        model.currentRenderPass.getShaderReplacement();
       needRebuild = true;
     }
 

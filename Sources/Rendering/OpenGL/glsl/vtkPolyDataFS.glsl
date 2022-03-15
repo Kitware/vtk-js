@@ -94,4 +94,6 @@ void main()
   //VTK::Coincident::Impl
 
   //VTK::ZBuffer::Impl
+
+  //VTK::RenderPassFragmentShader::Impl
 }

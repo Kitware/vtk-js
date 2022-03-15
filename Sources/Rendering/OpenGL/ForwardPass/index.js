@@ -1,6 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
+import vtkOpenGLOrderIndependentTranslucentPass from 'vtk.js/Sources/Rendering/OpenGL/OrderIndependentTranslucentPass';
 
 // ----------------------------------------------------------------------------
 
@@ -80,8 +81,11 @@ function vtkForwardPass(publicAPI, model) {
             renNode.traverse(publicAPI);
           }
           if (model.translucentActorCount > 0) {
-            publicAPI.setCurrentOperation('translucentPass');
-            renNode.traverse(publicAPI);
+            if (!model.translucentPass) {
+              model.translucentPass =
+                vtkOpenGLOrderIndependentTranslucentPass.newInstance();
+            }
+            model.translucentPass.traverse(viewNode, renNode, publicAPI);
           }
           if (model.volumeCount > 0) {
             publicAPI.setCurrentOperation('volumePass');
@@ -135,7 +139,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   vtkRenderPass.extend(publicAPI, model, initialValues);
 
-  macro.get(publicAPI, model, ['framebuffer']);
+  macro.get(publicAPI, model, [
+    'framebuffer',
+    'opaqueActorCount',
+    'translucentActorCount',
+    'volumeCount',
+  ]);
 
   // Object methods
   vtkForwardPass(publicAPI, model);

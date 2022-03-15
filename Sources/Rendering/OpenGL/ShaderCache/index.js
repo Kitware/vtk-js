@@ -96,15 +96,22 @@ function vtkShaderCache(publicAPI, model) {
         'varying',
         'in'
       ).result;
-      nFSSource = vtkShaderProgram.substitute(
-        nFSSource,
-        'gl_FragData\\[0\\]',
-        'fragOutput0'
-      ).result;
+
+      let shaderOutputs = '';
+      let outputCount = 0;
+      while (nFSSource.includes(`gl_FragData[${outputCount}]`)) {
+        nFSSource = vtkShaderProgram.substitute(
+          nFSSource,
+          `gl_FragData\\[${outputCount}\\]`,
+          `fragOutput${outputCount}`
+        ).result;
+        shaderOutputs += `layout(location = ${outputCount}) out vec4 fragOutput${outputCount};\n`;
+        outputCount++;
+      }
       nFSSource = vtkShaderProgram.substitute(
         nFSSource,
         '//VTK::Output::Dec',
-        'layout(location = 0) out vec4 fragOutput0;'
+        shaderOutputs
       ).result;
     }
 
