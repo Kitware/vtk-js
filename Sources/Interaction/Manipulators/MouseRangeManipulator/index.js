@@ -273,6 +273,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   vtkCompositeMouseManipulator.extend(publicAPI, model, initialValues);
 
+  // Create get-set macros
+  macro.setGet(publicAPI, model, ['usePointerLock']);
+
   // Object specific methods
   vtkMouseRangeManipulator(publicAPI, model);
 }
