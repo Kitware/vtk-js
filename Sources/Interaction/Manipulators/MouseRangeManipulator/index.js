@@ -164,46 +164,49 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     const size = glRenderWindow.getViewportSize(renderer);
     // rescale size to match mouse event position
     model.containerSize = size.map((v) => v * ratio);
-
-    if (model.usePointerLock && !interactor.isPointerLocked()) {
-      interactor.requestPointerLock();
-      publicAPI.startPointerLockInteraction(interactor);
-    }
   };
 
-  publicAPI.onButtonUp = () => {
-    publicAPI.exitPointerLock();
+  publicAPI.onButtonUp = (interactor) => {
+    interactor.exitPointerLock();
   };
 
   //--------------------------------------------------------------------------
 
-  publicAPI.exitPointerLock = () => document.exitPointerLock();
+  // TODO: at some point, this should perhaps be done in
+  // RenderWindowInteractor instead of here.
+  // We need to hook into mousemove directly for two reasons:
+  // 1. We need to keep receiving mouse move events after the mouse button
+  //    is released. This is currently not possible with
+  //    vtkInteractorStyleManipulator.
+  // 2. Since the mouse is stationary in pointer lock mode, we need the
+  //    event.movementX and event.movementY info, which are not currently
+  //    passed via interactor.onMouseMove.
+  publicAPI.startPointerLockEvent = (interactor, renderer) => {
+    const handlePointerLockMove = (event) => {
+      publicAPI.onPointerLockMove(interactor, renderer, event);
+    };
 
-  publicAPI.startPointerLockEvent = (interactor) => {
-    // TODO: at some point, this should perhaps be done in
-    // RenderWindowInteractor instead of here.
-    // We need to hook into mousemove directly for two reasons:
-    // 1. We need to keep receiving mouse move events after the mouse button
-    //    is released. This is currently not possible with
-    //    vtkInteractorStyleManipulator.
-    // 2. Since the mouse is stationary in pointer lock mode, we need the
-    //    event.movementX and event.movementY info, which are not currently
-    //    passed via interactor.onMouseMove.
-    document.addEventListener('mousemove', publicAPI.onPointerLockMove);
+    document.addEventListener('mousemove', handlePointerLockMove);
 
     let subscription = null;
     const endInteraction = () => {
-      document.removeEventListener('mousemove', publicAPI.onPointerLockMove);
+      document.removeEventListener('mousemove', handlePointerLockMove);
       subscription?.unsubscribe();
     };
     subscription = interactor?.onEndPointerLock(endInteraction);
   };
 
-  publicAPI.onPointerLockMove = (e) => {
-    model.previousPosition.x += e.movementX;
-    model.previousPosition.y += e.movementY;
+  publicAPI.onPointerLockMove = (interactor, renderer, event) => {
+    // There is a slight delay between the `onEndPointerLock` call
+    // and the last `onMouseMove` event, we must make sure the pointer
+    // is still locked before we run this logic otherwise we may
+    // get a `onMouseMove` call after the pointer has been unlocked.
+    if (!interactor.isPointerLocked()) return;
 
-    publicAPI.onMouseMove(null, null, model.previousPosition);
+    model.previousPosition.x += event.movementX;
+    model.previousPosition.y += event.movementY;
+
+    publicAPI.onMouseMove(interactor, renderer, model.previousPosition);
   };
 
   //-------------------------------------------------------------------------
@@ -211,6 +214,16 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     if (!model.verticalListener && !model.horizontalListener) {
       return;
     }
+
+    // We only want to initialize the pointer lock listener
+    // after the user starts moving their mouse, this way
+    // we don't interfere with other events such as doubleClick,
+    // for this reason we don't call this from `onButtonDown`
+    if (model.usePointerLock && !interactor.isPointerLocked()) {
+      interactor.requestPointerLock();
+      publicAPI.startPointerLockEvent(interactor, renderer);
+    }
+
     if (!position) {
       return;
     }
