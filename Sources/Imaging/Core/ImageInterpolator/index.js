@@ -162,21 +162,19 @@ function vtkImageInterpolator(publicAPI, model) {
     const fyfz = fy * fz;
 
     const inPtr = interpolationInfo.pointer;
-    const inPtr0 = inPtr.subarray(factX0);
-    const inPtr1 = inPtr.subarray(factX1);
 
     for (let i = 0; i < numscalars; ++i) {
       value[i] =
         rx *
-          (ryrz * inPtr0[i00 + i * 4] +
-            ryfz * inPtr0[i01 + i * 4] +
-            fyrz * inPtr0[i10 + i * 4] +
-            fyfz * inPtr0[i11 + i * 4]) +
+          (ryrz * inPtr[factX0 + i00 + i * 4] +
+            ryfz * inPtr[factX0 + i01 + i * 4] +
+            fyrz * inPtr[factX0 + i10 + i * 4] +
+            fyfz * inPtr[factX0 + i11 + i * 4]) +
         fx *
-          (ryrz * inPtr1[i00 + i * 4] +
-            ryfz * inPtr1[i01 + i * 4] +
-            fyrz * inPtr1[i10 + i * 4] +
-            fyfz * inPtr1[i11 + i * 4]);
+          (ryrz * inPtr[factX1 + i00 + i * 4] +
+            ryfz * inPtr[factX1 + i01 + i * 4] +
+            fyrz * inPtr[factX1 + i10 + i * 4] +
+            fyfz * inPtr[factX1 + i11 + i * 4]);
     }
   };
 
@@ -212,17 +210,16 @@ function vtkImageInterpolator(publicAPI, model) {
   };
 
   publicAPI.interpolateRowLinear = (weights, idX, idY, idZ, outPtr, n) => {
-    console.log('interpolate row linear');
     const stepX = weights.kernelSize[0];
     const stepY = weights.kernelSize[1];
     const stepZ = weights.kernelSize[2];
     const idXtemp = idX * stepX;
     const idYtemp = idY * stepY;
     const idZtemp = idZ * stepZ;
-    let fX = weights.weights[0].subarray(idXtemp);
+    const fX = weights.weights[0].subarray(idXtemp);
     const fY = weights.weights[1].subarray(idYtemp);
     const fZ = weights.weights[2].subarray(idZtemp);
-    let iX = weights.positions[0].subarray(idXtemp);
+    const iX = weights.positions[0].subarray(idXtemp);
     const iY = weights.positions[1].subarray(idYtemp);
     const iZ = weights.positions[2].subarray(idZtemp);
     const inPtr = weights.pointer;
@@ -267,85 +264,73 @@ function vtkImageInterpolator(publicAPI, model) {
     if (stepX === 1) {
       if (fy === 0 && fz === 0) {
         // no interpolation needed at all
-        const inPtr1 = inPtr.subarray(i00);
         for (let i = n; i > 0; --i) {
-          const inPtr0 = inPtr1.subarray(iX[n - i]);
-          const m = numscalars;
-          for (let j = 0; j < m; j++) {
-            outPtr[j + n - i] = inPtr0[j];
+          for (let j = 0; j < numscalars; j++) {
+            outPtr[j + n - i] = inPtr[i00 + iX[n - i] + j];
           }
         }
       } else if (fy === 0) {
         // only need linear z interpolation
         for (let i = n; i > 0; --i) {
-          const inPtr0 = inPtr.subarray(iX[n - i]);
-          const m = numscalars;
-          for (let j = 0; j < m; j++) {
+          for (let j = 0; j < numscalars; j++) {
             outPtr[j + n - i] =
-              rz * inPtr0[i00 + j * 4] + fz * inPtr0[i01 + j * 4];
+              rz * inPtr[iX[n - i] + i00 + j * 4] +
+              fz * inPtr[iX[n - i] + i01 + j * 4];
           }
         }
       } else {
         // interpolate in y and z but not in x
         for (let i = n; i > 0; --i) {
-          const inPtr0 = inPtr.subarray(iX[n - i]);
-          const m = numscalars;
-          for (let j = 0; j < m; j++) {
+          for (let j = 0; j < numscalars; j++) {
             outPtr[j + n - i] =
-              ryrz * inPtr0[i00 + j * 4] +
-              ryfz * inPtr0[i01 + j * 4] +
-              fyrz * inPtr0[i10 + j * 4] +
-              fyfz * inPtr0[i11 + j * 4];
+              ryrz * inPtr[iX[n - i] + i00 + j * 4] +
+              ryfz * inPtr[iX[n - i] + i01 + j * 4] +
+              fyrz * inPtr[iX[n - i] + i10 + j * 4] +
+              fyfz * inPtr[iX[n - i] + i11 + j * 4];
           }
         }
       }
     } else if (fz === 0) {
+      let x = 0;
       // bilinear interpolation in x,y
       for (let i = n; i > 0; --i) {
-        const rx = fX[0];
-        const fx = fX[1];
-        fX = fX.subarray(2);
+        const rx = fX[0 + 2 * x];
+        const fx = fX[1 + 2 * x];
 
-        const t0 = iX[0];
-        const t1 = iX[1];
-        iX = iX.subarray(2);
+        const t0 = iX[0 + 2 * x];
+        const t1 = iX[1 + 2 * x];
 
-        const inPtr0 = inPtr.subarray(t0);
-        const inPtr1 = inPtr.subarray(t1);
-        const m = numscalars;
-        for (let j = 0; j < m; j++) {
+        for (let j = 0; j < numscalars; j++) {
           outPtr[j + n - i] =
-            rx * (ry * inPtr0[i00 + j * 4] + fy * inPtr0[i10 + j * 4]) +
-            fx * (ry * inPtr1[i00 + j * 4] + fy * inPtr1[i10 + j * 4]);
+            rx * (ry * inPtr[t0 + i00 + j * 4] + fy * inPtr[t0 + i10 + j * 4]) +
+            fx * (ry * inPtr[t1 + i00 + j * 4] + fy * inPtr[t1 + i10 + j * 4]);
         }
+        x++;
       }
     } else {
+      let x = 0;
       // do full trilinear interpolation
       for (let i = n; i > 0; --i) {
-        const rx = fX[0];
-        const fx = fX[1];
-        fX = fX.subarray(2);
+        const rx = fX[0 + 2 * x];
+        const fx = fX[1 + 2 * x];
 
-        const t0 = iX[0];
-        const t1 = iX[1];
-        iX = iX.subarray(2);
+        const t0 = iX[0 + 2 * x];
+        const t1 = iX[1 + 2 * x];
 
-        const inPtr0 = inPtr.subarray(t0);
-        const inPtr1 = inPtr.subarray(t1);
-        const m = numscalars;
-        for (let j = 0; j < m; j++) {
+        for (let j = 0; j < numscalars; j++) {
           outPtr[j] =
             rx *
-              (ryrz * inPtr0[i00 + j * 4] +
-                ryfz * inPtr0[i01 + j * 4] +
-                fyrz * inPtr0[i10 + j * 4] +
-                fyfz * inPtr0[i11 + j * 4]) +
+              (ryrz * inPtr[t0 + i00 + j * 4] +
+                ryfz * inPtr[t0 + i01 + j * 4] +
+                fyrz * inPtr[t0 + i10 + j * 4] +
+                fyfz * inPtr[t0 + i11 + j * 4]) +
             fx *
-              (ryrz * inPtr1[i00 + j * 4] +
-                ryfz * inPtr1[i01 + j * 4] +
-                fyrz * inPtr1[i10 + j * 4] +
-                fyfz * inPtr1[i11 + j * 4]);
+              (ryrz * inPtr[t1 + i00 + j * 4] +
+                ryfz * inPtr[t1 + i01 + j * 4] +
+                fyrz * inPtr[t1 + i10 + j * 4] +
+                fyfz * inPtr[t1 + i11 + j * 4]);
         }
+        x++;
       }
     }
   };

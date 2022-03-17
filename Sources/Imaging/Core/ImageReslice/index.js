@@ -1118,11 +1118,11 @@ export function extend(publicAPI, model, initialValues = {}) {
     'mirror',
     'border',
     'backgroundColor',
+    'interpolationMode',
     'slabMode',
     'slabTrapezoidIntegration',
     'slabNumberOfSlices',
     'slabSliceSpacingFraction',
-    'interpolationMode',
   ]);
 
   macro.setGetArray(publicAPI, model, ['outputOrigin', 'outputSpacing'], 3);
