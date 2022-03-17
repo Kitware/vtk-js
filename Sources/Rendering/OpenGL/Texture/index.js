@@ -513,10 +513,12 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.getOpenGLDataType = (vtkScalarType, useHalfFloatType = false) => {
-    model.openGLDataType = publicAPI.getDefaultDataType(
-      vtkScalarType,
-      useHalfFloatType
-    );
+    if (!model.openGLDataType) {
+      model.openGLDataType = publicAPI.getDefaultDataType(
+        vtkScalarType,
+        useHalfFloatType
+      );
+    }
     return model.openGLDataType;
   };
 
@@ -607,11 +609,15 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.openGLDataType === model.context.FLOAT
     ) {
       for (let idx = 0; idx < data.length; idx++) {
-        const newArray = new Float32Array(pixCount);
-        for (let i = 0; i < pixCount; i++) {
-          newArray[i] = data[idx][i];
+        if (data[idx]) {
+          const newArray = new Float32Array(pixCount);
+          for (let i = 0; i < pixCount; i++) {
+            newArray[i] = data[idx][i];
+          }
+          pixData.push(newArray);
+        } else {
+          pixData.push(null);
         }
-        pixData.push(newArray);
       }
     }
 
@@ -622,11 +628,15 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.openGLDataType === model.context.UNSIGNED_BYTE
     ) {
       for (let idx = 0; idx < data.length; idx++) {
-        const newArray = new Uint8Array(pixCount);
-        for (let i = 0; i < pixCount; i++) {
-          newArray[i] = data[idx][i];
+        if (data[idx]) {
+          const newArray = new Uint8Array(pixCount);
+          for (let i = 0; i < pixCount; i++) {
+            newArray[i] = data[idx][i];
+          }
+          pixData.push(newArray);
+        } else {
+          pixData.push(null);
         }
-        pixData.push(newArray);
       }
     }
 
@@ -639,11 +649,15 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     if (halfFloat) {
       for (let idx = 0; idx < data.length; idx++) {
-        const newArray = new Uint16Array(pixCount);
-        for (let i = 0; i < pixCount; i++) {
-          newArray[i] = HalfFloat.toHalf(data[idx][i]);
+        if (data[idx]) {
+          const newArray = new Uint16Array(pixCount);
+          for (let i = 0; i < pixCount; i++) {
+            newArray[i] = HalfFloat.toHalf(data[idx][i]);
+          }
+          pixData.push(newArray);
+        } else {
+          pixData.push(null);
         }
-        pixData.push(newArray);
       }
     }
 

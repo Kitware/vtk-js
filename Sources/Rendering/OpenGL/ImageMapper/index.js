@@ -48,6 +48,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
+      model.currentRenderPass = null;
       model.openGLImageSlice = publicAPI.getFirstAncestorOfType(
         'vtkOpenGLImageSlice'
       );
@@ -70,8 +71,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     }
   };
 
-  publicAPI.translucentPass = (prepass) => {
+  publicAPI.translucentPass = (prepass, renderPass) => {
     if (prepass) {
+      model.currentRenderPass = renderPass;
       publicAPI.render();
     }
   };
@@ -107,6 +109,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
   publicAPI.buildShaders = (shaders, ren, actor) => {
     publicAPI.getShaderTemplate(shaders, ren, actor);
+
+    // apply any renderPassReplacements
+    if (model.lastRenderPassShaderReplacement) {
+      model.lastRenderPassShaderReplacement(shaders);
+    }
+
     publicAPI.replaceShaderValues(shaders, ren, actor);
   };
 
@@ -379,7 +387,24 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const tNumComp = model.openGLTexture.getComponents();
     const iComp = actor.getProperty().getIndependentComponents();
 
+    // has the render pass shader replacement changed? Two options
+    let needRebuild = false;
+    if (!model.currentRenderPass && model.lastRenderPassShaderReplacement) {
+      needRebuild = true;
+      model.lastRenderPassShaderReplacement = null;
+    }
     if (
+      model.currentRenderPass &&
+      model.currentRenderPass.getShaderReplacement() !==
+        model.lastRenderPassShaderReplacement
+    ) {
+      model.lastRenderPassShaderReplacement =
+        model.currentRenderPass.getShaderReplacement();
+      needRebuild = true;
+    }
+
+    if (
+      needRebuild ||
       model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
       cellBO.getProgram() === 0 ||
       model.lastTextureComponents !== tNumComp ||
