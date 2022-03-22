@@ -716,7 +716,12 @@ export function areEquals(a, b, eps = 1e-6) {
   return a.every(isEqual);
 }
 
-export const areMatricesEqual = areEquals;
+export function areMatricesEqual(a, b, eps = 1e-6) {
+  if (a.length !== b.length) {
+    return false;
+  }
+  return a.every((line,i) => areEquals(line, b[i], eps));
+}
 
 export function roundNumber(num, digits = 0) {
   if (!`${num}`.includes('e')) {
