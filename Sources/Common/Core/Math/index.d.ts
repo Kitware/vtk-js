@@ -454,11 +454,19 @@ export function quaternionToMatrix3x3(quat_4: Vector4, mat_3x3: Matrix3x3): void
 
 /**
  * Returns true if elements of both arrays are equals.
- * @param {Number[]} a An array of numbers (vector, point, matrix...)
- * @param {Number[]} b An array of numbers (vector, point, matrix...)
+ * @param {Number[]} a An array of numbers (vector, point...)
+ * @param {Number[]} b An array of numbers (vector, point...)
  * @param {Number} [eps] The tolerance value.
  */
 export function areEquals(a: number[], b: number[], eps?: number): boolean;
+
+/**
+ * Returns true if elements of both matrices are equals.
+ * @param {Number[][]} a A matrix of numbers
+ * @param {Number[][]} b A matrix of numbers
+ * @param {Number} [eps] The tolerance value.
+ */
+export function areEquals(a: number[][], b: number[][], eps?: number): boolean;
 
 /**
  *
@@ -894,7 +902,7 @@ export declare const vtkMath: {
 	determinant3x3: typeof determinant3x3;
 	quaternionToMatrix3x3: typeof quaternionToMatrix3x3;
 	areEquals: typeof areEquals;
-	areMatricesEqual: typeof areEquals;
+	areMatricesEqual: typeof areMatricesEqual;
 	roundNumber: typeof roundNumber;
 	roundVector: typeof roundVector;
 	jacobiN: typeof jacobiN;
