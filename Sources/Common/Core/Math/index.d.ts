@@ -466,7 +466,7 @@ export function areEquals(a: number[], b: number[], eps?: number): boolean;
  * @param {Number[][]} b A matrix of numbers
  * @param {Number} [eps] The tolerance value.
  */
-export function areEquals(a: number[][], b: number[][], eps?: number): boolean;
+export function areMatricesEqual(a: number[][], b: number[][], eps?: number): boolean;
 
 /**
  *
