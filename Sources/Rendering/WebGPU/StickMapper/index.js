@@ -1,11 +1,11 @@
 import * as macro from 'vtk.js/Sources/macros';
-import vtkWebGPUPolyDataMapper from 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper';
+import vtkWebGPUCellArrayMapper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
-const { BufferUsage, PrimitiveTypes } = vtkWebGPUBufferManager;
+const { BufferUsage } = vtkWebGPUBufferManager;
 const { vtkErrorMacro } = macro;
 
 // Vertices
@@ -124,6 +124,21 @@ function vtkWebGPUStickMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUStickMapper');
 
+  const cellMapperBuildPass = publicAPI.buildPass;
+  publicAPI.buildPass = (prepass) => {
+    if (prepass) {
+      if (!model.renderable.getStatic()) {
+        model.renderable.update();
+      }
+
+      const poly = model.renderable.getInputData();
+
+      publicAPI.setCellArray(poly.getVerts());
+      publicAPI.setCurrentInput(poly);
+    }
+    cellMapperBuildPass(prepass);
+  };
+
   publicAPI.replaceShaderNormal = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
     vDesc.addOutput('vec4<f32>', 'vertexVC');
@@ -239,37 +254,30 @@ function vtkWebGPUStickMapper(publicAPI, model) {
   // compute a unique hash for a pipeline, this needs to be unique enough to
   // capture any pipeline code changes (which includes shader changes)
   // or vertex input changes/ bind groups/ etc
-  publicAPI.computePipelineHash = (vertexInput) => {
-    let pipelineHash = 'stm';
-    if (vertexInput.hasAttribute(`colorVI`)) {
-      pipelineHash += `c`;
+  publicAPI.computePipelineHash = () => {
+    model.pipelineHash = 'stm';
+    if (model.vertexInput.hasAttribute(`colorVI`)) {
+      model.pipelineHash += `c`;
     }
-    pipelineHash += model.renderEncoder.getPipelineHash();
-
-    return pipelineHash;
+    model.pipelineHash += model.renderEncoder.getPipelineHash();
   };
 
-  // was originally buildIBOs() but not using IBOs right now
-  publicAPI.buildPrimitives = () => {
+  publicAPI.updateBuffers = () => {
     const poly = model.currentInput;
-
-    const device = model.WebGPURenderWindow.getDevice();
 
     model.renderable.mapScalars(poly, 1.0);
 
-    // handle triangles
-    const i = PrimitiveTypes.Triangles;
+    const device = model.device;
 
     const points = poly.getPoints();
     const pointData = poly.getPointData();
     const numPoints = points.getNumberOfPoints();
     const pointArray = points.getData();
-    const primHelper = model.primitives[i];
 
-    primHelper.setNumberOfInstances(numPoints);
-    primHelper.setNumberOfVertices(12);
+    publicAPI.setNumberOfInstances(numPoints);
+    publicAPI.setNumberOfVertices(12);
 
-    const vertexInput = model.primitives[i].getVertexInput();
+    const vertexInput = model.vertexInput;
 
     let buffRequest = {
       owner: points,
@@ -378,8 +386,6 @@ function vtkWebGPUStickMapper(publicAPI, model) {
       vertexInput.addBuffer(buff, ['orientMC'], 'instance');
     }
 
-    model.renderable.mapScalars(poly, 1.0);
-
     // deal with colors but only if modified
     let haveColors = false;
     if (model.renderable.getScalarVisibility()) {
@@ -418,11 +424,8 @@ function vtkWebGPUStickMapper(publicAPI, model) {
       vertexInput.removeBufferIfPresent('colorVI');
     }
 
-    primHelper.setPipelineHash(publicAPI.computePipelineHash(vertexInput));
-    primHelper.setWebGPURenderer(model.WebGPURenderer);
-    primHelper.setTopology('triangle-list');
-    primHelper.build(model.renderEncoder, device);
-    primHelper.registerToDraw();
+    publicAPI.setTopology('triangle-list');
+    publicAPI.updateUBO();
   };
 }
 
@@ -438,16 +441,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkWebGPUPolyDataMapper.extend(publicAPI, model, initialValues);
+  vtkWebGPUCellArrayMapper.extend(publicAPI, model, initialValues);
 
-  model.primitives[PrimitiveTypes.Triangles].setVertexShaderTemplate(
-    vtkWebGPUStickMapperVS
-  );
+  publicAPI.setVertexShaderTemplate(vtkWebGPUStickMapperVS);
 
   // Object methods
   vtkWebGPUStickMapper(publicAPI, model);
 
-  const sr = model.primitives[PrimitiveTypes.Triangles].getShaderReplacements();
+  const sr = model.shaderReplacements;
   sr.set('replaceShaderPosition', publicAPI.replaceShaderPosition);
   sr.set('replaceShaderNormal', publicAPI.replaceShaderNormal);
 }

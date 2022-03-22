@@ -124,19 +124,6 @@ function vtkWebGPURenderer(publicAPI, model) {
     return count;
   };
 
-  // register pipeline callbacks from a mapper
-  publicAPI.registerPipelineCallback = (pipeline, cb) => {
-    // if there is a matching pipeline just add the cb
-    for (let i = 0; i < model.pipelineCallbacks.length; i++) {
-      if (model.pipelineCallbacks[i].pipeline === pipeline) {
-        model.pipelineCallbacks[i].callbacks.push(cb);
-        return;
-      }
-    }
-
-    model.pipelineCallbacks.push({ pipeline, callbacks: [cb] });
-  };
-
   publicAPI.updateUBO = () => {
     // make sure the data is up to date
     // has the camera changed?
@@ -197,29 +184,11 @@ function vtkWebGPURenderer(publicAPI, model) {
   // Renders myself
   publicAPI.opaquePass = (prepass) => {
     if (prepass) {
-      // clear last pipelines
-      model.pipelineCallbacks = [];
-
       model.renderEncoder.begin(model._parent.getCommandEncoder());
       publicAPI.updateUBO();
     } else {
       publicAPI.scissorAndViewport(model.renderEncoder);
-
       publicAPI.clear();
-
-      // loop over registered pipelines
-      for (let i = 0; i < model.pipelineCallbacks.length; i++) {
-        const pStruct = model.pipelineCallbacks[i];
-        const pl = pStruct.pipeline;
-
-        model.renderEncoder.setPipeline(pl);
-        publicAPI.bindUBO(model.renderEncoder);
-
-        for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
-          pStruct.callbacks[cb](model.renderEncoder);
-        }
-      }
-
       model.renderEncoder.end();
     }
   };
@@ -243,55 +212,23 @@ function vtkWebGPURenderer(publicAPI, model) {
     const background = model.renderable.getBackgroundByReference();
     model.clearFSQ.getUBO().setArray('BackgroundColor', background);
     model.clearFSQ.getUBO().sendIfNeeded(device);
-    model.clearFSQ.render(model.renderEncoder, device);
+    model.clearFSQ.prepareAndDraw(model.renderEncoder);
   };
 
   publicAPI.translucentPass = (prepass) => {
     if (prepass) {
-      // clear last pipelines
-      model.pipelineCallbacks = [];
       model.renderEncoder.begin(model._parent.getCommandEncoder());
     } else {
       publicAPI.scissorAndViewport(model.renderEncoder);
-
-      // loop over registered pipelines
-      for (let i = 0; i < model.pipelineCallbacks.length; i++) {
-        const pStruct = model.pipelineCallbacks[i];
-        const pl = pStruct.pipeline;
-
-        model.renderEncoder.setPipeline(pl);
-        publicAPI.bindUBO(model.renderEncoder);
-
-        for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
-          pStruct.callbacks[cb](model.renderEncoder);
-        }
-      }
-
       model.renderEncoder.end();
     }
   };
 
   publicAPI.volumeDepthRangePass = (prepass) => {
     if (prepass) {
-      // clear last pipelines
-      model.pipelineCallbacks = [];
       model.renderEncoder.begin(model._parent.getCommandEncoder());
     } else {
       publicAPI.scissorAndViewport(model.renderEncoder);
-
-      // loop over registered pipelines
-      for (let i = 0; i < model.pipelineCallbacks.length; i++) {
-        const pStruct = model.pipelineCallbacks[i];
-        const pl = pStruct.pipeline;
-
-        model.renderEncoder.setPipeline(pl);
-        publicAPI.bindUBO(model.renderEncoder);
-
-        for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
-          pStruct.callbacks[cb](model.renderEncoder);
-        }
-      }
-
       model.renderEncoder.end();
     }
   };

@@ -30,16 +30,16 @@ is needed.
 - PBR lighting to replace the simple model currently coded
 - eventually switch to using IBOs and flat interpolation
 - cropping planes for polydata, image, volume mappers
-- update widgets to use the new async hardware selector API
 - add rgb texture support to volume renderer
 - add lighting to volume rendering
 - add line zbuffer offset to handle coincident
-- possibly change the zbuffer equation to be linear float30
 
 Waiting on fixes/dev in WebGPU spec
 - more cross platform testing and bug fixing, firefox and safari
 
 # Recently ToDone
+- possibly change the zbuffer equation to be linear float32
+- update widgets to use the new async hardware selector API
 - image display (use 3d texture)
 - create new volume renderer built for multivolume rendering
   - traverse all volumes and register with volume pass - done
@@ -120,6 +120,49 @@ getBindGroupTime()
 getShaderCode(group, binding)
 ```
 
+## Simple Mapper
+
+The Simple Mapper is the most basic class to get geometry onto the screen and many other mappers subclass from it. The basic process of invoking a mapper is two steps. First we prepareToDraw which gets everything ready, but doesn't actually draw the primitives. Then we register a draw callback that the encoder will invoke later once the mappers pipeline is bound. We do it this way so that mappers that share a pipeline will all get invoked when that pipeline is bound. Then the next pipeline is bound and all mappers sharing that pipeline get drawn. It batches up pipeline draw calls together for better performance.
+
+The prepareToDraw method is implemented as follows.
+
+```
+prepareToDraw()
+- updateInput() // any preprocessing you need
+- updateBuffers() // updates UBOs, VBOs SSBOs, Textures
+- updateBindables() // textureViews, samplers
+  - model.bindGroup.setBindables(publicAPI.getBindables())
+- updatePipeline() // update/create pipeline
+  - computePipelineHash() // compute a unique hash for the required pipeline
+  - device.getPipeline(hash) // return null if it doesn't already exist
+  - if that hash already exists just use it, otherwise create it
+```
+
+And the encoder's execution typically looks like this:
+
+```
+encoder.attachTextureViews()
+encoder.begin(renderWindow.getCommandEncoder())
+encoder.end()
+- binds pipelines and invokes draw callbacks
+    - mapper.draw(encoder) // bind the bindables then draw the primitives
+```
+
+updatePipeline does something like:
+
+updatePipeline()
+  - computePipelineHash()
+  - pipeline = device.getPipeline(model.pipelineHash)
+  - if (!pipeline)
+    - pipeline = vtkWebGPUPipeline.newInstance()
+    - add bindGroupLayouts to it
+    - generate shader descriptions for it
+    - set topology, renderEncoder, vertexState on the pipeline
+    - create the webgpu pipeline device.createPipeline(pipelineHash, pipeline)
+
+We set the render encoder on the pipeline because the renderEncoder used may add shader code to the fragment shader to direct the computed fragment data to specific outputs/textureViews.
+
+The simple mapper is a viewnode subclass so it can handle render passes. The FullScreenQuad is a small subclass of SimpleMapper designed to render a quad. CellArrayMapper is a large subclass of SimpleMapper designed to render a CellArray from a PolyData suchs as verts, lines, polys, strips. PolyDataMapper is a simple class that instantiates CellArrayMappers as needed to do the actual work.
 ## Private API
 Note that none of the classes in the WebGPU directory are meant to be accessed directly by application code. These classes implement one view of the data (WebGPU as opposed to WebGL). Typical applicaiton code will interface with the RenderWindowViewNode superclass (in the SceneGraph) directory as the main entry point for a view such as WebGL or WebGPU. As such, changes to the API of the WebGPU classes are considered private changes, internal to the implementation of this view.
 
@@ -150,8 +193,10 @@ The depth valus are linear in depth.
 
 For perspective we use a reverse infinite far clip projection which ranges from 1.0 at the near plane to 0.0 at infinity. The depth value in the vertex shader is
 
-```position.z = near```
-```position.w = -zVC```
+```
+position.z = near
+position.w = -zVC
+```
 
 and in the fragment after division by w as
 

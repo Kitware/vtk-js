@@ -285,7 +285,7 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
     const lines = [`struct ${model.label}Struct\n{`];
     for (let i = 0; i < model.bufferEntries.length; i++) {
       const entry = model.bufferEntries[i];
-      lines.push(`  ${entry.name}: ${entry.type};`);
+      lines.push(`  ${entry.name}: ${entry.type},`);
     }
     lines.push(
       `};\n@binding(${binding}) @group(${group}) var<uniform> ${model.label}: ${model.label}Struct;`
