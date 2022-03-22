@@ -731,43 +731,40 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
       : null;
 
     // Get the position of the actor
-    const size = model.openGLRenderer.getTiledSizeAndOrigin();
+    const view = ren.getRenderWindow().getViews()[0];
+    const size = view.getViewportSize(ren);
     const vport = ren.getViewport();
     const actorPos = actor
       .getActualPositionCoordinate()
-      .getComputedViewportValue(ren);
+      .getComputedDoubleViewportValue(ren);
 
     // Get the window info
-    // const tileViewport = ren.getVTKWindow().getTileViewport();
     // Assume tile viewport is 0 1 based on vtkOpenGLRenderer
     const tileViewport = [0.0, 0.0, 1.0, 1.0];
-    const visVP = [0, 1, 0, 1];
+    const visVP = [0.0, 0.0, 1.0, 1.0];
     visVP[0] = vport[0] >= tileViewport[0] ? vport[0] : tileViewport[0];
     visVP[1] = vport[1] >= tileViewport[1] ? vport[1] : tileViewport[1];
-    visVP[2] = vport[2] >= tileViewport[2] ? vport[2] : tileViewport[2];
-    visVP[3] = vport[3] >= tileViewport[3] ? vport[3] : tileViewport[3];
+    visVP[2] = vport[2] <= tileViewport[2] ? vport[2] : tileViewport[2];
+    visVP[3] = vport[3] <= tileViewport[3] ? vport[3] : tileViewport[3];
     if (visVP[0] >= visVP[2]) {
       return;
     }
     if (visVP[1] >= visVP[3]) {
       return;
     }
-    size.usize = round(
-      (size.usize * (visVP[2] - visVP[0])) / (vport[2] - vport[0])
-    );
-    size.vsize = round(
-      (size.vsize * (visVP[3] - visVP[1])) / (vport[3] - vport[1])
-    );
+    size[0] = round((size[0] * (visVP[2] - visVP[0])) / (vport[2] - vport[0]));
+    size[1] = round((size[1] * (visVP[3] - visVP[1])) / (vport[3] - vport[1]));
 
     const winSize = model.openGLRenderer.getParent().getSize();
+
     const xoff = round(actorPos[0] - (visVP[0] - vport[0]) * winSize[0]);
     const yoff = round(actorPos[1] - (visVP[1] - vport[1]) * winSize[1]);
 
     // set ortho projection
     const left = -xoff;
-    let right = -xoff + size.usize;
+    let right = -xoff + size[0];
     const bottom = -yoff;
-    let top = -yoff + size.vsize;
+    let top = -yoff + size[1];
 
     // it's an error to call glOrtho with
     // either left==right or top==bottom
