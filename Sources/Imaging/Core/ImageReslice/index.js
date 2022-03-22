@@ -1118,6 +1118,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'mirror',
     'border',
     'backgroundColor',
+    'interpolationMode',
     'slabMode',
     'slabTrapezoidIntegration',
     'slabNumberOfSlices',
