@@ -53,6 +53,7 @@ export function addPoint(bounds, ...xyz) {
   bounds[3] = yMax > xyz[1] ? yMax : xyz[1];
   bounds[4] = zMin < xyz[2] ? zMin : xyz[2];
   bounds[5] = zMax > xyz[2] ? zMax : xyz[2];
+  return bounds;
 }
 
 export function addBounds(bounds, xMin, xMax, yMin, yMax, zMin, zMax) {
@@ -72,6 +73,7 @@ export function addBounds(bounds, xMin, xMax, yMin, yMax, zMin, zMax) {
     bounds[4] = Math.min(zMin, _zMin);
     bounds[5] = Math.max(zMax, _zMax);
   }
+  return bounds;
 }
 
 export function setMinPoint(bounds, x, y, z) {
@@ -104,6 +106,7 @@ export function inflate(bounds, delta) {
   bounds[3] += delta;
   bounds[4] -= delta;
   bounds[5] += delta;
+  return bounds;
 }
 
 export function scale(bounds, sx, sy, sz) {
@@ -211,6 +214,7 @@ export function getCorners(bounds, corners) {
       }
     }
   }
+  return corners;
 }
 
 // Computes the two corners with minimal and miximal coordinates
@@ -222,6 +226,7 @@ export function computeCornerPoints(bounds, point1, point2) {
   point2[0] = bounds[1];
   point2[1] = bounds[3];
   point2[2] = bounds[5];
+  return point1;
 }
 
 export function computeScale3(bounds, scale3 = []) {
@@ -571,8 +576,7 @@ class BoundingBox {
   constructor(refBounds) {
     this.bounds = refBounds;
     if (!this.bounds) {
-      this.bounds = new Float64Array(6);
-      setBounds(this.bounds, INIT_BOUNDS);
+      this.bounds = new Float64Array(INIT_BOUNDS);
     }
   }
 
