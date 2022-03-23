@@ -5,7 +5,7 @@ import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 
 // ----------------------------------------------------------------------------
 
-const SET_GET_FIELDS = ['lastShaderBound', 'context', 'openGLRenderWindow'];
+const SET_GET_FIELDS = ['lastShaderBound', 'context', '_openGLRenderWindow'];
 
 // ----------------------------------------------------------------------------
 // vtkShaderCache methods
@@ -31,7 +31,7 @@ function vtkShaderCache(publicAPI, model) {
       ).result;
     }
 
-    const gl2 = model.openGLRenderWindow.getWebgl2();
+    const gl2 = model._openGLRenderWindow.getWebgl2();
 
     let fragDepthString = '\n';
 
@@ -238,7 +238,7 @@ const DEFAULT_VALUES = {
   lastShaderBound: null,
   shaderPrograms: null,
   context: null,
-  openGLRenderWindow: null,
+  // _openGLRenderWindow: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -252,6 +252,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, SET_GET_FIELDS);
+  macro.moveToProtected(publicAPI, model, ['openGLRenderWindow']);
 
   // Object methods
   vtkShaderCache(publicAPI, model);

@@ -110,7 +110,7 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
   };
 
   publicAPI.handleMouseMove = macro.chain(publicAPI.handleMouseMove, () => {
-    const renderer = model.interactor.getCurrentRenderer();
+    const renderer = model._interactor.getCurrentRenderer();
     const camera = renderer.getActiveCamera();
     const dist = camera.getDistance();
     camera.setClippingRange(dist, dist + 0.1);
@@ -119,7 +119,7 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
   const superSetVolumeMapper = publicAPI.setVolumeMapper;
   publicAPI.setVolumeMapper = (mapper) => {
     if (superSetVolumeMapper(mapper)) {
-      const renderer = model.interactor.getCurrentRenderer();
+      const renderer = model._interactor.getCurrentRenderer();
       const camera = renderer.getActiveCamera();
       if (mapper) {
         // prevent zoom manipulator from messing with our focal point
@@ -132,7 +132,7 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
   };
 
   publicAPI.getSlice = () => {
-    const renderer = model.interactor.getCurrentRenderer();
+    const renderer = model._interactor.getCurrentRenderer();
     const camera = renderer.getActiveCamera();
     const sliceNormal = publicAPI.getSliceNormal();
 
@@ -148,7 +148,7 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
   };
 
   publicAPI.setSlice = (slice) => {
-    const renderer = model.interactor.getCurrentRenderer();
+    const renderer = model._interactor.getCurrentRenderer();
     const camera = renderer.getActiveCamera();
 
     if (model.volumeMapper) {
@@ -235,7 +235,7 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
   // Slice normal is just camera DOP
   publicAPI.getSliceNormal = () => {
     if (model.volumeMapper) {
-      const renderer = model.interactor.getCurrentRenderer();
+      const renderer = model._interactor.getCurrentRenderer();
       const camera = renderer.getActiveCamera();
       return camera.getDirectionOfProjection();
     }
@@ -244,7 +244,7 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
 
   // in world space
   publicAPI.setSliceNormal = (...normal) => {
-    const renderer = model.interactor.getCurrentRenderer();
+    const renderer = model._interactor.getCurrentRenderer();
     const camera = renderer.getActiveCamera();
 
     vtkMath.normalize(normal);

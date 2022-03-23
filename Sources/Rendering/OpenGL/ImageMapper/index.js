@@ -54,12 +54,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       );
       model.openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model.openGLRenderWindow = model.openGLRenderer.getParent();
-      model.context = model.openGLRenderWindow.getContext();
-      model.tris.setOpenGLRenderWindow(model.openGLRenderWindow);
-      model.openGLTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
-      model.colorTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
-      model.pwfTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model._openGLRenderWindow = model.openGLRenderer.getParent();
+      model.context = model._openGLRenderWindow.getContext();
+      model.tris.setOpenGLRenderWindow(model._openGLRenderWindow);
+      model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      model.pwfTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       const ren = model.openGLRenderer.getRenderable();
       model.openGLCamera = model.openGLRenderer.getViewNodeFor(
         ren.getActiveCamera()
@@ -429,7 +429,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       publicAPI.buildShaders(shaders, ren, actor);
 
       // compile and bind the program if needed
-      const newShader = model.openGLRenderWindow
+      const newShader = model._openGLRenderWindow
         .getShaderCache()
         .readyShaderProgramArray(
           shaders.Vertex,
@@ -446,7 +446,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
       cellBO.getShaderSourceTime().modified();
     } else {
-      model.openGLRenderWindow
+      model._openGLRenderWindow
         .getShaderCache()
         .readyShaderProgram(cellBO.getProgram());
     }

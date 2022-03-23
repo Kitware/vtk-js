@@ -17,7 +17,9 @@ test('Test PolyDataMapper Clipping Planes 2', (t) => {
   // TODO switch back to onlyIfWebGL
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = document.createElement('div');
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // Create what we will view
@@ -123,7 +125,14 @@ test('Test PolyDataMapper Clipping Planes 2', (t) => {
   }
 
   glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(image, [baseline], 'TestMoreClippingPlanes', t, 2);
+    testUtils.compareImages(
+      image,
+      [baseline],
+      'TestMoreClippingPlanes',
+      t,
+      2,
+      gc.releaseResources
+    );
   });
   renderWindow.render();
 });

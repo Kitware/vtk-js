@@ -46,7 +46,7 @@ function implementReplaceShaderCoincidentOffset(
           ).result;
         }
       }
-      if (model.openGLRenderWindow.getWebgl2()) {
+      if (model._openGLRenderWindow.getWebgl2()) {
         if (cp.factor !== 0.0) {
           FSSource = vtkShaderProgram.substitute(
             FSSource,

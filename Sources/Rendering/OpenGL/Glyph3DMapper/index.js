@@ -52,7 +52,7 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
 
     // apply faceCulling
     const gl = model.context;
-    if (model.openGLRenderWindow.getWebgl2()) {
+    if (model._openGLRenderWindow.getWebgl2()) {
       model.hardwareSupport = true;
       model.extension = null;
     } else if (!model.extension) {
@@ -66,12 +66,12 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
     const backfaceCulling = actor.getProperty().getBackfaceCulling();
     const frontfaceCulling = actor.getProperty().getFrontfaceCulling();
     if (!backfaceCulling && !frontfaceCulling) {
-      model.openGLRenderWindow.disableCullFace();
+      model._openGLRenderWindow.disableCullFace();
     } else if (frontfaceCulling) {
-      model.openGLRenderWindow.enableCullFace();
+      model._openGLRenderWindow.enableCullFace();
       gl.cullFace(gl.FRONT);
     } else {
-      model.openGLRenderWindow.enableCullFace();
+      model._openGLRenderWindow.enableCullFace();
       gl.cullFace(gl.BACK);
     }
 
@@ -625,13 +625,13 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
       const carray = model.renderable.getColorArray();
       if (!model.matrixBuffer) {
         model.matrixBuffer = vtkBufferObject.newInstance();
-        model.matrixBuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
+        model.matrixBuffer.setOpenGLRenderWindow(model._openGLRenderWindow);
         model.normalBuffer = vtkBufferObject.newInstance();
-        model.normalBuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
+        model.normalBuffer.setOpenGLRenderWindow(model._openGLRenderWindow);
         model.colorBuffer = vtkBufferObject.newInstance();
-        model.colorBuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
+        model.colorBuffer.setOpenGLRenderWindow(model._openGLRenderWindow);
         model.pickBuffer = vtkBufferObject.newInstance();
-        model.pickBuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
+        model.pickBuffer.setOpenGLRenderWindow(model._openGLRenderWindow);
       }
       if (
         model.renderable.getBuildTime().getMTime() >

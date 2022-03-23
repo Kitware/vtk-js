@@ -17,7 +17,7 @@ function vtkOpenGLPixelSpaceCallbackMapper(publicAPI, model) {
   publicAPI.opaquePass = (prepass, renderPass) => {
     model.openGLRenderer =
       publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-    model.openGLRenderWindow = model.openGLRenderer.getParent();
+    model._openGLRenderWindow = model.openGLRenderer.getParent();
     const aspectRatio = model.openGLRenderer.getAspectRatio();
     const camera = model.openGLRenderer
       ? model.openGLRenderer.getRenderable().getActiveCamera()
@@ -30,7 +30,7 @@ function vtkOpenGLPixelSpaceCallbackMapper(publicAPI, model) {
       const width = Math.floor(zbt.getWidth());
       const height = Math.floor(zbt.getHeight());
 
-      const gl = model.openGLRenderWindow.getContext();
+      const gl = model._openGLRenderWindow.getContext();
       zbt.bind();
 
       // Here we need to use vtkFramebuffer to save current settings (bindings/buffers)

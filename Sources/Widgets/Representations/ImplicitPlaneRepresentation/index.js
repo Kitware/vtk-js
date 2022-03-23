@@ -107,31 +107,31 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
   model.pipelines.outline = {
     source: vtkCubeSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: false, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: false, _parentProp: publicAPI }),
   };
 
   model.pipelines.plane = {
     source: vtkClosedPolyLineToSurfaceFilter.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: true, _parentProp: publicAPI }),
   };
 
   model.pipelines.origin = {
     source: vtkSphereSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: true, _parentProp: publicAPI }),
   };
 
   model.pipelines.normal = {
     source: vtkCylinderSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: true, _parentProp: publicAPI }),
   };
 
   model.pipelines.display2D = {
     source: publicAPI,
     mapper: vtkPixelSpaceCallbackMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: false, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: false, _parentProp: publicAPI }),
   };
 
   // Plane generation pipeline

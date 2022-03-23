@@ -158,7 +158,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   function getScreenEventPositionFor(source) {
     const bounds = model.container.getBoundingClientRect();
-    const canvas = model.view.getCanvas();
+    const canvas = model._view.getCanvas();
     const scaleX = canvas.width / bounds.width;
     const scaleY = canvas.height / bounds.height;
     const position = {
@@ -349,9 +349,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   //----------------------------------------------------------------------
   function forceRender() {
-    if (model.view && model.enabled && model.enableRender) {
+    if (model._view && model.enabled && model.enableRender) {
       model.inRender = true;
-      model.view.traverseAllPasses();
+      model._view.traverseAllPasses();
       model.inRender = false;
     }
     // outside the above test so that third-party code can redirect
@@ -742,24 +742,24 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.setView = (val) => {
-    if (model.view === val) {
+    if (model._view === val) {
       return;
     }
-    model.view = val;
-    model.view.getRenderable().setInteractor(publicAPI);
+    model._view = val;
+    model._view.getRenderable().setInteractor(publicAPI);
     publicAPI.modified();
   };
 
   publicAPI.getFirstRenderer = () =>
-    model.view?.getRenderable()?.getRenderersByReference()?.[0];
+    model._view?.getRenderable()?.getRenderersByReference()?.[0];
 
   publicAPI.findPokedRenderer = (x = 0, y = 0) => {
-    if (!model.view) {
+    if (!model._view) {
       return null;
     }
     // The original order of renderers needs to remain as
     // the first one is the one we want to manipulate the camera on.
-    const rc = model.view?.getRenderable()?.getRenderers();
+    const rc = model._view?.getRenderable()?.getRenderers();
     if (!rc) {
       return null;
     }
@@ -771,7 +771,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     let count = rc.length;
     while (count--) {
       const aren = rc[count];
-      if (model.view.isInViewport(x, y, aren) && aren.getInteractive()) {
+      if (model._view.isInViewport(x, y, aren) && aren.getInteractive()) {
         currentRenderer = aren;
         break;
       }
@@ -781,7 +781,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         // is interactive.
         interactiveren = aren;
       }
-      if (viewportren === null && model.view.isInViewport(x, y, aren)) {
+      if (viewportren === null && model._view.isInViewport(x, y, aren)) {
         // Save this renderer in case we can't find one in the viewport that
         // is interactive.
         viewportren = aren;
@@ -1082,7 +1082,7 @@ const DEFAULT_VALUES = {
   desiredUpdateRate: 30.0,
   stillUpdateRate: 2.0,
   container: null,
-  view: null,
+  // _view: null,
   recognizeGestures: true,
   currentGesture: 'Start',
   animationRequest: null,
@@ -1116,7 +1116,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'interactorStyle',
     'lastFrameTime',
     'recentAnimationFrameRate',
-    'view',
+    '_view',
   ]);
 
   // Create get-set macros
@@ -1129,6 +1129,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'stillUpdateRate',
     'picker',
   ]);
+  macro.moveToProtected(publicAPI, model, ['view']);
 
   // For more macro methods, see "Sources/macros.js"
 

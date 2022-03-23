@@ -33,19 +33,19 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.setText = (text) => {
     model.widgetState.getText().setText(text);
     // Recompute position
-    model.interactor.render();
+    model._interactor.render();
   };
 
   // --------------------------------------------------------------------------
   // Public methods
   // --------------------------------------------------------------------------
   publicAPI.setResetAfterPointPlacement =
-    model.factory.setResetAfterPointPlacement;
+    model._factory.setResetAfterPointPlacement;
   publicAPI.getResetAfterPointPlacement =
-    model.factory.getResetAfterPointPlacement;
+    model._factory.getResetAfterPointPlacement;
 
-  publicAPI.setModifierBehavior = model.factory.setModifierBehavior;
-  publicAPI.getModifierBehavior = model.factory.getModifierBehavior;
+  publicAPI.setModifierBehavior = model._factory.setModifierBehavior;
+  publicAPI.getModifierBehavior = model._factory.getModifierBehavior;
 
   publicAPI.isBehaviorActive = (category, flag) =>
     Object.keys(model.keysDown).some(
@@ -540,7 +540,7 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       model.isDragging = true;
       model.apiSpecificRenderWindow.setCursor('grabbing');
-      model.interactor.requestAnimation(publicAPI);
+      model._interactor.requestAnimation(publicAPI);
       publicAPI.invokeStartInteractionEvent();
 
       return macro.EVENT_ABORT;
@@ -558,7 +558,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.isDragging = false;
       model.apiSpecificRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
       publicAPI.invokeEndInteractionEvent();
 
       return macro.EVENT_ABORT;
@@ -648,7 +648,7 @@ export default function widgetBehavior(publicAPI, model) {
 
       model.point1Handle.setVisible(true);
       model.shapeHandle.setVisible(false);
-      model.interactor.requestAnimation(publicAPI);
+      model._interactor.requestAnimation(publicAPI);
     }
 
     superClass.grabFocus();
@@ -658,7 +658,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.loseFocus = () => {
     if (model.hasFocus) {
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
     }
 
     if (!model.point1) {
@@ -670,7 +670,7 @@ export default function widgetBehavior(publicAPI, model) {
     model.point1Handle.deactivate();
     model.point2Handle.deactivate();
     model.activeState = null;
-    model.interactor.render();
+    model._interactor.render();
     model.widgetManager.enablePicking();
 
     superClass.loseFocus();

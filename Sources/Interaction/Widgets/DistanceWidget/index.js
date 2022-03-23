@@ -16,7 +16,7 @@ function vtkDistanceWidget(publicAPI, model) {
   publicAPI.setInteractor = (i) => {
     superClass.setInteractor(i);
 
-    model.labelWidget.setInteractor(model.interactor);
+    model.labelWidget.setInteractor(model._interactor);
 
     publicAPI.modified();
   };

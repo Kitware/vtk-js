@@ -47,7 +47,7 @@ function widgetBehavior(publicAPI, model) {
     model.lineManipulator.setOrigin(model.widgetState.getOrigin());
     model.planeManipulator.setOrigin(model.widgetState.getOrigin());
     model.trackballManipulator.reset(callData); // setup trackball delta
-    model.interactor.requestAnimation(publicAPI);
+    model._interactor.requestAnimation(publicAPI);
     publicAPI.invokeStartInteractionEvent();
 
     return macro.EVENT_ABORT;
@@ -63,7 +63,7 @@ function widgetBehavior(publicAPI, model) {
   publicAPI.handleLeftButtonRelease = () => {
     if (isDragging && model.pickable) {
       publicAPI.invokeEndInteractionEvent();
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
     }
     isDragging = false;
     model.widgetState.deactivate();

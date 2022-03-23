@@ -48,34 +48,34 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
   axis1.line = {
     source: vtkCylinderSource.newInstance(squarishCylinderProperties),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: true, _parentProp: publicAPI }),
   };
   axis1.rotation1 = {
     source: vtkSphereSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: true, _parentProp: publicAPI }),
   };
   axis1.rotation2 = {
     source: vtkSphereSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: true, _parentProp: publicAPI }),
   };
   // Create axis 2
   const axis2 = {};
   axis2.line = {
     source: vtkCylinderSource.newInstance(squarishCylinderProperties),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: true, _parentProp: publicAPI }),
   };
   axis2.rotation1 = {
     source: vtkSphereSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: true, _parentProp: publicAPI }),
   };
   axis2.rotation2 = {
     source: vtkSphereSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: true, _parentProp: publicAPI }),
   };
 
   model.pipelines.axes.push(axis1);

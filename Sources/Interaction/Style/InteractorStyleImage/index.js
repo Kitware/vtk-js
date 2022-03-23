@@ -117,7 +117,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
   publicAPI.windowLevel = (renderer, position) => {
     model.windowLevelCurrentPosition[0] = position.x;
     model.windowLevelCurrentPosition[1] = position.y;
-    const rwi = model.interactor;
+    const rwi = model._interactor;
 
     if (model.currentImageProperty) {
       const size = rwi.getView().getViewportSize(renderer);
@@ -172,7 +172,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.slice = (renderer, position) => {
-    const rwi = model.interactor;
+    const rwi = model._interactor;
 
     const dy = position.y - model.lastSlicePosition;
 
@@ -216,7 +216,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
       return;
     }
 
-    const renderer = model.interactor.getCurrentRenderer();
+    const renderer = model._interactor.getCurrentRenderer();
     if (!renderer) {
       return;
     }

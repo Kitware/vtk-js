@@ -54,11 +54,11 @@ function vtkHandleWidget(publicAPI, model) {
   publicAPI.setCursor = (state) => {
     switch (state) {
       case InteractionState.OUTSIDE: {
-        model.interactor.getView().setCursor('default');
+        model._interactor.getView().setCursor('default');
         break;
       }
       default: {
-        model.interactor.getView().setCursor('pointer');
+        model._interactor.getView().setCursor('pointer');
       }
     }
   };

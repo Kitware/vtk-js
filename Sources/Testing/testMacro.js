@@ -32,6 +32,9 @@ const DEFAULT_VALUES = {
   myProp8: [1, 2, 3],
   myProp9: null,
   // myProp10: null,
+  myProp11: 11,
+  _myProp12: [12],
+  _myProp13: 13,
 };
 
 // ----------------------------------------------------------------------------
@@ -65,6 +68,11 @@ function extend(publicAPI, model, initialValues = {}) {
 
   // setArray macros with no size
   macro.setGetArray(publicAPI, model, ['myProp10']);
+
+  // Protected variables
+  macro.setGet(publicAPI, model, ['_myProp11']);
+  macro.setGetArray(publicAPI, model, ['_myProp12'], 1);
+  macro.moveToProtected(publicAPI, model, ['myProp11', 'myProp12', 'myProp13']);
 
   // Object specific methods
   myClass(publicAPI, model);
@@ -279,6 +287,65 @@ test('Macro methods array tests', (t) => {
   t.end();
 });
 
+test('Macro protected variables tests', (t) => {
+  const defaultInstance = newInstance();
+  t.deepEqual(defaultInstance.get('_myProp11', '_myProp12', '_myProp13'), {
+    _myProp11: DEFAULT_VALUES.myProp11,
+    _myProp12: DEFAULT_VALUES._myProp12,
+    _myProp13: DEFAULT_VALUES._myProp13,
+  });
+  // getter must have been renamed
+  t.notOk(defaultInstance.get_myProp11);
+  t.notOk(defaultInstance.get_myProp12);
+  t.notOk(defaultInstance.get_myProp13);
+
+  // setter must have been renamed
+  t.notOk(defaultInstance.set_myProp11);
+  t.notOk(defaultInstance.set_myProp12);
+  t.notOk(defaultInstance.set_myProp13);
+
+  t.equal(defaultInstance.getMyProp11(), DEFAULT_VALUES.myProp11);
+  t.deepEqual(defaultInstance.getMyProp12(), DEFAULT_VALUES._myProp12);
+  t.notOk(defaultInstance.getMyProp13);
+
+  t.notOk(defaultInstance.getMyProp11ByReference);
+  t.ok(defaultInstance.getMyProp12ByReference);
+  t.notOk(defaultInstance.getMyProp11ByReference);
+
+  t.ok(defaultInstance.setMyProp11(111));
+  t.ok(defaultInstance.setMyProp12([112]));
+  t.notOk(defaultInstance.setMyProp13);
+
+  t.notOk(defaultInstance.setMyProp11From);
+  t.ok(defaultInstance.setMyProp12From);
+  t.notOk(defaultInstance.setMyProp13From);
+
+  t.equal(defaultInstance.getMyProp11(), 111);
+  t.deepEqual(defaultInstance.getMyProp12(), [112]);
+
+  const overridenInstance = newInstance({
+    myProp11: 111,
+    myProp12: [112],
+    myProp13: 113,
+  });
+  t.deepEqual(overridenInstance.get('_myProp11', '_myProp12', '_myProp13'), {
+    _myProp11: 111,
+    _myProp12: [112],
+    _myProp13: 113,
+  });
+  const overridenInstance2 = newInstance({
+    _myProp11: 111,
+    _myProp12: [112],
+    _myProp13: 113,
+  });
+  t.deepEqual(overridenInstance2.get('_myProp11', '_myProp12', '_myProp13'), {
+    _myProp11: DEFAULT_VALUES.myProp11, // TBD
+    _myProp12: [112],
+    _myProp13: 113,
+  });
+  t.end();
+});
+
 test('Macro methods enum tests', (t) => {
   const myTestClass = newInstance();
 
@@ -341,10 +408,14 @@ test('Macro methods enum tests', (t) => {
 test('Macro methods object tests', (t) => {
   const myTestClass = newInstance();
 
+  const defaultValues = { ...DEFAULT_VALUES };
+  defaultValues._myProp11 = defaultValues.myProp11;
+  delete defaultValues.myProp11;
+
   t.ok(myTestClass.get(), 'Get entire model');
   t.deepEqual(
-    myTestClass.get(...Object.keys(DEFAULT_VALUES)),
-    DEFAULT_VALUES,
+    myTestClass.get(...Object.keys(defaultValues)),
+    defaultValues,
     'Get defaults back test'
   );
 

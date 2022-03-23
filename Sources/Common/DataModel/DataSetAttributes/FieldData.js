@@ -172,9 +172,11 @@ function vtkFieldData(publicAPI, model) {
 
   publicAPI.getState = () => {
     const result = superGetState();
-    result.arrays = model.arrays.map((item) => ({
-      data: item.data.getState(),
-    }));
+    if (result) {
+      result.arrays = model.arrays.map((item) => ({
+        data: item.data.getState(),
+      }));
+    }
     return result;
   };
 }
