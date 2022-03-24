@@ -58,7 +58,6 @@ function vtkEllipseWidget(publicAPI, model) {
           {
             builder: vtkSVGLandmarkRepresentation,
             initialValues: {
-              showCircle: false,
               text: '',
             },
             labels: ['SVGtext'],
