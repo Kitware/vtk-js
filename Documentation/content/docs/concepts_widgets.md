@@ -144,7 +144,9 @@ An example manipulator would be a plane manipulator. When instantiated with a
 plane point and normal, the plane manipulator will project mouse events onto the
 plane in 3D and return that projected point.
 
-## SVG Layer
+## SVG Layer (Deprecated)
+
+**Deprecation Notice**: The built-in SVG layer for widgets will be deprecated in favor of the application providing their own 2D drawing capabilities. vtk.js will remain focused on providing 3D-based interaction and visualization, allowing applications to draw overlays as necessary.
 
 Below is a table that summarizes some widget feature needs and their availabilities 1) in vtk.js and in the Widgets framework 2) without and 3) with the SVG layer.
 
