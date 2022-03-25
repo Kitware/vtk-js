@@ -69,18 +69,31 @@ export interface vtkImageData extends vtkDataSet {
 	extentToBounds(ex: Extent): Bounds;
 
 	/**
-	 * The Bounds of a vtkImage are returned as pairs of world coordinates
+	 * Get image extents without translation (i.e. with origin set to [0,0,0]) and under unit spacing
+	 * (i.e. spacing = [1, 1, 1]).
+	 * This includes a padding of 0.5 pixel/voxel in each principal direction.
+	 * The padding is necessary for conventional images (textures, png, bmp)
+	 * as well as medical images and volumes, since each pixel/voxel has a pre-defined width
+	 * (based on specified spacing) including the ones on the boundary of the image.
+	 * @internal
+	 */
+	getSpatialExtent(): Extent;
+
+	/**
+	 * Returns the axis-aligned bounds of vtkImageData in world coordinates.
+	 * The axis-aligned Bounds of a vtkImage are returned as pairs of world coordinates
 	 * ```[x_min, x_max, y_min, y_max, z_min, z_max]``` these are calculated
 	 * from the Extent, Origin, and Spacing, defined
 	 * through
 	 * ```js
-	 * bounds[6] =
 	 * [
-	 *   i_min*Spacing[0] + Origin[0], i_max*Spacing[0] + Origin[0],
-	 *   j_min*Spacing[1] + Origin[1], j_max*Spacing[1] + Origin[1],
-	 *   k_min*Spacing[2] + Origin[2], k_max*Spacing[2] + Origin[2]
+	 *   (i_min - 0.5)*Spacing[0] + Origin[0], (i_max + 0.5)*Spacing[0] + Origin[0],
+	 *   (j_min - 0.5)*Spacing[1] + Origin[1], (j_max + 0.5)*Spacing[1] + Origin[1],
+	 *   (k_min - 0.5)*Spacing[2] + Origin[2], (k_max + 0.5)*Spacing[2] + Origin[2]
 	 * ];
 	 *  ```
+	 * Note that this includes a padding of 0.5 voxel spacing in each principal direction,
+	 * as well as any orientation of the image.
 	 * You can't directly set the bounds. First you need to decide how many
 	 * pixels across your image will be (i.e. what the extent should be), and
 	 * then you must find the origin and spacing that will produce the bounds
@@ -89,6 +102,8 @@ export interface vtkImageData extends vtkDataSet {
 	 * 9]` for a 10x10x10 image. Calling `setDimensions(10,10,10)` does exactly
 	 * the same thing as `setExtent(0,9,0,9,0,9)` but you should always do the
 	 * latter to be explicit about where your extent starts.
+	 * Such an image of dimensions [10, 10, 10], origin [0, 0, 0] and voxel-spacing of 1.0,
+	 * will result in bounds equal to [-0.5, 9.5, -0.5, 9.5, -0.5, 9.5].
 	 * @return {Bounds} The bounds for the mapper.
 	 */
 	getBounds(): Bounds;
@@ -217,7 +232,9 @@ export interface vtkImageData extends vtkDataSet {
 	/**
 	 * Calculate the corresponding world bounds for the given index bounds
 	 * `[i_min, i_max, j_min, j_max, k_min, k_max]`. Modifies `out` in place if
-	 * provided, or returns a new array.
+	 * provided, or returns a new array. Returned bounds are NOT padded based
+	 * on voxel spacing (see getBounds). The output is merely a bounding box
+	 * calculated considering voxels as grid points.
 	 * @param {Bounds} bin 
 	 * @param {Bounds} [bout] 
 	 */

@@ -295,25 +295,25 @@ test('Test rendering when several rotations plane', (t) => {
       updateAndCompareView(ViewTypes.YZ_PLANE, {
         focalPoint: [179.296875, 179.296875, 165],
         viewUp: [0, 0, 1],
-        origin: [179.296875, 0, 0],
-        point1: [179.296875, 358.59375, 0],
-        point2: [179.296875, 0, 330],
+        origin: [179.296875, -0.703125, -1.25],
+        point1: [179.296875, 359.296875, -1.25],
+        point2: [179.296875, -0.703125, 331.25],
       });
       // Check Y view
       updateAndCompareView(ViewTypes.XZ_PLANE, {
         focalPoint: [179.296875, 179.296875, 165],
         viewUp: [0, 0, 1],
-        origin: [0, 179.296875, 0],
-        point1: [358.59375, 179.296875, 0],
-        point2: [0, 179.296875, 330],
+        origin: [-0.703125, 179.296875, -1.25],
+        point1: [359.296875, 179.296875, -1.25],
+        point2: [-0.703125, 179.296875, 331.25],
       });
       // Check Z view
       updateAndCompareView(ViewTypes.XY_PLANE, {
         focalPoint: [179.296875, 179.296875, 165],
         viewUp: [0, -1, 0],
-        origin: [0, 358.59375, 165],
-        point1: [358.59375, 358.59375, 165],
-        point2: [0, 0, 165],
+        origin: [-0.703125, 359.296875, 165],
+        point1: [359.296875, 359.296875, 165],
+        point2: [-0.703125, -0.703125, 165],
       });
 
       // ----------------------------------------------------------------------
@@ -327,25 +327,25 @@ test('Test rendering when several rotations plane', (t) => {
       const XView45 = updateAndCompareView(ViewTypes.YZ_PLANE, {
         focalPoint: [179.296875, 179.296875, 165],
         viewUp: [-0.707106, 0, 0.707106],
-        origin: [344.29687, 0, 0],
-        point1: [344.29687, 358.59375, 0],
-        point2: [14.29687, 0, 330],
+        origin: [345.54687, -0.703125, -1.25],
+        point1: [345.54687, 359.296875, -1.25],
+        point2: [13.04687, -0.703125, 331.25],
       });
       // Check Y view
       const YView45 = updateAndCompareView(ViewTypes.XZ_PLANE, {
         focalPoint: [179.296875, 179.296875, 165],
         viewUp: [0, 0, 1],
-        origin: [0, 179.296875, 0],
-        point1: [358.59375, 179.296875, 0],
-        point2: [0, 179.296875, 330],
+        origin: [-0.703125, 179.296875, -1.25],
+        point1: [359.296875, 179.296875, -1.25],
+        point2: [-0.703125, 179.296875, 331.25],
       });
       // Check Z view
       const ZView45 = updateAndCompareView(ViewTypes.XY_PLANE, {
         focalPoint: [179.296875, 179.296875, 165],
         viewUp: [0, -1, 0],
-        origin: [14.29687, 358.59375, 0],
-        point1: [344.29687, 358.59375, 330],
-        point2: [14.29687, 0, 0],
+        origin: [13.04687, 359.296875, -1.25],
+        point1: [345.54687, 359.296875, 331.25],
+        point2: [13.04687, -0.703125, -1.25],
       });
 
       // ----------------------------------------------------------------------

@@ -189,7 +189,8 @@ function vtkImageData(publicAPI, model) {
   // void ComputeBounds() VTK_OVERRIDE;
   // int GetMaxCellSize() VTK_OVERRIDE {return 8;}; //voxel is the largest
 
-  publicAPI.getBounds = () => publicAPI.extentToBounds(model.extent);
+  publicAPI.getBounds = () =>
+    publicAPI.extentToBounds(publicAPI.getSpatialExtent());
 
   publicAPI.extentToBounds = (ex) => {
     // prettier-ignore
@@ -231,6 +232,13 @@ function vtkImageData(publicAPI, model) {
     }
 
     return bounds;
+  };
+
+  publicAPI.getSpatialExtent = () => {
+    const boundingBox = vtkBoundingBox.newInstance();
+    boundingBox.setBounds(model.extent);
+    boundingBox.inflate(0.5);
+    return boundingBox.getBounds();
   };
 
   // Internal, shouldn't need to call this manually.
