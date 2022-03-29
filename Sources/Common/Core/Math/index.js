@@ -867,7 +867,7 @@ export function jacobiN(a, n, w, v) {
     tmp = w[k];
     for (i = j + 1; i < n; i++) {
       // boundary incorrect, shifted already
-      if (w[i] >= tmp) {
+      if (w[i] >= tmp || Math.abs(w[i] - tmp) < VTK_SMALL_NUMBER) {
         // why exchange if same?
         k = i;
         tmp = w[k];
