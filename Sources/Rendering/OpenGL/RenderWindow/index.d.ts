@@ -21,6 +21,13 @@ export interface IOptions {
 	scale: number
 }
 
+export interface I3DContextOptions {
+    preserveDrawingBuffer?: boolean;
+    depth?: boolean;
+    alpha?: boolean;
+    powerPreference?: string;
+}
+
 type vtkOpenGLRenderWindowBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
 	| 'setInputData'
@@ -197,9 +204,9 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 
 	/**
 	 *
-	 * @param options
+	 * @param {I3DContextOptions} options
 	 */
-	get3DContext(options: object): Nullable<WebGLRenderingContext>;
+	get3DContext(options: I3DContextOptions): Nullable<WebGLRenderingContext>;
 
 	/**
 	 *

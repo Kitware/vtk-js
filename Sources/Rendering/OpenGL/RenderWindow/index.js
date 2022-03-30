@@ -234,7 +234,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.get3DContext = (
-    options = { preserveDrawingBuffer: false, depth: true, alpha: true }
+    options = {
+      preserveDrawingBuffer: false,
+      depth: true,
+      alpha: true,
+      powerPreference: 'high-performance',
+    }
   ) => {
     let result = null;
 
