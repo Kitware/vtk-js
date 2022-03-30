@@ -39,7 +39,7 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
         publicAPI.getFirstAncestorOfType('vtkOpenGLActor2D');
       model.openGLRenderer =
         model.openGLActor2D.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model.openGLRenderWindow = model.openGLRenderer.getParent();
+      model._openGLRenderWindow = model.openGLRenderer.getParent();
       model.openGLCamera = model.openGLRenderer.getViewNodeFor(
         model.openGLRenderer.getRenderable().getActiveCamera()
       );
@@ -84,11 +84,11 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
   };
 
   publicAPI.render = () => {
-    const ctx = model.openGLRenderWindow.getContext();
+    const ctx = model._openGLRenderWindow.getContext();
     if (model.context !== ctx) {
       model.context = ctx;
       for (let i = primTypes.Start; i < primTypes.End; i++) {
-        model.primitives[i].setOpenGLRenderWindow(model.openGLRenderWindow);
+        model.primitives[i].setOpenGLRenderWindow(model._openGLRenderWindow);
       }
     }
     const actor = model.openGLActor2D.getRenderable();
@@ -543,7 +543,7 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
       publicAPI.buildShaders(shaders, ren, actor);
 
       // compile and bind the program if needed
-      const newShader = model.openGLRenderWindow
+      const newShader = model._openGLRenderWindow
         .getShaderCache()
         .readyShaderProgramArray(
           shaders.Vertex,
@@ -560,7 +560,7 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
 
       cellBO.getShaderSourceTime().modified();
     } else {
-      model.openGLRenderWindow
+      model._openGLRenderWindow
         .getShaderCache()
         .readyShaderProgram(cellBO.getProgram());
     }

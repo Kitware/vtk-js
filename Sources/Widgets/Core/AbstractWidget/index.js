@@ -76,9 +76,9 @@ function vtkAbstractWidget(publicAPI, model) {
   };
 
   publicAPI.getViewWidgets = () =>
-    model.factory
+    model._factory
       .getViewIds()
-      .map((viewId) => model.factory.getWidgetForView({ viewId }));
+      .map((viewId) => model._factory.getWidgetForView({ viewId }));
 
   // --------------------------------------------------------------------------
   // Initialization calls
@@ -99,7 +99,7 @@ const DEFAULT_VALUES = {
  * @param {*} publicAPI public methods to populate
  * @param {*} model internal values to populate
  * @param {object} initialValues Contains at least
- *   {viewType, renderer, camera, openGLRenderWindow, factory}
+ *   {viewType, _renderer, _camera, _openGLRenderWindow, _factory}
  */
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
@@ -110,9 +110,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'contextVisibility',
     'handleVisibility',
-    'widgetManager',
+    '_widgetManager',
   ]);
   macro.get(publicAPI, model, ['representations', 'widgetState']);
+  macro.moveToProtected(publicAPI, model, ['widgetManager']);
   macro.event(publicAPI, model, 'ActivateHandle');
 
   vtkAbstractWidget(publicAPI, model);

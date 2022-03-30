@@ -276,6 +276,9 @@ function vtkDataArray(publicAPI, model) {
 
   // Override serialization support
   publicAPI.getState = () => {
+    if (model.deleted) {
+      return null;
+    }
     const jsonArchive = { ...model, vtkClass: publicAPI.getClassName() };
 
     // Convert typed array to regular array

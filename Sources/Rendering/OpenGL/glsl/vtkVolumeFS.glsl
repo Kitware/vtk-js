@@ -327,7 +327,10 @@ vec3 fragCoordToIndexSpace(vec4 fragCoord) {
   vec4 worldCoord = PCWCMatrix * pcPos;
   vec4 vertex = (worldCoord/worldCoord.w);
 
-  return (vWCtoIDX * vertex).xyz / vec3(volumeDimensions);
+  vec3 index = (vWCtoIDX * vertex).xyz;
+
+  // half voxel fix for labelmapOutline 
+  return (index + vec3(0.5)) / vec3(volumeDimensions);
 }
 #endif
 
@@ -908,7 +911,7 @@ vec2 computeRayDistances(vec3 rayDir, vec3 tdims)
 {
   vec2 dists = vec2(100.0*camFar, -1.0);
 
-  vec3 vSize = vSpacing*(tdims - 1.0);
+  vec3 vSize = vSpacing*tdims;
 
   // all this is in View Coordinates
   getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,

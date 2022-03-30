@@ -22,7 +22,7 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
     isDragging = true;
-    model.interactor.requestAnimation(publicAPI);
+    model._interactor.requestAnimation(publicAPI);
     return macro.EVENT_ABORT;
   };
 
@@ -36,7 +36,7 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleLeftButtonRelease = () => {
     if (isDragging && model.pickable) {
       isDragging = false;
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
       model.widgetState.deactivate();
     }
   };

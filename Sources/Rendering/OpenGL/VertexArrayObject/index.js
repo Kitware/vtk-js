@@ -16,15 +16,15 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
 
   publicAPI.initialize = () => {
     model.instancingExtension = null;
-    if (!model.openGLRenderWindow.getWebgl2()) {
+    if (!model._openGLRenderWindow.getWebgl2()) {
       model.instancingExtension = model.context.getExtension(
         'ANGLE_instanced_arrays'
       );
     }
     if (
       !model.forceEmulation &&
-      model.openGLRenderWindow &&
-      model.openGLRenderWindow.getWebgl2()
+      model._openGLRenderWindow &&
+      model._openGLRenderWindow.getWebgl2()
     ) {
       model.extension = null;
       model.supported = true;
@@ -369,14 +369,14 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
   };
 
   publicAPI.setOpenGLRenderWindow = (rw) => {
-    if (model.openGLRenderWindow === rw) {
+    if (model._openGLRenderWindow === rw) {
       return;
     }
     publicAPI.releaseGraphicsResources();
-    model.openGLRenderWindow = rw;
+    model._openGLRenderWindow = rw;
     model.context = null;
     if (rw) {
-      model.context = model.openGLRenderWindow.getContext();
+      model.context = model._openGLRenderWindow.getContext();
     }
   };
 }
@@ -392,7 +392,7 @@ const DEFAULT_VALUES = {
   supported: true,
   buffers: null,
   context: null,
-  openGLRenderWindow: null,
+  // _openGLRenderWindow: null,
 };
 
 // ----------------------------------------------------------------------------

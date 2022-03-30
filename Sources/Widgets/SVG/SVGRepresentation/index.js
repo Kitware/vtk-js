@@ -68,7 +68,7 @@ function vtkSVGRepresentation(publicAPI, model) {
 
   model.psActor = vtkActor.newInstance({
     pickable: false,
-    parentProp: publicAPI,
+    _parentProp: publicAPI,
   });
   model.psMapper = vtkPixelSpaceCallbackMapper.newInstance();
   model.points = vtkPolyData.newInstance();

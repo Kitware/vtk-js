@@ -61,13 +61,13 @@ function vtkViewNode(publicAPI, model) {
   };
 
   publicAPI.getFirstAncestorOfType = (type) => {
-    if (!model.parent) {
+    if (!model._parent) {
       return null;
     }
-    if (model.parent.isA(type)) {
-      return model.parent;
+    if (model._parent.isA(type)) {
+      return model._parent;
     }
-    return model.parent.getFirstAncestorOfType(type);
+    return model._parent.getFirstAncestorOfType(type);
   };
 
   publicAPI.addMissingNode = (dobj) => {
@@ -167,7 +167,7 @@ function vtkViewNode(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  parent: null,
+  // _parent: null,
   renderable: null,
   myFactory: null,
   children: [],
@@ -186,8 +186,9 @@ function extend(publicAPI, model, initialValues = {}) {
   model._renderableChildMap = new Map();
 
   macro.get(publicAPI, model, ['visited']);
-  macro.setGet(publicAPI, model, ['parent', 'renderable', 'myFactory']);
+  macro.setGet(publicAPI, model, ['_parent', 'renderable', 'myFactory']);
   macro.getArray(publicAPI, model, ['children']);
+  macro.moveToProtected(publicAPI, model, ['parent']);
 
   // Object methods
   vtkViewNode(publicAPI, model);

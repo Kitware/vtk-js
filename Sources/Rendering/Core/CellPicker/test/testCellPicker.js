@@ -8,6 +8,7 @@ import vtkRTAnalyticSource from 'vtk.js/Sources/Filters/Sources/RTAnalyticSource
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkCellPicker from 'vtk.js/Sources/Rendering/Core/CellPicker';
+import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 
 const { SlicingMode } = vtkImageMapper;
 
@@ -64,9 +65,11 @@ test('Test vtkCellPicker image mapper', (t) => {
   const positions = picker.getPickedPositions();
   t.equal(positions.length, 1);
   const xyz = positions[0];
-  t.equal(xyz[0], 64.49344091067883);
-  t.equal(xyz[1], 75.65264519589407);
-  t.equal(xyz[2], 12);
+  const expectedPosition = [64.33654020304944, 75.54505613923392, 12.0];
+  t.assert(
+    areEquals(xyz, expectedPosition),
+    'Float-compare picked position to expected.'
+  );
 
   const ijk = picker.getCellIJK();
   t.equal(ijk[0], 64);

@@ -1,3 +1,36 @@
+## From 23.x to 24
+
+All old-style widgets except OrientationMarkerWidget and PiecewiseGaussianWidget have been removed.
+
+| **Old-style/deprecated widget**   | **New-style widget**            |
+|-----------------------------------|---------------------------------|
+| `Sources/Interaction/Widgets/...` | `Sources/Widgets/Widgets3D/...` |
+| DistanceWidget			              | DistanceWidget                  |
+| HandleWidget				              | PolyLineWidget                  |
+| ImageCroppingRegionsWidget        | ImageCroppingWidget             |
+| LabelWidget                       | LabelWidget                     |
+| LineWidget                        | LineWidget                      |
+| OrientationMarkerWidget (kept)    | *not implemented*               |
+| PiecewiseGaussianWidget (kept)    | *not implemented*               |
+| ResliceCursor                     | ResliceCursorWidget             |
+
+- In SVGLandmarkRepresentation: `model.showCircle` is replaced by `model.circleProps.visible`
+
+## From 22.x to 23
+
+- **imagemapper**: The original behavior of the image mapper was that if a lookup table is provided,
+it mapped the lookup table's scalar range by default. The new behavior disables using the lookup
+table scalar range by default. Instead, the window/level values are used.
+
+## From 21.x to 22
+
+- `config/rules-linter.js` is now gone.
+- **AbstractMapper**: Changed removeClippingPlane to use instance instead of index.
+
+## From 20.x to 21
+
+SplineWidget's handles now scale up automatically.
+
 ## From 19.x to 20
 
 In ShapeWidget: 

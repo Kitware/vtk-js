@@ -33,13 +33,13 @@ function vtkProp(publicAPI, model) {
 
   publicAPI.getNestedVisibility = () =>
     model.visibility &&
-    (!model.parentProp || model.parentProp.getNestedVisibility());
+    (!model._parentProp || model._parentProp.getNestedVisibility());
   publicAPI.getNestedPickable = () =>
     model.pickable &&
-    (!model.parentProp || model.parentProp.getNestedPickable());
+    (!model._parentProp || model._parentProp.getNestedPickable());
   publicAPI.getNestedDragable = () =>
     model.dragable &&
-    (!model.parentProp || model.parentProp.getNestedDragable());
+    (!model._parentProp || model._parentProp.getNestedDragable());
 
   publicAPI.getRedrawMTime = () => model.mtime;
 
@@ -92,6 +92,7 @@ function vtkProp(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  // _parentProp: null,
   visibility: true,
   pickable: true,
   dragable: true,
@@ -118,8 +119,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     'dragable',
     'useBounds',
     'renderTimeMultiplier',
-    'parentProp',
+    '_parentProp',
   ]);
+  macro.moveToProtected(publicAPI, model, ['parentProp']);
 
   // Object methods
   vtkProp(publicAPI, model);

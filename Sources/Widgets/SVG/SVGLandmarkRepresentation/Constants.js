@@ -15,9 +15,8 @@ export function fontSizeToPixels(fontProperties, defaultFontSize = 16) {
       if (fontProperties.fontSize.slice(-2) === 'px') {
         return window.devicePixelRatio * parseInt(fontProperties.fontSize, 10);
       }
-    } else {
-      return window.devicePixelRatio * fontProperties.fontSize;
     }
+    return window.devicePixelRatio * fontProperties.fontSize;
   }
   return window.devicePixelRatio * defaultFontSize;
 }

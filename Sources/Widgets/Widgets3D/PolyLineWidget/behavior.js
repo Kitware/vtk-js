@@ -34,11 +34,11 @@ export default function widgetBehavior(publicAPI, model) {
     }
 
     if (model.activeState !== model.widgetState.getMoveHandle()) {
-      model.interactor.requestAnimation(publicAPI);
+      model._interactor.requestAnimation(publicAPI);
       model.activeState.deactivate();
       model.widgetState.removeHandle(model.activeState);
       model.activeState = null;
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
     }
 
     publicAPI.invokeStartInteractionEvent();
@@ -71,7 +71,7 @@ export default function widgetBehavior(publicAPI, model) {
     } else {
       isDragging = true;
       model.apiSpecificRenderWindow.setCursor('grabbing');
-      model.interactor.requestAnimation(publicAPI);
+      model._interactor.requestAnimation(publicAPI);
     }
 
     publicAPI.invokeStartInteractionEvent();
@@ -121,7 +121,7 @@ export default function widgetBehavior(publicAPI, model) {
     if (isDragging && model.pickable) {
       model.apiSpecificRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
       publicAPI.invokeEndInteractionEvent();
     } else if (model.activeState !== model.widgetState.getMoveHandle()) {
       model.widgetState.deactivate();
@@ -133,7 +133,7 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       publicAPI.invokeEndInteractionEvent();
       model.widgetManager.enablePicking();
-      model.interactor.render();
+      model._interactor.render();
     }
 
     isDragging = false;
@@ -158,7 +158,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState = model.widgetState.getMoveHandle();
       model.activeState.activate();
       model.activeState.setVisible(true);
-      model.interactor.requestAnimation(publicAPI);
+      model._interactor.requestAnimation(publicAPI);
       publicAPI.invokeStartInteractionEvent();
     }
     model.hasFocus = true;
@@ -168,7 +168,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.loseFocus = () => {
     if (model.hasFocus) {
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
       publicAPI.invokeEndInteractionEvent();
     }
     model.widgetState.deactivate();
@@ -177,6 +177,6 @@ export default function widgetBehavior(publicAPI, model) {
     model.activeState = null;
     model.hasFocus = false;
     model.widgetManager.enablePicking();
-    model.interactor.render();
+    model._interactor.render();
   };
 }

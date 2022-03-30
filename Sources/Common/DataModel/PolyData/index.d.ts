@@ -1,4 +1,4 @@
-import { Vector3 } from '../../../types';
+import { CellType, Vector3 } from '../../../types';
 import vtkCellArray from '../../Core/CellArray';
 import vtkPointSet, { IPointSetInitialValues } from '../PointSet';
 
@@ -44,6 +44,13 @@ export interface vtkPolyData extends vtkPointSet {
 	 * @return an object made of the cellType and a subarray `cellPointIds` of the cell points.
 	 */
 	getCellPoints(cellId: number): object;
+
+	/**
+	 * Get the type of the cell
+	 * @param {Number} cellId The Id of the cell.
+	 * @return CellType The type of the cell.
+	 */
+	 getCellType(cellId: number): CellType;
 
 	/**
 	 * Get the cell array defining cells.

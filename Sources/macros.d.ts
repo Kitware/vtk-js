@@ -65,11 +65,23 @@ export enum TYPED_ARRAYS {
  * ```
  * const set = `set${capitalize(fieldName)}`;
  * ```
+ * @param str String to capitalize
  */
 export function capitalize(str: string): string;
 
 /**
- * Lowercase the first letter of the provided string
+ * Capitalize provided string.
+ * This is typically used to convert the name of a field into its method name.
+ * Ignore the first letter if it starts with underscore (i.e. _).
+ *
+ * ```
+ * const set = `set${capitalize(fieldName)}`;
+ * ```
+ */
+export function _capitalize(str: string): string;
+
+/**
+ * Lowercase the first letter of the provided string.
  */
 export function uncapitalize(str: string): string;
 
@@ -208,6 +220,19 @@ export function setArray(publicAPI: object, model: object, fieldNames: Array<str
  */
 export function setGetArray(publicAPI: object, model: object, fieldNames: Array<string>, size: Number, defaultVal?: any): void;
 
+/**
+ * Convert model and publicAPI references to _fieldName into fieldName.
+ * It renames:
+ *   - model.fieldName into model._fieldName
+ *   - publicAPI.set_fieldName and publicAPI.set_fieldNameFrom into publicAPI.setFieldName and publicAPI.setFieldNameFrom
+ *   - publicAPI.get_fieldName and publicAPI.get_fieldNameByReference into publicAPI.getFieldName and publicAPI.getFieldNameByReference
+ * @param publicAPI
+ * @param model
+ * @param fieldNames List of field names to move to protected, e.g. ['interactor', 'renderWindow']
+ * @see get
+ * @see set
+ */
+export function moveToProtected(publicAPI: object, model: object, fieldNames: Array<string>): void;
 
 /**
  * Add algorithm methods onto the provided publicAPI

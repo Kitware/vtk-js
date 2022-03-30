@@ -1,4 +1,5 @@
 import test from 'tape-catch';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 
@@ -157,5 +158,56 @@ test('Test vtkTriangle evaluatePosition', (t) => {
   t.equal(result.dist2, 2);
   t.deepEqual(pcoords, [-1, 1, 0]);
   t.deepEqual(weights, [1, -1, 1]);
+  t.end();
+});
+
+test('Test vtkTriangle intersectWithTriangle with intersection', (t) => {
+  const intersection = vtkTriangle.intersectWithTriangle(
+    [0.5, 0, 0],
+    [0.5, 1, 0],
+    [0.5, 1, 1],
+    [0, 0.5, 0],
+    [1, 0.5, 0],
+    [1, 0.5, 1]
+  );
+  t.equal(intersection.intersect, true);
+  t.equal(intersection.coplanar, false);
+  t.ok(
+    vtkMath.areEquals(intersection.pt1, [0.5, 0.5, 0.5]),
+    `p1: ${intersection.pt1}`
+  );
+  t.ok(
+    vtkMath.areEquals(intersection.pt2, [0.5, 0.5, 0]),
+    `p2: ${intersection.pt2}`
+  );
+  t.end();
+});
+
+test('Test vtkTriangle intersectWithTriangle no intersection', (t) => {
+  const intersection2 = vtkTriangle.intersectWithTriangle(
+    [-0.32499998807907104, -0.029999999329447746, 0],
+    [-0.32499998807907104, -0.014999999664723873, -0.025980761274695396],
+    [0.32499998807907104, -0.029999999329447746, 0],
+    [0.02897777408361435, -0.22431930899620056, -0.23530007898807526],
+    [0.02897777408361435, 0.23530007898807526, 0.22431930899620056],
+    [0.02121320366859436, 0.21480970084667206, 0.24480970203876495]
+  );
+  t.equal(intersection2.intersect, false);
+  t.equal(intersection2.coplanar, false);
+  t.end();
+});
+
+test('Test vtkTriangle intersectWithTriangle coplanar', (t) => {
+  const intersection3 = vtkTriangle.intersectWithTriangle(
+    [0, 0, 1],
+    [1, 0, 1],
+    [0, 1, 1],
+    [-1, -1, 1],
+    [1, -1, 1],
+    [-1, 2, 1]
+  );
+  t.equal(intersection3.intersect, false);
+  t.equal(intersection3.coplanar, true);
+
   t.end();
 });

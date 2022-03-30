@@ -54,12 +54,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       );
       model.openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model.openGLRenderWindow = model.openGLRenderer.getParent();
-      model.context = model.openGLRenderWindow.getContext();
-      model.tris.setOpenGLRenderWindow(model.openGLRenderWindow);
-      model.openGLTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
-      model.colorTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
-      model.pwfTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model._openGLRenderWindow = model.openGLRenderer.getParent();
+      model.context = model._openGLRenderWindow.getContext();
+      model.tris.setOpenGLRenderWindow(model._openGLRenderWindow);
+      model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      model.pwfTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       const ren = model.openGLRenderer.getRenderable();
       model.openGLCamera = model.openGLRenderer.getViewNodeFor(
         ren.getActiveCamera()
@@ -429,7 +429,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       publicAPI.buildShaders(shaders, ren, actor);
 
       // compile and bind the program if needed
-      const newShader = model.openGLRenderWindow
+      const newShader = model._openGLRenderWindow
         .getShaderCache()
         .readyShaderProgramArray(
           shaders.Vertex,
@@ -446,7 +446,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
       cellBO.getShaderSourceTime().modified();
     } else {
-      model.openGLRenderWindow
+      model._openGLRenderWindow
         .getShaderCache()
         .readyShaderProgram(cellBO.getProgram());
     }
@@ -946,6 +946,16 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         tcoordArray[i * 2 + 1] = i > 1 ? 1.0 : 0.0;
       }
 
+      // Determine depth position of the slicing plane in the scene.
+      // Slicing modes X, Y, and Z use a continuous axis position, whereas
+      // slicing modes I, J, and K should use discrete positions.
+      const sliceDepth = [SlicingMode.X, SlicingMode.Y, SlicingMode.Z].includes(
+        model.renderable.getSlicingMode()
+      )
+        ? slice
+        : nSlice;
+
+      const spatialExt = image.getSpatialExtent();
       const basicScalars = imgScalars.getData();
       let scalars = null;
       // Get right scalars according to slicing mode
@@ -962,18 +972,18 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         }
         dims[0] = dims[1];
         dims[1] = dims[2];
-        ptsArray[0] = slice;
-        ptsArray[1] = ext[2];
-        ptsArray[2] = ext[4];
-        ptsArray[3] = slice;
-        ptsArray[4] = ext[3];
-        ptsArray[5] = ext[4];
-        ptsArray[6] = slice;
-        ptsArray[7] = ext[2];
-        ptsArray[8] = ext[5];
-        ptsArray[9] = slice;
-        ptsArray[10] = ext[3];
-        ptsArray[11] = ext[5];
+        ptsArray[0] = sliceDepth;
+        ptsArray[1] = spatialExt[2];
+        ptsArray[2] = spatialExt[4];
+        ptsArray[3] = sliceDepth;
+        ptsArray[4] = spatialExt[3];
+        ptsArray[5] = spatialExt[4];
+        ptsArray[6] = sliceDepth;
+        ptsArray[7] = spatialExt[2];
+        ptsArray[8] = spatialExt[5];
+        ptsArray[9] = sliceDepth;
+        ptsArray[10] = spatialExt[3];
+        ptsArray[11] = spatialExt[5];
       } else if (ijkMode === SlicingMode.J) {
         scalars = new basicScalars.constructor(dims[2] * dims[0] * numComp);
         let id = 0;
@@ -986,35 +996,35 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           }
         }
         dims[1] = dims[2];
-        ptsArray[0] = ext[0];
-        ptsArray[1] = slice;
-        ptsArray[2] = ext[4];
-        ptsArray[3] = ext[1];
-        ptsArray[4] = slice;
-        ptsArray[5] = ext[4];
-        ptsArray[6] = ext[0];
-        ptsArray[7] = slice;
-        ptsArray[8] = ext[5];
-        ptsArray[9] = ext[1];
-        ptsArray[10] = slice;
-        ptsArray[11] = ext[5];
+        ptsArray[0] = spatialExt[0];
+        ptsArray[1] = sliceDepth;
+        ptsArray[2] = spatialExt[4];
+        ptsArray[3] = spatialExt[1];
+        ptsArray[4] = sliceDepth;
+        ptsArray[5] = spatialExt[4];
+        ptsArray[6] = spatialExt[0];
+        ptsArray[7] = sliceDepth;
+        ptsArray[8] = spatialExt[5];
+        ptsArray[9] = spatialExt[1];
+        ptsArray[10] = sliceDepth;
+        ptsArray[11] = spatialExt[5];
       } else if (ijkMode === SlicingMode.K || ijkMode === SlicingMode.NONE) {
         scalars = basicScalars.subarray(
           sliceOffset * sliceSize,
           (sliceOffset + 1) * sliceSize
         );
-        ptsArray[0] = ext[0];
-        ptsArray[1] = ext[2];
-        ptsArray[2] = slice;
-        ptsArray[3] = ext[1];
-        ptsArray[4] = ext[2];
-        ptsArray[5] = slice;
-        ptsArray[6] = ext[0];
-        ptsArray[7] = ext[3];
-        ptsArray[8] = slice;
-        ptsArray[9] = ext[1];
-        ptsArray[10] = ext[3];
-        ptsArray[11] = slice;
+        ptsArray[0] = spatialExt[0];
+        ptsArray[1] = spatialExt[2];
+        ptsArray[2] = sliceDepth;
+        ptsArray[3] = spatialExt[1];
+        ptsArray[4] = spatialExt[2];
+        ptsArray[5] = sliceDepth;
+        ptsArray[6] = spatialExt[0];
+        ptsArray[7] = spatialExt[3];
+        ptsArray[8] = sliceDepth;
+        ptsArray[9] = spatialExt[1];
+        ptsArray[10] = spatialExt[3];
+        ptsArray[11] = sliceDepth;
       } else {
         vtkErrorMacro('Reformat slicing not yet supported.');
       }

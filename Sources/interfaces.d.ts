@@ -253,6 +253,17 @@ export interface vtkObject {
 	getState(): object;
 
 	/**
+	 * Used internally by JSON.stringify to get the content to serialize.
+	 * Allow to call directly JSON.stringify on the vtkObject instead of using getState before doing so.
+	 *
+	 * ```
+	 * const actorStr = JSON.stringify(actor);
+	 * const newActor = vtk(JSON.parse(actorStr));
+	 * ```
+	 */
+	toJSON(): object;
+
+	/**
 	 * Try to copy the state of the other to ourselves by just using references.
 	 *
 	 * @param {vtkObject} other instance to copy the reference from

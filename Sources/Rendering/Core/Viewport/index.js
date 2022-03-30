@@ -139,7 +139,7 @@ function vtkViewport(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  vtkWindow: null,
+  // _vtkWindow: null,
   background: [0, 0, 0],
   background2: [0.2, 0.2, 0.2],
   gradientBackground: false,

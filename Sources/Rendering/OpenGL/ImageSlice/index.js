@@ -22,12 +22,12 @@ function vtkOpenGLImageSlice(publicAPI, model) {
       if (!model.renderable) {
         return;
       }
-      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType(
+      model._openGLRenderWindow = publicAPI.getFirstAncestorOfType(
         'vtkOpenGLRenderWindow'
       );
       model.openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model.context = model.openGLRenderWindow.getContext();
+      model.context = model._openGLRenderWindow.getContext();
       publicAPI.prepareNodes();
       publicAPI.addMissingNode(model.renderable.getMapper());
       publicAPI.removeUnusedNodes();

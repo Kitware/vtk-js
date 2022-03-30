@@ -258,7 +258,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
       motionVector[2] + viewPoint[2]
     );
 
-    if (model.interactor.getLightFollowCamera()) {
+    if (model._interactor.getLightFollowCamera()) {
       callData.pokedRenderer.updateLightsGeometryToFollowCamera();
     }
 
@@ -277,7 +277,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
   //--------------------------------------------------------------------------
   publicAPI.handleMouseRotate = (renderer, position) => {
-    const rwi = model.interactor;
+    const rwi = model._interactor;
 
     const dx = position.x - model.previousPosition.x;
     const dy = position.y - model.previousPosition.y;
@@ -312,7 +312,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
   //--------------------------------------------------------------------------
   publicAPI.handleMouseSpin = (renderer, position) => {
-    const rwi = model.interactor;
+    const rwi = model._interactor;
     const camera = renderer.getActiveCamera();
     const center = rwi.getView().getViewportCenter(renderer);
 
@@ -383,7 +383,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
       motionVector[2] + viewPoint[2]
     );
 
-    if (model.interactor.getLightFollowCamera()) {
+    if (model._interactor.getLightFollowCamera()) {
       renderer.updateLightsGeometryToFollowCamera();
     }
   };
@@ -391,7 +391,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.handleMouseDolly = (renderer, position) => {
     const dy = position.y - model.previousPosition.y;
-    const rwi = model.interactor;
+    const rwi = model._interactor;
     const center = rwi.getView().getViewportCenter(renderer);
     const dyf = (model.motionFactor * dy) / center[1];
 
@@ -420,7 +420,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
       }
     }
 
-    if (model.interactor.getLightFollowCamera()) {
+    if (model._interactor.getLightFollowCamera()) {
       renderer.updateLightsGeometryToFollowCamera();
     }
   };

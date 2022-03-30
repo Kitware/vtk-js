@@ -16,12 +16,12 @@ function vtkOpenGLActor(publicAPI, model) {
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType(
+      model._openGLRenderWindow = publicAPI.getFirstAncestorOfType(
         'vtkOpenGLRenderWindow'
       );
       model.openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model.context = model.openGLRenderWindow.getContext();
+      model.context = model._openGLRenderWindow.getContext();
       publicAPI.prepareNodes();
       publicAPI.addMissingNodes(model.renderable.getTextures());
       publicAPI.addMissingNode(model.renderable.getMapper());
