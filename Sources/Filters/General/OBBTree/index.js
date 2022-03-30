@@ -157,10 +157,6 @@ function vtkOBBTree(publicAPI, model) {
     for (let i = 0; i < 3; i++) {
       for (let j = 0; j < 3; j++) {
         a[i][j] = a[i][j] / totMass - mean[i] * mean[j];
-        // send to zero if close to zero
-        if (Math.abs(a[i][j]) < 1e-12) {
-          a[i][j] = 0;
-        }
       }
     }
 
