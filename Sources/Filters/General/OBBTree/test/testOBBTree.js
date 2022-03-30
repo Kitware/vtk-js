@@ -8,7 +8,7 @@ import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkTriangleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter';
 
-const epsilon = 0.0001;
+const epsilon = 0.1;
 
 function getAllCorners(startCorner, min, mid, max) {
   const start2min = vtkMath.add(startCorner, min, []);
