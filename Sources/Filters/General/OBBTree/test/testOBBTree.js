@@ -27,10 +27,10 @@ test('Test OBB tree constructor', (t) => {
   const size = [0, 0, 0];
   const computedValues = [corner, max, mid, min, size];
   const expectedValues = [
-    { name: 'corner', value: [0.675, -0.1366, 0] },
-    { name: 'max', value: [-1, 0, 0] },
-    { name: 'mid', value: [0, 0.1366, 0.1366] },
-    { name: 'min', value: [0, 0.1366, -0.1366] },
+    { name: 'corner', value: [-0.325, -0.1, -0.0866] },
+    { name: 'max', value: [1, 0, 0] },
+    { name: 'mid', value: [0, 0, 0.1732] },
+    { name: 'min', value: [0, 0.2, 0] },
     { name: 'size', value: [0.0658262, 0.00126738, 0.00126738] },
   ];
 
@@ -65,8 +65,8 @@ test('Test OBB tree transform', (t) => {
   const expectedValues = [
     { name: 'corner', value: [-0.5, -0.5, -0.5] },
     { name: 'max', value: [0, 0, 1] },
-    { name: 'mid', value: [0, 1, 0] },
-    { name: 'min', value: [1, 0, 0] },
+    { name: 'mid', value: [1, 0, 0] },
+    { name: 'min', value: [0, 1, 0] },
     { name: 'size', value: [0.13888, 0.13888, 0.13888] },
   ];
   computedValues.forEach((value, index) => {
