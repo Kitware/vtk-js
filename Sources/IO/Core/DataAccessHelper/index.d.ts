@@ -29,4 +29,10 @@ export interface DataAccessHelper {
 	registerType(type: string, fn: any): void;
 }
 
+export declare const DataAccessHelper: {
+	has: typeof has,
+	get: typeof get,
+	registerType: typeof registerType,
+}
+
 export default DataAccessHelper;
