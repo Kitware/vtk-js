@@ -10,6 +10,31 @@ import vtkTriangleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter';
 
 const epsilon = 0.0001;
 
+function getAllCorners(startCorner, min, mid, max) {
+  const start2min = vtkMath.add(startCorner, min, []);
+  const start2mid = vtkMath.add(startCorner, mid, []);
+  const start2max = vtkMath.add(startCorner, max, []);
+  const start2min2mid = vtkMath.add(start2min, mid, []);
+  const start2mid2max = vtkMath.add(start2mid, max, []);
+  const start2max2min = vtkMath.add(start2max, min, []);
+  const oppositeCorner = vtkMath.add(start2min2mid, max, []);
+  return [
+    [...startCorner],
+    start2min,
+    start2mid,
+    start2max,
+    start2min2mid,
+    start2mid2max,
+    start2max2min,
+    oppositeCorner,
+  ];
+}
+
+// does point exist in points, with tolerance
+function hasMatchingPoint(point, points, eps) {
+  return !!points.find((pt) => vtkMath.areEquals(point, pt, eps));
+}
+
 test('Test OBB tree constructor', (t) => {
   const source = vtkArrowSource.newInstance();
   source.update();
@@ -25,21 +50,26 @@ test('Test OBB tree constructor', (t) => {
   const mid = [0, 0, 0];
   const min = [0, 0, 0];
   const size = [0, 0, 0];
-  const computedValues = [corner, max, mid, min, size];
-  const expectedValues = [
-    { name: 'corner', value: [0.675, -0.1366, 0] },
-    { name: 'max', value: [-1, 0, 0] },
-    { name: 'mid', value: [0, 0.1366, 0.1366] },
-    { name: 'min', value: [0, 0.1366, -0.1366] },
-    { name: 'size', value: [0.0658262, 0.00126738, 0.00126738] },
+
+  const expectedSize = [0.0658262, 0.00126738, 0.00126738];
+  const expectedCorners = [
+    [-0.32499999999999996, -0.13660254037844385, -1.522196077276375e-17],
+    [-0.32499999999999996, 0, -0.13660254037844385],
+    [-0.32499999999999996, 2.04473419971054e-17, 0.13660254037844388],
+    [-0.32499999999999996, 0.13660254037844388, 6.804476607412299e-17],
+    [0.675, -0.13660254037844388, -2.7755575615628914e-17],
+    [0.675, -2.7755575615628914e-17, -0.13660254037844385],
+    [0.675, 0, 0.13660254037844388],
+    [0.675, 0.13660254037844385, 5.551115123125783e-17],
   ];
 
   obbTree.computeOBBFromDataset(mesh, corner, max, mid, min, size);
+  const allCorners = getAllCorners(corner, min, mid, max);
 
-  computedValues.forEach((value, index) => {
-    const expected = expectedValues[index];
-    t.ok(vtkMath.areEquals(value, expected.value, epsilon), expected.name);
+  allCorners.forEach((actual, index) => {
+    t.ok(hasMatchingPoint(actual, expectedCorners, epsilon), `Corner ${index}`);
   });
+  t.ok(vtkMath.areEquals(size, expectedSize, epsilon), 'size');
 
   t.end();
 });
@@ -59,20 +89,26 @@ test('Test OBB tree transform', (t) => {
   const mid = [0, 0, 0];
   const min = [0, 0, 0];
   const size = [0, 0, 0];
-  const computedValues = [corner, max, mid, min, size];
-  obbTree.computeOBBFromDataset(mesh, corner, max, mid, min, size);
 
-  const expectedValues = [
-    { name: 'corner', value: [-0.5, -0.5, -0.5] },
-    { name: 'max', value: [0, 0, 1] },
-    { name: 'mid', value: [0, 1, 0] },
-    { name: 'min', value: [1, 0, 0] },
-    { name: 'size', value: [0.13888, 0.13888, 0.13888] },
+  const expectedSize = [0.13888, 0.13888, 0.13888];
+  const expectedCorners = [
+    [-0.5, -0.5, -0.5],
+    [-0.5, -0.5, 0.5],
+    [-0.5, 0.5, -0.5],
+    [-0.5, 0.5, 0.5],
+    [0.5, -0.5, -0.5],
+    [0.5, -0.5, 0.5],
+    [0.5, 0.5, -0.5],
+    [0.5, 0.5, 0.5],
   ];
-  computedValues.forEach((value, index) => {
-    const expected = expectedValues[index];
-    t.ok(vtkMath.areEquals(value, expected.value, epsilon), expected.name);
+
+  obbTree.computeOBBFromDataset(mesh, corner, max, mid, min, size);
+  const allCorners = getAllCorners(corner, min, mid, max);
+
+  allCorners.forEach((actual, index) => {
+    t.ok(hasMatchingPoint(actual, expectedCorners, epsilon), `Corner ${index}`);
   });
+  t.ok(vtkMath.areEquals(size, expectedSize, epsilon), 'size');
 
   const translation = [10, 0, 0];
   const transform = vtkMatrixBuilder
@@ -80,18 +116,17 @@ test('Test OBB tree transform', (t) => {
     .translate(...translation);
   obbTree.transform(transform);
   const tree = obbTree.getTree();
-  const translatedComputedValues = [
-    tree.getCorner(),
-    tree.getAxes()[0],
-    tree.getAxes()[1],
-    tree.getAxes()[2],
-  ];
-  expectedValues.pop();
-  vtkMath.add(expectedValues[0].value, translation, expectedValues[0].value);
 
-  translatedComputedValues.forEach((value, index) => {
-    const expected = expectedValues[index];
-    t.ok(vtkMath.areEquals(value, expected.value, epsilon), expected.name);
+  const translatedCorners = getAllCorners(tree.getCorner(), ...tree.getAxes());
+  const expectedTranslatedCorners = expectedCorners.map((point) =>
+    vtkMath.add(point, translation, [])
+  );
+
+  translatedCorners.forEach((actual, index) => {
+    t.ok(
+      hasMatchingPoint(actual, expectedTranslatedCorners, epsilon),
+      `Corner ${index}`
+    );
   });
   t.end();
 });
