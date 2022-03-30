@@ -144,7 +144,9 @@ An example manipulator would be a plane manipulator. When instantiated with a
 plane point and normal, the plane manipulator will project mouse events onto the
 plane in 3D and return that projected point.
 
-## SVG Layer
+## SVG Layer (Deprecated)
+
+**Deprecation Notice**: The built-in SVG layer for widgets will be deprecated in favor of the application providing their own 2D drawing capabilities. vtk.js will remain focused on providing 3D-based interaction and visualization, allowing applications to draw overlays as necessary.
 
 Below is a table that summarizes some widget feature needs and their availabilities 1) in vtk.js and in the Widgets framework 2) without and 3) with the SVG layer.
 
@@ -161,5 +163,10 @@ Below is a table that summarizes some widget feature needs and their availabilit
 | Screenshot      | Yes |   | Yes |   | No |
 | Mouse pick      | Yes |   | Yes | WidgetManager, [ImageCroppingWidget](https://kitware.github.io/vtk-js/examples/ImageCroppingWidget.html) | Yes | [LineWidget](https://kitware.github.io/vtk-js/examples/LineWidget.html) (text handle is pickable)
 | Mouse drag      | Yes |   | Yes | [ImageCroppingWidget](https://kitware.github.io/vtk-js/examples/ImageCroppingWidget.html)  | No |
+
+The SVG layer is provided as a proof-of-concept for SVG integration within VTK.JS.
+It is limited by its current virtual DOM implementation. We do not advise to rely on it.
+You may instead want to rely on the DOM capabilities of your JS framework (e.g. React, Vue...)
+For these reasons, efforts will be made to have 3D widgets rather than SVG widgets (that should belong to applications).
 
 [WidgetsDiagram]: ./gallery/widgets_diagram.png
