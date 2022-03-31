@@ -17,7 +17,7 @@ function vtkActor(publicAPI, model) {
   // Capture 'parentClass' api for internal use
   const superClass = { ...publicAPI };
 
-  publicAPI.getActors = () => publicAPI;
+  publicAPI.getActors = () => [publicAPI];
 
   publicAPI.getIsOpaque = () => {
     if (model.forceOpaque) {
