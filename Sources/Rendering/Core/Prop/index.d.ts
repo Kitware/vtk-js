@@ -14,7 +14,7 @@ export interface IPropInitialValues {
     estimatedRenderTime?: number;
     savedEstimatedRenderTime?: number;
     renderTimeMultiplier?: number;
-    textures?: Array<any>;
+    textures?: vtkTexture[];
 }
 
 export interface vtkProp extends vtkObject {
@@ -141,20 +141,20 @@ export interface vtkProp extends vtkObject {
 
     /**
      * 
-     * @param texture 
+     * @param {vtkTexture} texture The vtkTexture instance.
      *
      */
     hasTexture(texture: vtkTexture): boolean;
 
     /**
      * 
-     * @param texture 
+     * @param {vtkTexture} texture The vtkTexture instance.
      */
     addTexture(texture: vtkTexture): void;
 
     /**
      * 
-     * @param texture 
+     * @param {vtkTexture} texture The vtkTexture instance.
      */
     removeTexture(texture: vtkTexture): void;
 
@@ -230,9 +230,9 @@ export interface vtkProp extends vtkObject {
 
     /**
      * This is used for culling and is a number between 0 and 1. It is used to create the allocated render time value.
-     * @param renderTimeMultiplier 
+     * @param {Number} renderTimeMultiplier 
      */
-    setRendertimemultiplier(renderTimeMultiplier): boolean;
+    setRenderTimeMultiplier(renderTimeMultiplier: number): boolean;
 
     /**
      * Not Implemented yet
