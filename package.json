@@ -87,7 +87,7 @@
     "html-webpack-plugin": "5.5.0",
     "husky": "7.0.4",
     "ignore-loader": "0.1.2",
-    "karma": "6.3.10",
+    "karma": "6.3.17",
     "karma-chrome-launcher": "3.1.0",
     "karma-coverage": "2.1.0",
     "karma-firefox-launcher": "2.1.2",
