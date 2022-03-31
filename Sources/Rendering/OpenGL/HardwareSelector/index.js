@@ -300,7 +300,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.beginSelection = () => {
     model._openGLRenderer = model._openGLRenderWindow.getViewNodeFor(
-      model.renderer
+      model._renderer
     );
     model.maxAttributeId = 0;
 
@@ -360,7 +360,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
   publicAPI.getSourceDataAsync = async (renderer, fx1, fy1, fx2, fy2) => {
     // assign the renderer
-    model.renderer = renderer;
+    model._renderer = renderer;
 
     // set area to all if no arguments provided
     if (fx1 === undefined) {
@@ -390,13 +390,13 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.captureBuffers = () => {
-    if (!model.renderer || !model._openGLRenderWindow) {
+    if (!model._renderer || !model._openGLRenderWindow) {
       vtkErrorMacro('Renderer and view must be set before calling Select.');
       return false;
     }
 
     model._openGLRenderer = model._openGLRenderWindow.getViewNodeFor(
-      model.renderer
+      model._renderer
     );
 
     // todo revisit making selection part of core
@@ -414,8 +414,8 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
     // Initialize renderer for selection.
     // change the renderer's background to black, which will indicate a miss
-    model.originalBackground = model.renderer.getBackgroundByReference();
-    model.renderer.setBackground(0.0, 0.0, 0.0);
+    model.originalBackground = model._renderer.getBackgroundByReference();
+    model._renderer.setBackground(0.0, 0.0, 0.0);
     const rpasses = model._openGLRenderWindow.getRenderPasses();
 
     publicAPI.beginSelection();
@@ -445,7 +445,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     publicAPI.endSelection();
 
     // restore original background
-    model.renderer.setBackground(model.originalBackground);
+    model._renderer.setBackground(model.originalBackground);
     publicAPI.invokeEvent({ type: 'EndEvent' });
 
     // restore image, not needed?
@@ -721,7 +721,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       model.fieldAssociation,
       dataMap,
       model.captureZValues,
-      model.renderer,
+      model._renderer,
       model._openGLRenderWindow
     );
   };
@@ -730,7 +730,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
   publicAPI.attach = (w, r) => {
     model._openGLRenderWindow = w;
-    model.renderer = r;
+    model._renderer = r;
   };
 
   // override

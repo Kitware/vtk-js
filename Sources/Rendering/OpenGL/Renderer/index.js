@@ -187,7 +187,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   context: null,
-  _openGLRenderWindow: null,
+  // _openGLRenderWindow: null,
   selector: null,
 };
 
@@ -203,6 +203,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['shaderCache']);
 
   macro.setGet(publicAPI, model, ['selector']);
+
+  macro.moveToProtected(publicAPI, model, ['openGLRenderWindow']);
 
   // Object methods
   vtkOpenGLRenderer(publicAPI, model);

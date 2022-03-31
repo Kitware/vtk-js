@@ -70,7 +70,7 @@ export default function widgetBehavior(publicAPI, model) {
       newHandle.setScale1(moveHandle.getScale1());
     } else {
       isDragging = true;
-      model.apiSpecificRenderWindow.setCursor('grabbing');
+      model._apiSpecificRenderWindow.setCursor('grabbing');
       model._interactor.requestAnimation(publicAPI);
     }
 
@@ -92,10 +92,10 @@ export default function widgetBehavior(publicAPI, model) {
       !ignoreKey(callData)
     ) {
       model.manipulator.setOrigin(model.activeState.getOrigin());
-      model.manipulator.setNormal(model.camera.getDirectionOfProjection());
+      model.manipulator.setNormal(model._camera.getDirectionOfProjection());
       const worldCoords = model.manipulator.handleEvent(
         callData,
-        model.apiSpecificRenderWindow
+        model._apiSpecificRenderWindow
       );
 
       if (
@@ -108,7 +108,7 @@ export default function widgetBehavior(publicAPI, model) {
       }
     }
     if (model.hasFocus) {
-      model.widgetManager.disablePicking();
+      model._widgetManager.disablePicking();
     }
     return macro.VOID;
   };
@@ -119,7 +119,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleLeftButtonRelease = () => {
     if (isDragging && model.pickable) {
-      model.apiSpecificRenderWindow.setCursor('pointer');
+      model._apiSpecificRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
       model._interactor.cancelAnimation(publicAPI);
       publicAPI.invokeEndInteractionEvent();
@@ -132,7 +132,7 @@ export default function widgetBehavior(publicAPI, model) {
       (model.activeState && !model.activeState.getActive())
     ) {
       publicAPI.invokeEndInteractionEvent();
-      model.widgetManager.enablePicking();
+      model._widgetManager.enablePicking();
       model._interactor.render();
     }
 
@@ -176,7 +176,7 @@ export default function widgetBehavior(publicAPI, model) {
     model.widgetState.getMoveHandle().setVisible(false);
     model.activeState = null;
     model.hasFocus = false;
-    model.widgetManager.enablePicking();
+    model._widgetManager.enablePicking();
     model._interactor.render();
   };
 }
