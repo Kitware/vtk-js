@@ -19,6 +19,10 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
   publicAPI.render = () => {
     const list = publicAPI.getRepresentationStates();
 
+    if (!list.length) {
+      return createSvgElement('g');
+    }
+
     const coords = [];
     const texts = [];
     list.forEach((state, index) => {
@@ -71,8 +75,8 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
           text.setAttribute('x', x);
           text.setAttribute('y', y);
           // Vertical offset (dy) calculation based on VerticalTextAlignment
-          let dy = model.textProps.dy ? model.textProps.dy : 0;
-          switch (model.textProps.verticalAlign) {
+          let dy = model.textProps?.dy || 0;
+          switch (model.textProps?.verticalAlign) {
             case VerticalTextAlignment.MIDDLE:
               dy -= fontSize * (0.5 * splitText.length - j - 1);
               break;
