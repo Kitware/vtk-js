@@ -139,6 +139,16 @@ declare function getStateArrayMapFunc(item: any): any;
 export function setImmediateVTK(fn: () => void ): void;
 
 /**
+ * Measures the time it takes for a promise to finish from the time this function is invoked.
+ *
+ * The callback receives the time it took for the promise to resolve or reject.
+ *
+ * @param promise promise to measure
+ * @param callback called with the elapsed time for the promise
+ */
+export function measurePromiseExecution(promise: Promise<any>, callback: (elapsed: number) => void): void;
+
+/**
  * Turns the provided publicAPI into a VtkObject
  *
  * @param publicAPI (default: {}) object on which public methods get attached to
@@ -631,6 +641,7 @@ declare const Macro: {
   getStateArrayMapFunc: typeof getStateArrayMapFunc,
   isVtkObject: typeof isVtkObject,
   keystore: typeof keystore,
+  measurePromiseExecution: typeof measurePromiseExecution,
   newInstance: typeof newInstance,
   normalizeWheel: typeof normalizeWheel,
   obj: typeof obj,
