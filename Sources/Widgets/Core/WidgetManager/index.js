@@ -278,37 +278,38 @@ function vtkWidgetManager(publicAPI, model) {
     }
   }
 
-  let guardAgainst = '';
-
-  const handleEvent = (eventName) => (callData) => {
-    if (
-      guardAgainst === eventName ||
-      model.isAnimating ||
-      !model.pickingEnabled ||
-      model._selectionInProgress
-    ) {
-      return macro.VOID;
-    }
-
-    const updatePromise = updateSelection(callData);
-    macro.measurePromiseExecution(updatePromise, (elapsed) => {
-      // 100ms is deemed fast enough. Anything higher can degrade usability.
-      if (elapsed > 100) {
-        macro.vtkWarningMacro(
-          `vtkWidgetManager updateSelection() took ${elapsed}ms on ${eventName}`
-        );
+  const handleEvent = (eventName) => {
+    let guard = false;
+    return (callData) => {
+      if (
+        guard ||
+        model.isAnimating ||
+        !model.pickingEnabled ||
+        model._selectionInProgress
+      ) {
+        return macro.VOID;
       }
-    });
 
-    updatePromise.then(() => {
-      if (model._interactor) {
-        // re-trigger the event, ignoring our own handler
-        guardAgainst = eventName;
-        model._interactor[`invoke${eventName}`](callData);
-        guardAgainst = '';
-      }
-    });
-    return macro.EVENT_ABORT;
+      const updatePromise = updateSelection(callData);
+      macro.measurePromiseExecution(updatePromise, (elapsed) => {
+        // 100ms is deemed fast enough. Anything higher can degrade usability.
+        if (elapsed > 100) {
+          macro.vtkWarningMacro(
+            `vtkWidgetManager updateSelection() took ${elapsed}ms on ${eventName}`
+          );
+        }
+      });
+
+      updatePromise.then(() => {
+        if (model._interactor) {
+          // re-trigger the event, ignoring our own handler
+          guard = true;
+          model._interactor[`invoke${eventName}`](callData);
+          guard = false;
+        }
+      });
+      return macro.EVENT_ABORT;
+    };
   };
 
   function updateWidgetForRender(w) {
