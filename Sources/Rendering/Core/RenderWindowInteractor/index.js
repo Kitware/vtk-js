@@ -217,8 +217,14 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       rootElm[method]('mouseup', publicAPI.handleMouseUp);
       rootElm[method]('mousemove', publicAPI.handleMouseMove);
       rootElm[method]('touchend', publicAPI.handleTouchEnd, false);
-      rootElm[method]('touchcancel', publicAPI.handleTouchEnd, false);
-      rootElm[method]('touchmove', publicAPI.handleTouchMove, false);
+      rootElm[method]('touchcancel', publicAPI.handleTouchEnd, {
+        passive: false,
+        capture: false,
+      });
+      rootElm[method]('touchmove', publicAPI.handleTouchMove, {
+        passive: false,
+        capture: false,
+      });
     }
 
     if (!force && addListeners) {
@@ -245,7 +251,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       publicAPI.handlePointerLockChange
     );
 
-    container.addEventListener('touchstart', publicAPI.handleTouchStart, false);
+    container.addEventListener('touchstart', publicAPI.handleTouchStart, {
+      passive: false,
+      capture: false,
+    });
   };
 
   publicAPI.unbindEvents = () => {
@@ -277,7 +286,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     );
     model.container.removeEventListener(
       'touchstart',
-      publicAPI.handleTouchStart
+      publicAPI.handleTouchStart,
+      {
+        passive: false,
+        capture: false,
+      }
     );
     model.container = null;
   };
