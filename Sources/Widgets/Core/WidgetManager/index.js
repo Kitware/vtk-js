@@ -4,6 +4,7 @@ import macro from 'vtk.js/Sources/macros';
 import vtkSelectionNode from 'vtk.js/Sources/Common/DataModel/SelectionNode';
 import Constants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import vtkSVGRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGRepresentation';
+import { WIDGET_PRIORITY } from 'vtk.js/Sources/Widgets/Core/AbstractWidget/Constants';
 import { diff } from './vdom';
 
 const { ViewTypes, RenderingTypes, CaptureOn } = Constants;
@@ -242,6 +243,65 @@ function vtkWidgetManager(publicAPI, model) {
   // API public
   // --------------------------------------------------------------------------
 
+  async function updateSelection({ position }) {
+    model._selectionInProgress = true;
+    const { requestCount, selectedState, representation, widget } =
+      await publicAPI.getSelectedDataForXY(position.x, position.y);
+    model._selectionInProgress = false;
+
+    if (requestCount) {
+      // Call activate only once
+      return;
+    }
+
+    // Default cursor behavior
+    model._apiSpecificRenderWindow.setCursor(widget ? 'pointer' : 'default');
+
+    if (model.widgetInFocus === widget && widget.hasFocus()) {
+      widget.activateHandle({ selectedState, representation });
+      // Ken FIXME
+      model._interactor.render();
+      model._interactor.render();
+    } else {
+      for (let i = 0; i < model.widgets.length; i++) {
+        const w = model.widgets[i];
+        if (w === widget && w.getNestedPickable()) {
+          w.activateHandle({ selectedState, representation });
+          model.activeWidget = w;
+        } else {
+          w.deactivateAllHandles();
+        }
+      }
+      // Ken FIXME
+      model._interactor.render();
+      model._interactor.render();
+    }
+  }
+
+  let guardAgainst = '';
+
+  const handleEvent = (eventName) => (callData) => {
+    if (
+      guardAgainst === eventName ||
+      model.isAnimating ||
+      !model.pickingEnabled ||
+      model._selectionInProgress
+    ) {
+      return macro.VOID;
+    }
+
+    const updatePromise = updateSelection(callData);
+    updatePromise.then(() => {
+      if (model._interactor) {
+        // re-trigger the event, ignoring our own handler
+        guardAgainst = eventName;
+        model._interactor[`invoke${eventName}`](callData);
+        guardAgainst = '';
+      }
+    });
+    return macro.EVENT_ABORT;
+  };
+
   function updateWidgetForRender(w) {
     w.updateRepresentationForRender(model.renderingType);
   }
@@ -331,50 +391,13 @@ function vtkWidgetManager(publicAPI, model) {
       })
     );
 
+    subscriptions.push(model._interactor.onMouseMove(handleEvent('MouseMove')));
     subscriptions.push(
-      model._interactor.onMouseMove(async ({ position }) => {
-        if (
-          model.isAnimating ||
-          !model.pickingEnabled ||
-          model._selectionInProgress
-        ) {
-          return;
-        }
-        model._selectionInProgress = true;
-        const { requestCount, selectedState, representation, widget } =
-          await publicAPI.getSelectedDataForXY(position.x, position.y);
-        model._selectionInProgress = false;
-
-        if (requestCount) {
-          // Call activate only once
-          return;
-        }
-
-        // Default cursor behavior
-        model._apiSpecificRenderWindow.setCursor(
-          widget ? 'pointer' : 'default'
-        );
-
-        if (model.widgetInFocus === widget && widget.hasFocus()) {
-          widget.activateHandle({ selectedState, representation });
-          // Ken FIXME
-          model._interactor.render();
-          model._interactor.render();
-        } else {
-          for (let i = 0; i < model.widgets.length; i++) {
-            const w = model.widgets[i];
-            if (w === widget && w.getNestedPickable()) {
-              w.activateHandle({ selectedState, representation });
-              model.activeWidget = w;
-            } else {
-              w.deactivateAllHandles();
-            }
-          }
-          // Ken FIXME
-          model._interactor.render();
-          model._interactor.render();
-        }
-      })
+      model._interactor.onLeftButtonPress(
+        handleEvent('LeftButtonPress'),
+        // stay after widgets, but before default of 0
+        WIDGET_PRIORITY / 2
+      )
     );
 
     publicAPI.modified();
