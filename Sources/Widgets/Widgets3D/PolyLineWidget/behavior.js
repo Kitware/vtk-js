@@ -19,6 +19,25 @@ export default function widgetBehavior(publicAPI, model) {
     return e.altKey || e.controlKey || e.shiftKey;
   }
 
+  function updateMoveHandle(callData) {
+    model.manipulator.setOrigin(model._camera.getFocalPoint());
+    model.manipulator.setNormal(model._camera.getDirectionOfProjection());
+    const worldCoords = model.manipulator.handleEvent(
+      callData,
+      model._apiSpecificRenderWindow
+    );
+
+    if (
+      worldCoords.length &&
+      (model.activeState === model.widgetState.getMoveHandle() || isDragging)
+    ) {
+      model.activeState.setOrigin(worldCoords);
+      publicAPI.invokeInteractionEvent();
+      return macro.EVENT_ABORT;
+    }
+    return macro.VOID;
+  }
+
   // --------------------------------------------------------------------------
   // Right click: Delete handle
   // --------------------------------------------------------------------------
@@ -62,6 +81,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
 
     if (model.activeState === model.widgetState.getMoveHandle()) {
+      updateMoveHandle(e);
       // Commit handle to location
       const moveHandle = model.widgetState.getMoveHandle();
       const newHandle = model.widgetState.addHandle();
@@ -91,19 +111,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
-      model.manipulator.setOrigin(model.activeState.getOrigin());
-      model.manipulator.setNormal(model._camera.getDirectionOfProjection());
-      const worldCoords = model.manipulator.handleEvent(
-        callData,
-        model._apiSpecificRenderWindow
-      );
-
-      if (
-        worldCoords.length &&
-        (model.activeState === model.widgetState.getMoveHandle() || isDragging)
-      ) {
-        model.activeState.setOrigin(worldCoords);
-        publicAPI.invokeInteractionEvent();
+      if (updateMoveHandle(callData) === macro.EVENT_ABORT) {
         return macro.EVENT_ABORT;
       }
     }
