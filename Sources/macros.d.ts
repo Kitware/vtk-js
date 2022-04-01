@@ -642,6 +642,7 @@ declare const Macro: {
   isVtkObject: typeof isVtkObject,
   keystore: typeof keystore,
   measurePromiseExecution: typeof measurePromiseExecution,
+  moveToProtected: typeof moveToProtected,
   newInstance: typeof newInstance,
   normalizeWheel: typeof normalizeWheel,
   obj: typeof obj,
