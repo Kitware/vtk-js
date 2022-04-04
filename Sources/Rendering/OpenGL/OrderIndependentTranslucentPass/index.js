@@ -325,7 +325,7 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
     if (model._supported) {
       return translucentShaderReplacement;
     }
-    return {};
+    return null;
   };
 
   publicAPI.releaseGraphicsResources = (viewNode) => {
