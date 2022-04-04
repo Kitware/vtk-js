@@ -148,6 +148,28 @@ export function getCenter(bounds) {
   ];
 }
 
+export function scaleAboutCenter(bounds, sx, sy, sz) {
+  if (!isValid(bounds)) {
+    return false;
+  }
+  const center = getCenter(bounds);
+  bounds[0] -= center[0];
+  bounds[1] -= center[0];
+  bounds[2] -= center[1];
+  bounds[3] -= center[1];
+  bounds[4] -= center[2];
+  bounds[5] -= center[2];
+  scale(bounds, sx, sy, sz);
+  bounds[0] += center[0];
+  bounds[1] += center[0];
+  bounds[2] += center[1];
+  bounds[3] += center[1];
+  bounds[4] += center[2];
+  bounds[5] += center[2];
+
+  return true;
+}
+
 export function getLength(bounds, index) {
   return bounds[index * 2 + 1] - bounds[index * 2];
 }
@@ -230,11 +252,9 @@ export function computeCornerPoints(bounds, point1, point2) {
 }
 
 export function computeScale3(bounds, scale3 = []) {
-  const center = getCenter(bounds);
-  scale3[0] = bounds[1] - center[0];
-  scale3[1] = bounds[3] - center[1];
-  scale3[2] = bounds[5] - center[2];
-
+  scale3[0] = 0.5 * (bounds[1] - bounds[0]);
+  scale3[1] = 0.5 * (bounds[3] - bounds[2]);
+  scale3[2] = 0.5 * (bounds[5] - bounds[4]);
   return scale3;
 }
 
@@ -729,6 +749,7 @@ export const STATIC = {
   setMaxPoint,
   inflate,
   scale,
+  scaleAboutCenter,
   getCenter,
   getLength,
   getLengths,
