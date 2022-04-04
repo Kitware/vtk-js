@@ -214,6 +214,22 @@ export function setImmediateVTK(fn) {
 }
 
 // ----------------------------------------------------------------------------
+// measurePromiseExecution
+//
+// Measures the time it takes for a promise to finish from
+//   the time this function is invoked.
+// The callback receives the time it took for the promise to resolve or reject.
+// ----------------------------------------------------------------------------
+
+export function measurePromiseExecution(promise, callback) {
+  const start = performance.now();
+  promise.finally(() => {
+    const delta = performance.now() - start;
+    callback(delta);
+  });
+}
+
+// ----------------------------------------------------------------------------
 // vtkObject: modified(), onModified(callback), delete()
 // ----------------------------------------------------------------------------
 
@@ -1700,6 +1716,7 @@ export default {
   getStateArrayMapFunc,
   isVtkObject,
   keystore,
+  measurePromiseExecution,
   moveToProtected,
   newInstance,
   newTypedArray,
