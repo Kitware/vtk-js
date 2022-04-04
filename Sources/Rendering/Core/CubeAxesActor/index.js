@@ -781,7 +781,12 @@ function vtkCubeAxesActor(publicAPI, model) {
   publicAPI.getBounds = () => {
     publicAPI.update();
     vtkBoundingBox.setBounds(model.bounds, model.gridActor.getBounds());
-    vtkBoundingBox.scaleAboutCenter(model.bounds, model.boundsScaleFactor);
+    vtkBoundingBox.scaleAboutCenter(
+      model.bounds,
+      model.boundsScaleFactor,
+      model.boundsScaleFactor,
+      model.boundsScaleFactor
+    );
     return model.bounds;
   };
 }
