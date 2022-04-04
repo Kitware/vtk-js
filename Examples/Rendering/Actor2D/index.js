@@ -39,8 +39,8 @@ fpsElm.style.bottom = '10px';
 fpsElm.style.background = 'rgba(255,255,255,0.5)';
 fpsElm.style.borderRadius = '5px';
 
-fpsMonitor.setContainer(document.querySelector('body'));
-fpsMonitor.setRenderWindow(renderWindow);
+// fpsMonitor.setContainer(document.querySelector('body'));
+// fpsMonitor.setRenderWindow(renderWindow);
 
 fullScreenRenderer.setResizeCallback(fpsMonitor.update);
 
@@ -92,10 +92,14 @@ mapper2D.setScalarVisibility(false);
 
 const actor = vtkActor.newInstance();
 actor.setMapper(mapper);
+actor.getProperty().setEdgeVisibility(true);
+actor.getProperty().setEdgeColor([0.5, 0, 0.6]);
+actor.getProperty().setLineWidth(3);
 const actor2D = vtkActor2D.newInstance();
 actor2D.setMapper(mapper2D);
 actor2D.getProperty().setColor([1, 0, 0]);
 actor2D.getProperty().setOpacity(0.5);
+actor2D.getProperty().setLineWidth(3);
 actor2D.getProperty().setDisplayLocation(DisplayLocation.FOREGROUND);
 actor2D.getProperty().setRepresentation(Representation.SURFACE);
 
@@ -116,6 +120,7 @@ const resolutionChange = document.querySelector('.resolution');
 representationSelector.addEventListener('change', (e) => {
   const newRepValue = Number(e.target.value);
   actor2D.getProperty().setRepresentation(newRepValue);
+  actor.getProperty().setRepresentation(newRepValue);
   renderWindow.render();
   fpsMonitor.update();
 });
@@ -123,6 +128,7 @@ representationSelector.addEventListener('change', (e) => {
 resolutionChange.addEventListener('input', (e) => {
   const resolution = Number(e.target.value);
   sphereSource.setThetaResolution(resolution);
+  coneSource.setResolution(resolution);
   renderWindow.render();
   fpsMonitor.update();
 });
