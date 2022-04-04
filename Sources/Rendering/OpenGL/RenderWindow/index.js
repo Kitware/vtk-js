@@ -728,6 +728,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     });
   };
 
+  publicAPI.getHardwareMaximumLineWidth = () => {
+    const gl = publicAPI.get3DContext();
+    const lineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE);
+    return lineWidthRange[1];
+  };
+
   publicAPI.getGLInformations = () => {
     const gl = publicAPI.get3DContext();
 

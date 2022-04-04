@@ -462,10 +462,11 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
           drawSurfaceWithEdges &&
           (i === model.primTypes.TrisEdges ||
             i === model.primTypes.TriStripsEdges);
-        publicAPI.updateShaders(model.primitives[i], ren, actor);
+        model.lastBoundBO = model.primitives[i];
+        model.primitives[i].updateShaders(ren, actor, publicAPI);
         const program = model.primitives[i].getProgram();
 
-        const mode = publicAPI.getOpenGLMode(representation, i);
+        const mode = model.primitives[i].getOpenGLMode(representation);
         const normalMatrixUsed = program.isUniformUsed('normalMatrix');
         const mcvcMatrixUsed = program.isUniformUsed('MCVCMatrix');
 
@@ -615,6 +616,17 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
       return true;
     }
     return superClass.getNeedToRebuildBufferObjects(ren, actor);
+  };
+
+  publicAPI.getNeedToRebuildShaders = (cellBO, ren, actor) => {
+    if (
+      superClass.getNeedToRebuildShaders(cellBO, ren, actor) ||
+      cellBO.getShaderSourceTime().getMTime() < model.renderable.getMTime() ||
+      cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime()
+    ) {
+      return true;
+    }
+    return false;
   };
 
   publicAPI.buildBufferObjects = (ren, actor) => {
