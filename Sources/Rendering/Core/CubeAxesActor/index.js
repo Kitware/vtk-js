@@ -114,7 +114,7 @@ function vtkCubeAxesActorHelper(publicAPI, model) {
     offset,
     results
   ) => {
-    const value = model.renderable.get_tmAtlas().get(text);
+    const value = model.renderable.getTmAtlas().get(text);
     if (!value) {
       return;
     }

@@ -960,8 +960,18 @@ export function extend(publicAPI, model, initialValues = {}) {
     'drawAboveRangeSwatch',
   ]);
   macro.get(publicAPI, model, ['axisTextStyle', 'tickTextStyle']);
-  macro.getArray(publicAPI, model, ['boxPosition', 'boxSize']);
-  macro.setArray(publicAPI, model, ['boxPosition', 'boxSize'], 2);
+  macro.getArray(publicAPI, model, [
+    'barPosition',
+    'barSize',
+    'boxPosition',
+    'boxSize',
+  ]);
+  macro.setArray(
+    publicAPI,
+    model,
+    ['barPosition', 'barSize', 'boxPosition', 'boxSize'],
+    2
+  );
 
   // Object methods
   vtkScalarBarActor(publicAPI, model);
