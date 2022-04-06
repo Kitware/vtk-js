@@ -271,12 +271,12 @@ reader
         ijk[slicingMode] = image.imageMapper.getSlice();
         data.indexToWorld(ijk, position);
 
-        widgets.paintWidget.getManipulator().setOrigin(position);
-        widgets.rectangleWidget.getManipulator().setOrigin(position);
-        widgets.ellipseWidget.getManipulator().setOrigin(position);
-        widgets.circleWidget.getManipulator().setOrigin(position);
-        widgets.splineWidget.getManipulator().setOrigin(position);
-        widgets.polygonWidget.getManipulator().setOrigin(position);
+        widgets.paintWidget.getManipulator().setUserOrigin(position);
+        widgets.rectangleWidget.getManipulator().setUserOrigin(position);
+        widgets.ellipseWidget.getManipulator().setUserOrigin(position);
+        widgets.circleWidget.getManipulator().setUserOrigin(position);
+        widgets.splineWidget.getManipulator().setUserOrigin(position);
+        widgets.polygonWidget.getManipulator().setUserOrigin(position);
 
         painter.setSlicingMode(slicingMode);
 

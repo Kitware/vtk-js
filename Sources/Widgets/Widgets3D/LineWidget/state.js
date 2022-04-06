@@ -16,7 +16,7 @@ export default function generateState() {
     .createBuilder()
     .addStateFromMixin({
       labels: ['moveHandle'],
-      mixins: ['origin', 'color', 'scale1', 'visible', 'shape'],
+      mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator', 'shape'],
       name: 'moveHandle',
       initialValues: {
         scale1: 50,

@@ -20,9 +20,13 @@ export default function widgetBehavior(publicAPI, model) {
   }
 
   function updateMoveHandle(callData) {
-    model.manipulator.setOrigin(model._camera.getFocalPoint());
-    model.manipulator.setNormal(model._camera.getDirectionOfProjection());
-    const worldCoords = model.manipulator.handleEvent(
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
+    if (!manipulator) {
+      return macro.VOID;
+    }
+
+    const worldCoords = manipulator.handleEvent(
       callData,
       model._apiSpecificRenderWindow
     );
@@ -88,6 +92,7 @@ export default function widgetBehavior(publicAPI, model) {
       newHandle.setOrigin(...moveHandle.getOrigin());
       newHandle.setColor(moveHandle.getColor());
       newHandle.setScale1(moveHandle.getScale1());
+      newHandle.setManipulator(model.manipulator);
     } else {
       isDragging = true;
       model._apiSpecificRenderWindow.setCursor('grabbing');
@@ -106,7 +111,6 @@ export default function widgetBehavior(publicAPI, model) {
     if (
       model.pickable &&
       model.dragable &&
-      model.manipulator &&
       model.activeState &&
       model.activeState.getActive() &&
       !ignoreKey(callData)

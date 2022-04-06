@@ -13,8 +13,6 @@ export default function widgetBehavior(publicAPI, model) {
   // The last world coordinate of the mouse cursor during dragging.
   model.previousPosition = null;
 
-  centerHandle.setManipulator(model.manipulator);
-  borderHandle.setManipulator(model.manipulator);
   model.classHierarchy.push('vtkSphereWidgetProp');
 
   moveHandle.setVisible(true);
@@ -58,7 +56,9 @@ export default function widgetBehavior(publicAPI, model) {
   }
 
   function currentWorldCoords(e) {
-    return model.manipulator.handleEvent(e, model._apiSpecificRenderWindow);
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
+    return manipulator.handleEvent(e, model._apiSpecificRenderWindow);
   }
 
   // Update the sphere's center and radius.  Example:

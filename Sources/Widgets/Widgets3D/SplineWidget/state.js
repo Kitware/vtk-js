@@ -11,7 +11,7 @@ export default function generateState() {
     .addField({ name: 'splineBias', initialValue: 0 })
     .addStateFromMixin({
       labels: ['moveHandle'],
-      mixins: ['origin', 'color', 'scale1', 'visible'],
+      mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator'],
       name: 'moveHandle',
       initialValues: {
         scale1: 0.05,
@@ -20,7 +20,7 @@ export default function generateState() {
     })
     .addDynamicMixinState({
       labels: ['handles'],
-      mixins: ['origin', 'color', 'scale1', 'visible'],
+      mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator'],
       name: 'handle',
       initialValues: {
         scale1: 0.05,
