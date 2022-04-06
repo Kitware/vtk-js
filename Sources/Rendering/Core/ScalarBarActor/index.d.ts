@@ -225,6 +225,30 @@ export interface vtkScalarBarActor extends vtkActor {
 
 	/**
 	 * 
+	 * @param {Vector2} barPosition 
+	 */
+	setBarPosition(barPosition: Vector2): boolean;
+
+	/**
+	 * 
+	 * @param {Vector2} barPosition 
+	 */
+	setBarPositionFrom(barPosition: Vector2): boolean;
+
+	/**
+	 * 
+	 * @param {Size} barSize 
+	 */
+	setBarSize(barSize: Size): boolean;
+
+	/**
+	 * 
+	 * @param {Size} barSize 
+	 */
+	setBarSizeFrom(barSize: Size): boolean;
+
+	/**
+	 * 
 	 * @param {vtkScalarsToColors} scalarsToColors 
 	 */
 	setScalarsToColors(scalarsToColors: vtkScalarsToColors): boolean;
