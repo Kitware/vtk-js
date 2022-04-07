@@ -205,6 +205,7 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
     // basic alpha blending
     model._supported = false;
     if (
+      renNode.getSelector() ||
       !gl ||
       !viewNode.getWebgl2() ||
       (!gl.getExtension('EXT_color_buffer_half_float') &&
