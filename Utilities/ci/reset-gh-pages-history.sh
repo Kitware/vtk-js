@@ -4,6 +4,8 @@ trap 'exit' ERR
 
 curbranch="$(git branch --show-current)"
 
+git reset --hard
+git clean -dxf
 git checkout gh-pages
 git checkout --orphan tmp
 git commit -m "vtk.js website"
