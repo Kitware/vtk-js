@@ -1,8 +1,0 @@
-{
-  "include": ["Sources/**/*"],
-  "compilerOptions": {
-    "allowJs": true,
-    "declaration": true,
-    "emitDeclarationOnly": true
-  }
-}
