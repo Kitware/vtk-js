@@ -181,13 +181,25 @@ export default {
             if (base.endsWith('.d.ts')) {
               return relatifyImports(content.toString(), (relImport) => {
                 let importPath = relImport;
-                if (relImport.startsWith('../')) {
-                  importPath = relImport.slice(3);
+                const baseName = path.basename(base);
+
+                if (
+                  baseName === 'index.d.ts' &&
+                  path.dirname(base) !== 'Sources' &&
+                  (importPath.startsWith('../') || importPath.startsWith('./'))
+                ) {
+                  // this file will be moved up one folder, so
+                  // all of its relative imports must be adjusted.
+                  const baseDir = path.dirname(base);
+                  const resolvedImportPath = path.resolve(
+                    `${baseDir}/${importPath}`
+                  );
+                  importPath = `./${path.relative(
+                    `${baseDir}/..`,
+                    resolvedImportPath
+                  )}`;
                 }
 
-                if (!importPath.startsWith('../')) {
-                  importPath = `./${importPath}`;
-                }
                 return importPath;
               });
             }
