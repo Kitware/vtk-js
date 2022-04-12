@@ -17,12 +17,11 @@ import svgo from 'rollup-plugin-svgo';
 import webworkerLoader from 'rollup-plugin-web-worker-loader';
 import copy from 'rollup-plugin-copy';
 
-import pkg from './package.json';
+import pkgJSON from './package.json';
 
 import { rewriteFilenames } from './Utilities/rollup/plugin-rewrite-filenames';
 import { generateDtsReferences } from './Utilities/rollup/plugin-generate-references';
-
-const relatifyImports = require('./Utilities/build/rewrite-imports.js');
+import relatifyImports from './Utilities/build/rewrite-imports';
 
 const IGNORE_LIST = [
   /[/\\]example_?[/\\]/,
@@ -56,8 +55,8 @@ entryPoints.forEach((entry) => {
 
 const outputDir = path.resolve('dist', 'esm');
 
-const dependencies = Object.keys(pkg.dependencies || []);
-const peerDependencies = Object.keys(pkg.peerDependencies || []);
+const dependencies = Object.keys(pkgJSON.dependencies || []);
+const peerDependencies = Object.keys(pkgJSON.peerDependencies || []);
 
 export default {
   input: entries,
@@ -106,9 +105,7 @@ export default {
   ],
   plugins: [
     alias({
-      entries: [
-        { find: 'vtk.js', replacement: path.resolve(__dirname) },
-      ],
+      entries: [{ find: 'vtk.js', replacement: path.resolve(__dirname) }],
     }),
     // ignore crypto module
     ignore(['crypto']),
@@ -209,8 +206,16 @@ export default {
         { src: 'Utilities/DataGenerator', dest: `${outputDir}/Utilities` },
         { src: 'Utilities/prepare.js', dest: `${outputDir}/Utilities` },
         { src: 'Utilities/config/*', dest: `${outputDir}/Utilities/config` },
-        { src: 'Utilities/build/macro-shim.d.ts', dest: outputDir, rename: 'macro.d.ts' },
-        { src: 'Utilities/build/macro-shim.js', dest: outputDir, rename: 'macro.js' },
+        {
+          src: 'Utilities/build/macro-shim.d.ts',
+          dest: outputDir,
+          rename: 'macro.d.ts',
+        },
+        {
+          src: 'Utilities/build/macro-shim.js',
+          dest: outputDir,
+          rename: 'macro.js',
+        },
         { src: '*.txt', dest: outputDir },
         { src: '*.md', dest: outputDir },
         { src: 'tsconfig.json', dest: outputDir },
