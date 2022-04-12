@@ -79,6 +79,17 @@ function vtkWebGPUPipeline(publicAPI, model) {
   publicAPI.bindVertexInput = (renderEncoder, vInput) => {
     vInput.bindBuffers(renderEncoder);
   };
+
+  publicAPI.addDrawCallback = (cb) => {
+    model._drawCallbacks.push(cb);
+  };
+
+  // handle anything that needs to be done when drawing
+  publicAPI.draw = (encoder) => {
+    for (let cb = 0; cb < model._drawCallbacks.length; cb++) {
+      model._drawCallbacks[cb](encoder, publicAPI);
+    }
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -103,6 +114,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.layouts = [];
   model.shaderDescriptions = [];
+  model._drawCallbacks = [];
 
   macro.get(publicAPI, model, ['handle', 'pipelineDescription']);
   macro.setGet(publicAPI, model, [

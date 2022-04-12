@@ -202,7 +202,6 @@ function vtkScalarBarActorHelper(publicAPI, model) {
     ) {
       const range = scalarsToColors.getMappingRange();
       model.lastTickBounds = [...range];
-      model.barMapper.setScalarRange(model.lastTickBounds);
 
       // compute tick marks for axes (update for log scale)
       const scale = d3
@@ -847,6 +846,7 @@ const newScalarBarActorHelper = macro.newInstance(
 
     model.barMapper = vtkMapper.newInstance();
     model.barMapper.setInterpolateScalarsBeforeMapping(true);
+    model.barMapper.setUseLookupTableScalarRange(true);
     model.polyData = vtkPolyData.newInstance();
     model.barMapper.setInputData(model.polyData);
     model.barActor = vtkActor.newInstance();

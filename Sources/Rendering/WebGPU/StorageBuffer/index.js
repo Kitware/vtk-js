@@ -169,13 +169,13 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
     const lines = [`struct ${model.label}StructEntry\n{`];
     for (let i = 0; i < model.bufferEntries.length; i++) {
       const entry = model.bufferEntries[i];
-      lines.push(`  ${entry.name}: ${entry.type};`);
+      lines.push(`  ${entry.name}: ${entry.type},`);
     }
     lines.push(`
 };
 struct ${model.label}Struct
 {
-  values: array<${model.label}StructEntry>;
+  values: array<${model.label}StructEntry>,
 };
 @binding(${binding}) @group(${group}) var<storage, read> ${model.label}: ${model.label}Struct;
 `);
