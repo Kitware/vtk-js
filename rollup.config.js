@@ -21,7 +21,8 @@ import pkgJSON from './package.json';
 
 import { rewriteFilenames } from './Utilities/rollup/plugin-rewrite-filenames';
 import { generateDtsReferences } from './Utilities/rollup/plugin-generate-references';
-import relatifyImports from './Utilities/build/rewrite-imports';
+
+const relatifyImports = require('./Utilities/build/rewrite-imports');
 
 const IGNORE_LIST = [
   /[/\\]example_?[/\\]/,

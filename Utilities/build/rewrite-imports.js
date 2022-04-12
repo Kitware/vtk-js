@@ -1,4 +1,4 @@
-export default (code, replaceFunc) => {
+module.exports = (code, replaceFunc) => {
   const importRegex = /(?:import|from) ['"]([^'"]*)['"]/g;
   let m;
   while ((m = importRegex.exec(code)) !== null) {
