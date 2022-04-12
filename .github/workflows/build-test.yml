@@ -27,6 +27,10 @@ jobs:
           name: build-results
           path: dist
           retention-days: 15
+      - name: Validate generated typescript definitions
+        run: |
+          npx tsc -p tsconfig.esm-check.json
+          npx tsc -p tsconfig.umd-check.json
       - name: Chrome and Firefox tests
         run: xvfb-run --auto-servernum npm run test -- --browsers Chrome,Firefox
       - name: Archive test results
