@@ -198,7 +198,7 @@ export default {
                   importPath = `./${path.relative(
                     `${baseDir}/..`,
                     resolvedImportPath
-                  )}`;
+                  )}`.replace(/\\/g, '/');
                 }
 
                 return importPath;
