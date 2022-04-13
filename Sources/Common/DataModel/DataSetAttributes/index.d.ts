@@ -205,6 +205,12 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 
 	/**
 	 * Override to allow proper handling of active attributes
+	 * @param arr 
+	 */
+	addArray(arr: any): number;
+
+	/**
+	 * Override to allow proper handling of active attributes
 	 */
 	removeAllArrays(): void;
 
