@@ -44,6 +44,10 @@ function vtkOpenGLHelper(publicAPI, model) {
       const mode = publicAPI.getOpenGLMode(rep);
       const wideLines = publicAPI.haveWideLines(ren, actor);
       const gl = model.context;
+      const depthMask = gl.getParameter(gl.DEPTH_WRITEMASK);
+      if (model.pointPicking) {
+        gl.depthMask(false);
+      }
       const drawingLines = mode === gl.LINES;
       if (drawingLines && wideLines) {
         publicAPI.updateShaders(ren, actor, oglMapper);
@@ -62,12 +66,18 @@ function vtkOpenGLHelper(publicAPI, model) {
       }
       const stride =
         (mode === gl.POINTS ? 1 : 0) || (mode === gl.LINES ? 2 : 3);
+      if (model.pointPicking) {
+        gl.depthMask(depthMask);
+      }
       return model.CABO.getElementCount() / stride;
     }
     return 0;
   };
 
   publicAPI.getOpenGLMode = (rep) => {
+    if (model.pointPicking) {
+      return model.context.POINTS;
+    }
     const type = model.primitiveType;
     if (rep === Representation.POINTS || type === primTypes.Points) {
       return model.context.POINTS;
@@ -169,10 +179,34 @@ function vtkOpenGLHelper(publicAPI, model) {
         .setUniformf('lineWidthStepSize', lineWidth / Math.ceil(lineWidth));
       publicAPI.getProgram().setUniformf('halfLineWidth', halfLineWidth);
     }
+    if (
+      model.primitiveType === primTypes.Points ||
+      actor.getProperty().getRepresentation() === Representation.POINTS
+    ) {
+      publicAPI
+        .getProgram()
+        .setUniformf('pointSize', actor.getProperty().getPointSize());
+    } else if (model.pointPicking) {
+      publicAPI
+        .getProgram()
+        .setUniformf('pointSize', publicAPI.getPointPickingPrimitiveSize());
+    }
   };
 
   publicAPI.replaceShaderPositionVC = (shaders, ren, actor) => {
     let VSSource = shaders.Vertex;
+
+    // Always set point size in case we need picking
+    VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::PositionVC::Dec', [
+      '//VTK::PositionVC::Dec',
+      'uniform float pointSize;',
+    ]).result;
+    VSSource = vtkShaderProgram.substitute(
+      VSSource,
+      '//VTK::PositionVC::Impl',
+      ['//VTK::PositionVC::Impl', '  gl_PointSize = pointSize;'],
+      false
+    ).result;
 
     // for lines, make sure we add the width code
     if (
@@ -207,24 +241,17 @@ function vtkOpenGLHelper(publicAPI, model) {
         ]
       ).result;
     }
-
-    // for points make sure to add in the point size
-    if (
-      actor.getProperty().getRepresentation() === Representation.POINTS ||
-      model.primitiveType === primTypes.Points
-    ) {
-      VSSource = vtkShaderProgram.substitute(
-        VSSource,
-        '//VTK::PositionVC::Impl',
-        [
-          '//VTK::PositionVC::Impl',
-          `  gl_PointSize = ${actor.getProperty().getPointSize()}.0;`,
-        ],
-        false
-      ).result;
-    }
-
     shaders.Vertex = VSSource;
+  };
+
+  publicAPI.getPointPickingPrimitiveSize = () => {
+    if (model.primitiveType === primTypes.Points) {
+      return 2;
+    }
+    if (model.primitiveType === primTypes.Lines) {
+      return 4;
+    }
+    return 6;
   };
 }
 
@@ -240,6 +267,7 @@ const DEFAULT_VALUES = {
   attributeUpdateTime: null,
   CABO: null,
   primitiveType: 0,
+  pointPicking: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -263,6 +291,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'attributeUpdateTime',
     'CABO',
     'primitiveType',
+    'pointPicking',
   ]);
 
   model.program = vtkShaderProgram.newInstance();
