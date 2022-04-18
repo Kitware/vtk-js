@@ -145,6 +145,23 @@ function defaultAutoLayout(publicAPI, model) {
   };
 }
 
+// ----------------------------------------------------------------------------
+// Default generateTicks function
+// ----------------------------------------------------------------------------
+function defaultGenerateTicks(publicApi, model) {
+  return (helper) => {
+    const lastTickBounds = helper.getLastTickBounds();
+    const scale = d3
+      .scaleLinear()
+      .domain([lastTickBounds[0], lastTickBounds[1]]);
+    const ticks = scale.ticks(5);
+    const format = scale.tickFormat(5);
+
+    helper.setTicks(ticks);
+    helper.setTickstrings(ticks.map(format));
+  };
+}
+
 // many properties of this actor depend on the API specific view The main
 // dependency being the resolution as that drives what font sizes to use.
 // Bacause of this we need to do some of the calculations in a API specific
@@ -166,6 +183,7 @@ function vtkScalarBarActorHelper(publicAPI, model) {
     model.tmActor.setProperty(renderable.getProperty());
     model.tmActor.setParentProp(renderable);
 
+    model.generateTicks = renderable.generateTicks;
     model.axisTextStyle = { ...renderable.getAxisTextStyle() };
     model.tickTextStyle = { ...renderable.getTickTextStyle() };
 
@@ -204,12 +222,7 @@ function vtkScalarBarActorHelper(publicAPI, model) {
       model.lastTickBounds = [...range];
 
       // compute tick marks for axes (update for log scale)
-      const scale = d3
-        .scaleLinear()
-        .domain([model.lastTickBounds[0], model.lastTickBounds[1]]);
-      model.ticks = scale.ticks(5);
-      const format = scale.tickFormat(5);
-      model.tickstrings = model.ticks.map(format);
+      model.renderable.getGenerateTicks()(publicAPI);
 
       if (model.renderable.getAutomated()) {
         model.renderable.getAutoLayout()(publicAPI);
@@ -283,7 +296,7 @@ function vtkScalarBarActorHelper(publicAPI, model) {
     results.tickWidth = 0;
     results.tickHeight = 0;
     applyTextStyle(model.tmContext, model.tickTextStyle);
-    const strings = [...model.tickstrings, 'NaN', 'Below', 'Above'];
+    const strings = [...publicAPI.getTickstrings(), 'NaN', 'Below', 'Above'];
     for (let t = 0; t < strings.length; t++) {
       if (!newTmAtlas.has(strings[t])) {
         metrics = model.tmContext.measureText(strings[t]);
@@ -579,7 +592,8 @@ function vtkScalarBarActorHelper(publicAPI, model) {
     }
 
     // update the polydata
-    const numLabels = model.tickstrings.length + model.barSegments.length;
+    const numLabels =
+      publicAPI.getTickstrings().length + model.barSegments.length;
     const numPts = numLabels * 4;
     const numTris = numLabels * 2;
     const points = new Float64Array(numPts * 3);
@@ -690,14 +704,16 @@ function vtkScalarBarActorHelper(publicAPI, model) {
     const tickSegmentSize =
       model.barSize[spacedAxis] *
       (tickSeg.corners[2][spacedAxis] - tickSeg.corners[0][spacedAxis]);
-    for (let t = 0; t < model.ticks.length; t++) {
+    const ticks = publicAPI.getTicks();
+    const tickstrings = publicAPI.getTickstrings();
+    for (let t = 0; t < ticks.length; t++) {
       const tickPos =
-        (model.ticks[t] - model.lastTickBounds[0]) /
+        (ticks[t] - model.lastTickBounds[0]) /
         (model.lastTickBounds[1] - model.lastTickBounds[0]);
       tmp2v3[spacedAxis] = tickSegmentStart + tickSegmentSize * tickPos;
       vec3.transformMat4(ptv3, tmp2v3, invmat);
       publicAPI.createPolyDataForOneLabel(
-        model.tickstrings[t],
+        tickstrings[t],
         ptv3,
         xDir,
         yDir,
@@ -820,15 +836,17 @@ const newScalarBarActorHelper = macro.newInstance(
       'tickLabelPixelOffset',
       'renderable',
       'topTitle',
+      'ticks',
+      'tickstrings',
     ]);
     macro.get(publicAPI, model, [
       'lastSize',
       'lastAspectRatio',
+      'lastTickBounds',
       'axisTextStyle',
       'tickTextStyle',
       'barActor',
       'tmActor',
-      'ticks',
     ]);
     macro.getArray(publicAPI, model, ['boxPosition', 'boxSize']);
     macro.setArray(publicAPI, model, ['boxPosition', 'boxSize'], 2);
@@ -898,6 +916,10 @@ function vtkScalarBarActor(publicAPI, model) {
   publicAPI.resetAutoLayoutToDefault = () => {
     model.autoLayout = defaultAutoLayout(publicAPI, model);
   };
+
+  publicAPI.resetTicks = () => {
+    model.generateTicks = defaultGenerateTicks(publicAPI, model);
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -908,6 +930,7 @@ function defaultValues(initialValues) {
   return {
     automated: true,
     autoLayout: null,
+    generateTicks: null,
     axisLabel: 'Scalar Value',
     barPosition: [0, 0],
     barSize: [0, 0],
@@ -941,6 +964,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, defaultValues(initialValues));
 
   if (!model.autoLayout) model.autoLayout = defaultAutoLayout(publicAPI, model);
+  if (!model.generateTicks)
+    model.generateTicks = defaultGenerateTicks(publicAPI, model);
 
   // Inheritance
   vtkActor.extend(publicAPI, model, initialValues);
@@ -951,6 +976,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'automated',
     'autoLayout',
+    'generateTicks',
     'axisTitlePixelOffset',
     'axisLabel',
     'scalarsToColors',
