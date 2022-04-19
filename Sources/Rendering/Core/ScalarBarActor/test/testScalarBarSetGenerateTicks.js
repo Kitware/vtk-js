@@ -54,7 +54,7 @@ test.onlyIfWebGL('Test vtkScalarBarActor setGenerateTicks', (t) => {
     );
     const format = (num) => num.toFixed(2);
     helper.setTicks(ticks);
-    helper.setTickstrings(ticks.map(format));
+    helper.setTickStrings(ticks.map(format));
   };
 
   // Initialize scalar bar

@@ -148,6 +148,12 @@ function defaultAutoLayout(publicAPI, model) {
 // ----------------------------------------------------------------------------
 // Default generateTicks function
 // ----------------------------------------------------------------------------
+
+// This function returns the default function used to generate vtkScalarBarActor ticks.
+// The default function makes use of d3.scaleLinear() to generate 5 tick marks between
+// the minimum and maximum values of the scalar bar. Customize this behavior by passing
+// a function to vtkScalarBarActor.newInstance({ generateTicks: customGenerateTicks })
+// or by calling scalarBarActor.setGenerateTicks(customGenerateTicks).
 function defaultGenerateTicks(publicApi, model) {
   return (helper) => {
     const lastTickBounds = helper.getLastTickBounds();
@@ -930,7 +936,6 @@ function defaultValues(initialValues) {
   return {
     automated: true,
     autoLayout: null,
-    generateTicks: null,
     axisLabel: 'Scalar Value',
     barPosition: [0, 0],
     barSize: [0, 0],
@@ -951,6 +956,7 @@ function defaultValues(initialValues) {
       fontSize: 14,
       fontFamily: 'serif',
     },
+    generateTicks: null,
     drawNanAnnotation: true,
     drawBelowRangeSwatch: true,
     drawAboveRangeSwatch: true,
@@ -976,11 +982,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'automated',
     'autoLayout',
-    'generateTicks',
     'axisTitlePixelOffset',
     'axisLabel',
     'scalarsToColors',
     'tickLabelPixelOffset',
+    'generateTicks',
     'drawNanAnnotation',
     'drawBelowRangeSwatch',
     'drawAboveRangeSwatch',
