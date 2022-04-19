@@ -29,6 +29,7 @@ export interface IStyle {
 export interface IScalarBarActorInitialValues extends IActorInitialValues {
 	automated?: boolean,
 	autoLayout?: (publicAPI: object, model: object) => void,
+  generateTicks?: (helper: any) => void,
 	axisLabel?: string,
 	barPosition?: Vector2,
 	barSize?: Size,
@@ -87,6 +88,10 @@ export interface vtkScalarBarActor extends vtkActor {
 	 */
 	getAutoLayout(): any;
 
+  /**
+   * 
+   */
+  getGenerateTicks(): any;
 	/**
 	 * 
 	 */
@@ -175,6 +180,11 @@ export interface vtkScalarBarActor extends vtkActor {
 	 */
 	setAutoLayout(autoLayout: any): boolean;
 
+  /**
+   * 
+   * @param generateTicks 
+   */
+  setGenerateTicks(generateTicks: (helper: any) => void): boolean;
 	/**
 	 * 
 	 * @param {Boolean} automated 
