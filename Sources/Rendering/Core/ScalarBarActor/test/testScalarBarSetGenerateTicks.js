@@ -9,8 +9,10 @@ import vtkCustomScalarBarActor from 'vtk.js/Sources/Rendering/Core/ScalarBarActo
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 
 import baseline from './testScalarBarSetGenerateTicks.png';
+import baseline2 from './testScalarBarSetGenerateTicks2.png';
+import baseline3 from './testScalarBarSetGenerateTicks3.png';
 
-test.onlyIfWebGL.only('Test vtkScalarBarActor setGenerateTicks', (t) => {
+test.onlyIfWebGL('Test vtkScalarBarActor setGenerateTicks', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkScalarBarActor setGenerateTicks');
 
@@ -68,10 +70,10 @@ test.onlyIfWebGL.only('Test vtkScalarBarActor setGenerateTicks', (t) => {
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,
-      [baseline],
+      [baseline, baseline2, baseline3],
       'Rendering/Core/ScalarBarActor/testScalarBarActorSetGenerateTicks',
       t,
-      0.25,
+      0.5,
       gc.releaseResources
     );
   });

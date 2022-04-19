@@ -158,7 +158,7 @@ function defaultGenerateTicks(publicApi, model) {
     const format = scale.tickFormat(5);
 
     helper.setTicks(ticks);
-    helper.setTickstrings(ticks.map(format));
+    helper.setTickStrings(ticks.map(format));
   };
 }
 
@@ -296,7 +296,7 @@ function vtkScalarBarActorHelper(publicAPI, model) {
     results.tickWidth = 0;
     results.tickHeight = 0;
     applyTextStyle(model.tmContext, model.tickTextStyle);
-    const strings = [...publicAPI.getTickstrings(), 'NaN', 'Below', 'Above'];
+    const strings = [...publicAPI.getTickStrings(), 'NaN', 'Below', 'Above'];
     for (let t = 0; t < strings.length; t++) {
       if (!newTmAtlas.has(strings[t])) {
         metrics = model.tmContext.measureText(strings[t]);
@@ -593,7 +593,7 @@ function vtkScalarBarActorHelper(publicAPI, model) {
 
     // update the polydata
     const numLabels =
-      publicAPI.getTickstrings().length + model.barSegments.length;
+      publicAPI.getTickStrings().length + model.barSegments.length;
     const numPts = numLabels * 4;
     const numTris = numLabels * 2;
     const points = new Float64Array(numPts * 3);
@@ -705,7 +705,7 @@ function vtkScalarBarActorHelper(publicAPI, model) {
       model.barSize[spacedAxis] *
       (tickSeg.corners[2][spacedAxis] - tickSeg.corners[0][spacedAxis]);
     const ticks = publicAPI.getTicks();
-    const tickstrings = publicAPI.getTickstrings();
+    const tickStrings = publicAPI.getTickStrings();
     for (let t = 0; t < ticks.length; t++) {
       const tickPos =
         (ticks[t] - model.lastTickBounds[0]) /
@@ -713,7 +713,7 @@ function vtkScalarBarActorHelper(publicAPI, model) {
       tmp2v3[spacedAxis] = tickSegmentStart + tickSegmentSize * tickPos;
       vec3.transformMat4(ptv3, tmp2v3, invmat);
       publicAPI.createPolyDataForOneLabel(
-        tickstrings[t],
+        tickStrings[t],
         ptv3,
         xDir,
         yDir,
@@ -837,7 +837,7 @@ const newScalarBarActorHelper = macro.newInstance(
       'renderable',
       'topTitle',
       'ticks',
-      'tickstrings',
+      'tickStrings',
     ]);
     macro.get(publicAPI, model, [
       'lastSize',
