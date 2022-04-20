@@ -182,7 +182,7 @@ export interface vtkScalarBarActor extends vtkActor {
    *    mapper.getLookupTable().resetAnnotations()
    *  }
    * ```
-   * @param generateTicks 
+   * @param {(helper: any) => void} generateTicks 
    */
   setGenerateTicks(generateTicks: (helper: any) => void): boolean;
 	/**
