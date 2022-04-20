@@ -66,7 +66,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	/**
 	 * Get the container element.
 	 */
-	getContainer(): void;
+	getContainer(): Nullable<HTMLElement>;
 
 	/**
 	 * Get the container size.
