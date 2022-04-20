@@ -252,6 +252,12 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
 
     gl.colorMask(true, true, true, true);
     gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+
+    // make sure to clear the entire framebuffer as we will
+    // be blitting the entire thing all of it needs good initial values
+    gl.viewport(0, 0, size[0], size[1]);
+    gl.scissor(0, 0, size[0], size[1]);
+
     gl.clearBufferfv(gl.COLOR, 0, [0.0, 0.0, 0.0, 1.0]);
     gl.clearBufferfv(gl.COLOR, 1, [0.0, 0.0, 0.0, 0.0]);
 
