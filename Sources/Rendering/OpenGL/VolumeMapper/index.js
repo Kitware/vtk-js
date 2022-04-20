@@ -565,7 +565,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         'zBufferTexture',
         model.zBufferTexture.getTextureUnit()
       );
-      const size = publicAPI.getRenderTargetSize();
+      const size = model._useSmallViewport
+        ? [model._smallViewportWidth, model._smallViewportHeight]
+        : model._openGLRenderWindow.getFramebufferSize();
       program.setUniformf('vpWidth', size[0]);
       program.setUniformf('vpHeight', size[1]);
     }
