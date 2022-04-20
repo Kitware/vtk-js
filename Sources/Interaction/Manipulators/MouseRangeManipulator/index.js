@@ -30,7 +30,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     // the user's cursor is from the start of the interaction, the more
     // their movements will effect the value.
     const scalingFactor = listener.exponentialScroll
-      ? listener.scale ** Math.log(Math.abs(model.interactionNetDelta) + 2)
+      ? listener.scale ** Math.log2(Math.abs(model.interactionNetDelta) + 2)
       : listener.scale;
 
     const newDelta = delta * scalingFactor + incrementalDelta.get(listener);
@@ -273,9 +273,14 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     if (!model.scrollListener || !delta) {
       return;
     }
+    model.interactionNetDelta += delta * model.scrollListener.step;
     processDelta(model.scrollListener, delta * model.scrollListener.step);
   };
-  publicAPI.onStartScroll = publicAPI.onScroll;
+
+  publicAPI.onStartScroll = (payload) => {
+    model.interactionNetDelta = 0;
+    publicAPI.onScroll(payload);
+  };
 }
 
 // ----------------------------------------------------------------------------
