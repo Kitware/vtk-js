@@ -920,11 +920,11 @@ function vtkScalarBarActor(publicAPI, model) {
   };
 
   publicAPI.resetAutoLayoutToDefault = () => {
-    model.autoLayout = defaultAutoLayout(publicAPI, model);
+    publicAPI.setAutoLayout(defaultAutoLayout(publicAPI, model));
   };
 
-  publicAPI.resetTicks = () => {
-    model.generateTicks = defaultGenerateTicks(publicAPI, model);
+  publicAPI.resetGenerateTicksToDefault = () => {
+    publicAPI.setGenerateTicks(defaultGenerateTicks(publicAPI, model));
   };
 }
 

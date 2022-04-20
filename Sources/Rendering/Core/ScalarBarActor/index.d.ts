@@ -27,9 +27,21 @@ export interface IStyle {
  *
  */
 export interface IScalarBarActorInitialValues extends IActorInitialValues {
+  automated?: boolean,
   autoLayout?: (publicAPI: object, model: object) => void,
   axisLabel?: string,
+  barPosition?: Vector2,
+  barSize?: Size,
+  boxPosition?: Vector2,
+  boxSize?: Size,
+  scalarToColors?: null,
+  axisTitlePixelOffset?: number,
+  axisTextStyle?: IStyle,
+  tickLabelPixelOffset?: number,
+  tickTextStyle?: IStyle,
   generateTicks?: (helper: any) => void,
+  drawBelowRangeSwatch?: boolean,
+  drawAboveRangeSwatch?: boolean,
   drawNanAnnotation?: boolean,
 }
 
