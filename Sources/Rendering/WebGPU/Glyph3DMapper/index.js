@@ -130,6 +130,7 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
+      model.WebGPUActor = publicAPI.getFirstAncestorOfType('vtkWebGPUActor');
       if (!model.renderable.getStatic()) {
         model.renderable.update();
       }

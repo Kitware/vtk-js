@@ -336,11 +336,9 @@ function vtkWebGPUImageMapper(publicAPI, model) {
   const superClassUpdateBuffers = publicAPI.updateBuffers;
   publicAPI.updateBuffers = () => {
     superClassUpdateBuffers();
-    const treq = {
-      imageData: model.currentInput,
-      owner: model.currentInput.getPointData().getScalars(),
-    };
-    const newTex = model.device.getTextureManager().getTexture(treq);
+    const newTex = model.device
+      .getTextureManager()
+      .getTextureForImageData(model.currentInput);
     const tViews = model.textureViews;
 
     if (!tViews[0] || tViews[0].getTexture() !== newTex) {

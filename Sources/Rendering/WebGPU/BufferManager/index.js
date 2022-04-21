@@ -1,5 +1,6 @@
 import * as macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkWebGPUBuffer from 'vtk.js/Sources/Rendering/WebGPU/Buffer';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
@@ -8,7 +9,9 @@ import Constants from './Constants';
 const { BufferUsage, PrimitiveTypes } = Constants;
 const { Representation } = vtkProperty;
 
-const { vtkDebugMacro } = macro;
+const { vtkDebugMacro, vtkErrorMacro } = macro;
+
+const { VtkDataTypes } = vtkDataArray;
 
 // the webgpu constants all show up as undefined
 /* eslint-disable no-undef */
@@ -55,6 +58,54 @@ const cellCounters = {
     return 0;
   },
 };
+
+function _getFormatForDataArray(dataArray) {
+  let format;
+  switch (dataArray.getDataType()) {
+    case VtkDataTypes.UNSIGNED_CHAR:
+      format = 'uint8';
+      break;
+    case VtkDataTypes.FLOAT:
+      format = 'float32';
+      break;
+    case VtkDataTypes.UNSIGNED_INT:
+      format = 'uint32';
+      break;
+    case VtkDataTypes.INT:
+      format = 'sint32';
+      break;
+    case VtkDataTypes.DOUBLE:
+      format = 'float32';
+      break;
+    case VtkDataTypes.UNSIGNED_SHORT:
+      format = 'uint16';
+      break;
+    case VtkDataTypes.SHORT:
+      format = 'sin16';
+      break;
+    default:
+      format = 'float32';
+      break;
+  }
+  switch (dataArray.getNumberOfComponents()) {
+    case 2:
+      format += 'x2';
+      break;
+    case 3:
+      // only 32bit types support x3
+      if (!format.contains('32')) {
+        vtkErrorMacro(`unsupported x3 type for ${format}`);
+      }
+      format += 'x3';
+      break;
+    case 4:
+      format += 'x4';
+      break;
+    default:
+      break;
+  }
+  return format;
+}
 
 function getPrimitiveName(primType) {
   switch (primType) {
@@ -479,24 +530,34 @@ function vtkWebGPUBufferManager(publicAPI, model) {
   }
 
   // is the buffer already present?
-  publicAPI.hasBuffer = (req) => {
-    if (req.owner) {
-      // if a matching buffer already exists then return true
-      const hash = req.time + req.format + req.usage + req.hash;
-      return model.device.hasCachedObject(req.owner, hash);
-    }
-    return false;
-  };
+  publicAPI.hasBuffer = (hash) => model.device.hasCachedObject(hash);
 
   publicAPI.getBuffer = (req) => {
     // if we have a source the get/create/cache the buffer
-    if (req.owner) {
-      // if a matching buffer already exists then return it
-      const hash = req.time + req.format + req.usage + req.hash;
-      return model.device.getCachedObject(req.owner, hash, _createBuffer, req);
+    if (req.hash) {
+      return model.device.getCachedObject(req.hash, _createBuffer, req);
     }
 
     return _createBuffer(req);
+  };
+
+  publicAPI.getBufferForPointArray = (
+    dataArray,
+    cells,
+    primitiveType,
+    representation
+  ) => {
+    const format = _getFormatForDataArray(dataArray);
+    const buffRequest = {
+      hash: `PA${representation}P${primitiveType}D${dataArray.getMTime()}C${cells.getMTime()}${format}`,
+      usage: BufferUsage.PointArray,
+      format,
+      dataArray,
+      cells,
+      primitiveType,
+      representation,
+    };
+    return publicAPI.getBuffer(buffRequest);
   };
 
   publicAPI.getFullScreenQuadBuffer = () => {

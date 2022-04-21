@@ -178,14 +178,13 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
 
     const vertexInput = model.vertexInput;
 
-    let buffRequest = {
-      owner: points,
-      hash: 'spm',
-      time: points.getMTime(),
-      usage: BufferUsage.RawVertex,
-      format: 'float32x3',
-    };
-    if (!model.device.getBufferManager().hasBuffer(buffRequest)) {
+    let hash = `spm${points.getMTime()}float32x3`;
+    if (!model.device.getBufferManager().hasBuffer(hash)) {
+      const buffRequest = {
+        hash,
+        usage: BufferUsage.RawVertex,
+        format: 'float32x3',
+      };
       // xyz v1 v2 v3
       const tmpVBO = new Float32Array(3 * numPoints * 3);
 
@@ -220,16 +219,17 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
 
     const defaultRadius = model.renderable.getRadius();
     if (scales || defaultRadius !== model._lastRadius) {
-      buffRequest = {
-        owner: scales,
-        hash: 'spm',
-        time: scales
+      hash = `spm${
+        scales
           ? pointData.getArray(model.renderable.getScaleArray()).getMTime()
-          : 0,
-        usage: BufferUsage.RawVertex,
-        format: 'float32x2',
-      };
-      if (!model.device.getBufferManager().hasBuffer(buffRequest)) {
+          : defaultRadius
+      }float32x2`;
+      if (!model.device.getBufferManager().hasBuffer(hash)) {
+        const buffRequest = {
+          hash,
+          usage: BufferUsage.RawVertex,
+          format: 'float32x2',
+        };
         const tmpVBO = new Float32Array(3 * numPoints * 2);
 
         const cos30 = Math.cos(vtkMath.radiansFromDegrees(30.0));
@@ -258,14 +258,13 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
     if (model.renderable.getScalarVisibility()) {
       const c = model.renderable.getColorMapColors();
       if (c) {
-        buffRequest = {
-          owner: c,
-          hash: 'spm',
-          time: c.getMTime(),
-          usage: BufferUsage.RawVertex,
-          format: 'unorm8x4',
-        };
-        if (!model.device.getBufferManager().hasBuffer(buffRequest)) {
+        hash = `spm${c.getMTime()}unorm8x4`;
+        if (!model.device.getBufferManager().hasBuffer(hash)) {
+          const buffRequest = {
+            hash,
+            usage: BufferUsage.RawVertex,
+            format: 'unorm8x4',
+          };
           const colorComponents = c.getNumberOfComponents();
           if (colorComponents !== 4) {
             vtkErrorMacro('this should be 4');
