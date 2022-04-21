@@ -191,7 +191,6 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
     if (!model.UBO) {
       const req = {
         nativeArray: model.Float32Array,
-        time: 0,
         usage: BufferUsage.UniformArray,
         label: model.label,
       };

@@ -228,11 +228,11 @@ function vtkWebGPUStickMapper(publicAPI, model) {
         // rescale rerotate and translate
         vertexVC = vec4<f32>(input.radiusVC*(normal + iPoint.z*input.orientVC) + input.centerVC, 1.0);
       }
-      // compute the pixel's depth
-      var pos: vec4<f32> = rendererUBO.VCPCMatrix * vertexVC;
-      output.fragDepth = pos.z / pos.w;
     }
-    `;
+    // compute the pixel's depth
+    var pos: vec4<f32> = rendererUBO.VCPCMatrix * vertexVC;
+    output.fragDepth = pos.z / pos.w;
+  `;
 
     let code = fDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
@@ -279,14 +279,13 @@ function vtkWebGPUStickMapper(publicAPI, model) {
 
     const vertexInput = model.vertexInput;
 
-    let buffRequest = {
-      owner: points,
-      hash: 'stm',
-      time: points.getMTime(),
-      usage: BufferUsage.RawVertex,
-      format: 'float32x3',
-    };
-    if (!device.getBufferManager().hasBuffer(buffRequest)) {
+    let hash = `stm${points.getMTime()}float32x3`;
+    if (!device.getBufferManager().hasBuffer(hash)) {
+      const buffRequest = {
+        hash,
+        usage: BufferUsage.RawVertex,
+        format: 'float32x3',
+      };
       // xyz v1 v2 v3
       const tmpVBO = new Float32Array(numPoints * 3);
 
@@ -314,16 +313,17 @@ function vtkWebGPUStickMapper(publicAPI, model) {
 
     const defaultRadius = model.renderable.getRadius();
     if (scales || defaultRadius !== model._lastRadius) {
-      buffRequest = {
-        owner: scales,
-        hash: 'stm',
-        time: scales
+      hash = `stm${
+        scales
           ? pointData.getArray(model.renderable.getScaleArray()).getMTime()
-          : 0,
-        usage: BufferUsage.RawVertex,
-        format: 'float32',
-      };
-      if (!device.getBufferManager().hasBuffer(buffRequest)) {
+          : defaultRadius
+      }float32`;
+      if (!device.getBufferManager().hasBuffer(hash)) {
+        const buffRequest = {
+          hash,
+          usage: BufferUsage.RawVertex,
+          format: 'float32',
+        };
         const tmpVBO = new Float32Array(numPoints);
 
         let vboIdx = 0;
@@ -356,16 +356,15 @@ function vtkWebGPUStickMapper(publicAPI, model) {
       ]);
     }
 
-    buffRequest = {
-      owner: orientationArray,
-      hash: 'stm',
-      time: pointData
-        .getArray(model.renderable.getOrientationArray())
-        .getMTime(),
-      usage: BufferUsage.RawVertex,
-      format: 'float32x3',
-    };
-    if (!device.getBufferManager().hasBuffer(buffRequest)) {
+    hash = `stm${pointData
+      .getArray(model.renderable.getOrientationArray())
+      .getMTime()}float32x3`;
+    if (!device.getBufferManager().hasBuffer(hash)) {
+      const buffRequest = {
+        hash,
+        usage: BufferUsage.RawVertex,
+        format: 'float32x3',
+      };
       // xyz v1 v2 v3
       const tmpVBO = new Float32Array(numPoints * 3);
 
@@ -391,14 +390,12 @@ function vtkWebGPUStickMapper(publicAPI, model) {
     if (model.renderable.getScalarVisibility()) {
       const c = model.renderable.getColorMapColors();
       if (c) {
-        buffRequest = {
-          owner: c,
-          hash: 'stm',
-          time: c.getMTime(),
-          usage: BufferUsage.RawVertex,
-          format: 'unorm8x4',
-        };
-        if (!device.getBufferManager().hasBuffer(buffRequest)) {
+        hash = `stm${c.getMTime()}unorm8x4`;
+        if (!device.getBufferManager().hasBuffer(hash)) {
+          const buffRequest = {
+            usage: BufferUsage.RawVertex,
+            format: 'unorm8x4',
+          };
           const colorComponents = c.getNumberOfComponents();
           if (colorComponents !== 4) {
             vtkErrorMacro('this should be 4');

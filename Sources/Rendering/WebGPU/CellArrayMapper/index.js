@@ -452,15 +452,9 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     if (points) {
       const shift = model.WebGPUActor.getBufferShift(model.WebGPURenderer);
       const buffRequest = {
-        owner: points,
+        hash: `${hash}${points.getMTime()}${cells.getMTime()}${shift.join()}float32x4`,
         usage: BufferUsage.PointArray,
         format: 'float32x4',
-        time: Math.max(
-          points.getMTime(),
-          cells.getMTime(),
-          model.WebGPUActor.getKeyMatricesTime().getMTime()
-        ),
-        hash,
         dataArray: points,
         cells,
         primitiveType: primType,
@@ -480,7 +474,6 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       const normals = pd.getPointData().getNormals();
       const buffRequest = {
         format: 'snorm8x4',
-        hash,
         cells,
         representation,
         primitiveType: primType,
@@ -489,16 +482,14 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         scale: 127,
       };
       if (normals) {
-        buffRequest.owner = normals;
+        buffRequest.hash = `${hash}${normals.getMTime()}${cells.getMTime()}snorm8x4`;
         buffRequest.dataArray = normals;
-        buffRequest.time = Math.max(normals.getMTime(), cells.getMTime());
         buffRequest.usage = BufferUsage.PointArray;
         const buff = device.getBufferManager().getBuffer(buffRequest);
         vertexInput.addBuffer(buff, ['normalMC']);
       } else if (primType === PrimitiveTypes.Triangles) {
-        buffRequest.owner = points;
+        buffRequest.hash = `${hash}${points.getMTime()}${cells.getMTime()}snorm8x4`;
         buffRequest.dataArray = points;
-        buffRequest.time = Math.max(points.getMTime(), cells.getMTime());
         buffRequest.usage = BufferUsage.NormalsFromPoints;
         const buff = device.getBufferManager().getBuffer(buffRequest);
         vertexInput.addBuffer(buff, ['normalMC']);
@@ -528,11 +519,9 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
           haveCellScalars = true;
         }
         const buffRequest = {
-          owner: c,
           usage: BufferUsage.PointArray,
           format: 'unorm8x4',
-          time: Math.max(c.getMTime(), cells.getMTime(), points.getMTime()),
-          hash: hash + haveCellScalars,
+          hash: `${hash}${haveCellScalars}${c.getMTime()}${cells.getMTime()}unorm8x4`,
           dataArray: c,
           cells,
           primitiveType: primType,
@@ -559,19 +548,9 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       tcoords = pd.getPointData().getTCoords();
     }
     if (tcoords && !edges) {
-      // console.log(`tcoords ${tcoords.getMTime()}`);
-      const buffRequest = {
-        owner: tcoords,
-        usage: BufferUsage.PointArray,
-        format: 'float32x2',
-        time: Math.max(tcoords.getMTime(), cells.getMTime()),
-        hash,
-        dataArray: tcoords,
-        cells,
-        primitiveType: primType,
-        representation,
-      };
-      const buff = device.getBufferManager().getBuffer(buffRequest);
+      const buff = device
+        .getBufferManager()
+        .getBufferForPointArray(tcoords, cells, primType, representation);
       vertexInput.addBuffer(buff, ['tcoord']);
     } else {
       vertexInput.removeBufferIfPresent('tcoord');
@@ -613,21 +592,9 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     let usedCount = 0;
     for (let i = 0; i < newTextures.length; i++) {
       const srcTexture = newTextures[i];
-      const treq = { time: srcTexture.getMTime() };
-      if (srcTexture.getInputData()) {
-        treq.imageData = srcTexture.getInputData();
-        treq.owner = treq.imageData.getPointData().getScalars();
-      } else if (srcTexture.getImage()) {
-        treq.image = srcTexture.getImage();
-        treq.owner = treq.image;
-      } else if (srcTexture.getJsImageData()) {
-        treq.jsImageData = srcTexture.getJsImageData();
-        treq.owner = treq.jsImageData;
-      } else if (srcTexture.getCanvas()) {
-        treq.canvas = srcTexture.getCanvas();
-        treq.owner = treq.canvas;
-      }
-      const newTex = model.device.getTextureManager().getTexture(treq);
+      const newTex = model.device
+        .getTextureManager()
+        .getTextureForVTKTexture(srcTexture);
       if (newTex.getReady()) {
         // is this a new texture
         let found = false;
