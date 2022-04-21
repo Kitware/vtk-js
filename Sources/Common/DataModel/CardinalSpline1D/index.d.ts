@@ -1,6 +1,5 @@
 import { Vector3 } from '../../../types';
-import vtkSpline1D, { ISpline1DInitialValues } from '../Spline1D';
-
+import vtkSpline1D, { ISpline1DInitialValues, BoundaryCondition } from '../Spline1D';
 
 export interface ICardinalSpline1DInitialValues extends ISpline1DInitialValues {}
 
@@ -20,9 +19,14 @@ export interface vtkCardinalSpline1D extends vtkSpline1D {
 	 * @param {Number} size 
 	 * @param {Float32Array} work 
 	 * @param {Vector3} x 
-	 * @param {Vector3} y 
+	 * @param {Vector3} y
+	 * @param {Object} options
+	 * @param {BoundaryCondition} options.leftConstraint
+	 * @param {Number} options.leftValue
+	 * @param {BoundaryCondition} options.rightConstraint
+	 * @param {Number} options.rightValue
 	 */
-	computeOpenCoefficients(size: number, work: Float32Array, x: Vector3, y: Vector3): void;
+	computeOpenCoefficients(size: number, work: Float32Array, x: Vector3, y: Vector3, options: { leftConstraint: BoundaryCondition, leftValue: number, rightConstraint: BoundaryCondition, rightValue: Number }): void;
 
 	/**
 	 * 
