@@ -42,7 +42,6 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
     if (!model._buffer) {
       const req = {
         nativeArray: model.Float32Array,
-        time: 0,
         usage: BufferUsage.Storage,
         label: model.label,
       };
