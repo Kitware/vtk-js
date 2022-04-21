@@ -267,7 +267,7 @@ function vtkCellPicker(publicAPI, model) {
       const cellObject = data.getPolys();
       const points = data.getPoints();
       const cellData = cellObject.getData();
-      let cellId = 0;
+      let cellId = data.getNumberOfLines() + data.getNumberOfVerts();
       const pointsIdList = [-1, -1, -1];
       const cell = vtkTriangle.newInstance();
       const cellPoints = vtkPoints.newInstance();
