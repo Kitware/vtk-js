@@ -347,11 +347,9 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     // points
     const points = pd.getPoints();
     const buffRequest = {
-      owner: points,
       usage: BufferUsage.PointArray,
       format: 'float32x4',
-      time: Math.max(points.getMTime(), cells.getMTime()),
-      hash: 'vp',
+      hash: `vp${points.getMTime()}${cells.getMTime()}`,
       dataArray: points,
       cells,
       primitiveType: PrimitiveTypes.Triangles,
