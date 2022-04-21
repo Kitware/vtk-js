@@ -22,7 +22,7 @@ function vtkXMLImageDataReader(publicAPI, model) {
       .map((t) => Number(t));
     const direction = imageDataElem
       .getAttribute('Direction')
-      .split(' ')
+      ?.split(' ')
       .map((t) => Number(t));
     const pieces = imageDataElem.getElementsByTagName('Piece');
     const nbPieces = pieces.length;
