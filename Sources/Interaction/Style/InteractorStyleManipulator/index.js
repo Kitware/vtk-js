@@ -59,7 +59,7 @@ function dollyToPosition(fact, position, renderer, rwi) {
 
   if (cam.getParallelProjection()) {
     // Zoom relatively to the cursor
-    const aSize = rwi.getView().getSize();
+    const aSize = rwi.getView().getViewportSize(renderer);
     const w = aSize[0];
     const h = aSize[1];
     const x0 = w / 2;

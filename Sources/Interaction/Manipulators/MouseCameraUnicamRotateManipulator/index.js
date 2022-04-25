@@ -59,7 +59,8 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   const normalize = (position, interactor) => {
-    const [width, height] = interactor.getView().getSize();
+    const renderer = interactor.findPokedRenderer();
+    const [width, height] = interactor.getView().getViewportSize(renderer);
 
     const nx = -1.0 + (2.0 * position.x) / width;
     const ny = -1.0 + (2.0 * position.y) / height;

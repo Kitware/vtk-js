@@ -26,7 +26,7 @@ function vtkMouseCameraTrackballMultiRotateManipulator(publicAPI, model) {
   let currentManipulator = null;
 
   publicAPI.onButtonDown = (interactor, renderer, position) => {
-    const viewSize = interactor.getView().getSize();
+    const viewSize = interactor.getView().getViewportSize(renderer);
     const viewCenter = [0.5 * viewSize[0], 0.5 * viewSize[1]];
     const rotateRadius = 0.9 * max(viewCenter[0], viewCenter[1]);
     const dist2 =
