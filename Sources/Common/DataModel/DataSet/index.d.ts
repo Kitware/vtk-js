@@ -1,33 +1,6 @@
-import { vtkObject } from "../../../interfaces" ;
 import vtkDataSetAttributes from '../DataSetAttributes';
-
-export enum FieldDataTypes {
-	UNIFORM,
-	DATA_OBJECT_FIELD,
-	COORDINATE,
-	POINT_DATA,
-	POINT,
-	POINT_FIELD_DATA,
-	CELL,
-	CELL_FIELD_DATA,
-	VERTEX,
-	VERTEX_FIELD_DATA,
-	EDGE,
-	EDGE_FIELD_DATA,
-	ROW,
-	ROW_DATA,
-}
-
-export enum FieldAssociations {
-	FIELD_ASSOCIATION_POINTS,
-	FIELD_ASSOCIATION_CELLS,
-	FIELD_ASSOCIATION_NONE,
-	FIELD_ASSOCIATION_POINTS_THEN_CELLS,
-	FIELD_ASSOCIATION_VERTICES,
-	FIELD_ASSOCIATION_EDGES,
-	FIELD_ASSOCIATION_ROWS,
-	NUMBER_OF_ASSOCIATIONS,
-}
+import { vtkObject } from "../../../interfaces" ;
+import { FieldAssociations, FieldDataTypes } from "./Constants";
 
 /**
  *
@@ -102,7 +75,9 @@ export function newInstance(initialValues? : IDataSetInitialValues): vtkDataSet;
  * operate on cell data, both cell and point data, either one, or none.
  */
 export declare const vtkDataSet: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+	newInstance: typeof newInstance;
+	extend: typeof extend;
+	FieldAssociation: typeof FieldAssociations;
+	FieldDataTypes: typeof FieldDataTypes;
 };
 export default vtkDataSet;

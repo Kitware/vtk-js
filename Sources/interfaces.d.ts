@@ -1,5 +1,6 @@
 import vtkDataArray from "./Common/Core/DataArray";
 import { vtkPipelineConnection } from "./types";
+import { EVENT_ABORT, VOID } from './macros';
 
 /**
  * Object returned on any subscription call
@@ -278,3 +279,5 @@ export interface vtkProperty {
 }
 
 export interface vtkPropertyDomain {}
+
+export type EventHandler = (...args: unknown[]) => typeof EVENT_ABORT | typeof VOID | void;
