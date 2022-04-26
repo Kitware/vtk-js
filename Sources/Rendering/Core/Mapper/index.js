@@ -481,7 +481,7 @@ function vtkMapper(publicAPI, model) {
         2 * input.getLines().getNumberOfCells(),
       triangles:
         input.getPolys().getNumberOfValues() -
-        3 * input.getLines().getNumberOfCells(),
+        3 * input.getPolys().getNumberOfCells(),
     };
     return pcount;
   };

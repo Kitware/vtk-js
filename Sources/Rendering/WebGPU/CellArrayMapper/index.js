@@ -243,9 +243,14 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
   );
 
   publicAPI.replaceShaderNormal = (hash, pipeline, vertexInput) => {
-    if (vertexInput.hasAttribute('normalMC')) {
+    const normalBuffer = vertexInput.getBuffer('normalMC');
+    if (normalBuffer) {
       const vDesc = pipeline.getShaderDescription('vertex');
-      vDesc.addOutput('vec3<f32>', 'normalVC');
+      vDesc.addOutput(
+        'vec3<f32>',
+        'normalVC',
+        normalBuffer.getArrayInformation()[0].interpolation
+      );
       let code = vDesc.getCode();
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
         '  output.normalVC = normalize((rendererUBO.WCVCNormals * mapperUBO.MCWCNormals * normalMC).xyz);',
@@ -304,10 +309,15 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       return;
     }
 
-    if (!vertexInput.hasAttribute('colorVI')) return;
+    const colorBuffer = vertexInput.getBuffer('colorVI');
+    if (!colorBuffer) return;
 
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addOutput('vec4<f32>', 'color');
+    vDesc.addOutput(
+      'vec4<f32>',
+      'color',
+      colorBuffer.getArrayInformation()[0].interpolation
+    );
     let code = vDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
       '  output.color = colorVI;',
@@ -433,32 +443,44 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     }
 
     const vertexInput = model.vertexInput;
-    const hash = `R${representation}P${primType}`;
+    const points = pd.getPoints();
+    let indexBuffer;
+
+    // get the flat mapping indexBuffer for the cells
+    if (cells) {
+      const buffRequest = {
+        hash: `R${representation}P${primType}${cells.getMTime()}`,
+        usage: BufferUsage.Index,
+        cells,
+        numberOfPoints: points.getNumberOfPoints(),
+        primitiveType: primType,
+        representation,
+      };
+      indexBuffer = device.getBufferManager().getBuffer(buffRequest);
+      vertexInput.setIndexBuffer(indexBuffer);
+    } else {
+      vertexInput.setIndexBuffer(null);
+    }
 
     // hash = all things that can change the values on the buffer
     // since mtimes are unique we can use
-    // - cells mtime - because cells drive how we pack
-    // - rep (point/wireframe/surface) - again because of packing
+    // - indexBuffer mtime - because cells drive how we pack
     // - relevant dataArray mtime - the source data
     // - shift - not currently captured
     // - scale - not currently captured
     // - format
     // - usage
     // - packExtra - covered by format
-    // - prim type (vert/lines/polys/strips) - covered by cells mtime
 
     // points
-    const points = pd.getPoints();
     if (points) {
       const shift = model.WebGPUActor.getBufferShift(model.WebGPURenderer);
       const buffRequest = {
-        hash: `${hash}${points.getMTime()}${cells.getMTime()}${shift.join()}float32x4`,
+        hash: `${points.getMTime()}I${indexBuffer.getMTime()}${shift.join()}float32x4`,
         usage: BufferUsage.PointArray,
         format: 'float32x4',
         dataArray: points,
-        cells,
-        primitiveType: primType,
-        representation,
+        indexBuffer,
         shift,
         packExtra: true,
       };
@@ -474,22 +496,21 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       const normals = pd.getPointData().getNormals();
       const buffRequest = {
         format: 'snorm8x4',
-        cells,
-        representation,
-        primitiveType: primType,
+        indexBuffer,
         packExtra: true,
         shift: 0,
         scale: 127,
       };
       if (normals) {
-        buffRequest.hash = `${hash}${normals.getMTime()}${cells.getMTime()}snorm8x4`;
+        buffRequest.hash = `${normals.getMTime()}I${indexBuffer.getMTime()}snorm8x4`;
         buffRequest.dataArray = normals;
         buffRequest.usage = BufferUsage.PointArray;
         const buff = device.getBufferManager().getBuffer(buffRequest);
         vertexInput.addBuffer(buff, ['normalMC']);
       } else if (primType === PrimitiveTypes.Triangles) {
-        buffRequest.hash = `${hash}${points.getMTime()}${cells.getMTime()}snorm8x4`;
+        buffRequest.hash = `PFN${points.getMTime()}I${indexBuffer.getMTime()}snorm8x4`;
         buffRequest.dataArray = points;
+        buffRequest.cells = cells;
         buffRequest.usage = BufferUsage.NormalsFromPoints;
         const buff = device.getBufferManager().getBuffer(buffRequest);
         vertexInput.addBuffer(buff, ['normalMC']);
@@ -521,11 +542,9 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         const buffRequest = {
           usage: BufferUsage.PointArray,
           format: 'unorm8x4',
-          hash: `${hash}${haveCellScalars}${c.getMTime()}${cells.getMTime()}unorm8x4`,
+          hash: `${haveCellScalars}${c.getMTime()}I${indexBuffer.getMTime()}unorm8x4`,
           dataArray: c,
-          cells,
-          primitiveType: primType,
-          representation,
+          indexBuffer,
           cellData: haveCellScalars,
           cellOffset: 0,
         };
@@ -550,7 +569,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     if (tcoords && !edges) {
       const buff = device
         .getBufferManager()
-        .getBufferForPointArray(tcoords, cells, primType, representation);
+        .getBufferForPointArray(tcoords, vertexInput.getIndexBuffer());
       vertexInput.addBuffer(buff, ['tcoord']);
     } else {
       vertexInput.removeBufferIfPresent('tcoord');

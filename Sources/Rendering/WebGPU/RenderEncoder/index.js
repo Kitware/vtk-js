@@ -2,7 +2,13 @@ import * as macro from 'vtk.js/Sources/macros';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 
 // methods we forward to the handle
-const forwarded = ['setBindGroup', 'setVertexBuffer', 'draw'];
+const forwarded = [
+  'setBindGroup',
+  'setIndexBuffer',
+  'setVertexBuffer',
+  'draw',
+  'drawIndexed',
+];
 
 // ----------------------------------------------------------------------------
 // vtkWebGPURenderEncoder methods
