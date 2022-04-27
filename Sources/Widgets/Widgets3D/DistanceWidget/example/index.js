@@ -54,7 +54,6 @@ widgetManager.enablePicking();
 fullScreenRenderer.addController(controlPanel);
 
 widget.getWidgetState().onModified(() => {
-  console.log(widget.getDistance());
   document.querySelector('#distance').innerText = widget.getDistance();
 });
 
