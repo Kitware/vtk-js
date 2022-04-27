@@ -559,7 +559,7 @@ export interface vtkRenderer extends vtkViewport {
 	/**
 	 * Get the number of visible actors.
 	 */
-	visibleActorCount(): void;
+	visibleActorCount(): number;
 
 	/**
 	 * Not Implemented yet
