@@ -23,6 +23,7 @@ function vtkXMLImageDataWriter(publicAPI, model) {
       WholeExtent: dataObject.getExtent().join(' '),
       Origin: dataObject.getOrigin().join(' '),
       Spacing: dataObject.getSpacing().join(' '),
+      Direction: dataObject.getDirection().join(' '),
     });
 
     const piece = imageData.ele('Piece', {
