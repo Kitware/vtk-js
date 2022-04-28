@@ -128,6 +128,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IFullSc
 /**
  * Method used to create a new instance of vtkFullScreenRenderWindow
  * @param {IFullScreenRenderWindowInitialValues} [initialValues] for pre-setting some of its content
+ *  a background property can be given in the initialValues to set the background of the renderer
  */
 export function newInstance(initialValues?: IFullScreenRenderWindowInitialValues): vtkFullScreenRenderWindow;
 

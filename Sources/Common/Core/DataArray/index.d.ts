@@ -118,7 +118,7 @@ export interface vtkDataArray extends vtkObject {
 	 * @param {TypedArray} typedArray
 	 * @param {Number} [numberOfComponents]
 	 */
-	setData(typedArray: TypedArray, numberOfComponents?: number): void;
+	setData(typedArray?: TypedArray, numberOfComponents?: number): void;
 
 	/**
 	 *
@@ -208,6 +208,8 @@ export function extend(publicAPI: object, model: object, initialValues?: object)
 /**
  * Method use to create a new instance of vtkDataArray
  * @param {object} [initialValues] for pre-setting some of its content
+ * initialValues can have a property "empty: true" to be able to create a
+ * model without giving data. This property will not be stored in the model
  */
 export function newInstance(initialValues?: object): vtkDataArray;
 

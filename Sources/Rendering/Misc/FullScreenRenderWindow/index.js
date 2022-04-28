@@ -94,8 +94,8 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   model.interactor.initialize();
   model.interactor.bindEvents(model.container);
 
-  // Expose background
   publicAPI.setBackground = model.renderer.setBackground;
+  publicAPI.getBackground = model.renderer.getBackground;
 
   publicAPI.removeController = () => {
     const el = model.controlContainer;
@@ -136,9 +136,6 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
       }
     });
   };
-
-  // Update BG color
-  publicAPI.setBackground(...model.background);
 
   // Representation API
   publicAPI.addRepresentation = (representation) => {
@@ -188,19 +185,22 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  background: [0.32, 0.34, 0.43],
-  containerStyle: null,
-  controlPanelStyle: null,
-  listenWindowResize: true,
-  resizeCallback: null,
-  controllerVisibility: true,
-};
+function defaultValues(initialValues) {
+  return {
+    background: [0.32, 0.34, 0.43],
+    containerStyle: null,
+    controlPanelStyle: null,
+    listenWindowResize: true,
+    resizeCallback: null,
+    controllerVisibility: true,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Object methods
   macro.obj(publicAPI, model);

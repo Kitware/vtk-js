@@ -80,18 +80,23 @@ function vtkPoints(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  empty: true,
-  numberOfComponents: 3,
-  dataType: VtkDataTypes.FLOAT,
-  bounds: [1, -1, 1, -1, 1, -1],
-};
+function defaultValues(initialValues) {
+  return {
+    // empty is only here to be passed to the DataArray extend function in order
+    // to create Points without giving values
+    empty: true,
+    numberOfComponents: 3,
+    dataType: VtkDataTypes.FLOAT,
+    bounds: [1, -1, 1, -1, 1, -1],
+    values: [],
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-
+  Object.assign(initialValues, defaultValues(initialValues));
   vtkDataArray.extend(publicAPI, model, initialValues);
   vtkPoints(publicAPI, model);
 }

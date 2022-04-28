@@ -135,7 +135,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   if (!model.points) {
-    model.points = vtkPoints.newInstance();
+    model.points = vtkPoints.newInstance({ values: [] });
   }
 
   macro.get(publicAPI, model, ['points', 'pointsIds']);

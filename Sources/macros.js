@@ -309,7 +309,7 @@ export function obj(publicAPI = {}, model = {}) {
   publicAPI.set = (map = {}, noWarning = false, noFunction = false) => {
     let ret = false;
     Object.keys(map).forEach((name) => {
-      const fn = noFunction ? null : publicAPI[`set${capitalize(name)}`];
+      const fn = noFunction ? null : publicAPI[`set${_capitalize(name)}`];
       if (fn && Array.isArray(map[name]) && fn.length > 1) {
         ret = fn(...map[name]) || ret;
       } else if (fn) {
@@ -639,12 +639,14 @@ export function setGetArray(
   setArray(publicAPI, model, fieldNames, size, defaultVal);
 }
 
-export function moveToProtected(publicAPI, model, fieldNames) {
+export function moveToProtected(publicAPI, values, fieldNames) {
   for (let i = 0; i < fieldNames.length; i++) {
     const fieldName = fieldNames[i];
-    if (model[fieldName] !== undefined) {
-      model[`_${fieldName}`] = model[fieldName];
-      delete model[fieldName];
+    if (values[fieldName] !== undefined) {
+      if (values[`_${fieldName}`] === undefined) {
+        values[`_${fieldName}`] = values[fieldName];
+      }
+      delete values[fieldName];
     }
   }
 }
@@ -972,6 +974,7 @@ export function newInstance(extend, className) {
     const model = {};
     const publicAPI = {};
     extend(publicAPI, model, initialValues);
+    publicAPI.set(initialValues, true);
 
     return Object.freeze(publicAPI);
   };
