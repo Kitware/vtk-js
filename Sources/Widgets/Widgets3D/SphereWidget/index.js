@@ -11,6 +11,8 @@ import stateGenerator from './state';
 function vtkSphereWidget(publicAPI, model) {
   model.classHierarchy.push('vtkSphereWidget');
 
+  const superClass = { ...publicAPI };
+
   model.behavior = widgetBehavior;
   publicAPI.getRepresentationsForViewType = (viewType) => [
     {
@@ -40,14 +42,30 @@ function vtkSphereWidget(publicAPI, model) {
     },
   ];
 
+  // --- Public methods -------------------------------------------------------
+
   publicAPI.getRadius = () => {
     const h1 = model.widgetState.getCenterHandle();
     const h2 = model.widgetState.getBorderHandle();
     return Math.sqrt(distance2BetweenPoints(h1.getOrigin(), h2.getOrigin()));
   };
 
-  model.manipulator = vtkPlanePointManipulator.newInstance();
+  publicAPI.setManipulator = (manipulator) => {
+    superClass.setManipulator(manipulator);
+    model.widgetState.getMoveHandle().setManipulator(manipulator);
+    model.widgetState.getCenterHandle().setManipulator(manipulator);
+    model.widgetState.getBorderHandle().setManipulator(manipulator);
+  };
+
+  // --------------------------------------------------------------------------
+  // initialization
+  // --------------------------------------------------------------------------
+
   model.widgetState = stateGenerator();
+  publicAPI.setManipulator(
+    model.manipulator ||
+      vtkPlanePointManipulator.newInstance({ useCameraNormal: true })
+  );
 }
 
 export function extend(publicAPI, model, initialValues = {}) {

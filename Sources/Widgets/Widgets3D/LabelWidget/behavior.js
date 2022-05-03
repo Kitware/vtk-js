@@ -95,15 +95,17 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = (callData) => {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
     if (
+      manipulator &&
       model.pickable &&
       model.dragable &&
-      model.manipulator &&
       model.activeState &&
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
-      const worldCoords = model.manipulator.handleEvent(
+      const worldCoords = manipulator.handleEvent(
         callData,
         model._apiSpecificRenderWindow
       );

@@ -8,12 +8,21 @@ import {
 function vtkShapeWidget(publicAPI, model) {
   model.classHierarchy.push('vtkShapeWidget');
 
+  const superClass = { ...publicAPI };
+
   model.methodsToLink = ['scaleInPixels', 'textProps', 'fontProperties'];
+
+  publicAPI.setManipulator = (manipulator) => {
+    superClass.setManipulator(manipulator);
+    model.widgetState
+      .getStatesWithLabel('moveHandle')
+      .forEach((handle) => handle.setManipulator(manipulator));
+  };
 }
 
 function defaultValues(initialValues) {
   return {
-    manipulator: null,
+    // manipulator: null,
     modifierBehavior: {
       None: {
         [BehaviorCategory.PLACEMENT]:
@@ -36,6 +45,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
 
   macro.setGet(publicAPI, model, [
+    'manipulator',
     'modifierBehavior',
     'resetAfterPointPlacement',
   ]);

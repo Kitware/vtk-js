@@ -18,6 +18,8 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 function vtkLabelWidget(publicAPI, model) {
   model.classHierarchy.push('vtkLabelWidget');
 
+  const superClass = { ...publicAPI };
+
   // --- Widget Requirement ---------------------------------------------------
   model.methodsToLink = ['textProps', 'fontProperties', 'strokeFontProperties'];
 
@@ -56,8 +58,23 @@ function vtkLabelWidget(publicAPI, model) {
     }
   };
 
+  // --- Public methods -------------------------------------------------------
+
+  publicAPI.setManipulator = (manipulator) => {
+    superClass.setManipulator(manipulator);
+    model.widgetState.getMoveHandle().setManipulator(manipulator);
+    model.widgetState.getText().setManipulator(manipulator);
+  };
+
+  // --------------------------------------------------------------------------
+  // initialization
+  // --------------------------------------------------------------------------
+
   // Default manipulator
-  model.manipulator = vtkPlanePointManipulator.newInstance();
+  publicAPI.setManipulator(
+    model.manipulator ||
+      vtkPlanePointManipulator.newInstance({ useCameraNormal: true })
+  );
 }
 
 // ----------------------------------------------------------------------------

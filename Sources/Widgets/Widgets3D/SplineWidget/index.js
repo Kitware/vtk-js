@@ -16,6 +16,8 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 function vtkSplineWidget(publicAPI, model) {
   model.classHierarchy.push('vtkSplineWidget');
 
+  const superClass = { ...publicAPI };
+
   // --- Widget Requirement ---------------------------------------------------
 
   model.methodsToLink = [
@@ -50,17 +52,31 @@ function vtkSplineWidget(publicAPI, model) {
     }
   };
 
+  // --- Public methods -------------------------------------------------------
+  publicAPI.setManipulator = (manipulator) => {
+    superClass.setManipulator(manipulator);
+    model.widgetState.getMoveHandle().setManipulator(manipulator);
+    model.widgetState.getHandleList().forEach((handle) => {
+      handle.setManipulator(manipulator);
+    });
+  };
+
   // --------------------------------------------------------------------------
   // initialization
   // --------------------------------------------------------------------------
 
   // Default manipulator
-  model.manipulator = vtkPlanePointManipulator.newInstance();
+  publicAPI.setManipulator(
+    model.manipulator ||
+      model.manipulator ||
+      vtkPlanePointManipulator.newInstance({ useCameraNormal: true })
+  );
 }
 
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  // manipulator: null,
   freehandMinDistance: 0.1,
   allowFreehand: true,
   resolution: 32, // propagates to SplineContextRepresentation
