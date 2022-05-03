@@ -65,8 +65,8 @@ export default function widgetBehavior(publicAPI, model) {
       isDragging = true;
       const viewType = model.widgetState.getActiveViewType();
       const currentPlaneNormal = model.widgetState.getPlanes()[viewType].normal;
-      model.planeManipulator.setOrigin(model.widgetState.getCenter());
-      model.planeManipulator.setNormal(currentPlaneNormal);
+      model.planeManipulator.setWidgetOrigin(model.widgetState.getCenter());
+      model.planeManipulator.setWidgetNormal(currentPlaneNormal);
 
       publicAPI.startInteraction();
     } else if (
@@ -263,7 +263,7 @@ export default function widgetBehavior(publicAPI, model) {
     if (dot === 1 || dot === -1) {
       vtkMath.cross(
         currentLineVector,
-        model.planeManipulator.getNormal(),
+        model.planeManipulator.getWidgetNormal(),
         axisTranslation
       );
     }
@@ -309,7 +309,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI[InteractionMethodsName.RotateLine] = (calldata) => {
     const activeLine = model.widgetState.getActiveLineState();
-    const planeNormal = model.planeManipulator.getNormal();
+    const planeNormal = model.planeManipulator.getWidgetNormal();
     const worldCoords = model.planeManipulator.handleEvent(
       calldata,
       model._apiSpecificRenderWindow

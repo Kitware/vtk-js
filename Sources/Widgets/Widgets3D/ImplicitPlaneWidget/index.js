@@ -44,8 +44,8 @@ function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
     isDragging = true;
-    model.lineManipulator.setOrigin(model.widgetState.getOrigin());
-    model.planeManipulator.setOrigin(model.widgetState.getOrigin());
+    model.lineManipulator.setWidgetOrigin(model.widgetState.getOrigin());
+    model.planeManipulator.setWidgetOrigin(model.widgetState.getOrigin());
     model.trackballManipulator.reset(callData); // setup trackball delta
     model._interactor.requestAnimation(publicAPI);
     publicAPI.invokeStartInteractionEvent();
@@ -83,7 +83,7 @@ function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.updateFromOrigin = (callData) => {
-    model.planeManipulator.setNormal(model.widgetState.getNormal());
+    model.planeManipulator.setWidgetNormal(model.widgetState.getNormal());
     const worldCoords = model.planeManipulator.handleEvent(
       callData,
       model._apiSpecificRenderWindow
@@ -98,7 +98,7 @@ function widgetBehavior(publicAPI, model) {
 
   publicAPI.updateFromPlane = (callData) => {
     // Move origin along normal axis
-    model.lineManipulator.setNormal(model.activeState.getNormal());
+    model.lineManipulator.setWidgetNormal(model.activeState.getNormal());
     const worldCoords = model.lineManipulator.handleEvent(
       callData,
       model._apiSpecificRenderWindow
@@ -112,7 +112,7 @@ function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.updateFromNormal = (callData) => {
-    model.trackballManipulator.setNormal(model.activeState.getNormal());
+    model.trackballManipulator.setWidgetNormal(model.activeState.getNormal());
 
     const newNormal = model.trackballManipulator.handleEvent(
       callData,

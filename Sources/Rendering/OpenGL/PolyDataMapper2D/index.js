@@ -164,6 +164,7 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
     const vmtime = model.VBOBuildTime.getMTime();
     if (
       vmtime < publicAPI.getMTime() ||
+      vmtime < model._openGLRenderWindow.getMTime() ||
       vmtime < model.renderable.getMTime() ||
       vmtime < actor.getMTime() ||
       vmtime < model.currentInput.getMTime() ||
@@ -209,11 +210,14 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
 
     const transformCoordinate = model.renderable.getTransformCoordinate();
 
+    const view = ren.getRenderWindow().getViews()[0];
+    const vsize = view.getViewportSize(ren);
     const toString =
       `${poly.getMTime()}A${representation}B${poly.getMTime()}` +
       `C${c ? c.getMTime() : 1}` +
       `D${tcoords ? tcoords.getMTime() : 1}` +
-      `E${transformCoordinate ? ren.getMTime() : 1}`;
+      `E${transformCoordinate ? ren.getMTime() : 1}` +
+      `F${vsize}`;
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
       let points = poly.getPoints();

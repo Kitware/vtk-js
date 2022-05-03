@@ -52,6 +52,7 @@ export default function widgetBehavior(publicAPI, model) {
       newHandle.setOrigin(...moveHandle.getOrigin());
       newHandle.setColor(moveHandle.getColor());
       newHandle.setScale1(moveHandle.getScale1());
+      newHandle.setManipulator(model.manipulator);
     } else {
       isDragging = true;
       model._apiSpecificRenderWindow.setCursor('grabbing');
@@ -67,17 +68,17 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = (callData) => {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
     if (
+      manipulator &&
       model.pickable &&
       model.dragable &&
-      model.manipulator &&
       model.activeState &&
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
-      model.manipulator.setOrigin(model.activeState.getOrigin());
-      model.manipulator.setNormal(model._camera.getDirectionOfProjection());
-      const worldCoords = model.manipulator.handleEvent(
+      const worldCoords = manipulator.handleEvent(
         callData,
         model._apiSpecificRenderWindow
       );

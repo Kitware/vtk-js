@@ -18,7 +18,12 @@ function extractCellSizes(cellArray) {
 }
 
 function getNumberOfCells(cellArray) {
-  return extractCellSizes(cellArray).length;
+  let cellId = 0;
+  for (let cellArrayIndex = 0; cellArrayIndex < cellArray.length; ) {
+    cellArrayIndex += cellArray[cellArrayIndex] + 1;
+    cellId++;
+  }
+  return cellId;
 }
 
 // ----------------------------------------------------------------------------
@@ -43,8 +48,11 @@ function vtkCellArray(publicAPI, model) {
       return model.numberOfCells;
     }
 
-    model.cellSizes = extractCellSizes(model.values);
-    model.numberOfCells = model.cellSizes.length;
+    if (model.cellSizes) {
+      model.numberOfCells = model.cellSizes.length;
+    } else {
+      model.numberOfCells = getNumberOfCells(model.values);
+    }
     return model.numberOfCells;
   };
 

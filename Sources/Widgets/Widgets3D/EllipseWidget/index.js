@@ -70,9 +70,11 @@ function vtkEllipseWidget(publicAPI, model) {
   // initialization
   // --------------------------------------------------------------------------
 
-  // Default manipulator
-  model.manipulator = vtkPlanePointManipulator.newInstance();
   model.widgetState = stateGenerator();
+  publicAPI.setManipulator(
+    model.manipulator ||
+      vtkPlanePointManipulator.newInstance({ useCameraNormal: true })
+  );
 }
 
 // ----------------------------------------------------------------------------
@@ -103,7 +105,7 @@ function defaultValues(initialValues) {
 
 export function extend(publicAPI, model, initialValues = {}) {
   vtkShapeWidget.extend(publicAPI, model, defaultValues(initialValues));
-  macro.setGet(publicAPI, model, ['manipulator', 'widgetState']);
+  macro.setGet(publicAPI, model, ['widgetState']);
 
   vtkEllipseWidget(publicAPI, model);
 }

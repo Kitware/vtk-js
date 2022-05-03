@@ -35,10 +35,6 @@ export function extractRenderingComponents(renderer) {
 
 function createSvgRoot(id) {
   const svgRoot = createSvgDomElement('svg');
-  svgRoot.setAttribute(
-    'style',
-    'position: absolute; top: 0; left: 0; width: 100%; height: 100%;'
-  );
   svgRoot.setAttribute('version', '1.1');
   svgRoot.setAttribute('baseProfile', 'full');
 
@@ -122,7 +118,9 @@ function vtkWidgetManager(publicAPI, model) {
   }
 
   function setSvgSize() {
-    const [cwidth, cheight] = model._apiSpecificRenderWindow.getSize();
+    const [cwidth, cheight] = model._apiSpecificRenderWindow.getViewportSize(
+      model._renderer
+    );
     const ratio = window.devicePixelRatio || 1;
     const bwidth = String(cwidth / ratio);
     const bheight = String(cheight / ratio);
@@ -141,6 +139,18 @@ function vtkWidgetManager(publicAPI, model) {
     if (origViewBox !== viewBox) {
       model.svgRoot.setAttribute('viewBox', viewBox);
     }
+  }
+
+  function setSvgRootStyle() {
+    const viewport = model._renderer.getViewport().map((v) => v * 100);
+    model.svgRoot.setAttribute(
+      'style',
+      `position: absolute; left: ${viewport[0]}%; top: ${
+        100 - viewport[3]
+      }%; width: ${viewport[2] - viewport[0]}%; height: ${
+        viewport[3] - viewport[1]
+      }%;`
+    );
   }
 
   function updateSvg() {
@@ -379,6 +389,9 @@ function vtkWidgetManager(publicAPI, model) {
     );
 
     subscriptions.push(model._interactor.onRenderEvent(updateSvg));
+
+    subscriptions.push(renderer.onModified(setSvgRootStyle));
+    setSvgRootStyle();
 
     subscriptions.push(model._apiSpecificRenderWindow.onModified(setSvgSize));
     setSvgSize();

@@ -38,11 +38,10 @@ export default function widgetBehavior(publicAPI, model) {
 
   function updateCursor(callData) {
     model.isDragging = true;
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
     model.previousPosition = [
-      ...model.manipulator.handleEvent(
-        callData,
-        model._apiSpecificRenderWindow
-      ),
+      ...manipulator.handleEvent(callData, model._apiSpecificRenderWindow),
     ];
     model._apiSpecificRenderWindow.setCursor('grabbing');
     model._interactor.requestAnimation(publicAPI);
@@ -256,15 +255,17 @@ export default function widgetBehavior(publicAPI, model) {
       publicAPI.loseFocus();
       return macro.VOID;
     }
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
     if (
+      manipulator &&
       model.pickable &&
       model.dragable &&
-      model.manipulator &&
       model.activeState &&
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
-      const worldCoords = model.manipulator.handleEvent(
+      const worldCoords = manipulator.handleEvent(
         callData,
         model._apiSpecificRenderWindow
       );
