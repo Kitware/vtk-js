@@ -290,7 +290,18 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
 
     // bind the vertex input
     pipeline.bindVertexInput(renderEncoder, model.vertexInput);
-    renderEncoder.draw(model.numberOfVertices, model.numberOfInstances, 0, 0);
+    const indexBuffer = model.vertexInput.getIndexBuffer();
+    if (indexBuffer) {
+      renderEncoder.drawIndexed(
+        indexBuffer.getIndexCount(),
+        model.numberOfInstances,
+        0,
+        0,
+        0
+      );
+    } else {
+      renderEncoder.draw(model.numberOfVertices, model.numberOfInstances, 0, 0);
+    }
   };
 
   publicAPI.getBindables = () => {

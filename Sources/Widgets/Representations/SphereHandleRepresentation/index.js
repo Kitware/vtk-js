@@ -104,19 +104,17 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     model.displayMapper.setCallback(callback ? callbackProxy : null);
   };
 
+  const superGetRepresentationStates = publicAPI.getRepresentationStates;
+  publicAPI.getRepresentationStates = (input = model.inputData[0]) =>
+    superGetRepresentationStates(input).filter(
+      (state) => state.getOrigin?.() && state.isVisible?.()
+    );
+
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
     const { points, scale, color } = model.internalArrays;
-    const list = publicAPI
-      .getRepresentationStates(inData[0])
-      .filter(
-        (state) =>
-          state.getOrigin &&
-          state.getOrigin() &&
-          state.isVisible &&
-          state.isVisible()
-      );
+    const list = publicAPI.getRepresentationStates(inData[0]);
     const totalCount = list.length;
 
     if (color.getNumberOfValues() !== totalCount) {
