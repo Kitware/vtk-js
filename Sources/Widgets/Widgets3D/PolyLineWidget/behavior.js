@@ -4,6 +4,8 @@ export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkPolyLineWidgetProp');
   let isDragging = null;
 
+  model.getMaxPoints = model._factory.getMaxPoints;
+
   // --------------------------------------------------------------------------
   // Display 2D
   // --------------------------------------------------------------------------
@@ -36,6 +38,12 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.EVENT_ABORT;
     }
     return macro.VOID;
+  }
+
+  function canPlacePoints() {
+    return model.getMaxPoints()
+      ? model.widgetState.getHandleList().length < model.getMaxPoints()
+      : true;
   }
 
   // --------------------------------------------------------------------------
@@ -80,7 +88,10 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
 
-    if (model.activeState === model.widgetState.getMoveHandle()) {
+    if (
+      model.activeState === model.widgetState.getMoveHandle() &&
+      canPlacePoints()
+    ) {
       updateMoveHandle(e);
       // Commit handle to location
       const moveHandle = model.widgetState.getMoveHandle();
@@ -144,6 +155,11 @@ export default function widgetBehavior(publicAPI, model) {
       model._interactor.render();
     }
 
+    // Don't make any more points
+    if (!canPlacePoints()) {
+      publicAPI.loseFocus();
+    }
+
     isDragging = false;
   };
 
@@ -162,7 +178,7 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.grabFocus = () => {
-    if (!model.hasFocus) {
+    if (!model.hasFocus && canPlacePoints()) {
       model.activeState = model.widgetState.getMoveHandle();
       model.activeState.activate();
       model.activeState.setVisible(true);

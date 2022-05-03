@@ -91,17 +91,20 @@ function vtkPolyLineWidget(publicAPI, model) {
 
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  // manipulator: null,
-};
+function defaultValues(initialValues) {
+  return {
+    // maxPoints: 0,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
-  macro.setGet(publicAPI, model, ['manipulator']);
+  macro.setGet(publicAPI, model, ['manipulator', 'maxPoints']);
 
   vtkPolyLineWidget(publicAPI, model);
 }
