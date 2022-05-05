@@ -25,8 +25,16 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   function processDelta(listener, delta) {
     const oldValue = listener.getValue();
 
-    // Apply scale and cached delta to current delta
-    const newDelta = delta * listener.scale + incrementalDelta.get(listener);
+    // if exponential scroll is enabled, we raise our scale to the
+    //  exponent of the net delta of the interaction. The further away
+    // the user's cursor is from the start of the interaction, the more
+    // their movements will effect the value.
+    const scalingFactor = listener.exponentialScroll
+      ? listener.scale ** Math.log2(Math.abs(model.interactionNetDelta) + 2)
+      : listener.scale;
+
+    const newDelta = delta * scalingFactor + incrementalDelta.get(listener);
+
     let value = oldValue + newDelta;
 
     // Compute new value based on step
@@ -67,7 +75,8 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     step,
     getValue,
     setValue,
-    scale = 1
+    scale = 1,
+    exponentialScroll = false
   ) => {
     const getFn = Number.isFinite(getValue) ? () => getValue : getValue;
     model.horizontalListener = {
@@ -77,6 +86,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
       getValue: getFn,
       setValue,
       scale,
+      exponentialScroll,
     };
     incrementalDelta.set(model.horizontalListener, 0);
     publicAPI.modified();
@@ -89,7 +99,8 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     step,
     getValue,
     setValue,
-    scale = 1
+    scale = 1,
+    exponentialScroll = false
   ) => {
     const getFn = Number.isFinite(getValue) ? () => getValue : getValue;
     model.verticalListener = {
@@ -99,6 +110,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
       getValue: getFn,
       setValue,
       scale,
+      exponentialScroll,
     };
     incrementalDelta.set(model.verticalListener, 0);
     publicAPI.modified();
@@ -111,10 +123,19 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     step,
     getValue,
     setValue,
-    scale = 1
+    scale = 1,
+    exponentialScroll = false
   ) => {
     const getFn = Number.isFinite(getValue) ? () => getValue : getValue;
-    model.scrollListener = { min, max, step, getValue: getFn, setValue, scale };
+    model.scrollListener = {
+      min,
+      max,
+      step,
+      getValue: getFn,
+      setValue,
+      scale,
+      exponentialScroll,
+    };
     incrementalDelta.set(model.scrollListener, 0);
     publicAPI.modified();
   };
@@ -156,6 +177,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   publicAPI.onButtonDown = (interactor, renderer, position) => {
     model.previousPosition = position;
+    model.interactionNetDelta = 0;
     const glRenderWindow = interactor.getView();
     // Ratio is the dom size vs renderwindow size
     const ratio =
@@ -232,12 +254,14 @@ function vtkMouseRangeManipulator(publicAPI, model) {
       const dxNorm =
         (position.x - model.previousPosition.x) / model.containerSize[0];
       const dx = scaleDeltaToRange(model.horizontalListener, dxNorm);
+      model.interactionNetDelta += dx;
       processDelta(model.horizontalListener, dx);
     }
     if (model.verticalListener) {
       const dyNorm =
         (position.y - model.previousPosition.y) / model.containerSize[1];
       const dy = scaleDeltaToRange(model.verticalListener, dyNorm);
+      model.interactionNetDelta += dy;
       processDelta(model.verticalListener, dy);
     }
 
@@ -249,9 +273,14 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     if (!model.scrollListener || !delta) {
       return;
     }
+    model.interactionNetDelta += delta * model.scrollListener.step;
     processDelta(model.scrollListener, delta * model.scrollListener.step);
   };
-  publicAPI.onStartScroll = publicAPI.onScroll;
+
+  publicAPI.onStartScroll = (payload) => {
+    model.interactionNetDelta = 0;
+    publicAPI.onScroll(payload);
+  };
 }
 
 // ----------------------------------------------------------------------------
