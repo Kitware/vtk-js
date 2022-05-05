@@ -212,15 +212,6 @@ function vtkLine(publicAPI, model) {
     return outObj;
   };
 
-  publicAPI.evaluatePosition = (
-    x,
-    closestPoint,
-    subId,
-    pcoords,
-    dist2,
-    weights
-  ) => {}; // virtual
-
   publicAPI.evaluateLocation = (pcoords, x, weights) => {
     const a1 = [];
     const a2 = [];

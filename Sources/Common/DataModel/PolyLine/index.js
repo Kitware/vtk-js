@@ -58,15 +58,6 @@ function vtkPolyLine(publicAPI, model) {
     return outObj;
   };
 
-  publicAPI.evaluatePosition = (
-    x,
-    closestPoint,
-    subId,
-    pcoords,
-    dist2,
-    weights
-  ) => {}; // virtual
-
   publicAPI.evaluateLocation = (subId, pcoords, x, weights) => {
     line
       .getPoints()
