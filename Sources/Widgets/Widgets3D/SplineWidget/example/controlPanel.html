@@ -55,6 +55,48 @@
     </td>
   </tr>
   <tr>
+    <td>Closed spline</td>
+    <td></td>
+    <td>
+      <input class="close" type="checkbox" checked />
+    </td>
+  </tr>
+  <tr>
+  <td>Boundary conditions</td>
+  <td></td>
+  <td>
+    <select class="boundaryCondition">
+      <option value="0">default</option>
+      <option value="1">derivative</option>
+      <option value="2">2nd derivative</option>
+      <option value="3">2nd derivative interior point</option>
+    </select>
+  </td>
+  </tr>
+  <tr>
+    <td>Boundary Condition value X</td>
+    <td></td>
+    <td>
+      <input class="boundaryConditionValueX" type="range" min="-2" max="2" step="0.1" value="0">
+    </td>
+  </tr>
+  <tr>
+    <td>Boundary Condition value Y</td>
+    <td></td>
+    <td>
+      <input class="boundaryConditionValueY" type="range" min="-2" max="2" step="0.1" value="0">
+    </td>
+  </tr>
+</tr>
+<tr>
+  <tr>
+    <td>Border</td>
+    <td></td>
+    <td>
+      <input class="border" type="checkbox" checked>
+    </td>
+  </tr>
+  <tr>
     <td>
       <button class="placeWidget" >Place Widget</button>
     </td>

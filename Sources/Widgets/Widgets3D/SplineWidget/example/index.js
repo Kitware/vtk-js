@@ -43,6 +43,69 @@ renderer.resetCamera();
 
 fullScreenRenderer.addController(controlPanel);
 
+const borderCheckBox = document.querySelector('.border');
+const onBorderChanged = () => {
+  widgetRepresentation.setOutputBorder(borderCheckBox.checked);
+  renderWindow.render();
+};
+borderCheckBox.addEventListener('click', onBorderChanged);
+onBorderChanged();
+
+const boundaryConditionValueXInput = document.querySelector(
+  '.boundaryConditionValueX'
+);
+const boundaryConditionValueYInput = document.querySelector(
+  '.boundaryConditionValueY'
+);
+const onBoundaryConditionValueChanged = () => {
+  const valX = boundaryConditionValueXInput.value;
+  const valY = boundaryConditionValueYInput.value;
+  widget
+    .getWidgetState()
+    .setSplineBoundaryConditionValues([parseFloat(valX), parseFloat(valY), 0]);
+  renderWindow.render();
+};
+boundaryConditionValueXInput.addEventListener(
+  'input',
+  onBoundaryConditionValueChanged
+);
+onBoundaryConditionValueChanged();
+
+boundaryConditionValueYInput.addEventListener(
+  'input',
+  onBoundaryConditionValueChanged
+);
+onBoundaryConditionValueChanged();
+
+const boundaryCondition = document.querySelector('.boundaryCondition');
+const onBoundaryCondition = () => {
+  const isDefault = boundaryCondition.selectedIndex === 0;
+  boundaryConditionValueXInput.disabled =
+    widgetRepresentation.getClose() || isDefault;
+  boundaryConditionValueYInput.disabled =
+    widgetRepresentation.getClose() || isDefault;
+  widget
+    .getWidgetState()
+    .setSplineBoundaryCondition(boundaryCondition.selectedIndex);
+  renderWindow.render();
+};
+boundaryCondition.addEventListener('change', onBoundaryCondition);
+onBoundaryCondition();
+
+const isClosed = document.querySelector('.close');
+const onClosedChange = () => {
+  boundaryCondition.disabled = isClosed.checked;
+  boundaryConditionValueXInput.disabled =
+    isClosed.checked || boundaryCondition.selectedIndex === 0;
+  boundaryConditionValueYInput.disabled =
+    isClosed.checked || boundaryCondition.selectedIndex === 0;
+  widget.getWidgetState().setSplineClose(isClosed.checked);
+  widgetRepresentation.setClose(isClosed.checked);
+  renderWindow.render();
+};
+isClosed.addEventListener('click', onClosedChange);
+onClosedChange();
+
 const tensionInput = document.querySelector('.tension');
 const onTensionChanged = () => {
   widget.getWidgetState().setSplineTension(parseFloat(tensionInput.value));
