@@ -1,12 +1,6 @@
 import { Bounds, Range } from "../../../types";
 import vtkAbstractMapper, { IAbstractMapperInitialValues } from "../AbstractMapper";
-
-export enum BlendMode {
-	COMPOSITE_BLEND,
-	MAXIMUM_INTENSITY_BLEND,
-	MINIMUM_INTENSITY_BLEND,
-	AVERAGE_INTENSITY_BLEND,
-}
+import { BlendMode, FilterMode } from "./Constants";
 
 /**
  * 
@@ -165,7 +159,9 @@ export function newInstance(initialValues?: IVolumeMapperInitialValues): vtkVolu
  * A volume mapper that performs ray casting on the GPU using fragment programs.
  */
 export declare const vtkVolumeMapper: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+	newInstance: typeof newInstance;
+	extend: typeof extend;
+	BlendMode: typeof BlendMode;
+	FilterMode: typeof FilterMode;
 };
 export default vtkVolumeMapper;

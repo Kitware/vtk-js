@@ -2,9 +2,9 @@ import vtkPolyData from "../PolyData";
 import vtkImageData from "../ImageData";
 
 export interface IOptions {
-	pointDataName: string;
-	scalarArrayName: string;
-	cellDataName: string;
+	pointDataName?: string;
+	scalarArrayName?: string;
+	cellDataName?: string;
 }
 
 /**

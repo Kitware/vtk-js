@@ -77,7 +77,7 @@ export function newInstance(initialValues?: ILineInitialValues): vtkLine;
  *   t: tolerance of the distance
  *   distance: quared distance between closest point and x
  * }
- * 
+ * ```
  * @static
  * @param {Vector3} x 
  * @param {Vector3} p1 
