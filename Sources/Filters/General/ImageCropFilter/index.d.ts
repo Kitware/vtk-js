@@ -1,10 +1,12 @@
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 
+type CroppingPlanes = number[];
+
 /**
  *
  */
-interface IImageCropFilterInitialValues {
-	croppingPlanes?: any;
+export interface IImageCropFilterInitialValues {
+	croppingPlanes?: CroppingPlanes;
 }
 
 type vtkImageCropFilterBase = vtkObject & vtkAlgorithm;
@@ -15,18 +17,19 @@ export interface vtkImageCropFilter extends vtkImageCropFilterBase {
 	 * Get The cropping planes, in IJK space.
 	 * @default [0, 0, 0, 0, 0, 0].
 	 */
-	getCroppingPlanes(): number[];
+	getCroppingPlanes(): CroppingPlanes;
 
 	/**
 	 * Get The cropping planes, in IJK space.
 	 * @default [0, 0, 0, 0, 0, 0].
 	 */
-	getCroppingPlanesByReference(): number[];
+	getCroppingPlanesByReference(): CroppingPlanes;
 
 	/**
 	 *
 	 */
 	isResetAvailable(): boolean;
+
 	/**
 	 *
 	 */
@@ -43,13 +46,13 @@ export interface vtkImageCropFilter extends vtkImageCropFilterBase {
 	 *
 	 * @param croppingPlanes
 	 */
-	setCroppingPlanes(croppingPlanes: number[]): boolean;
+	setCroppingPlanes(croppingPlanes: CroppingPlanes): boolean;
 
 	/**
 	 *
 	 * @param croppingPlanes
 	 */
-	setCroppingPlanesFrom(croppingPlanes: number[]): boolean;
+	setCroppingPlanesFrom(croppingPlanes: CroppingPlanes): boolean;
 }
 
 /**

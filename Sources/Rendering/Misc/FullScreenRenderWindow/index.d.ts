@@ -13,10 +13,11 @@ import vtkRenderWindowInteractor from "../../Core/RenderWindowInteractor";
  */
 export interface IFullScreenRenderWindowInitialValues {
 	background?: RGBColor;
+	container?: HTMLElement
 	containerStyle?: object;
-	controlPanelStyle?: object,
-	listenWindowResize?: boolean;
+	controlPanelStyle?: object;
 	controllerVisibility?: boolean;
+	listenWindowResize?: boolean;
 	resizeCallback?: any;
 }
 

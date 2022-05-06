@@ -1,5 +1,5 @@
-import { vtkObject } from "../../../interfaces" ;
-import { Bounds, Point } from "../../../types";
+import { vtkObject } from "../../../interfaces";
+import { Bounds, Vector3 } from "../../../types";
 
 
 export interface IBoxInitialValues {
@@ -22,9 +22,9 @@ export interface vtkBox extends vtkObject {
 
     /**
      * 
-     * @param {Point} x The point coordinate.
+     * @param {Vector3} x The point coordinate.
      */
-    evaluateFunction(x: Point): number;
+    evaluateFunction(x: Vector3): number;
 
     /**
      * 

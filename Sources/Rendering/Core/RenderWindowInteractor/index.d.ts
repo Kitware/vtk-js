@@ -1,18 +1,45 @@
 import { vtkObject, vtkSubscription } from "../../../interfaces";
 import vtkRenderer from "../Renderer";
+import { Axis, Device, Input } from "./Constants";
 
-export enum Device {
-	Unknown,
-	LeftController,
-	RightController,
-}
-
-export enum Input {
-	Unknown,
-	Trigger,
-	TrackPad,
-	Grip,
-	ApplicationMenu,
+declare enum handledEvents {
+	'StartAnimation',
+	'Animation',
+	'EndAnimation',
+	'MouseEnter',
+	'MouseLeave',
+	'StartMouseMove',
+	'MouseMove',
+	'EndMouseMove',
+	'LeftButtonPress',
+	'LeftButtonRelease',
+	'MiddleButtonPress',
+	'MiddleButtonRelease',
+	'RightButtonPress',
+	'RightButtonRelease',
+	'KeyPress',
+	'KeyDown',
+	'KeyUp',
+	'StartMouseWheel',
+	'MouseWheel',
+	'EndMouseWheel',
+	'StartPinch',
+	'Pinch',
+	'EndPinch',
+	'StartPan',
+	'Pan',
+	'EndPan',
+	'StartRotate',
+	'Rotate',
+	'EndRotate',
+	'Button3D',
+	'Move3D',
+	'StartPointerLock',
+	'EndPointerLock',
+	'StartInteraction',
+	'Interaction',
+	'EndInteraction',
+	'AnimationFrameRateUpdate',
 }
 
 /**
@@ -125,182 +152,218 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	getStillUpdateRate(): number;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeStartAnimation(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeAnimation(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeEndAnimation(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeMouseEnter(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeMouseLeave(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeStartMouseMove(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeMouseMove(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeEndMouseMove(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeLeftButtonPress(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeLeftButtonRelease(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeMiddleButtonPress(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeMiddleButtonRelease(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeRightButtonPress(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeRightButtonRelease(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeKeyPress(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeKeyDown(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeKeyUp(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeStartMouseWheel(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeMouseWheel(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeEndMouseWheel(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeStartPinch(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokePinch(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeEndPinch(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeStartPan(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokePan(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeEndPan(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeStartRotate(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeRotate(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeEndRotate(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeButton3D(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeMove3D(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeStartPointerLock(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeEndPointerLock(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeStartInteractionEvent(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeInteractionEvent(callData: IRenderWindowInteractorEvent): void;
 
 	/**
-	 *
+	 * 
+	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
 	invokeEndInteractionEvent(callData: IRenderWindowInteractorEvent): void;
 
@@ -311,212 +374,247 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	onStartAnimation(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onAnimation(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onEndAnimation(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onMouseEnter(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onMouseLeave(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onStartMouseMove(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onMouseMove(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onEndMouseMove(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onLeftButtonPress(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onLeftButtonRelease(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onMiddleButtonPress(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onMiddleButtonRelease(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onRightButtonPress(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onRightButtonRelease(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onKeyPress(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onKeyDown(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onKeyUp(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onStartMouseWheel(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onMouseWheel(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onEndMouseWheel(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onStartPinch(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onPinch(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onEndPinch(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onStartPan(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onPan(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onEndPan(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onStartRotate(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onRotate(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onEndRotate(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onButton3D(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onMove3D(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onStartPointerLock(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onEndPointerLock(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onStartInteractionEvent(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onInteractionEvent(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
 	/**
-	 *
-	 * @param cb The callback to be called
+	 * 
+	 * @param {InteractorEventCallback} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
 	 */
 	onEndInteractionEvent(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
@@ -1045,7 +1143,11 @@ export function newInstance(initialValues?: IRenderWindowInteractorInitialValues
  * that event are expected to respond appropriately.
  */
 export declare const vtkRenderWindowInteractor: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+	newInstance: typeof newInstance;
+	extend: typeof extend;
+	handledEvents: typeof handledEvents;
+	Device: typeof Device;
+	Input: typeof Input;
+	Axis: typeof Axis;
 };
 export default vtkRenderWindowInteractor;

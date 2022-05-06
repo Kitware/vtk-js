@@ -1,23 +1,6 @@
 import { vtkObject } from "../../../interfaces";
 import { RGBColor } from "../../../types";
-
-export enum Shading {
-	FLAT,
-	GOURAUD,
-	PHONG,
-}
-
-export enum Representation {
-	POINTS,
-	WIREFRAME,
-	SURFACE,
-}
-
-export enum Interpolation {
-	FLAT,
-	GOURAUD,
-	PHONG,
-}
+import { Interpolation, Representation, Shading } from "./Constants";
 
 export interface IPropertyInitialValues {
 	color?: RGBColor;
@@ -457,7 +440,10 @@ export function newInstance(initialValues?: IPropertyInitialValues): vtkProperty
  * manipulated with this object.
  */
 export declare const vtkProperty: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+	newInstance: typeof newInstance;
+	extend: typeof extend;
+	Shading: typeof Shading;
+	Representation: typeof Representation;
+	Interpolation: typeof Interpolation;
 };
 export default vtkProperty;
