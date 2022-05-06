@@ -40,6 +40,14 @@ function isLinear(type) {
   );
 }
 
+function hasSubCells(cellType) {
+  return (
+    cellType === CellType.VTK_TRIANGLE_STRIP ||
+    cellType === CellType.VTK_POLY_LINE ||
+    cellType === CellType.VTK_POLY_VERTEX
+  );
+}
+
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
@@ -48,6 +56,7 @@ export const STATIC = {
   getClassNameFromTypeId,
   getTypeIdFromClassName,
   isLinear,
+  hasSubCells,
 };
 
 // ----------------------------------------------------------------------------

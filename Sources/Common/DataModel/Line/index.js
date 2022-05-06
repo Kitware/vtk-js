@@ -63,15 +63,9 @@ function intersection(a1, a2, b1, b2, u, v) {
   v[0] = 0.0;
 
   // Determine line vectors.
-  a21[0] = a2[0] - a1[0];
-  a21[1] = a2[1] - a1[1];
-  a21[2] = a2[2] - a1[2];
-  b21[0] = b2[0] - b1[0];
-  b21[1] = b2[1] - b1[1];
-  b21[2] = b2[2] - b1[2];
-  b1a1[0] = b1[0] - a1[0];
-  b1a1[1] = b1[1] - a1[1];
-  b1a1[2] = b1[2] - a1[2];
+  vtkMath.subtract(a2, a1, a21);
+  vtkMath.subtract(b2, b1, b21);
+  vtkMath.subtract(b1, a1, b1a1);
 
   // Compute the system (least squares) matrix.
   const A = [];
@@ -217,14 +211,20 @@ function vtkLine(publicAPI, model) {
     }
     return outObj;
   };
-  publicAPI.evaluatePosition = (
-    x,
-    closestPoint,
-    subId,
-    pcoords,
-    dist2,
-    weights
-  ) => {}; // virtual
+
+  publicAPI.evaluateLocation = (pcoords, x, weights) => {
+    const a1 = [];
+    const a2 = [];
+    model.points.getPoint(0, a1);
+    model.points.getPoint(1, a2);
+
+    for (let i = 0; i < 3; i++) {
+      x[i] = a1[i] + pcoords[0] * (a2[i] - a1[i]);
+    }
+
+    weights[0] = 1.0 - pcoords[0];
+    weights[1] = pcoords[0];
+  };
 }
 
 // ----------------------------------------------------------------------------
