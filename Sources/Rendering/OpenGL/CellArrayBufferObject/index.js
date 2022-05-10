@@ -307,7 +307,6 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
 
     let pointCount = options.vertexOffset;
     addAPoint = function addAPointFunc(i) {
-      // TODO: use a counter to avoid the division
       // Keep track of original point and cell ids, for selection
       if (selectionMaps) {
         selectionMaps.points[pointCount] = i;

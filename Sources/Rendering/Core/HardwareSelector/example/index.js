@@ -53,8 +53,8 @@ document.querySelector('body').appendChild(tooltipElem);
 // Sphere -------------------------------------------------
 
 const sphereSource = vtkSphereSource.newInstance({
-  phiResolution: 500,
-  thetaResolution: 500,
+  phiResolution: 30,
+  thetaResolution: 30,
 });
 
 const sphereMapper = vtkMapper.newInstance();
@@ -253,7 +253,7 @@ function processSelections(selections) {
   }
 
   // Update picture for the user so we can see the green one
-  // updateWorldPosition(worldPosition);
+  updateWorldPosition(worldPosition);
 }
 
 // ----------------------------------------------------------------------------
