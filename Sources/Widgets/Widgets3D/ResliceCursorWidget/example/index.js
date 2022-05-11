@@ -48,7 +48,8 @@ const widget = vtkResliceCursorWidget.newInstance();
 const widgetState = widget.getWidgetState();
 widgetState.setKeepOrthogonality(true);
 widgetState.setOpacity(0.6);
-widgetState.setSphereRadius(10);
+// Use devicePixelRatio in order to have the same display handle size on all devices
+widgetState.setSphereRadius(10 * window.devicePixelRatio);
 widgetState.setLineThickness(5);
 
 const showDebugActors = true;
