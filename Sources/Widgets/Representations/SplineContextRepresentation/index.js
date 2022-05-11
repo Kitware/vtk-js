@@ -65,6 +65,7 @@ function vtkSplineContextRepresentation(publicAPI, model) {
 
     const polydata = vtkPolyData.newInstance();
     const widgetState = inData[0];
+    const closed = widgetState.getSplineClosed();
 
     const list = publicAPI
       .getRepresentationStates(widgetState)
@@ -84,14 +85,14 @@ function vtkSplineContextRepresentation(publicAPI, model) {
 
     let numVertices = inPoints.length;
 
-    if (!model.close) {
+    if (!closed) {
       --numVertices;
     } else {
       inPoints.push(inPoints[0]);
     }
 
     const spline = vtkSpline3D.newInstance({
-      close: widgetState.getSplineClose(),
+      close: widgetState.getSplineClosed(),
       kind: widgetState.getSplineKind(),
       tension: widgetState.getSplineTension(),
       bias: widgetState.getSplineBias(),
@@ -102,7 +103,7 @@ function vtkSplineContextRepresentation(publicAPI, model) {
     spline.computeCoefficients(inPoints);
 
     const outPoints = new Float32Array(
-      3 * ((numVertices + !model.close) * model.resolution)
+      3 * ((numVertices + !closed) * model.resolution)
     );
     const outCells = new Uint32Array(numVertices * model.resolution + 2);
     outCells[0] = numVertices * model.resolution + 1;
@@ -120,7 +121,7 @@ function vtkSplineContextRepresentation(publicAPI, model) {
       }
     }
 
-    if (model.close) {
+    if (closed) {
       outCells[numVertices * model.resolution + 1] = 0;
     } else {
       const lastPointIndex = numVertices * model.resolution + 1;
@@ -132,7 +133,7 @@ function vtkSplineContextRepresentation(publicAPI, model) {
     }
 
     polydata.getPoints().setData(outPoints);
-    if (model.fill && model.close) {
+    if (model.fill) {
       polydata.getPolys().setData(outCells);
     }
 
@@ -154,11 +155,10 @@ function vtkSplineContextRepresentation(publicAPI, model) {
   publicAPI.getSelectedState = (prop, compositeID) => model.state;
 
   function updateAreaVisibility() {
-    model.pipelines.area.actor.setVisibility(model.fill && model.close);
+    model.pipelines.area.actor.setVisibility(model.fill);
   }
 
   publicAPI.setFill = macro.chain(publicAPI.setFill, updateAreaVisibility);
-  publicAPI.setClose = macro.chain(publicAPI.setClose, updateAreaVisibility);
 
   publicAPI.setOutputBorder = macro.chain(publicAPI.setOutputBorder, (v) =>
     model.pipelines.border.actor.setVisibility(v)
@@ -171,7 +171,6 @@ function vtkSplineContextRepresentation(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   resolution: 16,
-  close: true,
   fill: true,
   // boundaryCondition : BoundaryCondition.DEFAULT
   outputBorder: false,
@@ -188,7 +187,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['mapper']);
   macro.setGet(publicAPI, model, [
     'resolution',
-    'close',
     'boundaryCondition',
     'fill',
     'outputBorder',

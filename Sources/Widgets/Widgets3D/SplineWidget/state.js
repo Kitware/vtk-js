@@ -8,7 +8,7 @@ export default function generateState() {
   return vtkStateBuilder
     .createBuilder()
     .addField({ name: 'splineKind', initialValue: splineKind.KOCHANEK_SPLINE })
-    .addField({ name: 'splineClose', initialValue: true })
+    .addField({ name: 'splineClosed', initialValue: true })
     .addField({
       name: 'splineBoundaryCondition',
       initialValue: BoundaryCondition.DEFAULT,
