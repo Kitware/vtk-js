@@ -81,9 +81,9 @@ const boundaryCondition = document.querySelector('.boundaryCondition');
 const onBoundaryCondition = () => {
   const isDefault = boundaryCondition.selectedIndex === 0;
   boundaryConditionValueXInput.disabled =
-    widgetRepresentation.getClose() || isDefault;
+    widget.getWidgetState().getSplineClosed() || isDefault;
   boundaryConditionValueYInput.disabled =
-    widgetRepresentation.getClose() || isDefault;
+    widget.getWidgetState().getSplineClosed() || isDefault;
   widget
     .getWidgetState()
     .setSplineBoundaryCondition(boundaryCondition.selectedIndex);
@@ -99,8 +99,7 @@ const onClosedChange = () => {
     isClosed.checked || boundaryCondition.selectedIndex === 0;
   boundaryConditionValueYInput.disabled =
     isClosed.checked || boundaryCondition.selectedIndex === 0;
-  widget.getWidgetState().setSplineClose(isClosed.checked);
-  widgetRepresentation.setClose(isClosed.checked);
+  widget.getWidgetState().setSplineClosed(isClosed.checked);
   renderWindow.render();
 };
 isClosed.addEventListener('click', onClosedChange);
