@@ -39,11 +39,13 @@ function vtkPiecewiseFunction(publicAPI, model) {
           switch (functionType) {
             case 0:
             case 1:
-              functionType = 1; // NonDecreasing
+              // NonDecreasing
+              functionType = 1;
               break;
             case 2:
             default:
-              functionType = 3; // Varied
+              // Varied
+              functionType = 3;
               break;
           }
         } else {
@@ -51,11 +53,13 @@ function vtkPiecewiseFunction(publicAPI, model) {
           switch (functionType) {
             case 0:
             case 2:
-              functionType = 2; // NonIncreasing
+              // NonIncreasing
+              functionType = 2;
               break;
             case 1:
             default:
-              functionType = 3; // Varied
+              // Varied
+              functionType = 3;
               break;
           }
         }
