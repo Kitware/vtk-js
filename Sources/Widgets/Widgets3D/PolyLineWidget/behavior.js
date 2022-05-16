@@ -83,16 +83,19 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
-
-    if (model.activeState === model.widgetState.getMoveHandle()) {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
+    if (
+      model.activeState === model.widgetState.getMoveHandle() &&
+      manipulator
+    ) {
       updateMoveHandle(e);
-      // Commit handle to location
       const moveHandle = model.widgetState.getMoveHandle();
       const newHandle = model.widgetState.addHandle();
-      newHandle.setOrigin(...moveHandle.getOrigin());
+      newHandle.setOrigin(moveHandle.getOrigin());
       newHandle.setColor(moveHandle.getColor());
       newHandle.setScale1(moveHandle.getScale1());
-      newHandle.setManipulator(model.manipulator);
+      newHandle.setManipulator(manipulator);
     } else {
       isDragging = true;
       model._apiSpecificRenderWindow.setCursor('grabbing');

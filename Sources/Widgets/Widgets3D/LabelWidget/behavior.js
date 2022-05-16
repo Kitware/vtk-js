@@ -49,9 +49,19 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
 
-    if (model.activeState === model.widgetState.getMoveHandle()) {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
+    if (
+      model.activeState === model.widgetState.getMoveHandle() &&
+      manipulator
+    ) {
+      const worldCoords = manipulator.handleEvent(
+        e,
+        model._apiSpecificRenderWindow
+      );
       // Commit handle to location
       const moveHandle = model.widgetState.getMoveHandle();
+      moveHandle.setOrigin(worldCoords);
       model.widgetState.getText().setOrigin(moveHandle.getOrigin());
       publicAPI.loseFocus();
     } else {

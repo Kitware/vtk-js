@@ -41,18 +41,25 @@ export default function widgetBehavior(publicAPI, model) {
 
     picker.initializePickList();
     picker.setPickList(publicAPI.getNestedProps());
-
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
     if (
       model.activeState === model.widgetState.getMoveHandle() &&
-      model.widgetState.getHandleList().length < MAX_POINTS
+      model.widgetState.getHandleList().length < MAX_POINTS &&
+      manipulator
     ) {
+      const worldCoords = manipulator.handleEvent(
+        e,
+        model._apiSpecificRenderWindow
+      );
       // Commit handle to location
       const moveHandle = model.widgetState.getMoveHandle();
+      moveHandle.setOrigin(...worldCoords);
       const newHandle = model.widgetState.addHandle();
       newHandle.setOrigin(...moveHandle.getOrigin());
       newHandle.setColor(moveHandle.getColor());
       newHandle.setScale1(moveHandle.getScale1());
-      newHandle.setManipulator(model.manipulator);
+      newHandle.setManipulator(manipulator);
     } else {
       isDragging = true;
       model._apiSpecificRenderWindow.setCursor('grabbing');

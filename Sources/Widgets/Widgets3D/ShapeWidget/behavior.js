@@ -509,19 +509,28 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonPress = (e) => {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
     if (
       !model.activeState ||
       !model.activeState.getActive() ||
-      !model.pickable
+      !model.pickable ||
+      !manipulator
     ) {
       return macro.VOID;
     }
 
     if (model.hasFocus) {
+      const worldCoords = manipulator.handleEvent(
+        e,
+        model._apiSpecificRenderWindow
+      );
       if (!model.point1) {
+        model.point1Handle.setOrigin(worldCoords);
         publicAPI.placePoint1(model.point1Handle.getOrigin());
         publicAPI.invokeStartInteractionEvent();
       } else {
+        model.point2Handle.setOrigin(worldCoords);
         publicAPI.placePoint2(model.point2Handle.getOrigin());
         publicAPI.invokeInteractionEvent();
         publicAPI.invokeEndInteractionEvent();
