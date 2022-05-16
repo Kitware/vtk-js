@@ -5,7 +5,7 @@ export default function generateState() {
     .createBuilder()
     .addStateFromMixin({
       labels: ['moveHandle'],
-      mixins: ['origin', 'color', 'scale1', 'visible'],
+      mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator'],
       name: 'moveHandle',
       initialValues: {
         // when scaleInPixels=true, the handles have 30px height
@@ -15,7 +15,7 @@ export default function generateState() {
     })
     .addDynamicMixinState({
       labels: ['handles'],
-      mixins: ['origin', 'color', 'scale1', 'visible'],
+      mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator'],
       name: 'handle',
       initialValues: {
         scale1: 30,

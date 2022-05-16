@@ -1,7 +1,7 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import { Nullable, Size, Vector2, Vector3 } from '../../../types';
-import { vtkRenderer } from '../../../Rendering/Core/Renderer';
 import { VtkDataTypes } from '../../../Common/Core/DataArray';
+import vtkRenderer from '../../Core/Renderer';
 import vtkTexture from '../../Core/Texture';
 import vtkViewStream from '../../../IO/Core/ImageStream/ViewStream';
 
@@ -9,15 +9,33 @@ import vtkViewStream from '../../../IO/Core/ImageStream/ViewStream';
  *
  */
 export interface IOpenGLRenderWindowInitialValues {
-	resolution?: number;
-	point1?: Vector3;
-	point2?: Vector3;
-	pointType?: string;
+	cullFaceEnabled?: boolean;
+	shaderCache?: null;
+	initialized?: boolean;
+	context?: WebGLRenderingContext | WebGL2RenderingContext;
+	canvas?: HTMLCanvasElement;
+	cursorVisibility?: boolean;
+	cursor?: string;
+	textureUnitManager?: null;
+	textureResourceIds?: null;
+	containerSize?: Size;
+	renderPasses?: any[];
+	notifyStartCaptureImage?: boolean;
+	webgl2?: boolean;
+	defaultToWebgl2?: boolean;
+	activeFramebuffer?: any;
+	xrSession?: any;
+	xrSessionIsAR?: boolean;
+	xrReferenceSpace?: any;
+	xrSupported?: boolean;
+	imageFormat?: 'image/png';
+	useOffScreen?: boolean;
+	useBackgroundImage?: boolean;
 }
 
-export interface IOptions {
-	resetCamera: boolean,
-	size: Size,
+export interface ICaptureOptions {
+	resetCamera: boolean;
+	size: Size;
 	scale: number
 }
 
@@ -66,7 +84,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	/**
 	 * Get the container element.
 	 */
-	getContainer(): void;
+	getContainer(): Nullable<HTMLElement>;
 
 	/**
 	 * Get the container size.
@@ -278,9 +296,9 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * size is assumed.  The default format is "image/png". Returns a promise
 	 * that resolves to the captured screenshot.
 	 * @param {String} format
-	 * @param {IOptions} options
+	 * @param {ICaptureOptions} options
 	 */
-	captureNextImage(format: string, options: IOptions): Nullable<Promise<string>>;
+	captureNextImage(format: string, options: ICaptureOptions): Nullable<Promise<string>>;
 
 	/**
 	 *

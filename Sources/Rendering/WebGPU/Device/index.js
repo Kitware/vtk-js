@@ -3,6 +3,47 @@ import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManage
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUTextureManager from 'vtk.js/Sources/Rendering/WebGPU/TextureManager';
 
+/**
+ * provide a simple WeakRefMap class to share device objects based on
+ * hash values so that buffers/textures etc can be shared betwen mappers.
+ * This is roughly based on WeakLRUCache but without the actual caching
+ * behavior. This is just a map of key -> WeakRef(value)
+ */
+
+/* eslint-disable no-undef */
+export class WeakRefMap extends Map {
+  constructor() {
+    super();
+    this.registry = new FinalizationRegistry((key) => {
+      const entry = super.get(key);
+      if (entry && entry.deref && entry.deref() === undefined)
+        super.delete(key);
+    });
+  }
+
+  getValue(key) {
+    const entry = super.get(key);
+    if (entry) {
+      const value = entry.deref();
+      if (value !== undefined) return value;
+      super.delete(key);
+    }
+    return undefined;
+  }
+
+  setValue(key, value) {
+    let entry;
+    if (value && typeof value === 'object') {
+      entry = new WeakRef(value);
+      this.registry.register(value, key);
+      super.set(key, entry);
+    }
+    // else entry is undefined
+    return entry;
+  }
+}
+/* eslint-enable no-undef */
+
 // ----------------------------------------------------------------------------
 // vtkWebGPUDevice methods
 // ----------------------------------------------------------------------------
@@ -82,63 +123,26 @@ function vtkWebGPUDevice(publicAPI, model) {
   // The Device has an object cache that can be used to cache buffers,
   // textures and other objects that can be shared. The basic approach is to
   // call getCachedObject with a request and a create function. The request
-  // must have two fields a hash and an owner. The owner is what the weak
-  // map uses to hold onto the cached object. When the owner is deleted the
-  // cached object will be freed from the cache. The cache lookup just
-  // returns any entry that has a matching owner and hash. If a match isn't
-  // found then the create function is called with any extra arguments.
-  //
-  // For best memory management it is important that the owner be as close
-  // to the underlying object as possible. For example for a point data buffer
-  // you would want the actual vtkDataArray to be the owner, not the polydata
-  // or even worse the actor. As the points data array could be freed wihtout
-  // the polydata or actor being freed.
+  // is based on a hash. The cache lookup just returns any entry that has a
+  // matching hash. If a match isn't found then the create function is
+  // called with any extra arguments.
 
   // is the object already cached?
-  publicAPI.hasCachedObject = (owner, hash) => {
-    if (!owner) {
-      return false;
-    }
+  publicAPI.hasCachedObject = (hash) => model.objectCache.getValue(hash);
 
-    // if a matching request already exists then return true
-    if (model.objectCache.has(owner)) {
-      const objects = model.objectCache.get(owner);
-      for (let i = 0; i < objects.length; i++) {
-        if (hash === objects[i].hash) {
-          return true;
-        }
-      }
-    }
-    return false;
-  };
-
-  publicAPI.getCachedObject = (owner, hash, creator, ...args) => {
-    if (!owner || !hash) {
-      vtkErrorMacro('attempt to cache an object without an owner or hash');
+  publicAPI.getCachedObject = (hash, creator, ...args) => {
+    if (!hash) {
+      vtkErrorMacro('attempt to cache an object without a hash');
       return null;
     }
 
-    // if a matching request already exists then return the cached object
-    if (model.objectCache.has(owner)) {
-      const objects = model.objectCache.get(owner);
-      for (let i = 0; i < objects.length; i++) {
-        if (hash === objects[i].hash) {
-          return objects[i].object;
-        }
-      }
+    const existingValue = model.objectCache.getValue(hash);
+    if (existingValue) {
+      return existingValue;
     }
 
-    // otherwise create the object and cache it
     const createdObject = creator(...args);
-    if (!model.objectCache.has(owner)) {
-      model.objectCache.set(owner, []);
-    }
-    const objects = model.objectCache.get(owner);
-    objects.push({
-      hash,
-      object: createdObject,
-    });
-
+    model.objectCache.setValue(hash, createdObject);
     return createdObject;
   };
 }
@@ -169,8 +173,11 @@ export function extend(publicAPI, model, initialValues = {}) {
     'textureManager',
   ]);
 
-  // this is a cache, and a cache with GC pretty much means WeakMap
-  model.objectCache = new WeakMap();
+  // this is a weak ref cache implementation, we create it without
+  // an expirer (so it is strictly based on garbage collection and
+  // objects are not held if there are no external references)
+  // model.objectCache = new WeakLRUCache({ expirer: false });
+  model.objectCache = new WeakRefMap();
 
   model.shaderCache = vtkWebGPUShaderCache.newInstance();
   model.shaderCache.setDevice(publicAPI);

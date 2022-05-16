@@ -113,7 +113,9 @@ function vtkCell(publicAPI, model) {
     pcoords,
     dist2,
     weights
-  ) => {}; // virtual
+  ) => {
+    macro.vtkErrorMacro('vtkCell.evaluatePosition is not implemented.');
+  }; // virtual
 }
 
 // ----------------------------------------------------------------------------

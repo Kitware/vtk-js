@@ -1,14 +1,24 @@
 import macro from 'vtk.js/Sources/macros';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkCellTypes from 'vtk.js/Sources/Common/DataModel/CellTypes';
+import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import vtkPicker from 'vtk.js/Sources/Rendering/Core/Picker';
-import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkPolyLine from 'vtk.js/Sources/Common/DataModel/PolyLine';
 import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
-
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
 import { vec3 } from 'gl-matrix';
 
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
+
+function createCellMap() {
+  return {
+    [CellType.VTK_LINE]: vtkLine.newInstance(),
+    [CellType.VTK_POLY_LINE]: vtkPolyLine.newInstance(),
+    [CellType.VTK_TRIANGLE]: vtkTriangle.newInstance(),
+  };
+}
 
 function clipLineWithPlane(mapper, matrix, p1, p2) {
   const outObj = { planeId: -1, t1: 0.0, t2: 1.0, intersect: 0 };
@@ -238,8 +248,10 @@ function vtkCellPicker(publicAPI, model) {
     const minXYZ = [0, 0, 0];
     let pDistMin = Number.MAX_VALUE;
     const minPCoords = [0, 0, 0];
-    let minCellId = -1;
-    const minCell = vtkTriangle.newInstance();
+    let minCellId = null;
+    let minCell = null;
+    let minCellType = null;
+    let subId = null;
     const x = [];
     const data = mapper.getInputData();
     const isPolyData = 1;
@@ -263,31 +275,47 @@ function vtkCellPicker(publicAPI, model) {
     const locator = null;
     if (locator) {
       // TODO when cell locator will be implemented
-    } else if (data.getPolys) {
-      const cellObject = data.getPolys();
-      const points = data.getPoints();
-      const cellData = cellObject.getData();
-      let cellId = 0;
-      const pointsIdList = [-1, -1, -1];
-      const cell = vtkTriangle.newInstance();
-      const cellPoints = vtkPoints.newInstance();
-      // cross all cells
-      for (let i = 0; i < cellData.length; cellId++) {
-        const pCoords = [0, 0, 0];
-        const nbPointsInCell = cellData[i++];
+    } else if (data.getCells) {
+      if (!data.getCells()) {
+        data.buildLinks();
+      }
 
-        cellPoints.setNumberOfPoints(nbPointsInCell);
-        // Extract cell points
-        for (let j = 0; j < nbPointsInCell; j++) {
-          pointsIdList[j] = cellData[i++];
+      const tempCellMap = createCellMap();
+      const minCellMap = createCellMap();
+
+      const numberOfCells = data.getNumberOfCells();
+
+      for (let cellId = 0; cellId < numberOfCells; cellId++) {
+        const pCoords = [0, 0, 0];
+
+        minCellType = data.getCellType(cellId);
+        const cell = tempCellMap[minCellType];
+
+        if (cell == null) {
+          // eslint-disable-next-line no-continue
+          continue;
         }
 
-        // Create cell from points
-        cell.initialize(points, pointsIdList);
+        minCell = minCellMap[minCellType];
+
+        data.getCell(cellId, cell);
 
         let cellPicked;
+
         if (isPolyData) {
-          cellPicked = cell.intersectWithLine(p1, p2, tol, x, pCoords);
+          if (vtkCellTypes.hasSubCells(minCellType)) {
+            cellPicked = cell.intersectWithLine(
+              t1,
+              t2,
+              p1,
+              p2,
+              tol,
+              x,
+              pCoords
+            );
+          } else {
+            cellPicked = cell.intersectWithLine(p1, p2, tol, x, pCoords);
+          }
         } else {
           cellPicked = cell.intersectWithLine(q1, q2, tol, x, pCoords);
           if (t1 !== 0.0 || t2 !== 1.0) {
@@ -302,9 +330,11 @@ function vtkCellPicker(publicAPI, model) {
           cellPicked.t <= t2
         ) {
           const pDist = cell.getParametricDistance(pCoords);
+
           if (pDist < pDistMin || (pDist === pDistMin && cellPicked.t < tMin)) {
             tMin = cellPicked.t;
             pDistMin = pDist;
+            subId = cellPicked.subId;
             minCellId = cellId;
             cell.deepCopy(minCell);
             for (let k = 0; k < 3; k++) {
@@ -324,7 +354,12 @@ function vtkCellPicker(publicAPI, model) {
         weights[i] = 0.0;
       }
       const point = [];
-      minCell.evaluateLocation(minPCoords, point, weights);
+
+      if (vtkCellTypes.hasSubCells(minCellType)) {
+        minCell.evaluateLocation(subId, minPCoords, point, weights);
+      } else {
+        minCell.evaluateLocation(minPCoords, point, weights);
+      }
 
       // Return the polydata to the user
       model.dataSet = data;

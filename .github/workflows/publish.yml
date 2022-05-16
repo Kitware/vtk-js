@@ -57,5 +57,3 @@ jobs:
         env:
           GIT_PUBLISH_URL: https://${{ secrets.GH_PUBLISH_CREDS }}@github.com/Kitware/vtk-js.git
         run: npm run doc:publish
-      - name: Clear gh-pages history
-        run: bash Utilities/ci/reset-gh-pages-history.sh

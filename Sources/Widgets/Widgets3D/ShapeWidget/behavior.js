@@ -273,8 +273,10 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   const computeTextPosition = (worldBounds, textPosition, worldMargin = 0) => {
-    const viewPlaneOrigin = model.manipulator.getOrigin();
-    const viewPlaneNormal = model.manipulator.getNormal();
+    const viewPlaneOrigin = vtkBoundingBox.getCenter(worldBounds);
+    const viewPlaneNormal = model._renderer
+      .getActiveCamera()
+      .getDirectionOfProjection();
     const viewUp = model._renderer.getActiveCamera().getViewUp();
 
     const positionMargin = Array.isArray(worldMargin)
@@ -448,12 +450,14 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = (callData) => {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
     if (
+      !manipulator ||
       !model.activeState ||
       !model.activeState.getActive() ||
       !model.pickable ||
-      !model.dragable ||
-      !model.manipulator
+      !model.dragable
     ) {
       return macro.VOID;
     }
@@ -467,9 +471,8 @@ export default function widgetBehavior(publicAPI, model) {
       model.shapeHandle.setUp(up);
       model.shapeHandle.setRight(right);
       model.shapeHandle.setDirection(normal);
-      model.manipulator.setNormal(normal);
     }
-    const worldCoords = model.manipulator.handleEvent(
+    const worldCoords = manipulator.handleEvent(
       callData,
       model._apiSpecificRenderWindow
     );

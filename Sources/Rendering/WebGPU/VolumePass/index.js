@@ -343,19 +343,30 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     publicAPI.updateDepthPolyData(renNode);
 
     const pd = model._boundsPoly;
-    const cells = pd.getPolys();
-    // points
     const points = pd.getPoints();
-    const buffRequest = {
-      owner: points,
-      usage: BufferUsage.PointArray,
-      format: 'float32x4',
-      time: Math.max(points.getMTime(), cells.getMTime()),
-      hash: 'vp',
-      dataArray: points,
+    const cells = pd.getPolys();
+
+    let buffRequest = {
+      hash: `vp${cells.getMTime()}`,
+      usage: BufferUsage.Index,
       cells,
+      numberOfPoints: points.getNumberOfPoints(),
       primitiveType: PrimitiveTypes.Triangles,
       representation: Representation.SURFACE,
+    };
+    const indexBuffer = viewNode
+      .getDevice()
+      .getBufferManager()
+      .getBuffer(buffRequest);
+    model._mapper.getVertexInput().setIndexBuffer(indexBuffer);
+
+    // points
+    buffRequest = {
+      usage: BufferUsage.PointArray,
+      format: 'float32x4',
+      hash: `vp${points.getMTime()}${cells.getMTime()}`,
+      dataArray: points,
+      indexBuffer,
       packExtra: true,
     };
     const buff = viewNode.getDevice().getBufferManager().getBuffer(buffRequest);

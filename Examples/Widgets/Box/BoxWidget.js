@@ -202,7 +202,9 @@ function vtkBoxWidget(publicAPI, model) {
   const handles = model.widgetState.getStatesWithLabel('handles');
 
   // Default manipulator
-  model.manipulator = vtkPlaneManipulator.newInstance();
+  model.manipulator = vtkPlaneManipulator.newInstance({
+    useCameraNormal: true,
+  });
   handles.forEach((handle) => handle.setManipulator(model.manipulator));
 }
 

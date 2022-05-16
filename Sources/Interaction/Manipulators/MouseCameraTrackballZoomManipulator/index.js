@@ -12,7 +12,7 @@ function vtkMouseCameraTrackballZoomManipulator(publicAPI, model) {
 
   publicAPI.onButtonDown = (interactor, renderer, position) => {
     model.previousPosition = position;
-    const size = interactor.getView().getSize();
+    const size = interactor.getView().getViewportSize(renderer);
 
     const camera = renderer.getActiveCamera();
     const direction = model.flipDirection ? -1 : 1;

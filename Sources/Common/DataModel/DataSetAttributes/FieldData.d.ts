@@ -1,4 +1,6 @@
 import { vtkObject } from "../../../interfaces" ;
+import { Nullable } from "../../../types";
+import vtkDataArray from "../../Core/DataArray";
 
 /**
  * 
@@ -84,7 +86,7 @@ export interface vtkFieldData extends vtkObject {
 	 * 
 	 * @param {String} arrayName The name of the array.
 	 */
-	getArrayByName(arrayName: string): any | null;
+	getArrayByName(arrayName: string): Nullable<vtkDataArray>;
 
 	/**
 	 * 
