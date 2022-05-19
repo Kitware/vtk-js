@@ -1,15 +1,7 @@
 import { vtkObject, vtkProperty } from "../../../interfaces";
 import vtkRenderer from '../Renderer';
+import { Coordinate } from "./Constants";
 
-export enum Coordinate {
-	DISPLAY,
-	NORMALIZED_DISPLAY,
-	VIEWPORT,
-	NORMALIZED_VIEWPORT,
-	PROJECTION,
-	VIEW,
-	WORLD,
-}
 
 /**
  *
@@ -73,7 +65,7 @@ export interface vtkCoordinate extends vtkObject {
 	 * options are Display, Normalized Display, Viewport, Normalized Viewport,
 	 * View, and World.
 	 */
-	getCoordinateSystem(): number;
+	getCoordinateSystem(): Coordinate;
 
 	/**
 	 * Get the coordinate system which this coordinate is defined in as string.
@@ -251,7 +243,8 @@ export function newInstance(initialValues?: ICoordinateInitialValues): vtkCoordi
  * @see [vtkActor](./Rendering_Core_Actor.html)2D
  */
 export declare const vtkCoordinate: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+	newInstance: typeof newInstance;
+	extend: typeof extend;
+	Coordinate: typeof Coordinate;
 };
 export default vtkCoordinate;
