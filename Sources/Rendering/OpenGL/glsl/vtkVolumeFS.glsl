@@ -190,8 +190,9 @@ uniform vec4 ipScalarRangeMax;
 // declaration for intermixed geometry
 //VTK::ZBuffer::Dec
 
-// Lighting values
-//VTK::Light::Dec
+//=======================================================================
+// global and custom variables (a temporary section before photorealistics rendering module is complete)
+vec3 rayDirVC;
 
 //=======================================================================
 // Webgl2 specific version of functions
@@ -413,14 +414,137 @@ float computeGradientOpacityFactor(
 #endif
 }
 
+
+//=======================================================================
+// surface light contribution
+
+#if vtkLightComplexity == 3
+// convert vector position from idx to vc
+vec3 IStoVC(vec3 posIS){
+  vec3 posVC = posIS / vVCToIJK;
+  return posVC.x * vPlaneNormal0 + posVC.y * vPlaneNormal2 + posVC.z * vPlaneNormal4 + vOriginVC;
+}
+#endif
+
 #if vtkLightComplexity > 0
 void applyLighting(inout vec3 tColor, vec4 normal)
 {
   vec3 diffuse = vec3(0.0, 0.0, 0.0);
   vec3 specular = vec3(0.0, 0.0, 0.0);
-  //VTK::Light::Impl
+  float df, sf = 0.0;
+  for (int i = 0; i < lightNum; i++){
+      df = abs(dot(normal.rgb, -lightDirectionVC[i]));
+      diffuse += df * lightColor[i];
+      sf = pow( abs(dot(lightHalfAngleVC[i],normal.rgb)), vSpecularPower);
+      specular += sf * lightColor[i];
+  }
   tColor.rgb = tColor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;
 }
+  #if vtkLightComplexity < 3
+    void applyLightingDirectional(inout vec3 tColor, vec4 normal)
+    {
+      // everything in VC
+      vec3 diffuse = vec3(0.0);
+      vec3 specular = vec3(0.0);
+      vec3 vertLightDirection;
+      for (int i = 0; i < lightNum; i++){
+        float ndotL,ndotH;
+        vertLightDirection = lightDirectionVC[i];
+        ndotL = dot(normal.xyz, vertLightDirection);
+        if (ndotL < 0.0 && twoSidedLighting)
+        {
+          ndotL = -ndotL;
+        }
+        if (ndotL > 0.0)
+        {
+          diffuse += ndotL * lightColor[i];
+          //specular
+          ndotH = dot(normal.xyz, normalize(rayDirVC + vertLightDirection));
+          if (ndotH < 0.0 && twoSidedLighting)
+          {
+            ndotH = -ndotH;
+          }
+          if (ndotH > 0.0)
+          {
+            specular += pow(ndotH, vSpecularPower) * lightColor[i];
+          }
+        }
+      }
+      tColor.rgb = tColor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;
+    }
+  #else
+    void applyLightingPositional(inout vec3 tColor, vec4 normal, vec3 posVC)
+    {
+      // everything in VC
+      vec3 diffuse = vec3(0.0);
+      vec3 specular = vec3(0.0);
+      vec3 vertLightDirection;
+      for (int i = 0; i < lightNum; i++){
+        float distance,attenuation,ndotL,ndotH;
+        vec3 lightDir;
+        if (lightPositional[i] == 1){
+          lightDir = lightDirectionVC[i];
+          vertLightDirection = lightPositionVC[i] - posVC;  // or reverse...?
+          distance = length(vertLightDirection);
+          vertLightDirection = normalize(vertLightDirection);
+          attenuation = 1.0 / (lightAttenuation[i].x
+                              + lightAttenuation[i].y * distance
+                              + lightAttenuation[i].z * distance * distance);
+          // per OpenGL standard cone angle is 90 or less for a spot light`,
+          if (lightConeAngle[i] <= 90.0){
+            float coneDot = dot(normalize(posVC - lightPositionVC[i]), lightDir);
+            if (coneDot >= cos(radians(lightConeAngle[i]))){  // if inside cone
+              attenuation = attenuation * pow(coneDot, lightExponent[i]);
+            }
+            else {
+              attenuation = 0.0;
+            }
+          }
+          ndotL = dot(normal.xyz, vertLightDirection);
+          if (ndotL < 0.0 && twoSidedLighting)
+          {
+            ndotL = -ndotL;
+          }
+          if (ndotL > 0.0)
+          {
+            diffuse += ndotL * attenuation * lightColor[i];
+            //specular
+            ndotH = dot(normal.xyz, normalize(rayDirVC + vertLightDirection));
+            if (ndotH < 0.0 && twoSidedLighting)
+            {
+              ndotH = -ndotH;
+            }
+            if (ndotH > 0.0)
+            {
+              specular += pow(ndotH, vSpecularPower) * attenuation * lightColor[i];
+            }
+          }
+        } else {
+          vertLightDirection = lightDirectionVC[i];
+          ndotL = dot(normal.xyz, vertLightDirection);
+          if (ndotL < 0.0 && twoSidedLighting)
+          {
+            ndotL = -ndotL;
+          }
+          if (ndotL > 0.0)
+          {
+            diffuse += ndotL * lightColor[i];
+            //specular
+            ndotH = dot(normal.xyz, normalize(rayDirVC + vertLightDirection));
+            if (ndotH < 0.0 && twoSidedLighting)
+            {
+              ndotH = -ndotH;
+            }
+            if (ndotH > 0.0)
+            {
+              specular += pow(ndotH, vSpecularPower) * lightColor[i];
+            }
+          }
+        }
+      }
+      tColor.rgb = tColor.rgb * (diffuse * vDiffuse + vAmbient) + specular*vSpecular;
+    }
+  #endif 
 #endif
 
 //=======================================================================
@@ -603,7 +727,11 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
   // apply lighting if requested as appropriate
   #if vtkLightComplexity > 0
     #if !defined(vtkComponent0Proportional)
-      applyLighting(tColor.rgb, normal0);
+      #if vtkLightComplexity < 3
+        applyLightingDirectional(tColor.rgb, vec4(normalize(normal0.xyz),normal0.w));
+      #else
+        applyLightingPositional(tColor.rgb, vec4(normalize(normal0.xyz),normal0.w), IStoVC(posIS));
+      #endif
     #endif
   #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
     #if !defined(vtkComponent1Proportional)
@@ -620,7 +748,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
   #endif
   #endif
   #endif
-#endif
+  #endif
 
 // perform final independent blend as needed
 #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
@@ -982,8 +1110,6 @@ void computeIndexSpaceValues(out vec3 pos, out vec3 endPos, out float sampleDist
 
 void main()
 {
-
-  vec3 rayDirVC;
 
   if (cameraParallel == 1)
   {
