@@ -314,13 +314,13 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
   };
 
   publicAPI.requestData = (inData, outData) => {
-    const shape = publicAPI.getRepresentationStates(inData[0])[0].getShape();
+    const shape = publicAPI.getRepresentationStates(inData[0])[0]?.getShape();
     let shouldCreateGlyph = model.glyph == null;
     if (model.shape !== shape && Object.values(ShapeType).includes(shape)) {
       model.shape = shape;
       shouldCreateGlyph = true;
     }
-    if (shouldCreateGlyph) {
+    if (shouldCreateGlyph && model.shape) {
       model.glyph = createGlyph(model.shape);
       model.mapper.setInputConnection(model.glyph.getOutputPort(), 1);
     }
@@ -332,11 +332,11 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
     ctxVisible = true,
     handleVisible = true
   ) => {
-    const state = publicAPI.getRepresentationStates()[0];
+    const hasValidState = publicAPI.getRepresentationStates().length > 0;
     superClass.updateActorVisibility(
       renderingType,
       ctxVisible,
-      handleVisible && state.isVisible()
+      handleVisible && hasValidState
     );
   };
 }
