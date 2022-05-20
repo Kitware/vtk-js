@@ -1,12 +1,13 @@
 import { vtkObject } from "../../../interfaces";
 import { RGBColor } from "../../../types";
+import { DisplayLocation } from "./Constants";
 
 interface IProperty2DInitialValues{
 	color?: RGBColor;
 	opacity?: number;
 	pointSize?: number;
 	lineWidth?: number;
-	displayLocation?: string;
+	displayLocation?: DisplayLocation;
 }
 
 export interface vtkProperty2D extends vtkObject {
@@ -25,7 +26,7 @@ export interface vtkProperty2D extends vtkObject {
 	 * Get the display location of the object.
 	 * @default 'Foreground'
 	 */
-	getDisplayLocation(): string;
+	getDisplayLocation(): DisplayLocation;
 
 	/**
 	 * Get the width of a Line. 
@@ -84,7 +85,7 @@ export interface vtkProperty2D extends vtkObject {
 	 * Set the display location of the object.
 	 * @param {String} displayLocation
 	 */
-	setDisplayLocation(displayLocation: string): boolean;
+	setDisplayLocation(displayLocation: DisplayLocation): boolean;
 
 	/**
 	 * Set the width of a Line. The width is expressed in screen units.
@@ -138,7 +139,7 @@ export function newInstance(initialValues?: IProperty2DInitialValues): vtkProper
  * like backface properties can be set and manipulated with this object.
  */
 export declare const vtkProperty2D: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+	newInstance: typeof newInstance;
+	extend: typeof extend;
 };
 export default vtkProperty2D;

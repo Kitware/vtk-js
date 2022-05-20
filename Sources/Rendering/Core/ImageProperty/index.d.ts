@@ -1,17 +1,14 @@
 import { vtkObject } from "../../../interfaces";
 import vtkColorTransferFunction from "../ColorTransferFunction";
-
-export enum InterpolationType {
-	NEAREST,
-	LINEAR,
-}
+import vtkPiecewiseFunction from "../../../Common/DataModel/PiecewiseFunction";
+import { InterpolationType } from "./Constants";
 
 interface IComponentData {
 	piecewiseFunction: number;
 	componentWeight: number;
 }
 
-export interface IImageMapperInitialValues {
+export interface IImagePropertyInitialValues {
 	independentComponents?: boolean;
 	interpolationType?: InterpolationType;
 	colorWindow?: number;
@@ -20,13 +17,13 @@ export interface IImageMapperInitialValues {
 	diffuse?: number;
 	opacity?: number;
 	componentData?: IComponentData[];
-        useLookupTableScalarRange?: boolean;
+	useLookupTableScalarRange?: boolean;
 }
 
 export interface vtkImageProperty extends vtkObject {
 
 	/**
-     * Get the lighting coefficient.
+	 * Get the lighting coefficient.
 	 * @default 1.0
 	 */
 	getAmbient(): number;
@@ -50,7 +47,7 @@ export interface vtkImageProperty extends vtkObject {
 	getComponentWeight(index: number): number;
 
 	/**
-     * Get the diffuse lighting coefficient.
+	 * Get the diffuse lighting coefficient.
 	 * @default 1.0
 	 */
 	getDiffuse(): number;
@@ -72,7 +69,7 @@ export interface vtkImageProperty extends vtkObject {
 	getInterpolationTypeAsString(): string;
 
 	/**
-     * Get the opacity of the object.
+	 * Get the opacity of the object.
 	 * @default 1.0
 	 */
 	getOpacity(): number;
@@ -81,25 +78,25 @@ export interface vtkImageProperty extends vtkObject {
 	 * Get the component weighting function.
 	 * @param {Number} [idx]
 	 */
-	getPiecewiseFunction(idx?: number): any;
+	getPiecewiseFunction(idx?: number): vtkPiecewiseFunction;
 
 	/**
 	 * Get the currently set RGB transfer function.
 	 * @param {Number} [idx]
 	 */
-	getRGBTransferFunction(idx?: number): any;
+	getRGBTransferFunction(idx?: number): vtkColorTransferFunction;
 
 	/**
 	 * Alias to get the piecewise function (backwards compatibility)
 	 * @param {Number} [idx]
 	 */
-	getScalarOpacity(idx: number): number;
+	getScalarOpacity(idx?: number): vtkPiecewiseFunction;
 
-    /**
+	/**
 	 * Set the ambient lighting coefficient.
-     * @param {Number} ambient The ambient lighting coefficient.
-     */
-    setAmbient(ambient: number): boolean;
+	 * @param {Number} ambient The ambient lighting coefficient.
+	 */
+	setAmbient(ambient: number): boolean;
 
 	/**
 	 * Set the level value for window/level.
@@ -120,11 +117,11 @@ export interface vtkImageProperty extends vtkObject {
 	 */
 	setComponentWeight(index: number, value: number): boolean;
 
-    /**
-     * Set the diffuse lighting coefficient.
-     * @param {Number} diffuse  The diffuse lighting coefficient.
-     */
-    setDiffuse(diffuse: number): boolean;
+	/**
+	 * Set the diffuse lighting coefficient.
+	 * @param {Number} diffuse  The diffuse lighting coefficient.
+	 */
+	setDiffuse(diffuse: number): boolean;
 
 	/**
 	 * 
@@ -149,7 +146,7 @@ export interface vtkImageProperty extends vtkObject {
 	setInterpolationTypeToNearest(): boolean;
 
 	/**
-     * Set the opacity of the object
+	 * Set the opacity of the object
 	 * @param {Number} opacity The opacity value.
 	 */
 	setOpacity(opacity: number): boolean;
@@ -157,9 +154,9 @@ export interface vtkImageProperty extends vtkObject {
 	/**
 	 * Set the piecewise function
 	 * @param {Number} index 
-	 * @param func 
+	 * @param {vtkPiecewiseFunction} func 
 	 */
-	setPiecewiseFunction(index: number, func: any): boolean;
+	setPiecewiseFunction(index: number, func: vtkPiecewiseFunction): boolean;
 
 	/**
 	 * Set the color of a volume to an RGB transfer function
@@ -171,14 +168,14 @@ export interface vtkImageProperty extends vtkObject {
 	/**
 	 * Alias to set the piecewise function
 	 * @param {Number} index 
-	 * @param func 
+	 * @param {vtkPiecewiseFunction} func 
 	 */
-	setScalarOpacity(index: any, func: any): boolean;
+	setScalarOpacity(index: number, func: vtkPiecewiseFunction): boolean;
 
 	/**
 	 * Use the range that is set on the lookup table, instead of setting the range from the
-         * ColorWindow/ColorLevel settings
-         * @default false
+		 * ColorWindow/ColorLevel settings
+		 * @default false
 	 * @param {Boolean} useLookupTableScalarRange
 	 */
 	setUseLookupTableScalarRange(useLookupTableScalarRange: boolean): boolean;
@@ -189,15 +186,15 @@ export interface vtkImageProperty extends vtkObject {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param {IImageMapperInitialValues} [initialValues] (default: {})
+ * @param {IImagePropertyInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IImageMapperInitialValues): void;
+export function extend(publicAPI: object, model: object, initialValues?: IImagePropertyInitialValues): void;
 
 /**
  * Method use to create a new instance of vtkImageProperty
- * @param {IImageMapperInitialValues} [initialValues] for pre-setting some of its content
+ * @param {IImagePropertyInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: IImageMapperInitialValues): vtkImageProperty;
+export function newInstance(initialValues?: IImagePropertyInitialValues): vtkImageProperty;
 
 /**
  * vtkImageProperty provides 2D image display support for vtk.

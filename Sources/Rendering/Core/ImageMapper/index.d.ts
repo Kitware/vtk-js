@@ -1,16 +1,8 @@
 import vtkCamera from "../Camera";
 import vtkAbstractMapper, { IAbstractMapperInitialValues } from "../AbstractMapper";
 import { Bounds, Vector3 } from "../../../types";
+import { SlicingMode } from "./Constants";
 
-export enum SlicingMode {
-	NONE,
-	I,
-	J,
-	K,
-	X,
-	Y,
-	Z,
-}
 
 interface IClosestIJKAxis {
 	ijkMode: SlicingMode,
@@ -325,5 +317,6 @@ export function newInstance(initialValues?: IImageMapperInitialValues): vtkImage
 export declare const vtkImageMapper: {
 	newInstance: typeof newInstance;
 	extend: typeof extend;
+	SlicingMode: typeof SlicingMode;
 }
 export default vtkImageMapper;
