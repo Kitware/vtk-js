@@ -75,21 +75,62 @@ test('Test HardwareSelector', (tapeContext) => {
   sel.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_POINTS);
   sel.setCaptureZValues(true);
 
-  sel.selectAsync(renderer, 200, 200, 300, 300).then((res) => {
-    // console.log(JSON.stringify(res[0].getProperties()));
-    // console.log(JSON.stringify(res[1].getProperties()));
-    // res[1] should be at 1.0, 1.0, 1.5 in world coords
-    const allGood =
-      res.length === 2 &&
-      res[0].getProperties().prop === actor &&
-      res[1].getProperties().prop === actor3 &&
-      Math.abs(res[1].getProperties().worldPosition[0] - 1.0) < 0.02 &&
-      Math.abs(res[1].getProperties().worldPosition[1] - 1.0) < 0.02 &&
-      Math.abs(res[1].getProperties().worldPosition[2] - 1.5) < 0.02;
+  const promises = [];
+  promises.push(
+    sel.selectAsync(renderer, 200, 200, 300, 300).then((res) => {
+      // res[1] should be at 1.0, 1.0, 1.5 in world coords
+      const allGood =
+        res.length === 2 &&
+        res[0].getProperties().prop === actor &&
+        res[1].getProperties().prop === actor3 &&
+        Math.abs(res[1].getProperties().worldPosition[0] - 1.0) < 0.02 &&
+        Math.abs(res[1].getProperties().worldPosition[1] - 1.0) < 0.02 &&
+        Math.abs(res[1].getProperties().worldPosition[2] - 1.5) < 0.02;
 
-    tapeContext.ok(res.length === 2, 'Two props selected');
-    tapeContext.ok(allGood, 'Correct props were selected');
+      tapeContext.ok(res.length === 2, 'Two props selected');
+      tapeContext.ok(allGood, 'Correct props were selected');
+    })
+  );
 
+  // Test picking points
+  promises.push(
+    sel.selectAsync(renderer, 210, 199, 211, 200).then((res) => {
+      tapeContext.ok(res[0].getProperties().propID === 3);
+      tapeContext.ok(res[0].getProperties().attributeID === 33);
+    })
+  );
+
+  promises.push(
+    sel.selectAsync(renderer, 145, 140, 146, 141).then((res) => {
+      tapeContext.ok(res[0].getProperties().propID === 4);
+      tapeContext.ok(res[0].getProperties().attributeID === 0);
+    })
+  );
+
+  promises.push(
+    sel.selectAsync(renderer, 294, 264, 295, 265).then((res) => {
+      tapeContext.ok(res[0].getProperties().propID === 5);
+      tapeContext.ok(res[0].getProperties().attributeID === 0);
+    })
+  );
+
+  sel.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_CELLS);
+
+  // Test picking cells
+  promises.push(
+    sel.selectAsync(renderer, 200, 200, 201, 201).then((res) => {
+      tapeContext.ok(res[0].getProperties().propID === 3);
+      tapeContext.ok(res[0].getProperties().attributeID === 27);
+    })
+  );
+
+  promises.push(
+    sel.selectAsync(renderer, 265, 265, 266, 266).then((res) => {
+      tapeContext.ok(res[0].getProperties().propID === 5);
+      tapeContext.ok(res[0].getProperties().attributeID === 0);
+    })
+  );
+  Promise.all(promises).then(() => {
     gc.releaseResources();
   });
 });

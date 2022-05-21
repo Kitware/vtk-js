@@ -47,7 +47,13 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
 
   publicAPI.setType(ObjectType.ARRAY_BUFFER);
 
-  publicAPI.createVBO = (cellArray, inRep, outRep, options) => {
+  publicAPI.createVBO = (
+    cellArray,
+    inRep,
+    outRep,
+    options,
+    selectionMaps = null
+  ) => {
     if (!cellArray.getData() || !cellArray.getData().length) {
       model.elementCount = 0;
       return 0;
@@ -280,7 +286,34 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       publicAPI.setCoordShiftAndScale(null, null);
     }
 
+    // Initialize the structures used to keep track of point ids and cell ids for selectors
+    if (selectionMaps) {
+      if (!selectionMaps.points && !selectionMaps.cells) {
+        selectionMaps.points = new Int32Array(caboCount);
+        selectionMaps.cells = new Int32Array(caboCount);
+      } else {
+        const newPoints = new Int32Array(
+          caboCount + selectionMaps.points.length
+        );
+        newPoints.set(selectionMaps.points);
+        selectionMaps.points = newPoints;
+        const newCells = new Int32Array(
+          caboCount + selectionMaps.points.length
+        );
+        newCells.set(selectionMaps.cells);
+        selectionMaps.cells = newCells;
+      }
+    }
+
+    let pointCount = options.vertexOffset;
     addAPoint = function addAPointFunc(i) {
+      // Keep track of original point and cell ids, for selection
+      if (selectionMaps) {
+        selectionMaps.points[pointCount] = i;
+        selectionMaps.cells[pointCount] = cellCount;
+      }
+      ++pointCount;
+
       // Vertices
       pointIdx = i * 3;
 

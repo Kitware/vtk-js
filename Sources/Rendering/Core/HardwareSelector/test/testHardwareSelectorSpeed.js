@@ -77,9 +77,9 @@ test('Test HardwareSelector', (tapeContext) => {
         console.timeEnd('hardware render');
 
         tapeContext.ok(
-          // should take about 3 normal renders but we give it some wiggle room
-          tcTime < tbTime * 6,
-          `Hardware selector takes less than six normal renders (${taTime}, ${tbTime}, ${tcTime})`
+          // should take about 5 normal renders but we give it some wiggle room
+          tcTime < tbTime * 10,
+          `Hardware selector takes less than ten normal renders (${taTime}, ${tbTime}, ${tcTime})`
         );
 
         gc.releaseResources();
