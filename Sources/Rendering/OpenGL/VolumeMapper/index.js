@@ -206,6 +206,15 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       ).result;
     }
 
+    // set normal from density
+    if (model.renderable.getComputeNormalFromOpacity()) {
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::vtkComputeNormalFromOpacity',
+        `#define vtkComputeNormalFromOpacity`
+      ).result;
+    }
+
     // if we have a ztexture then declare it and use it
     if (model.zBufferTexture !== null) {
       FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::ZBuffer::Dec', [

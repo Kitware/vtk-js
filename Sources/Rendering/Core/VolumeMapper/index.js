@@ -89,6 +89,7 @@ const DEFAULT_VALUES = {
   ipScalarRange: [-1000000.0, 1000000.0],
   filterMode: FilterMode.OFF, // ignored by WebGL so no behavior change
   preferSizeOverAccuracy: false, // Whether to use halfFloat representation of float, when it is inaccurate
+  computeNormalFromOpacity: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -106,6 +107,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'blendMode',
     'filterMode',
     'preferSizeOverAccuracy',
+    'computeNormalFromOpacity',
   ]);
 
   macro.setGetArray(publicAPI, model, ['ipScalarRange'], 2);

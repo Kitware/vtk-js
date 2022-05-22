@@ -62,6 +62,9 @@ uniform float vSpecular;
 //VTK::Light::Dec
 #endif
 
+// define vtkComputeNormalFromOpacity
+//VTK::vtkComputeNormalFromOpacity
+
 // possibly define vtkGradientOpacityOn
 //VTK::GradientOpacityOn
 #ifdef vtkGradientOpacityOn
@@ -290,32 +293,160 @@ vec4 getTextureValue(vec3 ijk)
 #endif
 
 //=======================================================================
-// compute the normal and gradient magnitude for a position
-vec4 computeNormal(vec3 pos, float scalar, vec3 tstep)
+// Given a normal compute the gradient opacity factors
+float computeGradientOpacityFactor(
+  float normalMag, float goscale, float goshift, float gomin, float gomax)
 {
-  vec4 result;
-
-  result.x = getTextureValue(pos + vec3(tstep.x, 0.0, 0.0)).a - scalar;
-  result.y = getTextureValue(pos + vec3(0.0, tstep.y, 0.0)).a - scalar;
-  result.z = getTextureValue(pos + vec3(0.0, 0.0, tstep.z)).a - scalar;
-
-  // divide by spacing
-  result.xyz /= vSpacing;
-
-  result.w = length(result.xyz);
-
-  // rotate to View Coords
-  result.xyz =
-    result.x * vPlaneNormal0 +
-    result.y * vPlaneNormal2 +
-    result.z * vPlaneNormal4;
-
-  if (result.w > 0.0)
-  {
-    result.xyz /= result.w;
-  }
-  return result;
+#if defined(vtkGradientOpacityOn)
+  return clamp(normalMag * goscale + goshift, gomin, gomax);
+#else
+  return 1.0;
+#endif
 }
+
+//=======================================================================
+//Rotate gradients to view coordinate
+#if (vtkLightComplexity > 0) || (defined vtkGradientOpacityOn)
+void rotateToViewCoord(inout vec3 normalIDX){
+  normalIDX.xyz =
+  normalIDX.x * vPlaneNormal0 +
+  normalIDX.y * vPlaneNormal2 +
+  normalIDX.z * vPlaneNormal4;
+}
+#endif
+//=======================================================================
+// compute the normal and gradient magnitude for a position, uses forward difference
+#if vtkLightComplexity > 0
+  #ifdef vtkComputeNormalFromOpacity
+    #ifdef vtkGradientOpacityOn
+      vec4 computeNormalForDensity(vec3 pos, float scalar, vec3 tstep, out mat3 scalarInterp, out vec3 secondaryGradientMag)
+      {
+        vec4 result;
+        scalarInterp[0][0] = getTextureValue(pos + vec3(tstep.x, 0.0, 0.0)).a;
+        scalarInterp[0][1] = getTextureValue(pos + vec3(0.0, tstep.y, 0.0)).a;
+        scalarInterp[0][2] = getTextureValue(pos + vec3(0.0, 0.0, tstep.z)).a;
+        // look up scalar values for computing secondary gradient
+        scalarInterp[1][0] = getTextureValue(pos + vec3(2.0*tstep.x, 0.0, 0.0)).a;
+        scalarInterp[1][1] = getTextureValue(pos + vec3(0.0, 2.0*tstep.y, 0.0)).a;
+        scalarInterp[1][2] = getTextureValue(pos + vec3(0.0, 0.0, 2.0*tstep.z)).a;
+        scalarInterp[2][0] = getTextureValue(pos + vec3(tstep.x, tstep.y, 0.0)).a;
+        scalarInterp[2][1] = getTextureValue(pos + vec3(tstep.x, 0.0, tstep.z)).a;
+        scalarInterp[2][2] = getTextureValue(pos + vec3(0.0, tstep.y, tstep.z)).a;
+        result.x = scalarInterp[0][0] - scalar;
+        result.y = scalarInterp[0][1] - scalar;
+        result.z = scalarInterp[0][2] - scalar;
+        // divide by spacing
+        result.xyz /= vSpacing;
+        result.w = length(result.xyz);
+        rotateToViewCoord(result.xyz);
+        secondaryGradientMag.x = length(vec3(scalarInterp[1][0] - scalarInterp[0][0],
+                                             scalarInterp[2][0] - scalarInterp[0][0],
+                                             scalarInterp[2][1] - scalarInterp[0][0]) / vSpacing);
+        secondaryGradientMag.y = length(vec3(scalarInterp[2][0] - scalarInterp[0][1],
+                                             scalarInterp[1][1] - scalarInterp[0][1],
+                                             scalarInterp[2][2] - scalarInterp[0][1]) / vSpacing);
+        secondaryGradientMag.z = length(vec3(scalarInterp[2][1] - scalarInterp[0][2],
+                                             scalarInterp[2][2] - scalarInterp[0][2],
+                                             scalarInterp[1][2] - scalarInterp[0][2]) / vSpacing);
+        if (length(result.xyz) > 0.0) {
+          return vec4(normalize(result.xyz),result.w);
+        } else {
+          return vec4(0.0);
+        }
+      }
+
+      vec4 computeDensityNormal(float scalar, float gradientMag, mat3 scalarInterp, vec3 secondaryGradientMag)
+      {
+        vec4 opacityG;
+        vec3 opacityInterp = vec3(0.0);
+        float opacity = texture2D(otexture, vec2(scalar * oscale0 + oshift0, 0.5)).r;
+        if (gradientMag >= 0.0){
+          opacity *= computeGradientOpacityFactor(gradientMag, goscale0, goshift0, gomin0, gomax0);
+        }
+        opacityInterp.x = texture2D(otexture, vec2(scalarInterp[0][0] * oscale0 + oshift0, 0.5)).r; 
+        if (secondaryGradientMag.x >= 0.0){
+        // opacityInterp.x *= computeGradientOpacityFactor(secondaryGradientMag.x, goscale0, goshift0, gomin0, gomax0);
+        }
+    
+        opacityInterp.y = texture2D(otexture, vec2(scalarInterp[0][1] * oscale0 + oshift0, 0.5)).r;
+        if (secondaryGradientMag.y >= 0.0){
+        // opacityInterp.y *= computeGradientOpacityFactor(secondaryGradientMag.y, goscale0, goshift0, gomin0, gomax0);
+        }
+
+        opacityInterp.z = texture2D(otexture, vec2(scalarInterp[0][2] * oscale0 + oshift0, 0.5)).r;
+        if (secondaryGradientMag.z >= 0.0){
+        // opacityInterp.z *= computeGradientOpacityFactor(secondaryGradientMag.z, goscale0, goshift0, gomin0, gomax0);
+        }
+
+        opacityG.xyz = opacityInterp - vec3(opacity,opacity,opacity);
+        // divide by spacing
+        opacityG.xyz /= vSpacing;
+        opacityG.w = length(opacityG.xyz);
+        rotateToViewCoord(opacityG.xyz);
+        if (length(opacityG.xyz) > 0.0) {  
+          return vec4(normalize(opacityG.xyz),opacityG.w);
+        } else {
+          return vec4(0.0);
+        }
+      } 
+
+    #else
+    //if gradient opacity not on but using density gradient
+      vec4 computeDensityNormal(float scalar, vec3 scalarInterp) 
+      { 
+        vec4 opacityG; 
+        float opacity = texture2D(otexture, vec2(scalar * oscale0 + oshift0, 0.5)).r; 
+        opacityG.x = texture2D(otexture, vec2(scalarInterp.x * oscale0 + oshift0, 0.5)).r - opacity; 
+        opacityG.y = texture2D(otexture, vec2(scalarInterp.y * oscale0 + oshift0, 0.5)).r - opacity; 
+        opacityG.z = texture2D(otexture, vec2(scalarInterp.z * oscale0 + oshift0, 0.5)).r - opacity; 
+        // divide by spacing 
+        opacityG.xyz /= vSpacing; 
+        opacityG.w = length(opacityG.xyz); 
+        // rotate to View Coords 
+        rotateToViewCoord(opacityG.xyz);
+        if (length(opacityG.xyz) > 0.0) {     
+          return vec4(normalize(opacityG.xyz),opacityG.w); 
+        } else { 
+          return vec4(0.0); 
+        } 
+      } 
+      vec4 computeNormalForDensity(vec3 pos, float scalar, vec3 tstep, out vec3 scalarInterp) 
+      { 
+        vec4 result; 
+        scalarInterp.x = getTextureValue(pos + vec3(tstep.x, 0.0, 0.0)).a; 
+        scalarInterp.y = getTextureValue(pos + vec3(0.0, tstep.y, 0.0)).a; 
+        scalarInterp.z = getTextureValue(pos + vec3(0.0, 0.0, tstep.z)).a; 
+        result.x = scalarInterp.x - scalar; 
+        result.y = scalarInterp.y - scalar; 
+        result.z = scalarInterp.z - scalar;   
+        // divide by spacing
+        result.xyz /= vSpacing;
+        result.w = length(result.xyz); 
+        // rotate to View Coords 
+        rotateToViewCoord(result.xyz);      
+        if (length(result.xyz) > 0.0) {     
+          return vec4(normalize(result.xyz),result.w); 
+        } else { 
+          return vec4(0.0); 
+        } 
+      }           
+    #endif
+  #endif
+  // compute scalar density
+  vec4 computeNormal(vec3 pos, float scalar, vec3 tstep)  
+  {  
+    vec4 result;  
+    result.x = getTextureValue(pos + vec3(tstep.x, 0.0, 0.0)).a - scalar;  
+    result.y = getTextureValue(pos + vec3(0.0, tstep.y, 0.0)).a - scalar;  
+    result.z = getTextureValue(pos + vec3(0.0, 0.0, tstep.z)).a - scalar;  
+    // divide by spacing  
+    result.xyz /= vSpacing;  
+    result.w = length(result.xyz);  
+    // rotate to View Coords  
+    rotateToViewCoord(result.xyz);
+    return vec4(normalize(result.xyz),result.w);  
+  }  
+#endif
 
 #ifdef vtkImageLabelOutlineOn
 vec3 fragCoordToIndexSpace(vec4 fragCoord) {
@@ -402,20 +533,6 @@ mat4 computeMat4Normal(vec3 pos, vec4 tValue, vec3 tstep)
 }
 
 //=======================================================================
-// Given a normal compute the gradient opacity factors
-//
-float computeGradientOpacityFactor(
-  vec4 normal, float goscale, float goshift, float gomin, float gomax)
-{
-#if defined(vtkGradientOpacityOn)
-  return clamp(normal.a*goscale + goshift, gomin, gomax);
-#else
-  return 1.0;
-#endif
-}
-
-
-//=======================================================================
 // surface light contribution
 
 #if vtkLightComplexity == 3
@@ -427,19 +544,19 @@ vec3 IStoVC(vec3 posIS){
 #endif
 
 #if vtkLightComplexity > 0
-void applyLighting(inout vec3 tColor, vec4 normal)
-{
-  vec3 diffuse = vec3(0.0, 0.0, 0.0);
-  vec3 specular = vec3(0.0, 0.0, 0.0);
-  float df, sf = 0.0;
-  for (int i = 0; i < lightNum; i++){
-      df = abs(dot(normal.rgb, -lightDirectionVC[i]));
-      diffuse += df * lightColor[i];
-      sf = pow( abs(dot(lightHalfAngleVC[i],normal.rgb)), vSpecularPower);
-      specular += sf * lightColor[i];
+  void applyLighting(inout vec3 tColor, vec4 normal)
+  {
+    vec3 diffuse = vec3(0.0, 0.0, 0.0);
+    vec3 specular = vec3(0.0, 0.0, 0.0);
+    float df, sf = 0.0;
+    for (int i = 0; i < lightNum; i++){
+        df = abs(dot(normal.rgb, -lightDirectionVC[i]));
+        diffuse += df * lightColor[i];
+        sf = pow( abs(dot(lightHalfAngleVC[i],normal.rgb)), vSpecularPower);
+        specular += sf * lightColor[i];
+    }
+    tColor.rgb = tColor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;
   }
-  tColor.rgb = tColor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;
-}
   #if vtkLightComplexity < 3
     void applyLightingDirectional(inout vec3 tColor, vec4 normal)
     {
@@ -448,7 +565,7 @@ void applyLighting(inout vec3 tColor, vec4 normal)
       vec3 specular = vec3(0.0);
       vec3 vertLightDirection;
       for (int i = 0; i < lightNum; i++){
-        float ndotL,ndotH;
+        float ndotL,vdotR;
         vertLightDirection = lightDirectionVC[i];
         ndotL = dot(normal.xyz, vertLightDirection);
         if (ndotL < 0.0 && twoSidedLighting)
@@ -459,18 +576,18 @@ void applyLighting(inout vec3 tColor, vec4 normal)
         {
           diffuse += ndotL * lightColor[i];
           //specular
-          ndotH = dot(normal.xyz, normalize(rayDirVC + vertLightDirection));
-          if (ndotH < 0.0 && twoSidedLighting)
+          vdotR = dot(-rayDirVC, normalize(2.0 * ndotL * -normal.xyz + vertLightDirection));
+          if (vdotR < 0.0 && twoSidedLighting)
           {
-            ndotH = -ndotH;
+            vdotR = -vdotR;
           }
-          if (ndotH > 0.0)
+          if (vdotR > 0.0)
           {
-            specular += pow(ndotH, vSpecularPower) * lightColor[i];
+            specular += pow(vdotR, vSpecularPower) * lightColor[i];
           }
         }
-      }
-      tColor.rgb = tColor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;
+      }  
+      tColor.rgb = tColor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;    
     }
   #else
     void applyLightingPositional(inout vec3 tColor, vec4 normal, vec3 posVC)
@@ -480,19 +597,19 @@ void applyLighting(inout vec3 tColor, vec4 normal)
       vec3 specular = vec3(0.0);
       vec3 vertLightDirection;
       for (int i = 0; i < lightNum; i++){
-        float distance,attenuation,ndotL,ndotH;
+        float distance,attenuation,ndotL,vdotR;
         vec3 lightDir;
         if (lightPositional[i] == 1){
           lightDir = lightDirectionVC[i];
-          vertLightDirection = lightPositionVC[i] - posVC;  // or reverse...?
+          vertLightDirection = posVC - lightPositionVC[i]; 
           distance = length(vertLightDirection);
           vertLightDirection = normalize(vertLightDirection);
           attenuation = 1.0 / (lightAttenuation[i].x
                               + lightAttenuation[i].y * distance
                               + lightAttenuation[i].z * distance * distance);
-          // per OpenGL standard cone angle is 90 or less for a spot light`,
+          // per OpenGL standard cone angle is 90 or less for a spot light
           if (lightConeAngle[i] <= 90.0){
-            float coneDot = dot(normalize(posVC - lightPositionVC[i]), lightDir);
+            float coneDot = dot(vertLightDirection, lightDir);
             if (coneDot >= cos(radians(lightConeAngle[i]))){  // if inside cone
               attenuation = attenuation * pow(coneDot, lightExponent[i]);
             }
@@ -506,17 +623,17 @@ void applyLighting(inout vec3 tColor, vec4 normal)
             ndotL = -ndotL;
           }
           if (ndotL > 0.0)
-          {
+          {      
             diffuse += ndotL * attenuation * lightColor[i];
             //specular
-            ndotH = dot(normal.xyz, normalize(rayDirVC + vertLightDirection));
-            if (ndotH < 0.0 && twoSidedLighting)
+            vdotR = dot(-rayDirVC, normalize(2.0 * ndotL * -normal.xyz + vertLightDirection));
+            if (vdotR < 0.0 && twoSidedLighting)
             {
-              ndotH = -ndotH;
+              vdotR = -vdotR;
             }
-            if (ndotH > 0.0)
+            if (vdotR > 0.0)
             {
-              specular += pow(ndotH, vSpecularPower) * attenuation * lightColor[i];
+              specular += pow(vdotR, vSpecularPower) * attenuation * lightColor[i];
             }
           }
         } else {
@@ -530,14 +647,14 @@ void applyLighting(inout vec3 tColor, vec4 normal)
           {
             diffuse += ndotL * lightColor[i];
             //specular
-            ndotH = dot(normal.xyz, normalize(rayDirVC + vertLightDirection));
-            if (ndotH < 0.0 && twoSidedLighting)
+            vdotR = dot(-rayDirVC, normalize(2.0 * ndotL * -normal.xyz + vertLightDirection));
+            if (vdotR < 0.0 && twoSidedLighting)
             {
-              ndotH = -ndotH;
+              vdotR = -vdotR;
             }
-            if (ndotH > 0.0)
+            if (vdotR > 0.0)
             {
-              specular += pow(ndotH, vSpecularPower) * lightColor[i];
+              specular += pow(vdotR, vSpecularPower) * lightColor[i];
             }
           }
         }
@@ -625,7 +742,30 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
         #endif
       #endif
     #else
-      vec4 normal0 = computeNormal(posIS, tValue.a, tstep);
+      #ifdef vtkComputeNormalFromOpacity
+        #ifdef vtkGradientOpacityOn
+          mat3 scalarInterp;  
+          vec3 secondaryGradientMag;  
+          vec4 normalOpacity = vec4(0.0);  
+          vec4 normal0 = computeNormalForDensity(posIS, tValue.a, tstep, scalarInterp, secondaryGradientMag);  
+          normalOpacity = computeDensityNormal(tValue.a, normal0.w, scalarInterp,secondaryGradientMag);       
+          if (length(normalOpacity) == 0.0){  
+            normalOpacity = normal0;   
+          }                      
+        #else
+          vec3 scalarInterp;  
+          vec4 normal0 = computeNormalForDensity(posIS, tValue.a, tstep, scalarInterp);  
+          vec4 normalOpacity;          
+          if (length(normal0)>0.0){  
+            normalOpacity = computeDensityNormal(tValue.a,scalarInterp);  
+            if (length(normalOpacity)==0.0){  
+              normalOpacity = normal0;  
+            }  
+          }                
+        #endif
+      #else 
+        vec4 normal0 = computeNormal(posIS, tValue.a, tstep);                
+      #endif
     #endif
   #endif
 
@@ -633,22 +773,22 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
   #if defined(vtkGradientOpacityOn)
     #if !defined(vtkComponent0Proportional)
       goFactor.x =
-        computeGradientOpacityFactor(normal0, goscale0, goshift0, gomin0, gomax0);
+        computeGradientOpacityFactor(normal0.a, goscale0, goshift0, gomin0, gomax0);
     #endif
     #if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
       #if !defined(vtkComponent1Proportional)
         goFactor.y =
-          computeGradientOpacityFactor(normal1, goscale1, goshift1, gomin1, gomax1);
+          computeGradientOpacityFactor(normal1.a, goscale1, goshift1, gomin1, gomax1);
       #endif
       #if vtkNumComponents > 2
         #if !defined(vtkComponent2Proportional)
           goFactor.z =
-            computeGradientOpacityFactor(normal2, goscale2, goshift2, gomin2, gomax2);
+            computeGradientOpacityFactor(normal2.a, goscale2, goshift2, gomin2, gomax2);
         #endif
         #if vtkNumComponents > 3
           #if !defined(vtkComponent3Proportional)
             goFactor.w =
-              computeGradientOpacityFactor(normal3, goscale3, goshift3, gomin3, gomax3);
+              computeGradientOpacityFactor(normal3.a, goscale3, goshift3, gomin3, gomax3);
           #endif
         #endif
       #endif
@@ -727,11 +867,19 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
   // apply lighting if requested as appropriate
   #if vtkLightComplexity > 0
     #if !defined(vtkComponent0Proportional)
-      #if vtkLightComplexity < 3
-        applyLightingDirectional(tColor.rgb, vec4(normalize(normal0.xyz),normal0.w));
-      #else
-        applyLightingPositional(tColor.rgb, vec4(normalize(normal0.xyz),normal0.w), IStoVC(posIS));
-      #endif
+        #if vtkLightComplexity < 3
+          #ifdef vtkComputeNormalFromOpacity
+            applyLightingDirectional(tColor.rgb, normalOpacity);
+          #else
+            applyLightingDirectional(tColor.rgb, normal0);
+          #endif
+        #else
+          #ifdef vtkComputeNormalFromOpacity
+            applyLightingPositional(tColor.rgb, normalOpacity, IStoVC(posIS));        
+          #else
+            applyLightingPositional(tColor.rgb, normal0, IStoVC(posIS));        
+          #endif
+        #endif
     #endif
   #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
     #if !defined(vtkComponent1Proportional)
