@@ -2,7 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 import ImageHelper from 'vtk.js/Sources/Common/Core/ImageHelper';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 
-import JSZip from 'jszip';
+import { strFromU8, unzipSync } from 'fflate';
 
 // ----------------------------------------------------------------------------
 // vtkSkyboxReader methods
@@ -41,98 +41,93 @@ function vtkSkyboxReader(publicAPI, model) {
     model.busy = true;
     publicAPI.invokeBusy(model.busy);
     model.dataMapping = {};
-    let workCount = 0;
-    let canStartProcessing = false;
     const imageReady = [];
 
+    // Finish data processing
     function workDone() {
-      workCount--;
+      for (let i = 0; i < model.positions.length; i++) {
+        const key = model.positions[i];
+        const images = model.dataMapping[key];
+        if (!model.textures[key]) {
+          model.textures[key] = vtkTexture.newInstance({ interpolate: true });
+        }
+        if (images) {
+          const texture = model.textures[key];
 
-      // Finish data processing
-      if (workCount === 0 || canStartProcessing) {
-        for (let i = 0; i < model.positions.length; i++) {
-          const key = model.positions[i];
-          const images = model.dataMapping[key];
-          if (!model.textures[key]) {
-            model.textures[key] = vtkTexture.newInstance({ interpolate: true });
-          }
-          if (images) {
-            const texture = model.textures[key];
+          for (let idx = 0; idx < 6; idx++) {
+            const { fileName, transform } = model.faceMapping[idx];
+            const readyIndex = imageReady.indexOf(`${key}/${fileName}`);
 
-            for (let idx = 0; idx < 6; idx++) {
-              const { fileName, transform } = model.faceMapping[idx];
-              const readyIndex = imageReady.indexOf(`${key}/${fileName}`);
+            if (readyIndex !== -1) {
+              texture.setInputData(
+                ImageHelper.imageToImageData(images[fileName], transform),
+                idx
+              );
 
-              if (readyIndex !== -1) {
-                texture.setInputData(
-                  ImageHelper.imageToImageData(images[fileName], transform),
-                  idx
-                );
+              // Free image
+              URL.revokeObjectURL(images[fileName].src);
+              delete images[fileName];
 
-                // Free image
-                URL.revokeObjectURL(images[fileName].src);
-                delete images[fileName];
-
-                // Don't process again
-                imageReady.splice(readyIndex, 1);
-              }
+              // Don't process again
+              imageReady.splice(readyIndex, 1);
             }
           }
-        }
-
-        if (workCount === 0) {
-          model.busy = false;
-          publicAPI.modified();
-          publicAPI.invokeBusy(model.busy);
         }
       }
+
+      model.busy = false;
+      publicAPI.modified();
+      publicAPI.invokeBusy(model.busy);
     }
 
-    const zip = new JSZip();
-    zip.loadAsync(content).then(() => {
-      // Find root index.json
-      zip.forEach((relativePath, zipEntry) => {
-        if (relativePath.match(/index.json$/)) {
-          workCount++;
-          zipEntry.async('text').then((txt) => {
-            const config = JSON.parse(txt);
-            if (config.skybox && config.skybox.faceMapping) {
-              model.faceMapping = config.skybox.faceMapping;
-            }
-            if (
-              config.metadata &&
-              config.metadata.skybox &&
-              config.metadata.skybox.faceMapping
-            ) {
-              model.faceMapping = config.metadata.skybox.faceMapping;
-            }
-            canStartProcessing = true;
-            workDone();
-          });
+    const decompressedFiles = unzipSync(new Uint8Array(content));
+    const pending = [];
+    // Find root index.json
+    Object.entries(decompressedFiles).forEach(([relativePath, fileData]) => {
+      if (relativePath.match(/index.json$/)) {
+        const txt = strFromU8(fileData);
+        const config = JSON.parse(txt);
+        if (config.skybox && config.skybox.faceMapping) {
+          model.faceMapping = config.skybox.faceMapping;
         }
-        if (relativePath.match(/\.jpg$/)) {
-          workCount++;
-          const pathTokens = relativePath.split('/');
-          const fileName = pathTokens.pop();
-          const key = pathTokens.pop();
-          if (!model.dataMapping[key]) {
-            model.dataMapping[key] = {};
-          }
-          zipEntry.async('blob').then((blob) => {
-            const img = new Image();
-            const readyKey = `${key}/${fileName}`;
-            model.dataMapping[key][fileName] = img;
+        if (
+          config.metadata &&
+          config.metadata.skybox &&
+          config.metadata.skybox.faceMapping
+        ) {
+          model.faceMapping = config.metadata.skybox.faceMapping;
+        }
+      }
+      if (relativePath.match(/\.jpg$/)) {
+        const pathTokens = relativePath.split('/');
+        const fileName = pathTokens.pop();
+        const key = pathTokens.pop();
+        if (!model.dataMapping[key]) {
+          model.dataMapping[key] = {};
+        }
+        const blob = new Blob([fileData.buffer]);
+        const img = new Image();
+        const readyKey = `${key}/${fileName}`;
+        model.dataMapping[key][fileName] = img;
+        pending.push(
+          new Promise((resolve) => {
             img.onload = () => {
               imageReady.push(readyKey);
-              workDone();
+              resolve();
             };
-            img.src = URL.createObjectURL(blob);
-          });
-        }
-      });
-      model.positions = Object.keys(model.dataMapping);
-      model.position = model.positions[0];
+          })
+        );
+        img.src = URL.createObjectURL(blob);
+      }
     });
+
+    model.positions = Object.keys(model.dataMapping);
+    model.position = model.positions[0];
+
+    Promise.all(pending).then(() => {
+      workDone();
+    });
+
     return publicAPI.getReadyPromise();
   };
 

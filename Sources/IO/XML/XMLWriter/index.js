@@ -1,5 +1,5 @@
 import { create } from 'xmlbuilder2';
-import pako from 'pako';
+import { zlibSync } from 'fflate';
 
 import macro from 'vtk.js/Sources/macros';
 import { fromArrayBuffer } from 'vtk.js/Sources/Common/Core/Base64';
@@ -13,7 +13,7 @@ import {
 // ----------------------------------------------------------------------------
 
 function compressBlock(uncompressed) {
-  return pako.deflate(uncompressed);
+  return zlibSync(uncompressed);
 }
 
 function processDataArray(
