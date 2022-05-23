@@ -158,6 +158,12 @@ function vtkActor(publicAPI, model) {
 
   publicAPI.getSupportsSelection = () =>
     model.mapper ? model.mapper.getSupportsSelection() : false;
+
+  publicAPI.processSelectorPixelBuffers = (selector, pixelOffsets) => {
+    if (model.mapper && model.mapper.processSelectorPixelBuffers) {
+      model.mapper.processSelectorPixelBuffers(selector, pixelOffsets);
+    }
+  };
 }
 
 // ----------------------------------------------------------------------------

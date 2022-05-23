@@ -1,17 +1,7 @@
 import { Bounds } from "../../../types";
 import vtkMapper, { IMapperInitialValues } from "../Mapper";
+import { OrientationModes, ScaleModes } from "./Constants";
 
-export enum OrientationModes {
-	DIRECTION,
-	ROTATION,
-	MATRIX,
-}
-
-export enum ScaleModes {
-	SCALE_BY_CONSTANT,
-	SCALE_BY_MAGNITUDE,
-	SCALE_BY_COMPONENTS,
-}
 
 interface IPrimitiveCount {
 	points: number;
@@ -168,5 +158,7 @@ export function newInstance(initialValues?: IGlyph3DMapperInitialValues): vtkGly
 export declare const vtkGlyph3DMapper: {
 	newInstance: typeof newInstance;
 	extend: typeof extend;
+	OrientationModes: typeof OrientationModes;
+	ScaleModes: typeof ScaleModes;
 }
 export default vtkGlyph3DMapper;

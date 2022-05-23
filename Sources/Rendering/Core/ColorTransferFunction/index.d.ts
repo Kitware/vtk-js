@@ -1,16 +1,6 @@
 import { vtkObject } from '../../../interfaces';
+import { ColorSpace, Scale } from "./Constants";
 
-export enum ColorSpace {
-  RGB,
-  HSV,
-  LAB,
-  DIVERGING,
-}
-
-export enum Scale {
-  LINEAR,
-  LOG10,
-}
 
 /* TODO: use VtkScalarsToColors instead of VtkObject */
 export interface vtkColorTransferFunction extends vtkObject {
@@ -358,5 +348,7 @@ export function newInstance(initialValues?: object): vtkColorTransferFunction;
 export declare const vtkColorTransferFunction: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  ColorSpace: typeof ColorSpace;
+  Scale: typeof Scale;
 };
 export default vtkColorTransferFunction;

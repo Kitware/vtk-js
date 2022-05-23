@@ -237,58 +237,50 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderLight = (shaders, ren, actor) => {
-    let FSSource = shaders.Fragment;
-
-    // check for shadow maps
-    const shadowFactor = '';
-
-    switch (model.lastLightComplexity) {
-      case 1: // headlight
-      case 2: // light kit
-      case 3: {
-        // positional not implemented fallback to directional
-        let lightNum = 0;
-        ren.getLights().forEach((light) => {
-          const status = light.getSwitch();
-          if (status > 0) {
-            FSSource = vtkShaderProgram.substitute(
-              FSSource,
-              '//VTK::Light::Dec',
-              [
-                // intensity weighted color
-                `uniform vec3 lightColor${lightNum};`,
-                `uniform vec3 lightDirectionVC${lightNum}; // normalized`,
-                `uniform vec3 lightHalfAngleVC${lightNum}; // normalized`,
-                '//VTK::Light::Dec',
-              ],
-              false
-            ).result;
-            FSSource = vtkShaderProgram.substitute(
-              FSSource,
-              '//VTK::Light::Impl',
-              [
-                //              `  float df = max(0.0, dot(normal.rgb, -lightDirectionVC${lightNum}));`,
-                `  float df = abs(dot(normal.rgb, -lightDirectionVC${lightNum}));`,
-                `  diffuse += ((df${shadowFactor}) * lightColor${lightNum});`,
-                // '  if (df > 0.0)',
-                // '    {',
-                //              `    float sf = pow( max(0.0, dot(lightHalfAngleWC${lightNum},normal.rgb)), specularPower);`,
-                `    float sf = pow( abs(dot(lightHalfAngleVC${lightNum},normal.rgb)), vSpecularPower);`,
-                `    specular += ((sf${shadowFactor}) * lightColor${lightNum});`,
-                //              '    }',
-                '  //VTK::Light::Impl',
-              ],
-              false
-            ).result;
-            lightNum++;
-          }
-        });
-        break;
-      }
-      case 0: // no lighting, tcolor is fine as is
-      default:
+    if (model.lastLightComplexity === 0) {
+      return;
     }
+    let FSSource = shaders.Fragment;
+    // check for shadow maps - not implemented yet, skip
+    // const shadowFactor = '';
 
+    // to-do: single out the case when complexity = 1
+
+    // only account for lights that are switched on
+    let lightNum = 0;
+    ren.getLights().forEach((light) => {
+      if (light.getSwitch()) {
+        lightNum += 1;
+      }
+    });
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
+      '//VTK::Light::Dec',
+      [
+        `uniform int lightNum;`,
+        `uniform bool twoSidedLighting;`,
+        `uniform vec3 lightColor[${lightNum}];`,
+        `uniform vec3 lightDirectionVC[${lightNum}]; // normalized`,
+        `uniform vec3 lightHalfAngleVC[${lightNum}];`,
+        '//VTK::Light::Dec',
+      ],
+      false
+    ).result;
+    // support any number of lights
+    if (model.lastLightComplexity === 3) {
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::Light::Dec',
+        [
+          `uniform vec3 lightPositionVC[${lightNum}];`,
+          `uniform vec3 lightAttenuation[${lightNum}];`,
+          `uniform float lightConeAngle[${lightNum}];`,
+          `uniform float lightExponent[${lightNum}];`,
+          `uniform int lightPositional[${lightNum}];`,
+        ],
+        false
+      ).result;
+    }
     shaders.Fragment = FSSource;
   };
 
@@ -763,48 +755,71 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     program.setUniformMatrix('PCVCMatrix', model.projectionToView);
 
     // handle lighting values
-    switch (model.lastLightComplexity) {
-      case 1: // headlight
-      case 2: // light kit
-      case 3: {
-        // positional not implemented fallback to directional
-        // mat3.transpose(keyMats.normalMatrix, keyMats.normalMatrix);
-        let lightNum = 0;
-        const lightColor = [];
-        ren.getLights().forEach((light) => {
-          const status = light.getSwitch();
-          if (status > 0) {
-            const dColor = light.getColor();
-            const intensity = light.getIntensity();
-            lightColor[0] = dColor[0] * intensity;
-            lightColor[1] = dColor[1] * intensity;
-            lightColor[2] = dColor[2] * intensity;
-            program.setUniform3fArray(`lightColor${lightNum}`, lightColor);
-            const ldir = light.getDirection();
-            vec3.set(normal, ldir[0], ldir[1], ldir[2]);
-            vec3.transformMat3(normal, normal, keyMats.normalMatrix);
-            program.setUniform3f(
-              `lightDirectionVC${lightNum}`,
-              normal[0],
-              normal[1],
-              normal[2]
-            );
-            // camera DOP is 0,0,-1.0 in VC
-            const halfAngle = [
-              -0.5 * normal[0],
-              -0.5 * normal[1],
-              -0.5 * (normal[2] - 1.0),
-            ];
-            program.setUniform3fArray(`lightHalfAngleVC${lightNum}`, halfAngle);
-            lightNum++;
-          }
-        });
-        // mat3.transpose(keyMats.normalMatrix, keyMats.normalMatrix);
-        break;
+    if (model.lastLightComplexity === 0) {
+      return;
+    }
+    let lightNum = 0;
+    const lightColor = [];
+    const lightDir = [];
+    const halfAngle = [];
+    ren.getLights().forEach((light) => {
+      const status = light.getSwitch();
+      if (status > 0) {
+        const dColor = light.getColor();
+        const intensity = light.getIntensity();
+        lightColor[0 + lightNum * 3] = dColor[0] * intensity;
+        lightColor[1 + lightNum * 3] = dColor[1] * intensity;
+        lightColor[2 + lightNum * 3] = dColor[2] * intensity;
+        const ldir = light.getDirection();
+        vec3.set(normal, ldir[0], ldir[1], ldir[2]);
+        vec3.transformMat3(normal, normal, keyMats.normalMatrix); // in view coordinat
+        vec3.normalize(normal, normal);
+        lightDir[0 + lightNum * 3] = normal[0];
+        lightDir[1 + lightNum * 3] = normal[1];
+        lightDir[2 + lightNum * 3] = normal[2];
+        // camera DOP is 0,0,-1.0 in VC
+        halfAngle[0 + lightNum * 3] = -0.5 * normal[0];
+        halfAngle[1 + lightNum * 3] = -0.5 * normal[1];
+        halfAngle[2 + lightNum * 3] = -0.5 * (normal[2] - 1.0);
+        lightNum++;
       }
-      case 0: // no lighting, tcolor is fine as is
-      default:
-        break;
+    });
+    program.setUniformi('twoSidedLighting', ren.getTwoSidedLighting());
+    program.setUniformi('lightNum', lightNum);
+    program.setUniform3fv('lightColor', lightColor);
+    program.setUniform3fv('lightDirectionVC', lightDir);
+    program.setUniform3fv('lightHalfAngleVC', halfAngle);
+
+    if (model.lastLightComplexity === 3) {
+      lightNum = 0;
+      const lightPositionVC = [];
+      const lightAttenuation = [];
+      const lightConeAngle = [];
+      const lightExponent = [];
+      const lightPositional = [];
+      ren.getLights().forEach((light) => {
+        const status = light.getSwitch();
+        if (status > 0) {
+          const attenuation = light.getAttenuationValues();
+          lightAttenuation[0 + lightNum * 3] = attenuation[0];
+          lightAttenuation[1 + lightNum * 3] = attenuation[1];
+          lightAttenuation[2 + lightNum * 3] = attenuation[2];
+          lightExponent[lightNum] = light.getExponent();
+          lightConeAngle[lightNum] = light.getConeAngle();
+          lightPositional[lightNum] = light.getPositional();
+          const lp = light.getTransformedPosition();
+          vec3.transformMat4(lp, lp, model.modelToView);
+          lightPositionVC[0 + lightNum * 3] = lp[0];
+          lightPositionVC[1 + lightNum * 3] = lp[1];
+          lightPositionVC[2 + lightNum * 3] = lp[2];
+          lightNum += 1;
+        }
+      });
+      program.setUniform3fv('lightPositionVC', lightPositionVC);
+      program.setUniform3fv('lightAttenuation', lightAttenuation);
+      program.setUniformfv('lightConeAngle', lightConeAngle);
+      program.setUniformfv('lightExponent', lightExponent);
+      program.setUniformiv('lightPositional', lightPositional);
     }
   };
 

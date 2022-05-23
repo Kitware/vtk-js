@@ -23,6 +23,8 @@ function vtkProp(publicAPI, model) {
     return m1;
   };
 
+  publicAPI.processSelectorPixelBuffers = (selector, pixeloffsets) => {};
+
   publicAPI.getNestedProps = () => null;
   publicAPI.getActors = () => [];
   publicAPI.getActors2D = () => [];
