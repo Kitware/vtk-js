@@ -577,10 +577,6 @@ vec3 IStoVC(vec3 posIS){
           diffuse += ndotL * lightColor[i];
           //specular
           vdotR = dot(-rayDirVC, normalize(2.0 * ndotL * -normal.xyz + vertLightDirection));
-          if (vdotR < 0.0 && twoSidedLighting)
-          {
-            vdotR = -vdotR;
-          }
           if (vdotR > 0.0)
           {
             specular += pow(vdotR, vSpecularPower) * lightColor[i];
@@ -623,14 +619,10 @@ vec3 IStoVC(vec3 posIS){
             ndotL = -ndotL;
           }
           if (ndotL > 0.0)
-          {      
+          {
             diffuse += ndotL * attenuation * lightColor[i];
             //specular
             vdotR = dot(-rayDirVC, normalize(2.0 * ndotL * -normal.xyz + vertLightDirection));
-            if (vdotR < 0.0 && twoSidedLighting)
-            {
-              vdotR = -vdotR;
-            }
             if (vdotR > 0.0)
             {
               specular += pow(vdotR, vSpecularPower) * attenuation * lightColor[i];
@@ -648,10 +640,6 @@ vec3 IStoVC(vec3 posIS){
             diffuse += ndotL * lightColor[i];
             //specular
             vdotR = dot(-rayDirVC, normalize(2.0 * ndotL * -normal.xyz + vertLightDirection));
-            if (vdotR < 0.0 && twoSidedLighting)
-            {
-              vdotR = -vdotR;
-            }
             if (vdotR > 0.0)
             {
               specular += pow(vdotR, vSpecularPower) * lightColor[i];
