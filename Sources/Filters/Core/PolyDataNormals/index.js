@@ -5,6 +5,11 @@ import vtkMath from 'vtk.js/Sources/Common/Core/Math/index';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 
+export const NormalType = {
+  CELL: 'cell',
+  POINT: ' point',
+};
+
 // ----------------------------------------------------------------------------
 // vtkPolyDataNormals methods
 // ----------------------------------------------------------------------------
@@ -69,6 +74,49 @@ function vtkPolyDataNormals(publicAPI, model) {
     return normalsData;
   };
 
+  publicAPI.vtkPolyDataCellNormalsExecute = (polyData) => {
+    const pointsData = polyData.getPoints().getData();
+    const polysData = polyData.getPolys().getData();
+    const numPolys = polyData.getPolys().getNumberOfCells();
+
+    if (!pointsData || !polysData) {
+      return null;
+    }
+
+    const normalsData = new Float32Array(numPolys * 3);
+
+    let normalsIndex = 0;
+    let numberOfPoints = 0;
+    const cellPointIds = [0, 0, 0];
+
+    for (let c = 0; c < polysData.length; c += numberOfPoints + 1) {
+      numberOfPoints = polysData[c];
+
+      if (numberOfPoints < 3) {
+        continue; // eslint-disable-line
+      }
+
+      for (let i = 1; i <= 3; ++i) {
+        cellPointIds[i - 1] = 3 * polysData[c + i];
+      }
+
+      const cellNormal = [];
+
+      vtkTriangle.computeNormal(
+        pointsData.slice(cellPointIds[0], cellPointIds[0] + 3),
+        pointsData.slice(cellPointIds[1], cellPointIds[1] + 3),
+        pointsData.slice(cellPointIds[2], cellPointIds[2] + 3),
+        cellNormal
+      );
+
+      normalsData[normalsIndex++] = cellNormal[0];
+      normalsData[normalsIndex++] = cellNormal[1];
+      normalsData[normalsIndex++] = cellNormal[2];
+    }
+
+    return normalsData;
+  };
+
   publicAPI.requestData = (inData, outData) => {
     const numberOfInputs = publicAPI.getNumberOfInputPorts();
 
@@ -105,6 +153,13 @@ function vtkPolyDataNormals(publicAPI, model) {
 
     output.getPointData().setNormals(outputNormals);
 
+    if (model.computeCellNormals) {
+      const outputCellNormalsData =
+        publicAPI.vtkPolyDataCellNormalsExecute(input);
+
+      output.getCellData().setNormals(outputCellNormalsData);
+    }
+
     outData[0] = output;
   };
 }
@@ -129,6 +184,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   /* Also make it an algorithm with one input and one output */
 
   macro.algo(publicAPI, model, 1, 1);
+
+  macro.setGet(publicAPI, model, ['computeCellNormals']);
 
   /* Object specific methods */
 
