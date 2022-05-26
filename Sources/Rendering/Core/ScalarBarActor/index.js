@@ -221,8 +221,11 @@ function vtkScalarBarActorHelper(publicAPI, model) {
     // did something significant change? If so rebuild a lot of things
     if (
       model.forceUpdate ||
-      Math.max(scalarsToColors.getMTime(), publicAPI.getMTime()) >
-        model.lastRebuildTime.getMTime()
+      Math.max(
+        scalarsToColors.getMTime(),
+        publicAPI.getMTime(),
+        model.renderable.getMTime()
+      ) > model.lastRebuildTime.getMTime()
     ) {
       const range = scalarsToColors.getMappingRange();
       model.lastTickBounds = [...range];
