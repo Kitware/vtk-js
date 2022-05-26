@@ -129,6 +129,7 @@ for (let i = 0; i < 4; i++) {
     GLWindow: grw.getOpenGLRenderWindow(),
     interactor: grw.getInteractor(),
     widgetManager: vtkWidgetManager.newInstance(),
+    orientationWidget: null,
   };
 
   obj.renderer.getActiveCamera().setParallelProjection(true);
@@ -230,17 +231,17 @@ for (let i = 0; i < 4; i++) {
   });
 
   // create orientation widget
-  const orientationWidget = vtkOrientationMarkerWidget.newInstance({
+  obj.orientationWidget = vtkOrientationMarkerWidget.newInstance({
     actor: axes,
     interactor: obj.renderWindow.getInteractor(),
   });
-  orientationWidget.setEnabled(true);
-  orientationWidget.setViewportCorner(
+  obj.orientationWidget.setEnabled(true);
+  obj.orientationWidget.setViewportCorner(
     vtkOrientationMarkerWidget.Corners.BOTTOM_RIGHT
   );
-  orientationWidget.setViewportSize(0.15);
-  orientationWidget.setMinPixelSize(100);
-  orientationWidget.setMaxPixelSize(300);
+  obj.orientationWidget.setViewportSize(0.15);
+  obj.orientationWidget.setMinPixelSize(100);
+  obj.orientationWidget.setMaxPixelSize(300);
 }
 
 // ----------------------------------------------------------------------------
@@ -353,7 +354,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         computeFocalPointOffset: true, // Allow to compute the current offset between display reslice center and display focal point
         sphereSources: obj.sphereSources,
       });
-      obj.renderWindow.render();
+      obj.interactor.render();
     });
 
     view3D.renderer.resetCamera();
