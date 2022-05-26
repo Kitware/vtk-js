@@ -281,7 +281,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handlePointerDown = (event) => {
-    if (event.button > 2) {
+    if (event.button > 2 || publicAPI.isPointerLocked()) {
       // ignore events from extra mouse buttons such as `back` and `forward`
       return;
     }
