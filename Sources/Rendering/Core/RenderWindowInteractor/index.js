@@ -92,9 +92,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   // Initialize list of requesters
   const animationRequesters = new Set();
 
-  // track active event listeners to handle simultaneous button tracking
-  // let activeListenerCount = 0;
-
   // map from pointerId to { pointerId: number, position: [x, y] }
   const pointerCache = new Map();
 
