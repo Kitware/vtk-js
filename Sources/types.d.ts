@@ -1,7 +1,13 @@
-import { vtkOutputPort } from "./interfaces";
+import { vtkOutputPort } from './interfaces';
 
 /** Alias type for value that can be null */
 declare type Nullable<T> = T | null;
+
+/** Makes a publicAPI object indexable */
+// TODO move from macros.ts?
+
+/** Makes a model object indexable */
+// TODO move from macros.ts?
 
 /**
  * Alias type for number that are floats
@@ -22,16 +28,16 @@ declare type double = number;
 declare type int = number;
 
 declare type TypedArray =
-    | number[]
-    | Uint32Array
-    | Uint16Array
-    | Uint8Array
-    | Uint8ClampedArray
-    | Int32Array
-    | Int16Array
-    | Int8Array
-    | Float64Array
-    | Float32Array;
+  | number[]
+  | Uint32Array
+  | Uint16Array
+  | Uint8Array
+  | Uint8ClampedArray
+  | Int32Array
+  | Int16Array
+  | Int8Array
+  | Float64Array
+  | Float32Array;
 
 declare type Bounds = [number, number, number, number, number, number];
 declare type CellType = number;
@@ -56,6 +62,6 @@ declare type RGBColor = [number, number, number];
 declare type RGBAColor = [number, number, number, number];
 declare type Color = HSLColor | HSVColor | RGBColor | RGBAColor;
 
-declare type vtkPipelineConnection = () => any | vtkOutputPort;
+declare type vtkPipelineConnection = vtkOutputPort;
 
 declare type CrossOrigin = '' | 'anonymous' | 'use-credentials';

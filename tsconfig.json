@@ -1,0 +1,35 @@
+{
+    "compilerOptions": {
+      "target": "es2019",
+      "module": "esnext",
+      "strict": true,
+      "importHelpers": true,
+      "moduleResolution": "node",
+      "allowJs": true,
+      "skipLibCheck": true,
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true,
+      "sourceMap": true,
+      "baseUrl": ".",
+      "resolveJsonModule": true,
+      "declaration": true,
+      "emitDeclarationOnly": true,
+      "paths": {
+        "vtk.js/*": [
+          "./*"
+        ]
+      },
+      "lib": [
+        "esnext",
+        "dom",
+        "dom.iterable",
+        "scripthost"
+      ]
+    },
+    "include": [
+      "Sources/**/*.ts",
+    ],
+    "exclude": [
+      "node_modules"
+    ]
+  }
