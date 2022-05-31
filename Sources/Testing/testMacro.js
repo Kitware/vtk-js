@@ -33,30 +33,23 @@ function defaultValues(initialValues) {
     myProp8: [1, 2, 3],
     myProp9: null,
     // myProp10: null,
-    myProp11: 11,
+    _myProp11: 11,
     _myProp12: [12],
     _myProp13: 13,
-    myProp14: 14,
+    _myProp14: 14,
     ...initialValues,
   };
 }
 
 // ----------------------------------------------------------------------------
 function extend(publicAPI, model, initialValues = {}) {
-  const defaults = defaultValues();
   macro.moveToProtected(publicAPI, initialValues, [
     'myProp11',
     'myProp12',
     'myProp13',
     'myProp14',
   ]);
-  macro.moveToProtected(publicAPI, defaults, [
-    'myProp11',
-    'myProp12',
-    'myProp13',
-    'myProp14',
-  ]);
-  Object.assign(initialValues, defaults, { ...initialValues });
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Object methods
   macro.obj(publicAPI, model);
@@ -312,7 +305,7 @@ test('Macro methods array tests', (t) => {
 test('Macro protected variables tests', (t) => {
   const defaultInstance = newInstance();
   t.deepEqual(defaultInstance.get('_myProp11', '_myProp12', '_myProp13'), {
-    _myProp11: defaultValues().myProp11,
+    _myProp11: defaultValues()._myProp11,
     _myProp12: defaultValues()._myProp12,
     _myProp13: defaultValues()._myProp13,
   });
@@ -326,7 +319,7 @@ test('Macro protected variables tests', (t) => {
   t.notOk(defaultInstance.set_myProp12);
   t.notOk(defaultInstance.set_myProp13);
 
-  t.equal(defaultInstance.getMyProp11(), defaultValues().myProp11);
+  t.equal(defaultInstance.getMyProp11(), defaultValues()._myProp11);
   t.deepEqual(defaultInstance.getMyProp12(), defaultValues()._myProp12);
   t.notOk(defaultInstance.getMyProp13);
 
