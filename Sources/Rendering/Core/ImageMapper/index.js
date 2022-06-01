@@ -283,7 +283,7 @@ function vtkImageMapper(publicAPI, model) {
     if (!image) {
       return vtkMath.createUninitializedBounds();
     }
-    const extent = image.getExtent();
+    const extent = image.getSpatialExtent();
     const { ijkMode } = publicAPI.getClosestIJKAxis();
     let nSlice = slice;
     if (ijkMode !== model.slicingMode) {
