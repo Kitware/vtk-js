@@ -204,6 +204,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     return keys;
   }
 
+  function getDeviceTypeFor(event) {
+    return event.pointerType || '';
+  }
+
   publicAPI.bindEvents = (container) => {
     model.container = container;
     container.addEventListener('contextmenu', preventDefault);
@@ -286,18 +290,24 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     const callData = {
       ...getModifierKeysFor(event),
       position: getScreenEventPositionFor(event),
+      deviceType: getDeviceTypeFor(event),
     };
     publicAPI.pointerEnterEvent(callData);
-    publicAPI.mouseEnterEvent(callData);
+    if (callData.deviceType === 'mouse') {
+      publicAPI.mouseEnterEvent(callData);
+    }
   };
 
   publicAPI.handlePointerLeave = (event) => {
     const callData = {
       ...getModifierKeysFor(event),
       position: getScreenEventPositionFor(event),
+      deviceType: getDeviceTypeFor(event),
     };
     publicAPI.pointerLeaveEvent(callData);
-    publicAPI.mouseLeaveEvent(callData);
+    if (callData.deviceType === 'mouse') {
+      publicAPI.mouseLeaveEvent(callData);
+    }
   };
 
   publicAPI.handlePointerDown = (event) => {
@@ -392,6 +402,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     const callData = {
       ...getModifierKeysFor(event),
       position: getScreenEventPositionFor(event),
+      deviceType: getDeviceTypeFor(event),
     };
     switch (event.button) {
       case 0:
@@ -591,6 +602,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     const callData = {
       ...getModifierKeysFor(event),
       position: getScreenEventPositionFor(event),
+      deviceType: getDeviceTypeFor(event),
     };
 
     if (model.moveTimeoutID === 0) {
@@ -660,6 +672,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       ...normalizeWheel(event),
       ...getModifierKeysFor(event),
       position: getScreenEventPositionFor(event),
+      deviceType: getDeviceTypeFor(event),
     };
 
     if (model.wheelTimeoutID === 0) {
@@ -681,6 +694,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     const callData = {
       ...getModifierKeysFor(event),
       position: getScreenEventPositionFor(event),
+      deviceType: getDeviceTypeFor(event),
     };
     switch (event.button) {
       case 0:
@@ -708,6 +722,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         const callData = {
           ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
           position: pointers[0].position,
+          deviceType: getDeviceTypeFor(event),
         };
         publicAPI.leftButtonReleaseEvent(callData);
       }
@@ -717,12 +732,13 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       const callData = {
         ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
         position: getScreenEventPositionFor(event),
+        deviceType: getDeviceTypeFor(event),
       };
       publicAPI.leftButtonPressEvent(callData);
     }
   };
 
-  publicAPI.handleTouchMove = () => {
+  publicAPI.handleTouchMove = (event) => {
     const pointers = [...pointerCache.values()];
     if (model.recognizeGestures && pointers.length > 1) {
       const positions = pointerCacheToPositions(pointerCache);
@@ -731,12 +747,13 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       const callData = {
         ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
         position: pointers[0].position,
+        deviceType: getDeviceTypeFor(event),
       };
       publicAPI.mouseMoveEvent(callData);
     }
   };
 
-  publicAPI.handleTouchEnd = () => {
+  publicAPI.handleTouchEnd = (event) => {
     const pointers = [...pointerCache.values()];
 
     if (model.recognizeGestures) {
@@ -745,6 +762,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         const callData = {
           ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
           position: pointers[0].position,
+          deviceType: getDeviceTypeFor(event),
         };
         publicAPI.leftButtonReleaseEvent(callData);
       } else if (pointers.length === 1) {
@@ -754,6 +772,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         const callData = {
           ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
           position: pointers[0].position,
+          deviceType: getDeviceTypeFor(event),
         };
         publicAPI.leftButtonPressEvent(callData);
       } else {
@@ -765,6 +784,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       const callData = {
         ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
         position: pointers[0].position,
+        deviceType: getDeviceTypeFor(event),
       };
       publicAPI.leftButtonReleaseEvent(callData);
     }
