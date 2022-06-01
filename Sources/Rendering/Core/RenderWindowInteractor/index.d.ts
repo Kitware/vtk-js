@@ -173,6 +173,16 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	 * 
 	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
+	invokePointerEnter(callData: IRenderWindowInteractorEvent): void;
+
+	/**
+	 *
+	 */
+	invokePointerLeave(callData: IRenderWindowInteractorEvent): void;
+
+	/**
+	 *
+	 */
 	invokeMouseEnter(callData: IRenderWindowInteractorEvent): void;
 
 	/**
@@ -391,6 +401,18 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	 * 
 	 * @param {InteractorEventCallback} cb The callback to be called.
 	 * @param {Number} [priority] The priority of the event.
+	 */
+	onPointerEnter(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
+
+	/**
+	 *
+	 * @param cb The callback to be called
+	 */
+	onPointerLeave(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
+
+	/**
+	 *
+	 * @param cb The callback to be called
 	 */
 	onMouseEnter(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
 
@@ -950,10 +972,34 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	handleKeyUp(event: KeyboardEvent): void;
 
 	/**
-	 *
-	 * @param {MouseEvent} event 
+	 * 
+	 * @param {PointerEvent} event 
 	 */
-	handleMouseDown(event: MouseEvent): void;
+	handlePointerDown(event: PointerEvent): void;
+
+	/**
+	 * 
+	 * @param {PointerEvent} event 
+	 */
+	handlePointerUp(event: PointerEvent): void;
+
+	/**
+	 * 
+	 * @param {PointerEvent} event 
+	 */
+	handlePointerCancel(event: PointerEvent): void;
+
+	/**
+	 * 
+	 * @param {PointerEvent} event 
+	 */
+	handlePointerMove(event: PointerEvent): void;
+
+	/**
+	 *
+	 * @param {PointerEvent} event 
+	 */
+	handleMouseDown(event: PointerEvent): void;
 
 	/**
 	 *
@@ -1011,9 +1057,9 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 
 	/**
 	 *
-	 * @param {MouseEvent} event 
+	 * @param {PointerEvent} event 
 	 */
-	handleMouseMove(event: MouseEvent): void;
+	handleMouseMove(event: PointerEvent): void;
 
 	/**
 	 *
@@ -1028,39 +1074,39 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 
 	/**
 	 *
-	 * @param {MouseEvent} event 
+	 * @param {PointerEvent} event 
 	 */
-	handleMouseEnter(event: MouseEvent): void;
+	handlePointerEnter(event: PointerEvent): void;
 
 	/**
 	 *
-	 * @param {MouseEvent} event 
+	 * @param {PointerEvent} event 
 	 */
-	handleMouseLeave(event: MouseEvent): void;
+	handlePointerLeave(event: PointerEvent): void;
 
 	/**
 	 *
-	 * @param {MouseEvent} event 
+	 * @param {PointerEvent} event 
 	 */
-	handleMouseUp(event: MouseEvent): void;
+	handleMouseUp(event: PointerEvent): void;
 
 	/**
 	 *
-	 * @param {TouchEvent} event 
+	 * @param {PointerEvent} event 
 	 */
-	handleTouchStart(event: TouchEvent): void;
+	handleTouchStart(event: PointerEvent): void;
 
 	/**
 	 *
-	 * @param {TouchEvent} event 
+	 * @param {PointerEvent} event 
 	 */
-	handleTouchMove(event: TouchEvent): void;
+	handleTouchMove(event: PointerEvent): void;
 
 	/**
 	 *
-	 * @param {TouchEvent} event 
+	 * @param {PointerEvent} event 
 	 */
-	handleTouchEnd(event: TouchEvent): void;
+	handleTouchEnd(event: PointerEvent): void;
 
 	/**
 	 *
@@ -1093,7 +1139,7 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	 * @param event
 	 * @param positions
 	 */
-	recognizeGesture(event: 'TouchStart' | 'TouchMouve' | 'TouchEnd', positions: IPosition): void;
+	recognizeGesture(event: 'TouchStart' | 'TouchMove' | 'TouchEnd', positions: IPosition): void;
 
 	/**
 	 *
