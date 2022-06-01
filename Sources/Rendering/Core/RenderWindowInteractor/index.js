@@ -28,6 +28,8 @@ const handledEvents = [
   'StartAnimation',
   'Animation',
   'EndAnimation',
+  'PointerEnter',
+  'PointerLeave',
   'MouseEnter',
   'MouseLeave',
   'StartMouseMove',
@@ -208,8 +210,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // container.addEventListener('click', preventDefault); // Avoid stopping event propagation
     container.addEventListener('wheel', publicAPI.handleWheel);
     container.addEventListener('DOMMouseScroll', publicAPI.handleWheel);
-    container.addEventListener('mouseenter', publicAPI.handleMouseEnter);
-    container.addEventListener('mouseleave', publicAPI.handleMouseLeave);
+    container.addEventListener('pointerenter', publicAPI.handlePointerEnter);
+    container.addEventListener('pointerleave', publicAPI.handlePointerLeave);
     container.addEventListener('pointermove', publicAPI.handlePointerMove, {
       passive: false,
     });
@@ -241,8 +243,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // model.container.removeEventListener('click', preventDefault); // Avoid stopping event propagation
     container.removeEventListener('wheel', publicAPI.handleWheel);
     container.removeEventListener('DOMMouseScroll', publicAPI.handleWheel);
-    container.removeEventListener('mouseenter', publicAPI.handleMouseEnter);
-    container.removeEventListener('mouseleave', publicAPI.handleMouseLeave);
+    container.removeEventListener('pointerenter', publicAPI.handlePointerEnter);
+    container.removeEventListener('pointerleave', publicAPI.handlePointerLeave);
     container.removeEventListener('pointermove', publicAPI.handlePointerMove, {
       passive: false,
     });
@@ -278,6 +280,24 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   publicAPI.handleKeyUp = (event) => {
     const data = getKeysFor(event);
     publicAPI.keyUpEvent(data);
+  };
+
+  publicAPI.handlePointerEnter = (event) => {
+    const callData = {
+      ...getModifierKeysFor(event),
+      position: getScreenEventPositionFor(event),
+    };
+    publicAPI.pointerEnterEvent(callData);
+    publicAPI.mouseEnterEvent(callData);
+  };
+
+  publicAPI.handlePointerLeave = (event) => {
+    const callData = {
+      ...getModifierKeysFor(event),
+      position: getScreenEventPositionFor(event),
+    };
+    publicAPI.pointerLeaveEvent(callData);
+    publicAPI.mouseLeaveEvent(callData);
   };
 
   publicAPI.handlePointerDown = (event) => {
@@ -655,23 +675,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       publicAPI.endMouseWheelEvent();
       model.wheelTimeoutID = 0;
     }, 200);
-  };
-
-  publicAPI.handleMouseEnter = (event) => {
-    const callData = {
-      ...getModifierKeysFor(event),
-      position: getScreenEventPositionFor(event),
-    };
-    publicAPI.mouseEnterEvent(callData);
-  };
-
-  publicAPI.handleMouseLeave = (event) => {
-    const callData = {
-      ...getModifierKeysFor(event),
-      position: getScreenEventPositionFor(event),
-    };
-
-    publicAPI.mouseLeaveEvent(callData);
   };
 
   publicAPI.handleMouseUp = (event) => {
