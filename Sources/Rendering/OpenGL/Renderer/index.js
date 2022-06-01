@@ -68,8 +68,9 @@ function vtkOpenGLRenderer(publicAPI, model) {
       gl.viewport(ts.lowerLeftU, ts.lowerLeftV, ts.usize, ts.vsize);
 
       gl.colorMask(true, true, true, true);
-      gl.clear(clearMask);
-
+      if (clearMask) {
+        gl.clear(clearMask);
+      }
       gl.enable(gl.DEPTH_TEST);
     }
   };
@@ -156,7 +157,9 @@ function vtkOpenGLRenderer(publicAPI, model) {
     gl.scissor(ts.lowerLeftU, ts.lowerLeftV, ts.usize, ts.vsize);
     gl.viewport(ts.lowerLeftU, ts.lowerLeftV, ts.usize, ts.vsize);
 
-    gl.clear(clearMask);
+    if (clearMask) {
+      gl.clear(clearMask);
+    }
 
     gl.enable(gl.DEPTH_TEST);
     /* eslint-enable no-bitwise */
