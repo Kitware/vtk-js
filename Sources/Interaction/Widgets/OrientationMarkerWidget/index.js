@@ -22,9 +22,18 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
   const resizeObserver = new ResizeObserver((entries) => {
     publicAPI.updateViewport();
   });
+  let onCameraChangedSub = null;
+  let onCameraModifiedSub = null;
   let onAnimationSub = null;
   let onEndAnimationSub = null;
   let selfSubscription = null;
+
+  function onCameraModified() {
+    // If animating, marker will be updated on Animation event
+    if (!model._interactor.isAnimating()) {
+      publicAPI.updateMarkerOrientation();
+    }
+  }
 
   publicAPI.computeViewport = () => {
     const parentRen =
@@ -142,6 +151,15 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       selfRenderer.addViewProp(model.actor);
       model.actor.setVisibility(true);
 
+      onCameraChangedSub = ren.onEvent((event) => {
+        if (event.type === 'ActiveCameraEvent') {
+          if (onCameraModifiedSub) {
+            onCameraModifiedSub.unsubscribe();
+          }
+          onCameraModifiedSub = event.camera.onModified(onCameraModified);
+        }
+      });
+      onCameraModifiedSub = ren.getActiveCamera().onModified(onCameraModified);
       onAnimationSub = model._interactor.onAnimation(
         publicAPI.updateMarkerOrientation
       );
@@ -162,6 +180,10 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       model.enabled = false;
 
       resizeObserver.disconnect();
+      onCameraChangedSub.unsubscribe();
+      onCameraChangedSub = null;
+      onCameraModifiedSub.unsubscribe();
+      onCameraModifiedSub = null;
       onAnimationSub.unsubscribe();
       onAnimationSub = null;
       onEndAnimationSub.unsubscribe();
@@ -227,6 +249,14 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
     if (selfSubscription) {
       selfSubscription.unsubscribe();
       selfSubscription = null;
+    }
+    if (onCameraChangedSub) {
+      onCameraChangedSub.unsubscribe();
+      onCameraChangedSub = null;
+    }
+    if (onCameraModifiedSub) {
+      onCameraModifiedSub.unsubscribe();
+      onCameraModifiedSub = null;
     }
     if (onAnimationSub) {
       onAnimationSub.unsubscribe();
