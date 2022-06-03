@@ -384,17 +384,17 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     if (pointerCache.has(event.pointerId)) {
       const pointer = pointerCache.get(event.pointerId);
       pointer.position = getScreenEventPositionFor(event);
+    }
 
-      switch (event.pointerType) {
-        case 'pen':
-        case 'touch':
-          publicAPI.handleTouchMove(event);
-          break;
-        case 'mouse':
-        default:
-          publicAPI.handleMouseMove(event);
-          break;
-      }
+    switch (event.pointerType) {
+      case 'pen':
+      case 'touch':
+        publicAPI.handleTouchMove(event);
+        break;
+      case 'mouse':
+      default:
+        publicAPI.handleMouseMove(event);
+        break;
     }
   };
 
@@ -728,7 +728,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       }
       // handle the gesture
       publicAPI.recognizeGesture('TouchStart', positions);
-    } else {
+    } else if (pointers.length === 1) {
       const callData = {
         ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
         position: getScreenEventPositionFor(event),
@@ -743,7 +743,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     if (model.recognizeGestures && pointers.length > 1) {
       const positions = pointerCacheToPositions(pointerCache);
       publicAPI.recognizeGesture('TouchMove', positions);
-    } else {
+    } else if (pointers.length === 1) {
       const callData = {
         ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
         position: pointers[0].position,
@@ -780,7 +780,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         const positions = pointerCacheToPositions(pointerCache);
         publicAPI.recognizeGesture('TouchMove', positions);
       }
-    } else {
+    } else if (pointers.length === 1) {
       const callData = {
         ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
         position: pointers[0].position,
