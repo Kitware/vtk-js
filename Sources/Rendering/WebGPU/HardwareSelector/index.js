@@ -253,6 +253,17 @@ function generateSelectionWithData(buffdata, fx1, fy1, fx2, fy2) {
 }
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    WebGPURenderWindow: null,
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 // vtkWebGPUHardwareSelector methods
 // ----------------------------------------------------------------------------
 
@@ -414,17 +425,9 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-const DEFAULT_VALUES = {
-  WebGPURenderWindow: null,
-};
-
-// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   vtkHardwareSelector.extend(publicAPI, model, initialValues);

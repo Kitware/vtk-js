@@ -6,6 +6,18 @@ import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    propID: undefined,
+    bufferShift: undefined,
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 // vtkWebGPUActor methods
 // ----------------------------------------------------------------------------
 
@@ -149,27 +161,16 @@ function vtkWebGPUActor(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-const DEFAULT_VALUES = {
-  keyMatricesTime: null,
-  keyMatrices: null,
-  propID: undefined,
-  bufferShift: undefined,
-};
-
-// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
 
-  model.keyMatricesTime = {};
-  macro.obj(model.keyMatricesTime, { mtime: 0 });
-  model.keyMatrices = {
+  initialValues.keyMatricesTime = {};
+  macro.obj(initialValues.keyMatricesTime, { mtime: 0 });
+  initialValues.keyMatrices = {
     normalMatrix: new Float64Array(16),
     bcwc: new Float64Array(16),
     bcsc: new Float64Array(16),
@@ -177,7 +178,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.get(publicAPI, model, ['propID', 'keyMatricesTime']);
 
-  model.bufferShift = [0, 0, 0, 0];
+  initialValues.bufferShift = [0, 0, 0, 0];
 
   // Object methods
   vtkWebGPUActor(publicAPI, model);

@@ -1,6 +1,21 @@
 import macro from 'vtk.js/Sources/macros';
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    delegates: [],
+    currentOperation: null,
+    preDelegateOperations: [],
+    postDelegateOperations: [],
+    currentParent: null,
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 
 function vtkRenderPass(publicAPI, model) {
   // Set our className
@@ -10,9 +25,13 @@ function vtkRenderPass(publicAPI, model) {
 
   publicAPI.setCurrentOperation = (val) => {
     model.currentOperation = val;
-    model.currentTraverseOperation = `traverse${macro.capitalize(
-      model.currentOperation
-    )}`;
+    if (!val) {
+      model.currentTraverseOperation = undefined;
+    } else {
+      model.currentTraverseOperation = `traverse${macro.capitalize(
+        model.currentOperation
+      )}`;
+    }
   };
 
   publicAPI.getTraverseOperation = () => model.currentTraverseOperation;
@@ -44,21 +63,9 @@ function vtkRenderPass(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-const DEFAULT_VALUES = {
-  delegates: [],
-  currentOperation: null,
-  preDelegateOperations: [],
-  postDelegateOperations: [],
-  currentParent: null,
-};
-
-// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);

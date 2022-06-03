@@ -5,6 +5,27 @@ function notImplemented(method) {
 }
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    // _parentProp: null,
+    visibility: true,
+    pickable: true,
+    dragable: true,
+    useBounds: true,
+    allocatedRenderTime: 10,
+    estimatedRenderTime: 0,
+    savedEstimatedRenderTime: 0,
+    renderTimeMultiplier: 1,
+    paths: null,
+    textures: [],
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 // vtkProp methods
 // ----------------------------------------------------------------------------
 
@@ -13,9 +34,10 @@ function vtkProp(publicAPI, model) {
   model.classHierarchy.push('vtkProp');
 
   publicAPI.getMTime = () => {
+    const textures = model.textures ? model.textures : defaultValues().textures;
     let m1 = model.mtime;
-    for (let index = 0; index < model.textures.length; ++index) {
-      const m2 = model.textures[index].getMTime();
+    for (let index = 0; index < textures.length; ++index) {
+      const m2 = textures[index].getMTime();
       if (m2 > m1) {
         m1 = m2;
       }
@@ -90,27 +112,10 @@ function vtkProp(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-const DEFAULT_VALUES = {
-  // _parentProp: null,
-  visibility: true,
-  pickable: true,
-  dragable: true,
-  useBounds: true,
-  allocatedRenderTime: 10,
-  estimatedRenderTime: 0,
-  savedEstimatedRenderTime: 0,
-  renderTimeMultiplier: 1,
-  paths: null,
-  textures: [],
-};
-
-// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  macro.moveToProtected(publicAPI, initialValues, ['parentProp']);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -123,7 +128,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'renderTimeMultiplier',
     '_parentProp',
   ]);
-  macro.moveToProtected(publicAPI, model, ['parentProp']);
 
   // Object methods
   vtkProp(publicAPI, model);

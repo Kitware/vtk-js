@@ -6,6 +6,19 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 const { vtkDebugMacro } = macro;
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    context: null,
+    // _openGLRenderWindow: null,
+    selector: null,
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 // vtkOpenGLRenderer methods
 // ----------------------------------------------------------------------------
 /* eslint-disable no-bitwise */
@@ -185,19 +198,10 @@ function vtkOpenGLRenderer(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-const DEFAULT_VALUES = {
-  context: null,
-  // _openGLRenderWindow: null,
-  selector: null,
-};
-
-// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  macro.moveToProtected(publicAPI, initialValues, ['openGLRenderWindow']);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
@@ -206,8 +210,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['shaderCache']);
 
   macro.setGet(publicAPI, model, ['selector']);
-
-  macro.moveToProtected(publicAPI, model, ['openGLRenderWindow']);
 
   // Object methods
   vtkOpenGLRenderer(publicAPI, model);

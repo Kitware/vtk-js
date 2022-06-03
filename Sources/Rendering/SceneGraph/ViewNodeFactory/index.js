@@ -1,6 +1,17 @@
 import macro from 'vtk.js/Sources/macros';
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    // overrides: {},
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 // vtkViewNodeFactory methods
 // ----------------------------------------------------------------------------
 
@@ -44,17 +55,9 @@ function vtkViewNodeFactory(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-const DEFAULT_VALUES = {
-  // overrides: {},
-};
-
-// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);

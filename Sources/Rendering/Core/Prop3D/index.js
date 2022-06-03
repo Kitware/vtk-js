@@ -6,6 +6,26 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    origin: [0, 0, 0],
+    position: [0, 0, 0],
+    orientation: [0, 0, 0],
+    scale: [1, 1, 1],
+    bounds: [1, -1, 1, -1, 1, -1],
+
+    userMatrixMTime: null,
+
+    cachedProp3D: null,
+    isIdentity: true,
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 // vtkProp3D methods
 // ----------------------------------------------------------------------------
 
@@ -83,6 +103,7 @@ function vtkProp3D(publicAPI, model) {
 
   publicAPI.setOrientation = (x, y, z) => {
     if (
+      model.orientation &&
       x === model.orientation[0] &&
       y === model.orientation[1] &&
       z === model.orientation[2]
@@ -90,6 +111,7 @@ function vtkProp3D(publicAPI, model) {
       return false;
     }
     model.orientation = [x, y, z];
+    if (!model.rotation) model.rotation = mat4.identity(new Float64Array(16));
     mat4.identity(model.rotation);
     publicAPI.rotateZ(z);
     publicAPI.rotateX(x);
@@ -99,7 +121,13 @@ function vtkProp3D(publicAPI, model) {
   };
 
   publicAPI.setUserMatrix = (matrix) => {
-    mat4.copy(model.userMatrix, matrix);
+    if (!matrix) {
+      model.userMatrix = null;
+    } else {
+      if (!model.userMatrix)
+        model.userMatrix = mat4.identity(new Float64Array(16));
+      mat4.copy(model.userMatrix, matrix);
+    }
     publicAPI.modified();
   };
 
@@ -110,21 +138,26 @@ function vtkProp3D(publicAPI, model) {
 
   publicAPI.computeMatrix = () => {
     // check whether or not need to rebuild the matrix
+    if (!model.matrixMTime) {
+      return;
+    }
     if (publicAPI.getMTime() > model.matrixMTime.getMTime()) {
       mat4.identity(model.matrix);
       if (model.userMatrix) {
         mat4.multiply(model.matrix, model.matrix, model.userMatrix);
       }
-      mat4.translate(model.matrix, model.matrix, model.origin);
-      mat4.translate(model.matrix, model.matrix, model.position);
-      mat4.multiply(model.matrix, model.matrix, model.rotation);
-      mat4.scale(model.matrix, model.matrix, model.scale);
-      mat4.translate(model.matrix, model.matrix, [
-        -model.origin[0],
-        -model.origin[1],
-        -model.origin[2],
-      ]);
-      mat4.transpose(model.matrix, model.matrix);
+      if (model.position && model.origin && model.scale && model.rotation) {
+        mat4.translate(model.matrix, model.matrix, model.origin);
+        mat4.translate(model.matrix, model.matrix, model.position);
+        mat4.multiply(model.matrix, model.matrix, model.rotation);
+        mat4.scale(model.matrix, model.matrix, model.scale);
+        mat4.translate(model.matrix, model.matrix, [
+          -model.origin[0],
+          -model.origin[1],
+          -model.origin[2],
+        ]);
+        mat4.transpose(model.matrix, model.matrix);
+      }
 
       // check for identity
       model.isIdentity = true;
@@ -155,29 +188,9 @@ function vtkProp3D(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-const DEFAULT_VALUES = {
-  origin: [0, 0, 0],
-  position: [0, 0, 0],
-  orientation: [0, 0, 0],
-  rotation: null,
-  scale: [1, 1, 1],
-  bounds: [1, -1, 1, -1, 1, -1],
-
-  userMatrix: null,
-  userMatrixMTime: null,
-
-  cachedProp3D: null,
-  isIdentity: true,
-  matrixMTime: null,
-};
-
-// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkProp.extend(publicAPI, model, initialValues);

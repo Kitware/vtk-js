@@ -4,6 +4,18 @@ import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 const { FieldAssociations } = vtkDataSet;
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    fieldAssociation: FieldAssociations.FIELD_ASSOCIATION_CELLS,
+    captureZValues: false,
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 // vtkHardwareSelector methods
 // ----------------------------------------------------------------------------
 
@@ -32,18 +44,9 @@ function vtkHardwareSelector(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-const DEFAULT_VALUES = {
-  fieldAssociation: FieldAssociations.FIELD_ASSOCIATION_CELLS,
-  captureZValues: false,
-};
-
-// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   macro.obj(publicAPI, model);

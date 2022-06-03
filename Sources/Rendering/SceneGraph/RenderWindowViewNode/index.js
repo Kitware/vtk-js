@@ -10,6 +10,17 @@ import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    selector: undefined,
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 // vtkRenderWindowViewNode methods
 // ----------------------------------------------------------------------------
 
@@ -147,21 +158,12 @@ function vtkRenderWindowViewNode(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-const DEFAULT_VALUES = {
-  size: undefined,
-  selector: undefined,
-};
-
-// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
-  if (!model.size) {
-    model.size = [300, 300];
+  if (!initialValues.size) {
+    initialValues.size = [300, 300];
   }
 
   macro.getArray(publicAPI, model, ['size'], 2);

@@ -6,6 +6,18 @@ import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    context: null,
+    activeTextures: null,
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 // vtkOpenGLActor methods
 // ----------------------------------------------------------------------------
 
@@ -181,27 +193,16 @@ function vtkOpenGLActor(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-const DEFAULT_VALUES = {
-  context: null,
-  keyMatrixTime: null,
-  keyMatrices: null,
-  activeTextures: null,
-};
-
-// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
 
-  model.keyMatrixTime = {};
-  macro.obj(model.keyMatrixTime, { mtime: 0 });
-  model.keyMatrices = {
+  initialValues.keyMatrixTime = {};
+  macro.obj(initialValues.keyMatrixTime, { mtime: 0 });
+  initialValues.keyMatrices = {
     normalMatrix: mat3.identity(new Float64Array(9)),
     mcwc: mat4.identity(new Float64Array(16)),
   };
