@@ -72,7 +72,6 @@ function vtkCamera(publicAPI, model) {
 
     // recompute the focal distance
     publicAPI.computeDistance();
-    publicAPI.computeCameraLightTransform();
     publicAPI.modified();
   };
 
@@ -91,7 +90,6 @@ function vtkCamera(publicAPI, model) {
 
     // recompute the focal distance
     publicAPI.computeDistance();
-    publicAPI.computeCameraLightTransform();
     publicAPI.modified();
   };
 
@@ -114,7 +112,6 @@ function vtkCamera(publicAPI, model) {
     model.focalPoint[0] = model.position[0] + vec[0] * model.distance;
     model.focalPoint[1] = model.position[1] + vec[1] * model.distance;
     model.focalPoint[2] = model.position[2] + vec[2] * model.distance;
-    publicAPI.computeCameraLightTransform();
     publicAPI.modified();
   };
 
