@@ -316,7 +316,7 @@ void rotateToViewCoord(inout vec3 normalIDX){
 #endif
 //=======================================================================
 // compute the normal and gradient magnitude for a position, uses forward difference
-#if vtkLightComplexity > 0
+#if (vtkLightComplexity > 0) || (defined vtkGradientOpacityOn)
   #ifdef vtkComputeNormalFromOpacity
     #ifdef vtkGradientOpacityOn
       vec4 computeNormalForDensity(vec3 pos, float scalar, vec3 tstep, out mat3 scalarInterp, out vec3 secondaryGradientMag)
