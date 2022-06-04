@@ -1,4 +1,4 @@
-title: Using vtk.js as an ES6 dependency
+title: Using vtk.js as an ES dependency
 ---
 
 This guide illustrates how to consume vtk.js as an ES dependency.
