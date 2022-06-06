@@ -1,4 +1,5 @@
 import { vtkObject, vtkSubscription } from '../../../interfaces';
+import vtkImageStream from '../ImageStream';
 
 /**
  * Bind optional dependency from WSLink to our current class.
@@ -134,7 +135,7 @@ export interface vtkWSLinkClient extends vtkObject {
   /**
    *
    */
-  getImageStream(): object;
+  getImageStream(): vtkImageStream;
 
   /**
    *
