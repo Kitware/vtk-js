@@ -380,6 +380,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
     camera.setPhysicalScale(physicalScale);
     camera.setPhysicalTranslation(physicalTranslation);
+    // Clip at 0.1m, 100.0m in physical space by default
+    camera.setClippingRange(0.1 * physicalScale, 100.0 * physicalScale);
   };
 
   publicAPI.stopXR = async () => {

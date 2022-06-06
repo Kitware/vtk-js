@@ -40,6 +40,7 @@ vtk.js supports virtual and augmented reality rendering via the [WebXR device AP
 
 [![VR Cone Example][VrCone]](../examples/VR.html)
 [![SkyboxViewer Example][SkyboxViewerVR]](../examples/SkyboxViewer.html?fileURL=https://data.kitware.com/api/v1/file/5ae8a89c8d777f0685796bae/download)
+[![XR Volume Example][WebXRVolume]](../examples/WebXRVolume.html)
 
 </div>
 
@@ -51,6 +52,7 @@ vtk.js supports virtual and augmented reality rendering via the [WebXR device AP
 [![GeometryViewer Example][GeometryViewer]](../examples/GeometryViewer.html?fileURL=https://data.kitware.com/api/v1/item/59de9de58d777f31ac641dc5/download)
 [![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer/GeometryViewer.html?fileURL=[https://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download])
 [![GeometryViewer Chest CT][GeometryViewerchestCT]](../examples/GeometryViewer/GeometryViewer.html?fileURL=[https://data.kitware.com/api/v1/file/61f044354acac99f42c30276/download,https://data.kitware.com/api/v1/file/61f0440f4acac99f42c30191/download,https://data.kitware.com/api/v1/file/61f044204acac99f42c30267/download])
+[![XR Volume Example][WebXRVolume]](../examples/WebXRVolume.html)
 
 </div>
 

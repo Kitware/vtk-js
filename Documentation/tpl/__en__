@@ -22,7 +22,7 @@ sidebar:
     getting_started: Getting Started
     overview: Overview
     external: Script usage
-    es6_dep: ES6 usage
+    es6_dep: ESM usage
     tutorial: Tutorials and Training
     develop: Development
     requirement: Requirements
