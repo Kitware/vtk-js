@@ -68,7 +68,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
   publicAPI.recreateSwapChain = () => {
     if (model.context) {
       model.context.unconfigure();
-      const presentationFormat = model.context.getPreferredFormat(
+      const presentationFormat = navigator.gpu.getPreferredCanvasFormat(
         model.adapter
       );
 
@@ -77,8 +77,10 @@ function vtkWebGPURenderWindow(publicAPI, model) {
       model.context.configure({
         device: model.device.getHandle(),
         format: presentationFormat,
+        alphaMode: 'premultiplied',
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST,
-        size: model.size,
+        width: model.size[0],
+        height: model.size[1],
       });
       model._configured = true;
     }
