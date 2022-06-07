@@ -1,6 +1,5 @@
 import test from 'tape-catch';
 
-import vtkArrowSource from 'vtk.js/Sources/Filters/Sources/ArrowSource';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkOBBTree from 'vtk.js/Sources/Filters/General/OBBTree';
@@ -8,7 +7,7 @@ import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkTriangleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter';
 
-const epsilon = 0.1;
+const epsilon = 0.0001;
 
 function getAllCorners(startCorner, min, mid, max) {
   const start2min = vtkMath.add(startCorner, min, []);
@@ -34,45 +33,6 @@ function getAllCorners(startCorner, min, mid, max) {
 function hasMatchingPoint(point, points, eps) {
   return !!points.find((pt) => vtkMath.areEquals(point, pt, eps));
 }
-
-test('Test OBB tree constructor', (t) => {
-  const source = vtkArrowSource.newInstance();
-  source.update();
-  const mesh = source.getOutputData();
-
-  const obbTree = vtkOBBTree.newInstance();
-  obbTree.setDataset(mesh);
-  obbTree.setMaxLevel(2);
-  obbTree.buildLocator();
-
-  const corner = [0, 0, 0];
-  const max = [0, 0, 0];
-  const mid = [0, 0, 0];
-  const min = [0, 0, 0];
-  const size = [0, 0, 0];
-
-  const expectedSize = [0.0658262, 0.00126738, 0.00126738];
-  const expectedCorners = [
-    [-0.32499999999999996, -0.13660254037844385, -1.522196077276375e-17],
-    [-0.32499999999999996, 0, -0.13660254037844385],
-    [-0.32499999999999996, 2.04473419971054e-17, 0.13660254037844388],
-    [-0.32499999999999996, 0.13660254037844388, 6.804476607412299e-17],
-    [0.675, -0.13660254037844388, -2.7755575615628914e-17],
-    [0.675, -2.7755575615628914e-17, -0.13660254037844385],
-    [0.675, 0, 0.13660254037844388],
-    [0.675, 0.13660254037844385, 5.551115123125783e-17],
-  ];
-
-  obbTree.computeOBBFromDataset(mesh, corner, max, mid, min, size);
-  const allCorners = getAllCorners(corner, min, mid, max);
-
-  allCorners.forEach((actual, index) => {
-    t.ok(hasMatchingPoint(actual, expectedCorners, epsilon), `Corner ${index}`);
-  });
-  t.ok(vtkMath.areEquals(size, expectedSize, epsilon), 'size');
-
-  t.end();
-});
 
 test('Test OBB tree transform', (t) => {
   const source = vtkCubeSource.newInstance();
