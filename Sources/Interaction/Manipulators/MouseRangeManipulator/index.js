@@ -225,6 +225,10 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     // get a `onMouseMove` call after the pointer has been unlocked.
     if (!interactor.isPointerLocked()) return;
 
+    // previousPosition could be undefined if for some reason the
+    // `startPointerLockEvent` method is called before the `onButtonDown` one.
+    if (model.previousPosition == null) return;
+
     model.previousPosition.x += event.movementX;
     model.previousPosition.y += event.movementY;
 
