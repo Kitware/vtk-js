@@ -26,11 +26,8 @@ function vtkSwapVectors3(v1, v2) {
 }
 
 function createArray(size = 3) {
-  const array = [];
-  while (array.length < size) {
-    array.push(0);
-  }
-  return array;
+  // faster than Array.from and/or while loop
+  return Array(size).fill(0);
 }
 
 // ----------------------------------------------------------------------------

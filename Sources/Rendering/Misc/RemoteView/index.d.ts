@@ -11,6 +11,7 @@ interface IRemoteViewInitialValues {
   rpcMouseEvent?: string;
   rpcGestureEvent?: any;
   rpcWheelEvent?: any;
+  viewStream?: vtkViewStream;
 }
 
 export interface vtkRemoteView extends vtkObject {

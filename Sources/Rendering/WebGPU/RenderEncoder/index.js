@@ -2,7 +2,13 @@ import * as macro from 'vtk.js/Sources/macros';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 
 // methods we forward to the handle
-const forwarded = ['setBindGroup', 'setVertexBuffer', 'draw'];
+const forwarded = [
+  'setBindGroup',
+  'setIndexBuffer',
+  'setVertexBuffer',
+  'draw',
+  'drawIndexed',
+];
 
 // ----------------------------------------------------------------------------
 // vtkWebGPURenderEncoder methods
@@ -12,6 +18,7 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
   model.classHierarchy.push('vtkWebGPURenderEncoder');
 
   publicAPI.begin = (encoder) => {
+    model.drawCallbacks = [];
     model.handle = encoder.beginRenderPass(model.description);
     if (model.label) {
       model.handle.pushDebugGroup(model.label);
@@ -19,13 +26,28 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
   };
 
   publicAPI.end = () => {
+    // loop over registered pipelines and their callbacks
+    for (let i = 0; i < model.drawCallbacks.length; i++) {
+      const pStruct = model.drawCallbacks[i];
+      const pl = pStruct.pipeline;
+
+      publicAPI.setPipeline(pl);
+
+      for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
+        pStruct.callbacks[cb](publicAPI);
+      }
+    }
     if (model.label) {
       model.handle.popDebugGroup();
     }
     model.handle.end();
+    model.boundPipeline = null;
   };
 
   publicAPI.setPipeline = (pl) => {
+    if (model.boundPipeline === pl) {
+      return;
+    }
     model.handle.setPipeline(pl.getHandle());
     const pd = pl.getPipelineDescription();
 
@@ -61,6 +83,7 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
       }
     }
     model.boundPipeline = pl;
+    pl.draw(publicAPI);
   };
 
   publicAPI.replaceShaderCode = (pipeline) => {
@@ -109,6 +132,19 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
       model.description.depthStencilAttachment.view =
         model.depthTextureView.getHandle();
     }
+  };
+
+  // register pipeline callbacks from a mapper
+  publicAPI.registerDrawCallback = (pipeline, cb) => {
+    // if there is a matching pipeline just add the cb
+    for (let i = 0; i < model.drawCallbacks.length; i++) {
+      if (model.drawCallbacks[i].pipeline === pipeline) {
+        model.drawCallbacks[i].callbacks.push(cb);
+        return;
+      }
+    }
+
+    model.drawCallbacks.push({ pipeline, callbacks: [cb] });
   };
 
   // simple forwarders

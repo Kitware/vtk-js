@@ -1,15 +1,5 @@
 import { vtkObject } from "../../../interfaces";
-
-export enum InterpolationType {
-	NEAREST,
-	LINEAR,
-	FAST_LINEAR,
-}
-
-export enum OpacityMode {
-	FRACTIONAL,
-	PROPORTIONAL,
-}
+import { InterpolationType, OpacityMode } from "./Constants";
 
 interface IVolumePropertyInitialValues  {
 	independentComponents?: boolean;
@@ -412,7 +402,9 @@ export function newInstance(initialValues?: IVolumePropertyInitialValues): vtkVo
  * ```
  */
 export declare const vtkVolumeProperty: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+	newInstance: typeof newInstance;
+	extend: typeof extend;
+	InterpolationType: typeof InterpolationType;
+	OpacityMode: typeof OpacityMode;
 };
 export default vtkVolumeProperty;

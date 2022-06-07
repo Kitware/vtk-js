@@ -2,6 +2,8 @@ import { mat4, vec3 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
+import vtkAbstractManipulator from 'vtk.js/Sources/Widgets/Manipulators/AbstractManipulator';
+
 export function trackballRotate(
   prevX,
   prevY,
@@ -19,7 +21,11 @@ export function trackballRotate(
   const viewUp = camera.getViewUp();
   const dop = camera.getDirectionOfProjection();
 
-  const size = renderer.getRenderWindow().getInteractor().getView().getSize();
+  const size = renderer
+    .getRenderWindow()
+    .getInteractor()
+    .getView()
+    .getViewportSize(renderer);
   const xdeg = (360.0 * dx) / size[0];
   const ydeg = (360.0 * dy) / size[1];
 
@@ -52,16 +58,14 @@ function vtkTrackballManipulator(publicAPI, model) {
   let prevX = 0;
   let prevY = 0;
 
-  // --------------------------------------------------------------------------
-
   publicAPI.handleEvent = (callData, glRenderWindow) => {
     const newDirection = trackballRotate(
       prevX,
       prevY,
       callData.position.x,
       callData.position.y,
-      model.origin,
-      model.normal,
+      publicAPI.getOrigin(callData),
+      publicAPI.getNormal(callData),
       callData.pokedRenderer,
       glRenderWindow
     );
@@ -69,8 +73,6 @@ function vtkTrackballManipulator(publicAPI, model) {
     prevY = callData.position.y;
     return newDirection;
   };
-
-  // --------------------------------------------------------------------------
 
   publicAPI.reset = (callData) => {
     prevX = callData.position.x;
@@ -82,16 +84,16 @@ function vtkTrackballManipulator(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  normal: [0, 0, 1],
-};
+function defaultValues(initialValues) {
+  return {
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-  macro.obj(publicAPI, model);
-  macro.setGetArray(publicAPI, model, ['normal'], 3);
+  vtkAbstractManipulator.extend(publicAPI, model, defaultValues(initialValues));
 
   vtkTrackballManipulator(publicAPI, model);
 }

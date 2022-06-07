@@ -13,8 +13,6 @@ export default function widgetBehavior(publicAPI, model) {
   // The last world coordinate of the mouse cursor during dragging.
   model.previousPosition = null;
 
-  centerHandle.setManipulator(model.manipulator);
-  borderHandle.setManipulator(model.manipulator);
   model.classHierarchy.push('vtkSphereWidgetProp');
 
   moveHandle.setVisible(true);
@@ -54,11 +52,13 @@ export default function widgetBehavior(publicAPI, model) {
     shapeHandle.setVisible(true);
     shapeHandle.setOrigin(center);
     shapeHandle.setScale1(radius * 2);
-    model.interactor.render();
+    model._interactor.render();
   }
 
   function currentWorldCoords(e) {
-    return model.manipulator.handleEvent(e, model.apiSpecificRenderWindow);
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
+    return manipulator.handleEvent(e, model._apiSpecificRenderWindow);
   }
 
   // Update the sphere's center and radius.  Example:
@@ -83,7 +83,7 @@ export default function widgetBehavior(publicAPI, model) {
     centerHandle.setOrigin(newCenter);
     borderHandle.setOrigin(newBorder);
     updateSphere();
-    model.widgetManager.enablePicking();
+    model._widgetManager.enablePicking();
   };
 
   publicAPI.handleLeftButtonPress = (e) => {
@@ -103,7 +103,7 @@ export default function widgetBehavior(publicAPI, model) {
       updateSphere();
     }
     model.isDragging = true;
-    model.apiSpecificRenderWindow.setCursor('grabbing');
+    model._apiSpecificRenderWindow.setCursor('grabbing');
     model.previousPosition = [...currentWorldCoords(e)];
     publicAPI.invokeStartInteractionEvent();
     return macro.EVENT_ABORT;
@@ -116,8 +116,8 @@ export default function widgetBehavior(publicAPI, model) {
     }
     if (isPlaced()) {
       model.previousPosition = null;
-      model.widgetManager.enablePicking();
-      model.apiSpecificRenderWindow.setCursor('pointer');
+      model._widgetManager.enablePicking();
+      model._apiSpecificRenderWindow.setCursor('pointer');
       model.isDragging = false;
       model.activeState = null;
       state.deactivate();
@@ -167,7 +167,7 @@ export default function widgetBehavior(publicAPI, model) {
     borderHandle.setOrigin(null);
     model.isDragging = true;
     model.activeState = moveHandle;
-    model.interactor.render();
+    model._interactor.render();
   };
 
   publicAPI.loseFocus = () => {

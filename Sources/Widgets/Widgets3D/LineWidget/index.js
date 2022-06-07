@@ -19,6 +19,9 @@ import {
 
 function vtkLineWidget(publicAPI, model) {
   model.classHierarchy.push('vtkLineWidget');
+
+  const superClass = { ...publicAPI };
+
   model.widgetState = stateGenerator();
   model.behavior = widgetBehavior;
 
@@ -153,6 +156,13 @@ function vtkLineWidget(publicAPI, model) {
     return p1 && p2 ? Math.sqrt(distance2BetweenPoints(p1, p2)) : 0;
   };
 
+  publicAPI.setManipulator = (manipulator) => {
+    superClass.setManipulator(manipulator);
+    model.widgetState.getMoveHandle().setManipulator(manipulator);
+    model.widgetState.getHandle1().setManipulator(manipulator);
+    model.widgetState.getHandle2().setManipulator(manipulator);
+  };
+
   // --------------------------------------------------------------------------
   // initialization
   // --------------------------------------------------------------------------
@@ -174,12 +184,16 @@ function vtkLineWidget(publicAPI, model) {
   });
 
   // Default manipulator
-  model.manipulator = vtkPlanePointManipulator.newInstance();
+  publicAPI.setManipulator(
+    model.manipulator ||
+      vtkPlanePointManipulator.newInstance({ useCameraNormal: true })
+  );
 }
 
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  // manipulator: null,
   isDragging: false,
 };
 

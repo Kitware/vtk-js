@@ -1,14 +1,14 @@
 import * as macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkWebGPUBuffer from 'vtk.js/Sources/Rendering/WebGPU/Buffer';
+import vtkWebGPUIndexBuffer from 'vtk.js/Sources/Rendering/WebGPU/IndexBuffer';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
-import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import Constants from './Constants';
 
-const { BufferUsage, PrimitiveTypes } = Constants;
-const { Representation } = vtkProperty;
-
-const { vtkDebugMacro } = macro;
+const { BufferUsage } = Constants;
+const { vtkErrorMacro } = macro;
+const { VtkDataTypes } = vtkDataArray;
 
 // the webgpu constants all show up as undefined
 /* eslint-disable no-undef */
@@ -19,93 +19,58 @@ const { vtkDebugMacro } = macro;
 
 export const STATIC = {};
 
-const cellCounters = {
-  // easy, every input point becomes an output point
-  anythingToPoints(numPoints, cellPts) {
-    return numPoints;
-  },
-  linesToWireframe(numPoints, cellPts) {
-    if (numPoints > 1) {
-      return (numPoints - 1) * 2;
-    }
-    return 0;
-  },
-  polysToWireframe(numPoints, cellPts) {
-    if (numPoints > 2) {
-      return numPoints * 2;
-    }
-    return 0;
-  },
-  stripsToWireframe(numPoints, cellPts) {
-    if (numPoints > 2) {
-      return numPoints * 4 - 6;
-    }
-    return 0;
-  },
-  polysToSurface(npts, cellPts) {
-    if (npts > 2) {
-      return (npts - 2) * 3;
-    }
-    return 0;
-  },
-  stripsToSurface(npts, cellPts, offset) {
-    if (numPoints > 2) {
-      return (npts - 2) * 3;
-    }
-    return 0;
-  },
-};
-
-function getPrimitiveName(primType) {
-  switch (primType) {
-    case PrimitiveTypes.Points:
-      return 'points';
-    case PrimitiveTypes.Lines:
-      return 'lines';
-    case PrimitiveTypes.Triangles:
-    case PrimitiveTypes.TriangleEdges:
-      return 'polys';
-    case PrimitiveTypes.TriangleStripEdges:
-    case PrimitiveTypes.TriangleStrips:
-      return 'strips';
+function _getFormatForDataArray(dataArray) {
+  let format;
+  switch (dataArray.getDataType()) {
+    case VtkDataTypes.UNSIGNED_CHAR:
+      format = 'uint8';
+      break;
+    case VtkDataTypes.FLOAT:
+      format = 'float32';
+      break;
+    case VtkDataTypes.UNSIGNED_INT:
+      format = 'uint32';
+      break;
+    case VtkDataTypes.INT:
+      format = 'sint32';
+      break;
+    case VtkDataTypes.DOUBLE:
+      format = 'float32';
+      break;
+    case VtkDataTypes.UNSIGNED_SHORT:
+      format = 'uint16';
+      break;
+    case VtkDataTypes.SHORT:
+      format = 'sin16';
+      break;
     default:
-      return '';
+      format = 'float32';
+      break;
   }
+  switch (dataArray.getNumberOfComponents()) {
+    case 2:
+      format += 'x2';
+      break;
+    case 3:
+      // only 32bit types support x3
+      if (!format.contains('32')) {
+        vtkErrorMacro(`unsupported x3 type for ${format}`);
+      }
+      format += 'x3';
+      break;
+    case 4:
+      format += 'x4';
+      break;
+    default:
+      break;
+  }
+  return format;
 }
 
-function getOutputSize(cellArray, representation, inRepName) {
-  let countFunc = null;
-  if (representation === Representation.POINTS || inRepName === 'points') {
-    countFunc = cellCounters.anythingToPoints;
-  } else if (
-    representation === Representation.WIREFRAME ||
-    inRepName === 'lines'
-  ) {
-    countFunc = cellCounters[`${inRepName}ToWireframe`];
-  } else {
-    countFunc = cellCounters[`${inRepName}ToSurface`];
-  }
-
-  const array = cellArray.getData();
-  const size = array.length;
-  let caboCount = 0;
-  for (let index = 0; index < size; ) {
-    caboCount += countFunc(array[index], array);
-    index += array[index] + 1;
-  }
-  return caboCount;
-}
-
-function packArray(
-  cellArray,
-  primType,
-  representation,
-  inArray,
-  outputType,
-  options
-) {
-  const result = { elementCount: 0, blockSize: 0, stride: 0 };
-  if (!cellArray.getData() || !cellArray.getData().length) {
+function packArray(indexBuffer, inArrayData, numComp, outputType, options) {
+  const result = {};
+  const flatSize = indexBuffer.getFlatSize();
+  if (!flatSize) {
     return result;
   }
 
@@ -129,143 +94,58 @@ function packArray(
   const packExtra = Object.prototype.hasOwnProperty.call(options, 'packExtra')
     ? options.packExtra
     : false;
-  const pointData = inArray.getData();
 
   let addAPoint;
 
-  const cellBuilders = {
-    // easy, every input point becomes an output point
-    anythingToPoints(numPoints, cellPts, offset, cellId) {
-      for (let i = 0; i < numPoints; ++i) {
-        addAPoint(cellPts[offset + i], cellId);
-      }
-    },
-    linesToWireframe(numPoints, cellPts, offset, cellId) {
-      // for lines we add a bunch of segments
-      for (let i = 0; i < numPoints - 1; ++i) {
-        addAPoint(cellPts[offset + i], cellId);
-        addAPoint(cellPts[offset + i + 1], cellId);
-      }
-    },
-    polysToWireframe(numPoints, cellPts, offset, cellId) {
-      // for polys we add a bunch of segments and close it
-      if (numPoints > 2) {
-        for (let i = 0; i < numPoints; ++i) {
-          addAPoint(cellPts[offset + i], cellId);
-          addAPoint(cellPts[offset + ((i + 1) % numPoints)], cellId);
-        }
-      }
-    },
-    stripsToWireframe(numPoints, cellPts, offset, cellId) {
-      if (numPoints > 2) {
-        // for strips we add a bunch of segments and close it
-        for (let i = 0; i < numPoints - 1; ++i) {
-          addAPoint(cellPts[offset + i], cellId);
-          addAPoint(cellPts[offset + i + 1], cellId);
-        }
-        for (let i = 0; i < numPoints - 2; i++) {
-          addAPoint(cellPts[offset + i], cellId);
-          addAPoint(cellPts[offset + i + 2], cellId);
-        }
-      }
-    },
-    polysToSurface(npts, cellPts, offset, cellId) {
-      for (let i = 0; i < npts - 2; i++) {
-        addAPoint(cellPts[offset + 0], cellId);
-        addAPoint(cellPts[offset + i + 1], cellId);
-        addAPoint(cellPts[offset + i + 2], cellId);
-      }
-    },
-    stripsToSurface(npts, cellPts, offset, cellId) {
-      for (let i = 0; i < npts - 2; i++) {
-        addAPoint(cellPts[offset + i], cellId);
-        addAPoint(cellPts[offset + i + 1 + (i % 2)], cellId);
-        addAPoint(cellPts[offset + i + 1 + ((i + 1) % 2)], cellId);
-      }
-    },
-  };
-
-  const inRepName = getPrimitiveName(primType);
-  let func = null;
-  if (
-    representation === Representation.POINTS ||
-    primType === PrimitiveTypes.Points
-  ) {
-    func = cellBuilders.anythingToPoints;
-  } else if (
-    representation === Representation.WIREFRAME ||
-    primType === PrimitiveTypes.Lines
-  ) {
-    func = cellBuilders[`${inRepName}ToWireframe`];
-  } else {
-    func = cellBuilders[`${inRepName}ToSurface`];
-  }
-
-  const array = cellArray.getData();
-  const size = array.length;
-  const caboCount = getOutputSize(cellArray, representation, inRepName);
   let vboidx = 0;
-
-  const numComp = inArray.getNumberOfComponents();
-  const packedVBO = macro.newTypedArray(
-    outputType,
-    caboCount * (numComp + (packExtra ? 1 : 0))
-  );
+  const stride = numComp + (packExtra ? 1 : 0);
+  const packedVBO = macro.newTypedArray(outputType, flatSize * stride);
 
   // pick the right function based on point versus cell data
-  let getData = (ptId, cellId) => pointData[ptId];
+  let flatIdMap = indexBuffer.getFlatIdToPointId();
   if (options.cellData) {
-    getData = (ptId, cellId) => pointData[cellId];
+    flatIdMap = indexBuffer.getFlatIdToCellId();
   }
 
   // add data based on number of components
   if (numComp === 1) {
-    addAPoint = function addAPointFunc(i, cellid) {
-      packedVBO[vboidx++] = scale[0] * getData(i, cellid) + shift[0];
+    addAPoint = function addAPointFunc(i) {
+      packedVBO[vboidx++] = scale[0] * inArrayData[i] + shift[0];
     };
   } else if (numComp === 2) {
-    addAPoint = function addAPointFunc(i, cellid) {
-      packedVBO[vboidx++] = scale[0] * getData(i * 2, cellid * 2) + shift[0];
-      packedVBO[vboidx++] =
-        scale[1] * getData(i * 2 + 1, cellid * 2 + 1) + shift[1];
+    addAPoint = function addAPointFunc(i) {
+      packedVBO[vboidx++] = scale[0] * inArrayData[i] + shift[0];
+      packedVBO[vboidx++] = scale[1] * inArrayData[i + 1] + shift[1];
     };
   } else if (numComp === 3 && !packExtra) {
-    addAPoint = function addAPointFunc(i, cellid) {
-      packedVBO[vboidx++] = scale[0] * getData(i * 3, cellid * 3) + shift[0];
-      packedVBO[vboidx++] =
-        scale[1] * getData(i * 3 + 1, cellid * 3 + 1) + shift[1];
-      packedVBO[vboidx++] =
-        scale[2] * getData(i * 3 + 2, cellid * 3 + 2) + shift[2];
+    addAPoint = function addAPointFunc(i) {
+      packedVBO[vboidx++] = scale[0] * inArrayData[i] + shift[0];
+      packedVBO[vboidx++] = scale[1] * inArrayData[i + 1] + shift[1];
+      packedVBO[vboidx++] = scale[2] * inArrayData[i + 2] + shift[2];
     };
   } else if (numComp === 3 && packExtra) {
-    addAPoint = function addAPointFunc(i, cellid) {
-      packedVBO[vboidx++] = scale[0] * getData(i * 3, cellid * 3) + shift[0];
-      packedVBO[vboidx++] =
-        scale[1] * getData(i * 3 + 1, cellid * 3 + 1) + shift[1];
-      packedVBO[vboidx++] =
-        scale[2] * getData(i * 3 + 2, cellid * 3 + 2) + shift[2];
+    addAPoint = function addAPointFunc(i) {
+      packedVBO[vboidx++] = scale[0] * inArrayData[i] + shift[0];
+      packedVBO[vboidx++] = scale[1] * inArrayData[i + 1] + shift[1];
+      packedVBO[vboidx++] = scale[2] * inArrayData[i + 2] + shift[2];
       packedVBO[vboidx++] = scale[3] * 1.0 + shift[3];
     };
   } else if (numComp === 4) {
-    addAPoint = function addAPointFunc(i, cellid) {
-      packedVBO[vboidx++] = scale[0] * getData(i * 4, cellid * 4) + shift[0];
-      packedVBO[vboidx++] =
-        scale[1] * getData(i * 4 + 1, cellid * 4 + 1) + shift[1];
-      packedVBO[vboidx++] =
-        scale[2] * getData(i * 4 + 2, cellid * 4 + 2) + shift[2];
-      packedVBO[vboidx++] =
-        scale[3] * getData(i * 4 + 3, cellid * 4 + 3) + shift[3];
+    addAPoint = function addAPointFunc(i) {
+      packedVBO[vboidx++] = scale[0] * inArrayData[i] + shift[0];
+      packedVBO[vboidx++] = scale[1] * inArrayData[i + 1] + shift[1];
+      packedVBO[vboidx++] = scale[2] * inArrayData[i + 2] + shift[2];
+      packedVBO[vboidx++] = scale[3] * inArrayData[i + 3] + shift[3];
     };
   }
 
-  let cellId = options.cellOffset;
-  for (let index = 0; index < size; ) {
-    func(array[index], array, index + 1, cellId);
-    index += array[index] + 1;
-    cellId++;
+  // for each entry in the flat array process it
+  for (let index = 0; index < flatSize; index++) {
+    const inArrayId = numComp * flatIdMap[index];
+    addAPoint(inArrayId);
   }
+
   result.nativeArray = packedVBO;
-  result.elementCount = caboCount;
   return result;
 }
 
@@ -286,91 +166,32 @@ function getNormal(pointData, i0, i1, i2) {
   return result;
 }
 
-function generateNormals(cellArray, primType, representation, inArray) {
-  if (!cellArray.getData() || !cellArray.getData().length) {
+function generateNormals(cellArray, pointArray) {
+  const pointData = pointArray.getData();
+  const cellArrayData = cellArray.getData();
+  if (!cellArrayData || !pointData) {
     return null;
   }
 
-  const pointData = inArray.getData();
-
-  let addAPoint;
-
-  const cellBuilders = {
-    polysToPoints(numPoints, cellPts, offset) {
-      const normal = getNormal(
-        pointData,
-        cellPts[offset],
-        cellPts[offset + 1],
-        cellPts[offset + 2]
-      );
-      for (let i = 0; i < numPoints; ++i) {
-        addAPoint(normal);
-      }
-    },
-    polysToWireframe(numPoints, cellPts, offset) {
-      // for polys we add a bunch of segments and close it
-      // compute the normal
-      const normal = getNormal(
-        pointData,
-        cellPts[offset],
-        cellPts[offset + 1],
-        cellPts[offset + 2]
-      );
-      for (let i = 0; i < numPoints; ++i) {
-        addAPoint(normal);
-        addAPoint(normal);
-      }
-    },
-    polysToSurface(npts, cellPts, offset) {
-      if (npts < 3) {
-        // ignore degenerate triangles
-        vtkDebugMacro('skipping degenerate triangle');
-      } else {
-        // compute the normal
-        const normal = getNormal(
-          pointData,
-          cellPts[offset],
-          cellPts[offset + 1],
-          cellPts[offset + 2]
-        );
-        for (let i = 0; i < npts - 2; i++) {
-          addAPoint(normal);
-          addAPoint(normal);
-          addAPoint(normal);
-        }
-      }
-    },
-  };
-
-  const primName = getPrimitiveName(primType);
-
-  let func = null;
-  if (representation === Representation.POINTS) {
-    func = cellBuilders[`${primName}ToPoints`];
-  } else if (representation === Representation.WIREFRAME) {
-    func = cellBuilders[`${primName}ToWireframe`];
-  } else {
-    func = cellBuilders[`${primName}ToSurface`];
-  }
-
-  const caboCount = getOutputSize(cellArray, representation, primName);
+  // return a cellArray of normals
+  const packedVBO = new Int8Array(cellArray.getNumberOfCells() * 4);
+  const size = cellArrayData.length;
   let vboidx = 0;
 
-  const packedVBO = new Int8Array(caboCount * 4);
-
-  addAPoint = function addAPointFunc(normal) {
+  for (let index = 0; index < size; ) {
+    const normal = getNormal(
+      pointData,
+      cellArrayData[index + 1],
+      cellArrayData[index + 2],
+      cellArrayData[index + 3]
+    );
     packedVBO[vboidx++] = 127 * normal[0];
     packedVBO[vboidx++] = 127 * normal[1];
     packedVBO[vboidx++] = 127 * normal[2];
     packedVBO[vboidx++] = 127;
-  };
-
-  const array = cellArray.getData();
-  const size = array.length;
-  for (let index = 0; index < size; ) {
-    func(array[index], array, index + 1);
-    index += array[index] + 1;
+    index += cellArrayData[index] + 1;
   }
+
   return packedVBO;
 }
 
@@ -388,11 +209,27 @@ function vtkWebGPUBufferManager(publicAPI, model) {
       req.nativeArray = req.dataArray.getData();
     }
 
-    // create one
-    const buffer = vtkWebGPUBuffer.newInstance({ label: req.label });
-    buffer.setDevice(model.device);
+    let buffer;
+    let gpuUsage;
 
-    let gpuUsage = null;
+    // handle index buffers
+    if (req.usage === BufferUsage.Index) {
+      // todo change to FlattenedIndex to be more clear
+      buffer = vtkWebGPUIndexBuffer.newInstance({ label: req.label });
+      buffer.setDevice(model.device);
+      /* eslint-disable no-bitwise */
+      gpuUsage = GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST;
+      /* eslint-enable no-bitwise */
+      buffer.buildIndexBuffer(req);
+      buffer.createAndWrite(req.nativeArray, gpuUsage);
+      buffer.setArrayInformation([{ format: req.format }]);
+    }
+
+    // create one if not done already
+    if (!buffer) {
+      buffer = vtkWebGPUBuffer.newInstance({ label: req.label });
+      buffer.setDevice(model.device);
+    }
 
     // handle uniform buffers
     if (req.usage === BufferUsage.UniformArray) {
@@ -428,10 +265,9 @@ function vtkWebGPUBufferManager(publicAPI, model) {
         req.format
       );
       const result = packArray(
-        req.cells,
-        req.primitiveType,
-        req.representation,
-        req.dataArray,
+        req.indexBuffer,
+        req.dataArray.getData(),
+        req.dataArray.getNumberOfComponents(),
         arrayType,
         {
           packExtra: req.packExtra,
@@ -445,23 +281,32 @@ function vtkWebGPUBufferManager(publicAPI, model) {
       buffer.setStrideInBytes(
         vtkWebGPUTypes.getByteStrideFromBufferFormat(req.format)
       );
-      buffer.setArrayInformation([{ offset: 0, format: req.format }]);
+      buffer.setArrayInformation([
+        {
+          offset: 0,
+          format: req.format,
+          interpolation: req.cellData ? 'flat' : 'perspective',
+        },
+      ]);
     }
 
     // handle normals from points, snorm8x4
     if (req.usage === BufferUsage.NormalsFromPoints) {
       gpuUsage = GPUBufferUsage.VERTEX;
-      const normals = generateNormals(
-        req.cells,
-        req.primitiveType,
-        req.representation,
-        req.dataArray
+      const arrayType = vtkWebGPUTypes.getNativeTypeFromBufferFormat(
+        req.format
       );
-      buffer.createAndWrite(normals, gpuUsage);
+      const normals = generateNormals(req.cells, req.dataArray);
+      const result = packArray(req.indexBuffer, normals, 4, arrayType, {
+        cellData: true,
+      });
+      buffer.createAndWrite(result.nativeArray, gpuUsage);
       buffer.setStrideInBytes(
         vtkWebGPUTypes.getByteStrideFromBufferFormat(req.format)
       );
-      buffer.setArrayInformation([{ offset: 0, format: req.format }]);
+      buffer.setArrayInformation([
+        { offset: 0, format: req.format, interpolation: 'flat' },
+      ]);
     }
 
     if (req.usage === BufferUsage.RawVertex) {
@@ -479,24 +324,27 @@ function vtkWebGPUBufferManager(publicAPI, model) {
   }
 
   // is the buffer already present?
-  publicAPI.hasBuffer = (req) => {
-    if (req.owner) {
-      // if a matching buffer already exists then return true
-      const hash = req.time + req.format + req.usage + req.hash;
-      return model.device.hasCachedObject(req.owner, hash);
-    }
-    return false;
-  };
+  publicAPI.hasBuffer = (hash) => model.device.hasCachedObject(hash);
 
   publicAPI.getBuffer = (req) => {
     // if we have a source the get/create/cache the buffer
-    if (req.owner) {
-      // if a matching buffer already exists then return it
-      const hash = req.time + req.format + req.usage + req.hash;
-      return model.device.getCachedObject(req.owner, hash, _createBuffer, req);
+    if (req.hash) {
+      return model.device.getCachedObject(req.hash, _createBuffer, req);
     }
 
     return _createBuffer(req);
+  };
+
+  publicAPI.getBufferForPointArray = (dataArray, indexBuffer) => {
+    const format = _getFormatForDataArray(dataArray);
+    const buffRequest = {
+      hash: `${dataArray.getMTime()}I${indexBuffer.getMTime()}${format}`,
+      usage: BufferUsage.PointArray,
+      format,
+      dataArray,
+      indexBuffer,
+    };
+    return publicAPI.getBuffer(buffRequest);
   };
 
   publicAPI.getFullScreenQuadBuffer = () => {

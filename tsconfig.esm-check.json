@@ -1,0 +1,10 @@
+{
+  "include": ["dist/esm/**/*.d.ts"],
+  "compilerOptions": {
+    "noEmit": true,
+    "lib": [
+      "esnext",
+      "dom"
+    ]
+  }
+}

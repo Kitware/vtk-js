@@ -55,10 +55,9 @@ export default function widgetBehavior(publicAPI, model) {
 
         if (type === 'corners') {
           // manipulator should be a plane manipulator
-          manipulator.setNormal(model.camera.getDirectionOfProjection());
           worldCoords = manipulator.handleEvent(
             callData,
-            model.apiSpecificRenderWindow
+            model._apiSpecificRenderWindow
           );
         }
 
@@ -76,11 +75,13 @@ export default function widgetBehavior(publicAPI, model) {
           ];
 
           // manipulator should be a line manipulator
-          manipulator.setOrigin(transformVec3(center, indexToWorldT));
-          manipulator.setNormal(rotateVec3(constraintAxis, indexToWorldT));
+          manipulator.setHandleOrigin(transformVec3(center, indexToWorldT));
+          manipulator.setHandleNormal(
+            rotateVec3(constraintAxis, indexToWorldT)
+          );
           worldCoords = manipulator.handleEvent(
             callData,
-            model.apiSpecificRenderWindow
+            model._apiSpecificRenderWindow
           );
         }
 
@@ -88,10 +89,10 @@ export default function widgetBehavior(publicAPI, model) {
           // constrain to a plane with a normal parallel to the edge
           const edgeAxis = index.map((a) => (a === 1 ? a : 0));
 
-          manipulator.setNormal(rotateVec3(edgeAxis, indexToWorldT));
+          manipulator.setHandleNormal(rotateVec3(edgeAxis, indexToWorldT));
           worldCoords = manipulator.handleEvent(
             callData,
-            model.apiSpecificRenderWindow
+            model._apiSpecificRenderWindow
           );
         }
 
@@ -122,7 +123,7 @@ export default function widgetBehavior(publicAPI, model) {
   // initialization
   // --------------------------------------------------------------------------
 
-  model.camera = model.renderer.getActiveCamera();
+  model._camera = model._renderer.getActiveCamera();
 
   model.classHierarchy.push('vtkImageCroppingWidgetProp');
 }

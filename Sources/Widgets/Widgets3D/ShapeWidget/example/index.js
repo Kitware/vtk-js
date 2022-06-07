@@ -286,9 +286,9 @@ reader
         ijk[slicingMode] = image.imageMapper.getSlice();
         data.indexToWorld(ijk, slicePos);
 
-        widgets.rectangleWidget.getManipulator().setOrigin(slicePos);
-        widgets.ellipseWidget.getManipulator().setOrigin(slicePos);
-        widgets.circleWidget.getManipulator().setOrigin(slicePos);
+        widgets.rectangleWidget.getManipulator().setUserOrigin(slicePos);
+        widgets.ellipseWidget.getManipulator().setUserOrigin(slicePos);
+        widgets.circleWidget.getManipulator().setUserOrigin(slicePos);
 
         updateWidgetsVisibility(slicePos, slicingMode);
 

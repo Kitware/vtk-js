@@ -5,12 +5,10 @@ import * as macro from 'vtk.js/Sources/macros';
 // import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 // import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
-import vtkWebGPUStorageBuffer from 'vtk.js/Sources/Rendering/WebGPU/StorageBuffer';
 import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQuad';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 import vtkWebGPUSampler from 'vtk.js/Sources/Rendering/WebGPU/Sampler';
 // import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
-import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 // import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/ImageProperty/Constants';
@@ -112,12 +110,9 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     model.renderable.update();
 
     model.currentInput = model.renderable.getInputData();
-    model.renderEncoder = model.WebGPURenderer.getRenderEncoder();
 
-    publicAPI.build(model.renderEncoder, model.device);
-
-    // update descriptor sets
-    publicAPI.updateUBO(model.device);
+    publicAPI.prepareToDraw(model.WebGPURenderer.getRenderEncoder());
+    model.renderEncoder.registerDrawCallback(model.pipeline, publicAPI.draw);
   };
 
   publicAPI.computePipelineHash = () => {
@@ -131,7 +126,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     }
   };
 
-  publicAPI.updateUBO = (device) => {
+  publicAPI.updateUBO = () => {
     const utime = model.UBO.getSendTime();
     const actor = model.WebGPUImageSlice.getRenderable();
     const volMapr = actor.getMapper();
@@ -231,7 +226,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       // for performance in the fragment shader
       const cScale = [1, 1, 1, 1];
       const cShift = [0, 0, 0, 0];
-      const tView = model.helper.getTextureViews()[0];
+      const tView = model.textureViews[0];
       const tScale = tView.getTexture().getScale();
       const numComp = tView.getTexture().getNumberOfComponents();
       const iComps = false; // todo handle independent?
@@ -252,14 +247,14 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       }
       model.UBO.setArray('cScale', cScale);
       model.UBO.setArray('cShift', cShift);
-      model.UBO.sendIfNeeded(device);
+      model.UBO.sendIfNeeded(model.device);
     }
   };
 
-  publicAPI.updateLUTImage = (device) => {
+  publicAPI.updateLUTImage = () => {
     const actorProperty = model.WebGPUImageSlice.getRenderable().getProperty();
 
-    const tView = model.helper.getTextureViews()[0];
+    const tView = publicAPI.getTextureViews()[0];
     const numComp = tView.getTexture().getNumberOfComponents();
     const iComps = false; // todo support indepenedent comps?
     const numIComps = iComps ? numComp : 1;
@@ -329,36 +324,30 @@ function vtkWebGPUImageMapper(publicAPI, model) {
           depth: 1,
           format: 'rgba8unorm',
         };
-        const newTex = device.getTextureManager().getTexture(treq);
+        const newTex = model.device.getTextureManager().getTexture(treq);
         const tview = newTex.createView('tfunTexture');
-        const tViews = model.helper.getTextureViews();
-        tViews[1] = tview;
+        model.textureViews[1] = tview;
       }
 
       model.colorTextureString = cfunToString;
     }
   };
 
-  publicAPI.updateBuffers = (device) => {
-    const treq = {
-      imageData: model.currentInput,
-      owner: model.currentInput.getPointData().getScalars(),
-    };
-    const newTex = device.getTextureManager().getTexture(treq);
-    const tViews = model.helper.getTextureViews();
+  const superClassUpdateBuffers = publicAPI.updateBuffers;
+  publicAPI.updateBuffers = () => {
+    superClassUpdateBuffers();
+    const newTex = model.device
+      .getTextureManager()
+      .getTextureForImageData(model.currentInput);
+    const tViews = model.textureViews;
 
     if (!tViews[0] || tViews[0].getTexture() !== newTex) {
       const tview = newTex.createView('imgTexture');
       tViews[0] = tview;
     }
 
-    publicAPI.updateLUTImage(device);
-  };
-
-  publicAPI.build = (renderEncoder, device) => {
-    publicAPI.computePipelineHash();
-    model.helper.setPipelineHash(model.pipelineHash);
-    publicAPI.updateBuffers(device);
+    publicAPI.updateLUTImage();
+    publicAPI.updateUBO();
 
     // set interpolation on the texture based on property setting
     const actorProperty = model.WebGPUImageSlice.getRenderable().getProperty();
@@ -374,26 +363,15 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       model.clampSampler = vtkWebGPUSampler.newInstance({
         label: 'clampSampler',
       });
-      model.clampSampler.create(device, {
+      model.clampSampler.create(model.device, {
         minFilter: iType,
         magFilter: iType,
       });
+      model.additionalBindables = [model.clampSampler];
     }
-
-    model.helper.setAdditionalBindables(publicAPI.getBindables());
-    model.helper.setWebGPURenderer(model.WebGPURenderer);
-    model.helper.build(renderEncoder, device);
-    model.helper.registerToDraw();
   };
 
-  publicAPI.getBindables = () => {
-    const bindables = [];
-    // bindables.push(model.componentSSBO);
-    bindables.push(model.clampSampler);
-    return bindables;
-  };
-
-  const sr = model.helper.getShaderReplacements();
+  const sr = publicAPI.getShaderReplacements();
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
@@ -467,17 +445,6 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   rowLength: 1024,
-  // VBOBuildTime: 0,
-  // VBOBuildString: null,
-  // webGPUTexture: null,
-  // tris: null,
-  // imagemat: null,
-  // imagematinv: null,
-  // colorTexture: null,
-  // pwfTexture: null,
-  // lastHaveSeenDepthRequest: false,
-  // haveSeenDepthRequest: false,
-  // lastTextureComponents: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -486,10 +453,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkViewNode.extend(publicAPI, model, initialValues);
+  vtkWebGPUFullScreenQuad.extend(publicAPI, model, initialValues);
 
-  model.helper = vtkWebGPUFullScreenQuad.newInstance();
-  model.helper.setFragmentShaderTemplate(imgFragTemplate);
+  publicAPI.setFragmentShaderTemplate(imgFragTemplate);
 
   model.UBO = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
   model.UBO.addEntry('SCTCMatrix', 'mat4x4<f32>');
@@ -498,13 +464,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('Axis1', 'vec4<f32>');
   model.UBO.addEntry('cScale', 'vec4<f32>');
   model.UBO.addEntry('cShift', 'vec4<f32>');
-  model.helper.setUBO(model.UBO);
-
-  model.SSBO = vtkWebGPUStorageBuffer.newInstance({ label: 'volumeSSBO' });
-
-  model.componentSSBO = vtkWebGPUStorageBuffer.newInstance({
-    label: 'componentSSBO',
-  });
 
   model.lutBuildTime = {};
   macro.obj(model.lutBuildTime, { mtime: 0 });

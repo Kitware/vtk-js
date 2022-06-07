@@ -278,12 +278,12 @@ function vtkImageMapper(publicAPI, model) {
     return image.extentToBounds(ex);
   };
 
-  publicAPI.getBoundsForSlice = (slice = model.slice, thickness = 0) => {
+  publicAPI.getBoundsForSlice = (slice = model.slice, halfThickness = 0) => {
     const image = publicAPI.getInputData();
     if (!image) {
       return vtkMath.createUninitializedBounds();
     }
-    const extent = image.getExtent();
+    const extent = image.getSpatialExtent();
     const { ijkMode } = publicAPI.getClosestIJKAxis();
     let nSlice = slice;
     if (ijkMode !== model.slicingMode) {
@@ -292,16 +292,16 @@ function vtkImageMapper(publicAPI, model) {
     }
     switch (ijkMode) {
       case SlicingMode.I:
-        extent[0] = nSlice - thickness;
-        extent[1] = nSlice + thickness;
+        extent[0] = nSlice - halfThickness;
+        extent[1] = nSlice + halfThickness;
         break;
       case SlicingMode.J:
-        extent[2] = nSlice - thickness;
-        extent[3] = nSlice + thickness;
+        extent[2] = nSlice - halfThickness;
+        extent[3] = nSlice + halfThickness;
         break;
       case SlicingMode.K:
-        extent[4] = nSlice - thickness;
-        extent[5] = nSlice + thickness;
+        extent[4] = nSlice - halfThickness;
+        extent[5] = nSlice + halfThickness;
         break;
       default:
         break;

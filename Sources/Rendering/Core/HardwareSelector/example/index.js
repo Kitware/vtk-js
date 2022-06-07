@@ -15,7 +15,7 @@ import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenR
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
-
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 
@@ -56,6 +56,7 @@ const sphereSource = vtkSphereSource.newInstance({
   phiResolution: 30,
   thetaResolution: 30,
 });
+
 const sphereMapper = vtkMapper.newInstance();
 const sphereActor = vtkActor.newInstance();
 sphereActor.setMapper(sphereMapper);
@@ -155,9 +156,7 @@ renderWindow.render();
 
 const hardwareSelector = apiSpecificRenderWindow.getSelector();
 hardwareSelector.setCaptureZValues(true);
-hardwareSelector.setFieldAssociation(
-  FieldAssociations.FIELD_ASSOCIATION_POINTS
-);
+hardwareSelector.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_CELLS);
 
 // ----------------------------------------------------------------------------
 // Create Mouse listener for picking on mouse move
@@ -199,13 +198,42 @@ function processSelections(selections) {
     return;
   }
 
-  const { worldPosition, compositeID, prop } = selections[0].getProperties();
-
-  if (lastProcessedActor === prop) {
+  const { worldPosition, compositeID, prop, attributeID } =
+    selections[0].getProperties();
+  let cursorPosition = [...worldPosition];
+  if (attributeID || attributeID === 0) {
+    const input = prop.getMapper().getInputData();
+    if (!input.getCells()) {
+      input.buildCells();
+    }
+    if (
+      hardwareSelector.getFieldAssociation() ===
+      FieldAssociations.FIELD_ASSOCIATION_POINTS
+    ) {
+      const points = input.getPoints();
+      const point = points.getTuple(attributeID);
+      cursorPosition = [...point];
+    } else {
+      const cellPoints = input.getCellPoints(attributeID);
+      if (cellPoints) {
+        const pointIds = cellPoints.cellPointIds;
+        const points = [];
+        // Find the closest cell point, and use that as cursor position
+        pointIds.forEach((pointId) => {
+          points.push(input.getPoints().getPoint(pointId, []));
+        });
+        const distance = (pA, pB) =>
+          vtkMath.distance2BetweenPoints(pA, worldPosition) -
+          vtkMath.distance2BetweenPoints(pB, worldPosition);
+        const sorted = points.sort(distance);
+        cursorPosition = [...sorted[0]];
+      }
+    }
+  } else if (lastProcessedActor === prop) {
     // Skip render call when nothing change
-    updateWorldPosition(worldPosition);
     return;
   }
+  updateWorldPosition(cursorPosition);
   lastProcessedActor = prop;
 
   // Make the picked actor green

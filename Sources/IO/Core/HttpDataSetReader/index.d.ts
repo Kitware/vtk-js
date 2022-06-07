@@ -28,6 +28,56 @@ export interface IHttpDataSetReaderArray {
 	enable: boolean;
 }
 
+export interface IRange {
+	max: number,
+	component: unknown,
+	min: number
+}
+
+export interface IPointDataArray {
+	data: {
+		numberOfComponents: number,
+		name: string,
+		vtkClass: string,
+		dataType: string,
+		ranges: Array<IRange>,
+		ref: {
+			registration: string,
+			encode: string,
+			basepath: string,
+			id: string
+		},
+		size: number
+	}
+}
+
+export interface IDatasetManifest {
+	origin: [number, number, number],
+	cellData: {
+		arrays: Array<unknown>,
+		vtkClass: string
+	},
+	FieldData: {
+		arrays: Array<unknown>,
+		vtkClass: string,
+	},
+	vtkClass: string,	
+	pointData: {
+		arrays: Array<IPointDataArray>,
+		vtkClass: string
+	},
+	spacing: [number, number, number],
+	extent: [number, number, number, number, number, number],
+	direction: [number, number, number, number, number, number, number, number, number],
+	metadata?: Record<string, unknown>
+}
+
+export interface IParseObjectOptions {
+	loadData: boolean,
+	baseUrl: string,
+	deepCopy: boolean
+}
+
 type vtkHttpDataSetReaderBase = vtkObject & Omit<vtkAlgorithm,
 	| 'getInputData'
 	| 'setInputData'
@@ -165,6 +215,14 @@ export interface vtkHttpDataSetReader extends vtkHttpDataSetReaderBase {
 	 * @param {IHttpDataSetReaderOptions} [option] The Draco reader options.
 	 */
 	setUrl(url: string, option?: IHttpDataSetReaderOptions): Promise<any>;
+
+	/**
+	 * Set the dataset object to use for data fetching.
+	 * 
+	 * @param {IDatasetManifest} manifest The dataset manifest object
+	 * @param {IParseObjectOptions} options
+	 */
+	parseObject(manifest: IDatasetManifest, options: IParseObjectOptions): Promise<void>;
 
 	/**
 	 * 

@@ -17,6 +17,8 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 function vtkPolyLineWidget(publicAPI, model) {
   model.classHierarchy.push('vtkPolyLineWidget');
 
+  const superClass = { ...publicAPI };
+
   // --- Widget Requirement ---------------------------------------------------
 
   model.methodsToLink = [
@@ -72,6 +74,15 @@ function vtkPolyLineWidget(publicAPI, model) {
     }
   };
 
+  // --- Public methods -------------------------------------------------------
+  publicAPI.setManipulator = (manipulator) => {
+    superClass.setManipulator(manipulator);
+    model.widgetState.getMoveHandle().setManipulator(manipulator);
+    model.widgetState.getHandleList().forEach((handle) => {
+      handle.setManipulator(manipulator);
+    });
+  };
+
   // --------------------------------------------------------------------------
   // initialization
   // --------------------------------------------------------------------------
@@ -86,7 +97,13 @@ function vtkPolyLineWidget(publicAPI, model) {
   });
 
   // Default manipulator
-  model.manipulator = vtkPlanePointManipulator.newInstance();
+  publicAPI.setManipulator(
+    model.manipulator ||
+      vtkPlanePointManipulator.newInstance({
+        useCameraFocalPoint: true,
+        useCameraNormal: true,
+      })
+  );
 }
 
 // ----------------------------------------------------------------------------

@@ -1,11 +1,12 @@
 import macro from 'vtk.js/Sources/macros';
+import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import vtkWebGPUBindGroup from 'vtk.js/Sources/Rendering/WebGPU/BindGroup';
 import vtkWebGPUPipeline from 'vtk.js/Sources/Rendering/WebGPU/Pipeline';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUShaderDescription from 'vtk.js/Sources/Rendering/WebGPU/ShaderDescription';
 import vtkWebGPUVertexInput from 'vtk.js/Sources/Rendering/WebGPU/VertexInput';
 
-const vtkWebGPUMapperHelperVS = `
+const vtkWebGPUSimpleMapperVS = `
 //VTK::Renderer::Dec
 
 //VTK::Color::Dec
@@ -44,7 +45,7 @@ fn main(
 }
 `;
 
-const vtkWebGPUMapperHelperFS = `
+const vtkWebGPUSimpleMapperFS = `
 //VTK::Renderer::Dec
 
 //VTK::Color::Dec
@@ -87,12 +88,12 @@ fn main(
 `;
 
 // ----------------------------------------------------------------------------
-// vtkWebGPUMapperHelper methods
+// vtkWebGPUSimpleMapper methods
 // ----------------------------------------------------------------------------
 
-function vtkWebGPUMapperHelper(publicAPI, model) {
+function vtkWebGPUSimpleMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUMapperHelper');
+  model.classHierarchy.push('vtkWebGPUSimpleMapper');
 
   publicAPI.generateShaderDescriptions = (hash, pipeline, vertexInput) => {
     // create the shader descriptions
@@ -233,7 +234,55 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
     model.textureViews.push(view);
   };
 
-  publicAPI.renderForPipeline = (renderEncoder) => {
+  // do everything required for this mapper to be rerady to draw
+  // but do not bind or do the actual draw commands as the pipeline
+  // is not neccessarily bound yet
+  publicAPI.prepareToDraw = (renderEncoder) => {
+    model.renderEncoder = renderEncoder;
+
+    // do anything needed to get our input data up to date
+    publicAPI.updateInput();
+
+    // make sure buffers are created and up to date
+    publicAPI.updateBuffers();
+
+    // update bindings and bind groups/layouts
+    // does not acutally bind them, that is done in draw(...)
+    publicAPI.updateBindings();
+
+    // update the pipeline, includes computing the hash, and if needed
+    // creating the pipeline, shader code etc
+    publicAPI.updatePipeline();
+  };
+
+  publicAPI.updateInput = () => {};
+
+  publicAPI.updateBuffers = () => {};
+
+  publicAPI.updateBindings = () => {
+    // bindings can change without a pipeline change
+    // as long as their layout remains the same.
+    // That is why this is done even when the pipeline
+    // hash doesn't change.
+    model.bindGroup.setBindables(publicAPI.getBindables());
+  };
+
+  publicAPI.computePipelineHash = () => {};
+
+  publicAPI.registerDrawCallback = (encoder) => {
+    encoder.registerDrawCallback(model.pipeline, publicAPI.draw);
+  };
+
+  publicAPI.prepareAndDraw = (encoder) => {
+    publicAPI.prepareToDraw(encoder);
+    encoder.setPipeline(model.pipeline);
+    publicAPI.draw(encoder);
+  };
+
+  // do the rest of the calls required to draw this mapper
+  // at this point the command encouder and pipeline are
+  // created and bound
+  publicAPI.draw = (renderEncoder) => {
     const pipeline = renderEncoder.getBoundPipeline();
 
     // bind the mapper bind group
@@ -241,25 +290,18 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
 
     // bind the vertex input
     pipeline.bindVertexInput(renderEncoder, model.vertexInput);
-    renderEncoder.draw(model.numberOfVertices, model.numberOfInstances, 0, 0);
-  };
-
-  publicAPI.registerToDraw = () => {
-    if (model.pipeline) {
-      model.WebGPURenderer.registerPipelineCallback(
-        model.pipeline,
-        publicAPI.renderForPipeline
+    const indexBuffer = model.vertexInput.getIndexBuffer();
+    if (indexBuffer) {
+      renderEncoder.drawIndexed(
+        indexBuffer.getIndexCount(),
+        model.numberOfInstances,
+        0,
+        0,
+        0
       );
+    } else {
+      renderEncoder.draw(model.numberOfVertices, model.numberOfInstances, 0, 0);
     }
-  };
-
-  publicAPI.render = (renderEncoder, device) => {
-    publicAPI.build(renderEncoder, device);
-    renderEncoder.setPipeline(model.pipeline);
-    if (model.WebGPURenderer) {
-      model.WebGPURenderer.bindUBO(renderEncoder);
-    }
-    publicAPI.renderForPipeline(renderEncoder);
   };
 
   publicAPI.getBindables = () => {
@@ -284,22 +326,18 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
     return bindables;
   };
 
-  publicAPI.build = (renderEncoder, device) => {
-    // handle per primitive type
-    model.renderEncoder = renderEncoder;
+  publicAPI.updatePipeline = () => {
+    publicAPI.computePipelineHash();
+    model.pipeline = model.device.getPipeline(model.pipelineHash);
 
-    model.pipeline = device.getPipeline(model.pipelineHash);
-
-    model.bindGroup.setBindables(publicAPI.getBindables());
-
-    // build VBO for this primitive
     // build the pipeline if needed
     if (!model.pipeline) {
       model.pipeline = vtkWebGPUPipeline.newInstance();
-      model.pipeline.setDevice(device);
+      model.pipeline.setDevice(model.device);
 
       if (model.WebGPURenderer) {
         model.pipeline.addBindGroupLayout(model.WebGPURenderer.getBindGroup());
+        model.pipeline.addDrawCallback(model.WebGPURenderer.bindUBO);
       }
 
       model.pipeline.addBindGroupLayout(model.bindGroup);
@@ -310,11 +348,11 @@ function vtkWebGPUMapperHelper(publicAPI, model) {
         model.vertexInput
       );
       model.pipeline.setTopology(model.topology);
-      model.pipeline.setRenderEncoder(renderEncoder);
+      model.pipeline.setRenderEncoder(model.renderEncoder);
       model.pipeline.setVertexState(
         model.vertexInput.getVertexInputInformation()
       );
-      device.createPipeline(model.pipelineHash, model.pipeline);
+      model.device.createPipeline(model.pipelineHash, model.pipeline);
     }
   };
 }
@@ -346,7 +384,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  macro.obj(publicAPI, model);
+  vtkViewNode.extend(publicAPI, model, initialValues);
 
   model.textureViews = [];
   model.vertexInput = vtkWebGPUVertexInput.newInstance();
@@ -356,14 +394,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.additionalBindables = [];
 
   model.fragmentShaderTemplate =
-    model.fragmentShaderTemplate || vtkWebGPUMapperHelperFS;
+    model.fragmentShaderTemplate || vtkWebGPUSimpleMapperFS;
   model.vertexShaderTemplate =
-    model.vertexShaderTemplate || vtkWebGPUMapperHelperVS;
+    model.vertexShaderTemplate || vtkWebGPUSimpleMapperVS;
 
   model.shaderReplacements = new Map();
 
   // Build VTK API
-  macro.get(publicAPI, model, ['vertexInput']);
+  macro.get(publicAPI, model, ['pipeline', 'vertexInput']);
   macro.setGet(publicAPI, model, [
     'additionalBindables',
     'device',
@@ -382,12 +420,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   // Object methods
-  vtkWebGPUMapperHelper(publicAPI, model);
+  vtkWebGPUSimpleMapper(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkWebGPUMapperHelper');
+export const newInstance = macro.newInstance(extend, 'vtkWebGPUSimpleMapper');
 
 // ----------------------------------------------------------------------------
 

@@ -1,25 +1,6 @@
 import { Bounds, Nullable, Range } from "../../../types";
 import vtkAbstractMapper3D, { IAbstractMapper3DInitialValues } from "../AbstractMapper3D";
-
-export enum ColorMode {
-	DEFAULT,
-	MAP_SCALARS,
-	DIRECT_SCALARS,
-}
-
-export enum ScalarMode {
-	DEFAULT,
-	USE_POINT_DATA,
-	USE_CELL_DATA,
-	USE_POINT_FIELD_DATA,
-	USE_CELL_FIELD_DATA,
-	USE_FIELD_DATA,
-}
-
-export enum GetArray {
-	BY_ID,
-	BY_NAME,
-}
+import { ColorMode, GetArray, ScalarMode } from "./Constants";
 
 interface IPrimitiveCount {
 	points: number;
@@ -166,7 +147,7 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	/**
 	 * Return the method of coloring scalar data.
 	 */
-	getColorMode(): number;
+	getColorMode(): ColorMode;
 
 	/**
 	 * Return the method of coloring scalar data.
@@ -643,5 +624,8 @@ export declare const vtkMapper: {
 	getResolveCoincidentTopologyLineOffsetParameters: typeof getResolveCoincidentTopologyLineOffsetParameters;
 	getResolveCoincidentTopologyPointOffsetParameters: typeof getResolveCoincidentTopologyPointOffsetParameters;
 	getResolveCoincidentTopologyPolygonOffsetParameters: typeof getResolveCoincidentTopologyPolygonOffsetParameters;
+	ColorMode: typeof ColorMode;
+	ScalarMode: typeof ScalarMode;
+	GetArray: typeof GetArray;
 }
 export default vtkMapper;

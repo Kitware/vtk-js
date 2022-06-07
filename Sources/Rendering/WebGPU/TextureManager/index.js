@@ -120,15 +120,38 @@ function vtkWebGPUTextureManager(publicAPI, model) {
   // this is the main entry point
   publicAPI.getTexture = (req) => {
     // if we have a source the get/create/cache the texture
-    if (req.owner) {
-      // fill out the req time and format based on imageData/image
-      _fillRequest(req);
+    if (req.hash) {
       // if a matching texture already exists then return it
-      const hash = req.time + req.format;
-      return model.device.getCachedObject(req.owner, hash, _createTexture, req);
+      return model.device.getCachedObject(req.hash, _createTexture, req);
     }
 
     return _createTexture(req);
+  };
+
+  publicAPI.getTextureForImageData = (imgData) => {
+    const treq = { time: imgData.getMTime() };
+    treq.imageData = imgData;
+    // fill out the req time and format based on imageData/image
+    _fillRequest(treq);
+    treq.hash = treq.time + treq.format;
+    return model.device.getTextureManager().getTexture(treq);
+  };
+
+  publicAPI.getTextureForVTKTexture = (srcTexture) => {
+    const treq = { time: srcTexture.getMTime() };
+    if (srcTexture.getInputData()) {
+      treq.imageData = srcTexture.getInputData();
+    } else if (srcTexture.getImage()) {
+      treq.image = srcTexture.getImage();
+    } else if (srcTexture.getJsImageData()) {
+      treq.jsImageData = srcTexture.getJsImageData();
+    } else if (srcTexture.getCanvas()) {
+      treq.canvas = srcTexture.getCanvas();
+    }
+    // fill out the req time and format based on imageData/image
+    _fillRequest(treq);
+    treq.hash = treq.time + treq.format;
+    return model.device.getTextureManager().getTexture(treq);
   };
 }
 

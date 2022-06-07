@@ -16,7 +16,7 @@ function vtkSpline3D(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  function computeCoefficients1D(spline, points) {
+  function computeCoefficients1D(spline, points, boundaryConditionValue) {
     if (points.length === 0) {
       vtkErrorMacro('Splines require at least one points');
     }
@@ -32,20 +32,25 @@ function vtkSpline3D(publicAPI, model) {
     let work = null;
     let intervals = null;
 
-    if (model.close) {
-      work = new Float32Array(size);
-      if (model.intervals.length === 0) {
-        intervals = new Float32Array(size);
-        for (let i = 0; i < intervals.length; i++) {
-          intervals[i] = i;
-        }
-      } else {
-        intervals = model.intervals;
+    work = new Float32Array(size);
+    if (model.intervals.length === 0) {
+      intervals = new Float32Array(size);
+      for (let i = 0; i < intervals.length; i++) {
+        intervals[i] = i;
       }
+    } else {
+      intervals = model.intervals;
+    }
 
+    if (model.close) {
       spline.computeCloseCoefficients(size, work, intervals, points);
     } else {
-      vtkErrorMacro('Open splines are not supported yet!');
+      spline.computeOpenCoefficients(size, work, intervals, points, {
+        leftConstraint: model.boundaryCondition,
+        leftValue: boundaryConditionValue,
+        rightConstraint: model.boundaryCondition,
+        rightValue: boundaryConditionValue,
+      });
     }
   }
 
@@ -56,9 +61,9 @@ function vtkSpline3D(publicAPI, model) {
     const y = points.map((pt) => pt[1]);
     const z = points.map((pt) => pt[2]);
 
-    computeCoefficients1D(model.splineX, x);
-    computeCoefficients1D(model.splineY, y);
-    computeCoefficients1D(model.splineZ, z);
+    computeCoefficients1D(model.splineX, x, model.boundaryConditionValues[0]);
+    computeCoefficients1D(model.splineY, y, model.boundaryConditionValues[1]);
+    computeCoefficients1D(model.splineZ, z, model.boundaryConditionValues[2]);
   };
 
   // --------------------------------------------------------------------------
@@ -106,6 +111,7 @@ const DEFAULT_VALUES = {
   close: false,
   intervals: [],
   kind: splineKind.KOCHANEK_SPLINE,
+  boundaryConditionValues: [0, 0, 0],
 
   // Passed to the vtkKochanekSpline1D
   tension: 0,

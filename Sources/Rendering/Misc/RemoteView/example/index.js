@@ -1,8 +1,6 @@
 import vtkWSLinkClient from 'vtk.js/Sources/IO/Core/WSLinkClient';
 import SmartConnect from 'wslink/src/SmartConnect';
-import vtkRemoteView, {
-  connectImageStream,
-} from 'vtk.js/Sources/Rendering/Misc/RemoteView';
+import vtkRemoteView from 'vtk.js/Sources/Rendering/Misc/RemoteView';
 
 vtkWSLinkClient.setSmartConnectClass(SmartConnect);
 
@@ -16,15 +14,6 @@ divRenderer.style.position = 'relative';
 divRenderer.style.width = '100vw';
 divRenderer.style.height = '100vh';
 divRenderer.style.overflow = 'hidden';
-
-const view = vtkRemoteView.newInstance({
-  rpcWheelEvent: 'viewport.mouse.zoom.wheel',
-});
-view.setContainer(divRenderer);
-view.setInteractiveRatio(0.7); // the scaled image compared to the clients view resolution
-view.setInteractiveQuality(50); // jpeg quality
-
-window.addEventListener('resize', view.resize);
 
 const clientToConnect = vtkWSLinkClient.newInstance();
 
@@ -57,12 +46,21 @@ const config = {
 clientToConnect
   .connect(config)
   .then((validClient) => {
-    connectImageStream(validClient.getConnection().getSession());
+    const viewStream = this.clientToConnect
+      .getImageStream()
+      .createViewStream('-1');
 
+    const view = vtkRemoteView.newInstance({
+      rpcWheelEvent: 'viewport.mouse.zoom.wheel',
+      viewStream,
+    });
     const session = validClient.getConnection().getSession();
     view.setSession(session);
-    view.setViewId(-1);
-    view.render();
+    view.setContainer(divRenderer);
+    view.setInteractiveRatio(0.7); // the scaled image compared to the clients view resolution
+    view.setInteractiveQuality(50); // jpeg quality
+
+    window.addEventListener('resize', view.resize);
   })
   .catch((error) => {
     console.error(error);

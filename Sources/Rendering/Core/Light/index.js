@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import { vec3 } from 'gl-matrix';
 
 // ----------------------------------------------------------------------------
 
@@ -12,19 +13,29 @@ export const LIGHT_TYPES = ['HeadLight', 'CameraLight', 'SceneLight'];
 function vtkLight(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkLight');
+  const tmpVec = new Float64Array(3);
 
   publicAPI.getTransformedPosition = () => {
     if (model.transformMatrix) {
-      return []; // FIXME !!!!
+      vec3.transformMat4(tmpVec, model.position, model.transformMatrix);
+    } else {
+      vec3.set(tmpVec, model.position[0], model.position[1], model.position[2]);
     }
-    return [].concat(model.position);
+    return tmpVec;
   };
 
   publicAPI.getTransformedFocalPoint = () => {
     if (model.transformMatrix) {
-      return []; // FIXME !!!!
+      vec3.transformMat4(tmpVec, model.focalPoint, model.transformMatrix);
+    } else {
+      vec3.set(
+        tmpVec,
+        model.focalPoint[0],
+        model.focalPoint[1],
+        model.focalPoint[2]
+      );
     }
-    return [].concat(model.focalPoint);
+    return tmpVec;
   };
 
   publicAPI.getDirection = () => {
@@ -109,6 +120,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'transformMatrix',
     'lightType',
     'shadowAttenuation',
+    'attenuationValues',
   ]);
   macro.setGetArray(
     publicAPI,

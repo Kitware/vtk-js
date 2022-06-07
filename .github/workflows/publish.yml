@@ -26,8 +26,12 @@ jobs:
           sudo apt-get install xvfb
       - name: Build
         run: npm run build:release
-      - name: Validate
+      - name: Validate code style
         run: npm run validate
+      - name: Validate generated typescript definitions
+        run: |
+          npx tsc -p tsconfig.esm-check.json
+          npx tsc -p tsconfig.umd-check.json
       - name: Chrome and Firefox tests
         run: xvfb-run --auto-servernum npm run test -- --browsers Chrome,Firefox
       - name: Archive test results

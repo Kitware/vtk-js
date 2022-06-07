@@ -201,27 +201,22 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
     const size = viewNode.getSize();
     const gl = viewNode.getContext();
 
-    if (gl === null) {
-      // nothing to do -> no render context
-      // traverse delegate passes -> has to be done in order for the vtk render-pipeline to work correctly
-      model.delegates.forEach((val) => {
-        val.traverse(viewNode, publicAPI);
-      });
-      return;
-    }
-
     // if we lack the webgl2 and half floatsupport just do
     // basic alpha blending
+    model._supported = false;
     if (
+      renNode.getSelector() ||
+      !gl ||
       !viewNode.getWebgl2() ||
       (!gl.getExtension('EXT_color_buffer_half_float') &&
         !gl.getExtension('EXT_color_buffer_float'))
     ) {
-      console.log('fallback');
       publicAPI.setCurrentOperation('translucentPass');
       renNode.traverse(publicAPI);
       return;
     }
+
+    model._supported = true;
 
     // prepare framebuffer // allocate framebuffer if needed and bind it
     if (model.framebuffer === null) {
@@ -257,6 +252,12 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
 
     gl.colorMask(true, true, true, true);
     gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+
+    // make sure to clear the entire framebuffer as we will
+    // be blitting the entire thing all of it needs good initial values
+    gl.viewport(0, 0, size[0], size[1]);
+    gl.scissor(0, 0, size[0], size[1]);
+
     gl.clearBufferfv(gl.COLOR, 0, [0.0, 0.0, 0.0, 1.0]);
     gl.clearBufferfv(gl.COLOR, 1, [0.0, 0.0, 0.0, 0.0]);
 
@@ -327,7 +328,12 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
     model.translucentRTexture.deactivate();
   };
 
-  publicAPI.getShaderReplacement = () => translucentShaderReplacement;
+  publicAPI.getShaderReplacement = () => {
+    if (model._supported) {
+      return translucentShaderReplacement;
+    }
+    return null;
+  };
 
   publicAPI.releaseGraphicsResources = (viewNode) => {
     if (model.framebuffer) {

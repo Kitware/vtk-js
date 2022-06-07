@@ -3,7 +3,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
-import vtkWebGPUMapperHelper from 'vtk.js/Sources/Rendering/WebGPU/MapperHelper';
+import vtkWebGPUSimpleMapper from 'vtk.js/Sources/Rendering/WebGPU/SimpleMapper';
 import vtkWebGPURenderEncoder from 'vtk.js/Sources/Rendering/WebGPU/RenderEncoder';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUTexture from 'vtk.js/Sources/Rendering/WebGPU/Texture';
@@ -231,11 +231,6 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     // copy back to the original color buffer
 
     // final composite
-    model._copyEncoder.setColorTextureView(0, model.colorTextureView);
-    model._copyEncoder.attachTextureViews();
-    renNode.setRenderEncoder(model._copyEncoder);
-    model._copyEncoder.begin(viewNode.getCommandEncoder());
-    renNode.scissorAndViewport(model._copyEncoder);
     model._volumeCopyQuad.setWebGPURenderer(renNode);
     if (model._useSmallViewport) {
       const width = model._colorTextureView.getTexture().getWidth();
@@ -248,7 +243,13 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       model._copyUBO.setArray('tscale', [1.0, 1.0]);
     }
     model._copyUBO.sendIfNeeded(device);
-    model._volumeCopyQuad.render(model._copyEncoder, viewNode.getDevice());
+
+    model._copyEncoder.setColorTextureView(0, model.colorTextureView);
+    model._copyEncoder.attachTextureViews();
+
+    model._copyEncoder.begin(viewNode.getCommandEncoder());
+    renNode.scissorAndViewport(model._copyEncoder);
+    model._volumeCopyQuad.prepareAndDraw(model._copyEncoder);
     model._copyEncoder.end();
   };
 
@@ -321,7 +322,6 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       ? model._clearEncoder
       : model._mergeEncoder;
     encoder.attachTextureViews();
-    renNode.setRenderEncoder(encoder);
     encoder.begin(viewNode.getCommandEncoder());
     let width = model._colorTextureView.getTexture().getWidth();
     let height = model._colorTextureView.getTexture().getHeight();
@@ -335,7 +335,7 @@ function vtkWebGPUVolumePass(publicAPI, model) {
 
     model.fullScreenQuad.setWebGPURenderer(renNode);
     model.fullScreenQuad.setVolumes(volumes);
-    model.fullScreenQuad.render(encoder, viewNode.getDevice());
+    model.fullScreenQuad.prepareAndDraw(encoder);
     encoder.end();
   };
 
@@ -343,19 +343,30 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     publicAPI.updateDepthPolyData(renNode);
 
     const pd = model._boundsPoly;
-    const cells = pd.getPolys();
-    // points
     const points = pd.getPoints();
-    const buffRequest = {
-      owner: points,
-      usage: BufferUsage.PointArray,
-      format: 'float32x4',
-      time: Math.max(points.getMTime(), cells.getMTime()),
-      hash: 'vp',
-      dataArray: points,
+    const cells = pd.getPolys();
+
+    let buffRequest = {
+      hash: `vp${cells.getMTime()}`,
+      usage: BufferUsage.Index,
       cells,
+      numberOfPoints: points.getNumberOfPoints(),
       primitiveType: PrimitiveTypes.Triangles,
       representation: Representation.SURFACE,
+    };
+    const indexBuffer = viewNode
+      .getDevice()
+      .getBufferManager()
+      .getBuffer(buffRequest);
+    model._mapper.getVertexInput().setIndexBuffer(indexBuffer);
+
+    // points
+    buffRequest = {
+      usage: BufferUsage.PointArray,
+      format: 'float32x4',
+      hash: `vp${points.getMTime()}${cells.getMTime()}`,
+      dataArray: points,
+      indexBuffer,
       packExtra: true,
     };
     const buff = viewNode.getDevice().getBufferManager().getBuffer(buffRequest);
@@ -427,8 +438,6 @@ function vtkWebGPUVolumePass(publicAPI, model) {
   };
 
   publicAPI.drawDepthRange = (renNode, viewNode) => {
-    const device = viewNode.getDevice();
-
     // copy current depth buffer to
     model._depthRangeTexture.resizeToMatch(model.colorTextureView.getTexture());
     model._depthRangeTexture2.resizeToMatch(
@@ -442,8 +451,8 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     renNode.volumeDepthRangePass(true);
     model._mapper.setWebGPURenderer(renNode);
 
-    model._mapper.build(model._depthRangeEncoder, device);
-    model._mapper.registerToDraw();
+    model._mapper.prepareToDraw(model._depthRangeEncoder);
+    model._mapper.registerDrawCallback(model._depthRangeEncoder);
 
     renNode.volumeDepthRangePass(false);
   };
@@ -715,7 +724,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkRenderPass.extend(publicAPI, model, initialValues);
 
   model._lastScale = 2.0;
-  model._mapper = vtkWebGPUMapperHelper.newInstance();
+  model._mapper = vtkWebGPUSimpleMapper.newInstance();
   model._mapper.setFragmentShaderTemplate(DepthBoundsFS);
   model._mapper
     .getShaderReplacements()

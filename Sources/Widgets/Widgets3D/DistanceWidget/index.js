@@ -17,6 +17,8 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 function vtkDistanceWidget(publicAPI, model) {
   model.classHierarchy.push('vtkDistanceWidget');
 
+  const superClass = { ...publicAPI };
+
   // --- Widget Requirement ---------------------------------------------------
 
   model.methodsToLink = [
@@ -62,6 +64,14 @@ function vtkDistanceWidget(publicAPI, model) {
     );
   };
 
+  publicAPI.setManipulator = (manipulator) => {
+    superClass.setManipulator(manipulator);
+    model.widgetState.getMoveHandle().setManipulator(manipulator);
+    model.widgetState.getHandleList().forEach((handle) => {
+      handle.setManipulator(manipulator);
+    });
+  };
+
   // --------------------------------------------------------------------------
   // initialization
   // --------------------------------------------------------------------------
@@ -76,7 +86,10 @@ function vtkDistanceWidget(publicAPI, model) {
   });
 
   // Default manipulator
-  model.manipulator = vtkPlanePointManipulator.newInstance();
+  publicAPI.setManipulator(
+    model.manipulator ||
+      vtkPlanePointManipulator.newInstance({ useCameraNormal: true })
+  );
 }
 
 // ----------------------------------------------------------------------------

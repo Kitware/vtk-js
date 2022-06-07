@@ -93,7 +93,6 @@ function vtkWebGPUTexture(publicAPI, model) {
 
       if (req.dataArray) {
         buffRequest.dataArray = req.dataArray;
-        buffRequest.time = req.dataArray.getMTime();
       }
       buffRequest.nativeArray = req.nativeArray;
 
@@ -172,7 +171,6 @@ function vtkWebGPUTexture(publicAPI, model) {
       // create and write the buffer
       const buffRequest = {
         nativeArray: imageData.data,
-        time: 0,
         /* eslint-disable no-undef */
         usage: BufferUsage.Texture,
         /* eslint-enable no-undef */

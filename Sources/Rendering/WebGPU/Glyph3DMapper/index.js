@@ -1,21 +1,14 @@
 import * as macro from 'vtk.js/Sources/macros';
+import vtkWebGPUCellArrayMapper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper';
 import vtkWebGPUPolyDataMapper from 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper';
 import vtkWebGPUStorageBuffer from 'vtk.js/Sources/Rendering/WebGPU/StorageBuffer';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
-import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
-const { PrimitiveTypes } = vtkWebGPUBufferManager;
-
-// ----------------------------------------------------------------------------
-// vtkWebGPUSphereMapper methods
-// ----------------------------------------------------------------------------
-
-function vtkWebGPUGlyph3DMapper(publicAPI, model) {
+function vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUGlyph3DMapper');
+  model.classHierarchy.push('vtkWebGPUGlyph3DCellArrayMapper');
 
-  // Capture 'parentClass' api for internal use
   const superClass = { ...publicAPI };
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
@@ -30,6 +23,10 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
     ]).result;
     vDesc.setCode(code);
   };
+  model.shaderReplacements.set(
+    'replaceShaderPosition',
+    publicAPI.replaceShaderPosition
+  );
 
   publicAPI.replaceShaderNormal = (hash, pipeline, vertexInput) => {
     if (vertexInput.hasAttribute('normalMC')) {
@@ -44,9 +41,13 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
     }
     superClass.replaceShaderNormal(hash, pipeline, vertexInput);
   };
+  model.shaderReplacements.set(
+    'replaceShaderNormal',
+    publicAPI.replaceShaderNormal
+  );
 
   publicAPI.replaceShaderColor = (hash, pipeline, vertexInput) => {
-    if (!model.carray) {
+    if (!model.renderable.getColorArray()) {
       superClass.replaceShaderColor(hash, pipeline, vertexInput);
       return;
     }
@@ -67,6 +68,10 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
     ]).result;
     fDesc.setCode(code);
   };
+  model.shaderReplacements.set(
+    'replaceShaderColor',
+    publicAPI.replaceShaderColor
+  );
 
   publicAPI.replaceShaderSelect = (hash, pipeline, vertexInput) => {
     if (hash.includes('sel')) {
@@ -86,8 +91,66 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
       fDesc.setCode(code);
     }
   };
+  model.shaderReplacements.set(
+    'replaceShaderSelect',
+    publicAPI.replaceShaderSelect
+  );
+}
 
-  publicAPI.buildPrimitives = () => {
+// ----------------------------------------------------------------------------
+export function caExtend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, {}, initialValues);
+
+  // Inheritance
+  vtkWebGPUCellArrayMapper.extend(publicAPI, model, initialValues);
+
+  // Object methods
+  vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model);
+}
+
+const caNewInstance = macro.newInstance(
+  caExtend,
+  'vtkWebGPUGlyph3DCellArrayMapper'
+);
+
+// ----------------------------------------------------------------------------
+// vtkWebGPUSphereMapper methods
+// ----------------------------------------------------------------------------
+
+function vtkWebGPUGlyph3DMapper(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkWebGPUGlyph3DMapper');
+
+  publicAPI.createCellArrayMapper = () => {
+    const mpr = caNewInstance();
+    mpr.setSSBO(model.SSBO);
+    mpr.setRenderable(model.renderable);
+    return mpr;
+  };
+
+  publicAPI.buildPass = (prepass) => {
+    if (prepass) {
+      model.WebGPUActor = publicAPI.getFirstAncestorOfType('vtkWebGPUActor');
+      if (!model.renderable.getStatic()) {
+        model.renderable.update();
+      }
+
+      const gpoly = model.renderable.getInputData(1);
+
+      model.renderable.mapScalars(gpoly, 1.0);
+
+      publicAPI.updateSSBO();
+
+      publicAPI.updateCellArrayMappers(gpoly);
+
+      for (let i = 0; i < model.children.length; i++) {
+        const cellMapper = model.children[i];
+        cellMapper.setNumberOfInstances(model.numInstances);
+      }
+    }
+  };
+
+  publicAPI.updateSSBO = () => {
     model.currentInput = model.renderable.getInputData(1);
 
     model.renderable.buildArrays();
@@ -96,7 +159,7 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
     const garray = model.renderable.getMatrixArray();
     const narray = model.renderable.getNormalArray();
     model.carray = model.renderable.getColorArray();
-    const numInstances = garray.length / 16;
+    model.numInstances = garray.length / 16;
 
     if (
       model.renderable.getBuildTime().getMTime() >
@@ -104,10 +167,13 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
     ) {
       // In Core class all arrays are rebuilt when this happens
       // but these arrays can be shared between all primType
+      model.WebGPURenderWindow = publicAPI.getFirstAncestorOfType(
+        'vtkWebGPURenderWindow'
+      );
       const device = model.WebGPURenderWindow.getDevice();
 
       model.SSBO.clearData();
-      model.SSBO.setNumberOfInstances(numInstances);
+      model.SSBO.setNumberOfInstances(model.numInstances);
       model.SSBO.addEntry('matrix', 'mat4x4<f32>');
       model.SSBO.addEntry('normal', 'mat4x4<f32>');
       if (model.carray) {
@@ -125,13 +191,6 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
 
       model.SSBO.send(device);
       model.glyphBOBuildTime.modified();
-    }
-
-    superClass.buildPrimitives();
-
-    for (let i = 0; i < model.primitives.length; i++) {
-      const primHelper = model.primitives[i];
-      primHelper.setNumberOfInstances(numInstances);
     }
   };
 }
@@ -157,15 +216,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkWebGPUGlyph3DMapper(publicAPI, model);
-
-  for (let i = PrimitiveTypes.Start; i < PrimitiveTypes.End; i++) {
-    model.primitives[i].setSSBO(model.SSBO);
-    const sr = model.primitives[i].getShaderReplacements();
-    sr.set('replaceShaderPosition', publicAPI.replaceShaderPosition);
-    sr.set('replaceShaderNormal', publicAPI.replaceShaderNormal);
-    sr.set('replaceShaderSelect', publicAPI.replaceShaderSelect);
-    sr.set('replaceShaderColor', publicAPI.replaceShaderColor);
-  }
 }
 
 // ----------------------------------------------------------------------------

@@ -46,16 +46,16 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.updateCursor = () => {
     switch (model.activeState.getUpdateMethodName()) {
       case InteractionMethodsName.TranslateCenter:
-        model.apiSpecificRenderWindow.setCursor('move');
+        model._apiSpecificRenderWindow.setCursor('move');
         break;
       case InteractionMethodsName.RotateLine:
-        model.apiSpecificRenderWindow.setCursor('alias');
+        model._apiSpecificRenderWindow.setCursor('alias');
         break;
       case InteractionMethodsName.TranslateAxis:
-        model.apiSpecificRenderWindow.setCursor('pointer');
+        model._apiSpecificRenderWindow.setCursor('pointer');
         break;
       default:
-        model.apiSpecificRenderWindow.setCursor('default');
+        model._apiSpecificRenderWindow.setCursor('default');
         break;
     }
   };
@@ -65,8 +65,8 @@ export default function widgetBehavior(publicAPI, model) {
       isDragging = true;
       const viewType = model.widgetState.getActiveViewType();
       const currentPlaneNormal = model.widgetState.getPlanes()[viewType].normal;
-      model.planeManipulator.setOrigin(model.widgetState.getCenter());
-      model.planeManipulator.setNormal(currentPlaneNormal);
+      model.planeManipulator.setWidgetOrigin(model.widgetState.getCenter());
+      model.planeManipulator.setWidgetNormal(currentPlaneNormal);
 
       publicAPI.startInteraction();
     } else if (
@@ -238,7 +238,7 @@ export default function widgetBehavior(publicAPI, model) {
     const stateLine = model.widgetState.getActiveLineState();
     const worldCoords = model.planeManipulator.handleEvent(
       calldata,
-      model.apiSpecificRenderWindow
+      model._apiSpecificRenderWindow
     );
 
     const point1 = stateLine.getPoint1();
@@ -263,7 +263,7 @@ export default function widgetBehavior(publicAPI, model) {
     if (dot === 1 || dot === -1) {
       vtkMath.cross(
         currentLineVector,
-        model.planeManipulator.getNormal(),
+        model.planeManipulator.getWidgetNormal(),
         axisTranslation
       );
     }
@@ -300,7 +300,7 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI[InteractionMethodsName.TranslateCenter] = (calldata) => {
     let worldCoords = model.planeManipulator.handleEvent(
       calldata,
-      model.apiSpecificRenderWindow
+      model._apiSpecificRenderWindow
     );
     worldCoords = publicAPI.getBoundedCenter(worldCoords);
     model.activeState.setCenter(worldCoords);
@@ -309,10 +309,10 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI[InteractionMethodsName.RotateLine] = (calldata) => {
     const activeLine = model.widgetState.getActiveLineState();
-    const planeNormal = model.planeManipulator.getNormal();
+    const planeNormal = model.planeManipulator.getWidgetNormal();
     const worldCoords = model.planeManipulator.handleEvent(
       calldata,
-      model.apiSpecificRenderWindow
+      model._apiSpecificRenderWindow
     );
 
     const center = model.widgetState.getCenter();

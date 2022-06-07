@@ -841,7 +841,9 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     model.componentSSBO.send(device);
   };
 
-  publicAPI.updateBuffers = (device) => {
+  const superClassUpdateBuffers = publicAPI.updateBuffers;
+  publicAPI.updateBuffers = () => {
+    superClassUpdateBuffers();
     // compute the min step size
     let sampleDist = model.volumes[0]
       .getRenderable()
@@ -858,7 +860,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     if (model.sampleDist !== sampleDist) {
       model.sampleDist = sampleDist;
       model.UBO.setValue('SampleDistance', sampleDist);
-      model.UBO.sendIfNeeded(device);
+      model.UBO.sendIfNeeded(model.device);
     }
 
     // add in 3d volume textures
@@ -868,11 +870,9 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       const volMapr = actor.getMapper();
       const image = volMapr.getInputData();
 
-      const treq = {
-        imageData: image,
-        owner: image.getPointData().getScalars(),
-      };
-      const newTex = device.getTextureManager().getTexture(treq);
+      const newTex = model.device
+        .getTextureManager()
+        .getTextureForImageData(image);
       if (
         !model.textureViews[vidx + 4] ||
         model.textureViews[vidx + 4].getTexture() !== newTex
@@ -891,9 +891,19 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     }
     model.lastVolumeLength = model.volumes.length;
 
-    publicAPI.updateLUTImage(device);
+    publicAPI.updateLUTImage(model.device);
 
-    publicAPI.updateSSBO(device);
+    publicAPI.updateSSBO(model.device);
+
+    if (!model.clampSampler) {
+      model.clampSampler = vtkWebGPUSampler.newInstance({
+        label: 'clampSampler',
+      });
+      model.clampSampler.create(model.device, {
+        minFilter: 'linear',
+        magFilter: 'linear',
+      });
+    }
   };
 
   publicAPI.computePipelineHash = () => {
@@ -921,24 +931,6 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         return;
       }
     }
-  };
-
-  const superclassBuild = publicAPI.build;
-  publicAPI.build = (renderEncoder, device) => {
-    publicAPI.computePipelineHash();
-    publicAPI.updateBuffers(device);
-
-    if (!model.clampSampler) {
-      model.clampSampler = vtkWebGPUSampler.newInstance({
-        label: 'clampSampler',
-      });
-      model.clampSampler.create(device, {
-        minFilter: 'linear',
-        magFilter: 'linear',
-      });
-    }
-
-    superclassBuild(renderEncoder, device);
   };
 
   const superclassGetBindables = publicAPI.getBindables;

@@ -41,12 +41,13 @@ export default function widgetBehavior(publicAPI, model) {
       model.lastHandle.setOrigin(...model.moveHandle.getOrigin());
       model.lastHandle.setColor(model.moveHandle.getColor());
       model.lastHandle.setScale1(model.moveHandle.getScale1());
+      model.lastHandle.setManipulator(model.manipulator);
 
       if (!model.firstHandle) {
         model.firstHandle = model.lastHandle;
       }
 
-      model.apiSpecificRenderWindow.setCursor('grabbing');
+      model._apiSpecificRenderWindow.setCursor('grabbing');
     }
   };
 
@@ -58,8 +59,8 @@ export default function widgetBehavior(publicAPI, model) {
     const scale =
       model.moveHandle.getScale1() *
       vec3.distance(
-        model.apiSpecificRenderWindow.displayToWorld(0, 0, 0, model.renderer),
-        model.apiSpecificRenderWindow.displayToWorld(1, 0, 0, model.renderer)
+        model._apiSpecificRenderWindow.displayToWorld(0, 0, 0, model._renderer),
+        model._apiSpecificRenderWindow.displayToWorld(1, 0, 0, model._renderer)
       );
 
     return handles.reduce(
@@ -224,7 +225,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.freeHand = publicAPI.getAllowFreehand() && !model.isDragging;
     } else {
       model.isDragging = true;
-      model.apiSpecificRenderWindow.setCursor('grabbing');
+      model._apiSpecificRenderWindow.setCursor('grabbing');
       model._interactor.requestAnimation(publicAPI);
       publicAPI.invokeStartInteractionEvent();
     }
@@ -239,7 +240,7 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleLeftButtonRelease = (e) => {
     if (model.isDragging) {
       if (!model.hasFocus) {
-        model.apiSpecificRenderWindow.setCursor(model.defaultCursor);
+        model._apiSpecificRenderWindow.setCursor(model.defaultCursor);
         model.widgetState.deactivate();
         model._interactor.cancelAnimation(publicAPI);
         publicAPI.invokeEndInteractionEvent();
@@ -291,30 +292,30 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = (callData) => {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
     if (
+      !manipulator ||
       !model.activeState ||
       !model.activeState.getActive() ||
-      !model.pickable ||
-      !model.manipulator
+      !model.pickable
     ) {
       return macro.VOID;
     }
-    model.manipulator.setNormal(model.camera.getDirectionOfProjection());
-
-    const worldCoords = model.manipulator.handleEvent(
+    const worldCoords = manipulator.handleEvent(
       callData,
-      model.apiSpecificRenderWindow
+      model._apiSpecificRenderWindow
     );
 
     const hoveredHandle = getHoveredHandle();
     if (hoveredHandle) {
       model.moveHandle.setVisible(false);
       if (hoveredHandle !== model.firstHandle) {
-        model.apiSpecificRenderWindow.setCursor('grabbing');
+        model._apiSpecificRenderWindow.setCursor('grabbing');
       }
     } else if (!model.isDragging && model.hasFocus) {
       model.moveHandle.setVisible(true);
-      model.apiSpecificRenderWindow.setCursor(model.defaultCursor);
+      model._apiSpecificRenderWindow.setCursor(model.defaultCursor);
     }
 
     if (model.lastHandle) {

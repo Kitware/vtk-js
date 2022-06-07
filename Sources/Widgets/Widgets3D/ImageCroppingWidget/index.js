@@ -24,6 +24,8 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 function vtkImageCroppingWidget(publicAPI, model) {
   model.classHierarchy.push('vtkImageCroppingWidget');
 
+  const superClass = { ...publicAPI };
+
   let stateSub = null;
 
   // --------------------------------------------------------------------------
@@ -131,24 +133,45 @@ function vtkImageCroppingWidget(publicAPI, model) {
     .getCroppingPlanes()
     .onModified(publicAPI.updateHandles);
 
-  // Add manipulators to our widgets.
-  const planeManipulator = vtkPlaneManipulator.newInstance();
-  const lineManipulator = vtkLineManipulator.newInstance();
+  publicAPI.setCornerManipulator = (manipulator) => {
+    superClass.setCornerManipulator(manipulator);
+    model.widgetState
+      .getStatesWithLabel('corners')
+      .forEach((handle) => handle.setManipulator(manipulator));
+  };
 
-  model.widgetState
-    .getStatesWithLabel('corners')
-    .forEach((handle) => handle.setManipulator(planeManipulator));
-  model.widgetState
-    .getStatesWithLabel('edges')
-    .forEach((handle) => handle.setManipulator(planeManipulator));
-  model.widgetState
-    .getStatesWithLabel('faces')
-    .forEach((handle) => handle.setManipulator(lineManipulator));
+  publicAPI.setEdgeManipulator = (manipulator) => {
+    superClass.setEdgeManipulator(manipulator);
+    model.widgetState
+      .getStatesWithLabel('edges')
+      .forEach((handle) => handle.setManipulator(manipulator));
+  };
+
+  publicAPI.setFaceManipulator = (manipulator) => {
+    superClass.setFaceManipulator(manipulator);
+    model.widgetState
+      .getStatesWithLabel('faces')
+      .forEach((handle) => handle.setManipulator(manipulator));
+  };
+
+  // --------------------------------------------------------------------------
+  // initialization
+  // --------------------------------------------------------------------------
+
+  publicAPI.setCornerManipulator(
+    vtkPlaneManipulator.newInstance({ useCameraNormal: true })
+  );
+  publicAPI.setEdgeManipulator(vtkPlaneManipulator.newInstance());
+  publicAPI.setFaceManipulator(vtkLineManipulator.newInstance());
 }
 
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+const DEFAULT_VALUES = {
+  // cornerManipulator: null,
+  // edgeManipulator: null,
+  // faceManipulator: null
+};
 
 // ----------------------------------------------------------------------------
 
@@ -156,6 +179,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
+  macro.setGet(publicAPI, model, [
+    'cornerManipulator',
+    'edgeManipulator',
+    'faceManipulator',
+  ]);
 
   vtkImageCroppingWidget(publicAPI, model);
 }

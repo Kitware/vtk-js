@@ -380,6 +380,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
     camera.setPhysicalScale(physicalScale);
     camera.setPhysicalTranslation(physicalTranslation);
+    // Clip at 0.1m, 100.0m in physical space by default
+    camera.setClippingRange(0.1 * physicalScale, 100.0 * physicalScale);
   };
 
   publicAPI.stopXR = async () => {
@@ -726,6 +728,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         }
       });
     });
+  };
+
+  publicAPI.getHardwareMaximumLineWidth = () => {
+    const gl = publicAPI.get3DContext();
+    const lineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE);
+    return lineWidthRange[1];
   };
 
   publicAPI.getGLInformations = () => {

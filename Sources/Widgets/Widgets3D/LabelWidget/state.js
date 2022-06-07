@@ -5,7 +5,7 @@ export default function generateState() {
     .createBuilder()
     .addStateFromMixin({
       labels: ['moveHandle'],
-      mixins: ['origin', 'color', 'scale1', 'visible'],
+      mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator'],
       name: 'moveHandle',
       initialValues: {
         scale1: 0.1,
@@ -14,7 +14,7 @@ export default function generateState() {
     })
     .addStateFromMixin({
       labels: ['SVGtext'],
-      mixins: ['origin', 'color', 'text', 'visible'],
+      mixins: ['origin', 'color', 'text', 'visible', 'manipulator'],
       name: 'text',
       initialValues: {
         visible: true,

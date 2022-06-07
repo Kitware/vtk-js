@@ -104,12 +104,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'sizeInBytes',
     'usage',
   ]);
-  macro.setGet(publicAPI, model, [
-    'label',
-    'device',
-    'arrayInformation',
-    'sourceTime',
-  ]);
+  macro.setGet(publicAPI, model, ['label', 'device', 'arrayInformation']);
 
   vtkWebGPUBindGroup(publicAPI, model);
 }

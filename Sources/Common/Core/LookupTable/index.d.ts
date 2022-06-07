@@ -22,12 +22,12 @@ export interface vtkLookupTable extends vtkScalarsToColors {
 	/**
 	 * 
 	 */
-	getAboveRangeColor(): Range;
+	getAboveRangeColor(): RGBAColor;
 
 	/**
 	 * 
 	 */
-	getAboveRangeColorByReference(): Range;
+	getAboveRangeColorByReference(): RGBAColor;
 
 	/**
 	 * 
@@ -153,13 +153,13 @@ export interface vtkLookupTable extends vtkScalarsToColors {
 	 * 
 	 * @param aboveRangeColor 
 	 */
-	setAboveRangeColor(aboveRangeColor: Range): boolean;
+	setAboveRangeColor(aboveRangeColor: RGBAColor): boolean;
 
 	/**
 	 * 
 	 * @param aboveRangeColor 
 	 */
-	setAboveRangeColorFrom(aboveRangeColor: Range): boolean;
+	setAboveRangeColorFrom(aboveRangeColor: RGBAColor): boolean;
 
 	/**
 	 * 
@@ -177,13 +177,13 @@ export interface vtkLookupTable extends vtkScalarsToColors {
 	 * 
 	 * @param belowRangeColor 
 	 */
-	setBelowRangeColor(belowRangeColor: Range): boolean;
+	setBelowRangeColor(belowRangeColor: RGBAColor): boolean;
 
 	/**
 	 * 
 	 * @param belowRangeColor 
 	 */
-	setBelowRangeColorFrom(belowRangeColor: Range): boolean;
+	setBelowRangeColorFrom(belowRangeColor: RGBAColor): boolean;
 
 	/**
 	 * 

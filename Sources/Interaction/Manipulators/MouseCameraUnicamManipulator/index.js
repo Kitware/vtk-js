@@ -30,7 +30,8 @@ function vtkMouseCameraUnicamManipulator(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   const normalize = (position, interactor) => {
-    const [width, height] = interactor.getView().getSize();
+    const renderer = interactor.findPokedRenderer();
+    const [width, height] = interactor.getView().getViewportSize(renderer);
 
     const nx = -1.0 + (2.0 * position.x) / width;
     const ny = -1.0 + (2.0 * position.y) / height;
@@ -62,7 +63,8 @@ function vtkMouseCameraUnicamManipulator(publicAPI, model) {
     vtkMath.normalize(atV);
     const l = vtkMath.dot(cameraToPointVec, atV);
     const viewAngle = vtkMath.radiansFromDegrees(camera.getViewAngle());
-    const [width, height] = interactor.getView().getSize();
+    const renderer = interactor.findPokedRenderer();
+    const [width, height] = interactor.getView().getViewportSize(renderer);
 
     const scaleX = (width / height) * ((2 * l * Math.tan(viewAngle / 2)) / 2);
     const scaleY = (2 * l * Math.tan(viewAngle / 2)) / 2;

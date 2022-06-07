@@ -1,10 +1,5 @@
-import { vtkObject } from "../../../interfaces" ;
-
-export enum splineKind {
-	CARDINAL_SPLINE,
-	KOCHANEK_SPLINE,
-}
-
+import { vtkObject } from "../../../interfaces";
+import { splineKind } from "./Constants";
 
 export interface ISpline3DInitialValues {
 	close?: boolean;
@@ -52,7 +47,7 @@ export function newInstance(initialValues?: ISpline3DInitialValues): vtkSpline3D
  * at any given point inside the spline intervals.
  */
 export declare const vtkSpline3D: {
-	newInstance: typeof newInstance,
-	extend: typeof extend
+	newInstance: typeof newInstance;
+	extend: typeof extend;
 };
 export default vtkSpline3D;
