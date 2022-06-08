@@ -10,17 +10,6 @@ import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-function defaultValues(initialValues) {
-  return {
-    selector: undefined,
-    ...initialValues,
-  };
-}
-
-// ----------------------------------------------------------------------------
 // vtkRenderWindowViewNode methods
 // ----------------------------------------------------------------------------
 
@@ -154,6 +143,17 @@ function vtkRenderWindowViewNode(publicAPI, model) {
   publicAPI.createSelector = () => {
     macro.vtkErrorMacro('not implemented');
     return undefined;
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    selector: undefined,
+    ...initialValues,
   };
 }
 

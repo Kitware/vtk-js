@@ -5,21 +5,6 @@ const { vtkErrorMacro } = macro;
 const PASS_TYPES = ['Build', 'Render'];
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-function defaultValues(initialValues) {
-  return {
-    // _parent: null,
-    renderable: null,
-    myFactory: null,
-    children: [],
-    visited: false,
-    ...initialValues,
-  };
-}
-
-// ----------------------------------------------------------------------------
 // vtkViewNode methods
 // ----------------------------------------------------------------------------
 
@@ -202,6 +187,22 @@ function vtkViewNode(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    // _parent: null,
+    renderable: null,
+    myFactory: null,
+    children: [],
+    visited: false,
+    _renderableChildMap: new Map(),
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 
 function extend(publicAPI, model, initialValues = {}) {
   macro.moveToProtected(publicAPI, initialValues, ['parent']);
@@ -210,8 +211,6 @@ function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.event(publicAPI, model, 'event');
-
-  initialValues._renderableChildMap = new Map();
 
   macro.get(publicAPI, model, ['visited']);
   macro.setGet(publicAPI, model, ['_parent', 'renderable', 'myFactory']);

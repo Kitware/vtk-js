@@ -6,19 +6,6 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 const { vtkDebugMacro } = macro;
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-function defaultValues(initialValues) {
-  return {
-    context: null,
-    // _openGLRenderWindow: null,
-    selector: null,
-    ...initialValues,
-  };
-}
-
-// ----------------------------------------------------------------------------
 // vtkOpenGLRenderer methods
 // ----------------------------------------------------------------------------
 /* eslint-disable no-bitwise */
@@ -194,6 +181,19 @@ function vtkOpenGLRenderer(publicAPI, model) {
     if (rw) {
       model.context = model._openGLRenderWindow.getContext();
     }
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    context: null,
+    // _openGLRenderWindow: null,
+    selector: null,
+    ...initialValues,
   };
 }
 

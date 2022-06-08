@@ -302,8 +302,12 @@ function vtkLookupTable(publicAPI, model) {
 
 function defaultValues(initialValues) {
   return {
+    // Internal objects
+    buildTime: macro.obj({}),
+    opaqueFlagBuildTime: macro.obj({}, { mtime: 0 }),
+    insertTime: macro.obj({}, { mtime: 0 }),
+
     numberOfColors: 256,
-    // table: null,
 
     hueRange: [0.0, 0.66667],
     saturationRange: [1.0, 1.0],
@@ -336,15 +340,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   if (!model.table) {
     model.table = [];
   }
-
-  model.buildTime = {};
-  macro.obj(model.buildTime);
-
-  model.opaqueFlagBuildTime = {};
-  macro.obj(model.opaqueFlagBuildTime, { mtime: 0 });
-
-  model.insertTime = {};
-  macro.obj(model.insertTime, { mtime: 0 });
 
   // Create get-only macros
   macro.get(publicAPI, model, ['buildTime']);

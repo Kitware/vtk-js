@@ -233,6 +233,7 @@ function vtkCamera(publicAPI, model) {
     );
     vec4.transformMat4(viewUpVec4, viewUpVec4, rotateMatrix);
 
+    if (!model.viewUp) model.viewUp = defaultValues().viewUp;
     model.viewUp[0] = viewUpVec4[0];
     model.viewUp[1] = viewUpVec4[1];
     model.viewUp[2] = viewUpVec4[2];
@@ -241,7 +242,7 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.azimuth = (angle) => {
-    const fp = model.focalPoint;
+    const fp = model.focalPoint ? model.focalPoint : defaultValues().focalPoint;
 
     mat4.identity(trans);
 
@@ -249,11 +250,13 @@ function vtkCamera(publicAPI, model) {
     // rotate about view up,
     // translate back again
     mat4.translate(trans, trans, fp);
-    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), model.viewUp);
+    const viewUp = model.viewUp ? model.viewUp : defaultValues().viewUp;
+    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), viewUp);
     mat4.translate(trans, trans, [-fp[0], -fp[1], -fp[2]]);
 
     // apply the transform to the position
-    vec3.transformMat4(newPosition, model.position, trans);
+    const pos = model.position ? model.position : defaultValues().position;
+    vec3.transformMat4(newPosition, pos, trans);
     publicAPI.setPosition(newPosition[0], newPosition[1], newPosition[2]);
   };
 

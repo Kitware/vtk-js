@@ -92,6 +92,14 @@ function defaultValues(initialValues) {
   return {
     context: null,
     lastRenderer: null,
+    keyMatrixTime: macro.obj({}),
+    // values always get set by the get method
+    keyMatrices: {
+      normalMatrix: new Float64Array(9),
+      vcpc: new Float64Array(16),
+      wcvc: new Float64Array(16),
+      wcpc: new Float64Array(16),
+    },
     ...initialValues,
   };
 }
@@ -103,17 +111,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
-
-  model.keyMatrixTime = {};
-  macro.obj(model.keyMatrixTime);
-
-  // values always get set by the get method
-  initialValues.keyMatrices = {
-    normalMatrix: new Float64Array(9),
-    vcpc: new Float64Array(16),
-    wcvc: new Float64Array(16),
-    wcpc: new Float64Array(16),
-  };
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['context', 'keyMatrixTime']);

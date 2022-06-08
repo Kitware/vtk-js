@@ -7,25 +7,6 @@ import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 const { vtkDebugMacro } = macro;
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-function defaultValues(initialValues) {
-  return {
-    mapper: null,
-    property: null,
-    backfaceProperty: null,
-
-    forceOpaque: false,
-    forceTranslucent: false,
-
-    bounds: [1, -1, 1, -1, 1, -1],
-
-    ...initialValues,
-  };
-}
-
-// ----------------------------------------------------------------------------
 // vtkActor methods
 // ----------------------------------------------------------------------------
 
@@ -186,16 +167,34 @@ function vtkActor(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    // Internal objects
+    boundsMTime: macro.obj({}),
+
+    mapper: null,
+    property: null,
+    backfaceProperty: null,
+
+    forceOpaque: false,
+    forceTranslucent: false,
+
+    bounds: [1, -1, 1, -1, 1, -1],
+
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkProp3D.extend(publicAPI, model, initialValues);
-
-  // vtkTimeStamp
-  model.boundsMTime = {};
-  macro.obj(model.boundsMTime);
 
   // Build VTK API
   macro.set(publicAPI, model, ['property']);

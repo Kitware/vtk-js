@@ -6,26 +6,6 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-function defaultValues(initialValues) {
-  return {
-    origin: [0, 0, 0],
-    position: [0, 0, 0],
-    orientation: [0, 0, 0],
-    scale: [1, 1, 1],
-    bounds: [1, -1, 1, -1, 1, -1],
-
-    userMatrixMTime: null,
-
-    cachedProp3D: null,
-    isIdentity: true,
-    ...initialValues,
-  };
-}
-
-// ----------------------------------------------------------------------------
 // vtkProp3D methods
 // ----------------------------------------------------------------------------
 
@@ -188,6 +168,32 @@ function vtkProp3D(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    origin: [0, 0, 0],
+    position: [0, 0, 0],
+    orientation: [0, 0, 0],
+    scale: [1, 1, 1],
+    bounds: [1, -1, 1, -1, 1, -1],
+
+    matrix: mat4.identity(new Float64Array(16)),
+    rotation: mat4.identity(new Float64Array(16)),
+    userMatrix: mat4.identity(new Float64Array(16)),
+    transform: null,
+    matrixMTime: macro.obj({}),
+
+    userMatrixMTime: null,
+
+    cachedProp3D: null,
+    isIdentity: true,
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(initialValues, defaultValues(initialValues));
@@ -195,23 +201,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkProp.extend(publicAPI, model, initialValues);
 
-  model.matrixMTime = {};
-  macro.obj(model.matrixMTime);
-
   // Build VTK API
   macro.get(publicAPI, model, ['bounds', 'isIdentity']);
   macro.getArray(publicAPI, model, ['orientation']);
   macro.setGetArray(publicAPI, model, ['origin', 'position', 'scale'], 3);
-
-  // Object internal instance
-  model.matrix = mat4.identity(new Float64Array(16));
-  model.rotation = mat4.identity(new Float64Array(16));
-  model.userMatrix = mat4.identity(new Float64Array(16));
-  model.transform = null; // FIXME
-  delete initialValues.matrix;
-  delete initialValues.rotation;
-  delete initialValues.userMatrix;
-  delete initialValues.transform;
 
   // Object methods
   vtkProp3D(publicAPI, model);

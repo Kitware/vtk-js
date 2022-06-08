@@ -5,19 +5,6 @@ import vtkProperty2D from 'vtk.js/Sources/Rendering/Core/Property2D';
 import { Coordinate } from 'vtk.js/Sources/Rendering/Core/Coordinate/Constants';
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-function defaultValues(initialValues) {
-  return {
-    mapper: null,
-    property: null,
-    layerNumber: 0,
-    ...initialValues,
-  };
-}
-
-// ----------------------------------------------------------------------------
 // vtkActor2D methods
 // ----------------------------------------------------------------------------
 
@@ -144,6 +131,19 @@ function vtkActor2D(publicAPI, model) {
   // be overridden in specialized subclasses and otherwise ignored.
   publicAPI.getActualPositionCoordinate = () => model.positionCoordinate;
   publicAPI.getActualPositionCoordinate2 = () => model.positionCoordinate2;
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    mapper: null,
+    property: null,
+    layerNumber: 0,
+    ...initialValues,
+  };
 }
 
 // ----------------------------------------------------------------------------

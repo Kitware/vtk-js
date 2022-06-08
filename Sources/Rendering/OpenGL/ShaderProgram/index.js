@@ -551,14 +551,19 @@ function defaultValues(initialValues) {
     fragmentShaderHandle: 0,
     geometryShaderHandle: 0,
 
+    // Internal objects
+    vertexShader: vtkShader.newInstance(),
+    fragmentShader: vtkShader.newInstance(),
+    geometryShader: vtkShader.newInstance(),
+
     linked: false,
     bound: false,
     compiled: false,
     error: '',
     handle: 0,
     numberOfOutputs: 0,
-    attributesLocs: null,
-    uniformLocs: null,
+    attributesLocs: {},
+    uniformLocs: {},
     md5Hash: 0,
     context: null,
     lastCameraMTime: null,
@@ -572,14 +577,9 @@ function extend(publicAPI, model, initialValues = {}) {
   Object.assign(initialValues, defaultValues(initialValues));
 
   // Instantiate internal objects
-  model.attributesLocs = {};
-  model.uniformLocs = {};
-  model.vertexShader = vtkShader.newInstance();
-  model.vertexShader.setShaderType('Vertex');
-  model.fragmentShader = vtkShader.newInstance();
-  model.fragmentShader.setShaderType('Fragment');
-  model.geometryShader = vtkShader.newInstance();
-  model.geometryShader.setShaderType('Geometry');
+  initialValues.vertexShader.setShaderType('Vertex');
+  initialValues.fragmentShader.setShaderType('Fragment');
+  initialValues.geometryShader.setShaderType('Geometry');
 
   // Build VTK API
   macro.obj(publicAPI, model);
