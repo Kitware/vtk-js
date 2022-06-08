@@ -421,15 +421,17 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   //----------------------------------------------------------------------
   publicAPI.requestPointerLock = () => {
-    const canvas = publicAPI.getView().getCanvas();
-    canvas.requestPointerLock();
+    if (model.container) {
+      model.container.requestPointerLock();
+    }
   };
 
   //----------------------------------------------------------------------
   publicAPI.exitPointerLock = () => document.exitPointerLock();
 
   //----------------------------------------------------------------------
-  publicAPI.isPointerLocked = () => !!document.pointerLockElement;
+  publicAPI.isPointerLocked = () =>
+    !!model.container && document.pointerLockElement === model.container;
 
   //----------------------------------------------------------------------
   publicAPI.handlePointerLockChange = () => {
