@@ -294,43 +294,40 @@ function vtkLookupTable(publicAPI, model) {
       publicAPI.forceBuild();
     }
   };
-
-  if (model.table.length > 0) {
-    // ensure insertTime is more recently modified than buildTime if
-    // a table is provided via the constructor
-    model.insertTime.modified();
-  }
 }
 
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  numberOfColors: 256,
-  // table: null,
+function defaultValues(initialValues) {
+  return {
+    numberOfColors: 256,
+    // table: null,
 
-  hueRange: [0.0, 0.66667],
-  saturationRange: [1.0, 1.0],
-  valueRange: [1.0, 1.0],
-  alphaRange: [1.0, 1.0],
+    hueRange: [0.0, 0.66667],
+    saturationRange: [1.0, 1.0],
+    valueRange: [1.0, 1.0],
+    alphaRange: [1.0, 1.0],
 
-  nanColor: [0.5, 0.0, 0.0, 1.0],
-  belowRangeColor: [0.0, 0.0, 0.0, 1.0],
-  aboveRangeColor: [1.0, 1.0, 1.0, 1.0],
-  useAboveRangeColor: false,
-  useBelowRangeColor: false,
+    nanColor: [0.5, 0.0, 0.0, 1.0],
+    belowRangeColor: [0.0, 0.0, 0.0, 1.0],
+    aboveRangeColor: [1.0, 1.0, 1.0, 1.0],
+    useAboveRangeColor: false,
+    useBelowRangeColor: false,
 
-  alpha: 1.0,
-  // buildTime: null,
-  // opaqueFlagBuildTime: null,
-  // insertTime: null,
-};
+    alpha: 1.0,
+    // buildTime: null,
+    // opaqueFlagBuildTime: null,
+    // insertTime: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkScalarsToColors.extend(publicAPI, model, initialValues);
@@ -389,6 +386,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object specific methods
   vtkLookupTable(publicAPI, model);
+
+  if (initialValues.table && initialValues.table.length > 0) {
+    // ensure insertTime is more recently modified than buildTime if
+    // a table is provided via the constructor
+    model.insertTime.modified();
+  }
 }
 
 // ----------------------------------------------------------------------------

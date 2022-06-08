@@ -88,17 +88,18 @@ function vtkOpenGLCamera(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  context: null,
-  lastRenderer: null,
-  keyMatrixTime: null,
-  keyMatrices: null,
-};
+function defaultValues(initialValues) {
+  return {
+    context: null,
+    lastRenderer: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
@@ -107,7 +108,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(model.keyMatrixTime);
 
   // values always get set by the get method
-  model.keyMatrices = {
+  initialValues.keyMatrices = {
     normalMatrix: new Float64Array(9),
     vcpc: new Float64Array(16),
     wcvc: new Float64Array(16),

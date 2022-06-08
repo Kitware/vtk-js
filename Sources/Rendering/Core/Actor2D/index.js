@@ -5,6 +5,19 @@ import vtkProperty2D from 'vtk.js/Sources/Rendering/Core/Property2D';
 import { Coordinate } from 'vtk.js/Sources/Rendering/Core/Coordinate/Constants';
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    mapper: null,
+    property: null,
+    layerNumber: 0,
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 // vtkActor2D methods
 // ----------------------------------------------------------------------------
 
@@ -134,31 +147,21 @@ function vtkActor2D(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-const DEFAULT_VALUES = {
-  mapper: null,
-  property: null,
-  layerNumber: 0,
-  positionCoordinate: null,
-  positionCoordinate2: null,
-};
-
-// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkProp.extend(publicAPI, model, initialValues);
 
-  model.positionCoordinate = vtkCoordinate.newInstance();
-  model.positionCoordinate.setCoordinateSystemToViewport();
-  model.positionCoordinate2 = vtkCoordinate.newInstance();
-  model.positionCoordinate2.setCoordinateSystemToNormalizedViewport();
-  model.positionCoordinate2.setValue(0.5, 0.5);
-  model.positionCoordinate2.setReferenceCoordinate(model.positionCoordinate);
+  initialValues.positionCoordinate = vtkCoordinate.newInstance();
+  initialValues.positionCoordinate.setCoordinateSystemToViewport();
+  initialValues.positionCoordinate2 = vtkCoordinate.newInstance();
+  initialValues.positionCoordinate2.setCoordinateSystemToNormalizedViewport();
+  initialValues.positionCoordinate2.setValue(0.5, 0.5);
+  initialValues.positionCoordinate2.setReferenceCoordinate(
+    initialValues.positionCoordinate
+  );
 
   // Build VTK API
   macro.set(publicAPI, model, ['property']);

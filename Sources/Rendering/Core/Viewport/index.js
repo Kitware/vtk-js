@@ -138,22 +138,25 @@ function vtkViewport(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  // _vtkWindow: null,
-  background: [0, 0, 0],
-  background2: [0.2, 0.2, 0.2],
-  gradientBackground: false,
-  viewport: [0, 0, 1, 1],
-  aspect: [1, 1],
-  pixelAspect: [1, 1],
-  props: [],
-  actors2D: [],
-};
+function defaultValues(initialValues) {
+  return {
+    // _vtkWindow: null,
+    background: [0, 0, 0],
+    background2: [0.2, 0.2, 0.2],
+    gradientBackground: false,
+    viewport: [0, 0, 1, 1],
+    aspect: [1, 1],
+    pixelAspect: [1, 1],
+    props: [],
+    actors2D: [],
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);

@@ -52,16 +52,19 @@ function vtkWebGPUShaderCache(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  shaderModules: null,
-  device: null,
-  window: null,
-};
+function defaultValues(initialValues) {
+  return {
+    shaderModules: null,
+    device: null,
+    window: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Internal objects
   model._shaderModules = new Map();

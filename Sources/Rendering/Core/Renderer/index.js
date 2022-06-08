@@ -563,75 +563,79 @@ function vtkRenderer(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  pickedProp: null,
-  activeCamera: null,
+function defaultValues(initialValues) {
+  return {
+    pickedProp: null,
+    activeCamera: null,
 
-  allBounds: [],
-  ambient: [1, 1, 1],
+    allBounds: [],
+    ambient: [1, 1, 1],
 
-  allocatedRenderTime: 100,
-  timeFactor: 1,
+    allocatedRenderTime: 100,
+    timeFactor: 1,
 
-  automaticLightCreation: true,
+    automaticLightCreation: true,
 
-  twoSidedLighting: true,
-  lastRenderTimeInSeconds: -1,
+    twoSidedLighting: true,
+    lastRenderTimeInSeconds: -1,
 
-  renderWindow: null,
-  lights: [],
-  actors: [],
-  volumes: [],
+    _renderWindow: null,
+    lights: [],
+    actors: [],
+    volumes: [],
 
-  lightFollowCamera: true,
+    lightFollowCamera: true,
 
-  numberOfPropsRendered: 0,
+    numberOfPropsRendered: 0,
 
-  propArray: null,
+    propArray: null,
 
-  pathArray: null,
+    pathArray: null,
 
-  layer: 0,
-  preserveColorBuffer: false,
-  preserveDepthBuffer: false,
+    layer: 0,
+    preserveColorBuffer: false,
+    preserveDepthBuffer: false,
 
-  computeVisiblePropBounds: vtkMath.createUninitializedBounds(),
+    computeVisiblePropBounds: vtkMath.createUninitializedBounds(),
 
-  interactive: true,
+    interactive: true,
 
-  nearClippingPlaneTolerance: 0,
-  clippingRangeExpansion: 0.05,
+    nearClippingPlaneTolerance: 0,
+    clippingRangeExpansion: 0.05,
 
-  erase: true,
-  draw: true,
+    erase: true,
+    draw: true,
 
-  useShadows: false,
+    useShadows: false,
 
-  useDepthPeeling: false,
-  occlusionRatio: 0,
-  maximumNumberOfPeels: 4,
+    useDepthPeeling: false,
+    occlusionRatio: 0,
+    maximumNumberOfPeels: 4,
 
-  selector: null,
-  delegate: null,
+    selector: null,
+    delegate: null,
 
-  texturedBackground: false,
-  backgroundTexture: null,
+    texturedBackground: false,
+    backgroundTexture: null,
 
-  pass: 0,
-};
+    pass: 0,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  macro.moveToProtected(publicAPI, initialValues, ['renderWindow']);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewport.extend(publicAPI, model, initialValues);
 
   // make sure background has 4 entries. Default to opaque black
-  if (!model.background) model.background = [0, 0, 0, 1];
-  while (model.background.length < 3) model.background.push(0);
-  if (model.background.length === 3) model.background.push(1);
+  if (!initialValues.background) initialValues.background = [0, 0, 0, 1];
+  while (initialValues.background.length < 3) initialValues.background.push(0);
+  if (initialValues.background.length === 3) initialValues.background.push(1);
 
   // Build VTK API
   macro.get(publicAPI, model, [
@@ -670,7 +674,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
   macro.getArray(publicAPI, model, ['actors', 'volumes', 'lights']);
   macro.setGetArray(publicAPI, model, ['background'], 4, 1.0);
-  macro.moveToProtected(publicAPI, model, ['renderWindow']);
 
   // Object methods
   vtkRenderer(publicAPI, model);

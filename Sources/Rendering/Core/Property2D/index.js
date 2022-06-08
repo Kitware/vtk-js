@@ -31,19 +31,22 @@ function vtkProperty2D(publicAPI, model) {
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
-const DEFAULT_VALUES = {
-  color: [1, 1, 1],
-  opacity: 1,
-  pointSize: 1,
-  lineWidth: 1,
-  representation: Representation.SURFACE,
-  displayLocation: DisplayLocation.FOREGROUND,
-};
+function defaultValues(initialValues) {
+  return {
+    color: [1, 1, 1],
+    opacity: 1,
+    pointSize: 1,
+    lineWidth: 1,
+    representation: Representation.SURFACE,
+    displayLocation: DisplayLocation.FOREGROUND,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);

@@ -10,11 +10,6 @@ function vtkFieldData(publicAPI, model) {
   model.classHierarchy.push('vtkFieldData');
   const superGetState = publicAPI.getState;
 
-  // Decode serialized data if any
-  if (model.arrays) {
-    model.arrays = model.arrays.map((item) => ({ data: vtk(item.data) }));
-  }
-
   publicAPI.initialize = () => {
     publicAPI.initializeFields();
     publicAPI.copyAllOn();
@@ -57,22 +52,28 @@ function vtkFieldData(publicAPI, model) {
       ? publicAPI.getArrayByIndex(arraySpec)
       : publicAPI.getArrayByName(arraySpec);
   publicAPI.getArrayByName = (arrayName) =>
-    model.arrays.reduce(
-      (a, b, i) => (b.data.getName() === arrayName ? b.data : a),
-      null
-    );
+    model.arrays
+      ? model.arrays.reduce(
+          (a, b, i) => (b.data.getName() === arrayName ? b.data : a),
+          null
+        )
+      : null;
   publicAPI.getArrayWithIndex = (arrayName) =>
-    model.arrays.reduce(
-      (a, b, i) =>
-        b.data && b.data.getName() === arrayName
-          ? { array: b.data, index: i }
-          : a,
-      { array: null, index: -1 }
-    );
+    model.arrays
+      ? model.arrays.reduce(
+          (a, b, i) =>
+            b.data && b.data.getName() === arrayName
+              ? { array: b.data, index: i }
+              : a,
+          { array: null, index: -1 }
+        )
+      : null;
   publicAPI.getArrayByIndex = (idx) =>
     idx >= 0 && idx < model.arrays.length ? model.arrays[idx].data : null;
-  publicAPI.hasArray = (arrayName) =>
-    publicAPI.getArrayWithIndex(arrayName).index >= 0;
+  publicAPI.hasArray = (arrayName) => {
+    const array = publicAPI.getArrayWithIndex(arrayName);
+    return array && array.index >= 0;
+  };
   publicAPI.getArrayName = (idx) => {
     const arr = model.arrays[idx];
     return arr ? arr.data.getName() : '';
@@ -158,11 +159,13 @@ function vtkFieldData(publicAPI, model) {
   // TODO: publicAPI.squeeze = () => model.arrays.forEach(entry => entry.data.squeeze());
   publicAPI.reset = () => model.arrays.forEach((entry) => entry.data.reset());
   // TODO: getActualMemorySize
-  publicAPI.getMTime = () =>
-    model.arrays.reduce(
+  publicAPI.getMTime = () => {
+    if (!model.arrays) return 0;
+    return model.arrays.reduce(
       (a, b) => (b.data.getMTime() > a ? b.data.getMTime() : a),
       model.mtime
     );
+  };
   // TODO: publicAPI.getField = (ids, other) => { copy ids from other into this model's arrays }
   // TODO: publicAPI.getArrayContainingComponent = (component) => ...
   publicAPI.getNumberOfComponents = () =>
@@ -181,19 +184,29 @@ function vtkFieldData(publicAPI, model) {
   };
 }
 
-const DEFAULT_VALUES = {
-  arrays: [],
-  copyFieldFlags: [], // fields not to copy
-  doCopyAllOn: true,
-  doCopyAllOff: false,
-};
+function defaultValues(initialValues) {
+  return {
+    arrays: [],
+    copyFieldFlags: [], // fields not to copy
+    doCopyAllOn: true,
+    doCopyAllOff: false,
+    ...initialValues,
+  };
+}
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   macro.obj(publicAPI, model);
 
   vtkFieldData(publicAPI, model);
+
+  // Decode serialized data if any
+  if (initialValues.arrays) {
+    initialValues.arrays = initialValues.arrays.map((item) => ({
+      data: vtk(item.data),
+    }));
+  }
 }
 
 // ----------------------------------------------------------------------------

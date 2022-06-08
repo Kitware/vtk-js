@@ -314,19 +314,22 @@ function vtkWebGPURenderer(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  bindGroup: null,
-  selector: null,
-  renderEncoder: null,
-  recenterThreshold: 20.0,
-  suppressClear: false,
-  stabilizedCenter: [0.0, 0.0, 0.0],
-};
+function defaultValues(initialValues) {
+  return {
+    bindGroup: null,
+    selector: null,
+    renderEncoder: null,
+    recenterThreshold: 20.0,
+    suppressClear: false,
+    stabilizedCenter: [0.0, 0.0, 0.0],
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);

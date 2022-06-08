@@ -208,6 +208,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.rotation = mat4.identity(new Float64Array(16));
   model.userMatrix = mat4.identity(new Float64Array(16));
   model.transform = null; // FIXME
+  delete initialValues.matrix;
+  delete initialValues.rotation;
+  delete initialValues.userMatrix;
+  delete initialValues.transform;
 
   // Object methods
   vtkProp3D(publicAPI, model);

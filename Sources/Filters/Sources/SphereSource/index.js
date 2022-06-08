@@ -201,23 +201,26 @@ function vtkSphereSource(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  radius: 0.5,
-  latLongTessellation: false,
-  thetaResolution: 8,
-  startTheta: 0.0,
-  endTheta: 360.0,
-  phiResolution: 8,
-  startPhi: 0.0,
-  endPhi: 180.0,
-  center: [0, 0, 0],
-  pointType: 'Float64Array',
-};
+function defaultValues(initialValues) {
+  return {
+    radius: 0.5,
+    latLongTessellation: false,
+    thetaResolution: 8,
+    startTheta: 0.0,
+    endTheta: 360.0,
+    phiResolution: 8,
+    startPhi: 0.0,
+    endPhi: 180.0,
+    center: [0, 0, 0],
+    pointType: 'Float64Array',
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);

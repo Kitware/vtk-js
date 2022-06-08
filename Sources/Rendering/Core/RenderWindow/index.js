@@ -137,19 +137,22 @@ function vtkRenderWindow(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  defaultViewAPI: DEFAULT_VIEW_API,
-  renderers: [],
-  views: [],
-  interactor: null,
-  neverRendered: true,
-  numberOfLayers: 1,
-};
+function defaultValues(initialValues) {
+  return {
+    defaultViewAPI: DEFAULT_VIEW_API,
+    renderers: [],
+    views: [],
+    interactor: null,
+    neverRendered: true,
+    numberOfLayers: 1,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);

@@ -548,28 +548,31 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  initialized: false,
-  context: null,
-  adapter: null,
-  device: null,
-  canvas: null,
-  cursorVisibility: true,
-  cursor: 'pointer',
-  containerSize: null,
-  renderPasses: [],
-  notifyStartCaptureImage: false,
-  imageFormat: 'image/png',
-  useOffScreen: false,
-  useBackgroundImage: false,
-  nextPropID: 1,
-  xrSupported: false,
-};
+function defaultValues(initialValues) {
+  return {
+    initialized: false,
+    context: null,
+    adapter: null,
+    device: null,
+    canvas: null,
+    cursorVisibility: true,
+    cursor: 'pointer',
+    containerSize: null,
+    renderPasses: [],
+    notifyStartCaptureImage: false,
+    imageFormat: 'image/png',
+    useOffScreen: false,
+    useBackgroundImage: false,
+    nextPropID: 1,
+    xrSupported: false,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Create internal instances
   model.canvas = document.createElement('canvas');
@@ -577,6 +580,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Create internal bgImage
   model.bgImage = new Image();
+  delete initialValues.bgImage;
   model.bgImage.style.position = 'absolute';
   model.bgImage.style.left = '0';
   model.bgImage.style.top = '0';
@@ -595,9 +599,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   // setup default forward pass rendering
   model.renderPasses[0] = vtkForwardPass.newInstance();
 
-  if (!model.selector) {
-    model.selector = vtkWebGPUHardwareSelector.newInstance();
-    model.selector.setWebGPURenderWindow(publicAPI);
+  if (!initialValues.selector) {
+    initialValues.selector = vtkWebGPUHardwareSelector.newInstance();
+    initialValues.selector.setWebGPURenderWindow(publicAPI);
   }
 
   macro.event(publicAPI, model, 'imageReady');

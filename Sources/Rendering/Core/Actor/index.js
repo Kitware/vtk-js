@@ -147,12 +147,12 @@ function vtkActor(publicAPI, model) {
 
   publicAPI.getMTime = () => {
     let mt = superClass.getMTime();
-    if (model.property !== null) {
+    if (model.property) {
       const time = model.property.getMTime();
       mt = time > mt ? time : mt;
     }
 
-    if (model.backfaceProperty !== null) {
+    if (model.backfaceProperty) {
       const time = model.backfaceProperty.getMTime();
       mt = time > mt ? time : mt;
     }
@@ -194,8 +194,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkProp3D.extend(publicAPI, model, initialValues);
 
   // vtkTimeStamp
-  initialValues.boundsMTime = {};
-  macro.obj(initialValues.boundsMTime);
+  model.boundsMTime = {};
+  macro.obj(model.boundsMTime);
 
   // Build VTK API
   macro.set(publicAPI, model, ['property']);

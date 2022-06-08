@@ -131,24 +131,27 @@ function vtkWebGPUCamera(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  keyMatrixTime: null,
-  keyMatrices: null,
-};
+function defaultValues(initialValues) {
+  return {
+    keyMatrixTime: null,
+    keyMatrices: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
 
-  model.keyMatrixTime = {};
-  macro.obj(model.keyMatrixTime);
+  initialValues.keyMatrixTime = {};
+  macro.obj(initialValues.keyMatrixTime);
 
   // values always get set by the get method
-  model.keyMatrices = {
+  initialValues.keyMatrices = {
     normalMatrix: new Float64Array(16),
     vcpc: new Float64Array(16),
     pcsc: new Float64Array(16),

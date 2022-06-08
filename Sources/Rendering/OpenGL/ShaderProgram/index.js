@@ -97,12 +97,6 @@ function vtkShaderProgram(publicAPI, model) {
     publicAPI.setBound(false);
   };
 
-  publicAPI.setContext = (ctx) => {
-    model.vertexShader.setContext(ctx);
-    model.fragmentShader.setContext(ctx);
-    model.geometryShader.setContext(ctx);
-  };
-
   publicAPI.link = () => {
     if (model.inked) {
       return true;
@@ -516,6 +510,7 @@ function vtkShaderProgram(publicAPI, model) {
 
   publicAPI.setContext = (ctx) => {
     model.context = ctx;
+    if (!ctx) return;
     model.vertexShader.setContext(ctx);
     model.fragmentShader.setContext(ctx);
     model.geometryShader.setContext(ctx);
@@ -550,31 +545,31 @@ function vtkShaderProgram(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  vertexShaderHandle: 0,
-  fragmentShaderHandle: 0,
-  geometryShaderHandle: 0,
-  vertexShader: null,
-  fragmentShader: null,
-  geometryShader: null,
+function defaultValues(initialValues) {
+  return {
+    vertexShaderHandle: 0,
+    fragmentShaderHandle: 0,
+    geometryShaderHandle: 0,
 
-  linked: false,
-  bound: false,
-  compiled: false,
-  error: '',
-  handle: 0,
-  numberOfOutputs: 0,
-  attributesLocs: null,
-  uniformLocs: null,
-  md5Hash: 0,
-  context: null,
-  lastCameraMTime: null,
-};
+    linked: false,
+    bound: false,
+    compiled: false,
+    error: '',
+    handle: 0,
+    numberOfOutputs: 0,
+    attributesLocs: null,
+    uniformLocs: null,
+    md5Hash: 0,
+    context: null,
+    lastCameraMTime: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Instantiate internal objects
   model.attributesLocs = {};

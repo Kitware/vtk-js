@@ -16,6 +16,9 @@ function vtkProperty(publicAPI, model) {
   model.classHierarchy.push('vtkProperty');
 
   publicAPI.setColor = (r, g, b) => {
+    if (!model.color) {
+      model.color = [0, 0, 0];
+    }
     if (Array.isArray(r)) {
       if (
         model.color[0] !== r[0] ||
@@ -87,35 +90,38 @@ function vtkProperty(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  color: [1, 1, 1],
-  ambientColor: [1, 1, 1],
-  diffuseColor: [1, 1, 1],
-  specularColor: [1, 1, 1],
-  edgeColor: [0, 0, 0],
+function defaultValues(initialValues) {
+  return {
+    color: [1, 1, 1],
+    ambientColor: [1, 1, 1],
+    diffuseColor: [1, 1, 1],
+    specularColor: [1, 1, 1],
+    edgeColor: [0, 0, 0],
 
-  ambient: 0,
-  diffuse: 1,
-  specular: 0,
-  specularPower: 1,
-  opacity: 1,
-  interpolation: Interpolation.GOURAUD,
-  representation: Representation.SURFACE,
-  edgeVisibility: false,
-  backfaceCulling: false,
-  frontfaceCulling: false,
-  pointSize: 1,
-  lineWidth: 1,
-  lighting: true,
+    ambient: 0,
+    diffuse: 1,
+    specular: 0,
+    specularPower: 1,
+    opacity: 1,
+    interpolation: Interpolation.GOURAUD,
+    representation: Representation.SURFACE,
+    edgeVisibility: false,
+    backfaceCulling: false,
+    frontfaceCulling: false,
+    pointSize: 1,
+    lineWidth: 1,
+    lighting: true,
 
-  shading: false,
-  materialName: null,
-};
+    shading: false,
+    materialName: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
