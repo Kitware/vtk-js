@@ -68,11 +68,8 @@ const handledEvents = [
 
 function preventDefault(event) {
   if (event.cancelable) {
-    event.stopPropagation();
     event.preventDefault();
   }
-
-  return false;
 }
 
 function pointerCacheToPositions(cache) {
@@ -211,7 +208,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   publicAPI.bindEvents = (container) => {
     model.container = container;
     container.addEventListener('contextmenu', preventDefault);
-    // container.addEventListener('click', preventDefault); // Avoid stopping event propagation
     container.addEventListener('wheel', publicAPI.handleWheel);
     container.addEventListener('DOMMouseScroll', publicAPI.handleWheel);
     container.addEventListener('pointerenter', publicAPI.handlePointerEnter);
@@ -244,7 +240,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   publicAPI.unbindEvents = () => {
     const { container } = model;
     container.removeEventListener('contextmenu', preventDefault);
-    // model.container.removeEventListener('click', preventDefault); // Avoid stopping event propagation
     container.removeEventListener('wheel', publicAPI.handleWheel);
     container.removeEventListener('DOMMouseScroll', publicAPI.handleWheel);
     container.removeEventListener('pointerenter', publicAPI.handlePointerEnter);
@@ -315,7 +310,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       // ignore events from extra mouse buttons such as `back` and `forward`
       return;
     }
-    preventDefault(event);
+    if (model.preventDefaultOnPointerDown) {
+      preventDefault(event);
+    }
 
     if (event.target.hasPointerCapture(event.pointerId)) {
       event.target.releasePointerCapture(event.pointerId);
@@ -345,7 +342,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.handlePointerUp = (event) => {
     if (pointerCache.has(event.pointerId)) {
-      preventDefault(event);
+      if (model.preventDefaultOnPointerUp) {
+        preventDefault(event);
+      }
 
       pointerCache.delete(event.pointerId);
       model.container.releasePointerCapture(event.pointerId);
@@ -1140,6 +1139,8 @@ const DEFAULT_VALUES = {
   wheelTimeoutID: 0,
   moveTimeoutID: 0,
   lastGamepadValues: {},
+  preventDefaultOnPointerDown: false,
+  preventDefaultOnPointerUp: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -1177,6 +1178,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'desiredUpdateRate',
     'stillUpdateRate',
     'picker',
+    'preventDefaultOnPointerDown',
+    'preventDefaultOnPointerUp',
   ]);
   macro.moveToProtected(publicAPI, model, ['view']);
 
