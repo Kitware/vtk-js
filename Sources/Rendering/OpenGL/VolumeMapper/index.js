@@ -192,21 +192,21 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     ).result;
 
     // set shadow blending flag
-    if (model.lastLightComplexity > 0){
-      if (model.renderable.getVolumetricScatteringBlending() > 0.0){
+    if (model.lastLightComplexity > 0) {
+      if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
         FSSource = vtkShaderProgram.substitute(
           FSSource,
           '//VTK::VolumeShadowOn',
           `#define VolumeShadowOn`
         ).result;
-      }  
-      if (model.renderable.getVolumetricScatteringBlending() < 1.0){
+      }
+      if (model.renderable.getVolumetricScatteringBlending() < 1.0) {
         FSSource = vtkShaderProgram.substitute(
           FSSource,
           '//VTK::SurfaceShadowOn',
           `#define SurfaceShadowOn`
         ).result;
-      }        
+      }
     }
 
     // if using gradient opacity define that
@@ -309,7 +309,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       ).result;
     }
 
-    if (model.renderable.getVolumetricScatteringBlending() > 0.0){
+    if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
       FSSource = vtkShaderProgram.substitute(
         FSSource,
         '//VTK::VolumeShadow::Dec',
@@ -322,7 +322,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         ],
         false
       ).result;
-    }    
+    }
 
     shaders.Fragment = FSSource;
   };
@@ -864,13 +864,25 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformfv('lightExponent', lightExponent);
       program.setUniformiv('lightPositional', lightPositional);
     }
-    if (model.renderable.getVolumetricScatteringBlending() > 0.0){
-      program.setUniformf('giReach', Math.min(Math.max(model.renderable.getGlobalIlluminationReach(),0.0),1.0));
-      program.setUniformf('volumetricScatteringBlending', model.renderable.getVolumetricScatteringBlending());
-      program.setUniformf('volumeShadowSamplingDistFactor', model.renderable.getVolumeShadowSamplingDistFactor());
+    if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
+      program.setUniformf(
+        'giReach',
+        model.renderable.getGlobalIlluminationReach()
+      );
+      program.setUniformf(
+        'volumetricScatteringBlending',
+        model.renderable.getVolumetricScatteringBlending()
+      );
+      program.setUniformf(
+        'volumeShadowSamplingDistFactor',
+        model.renderable.getVolumeShadowSamplingDistFactor()
+      );
       program.setUniformf('anisotropy', model.renderable.getAnisotropy());
-      program.setUniformf('anisotropy2', model.renderable.getAnisotropy()**2.0);
-    }    
+      program.setUniformf(
+        'anisotropy2',
+        model.renderable.getAnisotropy() ** 2.0
+      );
+    }
   };
 
   publicAPI.setPropertyShaderParameters = (cellBO, ren, actor) => {
