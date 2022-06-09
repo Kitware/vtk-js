@@ -62,6 +62,9 @@ uniform float vSpecular;
 //VTK::Light::Dec
 #endif
 
+//VTK::VolumeShadowOn
+//VTK::VolumeShadow::Dec
+
 // define vtkComputeNormalFromOpacity
 //VTK::vtkComputeNormalFromOpacity
 
@@ -196,6 +199,11 @@ uniform vec4 ipScalarRangeMax;
 //=======================================================================
 // global and custom variables (a temporary section before photorealistics rendering module is complete)
 vec3 rayDirVC;
+float sampleDistanceISVS;
+
+#define SQRT3    1.7321
+#define INV4PI   0.0796
+#define EPSILON  0.001
 
 //=======================================================================
 // Webgl2 specific version of functions
@@ -293,6 +301,50 @@ vec4 getTextureValue(vec3 ijk)
 #endif
 
 //=======================================================================
+// transformation between VC and IS space
+
+// convert vector position from idx to vc
+#if vtkLightComplexity > 0
+vec3 IStoVC(vec3 posIS){
+  vec3 posVC = posIS / vVCToIJK;
+  return posVC.x * vPlaneNormal0 + 
+         posVC.y * vPlaneNormal2 + 
+         posVC.z * vPlaneNormal4 + 
+         vOriginVC;
+}
+
+// convert vector position from vc to idx
+vec3 VCtoIS(vec3 posVC){
+  posVC = posVC - vOriginVC;
+  posVC = vec3(
+    dot(posVC, vPlaneNormal0),
+    dot(posVC, vPlaneNormal2),
+    dot(posVC, vPlaneNormal4));  
+  return posVC * vVCToIJK;
+}
+#endif
+
+//Rotate vector to view coordinate
+#if (vtkLightComplexity > 0) || (defined vtkGradientOpacityOn)
+void rotateToViewCoord(inout vec3 dirIS){
+  dirIS.xyz =
+    dirIS.x * vPlaneNormal0 +
+    dirIS.y * vPlaneNormal2 +
+    dirIS.z * vPlaneNormal4;
+}
+
+//Rotate vector to idx coordinate
+vec3 rotateToIDX(vec3 dirVC){
+  vec3 dirIS;
+  dirIS.xyz = vec3(
+    dot(dirVC, vPlaneNormal0),
+    dot(dirVC, vPlaneNormal2),
+    dot(dirVC, vPlaneNormal4));  
+  return dirIS;
+}
+#endif
+
+//=======================================================================
 // Given a normal compute the gradient opacity factors
 float computeGradientOpacityFactor(
   float normalMag, float goscale, float goshift, float gomin, float gomax)
@@ -304,16 +356,6 @@ float computeGradientOpacityFactor(
 #endif
 }
 
-//=======================================================================
-//Rotate gradients to view coordinate
-#if (vtkLightComplexity > 0) || (defined vtkGradientOpacityOn)
-void rotateToViewCoord(inout vec3 normalIDX){
-  normalIDX.xyz =
-  normalIDX.x * vPlaneNormal0 +
-  normalIDX.y * vPlaneNormal2 +
-  normalIDX.z * vPlaneNormal4;
-}
-#endif
 //=======================================================================
 // compute the normal and gradient magnitude for a position, uses forward difference
 #if (vtkLightComplexity > 0) || (defined vtkGradientOpacityOn)
@@ -533,16 +575,170 @@ mat4 computeMat4Normal(vec3 pos, vec4 tValue, vec3 tstep)
 }
 
 //=======================================================================
-// surface light contribution
+// global shadow - secondary ray
+#ifdef VolumeShadowOn
 
-#if vtkLightComplexity == 3
-// convert vector position from idx to vc
-vec3 IStoVC(vec3 posIS){
-  vec3 posVC = posIS / vVCToIJK;
-  return posVC.x * vPlaneNormal0 + posVC.y * vPlaneNormal2 + posVC.z * vPlaneNormal4 + vOriginVC;
+// henyey greenstein phase function
+float phase_function(float cos_angle)
+{
+  // divide by 2.0 instead of 4pi to increase intensity
+  return ((1.0-anisotropy2)/pow(1.0+anisotropy2-2.0*anisotropy*cos_angle, 1.5))/2.0;
+}
+
+float random()
+{ 
+  float rand = fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453123);
+  float jitter=texture2D(jtexture,gl_FragCoord.xy/32.).r;
+  uint pcg_state = floatBitsToUint(jitter);
+  uint state = pcg_state;
+  pcg_state = pcg_state * uint(747796405) + uint(2891336453);
+  uint word = ((state >> ((state >> uint(28)) + uint(4))) ^ state) * uint(277803737);
+  return (float((((word >> uint(22)) ^ word) >> 1 ))/float(2147483647) + rand)/2.0;
+}
+
+// Computes the intersection between a ray and a box
+struct Hit
+{
+  float tmin;
+  float tmax;
+};
+
+struct Ray
+{
+  vec3 origin;
+  vec3 dir;
+  vec3 invDir;
+};
+
+bool BBoxIntersect(vec3 boundMin, vec3 boundMax, const Ray r, out Hit hit)
+{
+  vec3 tbot = r.invDir * (boundMin - r.origin);
+  vec3 ttop = r.invDir * (boundMax - r.origin);
+  vec3 tmin = min(ttop, tbot);
+  vec3 tmax = max(ttop, tbot);
+  vec2 t = max(tmin.xx, tmin.yz);
+  float t0 = max(t.x, t.y);
+  t = min(tmax.xx, tmax.yz);
+  float t1 = min(t.x, t.y);
+  hit.tmin = t0;
+  hit.tmax = t1;
+  return t1 > max(t0,0.0);
+}
+
+// As BBoxIntersect requires the inverse of the ray coords,
+// this function is used to avoid numerical issues
+void safe_0_vector(inout Ray ray)
+{
+  if(abs(ray.dir.x) < EPSILON) ray.dir.x = sign(ray.dir.x) * EPSILON;
+  if(abs(ray.dir.y) < EPSILON) ray.dir.y = sign(ray.dir.y) * EPSILON;
+  if(abs(ray.dir.z) < EPSILON) ray.dir.z = sign(ray.dir.z) * EPSILON;
+}
+
+float volume_shadow(vec3 posIS, vec3 lightDirNormIS)
+{
+  float shadow = 1.0;
+  float opacity = 0.0;
+
+  // modify sample distance with a random number between 0.8 and 1.0
+  float sampleDistanceISVS_jitter = sampleDistanceISVS * mix(0.8, 1.0, random());
+  float opacityPrev = texture2D(otexture, vec2(getTextureValue(posIS).r * oscale0 + oshift0, 0.5)).r;
+  
+  // in case the first sample near surface has a very tiled light ray, we need to offset start position 
+  posIS += sampleDistanceISVS_jitter * lightDirNormIS;  
+
+  // compute the start and end points for the ray
+  Ray ray;
+  Hit hit;  
+  ray.origin = posIS;
+  ray.dir = lightDirNormIS;
+  safe_0_vector(ray);
+  ray.invDir = 1.0/ray.dir;
+  
+  if(!BBoxIntersect(vec3(0.0),vec3(1.0), ray, hit))
+  {
+    return 1.0;
+  }
+  vec4 scalar = vec4(0.0);
+  float maxdist = hit.tmax;
+  if(maxdist < EPSILON) {
+    return 1.0;
+  }
+
+  // interpolate shadow ray length between: 1 unit of sample distance in IS to SQRT3, based on globalIlluminationReach
+  float maxgi = mix(sampleDistanceISVS_jitter,SQRT3,giReach);
+  maxdist = min(maxdist,maxgi);
+
+  // support gradient opacity
+  #ifdef vtkGradientOpacityOn
+    vec4 normal;
+  #endif
+
+  vec3 current_step = sampleDistanceISVS_jitter * lightDirNormIS;
+  float maxSteps = ceil(maxdist/sampleDistanceISVS_jitter);
+  float opacityDelta = 0.0;
+
+  for (float i = 0.0; i < maxSteps; i++)
+  {
+    scalar = getTextureValue(posIS);
+    opacity = texture2D(otexture, vec2(scalar.r * oscale0 + oshift0, 0.5)).r;
+    #ifdef vtkGradientOpacityOn 
+      normal = computeNormal(posIS, scalar.a, vec3(1.0/vec3(volumeDimensions))); 
+      opacity *= computeGradientOpacityFactor(normal.w, goscale0, goshift0, gomin0, gomax0);
+    #endif    
+    shadow *= 1.0 - opacity;
+
+    // optimization: early termination
+    if (shadow < EPSILON){
+      return 0.0;
+    }
+
+    // optimization: increase/decrease sample distance based on changed in opacity value
+    opacityDelta = opacityPrev - opacity;
+    opacityPrev = opacity;
+    if (opacityDelta > 0.0){
+      current_step *= 0.9;
+    } else if (opacityDelta < 0.0){
+      current_step *= 1.1;
+    }
+    posIS += current_step;
+  }
+
+  return shadow;  
+}
+
+vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
+{
+  vec3 vertLight = vec3(0.0);
+  vec3 secondary_contrib = vec3(0.0);
+  // here we assume only positional light, no effect of cones
+  for (int i = 0; i < lightNum; i++)
+  {
+    #if(vtkLightComplexity==3)
+      if (lightPositional[i] == 1){
+        vertLight = lightPositionVC[i] - IStoVC(posIS);
+      }else{
+        vertLight = - lightDirectionVC[i];
+      }
+    #else
+      vertLight = - lightDirectionVC[i];
+    #endif
+    // here we assume achromatic light, only intensity
+    float dDotL = dot(viewDirectionVC, normalize(vertLight));
+    // isotropic scatter returns 0.5 instead of 1/4pi to increase intensity
+    float phase_attenuation = 0.5;
+    if (abs(anisotropy) > 0.01){
+      phase_attenuation = phase_function(dDotL);
+    }
+    float vol_shadow = volume_shadow(posIS, normalize(rotateToIDX(vertLight)));
+    secondary_contrib += tColor * vDiffuse * lightColor[i] * vol_shadow * phase_attenuation;     
+    secondary_contrib += tColor * vAmbient;
+  } 
+  return secondary_contrib;
 }
 #endif
 
+//=======================================================================
+// surface light contribution
 #if vtkLightComplexity > 0
   void applyLighting(inout vec3 tColor, vec4 normal)
   {
@@ -869,6 +1065,18 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
           #endif
         #endif
     #endif
+
+    #ifdef VolumeShadowOn
+      vec3 secondary_contrib = applyShadowRay(tColor.rgb, posIS, rayDirVC);
+      float vol_coef;
+      if (volumetricScatteringBlending == 1.0 || volumetricScatteringBlending == 0.0){
+        vol_coef = volumetricScatteringBlending;
+      } else {
+        vol_coef = 1.0 - (pow(volumetricScatteringBlending,0.3) - 1.0)*(pow(volumetricScatteringBlending,0.3) - 1.0);
+      }
+      tColor.rgb = (1.0 - vol_coef) * tColor.rgb + vol_coef * secondary_contrib;
+    #endif
+
   #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
     #if !defined(vtkComponent1Proportional)
       applyLighting(tColor1, normal1);
@@ -1242,6 +1450,9 @@ void computeIndexSpaceValues(out vec3 pos, out vec3 endPos, out float sampleDist
 
   float delta2 = length(endPos - pos);
   sampleDistanceIS = sampleDistance*delta2/delta;
+  #ifdef VolumeShadowOn
+    sampleDistanceISVS = sampleDistanceIS * volumeShadowSamplingDistFactor;
+  #endif
 }
 
 void main()

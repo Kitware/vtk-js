@@ -90,6 +90,11 @@ const DEFAULT_VALUES = {
   filterMode: FilterMode.OFF, // ignored by WebGL so no behavior change
   preferSizeOverAccuracy: false, // Whether to use halfFloat representation of float, when it is inaccurate
   computeNormalFromOpacity: false,
+  //volume shadow parameters
+  globalIlluminationReach: 0.0,
+  volumetricScatteringBlending: 0.0,
+  volumeShadowSamplingDistFactor: 5.0,
+  anisotropy: 0.0,  
 };
 
 // ----------------------------------------------------------------------------
@@ -108,6 +113,10 @@ export function extend(publicAPI, model, initialValues = {}) {
     'filterMode',
     'preferSizeOverAccuracy',
     'computeNormalFromOpacity',
+    'globalIlluminationReach',
+    'volumetricScatteringBlending',
+    'volumeShadowSamplingDistFactor',
+    'anisotropy',    
   ]);
 
   macro.setGetArray(publicAPI, model, ['ipScalarRange'], 2);
