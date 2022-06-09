@@ -200,6 +200,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           `#define VolumeShadowOn`
         ).result;
       }  
+      if (model.renderable.getVolumetricScatteringBlending() < 1.0){
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::SurfaceShadowOn',
+          `#define SurfaceShadowOn`
+        ).result;
+      }        
     }
 
     // if using gradient opacity define that

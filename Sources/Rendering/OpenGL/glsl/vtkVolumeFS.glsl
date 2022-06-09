@@ -63,6 +63,7 @@ uniform float vSpecular;
 #endif
 
 //VTK::VolumeShadowOn
+//VTK::SurfaceShadowOn
 //VTK::VolumeShadow::Dec
 
 // define vtkComputeNormalFromOpacity
@@ -753,7 +754,7 @@ vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
     }
     tColor.rgb = tColor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;
   }
-  #if vtkLightComplexity < 3
+  #if vtkLightComplexity < 3 && defined(SurfaceShadowOn)
     void applyLightingDirectional(inout vec3 tColor, vec4 normal)
     {
       // everything in VC
@@ -1050,7 +1051,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
 
   // apply lighting if requested as appropriate
   #if vtkLightComplexity > 0
-    #if !defined(vtkComponent0Proportional)
+    #if !defined(vtkComponent0Proportional) && defined(SurfaceShadowOn)
         #if vtkLightComplexity < 3
           #ifdef vtkComputeNormalFromOpacity
             applyLightingDirectional(tColor.rgb, normalOpacity);
