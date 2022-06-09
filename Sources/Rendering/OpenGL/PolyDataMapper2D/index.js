@@ -24,6 +24,24 @@ const StartEvent = { type: 'StartEvent' };
 const EndEvent = { type: 'EndEvent' };
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    // Internal Objects
+    VBOBuildTime: macro.obj({}, { mtime: 0 }),
+    VBOBuildString: null,
+    primitives: null,
+    primTypes: null,
+    context: null,
+
+    shaderRebuildString: null,
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 // vtkOpenGLPolyDataMapper2D methods
 // ----------------------------------------------------------------------------
 
@@ -720,22 +738,9 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-const DEFAULT_VALUES = {
-  context: null,
-  VBOBuildTime: 0,
-  VBOBuildString: null,
-  primitives: null,
-  primTypes: null,
-  shaderRebuildString: null,
-};
-
-// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
@@ -745,15 +750,15 @@ export function extend(publicAPI, model, initialValues = {}) {
     initialValues
   );
 
-  model.primitives = [];
-  model.primTypes = primTypes;
+  initialValues.primitives = [];
+  initialValues.primTypes = primTypes;
 
-  model.tmpMat4 = mat4.identity(new Float64Array(16));
+  initialValues.tmpMat4 = mat4.identity(new Float64Array(16));
 
   for (let i = primTypes.Start; i < primTypes.End; i++) {
-    model.primitives[i] = vtkHelper.newInstance();
-    model.primitives[i].setPrimitiveType(i);
-    model.primitives[i].set(
+    initialValues.primitives[i] = vtkHelper.newInstance();
+    initialValues.primitives[i].setPrimitiveType(i);
+    initialValues.primitives[i].set(
       { lastLightComplexity: 0, lastLightCount: 0, lastSelectionPass: false },
       true
     );
@@ -761,9 +766,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['context']);
-
-  model.VBOBuildTime = {};
-  macro.obj(model.VBOBuildTime, { mtime: 0 });
 
   // Object methods
   vtkOpenGLPolyDataMapper2D(publicAPI, model);
