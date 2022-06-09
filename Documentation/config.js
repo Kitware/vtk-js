@@ -32,12 +32,12 @@ module.exports = {
     plugins: [],
     rules: [
       `
-      { test: /\\.glsl$/i, loader: 'shader-loader' },
       {
         test: /\\.js$/,
+        exclude: /dist\\/esm/,
         use: [
           {
-            loader: 'babel-loader',
+            loader: 'babel-loader?cacheDirectory',
           },
         ],
       },
@@ -69,22 +69,16 @@ module.exports = {
         test: /\\.svg$/,
         type: 'asset/source',
       },
-      {
-        test: /\\.worker\\.js$/,
-        use: [
-          {
-            loader: 'worker-loader',
-            options: { inline: 'no-fallback' },
-          },
-        ],
-      },
       { test: /\\.(png|jpg)$/, type: 'asset' },
       { test: /\\.html$/, loader: 'html-loader' },
       { test: /\\.cjson$/, loader: 'hson-loader' },
       { test: /\\.hson$/, loader: 'hson-loader' },
       `,
     ],
-    alias: ["'vtk.js': `${rootPath}`,"],
+    alias: [
+      "'vtk.js/Sources': `${rootPath}/dist/esm`,",
+      "'vtk.js': `${rootPath}`,",
+    ],
   },
   copy: [{ src: '../Data/*', dest: './build-tmp/public/data' }],
 };
