@@ -1190,9 +1190,7 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
       tValue = getTextureValue(posIS);
 
       // now map through opacity and color
-      if (texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, 0.5)).r > EPSILON){
-        tColor = getColorForValue(tValue, posIS, tstep);
-      }
+      tColor = getColorForValue(tValue, posIS, tstep);
 
       float mix = (1.0 - color.a);
 
