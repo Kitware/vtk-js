@@ -365,17 +365,17 @@ void rotateToViewCoord(inout vec3 normalIDX){
         }
         opacityInterp.x = texture2D(otexture, vec2(scalarInterp[0][0] * oscale0 + oshift0, 0.5)).r; 
         if (secondaryGradientMag.x >= 0.0){
-        // opacityInterp.x *= computeGradientOpacityFactor(secondaryGradientMag.x, goscale0, goshift0, gomin0, gomax0);
+          opacityInterp.x *= computeGradientOpacityFactor(secondaryGradientMag.x, goscale0, goshift0, gomin0, gomax0);
         }
     
         opacityInterp.y = texture2D(otexture, vec2(scalarInterp[0][1] * oscale0 + oshift0, 0.5)).r;
         if (secondaryGradientMag.y >= 0.0){
-        // opacityInterp.y *= computeGradientOpacityFactor(secondaryGradientMag.y, goscale0, goshift0, gomin0, gomax0);
+          opacityInterp.y *= computeGradientOpacityFactor(secondaryGradientMag.y, goscale0, goshift0, gomin0, gomax0);
         }
 
         opacityInterp.z = texture2D(otexture, vec2(scalarInterp[0][2] * oscale0 + oshift0, 0.5)).r;
         if (secondaryGradientMag.z >= 0.0){
-        // opacityInterp.z *= computeGradientOpacityFactor(secondaryGradientMag.z, goscale0, goshift0, gomin0, gomax0);
+          opacityInterp.z *= computeGradientOpacityFactor(secondaryGradientMag.z, goscale0, goshift0, gomin0, gomax0);
         }
 
         opacityG.xyz = opacityInterp - vec3(opacity,opacity,opacity);
