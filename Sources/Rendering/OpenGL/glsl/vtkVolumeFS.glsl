@@ -984,6 +984,9 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
   #if vtkNumComponents == 1
     vec4 tColor = texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, 0.5));
     tColor.a = goFactor.x*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, 0.5)).r;
+    if (tColor.a < EPSILON){
+      return vec4(0.0);
+    }    
   #endif
 
   #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
@@ -1056,6 +1059,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
             applyLightingDirectional(tColor.rgb, normalLight);
         #else
             applyLightingPositional(tColor.rgb, normalLight, IStoVC(posIS));  
+        #endif
     #endif
 
     #ifdef VolumeShadowOn
@@ -1186,7 +1190,9 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
       tValue = getTextureValue(posIS);
 
       // now map through opacity and color
-      tColor = getColorForValue(tValue, posIS, tstep);
+      if (texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, 0.5)).r > EPSILON){
+        tColor = getColorForValue(tValue, posIS, tstep);
+      }
 
       float mix = (1.0 - color.a);
 
