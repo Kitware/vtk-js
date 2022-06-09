@@ -927,29 +927,29 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
         #endif
       #endif
     #else
+      vec4 normalLight;
       #ifdef vtkComputeNormalFromOpacity
         #ifdef vtkGradientOpacityOn
           mat3 scalarInterp;  
           vec3 secondaryGradientMag;  
-          vec4 normalOpacity = vec4(0.0);  
           vec4 normal0 = computeNormalForDensity(posIS, tValue.a, tstep, scalarInterp, secondaryGradientMag);  
-          normalOpacity = computeDensityNormal(tValue.a, normal0.w, scalarInterp,secondaryGradientMag);       
-          if (length(normalOpacity) == 0.0){  
-            normalOpacity = normal0;   
+          normalLight = computeDensityNormal(tValue.a, normal0.w, scalarInterp,secondaryGradientMag);       
+          if (length(normalLight) == 0.0){  
+            normalLight = normal0;   
           }                      
         #else
           vec3 scalarInterp;  
           vec4 normal0 = computeNormalForDensity(posIS, tValue.a, tstep, scalarInterp);  
-          vec4 normalOpacity;          
           if (length(normal0)>0.0){  
-            normalOpacity = computeDensityNormal(tValue.a,scalarInterp);  
-            if (length(normalOpacity)==0.0){  
-              normalOpacity = normal0;  
+            normalLight = computeDensityNormal(tValue.a,scalarInterp);  
+            if (length(normalLight)==0.0){  
+              normalLight = normal0;  
             }  
           }                
         #endif
       #else 
-        vec4 normal0 = computeNormal(posIS, tValue.a, tstep);                
+        vec4 normal0 = computeNormal(posIS, tValue.a, tstep);  
+        normalLight = normal0;             
       #endif
     #endif
   #endif
@@ -1053,18 +1053,9 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
   #if vtkLightComplexity > 0
     #if !defined(vtkComponent0Proportional) && defined(SurfaceShadowOn)
         #if vtkLightComplexity < 3
-          #ifdef vtkComputeNormalFromOpacity
-            applyLightingDirectional(tColor.rgb, normalOpacity);
-          #else
-            applyLightingDirectional(tColor.rgb, normal0);
-          #endif
+            applyLightingDirectional(tColor.rgb, normalLight);
         #else
-          #ifdef vtkComputeNormalFromOpacity
-            applyLightingPositional(tColor.rgb, normalOpacity, IStoVC(posIS));        
-          #else
-            applyLightingPositional(tColor.rgb, normal0, IStoVC(posIS));        
-          #endif
-        #endif
+            applyLightingPositional(tColor.rgb, normalLight, IStoVC(posIS));  
     #endif
 
     #ifdef VolumeShadowOn
