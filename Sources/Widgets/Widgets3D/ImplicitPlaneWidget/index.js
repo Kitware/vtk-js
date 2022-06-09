@@ -13,7 +13,7 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkPlaneWidget');
-  let isDragging = null;
+  model._isDragging = false;
 
   publicAPI.setDisplayCallback = (callback) =>
     model.representations[0].setDisplayCallback(callback);
@@ -43,30 +43,46 @@ function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
-    isDragging = true;
+
     model.lineManipulator.setWidgetOrigin(model.widgetState.getOrigin());
     model.planeManipulator.setWidgetOrigin(model.widgetState.getOrigin());
     model.trackballManipulator.reset(callData); // setup trackball delta
-    model._interactor.requestAnimation(publicAPI);
-    publicAPI.invokeStartInteractionEvent();
 
+    if (model.dragable) {
+      model._isDragging = true;
+      model._apiSpecificRenderWindow.setCursor('grabbing');
+      model._interactor.requestAnimation(publicAPI);
+    }
+
+    publicAPI.invokeStartInteractionEvent();
     return macro.EVENT_ABORT;
   };
 
   publicAPI.handleMouseMove = (callData) => {
-    if (isDragging && model.pickable) {
+    if (model._isDragging) {
       return publicAPI.handleEvent(callData);
     }
     return macro.VOID;
   };
 
   publicAPI.handleLeftButtonRelease = () => {
-    if (isDragging && model.pickable) {
-      publicAPI.invokeEndInteractionEvent();
-      model._interactor.cancelAnimation(publicAPI);
+    if (
+      !model.activeState ||
+      !model.activeState.getActive() ||
+      !model.pickable
+    ) {
+      return macro.VOID;
     }
-    isDragging = false;
+
+    if (model._isDragging) {
+      model._interactor.cancelAnimation(publicAPI);
+      model._isDragging = false;
+    }
+
     model.widgetState.deactivate();
+
+    publicAPI.invokeEndInteractionEvent();
+    return macro.EVENT_ABORT;
   };
 
   publicAPI.handleEvent = (callData) => {

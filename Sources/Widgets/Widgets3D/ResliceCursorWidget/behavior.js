@@ -17,7 +17,7 @@ import {
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 
 export default function widgetBehavior(publicAPI, model) {
-  let isDragging = null;
+  model._isDragging = false;
   let isScrolling = false;
 
   // Reset "updateMethodName" attribute when no actors are selected
@@ -62,7 +62,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleLeftButtonPress = (callData) => {
     if (model.activeState && model.activeState.getActive()) {
-      isDragging = true;
+      model._isDragging = true;
       const viewType = model.widgetState.getActiveViewType();
       const currentPlaneNormal = model.widgetState.getPlanes()[viewType].normal;
       model.planeManipulator.setWidgetOrigin(model.widgetState.getCenter());
@@ -82,7 +82,7 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleMouseMove = (callData) => {
-    if (isDragging && model.pickable && model.dragable) {
+    if (model._isDragging) {
       return publicAPI.handleEvent(callData);
     }
     if (isScrolling) {
@@ -101,10 +101,10 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleLeftButtonRelease = () => {
-    if (isDragging || isScrolling) {
+    if (model._isDragging || isScrolling) {
       publicAPI.endScrolling();
     }
-    isDragging = false;
+    model._isDragging = false;
     model.widgetState.deactivate();
   };
 
