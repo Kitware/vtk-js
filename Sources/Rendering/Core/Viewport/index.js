@@ -7,6 +7,25 @@ function notImplemented(method) {
 }
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    // _vtkWindow: null,
+    background: [0, 0, 0],
+    background2: [0.2, 0.2, 0.2],
+    gradientBackground: false,
+    viewport: [0, 0, 1, 1],
+    aspect: [1, 1],
+    pixelAspect: [1, 1],
+    props: [],
+    actors2D: [],
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 // vtkViewport methods
 // ----------------------------------------------------------------------------
 
@@ -132,25 +151,6 @@ function vtkViewport(publicAPI, model) {
   ];
 
   publicAPI.PickPropFrom = notImplemented('PickPropFrom');
-}
-
-// ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-function defaultValues(initialValues) {
-  return {
-    // _vtkWindow: null,
-    background: [0, 0, 0],
-    background2: [0.2, 0.2, 0.2],
-    gradientBackground: false,
-    viewport: [0, 0, 1, 1],
-    aspect: [1, 1],
-    pixelAspect: [1, 1],
-    props: [],
-    actors2D: [],
-    ...initialValues,
-  };
 }
 
 // ----------------------------------------------------------------------------

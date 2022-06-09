@@ -259,6 +259,7 @@ function generateSelectionWithData(buffdata, fx1, fy1, fx2, fy2) {
 function defaultValues(initialValues) {
   return {
     WebGPURenderWindow: null,
+    _selectionPass: vtkWebGPUHardwareSelectionPass.newInstance(),
     ...initialValues,
   };
 }
@@ -431,8 +432,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   vtkHardwareSelector.extend(publicAPI, model, initialValues);
-
-  model._selectionPass = vtkWebGPUHardwareSelectionPass.newInstance();
 
   macro.setGet(publicAPI, model, ['WebGPURenderWindow']);
 

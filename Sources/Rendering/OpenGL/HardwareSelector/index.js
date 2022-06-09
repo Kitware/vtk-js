@@ -340,6 +340,10 @@ function defaultValues(initialValues) {
     // _openGLRenderWindow: null,
     // _openGLRenderer: null,
     currentPass: -1,
+    propColorValue: null,
+    props: null,
+    maximumPointId: 0,
+    maximumCellId: 0,
     idOffset: 1,
     ...initialValues,
   };
