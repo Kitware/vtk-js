@@ -610,11 +610,11 @@ function vtkOpenGLTexture(publicAPI, model) {
     ) {
       for (let idx = 0; idx < data.length; idx++) {
         if (data[idx]) {
-          const newArray = new Float32Array(pixCount);
-          for (let i = 0; i < pixCount; i++) {
-            newArray[i] = data[idx][i];
-          }
-          pixData.push(newArray);
+          const dataArrayToCopy =
+            data[idx].length > pixCount
+              ? data[idx].subarray(0, pixCount)
+              : data[idx];
+          pixData.push(new Float32Array(dataArrayToCopy));
         } else {
           pixData.push(null);
         }
@@ -629,11 +629,11 @@ function vtkOpenGLTexture(publicAPI, model) {
     ) {
       for (let idx = 0; idx < data.length; idx++) {
         if (data[idx]) {
-          const newArray = new Uint8Array(pixCount);
-          for (let i = 0; i < pixCount; i++) {
-            newArray[i] = data[idx][i];
-          }
-          pixData.push(newArray);
+          const dataArrayToCopy =
+            data[idx].length > pixCount
+              ? data[idx].subarray(0, pixCount)
+              : data[idx];
+          pixData.push(new Uint8Array(dataArrayToCopy));
         } else {
           pixData.push(null);
         }

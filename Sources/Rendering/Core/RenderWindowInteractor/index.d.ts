@@ -57,6 +57,8 @@ export interface IRenderWindowInteractorInitialValues {
 	lastFrameTime?: number;
 	wheelTimeoutID?: number;
 	moveTimeoutID?: number;
+	preventDefaultOnPointerDown?: boolean;
+	preventDefaultOnPointerUp?: boolean;
 }
 
 interface IPosition {
@@ -150,6 +152,16 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	 * @default 2.0
 	 */
 	getStillUpdateRate(): number;
+
+	/**
+	 * @default false
+	 */
+	getPreventDefaultOnPointerDown(): boolean;
+
+	/**
+	 * @default false
+	 */
+	getPreventDefaultOnPointerUp(): boolean;
 
 	/**
 	 * 
@@ -821,6 +833,22 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	setPicker(picker: any): boolean;
 
 	/**
+	 * Set whether preventDefault is called on pointer down.
+	 * @param {Boolean} preventDefault
+	 */
+	setPreventDefaultOnPointerDown(preventDefault: boolean): boolean;
+
+	/**
+	 * Set whether preventDefault is called on pointer up.
+	 *
+	 * If pointerup occurs without a preceeding pointerdown, then
+	 * this does nothing.
+	 *
+	 * @param {Boolean} preventDefault
+	 */
+	setPreventDefaultOnPointerUp(preventDefault: boolean): boolean;
+
+   /**
 	 *
 	 * @param recognizeGestures
 	 */
