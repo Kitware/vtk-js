@@ -5,6 +5,7 @@ import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
+import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
@@ -29,6 +30,7 @@ const { Filter, Wrap } = vtkOpenGLTexture;
 const { vtkErrorMacro } = macro;
 const StartEvent = { type: 'StartEvent' };
 const EndEvent = { type: 'EndEvent' };
+const { CoordinateSystem } = vtkProp;
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLPolyDataMapper methods
@@ -1541,14 +1543,25 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       ? { mcwc: null, normalMatrix: null }
       : model.openGLActor.getKeyMatrices();
 
-    program.setUniformMatrix(
-      'MCPCMatrix',
-      safeMatrixMultiply(
-        [keyMats.wcpc, actMats.mcwc, inverseShiftScaleMatrix],
-        mat4,
-        model.tmpMat4
-      )
-    );
+    if (actor.getCoordinateSystem() === CoordinateSystem.DISPLAY) {
+      const size = model.openGLRenderer.getTiledSizeAndOrigin();
+      mat4.identity(model.tmpMat4);
+      model.tmpMat4[0] = 2.0 / size.usize;
+      model.tmpMat4[12] = -1.0;
+      model.tmpMat4[5] = 2.0 / size.vsize;
+      model.tmpMat4[13] = -1.0;
+      mat4.multiply(model.tmpMat4, model.tmpMat4, inverseShiftScaleMatrix);
+      program.setUniformMatrix('MCPCMatrix', model.tmpMat4);
+    } else {
+      program.setUniformMatrix(
+        'MCPCMatrix',
+        safeMatrixMultiply(
+          [keyMats.wcpc, actMats.mcwc, inverseShiftScaleMatrix],
+          mat4,
+          model.tmpMat4
+        )
+      );
+    }
     if (program.isUniformUsed('MCVCMatrix')) {
       program.setUniformMatrix(
         'MCVCMatrix',

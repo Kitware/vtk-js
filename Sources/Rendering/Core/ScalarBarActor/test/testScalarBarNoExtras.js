@@ -9,7 +9,6 @@ import vtkScalarBarActor from 'vtk.js/Sources/Rendering/Core/ScalarBarActor';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 
 import baselineNoExtras from './testScalarBarNoExtras.png';
-import baselineNoExtras2 from './testScalarBarNoExtras2.png';
 
 test.onlyIfWebGL(
   'Test vtkScalarBarActor Rendering without extra colors"',
@@ -59,7 +58,7 @@ test.onlyIfWebGL(
     glwindow.captureNextImage().then((image) => {
       testUtils.compareImages(
         image,
-        [baselineNoExtras, baselineNoExtras2],
+        [baselineNoExtras],
         'Rendering/Core/ScalarBarActor/testScalarBarActorNoExtras',
         t,
         0.5,
