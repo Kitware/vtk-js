@@ -234,7 +234,8 @@ function vtkDataSetAttributes(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+function defaultValues(initialValues) {
+  return {
   activeScalars: -1,
   activeVectors: -1,
   activeTensors: -1,
@@ -242,12 +243,14 @@ const DEFAULT_VALUES = {
   activeTCoords: -1,
   activeGlobalIds: -1,
   activePedigreeIds: -1,
+    ...initialValues,
 };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Object methods
   vtkFieldData.extend(publicAPI, model, initialValues);
@@ -261,8 +264,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'activePedigreeIds',
   ]);
 
-  if (!model.arrays) {
-    model.arrays = {};
+  if (!initialValues.arrays) {
+    initialValues.arrays = {};
   }
 
   // Object specific methods

@@ -67,7 +67,7 @@ function vtkFieldData(publicAPI, model) {
               : a,
           { array: null, index: -1 }
         )
-      : null;
+      : { array: null, index: -1 };
   publicAPI.getArrayByIndex = (idx) =>
     idx >= 0 && idx < model.arrays.length ? model.arrays[idx].data : null;
   publicAPI.hasArray = (arrayName) => {
