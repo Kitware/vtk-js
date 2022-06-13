@@ -28,7 +28,7 @@ const vtkWebGPUPolyDataVS = `
 
 //VTK::IOStructs::Dec
 
-@stage(vertex)
+@vertex
 fn main(
 //VTK::IOStructs::Input
 )
@@ -70,7 +70,7 @@ const vtkWebGPUPolyDataFS = `
 
 //VTK::IOStructs::Dec
 
-@stage(fragment)
+@fragment
 fn main(
 //VTK::IOStructs::Input
 )
