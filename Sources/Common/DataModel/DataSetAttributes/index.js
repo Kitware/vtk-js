@@ -239,15 +239,15 @@ function vtkDataSetAttributes(publicAPI, model) {
 
 function defaultValues(initialValues) {
   return {
-  activeScalars: -1,
-  activeVectors: -1,
-  activeTensors: -1,
-  activeNormals: -1,
-  activeTCoords: -1,
-  activeGlobalIds: -1,
-  activePedigreeIds: -1,
+    activeScalars: -1,
+    activeVectors: -1,
+    activeTensors: -1,
+    activeNormals: -1,
+    activeTCoords: -1,
+    activeGlobalIds: -1,
+    activePedigreeIds: -1,
     ...initialValues,
-};
+  };
 }
 
 // ----------------------------------------------------------------------------
