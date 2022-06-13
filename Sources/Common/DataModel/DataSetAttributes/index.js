@@ -161,11 +161,14 @@ function vtkDataSetAttributes(publicAPI, model) {
     publicAPI[`get${value}`] = () =>
       publicAPI.getArrayByIndex(model[activeVal]);
     publicAPI[`set${value}`] = (da) => publicAPI.setAttribute(da, value);
-    publicAPI[`setActive${value}`] = (arrayName) =>
-      publicAPI.setActiveAttributeByIndex(
-        publicAPI.getArrayWithIndex(arrayName).index,
+    publicAPI[`setActive${value}`] = (arrayNameOrIndex) => {
+      if (typeof arrayNameOrIndex === 'number')
+        return publicAPI.setActiveAttributeByIndex(arrayNameOrIndex, value);
+      return publicAPI.setActiveAttributeByIndex(
+        publicAPI.getArrayWithIndex(arrayNameOrIndex).index,
         value
       );
+    };
     publicAPI[`copy${value}Off`] = () => {
       const attType = value.toUpperCase();
       model.copyAttributeFlags[AttributeCopyOperations.PASSDATA][
@@ -264,9 +267,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     'activePedigreeIds',
   ]);
 
-  if (!initialValues.arrays) {
-    initialValues.arrays = {};
-  }
+  // model.arrays must exist before calling setActiveAttribute
+  model.arrays = initialValues.arrays;
+  delete initialValues.arrays;
 
   // Object specific methods
   vtkDataSetAttributes(publicAPI, model);

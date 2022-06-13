@@ -1197,48 +1197,45 @@ function vtkColorTransferFunction(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  clamping: true,
-  colorSpace: ColorSpace.RGB,
-  hSVWrap: true,
-  scale: Scale.LINEAR,
+function defaultValues(initialValues) {
+  return {
+    // Internal objects
+    buildTime: macro.obj({}),
+    nodes: [],
+    table: [],
 
-  nanColor: null,
-  belowRangeColor: null,
-  aboveRangeColor: null,
-  useAboveRangeColor: false,
-  useBelowRangeColor: false,
+    clamping: true,
+    colorSpace: ColorSpace.RGB,
+    hSVWrap: true,
+    scale: Scale.LINEAR,
 
-  allowDuplicateScalars: false,
+    nanColor: [0.5, 0.0, 0.0, 1.0],
+    belowRangeColor: [0.0, 0.0, 0.0, 1.0],
+    aboveRangeColor: [1.0, 1.0, 1.0, 1.0],
+    useAboveRangeColor: false,
+    useBelowRangeColor: false,
 
-  table: null,
-  tableSize: 0,
-  buildTime: null,
+    allowDuplicateScalars: false,
 
-  nodes: null,
+    tableSize: 0,
 
-  discretize: false,
-  numberOfValues: 256,
-};
+    discretize: false,
+    numberOfValues: 256,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkScalarsToColors.extend(publicAPI, model, initialValues);
 
-  // Internal objects initialization
-  model.table = [];
-  model.nodes = [];
-
-  model.nanColor = [0.5, 0.0, 0.0, 1.0];
-  model.belowRangeColor = [0.0, 0.0, 0.0, 1.0];
-  model.aboveRangeColor = [1.0, 1.0, 1.0, 1.0];
-
-  model.buildTime = {};
-  macro.obj(model.buildTime);
+  // setMappingRange requires previous value for model.mappingRange
+  model.mappingRange = initialValues.mappingRange;
+  delete initialValues.mappingRange;
 
   // Create get-only macros
   macro.get(publicAPI, model, ['buildTime', 'mappingRange']);

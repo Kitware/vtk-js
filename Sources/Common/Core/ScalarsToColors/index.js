@@ -517,28 +517,27 @@ function vtkScalarsToColors(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  alpha: 1.0,
-  vectorComponent: 0,
-  vectorSize: -1,
-  vectorMode: VectorMode.COMPONENT,
-  mappingRange: null,
-  annotationArray: null,
-  annotatedValueMap: null,
-  indexedLookup: false,
-};
+function defaultValues(initialValues) {
+  return {
+    alpha: 1.0,
+    vectorComponent: 0,
+    vectorSize: -1,
+    vectorMode: VectorMode.COMPONENT,
+    mappingRange: [0, 255],
+    annotationArray: [],
+    annotatedValueMap: [],
+    indexedLookup: false,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Object methods
   macro.obj(publicAPI, model);
-
-  model.mappingRange = [0, 255];
-  model.annotationArray = [];
-  model.annotatedValueMap = [];
 
   // Create get-set macros
   macro.setGet(publicAPI, model, [
