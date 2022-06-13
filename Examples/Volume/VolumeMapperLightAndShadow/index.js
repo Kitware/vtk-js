@@ -228,7 +228,7 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
   sd.setAttribute('max', 10);
   sd.setAttribute('value', 5);
   sd.addEventListener('input', updateSD);
-  const at = document.querySelector('.anistropy');
+  const at = document.querySelector('.anisotropy');
   at.setAttribute('min', -1.0);
   at.setAttribute('max', 1.0);
   at.setAttribute('value', 0.0);
@@ -257,19 +257,12 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
     actorSphere.getProperty().setColor([1, 0, 0]);
     actorSphere.getProperty().setLighting(false);
     actorSphere.setMapper(mapperSphere);
+    actorSphere.setUseBounds(false);
     renderer.addActor(actorSphere);
   }
 
   // Camera and first render
   renderer.resetCamera();
-  renderer
-    .getActiveCamera()
-    .setFocalPoint(center[0] - 300, center[1] + 120, center[2] + 100);
-  renderer.getActiveCamera().setClippingRange([300, 1800]);
-  renderer
-    .getActiveCamera()
-    .setPosition(center[0] + 650, center[1] + 10, center[2] - 200);
-  renderer.getActiveCamera().setViewUp(0, 0, -1);
   renderWindow.render();
 
   // Make some variables global so that you can inspect and
