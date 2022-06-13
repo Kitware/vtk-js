@@ -147,7 +147,7 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       ]);
     }
 
-    if (!model._volumeCopyQuadQuad) {
+    if (!model._volumeCopyQuad) {
       model._volumeCopyQuad = vtkWebGPUFullScreenQuad.newInstance();
       model._volumeCopyQuad.setPipelineHash('volpassfsq');
       model._volumeCopyQuad.setDevice(viewNode.getDevice());
