@@ -191,6 +191,24 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       `#define vtkLightComplexity ${model.lastLightComplexity}`
     ).result;
 
+    // set shadow blending flag
+    if (model.lastLightComplexity > 0) {
+      if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::VolumeShadowOn',
+          `#define VolumeShadowOn`
+        ).result;
+      }
+      if (model.renderable.getVolumetricScatteringBlending() < 1.0) {
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::SurfaceShadowOn',
+          `#define SurfaceShadowOn`
+        ).result;
+      }
+    }
+
     // if using gradient opacity define that
     model.gopacity = actor.getProperty().getUseGradientOpacity(0);
     for (let nc = 1; iComps && !model.gopacity && nc < numComp; ++nc) {
@@ -290,6 +308,22 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         false
       ).result;
     }
+
+    if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::VolumeShadow::Dec',
+        [
+          `uniform float volumetricScatteringBlending;`,
+          `uniform float giReach;`,
+          `uniform float volumeShadowSamplingDistFactor;`,
+          `uniform float anisotropy;`,
+          `uniform float anisotropy2;`,
+        ],
+        false
+      ).result;
+    }
+
     shaders.Fragment = FSSource;
   };
 
@@ -738,26 +772,26 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // specify the planes in view coordinates
       program.setUniform3f(`vPlaneNormal${i}`, normal[0], normal[1], normal[2]);
       program.setUniformf(`vPlaneDistance${i}`, dist);
+    }
 
-      if (actor.getProperty().getUseLabelOutline()) {
-        const image = model.currentInput;
-        const worldToIndex = image.getWorldToIndex();
+    if (actor.getProperty().getUseLabelOutline()) {
+      const image = model.currentInput;
+      const worldToIndex = image.getWorldToIndex();
 
-        program.setUniformMatrix('vWCtoIDX', worldToIndex);
+      program.setUniformMatrix('vWCtoIDX', worldToIndex);
 
-        // Get the projection coordinate to world coordinate transformation matrix.
-        mat4.invert(model.projectionToWorld, keyMats.wcpc);
-        program.setUniformMatrix('PCWCMatrix', model.projectionToWorld);
+      // Get the projection coordinate to world coordinate transformation matrix.
+      mat4.invert(model.projectionToWorld, keyMats.wcpc);
+      program.setUniformMatrix('PCWCMatrix', model.projectionToWorld);
 
-        const size = publicAPI.getRenderTargetSize();
+      const size = publicAPI.getRenderTargetSize();
 
-        program.setUniformf('vpWidth', size[0]);
-        program.setUniformf('vpHeight', size[1]);
+      program.setUniformf('vpWidth', size[0]);
+      program.setUniformf('vpHeight', size[1]);
 
-        const offset = publicAPI.getRenderTargetOffset();
-        program.setUniformf('vpOffsetX', offset[0] / size[0]);
-        program.setUniformf('vpOffsetY', offset[1] / size[1]);
-      }
+      const offset = publicAPI.getRenderTargetOffset();
+      program.setUniformf('vpOffsetX', offset[0] / size[0]);
+      program.setUniformf('vpOffsetY', offset[1] / size[1]);
     }
 
     mat4.invert(model.projectionToView, keyMats.vcpc);
@@ -829,6 +863,25 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformfv('lightConeAngle', lightConeAngle);
       program.setUniformfv('lightExponent', lightExponent);
       program.setUniformiv('lightPositional', lightPositional);
+    }
+    if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
+      program.setUniformf(
+        'giReach',
+        model.renderable.getGlobalIlluminationReach()
+      );
+      program.setUniformf(
+        'volumetricScatteringBlending',
+        model.renderable.getVolumetricScatteringBlending()
+      );
+      program.setUniformf(
+        'volumeShadowSamplingDistFactor',
+        model.renderable.getVolumeShadowSamplingDistFactor()
+      );
+      program.setUniformf('anisotropy', model.renderable.getAnisotropy());
+      program.setUniformf(
+        'anisotropy2',
+        model.renderable.getAnisotropy() ** 2.0
+      );
     }
   };
 
