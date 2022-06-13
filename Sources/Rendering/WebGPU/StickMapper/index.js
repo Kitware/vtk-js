@@ -38,7 +38,7 @@ const vtkWebGPUStickMapperVS = `
 
 //VTK::IOStructs::Dec
 
-@stage(vertex)
+@vertex
 fn main(
 //VTK::IOStructs::Input
 )

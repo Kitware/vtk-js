@@ -62,7 +62,7 @@ const DepthBoundsFS = `
 
 //VTK::IOStructs::Dec
 
-@stage(fragment)
+@fragment
 fn main(
 //VTK::IOStructs::Input
 )
@@ -96,7 +96,7 @@ const volumeCopyFragTemplate = `
 
 //VTK::IOStructs::Dec
 
-@stage(fragment)
+@fragment
 fn main(
 //VTK::IOStructs::Input
 )
@@ -147,7 +147,7 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       ]);
     }
 
-    if (!model._volumeCopyQuadQuad) {
+    if (!model._volumeCopyQuad) {
       model._volumeCopyQuad = vtkWebGPUFullScreenQuad.newInstance();
       model._volumeCopyQuad.setPipelineHash('volpassfsq');
       model._volumeCopyQuad.setDevice(viewNode.getDevice());

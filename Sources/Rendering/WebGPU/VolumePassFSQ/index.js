@@ -351,7 +351,7 @@ fn composite(rayLengthSC: f32, minPosSC: vec4<f32>, rayStepSC: vec4<f32>) -> vec
   return computedColor;
 }
 
-@stage(fragment)
+@fragment
 fn main(
 //VTK::IOStructs::Input
 )
