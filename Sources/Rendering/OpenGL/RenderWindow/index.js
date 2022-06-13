@@ -92,6 +92,26 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.getViewNodeFactory = () => model.myFactory;
 
+  // prevent default context lost handler
+  model.canvas.addEventListener(
+    'webglcontextlost',
+    (event) => {
+      event.preventDefault();
+    },
+    false
+  );
+
+  model.canvas.addEventListener(
+    'webglcontextrestored',
+    publicAPI.restoreContext,
+    false
+  );
+
+  // Cache the value here as calling it on each frame is expensive
+  const isImmersiveVrSupported =
+    navigator.xr !== undefined &&
+    navigator.xr.isSessionSupported('immersive-vr');
+
   // Auto update style
   const previousSize = [0, 0];
   function updateWindow() {
@@ -244,10 +264,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     let result = null;
 
     // Do we have webxr support
-    if (
-      navigator.xr !== undefined &&
-      navigator.xr.isSessionSupported('immersive-vr')
-    ) {
+    if (isImmersiveVrSupported) {
       publicAPI.invokeHaveVRDisplay();
     }
 
@@ -266,21 +283,6 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         model.canvas.getContext('webgl', options) ||
         model.canvas.getContext('experimental-webgl', options);
     }
-
-    // prevent default context lost handler
-    model.canvas.addEventListener(
-      'webglcontextlost',
-      (event) => {
-        event.preventDefault();
-      },
-      false
-    );
-
-    model.canvas.addEventListener(
-      'webglcontextrestored',
-      publicAPI.restoreContext,
-      false
-    );
 
     return result;
   };
