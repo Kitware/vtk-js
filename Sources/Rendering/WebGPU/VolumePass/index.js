@@ -62,7 +62,7 @@ const DepthBoundsFS = `
 
 //VTK::IOStructs::Dec
 
-@stage(fragment)
+@fragment
 fn main(
 //VTK::IOStructs::Input
 )
@@ -96,7 +96,7 @@ const volumeCopyFragTemplate = `
 
 //VTK::IOStructs::Dec
 
-@stage(fragment)
+@fragment
 fn main(
 //VTK::IOStructs::Input
 )

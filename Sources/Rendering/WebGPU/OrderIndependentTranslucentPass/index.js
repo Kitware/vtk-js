@@ -16,7 +16,7 @@ const oitpFragTemplate = `
 
 //VTK::IOStructs::Dec
 
-@stage(fragment)
+@fragment
 fn main(
 //VTK::IOStructs::Input
 )
