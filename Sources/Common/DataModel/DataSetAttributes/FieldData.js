@@ -60,11 +60,11 @@ function vtkFieldData(publicAPI, model) {
       : null;
   publicAPI.getArrayWithIndex = (arrayName) =>
     (model.arrays || []).reduce(
-          (a, b, i) =>
-            b.data && b.data.getName() === arrayName
-              ? { array: b.data, index: i }
-              : a,
-          { array: null, index: -1 }
+      (a, b, i) =>
+        b.data && b.data.getName() === arrayName
+          ? { array: b.data, index: i }
+          : a,
+      { array: null, index: -1 }
     );
   publicAPI.getArrayByIndex = (idx) =>
     idx >= 0 && idx < model.arrays.length ? model.arrays[idx].data : null;

@@ -15,6 +15,9 @@ export function listViewAPIs() {
   return Object.keys(VIEW_CONSTRUCTORS);
 }
 
+export function newAPISpecificView(name, initialValues = {}) {
+  return VIEW_CONSTRUCTORS[name] && VIEW_CONSTRUCTORS[name](initialValues);
+}
 
 // ----------------------------------------------------------------------------
 // Object factory
