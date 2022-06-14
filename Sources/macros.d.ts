@@ -1,4 +1,4 @@
-import { vtkSubscription, vtkDebouncedFunction, vtkProperty, vtkPropertyDomain } from "./interfaces";
+import { vtkSubscription, vtkDebouncedFunction, vtkProperty, vtkPropertyDomain, vtkObject } from "./interfaces";
 
 /**
  * Allow user to redefine vtkXXXMacro method call.
@@ -164,7 +164,7 @@ export function obj(publicAPI?: object, model?: object): object;
  * @param model object on which protected fields are stored
  * @param fieldNames list of fields available in model that we want to expose as get{FieldName} methods on the publicAPI
  */
-export function get(publicAPI: object, model: object, fieldNames: Array<string>): void;
+export function get(publicAPI: object, model: object, fieldNames: Array<string>): Record<string, unknown>;
 
 /**
  * Add setter methods to the provided publicAPI
@@ -295,9 +295,16 @@ export interface VtkChangeEvent {
 // newInstance
 // ----------------------------------------------------------------------------
 
-export type VtkExtend = (publicAPI: object, model: object, initialValues: object) => void;
+export type VtkExtend<P, M, I extends Record<string, unknown>> = (
+  publicAPI: P,
+  model: M,
+  initialValues?: I
+) => void;
 
-export function newInstance(extend: VtkExtend, className: string): any;
+export function newInstance<P, M, I extends Record<string, unknown>>(
+  extend: VtkExtend<P, M, I>,
+  className: string
+): (initialValues?: I) => P;
 
 // ----------------------------------------------------------------------------
 // Chain function calls
@@ -313,7 +320,7 @@ export function chain(...fn: Array<Function>): Function;
  * Test if provided object is an actual vtkObject or not
  * @param instance
  */
-export function isVtkObject(instance: any): boolean;
+export function isVtkObject(instance: unknown): boolean;
 
 /**
  * Traverse an instance tree of vtkObjects
@@ -325,10 +332,10 @@ export function isVtkObject(instance: any): boolean;
  * @returns the accumulator is actually returned
  */
 export function traverseInstanceTree(
-  instance: any,
-  extractFunction: any,
-  accumulator?: Array<any>,
-  visitedInstances?: Array<any>
+  instance: unknown,
+  extractFunction: (instance: vtkObject) => unknown,
+  accumulator?: Array<unknown>,
+  visitedInstances?: Array<vtkObject>
 ): Array<any>;
 
 /**
