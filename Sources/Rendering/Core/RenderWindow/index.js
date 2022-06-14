@@ -15,8 +15,10 @@ export function listViewAPIs() {
   return Object.keys(VIEW_CONSTRUCTORS);
 }
 
-export function newAPISpecificView(name, initialValues = {}) {
-  return VIEW_CONSTRUCTORS[name] && VIEW_CONSTRUCTORS[name](initialValues);
+export function newAPISpecificView(name, initialValues = {}, toSet = true) {
+  return (
+    VIEW_CONSTRUCTORS[name] && VIEW_CONSTRUCTORS[name](initialValues, toSet)
+  );
 }
 
 // ----------------------------------------------------------------------------
@@ -173,7 +175,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkRenderWindow');
+export const newInstance = macro.newInstance(extend, 'vtkRenderWindow', true);
 
 // ----------------------------------------------------------------------------
 
