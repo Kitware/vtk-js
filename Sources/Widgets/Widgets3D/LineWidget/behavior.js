@@ -211,7 +211,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
     if (handleIndex === 1) {
       publicAPI.placeText();
-      publicAPI.setMoveHandleVisibility(false);
+      publicAPI.loseFocus();
     }
   };
 
@@ -367,6 +367,8 @@ export default function widgetBehavior(publicAPI, model) {
     }
     model.widgetState.deactivate();
     model.widgetState.getMoveHandle().deactivate();
+    publicAPI.setMoveHandleVisibility(false);
+    model.widgetState.getMoveHandle().setOrigin(null);
     model.activeState = null;
     model.hasFocus = false;
     model._widgetManager.enablePicking();

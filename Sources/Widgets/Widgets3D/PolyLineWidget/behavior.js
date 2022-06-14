@@ -189,6 +189,7 @@ export default function widgetBehavior(publicAPI, model) {
     model.widgetState.deactivate();
     model.widgetState.getMoveHandle().deactivate();
     model.widgetState.getMoveHandle().setVisible(false);
+    model.widgetState.getMoveHandle().setOrigin(null);
     model.activeState = null;
     model.hasFocus = false;
     model._widgetManager.enablePicking();
