@@ -727,7 +727,7 @@ vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
     float dDotL = dot(viewDirectionVC, normalize(vertLight));
     // isotropic scatter returns 0.5 instead of 1/4pi to increase intensity
     float phase_attenuation = 0.5;
-    if (abs(anisotropy) > 0.01){
+    if (abs(anisotropy) > EPSILON){
       phase_attenuation = phase_function(dDotL);
     }
     float vol_shadow = volume_shadow(posIS, normalize(rotateToIDX(vertLight)));

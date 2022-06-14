@@ -71,6 +71,30 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	getAverageIPScalarRangeByReference(): Range;
 
 	/**
+	 * Get the blending coefficient that interpolates between surface and volume rendering
+	 * @default 0.0
+	 */
+	getVolumetricScatteringBlending(): number;
+
+	/**
+	 * Get the global illumination reach of volume shadow
+	 * @default 0.0
+	 */
+	getGlobalIlluminationReach(): number;
+
+	/**
+	 * Get the multipler for volume shadow sampling distance
+	 * @default 5.0
+	 */
+	getVolumeShadowSamplingDistFactor(): number;
+
+	/**
+	 * Get anisotropy of volume shadow scatter
+	 * @default 0.0
+	 */
+	getAnisotropy(): number;
+
+	/**
 	 * 
 	 * @param x 
 	 * @param y 
@@ -132,6 +156,37 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	 * @param autoAdjustSampleDistances 
 	 */
 	setAutoAdjustSampleDistances(autoAdjustSampleDistances: boolean): boolean;
+
+	/**
+	 * Set the blending coefficient that determines the interpolation between surface and volume rendering.
+	 * Default value of 0.0 means shadow effect is computed with phong model.
+	 * Value of 1.0 means shadow is created by volume occlusion.
+	 * @param volumeScatterBlendCoef
+	 */
+	setVolumetricScatteringBlending(volumeScatterBlendCoef: number): void;
+
+	/**
+	 * Set the global illumination reach of volume shadow. This function is only effective when volumeScatterBlendCoef is greater than 0.
+	 * Default value of 0.0 means only the neighboring voxel is considered when creating global shadow.
+	 * Value of 1.0 means the shadow ray traverses through the entire volume.
+	 * @param globalIlluminationReach
+	 */
+	setGlobalIlluminationReach(globalIlluminationReach: number): void;
+
+	/**
+	 * Set the multipler for volume shadow sampling distance. This function is only effective when volumeScatterBlendCoef is greater than 0.
+	 * For VSSampleDistanceFactor >= 1.0, volume shadow sampling distance = VSSampleDistanceFactor * SampleDistance.
+	 * @param VSSampleDistanceFactor
+	 */
+	setVolumeShadowSamplingDistFactor(VSSampleDistanceFactor: number): void;
+
+	/**
+	 * Set anisotropy of volume shadow scatter. This function is only effective when volumeScatterBlendCoef is greater than 0.
+	 * Default value of 0.0 means light scatters uniformly in all directions.
+	 * Value of -1.0 means light scatters backward, value of 1.0 means light scatters forward.
+	 * @param anisotropy
+	 */
+	 getAnisotropy(anisotropy: number): number;
 
 	/**
 	 * 

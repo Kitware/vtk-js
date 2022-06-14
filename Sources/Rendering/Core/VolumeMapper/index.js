@@ -84,7 +84,7 @@ function vtkVolumeMapper(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.setVlumeShadowSamplingDistFactor = (vsdf) => {
+  publicAPI.setVolumeShadowSamplingDistFactor = (vsdf) => {
     model.volumeShadowSamplingDistFactor = vsdf >= 1.0 ? vsdf : 1.0;
     publicAPI.modified();
   };
@@ -112,8 +112,8 @@ const DEFAULT_VALUES = {
   preferSizeOverAccuracy: false, // Whether to use halfFloat representation of float, when it is inaccurate
   computeNormalFromOpacity: false,
   // volume shadow parameters
-  globalIlluminationReach: 0.0,
   volumetricScatteringBlending: 0.0,
+  globalIlluminationReach: 0.0,
   volumeShadowSamplingDistFactor: 5.0,
   anisotropy: 0.0,
 };
@@ -134,8 +134,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'filterMode',
     'preferSizeOverAccuracy',
     'computeNormalFromOpacity',
-    'globalIlluminationReach',
     'volumetricScatteringBlending',
+    'globalIlluminationReach',
     'volumeShadowSamplingDistFactor',
     'anisotropy',
   ]);
