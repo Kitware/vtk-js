@@ -2,6 +2,27 @@ import macro from 'vtk.js/Sources/macros';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    focus: null,
+    modelBounds: [-1.0, 1.0, -1.0, 1.0, -1.0, 1.0],
+    focalPoint: [0.0, 0.0, 0.0],
+    outline: true,
+    axes: true,
+    xShadows: true,
+    yShadows: true,
+    zShadows: true,
+    wrap: false,
+    translationMode: false,
+    ...initialValues,
+  };
+}
+
 // ----------------------------------------------------------------------------
 // vtkCursor3D methods
 // ----------------------------------------------------------------------------
@@ -15,6 +36,7 @@ function vtkCursor3D(publicAPI, model) {
       return;
     }
     if (
+      model.modelBounds &&
       model.modelBounds[0] === bounds[0] &&
       model.modelBounds[1] === bounds[1] &&
       model.modelBounds[2] === bounds[2] &&
@@ -41,6 +63,7 @@ function vtkCursor3D(publicAPI, model) {
     if (!Array.isArray(points) || points.length < 3) {
       return;
     }
+    if (!model.focalPoint) model.focalPoint = defaultValues().focalPoint;
     if (
       points[0] === model.focalPoint[0] &&
       points[1] === model.focalPoint[1] &&
@@ -389,26 +412,9 @@ function vtkCursor3D(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-const DEFAULT_VALUES = {
-  focus: null,
-  modelBounds: [-1.0, 1.0, -1.0, 1.0, -1.0, 1.0],
-  focalPoint: [0.0, 0.0, 0.0],
-  outline: true,
-  axes: true,
-  xShadows: true,
-  yShadows: true,
-  zShadows: true,
-  wrap: false,
-  translationMode: false,
-};
-
-// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   // Cursor3D
@@ -429,7 +435,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkCursor3D');
+export const newInstance = macro.newInstance(extend, 'vtkCursor3D', true);
 
 // ----------------------------------------------------------------------------
 

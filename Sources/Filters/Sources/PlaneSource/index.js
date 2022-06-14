@@ -122,7 +122,13 @@ function vtkPlaneSource(publicAPI, model) {
       n = [normal[0], normal[1], normal[2]];
     }
 
-    if (vtkMath.normalize(n) !== 0) {
+    const normN = vtkMath.normalize(n);
+    // If we are at instanciation time
+    if (model.normal === undefined) {
+      model.normal = n;
+    }
+
+    if (normN !== 0) {
       const dp = vtkMath.dot(model.normal, n);
 
       let theta = 0;
@@ -180,6 +186,11 @@ function vtkPlaneSource(publicAPI, model) {
       c = [center[0], center[1], center[2]];
     }
 
+    // If we are at instanciation time
+    if (model.center === undefined) {
+      model.center = c;
+    }
+
     if (!vec3.exactEquals(c, model.center)) {
       const v1 = [];
       vtkMath.subtract(model.point1, model.origin, v1);
@@ -206,6 +217,9 @@ function vtkPlaneSource(publicAPI, model) {
       point1 = [point[0], point[1], point[2]];
     }
 
+    // If we are at instanciation time
+    if (model.point1 === undefined) model.point1 = point1;
+
     if (!vec3.exactEquals(point1, model.point1)) {
       const v1 = [];
       const v2 = [];
@@ -228,6 +242,9 @@ function vtkPlaneSource(publicAPI, model) {
     } else if (point.length === 3) {
       point2 = [point[0], point[1], point[2]];
     }
+
+    // If we are at instanciation time
+    if (model.point2 === undefined) model.point2 = point2;
 
     if (!vec3.exactEquals(point2, model.point2)) {
       const v1 = [];
@@ -260,22 +277,26 @@ function vtkPlaneSource(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  xResolution: 10,
-  yResolution: 10,
-  origin: [0, 0, 0],
-  point1: [1, 0, 0],
-  point2: [0, 1, 0],
-  pointType: 'Float64Array',
-};
+function defaultValues(initialValues) {
+  return {
+    // Internal
+    normal: [0, 0, 1],
+    center: [0, 0, 0],
+
+    xResolution: 10,
+    yResolution: 10,
+    origin: [0, 0, 0],
+    point1: [1, 0, 0],
+    point2: [0, 1, 0],
+    pointType: 'Float64Array',
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-
-  model.normal = [0, 0, 1];
-  model.center = [0, 0, 0];
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -285,9 +306,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.algo(publicAPI, model, 0, 1);
   vtkPlaneSource(publicAPI, model);
-
-  publicAPI.setPoint1(model.point1);
-  publicAPI.setPoint2(model.point2);
 }
 
 // ----------------------------------------------------------------------------

@@ -72,17 +72,20 @@ function vtkLineSource(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  resolution: 10,
-  point1: [-1, 0, 0],
-  point2: [1, 0, 0],
-  pointType: 'Float64Array',
-};
+function defaultValues(initialValues) {
+  return {
+    resolution: 10,
+    point1: [-1, 0, 0],
+    point2: [1, 0, 0],
+    pointType: 'Float64Array',
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);

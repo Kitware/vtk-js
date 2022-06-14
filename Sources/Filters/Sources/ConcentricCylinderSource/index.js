@@ -36,6 +36,7 @@ function vtkConcentricCylinderSource(publicAPI, model) {
   publicAPI.getNumberOfRadius = () => model.radius.length;
   publicAPI.getRadius = (index = 0) => model.radius[index];
   publicAPI.setRadius = (index, radius) => {
+    if (!model.radius) model.radius = [];
     model.radius[index] = radius;
     publicAPI.modified();
   };
@@ -403,24 +404,27 @@ function vtkConcentricCylinderSource(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  height: 1.0,
-  radius: [0.5],
-  cellFields: [1],
-  resolution: 6,
-  startTheta: 0.0,
-  endTheta: 360.0,
-  center: [0, 0, 0],
-  direction: [0.0, 0.0, 1.0],
-  skipInnerFaces: true,
-  mask: null, // If present, array to know if a layer should be skipped(=true)
-  pointType: 'Float64Array',
-};
+function defaultValues(initialValues) {
+  return {
+    height: 1.0,
+    radius: [0.5],
+    cellFields: [1],
+    resolution: 6,
+    startTheta: 0.0,
+    endTheta: 360.0,
+    center: [0, 0, 0],
+    direction: [0.0, 0.0, 1.0],
+    skipInnerFaces: true,
+    mask: null, // If present, array to know if a layer should be skipped(=true)
+    pointType: 'Float64Array',
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
