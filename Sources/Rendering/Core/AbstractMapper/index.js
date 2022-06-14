@@ -107,10 +107,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   macro.algo(publicAPI, model, 1, 0);
 
-  if (!initialValues.clippingPlanes) {
-    initialValues.clippingPlanes = [];
-  }
-
   vtkAbstractMapper(publicAPI, model);
 }
 
