@@ -278,6 +278,7 @@ export default function widgetBehavior(publicAPI, model) {
       ) {
         if (model.activeState.setOrigin) {
           model.activeState.setOrigin(worldCoords);
+          publicAPI.setMoveHandleVisibility(!publicAPI.isPlaced());
         } else {
           // Dragging line
           publicAPI
