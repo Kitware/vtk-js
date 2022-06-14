@@ -108,7 +108,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkCellArray');
+export const newInstance = macro.newInstance(extend, 'vtkCellArray', true);
 
 // ----------------------------------------------------------------------------
 

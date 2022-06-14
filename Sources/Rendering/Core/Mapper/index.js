@@ -651,7 +651,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkMapper');
+export const newInstance = macro.newInstance(extend, 'vtkMapper', true);
 
 // ----------------------------------------------------------------------------
 

@@ -59,7 +59,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkHardwareSelector');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkHardwareSelector',
+  true
+);
 
 // ----------------------------------------------------------------------------
 

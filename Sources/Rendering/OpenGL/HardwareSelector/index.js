@@ -948,7 +948,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 export const newInstance = macro.newInstance(
   extend,
-  'vtkOpenGLHardwareSelector'
+  'vtkOpenGLHardwareSelector',
+  true
 );
 
 // ----------------------------------------------------------------------------

@@ -634,7 +634,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkWebGPURenderWindow');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkWebGPURenderWindow',
+  true
+);
 
 // ----------------------------------------------------------------------------
 // Register API specific RenderWindow implementation

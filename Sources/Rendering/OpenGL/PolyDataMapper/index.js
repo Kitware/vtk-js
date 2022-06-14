@@ -2069,7 +2069,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkOpenGLPolyDataMapper');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkOpenGLPolyDataMapper',
+  true
+);
 
 // ----------------------------------------------------------------------------
 

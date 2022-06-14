@@ -217,7 +217,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkOpenGLRenderer');
+export const newInstance = macro.newInstance(extend, 'vtkOpenGLRenderer', true);
 
 // ----------------------------------------------------------------------------
 

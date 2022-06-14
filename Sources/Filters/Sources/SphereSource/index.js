@@ -241,7 +241,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkSphereSource');
+export const newInstance = macro.newInstance(extend, 'vtkSphereSource', true);
 
 // ----------------------------------------------------------------------------
 

@@ -44,7 +44,7 @@ export default function vtk(obj) {
   });
 
   // Return the root
-  const newInst = constructor(model);
+  const newInst = constructor(model, true);
   if (newInst && newInst.modified) {
     newInst.modified();
   }

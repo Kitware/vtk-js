@@ -68,7 +68,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkViewNodeFactory');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkViewNodeFactory',
+  true
+);
 
 // ----------------------------------------------------------------------------
 

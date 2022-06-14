@@ -602,7 +602,7 @@ function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-const newInstance = macro.newInstance(extend, 'vtkShaderProgram');
+const newInstance = macro.newInstance(extend, 'vtkShaderProgram', true);
 
 // ----------------------------------------------------------------------------
 

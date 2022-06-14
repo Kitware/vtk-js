@@ -222,7 +222,7 @@ function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-const newInstance = macro.newInstance(extend, 'vtkViewNode');
+const newInstance = macro.newInstance(extend, 'vtkViewNode', true);
 
 // ----------------------------------------------------------------------------
 

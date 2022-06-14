@@ -367,7 +367,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkWebGPURenderer');
+export const newInstance = macro.newInstance(extend, 'vtkWebGPURenderer', true);
 
 // ----------------------------------------------------------------------------
 

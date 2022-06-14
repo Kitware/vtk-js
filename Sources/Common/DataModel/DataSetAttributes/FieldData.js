@@ -209,7 +209,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkFieldData');
+export const newInstance = macro.newInstance(extend, 'vtkFieldData', true);
 
 // ----------------------------------------------------------------------------
 

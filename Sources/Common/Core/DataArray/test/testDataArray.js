@@ -49,7 +49,7 @@ test('Test vtkDataArray instance', (t) => {
       values: null,
     },
     getDataArrayProperties(dataArray0),
-    'initialValues.data = null'
+    'initialValues.values = null'
   );
 
   const dataArray1 = vtkDataArray.newInstance({ size: 256 });
@@ -139,6 +139,21 @@ test('Test vtkDataArray instance', (t) => {
     },
     getDataArrayProperties(dataArray6),
     'Give numberOfComponents!=1 with empty array'
+  );
+
+  const dataArray7 = vtkDataArray.newInstance({
+    size: 3,
+    numberOfComponents: 3,
+  });
+  t.deepEqual(
+    {
+      dataType: DefaultDataType,
+      size: 3,
+      numberOfComponents: 3,
+      values: macro.newTypedArray(DefaultDataType, 3),
+    },
+    getDataArrayProperties(dataArray7),
+    'Give only size to create instance'
   );
 
   t.end();

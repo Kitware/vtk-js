@@ -310,7 +310,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkPlaneSource');
+export const newInstance = macro.newInstance(extend, 'vtkPlaneSource', true);
 
 // ----------------------------------------------------------------------------
 

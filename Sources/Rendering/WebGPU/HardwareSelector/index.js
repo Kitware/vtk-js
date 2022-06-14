@@ -443,7 +443,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 export const newInstance = macro.newInstance(
   extend,
-  'vtkWebGPUHardwareSelector'
+  'vtkWebGPUHardwareSelector',
+  true
 );
 
 // ----------------------------------------------------------------------------

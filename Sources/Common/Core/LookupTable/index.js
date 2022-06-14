@@ -391,7 +391,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkLookupTable');
+export const newInstance = macro.newInstance(extend, 'vtkLookupTable', true);
 
 // ----------------------------------------------------------------------------
 

@@ -96,7 +96,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkCircleSource');
+export const newInstance = macro.newInstance(extend, 'vtkCircleSource', true);
 
 // ----------------------------------------------------------------------------
 

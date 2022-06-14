@@ -277,7 +277,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkDataSetAttributes');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkDataSetAttributes',
+  true
+);
 
 // ----------------------------------------------------------------------------
 

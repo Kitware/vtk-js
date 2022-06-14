@@ -969,12 +969,12 @@ export function event(publicAPI, model, eventName) {
 // newInstance
 // ----------------------------------------------------------------------------
 
-export function newInstance(extend, className) {
-  const constructor = (initialValues = {}) => {
+export function newInstance(extend, className, toSet = false) {
+  const constructor = (initialValues = {}, toSetWhenVtkCalled = false) => {
     const model = {};
     const publicAPI = {};
     extend(publicAPI, model, initialValues);
-    publicAPI.set(initialValues, true);
+    if (toSet || toSetWhenVtkCalled) publicAPI.set(initialValues, true);
 
     return Object.freeze(publicAPI);
   };
