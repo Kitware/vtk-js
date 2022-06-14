@@ -391,4 +391,17 @@ export default function widgetBehavior(publicAPI, model) {
     model._widgetManager.enablePicking();
     model._interactor.render();
   };
+
+  publicAPI.reset = () => {
+    model.widgetState.deactivate();
+    model.widgetState.getMoveHandle().deactivate();
+
+    model.widgetState.getHandle1().setOrigin(null);
+    model.widgetState.getHandle2().setOrigin(null);
+    model.widgetState.getMoveHandle().setOrigin(null);
+    model.widgetState.getText().setOrigin(null);
+    model.widgetState.getText().setText('');
+
+    model.activeState = null;
+  };
 }
