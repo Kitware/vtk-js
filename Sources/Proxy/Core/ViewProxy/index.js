@@ -166,7 +166,10 @@ function vtkViewProxy(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.setContainer = (container) => {
+    const orientationWidgetEnabled = model.orientationWidget.getEnabled();
+
     if (model.container) {
+      model.orientationWidget.setEnabled(false);
       model.interactor.unbindEvents(model.container);
       model.openglRenderWindow.setContainer(null);
       model.cornerAnnotation.setContainer(null);
@@ -179,6 +182,7 @@ function vtkViewProxy(publicAPI, model) {
       model.cornerAnnotation.setContainer(container);
       model.interactor.initialize();
       model.interactor.bindEvents(container);
+      model.orientationWidget.setEnabled(orientationWidgetEnabled);
     }
   };
 
@@ -577,11 +581,21 @@ function vtkViewProxy(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.delete = macro.chain(
-    publicAPI.setContainer,
-    model.openglRenderWindow.delete,
-    publicAPI.delete
-  );
+  publicAPI.delete = macro.chain(() => {
+    publicAPI.setContainer(null);
+    model.orientationWidget.setEnabled(false);
+    model.orientationWidget.delete();
+    model.orientationAxesArrow.delete();
+    model.orientationAxesCube.delete();
+    model.interactorStyle2D.delete();
+    model.interactorStyle3D.delete();
+    model.cornerAnnotation.delete();
+    // in reverse order
+    model.interactor.delete();
+    model.renderer.delete();
+    model.openglRenderWindow.delete();
+    model.renderWindow.delete();
+  }, publicAPI.delete);
 
   // --------------------------------------------------------------------------
   // Initialization from state or input
