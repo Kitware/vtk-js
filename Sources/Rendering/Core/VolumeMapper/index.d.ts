@@ -186,7 +186,7 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	 * Value of -1.0 means light scatters backward, value of 1.0 means light scatters forward.
 	 * @param anisotropy
 	 */
-	 getAnisotropy(anisotropy: number): number;
+	setAnisotropy(anisotropy: number): number;
 
 	/**
 	 * 
