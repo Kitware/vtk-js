@@ -77,6 +77,10 @@ function vtkCamera(publicAPI, model) {
 
   // Internal Functions that don't need to be public
   function computeViewPlaneNormal() {
+    // Instanciation time
+    if (model.viewPlaneNormal === undefined) {
+      model.viewPlaneNormal = defaultValues().viewPlaneNormal;
+    }
     // VPN is -DOP
     model.viewPlaneNormal[0] = -model.directionOfProjection[0];
     model.viewPlaneNormal[1] = -model.directionOfProjection[1];
