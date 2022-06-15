@@ -2,6 +2,17 @@ import macro from 'vtk.js/Sources/macros';
 import Constants from 'vtk.js/Sources/Common/DataModel/SelectionNode/Constants';
 
 // ----------------------------------------------------------------------------
+// vtkSelectionNode methods
+// ----------------------------------------------------------------------------
+
+function vtkSelectionNode(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkSelectionNode');
+
+  publicAPI.getBounds = () => model.points.getBounds();
+}
+
+// ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 
@@ -12,17 +23,6 @@ function defaultValues(initialValues) {
     selectionList: [],
     ...initialValues,
   };
-}
-
-// ----------------------------------------------------------------------------
-// vtkSelectionNode methods
-// ----------------------------------------------------------------------------
-
-function vtkSelectionNode(publicAPI, model) {
-  // Set our className
-  model.classHierarchy.push('vtkSelectionNode');
-
-  publicAPI.getBounds = () => model.points.getBounds();
 }
 
 // ----------------------------------------------------------------------------

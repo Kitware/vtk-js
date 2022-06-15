@@ -22,8 +22,7 @@ function vtkAbstractMapper(publicAPI, model) {
     return false;
   };
 
-  publicAPI.getNumberOfClippingPlanes = () =>
-    model.clippingPlanes ? model.clippingPlanes.length : 0;
+  publicAPI.getNumberOfClippingPlanes = () => model.clippingPlanes.length;
 
   publicAPI.removeAllClippingPlanes = () => {
     model.clippingPlanes.length = 0;
@@ -42,7 +41,8 @@ function vtkAbstractMapper(publicAPI, model) {
   publicAPI.getClippingPlanes = () => model.clippingPlanes;
 
   publicAPI.setClippingPlanes = (planes) => {
-    if (!planes || planes.length === 0) {
+    // Instanciation time
+    if (model.clippingPlanes === undefined) {
       model.clippingPlanes = [];
       return;
     }
