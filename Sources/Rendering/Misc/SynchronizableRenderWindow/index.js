@@ -1,7 +1,7 @@
 import * as macro from 'vtk.js/Sources/macros';
 import Base64 from 'vtk.js/Sources/Common/Core/Base64';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkObjectManager from './vtkObjectManager';
+import vtkObjectManager from './ObjectManager';
 
 const SYNCHRONIZER_CONTEXTS = {};
 
