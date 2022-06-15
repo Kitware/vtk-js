@@ -389,7 +389,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   if (initialValues.table && initialValues.table.length > 0) {
     // ensure insertTime is more recently modified than buildTime if
     // a table is provided via the constructor
-    model.insertTime.modified();
+    initialValues.insertTime.modified();
   }
 }
 
