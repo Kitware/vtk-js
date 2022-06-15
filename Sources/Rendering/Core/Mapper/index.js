@@ -600,7 +600,7 @@ function defaultValues(initialValues) {
     useInvertibleColors: false,
     invertibleScalars: null,
 
-    viewSpecificProperties: null,
+    viewSpecificProperties: {},
 
     customShaderAttributes: [],
     ...initialValues,
@@ -638,10 +638,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'customShaderAttributes', // point data array names that will be transferred to the VBO
   ]);
   macro.setGetArray(publicAPI, model, ['scalarRange'], 2);
-
-  if (!initialValues.viewSpecificProperties) {
-    initialValues.viewSpecificProperties = {};
-  }
 
   CoincidentTopologyHelper.implementCoincidentTopologyMethods(publicAPI, model);
 

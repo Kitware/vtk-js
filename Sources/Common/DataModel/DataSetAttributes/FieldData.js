@@ -197,14 +197,13 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.obj(publicAPI, model);
 
-  vtkFieldData(publicAPI, model);
-
   // Decode serialized data if any
   if (initialValues.arrays) {
     initialValues.arrays = initialValues.arrays.map((item) => ({
       data: vtk(item.data),
     }));
   }
+  vtkFieldData(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
