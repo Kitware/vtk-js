@@ -303,6 +303,7 @@ function vtkLookupTable(publicAPI, model) {
 function defaultValues(initialValues) {
   return {
     // Internal objects
+    table: [],
     buildTime: macro.obj({}),
     opaqueFlagBuildTime: macro.obj({}, { mtime: 0 }),
     insertTime: macro.obj({}, { mtime: 0 }),
@@ -337,8 +338,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkScalarsToColors.extend(publicAPI, model, initialValues);
 
   // Internal objects initialization
-  if (!model.table) {
-    model.table = [];
+  if (Array.isArray(initialValues.table)) {
+    model.table = initialValues.table;
+    delete initialValues.table;
   }
 
   // Create get-only macros
