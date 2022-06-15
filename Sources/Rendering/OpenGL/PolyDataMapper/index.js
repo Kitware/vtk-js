@@ -2027,14 +2027,16 @@ function defaultValues(initialValues) {
 
     context: null,
     VBOBuildString: null,
-    primitives: Object.keys(primTypes).map((primType) =>
-      vtkHelper.newInstance({
-        primitiveType: primTypes[primType],
-        lastLightComplexity: 0,
-        lastLightCount: 0,
-        lastSelectionPass: false,
-      })
-    ),
+    primitives: Object.keys(primTypes)
+      .filter((primType) => primType !== 'Start' && primType !== 'End')
+      .map((primType) =>
+        vtkHelper.newInstance({
+          primitiveType: primTypes[primType],
+          lastLightComplexity: 0,
+          lastLightCount: 0,
+          lastSelectionPass: false,
+        })
+      ),
     primTypes,
     shaderRebuildString: null,
 

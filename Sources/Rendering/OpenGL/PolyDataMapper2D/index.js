@@ -30,14 +30,16 @@ const EndEvent = { type: 'EndEvent' };
 function defaultValues(initialValues) {
   return {
     // Internal Objects
-    primitives: Object.keys(primTypes).map((primType) =>
-      vtkHelper.newInstance({
-        primitiveType: primTypes[primType],
-        lastLightComplexity: 0,
-        lastLightCount: 0,
-        lastSelectionPass: false,
-      })
-    ),
+    primitives: Object.keys(primTypes)
+      .filter((primType) => primType !== 'Start' && primType !== 'End')
+      .map((primType) =>
+        vtkHelper.newInstance({
+          primitiveType: primTypes[primType],
+          lastLightComplexity: 0,
+          lastLightCount: 0,
+          lastSelectionPass: false,
+        })
+      ),
     primTypes,
     tmpMat4: mat4.identity(new Float64Array(16)),
     VBOBuildTime: macro.obj({}, { mtime: 0 }),
@@ -757,6 +759,15 @@ export function extend(publicAPI, model, initialValues = {}) {
     model,
     initialValues
   );
+
+  for (let i = primTypes.Start; i < primTypes.End; i++) {
+    initialValues.primitives[i] = vtkHelper.newInstance({
+      primitiveType: i,
+      lastLightComplexity: 0,
+      lastLightCount: 0,
+      lastSelectionPass: false,
+    });
+  }
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['context']);
