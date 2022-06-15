@@ -100,28 +100,31 @@ function vtkVolumeMapper(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 // TODO: what values to use for averageIPScalarRange to get GLSL to use max / min values like [-Math.inf, Math.inf]?
-const DEFAULT_VALUES = {
-  bounds: [1, -1, 1, -1, 1, -1],
-  sampleDistance: 1.0,
-  imageSampleDistance: 1.0,
-  maximumSamplesPerRay: 1000,
-  autoAdjustSampleDistances: true,
-  blendMode: BlendMode.COMPOSITE_BLEND,
-  ipScalarRange: [-1000000.0, 1000000.0],
-  filterMode: FilterMode.OFF, // ignored by WebGL so no behavior change
-  preferSizeOverAccuracy: false, // Whether to use halfFloat representation of float, when it is inaccurate
-  computeNormalFromOpacity: false,
-  // volume shadow parameters
-  volumetricScatteringBlending: 0.0,
-  globalIlluminationReach: 0.0,
-  volumeShadowSamplingDistFactor: 5.0,
-  anisotropy: 0.0,
-};
+function defaultValues(initialValues) {
+  return {
+    bounds: [1, -1, 1, -1, 1, -1],
+    sampleDistance: 1.0,
+    imageSampleDistance: 1.0,
+    maximumSamplesPerRay: 1000,
+    autoAdjustSampleDistances: true,
+    blendMode: BlendMode.COMPOSITE_BLEND,
+    ipScalarRange: [-1000000.0, 1000000.0],
+    filterMode: FilterMode.OFF, // ignored by WebGL so no behavior change
+    preferSizeOverAccuracy: false, // Whether to use halfFloat representation of float, when it is inaccurate
+    computeNormalFromOpacity: false,
+    // volume shadow parameters
+    volumetricScatteringBlending: 0.0,
+    globalIlluminationReach: 0.0,
+    volumeShadowSamplingDistFactor: 5.0,
+    anisotropy: 0.0,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   vtkAbstractMapper.extend(publicAPI, model, initialValues);
 
@@ -150,7 +153,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkVolumeMapper');
+export const newInstance = macro.newInstance(extend, 'vtkVolumeMapper', true);
 
 // ----------------------------------------------------------------------------
 

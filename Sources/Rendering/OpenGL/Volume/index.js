@@ -89,27 +89,24 @@ function vtkOpenGLVolume(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  // context: null,
-  // keyMatrixTime: null,
-  // normalMatrix: null,
-  // MCWCMatrix: null,
-  // _openGLRenderWindow: null,
-};
+function defaultValues(initialValues) {
+  return {
+    // context: null,
+    keyMatrixTime: macro.obj({}, { mtime: 0 }),
+    normalMatrix: new Float64Array(9),
+    MCWCMatrix: new Float64Array(16),
+    // _openGLRenderWindow: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
-
-  model.keyMatrixTime = {};
-  macro.obj(model.keyMatrixTime, { mtime: 0 });
-  // always set by getter
-  model.normalMatrix = new Float64Array(9);
-  model.MCWCMatrix = new Float64Array(16);
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['context']);
@@ -120,7 +117,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkOpenGLVolume');
+export const newInstance = macro.newInstance(extend, 'vtkOpenGLVolume', true);
 
 // ----------------------------------------------------------------------------
 

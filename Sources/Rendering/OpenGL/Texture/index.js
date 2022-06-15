@@ -1463,46 +1463,45 @@ function vtkOpenGLTexture(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  _openGLRenderWindow: null,
-  context: null,
-  handle: 0,
-  sendParametersTime: null,
-  textureBuildTime: null,
-  numberOfDimensions: 0,
-  target: 0,
-  format: 0,
-  openGLDataType: 0,
-  components: 0,
-  width: 0,
-  height: 0,
-  depth: 0,
-  autoParameters: true,
-  wrapS: Wrap.CLAMP_TO_EDGE,
-  wrapT: Wrap.CLAMP_TO_EDGE,
-  wrapR: Wrap.CLAMP_TO_EDGE,
-  minificationFilter: Filter.NEAREST,
-  magnificationFilter: Filter.NEAREST,
-  minLOD: -1000.0,
-  maxLOD: 1000.0,
-  baseLevel: 0,
-  maxLevel: 1000,
-  generateMipmap: false,
-};
+function defaultValues(initialValues) {
+  return {
+    // Internal objects
+    sendParametersTime: macro.obj({}, { mtime: 0 }),
+    textureBuildTime: macro.obj({}, { mtime: 0 }),
+
+    _openGLRenderWindow: null,
+    context: null,
+    handle: 0,
+    numberOfDimensions: 0,
+    target: 0,
+    format: 0,
+    openGLDataType: 0,
+    components: 0,
+    width: 0,
+    height: 0,
+    depth: 0,
+    autoParameters: true,
+    wrapS: Wrap.CLAMP_TO_EDGE,
+    wrapT: Wrap.CLAMP_TO_EDGE,
+    wrapR: Wrap.CLAMP_TO_EDGE,
+    minificationFilter: Filter.NEAREST,
+    magnificationFilter: Filter.NEAREST,
+    minLOD: -1000.0,
+    maxLOD: 1000.0,
+    baseLevel: 0,
+    maxLevel: 1000,
+    generateMipmap: false,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
-
-  model.sendParametersTime = {};
-  macro.obj(model.sendParametersTime, { mtime: 0 });
-
-  model.textureBuildTime = {};
-  macro.obj(model.textureBuildTime, { mtime: 0 });
 
   // Build VTK API
   macro.set(publicAPI, model, ['format', 'openGLDataType']);

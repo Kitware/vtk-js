@@ -110,23 +110,25 @@ function vtkVolume(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  mapper: null,
-  property: null,
-  bounds: [1, -1, 1, -1, 1, -1],
-};
+function defaultValues(initialValues) {
+  return {
+    // Internal objects
+    boundsMTime: macro.obj({}),
+
+    mapper: null,
+    property: null,
+    bounds: [1, -1, 1, -1, 1, -1],
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkProp3D.extend(publicAPI, model, initialValues);
-
-  // vtkTimeStamp
-  model.boundsMTime = {};
-  macro.obj(model.boundsMTime);
 
   // Build VTK API
   macro.set(publicAPI, model, ['property']);
@@ -139,7 +141,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkVolume');
+export const newInstance = macro.newInstance(extend, 'vtkVolume', true);
 
 // ----------------------------------------------------------------------------
 
