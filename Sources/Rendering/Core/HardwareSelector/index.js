@@ -4,18 +4,6 @@ import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 const { FieldAssociations } = vtkDataSet;
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-function defaultValues(initialValues) {
-  return {
-    fieldAssociation: FieldAssociations.FIELD_ASSOCIATION_CELLS,
-    captureZValues: false,
-    ...initialValues,
-  };
-}
-
-// ----------------------------------------------------------------------------
 // vtkHardwareSelector methods
 // ----------------------------------------------------------------------------
 
@@ -40,6 +28,18 @@ function vtkHardwareSelector(publicAPI, model) {
       return srcData.generateSelection(fx1, fy1, fx2, fy2);
     }
     return [];
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    fieldAssociation: FieldAssociations.FIELD_ASSOCIATION_CELLS,
+    captureZValues: false,
+    ...initialValues,
   };
 }
 

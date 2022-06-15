@@ -33,6 +33,7 @@ function vtkCoordinate(publicAPI, model) {
       throw new RangeError('Invalid number of values for array setter');
     }
     let changeDetected = false;
+    // Instanciation time : if model.value is undefined, change needs to be done
     if (model.value) {
       model.value.forEach((item, index) => {
         if (item !== array[index]) {
