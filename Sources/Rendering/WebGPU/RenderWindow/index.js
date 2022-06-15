@@ -550,6 +550,11 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 
 function defaultValues(initialValues) {
   return {
+    // Internal instances
+    bgImage: new Image(),
+    myFactory: vtkWebGPUViewNodeFactory.newInstance(),
+    selector: vtkWebGPUHardwareSelector.newInstance(),
+
     initialized: false,
     context: null,
     adapter: null,
@@ -574,35 +579,28 @@ function defaultValues(initialValues) {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(initialValues, defaultValues(initialValues));
 
-  // Create internal instances
+  // model.canvas needs to be set to model before calling other setters
   model.canvas = document.createElement('canvas');
   model.canvas.style.width = '100%';
 
-  // Create internal bgImage
-  model.bgImage = new Image();
-  delete initialValues.bgImage;
-  model.bgImage.style.position = 'absolute';
-  model.bgImage.style.left = '0';
-  model.bgImage.style.top = '0';
-  model.bgImage.style.width = '100%';
-  model.bgImage.style.height = '100%';
-  model.bgImage.style.zIndex = '-1';
+  initialValues.bgImage.style.position = 'absolute';
+  initialValues.bgImage.style.left = '0';
+  initialValues.bgImage.style.top = '0';
+  initialValues.bgImage.style.width = '100%';
+  initialValues.bgImage.style.height = '100%';
+  initialValues.bgImage.style.zIndex = '-1';
 
   // Inheritance
   vtkRenderWindowViewNode.extend(publicAPI, model, initialValues);
 
-  model.myFactory = vtkWebGPUViewNodeFactory.newInstance();
   /* eslint-disable no-use-before-define */
-  model.myFactory.registerOverride('vtkRenderWindow', newInstance);
+  initialValues.myFactory.registerOverride('vtkRenderWindow', newInstance);
   /* eslint-enable no-use-before-define */
 
   // setup default forward pass rendering
-  model.renderPasses[0] = vtkForwardPass.newInstance();
+  initialValues.renderPasses[0] = vtkForwardPass.newInstance();
 
-  if (!initialValues.selector) {
-    initialValues.selector = vtkWebGPUHardwareSelector.newInstance();
-    initialValues.selector.setWebGPURenderWindow(publicAPI);
-  }
+  initialValues.selector.setWebGPURenderWindow(publicAPI);
 
   macro.event(publicAPI, model, 'imageReady');
   macro.event(publicAPI, model, 'initialized');

@@ -54,7 +54,7 @@ function vtkWebGPUShaderCache(publicAPI, model) {
 
 function defaultValues(initialValues) {
   return {
-    shaderModules: null,
+    _shaderModules: new Map(),
     device: null,
     window: null,
     ...initialValues,
@@ -64,11 +64,8 @@ function defaultValues(initialValues) {
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
+  macro.moveToProtected(publicAPI, initialValues, ['shaderModules']);
   Object.assign(initialValues, defaultValues(initialValues));
-
-  // Internal objects
-  model._shaderModules = new Map();
-
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, ['device', 'window']);

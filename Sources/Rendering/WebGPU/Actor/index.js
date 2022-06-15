@@ -6,18 +6,6 @@ import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-function defaultValues(initialValues) {
-  return {
-    propID: undefined,
-    bufferShift: undefined,
-    ...initialValues,
-  };
-}
-
-// ----------------------------------------------------------------------------
 // vtkWebGPUActor methods
 // ----------------------------------------------------------------------------
 
@@ -161,6 +149,27 @@ function vtkWebGPUActor(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    // Internal objects
+    keyMatricesTime: macro.obj({}, { mtime: 0 }),
+    keyMatrices: {
+      normalMatrix: new Float64Array(16),
+      bcwc: new Float64Array(16),
+      bcsc: new Float64Array(16),
+    },
+    bufferShift: [0, 0, 0, 0],
+
+    propID: undefined,
+    bufferShift: undefined,
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(initialValues, defaultValues(initialValues));
@@ -168,17 +177,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
 
-  initialValues.keyMatricesTime = {};
-  macro.obj(initialValues.keyMatricesTime, { mtime: 0 });
-  initialValues.keyMatrices = {
-    normalMatrix: new Float64Array(16),
-    bcwc: new Float64Array(16),
-    bcsc: new Float64Array(16),
-  };
-
   macro.get(publicAPI, model, ['propID', 'keyMatricesTime']);
-
-  initialValues.bufferShift = [0, 0, 0, 0];
 
   // Object methods
   vtkWebGPUActor(publicAPI, model);

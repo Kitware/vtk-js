@@ -5,19 +5,6 @@ import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-function defaultValues(initialValues) {
-  return {
-    selectionRenderEncoder: null,
-    colorTexture: null,
-    depthTexture: null,
-    ...initialValues,
-  };
-}
-
-// ----------------------------------------------------------------------------
 
 function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
   // Set our className
@@ -126,6 +113,19 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
         ],
       },
     });
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    selectionRenderEncoder: null,
+    colorTexture: null,
+    depthTexture: null,
+    ...initialValues,
   };
 }
 

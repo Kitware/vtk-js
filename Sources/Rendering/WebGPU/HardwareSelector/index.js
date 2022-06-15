@@ -253,18 +253,6 @@ function generateSelectionWithData(buffdata, fx1, fy1, fx2, fy2) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-function defaultValues(initialValues) {
-  return {
-    WebGPURenderWindow: null,
-    _selectionPass: vtkWebGPUHardwareSelectionPass.newInstance(),
-    ...initialValues,
-  };
-}
-
-// ----------------------------------------------------------------------------
 // vtkWebGPUHardwareSelector methods
 // ----------------------------------------------------------------------------
 
@@ -422,6 +410,18 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
     result.generateSelection = (fx1, fy1, fx2, fy2) =>
       generateSelectionWithData(result, fx1, fy1, fx2, fy2);
     return result;
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    WebGPURenderWindow: null,
+    _selectionPass: vtkWebGPUHardwareSelectionPass.newInstance(),
+    ...initialValues,
   };
 }
 

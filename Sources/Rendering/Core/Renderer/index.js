@@ -565,6 +565,8 @@ function vtkRenderer(publicAPI, model) {
 
 function defaultValues(initialValues) {
   return {
+    background: [0, 0, 0, 1],
+
     pickedProp: null,
     activeCamera: null,
 
@@ -633,7 +635,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkViewport.extend(publicAPI, model, initialValues);
 
   // make sure background has 4 entries. Default to opaque black
-  if (!initialValues.background) initialValues.background = [0, 0, 0, 1];
   while (initialValues.background.length < 3) initialValues.background.push(0);
   if (initialValues.background.length === 3) initialValues.background.push(1);
 

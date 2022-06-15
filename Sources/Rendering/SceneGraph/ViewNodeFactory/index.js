@@ -1,17 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-function defaultValues(initialValues) {
-  return {
-    // overrides: {},
-    ...initialValues,
-  };
-}
-
-// ----------------------------------------------------------------------------
 // vtkViewNodeFactory methods
 // ----------------------------------------------------------------------------
 
@@ -51,6 +40,17 @@ function vtkViewNodeFactory(publicAPI, model) {
 
   publicAPI.registerOverride = (className, func) => {
     model.overrides[className] = func;
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    // overrides: {},
+    ...initialValues,
   };
 }
 

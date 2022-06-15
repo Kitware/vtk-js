@@ -166,7 +166,7 @@ function defaultValues(initialValues) {
 
     transformCoordinate: null,
 
-    viewSpecificProperties: null,
+    viewSpecificProperties: {},
     customShaderAttributes: [],
     ...initialValues,
   };
@@ -195,10 +195,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'customShaderAttributes', // point data array names that will be transferred to the VBO
   ]);
   macro.setGetArray(publicAPI, model, ['scalarRange'], 2);
-
-  if (!initialValues.viewSpecificProperties) {
-    initialValues.viewSpecificProperties = {};
-  }
 
   // Object methods
   vtkMapper2D(publicAPI, model);

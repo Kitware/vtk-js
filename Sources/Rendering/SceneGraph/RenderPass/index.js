@@ -1,21 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-function defaultValues(initialValues) {
-  return {
-    delegates: [],
-    currentOperation: null,
-    preDelegateOperations: [],
-    postDelegateOperations: [],
-    currentParent: null,
-    ...initialValues,
-  };
-}
-
-// ----------------------------------------------------------------------------
 
 function vtkRenderPass(publicAPI, model) {
   // Set our className
@@ -59,6 +44,21 @@ function vtkRenderPass(publicAPI, model) {
       publicAPI.setCurrentOperation(val);
       viewNode.traverse(publicAPI);
     });
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    delegates: [],
+    currentOperation: null,
+    preDelegateOperations: [],
+    postDelegateOperations: [],
+    currentParent: null,
+    ...initialValues,
   };
 }
 

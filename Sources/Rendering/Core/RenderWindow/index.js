@@ -22,22 +22,6 @@ export function newAPISpecificView(name, initialValues = {}, toSet = true) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-function defaultValues(initialValues) {
-  return {
-    defaultViewAPI: DEFAULT_VIEW_API,
-    renderers: [],
-    views: [],
-    interactor: null,
-    neverRendered: true,
-    numberOfLayers: 1,
-    ...initialValues,
-  };
-}
-
-// ----------------------------------------------------------------------------
 // vtkRenderWindow methods
 // ----------------------------------------------------------------------------
 
@@ -148,6 +132,22 @@ function vtkRenderWindow(publicAPI, model) {
         view.captureNextImage ? view.captureNextImage(format, opts) : undefined
       )
       .filter((i) => !!i);
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+function defaultValues(initialValues) {
+  return {
+    defaultViewAPI: DEFAULT_VIEW_API,
+    renderers: [],
+    views: [],
+    interactor: null,
+    neverRendered: true,
+    numberOfLayers: 1,
+    ...initialValues,
   };
 }
 

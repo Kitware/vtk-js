@@ -152,6 +152,7 @@ function vtkRenderWindowViewNode(publicAPI, model) {
 
 function defaultValues(initialValues) {
   return {
+    size: [300, 300],
     selector: undefined,
     ...initialValues,
   };
@@ -161,11 +162,6 @@ function defaultValues(initialValues) {
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(initialValues, defaultValues(initialValues));
-
-  if (!initialValues.size) {
-    initialValues.size = [300, 300];
-  }
-
   macro.getArray(publicAPI, model, ['size'], 2);
   macro.get(publicAPI, model, ['selector']);
 

@@ -21,16 +21,17 @@ function vtkOpenGLViewNodeFactory(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 function defaultValues(initialValues) {
-  return { ...initialValues };
+  return {
+    // Static class mapping shared across instances
+    overrides: CLASS_MAPPING,
+    ...initialValues,
+  };
 }
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(initialValues, defaultValues(initialValues));
-
-  // Static class mapping shared across instances
-  initialValues.overrides = CLASS_MAPPING;
 
   // Inheritance
   vtkViewNodeFactory.extend(publicAPI, model, initialValues);

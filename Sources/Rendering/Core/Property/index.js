@@ -16,7 +16,8 @@ function vtkProperty(publicAPI, model) {
   model.classHierarchy.push('vtkProperty');
 
   publicAPI.setColor = (r, g, b) => {
-    if (!model.color) {
+    // Instanciation time
+    if (model.color === undefined) {
       model.color = [0, 0, 0];
     }
     if (Array.isArray(r)) {

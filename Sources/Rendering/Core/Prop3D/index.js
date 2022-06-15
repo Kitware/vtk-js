@@ -91,7 +91,9 @@ function vtkProp3D(publicAPI, model) {
       return false;
     }
     model.orientation = [x, y, z];
-    if (!model.rotation) model.rotation = mat4.identity(new Float64Array(16));
+    // Instanciation time
+    if (model.rotation === undefined)
+      model.rotation = mat4.identity(new Float64Array(16));
     mat4.identity(model.rotation);
     publicAPI.rotateZ(z);
     publicAPI.rotateX(x);
@@ -101,13 +103,10 @@ function vtkProp3D(publicAPI, model) {
   };
 
   publicAPI.setUserMatrix = (matrix) => {
-    if (!matrix) {
-      model.userMatrix = null;
-    } else {
-      if (!model.userMatrix)
-        model.userMatrix = mat4.identity(new Float64Array(16));
-      mat4.copy(model.userMatrix, matrix);
-    }
+    if (model.userMatrix === undefined)
+      model.userMatrix = mat4.identity(new Float64Array(16));
+    mat4.copy(model.userMatrix, matrix);
+
     publicAPI.modified();
   };
 
@@ -118,7 +117,7 @@ function vtkProp3D(publicAPI, model) {
 
   publicAPI.computeMatrix = () => {
     // check whether or not need to rebuild the matrix
-    if (!model.matrixMTime) {
+    if (model.matrixMTime === undefined) {
       return;
     }
     if (publicAPI.getMTime() > model.matrixMTime.getMTime()) {
