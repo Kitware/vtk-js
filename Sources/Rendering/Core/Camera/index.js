@@ -77,7 +77,6 @@ function vtkCamera(publicAPI, model) {
 
   // Internal Functions that don't need to be public
   function computeViewPlaneNormal() {
-    if (!model.viewPlaneNormal) model.viewPlaneNormal = [0, 0, 0];
     // VPN is -DOP
     model.viewPlaneNormal[0] = -model.directionOfProjection[0];
     model.viewPlaneNormal[1] = -model.directionOfProjection[1];
@@ -102,7 +101,8 @@ function vtkCamera(publicAPI, model) {
     ) {
       return;
     }
-    if (!model.position) {
+    // Instanciation time
+    if (model.position === undefined) {
       model.position = defaultValues().position;
     }
 
@@ -124,7 +124,10 @@ function vtkCamera(publicAPI, model) {
     ) {
       return;
     }
-
+    // Instanciation time
+    if (model.focalPoint === undefined) {
+      model.focalPoint = defaultValues().focalPoint;
+    }
     model.focalPoint[0] = x;
     model.focalPoint[1] = y;
     model.focalPoint[2] = z;
@@ -159,10 +162,12 @@ function vtkCamera(publicAPI, model) {
   //----------------------------------------------------------------------------
   // This method must be called when the focal point or camera position changes
   publicAPI.computeDistance = () => {
-    if (!model.position) {
+    // Instanciation time : computeDistance can be called either when model.position
+    // or model.focalPoint are undefined
+    if (model.position === undefined) {
       model.position = defaultValues().position;
     }
-    if (!model.focalPoint) {
+    if (model.focalPoint === undefined) {
       model.focalPoint = defaultValues().focalPoint;
     }
     const dx = model.focalPoint[0] - model.position[0];
@@ -171,7 +176,7 @@ function vtkCamera(publicAPI, model) {
 
     model.distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-    if (!model.directionOfProjection) {
+    if (model.directionOfProjection === undefined) {
       model.directionOfProjection = defaultValues().directionOfProjection;
     }
 
@@ -233,7 +238,6 @@ function vtkCamera(publicAPI, model) {
     );
     vec4.transformMat4(viewUpVec4, viewUpVec4, rotateMatrix);
 
-    if (!model.viewUp) model.viewUp = defaultValues().viewUp;
     model.viewUp[0] = viewUpVec4[0];
     model.viewUp[1] = viewUpVec4[1];
     model.viewUp[2] = viewUpVec4[2];
@@ -242,7 +246,7 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.azimuth = (angle) => {
-    const fp = model.focalPoint ? model.focalPoint : defaultValues().focalPoint;
+    const fp = model.focalPoint;
 
     mat4.identity(trans);
 
@@ -250,13 +254,11 @@ function vtkCamera(publicAPI, model) {
     // rotate about view up,
     // translate back again
     mat4.translate(trans, trans, fp);
-    const viewUp = model.viewUp ? model.viewUp : defaultValues().viewUp;
-    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), viewUp);
+    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), model.viewUp);
     mat4.translate(trans, trans, [-fp[0], -fp[1], -fp[2]]);
 
     // apply the transform to the position
-    const pos = model.position ? model.position : defaultValues().position;
-    vec3.transformMat4(newPosition, pos, trans);
+    vec3.transformMat4(newPosition, model.position, trans);
     publicAPI.setPosition(newPosition[0], newPosition[1], newPosition[2]);
   };
 
@@ -736,9 +738,7 @@ function vtkCamera(publicAPI, model) {
     let vn = null;
     let position = null;
 
-    vn = model.viewPlaneNormal
-      ? model.viewPlaneNormal
-      : defaultValues().viewPlaneNormal;
+    vn = model.viewPlaneNormal;
     position = model.position;
 
     const a = -vn[0];
