@@ -338,6 +338,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkScalarsToColors.extend(publicAPI, model, initialValues);
 
   // Internal objects initialization
+  // model.table needs to be instanciated manually if it is an array to not call
+  // setTable in that case
   if (Array.isArray(initialValues.table)) {
     model.table = initialValues.table;
     delete initialValues.table;
