@@ -50,14 +50,17 @@ function vtkProgressHandler(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  workCount: 0,
-};
+function defaultValues(initialValues) {
+  return {
+    workCount: 0,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Object methods
   macro.obj(publicAPI, model);
@@ -70,7 +73,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkProgressHandler');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkProgressHandler',
+  true
+);
 
 // ----------------------------------------------------------------------------
 
