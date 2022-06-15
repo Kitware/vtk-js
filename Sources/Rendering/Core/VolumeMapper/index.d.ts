@@ -1,3 +1,4 @@
+import vtkPiecewiseFunction from "../../../Common/DataModel/PiecewiseFunction";
 import { Bounds, Range } from "../../../types";
 import vtkAbstractMapper, { IAbstractMapperInitialValues } from "../AbstractMapper";
 import { BlendMode, FilterMode } from "./Constants";
@@ -152,6 +153,11 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	setBlendModeToAverageIntensity(): void;
 
 	/**
+	 * Set blend mode to RADON_TRANSFORM_BLEND
+	 */
+	 setBlendModeToRadonTransform(): void;
+
+	/**
 	 * Get the distance between samples used for rendering
 	 * @param sampleDistance 
 	 */
@@ -233,6 +239,35 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	update(): void;
 }
 
+/**
+ * Create an absorption transfer function to set to the mapper when blend mode is RADON.
+ * The transfer function is a linear ramp between the lowest material with absorption and
+ * the material with maximum absorption. Voxel values lower than the lowest material with
+ * absorption will have no absorption associated. Voxel values higher than the maximum
+ * absorbent material will have the same absorption than the max absorbent material.
+ * The associated color transfer function is typically black to white between 0 and 1.
+ * An alternative is to create your own transfer function with HU/absorption pairs. e.g.
+ * const ofun = vtkPiecewiseFunction.newInstance();
+ * ofun.addPointLong(-1000,0, 1, 1); // air, "1, 1)" to flatten the function
+ * ofun.addPoint(-10, 0.01); // fat
+ * ofun.addPoint(-10, 0.015); // water
+ * ofun.addPointLong(1000, 0.03, 1, 1); // bone
+ * ofun.addPoint(3000, 1); // silver
+ * @static
+ * @param {number} firstAbsorbentMaterialHounsfieldValue: Define minimum voxel value (in hounsfield unit) with non zero absorption (e.g. water (0), fat(-10)...).
+ * Any voxel value lower than this parameter will have no absorption (absorption === 0)
+ * @param {number} firstAbsorbentMaterialAbsorption: Absorption attributed to voxels with firstAbsorbentMaterialHounsfieldValue (e.g. 0 or 0.01)
+ * @param {number} maxAbsorbentMaterialHounsfieldValue: Define maximum voxel value (in hounsfield unit) with increasing absorption (e.g. bone (1000))
+ * @param {number} maxAbsorbentMaterialAbsorption: Absorption attributed to voxels >= maxAbsorbentMaterialHounsfieldValue (e.g. 0.03)
+ * @param {vtkPiecewiseFunction} outputTransferFunction: To provide optionally to avoid instantiating a new transfer function each time.
+ * @return {vtkPiecewiseFunction} the created absorption transfer function to set on VolumeMapper scalarOpacity.
+ */
+export function createRadonTransferFunction(
+	firstAbsorbentMaterialHounsfieldValue: number,
+	firstAbsorbentMaterialAbsorption: number,
+	maxAbsorbentMaterialHounsfieldValue: number,
+	maxAbsorbentMaterialAbsorption: number,
+	outputTransferFunction?: vtkPiecewiseFunction): vtkPiecewiseFunction;
 
 /**
  * Method use to decorate a given object (publicAPI+model) with vtkVolumeMapper characteristics.
