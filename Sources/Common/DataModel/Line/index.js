@@ -231,12 +231,16 @@ function vtkLine(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+function defaultValues(initialValues) {
+  return {
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   vtkCell.extend(publicAPI, model, initialValues);
 
@@ -245,7 +249,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkLine');
+export const newInstance = macro.newInstance(extend, 'vtkLine', true);
 
 // ----------------------------------------------------------------------------
 
