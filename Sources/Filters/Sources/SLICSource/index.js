@@ -176,19 +176,22 @@ function vtkSLICSource(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  clusters: [],
-  spacing: [1.0, 1.0, 1.0],
-  origin: [0.0, 0.0, 0.0],
-  dimensions: [10, 10, 10],
-  clusterArrayName: 'cluster',
-  scalarArrayName: 'field',
-};
+function defaultValues(initialValues) {
+  return {
+    clusters: [],
+    spacing: [1.0, 1.0, 1.0],
+    origin: [0.0, 0.0, 0.0],
+    dimensions: [10, 10, 10],
+    clusterArrayName: 'cluster',
+    scalarArrayName: 'field',
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -202,7 +205,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkSLICSource');
+export const newInstance = macro.newInstance(extend, 'vtkSLICSource', true);
 
 // ----------------------------------------------------------------------------
 

@@ -92,20 +92,24 @@ function vtkViewFinderSource(publicAPI, model) {
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
-const DEFAULT_VALUES = {
-  radius: 1,
-  spacing: 2,
-  width: 4,
-  pointType: 'Float64Array',
-};
+function defaultValues(initialValues) {
+  return {
+    //Internal
+    center: [0, 0, 0],
+    orientation: [1, 0, 0],
+
+    radius: 1,
+    spacing: 2,
+    width: 4,
+    pointType: 'Float64Array',
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  model.center = [0, 0, 0];
-  model.orientation = [1, 0, 0];
-
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -117,7 +121,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkArrow2DSource');
+export const newInstance = macro.newInstance(extend, 'vtkArrow2DSource', true);
 
 // ----------------------------------------------------------------------------
 

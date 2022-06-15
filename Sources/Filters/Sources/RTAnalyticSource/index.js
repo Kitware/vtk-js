@@ -103,21 +103,24 @@ function vtkRTAnalyticSource(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  offset: 40,
-  maximum: 120,
-  center: [0, 0, 0],
-  frequency: [60, 30, 40],
-  magnitude: [10, 18, 5],
-  standardDeviation: 0.5,
-  wholeExtent: [-10, 10, -10, 10, -10, 10],
-  dataDirection: [1, 0, 0, 0, 1, 0, 0, 0, 1],
-};
+function defaultValues(initialValues) {
+  return {
+    offset: 40,
+    maximum: 120,
+    center: [0, 0, 0],
+    frequency: [60, 30, 40],
+    magnitude: [10, 18, 5],
+    standardDeviation: 0.5,
+    wholeExtent: [-10, 10, -10, 10, -10, 10],
+    dataDirection: [1, 0, 0, 0, 1, 0, 0, 0, 1],
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -136,7 +139,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkRTAnalyticSource');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkRTAnalyticSource',
+  true
+);
 
 // ----------------------------------------------------------------------------
 

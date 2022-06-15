@@ -35,9 +35,16 @@ function vtkConcentricCylinderSource(publicAPI, model) {
 
   publicAPI.getNumberOfRadius = () => model.radius.length;
   publicAPI.getRadius = (index = 0) => model.radius[index];
-  publicAPI.setRadius = (index, radius) => {
-    if (!model.radius) model.radius = [];
-    model.radius[index] = radius;
+  publicAPI.setRadius = (...args) => {
+    // Handle instanciation time
+    let n = [];
+
+    if (args.length === 1 || Array.isArray(args[0])) {
+      n = [...args[0]];
+      model.radius = n;
+    } else if (args.length === 2) {
+      model.radius[args[0]] = args[1];
+    }
     publicAPI.modified();
   };
   publicAPI.setCellField = (index, field) => {
