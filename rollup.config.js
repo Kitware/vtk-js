@@ -15,12 +15,15 @@ import postcss from 'rollup-plugin-postcss';
 import { string } from 'rollup-plugin-string';
 import svgo from 'rollup-plugin-svgo';
 import webworkerLoader from 'rollup-plugin-web-worker-loader';
+import license from 'rollup-plugin-license';
 import copy from 'rollup-plugin-copy';
 
 import pkgJSON from './package.json';
 
 import { rewriteFilenames } from './Utilities/rollup/plugin-rewrite-filenames';
 import { generateDtsReferences } from './Utilities/rollup/plugin-generate-references';
+
+const fs = require('fs');
 
 const relatifyImports = require('./Utilities/build/rewrite-imports');
 
@@ -59,7 +62,8 @@ const outputDir = path.resolve('dist', 'esm');
 const dependencies = Object.keys(pkgJSON.dependencies || []);
 const peerDependencies = Object.keys(pkgJSON.peerDependencies || []);
 
-export default {
+export default [
+  {
   input: entries,
   output: {
     dir: outputDir,
@@ -249,4 +253,48 @@ export default {
       ],
     }),
   ],
-};
+  },{
+    input: path.resolve(path.join('Sources', 'macros.js')),
+    output: {
+      file: path.join(outputDir, 'macros.js'),
+      format: 'es',
+      hoistTransitiveImports: false,
+    },
+    external: [
+      ...dependencies.map((name) => new RegExp(`^${name}`)),
+      ...peerDependencies.map((name) => new RegExp(`^${name}`)),
+    ],
+    plugins: [
+      license({
+        banner: {
+          commentStyle: 'ignored',
+          content: {
+            file: path.join(__dirname, 'LICENSE'),
+          },
+        },
+      }),
+      alias({
+        entries: [{ find: 'vtk.js', replacement: path.resolve(__dirname) }],
+      }),
+      nodeResolve({
+        // don't rely on node builtins for web
+        preferBuiltins: false,
+        browser: true,
+      }),
+      !process.env.NOLINT &&
+        eslint({
+          include: '**/*.js',
+        }),
+      // commonjs should be before babel
+      commonjs({
+        transformMixedEsModules: true,
+      }),
+      // should be after commonjs
+      nodePolyfills(),
+      babel({
+        extensions: ['.js'],
+        babelHelpers: 'runtime',
+      }),
+    ],
+  },
+];
