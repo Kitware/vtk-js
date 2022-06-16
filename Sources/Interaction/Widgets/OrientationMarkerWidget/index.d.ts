@@ -165,7 +165,6 @@ export function extend(publicAPI: object, model: object, initialValues?: IOrient
  */
 export function newInstance(initialValues?: IOrientationMarkerWidgetInitialValues): vtkOrientationMarkerWidget;
 
-
 /**
  * vtkOrientationMarkerWidget is a 2D widget for manipulating a marker prop
  */
@@ -174,4 +173,5 @@ export declare const vtkOrientationMarkerWidget: {
 	extend: typeof extend;
 	Corners: typeof Corners;
 }
+
 export default vtkOrientationMarkerWidget;

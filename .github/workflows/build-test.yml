@@ -36,6 +36,7 @@ jobs:
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
+        continue-on-error: true
         with:
           name: test-results
           path: Utilities/TestResults/Test-Report.html
