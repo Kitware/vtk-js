@@ -301,7 +301,7 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
       gl.ONE,
       gl.ONE_MINUS_SRC_ALPHA
     );
-    gl.depthMask(false);
+    viewNode.setDepthWriteMask(false);
     gl.depthFunc(gl.ALWAYS);
 
     gl.viewport(0, 0, size[0], size[1]);
@@ -322,7 +322,7 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
     // render quad
     gl.drawArrays(gl.TRIANGLES, 0, model.tris.getCABO().getElementCount());
 
-    gl.depthMask(true);
+    viewNode.setDepthWriteMask(true);
     gl.depthFunc(gl.LEQUAL);
     model.translucentRGBATexture.deactivate();
     model.translucentRTexture.deactivate();

@@ -262,8 +262,7 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
 
   publicAPI.renderPieceDraw = (ren, actor) => {
     const representation = actor.getProperty().getRepresentation();
-    const gl = model.context;
-    gl.depthMask(true);
+    model._openGLRenderWindow.setDepthWriteMask(true);
 
     // for every primitive type
     for (let i = primTypes.Start; i < primTypes.End; i++) {

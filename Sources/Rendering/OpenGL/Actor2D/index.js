@@ -127,7 +127,7 @@ function vtkOpenGLActor2D(publicAPI, model) {
   // Renders myself
   publicAPI.opaquePass = (prepass, renderPass) => {
     if (prepass) {
-      model.context.depthMask(true);
+      model._openGLRenderWindow.setDepthWriteMask(true);
       publicAPI.activateTextures();
     } else if (model.activeTextures) {
       // deactivate textures
@@ -140,7 +140,7 @@ function vtkOpenGLActor2D(publicAPI, model) {
   // Renders myself
   publicAPI.translucentPass = (prepass, renderPass) => {
     if (prepass) {
-      model.context.depthMask(false);
+      model._openGLRenderWindow.setDepthWriteMask(false);
       publicAPI.activateTextures();
     } else if (model.activeTextures) {
       for (let index = 0; index < model.activeTextures.length; index++) {
@@ -152,7 +152,7 @@ function vtkOpenGLActor2D(publicAPI, model) {
   // Renders myself
   publicAPI.overlayPass = (prepass, renderPass) => {
     if (prepass) {
-      model.context.depthMask(true);
+      model._openGLRenderWindow.setDepthWriteMask(true);
       publicAPI.activateTextures();
     } else if (model.activeTextures) {
       // deactivate textures

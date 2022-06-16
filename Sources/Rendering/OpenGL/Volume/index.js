@@ -62,7 +62,7 @@ function vtkOpenGLVolume(publicAPI, model) {
     if (!model.renderable || !model.renderable.getVisibility()) {
       return;
     }
-    model.context.depthMask(!prepass);
+    model._openGLRenderWindow.setDepthWriteMask(!prepass);
   };
 
   publicAPI.getKeyMatrices = () => {

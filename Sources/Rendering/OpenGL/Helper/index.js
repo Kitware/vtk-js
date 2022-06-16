@@ -25,6 +25,7 @@ function vtkOpenGLHelper(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLHelper');
 
   publicAPI.setOpenGLRenderWindow = (win) => {
+    model._openGLRenderWindow = win;
     model.context = win.getContext();
     model.program.setContext(model.context);
     model.VAO.setOpenGLRenderWindow(win);
@@ -44,9 +45,9 @@ function vtkOpenGLHelper(publicAPI, model) {
       const mode = publicAPI.getOpenGLMode(rep);
       const wideLines = publicAPI.haveWideLines(ren, actor);
       const gl = model.context;
-      const depthMask = gl.getParameter(gl.DEPTH_WRITEMASK);
+      const depthMask = model._openGLRenderWindow.getDepthWriteMask();
       if (model.pointPicking) {
-        gl.depthMask(false);
+        model._openGLRenderWindow.setDepthWriteMask(false);
       }
       const drawingLines = mode === gl.LINES;
       if (drawingLines && wideLines) {
@@ -67,7 +68,7 @@ function vtkOpenGLHelper(publicAPI, model) {
       const stride =
         (mode === gl.POINTS ? 1 : 0) || (mode === gl.LINES ? 2 : 3);
       if (model.pointPicking) {
-        gl.depthMask(depthMask);
+        model._openGLRenderWindow.setDepthWriteMask(depthMask);
       }
       return model.CABO.getElementCount() / stride;
     }
@@ -260,6 +261,7 @@ function vtkOpenGLHelper(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  _openGLRenderWindow: null,
   context: null,
   program: null,
   shaderSourceTime: null,

@@ -95,13 +95,13 @@ function vtkOpenGLImageSlice(publicAPI, model) {
   // Renders myself
   publicAPI.opaquePass = (prepass, renderPass) => {
     if (prepass) {
-      model.context.depthMask(true);
+      model._openGLRenderWindow.setDepthWriteMask(true);
     }
   };
 
   // Renders myself
   publicAPI.translucentPass = (prepass, renderPass) => {
-    model.context.depthMask(!prepass);
+    model._openGLRenderWindow.setDepthWriteMask(!prepass);
   };
 
   publicAPI.getKeyMatrices = () => {

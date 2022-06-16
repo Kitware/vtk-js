@@ -321,6 +321,16 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	enableCullFace(): void;
 
 	/**
+	 * Sets whether writing to the depth buffer is enabled or disabled.
+	 */
+	setDepthWriteMask(flag: boolean): void;
+
+	/**
+	 * Gets whether writing to the depth buffer is enabled or disabled.
+	 */
+	getDepthWriteMask(): boolean;
+
+	/**
 	 *
 	 * @param {vtkViewStream} stream The vtkViewStream instance.
 	 */

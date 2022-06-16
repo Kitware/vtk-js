@@ -1207,6 +1207,23 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     return true;
   };
 
+  publicAPI.getDepthWriteMask = () => {
+    if (model.depthWriteMask !== null) {
+      return model.depthWriteMask;
+    }
+
+    const gl = model.context;
+    const depthWriteMask = gl.getParameter(gl.DEPTH_WRITEMASK);
+    model.depthWriteMask = depthWriteMask;
+
+    return depthWriteMask;
+  };
+
+  publicAPI.setDepthWriteMask = (flag) => {
+    model.depthWriteMask = flag;
+    model.context.depthMask(flag);
+  };
+
   publicAPI.createSelector = () => {
     const ret = vtkOpenGLHardwareSelector.newInstance();
     ret.setOpenGLRenderWindow(publicAPI);
@@ -1226,6 +1243,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   cullFaceEnabled: false,
+  depthWriteMask: null,
   shaderCache: null,
   initialized: false,
   context: null,
