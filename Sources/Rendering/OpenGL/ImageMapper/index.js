@@ -295,7 +295,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
             ]
           ).result;
           break;
-        default:
+        case 3:
           FSSource = vtkShaderProgram.substitute(
             FSSource,
             '//VTK::TCoord::Impl',
@@ -304,6 +304,18 @@ function vtkOpenGLImageMapper(publicAPI, model) {
               'gl_FragData[0] = vec4(texture2D(colorTexture1, vec2(tcolor.r,0.5)).r,',
               '  texture2D(colorTexture1, vec2(tcolor.g,0.5)).r,',
               '  texture2D(colorTexture1, vec2(tcolor.b,0.5)).r, opacity);',
+            ]
+          ).result;
+          break;
+        default:
+          FSSource = vtkShaderProgram.substitute(
+            FSSource,
+            '//VTK::TCoord::Impl',
+            [
+              'vec4 tcolor = cscale0*texture2D(texture1, tcoordVCVSOutput.st) + cshift0;',
+              'gl_FragData[0] = vec4(texture2D(colorTexture1, vec2(tcolor.r,0.5)).r,',
+              '  texture2D(colorTexture1, vec2(tcolor.g,0.5)).r,',
+              '  texture2D(colorTexture1, vec2(tcolor.b,0.5)).r, tcolor.a);',
             ]
           ).result;
       }
