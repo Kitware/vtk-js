@@ -75,6 +75,7 @@ function createViewer(rootContainer, fileContents, options) {
 
   const source = vtiReader.getOutputData(0);
   const mapper = vtkVolumeMapper.newInstance();
+  mapper.setAutoAdjustSampleDistances(false);
   const actor = vtkVolume.newInstance();
 
   const dataArray =
@@ -160,6 +161,10 @@ function createViewer(rootContainer, fileContents, options) {
 
   // First render
   renderer.resetCamera();
+  renderer.getActiveCamera().elevation(90);
+  renderer.getActiveCamera().orthogonalizeViewUp();
+  renderer.getActiveCamera().zoom(1.4);
+  renderer.resetCameraClippingRange();
   renderWindow.render();
 
   global.pipeline = {

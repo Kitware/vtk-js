@@ -19,6 +19,7 @@ function vtkWebGPUTexture(publicAPI, model) {
   model.classHierarchy.push('vtkWebGPUTexture');
 
   publicAPI.create = (device, options) => {
+    console.log('creating texture');
     model.device = device;
     model.width = options.width;
     model.height = options.height;

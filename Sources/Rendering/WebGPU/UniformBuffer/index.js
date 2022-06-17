@@ -201,6 +201,8 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
 
     // send data down if needed
     if (model.sendDirty) {
+      console.log('writing buffer');
+      // console.trace();
       device
         .getHandle()
         .queue.writeBuffer(
