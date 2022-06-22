@@ -26,6 +26,23 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.getHandle = (handleIndex) =>
     model.widgetState[handleGetters[handleIndex]]();
 
+  /**
+   * Return the index in the of tbe handle in `representations` array,
+   * or -1 if the handle is not present in the widget state.
+   */
+  publicAPI.getHandleIndex = (handle) => {
+    switch (handle) {
+      case model.widgetState.getHandle1():
+        return 0;
+      case model.widgetState.getHandle2():
+        return 1;
+      case model.widgetState.getMoveHandle():
+        return 2;
+      default:
+        return -1;
+    }
+  };
+
   publicAPI.isPlaced = () =>
     getNumberOfPlacedHandles(model.widgetState) === MAX_POINTS;
 
@@ -159,12 +176,6 @@ export default function widgetBehavior(publicAPI, model) {
 
   // Handles visibility ---------------------------------------------------------
 
-  publicAPI.setMoveHandleVisibility = (visibility) => {
-    model.representations[2].setVisibilityFlagArray([visibility, visibility]);
-    model.widgetState.getMoveHandle().setVisible(visibility);
-    model.representations[2].updateActorVisibility();
-  };
-
   /**
    * Set actor visibility to true unless it is a NONE handle
    * and uses state visibility variable for the displayActor visibility to
@@ -212,7 +223,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
     if (handleIndex === 1) {
       publicAPI.placeText();
-      publicAPI.setMoveHandleVisibility(false);
+      publicAPI.loseFocus();
     }
   };
 
@@ -278,6 +289,9 @@ export default function widgetBehavior(publicAPI, model) {
       ) {
         if (model.activeState.setOrigin) {
           model.activeState.setOrigin(worldCoords);
+          publicAPI.updateHandleVisibility(
+            publicAPI.getHandleIndex(model.activeState)
+          );
         } else {
           // Dragging line
           publicAPI
@@ -355,7 +369,6 @@ export default function widgetBehavior(publicAPI, model) {
     if (!model.hasFocus && !publicAPI.isPlaced()) {
       model.activeState = model.widgetState.getMoveHandle();
       model.activeState.setShape(publicAPI.getHandle(0).getShape());
-      publicAPI.setMoveHandleVisibility(true);
       model.activeState.activate();
       model._interactor.requestAnimation(publicAPI);
       publicAPI.invokeStartInteractionEvent();
@@ -372,6 +385,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
     model.widgetState.deactivate();
     model.widgetState.getMoveHandle().deactivate();
+    model.widgetState.getMoveHandle().setOrigin(null);
     model.activeState = null;
     model.hasFocus = false;
     model._widgetManager.enablePicking();
