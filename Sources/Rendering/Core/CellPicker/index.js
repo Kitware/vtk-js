@@ -285,14 +285,20 @@ function vtkCellPicker(publicAPI, model) {
 
       const numberOfCells = data.getNumberOfCells();
 
+      /* eslint-disable no-continue */
       for (let cellId = 0; cellId < numberOfCells; cellId++) {
         const pCoords = [0, 0, 0];
 
         minCellType = data.getCellType(cellId);
+
+        // Skip cells that are marked as empty
+        if (minCellType === CellType.VTK_EMPTY_CELL) {
+          continue;
+        }
+
         const cell = tempCellMap[minCellType];
 
         if (cell == null) {
-          // eslint-disable-next-line no-continue
           continue;
         }
 
@@ -344,6 +350,7 @@ function vtkCellPicker(publicAPI, model) {
           }
         }
       }
+      /* eslint-enable no-continue */
     }
 
     if (minCellId >= 0 && tMin < model.globalTMin) {
