@@ -2,8 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkLabelWidgetProp');
-
-  model.isDragging = null;
+  model._isDragging = false;
 
   // --------------------------------------------------------------------------
   // Public methods
@@ -64,8 +63,8 @@ export default function widgetBehavior(publicAPI, model) {
       moveHandle.setOrigin(worldCoords);
       model.widgetState.getText().setOrigin(moveHandle.getOrigin());
       publicAPI.loseFocus();
-    } else {
-      model.isDragging = true;
+    } else if (model.dragable) {
+      model._isDragging = true;
       model._apiSpecificRenderWindow.setCursor('grabbing');
       model._interactor.requestAnimation(publicAPI);
     }
@@ -79,11 +78,19 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonRelease = () => {
-    if (model.isDragging && model.pickable) {
+    if (
+      !model.activeState ||
+      !model.activeState.getActive() ||
+      !model.pickable
+    ) {
+      return macro.VOID;
+    }
+
+    if (model._isDragging) {
       model._apiSpecificRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
       model._interactor.cancelAnimation(publicAPI);
-      publicAPI.invokeEndInteractionEvent();
+      model._isDragging = false;
     } else if (model.activeState !== model.widgetState.getMoveHandle()) {
       model.widgetState.deactivate();
     }
@@ -92,12 +99,12 @@ export default function widgetBehavior(publicAPI, model) {
       (model.hasFocus && !model.activeState) ||
       (model.activeState && !model.activeState.getActive())
     ) {
-      publicAPI.invokeEndInteractionEvent();
       model._widgetManager.enablePicking();
       model._interactor.render();
     }
 
-    model.isDragging = false;
+    publicAPI.invokeEndInteractionEvent();
+    return macro.EVENT_ABORT;
   };
 
   // --------------------------------------------------------------------------
@@ -123,7 +130,7 @@ export default function widgetBehavior(publicAPI, model) {
       if (
         worldCoords.length &&
         (model.activeState === model.widgetState.getMoveHandle() ||
-          model.isDragging)
+          model._isDragging)
       ) {
         model.activeState.setOrigin(worldCoords);
         model.widgetState.getText().setOrigin(model.activeState.getOrigin());

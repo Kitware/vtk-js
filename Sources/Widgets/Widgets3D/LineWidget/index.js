@@ -194,7 +194,6 @@ function vtkLineWidget(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   // manipulator: null,
-  isDragging: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -203,7 +202,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
-  macro.setGet(publicAPI, model, ['manipulator', 'isDragging']);
+  macro.setGet(publicAPI, model, ['manipulator']);
 
   vtkLineWidget(publicAPI, model);
 }

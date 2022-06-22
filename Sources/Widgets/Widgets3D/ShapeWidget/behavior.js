@@ -18,6 +18,7 @@ const EPSILON = 1e-6;
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkShapeWidgetProp');
+  model._isDragging = false;
 
   model.keysDown = {};
 
@@ -489,7 +490,7 @@ export default function widgetBehavior(publicAPI, model) {
         publicAPI.updateShapeBounds();
         publicAPI.invokeInteractionEvent();
       }
-    } else if (model.isDragging) {
+    } else if (model._isDragging) {
       if (model.activeState === model.point1Handle) {
         model.point1Handle.setOrigin(worldCoords);
         model.point1 = worldCoords;
@@ -501,7 +502,7 @@ export default function widgetBehavior(publicAPI, model) {
       publicAPI.invokeInteractionEvent();
     }
 
-    return model.hasFocus || model.isDragging ? macro.EVENT_ABORT : macro.VOID;
+    return model.hasFocus || model._isDragging ? macro.EVENT_ABORT : macro.VOID;
   };
 
   // --------------------------------------------------------------------------
@@ -548,17 +549,16 @@ export default function widgetBehavior(publicAPI, model) {
     if (
       model.point1 &&
       (model.activeState === model.point1Handle ||
-        model.activeState === model.point2Handle)
+        model.activeState === model.point2Handle) &&
+      model.dragable
     ) {
-      model.isDragging = true;
+      model._isDragging = true;
       model._apiSpecificRenderWindow.setCursor('grabbing');
       model._interactor.requestAnimation(publicAPI);
-      publicAPI.invokeStartInteractionEvent();
-
-      return macro.EVENT_ABORT;
     }
 
-    return macro.VOID;
+    publicAPI.invokeStartInteractionEvent();
+    return macro.EVENT_ABORT;
   };
 
   // --------------------------------------------------------------------------
@@ -566,8 +566,8 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonRelease = (e) => {
-    if (model.isDragging) {
-      model.isDragging = false;
+    if (model._isDragging) {
+      model._isDragging = false;
       model._apiSpecificRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
       model._interactor.cancelAnimation(publicAPI);

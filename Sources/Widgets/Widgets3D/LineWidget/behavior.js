@@ -17,6 +17,7 @@ const handleGetters = ['getHandle1', 'getHandle2', 'getMoveHandle'];
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkLineWidgetProp');
+  model._isDragging = false;
 
   /**
    * Returns the handle at the handleIndex'th index.
@@ -37,7 +38,7 @@ export default function widgetBehavior(publicAPI, model) {
   }
 
   function updateCursor(callData) {
-    model.isDragging = true;
+    model._isDragging = true;
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
     model.previousPosition = [
@@ -238,7 +239,7 @@ export default function widgetBehavior(publicAPI, model) {
       getNumberOfPlacedHandles(model.widgetState) === 1
     ) {
       publicAPI.placeHandle(1);
-    } else if (!model.widgetState.getText().getActive()) {
+    } else if (model.dragable && !model.widgetState.getText().getActive()) {
       // Grab handle1, handle2 or whole widget
       updateCursor(e);
     }
@@ -251,10 +252,6 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = (callData) => {
-    if (model.hasFocus && publicAPI.isPlaced() && !model.isDragging) {
-      publicAPI.loseFocus();
-      return macro.VOID;
-    }
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
     if (
@@ -277,7 +274,7 @@ export default function widgetBehavior(publicAPI, model) {
         // is placing first or second handle
         model.activeState === model.widgetState.getMoveHandle() ||
         // is dragging already placed first or second handle
-        model.isDragging
+        model._isDragging
       ) {
         if (model.activeState.setOrigin) {
           model.activeState.setOrigin(worldCoords);
@@ -304,42 +301,50 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   // --------------------------------------------------------------------------
-  // Left release: Finish drag / Create new handle
+  // Left release: Finish drag
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonRelease = () => {
-    // After dragging a point or placing all points
     if (
-      model.activeState &&
-      model.activeState.getActive() &&
-      (model.isDragging || publicAPI.isPlaced())
+      !model.activeState ||
+      !model.activeState.getActive() ||
+      !model.pickable
     ) {
+      publicAPI.rotateHandlesToFaceCamera();
+      return macro.VOID;
+    }
+    if (model.hasFocus && publicAPI.isPlaced()) {
+      publicAPI.loseFocus();
+      return macro.VOID;
+    }
+
+    if (model._isDragging && publicAPI.isPlaced()) {
       const wasTextActive = model.widgetState.getText().getActive();
       // Recompute offsets
       publicAPI.placeText();
       model.widgetState.deactivate();
-      model.widgetState.getMoveHandle().deactivate();
       model.activeState = null;
-
       if (!wasTextActive) {
         model._interactor.cancelAnimation(publicAPI);
       }
       model._apiSpecificRenderWindow.setCursor('pointer');
 
       model.hasFocus = false;
+      model._isDragging = false;
+    } else if (model.activeState !== model.widgetState.getMoveHandle()) {
+      model.widgetState.deactivate();
+    }
 
-      publicAPI.invokeEndInteractionEvent();
+    if (
+      (model.hasFocus && !model.activeState) ||
+      (model.activeState && !model.activeState.getActive())
+    ) {
       model._widgetManager.enablePicking();
       model._interactor.render();
     }
 
-    if (
-      model.isDragging === false &&
-      (!model.activeState || !model.activeState.getActive())
-    ) {
-      publicAPI.rotateHandlesToFaceCamera();
-    }
-    model.isDragging = false;
+    publicAPI.invokeEndInteractionEvent();
+    return macro.EVENT_ABORT;
   };
 
   // --------------------------------------------------------------------------
