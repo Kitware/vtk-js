@@ -8,7 +8,7 @@ import {
 } from 'vtk.js/Sources/Widgets/Widgets3D/ImageCroppingWidget/helpers';
 
 export default function widgetBehavior(publicAPI, model) {
-  let isDragging = null;
+  model._isDragging = false;
 
   publicAPI.setDisplayCallback = (callback) =>
     model.representations[0].setDisplayCallback(callback);
@@ -21,24 +21,37 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
-    isDragging = true;
-    model._interactor.requestAnimation(publicAPI);
+    if (model.dragable) {
+      model._isDragging = true;
+      model._apiSpecificRenderWindow.setCursor('grabbing');
+      model._interactor.requestAnimation(publicAPI);
+    }
     return macro.EVENT_ABORT;
   };
 
   publicAPI.handleMouseMove = (callData) => {
-    if (isDragging && model.pickable && model.dragable) {
+    if (model._isDragging) {
       return publicAPI.handleEvent(callData);
     }
     return macro.VOID;
   };
 
   publicAPI.handleLeftButtonRelease = () => {
-    if (isDragging && model.pickable) {
-      isDragging = false;
+    if (
+      !model.activeState ||
+      !model.activeState.getActive() ||
+      !model.pickable
+    ) {
+      return macro.VOID;
+    }
+
+    if (model._isDragging) {
+      model._isDragging = false;
       model._interactor.cancelAnimation(publicAPI);
       model.widgetState.deactivate();
     }
+
+    return macro.EVENT_ABORT;
   };
 
   publicAPI.handleEvent = (callData) => {

@@ -9,7 +9,7 @@ export default function widgetBehavior(publicAPI, model) {
   const shapeHandle = state.getSphereHandle();
 
   // Set while moving the center or border handle.
-  model.isDragging = false;
+  model._isDragging = false;
   // The last world coordinate of the mouse cursor during dragging.
   model.previousPosition = null;
 
@@ -102,7 +102,7 @@ export default function widgetBehavior(publicAPI, model) {
       }
       updateSphere();
     }
-    model.isDragging = true;
+    model._isDragging = true;
     model._apiSpecificRenderWindow.setCursor('grabbing');
     model.previousPosition = [...currentWorldCoords(e)];
     publicAPI.invokeStartInteractionEvent();
@@ -110,7 +110,7 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleLeftButtonRelease = (e) => {
-    if (!model.isDragging) {
+    if (!model._isDragging) {
       model.activeState = null;
       return macro.VOID;
     }
@@ -118,7 +118,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.previousPosition = null;
       model._widgetManager.enablePicking();
       model._apiSpecificRenderWindow.setCursor('pointer');
-      model.isDragging = false;
+      model._isDragging = false;
       model.activeState = null;
       state.deactivate();
     }
@@ -127,7 +127,7 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleMouseMove = (e) => {
-    if (!model.isDragging) {
+    if (!model._isDragging) {
       model.activeState = null;
       return macro.VOID;
     }
@@ -165,13 +165,13 @@ export default function widgetBehavior(publicAPI, model) {
     borderHandle.setVisible(false);
     centerHandle.setOrigin(null);
     borderHandle.setOrigin(null);
-    model.isDragging = true;
+    model._isDragging = true;
     model.activeState = moveHandle;
     model._interactor.render();
   };
 
   publicAPI.loseFocus = () => {
-    model.isDragging = false;
+    model._isDragging = false;
     model.activeState = null;
   };
 }

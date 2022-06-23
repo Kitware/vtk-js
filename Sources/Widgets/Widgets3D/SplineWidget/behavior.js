@@ -3,6 +3,7 @@ import { vec3 } from 'gl-matrix';
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkSplineWidgetProp');
+  model._isDragging = false;
 
   model.keysDown = {};
   model.moveHandle = model.widgetState.getMoveHandle();
@@ -206,7 +207,6 @@ export default function widgetBehavior(publicAPI, model) {
 
     if (model.activeState === model.moveHandle) {
       if (model.widgetState.getHandleList().length === 0) {
-        publicAPI.invokeStartInteractionEvent();
         addPoint();
       } else {
         const hoveredHandle = getHoveredHandle();
@@ -215,21 +215,21 @@ export default function widgetBehavior(publicAPI, model) {
           model.moveHandle.setVisible(false);
           model.activeState = hoveredHandle;
           hoveredHandle.activate();
-          model.isDragging = true;
+          model._isDragging = true;
           model.lastHandle.setVisible(true);
         } else {
           addPoint();
         }
       }
 
-      model.freeHand = publicAPI.getAllowFreehand() && !model.isDragging;
-    } else {
-      model.isDragging = true;
+      model.freeHand = publicAPI.getAllowFreehand() && !model._isDragging;
+    } else if (model.dragable) {
+      model._isDragging = true;
       model._apiSpecificRenderWindow.setCursor('grabbing');
       model._interactor.requestAnimation(publicAPI);
-      publicAPI.invokeStartInteractionEvent();
     }
 
+    publicAPI.invokeStartInteractionEvent();
     return macro.EVENT_ABORT;
   };
 
@@ -238,7 +238,7 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonRelease = (e) => {
-    if (model.isDragging) {
+    if (model._isDragging) {
       if (!model.hasFocus) {
         model._apiSpecificRenderWindow.setCursor(model.defaultCursor);
         model.widgetState.deactivate();
@@ -281,8 +281,8 @@ export default function widgetBehavior(publicAPI, model) {
     }
 
     model.freeHand = false;
-    model.isDragging = false;
     model.draggedPoint = false;
+    model._isDragging = false;
 
     return model.hasFocus ? macro.EVENT_ABORT : macro.VOID;
   };
@@ -313,7 +313,7 @@ export default function widgetBehavior(publicAPI, model) {
       if (hoveredHandle !== model.firstHandle) {
         model._apiSpecificRenderWindow.setCursor('grabbing');
       }
-    } else if (!model.isDragging && model.hasFocus) {
+    } else if (!model._isDragging && model.hasFocus) {
       model.moveHandle.setVisible(true);
       model._apiSpecificRenderWindow.setCursor(model.defaultCursor);
     }
@@ -324,10 +324,10 @@ export default function widgetBehavior(publicAPI, model) {
 
     if (
       worldCoords.length &&
-      (model.isDragging || model.activeState === model.moveHandle)
+      (model._isDragging || model.activeState === model.moveHandle)
     ) {
       model.activeState.setOrigin(worldCoords);
-      if (model.isDragging) {
+      if (model._isDragging) {
         model.draggedPoint = true;
       }
       if (model.freeHand && model.activeState === model.moveHandle) {

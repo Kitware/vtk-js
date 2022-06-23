@@ -4,7 +4,7 @@ const MAX_POINTS = 2;
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkDistanceWidgetProp');
-  let isDragging = null;
+  model._isDragging = false;
 
   // --------------------------------------------------------------------------
   // Display 2D
@@ -53,8 +53,8 @@ export default function widgetBehavior(publicAPI, model) {
       newHandle.setColor(moveHandle.getColor());
       newHandle.setScale1(moveHandle.getScale1());
       newHandle.setManipulator(manipulator);
-    } else {
-      isDragging = true;
+    } else if (model.dragable) {
+      model._isDragging = true;
       model._apiSpecificRenderWindow.setCursor('grabbing');
       model._interactor.requestAnimation(publicAPI);
     }
@@ -68,13 +68,6 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = (callData) => {
-    if (
-      model.hasFocus &&
-      model.widgetState.getHandleList().length === MAX_POINTS
-    ) {
-      publicAPI.loseFocus();
-      return macro.VOID;
-    }
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
     if (
@@ -92,7 +85,9 @@ export default function widgetBehavior(publicAPI, model) {
 
       if (
         worldCoords.length &&
-        (model.activeState === model.widgetState.getMoveHandle() || isDragging)
+        (model.activeState === model.widgetState.getMoveHandle() ||
+          model._isDragging) &&
+        model.activeState.setOrigin // e.g. the line is pickable but not draggable
       ) {
         model.activeState.setOrigin(worldCoords);
         publicAPI.invokeInteractionEvent();
@@ -108,11 +103,26 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonRelease = () => {
-    if (isDragging && model.pickable) {
+    if (
+      !model.activeState ||
+      !model.activeState.getActive() ||
+      !model.pickable
+    ) {
+      return macro.VOID;
+    }
+    if (
+      model.hasFocus &&
+      model.widgetState.getHandleList().length === MAX_POINTS
+    ) {
+      publicAPI.loseFocus();
+      return macro.VOID;
+    }
+
+    if (model._isDragging) {
       model._apiSpecificRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
       model._interactor.cancelAnimation(publicAPI);
-      publicAPI.invokeEndInteractionEvent();
+      model._isDragging = false;
     } else if (model.activeState !== model.widgetState.getMoveHandle()) {
       model.widgetState.deactivate();
     }
@@ -121,12 +131,12 @@ export default function widgetBehavior(publicAPI, model) {
       (model.hasFocus && !model.activeState) ||
       (model.activeState && !model.activeState.getActive())
     ) {
-      publicAPI.invokeEndInteractionEvent();
       model._widgetManager.enablePicking();
       model._interactor.render();
     }
 
-    isDragging = false;
+    publicAPI.invokeEndInteractionEvent();
+    return macro.EVENT_ABORT;
   };
 
   // --------------------------------------------------------------------------
@@ -157,6 +167,7 @@ export default function widgetBehavior(publicAPI, model) {
     model.widgetState.deactivate();
     model.widgetState.getMoveHandle().deactivate();
     model.widgetState.getMoveHandle().setVisible(false);
+    model.widgetState.getMoveHandle().setOrigin(null);
     model.activeState = null;
     model.hasFocus = false;
     model._widgetManager.enablePicking();

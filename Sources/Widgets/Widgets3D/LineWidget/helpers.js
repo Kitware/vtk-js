@@ -23,6 +23,10 @@ export function updateTextPosition(model) {
 }
 
 export function isHandlePlaced(handleIndex, widgetState) {
+  if (handleIndex === 2) {
+    return widgetState.getMoveHandle().getOrigin() != null;
+  }
+
   const handle1Origin = widgetState.getHandle1().getOrigin();
   if (handleIndex === 0) {
     return handle1Origin != null;
