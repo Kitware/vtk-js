@@ -252,10 +252,10 @@ export interface vtkVolumeProperty extends vtkObject {
 
 	/**
 	 *
-	 * @param {Number} index 
+	 * @param {Boolean} index 
 	 * @param {Number} value
 	 */
-	setUseGradientOpacity(index: number, value: number): boolean;
+	setUseGradientOpacity(index: boolean, value: number): boolean;
 
 	/**
 	 *
