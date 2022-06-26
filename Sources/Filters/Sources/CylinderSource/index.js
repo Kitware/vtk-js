@@ -178,21 +178,24 @@ function vtkCylinderSource(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  height: 1.0,
-  initAngle: 0,
-  radius: 1.0,
-  resolution: 6,
-  center: [0, 0, 0],
-  direction: [0.0, 1.0, 0.0],
-  capping: true,
-  pointType: 'Float64Array',
-};
+function defaultValues(initialValues) {
+  return {
+    height: 1.0,
+    initAngle: 0,
+    radius: 1.0,
+    resolution: 6,
+    center: [0, 0, 0],
+    direction: [0.0, 1.0, 0.0],
+    capping: true,
+    pointType: 'Float64Array',
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -211,7 +214,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkCylinderSource');
+export const newInstance = macro.newInstance(extend, 'vtkCylinderSource', true);
 
 // ----------------------------------------------------------------------------
 

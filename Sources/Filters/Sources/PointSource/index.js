@@ -66,17 +66,20 @@ function vtkPointSource(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  numberOfPoints: 10,
-  center: [0, 0, 0],
-  radius: 0.5,
-  pointType: 'Float64Array',
-};
+function defaultValues(initialValues) {
+  return {
+    numberOfPoints: 10,
+    center: [0, 0, 0],
+    radius: 0.5,
+    pointType: 'Float64Array',
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -88,7 +91,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkPointSource');
+export const newInstance = macro.newInstance(extend, 'vtkPointSource', true);
 
 // ----------------------------------------------------------------------------
 

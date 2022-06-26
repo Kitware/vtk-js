@@ -16,21 +16,23 @@ function vtkSelectionNode(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  contentType: -1,
-  fieldType: -1,
-  properties: null,
-  selectionList: [],
-};
+function defaultValues(initialValues) {
+  return {
+    contentType: -1,
+    fieldType: -1,
+    selectionList: [],
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   macro.obj(publicAPI, model);
-  model.properties = {};
+  initialValues.properties = {};
   macro.setGet(publicAPI, model, [
     'contentType',
     'fieldType',
@@ -44,7 +46,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkSelectionNode');
+export const newInstance = macro.newInstance(extend, 'vtkSelectionNode', true);
 
 // ----------------------------------------------------------------------------
 

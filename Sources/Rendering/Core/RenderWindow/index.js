@@ -15,8 +15,10 @@ export function listViewAPIs() {
   return Object.keys(VIEW_CONSTRUCTORS);
 }
 
-export function newAPISpecificView(name, initialValues = {}) {
-  return VIEW_CONSTRUCTORS[name] && VIEW_CONSTRUCTORS[name](initialValues);
+export function newAPISpecificView(name, initialValues = {}, toSet = true) {
+  return (
+    VIEW_CONSTRUCTORS[name] && VIEW_CONSTRUCTORS[name](initialValues, toSet)
+  );
 }
 
 // ----------------------------------------------------------------------------
@@ -137,19 +139,22 @@ function vtkRenderWindow(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  defaultViewAPI: DEFAULT_VIEW_API,
-  renderers: [],
-  views: [],
-  interactor: null,
-  neverRendered: true,
-  numberOfLayers: 1,
-};
+function defaultValues(initialValues) {
+  return {
+    defaultViewAPI: DEFAULT_VIEW_API,
+    renderers: [],
+    views: [],
+    interactor: null,
+    neverRendered: true,
+    numberOfLayers: 1,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -170,7 +175,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkRenderWindow');
+export const newInstance = macro.newInstance(extend, 'vtkRenderWindow', true);
 
 // ----------------------------------------------------------------------------
 

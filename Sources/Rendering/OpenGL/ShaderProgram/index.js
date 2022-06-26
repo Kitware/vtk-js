@@ -97,12 +97,6 @@ function vtkShaderProgram(publicAPI, model) {
     publicAPI.setBound(false);
   };
 
-  publicAPI.setContext = (ctx) => {
-    model.vertexShader.setContext(ctx);
-    model.fragmentShader.setContext(ctx);
-    model.geometryShader.setContext(ctx);
-  };
-
   publicAPI.link = () => {
     if (model.inked) {
       return true;
@@ -516,6 +510,7 @@ function vtkShaderProgram(publicAPI, model) {
 
   publicAPI.setContext = (ctx) => {
     model.context = ctx;
+    if (!ctx) return;
     model.vertexShader.setContext(ctx);
     model.fragmentShader.setContext(ctx);
     model.geometryShader.setContext(ctx);
@@ -550,41 +545,41 @@ function vtkShaderProgram(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  vertexShaderHandle: 0,
-  fragmentShaderHandle: 0,
-  geometryShaderHandle: 0,
-  vertexShader: null,
-  fragmentShader: null,
-  geometryShader: null,
+function defaultValues(initialValues) {
+  return {
+    vertexShaderHandle: 0,
+    fragmentShaderHandle: 0,
+    geometryShaderHandle: 0,
 
-  linked: false,
-  bound: false,
-  compiled: false,
-  error: '',
-  handle: 0,
-  numberOfOutputs: 0,
-  attributesLocs: null,
-  uniformLocs: null,
-  md5Hash: 0,
-  context: null,
-  lastCameraMTime: null,
-};
+    // Internal objects
+    vertexShader: vtkShader.newInstance(),
+    fragmentShader: vtkShader.newInstance(),
+    geometryShader: vtkShader.newInstance(),
+
+    linked: false,
+    bound: false,
+    compiled: false,
+    error: '',
+    handle: 0,
+    numberOfOutputs: 0,
+    attributesLocs: {},
+    uniformLocs: {},
+    md5Hash: 0,
+    context: null,
+    lastCameraMTime: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Instantiate internal objects
-  model.attributesLocs = {};
-  model.uniformLocs = {};
-  model.vertexShader = vtkShader.newInstance();
-  model.vertexShader.setShaderType('Vertex');
-  model.fragmentShader = vtkShader.newInstance();
-  model.fragmentShader.setShaderType('Fragment');
-  model.geometryShader = vtkShader.newInstance();
-  model.geometryShader.setShaderType('Geometry');
+  initialValues.vertexShader.setShaderType('Vertex');
+  initialValues.fragmentShader.setShaderType('Fragment');
+  initialValues.geometryShader.setShaderType('Geometry');
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -607,7 +602,7 @@ function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-const newInstance = macro.newInstance(extend, 'vtkShaderProgram');
+const newInstance = macro.newInstance(extend, 'vtkShaderProgram', true);
 
 // ----------------------------------------------------------------------------
 

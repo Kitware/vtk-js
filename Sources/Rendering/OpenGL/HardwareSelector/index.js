@@ -876,6 +876,9 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   // override
   const superSetArea = publicAPI.setArea;
   publicAPI.setArea = (...args) => {
+    if (!args[0]) return false;
+    // Instanciation time
+    if (model.area === undefined) model.area = [0, 0, 0, 0];
     if (superSetArea(...args)) {
       model.area[0] = Math.floor(model.area[0]);
       model.area[1] = Math.floor(model.area[1]);
@@ -891,33 +894,33 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  area: undefined,
-  // _renderer: null,
-  // _openGLRenderWindow: null,
-  // _openGLRenderer: null,
-  currentPass: -1,
-  propColorValue: null,
-  props: null,
-  maximumPointId: 0,
-  maximumCellId: 0,
-  idOffset: 1,
-};
+function defaultValues(initialValues) {
+  return {
+    area: [0, 0, 0, 0],
+    // _renderer: null,
+    // _openGLRenderWindow: null,
+    // _openGLRenderer: null,
+    currentPass: -1,
+    propColorValue: [0, 0, 0],
+    props: [],
+    maximumPointId: 0,
+    maximumCellId: 0,
+    idOffset: 1,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  macro.moveToProtected(publicAPI, initialValues, [
+    'renderer',
+    'openGLRenderWindow',
+  ]);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   vtkHardwareSelector.extend(publicAPI, model, initialValues);
-
-  model.propColorValue = [0, 0, 0];
-  model.props = [];
-
-  if (!model.area) {
-    model.area = [0, 0, 0, 0];
-  }
 
   macro.setGetArray(publicAPI, model, ['area'], 4);
   macro.setGet(publicAPI, model, [
@@ -929,7 +932,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   macro.setGetArray(publicAPI, model, ['propColorValue'], 3);
-  macro.moveToProtected(publicAPI, model, ['renderer', 'openGLRenderWindow']);
   macro.event(publicAPI, model, 'event');
 
   // Object methods
@@ -940,7 +942,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 export const newInstance = macro.newInstance(
   extend,
-  'vtkOpenGLHardwareSelector'
+  'vtkOpenGLHardwareSelector',
+  true
 );
 
 // ----------------------------------------------------------------------------

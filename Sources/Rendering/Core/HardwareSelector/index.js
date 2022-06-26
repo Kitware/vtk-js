@@ -35,15 +35,18 @@ function vtkHardwareSelector(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  fieldAssociation: FieldAssociations.FIELD_ASSOCIATION_CELLS,
-  captureZValues: false,
-};
+function defaultValues(initialValues) {
+  return {
+    fieldAssociation: FieldAssociations.FIELD_ASSOCIATION_CELLS,
+    captureZValues: false,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   macro.obj(publicAPI, model);
@@ -56,7 +59,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkHardwareSelector');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkHardwareSelector',
+  true
+);
 
 // ----------------------------------------------------------------------------
 

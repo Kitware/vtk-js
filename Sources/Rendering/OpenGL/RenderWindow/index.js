@@ -118,8 +118,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     // Canvas size
     if (model.renderable) {
       if (
-        model.size[0] !== previousSize[0] ||
-        model.size[1] !== previousSize[1]
+        model.size &&
+        (model.size[0] !== previousSize[0] || model.size[1] !== previousSize[1])
       ) {
         previousSize[0] = model.size[0];
         previousSize[1] = model.size[1];
@@ -573,7 +573,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.setUseBackgroundImage = (value) => {
     model.useBackgroundImage = value;
-
+    if (!model.el) return;
     // Add or remove the background image from the
     // DOM as specified.
     if (model.useBackgroundImage && !model.el.contains(model.bgImage)) {
@@ -1224,70 +1224,65 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  cullFaceEnabled: false,
-  shaderCache: null,
-  initialized: false,
-  context: null,
-  canvas: null,
-  cursorVisibility: true,
-  cursor: 'pointer',
-  textureUnitManager: null,
-  textureResourceIds: null,
-  containerSize: null,
-  renderPasses: [],
-  notifyStartCaptureImage: false,
-  webgl2: false,
-  defaultToWebgl2: true, // attempt webgl2 on by default
-  activeFramebuffer: null,
-  xrSession: null,
-  xrSessionIsAR: false,
-  xrReferenceSpace: null,
-  xrSupported: true,
-  imageFormat: 'image/png',
-  useOffScreen: false,
-  useBackgroundImage: false,
-};
+function defaultValues(initialValues) {
+  return {
+    // Internal
+    selector: vtkOpenGLHardwareSelector.newInstance(),
+    bgImage: new Image(),
+    _textureResourceIds: new Map(),
+    shaderCache: vtkShaderCache.newInstance(),
+
+    cullFaceEnabled: false,
+    initialized: false,
+    context: null,
+    cursorVisibility: true,
+    cursor: 'pointer',
+    textureUnitManager: null,
+    containerSize: null,
+    renderPasses: [],
+    notifyStartCaptureImage: false,
+    webgl2: false,
+    defaultToWebgl2: true, // attempt webgl2 on by default
+    activeFramebuffer: null,
+    xrSession: null,
+    xrSessionIsAR: false,
+    xrReferenceSpace: null,
+    xrSupported: true,
+    imageFormat: 'image/png',
+    useOffScreen: false,
+    useBackgroundImage: false,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkRenderWindowViewNode.extend(publicAPI, model, initialValues);
 
-  // Create internal instances
+  // model.canvas needs to be set to model before calling other setters
   model.canvas = document.createElement('canvas');
   model.canvas.style.width = '100%';
   createGLContext();
 
-  if (!model.selector) {
-    model.selector = vtkOpenGLHardwareSelector.newInstance();
-    model.selector.setOpenGLRenderWindow(publicAPI);
-  }
-
   // Create internal bgImage
-  model.bgImage = new Image();
-  model.bgImage.style.position = 'absolute';
-  model.bgImage.style.left = '0';
-  model.bgImage.style.top = '0';
-  model.bgImage.style.width = '100%';
-  model.bgImage.style.height = '100%';
-  model.bgImage.style.zIndex = '-1';
+  initialValues.bgImage.style.position = 'absolute';
+  initialValues.bgImage.style.left = '0';
+  initialValues.bgImage.style.top = '0';
+  initialValues.bgImage.style.width = '100%';
+  initialValues.bgImage.style.height = '100%';
+  initialValues.bgImage.style.zIndex = '-1';
 
-  model._textureResourceIds = new Map();
-
-  model.myFactory = vtkOpenGLViewNodeFactory.newInstance();
+  initialValues.myFactory = vtkOpenGLViewNodeFactory.newInstance();
   /* eslint-disable no-use-before-define */
-  model.myFactory.registerOverride('vtkRenderWindow', newInstance);
+  initialValues.myFactory.registerOverride('vtkRenderWindow', newInstance);
   /* eslint-enable no-use-before-define */
 
-  model.shaderCache = vtkShaderCache.newInstance();
-  model.shaderCache.setOpenGLRenderWindow(publicAPI);
-
   // setup default forward pass rendering
-  model.renderPasses[0] = vtkForwardPass.newInstance();
+  initialValues.renderPasses[0] = vtkForwardPass.newInstance();
 
   macro.event(publicAPI, model, 'imageReady');
   macro.event(publicAPI, model, 'haveVRDisplay');
@@ -1322,11 +1317,18 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkOpenGLRenderWindow(publicAPI, model);
+
+  initialValues.selector.setOpenGLRenderWindow(publicAPI);
+  initialValues.shaderCache.setOpenGLRenderWindow(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkOpenGLRenderWindow');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkOpenGLRenderWindow',
+  true
+);
 
 // ----------------------------------------------------------------------------
 // Register API specific RenderWindow implementation

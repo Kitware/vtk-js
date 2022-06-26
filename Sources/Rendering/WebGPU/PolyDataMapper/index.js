@@ -96,19 +96,20 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  primitives: null,
-};
+function defaultValues(initialValues) {
+  return {
+    primitives: [],
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
-
-  model.primitives = [];
 
   // Object methods
   vtkWebGPUPolyDataMapper(publicAPI, model);

@@ -267,20 +267,23 @@ function vtkCubeSource(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  xLength: 1.0,
-  yLength: 1.0,
-  zLength: 1.0,
-  center: [0.0, 0.0, 0.0],
-  rotations: [0.0, 0.0, 0.0],
-  pointType: 'Float64Array',
-  generate3DTextureCoordinates: false,
-};
+function defaultValues(initialValues) {
+  return {
+    xLength: 1.0,
+    yLength: 1.0,
+    zLength: 1.0,
+    center: [0.0, 0.0, 0.0],
+    rotations: [0.0, 0.0, 0.0],
+    pointType: 'Float64Array',
+    generate3DTextureCoordinates: false,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -298,7 +301,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkCubeSource');
+export const newInstance = macro.newInstance(extend, 'vtkCubeSource', true);
 
 // ----------------------------------------------------------------------------
 

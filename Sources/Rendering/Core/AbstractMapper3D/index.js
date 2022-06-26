@@ -39,24 +39,23 @@ function vtkAbstractMapper3D(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  bounds: [1, -1, 1, -1, 1, -1],
-  center: [0, 0, 0],
-};
+function defaultValues(initialValues) {
+  return {
+    bounds: [1, -1, 1, -1, 1, -1],
+    center: [0, 0, 0],
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
   // Inheritance
   vtkAbstractMapper.extend(publicAPI, model, initialValues);
 
-  if (!model.bounds) {
-    vtkMath.uninitializeBounds(model.bounds);
-  }
-
-  if (!model.center) {
-    model.center = [0.0, 0.0, 0.0];
+  if (!initialValues.bounds) {
+    vtkMath.uninitializeBounds(initialValues.bounds);
   }
 
   vtkAbstractMapper3D(publicAPI, model);

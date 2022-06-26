@@ -87,27 +87,31 @@ function vtkLight(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  switch: true,
-  intensity: 1,
-  color: [1, 1, 1],
-  position: [0, 0, 1],
-  focalPoint: [0, 0, 0],
-  positional: false,
-  exponent: 1,
-  coneAngle: 30,
-  attenuationValues: [1, 0, 0],
-  transformMatrix: null,
-  lightType: 'SceneLight',
-  shadowAttenuation: 1,
-  direction: [0, 0, 0],
-  directionMTime: 0,
-};
+function defaultValues(initialValues) {
+  return {
+    switch: true,
+    intensity: 1,
+    color: [1, 1, 1],
+    position: [0, 0, 1],
+    focalPoint: [0, 0, 0],
+    positional: false,
+    exponent: 1,
+    coneAngle: 30,
+    attenuationValues: [1, 0, 0],
+    transformMatrix: null,
+    lightType: 'SceneLight',
+    shadowAttenuation: 1,
+    direction: [0, 0, 0],
+    directionMTime: 0,
+
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -135,7 +139,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkLight');
+export const newInstance = macro.newInstance(extend, 'vtkLight', true);
 
 // ----------------------------------------------------------------------------
 

@@ -234,25 +234,26 @@ function vtkShaderCache(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  lastShaderBound: null,
-  shaderPrograms: null,
-  context: null,
-  // _openGLRenderWindow: null,
-};
+function defaultValues(initialValues) {
+  return {
+    // Internal objects
+    shaderPrograms: {},
+    lastShaderBound: null,
+    context: null,
+    // _openGLRenderWindow: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-
-  // Internal objects
-  model.shaderPrograms = {};
+  macro.moveToProtected(publicAPI, initialValues, ['openGLRenderWindow']);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, SET_GET_FIELDS);
-  macro.moveToProtected(publicAPI, model, ['openGLRenderWindow']);
 
   // Object methods
   vtkShaderCache(publicAPI, model);
@@ -260,7 +261,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkShaderCache');
+export const newInstance = macro.newInstance(extend, 'vtkShaderCache', true);
 
 // ----------------------------------------------------------------------------
 

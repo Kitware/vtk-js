@@ -35,8 +35,16 @@ function vtkConcentricCylinderSource(publicAPI, model) {
 
   publicAPI.getNumberOfRadius = () => model.radius.length;
   publicAPI.getRadius = (index = 0) => model.radius[index];
-  publicAPI.setRadius = (index, radius) => {
-    model.radius[index] = radius;
+  publicAPI.setRadius = (...args) => {
+    // Handle instanciation time
+    let n = [];
+
+    if (args.length === 1 || Array.isArray(args[0])) {
+      n = [...args[0]];
+      model.radius = n;
+    } else if (args.length === 2) {
+      model.radius[args[0]] = args[1];
+    }
     publicAPI.modified();
   };
   publicAPI.setCellField = (index, field) => {
@@ -403,24 +411,27 @@ function vtkConcentricCylinderSource(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  height: 1.0,
-  radius: [0.5],
-  cellFields: [1],
-  resolution: 6,
-  startTheta: 0.0,
-  endTheta: 360.0,
-  center: [0, 0, 0],
-  direction: [0.0, 0.0, 1.0],
-  skipInnerFaces: true,
-  mask: null, // If present, array to know if a layer should be skipped(=true)
-  pointType: 'Float64Array',
-};
+function defaultValues(initialValues) {
+  return {
+    height: 1.0,
+    radius: [0.5],
+    cellFields: [1],
+    resolution: 6,
+    startTheta: 0.0,
+    endTheta: 360.0,
+    center: [0, 0, 0],
+    direction: [0.0, 0.0, 1.0],
+    skipInnerFaces: true,
+    mask: null, // If present, array to know if a layer should be skipped(=true)
+    pointType: 'Float64Array',
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -441,7 +452,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 export const newInstance = macro.newInstance(
   extend,
-  'vtkConcentricCylinderSource'
+  'vtkConcentricCylinderSource',
+  true
 );
 
 // ----------------------------------------------------------------------------

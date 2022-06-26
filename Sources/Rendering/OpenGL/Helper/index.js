@@ -259,30 +259,29 @@ function vtkOpenGLHelper(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  context: null,
-  program: null,
-  shaderSourceTime: null,
-  VAO: null,
-  attributeUpdateTime: null,
-  CABO: null,
-  primitiveType: 0,
-  pointPicking: false,
-};
+function defaultValues(initialValues) {
+  return {
+    // Internal objects
+    shaderSourceTime: macro.obj({}),
+    attributeUpdateTime: macro.obj({}),
+
+    context: null,
+    program: vtkShaderProgram.newInstance(),
+    VAO: vtkVertexArrayObject.newInstance(),
+    CABO: vtkCellArrayBufferObject.newInstance(),
+    primitiveType: 0,
+    pointPicking: false,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
-
-  model.shaderSourceTime = {};
-  macro.obj(model.shaderSourceTime);
-
-  model.attributeUpdateTime = {};
-  macro.obj(model.attributeUpdateTime);
 
   macro.setGet(publicAPI, model, [
     'program',
@@ -294,17 +293,13 @@ export function extend(publicAPI, model, initialValues = {}) {
     'pointPicking',
   ]);
 
-  model.program = vtkShaderProgram.newInstance();
-  model.VAO = vtkVertexArrayObject.newInstance();
-  model.CABO = vtkCellArrayBufferObject.newInstance();
-
   // Object methods
   vtkOpenGLHelper(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, undefined, true);
 
 // ----------------------------------------------------------------------------
 

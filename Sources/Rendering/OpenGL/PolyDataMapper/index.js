@@ -2010,32 +2010,49 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  context: null,
-  VBOBuildTime: 0,
-  VBOBuildString: null,
-  primitives: null,
-  primTypes: null,
-  shaderRebuildString: null,
-  tmpMat4: null,
-  ambientColor: [], // used internally
-  diffuseColor: [], // used internally
-  specularColor: [], // used internally
-  lightColor: [], // used internally
-  lightHalfAngle: [], // used internally
-  lightDirection: [], // used internally
-  lastHaveSeenDepthRequest: false,
-  haveSeenDepthRequest: false,
-  lastSelectionState: PassTypes.MIN_KNOWN_PASS - 1,
-  selectionStateChanged: null,
-  selectionWebGLIdsToVTKIds: null,
-  pointPicking: false,
-};
+function defaultValues(initialValues) {
+  return {
+    // Internal
+    tmpMat3: mat3.identity(new Float64Array(9)),
+    tmpMat4: mat4.identity(new Float64Array(16)),
+
+    ambientColor: [], // used internally
+    diffuseColor: [], // used internally
+    specularColor: [], // used internally
+    lightColor: [], // used internally
+    lightHalfAngle: [], // used internally
+    lightDirection: [], // used internally
+    VBOBuildTime: macro.obj({}, { mtime: 0 }),
+    selectionStateChanged: macro.obj({}, { mtime: 0 }),
+
+    context: null,
+    VBOBuildString: null,
+    primitives: Object.keys(primTypes)
+      .filter((primType) => primType !== 'Start' && primType !== 'End')
+      .map((primType) =>
+        vtkHelper.newInstance({
+          primitiveType: primTypes[primType],
+          lastLightComplexity: 0,
+          lastLightCount: 0,
+          lastSelectionPass: false,
+        })
+      ),
+    primTypes,
+    shaderRebuildString: null,
+
+    lastHaveSeenDepthRequest: false,
+    haveSeenDepthRequest: false,
+    lastSelectionState: PassTypes.MIN_KNOWN_PASS - 1,
+    selectionWebGLIdsToVTKIds: null,
+    pointPicking: false,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
@@ -2045,29 +2062,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     initialValues
   );
 
-  model.primitives = [];
-  model.primTypes = primTypes;
-
-  model.tmpMat3 = mat3.identity(new Float64Array(9));
-  model.tmpMat4 = mat4.identity(new Float64Array(16));
-
-  for (let i = primTypes.Start; i < primTypes.End; i++) {
-    model.primitives[i] = vtkHelper.newInstance();
-    model.primitives[i].setPrimitiveType(i);
-    model.primitives[i].set(
-      { lastLightComplexity: 0, lastLightCount: 0, lastSelectionPass: false },
-      true
-    );
-  }
-
   // Build VTK API
   macro.setGet(publicAPI, model, ['context']);
-
-  model.VBOBuildTime = {};
-  macro.obj(model.VBOBuildTime, { mtime: 0 });
-
-  model.selectionStateChanged = {};
-  macro.obj(model.selectionStateChanged, { mtime: 0 });
 
   // Object methods
   vtkOpenGLPolyDataMapper(publicAPI, model);
@@ -2075,7 +2071,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkOpenGLPolyDataMapper');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkOpenGLPolyDataMapper',
+  true
+);
 
 // ----------------------------------------------------------------------------
 

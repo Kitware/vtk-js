@@ -6,6 +6,7 @@ const { vtkErrorMacro } = macro;
 function initPolyIterator(pd) {
   const polys = pd.getPolys().getData();
   const strips = pd.getStrips().getData();
+  const stripsLength = strips ? strips.length : 0;
   const it = {
     done: false,
     polyIdx: 0,
@@ -20,7 +21,7 @@ function initPolyIterator(pd) {
         const end = start + cellSize;
         it.polyIdx = end;
         ret = polys.subarray(start, end);
-      } else if (it.stripIdx < strips.length) {
+      } else if (it.stripIdx < stripsLength) {
         if (it.remainingStripLength === 0) {
           it.remainingStripLength = strips[it.stripIdx] - 2; // sliding window of 3 points
           // stripIdx points to the last point in a triangle 3-tuple
@@ -35,7 +36,7 @@ function initPolyIterator(pd) {
         throw new Error('Iterator is done');
       }
 
-      it.done = it.polyIdx >= polys.length && it.stripIdx >= strips.length;
+      it.done = it.polyIdx >= polys.length && it.stripIdx >= stripsLength;
       return ret;
     },
   };

@@ -18,6 +18,7 @@ function extractCellSizes(cellArray) {
 }
 
 function getNumberOfCells(cellArray) {
+  if (!cellArray) return 0;
   let cellId = 0;
   for (let cellArrayIndex = 0; cellArrayIndex < cellArray.length; ) {
     cellArrayIndex += cellArray[cellArrayIndex] + 1;
@@ -88,6 +89,8 @@ function vtkCellArray(publicAPI, model) {
 
 function defaultValues(initialValues) {
   return {
+    // empty is only here to be passed to the DataArray extend function in order
+    // to create a cellArray without giving values
     empty: true,
     numberOfComponents: 1,
     dataType: VtkDataTypes.UNSIGNED_INT,
@@ -98,13 +101,14 @@ function defaultValues(initialValues) {
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  vtkDataArray.extend(publicAPI, model, defaultValues(initialValues));
+  Object.assign(initialValues, defaultValues(initialValues));
+  vtkDataArray.extend(publicAPI, model, initialValues);
   vtkCellArray(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkCellArray');
+export const newInstance = macro.newInstance(extend, 'vtkCellArray', true);
 
 // ----------------------------------------------------------------------------
 

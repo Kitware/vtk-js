@@ -314,40 +314,42 @@ function vtkWebGPURenderer(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  bindGroup: null,
-  selector: null,
-  renderEncoder: null,
-  recenterThreshold: 20.0,
-  suppressClear: false,
-  stabilizedCenter: [0.0, 0.0, 0.0],
-};
+function defaultValues(initialValues) {
+  return {
+    // Internal objects
+    UBO: vtkWebGPUUniformBuffer.newInstance({ label: 'rendererUBO' }),
+    bindGroup: vtkWebGPUBindGroup.newInstance({ label: 'rendererBG' }),
+    tmpMat4: mat4.identity(new Float64Array(16)),
+    stabilizedTime: macro.obj({}, { mtime: 0 }),
+
+    selector: null,
+    renderEncoder: null,
+    recenterThreshold: 20.0,
+    suppressClear: false,
+    stabilizedCenter: [0.0, 0.0, 0.0],
+
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
 
-  model.UBO = vtkWebGPUUniformBuffer.newInstance({ label: 'rendererUBO' });
-  model.UBO.addEntry('WCVCMatrix', 'mat4x4<f32>');
-  model.UBO.addEntry('SCPCMatrix', 'mat4x4<f32>');
-  model.UBO.addEntry('PCSCMatrix', 'mat4x4<f32>');
-  model.UBO.addEntry('SCVCMatrix', 'mat4x4<f32>');
-  model.UBO.addEntry('VCPCMatrix', 'mat4x4<f32>');
-  model.UBO.addEntry('WCVCNormals', 'mat4x4<f32>');
-  model.UBO.addEntry('viewportSize', 'vec2<f32>');
-  model.UBO.addEntry('cameraParallel', 'u32');
+  initialValues.UBO.addEntry('WCVCMatrix', 'mat4x4<f32>');
+  initialValues.UBO.addEntry('SCPCMatrix', 'mat4x4<f32>');
+  initialValues.UBO.addEntry('PCSCMatrix', 'mat4x4<f32>');
+  initialValues.UBO.addEntry('SCVCMatrix', 'mat4x4<f32>');
+  initialValues.UBO.addEntry('VCPCMatrix', 'mat4x4<f32>');
+  initialValues.UBO.addEntry('WCVCNormals', 'mat4x4<f32>');
+  initialValues.UBO.addEntry('viewportSize', 'vec2<f32>');
+  initialValues.UBO.addEntry('cameraParallel', 'u32');
 
-  model.bindGroup = vtkWebGPUBindGroup.newInstance({ label: 'rendererBG' });
-  model.bindGroup.setBindables([model.UBO]);
-
-  model.tmpMat4 = mat4.identity(new Float64Array(16));
-
-  model.stabilizedTime = {};
-  macro.obj(model.stabilizedTime, { mtime: 0 });
+  initialValues.bindGroup.setBindables([initialValues.UBO]);
 
   // Build VTK API
   macro.get(publicAPI, model, ['bindGroup', 'stabilizedTime']);
@@ -365,7 +367,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkWebGPURenderer');
+export const newInstance = macro.newInstance(extend, 'vtkWebGPURenderer', true);
 
 // ----------------------------------------------------------------------------
 

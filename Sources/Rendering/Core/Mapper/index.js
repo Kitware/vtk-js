@@ -567,47 +567,50 @@ function vtkMapper(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  colorMapColors: null, // Same as this->Colors
+function defaultValues(initialValues) {
+  return {
+    colorMapColors: null, // Same as this->Colors
 
-  static: false,
-  lookupTable: null,
+    static: false,
+    lookupTable: null,
 
-  scalarVisibility: true,
-  scalarRange: [0, 1],
-  useLookupTableScalarRange: false,
+    scalarVisibility: true,
+    scalarRange: [0, 1],
+    useLookupTableScalarRange: false,
 
-  colorMode: 0,
-  scalarMode: 0,
-  arrayAccessMode: 1, // By_NAME
+    colorMode: 0,
+    scalarMode: 0,
+    arrayAccessMode: 1, // By_NAME
 
-  renderTime: 0,
+    renderTime: 0,
 
-  colorByArrayName: null,
+    colorByArrayName: null,
 
-  fieldDataTupleId: -1,
+    fieldDataTupleId: -1,
 
-  populateSelectionSettings: true,
-  selectionWebGLIdsToVTKIds: null,
+    populateSelectionSettings: true,
+    selectionWebGLIdsToVTKIds: null,
 
-  interpolateScalarsBeforeMapping: false,
-  colorCoordinates: null,
-  colorTextureMap: null,
+    interpolateScalarsBeforeMapping: false,
+    colorCoordinates: null,
+    colorTextureMap: null,
 
-  forceCompileOnly: 0,
+    forceCompileOnly: 0,
 
-  useInvertibleColors: false,
-  invertibleScalars: null,
+    useInvertibleColors: false,
+    invertibleScalars: null,
 
-  viewSpecificProperties: null,
+    viewSpecificProperties: {},
 
-  customShaderAttributes: [],
-};
+    customShaderAttributes: [],
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkAbstractMapper3D.extend(publicAPI, model, initialValues);
@@ -636,10 +639,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
   macro.setGetArray(publicAPI, model, ['scalarRange'], 2);
 
-  if (!model.viewSpecificProperties) {
-    model.viewSpecificProperties = {};
-  }
-
   CoincidentTopologyHelper.implementCoincidentTopologyMethods(publicAPI, model);
 
   // Object methods
@@ -648,7 +647,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkMapper');
+export const newInstance = macro.newInstance(extend, 'vtkMapper', true);
 
 // ----------------------------------------------------------------------------
 

@@ -33,14 +33,19 @@ function vtkCoordinate(publicAPI, model) {
       throw new RangeError('Invalid number of values for array setter');
     }
     let changeDetected = false;
-    model.value.forEach((item, index) => {
-      if (item !== array[index]) {
-        if (changeDetected) {
-          return;
+    // Instanciation time : if model.value is undefined, change needs to be done
+    if (model.value) {
+      model.value.forEach((item, index) => {
+        if (item !== array[index]) {
+          if (changeDetected) {
+            return;
+          }
+          changeDetected = true;
         }
-        changeDetected = true;
-      }
-    });
+      });
+    } else {
+      changeDetected = true;
+    }
 
     if (changeDetected) {
       model.value = [].concat(array);
@@ -581,20 +586,23 @@ function vtkCoordinate(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  coordinateSystem: Coordinate.WORLD,
-  value: [0.0, 0.0, 0.0],
-  renderer: null,
-  referenceCoordinate: null,
-  computing: 0,
-  computedWorldValue: [0.0, 0.0, 0.0],
-  computedDoubleDisplayValue: [0.0, 0.0],
-};
+function defaultValues(initialValues) {
+  return {
+    coordinateSystem: Coordinate.WORLD,
+    value: [0.0, 0.0, 0.0],
+    renderer: null,
+    referenceCoordinate: null,
+    computing: 0,
+    computedWorldValue: [0.0, 0.0, 0.0],
+    computedDoubleDisplayValue: [0.0, 0.0],
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   macro.obj(publicAPI, model);
 
@@ -615,7 +623,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkCoordinate');
+export const newInstance = macro.newInstance(extend, 'vtkCoordinate', true);
 
 // ----------------------------------------------------------------------------
 

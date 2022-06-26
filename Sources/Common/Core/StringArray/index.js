@@ -66,8 +66,14 @@ function vtkStringArray(publicAPI, model) {
   };
 
   publicAPI.setData = (array, numberOfComponents) => {
+    if (Array.isArray(array)) {
+      // eslint-disable-next-line no-param-reassign
+      array = macro.newTypedArrayFrom(model.dataType, array);
+    }
+
     model.values = array;
-    model.size = array.length;
+    model.size = array ? array.length : 0;
+
     if (numberOfComponents) {
       model.numberOfComponents = numberOfComponents;
     }
@@ -82,46 +88,64 @@ function vtkStringArray(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  name: '',
-  numberOfComponents: 1,
-  size: 0,
-  // values: null,
-  dataType: 'string',
-};
-
-// ----------------------------------------------------------------------------
-
-export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-
-  if (!model.empty && !model.values && !model.size) {
-    throw new TypeError(
-      'Cannot create vtkStringArray object without: size > 0, values'
-    );
-  }
-
-  if (!model.values) {
-    model.values = [];
-  } else if (Array.isArray(model.values)) {
-    model.values = [...model.values];
-  }
-
-  if (model.values) {
-    model.size = model.values.length;
-  }
-
-  // Object methods
-  macro.obj(publicAPI, model);
-  macro.set(publicAPI, model, ['name']);
-
-  // Object specific methods
-  vtkStringArray(publicAPI, model);
+function defaultValues(initialValues) {
+  return {
+    name: '',
+    numberOfComponents: 1,
+    size: 0,
+    // values: null,
+    dataType: 'string',
+    ...initialValues,
+  };
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkStringArray');
+export function extend(publicAPI, model, initialValues = {}) {
+  if (!initialValues.empty && !initialValues.values && !initialValues.size) {
+    throw new TypeError(
+      'Cannot create vtkDataArray object without: size > 0, values'
+    );
+  }
+  delete initialValues.empty;
+  Object.assign(initialValues, defaultValues(initialValues));
+
+  // Object methods
+  macro.obj(publicAPI, model);
+  macro.set(publicAPI, model, ['name', 'numberOfComponents']);
+
+  model.dataType = initialValues.dataType ? initialValues.dataType : 'string';
+  delete initialValues.dataType;
+  if (!initialValues.values) {
+    if (!initialValues.size) initialValues.values = null;
+    else
+      initialValues.values = macro.newTypedArray(
+        model.dataType,
+        initialValues.size
+      );
+  } else if (Array.isArray(initialValues.values)) {
+    initialValues.values = macro.newTypedArrayFrom(
+      model.dataType,
+      initialValues.values
+    );
+  }
+
+  // Object specific methods
+  vtkStringArray(publicAPI, model);
+
+  // We call customly setData here to keep coherence between parameters before
+  // the call of publicAPI.set(initialValues) in the constructor
+  // Warning : setData cannot be overwritten in a child class
+  publicAPI.setData(initialValues.values, initialValues.numberOfComponents);
+  delete initialValues.values;
+  delete initialValues.dataType;
+  delete initialValues.numberOfComponents;
+  delete initialValues.size;
+}
+
+// ----------------------------------------------------------------------------
+
+export const newInstance = macro.newInstance(extend, 'vtkStringArray', true);
 
 // ----------------------------------------------------------------------------
 

@@ -147,31 +147,34 @@ function vtkMapper2D(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  static: false,
-  lookupTable: null,
+function defaultValues(initialValues) {
+  return {
+    static: false,
+    lookupTable: null,
 
-  scalarVisibility: false,
-  scalarRange: [0, 1],
-  useLookupTableScalarRange: false,
+    scalarVisibility: false,
+    scalarRange: [0, 1],
+    useLookupTableScalarRange: false,
 
-  colorMode: 0,
-  scalarMode: 0,
-  arrayAccessMode: 1, // By_NAME
+    colorMode: 0,
+    scalarMode: 0,
+    arrayAccessMode: 1, // By_NAME
 
-  renderTime: 0,
+    renderTime: 0,
 
-  colorByArrayName: null,
+    colorByArrayName: null,
 
-  transformCoordinate: null,
+    transformCoordinate: null,
 
-  viewSpecificProperties: null,
-  customShaderAttributes: [],
-};
+    viewSpecificProperties: {},
+    customShaderAttributes: [],
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkAbstractMapper.extend(publicAPI, model, initialValues);
@@ -193,17 +196,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
   macro.setGetArray(publicAPI, model, ['scalarRange'], 2);
 
-  if (!model.viewSpecificProperties) {
-    model.viewSpecificProperties = {};
-  }
-
   // Object methods
   vtkMapper2D(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkMapper2D');
+export const newInstance = macro.newInstance(extend, 'vtkMapper2D', true);
 
 // ----------------------------------------------------------------------------
 

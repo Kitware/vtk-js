@@ -90,21 +90,24 @@ function vtkArrowSource(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  tipResolution: 6,
-  tipRadius: 0.1,
-  tipLength: 0.35,
-  shaftResolution: 6,
-  shaftRadius: 0.03,
-  invert: false,
-  direction: [1.0, 0.0, 0.0],
-  pointType: 'Float64Array',
-};
+function defaultValues(initialValues) {
+  return {
+    tipResolution: 6,
+    tipRadius: 0.1,
+    tipLength: 0.35,
+    shaftResolution: 6,
+    shaftRadius: 0.03,
+    invert: false,
+    direction: [1.0, 0.0, 0.0],
+    pointType: 'Float64Array',
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -123,7 +126,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkArrowSource');
+export const newInstance = macro.newInstance(extend, 'vtkArrowSource', true);
 
 // ----------------------------------------------------------------------------
 

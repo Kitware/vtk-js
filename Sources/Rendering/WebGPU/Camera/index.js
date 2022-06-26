@@ -131,31 +131,29 @@ function vtkWebGPUCamera(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  keyMatrixTime: null,
-  keyMatrices: null,
-};
+function defaultValues(initialValues) {
+  return {
+    keyMatrixTime: macro.obj({}),
+    // values always get set by the get method
+    keyMatrices: {
+      normalMatrix: new Float64Array(16),
+      vcpc: new Float64Array(16),
+      pcsc: new Float64Array(16),
+      wcvc: new Float64Array(16),
+      scpc: new Float64Array(16),
+      scvc: new Float64Array(16),
+    },
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
-
-  model.keyMatrixTime = {};
-  macro.obj(model.keyMatrixTime);
-
-  // values always get set by the get method
-  model.keyMatrices = {
-    normalMatrix: new Float64Array(16),
-    vcpc: new Float64Array(16),
-    pcsc: new Float64Array(16),
-    wcvc: new Float64Array(16),
-    scpc: new Float64Array(16),
-    scvc: new Float64Array(16),
-  };
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['keyMatrixTime']);
@@ -166,7 +164,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, undefined, true);
 
 // ----------------------------------------------------------------------------
 

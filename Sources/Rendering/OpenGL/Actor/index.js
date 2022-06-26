@@ -184,27 +184,29 @@ function vtkOpenGLActor(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  context: null,
-  keyMatrixTime: null,
-  keyMatrices: null,
-  activeTextures: null,
-};
+function defaultValues(initialValues) {
+  return {
+    // Internal objects
+    keyMatrixTime: macro.obj({}, { mtime: 0 }),
+    keyMatrices: {
+      normalMatrix: mat3.identity(new Float64Array(9)),
+      mcwc: mat4.identity(new Float64Array(16)),
+    },
+
+    context: null,
+    activeTextures: null,
+
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
-
-  model.keyMatrixTime = {};
-  macro.obj(model.keyMatrixTime, { mtime: 0 });
-  model.keyMatrices = {
-    normalMatrix: mat3.identity(new Float64Array(9)),
-    mcwc: mat4.identity(new Float64Array(16)),
-  };
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['context']);
@@ -217,7 +219,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, undefined, true);
 
 // ----------------------------------------------------------------------------
 

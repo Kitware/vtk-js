@@ -239,9 +239,9 @@ function vtkDataArray(publicAPI, model) {
 
   publicAPI.getTupleLocation = (idx = 1) => idx * model.numberOfComponents;
   publicAPI.getNumberOfComponents = () => model.numberOfComponents;
-  publicAPI.getNumberOfValues = () => model.values.length;
+  publicAPI.getNumberOfValues = () => (model.values ? model.values.length : 0);
   publicAPI.getNumberOfTuples = () =>
-    model.values.length / model.numberOfComponents;
+    model.values ? model.values.length / model.numberOfComponents : 0;
   publicAPI.getDataType = () => model.dataType;
   /* eslint-disable no-use-before-define */
   publicAPI.newClone = () =>
@@ -261,10 +261,16 @@ function vtkDataArray(publicAPI, model) {
     return model.name;
   };
 
-  publicAPI.setData = (typedArray, numberOfComponents) => {
+  publicAPI.setData = (typedArray = null, numberOfComponents = undefined) => {
+    if (Array.isArray(typedArray)) {
+      // eslint-disable-next-line no-param-reassign
+      typedArray = macro.newTypedArrayFrom(model.dataType, typedArray);
+    }
+
     model.values = typedArray;
-    model.size = typedArray.length;
-    model.dataType = getDataType(typedArray);
+    model.size = typedArray ? typedArray.length : 0;
+    model.dataType = typedArray ? getDataType(typedArray) : model.dataType;
+
     if (numberOfComponents) {
       model.numberOfComponents = numberOfComponents;
     }
@@ -313,49 +319,68 @@ function vtkDataArray(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  name: '',
-  numberOfComponents: 1,
-  size: 0,
-  dataType: DefaultDataType,
-  rangeTuple: [0, 0],
-  // values: null,
-  // ranges: null,
-};
+function defaultValues(initialValues) {
+  return {
+    name: '',
+    numberOfComponents: 1,
+    size: 0,
+    dataType: DefaultDataType,
+    rangeTuple: [0, 0],
+    // values: macro.newTypedArray(DefaultValues),
+    // ranges: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-
-  if (!model.empty && !model.values && !model.size) {
+  if (!initialValues.empty && !initialValues.values && !initialValues.size) {
     throw new TypeError(
       'Cannot create vtkDataArray object without: size > 0, values'
     );
   }
-
-  if (!model.values) {
-    model.values = macro.newTypedArray(model.dataType, model.size);
-  } else if (Array.isArray(model.values)) {
-    model.values = macro.newTypedArrayFrom(model.dataType, model.values);
-  }
-
-  if (model.values) {
-    model.size = model.values.length;
-    model.dataType = getDataType(model.values);
-  }
+  delete initialValues.empty;
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Object methods
   macro.obj(publicAPI, model);
   macro.set(publicAPI, model, ['name', 'numberOfComponents']);
 
+  model.dataType = initialValues.dataType
+    ? initialValues.dataType
+    : DefaultDataType;
+  delete initialValues.dataType;
+  if (!initialValues.values) {
+    if (!initialValues.size) initialValues.values = null;
+    else
+      initialValues.values = macro.newTypedArray(
+        model.dataType,
+        initialValues.size
+      );
+  } else if (Array.isArray(initialValues.values)) {
+    initialValues.values = macro.newTypedArrayFrom(
+      model.dataType,
+      initialValues.values
+    );
+  }
+
   // Object specific methods
   vtkDataArray(publicAPI, model);
+
+  // We call customly setData here to keep coherence between parameters before
+  // the call of publicAPI.set(initialValues) in the constructor
+  // Warning : setData cannot be overwritten in a child class
+  publicAPI.setData(initialValues.values, initialValues.numberOfComponents);
+  delete initialValues.values;
+  delete initialValues.dataType;
+  delete initialValues.numberOfComponents;
+  delete initialValues.size;
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkDataArray');
+export const newInstance = macro.newInstance(extend, 'vtkDataArray', true);
 
 // ----------------------------------------------------------------------------
 

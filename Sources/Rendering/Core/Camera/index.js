@@ -18,6 +18,41 @@ const { vtkDebugMacro } = macro;
 // }
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+export function defaultValues(initialValues) {
+  return {
+    position: [0, 0, 1],
+    focalPoint: [0, 0, 0],
+    viewUp: [0, 1, 0],
+    directionOfProjection: [0, 0, -1],
+    parallelProjection: false,
+    useHorizontalViewAngle: false,
+    viewAngle: 30,
+    parallelScale: 1,
+    clippingRange: [0.01, 1000.01],
+    windowCenter: [0, 0],
+    viewPlaneNormal: [0, 0, 1],
+    useOffAxisProjection: false,
+    screenBottomLeft: [-0.5, -0.5, -0.5],
+    screenBottomRight: [0.5, -0.5, -0.5],
+    screenTopRight: [0.5, 0.5, -0.5],
+    freezeFocalPoint: false,
+    projectionMatrix: null,
+    viewMatrix: null,
+    cameraLightTransform: mat4.create(),
+
+    // used for world to physical transformations
+    physicalTranslation: [0, 0, 0],
+    physicalScale: 1.0,
+    physicalViewUp: [0, 1, 0],
+    physicalViewNorth: [0, 0, -1],
+    ...initialValues,
+  };
+}
+
+// ----------------------------------------------------------------------------
 // vtkCamera methods
 // ----------------------------------------------------------------------------
 
@@ -42,6 +77,10 @@ function vtkCamera(publicAPI, model) {
 
   // Internal Functions that don't need to be public
   function computeViewPlaneNormal() {
+    // Instanciation time
+    if (model.viewPlaneNormal === undefined) {
+      model.viewPlaneNormal = defaultValues().viewPlaneNormal;
+    }
     // VPN is -DOP
     model.viewPlaneNormal[0] = -model.directionOfProjection[0];
     model.viewPlaneNormal[1] = -model.directionOfProjection[1];
@@ -59,11 +98,16 @@ function vtkCamera(publicAPI, model) {
 
   publicAPI.setPosition = (x, y, z) => {
     if (
+      model.position &&
       x === model.position[0] &&
       y === model.position[1] &&
       z === model.position[2]
     ) {
       return;
+    }
+    // Instanciation time
+    if (model.position === undefined) {
+      model.position = defaultValues().position;
     }
 
     model.position[0] = x;
@@ -77,13 +121,17 @@ function vtkCamera(publicAPI, model) {
 
   publicAPI.setFocalPoint = (x, y, z) => {
     if (
+      model.focalPoint &&
       x === model.focalPoint[0] &&
       y === model.focalPoint[1] &&
       z === model.focalPoint[2]
     ) {
       return;
     }
-
+    // Instanciation time
+    if (model.focalPoint === undefined) {
+      model.focalPoint = defaultValues().focalPoint;
+    }
     model.focalPoint[0] = x;
     model.focalPoint[1] = y;
     model.focalPoint[2] = z;
@@ -118,11 +166,23 @@ function vtkCamera(publicAPI, model) {
   //----------------------------------------------------------------------------
   // This method must be called when the focal point or camera position changes
   publicAPI.computeDistance = () => {
+    // Instanciation time : computeDistance can be called either when model.position
+    // or model.focalPoint are undefined
+    if (model.position === undefined) {
+      model.position = defaultValues().position;
+    }
+    if (model.focalPoint === undefined) {
+      model.focalPoint = defaultValues().focalPoint;
+    }
     const dx = model.focalPoint[0] - model.position[0];
     const dy = model.focalPoint[1] - model.position[1];
     const dz = model.focalPoint[2] - model.position[2];
 
     model.distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+    if (model.directionOfProjection === undefined) {
+      model.directionOfProjection = defaultValues().directionOfProjection;
+    }
 
     if (model.distance < 1e-20) {
       model.distance = 1e-20;
@@ -710,41 +770,9 @@ function vtkCamera(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
-export const DEFAULT_VALUES = {
-  position: [0, 0, 1],
-  focalPoint: [0, 0, 0],
-  viewUp: [0, 1, 0],
-  directionOfProjection: [0, 0, -1],
-  parallelProjection: false,
-  useHorizontalViewAngle: false,
-  viewAngle: 30,
-  parallelScale: 1,
-  clippingRange: [0.01, 1000.01],
-  windowCenter: [0, 0],
-  viewPlaneNormal: [0, 0, 1],
-  useOffAxisProjection: false,
-  screenBottomLeft: [-0.5, -0.5, -0.5],
-  screenBottomRight: [0.5, -0.5, -0.5],
-  screenTopRight: [0.5, 0.5, -0.5],
-  freezeFocalPoint: false,
-  projectionMatrix: null,
-  viewMatrix: null,
-  cameraLightTransform: mat4.create(),
-
-  // used for world to physical transformations
-  physicalTranslation: [0, 0, 0],
-  physicalScale: 1.0,
-  physicalViewUp: [0, 1, 0],
-  physicalViewNorth: [0, 0, -1],
-};
-
-// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -791,7 +819,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkCamera');
+export const newInstance = macro.newInstance(extend, 'vtkCamera', true);
 
 // ----------------------------------------------------------------------------
 

@@ -181,32 +181,30 @@ function vtkRemoteView(publicAPI, model) {
     }
     return changeDetected;
   };
-
-  // Initialize viewStream if available
-  if (model.viewStream) {
-    publicAPI.setViewStream(model.viewStream);
-  }
 }
 
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  viewId: '-1',
-  interactiveQuality: 60,
-  interactiveRatio: 1 / window.devicePixelRatio,
-  stillQuality: 100,
-  stillRatio: 1,
-  rpcMouseEvent: 'viewport.mouse.interaction',
-  rpcGestureEvent: null,
-  rpcWheelEvent: null,
-};
+function defaultValues(initialValues) {
+  return {
+    viewId: '-1',
+    interactiveQuality: 60,
+    interactiveRatio: 1 / window.devicePixelRatio,
+    stillQuality: 100,
+    stillRatio: 1,
+    rpcMouseEvent: 'viewport.mouse.interaction',
+    rpcGestureEvent: null,
+    rpcWheelEvent: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   macro.obj(publicAPI, model, initialValues);
   macro.get(publicAPI, model, [

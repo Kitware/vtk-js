@@ -161,11 +161,14 @@ function vtkDataSetAttributes(publicAPI, model) {
     publicAPI[`get${value}`] = () =>
       publicAPI.getArrayByIndex(model[activeVal]);
     publicAPI[`set${value}`] = (da) => publicAPI.setAttribute(da, value);
-    publicAPI[`setActive${value}`] = (arrayName) =>
-      publicAPI.setActiveAttributeByIndex(
-        publicAPI.getArrayWithIndex(arrayName).index,
+    publicAPI[`setActive${value}`] = (arrayNameOrIndex) => {
+      if (typeof arrayNameOrIndex === 'number')
+        return publicAPI.setActiveAttributeByIndex(arrayNameOrIndex, value);
+      return publicAPI.setActiveAttributeByIndex(
+        publicAPI.getArrayWithIndex(arrayNameOrIndex).index,
         value
       );
+    };
     publicAPI[`copy${value}Off`] = () => {
       const attType = value.toUpperCase();
       model.copyAttributeFlags[AttributeCopyOperations.PASSDATA][
@@ -234,20 +237,23 @@ function vtkDataSetAttributes(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  activeScalars: -1,
-  activeVectors: -1,
-  activeTensors: -1,
-  activeNormals: -1,
-  activeTCoords: -1,
-  activeGlobalIds: -1,
-  activePedigreeIds: -1,
-};
+function defaultValues(initialValues) {
+  return {
+    activeScalars: -1,
+    activeVectors: -1,
+    activeTensors: -1,
+    activeNormals: -1,
+    activeTCoords: -1,
+    activeGlobalIds: -1,
+    activePedigreeIds: -1,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Object methods
   vtkFieldData.extend(publicAPI, model, initialValues);
@@ -261,9 +267,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     'activePedigreeIds',
   ]);
 
-  if (!model.arrays) {
-    model.arrays = {};
-  }
+  // model.arrays must exist before calling setActiveAttribute
+  model.arrays = initialValues.arrays;
+  delete initialValues.arrays;
 
   // Object specific methods
   vtkDataSetAttributes(publicAPI, model);
@@ -271,7 +277,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkDataSetAttributes');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkDataSetAttributes',
+  true
+);
 
 // ----------------------------------------------------------------------------
 

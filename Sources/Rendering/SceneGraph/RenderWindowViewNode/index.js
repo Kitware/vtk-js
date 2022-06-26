@@ -150,20 +150,18 @@ function vtkRenderWindowViewNode(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  size: undefined,
-  selector: undefined,
-};
+function defaultValues(initialValues) {
+  return {
+    size: [300, 300],
+    selector: undefined,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-
-  if (!model.size) {
-    model.size = [300, 300];
-  }
-
+  Object.assign(initialValues, defaultValues(initialValues));
   macro.getArray(publicAPI, model, ['size'], 2);
   macro.get(publicAPI, model, ['selector']);
 
@@ -176,7 +174,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkRenderWindowViewNode');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkRenderWindowViewNode',
+  true
+);
 
 // ----------------------------------------------------------------------------
 

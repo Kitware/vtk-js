@@ -52,20 +52,20 @@ function vtkWebGPUShaderCache(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  shaderModules: null,
-  device: null,
-  window: null,
-};
+function defaultValues(initialValues) {
+  return {
+    _shaderModules: new Map(),
+    device: null,
+    window: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-
-  // Internal objects
-  model._shaderModules = new Map();
-
+  macro.moveToProtected(publicAPI, initialValues, ['shaderModules']);
+  Object.assign(initialValues, defaultValues(initialValues));
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, ['device', 'window']);
@@ -76,7 +76,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkWebGPUShaderCache');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkWebGPUShaderCache',
+  true
+);
 
 // ----------------------------------------------------------------------------
 

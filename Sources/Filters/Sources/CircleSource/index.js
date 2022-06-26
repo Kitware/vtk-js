@@ -84,7 +84,7 @@ function defaultValues(initialValues) {
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, defaultValues(initialValues));
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -96,7 +96,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkCircleSource');
+export const newInstance = macro.newInstance(extend, 'vtkCircleSource', true);
 
 // ----------------------------------------------------------------------------
 

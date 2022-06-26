@@ -96,21 +96,24 @@ function vtkImageGridSource(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  lineValue: 0,
-  fillValue: 255,
-  gridSpacing: [10, 10, 0],
-  gridOrigin: [0, 0, 0],
-  dataSpacing: [1.0, 1.0, 1.0],
-  dataOrigin: [0.0, 0.0, 0.0],
-  dataExtent: [0, 255, 0, 255, 0, 0],
-  dataDirection: [1, 0, 0, 0, 1, 0, 0, 0, 1],
-};
+function defaultValues(initialValues) {
+  return {
+    lineValue: 0,
+    fillValue: 255,
+    gridSpacing: [10, 10, 0],
+    gridOrigin: [0, 0, 0],
+    dataSpacing: [1.0, 1.0, 1.0],
+    dataOrigin: [0.0, 0.0, 0.0],
+    dataExtent: [0, 255, 0, 255, 0, 0],
+    dataDirection: [1, 0, 0, 0, 1, 0, 0, 0, 1],
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -134,7 +137,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkImageGridSource');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkImageGridSource',
+  true
+);
 
 // ----------------------------------------------------------------------------
 

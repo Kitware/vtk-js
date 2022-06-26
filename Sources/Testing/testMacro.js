@@ -21,25 +21,35 @@ function myClass(publicAPI, model) {
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
-const DEFAULT_VALUES = {
-  myProp1: [0, 0, 0],
-  myProp2: null, // Do not initialize internal objects here
-  myProp3: true,
-  myProp4: 6,
-  myProp5: [1, 2, 3, 4],
-  myProp6: [0.1, 0.2, 0.3, 0.4, 0.5],
-  myProp7: MY_ENUM.FIRST,
-  myProp8: [1, 2, 3],
-  myProp9: null,
-  // myProp10: null,
-  myProp11: 11,
-  _myProp12: [12],
-  _myProp13: 13,
-};
+function defaultValues(initialValues) {
+  return {
+    myProp1: [0, 0, 0],
+    myProp2: null, // Do not initialize internal objects here
+    myProp3: true,
+    myProp4: 6,
+    myProp5: [1, 2, 3, 4],
+    myProp6: [0.1, 0.2, 0.3, 0.4, 0.5],
+    myProp7: MY_ENUM.FIRST,
+    myProp8: [1, 2, 3],
+    myProp9: null,
+    // myProp10: null,
+    _myProp11: 11,
+    _myProp12: [12],
+    _myProp13: 13,
+    _myProp14: 14,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  macro.moveToProtected(publicAPI, initialValues, [
+    'myProp11',
+    'myProp12',
+    'myProp13',
+    'myProp14',
+  ]);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Object methods
   macro.obj(publicAPI, model);
@@ -72,7 +82,12 @@ function extend(publicAPI, model, initialValues = {}) {
   // Protected variables
   macro.setGet(publicAPI, model, ['_myProp11']);
   macro.setGetArray(publicAPI, model, ['_myProp12'], 1);
-  macro.moveToProtected(publicAPI, model, ['myProp11', 'myProp12', 'myProp13']);
+  macro.moveToProtected(publicAPI, initialValues, [
+    'myProp11',
+    'myProp12',
+    'myProp13',
+    'myProp14',
+  ]);
 
   // Object specific methods
   myClass(publicAPI, model);
@@ -93,7 +108,7 @@ test('Macro methods scalar tests', (t) => {
 
   t.equal(
     myTestClass.getMyProp3(),
-    DEFAULT_VALUES.myProp3,
+    defaultValues().myProp3,
     'Initial gets should match defaults'
   );
   myTestClass.setMyProp3(false);
@@ -102,7 +117,7 @@ test('Macro methods scalar tests', (t) => {
   const mtime1 = myTestClass.getMTime();
   t.equal(
     myTestClass.getMyProp4(),
-    DEFAULT_VALUES.myProp4,
+    defaultValues().myProp4,
     'Initial gets should match defaults'
   );
   myTestClass.setMyProp4(42);
@@ -121,7 +136,7 @@ test('Macro methods array tests', (t) => {
 
   t.deepEqual(
     myTestClass.getMyProp1(),
-    DEFAULT_VALUES.myProp1,
+    defaultValues().myProp1,
     'Initial gets should match defaults'
   );
   // we must wrap the non-existent call inside another function to avoid test program exiting, and tape-catch generating error.
@@ -155,7 +170,7 @@ test('Macro methods array tests', (t) => {
   );
   t.deepEqual(
     myTestClass.getMyProp6(),
-    DEFAULT_VALUES.myProp6,
+    defaultValues().myProp6,
     'Keep default value after illegal set'
   );
 
@@ -290,9 +305,9 @@ test('Macro methods array tests', (t) => {
 test('Macro protected variables tests', (t) => {
   const defaultInstance = newInstance();
   t.deepEqual(defaultInstance.get('_myProp11', '_myProp12', '_myProp13'), {
-    _myProp11: DEFAULT_VALUES.myProp11,
-    _myProp12: DEFAULT_VALUES._myProp12,
-    _myProp13: DEFAULT_VALUES._myProp13,
+    _myProp11: defaultValues()._myProp11,
+    _myProp12: defaultValues()._myProp12,
+    _myProp13: defaultValues()._myProp13,
   });
   // getter must have been renamed
   t.notOk(defaultInstance.get_myProp11);
@@ -304,8 +319,8 @@ test('Macro protected variables tests', (t) => {
   t.notOk(defaultInstance.set_myProp12);
   t.notOk(defaultInstance.set_myProp13);
 
-  t.equal(defaultInstance.getMyProp11(), DEFAULT_VALUES.myProp11);
-  t.deepEqual(defaultInstance.getMyProp12(), DEFAULT_VALUES._myProp12);
+  t.equal(defaultInstance.getMyProp11(), defaultValues()._myProp11);
+  t.deepEqual(defaultInstance.getMyProp12(), defaultValues()._myProp12);
   t.notOk(defaultInstance.getMyProp13);
 
   t.notOk(defaultInstance.getMyProp11ByReference);
@@ -327,22 +342,32 @@ test('Macro protected variables tests', (t) => {
     myProp11: 111,
     myProp12: [112],
     myProp13: 113,
+    myProp14: 114,
   });
-  t.deepEqual(overridenInstance.get('_myProp11', '_myProp12', '_myProp13'), {
-    _myProp11: 111,
-    _myProp12: [112],
-    _myProp13: 113,
-  });
+  t.deepEqual(
+    overridenInstance.get('_myProp11', '_myProp12', '_myProp13', '_myProp14'),
+    {
+      _myProp11: 111,
+      _myProp12: [112],
+      _myProp13: 113,
+      _myProp14: 114,
+    }
+  );
   const overridenInstance2 = newInstance({
     _myProp11: 111,
     _myProp12: [112],
     _myProp13: 113,
+    _myProp14: 114,
   });
-  t.deepEqual(overridenInstance2.get('_myProp11', '_myProp12', '_myProp13'), {
-    _myProp11: DEFAULT_VALUES.myProp11, // TBD
-    _myProp12: [112],
-    _myProp13: 113,
-  });
+  t.deepEqual(
+    overridenInstance2.get('_myProp11', '_myProp12', '_myProp13', '_myProp14'),
+    {
+      _myProp11: 111,
+      _myProp12: [112],
+      _myProp13: 113,
+      _myProp14: 114,
+    }
+  );
   t.end();
 });
 
@@ -351,7 +376,7 @@ test('Macro methods enum tests', (t) => {
 
   t.equal(
     myTestClass.getMyProp7(),
-    DEFAULT_VALUES.myProp7,
+    defaultValues().myProp7,
     'Initial gets should match defaults'
   );
   myTestClass.setMyProp7(MY_ENUM.THIRD);
@@ -408,14 +433,16 @@ test('Macro methods enum tests', (t) => {
 test('Macro methods object tests', (t) => {
   const myTestClass = newInstance();
 
-  const defaultValues = { ...DEFAULT_VALUES };
-  defaultValues._myProp11 = defaultValues.myProp11;
-  delete defaultValues.myProp11;
+  const copyDefaultValues = { ...defaultValues() };
+  copyDefaultValues._myProp11 = copyDefaultValues.myProp11;
+  copyDefaultValues._myProp14 = copyDefaultValues.myProp14;
+  delete copyDefaultValues.myProp11;
+  delete copyDefaultValues.myProp14;
 
   t.ok(myTestClass.get(), 'Get entire model');
   t.deepEqual(
-    myTestClass.get(...Object.keys(defaultValues)),
-    defaultValues,
+    myTestClass.get(...Object.keys(copyDefaultValues)),
+    copyDefaultValues,
     'Get defaults back test'
   );
 

@@ -128,12 +128,12 @@ function vtkActor(publicAPI, model) {
 
   publicAPI.getMTime = () => {
     let mt = superClass.getMTime();
-    if (model.property !== null) {
+    if (model.property) {
       const time = model.property.getMTime();
       mt = time > mt ? time : mt;
     }
 
-    if (model.backfaceProperty !== null) {
+    if (model.backfaceProperty) {
       const time = model.backfaceProperty.getMTime();
       mt = time > mt ? time : mt;
     }
@@ -170,28 +170,31 @@ function vtkActor(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  mapper: null,
-  property: null,
-  backfaceProperty: null,
+function defaultValues(initialValues) {
+  return {
+    // Internal objects
+    boundsMTime: macro.obj({}),
 
-  forceOpaque: false,
-  forceTranslucent: false,
+    mapper: null,
+    property: null,
+    backfaceProperty: null,
 
-  bounds: [1, -1, 1, -1, 1, -1],
-};
+    forceOpaque: false,
+    forceTranslucent: false,
+
+    bounds: [1, -1, 1, -1, 1, -1],
+
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkProp3D.extend(publicAPI, model, initialValues);
-
-  // vtkTimeStamp
-  model.boundsMTime = {};
-  macro.obj(model.boundsMTime);
 
   // Build VTK API
   macro.set(publicAPI, model, ['property']);
@@ -208,7 +211,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkActor');
+export const newInstance = macro.newInstance(extend, 'vtkActor', true);
 
 // ----------------------------------------------------------------------------
 

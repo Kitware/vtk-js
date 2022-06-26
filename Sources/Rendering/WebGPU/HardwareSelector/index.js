@@ -417,19 +417,21 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  WebGPURenderWindow: null,
-};
+function defaultValues(initialValues) {
+  return {
+    WebGPURenderWindow: null,
+    _selectionPass: vtkWebGPUHardwareSelectionPass.newInstance(),
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   vtkHardwareSelector.extend(publicAPI, model, initialValues);
-
-  model._selectionPass = vtkWebGPUHardwareSelectionPass.newInstance();
 
   macro.setGet(publicAPI, model, ['WebGPURenderWindow']);
 
@@ -441,7 +443,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 export const newInstance = macro.newInstance(
   extend,
-  'vtkWebGPUHardwareSelector'
+  'vtkWebGPUHardwareSelector',
+  true
 );
 
 // ----------------------------------------------------------------------------

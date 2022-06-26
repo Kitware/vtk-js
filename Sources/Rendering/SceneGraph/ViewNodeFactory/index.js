@@ -47,14 +47,17 @@ function vtkViewNodeFactory(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  // overrides: {},
-};
+function defaultValues(initialValues) {
+  return {
+    // overrides: {},
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -65,7 +68,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkViewNodeFactory');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkViewNodeFactory',
+  true
+);
 
 // ----------------------------------------------------------------------------
 

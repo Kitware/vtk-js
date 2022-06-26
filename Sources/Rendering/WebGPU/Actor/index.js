@@ -152,32 +152,32 @@ function vtkWebGPUActor(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  keyMatricesTime: null,
-  keyMatrices: null,
-  propID: undefined,
-  bufferShift: undefined,
-};
+function defaultValues(initialValues) {
+  return {
+    // Internal objects
+    keyMatricesTime: macro.obj({}, { mtime: 0 }),
+    keyMatrices: {
+      normalMatrix: new Float64Array(16),
+      bcwc: new Float64Array(16),
+      bcsc: new Float64Array(16),
+    },
+    bufferShift: [0, 0, 0, 0],
+
+    propID: undefined,
+    bufferShift: undefined,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
 
-  model.keyMatricesTime = {};
-  macro.obj(model.keyMatricesTime, { mtime: 0 });
-  model.keyMatrices = {
-    normalMatrix: new Float64Array(16),
-    bcwc: new Float64Array(16),
-    bcsc: new Float64Array(16),
-  };
-
   macro.get(publicAPI, model, ['propID', 'keyMatricesTime']);
-
-  model.bufferShift = [0, 0, 0, 0];
 
   // Object methods
   vtkWebGPUActor(publicAPI, model);
@@ -185,7 +185,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, undefined, true);
 
 // ----------------------------------------------------------------------------
 

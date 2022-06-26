@@ -190,29 +190,31 @@ function vtkViewNode(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  // _parent: null,
-  renderable: null,
-  myFactory: null,
-  children: [],
-  visited: false,
-};
+function defaultValues(initialValues) {
+  return {
+    // _parent: null,
+    renderable: null,
+    myFactory: null,
+    children: [],
+    visited: false,
+    _renderableChildMap: new Map(),
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  macro.moveToProtected(publicAPI, initialValues, ['parent']);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.event(publicAPI, model, 'event');
 
-  model._renderableChildMap = new Map();
-
   macro.get(publicAPI, model, ['visited']);
   macro.setGet(publicAPI, model, ['_parent', 'renderable', 'myFactory']);
   macro.getArray(publicAPI, model, ['children']);
-  macro.moveToProtected(publicAPI, model, ['parent']);
 
   // Object methods
   vtkViewNode(publicAPI, model);
@@ -220,7 +222,7 @@ function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-const newInstance = macro.newInstance(extend, 'vtkViewNode');
+const newInstance = macro.newInstance(extend, 'vtkViewNode', true);
 
 // ----------------------------------------------------------------------------
 

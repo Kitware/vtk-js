@@ -122,21 +122,21 @@ function vtkCell(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  bounds: [-1, -1, -1, -1, -1, -1],
-  pointsIds: [],
-};
+function defaultValues(initialValues) {
+  return {
+    points: vtkPoints.newInstance(),
+    bounds: [-1, -1, -1, -1, -1, -1],
+    pointsIds: [],
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   macro.obj(publicAPI, model);
-
-  if (!model.points) {
-    model.points = vtkPoints.newInstance();
-  }
 
   macro.get(publicAPI, model, ['points', 'pointsIds']);
 
@@ -145,7 +145,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkCell');
+export const newInstance = macro.newInstance(extend, 'vtkCell', true);
 
 // ----------------------------------------------------------------------------
 

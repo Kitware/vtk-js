@@ -76,19 +76,22 @@ function vtkShader(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  shaderType: 'Unknown',
-  source: '',
-  error: '',
-  handle: 0,
-  dirty: false,
-  context: null,
-};
+function defaultValues(initialValues) {
+  return {
+    shaderType: 'Unknown',
+    source: '',
+    error: '',
+    handle: 0,
+    dirty: false,
+    context: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -106,7 +109,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkShader');
+export const newInstance = macro.newInstance(extend, 'vtkShader', true);
 
 // ----------------------------------------------------------------------------
 

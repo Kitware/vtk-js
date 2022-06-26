@@ -1528,61 +1528,51 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  context: null,
-  VBOBuildTime: null,
-  scalarTexture: null,
-  scalarTextureString: null,
-  opacityTexture: null,
-  opacityTextureString: null,
-  colorTexture: null,
-  colorTextureString: null,
-  jitterTexture: null,
-  tris: null,
-  framebuffer: null,
-  copyShader: null,
-  copyVAO: null,
-  lastXYF: 1.0,
-  targetXYF: 1.0,
-  zBufferTexture: null,
-  lastZBufferTexture: null,
-  lastLightComplexity: 0,
-  fullViewportTime: 1.0,
-  idxToView: null,
-  idxNormalMatrix: null,
-  modelToView: null,
-  projectionToView: null,
-  avgWindowArea: 0.0,
-  avgFrameTime: 0.0,
-};
+function defaultValues(initialValues) {
+  return {
+    // Internal Objects
+    VBOBuildTime: macro.obj({}, { mtime: 0 }),
+    tris: vtkHelper.newInstance(),
+    scalarTexture: vtkOpenGLTexture.newInstance(),
+    opacityTexture: vtkOpenGLTexture.newInstance(),
+    colorTexture: vtkOpenGLTexture.newInstance(),
+    jitterTexture: vtkOpenGLTexture.newInstance({
+      wrapS: Wrap.REPEAT,
+      wrapT: Wrap.REPEAT,
+    }),
+    framebuffer: vtkOpenGLFramebuffer.newInstance(),
+    idxToView: mat4.identity(new Float64Array(16)),
+    idxNormalMatrix: mat3.identity(new Float64Array(9)),
+    modelToView: mat4.identity(new Float64Array(16)),
+    projectionToView: mat4.identity(new Float64Array(16)),
+    projectionToWorld: mat4.identity(new Float64Array(16)),
+    _lastScale: 1.0,
+
+    context: null,
+    scalarTextureString: null,
+    opacityTextureString: null,
+    colorTextureString: null,
+    copyShader: null,
+    copyVAO: null,
+    lastXYF: 1.0,
+    targetXYF: 1.0,
+    zBufferTexture: null,
+    lastZBufferTexture: null,
+    lastLightComplexity: 0,
+    fullViewportTime: 1.0,
+    avgWindowArea: 0.0,
+    avgFrameTime: 0.0,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
-
-  model.VBOBuildTime = {};
-  macro.obj(model.VBOBuildTime, { mtime: 0 });
-
-  model.tris = vtkHelper.newInstance();
-  model.scalarTexture = vtkOpenGLTexture.newInstance();
-  model.opacityTexture = vtkOpenGLTexture.newInstance();
-  model.colorTexture = vtkOpenGLTexture.newInstance();
-  model.jitterTexture = vtkOpenGLTexture.newInstance();
-  model.jitterTexture.setWrapS(Wrap.REPEAT);
-  model.jitterTexture.setWrapT(Wrap.REPEAT);
-  model.framebuffer = vtkOpenGLFramebuffer.newInstance();
-
-  model.idxToView = mat4.identity(new Float64Array(16));
-  model.idxNormalMatrix = mat3.identity(new Float64Array(9));
-  model.modelToView = mat4.identity(new Float64Array(16));
-  model.projectionToView = mat4.identity(new Float64Array(16));
-  model.projectionToWorld = mat4.identity(new Float64Array(16));
-
-  model._lastScale = 1.0;
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['context']);
@@ -1593,7 +1583,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkOpenGLVolumeMapper');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkOpenGLVolumeMapper',
+  true
+);
 
 // ----------------------------------------------------------------------------
 

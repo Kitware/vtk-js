@@ -294,60 +294,56 @@ function vtkLookupTable(publicAPI, model) {
       publicAPI.forceBuild();
     }
   };
-
-  if (model.table.length > 0) {
-    // ensure insertTime is more recently modified than buildTime if
-    // a table is provided via the constructor
-    model.insertTime.modified();
-  }
 }
 
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  numberOfColors: 256,
-  // table: null,
+function defaultValues(initialValues) {
+  return {
+    // Internal objects
+    table: [],
+    buildTime: macro.obj({}),
+    opaqueFlagBuildTime: macro.obj({}, { mtime: 0 }),
+    insertTime: macro.obj({}, { mtime: 0 }),
 
-  hueRange: [0.0, 0.66667],
-  saturationRange: [1.0, 1.0],
-  valueRange: [1.0, 1.0],
-  alphaRange: [1.0, 1.0],
+    numberOfColors: 256,
 
-  nanColor: [0.5, 0.0, 0.0, 1.0],
-  belowRangeColor: [0.0, 0.0, 0.0, 1.0],
-  aboveRangeColor: [1.0, 1.0, 1.0, 1.0],
-  useAboveRangeColor: false,
-  useBelowRangeColor: false,
+    hueRange: [0.0, 0.66667],
+    saturationRange: [1.0, 1.0],
+    valueRange: [1.0, 1.0],
+    alphaRange: [1.0, 1.0],
 
-  alpha: 1.0,
-  // buildTime: null,
-  // opaqueFlagBuildTime: null,
-  // insertTime: null,
-};
+    nanColor: [0.5, 0.0, 0.0, 1.0],
+    belowRangeColor: [0.0, 0.0, 0.0, 1.0],
+    aboveRangeColor: [1.0, 1.0, 1.0, 1.0],
+    useAboveRangeColor: false,
+    useBelowRangeColor: false,
+
+    alpha: 1.0,
+    // buildTime: null,
+    // opaqueFlagBuildTime: null,
+    // insertTime: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkScalarsToColors.extend(publicAPI, model, initialValues);
 
   // Internal objects initialization
-  if (!model.table) {
-    model.table = [];
+  // model.table needs to be instanciated manually if it is an array to not call
+  // setTable in that case
+  if (Array.isArray(initialValues.table)) {
+    model.table = initialValues.table;
+    delete initialValues.table;
   }
-
-  model.buildTime = {};
-  macro.obj(model.buildTime);
-
-  model.opaqueFlagBuildTime = {};
-  macro.obj(model.opaqueFlagBuildTime, { mtime: 0 });
-
-  model.insertTime = {};
-  macro.obj(model.insertTime, { mtime: 0 });
 
   // Create get-only macros
   macro.get(publicAPI, model, ['buildTime']);
@@ -389,11 +385,17 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object specific methods
   vtkLookupTable(publicAPI, model);
+
+  if (initialValues.table && initialValues.table.length > 0) {
+    // ensure insertTime is more recently modified than buildTime if
+    // a table is provided via the constructor
+    initialValues.insertTime.modified();
+  }
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkLookupTable');
+export const newInstance = macro.newInstance(extend, 'vtkLookupTable', true);
 
 // ----------------------------------------------------------------------------
 

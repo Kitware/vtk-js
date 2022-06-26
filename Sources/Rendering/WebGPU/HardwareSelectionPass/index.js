@@ -120,16 +120,19 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  selectionRenderEncoder: null,
-  colorTexture: null,
-  depthTexture: null,
-};
+function defaultValues(initialValues) {
+  return {
+    selectionRenderEncoder: null,
+    colorTexture: null,
+    depthTexture: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Build VTK API
   vtkRenderPass.extend(publicAPI, model, initialValues);
@@ -144,7 +147,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 export const newInstance = macro.newInstance(
   extend,
-  'vtkWebGPUHardwareSelectionPass'
+  'vtkWebGPUHardwareSelectionPass',
+  true
 );
 
 // ----------------------------------------------------------------------------

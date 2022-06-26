@@ -53,7 +53,7 @@ test('Test vtkCell deepCopy', (t) => {
   cell.initialize(points);
 
   const cell2 = vtkCell.newInstance();
-  cell2.deepCopy(cell);
+  cell.deepCopy(cell2);
   t.notEqual(cell2.getPoints(), points);
   t.deepEqual(cell2.getPoints().getData(), points.getData());
 

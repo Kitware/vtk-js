@@ -41,7 +41,9 @@ function vtkAbstractMapper(publicAPI, model) {
   publicAPI.getClippingPlanes = () => model.clippingPlanes;
 
   publicAPI.setClippingPlanes = (planes) => {
-    if (!planes) {
+    // Instanciation time
+    if (model.clippingPlanes === undefined) {
+      model.clippingPlanes = [];
       return;
     }
     if (!Array.isArray(planes)) {
@@ -89,22 +91,21 @@ function vtkAbstractMapper(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  clippingPlanes: [],
-};
+function defaultValues(initialValues) {
+  return {
+    clippingPlanes: [],
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Object methods
   macro.obj(publicAPI, model);
   macro.algo(publicAPI, model, 1, 0);
-
-  if (!model.clippingPlanes) {
-    model.clippingPlanes = [];
-  }
 
   vtkAbstractMapper(publicAPI, model);
 }

@@ -188,16 +188,20 @@ function vtkOpenGLRenderer(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  context: null,
-  // _openGLRenderWindow: null,
-  selector: null,
-};
+function defaultValues(initialValues) {
+  return {
+    context: null,
+    // _openGLRenderWindow: null,
+    selector: null,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  macro.moveToProtected(publicAPI, initialValues, ['openGLRenderWindow']);
+  Object.assign(initialValues, defaultValues(initialValues));
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
@@ -207,15 +211,13 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, ['selector']);
 
-  macro.moveToProtected(publicAPI, model, ['openGLRenderWindow']);
-
   // Object methods
   vtkOpenGLRenderer(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkOpenGLRenderer');
+export const newInstance = macro.newInstance(extend, 'vtkOpenGLRenderer', true);
 
 // ----------------------------------------------------------------------------
 

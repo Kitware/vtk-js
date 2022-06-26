@@ -548,57 +548,59 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  initialized: false,
-  context: null,
-  adapter: null,
-  device: null,
-  canvas: null,
-  cursorVisibility: true,
-  cursor: 'pointer',
-  containerSize: null,
-  renderPasses: [],
-  notifyStartCaptureImage: false,
-  imageFormat: 'image/png',
-  useOffScreen: false,
-  useBackgroundImage: false,
-  nextPropID: 1,
-  xrSupported: false,
-};
+function defaultValues(initialValues) {
+  return {
+    // Internal instances
+    bgImage: new Image(),
+    myFactory: vtkWebGPUViewNodeFactory.newInstance(),
+    selector: vtkWebGPUHardwareSelector.newInstance(),
+
+    initialized: false,
+    context: null,
+    adapter: null,
+    device: null,
+    canvas: null,
+    cursorVisibility: true,
+    cursor: 'pointer',
+    containerSize: null,
+    renderPasses: [],
+    notifyStartCaptureImage: false,
+    imageFormat: 'image/png',
+    useOffScreen: false,
+    useBackgroundImage: false,
+    nextPropID: 1,
+    xrSupported: false,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(initialValues, defaultValues(initialValues));
 
-  // Create internal instances
+  // model.canvas needs to be set to model before calling other setters
   model.canvas = document.createElement('canvas');
   model.canvas.style.width = '100%';
 
-  // Create internal bgImage
-  model.bgImage = new Image();
-  model.bgImage.style.position = 'absolute';
-  model.bgImage.style.left = '0';
-  model.bgImage.style.top = '0';
-  model.bgImage.style.width = '100%';
-  model.bgImage.style.height = '100%';
-  model.bgImage.style.zIndex = '-1';
+  initialValues.bgImage.style.position = 'absolute';
+  initialValues.bgImage.style.left = '0';
+  initialValues.bgImage.style.top = '0';
+  initialValues.bgImage.style.width = '100%';
+  initialValues.bgImage.style.height = '100%';
+  initialValues.bgImage.style.zIndex = '-1';
 
   // Inheritance
   vtkRenderWindowViewNode.extend(publicAPI, model, initialValues);
 
-  model.myFactory = vtkWebGPUViewNodeFactory.newInstance();
   /* eslint-disable no-use-before-define */
-  model.myFactory.registerOverride('vtkRenderWindow', newInstance);
+  initialValues.myFactory.registerOverride('vtkRenderWindow', newInstance);
   /* eslint-enable no-use-before-define */
 
   // setup default forward pass rendering
-  model.renderPasses[0] = vtkForwardPass.newInstance();
+  initialValues.renderPasses[0] = vtkForwardPass.newInstance();
 
-  if (!model.selector) {
-    model.selector = vtkWebGPUHardwareSelector.newInstance();
-    model.selector.setWebGPURenderWindow(publicAPI);
-  }
+  initialValues.selector.setWebGPURenderWindow(publicAPI);
 
   macro.event(publicAPI, model, 'imageReady');
   macro.event(publicAPI, model, 'initialized');
@@ -630,7 +632,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkWebGPURenderWindow');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkWebGPURenderWindow',
+  true
+);
 
 // ----------------------------------------------------------------------------
 // Register API specific RenderWindow implementation

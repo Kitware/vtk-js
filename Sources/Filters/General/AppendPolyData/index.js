@@ -10,6 +10,8 @@ const { vtkErrorMacro } = macro;
 
 function offsetCellArray(typedArray, offset) {
   let currentIdx = 0;
+  // No data to shift
+  if (!typedArray) return {};
   return typedArray.map((value, index) => {
     if (index === currentIdx) {
       currentIdx += value + 1;
