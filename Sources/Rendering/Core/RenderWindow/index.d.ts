@@ -38,7 +38,7 @@ export interface vtkRenderWindow extends vtkObject {
 
 	/**
 	 * Add renderer
-	 * @param renderer 
+	 * @param renderer The vtkRenderer instance.
 	 */
 	addRenderer(renderer: vtkRenderer): void;
 
@@ -120,10 +120,10 @@ export interface vtkRenderWindow extends vtkObject {
 
 	/**
 	 * 
-	 * @param {String} [name] 
-	 * @param initialValues 
+	 * @param {String} name 
+	 * @param {} [initialValues] 
 	 */
-	newAPISpecificView(name?: string, initialValues: object): any;
+	newAPISpecificView(name: string, initialValues?: object): any;
 
 	/**
 	 * Remove renderer
