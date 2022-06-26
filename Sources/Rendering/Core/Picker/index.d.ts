@@ -73,7 +73,7 @@ export interface vtkPicker extends vtkAbstractPicker {
 	/**
 	 * Perform pick operation with selection point provided.
 	 * @param selection 
-	 * @param {vtkRenderer} renderer 
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	pick(selection: any, renderer: vtkRenderer): any;
 

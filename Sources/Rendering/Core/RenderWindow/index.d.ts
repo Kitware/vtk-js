@@ -38,7 +38,7 @@ export interface vtkRenderWindow extends vtkObject {
 
 	/**
 	 * Add renderer
-	 * @param renderer The vtkRenderer instance.
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	addRenderer(renderer: vtkRenderer): void;
 
@@ -127,7 +127,7 @@ export interface vtkRenderWindow extends vtkObject {
 
 	/**
 	 * Remove renderer
-	 * @param {vtkRenderer} renderer The vtkRender instance.
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	removeRenderer(renderer: vtkRenderer): void;
 
