@@ -22,6 +22,7 @@ const DEFAULT_VALUES = {
   behavior: Behavior.HANDLE,
   pickable: true,
   dragable: true,
+  scaleInPixels: true,
 };
 
 // ----------------------------------------------------------------------------

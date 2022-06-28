@@ -1,7 +1,7 @@
 ## From 24.x to 25
 
-- **math**: For functions calling math functions for computations with matrices, the format must now be number[] or Matrix as difined in
-the typescript definitions.
+- **math**: For functions calling math functions for computations with matrices, the format must now be number[] or Matrix as defined in the typescript definitions.
+- All widgets handles inheriting from vtkHandleRepresentation now scale up automatically.
 
 ## From 23.x to 24
 

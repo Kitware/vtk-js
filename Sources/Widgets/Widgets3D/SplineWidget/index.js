@@ -27,6 +27,7 @@ function vtkSplineWidget(publicAPI, model) {
     'fill',
     'borderColor',
     'errorBorderColor',
+    'scaleInPixels',
   ];
   model.behavior = widgetBehavior;
   model.widgetState = stateGenerator();
@@ -42,9 +43,6 @@ function vtkSplineWidget(publicAPI, model) {
           {
             builder: vtkSphereHandleRepresentation,
             labels: ['handles', 'moveHandle'],
-            initialValues: {
-              scaleInPixels: true,
-            },
           },
           {
             builder: vtkSplineContextRepresentation,
