@@ -95,10 +95,11 @@ test('Test PolyDataMapper Clipping Planes 2', (t) => {
   const numPlanes = 8;
 
   const theta = (2 * Math.PI) / numPlanes;
+  // prettier-ignore
   const rotationMatrix = [
-    [Math.cos(theta), Math.sin(theta), 0],
-    [-Math.sin(theta), Math.cos(theta), 0],
-    [0, 0, 1],
+    Math.cos(theta), Math.sin(theta), 0,
+    -Math.sin(theta), Math.cos(theta), 0,
+    0, 0, 1,
   ];
   const normal = [1, 0, 0];
   const origin = [0, 0, 0];

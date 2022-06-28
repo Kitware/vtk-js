@@ -20,43 +20,43 @@ export interface vtkCoordinate extends vtkObject {
 
 	/**
 	 *
-	 * @param {vtkRenderer} ren 
+	 * @param {vtkRenderer} ren The vtkRenderer instance.
 	 */
 	getComputedWorldValue(ren: vtkRenderer): number[];
 
 	/**
 	 *
-	 * @param {vtkRenderer} ren 
+	 * @param {vtkRenderer} ren The vtkRenderer instance.
 	 */
 	getComputedViewportValue(ren: vtkRenderer): number[];
 
 	/**
 	 *
-	 * @param {vtkRenderer} ren 
+	 * @param {vtkRenderer} ren The vtkRenderer instance.
 	 */
 	getComputedDisplayValue(ren: vtkRenderer): number[];
 
 	/**
 	 *
-	 * @param {vtkRenderer} ren 
+	 * @param {vtkRenderer} ren The vtkRenderer instance.
 	 */
 	getComputedLocalDisplayValue(ren: vtkRenderer): number[];
 
 	/**
 	 *
-	 * @param {vtkRenderer} ren 
+	 * @param {vtkRenderer} ren The vtkRenderer instance.
 	 */
 	getComputedValue(ren: vtkRenderer): number[];
 
 	/**
 	 *
-	 * @param {vtkRenderer} ren 
+	 * @param {vtkRenderer} ren The vtkRenderer instance.
 	 */
 	getComputedDoubleViewportValue(ren: vtkRenderer): number[];
 
 	/**
 	 *
-	 * @param {vtkRenderer} ren 
+	 * @param {vtkRenderer} ren The vtkRenderer instance.
 	 */
 	getComputedDoubleDisplayValue(ren: vtkRenderer): number[];
 

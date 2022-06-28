@@ -19,7 +19,7 @@ export default function generateState() {
       mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator', 'shape'],
       name: 'moveHandle',
       initialValues: {
-        scale1: 50,
+        scale1: 30,
         visible: true,
       },
     })
@@ -28,7 +28,7 @@ export default function generateState() {
       mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator', 'shape'],
       name: 'handle1',
       initialValues: {
-        scale1: 50,
+        scale1: 30,
       },
     })
     .addStateFromMixin({
@@ -36,7 +36,7 @@ export default function generateState() {
       mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator', 'shape'],
       name: 'handle2',
       initialValues: {
-        scale1: 50,
+        scale1: 30,
       },
     })
     .addStateFromMixin({

@@ -45,9 +45,6 @@ function vtkRectangleWidget(publicAPI, model) {
           {
             builder: vtkSphereHandleRepresentation,
             labels: ['moveHandle'],
-            initialValues: {
-              scaleInPixels: true,
-            },
           },
           {
             builder: vtkRectangleContextRepresentation,

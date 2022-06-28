@@ -45,16 +45,10 @@ function vtkPolyLineWidget(publicAPI, model) {
           {
             builder: vtkSphereHandleRepresentation,
             labels: ['handles'],
-            initialValues: {
-              scaleInPixels: true,
-            },
           },
           {
             builder: vtkSphereHandleRepresentation,
             labels: ['moveHandle'],
-            initialValues: {
-              scaleInPixels: true,
-            },
           },
           {
             builder: vtkSVGLandmarkRepresentation,

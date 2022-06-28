@@ -47,9 +47,6 @@ function vtkEllipseWidget(publicAPI, model) {
           {
             builder: vtkSphereHandleRepresentation,
             labels: ['moveHandle'],
-            initialValues: {
-              scaleInPixels: true,
-            },
           },
           {
             builder: vtkCircleContextRepresentation,

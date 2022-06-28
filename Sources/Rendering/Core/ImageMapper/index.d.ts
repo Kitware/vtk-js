@@ -198,7 +198,7 @@ export interface vtkImageMapper extends vtkAbstractMapper {
 	 * @param {Number} factor 
 	 * @param {Number} offset 
 	 */
-	setResolveCoincidentTopologyPolygonOffsetParameters(factor: number, offset: number)
+	setResolveCoincidentTopologyPolygonOffsetParameters(factor: number, offset: number): boolean;
 
 	/**
 	 *

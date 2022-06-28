@@ -1,4 +1,4 @@
-import { vtkOutputPort } from "./interfaces";
+import { vtkOutputPort } from './interfaces';
 
 /** Alias type for value that can be null */
 declare type Nullable<T> = T | null;
@@ -22,16 +22,16 @@ declare type double = number;
 declare type int = number;
 
 declare type TypedArray =
-    | number[]
-    | Uint32Array
-    | Uint16Array
-    | Uint8Array
-    | Uint8ClampedArray
-    | Int32Array
-    | Int16Array
-    | Int8Array
-    | Float64Array
-    | Float32Array;
+  | number[]
+  | Uint32Array
+  | Uint16Array
+  | Uint8Array
+  | Uint8ClampedArray
+  | Int32Array
+  | Int16Array
+  | Int8Array
+  | Float64Array
+  | Float32Array;
 
 declare type Bounds = [number, number, number, number, number, number];
 declare type CellType = number;
@@ -43,9 +43,19 @@ declare type Vector2 = [number, number];
 declare type Vector3 = [number, number, number];
 declare type Vector4 = [number, number, number, number];
 
-declare type Matrix = number[][];
-declare type Matrix2x2 = [Vector2, Vector2];
-declare type Matrix3x3 = [Vector3, Vector3, Vector3];
+declare type Matrix = number[];
+declare type Matrix2x2 = [number, number, number, number, number, number];
+declare type Matrix3x3 = [
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number
+];
 /**
  * @deprecated The `Point` type is depracted, please use `Vector3` instead.
  */

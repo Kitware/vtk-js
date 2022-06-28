@@ -27,6 +27,7 @@ function vtkDistanceWidget(publicAPI, model) {
     'useActiveColor',
     'glyphResolution',
     'defaultScale',
+    'scaleInPixels',
   ];
   model.behavior = widgetBehavior;
   model.widgetState = stateGenerator();

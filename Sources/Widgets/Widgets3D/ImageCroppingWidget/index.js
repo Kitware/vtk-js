@@ -103,6 +103,7 @@ function vtkImageCroppingWidget(publicAPI, model) {
 
   model.behavior = behavior;
   model.widgetState = state();
+  model.methodsToLink = ['scaleInPixels'];
 
   // Given a view type (geometry, slice, volume), return a description
   // of what representations to create and what widget state to pass

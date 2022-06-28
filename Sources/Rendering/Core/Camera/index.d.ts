@@ -56,6 +56,11 @@ export interface vtkCamera extends vtkObject {
 	computeDistance(): void;
 
 	/**
+	 * 
+	 */
+	computeCameraLightTransform(): void;
+
+	/**
 	 * the provided matrix should include translation and orientation only mat
 	 * is physical to view
 	 * @param {mat4} mat The physical matrix.
@@ -440,6 +445,12 @@ export interface vtkCamera extends vtkObject {
 	setFocalPointFrom(focalPoint: Vector3): boolean;
 
 	/**
+	 * Set the value of the FreezeDolly instance variable.
+	 * @param {Boolean} freezeFocalPoint 
+	 */
+	setFreezeFocalPoint(freezeFocalPoint: boolean): boolean;
+
+	/**
 	 * Not implement yet
 	 * Set the oblique viewing angles.
 	 * The first angle, alpha, is the angle (measured from the horizontal) that
@@ -633,7 +644,7 @@ export interface vtkCamera extends vtkObject {
 	 * @param {Boolean} useHorizontalViewAngle The value of the useHorizontalViewAngle.
 	 */
 	setUseHorizontalViewAngle(useHorizontalViewAngle: boolean): boolean;
-	
+
 	/**
 	 * Set use offaxis frustum.
 	 * 

@@ -7,6 +7,24 @@ import { Bounds, Extent, HSVColor, RGBAColor, RGBColor, Matrix, Matrix3x3, Range
 export function createArray(size?: number): number[];
 
 /**
+ * Given two rows indices, swap the two rows of a nxn matrix
+ * @param {Number[]} matrix The n by n matrix in wich we want to swap the vectors.
+ * @param {Number} n size of the matrix.
+ * @param {Number} row1 index of first row to swap with the other.
+ * @param {Number} row2 index of second row to swap with the other.
+ */
+export function swapRowsMatrix_nxn(matrix: number[], n: number, row1: number, row2: number): void;
+
+/**
+ * Given two columns indices, swap the two columns of a nxn matrix
+ * @param {Number[]} matrix The n by n matrix in wich we want to swap the vectors.
+ * @param {Number} n size of the matrix.
+ * @param {Number} column1 index of first col to swap with the other.
+ * @param {Number} column2 index of second col to swap with the other.
+ */
+ export function swapColumnsMatrix_nxn(matrix: number[], n: number, column1: number, column2: number): void;
+
+/**
  * Get the number π.
  */
 export function Pi(): number;
@@ -364,9 +382,47 @@ export function normalize2D(x: Vector2): number;
 
 /**
  *
- * @param {Number[][]|Number[]} args 
+ * @param {Number[]} args 
  */
-export function determinant2x2(args: number[][]|number[]): number;
+export function determinant2x2(args: number[]): number;
+
+/**
+ * Fill a 4x4 matrix with the given row vectors
+ * @param {Vector4} row0 
+ * @param {Vector4} row1
+ * @param {Vector4} row2
+ * @param {Vector4} row3
+ * @param {Matrix} mat
+ */
+export function rowsToMat4(row0: Vector4, row1: Vector4, row2: Vector4, row3: Vector4, mat: Matrix): Matrix;
+
+/**
+ * Fill a 4x4 matrix with the given column vectors
+ * @param {Vector4} column0 
+ * @param {Vector4} column1
+ * @param {Vector4} column2
+ * @param {Vector4} column3
+ * @param {Matrix} mat
+ */
+export function columnsToMat4(column0: Vector4, column1: Vector4, column2: Vector4, column3: Vector4, mat: Matrix): Matrix;
+
+ /**
+ * Fill a 3x3 matrix with the given row vectors
+ * @param {Vector3} row0 
+ * @param {Vector3} row1
+ * @param {Vector3} row2
+ * @param {Matrix} mat
+ */
+export function rowsToMat3(row0: Vector3, row1: Vector3, row2: Vector3, mat: Matrix): Matrix;
+
+ /**
+ * Fill a 3x3 matrix with the given column vectors
+ * @param {Vector3} column0 
+ * @param {Vector3} column1
+ * @param {Vector3} column2
+ * @param {Matrix} mat
+ */
+export function columnsToMat3(column0: Vector3, column1: Vector3, column2: Vector3, mat: Matrix): Matrix;
 
 /**
  * LU Factorization of a 3x3 matrix.
@@ -476,12 +532,12 @@ export function roundNumber(num: number, digits?: number): number;
 export function roundVector(vector: Vector3, out?: Vector3, digits?: number): Vector3;
 
 /**
- *
- * @param {Matrix} a 
- * @param {Number} n 
- * @param {Number[]} w 
- * @param {Number[]} v 
- */
+* Jacobi iteration for the solution of eigenvectors/eigenvalues. Input matrix a is modified (the upper triangle is filled with zeros)
+* @param {Matrix} a real symetric nxn matrix
+* @param {Number} n matrix size
+* @param {Number[]} w vector of size n to store eigenvalues (stored in decreasing order)
+* @param {Number[]} v matrix of size nxn to store eigenvectors (stored in decreasing order, normalized)
+*/
 export function jacobiN(a: Matrix, n: number, w: number[], v: number[]): number;
 
 /**
@@ -837,6 +893,8 @@ export function isFinite(value: any): boolean;
  */
 export declare const vtkMath: {
 	createArray: typeof createArray;
+	swapRowsMatrix_nxn: typeof swapRowsMatrix_nxn;
+	swapColumnsMatrix_nxn: typeof swapColumnsMatrix_nxn;
 	Pi: typeof Pi;
 	radiansFromDegrees: typeof radiansFromDegrees;
 	degreesFromRadians: typeof degreesFromRadians;
@@ -882,6 +940,10 @@ export declare const vtkMath: {
 	norm2D: typeof norm2D;
 	normalize2D: typeof normalize2D;
 	determinant2x2: typeof determinant2x2;
+	rowsToMat4: typeof rowsToMat4;
+	columnsToMat4: typeof columnsToMat4;
+	rowsToMat3: typeof rowsToMat3;
+	columnsToMat3: typeof columnsToMat3;
 	LUFactor3x3: typeof LUFactor3x3;
 	LUSolve3x3: typeof LUSolve3x3;
 	linearSolve3x3: typeof linearSolve3x3;

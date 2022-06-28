@@ -14,27 +14,20 @@ function vtkSphereWidget(publicAPI, model) {
   const superClass = { ...publicAPI };
 
   model.behavior = widgetBehavior;
+  model.methodsToLink = ['scaleInPixels'];
+
   publicAPI.getRepresentationsForViewType = (viewType) => [
     {
       builder: vtkSphereHandleRepresentation,
       labels: ['moveHandle'],
-      initialValues: {
-        scaleInPixels: true,
-      },
     },
     {
       builder: vtkSphereHandleRepresentation,
       labels: ['centerHandle'],
-      initialValues: {
-        scaleInPixels: true,
-      },
     },
     {
       builder: vtkSphereHandleRepresentation,
       labels: ['borderHandle'],
-      initialValues: {
-        scaleInPixels: true,
-      },
     },
     {
       builder: vtkSphereContextRepresentation,
