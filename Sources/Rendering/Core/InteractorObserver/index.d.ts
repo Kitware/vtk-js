@@ -101,7 +101,7 @@ export interface vtkInteractorObserver extends vtkObject {
   /**
    * Transform from world to display coordinates.
    * 
-   * @param {vtkRenderer} renderer 
+   * @param {vtkRenderer} renderer The vtkRenderer instance.
    * @param {Number} x 
    * @param {Number} y 
    * @param {Number} z 
@@ -116,7 +116,7 @@ export interface vtkInteractorObserver extends vtkObject {
   /**
    * Transform from display to world coordinates.
    *
-   * @param {vtkRenderer} renderer 
+   * @param {vtkRenderer} renderer The vtkRenderer instance.
    * @param {Number} x 
    * @param {Number} y 
    * @param {Number} z 

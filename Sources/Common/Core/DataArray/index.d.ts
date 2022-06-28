@@ -54,7 +54,7 @@ export interface vtkDataArray extends vtkObject {
 	 *
 	 * @param {Number} componentIndex (default: -1)
 	 */
-	getRange(componentIndex?: number): vtkRange;
+	getRange(componentIndex?: number): [number, number];
 
 	/**
 	 *

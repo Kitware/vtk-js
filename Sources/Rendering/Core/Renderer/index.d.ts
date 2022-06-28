@@ -3,11 +3,10 @@ import { Bounds, Nullable } from '../../../types';
 import vtkCamera from '../Camera';
 import vtkLight from '../Light';
 import vtkRenderWindow from '../RenderWindow';
-import vtkProp3D from '../Prop3D';
+import vtkProp from '../Prop';
 import vtkViewport, { IViewportInitialValues } from '../Viewport';
 import vtkVolume from '../Volume';
 import vtkTexture from '../Texture';
-import vtkActor from '../Actor';
 
 
 export interface IRendererInitialValues extends IViewportInitialValues {
@@ -19,7 +18,7 @@ export interface IRendererInitialValues extends IViewportInitialValues {
 	twoSidedLighting?: boolean;
 	lastRenderTimeInSeconds?: number;
 	lights?: vtkLight[];
-	actors?: vtkProp3D[];
+	actors?: vtkProp[];
 	volumes?: vtkVolume[];
 	lightFollowCamera?: boolean;
 	numberOfPropsRendered?: number;
@@ -48,9 +47,9 @@ export interface vtkRenderer extends vtkViewport {
 
 	/**
 	 * Add different types of props to the renderer.
-	 * @param {vtkActor} actor The vtkActor instance.
+	 * @param {vtkProp} actor The vtkProp instance.
 	 */
-	addActor(actor: vtkActor): boolean;
+	addActor(actor: vtkProp): boolean;
 
 	/**
 	 * Add a light to the list of lights.
@@ -93,13 +92,13 @@ export interface vtkRenderer extends vtkViewport {
 	 * Return any actors in this renderer.
 	 *   
 	 */
-	getActors(): vtkActor[];
+	getActors(): vtkProp[];
 
 	/**
 	 * Return any actors in this renderer.
 	 *   
 	 */
-	getActorsByReference(): vtkActor[];
+	getActorsByReference(): vtkProp[];
 
 	/**
 	 * 
@@ -474,9 +473,9 @@ export interface vtkRenderer extends vtkViewport {
 
 	/**
 	 * 
-	 * @param {vtkActor} actor 
+	 * @param {vtkProp} actor 
 	 */
-	removeActor(actor: vtkActor): void;
+	removeActor(actor: vtkProp): void;
 
 	/**
 	 * 
