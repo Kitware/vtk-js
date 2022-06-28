@@ -68,15 +68,17 @@ function intersection(a1, a2, b1, b2, u, v) {
   vtkMath.subtract(b1, a1, b1a1);
 
   // Compute the system (least squares) matrix.
-  const A = [];
-  A[0] = [vtkMath.dot(a21, a21), -vtkMath.dot(a21, b21)];
-  A[1] = [A[0][1], vtkMath.dot(b21, b21)];
+  const A = [
+    vtkMath.dot(a21, a21),
+    -vtkMath.dot(a21, b21),
+    -vtkMath.dot(a21, b21),
+    vtkMath.dot(b21, b21),
+  ];
 
   // Compute the least squares system constant term.
   const c = [];
   c[0] = vtkMath.dot(a21, b1a1);
   c[1] = -vtkMath.dot(b21, b1a1);
-
   // Solve the system of equations
   if (vtkMath.solveLinearSystem(A, c, 2) === 0) {
     // The lines are colinear. Therefore, one of the four endpoints is the
