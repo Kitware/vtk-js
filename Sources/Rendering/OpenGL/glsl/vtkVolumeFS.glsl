@@ -754,7 +754,8 @@ vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
     }
     tColor.rgb = tColor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;
   }
-  #if vtkLightComplexity < 3 && defined(SurfaceShadowOn)
+  #ifdef SurfaceShadowOn
+  #if vtkLightComplexity < 3
     vec3 applyLightingDirectional(inout vec3 tColor, vec4 normal)
     {
       // everything in VC
@@ -847,6 +848,7 @@ vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
       return tColor.rgb * (diffuse * vDiffuse + vAmbient) + specular*vSpecular;
     }
   #endif 
+  #endif
 #endif
 
 //=======================================================================
