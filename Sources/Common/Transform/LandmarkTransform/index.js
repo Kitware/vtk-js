@@ -13,23 +13,6 @@ function vtkLandmarkTransform(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkLandmarkTransform');
 
-  // Convert a mat4 matrix to a Matrix 2 dimensions
-  function mat4To2DArray(mat) {
-    const output = [
-      [0.0, 0.0, 0.0, 0.0],
-      [0.0, 0.0, 0.0, 0.0],
-      [0.0, 0.0, 0.0, 0.0],
-      [0.0, 0.0, 0.0, 0.0],
-    ];
-    let cpt = 0;
-    for (let c = 0; c < 4; c++) {
-      for (let r = 0; r < 4; r++) {
-        output[r][c] = mat[cpt++];
-      }
-    }
-    return output;
-  }
-
   function update() {
     mat4.identity(model.matrix);
     const N_PTS = model.sourceLandmark.getNumberOfPoints();
@@ -69,9 +52,9 @@ function vtkLandmarkTransform(publicAPI, model) {
 
     if (N_PTS === 1) {
       mat4.identity(model.matrix);
-      model.matrix.elem[12] = targetCentroid[0] - sourceCentroid[0];
-      model.matrix.elem[13] = targetCentroid[1] - sourceCentroid[1];
-      model.matrix.elem[14] = targetCentroid[2] - sourceCentroid[2];
+      model.matrix[12] = targetCentroid[0] - sourceCentroid[0];
+      model.matrix[13] = targetCentroid[1] - sourceCentroid[1];
+      model.matrix[14] = targetCentroid[2] - sourceCentroid[2];
       return model.matrix;
     }
 
@@ -152,17 +135,16 @@ function vtkLandmarkTransform(publicAPI, model) {
       /* eslint-enable no-multi-assign */
 
       // -- eigen-decompose N (is symmetric) --
-
+      // prettier-ignore
       const eigenVectors = [
-        [0.0, 0.0, 0.0, 0.0],
-        [0.0, 0.0, 0.0, 0.0],
-        [0.0, 0.0, 0.0, 0.0],
-        [0.0, 0.0, 0.0, 0.0],
+        0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0,
       ];
       const eigenValues = [0.0, 0.0, 0.0, 0.0];
 
-      const NMatrix = mat4To2DArray(N);
-      vtkMath.jacobiN(NMatrix, 4, eigenValues, eigenVectors);
+      vtkMath.jacobiN(N, 4, eigenValues, eigenVectors);
 
       // The eigenvector with the largest eigenvalue is the quaternion we want
       // (they are sorted in decreasing order for us by JacobiN)
@@ -231,10 +213,10 @@ function vtkLandmarkTransform(publicAPI, model) {
         }
       } else {
         // points are not collinear
-        w = eigenVectors[0][0];
-        x = eigenVectors[1][0];
-        y = eigenVectors[2][0];
-        z = eigenVectors[3][0];
+        w = eigenVectors[0];
+        x = eigenVectors[4];
+        y = eigenVectors[8];
+        z = eigenVectors[12];
       }
 
       // convert quaternion to a rotation matrix

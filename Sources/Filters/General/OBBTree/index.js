@@ -53,7 +53,7 @@ function vtkOBBTree(publicAPI, model) {
     const a0 = [0, 0, 0];
     const a1 = [0, 0, 0];
     const a2 = [0, 0, 0];
-    const a = [a0, a1, a2];
+    let a = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     const dp0 = [0, 0, 0];
     const dp1 = [0, 0, 0];
     const c = [0, 0, 0];
@@ -153,35 +153,33 @@ function vtkOBBTree(publicAPI, model) {
     a2[0] = a0[2];
     a2[1] = a1[2];
 
+    a = [a0[0], a0[1], a0[2], a1[0], a1[1], a1[2], a2[0], a2[1], a2[2]];
     // get covariance from moments
     for (let i = 0; i < 3; i++) {
       for (let j = 0; j < 3; j++) {
-        a[i][j] = a[i][j] / totMass - mean[i] * mean[j];
+        a[i * 3 + j] = a[i * 3 + j] / totMass - mean[i] * mean[j];
       }
     }
 
     //
     // Extract axes (i.e., eigenvectors) from covariance matrix.
     //
-    const v0 = [0, 0, 0];
-    const v1 = [0, 0, 0];
-    const v2 = [0, 0, 0];
-    const v = [v0, v1, v2];
+    const v = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     vtkMath.jacobi(a, size, v);
-    max[0] = v[0][0];
-    max[1] = v[1][0];
-    max[2] = v[2][0];
-    mid[0] = v[0][1];
-    mid[1] = v[1][1];
-    mid[2] = v[2][1];
-    min[0] = v[0][2];
-    min[1] = v[1][2];
-    min[2] = v[2][2];
+    max[0] = v[0];
+    max[1] = v[3];
+    max[2] = v[6];
+    mid[0] = v[1];
+    mid[1] = v[4];
+    mid[2] = v[7];
+    min[0] = v[2];
+    min[1] = v[5];
+    min[2] = v[8];
 
     for (let i = 0; i < 3; i++) {
-      a[0][i] = mean[i] + max[i];
-      a[1][i] = mean[i] + mid[i];
-      a[2][i] = mean[i] + min[i];
+      a[i] = mean[i] + max[i];
+      a[3 + i] = mean[i] + mid[i];
+      a[6 + i] = mean[i] + min[i];
     }
 
     //
@@ -194,7 +192,12 @@ function vtkOBBTree(publicAPI, model) {
     for (let ptId = 0; ptId < numPts; ptId++) {
       const p = model.pointsList[ptId];
       for (let i = 0; i < 3; i++) {
-        const out = vtkLine.distanceToLine(p, mean, a[i], []);
+        const out = vtkLine.distanceToLine(
+          p,
+          mean,
+          a.slice(3 * i, 3 * (i + 1)),
+          []
+        );
         if (out.t < tMin[i]) {
           tMin[i] = out.t;
         }
@@ -548,11 +551,7 @@ function vtkOBBTree(publicAPI, model) {
     const eps = model.tolerance;
     const pA = nodeA;
     let pB = vtkOBBNode.newInstance();
-    const dotAB = [
-      [0, 0, 0],
-      [0, 0, 0],
-      [0, 0, 0],
-    ];
+    const dotAB = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     if (XformBtoA) {
       // Here we assume that XformBtoA is an orthogonal matrix
       input[0] = nodeB.getCorner()[0];
@@ -644,7 +643,7 @@ function vtkOBBTree(publicAPI, model) {
       for (let jj = 0; jj < 3; jj++) {
         // (note: we are saving all 9 dotproducts for future use)
         dotA = vtkMath.dot(pB.getAxis(ii), pA.getAxis(jj));
-        dotAB[ii][jj] = dotA;
+        dotAB[ii * 3 + jj] = dotA;
         if (dotA > 0) {
           rangeAmax += dotA;
         } else {
@@ -669,7 +668,7 @@ function vtkOBBTree(publicAPI, model) {
       rangeBmax = rangeBmin;
       for (let jj = 0; jj < 3; jj++) {
         // (note: we are using the 9 dotproducts computed earlier)
-        dotB = dotAB[jj][ii];
+        dotB = dotAB[jj * 3 + ii];
         if (dotB > 0) {
           rangeBmax += dotB;
         } else {
