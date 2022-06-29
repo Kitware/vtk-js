@@ -41,9 +41,9 @@ export interface vtkProp extends vtkObject {
 	/**
 	 * Get the coordinate system this prop is defined in.
 	 */
-     getCoordinateSystem(): CoordinateSystem;
+    getCoordinateSystem(): CoordinateSystem;
 
-     /**
+    /**
      * Get the value of the dragable instance variable.
      * @see getNestedDragable
      * @see getPickable
@@ -188,7 +188,7 @@ export interface vtkProp extends vtkObject {
      * Not all mappers support all coordinate systems.
 	 * @param {CoordinateSystem} coordinateSystem
 	 */
-     setCoordinateSystem(coordinateSystem: CoordinateSystem): void;
+    setCoordinateSystem(coordinateSystem: CoordinateSystem): void;
 
     /**
      * Indicate that this prop's data should be in world coordinates.
@@ -196,19 +196,19 @@ export interface vtkProp extends vtkObject {
      * userMatrix the resulting values will be treated as in world coordinates.
      * Not all mappers support all coordinate systems.
      */
-     setCoordinateSystemToWorld(): void;
+    setCoordinateSystemToWorld(): void;
 
-     /**
-      * Indicate that this prop's data should be in display coordinates.
-      * Once the prop has applied any modifiers such as position, orientation
-      * userMatrix the resulting values will be treated as in pixel coordinates.
-      * That is pixel coordinate with 0,0 in the lower left of the viewport
-      * and a z range of -1 at the near plane and 1 at the far.
-      * Not all mappers support all coordinate systems.
-      */
-      setCoordinateSystemToDisplay(): void;
+    /**
+     * Indicate that this prop's data should be in display coordinates.
+     * Once the prop has applied any modifiers such as position, orientation
+     * userMatrix the resulting values will be treated as in pixel coordinates.
+     * That is pixel coordinate with 0,0 in the lower left of the viewport
+     * and a z range of -1 at the near plane and 1 at the far.
+     * Not all mappers support all coordinate systems.
+     */
+    setCoordinateSystemToDisplay(): void;
 
-      /**
+    /**
      * Set whether prop is dragable.
      * Even if true, prop may not be dragable if an ancestor prop is not dragable.
      * @param dragable
@@ -232,7 +232,7 @@ export interface vtkProp extends vtkObject {
      * @see combineDragable
      * @default null
      */
-     setParentProp(parentProp: vtkProp): void;
+    setParentProp(parentProp: vtkProp): void;
 
     /**
      * Set whether prop is pickable.
@@ -242,16 +242,16 @@ export interface vtkProp extends vtkObject {
      * @see getPickable
      * @see combinePickable
      */
-     setPickable(pickable: boolean): boolean;
+    setPickable(pickable: boolean): boolean;
 
-     /**
-      * Set whether prop is visible.
-      * Even if true, prop may not be visible if an ancestor prop is not visible.
-      * @param visibility
-      * @default true
-      * @see getVisibility
-      * @see combineVisibility
-      */
+    /**
+     * Set whether prop is visible.
+     * Even if true, prop may not be visible if an ancestor prop is not visible.
+     * @param visibility
+     * @default true
+     * @see getVisibility
+     * @see combineVisibility
+     */
     setVisibility(visibility: boolean): boolean;
 
     /**
@@ -268,7 +268,7 @@ export interface vtkProp extends vtkObject {
      */
     setRenderTimeMultiplier(renderTimeMultiplier: number): boolean;
 
-     /**
+    /**
      * Not Implemented yet
      * Method fires PickEvent if the prop is picked.
      */

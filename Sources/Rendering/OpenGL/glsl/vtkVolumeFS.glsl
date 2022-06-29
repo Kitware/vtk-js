@@ -754,8 +754,9 @@ vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
     }
     tColor.rgb = tColor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;
   }
-  #if vtkLightComplexity < 3 && defined(SurfaceShadowOn)
-    void applyLightingDirectional(inout vec3 tColor, vec4 normal)
+  #ifdef SurfaceShadowOn
+  #if vtkLightComplexity < 3
+    vec3 applyLightingDirectional(inout vec3 tColor, vec4 normal)
     {
       // everything in VC
       vec3 diffuse = vec3(0.0);
@@ -780,10 +781,10 @@ vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
           }
         }
       }  
-      tColor.rgb = tColor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;    
+      return tColor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;
     }
   #else
-    void applyLightingPositional(inout vec3 tColor, vec4 normal, vec3 posVC)
+    vec3 applyLightingPositional(inout vec3 tColor, vec4 normal, vec3 posVC)
     {
       // everything in VC
       vec3 diffuse = vec3(0.0);
@@ -844,9 +845,10 @@ vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
           }
         }
       }
-      tColor.rgb = tColor.rgb * (diffuse * vDiffuse + vAmbient) + specular*vSpecular;
+      return tColor.rgb * (diffuse * vDiffuse + vAmbient) + specular*vSpecular;
     }
   #endif 
+  #endif
 #endif
 
 //=======================================================================
@@ -1056,21 +1058,22 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
   #if vtkLightComplexity > 0
     #if !defined(vtkComponent0Proportional) && defined(SurfaceShadowOn)
         #if vtkLightComplexity < 3
-            applyLightingDirectional(tColor.rgb, normalLight);
+            vec3 tColorS = applyLightingDirectional(tColor.rgb, normalLight);
         #else
-            applyLightingPositional(tColor.rgb, normalLight, IStoVC(posIS));  
+            vec3 tColorS = applyLightingPositional(tColor.rgb, normalLight, IStoVC(posIS));
         #endif
     #endif
 
     #ifdef VolumeShadowOn
-      vec3 secondary_contrib = applyShadowRay(tColor.rgb, posIS, rayDirVC);
-      float vol_coef;
-      if (volumetricScatteringBlending == 1.0 || volumetricScatteringBlending == 0.0){
-        vol_coef = volumetricScatteringBlending;
-      } else {
-        vol_coef = 1.0 - (pow(volumetricScatteringBlending,0.3) - 1.0)*(pow(volumetricScatteringBlending,0.3) - 1.0);
-      }
-      tColor.rgb = (1.0 - vol_coef) * tColor.rgb + vol_coef * secondary_contrib;
+      vec3 tColorVS = applyShadowRay(tColor.rgb, posIS, rayDirVC);
+      #ifdef SurfaceShadowOn
+        float vol_coef = volumetricScatteringBlending * (1.0 - tColor.a * exp(normalLight.w));
+        tColor.rgb = (1.0-vol_coef) * tColorS + vol_coef * tColorVS;
+      #else
+        tColor.rgb = tColorVS;
+      #endif
+    #else
+        tColor.rgb = tColorS;
     #endif
 
   #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2

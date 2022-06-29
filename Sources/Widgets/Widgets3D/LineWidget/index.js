@@ -33,6 +33,7 @@ function vtkLineWidget(publicAPI, model) {
     'useActiveColor',
     'glyphResolution',
     'defaultScale',
+    'scaleInPixels',
   ];
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
@@ -47,8 +48,6 @@ function vtkLineWidget(publicAPI, model) {
             builder: vtkArrowHandleRepresentation,
             labels: ['handle1'],
             initialValues: {
-              /* to scale handle size when zooming/dezooming, optional */
-              scaleInPixels: true,
               /*
                * This table sets the visibility of the handles' actors
                * 1st actor is a displayActor, which hides a rendered object on the HTML layer.
@@ -77,8 +76,6 @@ function vtkLineWidget(publicAPI, model) {
             builder: vtkArrowHandleRepresentation,
             labels: ['handle2'],
             initialValues: {
-              /* to scale handle size when zooming/dezooming, optional */
-              scaleInPixels: true,
               /*
                * This table sets the visibility of the handles' actors
                * 1st actor is a displayActor, which hides a rendered object on the HTML layer.
@@ -107,7 +104,6 @@ function vtkLineWidget(publicAPI, model) {
             builder: vtkArrowHandleRepresentation,
             labels: ['moveHandle'],
             initialValues: {
-              scaleInPixels: true,
               visibilityFlagArray: [false, false],
               coincidentTopologyParameters: {
                 Point: {
@@ -194,7 +190,6 @@ function vtkLineWidget(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   // manipulator: null,
-  isDragging: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -203,7 +198,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
-  macro.setGet(publicAPI, model, ['manipulator', 'isDragging']);
+  macro.setGet(publicAPI, model, ['manipulator']);
 
   vtkLineWidget(publicAPI, model);
 }

@@ -22,7 +22,7 @@ function vtkTextureMapToPlane(publicAPI, model) {
 
     const nbPoints = output.getPoints().getNumberOfPoints();
     let dir = 0;
-    const m = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let m = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     const x = [0, 0, 0];
     const v = [0, 0, 0];
 
@@ -58,9 +58,6 @@ function vtkTextureMapToPlane(publicAPI, model) {
     v[0] = 0.0;
     v[1] = 0.0;
     v[2] = 0.0;
-    for (i = 0; i < 9; i++) {
-      m[i] = 0.0;
-    }
 
     for (let ptId = 0; ptId < nbPoints; ptId++) {
       output.getPoints().getPoint(ptId, x);
@@ -87,20 +84,15 @@ function vtkTextureMapToPlane(publicAPI, model) {
     const c1 = [m[0], m[1], m[2]];
     const c2 = [m[3], m[4], m[5]];
     const c3 = [m[6], m[7], m[8]];
-    const matrix = [c1, c2, c3];
-    const det = vtkMath.determinant3x3(matrix);
+    const det = vtkMath.determinant3x3(m);
     if (det <= VTK_TOLERANCE) {
       return;
     }
 
-    matrix[0] = v;
-    matrix[1] = c2;
-    matrix[2] = c3;
-    model.normal[0] = vtkMath.determinant3x3(matrix) / det;
-    matrix[0] = c1;
-    matrix[1] = v;
-    matrix[2] = c3;
-    model.normal[1] = vtkMath.determinant3x3(matrix) / det;
+    m = vtkMath.rowsToMat3(v, c2, c3, []);
+    model.normal[0] = vtkMath.determinant3x3(m) / det;
+    m = vtkMath.rowsToMat3(c1, v, c3, []);
+    model.normal[1] = vtkMath.determinant3x3(m) / det;
     // because of the formulation
     model.normal[2] = -1.0;
   }

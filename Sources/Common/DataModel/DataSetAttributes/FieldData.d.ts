@@ -98,7 +98,7 @@ export interface vtkFieldData extends vtkObject {
 	 * 
 	 * @param {Number} idx The index of the array.
 	 */
-	getArrayByIndex(idx: number): any | null;
+	getArrayByIndex(idx: number): Nullable<any>;
 
 	/**
 	 * 
