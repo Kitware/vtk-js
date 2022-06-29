@@ -62,7 +62,7 @@ export default function build() {
             ],
             name,
             initialValues: {
-              scale1: 10,
+              scale1: 30,
               origin: [i, j, k],
               visible: true,
               name,

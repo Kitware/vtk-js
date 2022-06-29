@@ -137,7 +137,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @param {Number} z
-	 * @param {vtkRenderer} renderer
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	worldToView(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
@@ -146,7 +146,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @param {Number} z
-	 * @param {vtkRenderer} renderer
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	viewToWorld(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
@@ -155,7 +155,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @param {Number} z
-	 * @param {vtkRenderer} renderer
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	worldToDisplay(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
@@ -164,7 +164,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @param {Number} z
-	 * @param {vtkRenderer} renderer
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	displayToWorld(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
@@ -173,7 +173,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @param {Number} z
-	 * @param {vtkRenderer} renderer
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	normalizedDisplayToViewport(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
@@ -182,7 +182,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @param {Number} z
-	 * @param {vtkRenderer} renderer
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	viewportToNormalizedViewport(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
@@ -207,7 +207,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @param {Number} z
-	 * @param {vtkRenderer} renderer
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	viewportToNormalizedDisplay(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 

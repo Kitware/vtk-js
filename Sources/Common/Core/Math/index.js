@@ -17,22 +17,34 @@ function notImplemented(method) {
   return () => vtkErrorMacro(`vtkMath::${method} - NOT IMPLEMENTED`);
 }
 
-function vtkSwapVectors3(v1, v2) {
-  for (let i = 0; i < 3; i++) {
-    const tmp = v1[i];
-    v1[i] = v2[i];
-    v2[i] = tmp;
+// Swap rows for n by n matrix
+function swapRowsMatrix_nxn(matrix, n, row1, row2) {
+  let tmp;
+  for (let i = 0; i < n; i++) {
+    tmp = matrix[row1 * n + i];
+    matrix[row1 * n + i] = matrix[row2 * n + i];
+    matrix[row2 * n + i] = tmp;
   }
 }
 
-function createArray(size = 3) {
-  // faster than Array.from and/or while loop
-  return Array(size).fill(0);
+// Swap columns for n by n matrix
+function swapColumnsMatrix_nxn(matrix, n, column1, column2) {
+  let tmp;
+  for (let i = 0; i < n; i++) {
+    tmp = matrix[i * n + column1];
+    matrix[i * n + column1] = matrix[i * n + column2];
+    matrix[i * n + column2] = tmp;
+  }
 }
 
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
+
+export function createArray(size = 3) {
+  // faster than Array.from and/or while loop
+  return Array(size).fill(0);
+}
 
 export const Pi = () => Math.PI;
 
@@ -195,11 +207,15 @@ export function dot(x, y) {
 }
 
 export function outer(x, y, out_3x3) {
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 3; j++) {
-      out_3x3[i][j] = x[i] * y[j];
-    }
-  }
+  out_3x3[0] = x[0] * y[0];
+  out_3x3[1] = x[0] * y[1];
+  out_3x3[2] = x[0] * y[2];
+  out_3x3[3] = x[1] * y[0];
+  out_3x3[4] = x[1] * y[1];
+  out_3x3[5] = x[1] * y[2];
+  out_3x3[6] = x[2] * y[0];
+  out_3x3[7] = x[2] * y[1];
+  out_3x3[8] = x[2] * y[2];
 }
 
 export function cross(x, y, out) {
@@ -378,11 +394,10 @@ export function gaussianWeight(mean, variance, position) {
 }
 
 export function outer2D(x, y, out_2x2) {
-  for (let i = 0; i < 2; i++) {
-    for (let j = 0; j < 2; j++) {
-      out_2x2[i][j] = x[i] * y[j];
-    }
-  }
+  out_2x2[0] = x[0] * y[0];
+  out_2x2[1] = x[0] * y[1];
+  out_2x2[2] = x[1] * y[0];
+  out_2x2[3] = x[1] * y[1];
 }
 
 export function norm2D(x2D) {
@@ -396,6 +411,44 @@ export function normalize2D(x) {
     x[1] /= den;
   }
   return den;
+}
+
+export function rowsToMat4(row0, row1, row2, row3, mat) {
+  for (let i = 0; i < 4; i++) {
+    mat[i] = row0[i];
+    mat[4 + i] = row1[i];
+    mat[8 + i] = row2[i];
+    mat[12 + i] = row3[i];
+  }
+  return mat;
+}
+
+export function columnsToMat4(column0, column1, column2, column3, mat) {
+  for (let i = 0; i < 4; i++) {
+    mat[4 * i] = column0[i];
+    mat[4 * i + 1] = column1[i];
+    mat[4 * i + 2] = column2[i];
+    mat[4 * i + 3] = column3[i];
+  }
+  return mat;
+}
+
+export function rowsToMat3(row0, row1, row2, mat) {
+  for (let i = 0; i < 3; i++) {
+    mat[i] = row0[i];
+    mat[3 + i] = row1[i];
+    mat[6 + i] = row2[i];
+  }
+  return mat;
+}
+
+export function columnsToMat3(column0, column1, column2, mat) {
+  for (let i = 0; i < 3; i++) {
+    mat[3 * i] = column0[i];
+    mat[3 * i + 1] = column1[i];
+    mat[3 * i + 2] = column2[i];
+  }
+  return mat;
 }
 
 export function determinant2x2(...args) {
@@ -416,11 +469,11 @@ export function LUFactor3x3(mat_3x3, index_3) {
 
   // Loop over rows to get implicit scaling information
   for (let i = 0; i < 3; i++) {
-    largest = Math.abs(mat_3x3[i][0]);
-    if ((tmp = Math.abs(mat_3x3[i][1])) > largest) {
+    largest = Math.abs(mat_3x3[i * 3]);
+    if ((tmp = Math.abs(mat_3x3[i * 3 + 1])) > largest) {
       largest = tmp;
     }
-    if ((tmp = Math.abs(mat_3x3[i][2])) > largest) {
+    if ((tmp = Math.abs(mat_3x3[i * 3 + 2])) > largest) {
       largest = tmp;
     }
     scale[i] = 1 / largest;
@@ -429,41 +482,40 @@ export function LUFactor3x3(mat_3x3, index_3) {
   // Loop over all columns using Crout's method
 
   // first column
-  largest = scale[0] * Math.abs(mat_3x3[0][0]);
+  largest = scale[0] * Math.abs(mat_3x3[0]);
   maxI = 0;
-  if ((tmp = scale[1] * Math.abs(mat_3x3[1][0])) >= largest) {
+  if ((tmp = scale[1] * Math.abs(mat_3x3[3])) >= largest) {
     largest = tmp;
     maxI = 1;
   }
-  if ((tmp = scale[2] * Math.abs(mat_3x3[2][0])) >= largest) {
+  if ((tmp = scale[2] * Math.abs(mat_3x3[6])) >= largest) {
     maxI = 2;
   }
   if (maxI !== 0) {
-    vtkSwapVectors3(mat_3x3[maxI], mat_3x3[0]);
+    swapRowsMatrix_nxn(mat_3x3, 3, maxI, 0);
     scale[maxI] = scale[0];
   }
   index_3[0] = maxI;
 
-  mat_3x3[1][0] /= mat_3x3[0][0];
-  mat_3x3[2][0] /= mat_3x3[0][0];
+  mat_3x3[3] /= mat_3x3[0];
+  mat_3x3[6] /= mat_3x3[0];
 
   // second column
-  mat_3x3[1][1] -= mat_3x3[1][0] * mat_3x3[0][1];
-  mat_3x3[2][1] -= mat_3x3[2][0] * mat_3x3[0][1];
-  largest = scale[1] * Math.abs(mat_3x3[1][1]);
+  mat_3x3[4] -= mat_3x3[3] * mat_3x3[1];
+  mat_3x3[7] -= mat_3x3[6] * mat_3x3[1];
+  largest = scale[1] * Math.abs(mat_3x3[4]);
   maxI = 1;
-  if ((tmp = scale[2] * Math.abs(mat_3x3[2][1])) >= largest) {
+  if ((tmp = scale[2] * Math.abs(mat_3x3[7])) >= largest) {
     maxI = 2;
-    vtkSwapVectors3(mat_3x3[2], mat_3x3[1]);
+    swapRowsMatrix_nxn(mat_3x3, 3, 1, 2);
     scale[2] = scale[1];
   }
   index_3[1] = maxI;
-  mat_3x3[2][1] /= mat_3x3[1][1];
+  mat_3x3[7] /= mat_3x3[4];
 
   // third column
-  mat_3x3[1][2] -= mat_3x3[1][0] * mat_3x3[0][2];
-  mat_3x3[2][2] -=
-    mat_3x3[2][0] * mat_3x3[0][2] + mat_3x3[2][1] * mat_3x3[1][2];
+  mat_3x3[5] -= mat_3x3[3] * mat_3x3[2];
+  mat_3x3[8] -= mat_3x3[6] * mat_3x3[2] + mat_3x3[7] * mat_3x3[5];
   index_3[2] = 2;
 }
 
@@ -475,29 +527,28 @@ export function LUSolve3x3(mat_3x3, index_3, x_3) {
 
   sum = x_3[index_3[1]];
   x_3[index_3[1]] = x_3[1];
-  x_3[1] = sum - mat_3x3[1][0] * x_3[0];
+  x_3[1] = sum - mat_3x3[3] * x_3[0];
 
   sum = x_3[index_3[2]];
   x_3[index_3[2]] = x_3[2];
-  x_3[2] = sum - mat_3x3[2][0] * x_3[0] - mat_3x3[2][1] * x_3[1];
+  x_3[2] = sum - mat_3x3[6] * x_3[0] - mat_3x3[7] * x_3[1];
 
   // back substitution
-  x_3[2] /= mat_3x3[2][2];
-  x_3[1] = (x_3[1] - mat_3x3[1][2] * x_3[2]) / mat_3x3[1][1];
-  x_3[0] =
-    (x_3[0] - mat_3x3[0][1] * x_3[1] - mat_3x3[0][2] * x_3[2]) / mat_3x3[0][0];
+  x_3[2] /= mat_3x3[8];
+  x_3[1] = (x_3[1] - mat_3x3[5] * x_3[2]) / mat_3x3[4];
+  x_3[0] = (x_3[0] - mat_3x3[1] * x_3[1] - mat_3x3[2] * x_3[2]) / mat_3x3[0];
 }
 
 export function linearSolve3x3(mat_3x3, x_3, y_3) {
-  const a1 = mat_3x3[0][0];
-  const b1 = mat_3x3[0][1];
-  const c1 = mat_3x3[0][2];
-  const a2 = mat_3x3[1][0];
-  const b2 = mat_3x3[1][1];
-  const c2 = mat_3x3[1][2];
-  const a3 = mat_3x3[2][0];
-  const b3 = mat_3x3[2][1];
-  const c3 = mat_3x3[2][2];
+  const a1 = mat_3x3[0];
+  const b1 = mat_3x3[1];
+  const c1 = mat_3x3[2];
+  const a2 = mat_3x3[3];
+  const b2 = mat_3x3[4];
+  const c2 = mat_3x3[5];
+  const a3 = mat_3x3[6];
+  const b3 = mat_3x3[7];
+  const c3 = mat_3x3[8];
 
   // Compute the adjoint
   const d1 = +determinant2x2(b2, b3, c2, c3);
@@ -527,12 +578,9 @@ export function linearSolve3x3(mat_3x3, x_3, y_3) {
 }
 
 export function multiply3x3_vect3(mat_3x3, in_3, out_3) {
-  const x =
-    mat_3x3[0][0] * in_3[0] + mat_3x3[0][1] * in_3[1] + mat_3x3[0][2] * in_3[2];
-  const y =
-    mat_3x3[1][0] * in_3[0] + mat_3x3[1][1] * in_3[1] + mat_3x3[1][2] * in_3[2];
-  const z =
-    mat_3x3[2][0] * in_3[0] + mat_3x3[2][1] * in_3[1] + mat_3x3[2][2] * in_3[2];
+  const x = mat_3x3[0] * in_3[0] + mat_3x3[1] * in_3[1] + mat_3x3[2] * in_3[2];
+  const y = mat_3x3[3] * in_3[0] + mat_3x3[4] * in_3[1] + mat_3x3[5] * in_3[2];
+  const z = mat_3x3[6] * in_3[0] + mat_3x3[7] * in_3[1] + mat_3x3[8] * in_3[2];
 
   out_3[0] = x;
   out_3[1] = y;
@@ -540,31 +588,15 @@ export function multiply3x3_vect3(mat_3x3, in_3, out_3) {
 }
 
 export function multiply3x3_mat3(a_3x3, b_3x3, out_3x3) {
-  const tmp = [
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0],
-  ];
-
+  const copyA = [...a_3x3];
+  const copyB = [...b_3x3];
   for (let i = 0; i < 3; i++) {
-    tmp[0][i] =
-      a_3x3[0][0] * b_3x3[0][i] +
-      a_3x3[0][1] * b_3x3[1][i] +
-      a_3x3[0][2] * b_3x3[2][i];
-    tmp[1][i] =
-      a_3x3[1][0] * b_3x3[0][i] +
-      a_3x3[1][1] * b_3x3[1][i] +
-      a_3x3[1][2] * b_3x3[2][i];
-    tmp[2][i] =
-      a_3x3[2][0] * b_3x3[0][i] +
-      a_3x3[2][1] * b_3x3[1][i] +
-      a_3x3[2][2] * b_3x3[2][i];
-  }
-
-  for (let j = 0; j < 3; j++) {
-    out_3x3[j][0] = tmp[j][0];
-    out_3x3[j][1] = tmp[j][1];
-    out_3x3[j][2] = tmp[j][2];
+    out_3x3[i] =
+      copyA[0] * copyB[i] + copyA[1] * copyB[i + 3] + copyA[2] * copyB[i + 6];
+    out_3x3[i + 3] =
+      copyA[3] * copyB[i] + copyA[4] * copyB[i + 3] + copyA[5] * copyB[i + 6];
+    out_3x3[i + 6] =
+      copyA[6] * copyB[i] + copyA[7] * copyB[i + 3] + copyA[8] * copyB[i + 6];
   }
 }
 
@@ -574,15 +606,18 @@ export function multiplyMatrix(a, b, rowA, colA, rowB, colB, out_rowXcol) {
     vtkErrorMacro('Number of columns of A must match number of rows of B.');
   }
 
+  // If a or b is used to store the result, copying them is required
+  const copyA = [...a];
+  const copyB = [...b];
   // output matrix is rowA*colB
   // output row
   for (let i = 0; i < rowA; i++) {
     // output col
     for (let j = 0; j < colB; j++) {
-      out_rowXcol[i][j] = 0;
+      out_rowXcol[i * colB + j] = 0;
       // sum for this point
       for (let k = 0; k < colA; k++) {
-        out_rowXcol[i][j] += a[i][k] * b[k][j];
+        out_rowXcol[i * colB + j] += copyA[i * colA + k] * copyB[j + colB * k];
       }
     }
   }
@@ -590,31 +625,34 @@ export function multiplyMatrix(a, b, rowA, colA, rowB, colB, out_rowXcol) {
 
 export function transpose3x3(in_3x3, outT_3x3) {
   let tmp;
-  tmp = in_3x3[1][0];
-  outT_3x3[1][0] = in_3x3[0][1];
-  outT_3x3[0][1] = tmp;
-  tmp = in_3x3[2][0];
-  outT_3x3[2][0] = in_3x3[0][2];
-  outT_3x3[0][2] = tmp;
-  tmp = in_3x3[2][1];
-  outT_3x3[2][1] = in_3x3[1][2];
-  outT_3x3[1][2] = tmp;
 
-  outT_3x3[0][0] = in_3x3[0][0];
-  outT_3x3[1][1] = in_3x3[1][1];
-  outT_3x3[2][2] = in_3x3[2][2];
+  // off-diagonal elements
+  tmp = in_3x3[3];
+  outT_3x3[3] = in_3x3[1];
+  outT_3x3[1] = tmp;
+  tmp = in_3x3[6];
+  outT_3x3[6] = in_3x3[2];
+  outT_3x3[2] = tmp;
+  tmp = in_3x3[7];
+  outT_3x3[7] = in_3x3[5];
+  outT_3x3[5] = tmp;
+
+  // on-diagonal elements
+  outT_3x3[0] = in_3x3[0];
+  outT_3x3[4] = in_3x3[4];
+  outT_3x3[8] = in_3x3[8];
 }
 
 export function invert3x3(in_3x3, outI_3x3) {
-  const a1 = in_3x3[0][0];
-  const b1 = in_3x3[0][1];
-  const c1 = in_3x3[0][2];
-  const a2 = in_3x3[1][0];
-  const b2 = in_3x3[1][1];
-  const c2 = in_3x3[1][2];
-  const a3 = in_3x3[2][0];
-  const b3 = in_3x3[2][1];
-  const c3 = in_3x3[2][2];
+  const a1 = in_3x3[0];
+  const b1 = in_3x3[1];
+  const c1 = in_3x3[2];
+  const a2 = in_3x3[3];
+  const b2 = in_3x3[4];
+  const c2 = in_3x3[5];
+  const a3 = in_3x3[6];
+  const b3 = in_3x3[7];
+  const c3 = in_3x3[8];
 
   // Compute the adjoint
   const d1 = +determinant2x2(b2, b3, c2, c3);
@@ -631,36 +669,50 @@ export function invert3x3(in_3x3, outI_3x3) {
 
   // Divide by the determinant
   const det = a1 * d1 + b1 * d2 + c1 * d3;
-
-  outI_3x3[0][0] = d1 / det;
-  outI_3x3[1][0] = d2 / det;
-  outI_3x3[2][0] = d3 / det;
-
-  outI_3x3[0][1] = e1 / det;
-  outI_3x3[1][1] = e2 / det;
-  outI_3x3[2][1] = e3 / det;
-
-  outI_3x3[0][2] = f1 / det;
-  outI_3x3[1][2] = f2 / det;
-  outI_3x3[2][2] = f3 / det;
-}
-
-export function identity3x3(mat_3x3) {
-  for (let i = 0; i < 3; i++) {
-    mat_3x3[i][0] = mat_3x3[i][1] = mat_3x3[i][2] = 0;
-    mat_3x3[i][i] = 1;
+  if (det === 0) {
+    vtkWarningMacro('Matrix has 0 determinant');
   }
+
+  outI_3x3[0] = d1 / det;
+  outI_3x3[3] = d2 / det;
+  outI_3x3[6] = d3 / det;
+
+  outI_3x3[1] = e1 / det;
+  outI_3x3[4] = e2 / det;
+  outI_3x3[7] = e3 / det;
+
+  outI_3x3[2] = f1 / det;
+  outI_3x3[5] = f2 / det;
+  outI_3x3[8] = f3 / det;
 }
 
 export function determinant3x3(mat_3x3) {
   return (
-    mat_3x3[0][0] * mat_3x3[1][1] * mat_3x3[2][2] +
-    mat_3x3[1][0] * mat_3x3[2][1] * mat_3x3[0][2] +
-    mat_3x3[2][0] * mat_3x3[0][1] * mat_3x3[1][2] -
-    mat_3x3[0][0] * mat_3x3[2][1] * mat_3x3[1][2] -
-    mat_3x3[1][0] * mat_3x3[0][1] * mat_3x3[2][2] -
-    mat_3x3[2][0] * mat_3x3[1][1] * mat_3x3[0][2]
+    mat_3x3[0] * mat_3x3[4] * mat_3x3[8] +
+    mat_3x3[3] * mat_3x3[7] * mat_3x3[2] +
+    mat_3x3[6] * mat_3x3[1] * mat_3x3[5] -
+    mat_3x3[0] * mat_3x3[7] * mat_3x3[5] -
+    mat_3x3[3] * mat_3x3[1] * mat_3x3[8] -
+    mat_3x3[6] * mat_3x3[4] * mat_3x3[2]
   );
+}
+
+export function identity3x3(mat_3x3) {
+  for (let i = 0; i < 3; i++) {
+    /* eslint-disable-next-line no-multi-assign */
+    mat_3x3[i * 3] = mat_3x3[i * 3 + 1] = mat_3x3[i * 3 + 2] = 0;
+    mat_3x3[i * 3 + i] = 1;
+  }
+}
+
+export function identity(n, mat) {
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      mat[i * n + j] = 0;
+    }
+    mat[i * n + i] = 1;
+  }
+  return mat;
 }
 
 export function quaternionToMatrix3x3(quat_4, mat_3x3) {
@@ -683,17 +735,17 @@ export function quaternionToMatrix3x3(quat_4, mat_3x3) {
   const s = (ww - rr) * f;
   f *= 2;
 
-  mat_3x3[0][0] = xx * f + s;
-  mat_3x3[1][0] = (xy + wz) * f;
-  mat_3x3[2][0] = (xz - wy) * f;
+  mat_3x3[0] = xx * f + s;
+  mat_3x3[3] = (xy + wz) * f;
+  mat_3x3[6] = (xz - wy) * f;
 
-  mat_3x3[0][1] = (xy - wz) * f;
-  mat_3x3[1][1] = yy * f + s;
-  mat_3x3[2][1] = (yz + wx) * f;
+  mat_3x3[1] = (xy - wz) * f;
+  mat_3x3[4] = yy * f + s;
+  mat_3x3[7] = (yz + wx) * f;
 
-  mat_3x3[0][2] = (xz + wy) * f;
-  mat_3x3[1][2] = (yz - wx) * f;
-  mat_3x3[2][2] = zz * f + s;
+  mat_3x3[2] = (xz + wy) * f;
+  mat_3x3[5] = (yz - wx) * f;
+  mat_3x3[8] = zz * f + s;
 }
 
 /**
@@ -755,22 +807,17 @@ export function jacobiN(a, n, w, v) {
   const b = createArray(n);
   const z = createArray(n);
 
-  const vtkROTATE = (aa, ii, jj, kk, ll) => {
-    g = aa[ii][jj];
-    h = aa[kk][ll];
-    aa[ii][jj] = g - s * (h + g * tau);
-    aa[kk][ll] = h + s * (g - h * tau);
+  const vtkROTATE = (aa, ii, jj) => {
+    g = aa[ii];
+    h = aa[jj];
+    aa[ii] = g - s * (h + g * tau);
+    aa[jj] = h + s * (g - h * tau);
   };
 
   // initialize
+  identity(n, v);
   for (ip = 0; ip < n; ip++) {
-    for (iq = 0; iq < n; iq++) {
-      v[ip][iq] = 0.0;
-    }
-    v[ip][ip] = 1.0;
-  }
-  for (ip = 0; ip < n; ip++) {
-    b[ip] = w[ip] = a[ip][ip];
+    b[ip] = w[ip] = a[ip + ip * n];
     z[ip] = 0.0;
   }
 
@@ -779,7 +826,7 @@ export function jacobiN(a, n, w, v) {
     sm = 0.0;
     for (ip = 0; ip < n - 1; ip++) {
       for (iq = ip + 1; iq < n; iq++) {
-        sm += Math.abs(a[ip][iq]);
+        sm += Math.abs(a[ip * n + iq]);
       }
     }
     if (sm === 0.0) {
@@ -795,7 +842,7 @@ export function jacobiN(a, n, w, v) {
 
     for (ip = 0; ip < n - 1; ip++) {
       for (iq = ip + 1; iq < n; iq++) {
-        g = 100.0 * Math.abs(a[ip][iq]);
+        g = 100.0 * Math.abs(a[ip * n + iq]);
 
         // after 4 sweeps
         if (
@@ -803,13 +850,13 @@ export function jacobiN(a, n, w, v) {
           Math.abs(w[ip]) + g === Math.abs(w[ip]) &&
           Math.abs(w[iq]) + g === Math.abs(w[iq])
         ) {
-          a[ip][iq] = 0.0;
-        } else if (Math.abs(a[ip][iq]) > tresh) {
+          a[ip * n + iq] = 0.0;
+        } else if (Math.abs(a[ip * n + iq]) > tresh) {
           h = w[iq] - w[ip];
           if (Math.abs(h) + g === Math.abs(h)) {
-            t = a[ip][iq] / h;
+            t = a[ip * n + iq] / h;
           } else {
-            theta = (0.5 * h) / a[ip][iq];
+            theta = (0.5 * h) / a[ip * n + iq];
             t = 1.0 / (Math.abs(theta) + Math.sqrt(1.0 + theta * theta));
             if (theta < 0.0) {
               t = -t;
@@ -818,27 +865,27 @@ export function jacobiN(a, n, w, v) {
           c = 1.0 / Math.sqrt(1 + t * t);
           s = t * c;
           tau = s / (1.0 + c);
-          h = t * a[ip][iq];
+          h = t * a[ip * n + iq];
           z[ip] -= h;
           z[iq] += h;
           w[ip] -= h;
           w[iq] += h;
-          a[ip][iq] = 0.0;
+          a[ip * n + iq] = 0.0;
 
           // ip already shifted left by 1 unit
           for (j = 0; j <= ip - 1; j++) {
-            vtkROTATE(a, j, ip, j, iq);
+            vtkROTATE(a, j * n + ip, j * n + iq);
           }
           // ip and iq already shifted left by 1 unit
           for (j = ip + 1; j <= iq - 1; j++) {
-            vtkROTATE(a, ip, j, j, iq);
+            vtkROTATE(a, ip * n + j, j * n + iq);
           }
           // iq already shifted left by 1 unit
           for (j = iq + 1; j < n; j++) {
-            vtkROTATE(a, ip, j, iq, j);
+            vtkROTATE(a, ip * n + j, iq * n + j);
           }
           for (j = 0; j < n; j++) {
-            vtkROTATE(v, j, ip, j, iq);
+            vtkROTATE(v, j * n + ip, j * n + iq);
           }
         }
       }
@@ -873,11 +920,7 @@ export function jacobiN(a, n, w, v) {
     if (k !== j) {
       w[k] = w[j];
       w[j] = tmp;
-      for (i = 0; i < n; i++) {
-        tmp = v[i][j];
-        v[i][j] = v[i][k];
-        v[i][k] = tmp;
-      }
+      swapColumnsMatrix_nxn(v, n, j, k);
     }
   }
   // ensure eigenvector consistency (i.e., Jacobi can compute vectors that
@@ -885,68 +928,53 @@ export function jacobiN(a, n, w, v) {
   // reek havoc in hyperstreamline/other stuff. We will select the most
   // positive eigenvector.
   const ceil_half_n = (n >> 1) + (n & 1);
-  for (j = 0; j < n; j++) {
-    for (numPos = 0, i = 0; i < n; i++) {
-      if (v[i][j] >= 0.0) {
-        numPos++;
-      }
+
+  for (numPos = 0, i = 0; i < n * n; i++) {
+    if (v[i] >= 0.0) {
+      numPos++;
     }
-    //    if ( numPos < ceil(double(n)/double(2.0)) )
-    if (numPos < ceil_half_n) {
-      for (i = 0; i < n; i++) {
-        v[i][j] *= -1.0;
-      }
+  }
+  //    if ( numPos < ceil(double(n)/double(2.0)) )
+  if (numPos < ceil_half_n) {
+    for (i = 0; i < n; i++) {
+      v[i * n + j] *= -1.0;
     }
   }
   return 1;
 }
 
 export function matrix3x3ToQuaternion(mat_3x3, quat_4) {
-  const tmp = [
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-  ];
+  const tmp = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
   // on-diagonal elements
-  tmp[0][0] = mat_3x3[0][0] + mat_3x3[1][1] + mat_3x3[2][2];
-  tmp[1][1] = mat_3x3[0][0] - mat_3x3[1][1] - mat_3x3[2][2];
-  tmp[2][2] = -mat_3x3[0][0] + mat_3x3[1][1] - mat_3x3[2][2];
-  tmp[3][3] = -mat_3x3[0][0] - mat_3x3[1][1] + mat_3x3[2][2];
+  tmp[0] = mat_3x3[0] + mat_3x3[4] + mat_3x3[8];
+  tmp[5] = mat_3x3[0] - mat_3x3[4] - mat_3x3[8];
+  tmp[10] = -mat_3x3[0] + mat_3x3[4] - mat_3x3[8];
+  tmp[15] = -mat_3x3[0] - mat_3x3[4] + mat_3x3[8];
 
   // off-diagonal elements
-  tmp[0][1] = tmp[1][0] = mat_3x3[2][1] - mat_3x3[1][2];
-  tmp[0][2] = tmp[2][0] = mat_3x3[0][2] - mat_3x3[2][0];
-  tmp[0][3] = tmp[3][0] = mat_3x3[1][0] - mat_3x3[0][1];
+  tmp[1] = tmp[4] = mat_3x3[7] - mat_3x3[5];
+  tmp[2] = tmp[8] = mat_3x3[2] - mat_3x3[6];
+  tmp[3] = tmp[12] = mat_3x3[3] - mat_3x3[1];
 
-  tmp[1][2] = tmp[2][1] = mat_3x3[1][0] + mat_3x3[0][1];
-  tmp[1][3] = tmp[3][1] = mat_3x3[0][2] + mat_3x3[2][0];
-  tmp[2][3] = tmp[3][2] = mat_3x3[2][1] + mat_3x3[1][2];
+  tmp[6] = tmp[9] = mat_3x3[3] + mat_3x3[1];
+  tmp[7] = tmp[13] = mat_3x3[2] + mat_3x3[6];
+  tmp[11] = tmp[14] = mat_3x3[7] + mat_3x3[5];
 
-  const eigenvectors = [
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-  ];
+  const eigenvectors = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   const eigenvalues = [0, 0, 0, 0];
 
   // convert into format that JacobiN can use,
   // then use Jacobi to find eigenvalues and eigenvectors
-  const NTemp = [0, 0, 0, 0];
-  const eigenvectorsTemp = [0, 0, 0, 0];
-  for (let i = 0; i < 4; i++) {
-    NTemp[i] = tmp[i];
-    eigenvectorsTemp[i] = eigenvectors[i];
-  }
-  jacobiN(NTemp, 4, eigenvalues, eigenvectorsTemp);
+  // tmp is copied because jacobiN may modify it
+  const NTemp = [...tmp];
+  jacobiN(NTemp, 4, eigenvalues, eigenvectors);
 
   // the first eigenvector is the one we want
-  quat_4[0] = eigenvectors[0][0];
-  quat_4[1] = eigenvectors[1][0];
-  quat_4[2] = eigenvectors[2][0];
-  quat_4[3] = eigenvectors[3][0];
+  quat_4[0] = eigenvectors[0];
+  quat_4[1] = eigenvectors[4];
+  quat_4[2] = eigenvectors[8];
+  quat_4[3] = eigenvectors[12];
 }
 
 export function multiplyQuaternion(quat_1, quat_2, quat_out) {
@@ -978,10 +1006,8 @@ export function multiplyQuaternion(quat_1, quat_2, quat_out) {
 
 export function orthogonalize3x3(a_3x3, out_3x3) {
   // copy the matrix
-  for (let i = 0; i < 3; i++) {
-    out_3x3[0][i] = a_3x3[0][i];
-    out_3x3[1][i] = a_3x3[1][i];
-    out_3x3[2][i] = a_3x3[2][i];
+  for (let i = 0; i < 9; i++) {
+    out_3x3[i] = a_3x3[i];
   }
 
   // Pivot the matrix to improve accuracy
@@ -991,9 +1017,9 @@ export function orthogonalize3x3(a_3x3, out_3x3) {
 
   // Loop over rows to get implicit scaling information
   for (let i = 0; i < 3; i++) {
-    const x1 = Math.abs(out_3x3[i][0]);
-    const x2 = Math.abs(out_3x3[i][1]);
-    const x3 = Math.abs(out_3x3[i][2]);
+    const x1 = Math.abs(out_3x3[i * 3]);
+    const x2 = Math.abs(out_3x3[i * 3 + 1]);
+    const x3 = Math.abs(out_3x3[i * 3 + 2]);
     largest = x2 > x1 ? x2 : x1;
     largest = x3 > largest ? x3 : largest;
     scale[i] = 1;
@@ -1003,9 +1029,9 @@ export function orthogonalize3x3(a_3x3, out_3x3) {
   }
 
   // first column
-  const x1 = Math.abs(out_3x3[0][0]) * scale[0];
-  const x2 = Math.abs(out_3x3[1][0]) * scale[1];
-  const x3 = Math.abs(out_3x3[2][0]) * scale[2];
+  const x1 = Math.abs(out_3x3[0]) * scale[0];
+  const x2 = Math.abs(out_3x3[3]) * scale[1];
+  const x3 = Math.abs(out_3x3[6]) * scale[2];
   index[0] = 0;
   largest = x1;
   if (x2 >= largest) {
@@ -1016,18 +1042,20 @@ export function orthogonalize3x3(a_3x3, out_3x3) {
     index[0] = 2;
   }
   if (index[0] !== 0) {
-    vtkSwapVectors3(out_3x3[index[0]], out_3x3[0]);
+    // swap vectors
+    swapColumnsMatrix_nxn(out_3x3, 3, index[0], 0);
     scale[index[0]] = scale[0];
   }
 
   // second column
-  const y2 = Math.abs(out_3x3[1][1]) * scale[1];
-  const y3 = Math.abs(out_3x3[2][1]) * scale[2];
+  const y2 = Math.abs(out_3x3[4]) * scale[1];
+  const y3 = Math.abs(out_3x3[7]) * scale[2];
   index[1] = 1;
   largest = y2;
   if (y3 >= largest) {
     index[1] = 2;
-    vtkSwapVectors3(out_3x3[2], out_3x3[1]);
+    // swap vectors
+    swapColumnsMatrix_nxn(out_3x3, 3, 1, 2);
   }
 
   // third column
@@ -1039,10 +1067,8 @@ export function orthogonalize3x3(a_3x3, out_3x3) {
   let flip = 0;
   if (determinant3x3(out_3x3) < 0) {
     flip = 1;
-    for (let i = 0; i < 3; i++) {
-      out_3x3[0][i] = -out_3x3[0][i];
-      out_3x3[1][i] = -out_3x3[1][i];
-      out_3x3[2][i] = -out_3x3[2][i];
+    for (let i = 0; i < 9; i++) {
+      out_3x3[i] = -out_3x3[i];
     }
   }
 
@@ -1056,19 +1082,17 @@ export function orthogonalize3x3(a_3x3, out_3x3) {
 
   // Put the flip back into the orthogonalized matrix.
   if (flip) {
-    for (let i = 0; i < 3; i++) {
-      out_3x3[0][i] = -out_3x3[0][i];
-      out_3x3[1][i] = -out_3x3[1][i];
-      out_3x3[2][i] = -out_3x3[2][i];
+    for (let i = 0; i < 9; i++) {
+      out_3x3[i] = -out_3x3[i];
     }
   }
 
   // Undo the pivoting
   if (index[1] !== 1) {
-    vtkSwapVectors3(out_3x3[index[1]], out_3x3[1]);
+    swapColumnsMatrix_nxn(out_3x3, 3, index[1], 1);
   }
   if (index[0] !== 0) {
-    vtkSwapVectors3(out_3x3[index[0]], out_3x3[0]);
+    swapColumnsMatrix_nxn(out_3x3, 3, index[0], 0);
   }
 }
 
@@ -1080,20 +1104,11 @@ export function diagonalize3x3(a_3x3, w_3, v_3x3) {
   let tmp;
   let maxVal;
 
-  // do the matrix[3][3] to **matrix conversion for Jacobi
-  const C = [createArray(3), createArray(3), createArray(3)];
-  const ATemp = createArray(3);
-  const VTemp = createArray(3);
-  for (i = 0; i < 3; i++) {
-    C[i][0] = a_3x3[i][0];
-    C[i][1] = a_3x3[i][1];
-    C[i][2] = a_3x3[i][2];
-    ATemp[i] = C[i];
-    VTemp[i] = v_3x3[i];
-  }
+  // a is copied because jacobiN may modify it
+  const copyA = [...a_3x3];
 
   // diagonalize using Jacobi
-  jacobiN(ATemp, 3, w_3, VTemp);
+  jacobiN(copyA, 3, w_3, v_3x3);
 
   // if all the eigenvalues are the same, return identity matrix
   if (w_3[0] === w_3[1] && w_3[0] === w_3[2]) {
@@ -1110,10 +1125,10 @@ export function diagonalize3x3(a_3x3, w_3, v_3x3) {
     // two eigenvalues are the same
     if (w_3[(i + 1) % 3] === w_3[(i + 2) % 3]) {
       // find maximum element of the independent eigenvector
-      maxVal = Math.abs(v_3x3[i][0]);
+      maxVal = Math.abs(v_3x3[i * 3]);
       maxI = 0;
       for (j = 1; j < 3; j++) {
-        if (maxVal < (tmp = Math.abs(v_3x3[i][j]))) {
+        if (maxVal < (tmp = Math.abs(v_3x3[i * 3 + j]))) {
           maxVal = tmp;
           maxI = j;
         }
@@ -1123,26 +1138,38 @@ export function diagonalize3x3(a_3x3, w_3, v_3x3) {
         tmp = w_3[maxI];
         w_3[maxI] = w_3[i];
         w_3[i] = tmp;
-        vtkSwapVectors3(v_3x3[i], v_3x3[maxI]);
+        swapRowsMatrix_nxn(v_3x3, 3, i, maxI);
       }
       // maximum element of eigenvector should be positive
-      if (v_3x3[maxI][maxI] < 0) {
-        v_3x3[maxI][0] = -v_3x3[maxI][0];
-        v_3x3[maxI][1] = -v_3x3[maxI][1];
-        v_3x3[maxI][2] = -v_3x3[maxI][2];
+      if (v_3x3[maxI * 3 + maxI] < 0) {
+        v_3x3[maxI * 3] = -v_3x3[maxI * 3];
+        v_3x3[maxI * 3 + 1] = -v_3x3[maxI * 3 + 1];
+        v_3x3[maxI * 3 + 2] = -v_3x3[maxI * 3 + 2];
       }
 
       // re-orthogonalize the other two eigenvectors
       j = (maxI + 1) % 3;
       k = (maxI + 2) % 3;
 
-      v_3x3[j][0] = 0.0;
-      v_3x3[j][1] = 0.0;
-      v_3x3[j][2] = 0.0;
-      v_3x3[j][j] = 1.0;
-      cross(v_3x3[maxI], v_3x3[j], v_3x3[k]);
-      normalize(v_3x3[k]);
-      cross(v_3x3[k], v_3x3[maxI], v_3x3[j]);
+      v_3x3[j * 3] = 0.0;
+      v_3x3[j * 3 + 1] = 0.0;
+      v_3x3[j * 3 + 2] = 0.0;
+      v_3x3[j * 3 + j] = 1.0;
+      const vectTmp1 = cross(
+        [v_3x3[maxI * 3], v_3x3[maxI * 3 + 1], v_3x3[maxI * 3 + 2]],
+        [v_3x3[j * 3], v_3x3[j * 3 + 1], v_3x3[j * 3 + 2]],
+        []
+      );
+      normalize(vectTmp1);
+      const vectTmp2 = cross(
+        vectTmp1,
+        [v_3x3[maxI * 3], v_3x3[maxI * 3 + 1], v_3x3[maxI * 3 + 2]],
+        []
+      );
+      for (let t = 0; t < 3; t++) {
+        v_3x3[k * 3 + t] = vectTmp1[t];
+        v_3x3[j * 3 + t] = vectTmp2[t];
+      }
 
       // transpose vectors back to columns
       transpose3x3(v_3x3, v_3x3);
@@ -1155,42 +1182,42 @@ export function diagonalize3x3(a_3x3, w_3, v_3x3) {
 
   // find the vector with the largest x element, make that vector
   // the first vector
-  maxVal = Math.abs(v_3x3[0][0]);
+  maxVal = Math.abs(v_3x3[0]);
   maxI = 0;
   for (i = 1; i < 3; i++) {
-    if (maxVal < (tmp = Math.abs(v_3x3[i][0]))) {
+    if (maxVal < (tmp = Math.abs(v_3x3[i * 3]))) {
       maxVal = tmp;
       maxI = i;
     }
   }
   // swap eigenvalue and eigenvector
   if (maxI !== 0) {
-    tmp = w_3[maxI];
+    const eigenValTmp = w_3[maxI];
     w_3[maxI] = w_3[0];
-    w_3[0] = tmp;
-    vtkSwapVectors3(v_3x3[maxI], v_3x3[0]);
+    w_3[0] = eigenValTmp;
+    swapRowsMatrix_nxn(v_3x3, 3, maxI, 0);
   }
   // do the same for the y element
-  if (Math.abs(v_3x3[1][1]) < Math.abs(v_3x3[2][1])) {
-    tmp = w_3[2];
+  if (Math.abs(v_3x3[4]) < Math.abs(v_3x3[7])) {
+    const eigenValTmp = w_3[2];
     w_3[2] = w_3[1];
-    w_3[1] = tmp;
-    vtkSwapVectors3(v_3x3[2], v_3x3[1]);
+    w_3[1] = eigenValTmp;
+    swapRowsMatrix_nxn(v_3x3, 3, 1, 2);
   }
 
   // ensure that the sign of the eigenvectors is correct
   for (i = 0; i < 2; i++) {
-    if (v_3x3[i][i] < 0) {
-      v_3x3[i][0] = -v_3x3[i][0];
-      v_3x3[i][1] = -v_3x3[i][1];
-      v_3x3[i][2] = -v_3x3[i][2];
+    if (v_3x3[i * 3 + i] < 0) {
+      v_3x3[i * 3] = -v_3x3[i * 3];
+      v_3x3[i * 3 + 1] = -v_3x3[i * 3 + 1];
+      v_3x3[i * 3 + 2] = -v_3x3[i * 3 + 2];
     }
   }
   // set sign of final eigenvector to ensure that determinant is positive
   if (determinant3x3(v_3x3) < 0) {
-    v_3x3[2][0] = -v_3x3[2][0];
-    v_3x3[2][1] = -v_3x3[2][1];
-    v_3x3[2][2] = -v_3x3[2][2];
+    v_3x3[6] = -v_3x3[6];
+    v_3x3[7] = -v_3x3[7];
+    v_3x3[8] = -v_3x3[8];
   }
 
   // transpose the eigenvectors back again
@@ -1199,22 +1226,14 @@ export function diagonalize3x3(a_3x3, w_3, v_3x3) {
 
 export function singularValueDecomposition3x3(a_3x3, u_3x3, w_3, vT_3x3) {
   let i;
-  const B = [createArray(3), createArray(3), createArray(3)];
-
   // copy so that A can be used for U or VT without risk
-  for (i = 0; i < 3; i++) {
-    B[0][i] = a_3x3[0][i];
-    B[1][i] = a_3x3[1][i];
-    B[2][i] = a_3x3[2][i];
-  }
+  const B = [...a_3x3];
 
   // temporarily flip if determinant is negative
   const d = determinant3x3(B);
   if (d < 0) {
-    for (i = 0; i < 3; i++) {
-      B[0][i] = -B[0][i];
-      B[1][i] = -B[1][i];
-      B[2][i] = -B[2][i];
+    for (i = 0; i < 9; i++) {
+      B[i] = -B[i];
     }
   }
 
@@ -1234,6 +1253,12 @@ export function singularValueDecomposition3x3(a_3x3, u_3x3, w_3, vT_3x3) {
   }
 }
 
+/**
+ * Factor linear equations Ax = b using LU decomposition A = LU. Output factorization LU is in matrix A.
+ * @param {Matrix} A square matrix
+ * @param {Number} index integer array of pivot indices index[0->n-1]
+ * @param {Number} size matrix size
+ */
 export function luFactorLinearSystem(A, index, size) {
   let i;
   let j;
@@ -1250,7 +1275,7 @@ export function luFactorLinearSystem(A, index, size) {
   //
   for (i = 0; i < size; i++) {
     for (largest = 0.0, j = 0; j < size; j++) {
-      if ((temp2 = Math.abs(A[i][j])) > largest) {
+      if ((temp2 = Math.abs(A[i * size + j])) > largest) {
         largest = temp2;
       }
     }
@@ -1266,21 +1291,21 @@ export function luFactorLinearSystem(A, index, size) {
   //
   for (j = 0; j < size; j++) {
     for (i = 0; i < j; i++) {
-      sum = A[i][j];
+      sum = A[i * size + j];
       for (k = 0; k < i; k++) {
-        sum -= A[i][k] * A[k][j];
+        sum -= A[i * size + k] * A[k * size + j];
       }
-      A[i][j] = sum;
+      A[i * size + j] = sum;
     }
     //
     // Begin search for largest pivot element
     //
     for (largest = 0.0, i = j; i < size; i++) {
-      sum = A[i][j];
+      sum = A[i * size + j];
       for (k = 0; k < j; k++) {
-        sum -= A[i][k] * A[k][j];
+        sum -= A[i * size + k] * A[k * size + j];
       }
-      A[i][j] = sum;
+      A[i * size + j] = sum;
 
       if ((temp1 = scale[i] * Math.abs(sum)) >= largest) {
         largest = temp1;
@@ -1292,9 +1317,9 @@ export function luFactorLinearSystem(A, index, size) {
     //
     if (j !== maxI) {
       for (k = 0; k < size; k++) {
-        temp1 = A[maxI][k];
-        A[maxI][k] = A[j][k];
-        A[j][k] = temp1;
+        temp1 = A[maxI * size + k];
+        A[maxI * size + k] = A[j * size + k];
+        A[j * size + k] = temp1;
       }
       scale[maxI] = scale[j];
     }
@@ -1303,15 +1328,15 @@ export function luFactorLinearSystem(A, index, size) {
     //
     index[j] = maxI;
 
-    if (Math.abs(A[j][j]) <= VTK_SMALL_NUMBER) {
+    if (Math.abs(A[j * size + j]) <= VTK_SMALL_NUMBER) {
       vtkWarningMacro('Unable to factor linear system');
       return 0;
     }
 
     if (j !== size - 1) {
-      temp1 = 1.0 / A[j][j];
+      temp1 = 1.0 / A[j * size + j];
       for (i = j + 1; i < size; i++) {
-        A[i][j] *= temp1;
+        A[i * size + j] *= temp1;
       }
     }
   }
@@ -1335,7 +1360,7 @@ export function luSolveLinearSystem(A, index, x, size) {
 
     if (ii >= 0) {
       for (j = ii; j <= i - 1; j++) {
-        sum -= A[i][j] * x[j];
+        sum -= A[i * size + j] * x[j];
       }
     } else if (sum !== 0.0) {
       ii = i;
@@ -1349,9 +1374,9 @@ export function luSolveLinearSystem(A, index, x, size) {
   for (i = size - 1; i >= 0; i--) {
     sum = x[i];
     for (j = i + 1; j < size; j++) {
-      sum -= A[i][j] * x[j];
+      sum -= A[i * size + j] * x[j];
     }
-    x[i] = sum / A[i][i];
+    x[i] = sum / A[i * size + i];
   }
 }
 
@@ -1359,15 +1384,15 @@ export function solveLinearSystem(A, x, size) {
   // if we solving something simple, just solve it
   if (size === 2) {
     const y = createArray(2);
-    const det = determinant2x2(A[0][0], A[0][1], A[1][0], A[1][1]);
+    const det = determinant2x2(A[0], A[1], A[2], A[3]);
 
     if (det === 0.0) {
       // Unable to solve linear system
       return 0;
     }
 
-    y[0] = (A[1][1] * x[0] - A[0][1] * x[1]) / det;
-    y[1] = (-(A[1][0] * x[0]) + A[0][0] * x[1]) / det;
+    y[0] = (A[3] * x[0] - A[1] * x[1]) / det;
+    y[1] = (-(A[2] * x[0]) + A[0] * x[1]) / det;
 
     x[0] = y[0];
     x[1] = y[1];
@@ -1375,12 +1400,12 @@ export function solveLinearSystem(A, x, size) {
   }
 
   if (size === 1) {
-    if (A[0][0] === 0.0) {
+    if (A[0] === 0.0) {
       // Unable to solve linear system
       return 0;
     }
 
-    x[0] /= A[0][0];
+    x[0] /= A[0];
     return 1;
   }
 
@@ -1420,7 +1445,7 @@ export function invertMatrix(A, AI, size, index = null, column = null) {
     luSolveLinearSystem(A, tmp1Size, tmp2Size, size);
 
     for (let i = 0; i < size; i++) {
-      AI[i][j] = tmp2Size[i];
+      AI[i * size + j] = tmp2Size[i];
     }
   }
 
@@ -1434,16 +1459,16 @@ export function estimateMatrixCondition(A, size) {
   // find the maximum value
   for (let i = 0; i < size; i++) {
     for (let j = i; j < size; j++) {
-      if (Math.abs(A[i][j]) > max) {
-        maxValue = Math.abs(A[i][j]);
+      if (Math.abs(A[i * size + j]) > maxValue) {
+        maxValue = Math.abs(A[i * size + j]);
       }
     }
   }
 
   // find the minimum diagonal value
   for (let i = 0; i < size; i++) {
-    if (Math.abs(A[i][i]) < min) {
-      minValue = Math.abs(A[i][i]);
+    if (Math.abs(A[i * size + i]) < minValue) {
+      minValue = Math.abs(A[i * size + i]);
     }
   }
 
@@ -1470,25 +1495,16 @@ export function solveHomogeneousLeastSquares(numberOfSamples, xt, xOrder, mt) {
 
   // set up intermediate variables
   // Allocate matrix to hold X times transpose of X
-  const XXt = createArray(xOrder); // size x by x
+  const XXt = createArray(xOrder * xOrder); // size x by x
   // Allocate the array of eigenvalues and eigenvectors
   const eigenvals = createArray(xOrder);
-  const eigenvecs = createArray(xOrder);
-
-  // Clear the upper triangular region (and btw, allocate the eigenvecs as well)
-  for (i = 0; i < xOrder; i++) {
-    eigenvecs[i] = createArray(xOrder);
-    XXt[i] = createArray(xOrder);
-    for (j = 0; j < xOrder; j++) {
-      XXt[i][j] = 0.0;
-    }
-  }
+  const eigenvecs = createArray(xOrder * xOrder);
 
   // Calculate XXt upper half only, due to symmetry
   for (k = 0; k < numberOfSamples; k++) {
     for (i = 0; i < xOrder; i++) {
       for (j = i; j < xOrder; j++) {
-        XXt[i][j] += xt[k][i] * xt[k][j];
+        XXt[i * xOrder + j] += xt[k * xOrder + i] * xt[k * xOrder + j];
       }
     }
   }
@@ -1496,7 +1512,7 @@ export function solveHomogeneousLeastSquares(numberOfSamples, xt, xOrder, mt) {
   // now fill in the lower half of the XXt matrix
   for (i = 0; i < xOrder; i++) {
     for (j = 0; j < i; j++) {
-      XXt[i][j] = XXt[j][i];
+      XXt[i * xOrder + j] = XXt[j * xOrder + i];
     }
   }
 
@@ -1506,7 +1522,7 @@ export function solveHomogeneousLeastSquares(numberOfSamples, xt, xOrder, mt) {
   // Smallest eigenval is at the end of the list (xOrder-1), and solution is
   // corresponding eigenvec.
   for (i = 0; i < xOrder; i++) {
-    mt[i][0] = eigenvecs[i][xOrder - 1];
+    mt[i] = eigenvecs[i * xOrder + xOrder - 1];
   }
 
   return 1;
@@ -1551,7 +1567,7 @@ export function solveLeastSquares(
     }
     for (i = 0; i < numberOfSamples; i++) {
       for (j = 0; j < yOrder; j++) {
-        if (Math.abs(yt[i][j]) > VTK_SMALL_NUMBER) {
+        if (Math.abs(yt[i * yOrder + j]) > VTK_SMALL_NUMBER) {
           allHomogeneous = 0;
           homogenFlags[j] = 0;
         }
@@ -1583,47 +1599,29 @@ export function solveLeastSquares(
   // If necessary, solve the homogeneous problem
   if (someHomogeneous) {
     // hmt is the homogeneous equation version of mt, the general solution.
+    // hmt should be xOrder x yOrder, but since we are solving only the homogeneous part, here it is xOrder x 1
     hmt = createArray(xOrder);
-    for (j = 0; j < xOrder; j++) {
-      // Only allocate 1 here, not yOrder, because here we're going to solve
-      // just the one homogeneous equation subset of the entire problem
-      hmt[j] = [0];
-    }
 
     // Ok, solve the homogeneous problem
     homogRC = solveHomogeneousLeastSquares(numberOfSamples, xt, xOrder, hmt);
   }
 
   // set up intermediate variables
-  const XXt = createArray(xOrder); // size x by x
-  const XXtI = createArray(xOrder); // size x by x
-  const XYt = createArray(xOrder); // size x by y
-  for (i = 0; i < xOrder; i++) {
-    XXt[i] = createArray(xOrder);
-    XXtI[i] = createArray(xOrder);
-
-    for (j = 0; j < xOrder; j++) {
-      XXt[i][j] = 0.0;
-      XXtI[i][j] = 0.0;
-    }
-
-    XYt[i] = createArray(yOrder);
-    for (j = 0; j < yOrder; j++) {
-      XYt[i][j] = 0.0;
-    }
-  }
+  const XXt = createArray(xOrder * xOrder); // size x by x
+  const XXtI = createArray(xOrder * xOrder); // size x by x
+  const XYt = createArray(xOrder * yOrder); // size x by y
 
   // first find the pseudoinverse matrix
   for (k = 0; k < numberOfSamples; k++) {
     for (i = 0; i < xOrder; i++) {
       // first calculate the XXt matrix, only do the upper half (symmetrical)
       for (j = i; j < xOrder; j++) {
-        XXt[i][j] += xt[k][i] * xt[k][j];
+        XXt[i * xOrder + j] += xt[k * xOrder + i] * xt[k * xOrder + j];
       }
 
       // now calculate the XYt matrix
       for (j = 0; j < yOrder; j++) {
-        XYt[i][j] += xt[k][i] * yt[k][j];
+        XYt[i * yOrder + j] += xt[k * xOrder + i] * yt[k * yOrder + j];
       }
     }
   }
@@ -1631,7 +1629,7 @@ export function solveLeastSquares(
   // now fill in the lower half of the XXt matrix
   for (i = 0; i < xOrder; i++) {
     for (j = 0; j < i; j++) {
-      XXt[i][j] = XXt[j][i];
+      XXt[i * xOrder + j] = XXt[j * xOrder + i];
     }
   }
 
@@ -1641,9 +1639,9 @@ export function solveLeastSquares(
   if (successFlag) {
     for (i = 0; i < xOrder; i++) {
       for (j = 0; j < yOrder; j++) {
-        mt[i][j] = 0.0;
+        mt[i * yOrder + j] = 0.0;
         for (k = 0; k < xOrder; k++) {
-          mt[i][j] += XXtI[i][k] * XYt[k][j];
+          mt[i * yOrder + j] += XXtI[i * xOrder + k] * XYt[k * yOrder + j];
         }
       }
     }
@@ -1656,7 +1654,7 @@ export function solveLeastSquares(
       if (homogenFlags[j]) {
         // Fix this one
         for (i = 0; i < xOrder; i++) {
-          mt[i][j] = hmt[i][0];
+          mt[i * yOrder + j] = hmt[i * yOrder];
         }
       }
     }
@@ -2211,6 +2209,7 @@ export default {
   transpose3x3,
   invert3x3,
   identity3x3,
+  identity,
   determinant3x3,
   quaternionToMatrix3x3,
   areEquals,

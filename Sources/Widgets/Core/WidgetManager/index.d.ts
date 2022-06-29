@@ -33,7 +33,7 @@ export interface IRenderingComponents {
 /**
  * Extract the rendering components from the given renderer.
  * 
- * @param renderer
+ * @param {vtkRenderer} renderer The vtkRenderer instance.
  */
 export function extractRenderingComponents(renderer: vtkRenderer): IRenderingComponents;
 

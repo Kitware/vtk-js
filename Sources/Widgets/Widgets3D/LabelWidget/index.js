@@ -21,7 +21,12 @@ function vtkLabelWidget(publicAPI, model) {
   const superClass = { ...publicAPI };
 
   // --- Widget Requirement ---------------------------------------------------
-  model.methodsToLink = ['textProps', 'fontProperties', 'strokeFontProperties'];
+  model.methodsToLink = [
+    'textProps',
+    'fontProperties',
+    'strokeFontProperties',
+    'scaleInPixels',
+  ];
 
   model.behavior = widgetBehavior;
   model.widgetState = stateGenerator();

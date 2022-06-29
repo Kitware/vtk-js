@@ -33,6 +33,7 @@ function vtkLineWidget(publicAPI, model) {
     'useActiveColor',
     'glyphResolution',
     'defaultScale',
+    'scaleInPixels',
   ];
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
@@ -47,8 +48,6 @@ function vtkLineWidget(publicAPI, model) {
             builder: vtkArrowHandleRepresentation,
             labels: ['handle1'],
             initialValues: {
-              /* to scale handle size when zooming/dezooming, optional */
-              scaleInPixels: true,
               /*
                * This table sets the visibility of the handles' actors
                * 1st actor is a displayActor, which hides a rendered object on the HTML layer.
@@ -77,8 +76,6 @@ function vtkLineWidget(publicAPI, model) {
             builder: vtkArrowHandleRepresentation,
             labels: ['handle2'],
             initialValues: {
-              /* to scale handle size when zooming/dezooming, optional */
-              scaleInPixels: true,
               /*
                * This table sets the visibility of the handles' actors
                * 1st actor is a displayActor, which hides a rendered object on the HTML layer.
@@ -107,7 +104,6 @@ function vtkLineWidget(publicAPI, model) {
             builder: vtkArrowHandleRepresentation,
             labels: ['moveHandle'],
             initialValues: {
-              scaleInPixels: true,
               visibilityFlagArray: [false, false],
               coincidentTopologyParameters: {
                 Point: {

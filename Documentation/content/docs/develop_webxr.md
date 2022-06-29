@@ -74,3 +74,4 @@ While WebXR has broad industry support, it is not yet implemented in all browser
 [GeometryViewerChestCT]: ../docs/gallery/GeometryViewerChestCT.jpg
 [SkyboxViewerVR]: ../docs/gallery/SkyboxViewerVR.jpg
 [VrCone]: ../docs/gallery/VrCone.jpg
+[WebXRVolume]: ../docs/gallery/WebXRVolume.png
