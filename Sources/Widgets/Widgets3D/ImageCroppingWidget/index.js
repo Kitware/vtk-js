@@ -101,8 +101,6 @@ function vtkImageCroppingWidget(publicAPI, model) {
 
   // --- Widget Requirement ---------------------------------------------------
 
-  model.behavior = behavior;
-  model.widgetState = state();
   model.methodsToLink = ['scaleInPixels'];
 
   // Given a view type (geometry, slice, volume), return a description
@@ -168,16 +166,19 @@ function vtkImageCroppingWidget(publicAPI, model) {
 
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+const defaultValues = (initialValues) => ({
   // cornerManipulator: null,
   // edgeManipulator: null,
-  // faceManipulator: null
-};
+  // faceManipulator: null,
+  behavior,
+  widgetState: state(),
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, [

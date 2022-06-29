@@ -35,7 +35,6 @@ function vtkEllipseWidget(publicAPI, model) {
     'opacity',
   ];
 
-  model.behavior = widgetBehavior;
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
       case ViewTypes.DEFAULT:
@@ -67,7 +66,6 @@ function vtkEllipseWidget(publicAPI, model) {
   // initialization
   // --------------------------------------------------------------------------
 
-  model.widgetState = stateGenerator();
   publicAPI.setManipulator(
     model.manipulator ||
       vtkPlanePointManipulator.newInstance({ useCameraNormal: true })
@@ -78,6 +76,8 @@ function vtkEllipseWidget(publicAPI, model) {
 
 function defaultValues(initialValues) {
   return {
+    behavior: widgetBehavior,
+    widgetState: stateGenerator(),
     modifierBehavior: {
       None: {
         [BehaviorCategory.PLACEMENT]:
