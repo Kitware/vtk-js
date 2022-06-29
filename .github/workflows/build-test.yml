@@ -6,8 +6,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04]
-        node: [12, 14, 16]
+        os: [ubuntu-20.04]
+        node: [14, 16, 18]
     name: ${{ matrix.os }} and node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v2

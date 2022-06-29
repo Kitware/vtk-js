@@ -12,7 +12,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 16
       - run: npm ci
       - name: Enforce code style
         run: npm run validate
