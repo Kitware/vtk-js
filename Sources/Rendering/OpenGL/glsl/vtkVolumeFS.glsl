@@ -1065,7 +1065,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
     #ifdef VolumeShadowOn
       vec3 tColorVS = applyShadowRay(tColor.rgb, posIS, rayDirVC);
       #ifdef SurfaceShadowOn
-        float vol_coef = volumetricScatteringBlending * (1.0 - tColor.a * exp(normalLight.w));
+        float vol_coef = volumetricScatteringBlending * (1.0 - tColor.a / 2.0) * (1.0 - atan(normalLight.w) * INV4PI);
         tColor.rgb = (1.0-vol_coef) * tColorS + vol_coef * tColorVS;
       #else
         tColor.rgb = tColorVS;
