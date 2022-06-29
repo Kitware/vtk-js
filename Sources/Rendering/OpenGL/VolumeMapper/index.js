@@ -193,19 +193,27 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     // set shadow blending flag
     if (model.lastLightComplexity > 0) {
-      if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
+      if (model.renderable.getMultipleScatter()) {
         FSSource = vtkShaderProgram.substitute(
           FSSource,
-          '//VTK::VolumeShadowOn',
-          `#define VolumeShadowOn`
+          '//VTK::MultipleScatterOn',
+          `#define MultipleScatterOn`
         ).result;
-      }
-      if (model.renderable.getVolumetricScatteringBlending() < 1.0) {
-        FSSource = vtkShaderProgram.substitute(
-          FSSource,
-          '//VTK::SurfaceShadowOn',
-          `#define SurfaceShadowOn`
-        ).result;
+      } else {
+        if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
+          FSSource = vtkShaderProgram.substitute(
+            FSSource,
+            '//VTK::VolumeShadowOn',
+            `#define VolumeShadowOn`
+          ).result;
+        }
+        if (model.renderable.getVolumetricScatteringBlending() < 1.0) {
+          FSSource = vtkShaderProgram.substitute(
+            FSSource,
+            '//VTK::SurfaceShadowOn',
+            `#define SurfaceShadowOn`
+          ).result;
+        }
       }
     }
 
@@ -309,7 +317,19 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       ).result;
     }
 
-    if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
+    if (model.renderable.getMultipleScatter()) {
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::VolumeShadow::Dec',
+        [
+          `uniform float multipleScatterSamplingDistFactor;`,
+          `uniform float sphericalSampleNumber;`,
+          `uniform float anisotropy;`,
+          `uniform float anisotropy2;`,
+        ],
+        false
+      ).result;
+    } else if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
       FSSource = vtkShaderProgram.substitute(
         FSSource,
         '//VTK::VolumeShadow::Dec',
@@ -864,7 +884,22 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformfv('lightExponent', lightExponent);
       program.setUniformiv('lightPositional', lightPositional);
     }
-    if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
+
+    if (model.renderable.getMultipleScatter()) {
+      program.setUniformf(
+        'multipleScatterSamplingDistFactor',
+        model.renderable.getMultipleScatterSamplingDistFactor()
+      );
+      program.setUniformf(
+        'sphericalSampleNumber',
+        model.renderable.getSphericalSampleNumber()
+      );
+      program.setUniformf('anisotropy', model.renderable.getAnisotropy());
+      program.setUniformf(
+        'anisotropy2',
+        model.renderable.getAnisotropy() ** 2.0
+      );
+    } else if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
       program.setUniformf(
         'giReach',
         model.renderable.getGlobalIlluminationReach()
@@ -1330,15 +1365,15 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const vprop = actor.getProperty();
 
     if (!model.jitterTexture.getHandle()) {
-      const oTable = new Uint8Array(32 * 32);
-      for (let i = 0; i < 32 * 32; ++i) {
+      const oTable = new Uint8Array(512 * 512);
+      for (let i = 0; i < 512 * 512; ++i) {
         oTable[i] = 255.0 * Math.random();
       }
       model.jitterTexture.setMinificationFilter(Filter.LINEAR);
       model.jitterTexture.setMagnificationFilter(Filter.LINEAR);
       model.jitterTexture.create2DFromRaw(
-        32,
-        32,
+        512,
+        512,
         1,
         VtkDataTypes.UNSIGNED_CHAR,
         oTable

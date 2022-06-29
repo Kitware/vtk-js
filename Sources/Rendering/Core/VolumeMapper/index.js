@@ -116,6 +116,10 @@ const DEFAULT_VALUES = {
   globalIlluminationReach: 0.0,
   volumeShadowSamplingDistFactor: 5.0,
   anisotropy: 0.0,
+  // multiple scatter parameters
+  sphericalSampleNumber: 5.0,
+  multipleScatterSamplingDistFactor: 1.0,
+  multipleScatter: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -138,6 +142,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     'globalIlluminationReach',
     'volumeShadowSamplingDistFactor',
     'anisotropy',
+    'multipleScatterSamplingDistFactor',
+    'sphericalSampleNumber',
+    'multipleScatter',
   ]);
 
   macro.setGetArray(publicAPI, model, ['ipScalarRange'], 2);

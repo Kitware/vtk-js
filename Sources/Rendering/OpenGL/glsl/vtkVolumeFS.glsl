@@ -62,6 +62,7 @@ uniform float vSpecular;
 //VTK::Light::Dec
 #endif
 
+//VTK::MultipleScatterOn
 //VTK::VolumeShadowOn
 //VTK::SurfaceShadowOn
 //VTK::VolumeShadow::Dec
@@ -200,12 +201,22 @@ uniform vec4 ipScalarRangeMax;
 //=======================================================================
 // global and custom variables (a temporary section before photorealistics rendering module is complete)
 vec3 rayDirVC;
-float sampleDistanceISVS;
+vec3 tstep;
+#ifdef VolumeShadowOn
+  float sampleDistanceISVS;
+#endif
+#ifdef MultipleScatterOn
+  float sampleDistanceISMS;
+  #define PI       3.1415
+  #define PI2      6.2832
+  #define INV2PI2  0.0506
+  mat3 rotateBasis;
+  mat3 inverseRotateBasis;
+#endif
 
 #define SQRT3    1.7321
-#define INV4PI   0.0796
 #define EPSILON  0.001
-
+const float g_opacityThreshold = 1.0 - 1.0 / 255.0;
 //=======================================================================
 // Webgl2 specific version of functions
 #if __VERSION__ == 300
@@ -362,7 +373,7 @@ float computeGradientOpacityFactor(
 #if (vtkLightComplexity > 0) || (defined vtkGradientOpacityOn)
   #ifdef vtkComputeNormalFromOpacity
     #ifdef vtkGradientOpacityOn
-      vec4 computeNormalForDensity(vec3 pos, float scalar, vec3 tstep, out mat3 scalarInterp, out vec3 secondaryGradientMag)
+      vec4 computeNormalForDensity(vec3 pos, float scalar, out mat3 scalarInterp, out vec3 secondaryGradientMag)
       {
         vec4 result;
         scalarInterp[0][0] = getTextureValue(pos + vec3(tstep.x, 0.0, 0.0)).a;
@@ -453,7 +464,7 @@ float computeGradientOpacityFactor(
           return vec4(0.0); 
         } 
       } 
-      vec4 computeNormalForDensity(vec3 pos, float scalar, vec3 tstep, out vec3 scalarInterp) 
+      vec4 computeNormalForDensity(vec3 pos, float scalar, out vec3 scalarInterp) 
       { 
         vec4 result; 
         scalarInterp.x = getTextureValue(pos + vec3(tstep.x, 0.0, 0.0)).a; 
@@ -476,7 +487,7 @@ float computeGradientOpacityFactor(
     #endif
   #endif
   // compute scalar density
-  vec4 computeNormal(vec3 pos, float scalar, vec3 tstep)  
+  vec4 computeNormal(vec3 pos, float scalar)  
   {  
     vec4 result;  
     result.x = getTextureValue(pos + vec3(tstep.x, 0.0, 0.0)).a - scalar;  
@@ -512,7 +523,7 @@ vec3 fragCoordToIndexSpace(vec4 fragCoord) {
 //=======================================================================
 // compute the normals and gradient magnitudes for a position
 // for independent components
-mat4 computeMat4Normal(vec3 pos, vec4 tValue, vec3 tstep)
+mat4 computeMat4Normal(vec3 pos, vec4 tValue)
 {
   mat4 result;
   vec4 distX = getTextureValue(pos + vec3(tstep.x, 0.0, 0.0)) - tValue;
@@ -577,24 +588,25 @@ mat4 computeMat4Normal(vec3 pos, vec4 tValue, vec3 tstep)
 
 //=======================================================================
 // global shadow - secondary ray
-#ifdef VolumeShadowOn
+#if defined(VolumeShadowOn) || defined(MultipleScatterOn)
 
 // henyey greenstein phase function
 float phase_function(float cos_angle)
 {
-  // divide by 2.0 instead of 4pi to increase intensity
-  return ((1.0-anisotropy2)/pow(1.0+anisotropy2-2.0*anisotropy*cos_angle, 1.5))/2.0;
+  // removed constant multiple 1/4pi to increase intensity
+  return ((1.0-anisotropy2)/pow(1.0+anisotropy2-2.0*anisotropy*cos_angle, 1.5));
 }
 
 float random()
 { 
-  float rand = fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453123);
-  float jitter=texture2D(jtexture,gl_FragCoord.xy/32.).r;
+  // float rand = fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453123);
+  float jitter=texture2D(jtexture,gl_FragCoord.xy/512.).r;
   uint pcg_state = floatBitsToUint(jitter);
   uint state = pcg_state;
   pcg_state = pcg_state * uint(747796405) + uint(2891336453);
   uint word = ((state >> ((state >> uint(28)) + uint(4))) ^ state) * uint(277803737);
-  return (float((((word >> uint(22)) ^ word) >> 1 ))/float(2147483647) + rand)/2.0;
+  // return (float((((word >> uint(22)) ^ word) >> 1 ))/float(2147483647) + rand)/2.0;
+  return float((((word >> uint(22)) ^ word) >> 1 ))/float(2147483647);  
 }
 
 // Computes the intersection between a ray and a box
@@ -634,7 +646,9 @@ void safe_0_vector(inout Ray ray)
   if(abs(ray.dir.y) < EPSILON) ray.dir.y = sign(ray.dir.y) * EPSILON;
   if(abs(ray.dir.z) < EPSILON) ray.dir.z = sign(ray.dir.z) * EPSILON;
 }
+#endif
 
+#ifdef VolumeShadowOn
 float volume_shadow(vec3 posIS, vec3 lightDirNormIS)
 {
   float shadow = 1.0;
@@ -683,7 +697,7 @@ float volume_shadow(vec3 posIS, vec3 lightDirNormIS)
     scalar = getTextureValue(posIS);
     opacity = texture2D(otexture, vec2(scalar.r * oscale0 + oshift0, 0.5)).r;
     #ifdef vtkGradientOpacityOn 
-      normal = computeNormal(posIS, scalar.a, vec3(1.0/vec3(volumeDimensions))); 
+      normal = computeNormal(posIS, scalar.a); 
       opacity *= computeGradientOpacityFactor(normal.w, goscale0, goshift0, gomin0, gomax0);
     #endif    
     shadow *= 1.0 - opacity;
@@ -736,6 +750,275 @@ vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
   } 
   return secondary_contrib;
 }
+#endif
+//=======================================================================
+// higher order scatter
+
+#ifdef MultipleScatterOn
+float volume_shadow_stochastic(vec3 posIS, vec3 lightDirNormIS)
+{
+  float shadow = 1.0;
+  float opacity = 0.0;
+
+  // modify sample distance with a random number between 0.8 and 1.0
+  float sampleDistanceISVS_jitter = sampleDistanceISMS * mix(0.8, 1.0, random());
+  
+  // in case the first sample near surface has a very tiled light ray, we need to offset start position 
+  posIS += sampleDistanceISVS_jitter * lightDirNormIS;  
+
+  // compute the start and end points for the ray
+  Ray ray;
+  Hit hit;  
+  ray.origin = posIS;
+  ray.dir = lightDirNormIS;
+  safe_0_vector(ray);
+  ray.invDir = 1.0/ray.dir;
+  
+  if(!BBoxIntersect(vec3(0.0),vec3(1.0), ray, hit))
+  {
+    return 1.0;
+  }
+  float maxdist = hit.tmax;
+  if(maxdist < EPSILON) {
+    return 1.0;
+  }
+
+  // interpolate shadow ray length between: 1 unit of sample distance in IS to SQRT3, based on globalIlluminationReach
+  vec4 scalar = vec4(0.0);
+  vec3 sampled_point = posIS;
+
+  uint num_samples = uint(ceil(20.0 * maxdist/SQRT3)); 
+  vec3 displacement = lightDirNormIS * (maxdist/float(num_samples));
+  for(uint s = uint(0); s < num_samples; s++)
+  {
+    scalar = getTextureValue(sampled_point);
+    opacity = texture2D(otexture, vec2(scalar.r * oscale0 + oshift0, 0.5)).r;
+
+    // support gradient opacity
+    #ifdef vtkGradientOpacityOn 
+      opacity *= computeGradientOpacityFactor(computeNormal(sampled_point, scalar.a).w, goscale0, goshift0, gomin0, gomax0);
+    #endif      
+    shadow += 1.0 - opacity;
+
+    // optimization: early termination
+    if (shadow < EPSILON){
+      return 0.0;
+    }
+    sampled_point += displacement * mix(0.8,1.0,random());
+  }
+  return shadow / float(num_samples);
+}
+
+// return a matrix that transform startDir into z axis; startDir should be normalized
+mat3 zBaseRotationalMatrix(vec3 startDir){
+  vec3 axis = cross(startDir, vec3(0.0,0.0,1.0));
+  float cosA = startDir.z;
+  float k = 1.0 / (1.0 + cosA);
+  mat3 matrix = mat3((axis.x * axis.x * k) + cosA, (axis.y * axis.x * k) - axis.z, (axis.z * axis.x * k) + axis.y,
+              (axis.x * axis.y * k) + axis.z, (axis.y * axis.y * k) + cosA, (axis.z * axis.y * k) - axis.x,
+              (axis.x * axis.z * k) - axis.y, (axis.y * axis.z * k) + axis.x, (axis.z * axis.z * k) + cosA);
+  return matrix;
+}
+
+// generate pdf for sampled light direction
+float pdf_direction_light_analytical(vec3 dir, vec3 light_dir)
+{
+  return INV2PI2 * (1.+dot(dir, light_dir));
+}
+
+// generate a random sample direction on unit sphere
+vec3 sample_direction_uniform()
+{
+  float theta = PI2 * random();
+  float phi = acos(1. - 2. * random());
+  return vec3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));
+}
+
+// sample a random direction based on phase function
+vec3 sample_direction_phase(mat3 invViewDirMat, out float theta, out float pdf)
+{
+  float phi = PI2 * random();
+
+  if(abs(anisotropy2) < 0.001)
+  {
+    return sample_direction_uniform();
+  }
+
+  float r_ctheta = (1.- anisotropy2)/(1. + anisotropy - 2. * anisotropy * random());
+  float ctheta = (0.5/anisotropy) * (1. + anisotropy2 - r_ctheta * r_ctheta);
+
+  float stheta = sqrt(max(0.0, 1.0 - ctheta * ctheta));
+
+  vec3 noisevec = vec3(stheta*cos(phi), stheta*sin(phi), ctheta);
+  theta = acos(ctheta);
+  pdf = phase_function(ctheta);
+  return normalize(invViewDirMat * noisevec);
+}
+
+// sample a random direction based on light direction
+// invLightDirMat represents the inverse of an orthogonal coordinates matrix of a base where light dir is up
+vec3 sample_direction_light_analytical(mat3 invLightDirMat, out float pdf)
+{
+  float theta = PI/4.0 * random();
+  float phi = PI2 * random();
+  while(random() >= 0.5*(1.+cos(theta)))
+  {
+    theta = PI/4.0 * random();
+  }
+  vec3 noisevec = vec3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));
+  pdf = INV2PI2 * (1.+cos(theta));
+  return normalize(invLightDirMat * noisevec);
+}
+
+// calculate a weight term between two sampling methods to reduce variance
+float balanced_weight(int nf, float fpdf, int ng, float gpdf)
+{
+  return (float(nf) * fpdf)/(float(nf) * fpdf + float(ng) * gpdf);
+}
+
+// generate a random direction
+void generateDir(in float alpha_l, in float light_percentage, in float totalRay, in vec3 lightDir, in vec3 currDir, out vec3 sampleDir, out float weight_mis)
+{
+  float theta,lightPDF,phasePDF;
+  if (random() < light_percentage){
+    sampleDir = sample_direction_light_analytical(inverse(zBaseRotationalMatrix(normalize(lightDir))),lightPDF);
+    theta =  dot(sampleDir, currDir);
+    phasePDF = phase_function(theta);
+  }
+  else{
+    sampleDir = sample_direction_phase(inverse(zBaseRotationalMatrix(currDir)),theta, phasePDF);
+    lightPDF = pdf_direction_light_analytical(sampleDir, normalize(lightDir));
+  }    
+  //multiscatter phase function 
+  weight_mis = balanced_weight(int(light_percentage*totalRay), lightPDF, int((1.-light_percentage)*totalRay), phasePDF);
+}
+
+// compute light contribution at a certain point
+vec3 computeLighting(vec3 posIS, vec3 main_dirIS, float sample_opacity)
+{
+
+  vec3 light_color = vec3(0.0); 
+  vec3 viewDirectionVC = normalize( main_dirIS );
+  rotateToViewCoord(viewDirectionVC);
+  vec3 vertLight = vec3(0.0);
+  for (int i = 0; i < lightNum; i++)
+  {
+    #if(vtkLightComplexity==3)
+      if (lightPositional[i] == 1){
+        vertLight = lightPositionVC[i] - IStoVC(posIS);
+      }else{
+        vertLight = - lightDirectionVC[i];
+      }
+    #else
+      vertLight = - lightDirectionVC[i];
+    #endif
+    float dDotL = dot(viewDirectionVC, normalize(vertLight));
+    // isotropic scatter returns 1.0 instead of 1/4pi to increase intensity
+    float phase_attenuation = 1.0;
+    if (abs(anisotropy) > EPSILON){
+      phase_attenuation = phase_function(dDotL);
+    }
+    // assume achromatic light
+    float vol_shadow = volume_shadow_stochastic(posIS, normalize(rotateToIDX(vertLight)));
+    light_color += lightColor[i] * vol_shadow * phase_attenuation;
+  } 
+  return light_color;
+}
+
+// multiple scatter approximation using path integration
+vec3 applyMultipleScatterApprox(vec3 startPosIS)
+{
+  vec3 color = vec3(0.0, 0.0, 0.0);
+  float sample_opacity = 0.0;
+  vec3 sampledDir = vec3(0.0);
+  float sampledPDF = 0.0;
+  float transmittance = 0.0;
+  float opacity = 0.0;
+  float goFactor;
+  vec4 normalLight;
+  float thetaDelta = 0.0;
+  // assume we only branch off once at each point
+  float scatterBaseNo = mix(0.8,1.0,random()) * 5.0;
+  float scatterTotal = 0.;
+  float scatterDelta = 0.;
+  vec3 totalDisplacement = vec3(0.0);
+  vec3 currLocation = startPosIS;
+  vec3 currDir = vec3(1.0);
+  vec4 scalar;
+  vec3 lightDir;
+
+  for(int i=0; i<lightNum; i++)
+  {
+    // calculate overall rotation angle
+    #if(vtkLightComplexity==3)
+      if (lightPositional[i] == 1){
+        lightDir = normalize(rotateBasis*(VCtoIS(lightPositionVC[i]) - startPosIS));
+      }else{
+        lightDir = normalize(rotateBasis*rotateToIDX(-lightDirectionVC[i]));
+      }
+    #else
+      lightDir = normalize(rotateBasis*rotateToIDX(-lightDirectionVC[i]));
+    #endif
+    float thetaTotal = acos(lightDir.z);
+    float phiAngleCos = cos(atan(lightDir.y, lightDir.x));
+    float phiAngleSin = sin(atan(lightDir.y, lightDir.x));
+
+    // traverse path
+    // for each sample point along the path ~βnw      
+    // calculate scatterDelta, for now assume uniform value    
+    while(thetaDelta < 0.98*thetaTotal)
+    {
+      scalar = getTextureValue(currLocation);
+
+      // support grdient opacity
+      #if defined(vtkGradientOpacityOn)
+        mat3 scalarInterp;  
+        vec3 secondaryGradientMag;  
+        vec4 normalLight = computeNormal(currLocation, scalar.a);  
+        goFactor=computeGradientOpacityFactor(normalLight.w,goscale0,goshift0,gomin0,gomax0);
+        sample_opacity=goFactor*texture2D(otexture,vec2(scalar.r*oscale0+oshift0,.5)).r; //?
+      #else 
+        sample_opacity=texture2D(otexture,vec2(scalar.r*oscale0+oshift0,.5)).r; //?
+      #endif
+      // update number of scatters   
+      scatterDelta = sample_opacity*scatterBaseNo;
+      scatterTotal += scatterDelta;
+      thetaDelta = (1.0-scatterDelta/scatterTotal)*thetaTotal;
+      // find dl and a point x' on the path
+      currDir = normalize(inverseRotateBasis * vec3(sin(thetaDelta)*phiAngleCos,sin(thetaDelta)*phiAngleSin,cos(thetaDelta)));
+      totalDisplacement += sampleDistanceISMS/clamp(scatterDelta,0.0,1.0)*currDir; 
+      currLocation = startPosIS + totalDisplacement;
+
+      if (sample_opacity > 0.01){
+        // for each set of sampling directions Ω
+        vec3 scatterContrib = vec3(0.0);
+        float weight_mis = 0.0;
+        // assume 83% scattering, 17% absorption, c/b = 1.2
+        float w = exp(-1.2*scatterTotal) * (exp(scatterTotal)-1.0);     
+        float alpha_l = sqrt(scatterTotal/(1.0-exp(-scatterTotal)));
+
+        lightDir = VCtoIS(lightPositionVC[i]) - currLocation;
+
+        // sample a certain number of directions on the sphere
+        float sampleNo = sample_opacity*sphericalSampleNumber;
+        for (float j = 0.; j < sampleNo; j++){ 
+          generateDir(alpha_l, 0.8, sampleNo, lightDir, currDir, sampledDir, weight_mis);
+          scatterContrib += weight_mis * computeLighting(currLocation,sampledDir,sample_opacity);      
+        }                           
+        color += sample_opacity * scatterContrib * w; 
+        transmittance *= sample_opacity;
+        opacity = 1.0 - transmittance; 
+        if(opacity > g_opacityThreshold) {
+          break;
+        } 
+      }
+
+    }   
+  }
+  // Add scatter light contributions - normalize light intensity based on sample number
+  return clamp(color,0.0,1.0);
+}
+
 #endif
 
 //=======================================================================
@@ -854,7 +1137,7 @@ vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
 //=======================================================================
 // Given a texture value compute the color and opacity
 //
-vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
+vec4 getColorForValue(vec4 tValue, vec3 posIS)
 {
 #ifdef vtkImageLabelOutlineOn
   vec3 centerPosIS = fragCoordToIndexSpace(gl_FragCoord); // pos in texture space
@@ -911,7 +1194,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
   // compute the normal vectors as needed
   #if (vtkLightComplexity > 0) || defined(vtkGradientOpacityOn)
     #if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
-      mat4 normalMat = computeMat4Normal(posIS, tValue, tstep);
+      mat4 normalMat = computeMat4Normal(posIS, tValue);
       #if !defined(vtkComponent0Proportional)
         vec4 normal0 = normalMat[0];
       #endif
@@ -934,14 +1217,14 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
         #ifdef vtkGradientOpacityOn
           mat3 scalarInterp;  
           vec3 secondaryGradientMag;  
-          vec4 normal0 = computeNormalForDensity(posIS, tValue.a, tstep, scalarInterp, secondaryGradientMag);  
+          vec4 normal0 = computeNormalForDensity(posIS, tValue.a, scalarInterp, secondaryGradientMag);  
           normalLight = computeDensityNormal(tValue.a, normal0.w, scalarInterp,secondaryGradientMag);       
           if (length(normalLight) == 0.0){  
             normalLight = normal0;   
           }                      
         #else
           vec3 scalarInterp;  
-          vec4 normal0 = computeNormalForDensity(posIS, tValue.a, tstep, scalarInterp);  
+          vec4 normal0 = computeNormalForDensity(posIS, tValue.a, scalarInterp);  
           if (length(normal0)>0.0){  
             normalLight = computeDensityNormal(tValue.a,scalarInterp);  
             if (length(normalLight)==0.0){  
@@ -950,7 +1233,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
           }                
         #endif
       #else 
-        vec4 normal0 = computeNormal(posIS, tValue.a, tstep);  
+        vec4 normal0 = computeNormal(posIS, tValue.a);  
         normalLight = normal0;             
       #endif
     #endif
@@ -1067,13 +1350,17 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
     #ifdef VolumeShadowOn
       vec3 tColorVS = applyShadowRay(tColor.rgb, posIS, rayDirVC);
       #ifdef SurfaceShadowOn
-        float vol_coef = volumetricScatteringBlending * (1.0 - tColor.a * exp(normalLight.w));
+        float vol_coef = volumetricScatteringBlending * (1.0 - clamp(tColor.a * exp(normalLight.w),0.0,1.0));
         tColor.rgb = (1.0-vol_coef) * tColorS + vol_coef * tColorVS;
       #else
         tColor.rgb = tColorVS;
       #endif
     #else
+      #ifdef MultipleScatterOn
+        tColor.rgb += applyMultipleScatterApprox(posIS);
+      #else 
         tColor.rgb = tColorS;
+      #endif   
     #endif
 
   #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
@@ -1142,15 +1429,18 @@ bool valueWithinScalarRange(vec4 val, vec4 min, vec4 max) {
 //
 void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
 {
-  vec3 tstep = 1.0/tdims;
-
   // start slightly inside and apply some jitter
   vec3 delta = endIS - posIS;
   vec3 stepIS = normalize(delta)*sampleDistanceIS;
   float raySteps = length(delta)/sampleDistanceIS;
 
+  #ifdef MultipleScatterOn
+    rotateBasis = zBaseRotationalMatrix(normalize(delta));
+    inverseRotateBasis = inverse(rotateBasis);
+  #endif
+
   // avoid 0.0 jitter
-  float jitter = 0.01 + 0.99*texture2D(jtexture, gl_FragCoord.xy/32.0).r;
+  float jitter = 0.01 + 0.99*texture2D(jtexture, gl_FragCoord.xy/512.0).r;
   float stepsTraveled = jitter;
 
   // local vars for the loop
@@ -1171,7 +1461,7 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
 
   #if vtkBlendMode == 0 // COMPOSITE_BLEND
     // now map through opacity and color
-    tColor = getColorForValue(tValue, posIS, tstep);
+    tColor = getColorForValue(tValue, posIS);
 
     // handle very thin volumes
     if (raySteps <= 1.0)
@@ -1193,7 +1483,7 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
       tValue = getTextureValue(posIS);
 
       // now map through opacity and color
-      tColor = getColorForValue(tValue, posIS, tstep);
+      tColor = getColorForValue(tValue, posIS);
 
       float mix = (1.0 - color.a);
 
@@ -1204,7 +1494,7 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
       color = color + vec4(tColor.rgb*tColor.a, tColor.a)*mix;
       stepsTraveled++;
       posIS += stepIS;
-      if (color.a > 0.99) { color.a = 1.0; break; }
+      if (color.a > g_opacityThreshold) { color.a = 1.0; break; }
     }
 
     if (color.a < 0.99 && (raySteps - stepsTraveled) > 0.0)
@@ -1215,7 +1505,7 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
       tValue = getTextureValue(posIS);
 
       // now map through opacity and color
-      tColor = getColorForValue(tValue, posIS, tstep);
+      tColor = getColorForValue(tValue, posIS);
       tColor.a = 1.0 - pow(1.0 - tColor.a, raySteps - stepsTraveled);
 
       float mix = (1.0 - color.a);
@@ -1239,7 +1529,7 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
     // we can skip the sampling loop along the ray.
     if (raySteps <= 1.0)
     {
-      gl_FragData[0] = getColorForValue(tValue, posIS, tstep);
+      gl_FragData[0] = getColorForValue(tValue, posIS);
       return;
     }
 
@@ -1271,7 +1561,7 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
     value = OP(tValue, value);
 
     // Now map through opacity and color
-    gl_FragData[0] = getColorForValue(value, posIS, tstep);
+    gl_FragData[0] = getColorForValue(value, posIS);
   #endif
   #if vtkBlendMode == 3 || vtkBlendMode == 4 //AVERAGE_INTENSITY_BLEND || ADDITIVE_BLEND
     vec4 sum = vec4(0.);
@@ -1281,7 +1571,7 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
     }
 
     if (raySteps <= 1.0) {
-      gl_FragData[0] = getColorForValue(sum, posIS, tstep);
+      gl_FragData[0] = getColorForValue(sum, posIS);
       return;
     }
 
@@ -1328,7 +1618,7 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
       sum /= vec4(stepsTraveled, stepsTraveled, stepsTraveled, 1.0);
     #endif
 
-    gl_FragData[0] = getColorForValue(sum, posIS, tstep);
+    gl_FragData[0] = getColorForValue(sum, posIS);
   #endif
 }
 
@@ -1452,11 +1742,13 @@ void computeIndexSpaceValues(out vec3 pos, out vec3 endPos, out float sampleDist
   #ifdef VolumeShadowOn
     sampleDistanceISVS = sampleDistanceIS * volumeShadowSamplingDistFactor;
   #endif
+  #ifdef MultipleScatterOn
+    sampleDistanceISMS = 0.1 * sampleDistanceIS * multipleScatterSamplingDistFactor;
+  #endif  
 }
 
 void main()
 {
-
   if (cameraParallel == 1)
   {
     // Camera is parallel, so the rayDir is just the direction of the camera.
@@ -1467,7 +1759,7 @@ void main()
   }
 
   vec3 tdims = vec3(volumeDimensions);
-
+  tstep = 1.0/tdims;
   // compute the start and end points for the ray
   vec2 rayStartEndDistancesVC = computeRayDistances(rayDirVC, tdims);
 
