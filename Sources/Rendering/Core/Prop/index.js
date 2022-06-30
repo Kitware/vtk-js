@@ -1,4 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
+import Constants from 'vtk.js/Sources/Rendering/Core/Prop/Constants';
+
+const { CoordinateSystem } = Constants;
 
 function notImplemented(method) {
   return () => macro.vtkErrorMacro(`vtkProp::${method} - NOT IMPLEMENTED`);
@@ -87,6 +90,12 @@ function vtkProp(publicAPI, model) {
     model.textures = [];
     publicAPI.modified();
   };
+
+  // not all mappers support all coordinate systems
+  publicAPI.setCoordinateSystemToWorld = () =>
+    publicAPI.setCoordinateSystem(CoordinateSystem.WORLD);
+  publicAPI.setCoordinateSystemToDisplay = () =>
+    publicAPI.setCoordinateSystem(CoordinateSystem.DISPLAY);
 }
 
 // ----------------------------------------------------------------------------
@@ -95,16 +104,17 @@ function vtkProp(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   // _parentProp: null,
-  visibility: true,
-  pickable: true,
-  dragable: true,
-  useBounds: true,
   allocatedRenderTime: 10,
+  coordinateSystem: CoordinateSystem.WORLD,
+  dragable: true,
   estimatedRenderTime: 0,
-  savedEstimatedRenderTime: 0,
-  renderTimeMultiplier: 1,
   paths: null,
+  pickable: true,
+  renderTimeMultiplier: 1,
+  savedEstimatedRenderTime: 0,
   textures: [],
+  useBounds: true,
+  visibility: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -116,12 +126,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   macro.get(publicAPI, model, ['estimatedRenderTime', 'allocatedRenderTime']);
   macro.setGet(publicAPI, model, [
-    'visibility',
-    'pickable',
-    'dragable',
-    'useBounds',
-    'renderTimeMultiplier',
     '_parentProp',
+    'coordinateSystem',
+    'dragable',
+    'pickable',
+    'renderTimeMultiplier',
+    'useBounds',
+    'visibility',
   ]);
   macro.moveToProtected(publicAPI, model, ['parentProp']);
 
@@ -135,4 +146,4 @@ export const newInstance = macro.newInstance(extend, 'vtkProp');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, ...Constants };

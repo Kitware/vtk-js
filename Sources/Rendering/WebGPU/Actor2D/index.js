@@ -12,9 +12,9 @@ const { CoordinateSystem } = vtkProp;
 // vtkWebGPUActor methods
 // ----------------------------------------------------------------------------
 
-function vtkWebGPUActor(publicAPI, model) {
+function vtkWebGPUActor2D(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUActor');
+  model.classHierarchy.push('vtkWebGPUActor2D');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
@@ -99,14 +99,10 @@ function vtkWebGPUActor(publicAPI, model) {
       Math.max(model.renderable.getMTime(), wgpuRen.getStabilizedTime()) >
       model.keyMatricesTime.getMTime()
     ) {
-      model.renderable.computeMatrix();
-
-      const mcwc = model.renderable.getMatrix();
-
       // compute the net shift, only apply stabilized coords with world coordinates
-      model.bufferShift[0] = mcwc[3];
-      model.bufferShift[1] = mcwc[7];
-      model.bufferShift[2] = mcwc[11];
+      model.bufferShift[0] = 0.0;
+      model.bufferShift[1] = 0.0;
+      model.bufferShift[2] = 0.0;
       const center = wgpuRen.getStabilizedCenterByReference();
       if (model.renderable.getCoordinateSystem() === CoordinateSystem.WORLD) {
         model.bufferShift[0] -= center[0];
@@ -114,28 +110,10 @@ function vtkWebGPUActor(publicAPI, model) {
         model.bufferShift[2] -= center[2];
       }
 
-      mat4.transpose(model.keyMatrices.bcwc, mcwc);
+      mat4.identity(model.keyMatrices.bcwc);
+      mat4.identity(model.keyMatrices.normalMatrix);
 
-      if (model.renderable.getIsIdentity()) {
-        mat4.identity(model.keyMatrices.normalMatrix);
-      } else {
-        // we use bcwc BEFORE the translate below (just to get transposed mcvc)
-        mat4.copy(model.keyMatrices.normalMatrix, model.keyMatrices.bcwc);
-        // zero out translation
-        model.keyMatrices.normalMatrix[3] = 0.0;
-        model.keyMatrices.normalMatrix[7] = 0.0;
-        model.keyMatrices.normalMatrix[11] = 0.0;
-        mat4.invert(
-          model.keyMatrices.normalMatrix,
-          model.keyMatrices.normalMatrix
-        );
-        mat4.transpose(
-          model.keyMatrices.normalMatrix,
-          model.keyMatrices.normalMatrix
-        );
-      }
-
-      // only need the buffer shift to get to world
+      // only meed the buffer shift to get to world
       mat4.translate(model.keyMatrices.bcwc, model.keyMatrices.bcwc, [
         -model.bufferShift[0],
         -model.bufferShift[1],
@@ -149,10 +127,7 @@ function vtkWebGPUActor(publicAPI, model) {
           -center[1],
           -center[2],
         ]);
-      } else {
-        mat4.copy(model.keyMatrices.bcsc, model.keyMatrices.bcwc);
       }
-
       model.keyMatricesTime.modified();
     }
 
@@ -192,7 +167,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.bufferShift = [0, 0, 0, 0];
 
   // Object methods
-  vtkWebGPUActor(publicAPI, model);
+  vtkWebGPUActor2D(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
@@ -204,4 +179,4 @@ export const newInstance = macro.newInstance(extend);
 export default { newInstance, extend };
 
 // Register ourself to WebGPU backend if imported
-registerOverride('vtkActor', newInstance);
+registerOverride('vtkActor2D', newInstance);

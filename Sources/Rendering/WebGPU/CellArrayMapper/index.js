@@ -2,7 +2,9 @@ import { mat3, mat4 } from 'gl-matrix';
 
 import * as macro from 'vtk.js/Sources/macros';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
+import vtkProperty2D from 'vtk.js/Sources/Rendering/Core/Property2D';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
@@ -12,6 +14,8 @@ import vtkWebGPUSimpleMapper from 'vtk.js/Sources/Rendering/WebGPU/SimpleMapper'
 const { BufferUsage, PrimitiveTypes } = vtkWebGPUBufferManager;
 const { Representation } = vtkProperty;
 const { ScalarMode } = vtkMapper;
+const { CoordinateSystem } = vtkProp;
+const { DisplayLocation } = vtkProperty2D;
 
 const vtkWebGPUPolyDataVS = `
 //VTK::Renderer::Dec
@@ -121,7 +125,18 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.WebGPUActor = publicAPI.getFirstAncestorOfType('vtkWebGPUActor');
+      if (model.is2D) {
+        model.WebGPUActor =
+          publicAPI.getFirstAncestorOfType('vtkWebGPUActor2D');
+        model.forceZValue = true;
+      } else {
+        model.WebGPUActor = publicAPI.getFirstAncestorOfType('vtkWebGPUActor');
+        model.forceZValue = false;
+      }
+      model.coordinateSystem =
+        model.WebGPUActor.getRenderable().getCoordinateSystem();
+      model.useRendererMatrix =
+        model.coordinateSystem !== CoordinateSystem.DISPLAY;
       model.WebGPURenderer =
         model.WebGPUActor.getFirstAncestorOfType('vtkWebGPURenderer');
       model.WebGPURenderWindow = model.WebGPURenderer.getParent();
@@ -159,34 +174,56 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       model.UBO.setArray('BCSCMatrix', keyMats.bcsc);
       model.UBO.setArray('MCWCNormals', keyMats.normalMatrix);
 
-      let aColor = ppty.getAmbientColorByReference();
-      model.UBO.setValue('AmbientIntensity', ppty.getAmbient());
-      model.UBO.setArray('AmbientColor', [
-        aColor[0],
-        aColor[1],
-        aColor[2],
-        1.0,
-      ]);
-      model.UBO.setValue('DiffuseIntensity', ppty.getDiffuse());
-      aColor = ppty.getDiffuseColorByReference();
-      model.UBO.setArray('DiffuseColor', [
-        aColor[0],
-        aColor[1],
-        aColor[2],
-        1.0,
-      ]);
-      model.UBO.setValue('SpecularIntensity', ppty.getSpecular());
-      model.UBO.setValue('SpecularPower', ppty.getSpecularPower());
-      aColor = ppty.getSpecularColorByReference();
-      model.UBO.setArray('SpecularColor', [
-        aColor[0],
-        aColor[1],
-        aColor[2],
-        1.0,
-      ]);
+      if (model.is2D) {
+        model.UBO.setValue(
+          'ZValue',
+          model.WebGPUActor.getRenderable()
+            .getProperty()
+            .getDisplayLocation() === DisplayLocation.FOREGROUND
+            ? 1.0
+            : 0.0
+        );
+
+        const aColor = ppty.getColorByReference();
+        model.UBO.setValue('AmbientIntensity', 1.0);
+        model.UBO.setArray('AmbientColor', [
+          aColor[0],
+          aColor[1],
+          aColor[2],
+          1.0,
+        ]);
+        model.UBO.setValue('DiffuseIntensity', 0.0);
+        model.UBO.setValue('SpecularIntensity', 0.0);
+      } else {
+        let aColor = ppty.getAmbientColorByReference();
+        model.UBO.setValue('AmbientIntensity', ppty.getAmbient());
+        model.UBO.setArray('AmbientColor', [
+          aColor[0],
+          aColor[1],
+          aColor[2],
+          1.0,
+        ]);
+        model.UBO.setValue('DiffuseIntensity', ppty.getDiffuse());
+        aColor = ppty.getDiffuseColorByReference();
+        model.UBO.setArray('DiffuseColor', [
+          aColor[0],
+          aColor[1],
+          aColor[2],
+          1.0,
+        ]);
+        model.UBO.setValue('SpecularIntensity', ppty.getSpecular());
+        model.UBO.setValue('SpecularPower', ppty.getSpecularPower());
+        aColor = ppty.getSpecularColorByReference();
+        model.UBO.setArray('SpecularColor', [
+          aColor[0],
+          aColor[1],
+          aColor[2],
+          1.0,
+        ]);
+        aColor = ppty.getEdgeColorByReference();
+        model.UBO.setArray('EdgeColor', [aColor[0], aColor[1], aColor[2], 1.0]);
+      }
       model.UBO.setValue('LineWidth', ppty.getLineWidth());
-      aColor = ppty.getEdgeColorByReference();
-      model.UBO.setArray('EdgeColor', [aColor[0], aColor[1], aColor[2], 1.0]);
       model.UBO.setValue('Opacity', ppty.getOpacity());
       model.UBO.setValue('PropID', model.WebGPUActor.getPropID());
       const device = model.WebGPURenderWindow.getDevice();
@@ -216,24 +253,53 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     const vDesc = pipeline.getShaderDescription('vertex');
     vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
     let code = vDesc.getCode();
+    if (model.useRendererMatrix) {
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
+        '    var pCoord: vec4<f32> = rendererUBO.SCPCMatrix*mapperUBO.BCSCMatrix*vertexBC;',
+        '//VTK::Position::Impl',
+      ]).result;
+      if (model.forceZValue) {
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
+          'pCoord = vec4<f32>(pCoord.xyz/pCoord.w, 1.0);',
+          'pCoord.z = mapperUBO.ZValue;',
+          '//VTK::Position::Impl',
+        ]).result;
+      }
+    } else {
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
+        '    var pCoord: vec4<f32> = mapperUBO.BCSCMatrix*vertexBC;',
+        '    pCoord.x = 2.0* pCoord.x / rendererUBO.viewportSize.x - 1.0;',
+        '    pCoord.y = 2.0* pCoord.y / rendererUBO.viewportSize.y - 1.0;',
+        '    pCoord.z = 0.5 - 0.5 * pCoord.z;',
+        '//VTK::Position::Impl',
+      ]).result;
+      if (model.forceZValue) {
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
+          '    pCoord.z = mapperUBO.ZValue;',
+          '//VTK::Position::Impl',
+        ]).result;
+      }
+    }
+
     if (publicAPI.haveWideLines()) {
       vDesc.addBuiltinInput('u32', '@builtin(instance_index) instanceIndex');
       // widen the edge
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
-        '    var tmpPos: vec4<f32> = rendererUBO.SCPCMatrix*mapperUBO.BCSCMatrix*vertexBC;',
+        '    var tmpPos: vec4<f32> = pCoord;',
         '    var numSteps: f32 = ceil(mapperUBO.LineWidth - 1.0);',
         '    var offset: f32 = (mapperUBO.LineWidth - 1.0) * (f32(input.instanceIndex / 2u) - numSteps/2.0) / numSteps;',
         '    var tmpPos2: vec3<f32> = tmpPos.xyz / tmpPos.w;',
         '    tmpPos2.x = tmpPos2.x + 2.0 * (f32(input.instanceIndex) % 2.0) * offset / rendererUBO.viewportSize.x;',
         '    tmpPos2.y = tmpPos2.y + 2.0 * (f32(input.instanceIndex + 1u) % 2.0) * offset / rendererUBO.viewportSize.y;',
-        '    tmpPos2.z = tmpPos2.z + 0.00001;', // could become a setting
-        '    output.Position = vec4<f32>(tmpPos2.xyz * tmpPos.w, tmpPos.w);',
-      ]).result;
-    } else {
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
-        '    output.Position = rendererUBO.SCPCMatrix*mapperUBO.BCSCMatrix*vertexBC;',
+        '    tmpPos2.z = min(1.0, tmpPos2.z + 0.00001);', // could become a setting
+        '    pCoord = vec4<f32>(tmpPos2.xyz * tmpPos.w, tmpPos.w);',
+        '//VTK::Position::Impl',
       ]).result;
     }
+
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
+      '    output.Position = pCoord;',
+    ]).result;
 
     vDesc.setCode(code);
   };
@@ -492,7 +558,10 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
     // normals, only used for surface rendering
     const usage = publicAPI.getUsage(representation, primType);
-    if (usage === BufferUsage.Triangles || usage === BufferUsage.Strips) {
+    if (
+      !model.is2D && // no lighting on Property2D
+      (usage === BufferUsage.Triangles || usage === BufferUsage.Strips)
+    ) {
       const normals = pd.getPointData().getNormals();
       const buffRequest = {
         format: 'snorm8x4',
@@ -559,7 +628,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
     let tcoords = null;
     if (
-      model.renderable.getInterpolateScalarsBeforeMapping() &&
+      model.renderable.getInterpolateScalarsBeforeMapping?.() &&
       model.renderable.getColorCoordinates()
     ) {
       tcoords = model.renderable.getColorCoordinates();
@@ -583,7 +652,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     const newTextures = [];
 
     // do we have a scalar color texture
-    const idata = model.renderable.getColorTextureMap(); // returns an imagedata
+    const idata = model.renderable.getColorTextureMap?.();
     if (idata) {
       if (!model.colorTexture) {
         model.colorTexture = vtkTexture.newInstance({ label: 'polyDataColor' });
@@ -653,7 +722,10 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
   // capture any pipeline code changes (which includes shader changes)
   // or vertex input changes/ bind groups/ etc
   publicAPI.computePipelineHash = () => {
-    let pipelineHash = 'pd';
+    let pipelineHash = `pd${model.useRendererMatrix ? 'r' : ''}${
+      model.forceZValue ? 'z' : ''
+    }`;
+
     if (
       model.primitiveType === PrimitiveTypes.TriangleEdges ||
       model.primitiveType === PrimitiveTypes.TriangleStripEdges
@@ -677,6 +749,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     if (model.SSBO) {
       pipelineHash += `ssbo`;
     }
+
     const uhash = publicAPI.getHashFromUsage(model.usage);
     pipelineHash += uhash;
     pipelineHash += model.renderEncoder.getPipelineHash();
@@ -709,6 +782,8 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     if (publicAPI.haveWideLines()) {
       const ppty = actor.getProperty();
       publicAPI.setNumberOfInstances(Math.ceil(ppty.getLineWidth() * 2.0));
+    } else {
+      publicAPI.setNumberOfInstances(1);
     }
   };
 }
@@ -718,6 +793,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  is2D: false,
   cellArray: null,
   currentInput: null,
   cellOffset: 0,
@@ -755,6 +831,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('LineWidth', 'f32');
   model.UBO.addEntry('Opacity', 'f32');
   model.UBO.addEntry('SpecularPower', 'f32');
+  model.UBO.addEntry('ZValue', 'f32');
   model.UBO.addEntry('PropID', 'u32');
 
   // Build VTK API
@@ -762,6 +839,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'cellArray',
     'currentInput',
     'cellOffset',
+    'is2D',
     'primitiveType',
     'renderEncoder',
   ]);

@@ -229,9 +229,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       code = vtkWebGPUShaderCache.substitute(
         code,
         '//VTK::RenderEncoder::Impl',
-        [
-          'output.outColor = vec4<f32>(computedColor.rgb*computedColor.a, computedColor.a);',
-        ]
+        ['output.outColor = vec4<f32>(computedColor.rgb, computedColor.a);']
       ).result;
       fDesc.setCode(code);
     });

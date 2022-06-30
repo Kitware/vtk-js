@@ -11,6 +11,15 @@ function vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model) {
 
   const superClass = { ...publicAPI };
 
+  publicAPI.setGlyphInstances = (val) => {
+    model.glyphInstances = val;
+  };
+
+  publicAPI.updateBuffers = () => {
+    superClass.updateBuffers();
+    publicAPI.setNumberOfInstances(model.glyphInstances);
+  };
+
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
     vDesc.addBuiltinInput('u32', '@builtin(instance_index) instanceIndex');
@@ -145,7 +154,7 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
 
       for (let i = 0; i < model.children.length; i++) {
         const cellMapper = model.children[i];
-        cellMapper.setNumberOfInstances(model.numInstances);
+        cellMapper.setGlyphInstances(model.numInstances);
       }
     }
   };

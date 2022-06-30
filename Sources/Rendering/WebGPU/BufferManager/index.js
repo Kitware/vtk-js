@@ -198,7 +198,6 @@ function generateNormals(cellArray, pointArray) {
 // ----------------------------------------------------------------------------
 // vtkWebGPUBufferManager methods
 // ----------------------------------------------------------------------------
-
 function vtkWebGPUBufferManager(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUBufferManager');
