@@ -1,4 +1,3 @@
-import { vec3, mat4 } from 'gl-matrix';
 import * as d3 from 'd3-scale';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import macro from 'vtk.js/Sources/macros';
@@ -26,15 +25,6 @@ const { VectorMode } = vtkScalarsToColors;
 // multiple rendering backends.
 //
 // ----------------------------------------------------------------------------
-
-// some shared temp variables to reduce heap allocs
-const ptv3 = new Float64Array(3);
-const pt2v3 = new Float64Array(3);
-const tmpv3 = new Float64Array(3);
-const tmp2v3 = new Float64Array(3);
-const xDir = new Float64Array(3);
-const yDir = new Float64Array(3);
-const invmat = new Float64Array(16);
 
 function applyTextStyle(ctx, style) {
   ctx.strokeStyle = style.strokeColor;
@@ -96,47 +86,55 @@ function defaultAutoLayout(publicAPI, model) {
 
     // if vertical
     if (helper.getLastAspectRatio() > 1.0) {
-      helper.setTickLabelPixelOffset(0.4 * tickTextStyle.fontSize);
-      const tickWidth =
-        (2.0 * (textSizes.tickWidth + helper.getTickLabelPixelOffset())) /
-        lastSize[0];
-      helper.setAxisTitlePixelOffset(0.8 * axisTextStyle.fontSize);
-      // width required if the title is vertical
-      const titleWidth =
-        (2.0 * (textSizes.titleHeight + helper.getAxisTitlePixelOffset())) /
-        lastSize[0];
+      helper.setTickLabelPixelOffset(0.3 * tickTextStyle.fontSize);
 
       // if the title will fit within the width of the bar then that looks
       // nicer to put it at the top (helper.topTitle), otherwise rotate it
       // and place it sideways
       if (
-        tickWidth + 0.4 * titleWidth >
-        (2.0 * textSizes.titleWidth) / lastSize[0]
+        textSizes.titleWidth <=
+        textSizes.tickWidth +
+          helper.getTickLabelPixelOffset() +
+          0.8 * tickTextStyle.fontSize
       ) {
         helper.setTopTitle(true);
-        boxSize[0] = tickWidth + 0.4 * titleWidth;
+        helper.setAxisTitlePixelOffset(0.2 * tickTextStyle.fontSize);
+        boxSize[0] =
+          (2.0 *
+            (textSizes.tickWidth +
+              helper.getTickLabelPixelOffset() +
+              0.8 * tickTextStyle.fontSize)) /
+          lastSize[0];
         helper.setBoxPosition([0.98 - boxSize[0], -0.92]);
       } else {
-        boxSize[0] = tickWidth + 1.4 * titleWidth;
+        helper.setAxisTitlePixelOffset(0.2 * tickTextStyle.fontSize);
+        boxSize[0] =
+          (2.0 *
+            (textSizes.titleHeight +
+              helper.getAxisTitlePixelOffset() +
+              textSizes.tickWidth +
+              helper.getTickLabelPixelOffset() +
+              0.8 * tickTextStyle.fontSize)) /
+          lastSize[0];
         helper.setBoxPosition([0.99 - boxSize[0], -0.92]);
       }
       boxSize[1] = Math.max(1.2, Math.min(1.84 / yAxisAdjust, 1.84));
     } else {
       // horizontal
-      helper.setAxisTitlePixelOffset(2.0 * tickTextStyle.fontSize);
-      helper.setTickLabelPixelOffset(0.5 * tickTextStyle.fontSize);
-      const tickHeight =
-        (2.0 * (textSizes.tickHeight + helper.getTickLabelPixelOffset())) /
-        lastSize[1];
-      const titleHeight =
-        (2.0 * (textSizes.titleHeight + helper.getAxisTitlePixelOffset())) /
+      helper.setAxisTitlePixelOffset(1.2 * tickTextStyle.fontSize);
+      helper.setTickLabelPixelOffset(0.1 * tickTextStyle.fontSize);
+      const titleHeight = // total offset from top of bar (includes ticks)
+        (2.0 *
+          (0.8 * tickTextStyle.fontSize +
+            textSizes.titleHeight +
+            helper.getAxisTitlePixelOffset())) /
         lastSize[1];
       const tickWidth = (2.0 * textSizes.tickWidth) / lastSize[0];
       boxSize[0] = Math.min(
         1.9,
         Math.max(1.4, 1.4 * tickWidth * (helper.getTicks().length + 3))
       );
-      boxSize[1] = tickHeight + titleHeight;
+      boxSize[1] = titleHeight;
       helper.setBoxPosition([-0.5 * boxSize[0], -0.97]);
     }
 
@@ -186,8 +184,10 @@ function vtkScalarBarActorHelper(publicAPI, model) {
     model.renderable = renderable;
     model.barActor.setProperty(renderable.getProperty());
     model.barActor.setParentProp(renderable);
+    model.barActor.setCoordinateSystemToDisplay();
     model.tmActor.setProperty(renderable.getProperty());
     model.tmActor.setParentProp(renderable);
+    model.tmActor.setCoordinateSystemToDisplay();
 
     model.generateTicks = renderable.generateTicks;
     model.axisTextStyle = { ...renderable.getAxisTextStyle() };
@@ -253,22 +253,10 @@ function vtkScalarBarActorHelper(publicAPI, model) {
         // recompute bar segments based on positioning
         publicAPI.recomputeBarSegments(textSizes);
       }
-      model.forceViewUpdate = true;
-      model.lastRebuildTime.modified();
-      model.forceUpdate = false;
-    }
-
-    // compute bounds for label quads whenever the camera changes or forced
-    // the polydata mapper could be modified to accept NDC coords then this
-    // would be called far less often
-    if (
-      model.forceViewUpdate ||
-      model.camera.getMTime() > model.lastRedrawTime.getMTime()
-    ) {
       publicAPI.updatePolyDataForLabels();
       publicAPI.updatePolyDataForBarSegments();
-      model.lastRedrawTime.modified();
-      model.forceViewUpdate = false;
+      model.lastRebuildTime.modified();
+      model.forceUpdate = false;
     }
   };
 
@@ -407,7 +395,7 @@ function vtkScalarBarActorHelper(publicAPI, model) {
         model.lastSize[1];
       model.barSize[0] = model.boxSize[0];
       model.barPosition[0] = model.boxPosition[0];
-      model.barSize[1] = model.boxSize[1] - titleHeight - tickHeight;
+      model.barSize[1] = model.boxSize[1] - titleHeight;
       model.barPosition[1] = model.boxPosition[1];
       segSize[0] = tickWidth;
     }
@@ -488,13 +476,19 @@ function vtkScalarBarActorHelper(publicAPI, model) {
   };
 
   // called by updatePolyDataForLabels
-  // modifies class constants ptv3, tmpv3
+  // modifies class constants tmp2v3
+  const tmp2v3 = new Float64Array(3);
+
+  // anchor point = pos
+  // H alignment = left, middle, right
+  // V alignment = bottom, middle, top
+  // Text Orientation = horizontal, vertical
+  // orientation
   publicAPI.createPolyDataForOneLabel = (
     text,
     pos,
-    xdir,
-    ydir,
-    dir,
+    alignment,
+    orientation,
     offset,
     results
   ) => {
@@ -503,50 +497,74 @@ function vtkScalarBarActorHelper(publicAPI, model) {
       return;
     }
     // have to find the four corners of the texture polygon for this label
-    // convert anchor point to View Coords
     let ptIdx = results.ptIdx;
     let cellIdx = results.cellIdx;
-    ptv3[0] = pos[0];
-    ptv3[1] = pos[1];
-    ptv3[2] = pos[2];
-    // horizontal left, right, or middle alignment based on dir[0]
-    if (dir[0] < -0.5) {
-      vec3.scale(tmpv3, xdir, dir[0] * offset - value.width);
-    } else if (dir[0] > 0.5) {
-      vec3.scale(tmpv3, xdir, dir[0] * offset);
+
+    // get achor point in pixels
+    tmp2v3[0] = (0.5 * pos[0] + 0.5) * model.lastSize[0];
+    tmp2v3[1] = (0.5 * pos[1] + 0.5) * model.lastSize[1];
+    tmp2v3[2] = pos[2];
+
+    tmp2v3[0] += offset[0];
+    tmp2v3[1] += offset[1];
+
+    // get text size in display pixels
+    const textSize = [];
+    const textAxes = orientation === 'vertical' ? [1, 0] : [0, 1];
+    if (orientation === 'vertical') {
+      textSize[0] = value.width;
+      textSize[1] = -value.height;
+      // update anchor point based on alignment
+      if (alignment[0] === 'middle') {
+        tmp2v3[1] -= value.width / 2.0;
+      } else if (alignment[0] === 'right') {
+        tmp2v3[1] -= value.width;
+      }
+      if (alignment[1] === 'middle') {
+        tmp2v3[0] += value.height / 2.0;
+      } else if (alignment[1] === 'top') {
+        tmp2v3[0] += value.height;
+      }
     } else {
-      vec3.scale(tmpv3, xdir, dir[0] * offset - value.width / 2.0);
+      textSize[0] = value.width;
+      textSize[1] = value.height;
+      // update anchor point based on alignment
+      if (alignment[0] === 'middle') {
+        tmp2v3[0] -= value.width / 2.0;
+      } else if (alignment[0] === 'right') {
+        tmp2v3[0] -= value.width;
+      }
+      if (alignment[1] === 'middle') {
+        tmp2v3[1] -= value.height / 2.0;
+      } else if (alignment[1] === 'top') {
+        tmp2v3[1] -= value.height;
+      }
     }
-    vec3.add(ptv3, ptv3, tmpv3);
-    vec3.scale(tmpv3, ydir, dir[1] * offset - value.height / 2.0);
-    vec3.add(ptv3, ptv3, tmpv3);
-    results.points[ptIdx * 3] = ptv3[0];
-    results.points[ptIdx * 3 + 1] = ptv3[1];
-    results.points[ptIdx * 3 + 2] = ptv3[2];
+
+    results.points[ptIdx * 3] = tmp2v3[0];
+    results.points[ptIdx * 3 + 1] = tmp2v3[1];
+    results.points[ptIdx * 3 + 2] = tmp2v3[2];
     results.tcoords[ptIdx * 2] = value.tcoords[0];
     results.tcoords[ptIdx * 2 + 1] = value.tcoords[1];
     ptIdx++;
-    vec3.scale(tmpv3, xdir, value.width);
-    vec3.add(ptv3, ptv3, tmpv3);
-    results.points[ptIdx * 3] = ptv3[0];
-    results.points[ptIdx * 3 + 1] = ptv3[1];
-    results.points[ptIdx * 3 + 2] = ptv3[2];
+    tmp2v3[textAxes[0]] += textSize[0];
+    results.points[ptIdx * 3] = tmp2v3[0];
+    results.points[ptIdx * 3 + 1] = tmp2v3[1];
+    results.points[ptIdx * 3 + 2] = tmp2v3[2];
     results.tcoords[ptIdx * 2] = value.tcoords[2];
     results.tcoords[ptIdx * 2 + 1] = value.tcoords[3];
     ptIdx++;
-    vec3.scale(tmpv3, ydir, value.height);
-    vec3.add(ptv3, ptv3, tmpv3);
-    results.points[ptIdx * 3] = ptv3[0];
-    results.points[ptIdx * 3 + 1] = ptv3[1];
-    results.points[ptIdx * 3 + 2] = ptv3[2];
+    tmp2v3[textAxes[1]] += textSize[1];
+    results.points[ptIdx * 3] = tmp2v3[0];
+    results.points[ptIdx * 3 + 1] = tmp2v3[1];
+    results.points[ptIdx * 3 + 2] = tmp2v3[2];
     results.tcoords[ptIdx * 2] = value.tcoords[4];
     results.tcoords[ptIdx * 2 + 1] = value.tcoords[5];
     ptIdx++;
-    vec3.scale(tmpv3, xdir, value.width);
-    vec3.subtract(ptv3, ptv3, tmpv3);
-    results.points[ptIdx * 3] = ptv3[0];
-    results.points[ptIdx * 3 + 1] = ptv3[1];
-    results.points[ptIdx * 3 + 2] = ptv3[2];
+    tmp2v3[textAxes[0]] -= textSize[0];
+    results.points[ptIdx * 3] = tmp2v3[0];
+    results.points[ptIdx * 3 + 1] = tmp2v3[1];
+    results.points[ptIdx * 3 + 2] = tmp2v3[2];
     results.tcoords[ptIdx * 2] = value.tcoords[6];
     results.tcoords[ptIdx * 2 + 1] = value.tcoords[7];
     ptIdx++;
@@ -569,37 +587,8 @@ function vtkScalarBarActorHelper(publicAPI, model) {
   // update the polydata associated with drawing the text labels
   // specifically the quads used for each label and their associated tcoords
   // etc. This changes every time the camera viewpoint changes
+  const tmpv3 = new Float64Array(3);
   publicAPI.updatePolyDataForLabels = () => {
-    const cmat = model.camera.getCompositeProjectionMatrix(
-      model.lastAspectRatio,
-      -1,
-      1
-    );
-    mat4.transpose(cmat, cmat);
-    mat4.invert(invmat, cmat);
-
-    const size = model.lastSize;
-
-    // compute pixel to distance factors
-    tmpv3[0] = 0.0;
-    tmpv3[1] = 0.0;
-    tmpv3[2] = -0.99; // near plane
-    vec3.transformMat4(ptv3, tmpv3, invmat);
-    // moving 0.1 in NDC
-    tmpv3[0] += 0.1;
-    vec3.transformMat4(pt2v3, tmpv3, invmat);
-    // results in WC move of
-    vec3.subtract(xDir, pt2v3, ptv3);
-    tmpv3[0] -= 0.1;
-    tmpv3[1] += 0.1;
-    vec3.transformMat4(pt2v3, tmpv3, invmat);
-    // results in WC move of
-    vec3.subtract(yDir, pt2v3, ptv3);
-    for (let i = 0; i < 3; i++) {
-      xDir[i] /= 0.5 * 0.1 * size[0];
-      yDir[i] /= 0.5 * 0.1 * size[1];
-    }
-
     // update the polydata
     const numLabels =
       publicAPI.getTickStrings().length + model.barSegments.length;
@@ -617,67 +606,66 @@ function vtkScalarBarActorHelper(publicAPI, model) {
       tcoords,
     };
 
-    // compute the direction vector, to make the code general we place text
+    // compute the direction vector
     const offsetAxis = model.vertical ? 0 : 1;
     const spacedAxis = model.vertical ? 1 : 0;
 
+    tmpv3[2] = -0.99; // near plane
+
     // draw the title
+    const alignment = model.vertical
+      ? ['right', 'middle']
+      : ['middle', 'bottom'];
     let dir = [0, 1];
+    const tickOffsets = [0, 0];
     if (model.vertical) {
+      tickOffsets[0] = -model.tickLabelPixelOffset;
       if (model.topTitle) {
         tmpv3[0] = model.boxPosition[0] + 0.5 * model.boxSize[0];
         tmpv3[1] = model.barPosition[1] + model.barSize[1];
-        vec3.transformMat4(ptv3, tmpv3, invmat);
 
         // write the axis label
         publicAPI.createPolyDataForOneLabel(
           model.renderable.getAxisLabel(),
-          ptv3,
-          xDir,
-          yDir,
-          [0, 1],
-          model.axisTitlePixelOffset,
+          tmpv3,
+          ['middle', 'bottom'],
+          'horizontal',
+          [0, model.axisTitlePixelOffset],
           results
         );
       } else {
         tmpv3[0] = model.barPosition[0] + model.barSize[0];
         tmpv3[1] = model.barPosition[1] + 0.5 * model.barSize[1];
-        vec3.transformMat4(ptv3, tmpv3, invmat);
 
         // write the axis label
-        vec3.scale(xDir, xDir, -1);
         publicAPI.createPolyDataForOneLabel(
           model.renderable.getAxisLabel(),
-          ptv3,
-          yDir,
-          xDir,
-          [0, -1],
-          model.axisTitlePixelOffset,
+          tmpv3,
+          ['middle', 'top'],
+          'vertical',
+          [model.axisTitlePixelOffset, 0],
           results
         );
-        vec3.scale(xDir, xDir, -1);
       }
       dir = [-1, 0];
     } else {
+      tickOffsets[1] = model.tickLabelPixelOffset;
       tmpv3[0] = model.barPosition[0] + 0.5 * model.barSize[0];
       tmpv3[1] = model.barPosition[1] + model.barSize[1];
-      vec3.transformMat4(ptv3, tmpv3, invmat);
       publicAPI.createPolyDataForOneLabel(
         model.renderable.getAxisLabel(),
-        ptv3,
-        xDir,
-        yDir,
-        dir,
-        model.axisTitlePixelOffset,
+        tmpv3,
+        ['middle', 'bottom'],
+        'horizontal',
+        [0, model.axisTitlePixelOffset],
         results
       );
     }
 
-    tmp2v3[2] = -0.99; // near plane
-    tmp2v3[offsetAxis] =
+    tmpv3[offsetAxis] =
       model.barPosition[offsetAxis] +
       (0.5 * dir[offsetAxis] + 0.5) * model.barSize[offsetAxis];
-    tmp2v3[spacedAxis] =
+    tmpv3[spacedAxis] =
       model.barPosition[spacedAxis] + model.barSize[spacedAxis] * 0.5;
 
     // draw bar segment labels
@@ -688,19 +676,17 @@ function vtkScalarBarActorHelper(publicAPI, model) {
         // handle ticks below
         tickSeg = seg;
       } else {
-        tmp2v3[spacedAxis] =
+        tmpv3[spacedAxis] =
           model.barPosition[spacedAxis] +
           0.5 *
             model.barSize[spacedAxis] *
             (seg.corners[2][spacedAxis] + seg.corners[0][spacedAxis]);
-        vec3.transformMat4(ptv3, tmp2v3, invmat);
         publicAPI.createPolyDataForOneLabel(
           seg.title,
-          ptv3,
-          xDir,
-          yDir,
-          dir,
-          model.tickLabelPixelOffset,
+          tmpv3,
+          alignment,
+          'horizontal',
+          tickOffsets,
           results
         );
       }
@@ -719,15 +705,13 @@ function vtkScalarBarActorHelper(publicAPI, model) {
       const tickPos =
         (ticks[t] - model.lastTickBounds[0]) /
         (model.lastTickBounds[1] - model.lastTickBounds[0]);
-      tmp2v3[spacedAxis] = tickSegmentStart + tickSegmentSize * tickPos;
-      vec3.transformMat4(ptv3, tmp2v3, invmat);
+      tmpv3[spacedAxis] = tickSegmentStart + tickSegmentSize * tickPos;
       publicAPI.createPolyDataForOneLabel(
         tickStrings[t],
-        ptv3,
-        xDir,
-        yDir,
-        dir,
-        model.tickLabelPixelOffset,
+        tmpv3,
+        alignment,
+        'horizontal',
+        tickOffsets,
         results
       );
     }
@@ -746,14 +730,6 @@ function vtkScalarBarActorHelper(publicAPI, model) {
   };
 
   publicAPI.updatePolyDataForBarSegments = () => {
-    const cmat = model.camera.getCompositeProjectionMatrix(
-      model.lastAspectRatio,
-      -1,
-      1
-    );
-    mat4.transpose(cmat, cmat);
-    mat4.invert(invmat, cmat);
-
     const scalarsToColors = model.renderable.getScalarsToColors();
     let numberOfExtraColors = 0;
     if (
@@ -794,15 +770,12 @@ function vtkScalarBarActorHelper(publicAPI, model) {
 
     for (let i = 0; i < model.barSegments.length; i++) {
       const seg = model.barSegments[i];
-      tmp2v3[1] = model.barPosition[1] + model.barSize[1] * 0.5;
-      tmp2v3[2] = -0.99; // near plane
       for (let e = 0; e < 4; e++) {
-        tmp2v3[0] = model.barPosition[0] + seg.corners[e][0] * model.barSize[0];
-        tmp2v3[1] = model.barPosition[1] + seg.corners[e][1] * model.barSize[1];
-        vec3.transformMat4(ptv3, tmp2v3, invmat);
-        points[ptIdx * 3] = ptv3[0];
-        points[ptIdx * 3 + 1] = ptv3[1];
-        points[ptIdx * 3 + 2] = ptv3[2];
+        tmpv3[0] = model.barPosition[0] + seg.corners[e][0] * model.barSize[0];
+        tmpv3[1] = model.barPosition[1] + seg.corners[e][1] * model.barSize[1];
+        points[ptIdx * 3] = (0.5 * tmpv3[0] + 0.5) * model.lastSize[0];
+        points[ptIdx * 3 + 1] = (0.5 * tmpv3[1] + 0.5) * model.lastSize[1];
+        points[ptIdx * 3 + 2] = tmpv3[2];
         for (let nc = 0; nc < numComps; nc++) {
           scalars[ptIdx * numComps + nc] =
             model.lastTickBounds[0] +
@@ -861,8 +834,6 @@ const newScalarBarActorHelper = macro.newInstance(
     macro.setArray(publicAPI, model, ['boxPosition', 'boxSize'], 2);
 
     model.forceUpdate = false;
-    model.lastRedrawTime = {};
-    macro.obj(model.lastRedrawTime, { mtime: 0 });
     model.lastRebuildTime = {};
     macro.obj(model.lastRebuildTime, { mtime: 0 });
     model.lastSize = [-1, -1];

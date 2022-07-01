@@ -28,7 +28,6 @@ is needed.
 - create background class to encapsulate, background clear,
   gradient background, texture background, skybox etc
 - PBR lighting to replace the simple model currently coded
-- eventually switch to using IBOs and flat interpolation
 - cropping planes for polydata, image, volume mappers
 - add rgb texture support to volume renderer
 - add lighting to volume rendering
@@ -38,6 +37,10 @@ Waiting on fixes/dev in WebGPU spec
 - more cross platform testing and bug fixing, firefox and safari
 
 # Recently ToDone
+- add coordinate systems to Prop
+- update scalarBar actor to not regenerate arrays every camera movement
+- add actor2D
+- switched to using IBOs and flat interpolation for polydata
 - possibly change the zbuffer equation to be linear float32
 - update widgets to use the new async hardware selector API
 - image display (use 3d texture)
@@ -75,8 +78,6 @@ Here are some quick notes on the WebGPU classes and how they work together. Clas
 
 - Sampler - many instances - something that can be used to sample a texture, typically linear or nearest, etc. Requested often by mappers using textures. a bindable
 
-- ShaderCache - one instance, caches many shader modules, owned by the Device. Requested typically by mappers.
-
 - ShaderModule - many instances, e.g. a vertex or fragment shader program
 
 - VertexInput - many instances, holds the structure and buffers of a Vertex buffer, owned by mappers
@@ -94,7 +95,7 @@ can be used to run a pipeline on those fragment destinations.
 
 - Renderer - a viewport or layer into a render window
 
-- Mapper - maps vtkDataSet to graphics primitives (draws them) Creates many objects to get the job done including VertexInputs, Pipelines, Buffers, Textures, Samplers. Typically sets up everything and then registers pipelines to call it back when they render. For example, a single mapper when it renders with lines and triangles would request two pipelines and set up their vertex input etc, and then register a reuqest for those pipelines to call it back when the pipelines render. Later on after all mappers have "rendered" the resulting pipelines would be executed by the renderer and for each pipeline all mappers using that pipeline would get a callback so they can bind and draw their primitives. This is different from OpenGL where each mapper would draw during its render pass lines then triangles. With WebGPU (essentially) all lines are drawn together for all mappers, then all triangles for all mappers.
+- Mapper - maps vtkDataSet to graphics primitives (draws them) Creates many objects to get the job done including VertexInputs, Pipelines, Buffers, Textures, Samplers. Typically sets up everything and then registers pipelines to call it back when they render. For example, a single mapper when it renders with lines and triangles would request two pipelines and set up their vertex input etc, and then register a reuqest for those pipelines to call it back when the pipelines render. Later on after all mappers have "rendered" the resulting pipelines would be executed by the renderer and for each pipeline all mappers using that pipeline would get a callback so they can bind and draw their primitives. This is different from OpenGL where each mapper would draw during its render pass lines then triangles. With WebGPU (essentially) all lines are drawn together for all mappers, then all triangles for all mappers. See more down below under "Simple Mapper"
 
 - Bind Group - hold bindables (textures samplers, UBOs SSBOs) and organizes them
 so they can be bound as needed. Typically one for each renderer and one for each mapper.
@@ -103,7 +104,9 @@ so they can be bound as needed. Typically one for each renderer and one for each
 
 - StorageBuffer - a SSBO that can be used when you need a SSBO, a bindable
 
-The buffer and texture managers also cache their objects so that these large GPU objects can be shared betwen mappers. Both of them take a request and return something from the cache. In both cases the source property of the request indicates what object is holding onto the buffer/texture.
+- IndexBuffer - a subclass of buffer that includes arrays mapping vtk points/cells to webgpu
+
+A few classes such as buffer and texture managers cache their objects in a cache owned by the device so that these large GPU objects can be shared. The general approach is that they take a request and return something from the cache, if it isn't in the cache it is created.
 
 Note that vtk.js already had a notion of a render pass which is a bit different from
 what WebGPU uses. So to avoid confusion we call WebGPU render passes "render encoders".
@@ -163,7 +166,12 @@ updatePipeline()
 We set the render encoder on the pipeline because the renderEncoder used may add shader code to the fragment shader to direct the computed fragment data to specific outputs/textureViews.
 
 The simple mapper is a viewnode subclass so it can handle render passes. The FullScreenQuad is a small subclass of SimpleMapper designed to render a quad. CellArrayMapper is a large subclass of SimpleMapper designed to render a CellArray from a PolyData suchs as verts, lines, polys, strips. PolyDataMapper is a simple class that instantiates CellArrayMappers as needed to do the actual work.
+
+## IndexBuffers
+
+The WebGPU backend supports the standard IndexBuffer and VertexBuffer combination to render primatives. Due to vtk's use of celldata which doesn;t always map well to graphics primitives, the IndexBuffer class has methods to create a index buffer where each primitive has a unique provoking point. That way cell data can be rendered as point data using a flat interpolation. The IndexBuffer class holds array to map between the flat indexbuffer and original vtk data.
 ## Private API
+
 Note that none of the classes in the WebGPU directory are meant to be accessed directly by application code. These classes implement one view of the data (WebGPU as opposed to WebGL). Typical applicaiton code will interface with the RenderWindowViewNode superclass (in the SceneGraph) directory as the main entry point for a view such as WebGL or WebGPU. As such, changes to the API of the WebGPU classes are considered private changes, internal to the implementation of this view.
 
 ## Volume Rendering Approach
@@ -171,7 +179,6 @@ Note that none of the classes in the WebGPU directory are meant to be accessed d
 The volume renderer in WebGPU starts in the ForwardPass, which if it detects volumes invokes a volume pass. The volume pass requests bounding boxes from all volumes and renders them, along with the opaque polygonal depth buffer to create min and max ray depth textures. These textures are bounds for each fragment's ray casting. Then the VolumePassFSQ gets invoked with these two bounding textures to actually perfom the ray casting of the voxels between the min and max.
 
 The ray casting is done for all volumes at once and the VolumePassFSQ class is where all the complexity and work is done.
-
 
 ## Zbuffer implementation and calculations
 
@@ -187,7 +194,7 @@ within the fragment shader you can get the z value (in view coordinates)
 
 ```zVC = position.z * (far - near) - far```
 
-The depth valus are linear in depth.
+The depth values are linear in depth.
 
 ### Perspective
 
