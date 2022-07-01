@@ -13,6 +13,7 @@ import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttribute
 import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
 import baseline from './testSphere.png';
+import baseline2 from './testSphere2.png';
 
 test('Test SphereMapper', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -107,7 +108,7 @@ test('Test SphereMapper', (t) => {
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,
-      [baseline],
+      [baseline, baseline2],
       'Rendering/Core/SphereMapper',
       t,
       1,

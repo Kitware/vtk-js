@@ -10,6 +10,7 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import baseline from './testVectorComponent.png';
+import baseline2 from './testVectorComponent2.png';
 
 const { GetArray } = vtkMapper;
 
@@ -62,7 +63,7 @@ test('Test VectorComponent', (t) => {
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,
-      [baseline],
+      [baseline, baseline2],
       'Rendering/Core/Mapper/testVectorComponent.js',
       t,
       5,

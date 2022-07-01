@@ -26,7 +26,7 @@ fn main(
 {
   var output : vertexOutput;
 
-  var vertexVC: vec4<f32> = rendererUBO.SCVCMatrix * mapperUBO.BCSCMatrix * vec4<f32>(vertexBC.x, vertexBC.y, vertexBC.z, 1.0);
+  var vertexVC: vec4<f32> = rendererUBO.SCVCMatrix * mapperUBO.BCSCMatrix * vec4<f32>(vertexBC.xyz, 1.0);
 
   //VTK::Color::Impl
 
@@ -50,7 +50,7 @@ fn main(
     vertexVC = vec4<f32>(tmp2, vertexVC.zw);
     }
 
-  output.vertexVC = vertexVC.xyz;
+  output.vertexVC = vec4<f32>(vertexVC.xyz, 0.0);
 
   //VTK::Position::Impl
 
@@ -83,7 +83,7 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
 
   publicAPI.replaceShaderNormal = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addOutput('vec3<f32>', 'vertexVC');
+    if (!vDesc.hasOutput('vertexVC')) vDesc.addOutput('vec4<f32>', 'vertexVC');
     vDesc.addOutput('vec3<f32>', 'centerVC');
     vDesc.addOutput('f32', 'radiusVC');
 

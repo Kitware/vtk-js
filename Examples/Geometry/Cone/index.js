@@ -50,6 +50,7 @@ const coneSource = vtkConeSource.newInstance({
   center: [0, 500000, 0],
   height: 1.0,
 });
+
 const filter = vtkCalculator.newInstance();
 
 filter.setInputConnection(coneSource.getOutputPort());

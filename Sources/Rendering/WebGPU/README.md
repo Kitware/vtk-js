@@ -8,7 +8,7 @@ backend with a minimum or no user code changes.
 
 # Status
 
-WebGPU is still being finalized and implemented on majpr browsers so
+WebGPU is still being finalized and implemented on major browsers so
 everything is subject to change. This implementation has been tested on
 Chrome Canary when WebGPU is enabled. You have to set --enable-unsafe-webgpu
 there is a test target named test:webgpu that will specificly try to run
@@ -19,7 +19,7 @@ break daily as they change and interate on the API.
 
 Lots of capabilities are currently not implemented.
 
-From an application point of view replacing your OpenGLRenderWindow with
+From an application point of view, replacing your OpenGLRenderWindow with
 instead calling renderWindow.newAPISpecificView('WebGPU') should be all that
 is needed.
 
@@ -27,7 +27,6 @@ is needed.
 - add device.lost handler
 - create background class to encapsulate, background clear,
   gradient background, texture background, skybox etc
-- PBR lighting to replace the simple model currently coded
 - cropping planes for polydata, image, volume mappers
 - add rgb texture support to volume renderer
 - add lighting to volume rendering
@@ -37,6 +36,7 @@ Waiting on fixes/dev in WebGPU spec
 - more cross platform testing and bug fixing, firefox and safari
 
 # Recently ToDone
+- PBR lighting to replace the simple model currently coded
 - add coordinate systems to Prop
 - update scalarBar actor to not regenerate arrays every camera movement
 - add actor2D
@@ -220,3 +220,19 @@ You can offset geometry by a factor cF ranging from 0.0 to 1.0 using the followi
 ```z' = 1.0 - (1.0 - cF)*(1.0 - z)```
 ```z' = z + cF - cF*z```
 ```z' = (1.0 - cF)*z + cF```
+
+### Physically Based Rendering
+
+The physically based rendering implementation is relatively basic in its current state. It uses a metallic roughness workflow,
+supporting diffuse, roughness, metallic, normal, emission (ambient occlusion is yet to be supported since there is no ambient
+lighting). The specular component is computed with the Cook-Torrance BRDF which utilizes the Trowbridge-Reitz GGX normal distribution, 
+Shlick fresnel approximation, and Smith's method with Schlick GGX. The diffuse is computed using Yasuhiro Fujii's improvement on the
+Oren–Nayar reflectance model. As of right now, there are a few limitations to take note of:
+
+- Lacking support for anisotropic materials
+
+- For high metallic values, physical accuracy worsens
+
+- Normal maps are applied with an approximation of tangent values, causing them to be off at high strengths
+
+- For certain meshes (depending on the normals and topology), dark zones can appear around the edges

@@ -14,6 +14,7 @@ import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttribute
 import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
 import baseline from './testGlyph3DMapper.png';
+import baseline2 from './testGlyph3DMapper2.png';
 
 test('Test vtkGlyph3DMapper Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -108,7 +109,7 @@ test('Test vtkGlyph3DMapper Rendering', (t) => {
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,
-      [baseline],
+      [baseline, baseline2],
       'Rendering/Core/Glyph3DMapper/testGlyph3DMapper',
       t,
       1.0,

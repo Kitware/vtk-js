@@ -9,6 +9,7 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
 import baseline from './testRotate.png';
+import baseline2 from './testRotate2.png';
 
 test('Test Actor', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -57,7 +58,7 @@ test('Test Actor', (t) => {
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,
-      [baseline],
+      [baseline, baseline2],
       'Rendering/Core/Actor',
       t,
       1,
