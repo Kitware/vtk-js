@@ -333,7 +333,8 @@ export default function widgetBehavior(publicAPI, model) {
         );
       const displayPlaneNormal = vtkMath.subtract(
         displayPlaneNormalPoint,
-        displayPlaneOrigin
+        displayPlaneOrigin,
+        []
       );
 
       // Project view plane into bounding box
