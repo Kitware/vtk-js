@@ -35,7 +35,7 @@ USER_HOME = os.path.expanduser('~')
 ROOT_OUTPUT_DIRECTORY = EXPORT_DIRECTORY.replace('${USER_HOME}', USER_HOME)
 ROOT_OUTPUT_DIRECTORY = os.path.normpath(ROOT_OUTPUT_DIRECTORY)
 
-arrayTypesMapping = '  bBhHiIlLfdL' # last one is idtype
+arrayTypesMapping = '  bBhHiIlLfdLs'  # last ones are idtype and string
 
 jsMapping = {
     'b': 'Int8Array',
@@ -47,7 +47,8 @@ jsMapping = {
     'l': 'Int32Array',
     'L': 'Uint32Array',
     'f': 'Float32Array',
-    'd': 'Float64Array'
+    'd': 'Float64Array',
+    's': 'string',
 }
 
 writerMapping = {}
@@ -97,6 +98,11 @@ def dumpDataArray(datasetDir, dataDir, array, root = {}, compress = True):
     for i in range(arraySize):
       newArray.SetValue(i, -1 if array.GetValue(i) < 0 else array.GetValue(i))
     pBuffer = memoryview(newArray)
+  elif array.GetDataType() == 13:
+    # vtkStringArray - write as utf-8 encoded string that contains a json array with the strings
+    arraySize = array.GetNumberOfTuples() * array.GetNumberOfComponents()
+    newArray = json.dumps([array.GetValue(v) for v in range(arraySize)])
+    pBuffer = memoryview(newArray.encode('utf-8'))
   else:
     pBuffer = memoryview(array)
 
@@ -117,12 +123,14 @@ def dumpDataArray(datasetDir, dataDir, array, root = {}, compress = True):
   root['numberOfComponents'] = array.GetNumberOfComponents()
   root['size'] = array.GetNumberOfComponents() * array.GetNumberOfTuples()
   root['ranges'] = []
-  if root['numberOfComponents'] > 1:
-    for i in range(root['numberOfComponents']):
-      root['ranges'].append(getRangeInfo(array, i))
-    root['ranges'].append(getRangeInfo(array, -1))
-  else:
-    root['ranges'].append(getRangeInfo(array, 0))
+
+  if array.GetDataType() != 13:  # ranges do not make sense for vtkStringArray
+    if root['numberOfComponents'] > 1:
+      for i in range(root['numberOfComponents']):
+        root['ranges'].append(getRangeInfo(array, i))
+      root['ranges'].append(getRangeInfo(array, -1))
+    else:
+      root['ranges'].append(getRangeInfo(array, 0))
 
   return root
 
@@ -200,7 +208,7 @@ def dumpAllArrays(datasetDir, dataDir, dataset, root = {}, compress = True):
   pd = dataset.GetPointData()
   pd_size = pd.GetNumberOfArrays()
   for i in range(pd_size):
-    array = pd.GetArray(i)
+    array = pd.GetAbstractArray(i)
     if array:
       dumpedArray = dumpDataArray(datasetDir, dataDir, array, {}, compress)
       root['pointData']['activeScalars'] = 0
@@ -210,7 +218,7 @@ def dumpAllArrays(datasetDir, dataDir, dataset, root = {}, compress = True):
   cd = dataset.GetCellData()
   cd_size = cd.GetNumberOfArrays()
   for i in range(cd_size):
-    array = cd.GetArray(i)
+    array = cd.GetAbstractArray(i)
     if array:
       dumpedArray = dumpDataArray(datasetDir, dataDir, array, {}, compress)
       root['cellData']['activeScalars'] = 0
