@@ -450,7 +450,7 @@ for rIdx in range(renderers.GetNumberOfItems()):
         dataArray = None
 
         if dsAttrs:
-            dataArray = dsAttrs.GetArray(colorArrayName)
+            dataArray = dsAttrs.GetAbstractArray(colorArrayName)
 
         if dataArray:
           # component = -1 => let specific instance get scalar from vector before mapping
