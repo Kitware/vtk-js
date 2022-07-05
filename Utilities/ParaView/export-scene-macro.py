@@ -25,11 +25,11 @@ from paraview import simple
 from paraview.vtk import *
 
 try:
-  from vtk.vtkFiltersGeometryPython import vtkCompositeDataGeometryFilter
-  from vtk.vtkCommonCorePython import vtkUnsignedCharArray
+  from vtk.vtkFiltersGeometry import vtkCompositeDataGeometryFilter
+  from vtk.vtkCommonCore import vtkUnsignedCharArray
 except:
-  from vtkFiltersGeometryPython import vtkCompositeDataGeometryFilter
-  from vtkCommonCorePython import vtkUnsignedCharArray
+  from vtkFiltersGeometry import vtkCompositeDataGeometryFilter
+  from vtkCommonCore import vtkUnsignedCharArray
 
 USER_HOME = os.path.expanduser('~')
 ROOT_OUTPUT_DIRECTORY = EXPORT_DIRECTORY.replace('${USER_HOME}', USER_HOME)
@@ -96,9 +96,9 @@ def dumpDataArray(datasetDir, dataDir, array, root = {}, compress = True):
     newArray.SetNumberOfTuples(arraySize)
     for i in range(arraySize):
       newArray.SetValue(i, -1 if array.GetValue(i) < 0 else array.GetValue(i))
-    pBuffer = buffer(newArray)
+    pBuffer = memoryview(newArray)
   else:
-    pBuffer = buffer(array)
+    pBuffer = memoryview(array)
 
   pMd5 = hashlib.md5(pBuffer).hexdigest()
   pPath = os.path.join(dataDir, pMd5)
@@ -241,7 +241,7 @@ def dumpAllArrays(datasetDir, dataDir, dataset, root = {}, compress = True):
 
   # Cell data
   cd = dataset.GetCellData()
-  cd_size = pd.GetNumberOfArrays()
+  cd_size = cd.GetNumberOfArrays()
   for i in range(cd_size):
     array = cd.GetArray(i)
     if array:
@@ -430,6 +430,7 @@ for rIdx in range(renderers.GetNumberOfItems()):
     renProp = renProps.GetItemAsObject(rpIdx)
     if not renProp.GetVisibility():
       continue
+
     if hasattr(renProp, 'GetMapper'):
       mapper = renProp.GetMapper()
       dataObject = mapper.GetInputDataObject(0, 0);
