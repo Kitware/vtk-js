@@ -19,6 +19,7 @@ FILENAME_EXTENSION = '.vtkjs'
 
 import sys, os, re, time, errno, json, math, gzip, shutil, argparse, hashlib
 
+from urllib.parse import quote
 import zipfile
 
 from paraview import simple
@@ -295,7 +296,7 @@ writerMapping['vtkImageData'] = dumpImageData
 # -----------------------------------------------------------------------------
 
 def writeDataSet(filePath, dataset, outputDir, colorArrayInfo, newDSName = None, compress = True):
-  fileName = newDSName if newDSName else os.path.basename(filePath)
+  fileName = quote(newDSName if newDSName else os.path.basename(filePath))
   datasetDir = os.path.join(outputDir, fileName)
   dataDir = os.path.join(datasetDir, 'data')
 
