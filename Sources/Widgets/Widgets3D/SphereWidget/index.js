@@ -13,7 +13,6 @@ function vtkSphereWidget(publicAPI, model) {
 
   const superClass = { ...publicAPI };
 
-  model.behavior = widgetBehavior;
   model.methodsToLink = ['scaleInPixels'];
 
   publicAPI.getRepresentationsForViewType = (viewType) => [
@@ -54,15 +53,20 @@ function vtkSphereWidget(publicAPI, model) {
   // initialization
   // --------------------------------------------------------------------------
 
-  model.widgetState = stateGenerator();
   publicAPI.setManipulator(
     model.manipulator ||
       vtkPlanePointManipulator.newInstance({ useCameraNormal: true })
   );
 }
 
+const defaultValues = (initialValues) => ({
+  behavior: widgetBehavior,
+  widgetState: stateGenerator(),
+  ...initialValues,
+});
+
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, {}, initialValues);
+  Object.assign(model, defaultValues(initialValues));
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, ['manipulator', 'widgetState']);
   vtkSphereWidget(publicAPI, model);

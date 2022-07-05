@@ -28,8 +28,6 @@ function vtkInteractiveOrientationWidget(publicAPI, model) {
     'glyphResolution',
     'defaultScale',
   ];
-  model.behavior = widgetBehavior;
-  model.widgetState = generateState();
 
   publicAPI.setBounds = (bounds) => {
     const handles = model.widgetState.getStatesWithLabel('handles');
@@ -129,12 +127,16 @@ function vtkInteractiveOrientationWidget(publicAPI, model) {
 
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+const defaultValues = (initialValues) => ({
+  behavior: widgetBehavior,
+  widgetState: generateState(),
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
 

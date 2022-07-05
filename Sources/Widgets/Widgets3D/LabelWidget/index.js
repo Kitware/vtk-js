@@ -28,9 +28,6 @@ function vtkLabelWidget(publicAPI, model) {
     'scaleInPixels',
   ];
 
-  model.behavior = widgetBehavior;
-  model.widgetState = stateGenerator();
-
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
       case ViewTypes.DEFAULT:
@@ -86,6 +83,8 @@ function vtkLabelWidget(publicAPI, model) {
 
 function defaultValues(initialValues) {
   return {
+    behavior: widgetBehavior,
+    widgetState: stateGenerator(),
     ...initialValues,
   };
 }

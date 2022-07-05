@@ -29,8 +29,6 @@ function vtkSplineWidget(publicAPI, model) {
     'errorBorderColor',
     'scaleInPixels',
   ];
-  model.behavior = widgetBehavior;
-  model.widgetState = stateGenerator();
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
@@ -75,7 +73,7 @@ function vtkSplineWidget(publicAPI, model) {
 
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+const defaultValues = (initialValues) => ({
   // manipulator: null,
   freehandMinDistance: 0.1,
   allowFreehand: true,
@@ -83,12 +81,15 @@ const DEFAULT_VALUES = {
   defaultCursor: 'pointer',
   handleSizeInPixels: 10, // propagates to SplineContextRepresentation
   resetAfterPointPlacement: false,
-};
+  behavior: widgetBehavior,
+  widgetState: stateGenerator(),
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, [

@@ -33,7 +33,6 @@ function vtkRectangleWidget(publicAPI, model) {
 
   // --- Widget Requirement ---------------------------------------------------
 
-  model.behavior = widgetBehavior;
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
       case ViewTypes.DEFAULT:
@@ -65,7 +64,6 @@ function vtkRectangleWidget(publicAPI, model) {
   // initialization
   // --------------------------------------------------------------------------
 
-  model.widgetState = stateGenerator();
   model.manipulator = vtkPlanePointManipulator.newInstance({
     useCameraNormal: true,
   });
@@ -75,6 +73,8 @@ function vtkRectangleWidget(publicAPI, model) {
 
 function defaultValues(initialValues) {
   return {
+    behavior: widgetBehavior,
+    widgetState: stateGenerator(),
     modifierBehavior: {
       None: {
         [BehaviorCategory.PLACEMENT]:

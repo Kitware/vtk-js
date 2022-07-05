@@ -22,9 +22,6 @@ function vtkLineWidget(publicAPI, model) {
 
   const superClass = { ...publicAPI };
 
-  model.widgetState = stateGenerator();
-  model.behavior = widgetBehavior;
-
   // --- Widget Requirement ---------------------------------------------------
 
   model.methodsToLink = [
@@ -188,14 +185,17 @@ function vtkLineWidget(publicAPI, model) {
 
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+const defaultValues = (initialValues) => ({
   // manipulator: null,
-};
+  behavior: widgetBehavior,
+  widgetState: stateGenerator(),
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, ['manipulator']);

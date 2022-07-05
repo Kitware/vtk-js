@@ -29,8 +29,6 @@ function vtkAngleWidget(publicAPI, model) {
     'defaultScale',
     'scaleInPixels',
   ];
-  model.behavior = widgetBehavior;
-  model.widgetState = stateGenerator();
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
@@ -102,14 +100,17 @@ function vtkAngleWidget(publicAPI, model) {
 
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+const defaultValues = (initialValues) => ({
   // manipulator: null,
-};
+  behavior: widgetBehavior,
+  widgetState: stateGenerator(),
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, ['manipulator']);

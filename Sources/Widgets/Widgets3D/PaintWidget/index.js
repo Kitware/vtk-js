@@ -19,8 +19,6 @@ function vtkPaintWidget(publicAPI, model) {
   const superClass = { ...publicAPI };
 
   // --- Widget Requirement ---------------------------------------------------
-  model.behavior = widgetBehavior;
-  model.widgetState = stateGenerator(model.radius);
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
@@ -67,17 +65,20 @@ function vtkPaintWidget(publicAPI, model) {
 
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+const defaultValues = (initialValues) => ({
   // manipulator: null,
   radius: 1,
   painting: false,
   color: [1],
-};
+  behavior: widgetBehavior,
+  widgetState: stateGenerator(initialValues?.radius ?? 1),
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
 
