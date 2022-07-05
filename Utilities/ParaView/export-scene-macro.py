@@ -129,39 +129,6 @@ def dumpDataArray(datasetDir, dataDir, array, root = {}, compress = True):
 # -----------------------------------------------------------------------------
 
 def dumpColorArray(datasetDir, dataDir, colorArrayInfo, root = {}, compress = True):
-  root['pointData'] = {
-    'vtkClass': 'vtkDataSetAttributes',
-    "activeGlobalIds": -1,
-    "activeNormals": -1,
-    "activePedigreeIds": -1,
-    "activeScalars": -1,
-    "activeTCoords": -1,
-    "activeTensors": -1,
-    "activeVectors": -1,
-    "arrays": []
-  }
-  root['cellData'] = {
-    'vtkClass': 'vtkDataSetAttributes',
-    "activeGlobalIds": -1,
-    "activeNormals": -1,
-    "activePedigreeIds": -1,
-    "activeScalars": -1,
-    "activeTCoords": -1,
-    "activeTensors": -1,
-    "activeVectors": -1,
-    "arrays": []
-  }
-  root['fieldData'] = {
-    'vtkClass': 'vtkDataSetAttributes',
-    "activeGlobalIds": -1,
-    "activeNormals": -1,
-    "activePedigreeIds": -1,
-    "activeScalars": -1,
-    "activeTCoords": -1,
-    "activeTensors": -1,
-    "activeVectors": -1,
-    "arrays": []
-  }
 
   colorArray = colorArrayInfo['colorArray']
   location = colorArrayInfo['location']
@@ -288,6 +255,8 @@ def dumpPolyData(datasetDir, dataDir, dataset, colorArrayInfo, root = {}, compre
     _strips = dumpDataArray(datasetDir, dataDir, dataset.GetStrips().GetData(), {}, compress)
     _cells['strips'] = _strips
     _cells['strips']['vtkClass'] = 'vtkCellArray'
+
+  dumpAllArrays(datasetDir, dataDir, dataset, container, compress)
 
   dumpColorArray(datasetDir, dataDir, colorArrayInfo, container, compress)
 
