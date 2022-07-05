@@ -452,7 +452,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleMouseMove = (callData) => {
     const manipulator =
-      model.activeState?.getManipulator?.() ?? model.manipulator;
+      model.activeState?.getManipulator?.() || model.manipulator;
     if (
       !manipulator ||
       !model.activeState ||
@@ -511,7 +511,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleLeftButtonPress = (e) => {
     const manipulator =
-      model.activeState?.getManipulator?.() ?? model.manipulator;
+      model.activeState?.getManipulator?.() || model.manipulator;
     if (
       !model.activeState ||
       !model.activeState.getActive() ||

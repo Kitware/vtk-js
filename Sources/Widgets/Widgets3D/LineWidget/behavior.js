@@ -57,7 +57,7 @@ export default function widgetBehavior(publicAPI, model) {
   function updateCursor(callData) {
     model._isDragging = true;
     const manipulator =
-      model.activeState?.getManipulator?.() ?? model.manipulator;
+      model.activeState?.getManipulator?.() || model.manipulator;
     model.previousPosition = [
       ...manipulator.handleEvent(callData, model._apiSpecificRenderWindow),
     ];
@@ -264,7 +264,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleMouseMove = (callData) => {
     const manipulator =
-      model.activeState?.getManipulator?.() ?? model.manipulator;
+      model.activeState?.getManipulator?.() || model.manipulator;
     if (
       manipulator &&
       model.pickable &&

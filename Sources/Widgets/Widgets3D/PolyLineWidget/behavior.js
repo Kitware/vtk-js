@@ -21,7 +21,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   function updateMoveHandle(callData) {
     const manipulator =
-      model.activeState?.getManipulator?.() ?? model.manipulator;
+      model.activeState?.getManipulator?.() || model.manipulator;
     if (!manipulator) {
       return macro.VOID;
     }
@@ -86,7 +86,7 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
     const manipulator =
-      model.activeState?.getManipulator?.() ?? model.manipulator;
+      model.activeState?.getManipulator?.() || model.manipulator;
     if (
       model.activeState === model.widgetState.getMoveHandle() &&
       manipulator

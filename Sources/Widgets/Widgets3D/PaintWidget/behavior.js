@@ -31,7 +31,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleEvent = (callData) => {
     const manipulator =
-      model.activeState?.getManipulator?.() ?? model.manipulator;
+      model.activeState?.getManipulator?.() || model.manipulator;
     if (manipulator && model.activeState && model.activeState.getActive()) {
       const normal = model._camera.getDirectionOfProjection();
       const up = model._camera.getViewUp();

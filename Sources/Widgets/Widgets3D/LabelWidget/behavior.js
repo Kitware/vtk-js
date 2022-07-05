@@ -49,7 +49,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
 
     const manipulator =
-      model.activeState?.getManipulator?.() ?? model.manipulator;
+      model.activeState?.getManipulator?.() || model.manipulator;
     if (
       model.activeState === model.widgetState.getMoveHandle() &&
       manipulator
@@ -113,7 +113,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleMouseMove = (callData) => {
     const manipulator =
-      model.activeState?.getManipulator?.() ?? model.manipulator;
+      model.activeState?.getManipulator?.() || model.manipulator;
     if (
       manipulator &&
       model.pickable &&

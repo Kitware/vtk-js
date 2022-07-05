@@ -57,7 +57,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   function currentWorldCoords(e) {
     const manipulator =
-      model.activeState?.getManipulator?.() ?? model.manipulator;
+      model.activeState?.getManipulator?.() || model.manipulator;
     return manipulator.handleEvent(e, model._apiSpecificRenderWindow);
   }
 

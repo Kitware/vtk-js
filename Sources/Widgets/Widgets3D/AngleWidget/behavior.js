@@ -42,7 +42,7 @@ export default function widgetBehavior(publicAPI, model) {
     picker.initializePickList();
     picker.setPickList(publicAPI.getNestedProps());
     const manipulator =
-      model.activeState?.getManipulator?.() ?? model.manipulator;
+      model.activeState?.getManipulator?.() || model.manipulator;
     if (
       model.activeState === model.widgetState.getMoveHandle() &&
       model.widgetState.getHandleList().length < MAX_POINTS &&
@@ -76,7 +76,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleMouseMove = (callData) => {
     const manipulator =
-      model.activeState?.getManipulator?.() ?? model.manipulator;
+      model.activeState?.getManipulator?.() || model.manipulator;
     if (
       manipulator &&
       model.pickable &&
