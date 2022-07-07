@@ -127,6 +127,8 @@ function vtkWebGPUActor2D(publicAPI, model) {
           -center[1],
           -center[2],
         ]);
+      } else {
+        mat4.copy(model.keyMatrices.bcsc, model.keyMatrices.bcwc);
       }
       model.keyMatricesTime.modified();
     }

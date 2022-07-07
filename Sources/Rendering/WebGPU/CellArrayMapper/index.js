@@ -10,6 +10,7 @@ import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManage
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 import vtkWebGPUSimpleMapper from 'vtk.js/Sources/Rendering/WebGPU/SimpleMapper';
+import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 
 const { BufferUsage, PrimitiveTypes } = vtkWebGPUBufferManager;
 const { Representation } = vtkProperty;
@@ -408,8 +409,12 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     if (!vertexInput.hasAttribute('tcoord')) return;
 
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addOutput('vec2<f32>', 'tcoordVS');
+    const tcoords = vertexInput.getBuffer('tcoord');
+    const numComp = vtkWebGPUTypes.getNumberOfComponentsFromBufferFormat(
+      tcoords.getArrayInformation()[0].format
+    );
     let code = vDesc.getCode();
+    vDesc.addOutput(`vec${numComp}<f32>`, 'tcoordVS');
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Impl', [
       '  output.tcoordVS = tcoord;',
     ]).result;
@@ -420,10 +425,17 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
     // todo handle multiple textures? Blend multiply ?
     if (model.textures.length) {
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Impl', [
-        'var tcolor: vec4<f32> = textureSample(Texture0, Texture0Sampler, input.tcoordVS);',
-        'computedColor = computedColor*tcolor;',
-      ]).result;
+      const tdims = model.textures[0].getDimensions();
+      if (tdims === numComp) {
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Impl', [
+          'var tcolor: vec4<f32> = textureSample(Texture0, Texture0Sampler, input.tcoordVS);',
+          'computedColor = computedColor*tcolor;',
+        ]).result;
+      } else {
+        console.log(
+          `mismatched texture coord dimension ${numComp} with texture map dimension ${tdims}`
+        );
+      }
     }
     fDesc.setCode(code);
   };
@@ -558,6 +570,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
     // normals, only used for surface rendering
     const usage = publicAPI.getUsage(representation, primType);
+    model._usesCellNormals = false;
     if (
       !model.is2D && // no lighting on Property2D
       (usage === BufferUsage.Triangles || usage === BufferUsage.Strips)
@@ -577,6 +590,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         const buff = device.getBufferManager().getBuffer(buffRequest);
         vertexInput.addBuffer(buff, ['normalMC']);
       } else if (primType === PrimitiveTypes.Triangles) {
+        model._usesCellNormals = true;
         buffRequest.hash = `PFN${points.getMTime()}I${indexBuffer.getMTime()}snorm8x4`;
         buffRequest.dataArray = points;
         buffRequest.cells = cells;
@@ -739,11 +753,19 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         pipelineHash += `c`;
       }
       if (model.vertexInput.hasAttribute(`tcoord`)) {
-        pipelineHash += `t`;
+        const tcoords = model.vertexInput.getBuffer('tcoord');
+        const numComp = vtkWebGPUTypes.getNumberOfComponentsFromBufferFormat(
+          tcoords.getArrayInformation()[0].format
+        );
+        pipelineHash += `t${numComp}`;
       }
       if (model.textures.length) {
         pipelineHash += `tx${model.textures.length}`;
       }
+    }
+
+    if (model._usesCellNormals) {
+      pipelineHash += `cn`;
     }
 
     if (model.SSBO) {
