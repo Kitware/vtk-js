@@ -53,7 +53,7 @@ function _getFormatForDataArray(dataArray) {
       break;
     case 3:
       // only 32bit types support x3
-      if (!format.contains('32')) {
+      if (!format.includes('32')) {
         vtkErrorMacro(`unsupported x3 type for ${format}`);
       }
       format += 'x3';
