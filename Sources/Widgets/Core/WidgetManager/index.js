@@ -253,22 +253,34 @@ function vtkWidgetManager(publicAPI, model) {
   // API public
   // --------------------------------------------------------------------------
 
-  async function updateSelection({ position }) {
-    model._selectionInProgress = true;
+  async function updateSelection(callData, fromTouchEvent, callID) {
+    const { position } = callData;
     const { requestCount, selectedState, representation, widget } =
       await publicAPI.getSelectedDataForXY(position.x, position.y);
-    model._selectionInProgress = false;
 
-    if (requestCount) {
-      // Call activate only once
+    if (requestCount || callID !== model._currentUpdateSelectionCallID) {
+      // requestCount > 0: Call activate only once
+      // callID check: drop old calls
       return;
+    }
+
+    function activateHandle(w) {
+      if (fromTouchEvent) {
+        // release any previous left button interaction
+        model._interactor.invokeLeftButtonRelease(callData);
+      }
+      w.activateHandle({ selectedState, representation });
+      if (fromTouchEvent) {
+        // re-trigger the left button press to pick the now-active widget
+        model._interactor.invokeLeftButtonPress(callData);
+      }
     }
 
     // Default cursor behavior
     model._apiSpecificRenderWindow.setCursor(widget ? 'pointer' : 'default');
 
     if (model.widgetInFocus === widget && widget.hasFocus()) {
-      widget.activateHandle({ selectedState, representation });
+      activateHandle(widget);
       // Ken FIXME
       model._interactor.render();
       model._interactor.render();
@@ -276,7 +288,7 @@ function vtkWidgetManager(publicAPI, model) {
       for (let i = 0; i < model.widgets.length; i++) {
         const w = model.widgets[i];
         if (w === widget && w.getNestedPickable()) {
-          w.activateHandle({ selectedState, representation });
+          activateHandle(w);
           model.activeWidget = w;
         } else {
           w.deactivateAllHandles();
@@ -288,38 +300,12 @@ function vtkWidgetManager(publicAPI, model) {
     }
   }
 
-  const handleEvent = (eventName) => {
-    let guard = false;
-    return (callData) => {
-      if (
-        guard ||
-        model.isAnimating ||
-        !model.pickingEnabled ||
-        model._selectionInProgress
-      ) {
-        return macro.VOID;
-      }
-
-      const updatePromise = updateSelection(callData);
-      macro.measurePromiseExecution(updatePromise, (elapsed) => {
-        // 100ms is deemed fast enough. Anything higher can degrade usability.
-        if (elapsed > 100) {
-          macro.vtkWarningMacro(
-            `vtkWidgetManager updateSelection() took ${elapsed}ms on ${eventName}`
-          );
-        }
-      });
-
-      updatePromise.then(() => {
-        if (model._interactor) {
-          // re-trigger the event, ignoring our own handler
-          guard = true;
-          model._interactor[`invoke${eventName}`](callData);
-          guard = false;
-        }
-      });
-      return macro.EVENT_ABORT;
-    };
+  const handleEvent = async (callData, fromTouchEvent = false) => {
+    if (!model.isAnimating && model.pickingEnabled) {
+      const callID = Symbol('UpdateSelection');
+      model._currentUpdateSelectionCallID = callID;
+      await updateSelection(callData, fromTouchEvent, callID);
+    }
   };
 
   function updateWidgetForRender(w) {
@@ -414,13 +400,24 @@ function vtkWidgetManager(publicAPI, model) {
       })
     );
 
-    subscriptions.push(model._interactor.onMouseMove(handleEvent('MouseMove')));
     subscriptions.push(
-      model._interactor.onLeftButtonPress(
-        handleEvent('LeftButtonPress'),
-        // stay after widgets, but before default of 0
-        WIDGET_PRIORITY / 2
-      )
+      model._interactor.onMouseMove((eventData) => {
+        handleEvent(eventData);
+        return macro.VOID;
+      })
+    );
+
+    // must be handled after widgets, hence the given priority.
+    subscriptions.push(
+      model._interactor.onLeftButtonPress((eventData) => {
+        const { deviceType } = eventData;
+        const touchEvent = deviceType === 'touch' || deviceType === 'pen';
+        // only try selection if the left button press is from touch.
+        if (touchEvent) {
+          handleEvent(eventData, touchEvent);
+        }
+        return macro.VOID;
+      }, WIDGET_PRIORITY / 2)
     );
 
     publicAPI.modified();
@@ -672,6 +669,7 @@ function vtkWidgetManager(publicAPI, model) {
 const DEFAULT_VALUES = {
   // _camera: null,
   // _selector: null,
+  // _currentUpdateSelectionCallID: null,
   viewId: null,
   widgets: [],
   renderer: null,
