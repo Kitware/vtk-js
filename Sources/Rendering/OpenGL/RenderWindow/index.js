@@ -8,6 +8,7 @@ import vtkOpenGLTextureUnitManager from 'vtk.js/Sources/Rendering/OpenGL/Texture
 import vtkOpenGLViewNodeFactory from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderWindowViewNode';
+import { createContextProxyHandler } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/ContextProxy';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
 
@@ -89,6 +90,8 @@ export function popMonitorGLContextCount(cb) {
 function vtkOpenGLRenderWindow(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLRenderWindow');
+
+  const cachingContextHandler = createContextProxyHandler();
 
   publicAPI.getViewNodeFactory = () => model.myFactory;
 
@@ -284,7 +287,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         model.canvas.getContext('experimental-webgl', options);
     }
 
-    return result;
+    return new Proxy(result, cachingContextHandler);
   };
 
   // Request an XR session on the user device with WebXR,
