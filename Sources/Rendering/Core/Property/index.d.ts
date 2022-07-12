@@ -1,15 +1,27 @@
 import { vtkObject } from "../../../interfaces";
 import { RGBColor } from "../../../types";
 import { Interpolation, Representation, Shading } from "./Constants";
+import { vtkTexture } from '../../Core/Texture';
 
 export interface IPropertyInitialValues {
 	color?: RGBColor;
 	ambientColor?: RGBColor;
 	diffuseColor?: RGBColor;
 	specularColor?: RGBColor;
+	diffuseTexture?: vtkTexture;
+	metallicTexture?: vtkTexture;
+	roughnessTexture?: vtkTexture;
+	normalTexture?: vtkTexture;
+	ambientOcclusionTexture?: vtkTexture;
+	emissionTexture?: vtkTexture;
 	edgeColor?: RGBColor;
 	ambient?: number;
 	diffuse?: number;
+	metallic?: number;
+	roughness?: number;
+	normalStrength?: number;
+	emission?: number;
+	baseIOR?: number;
 	specular?: number;
 	specularPower?: number;
 	opacity?: number;
@@ -162,6 +174,36 @@ export interface vtkProperty extends vtkObject {
 	getSpecular(): number;
 
 	/**
+	 * Get the roughness coefficient.
+	 * @default 1
+	 */
+	getRoughness(): number;
+
+	/**
+	 * Get the metallic coefficient.
+	 * @default 0
+	 */
+	getMetallic(): number;
+
+	/**
+	 * Get the index of refraction.
+	 * @default 0
+	 */
+	getBaseIOR(): number;
+
+	/**
+	 * Get the strength of the normal map.
+	 * @default 1
+	 */
+	getNormalStrength(): number;
+
+	/**
+	 * Get the emission coefficient.
+	 * @default 0
+	 */
+	getEmission(): number;
+
+	/**
 	 * Get the specular surface color.
 	 * @return {RGBColor} Array of RGB color.
 	 */
@@ -177,6 +219,36 @@ export interface vtkProperty extends vtkObject {
 	 * @default 1
 	 */
 	getSpecularPower(): number;
+
+	/**
+	 * Get the diffuse texture.
+	 */
+	getDiffuseTexture(): vtkTexture;
+
+	/**
+	 * Get the metallic texture.
+	 */
+	getMetallicTexture(): vtkTexture;
+
+	/**
+	 * Get the roughness texture.
+	 */
+	getRoughnessTexture(): vtkTexture;
+
+	/**
+	 * Get the normal texture.
+	 */
+	getNormalTexture(): vtkTexture;
+
+	/**
+	 * Get the ambient occlusion texture.
+	 */
+	getAmbientOcclusionTexture(): vtkTexture;
+
+	/**
+	 * Get the emission texture.
+	 */
+	getEmissionTexture(): vtkTexture;
 
 	/**
 	 * Set the ambient lighting coefficient.
@@ -386,6 +458,18 @@ export interface vtkProperty extends vtkObject {
 	setSpecular(specular: number): boolean;
 
 	/**
+	 * Set the normal map strength.
+	 * @param {Boolean} normal 
+	 */
+	setNormalStrength(normalStrength: number): boolean;
+
+	/**
+	 * Set the ambient occlusion map strength.
+	 * @param {Boolean} emission 
+	 */
+	setEmission(emission: number): boolean;
+
+	/**
 	 * Set the specular surface color.
 	 * @param {Number} r Defines the red component (between 0 and 1)
 	 * @param {Number} g Defines the green component (between 0 and 1)
@@ -410,6 +494,42 @@ export interface vtkProperty extends vtkObject {
 	 * @param {Number} specularPower 
 	 */
 	setSpecularPower(specularPower: number): boolean;
+
+	/**
+	 * Set the diffuse texture.
+	 * @param {vtkTexture} diffuseTexture
+	 */
+	setDiffuseTexture(diffuseTexture: vtkTexture): boolean;
+
+	/**
+	 * Set the metallic texture.
+	 * @param {vtkTexture} metallicTexture
+	 */
+	setMetallicTexture(metallicTexture: vtkTexture): boolean;
+
+	/**
+	 * Set the roughness texture.
+	 * @param {vtkTexture} roughnessTexture
+	 */
+	setRoughnessTexture(roughnessTexture: vtkTexture): boolean;
+
+	/**
+	 * Set the normal texture.
+	 * @param {vtkTexture} normalTexture
+	 */
+	setNormalTexture(normalTexture: vtkTexture): boolean;
+
+	/**
+	 * Set the ambient occlusion texture.
+	 * @param {vtkTexture} ambientOcclusionTexture
+	 */
+	setAmbientOcclusionTexture(ambientOcclusionTexture: vtkTexture): boolean;
+
+	/**
+	 * Set the emission texture.
+	 * @param {vtkTexture} emissionTexture
+	 */
+	setEmissionTexture(emissionTexture: vtkTexture): boolean;
 }
 
 /**

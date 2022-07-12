@@ -1,0 +1,37 @@
+<table>
+  <h3>PBR Properties</h3>
+  <tr>
+    <td>
+      <label>Color: </label>
+      <input class='color' type='color', value='#FFFFFF'/>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <label>Roughness: </label>
+      <input class='roughness' type='range' min='0.0' max='1.0' value='1.0' step='0.01' oninput="this.nextElementSibling.value = this.value"/>
+      <output>1.00</output>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <label>Metallic: </label>
+      <input class='metallic' type='range' min='0.0' max='1.0' value='1.0' step='0.01' oninput="this.nextElementSibling.value = this.value"/>
+      <output>1.00</output>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <label>Normal Strength: </label>
+      <input class='normal' type='range' min='0.0' max='1.0' value='0.5' step='0.01' oninput="this.nextElementSibling.value = this.value"/>
+      <output>0.50</output>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <label>IOR: </label>
+      <input class='ior' type='range' min='0.0' max='3.0' value='1.33', step='0.01' oninput="this.nextElementSibling.value = this.value"/>
+      <output>1.33</output>
+    </td>
+  </tr>
+</table>

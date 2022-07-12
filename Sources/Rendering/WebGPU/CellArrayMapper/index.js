@@ -58,14 +58,220 @@ fn main(
 `;
 
 const vtkWebGPUPolyDataFS = `
+struct PBRData {
+  diffuse: vec3<f32>,
+  specular: vec3<f32>,
+}
+
+// Dot product with the max already in it
+fn mdot(a: vec3<f32>, b: vec3<f32>) -> f32 {
+  return max(0.0, dot(a, b));
+}
+
+// Lambertian diffuse model
+fn lambertDiffuse(base: vec3<f32>, N: vec3<f32>, L: vec3<f32>) -> vec3<f32> {
+  var pi: f32 = 3.14159265359; 
+  var NdotL: f32 = mdot(N, L);
+  NdotL = pow(NdotL, 1.5);
+  return (base/pi)*NdotL;
+}
+
+// Yasuhiro Fujii improvement on the Oren-Nayar model
+// https://mimosa-pudica.net/improved-oren-nayar.html
+// p is surface color, o is roughness
+fn fujiiOrenNayar(p: vec3<f32>, o: f32, N: vec3<f32>, L: vec3<f32>, V: vec3<f32>) -> vec3<f32> {
+  var invpi: f32 = 0.31830988618; // 1/pi
+
+  var o2 = o*o;
+  var NdotL: f32 = mdot(N, L);
+  NdotL = pow(NdotL, 1.5); // Less physically accurate, but hides the "seams" between lights better
+
+  var NdotV: f32 = mdot(N, V);
+  var LdotV: f32 = mdot(L, V);
+
+  var s: f32 = LdotV - NdotL*NdotV;
+  var t: f32 = mix(1, max(NdotL, NdotV), step(0, s)); // Mix with step is the equivalent of an if statement
+  var A: vec3<f32> = 0.5*(o2 / (o2 + 0.33)) + 0.17*p*(o2 / (o2 + 0.13));
+  A = invpi*(1 - A);
+  var B: f32 = 0.45*(o2 / (o2 + 0.09));
+  B = invpi*B;
+
+  return p*NdotL*(A + B*(s/t));
+}
+
+// Fresnel portion of BRDF (IOR only, simplified)
+fn schlickFresnelIOR(V: vec3<f32>, N: vec3<f32>, ior: f32, k: f32) -> f32 {
+  var NdotV: f32 = mdot(V, N);
+  // var R0: f32 = pow((ior - 1.0) / (ior + 1.0), 2); // 1.0 is about the ior of air, and it is assumed that light will be traveling through air
+  var F0: f32 = (pow((ior - 1.0), 2) + k*k) / (pow((ior + 1.0), 2) + k*k); // This takes into account the roughness, whic the other one does not
+  return F0 + (1 - F0) * pow((1-NdotV), 5); 
+}
+
+// Fresnel portion of BRDF (Color ior, better)
+fn schlickFresnelRGB(V: vec3<f32>, N: vec3<f32>, F0: vec3<f32>) -> vec3<f32> {
+  var NdotV: f32 = mdot(V, N);
+  return F0 + (1 - F0) * pow((1-NdotV), 5); 
+}
+
+// Normal portion of BRDF
+// https://learnopengl.com/PBR/Theory
+// Trowbridge-Reitz GGX functions: normal, halfway, roughness^2
+fn trGGX(N: vec3<f32>, H: vec3<f32>, a: f32) -> f32 {
+  var pi: f32 = 3.14159265359; 
+
+  var a2: f32 = a*a;
+  var NdotH = mdot(N, H);
+  var NdotH2 = NdotH*NdotH;
+  
+  var denom: f32 = NdotH2 * (a2 - 1.0) + 1.0;
+
+  return a2 / max((pi*denom*denom), 0.000001);
+}
+
+// A VERY bad approximation of anisotropy. Real anisotropic calculations require tangent and bitangent
+fn anisotrophicTrGGX(N: vec3<f32>, H: vec3<f32>, O: vec3<f32>, s: f32, a: f32) -> f32 {
+  var Op: vec3<f32> = (rendererUBO.WCVCNormals * vec4<f32>(normalize(O) * s, 0.)).xyz;
+
+  var ggx1: f32 = trGGX(N + Op*s, H, a);
+  var ggx2: f32 = trGGX(N - Op*s, H, a);
+  return (0.5 * ggx1 + 0.5 * ggx2);
+}
+
+// Geometry portion of BRDF
+fn schlickGGX(N: vec3<f32>, X: vec3<f32>, k: f32) -> f32 {
+  var NdotX = mdot(N, X);
+  return NdotX / max(0.000001, (NdotX*(1-k) + k));
+}
+
+fn smithSurfaceRoughness(N: vec3<f32>, V: vec3<f32>, L: vec3<f32>, k: f32) -> f32 {
+  var ggx1: f32 = max(0.01, schlickGGX(N, V, k)); // Prevents void zones at the cost of some accuracy
+  var ggx2: f32 = schlickGGX(N, L, k);
+  return ggx1*ggx2;
+}
+
+// BRDF Combination
+fn cookTorrance(D: f32, F: f32, G: f32, N: vec3<f32>, V: vec3<f32>, L: vec3<f32>) -> f32 {
+  var num: f32 = D*F*G;
+  var denom: f32 = 4*mdot(V, N)*mdot(L, N);
+
+  return num / max(denom, 0.000001);
+}
+
+// Different lighting calculations for different light sources
+fn calcDirectionalLight(N: vec3<f32>, V: vec3<f32>, ior: f32, roughness: f32, metallic: f32, direction: vec3<f32>, color: vec3<f32>, base: vec3<f32>) -> PBRData {  
+  var L: vec3<f32> = normalize(direction); // Light Vector
+  var H: vec3<f32> = normalize(L + V); // Halfway Vector
+
+  var alpha = roughness*roughness;
+  var k: f32 = alpha*alpha / 2;
+
+  var D: f32 = trGGX(N, H, alpha); // Distribution
+  // var F: f32 = schlickFresnelIOR(V, N, ior, k); // Fresnel
+  var G: f32 = smithSurfaceRoughness(N, V, L, k); // Geometry
+
+  var brdf: f32 = cookTorrance(D, 1, G, N, V, L); // Fresnel term is replaced with 1 because it is added later
+  var incoming: vec3<f32> = color;
+  var angle: f32 = mdot(L, N);
+  angle = pow(angle, 1.5);
+
+  var specular: vec3<f32> = brdf*incoming*angle;
+  // Oren-Nayar gives a clay-like effect when fully rough which some people may not want, so it might be better to give a separate
+  // control property for the diffuse vs specular roughness
+  var diffuse: vec3<f32> = incoming*fujiiOrenNayar(base, roughness, N, L, V); 
+  // Stores the specular and diffuse separately to allow for finer post processing
+  // Could also be done (propably more properly) with a struct
+  var out = PBRData(diffuse, specular);
+  
+  return out; // Returns angle along with color of light so the final color can be multiplied by angle as well (creates black areas)
+}
+
+// TODO: find some way to reduce the number of arguments going in here
+fn calcPointLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, roughness: f32, metallic: f32, position: vec3<f32>, color: vec3<f32>, base: vec3<f32>) -> PBRData {
+  var L: vec3<f32> = normalize(position - fragPos); // Light Vector
+  var H: vec3<f32> = normalize(L + V); // Halfway Vector
+  var dist = distance(position, fragPos);
+
+  var alpha = roughness*roughness;
+  var k: f32 = alpha*alpha / 2; // could also be pow(alpha + 1.0, 2) / 8
+
+  var D: f32 = trGGX(N, H, alpha); // Distribution
+  // var F: f32 = schlickFresnelIOR(V, N, ior, k); // Fresnel
+  var G: f32 = smithSurfaceRoughness(N, V, L, k); // Geometry
+
+  var brdf: f32 = cookTorrance(D, 1, G, N, V, L);  
+  var incoming: vec3<f32> = color * (1. / (dist*dist));
+  var angle: f32 = mdot(L, N);
+  angle = pow(angle, 1.5); // Smoothing factor makes it less accurate, but reduces ugly "seams" bewteen light sources
+
+  var specular: vec3<f32> = brdf*incoming*angle;
+  var diffuse: vec3<f32> = incoming*fujiiOrenNayar(base, roughness, N, L, V);
+
+  // Stores the specular and diffuse separately to allow for finer post processing
+  // Could also be done (propably more properly) with a struct
+  var out = PBRData(diffuse, specular);
+  
+  return out; // Returns angle along with color of light so the final color can be multiplied by angle as well (creates black areas)
+}
+
+// For a reason unknown to me, spheres dont seem to behave propperly with head-on spot lights
+fn calcSpotLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, roughness: f32, metallic: f32, position: vec3<f32>, direction: vec3<f32>, cones: vec2<f32>, color: vec3<f32>, base: vec3<f32>) -> PBRData {
+  var L: vec3<f32> = normalize(position - fragPos);
+  var H: vec3<f32> = normalize(L + V); // Halfway Vector
+  var dist = distance(position, fragPos);
+
+  var alpha = roughness*roughness;
+  var k: f32 = alpha*alpha / 2; // could also be pow(alpha + 1.0, 2) / 8
+
+  var D: f32 = trGGX(N, H, alpha); // Distribution
+  // var F: f32 = schlickFresnelIOR(V, N, ior, k); // Fresnel
+  var G: f32 = smithSurfaceRoughness(N, V, L, k); // Geometry
+
+  var brdf: f32 = cookTorrance(D, 1, G, N, V, L);  
+  
+  // Cones.x is the inner phi and cones.y is the outer phi
+  var theta: f32 = mdot(normalize(direction), L);
+  var epsilon: f32 = cones.x - cones.y;
+  var intensity: f32 = (theta - cones.y) / epsilon;
+  intensity = clamp(intensity, 0.0, 1.0);
+  intensity /= dist*dist;
+
+  var incoming: vec3<f32> = color * intensity;
+
+  var angle: f32 = mdot(L, N);
+  angle = pow(angle, 1.5); // Smoothing factor makes it less accurate, but reduces ugly "seams" bewteen light sources
+
+  var specular: vec3<f32> = brdf*incoming*angle;
+  var diffuse: vec3<f32> = incoming*fujiiOrenNayar(base, roughness, N, L, V);
+
+  // Stores the specular and diffuse separately to allow for finer post processing
+  // Could also be done (propably more properly) with a struct
+  var out = PBRData(diffuse, specular);
+  
+  return out; // Returns angle along with color of light so the final color can be multiplied by angle as well (creates black areas)
+}
+
+// Environment mapping stuff
+// Takes in a vector and converts it to an equivalent coordinate in a rectilinear texture. Should be replaced with cubemaps at some point
+fn vecToRectCoord(dir: vec3<f32>) -> vec2<f32> {
+  var tau: f32 = 6.28318530718;
+  var out: vec2<f32> = vec2<f32>(0.);
+
+  out.x = atan2(dir.z, dir.x) / tau;
+  out.x += 0.5;
+
+  out.y = (dir.y * .5) + .5;
+
+  return out;
+}
+
 //VTK::Renderer::Dec
 
 //VTK::Color::Dec
 
+//VTK::TCoord::Dec
+
 // optional surface normal declaration
 //VTK::Normal::Dec
-
-//VTK::TCoord::Dec
 
 //VTK::Select::Dec
 
@@ -83,22 +289,28 @@ fn main(
 {
   var output : fragmentOutput;
 
+  // Temporary ambient, diffuse, and opacity
   var ambientColor: vec4<f32> = mapperUBO.AmbientColor;
   var diffuseColor: vec4<f32> = mapperUBO.DiffuseColor;
   var opacity: f32 = mapperUBO.Opacity;
 
+  // This should be declared somewhere else
+  var _diffuseMap: vec4<f32> = vec4<f32>(1);
+  var _roughnessMap: vec4<f32> = vec4<f32>(1);
+  var _metallicMap: vec4<f32> = vec4<f32>(1);
+  var _normalMap: vec4<f32> = vec4<f32>(0, 0, 1, 0); // normal map was setting off the normal vector detection in fragment
+  var _ambientOcclusionMap: vec4<f32> = vec4<f32>(0);
+  var _emissionMap: vec4<f32> = vec4<f32>(0);
+
   //VTK::Color::Impl
+
+  //VTK::TCoord::Impl
 
   //VTK::Normal::Impl
 
+  var computedColor: vec4<f32> = vec4<f32>(diffuseColor.rgb, 1.);
+
   //VTK::Light::Impl
-
-  var computedColor: vec4<f32> = vec4<f32>(ambientColor.rgb * mapperUBO.AmbientIntensity
-     + diffuse * mapperUBO.DiffuseIntensity
-     + specular * mapperUBO.SpecularIntensity,
-     opacity);
-
-  //VTK::TCoord::Impl
 
   //VTK::Select::Impl
 
@@ -107,6 +319,7 @@ fn main(
   //VTK::Position::Impl
 
   //VTK::RenderEncoder::Impl
+
   return output;
 }
 `;
@@ -165,11 +378,13 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     const actor = model.WebGPUActor.getRenderable();
     const ppty = actor.getProperty();
     const utime = model.UBO.getSendTime();
+
     if (
       publicAPI.getMTime() > utime ||
       ppty.getMTime() > utime ||
       model.renderable.getMTime() > utime
     ) {
+      // Matricies
       const keyMats = model.WebGPUActor.getKeyMatrices(model.WebGPURenderer);
       model.UBO.setArray('BCWCMatrix', keyMats.bcwc);
       model.UBO.setArray('BCSCMatrix', keyMats.bcsc);
@@ -187,7 +402,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
         const aColor = ppty.getColorByReference();
         model.UBO.setValue('AmbientIntensity', 1.0);
-        model.UBO.setArray('AmbientColor', [
+        model.UBO.setArray('DiffuseColor', [
           aColor[0],
           aColor[1],
           aColor[2],
@@ -196,6 +411,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         model.UBO.setValue('DiffuseIntensity', 0.0);
         model.UBO.setValue('SpecularIntensity', 0.0);
       } else {
+        // Base Colors
         let aColor = ppty.getAmbientColorByReference();
         model.UBO.setValue('AmbientIntensity', ppty.getAmbient());
         model.UBO.setArray('AmbientColor', [
@@ -212,8 +428,17 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
           aColor[2],
           1.0,
         ]);
+        // Roughness
+        model.UBO.setValue('Roughness', ppty.getRoughness());
+        model.UBO.setValue('BaseIOR', ppty.getBaseIOR());
+        // Metallic
+        model.UBO.setValue('Metallic', ppty.getMetallic());
+        // Normal
+        model.UBO.setValue('NormalStrength', ppty.getNormalStrength());
+        // Emission
+        model.UBO.setValue('Emission', ppty.getEmission());
+        // Specular
         model.UBO.setValue('SpecularIntensity', ppty.getSpecular());
-        model.UBO.setValue('SpecularPower', ppty.getSpecularPower());
         aColor = ppty.getSpecularColorByReference();
         model.UBO.setArray('SpecularColor', [
           aColor[0],
@@ -221,7 +446,10 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
           aColor[2],
           1.0,
         ]);
-        aColor = ppty.getEdgeColorByReference();
+      }
+      // Edge and line rendering
+      const aColor = ppty.getEdgeColorByReference?.();
+      if (aColor) {
         model.UBO.setArray('EdgeColor', [aColor[0], aColor[1], aColor[2], 1.0]);
       }
       model.UBO.setValue('LineWidth', ppty.getLineWidth());
@@ -253,10 +481,12 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
     vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
+    if (!vDesc.hasOutput('vertexVC')) vDesc.addOutput('vec4<f32>', 'vertexVC');
     let code = vDesc.getCode();
     if (model.useRendererMatrix) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
         '    var pCoord: vec4<f32> = rendererUBO.SCPCMatrix*mapperUBO.BCSCMatrix*vertexBC;',
+        '    output.vertexVC = rendererUBO.SCVCMatrix * mapperUBO.BCSCMatrix * vec4<f32>(vertexBC.xyz, 1.0);',
         '//VTK::Position::Impl',
       ]).result;
       if (model.forceZValue) {
@@ -281,7 +511,6 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         ]).result;
       }
     }
-
     if (publicAPI.haveWideLines()) {
       vDesc.addBuiltinInput('u32', '@builtin(instance_index) instanceIndex');
       // widen the edge
@@ -297,7 +526,6 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         '//VTK::Position::Impl',
       ]).result;
     }
-
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
       '    output.Position = pCoord;',
     ]).result;
@@ -311,25 +539,73 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
   publicAPI.replaceShaderNormal = (hash, pipeline, vertexInput) => {
     const normalBuffer = vertexInput.getBuffer('normalMC');
+    const actor = model.WebGPUActor.getRenderable();
+
     if (normalBuffer) {
       const vDesc = pipeline.getShaderDescription('vertex');
-      vDesc.addOutput(
-        'vec3<f32>',
-        'normalVC',
-        normalBuffer.getArrayInformation()[0].interpolation
-      );
+
+      if (!vDesc.hasOutput('normalVC')) {
+        vDesc.addOutput(
+          'vec3<f32>',
+          'normalVC',
+          normalBuffer.getArrayInformation()[0].interpolation
+        );
+      }
+      if (!vDesc.hasOutput('tangentVC')) {
+        vDesc.addOutput(
+          'vec3<f32>',
+          'tangentVC',
+          normalBuffer.getArrayInformation()[0].interpolation
+        );
+      }
+      if (!vDesc.hasOutput('bitangentVC')) {
+        vDesc.addOutput(
+          'vec3<f32>',
+          'bitangentVC',
+          normalBuffer.getArrayInformation()[0].interpolation
+        );
+      }
+
       let code = vDesc.getCode();
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
         '  output.normalVC = normalize((rendererUBO.WCVCNormals * mapperUBO.MCWCNormals * normalMC).xyz);',
+        // This is just an approximation, but it happens to work extremely well
+        // It only works well for normals that are head on and not super angled though
+        // Definitely needs to be replaced
+        '  var c1: vec3<f32> = cross(output.normalVC, vec3<f32>(0, 0, 1));',
+        '  var c2: vec3<f32> = cross(output.normalVC, vec3<f32>(0, 1, 0));',
+        '  var tangent: vec3<f32> = mix(c1, c2, distance(c1, c2));',
+        '  output.tangentVC = normalize(tangent);',
+        '  output.bitangentVC = normalize(cross(output.normalVC, tangent));',
       ]).result;
+
       vDesc.setCode(code);
 
       const fDesc = pipeline.getShaderDescription('fragment');
       code = fDesc.getCode();
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
-        '  var normal: vec3<f32> = input.normalVC;',
-        '  if (!input.frontFacing) { normal = -normal; }',
-      ]).result;
+
+      if (actor.getProperty().getNormalTexture()) {
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
+          '  var normal: vec3<f32> = input.normalVC;',
+          '  if (!input.frontFacing) { normal = -normal; }',
+          '  var tangent: vec3<f32> = input.tangentVC;',
+          '  var bitangent: vec3<f32> = input.bitangentVC;',
+          '  var TCVCMatrix: mat3x3<f32> = mat3x3<f32>(',
+          '    tangent.x, bitangent.x, normal.x,',
+          '    tangent.y, bitangent.y, normal.y,',
+          '    tangent.z, bitangent.z, normal.z,',
+          '  );',
+          '  normal = TCVCMatrix * (_normalMap.xyz * 2 - 1);',
+          '  normal = mix(input.normalVC, normal, mapperUBO.NormalStrength);',
+          '  normal = normalize(normal);',
+        ]).result;
+      } else {
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
+          '  var normal: vec3<f32> = input.normalVC;',
+          '  if (!input.frontFacing) { normal = -normal; }',
+          '  normal = normalize(normal);',
+        ]).result;
+      }
       fDesc.setCode(code);
     }
   };
@@ -341,20 +617,96 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
   // we only apply lighting when there is a "var normal" declaration in the
   // fragment shader code. That is the lighting trigger.
   publicAPI.replaceShaderLight = (hash, pipeline, vertexInput) => {
+    if (hash.includes('sel')) return;
+    const vDesc = pipeline.getShaderDescription('vertex');
+    if (!vDesc.hasOutput('vertexVC')) vDesc.addOutput('vec4<f32>', 'vertexVC');
+
     const fDesc = pipeline.getShaderDescription('fragment');
     let code = fDesc.getCode();
-    if (code.includes('var normal')) {
+
+    // Code that runs if the fragment shader includes normals
+    if (
+      code.includes('var normal:') &&
+      model.useRendererMatrix &&
+      !isEdges(hash) &&
+      !model.is2D &&
+      !hash.includes('sel')
+    ) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Light::Impl', [
-        '  var df: f32  = max(0.0, normal.z);',
-        '  var sf: f32 = pow(df, mapperUBO.SpecularPower);',
-        '  var diffuse: vec3<f32> = df * diffuseColor.rgb;',
-        '  var specular: vec3<f32> = sf * mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
+        // Constants
+        '  var pi: f32 = 3.14159265359;',
+        // Vectors needed for light calculations
+        '  var fragPos: vec3<f32> = vec3<f32>(input.vertexVC.xyz);',
+        '  var V: vec3<f32> = mix(normalize(-fragPos), vec3<f32>(0, 0, 1), f32(rendererUBO.cameraParallel)); // View Vector',
+        // Values needed for light calculations
+        '  var baseColor: vec3<f32> = _diffuseMap.rgb * diffuseColor.rgb;',
+        '  var roughness: f32 = max(0.000001, mapperUBO.Roughness * _roughnessMap.r);', // Need to have a different way of sampling greyscale values aside from .r
+        '  var metallic: f32 = mapperUBO.Metallic * _metallicMap.r;',
+        '  var alpha: f32 = roughness*roughness;',
+        '  var ior: f32 = mapperUBO.BaseIOR;',
+        '  var k: f32 = alpha*alpha / 2;',
+        // Split diffuse and specular components
+        '  var diffuse: vec3<f32> = vec3<f32>(0.);',
+        '  var specular: vec3<f32> = vec3<f32>(0.);',
+        '  var emission: vec3<f32> = _emissionMap.rgb * mapperUBO.Emission;',
+        // Summing diffuse and specular components of directional lights
+        '  {',
+        '    var i: i32 = 0;',
+        '    loop {',
+        '      if !(i < rendererUBO.LightCount) { break; }',
+        '      switch (i32(rendererLightSSBO.values[i].LightData.x)) {',
+        '         // Point Light',
+        '         case 0 {',
+        '           var color: vec3<f32> = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w;',
+        '           var pos: vec3<f32> = (rendererLightSSBO.values[i].LightPos).xyz;',
+        '           var calculated: PBRData = calcPointLight(normal, V, fragPos, ior, roughness, metallic, pos, color, baseColor);',
+        '           diffuse += max(vec3<f32>(0), calculated.diffuse);',
+        '           specular += max(vec3<f32>(0), calculated.specular);',
+        '          }',
+        '         // Directional light',
+        '         case 1 {',
+        '           var dir: vec3<f32> = (rendererUBO.WCVCNormals * vec4<f32>(normalize(rendererLightSSBO.values[i].LightDir.xyz), 0.)).xyz;',
+        '           dir = normalize(dir);',
+        '           var color: vec3<f32> = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w;',
+        '           var calculated: PBRData = calcDirectionalLight(normal, V, ior, roughness, metallic, dir, color, baseColor); // diffuseColor.rgb needs to be fixed with a more dynamic diffuse color',
+        '           diffuse += max(vec3<f32>(0), calculated.diffuse);',
+        '           specular += max(vec3<f32>(0), calculated.specular);',
+        '         }',
+        '         // Spot Light',
+        '         case 2 {',
+        '           var color: vec3<f32> = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w;',
+        '           var pos: vec3<f32> = (rendererLightSSBO.values[i].LightPos).xyz;',
+        '           var dir: vec3<f32> = (rendererUBO.WCVCNormals * vec4<f32>(normalize(rendererLightSSBO.values[i].LightDir.xyz), 0.)).xyz;',
+        '           dir = normalize(dir);',
+        '           var cones: vec2<f32> = vec2<f32>(rendererLightSSBO.values[i].LightData.y, rendererLightSSBO.values[i].LightData.z);',
+        '           var calculated: PBRData = calcSpotLight(normal, V, fragPos, ior, roughness, metallic, pos, dir, cones, color, baseColor);',
+        '           diffuse += max(vec3<f32>(0), calculated.diffuse);',
+        '           specular += max(vec3<f32>(0), calculated.specular);',
+        '         }',
+        '         default { continue; }',
+        '       }',
+        '      continuing { i++; }',
+        '    }',
+        '  }',
+        // Final variables for combining specular and diffuse
+        '  var fresnel: f32 = schlickFresnelIOR(V, normal, ior, k); // Fresnel',
+        '  fresnel = min(1, fresnel);',
+        '  // This could be controlled with its own variable (that isnt base color) for better artistic control',
+        '  var fresnelMetallic: vec3<f32> = schlickFresnelRGB(V, normal, baseColor); // Fresnel for metal, takes color into account',
+        '  var kS: vec3<f32> = mix(vec3<f32>(fresnel), fresnelMetallic, metallic);',
+        '  kS = min(vec3<f32>(1), kS);',
+        '  var kD: vec3<f32> = (1.0 - kS) * (1.0 - metallic);',
+        '  var PBR: vec3<f32> = mapperUBO.DiffuseIntensity*kD*diffuse + kS*specular;',
+        '  PBR += emission;',
+        '  computedColor = vec4<f32>(PBR, mapperUBO.Opacity);',
       ]).result;
       fDesc.setCode(code);
+      // If theres no normals, just set the specular color to be flat
     } else {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Light::Impl', [
         '  var diffuse: vec3<f32> = diffuseColor.rgb;',
         '  var specular: vec3<f32> = mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
+        '  computedColor = vec4<f32>(diffuse, mapperUBO.Opacity);',
       ]).result;
       fDesc.setCode(code);
     }
@@ -365,6 +717,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
   );
 
   publicAPI.replaceShaderColor = (hash, pipeline, vertexInput) => {
+    // By default, set the colors to be flat
     if (isEdges(hash)) {
       const fDesc = pipeline.getShaderDescription('fragment');
       let code = fDesc.getCode();
@@ -376,9 +729,11 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       return;
     }
 
+    // If there's no vertex color buffer return the shader as is
     const colorBuffer = vertexInput.getBuffer('colorVI');
     if (!colorBuffer) return;
 
+    // Modifies the vertex shader to include the vertex colors and interpolation in the outputs
     const vDesc = pipeline.getShaderDescription('vertex');
     vDesc.addOutput(
       'vec4<f32>',
@@ -391,6 +746,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     ]).result;
     vDesc.setCode(code);
 
+    // Sets the fragment shader to accept the color inputs from the vertex shader
     const fDesc = pipeline.getShaderDescription('fragment');
     code = fDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
@@ -416,27 +772,82 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     let code = vDesc.getCode();
     vDesc.addOutput(`vec${numComp}<f32>`, 'tcoordVS');
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Impl', [
-      '  output.tcoordVS = tcoord;',
+      '  output.tcoordVS = tcoord;', // Ensure that UV coordinates are always between 0-1
     ]).result;
     vDesc.setCode(code);
+
+    if (model.is2D) return;
 
     const fDesc = pipeline.getShaderDescription('fragment');
     code = fDesc.getCode();
 
-    // todo handle multiple textures? Blend multiply ?
-    if (model.textures.length) {
-      const tdims = model.textures[0].getDimensions();
-      if (tdims === numComp) {
-        code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Impl', [
-          'var tcolor: vec4<f32> = textureSample(Texture0, Texture0Sampler, input.tcoordVS);',
-          'computedColor = computedColor*tcolor;',
-        ]).result;
-      } else {
-        console.log(
-          `mismatched texture coord dimension ${numComp} with texture map dimension ${tdims}`
+    const actor = model.WebGPUActor.getRenderable();
+
+    const checkDims = (texture) => {
+      if (!texture) return false;
+      const dims = texture.getDimensionality();
+      return dims === numComp;
+    };
+
+    const usedTextures = [];
+
+    if (
+      actor.getProperty().getDiffuseTexture?.()?.getImageLoaded() ||
+      actor.getTextures()[0] ||
+      model.colorTexture
+    ) {
+      if (
+        // Chained or statements here are questionable
+        checkDims(actor.getProperty().getDiffuseTexture?.()) ||
+        checkDims(actor.getTextures()[0]) ||
+        checkDims(model.colorTexture)
+      ) {
+        usedTextures.push(
+          '_diffuseMap = textureSample(DiffuseTexture, DiffuseTextureSampler, input.tcoordVS);'
         );
       }
     }
+    if (actor.getProperty().getRoughnessTexture?.()?.getImageLoaded()) {
+      if (checkDims(actor.getProperty().getRoughnessTexture())) {
+        usedTextures.push(
+          '_roughnessMap = textureSample(RoughnessTexture, RoughnessTextureSampler, input.tcoordVS);'
+        );
+      }
+    }
+    if (actor.getProperty().getMetallicTexture?.()?.getImageLoaded()) {
+      if (checkDims(actor.getProperty().getMetallicTexture())) {
+        usedTextures.push(
+          '_metallicMap = textureSample(MetallicTexture, MetallicTextureSampler, input.tcoordVS);'
+        );
+      }
+    }
+    if (actor.getProperty().getNormalTexture?.()?.getImageLoaded()) {
+      if (checkDims(actor.getProperty().getNormalTexture())) {
+        usedTextures.push(
+          '_normalMap = textureSample(NormalTexture, NormalTextureSampler, input.tcoordVS);'
+        );
+      }
+    }
+    if (actor.getProperty().getAmbientOcclusionTexture?.()?.getImageLoaded()) {
+      if (checkDims(actor.getProperty().getAmbientOcclusionTexture())) {
+        usedTextures.push(
+          '_ambientOcclusionMap = textureSample(AmbientOcclusionTexture, AmbientOcclusionTextureSampler, input.tcoordVS);'
+        );
+      }
+    }
+    if (actor.getProperty().getEmissionTexture?.()?.getImageLoaded()) {
+      if (checkDims(actor.getProperty().getEmissionTexture())) {
+        usedTextures.push(
+          '_emissionMap = textureSample(EmissionTexture, EmissionTextureSampler, input.tcoordVS);'
+        );
+      }
+    }
+
+    code = vtkWebGPUShaderCache.substitute(
+      code,
+      '//VTK::TCoord::Impl',
+      usedTextures
+    ).result;
     fDesc.setCode(code);
   };
   model.shaderReplacements.set(
@@ -506,6 +917,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     }
   };
 
+  // TODO: calculate tangents
   publicAPI.buildVertexInput = () => {
     const pd = model.currentInput;
     const cells = model.cellArray;
@@ -576,6 +988,8 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       (usage === BufferUsage.Triangles || usage === BufferUsage.Strips)
     ) {
       const normals = pd.getPointData().getNormals();
+      // https://vtk.org/doc/nightly/html/classvtkPolyDataTangents.html
+      // Need to find some way of using precomputed tangents (or computing new ones)
       const buffRequest = {
         format: 'snorm8x4',
         indexBuffer,
@@ -672,44 +1086,84 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         model.colorTexture = vtkTexture.newInstance({ label: 'polyDataColor' });
       }
       model.colorTexture.setInputData(idata);
-      newTextures.push(model.colorTexture);
+      newTextures.push(['Diffuse', model.colorTexture]);
     }
 
     // actor textures?
     const actor = model.WebGPUActor.getRenderable();
-    const textures = actor.getTextures();
+    const renderer = model.WebGPURenderer.getRenderable();
+
+    // Reusing the old code for new and old textures, just loading in from properties instead of actor.getTextures()
+    const textures = [];
+
+    // Feels like there should be a better way than individually adding all
+    if (actor.getProperty().getDiffuseTexture?.()) {
+      const pair = ['Diffuse', actor.getProperty().getDiffuseTexture()];
+      textures.push(pair);
+    }
+    if (actor.getTextures()[0]) {
+      const pair = ['Diffuse', actor.getTextures()[0]];
+      textures.push(pair);
+    }
+    if (actor.getProperty().getRoughnessTexture?.()) {
+      const pair = ['Roughness', actor.getProperty().getRoughnessTexture()];
+      textures.push(pair);
+    }
+    if (actor.getProperty().getMetallicTexture?.()) {
+      const pair = ['Metallic', actor.getProperty().getMetallicTexture()];
+      textures.push(pair);
+    }
+    if (actor.getProperty().getNormalTexture?.()) {
+      const pair = ['Normal', actor.getProperty().getNormalTexture()];
+      textures.push(pair);
+    }
+    if (actor.getProperty().getAmbientOcclusionTexture?.()) {
+      const pair = [
+        'AmbientOcclusion',
+        actor.getProperty().getAmbientOcclusionTexture(),
+      ];
+      textures.push(pair);
+    }
+    if (actor.getProperty().getEmissionTexture?.()) {
+      const pair = ['Emission', actor.getProperty().getEmissionTexture()];
+      textures.push(pair);
+    }
+    if (renderer.getBackgroundTexture?.()) {
+      const pair = ['Background', renderer.getBackgroundTexture()];
+      textures.push(pair);
+    }
+
     for (let i = 0; i < textures.length; i++) {
       if (
-        textures[i].getInputData() ||
-        textures[i].getJsImageData() ||
-        textures[i].getCanvas()
+        textures[i][1].getInputData() ||
+        textures[i][1].getJsImageData() ||
+        textures[i][1].getCanvas()
       ) {
         newTextures.push(textures[i]);
       }
-      if (textures[i].getImage() && textures[i].getImageLoaded()) {
+      if (textures[i][1].getImage() && textures[i][1].getImageLoaded()) {
         newTextures.push(textures[i]);
       }
     }
 
-    let usedCount = 0;
     for (let i = 0; i < newTextures.length; i++) {
-      const srcTexture = newTextures[i];
+      const srcTexture = newTextures[i][1];
+      const textureName = newTextures[i][0];
       const newTex = model.device
         .getTextureManager()
-        .getTextureForVTKTexture(srcTexture);
+        .getTextureForVTKTexture(srcTexture); // Generates hash
       if (newTex.getReady()) {
         // is this a new texture
         let found = false;
         for (let t = 0; t < model.textures.length; t++) {
           if (model.textures[t] === newTex) {
-            usedCount++;
             found = true;
             usedTextures[t] = true;
           }
         }
         if (!found) {
           usedTextures[model.textures.length] = true;
-          const tview = newTex.createView(`Texture${usedCount++}`);
+          const tview = newTex.createView(`${textureName}Texture`);
           model.textures.push(newTex);
           model.textureViews.push(tview);
           const interpolate = srcTexture.getInterpolate()
@@ -827,11 +1281,11 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+export function extend(publicAPI, model, initiaLalues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initiaLalues);
 
   // Inheritance
-  vtkWebGPUSimpleMapper.extend(publicAPI, model, initialValues);
+  vtkWebGPUSimpleMapper.extend(publicAPI, model, initiaLalues);
 
   model.fragmentShaderTemplate = vtkWebGPUPolyDataFS;
   model.vertexShaderTemplate = vtkWebGPUPolyDataVS;
@@ -839,6 +1293,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model._tmpMat3 = mat3.identity(new Float64Array(9));
   model._tmpMat4 = mat4.identity(new Float64Array(16));
 
+  // UBO
   model.UBO = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
   model.UBO.addEntry('BCWCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('BCSCMatrix', 'mat4x4<f32>');
@@ -849,12 +1304,21 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('SpecularColor', 'vec4<f32>');
   model.UBO.addEntry('AmbientIntensity', 'f32');
   model.UBO.addEntry('DiffuseIntensity', 'f32');
+  model.UBO.addEntry('Roughness', 'f32');
+  model.UBO.addEntry('Metallic', 'f32');
+  model.UBO.addEntry('Ambient', 'f32');
+  model.UBO.addEntry('Normal', 'f32');
+  model.UBO.addEntry('Emission', 'f32');
+  model.UBO.addEntry('NormalStrength', 'f32');
+  model.UBO.addEntry('BaseIOR', 'f32');
   model.UBO.addEntry('SpecularIntensity', 'f32');
   model.UBO.addEntry('LineWidth', 'f32');
   model.UBO.addEntry('Opacity', 'f32');
-  model.UBO.addEntry('SpecularPower', 'f32');
   model.UBO.addEntry('ZValue', 'f32');
   model.UBO.addEntry('PropID', 'u32');
+  model.UBO.addEntry('ClipNear', 'f32');
+  model.UBO.addEntry('ClipFar', 'f32');
+  model.UBO.addEntry('Time', 'u32');
 
   // Build VTK API
   macro.setGet(publicAPI, model, [

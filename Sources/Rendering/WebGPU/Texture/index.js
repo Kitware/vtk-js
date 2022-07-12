@@ -211,7 +211,13 @@ function vtkWebGPUTexture(publicAPI, model) {
     return tDetails.numComponents;
   };
 
-  publicAPI.getDimensions = () => (model.depth > 1 ? 3 : 2);
+  publicAPI.getDimensionality = () => {
+    let dims = 0;
+    if (model.width > 1) dims++;
+    if (model.height > 1) dims++;
+    if (model.depth > 1) dims++;
+    return dims;
+  };
 
   publicAPI.resizeToMatch = (tex) => {
     if (

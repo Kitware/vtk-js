@@ -9,6 +9,7 @@ import colorMaps from '../ColorMaps.json';
 
 import createScalarMap from './createScalarMap';
 import baseline from './testColorTransferFunctionPresets.png';
+import baseline2 from './testColorTransferFunctionPresets2.png';
 
 const MAX_NUMBER_OF_PRESETS = 200;
 const NUMBER_PER_LINE = 20;
@@ -60,7 +61,7 @@ test('Test ColorTransferFunction Presets', (t) => {
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,
-      [baseline],
+      [baseline, baseline2],
       'Rendering/Core/ColorTransferFunction/testColorTransferFunctionPresets',
       t,
       4.8,

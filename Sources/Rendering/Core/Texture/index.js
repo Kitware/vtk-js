@@ -73,6 +73,33 @@ function vtkTexture(publicAPI, model) {
 
     publicAPI.modified();
   };
+
+  publicAPI.getDimensionality = () => {
+    let width = 0;
+    let height = 0;
+    let depth = 1;
+
+    if (publicAPI.getInputData()) {
+      const data = publicAPI.getInputData();
+      width = data.getDimensions()[0];
+      height = data.getDimensions()[1];
+      depth = data.getDimensions()[2];
+    }
+    if (model.jsImageData) {
+      width = model.jsImageData.width;
+      height = model.jsImageData.height;
+    }
+    if (model.canvas) {
+      width = model.canvas.width;
+      height = model.canvas.height;
+    }
+    if (model.image) {
+      width = model.image.width;
+      height = model.image.height;
+    }
+    const dimensionality = (width > 1) + (height > 1) + (depth > 1);
+    return dimensionality;
+  };
 }
 
 // ----------------------------------------------------------------------------
