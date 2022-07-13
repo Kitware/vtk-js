@@ -1,7 +1,7 @@
-import { Bounds } from "../../../types";
+import { Bounds, Nullable } from "../../../types";
 import vtkProp3D, { IProp3DInitialValues } from "../Prop3D";
 import vtkVolumeMapper from "../VolumeMapper";
-import vtkVolumeProperty from "../VolumeProperty";
+import vtkVolumeProperty, { IVolumePropertyInitialValues } from "../VolumeProperty";
 
 /**
  * 
@@ -20,7 +20,7 @@ export interface vtkVolume extends vtkProp3D {
 	/**
 	 * Get the volume mapper
 	 */
-	getMapper(): vtkVolumeMapper;
+	getMapper(): Nullable<vtkVolumeMapper>;
 
 	/**
 	 * For some exporters and other other operations we must be able to collect
@@ -63,9 +63,10 @@ export interface vtkVolume extends vtkProp3D {
 	getRedrawMTime(): number;
 
 	/**
-	 * 
+	 * Create a new property suitable for use with this type of Actor.
+	 * @param {IVolumePropertyInitialValues} [initialValues] (default: {})
 	 */
-	makeProperty(): void;
+	makeProperty(initialValues?: IVolumePropertyInitialValues): vtkVolumeProperty;
 
 	/**
 	 * Set the volume mapper

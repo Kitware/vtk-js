@@ -1,7 +1,7 @@
-import { Bounds } from '../../../types';
+import { Bounds, Nullable } from '../../../types';
 import vtkMapper from '../Mapper';
 import vtkProp3D, { IProp3DInitialValues } from '../Prop3D';
-import vtkProperty from '../Property';
+import vtkProperty, { IPropertyInitialValues } from '../Property';
 
 /**
  * 
@@ -62,7 +62,7 @@ export interface vtkActor extends vtkProp3D {
 	/**
 	 * Get the Mapper that this actor is getting its data from.
 	 */
-	getMapper(): null | vtkMapper;
+	getMapper(): Nullable<vtkMapper>;
 
 	/**
 	 * Get the property object that controls this actors surface
@@ -82,8 +82,9 @@ export interface vtkActor extends vtkProp3D {
 
 	/**
 	 * Create a new property suitable for use with this type of Actor.
+	 * @param {IPropertyInitialValues} [initialValues] (default: {})
 	 */
-	makeProperty(): vtkProperty;
+	makeProperty(initialValues?: IPropertyInitialValues): vtkProperty;
 
 	/**
 	 * Set the property object that controls this actors backface surface
