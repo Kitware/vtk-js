@@ -288,6 +288,10 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
     // bind the mapper bind group
     renderEncoder.activateBindGroup(model.bindGroup);
 
+    if (model.WebGPURenderer) {
+      model.WebGPURenderer.bindUBO(renderEncoder);
+    }
+
     // bind the vertex input
     pipeline.bindVertexInput(renderEncoder, model.vertexInput);
     const indexBuffer = model.vertexInput.getIndexBuffer();
@@ -337,7 +341,6 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
 
       if (model.WebGPURenderer) {
         model.pipeline.addBindGroupLayout(model.WebGPURenderer.getBindGroup());
-        model.pipeline.addDrawCallback(model.WebGPURenderer.bindUBO);
       }
 
       model.pipeline.addBindGroupLayout(model.bindGroup);
