@@ -706,7 +706,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Light::Impl', [
         '  var diffuse: vec3<f32> = diffuseColor.rgb;',
         '  var specular: vec3<f32> = mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
-        '  computedColor = vec4<f32>(diffuse, mapperUBO.Opacity);',
+        '  computedColor = vec4<f32>(diffuse * _diffuseMap.rgb, mapperUBO.Opacity);',
       ]).result;
       fDesc.setCode(code);
     }
@@ -775,8 +775,6 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       '  output.tcoordVS = tcoord;', // Ensure that UV coordinates are always between 0-1
     ]).result;
     vDesc.setCode(code);
-
-    if (model.is2D) return;
 
     const fDesc = pipeline.getShaderDescription('fragment');
     code = fDesc.getCode();
@@ -1103,6 +1101,10 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     }
     if (actor.getTextures()[0]) {
       const pair = ['Diffuse', actor.getTextures()[0]];
+      textures.push(pair);
+    }
+    if (model.colorTexture) {
+      const pair = ['Diffuse', model.colorTexture];
       textures.push(pair);
     }
     if (actor.getProperty().getRoughnessTexture?.()) {
