@@ -5,7 +5,7 @@ import { BlendMode, FilterMode } from "./Constants";
 /**
  * 
  */
-interface IVolumeMapperInitialValues extends IAbstractMapperInitialValues {
+export interface IVolumeMapperInitialValues extends IAbstractMapperInitialValues {
 	bounds?: Bounds;
 	blendMode?: BlendMode;
 	sampleDistance?: number;

@@ -418,8 +418,7 @@ function vtkShaderProgram(publicAPI, model) {
     }
 
     // see if we have cached the result
-    let loc = Object.keys(model.attributeLocs).indexOf(name);
-    if (loc !== -1) {
+    if (name in model.attributeLocs) {
       return true;
     }
 
@@ -430,7 +429,7 @@ function vtkShaderProgram(publicAPI, model) {
       return false;
     }
 
-    loc = model.context.getAttribLocation(model.handle, name);
+    const loc = model.context.getAttribLocation(model.handle, name);
     if (loc === -1) {
       return false;
     }

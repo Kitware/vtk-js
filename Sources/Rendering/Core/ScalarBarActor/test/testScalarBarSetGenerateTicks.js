@@ -11,7 +11,7 @@ import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransfe
 import baseline from './testScalarBarSetGenerateTicks.png';
 import baseline2 from './testScalarBarSetGenerateTicks2.png';
 
-test.onlyIfWebGL('Test vtkScalarBarActor setGenerateTicks', (t) => {
+test('Test vtkScalarBarActor setGenerateTicks', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkScalarBarActor setGenerateTicks');
 

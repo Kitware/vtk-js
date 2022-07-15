@@ -83,7 +83,6 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
       }
     }
     model.boundPipeline = pl;
-    pl.draw(publicAPI);
   };
 
   publicAPI.replaceShaderCode = (pipeline) => {

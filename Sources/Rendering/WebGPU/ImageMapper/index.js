@@ -158,6 +158,10 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       // tmpMat4 is now SC -> Index, save this as we need it later
       mat4.invert(tmp3Mat4, tmpMat4);
 
+      // need translation and scale
+      mat4.fromTranslation(tmp2Mat4, [0.5, 0.5, 0.5]);
+      mat4.multiply(tmpMat4, tmp2Mat4, tmpMat4);
+
       const dims = image.getDimensions();
       mat4.identity(tmp2Mat4);
       mat4.scale(tmp2Mat4, tmp2Mat4, [
@@ -198,15 +202,15 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       }
 
       ptsArray1[axis0] = nSlice;
-      ptsArray1[axis1] = ext[axis1 * 2];
-      ptsArray1[axis2] = ext[axis2 * 2];
+      ptsArray1[axis1] = ext[axis1 * 2] - 0.5;
+      ptsArray1[axis2] = ext[axis2 * 2] - 0.5;
       ptsArray1[3] = 1.0;
       vec4.transformMat4(ptsArray1, ptsArray1, tmp3Mat4);
       model.UBO.setArray('Origin', ptsArray1);
 
       ptsArray2[axis0] = nSlice;
-      ptsArray2[axis1] = ext[axis1 * 2 + 1];
-      ptsArray2[axis2] = ext[axis2 * 2];
+      ptsArray2[axis1] = ext[axis1 * 2 + 1] + 0.5;
+      ptsArray2[axis2] = ext[axis2 * 2] - 0.5;
       ptsArray2[3] = 1.0;
       vec4.transformMat4(ptsArray2, ptsArray2, tmp3Mat4);
       vec4.subtract(ptsArray2, ptsArray2, ptsArray1);
@@ -214,8 +218,8 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       model.UBO.setArray('Axis1', ptsArray2);
 
       ptsArray2[axis0] = nSlice;
-      ptsArray2[axis1] = ext[axis1 * 2];
-      ptsArray2[axis2] = ext[axis2 * 2 + 1];
+      ptsArray2[axis1] = ext[axis1 * 2] - 0.5;
+      ptsArray2[axis2] = ext[axis2 * 2 + 1] + 0.5;
       ptsArray2[3] = 1.0;
       vec4.transformMat4(ptsArray2, ptsArray2, tmp3Mat4);
       vec4.subtract(ptsArray2, ptsArray2, ptsArray1);
@@ -236,7 +240,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 
         const target = iComps ? i : 0;
         const cfun = actor.getProperty().getRGBTransferFunction(target);
-        if (cfun && actor.getProperty().getUseLookupTableScalarRange()) {
+        if (cfun) {
           const cRange = cfun.getRange();
           cw = cRange[1] - cRange[0];
           cl = 0.5 * (cRange[1] + cRange[0]);
