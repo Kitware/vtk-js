@@ -67,6 +67,17 @@ struct PBRData {
 fn mdot(a: vec3<f32>, b: vec3<f32>) -> f32 {
   return max(0.0, dot(a, b));
 }
+// Dot product with a max in it that does not allow for negative values
+// Physically based rendering is accurate as long as normals are accurate,
+// however this is pretty often not the case. In order to prevent negative
+// values from ruining light calculations and creating zones of zero light,
+// this remapping is used, which smoothly clamps the dot product between
+// zero and one while still maintaining a good amount of accuracy.
+fn cdot(a: vec3<f32>, b: vec3<f32>) -> f32 {
+  var d: f32 = max(0.0, dot(a, b));
+  d = pow((d + 1) / 2.0, 2.6);
+  return d;
+}
 
 // Lambertian diffuse model
 fn lambertDiffuse(base: vec3<f32>, N: vec3<f32>, L: vec3<f32>) -> vec3<f32> {
@@ -102,8 +113,7 @@ fn fujiiOrenNayar(p: vec3<f32>, o: f32, N: vec3<f32>, L: vec3<f32>, V: vec3<f32>
 // Fresnel portion of BRDF (IOR only, simplified)
 fn schlickFresnelIOR(V: vec3<f32>, N: vec3<f32>, ior: f32, k: f32) -> f32 {
   var NdotV: f32 = mdot(V, N);
-  // var R0: f32 = pow((ior - 1.0) / (ior + 1.0), 2); // 1.0 is about the ior of air, and it is assumed that light will be traveling through air
-  var F0: f32 = (pow((ior - 1.0), 2) + k*k) / (pow((ior + 1.0), 2) + k*k); // This takes into account the roughness, whic the other one does not
+  var F0: f32 = (pow((ior - 1.0), 2) + k*k) / (pow((ior + 1.0), 2) + k*k); // This takes into account the roughness, which the other one does not
   return F0 + (1 - F0) * pow((1-NdotV), 5); 
 }
 
@@ -139,20 +149,20 @@ fn anisotrophicTrGGX(N: vec3<f32>, H: vec3<f32>, O: vec3<f32>, s: f32, a: f32) -
 
 // Geometry portion of BRDF
 fn schlickGGX(N: vec3<f32>, X: vec3<f32>, k: f32) -> f32 {
-  var NdotX = mdot(N, X);
+  var NdotX = cdot(N, X);
   return NdotX / max(0.000001, (NdotX*(1-k) + k));
 }
 
 fn smithSurfaceRoughness(N: vec3<f32>, V: vec3<f32>, L: vec3<f32>, k: f32) -> f32 {
-  var ggx1: f32 = max(0.01, schlickGGX(N, V, k)); // Prevents void zones at the cost of some accuracy
-  var ggx2: f32 = schlickGGX(N, L, k);
+  var ggx1: f32 = min(1, schlickGGX(N, V, k));
+  var ggx2: f32 = min(1, schlickGGX(N, L, k));
   return ggx1*ggx2;
 }
 
 // BRDF Combination
 fn cookTorrance(D: f32, F: f32, G: f32, N: vec3<f32>, V: vec3<f32>, L: vec3<f32>) -> f32 {
   var num: f32 = D*F*G;
-  var denom: f32 = 4*mdot(V, N)*mdot(L, N);
+  var denom: f32 = 4*cdot(V, N)*cdot(L, N);
 
   return num / max(denom, 0.000001);
 }
@@ -179,7 +189,6 @@ fn calcDirectionalLight(N: vec3<f32>, V: vec3<f32>, ior: f32, roughness: f32, me
   // control property for the diffuse vs specular roughness
   var diffuse: vec3<f32> = incoming*fujiiOrenNayar(base, roughness, N, L, V); 
   // Stores the specular and diffuse separately to allow for finer post processing
-  // Could also be done (propably more properly) with a struct
   var out = PBRData(diffuse, specular);
   
   return out; // Returns angle along with color of light so the final color can be multiplied by angle as well (creates black areas)
@@ -254,12 +263,14 @@ fn calcSpotLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, rough
 // Takes in a vector and converts it to an equivalent coordinate in a rectilinear texture. Should be replaced with cubemaps at some point
 fn vecToRectCoord(dir: vec3<f32>) -> vec2<f32> {
   var tau: f32 = 6.28318530718;
-  var out: vec2<f32> = vec2<f32>(0.);
+  var pi: f32 = 3.14159265359;
+  var out: vec2<f32> = vec2<f32>(0.0);
 
   out.x = atan2(dir.z, dir.x) / tau;
   out.x += 0.5;
 
-  out.y = (dir.y * .5) + .5;
+  var phix: f32 = length(vec2(dir.x, dir.z));
+  out.y = atan2(dir.y, phix) / pi + 0.5;
 
   return out;
 }
@@ -299,7 +310,7 @@ fn main(
   var _roughnessMap: vec4<f32> = vec4<f32>(1);
   var _metallicMap: vec4<f32> = vec4<f32>(1);
   var _normalMap: vec4<f32> = vec4<f32>(0, 0, 1, 0); // normal map was setting off the normal vector detection in fragment
-  var _ambientOcclusionMap: vec4<f32> = vec4<f32>(0);
+  var _ambientOcclusionMap: vec4<f32> = vec4<f32>(1);
   var _emissionMap: vec4<f32> = vec4<f32>(0);
 
   //VTK::Color::Impl
@@ -308,7 +319,7 @@ fn main(
 
   //VTK::Normal::Impl
 
-  var computedColor: vec4<f32> = vec4<f32>(diffuseColor.rgb, 1.);
+  var computedColor: vec4<f32> = vec4<f32>(diffuseColor.rgb, 1.0);
 
   //VTK::Light::Impl
 
@@ -595,8 +606,8 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
           '    tangent.y, bitangent.y, normal.y,',
           '    tangent.z, bitangent.z, normal.z,',
           '  );',
-          '  normal = TCVCMatrix * (_normalMap.xyz * 2 - 1);',
-          '  normal = mix(input.normalVC, normal, mapperUBO.NormalStrength);',
+          '  var mappedNormal: vec3<f32> = TCVCMatrix * (_normalMap.xyz * 2 - 1);',
+          '  normal = mix(normal, mappedNormal, mapperUBO.NormalStrength);',
           '  normal = normalize(normal);',
         ]).result;
       } else {
@@ -621,6 +632,8 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     const vDesc = pipeline.getShaderDescription('vertex');
     if (!vDesc.hasOutput('vertexVC')) vDesc.addOutput('vec4<f32>', 'vertexVC');
 
+    const renderer = model.WebGPURenderer.getRenderable();
+
     const fDesc = pipeline.getShaderDescription('fragment');
     let code = fDesc.getCode();
 
@@ -632,7 +645,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       !model.is2D &&
       !hash.includes('sel')
     ) {
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Light::Impl', [
+      const lightingCode = [
         // Constants
         '  var pi: f32 = 3.14159265359;',
         // Vectors needed for light calculations
@@ -699,7 +712,33 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         '  var PBR: vec3<f32> = mapperUBO.DiffuseIntensity*kD*diffuse + kS*specular;',
         '  PBR += emission;',
         '  computedColor = vec4<f32>(PBR, mapperUBO.Opacity);',
-      ]).result;
+      ];
+      if (renderer.getEnvironmentTexture()?.getImageLoaded()) {
+        lightingCode.push(
+          '  // To get diffuse IBL, the texture is sampled with normals in worldspace',
+          '  var diffuseIBLCoords: vec3<f32> = (transpose(rendererUBO.WCVCNormals) * vec4<f32>(normal, 1.)).xyz;',
+          '  var diffuseCoords: vec2<f32> = vecToRectCoord(diffuseIBLCoords);',
+          '  // To get specular IBL, the texture is sampled as the worldspace reflection between the normal and view vectors',
+          '  // Reflections are first calculated in viewspace, then converted to worldspace to sample the environment',
+          '  var VreflN: vec3<f32> = normalize(reflect(-V, normal));',
+          '  var reflectionIBLCoords = (transpose(rendererUBO.WCVCNormals) * vec4<f32>(VreflN, 1.)).xyz;',
+          '  var specularCoords: vec2<f32> = vecToRectCoord(reflectionIBLCoords);',
+          '  var diffuseIBL = textureSampleLevel(EnvironmentTexture, EnvironmentTextureSampler, diffuseCoords, rendererUBO.MaxEnvironmentMipLevel);',
+          // Level multiplier should be set by UBO
+          '  var level = roughness * rendererUBO.MaxEnvironmentMipLevel;',
+          '  var specularIBL = textureSampleLevel(EnvironmentTexture, EnvironmentTextureSampler, specularCoords, level);', // Manual mip smoothing since not all formats support smooth level sampling
+          '  var specularIBLContribution: vec3<f32> = specularIBL.rgb*rendererUBO.BackgroundSpecularStrength;',
+          '  computedColor += vec4<f32>(specularIBLContribution*kS, 0);',
+          '  var diffuseIBLContribution: vec3<f32> = diffuseIBL.rgb*rendererUBO.BackgroundDiffuseStrength;',
+          '  diffuseIBLContribution *= baseColor * _ambientOcclusionMap.rgb;', // Multipy by baseColor may be changed
+          '  computedColor += vec4<f32>(diffuseIBLContribution*kD, 0);'
+        );
+      }
+      code = vtkWebGPUShaderCache.substitute(
+        code,
+        '//VTK::Light::Impl',
+        lightingCode
+      ).result;
       fDesc.setCode(code);
       // If theres no normals, just set the specular color to be flat
     } else {
@@ -772,7 +811,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     let code = vDesc.getCode();
     vDesc.addOutput(`vec${numComp}<f32>`, 'tcoordVS');
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Impl', [
-      '  output.tcoordVS = tcoord;', // Ensure that UV coordinates are always between 0-1
+      '  output.tcoordVS = tcoord;',
     ]).result;
     vDesc.setCode(code);
 
@@ -1130,8 +1169,8 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       const pair = ['Emission', actor.getProperty().getEmissionTexture()];
       textures.push(pair);
     }
-    if (renderer.getBackgroundTexture?.()) {
-      const pair = ['Background', renderer.getBackgroundTexture()];
+    if (renderer.getEnvironmentTexture?.()) {
+      const pair = ['Environment', renderer.getEnvironmentTexture()];
       textures.push(pair);
     }
 
@@ -1171,10 +1210,35 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
           const interpolate = srcTexture.getInterpolate()
             ? 'linear'
             : 'nearest';
-          tview.addSampler(model.device, {
-            minFilter: interpolate,
-            magFilter: interpolate,
-          });
+          let addressMode = null;
+          if (
+            !addressMode &&
+            srcTexture.getEdgeClamp() &&
+            srcTexture.getRepeat()
+          )
+            addressMode = 'mirror-repeat';
+          if (!addressMode && srcTexture.getEdgeClamp())
+            addressMode = 'clamp-to-edge';
+          if (!addressMode && srcTexture.getRepeat()) addressMode = 'repeat';
+
+          if (textureName !== 'Environment') {
+            tview.addSampler(model.device, {
+              addressModeU: addressMode,
+              addressModeV: addressMode,
+              addressModeW: addressMode,
+              minFilter: interpolate,
+              magFilter: interpolate,
+            });
+          } else {
+            tview.addSampler(model.device, {
+              addressModeU: 'repeat',
+              addressModeV: 'clamp-to-edge',
+              addressModeW: 'repeat',
+              minFilter: interpolate,
+              magFilter: interpolate,
+              mipmapFilter: 'linear',
+            });
+          }
         }
       }
     }

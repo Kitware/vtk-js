@@ -35,6 +35,10 @@ export interface IRendererInitialValues extends IViewportInitialValues {
 	occlusionRatio?: number;
 	maximumNumberOfPeels?: number;
 	texturedBackground?: boolean;
+	environmentTexture?: vtkTexture;
+	environmentTextureDiffuseStrength?: number;
+	environmentTextureSpecularStrength?: number;
+	useEnvironmentTextureAsBackground?: boolean;
 	pass?: number;
 }
 
@@ -115,7 +119,25 @@ export interface vtkRenderer extends vtkViewport {
 	 * 
 	 * @default null
 	 */
-	getBackgroundTexture(): vtkTexture;
+	getEnvironmentTexture(): vtkTexture;
+
+	/**
+	 * Returns the diffuse strength of the set environment texture.
+	 * @default 1
+	 */
+	getEnvironmentTextureDiffuseStrength(): number;
+
+	/**
+	 * Returns the specular strength of the set environment texture.
+	 * @default 1
+	 */
+	getEnvironmentTextureSpecularStrength(): number;
+
+	/**
+	  * Gets whether or not the environment texture is being used as the background for the view.
+	  * @default false
+	  */
+	getUseEnvironmentTextureAsBackground(): boolean;
 
 	/**
 	 * 
@@ -347,9 +369,27 @@ export interface vtkRenderer extends vtkViewport {
 
 	/**
 	 * 
-	 * @param {vtkTexture} backgroundTexture 
+	 * @param {vtkTexture} environmentTexture 
 	 */
-	setBackgroundTexture(backgroundTexture: vtkTexture): boolean;
+	setEnvironmentTexture(environmentTexture: vtkTexture): boolean;
+
+	/**
+	 * Sets the diffuse strength of the set environment texture.
+	 * @param {number} diffuseStrength the new diffuse strength.
+	 */
+	setEnvironmentTextureDiffuseStrength(diffuseStrength: number): boolean;
+
+	 /**
+	  * Sets the specular strength of the set environment texture.
+	  * @param {number} specularStrength the new specular strength.
+	  */
+	setEnvironmentTextureSpecularStrength(specularStrength: number): boolean;
+
+	/**
+	  * Sets whether or not to use the environment texture as the background for the view.
+	  * @param {number} textureAsBackground
+	  */
+	setUseEnvironmentTextureAsBackground(textureAsBackground: boolean): boolean;
 
 	/**
 	 * 

@@ -11,7 +11,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactor
 
 const { vtkDebugMacro } = macro;
 
-const clearFragTemplate = `
+const clearFragColorTemplate = `
 //VTK::Renderer::Dec
 
 //VTK::Mapper::Dec
@@ -36,6 +36,53 @@ fn main(
   return output;
 }
 `;
+
+const clearFragTextureTemplate = `
+fn vecToRectCoord(dir: vec3<f32>) -> vec2<f32> {
+  var tau: f32 = 6.28318530718;
+  var pi: f32 = 3.14159265359;
+  var out: vec2<f32> = vec2<f32>(0.0);
+
+  out.x = atan2(dir.z, dir.x) / tau;
+  out.x += 0.5;
+
+  var phix: f32 = length(vec2(dir.x, dir.z));
+  out.y = atan2(dir.y, phix) / pi + 0.5;
+
+  return out;
+}
+
+//VTK::Renderer::Dec
+
+//VTK::Mapper::Dec
+
+//VTK::TCoord::Dec
+
+//VTK::RenderEncoder::Dec
+
+//VTK::IOStructs::Dec
+
+@fragment
+fn main(
+//VTK::IOStructs::Input
+)
+//VTK::IOStructs::Output
+{
+  var output: fragmentOutput;
+
+  var tcoord: vec4<f32> = vec4<f32>(input.vertexVC.xy, -1, 1);
+  var V: vec4<f32> = normalize(mapperUBO.FSQMatrix * tcoord); // vec2<f32>((input.tcoordVS.x - 0.5) * 2, -(input.tcoordVS.y - 0.5) * 2);
+  // textureSampleLevel gets rid of some ugly artifacts
+  var background = textureSampleLevel(EnvironmentTexture, EnvironmentTextureSampler, vecToRectCoord(V.xyz), 0);
+  var computedColor: vec4<f32> = vec4<f32>(background.rgb, 1);
+
+  //VTK::RenderEncoder::Impl
+  return output;
+}
+`;
+
+const _fsqClearMat4 = new Float64Array(16);
+const _tNormalMat4 = new Float64Array(16);
 
 // Light type index gives either 0, 1, or 2 which indicates what type of light there is.
 // While technically, there are only spot and directional lights, within the CellArrayMapper
@@ -163,6 +210,18 @@ function vtkWebGPURenderer(publicAPI, model) {
       model.UBO.setArray('VCPCMatrix', keyMats.vcpc);
       model.UBO.setArray('WCVCNormals', keyMats.normalMatrix);
       model.UBO.setValue('LightCount', model.renderable.getLights().length);
+      model.UBO.setValue(
+        'MaxEnvironmentMipLevel',
+        model.renderable.getEnvironmentTexture()?.getMipLevel()
+      );
+      model.UBO.setValue(
+        'BackgroundDiffuseStrength',
+        model.renderable.getEnvironmentTextureDiffuseStrength()
+      );
+      model.UBO.setValue(
+        'BackgroundSpecularStrength',
+        model.renderable.getEnvironmentTextureSpecularStrength()
+      );
 
       const tsize = publicAPI.getYInvertedTiledSizeAndOrigin();
       model.UBO.setArray('viewportSize', [tsize.usize, tsize.vsize]);
@@ -201,7 +260,6 @@ function vtkWebGPURenderer(publicAPI, model) {
           viewCoordinatePosition,
           keyMats.wcvc
         );
-        // console.log(viewCoordinatePosition);
         // viewCoordinatePosition
         lightPosArray[offset] = viewCoordinatePosition[0];
         lightPosArray[offset + 1] = viewCoordinatePosition[1];
@@ -301,18 +359,75 @@ function vtkWebGPURenderer(publicAPI, model) {
     }
 
     const device = model._parent.getDevice();
+    // Normal Solid Color
     if (!model.clearFSQ) {
       model.clearFSQ = vtkWebGPUFullScreenQuad.newInstance();
       model.clearFSQ.setDevice(device);
       model.clearFSQ.setPipelineHash('clearfsq');
-      model.clearFSQ.setFragmentShaderTemplate(clearFragTemplate);
+      model.clearFSQ.setFragmentShaderTemplate(clearFragColorTemplate);
       const ubo = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
+      ubo.addEntry('FSQMatrix', 'mat4x4<f32>');
+      ubo.addEntry('BackgroundColor', 'vec4<f32>');
+      model.clearFSQ.setUBO(ubo);
+
+      model.backgroundTex = model.renderable.getEnvironmentTexture();
+    }
+    // Textured Background
+    if (
+      model.clearFSQ.getPipelineHash() !== 'clearfsqwithtexture' &&
+      model.renderable.getUseEnvironmentTextureAsBackground() &&
+      model.backgroundTex?.getImageLoaded()
+    ) {
+      model.clearFSQ.setFragmentShaderTemplate(clearFragTextureTemplate);
+      const ubo = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
+      ubo.addEntry('FSQMatrix', 'mat4x4<f32>');
+      ubo.addEntry('BackgroundColor', 'vec4<f32>');
+      model.clearFSQ.setUBO(ubo);
+
+      const environmentTextureHash = device
+        .getTextureManager()
+        .getTextureForVTKTexture(model.backgroundTex);
+      if (environmentTextureHash.getReady()) {
+        const tview = environmentTextureHash.createView(`EnvironmentTexture`);
+        model.clearFSQ.setTextureViews([tview]);
+        model.backgroundTexLoaded = true;
+        const interpolate = model.backgroundTex.getInterpolate()
+          ? 'linear'
+          : 'nearest';
+        tview.addSampler(device, {
+          addressModeU: 'repeat',
+          addressModeV: 'clamp-to-edge',
+          addressModeW: 'repeat',
+          minFilter: interpolate,
+          magFilter: interpolate,
+          mipmapFilter: 'linear',
+        });
+      }
+      model.clearFSQ.setPipelineHash('clearfsqwithtexture');
+    } else if (
+      model.clearFSQ.getPipelineHash() === 'clearfsqwithtexture' &&
+      !model.renderable.getUseEnvironmentTextureAsBackground()
+    ) {
+      // In case the mode is changed at runtime
+      model.clearFSQ = vtkWebGPUFullScreenQuad.newInstance();
+      model.clearFSQ.setDevice(device);
+      model.clearFSQ.setPipelineHash('clearfsq');
+      model.clearFSQ.setFragmentShaderTemplate(clearFragColorTemplate);
+      const ubo = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
+      ubo.addEntry('FSQMatrix', 'mat4x4<f32>');
       ubo.addEntry('BackgroundColor', 'vec4<f32>');
       model.clearFSQ.setUBO(ubo);
     }
 
+    const keyMats = model.webgpuCamera.getKeyMatrices(publicAPI);
     const background = model.renderable.getBackgroundByReference();
+
     model.clearFSQ.getUBO().setArray('BackgroundColor', background);
+    mat4.transpose(_tNormalMat4, keyMats.normalMatrix);
+    mat4.mul(_fsqClearMat4, keyMats.scvc, keyMats.pcsc);
+    mat4.mul(_fsqClearMat4, _tNormalMat4, _fsqClearMat4);
+    model.clearFSQ.getUBO().setArray('FSQMatrix', _fsqClearMat4);
+
     model.clearFSQ.getUBO().sendIfNeeded(device);
     model.clearFSQ.prepareAndDraw(model.renderEncoder);
   };
@@ -443,6 +558,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('WCVCNormals', 'mat4x4<f32>');
   model.UBO.addEntry('viewportSize', 'vec2<f32>');
   model.UBO.addEntry('LightCount', 'i32');
+  model.UBO.addEntry('MaxEnvironmentMipLevel', 'f32');
+  model.UBO.addEntry('BackgroundDiffuseStrength', 'f32');
+  model.UBO.addEntry('BackgroundSpecularStrength', 'f32');
   model.UBO.addEntry('cameraParallel', 'u32');
 
   // SSBO (Light data)
