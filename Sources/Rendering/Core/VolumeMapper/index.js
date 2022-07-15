@@ -93,6 +93,16 @@ function vtkVolumeMapper(publicAPI, model) {
     model.anisotropy = vtkMath.clampValue(at, -0.99, 0.99);
     publicAPI.modified();
   };
+
+  publicAPI.setKernelSize = (ks) => {
+    model.kernelSize = vtkMath.floor(vtkMath.clampValue(ks, 1, 32));
+    publicAPI.modified();
+  };
+
+  publicAPI.setKernelRadius = (kr) => {
+    model.kernelRadius = kr >= 1 ? kr : 1;
+    publicAPI.modified();
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -116,6 +126,10 @@ const DEFAULT_VALUES = {
   globalIlluminationReach: 0.0,
   volumeShadowSamplingDistFactor: 5.0,
   anisotropy: 0.0,
+  // local ambient occlusion
+  localAmbientOcclusion: false,
+  kernelSize: 15,
+  kernelRadius: 7,
 };
 
 // ----------------------------------------------------------------------------
@@ -138,6 +152,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     'globalIlluminationReach',
     'volumeShadowSamplingDistFactor',
     'anisotropy',
+    'localAmbientOcclusion',
+    'kernelSize',
+    'kernelRadius',
   ]);
 
   macro.setGetArray(publicAPI, model, ['ipScalarRange'], 2);
