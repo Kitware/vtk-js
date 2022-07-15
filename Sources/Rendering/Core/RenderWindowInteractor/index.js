@@ -552,6 +552,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
           model.lastGamepadValues[gp.index] = {
             left: { buttons: {} },
             right: { buttons: {} },
+            none: { buttons: {} },
           };
         }
         for (let b = 0; b < gp.buttons.length; ++b) {
@@ -762,7 +763,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       if (pointers.length === 0) {
         const callData = {
           ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
-          position: pointers[0].position,
+          position: getScreenEventPositionFor(event),
           deviceType: getDeviceTypeFor(event),
         };
         publicAPI.leftButtonReleaseEvent(callData);
