@@ -775,9 +775,7 @@ export function vtkCCSSplitAtPinchPoints(
     n = poly.length;
 
     bounds = [];
-    tol =
-      CCS_POLYGON_TOLERANCE *
-      Math.sqrt(vtkPolygon.getBounds(poly, points, bounds));
+    tol = CCS_POLYGON_TOLERANCE * Math.sqrt(vtkPolygon.getBounds(points));
 
     if (tol === 0) {
       // eslint-disable-next-line no-continue
@@ -929,8 +927,7 @@ export function vtkCCSFindTrueEdges(polys, points, polyEdges, originalEdges) {
     let m = n;
 
     // Compute bounds for tolerance
-    const bounds = [];
-    const tol2 = vtkPolygon.getBounds(oldPoly, points, bounds) * atol2;
+    const tol2 = vtkPolygon.getBounds(points) * atol2;
 
     // The new poly
     const newPoly = [];
@@ -1230,7 +1227,7 @@ export function vtkCCSPrepareForPolyInPoly(outerPoly, points, pp, bounds) {
 
   // Find the bounding box and tolerance for the polygon
   return (
-    vtkPolygon.getBounds(outerPoly, points, bounds) *
+    vtkPolygon.getBounds(points) *
     (CCS_POLYGON_TOLERANCE * CCS_POLYGON_TOLERANCE)
   );
 }

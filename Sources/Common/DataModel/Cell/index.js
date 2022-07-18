@@ -104,8 +104,12 @@ function vtkCell(publicAPI, model) {
     cell.initialize(model.points, model.pointsIds);
   };
 
-  publicAPI.getCellDimension = () => {}; // virtual
-  publicAPI.intersectWithLine = (p1, p2, tol, t, x, pcoords, subId) => {}; // virtual
+  publicAPI.getCellDimension = () => {
+    macro.vtkErrorMacro('vtkCell.getCellDimension is not implemented.');
+  }; // virtual
+  publicAPI.intersectWithLine = (p1, p2, tol, t, x, pcoords, subId) => {
+    macro.vtkErrorMacro('vtkCell.intersectWithLine is not implemented.');
+  }; // virtual
   publicAPI.evaluatePosition = (
     x,
     closestPoint,

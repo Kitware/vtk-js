@@ -203,12 +203,16 @@ function vtkPaintFilter(publicAPI, model) {
       }
       polygon.setPoints(poly);
 
-      if (!polygon.triangulate()) {
+      const points = polygon.triangulate();
+      const triangulationSuceeded = points !== null;
+      if (triangulationSuceeded) {
         console.log('triangulation failed!');
       }
 
-      const points = polygon.getPointArray();
-      const triangleList = new Float32Array(points.length);
+      const triangleList = triangulationSuceeded
+        ? new Float32Array(points.length)
+        : new Float32Array(0);
+
       const numPoints = Math.floor(triangleList.length / 3);
       for (let i = 0; i < numPoints; i++) {
         const point = points.slice(3 * i, 3 * i + 3);

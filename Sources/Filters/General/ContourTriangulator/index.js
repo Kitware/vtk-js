@@ -60,7 +60,7 @@ function triangulateContours(
     let maxnorm = 0;
     const n = [];
     for (let i = 0; i < newPolys.length; i++) {
-      const norm = vtkPolygon.getNormal(newPolys[i], points, n);
+      const norm = vtkPolygon.getNormal(newPolys[i], points, n) ** 2;
       if (norm > maxnorm) {
         maxnorm = norm;
         computedNormal[0] = n[0];
@@ -186,7 +186,7 @@ function triangulatePolygon(polygon, points, triangles) {
 
   let success = true;
   const normal = [];
-  const norm = vtkPolygon.getNormal(poly, points, normal);
+  const norm = vtkPolygon.getNormal(poly, points, normal) ** 2;
   if (norm !== 0) {
     success = vtkCCSTriangulate(
       poly,

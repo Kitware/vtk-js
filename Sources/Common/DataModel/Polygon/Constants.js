@@ -6,6 +6,15 @@ export const PolygonWithPointIntersectionState = {
   FAILURE: -1,
   OUTSIDE: 0,
   INSIDE: 1,
-  INTERSECTION: 2,
-  ON_LINE: 3,
 };
+export const VTK_DBL_EPSILON = 2.2204460492503131e-16;
+
+export const PolygonWithCellIntersectionState = {
+  NO_INTERSECTION: 0,
+  POINT_INTERSECTION: 1,
+  LINE_INTERSECTION: 2,
+  OVERLAP: 3,
+  INCLUDED: 4,
+};
+
+export default { PolygonWithPointIntersectionState };

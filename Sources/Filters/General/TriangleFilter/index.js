@@ -56,13 +56,16 @@ function vtkTriangleFilter(publicAPI, model) {
           const polygon = vtkPolygon.newInstance();
           polygon.setPoints(cellPoints);
 
-          if (!polygon.triangulate()) {
+          const newCellPoints = polygon.triangulate();
+          const triangulationSucceeded = newCellPoints !== null;
+          if (!triangulationSucceeded) {
             vtkWarningMacro(`Triangulation failed at cellOffset ${c}`);
             ++model.errorCount;
           }
 
-          const newCellPoints = polygon.getPointArray();
-          const numSimplices = Math.floor(newCellPoints.length / 9);
+          const numSimplices = triangulationSucceeded
+            ? Math.floor(newCellPoints.length / 9)
+            : 0;
           const triPts = [];
           triPts.length = 9;
           for (let i = 0; i < numSimplices; i++) {
