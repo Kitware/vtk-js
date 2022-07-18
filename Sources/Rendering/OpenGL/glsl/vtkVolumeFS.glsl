@@ -914,6 +914,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
       mat4 normalMat = computeMat4Normal(posIS, tValue, tstep);
       #if !defined(vtkComponent0Proportional)
         vec4 normal0 = normalMat[0];
+        vec4 normalLight = computeNormal(posIS, tValue.a, tstep); // for case: vtkLightComplexity > 0 && defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1) && !defined(vtkComponent0Proportional)
       #endif
       #if !defined(vtkComponent1Proportional)
         vec4 normal1 = normalMat[1];
