@@ -14,7 +14,7 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import baseline1 from './testComposite16Bit.png';
 import baseline2 from './testComposite16Bit_2.png';
 
-test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
+test('Test Composite Volume Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkVolumeMapper Composite16Bit');
   // testUtils.keepDOM();

@@ -1,3 +1,4 @@
+import { mat4 } from 'gl-matrix';
 import 'vtk.js/Sources/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
@@ -10,6 +11,8 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import vtkImageReslice from 'vtk.js/Sources/Imaging/Core/ImageReslice';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
 import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
@@ -34,9 +37,11 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // ----------------------------------------------------------------------------
 
 const vtiReader = vtkXMLImageDataReader.newInstance();
+const reslicer = vtkImageReslice.newInstance();
 const actor = vtkVolume.newInstance();
 const mapper = vtkVolumeMapper.newInstance();
-mapper.setInputConnection(vtiReader.getOutputPort());
+reslicer.setInputConnection(vtiReader.getOutputPort());
+mapper.setInputConnection(reslicer.getOutputPort());
 actor.setMapper(mapper);
 renderer.addVolume(actor);
 
@@ -55,7 +60,13 @@ const {
 HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   // Read data
   vtiReader.parseAsArrayBuffer(fileContents);
-  const data = vtiReader.getOutputData(0);
+
+  // Rotate 90 degrees forward so that default head volume faces camera
+  const rotateX = mat4.create();
+  mat4.fromRotation(rotateX, vtkMath.radiansFromDegrees(90), [-1, 0, 0]);
+  reslicer.setResliceAxes(rotateX);
+
+  const data = reslicer.getOutputData(0);
   const dataArray =
     data.getPointData().getScalars() || data.getPointData().getArrays()[0];
   const dataRange = dataArray.getRange();

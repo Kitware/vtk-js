@@ -600,8 +600,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         macro.vtkErrorMacro('OpenGL has a limit of 6 clipping planes');
         numClipPlanes = 6;
       }
-      const image = model.currentInput;
-      const w2imat4 = image.getWorldToIndex();
 
       const shiftScaleEnabled = cellBO.getCABO().getCoordShiftAndScaleEnabled();
       const inverseShiftScaleMatrix = shiftScaleEnabled
@@ -615,7 +613,11 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         mat4.multiply(mat, mat, inverseShiftScaleMatrix);
         mat4.transpose(mat, mat);
       }
-      mat4.multiply(model.imagematinv, mat, w2imat4);
+
+      // transform crop plane normal with transpose(inverse(worldToIndex))
+      mat4.transpose(model.imagemat, model.currentInput.getIndexToWorld());
+      mat4.multiply(model.imagematinv, mat, model.imagemat);
+
       const planeEquations = [];
       for (let i = 0; i < numClipPlanes; i++) {
         const planeEquation = [];
