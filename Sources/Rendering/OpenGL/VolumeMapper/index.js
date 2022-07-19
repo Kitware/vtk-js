@@ -208,7 +208,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         ).result;
       }
       if (
-        model.renderable.getVolumetricScatteringBlending() == 0.0 &&
+        model.renderable.getVolumetricScatteringBlending() === 0.0 &&
         model.renderable.getLocalAmbientOcclusion() &&
         actor.getProperty().getAmbient() > 0.0
       ) {
@@ -335,7 +335,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       ).result;
     }
     if (
-      model.renderable.getVolumetricScatteringBlending() == 0.0 &&
+      model.renderable.getVolumetricScatteringBlending() === 0.0 &&
       model.renderable.getLocalAmbientOcclusion() &&
       actor.getProperty().getAmbient() > 0.0
     ) {
@@ -910,7 +910,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       );
     }
     if (
-      model.renderable.getVolumetricScatteringBlending() == 0.0 &&
+      model.renderable.getVolumetricScatteringBlending() === 0.0 &&
       model.renderable.getLocalAmbientOcclusion() &&
       actor.getProperty().getAmbient() > 0.0
     ) {
