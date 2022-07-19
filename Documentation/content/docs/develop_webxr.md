@@ -41,6 +41,8 @@ vtk.js supports virtual and augmented reality rendering via the [WebXR device AP
 [![VR Cone Example][VrCone]](../examples/VR.html)
 [![SkyboxViewer Example][SkyboxViewerVR]](../examples/SkyboxViewer.html?fileURL=https://data.kitware.com/api/v1/file/5ae8a89c8d777f0685796bae/download)
 [![XR Volume Example][WebXRVolume]](../examples/WebXRVolume.html)
+[![XR Volumetric Example][HeadFullVolume]](../examples/WebXRHeadFullVolumeCVR.html)
+[![XR Hybrid Example][ChestCTHybrid]](../examples/WebXRChestCTBlendedCVR.html)
 
 </div>
 
@@ -53,6 +55,7 @@ vtk.js supports virtual and augmented reality rendering via the [WebXR device AP
 [![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer/GeometryViewer.html?fileURL=[https://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download])
 [![GeometryViewer Chest CT][GeometryViewerchestCT]](../examples/GeometryViewer/GeometryViewer.html?fileURL=[https://data.kitware.com/api/v1/file/61f044354acac99f42c30276/download,https://data.kitware.com/api/v1/file/61f0440f4acac99f42c30191/download,https://data.kitware.com/api/v1/file/61f044204acac99f42c30267/download])
 [![XR Volume Example][WebXRVolume]](../examples/WebXRVolume.html)
+[![XR Gradient Example][HeadGradient]](../examples/WebXRHeadGradientCVR.html)
 
 </div>
 
@@ -75,3 +78,6 @@ While WebXR has broad industry support, it is not yet implemented in all browser
 [SkyboxViewerVR]: ../docs/gallery/SkyboxViewerVR.jpg
 [VrCone]: ../docs/gallery/VrCone.jpg
 [WebXRVolume]: ../docs/gallery/WebXRVolume.png
+[HeadFullVolume]: ../docs/gallery/HeadFullVolume.png
+[ChestCTHybrid]: ../docs/gallery/ChestCTHybrid.png
+[HeadGradient]: ../docs/gallery/HeadGradient.png
