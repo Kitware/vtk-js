@@ -57,7 +57,6 @@ vtk.js supports virtual and augmented reality rendering via the [WebXR device AP
 [![XR Volume Example][WebXRVolume]](../examples/WebXRVolume.html)
 [![XR Gradient Example][HeadGradient]](../examples/WebXRHeadGradientCVR.html)
 
-
 </div>
 
 ### For Developers
@@ -79,3 +78,6 @@ While WebXR has broad industry support, it is not yet implemented in all browser
 [SkyboxViewerVR]: ../docs/gallery/SkyboxViewerVR.jpg
 [VrCone]: ../docs/gallery/VrCone.jpg
 [WebXRVolume]: ../docs/gallery/WebXRVolume.png
+[HeadFullVolume]: ../docs/gallery/HeadFullVolume.png
+[ChestCTHybrid]: ../docs/gallery/ChestCTHybrid.png
+[HeadGradient]: ../docs/gallery/HeadGradient.png

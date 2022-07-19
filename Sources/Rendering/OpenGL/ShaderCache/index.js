@@ -172,9 +172,7 @@ function vtkShaderCache(publicAPI, model) {
     const result = Md5.hash(hashInput);
 
     // does it already exist?
-    const loc = Object.keys(model.shaderPrograms).indexOf(result);
-
-    if (loc === -1) {
+    if (!(result in model.shaderPrograms)) {
       // create one
       const sps = vtkShaderProgram.newInstance();
       sps.setContext(model.context);

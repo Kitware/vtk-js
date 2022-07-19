@@ -10,9 +10,9 @@ import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
-test('Test HardwareSelector', (tapeContext) => {
+test.onlyIfWebGL('Test HardwareSelector Points', (tapeContext) => {
   const gc = testUtils.createGarbageCollector(tapeContext);
-  tapeContext.ok('rendering', 'vtkHardwareSelector TestHardwareSelector');
+  tapeContext.ok('rendering', 'vtkHardwareSelector TestHardwareSelectorPoints');
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -76,22 +76,45 @@ test('Test HardwareSelector', (tapeContext) => {
   sel.setCaptureZValues(true);
 
   const promises = [];
-  promises.push(
-    sel.selectAsync(renderer, 200, 200, 300, 300).then((res) => {
-      // res[1] should be at 1.0, 1.0, 1.5 in world coords
-      const allGood =
-        res.length === 2 &&
-        res[0].getProperties().prop === actor &&
-        res[1].getProperties().prop === actor3 &&
-        Math.abs(res[1].getProperties().worldPosition[0] - 1.0) < 0.02 &&
-        Math.abs(res[1].getProperties().worldPosition[1] - 1.0) < 0.02 &&
-        Math.abs(res[1].getProperties().worldPosition[2] - 1.5) < 0.02;
 
-      tapeContext.ok(res.length === 2, 'Two props selected');
-      tapeContext.ok(allGood, 'Correct props were selected');
+  // Test picking points
+  promises.push(
+    sel.selectAsync(renderer, 210, 199, 211, 200).then((res) => {
+      tapeContext.ok(res[0].getProperties().propID === 3);
+      tapeContext.ok(res[0].getProperties().attributeID === 33);
     })
   );
 
+  promises.push(
+    sel.selectAsync(renderer, 145, 140, 146, 141).then((res) => {
+      tapeContext.ok(res[0].getProperties().propID === 4);
+      tapeContext.ok(res[0].getProperties().attributeID === 0);
+    })
+  );
+
+  promises.push(
+    sel.selectAsync(renderer, 294, 264, 295, 265).then((res) => {
+      tapeContext.ok(res[0].getProperties().propID === 5);
+      tapeContext.ok(res[0].getProperties().attributeID === 0);
+    })
+  );
+
+  sel.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_CELLS);
+
+  // Test picking cells
+  promises.push(
+    sel.selectAsync(renderer, 200, 200, 201, 201).then((res) => {
+      tapeContext.ok(res[0].getProperties().propID === 3);
+      tapeContext.ok(res[0].getProperties().attributeID === 27);
+    })
+  );
+
+  promises.push(
+    sel.selectAsync(renderer, 265, 265, 266, 266).then((res) => {
+      tapeContext.ok(res[0].getProperties().propID === 5);
+      tapeContext.ok(res[0].getProperties().attributeID === 0);
+    })
+  );
   Promise.all(promises).then(() => {
     gc.releaseResources();
   });

@@ -11,7 +11,7 @@ import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransfe
 import baseline from './testScalarBar.png';
 import baseline2 from './testScalarBar2.png';
 
-test.onlyIfWebGL('Test vtkScalarBarActor Rendering', (t) => {
+test('Test vtkScalarBarActor Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkScalarBarActor Rendering');
 
