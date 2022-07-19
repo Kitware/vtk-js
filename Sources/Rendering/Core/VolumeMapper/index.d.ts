@@ -95,6 +95,24 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	getAnisotropy(): number;
 
 	/**
+	 * Get local ambient occlusion flag
+	 * @default false
+	 */
+	getLocalAmbientOcclusion(): boolean;
+
+	/**
+	 * Get kernel size for local ambient occlusion
+	 * @default 15
+	 */
+	getKernelSize(): number;
+
+	/**
+	 * Get kernel radius for local ambient occlusion
+	 * @default 7
+	 */
+	getKernelRadius(): number;
+
+	/**
 	 * 
 	 * @param x 
 	 * @param y 
@@ -186,7 +204,28 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	 * Value of -1.0 means light scatters backward, value of 1.0 means light scatters forward.
 	 * @param anisotropy
 	 */
-	setAnisotropy(anisotropy: number): number;
+	setAnisotropy(anisotropy: number): void;
+
+	/**
+	 * Set whether to turn on local ambient occlusion (LAO). LAO is only effective if shading is on and volumeScatterBlendCoef is set to 0.
+	 * LAO effect is added to ambient lighting, so the ambient component of the actor needs to be great than 0.
+	 * @param localAmbientOcclusion
+	 */
+	setLocalAmbientOcclusion(localAmbientOcclusion: boolean): void;
+
+	/**
+	 * Set kernel size for local ambient occlusion. It specifies the number of rays that are randomly sampled in the hemisphere.
+	 * Value is clipped between 1 and 32.
+	 * @param kernelSize
+	 */
+	setKernelSize(kernelSize: number): void;
+
+	/**
+	 * Set kernel radius for local ambient occlusion. It specifies the number of samples that are considered on each random ray.
+	 * Value must be greater than or equal to 1.
+	 * @param kernelRadius
+	 */
+	setKernelRadius(kernelRadius: number): void;
 
 	/**
 	 * 
