@@ -13,6 +13,8 @@ function vtkVolumeMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkVolumeMapper');
 
+  const superClass = { ...publicAPI };
+
   publicAPI.getBounds = () => {
     const input = publicAPI.getInputData();
     if (!input) {
@@ -74,34 +76,29 @@ function vtkVolumeMapper(publicAPI, model) {
   };
 
   publicAPI.setGlobalIlluminationReach = (gl) => {
-    model.globalIlluminationReach = vtkMath.clampValue(gl, 0.0, 1.0);
-    publicAPI.modified();
+    superClass.setGlobalIlluminationReach(vtkMath.clampValue(gl, 0.0, 1.0));
   };
 
   publicAPI.setVolumetricScatteringBlending = (vsb) => {
-    model.volumetricScatteringBlending = vtkMath.clampValue(vsb, 0.0, 1.0);
-
-    publicAPI.modified();
+    superClass.setVolumetricScatteringBlending(
+      vtkMath.clampValue(vsb, 0.0, 1.0)
+    );
   };
 
   publicAPI.setVolumeShadowSamplingDistFactor = (vsdf) => {
-    model.volumeShadowSamplingDistFactor = vsdf >= 1.0 ? vsdf : 1.0;
-    publicAPI.modified();
+    superClass.setVolumeShadowSamplingDistFactor(vsdf >= 1.0 ? vsdf : 1.0);
   };
 
   publicAPI.setAnisotropy = (at) => {
-    model.anisotropy = vtkMath.clampValue(at, -0.99, 0.99);
-    publicAPI.modified();
+    superClass.setAnisotropy(vtkMath.clampValue(at, -0.99, 0.99));
   };
 
-  publicAPI.setKernelSize = (ks) => {
-    model.kernelSize = vtkMath.floor(vtkMath.clampValue(ks, 1, 32));
-    publicAPI.modified();
+  publicAPI.setLaoKernelSize = (ks) => {
+    superClass.setLaoKernelSize(vtkMath.floor(vtkMath.clampValue(ks, 1, 32)));
   };
 
-  publicAPI.setKernelRadius = (kr) => {
-    model.kernelRadius = kr >= 1 ? kr : 1;
-    publicAPI.modified();
+  publicAPI.setLaoKernelRadius = (kr) => {
+    superClass.setLaoKernelRadius(kr >= 1 ? kr : 1);
   };
 }
 
@@ -128,8 +125,8 @@ const DEFAULT_VALUES = {
   anisotropy: 0.0,
   // local ambient occlusion
   localAmbientOcclusion: false,
-  kernelSize: 15,
-  kernelRadius: 7,
+  laoKernelSize: 15,
+  laoKernelRadius: 7,
 };
 
 // ----------------------------------------------------------------------------
@@ -153,8 +150,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'volumeShadowSamplingDistFactor',
     'anisotropy',
     'localAmbientOcclusion',
-    'kernelSize',
-    'kernelRadius',
+    'laoKernelSize',
+    'laoKernelRadius',
   ]);
 
   macro.setGetArray(publicAPI, model, ['ipScalarRange'], 2);

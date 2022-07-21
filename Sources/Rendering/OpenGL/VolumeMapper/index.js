@@ -344,7 +344,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         '//VTK::LAO::Dec',
         [
           `uniform int kernelRadius;`,
-          `uniform vec2 kernelSample[${model.renderable.getKernelRadius()}];`,
+          `uniform vec2 kernelSample[${model.renderable.getLaoKernelRadius()}];`,
           `uniform int kernelSize;`,
         ],
         false
@@ -914,7 +914,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.renderable.getLocalAmbientOcclusion() &&
       actor.getProperty().getAmbient() > 0.0
     ) {
-      const ks = model.renderable.getKernelSize();
+      const ks = model.renderable.getLaoKernelSize();
       program.setUniformi('kernelSize', ks);
       const kernelSample = [];
       for (let i = 0; i < ks; i++) {
@@ -922,7 +922,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         kernelSample[i * 2 + 1] = Math.random() * 0.5;
       }
       program.setUniform2fv('kernelSample', kernelSample);
-      program.setUniformi('kernelRadius', model.renderable.getKernelRadius());
+      program.setUniformi(
+        'kernelRadius',
+        model.renderable.getLaoKernelRadius()
+      );
     }
   };
 
