@@ -1056,41 +1056,49 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
 
   // apply lighting if requested as appropriate
   #if vtkLightComplexity > 0
-    #if !defined(vtkComponent0Proportional) && defined(SurfaceShadowOn)
-        #if vtkLightComplexity < 3
-            vec3 tColorS = applyLightingDirectional(tColor.rgb, normalLight);
-        #else
-            vec3 tColorS = applyLightingPositional(tColor.rgb, normalLight, IStoVC(posIS));
+    #if !defined(vtkComponent0Proportional) 
+      #if vtkNumComponents == 1
+    
+        #ifdef SurfaceShadowOn
+            #if vtkLightComplexity < 3
+                vec3 tColorS = applyLightingDirectional(tColor.rgb, normalLight);
+            #else
+                vec3 tColorS = applyLightingPositional(tColor.rgb, normalLight, IStoVC(posIS));
+            #endif
         #endif
-    #endif
 
-    #ifdef VolumeShadowOn
-      vec3 tColorVS = applyShadowRay(tColor.rgb, posIS, rayDirVC);
-      #ifdef SurfaceShadowOn
-        float vol_coef = volumetricScatteringBlending * (1.0 - tColor.a / 2.0) * (1.0 - atan(normalLight.w) * INV4PI);
-        tColor.rgb = (1.0-vol_coef) * tColorS + vol_coef * tColorVS;
+        #ifdef VolumeShadowOn
+          vec3 tColorVS = applyShadowRay(tColor.rgb, posIS, rayDirVC);
+          #ifdef SurfaceShadowOn
+            float vol_coef = volumetricScatteringBlending * (1.0 - tColor.a / 2.0) * (1.0 - atan(normalLight.w) * INV4PI);
+            tColor.rgb = (1.0-vol_coef) * tColorS + vol_coef * tColorVS;
+          #else
+            tColor.rgb = tColorVS;
+          #endif
+        #else
+            tColor.rgb = tColorS;
+        #endif
+        
       #else
-        tColor.rgb = tColorVS;
+        applyLighting(tColor.rgb, normal0);
       #endif
-    #else
-        tColor.rgb = tColorS;
     #endif
 
-  #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
-    #if !defined(vtkComponent1Proportional)
-      applyLighting(tColor1, normal1);
+    #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
+      #if !defined(vtkComponent1Proportional)
+        applyLighting(tColor1, normal1);
+      #endif
+    #if vtkNumComponents >= 3
+      #if !defined(vtkComponent2Proportional)
+        applyLighting(tColor2, normal2);
+      #endif
+    #if vtkNumComponents >= 4
+      #if !defined(vtkComponent3Proportional)
+        applyLighting(tColor3, normal3);
+      #endif
     #endif
-  #if vtkNumComponents >= 3
-    #if !defined(vtkComponent2Proportional)
-      applyLighting(tColor2, normal2);
     #endif
-  #if vtkNumComponents >= 4
-    #if !defined(vtkComponent3Proportional)
-      applyLighting(tColor3, normal3);
     #endif
-  #endif
-  #endif
-  #endif
   #endif
 
 // perform final independent blend as needed
