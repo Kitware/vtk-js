@@ -776,7 +776,7 @@ float computeLAO(vec3 posIS, float opacity, vec3 lightDir, vec4 normal){
     float total_transmittance = 0.0;
     mat3 inverseRotateBasis = inverse(zBaseRotationalMatrix(normalize(-normal.xyz)));
     vec3 currPos, randomDirStep;
-    float weight, transmittance, sampled_transmittance;
+    float weight, transmittance, opacity;
     for (int i = 0; i < kernelSize; i++)
     {
       randomDirStep = inverseRotateBasis * sample_direction_uniform(i) * sampleDistanceIS;
@@ -787,8 +787,11 @@ float computeLAO(vec3 posIS, float opacity, vec3 lightDir, vec4 normal){
         currPos += randomDirStep;
         // check if it's at clipping plane, if so return full brightness
         if (all(greaterThan(currPos, vec3(EPSILON))) && all(lessThan(currPos,vec3(1.0-EPSILON)))){
-          sampled_transmittance = 1.0 - texture2D(otexture, vec2(getTextureValue(currPos).r * oscale0 + oshift0, 0.5)).r;
-          transmittance *= sampled_transmittance;
+          opacity = texture2D(otexture, vec2(getTextureValue(currPos).r * oscale0 + oshift0, 0.5)).r;
+          #ifdef vtkGradientOpacityOn
+             opacity *= computeGradientOpacityFactor(normal.w, goscale0, goshift0, gomin0, gomax0);
+          #endif
+          transmittance *= 1.0 - opacity;
         }
         else{
           break;
@@ -1155,9 +1158,9 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
     
         #ifdef SurfaceShadowOn
             #if vtkLightComplexity < 3
-                vec3 tColorS = applyLightingDirectional(tColor.rgb, normalLight);
+                vec3 tColorS = applyLightingDirectional(posIS, tColor, normalLight);
             #else
-                vec3 tColorS = applyLightingPositional(tColor.rgb, normalLight, IStoVC(posIS));
+                vec3 tColorS = applyLightingPositional(posIS, tColor, normalLight, IStoVC(posIS));
             #endif
         #endif
 

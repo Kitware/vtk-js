@@ -104,13 +104,13 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	 * Get kernel size for local ambient occlusion
 	 * @default 15
 	 */
-	getLaoKernelSize(): number;
+	getLAOKernelSize(): number;
 
 	/**
 	 * Get kernel radius for local ambient occlusion
 	 * @default 7
 	 */
-	getLaoKernelRadius(): number;
+	getLAOKernelRadius(): number;
 
 	/**
 	 * 
@@ -216,16 +216,16 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	/**
 	 * Set kernel size for local ambient occlusion. It specifies the number of rays that are randomly sampled in the hemisphere.
 	 * Value is clipped between 1 and 32.
-	 * @param kernelSize
+	 * @param LAOKernelSize
 	 */
-	setLaoKernelSize(laoKernelSize: number): void;
+	setLAOKernelSize(LAOKernelSize: number): void;
 
 	/**
 	 * Set kernel radius for local ambient occlusion. It specifies the number of samples that are considered on each random ray.
 	 * Value must be greater than or equal to 1.
-	 * @param kernelRadius
+	 * @param LAOKernelRadius
 	 */
-	setLaoKernelRadius(laoKernelRadius: number): void;
+	setLAOKernelRadius(LAOKernelRadius: number): void;
 
 	/**
 	 * 

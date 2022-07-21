@@ -75,31 +75,25 @@ function vtkVolumeMapper(publicAPI, model) {
     publicAPI.setFilterMode(FilterMode.RAW);
   };
 
-  publicAPI.setGlobalIlluminationReach = (gl) => {
+  publicAPI.setGlobalIlluminationReach = (gl) =>
     superClass.setGlobalIlluminationReach(vtkMath.clampValue(gl, 0.0, 1.0));
-  };
 
-  publicAPI.setVolumetricScatteringBlending = (vsb) => {
+  publicAPI.setVolumetricScatteringBlending = (vsb) =>
     superClass.setVolumetricScatteringBlending(
       vtkMath.clampValue(vsb, 0.0, 1.0)
     );
-  };
 
-  publicAPI.setVolumeShadowSamplingDistFactor = (vsdf) => {
+  publicAPI.setVolumeShadowSamplingDistFactor = (vsdf) =>
     superClass.setVolumeShadowSamplingDistFactor(vsdf >= 1.0 ? vsdf : 1.0);
-  };
 
-  publicAPI.setAnisotropy = (at) => {
+  publicAPI.setAnisotropy = (at) =>
     superClass.setAnisotropy(vtkMath.clampValue(at, -0.99, 0.99));
-  };
 
-  publicAPI.setLaoKernelSize = (ks) => {
-    superClass.setLaoKernelSize(vtkMath.floor(vtkMath.clampValue(ks, 1, 32)));
-  };
+  publicAPI.setLAOKernelSize = (ks) =>
+    superClass.setLAOKernelSize(vtkMath.floor(vtkMath.clampValue(ks, 1, 32)));
 
-  publicAPI.setLaoKernelRadius = (kr) => {
-    superClass.setLaoKernelRadius(kr >= 1 ? kr : 1);
-  };
+  publicAPI.setLAOKernelRadius = (kr) =>
+    superClass.setLAOKernelRadius(kr >= 1 ? kr : 1);
 }
 
 // ----------------------------------------------------------------------------
@@ -125,8 +119,8 @@ const DEFAULT_VALUES = {
   anisotropy: 0.0,
   // local ambient occlusion
   localAmbientOcclusion: false,
-  laoKernelSize: 15,
-  laoKernelRadius: 7,
+  LAOKernelSize: 15,
+  LAOKernelRadius: 7,
 };
 
 // ----------------------------------------------------------------------------
@@ -150,8 +144,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'volumeShadowSamplingDistFactor',
     'anisotropy',
     'localAmbientOcclusion',
-    'laoKernelSize',
-    'laoKernelRadius',
+    'LAOKernelSize',
+    'LAOKernelRadius',
   ]);
 
   macro.setGetArray(publicAPI, model, ['ipScalarRange'], 2);
