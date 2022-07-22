@@ -64,6 +64,8 @@ uniform float vSpecular;
 
 //VTK::VolumeShadowOn
 //VTK::SurfaceShadowOn
+//VTK::localAmbientOcclusionOn
+//VTK::LAO::Dec
 //VTK::VolumeShadow::Dec
 
 // define vtkComputeNormalFromOpacity
@@ -201,10 +203,13 @@ uniform vec4 ipScalarRangeMax;
 // global and custom variables (a temporary section before photorealistics rendering module is complete)
 vec3 rayDirVC;
 float sampleDistanceISVS;
+float sampleDistanceIS;
 
 #define SQRT3    1.7321
 #define INV4PI   0.0796
 #define EPSILON  0.001
+#define PI       3.1415
+#define PI2      9.8696
 
 //=======================================================================
 // Webgl2 specific version of functions
@@ -484,10 +489,14 @@ float computeGradientOpacityFactor(
     result.z = getTextureValue(pos + vec3(0.0, 0.0, tstep.z)).a - scalar;  
     // divide by spacing  
     result.xyz /= vSpacing;  
-    result.w = length(result.xyz);  
-    // rotate to View Coords  
-    rotateToViewCoord(result.xyz);
-    return vec4(normalize(result.xyz),result.w);  
+    result.w = length(result.xyz);
+    if (result.w > 0.0){
+      // rotate to View Coords  
+      rotateToViewCoord(result.xyz);
+      return vec4(normalize(result.xyz),result.w);  
+    } else {
+      return vec4(0.0);
+    }
   }  
 #endif
 
@@ -577,15 +586,7 @@ mat4 computeMat4Normal(vec3 pos, vec4 tValue, vec3 tstep)
 
 //=======================================================================
 // global shadow - secondary ray
-#ifdef VolumeShadowOn
-
-// henyey greenstein phase function
-float phase_function(float cos_angle)
-{
-  // divide by 2.0 instead of 4pi to increase intensity
-  return ((1.0-anisotropy2)/pow(1.0+anisotropy2-2.0*anisotropy*cos_angle, 1.5))/2.0;
-}
-
+#if defined(VolumeShadowOn) || defined(localAmbientOcclusionOn)
 float random()
 { 
   float rand = fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453123);
@@ -595,6 +596,15 @@ float random()
   pcg_state = pcg_state * uint(747796405) + uint(2891336453);
   uint word = ((state >> ((state >> uint(28)) + uint(4))) ^ state) * uint(277803737);
   return (float((((word >> uint(22)) ^ word) >> 1 ))/float(2147483647) + rand)/2.0;
+}
+#endif
+
+#ifdef VolumeShadowOn
+// henyey greenstein phase function
+float phase_function(float cos_angle)
+{
+  // divide by 2.0 instead of 4pi to increase intensity
+  return ((1.0-anisotropy2)/pow(1.0+anisotropy2-2.0*anisotropy*cos_angle, 1.5))/2.0;
 }
 
 // Computes the intersection between a ray and a box
@@ -739,6 +749,70 @@ vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
 #endif
 
 //=======================================================================
+// local ambient occlusion
+#ifdef localAmbientOcclusionOn
+vec3 sample_direction_uniform(int i)
+{
+  float rand = random() * 0.5;
+  float theta = PI2 * (kernelSample[i][0] + rand);
+  float phi = acos(2.0 * (kernelSample[i][1] + rand) -1.0) / 2.5;
+  return normalize(vec3(cos(theta)*sin(phi), sin(theta)*sin(phi), cos(phi)));
+}
+
+// return a matrix that transform startDir into z axis; startDir should be normalized
+mat3 zBaseRotationalMatrix(vec3 startDir){
+  vec3 axis = cross(startDir, vec3(0.0,0.0,1.0));
+  float cosA = startDir.z;
+  float k = 1.0 / (1.0 + cosA);
+  mat3 matrix = mat3((axis.x * axis.x * k) + cosA, (axis.y * axis.x * k) - axis.z, (axis.z * axis.x * k) + axis.y,
+              (axis.x * axis.y * k) + axis.z, (axis.y * axis.y * k) + cosA, (axis.z * axis.y * k) - axis.x,
+              (axis.x * axis.z * k) - axis.y, (axis.y * axis.z * k) + axis.x, (axis.z * axis.z * k) + cosA);
+  return matrix;
+}
+
+float computeLAO(vec3 posIS, float opacity, vec3 lightDir, vec4 normal){
+  // apply LAO only at selected locations, otherwise return full brightness
+  if (normal.w > 0.0 && opacity > 0.05){
+    float total_transmittance = 0.0;
+    mat3 inverseRotateBasis = inverse(zBaseRotationalMatrix(normalize(-normal.xyz)));
+    vec3 currPos, randomDirStep;
+    float weight, transmittance, opacity;
+    for (int i = 0; i < kernelSize; i++)
+    {
+      randomDirStep = inverseRotateBasis * sample_direction_uniform(i) * sampleDistanceIS;
+      weight = 1.0 - dot(normalize(lightDir), normalize(randomDirStep));
+      currPos = posIS;
+      transmittance = 1.0;
+      for (int j = 0; j < kernelRadius ; j++){
+        currPos += randomDirStep;
+        // check if it's at clipping plane, if so return full brightness
+        if (all(greaterThan(currPos, vec3(EPSILON))) && all(lessThan(currPos,vec3(1.0-EPSILON)))){
+          opacity = texture2D(otexture, vec2(getTextureValue(currPos).r * oscale0 + oshift0, 0.5)).r;
+          #ifdef vtkGradientOpacityOn
+             opacity *= computeGradientOpacityFactor(normal.w, goscale0, goshift0, gomin0, gomax0);
+          #endif
+          transmittance *= 1.0 - opacity;
+        }
+        else{
+          break;
+        }
+      }
+      total_transmittance += transmittance / float(kernelRadius) * weight;
+
+      // early termination if fully translucent
+      if (total_transmittance > 1.0 - EPSILON){
+        return 1.0;
+      }
+    }
+    // average transmittance and reduce variance
+    return clamp(total_transmittance / float(kernelSize), 0.3, 1.0); 
+  } else {
+    return 1.0;
+  }
+}
+#endif
+
+//=======================================================================
 // surface light contribution
 #if vtkLightComplexity > 0
   void applyLighting(inout vec3 tColor, vec4 normal)
@@ -756,11 +830,14 @@ vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
   }
   #ifdef SurfaceShadowOn
   #if vtkLightComplexity < 3
-    vec3 applyLightingDirectional(inout vec3 tColor, vec4 normal)
+    vec3 applyLightingDirectional(vec3 posIS, vec4 tColor, vec4 normal)
     {
       // everything in VC
       vec3 diffuse = vec3(0.0);
       vec3 specular = vec3(0.0);
+      #ifdef localAmbientOcclusionOn
+        vec3 ambient = vec3(0.0);
+      #endif        
       vec3 vertLightDirection;
       for (int i = 0; i < lightNum; i++){
         float ndotL,vdotR;
@@ -780,15 +857,25 @@ vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
             specular += pow(vdotR, vSpecularPower) * lightColor[i];
           }
         }
+        #ifdef localAmbientOcclusionOn
+            ambient += computeLAO(posIS, tColor.a, vertLightDirection, normal);
+        #endif
       }  
-      return tColor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;
+      #ifdef localAmbientOcclusionOn
+        return tColor.rgb * (diffuse * vDiffuse + vAmbient * ambient) + specular*vSpecular;
+      #else 
+        return tColor.rgb * (diffuse * vDiffuse + vAmbient) + specular*vSpecular;
+      #endif    
     }
   #else
-    vec3 applyLightingPositional(inout vec3 tColor, vec4 normal, vec3 posVC)
+    vec3 applyLightingPositional(vec3 posIS, vec4 tColor, vec4 normal, vec3 posVC)
     {
       // everything in VC
       vec3 diffuse = vec3(0.0);
       vec3 specular = vec3(0.0);
+      #ifdef localAmbientOcclusionOn
+        vec3 ambient = vec3(0.0);
+      #endif      
       vec3 vertLightDirection;
       for (int i = 0; i < lightNum; i++){
         float distance,attenuation,ndotL,vdotR;
@@ -826,6 +913,9 @@ vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
               specular += pow(vdotR, vSpecularPower) * attenuation * lightColor[i];
             }
           }
+          #ifdef localAmbientOcclusionOn
+            ambient += computeLAO(posIS, tColor.a, vertLightDirection, normal);
+          #endif          
         } else {
           vertLightDirection = lightDirectionVC[i];
           ndotL = dot(normal.xyz, vertLightDirection);
@@ -843,9 +933,16 @@ vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
               specular += pow(vdotR, vSpecularPower) * lightColor[i];
             }
           }
+          #ifdef localAmbientOcclusionOn
+            ambient += computeLAO(posIS, tColor.a, vertLightDirection, normal);
+          #endif          
         }
       }
-      return tColor.rgb * (diffuse * vDiffuse + vAmbient) + specular*vSpecular;
+      #ifdef localAmbientOcclusionOn
+        return tColor.rgb * (diffuse * vDiffuse + vAmbient * ambient) + specular*vSpecular;
+      #else 
+        return tColor.rgb * (diffuse * vDiffuse + vAmbient) + specular*vSpecular;
+      #endif
     }
   #endif 
   #endif
@@ -1061,9 +1158,9 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
     
         #ifdef SurfaceShadowOn
             #if vtkLightComplexity < 3
-                vec3 tColorS = applyLightingDirectional(tColor.rgb, normalLight);
+                vec3 tColorS = applyLightingDirectional(posIS, tColor, normalLight);
             #else
-                vec3 tColorS = applyLightingPositional(tColor.rgb, normalLight, IStoVC(posIS));
+                vec3 tColorS = applyLightingPositional(posIS, tColor, normalLight, IStoVC(posIS));
             #endif
         #endif
 
@@ -1148,7 +1245,7 @@ bool valueWithinScalarRange(vec4 val, vec4 min, vec4 max) {
 //=======================================================================
 // Apply the specified blend mode operation along the ray's path.
 //
-void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
+void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
 {
   vec3 tstep = 1.0/tdims;
 
@@ -1432,7 +1529,7 @@ vec2 computeRayDistances(vec3 rayDir, vec3 tdims)
 // Compute the index space starting position (pos) and end
 // position
 //
-void computeIndexSpaceValues(out vec3 pos, out vec3 endPos, out float sampleDistanceIS, vec3 rayDir, vec2 dists)
+void computeIndexSpaceValues(out vec3 pos, out vec3 endPos, vec3 rayDir, vec2 dists)
 {
   // compute starting and ending values in volume space
   pos = vertexVCVSOutput + dists.x*rayDir;
@@ -1489,9 +1586,8 @@ void main()
   // IS = Index Space
   vec3 posIS;
   vec3 endIS;
-  float sampleDistanceIS;
-  computeIndexSpaceValues(posIS, endIS, sampleDistanceIS, rayDirVC, rayStartEndDistancesVC);
+  computeIndexSpaceValues(posIS, endIS, rayDirVC, rayStartEndDistancesVC);
 
   // Perform the blending operation along the ray
-  applyBlend(posIS, endIS, sampleDistanceIS, tdims);
+  applyBlend(posIS, endIS, tdims);
 }

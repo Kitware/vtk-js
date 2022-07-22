@@ -207,6 +207,17 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           `#define SurfaceShadowOn`
         ).result;
       }
+      if (
+        model.renderable.getVolumetricScatteringBlending() === 0.0 &&
+        model.renderable.getLocalAmbientOcclusion() &&
+        actor.getProperty().getAmbient() > 0.0
+      ) {
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::localAmbientOcclusionOn',
+          `#define localAmbientOcclusionOn`
+        ).result;
+      }
     }
 
     // if using gradient opacity define that
@@ -323,7 +334,22 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         false
       ).result;
     }
-
+    if (
+      model.renderable.getVolumetricScatteringBlending() === 0.0 &&
+      model.renderable.getLocalAmbientOcclusion() &&
+      actor.getProperty().getAmbient() > 0.0
+    ) {
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::LAO::Dec',
+        [
+          `uniform int kernelRadius;`,
+          `uniform vec2 kernelSample[${model.renderable.getLAOKernelRadius()}];`,
+          `uniform int kernelSize;`,
+        ],
+        false
+      ).result;
+    }
     shaders.Fragment = FSSource;
   };
 
@@ -881,6 +907,24 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformf(
         'anisotropy2',
         model.renderable.getAnisotropy() ** 2.0
+      );
+    }
+    if (
+      model.renderable.getVolumetricScatteringBlending() === 0.0 &&
+      model.renderable.getLocalAmbientOcclusion() &&
+      actor.getProperty().getAmbient() > 0.0
+    ) {
+      const ks = model.renderable.getLAOKernelSize();
+      program.setUniformi('kernelSize', ks);
+      const kernelSample = [];
+      for (let i = 0; i < ks; i++) {
+        kernelSample[i * 2] = Math.random() * 0.5;
+        kernelSample[i * 2 + 1] = Math.random() * 0.5;
+      }
+      program.setUniform2fv('kernelSample', kernelSample);
+      program.setUniformi(
+        'kernelRadius',
+        model.renderable.getLAOKernelRadius()
       );
     }
   };
