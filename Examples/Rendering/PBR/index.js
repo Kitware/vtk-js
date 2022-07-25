@@ -23,6 +23,7 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0.08, 0.08, 0.08],
 });
 const renderer = fullScreenRenderer.getRenderer();
+renderer.setUseEnvironmentTextureAsBackground(true);
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
 const fpsMonitor = vtkFPSMonitor.newInstance();
@@ -59,9 +60,26 @@ function createTexture(src) {
   _img.crossOrigin = 'Anonymous';
   _img.src = src;
   const _tex = vtkTexture.newInstance();
-  _tex.setInterpolate(true);
-  _tex.setEdgeClamp(true);
-  _tex.setImage(_img);
+  _img.onload = () => {
+    _tex.setInterpolate(true);
+    _tex.setEdgeClamp(true);
+    _tex.setImage(_img);
+  };
+  return _tex;
+}
+
+// Texture loading helper function
+function createTextureWithMipmap(src, level) {
+  const _img = new Image();
+  _img.crossOrigin = 'Anonymous';
+  _img.src = src;
+  const _tex = vtkTexture.newInstance();
+  _tex.setMipLevel(level);
+  _img.onload = () => {
+    _tex.setInterpolate(true);
+    _tex.setEdgeClamp(true);
+    _tex.setImage(_img);
+  };
   return _tex;
 }
 
@@ -85,7 +103,7 @@ reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(() => {
   // Setting default values
   actor.setPosition(0.0, 0.0, 0.0);
   actor.getProperty().setRoughness(1.0);
-  actor.getProperty().setEmission(5.0);
+  actor.getProperty().setEmission(0.6);
   actor.getProperty().setMetallic(1.0);
   actor.getProperty().setNormalStrength(0.5);
   actor.getProperty().setBaseIOR(1.33);
@@ -94,16 +112,24 @@ reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(() => {
 
   // Texture loading
   const diffuseTex = createTexture(`${__BASE_PATH__}/data/pbr/diffuse.jpg`);
+  const aoTex = createTexture(`${__BASE_PATH__}/data/pbr/ao.jpg`);
   const roughnessTex = createTexture(`${__BASE_PATH__}/data/pbr/roughness.jpg`);
   const metallicTex = createTexture(`${__BASE_PATH__}/data/pbr/metallic.jpg`);
   const emissionTex = createTexture(`${__BASE_PATH__}/data/pbr/emission.jpg`);
   const normalTex = createTexture(`${__BASE_PATH__}/data/pbr/normal.jpg`);
-
+  const environmentTex = createTextureWithMipmap(
+    `${__BASE_PATH__}/data/pbr/kiara_dawn_4k.jpg`,
+    8
+  );
   actor.getProperty().setDiffuseTexture(diffuseTex);
+  actor.getProperty().setAmbientOcclusionTexture(aoTex);
   actor.getProperty().setRoughnessTexture(roughnessTex);
   actor.getProperty().setMetallicTexture(metallicTex);
   actor.getProperty().setEmissionTexture(emissionTex);
   actor.getProperty().setNormalTexture(normalTex);
+  renderer.setEnvironmentTexture(environmentTex);
+  renderer.setEnvironmentTextureDiffuseStrength(1);
+  renderer.setEnvironmentTextureSpecularStrength(1);
 
   actor.setMapper(mapper);
   mapper.setInputData(polydata);
@@ -116,37 +142,13 @@ reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(() => {
 // Adding lights and other scene properties
 // ----------------------------------------------
 
-const baseLight = vtkLight.newInstance({
-  positional: false,
-  color: [1, 0.95, 1],
-  intensity: 2,
-});
-baseLight.setDirection([0, 0.5, 1]); // setDirection allows for direct setting instead of through a focal point
-renderer.addLight(baseLight);
-
-const rimLight = vtkLight.newInstance({
-  positional: false,
-  color: [1, 0.95, 1],
-  intensity: 2,
-});
-rimLight.setDirection([-0.4, -0.2, -1]);
-renderer.addLight(rimLight);
-
 const redLight = vtkLight.newInstance({
   positional: false,
   color: [1.5, 0.4, 0.2],
-  intensity: 1,
+  intensity: 0.5,
 });
-redLight.setDirection([1, 0, 0]);
+redLight.setDirection([0.8, 1, -1]); // setDirection allows for direct setting instead of through a focal point
 renderer.addLight(redLight);
-
-const blueLight = vtkLight.newInstance({
-  positional: false,
-  color: [0.2, 0.4, 1.5],
-  intensity: 1,
-});
-blueLight.setDirection([-1, 0, 0]);
-renderer.addLight(blueLight);
 
 renderer.resetCamera();
 renderWindow.render();
@@ -157,11 +159,50 @@ fpsMonitor.update();
 // -----------------------------------------------------------
 
 fullScreenRenderer.addController(controlPanel);
+// Alert if WebGPU is not being used
+const pipelineNotification = document.querySelector('.device_notification');
+if (!('gpu' in navigator)) {
+  pipelineNotification.innerHTML =
+    'This browser does not support WebGPU, falling<br>' +
+    'back to WebGL. Functionality will suffer.';
+}
 const colorChange = document.querySelector('.color');
 const roughnessChange = document.querySelector('.roughness');
 const metallicChange = document.querySelector('.metallic');
 const normalChange = document.querySelector('.normal');
 const iorChange = document.querySelector('.ior');
+const eSpecularChange = document.querySelector('.e_specular');
+const eDiffuseChange = document.querySelector('.e_diffuse');
+const angleChange = document.querySelector('.angle');
+const useTextureBackgroundChange = document.querySelector('.use_background');
+
+useTextureBackgroundChange.addEventListener('input', (e) => {
+  const useTexturedBackground = Boolean(e.target.checked);
+  renderer.setUseEnvironmentTextureAsBackground(useTexturedBackground);
+  renderWindow.render();
+  fpsMonitor.update();
+});
+
+angleChange.addEventListener('input', (e) => {
+  const angle = Number(e.target.value);
+  renderer.getActiveCamera().setViewAngle(angle);
+  renderWindow.render();
+  fpsMonitor.update();
+});
+
+eSpecularChange.addEventListener('input', (e) => {
+  const specular = Number(e.target.value);
+  renderer.setEnvironmentTextureSpecularStrength(specular);
+  renderWindow.render();
+  fpsMonitor.update();
+});
+
+eDiffuseChange.addEventListener('input', (e) => {
+  const diffuse = Number(e.target.value);
+  renderer.setEnvironmentTextureDiffuseStrength(diffuse);
+  renderWindow.render();
+  fpsMonitor.update();
+});
 
 roughnessChange.addEventListener('input', (e) => {
   const roughness = Number(e.target.value);

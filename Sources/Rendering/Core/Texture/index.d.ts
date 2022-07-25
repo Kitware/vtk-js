@@ -5,6 +5,7 @@ export interface ITextureInitialValues {
 	interpolate?: boolean;
 	edgeClamp?: boolean;
 	imageLoaded?: boolean;
+	mipLevel?: number;
 }
 
 export interface vtkTexture extends vtkAlgorithm {
@@ -36,6 +37,11 @@ export interface vtkTexture extends vtkAlgorithm {
 
 	/**
 	 * 
+	 */
+	getMipLevel(): number;
+
+	/**
+	 * 
 	 * @param repeat 
 	 * @default false
 	 */
@@ -62,6 +68,11 @@ export interface vtkTexture extends vtkAlgorithm {
 	 * @default null
 	 */
 	setImage(image: any): void;
+
+	/**
+	 * @param level
+	 */
+	setMipLevel(level: number): boolean;
 }
 
 /**
@@ -78,6 +89,17 @@ export function extend(publicAPI: object, model: object, initialValues?: ITextur
  * @param {ITextureInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ITextureInitialValues): vtkTexture;
+
+/**
+ * Method used to create mipmaps from given texture data. Works best with textures that have a 
+ * width and a height that are powers of two.
+ * 
+ * @param nativeArray the array of data to create mipmaps from.
+ * @param width the width of the data
+ * @param height the height of the data
+ * @param level the level to which additional mipmaps are generated.
+ */
+export function generateMipmaps(nativeArray: any, width: number, height: number, level: number): Array<Uint8ClampedArray>;
 
 /** 
  * vtkTexture is an image algorithm that handles loading and binding of texture maps.

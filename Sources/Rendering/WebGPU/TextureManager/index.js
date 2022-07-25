@@ -107,6 +107,7 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       depth: req.depth,
       format: req.format,
       usage: req.usage,
+      mipLevel: req.mipLevel,
     });
 
     // fill the texture if we have data
@@ -133,7 +134,7 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     treq.imageData = imgData;
     // fill out the req time and format based on imageData/image
     _fillRequest(treq);
-    treq.hash = treq.time + treq.format;
+    treq.hash = treq.time + treq.format + treq.mipLevel;
     return model.device.getTextureManager().getTexture(treq);
   };
 
@@ -150,7 +151,8 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     }
     // fill out the req time and format based on imageData/image
     _fillRequest(treq);
-    treq.hash = treq.time + treq.format;
+    treq.mipLevel = srcTexture.getMipLevel();
+    treq.hash = treq.time + treq.format + treq.mipLevel;
     return model.device.getTextureManager().getTexture(treq);
   };
 }

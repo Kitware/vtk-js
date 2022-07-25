@@ -13,10 +13,12 @@ function vtkWebGPUFullScreenQuad(publicAPI, model) {
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
     vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
+    vDesc.addOutput('vec4<f32>', 'vertexVC');
     let code = vDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
       'output.tcoordVS = vec2<f32>(vertexBC.x * 0.5 + 0.5, 1.0 - vertexBC.y * 0.5 - 0.5);',
       'output.Position = vec4<f32>(vertexBC, 1.0);',
+      'output.vertexVC = vec4<f32>(vertexBC, 1);',
     ]).result;
     vDesc.setCode(code);
   };
