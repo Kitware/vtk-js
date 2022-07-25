@@ -96,7 +96,7 @@
     "kw-doc": "3.1.2",
     "lodash": "4.17.21",
     "magic-string": "0.26.2",
-    "moment": "2.29.3",
+    "moment": "2.29.4",
     "patch-package": "6.4.7",
     "pixelmatch": "5.3.0",
     "postcss-loader": "6.2.1",
