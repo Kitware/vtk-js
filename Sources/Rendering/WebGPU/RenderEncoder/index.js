@@ -59,8 +59,8 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
       console.trace();
     } else {
       for (let i = 0; i < model.colorTextureViews.length; i++) {
-        const fmt = model.colorTextureViews[i].getTexture().getFormat();
-        if (fmt !== pd.fragment.targets[i].format) {
+        const fmt = model.colorTextureViews[i].getTexture()?.getFormat();
+        if (fmt && fmt !== pd.fragment.targets[i].format) {
           console.log(
             `mismatched attachments for attachment ${i} on pipeline ${pd.fragment.targets[i].format} while encoder has ${fmt}`
           );
@@ -74,8 +74,8 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
       console.log('mismatched depth attachments');
       console.trace();
     } else if (model.depthTextureView) {
-      const dfmt = model.depthTextureView.getTexture().getFormat();
-      if (dfmt !== pd.depthStencil.format) {
+      const dfmt = model.depthTextureView.getTexture()?.getFormat();
+      if (dfmt && dfmt !== pd.depthStencil.format) {
         console.log(
           `mismatched depth attachments on pipeline ${pd.depthStencil.format} while encoder has ${dfmt}`
         );
@@ -211,7 +211,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     fragment: {
       targets: [
         {
-          format: 'bgra8unorm',
+          format: 'rgba16float',
           blend: {
             color: {
               srcFactor: 'src-alpha',
