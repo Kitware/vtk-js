@@ -1,5 +1,5 @@
 import { create } from 'xmlbuilder2';
-import pako from 'pako';
+import { decompressSync } from 'fflate';
 
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import Base64 from 'vtk.js/Sources/Common/Core/Base64';
@@ -108,7 +108,7 @@ function readerHeader(uint8, headerType) {
 // ----------------------------------------------------------------------------
 
 function uncompressBlock(compressedUint8, output) {
-  const uncompressedBlock = pako.inflate(compressedUint8);
+  const uncompressedBlock = decompressSync(compressedUint8);
   output.uint8.set(uncompressedBlock, output.offset);
   output.offset += uncompressedBlock.length;
 }
