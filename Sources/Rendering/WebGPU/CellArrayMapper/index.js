@@ -82,7 +82,7 @@ fn cdot(a: vec3<f32>, b: vec3<f32>) -> f32 {
 // Lambertian diffuse model
 fn lambertDiffuse(base: vec3<f32>, N: vec3<f32>, L: vec3<f32>) -> vec3<f32> {
   var pi: f32 = 3.14159265359; 
-  var NdotL: f32 = mdot(N, L);
+  var NdotL: f32 = cdot(N, L);
   NdotL = pow(NdotL, 1.5);
   return (base/pi)*NdotL;
 }
@@ -94,11 +94,11 @@ fn fujiiOrenNayar(p: vec3<f32>, o: f32, N: vec3<f32>, L: vec3<f32>, V: vec3<f32>
   var invpi: f32 = 0.31830988618; // 1/pi
 
   var o2 = o*o;
-  var NdotL: f32 = mdot(N, L);
+  var NdotL: f32 = cdot(N, L);
   NdotL = pow(NdotL, 1.5); // Less physically accurate, but hides the "seams" between lights better
 
-  var NdotV: f32 = mdot(N, V);
-  var LdotV: f32 = mdot(L, V);
+  var NdotV: f32 = cdot(N, V);
+  var LdotV: f32 = cdot(L, V);
 
   var s: f32 = LdotV - NdotL*NdotV;
   var t: f32 = mix(1, max(NdotL, NdotV), step(0, s)); // Mix with step is the equivalent of an if statement
@@ -112,14 +112,14 @@ fn fujiiOrenNayar(p: vec3<f32>, o: f32, N: vec3<f32>, L: vec3<f32>, V: vec3<f32>
 
 // Fresnel portion of BRDF (IOR only, simplified)
 fn schlickFresnelIOR(V: vec3<f32>, N: vec3<f32>, ior: f32, k: f32) -> f32 {
-  var NdotV: f32 = mdot(V, N);
+  var NdotV: f32 = cdot(V, N);
   var F0: f32 = (pow((ior - 1.0), 2) + k*k) / (pow((ior + 1.0), 2) + k*k); // This takes into account the roughness, which the other one does not
   return F0 + (1 - F0) * pow((1-NdotV), 5); 
 }
 
 // Fresnel portion of BRDF (Color ior, better)
 fn schlickFresnelRGB(V: vec3<f32>, N: vec3<f32>, F0: vec3<f32>) -> vec3<f32> {
-  var NdotV: f32 = mdot(V, N);
+  var NdotV: f32 = cdot(V, N);
   return F0 + (1 - F0) * pow((1-NdotV), 5); 
 }
 
@@ -130,7 +130,7 @@ fn trGGX(N: vec3<f32>, H: vec3<f32>, a: f32) -> f32 {
   var pi: f32 = 3.14159265359; 
 
   var a2: f32 = a*a;
-  var NdotH = mdot(N, H);
+  var NdotH = cdot(N, H);
   var NdotH2 = NdotH*NdotH;
   
   var denom: f32 = NdotH2 * (a2 - 1.0) + 1.0;
@@ -181,7 +181,7 @@ fn calcDirectionalLight(N: vec3<f32>, V: vec3<f32>, ior: f32, roughness: f32, me
 
   var brdf: f32 = cookTorrance(D, 1, G, N, V, L); // Fresnel term is replaced with 1 because it is added later
   var incoming: vec3<f32> = color;
-  var angle: f32 = mdot(L, N);
+  var angle: f32 = cdot(L, N);
   angle = pow(angle, 1.5);
 
   var specular: vec3<f32> = brdf*incoming*angle;
@@ -209,7 +209,7 @@ fn calcPointLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, roug
 
   var brdf: f32 = cookTorrance(D, 1, G, N, V, L);  
   var incoming: vec3<f32> = color * (1. / (dist*dist));
-  var angle: f32 = mdot(L, N);
+  var angle: f32 = cdot(L, N);
   angle = pow(angle, 1.5); // Smoothing factor makes it less accurate, but reduces ugly "seams" bewteen light sources
 
   var specular: vec3<f32> = brdf*incoming*angle;
@@ -238,7 +238,7 @@ fn calcSpotLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, rough
   var brdf: f32 = cookTorrance(D, 1, G, N, V, L);  
   
   // Cones.x is the inner phi and cones.y is the outer phi
-  var theta: f32 = mdot(normalize(direction), L);
+  var theta: f32 = cdot(normalize(direction), L);
   var epsilon: f32 = cones.x - cones.y;
   var intensity: f32 = (theta - cones.y) / epsilon;
   intensity = clamp(intensity, 0.0, 1.0);
@@ -246,7 +246,7 @@ fn calcSpotLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, rough
 
   var incoming: vec3<f32> = color * intensity;
 
-  var angle: f32 = mdot(L, N);
+  var angle: f32 = cdot(L, N);
   angle = pow(angle, 1.5); // Smoothing factor makes it less accurate, but reduces ugly "seams" bewteen light sources
 
   var specular: vec3<f32> = brdf*incoming*angle;
@@ -311,7 +311,7 @@ fn main(
   var _metallicMap: vec4<f32> = vec4<f32>(1);
   var _normalMap: vec4<f32> = vec4<f32>(0, 0, 1, 0); // normal map was setting off the normal vector detection in fragment
   var _ambientOcclusionMap: vec4<f32> = vec4<f32>(1);
-  var _emissionMap: vec4<f32> = vec4<f32>(0);
+  var _emissionMap: vec4<f32> = vec4<f32>(1);
 
   //VTK::Color::Impl
 
@@ -745,7 +745,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Light::Impl', [
         '  var diffuse: vec3<f32> = diffuseColor.rgb;',
         '  var specular: vec3<f32> = mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
-        '  computedColor = vec4<f32>(diffuse * _diffuseMap.rgb, mapperUBO.Opacity);',
+        '  computedColor = vec4<f32>(diffuse * _diffuseMap.rgb, mapperUBO.Opacity * _diffuseMap.a);',
       ]).result;
       fDesc.setCode(code);
     }

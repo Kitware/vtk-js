@@ -13,6 +13,7 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
 import baseline1 from './testComposite.png';
 import baseline2 from './testComposite_2.png';
+import baseline3 from './testComposite_3.png';
 
 test('Test Composite Volume Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -79,7 +80,7 @@ test('Test Composite Volume Rendering', (t) => {
       glwindow.captureNextImage().then((image) => {
         testUtils.compareImages(
           image,
-          [baseline1, baseline2],
+          [baseline1, baseline2, baseline3],
           'Rendering/Core/VolumeMapper/testComposite',
           t,
           3.0,

@@ -66,6 +66,9 @@ test('Test vtkScalarBarActor setGenerateTicks', (t) => {
 
   renderer.addActor(scalarBarActor);
 
+  renderer.resetCamera();
+  renderWindow.render();
+
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,

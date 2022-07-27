@@ -111,7 +111,7 @@ const DEFAULT_VALUES = {
   metallic: 0,
   roughness: 0.6,
   normalStrength: 1,
-  emission: 1,
+  emission: 0,
   baseIOR: 1.45,
   specular: 0,
   specularPower: 1,

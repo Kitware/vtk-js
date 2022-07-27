@@ -19,7 +19,7 @@ import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/Orien
 import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor';
 
 import baseline1 from './testIntermixedImage.png';
-// import baseline2 from './testIntermixedImage_1.png';
+import baseline2 from './testIntermixedImage_2.png';
 
 test('Test Composite Volume Rendering: intermixed image', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -168,7 +168,7 @@ test('Test Composite Volume Rendering: intermixed image', (t) => {
       glwindow.captureNextImage().then((image) => {
         testUtils.compareImages(
           image,
-          [baseline1],
+          [baseline1, baseline2],
           'Rendering/Core/VolumeMapper/testIntermixedImage',
           t,
           5.0,

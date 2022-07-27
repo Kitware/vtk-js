@@ -9,6 +9,7 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 
 import baseline from './testFollower.png';
+import baseline2 from './testFollower_2.png';
 
 test('Test Follower class', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -58,10 +59,11 @@ test('Test Follower class', (t) => {
       renderer.getActiveCamera().azimuth(10);
       renderer.getActiveCamera().elevation(10);
       renderer.getActiveCamera().orthogonalizeViewUp();
+
       glwindow.captureNextImage().then((image) => {
         testUtils.compareImages(
           image,
-          [baseline],
+          [baseline, baseline2],
           'Rendering/Core/Follower/testFollower',
           t,
           1.5,

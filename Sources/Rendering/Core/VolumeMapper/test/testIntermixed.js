@@ -16,6 +16,7 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
 import baseline1 from './testIntermixed.png';
 import baseline2 from './testIntermixed_2.png';
+import baseline3 from './testIntermixed_3.png';
 
 test('Test Composite Volume Rendering: intermixed geometry', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -100,7 +101,7 @@ test('Test Composite Volume Rendering: intermixed geometry', (t) => {
       glwindow.captureNextImage().then((image) => {
         testUtils.compareImages(
           image,
-          [baseline1, baseline2],
+          [baseline1, baseline2, baseline3],
           'Rendering/Core/VolumeMapper/testIntermixed',
           t,
           5.0,

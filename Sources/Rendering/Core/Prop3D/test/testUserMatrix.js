@@ -11,6 +11,7 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import { mat4 } from 'gl-matrix';
 
 import baseline from './testUserMatrix.png';
+import baseline2 from './testUserMatrix_2.png';
 
 test('Test Set Actor User Matrix', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -65,7 +66,7 @@ test('Test Set Actor User Matrix', (t) => {
       glwindow.captureNextImage().then((image) => {
         testUtils.compareImages(
           image,
-          [baseline],
+          [baseline, baseline2],
           'Rendering/Core/Prop3D/testUserMatrix',
           t,
           1.5,
