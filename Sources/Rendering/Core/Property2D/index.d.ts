@@ -2,7 +2,7 @@ import { vtkObject } from "../../../interfaces";
 import { RGBColor } from "../../../types";
 import { DisplayLocation } from "./Constants";
 
-interface IProperty2DInitialValues{
+export interface IProperty2DInitialValues{
 	color?: RGBColor;
 	opacity?: number;
 	pointSize?: number;
