@@ -5,7 +5,7 @@ import { InterpolationType, OpacityMode } from "./Constants";
 
 export interface IVolumePropertyInitialValues  {
 	independentComponents?: boolean;
-	shade?: number;
+	shade?: boolean;
 	ambient?: number;
 	diffuse?: number;
 	specular?: number;
@@ -111,7 +111,7 @@ export interface vtkVolumeProperty extends vtkObject {
 	/**
 	 * Get the shading of a volume.
 	 */
-	getShade(): number;
+	getShade(): boolean;
 
 	/**
 	 *
@@ -236,9 +236,9 @@ export interface vtkVolumeProperty extends vtkObject {
 	 * turning shading off is generally the same as setting ambient=1,
 	 * diffuse=0, specular=0. Shading can be independently turned on/off per
 	 * component.
-	 * @param {Number} shade 
+	 * @param {Boolean} shade
 	 */
-	setShade(shade: number): boolean;
+	setShade(shade: boolean): boolean;
 
 	/**
 	 *
