@@ -56,6 +56,22 @@ export function addPoint(bounds, ...xyz) {
   return bounds;
 }
 
+export function addPoints(bounds, points) {
+  if (points.length === 0) {
+    return bounds;
+  }
+  if (Array.isArray(points[0])) {
+    for (let i = 0; i < points.length; ++i) {
+      addPoint(bounds, points[i]);
+    }
+  } else {
+    for (let i = 0; i < points.length; i += 3) {
+      addPoint(bounds, points.slice(i, i + 3));
+    }
+  }
+  return bounds;
+}
+
 export function addBounds(bounds, xMin, xMax, yMin, yMax, zMin, zMax) {
   const [_xMin, _xMax, _yMin, _yMax, _zMin, _zMax] = bounds;
   if (zMax === undefined) {
@@ -624,6 +640,10 @@ class BoundingBox {
     return addPoint(this.bounds, xyz);
   }
 
+  addPoints(points) {
+    return addPoints(this.bounds, points);
+  }
+
   addBounds(xMin, xMax, yMin, yMax, zMin, zMax) {
     return addBounds(this.bounds, xMin, xMax, yMin, yMax, zMin, zMax);
   }
@@ -744,6 +764,7 @@ export const STATIC = {
   setBounds,
   reset,
   addPoint,
+  addPoints,
   addBounds,
   setMinPoint,
   setMaxPoint,
