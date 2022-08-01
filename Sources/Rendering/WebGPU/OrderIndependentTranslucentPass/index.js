@@ -239,7 +239,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       fragment: {
         targets: [
           {
-            format: 'bgra8unorm',
+            format: 'rgba16float',
             blend: {
               color: {
                 srcFactor: 'src-alpha',

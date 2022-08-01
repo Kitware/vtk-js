@@ -31,7 +31,7 @@ function vtkWebGPUOpaquePass(publicAPI, model) {
       model.colorTexture.create(device, {
         width: viewNode.getCanvas().width,
         height: viewNode.getCanvas().height,
-        format: 'bgra8unorm',
+        format: 'rgba16float',
         /* eslint-disable no-undef */
         /* eslint-disable no-bitwise */
         usage:

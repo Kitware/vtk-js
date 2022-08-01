@@ -26,6 +26,19 @@ function vtkWebGPUTextureView(publicAPI, model) {
     model.bindGroupLayoutEntry.texture.sampleType = tDetails.sampleType;
   };
 
+  publicAPI.createFromTextureHandle = (textureHandle, options) => {
+    model.texture = null;
+    model.options = options;
+    model.options.dimension = model.options.dimension || '2d';
+    model.options.label = model.label;
+    model.textureHandle = textureHandle;
+    model.handle = model.textureHandle.createView(model.options);
+    model.bindGroupLayoutEntry.texture.viewDimension = model.options.dimension;
+    const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(options.format);
+    model.bindGroupLayoutEntry.texture.sampleType = tDetails.sampleType;
+    model.bindGroupTime.modified();
+  };
+
   publicAPI.getBindGroupEntry = () => {
     const foo = {
       resource: publicAPI.getHandle(),
@@ -57,7 +70,7 @@ function vtkWebGPUTextureView(publicAPI, model) {
 
   publicAPI.getBindGroupTime = () => {
     // check if the handle changed
-    if (model.texture.getHandle() !== model.textureHandle) {
+    if (model.texture && model.texture.getHandle() !== model.textureHandle) {
       model.textureHandle = model.texture.getHandle();
       model.handle = model.textureHandle.createView(model.options);
       model.bindGroupTime.modified();
@@ -67,7 +80,7 @@ function vtkWebGPUTextureView(publicAPI, model) {
 
   // if the texture has changed then get a new view
   publicAPI.getHandle = () => {
-    if (model.texture.getHandle() !== model.textureHandle) {
+    if (model.texture && model.texture.getHandle() !== model.textureHandle) {
       model.textureHandle = model.texture.getHandle();
       model.handle = model.textureHandle.createView(model.options);
       model.bindGroupTime.modified();

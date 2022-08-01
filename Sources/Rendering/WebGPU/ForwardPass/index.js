@@ -1,8 +1,36 @@
 import macro from 'vtk.js/Sources/macros';
+import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQuad';
 import vtkWebGPUOpaquePass from 'vtk.js/Sources/Rendering/WebGPU/OpaquePass';
 import vtkWebGPUOrderIndepenentTranslucentPass from 'vtk.js/Sources/Rendering/WebGPU/OrderIndependentTranslucentPass';
+import vtkWebGPURenderEncoder from 'vtk.js/Sources/Rendering/WebGPU/RenderEncoder';
 import vtkWebGPUVolumePass from 'vtk.js/Sources/Rendering/WebGPU/VolumePass';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
+import vtkWebGPUSampler from 'vtk.js/Sources/Rendering/WebGPU/Sampler';
+import vtkWebGPUTextureView from 'vtk.js/Sources/Rendering/WebGPU/TextureView';
+
+const finalBlitFragTemplate = `
+//VTK::Mapper::Dec
+
+//VTK::TCoord::Dec
+
+//VTK::RenderEncoder::Dec
+
+//VTK::IOStructs::Dec
+
+@fragment
+fn main(
+//VTK::IOStructs::Input
+)
+//VTK::IOStructs::Output
+{
+  var output: fragmentOutput;
+
+  var computedColor: vec4<f32> = clamp(textureSampleLevel(opaquePassColorTexture, finalPassSampler, input.tcoordVS, 0),vec4<f32>(0.0),vec4<f32>(1.0));
+
+  //VTK::RenderEncoder::Impl
+  return output;
+}
+`;
 
 // ----------------------------------------------------------------------------
 
@@ -83,26 +111,80 @@ function vtkForwardPass(publicAPI, model) {
             model.volumePass.setVolumes(model.volumes);
             model.volumePass.traverse(renNode, viewNode);
           }
+
+          // blit the result into the swap chain
+          publicAPI.finalPass(viewNode, renNode);
         }
       }
     }
+  };
 
-    // blit the result into the swap chain
-    const sctex = viewNode.getCurrentTexture();
-    const optex = model.opaquePass.getColorTexture();
-    const cmdEnc = viewNode.getCommandEncoder();
-    cmdEnc.copyTextureToTexture(
-      {
-        texture: optex.getHandle(),
+  publicAPI.finalPass = (viewNode, renNode) => {
+    if (!model._finalBlitEncoder) {
+      publicAPI.createFinalBlitEncoder(viewNode);
+    }
+    model._finalBlitOutputTextureView.createFromTextureHandle(
+      viewNode.getCurrentTexture(),
+      { depth: 1, format: viewNode.getPresentationFormat() }
+    );
+
+    model._finalBlitEncoder.attachTextureViews();
+    model._finalBlitEncoder.begin(viewNode.getCommandEncoder());
+    renNode.scissorAndViewport(model._finalBlitEncoder);
+    model._fullScreenQuad.prepareAndDraw(model._finalBlitEncoder);
+    model._finalBlitEncoder.end();
+  };
+
+  publicAPI.createFinalBlitEncoder = (viewNode) => {
+    model._finalBlitEncoder = vtkWebGPURenderEncoder.newInstance({
+      label: 'forwardPassBlit',
+    });
+    model._finalBlitEncoder.setDescription({
+      colorAttachments: [
+        {
+          view: null,
+          loadOp: 'load',
+          storeOp: 'store',
+        },
+      ],
+    });
+    model._finalBlitEncoder.setPipelineHash('fpf');
+    model._finalBlitEncoder.setPipelineSettings({
+      primitive: { cullMode: 'none' },
+      fragment: {
+        targets: [
+          {
+            format: viewNode.getPresentationFormat(),
+            blend: {
+              color: {
+                srcFactor: 'src-alpha',
+                dstFactor: 'one-minus-src-alpha',
+              },
+              alpha: { srcfactor: 'one', dstFactor: 'one-minus-src-alpha' },
+            },
+          },
+        ],
       },
-      {
-        texture: sctex,
-      },
-      {
-        width: optex.getWidth(),
-        height: optex.getHeight(),
-        depthOrArrayLayers: 1,
-      }
+    });
+    model._fsqSampler = vtkWebGPUSampler.newInstance({
+      label: 'finalPassSampler',
+    });
+    model._fsqSampler.create(viewNode.getDevice(), {
+      minFilter: 'linear',
+      magFilter: 'linear',
+    });
+    model._fullScreenQuad = vtkWebGPUFullScreenQuad.newInstance();
+    model._fullScreenQuad.setDevice(viewNode.getDevice());
+    model._fullScreenQuad.setPipelineHash('fpfsq');
+    model._fullScreenQuad.setTextureViews([
+      model.opaquePass.getColorTextureView(),
+    ]);
+    model._fullScreenQuad.setAdditionalBindables([model._fsqSampler]);
+    model._fullScreenQuad.setFragmentShaderTemplate(finalBlitFragTemplate);
+    model._finalBlitOutputTextureView = vtkWebGPUTextureView.newInstance();
+    model._finalBlitEncoder.setColorTextureView(
+      0,
+      model._finalBlitOutputTextureView
     );
   };
 
