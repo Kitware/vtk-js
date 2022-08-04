@@ -2,6 +2,8 @@ import vtk from 'vtk.js/Sources/vtk';
 import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
+const { vtkErrorMacro, vtkWarningMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkFieldData methods
 // ----------------------------------------------------------------------------
@@ -37,6 +39,12 @@ function vtkFieldData(publicAPI, model) {
   publicAPI.getNumberOfArrays = () => model.arrays.length;
   publicAPI.getNumberOfActiveArrays = () => model.arrays.length;
   publicAPI.addArray = (arr) => {
+    const name = arr.getName();
+    const { array, index } = publicAPI.getArrayWithIndex(name);
+    if (array != null) {
+      model.arrays[index] = { data: arr };
+      return index;
+    }
     model.arrays = [].concat(model.arrays, { data: arr });
     return model.arrays.length - 1;
   };
@@ -90,36 +98,106 @@ function vtkFieldData(publicAPI, model) {
         let destArr = publicAPI.getArrayByName(arr.getName());
         if (!destArr) {
           if (fromId < 0 || fromId > arr.getNumberOfTuples()) {
+            // TBD: should this be a deep or a shallow copy?
             publicAPI.addArray(arr);
+            other.getAttributes(arr).forEach((attrType) => {
+              publicAPI.setAttribute(arr, attrType);
+            });
           } else {
             const ncomps = arr.getNumberOfComponents();
             let newSize = arr.getNumberOfValues();
             const tId = toId > -1 ? toId : fromId;
-            if (newSize < tId * ncomps) {
+            if (newSize <= tId * ncomps) {
               newSize = (tId + 1) * ncomps;
             }
             destArr = vtkDataArray.newInstance({
               name: arr.getName(),
               dataType: arr.getDataType(),
-              numberOfComponents: arr.getNumberOfComponents(),
-              size: newSize,
+              numberOfComponents: ncomps,
+              values: macro.newTypedArray(arr.getDataType(), newSize),
+              size: 0,
             });
-            destArr.setTuple(tId, arr.getTuple(fromId));
+            destArr.insertTuple(tId, arr.getTuple(fromId));
             publicAPI.addArray(destArr);
+            other.getAttributes(arr).forEach((attrType) => {
+              publicAPI.setAttribute(destArr, attrType);
+            });
           }
         } else if (
           arr.getNumberOfComponents() === destArr.getNumberOfComponents()
         ) {
           if (fromId > -1 && fromId < arr.getNumberOfTuples()) {
             const tId = toId > -1 ? toId : fromId;
-            destArr.setTuple(tId, arr.getTuple(fromId));
+            destArr.insertTuple(tId, arr.getTuple(fromId));
           } else {
-            // if fromId and not provided, just copy all (or as much possible)
-            // of arr to destArr.
-            for (let i = 0; i < arr.getNumberOfTuples(); ++i) {
-              destArr.setTuple(i, arr.getTuple(i));
-            }
+            // if `fromId` is not provided, just copy all (or as much possible)
+            // from `arr` to `destArr`.
+            destArr.insertTuples(0, arr.getTuples());
           }
+        } else {
+          vtkErrorMacro('Unhandled case in passData');
+        }
+      }
+    });
+  };
+
+  publicAPI.interpolateData = (
+    other,
+    fromId1 = -1,
+    fromId2 = -1,
+    toId = -1,
+    t = 0.5
+  ) => {
+    other.getArrays().forEach((arr) => {
+      const copyFlag = publicAPI.getFlag(arr.getName());
+      if (
+        copyFlag !== false &&
+        !(model.doCopyAllOff && copyFlag !== true) &&
+        arr
+      ) {
+        let destArr = publicAPI.getArrayByName(arr.getName());
+        if (!destArr) {
+          if (fromId1 < 0 || fromId2 < 0 || fromId1 > arr.getNumberOfTuples()) {
+            // TBD: should this be a deep or a shallow copy?
+            publicAPI.addArray(arr);
+            other.getAttributes(arr).forEach((attrType) => {
+              publicAPI.setAttribute(arr, attrType);
+            });
+          } else {
+            const ncomps = arr.getNumberOfComponents();
+            let newSize = arr.getNumberOfValues();
+            // TODO: Is this supposed to happen?
+            const tId = toId > -1 ? toId : fromId1;
+            if (newSize <= tId * ncomps) {
+              newSize = (tId + 1) * ncomps;
+            }
+            destArr = vtkDataArray.newInstance({
+              name: arr.getName(),
+              dataType: arr.getDataType(),
+              numberOfComponents: ncomps,
+              values: macro.newTypedArray(arr.getDataType(), newSize),
+              size: 0,
+            });
+            destArr.interpolateTuple(tId, arr, fromId1, arr, fromId2, t);
+            publicAPI.addArray(destArr);
+            other.getAttributes(arr).forEach((attrType) => {
+              publicAPI.setAttribute(destArr, attrType);
+            });
+          }
+        } else if (
+          arr.getNumberOfComponents() === destArr.getNumberOfComponents()
+        ) {
+          if (fromId1 > -1 && fromId1 < arr.getNumberOfTuples()) {
+            const tId = toId > -1 ? toId : fromId1;
+            destArr.interpolateTuple(tId, arr, fromId1, arr, fromId2, t);
+            vtkWarningMacro('Unexpected case in interpolateData');
+          } else {
+            // if `fromId` is not provided, just copy all (or as much possible)
+            // from `arr` to `destArr`.
+            destArr.insertTuples(arr.getTuples());
+          }
+        } else {
+          vtkErrorMacro('Unhandled case in interpolateData');
         }
       }
     });

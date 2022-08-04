@@ -27,13 +27,12 @@ function vtkPoints(publicAPI, model) {
   };
 
   publicAPI.setPoint = (idx, ...xyz) => {
-    const offset = idx * model.numberOfComponents;
-    for (let i = 0; i < model.numberOfComponents; i++) {
-      model.values[offset + i] = xyz[i];
-    }
+    publicAPI.setTuple(idx, xyz);
   };
 
   publicAPI.getPoint = publicAPI.getTuple;
+
+  publicAPI.insertNextPoint = (x, y, z) => publicAPI.insertNextTuple([x, y, z]);
 
   publicAPI.getBounds = () => {
     if (publicAPI.getNumberOfComponents() === 3) {

@@ -113,6 +113,14 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 	getActiveAttribute(attType: string): any;
 
 	/**
+	 * Get a list of attribute names that the given array 
+	 * is for this vtkDataSetAttributes.
+	 * @param {vtkDataArray} arr
+	 * @returns {String[]}
+	 */
+	getAttributes(arr: vtkDataArray): string[];
+
+	/**
 	 *
 	 */
 	getActiveScalars(): number;
@@ -363,6 +371,41 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 	/**
 	 *
 	 */
+	copyScalarsOn(): void;
+
+	/**
+	 *
+	 */
+	copyVectorsOn(): void;
+
+	/**
+	 *
+	 */
+	copyNormalsOn(): void;
+
+	/**
+	 *
+	 */
+	copyTCoordsOn(): void;
+
+	/**
+	 *
+	 */
+	copyTensorsOn(): void;
+
+	/**
+	 *
+	 */
+	copyGlobalIdsOn(): void;
+
+	/**
+	 *
+	 */
+	copyPedigreeIdsOn(): void;
+
+	/**
+	 *
+	 */
 	copyScalarsOff(): void;
 
 	/**
@@ -394,6 +437,7 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 	 *
 	 */
 	copyPedigreeIdsOff(): void;
+
 }
 
 /**
