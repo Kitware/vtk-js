@@ -2,6 +2,7 @@ import Constants from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import * as macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
+const { vtkErrorMacro } = macro;
 const { DefaultDataType } = Constants;
 const TUPLE_HOLDER = [];
 
@@ -136,6 +137,43 @@ function vtkDataArray(publicAPI, model) {
     publicAPI.modified();
   }
 
+  /**
+   * Resize model.values and copy the old values to the new array.
+   * @param {Number} requestedNumTuples
+   */
+  function resize(requestedNumTuples) {
+    if (requestedNumTuples < 0) {
+      // requestedNumTuples must be >= 0
+      return false;
+    }
+    const numComps = publicAPI.getNumberOfComponents();
+    const curNumTuples = model.values.length / (numComps > 0 ? numComps : 1);
+    if (requestedNumTuples === curNumTuples) {
+      return true;
+    }
+
+    if (requestedNumTuples > curNumTuples) {
+      // Requested size is bigger than current size.  Allocate enough
+      // memory to fit the requested size and be more than double the
+      // currently allocated memory.
+      const oldValues = model.values;
+      model.values = macro.newTypedArray(
+        model.dataType,
+        (requestedNumTuples + curNumTuples) * numComps
+      );
+      model.values.set(oldValues);
+      return true;
+    }
+    // Requested size is smaller than current size.
+    model.size = requestedNumTuples * numComps;
+    dataChange();
+    return true;
+  }
+
+  publicAPI.initialize = () => {
+    resize(0);
+  };
+
   publicAPI.getElementComponentSize = () => model.values.BYTES_PER_ELEMENT;
 
   // Description:
@@ -157,7 +195,22 @@ function vtkDataArray(publicAPI, model) {
     }
   };
 
-  publicAPI.getData = () => model.values;
+  publicAPI.getValue = (valueIdx) => {
+    const idx = valueIdx / model.numberOfComponents;
+    const comp = valueIdx % model.numberOfComponents;
+    return publicAPI.getComponent(idx, comp);
+  };
+
+  publicAPI.setValue = (valueIdx, value) => {
+    const idx = valueIdx / model.numberOfComponents;
+    const comp = valueIdx % model.numberOfComponents;
+    publicAPI.setComponent(idx, comp, value);
+  };
+
+  publicAPI.getData = () =>
+    model.size === model.values.length
+      ? model.values
+      : model.values.subarray(0, model.size);
 
   publicAPI.getRange = (componentIndex = -1) => {
     const rangeIdx =
@@ -177,7 +230,7 @@ function vtkDataArray(publicAPI, model) {
 
     // Need to compute ranges...
     range = computeRange(
-      model.values,
+      publicAPI.getData(),
       componentIndex,
       model.numberOfComponents
     );
@@ -207,6 +260,20 @@ function vtkDataArray(publicAPI, model) {
     }
   };
 
+  publicAPI.insertTuple = (idx, tuple) => {
+    if (model.size <= idx * model.numberOfComponents) {
+      model.size = (idx + 1) * model.numberOfComponents;
+      resize(idx + 1);
+    }
+    publicAPI.setTuple(idx, tuple);
+    return idx;
+  };
+
+  publicAPI.insertNextTuple = (tuple) => {
+    const idx = model.size / model.numberOfComponents;
+    return publicAPI.insertTuple(idx, tuple);
+  };
+
   publicAPI.getTuple = (idx, tupleToFill = TUPLE_HOLDER) => {
     const numberOfComponents = model.numberOfComponents || 1;
     if (tupleToFill.length !== numberOfComponents) {
@@ -215,33 +282,31 @@ function vtkDataArray(publicAPI, model) {
     const offset = idx * numberOfComponents;
     // Check most common component sizes first
     // to avoid doing a for loop if possible
-    if (numberOfComponents === 1) {
-      tupleToFill[0] = model.values[offset];
-    } else if (numberOfComponents === 2) {
-      tupleToFill[0] = model.values[offset];
-      tupleToFill[1] = model.values[offset + 1];
-    } else if (numberOfComponents === 3) {
-      tupleToFill[0] = model.values[offset];
-      tupleToFill[1] = model.values[offset + 1];
-      tupleToFill[2] = model.values[offset + 2];
-    } else if (numberOfComponents === 4) {
-      tupleToFill[0] = model.values[offset];
-      tupleToFill[1] = model.values[offset + 1];
-      tupleToFill[2] = model.values[offset + 2];
-      tupleToFill[3] = model.values[offset + 3];
-    } else {
-      for (let i = 0; i < numberOfComponents; i++) {
-        tupleToFill[i] = model.values[offset + i];
-      }
+    switch (numberOfComponents) {
+      case 4:
+        tupleToFill[3] = model.values[offset + 3];
+      // eslint-disable-next-line no-fallthrough
+      case 3:
+        tupleToFill[2] = model.values[offset + 2];
+      // eslint-disable-next-line no-fallthrough
+      case 2:
+        tupleToFill[1] = model.values[offset + 1];
+      // eslint-disable-next-line no-fallthrough
+      case 1:
+        tupleToFill[0] = model.values[offset];
+        break;
+      default:
+        for (let i = 0; i < numberOfComponents; i++) {
+          tupleToFill[i] = model.values[offset + i];
+        }
     }
     return tupleToFill;
   };
 
   publicAPI.getTupleLocation = (idx = 1) => idx * model.numberOfComponents;
   publicAPI.getNumberOfComponents = () => model.numberOfComponents;
-  publicAPI.getNumberOfValues = () => model.values.length;
-  publicAPI.getNumberOfTuples = () =>
-    model.values.length / model.numberOfComponents;
+  publicAPI.getNumberOfValues = () => model.size;
+  publicAPI.getNumberOfTuples = () => model.size / model.numberOfComponents;
   publicAPI.getDataType = () => model.dataType;
   /* eslint-disable no-use-before-define */
   publicAPI.newClone = () =>
@@ -307,16 +372,72 @@ function vtkDataArray(publicAPI, model) {
 
     return sortedObj;
   };
+
+  publicAPI.deepCopy = (other) => {
+    publicAPI.shallowCopy(other);
+    publicAPI.setData(other.getData().slice());
+  };
+
+  // TODO: Check
+  publicAPI.interpolateTuple = (
+    idx,
+    source1,
+    source1Idx,
+    source2,
+    source2Idx,
+    t
+  ) => {
+    const numberOfComponents = model.numberOfComponents || 1;
+    if (
+      numberOfComponents !== source1.getNumberOfComponents() ||
+      numberOfComponents !== source2.getNumberOfComponents()
+    ) {
+      vtkErrorMacro('numberOfComponents must match');
+    }
+
+    const tuple1 = [];
+    const tuple2 = [];
+    const out = [];
+    out.length = numberOfComponents;
+
+    source1.getTuple(source1Idx, tuple1);
+    source2.getTuple(source2Idx, tuple2);
+
+    // Check most common component sizes first
+    // to avoid doing a for loop if possible
+    switch (numberOfComponents) {
+      case 4:
+        out[3] = tuple1[3] + (tuple2[3] - tuple1[3]) * t;
+      // eslint-disable-next-line no-fallthrough
+      case 3:
+        out[2] = tuple1[2] + (tuple2[2] - tuple1[2]) * t;
+      // eslint-disable-next-line no-fallthrough
+      case 2:
+        out[1] = tuple1[1] + (tuple2[1] - tuple1[1]) * t;
+      // eslint-disable-next-line no-fallthrough
+      case 1:
+        out[0] = tuple1[0] + (tuple2[0] - tuple1[0]) * t;
+        break;
+      default:
+        for (let i = 0; i < numberOfComponents; i++) {
+          out[i] = tuple1[i] + (tuple2[i] - tuple1[i]) * t;
+        }
+    }
+
+    publicAPI.insertTuple(idx, out);
+  };
 }
 
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 
+// size: The current size of the dataArray.
+// NOTE: The underlying typed array may be larger than 'size'.
 const DEFAULT_VALUES = {
   name: '',
   numberOfComponents: 1,
-  size: 0,
+  size: undefined,
   dataType: DefaultDataType,
   rangeTuple: [0, 0],
   // values: null,
@@ -341,7 +462,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   }
 
   if (model.values) {
-    model.size = model.values.length;
+    model.size = model.size ?? model.values.length;
     model.dataType = getDataType(model.values);
   }
 

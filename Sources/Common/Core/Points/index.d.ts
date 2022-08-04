@@ -51,7 +51,7 @@ export interface vtkPoints extends vtkDataArray {
 	setNumberOfPoints(nbPoints: number, dimension?: number): void;
 
 	/**
-	 * Set the (x,y,z) coordinate of a point based on its index.
+	 * Set the (x,y,z) coordinates of a point based on its index.
 	 * @param {Number} idx The index of point.
 	 * @param {Number} x The x coordinate.
 	 * @param {Number} y The y coordinate.
@@ -65,6 +65,14 @@ export interface vtkPoints extends vtkDataArray {
 	 * @param {Number[]} coord The point's coordinates.
 	 */
 	setPoint(idx: number, coord: number[]): void;
+
+	/**
+	 * Insert the (x,y,z) coordinates of a point at the next available slot.
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
+	 */
+	insertNextPoint(x: number, y: number, z: number): void;
 }
 
 /**

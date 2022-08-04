@@ -1,5 +1,6 @@
 import test from 'tape-catch';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import { VtkDataTypes } from '../Constants';
 
 test('Test vtkDataArray instance', (t) => {
   t.ok(vtkDataArray, 'Make sure the class definition exists');
@@ -69,5 +70,35 @@ test('Test vtkDataArray getRange function with multi-channel data.', (t) => {
     compareFloat(vecRange[1].toFixed(3), 441.673),
     'vector magnitude max value should be 441.673'
   );
+  t.end();
+});
+
+test('Test vtkDataArray insertNextTuple', (t) => {
+  const dataArray = vtkDataArray.newInstance({
+    dataType: VtkDataTypes.UNSIGNED_CHAR,
+    empty: true,
+    numberOfComponents: 3,
+  });
+  t.equal(dataArray.getData().length, 0, 'dataArray.getData() starts empty');
+
+  dataArray.insertNextTuple([1, 2, 3]);
+
+  t.equal(dataArray.getData().length, 3, 'dataArray after first insert');
+
+  dataArray.insertNextTuple([4, 5, 6]);
+
+  t.equal(dataArray.getData().length, 6, 'dataArray after second insert');
+
+  // numberOfComponents forces the length of the inserted tuple to be 3
+  dataArray.insertNextTuple([7, 8, 9, 10]);
+
+  t.equal(dataArray.getData().length, 9, 'dataArray after long insert');
+  t.equal(dataArray.getData()[8], 9, 'dataArray last value is 9');
+
+  dataArray.insertNextTuple([10]);
+
+  t.equal(dataArray.getData().length, 12, 'dataArray after short insert');
+  t.equal(dataArray.getData()[11], 0, 'dataArray has default value');
+
   t.end();
 });

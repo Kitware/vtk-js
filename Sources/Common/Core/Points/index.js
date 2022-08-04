@@ -35,6 +35,8 @@ function vtkPoints(publicAPI, model) {
 
   publicAPI.getPoint = publicAPI.getTuple;
 
+  publicAPI.insertNextPoint = (x, y, z) => publicAPI.insertNextTuple([x, y, z]);
+
   publicAPI.getBounds = () => {
     if (publicAPI.getNumberOfComponents() === 3) {
       const xRange = publicAPI.getRange(0);

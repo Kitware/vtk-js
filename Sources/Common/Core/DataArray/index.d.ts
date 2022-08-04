@@ -1,5 +1,5 @@
 import { vtkObject, vtkRange } from "../../../interfaces";
-import { TypedArray } from "../../../types";
+import { float, int, TypedArray } from "../../../types";
 
 
 /**
@@ -20,6 +20,17 @@ interface vtkRangeHelper {
 	add(value: number): void;
 	get(): VtkStatisticInformation;
 	getRange(): vtkRange;
+}
+
+/**
+ * The inital values of a vtkDataArray.
+ */
+export interface IDataArrayInitialValues {
+	name?: string;
+	numberOfComponents?: number;
+	size?: number;
+	dataType?: string;
+	rangeTuple?: [Number, Number];
 }
 
 export interface vtkDataArray extends vtkObject {
@@ -64,56 +75,92 @@ export interface vtkDataArray extends vtkObject {
 	setRange(rangeValue: vtkRange, componentIndex: number): [number, number];
 
 	/**
-	 *
+	 * Set the given tuple at the given index.
 	 * @param {Number} idx
 	 * @param {Number[]} tuple
 	 */
 	setTuple(idx: number, tuple: number[]): void;
 
 	/**
-	 *
+	 * Get the tuple at the given index.
 	 * @param {Number} idx
 	 * @param {Number[]} [tupleToFill] (default [])
 	 */
 	getTuple(idx: number, tupleToFill?: number[]): number[];
 
 	/**
+	 * Insert the given tuple at the given index.
+	 * NOTE: May resize the data values array. "Safe" version of setTuple.
+	 *
+	 * A typical usage is when the `vtkDataArray` is initialized with
+	 * `initialValues = { size:0, values: new Uint8Array(1000) }`, where an
+	 * empty but pre-allocated array with 1'000 components is created.
+	 * The component values can then be inserted with `insertTuple()`
+	 * or `insertNextTuple()` without requiring new memory allocation until
+	 * the size of 1'000 is exceeded.
+	 *
+	 * `insertTuple` increases the number of tuples (`getNumberOfTuples()`).
+	 * @seealso insertNextTuple(), getNumberOfTuples()
+	 *
+	 * @param {Number} idx
+	 * @param {Number[]} tuple
+	 * @returns {Number} Index of the inserted tuple
+	 */
+	insertTuple(idx: number, tuple: number[]): number;
+
+	/**
+	 * Insert the given tuple at the next available slot and return the index of the insertion.
+	 * NOTE: May resize the data values array. "Safe" version of setTuple.
+	 * @param {Number[]} tuple
+	 * @returns {Number} Index of the inserted tuple
+	 */
+	insertNextTuple(tuple: number[]): number;
+
+	/**
 	 *
 	 * @param {Number} [idx] (default: 1)
+	 * @returns {Number}
 	 */
 	getTupleLocation(idx?: number): number;
 
 	/**
 	 * Get the dimension (n) of the components.
+	 * @returns {Number}
 	 */
 	getNumberOfComponents(): number;
 
 	/**
 	 * Get the total number of values in the array.
+	 * @returns {Number}
 	 */
 	getNumberOfValues(): number;
 
 	/**
 	 * Get the number of complete tuples (a component group) in the array.
+	 * @returns {Number}
 	 */
 	getNumberOfTuples(): number;
 
 	/**
-	 *
+	 * Get the data type of this array as a string.
+	 * @returns {String}
 	 */
 	getDataType(): string;
 
 	/**
-	 *
+	 * Return a clone of this array.
+	 * @returns {vtkDataArray}
 	 */
 	newClone(): vtkDataArray;
 
 	/**
-	 *
+	 * Get the name of the array.
+	 * @returns {String}
 	 */
 	getName(): string;
 
 	/**
+	 * Set the data of this array.
 	 *
 	 * @param {TypedArray} typedArray
 	 * @param {Number} [numberOfComponents]
@@ -121,14 +168,50 @@ export interface vtkDataArray extends vtkObject {
 	setData(typedArray: TypedArray, numberOfComponents?: number): void;
 
 	/**
-	 *
+	 * Get the state of this array.
+	 * @returns {object}
 	 */
 	getState(): object;
+
+	/**
+	 * Deep copy of another vtkDataArray into this one.
+	 * @param {vtkDataArray} other
+	 */
+	deepCopy(other: vtkDataArray): void;
+	
+	/**
+	 * Interpolate between the tuples retrieved from source1 
+	 * and source2 with the resp. indices and set the 
+	 * resulting tuple to the idx of this DataArray.
+	 * 
+	 * @param {int} idx,
+	 * @param {vtkDataArray} source1,
+	 * @param {int} source1Idx,
+	 * @param {vtkDataArray} source2,
+	 * @param {int} source2Idx,
+	 * @param {float} t
+	 */
+	interpolateTuple(
+		idx: int,
+		source1: vtkDataArray,
+		source1Idx: int,
+		source2: vtkDataArray,
+		source2Idx: int,
+		t: float
+	): void;
+
+	/**
+	 * Reset this array.
+	 * NOTE: This won't touch the actual memory of the underlying typedArray. 
+	 */
+	initialize(): void;
 
 	// --- via macro --
 
 	/**
-	 *
+	 * Set the name of this array.
+	 * @param {String} name
+	 * @returns {Boolean}
 	 */
 	setName(name: string): boolean;
 
@@ -199,9 +282,9 @@ export function getMaxNorm(dataArray: vtkDataArray): number
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param {object} [initialValues] (default: {})
+ * @param {object} [initialValues] (default: {}) Must pass a number > 0 for `size` except if `empty: true` is also passed or a non-empty typed array for `values`. 
  */
-export function extend(publicAPI: object, model: object, initialValues?: object): void;
+export function extend(publicAPI: object, model: object, initialValues?: IDataArrayInitialValues): void;
 
 // ----------------------------------------------------------------------------
 
@@ -252,7 +335,7 @@ export declare const vtkDataArray: {
 	// static
 	computeRange: typeof computeRange,
 	createRangeHelper: typeof createRangeHelper,
-  fastComputeRange: typeof fastComputeRange,
+	fastComputeRange: typeof fastComputeRange,
 	getDataType: typeof getDataType,
 	getMaxNorm: typeof getMaxNorm,
 	// constants

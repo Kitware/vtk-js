@@ -1,13 +1,12 @@
 import { TypedArray } from "../../../types";
-import vtkDataArray from "../../Core/DataArray";
+import vtkDataArray, { IDataArrayInitialValues } from "../../Core/DataArray";
 
 
 /**
- *
+ * The inital values of a vtkCellArray.
  */
-export interface ICellArrayInitialValues {
+export interface ICellArrayInitialValues extends IDataArrayInitialValues {
 	empty?: boolean;
-	numberOfComponents?: number;
 }
 
 export interface vtkCellArray extends vtkDataArray {
@@ -19,22 +18,34 @@ export interface vtkCellArray extends vtkDataArray {
 	getNumberOfCells(recompute?: boolean): number;
 
 	/**
-	 *
+	 * Get the sizes of the cells in this array.
 	 * @param {Boolean} [recompute] Recompute the cell sizes.
 	 */
 	getCellSizes(recompute?: boolean): any;
 
 	/**
-	 *
+	 * Set the data of this array.
 	 * @param {TypedArray} typedArray The typedArray value.
 	 */
 	setData(typedArray: TypedArray): void;
 
 	/**
-	 * Returns the point indexes at the given location as a subarray.
+	 * Returns the point indices at the given location as a subarray.
 	 * @param loc
 	 */
 	getCell(loc: any): void;
+
+	/**
+	 * Reset this array.
+	 * NOTE: This won't touch the actual memory of the underlying typedArray. 
+	 */
+	initialize(): void;
+
+	/**
+	 * Insert a cell to this array in the next available slot.
+	 * @param {Number[]} cellPoinIds
+	 */
+	insertNextCell(cellPoinIds: Number[]): void;
 }
 
 /**
