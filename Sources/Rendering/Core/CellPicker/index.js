@@ -4,6 +4,7 @@ import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import vtkPicker from 'vtk.js/Sources/Rendering/Core/Picker';
 import vtkPolyLine from 'vtk.js/Sources/Common/DataModel/PolyLine';
 import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
+import vtkQuad from 'vtk.js/Sources/Common/DataModel/Quad';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
 import { vec3 } from 'gl-matrix';
@@ -17,6 +18,7 @@ function createCellMap() {
     [CellType.VTK_LINE]: vtkLine.newInstance(),
     [CellType.VTK_POLY_LINE]: vtkPolyLine.newInstance(),
     [CellType.VTK_TRIANGLE]: vtkTriangle.newInstance(),
+    [CellType.VTK_QUAD]: vtkQuad.newInstance(),
   };
 }
 
@@ -239,7 +241,6 @@ function vtkCellPicker(publicAPI, model) {
         mat[6] * model.pickNormal[1] +
         mat[10] * model.pickNormal[2];
     }
-
     return tMin;
   };
 
