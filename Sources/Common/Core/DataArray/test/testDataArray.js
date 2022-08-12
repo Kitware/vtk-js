@@ -1,5 +1,6 @@
 import test from 'tape-catch';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 test('Test vtkDataArray instance', (t) => {
   t.ok(vtkDataArray, 'Make sure the class definition exists');
@@ -69,5 +70,93 @@ test('Test vtkDataArray getRange function with multi-channel data.', (t) => {
     compareFloat(vecRange[1].toFixed(3), 441.673),
     'vector magnitude max value should be 441.673'
   );
+  t.end();
+});
+
+test('Test vtkDataArray insertNextTuple', (t) => {
+  const dataArray = vtkDataArray.newInstance({
+    dataType: VtkDataTypes.UNSIGNED_CHAR,
+    empty: true,
+    numberOfComponents: 3,
+  });
+  t.equal(dataArray.getData().length, 0, 'dataArray.getData() starts empty');
+
+  let idx = dataArray.insertNextTuple([1, 2, 3]);
+
+  t.equal(dataArray.getData().length, 3, 'dataArray after first insert');
+  t.equal(idx, 0, 'idx after first insert');
+
+  idx = dataArray.insertNextTuple([4, 5, 6]);
+
+  t.equal(dataArray.getData().length, 6, 'dataArray after second insert');
+  t.equal(idx, 1, 'idx after second insert');
+
+  // numberOfComponents forces the length of the inserted tuple to be 3
+  idx = dataArray.insertNextTuple([7, 8, 9, 10]);
+
+  t.equal(dataArray.getData().length, 9, 'dataArray after long insert');
+  t.equal(dataArray.getData()[8], 9, 'dataArray last value is 9');
+  t.equal(idx, 2, 'idx after third insert');
+
+  idx = dataArray.insertNextTuple([10]);
+
+  t.equal(dataArray.getData().length, 12, 'dataArray after short insert');
+  t.equal(dataArray.getData()[11], 0, 'dataArray has default value');
+  t.equal(idx, 3, 'idx after fourth insert');
+
+  t.end();
+});
+
+test('Test vtkDataArray getTuples and insertTuples', (t) => {
+  const values = Uint8Array.from([
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+  ]);
+
+  const dataArray = vtkDataArray.newInstance({
+    dataType: VtkDataTypes.UNSIGNED_CHAR,
+    values,
+    numberOfComponents: 3,
+  });
+
+  t.deepEqual(
+    dataArray.getTuples(),
+    values,
+    'getTuples without parameters returns the whole array'
+  );
+
+  t.deepEqual(
+    dataArray.getTuples(1, 4),
+    Uint8Array.from([3, 4, 5, 6, 7, 8, 9, 10, 11]),
+    'check tuples between two indices'
+  );
+
+  t.deepEqual(
+    dataArray.getTuples(-3, -1),
+    Uint8Array.from([6, 7, 8, 9, 10, 11]),
+    'check tuples between two negative indices'
+  );
+
+  t.equal(dataArray.getTuples(1, 0), null, 'invalid range returns null');
+
+  t.deepEqual(
+    dataArray.getTuples(1, 10),
+    Uint8Array.from([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]),
+    'to > numberOfTuples returns array until numberOfTuples'
+  );
+
+  const emptyDataArray = vtkDataArray.newInstance({
+    dataType: VtkDataTypes.UNSIGNED_CHAR,
+    empty: true,
+    numberOfComponents: 3,
+  });
+
+  emptyDataArray.insertNextTuples(dataArray.getTuples());
+
+  t.deepEqual(
+    emptyDataArray.getTuples(),
+    values,
+    'to.insertTuples(from.getTuples()) copies all the values'
+  );
+
   t.end();
 });

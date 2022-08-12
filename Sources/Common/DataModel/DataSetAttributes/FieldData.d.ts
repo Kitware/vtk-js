@@ -34,9 +34,9 @@ export interface vtkFieldData extends vtkObject {
 
 	/**
 	 * 
-	 * @param other 
+	 * @param {vtkFieldData} other
 	 */
-	copyStructure(other: any): void;
+	copyStructure(other: vtkFieldData): void;
 
 	/**
 	 * Get the number of arrays.
@@ -50,9 +50,10 @@ export interface vtkFieldData extends vtkObject {
 
 	/**
 	 * Add a new array.
-	 * @param arr 
+	 * If an array with the same name already exists, it is replaced instead.
+	 * @param {vtkDataArray} arr 
 	 */
-	addArray(arr: any): number;
+	addArray(arr: vtkDataArray): number;
 
 	/**
 	 * Remove all the arrays.
@@ -60,30 +61,30 @@ export interface vtkFieldData extends vtkObject {
 	removeAllArrays(): void;
 
 	/**
-	 * 
+	 * Remove an array.
 	 * @param {String} arrayName The name of the array.
 	 */
 	removeArray(arrayName: string): void;
 
 	/**
-	 * 
+	 * Remove an array by its index.
 	 * @param {Number} arrayIdx The index of the array to remove. 
 	 */
 	removeArrayByIndex(arrayIdx: number): void;
 
 	/**
-	 * 
+	 * Get all arrays.
 	 */
 	getArrays(): any;
 
 	/**
 	 * 
-	 * @param arraySpec 
+	 * @param {any} arraySpec 
 	 */
 	getArray(arraySpec: any): void;
 
 	/**
-	 * 
+	 * Get an array by its name.
 	 * @param {String} arrayName The name of the array.
 	 */
 	getArrayByName(arrayName: string): Nullable<vtkDataArray>;
@@ -95,19 +96,19 @@ export interface vtkFieldData extends vtkObject {
 	getArrayWithIndex(arrayName: string): IArrayWithIndex;
 
 	/**
-	 * 
+	 * Get an array by its index.
 	 * @param {Number} idx The index of the array.
 	 */
 	getArrayByIndex(idx: number): Nullable<any>;
 
 	/**
-	 * 
+	 * Return true if there exists an array with the given arraName. False otherwise.
 	 * @param {String} arrayName The name of the array.
 	 */
 	hasArray(arrayName: string): boolean;
 
 	/**
-	 * 
+	 * Get the name of an array at the given index.
 	 * @param {Number} idx The index of the array.
 	 */
 	getArrayName(idx: number): string;
@@ -118,18 +119,28 @@ export interface vtkFieldData extends vtkObject {
 	getCopyFieldFlags(): object;
 
 	/**
-	 * 
+	 * Get the flag of the array that has the given name.
 	 * @param {String} arrayName The name of the array.
 	 */
 	getFlag(arrayName: string): boolean;
 
 	/**
-	 * 
-	 * @param other 
-	 * @param fromId 
-	 * @param toId 
+	 * Pass data from one fieldData to another at the given index.
+	 * @param {vtkFieldData} other
+	 * @param {Number} [fromId] (default: -1)
+	 * @param {Number} [toId] (default: -1)
 	 */
-	passData(other: any, fromId?: number, toId?: number): void;
+	passData(other: vtkFieldData, fromId?: number, toId?: number): void;
+
+	/**
+	 * Works like passData, but interpolates the values between the two given fromIds.
+	 * @param {vtkFieldData} other
+	 * @param {Number} [fromId1] (default: -1)
+	 * @param {Number} [fromId2] (default: -1)
+	 * @param {Number} [toId] (default: -1)
+	 * @param {Number} [t] (default: 0.5)
+	 */
+	interpolateData(other: vtkFieldData, fromId1?: number, fromId2?: number, toId?: number, t?: number): void;
 
 	/**
 	 * 
@@ -160,15 +171,15 @@ export interface vtkFieldData extends vtkObject {
 
 	/**
 	 * 
-	 * @param other 
+	 * @param {vtkFieldData} other 
 	 */
-	deepCopy(other: any): void;
+	deepCopy(other: vtkFieldData): void;
 
 	/**
 	 * 
-	 * @param other 
+	 * @param {vtkFieldData} other 
 	 */
-	copyFlags(other: any): void;
+	copyFlags(other: vtkFieldData): void;
 
 	/**
 	 * TODO: publicAPI.squeeze = () => model.arrays.forEach(entry => entry.data.squeeze());

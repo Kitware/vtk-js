@@ -51,7 +51,7 @@ function vtkCellArray(publicAPI, model) {
     if (model.cellSizes) {
       model.numberOfCells = model.cellSizes.length;
     } else {
-      model.numberOfCells = getNumberOfCells(model.values);
+      model.numberOfCells = getNumberOfCells(publicAPI.getData());
     }
     return model.numberOfCells;
   };
@@ -61,7 +61,7 @@ function vtkCellArray(publicAPI, model) {
       return model.cellSizes;
     }
 
-    model.cellSizes = extractCellSizes(model.values);
+    model.cellSizes = extractCellSizes(publicAPI.getData());
     return model.cellSizes;
   };
 
@@ -72,13 +72,29 @@ function vtkCellArray(publicAPI, model) {
     model.cellSizes = undefined;
   };
 
-  /**
-   * Returns the point indexes at the given location as a subarray.
-   */
   publicAPI.getCell = (loc) => {
     let cellLoc = loc;
     const numberOfPoints = model.values[cellLoc++];
     return model.values.subarray(cellLoc, cellLoc + numberOfPoints);
+  };
+
+  const superInitialize = publicAPI.initialize;
+  publicAPI.initialize = () => {
+    superInitialize();
+    // Set to undefined to ensure insertNextCell works correctly
+    model.numberOfCells = undefined;
+    model.cellSizes = undefined;
+  };
+
+  publicAPI.insertNextCell = (cellPointIds) => {
+    const cellId = publicAPI.getNumberOfCells();
+    publicAPI.insertNextTuples([cellPointIds.length, ...cellPointIds]);
+    // By computing the number of cells earlier, we made sure that numberOfCells is defined
+    ++model.numberOfCells;
+    if (model.cellSizes != null) {
+      model.cellSizes.push(cellPointIds.length);
+    }
+    return cellId;
   };
 }
 
