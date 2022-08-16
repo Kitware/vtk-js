@@ -799,8 +799,7 @@ function vtkClipClosedSurface(publicAPI, model) {
       );
 
       // Check if the input has polys and quads or just triangles
-      // TODO: Improve performance
-      polyMax = Math.max(...inputPolys.getCellSizes());
+      polyMax = inputPolys.getCellSizes().reduce((a, b) => (a > b ? a : b), 0);
     }
 
     // Arrays for storing the clipped lines and polys
