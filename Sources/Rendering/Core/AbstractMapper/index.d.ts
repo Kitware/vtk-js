@@ -35,13 +35,15 @@ export interface vtkAbstractMapper extends vtkAbstractMapperBase {
 
 	/**
 	 * Remove all clipping planes.
+	 * @return true if there were planes, false otherwise.
 	 */
-	removeAllClippingPlanes(): void;
+	removeAllClippingPlanes(): boolean;
 
-	/**
-	 * Remove clipping plane.
-	 * @param {vtkPlane} plane
-	 */
+	 /**
+	  * Remove clipping plane.
+	  * @param {vtkPlane} plane
+	  * @return true if plane existed and therefore is removed, false otherwise.
+	  */
 	removeClippingPlane(plane: vtkPlane): boolean;
 
 	/**

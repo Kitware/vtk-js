@@ -25,7 +25,12 @@ function vtkAbstractMapper(publicAPI, model) {
   publicAPI.getNumberOfClippingPlanes = () => model.clippingPlanes.length;
 
   publicAPI.removeAllClippingPlanes = () => {
+    if (model.clippingPlanes.length === 0) {
+      return false;
+    }
     model.clippingPlanes.length = 0;
+    publicAPI.modified();
+    return true;
   };
 
   publicAPI.removeClippingPlane = (clippingPlane) => {
