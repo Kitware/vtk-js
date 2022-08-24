@@ -226,6 +226,7 @@ function vtkTubeFilter(publicAPI, model) {
     const normal = [0.0, 0.0, 0.0];
     let sFactor = 1.0;
     let ptId = offset;
+    const vector = [];
     for (let j = 0; j < npts; ++j) {
       // First point
       if (j === 0) {
@@ -297,7 +298,7 @@ function vtkTubeFilter(publicAPI, model) {
         model.varyRadius === VaryRadius.VARY_RADIUS_BY_VECTOR
       ) {
         sFactor = Math.sqrt(
-          maxSpeed / vtkMath.norm(inVectors.getTuple(pts[j]))
+          maxSpeed / vtkMath.norm(inVectors.getTuple(pts[j], vector))
         );
         if (sFactor > model.radiusFactor) {
           sFactor = model.radiusFactor;

@@ -77,10 +77,8 @@ function vtkClipClosedSurface(publicAPI, model) {
     }
 
     // Get the edge and interpolate the new point
-    const p0 = [];
-    const p1 = [];
-    points.getPoint(i0, p0);
-    points.getPoint(i1, p1);
+    const p0 = points.getPoint(i0);
+    const p1 = points.getPoint(i1);
 
     const f = v0 / (v0 - v1);
     const s = 1.0 - f;

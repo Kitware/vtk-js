@@ -225,8 +225,10 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
         const p = vtkPoints.newInstance();
         const numPts = points.getNumberOfPoints();
         p.setNumberOfPoints(numPts);
+        const point = [];
         for (let i = 0; i < numPts; ++i) {
-          transformCoordinate.setValue(points.getPoint(i));
+          points.getPoint(i, point);
+          transformCoordinate.setValue(point);
           const v = transformCoordinate.getComputedDoubleViewportValue(ren);
           p.setPoint(i, v[0], v[1], 0.0);
         }

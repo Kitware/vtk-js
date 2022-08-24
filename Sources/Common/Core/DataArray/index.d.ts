@@ -93,17 +93,20 @@ export interface vtkDataArray extends vtkObject {
 	/**
 	 * Get the tuple at the given index.
 	 *
-	 * The recommended use is the following:
+	 * For performance reasons, it is advised to pass a 'tupleToFill':
 	 * `const x = [];`
-	 * `dataArray.getTuple(idx, x);`
+	 * `for (int i = 0; i < N; ++i) {
+	 * `  dataArray.getTuple(idx, x);`
+	 * `  ...`
 	 * instead of:
-	 * `const x = dataArray.getTuple(idx);`
-	 *
+	 * `for (int i = 0; i < N; ++i) {
+	 * `  const x = dataArray.getTuple(idx);`
+	 * `...`
 	 * @param {Number} idx
-	 * @param {Array<Number>} [tupleToFill] (default [])
-	 * @returns {Array<Number>}
+	 * @param {Number[]|TypedArray} [tupleToFill] (default [])
+	 * @returns {Number[]|TypedArray}
 	 */
-	getTuple(idx: number, tupleToFill?: Array<number>): Array<number>;
+	getTuple(idx: number, tupleToFill?: number[]|TypedArray): number[]|TypedArray;
 	
 	/**
 	 * Get the tuples between fromId (inclusive) and toId (exclusive).

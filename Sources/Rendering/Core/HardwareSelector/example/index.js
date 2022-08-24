@@ -210,18 +210,15 @@ function processSelections(selections) {
       hardwareSelector.getFieldAssociation() ===
       FieldAssociations.FIELD_ASSOCIATION_POINTS
     ) {
-      const points = input.getPoints();
-      const point = points.getTuple(attributeID);
-      cursorPosition = [...point];
+      cursorPosition = input.getPoints().getTuple(attributeID);
     } else {
       const cellPoints = input.getCellPoints(attributeID);
       if (cellPoints) {
         const pointIds = cellPoints.cellPointIds;
-        const points = [];
         // Find the closest cell point, and use that as cursor position
-        pointIds.forEach((pointId) => {
-          points.push(input.getPoints().getPoint(pointId, []));
-        });
+        const points = pointIds.map((pointId) =>
+          input.getPoints().getPoint(pointId)
+        );
         const distance = (pA, pB) =>
           vtkMath.distance2BetweenPoints(pA, worldPosition) -
           vtkMath.distance2BetweenPoints(pB, worldPosition);
