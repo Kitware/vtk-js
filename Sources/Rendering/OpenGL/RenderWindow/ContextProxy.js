@@ -42,7 +42,7 @@ export function createContextProxyHandler() {
 
   return {
     get(gl, prop, receiver) {
-      let value = Reflect.get(gl, prop, receiver);
+      let value = Reflect.get(gl, prop, gl);
       if (value instanceof Function) {
         // prevents Illegal Invocation errors
         value = value.bind(gl);
