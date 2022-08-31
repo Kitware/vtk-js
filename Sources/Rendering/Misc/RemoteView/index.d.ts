@@ -1,5 +1,6 @@
 import { vtkObject } from '../../../interfaces';
 import vtkCanvasView from '../CanvasView';
+import vtkImageStream from '../../../IO/Core/ImageStream';
 import vtkViewStream from '../../../IO/Core/ImageStream/ViewStream';
 
 interface IRemoteViewInitialValues {
@@ -188,13 +189,18 @@ export function newInstance(
   initialValues?: IRemoteViewInitialValues
 ): vtkRemoteView;
 
-export function connectImageStream(session: any): any;
+export function connectImageStream(session: any): void;
+
+export function disconnectImageStream(): void;
+
 /**
  * vtkRemoteView provides a way to create a remote view.
  */
 export declare const vtkRemoteView: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  SHARED_IMAGE_STREAM: vtkImageStream;
   connectImageStream: typeof connectImageStream;
+  disconnectImageStream: typeof disconnectImageStream;
 };
 export default vtkRemoteView;
