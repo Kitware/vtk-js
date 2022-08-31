@@ -4,6 +4,8 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
+const TOLERANCE = 1e-6;
+
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
@@ -221,6 +223,62 @@ function intersectWithTriangle(p1, q1, r1, p2, q2, r2, tolerance = 1e-6) {
   return { intersect: true, coplanar, pt1, pt2, surfaceId };
 }
 
+//------------------------------------------------------------------------------
+// Given a point x, determine whether it is inside (within the
+// a tolerance squared) the triangle defined by the three
+// coordinate values p1, p2, p3. Method is via comparing dot products.
+// (Note: in current implementation the tolerance only works in the
+// neighborhood of the three vertices of the triangle.
+function pointInTriangle(x, p1, p2, p3) {
+  const tol2 = TOLERANCE * TOLERANCE;
+  const x1 = [0, 0, 0];
+  const x2 = [0, 0, 0];
+  const x3 = [0, 0, 0];
+  const v13 = [0, 0, 0];
+  const v21 = [0, 0, 0];
+  const v32 = [0, 0, 0];
+  const n1 = [0, 0, 0];
+  const n2 = [0, 0, 0];
+  const n3 = [0, 0, 0];
+
+  //  Compute appropriate vectors
+  //
+  for (let i = 0; i < 3; i++) {
+    x1[i] = x[i] - p1[i];
+    x2[i] = x[i] - p2[i];
+    x3[i] = x[i] - p3[i];
+    v13[i] = p1[i] - p3[i];
+    v21[i] = p2[i] - p1[i];
+    v32[i] = p3[i] - p2[i];
+  }
+
+  //  See whether intersection point is within tolerance of a vertex.
+  //
+  if (
+    x1[0] * x1[0] + x1[1] * x1[1] + x1[2] * x1[2] <= tol2 ||
+    x2[0] * x2[0] + x2[1] * x2[1] + x2[2] * x2[2] <= tol2 ||
+    x3[0] * x3[0] + x3[1] * x3[1] + x3[2] * x3[2] <= tol2
+  ) {
+    return true;
+  }
+
+  //  If not near a vertex, check whether point is inside of triangular face.
+  //
+  //  Obtain normal off of triangular face
+  //
+  vtkMath.cross(x1, v13, n1);
+  vtkMath.cross(x2, v21, n2);
+  vtkMath.cross(x3, v32, n3);
+
+  //  Check whether ALL the three normals go in same direction
+  //
+  return (
+    vtkMath.dot(n1, n2) >= 0.0 &&
+    vtkMath.dot(n2, n3) >= 0.0 &&
+    vtkMath.dot(n1, n3) >= 0.0
+  );
+}
+
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
@@ -229,6 +287,7 @@ export const STATIC = {
   computeNormalDirection,
   computeNormal,
   intersectWithTriangle,
+  pointInTriangle,
 };
 
 // ----------------------------------------------------------------------------

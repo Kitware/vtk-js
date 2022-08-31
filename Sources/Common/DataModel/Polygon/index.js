@@ -5,6 +5,7 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkPriorityQueue from 'vtk.js/Sources/Common/Core/PriorityQueue';
 import { IntersectionState } from 'vtk.js/Sources/Common/DataModel/Line/Constants';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 import vtkCell from 'vtk.js/Sources/Common/DataModel/Cell';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 
@@ -394,7 +395,7 @@ function computeArea(points, normal) {
 }
 
 //------------------------------------------------------------------------------
-function distanceToPolygon(x, points, closest) {
+export function distanceToPolygon(x, points, closest) {
   const outObj = { t: Number.MIN_VALUE, distance: 0 };
   const bounds = points.getBounds();
   // First check to see if the point is inside the polygon
@@ -442,6 +443,97 @@ function distanceToPolygon(x, points, closest) {
   outObj.t = t;
   outObj.distance = Math.sqrt(minDist2);
   return outObj;
+}
+
+//------------------------------------------------------------------------------
+// Method intersects two polygons. You must supply the number of points and
+// point coordinates (npts, *pts) and the bounding box (bounds) of the two
+// polygons. Also supply a tolerance squared for controlling
+// error. The method returns 1 if there is an intersection, and 0 if
+// not. A single point of intersection x[3] is also returned if there
+// is an intersection.
+function intersectPolygonWithPolygon(points1, points2, x) {
+  const n = [0, 0, 0];
+  const coords = [0, 0, 0];
+  const p1 = [0, 0, 0];
+  const p2 = [0, 0, 0];
+  const ray = [0, 0, 0];
+  let t;
+
+  //  Intersect each edge of first polygon against second
+  //
+  getNormal(points2, n);
+
+  const npts = points1.getNumberOfPoints();
+  const npts2 = points2.getNumberOfPoints();
+
+  const bounds2 = points2.getBounds();
+  for (let i = 0; i < npts; i++) {
+    points1.getPoint(3 * i, p1);
+    points1.getPoint((i + 1) % npts, p2);
+
+    for (let j = 0; j < 3; j++) {
+      ray[j] = p2[j] - p1[j];
+    }
+    if (!vtkBoundingBox.intersectBox(bounds2, p1, ray, coords, t)) {
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+
+    if (vtkPlane.intersectWithLine(p1, p2, x, n) === 1) {
+      if (
+        vtkTriangle.pointInTriangle(
+          x,
+          [...points2.getPoint(0)],
+          [...points2.getPoint(3)],
+          [...points2.getPoint(6)]
+        ) ||
+        pointInPolygon(x, points2, bounds2, n) ===
+          PolygonWithPointIntersectionState.INSIDE
+      ) {
+        return true;
+      }
+    } else {
+      return false;
+    }
+  }
+
+  //  Intersect each edge of second polygon against first
+  //
+  getNormal(points1, n);
+
+  const bounds = points1.getBounds();
+  for (i = 0; i < npts2; i++) {
+    points2.getPoint(3 * i, p1);
+    points2.getPoint((i + 1) % npts, p2);
+
+    for (j = 0; j < 3; j++) {
+      ray[j] = p2[j] - p1[j];
+    }
+
+    if (!vtkBoundingBoxBox.intersectBox(bounds, p1, ray, coords, t)) {
+      continue;
+    }
+
+    if (vtkPlane.intersectWithLine(p1, p2, x, n).intersection) {
+      if (
+        vtkTriangle.pointInTriangle(
+          x,
+          [...points1.getPoint(0)],
+          [...points1.getPoint(3)],
+          [...points1.getPoint(6)]
+        ) ||
+        pointInPolygon(x, points1, bounds, n) ===
+          PolygonWithPointIntersectionState.INSIDE
+      ) {
+        return 1;
+      }
+    } else {
+      return 0;
+    }
+  }
+
+  return 0;
 }
 
 //------------------------------------------------------------------------------
