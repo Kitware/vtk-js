@@ -181,3 +181,59 @@ test.onlyIfWebGL('Test vtkTubeFilter rendering', (t) => {
   });
   renderWindow.render();
 });
+
+test('Test vtkTubeFilter numberOfPoints', (t) => {
+  const numberOfSides = 3;
+  const numberOfLines = 2;
+  const sidesShareVertices = 1;
+
+  const polyData = vtkPolyData.newInstance();
+
+  const points = new Uint32Array([
+    0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5,
+  ]);
+  const lines = new Uint32Array([2, 0, 1, 4, 2, 3, 4, 5]);
+
+  polyData.getPoints().setData(points);
+  polyData.getLines().setData(lines);
+
+  const tubeFilter = vtkTubeFilter.newInstance();
+  tubeFilter.setCapping(false);
+  tubeFilter.setNumberOfSides(numberOfSides);
+
+  tubeFilter.setInputData(polyData);
+
+  const tubeOutput = tubeFilter.getOutputData();
+
+  // Each segment should have numberOfPoints * sidesShareVertices * numberOfSides
+  // sidesShareVertices = 1
+  // numberOfSides = 3
+  // 2 * 1 * 3 + 4 * 1 * 3
+  t.ok(
+    tubeOutput.getPoints().getNumberOfPoints() ===
+      2 * sidesShareVertices * numberOfSides +
+        4 * sidesShareVertices * numberOfSides,
+    'Make sure the output number of points is correct.'
+  );
+
+  tubeFilter.setCapping(true);
+
+  tubeFilter.setInputData(polyData);
+
+  const tubeOutputCapping = tubeFilter.getOutputData();
+
+  // Each segment should have numberOfPoints * sidesShareVertices * numberOfSides
+  // sidesShareVertices = 1
+  // numberOfSides = 3
+  // 2 * 1 * 3 + 4 * 1 * 3
+  // Caps should have numberOfSides * 2 (each end) * numberOfLines
+  t.ok(
+    tubeOutputCapping.getPoints().getNumberOfPoints() ===
+      2 * sidesShareVertices * numberOfSides +
+        4 * sidesShareVertices * numberOfSides +
+        numberOfLines * numberOfSides * 2,
+    'Make sure the output number of points is correct with capping.'
+  );
+
+  t.end();
+});
