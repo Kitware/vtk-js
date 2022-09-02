@@ -22,7 +22,6 @@ declare type double = number;
 declare type int = number;
 
 declare type TypedArray =
-  | number[]
   | Uint32Array
   | Uint16Array
   | Uint8Array
