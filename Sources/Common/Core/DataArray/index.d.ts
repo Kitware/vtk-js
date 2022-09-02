@@ -1,5 +1,5 @@
 import { vtkObject, vtkRange } from "../../../interfaces";
-import { float, int, Nullable, TypedArray } from "../../../types";
+import { float, int, Nullable, Range, TypedArray } from "../../../types";
 
 
 /**
@@ -30,7 +30,7 @@ export interface IDataArrayInitialValues {
 	empty?: boolean;
 	name?: string;
 	numberOfComponents?: number;
-	rangeTuple?: [number, number];
+	rangeTuple?: Range;
 	size?: number;
 	values?: Array<number>|TypedArray;
 }
@@ -60,21 +60,21 @@ export interface vtkDataArray extends vtkObject {
 	/**
 	 *
 	 */
-	getData(): TypedArray;
+	getData(): number[]|TypedArray;
 
 	/**
 	 * Get the range of the given component.
 	 *
 	 * @param {Number} componentIndex (default: -1)
 	 */
-	getRange(componentIndex?: number): [number, number];
+	getRange(componentIndex?: number): Range;
 
 	/**
 	 *
 	 * @param {vtkRange} rangeValue
 	 * @param {Number} componentIndex
 	 */
-	setRange(rangeValue: vtkRange, componentIndex: number): [number, number];
+	setRange(rangeValue: vtkRange, componentIndex: number): Range;
 
 	/**
 	 * Set the given tuple at the given index.
@@ -223,10 +223,10 @@ export interface vtkDataArray extends vtkObject {
 	 * If this dataArray's numberOfComponents doesn't divide the given array's
 	 * length, this dataArray's numberOfComponents is set to 1.
 	 *
-	 * @param {TypedArray} typedArray
-	 * @param {Number} [numberOfComponents]
+	 * @param {Number[]|TypedArray} typedArray The Array value.
+	 * @param {Number} [numberOfComponents] 
 	 */
-	setData(typedArray: TypedArray, numberOfComponents?: number): void;
+	setData(typedArray: number[]|TypedArray, numberOfComponents?: number): void;
 
 	/**
 	 * Get the state of this array.

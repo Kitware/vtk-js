@@ -25,9 +25,9 @@ export interface vtkCellArray extends vtkDataArray {
 
 	/**
 	 * Set the data of this array.
-	 * @param {TypedArray} typedArray The Array value.
+	 * @param {Number[]|TypedArray} typedArray The Array value.
 	 */
-	setData(typedArray: TypedArray): void;
+	setData(typedArray: number[]|TypedArray): void;
 
 	/**
 	 * Returns the point indices at the given location as a subarray.
