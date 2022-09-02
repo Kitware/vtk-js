@@ -1,6 +1,7 @@
 import test from 'tape-catch';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 test('Test vtkDataArray instance', (t) => {
   t.ok(vtkDataArray, 'Make sure the class definition exists');
@@ -26,6 +27,33 @@ test('Test vtkDataArray getRange function with single-channel data.', (t) => {
   t.ok(da.getRange(0)[0] === 0, 'getRange minimum value should be 0');
   t.ok(da.getRange(0)[1] === 767, 'getRange maximum value should be 767');
 
+  t.end();
+});
+
+test('Test vtkDataArray getTuple', (t) => {
+  const da = vtkDataArray.newInstance({
+    numberOfComponents: 3,
+    values: new Uint8Array([0, 1, 2, 3, 4, 5]),
+  });
+  const da2 = vtkDataArray.newInstance({
+    numberOfComponents: 3,
+    values: new Uint8Array([0, 1, 2, 3, 4, 5]),
+  });
+
+  t.ok(vtkMath.areEquals(da.getTuple(0), [0, 1, 2]), 'get first tuple');
+  t.ok(vtkMath.areEquals(da.getTuple(1), [3, 4, 5]), 'get 2nd tuple');
+  t.ok(da.getTuple(0) !== da.getTuple(1), 'getTuple twice');
+  t.ok(da.getTuple(0) !== da2.getTuple(0), 'getTuple twice');
+  const tuple = [];
+  t.equal(da.getTuple(0, tuple), tuple, 'getTuple with tupleToFill');
+  t.equal(tuple.length, 3, 'getTuple length');
+  const typedArray = new Uint8Array(3);
+  t.equal(
+    da.getTuple(0, typedArray),
+    typedArray,
+    'getTuple with typed tupleToFill'
+  );
+  t.ok(vtkMath.areEquals(typedArray, [0, 1, 2]), 'get typed first tuple');
   t.end();
 });
 

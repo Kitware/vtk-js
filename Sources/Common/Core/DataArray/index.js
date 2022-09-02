@@ -4,7 +4,6 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { vtkErrorMacro } = macro;
 const { DefaultDataType } = Constants;
-const TUPLE_HOLDER = [];
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -103,8 +102,10 @@ function getDataType(typedArray) {
 function getMaxNorm(normArray) {
   const numComps = normArray.getNumberOfComponents();
   let maxNorm = 0.0;
+  const tuple = new Array(numComps);
   for (let i = 0; i < normArray.getNumberOfTuples(); ++i) {
-    const norm = vtkMath.norm(normArray.getTuple(i), numComps);
+    normArray.getTuple(i, tuple);
+    const norm = vtkMath.norm(tuple, numComps);
     if (norm > maxNorm) {
       maxNorm = norm;
     }
@@ -299,11 +300,8 @@ function vtkDataArray(publicAPI, model) {
     return publicAPI.insertTuples(idx, tuples);
   };
 
-  publicAPI.getTuple = (idx, tupleToFill = TUPLE_HOLDER) => {
+  publicAPI.getTuple = (idx, tupleToFill = []) => {
     const numberOfComponents = model.numberOfComponents || 1;
-    if (tupleToFill.length !== numberOfComponents) {
-      tupleToFill.length = numberOfComponents;
-    }
     const offset = idx * numberOfComponents;
     // Check most common component sizes first
     // to avoid doing a for loop if possible
@@ -321,7 +319,7 @@ function vtkDataArray(publicAPI, model) {
         tupleToFill[0] = model.values[offset];
         break;
       default:
-        for (let i = 0; i < numberOfComponents; i++) {
+        for (let i = numberOfComponents - 1; i >= 0; --i) {
           tupleToFill[i] = model.values[offset + i];
         }
     }
@@ -427,13 +425,10 @@ function vtkDataArray(publicAPI, model) {
       vtkErrorMacro('numberOfComponents must match');
     }
 
-    const tuple1 = [];
-    const tuple2 = [];
+    const tuple1 = source1.getTuple(source1Idx);
+    const tuple2 = source2.getTuple(source2Idx);
     const out = [];
     out.length = numberOfComponents;
-
-    source1.getTuple(source1Idx, tuple1);
-    source2.getTuple(source2Idx, tuple2);
 
     // Check most common component sizes first
     // to avoid doing a for loop if possible

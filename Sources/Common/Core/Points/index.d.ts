@@ -1,5 +1,5 @@
 import vtkDataArray from '../../../Common/Core/DataArray';
-import { Bounds } from '../../../types';
+import { Bounds, TypedArray } from '../../../types';
 
 /**
  *
@@ -26,10 +26,10 @@ export interface vtkPoints extends vtkDataArray {
 	/**
 	 * Get the coordinate of a point.
 	 * @param {Number} idx The index of point.
-	 * @param {Number[]} [tupleToFill] 
-	 * @default []
+	 * @param {Number[]|TypedArray} [tupleToFill] (default [])
+	 * @returns {Number[]|TypedArray}
 	 */
-	getPoint(idx: number, tupleToFill?: number[]): number[];
+	getPoint(idx: number, tupleToFill?: number[]|TypedArray): number[]|TypedArray;
 
 	/**
 	 * Get the number of points for this object can hold.
