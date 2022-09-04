@@ -49,6 +49,7 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
         'apiSpecificRenderWindow',
         'factory',
       ]);
+      macro.get(widgetPublicAPI, widgetModel, ['viewType']);
       macro.safeArrays(widgetModel);
       vtkAbstractWidget.extend(widgetPublicAPI, widgetModel, initialValues);
 
