@@ -1435,6 +1435,38 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
 
     gl_FragData[0] = getColorForValue(sum, posIS, tstep);
   #endif
+  #if vtkBlendMode == 5 // RADON
+    float normalizedRayIntensity = 1.0;
+
+    // handle very thin volumes
+    if (raySteps <= 1.0)
+    {
+      tValue = getTextureValue(posIS);
+      normalizedRayIntensity = normalizedRayIntensity - sampleDistance*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, 0.5)).r;
+      gl_FragData[0] = texture2D(ctexture, vec2(normalizedRayIntensity * cscale0 + cshift0, 0.5));
+      return;
+    }
+
+    posIS += (jitter*stepIS);
+
+    for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
+    {
+      if (stepsTraveled + 1.0 >= raySteps) { break; }
+
+      // compute the scalar value
+      tValue = getTextureValue(posIS);
+
+      // Convert scalar value to normalizedRayIntensity coefficient and accumulate normalizedRayIntensity
+      normalizedRayIntensity = normalizedRayIntensity - sampleDistance*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, 0.5)).r;
+
+      posIS += stepIS;
+      stepsTraveled++;
+    }
+
+    // map normalizedRayIntensity to color
+    gl_FragData[0] = texture2D(ctexture, vec2(normalizedRayIntensity * cscale0 + cshift0, 0.5));
+
+  #endif
 }
 
 //=======================================================================

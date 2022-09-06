@@ -8,15 +8,40 @@
         <option value="2">Minimum Intensity</option>
         <option value="3">Average Intensity</option>
         <option value="4">Additive Intensity</option>
+        <option value="5">Radon transform</option>
       </select>
     </td>
   </tr>
+
   <tr class="ipScalar" style="display:none;">
     <td>IP Scalar Min</td>
     <td><input class="scalarMin" type="range" min="0" max="1" value="0" step="0.01"></td>
   </tr>
+
   <tr class="ipScalar" style="display:none;">
     <td><p>IP Scalar Max</p></td>
     <td><input class="scalarMax" type="range" min="0" max="1" value="1" step="0.01"></td>
+  </tr>
+
+  <tr class="radonScalar"  style="display:none;">
+    <td>First hounsfield:</td>
+    <td><input class="minHounsfield" type="range" min="-1024" max="3071" step="5"></td>
+    <td><label id="minHounsfieldLabel"></label></td>
+    <td>Absorption:</td>
+    <td><input class="minAbsorption" type="range" min="0" max="0.1" step="0.001"></td>
+    <td><label id="minAbsorptionLabel"></label></td>
+  </tr>
+  <tr class="radonScalar"  style="display:none;">
+    <td>Max hounsfield:</td>
+    <td><input class="maxHounsfield" type="range" min="-1024" max="3071" step="5"></td>
+    <td><label id="maxHounsfieldLabel"></label></td>
+    <td>Absorption:</td>
+    <td><input class="maxAbsorption" type="range" min="0" max="0.1" step="0.001"></td>
+    <td><label id="maxAbsorptionLabel"></label></td>
+  </tr>
+  <tr>
+    <td>Sample distance:</td>
+    <td><input class="sampleDistance" type="range" min="0.1" max="2.5" step="0.1"></td>
+    <td><label id="sampleDistanceLabel"></label></td>
   </tr>
 </table>

@@ -2,8 +2,44 @@ import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 import vtkAbstractMapper from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
+import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 
 const { BlendMode, FilterMode } = Constants;
+
+function createRadonTransferFunction(
+  firstAbsorbentMaterialHounsfieldValue,
+  firstAbsorbentMaterialAbsorption,
+  maxAbsorbentMaterialHounsfieldValue,
+  maxAbsorbentMaterialAbsorption,
+  outputTransferFunction
+) {
+  let ofun = null;
+  if (outputTransferFunction) {
+    ofun = outputTransferFunction;
+    ofun.removeAllPoints();
+  } else {
+    ofun = vtkPiecewiseFunction.newInstance();
+  }
+  ofun.addPointLong(-1024, 0, 1, 1); // air (i.e. material with no absorption)
+  ofun.addPoint(
+    firstAbsorbentMaterialHounsfieldValue,
+    firstAbsorbentMaterialAbsorption
+  );
+  ofun.addPoint(
+    maxAbsorbentMaterialHounsfieldValue,
+    maxAbsorbentMaterialAbsorption
+  );
+
+  return ofun;
+}
+
+// ----------------------------------------------------------------------------
+// Static API
+// ----------------------------------------------------------------------------
+
+export const STATIC = {
+  createRadonTransferFunction,
+};
 
 // ----------------------------------------------------------------------------
 // vtkVolumeMapper methods
@@ -50,6 +86,10 @@ function vtkVolumeMapper(publicAPI, model) {
 
   publicAPI.setBlendModeToAdditiveIntensity = () => {
     publicAPI.setBlendMode(BlendMode.ADDITIVE_INTENSITY_BLEND);
+  };
+
+  publicAPI.setBlendModeToRadonTransform = () => {
+    publicAPI.setBlendMode(BlendMode.RADON_TRANSFORM_BLEND);
   };
 
   publicAPI.getBlendModeAsString = () =>
@@ -162,4 +202,4 @@ export const newInstance = macro.newInstance(extend, 'vtkVolumeMapper');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, ...STATIC };
