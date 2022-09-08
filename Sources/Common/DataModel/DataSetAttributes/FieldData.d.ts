@@ -1,12 +1,12 @@
 import { vtkObject } from "../../../interfaces" ;
 import { Nullable } from "../../../types";
-import vtkDataArray from "../../Core/DataArray";
+import type vtkDataArray from "../../Core/DataArray";
 
 /**
  * 
  */
 export interface IFieldDataInitialValues {
-	arrays?: Array<any>;
+	arrays?: vtkDataArray[];
 	copyFieldFlags?: Array<any>;
 	doCopyAllOn?: boolean;
 	doCopyAllOff?: boolean;
@@ -16,7 +16,7 @@ export interface IFieldDataInitialValues {
  * 
  */
 interface IArrayWithIndex {
-	array: any,
+	array: vtkDataArray,
 	index: number;
 }
 
@@ -75,13 +75,13 @@ export interface vtkFieldData extends vtkObject {
 	/**
 	 * Get all arrays.
 	 */
-	getArrays(): any;
+	getArrays(): vtkDataArray[];
 
 	/**
 	 * 
-	 * @param {any} arraySpec 
+	 * @param {number | string} arraySpec index or name of the array
 	 */
-	getArray(arraySpec: any): void;
+	getArray(arraySpec: number | string): Nullable<vtkDataArray>;
 
 	/**
 	 * Get an array by its name.
@@ -99,7 +99,7 @@ export interface vtkFieldData extends vtkObject {
 	 * Get an array by its index.
 	 * @param {Number} idx The index of the array.
 	 */
-	getArrayByIndex(idx: number): Nullable<any>;
+	getArrayByIndex(idx: number): Nullable<vtkDataArray>;
 
 	/**
 	 * Return true if there exists an array with the given arraName. False otherwise.
