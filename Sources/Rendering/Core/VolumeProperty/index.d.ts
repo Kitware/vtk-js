@@ -81,6 +81,7 @@ export interface vtkVolumeProperty extends vtkObject {
 
 	/**
 	 * Get the currently set gray transfer function. Create one if none set.
+	 * NOT SUPPORTED as of now, use RGB transfer function instead.
 	 * @param {Number} index
 	 */
 	getGrayTransferFunction(index: number): vtkPiecewiseFunction;
@@ -176,6 +177,7 @@ export interface vtkVolumeProperty extends vtkObject {
 
 	/**
 	 * Set the color of a volume to a gray transfer function
+	 * NOT SUPPORTED as of now, use RGB transfer function instead.
 	 * @param {Number} index 
 	 * @param {vtkPiecewiseFunction} func 
 	 */
