@@ -1,3 +1,4 @@
+import { vtkObject } from "../../../interfaces";
 import vtkPiecewiseFunction from "../../../Common/DataModel/PiecewiseFunction";
 import { Bounds, Range, Vector3 } from "../../../types";
 import vtkAbstractMapper, { IAbstractMapperInitialValues } from "../AbstractMapper";
