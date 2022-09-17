@@ -1,9 +1,16 @@
 import vtkProp from "../../../Rendering/Core/Prop";
+export interface IDisplayScaleParams {
+	dispHeightFactor: number,
+	cameraPosition: number[],
+	cameraDir: number[],
+	isParallel: boolean,
+	rendererPixelDims: number[],
+}
 
 export interface IWidgetRepresentationInitialValues {
     labels?: Array<any>,
     coincidentTopologyParameters?: object,
-    displayScaleParams?: object,
+    displayScaleParams?: IDisplayScaleParams,
     scaleInPixels?: boolean
 }
 
@@ -54,6 +61,13 @@ export function extend(publicAPI: object, model: object, initialValues?: IWidget
  * @param {IWidgetRepresentationInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IWidgetRepresentationInitialValues): vtkWidgetRepresentation;
+
+/**
+ * Static function to get the pixel size of a 3D point.
+ * @param {Number[]} worldCoord 3D point in world coordinates
+ * @param {IDisplayScaleParams} displayScaleParams Display and camera information
+ */
+export function getPixelWorldHeightAtCoord(worldCoord: number[], displayScaleParams: IDisplayScaleParams): number[];
 
 export declare const vtkWidgetRepresentation: {
 	newInstance: typeof newInstance;

@@ -18,6 +18,7 @@ import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 import { vec3, mat3, mat4 } from 'gl-matrix';
 
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import { getPixelWorldHeightAtCoord } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 const { ShapeType, Shapes2D, ShapesOrientable } = Constants;
 
@@ -299,7 +300,10 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
           (state.getScale1 ? state.getScale1() : model.defaultScale);
 
         if (publicAPI.getScaleInPixels()) {
-          typedArray.scale[i] *= publicAPI.getPixelWorldHeightAtCoord(coord);
+          typedArray.scale[i] *= getPixelWorldHeightAtCoord(
+            coord,
+            model.displayScaleParams
+          );
         }
 
         typedArray.color[i] =

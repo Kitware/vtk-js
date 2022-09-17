@@ -11,7 +11,9 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
-import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
+import vtkWidgetRepresentation, {
+  getPixelWorldHeightAtCoord,
+} from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 import WidgetManagerConst from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import PropertyConst from 'vtk.js/Sources/Rendering/Core/Property/Constants';
@@ -186,7 +188,7 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
 
     let pixelScale = 1;
     if (model.scaleInPixels) {
-      pixelScale = publicAPI.getPixelWorldHeightAtCoord(origin);
+      pixelScale = getPixelWorldHeightAtCoord(origin, model.displayScaleParams);
     }
 
     model.pipelines.normal.source.set({

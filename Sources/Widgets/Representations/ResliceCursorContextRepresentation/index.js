@@ -10,6 +10,7 @@ import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/Widg
 
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import { InteractionMethodsName } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
+import { getPixelWorldHeightAtCoord } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkResliceCursorContextRepresentation methods
@@ -104,7 +105,10 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     let scaledLineThickness = lineThickness;
     if (publicAPI.getScaleInPixels()) {
       const centerCoords = model.pipelines.center.source.getCenter();
-      scaledLineThickness *= publicAPI.getPixelWorldHeightAtCoord(centerCoords);
+      scaledLineThickness *= getPixelWorldHeightAtCoord(
+        centerCoords,
+        model.displayScaleParams
+      );
     }
     model.pipelines.axes[0].line.source.setRadius(scaledLineThickness);
     model.pipelines.axes[1].line.source.setRadius(scaledLineThickness);
@@ -134,7 +138,10 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     let scaledRadius = radius;
     if (publicAPI.getScaleInPixels()) {
       const centerCoords = source.getCenter();
-      scaledRadius *= publicAPI.getPixelWorldHeightAtCoord(centerCoords);
+      scaledRadius *= getPixelWorldHeightAtCoord(
+        centerCoords,
+        model.displayScaleParams
+      );
     }
     source.setRadius(scaledRadius);
   };
@@ -163,7 +170,10 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     // Rotation handles
     let distance = 0;
     if (publicAPI.getScaleInPixels()) {
-      const pixelWorldHeight = publicAPI.getPixelWorldHeightAtCoord(center);
+      const pixelWorldHeight = getPixelWorldHeightAtCoord(
+        center,
+        model.displayScaleParams
+      );
       const { rendererPixelDims } = model.displayScaleParams;
       const totalSize =
         Math.min(rendererPixelDims[0], rendererPixelDims[1]) / 2;

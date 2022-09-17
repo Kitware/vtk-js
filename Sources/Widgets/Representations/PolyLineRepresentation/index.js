@@ -5,7 +5,9 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
-import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
+import vtkWidgetRepresentation, {
+  getPixelWorldHeightAtCoord,
+} from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 // ----------------------------------------------------------------------------
@@ -55,7 +57,10 @@ function vtkPolyLineRepresentation(publicAPI, model) {
       const center = vtkBoundingBox.getCenter(
         model.internalPolyData.getBounds()
       );
-      scaledLineThickness *= publicAPI.getPixelWorldHeightAtCoord(center);
+      scaledLineThickness *= getPixelWorldHeightAtCoord(
+        center,
+        model.displayScaleParams
+      );
     }
     model.tubes.setRadius(scaledLineThickness);
   }

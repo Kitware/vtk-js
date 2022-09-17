@@ -1,6 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
-import { subtract, dot } from 'vtk.js/Sources/Common/Core/Math';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
@@ -69,6 +69,27 @@ export function connectPipeline(pipeline) {
     pipeline.mapper.setInputConnection(pipeline.glyph.getOutputPort(), 1);
   }
   pipeline.actor.setMapper(pipeline.mapper);
+}
+
+export function getPixelWorldHeightAtCoord(worldCoord, displayScaleParams) {
+  const {
+    dispHeightFactor,
+    cameraPosition,
+    cameraDir,
+    isParallel,
+    rendererPixelDims,
+  } = displayScaleParams;
+  let scale = 1;
+  if (isParallel) {
+    scale = dispHeightFactor;
+  } else {
+    const worldCoordToCamera = [...worldCoord];
+    vtkMath.subtract(worldCoordToCamera, cameraPosition, worldCoordToCamera);
+    scale = vtkMath.dot(worldCoordToCamera, cameraDir) * dispHeightFactor;
+  }
+
+  const rHeight = rendererPixelDims[1];
+  return scale / rHeight;
 }
 
 // ----------------------------------------------------------------------------
@@ -203,27 +224,6 @@ function vtkWidgetRepresentation(publicAPI, model) {
     });
   };
 
-  publicAPI.getPixelWorldHeightAtCoord = (worldCoord) => {
-    const {
-      dispHeightFactor,
-      cameraPosition,
-      cameraDir,
-      isParallel,
-      rendererPixelDims,
-    } = model.displayScaleParams;
-    let scale = 1;
-    if (isParallel) {
-      scale = dispHeightFactor;
-    } else {
-      const worldCoordToCamera = [...worldCoord];
-      subtract(worldCoordToCamera, cameraPosition, worldCoordToCamera);
-      scale = dot(worldCoordToCamera, cameraDir) * dispHeightFactor;
-    }
-
-    const rHeight = rendererPixelDims[1];
-    return scale / rHeight;
-  };
-
   // Make sure setting the labels at build time works with string/array...
   publicAPI.setLabels(model.labels);
 }
@@ -278,4 +278,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export default { extend, mergeStyles, applyStyles, connectPipeline };
+export default {
+  extend,
+  mergeStyles,
+  applyStyles,
+  connectPipeline,
+  getPixelWorldHeightAtCoord,
+};

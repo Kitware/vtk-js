@@ -8,6 +8,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
+import { getPixelWorldHeightAtCoord } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 // ----------------------------------------------------------------------------
 // vtkSphereHandleRepresentation methods
@@ -144,7 +145,10 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
         (state.getScale1 ? state.getScale1() : model.defaultScale);
 
       if (publicAPI.getScaleInPixels()) {
-        typedArray.scale[i] *= publicAPI.getPixelWorldHeightAtCoord(coord);
+        typedArray.scale[i] *= getPixelWorldHeightAtCoord(
+          coord,
+          model.displayScaleParams
+        );
       }
 
       typedArray.color[i] =
