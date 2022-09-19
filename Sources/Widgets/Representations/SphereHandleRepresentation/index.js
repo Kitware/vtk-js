@@ -1,14 +1,14 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
-import { getPixelWorldHeightAtCoord } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
+import vtkWidgetRepresentation, {
+  getPixelWorldHeightAtCoord,
+} from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 // ----------------------------------------------------------------------------
 // vtkSphereHandleRepresentation methods
@@ -21,24 +21,6 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
   // Internal polydata dataset
   // --------------------------------------------------------------------------
-
-  model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
-  model.internalArrays = {
-    points: model.internalPolyData.getPoints(),
-    scale: vtkDataArray.newInstance({
-      name: 'scale',
-      numberOfComponents: 1,
-      empty: true,
-    }),
-    color: vtkDataArray.newInstance({
-      name: 'color',
-      numberOfComponents: 1,
-      empty: true,
-    }),
-  };
-
-  model.internalPolyData.getPointData().addArray(model.internalArrays.scale);
-  model.internalPolyData.getPointData().addArray(model.internalArrays.color);
 
   // --------------------------------------------------------------------------
   // Generic rendering pipeline
@@ -57,29 +39,16 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   publicAPI.addActor(model.displayActor);
   model.alwaysVisibleActors = [model.displayActor];
 
-  model.mapper = vtkGlyph3DMapper.newInstance({
-    scaleArray: 'scale',
-    colorByArrayName: 'color',
-    scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
-  });
-  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
-  model.glyph = vtkSphereSource.newInstance({
-    phiResolution: model.glyphResolution,
-    thetaResolution: model.glyphResolution,
-  });
-
-  model.mapper.setInputConnection(publicAPI.getOutputPort(), 0);
-  model.mapper.setInputConnection(model.glyph.getOutputPort(), 1);
-  model.actor.setMapper(model.mapper);
-
-  publicAPI.addActor(model.actor);
+  vtkWidgetRepresentation.connectPipeline(model.pipelines.sphere);
+  publicAPI.addActor(model.pipelines.sphere.actor);
 
   // --------------------------------------------------------------------------
 
-  publicAPI.setGlyphResolution = macro.chain(
-    publicAPI.setGlyphResolution,
-    (r) => model.glyph.setPhiResolution(r) && model.glyph.setThetaResolution(r)
-  );
+  publicAPI.getGlyphResolution = () =>
+    model.pipelines.sphere.glyph.getPhiResolution();
+  publicAPI.setGlyphResolution = (resolution) =>
+    model.pipelines.sphere.glyph.setPhiResolution(resolution) ||
+    model.pipelines.sphere.glyph.setThetaResolution(resolution);
 
   // --------------------------------------------------------------------------
 
@@ -114,21 +83,19 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
-    const { points, scale, color } = model.internalArrays;
     const list = publicAPI.getRepresentationStates(inData[0]);
     const totalCount = list.length;
 
-    if (color.getNumberOfValues() !== totalCount) {
-      // Need to resize dataset
-      points.setData(new Float32Array(3 * totalCount), 3);
-      scale.setData(new Float32Array(totalCount));
-      color.setData(new Float32Array(totalCount));
-    }
-    const typedArray = {
-      points: points.getData(),
-      scale: scale.getData(),
-      color: color.getData(),
-    };
+    const points = publicAPI
+      .allocateArray('points', 'Float32Array', 3, totalCount)
+      .getData();
+
+    const color = publicAPI
+      .allocateArray('color', ...publicAPI.computeColorType(list), totalCount)
+      .getData();
+    const scale = publicAPI
+      .allocateArray('scale', 'Float32Array', 1, totalCount)
+      .getData();
 
     for (let i = 0; i < totalCount; i++) {
       const state = list[i];
@@ -136,23 +103,19 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
       const scaleFactor = isActive ? model.activeScaleFactor : 1;
 
       const coord = state.getOrigin();
-      typedArray.points[i * 3 + 0] = coord[0];
-      typedArray.points[i * 3 + 1] = coord[1];
-      typedArray.points[i * 3 + 2] = coord[2];
+      points[i * 3 + 0] = coord[0];
+      points[i * 3 + 1] = coord[1];
+      points[i * 3 + 2] = coord[2];
 
-      typedArray.scale[i] =
+      scale[i] =
         scaleFactor *
         (state.getScale1 ? state.getScale1() : model.defaultScale);
 
       if (publicAPI.getScaleInPixels()) {
-        typedArray.scale[i] *= getPixelWorldHeightAtCoord(
-          coord,
-          model.displayScaleParams
-        );
+        scale[i] *= getPixelWorldHeightAtCoord(coord, model.displayScaleParams);
       }
 
-      typedArray.color[i] =
-        model.useActiveColor && isActive ? model.activeColor : state.getColor();
+      publicAPI.colorize(color, i, state);
     }
 
     model.internalPolyData.modified();
@@ -164,18 +127,37 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  glyphResolution: 8,
-  defaultScale: 1,
-};
+function defaultValues(publicAPI, initialValues) {
+  return {
+    defaultScale: 1,
+    pipelines: {
+      sphere: {
+        source: publicAPI,
+        glyph: vtkSphereSource.newInstance({
+          phiResolution: 8,
+          thetaResolution: 8,
+        }),
+        mapper: vtkGlyph3DMapper.newInstance({
+          scaleArray: 'scale',
+          colorByArrayName: 'color',
+          scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
+        }),
+        actor: vtkActor.newInstance({ parentProp: publicAPI }),
+      },
+    },
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-
-  vtkHandleRepresentation.extend(publicAPI, model, initialValues);
-  macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
+  vtkHandleRepresentation.extend(
+    publicAPI,
+    model,
+    defaultValues(publicAPI, initialValues)
+  );
+  macro.get(publicAPI, model.pipelines.sphere, ['glyph', 'mapper', 'actor']);
 
   // Object specific methods
   vtkSphereHandleRepresentation(publicAPI, model);

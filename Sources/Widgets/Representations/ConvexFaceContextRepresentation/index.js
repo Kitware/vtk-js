@@ -26,17 +26,20 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
   model.internalPolyData.getPolys().setData(model.cells);
 
   function allocateSize(size) {
-    if (model.cells.length - 1 !== size) {
-      model.points = new Float32Array(size * 3);
-      model.cells = new Uint8Array(size + 1);
-      model.cells[0] = size;
+    const points = publicAPI
+      .allocateArray('points', 'Float32Array', 3, size)
+      .getData();
+    const oldCellsSize = model.internalPolyData.getPolys().getNumberOfValues();
+    const cells = publicAPI
+      .allocateArray('polys', 'Uint8Array', 1, size + 1)
+      .getData();
+    if (oldCellsSize !== cells.length) {
+      cells[0] = size;
       for (let i = 0; i < size; i++) {
-        model.cells[i + 1] = i;
+        cells[i + 1] = i;
       }
-      model.internalPolyData.getPoints().setData(model.points, 3);
-      model.internalPolyData.getPolys().setData(model.cells);
     }
-    return model.points;
+    return points;
   }
 
   // --------------------------------------------------------------------------

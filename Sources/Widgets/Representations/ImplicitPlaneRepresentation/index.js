@@ -113,7 +113,8 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
   };
 
   model.pipelines.plane = {
-    source: vtkClosedPolyLineToSurfaceFilter.newInstance(),
+    source: vtkCutter.newInstance({ cutFunction: model.plane }),
+    filter: vtkClosedPolyLineToSurfaceFilter.newInstance(),
     mapper: vtkMapper.newInstance(),
     actor: vtkActor.newInstance({ pickable: true, _parentProp: publicAPI }),
   };
@@ -137,9 +138,9 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
   };
 
   // Plane generation pipeline
-  const cutter = vtkCutter.newInstance({ cutFunction: model.plane });
-  cutter.setInputConnection(model.pipelines.outline.source.getOutputPort());
-  model.pipelines.plane.source.setInputConnection(cutter.getOutputPort());
+  model.pipelines.plane.source.setInputConnection(
+    model.pipelines.outline.source.getOutputPort()
+  );
 
   vtkWidgetRepresentation.connectPipeline(model.pipelines.outline);
   vtkWidgetRepresentation.connectPipeline(model.pipelines.plane);
@@ -238,7 +239,7 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
     );
 
     const output = vtkPolyData.newInstance();
-    output.shallowCopy(model.pipelines.plane.source.getOutputData());
+    output.shallowCopy(model.pipelines.plane.filter.getOutputData());
     outData[0] = output;
   };
 

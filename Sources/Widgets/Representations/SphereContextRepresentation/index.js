@@ -1,5 +1,3 @@
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
@@ -10,23 +8,6 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkSphereContextRepresentation(publicAPI, model) {
   model.classHierarchy.push('vtkSphereContextRepresentation');
-
-  model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
-  model.internalArrays = {
-    points: model.internalPolyData.getPoints(),
-    scale: vtkDataArray.newInstance({
-      name: 'scale',
-      numberOfComponents: 3,
-      empty: true,
-    }),
-    color: vtkDataArray.newInstance({
-      name: 'color',
-      numberOfComponents: 1,
-      empty: true,
-    }),
-  };
-  model.internalPolyData.getPointData().addArray(model.internalArrays.scale);
-  model.internalPolyData.getPointData().addArray(model.internalArrays.color);
 
   model.pipelines = {
     circle: {
@@ -48,8 +29,8 @@ function vtkSphereContextRepresentation(publicAPI, model) {
   model.pipelines.circle.actor.getProperty().setOpacity(0.2);
 
   vtkWidgetRepresentation.connectPipeline(model.pipelines.circle);
-
   publicAPI.addActor(model.pipelines.circle.actor);
+
   publicAPI.setGlyphResolution = macro.chain(
     publicAPI.setGlyphResolution,
     (r) => model.pipelines.circle.glyph.setResolution(r)
@@ -69,21 +50,18 @@ function vtkSphereContextRepresentation(publicAPI, model) {
       (state) => state.getOrigin?.() && state.isVisible?.()
     );
   publicAPI.requestData = (inData, outData) => {
-    const { points, scale, color } = model.internalArrays;
     const list = publicAPI.getRepresentationStates(inData[0]);
     const totalCount = list.length;
 
-    if (color.getNumberOfValues() !== totalCount) {
-      // Need to resize dataset
-      points.setData(new Float32Array(3 * totalCount));
-      scale.setData(new Float32Array(3 * totalCount));
-      color.setData(new Float32Array(totalCount));
-    }
-    const typedArray = {
-      points: points.getData(),
-      scale: scale.getData(),
-      color: color.getData(),
-    };
+    const points = publicAPI
+      .allocateArray('points', 'Float32Array', 3, totalCount)
+      .getData();
+    const color = publicAPI
+      .allocateArray('color', ...publicAPI.computeColorType(list), totalCount)
+      .getData();
+    const scale = publicAPI
+      .allocateArray('scale', 'Float32Array', 1, totalCount)
+      .getData();
 
     for (let i = 0; i < totalCount; i += 1) {
       const state = list[i];
@@ -91,11 +69,11 @@ function vtkSphereContextRepresentation(publicAPI, model) {
       const scaleFactor = isActive ? model.activeScaleFactor : 1;
 
       const coord = state.getOrigin();
-      typedArray.points[i * 3 + 0] = coord[0];
-      typedArray.points[i * 3 + 1] = coord[1];
-      typedArray.points[i * 3 + 2] = coord[2];
+      points[i * 3 + 0] = coord[0];
+      points[i * 3 + 1] = coord[1];
+      points[i * 3 + 2] = coord[2];
 
-      typedArray.scale[i] =
+      scale[i] =
         scaleFactor *
         (state.getScale1 ? state.getScale1() : model.defaultScale);
 
@@ -121,7 +99,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
   vtkContextRepresentation.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, ['glyphResolution', 'defaultScale']);
-  macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
+
   vtkSphereContextRepresentation(publicAPI, model);
 }
 

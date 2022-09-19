@@ -1,13 +1,13 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
-import { getPixelWorldHeightAtCoord } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
+import vtkWidgetRepresentation, {
+  getPixelWorldHeightAtCoord,
+} from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 // ----------------------------------------------------------------------------
 // vtkCubeHandleRepresentation methods
@@ -21,40 +21,24 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
   // Internal polydata dataset
   // --------------------------------------------------------------------------
 
-  model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
-  model.internalArrays = {
-    points: model.internalPolyData.getPoints(),
-    scale: vtkDataArray.newInstance({
-      name: 'scale',
-      numberOfComponents: 3,
-      empty: true,
-    }),
-    color: vtkDataArray.newInstance({
-      name: 'color',
-      numberOfComponents: 1,
-      empty: true,
-    }),
-  };
-  model.internalPolyData.getPointData().addArray(model.internalArrays.scale);
-  model.internalPolyData.getPointData().addArray(model.internalArrays.color);
-
   // --------------------------------------------------------------------------
   // Generic rendering pipeline
   // --------------------------------------------------------------------------
 
-  model.mapper = vtkGlyph3DMapper.newInstance({
-    scaleArray: 'scale',
-    colorByArrayName: 'color',
-    scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
-  });
-  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
-  model.glyph = vtkCubeSource.newInstance();
-
-  model.mapper.setInputConnection(publicAPI.getOutputPort(), 0);
-  model.mapper.setInputConnection(model.glyph.getOutputPort(), 1);
-  model.actor.setMapper(model.mapper);
-
-  publicAPI.addActor(model.actor);
+  model.pipelines = {
+    cubes: {
+      source: publicAPI,
+      glyph: vtkCubeSource.newInstance(),
+      mapper: vtkGlyph3DMapper.newInstance({
+        scaleArray: 'scale',
+        colorByArrayName: 'color',
+        scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
+      }),
+      actor: vtkActor.newInstance({ parentProp: publicAPI }),
+    },
+  };
+  vtkWidgetRepresentation.connectPipeline(model.pipelines.cubes);
+  publicAPI.addActor(model.pipelines.cubes.actor);
 
   const superGetRepresentationStates = publicAPI.getRepresentationStates;
   publicAPI.getRepresentationStates = (input = model.inputData[0]) =>
@@ -64,21 +48,18 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
-    const { points, scale, color } = model.internalArrays;
     const list = publicAPI.getRepresentationStates(inData[0]);
     const totalCount = list.length;
 
-    if (color.getNumberOfValues() !== totalCount) {
-      // Need to resize dataset
-      points.setData(new Float32Array(3 * totalCount));
-      scale.setData(new Float32Array(3 * totalCount));
-      color.setData(new Float32Array(totalCount));
-    }
-    const typedArray = {
-      points: points.getData(),
-      scale: scale.getData(),
-      color: color.getData(),
-    };
+    const points = publicAPI
+      .allocateArray('points', 'Float32Array', 3, totalCount)
+      .getData();
+    const color = publicAPI
+      .allocateArray('color', ...publicAPI.computeColorType(list), totalCount)
+      .getData();
+    const scale = publicAPI
+      .allocateArray('scale', 'Float32Array', 1, totalCount)
+      .getData();
 
     for (let i = 0; i < totalCount; i++) {
       const state = list[i];
@@ -87,16 +68,16 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
 
       const coord = state.getOrigin();
       if (coord) {
-        typedArray.points[i * 3 + 0] = coord[0];
-        typedArray.points[i * 3 + 1] = coord[1];
-        typedArray.points[i * 3 + 2] = coord[2];
+        points[i * 3 + 0] = coord[0];
+        points[i * 3 + 1] = coord[1];
+        points[i * 3 + 2] = coord[2];
 
-        typedArray.scale[i] =
+        scale[i] =
           scaleFactor *
           (state.getScale1 ? state.getScale1() : model.defaultScale);
 
         if (publicAPI.getScaleInPixels()) {
-          typedArray.scale[i] *= getPixelWorldHeightAtCoord(
+          scale[i] *= getPixelWorldHeightAtCoord(
             coord,
             model.displayScaleParams
           );
@@ -118,7 +99,7 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+const DEFAULT_VALUES = { defaultScale: 1 };
 
 // ----------------------------------------------------------------------------
 
@@ -126,7 +107,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
-  macro.get(publicAPI, model, ['glyph', 'mapper', 'actor', 'defaultScale']);
+  macro.get(publicAPI, model, ['defaultScale']);
 
   // Object specific methods
   vtkCubeHandleRepresentation(publicAPI, model);

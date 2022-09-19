@@ -2,7 +2,6 @@ import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ContextRepresentation';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 const { vtkErrorMacro } = macro;
 
@@ -37,10 +36,9 @@ function vtkCroppingOutlineRepresentation(publicAPI, model) {
   // Internal polydata dataset
   // --------------------------------------------------------------------------
 
-  model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
-  model.points = new Float32Array(8 * 3);
-  model.internalPolyData.getPoints().setData(model.points, 3);
-  model.internalPolyData.getLines().setData(Uint16Array.from(OUTLINE_ARRAY));
+  publicAPI
+    .allocateArray('lines', 'Uint16Array', 1, OUTLINE_ARRAY.length)
+    .set(OUTLINE_ARRAY);
 
   // --------------------------------------------------------------------------
   // Generic rendering pipeline
@@ -63,12 +61,15 @@ function vtkCroppingOutlineRepresentation(publicAPI, model) {
       .getRepresentationStates(inData[0])
       .filter((state) => state.getOrigin && state.getOrigin());
     if (list.length === 8) {
+      const points = publicAPI
+        .allocateArray('points', 'Float32Array', 3, 8)
+        .getData();
       let pi = 0;
       for (let i = 0; i < list.length; i++) {
         const pt = list[i].getOrigin();
-        model.points[pi++] = pt[0];
-        model.points[pi++] = pt[1];
-        model.points[pi++] = pt[2];
+        points[pi++] = pt[0];
+        points[pi++] = pt[1];
+        points[pi++] = pt[2];
       }
       model.internalPolyData.getPoints().modified();
       model.internalPolyData.modified();

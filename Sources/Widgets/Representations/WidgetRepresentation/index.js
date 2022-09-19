@@ -2,9 +2,14 @@ import macro from 'vtk.js/Sources/macros';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import { CATEGORIES } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
+import { POLYDATA_FIELDS } from 'vtk.js/Sources/Common/DataModel/PolyData/Constants';
 
 const { vtkErrorMacro, vtkWarningMacro } = macro;
 
@@ -60,10 +65,21 @@ export function applyStyles(pipelines, styles, activeActor) {
 // ----------------------------------------------------------------------------
 
 export function connectPipeline(pipeline) {
-  if (pipeline.source.isA('vtkDataSet')) {
-    pipeline.mapper.setInputData(pipeline.source);
-  } else {
-    pipeline.mapper.setInputConnection(pipeline.source.getOutputPort());
+  let source = pipeline.source;
+  if (pipeline.filter) {
+    if (source.isA('vtkDataSet')) {
+      pipeline.filter.setInputData(source);
+    } else {
+      pipeline.pipeline.setInputConnection(source.getOutputPort());
+    }
+    source = pipeline.filter;
+  }
+  if (source) {
+    if (source.isA('vtkDataSet')) {
+      pipeline.mapper.setInputData(source);
+    } else {
+      pipeline.mapper.setInputConnection(source.getOutputPort());
+    }
   }
   if (pipeline.glyph) {
     pipeline.mapper.setInputConnection(pipeline.glyph.getOutputPort(), 1);
@@ -226,47 +242,92 @@ function vtkWidgetRepresentation(publicAPI, model) {
 
   // Make sure setting the labels at build time works with string/array...
   publicAPI.setLabels(model.labels);
+
+  // Internal convenient function to create a data array:
+  publicAPI.allocateArray = (
+    name,
+    dataType,
+    numberOfComponents,
+    numberOfTuples
+  ) => {
+    if (!model.internalPolyData) {
+      model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
+    }
+    // Check first whether name is points, verts, lines, polys, otherwise it is a point data array.
+    let dataArray =
+      model.internalPolyData[`get${macro.capitalize(name)}`]?.() ||
+      model._internalArrays[name];
+    if (
+      !dataArray ||
+      dataArray.getDataType() !== dataType ||
+      dataArray.getNumberOfComponents() !== numberOfComponents
+    ) {
+      let arrayType = vtkDataArray;
+      if (name === 'points') {
+        arrayType = vtkPoints;
+      } else if (name === POLYDATA_FIELDS.includes(name)) {
+        arrayType = vtkCellArray;
+      }
+      dataArray = arrayType.newInstance({
+        name,
+        numberOfComponents,
+        dataType,
+        size: numberOfComponents * numberOfTuples,
+        empty: numberOfTuples === 0,
+      });
+      if (name === 'points' || POLYDATA_FIELDS.includes(name)) {
+        model.internalPolyData[`set${macro.capitalize(name)}`](dataArray);
+      } else {
+        model.internalPolyData.getPointData().addArray(dataArray);
+      }
+    } else if (dataArray.getNumberOfTuples() !== numberOfTuples) {
+      dataArray.resize(numberOfTuples);
+    }
+    return dataArray;
+  };
 }
 
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  actors: [],
-  labels: [],
-  behavior: Behavior.CONTEXT,
-  coincidentTopologyParameters: {
-    Point: {
-      factor: -1.0,
-      offset: -1.0,
+function defaultValues(initialValues) {
+  return {
+    actors: [],
+    labels: [],
+    behavior: Behavior.CONTEXT,
+    coincidentTopologyParameters: {
+      Point: {
+        factor: -1.0,
+        offset: -1.0,
+      },
+      Line: {
+        factor: -1.0,
+        offset: -1.0,
+      },
+      Polygon: {
+        factor: -1.0,
+        offset: -1.0,
+      },
     },
-    Line: {
-      factor: -1.0,
-      offset: -1.0,
+    scaleInPixels: false,
+    displayScaleParams: {
+      dispHeightFactor: 1,
+      cameraPosition: [0, 0, 0],
+      cameraDir: [1, 0, 0],
+      isParallel: false,
+      rendererPixelDims: [1, 1],
     },
-    Polygon: {
-      factor: -1.0,
-      offset: -1.0,
-    },
-  },
-  scaleInPixels: false,
-  displayScaleParams: {
-    dispHeightFactor: 1,
-    cameraPosition: [0, 0, 0],
-    cameraDir: [1, 0, 0],
-    isParallel: false,
-    rendererPixelDims: [1, 1],
-  },
-};
+    _internalArrays: {},
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-
   // Object methods
-  vtkProp.extend(publicAPI, model, initialValues);
+  vtkProp.extend(publicAPI, model, defaultValues(initialValues));
   macro.algo(publicAPI, model, 1, 1);
   macro.get(publicAPI, model, ['labels', 'coincidentTopologyParameters']);
   macro.set(publicAPI, model, ['displayScaleParams']);

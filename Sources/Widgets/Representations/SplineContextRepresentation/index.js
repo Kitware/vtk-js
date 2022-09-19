@@ -6,6 +6,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkSpline3D from 'vtk.js/Sources/Common/DataModel/Spline3D';
 import vtkTriangleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter';
 import vtkLineFilter from 'vtk.js/Sources/Filters/General/LineFilter';
+import vtkWidgetRepresentation from '../WidgetRepresentation';
 
 // ----------------------------------------------------------------------------
 // vtkSplineContextRepresentation methods
@@ -19,67 +20,53 @@ function vtkSplineContextRepresentation(publicAPI, model) {
   // Generic rendering pipeline
   // --------------------------------------------------------------------------
 
+  model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
+
   model.pipelines = {
     area: {
-      actor: vtkActor.newInstance({ parentProp: publicAPI }),
+      source: publicAPI,
+      filter: vtkTriangleFilter.newInstance(),
       mapper: vtkMapper.newInstance(),
-      triangleFilter: vtkTriangleFilter.newInstance(),
+      actor: vtkActor.newInstance({ parentProp: publicAPI }),
     },
     border: {
-      actor: vtkActor.newInstance({ parentProp: publicAPI }),
+      source: publicAPI,
+      filter: vtkLineFilter.newInstance(),
       mapper: vtkMapper.newInstance(),
-      lineFilter: vtkLineFilter.newInstance(),
+      actor: vtkActor.newInstance({ parentProp: publicAPI }),
     },
   };
 
-  model.pipelines.area.triangleFilter.setInputConnection(
-    publicAPI.getOutputPort()
-  );
-  model.pipelines.area.mapper.setInputConnection(
-    model.pipelines.area.triangleFilter.getOutputPort()
-  );
-  model.pipelines.area.actor.setMapper(model.pipelines.area.mapper);
+  vtkWidgetRepresentation.connectPipeline(model.pipelines.area);
   model.pipelines.area.actor.getProperty().setOpacity(0.2);
   model.pipelines.area.actor.getProperty().setColor(0, 1, 0);
   publicAPI.addActor(model.pipelines.area.actor);
 
-  model.pipelines.border.lineFilter.setInputConnection(
-    publicAPI.getOutputPort()
-  );
-  model.pipelines.border.mapper.setInputConnection(
-    model.pipelines.border.lineFilter.getOutputPort()
-  );
-  model.pipelines.border.actor.setMapper(model.pipelines.border.mapper);
+  vtkWidgetRepresentation.connectPipeline(model.pipelines.border);
   model.pipelines.border.actor.getProperty().setOpacity(1);
   model.pipelines.border.actor.getProperty().setColor(0.1, 1, 0.1);
   model.pipelines.border.actor.setVisibility(model.outputBorder);
-
   publicAPI.addActor(model.pipelines.border.actor);
 
   // --------------------------------------------------------------------------
+  const superGetRepresentationStates = publicAPI.getRepresentationStates;
+  publicAPI.getRepresentationStates = (input = model.inputData[0]) =>
+    superGetRepresentationStates(input).filter(
+      (state) => state.getOrigin?.() && state.isVisible?.()
+    );
 
   publicAPI.requestData = (inData, outData) => {
     if (model.deleted) {
       return;
     }
 
-    const polydata = vtkPolyData.newInstance();
     const widgetState = inData[0];
     const closed = widgetState.getSplineClosed();
 
-    const list = publicAPI
-      .getRepresentationStates(widgetState)
-      .filter(
-        (state) =>
-          state.getVisible &&
-          state.getVisible() &&
-          state.getOrigin &&
-          state.getOrigin()
-      );
-
+    const list = publicAPI.getRepresentationStates(widgetState);
     const inPoints = list.map((state) => state.getOrigin());
     if (inPoints.length <= 1) {
-      outData[0] = polydata;
+      outData[0] = model.internalPolyData;
       return;
     }
 
@@ -102,9 +89,14 @@ function vtkSplineContextRepresentation(publicAPI, model) {
     });
     spline.computeCoefficients(inPoints);
 
-    const outPoints = new Float32Array(
-      3 * ((numVertices + !closed) * model.resolution)
-    );
+    const outPoints = publicAPI
+      .allocateArray(
+        'points',
+        'Float32Array',
+        3,
+        (numVertices + !closed) * model.resolution
+      )
+      .getData();
     const outCells = new Uint32Array(numVertices * model.resolution + 2);
     outCells[0] = numVertices * model.resolution + 1;
     outCells[numVertices * model.resolution + 1] = 0;
@@ -132,21 +124,22 @@ function vtkSplineContextRepresentation(publicAPI, model) {
       outCells[numVertices * model.resolution + 1] = lastPointIndex;
     }
 
-    polydata.getPoints().setData(outPoints);
     if (model.fill) {
-      polydata.getPolys().setData(outCells);
+      model.internalPolyData.getPolys().setData(outCells);
     }
 
-    polydata.getLines().setData(model.outputBorder ? outCells : []);
+    model.internalPolyData
+      .getLines()
+      .setData(model.outputBorder ? outCells : []);
 
-    outData[0] = polydata;
+    outData[0] = model.internalPolyData;
 
-    model.pipelines.area.triangleFilter.update();
+    model.pipelines.area.filter.update();
     model.pipelines.border.actor
       .getProperty()
       .setColor(
         ...(inPoints.length <= 3 ||
-        model.pipelines.area.triangleFilter.getErrorCount() === 0
+        model.pipelines.area.filter.getErrorCount() === 0
           ? model.borderColor
           : model.errorBorderColor)
       );

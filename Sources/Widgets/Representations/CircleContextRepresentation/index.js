@@ -2,10 +2,8 @@ import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCircleSource from 'vtk.js/Sources/Filters/Sources/CircleSource';
 import vtkContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ContextRepresentation';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
@@ -22,31 +20,6 @@ function vtkCircleContextRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
   // Internal polydata dataset
   // --------------------------------------------------------------------------
-
-  model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
-  model.internalArrays = {
-    points: model.internalPolyData.getPoints(),
-    scale: vtkDataArray.newInstance({
-      name: 'scale',
-      numberOfComponents: 3,
-      empty: true,
-    }),
-    color: vtkDataArray.newInstance({
-      name: 'color',
-      numberOfComponents: 1,
-      empty: true,
-    }),
-    direction: vtkDataArray.newInstance({
-      name: 'direction',
-      numberOfComponents: 9,
-      empty: true,
-    }),
-  };
-  model.internalPolyData.getPointData().addArray(model.internalArrays.scale);
-  model.internalPolyData.getPointData().addArray(model.internalArrays.color);
-  model.internalPolyData
-    .getPointData()
-    .addArray(model.internalArrays.direction);
 
   // --------------------------------------------------------------------------
   // Generic rendering pipeline
@@ -119,23 +92,21 @@ function vtkCircleContextRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
-    const { points, scale, color, direction } = model.internalArrays;
     const list = publicAPI.getRepresentationStates(inData[0]);
     const totalCount = list.length;
 
-    if (color.getNumberOfValues() !== totalCount) {
-      // Need to resize dataset
-      points.setData(new Float32Array(3 * totalCount));
-      scale.setData(new Float32Array(3 * totalCount));
-      direction.setData(new Float32Array(9 * totalCount));
-      color.setData(new Float32Array(totalCount));
-    }
-    const typedArray = {
-      points: points.getData(),
-      scale: scale.getData(),
-      color: color.getData(),
-      direction: direction.getData(),
-    };
+    const points = publicAPI
+      .allocateArray('points', 'Float32Array', 3, totalCount)
+      .getData();
+    const color = publicAPI
+      .allocateArray('color', ...publicAPI.computeColorType(list), totalCount)
+      .getData();
+    const scale = publicAPI
+      .allocateArray('scale', 'Float32Array', 3, totalCount)
+      .getData();
+    const direction = publicAPI
+      .allocateArray('direction', 'Float32Array', 9, totalCount)
+      .getData();
 
     for (let i = 0; i < totalCount; i++) {
       const state = list[i];
@@ -143,9 +114,9 @@ function vtkCircleContextRepresentation(publicAPI, model) {
       const scaleFactor = isActive ? model.activeScaleFactor : 1;
 
       const coord = state.getOrigin();
-      typedArray.points[i * 3 + 0] = coord[0];
-      typedArray.points[i * 3 + 1] = coord[1];
-      typedArray.points[i * 3 + 2] = coord[2];
+      points[i * 3 + 0] = coord[0];
+      points[i * 3 + 1] = coord[1];
+      points[i * 3 + 2] = coord[2];
 
       const right = state.getRight ? state.getRight() : [1, 0, 0];
       const up = state.getUp ? state.getUp() : [0, 1, 0];
@@ -166,15 +137,15 @@ function vtkCircleContextRepresentation(publicAPI, model) {
       mat3.multiply(rotation, rotation, reorientCircleSource3);
 
       for (let j = 0; j < 9; j += 1) {
-        typedArray.direction[i * 9 + j] = rotation[j];
+        direction[i * 9 + j] = rotation[j];
       }
 
       const scale1 =
         (state.getScale1 ? state.getScale1() : model.defaultScale) / 2;
 
-      typedArray.scale[i * 3 + 0] = scale1 * scaleFactor * scale3[0];
-      typedArray.scale[i * 3 + 1] = scale1 * scaleFactor * scale3[1];
-      typedArray.scale[i * 3 + 2] = scale1 * scaleFactor * scale3[2];
+      scale[i * 3 + 0] = scale1 * scaleFactor * scale3[0];
+      scale[i * 3 + 1] = scale1 * scaleFactor * scale3[1];
+      scale[i * 3 + 2] = scale1 * scaleFactor * scale3[2];
 
       typedArray.color[i] =
         model.useActiveColor && isActive ? model.activeColor : state.getColor();

@@ -1,3 +1,4 @@
+import { vtkObject } from "../../../interfaces";
 import vtkProp from "../../../Rendering/Core/Prop";
 export interface IDisplayScaleParams {
 	dispHeightFactor: number,
@@ -68,6 +69,22 @@ export function newInstance(initialValues?: IWidgetRepresentationInitialValues):
  * @param {IDisplayScaleParams} displayScaleParams Display and camera information
  */
 export function getPixelWorldHeightAtCoord(worldCoord: number[], displayScaleParams: IDisplayScaleParams): number[];
+
+export interface IPipeline {
+	source?: object,
+	filter?: object,
+	glyph?: object,
+	mapper: object,
+	actor: object
+}
+/**
+ * If provided, connects `source` (dataset or filter) to `filter`.
+ * If provided, connects `filter` (otherwise `source`) to mapper
+ * If provided, connects glyph as 2nd input to mapper. This is typically for the glyph mapper.
+ * Connects mapper to actor.
+ * @param {IPipeline} pipeline of source, filter, mapper and actor to connect
+ */
+export function connectPipeline(pipeline: IPipeline) {}
 
 export declare const vtkWidgetRepresentation: {
 	newInstance: typeof newInstance;

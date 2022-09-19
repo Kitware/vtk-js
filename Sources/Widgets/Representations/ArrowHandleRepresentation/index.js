@@ -1,12 +1,10 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkArrow2DSource from 'vtk.js/Sources/Filters/Sources/Arrow2DSource/';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkCircleSource from 'vtk.js/Sources/Filters/Sources/CircleSource';
@@ -18,7 +16,11 @@ import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 import { vec3, mat3, mat4 } from 'gl-matrix';
 
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
-import { getPixelWorldHeightAtCoord } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
+import vtkWidgetRepresentation, {
+  getPixelWorldHeightAtCoord,
+} from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
+
+import { OrientationModes } from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper/Constants';
 
 const { ShapeType, Shapes2D, ShapesOrientable } = Constants;
 
@@ -34,32 +36,6 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
   // Internal polydata dataset
   // --------------------------------------------------------------------------
-
-  model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
-  model.internalArrays = {
-    points: model.internalPolyData.getPoints(),
-    scale: vtkDataArray.newInstance({
-      name: 'scale',
-      numberOfComponents: 1,
-      empty: true,
-    }),
-    color: vtkDataArray.newInstance({
-      name: 'color',
-      numberOfComponents: 1,
-      empty: true,
-    }),
-    direction: vtkDataArray.newInstance({
-      name: 'direction',
-      numberOfComponents: 9,
-      empty: true,
-    }),
-  };
-
-  model.internalPolyData.getPointData().addArray(model.internalArrays.scale);
-  model.internalPolyData.getPointData().addArray(model.internalArrays.color);
-  model.internalPolyData
-    .getPointData()
-    .addArray(model.internalArrays.direction);
 
   /**
    * Set the shape for the glyph according to lineWidget state inputs
@@ -143,18 +119,21 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
 
   model.alwaysVisibleActors = [model.displayActor];
 
-  model.mapper = vtkGlyph3DMapper.newInstance({
-    orientationArray: 'direction',
-    scaleArray: 'scale',
-    colorByArrayName: 'color',
-    scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
-  });
-  model.mapper.setOrientationModeToMatrix();
-  model.mapper.setInputConnection(publicAPI.getOutputPort());
-
-  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
-  model.actor.setMapper(model.mapper);
-  publicAPI.addActor(model.actor);
+  model.pipelines = {
+    arrows: {
+      source: publicAPI, // output polydata of requestData()
+      mapper: vtkGlyph3DMapper.newInstance({
+        orientationArray: 'direction',
+        scaleArray: 'scale',
+        colorByArrayName: 'color',
+        scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
+        orientationMode: OrientationModes.MATRIX,
+      }),
+      actor: vtkActor.newInstance({ parentProp: publicAPI }),
+    },
+  };
+  vtkWidgetRepresentation.connectPipeline(model.pipelines.arrows);
+  publicAPI.addActor(model.pipelines.arrows.actor);
 
   // --------------------------------------------------------------------------
 
@@ -259,24 +238,21 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
     );
 
   publicAPI.requestDataInternal = (inData, outData) => {
-    const { points, scale, color, direction } = model.internalArrays;
     const list = publicAPI.getRepresentationStates(inData[0]);
     const totalCount = list.length;
 
-    if (color.getNumberOfValues() !== totalCount) {
-      // Need to resize dataset
-      points.setData(new Float32Array(3 * totalCount), 3);
-      scale.setData(new Float32Array(totalCount));
-      color.setData(new Float32Array(totalCount));
-      direction.setData(new Float32Array(9 * totalCount));
-    }
-
-    const typedArray = {
-      points: points.getData(),
-      scale: scale.getData(),
-      color: color.getData(),
-      direction: direction.getData(),
-    };
+    const points = publicAPI
+      .allocateArray('points', 'Float32Array', 3, totalCount)
+      .getData();
+    const color = publicAPI
+      .allocateArray('color', ...publicAPI.computeColorType(list), totalCount)
+      .getData();
+    const scale = publicAPI
+      .allocateArray('scale', 'Float32Array', 1, totalCount)
+      .getData();
+    const direction = publicAPI
+      .allocateArray('direction', 'Float32Array', 9, totalCount)
+      .getData();
 
     for (let i = 0; i < totalCount; i++) {
       const state = list[i];
@@ -285,22 +261,22 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
 
       const coord = state.getOrigin();
       if (coord) {
-        typedArray.points[i * 3 + 0] = coord[0];
-        typedArray.points[i * 3 + 1] = coord[1];
-        typedArray.points[i * 3 + 2] = coord[2];
+        points[i * 3 + 0] = coord[0];
+        points[i * 3 + 1] = coord[1];
+        points[i * 3 + 2] = coord[2];
 
         let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
         scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
 
         const rotation = getGlyphRotation(scale3);
 
-        typedArray.direction.set(rotation, 9 * i);
-        typedArray.scale[i] =
+        direction.set(rotation, 9 * i);
+        scale[i] =
           scaleFactor *
           (state.getScale1 ? state.getScale1() : model.defaultScale);
 
         if (publicAPI.getScaleInPixels()) {
-          typedArray.scale[i] *= getPixelWorldHeightAtCoord(
+          scale[i] *= getPixelWorldHeightAtCoord(
             coord,
             model.displayScaleParams
           );
@@ -326,7 +302,10 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
     }
     if (shouldCreateGlyph && model.shape) {
       model.glyph = createGlyph(model.shape);
-      model.mapper.setInputConnection(model.glyph.getOutputPort(), 1);
+      model.pipelines.arrows.mapper.setInputConnection(
+        model.glyph.getOutputPort(),
+        1
+      );
     }
     publicAPI.requestDataInternal(inData, outData);
   };

@@ -166,14 +166,29 @@ function vtkDataArray(publicAPI, model) {
       return true;
     }
 
-    // Requested size is smaller than current size
-    model.size = requestedNumTuples * numComps;
-    dataChange();
+    // Requested size is smaller than currently allocated size
+    if (model.size > requestedNumTuples * numComps) {
+      model.size = requestedNumTuples * numComps;
+      dataChange();
+    }
+
     return true;
   }
 
+  publicAPI.resize = (requestedNumTuples) => {
+    resize(requestedNumTuples);
+    const newSize = requestedNumTuples * publicAPI.getNumberOfComponents();
+    if (model.size !== newSize) {
+      model.size = newSize;
+      dataChange();
+      return true;
+    }
+    return false;
+  };
+
+  // FIXME, to rename into "clear()" or "reset()"
   publicAPI.initialize = () => {
-    resize(0);
+    publicAPI.resize(0);
   };
 
   publicAPI.getElementComponentSize = () => model.values.BYTES_PER_ELEMENT;

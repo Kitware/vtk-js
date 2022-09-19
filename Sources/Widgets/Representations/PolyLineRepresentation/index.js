@@ -3,7 +3,6 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
 import vtkWidgetRepresentation, {
   getPixelWorldHeightAtCoord,
@@ -23,28 +22,35 @@ function vtkPolyLineRepresentation(publicAPI, model) {
   // Internal polydata dataset
   // --------------------------------------------------------------------------
 
-  model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
-  model.cells = [];
-
   function allocateSize(size, closePolyLine = false) {
+    let points = null;
     if (size < 2) {
-      model.internalPolyData.getPoints().setData(new Float32Array([0, 0, 0]));
-      model.internalPolyData.getLines().setData(new Uint8Array(0));
-    } else if (!model.points || model.points.length !== size * 3) {
-      model.points = new Float32Array(size * 3);
-      model.cells = new Uint8Array(size + 1 + (closePolyLine ? 1 : 0));
-      model.cells[0] = model.cells.length - 1;
-      for (let i = 1; i < model.cells.length; i++) {
-        model.cells[i] = i - 1;
+      // FIXME: Why 1 point and not 0 ?
+      points = publicAPI
+        .allocateArray('points', 'Float32Array', 3, 1)
+        .getData();
+      points.set([0, 0, 0]);
+      publicAPI.allocateArray('lines', 'Uint8Array', 3, 0).getData();
+    } else if (
+      !model.internalPolyData.getPoints() ||
+      model.internalPolyData.getPoints().length !== size * 3
+    ) {
+      points = publicAPI
+        .allocateArray('points', 'Float32Array', 3, size)
+        .getData();
+      const cellSize = size + 1 + (closePolyLine ? 1 : 0);
+      const cells = publicAPI
+        .allocateArray('points', 'Uint8Array', 1, cellSize)
+        .getData();
+      cells[0] = cells.length - 1;
+      for (let i = 1; i < cells.length; i++) {
+        cells[i] = i - 1;
       }
       if (closePolyLine) {
-        model.cells[model.cells.length - 1] = 0;
-        console.log('closePolyLine', closePolyLine, model.cells);
+        cells[cells.length - 1] = 0;
       }
-      model.internalPolyData.getPoints().setData(model.points, 3);
-      model.internalPolyData.getLines().setData(model.cells);
     }
-    return model.points;
+    return points;
   }
 
   /**
@@ -62,28 +68,28 @@ function vtkPolyLineRepresentation(publicAPI, model) {
         model.displayScaleParams
       );
     }
-    model.tubes.setRadius(scaledLineThickness);
+    model.pipelines.tubes.filter.setRadius(scaledLineThickness);
   }
 
   // --------------------------------------------------------------------------
   // Generic rendering pipeline
   // --------------------------------------------------------------------------
 
-  model.mapper = vtkMapper.newInstance();
-  model.actor = vtkActor.newInstance({ parentProp: publicAPI });
-  model.tubes = vtkTubeFilter.newInstance({
-    radius: model.lineThickness,
-    numberOfSides: 12,
-    capping: false,
-  });
+  model.pipelines = {
+    tubes: {
+      source: publicAPI,
+      filter: vtkTubeFilter.newInstance({
+        radius: model.lineThickness,
+        numberOfSides: 12,
+        capping: false,
+      }),
+      mapper: vtkMapper.newInstance(),
+      actor: vtkActor.newInstance({ parentProp: publicAPI }),
+    },
+  };
 
-  model.tubes.setInputConnection(publicAPI.getOutputPort());
-  model.mapper.setInputConnection(model.tubes.getOutputPort());
-
-  // model.mapper.setInputConnection(publicAPI.getOutputPort());
-  model.actor.setMapper(model.mapper);
-
-  publicAPI.addActor(model.actor);
+  vtkWidgetRepresentation.connectPipeline(model.pipelines.tubes);
+  publicAPI.addActor(model.pipelines.tubes.actor);
 
   // --------------------------------------------------------------------------
 
