@@ -29,16 +29,10 @@ function convert(xx, yy, pb, area) {
     return 0;
   }
   const offset = (yy * (area[2] - area[0] + 1) + xx) * 4;
-  const rgb = [];
-  rgb[0] = pb[offset];
-  rgb[1] = pb[offset + 1];
-  rgb[2] = pb[offset + 2];
-  let val = rgb[2];
-  val *= 256;
-  val += rgb[1];
-  val *= 256;
-  val += rgb[0];
-  return val;
+  const r = pb[offset];
+  const g = pb[offset + 1];
+  const b = pb[offset + 2];
+  return (b * 256 + g) * 256 + r;
 }
 
 function getID(low24, high8) {
