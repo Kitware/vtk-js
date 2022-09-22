@@ -23,6 +23,7 @@ import {
 export default function widgetBehavior(publicAPI, model) {
   model._isDragging = false;
   let isScrolling = false;
+  let previousPosition;
 
   // FIXME: label information should be accessible from activeState instead of parent state.
   publicAPI.getActiveInteraction = () => {
@@ -90,7 +91,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.startScrolling = (newPosition) => {
     if (newPosition) {
-      model.previousPosition = newPosition;
+      previousPosition = newPosition;
     }
     isScrolling = true;
     publicAPI.resetUpdateMethod();
@@ -126,6 +127,11 @@ export default function widgetBehavior(publicAPI, model) {
       const currentPlaneNormal = model.widgetState.getPlanes()[viewType].normal;
       model.planeManipulator.setWidgetOrigin(model.widgetState.getCenter());
       model.planeManipulator.setWidgetNormal(currentPlaneNormal);
+      const worldCoords = model.planeManipulator.handleEvent(
+        callData,
+        model._apiSpecificRenderWindow
+      );
+      previousPosition = worldCoords;
 
       publicAPI.startInteraction();
     } else if (
@@ -145,10 +151,10 @@ export default function widgetBehavior(publicAPI, model) {
       return publicAPI.handleEvent(callData);
     }
     if (isScrolling) {
-      if (model.previousPosition.y !== callData.position.y) {
-        const step = model.previousPosition.y - callData.position.y;
+      if (previousPosition.y !== callData.position.y) {
+        const step = previousPosition.y - callData.position.y;
         publicAPI.translateCenterOnPlaneDirection(step);
-        model.previousPosition = callData.position;
+        previousPosition = callData.position;
 
         publicAPI.invokeInternalInteractionEvent();
       }
@@ -356,12 +362,15 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI[InteractionMethodsName.TranslateCenter] = (calldata) => {
-    let worldCoords = model.planeManipulator.handleEvent(
+    const worldCoords = model.planeManipulator.handleEvent(
       calldata,
       model._apiSpecificRenderWindow
     );
-    worldCoords = publicAPI.getBoundedCenter(worldCoords);
-    model.widgetState.setCenter(worldCoords);
+    const translation = vtkMath.subtract(worldCoords, previousPosition, []);
+    previousPosition = worldCoords;
+    let newCenter = vtkMath.add(model.widgetState.getCenter(), translation, []);
+    newCenter = publicAPI.getBoundedCenter(newCenter);
+    model.widgetState.setCenter(newCenter);
     updateState(
       model.widgetState,
       model._factory.getDisplayScaleParams(),
