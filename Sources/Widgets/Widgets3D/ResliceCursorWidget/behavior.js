@@ -394,7 +394,6 @@ export default function widgetBehavior(publicAPI, model) {
       planeNormal
     );
 
-    console.log('Rotate', publicAPI.getActiveLineName());
     publicAPI.rotateLineInView(publicAPI.getActiveLineName(), radianAngle);
   };
 

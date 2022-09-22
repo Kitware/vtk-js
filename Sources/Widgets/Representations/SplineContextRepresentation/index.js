@@ -6,7 +6,9 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkSpline3D from 'vtk.js/Sources/Common/DataModel/Spline3D';
 import vtkTriangleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter';
 import vtkLineFilter from 'vtk.js/Sources/Filters/General/LineFilter';
-import vtkWidgetRepresentation from '../WidgetRepresentation';
+import vtkWidgetRepresentation, {
+  allocateArray,
+} from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 // ----------------------------------------------------------------------------
 // vtkSplineContextRepresentation methods
@@ -22,7 +24,7 @@ function vtkSplineContextRepresentation(publicAPI, model) {
 
   model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
 
-  model.pipelines = {
+  model._pipelines = {
     area: {
       source: publicAPI,
       filter: vtkTriangleFilter.newInstance(),
@@ -37,16 +39,16 @@ function vtkSplineContextRepresentation(publicAPI, model) {
     },
   };
 
-  vtkWidgetRepresentation.connectPipeline(model.pipelines.area);
-  model.pipelines.area.actor.getProperty().setOpacity(0.2);
-  model.pipelines.area.actor.getProperty().setColor(0, 1, 0);
-  publicAPI.addActor(model.pipelines.area.actor);
+  vtkWidgetRepresentation.connectPipeline(model._pipelines.area);
+  model._pipelines.area.actor.getProperty().setOpacity(0.2);
+  model._pipelines.area.actor.getProperty().setColor(0, 1, 0);
+  publicAPI.addActor(model._pipelines.area.actor);
 
-  vtkWidgetRepresentation.connectPipeline(model.pipelines.border);
-  model.pipelines.border.actor.getProperty().setOpacity(1);
-  model.pipelines.border.actor.getProperty().setColor(0.1, 1, 0.1);
-  model.pipelines.border.actor.setVisibility(model.outputBorder);
-  publicAPI.addActor(model.pipelines.border.actor);
+  vtkWidgetRepresentation.connectPipeline(model._pipelines.border);
+  model._pipelines.border.actor.getProperty().setOpacity(1);
+  model._pipelines.border.actor.getProperty().setColor(0.1, 1, 0.1);
+  model._pipelines.border.actor.setVisibility(model.outputBorder);
+  publicAPI.addActor(model._pipelines.border.actor);
 
   // --------------------------------------------------------------------------
   const superGetRepresentationStates = publicAPI.getRepresentationStates;
@@ -89,14 +91,11 @@ function vtkSplineContextRepresentation(publicAPI, model) {
     });
     spline.computeCoefficients(inPoints);
 
-    const outPoints = publicAPI
-      .allocateArray(
-        'points',
-        'Float32Array',
-        3,
-        (numVertices + !closed) * model.resolution
-      )
-      .getData();
+    const outPoints = allocateArray(
+      model.internalPolyData,
+      'points',
+      (numVertices + !closed) * model.resolution
+    ).getData();
     const outCells = new Uint32Array(numVertices * model.resolution + 2);
     outCells[0] = numVertices * model.resolution + 1;
     outCells[numVertices * model.resolution + 1] = 0;
@@ -132,14 +131,15 @@ function vtkSplineContextRepresentation(publicAPI, model) {
       .getLines()
       .setData(model.outputBorder ? outCells : []);
 
+    model.internalPolyData.modified();
     outData[0] = model.internalPolyData;
 
-    model.pipelines.area.filter.update();
-    model.pipelines.border.actor
+    model._pipelines.area.filter.update();
+    model._pipelines.border.actor
       .getProperty()
       .setColor(
         ...(inPoints.length <= 3 ||
-        model.pipelines.area.filter.getErrorCount() === 0
+        model._pipelines.area.filter.getErrorCount() === 0
           ? model.borderColor
           : model.errorBorderColor)
       );
@@ -148,13 +148,13 @@ function vtkSplineContextRepresentation(publicAPI, model) {
   publicAPI.getSelectedState = (prop, compositeID) => model.state;
 
   function updateAreaVisibility() {
-    model.pipelines.area.actor.setVisibility(model.fill);
+    model._pipelines.area.actor.setVisibility(model.fill);
   }
 
   publicAPI.setFill = macro.chain(publicAPI.setFill, updateAreaVisibility);
 
   publicAPI.setOutputBorder = macro.chain(publicAPI.setOutputBorder, (v) =>
-    model.pipelines.border.actor.setVisibility(v)
+    model._pipelines.border.actor.setVisibility(v)
   );
 }
 

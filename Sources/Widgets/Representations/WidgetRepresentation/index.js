@@ -5,7 +5,6 @@ import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import { CATEGORIES } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
@@ -70,7 +69,7 @@ export function connectPipeline(pipeline) {
     if (source.isA('vtkDataSet')) {
       pipeline.filter.setInputData(source);
     } else {
-      pipeline.pipeline.setInputConnection(source.getOutputPort());
+      pipeline.filter.setInputConnection(source.getOutputPort());
     }
     source = pipeline.filter;
   }
@@ -106,6 +105,58 @@ export function getPixelWorldHeightAtCoord(worldCoord, displayScaleParams) {
 
   const rHeight = rendererPixelDims[1];
   return scale / rHeight;
+}
+
+// Internal convenient function to create a data array:
+export function allocateArray(
+  polyData,
+  name,
+  numberOfTuples,
+  dataType,
+  numberOfComponents
+) {
+  // Check first whether name is points, verts, lines, polys, otherwise it is a point data array.
+  let dataArray =
+    polyData[`get${macro.capitalize(name)}`]?.() ||
+    polyData.getPointData().getArrayByName(name);
+  if (
+    !dataArray ||
+    (dataType !== undefined && dataArray.getDataType() !== dataType) ||
+    (numberOfComponents !== undefined &&
+      dataArray.getNumberOfComponents() !== numberOfComponents)
+  ) {
+    let arrayType = vtkDataArray;
+    let arrayDataType = dataType;
+    let arrayNumberOfComponents = numberOfComponents;
+    if (name === 'points') {
+      arrayType = vtkPoints;
+      arrayDataType = arrayDataType ?? 'Float32Array';
+      arrayNumberOfComponents = numberOfComponents ?? 3;
+    } else if (POLYDATA_FIELDS.includes(name)) {
+      arrayType = vtkCellArray;
+      arrayDataType = arrayDataType ?? 'Uint16Array';
+      arrayNumberOfComponents = numberOfComponents ?? 1;
+    } else {
+      // data array
+      arrayDataType = arrayDataType ?? 'Float32Array';
+      arrayNumberOfComponents = numberOfComponents ?? 1;
+    }
+    dataArray = arrayType.newInstance({
+      name,
+      dataType: arrayDataType,
+      numberOfComponents: arrayNumberOfComponents,
+      size: arrayNumberOfComponents * numberOfTuples,
+      empty: numberOfTuples === 0,
+    });
+    if (name === 'points' || POLYDATA_FIELDS.includes(name)) {
+      polyData[`set${macro.capitalize(name)}`](dataArray);
+    } else {
+      polyData.getPointData().addArray(dataArray);
+    }
+  } else if (dataArray.getNumberOfTuples() !== numberOfTuples) {
+    dataArray.resize(numberOfTuples);
+  }
+  return dataArray;
 }
 
 // ----------------------------------------------------------------------------
@@ -242,49 +293,6 @@ function vtkWidgetRepresentation(publicAPI, model) {
 
   // Make sure setting the labels at build time works with string/array...
   publicAPI.setLabels(model.labels);
-
-  // Internal convenient function to create a data array:
-  publicAPI.allocateArray = (
-    name,
-    dataType,
-    numberOfComponents,
-    numberOfTuples
-  ) => {
-    if (!model.internalPolyData) {
-      model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
-    }
-    // Check first whether name is points, verts, lines, polys, otherwise it is a point data array.
-    let dataArray =
-      model.internalPolyData[`get${macro.capitalize(name)}`]?.() ||
-      model._internalArrays[name];
-    if (
-      !dataArray ||
-      dataArray.getDataType() !== dataType ||
-      dataArray.getNumberOfComponents() !== numberOfComponents
-    ) {
-      let arrayType = vtkDataArray;
-      if (name === 'points') {
-        arrayType = vtkPoints;
-      } else if (name === POLYDATA_FIELDS.includes(name)) {
-        arrayType = vtkCellArray;
-      }
-      dataArray = arrayType.newInstance({
-        name,
-        numberOfComponents,
-        dataType,
-        size: numberOfComponents * numberOfTuples,
-        empty: numberOfTuples === 0,
-      });
-      if (name === 'points' || POLYDATA_FIELDS.includes(name)) {
-        model.internalPolyData[`set${macro.capitalize(name)}`](dataArray);
-      } else {
-        model.internalPolyData.getPointData().addArray(dataArray);
-      }
-    } else if (dataArray.getNumberOfTuples() !== numberOfTuples) {
-      dataArray.resize(numberOfTuples);
-    }
-    return dataArray;
-  };
 }
 
 // ----------------------------------------------------------------------------

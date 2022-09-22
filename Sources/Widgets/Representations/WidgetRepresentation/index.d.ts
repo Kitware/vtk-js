@@ -1,3 +1,5 @@
+import vtkDataArray from "../../../Common/Core/DataArray";
+import vtkPolyData from "../../../Common/DataModel/PolyData";
 import { vtkObject } from "../../../interfaces";
 import vtkProp from "../../../Rendering/Core/Prop";
 export interface IDisplayScaleParams {
@@ -70,7 +72,7 @@ export function newInstance(initialValues?: IWidgetRepresentationInitialValues):
  */
 export function getPixelWorldHeightAtCoord(worldCoord: number[], displayScaleParams: IDisplayScaleParams): number[];
 
-export interface IPipeline {
+export interface IWidgetPipeline {
 	source?: object,
 	filter?: object,
 	glyph?: object,
@@ -82,9 +84,27 @@ export interface IPipeline {
  * If provided, connects `filter` (otherwise `source`) to mapper
  * If provided, connects glyph as 2nd input to mapper. This is typically for the glyph mapper.
  * Connects mapper to actor.
- * @param {IPipeline} pipeline of source, filter, mapper and actor to connect
+ * @param {IWidgetPipeline} pipeline of source, filter, mapper and actor to connect
  */
-export function connectPipeline(pipeline: IPipeline) {}
+export function connectPipeline(pipeline: IWidgetPipeline): void;
+
+/**
+ * Allocate or resize a vtkPoint(name='point'), vtkCellArray (name=
+ * 'line'|'poly') or vtkDataArray (name=any) and add it to the vtkPolyData.
+ * If allocated, the array is automatically added to the polydata
+ * Connects mapper to actor.
+ * @param {vtkPolyData} polyData The polydata to add array to
+ * @param {string} name The name of the array to add (special handling for
+ * 'point', 'line, 'poly')
+ * @param {Number} numberOfTuples The number of tuples to (re)allocate.
+ * @param {String} dataType The typed array type name.
+ * @param {Number} numberOfComponents The number of components of the array.
+ */
+ export function allocateArray(polyData: vtkPolyData,
+    name: string,
+    numberOfTuples: number,
+    dataType?: string,
+    numberOfComponents?: number): vtkDataArray|null;
 
 export declare const vtkWidgetRepresentation: {
 	newInstance: typeof newInstance;

@@ -1,8 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkArrow2DSource from 'vtk.js/Sources/Filters/Sources/Arrow2DSource/';
-import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
-import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
+import vtkGlyphRepresentation from 'vtk.js/Sources/Widgets/Representations/GlyphRepresentation';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
@@ -12,15 +11,10 @@ import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkViewFinderSource from 'vtk.js/Sources/Filters/Sources/ViewFinderSource';
 
 import Constants from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/Constants';
-import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 import { vec3, mat3, mat4 } from 'gl-matrix';
-
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
-import vtkWidgetRepresentation, {
-  getPixelWorldHeightAtCoord,
-} from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
-
 import { OrientationModes } from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper/Constants';
+import { allocateArray } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 const { ShapeType, Shapes2D, ShapesOrientable } = Constants;
 
@@ -119,27 +113,12 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
 
   model.alwaysVisibleActors = [model.displayActor];
 
-  model.pipelines = {
-    arrows: {
-      source: publicAPI, // output polydata of requestData()
-      mapper: vtkGlyph3DMapper.newInstance({
-        orientationArray: 'direction',
-        scaleArray: 'scale',
-        colorByArrayName: 'color',
-        scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
-        orientationMode: OrientationModes.MATRIX,
-      }),
-      actor: vtkActor.newInstance({ parentProp: publicAPI }),
-    },
-  };
-  vtkWidgetRepresentation.connectPipeline(model.pipelines.arrows);
-  publicAPI.addActor(model.pipelines.arrows.actor);
-
   // --------------------------------------------------------------------------
 
   publicAPI.setGlyphResolution = macro.chain(
     publicAPI.setGlyphResolution,
-    (r) => model.glyph.setPhiResolution(r) && model.glyph.setThetaResolution(r)
+    (r) => model._pipeline.glyph.setPhiResolution(r),
+    (r) => model._pipeline.glyph.setThetaResolution(r)
   );
 
   // --------------------------------------------------------------------------
@@ -231,83 +210,42 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
     return orientationRotation;
   }
 
-  const superGetRepresentationStates = publicAPI.getRepresentationStates;
-  publicAPI.getRepresentationStates = (input = model.inputData[0]) =>
-    superGetRepresentationStates(input).filter(
-      (state) => state.getOrigin?.() && state.isVisible?.()
-    );
-
-  publicAPI.requestDataInternal = (inData, outData) => {
-    const list = publicAPI.getRepresentationStates(inData[0]);
-    const totalCount = list.length;
-
-    const points = publicAPI
-      .allocateArray('points', 'Float32Array', 3, totalCount)
-      .getData();
-    const color = publicAPI
-      .allocateArray('color', ...publicAPI.computeColorType(list), totalCount)
-      .getData();
-    const scale = publicAPI
-      .allocateArray('scale', 'Float32Array', 1, totalCount)
-      .getData();
-    const direction = publicAPI
-      .allocateArray('direction', 'Float32Array', 9, totalCount)
-      .getData();
-
-    for (let i = 0; i < totalCount; i++) {
-      const state = list[i];
-      const isActive = state.getActive();
-      const scaleFactor = isActive ? model.activeScaleFactor : 1;
-
-      const coord = state.getOrigin();
-      if (coord) {
-        points[i * 3 + 0] = coord[0];
-        points[i * 3 + 1] = coord[1];
-        points[i * 3 + 2] = coord[2];
-
-        let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
-        scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
-
-        const rotation = getGlyphRotation(scale3);
-
-        direction.set(rotation, 9 * i);
-        scale[i] =
-          scaleFactor *
-          (state.getScale1 ? state.getScale1() : model.defaultScale);
-
-        if (publicAPI.getScaleInPixels()) {
-          scale[i] *= getPixelWorldHeightAtCoord(
-            coord,
-            model.displayScaleParams
-          );
-        }
-
-        typedArray.color[i] =
-          model.useActiveColor && isActive
-            ? model.activeColor
-            : state.getColor();
-      }
+  function applyOrientation(polyData, states) {
+    model._pipeline.mapper.setOrientationArray('orientation');
+    model._pipeline.mapper.setOrientationMode(OrientationModes.MATRIX);
+    const orientation = allocateArray(
+      polyData,
+      'orientation',
+      states.length,
+      'Float32Array',
+      9
+    ).getData();
+    const defaultScale3 = [1, 1, 1];
+    for (let i = 0; i < states.length; ++i) {
+      const scale3 = states[i].getScale3?.() ?? defaultScale3;
+      const rotation = getGlyphRotation(scale3);
+      orientation.set(rotation, 9 * i);
     }
-
-    model.internalPolyData.modified();
-    outData[0] = model.internalPolyData;
-  };
+  }
+  publicAPI.setDirection(applyOrientation);
+  publicAPI.setNoOrientation(applyOrientation);
 
   publicAPI.requestData = (inData, outData) => {
+    // FIXME: shape should NOT be mixin, but a representation property.
     const shape = publicAPI.getRepresentationStates(inData[0])[0]?.getShape();
-    let shouldCreateGlyph = model.glyph == null;
+    let shouldCreateGlyph = model._pipeline.glyph == null;
     if (model.shape !== shape && Object.values(ShapeType).includes(shape)) {
       model.shape = shape;
       shouldCreateGlyph = true;
     }
     if (shouldCreateGlyph && model.shape) {
-      model.glyph = createGlyph(model.shape);
-      model.pipelines.arrows.mapper.setInputConnection(
-        model.glyph.getOutputPort(),
+      model._pipeline.glyph = createGlyph(model.shape);
+      model._pipeline.mapper.setInputConnection(
+        model._pipeline.glyph.getOutputPort(),
         1
       );
     }
-    publicAPI.requestDataInternal(inData, outData);
+    return superClass.requestData(inData, outData);
   };
 
   publicAPI.updateActorVisibility = (
@@ -338,7 +276,6 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
  */
 function defaultValues(initialValues) {
   return {
-    defaultScale: 1,
     faceCamera: null,
     orientation: [1, 0, 0],
     shape: ShapeType.SPHERE,
@@ -352,8 +289,7 @@ function defaultValues(initialValues) {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, defaultValues(initialValues));
 
-  vtkHandleRepresentation.extend(publicAPI, model, initialValues);
-  macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
+  vtkGlyphRepresentation.extend(publicAPI, model, initialValues);
   macro.setGetArray(publicAPI, model, ['visibilityFlagArray'], 2);
   macro.setGetArray(publicAPI, model, ['orientation'], 3);
   macro.setGetArray(publicAPI, model, ['viewMatrix'], 16);
