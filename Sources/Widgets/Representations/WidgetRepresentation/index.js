@@ -293,6 +293,9 @@ function vtkWidgetRepresentation(publicAPI, model) {
 
 function defaultValues(initialValues) {
   return {
+    activeScaleFactor: 1.2,
+    activeColor: 1,
+    useActiveColor: true,
     actors: [],
     labels: [],
     behavior: Behavior.CONTEXT,
@@ -331,7 +334,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.algo(publicAPI, model, 1, 1);
   macro.get(publicAPI, model, ['labels', 'coincidentTopologyParameters']);
   macro.set(publicAPI, model, ['displayScaleParams']);
-  macro.setGet(publicAPI, model, ['scaleInPixels']);
+  macro.setGet(publicAPI, model, [
+    'scaleInPixels',
+    'activeScaleFactor',
+    'activeColor',
+    'useActiveColor',
+  ]);
 
   // Object specific methods
   vtkWidgetRepresentation(publicAPI, model);
