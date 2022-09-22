@@ -1,15 +1,11 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
-import { OrientationModes } from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper/Constants';
-import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
+import vtkGlyphRepresentation from 'vtk.js/Sources/Widgets/Representations/GlyphRepresentation';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
+import { allocateArray } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
-import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
-import vtkWidgetRepresentation, {
-  getPixelWorldHeightAtCoord,
-} from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
+const INFINITE_RATIO = 100000;
 
 // ----------------------------------------------------------------------------
 // vtkLineHandleRepresentation methods
@@ -18,10 +14,6 @@ import vtkWidgetRepresentation, {
 function vtkLineHandleRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkLineHandleRepresentation');
-
-  // --------------------------------------------------------------------------
-  // Internal polydata dataset
-  // --------------------------------------------------------------------------
 
   // --------------------------------------------------------------------------
   // Generic rendering pipeline
@@ -40,32 +32,12 @@ function vtkLineHandleRepresentation(publicAPI, model) {
   publicAPI.addActor(model.displayActor);
   model.alwaysVisibleActors = [model.displayActor];
 
-  model.pipelines = {
-    lines: {
-      source: publicAPI,
-      glyph: vtkCylinderSource.newInstance({
-        resolution: model.glyphResolution,
-        direction: [0, 0, 1],
-      }),
-      mapper: vtkGlyph3DMapper.newInstance({
-        scaleArray: 'scale',
-        scaleMode: vtkGlyph3DMapper.ScaleModes.SCALE_BY_COMPONENTS,
-        colorByArrayName: 'color',
-        orientationArray: 'direction',
-        scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
-        orientationMode: OrientationModes.MATRIX,
-      }),
-      actor: vtkActor.newInstance({ parentProp: publicAPI }),
-    },
-  };
-  vtkWidgetRepresentation.connectPipeline(model.pipelines.lines);
-  publicAPI.addActor(model.pipelines.lines.actor);
-
   // --------------------------------------------------------------------------
 
   publicAPI.setGlyphResolution = macro.chain(
     publicAPI.setGlyphResolution,
-    (r) => model.pipelines.lines.glyph.setResolution(r)
+    model._pipeline.glyph.setThetaResolution,
+    model._pipeline.glyph.setPhiResolution
   );
 
   // --------------------------------------------------------------------------
@@ -92,91 +64,50 @@ function vtkLineHandleRepresentation(publicAPI, model) {
     model.displayMapper.setCallback(callback ? callbackProxy : null);
   };
 
-  const superGetRepresentationStates = publicAPI.getRepresentationStates;
-  publicAPI.getRepresentationStates = (input = model.inputData[0]) =>
-    superGetRepresentationStates(input).filter(
-      (state) => state.getOrigin?.() && state.isVisible?.()
-    );
-
-  // --------------------------------------------------------------------------
-
-  publicAPI.requestData = (inData, outData) => {
-    const list = publicAPI.getRepresentationStates(inData[0]);
-    const totalCount = list.length;
-
-    const points = publicAPI
-      .allocateArray('points', 'Float32Array', 3, totalCount)
-      .getData();
-    const color = publicAPI
-      .allocateArray('color', ...publicAPI.computeColorType(list), totalCount)
-      .getData();
-    const scale = publicAPI
-      .allocateArray('scale', 'Float32Array', 3, totalCount)
-      .getData();
-    const direction = publicAPI
-      .allocateArray('direction', 'Float32Array', 9, totalCount)
-      .getData();
-
-    for (let i = 0; i < totalCount; i++) {
-      const state = list[i];
-      const isActive = state.getActive();
-      let scaleFactor = isActive ? model.activeScaleFactor : 1;
-
-      const coord = state.getOrigin();
-      points[i * 3 + 0] = coord[0];
-      points[i * 3 + 1] = coord[1];
-      points[i * 3 + 2] = coord[2];
-
-      const right = state.getRight ? state.getRight() : [1, 0, 0];
-      const up = state.getUp ? state.getUp() : [0, 1, 0];
-      const dir = state.getDirection ? state.getDirection() : [0, 0, 1];
-      const rotation = [...right, ...up, ...dir];
-      direction.set(rotation, 9 * i);
-
-      let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
-      scale3 = scale3.map((x) => (x === 0 ? model.defaultScale : x));
-      if (model.infiniteLine) {
-        scale3[2] = 100000;
+  /**
+   * Overwrite scale3 to optionally make lines infinite
+   */
+  const superScale3 = publicAPI.getScale3();
+  publicAPI.setScale3((polyData, states) => {
+    superScale3(polyData, states);
+    if (model.infiniteLine) {
+      const scales = allocateArray(
+        polyData,
+        'scale',
+        states.length,
+        'Float32Array',
+        3
+      ).getData();
+      for (let i = 0; i < states.length; ++i) {
+        scales[3 * i + 2] = INFINITE_RATIO;
       }
-
-      const scale1 = state.getScale1 ? state.getScale1() : model.defaultScale;
-      if (publicAPI.getScaleInPixels()) {
-        scaleFactor *= getPixelWorldHeightAtCoord(
-          coord,
-          model.displayScaleParams
-        );
-      }
-
-      scale[i * 3 + 0] = scale1 * scaleFactor * scale3[0];
-      scale[i * 3 + 1] = scale1 * scaleFactor * scale3[1];
-      scale[i * 3 + 2] = scale1 * scaleFactor * scale3[2];
-
-      typedArray.color[i] =
-        model.useActiveColor && isActive ? model.activeColor : state.getColor();
     }
-
-    model.internalPolyData.modified();
-    outData[0] = model.internalPolyData;
-  };
+  });
 }
 
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  glyphResolution: 8,
-  defaultScale: 1,
-  useActiveColor: true,
-  infiniteLine: true,
-};
+function defaultValues(initialValues) {
+  return {
+    infiniteLine: true,
+    glyphResolution: 4,
+    _pipeline: {
+      glyph: vtkCylinderSource.newInstance({
+        resolution: initialValues.glyphResolution ?? 4,
+        direction: [0, 0, 1],
+      }),
+    },
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-
-  vtkHandleRepresentation.extend(publicAPI, model, initialValues);
+  vtkGlyphRepresentation.extend(publicAPI, model, defaultValues(initialValues));
+  macro.setGet(publicAPI, model, ['infiniteLine', 'glyphResolution']);
 
   // Object specific methods
   vtkLineHandleRepresentation(publicAPI, model);

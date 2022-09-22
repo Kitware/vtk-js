@@ -3,6 +3,7 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ContextRepresentation';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import { allocateArray } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 import { vec3 } from 'gl-matrix';
 
@@ -31,18 +32,6 @@ function vtkRectangleContextRepresentation(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.setDrawBorder = (draw) => {
-    model.drawBorder = draw;
-  };
-
-  // --------------------------------------------------------------------------
-
-  publicAPI.setDrawFace = (draw) => {
-    model.drawFace = draw;
-  };
-
-  // --------------------------------------------------------------------------
-
   publicAPI.setOpacity = (opacity) => {
     model.actor.getProperty().setOpacity(opacity);
   };
@@ -55,9 +44,10 @@ function vtkRectangleContextRepresentation(publicAPI, model) {
     }
 
     const list = publicAPI.getRepresentationStates(inData[0]);
+    // FIXME: support list > 1.
     const state = list[0];
 
-    if (state.getVisible() && state.getOrigin()) {
+    if (state?.getVisible() && state?.getOrigin()) {
       const point1 = state.getOrigin();
       const point2 = state.getCorner();
       const diagonal = [0, 0, 0];
@@ -65,9 +55,11 @@ function vtkRectangleContextRepresentation(publicAPI, model) {
       const up = state.getUp();
       const upComponent = vec3.dot(diagonal, up);
 
-      const points = publicAPI
-        .allocateArray('points', 'Float32Array', 3, 4)
-        .getData();
+      const points = allocateArray(
+        model.internalPolyData,
+        'points',
+        4
+      ).getData();
 
       points[0] = point1[0];
       points[1] = point1[1];
@@ -96,6 +88,7 @@ function vtkRectangleContextRepresentation(publicAPI, model) {
       model.internalPolyData.getLines().setData([], 0);
     }
 
+    model.internalPolyData.modified();
     outData[0] = model.internalPolyData;
   };
 
@@ -119,6 +112,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkContextRepresentation.extend(publicAPI, model, initialValues);
   macro.setGetArray(publicAPI, model, ['color'], 1);
 
+  macro.setGet(publicAPI, model, ['drawBorder', 'drawFace']);
   macro.get(publicAPI, model, ['mapper', 'actor']);
 
   // Object specific methods
