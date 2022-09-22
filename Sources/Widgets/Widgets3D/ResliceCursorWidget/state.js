@@ -5,10 +5,10 @@ import {
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
-const viewColors = {
-  X: 0, // red
-  Y: 0.5, // green
-  Z: 1, // blue
+const viewsColor3 = {
+  X: [255, 0, 0], // red
+  Y: [0, 255, 0], // green
+  Z: [0, 0, 255], // blue
 };
 
 export default function generateState() {
@@ -40,11 +40,11 @@ export default function generateState() {
     .addField({ name: 'viewUpFromViewType', initialValue: {} })
     .addStateFromMixin({
       labels: ['handles', 'center'],
-      mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator'],
+      mixins: ['origin', 'color3', 'scale1', 'visible', 'manipulator'],
       name: 'centerHandle',
       initialValues: {
         scale1: 30,
-        color: 0.25,
+        color3: [255, 255, 255],
       },
     });
 
@@ -58,7 +58,7 @@ export default function generateState() {
             labels: ['handles', 'line', `lineIn${view}`, `${axis}in${view}`],
             mixins: [
               'origin',
-              'color',
+              'color3',
               'scale3', // scale3[2] will be automatically overwritten
               'orientation',
               'visible',
@@ -67,7 +67,7 @@ export default function generateState() {
             name: `axis${axis}in${view}`,
             initialValues: {
               scale3: [4, 4, 4],
-              color: viewColors[axis],
+              color3: viewsColor3[axis],
             },
           });
           // Rotation handle
@@ -80,11 +80,11 @@ export default function generateState() {
                 `${axis}in${view}`,
                 `point${rotationHandle}`,
               ],
-              mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator'],
+              mixins: ['origin', 'color3', 'scale1', 'visible', 'manipulator'],
               name: `rotationHandle${axis}in${view}${rotationHandle}`,
               initialValues: {
                 scale1: 30,
-                color: viewColors[axis],
+                color3: viewsColor3[axis],
               },
             });
           }
