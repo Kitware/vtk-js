@@ -513,7 +513,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     const result = model._textureResourceIds.get(texture);
     if (result !== undefined) {
       publicAPI.getTextureUnitManager().free(result);
-      delete model._textureResourceIds.delete(texture);
+      model._textureResourceIds.delete(texture);
     }
   };
 
