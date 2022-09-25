@@ -172,17 +172,19 @@ export function get(publicAPI: object, model: object, fieldNames: Array<string>)
  * @param publicAPI object on which public methods get attached to
  * @param model object on which protected fields are stored
  * @param fieldNames list of fields available in model that we want to expose as set{FieldName} methods on the publicAPI
+ * * Can be a string (the name of the field to expose) or an object (e.g. {type:enum, name: {FieldName}, enum: FieldEnum}).
  */
-export function set(publicAPI: object, model: object, fields: Array<string>): void;
+export function set(publicAPI: object, model: object, fields: Array<string|object>): void;
 
 /**
  * Add setter+getter methods to the provided publicAPI
  *
  * @param publicAPI object on which public methods get attached to
  * @param model object on which protected fields are stored
- * @param fieldNames list of fields available in model that we want to expose as set{FieldName}+get{FieldName} methods on the publicAPI
+ * @param fieldNames list of fields available in model that we want to expose as set{FieldName}+get{FieldName} methods on the publicAPI.
+ * Can be a string (the name of the field to expose) or an object (e.g. {type:enum, name: {FieldName}, enum: FieldEnum}).
  */
-export function setGet(publicAPI: object, model: object, fields: Array<string>): void;
+export function setGet(publicAPI: object, model: object, fields: Array<string|object>): void;
 
 /**
  * Add getter methods to the provided publicAPI for arrays.

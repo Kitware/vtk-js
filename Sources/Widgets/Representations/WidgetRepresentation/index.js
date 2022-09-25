@@ -268,8 +268,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   vtkProp.extend(publicAPI, model, initialValues);
   macro.algo(publicAPI, model, 1, 1);
-  macro.get(publicAPI, model, ['labels', 'coincidentTopologyParameters']);
-  macro.set(publicAPI, model, ['displayScaleParams']);
+  macro.get(publicAPI, model, ['labels']);
+  macro.set(publicAPI, model, [
+    { type: 'object', name: 'displayScaleParams' },
+    { type: 'object', name: 'coincidentTopologyParameters' },
+  ]);
   macro.setGet(publicAPI, model, ['scaleInPixels']);
 
   // Object specific methods

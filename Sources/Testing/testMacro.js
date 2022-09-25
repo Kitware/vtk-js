@@ -35,6 +35,7 @@ const DEFAULT_VALUES = {
   myProp11: 11,
   _myProp12: [12],
   _myProp13: 13,
+  myObjectProp: { foo: 1 },
 };
 
 // ----------------------------------------------------------------------------
@@ -73,6 +74,9 @@ function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, ['_myProp11']);
   macro.setGetArray(publicAPI, model, ['_myProp12'], 1);
   macro.moveToProtected(publicAPI, model, ['myProp11', 'myProp12', 'myProp13']);
+
+  // Object member variables
+  macro.setGet(publicAPI, model, [{ name: 'myObjectProp', type: 'object' }]);
 
   // Object specific methods
   myClass(publicAPI, model);
@@ -400,6 +404,39 @@ test('Macro methods enum tests', (t) => {
     myTestClass.getMyProp7(),
     MY_ENUM.SECOND,
     'Enum set string out of range should be rejected'
+  );
+
+  t.end();
+});
+
+test('Macro methods object tests', (t) => {
+  const myTestClass = newInstance();
+
+  const mtime = myTestClass.getMTime();
+  t.equal(
+    myTestClass.setMyObjectProp({ foo: 1 }),
+    false,
+    'No change on same object'
+  );
+  t.equal(myTestClass.getMTime(), mtime, 'No change when setting same object');
+
+  t.equal(
+    myTestClass.setMyObjectProp({ foo: 2 }),
+    true,
+    'Change on different object'
+  );
+  t.notEqual(myTestClass.getMTime(), mtime, 'Change when setting same object');
+  t.deepEqual(
+    myTestClass.getMyObjectProp(),
+    { foo: 2 },
+    'Change on different object'
+  );
+
+  myTestClass.getMyObjectProp().foo = 3;
+  t.deepEqual(
+    myTestClass.getMyObjectProp(),
+    { foo: 2 },
+    'Getter shall return a copy'
   );
 
   t.end();
