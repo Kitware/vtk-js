@@ -78,6 +78,7 @@ export function connectPipeline(pipeline) {
 function vtkWidgetRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWidgetRepresentation');
+  const superclass = { ...publicAPI };
   // Internal cache
   const cache = { mtimes: {}, states: [] };
 
@@ -194,13 +195,15 @@ function vtkWidgetRepresentation(publicAPI, model) {
   };
 
   publicAPI.setCoincidentTopologyParameters = (parameters) => {
-    model.coincidentTopologyParameters = parameters;
-    publicAPI.getActors().forEach((actor) => {
-      applyCoincidentTopologyParametersToMapper(
-        actor.getMapper(),
-        model.coincidentTopologyParameters
-      );
-    });
+    const modified = superclass.setCoincidentTopologyParameters(parameters);
+    if (modified) {
+      publicAPI.getActors().forEach((actor) => {
+        applyCoincidentTopologyParametersToMapper(
+          actor.getMapper(),
+          model.coincidentTopologyParameters
+        );
+      });
+    }
   };
 
   publicAPI.getPixelWorldHeightAtCoord = (worldCoord) => {
