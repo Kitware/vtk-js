@@ -297,9 +297,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
         );
         newPoints.set(selectionMaps.points);
         selectionMaps.points = newPoints;
-        const newCells = new Int32Array(
-          caboCount + selectionMaps.points.length
-        );
+        const newCells = new Int32Array(caboCount + selectionMaps.cells.length);
         newCells.set(selectionMaps.cells);
         selectionMaps.cells = newCells;
       }
