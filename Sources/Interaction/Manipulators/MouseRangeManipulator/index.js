@@ -142,18 +142,18 @@ function vtkMouseRangeManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.removeHorizontalListener = () => {
-    if (model.verticalListener) {
-      incrementalDelta.delete(model.verticalListener);
-      delete model.verticalListener;
+    if (model.horizontalListener) {
+      incrementalDelta.delete(model.horizontalListener);
+      delete model.horizontalListener;
       publicAPI.modified();
     }
   };
 
   //-------------------------------------------------------------------------
   publicAPI.removeVerticalListener = () => {
-    if (model.horizontalListener) {
-      incrementalDelta.delete(model.horizontalListener);
-      delete model.horizontalListener;
+    if (model.verticalListener) {
+      incrementalDelta.delete(model.verticalListener);
+      delete model.verticalListener;
       publicAPI.modified();
     }
   };
