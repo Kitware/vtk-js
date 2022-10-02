@@ -18,6 +18,7 @@ const EPSILON = 1e-6;
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkShapeWidgetProp');
+  model._isDragging = false;
 
   model.keysDown = {};
 
@@ -273,22 +274,24 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   const computeTextPosition = (worldBounds, textPosition, worldMargin = 0) => {
-    const viewPlaneOrigin = model.manipulator.getOrigin();
-    const viewPlaneNormal = model.manipulator.getNormal();
-    const viewUp = model.renderer.getActiveCamera().getViewUp();
+    const viewPlaneOrigin = vtkBoundingBox.getCenter(worldBounds);
+    const viewPlaneNormal = model._renderer
+      .getActiveCamera()
+      .getDirectionOfProjection();
+    const viewUp = model._renderer.getActiveCamera().getViewUp();
 
     const positionMargin = Array.isArray(worldMargin)
       ? [...worldMargin]
       : [worldMargin, worldMargin, viewPlaneOrigin ? worldMargin : 0];
 
     // Map bounds from world positions to display positions
-    const minPoint = model.apiSpecificRenderWindow.worldToDisplay(
+    const minPoint = model._apiSpecificRenderWindow.worldToDisplay(
       ...vtkBoundingBox.getMinPoint(worldBounds),
-      model.renderer
+      model._renderer
     );
-    const maxPoint = model.apiSpecificRenderWindow.worldToDisplay(
+    const maxPoint = model._apiSpecificRenderWindow.worldToDisplay(
       ...vtkBoundingBox.getMaxPoint(worldBounds),
-      model.renderer
+      model._renderer
     );
     const displayBounds = vtkMath.computeBoundsFromPoints(
       minPoint,
@@ -313,9 +316,9 @@ export default function widgetBehavior(publicAPI, model) {
       )
     ) {
       // Map plane origin from world positions to display positions
-      const displayPlaneOrigin = model.apiSpecificRenderWindow.worldToDisplay(
+      const displayPlaneOrigin = model._apiSpecificRenderWindow.worldToDisplay(
         ...viewPlaneOrigin,
-        model.renderer
+        model._renderer
       );
       // Map plane normal from world positions to display positions
       const planeNormalPoint = vtkMath.add(
@@ -324,13 +327,14 @@ export default function widgetBehavior(publicAPI, model) {
         []
       );
       const displayPlaneNormalPoint =
-        model.apiSpecificRenderWindow.worldToDisplay(
+        model._apiSpecificRenderWindow.worldToDisplay(
           ...planeNormalPoint,
-          model.renderer
+          model._renderer
         );
       const displayPlaneNormal = vtkMath.subtract(
         displayPlaneNormalPoint,
-        displayPlaneOrigin
+        displayPlaneOrigin,
+        []
       );
 
       // Project view plane into bounding box
@@ -395,9 +399,9 @@ export default function widgetBehavior(publicAPI, model) {
     vtkMath.add(finalPosition, w, finalPosition);
     vtkMath.add(finalPosition, positionMargin, finalPosition);
 
-    return model.apiSpecificRenderWindow.displayToWorld(
+    return model._apiSpecificRenderWindow.displayToWorld(
       ...finalPosition,
-      model.renderer
+      model._renderer
     );
   };
 
@@ -448,30 +452,31 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = (callData) => {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
     if (
+      !manipulator ||
       !model.activeState ||
       !model.activeState.getActive() ||
       !model.pickable ||
-      !model.dragable ||
-      !model.manipulator
+      !model.dragable
     ) {
       return macro.VOID;
     }
     if (!model.point2) {
       // Update orientation to match the camera's plane
       // if the corners are not yet placed
-      const normal = model.camera.getDirectionOfProjection();
-      const up = model.camera.getViewUp();
+      const normal = model._camera.getDirectionOfProjection();
+      const up = model._camera.getViewUp();
       const right = [];
       vec3.cross(right, up, normal);
       model.shapeHandle.setUp(up);
       model.shapeHandle.setRight(right);
       model.shapeHandle.setDirection(normal);
-      model.manipulator.setNormal(normal);
     }
-    const worldCoords = model.manipulator.handleEvent(
+    const worldCoords = manipulator.handleEvent(
       callData,
-      model.apiSpecificRenderWindow
+      model._apiSpecificRenderWindow
     );
     if (!worldCoords.length) {
       return macro.VOID;
@@ -486,7 +491,7 @@ export default function widgetBehavior(publicAPI, model) {
         publicAPI.updateShapeBounds();
         publicAPI.invokeInteractionEvent();
       }
-    } else if (model.isDragging) {
+    } else if (model._isDragging) {
       if (model.activeState === model.point1Handle) {
         model.point1Handle.setOrigin(worldCoords);
         model.point1 = worldCoords;
@@ -498,7 +503,7 @@ export default function widgetBehavior(publicAPI, model) {
       publicAPI.invokeInteractionEvent();
     }
 
-    return model.hasFocus || model.isDragging ? macro.EVENT_ABORT : macro.VOID;
+    return model.hasFocus || model._isDragging ? macro.EVENT_ABORT : macro.VOID;
   };
 
   // --------------------------------------------------------------------------
@@ -506,19 +511,28 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonPress = (e) => {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
     if (
       !model.activeState ||
       !model.activeState.getActive() ||
-      !model.pickable
+      !model.pickable ||
+      !manipulator
     ) {
       return macro.VOID;
     }
 
     if (model.hasFocus) {
+      const worldCoords = manipulator.handleEvent(
+        e,
+        model._apiSpecificRenderWindow
+      );
       if (!model.point1) {
+        model.point1Handle.setOrigin(worldCoords);
         publicAPI.placePoint1(model.point1Handle.getOrigin());
         publicAPI.invokeStartInteractionEvent();
       } else {
+        model.point2Handle.setOrigin(worldCoords);
         publicAPI.placePoint2(model.point2Handle.getOrigin());
         publicAPI.invokeInteractionEvent();
         publicAPI.invokeEndInteractionEvent();
@@ -536,17 +550,16 @@ export default function widgetBehavior(publicAPI, model) {
     if (
       model.point1 &&
       (model.activeState === model.point1Handle ||
-        model.activeState === model.point2Handle)
+        model.activeState === model.point2Handle) &&
+      model.dragable
     ) {
-      model.isDragging = true;
-      model.apiSpecificRenderWindow.setCursor('grabbing');
+      model._isDragging = true;
+      model._apiSpecificRenderWindow.setCursor('grabbing');
       model._interactor.requestAnimation(publicAPI);
-      publicAPI.invokeStartInteractionEvent();
-
-      return macro.EVENT_ABORT;
     }
 
-    return macro.VOID;
+    publicAPI.invokeStartInteractionEvent();
+    return macro.EVENT_ABORT;
   };
 
   // --------------------------------------------------------------------------
@@ -554,9 +567,9 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonRelease = (e) => {
-    if (model.isDragging) {
-      model.isDragging = false;
-      model.apiSpecificRenderWindow.setCursor('pointer');
+    if (model._isDragging) {
+      model._isDragging = false;
+      model._apiSpecificRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
       model._interactor.cancelAnimation(publicAPI);
       publicAPI.invokeEndInteractionEvent();
@@ -568,7 +581,7 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
 
-    const viewSize = model.apiSpecificRenderWindow.getSize();
+    const viewSize = model._apiSpecificRenderWindow.getSize();
     if (
       e.position.x < 0 ||
       e.position.x > viewSize[0] - 1 ||
@@ -671,7 +684,7 @@ export default function widgetBehavior(publicAPI, model) {
     model.point2Handle.deactivate();
     model.activeState = null;
     model._interactor.render();
-    model.widgetManager.enablePicking();
+    model._widgetManager.enablePicking();
 
     superClass.loseFocus();
   };

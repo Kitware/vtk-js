@@ -4,13 +4,8 @@ import vtkAxesActor from "../../../Rendering/Core/AxesActor";
 import vtkRenderer from "../../../Rendering/Core/Renderer";
 import vtkRenderWindowInteractor from "../../../Rendering/Core/RenderWindowInteractor";
 import { Nullable } from "../../../types";
+import { Corners } from "./Constants";
 
-export enum Corners {
-	TOP_LEFT,
-	TOP_RIGHT,
-	BOTTOM_LEFT,
-	BOTTOM_RIGHT,
-}
 
 /**
  * 
@@ -170,12 +165,13 @@ export function extend(publicAPI: object, model: object, initialValues?: IOrient
  */
 export function newInstance(initialValues?: IOrientationMarkerWidgetInitialValues): vtkOrientationMarkerWidget;
 
-
 /**
  * vtkOrientationMarkerWidget is a 2D widget for manipulating a marker prop
  */
 export declare const vtkOrientationMarkerWidget: {
 	newInstance: typeof newInstance;
 	extend: typeof extend;
+	Corners: typeof Corners;
 }
+
 export default vtkOrientationMarkerWidget;

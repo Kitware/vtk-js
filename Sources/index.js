@@ -5,7 +5,6 @@ import Interaction from './Interaction';
 import IO from './IO';
 import Rendering from './Rendering';
 import VTKProxy from './Proxy';
-import ThirdParty from './ThirdParty';
 import Widgets from './Widgets';
 
 import macro from './macros';
@@ -19,7 +18,6 @@ vtk.Interaction = Interaction;
 vtk.IO = IO;
 vtk.Proxy = VTKProxy;
 vtk.Rendering = Rendering;
-vtk.ThirdParty = ThirdParty;
 vtk.Widgets = Widgets;
 
 vtk.mtime = macro.getCurrentGlobalMTime;

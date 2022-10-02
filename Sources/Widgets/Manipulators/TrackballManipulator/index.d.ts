@@ -1,50 +1,14 @@
-import { vtkObject } from "../../../interfaces";
+import { IAbstractManipulatorInitialValues, vtkAbstractManipulator } from "../AbstractManipulator";
+import { Vector3 } from "../../../types";
 
 /**
  *
  */
-export interface ITrackballManipulatorInitialValues {
-	normal?: number[];
+export interface ITrackballManipulatorInitialValues extends IAbstractManipulatorInitialValues {
+
 }
 
-export interface vtkTrackballManipulator extends vtkObject {
-
-	/**
-	 * Get normal
-	 */
-	getNormal(): number[];
-
-	/**
-	 * Get normal
-	 */
-	getNormalByReference(): number[];
-
-	/**
-	 * 
-	 * @param callData 
-	 * @param glRenderWindow 
-	 */
-	handleEvent(callData: any, glRenderWindow: any): void;
-
-	/**
-	 * Set the normal of the line.
-	 * @param {Number[]} normal The normal coordinate.
-	 */
-	setNormal(normal: number[]): boolean;
-
-	/**
-	 * Set the normal of the line.
-	 * @param {Number} x The x coordinate.
-	 * @param {Number} y The y coordinate.
-	 * @param {Number} z The z coordinate.
-	 */
-	setNormal(x: number, y: number, z: number): boolean;
-
-	/**
-	 * Set the normal of the line.
-	 * @param {Number[]} normal The normal coordinate.
-	 */
-	setNormalFrom(normal: number[]): boolean;
+export interface vtkTrackballManipulator extends vtkAbstractManipulator {
 
 	/**
 	 * 
@@ -73,12 +37,12 @@ export function newInstance(initialValues?: ITrackballManipulatorInitialValues):
  * @param {Number} prevY 
  * @param {Number} curX 
  * @param {Number} curY 
- * @param {Number[]} origin 
- * @param {Number[]} direction 
+ * @param {Vector3} origin 
+ * @param {Vector3} direction 
  * @param renderer 
  * @param glRenderWindow 
  */
-export function trackballRotate(prevX: number, prevY: number, curX: number, curY: number, origin: number[], direction: number[], renderer: any, glRenderWindow: any): void;
+export function trackballRotate(prevX: number, prevY: number, curX: number, curY: number, origin: Vector3, direction: Vector3, renderer: any, glRenderWindow: any): void;
 
 
 /**

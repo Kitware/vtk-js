@@ -1,4 +1,4 @@
-import JSZip from 'jszip';
+import { zipSync } from 'fflate';
 
 import macro from 'vtk.js/Sources/macros';
 import vtkSerializer from 'vtk.js/Sources/IO/Core/Serializer';
@@ -40,35 +40,18 @@ function vtkZipMultiDataSetWriter(publicAPI, model) {
   publicAPI.write = () => {
     publicAPI.update();
 
-    // Write to zip
-    if (model.zipFile) {
-      model.zipFile = new JSZip();
-    }
+    const zipInfo = Object.create(null);
 
     // Write metadata
-    model.zipFile.file('datasets.json', JSON.stringify(model.datasets));
+    zipInfo['datasets.json'] = JSON.stringify(model.datasets);
 
     // Write Arrays
     for (let i = 0; i < model.arrays.length; i++) {
-      model.zipFile.file(
-        `array_${vtkDataArray.getDataType(model.arrays[i])}_${i}`,
-        model.arrays[i],
-        { binary: true }
-      );
+      zipInfo[`array_${vtkDataArray.getDataType(model.arrays[i])}_${i}`] =
+        model.arrays[i];
     }
 
-    model.zipFile
-      .generateAsync({
-        type: 'blob',
-        compression: 'DEFLATE',
-        compressionOptions: {
-          level: model.compressionLevel,
-        },
-      })
-      .then((blob) => {
-        model.blob = blob;
-        return blob;
-      });
+    model.blob = new Blob([zipSync(zipInfo)]);
   };
 }
 
@@ -77,7 +60,6 @@ function vtkZipMultiDataSetWriter(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  zipFile: null,
   compressionLevel: 6,
   blob: null,
 };
@@ -92,7 +74,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Also make it an algorithm with one input and one output
   macro.algo(publicAPI, model, 1, 0);
-  macro.setGet(publicAPI, model, ['zipFile', 'compressionLevel']);
+  macro.setGet(publicAPI, model, ['compressionLevel']);
   macro.get(publicAPI, model, ['blob']);
 
   // Object specific methods

@@ -3,7 +3,7 @@ import 'vtk.js/Sources/favicon';
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import 'vtk.js/Sources/Rendering/Profiles/All';
 
-import JSZip from 'jszip';
+import { strFromU8, unzipSync } from 'fflate';
 
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
@@ -31,6 +31,18 @@ function emptyContainer(container) {
 
 // ----------------------------------------------------------------------------
 
+function unpack(zipContent) {
+  if (zipContent instanceof Blob) {
+    return zipContent.arrayBuffer().then((ab) => new Uint8Array(ab));
+  }
+  if (zipContent instanceof ArrayBuffer) {
+    return Promise.resolve(new Uint8Array(zipContent));
+  }
+  return Promise.reject(new Error('invalid zip content'));
+}
+
+// ----------------------------------------------------------------------------
+
 function loadZipContent(zipContent, container) {
   const fileContents = { state: null, arrays: {} };
 
@@ -38,15 +50,10 @@ function loadZipContent(zipContent, container) {
     return Promise.resolve(fileContents.arrays[hash]);
   }
 
-  const zip = new JSZip();
-  zip.loadAsync(zipContent).then(() => {
-    let workLoad = 0;
+  unpack(zipContent).then((zipArrayBuffer) => {
+    const decompressedFiles = unzipSync(zipArrayBuffer);
 
     function done() {
-      if (workLoad !== 0) {
-        return;
-      }
-
       // Synchronize context
       const synchronizerContext =
         vtkSynchronizableRenderWindow.getSynchronizerContext(CONTEXT_NAME);
@@ -97,27 +104,19 @@ function loadZipContent(zipContent, container) {
       });
     }
 
-    zip.forEach((relativePath, zipEntry) => {
+    Object.entries(decompressedFiles).forEach(([relativePath, fileData]) => {
       const fileName = relativePath.split('/').pop();
       if (fileName === 'index.json') {
-        workLoad++;
-        zipEntry.async('string').then((txt) => {
-          fileContents.state = JSON.parse(txt);
-          workLoad--;
-          done();
-        });
+        fileContents.state = JSON.parse(strFromU8(fileData));
       }
 
       if (fileName.length === 32) {
-        workLoad++;
         const hash = fileName;
-        zipEntry.async('arraybuffer').then((arraybuffer) => {
-          fileContents.arrays[hash] = arraybuffer;
-          workLoad--;
-          done();
-        });
+        fileContents.arrays[hash] = fileData.buffer;
       }
     });
+
+    done();
   });
 }
 

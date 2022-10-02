@@ -1,6 +1,11 @@
+## From 24.x to 25
+
+- **math**: For functions calling math functions for computations with matrices, the format must now be number[] or Matrix as defined in the typescript definitions.
+- All widgets handles inheriting from vtkHandleRepresentation now scale up automatically.
+
 ## From 23.x to 24
 
-All old-style widgets except OrientationMarkerWidget and PiecewiseGaussianWidget have been removed.
+- All old-style widgets except OrientationMarkerWidget and PiecewiseGaussianWidget have been removed.
 
 | **Old-style/deprecated widget**   | **New-style widget**            |
 |-----------------------------------|---------------------------------|
@@ -15,6 +20,16 @@ All old-style widgets except OrientationMarkerWidget and PiecewiseGaussianWidget
 | ResliceCursor                     | ResliceCursorWidget             |
 
 - In SVGLandmarkRepresentation: `model.showCircle` is replaced by `model.circleProps.visible`
+- In vtk.js subclasses, prefix with '_' the following "protected" model variables:
+  - vtk*: model.openglRenderWindow -> model._openglRenderWindow
+  - vtk*: model.openglRenderer -> model._openglRenderer
+  - vtkInteractorObserver, vtkOrientationMarkerWidget : model.interactor -> model._interactor
+  - vtkAbstractWidget, vtkViewNode: model.parent -> model._parent
+  - vtkProp: model.parentProp -> model._parentProp
+  - vtkRenderWindowInteractor: model.view -> model._view
+  - vtkRenderer: model.renderWindow -> model._renderWindow
+  - vtkHardwareSelector: model.renderer -> model._renderer
+  - vtkAbstractWidget: model.widgetManager -> model._widgetManager
 
 ## From 22.x to 23
 

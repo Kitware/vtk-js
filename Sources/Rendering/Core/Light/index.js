@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import { vec3 } from 'gl-matrix';
 
 // ----------------------------------------------------------------------------
 
@@ -12,30 +13,45 @@ export const LIGHT_TYPES = ['HeadLight', 'CameraLight', 'SceneLight'];
 function vtkLight(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkLight');
+  const tmpVec = new Float64Array(3);
 
   publicAPI.getTransformedPosition = () => {
     if (model.transformMatrix) {
-      return []; // FIXME !!!!
+      vec3.transformMat4(tmpVec, model.position, model.transformMatrix);
+    } else {
+      vec3.set(tmpVec, model.position[0], model.position[1], model.position[2]);
     }
-    return [].concat(model.position);
+    return tmpVec;
   };
 
   publicAPI.getTransformedFocalPoint = () => {
     if (model.transformMatrix) {
-      return []; // FIXME !!!!
+      vec3.transformMat4(tmpVec, model.focalPoint, model.transformMatrix);
+    } else {
+      vec3.set(
+        tmpVec,
+        model.focalPoint[0],
+        model.focalPoint[1],
+        model.focalPoint[2]
+      );
     }
-    return [].concat(model.focalPoint);
+    return tmpVec;
   };
 
   publicAPI.getDirection = () => {
     if (model.directionMTime < model.mtime) {
-      model.direction[0] = model.focalPoint[0] - model.position[0];
-      model.direction[1] = model.focalPoint[1] - model.position[1];
-      model.direction[2] = model.focalPoint[2] - model.position[2];
+      vec3.sub(model.direction, model.focalPoint, model.position);
       vtkMath.normalize(model.direction);
       model.directionMTime = model.mtime;
     }
     return model.direction;
+  };
+
+  // Sets the direction from a vec3 instead of a focal point
+  publicAPI.setDirection = (directionVector) => {
+    const newFocalPoint = new Float64Array(3);
+    vec3.sub(newFocalPoint, model.position, directionVector);
+    model.focalPoint = newFocalPoint;
   };
 
   publicAPI.setDirectionAngle = (elevation, azimuth) => {
@@ -85,6 +101,7 @@ const DEFAULT_VALUES = {
   positional: false,
   exponent: 1,
   coneAngle: 30,
+  coneFalloff: 5,
   attenuationValues: [1, 0, 0],
   transformMatrix: null,
   lightType: 'SceneLight',
@@ -106,9 +123,11 @@ export function extend(publicAPI, model, initialValues = {}) {
     'positional',
     'exponent',
     'coneAngle',
+    'coneFalloff',
     'transformMatrix',
     'lightType',
     'shadowAttenuation',
+    'attenuationValues',
   ]);
   macro.setGetArray(
     publicAPI,

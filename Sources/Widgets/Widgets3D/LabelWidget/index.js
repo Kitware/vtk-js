@@ -18,11 +18,15 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 function vtkLabelWidget(publicAPI, model) {
   model.classHierarchy.push('vtkLabelWidget');
 
-  // --- Widget Requirement ---------------------------------------------------
-  model.methodsToLink = ['textProps', 'fontProperties', 'strokeFontProperties'];
+  const superClass = { ...publicAPI };
 
-  model.behavior = widgetBehavior;
-  model.widgetState = stateGenerator();
+  // --- Widget Requirement ---------------------------------------------------
+  model.methodsToLink = [
+    'textProps',
+    'fontProperties',
+    'strokeFontProperties',
+    'scaleInPixels',
+  ];
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
@@ -56,14 +60,31 @@ function vtkLabelWidget(publicAPI, model) {
     }
   };
 
+  // --- Public methods -------------------------------------------------------
+
+  publicAPI.setManipulator = (manipulator) => {
+    superClass.setManipulator(manipulator);
+    model.widgetState.getMoveHandle().setManipulator(manipulator);
+    model.widgetState.getText().setManipulator(manipulator);
+  };
+
+  // --------------------------------------------------------------------------
+  // initialization
+  // --------------------------------------------------------------------------
+
   // Default manipulator
-  model.manipulator = vtkPlanePointManipulator.newInstance();
+  publicAPI.setManipulator(
+    model.manipulator ||
+      vtkPlanePointManipulator.newInstance({ useCameraNormal: true })
+  );
 }
 
 // ----------------------------------------------------------------------------
 
 function defaultValues(initialValues) {
   return {
+    behavior: widgetBehavior,
+    widgetState: stateGenerator(),
     ...initialValues,
   };
 }

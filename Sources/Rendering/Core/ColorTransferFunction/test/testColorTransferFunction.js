@@ -13,6 +13,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 
 import baseline from './testColorTransferFunction.png';
+import baseline2 from './testColorTransferFunction2.png';
 
 test('Test Color Transfer Function', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -111,7 +112,7 @@ test('Test Color Transfer Function', (t) => {
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,
-      [baseline],
+      [baseline, baseline2],
       'Rendering/Core/ColorTransferFunction/testColorTransferFunction',
       t,
       5,

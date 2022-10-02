@@ -16,9 +16,9 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 function vtkPaintWidget(publicAPI, model) {
   model.classHierarchy.push('vtkPaintWidget');
 
+  const superClass = { ...publicAPI };
+
   // --- Widget Requirement ---------------------------------------------------
-  model.behavior = widgetBehavior;
-  model.widgetState = stateGenerator(model.radius);
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
@@ -36,36 +36,49 @@ function vtkPaintWidget(publicAPI, model) {
         return [{ builder: vtkSphereHandleRepresentation, labels: ['handle'] }];
     }
   };
-  // --- Widget Requirement ---------------------------------------------------
 
-  const handle = model.widgetState.getHandle();
+  // --- Public methods -------------------------------------------------------
 
-  // Default manipulator
-  model.manipulator = vtkPlaneManipulator.newInstance();
-  handle.setManipulator(model.manipulator);
+  publicAPI.setManipulator = (manipulator) => {
+    superClass.setManipulator(manipulator);
+    model.widgetState.getHandle().setManipulator(manipulator);
+  };
 
   // override
   const superSetRadius = publicAPI.setRadius;
   publicAPI.setRadius = (r) => {
     if (superSetRadius(r)) {
-      handle.setScale1(r);
+      model.widgetState.getHandle().setScale1(r);
     }
   };
+
+  // --------------------------------------------------------------------------
+  // initialization
+  // --------------------------------------------------------------------------
+
+  // Default manipulator
+  publicAPI.setManipulator(
+    model.manipulator ||
+      vtkPlaneManipulator.newInstance({ useCameraNormal: true })
+  );
 }
 
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  manipulator: null,
+const defaultValues = (initialValues) => ({
+  // manipulator: null,
   radius: 1,
   painting: false,
   color: [1],
-};
+  behavior: widgetBehavior,
+  widgetState: stateGenerator(initialValues?.radius ?? 1),
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
 

@@ -771,6 +771,24 @@ function vtkCubeAxesActor(publicAPI, model) {
     model.axisTextStyle = { ...model.axisTextStyle, ...axisStyle };
     publicAPI.modified();
   };
+
+  publicAPI.get_tmAtlas = () => model._tmAtlas;
+
+  // try to get the bounds for the annotation. This is complicated
+  // as it relies on the pixel size of the window. Every time the camera
+  // changes the bounds change. This method simplifies by just expanding
+  // the grid bounds by a user specified factor.
+  publicAPI.getBounds = () => {
+    publicAPI.update();
+    vtkBoundingBox.setBounds(model.bounds, model.gridActor.getBounds());
+    vtkBoundingBox.scaleAboutCenter(
+      model.bounds,
+      model.boundsScaleFactor,
+      model.boundsScaleFactor,
+      model.boundsScaleFactor
+    );
+    return model.bounds;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -779,6 +797,7 @@ function vtkCubeAxesActor(publicAPI, model) {
 
 function defaultValues(initialValues) {
   return {
+    boundsScaleFactor: 1.3,
     camera: null,
     dataBounds: [...vtkBoundingBox.INIT_BOUNDS],
     faceVisibilityAngle: 8,
@@ -840,6 +859,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, [
     'axisTitlePixelOffset',
+    'boundsScaleFactor',
     'faceVisibilityAngle',
     'gridLines',
     'tickLabelPixelOffset',
@@ -854,7 +874,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'tmTexture',
     'textValues',
     'textPolyData',
-    '_tmAtlas',
     'tickCounts',
     'gridActor',
   ]);

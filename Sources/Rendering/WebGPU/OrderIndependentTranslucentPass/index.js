@@ -16,7 +16,7 @@ const oitpFragTemplate = `
 
 //VTK::IOStructs::Dec
 
-@stage(fragment)
+@fragment
 fn main(
 //VTK::IOStructs::Input
 )
@@ -117,14 +117,10 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       model.colorTextureView
     );
     model.translucentFinalEncoder.attachTextureViews();
-    renNode.setRenderEncoder(model.translucentFinalEncoder);
+
     model.translucentFinalEncoder.begin(viewNode.getCommandEncoder());
-    // set viewport
     renNode.scissorAndViewport(model.translucentFinalEncoder);
-    model.fullScreenQuad.render(
-      model.translucentFinalEncoder,
-      viewNode.getDevice()
-    );
+    model.fullScreenQuad.prepareAndDraw(model.translucentFinalEncoder);
     model.translucentFinalEncoder.end();
   };
 
@@ -164,13 +160,14 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       fDesc.addOutput('f32', 'outAccum');
       fDesc.addBuiltinInput('vec4<f32>', '@builtin(position) fragPos');
       let code = fDesc.getCode();
+
       code = vtkWebGPUShaderCache.substitute(
         code,
         '//VTK::RenderEncoder::Impl',
         [
-          // very simple depth weighting in w
-          'var w: f32 = 1.0 - input.fragPos.z * 0.9;',
-          'output.outColor = vec4<f32>(computedColor.rgb*computedColor.a, computedColor.a) * w;',
+          // very simple depth weighting in w z ranges from 1.0 near to 0.0
+          'var w: f32 = computedColor.a * pow(0.1 + input.fragPos.z, 2.0);',
+          'output.outColor = vec4<f32>(computedColor.rgb*w, w);',
           'output.outAccum = computedColor.a;',
         ]
       ).result;
@@ -232,9 +229,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       code = vtkWebGPUShaderCache.substitute(
         code,
         '//VTK::RenderEncoder::Impl',
-        [
-          'output.outColor = vec4<f32>(computedColor.rgb*computedColor.a, computedColor.a);',
-        ]
+        ['output.outColor = vec4<f32>(computedColor.rgb, computedColor.a);']
       ).result;
       fDesc.setCode(code);
     });
@@ -244,7 +239,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       fragment: {
         targets: [
           {
-            format: 'bgra8unorm',
+            format: 'rgba16float',
             blend: {
               color: {
                 srcFactor: 'src-alpha',

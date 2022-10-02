@@ -1,19 +1,11 @@
+import vtkPiecewiseFunction from "../../../Common/DataModel/PiecewiseFunction";
 import { vtkObject } from "../../../interfaces";
+import vtkColorTransferFunction from "../ColorTransferFunction";
+import { InterpolationType, OpacityMode } from "./Constants";
 
-export enum InterpolationType {
-	NEAREST,
-	LINEAR,
-	FAST_LINEAR,
-}
-
-export enum OpacityMode {
-	FRACTIONAL,
-	PROPORTIONAL,
-}
-
-interface IVolumePropertyInitialValues  {
+export interface IVolumePropertyInitialValues  {
 	independentComponents?: boolean;
-	shade?: number;
+	shade?: boolean;
 	ambient?: number;
 	diffuse?: number;
 	specular?: number;
@@ -43,7 +35,7 @@ export interface vtkVolumeProperty extends vtkObject {
 
 	/**
 	 *
-	 * @param {Number} index 
+	 * @param {Number} index
 	 */
 	getColorChannels(index: number): number;
 
@@ -54,25 +46,25 @@ export interface vtkVolumeProperty extends vtkObject {
 
 	/**
 	 *
-	 * @param {Number} index 
+	 * @param {Number} index
 	 */
 	getGradientOpacityMaximumOpacity(index: number): number;
 
 	/**
 	 *
-	 * @param {Number} index 
+	 * @param {Number} index
 	 */
 	getGradientOpacityMaximumValue(index: number): number;
 
 	/**
 	 *
-	 * @param {Number} index 
+	 * @param {Number} index
 	 */
 	getGradientOpacityMinimumOpacity(index: number): number;
 
 	/**
 	 *
-	 * @param {Number} index 
+	 * @param {Number} index
 	 */
 	getGradientOpacityMinimumValue(index: number): number;
 
@@ -83,15 +75,15 @@ export interface vtkVolumeProperty extends vtkObject {
 
 	/**
 	 * Get the unit distance on which the scalar opacity transfer function is defined.
-	 * @param {Number} index 
+	 * @param {Number} index
 	 */
 	getScalarOpacityUnitDistance(index: number): number;
 
 	/**
 	 * Get the currently set gray transfer function. Create one if none set.
-	 * @param {Number} index 
+	 * @param {Number} index
 	 */
-	getGrayTransferFunction(index: number): any;
+	getGrayTransferFunction(index: number): vtkPiecewiseFunction;
 
 	/**
 	 *
@@ -108,18 +100,18 @@ export interface vtkVolumeProperty extends vtkObject {
 	 * Get the currently set RGB transfer function. Create one if none set.
 	 * @param {Number} index 
 	 */
-	getRGBTransferFunction(index: number): any;
+	getRGBTransferFunction(index: number): vtkColorTransferFunction;
 
 	/**
 	 * Get the scalar opacity transfer function. Create one if none set.
 	 * @param {Number} index 
 	 */
-	getScalarOpacity(index: number): any;
+	getScalarOpacity(index: number): vtkPiecewiseFunction;
 
 	/**
 	 * Get the shading of a volume.
 	 */
-	getShade(): number;
+	getShade(): boolean;
 
 	/**
 	 *
@@ -157,37 +149,37 @@ export interface vtkVolumeProperty extends vtkObject {
 	/**
 	 *
 	 * @param {Number} index 
-	 * @param {Number} value
+	 * @param {Number} value 
 	 */
 	setGradientOpacityMaximumOpacity(index: number, value: number): boolean;
 
 	/**
 	 *
 	 * @param {Number} index 
-	 * @param {Number} value
+	 * @param {Number} value 
 	 */
 	setGradientOpacityMaximumValue(index: number, value: number): boolean;
 
 	/**
 	 *
 	 * @param {Number} index 
-	 * @param {Number} value
+	 * @param {Number} value 
 	 */
 	setGradientOpacityMinimumOpacity(index: number, value: number): boolean;
 
 	/**
 	 *
 	 * @param {Number} index 
-	 * @param {Number} value
+	 * @param {Number} value 
 	 */
 	setGradientOpacityMinimumValue(index: number, value: number): boolean;
 
 	/**
 	 * Set the color of a volume to a gray transfer function
 	 * @param {Number} index 
-	 * @param func
+	 * @param {vtkPiecewiseFunction} func 
 	 */
-	setGrayTransferFunction(index: number, func: any): boolean;
+	setGrayTransferFunction(index: number, func: vtkPiecewiseFunction): boolean;
 
 	/**
 	 * Does the data have independent components, or do some define color only?
@@ -214,14 +206,14 @@ export interface vtkVolumeProperty extends vtkObject {
 
 	/**
 	 *
-	 * @param {Number} labelOutlineThickness
+	 * @param {Number} labelOutlineThickness 
 	 */
 	setLabelOutlineThickness(labelOutlineThickness: number): boolean;
 
 	/**
 	 *
 	 * @param {Number} index 
-	 * @param {Number} value
+	 * @param {Number} value 
 	 */
 	setOpacityMode(index: number, value: number): boolean;
 
@@ -229,7 +221,7 @@ export interface vtkVolumeProperty extends vtkObject {
 	 * Set the unit distance on which the scalar opacity transfer function is
 	 * defined.
 	 * @param {Number} index 
-	 * @param {Number} value
+	 * @param {Number} value 
 	 */
 	setScalarOpacityUnitDistance(index: number, value: number): boolean;
 
@@ -244,9 +236,9 @@ export interface vtkVolumeProperty extends vtkObject {
 	 * turning shading off is generally the same as setting ambient=1,
 	 * diffuse=0, specular=0. Shading can be independently turned on/off per
 	 * component.
-	 * @param {Number} shade
+	 * @param {Boolean} shade
 	 */
-	setShade(shade: number): boolean;
+	setShade(shade: boolean): boolean;
 
 	/**
 	 *
@@ -263,34 +255,34 @@ export interface vtkVolumeProperty extends vtkObject {
 	/**
 	 *
 	 * @param {Number} index 
-	 * @param {Number} value
+	 * @param {Boolean} value 
 	 */
-	setUseGradientOpacity(index: number, value: number): boolean;
+	setUseGradientOpacity(index: number, value: boolean): boolean;
 
 	/**
 	 *
-	 * @param {Boolean} useLabelOutline
+	 * @param {Boolean} useLabelOutline 
 	 */
 	setUseLabelOutline(useLabelOutline: boolean): boolean;
 
 	/**
 	 * Set the color of a volume to an RGB transfer function
 	 * @param {Number} index 
-	 * @param func
+	 * @param {vtkColorTransferFunction} func 
 	 */
-	setRGBTransferFunction(index: number, func: any): boolean;
+	setRGBTransferFunction(index: number, func: vtkColorTransferFunction): boolean;
 
 	/**
 	 * Set the scalar opacity of a volume to a transfer function
 	 * @param {Number} index 
-	 * @param func
+	 * @param {vtkPiecewiseFunction} func 
 	 */
-	setScalarOpacity(index: number, func: any): boolean;
+	setScalarOpacity(index: number, func: vtkPiecewiseFunction): boolean;
 
 	/**
 	 * Set the scalar component weights.
 	 * @param {Number} index 
-	 * @param {Number} value
+	 * @param {Number} value 
 	 */
 	setComponentWeight(index: number, value: number): boolean;
 
@@ -302,7 +294,7 @@ export interface vtkVolumeProperty extends vtkObject {
 
 	/**
 	 * Set the interpolation type for sampling a volume.
-	 * @param {InterpolationType} interpolationType
+	 * @param {InterpolationType} interpolationType 
 	 */
 	setInterpolationType(interpolationType: InterpolationType): boolean;
 
@@ -412,7 +404,9 @@ export function newInstance(initialValues?: IVolumePropertyInitialValues): vtkVo
  * ```
  */
 export declare const vtkVolumeProperty: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+	newInstance: typeof newInstance;
+	extend: typeof extend;
+	InterpolationType: typeof InterpolationType;
+	OpacityMode: typeof OpacityMode;
 };
 export default vtkVolumeProperty;

@@ -295,6 +295,18 @@ function vtkOpenGLImageMapper(publicAPI, model) {
             ]
           ).result;
           break;
+        case 3:
+          FSSource = vtkShaderProgram.substitute(
+            FSSource,
+            '//VTK::TCoord::Impl',
+            [
+              'vec4 tcolor = cscale0*texture2D(texture1, tcoordVCVSOutput.st) + cshift0;',
+              'gl_FragData[0] = vec4(texture2D(colorTexture1, vec2(tcolor.r,0.5)).r,',
+              '  texture2D(colorTexture1, vec2(tcolor.g,0.5)).r,',
+              '  texture2D(colorTexture1, vec2(tcolor.b,0.5)).r, opacity);',
+            ]
+          ).result;
+          break;
         default:
           FSSource = vtkShaderProgram.substitute(
             FSSource,
@@ -588,8 +600,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         macro.vtkErrorMacro('OpenGL has a limit of 6 clipping planes');
         numClipPlanes = 6;
       }
-      const image = model.currentInput;
-      const w2imat4 = image.getWorldToIndex();
 
       const shiftScaleEnabled = cellBO.getCABO().getCoordShiftAndScaleEnabled();
       const inverseShiftScaleMatrix = shiftScaleEnabled
@@ -603,7 +613,11 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         mat4.multiply(mat, mat, inverseShiftScaleMatrix);
         mat4.transpose(mat, mat);
       }
-      mat4.multiply(model.imagematinv, mat, w2imat4);
+
+      // transform crop plane normal with transpose(inverse(worldToIndex))
+      mat4.transpose(model.imagemat, model.currentInput.getIndexToWorld());
+      mat4.multiply(model.imagematinv, mat, model.imagemat);
+
       const planeEquations = [];
       for (let i = 0; i < numClipPlanes; i++) {
         const planeEquation = [];

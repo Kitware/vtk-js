@@ -35,7 +35,6 @@ function vtkEllipseWidget(publicAPI, model) {
     'opacity',
   ];
 
-  model.behavior = widgetBehavior;
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
       case ViewTypes.DEFAULT:
@@ -47,9 +46,6 @@ function vtkEllipseWidget(publicAPI, model) {
           {
             builder: vtkSphereHandleRepresentation,
             labels: ['moveHandle'],
-            initialValues: {
-              scaleInPixels: true,
-            },
           },
           {
             builder: vtkCircleContextRepresentation,
@@ -70,15 +66,18 @@ function vtkEllipseWidget(publicAPI, model) {
   // initialization
   // --------------------------------------------------------------------------
 
-  // Default manipulator
-  model.manipulator = vtkPlanePointManipulator.newInstance();
-  model.widgetState = stateGenerator();
+  publicAPI.setManipulator(
+    model.manipulator ||
+      vtkPlanePointManipulator.newInstance({ useCameraNormal: true })
+  );
 }
 
 // ----------------------------------------------------------------------------
 
 function defaultValues(initialValues) {
   return {
+    behavior: widgetBehavior,
+    widgetState: stateGenerator(),
     modifierBehavior: {
       None: {
         [BehaviorCategory.PLACEMENT]:
@@ -103,7 +102,7 @@ function defaultValues(initialValues) {
 
 export function extend(publicAPI, model, initialValues = {}) {
   vtkShapeWidget.extend(publicAPI, model, defaultValues(initialValues));
-  macro.setGet(publicAPI, model, ['manipulator', 'widgetState']);
+  macro.setGet(publicAPI, model, ['widgetState']);
 
   vtkEllipseWidget(publicAPI, model);
 }

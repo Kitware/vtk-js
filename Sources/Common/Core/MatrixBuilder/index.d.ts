@@ -78,11 +78,11 @@ declare interface Transform {
 	 * iterations (sets of 3) to loop through. Assumes the `typedArray` is an
 	 * array of multiples of 3, unless specifically handling with offset and
 	 * iterations. Returns the instance for chaining.
-	 * @param {TypedArray} typedArray 
+	 * @param {Number[]|TypedArray} typedArray The Array value.
 	 * @param {Number} [offset] 
 	 * @param {Number} [nbIterations] 
 	 */
-	apply(typedArray: TypedArray, offset?: number, nbIterations?: number): Transform
+	apply(typedArray: number[]|TypedArray, offset?: number, nbIterations?: number): Transform
 
 	/**
 	 * Returns the internal `mat4` matrix.

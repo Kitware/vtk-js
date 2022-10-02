@@ -3,11 +3,10 @@ import { Bounds, Nullable } from '../../../types';
 import vtkCamera from '../Camera';
 import vtkLight from '../Light';
 import vtkRenderWindow from '../RenderWindow';
-import vtkProp3D from '../Prop3D';
+import vtkProp from '../Prop';
 import vtkViewport, { IViewportInitialValues } from '../Viewport';
 import vtkVolume from '../Volume';
 import vtkTexture from '../Texture';
-import vtkActor from '../Actor';
 
 
 export interface IRendererInitialValues extends IViewportInitialValues {
@@ -19,7 +18,7 @@ export interface IRendererInitialValues extends IViewportInitialValues {
 	twoSidedLighting?: boolean;
 	lastRenderTimeInSeconds?: number;
 	lights?: vtkLight[];
-	actors?: vtkProp3D[];
+	actors?: vtkProp[];
 	volumes?: vtkVolume[];
 	lightFollowCamera?: boolean;
 	numberOfPropsRendered?: number;
@@ -36,6 +35,10 @@ export interface IRendererInitialValues extends IViewportInitialValues {
 	occlusionRatio?: number;
 	maximumNumberOfPeels?: number;
 	texturedBackground?: boolean;
+	environmentTexture?: vtkTexture;
+	environmentTextureDiffuseStrength?: number;
+	environmentTextureSpecularStrength?: number;
+	useEnvironmentTextureAsBackground?: boolean;
 	pass?: number;
 }
 
@@ -48,9 +51,9 @@ export interface vtkRenderer extends vtkViewport {
 
 	/**
 	 * Add different types of props to the renderer.
-	 * @param {vtkActor} actor The vtkActor instance.
+	 * @param {vtkProp} actor The vtkProp instance.
 	 */
-	addActor(actor: vtkActor): boolean;
+	addActor(actor: vtkProp): boolean;
 
 	/**
 	 * Add a light to the list of lights.
@@ -93,13 +96,13 @@ export interface vtkRenderer extends vtkViewport {
 	 * Return any actors in this renderer.
 	 *   
 	 */
-	getActors(): vtkActor[];
+	getActors(): vtkProp[];
 
 	/**
 	 * Return any actors in this renderer.
 	 *   
 	 */
-	getActorsByReference(): vtkActor[];
+	getActorsByReference(): vtkProp[];
 
 	/**
 	 * 
@@ -116,7 +119,25 @@ export interface vtkRenderer extends vtkViewport {
 	 * 
 	 * @default null
 	 */
-	getBackgroundTexture(): vtkTexture;
+	getEnvironmentTexture(): vtkTexture;
+
+	/**
+	 * Returns the diffuse strength of the set environment texture.
+	 * @default 1
+	 */
+	getEnvironmentTextureDiffuseStrength(): number;
+
+	/**
+	 * Returns the specular strength of the set environment texture.
+	 * @default 1
+	 */
+	getEnvironmentTextureSpecularStrength(): number;
+
+	/**
+	  * Gets whether or not the environment texture is being used as the background for the view.
+	  * @default false
+	  */
+	getUseEnvironmentTextureAsBackground(): boolean;
 
 	/**
 	 * 
@@ -348,9 +369,27 @@ export interface vtkRenderer extends vtkViewport {
 
 	/**
 	 * 
-	 * @param {vtkTexture} backgroundTexture 
+	 * @param {vtkTexture} environmentTexture 
 	 */
-	setBackgroundTexture(backgroundTexture: vtkTexture): boolean;
+	setEnvironmentTexture(environmentTexture: vtkTexture): boolean;
+
+	/**
+	 * Sets the diffuse strength of the set environment texture.
+	 * @param {number} diffuseStrength the new diffuse strength.
+	 */
+	setEnvironmentTextureDiffuseStrength(diffuseStrength: number): boolean;
+
+	 /**
+	  * Sets the specular strength of the set environment texture.
+	  * @param {number} specularStrength the new specular strength.
+	  */
+	setEnvironmentTextureSpecularStrength(specularStrength: number): boolean;
+
+	/**
+	  * Sets whether or not to use the environment texture as the background for the view.
+	  * @param {number} textureAsBackground
+	  */
+	setUseEnvironmentTextureAsBackground(textureAsBackground: boolean): boolean;
 
 	/**
 	 * 
@@ -474,9 +513,9 @@ export interface vtkRenderer extends vtkViewport {
 
 	/**
 	 * 
-	 * @param {vtkActor} actor 
+	 * @param {vtkProp} actor 
 	 */
-	removeActor(actor: vtkActor): void;
+	removeActor(actor: vtkProp): void;
 
 	/**
 	 * 
@@ -559,7 +598,7 @@ export interface vtkRenderer extends vtkViewport {
 	/**
 	 * Get the number of visible actors.
 	 */
-	visibleActorCount(): void;
+	visibleActorCount(): number;
 
 	/**
 	 * Not Implemented yet

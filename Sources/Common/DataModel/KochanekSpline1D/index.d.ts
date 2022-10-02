@@ -1,5 +1,4 @@
-import vtkSpline1D, { ISpline1DInitialValues } from '../Spline1D';
-
+import vtkSpline1D, { ISpline1DInitialValues, BoundaryCondition } from '../Spline1D';
 
 export interface IKochanekSpline1DInitialValues extends ISpline1DInitialValues {
 	tension?: number;
@@ -23,9 +22,14 @@ export interface vtkKochanekSpline1D extends vtkSpline1D {
 	 * @param {Number} size 
 	 * @param {Float32Array} work 
 	 * @param {Number[]} x 
-	 * @param {Number[]} y 
+	 * @param {Number[]} y
+	 * @param {Object} options
+	 * @param {BoundaryCondition} options.leftConstraint
+	 * @param {Number} options.leftValue
+	 * @param {BoundaryCondition} options.rightConstraint
+	 * @param {Number} options.rightValue
 	 */
-	computeOpenCoefficients(size: number, work: Float32Array, x: number[], y: number[]): void;
+	computeOpenCoefficients(size: number, work: Float32Array, x: number[], y: number[], options: { leftConstraint: BoundaryCondition, leftValue: number, rightConstraint: BoundaryCondition, rightValue: Number }): void;
 
 	/**
 	 * 

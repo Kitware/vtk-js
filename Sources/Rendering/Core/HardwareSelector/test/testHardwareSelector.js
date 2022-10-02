@@ -75,21 +75,24 @@ test('Test HardwareSelector', (tapeContext) => {
   sel.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_POINTS);
   sel.setCaptureZValues(true);
 
-  sel.selectAsync(renderer, 200, 200, 300, 300).then((res) => {
-    // console.log(JSON.stringify(res[0].getProperties()));
-    // console.log(JSON.stringify(res[1].getProperties()));
-    // res[1] should be at 1.0, 1.0, 1.5 in world coords
-    const allGood =
-      res.length === 2 &&
-      res[0].getProperties().prop === actor &&
-      res[1].getProperties().prop === actor3 &&
-      Math.abs(res[1].getProperties().worldPosition[0] - 1.0) < 0.02 &&
-      Math.abs(res[1].getProperties().worldPosition[1] - 1.0) < 0.02 &&
-      Math.abs(res[1].getProperties().worldPosition[2] - 1.5) < 0.02;
+  const promises = [];
+  promises.push(
+    sel.selectAsync(renderer, 200, 200, 300, 300).then((res) => {
+      // res[1] should be at 1.0, 1.0, 1.5 in world coords
+      const allGood =
+        res.length === 2 &&
+        res[0].getProperties().prop === actor &&
+        res[1].getProperties().prop === actor3 &&
+        Math.abs(res[1].getProperties().worldPosition[0] - 1.0) < 0.02 &&
+        Math.abs(res[1].getProperties().worldPosition[1] - 1.0) < 0.02 &&
+        Math.abs(res[1].getProperties().worldPosition[2] - 1.5) < 0.02;
 
-    tapeContext.ok(res.length === 2, 'Two props selected');
-    tapeContext.ok(allGood, 'Correct props were selected');
+      tapeContext.ok(res.length === 2, 'Two props selected');
+      tapeContext.ok(allGood, 'Correct props were selected');
+    })
+  );
 
+  Promise.all(promises).then(() => {
     gc.releaseResources();
   });
 });

@@ -1,4 +1,5 @@
 import { vtkObject, vtkSubscription } from '../../../interfaces';
+import vtkImageStream from '../ImageStream';
 
 /**
  * Bind optional dependency from WSLink to our current class.
@@ -75,12 +76,12 @@ export interface vtkWSLinkClient extends vtkObject {
    * Assign protocols to the client. Those will only be used at connect time and therefore needs to be set before being connected otherwise `registerProtocol` should be used instead.
    * @returns {Boolean} true if the set method modified the object
    */
-  setProtocols(protocols: object): boolean;
+  setProtocols(protocols: Record<string, any>): boolean;
 
   /**
    * Get protocols that were either provided in `newInstance` or via its set
    */
-  getProtocols(): object;
+  getProtocols(): Record<string, any>;
 
   /**
    * Update the list of methods that should be ignore from the busy state monitoring
@@ -129,12 +130,12 @@ export interface vtkWSLinkClient extends vtkObject {
   /**
    *
    */
-  getRemote(): object;
+  getRemote(): Record<string, any>;
 
   /**
    *
    */
-  getImageStream(): object;
+  getImageStream(): vtkImageStream;
 
   /**
    *

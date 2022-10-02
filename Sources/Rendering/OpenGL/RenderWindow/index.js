@@ -8,6 +8,7 @@ import vtkOpenGLTextureUnitManager from 'vtk.js/Sources/Rendering/OpenGL/Texture
 import vtkOpenGLViewNodeFactory from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderWindowViewNode';
+import { createContextProxyHandler } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/ContextProxy';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
 
@@ -90,7 +91,29 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLRenderWindow');
 
+  const cachingContextHandler = createContextProxyHandler();
+
   publicAPI.getViewNodeFactory = () => model.myFactory;
+
+  // prevent default context lost handler
+  model.canvas.addEventListener(
+    'webglcontextlost',
+    (event) => {
+      event.preventDefault();
+    },
+    false
+  );
+
+  model.canvas.addEventListener(
+    'webglcontextrestored',
+    publicAPI.restoreContext,
+    false
+  );
+
+  // Cache the value here as calling it on each frame is expensive
+  const isImmersiveVrSupported =
+    navigator.xr !== undefined &&
+    navigator.xr.isSessionSupported('immersive-vr');
 
   // Auto update style
   const previousSize = [0, 0];
@@ -234,15 +257,17 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.get3DContext = (
-    options = { preserveDrawingBuffer: false, depth: true, alpha: true }
+    options = {
+      preserveDrawingBuffer: false,
+      depth: true,
+      alpha: true,
+      powerPreference: 'high-performance',
+    }
   ) => {
     let result = null;
 
     // Do we have webxr support
-    if (
-      navigator.xr !== undefined &&
-      navigator.xr.isSessionSupported('immersive-vr')
-    ) {
+    if (isImmersiveVrSupported) {
       publicAPI.invokeHaveVRDisplay();
     }
 
@@ -262,22 +287,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         model.canvas.getContext('experimental-webgl', options);
     }
 
-    // prevent default context lost handler
-    model.canvas.addEventListener(
-      'webglcontextlost',
-      (event) => {
-        event.preventDefault();
-      },
-      false
-    );
-
-    model.canvas.addEventListener(
-      'webglcontextrestored',
-      publicAPI.restoreContext,
-      false
-    );
-
-    return result;
+    return new Proxy(result, cachingContextHandler);
   };
 
   // Request an XR session on the user device with WebXR,
@@ -375,6 +385,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
     camera.setPhysicalScale(physicalScale);
     camera.setPhysicalTranslation(physicalTranslation);
+    // Clip at 0.1m, 100.0m in physical space by default
+    camera.setClippingRange(0.1 * physicalScale, 100.0 * physicalScale);
   };
 
   publicAPI.stopXR = async () => {
@@ -501,7 +513,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     const result = model._textureResourceIds.get(texture);
     if (result !== undefined) {
       publicAPI.getTextureUnitManager().free(result);
-      delete model._textureResourceIds.delete(texture);
+      model._textureResourceIds.delete(texture);
     }
   };
 
@@ -721,6 +733,21 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         }
       });
     });
+  };
+
+  let hardwareMaximumLineWidth;
+  publicAPI.getHardwareMaximumLineWidth = () => {
+    // We cache the result of this function because `getParameter` is slow
+    if (hardwareMaximumLineWidth != null) {
+      return hardwareMaximumLineWidth;
+    }
+
+    const gl = publicAPI.get3DContext();
+    const lineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE);
+
+    hardwareMaximumLineWidth = lineWidthRange[1];
+
+    return lineWidthRange[1];
   };
 
   publicAPI.getGLInformations = () => {

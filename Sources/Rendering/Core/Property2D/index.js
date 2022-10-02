@@ -66,4 +66,4 @@ export const newInstance = macro.newInstance(extend, 'vtkProperty2D');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, ...Constants };

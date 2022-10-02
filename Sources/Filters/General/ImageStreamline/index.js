@@ -137,8 +137,9 @@ function vtkImageStreamline(publicAPI, model) {
     velAtArg[0] = 0.0;
     velAtArg[1] = 0.0;
     velAtArg[2] = 0.0;
+    const vel = new Array(3);
     for (let i = 0; i < 8; i++) {
-      const vel = velArray.getTuple(voxelIndices[i]);
+      velArray.getTuple(voxelIndices[i], vel);
       for (let j = 0; j < 3; j++) {
         velAtArg[j] += weights[i] * vel[j];
       }
@@ -236,13 +237,10 @@ function vtkImageStreamline(publicAPI, model) {
     let offset = 0;
     const datas = [];
     const vectors = input.getPointData().getVectors();
+    const point = [];
     for (let i = 0; i < nSeeds; i++) {
-      const retVal = publicAPI.streamIntegrate(
-        vectors,
-        input,
-        seedPts.getTuple(i),
-        offset
-      );
+      seedPts.getTuple(i, point);
+      const retVal = publicAPI.streamIntegrate(vectors, input, point, offset);
       offset += retVal[0].length / 3;
       datas.push(retVal);
     }

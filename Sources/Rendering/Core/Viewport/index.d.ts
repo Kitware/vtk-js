@@ -1,6 +1,6 @@
 
 import { vtkObject } from "../../../interfaces";
-import { RGBColor } from "../../../types";
+import { RGBColor, Size } from "../../../types";
 import vtkActor2D from '../Actor2D';
 import vtkProp from '../Prop';
 
@@ -58,12 +58,10 @@ export interface vtkViewport extends vtkObject {
      */
     getBackgroundByReference(): number[];
 
-
-
     /**
      * 
      */
-    getSize(): any;
+    getSize(): Size;
 
     /**
      * 

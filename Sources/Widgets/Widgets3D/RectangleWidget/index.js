@@ -33,7 +33,6 @@ function vtkRectangleWidget(publicAPI, model) {
 
   // --- Widget Requirement ---------------------------------------------------
 
-  model.behavior = widgetBehavior;
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
       case ViewTypes.DEFAULT:
@@ -45,9 +44,6 @@ function vtkRectangleWidget(publicAPI, model) {
           {
             builder: vtkSphereHandleRepresentation,
             labels: ['moveHandle'],
-            initialValues: {
-              scaleInPixels: true,
-            },
           },
           {
             builder: vtkRectangleContextRepresentation,
@@ -68,15 +64,17 @@ function vtkRectangleWidget(publicAPI, model) {
   // initialization
   // --------------------------------------------------------------------------
 
-  // Default manipulator
-  model.manipulator = vtkPlanePointManipulator.newInstance();
-  model.widgetState = stateGenerator();
+  model.manipulator = vtkPlanePointManipulator.newInstance({
+    useCameraNormal: true,
+  });
 }
 
 // ----------------------------------------------------------------------------
 
-function defaultValues(initalValues) {
+function defaultValues(initialValues) {
   return {
+    behavior: widgetBehavior,
+    widgetState: stateGenerator(),
     modifierBehavior: {
       None: {
         [BehaviorCategory.PLACEMENT]:
@@ -93,7 +91,7 @@ function defaultValues(initalValues) {
           ShapeBehavior[BehaviorCategory.POINTS].CENTER_TO_CORNER,
       },
     },
-    ...initalValues,
+    ...initialValues,
   };
 }
 
@@ -101,7 +99,7 @@ function defaultValues(initalValues) {
 
 export function extend(publicAPI, model, initialValues = {}) {
   vtkShapeWidget.extend(publicAPI, model, defaultValues(initialValues));
-  macro.setGet(publicAPI, model, ['manipulator', 'widgetState']);
+  macro.setGet(publicAPI, model, ['widgetState']);
 
   vtkRectangleWidget(publicAPI, model);
 }

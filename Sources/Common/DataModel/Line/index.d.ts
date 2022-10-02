@@ -1,4 +1,4 @@
-import { Vector3 } from '../../../types';
+import { Vector3, Vector2 } from '../../../types';
 import vtkCell from '../Cell';
 
 export enum IntersectionState {
@@ -9,7 +9,7 @@ export enum IntersectionState {
 
 interface ILineInitialValues { }
 
-interface IIntersectWithLine {
+export interface IIntersectWithLine {
 	intersect: number;
 	t: number;
 	subId: number;
@@ -50,6 +50,11 @@ export interface vtkLine extends vtkCell {
 	 * @param {Vector3} pcoords The parametric coordinates.
 	 */
 	intersectWithLine(p1: Vector3, p2: Vector3, tol: number, x: Vector3, pcoords: Vector3): IIntersectWithLine;
+
+	/**
+	 * Determine the global coordinates `x' and parametric coordinates `pcoords' in the cell.
+	 */
+	evaluateLocation(pcoords: Vector3, x: Vector3, weights: Vector2): void
 }
 
 /**
@@ -77,7 +82,7 @@ export function newInstance(initialValues?: ILineInitialValues): vtkLine;
  *   t: tolerance of the distance
  *   distance: quared distance between closest point and x
  * }
- * 
+ * ```
  * @static
  * @param {Vector3} x 
  * @param {Vector3} p1 

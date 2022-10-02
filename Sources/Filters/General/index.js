@@ -12,6 +12,7 @@ import vtkOBBTree from './OBBTree';
 import vtkOutlineFilter from './OutlineFilter';
 import vtkPaintFilter from './PaintFilter';
 import vtkScalarToRGBA from './ScalarToRGBA';
+import vtkTriangleFilter from './TriangleFilter';
 import vtkTubeFilter from './TubeFilter';
 import vtkWarpScalar from './WarpScalar';
 import vtkWindowedSincPolyDataFilter from './WindowedSincPolyDataFilter';
@@ -31,6 +32,7 @@ export default {
   vtkOutlineFilter,
   vtkPaintFilter,
   vtkScalarToRGBA,
+  vtkTriangleFilter,
   vtkTubeFilter,
   vtkWarpScalar,
   vtkWindowedSincPolyDataFilter,

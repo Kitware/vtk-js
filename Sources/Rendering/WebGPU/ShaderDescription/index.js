@@ -48,18 +48,18 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
         for (let i = 0; i < inputNames.length; i++) {
           if (inputInterpolations[i] !== undefined) {
             inputStruct.push(
-              `  @location(${i}) @interpolate(${inputInterpolations[i]}) ${inputNames[i]} : ${inputTypes[i]};`
+              `  @location(${i}) @interpolate(${inputInterpolations[i]}) ${inputNames[i]} : ${inputTypes[i]},`
             );
           } else {
             inputStruct.push(
-              `  @location(${i}) ${inputNames[i]} : ${inputTypes[i]};`
+              `  @location(${i}) ${inputNames[i]} : ${inputTypes[i]},`
             );
           }
         }
       }
       for (let i = 0; i < model.builtinInputNames.length; i++) {
         inputStruct.push(
-          `  ${model.builtinInputNames[i]} : ${model.builtinInputTypes[i]};`
+          `  ${model.builtinInputNames[i]} : ${model.builtinInputTypes[i]},`
         );
       }
       if (inputStruct.length > 1) {
@@ -82,17 +82,17 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
       for (let i = 0; i < model.outputNames.length; i++) {
         if (model.outputInterpolations[i] !== undefined) {
           outputStruct.push(
-            `  @location(${i}) @interpolate(${model.outputInterpolations[i]}) ${model.outputNames[i]} : ${model.outputTypes[i]};`
+            `  @location(${i}) @interpolate(${model.outputInterpolations[i]}) ${model.outputNames[i]} : ${model.outputTypes[i]},`
           );
         } else {
           outputStruct.push(
-            `  @location(${i}) ${model.outputNames[i]} : ${model.outputTypes[i]};`
+            `  @location(${i}) ${model.outputNames[i]} : ${model.outputTypes[i]},`
           );
         }
       }
       for (let i = 0; i < model.builtinOutputNames.length; i++) {
         outputStruct.push(
-          `  ${model.builtinOutputNames[i]} : ${model.builtinOutputTypes[i]};`
+          `  ${model.builtinOutputNames[i]} : ${model.builtinOutputTypes[i]},`
         );
       }
       outputStruct.push('};');

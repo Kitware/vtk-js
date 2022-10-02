@@ -1,4 +1,4 @@
-import pako from 'pako';
+import { decompressSync, strFromU8 } from 'fflate';
 
 import macro from 'vtk.js/Sources/macros';
 import Base64 from 'vtk.js/Sources/Common/Core/Base64';
@@ -62,7 +62,7 @@ function fetchArray(instance, baseURL, array, options = {}) {
       if (array.dataType === 'string') {
         let bText = atob(txt);
         if (options.compression) {
-          bText = pako.inflate(bText, { to: 'string' });
+          bText = strFromU8(decompressSync(bText));
         }
         array.values = JSON.parse(bText);
       } else {
@@ -76,11 +76,11 @@ function fetchArray(instance, baseURL, array, options = {}) {
 
         if (options.compression) {
           if (array.dataType === 'string' || array.dataType === 'JSON') {
-            array.buffer = pako.inflate(new Uint8Array(array.buffer), {
-              to: 'string',
-            });
+            array.buffer = strFromU8(
+              decompressSync(new Uint8Array(array.buffer))
+            );
           } else {
-            array.buffer = pako.inflate(new Uint8Array(array.buffer)).buffer;
+            array.buffer = decompressSync(new Uint8Array(array.buffer)).buffer;
           }
         }
 

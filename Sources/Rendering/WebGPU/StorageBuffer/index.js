@@ -42,7 +42,6 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
     if (!model._buffer) {
       const req = {
         nativeArray: model.Float32Array,
-        time: 0,
         usage: BufferUsage.Storage,
         label: model.label,
       };
@@ -169,13 +168,13 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
     const lines = [`struct ${model.label}StructEntry\n{`];
     for (let i = 0; i < model.bufferEntries.length; i++) {
       const entry = model.bufferEntries[i];
-      lines.push(`  ${entry.name}: ${entry.type};`);
+      lines.push(`  ${entry.name}: ${entry.type},`);
     }
     lines.push(`
 };
 struct ${model.label}Struct
 {
-  values: array<${model.label}StructEntry>;
+  values: array<${model.label}StructEntry>,
 };
 @binding(${binding}) @group(${group}) var<storage, read> ${model.label}: ${model.label}Struct;
 `);

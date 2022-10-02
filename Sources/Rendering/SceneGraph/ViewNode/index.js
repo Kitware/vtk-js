@@ -70,6 +70,8 @@ function vtkViewNode(publicAPI, model) {
     return model._parent.getFirstAncestorOfType(type);
   };
 
+  // add a missing node/child for the passed in renderables. This should
+  // be called only in between prepareNodes and removeUnusedNodes
   publicAPI.addMissingNode = (dobj) => {
     if (!dobj) {
       return;
@@ -90,6 +92,8 @@ function vtkViewNode(publicAPI, model) {
     }
   };
 
+  // add missing nodes/children for the passed in renderables. This should
+  // be called only in between prepareNodes and removeUnusedNodes
   publicAPI.addMissingNodes = (dataObjs) => {
     if (!dataObjs || !dataObjs.length) {
       return;
@@ -111,6 +115,26 @@ function vtkViewNode(publicAPI, model) {
           model.children.push(newNode);
         }
       }
+    }
+  };
+
+  // ability to add children that have no renderable use in the same manner
+  // as addMissingNodes This case is when a normal viewnode wants to
+  // delegate passes to a helper or child that doeasn't map to a clear
+  // renderable or any renderable
+  publicAPI.addMissingChildren = (children) => {
+    if (!children || !children.length) {
+      return;
+    }
+
+    for (let index = 0; index < children.length; ++index) {
+      const child = children[index];
+      const cindex = model.children.indexOf(child);
+      if (cindex === -1) {
+        child.setParent(publicAPI);
+        model.children.push(child);
+      }
+      child.setVisited(true);
     }
   };
 

@@ -2,7 +2,13 @@ import * as macro from 'vtk.js/Sources/macros';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 
 // methods we forward to the handle
-const forwarded = ['setBindGroup', 'setVertexBuffer', 'draw'];
+const forwarded = [
+  'setBindGroup',
+  'setIndexBuffer',
+  'setVertexBuffer',
+  'draw',
+  'drawIndexed',
+];
 
 // ----------------------------------------------------------------------------
 // vtkWebGPURenderEncoder methods
@@ -12,6 +18,7 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
   model.classHierarchy.push('vtkWebGPURenderEncoder');
 
   publicAPI.begin = (encoder) => {
+    model.drawCallbacks = [];
     model.handle = encoder.beginRenderPass(model.description);
     if (model.label) {
       model.handle.pushDebugGroup(model.label);
@@ -19,13 +26,28 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
   };
 
   publicAPI.end = () => {
+    // loop over registered pipelines and their callbacks
+    for (let i = 0; i < model.drawCallbacks.length; i++) {
+      const pStruct = model.drawCallbacks[i];
+      const pl = pStruct.pipeline;
+
+      publicAPI.setPipeline(pl);
+
+      for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
+        pStruct.callbacks[cb](publicAPI);
+      }
+    }
     if (model.label) {
       model.handle.popDebugGroup();
     }
     model.handle.end();
+    model.boundPipeline = null;
   };
 
   publicAPI.setPipeline = (pl) => {
+    if (model.boundPipeline === pl) {
+      return;
+    }
     model.handle.setPipeline(pl.getHandle());
     const pd = pl.getPipelineDescription();
 
@@ -37,8 +59,8 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
       console.trace();
     } else {
       for (let i = 0; i < model.colorTextureViews.length; i++) {
-        const fmt = model.colorTextureViews[i].getTexture().getFormat();
-        if (fmt !== pd.fragment.targets[i].format) {
+        const fmt = model.colorTextureViews[i].getTexture()?.getFormat();
+        if (fmt && fmt !== pd.fragment.targets[i].format) {
           console.log(
             `mismatched attachments for attachment ${i} on pipeline ${pd.fragment.targets[i].format} while encoder has ${fmt}`
           );
@@ -52,8 +74,8 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
       console.log('mismatched depth attachments');
       console.trace();
     } else if (model.depthTextureView) {
-      const dfmt = model.depthTextureView.getTexture().getFormat();
-      if (dfmt !== pd.depthStencil.format) {
+      const dfmt = model.depthTextureView.getTexture()?.getFormat();
+      if (dfmt && dfmt !== pd.depthStencil.format) {
         console.log(
           `mismatched depth attachments on pipeline ${pd.depthStencil.format} while encoder has ${dfmt}`
         );
@@ -109,6 +131,19 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
       model.description.depthStencilAttachment.view =
         model.depthTextureView.getHandle();
     }
+  };
+
+  // register pipeline callbacks from a mapper
+  publicAPI.registerDrawCallback = (pipeline, cb) => {
+    // if there is a matching pipeline just add the cb
+    for (let i = 0; i < model.drawCallbacks.length; i++) {
+      if (model.drawCallbacks[i].pipeline === pipeline) {
+        model.drawCallbacks[i].callbacks.push(cb);
+        return;
+      }
+    }
+
+    model.drawCallbacks.push({ pipeline, callbacks: [cb] });
   };
 
   // simple forwarders
@@ -176,7 +211,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     fragment: {
       targets: [
         {
-          format: 'bgra8unorm',
+          format: 'rgba16float',
           blend: {
             color: {
               srcFactor: 'src-alpha',

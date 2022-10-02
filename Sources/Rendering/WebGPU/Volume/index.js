@@ -28,10 +28,7 @@ function vtkWebGPUVolume(publicAPI, model) {
       if (model.propID === undefined) {
         model.propID = model.WebGPURenderWindow.getUniquePropID();
       }
-      publicAPI.prepareNodes();
       model.renderable.getMapper().update();
-      // publicAPI.addMissingNode(model.renderable.getMapper());
-      publicAPI.removeUnusedNodes();
     }
   };
 
@@ -82,23 +79,6 @@ function vtkWebGPUVolume(publicAPI, model) {
         }
       }
     }
-  };
-
-  publicAPI.traverseVolumePass = (renderPass) => {
-    if (
-      !model.renderable ||
-      !model.renderable.getNestedVisibility() ||
-      (model.WebGPURenderer.getSelector() &&
-        !model.renderable.getNestedPickable())
-    ) {
-      return;
-    }
-
-    publicAPI.apply(renderPass, true);
-
-    model.children[0].traverse(renderPass);
-
-    publicAPI.apply(renderPass, false);
   };
 
   publicAPI.getKeyMatrices = (wgpuRen) => {

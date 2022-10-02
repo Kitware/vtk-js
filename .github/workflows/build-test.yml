@@ -6,8 +6,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04]
-        node: [12, 14, 16]
+        os: [ubuntu-20.04]
+        node: [14, 16, 18]
     name: ${{ matrix.os }} and node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v2
@@ -15,18 +15,28 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
-          cache: 'npm'
       - name: Install dependencies
         run: |
           npm ci
           sudo apt-get install xvfb
       - name: Build
         run: npm run build:release
+      - name: Archive build output
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-results
+          path: dist
+          retention-days: 15
+      - name: Validate generated typescript definitions
+        run: |
+          npx tsc -p tsconfig.esm-check.json
+          npx tsc -p tsconfig.umd-check.json
       - name: Chrome and Firefox tests
         run: xvfb-run --auto-servernum npm run test -- --browsers Chrome,Firefox
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
+        continue-on-error: true
         with:
           name: test-results
           path: Utilities/TestResults/Test-Report.html

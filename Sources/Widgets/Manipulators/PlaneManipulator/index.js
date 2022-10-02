@@ -1,6 +1,8 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
+import vtkAbstractManipulator from 'vtk.js/Sources/Widgets/Manipulators/AbstractManipulator';
+
 export function intersectDisplayWithPlane(
   x,
   y,
@@ -23,14 +25,12 @@ function vtkPlaneManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPlaneManipulator');
 
-  // --------------------------------------------------------------------------
-
   publicAPI.handleEvent = (callData, glRenderWindow) =>
     intersectDisplayWithPlane(
       callData.position.x,
       callData.position.y,
-      model.origin,
-      model.normal,
+      publicAPI.getOrigin(callData),
+      publicAPI.getNormal(callData),
       callData.pokedRenderer,
       glRenderWindow
     );
@@ -40,17 +40,16 @@ function vtkPlaneManipulator(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  normal: [0, 0, 1],
-  origin: [0, 0, 0],
-};
+function defaultValues(initialValues) {
+  return {
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-  macro.obj(publicAPI, model);
-  macro.setGetArray(publicAPI, model, ['normal', 'origin'], 3);
+  vtkAbstractManipulator.extend(publicAPI, model, defaultValues(initialValues));
 
   vtkPlaneManipulator(publicAPI, model);
 }

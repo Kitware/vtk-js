@@ -183,15 +183,12 @@ function vtkHttpDataSetReader(publicAPI, model) {
                     .fetchJSON(publicAPI, 'index.json')
                     .then(
                       (dataset) => {
-                        processDataSet(
-                          publicAPI,
-                          model,
-                          dataset,
-                          fetchArray,
-                          resolve,
-                          reject,
-                          loadData
-                        );
+                        publicAPI
+                          .parseObject(dataset, {
+                            loadData,
+                            deepCopy: false,
+                          })
+                          .then(resolve, reject);
                       },
                       (error) => {
                         reject(error);
@@ -210,15 +207,9 @@ function vtkHttpDataSetReader(publicAPI, model) {
     return new Promise((resolve, reject) => {
       model.dataAccessHelper.fetchJSON(publicAPI, model.url).then(
         (dataset) => {
-          processDataSet(
-            publicAPI,
-            model,
-            dataset,
-            fetchArray,
-            resolve,
-            reject,
-            loadData
-          );
+          publicAPI
+            .parseObject(dataset, { loadData, deepCopy: false })
+            .then(resolve, reject);
         },
         (error) => {
           reject(error);
@@ -245,6 +236,29 @@ function vtkHttpDataSetReader(publicAPI, model) {
 
     // Fetch metadata
     return publicAPI.updateMetadata(!!options.loadData);
+  };
+
+  publicAPI.parseObject = (
+    manifest,
+    { loadData, baseUrl, deepCopy = true }
+  ) => {
+    if (baseUrl) {
+      model.baseURL = baseUrl;
+    }
+
+    const dataset = deepCopy ? structuredClone(manifest) : manifest;
+
+    return new Promise((resolve, reject) => {
+      processDataSet(
+        publicAPI,
+        model,
+        dataset,
+        fetchArray,
+        resolve,
+        reject,
+        loadData
+      );
+    });
   };
 
   // Fetch the actual data arrays

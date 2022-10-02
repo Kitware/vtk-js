@@ -1,7 +1,7 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import { Nullable, Size, Vector2, Vector3 } from '../../../types';
-import { vtkRenderer } from '../../../Rendering/Core/Renderer';
 import { VtkDataTypes } from '../../../Common/Core/DataArray';
+import vtkRenderer from '../../Core/Renderer';
 import vtkTexture from '../../Core/Texture';
 import vtkViewStream from '../../../IO/Core/ImageStream/ViewStream';
 
@@ -9,16 +9,41 @@ import vtkViewStream from '../../../IO/Core/ImageStream/ViewStream';
  *
  */
 export interface IOpenGLRenderWindowInitialValues {
-	resolution?: number;
-	point1?: Vector3;
-	point2?: Vector3;
-	pointType?: string;
+	cullFaceEnabled?: boolean;
+	shaderCache?: null;
+	initialized?: boolean;
+	context?: WebGLRenderingContext | WebGL2RenderingContext;
+	canvas?: HTMLCanvasElement;
+	cursorVisibility?: boolean;
+	cursor?: string;
+	textureUnitManager?: null;
+	textureResourceIds?: null;
+	containerSize?: Size;
+	renderPasses?: any[];
+	notifyStartCaptureImage?: boolean;
+	webgl2?: boolean;
+	defaultToWebgl2?: boolean;
+	activeFramebuffer?: any;
+	xrSession?: any;
+	xrSessionIsAR?: boolean;
+	xrReferenceSpace?: any;
+	xrSupported?: boolean;
+	imageFormat?: 'image/png';
+	useOffScreen?: boolean;
+	useBackgroundImage?: boolean;
 }
 
-export interface IOptions {
-	resetCamera: boolean,
-	size: Size,
+export interface ICaptureOptions {
+	resetCamera: boolean;
+	size: Size;
 	scale: number
+}
+
+export interface I3DContextOptions {
+    preserveDrawingBuffer?: boolean;
+    depth?: boolean;
+    alpha?: boolean;
+    powerPreference?: string;
 }
 
 type vtkOpenGLRenderWindowBase = vtkObject & Omit<vtkAlgorithm,
@@ -59,7 +84,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	/**
 	 * Get the container element.
 	 */
-	getContainer(): void;
+	getContainer(): Nullable<HTMLElement>;
 
 	/**
 	 * Get the container size.
@@ -112,7 +137,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @param {Number} z
-	 * @param {vtkRenderer} renderer
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	worldToView(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
@@ -121,7 +146,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @param {Number} z
-	 * @param {vtkRenderer} renderer
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	viewToWorld(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
@@ -130,7 +155,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @param {Number} z
-	 * @param {vtkRenderer} renderer
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	worldToDisplay(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
@@ -139,7 +164,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @param {Number} z
-	 * @param {vtkRenderer} renderer
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	displayToWorld(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
@@ -148,7 +173,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @param {Number} z
-	 * @param {vtkRenderer} renderer
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	normalizedDisplayToViewport(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
@@ -157,7 +182,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @param {Number} z
-	 * @param {vtkRenderer} renderer
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	viewportToNormalizedViewport(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
@@ -182,7 +207,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @param {Number} z
-	 * @param {vtkRenderer} renderer
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	viewportToNormalizedDisplay(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
@@ -197,9 +222,9 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 
 	/**
 	 *
-	 * @param options
+	 * @param {I3DContextOptions} options
 	 */
-	get3DContext(options: object): Nullable<WebGLRenderingContext>;
+	get3DContext(options: I3DContextOptions): Nullable<WebGLRenderingContext>;
 
 	/**
 	 *
@@ -271,9 +296,9 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * size is assumed.  The default format is "image/png". Returns a promise
 	 * that resolves to the captured screenshot.
 	 * @param {String} format
-	 * @param {IOptions} options
+	 * @param {ICaptureOptions} options
 	 */
-	captureNextImage(format: string, options: IOptions): Nullable<Promise<string>>;
+	captureNextImage(format: string, options: ICaptureOptions): Nullable<Promise<string>>;
 
 	/**
 	 *

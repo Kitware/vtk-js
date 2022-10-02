@@ -248,9 +248,6 @@ function vtkResliceCursorWidget(publicAPI, model) {
   // initialization
   // --------------------------------------------------------------------------
 
-  model.behavior = widgetBehavior;
-  model.widgetState = stateGenerator();
-
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
       case ViewTypes.XY_PLANE:
@@ -591,12 +588,16 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+const defaultValues = (initialValues) => ({
+  behavior: widgetBehavior,
+  widgetState: stateGenerator(),
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
 

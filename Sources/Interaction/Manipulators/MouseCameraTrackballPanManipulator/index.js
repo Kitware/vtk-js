@@ -39,7 +39,7 @@ function vtkMouseCameraTrackballPanManipulator(publicAPI, model) {
       vtkMath.cross(vpn, up, right);
 
       // These are different because y is flipped.
-      const height = interactor.getView().getSize()[1];
+      const height = interactor.getView().getViewportSize(renderer)[1];
       let dx = (pos.x - lastPos.x) / height;
       let dy = (lastPos.y - pos.y) / height;
 

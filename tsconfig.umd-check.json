@@ -1,0 +1,14 @@
+{
+  "include": ["dist/umd/**/*.d.ts"],
+  "compilerOptions": {
+    "noEmit": true,
+    "lib": [
+      "esnext",
+      "dom"
+    ],
+    "baseUrl": "dist/umd",
+    "paths": {
+        "vtk.js/*": ["./*"]
+    }
+  }
+}

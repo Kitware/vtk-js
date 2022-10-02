@@ -1,10 +1,10 @@
-import JSZip from 'jszip';
-import pako from 'pako';
+import { decompressSync, strFromU8, strToU8, unzipSync } from 'fflate';
 
 import macro from 'vtk.js/Sources/macros';
 import Endian from 'vtk.js/Sources/Common/Core/Endian';
 import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import { registerType } from 'vtk.js/Sources/IO/Core/DataAccessHelper';
+import { fromArrayBuffer } from 'vtk.js/Sources/Common/Core/Base64';
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
 
@@ -26,11 +26,9 @@ function handleUint8Array(array, compression, done) {
 
     if (compression) {
       if (array.dataType === 'string' || array.dataType === 'JSON') {
-        array.buffer = pako.inflate(new Uint8Array(array.buffer), {
-          to: 'string',
-        });
+        array.buffer = strFromU8(decompressSync(new Uint8Array(array.buffer)));
       } else {
-        array.buffer = pako.inflate(new Uint8Array(array.buffer)).buffer;
+        array.buffer = decompressSync(new Uint8Array(array.buffer)).buffer;
       }
     }
 
@@ -59,18 +57,13 @@ function handleUint8Array(array, compression, done) {
 function handleString(array, compression, done) {
   return (string) => {
     if (compression) {
-      array.values = JSON.parse(pako.inflate(string, { to: 'string' }));
+      array.values = JSON.parse(strFromU8(decompressSync(string)));
     } else {
       array.values = JSON.parse(string);
     }
     done();
   };
 }
-
-const handlers = {
-  uint8array: handleUint8Array,
-  string: handleString,
-};
 
 function removeLeadingSlash(str) {
   return str[0] === '/' ? str.substr(1) : str;
@@ -84,32 +77,48 @@ function cleanUpPath(str) {
   return removeLeadingSlash(normalizePath(str));
 }
 
+function unpack(zipContent) {
+  return new Promise((resolve, reject) => {
+    if (typeof zipContent === 'string') {
+      resolve(strToU8(zipContent));
+    } else if (zipContent instanceof Blob) {
+      resolve(zipContent.arrayBuffer().then((ab) => new Uint8Array(ab)));
+    } else if (zipContent instanceof ArrayBuffer) {
+      resolve(new Uint8Array(zipContent));
+    } else if (zipContent?.buffer instanceof ArrayBuffer) {
+      resolve(new Uint8Array(zipContent.buffer));
+    } else {
+      reject(new Error('Invalid datatype to unpack.'));
+    }
+  });
+}
+
 function create(createOptions) {
   let ready = false;
   let requestCount = 0;
-  const zip = new JSZip();
-  let zipRoot = zip;
-  zip.loadAsync(createOptions.zipContent).then(() => {
+  let decompressedFiles = null;
+  let fullRootPath = '';
+
+  unpack(createOptions.zipContent).then((zipFileData) => {
+    decompressedFiles = unzipSync(zipFileData);
     ready = true;
 
     // Find root index.json
     const metaFiles = [];
-    zip.forEach((relativePath, zipEntry) => {
-      if (relativePath.indexOf('index.json') !== -1) {
+    Object.keys(decompressedFiles).forEach((relativePath) => {
+      if (relativePath.endsWith('index.json')) {
         metaFiles.push(relativePath);
       }
     });
     metaFiles.sort((a, b) => a.length - b.length);
-    const fullRootPath = metaFiles[0].split('/');
-    while (fullRootPath.length > 1) {
-      const dirName = fullRootPath.shift();
-      zipRoot = zipRoot.folder(dirName);
-    }
+    // if not empty, then fullRootPath will have a forward slash suffix
+    fullRootPath = metaFiles[0].replace(/index\.json$/, '');
 
     if (createOptions.callback) {
-      createOptions.callback(zip);
+      createOptions.callback(decompressedFiles);
     }
   });
+
   return {
     fetchArray(instance, baseURL, array, options = {}) {
       return new Promise((resolve, reject) => {
@@ -140,16 +149,21 @@ function create(createOptions) {
           resolve(array);
         }
 
-        const asyncType =
-          array.dataType === 'string' && !options.compression
-            ? 'string'
-            : 'uint8array';
-        const asyncCallback = handlers[asyncType](
-          array,
-          options.compression,
-          doneCleanUp
-        );
-        zipRoot.file(url).async(asyncType).then(asyncCallback);
+        const fileData = decompressedFiles[`${fullRootPath}${url}`];
+
+        if (array.dataType === 'string' && !options.compression) {
+          // string
+          const handler = handleString(array, options.compression, doneCleanUp);
+          handler(strFromU8(fileData));
+        } else {
+          // uint8array
+          const handler = handleUint8Array(
+            array,
+            options.compression,
+            doneCleanUp
+          );
+          handler(fileData);
+        }
       });
     },
 
@@ -158,23 +172,15 @@ function create(createOptions) {
       if (!ready) {
         vtkErrorMacro('ERROR!!! zip not ready...');
       }
-
+      const fileData = decompressedFiles[`${fullRootPath}${path}`];
       if (options.compression) {
         if (options.compression === 'gz') {
-          return zipRoot
-            .file(path)
-            .async('uint8array')
-            .then((uint8array) => {
-              const str = pako.inflate(uint8array, { to: 'string' });
-              return Promise.resolve(JSON.parse(str));
-            });
+          const str = strFromU8(decompressSync(fileData));
+          return Promise.resolve(JSON.parse(str));
         }
         return Promise.reject(new Error('Invalid compression'));
       }
-      return zipRoot
-        .file(path)
-        .async('string')
-        .then((str) => Promise.resolve(JSON.parse(str)));
+      return Promise.resolve(JSON.parse(strFromU8(fileData)));
     },
 
     fetchText(instance, url, options = {}) {
@@ -182,24 +188,14 @@ function create(createOptions) {
       if (!ready) {
         vtkErrorMacro('ERROR!!! zip not ready...');
       }
-
+      const fileData = decompressedFiles[`${fullRootPath}${path}`];
       if (options.compression) {
         if (options.compression === 'gz') {
-          return zipRoot
-            .file(path)
-            .async('uint8array')
-            .then((uint8array) => {
-              const str = pako.inflate(uint8array, { to: 'string' });
-              return Promise.resolve(str);
-            });
+          return Promise.resolve(strFromU8(unzipSync(fileData)));
         }
         return Promise.reject(new Error('Invalid compression'));
       }
-
-      return zipRoot
-        .file(path)
-        .async('string')
-        .then((str) => Promise.resolve(str));
+      return Promise.resolve(strFromU8(fileData));
     },
 
     fetchImage(instance, url, options = {}) {
@@ -207,18 +203,13 @@ function create(createOptions) {
       if (!ready) {
         vtkErrorMacro('ERROR!!! zip not ready...');
       }
-
+      const fileData = decompressedFiles[`${fullRootPath}${path}`];
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve(img);
         img.onerror = reject;
-
-        zipRoot
-          .file(path)
-          .async('base64')
-          .then((str) => {
-            img.src = `data:image/${toMimeType(path)};base64,${str}`;
-          });
+        const str = fromArrayBuffer(fileData.buffer);
+        img.src = `data:image/${toMimeType(path)};base64,${str}`;
       });
     },
 
@@ -227,21 +218,14 @@ function create(createOptions) {
       if (!ready) {
         vtkErrorMacro('ERROR!!! zip not ready...');
       }
-
+      const fileData = decompressedFiles[`${fullRootPath}${path}`];
       if (options.compression) {
         if (options.compression === 'gz') {
-          return zipRoot.file(path).then((data) => {
-            const array = pako.inflate(data).buffer;
-            return Promise.resolve(array);
-          });
+          return Promise.resolve(decompressSync(fileData).buffer);
         }
         return Promise.reject(new Error('Invalid compression'));
       }
-
-      return zipRoot
-        .file(path)
-        .async('arraybuffer')
-        .then((data) => Promise.resolve(data));
+      return Promise.resolve(fileData.buffer);
     },
   };
 }

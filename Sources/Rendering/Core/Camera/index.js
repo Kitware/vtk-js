@@ -30,6 +30,7 @@ function vtkCamera(publicAPI, model) {
   const dopbasis = new Float64Array([0.0, 0.0, -1.0]);
   const upbasis = new Float64Array([0.0, 1.0, 0.0]);
   const tmpMatrix = mat4.identity(new Float64Array(16));
+  const tmpMatrix2 = mat4.identity(new Float64Array(16));
   const tmpvec1 = new Float64Array(3);
   const tmpvec2 = new Float64Array(3);
   const tmpvec3 = new Float64Array(3);
@@ -71,7 +72,6 @@ function vtkCamera(publicAPI, model) {
 
     // recompute the focal distance
     publicAPI.computeDistance();
-
     publicAPI.modified();
   };
 
@@ -90,7 +90,6 @@ function vtkCamera(publicAPI, model) {
 
     // recompute the focal distance
     publicAPI.computeDistance();
-
     publicAPI.modified();
   };
 
@@ -113,7 +112,6 @@ function vtkCamera(publicAPI, model) {
     model.focalPoint[0] = model.position[0] + vec[0] * model.distance;
     model.focalPoint[1] = model.position[1] + vec[1] * model.distance;
     model.focalPoint[2] = model.position[2] + vec[2] * model.distance;
-
     publicAPI.modified();
   };
 
@@ -348,7 +346,26 @@ function vtkCamera(publicAPI, model) {
   publicAPI.getFrustumPlanes = (aspect) => {
     // Return array of 24 params (4 params for each of 6 plane equations)
   };
-  publicAPI.getCameraLightTransformMatrix = () => {};
+  publicAPI.getCameraLightTransformMatrix = (matrix) => {
+    mat4.copy(matrix, model.cameraLightTransform);
+    return matrix;
+  };
+
+  publicAPI.computeCameraLightTransform = () => {
+    // not sure if this is the correct transformation, based on the same funciton in VTK
+    mat4.copy(tmpMatrix, publicAPI.getViewMatrix());
+    mat4.invert(tmpMatrix, tmpMatrix);
+
+    mat4.fromScaling(tmpMatrix2, [
+      model.distance,
+      model.distance,
+      model.distance,
+    ]);
+    mat4.multiply(tmpMatrix, tmpMatrix, tmpMatrix2);
+    mat4.identity(model.cameraLightTransform);
+    mat4.translate(model.cameraLightTransform, tmpMatrix, [0.0, 0.0, -1.0]);
+  };
+
   publicAPI.deepCopy = (sourceCamera) => {};
 
   publicAPI.physicalOrientationToWorldDirection = (ori) => {
@@ -715,6 +732,7 @@ export const DEFAULT_VALUES = {
   freezeFocalPoint: false,
   projectionMatrix: null,
   viewMatrix: null,
+  cameraLightTransform: mat4.create(),
 
   // used for world to physical transformations
   physicalTranslation: [0, 0, 0],

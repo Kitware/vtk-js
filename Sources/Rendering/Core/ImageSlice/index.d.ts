@@ -1,10 +1,10 @@
 import { Bounds } from "../../../types";
-import vtkImageProperty from "../ImageProperty";
-import vtkMapper from "../Mapper";
+import vtkImageProperty, { IImagePropertyInitialValues } from "../ImageProperty";
+import vtkImageMapper from "../ImageMapper";
 import vtkProp3D, { IProp3DInitialValues } from "../Prop3D";
 
-interface IImageSliceInitialValues extends IProp3DInitialValues{
-	mapper?: vtkMapper;
+export interface IImageSliceInitialValues extends IProp3DInitialValues{
+	mapper?: vtkImageMapper;
 	property?: vtkImageProperty;
 	bounds?: Bounds;
 }
@@ -22,6 +22,12 @@ export interface vtkImageSlice extends vtkProp3D {
 	 * @return {Bounds} The bounds for the mapper.
 	 */
 	getBounds(): Bounds;
+
+	/**
+	 * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * @return {Bounds} The bounds for the mapper.
+	 */
+	getBoundsByReference(): Bounds;
 
 	/**
 	 * Get the bounds for a given slice as [xmin, xmax, ymin, ymax,zmin, zmax].
@@ -49,7 +55,7 @@ export interface vtkImageSlice extends vtkProp3D {
 	/**
 	 * 
 	 */
-	getMapper(): vtkMapper;
+	getMapper(): vtkImageMapper;
 	
 	/**
 	 * Get the minimum X bound
@@ -111,6 +117,24 @@ export interface vtkImageSlice extends vtkProp3D {
 	 * and the Renderer will do the images in their own pass.
 	 */
 	hasTranslucentPolygonalGeometry(): boolean;
+
+	/**
+	 * Create a new property suitable for use with this type of Actor.
+	 * @param {IImageSliceInitialValues} [initialValues] (default: {})
+	 */
+	makeProperty(initialValues?: IImagePropertyInitialValues): vtkImageProperty;
+
+	/**
+	 * 
+	 * @param {vtkImageMapper} mapper The vtkImageMapper instance.
+	 */
+	setMapper(mapper: vtkImageMapper): boolean;
+
+	/**
+	 * 
+	 * @param {vtkImageProperty} property The vtkImageProperty instance.
+	 */
+	setProperty(property: vtkImageProperty): boolean;
 }
 
 /**

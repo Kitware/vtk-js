@@ -1,19 +1,7 @@
-import { vtkObject } from "../../../interfaces" ;
-import { ColorMode } from "../../../Rendering/Core/Mapper";
-import { Range } from "../../../types" ;
-
-export enum VectorMode {
-	MAGNITUDE,
-	COMPONENT,
-	RGBCOLORS
-}
-
-export enum ScalarMappingTarget {
-	LUMINANCE,
-	LUMINANCE_ALPHA,
-	RGB,
-	RGBA
-}
+import { vtkObject } from "../../../interfaces";
+import { ColorMode } from "../../../Rendering/Core/Mapper/Constants";
+import { Range } from "../../../types";
+import { ScalarMappingTarget, VectorMode } from "./Constants";
 
 /**
  *
@@ -370,5 +358,7 @@ export function newInstance(initialValues?: IScalarsToColorsInitialValues): vtkS
 export declare const vtkScalarsToColors: {
 	newInstance: typeof newInstance;
 	extend: typeof extend;
+	VectorMode: typeof VectorMode;
+	ScalarMappingTarget: typeof VectorMode;
 }
 export default vtkScalarsToColors;

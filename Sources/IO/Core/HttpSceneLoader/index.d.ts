@@ -29,7 +29,7 @@ export interface vtkHttpSceneLoader extends vtkObject {
 
 	/**
 	 * 
-	 * @param fetchGzip 
+	 * @param {Boolean} fetchGzip 
 	 */
 	getFetchGzip(fetchGzip: boolean): boolean;
 
@@ -70,10 +70,19 @@ export interface vtkHttpSceneLoader extends vtkObject {
 
 	/**
 	 * 
-	 * @param renderer 
+	 * @param {vtkRenderer} renderer The vtkRenderer instance. 
 	 */
 	setRenderer(renderer: vtkRenderer): boolean;
+
+	/**
+	 * 
+	 * @param {String} url 
+	 */
 	setUrl(url: string): void;
+
+	/**
+	 * 
+	 */
 	update(): void;
 }
 

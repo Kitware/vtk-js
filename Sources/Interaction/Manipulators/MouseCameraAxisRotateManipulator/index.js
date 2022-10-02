@@ -47,7 +47,7 @@ function vtkMouseCameraAxisRotateManipulator(publicAPI, model) {
     const dx = model.previousPosition.x - position.x;
     const dy = model.previousPosition.y - position.y;
 
-    const size = interactor.getView().getSize();
+    const size = interactor.getView().getViewportSize(renderer);
 
     // Azimuth
     mat4.rotate(

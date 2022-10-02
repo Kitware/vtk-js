@@ -40,7 +40,7 @@ export interface IViewState {
   // vtk object mtime.
   mtime: number;
   // ID of the parent. Null for the root.
-  parent?: string | null;
+  parent?: Nullable<string>;
   properties?: {[key: string]: any};
   // Child objects.
   dependencies?: IViewState[];

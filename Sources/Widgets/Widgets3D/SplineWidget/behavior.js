@@ -3,6 +3,7 @@ import { vec3 } from 'gl-matrix';
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkSplineWidgetProp');
+  model._isDragging = false;
 
   model.keysDown = {};
   model.moveHandle = model.widgetState.getMoveHandle();
@@ -41,12 +42,13 @@ export default function widgetBehavior(publicAPI, model) {
       model.lastHandle.setOrigin(...model.moveHandle.getOrigin());
       model.lastHandle.setColor(model.moveHandle.getColor());
       model.lastHandle.setScale1(model.moveHandle.getScale1());
+      model.lastHandle.setManipulator(model.manipulator);
 
       if (!model.firstHandle) {
         model.firstHandle = model.lastHandle;
       }
 
-      model.apiSpecificRenderWindow.setCursor('grabbing');
+      model._apiSpecificRenderWindow.setCursor('grabbing');
     }
   };
 
@@ -58,8 +60,8 @@ export default function widgetBehavior(publicAPI, model) {
     const scale =
       model.moveHandle.getScale1() *
       vec3.distance(
-        model.apiSpecificRenderWindow.displayToWorld(0, 0, 0, model.renderer),
-        model.apiSpecificRenderWindow.displayToWorld(1, 0, 0, model.renderer)
+        model._apiSpecificRenderWindow.displayToWorld(0, 0, 0, model._renderer),
+        model._apiSpecificRenderWindow.displayToWorld(1, 0, 0, model._renderer)
       );
 
     return handles.reduce(
@@ -205,7 +207,6 @@ export default function widgetBehavior(publicAPI, model) {
 
     if (model.activeState === model.moveHandle) {
       if (model.widgetState.getHandleList().length === 0) {
-        publicAPI.invokeStartInteractionEvent();
         addPoint();
       } else {
         const hoveredHandle = getHoveredHandle();
@@ -214,21 +215,21 @@ export default function widgetBehavior(publicAPI, model) {
           model.moveHandle.setVisible(false);
           model.activeState = hoveredHandle;
           hoveredHandle.activate();
-          model.isDragging = true;
+          model._isDragging = true;
           model.lastHandle.setVisible(true);
         } else {
           addPoint();
         }
       }
 
-      model.freeHand = publicAPI.getAllowFreehand() && !model.isDragging;
-    } else {
-      model.isDragging = true;
-      model.apiSpecificRenderWindow.setCursor('grabbing');
+      model.freeHand = publicAPI.getAllowFreehand() && !model._isDragging;
+    } else if (model.dragable) {
+      model._isDragging = true;
+      model._apiSpecificRenderWindow.setCursor('grabbing');
       model._interactor.requestAnimation(publicAPI);
-      publicAPI.invokeStartInteractionEvent();
     }
 
+    publicAPI.invokeStartInteractionEvent();
     return macro.EVENT_ABORT;
   };
 
@@ -237,9 +238,9 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonRelease = (e) => {
-    if (model.isDragging) {
+    if (model._isDragging) {
       if (!model.hasFocus) {
-        model.apiSpecificRenderWindow.setCursor(model.defaultCursor);
+        model._apiSpecificRenderWindow.setCursor(model.defaultCursor);
         model.widgetState.deactivate();
         model._interactor.cancelAnimation(publicAPI);
         publicAPI.invokeEndInteractionEvent();
@@ -280,8 +281,8 @@ export default function widgetBehavior(publicAPI, model) {
     }
 
     model.freeHand = false;
-    model.isDragging = false;
     model.draggedPoint = false;
+    model._isDragging = false;
 
     return model.hasFocus ? macro.EVENT_ABORT : macro.VOID;
   };
@@ -291,30 +292,30 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = (callData) => {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
     if (
+      !manipulator ||
       !model.activeState ||
       !model.activeState.getActive() ||
-      !model.pickable ||
-      !model.manipulator
+      !model.pickable
     ) {
       return macro.VOID;
     }
-    model.manipulator.setNormal(model.camera.getDirectionOfProjection());
-
-    const worldCoords = model.manipulator.handleEvent(
+    const worldCoords = manipulator.handleEvent(
       callData,
-      model.apiSpecificRenderWindow
+      model._apiSpecificRenderWindow
     );
 
     const hoveredHandle = getHoveredHandle();
     if (hoveredHandle) {
       model.moveHandle.setVisible(false);
       if (hoveredHandle !== model.firstHandle) {
-        model.apiSpecificRenderWindow.setCursor('grabbing');
+        model._apiSpecificRenderWindow.setCursor('grabbing');
       }
-    } else if (!model.isDragging && model.hasFocus) {
+    } else if (!model._isDragging && model.hasFocus) {
       model.moveHandle.setVisible(true);
-      model.apiSpecificRenderWindow.setCursor(model.defaultCursor);
+      model._apiSpecificRenderWindow.setCursor(model.defaultCursor);
     }
 
     if (model.lastHandle) {
@@ -323,10 +324,10 @@ export default function widgetBehavior(publicAPI, model) {
 
     if (
       worldCoords.length &&
-      (model.isDragging || model.activeState === model.moveHandle)
+      (model._isDragging || model.activeState === model.moveHandle)
     ) {
       model.activeState.setOrigin(worldCoords);
-      if (model.isDragging) {
+      if (model._isDragging) {
         model.draggedPoint = true;
       }
       if (model.freeHand && model.activeState === model.moveHandle) {

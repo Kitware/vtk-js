@@ -23,6 +23,14 @@ Note that the bounding box may have 0 volume if its bounds
 were just initialized.
 Returns the updated bounds
 
+### addPoints(bounds[6], points)
+
+Change bounding box so it includes the points.
+points can be a list of lists (e.g. [[0,0,0], [1, 0, 0], ...]) or
+a flat list (e.g. [0, 0, 0, 1, 0, 0, ...])
+Note that the bounding box may have 0 volume if its bounds
+were just initialized.
+
 ### addBounds(bounds[6], xMin, xMax, yMin, yMax, zMin, zMax)
 
 Change the bounding box so it includes bounds (defined by vtk standard)

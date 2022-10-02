@@ -1,5 +1,6 @@
 module.exports = (code, replaceFunc) => {
   const importRegex = /(?:import|from) ['"]([^'"]*)['"]/g;
+  let m;
   while ((m = importRegex.exec(code)) !== null) {
     // This is necessary to avoid infinite loops with zero-width matches
     if (m.index === importRegex.lastIndex) {
