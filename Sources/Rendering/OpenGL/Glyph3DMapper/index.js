@@ -443,9 +443,9 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
     const numPts = garray.length / 16;
 
     let compositePass = false;
-    if (model.openGLRenderer.getSelector()) {
+    if (model._openGLRenderer.getSelector()) {
       if (
-        model.openGLRenderer.getSelector().getCurrentPass() ===
+        model._openGLRenderer.getSelector().getCurrentPass() ===
         PassTypes.COMPOSITE_INDEX_PASS
       ) {
         compositePass = true;
@@ -485,7 +485,7 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
           // draw the array multiple times with different cam matrix
           for (let p = 0; p < numPts; ++p) {
             if (compositePass) {
-              model.openGLRenderer.getSelector().renderCompositeIndex(p);
+              model._openGLRenderer.getSelector().renderCompositeIndex(p);
             }
             publicAPI.updateGlyphShaderParameters(
               normalMatrixUsed,
@@ -495,7 +495,7 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
               garray,
               narray,
               p,
-              compositePass ? model.openGLRenderer.getSelector() : null
+              compositePass ? model._openGLRenderer.getSelector() : null
             );
             gl.drawArrays(mode, 0, cabo.getElementCount());
           }

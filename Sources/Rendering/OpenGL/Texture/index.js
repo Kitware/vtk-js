@@ -23,10 +23,10 @@ function vtkOpenGLTexture(publicAPI, model) {
     if (renWin) {
       model._openGLRenderWindow = renWin;
     } else {
-      model.openGLRenderer =
+      model._openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       // sync renderable properties
-      model._openGLRenderWindow = model.openGLRenderer.getParent();
+      model._openGLRenderWindow = model._openGLRenderer.getParent();
     }
     model.context = model._openGLRenderWindow.getContext();
     if (model.renderable.getInterpolate()) {
@@ -1464,7 +1464,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  _openGLRenderWindow: null,
+  // _openGLRenderWindow: null,
   context: null,
   handle: 0,
   sendParametersTime: null,
@@ -1525,6 +1525,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'handle',
     'target',
   ]);
+  macro.moveToProtected(publicAPI, model, ['openGLRenderWindow']);
 
   // Object methods
   vtkOpenGLTexture(publicAPI, model);

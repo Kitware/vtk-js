@@ -25,7 +25,7 @@ function vtkOpenGLImageSlice(publicAPI, model) {
       model._openGLRenderWindow = publicAPI.getFirstAncestorOfType(
         'vtkOpenGLRenderWindow'
       );
-      model.openGLRenderer =
+      model._openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       model.context = model._openGLRenderWindow.getContext();
       publicAPI.prepareNodes();
@@ -44,7 +44,7 @@ function vtkOpenGLImageSlice(publicAPI, model) {
       !model.renderable ||
       !model.renderable.getNestedVisibility() ||
       !model.renderable.getIsOpaque() ||
-      (model.openGLRenderer.getSelector() &&
+      (model._openGLRenderer.getSelector() &&
         !model.renderable.getNestedPickable())
     ) {
       return;
@@ -63,7 +63,7 @@ function vtkOpenGLImageSlice(publicAPI, model) {
       !model.renderable ||
       !model.renderable.getNestedVisibility() ||
       model.renderable.getIsOpaque() ||
-      (model.openGLRenderer.getSelector() &&
+      (model._openGLRenderer.getSelector() &&
         !model.renderable.getNestedPickable())
     ) {
       return;

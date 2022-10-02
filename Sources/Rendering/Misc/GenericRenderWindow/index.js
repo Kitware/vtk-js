@@ -23,15 +23,15 @@ function vtkGenericRenderWindow(publicAPI, model) {
   model.renderWindow.addRenderer(model.renderer);
 
   // OpenGLRenderWindow
-  model.openGLRenderWindow = vtkOpenGLRenderWindow.newInstance();
-  model.renderWindow.addView(model.openGLRenderWindow);
+  model._openGLRenderWindow = vtkOpenGLRenderWindow.newInstance();
+  model.renderWindow.addView(model._openGLRenderWindow);
 
   // Interactor
   model.interactor = vtkRenderWindowInteractor.newInstance();
   model.interactor.setInteractorStyle(
     vtkInteractorStyleTrackballCamera.newInstance()
   );
-  model.interactor.setView(model.openGLRenderWindow);
+  model.interactor.setView(model._openGLRenderWindow);
   model.interactor.initialize();
 
   // Expose background
@@ -45,7 +45,7 @@ function vtkGenericRenderWindow(publicAPI, model) {
     if (model.container) {
       const dims = model.container.getBoundingClientRect();
       const devicePixelRatio = window.devicePixelRatio || 1;
-      model.openGLRenderWindow.setSize(
+      model._openGLRenderWindow.setSize(
         Math.floor(dims.width * devicePixelRatio),
         Math.floor(dims.height * devicePixelRatio)
       );
@@ -62,7 +62,7 @@ function vtkGenericRenderWindow(publicAPI, model) {
 
     // Switch container
     model.container = el;
-    model.openGLRenderWindow.setContainer(model.container);
+    model._openGLRenderWindow.setContainer(model.container);
 
     // Bind to new container
     if (model.container) {
@@ -73,7 +73,7 @@ function vtkGenericRenderWindow(publicAPI, model) {
   // Properly release GL context
   publicAPI.delete = macro.chain(
     publicAPI.setContainer,
-    model.openGLRenderWindow.delete,
+    model._openGLRenderWindow.delete,
     publicAPI.delete
   );
 
@@ -104,10 +104,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, [
     'renderWindow',
     'renderer',
-    'openGLRenderWindow',
+    '_openGLRenderWindow',
     'interactor',
     'container',
   ]);
+  macro.moveToProtected(publicAPI, model, ['openGLRenderWindow']);
   macro.event(publicAPI, model, 'resize');
 
   // Object specific methods
