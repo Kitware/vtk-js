@@ -13,7 +13,7 @@ function vtkCanvasView(publicAPI, model) {
   // Auto update style
   function updateWindow() {
     // Canvas size
-    if (model.renderable) {
+    if (model._renderable) {
       model.canvas.setAttribute('width', model.size[0]);
       model.canvas.setAttribute('height', model.size[1]);
     }
@@ -122,8 +122,8 @@ function vtkCanvasView(publicAPI, model) {
   // --------------------------------------------------------------------------
   // Make us look like a View (i.e.: vtkOpenGLRenderWindow)
   // --------------------------------------------------------------------------
-  model.renderable = publicAPI;
-  model.renderers = [publicAPI];
+  model._renderable = publicAPI;
+  model._renderers = [publicAPI];
   publicAPI.traverseAllPasses = () => {};
   publicAPI.isInViewport = () => true;
   publicAPI.getInteractive = () => true;
@@ -164,7 +164,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model, initialValues);
 
   // Build VTK API
-  macro.get(publicAPI, model, ['useBackgroundImage', 'renderable']);
+  macro.get(publicAPI, model, ['useBackgroundImage', '_renderable']);
 
   macro.setGet(publicAPI, model, [
     'canvas',
@@ -174,7 +174,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   macro.setGetArray(publicAPI, model, ['size'], 2);
-  macro.getArray(publicAPI, model, ['renderers']);
+  macro.getArray(publicAPI, model, ['_renderers']);
+  macro.moveToProtected(publicAPI, model, ['renderable', 'renderers']);
 
   // Object methods
   vtkCanvasView(publicAPI, model);

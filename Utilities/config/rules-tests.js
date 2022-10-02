@@ -17,6 +17,34 @@ module.exports = [
     ],
   },
   {
+    test: /\.css$/,
+    exclude: /\.module\.css$/,
+    use: [
+      { loader: 'style-loader' },
+      { loader: 'css-loader' },
+      { loader: 'postcss-loader' },
+    ],
+  },
+  {
+    test: /\.module\.css$/,
+    use: [
+      { loader: 'style-loader' },
+      {
+        loader: 'css-loader',
+        options: {
+          modules: {
+            localIdentName: '[name]-[local]_[sha512:hash:base64:5]',
+          },
+        },
+      },
+      { loader: 'postcss-loader' },
+    ],
+  },
+  {
+    test: /\.svg$/,
+    type: 'asset/source',
+  },
+  {
     test: /\.js$/,
     use: [
       { loader: 'babel-loader' },

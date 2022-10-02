@@ -47,6 +47,10 @@ function BufferedObjectPipe() {
     scheduleFlush();
   };
 
+  /**
+   * Called when karma is loaded in browser.
+   * @param {*} reader
+   */
   const setReader = (r) => {
     reader = r;
   };

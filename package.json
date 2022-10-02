@@ -149,7 +149,7 @@
     "release:create-packages": "node ./Utilities/ci/build-npm-package.js",
     "test": "karma start ./karma.conf.js",
     "test:headless": "karma start ./karma.conf.js --browsers ChromeHeadlessNoSandbox --single-run",
-    "test:debug": "karma start ./karma.conf.js --no-single-run",
+    "test:debug": "karma start ./karma.conf.js --log-level debug --no-single-run",
     "test:firefox": "karma start ./karma.conf.js --browsers Firefox",
     "test:webgpu": "cross-env WEBGPU=1 NO_WEBGL=1 karma start ./karma.conf.js --browsers ChromeWebGPU --no-single-run",
     "test:firefox-debug": "karma start ./karma.conf.js --browsers Firefox --no-single-run",

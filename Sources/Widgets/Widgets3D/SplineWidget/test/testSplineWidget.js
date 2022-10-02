@@ -125,9 +125,12 @@ test.onlyIfWebGL('Test vtkSplineWidget rendering and picking', (t) => {
 
     return sel.selectAsync(renderer, 200, 200, 210, 210).then((res) => {
       t.equal(res.length, 1);
-      t.equal(
-        res[0].getProperties().prop.getParentProp(),
-        widgets[0].getRepresentations()[1]
+      t.ok(
+        // do not use equal to avoid serializing representation
+        Object.is(
+          res[0].getProperties().prop.getParentProp(),
+          widgets[0].getRepresentations()[1]
+        )
       );
     });
   }

@@ -167,7 +167,7 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     }
 
     // we just render our delegates in order
-    model.currentParent = viewNode;
+    model._currentParent = viewNode;
 
     // create stuff we need
     publicAPI.initialize(viewNode);

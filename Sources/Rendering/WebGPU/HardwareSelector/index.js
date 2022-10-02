@@ -271,23 +271,23 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
   // based on the passed in size etc but it gets messy so for now we always
   // render the full size window and copy it to the buffers.
   publicAPI.getSourceDataAsync = async (renderer) => {
-    if (!renderer || !model.WebGPURenderWindow) {
+    if (!renderer || !model._WebGPURenderWindow) {
       vtkErrorMacro('Renderer and view must be set before calling Select.');
       return false;
     }
 
     // todo revisit making selection part of core
     // then we can do this in core
-    model.WebGPURenderWindow.getRenderable().preRender();
+    model._WebGPURenderWindow.getRenderable().preRender();
 
-    if (!model.WebGPURenderWindow.getInitialized()) {
-      model.WebGPURenderWindow.initialize();
+    if (!model._WebGPURenderWindow.getInitialized()) {
+      model._WebGPURenderWindow.initialize();
       await new Promise((resolve) => {
-        model.WebGPURenderWindow.onInitialized(resolve);
+        model._WebGPURenderWindow.onInitialized(resolve);
       });
     }
 
-    const webGPURenderer = model.WebGPURenderWindow.getViewNodeFor(renderer);
+    const webGPURenderer = model._WebGPURenderWindow.getViewNodeFor(renderer);
 
     if (!webGPURenderer) {
       return false;
@@ -298,12 +298,12 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
     const originalSuppress = webGPURenderer.getSuppressClear();
     webGPURenderer.setSuppressClear(true);
 
-    model._selectionPass.traverse(model.WebGPURenderWindow, webGPURenderer);
+    model._selectionPass.traverse(model._WebGPURenderWindow, webGPURenderer);
 
     // restore original background
     webGPURenderer.setSuppressClear(originalSuppress);
 
-    const device = model.WebGPURenderWindow.getDevice();
+    const device = model._WebGPURenderWindow.getDevice();
     const texture = model._selectionPass.getColorTexture();
     const depthTexture = model._selectionPass.getDepthTexture();
 
@@ -317,7 +317,7 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
       fieldAssociation: model.fieldAssociation,
       renderer,
       webGPURenderer,
-      webGPURenderWindow: model.WebGPURenderWindow,
+      webGPURenderWindow: model._WebGPURenderWindow,
       width: texture.getWidth(),
       height: texture.getHeight(),
     };
@@ -339,7 +339,7 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
     /* eslint-enable no-bitwise */
     /* eslint-enable no-undef */
 
-    const cmdEnc = model.WebGPURenderWindow.getCommandEncoder();
+    const cmdEnc = model._WebGPURenderWindow.getCommandEncoder();
     cmdEnc.copyTextureToBuffer(
       {
         texture: texture.getHandle(),
@@ -418,7 +418,7 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  WebGPURenderWindow: null,
+  // WebGPURenderWindow: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -431,7 +431,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model._selectionPass = vtkWebGPUHardwareSelectionPass.newInstance();
 
-  macro.setGet(publicAPI, model, ['WebGPURenderWindow']);
+  macro.setGet(publicAPI, model, ['_WebGPURenderWindow']);
+  macro.moveToProtected(publicAPI, model, ['WebGPURenderWindow']);
 
   // Object methods
   vtkWebGPUHardwareSelector(publicAPI, model);

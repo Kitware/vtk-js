@@ -61,7 +61,9 @@ function createView(gc, viewType, widget) {
   obj.interactor.setInteractorStyle(
     gc.registerResource(vtkInteractorStyleImage.newInstance())
   );
-  obj.widgetInstance = obj.widgetManager.addWidget(widget, viewType);
+  obj.widgetInstance = gc.registerResource(
+    obj.widgetManager.addWidget(widget, viewType)
+  );
   obj.widgetManager.enablePicking();
   // Use to update all renderers buffer when actors are moved
   obj.widgetManager.setCaptureOn(CaptureOn.MOUSE_MOVE);
