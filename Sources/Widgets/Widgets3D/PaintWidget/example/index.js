@@ -16,16 +16,14 @@ import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkPaintFilter from 'vtk.js/Sources/Filters/General/PaintFilter';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+
+// Force the loading of HttpDataAccessHelper to support gzip decompression
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
 import {
   BehaviorCategory,
   ShapeBehavior,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
-import {
-  TextAlign,
-  VerticalAlign,
-} from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation/Constants';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
@@ -80,9 +78,14 @@ scene.widgetManager.setRenderer(scene.renderer);
 // Widgets
 const widgets = {};
 widgets.paintWidget = vtkPaintWidget.newInstance();
-widgets.rectangleWidget = vtkRectangleWidget.newInstance();
-widgets.ellipseWidget = vtkEllipseWidget.newInstance();
+widgets.rectangleWidget = vtkRectangleWidget.newInstance({
+  resetAfterPointPlacement: true,
+});
+widgets.ellipseWidget = vtkEllipseWidget.newInstance({
+  resetAfterPointPlacement: true,
+});
 widgets.circleWidget = vtkEllipseWidget.newInstance({
+  resetAfterPointPlacement: true,
   modifierBehavior: {
     None: {
       [BehaviorCategory.PLACEMENT]:
@@ -96,8 +99,11 @@ widgets.circleWidget = vtkEllipseWidget.newInstance({
     },
   },
 });
-widgets.splineWidget = vtkSplineWidget.newInstance();
+widgets.splineWidget = vtkSplineWidget.newInstance({
+  resetAfterPointPlacement: true,
+});
 widgets.polygonWidget = vtkSplineWidget.newInstance({
+  resetAfterPointPlacement: true,
   resolution: 1,
 });
 
@@ -227,42 +233,29 @@ reader
 
     updateControlPanel(image.imageMapper, data);
 
-    scene.circleHandle.setLabelTextCallback((worldBounds, screenBounds) => {
-      const center = vtkBoundingBox.getCenter(screenBounds);
-      const radius =
-        vec3.distance(center, [
-          screenBounds[0],
-          screenBounds[2],
-          screenBounds[4],
-        ]) / 2;
-      const position = [0, 0, 0];
-      vec3.scaleAndAdd(position, center, [1, 1, 1], radius);
+    // set text display callback
+    scene.circleHandle.onInteractionEvent(() => {
+      const worldBounds = scene.circleHandle.getBounds();
 
-      return {
-        text: `radius: ${(
-          vec3.distance(
-            [worldBounds[0], worldBounds[2], worldBounds[4]],
-            [worldBounds[1], worldBounds[3], worldBounds[5]]
-          ) / 2
-        ).toFixed(2)}`,
-        position,
-        textAlign: TextAlign.CENTER,
-        verticalAlign: VerticalAlign.CENTER,
-      };
+      const text = `radius: ${(
+        vec3.distance(
+          [worldBounds[0], worldBounds[2], worldBounds[4]],
+          [worldBounds[1], worldBounds[3], worldBounds[5]]
+        ) / 2
+      ).toFixed(2)}`;
+      widgets.circleWidget.getWidgetState().getText().setText(text);
     });
 
-    scene.splineHandle
-      .getWidgetState()
-      .getMoveHandle()
-      .setScale1(2 * Math.max(...image.data.getSpacing()));
+    scene.splineHandle.setHandleSizeInPixels(
+      2 * Math.max(...image.data.getSpacing())
+    );
     scene.splineHandle.setFreehandMinDistance(
       4 * Math.max(...image.data.getSpacing())
     );
 
-    scene.polygonHandle
-      .getWidgetState()
-      .getMoveHandle()
-      .setScale1(2 * Math.max(...image.data.getSpacing()));
+    scene.polygonHandle.setHandleSizeInPixels(
+      2 * Math.max(...image.data.getSpacing())
+    );
     scene.polygonHandle.setFreehandMinDistance(
       4 * Math.max(...image.data.getSpacing())
     );
@@ -278,12 +271,12 @@ reader
         ijk[slicingMode] = image.imageMapper.getSlice();
         data.indexToWorld(ijk, position);
 
-        widgets.paintWidget.getManipulator().setOrigin(position);
-        widgets.rectangleWidget.getManipulator().setOrigin(position);
-        widgets.ellipseWidget.getManipulator().setOrigin(position);
-        widgets.circleWidget.getManipulator().setOrigin(position);
-        widgets.splineWidget.getManipulator().setOrigin(position);
-        widgets.polygonWidget.getManipulator().setOrigin(position);
+        widgets.paintWidget.getManipulator().setUserOrigin(position);
+        widgets.rectangleWidget.getManipulator().setUserOrigin(position);
+        widgets.ellipseWidget.getManipulator().setUserOrigin(position);
+        widgets.circleWidget.getManipulator().setUserOrigin(position);
+        widgets.splineWidget.getManipulator().setUserOrigin(position);
+        widgets.polygonWidget.getManipulator().setUserOrigin(position);
 
         painter.setSlicingMode(slicingMode);
 
@@ -306,8 +299,6 @@ reader
     image.imageMapper.onModified(update);
     // trigger initial update
     update();
-
-    //    readyAll();
   });
 
 // register readyAll to resize event
@@ -378,13 +369,10 @@ function initializeHandle(handle) {
   handle.onStartInteractionEvent(() => {
     painter.startStroke();
   });
-
   handle.onEndInteractionEvent(() => {
     painter.endStroke();
   });
 }
-
-initializeHandle(scene.paintHandle);
 
 scene.paintHandle.onStartInteractionEvent(() => {
   painter.startStroke();
@@ -394,23 +382,23 @@ scene.paintHandle.onStartInteractionEvent(() => {
 scene.paintHandle.onInteractionEvent(() => {
   painter.addPoint(widgets.paintWidget.getWidgetState().getTrueOrigin());
 });
+initializeHandle(scene.paintHandle);
 
-initializeHandle(scene.rectangleHandle);
-
-scene.rectangleHandle.onInteractionEvent(() => {
+scene.rectangleHandle.onEndInteractionEvent(() => {
   const rectangleHandle = scene.rectangleHandle
     .getWidgetState()
     .getRectangleHandle();
 
-  painter.paintRectangle(
-    rectangleHandle.getOrigin(),
-    rectangleHandle.getCorner()
-  );
+  const origin = rectangleHandle.getOrigin();
+  const corner = rectangleHandle.getCorner();
+
+  if (origin && corner) {
+    painter.paintRectangle(origin, corner);
+  }
 });
+initializeHandle(scene.rectangleHandle);
 
-initializeHandle(scene.ellipseHandle);
-
-scene.ellipseHandle.onInteractionEvent(() => {
+scene.ellipseHandle.onEndInteractionEvent(() => {
   const center = scene.ellipseHandle
     .getWidgetState()
     .getEllipseHandle()
@@ -420,56 +408,60 @@ scene.ellipseHandle.onInteractionEvent(() => {
     .getPoint2Handle()
     .getOrigin();
 
-  const corner = [
-    center[0] - point2[0],
-    center[1] - point2[1],
-    center[2] - point2[2],
-  ];
-  painter.paintEllipse(center, corner);
+  if (center && point2) {
+    let corner = [];
+    if (
+      scene.ellipseHandle.isBehaviorActive(
+        BehaviorCategory.RATIO,
+        ShapeBehavior[BehaviorCategory.RATIO].FIXED
+      )
+    ) {
+      const radius = vec3.distance(center, point2);
+      corner = [radius, radius, radius];
+    } else {
+      corner = [
+        center[0] - point2[0],
+        center[1] - point2[1],
+        center[2] - point2[2],
+      ];
+    }
+
+    painter.paintEllipse(center, corner);
+  }
 });
+initializeHandle(scene.ellipseHandle);
 
-initializeHandle(scene.circleHandle);
-
-scene.circleHandle.onInteractionEvent(() => {
+scene.circleHandle.onEndInteractionEvent(() => {
   const center = scene.circleHandle
     .getWidgetState()
     .getEllipseHandle()
     .getOrigin();
   const point2 = scene.circleHandle
     .getWidgetState()
-    .getPoint1Handle()
+    .getPoint2Handle()
     .getOrigin();
 
-  const radius = vec3.distance(center, point2);
+  if (center && point2) {
+    const radius = vec3.distance(center, point2);
+    const corner = [radius, radius, radius];
 
-  const corner = [radius, radius, radius];
-  painter.paintEllipse(center, corner);
+    painter.paintEllipse(center, corner);
+  }
 });
-
-scene.splineHandle.onStartInteractionEvent(() => {
-  painter.startStroke();
-});
+initializeHandle(scene.circleHandle);
 
 scene.splineHandle.onEndInteractionEvent(() => {
   const points = scene.splineHandle.getPoints();
   painter.paintPolygon(points);
-  painter.endStroke();
 
-  scene.splineHandle.reset();
   scene.splineHandle.updateRepresentationForRender();
-  scene.widgetManager.grabFocus(widgets.splineWidget);
 });
-
-scene.polygonHandle.onStartInteractionEvent(() => {
-  painter.startStroke();
-});
+initializeHandle(scene.splineHandle);
 
 scene.polygonHandle.onEndInteractionEvent(() => {
   const points = scene.polygonHandle.getPoints();
   painter.paintPolygon(points);
-  painter.endStroke();
 
-  scene.polygonHandle.reset();
   scene.polygonHandle.updateRepresentationForRender();
-  scene.widgetManager.grabFocus(widgets.polygonWidget);
 });
+initializeHandle(scene.polygonHandle);

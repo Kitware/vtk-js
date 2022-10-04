@@ -22,9 +22,9 @@ function vtkLineSource(publicAPI, model) {
     // Check input
     const pointDataType = dataset
       ? dataset.getPoints().getDataType()
-      : 'Float32Array';
+      : model.pointType;
     const pd = vtkPolyData.newInstance();
-    const v21 = new Float32Array(3);
+    const v21 = [];
     vtkMath.subtract(model.point2, model.point1, v21);
     if (vtkMath.norm(v21) <= 0.0) {
       vtkWarningMacro('Zero-length line definition');
@@ -32,8 +32,8 @@ function vtkLineSource(publicAPI, model) {
     }
 
     // hand create a line with special scalars
-    const xres = model.resolution;
-    const numPts = xres + 1;
+    const res = model.resolution;
+    const numPts = res + 1;
 
     // Points
     const points = macro.newTypedArray(pointDataType, numPts * 3);
@@ -45,8 +45,8 @@ function vtkLineSource(publicAPI, model) {
 
     let idx = 0;
     let t = 0.0;
-    for (let i = 0; i < xres + 1; i++) {
-      t = i / xres;
+    for (let i = 0; i < res + 1; i++) {
+      t = i / res;
 
       points[idx * 3] = model.point1[0] + t * v21[0];
       points[idx * 3 + 1] = model.point1[1] + t * v21[1];
@@ -76,7 +76,7 @@ const DEFAULT_VALUES = {
   resolution: 10,
   point1: [-1, 0, 0],
   point2: [1, 0, 0],
-  pointType: 'Float32Array',
+  pointType: 'Float64Array',
 };
 
 // ----------------------------------------------------------------------------

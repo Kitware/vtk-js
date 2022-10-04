@@ -67,18 +67,18 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   // Renders myself
   publicAPI.volumePass = (prepass, renderPass) => {
     if (prepass) {
-      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType(
+      model._openGLRenderWindow = publicAPI.getFirstAncestorOfType(
         'vtkOpenGLRenderWindow'
       );
-      model.context = model.openGLRenderWindow.getContext();
-      model.tris.setOpenGLRenderWindow(model.openGLRenderWindow);
-      model.jitterTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
-      model.framebuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.context = model._openGLRenderWindow.getContext();
+      model.tris.setOpenGLRenderWindow(model._openGLRenderWindow);
+      model.jitterTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      model.framebuffer.setOpenGLRenderWindow(model._openGLRenderWindow);
 
       // Per Component?
-      model.scalarTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
-      model.colorTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
-      model.opacityTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.scalarTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      model.opacityTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
 
       model.openGLVolume = publicAPI.getFirstAncestorOfType('vtkOpenGLVolume');
       const actor = model.openGLVolume.getRenderable();
@@ -165,7 +165,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     // We do a break so most systems will gracefully
     // early terminate, but it is always possible
     // a system will execute every step regardless
-    const ext = model.currentInput.getExtent();
+    const ext = model.currentInput.getSpatialExtent();
     const spc = model.currentInput.getSpacing();
     const vsize = new Float64Array(3);
     vec3.set(
@@ -191,6 +191,35 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       `#define vtkLightComplexity ${model.lastLightComplexity}`
     ).result;
 
+    // set shadow blending flag
+    if (model.lastLightComplexity > 0) {
+      if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::VolumeShadowOn',
+          `#define VolumeShadowOn`
+        ).result;
+      }
+      if (model.renderable.getVolumetricScatteringBlending() < 1.0) {
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::SurfaceShadowOn',
+          `#define SurfaceShadowOn`
+        ).result;
+      }
+      if (
+        model.renderable.getVolumetricScatteringBlending() === 0.0 &&
+        model.renderable.getLocalAmbientOcclusion() &&
+        actor.getProperty().getAmbient() > 0.0
+      ) {
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::localAmbientOcclusionOn',
+          `#define localAmbientOcclusionOn`
+        ).result;
+      }
+    }
+
     // if using gradient opacity define that
     model.gopacity = actor.getProperty().getUseGradientOpacity(0);
     for (let nc = 1; iComps && !model.gopacity && nc < numComp; ++nc) {
@@ -203,6 +232,15 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         FSSource,
         '//VTK::GradientOpacityOn',
         '#define vtkGradientOpacityOn'
+      ).result;
+    }
+
+    // set normal from density
+    if (model.renderable.getComputeNormalFromOpacity()) {
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::vtkComputeNormalFromOpacity',
+        `#define vtkComputeNormalFromOpacity`
       ).result;
     }
 
@@ -237,59 +275,81 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderLight = (shaders, ren, actor) => {
+    if (model.lastLightComplexity === 0) {
+      return;
+    }
     let FSSource = shaders.Fragment;
+    // check for shadow maps - not implemented yet, skip
+    // const shadowFactor = '';
 
-    // check for shadow maps
-    const shadowFactor = '';
+    // to-do: single out the case when complexity = 1
 
-    switch (model.lastLightComplexity) {
-      default:
-      case 0: // no lighting, tcolor is fine as is
-        break;
-
-      case 1: // headlight
-      case 2: // light kit
-      case 3: {
-        // positional not implemented fallback to directional
-        let lightNum = 0;
-        ren.getLights().forEach((light) => {
-          const status = light.getSwitch();
-          if (status > 0) {
-            FSSource = vtkShaderProgram.substitute(
-              FSSource,
-              '//VTK::Light::Dec',
-              [
-                // intensity weighted color
-                `uniform vec3 lightColor${lightNum};`,
-                `uniform vec3 lightDirectionVC${lightNum}; // normalized`,
-                `uniform vec3 lightHalfAngleVC${lightNum}; // normalized`,
-                '//VTK::Light::Dec',
-              ],
-              false
-            ).result;
-            FSSource = vtkShaderProgram.substitute(
-              FSSource,
-              '//VTK::Light::Impl',
-              [
-                //              `  float df = max(0.0, dot(normal.rgb, -lightDirectionVC${lightNum}));`,
-                `  float df = abs(dot(normal.rgb, -lightDirectionVC${lightNum}));`,
-                `  diffuse += ((df${shadowFactor}) * lightColor${lightNum});`,
-                // '  if (df > 0.0)',
-                // '    {',
-                //              `    float sf = pow( max(0.0, dot(lightHalfAngleWC${lightNum},normal.rgb)), specularPower);`,
-                `    float sf = pow( abs(dot(lightHalfAngleVC${lightNum},normal.rgb)), vSpecularPower);`,
-                `    specular += ((sf${shadowFactor}) * lightColor${lightNum});`,
-                //              '    }',
-                '  //VTK::Light::Impl',
-              ],
-              false
-            ).result;
-            lightNum++;
-          }
-        });
+    // only account for lights that are switched on
+    let lightNum = 0;
+    ren.getLights().forEach((light) => {
+      if (light.getSwitch()) {
+        lightNum += 1;
       }
+    });
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
+      '//VTK::Light::Dec',
+      [
+        `uniform int lightNum;`,
+        `uniform bool twoSidedLighting;`,
+        `uniform vec3 lightColor[${lightNum}];`,
+        `uniform vec3 lightDirectionVC[${lightNum}]; // normalized`,
+        `uniform vec3 lightHalfAngleVC[${lightNum}];`,
+        '//VTK::Light::Dec',
+      ],
+      false
+    ).result;
+    // support any number of lights
+    if (model.lastLightComplexity === 3) {
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::Light::Dec',
+        [
+          `uniform vec3 lightPositionVC[${lightNum}];`,
+          `uniform vec3 lightAttenuation[${lightNum}];`,
+          `uniform float lightConeAngle[${lightNum}];`,
+          `uniform float lightExponent[${lightNum}];`,
+          `uniform int lightPositional[${lightNum}];`,
+        ],
+        false
+      ).result;
     }
 
+    if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::VolumeShadow::Dec',
+        [
+          `uniform float volumetricScatteringBlending;`,
+          `uniform float giReach;`,
+          `uniform float volumeShadowSamplingDistFactor;`,
+          `uniform float anisotropy;`,
+          `uniform float anisotropy2;`,
+        ],
+        false
+      ).result;
+    }
+    if (
+      model.renderable.getVolumetricScatteringBlending() === 0.0 &&
+      model.renderable.getLocalAmbientOcclusion() &&
+      actor.getProperty().getAmbient() > 0.0
+    ) {
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::LAO::Dec',
+        [
+          `uniform int kernelRadius;`,
+          `uniform vec2 kernelSample[${model.renderable.getLAOKernelRadius()}];`,
+          `uniform int kernelSize;`,
+        ],
+        false
+      ).result;
+    }
     shaders.Fragment = FSSource;
   };
 
@@ -390,7 +450,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
     }
 
-    const ext = model.currentInput.getExtent();
+    const ext = model.currentInput.getSpatialExtent();
     const spc = model.currentInput.getSpacing();
     const vsize = new Float64Array(3);
     vec3.set(
@@ -464,7 +524,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       publicAPI.buildShaders(shaders, ren, actor);
 
       // compile and bind the program if needed
-      const newShader = model.openGLRenderWindow
+      const newShader = model._openGLRenderWindow
         .getShaderCache()
         .readyShaderProgramArray(
           shaders.Vertex,
@@ -481,7 +541,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
       cellBO.getShaderSourceTime().modified();
     } else {
-      model.openGLRenderWindow
+      model._openGLRenderWindow
         .getShaderCache()
         .readyShaderProgram(cellBO.getProgram());
     }
@@ -566,7 +626,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         'zBufferTexture',
         model.zBufferTexture.getTextureUnit()
       );
-      const size = publicAPI.getRenderTargetSize();
+      const size = model._useSmallViewport
+        ? [model._smallViewportWidth, model._smallViewportHeight]
+        : model._openGLRenderWindow.getFramebufferSize();
       program.setUniformf('vpWidth', size[0]);
       program.setUniformf('vpHeight', size[1]);
     }
@@ -637,14 +699,14 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformi('cameraParallel', cam.getParallelProjection());
     }
 
-    const ext = model.currentInput.getExtent();
+    const ext = model.currentInput.getSpatialExtent();
     const spc = model.currentInput.getSpacing();
     const vsize = new Float64Array(3);
     vec3.set(
       vsize,
-      (ext[1] - ext[0] + 1) * spc[0],
-      (ext[3] - ext[2] + 1) * spc[1],
-      (ext[5] - ext[4] + 1) * spc[2]
+      (ext[1] - ext[0]) * spc[0],
+      (ext[3] - ext[2]) * spc[1],
+      (ext[5] - ext[4]) * spc[2]
     );
     program.setUniform3f('vSpacing', spc[0], spc[1], spc[2]);
 
@@ -687,7 +749,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     program.setUniform3f('vVCToIJK', vctoijk[0], vctoijk[1], vctoijk[2]);
     program.setUniform3i('volumeDimensions', dims[0], dims[1], dims[2]);
 
-    if (!model.openGLRenderWindow.getWebgl2()) {
+    if (!model._openGLRenderWindow.getWebgl2()) {
       const volInfo = model.scalarTexture.getVolumeInfo();
       program.setUniformf('texWidth', model.scalarTexture.getWidth());
       program.setUniformf('texHeight', model.scalarTexture.getHeight());
@@ -702,11 +764,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const pos2 = new Float64Array(3);
     for (let i = 0; i < 6; ++i) {
       switch (i) {
-        default:
-        case 0:
-          vec3.set(normal, 1.0, 0.0, 0.0);
-          vec3.set(pos2, ext[1], ext[3], ext[5]);
-          break;
         case 1:
           vec3.set(normal, -1.0, 0.0, 0.0);
           vec3.set(pos2, ext[0], ext[2], ext[4]);
@@ -727,6 +784,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           vec3.set(normal, 0.0, 0.0, -1.0);
           vec3.set(pos2, ext[0], ext[2], ext[4]);
           break;
+        case 0:
+        default:
+          vec3.set(normal, 1.0, 0.0, 0.0);
+          vec3.set(pos2, ext[1], ext[3], ext[5]);
+          break;
       }
       vec3.transformMat3(normal, normal, model.idxNormalMatrix);
       vec3.transformMat4(pos2, pos2, model.idxToView);
@@ -736,70 +798,134 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // specify the planes in view coordinates
       program.setUniform3f(`vPlaneNormal${i}`, normal[0], normal[1], normal[2]);
       program.setUniformf(`vPlaneDistance${i}`, dist);
+    }
 
-      if (actor.getProperty().getUseLabelOutline()) {
-        const image = model.currentInput;
-        const worldToIndex = image.getWorldToIndex();
+    if (actor.getProperty().getUseLabelOutline()) {
+      const image = model.currentInput;
+      const worldToIndex = image.getWorldToIndex();
 
-        program.setUniformMatrix('vWCtoIDX', worldToIndex);
+      program.setUniformMatrix('vWCtoIDX', worldToIndex);
 
-        // Get the projection coordinate to world coordinate transformation matrix.
-        mat4.invert(model.projectionToWorld, keyMats.wcpc);
-        program.setUniformMatrix('PCWCMatrix', model.projectionToWorld);
+      // Get the projection coordinate to world coordinate transformation matrix.
+      mat4.invert(model.projectionToWorld, keyMats.wcpc);
+      program.setUniformMatrix('PCWCMatrix', model.projectionToWorld);
 
-        const size = publicAPI.getRenderTargetSize();
+      const size = publicAPI.getRenderTargetSize();
 
-        program.setUniformf('vpWidth', size[0]);
-        program.setUniformf('vpHeight', size[1]);
-      }
+      program.setUniformf('vpWidth', size[0]);
+      program.setUniformf('vpHeight', size[1]);
+
+      const offset = publicAPI.getRenderTargetOffset();
+      program.setUniformf('vpOffsetX', offset[0] / size[0]);
+      program.setUniformf('vpOffsetY', offset[1] / size[1]);
     }
 
     mat4.invert(model.projectionToView, keyMats.vcpc);
     program.setUniformMatrix('PCVCMatrix', model.projectionToView);
 
     // handle lighting values
-    switch (model.lastLightComplexity) {
-      default:
-      case 0: // no lighting, tcolor is fine as is
-        break;
-
-      case 1: // headlight
-      case 2: // light kit
-      case 3: {
-        // positional not implemented fallback to directional
-        // mat3.transpose(keyMats.normalMatrix, keyMats.normalMatrix);
-        let lightNum = 0;
-        const lightColor = [];
-        ren.getLights().forEach((light) => {
-          const status = light.getSwitch();
-          if (status > 0) {
-            const dColor = light.getColor();
-            const intensity = light.getIntensity();
-            lightColor[0] = dColor[0] * intensity;
-            lightColor[1] = dColor[1] * intensity;
-            lightColor[2] = dColor[2] * intensity;
-            program.setUniform3fArray(`lightColor${lightNum}`, lightColor);
-            const ldir = light.getDirection();
-            vec3.set(normal, ldir[0], ldir[1], ldir[2]);
-            vec3.transformMat3(normal, normal, keyMats.normalMatrix);
-            program.setUniform3f(
-              `lightDirectionVC${lightNum}`,
-              normal[0],
-              normal[1],
-              normal[2]
-            );
-            // camera DOP is 0,0,-1.0 in VC
-            const halfAngle = [
-              -0.5 * normal[0],
-              -0.5 * normal[1],
-              -0.5 * (normal[2] - 1.0),
-            ];
-            program.setUniform3fArray(`lightHalfAngleVC${lightNum}`, halfAngle);
-            lightNum++;
-          }
-        });
-        // mat3.transpose(keyMats.normalMatrix, keyMats.normalMatrix);
+    if (model.lastLightComplexity === 0) {
+      return;
+    }
+    let lightNum = 0;
+    const lightColor = [];
+    const lightDir = [];
+    const halfAngle = [];
+    ren.getLights().forEach((light) => {
+      const status = light.getSwitch();
+      if (status > 0) {
+        const dColor = light.getColor();
+        const intensity = light.getIntensity();
+        lightColor[0 + lightNum * 3] = dColor[0] * intensity;
+        lightColor[1 + lightNum * 3] = dColor[1] * intensity;
+        lightColor[2 + lightNum * 3] = dColor[2] * intensity;
+        const ldir = light.getDirection();
+        vec3.set(normal, ldir[0], ldir[1], ldir[2]);
+        vec3.transformMat3(normal, normal, keyMats.normalMatrix); // in view coordinat
+        vec3.normalize(normal, normal);
+        lightDir[0 + lightNum * 3] = normal[0];
+        lightDir[1 + lightNum * 3] = normal[1];
+        lightDir[2 + lightNum * 3] = normal[2];
+        // camera DOP is 0,0,-1.0 in VC
+        halfAngle[0 + lightNum * 3] = -0.5 * normal[0];
+        halfAngle[1 + lightNum * 3] = -0.5 * normal[1];
+        halfAngle[2 + lightNum * 3] = -0.5 * (normal[2] - 1.0);
+        lightNum++;
       }
+    });
+    program.setUniformi('twoSidedLighting', ren.getTwoSidedLighting());
+    program.setUniformi('lightNum', lightNum);
+    program.setUniform3fv('lightColor', lightColor);
+    program.setUniform3fv('lightDirectionVC', lightDir);
+    program.setUniform3fv('lightHalfAngleVC', halfAngle);
+
+    if (model.lastLightComplexity === 3) {
+      lightNum = 0;
+      const lightPositionVC = [];
+      const lightAttenuation = [];
+      const lightConeAngle = [];
+      const lightExponent = [];
+      const lightPositional = [];
+      ren.getLights().forEach((light) => {
+        const status = light.getSwitch();
+        if (status > 0) {
+          const attenuation = light.getAttenuationValues();
+          lightAttenuation[0 + lightNum * 3] = attenuation[0];
+          lightAttenuation[1 + lightNum * 3] = attenuation[1];
+          lightAttenuation[2 + lightNum * 3] = attenuation[2];
+          lightExponent[lightNum] = light.getExponent();
+          lightConeAngle[lightNum] = light.getConeAngle();
+          lightPositional[lightNum] = light.getPositional();
+          const lp = light.getTransformedPosition();
+          vec3.transformMat4(lp, lp, model.modelToView);
+          lightPositionVC[0 + lightNum * 3] = lp[0];
+          lightPositionVC[1 + lightNum * 3] = lp[1];
+          lightPositionVC[2 + lightNum * 3] = lp[2];
+          lightNum += 1;
+        }
+      });
+      program.setUniform3fv('lightPositionVC', lightPositionVC);
+      program.setUniform3fv('lightAttenuation', lightAttenuation);
+      program.setUniformfv('lightConeAngle', lightConeAngle);
+      program.setUniformfv('lightExponent', lightExponent);
+      program.setUniformiv('lightPositional', lightPositional);
+    }
+    if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
+      program.setUniformf(
+        'giReach',
+        model.renderable.getGlobalIlluminationReach()
+      );
+      program.setUniformf(
+        'volumetricScatteringBlending',
+        model.renderable.getVolumetricScatteringBlending()
+      );
+      program.setUniformf(
+        'volumeShadowSamplingDistFactor',
+        model.renderable.getVolumeShadowSamplingDistFactor()
+      );
+      program.setUniformf('anisotropy', model.renderable.getAnisotropy());
+      program.setUniformf(
+        'anisotropy2',
+        model.renderable.getAnisotropy() ** 2.0
+      );
+    }
+    if (
+      model.renderable.getVolumetricScatteringBlending() === 0.0 &&
+      model.renderable.getLocalAmbientOcclusion() &&
+      actor.getProperty().getAmbient() > 0.0
+    ) {
+      const ks = model.renderable.getLAOKernelSize();
+      program.setUniformi('kernelSize', ks);
+      const kernelSample = [];
+      for (let i = 0; i < ks; i++) {
+        kernelSample[i * 2] = Math.random() * 0.5;
+        kernelSample[i * 2 + 1] = Math.random() * 0.5;
+      }
+      program.setUniform2fv('kernelSample', kernelSample);
+      program.setUniformi(
+        'kernelRadius',
+        model.renderable.getLAOKernelRadius()
+      );
     }
   };
 
@@ -951,107 +1077,94 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     }
   };
 
-  publicAPI.getRenderTargetSize = () => {
-    if (model.lastXYF > 1.43) {
-      const sz = model.framebuffer.getSize();
-      return [model.fvp[0] * sz[0], model.fvp[1] * sz[1]];
+  // unsubscribe from our listeners
+  publicAPI.delete = macro.chain(() => {
+    if (model._animationRateSubscription) {
+      model._animationRateSubscription.unsubscribe();
+      model._animationRateSubscription = null;
     }
-    return model.openGLRenderWindow.getFramebufferSize();
+  }, publicAPI.delete);
+
+  publicAPI.getRenderTargetSize = () => {
+    if (model._useSmallViewport) {
+      return [model._smallViewportWidth, model._smallViewportHeight];
+    }
+
+    const { usize, vsize } = model.openGLRenderer.getTiledSizeAndOrigin();
+
+    return [usize, vsize];
+  };
+
+  publicAPI.getRenderTargetOffset = () => {
+    const { lowerLeftU, lowerLeftV } =
+      model.openGLRenderer.getTiledSizeAndOrigin();
+
+    return [lowerLeftU, lowerLeftV];
   };
 
   publicAPI.renderPieceStart = (ren, actor) => {
-    if (model.renderable.getAutoAdjustSampleDistances()) {
-      const rwi = ren.getVTKWindow().getInteractor();
-      const rft = rwi.getLastFrameTime();
-      // console.log(`last frame time ${Math.floor(1.0 / rft)}`);
+    const rwi = ren.getVTKWindow().getInteractor();
 
-      // frame time is typically for a couple frames prior
-      // which makes it messy, so keep long running averages
-      // of frame times and pixels rendered
-      model.avgFrameTime = 0.97 * model.avgFrameTime + 0.03 * rft;
-      model.avgWindowArea =
-        0.97 * model.avgWindowArea + 0.03 / (model.lastXYF * model.lastXYF);
+    model._useSmallViewport = false;
+    if (rwi.isAnimating() && model._lastScale > 1.5) {
+      model._useSmallViewport = true;
+    }
 
-      if (ren.getVTKWindow().getInteractor().isAnimating()) {
-        // compute target xy factor
-        let txyf = Math.sqrt(
-          (model.avgFrameTime * rwi.getDesiredUpdateRate()) /
-            model.avgWindowArea
-        );
+    if (!model._animationRateSubscription) {
+      // when the animation frame rate changes recompute the scale factor
+      model._animationRateSubscription = rwi.onAnimationFrameRateUpdate(() => {
+        if (model.renderable.getAutoAdjustSampleDistances()) {
+          const frate = rwi.getRecentAnimationFrameRate();
+          const adjustment = rwi.getDesiredUpdateRate() / frate;
 
-        // limit subsampling to a factor of 10
-        if (txyf > 10.0) {
-          txyf = 10.0;
+          // only change if we are off by 15%
+          if (adjustment > 1.15 || adjustment < 0.85) {
+            model._lastScale *= adjustment;
+          }
+          // clamp scale to some reasonable values.
+          // Below 1.5 we will just be using full resolution as that is close enough
+          // Above 400 seems like a lot so we limit to that 1/20th per axis
+          if (model._lastScale > 400) {
+            model._lastScale = 400;
+          }
+          if (model._lastScale < 1.5) {
+            model._lastScale = 1.5;
+          }
+        } else {
+          model._lastScale =
+            model.renderable.getImageSampleDistance() *
+            model.renderable.getImageSampleDistance();
         }
-
-        model.targetXYF = txyf;
-      } else {
-        model.targetXYF = Math.sqrt(
-          (model.avgFrameTime * rwi.getStillUpdateRate()) / model.avgWindowArea
+        const size = model._openGLRenderWindow.getFramebufferSize();
+        model._smallViewportWidth = Math.ceil(
+          size[0] / Math.sqrt(model._lastScale)
         );
-      }
-
-      // have some inertia to change states around 1.43
-      if (model.targetXYF < 1.53 && model.targetXYF > 1.33) {
-        model.targetXYF = model.lastXYF;
-      }
-
-      // and add some inertia to change at all
-      if (Math.abs(1.0 - model.targetXYF / model.lastXYF) < 0.1) {
-        model.targetXYF = model.lastXYF;
-      }
-      model.lastXYF = model.targetXYF;
-    } else {
-      model.lastXYF = model.renderable.getImageSampleDistance();
+        model._smallViewportHeight = Math.ceil(
+          size[1] / Math.sqrt(model._lastScale)
+        );
+      });
     }
 
-    // only use FBO beyond this value
-    if (model.lastXYF <= 1.43) {
-      model.lastXYF = 1.0;
-    }
+    // use/create/resize framebuffer if needed
+    if (model._useSmallViewport) {
+      const size = model._openGLRenderWindow.getFramebufferSize();
 
-    // console.log(`last target  ${model.lastXYF} ${model.targetXYF}`);
-    // console.log(`awin aft  ${model.avgWindowArea} ${model.avgFrameTime}`);
-    const xyf = model.lastXYF;
-
-    const size = model.openGLRenderWindow.getFramebufferSize();
-    // const newSize = [
-    //   Math.floor((size[0] / xyf) + 0.5),
-    //   Math.floor((size[1] / xyf) + 0.5)];
-
-    // const diag = vtkBoundingBox.getDiagonalLength(model.currentInput.getBounds());
-
-    // // so what is the resulting sample size roughly
-    // console.log(`sam size ${diag / newSize[0]} ${diag / newSize[1]} ${model.renderable.getImageSampleDistance()}`);
-
-    // // if the sample distance is getting far from the image sample dist
-    // if (2.0 * diag / (newSize[0] + newSize[1]) > 4 * model.renderable.getSampleDistance()) {
-    //   model.renderable.setSampleDistance(4.0 * model.renderable.getSampleDistance());
-    // }
-    // if (2.0 * diag / (newSize[0] + newSize[1]) < 0.25 * model.renderable.getSampleDistance()) {
-    //   model.renderable.setSampleDistance(0.25 * model.renderable.getSampleDistance());
-    // }
-
-    // create/resize framebuffer if needed
-    if (xyf > 1.43) {
+      // adjust viewportSize to always be at most the dest fo size
+      if (model._smallViewportHeight > size[1]) {
+        model._smallViewportHeight = size[1];
+      }
+      if (model._smallViewportWidth > size[0]) {
+        model._smallViewportWidth = size[0];
+      }
       model.framebuffer.saveCurrentBindingsAndBuffers();
 
       if (model.framebuffer.getGLFramebuffer() === null) {
-        model.framebuffer.create(
-          Math.floor(size[0] * 0.7),
-          Math.floor(size[1] * 0.7)
-        );
+        model.framebuffer.create(size[0], size[1]);
         model.framebuffer.populateFramebuffer();
       } else {
         const fbSize = model.framebuffer.getSize();
-        if (
-          fbSize[0] !== Math.floor(size[0] * 0.7) ||
-          fbSize[1] !== Math.floor(size[1] * 0.7)
-        ) {
-          model.framebuffer.create(
-            Math.floor(size[0] * 0.7),
-            Math.floor(size[1] * 0.7)
-          );
+        if (fbSize[0] !== size[0] || fbSize[1] !== size[1]) {
+          model.framebuffer.create(size[0], size[1]);
           model.framebuffer.populateFramebuffer();
         }
       }
@@ -1060,10 +1173,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       gl.clearColor(0.0, 0.0, 0.0, 0.0);
       gl.colorMask(true, true, true, true);
       gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.viewport(0, 0, size[0] / xyf, size[1] / xyf);
+      gl.viewport(0, 0, model._smallViewportWidth, model._smallViewportHeight);
       model.fvp = [
-        Math.floor(size[0] / xyf) / Math.floor(size[0] * 0.7),
-        Math.floor(size[1] / xyf) / Math.floor(size[1] * 0.7),
+        model._smallViewportWidth / size[0],
+        model._smallViewportHeight / size[1],
       ];
     }
     model.context.disable(model.context.DEPTH_TEST);
@@ -1120,13 +1233,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.zBufferTexture.deactivate();
     }
 
-    if (model.lastXYF > 1.43) {
+    if (model._useSmallViewport) {
       // now copy the framebuffer with the volume into the
       // regular buffer
       model.framebuffer.restorePreviousBindingsAndBuffers();
 
       if (model.copyShader === null) {
-        model.copyShader = model.openGLRenderWindow
+        model.copyShader = model._openGLRenderWindow
           .getShaderCache()
           .readyShaderProgramArray(
             [
@@ -1148,7 +1261,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         const program = model.copyShader;
 
         model.copyVAO = vtkVertexArrayObject.newInstance();
-        model.copyVAO.setOpenGLRenderWindow(model.openGLRenderWindow);
+        model.copyVAO.setOpenGLRenderWindow(model._openGLRenderWindow);
 
         model.tris.getCABO().bind();
         if (
@@ -1166,19 +1279,18 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           vtkErrorMacro('Error setting vertexDC in copy shader VAO.');
         }
       } else {
-        model.openGLRenderWindow
+        model._openGLRenderWindow
           .getShaderCache()
           .readyShaderProgram(model.copyShader);
       }
 
-      const size = model.openGLRenderWindow.getFramebufferSize();
+      const size = model._openGLRenderWindow.getFramebufferSize();
       model.context.viewport(0, 0, size[0], size[1]);
 
       // activate texture
       const tex = model.framebuffer.getColorTexture();
       tex.activate();
       model.copyShader.setUniformi('texture', tex.getTextureUnit());
-
       model.copyShader.setUniform2f('tfactor', model.fvp[0], model.fvp[1]);
 
       const gl = model.context;
@@ -1308,7 +1420,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         }
       }
 
-      model.opacityTexture.releaseGraphicsResources(model.openGLRenderWindow);
+      model.opacityTexture.releaseGraphicsResources(model._openGLRenderWindow);
       model.opacityTexture.setMinificationFilter(Filter.LINEAR);
       model.opacityTexture.setMagnificationFilter(Filter.LINEAR);
 
@@ -1317,7 +1429,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // visible artifacts. High values of opacity quickly terminate without
       // artifacts.
       if (
-        model.openGLRenderWindow.getWebgl2() ||
+        model._openGLRenderWindow.getWebgl2() ||
         (model.context.getExtension('OES_texture_float') &&
           model.context.getExtension('OES_texture_float_linear'))
       ) {
@@ -1362,7 +1474,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         }
       }
 
-      model.colorTexture.releaseGraphicsResources(model.openGLRenderWindow);
+      model.colorTexture.releaseGraphicsResources(model._openGLRenderWindow);
       model.colorTexture.setMinificationFilter(Filter.LINEAR);
       model.colorTexture.setMagnificationFilter(Filter.LINEAR);
 
@@ -1381,7 +1493,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (model.scalarTextureString !== toString) {
       // Build the textures
       const dims = image.getDimensions();
-      model.scalarTexture.releaseGraphicsResources(model.openGLRenderWindow);
+      model.scalarTexture.releaseGraphicsResources(model._openGLRenderWindow);
       model.scalarTexture.resetFormatAndType();
       model.scalarTexture.create3DFilterableFromRaw(
         dims[0],
@@ -1392,7 +1504,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         scalars.getData(),
         model.renderable.getPreferSizeOverAccuracy()
       );
-      // console.log(model.scalarTexture.get());
       model.scalarTextureString = toString;
     }
 
@@ -1517,6 +1628,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.modelToView = mat4.identity(new Float64Array(16));
   model.projectionToView = mat4.identity(new Float64Array(16));
   model.projectionToWorld = mat4.identity(new Float64Array(16));
+
+  model._lastScale = 1.0;
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['context']);

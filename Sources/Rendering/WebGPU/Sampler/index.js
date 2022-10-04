@@ -12,15 +12,27 @@ function vtkWebGPUSampler(publicAPI, model) {
 
   publicAPI.create = (device, options = {}) => {
     model.device = device;
-    model.handle = model.device.getHandle().createSampler({
-      magFilter: options.magFilter ? options.magFilter : 'nearest',
-      minFilter: options.minFilter ? options.minFilter : 'nearest',
-    });
+    model.options.addressModeU = options.addressModeU
+      ? options.addressModeU
+      : 'clamp-to-edge';
+    model.options.addressModeV = options.addressModeV
+      ? options.addressModeV
+      : 'clamp-to-edge';
+    model.options.addressModeW = options.addressModeW
+      ? options.addressModeW
+      : 'clamp-to-edge';
+    model.options.magFilter = options.magFilter ? options.magFilter : 'nearest';
+    model.options.minFilter = options.minFilter ? options.minFilter : 'nearest';
+    model.options.mipmapFilter = options.mipmapFilter
+      ? options.mipmapFilter
+      : 'nearest';
+    model.options.label = model.label;
+    model.handle = model.device.getHandle().createSampler(model.options);
     model.bindGroupTime.modified();
   };
 
   publicAPI.getShaderCode = (binding, group) => {
-    const result = `[[binding(${binding}), group(${group})]] var ${model.name}: sampler;`;
+    const result = `@binding(${binding}) @group(${group}) var ${model.label}: sampler;`;
     return result;
   };
 
@@ -39,7 +51,8 @@ function vtkWebGPUSampler(publicAPI, model) {
 const DEFAULT_VALUES = {
   device: null,
   handle: null,
-  name: null,
+  label: null,
+  options: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -50,6 +63,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   macro.obj(publicAPI, model);
 
+  model.options = {};
   model.bindGroupLayoutEntry = {
     /* eslint-disable no-undef */
     visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
@@ -62,8 +76,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.bindGroupTime = {};
   macro.obj(model.bindGroupTime, { mtime: 0 });
 
-  macro.get(publicAPI, model, ['bindGroupTime', 'handle']);
-  macro.setGet(publicAPI, model, ['bindGroupLayoutEntry', 'device', 'name']);
+  macro.get(publicAPI, model, ['bindGroupTime', 'handle', 'options']);
+  macro.setGet(publicAPI, model, ['bindGroupLayoutEntry', 'device', 'label']);
 
   vtkWebGPUSampler(publicAPI, model);
 }

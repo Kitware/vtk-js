@@ -2,6 +2,12 @@ const path = require('path');
 const prettierConf = require('./prettier.config.js');
 
 module.exports = {
+  parser: '@babel/eslint-parser',
+  parserOptions: {
+    babelOptions: {
+      configFile: path.resolve(__dirname, '.babelrc.json'),
+    },
+  },
   extends: ['airbnb/base', 'prettier'],
   rules: {
     'prettier/prettier': ['error', prettierConf],

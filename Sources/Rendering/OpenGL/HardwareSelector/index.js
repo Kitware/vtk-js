@@ -16,21 +16,32 @@ function getInfoHash(info) {
   return `${info.propID} ${info.compositeID}`;
 }
 
+function getAlpha(xx, yy, pb, area) {
+  if (!pb) {
+    return 0;
+  }
+  const offset = (yy * (area[2] - area[0] + 1) + xx) * 4;
+  return pb[offset + 3];
+}
+
 function convert(xx, yy, pb, area) {
   if (!pb) {
     return 0;
   }
   const offset = (yy * (area[2] - area[0] + 1) + xx) * 4;
-  const rgb = [];
-  rgb[0] = pb[offset];
-  rgb[1] = pb[offset + 1];
-  rgb[2] = pb[offset + 2];
-  let val = rgb[2];
-  val *= 256;
-  val += rgb[1];
-  val *= 256;
-  val += rgb[0];
+  const r = pb[offset];
+  const g = pb[offset + 1];
+  const b = pb[offset + 2];
+  return (b * 256 + g) * 256 + r;
+}
+
+function getID(low24, high8) {
+  /* eslint-disable no-bitwise */
+  let val = high8;
+  val <<= 24;
+  val |= low24;
   return val;
+  /* eslint-enable no-bitwise */
 }
 
 function getPixelInformationWithData(
@@ -65,7 +76,7 @@ function getPixelInformationWithData(
       buffdata.pixBuffer[PassTypes.ACTOR_PASS],
       buffdata.area
     );
-    if (actorid <= 0) {
+    if (actorid <= 0 || actorid - idOffset >= buffdata.props.length) {
       // the pixel did not hit any actor.
       return null;
     }
@@ -96,6 +107,34 @@ function getPixelInformationWithData(
         65535.0;
       info.displayPosition = inDisplayPosition;
     }
+
+    if (buffdata.pixBuffer[PassTypes.ID_LOW24]) {
+      if (
+        getAlpha(
+          displayPosition[0],
+          displayPosition[1],
+          buffdata.pixBuffer[PassTypes.ID_LOW24],
+          buffdata.area
+        ) === 0.0
+      ) {
+        return info;
+      }
+    }
+
+    const low24 = convert(
+      displayPosition[0],
+      displayPosition[1],
+      buffdata.pixBuffer[PassTypes.ID_LOW24],
+      buffdata.area
+    );
+    const high24 = convert(
+      displayPosition[0],
+      displayPosition[1],
+      buffdata.pixBuffer[PassTypes.ID_HIGH24],
+      buffdata.area
+    );
+    info.attributeID = getID(low24, high24, 0);
+
     return info;
   }
 
@@ -208,6 +247,7 @@ function convertSelection(
     child.getProperties().propID = value.info.propID;
     child.getProperties().prop = value.info.prop;
     child.getProperties().compositeID = value.info.compositeID;
+    child.getProperties().attributeID = value.info.attributeID;
     child.getProperties().pixelCount = value.pixelCount;
     if (captureZValues) {
       child.getProperties().displayPosition = [
@@ -293,27 +333,28 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.releasePixBuffers = () => {
+    model.rawPixBuffer = [];
     model.pixBuffer = [];
     model.zBuffer = null;
   };
 
   //----------------------------------------------------------------------------
   publicAPI.beginSelection = () => {
-    model.openGLRenderer = model.openGLRenderWindow.getViewNodeFor(
-      model.renderer
+    model._openGLRenderer = model._openGLRenderWindow.getViewNodeFor(
+      model._renderer
     );
     model.maxAttributeId = 0;
 
-    const size = model.openGLRenderWindow.getSize();
+    const size = model._openGLRenderWindow.getSize();
     if (!model.framebuffer) {
       model.framebuffer = vtkOpenGLFramebuffer.newInstance();
-      model.framebuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.framebuffer.setOpenGLRenderWindow(model._openGLRenderWindow);
       model.framebuffer.saveCurrentBindingsAndBuffers();
       model.framebuffer.create(size[0], size[1]);
       // this calls model.framebuffer.bind()
       model.framebuffer.populateFramebuffer();
     } else {
-      model.framebuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.framebuffer.setOpenGLRenderWindow(model._openGLRenderWindow);
       model.framebuffer.saveCurrentBindingsAndBuffers();
       const fbSize = model.framebuffer.getSize();
       if (fbSize[0] !== size[0] || fbSize[1] !== size[1]) {
@@ -325,23 +366,47 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       }
     }
 
-    model.openGLRenderer.clear();
-    model.openGLRenderer.setSelector(publicAPI);
+    model._openGLRenderer.clear();
+    model._openGLRenderer.setSelector(publicAPI);
     model.hitProps = {};
+    model.propPixels = {};
     model.props = [];
     publicAPI.releasePixBuffers();
+
+    if (model.fieldAssociation === FieldAssociations.FIELD_ASSOCIATION_POINTS) {
+      const gl = model._openGLRenderWindow.getContext();
+      const originalBlending = gl.isEnabled(gl.BLEND);
+      gl.disable(gl.BLEND);
+      model._openGLRenderWindow.traverseAllPasses();
+      model._renderer.setPreserveDepthBuffer(true);
+      if (originalBlending) {
+        gl.enable(gl.BLEND);
+      }
+    }
   };
 
   //----------------------------------------------------------------------------
   publicAPI.endSelection = () => {
     model.hitProps = {};
-    model.openGLRenderer.setSelector(null);
+    model._openGLRenderer.setSelector(null);
     model.framebuffer.restorePreviousBindingsAndBuffers();
+    model._renderer.setPreserveDepthBuffer(false);
   };
 
-  publicAPI.preCapturePass = () => {};
+  publicAPI.preCapturePass = () => {
+    const gl = model._openGLRenderWindow.getContext();
+    // Disable blending
+    model.originalBlending = gl.isEnabled(gl.BLEND);
+    gl.disable(gl.BLEND);
+  };
 
-  publicAPI.postCapturePass = () => {};
+  publicAPI.postCapturePass = () => {
+    const gl = model._openGLRenderWindow.getContext();
+    // Restore blending if it was enabled prior to the capture
+    if (model.originalBlending) {
+      gl.enable(gl.BLEND);
+    }
+  };
 
   //----------------------------------------------------------------------------
   publicAPI.select = () => {
@@ -360,11 +425,11 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
   publicAPI.getSourceDataAsync = async (renderer, fx1, fy1, fx2, fy2) => {
     // assign the renderer
-    model.renderer = renderer;
+    model._renderer = renderer;
 
     // set area to all if no arguments provided
     if (fx1 === undefined) {
-      const size = model.openGLRenderWindow.getSize();
+      const size = model._openGLRenderWindow.getSize();
       publicAPI.setArea(0, 0, size[0] - 1, size[1] - 1);
     } else {
       publicAPI.setArea(fx1, fy1, fx2, fy2);
@@ -381,7 +446,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       props: [...model.props],
       fieldAssociation: model.fieldAssociation,
       renderer,
-      openGLRenderWindow: model.openGLRenderWindow,
+      openGLRenderWindow: model._openGLRenderWindow,
     };
     result.generateSelection = (...args) =>
       generateSelectionWithData(result, ...args);
@@ -390,14 +455,18 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.captureBuffers = () => {
-    if (!model.renderer || !model.openGLRenderWindow) {
+    if (!model._renderer || !model._openGLRenderWindow) {
       vtkErrorMacro('Renderer and view must be set before calling Select.');
       return false;
     }
 
-    model.openGLRenderer = model.openGLRenderWindow.getViewNodeFor(
-      model.renderer
+    model._openGLRenderer = model._openGLRenderWindow.getViewNodeFor(
+      model._renderer
     );
+
+    // todo revisit making selection part of core
+    // then we can do this in core
+    model._openGLRenderWindow.getRenderable().preRender();
 
     // int rgba[4];
     // rwin.getColorBufferSizes(rgba);
@@ -410,14 +479,14 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
     // Initialize renderer for selection.
     // change the renderer's background to black, which will indicate a miss
-    model.originalBackground = model.renderer.getBackgroundByReference();
-    model.renderer.setBackground(0.0, 0.0, 0.0);
-    const rpasses = model.openGLRenderWindow.getRenderPasses();
+    model.originalBackground = model._renderer.getBackgroundByReference();
+    model._renderer.setBackground(0.0, 0.0, 0.0, 0.0);
+    const rpasses = model._openGLRenderWindow.getRenderPasses();
 
     publicAPI.beginSelection();
     for (
       model.currentPass = PassTypes.MIN_KNOWN_PASS;
-      model.currentPass <= PassTypes.COMPOSITE_INDEX_PASS;
+      model.currentPass <= PassTypes.MAX_KNOWN_PASS;
       model.currentPass++
     ) {
       if (publicAPI.passRequired(model.currentPass)) {
@@ -429,40 +498,74 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
           typeof rpasses[0].getFramebuffer === 'function'
         ) {
           rpasses[0].requestDepth();
-          model.openGLRenderWindow.traverseAllPasses();
+          model._openGLRenderWindow.traverseAllPasses();
         } else {
-          model.openGLRenderWindow.traverseAllPasses();
+          model._openGLRenderWindow.traverseAllPasses();
         }
         publicAPI.postCapturePass(model.currentPass);
 
         publicAPI.savePixelBuffer(model.currentPass);
+        publicAPI.processPixelBuffers();
       }
     }
     publicAPI.endSelection();
 
     // restore original background
-    model.renderer.setBackground(model.originalBackground);
+    model._renderer.setBackground(model.originalBackground);
     publicAPI.invokeEvent({ type: 'EndEvent' });
 
     // restore image, not needed?
-    // model.openGLRenderWindow.traverseAllPasses();
+    // model._openGLRenderWindow.traverseAllPasses();
+    return true;
+  };
+
+  publicAPI.processPixelBuffers = () => {
+    model.props.forEach((prop, index) => {
+      if (publicAPI.isPropHit(index)) {
+        prop.processSelectorPixelBuffers(publicAPI, model.propPixels[index]);
+      }
+    });
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.passRequired = (pass) => {
+    if (pass === PassTypes.ID_HIGH24) {
+      if (
+        model.fieldAssociation === FieldAssociations.FIELD_ASSOCIATION_POINTS
+      ) {
+        return model.maximumPointId > 0x00ffffff;
+      }
+      if (
+        model.fieldAssociation === FieldAssociations.FIELD_ASSOCIATION_CELLS
+      ) {
+        return model.maximumCellId > 0x00ffffff;
+      }
+    }
     return true;
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.passRequired = (pass) => true;
-
-  //----------------------------------------------------------------------------
   publicAPI.savePixelBuffer = (passNo) => {
-    model.pixBuffer[passNo] = model.openGLRenderWindow.getPixelData(
+    model.pixBuffer[passNo] = model._openGLRenderWindow.getPixelData(
       model.area[0],
       model.area[1],
       model.area[2],
       model.area[3]
     );
+
+    if (!model.rawPixBuffer[passNo]) {
+      const size =
+        (model.area[2] - model.area[0] + 1) *
+        (model.area[3] - model.area[1] + 1) *
+        4;
+
+      model.rawPixBuffer[passNo] = new Uint8Array(size);
+      model.rawPixBuffer[passNo].set(model.pixBuffer[passNo]);
+    }
+
     if (passNo === PassTypes.ACTOR_PASS) {
       if (model.captureZValues) {
-        const rpasses = model.openGLRenderWindow.getRenderPasses();
+        const rpasses = model._openGLRenderWindow.getRenderPasses();
         if (
           typeof rpasses[0].requestDepth === 'function' &&
           typeof rpasses[0].getFramebuffer === 'function'
@@ -470,7 +573,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
           const fb = rpasses[0].getFramebuffer();
           fb.saveCurrentBindingsAndBuffers();
           fb.bind();
-          model.zBuffer = model.openGLRenderWindow.getPixelData(
+          model.zBuffer = model._openGLRenderWindow.getPixelData(
             model.area[0],
             model.area[1],
             model.area[2],
@@ -479,12 +582,13 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
           fb.restorePreviousBindingsAndBuffers();
         }
       }
-      publicAPI.buildPropHitList(model.pixBuffer[passNo]);
+      publicAPI.buildPropHitList(model.rawPixBuffer[passNo]);
     }
   };
 
   //----------------------------------------------------------------------------
   publicAPI.buildPropHitList = (pixelbuffer) => {
+    let offset = 0;
     for (let yy = 0; yy <= model.area[3] - model.area[1]; yy++) {
       for (let xx = 0; xx <= model.area[2] - model.area[0]; xx++) {
         let val = convert(xx, yy, pixelbuffer, model.area);
@@ -492,8 +596,11 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
           val--;
           if (!(val in model.hitProps)) {
             model.hitProps[val] = true;
+            model.propPixels[val] = [];
           }
+          model.propPixels[val].push(offset * 4);
         }
+        ++offset;
       }
     }
   };
@@ -581,7 +688,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
         model.pixBuffer[PassTypes.ACTOR_PASS],
         model.area
       );
-      if (actorid <= 0) {
+      if (actorid <= 0 || actorid - idOffset >= model.props.length) {
         // the pixel did not hit any actor.
         return null;
       }
@@ -610,6 +717,34 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
           (256 * model.zBuffer[offset] + model.zBuffer[offset + 1]) / 65535.0;
         info.displayPosition = inDisplayPosition;
       }
+
+      // Skip attribute ids if alpha is zero (missed)
+      if (model.pixBuffer[PassTypes.ID_LOW24]) {
+        if (
+          getAlpha(
+            displayPosition[0],
+            displayPosition[1],
+            model.pixBuffer[PassTypes.ID_LOW24],
+            model.area
+          ) === 0.0
+        ) {
+          return info;
+        }
+      }
+
+      const low24 = convert(
+        displayPosition[0],
+        displayPosition[1],
+        model.pixBuffer[PassTypes.ID_LOW24],
+        model.area
+      );
+      const high24 = convert(
+        displayPosition[0],
+        displayPosition[1],
+        model.pixBuffer[PassTypes.ID_HIGH24],
+        model.area
+      );
+      info.attributeID = getID(low24, high24);
 
       return info;
     }
@@ -717,16 +852,19 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       model.fieldAssociation,
       dataMap,
       model.captureZValues,
-      model.renderer,
-      model.openGLRenderWindow
+      model._renderer,
+      model._openGLRenderWindow
     );
   };
+
+  publicAPI.getRawPixelBuffer = (passNo) => model.rawPixBuffer[passNo];
+  publicAPI.getPixelBuffer = (passNo) => model.pixBuffer[passNo];
 
   //----------------------------------------------------------------------------
 
   publicAPI.attach = (w, r) => {
-    model.openGLRenderWindow = w;
-    model.renderer = r;
+    model._openGLRenderWindow = w;
+    model._renderer = r;
   };
 
   // override
@@ -749,12 +887,14 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   area: undefined,
-  renderer: null,
-  openGLRenderWindow: null,
-  openGLRenderer: null,
+  // _renderer: null,
+  // _openGLRenderWindow: null,
+  // _openGLRenderer: null,
   currentPass: -1,
   propColorValue: null,
   props: null,
+  maximumPointId: 0,
+  maximumCellId: 0,
   idOffset: 1,
 };
 
@@ -775,12 +915,15 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGetArray(publicAPI, model, ['area'], 4);
   macro.setGet(publicAPI, model, [
-    'renderer',
+    '_renderer',
     'currentPass',
-    'openGLRenderWindow',
+    '_openGLRenderWindow',
+    'maximumPointId',
+    'maximumCellId',
   ]);
 
   macro.setGetArray(publicAPI, model, ['propColorValue'], 3);
+  macro.moveToProtected(publicAPI, model, ['renderer', 'openGLRenderWindow']);
   macro.event(publicAPI, model, 'event');
 
   // Object methods

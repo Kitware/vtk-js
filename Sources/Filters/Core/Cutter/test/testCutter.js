@@ -31,8 +31,7 @@ test('Test vtkCutter cutCube', (t) => {
   correctPoints.forEach((correctPoint) => {
     let isContaining = false;
     for (let i = 0; i < points.getNumberOfPoints(); i++) {
-      const p = [];
-      points.getPoint(i, p);
+      const p = points.getPoint(i);
       isContaining =
         p[0] === correctPoint[0] &&
         p[1] === correctPoint[1] &&

@@ -102,14 +102,12 @@ test('Test HardwareSelectorGlyph', (tapeContext) => {
   glwindow.setSize(400, 400);
   renderer.resetCamera();
   renderer.getActiveCamera().zoom(1.4);
-  glwindow.traverseAllPasses();
+  renderWindow.render();
 
   const sel = glwindow.getSelector();
   sel.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_POINTS);
 
   sel.selectAsync(renderer, 200, 200, 250, 300).then((res) => {
-    console.log(res);
-    console.log(res[0].get());
     const allGood = res.length === 7 && res[0].getProperties().prop === actor;
 
     tapeContext.ok(res.length === 7, 'Seven glyphs selected');

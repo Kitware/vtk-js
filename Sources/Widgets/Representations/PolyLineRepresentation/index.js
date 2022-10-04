@@ -89,7 +89,7 @@ function vtkPolyLineRepresentation(publicAPI, model) {
       .getRepresentationStates(state)
       .reduce((subStates, subState) => {
         const subStateOrigin =
-          subState.getOrigin && subState.getOrigin().length
+          subState.getOrigin && subState.getOrigin()
             ? subState.getOrigin()
             : null;
         const previousSubStateOrigin =
@@ -104,22 +104,7 @@ function vtkPolyLineRepresentation(publicAPI, model) {
         subStates.push(subState);
         return subStates;
       }, []);
-    let size = list.length;
-
-    // Do not render last point if not visible or too close from previous point.
-    if (size > 1) {
-      const lastState = list[list.length - 1];
-      const last = lastState.getOrigin();
-      const prevLast = list[list.length - 2].getOrigin();
-      let delta =
-        vtkMath.distance2BetweenPoints(last, prevLast) > model.threshold
-          ? 0
-          : 1;
-      if (!delta && lastState.isVisible && !lastState.isVisible()) {
-        delta++;
-      }
-      size -= delta;
-    }
+    const size = list.length;
 
     const points = allocateSize(size, model.closePolyLine && size > 2);
 

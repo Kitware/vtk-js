@@ -1,4 +1,5 @@
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
+import { Vector3 } from "../../../types";
 
 /**
  *
@@ -6,7 +7,7 @@ import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 export interface ICircleSourceInitialValues {
 	radius?: number;
 	resolution?: number;
-	center?: number[];
+	center?: Vector3;
 	pointType?: string;
 	lines?: boolean;
 	face?: boolean;
@@ -26,23 +27,23 @@ export interface vtkCircleSource extends vtkCircleSourceBase {
 	 * Get the center of the cone.
 	 * @default [0, 0, 0]
 	 */
-	getCenter(): number[];
+	getCenter(): Vector3;
 
 	/**
 	 * Get the center of the cone.
 	 */
-	getCenterByReference(): number[];
+	getCenterByReference(): Vector3;
 
 	/**
 	 * Get the orientation vector of the cone.
 	 * @default [1.0, 0.0, 0.0]
 	 */
-	getDirection(): number[];
+	getDirection(): Vector3;
 
 	/**
 	 * Get the orientation vector of the cone.
 	 */
-	getDirectionByReference(): number[];
+	getDirectionByReference(): Vector3;
 
 	/**
 	 *
@@ -85,15 +86,15 @@ export interface vtkCircleSource extends vtkCircleSourceBase {
 
 	/**
 	 * Set the direction for the circle.
-	 * @param {Number[]} direction The direction coordinates.
+	 * @param {Vector3} direction The direction coordinates.
 	 */
-	setDirection(direction: number[]): boolean;
+	setDirection(direction: Vector3): boolean;
 
 	/**
 	 * Set the direction for the circle.
-	 * @param {Number[]} direction The direction coordinates.
+	 * @param {Vector3} direction The direction coordinates.
 	 */
-	setDirectionFrom(direction: number[]): boolean;
+	setDirectionFrom(direction: Vector3): boolean;
 
 	/**
 	 * Set the center of the circle.
@@ -106,10 +107,10 @@ export interface vtkCircleSource extends vtkCircleSourceBase {
 
 	/**
 	 * Set the center of the circle.
-	 * @param {Number[]} center 
+	 * @param {Vector3} center 
 	 * @default [0, 0, 0]
 	 */
-	setCenterFrom(center: number[]): boolean;
+	setCenterFrom(center: Vector3): boolean;
 
 	/**
 	 *
@@ -125,13 +126,13 @@ export interface vtkCircleSource extends vtkCircleSourceBase {
 
 	/**
 	 * Set the radius of the circle.
-	 * @param {Number} radius 
+	 * @param {Number} radius The radius of the circle.
 	 */
 	setRadius(radius: number): boolean;
 
 	/**
 	 * Set the resolution of the circle.
-	 * @param resolution 
+	 * @param {Number} resolution The resolution of the circle.
 	 */
 	setResolution(resolution: number): boolean;
 }
@@ -157,7 +158,7 @@ export function newInstance(initialValues?: ICircleSourceInitialValues): vtkCirc
  * 
  * @example
  * ```js
- * import vtkCircleSource from 'vtk.js/Sources/Filters/Sources/CircleSource';
+ * import vtkCircleSource from '@kitware/vtk.js/Filters/Sources/CircleSource';
  * 
  * const circle = vtkCircleSource.newInstance({ radius: 1, resolution: 80 });
  * const polydata = circle.getOutputData();

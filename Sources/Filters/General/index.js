@@ -8,9 +8,11 @@ import vtkImageOutlineFilter from './ImageOutlineFilter';
 import vtkImageSliceFilter from './ImageSliceFilter';
 import vtkImageStreamline from './ImageStreamline';
 import vtkMoleculeToRepresentation from './MoleculeToRepresentation';
+import vtkOBBTree from './OBBTree';
 import vtkOutlineFilter from './OutlineFilter';
 import vtkPaintFilter from './PaintFilter';
 import vtkScalarToRGBA from './ScalarToRGBA';
+import vtkTriangleFilter from './TriangleFilter';
 import vtkTubeFilter from './TubeFilter';
 import vtkWarpScalar from './WarpScalar';
 import vtkWindowedSincPolyDataFilter from './WindowedSincPolyDataFilter';
@@ -26,9 +28,11 @@ export default {
   vtkImageSliceFilter,
   vtkImageStreamline,
   vtkMoleculeToRepresentation,
+  vtkOBBTree,
   vtkOutlineFilter,
   vtkPaintFilter,
   vtkScalarToRGBA,
+  vtkTriangleFilter,
   vtkTubeFilter,
   vtkWarpScalar,
   vtkWindowedSincPolyDataFilter,

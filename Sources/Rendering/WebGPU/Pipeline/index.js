@@ -9,13 +9,15 @@ function vtkWebGPUPipeline(publicAPI, model) {
 
   publicAPI.getShaderDescriptions = () => model.shaderDescriptions;
 
-  publicAPI.initialize = (device) => {
+  publicAPI.initialize = (device, hash) => {
     // start with the renderencoder settings
     model.pipelineDescription = model.renderEncoder.getPipelineSettings();
 
     model.pipelineDescription.primitive.topology = model.topology;
 
     model.pipelineDescription.vertex = model.vertexState;
+
+    model.pipelineDescription.label = hash;
 
     // add in bind group layouts
     const bindGroupLayouts = [];
@@ -59,15 +61,15 @@ function vtkWebGPUPipeline(publicAPI, model) {
     }
     model.layouts.push({
       layout: bindGroup.getBindGroupLayout(model.device),
-      name: bindGroup.getName(),
+      label: bindGroup.getLabel(),
     });
   };
 
   publicAPI.getBindGroupLayout = (idx) => model.layouts[idx].layout;
 
-  publicAPI.getBindGroupLayoutCount = (lname) => {
+  publicAPI.getBindGroupLayoutCount = (llabel) => {
     for (let i = 0; i < model.layouts.length; i++) {
-      if (model.layouts[i].name === lname) {
+      if (model.layouts[i].label === llabel) {
         return i;
       }
     }

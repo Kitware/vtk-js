@@ -97,7 +97,7 @@ function vtkWebGPUVertexInput(publicAPI, model) {
         if (nameCount > 0) {
           result += ',\n';
         }
-        result = `${result}  [[location(${nameCount})]] ${model.inputs[i].names[nm]} : ${type}`;
+        result = `${result}  @location(${nameCount}) ${model.inputs[i].names[nm]} : ${type}`;
         nameCount++;
       }
     }
@@ -137,6 +137,12 @@ function vtkWebGPUVertexInput(publicAPI, model) {
     for (let i = 0; i < model.inputs.length; i++) {
       renderEncoder.setVertexBuffer(i, model.inputs[i].buffer.getHandle());
     }
+    if (model.indexBuffer) {
+      renderEncoder.setIndexBuffer(
+        model.indexBuffer.getHandle(),
+        model.indexBuffer.getArrayInformation()[0].format
+      );
+    }
   };
 
   publicAPI.getReady = () => {};
@@ -157,6 +163,7 @@ const DEFAULT_VALUES = {
   inputs: null,
   bindingDescriptions: false,
   attributeDescriptions: null,
+  indexBuffer: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -170,7 +177,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.attributeDescriptions = [];
   model.inputs = [];
 
-  macro.setGet(publicAPI, model, ['created', 'device', 'handle']);
+  macro.setGet(publicAPI, model, [
+    'created',
+    'device',
+    'handle',
+    'indexBuffer',
+  ]);
 
   // For more macro methods, see "Sources/macros.js"
   // Object specific methods

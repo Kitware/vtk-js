@@ -1,6 +1,11 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkSVGRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGRepresentation';
 
+import {
+  VerticalTextAlignment,
+  fontSizeToPixels,
+} from 'vtk.js/Sources/Widgets/SVG/SVGLandmarkRepresentation/Constants';
+
 const { createSvgElement } = vtkSVGRepresentation;
 
 // ----------------------------------------------------------------------------
@@ -14,10 +19,26 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
   publicAPI.render = () => {
     const list = publicAPI.getRepresentationStates();
 
-    const coords = list.map((state) => state.getOrigin());
-    const texts = list.map((state, index) =>
-      state.getText ? state.getText() : `L${index}`
-    );
+    if (!list.length) {
+      return createSvgElement('g');
+    }
+
+    const coords = [];
+    const texts = [];
+    list.forEach((state, index) => {
+      if (
+        state.getOrigin &&
+        state.getOrigin() &&
+        state.getVisible &&
+        state.getVisible()
+      ) {
+        coords.push(state.getOrigin());
+        texts.push(state.getText ? state.getText() : `L${index}`);
+      }
+    });
+
+    const state = list[0];
+    const isActive = state.getActive();
 
     return publicAPI.worldPointsToPixelSpace(coords).then((pixelSpace) => {
       const points2d = pixelSpace.coords;
@@ -32,7 +53,7 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
         const x = xy[0];
         const y = winHeight - xy[1];
 
-        if (model.showCircle === true) {
+        if (model.circleProps && model.circleProps.visible) {
           const circle = publicAPI.createListenableSvgElement('circle', i);
           Object.keys(model.circleProps || {}).forEach((prop) =>
             circle.setAttribute(prop, model.circleProps[prop])
@@ -45,27 +66,67 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
           texts[i] = '';
         }
         const splitText = texts[i].split('\n');
-        const newlineOffset =
-          model.fontProperties != null && model.fontProperties.fontSize
-            ? model.fontProperties.fontSize
-            : 15;
+        const fontSize = fontSizeToPixels(model.fontProperties);
         splitText.forEach((subText, j) => {
           const text = publicAPI.createListenableSvgElement('text', i);
           Object.keys(model.textProps || {}).forEach((prop) => {
-            let propValue = model.textProps[prop];
-            if (model.offsetText === true && prop === 'dy') {
-              propValue = model.textProps.dy + newlineOffset * j;
-            }
-            text.setAttribute(prop, propValue);
+            text.setAttribute(prop, model.textProps[prop]);
           });
           text.setAttribute('x', x);
           text.setAttribute('y', y);
-          if (model.fontProperties != null) {
-            text.setAttribute('font-size', model.fontProperties.fontSize);
-            text.setAttribute('font-family', model.fontProperties.fontFamily);
-            text.setAttribute('font-weight', model.fontProperties.fontStyle);
-            text.setAttribute('fill', model.fontProperties.fontColor);
+          // Vertical offset (dy) calculation based on VerticalTextAlignment
+          let dy = model.textProps?.dy || 0;
+          switch (model.textProps?.verticalAlign) {
+            case VerticalTextAlignment.MIDDLE:
+              dy -= fontSize * (0.5 * splitText.length - j - 1);
+              break;
+            case VerticalTextAlignment.TOP:
+              dy += fontSize * (j + 1);
+              break;
+            case VerticalTextAlignment.BOTTOM:
+            default:
+              dy -= fontSize * (splitText.length - j - 1);
+              break;
           }
+          text.setAttribute('dy', dy);
+          text.setAttribute('font-size', fontSize);
+
+          if (model.fontProperties && model.fontProperties.fontFamily) {
+            text.setAttribute('font-family', model.fontProperties.fontFamily);
+          } else if (
+            isActive &&
+            model.strokeFontProperties &&
+            model.strokeFontProperties.fontFamily
+          ) {
+            text.setAttribute(
+              'font-family',
+              model.strokeFontProperties.fontFamily
+            );
+          }
+
+          if (model.fontProperties && model.fontProperties.fontStyle) {
+            text.setAttribute('font-weight', model.fontProperties.fontStyle);
+          } else if (
+            isActive &&
+            model.strokeFontProperties &&
+            model.strokeFontProperties.fontStyle
+          ) {
+            text.setAttribute(
+              'font-weight',
+              model.strokeFontProperties.fontStyle
+            );
+          }
+
+          if (model.fontProperties && model.fontProperties.fontColor) {
+            text.setAttribute('fill', model.fontProperties.fontColor);
+          } else if (
+            isActive &&
+            model.strokeFontProperties &&
+            model.strokeFontProperties.fontColor
+          ) {
+            text.setAttribute('fill', model.strokeFontProperties.fontColor);
+          }
+
           text.textContent = subText;
           root.appendChild(text);
         });
@@ -80,33 +141,36 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
+/**
+ * textProps can contain any "svg" attribute (e.g. text-anchor, text-align,
+ * alignment-baseline...)
+ */
 function defaultValues(initialValues) {
   return {
+    ...initialValues,
     circleProps: {
+      visible: false,
       r: 5,
       stroke: 'red',
       fill: 'red',
+      ...initialValues.circleProps,
     },
-    textProps: {
-      fill: 'white',
-      dx: 12,
-      dy: -12,
+    fontProperties: {
+      fontColor: 'white',
+      ...initialValues.fontProperties,
     },
-    ...initialValues,
   };
 }
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, defaultValues(initialValues));
-
-  vtkSVGRepresentation.extend(publicAPI, model, initialValues);
+  vtkSVGRepresentation.extend(publicAPI, model, defaultValues(initialValues));
 
   macro.setGet(publicAPI, model, [
     'circleProps',
     'fontProperties',
-    'name',
+    'strokeFontProperties',
     'textProps',
   ]);
 

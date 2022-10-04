@@ -107,31 +107,31 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
   model.pipelines.outline = {
     source: vtkCubeSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: false, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: false, _parentProp: publicAPI }),
   };
 
   model.pipelines.plane = {
     source: vtkClosedPolyLineToSurfaceFilter.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: true, _parentProp: publicAPI }),
   };
 
   model.pipelines.origin = {
     source: vtkSphereSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: true, _parentProp: publicAPI }),
   };
 
   model.pipelines.normal = {
     source: vtkCylinderSource.newInstance(),
     mapper: vtkMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: true, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: true, _parentProp: publicAPI }),
   };
 
   model.pipelines.display2D = {
     source: publicAPI,
     mapper: vtkPixelSpaceCallbackMapper.newInstance(),
-    actor: vtkActor.newInstance({ pickable: false, parentProp: publicAPI }),
+    actor: vtkActor.newInstance({ pickable: false, _parentProp: publicAPI }),
   };
 
   // Plane generation pipeline
@@ -156,6 +156,9 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
   publicAPI.requestData = (inData, outData) => {
     const state = inData[0];
     const origin = state.getOrigin();
+    if (!origin) {
+      return;
+    }
     const normal = state.getNormal();
     const bounds = state.getBounds();
     model.plane.setOrigin(origin);
@@ -181,12 +184,18 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
     // Update normal parameters
     // --------------------------------
 
+    let pixelScale = 1;
+    if (model.scaleInPixels) {
+      pixelScale = publicAPI.getPixelWorldHeightAtCoord(origin);
+    }
+
     model.pipelines.normal.source.set({
       height: Math.max(xRange, yRange, zRange),
       radius:
         model.handleSizeRatio *
         Math.min(xRange, yRange, zRange) *
-        model.axisScale,
+        model.axisScale *
+        pixelScale,
       resolution: model.sphereResolution,
     });
     const yAxis = model.pipelines.normal.source.getOutputData();
@@ -209,7 +218,7 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
 
     model.pipelines.origin.actor.setPosition(origin);
     const handleScale =
-      model.handleSizeRatio * Math.min(xRange, yRange, zRange);
+      model.handleSizeRatio * Math.min(xRange, yRange, zRange) * pixelScale;
     model.pipelines.origin.actor.setScale(
       handleScale,
       handleScale,

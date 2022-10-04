@@ -1,11 +1,14 @@
 import macro from 'vtk.js/Sources/macros';
-
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import {
   BehaviorCategory,
   ShapeBehavior,
+  TextPosition,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
 
-import vtkLabelRepresentation from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation';
+import { boundPlane } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
 import { vec3 } from 'gl-matrix';
 
@@ -13,19 +16,11 @@ const { vtkErrorMacro } = macro;
 
 const EPSILON = 1e-6;
 
-function makeBoundsFromPoints(point1, point2) {
-  return [
-    Math.min(point1[0], point2[0]),
-    Math.max(point1[0], point2[0]),
-    Math.min(point1[1], point2[1]),
-    Math.max(point1[1], point2[1]),
-    Math.min(point1[2], point2[2]),
-    Math.max(point1[2], point2[2]),
-  ];
-}
-
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkShapeWidgetProp');
+  model._isDragging = false;
+
+  model.keysDown = {};
 
   const superClass = { ...publicAPI };
 
@@ -36,20 +31,29 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.setDisplayCallback = (callback) =>
     model.representations[0].setDisplayCallback(callback);
 
+  publicAPI.setText = (text) => {
+    model.widgetState.getText().setText(text);
+    // Recompute position
+    model._interactor.render();
+  };
+
   // --------------------------------------------------------------------------
   // Public methods
   // --------------------------------------------------------------------------
+  publicAPI.setResetAfterPointPlacement =
+    model._factory.setResetAfterPointPlacement;
+  publicAPI.getResetAfterPointPlacement =
+    model._factory.getResetAfterPointPlacement;
 
-  publicAPI.setModifierBehavior = (behavior) => {
-    Object.assign(model.modifierBehavior, behavior);
-  };
+  publicAPI.setModifierBehavior = model._factory.setModifierBehavior;
+  publicAPI.getModifierBehavior = model._factory.getModifierBehavior;
 
   publicAPI.isBehaviorActive = (category, flag) =>
     Object.keys(model.keysDown).some(
       (key) =>
         model.keysDown[key] &&
-        model.modifierBehavior[key] &&
-        model.modifierBehavior[key][category] === flag
+        publicAPI.getModifierBehavior()[key] &&
+        publicAPI.getModifierBehavior()[key][category] === flag
     );
 
   publicAPI.isOppositeBehaviorActive = (category, flag) =>
@@ -63,7 +67,7 @@ export default function widgetBehavior(publicAPI, model) {
       (flag) =>
         publicAPI.isBehaviorActive(category, flag) ||
         (!publicAPI.isOppositeBehaviorActive(category, flag) &&
-          model.modifierBehavior.None[category] === flag)
+          publicAPI.getModifierBehavior().None[category] === flag)
     );
 
   publicAPI.isRatioFixed = () =>
@@ -85,20 +89,8 @@ export default function widgetBehavior(publicAPI, model) {
       BehaviorCategory.PLACEMENT,
       ShapeBehavior[BehaviorCategory.PLACEMENT].DRAG
     ) ||
-    model.modifierBehavior.None[BehaviorCategory.PLACEMENT] ===
+    publicAPI.getModifierBehavior().None[BehaviorCategory.PLACEMENT] ===
       ShapeBehavior[BehaviorCategory.PLACEMENT].DRAG;
-
-  publicAPI.setVisibleOnFocus = (visibleOnFocus) => {
-    model.visibleOnFocus = visibleOnFocus;
-  };
-
-  publicAPI.setLabelTextCallback = (callback) => {
-    model.labelTextCallback = callback;
-  };
-
-  publicAPI.setResetAfterPointPlacement = (reset) => {
-    model.resetAfterPointPlacement = reset;
-  };
 
   publicAPI.getPoint1 = () => model.point1;
   publicAPI.getPoint2 = () => model.point2;
@@ -126,15 +118,12 @@ export default function widgetBehavior(publicAPI, model) {
       model.point2Handle.activate();
       model.activeState = model.point2Handle;
 
-      if (model.useHandles) {
-        model.point2Handle.setVisible(true);
-      }
+      model.point2Handle.setVisible(true);
+      model.widgetState.getText().setVisible(true);
 
       publicAPI.updateShapeBounds();
 
-      if (model.visibleOnFocus) {
-        model.shapeHandle.setVisible(true);
-      }
+      model.shapeHandle.setVisible(true);
     }
   };
 
@@ -144,54 +133,8 @@ export default function widgetBehavior(publicAPI, model) {
       model.point2Handle.setOrigin(model.point2);
 
       publicAPI.updateShapeBounds();
-
-      if (model.resetAfterPointPlacement) {
-        publicAPI.reset();
-      } else {
-        publicAPI.loseFocus();
-      }
     }
   };
-
-  publicAPI.setPixelScale = (pixelScale) => {
-    model.pixelScale = pixelScale;
-    publicAPI.updateHandlesSize();
-  };
-
-  publicAPI.updateHandlesSize = () => {
-    if (model.pixelScale !== null) {
-      const scale =
-        model.pixelScale *
-        vec3.distance(
-          model.apiSpecificRenderWindow.displayToWorld(0, 0, 0, model.renderer),
-          model.apiSpecificRenderWindow.displayToWorld(1, 0, 0, model.renderer)
-        );
-
-      model.point1Handle.setScale1(scale);
-      model.point2Handle.setScale1(scale);
-    }
-  };
-
-  publicAPI.setVisibility = (visibility) => {
-    let modified = false;
-    if (model.useHandles) {
-      modified = superClass.setVisibility(visibility) || modified;
-    } else {
-      modified = model.shapeHandle.setVisible(visibility) || modified;
-    }
-
-    if (model.label) {
-      if (visibility) {
-        modified =
-          model.label.setContainer(model.interactor.getContainer()) || modified;
-      } else {
-        modified = model.label.setContainer(null) || modified;
-      }
-    }
-    return modified;
-  };
-
-  publicAPI.getLabel = () => model.label;
 
   // --------------------------------------------------------------------------
   // Private methods
@@ -262,27 +205,15 @@ export default function widgetBehavior(publicAPI, model) {
     return getCornersFromRadius(center, point1);
   };
 
+  // TODO: move to ShapeWidget/index.js
+  publicAPI.getBounds = () =>
+    model.point1 && model.point2
+      ? vtkMath.computeBoundsFromPoints(model.point1, model.point2, [])
+      : vtkMath.uninitializeBounds([]);
+
+  // To be reimplemented by subclass
   publicAPI.setCorners = (point1, point2) => {
-    if (model.label && model.labelTextCallback) {
-      const bounds = makeBoundsFromPoints(point1, point2);
-      const screenPoint1 = model.apiSpecificRenderWindow.worldToDisplay(
-        ...point1,
-        model.renderer
-      );
-      const screenPoint2 = model.apiSpecificRenderWindow.worldToDisplay(
-        ...point2,
-        model.renderer
-      );
-      const screenBounds = [
-        Math.min(screenPoint1[0], screenPoint2[0]),
-        Math.max(screenPoint1[0], screenPoint2[0]),
-        Math.min(screenPoint1[1], screenPoint2[1]),
-        Math.max(screenPoint1[1], screenPoint2[1]),
-        Math.min(screenPoint1[2], screenPoint2[2]),
-        Math.max(screenPoint1[2], screenPoint2[2]),
-      ];
-      model.labelTextCallback(bounds, screenBounds, model.label);
-    }
+    publicAPI.updateTextPosition(point1, point2);
   };
 
   publicAPI.updateShapeBounds = () => {
@@ -325,32 +256,190 @@ export default function widgetBehavior(publicAPI, model) {
     }
   };
 
+  const computePositionVector = (textPosition, minPoint, maxPoint) => {
+    const positionVector = [0, 0, 0];
+    switch (textPosition) {
+      case TextPosition.MIN:
+        break;
+      case TextPosition.MAX:
+        vtkMath.subtract(maxPoint, minPoint, positionVector);
+        break;
+      case TextPosition.CENTER:
+      default:
+        vtkMath.subtract(maxPoint, minPoint, positionVector);
+        vtkMath.multiplyScalar(positionVector, 0.5);
+        break;
+    }
+    return positionVector;
+  };
+
+  const computeTextPosition = (worldBounds, textPosition, worldMargin = 0) => {
+    const viewPlaneOrigin = vtkBoundingBox.getCenter(worldBounds);
+    const viewPlaneNormal = model._renderer
+      .getActiveCamera()
+      .getDirectionOfProjection();
+    const viewUp = model._renderer.getActiveCamera().getViewUp();
+
+    const positionMargin = Array.isArray(worldMargin)
+      ? [...worldMargin]
+      : [worldMargin, worldMargin, viewPlaneOrigin ? worldMargin : 0];
+
+    // Map bounds from world positions to display positions
+    const minPoint = model._apiSpecificRenderWindow.worldToDisplay(
+      ...vtkBoundingBox.getMinPoint(worldBounds),
+      model._renderer
+    );
+    const maxPoint = model._apiSpecificRenderWindow.worldToDisplay(
+      ...vtkBoundingBox.getMaxPoint(worldBounds),
+      model._renderer
+    );
+    const displayBounds = vtkMath.computeBoundsFromPoints(
+      minPoint,
+      maxPoint,
+      []
+    );
+
+    let planeOrigin = [];
+    let p1 = [];
+    let p2 = [];
+    let p3 = [];
+
+    // If we are in a 2D projection
+    if (
+      viewPlaneOrigin &&
+      viewPlaneNormal &&
+      viewUp &&
+      vtkBoundingBox.intersectPlane(
+        displayBounds,
+        viewPlaneOrigin,
+        viewPlaneNormal
+      )
+    ) {
+      // Map plane origin from world positions to display positions
+      const displayPlaneOrigin = model._apiSpecificRenderWindow.worldToDisplay(
+        ...viewPlaneOrigin,
+        model._renderer
+      );
+      // Map plane normal from world positions to display positions
+      const planeNormalPoint = vtkMath.add(
+        viewPlaneOrigin,
+        viewPlaneNormal,
+        []
+      );
+      const displayPlaneNormalPoint =
+        model._apiSpecificRenderWindow.worldToDisplay(
+          ...planeNormalPoint,
+          model._renderer
+        );
+      const displayPlaneNormal = vtkMath.subtract(
+        displayPlaneNormalPoint,
+        displayPlaneOrigin,
+        []
+      );
+
+      // Project view plane into bounding box
+      const largeDistance =
+        10 * vtkBoundingBox.getDiagonalLength(displayBounds);
+
+      vtkPlane.projectPoint(
+        vtkBoundingBox.getCenter(displayBounds),
+        displayPlaneOrigin,
+        displayPlaneNormal,
+        planeOrigin
+      );
+
+      const planeU = vtkMath.cross(viewUp, displayPlaneNormal, []);
+      vtkMath.normalize(planeU); // u
+      vtkMath.normalize(viewUp); // v
+      vtkMath.normalize(displayPlaneNormal); // w
+
+      vtkMath.multiplyAccumulate(
+        planeOrigin,
+        viewUp,
+        -largeDistance,
+        planeOrigin
+      );
+      vtkMath.multiplyAccumulate(
+        planeOrigin,
+        planeU,
+        -largeDistance,
+        planeOrigin
+      );
+
+      p1 = vtkMath.multiplyAccumulate(
+        planeOrigin,
+        planeU,
+        2 * largeDistance,
+        []
+      );
+      p2 = vtkMath.multiplyAccumulate(
+        planeOrigin,
+        viewUp,
+        2 * largeDistance,
+        []
+      );
+      p3 = planeOrigin;
+
+      boundPlane(displayBounds, planeOrigin, p1, p2);
+    } else {
+      planeOrigin = [displayBounds[0], displayBounds[2], displayBounds[4]];
+      p1 = [displayBounds[1], displayBounds[2], displayBounds[4]];
+      p2 = [displayBounds[0], displayBounds[3], displayBounds[4]];
+      p3 = [displayBounds[0], displayBounds[2], displayBounds[5]];
+    }
+
+    // Compute horizontal, vertical and depth position
+    const u = computePositionVector(textPosition[0], planeOrigin, p1);
+    const v = computePositionVector(textPosition[1], planeOrigin, p2);
+    const w = computePositionVector(textPosition[2], planeOrigin, p3);
+
+    const finalPosition = planeOrigin;
+    vtkMath.add(finalPosition, u, finalPosition);
+    vtkMath.add(finalPosition, v, finalPosition);
+    vtkMath.add(finalPosition, w, finalPosition);
+    vtkMath.add(finalPosition, positionMargin, finalPosition);
+
+    return model._apiSpecificRenderWindow.displayToWorld(
+      ...finalPosition,
+      model._renderer
+    );
+  };
+
+  publicAPI.updateTextPosition = (point1, point2) => {
+    const bounds = vtkMath.computeBoundsFromPoints(point1, point2, []);
+    const screenPosition = computeTextPosition(
+      bounds,
+      model.widgetState.getTextPosition(),
+      model.widgetState.getTextWorldMargin()
+    );
+    const textHandle = model.widgetState.getText();
+    textHandle.setOrigin(screenPosition);
+  };
+
   /*
    * If the widget has the focus, this method reset the widget
    * to it's state just after it grabbed the focus. Otherwise
    * it resets the widget to its state before it grabbed the focus.
    */
   publicAPI.reset = () => {
-    if (!model.hasFocus) {
-      model.point1Handle.setVisible(false);
-    }
-
-    model.shapeHandle.setVisible(false);
-
     model.point1 = null;
     model.point2 = null;
 
-    if (model.label) {
-      model.label.setLabelText('');
-    }
+    model.widgetState.getText().setVisible(false);
 
-    model.point1Handle.setOrigin(model.point2Handle.getOrigin());
+    model.point1Handle.setOrigin(null);
+    model.point2Handle.setOrigin(null);
+    model.shapeHandle.setOrigin(null);
+
+    model.shapeHandle.setVisible(false);
     model.point2Handle.setVisible(false);
     model.point2Handle.deactivate();
+
     if (model.hasFocus) {
       model.point1Handle.activate();
       model.activeState = model.point1Handle;
     } else {
+      model.point1Handle.setVisible(false);
       model.point1Handle.deactivate();
       model.activeState = null;
     }
@@ -363,30 +452,31 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = (callData) => {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
     if (
+      !manipulator ||
       !model.activeState ||
       !model.activeState.getActive() ||
       !model.pickable ||
-      !model.dragable ||
-      !model.manipulator
+      !model.dragable
     ) {
       return macro.VOID;
     }
     if (!model.point2) {
       // Update orientation to match the camera's plane
       // if the corners are not yet placed
-      const normal = model.camera.getDirectionOfProjection();
-      const up = model.camera.getViewUp();
+      const normal = model._camera.getDirectionOfProjection();
+      const up = model._camera.getViewUp();
       const right = [];
       vec3.cross(right, up, normal);
       model.shapeHandle.setUp(up);
       model.shapeHandle.setRight(right);
       model.shapeHandle.setDirection(normal);
-      model.manipulator.setNormal(normal);
     }
-    const worldCoords = model.manipulator.handleEvent(
+    const worldCoords = manipulator.handleEvent(
       callData,
-      model.apiSpecificRenderWindow
+      model._apiSpecificRenderWindow
     );
     if (!worldCoords.length) {
       return macro.VOID;
@@ -399,8 +489,9 @@ export default function widgetBehavior(publicAPI, model) {
         model.point2Handle.setOrigin(worldCoords);
         model.point2 = worldCoords;
         publicAPI.updateShapeBounds();
+        publicAPI.invokeInteractionEvent();
       }
-    } else if (model.useHandles && model.isDragging) {
+    } else if (model._isDragging) {
       if (model.activeState === model.point1Handle) {
         model.point1Handle.setOrigin(worldCoords);
         model.point1 = worldCoords;
@@ -412,7 +503,7 @@ export default function widgetBehavior(publicAPI, model) {
       publicAPI.invokeInteractionEvent();
     }
 
-    return model.hasFocus ? macro.EVENT_ABORT : macro.VOID;
+    return model.hasFocus || model._isDragging ? macro.EVENT_ABORT : macro.VOID;
   };
 
   // --------------------------------------------------------------------------
@@ -420,22 +511,37 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonPress = (e) => {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
     if (
       !model.activeState ||
       !model.activeState.getActive() ||
-      !model.pickable
+      !model.pickable ||
+      !manipulator
     ) {
       return macro.VOID;
     }
 
     if (model.hasFocus) {
+      const worldCoords = manipulator.handleEvent(
+        e,
+        model._apiSpecificRenderWindow
+      );
       if (!model.point1) {
+        model.point1Handle.setOrigin(worldCoords);
         publicAPI.placePoint1(model.point1Handle.getOrigin());
         publicAPI.invokeStartInteractionEvent();
       } else {
+        model.point2Handle.setOrigin(worldCoords);
         publicAPI.placePoint2(model.point2Handle.getOrigin());
         publicAPI.invokeInteractionEvent();
         publicAPI.invokeEndInteractionEvent();
+
+        if (publicAPI.getResetAfterPointPlacement()) {
+          publicAPI.reset();
+        } else {
+          publicAPI.loseFocus();
+        }
       }
 
       return macro.EVENT_ABORT;
@@ -444,17 +550,16 @@ export default function widgetBehavior(publicAPI, model) {
     if (
       model.point1 &&
       (model.activeState === model.point1Handle ||
-        model.activeState === model.point2Handle)
+        model.activeState === model.point2Handle) &&
+      model.dragable
     ) {
-      model.isDragging = true;
-      model.apiSpecificRenderWindow.setCursor('grabbing');
-      model.interactor.requestAnimation(publicAPI);
-      publicAPI.invokeStartInteractionEvent();
-
-      return macro.EVENT_ABORT;
+      model._isDragging = true;
+      model._apiSpecificRenderWindow.setCursor('grabbing');
+      model._interactor.requestAnimation(publicAPI);
     }
 
-    return macro.VOID;
+    publicAPI.invokeStartInteractionEvent();
+    return macro.EVENT_ABORT;
   };
 
   // --------------------------------------------------------------------------
@@ -462,11 +567,11 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonRelease = (e) => {
-    if (model.isDragging) {
-      model.isDragging = false;
-      model.apiSpecificRenderWindow.setCursor('pointer');
+    if (model._isDragging) {
+      model._isDragging = false;
+      model._apiSpecificRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
       publicAPI.invokeEndInteractionEvent();
 
       return macro.EVENT_ABORT;
@@ -476,7 +581,7 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
 
-    const viewSize = model.apiSpecificRenderWindow.getSize();
+    const viewSize = model._apiSpecificRenderWindow.getSize();
     if (
       e.position.x < 0 ||
       e.position.x > viewSize[0] - 1 ||
@@ -487,8 +592,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
 
     if (model.point1) {
-      model.point2 = model.point2Handle.getOrigin();
-      publicAPI.updateShapeBounds();
+      publicAPI.placePoint2(model.point2Handle.getOrigin());
 
       if (publicAPI.isDraggingEnabled()) {
         const distance = vec3.squaredDistance(model.point1, model.point2);
@@ -498,7 +602,7 @@ export default function widgetBehavior(publicAPI, model) {
           publicAPI.invokeInteractionEvent();
           publicAPI.invokeEndInteractionEvent();
 
-          if (model.resetAfterPointPlacement) {
+          if (publicAPI.getResetAfterPointPlacement()) {
             publicAPI.reset();
           } else {
             publicAPI.loseFocus();
@@ -517,9 +621,9 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleKeyDown = ({ key }) => {
     if (key === 'Escape') {
       if (model.hasFocus) {
-        publicAPI.invokeEndInteractionEvent();
         publicAPI.reset();
         publicAPI.loseFocus();
+        publicAPI.invokeEndInteractionEvent();
       }
     } else {
       model.keysDown[key] = true;
@@ -552,45 +656,25 @@ export default function widgetBehavior(publicAPI, model) {
     if (!model.hasFocus) {
       publicAPI.reset();
 
-      if (!model.label) {
-        model.label = vtkLabelRepresentation.newInstance();
-      }
-
-      model.label.setRenderer(model.renderer);
-      model.label.buildRepresentation();
-      model.renderer.addViewProp(model.label);
-      model.label.setContainer(model.interactor.getContainer());
-
       model.point1Handle.activate();
       model.activeState = model.point1Handle;
 
-      if (model.useHandles) {
-        model.point1Handle.setVisible(true);
-      }
+      model.point1Handle.setVisible(true);
       model.shapeHandle.setVisible(false);
-      model.interactor.requestAnimation(publicAPI);
+      model._interactor.requestAnimation(publicAPI);
     }
 
-    publicAPI.updateHandlesSize();
-
-    model.hasFocus = true;
+    superClass.grabFocus();
   };
 
   // --------------------------------------------------------------------------
 
   publicAPI.loseFocus = () => {
     if (model.hasFocus) {
-      if (model.visibleOnFocus && !model.useHandles) {
-        model.shapeHandle.setVisible(false);
-      }
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
     }
 
-    if (model.label && !model.useHandles) {
-      model.label.setContainer(null);
-    }
-
-    if (!model.useHandles || !model.point1) {
+    if (!model.point1) {
       model.point1Handle.setVisible(false);
       model.point2Handle.setVisible(false);
     }
@@ -599,9 +683,9 @@ export default function widgetBehavior(publicAPI, model) {
     model.point1Handle.deactivate();
     model.point2Handle.deactivate();
     model.activeState = null;
-    model.interactor.render();
-    model.widgetManager.enablePicking();
+    model._interactor.render();
+    model._widgetManager.enablePicking();
 
-    model.hasFocus = false;
+    superClass.loseFocus();
   };
 }

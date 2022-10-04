@@ -138,7 +138,7 @@ test.onlyIfWebGL('Test LookupTable setTable', (t) => {
       [baseline],
       'Common/Core/LookupTable/testSetTable',
       t,
-      2,
+      5,
       gc.releaseResources
     );
   });

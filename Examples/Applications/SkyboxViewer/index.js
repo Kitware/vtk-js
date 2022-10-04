@@ -1,3 +1,6 @@
+// For streamlined VR development install the WebXR emulator extension
+// https://github.com/MozillaReality/WebXR-emulator-extension
+
 import 'vtk.js/Sources/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
@@ -6,10 +9,7 @@ import 'vtk.js/Sources/Rendering/Profiles/Geometry';
 import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import macro from 'vtk.js/Sources/macros';
 import vtkDeviceOrientationToCamera from 'vtk.js/Sources/Interaction/Misc/DeviceOrientationToCamera';
-import vtkForwardPass from 'vtk.js/Sources/Rendering/OpenGL/ForwardPass';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkRadialDistortionPass from 'vtk.js/Sources/Rendering/OpenGL/RadialDistortionPass';
-import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkSkybox from 'vtk.js/Sources/Rendering/Core/Skybox';
 import vtkSkyboxReader from 'vtk.js/Sources/IO/Misc/SkyboxReader';
 import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
@@ -19,7 +19,21 @@ import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
 import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
 import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
+import vtkResourceLoader from 'vtk.js/Sources/IO/Core/ResourceLoader';
+
 import style from './SkyboxViewer.module.css';
+
+// Dynamically load WebXR polyfill from CDN for WebVR and Cardboard API backwards compatibility
+if (navigator.xr === undefined) {
+  vtkResourceLoader
+    .loadScript(
+      'https://cdn.jsdelivr.net/npm/webxr-polyfill@latest/build/webxr-polyfill.js'
+    )
+    .then(() => {
+      // eslint-disable-next-line no-new, no-undef
+      new WebXRPolyfill();
+    });
+}
 
 // ----------------------------------------------
 // Possible URL parameters to look for:
@@ -41,14 +55,9 @@ let autoInit = true;
 const cameraFocalPoint = userParams.direction || [0, 0, -1];
 const cameraViewUp = userParams.up || [0, 1, 0];
 const cameraViewAngle = userParams.viewAngle || 100;
-const enableVR = !!userParams.vr;
 const eyeSpacing = userParams.eye || 0.0;
 const grid = userParams.debug || false;
 const autoIncrementTimer = userParams.timer || 0;
-const disableTouchNext = userParams.disableTouch || false;
-const distk1 = userParams.k1 || 0.2;
-const distk2 = userParams.k2 || 0.0;
-const cameraCenterY = userParams.centerY || 0.0;
 
 const body = document.querySelector('body');
 let fullScreenMetod = null;
@@ -151,10 +160,8 @@ function createVisualization(container, mapReader) {
   const mainRenderer = fullScreenRenderer.getRenderer();
   const interactor = fullScreenRenderer.getInteractor();
   const actor = vtkSkybox.newInstance();
-  let camera = mainRenderer.getActiveCamera();
-  let leftRenderer = null;
-  let rightRenderer = null;
-  let updateCameraCallBack = mainRenderer.resetCameraClippingRange;
+  const camera = mainRenderer.getActiveCamera();
+  const updateCameraCallBack = mainRenderer.resetCameraClippingRange;
 
   // Connect viz pipeline
   actor.addTexture(mapReader.getOutputData());
@@ -189,116 +196,28 @@ function createVisualization(container, mapReader) {
     updateSkybox(allPositions[nextIdx]);
   }
 
-  if (enableVR && vtkDeviceOrientationToCamera.isDeviceOrientationSupported()) {
-    // vtkMobileVR.getVRHeadset().then((headset) => {
-    //   console.log('got headset');
-    //   console.log(headset);
-    //   console.log(vtkMobileVR.hardware);
-    // });
+  camera.set(cameraConfiguration);
+  mainRenderer.addActor(actor);
 
-    leftRenderer = vtkRenderer.newInstance();
-    rightRenderer = vtkRenderer.newInstance();
-
-    // Configure left/right renderers
-    leftRenderer.setViewport(0, 0, 0.5, 1);
-    leftRenderer.addActor(actor);
-    const leftCamera = leftRenderer.getActiveCamera();
-    leftCamera.set(cameraConfiguration);
-    leftCamera.setWindowCenter(-eyeSpacing, -cameraCenterY);
-
-    rightRenderer.setViewport(0.5, 0, 1, 1);
-    rightRenderer.addActor(actor);
-    const rightCamera = rightRenderer.getActiveCamera();
-    rightCamera.set(cameraConfiguration);
-    rightCamera.setWindowCenter(eyeSpacing, -cameraCenterY);
-
-    // Provide custom update callback + fake camera
-    updateCameraCallBack = () => {
-      leftRenderer.resetCameraClippingRange();
-      rightRenderer.resetCameraClippingRange();
-    };
-    camera = {
-      setDeviceAngles(alpha, beta, gamma, screen) {
-        leftCamera.setDeviceAngles(alpha, beta, gamma, screen);
-        rightCamera.setDeviceAngles(alpha, beta, gamma, screen);
-      },
-    };
-
-    // Reconfigure render window
-    renderWindow.addRenderer(leftRenderer);
-    renderWindow.addRenderer(rightRenderer);
-    renderWindow.removeRenderer(mainRenderer);
-
-    const distPass = vtkRadialDistortionPass.newInstance();
-    distPass.setK1(distk1);
-    distPass.setK2(distk2);
-    distPass.setCameraCenterY(cameraCenterY);
-    distPass.setCameraCenterX1(-eyeSpacing);
-    distPass.setCameraCenterX2(eyeSpacing);
-    distPass.setDelegates([vtkForwardPass.newInstance()]);
-    fullScreenRenderer.getAPISpecificRenderWindow().setRenderPasses([distPass]);
-
-    // Hide any controller
-    fullScreenRenderer.setControllerVisibility(false);
-
-    // Remove window interactions
-    interactor.unbindEvents();
-
-    // Attach touch control
-    if (!disableTouchNext) {
-      fullScreenRenderer
-        .getRootContainer()
-        .addEventListener('touchstart', nextPosition, true);
-      if (fullScreenMetod) {
-        fullScreenRenderer.getRootContainer().addEventListener(
-          'touchend',
-          (e) => {
-            body[fullScreenMetod]();
-          },
-          true
-        );
-      }
-    }
-
-    // Warning if browser does not support fullscreen
-    /* eslint-disable */
-    if (navigator.userAgent.match('CriOS')) {
-      alert(
-        'Chrome on iOS does not support fullscreen. Please use Safari instead.'
-      );
-    }
-    if (navigator.userAgent.match('FxiOS')) {
-      alert(
-        'Firefox on iOS does not support fullscreen. Please use Safari instead.'
-      );
-    }
-    /* eslint-enable */
-  } else {
-    camera.set(cameraConfiguration);
-    mainRenderer.addActor(actor);
-
-    // add vr option button if supported
-    fullScreenRenderer.getApiSpecificRenderWindow().onHaveVRDisplay(() => {
-      if (
-        fullScreenRenderer.getApiSpecificRenderWindow().getVrDisplay()
-          .capabilities.canPresent
-      ) {
-        const button = document.createElement('button');
-        button.style.position = 'absolute';
-        button.style.left = '10px';
-        button.style.bottom = '10px';
-        button.style.zIndex = 10000;
+  // add vr option button if supported
+  if (
+    navigator.xr !== undefined &&
+    navigator.xr.isSessionSupported('immersive-vr')
+  ) {
+    const button = document.createElement('button');
+    button.style.position = 'absolute';
+    button.style.left = '10px';
+    button.style.bottom = '10px';
+    button.style.zIndex = 10000;
+    button.textContent = 'Send To VR';
+    document.querySelector('body').appendChild(button);
+    button.addEventListener('click', () => {
+      if (button.textContent === 'Send To VR') {
+        fullScreenRenderer.getApiSpecificRenderWindow().startXR();
+        button.textContent = 'Return From VR';
+      } else {
+        fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
         button.textContent = 'Send To VR';
-        document.querySelector('body').appendChild(button);
-        button.addEventListener('click', () => {
-          if (button.textContent === 'Send To VR') {
-            fullScreenRenderer.getOpenGLRenderWindow().startVR();
-            button.textContent = 'Return From VR';
-          } else {
-            fullScreenRenderer.getOpenGLRenderWindow().stopVR();
-            button.textContent = 'Send To VR';
-          }
-        });
       }
     });
   }

@@ -1,81 +1,15 @@
-import { vtkObject } from "../../../interfaces";
+import { IAbstractManipulatorInitialValues, vtkAbstractManipulator } from "../AbstractManipulator";
+import { Vector3 } from "../../../types";
 
 /**
  *
  */
-export interface IPlaneManipulatorInitialValues {
-	origin?: number[];
-	normal?: number[];
+export interface IPlaneManipulatorInitialValues extends IAbstractManipulatorInitialValues {
+
 }
 
-export interface vtkPlaneManipulator extends vtkObject {
+export interface vtkPlaneManipulator extends vtkAbstractManipulator {
 
-	/**
-	 * Get the normal of the plane
-	 */
-	getNormal(): number[];
-
-	/**
-	 * Get the normal of the plane
-	 */
-	getNormalByReference(): number[];
-
-	/**
-	 * Get the origin of the plane
-	 */
-	getOrigin(): number[];
-
-	/**
-	 * Get the origin of the plane
-	 */
-	getOriginByReference(): number[];
-
-	/**
-	 * 
-	 * @param callData 
-	 * @param glRenderWindow 
-	 */
-	handleEvent(callData: any, glRenderWindow: any): number[];
-
-	/**
-	 * Set the normal of the plane
-	 * @param {Number[]} normal The normal coordinate.
-	 */
-	setNormal(normal: number[]): boolean;
-
-	/**
-	 * Set the normal of the plane
-	 * @param {Number} x The x coordinate.
-	 * @param {Number} y The y coordinate.
-	 * @param {Number} z The z coordinate.
-	 */
-	setNormal(x: number, y: number, z: number): boolean;
-
-	/**
-	 * Set the normal of the plane
-	 * @param {Number[]} normal The normal coordinate.
-	 */
-	setNormalFrom(normal: number[]): boolean;
-
-	/**
-	 * Set the origin of the plane.
-	 * @param {Number[]} origin The coordinate of the origin point.
-	 */
-	setOrigin(origin: number[]): boolean;
-
-	/**
-	 * Set the origin of the plane.
-	 * @param {Number} x The x coordinate of the origin point.
-	 * @param {Number} y The y coordinate of the origin point.
-	 * @param {Number} z The z coordinate of the origin point.
-	 */
-	setOrigin(x: number, y: number, z: number): boolean;
-
-	/**
-	 * Set the origin of the plane.
-	 * @param {Number[]} origin The coordinate of the origin point.
-	 */
-	setOriginFrom(origin: number[]): boolean;
 }
 
 
@@ -97,12 +31,12 @@ export function newInstance(initialValues?: IPlaneManipulatorInitialValues): vtk
  * 
  * @param {Number} x 
  * @param {Number} y 
- * @param {Number[]} planeOrigin 
- * @param {Number[]} planeNormal 
+ * @param {Vector3} planeOrigin 
+ * @param {Vector3} planeNormal 
  * @param renderer 
  * @param glRenderWindow 
  */
-export function intersectDisplayWithPlane(x: number, y: number, planeOrigin: number[], planeNormal: number[], renderer: any, glRenderWindow: any): number[];
+export function intersectDisplayWithPlane(x: number, y: number, planeOrigin: Vector3, planeNormal: Vector3, renderer: any, glRenderWindow: any): Vector3;
 
 
 /**

@@ -2,7 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkPolyLineWidgetProp');
-  let isDragging = null;
+  model._isDragging = false;
 
   // --------------------------------------------------------------------------
   // Display 2D
@@ -17,6 +17,31 @@ export default function widgetBehavior(publicAPI, model) {
 
   function ignoreKey(e) {
     return e.altKey || e.controlKey || e.shiftKey;
+  }
+
+  function updateMoveHandle(callData) {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
+    if (!manipulator) {
+      return macro.VOID;
+    }
+
+    const worldCoords = manipulator.handleEvent(
+      callData,
+      model._apiSpecificRenderWindow
+    );
+
+    if (
+      worldCoords.length &&
+      (model.activeState === model.widgetState.getMoveHandle() ||
+        model._isDragging) &&
+      model.activeState.setOrigin // e.g. the line is pickable but not draggable
+    ) {
+      model.activeState.setOrigin(worldCoords);
+      publicAPI.invokeInteractionEvent();
+      return macro.EVENT_ABORT;
+    }
+    return macro.VOID;
   }
 
   // --------------------------------------------------------------------------
@@ -34,11 +59,11 @@ export default function widgetBehavior(publicAPI, model) {
     }
 
     if (model.activeState !== model.widgetState.getMoveHandle()) {
-      model.interactor.requestAnimation(publicAPI);
+      model._interactor.requestAnimation(publicAPI);
       model.activeState.deactivate();
       model.widgetState.removeHandle(model.activeState);
       model.activeState = null;
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
     }
 
     publicAPI.invokeStartInteractionEvent();
@@ -60,18 +85,23 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
-
-    if (model.activeState === model.widgetState.getMoveHandle()) {
-      // Commit handle to location
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
+    if (
+      model.activeState === model.widgetState.getMoveHandle() &&
+      manipulator
+    ) {
+      updateMoveHandle(e);
       const moveHandle = model.widgetState.getMoveHandle();
       const newHandle = model.widgetState.addHandle();
-      newHandle.setOrigin(...moveHandle.getOrigin());
+      newHandle.setOrigin(moveHandle.getOrigin());
       newHandle.setColor(moveHandle.getColor());
       newHandle.setScale1(moveHandle.getScale1());
-    } else {
-      isDragging = true;
-      model.apiSpecificRenderWindow.setCursor('grabbing');
-      model.interactor.requestAnimation(publicAPI);
+      newHandle.setManipulator(manipulator);
+    } else if (model.dragable) {
+      model._isDragging = true;
+      model._apiSpecificRenderWindow.setCursor('grabbing');
+      model._interactor.requestAnimation(publicAPI);
     }
 
     publicAPI.invokeStartInteractionEvent();
@@ -86,29 +116,16 @@ export default function widgetBehavior(publicAPI, model) {
     if (
       model.pickable &&
       model.dragable &&
-      model.manipulator &&
       model.activeState &&
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
-      model.manipulator.setOrigin(model.activeState.getOrigin());
-      model.manipulator.setNormal(model.camera.getDirectionOfProjection());
-      const worldCoords = model.manipulator.handleEvent(
-        callData,
-        model.apiSpecificRenderWindow
-      );
-
-      if (
-        worldCoords.length &&
-        (model.activeState === model.widgetState.getMoveHandle() || isDragging)
-      ) {
-        model.activeState.setOrigin(worldCoords);
-        publicAPI.invokeInteractionEvent();
+      if (updateMoveHandle(callData) === macro.EVENT_ABORT) {
         return macro.EVENT_ABORT;
       }
     }
     if (model.hasFocus) {
-      model.widgetManager.disablePicking();
+      model._widgetManager.disablePicking();
     }
     return macro.VOID;
   };
@@ -118,11 +135,19 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonRelease = () => {
-    if (isDragging && model.pickable) {
-      model.apiSpecificRenderWindow.setCursor('pointer');
+    if (
+      !model.activeState ||
+      !model.activeState.getActive() ||
+      !model.pickable
+    ) {
+      return macro.VOID;
+    }
+
+    if (model._isDragging) {
+      model._apiSpecificRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
-      model.interactor.cancelAnimation(publicAPI);
-      publicAPI.invokeEndInteractionEvent();
+      model._interactor.cancelAnimation(publicAPI);
+      model._isDragging = false;
     } else if (model.activeState !== model.widgetState.getMoveHandle()) {
       model.widgetState.deactivate();
     }
@@ -131,12 +156,12 @@ export default function widgetBehavior(publicAPI, model) {
       (model.hasFocus && !model.activeState) ||
       (model.activeState && !model.activeState.getActive())
     ) {
-      publicAPI.invokeEndInteractionEvent();
-      model.widgetManager.enablePicking();
-      model.interactor.render();
+      model._widgetManager.enablePicking();
+      model._interactor.render();
     }
 
-    isDragging = false;
+    publicAPI.invokeEndInteractionEvent();
+    return macro.EVENT_ABORT;
   };
 
   // --------------------------------------------------------------------------
@@ -158,7 +183,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState = model.widgetState.getMoveHandle();
       model.activeState.activate();
       model.activeState.setVisible(true);
-      model.interactor.requestAnimation(publicAPI);
+      model._interactor.requestAnimation(publicAPI);
       publicAPI.invokeStartInteractionEvent();
     }
     model.hasFocus = true;
@@ -168,15 +193,16 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.loseFocus = () => {
     if (model.hasFocus) {
-      model.interactor.cancelAnimation(publicAPI);
+      model._interactor.cancelAnimation(publicAPI);
       publicAPI.invokeEndInteractionEvent();
     }
     model.widgetState.deactivate();
     model.widgetState.getMoveHandle().deactivate();
     model.widgetState.getMoveHandle().setVisible(false);
+    model.widgetState.getMoveHandle().setOrigin(null);
     model.activeState = null;
     model.hasFocus = false;
-    model.widgetManager.enablePicking();
-    model.interactor.render();
+    model._widgetManager.enablePicking();
+    model._interactor.render();
   };
 }

@@ -60,7 +60,7 @@ test.onlyIfWebGL('Test Lighted Volume Rendering', (t) => {
   actor.getProperty().setAmbient(0.2);
   actor.getProperty().setDiffuse(0.7);
   actor.getProperty().setSpecular(0.3);
-  actor.getProperty().setSpecularPower(8.0);
+  actor.getProperty().setSpecularPower(3.0);
   // actor.getProperty().setInterpolationTypeToFastLinear();
   actor.getProperty().setInterpolationTypeToLinear();
   // actor.getProperty().setInterpolationTypeToNearest();
@@ -101,7 +101,7 @@ test.onlyIfWebGL('Test Lighted Volume Rendering', (t) => {
           [baseline1, baseline2],
           'Rendering/OpenGL/VolumeMapper/testMultiComponentComposite',
           t,
-          1.5,
+          0.05,
           gc.releaseResources
         );
       });

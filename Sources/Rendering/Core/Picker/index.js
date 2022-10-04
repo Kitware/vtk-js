@@ -112,11 +112,14 @@ function vtkPicker(publicAPI, model) {
     const camera = renderer.getActiveCamera();
     cameraPos = camera.getPosition();
     cameraFP = camera.getFocalPoint();
+    const dims = view.getViewportSize(renderer);
+    const aspect = dims[0] / dims[1];
 
     displayCoords = renderer.worldToNormalizedDisplay(
       cameraFP[0],
       cameraFP[1],
-      cameraFP[2]
+      cameraFP[2],
+      aspect
     );
     displayCoords = view.normalizedDisplayToDisplay(
       displayCoords[0],
@@ -131,8 +134,6 @@ function vtkPicker(publicAPI, model) {
       selectionY,
       selectionZ
     );
-    const dims = view.getViewportSize(renderer);
-    const aspect = dims[0] / dims[1];
     worldCoords = renderer.normalizedDisplayToWorld(
       normalizedDisplay[0],
       normalizedDisplay[1],

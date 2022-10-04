@@ -21,11 +21,6 @@ function vtkRenderer(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderer');
 
-  // make sure background has 4 entries. Default to opaque black
-  if (!model.background) model.background = [0, 0, 0, 1];
-  while (model.background.length < 3) model.background.push(0);
-  if (model.background.length === 3) model.background.push(1);
-
   // Events
   const COMPUTE_VISIBLE_PROP_BOUNDS_EVENT = {
     type: 'ComputeVisiblePropBoundsEvent',
@@ -61,7 +56,7 @@ function vtkRenderer(publicAPI, model) {
     const camera = publicAPI.getActiveCameraAndResetIfCreated();
 
     model.lights.forEach((light) => {
-      if (light.lightTypeIsSceneLight() || light.lightTypeIsCameraLight()) {
+      if (light.lightTypeIsSceneLight()) {
         // Do nothing. Don't reset the transform matrix because applications
         // may have set a custom matrix. Only reset the transform matrix in
         // vtkLight::SetLightTypeToSceneLight()
@@ -70,6 +65,10 @@ function vtkRenderer(publicAPI, model) {
         light.setPositionFrom(camera.getPositionByReference());
         light.setFocalPointFrom(camera.getFocalPointByReference());
         light.modified(camera.getMTime());
+      } else if (light.lightTypeIsCameraLight()) {
+        light.setTransformMatrix(
+          camera.getCameraLightTransformMatrix(mat4.create())
+        );
       } else {
         vtkErrorMacro('light has unknown light type', light.get());
       }
@@ -89,7 +88,7 @@ function vtkRenderer(publicAPI, model) {
   publicAPI.allocateTime = notImplemented('allocateTime');
   publicAPI.updateGeometry = notImplemented('updateGeometry');
 
-  publicAPI.getVTKWindow = () => model.renderWindow;
+  publicAPI.getVTKWindow = () => model._renderWindow;
 
   publicAPI.setLayer = (layer) => {
     vtkDebugMacro(
@@ -206,21 +205,21 @@ function vtkRenderer(publicAPI, model) {
       return;
     }
 
-    if (model.createdLight) {
-      publicAPI.removeLight(model.createdLight);
-      model.createdLight.delete();
-      model.createdLight = null;
+    if (model._createdLight) {
+      publicAPI.removeLight(model._createdLight);
+      model._createdLight.delete();
+      model._createdLight = null;
     }
 
-    model.createdLight = publicAPI.makeLight();
-    publicAPI.addLight(model.createdLight);
+    model._createdLight = publicAPI.makeLight();
+    publicAPI.addLight(model._createdLight);
 
-    model.createdLight.setLightTypeToHeadLight();
+    model._createdLight.setLightTypeToHeadLight();
 
     // set these values just to have a good default should LightFollowCamera
     // be turned off.
-    model.createdLight.setPosition(publicAPI.getActiveCamera().getPosition());
-    model.createdLight.setFocalPoint(
+    model._createdLight.setPosition(publicAPI.getActiveCamera().getPosition());
+    model._createdLight.setFocalPoint(
       publicAPI.getActiveCamera().getFocalPoint()
     );
   };
@@ -532,9 +531,9 @@ function vtkRenderer(publicAPI, model) {
   };
 
   publicAPI.setRenderWindow = (renderWindow) => {
-    if (renderWindow !== model.renderWindow) {
-      model.vtkWindow = renderWindow;
-      model.renderWindow = renderWindow;
+    if (renderWindow !== model._renderWindow) {
+      model._vtkWindow = renderWindow;
+      model._renderWindow = renderWindow;
     }
   };
 
@@ -548,7 +547,7 @@ function vtkRenderer(publicAPI, model) {
     if (m2 > m1) {
       m1 = m2;
     }
-    const m3 = model.createdLight ? model.createdLight.getMTime() : 0;
+    const m3 = model._createdLight ? model._createdLight.getMTime() : 0;
     if (m3 > m1) {
       m1 = m3;
     }
@@ -574,7 +573,6 @@ const DEFAULT_VALUES = {
   allocatedRenderTime: 100,
   timeFactor: 1,
 
-  createdLight: null,
   automaticLightCreation: true,
 
   twoSidedLighting: true,
@@ -619,6 +617,11 @@ const DEFAULT_VALUES = {
   texturedBackground: false,
   backgroundTexture: null,
 
+  environmentTexture: null,
+  environmentTextureDiffuseStrength: 1,
+  environmentTextureSpecularStrength: 1,
+  useEnvironmentTextureAsBackground: false,
+
   pass: 0,
 };
 
@@ -630,9 +633,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkViewport.extend(publicAPI, model, initialValues);
 
+  // make sure background has 4 entries. Default to opaque black
+  if (!model.background) model.background = [0, 0, 0, 1];
+  while (model.background.length < 3) model.background.push(0);
+  if (model.background.length === 3) model.background.push(1);
+
   // Build VTK API
   macro.get(publicAPI, model, [
-    'renderWindow',
+    '_renderWindow',
 
     'allocatedRenderTime',
     'timeFactor',
@@ -662,11 +670,16 @@ export function extend(publicAPI, model, initialValues = {}) {
     'delegate',
     'backgroundTexture',
     'texturedBackground',
+    'environmentTexture',
+    'environmentTextureDiffuseStrength',
+    'environmentTextureSpecularStrength',
+    'useEnvironmentTextureAsBackground',
     'useShadows',
     'pass',
   ]);
   macro.getArray(publicAPI, model, ['actors', 'volumes', 'lights']);
   macro.setGetArray(publicAPI, model, ['background'], 4, 1.0);
+  macro.moveToProtected(publicAPI, model, ['renderWindow']);
 
   // Object methods
   vtkRenderer(publicAPI, model);

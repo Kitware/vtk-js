@@ -184,7 +184,7 @@ function vtkSTLReader(publicAPI, model) {
 
     // Data
     const dataView = new DataView(content, 84);
-    global.dataview = dataView;
+    // global.dataview = dataView;
     const nbFaces = (content.byteLength - 84) / 50;
     const pointValues = new Float32Array(nbFaces * 9);
     const normalValues = new Float32Array(nbFaces * 3);

@@ -17,8 +17,8 @@ function vtkOpenGLCamera(publicAPI, model) {
     if (prepass) {
       model.openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model.openGLRenderWindow = model.openGLRenderer.getParent();
-      model.context = model.openGLRenderWindow.getContext();
+      model._openGLRenderWindow = model.openGLRenderer.getParent();
+      model.context = model._openGLRenderWindow.getContext();
     }
   };
 
@@ -48,7 +48,7 @@ function vtkOpenGLCamera(publicAPI, model) {
     // has the camera changed?
     if (
       ren !== model.lastRenderer ||
-      model.openGLRenderWindow.getMTime() > model.keyMatrixTime.getMTime() ||
+      model._openGLRenderWindow.getMTime() > model.keyMatrixTime.getMTime() ||
       publicAPI.getMTime() > model.keyMatrixTime.getMTime() ||
       ren.getMTime() > model.keyMatrixTime.getMTime() ||
       model.renderable.getMTime() > model.keyMatrixTime.getMTime()

@@ -81,8 +81,11 @@ class Builder {
     const listName = `${name}List`;
     this.model[listName] = [];
     // Create new Instance method
-    this.publicAPI[`add${macro.capitalize(name)}`] = () => {
-      const instance = newInstance(mixins, initialValues);
+    this.publicAPI[`add${macro.capitalize(name)}`] = (values) => {
+      const instance = newInstance(mixins, {
+        ...initialValues,
+        ...values,
+      });
       this.publicAPI.bindState(instance, labels);
       this.model[listName].push(instance);
       this.publicAPI.modified();

@@ -97,8 +97,8 @@ test('Test vtkImageStreamline execution', (t) => {
   );
   t.equal(
     output.getPoints().getNumberOfPoints(),
-    2228,
-    'The number of points should be 2228'
+    2324,
+    'The number of points should be 2324'
   );
 
   t.end();

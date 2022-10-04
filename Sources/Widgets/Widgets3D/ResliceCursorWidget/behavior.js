@@ -17,7 +17,7 @@ import {
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 
 export default function widgetBehavior(publicAPI, model) {
-  let isDragging = null;
+  model._isDragging = false;
   let isScrolling = false;
 
   // Reset "updateMethodName" attribute when no actors are selected
@@ -46,27 +46,27 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.updateCursor = () => {
     switch (model.activeState.getUpdateMethodName()) {
       case InteractionMethodsName.TranslateCenter:
-        model.apiSpecificRenderWindow.setCursor('move');
+        model._apiSpecificRenderWindow.setCursor('move');
         break;
       case InteractionMethodsName.RotateLine:
-        model.apiSpecificRenderWindow.setCursor('alias');
+        model._apiSpecificRenderWindow.setCursor('alias');
         break;
       case InteractionMethodsName.TranslateAxis:
-        model.apiSpecificRenderWindow.setCursor('pointer');
+        model._apiSpecificRenderWindow.setCursor('pointer');
         break;
       default:
-        model.apiSpecificRenderWindow.setCursor('default');
+        model._apiSpecificRenderWindow.setCursor('default');
         break;
     }
   };
 
   publicAPI.handleLeftButtonPress = (callData) => {
     if (model.activeState && model.activeState.getActive()) {
-      isDragging = true;
+      model._isDragging = true;
       const viewType = model.widgetState.getActiveViewType();
       const currentPlaneNormal = model.widgetState.getPlanes()[viewType].normal;
-      model.planeManipulator.setOrigin(model.widgetState.getCenter());
-      model.planeManipulator.setNormal(currentPlaneNormal);
+      model.planeManipulator.setWidgetOrigin(model.widgetState.getCenter());
+      model.planeManipulator.setWidgetNormal(currentPlaneNormal);
 
       publicAPI.startInteraction();
     } else if (
@@ -82,16 +82,13 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleMouseMove = (callData) => {
-    if (isDragging && model.pickable && model.dragable) {
+    if (model._isDragging) {
       return publicAPI.handleEvent(callData);
     }
     if (isScrolling) {
       if (model.previousPosition.y !== callData.position.y) {
         const step = model.previousPosition.y - callData.position.y;
-        publicAPI.translateCenterOnCurrentDirection(
-          step,
-          callData.pokedRenderer
-        );
+        publicAPI.translateCenterOnPlaneDirection(step);
         model.previousPosition = callData.position;
 
         publicAPI.invokeInternalInteractionEvent();
@@ -101,10 +98,10 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleLeftButtonRelease = () => {
-    if (isDragging || isScrolling) {
+    if (model._isDragging || isScrolling) {
       publicAPI.endScrolling();
     }
-    isDragging = false;
+    model._isDragging = false;
     model.widgetState.deactivate();
   };
 
@@ -134,7 +131,7 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleMouseWheel = (calldata) => {
     const step = calldata.spinY;
     isScrolling = true;
-    publicAPI.translateCenterOnCurrentDirection(step, calldata.pokedRenderer);
+    publicAPI.translateCenterOnPlaneDirection(step);
 
     publicAPI.invokeInternalInteractionEvent();
     isScrolling = false;
@@ -202,15 +199,8 @@ export default function widgetBehavior(publicAPI, model) {
     });
   };
 
-  publicAPI.translateCenterOnCurrentDirection = (nbSteps, renderer) => {
-    const dirProj = renderer
-      .getRenderWindow()
-      .getRenderers()[0]
-      .getActiveCamera()
-      .getDirectionOfProjection();
-
-    // Direction of the projection is the inverse of what we want
-    const direction = vtkMath.multiplyScalar(dirProj, -1);
+  publicAPI.translateCenterOnPlaneDirection = (nbSteps) => {
+    const dirProj = model.widgetState.getPlanes()[model.viewType].normal;
 
     const oldCenter = model.widgetState.getCenter();
     const image = model.widgetState.getImage();
@@ -220,13 +210,14 @@ export default function widgetBehavior(publicAPI, model) {
     // https://math.stackexchange.com/questions/71423/what-is-the-term-for-the-projection-of-a-vector-onto-the-unit-cube
     const absDirProj = dirProj.map((value) => Math.abs(value));
     const index = absDirProj.indexOf(Math.max(...absDirProj));
-    const movingFactor = nbSteps * (imageSpacing[index] / dirProj[index]);
+    const movingFactor =
+      (nbSteps * imageSpacing[index]) / Math.abs(dirProj[index]);
 
     // Define the potentially new center
     let newCenter = [
-      oldCenter[0] + movingFactor * direction[0],
-      oldCenter[1] + movingFactor * direction[1],
-      oldCenter[2] + movingFactor * direction[2],
+      oldCenter[0] + movingFactor * dirProj[0],
+      oldCenter[1] + movingFactor * dirProj[1],
+      oldCenter[2] + movingFactor * dirProj[2],
     ];
     newCenter = publicAPI.getBoundedCenter(newCenter);
 
@@ -238,7 +229,7 @@ export default function widgetBehavior(publicAPI, model) {
     const stateLine = model.widgetState.getActiveLineState();
     const worldCoords = model.planeManipulator.handleEvent(
       calldata,
-      model.apiSpecificRenderWindow
+      model._apiSpecificRenderWindow
     );
 
     const point1 = stateLine.getPoint1();
@@ -263,7 +254,7 @@ export default function widgetBehavior(publicAPI, model) {
     if (dot === 1 || dot === -1) {
       vtkMath.cross(
         currentLineVector,
-        model.planeManipulator.getNormal(),
+        model.planeManipulator.getWidgetNormal(),
         axisTranslation
       );
     }
@@ -300,7 +291,7 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI[InteractionMethodsName.TranslateCenter] = (calldata) => {
     let worldCoords = model.planeManipulator.handleEvent(
       calldata,
-      model.apiSpecificRenderWindow
+      model._apiSpecificRenderWindow
     );
     worldCoords = publicAPI.getBoundedCenter(worldCoords);
     model.activeState.setCenter(worldCoords);
@@ -309,10 +300,10 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI[InteractionMethodsName.RotateLine] = (calldata) => {
     const activeLine = model.widgetState.getActiveLineState();
-    const planeNormal = model.planeManipulator.getNormal();
+    const planeNormal = model.planeManipulator.getWidgetNormal();
     const worldCoords = model.planeManipulator.handleEvent(
       calldata,
-      model.apiSpecificRenderWindow
+      model._apiSpecificRenderWindow
     );
 
     const center = model.widgetState.getCenter();

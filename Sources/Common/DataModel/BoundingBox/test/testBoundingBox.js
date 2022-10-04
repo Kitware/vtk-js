@@ -1,5 +1,23 @@
 import test from 'tape-catch';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+
+test('Test vtkBoundingBox inflate', (t) => {
+  const bounds = [0, 10, 10, 20, -10, 10];
+  const inflated = [-0.5, 10.5, 9.5, 20.5, -10.5, 10.5];
+
+  const bbox = vtkBoundingBox.newInstance();
+  bbox.setBounds(bounds);
+  let inflatedBounds = bbox.inflate(0.5);
+  t.ok(vtkMath.areEquals(inflatedBounds, inflated));
+  t.ok(vtkMath.areEquals(bbox.getBounds(), inflated));
+
+  inflatedBounds = vtkBoundingBox.inflate(bounds, 0.5);
+  t.ok(vtkMath.areEquals(inflatedBounds, inflated));
+  t.ok(vtkMath.areEquals(bounds, inflated));
+
+  t.end();
+});
 
 test('Test vtkBoundingBox intersectBox', (t) => {
   const bounds = [-50, 50, -50, 50, -50, 50];

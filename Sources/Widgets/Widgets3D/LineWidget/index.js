@@ -19,8 +19,8 @@ import {
 
 function vtkLineWidget(publicAPI, model) {
   model.classHierarchy.push('vtkLineWidget');
-  model.widgetState = stateGenerator();
-  model.behavior = widgetBehavior;
+
+  const superClass = { ...publicAPI };
 
   // --- Widget Requirement ---------------------------------------------------
 
@@ -30,6 +30,7 @@ function vtkLineWidget(publicAPI, model) {
     'useActiveColor',
     'glyphResolution',
     'defaultScale',
+    'scaleInPixels',
   ];
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
@@ -44,8 +45,6 @@ function vtkLineWidget(publicAPI, model) {
             builder: vtkArrowHandleRepresentation,
             labels: ['handle1'],
             initialValues: {
-              /* to scale handle size when zooming/dezooming, optional */
-              scaleInPixels: true,
               /*
                * This table sets the visibility of the handles' actors
                * 1st actor is a displayActor, which hides a rendered object on the HTML layer.
@@ -74,8 +73,6 @@ function vtkLineWidget(publicAPI, model) {
             builder: vtkArrowHandleRepresentation,
             labels: ['handle2'],
             initialValues: {
-              /* to scale handle size when zooming/dezooming, optional */
-              scaleInPixels: true,
               /*
                * This table sets the visibility of the handles' actors
                * 1st actor is a displayActor, which hides a rendered object on the HTML layer.
@@ -104,7 +101,6 @@ function vtkLineWidget(publicAPI, model) {
             builder: vtkArrowHandleRepresentation,
             labels: ['moveHandle'],
             initialValues: {
-              scaleInPixels: true,
               visibilityFlagArray: [false, false],
               coincidentTopologyParameters: {
                 Point: {
@@ -125,10 +121,11 @@ function vtkLineWidget(publicAPI, model) {
           {
             builder: vtkSVGLandmarkRepresentation,
             initialValues: {
-              showCircle: false,
-              isVisible: false,
-              offsetText: true,
               text: '',
+              textProps: {
+                dx: 12,
+                dy: -12,
+              },
             },
             labels: ['SVGtext'],
           },
@@ -152,6 +149,13 @@ function vtkLineWidget(publicAPI, model) {
     return p1 && p2 ? Math.sqrt(distance2BetweenPoints(p1, p2)) : 0;
   };
 
+  publicAPI.setManipulator = (manipulator) => {
+    superClass.setManipulator(manipulator);
+    model.widgetState.getMoveHandle().setManipulator(manipulator);
+    model.widgetState.getHandle1().setManipulator(manipulator);
+    model.widgetState.getHandle2().setManipulator(manipulator);
+  };
+
   // --------------------------------------------------------------------------
   // initialization
   // --------------------------------------------------------------------------
@@ -173,22 +177,28 @@ function vtkLineWidget(publicAPI, model) {
   });
 
   // Default manipulator
-  model.manipulator = vtkPlanePointManipulator.newInstance();
+  publicAPI.setManipulator(
+    model.manipulator ||
+      vtkPlanePointManipulator.newInstance({ useCameraNormal: true })
+  );
 }
 
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  isDragging: false,
-};
+const defaultValues = (initialValues) => ({
+  // manipulator: null,
+  behavior: widgetBehavior,
+  widgetState: stateGenerator(),
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
-  macro.setGet(publicAPI, model, ['manipulator', 'isDragging']);
+  macro.setGet(publicAPI, model, ['manipulator']);
 
   vtkLineWidget(publicAPI, model);
 }

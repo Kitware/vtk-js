@@ -12,6 +12,7 @@ export const BufferUsage = {
   Texture: 10,
   RawVertex: 11,
   Storage: 12,
+  Index: 13,
 };
 
 export const PrimitiveTypes = {

@@ -114,7 +114,7 @@ test.onlyIfWebGL('Test Categorical Colors', (t) => {
       [baseline],
       'Common/Core/LookupTable/testCategoricalColors',
       t,
-      2,
+      5,
       gc.releaseResources
     );
   });

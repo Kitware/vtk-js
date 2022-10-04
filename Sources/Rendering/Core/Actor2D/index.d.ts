@@ -1,7 +1,7 @@
 import vtkProp, { IPropInitialValues } from '../Prop';
 import vtkCoordinate from '../Coordinate';
 import vtkMapper from '../Mapper';
-import vtkProperty from '../Property';
+import vtkProperty2D, { IProperty2DInitialValues } from '../Property2D';
 import { Bounds } from '../../../types';
 
 /**
@@ -9,7 +9,7 @@ import { Bounds } from '../../../types';
  */
 export interface IActor2DInitialValues extends IPropInitialValues {
 	mapper?: vtkMapper;
-	property?: vtkProperty;
+	property?: vtkProperty2D;
 	layerNumber?: number;
 	positionCoordinate?: vtkCoordinate;
 	positionCoordinate2?: vtkCoordinate;
@@ -31,12 +31,18 @@ export interface vtkActor2D extends vtkProp {
 
 	/**
 	 * Return the property object that controls this actors surface
-	 * properties. This should be an instance of a vtkProperty object. Every
+	 * properties. This should be an instance of a vtkProperty2D object. Every
 	 * actor must have a property associated with it. If one isn’t specified,
 	 * then one will be generated automatically. Multiple actors can share one
 	 * property object.
 	 */
-	getProperty(): vtkProperty;
+	getProperty(): vtkProperty2D;
+
+	/**
+	 * Create a new property suitable for use with this type of Actor.
+	 * @param {IProperty2DInitialValues} [initialValues] (default: {})
+	 */
+	 makeProperty(initialValues?: IProperty2DInitialValues): vtkProperty2D;
 
 	/**
 	 * 
@@ -112,8 +118,8 @@ export function newInstance(initialValues?: IActor2DInitialValues): vtkActor2D;
  * vtkProp. The actor also has scaling and maintains a reference to the
  * defining geometry (i.e., the mapper), rendering properties, and possibly a
  * texture map.
- * @see [vtkMapper](./Rendering_Core_Mapper.html)2D
- * @see [vtkProperty](./Rendering_Core_Property.html)2D 
+ * @see [vtkMapper2D](./Rendering_Core_Mapper2D.html)
+ * @see [vtkProperty2D](./Rendering_Core_Property2D.html)
  */
 export declare const vtkActor2D: {
 	newInstance: typeof newInstance,

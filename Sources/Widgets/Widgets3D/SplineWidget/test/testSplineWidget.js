@@ -116,7 +116,7 @@ test.onlyIfWebGL('Test vtkSplineWidget rendering and picking', (t) => {
       );
     });
     // Trigger a next image
-    glwindow.traverseAllPasses();
+    renderWindow.render();
     return promise;
   }
 

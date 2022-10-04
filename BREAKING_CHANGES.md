@@ -1,3 +1,65 @@
+## From 24.x to 25
+
+- **math**: For functions calling math functions for computations with matrices, the format must now be number[] or Matrix as defined in the typescript definitions.
+- All widgets handles inheriting from vtkHandleRepresentation now scale up automatically.
+
+## From 23.x to 24
+
+- All old-style widgets except OrientationMarkerWidget and PiecewiseGaussianWidget have been removed.
+
+| **Old-style/deprecated widget**   | **New-style widget**            |
+|-----------------------------------|---------------------------------|
+| `Sources/Interaction/Widgets/...` | `Sources/Widgets/Widgets3D/...` |
+| DistanceWidget			              | DistanceWidget                  |
+| HandleWidget				              | PolyLineWidget                  |
+| ImageCroppingRegionsWidget        | ImageCroppingWidget             |
+| LabelWidget                       | LabelWidget                     |
+| LineWidget                        | LineWidget                      |
+| OrientationMarkerWidget (kept)    | *not implemented*               |
+| PiecewiseGaussianWidget (kept)    | *not implemented*               |
+| ResliceCursor                     | ResliceCursorWidget             |
+
+- In SVGLandmarkRepresentation: `model.showCircle` is replaced by `model.circleProps.visible`
+- In vtk.js subclasses, prefix with '_' the following "protected" model variables:
+  - vtk*: model.openglRenderWindow -> model._openglRenderWindow
+  - vtk*: model.openglRenderer -> model._openglRenderer
+  - vtkInteractorObserver, vtkOrientationMarkerWidget : model.interactor -> model._interactor
+  - vtkAbstractWidget, vtkViewNode: model.parent -> model._parent
+  - vtkProp: model.parentProp -> model._parentProp
+  - vtkRenderWindowInteractor: model.view -> model._view
+  - vtkRenderer: model.renderWindow -> model._renderWindow
+  - vtkHardwareSelector: model.renderer -> model._renderer
+  - vtkAbstractWidget: model.widgetManager -> model._widgetManager
+
+## From 22.x to 23
+
+- **imagemapper**: The original behavior of the image mapper was that if a lookup table is provided,
+it mapped the lookup table's scalar range by default. The new behavior disables using the lookup
+table scalar range by default. Instead, the window/level values are used.
+
+## From 21.x to 22
+
+- `config/rules-linter.js` is now gone.
+- **AbstractMapper**: Changed removeClippingPlane to use instance instead of index.
+
+## From 20.x to 21
+
+SplineWidget's handles now scale up automatically.
+
+## From 19.x to 20
+
+In ShapeWidget: 
+- `setLabelTextCallback` is replaced by `text` substate.  
+- `setPixelScale` has been removed. It should be replaced by point handle `scale1` mixin and `scaleInPixels`.  
+- `useHandles` has been removed. It should be replaced by `setHandleVisibility`.
+- `resetAfterPointPlacement` is now false by default.
+
+RectangleWidget and EllipseWidget handles now scale up automatically.
+
+## From 19.2 to 19.3
+
+Node >=12 is required
+
 ## From 18.x to 19
 
 vtkWidgetRepresentation.updateActorVisibility(...) lost the widgetVisibility parameter.

@@ -98,9 +98,10 @@ function vtkPaintFilter(publicAPI, model) {
     let diffIdx = 0;
     if (model.voxelFunc) {
       const bgScalars = model.backgroundImage.getPointData().getScalars();
+      const voxel = [];
       for (let i = 0; i < maskLabelMap.length; i++) {
         if (maskLabelMap[i]) {
-          const voxel = bgScalars.getTuple(i);
+          bgScalars.getTuple(i, voxel);
           // might not fill up snapshot
           if (model.voxelFunc(voxel, i, label)) {
             snapshot[diffIdx++] = [i, data[i]];

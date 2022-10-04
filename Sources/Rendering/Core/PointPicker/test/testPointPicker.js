@@ -12,6 +12,7 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkLineSource from 'vtk.js/Sources/Filters/Sources/LineSource';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 
 const { SlicingMode } = vtkImageMapper;
 
@@ -67,9 +68,11 @@ test('Test vtkPointPicker image mapper', (t) => {
   const positions = picker.getPickedPositions();
   t.equal(positions.length, 1);
   const xyz = positions[0];
-  t.equal(xyz[0], 64.49344091067883);
-  t.equal(xyz[1], 75.65264519589407);
-  t.equal(xyz[2], 12);
+  const expectedPosition = [64.33654020304944, 75.54505613923392, 12.0];
+  t.assert(
+    areEquals(xyz, expectedPosition),
+    'Float-compare picked position to expected.'
+  );
 
   const ijk = picker.getPointIJK();
   t.equal(ijk[0], 64);

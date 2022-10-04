@@ -98,7 +98,7 @@ const DEFAULT_VALUES = {
   shaftRadius: 0.03,
   invert: false,
   direction: [1.0, 0.0, 0.0],
-  pointType: 'Float32Array',
+  pointType: 'Float64Array',
 };
 
 // ----------------------------------------------------------------------------

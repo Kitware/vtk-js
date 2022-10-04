@@ -76,18 +76,16 @@ test('Test HardwareSelector', (tapeContext) => {
         const tcTime = Date.now() - previousTime;
         console.timeEnd('hardware render');
 
-        console.log(taTime, tbTime, tcTime);
-
         tapeContext.ok(
-          // should take about 3 normal renders but we give it some wiggle room
-          tcTime < tbTime * 6,
-          `Hardware selector takes less than six normal renders (${taTime}, ${tbTime}, ${tcTime})`
+          // should take about 5 normal renders but we give it some wiggle room
+          tcTime < tbTime * 10,
+          `Hardware selector takes less than ten normal renders (${taTime}, ${tbTime}, ${tcTime})`
         );
 
         gc.releaseResources();
       });
     });
-    glwindow.traverseAllPasses();
+    renderWindow.render();
   });
-  glwindow.traverseAllPasses();
+  renderWindow.render();
 });

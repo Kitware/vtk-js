@@ -2,13 +2,41 @@ import Constants from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import * as macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
+const { vtkErrorMacro } = macro;
 const { DefaultDataType } = Constants;
-const TUPLE_HOLDER = [];
 
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
 
+// Original source from https://www.npmjs.com/package/compute-range
+// Modified to accept type arrays
+function fastComputeRange(arr, offset, numberOfComponents) {
+  const len = arr.length;
+  let min;
+  let max;
+  let x;
+  let i;
+
+  if (len === 0) {
+    return { min: Number.MAX_VALUE, max: -Number.MAX_VALUE };
+  }
+  min = arr[offset];
+  max = min;
+  for (i = offset; i < len; i += numberOfComponents) {
+    x = arr[i];
+    if (x < min) {
+      min = x;
+    } else if (x > max) {
+      max = x;
+    }
+  }
+  return { min, max };
+}
+
+/**
+ * @deprecated please use fastComputeRange instead
+ */
 function createRangeHelper() {
   let min = Number.MAX_VALUE;
   let max = -Number.MAX_VALUE;
@@ -36,29 +64,25 @@ function createRangeHelper() {
 }
 
 function computeRange(values, component = 0, numberOfComponents = 1) {
-  const helper = createRangeHelper();
-  const size = values.length;
-  let value = 0;
-
   if (component < 0 && numberOfComponents > 1) {
     // Compute magnitude
-    for (let i = 0; i < size; i += numberOfComponents) {
-      value = 0;
-      for (let j = 0; j < numberOfComponents; j++) {
-        value += values[i + j] * values[i + j];
+    const size = values.length;
+    const numberOfValues = size / numberOfComponents;
+    const data = new Float64Array(numberOfValues);
+    for (let i = 0, j = 0; i < numberOfValues; ++i) {
+      for (let nextJ = j + numberOfComponents; j < nextJ; ++j) {
+        data[i] += values[j] * values[j];
       }
-      value **= 0.5;
-      helper.add(value);
+      data[i] **= 0.5;
     }
-    return helper.getRange();
+    return fastComputeRange(data, 0, 1);
   }
 
-  const offset = component < 0 ? 0 : component;
-  for (let i = offset; i < size; i += numberOfComponents) {
-    helper.add(values[i]);
-  }
-
-  return helper.getRange();
+  return fastComputeRange(
+    values,
+    component < 0 ? 0 : component,
+    numberOfComponents
+  );
 }
 
 function ensureRangeSize(rangeArray, size = 0) {
@@ -78,8 +102,10 @@ function getDataType(typedArray) {
 function getMaxNorm(normArray) {
   const numComps = normArray.getNumberOfComponents();
   let maxNorm = 0.0;
+  const tuple = new Array(numComps);
   for (let i = 0; i < normArray.getNumberOfTuples(); ++i) {
-    const norm = vtkMath.norm(normArray.getTuple(i), numComps);
+    normArray.getTuple(i, tuple);
+    const norm = vtkMath.norm(tuple, numComps);
     if (norm > maxNorm) {
       maxNorm = norm;
     }
@@ -94,6 +120,7 @@ function getMaxNorm(normArray) {
 export const STATIC = {
   computeRange,
   createRangeHelper,
+  fastComputeRange,
   getDataType,
   getMaxNorm,
 };
@@ -110,6 +137,45 @@ function vtkDataArray(publicAPI, model) {
     model.ranges = null;
     publicAPI.modified();
   }
+
+  /**
+   * Resize model.values and copy the old values to the new array.
+   * @param {Number} requestedNumTuples Final expected number of tuples; must be >= 0
+   * @returns {Boolean} True if a resize occured, false otherwise
+   */
+  function resize(requestedNumTuples) {
+    if (requestedNumTuples < 0) {
+      return false;
+    }
+
+    const numComps = publicAPI.getNumberOfComponents();
+    const curNumTuples = model.values.length / (numComps > 0 ? numComps : 1);
+    if (requestedNumTuples === curNumTuples) {
+      return true;
+    }
+
+    if (requestedNumTuples > curNumTuples) {
+      // Requested size is bigger than current size.  Allocate enough
+      // memory to fit the requested size and be more than double the
+      // currently allocated memory.
+      const oldValues = model.values;
+      model.values = macro.newTypedArray(
+        model.dataType,
+        (requestedNumTuples + curNumTuples) * numComps
+      );
+      model.values.set(oldValues);
+      return true;
+    }
+
+    // Requested size is smaller than current size
+    model.size = requestedNumTuples * numComps;
+    dataChange();
+    return true;
+  }
+
+  publicAPI.initialize = () => {
+    resize(0);
+  };
 
   publicAPI.getElementComponentSize = () => model.values.BYTES_PER_ELEMENT;
 
@@ -132,7 +198,22 @@ function vtkDataArray(publicAPI, model) {
     }
   };
 
-  publicAPI.getData = () => model.values;
+  publicAPI.getValue = (valueIdx) => {
+    const idx = valueIdx / model.numberOfComponents;
+    const comp = valueIdx % model.numberOfComponents;
+    return publicAPI.getComponent(idx, comp);
+  };
+
+  publicAPI.setValue = (valueIdx, value) => {
+    const idx = valueIdx / model.numberOfComponents;
+    const comp = valueIdx % model.numberOfComponents;
+    publicAPI.setComponent(idx, comp, value);
+  };
+
+  publicAPI.getData = () =>
+    model.size === model.values.length
+      ? model.values
+      : model.values.subarray(0, model.size);
 
   publicAPI.getRange = (componentIndex = -1) => {
     const rangeIdx =
@@ -152,7 +233,7 @@ function vtkDataArray(publicAPI, model) {
 
     // Need to compute ranges...
     range = computeRange(
-      model.values,
+      publicAPI.getData(),
       componentIndex,
       model.numberOfComponents
     );
@@ -182,41 +263,81 @@ function vtkDataArray(publicAPI, model) {
     }
   };
 
-  publicAPI.getTuple = (idx, tupleToFill = TUPLE_HOLDER) => {
-    const numberOfComponents = model.numberOfComponents || 1;
-    if (tupleToFill.length !== numberOfComponents) {
-      tupleToFill.length = numberOfComponents;
+  publicAPI.setTuples = (idx, tuples) => {
+    let i = idx * model.numberOfComponents;
+    const last = Math.min(tuples.length, model.size - i);
+    for (let j = 0; j < last; ) {
+      model.values[i++] = tuples[j++];
     }
+  };
+
+  publicAPI.insertTuple = (idx, tuple) => {
+    if (model.size <= idx * model.numberOfComponents) {
+      model.size = (idx + 1) * model.numberOfComponents;
+      resize(idx + 1);
+    }
+    publicAPI.setTuple(idx, tuple);
+    return idx;
+  };
+
+  publicAPI.insertTuples = (idx, tuples) => {
+    const end = idx + tuples.length / model.numberOfComponents;
+    if (model.size < end * model.numberOfComponents) {
+      model.size = end * model.numberOfComponents;
+      resize(end);
+    }
+    publicAPI.setTuples(idx, tuples);
+    return end;
+  };
+
+  publicAPI.insertNextTuple = (tuple) => {
+    const idx = model.size / model.numberOfComponents;
+    return publicAPI.insertTuple(idx, tuple);
+  };
+
+  publicAPI.insertNextTuples = (tuples) => {
+    const idx = model.size / model.numberOfComponents;
+    return publicAPI.insertTuples(idx, tuples);
+  };
+
+  publicAPI.getTuple = (idx, tupleToFill = []) => {
+    const numberOfComponents = model.numberOfComponents || 1;
     const offset = idx * numberOfComponents;
     // Check most common component sizes first
     // to avoid doing a for loop if possible
-    if (numberOfComponents === 1) {
-      tupleToFill[0] = model.values[offset];
-    } else if (numberOfComponents === 2) {
-      tupleToFill[0] = model.values[offset];
-      tupleToFill[1] = model.values[offset + 1];
-    } else if (numberOfComponents === 3) {
-      tupleToFill[0] = model.values[offset];
-      tupleToFill[1] = model.values[offset + 1];
-      tupleToFill[2] = model.values[offset + 2];
-    } else if (numberOfComponents === 4) {
-      tupleToFill[0] = model.values[offset];
-      tupleToFill[1] = model.values[offset + 1];
-      tupleToFill[2] = model.values[offset + 2];
-      tupleToFill[3] = model.values[offset + 3];
-    } else {
-      for (let i = 0; i < numberOfComponents; i++) {
-        tupleToFill[i] = model.values[offset + i];
-      }
+    switch (numberOfComponents) {
+      case 4:
+        tupleToFill[3] = model.values[offset + 3];
+      // eslint-disable-next-line no-fallthrough
+      case 3:
+        tupleToFill[2] = model.values[offset + 2];
+      // eslint-disable-next-line no-fallthrough
+      case 2:
+        tupleToFill[1] = model.values[offset + 1];
+      // eslint-disable-next-line no-fallthrough
+      case 1:
+        tupleToFill[0] = model.values[offset];
+        break;
+      default:
+        for (let i = numberOfComponents - 1; i >= 0; --i) {
+          tupleToFill[i] = model.values[offset + i];
+        }
     }
     return tupleToFill;
   };
 
+  publicAPI.getTuples = (fromId, toId) => {
+    const from = (fromId ?? 0) * model.numberOfComponents;
+    const to =
+      (toId ?? publicAPI.getNumberOfTuples()) * model.numberOfComponents;
+    const arr = publicAPI.getData().subarray(from, to);
+    return arr.length > 0 ? arr : null;
+  };
+
   publicAPI.getTupleLocation = (idx = 1) => idx * model.numberOfComponents;
   publicAPI.getNumberOfComponents = () => model.numberOfComponents;
-  publicAPI.getNumberOfValues = () => model.values.length;
-  publicAPI.getNumberOfTuples = () =>
-    model.values.length / model.numberOfComponents;
+  publicAPI.getNumberOfValues = () => model.size;
+  publicAPI.getNumberOfTuples = () => model.size / model.numberOfComponents;
   publicAPI.getDataType = () => model.dataType;
   /* eslint-disable no-use-before-define */
   publicAPI.newClone = () =>
@@ -251,6 +372,9 @@ function vtkDataArray(publicAPI, model) {
 
   // Override serialization support
   publicAPI.getState = () => {
+    if (model.deleted) {
+      return null;
+    }
     const jsonArchive = { ...model, vtkClass: publicAPI.getClassName() };
 
     // Convert typed array to regular array
@@ -279,18 +403,70 @@ function vtkDataArray(publicAPI, model) {
 
     return sortedObj;
   };
+
+  publicAPI.deepCopy = (other) => {
+    publicAPI.shallowCopy(other);
+    publicAPI.setData(other.getData().slice());
+  };
+
+  publicAPI.interpolateTuple = (
+    idx,
+    source1,
+    source1Idx,
+    source2,
+    source2Idx,
+    t
+  ) => {
+    const numberOfComponents = model.numberOfComponents || 1;
+    if (
+      numberOfComponents !== source1.getNumberOfComponents() ||
+      numberOfComponents !== source2.getNumberOfComponents()
+    ) {
+      vtkErrorMacro('numberOfComponents must match');
+    }
+
+    const tuple1 = source1.getTuple(source1Idx);
+    const tuple2 = source2.getTuple(source2Idx);
+    const out = [];
+    out.length = numberOfComponents;
+
+    // Check most common component sizes first
+    // to avoid doing a for loop if possible
+    switch (numberOfComponents) {
+      case 4:
+        out[3] = tuple1[3] + (tuple2[3] - tuple1[3]) * t;
+      // eslint-disable-next-line no-fallthrough
+      case 3:
+        out[2] = tuple1[2] + (tuple2[2] - tuple1[2]) * t;
+      // eslint-disable-next-line no-fallthrough
+      case 2:
+        out[1] = tuple1[1] + (tuple2[1] - tuple1[1]) * t;
+      // eslint-disable-next-line no-fallthrough
+      case 1:
+        out[0] = tuple1[0] + (tuple2[0] - tuple1[0]) * t;
+        break;
+      default:
+        for (let i = 0; i < numberOfComponents; i++) {
+          out[i] = tuple1[i] + (tuple2[i] - tuple1[i]) * t;
+        }
+    }
+
+    return publicAPI.insertTuple(idx, out);
+  };
 }
 
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 
+// size: The current size of the dataArray.
+// NOTE: The underlying typed array may be larger than 'size'.
 const DEFAULT_VALUES = {
   name: '',
   numberOfComponents: 1,
-  size: 0,
   dataType: DefaultDataType,
   rangeTuple: [0, 0],
+  // size: undefined,
   // values: null,
   // ranges: null,
 };
@@ -313,7 +489,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   }
 
   if (model.values) {
-    model.size = model.values.length;
+    // Takes the size if provided (can be lower than `model.values`) otherwise the actual length of `values`.
+    model.size = model.size ?? model.values.length;
     model.dataType = getDataType(model.values);
   }
 

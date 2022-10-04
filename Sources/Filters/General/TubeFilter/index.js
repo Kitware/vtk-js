@@ -226,6 +226,7 @@ function vtkTubeFilter(publicAPI, model) {
     const normal = [0.0, 0.0, 0.0];
     let sFactor = 1.0;
     let ptId = offset;
+    const vector = [];
     for (let j = 0; j < npts; ++j) {
       // First point
       if (j === 0) {
@@ -297,7 +298,7 @@ function vtkTubeFilter(publicAPI, model) {
         model.varyRadius === VaryRadius.VARY_RADIUS_BY_VECTOR
       ) {
         sFactor = Math.sqrt(
-          maxSpeed / vtkMath.norm(inVectors.getTuple(pts[j]))
+          maxSpeed / vtkMath.norm(inVectors.getTuple(pts[j], vector))
         );
         if (sFactor > model.radiusFactor) {
           sFactor = model.radiusFactor;
@@ -635,14 +636,10 @@ function vtkTubeFilter(publicAPI, model) {
     let numStrips = 0;
     const inLinesData = inLines.getData();
     let npts = inLinesData[0];
-    const sidesShareVerticesMultiplier = model.sidesShareVertices ? 1 : 2;
     for (let i = 0; i < inLinesData.length; i += npts + 1) {
-      numNewPts += sidesShareVerticesMultiplier * npts * model.numberOfSides;
-      if (model.capping) {
-        numNewPts += 2 * model.numberOfSides;
-      }
-
       npts = inLinesData[i];
+
+      numNewPts = computeOffset(numNewPts, npts);
       numStrips +=
         (2 * npts + 1) * Math.ceil(model.numberOfSides / model.onRatio);
       if (model.capping) {
@@ -661,10 +658,7 @@ function vtkTubeFilter(publicAPI, model) {
       size: numNewPts * 3,
       numberOfComponents: 3,
     });
-    let numNormals = 3 * numNewPts;
-    if (model.capping) {
-      numNormals = 3 * (numNewPts + 2 * model.numberOfSides);
-    }
+    const numNormals = 3 * numNewPts;
     const newNormalsData = new Float32Array(numNormals);
     const newNormals = vtkDataArray.newInstance({
       numberOfComponents: 3,

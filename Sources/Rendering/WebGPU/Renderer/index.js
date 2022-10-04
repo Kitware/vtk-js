@@ -1,15 +1,17 @@
 import { vec3, mat4 } from 'gl-matrix';
 import * as macro from 'vtk.js/Sources/macros';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import vtkWebGPUBindGroup from 'vtk.js/Sources/Rendering/WebGPU/BindGroup';
 import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQuad';
+import vtkWebGPUStorageBuffer from 'vtk.js/Sources/Rendering/WebGPU/StorageBuffer';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
 const { vtkDebugMacro } = macro;
 
-const clearFragTemplate = `
+const clearFragColorTemplate = `
 //VTK::Renderer::Dec
 
 //VTK::Mapper::Dec
@@ -20,7 +22,7 @@ const clearFragTemplate = `
 
 //VTK::IOStructs::Dec
 
-[[stage(fragment)]]
+@fragment
 fn main(
 //VTK::IOStructs::Input
 )
@@ -34,6 +36,72 @@ fn main(
   return output;
 }
 `;
+
+const clearFragTextureTemplate = `
+fn vecToRectCoord(dir: vec3<f32>) -> vec2<f32> {
+  var tau: f32 = 6.28318530718;
+  var pi: f32 = 3.14159265359;
+  var out: vec2<f32> = vec2<f32>(0.0);
+
+  out.x = atan2(dir.z, dir.x) / tau;
+  out.x += 0.5;
+
+  var phix: f32 = length(vec2(dir.x, dir.z));
+  out.y = atan2(dir.y, phix) / pi + 0.5;
+
+  return out;
+}
+
+//VTK::Renderer::Dec
+
+//VTK::Mapper::Dec
+
+//VTK::TCoord::Dec
+
+//VTK::RenderEncoder::Dec
+
+//VTK::IOStructs::Dec
+
+@fragment
+fn main(
+//VTK::IOStructs::Input
+)
+//VTK::IOStructs::Output
+{
+  var output: fragmentOutput;
+
+  var tcoord: vec4<f32> = vec4<f32>(input.vertexVC.xy, -1, 1);
+  var V: vec4<f32> = normalize(mapperUBO.FSQMatrix * tcoord); // vec2<f32>((input.tcoordVS.x - 0.5) * 2, -(input.tcoordVS.y - 0.5) * 2);
+  // textureSampleLevel gets rid of some ugly artifacts
+  var background = textureSampleLevel(EnvironmentTexture, EnvironmentTextureSampler, vecToRectCoord(V.xyz), 0);
+  var computedColor: vec4<f32> = vec4<f32>(background.rgb, 1);
+
+  //VTK::RenderEncoder::Impl
+  return output;
+}
+`;
+
+const _fsqClearMat4 = new Float64Array(16);
+const _tNormalMat4 = new Float64Array(16);
+
+// Light type index gives either 0, 1, or 2 which indicates what type of light there is.
+// While technically, there are only spot and directional lights, within the CellArrayMapper
+// there is a third, positional light. It is technically just a variant of a spot light with
+// a cone angle of 90 or above, however certain calculations can be skipped if it is treated
+// separately.
+// The mappings are shown below:
+// 0 -> positional light
+// 1 -> directional light
+// 2 -> spot light
+function getLightTypeIndex(light) {
+  if (light.getPositional()) {
+    if (light.getConeAngle() >= 90) {
+      return 0;
+    }
+    return 2;
+  }
+  return 1;
+}
 
 // ----------------------------------------------------------------------------
 // vtkWebGPURenderer methods
@@ -51,15 +119,15 @@ function vtkWebGPURenderer(publicAPI, model) {
         return;
       }
 
-      // make sure we have a camera
-      if (!model.renderable.isActiveCameraCreated()) {
-        model.renderable.resetCamera();
-      }
+      model.camera = model.renderable.getActiveCamera();
+
       publicAPI.updateLights();
       publicAPI.prepareNodes();
-      publicAPI.addMissingNode(model.renderable.getActiveCamera());
+      publicAPI.addMissingNode(model.camera);
       publicAPI.addMissingNodes(model.renderable.getViewPropsWithNestedProps());
       publicAPI.removeUnusedNodes();
+
+      model.webgpuCamera = publicAPI.getViewNodeFor(model.camera);
       publicAPI.updateStabilizedMatrix();
     }
   };
@@ -91,10 +159,9 @@ function vtkWebGPURenderer(publicAPI, model) {
     // when the center of the view frustum moves a lot
     // we recenter it. The center of the view frustum is roughly
     // camPos + dirOfProj*(far + near)*0.5
-    const cam = model.renderable.getActiveCamera();
-    const clipRange = cam.getClippingRange();
-    const pos = cam.getPositionByReference();
-    const dop = cam.getDirectionOfProjectionByReference();
+    const clipRange = model.camera.getClippingRange();
+    const pos = model.camera.getPositionByReference();
+    const dop = model.camera.getDirectionOfProjectionByReference();
     const center = [];
     const offset = [];
     vec3.scale(offset, dop, 0.5 * (clipRange[0] + clipRange[1]));
@@ -125,43 +192,125 @@ function vtkWebGPURenderer(publicAPI, model) {
     return count;
   };
 
-  // register pipeline callbacks from a mapper
-  publicAPI.registerPipelineCallback = (pipeline, cb) => {
-    // if there is a matching pipeline just add the cb
-    for (let i = 0; i < model.pipelineCallbacks.length; i++) {
-      if (model.pipelineCallbacks[i].pipeline === pipeline) {
-        model.pipelineCallbacks[i].callbacks.push(cb);
-        return;
-      }
-    }
-
-    model.pipelineCallbacks.push({ pipeline, callbacks: [cb] });
-  };
-
   publicAPI.updateUBO = () => {
     // make sure the data is up to date
     // has the camera changed?
-    const cam = model.renderable.getActiveCamera();
-    const webgpuCamera = publicAPI.getViewNodeFor(cam);
     const utime = model.UBO.getSendTime();
     if (
-      model.parent.getMTime() > utime ||
+      model._parent.getMTime() > utime ||
       publicAPI.getMTime() > utime ||
-      cam.getMTime() > utime ||
+      model.camera.getMTime() > utime ||
       model.renderable.getMTime() > utime
     ) {
-      const keyMats = webgpuCamera.getKeyMatrices(publicAPI);
+      const keyMats = model.webgpuCamera.getKeyMatrices(publicAPI);
       model.UBO.setArray('WCVCMatrix', keyMats.wcvc);
       model.UBO.setArray('SCPCMatrix', keyMats.scpc);
       model.UBO.setArray('PCSCMatrix', keyMats.pcsc);
       model.UBO.setArray('SCVCMatrix', keyMats.scvc);
       model.UBO.setArray('VCPCMatrix', keyMats.vcpc);
       model.UBO.setArray('WCVCNormals', keyMats.normalMatrix);
-      model.UBO.setValue('cameraParallel', cam.getParallelProjection());
+      model.UBO.setValue('LightCount', model.renderable.getLights().length);
+      model.UBO.setValue(
+        'MaxEnvironmentMipLevel',
+        model.renderable.getEnvironmentTexture()?.getMipLevel()
+      );
+      model.UBO.setValue(
+        'BackgroundDiffuseStrength',
+        model.renderable.getEnvironmentTextureDiffuseStrength()
+      );
+      model.UBO.setValue(
+        'BackgroundSpecularStrength',
+        model.renderable.getEnvironmentTextureSpecularStrength()
+      );
 
-      const device = model.parent.getDevice();
+      const tsize = publicAPI.getYInvertedTiledSizeAndOrigin();
+      model.UBO.setArray('viewportSize', [tsize.usize, tsize.vsize]);
+      model.UBO.setValue(
+        'cameraParallel',
+        model.camera.getParallelProjection()
+      );
+
+      const device = model._parent.getDevice();
       model.UBO.sendIfNeeded(device);
     }
+  };
+
+  publicAPI.updateSSBO = () => {
+    const lights = model.renderable.getLights();
+    const keyMats = model.webgpuCamera.getKeyMatrices(publicAPI);
+
+    let lightTimeString = `${model.renderable.getMTime()}`;
+    for (let i = 0; i < lights.length; i++) {
+      lightTimeString += lights[i].getMTime();
+    }
+
+    if (lightTimeString !== model.lightTimeString) {
+      const lightPosArray = new Float32Array(lights.length * 4);
+      const lightDirArray = new Float32Array(lights.length * 4);
+      const lightColorArray = new Float32Array(lights.length * 4);
+      const lightTypeArray = new Float32Array(lights.length * 4);
+
+      for (let i = 0; i < lights.length; i++) {
+        const offset = i * 4;
+
+        // Position
+        const viewCoordinatePosition = lights[i].getPosition();
+        vec3.transformMat4(
+          viewCoordinatePosition,
+          viewCoordinatePosition,
+          keyMats.wcvc
+        );
+        // viewCoordinatePosition
+        lightPosArray[offset] = viewCoordinatePosition[0];
+        lightPosArray[offset + 1] = viewCoordinatePosition[1];
+        lightPosArray[offset + 2] = viewCoordinatePosition[2];
+        lightPosArray[offset + 3] = 0;
+
+        // Rotation (All are negative to correct for -Z being forward)
+        lightDirArray[offset] = -lights[i].getDirection()[0];
+        lightDirArray[offset + 1] = -lights[i].getDirection()[1];
+        lightDirArray[offset + 2] = -lights[i].getDirection()[2];
+        lightDirArray[offset + 3] = 0;
+
+        // Color
+        lightColorArray[offset] = lights[i].getColor()[0];
+        lightColorArray[offset + 1] = lights[i].getColor()[1];
+        lightColorArray[offset + 2] = lights[i].getColor()[2];
+        lightColorArray[offset + 3] = lights[i].getIntensity() * 5; // arbitrary multiplication to fix the dullness of low value PBR lights
+
+        // Type
+        lightTypeArray[offset] = getLightTypeIndex(lights[i]); // Type
+        lightTypeArray[offset + 1] = Math.cos(
+          vtkMath.radiansFromDegrees(lights[i].getConeAngle())
+        ); // Inner Phi, should probably do some check on these to make sure they dont excede limits
+        lightTypeArray[offset + 2] = Math.cos(
+          vtkMath.radiansFromDegrees(
+            lights[i].getConeAngle() + lights[i].getConeFalloff()
+          )
+        ); // Outer Phi
+        lightTypeArray[offset + 3] = 0;
+      }
+
+      // Im not sure how correct this is, but this is what the example does
+      // https://kitware.github.io/vtk-js/api/Rendering_WebGPU_VolumePassFSQ.html
+      model.SSBO.clearData();
+      model.SSBO.setNumberOfInstances(lights.length);
+
+      model.SSBO.addEntry('LightPos', 'vec4<f32>'); // Position
+      model.SSBO.addEntry('LightDir', 'vec4<f32>'); // Direction
+      model.SSBO.addEntry('LightColor', 'vec4<f32>'); // Color (r, g, b, intensity)
+      model.SSBO.addEntry('LightData', 'vec4<f32>'); // Other data (type, etc, etc, etc)
+
+      model.SSBO.setAllInstancesFromArray('LightPos', lightPosArray);
+      model.SSBO.setAllInstancesFromArray('LightDir', lightDirArray);
+      model.SSBO.setAllInstancesFromArray('LightColor', lightColorArray);
+      model.SSBO.setAllInstancesFromArray('LightData', lightTypeArray);
+
+      const device = model._parent.getDevice();
+      model.SSBO.send(device);
+    }
+
+    model.lightTimeString = lightTimeString;
   };
 
   publicAPI.scissorAndViewport = (encoder) => {
@@ -194,29 +343,12 @@ function vtkWebGPURenderer(publicAPI, model) {
   // Renders myself
   publicAPI.opaquePass = (prepass) => {
     if (prepass) {
-      // clear last pipelines
-      model.pipelineCallbacks = [];
-
-      model.renderEncoder.begin(model.parent.getCommandEncoder());
+      model.renderEncoder.begin(model._parent.getCommandEncoder());
       publicAPI.updateUBO();
+      publicAPI.updateSSBO();
     } else {
       publicAPI.scissorAndViewport(model.renderEncoder);
-
       publicAPI.clear();
-
-      // loop over registered pipelines
-      for (let i = 0; i < model.pipelineCallbacks.length; i++) {
-        const pStruct = model.pipelineCallbacks[i];
-        const pl = pStruct.pipeline;
-
-        model.renderEncoder.setPipeline(pl);
-        publicAPI.bindUBO(model.renderEncoder);
-
-        for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
-          pStruct.callbacks[cb](model.renderEncoder);
-        }
-      }
-
       model.renderEncoder.end();
     }
   };
@@ -226,76 +358,100 @@ function vtkWebGPURenderer(publicAPI, model) {
       return;
     }
 
-    const device = model.parent.getDevice();
+    const device = model._parent.getDevice();
+    // Normal Solid Color
     if (!model.clearFSQ) {
       model.clearFSQ = vtkWebGPUFullScreenQuad.newInstance();
       model.clearFSQ.setDevice(device);
       model.clearFSQ.setPipelineHash('clearfsq');
-      model.clearFSQ.setFragmentShaderTemplate(clearFragTemplate);
-      const ubo = vtkWebGPUUniformBuffer.newInstance();
-      ubo.setName('mapperUBO');
+      model.clearFSQ.setFragmentShaderTemplate(clearFragColorTemplate);
+      const ubo = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
+      ubo.addEntry('FSQMatrix', 'mat4x4<f32>');
+      ubo.addEntry('BackgroundColor', 'vec4<f32>');
+      model.clearFSQ.setUBO(ubo);
+
+      model.backgroundTex = model.renderable.getEnvironmentTexture();
+    }
+    // Textured Background
+    if (
+      model.clearFSQ.getPipelineHash() !== 'clearfsqwithtexture' &&
+      model.renderable.getUseEnvironmentTextureAsBackground() &&
+      model.backgroundTex?.getImageLoaded()
+    ) {
+      model.clearFSQ.setFragmentShaderTemplate(clearFragTextureTemplate);
+      const ubo = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
+      ubo.addEntry('FSQMatrix', 'mat4x4<f32>');
+      ubo.addEntry('BackgroundColor', 'vec4<f32>');
+      model.clearFSQ.setUBO(ubo);
+
+      const environmentTextureHash = device
+        .getTextureManager()
+        .getTextureForVTKTexture(model.backgroundTex);
+      if (environmentTextureHash.getReady()) {
+        const tview = environmentTextureHash.createView(`EnvironmentTexture`);
+        model.clearFSQ.setTextureViews([tview]);
+        model.backgroundTexLoaded = true;
+        const interpolate = model.backgroundTex.getInterpolate()
+          ? 'linear'
+          : 'nearest';
+        tview.addSampler(device, {
+          addressModeU: 'repeat',
+          addressModeV: 'clamp-to-edge',
+          addressModeW: 'repeat',
+          minFilter: interpolate,
+          magFilter: interpolate,
+          mipmapFilter: 'linear',
+        });
+      }
+      model.clearFSQ.setPipelineHash('clearfsqwithtexture');
+    } else if (
+      model.clearFSQ.getPipelineHash() === 'clearfsqwithtexture' &&
+      !model.renderable.getUseEnvironmentTextureAsBackground()
+    ) {
+      // In case the mode is changed at runtime
+      model.clearFSQ = vtkWebGPUFullScreenQuad.newInstance();
+      model.clearFSQ.setDevice(device);
+      model.clearFSQ.setPipelineHash('clearfsq');
+      model.clearFSQ.setFragmentShaderTemplate(clearFragColorTemplate);
+      const ubo = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
+      ubo.addEntry('FSQMatrix', 'mat4x4<f32>');
       ubo.addEntry('BackgroundColor', 'vec4<f32>');
       model.clearFSQ.setUBO(ubo);
     }
 
+    const keyMats = model.webgpuCamera.getKeyMatrices(publicAPI);
     const background = model.renderable.getBackgroundByReference();
+
     model.clearFSQ.getUBO().setArray('BackgroundColor', background);
+    mat4.transpose(_tNormalMat4, keyMats.normalMatrix);
+    mat4.mul(_fsqClearMat4, keyMats.scvc, keyMats.pcsc);
+    mat4.mul(_fsqClearMat4, _tNormalMat4, _fsqClearMat4);
+    model.clearFSQ.getUBO().setArray('FSQMatrix', _fsqClearMat4);
+
     model.clearFSQ.getUBO().sendIfNeeded(device);
-    model.clearFSQ.render(model.renderEncoder, device);
+    model.clearFSQ.prepareAndDraw(model.renderEncoder);
   };
 
   publicAPI.translucentPass = (prepass) => {
     if (prepass) {
-      // clear last pipelines
-      model.pipelineCallbacks = [];
-      model.renderEncoder.begin(model.parent.getCommandEncoder());
+      model.renderEncoder.begin(model._parent.getCommandEncoder());
     } else {
       publicAPI.scissorAndViewport(model.renderEncoder);
-
-      // loop over registered pipelines
-      for (let i = 0; i < model.pipelineCallbacks.length; i++) {
-        const pStruct = model.pipelineCallbacks[i];
-        const pl = pStruct.pipeline;
-
-        model.renderEncoder.setPipeline(pl);
-        publicAPI.bindUBO(model.renderEncoder);
-
-        for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
-          pStruct.callbacks[cb](model.renderEncoder);
-        }
-      }
-
       model.renderEncoder.end();
     }
   };
 
   publicAPI.volumeDepthRangePass = (prepass) => {
     if (prepass) {
-      // clear last pipelines
-      model.pipelineCallbacks = [];
-      model.renderEncoder.begin(model.parent.getCommandEncoder());
+      model.renderEncoder.begin(model._parent.getCommandEncoder());
     } else {
       publicAPI.scissorAndViewport(model.renderEncoder);
-
-      // loop over registered pipelines
-      for (let i = 0; i < model.pipelineCallbacks.length; i++) {
-        const pStruct = model.pipelineCallbacks[i];
-        const pl = pStruct.pipeline;
-
-        model.renderEncoder.setPipeline(pl);
-        publicAPI.bindUBO(model.renderEncoder);
-
-        for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
-          pStruct.callbacks[cb](model.renderEncoder);
-        }
-      }
-
       model.renderEncoder.end();
     }
   };
 
   publicAPI.getAspectRatio = () => {
-    const size = model.parent.getSizeByReference();
+    const size = model._parent.getSizeByReference();
     const viewport = model.renderable.getViewportByReference();
     return (
       (size[0] * (viewport[2] - viewport[0])) /
@@ -303,9 +459,12 @@ function vtkWebGPURenderer(publicAPI, model) {
     );
   };
 
+  publicAPI.convertToOpenGLDepth = (val) =>
+    model.webgpuCamera.convertToOpenGLDepth(val);
+
   publicAPI.getYInvertedTiledSizeAndOrigin = () => {
     const res = publicAPI.getTiledSizeAndOrigin();
-    const size = model.parent.getSizeByReference();
+    const size = model._parent.getSizeByReference();
     res.lowerLeftV = size[1] - res.vsize - res.lowerLeftV;
     return res;
   };
@@ -322,7 +481,7 @@ function vtkWebGPURenderer(publicAPI, model) {
     const vpv = vport[1] - tileViewPort[1];
 
     // store the result as a pixel value
-    const ndvp = model.parent.normalizedDisplayToDisplay(vpu, vpv);
+    const ndvp = model._parent.normalizedDisplayToDisplay(vpu, vpv);
     const lowerLeftU = Math.round(ndvp[0]);
     const lowerLeftV = Math.round(ndvp[1]);
 
@@ -330,7 +489,7 @@ function vtkWebGPURenderer(publicAPI, model) {
     // lower left boundary of this tile
     const vpu2 = vport[2] - tileViewPort[0];
     const vpv2 = vport[3] - tileViewPort[1];
-    const ndvp2 = model.parent.normalizedDisplayToDisplay(vpu2, vpv2);
+    const ndvp2 = model._parent.normalizedDisplayToDisplay(vpu2, vpv2);
 
     // now compute the size of the intersection of the viewport with the
     // current tile
@@ -389,19 +548,29 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
 
-  model.UBO = vtkWebGPUUniformBuffer.newInstance();
-  model.UBO.setName('rendererUBO');
+  // UBO
+  model.UBO = vtkWebGPUUniformBuffer.newInstance({ label: 'rendererUBO' });
   model.UBO.addEntry('WCVCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('SCPCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('PCSCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('SCVCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('VCPCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('WCVCNormals', 'mat4x4<f32>');
+  model.UBO.addEntry('viewportSize', 'vec2<f32>');
+  model.UBO.addEntry('LightCount', 'i32');
+  model.UBO.addEntry('MaxEnvironmentMipLevel', 'f32');
+  model.UBO.addEntry('BackgroundDiffuseStrength', 'f32');
+  model.UBO.addEntry('BackgroundSpecularStrength', 'f32');
   model.UBO.addEntry('cameraParallel', 'u32');
 
-  model.bindGroup = vtkWebGPUBindGroup.newInstance();
-  model.bindGroup.setName('rendererBG');
-  model.bindGroup.setBindables([model.UBO]);
+  // SSBO (Light data)
+  model.SSBO = vtkWebGPUStorageBuffer.newInstance({
+    label: 'rendererLightSSBO',
+  });
+  model.lightTimeString = '';
+
+  model.bindGroup = vtkWebGPUBindGroup.newInstance({ label: 'rendererBG' });
+  model.bindGroup.setBindables([model.UBO, model.SSBO]);
 
   model.tmpMat4 = mat4.identity(new Float64Array(16));
 

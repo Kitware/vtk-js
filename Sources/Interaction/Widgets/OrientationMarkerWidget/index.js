@@ -20,15 +20,30 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
   const previousCameraInput = [];
   const selfRenderer = vtkRenderer.newInstance();
   const resizeObserver = new ResizeObserver((entries) => {
-    if (entries.length === 1) {
-      publicAPI.updateViewport();
-    }
+    publicAPI.updateViewport();
   });
-  let interactorUnsubscribe = null;
+  let onCameraChangedSub = null;
+  let onCameraModifiedSub = null;
+  let onAnimationSub = null;
+  let onEndAnimationSub = null;
   let selfSubscription = null;
 
+  function onCameraModified() {
+    // If animating, marker will be updated on Animation event
+    if (!model._interactor.isAnimating()) {
+      publicAPI.updateMarkerOrientation();
+    }
+  }
+
   publicAPI.computeViewport = () => {
-    const [viewXSize, viewYSize] = model.interactor.getView().getSize();
+    const parentRen =
+      model.parentRenderer || model._interactor.getCurrentRenderer();
+
+    const [xMin, yMin, xMax, yMax] = parentRen.getViewport();
+
+    const view = model._interactor.getView();
+    const canvasSize = view.getSize();
+    const [viewXSize, viewYSize] = view.getViewportSize(parentRen);
     const minViewSize = Math.min(viewXSize, viewYSize);
 
     let pixelSize = model.viewportSize * minViewSize;
@@ -38,18 +53,18 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       Math.min(model.maxPixelSize, pixelSize)
     );
 
-    const xFrac = pixelSize / viewXSize;
-    const yFrac = pixelSize / viewYSize;
+    const xFrac = pixelSize / canvasSize[0];
+    const yFrac = pixelSize / canvasSize[1];
     // [left bottom right top]
     switch (model.viewportCorner) {
       case Corners.TOP_LEFT:
-        return [0, 1 - yFrac, xFrac, 1];
+        return [xMin, yMax - yFrac, xMin + xFrac, yMax];
       case Corners.TOP_RIGHT:
-        return [1 - xFrac, 1 - yFrac, 1, 1];
+        return [xMax - xFrac, yMax - yFrac, xMax, yMax];
       case Corners.BOTTOM_LEFT:
-        return [0, 0, xFrac, yFrac];
+        return [xMin, yMin, xMin + xFrac, yMin + yFrac];
       case Corners.BOTTOM_RIGHT:
-        return [1 - xFrac, 0, 1, yFrac];
+        return [xMax - xFrac, yMin, xMax, yMin + yFrac];
       default:
         vtkErrorMacro('Invalid widget corner');
         return null;
@@ -57,15 +72,15 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
   };
 
   publicAPI.updateViewport = () => {
-    selfRenderer.setViewport(...publicAPI.computeViewport());
-    model.interactor.render();
+    if (model.enabled) {
+      selfRenderer.setViewport(...publicAPI.computeViewport());
+      model._interactor.render();
+    }
   };
 
   publicAPI.updateMarkerOrientation = () => {
-    const currentCamera = model.interactor
-      .findPokedRenderer()
-      .getActiveCamera();
-
+    const ren = model.parentRenderer || model._interactor.getCurrentRenderer();
+    const currentCamera = ren.getActiveCamera();
     if (!currentCamera) {
       return;
     }
@@ -115,16 +130,16 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
         return;
       }
 
-      if (!model.interactor) {
+      if (!model._interactor) {
         vtkErrorMacro(
           'Must set interactor before enabling orientation marker.'
         );
         return;
       }
 
-      const renderWindow = model.interactor
-        .findPokedRenderer()
-        .getRenderWindow();
+      const ren =
+        model.parentRenderer || model._interactor.getCurrentRenderer();
+      const renderWindow = ren.getRenderWindow();
       renderWindow.addRenderer(selfRenderer);
       if (renderWindow.getNumberOfLayers() < 2) {
         renderWindow.setNumberOfLayers(2);
@@ -136,11 +151,23 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       selfRenderer.addViewProp(model.actor);
       model.actor.setVisibility(true);
 
-      ({ unsubscribe: interactorUnsubscribe } = model.interactor.onAnimation(
+      onCameraChangedSub = ren.onEvent((event) => {
+        if (event.type === 'ActiveCameraEvent') {
+          if (onCameraModifiedSub) {
+            onCameraModifiedSub.unsubscribe();
+          }
+          onCameraModifiedSub = event.camera.onModified(onCameraModified);
+        }
+      });
+      onCameraModifiedSub = ren.getActiveCamera().onModified(onCameraModified);
+      onAnimationSub = model._interactor.onAnimation(
         publicAPI.updateMarkerOrientation
-      ));
+      );
+      onEndAnimationSub = model._interactor.onEndAnimation(
+        publicAPI.updateMarkerOrientation
+      );
 
-      resizeObserver.observe(model.interactor.getView().getCanvas());
+      resizeObserver.observe(model._interactor.getView().getCanvas());
 
       publicAPI.updateViewport();
       publicAPI.updateMarkerOrientation();
@@ -153,13 +180,19 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       model.enabled = false;
 
       resizeObserver.disconnect();
-      interactorUnsubscribe();
-      interactorUnsubscribe = null;
+      onCameraChangedSub.unsubscribe();
+      onCameraChangedSub = null;
+      onCameraModifiedSub.unsubscribe();
+      onCameraModifiedSub = null;
+      onAnimationSub.unsubscribe();
+      onAnimationSub = null;
+      onEndAnimationSub.unsubscribe();
+      onEndAnimationSub = null;
 
       model.actor.setVisibility(false);
       selfRenderer.removeViewProp(model.actor);
 
-      const renderWindow = model.interactor
+      const renderWindow = model._interactor
         .findPokedRenderer()
         .getRenderWindow();
       if (renderWindow) {
@@ -178,9 +211,7 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
     }
 
     model.viewportCorner = corner;
-    if (model.enabled) {
-      publicAPI.updateViewport();
-    }
+    publicAPI.updateViewport();
   };
 
   /**
@@ -193,9 +224,7 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
     }
 
     model.viewportSize = viewportSize;
-    if (model.enabled) {
-      publicAPI.updateViewport();
-    }
+    publicAPI.updateViewport();
   };
 
   publicAPI.setActor = (actor) => {
@@ -203,6 +232,14 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
     publicAPI.setEnabled(false);
     model.actor = actor;
     publicAPI.setEnabled(previousState);
+  };
+
+  publicAPI.setParentRenderer = (ren) => {
+    const changed = superClass.setParentRenderer(ren);
+    if (changed) {
+      publicAPI.updateViewport();
+    }
+    return changed;
   };
 
   publicAPI.getRenderer = () => selfRenderer;
@@ -213,9 +250,21 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       selfSubscription.unsubscribe();
       selfSubscription = null;
     }
-    if (interactorUnsubscribe) {
-      interactorUnsubscribe();
-      interactorUnsubscribe = null;
+    if (onCameraChangedSub) {
+      onCameraChangedSub.unsubscribe();
+      onCameraChangedSub = null;
+    }
+    if (onCameraModifiedSub) {
+      onCameraModifiedSub.unsubscribe();
+      onCameraModifiedSub = null;
+    }
+    if (onAnimationSub) {
+      onAnimationSub.unsubscribe();
+      onAnimationSub = null;
+    }
+    if (onEndAnimationSub) {
+      onEndAnimationSub.unsubscribe();
+      onEndAnimationSub = null;
     }
     resizeObserver.disconnect();
   };
@@ -232,11 +281,12 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
 
 export const DEFAULT_VALUES = {
   // actor: null,
-  // interactor: null,
+  // _interactor: null,
   viewportCorner: Constants.Corners.BOTTOM_LEFT,
   viewportSize: 0.2,
   minPixelSize: 50,
   maxPixelSize: 200,
+  parentRenderer: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -252,11 +302,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   // NOTE: setting these while the widget is enabled will
   // not update the widget.
   macro.setGet(publicAPI, model, [
-    'interactor',
+    '_interactor',
     'minPixelSize',
     'maxPixelSize',
+    'parentRenderer',
   ]);
   macro.get(publicAPI, model, ['actor']);
+  macro.moveToProtected(publicAPI, model, ['interactor']);
 
   // Object methods
   vtkOrientationMarkerWidget(publicAPI, model);

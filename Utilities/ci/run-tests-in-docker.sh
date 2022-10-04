@@ -3,7 +3,7 @@
 # Source: https://github.com/thewtex/docker-opengl/tree/webgl
 
 container=webgl
-image=thewtex/opengl:ubuntu1804
+image=thewtex/opengl:ubuntu2004
 port=6080
 extra_run_args=""
 quiet=""

@@ -16,11 +16,10 @@ export default function generateState() {
     .createBuilder()
     .addStateFromMixin({
       labels: ['moveHandle'],
-      mixins: ['origin', 'color', 'scale1', 'visible', 'shape'],
+      mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator', 'shape'],
       name: 'moveHandle',
       initialValues: {
-        scale1: 50,
-        origin: [],
+        scale1: 30,
         visible: true,
       },
     })
@@ -29,8 +28,7 @@ export default function generateState() {
       mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator', 'shape'],
       name: 'handle1',
       initialValues: {
-        scale1: 50,
-        origin: [],
+        scale1: 30,
       },
     })
     .addStateFromMixin({
@@ -38,8 +36,7 @@ export default function generateState() {
       mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator', 'shape'],
       name: 'handle2',
       initialValues: {
-        scale1: 50,
-        origin: [],
+        scale1: 30,
       },
     })
     .addStateFromMixin({
@@ -50,8 +47,6 @@ export default function generateState() {
         /* text is empty to set a text filed in the SVGLayer and to avoid
          * displaying text before positioning the handles */
         text: '',
-        visible: false,
-        origin: [0, 0, 0],
       },
     })
     .addStateFromInstance({ name: 'positionOnLine', instance: linePosState })

@@ -22,7 +22,7 @@ function vtkSpline1D(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.computeOpenCoefficients = (size, work, x, y) => {
+  publicAPI.computeOpenCoefficients = (size, work, x, y, options = {}) => {
     vtkErrorMacro(
       `${
         model.classHierarchy.slice(-1)[0]

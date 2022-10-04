@@ -32,7 +32,7 @@ function majorAxis(vec3, idxA, idxB) {
 // ----------------------------------------------------------------------------
 
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
-  background: [0, 0, 0],
+  background: [0.2, 0.2, 0.2],
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
@@ -47,7 +47,7 @@ orientationWidget.setEnabled(true);
 orientationWidget.setViewportCorner(
   vtkOrientationMarkerWidget.Corners.BOTTOM_LEFT
 );
-orientationWidget.setViewportSize(0.15);
+orientationWidget.setViewportSize(0.3);
 orientationWidget.setMinPixelSize(100);
 orientationWidget.setMaxPixelSize(300);
 
@@ -74,12 +74,12 @@ widgetManager.setRenderer(orientationWidget.getRenderer());
 
 const widget = vtkInteractiveOrientationWidget.newInstance();
 widget.placeWidget(axes.getBounds());
-widget.setBounds(axes.getBounds());
+// widget.setBounds(axes.getBounds());
 widget.setPlaceFactor(1);
 
 const vw = widgetManager.addWidget(widget);
 
-// Manage user interaction
+// // Manage user interaction
 vw.onOrientationChange(({ up, direction, action, event }) => {
   const focalPoint = camera.getFocalPoint();
   const position = camera.getPosition();

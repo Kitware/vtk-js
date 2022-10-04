@@ -1,4 +1,4 @@
-import JSZip from 'jszip';
+import { strFromU8, unzipSync } from 'fflate';
 
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import macro from 'vtk.js/Sources/macros';
@@ -51,39 +51,23 @@ function vtkZipMultiDataSetReader(publicAPI, model) {
 
     return new Promise((resolve, reject) => {
       model.arrays = [];
-      const zip = new JSZip();
-      zip
-        .loadAsync(arrayBuffer)
-        .then(() => {
-          let processing = 0;
-          zip.forEach((relativePath, zipEntry) => {
+      const decompressedFiles = unzipSync(new Uint8Array(arrayBuffer));
+      try {
+        Object.entries(decompressedFiles).forEach(
+          ([relativePath, fileData]) => {
             if (relativePath.match(/datasets\.json$/i)) {
-              processing++;
-              zipEntry
-                .async('string')
-                .then((txt) => {
-                  model.datasets = JSON.parse(txt);
-                  processing--;
-                  if (!processing) {
-                    resolve();
-                  }
-                })
-                .catch(reject);
+              model.datasets = JSON.parse(strFromU8(fileData));
             }
             if (relativePath.match(/array_[a-zA-Z]+_[0-9]+/)) {
-              processing++;
-              zipEntry.async('arraybuffer').then((arraybuffer) => {
-                processing--;
-                const [type, id] = relativePath.split('_').slice(-2);
-                model.arrays[id] = macro.newTypedArray(type, arraybuffer);
-                if (!processing) {
-                  resolve();
-                }
-              });
+              const [type, id] = relativePath.split('_').slice(-2);
+              model.arrays[id] = macro.newTypedArray(type, fileData.buffer);
             }
-          });
-        })
-        .catch(reject);
+          }
+        );
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
     });
   };
 

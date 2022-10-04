@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix';
-import { TypedArray } from '../../../types';
+import { TypedArray, Vector3 } from '../../../types';
 
 declare interface Transform {
 
@@ -22,9 +22,9 @@ declare interface Transform {
 	 * Normalizes the axis of rotation then rotates the current matrix `angle`
 	 * degrees/radians around the provided axis.
 	 * @param {Number} angle 
-	 * @param {Number} axis 
+	 * @param {Vector3} axis 
 	 */
-	rotate(angle: number, axis: number): Transform
+	rotate(angle: number, axis: Vector3): Transform
 
 	/**
 	 * Rotates `angle` degrees/radians around the X axis.
@@ -78,11 +78,11 @@ declare interface Transform {
 	 * iterations (sets of 3) to loop through. Assumes the `typedArray` is an
 	 * array of multiples of 3, unless specifically handling with offset and
 	 * iterations. Returns the instance for chaining.
-	 * @param {TypedArray} typedArray 
+	 * @param {Number[]|TypedArray} typedArray The Array value.
 	 * @param {Number} [offset] 
 	 * @param {Number} [nbIterations] 
 	 */
-	apply(typedArray: TypedArray, offset?: number, nbIterations?: number): Transform
+	apply(typedArray: number[]|TypedArray, offset?: number, nbIterations?: number): Transform
 
 	/**
 	 * Returns the internal `mat4` matrix.
@@ -119,7 +119,7 @@ declare function buildFromRadian(): Transform;
  * @example
  * ```js
  * let point = [2,5,12];
- * vtkMatrixBuilder.buildfromDegree().translate(1,0,2).rotateZ(45).apply(point);
+ * vtkMatrixBuilder.buildFromDegree().translate(1,0,2).rotateZ(45).apply(point);
  * ```
  * 
  * The vtkMatrixBuilder class has two functions, `vtkMatrixBuilder.buildFromDegree()` and

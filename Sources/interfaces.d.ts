@@ -1,5 +1,6 @@
 import vtkDataArray from "./Common/Core/DataArray";
 import { vtkPipelineConnection } from "./types";
+import { EVENT_ABORT, VOID } from './macros';
 
 /**
  * Object returned on any subscription call
@@ -32,48 +33,88 @@ export interface vtkOutputPort {
  * vtkAlgorithm API
  */
 export interface vtkAlgorithm {
+
 	/**
-	 * @param dataset
-	 * @param port (default 0)
+	 * Assign a data object as input.
+	 * @param dataset The dataset object.
+	 * @param {Number} [port] The port number (default 0).
 	 */
 	setInputData(dataset: any, port?: number): void;
+
 	/**
-	 * @param port (default 0)
+	 * @param {Number} [port] The port number (default 0).
 	 */
 	getInputData(port?: number): any;
+
 	/**
 	 * @param outputPort
-	 * @param port (default 0)
+	 * @param {Number} [port] The port number (default 0).
 	 */
 	setInputConnection(outputPort: vtkPipelineConnection, port?: number): void;
+
 	/**
-	 * @param port (default 0)
+	 * @param {Number} [port] The port number (default 0).
 	 */
 	getInputConnection(port?: number): vtkPipelineConnection;
-	addInputConnection(outputPort: vtkPipelineConnection): void;
-	addInputData(dataset: any): void;
+
 	/**
-	 * @param port (default 0)
+	 * Add a connection to the given input port index.
+	 * @param {vtkPipelineConnection} outputPort 
+	 */
+	addInputConnection(outputPort: vtkPipelineConnection): void;
+
+	/**
+	 * 
+	 * @param dataset 
+	 */
+	addInputData(dataset: any): void;
+
+	/**
+	 * Get the data object that will contain the algorithm output for the given
+	 * port.
+	 * @param {Number} [port] The port number (default 0).
 	 */
 	getOutputData(port?: number): any;
-	shouldUpdate(): boolean;
+
 	/**
-	 * @param port (default 0)
+	 * 
+	 */
+	shouldUpdate(): boolean;
+
+	/**
+	 * Get a proxy object corresponding to the given output port of this
+	 * algorithm. 
+	 * @param {Number} [port] The port number (default 0).
 	 */
 	getOutputPort(port?: number): vtkPipelineConnection;
-	update(): void;
-	getNumberOfInputPorts(): number;
-	getNumberOfOutputPorts(): number;
+
 	/**
-	 * @param port (default 0)
+	 * Bring this algorithm's outputs up-to-date.
+	 */
+	update(): void;
+
+	/**
+	 * Get the number of input ports used by the algorithm.
+	 */
+	getNumberOfInputPorts(): number;
+
+	/**
+	 * Get the number of output ports provided by the algorithm.
+	 */
+	getNumberOfOutputPorts(): number;
+
+	/**
+	 * Get the actual data array for the input array sepcified by idx.
+	 * @param {Number} port (default 0)
 	 */
 	getInputArrayToProcess(inputPort?: number): vtkDataArray;
+
 	/**
-	 *
-	 * @param inputPort
-	 * @param arrayName
-	 * @param fieldAssociation
-	 * @param attributeType (default 'Scalars')
+	 * Set the input data arrays that this algorithm will process. 
+	 * @param {Number} inputPort The port number.
+	 * @param {String} arrayName The name of the array.
+	 * @param {String} fieldAssociation The name of the association field.
+	 * @param {String} attributeType (default 'Scalars')
 	 */
 	setInputArrayToProcess(
 		inputPort: number,
@@ -87,9 +128,9 @@ export interface vtkAlgorithm {
 * Base vtkClass which provides MTime tracking and class infrastructure
 */
 export interface vtkObject {
+	
 	/**
 	 * Allow to check if that object was deleted (.delete() was called before).
-	 *
 	 * @returns true if delete() was previously called
 	 */
 	isDeleted(): boolean;
@@ -137,14 +178,14 @@ export interface vtkObject {
 	 * Generic method to set many fields at one.
 	 *
 	 * For example calling the following function
-	 * ```
+	 * ```js
 	 * changeDetected = sphereSourceInstance.set({
 	 *    phiResolution: 10,
 	 *    thetaResolution: 20,
 	 * });
 	 * ```
 	 * will be equivalent of calling
-	 * ```
+	 * ```js
 	 * changeDetected += sphereSourceInstance.setPhiResolution(10);
 	 * changeDetected += sphereSourceInstance.setThetaResolution(20);
 	 * changeDetected = !!changeDetected;
@@ -157,9 +198,9 @@ export interface vtkObject {
 	 * If `noFunction` is set to true, the field will be set directly on the model
 	 * without calling the `set${FieldName}()` method.
 	 *
-	 * @param map (default: {}) Object capturing the set of fieldNames and associated values to set.
-	 * @param noWarning (default: false) Boolean to disable any warning.
-	 * @param noFunctions (default: false) Boolean to skip any function execution and rely on only setting the fields on the model.
+	 * @param [map] (default: {}) Object capturing the set of fieldNames and associated values to set.
+	 * @param [noWarning] (default: false) Boolean to disable any warning.
+	 * @param [noFunctions] (default: false) Boolean to skip any function execution and rely on only setting the fields on the model.
 	 * @return true if a change was actually performed. False otherwise when the value provided were equal to the ones already set inside the instance.
 	 */
 	set(map?: object, noWarning?: boolean, noFunction?: boolean): boolean;
@@ -213,17 +254,30 @@ export interface vtkObject {
 	getState(): object;
 
 	/**
+	 * Used internally by JSON.stringify to get the content to serialize.
+	 * Allow to call directly JSON.stringify on the vtkObject instead of using getState before doing so.
+	 *
+	 * ```
+	 * const actorStr = JSON.stringify(actor);
+	 * const newActor = vtk(JSON.parse(actorStr));
+	 * ```
+	 */
+	toJSON(): object;
+
+	/**
 	 * Try to copy the state of the other to ourselves by just using references.
 	 *
-	 * @param other instance to copy the reference from
-	 * @param debug (default: false) if true feedback will be provided when mismatch happen
+	 * @param {vtkObject} other instance to copy the reference from
+	 * @param {Boolean} [debug] (default: false) if true feedback will be provided when mismatch happen
 	 */
 	shallowCopy(other: vtkObject, debug?: boolean): void;
 }
 
 export interface vtkProperty {
 	name: string;
-	children?: Array<vtkProperty>;
+	children?: vtkProperty[];
 }
 
 export interface vtkPropertyDomain {}
+
+export type EventHandler = (...args: unknown[]) => typeof EVENT_ABORT | typeof VOID | void;

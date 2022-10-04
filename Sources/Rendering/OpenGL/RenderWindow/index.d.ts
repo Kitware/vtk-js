@@ -1,14 +1,49 @@
-import { vtkAlgorithm, vtkObject } from "../../../interfaces";
-import { Vector3 } from "../../../types";
+import { vtkAlgorithm, vtkObject } from '../../../interfaces';
+import { Nullable, Size, Vector2, Vector3 } from '../../../types';
+import { VtkDataTypes } from '../../../Common/Core/DataArray';
+import vtkRenderer from '../../Core/Renderer';
+import vtkTexture from '../../Core/Texture';
+import vtkViewStream from '../../../IO/Core/ImageStream/ViewStream';
 
 /**
  *
  */
-export interface ILineSourceInitialValues {
-	resolution?: number;
-	point1?: Vector3;
-	point2?: Vector3;
-	pointType?: string;
+export interface IOpenGLRenderWindowInitialValues {
+	cullFaceEnabled?: boolean;
+	shaderCache?: null;
+	initialized?: boolean;
+	context?: WebGLRenderingContext | WebGL2RenderingContext;
+	canvas?: HTMLCanvasElement;
+	cursorVisibility?: boolean;
+	cursor?: string;
+	textureUnitManager?: null;
+	textureResourceIds?: null;
+	containerSize?: Size;
+	renderPasses?: any[];
+	notifyStartCaptureImage?: boolean;
+	webgl2?: boolean;
+	defaultToWebgl2?: boolean;
+	activeFramebuffer?: any;
+	xrSession?: any;
+	xrSessionIsAR?: boolean;
+	xrReferenceSpace?: any;
+	xrSupported?: boolean;
+	imageFormat?: 'image/png';
+	useOffScreen?: boolean;
+	useBackgroundImage?: boolean;
+}
+
+export interface ICaptureOptions {
+	resetCamera: boolean;
+	size: Size;
+	scale: number
+}
+
+export interface I3DContextOptions {
+    preserveDrawingBuffer?: boolean;
+    depth?: boolean;
+    alpha?: boolean;
+    powerPreference?: string;
 }
 
 type vtkOpenGLRenderWindowBase = vtkObject & Omit<vtkAlgorithm,
@@ -23,228 +58,231 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 
 	/**
 	 * Builds myself.
-	 * @param prepass 
+	 * @param {Boolean} prepass
 	 */
-	buildPass(prepass : any): void;
+	buildPass(prepass: boolean): void;
 
 	/**
-	 * 
+     * Initialize the rendering window. This will setup all system-specific
+	 * resources. This method and Finalize() must be symmetric and it should be
+	 * possible to call them multiple times, even changing WindowId in-between.
+	 * This is what WindowRemap does.
 	 */
 	initialize(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	makeCurrent(): void;
 
 	/**
-	 * 
-	 * @param el 
+	 *
+	 * @param {HTMLElement} el The container element.
 	 */
-	setContainer(el : any): void;
+	setContainer(el: HTMLElement): void;
 
 	/**
-	 * 
+	 * Get the container element.
 	 */
-	getContainer(): void;
+	getContainer(): Nullable<HTMLElement>;
 
 	/**
-	 * 
+	 * Get the container size.
 	 */
-	getContainerSize(): Array</* ?,? */ any>;
+	getContainerSize(): Vector2;
 
 	/**
-	 * 
+	 * Get the frame buffer size.
 	 */
-	getFramebufferSize(): Array<number>;
+	getFramebufferSize(): Vector2;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param viewport 
+	 * Check if a point is in the viewport.
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {vtkRenderer} viewport The viewport vtk element.
 	 */
-	isInViewport(x : any, y : any, viewport : any): boolean;
+	isInViewport(x: number, y: number, viewport: vtkRenderer): boolean;
 
 	/**
-	 * 
-	 * @param viewport 
+	 * Get the viewport size.
+	 * @param {vtkRenderer} viewport The viewport vtk element.
 	 */
-	getViewportSize(viewport : any): VtkOpenGLRenderWindow0.GetViewportSizeRet;
+	getViewportSize(viewport: vtkRenderer): Vector2;
 
 	/**
-	 * 
-	 * @param viewport 
+	 * Get the center of the viewport.
+	 * @param {vtkRenderer} viewport The viewport vtk element.
 	 */
-	getViewportCenter(viewport : any): VtkOpenGLRenderWindow0.GetViewportCenterRet;
+	getViewportCenter(viewport: vtkRenderer): Vector2;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
 	 */
-	displayToNormalizedDisplay(x : any, y : any, z : any): VtkOpenGLRenderWindow0.DisplayToNormalizedDisplayRet;
+	displayToNormalizedDisplay(x: number, y: number, z: number): Vector3;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
 	 */
-	normalizedDisplayToDisplay(x : number, y : number, z : number): VtkOpenGLRenderWindow0.NormalizedDisplayToDisplayRet;
+	normalizedDisplayToDisplay(x: number, y: number, z: number): Vector3;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
-	 * @param renderer 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
-	worldToView(x : any, y : any, z : any, renderer : any): void;
+	worldToView(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
-	 * @param renderer 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
-	viewToWorld(x : any, y : any, z : any, renderer : any): void;
+	viewToWorld(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
-	 * @param renderer 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
-	worldToDisplay(x : any, y : any, z : any, renderer : any): Array</* number,number,number */ any>;
+	worldToDisplay(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
-	 * @param renderer 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
-	displayToWorld(x : any, y : any, z : any, renderer : any): void;
+	displayToWorld(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
-	 * @param renderer 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
-	normalizedDisplayToViewport(x : any, y : any, z : any, renderer : any): VtkOpenGLRenderWindow0.NormalizedDisplayToViewportRet;
+	normalizedDisplayToViewport(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
-	 * @param renderer 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
-	viewportToNormalizedViewport(x : any, y : any, z : any, renderer : any): VtkOpenGLRenderWindow0.ViewportToNormalizedViewportRet;
+	viewportToNormalizedViewport(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
 	 */
-	normalizedViewportToViewport(x : any, y : any, z : any): VtkOpenGLRenderWindow0.NormalizedViewportToViewportRet;
+	normalizedViewportToViewport(x: number, y: number, z: number): Vector3;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
 	 */
-	displayToLocalDisplay(x : any, y : any, z : any): VtkOpenGLRenderWindow0.DisplayToLocalDisplayRet;
+	displayToLocalDisplay(x: number, y: number, z: number): Vector3;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
-	 * @param renderer 
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} z
+	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
-	viewportToNormalizedDisplay(x : any, y : any, z : any, renderer : any): Array</* number,number,? */ any>;
+	viewportToNormalizedDisplay(x: number, y: number, z: number, renderer: vtkRenderer): Vector3;
 
 	/**
-	 * 
-	 * @param x1 
-	 * @param y1 
-	 * @param x2 
-	 * @param y2 
+	 *
+	 * @param {Number} x1
+	 * @param {Number} y1
+	 * @param {Number} x2
+	 * @param {Number} y2
 	 */
-	getPixelData(x1 : any, y1 : any, x2 : any, y2 : any): Float32Array;
+	getPixelData(x1: number, y1: number, x2: number, y2: number): Uint8Array;
 
 	/**
-	 * 
-	 * @param options 
+	 *
+	 * @param {I3DContextOptions} options
 	 */
-	get3DContext(options : object): void;
+	get3DContext(options: I3DContextOptions): Nullable<WebGLRenderingContext>;
 
 	/**
-	 * 
+	 *
 	 */
 	startVR(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	stopVR(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	vrRender(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	restoreContext(): void;
 
 	/**
-	 * 
-	 * @param texture 
+	 *
+	 * @param {vtkTexture} texture
 	 */
-	activateTexture(texture : any): void;
+	activateTexture(texture: vtkTexture): void;
+
+	/**
+	 *
+	 * @param {vtkTexture} texture
+	 */
+	deactivateTexture(texture: vtkTexture): void;
+
+	/**
+	 *
+	 * @param {vtkTexture} texture
+	 */
+	getTextureUnitForTexture(texture: vtkTexture): number;
+
+	/**
+	 *
+	 * @param {VtkDataTypes} vtktype 
+	 * @param {Number} numComps 
+	 * @param {Boolean} useFloat 
+	 */
+	getDefaultTextureInternalFormat(vtktype: VtkDataTypes, numComps: number, useFloat: boolean): void;
 
 	/**
 	 * 
-	 * @param texture 
+	 * @param {HTMLImageElement} img The background image.
 	 */
-	deactivateTexture(texture : any): void;
+	setBackgroundImage(img: HTMLImageElement): void;
 
 	/**
 	 * 
-	 * @param texture 
+	 * @param {Boolean} value
 	 */
-	getTextureUnitForTexture(texture : any): number;
-
-	/**
-	 * 
-	 * @param vtktype 
-	 * @param numComps 
-	 * @param useFloat 
-	 */
-	getDefaultTextureInternalFormat(vtktype : any, numComps : any, useFloat : any): void;
-
-	/**
-	 * 
-	 * @param img 
-	 */
-	setBackgroundImage(img : any): void;
-
-	/**
-	 * 
-	 * @param value 
-	 */
-	setUseBackgroundImage(value : boolean): void;
+	setUseBackgroundImage(value: boolean): void;
 
 	/**
 	 * Capture a screenshot of the contents of this renderwindow.  The options
@@ -257,46 +295,72 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * size.  If no `size` or `scale` are provided, the current renderwindow
 	 * size is assumed.  The default format is "image/png". Returns a promise
 	 * that resolves to the captured screenshot.
-	 * @param format 
-	 * @param options 
+	 * @param {String} format
+	 * @param {ICaptureOptions} options
 	 */
-	captureNextImage(format : any, options: object): /* VtkOpenGLRenderWindow0.+Promise */ any;
+	captureNextImage(format: string, options: ICaptureOptions): Nullable<Promise<string>>;
 
 	/**
-	 * 
+	 *
 	 */
-	getGLInformations(): VtkOpenGLRenderWindow0.GetGLInformationsRet;
+	getGLInformations(): object;
 
 	/**
-	 * 
+	 *
 	 */
 	traverseAllPasses(): void;
 
 	/**
-	 * 
-	 */
-	disableDepthMask(): void;
-
-	/**
-	 * 
-	 */
-	enableDepthMask(): void;
-
-	/**
-	 * 
+	 *
 	 */
 	disableCullFace(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	enableCullFace(): void;
 
 	/**
-	 * 
-	 * @param stream 
+	 *
+	 * @param {vtkViewStream} stream The vtkViewStream instance.
 	 */
-	setViewStream(stream : any): boolean;
+	setViewStream(stream: vtkViewStream): boolean;
+
+	/**
+	 *
+	 * @param {Vector2} size 
+	 */
+	setSize(size: Vector2): void;
+
+	/**
+	 *
+	 * @param {Number} x 
+	 * @param {Number} y 
+	 */
+	setSize(x: number, y: number): void;
+
+	/**
+	 *
+	 */
+	getSize(): Vector2;
+
+	/**
+	 *
+	 * @param {Vector2} size
+	 */
+	setVrResolution(size: Vector2): void;
+
+	/**
+	 *
+	 * @param {Number} x
+	 * @param {Number} y
+	 */
+	setVrResolution(x: number, y: number): void;
+
+	/**
+	 *
+	 */
+	getVrResolution(): Vector2;
 }
 
 /**
@@ -304,33 +368,37 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param {ILineSourceInitialValues} [initialValues] (default: {})
+ * @param {IOpenGLRenderWindowInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: ILineSourceInitialValues): void;
+export function extend(publicAPI: object, model: object, initialValues?: IOpenGLRenderWindowInitialValues): void;
 
 /**
  * Method used to create a new instance of vtkOpenGLRenderWindow.
- * @param {ILineSourceInitialValues} [initialValues] for pre-setting some of its content
+ * @param {IOpenGLRenderWindowInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: ILineSourceInitialValues): vtkOpenGLRenderWindow;
+export function newInstance(initialValues?: IOpenGLRenderWindowInitialValues): vtkOpenGLRenderWindow;
 
 /**
- * vtkOpenGLRenderWindow creates a polygonal cylinder centered at Center;
- * The axis of the cylinder is aligned along the global y-axis.
- * The height and radius of the cylinder can be specified, as well as the number of sides.
- * It is also possible to control whether the cylinder is open-ended or capped.
- * If you have the end points of the cylinder, you should use a vtkOpenGLRenderWindow followed by a vtkTubeFilter instead of the vtkOpenGLRenderWindow.
- * 
- * @example
- * ```js
- * import vtkOpenGLRenderWindow from 'vtk.js/Sources/Filters/Sources/LineSource';
- * 
- * const line = vtkOpenGLRenderWindow.newInstance({ resolution: 10 });
- * const polydata = line.getOutputData();
- * ```
+ *
+ * @param cb
+ */
+export function pushMonitorGLContextCount(cb: any): void;
+
+/**
+ *
+ * @param cb
+ */
+export function popMonitorGLContextCount(cb: any): void;
+
+/**
+ * WebGL rendering window
+ *
+ * vtkOpenGLRenderWindow is designed to view/render a vtkRenderWindow.
  */
 export declare const vtkOpenGLRenderWindow: {
 	newInstance: typeof newInstance,
 	extend: typeof extend,
+	pushMonitorGLContextCount: typeof pushMonitorGLContextCount,
+	popMonitorGLContextCount: typeof popMonitorGLContextCount,
 };
 export default vtkOpenGLRenderWindow;

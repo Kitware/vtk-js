@@ -12,7 +12,6 @@ import vtkSphereMapper from 'vtk.js/Sources/Rendering/Core/SphereMapper';
 
 import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
-import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 
 import controlPanel from './controlPanel.html';
 
@@ -34,8 +33,6 @@ const planeSource = vtkPlaneSource.newInstance();
 const simpleFilter = vtkCalculator.newInstance();
 const mapper = vtkSphereMapper.newInstance();
 const actor = vtkActor.newInstance();
-
-actor.getProperty().setRepresentation(Representation.WIREFRAME); // ??? Is this useful?
 
 simpleFilter.setFormula({
   getArrays: (inputDataSets) => ({

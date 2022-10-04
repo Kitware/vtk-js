@@ -251,6 +251,12 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
     return orientationRotation;
   }
 
+  const superGetRepresentationStates = publicAPI.getRepresentationStates;
+  publicAPI.getRepresentationStates = (input = model.inputData[0]) =>
+    superGetRepresentationStates(input).filter(
+      (state) => state.getOrigin?.() && state.isVisible?.()
+    );
+
   publicAPI.requestDataInternal = (inData, outData) => {
     const { points, scale, color, direction } = model.internalArrays;
     const list = publicAPI.getRepresentationStates(inData[0]);
@@ -271,32 +277,36 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
       direction: direction.getData(),
     };
 
-    for (let i = 0; i < list.length; i++) {
+    for (let i = 0; i < totalCount; i++) {
       const state = list[i];
       const isActive = state.getActive();
       const scaleFactor = isActive ? model.activeScaleFactor : 1;
 
       const coord = state.getOrigin();
-      typedArray.points[i * 3 + 0] = coord[0];
-      typedArray.points[i * 3 + 1] = coord[1];
-      typedArray.points[i * 3 + 2] = coord[2];
+      if (coord) {
+        typedArray.points[i * 3 + 0] = coord[0];
+        typedArray.points[i * 3 + 1] = coord[1];
+        typedArray.points[i * 3 + 2] = coord[2];
 
-      let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
-      scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
+        let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
+        scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
 
-      const rotation = getGlyphRotation(scale3);
+        const rotation = getGlyphRotation(scale3);
 
-      typedArray.direction.set(rotation, 9 * i);
-      typedArray.scale[i] =
-        scaleFactor *
-        (state.getScale1 ? state.getScale1() : model.defaultScale);
+        typedArray.direction.set(rotation, 9 * i);
+        typedArray.scale[i] =
+          scaleFactor *
+          (state.getScale1 ? state.getScale1() : model.defaultScale);
 
-      if (publicAPI.getScaleInPixels()) {
-        typedArray.scale[i] *= publicAPI.getPixelWorldHeightAtCoord(coord);
+        if (publicAPI.getScaleInPixels()) {
+          typedArray.scale[i] *= publicAPI.getPixelWorldHeightAtCoord(coord);
+        }
+
+        typedArray.color[i] =
+          model.useActiveColor && isActive
+            ? model.activeColor
+            : state.getColor();
       }
-
-      typedArray.color[i] =
-        model.useActiveColor && isActive ? model.activeColor : state.getColor();
     }
 
     model.internalPolyData.modified();
@@ -304,13 +314,13 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
   };
 
   publicAPI.requestData = (inData, outData) => {
-    const shape = publicAPI.getRepresentationStates(inData[0])[0].getShape();
+    const shape = publicAPI.getRepresentationStates(inData[0])[0]?.getShape();
     let shouldCreateGlyph = model.glyph == null;
     if (model.shape !== shape && Object.values(ShapeType).includes(shape)) {
       model.shape = shape;
       shouldCreateGlyph = true;
     }
-    if (shouldCreateGlyph) {
+    if (shouldCreateGlyph && model.shape) {
       model.glyph = createGlyph(model.shape);
       model.mapper.setInputConnection(model.glyph.getOutputPort(), 1);
     }
@@ -322,11 +332,11 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
     ctxVisible = true,
     handleVisible = true
   ) => {
-    const state = publicAPI.getRepresentationStates()[0];
+    const hasValidState = publicAPI.getRepresentationStates().length > 0;
     superClass.updateActorVisibility(
       renderingType,
       ctxVisible,
-      handleVisible && state.isVisible()
+      handleVisible && hasValidState
     );
   };
 }

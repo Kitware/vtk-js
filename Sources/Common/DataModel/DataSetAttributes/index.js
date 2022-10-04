@@ -78,6 +78,9 @@ function vtkDataSetAttributes(publicAPI, model) {
     return model[`active${attType}`];
   };
 
+  publicAPI.getAttributes = (arr) =>
+    attrTypes.filter((attrType) => publicAPI[`get${attrType}`]() === arr);
+
   publicAPI.setActiveAttributeByName = (arrayName, attType) =>
     publicAPI.setActiveAttributeByIndex(
       publicAPI.getArrayWithIndex(arrayName).index,
@@ -171,6 +174,12 @@ function vtkDataSetAttributes(publicAPI, model) {
       model.copyAttributeFlags[AttributeCopyOperations.PASSDATA][
         AttributeTypes[attType]
       ] = false;
+    };
+    publicAPI[`copy${value}On`] = () => {
+      const attType = value.toUpperCase();
+      model.copyAttributeFlags[AttributeCopyOperations.PASSDATA][
+        AttributeTypes[attType]
+      ] = true;
     };
   });
 

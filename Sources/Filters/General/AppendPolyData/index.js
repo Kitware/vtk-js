@@ -65,8 +65,8 @@ function vtkAppendPolyData(publicAPI, model) {
     for (let i = 0; i < numberOfInputs; i++) {
       const ds = inData[i];
       if (!ds) {
-        vtkErrorMacro('Invalid or missing input');
-        return;
+        // eslint-disable-next-line
+        continue;
       }
       const dsNumPts = ds.getPoints().getNumberOfPoints();
       numPts += dsNumPts;

@@ -48,17 +48,18 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
+      model.currentRenderPass = null;
       model.openGLImageSlice = publicAPI.getFirstAncestorOfType(
         'vtkOpenGLImageSlice'
       );
       model.openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model.openGLRenderWindow = model.openGLRenderer.getParent();
-      model.context = model.openGLRenderWindow.getContext();
-      model.tris.setOpenGLRenderWindow(model.openGLRenderWindow);
-      model.openGLTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
-      model.colorTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
-      model.pwfTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model._openGLRenderWindow = model.openGLRenderer.getParent();
+      model.context = model._openGLRenderWindow.getContext();
+      model.tris.setOpenGLRenderWindow(model._openGLRenderWindow);
+      model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      model.pwfTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       const ren = model.openGLRenderer.getRenderable();
       model.openGLCamera = model.openGLRenderer.getViewNodeFor(
         ren.getActiveCamera()
@@ -70,8 +71,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     }
   };
 
-  publicAPI.translucentPass = (prepass) => {
+  publicAPI.translucentPass = (prepass, renderPass) => {
     if (prepass) {
+      model.currentRenderPass = renderPass;
       publicAPI.render();
     }
   };
@@ -107,6 +109,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
   publicAPI.buildShaders = (shaders, ren, actor) => {
     publicAPI.getShaderTemplate(shaders, ren, actor);
+
+    // apply any renderPassReplacements
+    if (model.lastRenderPassShaderReplacement) {
+      model.lastRenderPassShaderReplacement(shaders);
+    }
+
     publicAPI.replaceShaderValues(shaders, ren, actor);
   };
 
@@ -287,6 +295,18 @@ function vtkOpenGLImageMapper(publicAPI, model) {
             ]
           ).result;
           break;
+        case 3:
+          FSSource = vtkShaderProgram.substitute(
+            FSSource,
+            '//VTK::TCoord::Impl',
+            [
+              'vec4 tcolor = cscale0*texture2D(texture1, tcoordVCVSOutput.st) + cshift0;',
+              'gl_FragData[0] = vec4(texture2D(colorTexture1, vec2(tcolor.r,0.5)).r,',
+              '  texture2D(colorTexture1, vec2(tcolor.g,0.5)).r,',
+              '  texture2D(colorTexture1, vec2(tcolor.b,0.5)).r, opacity);',
+            ]
+          ).result;
+          break;
         default:
           FSSource = vtkShaderProgram.substitute(
             FSSource,
@@ -379,7 +399,24 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const tNumComp = model.openGLTexture.getComponents();
     const iComp = actor.getProperty().getIndependentComponents();
 
+    // has the render pass shader replacement changed? Two options
+    let needRebuild = false;
+    if (!model.currentRenderPass && model.lastRenderPassShaderReplacement) {
+      needRebuild = true;
+      model.lastRenderPassShaderReplacement = null;
+    }
     if (
+      model.currentRenderPass &&
+      model.currentRenderPass.getShaderReplacement() !==
+        model.lastRenderPassShaderReplacement
+    ) {
+      model.lastRenderPassShaderReplacement =
+        model.currentRenderPass.getShaderReplacement();
+      needRebuild = true;
+    }
+
+    if (
+      needRebuild ||
       model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
       cellBO.getProgram() === 0 ||
       model.lastTextureComponents !== tNumComp ||
@@ -404,7 +441,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       publicAPI.buildShaders(shaders, ren, actor);
 
       // compile and bind the program if needed
-      const newShader = model.openGLRenderWindow
+      const newShader = model._openGLRenderWindow
         .getShaderCache()
         .readyShaderProgramArray(
           shaders.Vertex,
@@ -421,7 +458,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
       cellBO.getShaderSourceTime().modified();
     } else {
-      model.openGLRenderWindow
+      model._openGLRenderWindow
         .getShaderCache()
         .readyShaderProgram(cellBO.getProgram());
     }
@@ -505,7 +542,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       let cl = actor.getProperty().getColorLevel();
       const target = iComps ? i : 0;
       const cfun = actor.getProperty().getRGBTransferFunction(target);
-      if (cfun) {
+      if (cfun && actor.getProperty().getUseLookupTableScalarRange()) {
         const cRange = cfun.getRange();
         cw = cRange[1] - cRange[0];
         cl = 0.5 * (cRange[1] + cRange[0]);
@@ -563,9 +600,24 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         macro.vtkErrorMacro('OpenGL has a limit of 6 clipping planes');
         numClipPlanes = 6;
       }
-      const image = model.currentInput;
-      const w2imat4 = image.getWorldToIndex();
-      mat4.multiply(model.imagematinv, w2imat4, actor.getMatrix());
+
+      const shiftScaleEnabled = cellBO.getCABO().getCoordShiftAndScaleEnabled();
+      const inverseShiftScaleMatrix = shiftScaleEnabled
+        ? cellBO.getCABO().getInverseShiftAndScaleMatrix()
+        : null;
+      const mat = inverseShiftScaleMatrix
+        ? mat4.copy(model.imagematinv, actor.getMatrix())
+        : actor.getMatrix();
+      if (inverseShiftScaleMatrix) {
+        mat4.transpose(mat, mat);
+        mat4.multiply(mat, mat, inverseShiftScaleMatrix);
+        mat4.transpose(mat, mat);
+      }
+
+      // transform crop plane normal with transpose(inverse(worldToIndex))
+      mat4.transpose(model.imagemat, model.currentInput.getIndexToWorld());
+      mat4.multiply(model.imagematinv, mat, model.imagemat);
+
       const planeEquations = [];
       for (let i = 0; i < numClipPlanes; i++) {
         const planeEquation = [];
@@ -580,7 +632,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         }
       }
       cellBO.getProgram().setUniformi('numClipPlanes', numClipPlanes);
-      cellBO.getProgram().setUniform4fv('clipPlanes', 6, planeEquations);
+      cellBO.getProgram().setUniform4fv('clipPlanes', planeEquations);
     }
   };
 
@@ -850,11 +902,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const { ijkMode } = model.renderable.getClosestIJKAxis();
 
     // Find the IJK slice
-    let nSlice = model.renderable.getSlice();
+    let slice = model.renderable.getSlice();
     if (ijkMode !== model.renderable.getSlicingMode()) {
       // If not IJK slicing, get the IJK slice from the XYZ position/slice
-      nSlice = model.renderable.getSliceAtPosition(nSlice);
+      slice = model.renderable.getSliceAtPosition(slice);
     }
+
+    const nSlice = Math.round(slice);
 
     // Find sliceOffset
     const ext = image.getExtent();
@@ -870,7 +924,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     }
 
     // rebuild the VBO if the data has changed
-    const toString = `${nSlice}A${image.getMTime()}A${imgScalars.getMTime()}B${publicAPI.getMTime()}C${model.renderable.getSlicingMode()}D${actor
+    const toString = `${slice}A${image.getMTime()}A${imgScalars.getMTime()}B${publicAPI.getMTime()}C${model.renderable.getSlicingMode()}D${actor
       .getProperty()
       .getMTime()}`;
     if (model.VBOBuildString !== toString) {
@@ -906,6 +960,16 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         tcoordArray[i * 2 + 1] = i > 1 ? 1.0 : 0.0;
       }
 
+      // Determine depth position of the slicing plane in the scene.
+      // Slicing modes X, Y, and Z use a continuous axis position, whereas
+      // slicing modes I, J, and K should use discrete positions.
+      const sliceDepth = [SlicingMode.X, SlicingMode.Y, SlicingMode.Z].includes(
+        model.renderable.getSlicingMode()
+      )
+        ? slice
+        : nSlice;
+
+      const spatialExt = image.getSpatialExtent();
       const basicScalars = imgScalars.getData();
       let scalars = null;
       // Get right scalars according to slicing mode
@@ -922,18 +986,18 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         }
         dims[0] = dims[1];
         dims[1] = dims[2];
-        ptsArray[0] = nSlice;
-        ptsArray[1] = ext[2];
-        ptsArray[2] = ext[4];
-        ptsArray[3] = nSlice;
-        ptsArray[4] = ext[3];
-        ptsArray[5] = ext[4];
-        ptsArray[6] = nSlice;
-        ptsArray[7] = ext[2];
-        ptsArray[8] = ext[5];
-        ptsArray[9] = nSlice;
-        ptsArray[10] = ext[3];
-        ptsArray[11] = ext[5];
+        ptsArray[0] = sliceDepth;
+        ptsArray[1] = spatialExt[2];
+        ptsArray[2] = spatialExt[4];
+        ptsArray[3] = sliceDepth;
+        ptsArray[4] = spatialExt[3];
+        ptsArray[5] = spatialExt[4];
+        ptsArray[6] = sliceDepth;
+        ptsArray[7] = spatialExt[2];
+        ptsArray[8] = spatialExt[5];
+        ptsArray[9] = sliceDepth;
+        ptsArray[10] = spatialExt[3];
+        ptsArray[11] = spatialExt[5];
       } else if (ijkMode === SlicingMode.J) {
         scalars = new basicScalars.constructor(dims[2] * dims[0] * numComp);
         let id = 0;
@@ -946,35 +1010,35 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           }
         }
         dims[1] = dims[2];
-        ptsArray[0] = ext[0];
-        ptsArray[1] = nSlice;
-        ptsArray[2] = ext[4];
-        ptsArray[3] = ext[1];
-        ptsArray[4] = nSlice;
-        ptsArray[5] = ext[4];
-        ptsArray[6] = ext[0];
-        ptsArray[7] = nSlice;
-        ptsArray[8] = ext[5];
-        ptsArray[9] = ext[1];
-        ptsArray[10] = nSlice;
-        ptsArray[11] = ext[5];
+        ptsArray[0] = spatialExt[0];
+        ptsArray[1] = sliceDepth;
+        ptsArray[2] = spatialExt[4];
+        ptsArray[3] = spatialExt[1];
+        ptsArray[4] = sliceDepth;
+        ptsArray[5] = spatialExt[4];
+        ptsArray[6] = spatialExt[0];
+        ptsArray[7] = sliceDepth;
+        ptsArray[8] = spatialExt[5];
+        ptsArray[9] = spatialExt[1];
+        ptsArray[10] = sliceDepth;
+        ptsArray[11] = spatialExt[5];
       } else if (ijkMode === SlicingMode.K || ijkMode === SlicingMode.NONE) {
         scalars = basicScalars.subarray(
           sliceOffset * sliceSize,
           (sliceOffset + 1) * sliceSize
         );
-        ptsArray[0] = ext[0];
-        ptsArray[1] = ext[2];
-        ptsArray[2] = nSlice;
-        ptsArray[3] = ext[1];
-        ptsArray[4] = ext[2];
-        ptsArray[5] = nSlice;
-        ptsArray[6] = ext[0];
-        ptsArray[7] = ext[3];
-        ptsArray[8] = nSlice;
-        ptsArray[9] = ext[1];
-        ptsArray[10] = ext[3];
-        ptsArray[11] = nSlice;
+        ptsArray[0] = spatialExt[0];
+        ptsArray[1] = spatialExt[2];
+        ptsArray[2] = sliceDepth;
+        ptsArray[3] = spatialExt[1];
+        ptsArray[4] = spatialExt[2];
+        ptsArray[5] = sliceDepth;
+        ptsArray[6] = spatialExt[0];
+        ptsArray[7] = spatialExt[3];
+        ptsArray[8] = sliceDepth;
+        ptsArray[9] = spatialExt[1];
+        ptsArray[10] = spatialExt[3];
+        ptsArray[11] = sliceDepth;
       } else {
         vtkErrorMacro('Reformat slicing not yet supported.');
       }

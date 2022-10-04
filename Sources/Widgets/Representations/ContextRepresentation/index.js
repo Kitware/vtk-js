@@ -14,6 +14,9 @@ function vtkContextRepresentation(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  activeScaleFactor: 1.2,
+  activeColor: 1,
+  useActiveColor: true,
   behavior: Behavior.CONTEXT,
   pickable: false,
   dragable: true,

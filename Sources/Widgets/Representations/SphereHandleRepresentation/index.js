@@ -104,6 +104,12 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     model.displayMapper.setCallback(callback ? callbackProxy : null);
   };
 
+  const superGetRepresentationStates = publicAPI.getRepresentationStates;
+  publicAPI.getRepresentationStates = (input = model.inputData[0]) =>
+    superGetRepresentationStates(input).filter(
+      (state) => state.getOrigin?.() && state.isVisible?.()
+    );
+
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
@@ -123,7 +129,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
       color: color.getData(),
     };
 
-    for (let i = 0; i < list.length; i++) {
+    for (let i = 0; i < totalCount; i++) {
       const state = list[i];
       const isActive = state.getActive();
       const scaleFactor = isActive ? model.activeScaleFactor : 1;
@@ -135,7 +141,6 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
       typedArray.scale[i] =
         scaleFactor *
-        (!state.isVisible || state.isVisible() ? 1 : 0) *
         (state.getScale1 ? state.getScale1() : model.defaultScale);
 
       if (publicAPI.getScaleInPixels()) {

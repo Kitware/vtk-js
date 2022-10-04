@@ -21,10 +21,6 @@ function vtkOpenGLRenderer(publicAPI, model) {
         return;
       }
 
-      // make sure we have a camera
-      if (!model.renderable.isActiveCameraCreated()) {
-        model.renderable.resetCamera();
-      }
       publicAPI.updateLights();
       publicAPI.prepareNodes();
       publicAPI.addMissingNode(model.renderable.getActiveCamera());
@@ -63,7 +59,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
       if (!model.renderable.getPreserveDepthBuffer()) {
         gl.clearDepth(1.0);
         clearMask |= gl.DEPTH_BUFFER_BIT;
-        gl.depthMask(true);
+        model.context.depthMask(true);
       }
 
       const ts = publicAPI.getTiledSizeAndOrigin();
@@ -72,8 +68,9 @@ function vtkOpenGLRenderer(publicAPI, model) {
       gl.viewport(ts.lowerLeftU, ts.lowerLeftV, ts.usize, ts.vsize);
 
       gl.colorMask(true, true, true, true);
-      gl.clear(clearMask);
-
+      if (clearMask) {
+        gl.clear(clearMask);
+      }
       gl.enable(gl.DEPTH_TEST);
     }
   };
@@ -86,7 +83,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
   };
 
   publicAPI.getAspectRatio = () => {
-    const size = model.parent.getSizeByReference();
+    const size = model._parent.getSizeByReference();
     const viewport = model.renderable.getViewportByReference();
     return (
       (size[0] * (viewport[2] - viewport[0])) /
@@ -106,7 +103,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
     const vpv = vport[1] - tileViewPort[1];
 
     // store the result as a pixel value
-    const ndvp = model.parent.normalizedDisplayToDisplay(vpu, vpv);
+    const ndvp = model._parent.normalizedDisplayToDisplay(vpu, vpv);
     const lowerLeftU = Math.round(ndvp[0]);
     const lowerLeftV = Math.round(ndvp[1]);
 
@@ -114,7 +111,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
     // lower left boundary of this tile
     const vpu2 = vport[2] - tileViewPort[0];
     const vpv2 = vport[3] - tileViewPort[1];
-    const ndvp2 = model.parent.normalizedDisplayToDisplay(vpu2, vpv2);
+    const ndvp2 = model._parent.normalizedDisplayToDisplay(vpu2, vpv2);
 
     // now compute the size of the intersection of the viewport with the
     // current tile
@@ -150,7 +147,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
     if (!model.renderable.getPreserveDepthBuffer()) {
       gl.clearDepth(1.0);
       clearMask |= gl.DEPTH_BUFFER_BIT;
-      gl.depthMask(true);
+      model.context.depthMask(true);
     }
 
     gl.colorMask(true, true, true, true);
@@ -160,7 +157,9 @@ function vtkOpenGLRenderer(publicAPI, model) {
     gl.scissor(ts.lowerLeftU, ts.lowerLeftV, ts.usize, ts.vsize);
     gl.viewport(ts.lowerLeftU, ts.lowerLeftV, ts.usize, ts.vsize);
 
-    gl.clear(clearMask);
+    if (clearMask) {
+      gl.clear(clearMask);
+    }
 
     gl.enable(gl.DEPTH_TEST);
     /* eslint-enable no-bitwise */
@@ -173,14 +172,14 @@ function vtkOpenGLRenderer(publicAPI, model) {
   };
 
   publicAPI.setOpenGLRenderWindow = (rw) => {
-    if (model.openGLRenderWindow === rw) {
+    if (model._openGLRenderWindow === rw) {
       return;
     }
     publicAPI.releaseGraphicsResources();
-    model.openGLRenderWindow = rw;
+    model._openGLRenderWindow = rw;
     model.context = null;
     if (rw) {
-      model.context = model.openGLRenderWindow.getContext();
+      model.context = model._openGLRenderWindow.getContext();
     }
   };
 }
@@ -191,7 +190,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   context: null,
-  openGLRenderWindow: null,
+  // _openGLRenderWindow: null,
   selector: null,
 };
 
@@ -207,6 +206,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['shaderCache']);
 
   macro.setGet(publicAPI, model, ['selector']);
+
+  macro.moveToProtected(publicAPI, model, ['openGLRenderWindow']);
 
   // Object methods
   vtkOpenGLRenderer(publicAPI, model);

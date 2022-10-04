@@ -1,4 +1,5 @@
-import { vtkObject, vtkSubscription } from "../../../interfaces";
+import { vtkObject, vtkSubscription } from '../../../interfaces';
+import vtkImageStream from '../ImageStream';
 
 /**
  * Bind optional dependency from WSLink to our current class.
@@ -14,7 +15,6 @@ import { vtkObject, vtkSubscription } from "../../../interfaces";
  * @param smartConnectClass
  */
 export function setSmartConnectClass(smartConnectClass: object): void;
-
 
 export interface vtkWSLinkClient extends vtkObject {
 
@@ -76,12 +76,12 @@ export interface vtkWSLinkClient extends vtkObject {
    * Assign protocols to the client. Those will only be used at connect time and therefore needs to be set before being connected otherwise `registerProtocol` should be used instead.
    * @returns {Boolean} true if the set method modified the object
    */
-  setProtocols(protocols: object): boolean;
+  setProtocols(protocols: Record<string, any>): boolean;
 
   /**
    * Get protocols that were either provided in `newInstance` or via its set
    */
-  getProtocols(): object;
+  getProtocols(): Record<string, any>;
 
   /**
    * Update the list of methods that should be ignore from the busy state monitoring
@@ -117,21 +117,45 @@ export interface vtkWSLinkClient extends vtkObject {
    */
   getConfigDecorator(): (config: object) => object;
 
-  getConnection(): object;
-  getCongig(): object;
-  getRemote(): object;
-  getImageStream(): object;
+  /**
+   *
+   */
+  getConnection(): any;
 
+  /**
+   *
+   */
+  getConfig(): object;
+
+  /**
+   *
+   */
+  getRemote(): Record<string, any>;
+
+  /**
+   *
+   */
+  getImageStream(): vtkImageStream;
+
+  /**
+   *
+   * @param callback
+   * @param priority
+   */
   onBusyChange(callback: Function, priority: number): vtkSubscription;
+
+  /**
+   *
+   */
   invokeBusyChange(): void;
 
-  onConnectionReady(callback: () => void): vtkSubscription;
+  onConnectionReady(callback: (httpReq: any) => void): vtkSubscription;
   // invokeConnectionReady(): void
 
-  onConnectionError(callback: () => void): vtkSubscription;
+  onConnectionError(callback: (httpReq: any) => void): vtkSubscription;
   // invokeConnectionError(): void
 
-  onConnectionClose(callback: () => void): vtkSubscription;
+  onConnectionClose(callback: (httpReq: any) => void): vtkSubscription;
   // invokeConnectionClose(): void
 }
 

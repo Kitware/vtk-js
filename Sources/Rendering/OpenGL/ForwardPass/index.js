@@ -1,6 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
+import vtkOpenGLOrderIndependentTranslucentPass from 'vtk.js/Sources/Rendering/OpenGL/OrderIndependentTranslucentPass';
 
 // ----------------------------------------------------------------------------
 
@@ -38,6 +39,7 @@ function vtkForwardPass(publicAPI, model) {
           model.opaqueActorCount = 0;
           model.translucentActorCount = 0;
           model.volumeCount = 0;
+          model.overlayActorCount = 0;
           publicAPI.setCurrentOperation('queryPass');
 
           renNode.traverse(publicAPI);
@@ -79,11 +81,18 @@ function vtkForwardPass(publicAPI, model) {
             renNode.traverse(publicAPI);
           }
           if (model.translucentActorCount > 0) {
-            publicAPI.setCurrentOperation('translucentPass');
-            renNode.traverse(publicAPI);
+            if (!model.translucentPass) {
+              model.translucentPass =
+                vtkOpenGLOrderIndependentTranslucentPass.newInstance();
+            }
+            model.translucentPass.traverse(viewNode, renNode, publicAPI);
           }
           if (model.volumeCount > 0) {
             publicAPI.setCurrentOperation('volumePass');
+            renNode.traverse(publicAPI);
+          }
+          if (model.overlayActorCount > 0) {
+            publicAPI.setCurrentOperation('overlayPass');
             renNode.traverse(publicAPI);
           }
         }
@@ -106,6 +115,7 @@ function vtkForwardPass(publicAPI, model) {
   publicAPI.incrementTranslucentActorCount = () =>
     model.translucentActorCount++;
   publicAPI.incrementVolumeCount = () => model.volumeCount++;
+  publicAPI.incrementOverlayActorCount = () => model.overlayActorCount++;
 }
 
 // ----------------------------------------------------------------------------
@@ -116,6 +126,7 @@ const DEFAULT_VALUES = {
   opaqueActorCount: 0,
   translucentActorCount: 0,
   volumeCount: 0,
+  overlayActorCount: 0,
   framebuffer: null,
   depthRequested: false,
 };
@@ -128,7 +139,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   vtkRenderPass.extend(publicAPI, model, initialValues);
 
-  macro.get(publicAPI, model, ['framebuffer']);
+  macro.get(publicAPI, model, [
+    'framebuffer',
+    'opaqueActorCount',
+    'translucentActorCount',
+    'volumeCount',
+  ]);
 
   // Object methods
   vtkForwardPass(publicAPI, model);

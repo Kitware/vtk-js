@@ -1,12 +1,12 @@
 import * as macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import vtkWebGPUPolyDataMapper from 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper';
+import vtkWebGPUCellArrayMapper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
-const { BufferUsage, PrimitiveTypes } = vtkWebGPUBufferManager;
+const { BufferUsage } = vtkWebGPUBufferManager;
 const { vtkErrorMacro } = macro;
 
 const vtkWebGPUSphereMapperVS = `
@@ -18,7 +18,7 @@ const vtkWebGPUSphereMapperVS = `
 
 //VTK::IOStructs::Dec
 
-[[stage(vertex)]]
+@vertex
 fn main(
 //VTK::IOStructs::Input
 )
@@ -26,7 +26,7 @@ fn main(
 {
   var output : vertexOutput;
 
-  var vertexVC: vec4<f32> = rendererUBO.SCVCMatrix * mapperUBO.BCSCMatrix * vec4<f32>(vertexBC.x, vertexBC.y, vertexBC.z, 1.0);
+  var vertexVC: vec4<f32> = rendererUBO.SCVCMatrix * mapperUBO.BCSCMatrix * vec4<f32>(vertexBC.xyz, 1.0);
 
   //VTK::Color::Impl
 
@@ -50,7 +50,7 @@ fn main(
     vertexVC = vec4<f32>(tmp2, vertexVC.zw);
     }
 
-  output.vertexVC = vertexVC.xyz;
+  output.vertexVC = vec4<f32>(vertexVC.xyz, 0.0);
 
   //VTK::Position::Impl
 
@@ -66,14 +66,29 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUSphereMapper');
 
+  const cellMapperBuildPass = publicAPI.buildPass;
+  publicAPI.buildPass = (prepass) => {
+    if (prepass) {
+      if (!model.renderable.getStatic()) {
+        model.renderable.update();
+      }
+
+      const poly = model.renderable.getInputData();
+
+      publicAPI.setCellArray(poly.getVerts());
+      publicAPI.setCurrentInput(poly);
+    }
+    cellMapperBuildPass(prepass);
+  };
+
   publicAPI.replaceShaderNormal = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addOutput('vec3<f32>', 'vertexVC');
+    if (!vDesc.hasOutput('vertexVC')) vDesc.addOutput('vec4<f32>', 'vertexVC');
     vDesc.addOutput('vec3<f32>', 'centerVC');
     vDesc.addOutput('f32', 'radiusVC');
 
     const fDesc = pipeline.getShaderDescription('fragment');
-    fDesc.addBuiltinOutput('f32', '[[builtin(frag_depth)]] fragDepth');
+    fDesc.addBuiltinOutput('f32', '@builtin(frag_depth) fragDepth');
     const sphereFrag = `
     // compute the eye position and unit direction
     var vertexVC: vec4<f32>;
@@ -129,7 +144,7 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
+    vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
     let code = vDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
       '  output.Position = rendererUBO.VCPCMatrix*vertexVC;',
@@ -140,46 +155,36 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
   // compute a unique hash for a pipeline, this needs to be unique enough to
   // capture any pipeline code changes (which includes shader changes)
   // or vertex input changes/ bind groups/ etc
-  publicAPI.computePipelineHash = (vertexInput) => {
-    let pipelineHash = 'spm';
-    if (vertexInput.hasAttribute(`colorVI`)) {
-      pipelineHash += `c`;
+  publicAPI.computePipelineHash = () => {
+    model.pipelineHash = 'spm';
+    if (model.vertexInput.hasAttribute(`colorVI`)) {
+      model.pipelineHash += `c`;
     }
-    pipelineHash += model.renderEncoder.getPipelineHash();
-
-    return pipelineHash;
+    model.pipelineHash += model.renderEncoder.getPipelineHash();
   };
 
-  // was originally buildIBOs() but not using IBOs right now
-  publicAPI.buildPrimitives = () => {
+  publicAPI.updateBuffers = () => {
     const poly = model.currentInput;
 
-    const device = model.WebGPURenderWindow.getDevice();
-
     model.renderable.mapScalars(poly, 1.0);
-
-    // handle triangles
-    const i = PrimitiveTypes.Triangles;
 
     const points = poly.getPoints();
     const numPoints = points.getNumberOfPoints();
     const pointArray = points.getData();
-    const primHelper = model.primitives[i];
 
     // default to one instance and computed number of verts
-    primHelper.setNumberOfInstances(1);
-    primHelper.setNumberOfVertices(3 * numPoints);
+    publicAPI.setNumberOfInstances(1);
+    publicAPI.setNumberOfVertices(3 * numPoints);
 
-    const vertexInput = model.primitives[i].getVertexInput();
+    const vertexInput = model.vertexInput;
 
-    let buffRequest = {
-      hash: points.getMTime(),
-      source: points,
-      time: points.getMTime(),
-      usage: BufferUsage.RawVertex,
-      format: 'float32x3',
-    };
-    if (!device.getBufferManager().hasBuffer(buffRequest)) {
+    let hash = `spm${points.getMTime()}float32x3`;
+    if (!model.device.getBufferManager().hasBuffer(hash)) {
+      const buffRequest = {
+        hash,
+        usage: BufferUsage.RawVertex,
+        format: 'float32x3',
+      };
       // xyz v1 v2 v3
       const tmpVBO = new Float32Array(3 * numPoints * 3);
 
@@ -198,7 +203,7 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
         tmpVBO[vboIdx++] = pointArray[pointIdx + 2];
       }
       buffRequest.nativeArray = tmpVBO;
-      const buff = device.getBufferManager().getBuffer(buffRequest);
+      const buff = model.device.getBufferManager().getBuffer(buffRequest);
       vertexInput.addBuffer(buff, ['vertexBC']);
     }
 
@@ -214,16 +219,17 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
 
     const defaultRadius = model.renderable.getRadius();
     if (scales || defaultRadius !== model._lastRadius) {
-      buffRequest = {
-        hash: scales,
-        source: scales,
-        time: scales
+      hash = `spm${
+        scales
           ? pointData.getArray(model.renderable.getScaleArray()).getMTime()
-          : 0,
-        usage: BufferUsage.RawVertex,
-        format: 'float32x2',
-      };
-      if (!device.getBufferManager().hasBuffer(buffRequest)) {
+          : defaultRadius
+      }float32x2`;
+      if (!model.device.getBufferManager().hasBuffer(hash)) {
+        const buffRequest = {
+          hash,
+          usage: BufferUsage.RawVertex,
+          format: 'float32x2',
+        };
         const tmpVBO = new Float32Array(3 * numPoints * 2);
 
         const cos30 = Math.cos(vtkMath.radiansFromDegrees(30.0));
@@ -241,27 +247,24 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
           tmpVBO[vboIdx++] = 2.0 * radius;
         }
         buffRequest.nativeArray = tmpVBO;
-        const buff = device.getBufferManager().getBuffer(buffRequest);
+        const buff = model.device.getBufferManager().getBuffer(buffRequest);
         vertexInput.addBuffer(buff, ['offsetMC']);
       }
       model._lastRadius = defaultRadius;
     }
-
-    model.renderable.mapScalars(poly, 1.0);
 
     // deal with colors but only if modified
     let haveColors = false;
     if (model.renderable.getScalarVisibility()) {
       const c = model.renderable.getColorMapColors();
       if (c) {
-        buffRequest = {
-          hash: c,
-          source: c,
-          time: c.getMTime(),
-          usage: BufferUsage.RawVertex,
-          format: 'unorm8x4',
-        };
-        if (!device.getBufferManager().hasBuffer(buffRequest)) {
+        hash = `spm${c.getMTime()}unorm8x4`;
+        if (!model.device.getBufferManager().hasBuffer(hash)) {
+          const buffRequest = {
+            hash,
+            usage: BufferUsage.RawVertex,
+            format: 'unorm8x4',
+          };
           const colorComponents = c.getNumberOfComponents();
           if (colorComponents !== 4) {
             vtkErrorMacro('this should be 4');
@@ -279,7 +282,7 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
             }
           }
           buffRequest.nativeArray = tmpVBO;
-          const buff = device.getBufferManager().getBuffer(buffRequest);
+          const buff = model.device.getBufferManager().getBuffer(buffRequest);
           vertexInput.addBuffer(buff, ['colorVI']);
         }
         haveColors = true;
@@ -289,11 +292,8 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
       vertexInput.removeBufferIfPresent('colorVI');
     }
 
-    primHelper.setPipelineHash(publicAPI.computePipelineHash(vertexInput));
-    primHelper.setWebGPURenderer(model.WebGPURenderer);
-    primHelper.setTopology('triangle-list');
-    primHelper.build(model.renderEncoder, device);
-    primHelper.registerToDraw();
+    publicAPI.setTopology('triangle-list');
+    publicAPI.updateUBO();
   };
 }
 
@@ -309,16 +309,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkWebGPUPolyDataMapper.extend(publicAPI, model, initialValues);
+  vtkWebGPUCellArrayMapper.extend(publicAPI, model, initialValues);
 
-  model.primitives[PrimitiveTypes.Triangles].setVertexShaderTemplate(
-    vtkWebGPUSphereMapperVS
-  );
+  publicAPI.setVertexShaderTemplate(vtkWebGPUSphereMapperVS);
 
   // Object methods
   vtkWebGPUSphereMapper(publicAPI, model);
 
-  const sr = model.primitives[PrimitiveTypes.Triangles].getShaderReplacements();
+  const sr = model.shaderReplacements;
   sr.set('replaceShaderPosition', publicAPI.replaceShaderPosition);
   sr.set('replaceShaderNormal', publicAPI.replaceShaderNormal);
 }

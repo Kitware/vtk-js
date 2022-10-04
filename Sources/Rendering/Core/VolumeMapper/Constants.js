@@ -4,6 +4,7 @@ export const BlendMode = {
   MINIMUM_INTENSITY_BLEND: 2,
   AVERAGE_INTENSITY_BLEND: 3,
   ADDITIVE_INTENSITY_BLEND: 4,
+  RADON_TRANSFORM_BLEND: 5,
 };
 
 export const FilterMode = {

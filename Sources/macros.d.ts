@@ -65,11 +65,23 @@ export enum TYPED_ARRAYS {
  * ```
  * const set = `set${capitalize(fieldName)}`;
  * ```
+ * @param str String to capitalize
  */
 export function capitalize(str: string): string;
 
 /**
- * Lowercase the first letter of the provided string
+ * Capitalize provided string.
+ * This is typically used to convert the name of a field into its method name.
+ * Ignore the first letter if it starts with underscore (i.e. _).
+ *
+ * ```
+ * const set = `set${capitalize(fieldName)}`;
+ * ```
+ */
+export function _capitalize(str: string): string;
+
+/**
+ * Lowercase the first letter of the provided string.
  */
 export function uncapitalize(str: string): string;
 
@@ -125,6 +137,16 @@ declare function getStateArrayMapFunc(item: any): any;
  * @param fn function to execute
  */
 export function setImmediateVTK(fn: () => void ): void;
+
+/**
+ * Measures the time it takes for a promise to finish from the time this function is invoked.
+ *
+ * The callback receives the time it took for the promise to resolve or reject.
+ *
+ * @param promise promise to measure
+ * @param callback called with the elapsed time for the promise
+ */
+export function measurePromiseExecution(promise: Promise<any>, callback: (elapsed: number) => void): void;
 
 /**
  * Turns the provided publicAPI into a VtkObject
@@ -186,8 +208,8 @@ export function getArray(publicAPI: object, model: object, fields: Array<string>
  * without calling modified.
  *
  * ```
- * set{FieldName}(a, b, c) / set{FieldName}(abc)
- * set{FieldName}From(abc)
+ * set{FieldName}(a, b, c) / set{FieldName}([a, b, c]) / set{FieldName}(new Uint8Array(...)) / set{FieldName}(null)
+ * set{FieldName}From([a, b, c])
  * ```
  *
  * @param publicAPI
@@ -208,6 +230,19 @@ export function setArray(publicAPI: object, model: object, fieldNames: Array<str
  */
 export function setGetArray(publicAPI: object, model: object, fieldNames: Array<string>, size: Number, defaultVal?: any): void;
 
+/**
+ * Convert model and publicAPI references to _fieldName into fieldName.
+ * It renames:
+ *   - model.fieldName into model._fieldName
+ *   - publicAPI.set_fieldName and publicAPI.set_fieldNameFrom into publicAPI.setFieldName and publicAPI.setFieldNameFrom
+ *   - publicAPI.get_fieldName and publicAPI.get_fieldNameByReference into publicAPI.getFieldName and publicAPI.getFieldNameByReference
+ * @param publicAPI
+ * @param model
+ * @param fieldNames List of field names to move to protected, e.g. ['interactor', 'renderWindow']
+ * @see get
+ * @see set
+ */
+export function moveToProtected(publicAPI: object, model: object, fieldNames: Array<string>): void;
 
 /**
  * Add algorithm methods onto the provided publicAPI
@@ -606,6 +641,8 @@ declare const Macro: {
   getStateArrayMapFunc: typeof getStateArrayMapFunc,
   isVtkObject: typeof isVtkObject,
   keystore: typeof keystore,
+  measurePromiseExecution: typeof measurePromiseExecution,
+  moveToProtected: typeof moveToProtected,
   newInstance: typeof newInstance,
   normalizeWheel: typeof normalizeWheel,
   obj: typeof obj,

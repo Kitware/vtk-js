@@ -58,6 +58,7 @@ function vtkWebGPUBindGroup(publicAPI, model) {
     model.bindGroup = device.getHandle().createBindGroup({
       layout: publicAPI.getBindGroupLayout(device),
       entries,
+      label: model.label,
     });
     model.bindGroupTime.modified();
 
@@ -66,7 +67,7 @@ function vtkWebGPUBindGroup(publicAPI, model) {
 
   publicAPI.getShaderCode = (pipeline) => {
     const lines = [];
-    const bgroup = pipeline.getBindGroupLayoutCount(model.name);
+    const bgroup = pipeline.getBindGroupLayoutCount(model.label);
     for (let i = 0; i < model.bindables.length; i++) {
       lines.push(model.bindables[i].getShaderCode(i, bgroup));
     }
@@ -81,7 +82,7 @@ function vtkWebGPUBindGroup(publicAPI, model) {
 const DEFAULT_VALUES = {
   device: null,
   handle: null,
-  name: null,
+  label: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -103,12 +104,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'sizeInBytes',
     'usage',
   ]);
-  macro.setGet(publicAPI, model, [
-    'name',
-    'device',
-    'arrayInformation',
-    'sourceTime',
-  ]);
+  macro.setGet(publicAPI, model, ['label', 'device', 'arrayInformation']);
 
   vtkWebGPUBindGroup(publicAPI, model);
 }

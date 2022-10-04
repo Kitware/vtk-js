@@ -21,10 +21,20 @@ is less than the min point then the  min point will also be changed
 Change bounding box so it includes the point p
 Note that the bounding box may have 0 volume if its bounds
 were just initialized.
+Returns the updated bounds
+
+### addPoints(bounds[6], points)
+
+Change bounding box so it includes the points.
+points can be a list of lists (e.g. [[0,0,0], [1, 0, 0], ...]) or
+a flat list (e.g. [0, 0, 0, 1, 0, 0, ...])
+Note that the bounding box may have 0 volume if its bounds
+were just initialized.
 
 ### addBounds(bounds[6], xMin, xMax, yMin, yMax, zMin, zMax)
 
 Change the bounding box so it includes bounds (defined by vtk standard)
+Returns the updated bounds
 
 ### intersect(bounds[6], otherBounds[6]) : Boolean
 
@@ -87,6 +97,7 @@ Return the length of the diagonal or null if not valid.
 
 Expand the Box by delta on each side, the box will grow by
 2*delta in x, y and z
+Returns the updated bounds
 
 ### isValid(bounds[6])
 
@@ -103,4 +114,4 @@ Scale each dimension of the box by some given factor.
 If the box is not valid, it stays unchanged.
 If the scalar factor is negative, bounds are flipped: for example,
 if (xMin,xMax)=(-2,4) and sx=-3, (xMin,xMax) becomes (-12,6).
-
+Returns the updated bounds

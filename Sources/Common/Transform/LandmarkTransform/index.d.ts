@@ -89,7 +89,7 @@ export function newInstance(initialValues?: ILandmarkTransformInitialValues): vt
  * 
  * @example
  * '''js
- * import vtkLandmarkTransform from 'vtk.js/Sources/Common/Transform/LandmarkTransform';
+ * import vtkLandmarkTransform from '@kitware/vtk.js/Common/Transform/LandmarkTransform';
  * 
  * const transform = LandmarkTransform.New();
  * transform.setMode(Mode.RIGID_BODY);

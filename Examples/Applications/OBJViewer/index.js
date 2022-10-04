@@ -5,13 +5,14 @@ import 'vtk.js/Sources/favicon';
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import 'vtk.js/Sources/Rendering/Profiles/Geometry';
 
-import JSZip from 'jszip';
+import { strFromU8, unzipSync } from 'fflate';
 
 import macro from 'vtk.js/Sources/macros';
 
 import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
+import { fromArrayBuffer } from 'vtk.js/Sources/Common/Core/Base64';
 
 import vtkOBJReader from 'vtk.js/Sources/IO/Misc/OBJReader';
 import vtkMTLReader from 'vtk.js/Sources/IO/Misc/MTLReader';
@@ -50,17 +51,22 @@ function emptyContainer(container) {
   }
 }
 
+function unpack(zipContent) {
+  if (zipContent instanceof Blob) {
+    return zipContent.arrayBuffer().then((ab) => new Uint8Array(ab));
+  }
+  if (zipContent instanceof ArrayBuffer) {
+    return Promise.resolve(new Uint8Array(zipContent));
+  }
+  return Promise.reject(new Error('invalid zip content'));
+}
+
 function loadZipContent(zipContent, renderWindow, renderer) {
   const fileContents = { obj: {}, mtl: {}, img: {} };
-  const zip = new JSZip();
-  zip.loadAsync(zipContent).then(() => {
-    let workLoad = 0;
+  unpack(zipContent).then((zipArrayBuffer) => {
+    const decompressedFiles = unzipSync(new Uint8Array(zipArrayBuffer));
 
     function done() {
-      if (workLoad !== 0) {
-        return;
-      }
-
       // Attach images to MTLs
       const promises = [];
       Object.keys(fileContents.mtl).forEach((mtlFilePath) => {
@@ -108,39 +114,29 @@ function loadZipContent(zipContent, renderWindow, renderer) {
       });
     }
 
-    zip.forEach((relativePath, zipEntry) => {
+    Object.entries(decompressedFiles).forEach(([relativePath, fileData]) => {
       if (relativePath.match(/\.obj$/i)) {
-        workLoad++;
-        zipEntry.async('string').then((txt) => {
-          const reader = vtkOBJReader.newInstance({ splitMode: 'usemtl' });
-          reader.parseAsText(txt);
-          fileContents.obj[relativePath] = reader;
-          workLoad--;
-          done();
-        });
+        const txt = strFromU8(fileData);
+        const reader = vtkOBJReader.newInstance({ splitMode: 'usemtl' });
+        reader.parseAsText(txt);
+        fileContents.obj[relativePath] = reader;
       }
       if (relativePath.match(/\.mtl$/i)) {
-        workLoad++;
-        zipEntry.async('string').then((txt) => {
-          const reader = vtkMTLReader.newInstance({
-            interpolateTextures: !userParams.noInterpolation,
-          });
-          reader.parseAsText(txt);
-          fileContents.mtl[relativePath] = reader;
-          workLoad--;
-          done();
+        const txt = strFromU8(fileData);
+        const reader = vtkMTLReader.newInstance({
+          interpolateTextures: !userParams.noInterpolation,
         });
+        reader.parseAsText(txt);
+        fileContents.mtl[relativePath] = reader;
       }
       if (relativePath.match(/\.jpg$/i) || relativePath.match(/\.png$/i)) {
-        workLoad++;
-        zipEntry.async('base64').then((txt) => {
-          const ext = relativePath.slice(-3).toLowerCase();
-          fileContents.img[relativePath] = `data:image/${ext};base64,${txt}`;
-          workLoad--;
-          done();
-        });
+        const txt = fromArrayBuffer(fileData);
+        const ext = relativePath.slice(-3).toLowerCase();
+        fileContents.img[relativePath] = `data:image/${ext};base64,${txt}`;
       }
     });
+
+    done();
   });
 }
 

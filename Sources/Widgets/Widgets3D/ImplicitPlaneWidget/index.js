@@ -13,7 +13,7 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkPlaneWidget');
-  let isDragging = null;
+  model._isDragging = false;
 
   publicAPI.setDisplayCallback = (callback) =>
     model.representations[0].setDisplayCallback(callback);
@@ -21,16 +21,16 @@ function widgetBehavior(publicAPI, model) {
   publicAPI.updateCursor = () => {
     switch (model.activeState.getUpdateMethodName()) {
       case 'updateFromOrigin':
-        model.apiSpecificRenderWindow.setCursor('crosshair');
+        model._apiSpecificRenderWindow.setCursor('crosshair');
         break;
       case 'updateFromPlane':
-        model.apiSpecificRenderWindow.setCursor('move');
+        model._apiSpecificRenderWindow.setCursor('move');
         break;
       case 'updateFromNormal':
-        model.apiSpecificRenderWindow.setCursor('alias');
+        model._apiSpecificRenderWindow.setCursor('alias');
         break;
       default:
-        model.apiSpecificRenderWindow.setCursor('grabbing');
+        model._apiSpecificRenderWindow.setCursor('grabbing');
         break;
     }
   };
@@ -43,30 +43,46 @@ function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
-    isDragging = true;
-    model.lineManipulator.setOrigin(model.widgetState.getOrigin());
-    model.planeManipulator.setOrigin(model.widgetState.getOrigin());
-    model.trackballManipulator.reset(callData); // setup trackball delta
-    model.interactor.requestAnimation(publicAPI);
-    publicAPI.invokeStartInteractionEvent();
 
+    model.lineManipulator.setWidgetOrigin(model.widgetState.getOrigin());
+    model.planeManipulator.setWidgetOrigin(model.widgetState.getOrigin());
+    model.trackballManipulator.reset(callData); // setup trackball delta
+
+    if (model.dragable) {
+      model._isDragging = true;
+      model._apiSpecificRenderWindow.setCursor('grabbing');
+      model._interactor.requestAnimation(publicAPI);
+    }
+
+    publicAPI.invokeStartInteractionEvent();
     return macro.EVENT_ABORT;
   };
 
   publicAPI.handleMouseMove = (callData) => {
-    if (isDragging && model.pickable) {
+    if (model._isDragging) {
       return publicAPI.handleEvent(callData);
     }
     return macro.VOID;
   };
 
   publicAPI.handleLeftButtonRelease = () => {
-    if (isDragging && model.pickable) {
-      publicAPI.invokeEndInteractionEvent();
-      model.interactor.cancelAnimation(publicAPI);
+    if (
+      !model.activeState ||
+      !model.activeState.getActive() ||
+      !model.pickable
+    ) {
+      return macro.VOID;
     }
-    isDragging = false;
+
+    if (model._isDragging) {
+      model._interactor.cancelAnimation(publicAPI);
+      model._isDragging = false;
+    }
+
     model.widgetState.deactivate();
+
+    publicAPI.invokeEndInteractionEvent();
+    return macro.EVENT_ABORT;
   };
 
   publicAPI.handleEvent = (callData) => {
@@ -83,10 +99,10 @@ function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.updateFromOrigin = (callData) => {
-    model.planeManipulator.setNormal(model.widgetState.getNormal());
+    model.planeManipulator.setWidgetNormal(model.widgetState.getNormal());
     const worldCoords = model.planeManipulator.handleEvent(
       callData,
-      model.apiSpecificRenderWindow
+      model._apiSpecificRenderWindow
     );
 
     if (model.widgetState.containsPoint(worldCoords)) {
@@ -98,10 +114,10 @@ function widgetBehavior(publicAPI, model) {
 
   publicAPI.updateFromPlane = (callData) => {
     // Move origin along normal axis
-    model.lineManipulator.setNormal(model.activeState.getNormal());
+    model.lineManipulator.setWidgetNormal(model.activeState.getNormal());
     const worldCoords = model.lineManipulator.handleEvent(
       callData,
-      model.apiSpecificRenderWindow
+      model._apiSpecificRenderWindow
     );
 
     if (model.widgetState.containsPoint(...worldCoords)) {
@@ -112,11 +128,11 @@ function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.updateFromNormal = (callData) => {
-    model.trackballManipulator.setNormal(model.activeState.getNormal());
+    model.trackballManipulator.setWidgetNormal(model.activeState.getNormal());
 
     const newNormal = model.trackballManipulator.handleEvent(
       callData,
-      model.apiSpecificRenderWindow
+      model._apiSpecificRenderWindow
     );
     model.activeState.setNormal(newNormal);
   };
@@ -138,10 +154,6 @@ function vtkImplicitPlaneWidget(publicAPI, model) {
   model.classHierarchy.push('vtkPlaneWidget');
 
   // --- Widget Requirement ---------------------------------------------------
-
-  model.widgetState = vtkImplicitPlaneRepresentation.generateState();
-
-  model.behavior = widgetBehavior;
 
   model.methodsToLink = [
     'representationStyle',
@@ -168,12 +180,16 @@ function vtkImplicitPlaneWidget(publicAPI, model) {
 
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+const defaultValues = (initialValues) => ({
+  behavior: widgetBehavior,
+  widgetState: vtkImplicitPlaneRepresentation.generateState(),
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
 

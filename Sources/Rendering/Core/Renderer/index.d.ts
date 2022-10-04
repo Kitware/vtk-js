@@ -1,9 +1,9 @@
-import { Bounds } from '../../../types';
+import { Bounds, Nullable } from '../../../types';
 
 import vtkCamera from '../Camera';
 import vtkLight from '../Light';
 import vtkRenderWindow from '../RenderWindow';
-import vtkProp3D from '../Prop3D';
+import vtkProp from '../Prop';
 import vtkViewport, { IViewportInitialValues } from '../Viewport';
 import vtkVolume from '../Volume';
 import vtkTexture from '../Texture';
@@ -18,7 +18,7 @@ export interface IRendererInitialValues extends IViewportInitialValues {
 	twoSidedLighting?: boolean;
 	lastRenderTimeInSeconds?: number;
 	lights?: vtkLight[];
-	actors?: vtkProp3D[];
+	actors?: vtkProp[];
 	volumes?: vtkVolume[];
 	lightFollowCamera?: boolean;
 	numberOfPropsRendered?: number;
@@ -35,6 +35,10 @@ export interface IRendererInitialValues extends IViewportInitialValues {
 	occlusionRatio?: number;
 	maximumNumberOfPeels?: number;
 	texturedBackground?: boolean;
+	environmentTexture?: vtkTexture;
+	environmentTextureDiffuseStrength?: number;
+	environmentTextureSpecularStrength?: number;
+	useEnvironmentTextureAsBackground?: boolean;
 	pass?: number;
 }
 
@@ -46,14 +50,14 @@ export interface vtkRenderer extends vtkViewport {
 	isActiveCameraCreated(): boolean;
 
 	/**
-	 * 
-	 * @param actor 
+	 * Add different types of props to the renderer.
+	 * @param {vtkProp} actor The vtkProp instance.
 	 */
-	addActor(actor: vtkProp3D): boolean;
+	addActor(actor: vtkProp): boolean;
 
 	/**
 	 * Add a light to the list of lights.
-	 * @param light 
+	 * @param {vtkLight} light The vtkLight instance.
 	 */
 	addLight(light: vtkLight): void;
 
@@ -63,8 +67,8 @@ export interface vtkRenderer extends vtkViewport {
 	allocateTime(): any;
 
 	/**
-	 * 
-	 * @param volume 
+	 * Add a volume to the renderer..
+	 * @param volume The vtkVolume instance.
 	 */
 	addVolume(volume: vtkVolume): boolean;
 
@@ -74,9 +78,9 @@ export interface vtkRenderer extends vtkViewport {
 	createLight(): vtkLight;
 
 	/**
-	 * 
+	 * Compute the bounding box of all the visible props Used in ResetCamera() and ResetCameraClippingRange()
 	 */
-	computeVisiblePropBounds(): number[];
+	computeVisiblePropBounds(): Bounds;
 
 	/**
 	 * Get the active camera
@@ -92,13 +96,13 @@ export interface vtkRenderer extends vtkViewport {
 	 * Return any actors in this renderer.
 	 *   
 	 */
-	getActors(): vtkProp3D[];
+	getActors(): vtkProp[];
 
 	/**
 	 * Return any actors in this renderer.
 	 *   
 	 */
-	getActorsByReference(): vtkProp3D[];
+	getActorsByReference(): vtkProp[];
 
 	/**
 	 * 
@@ -115,7 +119,25 @@ export interface vtkRenderer extends vtkViewport {
 	 * 
 	 * @default null
 	 */
-	getBackgroundTexture(): vtkTexture | null;
+	getEnvironmentTexture(): vtkTexture;
+
+	/**
+	 * Returns the diffuse strength of the set environment texture.
+	 * @default 1
+	 */
+	getEnvironmentTextureDiffuseStrength(): number;
+
+	/**
+	 * Returns the specular strength of the set environment texture.
+	 * @default 1
+	 */
+	getEnvironmentTextureSpecularStrength(): number;
+
+	/**
+	  * Gets whether or not the environment texture is being used as the background for the view.
+	  * @default false
+	  */
+	getUseEnvironmentTextureAsBackground(): boolean;
 
 	/**
 	 * 
@@ -127,6 +149,7 @@ export interface vtkRenderer extends vtkViewport {
 	 * 
 	 */
 	getClippingRangeExpansion(): number;
+
 	/**
 	 * 
 	 * @default null
@@ -225,7 +248,7 @@ export interface vtkRenderer extends vtkViewport {
 	 * 
 	 * @default null
 	 */
-	getRenderWindow(): vtkRenderWindow | null;
+	getRenderWindow(): Nullable<vtkRenderWindow>;
 
 	/**
 	 * 
@@ -336,7 +359,7 @@ export interface vtkRenderer extends vtkViewport {
 	 * Specify the camera to use for this renderer.
 	 * @param {vtkCamera} camera The camera object to use.
 	 */
-	setActiveCamera(camera: vtkCamera | null): boolean;
+	setActiveCamera(camera: vtkCamera): boolean;
 
 	/**
 	 * 
@@ -346,9 +369,27 @@ export interface vtkRenderer extends vtkViewport {
 
 	/**
 	 * 
-	 * @param {vtkTexture} backgroundTexture 
+	 * @param {vtkTexture} environmentTexture 
 	 */
-	setBackgroundTexture(backgroundTexture: vtkTexture): boolean;
+	setEnvironmentTexture(environmentTexture: vtkTexture): boolean;
+
+	/**
+	 * Sets the diffuse strength of the set environment texture.
+	 * @param {number} diffuseStrength the new diffuse strength.
+	 */
+	setEnvironmentTextureDiffuseStrength(diffuseStrength: number): boolean;
+
+	 /**
+	  * Sets the specular strength of the set environment texture.
+	  * @param {number} specularStrength the new specular strength.
+	  */
+	setEnvironmentTextureSpecularStrength(specularStrength: number): boolean;
+
+	/**
+	  * Sets whether or not to use the environment texture as the background for the view.
+	  * @param {number} textureAsBackground
+	  */
+	setUseEnvironmentTextureAsBackground(textureAsBackground: boolean): boolean;
 
 	/**
 	 * 
@@ -472,9 +513,9 @@ export interface vtkRenderer extends vtkViewport {
 
 	/**
 	 * 
-	 * @param {vtkProp3D | null} actor 
+	 * @param {vtkProp} actor 
 	 */
-	removeActor(actor: vtkProp3D | null): void;
+	removeActor(actor: vtkProp): void;
 
 	/**
 	 * 
@@ -539,21 +580,25 @@ export interface vtkRenderer extends vtkViewport {
 	viewToProjection(x: number, y: number, z: number, aspect: number): number[];
 
 	/**
+	 * Automatically set up the camera based on the visible actors.
 	 * 
-	 * @param {Number[]} [bounds] 
+	 * The camera will reposition itself to view the center point of the actors,
+	 * and move along its initial view plane normal (i.e., vector defined from
+	 * camera position to focal point) so that all of the actors can be seen.
+	 * @param {Bounds} [bounds] 
 	 */
-	resetCamera(bounds?: number[]): boolean;
+	resetCamera(bounds?: Bounds): boolean;
 
 	/**
-	 * 
-	 * @param {Number[]} [bounds] 
+	 * Reset the camera clipping range based on a bounding box.
+	 * @param {Bounds} [bounds] 
 	 */
-	resetCameraClippingRange(bounds?: number[]): boolean;
+	resetCameraClippingRange(bounds?: Bounds): boolean;
 
 	/**
-	 * 
+	 * Get the number of visible actors.
 	 */
-	visibleActorCount(): void;
+	visibleActorCount(): number;
 
 	/**
 	 * Not Implemented yet
@@ -561,7 +606,7 @@ export interface vtkRenderer extends vtkViewport {
 	updateGeometry(): any;
 
 	/**
-	 * 
+	 * Ask the active camera to do whatever it needs to do prior to rendering.
 	 */
 	updateCamera(): boolean;
 
@@ -573,7 +618,9 @@ export interface vtkRenderer extends vtkViewport {
 	updateLightsGeometryToFollowCamera(): void;
 
 	/**
-	 * 
+	 * Update the geometry of the lights in the scene that are not in world
+	 * space (for instance, Headlights or CameraLights that are attached to the
+	 * camera).
 	 */
 	updateLightGeometry(): boolean;
 

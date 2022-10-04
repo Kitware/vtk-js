@@ -16,6 +16,7 @@ function vtkWebGPUTextureView(publicAPI, model) {
     model.texture = texture;
     model.options = options;
     model.options.dimension = model.options.dimension || '2d';
+    model.options.label = model.label;
     model.textureHandle = texture.getHandle();
     model.handle = model.textureHandle.createView(model.options);
     model.bindGroupLayoutEntry.texture.viewDimension = model.options.dimension;
@@ -23,6 +24,19 @@ function vtkWebGPUTextureView(publicAPI, model) {
       model.texture.getFormat()
     );
     model.bindGroupLayoutEntry.texture.sampleType = tDetails.sampleType;
+  };
+
+  publicAPI.createFromTextureHandle = (textureHandle, options) => {
+    model.texture = null;
+    model.options = options;
+    model.options.dimension = model.options.dimension || '2d';
+    model.options.label = model.label;
+    model.textureHandle = textureHandle;
+    model.handle = model.textureHandle.createView(model.options);
+    model.bindGroupLayoutEntry.texture.viewDimension = model.options.dimension;
+    const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(options.format);
+    model.bindGroupLayoutEntry.texture.sampleType = tDetails.sampleType;
+    model.bindGroupTime.modified();
   };
 
   publicAPI.getBindGroupEntry = () => {
@@ -39,34 +53,24 @@ function vtkWebGPUTextureView(publicAPI, model) {
     } else if (model.bindGroupLayoutEntry.texture.sampleType === 'uint') {
       ttype = 'u32';
     }
-    let result = `[[binding(${binding}), group(${group})]] var ${model.name}: texture_${model.options.dimension}<${ttype}>;`;
+    let result = `@binding(${binding}) @group(${group}) var ${model.label}: texture_${model.options.dimension}<${ttype}>;`;
     if (model.bindGroupLayoutEntry.texture.sampleType === 'depth') {
-      result = `[[binding(${binding}), group(${group})]] var ${model.name}: texture_depth_${model.options.dimension};`;
+      result = `@binding(${binding}) @group(${group}) var ${model.label}: texture_depth_${model.options.dimension};`;
     }
     return result;
   };
 
   publicAPI.addSampler = (device, options) => {
-    const newSamp = vtkWebGPUSampler.newInstance();
+    const newSamp = vtkWebGPUSampler.newInstance({
+      label: `${model.label}Sampler`,
+    });
     newSamp.create(device, options);
     publicAPI.setSampler(newSamp);
-    model.sampler.setName(`${model.name}Sampler`);
-  };
-
-  publicAPI.setName = (val) => {
-    if (model.sampler) {
-      model.sampler.setName(`${val}Sampler`);
-    }
-    if (model.name === val) {
-      return;
-    }
-    model.name = val;
-    publicAPI.modified();
   };
 
   publicAPI.getBindGroupTime = () => {
     // check if the handle changed
-    if (model.texture.getHandle() !== model.textureHandle) {
+    if (model.texture && model.texture.getHandle() !== model.textureHandle) {
       model.textureHandle = model.texture.getHandle();
       model.handle = model.textureHandle.createView(model.options);
       model.bindGroupTime.modified();
@@ -76,7 +80,7 @@ function vtkWebGPUTextureView(publicAPI, model) {
 
   // if the texture has changed then get a new view
   publicAPI.getHandle = () => {
-    if (model.texture.getHandle() !== model.textureHandle) {
+    if (model.texture && model.texture.getHandle() !== model.textureHandle) {
       model.textureHandle = model.texture.getHandle();
       model.handle = model.textureHandle.createView(model.options);
       model.bindGroupTime.modified();
@@ -92,8 +96,8 @@ function vtkWebGPUTextureView(publicAPI, model) {
 const DEFAULT_VALUES = {
   texture: null,
   handle: null,
-  name: null,
   sampler: null,
+  label: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -118,8 +122,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.bindGroupTime = {};
   macro.obj(model.bindGroupTime, { mtime: 0 });
 
-  macro.get(publicAPI, model, ['bindGroupTime', 'name', 'texture']);
-  macro.setGet(publicAPI, model, ['bindGroupLayoutEntry', 'sampler']);
+  macro.get(publicAPI, model, ['bindGroupTime', 'texture']);
+  macro.setGet(publicAPI, model, ['bindGroupLayoutEntry', 'label', 'sampler']);
 
   vtkWebGPUTextureView(publicAPI, model);
 }

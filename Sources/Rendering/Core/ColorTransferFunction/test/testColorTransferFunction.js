@@ -13,10 +13,11 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 
 import baseline from './testColorTransferFunction.png';
+import baseline2 from './testColorTransferFunction2.png';
 
-test('Test Interpolate Scalars Before Colors', (t) => {
+test('Test Color Transfer Function', (t) => {
   const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkOpenGLPolyDataMapper ColorTransferFunction');
+  t.ok('rendering', 'vtkMapper ColorTransferFunction');
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -111,10 +112,10 @@ test('Test Interpolate Scalars Before Colors', (t) => {
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,
-      [baseline],
+      [baseline, baseline2],
       'Rendering/Core/ColorTransferFunction/testColorTransferFunction',
       t,
-      1.5,
+      5,
       gc.releaseResources
     );
   });

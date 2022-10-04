@@ -2,7 +2,7 @@ name: PR Checks
 on: pull_request
 
 jobs:
-  build:
+  pr-checks:
     runs-on: ubuntu-20.04
     name: Check and lint PR
     steps:
@@ -12,9 +12,11 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 16
       - run: npm ci
       - name: Enforce code style
         run: npm run validate
       - name: Lint commits
         run: npx commitlint --from=${{ github.event.pull_request.base.sha }}
+      - name: Tests must not use test.only
+        run: bash .github/workflows/test-only-check.sh

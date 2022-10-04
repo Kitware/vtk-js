@@ -1,7 +1,9 @@
+import { Nullable } from "../../../types";
+
 /**
  * Get the endianness
  */
-export function getEndianness(): string | null;
+export function getEndianness(): Nullable<string>;
 
 export const ENDIANNESS : string;
 

@@ -34,3 +34,34 @@ test('Test cell array constructor', (t) => {
 
   t.end();
 });
+
+test('Test vtkCellArray insertNextCell', (t) => {
+  const cellArray = vtkCellArray.newInstance({
+    dataType: 'Uint16Array',
+    empty: true,
+    numberOfComponents: 1,
+  });
+  cellArray.insertNextCell([0, 1, 2]);
+  t.equal(
+    cellArray.getNumberOfCells(),
+    1,
+    'number of cells after first insertNextCell'
+  );
+  t.deepEqual(
+    cellArray.getData(),
+    Uint16Array.from([3, 0, 1, 2]),
+    'getData after first insertNextCell'
+  );
+  cellArray.insertNextCell([3, 4, 5, 6]);
+  t.equal(
+    cellArray.getNumberOfCells(),
+    2,
+    'number of cells after second insertNextCell'
+  );
+  t.deepEqual(
+    cellArray.getData(),
+    Uint16Array.from([3, 0, 1, 2, 4, 3, 4, 5, 6]),
+    'getData after second insertNextCell'
+  );
+  t.end();
+});

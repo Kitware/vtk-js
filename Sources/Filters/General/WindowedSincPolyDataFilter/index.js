@@ -186,17 +186,17 @@ function vtkWindowedSincPolyDataFilter(publicAPI, model) {
               // TODO: support polygons
               // vtkPolygon::ComputeNormal(inPts,npts,pts,normal);
               vtkTriangle.computeNormal(
-                [...inPts.getPoint(pts[0])],
-                [...inPts.getPoint(pts[1])],
-                [...inPts.getPoint(pts[2])],
+                inPts.getPoint(pts[0]),
+                inPts.getPoint(pts[1]),
+                inPts.getPoint(pts[2]),
                 normal
               );
               const { cellPointIds } = mesh.getCellPoints(nei);
               // vtkPolygon::ComputeNormal(inPts,numNeiPts,neiPts,neiNormal);
               vtkTriangle.computeNormal(
-                [...inPts.getPoint(cellPointIds[0])],
-                [...inPts.getPoint(cellPointIds[1])],
-                [...inPts.getPoint(cellPointIds[2])],
+                inPts.getPoint(cellPointIds[0]),
+                inPts.getPoint(cellPointIds[1]),
+                inPts.getPoint(cellPointIds[2]),
                 neiNormal
               );
 
@@ -275,12 +275,9 @@ function vtkWindowedSincPolyDataFilter(publicAPI, model) {
           ++numFixed;
         } // check angle between edges
         else {
-          const x1 = [0, 0, 0];
-          inPts.getPoint(verts[i].edges[0], x1);
-          const x2 = [0, 0, 0];
-          inPts.getPoint(i, x2);
-          const x3 = [0, 0, 0];
-          inPts.getPoint(verts[i].edges[1], x3);
+          const x1 = inPts.getPoint(verts[i].edges[0]);
+          const x2 = inPts.getPoint(i);
+          const x3 = inPts.getPoint(verts[i].edges[1]);
 
           const l1 = [0, 0, 0];
           const l2 = [0, 0, 0];

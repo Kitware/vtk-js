@@ -55,6 +55,11 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
 
   publicAPI.addActor(model.actor);
 
+  const superGetRepresentationStates = publicAPI.getRepresentationStates;
+  publicAPI.getRepresentationStates = (input = model.inputData[0]) =>
+    superGetRepresentationStates(input).filter(
+      (state) => state.getOrigin?.() && state.isVisible?.()
+    );
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
@@ -74,27 +79,30 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
       color: color.getData(),
     };
 
-    for (let i = 0; i < list.length; i++) {
+    for (let i = 0; i < totalCount; i++) {
       const state = list[i];
       const isActive = state.getActive();
       const scaleFactor = isActive ? model.activeScaleFactor : 1;
 
       const coord = state.getOrigin();
-      typedArray.points[i * 3 + 0] = coord[0];
-      typedArray.points[i * 3 + 1] = coord[1];
-      typedArray.points[i * 3 + 2] = coord[2];
+      if (coord) {
+        typedArray.points[i * 3 + 0] = coord[0];
+        typedArray.points[i * 3 + 1] = coord[1];
+        typedArray.points[i * 3 + 2] = coord[2];
 
-      typedArray.scale[i] =
-        scaleFactor *
-        (!state.isVisible || state.isVisible() ? 1 : 0) *
-        (state.getScale1 ? state.getScale1() : model.defaultScale);
+        typedArray.scale[i] =
+          scaleFactor *
+          (state.getScale1 ? state.getScale1() : model.defaultScale);
 
-      if (publicAPI.getScaleInPixels()) {
-        typedArray.scale[i] *= publicAPI.getPixelWorldHeightAtCoord(coord);
+        if (publicAPI.getScaleInPixels()) {
+          typedArray.scale[i] *= publicAPI.getPixelWorldHeightAtCoord(coord);
+        }
+
+        typedArray.color[i] =
+          model.useActiveColor && isActive
+            ? model.activeColor
+            : state.getColor();
       }
-
-      typedArray.color[i] =
-        model.useActiveColor && isActive ? model.activeColor : state.getColor();
     }
 
     model.internalPolyData.modified();

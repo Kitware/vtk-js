@@ -330,7 +330,7 @@ function getByteStrideFromBufferFormat(format) {
   // options are x2, x3, x4 or nothing
   let numComp = 1;
   if (format[format.length - 2] === 'x') {
-    numComp = format[format.length - 1];
+    numComp = Number(format[format.length - 1]);
   }
 
   const sizeStart = numComp === 1 ? format.length - 1 : format.length - 3;
@@ -353,7 +353,7 @@ function getNumberOfComponentsFromBufferFormat(format) {
   // options are x2, x3, x4 or nothing
   let numComp = 1;
   if (format[format.length - 2] === 'x') {
-    numComp = format[format.length - 1];
+    numComp = Number(format[format.length - 1]);
   }
   return numComp;
 }
@@ -419,7 +419,7 @@ function getByteStrideFromShaderFormat(format) {
   let numComp = 1;
 
   if (format.substring(0, 3) === 'vec') {
-    numComp = format[3];
+    numComp = Number(format[3]);
   } else if (format.substring(0, 3) === 'mat') {
     numComp = format[3] * format[5];
   }

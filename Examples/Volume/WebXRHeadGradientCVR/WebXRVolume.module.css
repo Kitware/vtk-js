@@ -1,0 +1,14 @@
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 200px;
+  z-index: 2;
+  cursor: pointer;
+}

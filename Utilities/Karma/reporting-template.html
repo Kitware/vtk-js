@@ -1,0 +1,214 @@
+<!doctype html>
+<html>
+  <head>
+    <style type="text/css">
+      * {
+          margin: 0;
+      }
+      body {
+          padding: 4px;
+          font-family: sans-serif;
+      }
+      figcaption {
+          text-align: center;
+      }
+      button {
+          padding: 4px;
+          margin: 2px 6px;
+      }
+      .container {
+          display: flex;
+          flex-flow: column;
+      }
+      .indent {
+          margin-left: 32px;
+      }
+      .badge {
+          font-size: 0.9rem;
+          border-radius: 4px;
+          border: 1px solid #333;
+          background-color: rgba(255, 255, 255, 0.4);
+          padding: 4px;
+          color: black;
+      }
+      .line {
+          border: 1px solid grey;
+          font-size: 1em;
+          padding: 6px 8px;
+          display: flex;
+          flex-flow: row;
+          align-items: center;
+      }
+      .browser > .line {
+          display: block;
+          background: white;
+          font-size: 1.25em;
+      }
+      .browser li {
+          font-size: 0.8em;
+      }
+      .test > .line {
+          font-size: 1.1em;
+      }
+      .green, .test.pass > .line {
+          background: #98ff98;
+      }
+      .red, .test.fail > .line {
+          background: #ee0000;
+          color: white;
+      }
+      .spec.pass > .line {
+          background: #98ff9888;
+      }
+      .spec.fail > .line {
+          background: #ee000088;
+      }
+      .skip {
+          background: #efefef;
+      }
+      .details {
+          padding: 8px;
+          background: #eee;
+      }
+      .skip > .details, .pass > .details {
+          display: none;
+      }
+      .fail > .details {
+          display: block;
+      }
+      .imagediff {
+          display: flex;
+          flex-flow: row;
+      }
+      .ml-8 {
+          margin-left: 8px;
+      }
+      .hidden {
+          display: none !important;
+      }
+      .show-block {
+          display: block !important;
+      }
+      #controls {
+          padding: 8px;
+      }
+    </style>
+    <script type="text/javascript">
+      // addOrRemove: true to add, false to remove
+      function toggleClasses(query, classes, addOrRemove) {
+        Array.from(document.querySelectorAll(query)).forEach((el) => {
+          if (addOrRemove) {
+            classes.forEach((cls) => el.classList.add(cls));
+          } else {
+            classes.forEach((cls) => el.classList.remove(cls));
+          }
+        });
+      }
+
+      let showSuccess = false;
+      function toggleSuccess(forceFlag = undefined) {
+        showSuccess = forceFlag === undefined ? !showSuccess : forceFlag;
+        toggleClasses('.skip, .pass', ['hidden'], !showSuccess);
+        document.getElementById('toggleSuccessBtn').innerText = showSuccess
+          ? 'hide passing tests'
+          : 'show passing tests';
+      }
+
+      let showImages = false;
+      function toggleImages(forceFlag = undefined) {
+        showImages = forceFlag === undefined ? !showImages : forceFlag;
+        toggleClasses('.details.operator-imagediff', ['show-block'], showImages);
+        document.getElementById('toggleImagesBtn').innerText = showImages
+          ? 'hide passing image tests'
+          : 'show all image tests';
+      }
+
+      function toggleTests(browserID) {
+        const el = document.getElementById(browserID);
+        if (el) {
+          const addOrRemove = !Array.from(el.classList).includes('hidden');
+          toggleClasses(`#${browserID}`, ['hidden'], addOrRemove);
+        }
+      }
+
+      window.onload = () => {
+        toggleSuccess(true);
+        toggleImages(false);
+      };
+    </script>
+  </head>
+  <body>
+    <h1>vtk.js Test Results</h1>
+    <div id="controls">
+      <button id="toggleSuccessBtn" onclick="toggleSuccess()">loading</button>
+      <button id="toggleImagesBtn" onclick="toggleImages()">loading</button>
+    </div>
+    {{#each browsers}}
+    <div class="browser">
+      <div class="line">
+        <div>
+          {{name}}
+          <span class="ml-8 badge {{#if summary.failed}}red{{else}}green{{/if}}">
+            {{#if summary.failed}}
+            Some tests failed
+            {{else}}
+            All passed
+            {{/if}}
+          </span>
+          <button onclick="toggleTests('id-{{id}}')">Hide/show browser tests</button>
+        </div>
+        <ul>
+          <li>Failed: {{summary.failed}}</li>
+          <li>Passed: {{summary.passed}}</li>
+          <li>Skipped: {{summary.skipped}}</li>
+          <li>Total: {{summary.total}}</li>
+        </ul>
+      </div>
+      <div id="id-{{id}}" class="hidden">
+        {{#each tests}}
+        <div class="test indent {{#if success}}pass{{else}}fail{{/if}}">
+          <div class="line">
+            {{name}}
+            {{#if success}}
+            <div class="ml-8 badge">passing</div>
+            {{else}}
+            <div class="ml-8 badge">failing</div>
+            {{/if}}
+          </div>
+          {{#each specs}}
+          <div class="spec indent {{#if skipped}}skip{{else if success}}pass{{else}}fail{{/if}}">
+            <div class="line">
+              <div>{{description}}</div>
+              {{#if skipped}}
+              <div class="ml-8 badge">skipped</div>
+              {{else if success}}
+              <div class="ml-8 badge">passing</div>
+              {{else}}
+              <div class="ml-8 badge">failing</div>
+              {{/if}}
+            </div>
+            {{#with details}}
+            <div class="details operator-{{operator}}">
+            {{#if (equals operator "imagediff")}}
+              {{! Image diff structure: see testUtils.compareImage }}
+              <div>Mismatch count tolerance: {{expected}}%</div>
+              <div class="imagediff">
+                <figure><img src="{{actual.outputImage}}"><figcaption>Output</figcaption></figure>
+                <figure><img src="{{actual.expectedImage}}"><figcaption>Expected</figcaption></figure>
+                <figure><img src="{{actual.diffImage}}"><figcaption>Difference</figcaption></figure>
+              </div>
+            {{else}}
+              <div>Output: <code>{{json actual}}</code></div>
+              <div>Expected: <code>{{json expected}}</code></div>
+            {{/if}}
+            </div>
+            {{/with}}
+          </div>
+          {{/each}}
+        </div>
+        {{/each}}
+      </div>
+    </div>
+    {{/each}}
+ </body>
+</html>

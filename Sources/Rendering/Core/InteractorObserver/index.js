@@ -54,7 +54,7 @@ function vtkInteractorObserver(publicAPI, model) {
     vtkRenderWindowInteractor.handledEvents.forEach((eventName) => {
       if (publicAPI[`handle${eventName}`]) {
         model.subscribedEvents.push(
-          model.interactor[`on${eventName}`]((callData) => {
+          model._interactor[`on${eventName}`]((callData) => {
             if (model.processEvents) {
               return publicAPI[`handle${eventName}`](callData);
             }
@@ -69,13 +69,13 @@ function vtkInteractorObserver(publicAPI, model) {
   // Public API methods
   //----------------------------------------------------------------------------
   publicAPI.setInteractor = (i) => {
-    if (i === model.interactor) {
+    if (i === model._interactor) {
       return;
     }
 
     unsubscribeFromEvents();
 
-    model.interactor = i;
+    model._interactor = i;
 
     if (i && model.enabled) {
       subscribeToEvents();
@@ -93,7 +93,7 @@ function vtkInteractorObserver(publicAPI, model) {
     unsubscribeFromEvents();
 
     if (enable) {
-      if (model.interactor) {
+      if (model._interactor) {
         subscribeToEvents();
       } else {
         vtkErrorMacro(`
@@ -114,7 +114,7 @@ function vtkInteractorObserver(publicAPI, model) {
       return null;
     }
 
-    return model.interactor.getView().displayToWorld(x, y, z, renderer);
+    return model._interactor.getView().displayToWorld(x, y, z, renderer);
   };
 
   //----------------------------------------------------------------------------
@@ -125,7 +125,7 @@ function vtkInteractorObserver(publicAPI, model) {
       return null;
     }
 
-    return model.interactor.getView().worldToDisplay(x, y, z, renderer);
+    return model._interactor.getView().worldToDisplay(x, y, z, renderer);
   };
 
   //----------------------------------------------------------------------------
@@ -133,7 +133,7 @@ function vtkInteractorObserver(publicAPI, model) {
   publicAPI.setPriority = (priority) => {
     const modified = superClass.setPriority(priority);
 
-    if (modified && model.interactor) {
+    if (modified && model._interactor) {
       unsubscribeFromEvents();
       subscribeToEvents();
     }
@@ -146,7 +146,7 @@ function vtkInteractorObserver(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   enabled: true,
-  interactor: null,
+  // _interactor: null,
   priority: 0.0,
   processEvents: true,
   subscribedEvents: [],
@@ -165,10 +165,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.event(publicAPI, model, 'EndInteractionEvent');
 
   // Create get-only macros
-  macro.get(publicAPI, model, ['interactor', 'enabled']);
+  macro.get(publicAPI, model, ['_interactor', 'enabled']);
 
   // Create get-set macros
   macro.setGet(publicAPI, model, ['priority', 'processEvents']);
+
+  macro.moveToProtected(publicAPI, model, ['interactor']);
 
   // For more macro methods, see "Sources/macros.js"
 

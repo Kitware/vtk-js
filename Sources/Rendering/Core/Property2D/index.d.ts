@@ -1,12 +1,13 @@
 import { vtkObject } from "../../../interfaces";
-import { Color } from "../../../types";
+import { RGBColor } from "../../../types";
+import { DisplayLocation } from "./Constants";
 
-interface IProperty2DInitialValues{
-	color?: number[];
+export interface IProperty2DInitialValues{
+	color?: RGBColor;
 	opacity?: number;
 	pointSize?: number;
 	lineWidth?: number;
-	displayLocation?: string;
+	displayLocation?: DisplayLocation;
 }
 
 export interface vtkProperty2D extends vtkObject {
@@ -14,18 +15,18 @@ export interface vtkProperty2D extends vtkObject {
 	/**
 	 * Get the color of the object.
 	 */
-	getColor(): Color;
+	getColor(): RGBColor;
 
 	/**
 	 * Get the color of the object.
 	 */
-	getColorByReference(): Color;
+	getColorByReference(): RGBColor;
 
 	/**
 	 * Get the display location of the object.
 	 * @default 'Foreground'
 	 */
-	getDisplayLocation(): string;
+	getDisplayLocation(): DisplayLocation;
 
 	/**
 	 * Get the width of a Line. 
@@ -58,17 +59,33 @@ export interface vtkProperty2D extends vtkObject {
 	 * Set the color of the object. Has the side effect of setting the
 	 * ambient diffuse and specular colors as well. This is basically
 	 * a quick overall color setting method.
+	 * @param {RGBColor} color Defines the RGB color array..
+	 */
+	setColor(color: RGBColor): boolean;
+
+	/**
+	 * Set the color of the object. Has the side effect of setting the
+	 * ambient diffuse and specular colors as well. This is basically
+	 * a quick overall color setting method.
 	 * @param {Number} r Defines the red component (between 0 and 1).
 	 * @param {Number} g Defines the green component (between 0 and 1).
 	 * @param {Number} b Defines the blue component (between 0 and 1).
 	 */
-	setColorFrom(color: number[]): boolean;
+	setColorFrom(r: number, g: number, b: number): boolean;
+
+	/**
+	 * Set the color of the object. Has the side effect of setting the
+	 * ambient diffuse and specular colors as well. This is basically
+	 * a quick overall color setting method.
+	 * @param {RGBColor} color Defines the RGB color array..
+	 */
+	setColorFrom(color: RGBColor): boolean;
 
 	/**
 	 * Set the display location of the object.
 	 * @param {String} displayLocation
 	 */
-	setDisplayLocation(displayLocation: string): boolean;
+	setDisplayLocation(displayLocation: DisplayLocation): boolean;
 
 	/**
 	 * Set the width of a Line. The width is expressed in screen units.
@@ -122,7 +139,7 @@ export function newInstance(initialValues?: IProperty2DInitialValues): vtkProper
  * like backface properties can be set and manipulated with this object.
  */
 export declare const vtkProperty2D: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+	newInstance: typeof newInstance;
+	extend: typeof extend;
 };
 export default vtkProperty2D;

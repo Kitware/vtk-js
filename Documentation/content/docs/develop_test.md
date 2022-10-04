@@ -90,10 +90,7 @@ test.onlyIfWebGL('Test vtkClassName Rendering', (t) => {
 
 ## Registering a test
 
-As opposed to examples and api documentation, tests won't be picked up automatically and it is the responsibility of the author to register it on the test suite.
-_This may change as the project evolves._
-
-To add a test to the suite, you need to import it inside `Sources/tests.js`.
+Tests are automatically picked up by Karma, our test runner.
 
 ## Running all the tests
 
@@ -103,11 +100,20 @@ In order to run all the registered test, run the following command:
 $ npm run test
 ```
 
-That command can also be written as `npm t` or `npm test` however it will run all tests.
+That command can also be written as `npm t` or `npm test`.
+
+## Test reporting
+
+After running tests, a report file will be written to `Utilities/TestResults/Test-Report.html`. Opening this file in a browser will show which tests have passed, which tests have failed, and which tests have associated images.
 
 ## Running a single test for debugging
 
-Since we have single entry points for all the tests we run, you can comment out every file except the one you want to run inside `Sources/tests.js`.
+In your test file, specifying `test.only(...)` will tell the test harness to only run your test. Don't forget to remove it once your test is ready!
+
+```diff
+-test('my test description', (t) => {})
++test.only('my test description', (t) => {})
+```
 
 Then executing `npm t` will only run that file, but if you want to open a browser and debug the actual code, you can do it with the following command:
 
@@ -126,9 +132,8 @@ Follow the following procedure to create a new baseline or change an existing ba
 - Add an invalid baseline (any PNG file) and rename it as the required baseline.
   For example, to create a baseline for `testCylinder.js` copy *testCone.png* to *Sources/Filters/Sources/CylinderSource/test/testCylinder.png*.
 - Run the test as per [Running a single test for debugging](#Running-a-single-test-for-debugging). The test should fail because of the invalid baseline. 
-- The test execution creates a file **Documentation/content/coverage/tests.md**.
-  Rename this file as **tests.html** and open it in the browser.
-- The file should show the test output versus the invalid baseline image.
+- The test execution creates a file **Utilities/TestResults/Test-Report.html**. Open this in the browser.
+- The file should show the test output versus the invalid baseline image, as well as a diff.
   Right-click on the test output image and save it as the valid baseline.
 - Re-run the test to ensure that it passes with the valid baseline.
 - Commit the baseline image to the git source tree. 

@@ -56,7 +56,7 @@ function vtkLineIntegralConvolution2D(publicAPI, model) {
   model.classHierarchy.push('vtkLineIntegralConvolution2D');
 
   publicAPI.buildAShader = (fSource) =>
-    model.openGLRenderWindow
+    model._openGLRenderWindow
       .getShaderCache()
       .readyShaderProgramArray(
         vtkLineIntegralConvolution2D_quadVS,
@@ -68,7 +68,7 @@ function vtkLineIntegralConvolution2D(publicAPI, model) {
     texture,
     [width, height],
     context = model.context,
-    openGLRenderWindow = model.openGLRenderWindow,
+    openGLRenderWindow = model._openGLRenderWindow,
     nComp = 4
   ) => {
     // To get texture values in es 2.0, we need to attach the texture to a fbo,
@@ -99,7 +99,7 @@ function vtkLineIntegralConvolution2D(publicAPI, model) {
     texture,
     size,
     context = model.context,
-    openGLRenderWindow = model.openGLRenderWindow
+    openGLRenderWindow = model._openGLRenderWindow
   ) => {
     const values = publicAPI.dumpTextureValues(
       texture,
@@ -184,7 +184,7 @@ function vtkLineIntegralConvolution2D(publicAPI, model) {
     openGLRenderWindow,
     options
   ) => {
-    model.openGLRenderWindow = openGLRenderWindow;
+    model._openGLRenderWindow = openGLRenderWindow;
     model.context = openGLRenderWindow.getContext();
     Object.assign(model, options);
     if (size[0] <= 0.0 || size[1] <= 0.0) {
@@ -204,7 +204,7 @@ function vtkLineIntegralConvolution2D(publicAPI, model) {
     let fb = model.framebuffer;
     if (!fb || size[0] !== fb.getSize()[0] || size[1] !== fb.getSize()[1]) {
       fb = vtkFrameBuffer.newInstance();
-      fb.setOpenGLRenderWindow(model.openGLRenderWindow);
+      fb.setOpenGLRenderWindow(model._openGLRenderWindow);
       fb.saveCurrentBindingsAndBuffers();
       fb.create(...size);
       fb.populateFramebuffer();
@@ -247,7 +247,7 @@ function vtkLineIntegralConvolution2D(publicAPI, model) {
     const dx = 1.0 / size[0];
     const dy = 1.0 / size[1];
 
-    const shaderCache = model.openGLRenderWindow.getShaderCache();
+    const shaderCache = model._openGLRenderWindow.getShaderCache();
 
     if (model.transformVectors) {
       const VTShaderProgram = model.VTProgram;
@@ -444,13 +444,13 @@ function vtkLineIntegralConvolution2D(publicAPI, model) {
   };
 
   publicAPI.contrastEnhance = (isSecondStage, size) => {
-    const shaderCache = model.openGLRenderWindow.getShaderCache();
+    const shaderCache = model._openGLRenderWindow.getShaderCache();
 
     let { min, max } = publicAPI.getTextureMinMax(
       model.bufs.getLastLICBuffer(),
       size,
       model.context,
-      model.openGLRenderWindow
+      model._openGLRenderWindow
     );
 
     if (max <= min || max > 1.0 || min < 0) {
@@ -500,7 +500,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, [
     'context',
-    'openGLRenderWindow',
+    '_openGLRenderWindow',
 
     'nuberOfSteps',
     'stepSize',
@@ -514,6 +514,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'componentIds',
     'isComposite',
   ]);
+  macro.moveToProtected(publicAPI, model, ['openGLRenderWindow']);
 
   // Object methods
   vtkLineIntegralConvolution2D(publicAPI, model);

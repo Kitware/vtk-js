@@ -43,6 +43,12 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
         apiSpecificRenderWindow,
         factory: publicAPI,
       });
+      macro.moveToProtected(widgetPublicAPI, widgetModel, [
+        'renderer',
+        'camera',
+        'apiSpecificRenderWindow',
+        'factory',
+      ]);
       macro.safeArrays(widgetModel);
       vtkAbstractWidget.extend(widgetPublicAPI, widgetModel, initialValues);
 
@@ -53,7 +59,7 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
         .getRepresentationsForViewType(viewType)
         .map(({ builder, labels, initialValues }) =>
           builder.newInstance({
-            parentProp: widgetPublicAPI,
+            _parentProp: widgetPublicAPI,
             labels,
             ...initialValues,
             ...widgetInitialValues,
@@ -173,17 +179,17 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
   let unsubscribe = NoOp;
   publicAPI.delete = macro.chain(publicAPI.delete, () => unsubscribe());
 
-  // Defer after object instantiation so model.widgetState actually exist
-  setTimeout(() => {
+  if (model.widgetState) {
     unsubscribe = model.widgetState.onModified(() =>
       publicAPI.invokeWidgetChange(model.widgetState)
     ).unsubscribe;
-  }, 0);
+  }
 }
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, initialValues);
   macro.obj(publicAPI, model);
   macro.get(publicAPI, model, ['widgetState']);
   macro.event(publicAPI, model, 'WidgetChange');

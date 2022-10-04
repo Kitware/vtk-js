@@ -39,11 +39,13 @@ function vtkPiecewiseFunction(publicAPI, model) {
           switch (functionType) {
             case 0:
             case 1:
-              functionType = 1; // NonDecreasing
+              // NonDecreasing
+              functionType = 1;
               break;
-            default:
             case 2:
-              functionType = 3; // Varied
+            default:
+              // Varied
+              functionType = 3;
               break;
           }
         } else {
@@ -51,11 +53,13 @@ function vtkPiecewiseFunction(publicAPI, model) {
           switch (functionType) {
             case 0:
             case 2:
-              functionType = 2; // NonIncreasing
+              // NonIncreasing
+              functionType = 2;
               break;
-            default:
             case 1:
-              functionType = 3; // Varied
+            default:
+              // Varied
+              functionType = 3;
               break;
           }
         }
@@ -76,8 +80,8 @@ function vtkPiecewiseFunction(publicAPI, model) {
         return 'NonDecreasing';
       case 2:
         return 'NonIncreasing';
-      default:
       case 3:
+      default:
         return 'Varied';
     }
   };

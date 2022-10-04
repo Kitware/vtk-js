@@ -18,7 +18,7 @@ function vtkSphereSource(publicAPI, model) {
     let dataset = outData[0];
     const pointDataType = dataset
       ? dataset.getPoints().getDataType()
-      : 'Float32Array';
+      : model.pointType;
     dataset = vtkPolyData.newInstance();
 
     // ----------------------------------------------------------------------
@@ -211,7 +211,7 @@ const DEFAULT_VALUES = {
   startPhi: 0.0,
   endPhi: 180.0,
   center: [0, 0, 0],
-  pointType: 'Float32Array',
+  pointType: 'Float64Array',
 };
 
 // ----------------------------------------------------------------------------

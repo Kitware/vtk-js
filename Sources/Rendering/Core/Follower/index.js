@@ -73,7 +73,7 @@ function vtkFollower(publicAPI, model) {
         model.followerMatrix[9] = vpn[1];
         model.followerMatrix[10] = vpn[2];
 
-        mat4.multiply(model.matrix, model.followerMatrix, model.matrix);
+        mat4.multiply(model.matrix, model.matrix, model.followerMatrix);
       }
 
       mat4.translate(model.matrix, model.matrix, [

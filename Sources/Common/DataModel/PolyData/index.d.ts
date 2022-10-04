@@ -1,4 +1,4 @@
-import { Vector3 } from '../../../types';
+import { CellType, Vector3 } from '../../../types';
 import vtkCellArray from '../../Core/CellArray';
 import vtkPointSet, { IPointSetInitialValues } from '../PointSet';
 
@@ -44,6 +44,13 @@ export interface vtkPolyData extends vtkPointSet {
 	 * @return an object made of the cellType and a subarray `cellPointIds` of the cell points.
 	 */
 	getCellPoints(cellId: number): object;
+
+	/**
+	 * Get the type of the cell
+	 * @param {Number} cellId The Id of the cell.
+	 * @return CellType The type of the cell.
+	 */
+	 getCellType(cellId: number): CellType;
 
 	/**
 	 * Get the cell array defining cells.
@@ -154,15 +161,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IPolyDa
 export function newInstance(initialValues?: IPolyDataInitialValues): vtkPolyData;
 
 /**
- * vtkPolyData creates an m x n array of quadrilaterals arranged as a regular
- * tiling in a plane. The plane is defined by specifying an origin point, and then
- * two other points that, together with the origin, define two axes for the plane.
- * These axes do not have to be orthogonal - so you can create a parallelogram.
- * (The axes must not be parallel.) The resolution of the plane (i.e., number of
- * subdivisions) is controlled by the ivars XResolution and YResolution.
- *
- * By default, the plane is centered at the origin and perpendicular to the z-axis,
- * with width and height of length 1 and resolutions set to 1.
+ * vtkPolyData is a dataset that represents a geometric structure consisting of vertices, lines, polygons, and/or strips.
  */
 export declare const vtkPolyData: {
 	newInstance: typeof newInstance,

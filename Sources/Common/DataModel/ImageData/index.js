@@ -28,15 +28,9 @@ function vtkImageData(publicAPI, model) {
       return false;
     }
 
-    let changeDetected = false;
-    model.extent.forEach((item, index) => {
-      if (item !== extentArray[index]) {
-        if (changeDetected) {
-          return;
-        }
-        changeDetected = true;
-      }
-    });
+    const changeDetected = model.extent.some(
+      (item, index) => item !== extentArray[index]
+    );
 
     if (changeDetected) {
       model.extent = extentArray.slice();
@@ -189,49 +183,33 @@ function vtkImageData(publicAPI, model) {
   // void ComputeBounds() VTK_OVERRIDE;
   // int GetMaxCellSize() VTK_OVERRIDE {return 8;}; //voxel is the largest
 
-  publicAPI.getBounds = () => publicAPI.extentToBounds(model.extent);
+  publicAPI.getBounds = () =>
+    publicAPI.extentToBounds(publicAPI.getSpatialExtent());
 
   publicAPI.extentToBounds = (ex) => {
     // prettier-ignore
     const corners = [
-      ex[0], ex[2], ex[4],
-      ex[1], ex[2], ex[4],
-      ex[0], ex[3], ex[4],
-      ex[1], ex[3], ex[4],
-      ex[0], ex[2], ex[5],
-      ex[1], ex[2], ex[5],
-      ex[0], ex[3], ex[5],
-      ex[1], ex[3], ex[5]];
+      [ex[0], ex[2], ex[4]],
+      [ex[1], ex[2], ex[4]],
+      [ex[0], ex[3], ex[4]],
+      [ex[1], ex[3], ex[4]],
+      [ex[0], ex[2], ex[5]],
+      [ex[1], ex[2], ex[5]],
+      [ex[0], ex[3], ex[5]],
+      [ex[1], ex[3], ex[5]]
+    ];
 
-    const idx = new Float64Array([corners[0], corners[1], corners[2]]);
-    const vout = new Float64Array(3);
-    publicAPI.indexToWorld(idx, vout);
-    const bounds = [vout[0], vout[0], vout[1], vout[1], vout[2], vout[2]];
-    for (let i = 3; i < 24; i += 3) {
-      vec3.set(idx, corners[i], corners[i + 1], corners[i + 2]);
-      publicAPI.indexToWorld(idx, vout);
-      if (vout[0] < bounds[0]) {
-        bounds[0] = vout[0];
-      }
-      if (vout[1] < bounds[2]) {
-        bounds[2] = vout[1];
-      }
-      if (vout[2] < bounds[4]) {
-        bounds[4] = vout[2];
-      }
-      if (vout[0] > bounds[1]) {
-        bounds[1] = vout[0];
-      }
-      if (vout[1] > bounds[3]) {
-        bounds[3] = vout[1];
-      }
-      if (vout[2] > bounds[5]) {
-        bounds[5] = vout[2];
-      }
+    const bounds = [...vtkBoundingBox.INIT_BOUNDS];
+    const vout = [];
+    for (let i = 0; i < 8; ++i) {
+      publicAPI.indexToWorld(corners[i], vout);
+      vtkBoundingBox.addPoint(bounds, ...vout);
     }
-
     return bounds;
   };
+
+  publicAPI.getSpatialExtent = () =>
+    vtkBoundingBox.inflate([...model.extent], 0.5);
 
   // Internal, shouldn't need to call this manually.
   publicAPI.computeTransforms = () => {
@@ -322,9 +300,7 @@ function vtkImageData(publicAPI, model) {
     vec3.transformMat4(out1, in1, model.indexToWorld);
     vec3.transformMat4(out2, in2, model.indexToWorld);
 
-    vtkMath.computeBoundsFromPoints(out1, out2, bout);
-
-    return bout;
+    return vtkMath.computeBoundsFromPoints(out1, out2, bout);
   };
 
   publicAPI.worldToIndexBounds = (bin, bout = []) => {
@@ -337,25 +313,14 @@ function vtkImageData(publicAPI, model) {
     vec3.transformMat4(out1, in1, model.worldToIndex);
     vec3.transformMat4(out2, in2, model.worldToIndex);
 
-    vtkMath.computeBoundsFromPoints(out1, out2, bout);
-
-    return bout;
+    return vtkMath.computeBoundsFromPoints(out1, out2, bout);
   };
 
   // Make sure the transform is correct
   publicAPI.onModified(publicAPI.computeTransforms);
   publicAPI.computeTransforms();
 
-  publicAPI.getCenter = () => {
-    const bounds = publicAPI.getBounds();
-    const center = [];
-
-    for (let i = 0; i < 3; i++) {
-      center[i] = (bounds[2 * i + 1] + bounds[2 * i]) / 2;
-    }
-
-    return center;
-  };
+  publicAPI.getCenter = () => vtkBoundingBox.getCenter(publicAPI.getBounds());
 
   publicAPI.computeHistogram = (worldBounds, voxelFunc = null) => {
     const bounds = [0, 0, 0, 0, 0, 0];
@@ -414,7 +379,9 @@ function vtkImageData(publicAPI, model) {
     }
 
     const average = inum > 0 ? isum / inum : 0;
-    const variance = sumOfSquares - average * average;
+    const variance = inum
+      ? Math.abs(sumOfSquares / inum - average * average)
+      : 0;
     const sigma = Math.sqrt(variance);
 
     return {
@@ -423,6 +390,7 @@ function vtkImageData(publicAPI, model) {
       average,
       variance,
       sigma,
+      count: inum,
     };
   };
 

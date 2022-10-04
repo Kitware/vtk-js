@@ -1,6 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
-import vtkWebGPUMapperHelper from 'vtk.js/Sources/Rendering/WebGPU/MapperHelper';
+import vtkWebGPUSimpleMapper from 'vtk.js/Sources/Rendering/WebGPU/SimpleMapper';
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUFullScreenQuad methods
@@ -12,11 +12,13 @@ function vtkWebGPUFullScreenQuad(publicAPI, model) {
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
+    vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
+    vDesc.addOutput('vec4<f32>', 'vertexVC');
     let code = vDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
       'output.tcoordVS = vec2<f32>(vertexBC.x * 0.5 + 0.5, 1.0 - vertexBC.y * 0.5 - 0.5);',
       'output.Position = vec4<f32>(vertexBC, 1.0);',
+      'output.vertexVC = vec4<f32>(vertexBC, 1);',
     ]).result;
     vDesc.setCode(code);
   };
@@ -25,12 +27,10 @@ function vtkWebGPUFullScreenQuad(publicAPI, model) {
     publicAPI.replaceShaderPosition
   );
 
-  const superclassBuild = publicAPI.build;
-  publicAPI.build = (renderEncoder, device) => {
-    const buff = device.getBufferManager().getFullScreenQuadBuffer();
+  publicAPI.updateBuffers = () => {
+    const buff = model.device.getBufferManager().getFullScreenQuadBuffer();
     model.vertexInput.addBuffer(buff, ['vertexBC']);
     model.numberOfVertices = 6;
-    superclassBuild(renderEncoder, device);
   };
 }
 
@@ -46,7 +46,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkWebGPUMapperHelper.extend(publicAPI, model, initialValues);
+  vtkWebGPUSimpleMapper.extend(publicAPI, model, initialValues);
 
   // Object methods
   vtkWebGPUFullScreenQuad(publicAPI, model);

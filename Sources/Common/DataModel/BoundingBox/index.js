@@ -53,6 +53,23 @@ export function addPoint(bounds, ...xyz) {
   bounds[3] = yMax > xyz[1] ? yMax : xyz[1];
   bounds[4] = zMin < xyz[2] ? zMin : xyz[2];
   bounds[5] = zMax > xyz[2] ? zMax : xyz[2];
+  return bounds;
+}
+
+export function addPoints(bounds, points) {
+  if (points.length === 0) {
+    return bounds;
+  }
+  if (Array.isArray(points[0])) {
+    for (let i = 0; i < points.length; ++i) {
+      addPoint(bounds, points[i]);
+    }
+  } else {
+    for (let i = 0; i < points.length; i += 3) {
+      addPoint(bounds, points.slice(i, i + 3));
+    }
+  }
+  return bounds;
 }
 
 export function addBounds(bounds, xMin, xMax, yMin, yMax, zMin, zMax) {
@@ -72,6 +89,7 @@ export function addBounds(bounds, xMin, xMax, yMin, yMax, zMin, zMax) {
     bounds[4] = Math.min(zMin, _zMin);
     bounds[5] = Math.max(zMax, _zMax);
   }
+  return bounds;
 }
 
 export function setMinPoint(bounds, x, y, z) {
@@ -104,6 +122,7 @@ export function inflate(bounds, delta) {
   bounds[3] += delta;
   bounds[4] -= delta;
   bounds[5] += delta;
+  return bounds;
 }
 
 export function scale(bounds, sx, sy, sz) {
@@ -143,6 +162,28 @@ export function getCenter(bounds) {
     0.5 * (bounds[2] + bounds[3]),
     0.5 * (bounds[4] + bounds[5]),
   ];
+}
+
+export function scaleAboutCenter(bounds, sx, sy, sz) {
+  if (!isValid(bounds)) {
+    return false;
+  }
+  const center = getCenter(bounds);
+  bounds[0] -= center[0];
+  bounds[1] -= center[0];
+  bounds[2] -= center[1];
+  bounds[3] -= center[1];
+  bounds[4] -= center[2];
+  bounds[5] -= center[2];
+  scale(bounds, sx, sy, sz);
+  bounds[0] += center[0];
+  bounds[1] += center[0];
+  bounds[2] += center[1];
+  bounds[3] += center[1];
+  bounds[4] += center[2];
+  bounds[5] += center[2];
+
+  return true;
 }
 
 export function getLength(bounds, index) {
@@ -211,6 +252,7 @@ export function getCorners(bounds, corners) {
       }
     }
   }
+  return corners;
 }
 
 // Computes the two corners with minimal and miximal coordinates
@@ -222,14 +264,13 @@ export function computeCornerPoints(bounds, point1, point2) {
   point2[0] = bounds[1];
   point2[1] = bounds[3];
   point2[2] = bounds[5];
+  return point1;
 }
 
 export function computeScale3(bounds, scale3 = []) {
-  const center = getCenter(bounds);
-  scale3[0] = bounds[1] - center[0];
-  scale3[1] = bounds[3] - center[1];
-  scale3[2] = bounds[5] - center[2];
-
+  scale3[0] = 0.5 * (bounds[1] - bounds[0]);
+  scale3[1] = 0.5 * (bounds[3] - bounds[2]);
+  scale3[2] = 0.5 * (bounds[5] - bounds[4]);
   return scale3;
 }
 
@@ -571,8 +612,7 @@ class BoundingBox {
   constructor(refBounds) {
     this.bounds = refBounds;
     if (!this.bounds) {
-      this.bounds = new Float64Array(6);
-      setBounds(this.bounds, INIT_BOUNDS);
+      this.bounds = new Float64Array(INIT_BOUNDS);
     }
   }
 
@@ -598,6 +638,10 @@ class BoundingBox {
 
   addPoint(...xyz) {
     return addPoint(this.bounds, xyz);
+  }
+
+  addPoints(points) {
+    return addPoints(this.bounds, points);
   }
 
   addBounds(xMin, xMax, yMin, yMax, zMin, zMax) {
@@ -720,11 +764,13 @@ export const STATIC = {
   setBounds,
   reset,
   addPoint,
+  addPoints,
   addBounds,
   setMinPoint,
   setMaxPoint,
   inflate,
   scale,
+  scaleAboutCenter,
   getCenter,
   getLength,
   getLengths,

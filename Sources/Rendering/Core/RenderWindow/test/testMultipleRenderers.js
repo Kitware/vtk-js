@@ -11,6 +11,7 @@ import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 
 import baseline from './testMultipleRenderers.png';
+import baseline2 from './testMultipleRenderers2.png';
 
 test('Test multiple renderers', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -86,7 +87,7 @@ test('Test multiple renderers', (t) => {
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,
-      [baseline],
+      [baseline, baseline2],
       'Rendering/Core/RenderWindow/testMultipleRenderers',
       t,
       5,

@@ -16,7 +16,7 @@ const oitpFragTemplate = `
 
 //VTK::IOStructs::Dec
 
-[[stage(fragment)]]
+@fragment
 fn main(
 //VTK::IOStructs::Input
 )
@@ -57,7 +57,9 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
     if (!model.translucentRenderEncoder) {
       publicAPI.createRenderEncoder();
       publicAPI.createFinalEncoder();
-      model.translucentColorTexture = vtkWebGPUTexture.newInstance();
+      model.translucentColorTexture = vtkWebGPUTexture.newInstance({
+        label: 'translucentPassColor',
+      });
       model.translucentColorTexture.create(device, {
         width: viewNode.getCanvas().width,
         height: viewNode.getCanvas().height,
@@ -67,11 +69,12 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
         usage:
           GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
       });
-      const v1 = model.translucentColorTexture.createView();
-      v1.setName('oitpColorTexture');
+      const v1 = model.translucentColorTexture.createView('oitpColorTexture');
       model.translucentRenderEncoder.setColorTextureView(0, v1);
 
-      model.translucentAccumulateTexture = vtkWebGPUTexture.newInstance();
+      model.translucentAccumulateTexture = vtkWebGPUTexture.newInstance({
+        label: 'translucentPassAccumulate',
+      });
       model.translucentAccumulateTexture.create(device, {
         width: viewNode.getCanvas().width,
         height: viewNode.getCanvas().height,
@@ -81,8 +84,8 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
         usage:
           GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
       });
-      const v2 = model.translucentAccumulateTexture.createView();
-      v2.setName('oitpAccumTexture');
+      const v2 =
+        model.translucentAccumulateTexture.createView('oitpAccumTexture');
       model.translucentRenderEncoder.setColorTextureView(1, v2);
       model.fullScreenQuad = vtkWebGPUFullScreenQuad.newInstance();
       model.fullScreenQuad.setDevice(viewNode.getDevice());
@@ -114,14 +117,10 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       model.colorTextureView
     );
     model.translucentFinalEncoder.attachTextureViews();
-    renNode.setRenderEncoder(model.translucentFinalEncoder);
+
     model.translucentFinalEncoder.begin(viewNode.getCommandEncoder());
-    // set viewport
     renNode.scissorAndViewport(model.translucentFinalEncoder);
-    model.fullScreenQuad.render(
-      model.translucentFinalEncoder,
-      viewNode.getDevice()
-    );
+    model.fullScreenQuad.prepareAndDraw(model.translucentFinalEncoder);
     model.translucentFinalEncoder.end();
   };
 
@@ -131,41 +130,44 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
   ];
 
   publicAPI.createRenderEncoder = () => {
-    model.translucentRenderEncoder = vtkWebGPURenderEncoder.newInstance();
+    model.translucentRenderEncoder = vtkWebGPURenderEncoder.newInstance({
+      label: 'translucentRender',
+    });
     const rDesc = model.translucentRenderEncoder.getDescription();
     rDesc.colorAttachments = [
       {
         view: undefined,
-        loadValue: [0.0, 0.0, 0.0, 0.0],
+        clearValue: [0.0, 0.0, 0.0, 0.0],
+        loadOp: 'clear',
         storeOp: 'store',
       },
       {
         view: undefined,
-        loadValue: [1.0, 0.0, 0.0, 0.0],
+        clearValue: [1.0, 0.0, 0.0, 0.0],
+        loadOp: 'clear',
         storeOp: 'store',
       },
     ];
     rDesc.depthStencilAttachment = {
       view: undefined,
-      depthLoadValue: 'load',
+      depthLoadOp: 'load',
       depthStoreOp: 'store',
-      stencilLoadValue: 'load',
-      stencilStoreOp: 'store',
     };
 
     model.translucentRenderEncoder.setReplaceShaderCodeFunction((pipeline) => {
       const fDesc = pipeline.getShaderDescription('fragment');
       fDesc.addOutput('vec4<f32>', 'outColor');
       fDesc.addOutput('f32', 'outAccum');
-      fDesc.addBuiltinInput('vec4<f32>', '[[builtin(position)]] fragPos');
+      fDesc.addBuiltinInput('vec4<f32>', '@builtin(position) fragPos');
       let code = fDesc.getCode();
+
       code = vtkWebGPUShaderCache.substitute(
         code,
         '//VTK::RenderEncoder::Impl',
         [
-          // very simple depth weighting in w
-          'var w: f32 = 1.0 - input.fragPos.z * 0.9;',
-          'output.outColor = vec4<f32>(computedColor.rgb*computedColor.a, computedColor.a) * w;',
+          // very simple depth weighting in w z ranges from 1.0 near to 0.0
+          'var w: f32 = computedColor.a * pow(0.1 + input.fragPos.z, 2.0);',
+          'output.outColor = vec4<f32>(computedColor.rgb*w, w);',
           'output.outAccum = computedColor.a;',
         ]
       ).result;
@@ -176,7 +178,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       primitive: { cullMode: 'none' },
       depthStencil: {
         depthWriteEnabled: false,
-        depthCompare: 'less',
+        depthCompare: 'greater',
         format: 'depth32float',
       },
       fragment: {
@@ -207,12 +209,14 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
   };
 
   publicAPI.createFinalEncoder = () => {
-    model.translucentFinalEncoder = vtkWebGPURenderEncoder.newInstance();
+    model.translucentFinalEncoder = vtkWebGPURenderEncoder.newInstance({
+      label: 'translucentFinal',
+    });
     model.translucentFinalEncoder.setDescription({
       colorAttachments: [
         {
           view: null,
-          loadValue: 'load',
+          loadOp: 'load',
           storeOp: 'store',
         },
       ],
@@ -220,14 +224,12 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
     model.translucentFinalEncoder.setReplaceShaderCodeFunction((pipeline) => {
       const fDesc = pipeline.getShaderDescription('fragment');
       fDesc.addOutput('vec4<f32>', 'outColor');
-      fDesc.addBuiltinInput('vec4<f32>', '[[builtin(position)]] fragPos');
+      fDesc.addBuiltinInput('vec4<f32>', '@builtin(position) fragPos');
       let code = fDesc.getCode();
       code = vtkWebGPUShaderCache.substitute(
         code,
         '//VTK::RenderEncoder::Impl',
-        [
-          'output.outColor = vec4<f32>(computedColor.rgb*computedColor.a, computedColor.a);',
-        ]
+        ['output.outColor = vec4<f32>(computedColor.rgb, computedColor.a);']
       ).result;
       fDesc.setCode(code);
     });
@@ -237,7 +239,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       fragment: {
         targets: [
           {
-            format: 'bgra8unorm',
+            format: 'rgba16float',
             blend: {
               color: {
                 srcFactor: 'src-alpha',

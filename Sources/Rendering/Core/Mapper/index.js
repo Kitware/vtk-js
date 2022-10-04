@@ -9,6 +9,12 @@ import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors/Const
 import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 import Constants from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
+import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
+
+import { PassTypes } from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector/Constants';
+
+const { FieldAssociations } = vtkDataSet;
+
 const { staticOffsetAPI, otherStaticMethods } = CoincidentTopologyHelper;
 
 const { ColorMode, ScalarMode, GetArray } = Constants;
@@ -161,7 +167,11 @@ function vtkMapper(publicAPI, model) {
       if (lut) {
         // Ensure that the lookup table is built
         lut.build();
-        model.colorMapColors = lut.mapScalars(scalars, model.colorMode, -1);
+        model.colorMapColors = lut.mapScalars(
+          scalars,
+          model.colorMode,
+          model.fieldDataTupleId
+        );
       }
     }
     model.colorBuildString = `${publicAPI.getMTime()}${scalars.getMTime()}${alpha}`;
@@ -477,7 +487,7 @@ function vtkMapper(publicAPI, model) {
         2 * input.getLines().getNumberOfCells(),
       triangles:
         input.getPolys().getNumberOfValues() -
-        3 * input.getLines().getNumberOfCells(),
+        3 * input.getPolys().getNumberOfCells(),
     };
     return pcount;
   };
@@ -489,6 +499,68 @@ function vtkMapper(publicAPI, model) {
   publicAPI.colorToValue = notImplemented('ColorToValue');
   publicAPI.useInvertibleColorFor = notImplemented('UseInvertibleColorFor');
   publicAPI.clearInvertibleColor = notImplemented('ClearInvertibleColor');
+
+  publicAPI.processSelectorPixelBuffers = (selector, pixelOffsets) => {
+    /* eslint-disable no-bitwise */
+    if (
+      !selector ||
+      !model.selectionWebGLIdsToVTKIds ||
+      !model.populateSelectionSettings
+    ) {
+      return;
+    }
+
+    const rawLowData = selector.getRawPixelBuffer(PassTypes.ID_LOW24);
+    const rawHighData = selector.getRawPixelBuffer(PassTypes.ID_HIGH24);
+    const currentPass = selector.getCurrentPass();
+    const fieldAssociation = selector.getFieldAssociation();
+
+    let idMap = null;
+    if (fieldAssociation === FieldAssociations.FIELD_ASSOCIATION_POINTS) {
+      idMap = model.selectionWebGLIdsToVTKIds.points;
+    } else if (fieldAssociation === FieldAssociations.FIELD_ASSOCIATION_CELLS) {
+      idMap = model.selectionWebGLIdsToVTKIds.cells;
+    }
+
+    if (!idMap) {
+      return;
+    }
+
+    pixelOffsets.forEach((pos) => {
+      if (currentPass === PassTypes.ID_LOW24) {
+        let inValue = 0;
+        if (rawHighData) {
+          inValue += rawHighData[pos];
+          inValue *= 256;
+        }
+        inValue += rawLowData[pos + 2];
+        inValue *= 256;
+        inValue += rawLowData[pos + 1];
+        inValue *= 256;
+        inValue += rawLowData[pos];
+
+        const outValue = idMap[inValue];
+        const lowData = selector.getPixelBuffer(PassTypes.ID_LOW24);
+        lowData[pos] = outValue & 0xff;
+        lowData[pos + 1] = (outValue & 0xff00) >> 8;
+        lowData[pos + 2] = (outValue & 0xff0000) >> 16;
+      } else if (currentPass === PassTypes.ID_HIGH24 && rawHighData) {
+        let inValue = 0;
+        inValue += rawHighData[pos];
+        inValue *= 256;
+        inValue += rawLowData[pos];
+        inValue *= 256;
+        inValue += rawLowData[pos + 1];
+        inValue *= 256;
+        inValue += rawLowData[pos + 2];
+
+        const outValue = idMap[inValue];
+        const highData = selector.getPixelBuffer(PassTypes.ID_HIGH24);
+        highData[pos] = (outValue & 0xff000000) >> 24;
+      }
+    });
+    /* eslint-enable no-bitwise */
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -514,6 +586,9 @@ const DEFAULT_VALUES = {
   colorByArrayName: null,
 
   fieldDataTupleId: -1,
+
+  populateSelectionSettings: true,
+  selectionWebGLIdsToVTKIds: null,
 
   interpolateScalarsBeforeMapping: false,
   colorCoordinates: null,
@@ -549,9 +624,11 @@ export function extend(publicAPI, model, initialValues = {}) {
     'fieldDataTupleId',
     'interpolateScalarsBeforeMapping',
     'lookupTable',
+    'populateSelectionSettings',
     'renderTime',
     'scalarMode',
     'scalarVisibility',
+    'selectionWebGLIdsToVTKIds',
     'static',
     'useLookupTableScalarRange',
     'viewSpecificProperties',

@@ -1,10 +1,9 @@
 /* eslint-disable global-require */
-/* eslint-disable react/require-extension */
 const path = require('path');
 
 const webpack = require('webpack');
-const testsRules = require('./Utilities/config/rules-tests.js');
-const linterRules = require('./Utilities/config/rules-linter.js');
+const ESLintPlugin = require('eslint-webpack-plugin');
+const testsRules = require('./Utilities/config/rules-tests');
 
 const sourcePath = path.join(__dirname, './Sources');
 
@@ -14,29 +13,31 @@ module.exports = function init(config) {
   config.set({
     plugins: [
       require('karma-webpack'),
-      require('karma-tap'),
       require('karma-chrome-launcher'),
       require('karma-firefox-launcher'),
       require('karma-coverage'),
-      require('karma-tap-pretty-reporter'),
       require('karma-junit-reporter'),
+      require('./Utilities/Karma/tape-object-stream'),
+      require('./Utilities/Karma/tape-html-reporter'),
     ],
 
     basePath: '',
-    frameworks: ['tap', 'webpack'],
+    frameworks: ['tape-object-stream', 'webpack'],
     files: [
-      'Sources/tests.js',
+      'Sources/Testing/setupTestEnv.js',
+      'Sources/**/test*.js',
       { pattern: 'Data/**', watched: false, served: true, included: false },
     ],
 
     preprocessors: {
-      'Sources/tests.js': ['webpack'],
+      'Sources/Testing/setupTestEnv.js': ['webpack'],
+      'Sources/**/test*.js': ['webpack'],
     },
 
     webpack: {
       mode: 'development',
       module: {
-        rules: [].concat(testsRules, linterRules),
+        rules: [].concat(testsRules),
       },
       resolve: {
         modules: [path.resolve(__dirname, 'node_modules'), sourcePath],
@@ -51,6 +52,7 @@ module.exports = function init(config) {
         },
       },
       plugins: [
+        new ESLintPlugin(),
         new webpack.DefinePlugin({
           __BASE_PATH__: "'/base'",
         }),
@@ -58,13 +60,11 @@ module.exports = function init(config) {
       ],
     },
 
-    reporters: ['coverage', 'tap-pretty', 'junit'],
+    reporters: ['coverage', 'junit', 'tape-html'],
 
-    tapReporter: {
-      outputFile: 'Documentation/content/coverage/tests.md',
-      prettifier: 'tap-markdown',
-      separator:
-        '\n=========================================================\n=========================================================\n',
+    tapeHTMLReporter: {
+      templateFile: 'Utilities/Karma/reporting-template.html',
+      outputFile: 'Utilities/TestResults/Test-Report.html',
     },
 
     coverageReporter: {
@@ -91,7 +91,8 @@ module.exports = function init(config) {
       },
     },
     // browserNoActivityTimeout: 600000,
-    // browserDisconnectTimeout: 600000,
+    browserDisconnectTimeout: 10000,
+    browserDisconnectTolerance: 3,
 
     port: 9876,
     colors: true,

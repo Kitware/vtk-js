@@ -1,3 +1,6 @@
+// For streamlined VR development install the WebXR emulator extension
+// https://github.com/MozillaReality/WebXR-emulator-extension
+
 import 'vtk.js/Sources/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
@@ -16,7 +19,22 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
 import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
+import vtkResourceLoader from 'vtk.js/Sources/IO/Core/ResourceLoader';
+
+// Custom UI controls, including button to start XR session
 import controlPanel from './controller.html';
+
+// Dynamically load WebXR polyfill from CDN for WebVR and Cardboard API backwards compatibility
+if (navigator.xr === undefined) {
+  vtkResourceLoader
+    .loadScript(
+      'https://cdn.jsdelivr.net/npm/webxr-polyfill@latest/build/webxr-polyfill.js'
+    )
+    .then(() => {
+      // eslint-disable-next-line no-new, no-undef
+      new WebXRPolyfill();
+    });
+}
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -36,8 +54,7 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // this
 // ----------------------------------------------------------------------------
 
-const coneSource = vtkConeSource.newInstance({ height: 100.0, radius: 50.0 });
-// const coneSource = vtkConeSource.newInstance({ height: 1.0, radius: 0.5 });
+const coneSource = vtkConeSource.newInstance({ height: 100.0, radius: 50 });
 const filter = vtkCalculator.newInstance();
 
 filter.setInputConnection(coneSource.getOutputPort());
@@ -67,7 +84,7 @@ mapper.setInputConnection(filter.getOutputPort());
 
 const actor = vtkActor.newInstance();
 actor.setMapper(mapper);
-actor.setPosition(20.0, 0.0, 0.0);
+actor.setPosition(0.0, 0.0, -20.0);
 
 renderer.addActor(actor);
 renderer.resetCamera();
@@ -96,10 +113,10 @@ resolutionChange.addEventListener('input', (e) => {
 
 vrbutton.addEventListener('click', (e) => {
   if (vrbutton.textContent === 'Send To VR') {
-    fullScreenRenderer.getApiSpecificRenderWindow().startVR();
+    fullScreenRenderer.getApiSpecificRenderWindow().startXR();
     vrbutton.textContent = 'Return From VR';
   } else {
-    fullScreenRenderer.getApiSpecificRenderWindow().stopVR();
+    fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
     vrbutton.textContent = 'Send To VR';
   }
 });

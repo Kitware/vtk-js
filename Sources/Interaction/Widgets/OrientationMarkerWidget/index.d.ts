@@ -3,13 +3,9 @@ import vtkAnnotatedCubeActor from "../../../Rendering/Core/AnnotatedCubeActor";
 import vtkAxesActor from "../../../Rendering/Core/AxesActor";
 import vtkRenderer from "../../../Rendering/Core/Renderer";
 import vtkRenderWindowInteractor from "../../../Rendering/Core/RenderWindowInteractor";
+import { Nullable } from "../../../types";
+import { Corners } from "./Constants";
 
-export enum Corners {
-	TOP_LEFT,
-	TOP_RIGHT,
-	BOTTOM_LEFT,
-	BOTTOM_RIGHT,
-}
 
 /**
  * 
@@ -17,6 +13,7 @@ export enum Corners {
 export interface IOrientationMarkerWidgetInitialValues {
 	actor?: vtkAnnotatedCubeActor | vtkAxesActor,
 	interactor?: vtkRenderWindowInteractor,
+	parentRenderer?: vtkRenderer,
 	viewportCorner?: Corners,
 	viewportSize?: number,
 	minPixelSize?: number,
@@ -43,6 +40,11 @@ export interface vtkOrientationMarkerWidget extends vtkObject {
 	 * 
 	 */
 	getActor(): vtkAnnotatedCubeActor | vtkAxesActor;
+
+	/**
+	 * Gets the parent renderer, if any.
+	 */
+	getParentRenderer(): Nullable<vtkRenderer>;
 
 	/**
 	 * Get wheter the orientation marker is enabled.
@@ -83,9 +85,15 @@ export interface vtkOrientationMarkerWidget extends vtkObject {
 	
 	/**
 	 * Get the actor associated with the widget.
-	 * @param actor 
+	 * @param {vtkAnnotatedCubeActor | vtkAxesActor} actor The actor instance.
 	 */
 	setActor(actor: vtkAnnotatedCubeActor | vtkAxesActor): void;
+
+	/**
+	 * Sets the parent renderer
+	 * @param {vtkRenderer} ren The parent renderer
+	 */
+	setParentRenderer(ren: vtkRenderer): boolean;
 
 	/**
 	 * Set the widget enabled status, i.e. to show the widget or not.
@@ -123,9 +131,10 @@ export interface vtkOrientationMarkerWidget extends vtkObject {
 	setViewportCorner(viewportCorner: Corners): boolean;
 
 	/**
-	 * Set the viewport size. The sizeFactor should be between 0.0 and 1.0.
+	 * Set the viewport size.
+	 * The sizeFactor should be between 0.0 and 1.0.
 	 * It says how much of the main render window to color.
-	 * @param sizeFactor 
+	 * @param {Number} sizeFactor 
 	 * @default 0.2
 	 */
 	setViewportSize(sizeFactor: number): void;
@@ -156,12 +165,13 @@ export function extend(publicAPI: object, model: object, initialValues?: IOrient
  */
 export function newInstance(initialValues?: IOrientationMarkerWidgetInitialValues): vtkOrientationMarkerWidget;
 
-
 /**
  * vtkOrientationMarkerWidget is a 2D widget for manipulating a marker prop
  */
 export declare const vtkOrientationMarkerWidget: {
 	newInstance: typeof newInstance;
 	extend: typeof extend;
+	Corners: typeof Corners;
 }
+
 export default vtkOrientationMarkerWidget;

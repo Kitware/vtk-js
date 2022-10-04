@@ -9,10 +9,11 @@ import colorMaps from '../ColorMaps.json';
 
 import createScalarMap from './createScalarMap';
 import baseline from './testColorTransferFunctionInterpolation.png';
+import baseline2 from './testColorTransferFunctionInterpolation2.png';
 
-test('Test Interpolate Scalars Before Colors', (t) => {
+test('Test ColorTransferFunction Interpolation', (t) => {
   const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkOpenGLPolyDataMapper ColorTransferFunction Presets');
+  t.ok('rendering', 'vtkMapper ColorTransferFunction Interpolaiton');
 
   // testUtils.keepDOM();
 
@@ -51,7 +52,7 @@ test('Test Interpolate Scalars Before Colors', (t) => {
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,
-      [baseline],
+      [baseline, baseline2],
       'Rendering/Core/ColorTransferFunction/testColorTransferFunctionInterpolation',
       t,
       5,

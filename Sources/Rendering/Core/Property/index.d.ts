@@ -1,32 +1,27 @@
 import { vtkObject } from "../../../interfaces";
-import { Color } from "../../../types";
+import { RGBColor } from "../../../types";
+import { Interpolation, Representation, Shading } from "./Constants";
+import { vtkTexture } from '../../Core/Texture';
 
-export enum Shading {
-	FLAT,
-	GOURAUD,
-	PHONG,
-}
-
-export enum Representation {
-	POINTS,
-	WIREFRAME,
-	SURFACE,
-}
-
-export enum Interpolation {
-	FLAT,
-	GOURAUD,
-	PHONG,
-}
-
-interface IPropertyValues {
-	color?: Color;
-	ambientColor?: Color;
-	diffuseColor?: Color;
-	specularColor?: Color;
-	edgeColor?: Color;
+export interface IPropertyInitialValues {
+	color?: RGBColor;
+	ambientColor?: RGBColor;
+	diffuseColor?: RGBColor;
+	specularColor?: RGBColor;
+	diffuseTexture?: vtkTexture;
+	metallicTexture?: vtkTexture;
+	roughnessTexture?: vtkTexture;
+	normalTexture?: vtkTexture;
+	ambientOcclusionTexture?: vtkTexture;
+	emissionTexture?: vtkTexture;
+	edgeColor?: RGBColor;
 	ambient?: number;
 	diffuse?: number;
+	metallic?: number;
+	roughness?: number;
+	normalStrength?: number;
+	emission?: number;
+	baseIOR?: number;
 	specular?: number;
 	specularPower?: number;
 	opacity?: number;
@@ -63,14 +58,14 @@ export interface vtkProperty extends vtkObject {
 	 * and diffuse colors. From a physical standpoint it really doesn't make too
 	 * much sense to have both. For the rendering libraries that don't support
 	 * both, the diffuse color is used.
-	 * @return {Color} Array of RGB color.
+	 * @return {RGBColor} Array of RGB color.
 	 */
-	getAmbientColor(): Color;
+	getAmbientColor(): RGBColor;
 
 	/**
-	 * 
+	 * Get the ambient surface color.
 	 */
-	getAmbientColorByReference(): Color;
+	getAmbientColorByReference(): RGBColor;
 
 	/**
 	 * 
@@ -80,7 +75,7 @@ export interface vtkProperty extends vtkObject {
 	/**
 	 * Get the color of the object.the color of the object
 	 */
-	getColor(): Color;
+	getColor(): RGBColor;
 
 	/**
 	 * Get the diffuse lighting coefficient.
@@ -90,23 +85,23 @@ export interface vtkProperty extends vtkObject {
 
 	/**
 	 * Get the diffuse surface color.
-	 * @return {Color} Array of RGB color.
+	 * @return {RGBColor} Array of RGB color.
 	 */
-	getDiffuseColor(): Color;
+	getDiffuseColor(): RGBColor;
 	/**
 	 * 
 	 */
-	getDiffuseColorByReference(): Color;
+	getDiffuseColorByReference(): RGBColor;
 
 	/**
 	 * 
 	 */
-	getEdgeColor(): Color;
+	getEdgeColor(): RGBColor;
 
 	/**
 	 * 
 	 */
-	getEdgeColorByReference(): Color;
+	getEdgeColorByReference(): RGBColor;
 
 	/**
 	 * 
@@ -179,21 +174,81 @@ export interface vtkProperty extends vtkObject {
 	getSpecular(): number;
 
 	/**
-	 * Get the specular surface color.
-	 * @return {Color} Array of RGB color.
+	 * Get the roughness coefficient.
+	 * @default 1
 	 */
-	getSpecularColor(): Color;
+	getRoughness(): number;
 
 	/**
-	 * 
+	 * Get the metallic coefficient.
+	 * @default 0
 	 */
-	getSpecularColorByReference(): Color;
+	getMetallic(): number;
+
+	/**
+	 * Get the index of refraction.
+	 * @default 0
+	 */
+	getBaseIOR(): number;
+
+	/**
+	 * Get the strength of the normal map.
+	 * @default 1
+	 */
+	getNormalStrength(): number;
+
+	/**
+	 * Get the emission coefficient.
+	 * @default 0
+	 */
+	getEmission(): number;
+
+	/**
+	 * Get the specular surface color.
+	 * @return {RGBColor} Array of RGB color.
+	 */
+	getSpecularColor(): RGBColor;
+
+	/**
+	 * Get the specular surface color.
+	 */
+	getSpecularColorByReference(): RGBColor;
 
 	/**
 	 * Get the specular power.
 	 * @default 1
 	 */
 	getSpecularPower(): number;
+
+	/**
+	 * Get the diffuse texture.
+	 */
+	getDiffuseTexture(): vtkTexture;
+
+	/**
+	 * Get the metallic texture.
+	 */
+	getMetallicTexture(): vtkTexture;
+
+	/**
+	 * Get the roughness texture.
+	 */
+	getRoughnessTexture(): vtkTexture;
+
+	/**
+	 * Get the normal texture.
+	 */
+	getNormalTexture(): vtkTexture;
+
+	/**
+	 * Get the ambient occlusion texture.
+	 */
+	getAmbientOcclusionTexture(): vtkTexture;
+
+	/**
+	 * Get the emission texture.
+	 */
+	getEmissionTexture(): vtkTexture;
 
 	/**
 	 * Set the ambient lighting coefficient.
@@ -218,15 +273,15 @@ export interface vtkProperty extends vtkObject {
 	 * ambient and diffuse colors. From a physical standpoint it really
 	 * doesn't make too much sense to have both. For the rendering
 	 * libraries that don’t support both, the diffuse color is used.
-	 * @param {Color} ambientColor An Array of the RGB color.
+	 * @param {RGBColor} ambientColor An Array of the RGB color.
 	 */
-	setAmbientColor(ambientColor: Color): boolean;
+	setAmbientColor(ambientColor: RGBColor): boolean;
 
 	/**
 	 * Set the ambient surface color from an RGB array
-	 * @param {Color} ambientColor An Array of the RGB color.
+	 * @param {RGBColor} ambientColor An Array of the RGB color.
 	 */
-	setAmbientColorFrom(ambientColor: Color): boolean;
+	setAmbientColorFrom(ambientColor: RGBColor): boolean;
 
 	/**
 	 * Turn on/off fast culling of polygons based on orientation of normal
@@ -250,9 +305,9 @@ export interface vtkProperty extends vtkObject {
 	 * Set the color of the object. Has the side effect of setting the
 	 * ambient diffuse and specular colors as well. This is basically
 	 * a quick overall color setting method.
-	 * @param {Color} color An Array of the RGB color.
+	 * @param {RGBColor} color An Array of the RGB color.
 	 */
-	setColor(color: Color): boolean;
+	setColor(color: RGBColor): boolean;
 
 	/**
 	 * Set the diffuse lighting coefficient.
@@ -270,15 +325,15 @@ export interface vtkProperty extends vtkObject {
 
 	/**
 	 * Set the diffuse surface color.
-	 * @param {Color} diffuseColor An Array of the RGB color.
+	 * @param {RGBColor} diffuseColor An Array of the RGB color.
 	 */
-	setDiffuseColor(diffuseColor: Color): boolean;
+	setDiffuseColor(diffuseColor: RGBColor): boolean;
 
 	/**
 	 * Set the diffuse surface color from an RGB array
-	 * @param {Color} diffuseColor An Array of the RGB color.
+	 * @param {RGBColor} diffuseColor An Array of the RGB color.
 	 */
-	setDiffuseColorFrom(diffuseColor: Color): boolean;
+	setDiffuseColorFrom(diffuseColor: RGBColor): boolean;
 
 	/**
 	 * Set the color of primitive edges (if edge visibility is enabled).
@@ -290,15 +345,15 @@ export interface vtkProperty extends vtkObject {
 
 	/**
 	 * Set the color of primitive edges (if edge visibility is enabled).
-	 * @param {Color} edgeColor An Array of the RGB color.
+	 * @param {RGBColor} edgeColor An Array of the RGB color.
 	 */
-	setEdgeColor(edgeColor: Color): boolean;
+	setEdgeColor(edgeColor: RGBColor): boolean;
 
 	/**
 	 * Set the color of primitive edges from an RGB array.
-	 * @param {Color} edgeColor An Array of the RGB color.
+	 * @param {RGBColor} edgeColor An Array of the RGB color.
 	 */
-	setEdgeColorFrom(edgeColor: Color): boolean;
+	setEdgeColorFrom(edgeColor: RGBColor): boolean;
 
 	/**
 	 * Turn on/off the visibility of edges. On some renderers it is
@@ -403,6 +458,18 @@ export interface vtkProperty extends vtkObject {
 	setSpecular(specular: number): boolean;
 
 	/**
+	 * Set the normal map strength.
+	 * @param {Boolean} normal 
+	 */
+	setNormalStrength(normalStrength: number): boolean;
+
+	/**
+	 * Set the ambient occlusion map strength.
+	 * @param {Boolean} emission 
+	 */
+	setEmission(emission: number): boolean;
+
+	/**
 	 * Set the specular surface color.
 	 * @param {Number} r Defines the red component (between 0 and 1)
 	 * @param {Number} g Defines the green component (between 0 and 1)
@@ -412,21 +479,57 @@ export interface vtkProperty extends vtkObject {
 
 	/**
 	 * Set the specular surface color from an RGB array
-	 * @param {Color} specularColor An Array of the RGB color.
+	 * @param {RGBColor} specularColor An Array of the RGB color.
 	 */
-	setSpecularColor(specularColor: Color): boolean;
+	setSpecularColor(specularColor: RGBColor): boolean;
 
 	/**
 	 * Set the specular surface color from an RGB array
-	 * @param {Color} specularColor An Array of the RGB color.
+	 * @param {RGBColor} specularColor An Array of the RGB color.
 	 */
-	setSpecularColorFrom(specularColor: Color): boolean;
+	setSpecularColorFrom(specularColor: RGBColor): boolean;
 
 	/**
 	 * Set the specular power.
 	 * @param {Number} specularPower 
 	 */
 	setSpecularPower(specularPower: number): boolean;
+
+	/**
+	 * Set the diffuse texture.
+	 * @param {vtkTexture} diffuseTexture
+	 */
+	setDiffuseTexture(diffuseTexture: vtkTexture): boolean;
+
+	/**
+	 * Set the metallic texture.
+	 * @param {vtkTexture} metallicTexture
+	 */
+	setMetallicTexture(metallicTexture: vtkTexture): boolean;
+
+	/**
+	 * Set the roughness texture.
+	 * @param {vtkTexture} roughnessTexture
+	 */
+	setRoughnessTexture(roughnessTexture: vtkTexture): boolean;
+
+	/**
+	 * Set the normal texture.
+	 * @param {vtkTexture} normalTexture
+	 */
+	setNormalTexture(normalTexture: vtkTexture): boolean;
+
+	/**
+	 * Set the ambient occlusion texture.
+	 * @param {vtkTexture} ambientOcclusionTexture
+	 */
+	setAmbientOcclusionTexture(ambientOcclusionTexture: vtkTexture): boolean;
+
+	/**
+	 * Set the emission texture.
+	 * @param {vtkTexture} emissionTexture
+	 */
+	setEmissionTexture(emissionTexture: vtkTexture): boolean;
 }
 
 /**
@@ -434,18 +537,18 @@ export interface vtkProperty extends vtkObject {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param {IPropertyValues} [initialValues] (default: {})
+ * @param {IPropertyInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IPropertyValues): void;
+export function extend(publicAPI: object, model: object, initialValues?: IPropertyInitialValues): void;
 
 /**
  * Method use to create a new instance of vtkProperty with object color, ambient color, diffuse color,
  * specular color, and edge color white; ambient coefficient=0; diffuse
  * coefficient=0; specular coefficient=0; specular power=1; Gouraud shading;
  * and surface representation. Backface and frontface culling are off.
- * @param {IPropertyValues} [initialValues] for pre-setting some of its content
+ * @param {IPropertyInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: IPropertyValues): vtkProperty;
+export function newInstance(initialValues?: IPropertyInitialValues): vtkProperty;
 
 /** 
  * vtkProperty is an object that represents lighting and other surface
@@ -457,7 +560,10 @@ export function newInstance(initialValues?: IPropertyValues): vtkProperty;
  * manipulated with this object.
  */
 export declare const vtkProperty: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+	newInstance: typeof newInstance;
+	extend: typeof extend;
+	Shading: typeof Shading;
+	Representation: typeof Representation;
+	Interpolation: typeof Interpolation;
 };
 export default vtkProperty;
