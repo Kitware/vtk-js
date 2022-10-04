@@ -5,6 +5,7 @@ import 'vtk.js/Sources/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import 'vtk.js/Sources/Rendering/OpenGL/Glyph3DMapper';
 
 import { throttle } from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -15,6 +16,9 @@ import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenR
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
+import { mat4 } from 'gl-matrix';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
@@ -30,17 +34,23 @@ const GREEN = [0.1, 0.8, 0.1];
 // Create DOM tooltip
 // ----------------------------------------------------------------------------
 
-const tooltipElem = document.createElement('div');
-tooltipElem.style.position = 'absolute';
-tooltipElem.style.top = 0;
-tooltipElem.style.left = 0;
-tooltipElem.style.width = '150px';
-tooltipElem.style.padding = '10px';
-tooltipElem.style.zIndex = 1;
-tooltipElem.style.background = 'white';
-tooltipElem.style.textAlign = 'center';
+const tooltipsElem = document.createElement('div');
+tooltipsElem.style.position = 'absolute';
+tooltipsElem.style.top = 0;
+tooltipsElem.style.left = 0;
+tooltipsElem.style.padding = '10px';
+tooltipsElem.style.zIndex = 1;
+tooltipsElem.style.background = 'white';
+tooltipsElem.style.textAlign = 'center';
 
-document.querySelector('body').appendChild(tooltipElem);
+const positionTooltipElem = document.createElement('div');
+const fieldIdTooltipElem = document.createElement('div');
+const compositeIdTooltipElem = document.createElement('div');
+tooltipsElem.appendChild(positionTooltipElem);
+tooltipsElem.appendChild(fieldIdTooltipElem);
+tooltipsElem.appendChild(compositeIdTooltipElem);
+
+document.querySelector('body').appendChild(tooltipsElem);
 
 // ----------------------------------------------------------------------------
 // Create 4 objects
@@ -60,7 +70,22 @@ const sphereSource = vtkSphereSource.newInstance({
 const sphereMapper = vtkMapper.newInstance();
 const sphereActor = vtkActor.newInstance();
 sphereActor.setMapper(sphereMapper);
+sphereActor.getProperty().setEdgeVisibility(true);
 sphereMapper.setInputConnection(sphereSource.getOutputPort());
+
+// Cube -------------------------------------------------
+
+const cubeSource = vtkCubeSource.newInstance({
+  xLength: 1,
+  yLength: 1,
+  zLength: 1,
+});
+
+const cubeMapper = vtkMapper.newInstance();
+const cubeActor = vtkActor.newInstance({ position: [-1, 0, 0] });
+cubeActor.setMapper(cubeMapper);
+cubeActor.getProperty().setEdgeVisibility(true);
+cubeMapper.setInputConnection(cubeSource.getOutputPort());
 
 // Sphere with point representation -----------------------
 
@@ -82,7 +107,7 @@ spherePointsActor.getProperty().setPointSize(20);
 
 const coneSource = vtkConeSource.newInstance({ resolution: 20 });
 const coneMapper = vtkMapper.newInstance();
-const coneActor = vtkActor.newInstance();
+const coneActor = vtkActor.newInstance({ position: [1, 0, 0] });
 coneActor.setMapper(coneMapper);
 coneMapper.setInputConnection(coneSource.getOutputPort());
 
@@ -100,7 +125,7 @@ const cylinderMapper = vtkGlyph3DMapper.newInstance({
   scaleMode: vtkGlyph3DMapper.ScaleModes.SCALE_BY_MAGNITUDE,
   scaleArray: 'scale',
 });
-const cylinderActor = vtkActor.newInstance();
+const cylinderActor = vtkActor.newInstance({ position: [0, 1, 0] });
 const cylinderGlyph = sphereSource.getOutputData();
 const cylinderPointSet = cylinderSource.getOutputData();
 cylinderActor.setMapper(cylinderMapper);
@@ -142,6 +167,7 @@ const interactor = renderWindow.getInteractor();
 const apiSpecificRenderWindow = interactor.getView();
 
 renderer.addActor(sphereActor);
+renderer.addActor(cubeActor);
 renderer.addActor(spherePointsActor);
 renderer.addActor(coneActor);
 renderer.addActor(cylinderActor);
@@ -177,64 +203,114 @@ function eventToWindowXY(event) {
 let needGlyphCleanup = false;
 let lastProcessedActor = null;
 
-const updateWorldPosition = (worldPosition) => {
+const updatePositionTooltip = (worldPosition) => {
+  if (lastProcessedActor) {
+    positionTooltipElem.innerHTML = `Position: ${worldPosition
+      .map((v) => v.toFixed(3))
+      .join(' , ')}`;
+  } else {
+    positionTooltipElem.innerHTML = '';
+  }
+};
+
+const updateAssociationTooltip = (type, id) => {
+  if (type !== undefined && id !== undefined) {
+    fieldIdTooltipElem.innerHTML = `${type} ID: ${id}`;
+  } else {
+    fieldIdTooltipElem.innerHTML = '';
+  }
+};
+
+const updateCompositeIdTooltip = (compositeID) => {
+  if (compositeID !== undefined) {
+    compositeIdTooltipElem.innerHTML = `Composite ID: ${compositeID}`;
+  } else {
+    compositeIdTooltipElem.innerHTML = '';
+  }
+};
+
+const updateCursor = (worldPosition) => {
   if (lastProcessedActor) {
     pointerActor.setVisibility(true);
-    tooltipElem.innerHTML = worldPosition.map((v) => v.toFixed(3)).join(' , ');
     pointerActor.setPosition(worldPosition);
   } else {
     pointerActor.setVisibility(false);
-    tooltipElem.innerHTML = '';
   }
   renderWindow.render();
+  updatePositionTooltip(worldPosition);
 };
 
 function processSelections(selections) {
+  renderer.getActors().forEach((a) => a.getProperty().setColor(...WHITE));
   if (!selections || selections.length === 0) {
-    renderer.getActors().forEach((a) => a.getProperty().setColor(...WHITE));
-    pointerActor.setVisibility(false);
-    renderWindow.render();
     lastProcessedActor = null;
+    updateAssociationTooltip();
+    updateCursor();
+    updateCompositeIdTooltip();
     return;
   }
 
-  const { worldPosition, compositeID, prop, attributeID } =
-    selections[0].getProperties();
-  let cursorPosition = [...worldPosition];
+  const {
+    worldPosition: rayHitWorldPosition,
+    compositeID,
+    prop,
+    attributeID,
+  } = selections[0].getProperties();
+
+  updateCompositeIdTooltip(compositeID);
+
+  let closestCellPointWorldPosition = [...rayHitWorldPosition];
   if (attributeID || attributeID === 0) {
     const input = prop.getMapper().getInputData();
     if (!input.getCells()) {
       input.buildCells();
     }
+
+    // Get matrices to convert coordinates: (prop coordinates) <-> (world coordinates)
+    const glTempMat = mat4.fromValues(...prop.getMatrix());
+    mat4.transpose(glTempMat, glTempMat);
+    const propToWorld = vtkMatrixBuilder.buildFromDegree().setMatrix(glTempMat);
+    mat4.invert(glTempMat, glTempMat);
+    const worldToProp = vtkMatrixBuilder.buildFromDegree().setMatrix(glTempMat);
+    // Compute the position of the cursor in prop coordinates
+    const propPosition = [...rayHitWorldPosition];
+    worldToProp.apply(propPosition);
+
     if (
       hardwareSelector.getFieldAssociation() ===
       FieldAssociations.FIELD_ASSOCIATION_POINTS
     ) {
-      cursorPosition = input.getPoints().getTuple(attributeID);
+      // Selecting points
+      // TODO: not working as expected
+      closestCellPointWorldPosition = [
+        ...input.getPoints().getTuple(attributeID),
+      ];
+      propToWorld.apply(closestCellPointWorldPosition);
+      updateAssociationTooltip('Point', attributeID);
     } else {
+      // Selecting cells
       const cellPoints = input.getCellPoints(attributeID);
+      updateAssociationTooltip('Cell', attributeID);
       if (cellPoints) {
         const pointIds = cellPoints.cellPointIds;
         // Find the closest cell point, and use that as cursor position
-        const points = pointIds.map((pointId) =>
+        const points = Array.from(pointIds).map((pointId) =>
           input.getPoints().getPoint(pointId)
         );
         const distance = (pA, pB) =>
-          vtkMath.distance2BetweenPoints(pA, worldPosition) -
-          vtkMath.distance2BetweenPoints(pB, worldPosition);
+          vtkMath.distance2BetweenPoints(pA, propPosition) -
+          vtkMath.distance2BetweenPoints(pB, propPosition);
         const sorted = points.sort(distance);
-        cursorPosition = [...sorted[0]];
+        closestCellPointWorldPosition = [...sorted[0]];
+        propToWorld.apply(closestCellPointWorldPosition);
       }
     }
-  } else if (lastProcessedActor === prop) {
-    // Skip render call when nothing change
-    return;
   }
-  updateWorldPosition(cursorPosition);
   lastProcessedActor = prop;
+  // Use closestCellPointWorldPosition or rayHitWorldPosition
+  updateCursor(closestCellPointWorldPosition);
 
   // Make the picked actor green
-  renderer.getActors().forEach((a) => a.getProperty().setColor(...WHITE));
   prop.getProperty().setColor(...GREEN);
 
   // We hit the glyph, let's scale the picked glyph
@@ -248,9 +324,7 @@ function processSelections(selections) {
     scaleArray.fill(0.5);
     cylinderPointSet.modified();
   }
-
-  // Update picture for the user so we can see the green one
-  updateWorldPosition(worldPosition);
+  renderWindow.render();
 }
 
 // ----------------------------------------------------------------------------
@@ -271,6 +345,6 @@ function pickOnMouseEvent(event) {
     }
   });
 }
-const throttleMouseHandler = throttle(pickOnMouseEvent, 100);
+const throttleMouseHandler = throttle(pickOnMouseEvent, 20);
 
 document.addEventListener('mousemove', throttleMouseHandler);
