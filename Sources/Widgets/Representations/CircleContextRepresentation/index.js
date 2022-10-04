@@ -17,7 +17,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
 
   model._pipeline.actor.getProperty().setOpacity(0.2);
   model._pipeline.mapper.setResolveCoincidentTopology(true);
-  model._pipeline.mapper.setResolveCoincidentTopologyPolygonOffsetParameters(
+  model._pipeline.mapper.setRelativeCoincidentTopologyPolygonOffsetParameters(
     -1,
     -1
   );
