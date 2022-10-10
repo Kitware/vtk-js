@@ -168,10 +168,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkSVGRepresentation.extend(publicAPI, model, defaultValues(initialValues));
 
   macro.setGet(publicAPI, model, [
-    'circleProps',
-    'fontProperties',
-    'strokeFontProperties',
-    'textProps',
+    { type: 'object', name: 'circleProps' },
+    { type: 'object', name: 'fontProperties' },
+    { type: 'object', name: 'strokeFontProperties' },
+    { type: 'object', name: 'textProps' },
   ]);
 
   // Object specific methods

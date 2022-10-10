@@ -2,6 +2,7 @@
  * macros.js is the old macro.js.
  * The name change is so we do not get eaten by babel-plugin-macros.
  */
+import DeepEqual from 'deep-equal';
 import vtk, { vtkGlobal } from './vtk';
 import ClassHierarchy from './Common/Core/ClassHierarchy';
 
@@ -431,10 +432,27 @@ export function obj(publicAPI = {}, model = {}) {
 // getXXX: add getters
 // ----------------------------------------------------------------------------
 
+const objectGetterMap = {
+  object(publicAPI, model, field) {
+    return function getter() {
+      return { ...model[field.name] };
+    };
+  },
+};
+
 export function get(publicAPI, model, fieldNames) {
   fieldNames.forEach((field) => {
     if (typeof field === 'object') {
-      publicAPI[`get${_capitalize(field.name)}`] = () => model[field.name];
+      const getter = objectGetterMap[field.type];
+      if (getter) {
+        publicAPI[`get${_capitalize(field.name)}`] = getter(
+          publicAPI,
+          model,
+          field
+        );
+      } else {
+        publicAPI[`get${_capitalize(field.name)}`] = () => model[field.name];
+      }
     } else {
       publicAPI[`get${_capitalize(field)}`] = () => model[field];
     }
@@ -480,6 +498,16 @@ const objectSetterMap = {
         `Set Enum with invalid argument (String/Number) ${field}, ${value}`
       );
       throw new TypeError('Set Enum with invalid argument (String/Number)');
+    };
+  },
+  object(publicAPI, model, field) {
+    return (value) => {
+      if (!DeepEqual(model[field.name], value)) {
+        model[field.name] = value;
+        publicAPI.modified();
+        return true;
+      }
+      return false;
     };
   },
 };
