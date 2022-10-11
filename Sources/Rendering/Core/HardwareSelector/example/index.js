@@ -182,6 +182,10 @@ renderWindow.render();
 
 const hardwareSelector = apiSpecificRenderWindow.getSelector();
 hardwareSelector.setCaptureZValues(true);
+// TODO: bug in FIELD_ASSOCIATION_POINTS mode
+// hardwareSelector.setFieldAssociation(
+//   FieldAssociations.FIELD_ASSOCIATION_POINTS
+// );
 hardwareSelector.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_CELLS);
 
 // ----------------------------------------------------------------------------
@@ -281,7 +285,6 @@ function processSelections(selections) {
       FieldAssociations.FIELD_ASSOCIATION_POINTS
     ) {
       // Selecting points
-      // TODO: not working as expected
       closestCellPointWorldPosition = [
         ...input.getPoints().getTuple(attributeID),
       ];
