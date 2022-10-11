@@ -11,8 +11,12 @@ import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenR
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkLineWidget from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget';
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
+import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
 
+import { bindSVGRepresentation } from 'vtk.js/Examples/Widgets/Utilities/SVGHelpers';
 import controlPanel from './controlPanel.html';
+
+const { computeWorldToDisplay } = vtkInteractorObserver;
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -56,20 +60,68 @@ renderer.resetCamera();
 
 fullScreenRenderer.addController(controlPanel);
 
+// -----------------------------------------------------------
+// SVG handling
+// -----------------------------------------------------------
+
+const svgCleanupCallbacks = [];
+
+function setupSVG(w) {
+  svgCleanupCallbacks.push(
+    bindSVGRepresentation(renderer, w.getWidgetState(), {
+      mapState(widgetState, { size }) {
+        const textState = widgetState.getText();
+        const text = textState.getText();
+        const origin = textState.getOrigin();
+        if (origin) {
+          const coords = computeWorldToDisplay(renderer, ...origin);
+          const position = [coords[0], size[1] - coords[1]];
+          return {
+            text,
+            position,
+          };
+        }
+        return null;
+      },
+      render(data, h) {
+        if (data) {
+          return h(
+            'text',
+            {
+              key: 'lineText',
+              attrs: {
+                x: data.position[0],
+                y: data.position[1],
+                dx: 12,
+                dy: -12,
+                fill: 'white',
+                'font-size': 32,
+              },
+            },
+            data.text
+          );
+        }
+        return [];
+      },
+    })
+  );
+}
+
 // Text Modifiers ------------------------------------------
 
 function updateLinePos() {
   const input = document.getElementById('linePos').value;
   const subState = lineWidget.getWidgetState().getPositionOnLine();
   subState.setPosOnLine(input / 100);
-  lineWidget.placeText();
   renderWindow.render();
 }
 
 function updateText() {
   const input = document.getElementById('txtIpt').value;
-  lineWidget.setText(input);
-  renderWindow.render();
+  if (lineWidget) {
+    lineWidget.setText(input);
+    renderWindow.render();
+  }
 }
 document.querySelector('#txtIpt').addEventListener('keyup', updateText);
 // updateText();
@@ -176,6 +228,8 @@ document.querySelector('#addWidget').addEventListener('click', () => {
   currentHandle = widgetManager.addWidget(widget);
   lineWidget = currentHandle;
 
+  setupSVG(widget);
+
   getHandle = {
     1: lineWidget.getWidgetState().getHandle1(),
     2: lineWidget.getWidgetState().getHandle2(),
@@ -223,6 +277,7 @@ document.querySelector('#addWidget').addEventListener('click', () => {
 
 document.querySelector('#removeWidget').addEventListener('click', () => {
   widgetManager.removeWidget(widgetManager.getWidgets()[selectedWidgetIndex]);
+  if (svgCleanupCallbacks.length) svgCleanupCallbacks.pop()();
   if (widgetManager.getWidgets().length !== 0) {
     selectedWidgetIndex = widgetManager.getWidgets().length - 1;
     setWidgetColor(widgetManager.getWidgets()[selectedWidgetIndex], 0.2);

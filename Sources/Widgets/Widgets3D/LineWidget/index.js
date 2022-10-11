@@ -4,7 +4,6 @@ import stateGenerator from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/state';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
 import vtkArrowHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/ArrowHandleRepresentation';
 import vtkPlanePointManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
-import vtkSVGLandmarkRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGLandmarkRepresentation';
 import vtkPolyLineRepresentation from 'vtk.js/Sources/Widgets/Representations/PolyLineRepresentation';
 import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/behavior';
 import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
@@ -117,17 +116,6 @@ function vtkLineWidget(publicAPI, model) {
                 },
               },
             },
-          },
-          {
-            builder: vtkSVGLandmarkRepresentation,
-            initialValues: {
-              text: '',
-              textProps: {
-                dx: 12,
-                dy: -12,
-              },
-            },
-            labels: ['SVGtext'],
           },
           {
             builder: vtkPolyLineRepresentation,

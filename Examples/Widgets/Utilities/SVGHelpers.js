@@ -30,6 +30,39 @@ function mountDummySVGContainer(canvas) {
   return dummy;
 }
 
+export const VerticalTextAlignment = {
+  TOP: 1,
+  MIDDLE: 2,
+  BOTTOM: 3,
+};
+
+/**
+ * Computes the relative dy values around 0 for multiline text.
+ * @param nLines
+ * @param fontSize
+ */
+export function multiLineTextCalculator(
+  nLines,
+  fontSize,
+  alignment = VerticalTextAlignment.BOTTOM
+) {
+  const dys = [];
+  for (let i = 0; i < nLines; i++) {
+    switch (alignment) {
+      case VerticalTextAlignment.TOP:
+        dys.push(fontSize * (i + 1));
+        break;
+      case VerticalTextAlignment.MIDDLE:
+        dys.push(-fontSize * (0.5 * nLines - i - 1));
+        break;
+      case VerticalTextAlignment.BOTTOM:
+      default:
+        dys.push(-fontSize * (nLines - i - 1));
+    }
+  }
+  return dys;
+}
+
 export function bindSVGRepresentation(
   renderer,
   widgetState,
@@ -90,4 +123,4 @@ export function bindSVGRepresentation(
   };
 }
 
-export default { bindSVGRepresentation };
+export default { bindSVGRepresentation, multiLineTextCalculator };
