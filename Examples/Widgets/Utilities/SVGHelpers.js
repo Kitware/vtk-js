@@ -96,6 +96,8 @@ export function bindSVGRepresentation(
           left: '0',
           width: '100%',
           height: '100%',
+          // deny pointer events by default
+          'pointer-events': 'none',
         },
       },
       Array.isArray(rendered) ? rendered : [rendered]
@@ -121,6 +123,71 @@ export function bindSVGRepresentation(
     patch(vnode, h('!')); // unmount hack
     vnode = null;
   };
+}
+
+/**
+ * Applies a set of default interaction handling behavior.
+ *
+ * Typically, firing pointerenter means that the pointer is
+ * "hovering", meaning the associated widget state should
+ * be selected. (This is on the user to do this step.)
+ * Accordingly, pointerleave means no more hovering.
+ *
+ * However, vtk.js captures the pointer on pointerdown,
+ * which means that clicking on an SVG element will result
+ * in a pointerleave being triggered, deselecting the
+ * widget state.
+ *
+ * The abridged sequence of events is as follows:
+ * 1. pointerenter on the SVG element (mouse moves over SVG handle)
+ * 2. pointerdown on the SVG element (left button press)
+ * 2. pointerdown on the vtk.js canvas (left button press)
+ * 3. pointer captured on the vtk.js canvas (left button press)
+ * 4. pointerleave on the SVG element as soon as the mouse is moved,
+ *    since the capture target is now the canvas.
+ * 5. pointerenter on the SVG element when the mouse/pointer is released.
+ *
+ * To workaround this issue, we conditionally fire the user's
+ * pointerleave listener only when we are "locked", which means
+ * we saw a pointerdown and so the vtk.js canvas is capturing
+ * the current pointer.
+ */
+function applyDefaultInteractions(userListeners) {
+  let locked = false;
+  return {
+    ...userListeners,
+    pointerdown(ev) {
+      locked = true;
+      return userListeners?.pointerdown?.(ev);
+    },
+    pointerenter(ev) {
+      if (locked) {
+        locked = false;
+      }
+      return userListeners?.pointerenter?.(ev);
+    },
+    pointerleave(ev) {
+      if (!locked) {
+        return userListeners?.pointerleave?.(ev);
+      }
+      return undefined;
+    },
+  };
+}
+
+/**
+ * Requires the snabbdom eventlisteners and style modules.
+ * @param vnode
+ * @returns
+ */
+export function makeListenableSVGNode(vnode) {
+  // allow pointer events on this vnode
+  vnode.data.style = {
+    ...vnode.data.style,
+    'pointer-events': 'all',
+  };
+  vnode.data.on = applyDefaultInteractions(vnode.data.on);
+  return vnode;
 }
 
 export default { bindSVGRepresentation, multiLineTextCalculator };

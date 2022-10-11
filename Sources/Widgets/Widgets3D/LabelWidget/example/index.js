@@ -10,7 +10,17 @@ import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/Interactor
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 import vtkLabelWidget from 'vtk.js/Sources/Widgets/Widgets3D/LabelWidget';
 
+import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
+import {
+  bindSVGRepresentation,
+  multiLineTextCalculator,
+  VerticalTextAlignment,
+  makeListenableSVGNode,
+} from 'vtk.js/Examples/Widgets/Utilities/SVGHelpers';
+
 import controlPanel from './controlPanel.html';
+
+const { computeWorldToDisplay } = vtkInteractorObserver;
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -28,6 +38,102 @@ widgetManager.setRenderer(renderer);
 renderer.resetCamera();
 widgetManager.enablePicking();
 
+// ----------------------------------------------------------------------------
+// SVG
+// ----------------------------------------------------------------------------
+
+const handleTextProps = new Map();
+
+function setupSVG(viewWidget) {
+  bindSVGRepresentation(renderer, viewWidget.getWidgetState(), {
+    mapState(widgetState, { size }) {
+      const textState = widgetState.getText();
+      const text = textState.getText();
+      const origin = textState.getOrigin();
+      if (origin && textState.getVisible()) {
+        const coords = computeWorldToDisplay(renderer, ...origin);
+        const position = [coords[0], size[1] - coords[1]];
+        return {
+          text,
+          position,
+          active: textState.getActive(),
+        };
+      }
+      return null;
+    },
+    render(data, h) {
+      if (data) {
+        const nodes = [];
+        const { text, position, active } = data;
+        const { fontColor, fontSize } = handleTextProps.get(viewWidget);
+
+        if (text.trim().length === 0) {
+          nodes.push(
+            h('circle', {
+              key: 'circle',
+              attrs: {
+                r: 5,
+                stroke: 'red',
+                fill: 'red',
+                cx: position[0],
+                cy: position[1],
+              },
+            })
+          );
+        }
+
+        const lines = text.split('\n');
+        const dys = multiLineTextCalculator(
+          lines.length,
+          fontSize,
+          VerticalTextAlignment.MIDDLE
+        );
+        nodes.push(
+          ...lines.map((line, index) =>
+            makeListenableSVGNode(
+              h(
+                'text',
+                {
+                  key: index,
+                  attrs: {
+                    x: position[0],
+                    y: position[1],
+                    dx: 12,
+                    dy: dys[index],
+                    fill: fontColor,
+                    'font-size': fontSize,
+                    'text-anchor': 'middle',
+                    'font-weight': active ? 'bold' : 'normal',
+                  },
+                  style: {
+                    cursor: 'pointer',
+                  },
+                  on: {
+                    pointerenter() {
+                      widgetManager.disablePicking();
+                      viewWidget.activateHandle({
+                        selectedState: viewWidget.getWidgetState().getText(),
+                      });
+                    },
+                    pointerleave: () => {
+                      viewWidget.deactivateAllHandles();
+                      widgetManager.enablePicking();
+                    },
+                  },
+                },
+                line
+              )
+            )
+          )
+        );
+
+        return nodes;
+      }
+      return [];
+    },
+  });
+}
+
 // -----------------------------------------------------------
 // UI control handling
 // -----------------------------------------------------------
@@ -35,6 +141,7 @@ widgetManager.enablePicking();
 fullScreenRenderer.addController(controlPanel);
 
 let currentHandle = null;
+const svgCleanupCallbacks = new Map();
 
 // Add a new label
 document.querySelector('#addLabel').addEventListener('click', () => {
@@ -42,14 +149,19 @@ document.querySelector('#addLabel').addEventListener('click', () => {
   const handle = widgetManager.addWidget(widget);
   widgetManager.grabFocus(widget);
 
+  const textProps = {
+    fontSize: 32,
+    fontColor: 'white',
+  };
+  handleTextProps.set(handle, textProps);
+  svgCleanupCallbacks.set(handle, setupSVG(handle));
+
   // Update control panel when a label is selected
   handle.onStartInteractionEvent(() => {
     currentHandle = handle;
     document.getElementById('txtIpt').value = currentHandle.getText() || '';
-    document.getElementById('fontSize').value =
-      currentHandle.getFontProperties().fontSize || 16;
-    document.getElementById('color').value =
-      currentHandle.getFontProperties().fontColor || 'white';
+    document.getElementById('fontSize').value = textProps.fontSize;
+    document.getElementById('color').value = textProps.fontColor;
   });
 });
 
@@ -58,6 +170,9 @@ document.querySelector('#deleteLabel').addEventListener('click', () => {
   if (currentHandle) {
     currentHandle.reset();
     widgetManager.removeWidget(currentHandle);
+    svgCleanupCallbacks.get(currentHandle)();
+    svgCleanupCallbacks.delete(currentHandle);
+    handleTextProps.delete(currentHandle);
     currentHandle = null;
   }
 });
@@ -76,11 +191,11 @@ document.querySelector('#txtIpt').addEventListener('keyup', updateText);
 function updateFontSize() {
   const input = document.getElementById('fontSize').value;
   if (currentHandle) {
-    currentHandle.setFontProperties({
-      ...currentHandle.getFontProperties(),
+    handleTextProps.set(currentHandle, {
+      ...handleTextProps.get(currentHandle),
       fontSize: input,
     });
-    renderWindow.getInteractor().render();
+    currentHandle.getWidgetState().modified(); // render svg
   }
 }
 document.querySelector('#fontSize').addEventListener('input', updateFontSize);
@@ -89,10 +204,11 @@ document.querySelector('#fontSize').addEventListener('input', updateFontSize);
 function updateColor() {
   const input = document.getElementById('color').value;
   if (currentHandle) {
-    currentHandle.setFontProperties({
-      ...currentHandle.getFontProperties(),
+    handleTextProps.set(currentHandle, {
+      ...handleTextProps.get(currentHandle),
       fontColor: input,
     });
+    currentHandle.getWidgetState().modified(); // render svg
   }
 }
 document.querySelector('#color').addEventListener('input', updateColor);
