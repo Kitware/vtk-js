@@ -246,7 +246,11 @@ export function obj(publicAPI = {}, model = {}) {
   if (!('classHierarchy' in model)) {
     model.classHierarchy = new ClassHierarchy('vtkObject');
   } else if (!(model.classHierarchy instanceof ClassHierarchy)) {
-    model.classHierarchy = ClassHierarchy.from(model.classHierarchy);
+    const hierarchy = new ClassHierarchy();
+    for (let i = 0; i < model.classHierarchy.length; i++) {
+      hierarchy.push(model.classHierarchy[i]);
+    }
+    model.classHierarchy = hierarchy;
   }
 
   function off(index) {
