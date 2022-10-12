@@ -18,6 +18,9 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkOutlineFilter from 'vtk.js/Sources/Filters/General/OutlineFilter';
 import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
 import vtkResliceCursorWidget from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget';
+import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
+import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
+import { BlendMode } from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
@@ -53,6 +56,8 @@ widgetState.setSphereRadius(10 * window.devicePixelRatio);
 widgetState.setLineThickness(5);
 
 const showDebugActors = true;
+const debugPlanes = false;
+let renderWithGPU = true;
 
 // ----------------------------------------------------------------------------
 // Define html structure
@@ -142,7 +147,11 @@ for (let i = 0; i < 4; i++) {
   obj.interactor.bindEvents(element);
   obj.widgetManager.setRenderer(obj.renderer);
   if (i < 3) {
-    obj.interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
+    obj.interactor.setInteractorStyle(
+      debugPlanes
+        ? vtkInteractorStyleTrackballCamera.newInstance()
+        : vtkInteractorStyleImage.newInstance()
+    );
     obj.widgetInstance = obj.widgetManager.addWidget(widget, xyzToViewType[i]);
     obj.widgetInstance.setScaleInPixels(true);
     obj.widgetInstance.setRotationHandlePosition(0.75);
@@ -155,6 +164,7 @@ for (let i = 0; i < 4; i++) {
     );
   }
 
+  // CPU reslice
   obj.reslice = vtkImageReslice.newInstance();
   obj.reslice.setSlabMode(SlabMode.MEAN);
   obj.reslice.setSlabNumberOfSlices(1);
@@ -165,6 +175,18 @@ for (let i = 0; i < 4; i++) {
   obj.resliceMapper.setInputConnection(obj.reslice.getOutputPort());
   obj.resliceActor = vtkImageSlice.newInstance();
   obj.resliceActor.setMapper(obj.resliceMapper);
+
+  // GPU reslice
+  obj.volume = vtkVolume.newInstance();
+  obj.volumeMapper = vtkVolumeMapper.newInstance();
+  // obj.volumeMapper.setMaximumSamplesPerRay(1);
+  obj.volume.setMapper(obj.volumeMapper);
+
+  obj.sliceHelper = vtkVolumeMapper.vtkSliceHelper.newInstance({
+    thickness: 1,
+  });
+  obj.sliceHelper.registerClipPlanesToMapper(obj.volumeMapper);
+
   obj.sphereActors = [];
   obj.sphereSources = [];
 
@@ -253,6 +275,7 @@ function updateReslice(
     viewType: '',
     reslice: null,
     actor: null,
+    sliceHelper: null,
     renderer: null,
     resetFocalPoint: false, // Reset the focal point to the center of the display image
     keepFocalPointPosition: false, // Defines if the focal point position is kepts (same display distance from reslice cursor center)
@@ -267,9 +290,20 @@ function updateReslice(
   );
   if (obj.modified) {
     // Get returned modified from setter to know if we have to render
+    // CPU
     interactionContext.actor.setUserMatrix(
       interactionContext.reslice.getResliceAxes()
     );
+    // GPU
+    interactionContext.sliceHelper.setNormal(
+      interactionContext.reslice.getResliceAxes()[8],
+      interactionContext.reslice.getResliceAxes()[9],
+      interactionContext.reslice.getResliceAxes()[10]
+    );
+    interactionContext.sliceHelper.setOrigin(
+      widget.getWidgetState().getCenter()
+    );
+
     interactionContext.sphereSources[0].setCenter(...obj.origin);
     interactionContext.sphereSources[1].setCenter(...obj.point1);
     interactionContext.sphereSources[2].setCenter(...obj.point2);
@@ -301,8 +335,17 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
     view3D.renderer.addActor(outlineActor);
 
     viewAttributes.forEach((obj, i) => {
-      obj.reslice.setInputData(image);
-      obj.renderer.addActor(obj.resliceActor);
+      obj.reslice.setInputData(image); // CPU
+      obj.volumeMapper.setInputData(image); // GPU
+
+      obj.renderer.addActor(obj.resliceActor); // CPU
+      obj.renderer.addVolume(obj.volume); // GPU
+
+      obj.volume
+        .getProperty()
+        .getRGBTransferFunction(0)
+        .setRange(...image.getPointData().getScalars().getRange());
+
       view3D.renderer.addActor(obj.resliceActor);
       obj.sphereActors.forEach((actor) => {
         obj.renderer.addActor(actor);
@@ -333,7 +376,8 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
               updateReslice({
                 viewType,
                 reslice,
-                actor: obj.resliceActor,
+                actor: obj.resliceActor, // CPU
+                sliceHelper: obj.sliceHelper, // GPU
                 renderer: obj.renderer,
                 resetFocalPoint: false,
                 keepFocalPointPosition,
@@ -347,7 +391,8 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
       updateReslice({
         viewType,
         reslice,
-        actor: obj.resliceActor,
+        actor: obj.resliceActor, // CPU
+        sliceHelper: obj.sliceHelper, // GPU
         renderer: obj.renderer,
         resetFocalPoint: true, // At first initilization, center the focal point to the image center
         keepFocalPointPosition: false, // Don't update the focal point as we already set it to the center of the image
@@ -375,6 +420,7 @@ function updateViews() {
       viewType: xyzToViewType[i],
       reslice: obj.reslice,
       actor: obj.resliceActor,
+      sliceHelper: obj.sliceHelper,
       renderer: obj.renderer,
       resetFocalPoint: true,
       keepFocalPointPosition: false,
@@ -411,6 +457,20 @@ checkboxScaleInPixels.addEventListener('change', (ev) => {
   });
 });
 
+document.getElementById('renderWithGPU').addEventListener('change', (ev) => {
+  renderWithGPU = ev.target.checked;
+  viewAttributes.forEach((obj, i) => {
+    obj.resliceActor.setVisibility(!renderWithGPU);
+    obj.volume.setVisibility(renderWithGPU);
+    obj.interactor.render();
+  });
+});
+viewAttributes.forEach((obj, i) => {
+  obj.resliceActor.setVisibility(!renderWithGPU);
+  obj.volume.setVisibility(renderWithGPU);
+  obj.interactor.render();
+});
+
 const optionSlabModeMin = document.getElementById('slabModeMin');
 optionSlabModeMin.value = SlabMode.MIN;
 const optionSlabModeMax = document.getElementById('slabModeMax');
@@ -419,10 +479,16 @@ const optionSlabModeMean = document.getElementById('slabModeMean');
 optionSlabModeMean.value = SlabMode.MEAN;
 const optionSlabModeSum = document.getElementById('slabModeSum');
 optionSlabModeSum.value = SlabMode.SUM;
-const selectSlabMode = document.getElementById('slabMode');
-selectSlabMode.addEventListener('change', (ev) => {
+const slabModeToBlendMode = {
+  [SlabMode.MIN]: BlendMode.MINIMUM_INTENSITY_BLEND,
+  [SlabMode.MAX]: BlendMode.MAXIMUM_INTENSITY_BLEND,
+  [SlabMode.MEAN]: BlendMode.AVERAGE_INTENSITY_BLEND,
+  [SlabMode.SUM]: BlendMode.ADDITIVE_INTENSITY_BLEND,
+};
+document.getElementById('slabMode').addEventListener('change', (ev) => {
   viewAttributes.forEach((obj) => {
-    obj.reslice.setSlabMode(Number(ev.target.value));
+    obj.reslice.setSlabMode(Number(ev.target.value)); // CPU
+    obj.volumeMapper.setBlendMode(slabModeToBlendMode[ev.target.value]); // GPU
   });
   updateViews();
 });
@@ -432,7 +498,8 @@ sliderSlabNumberofSlices.addEventListener('change', (ev) => {
   const trSlabNumberValue = document.getElementById('slabNumberValue');
   trSlabNumberValue.innerHTML = ev.target.value;
   viewAttributes.forEach((obj) => {
-    obj.reslice.setSlabNumberOfSlices(ev.target.value);
+    obj.reslice.setSlabNumberOfSlices(ev.target.value); // CPU
+    obj.sliceHelper.setThickness(Number(ev.target.value)); // GPU
   });
   updateViews();
 });
@@ -447,7 +514,10 @@ buttonReset.addEventListener('click', () => {
 const selectInterpolationMode = document.getElementById('selectInterpolation');
 selectInterpolationMode.addEventListener('change', (ev) => {
   viewAttributes.forEach((obj) => {
-    obj.reslice.setInterpolationMode(Number(ev.target.selectedIndex));
+    obj.reslice.setInterpolationMode(Number(ev.target.selectedIndex)); // CPU
+    obj.volume
+      .getProperty()
+      .setInterpolationType(Number(ev.target.selectedIndex)); // GPU
   });
   updateViews();
 });

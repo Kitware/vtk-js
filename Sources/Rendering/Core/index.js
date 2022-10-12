@@ -81,6 +81,7 @@ export default {
   vtkRenderWindowInteractor,
   vtkScalarBarActor,
   vtkSkybox,
+  vtkSliceHelper: vtkVolumeMapper.vtkSliceHelper,
   vtkSphereMapper,
   vtkStickMapper,
   vtkTexture,

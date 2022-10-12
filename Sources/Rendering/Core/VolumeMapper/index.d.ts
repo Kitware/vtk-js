@@ -1,5 +1,6 @@
+import { vtkObject } from "../../../interfaces";
 import vtkPiecewiseFunction from "../../../Common/DataModel/PiecewiseFunction";
-import { Bounds, Range } from "../../../types";
+import { Bounds, Range, Vector3 } from "../../../types";
 import vtkAbstractMapper, { IAbstractMapperInitialValues } from "../AbstractMapper";
 import { BlendMode, FilterMode } from "./Constants";
 
@@ -283,6 +284,57 @@ export function extend(publicAPI: object, model: object, initialValues?: IVolume
  */
 export function newInstance(initialValues?: IVolumeMapperInitialValues): vtkVolumeMapper;
 
+/**
+ *
+ */
+export interface ISliceHelperInitialValues {
+	thickness?: number;
+	origin?: Vector3;
+	normal?: Vector3;
+}
+
+/**
+ * Helper class to perform MPR.
+ */
+
+ export interface vtkSliceHelper extends vtkObject {
+  /**
+   * Update the mapper from the slice helper parameters.
+   */
+   update(): void;
+
+  /**
+   * Get the distance between clip planes
+   */
+   getThickness(): number;
+
+  /**
+   * Get the origin of the MPR
+   */
+   getOrigin(): Vector3;
+
+  /**
+   * Get the orientation of the MPR
+   */
+   getNormal(): Vector3;
+
+  /**
+   * Set the distance between clip planes
+   */
+   setThickness(thickness: number): boolean;
+
+  /**
+   * Set the origin of the MPR
+   */
+   setOrigin(origin: Vector3): boolean;
+
+  /**
+   * Set the orientation of the MPR
+   */
+   setNormal(normal: Vector3): boolean;
+
+}
+
 /** 
  * vtkVolumeMapper inherits from vtkMapper.
  * A volume mapper that performs ray casting on the GPU using fragment programs.
@@ -292,5 +344,25 @@ export declare const vtkVolumeMapper: {
 	extend: typeof extend;
 	BlendMode: typeof BlendMode;
 	FilterMode: typeof FilterMode;
+	vtkSliceHelper: vtkSliceHelper,
 };
 export default vtkVolumeMapper;
+
+/**
+ * Method use to decorate a given object (publicAPI+model) with vtkVolumeMapper characteristics.
+ *
+ * @param publicAPI object on which methods will be bounds (public)
+ * @param model object on which data structure will be bounds (protected)
+ * @param {IVolumeMapperInitialValues} [initialValues] (default: {})
+ */
+ export function extendSliceHelper(publicAPI: object, model: object, initialValues?: IVolumeMapperInitialValues): void;
+
+ /**
+  * Method use to create a new instance of vtkVolumeMapper 
+  */
+ export function newInstanceSliceHelper(initialValues?: IVolumeMapperInitialValues): vtkVolumeMapper;
+ 
+export declare const vtkSliceHelper: {
+	newInstance: typeof newInstanceSliceHelper,
+	extend: typeof extendSliceHelper,
+};
