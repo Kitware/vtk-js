@@ -45,14 +45,14 @@ export function reset(bounds) {
   return setBounds(bounds, INIT_BOUNDS);
 }
 
-export function addPoint(bounds, ...xyz) {
+export function addPoint(bounds, x, y, z) {
   const [xMin, xMax, yMin, yMax, zMin, zMax] = bounds;
-  bounds[0] = xMin < xyz[0] ? xMin : xyz[0];
-  bounds[1] = xMax > xyz[0] ? xMax : xyz[0];
-  bounds[2] = yMin < xyz[1] ? yMin : xyz[1];
-  bounds[3] = yMax > xyz[1] ? yMax : xyz[1];
-  bounds[4] = zMin < xyz[2] ? zMin : xyz[2];
-  bounds[5] = zMax > xyz[2] ? zMax : xyz[2];
+  bounds[0] = xMin < x ? xMin : x;
+  bounds[1] = xMax > x ? xMax : x;
+  bounds[2] = yMin < y ? yMin : y;
+  bounds[3] = yMax > y ? yMax : y;
+  bounds[4] = zMin < z ? zMin : z;
+  bounds[5] = zMax > z ? zMax : z;
   return bounds;
 }
 
