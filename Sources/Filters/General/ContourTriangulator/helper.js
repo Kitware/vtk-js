@@ -463,7 +463,7 @@ export function vtkCCSMakePolysFromLines(
           }
         }
 
-        if (!matches.length === 0) {
+        if (matches.length > 0) {
           // Multiple matches mean we need to decide which path to take
           if (matches.length > 1) {
             // Remove double-backs
