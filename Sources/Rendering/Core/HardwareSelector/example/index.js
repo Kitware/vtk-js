@@ -17,6 +17,7 @@ import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
+import vtkPolydata from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import { mat4 } from 'gl-matrix';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -46,7 +47,9 @@ tooltipsElem.style.textAlign = 'center';
 const positionTooltipElem = document.createElement('div');
 const fieldIdTooltipElem = document.createElement('div');
 const compositeIdTooltipElem = document.createElement('div');
+const propIdTooltipElem = document.createElement('div');
 tooltipsElem.appendChild(positionTooltipElem);
+tooltipsElem.appendChild(propIdTooltipElem);
 tooltipsElem.appendChild(fieldIdTooltipElem);
 tooltipsElem.appendChild(compositeIdTooltipElem);
 
@@ -95,7 +98,7 @@ const spherePointsSource = vtkSphereSource.newInstance({
   radius: 0.6,
 });
 const spherePointsMapper = vtkMapper.newInstance();
-const spherePointsActor = vtkActor.newInstance();
+const spherePointsActor = vtkActor.newInstance({ position: [0, -1, 0] });
 spherePointsActor.setMapper(spherePointsMapper);
 spherePointsMapper.setInputConnection(spherePointsSource.getOutputPort());
 
@@ -142,6 +145,23 @@ cylinderPointSet.getPointData().addArray(
   })
 );
 
+// PolyLines -------------------------------------------------
+
+const polyLinesMapper = vtkMapper.newInstance();
+const polyLinesData = vtkPolydata.newInstance();
+const squarePoints = [-1, 2, 0, 0, 2, 0, 0, 1, 0, -1, 1, 0];
+const trianglePoints = [1, 2, 0, 1, 1, 0, 2, 1.5, 0];
+polyLinesData
+  .getPoints()
+  .setData(Float32Array.from([...squarePoints, ...trianglePoints]), 3);
+polyLinesData
+  .getLines()
+  .setData(Uint16Array.from([5, 0, 1, 2, 3, 0, 4, 4, 5, 6, 4]));
+polyLinesMapper.setInputData(polyLinesData);
+
+const polyLines = vtkActor.newInstance();
+polyLines.setMapper(polyLinesMapper);
+
 // ----------------------------------------------------------------------------
 // Create Picking pointer
 // ----------------------------------------------------------------------------
@@ -172,6 +192,7 @@ renderer.addActor(spherePointsActor);
 renderer.addActor(coneActor);
 renderer.addActor(cylinderActor);
 renderer.addActor(pointerActor);
+renderer.addActor(polyLines);
 
 renderer.resetCamera();
 renderWindow.render();
@@ -225,11 +246,16 @@ const updateAssociationTooltip = (type, id) => {
   }
 };
 
-const updateCompositeIdTooltip = (compositeID) => {
+const updateCompositeAndPropIdTooltip = (compositeID, propID) => {
   if (compositeID !== undefined) {
     compositeIdTooltipElem.innerHTML = `Composite ID: ${compositeID}`;
   } else {
     compositeIdTooltipElem.innerHTML = '';
+  }
+  if (propID !== undefined) {
+    propIdTooltipElem.innerHTML = `Prop ID: ${propID}`;
+  } else {
+    propIdTooltipElem.innerHTML = '';
   }
 };
 
@@ -250,7 +276,7 @@ function processSelections(selections) {
     lastProcessedActor = null;
     updateAssociationTooltip();
     updateCursor();
-    updateCompositeIdTooltip();
+    updateCompositeAndPropIdTooltip();
     return;
   }
 
@@ -258,10 +284,11 @@ function processSelections(selections) {
     worldPosition: rayHitWorldPosition,
     compositeID,
     prop,
+    propID,
     attributeID,
   } = selections[0].getProperties();
 
-  updateCompositeIdTooltip(compositeID);
+  updateCompositeAndPropIdTooltip(compositeID, propID);
 
   let closestCellPointWorldPosition = [...rayHitWorldPosition];
   if (attributeID || attributeID === 0) {
