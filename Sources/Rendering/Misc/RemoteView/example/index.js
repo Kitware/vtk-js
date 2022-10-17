@@ -46,9 +46,7 @@ const config = {
 clientToConnect
   .connect(config)
   .then((validClient) => {
-    const viewStream = this.clientToConnect
-      .getImageStream()
-      .createViewStream('-1');
+    const viewStream = clientToConnect.getImageStream().createViewStream('-1');
 
     const view = vtkRemoteView.newInstance({
       rpcWheelEvent: 'viewport.mouse.zoom.wheel',

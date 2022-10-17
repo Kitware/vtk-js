@@ -1029,7 +1029,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         .getProperty()
         .getLabelOutlineThickness();
 
+      const labelOutlineOpacity = actor.getProperty().getLabelOutlineOpacity();
+
       program.setUniformi('outlineThickness', labelOutlineThickness);
+      program.setUniformf('outlineOpacity', labelOutlineOpacity);
     }
 
     if (model.lastLightComplexity > 0) {

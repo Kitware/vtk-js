@@ -1,7 +1,12 @@
+/* eslint-disable prefer-rest-params */
 export default class ClassHierarchy extends Array {
-  push(...args) {
-    // no perf issue since args.length should be small
-    const newArgs = args.filter((arg) => !this.includes(arg));
-    return super.push(...newArgs);
+  push() {
+    for (let i = 0; i < arguments.length; i++) {
+      if (!this.includes(arguments[i])) {
+        super.push(arguments[i]);
+      }
+    }
+
+    return this.length;
   }
 }

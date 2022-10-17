@@ -88,6 +88,7 @@ function createLabelPipeline(backgroundImageData) {
   labelMap.actor.getProperty().setInterpolationTypeToNearest();
   labelMap.actor.getProperty().setUseLabelOutline(true);
   labelMap.actor.getProperty().setLabelOutlineThickness(3);
+  labelMap.actor.getProperty().setLabelOutlineOpacity(1.0);
 
   return labelMap;
 }
