@@ -350,7 +350,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.getInternalFormat = (vtktype, numComps) => {
-    if (!model.internalFormat) {
+    if (!model._forceInternalFormat) {
       model.internalFormat = publicAPI.getDefaultInternalFormat(
         vtktype,
         numComps
@@ -399,6 +399,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.setInternalFormat = (iFormat) => {
+    model._forceInternalFormat = true;
     if (iFormat !== model.internalFormat) {
       model.internalFormat = iFormat;
       publicAPI.modified();
@@ -447,6 +448,7 @@ function vtkOpenGLTexture(publicAPI, model) {
   publicAPI.resetFormatAndType = () => {
     model.format = 0;
     model.internalFormat = 0;
+    model._forceInternalFormat = false;
     model.openGLDataType = 0;
   };
 
@@ -1465,6 +1467,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   _openGLRenderWindow: null,
+  _forceInternalFormat: false,
   context: null,
   handle: 0,
   sendParametersTime: null,
