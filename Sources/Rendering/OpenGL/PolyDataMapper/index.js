@@ -1983,22 +1983,22 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         } else {
           // if we have edge visibility build the edge VBOs
           if (drawSurfaceWithEdges) {
-            model.primitives[i]
+            options.cellOffset += model.primitives[i].getCABO().createVBO(
+              primitives[i].cells,
+              primitives[i].inRep,
+              Representation.WIREFRAME,
+              {
+                ...options,
+                tcoords: null,
+                colors: null,
+                haveCellScalars: false,
+                haveCellNormals: false,
+              },
+              model.selectionWebGLIdsToVTKIds
+            );
+            options.vertexOffset += model.primitives[i]
               .getCABO()
-              .createVBO(
-                primitives[i].cells,
-                primitives[i].inRep,
-                Representation.WIREFRAME,
-                {
-                  points,
-                  normals: n,
-                  tcoords: null,
-                  colors: null,
-                  cellOffset: 0,
-                  haveCellScalars: false,
-                  haveCellNormals: false,
-                }
-              );
+              .getElementCount();
           } else {
             // otherwise free them
             model.primitives[i].releaseGraphicsResources();
