@@ -1080,9 +1080,9 @@ const DEFAULT_VALUES = {
   generateFaces: true,
   activePlaneId: -1,
 
-  baseColor: null,
-  clipColor: null,
-  activePlaneColor: null,
+  baseColor: [255 / 255, 99 / 255, 71 / 255], // Tomato
+  clipColor: [244 / 255, 164 / 255, 96 / 255], // Sandy brown
+  activePlaneColor: [227 / 255, 207 / 255, 87 / 255], // Banana
 
   triangulationErrorDisplay: false,
   // _idList: null,
