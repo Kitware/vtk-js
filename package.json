@@ -140,6 +140,7 @@
     "doc:publish": "kw-doc -c ./Documentation/config.js -mp",
     "doc:generate-api": "node ./Documentation/generate-api-docs.js",
     "example": "node ./Utilities/ExampleRunner/example-runner-cli.js -c ./Documentation/config.js",
+    "example:webgpu": "cross-env WEBGPU=1 NO_WEBGL=1 node ./Utilities/ExampleRunner/example-runner-cli.js -c ./Documentation/config.js",
     "dev:esm": "npm run build:esm -- -w",
     "dev:umd": "webpack --watch --config webpack.dev.js --progress",
     "build": "npm run build:release",
