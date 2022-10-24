@@ -1162,16 +1162,18 @@ function vtkColorTransferFunction(publicAPI, model) {
         model.colorSpace = ColorSpace.RGB;
       }
     }
+    let isModified = oldColorSpace !== JSON.stringify(model.colorSpace);
 
-    const oldNanColor = JSON.stringify(model.nanColor);
+    const oldNanColor = isModified || JSON.stringify(model.nanColor);
     if (colorMap.NanColor) {
       model.nanColor = [].concat(colorMap.NanColor);
       while (model.nanColor.length < 4) {
         model.nanColor.push(1.0);
       }
     }
+    isModified = isModified || oldNanColor !== JSON.stringify(model.nanColor);
 
-    const oldNodes = JSON.stringify(model.nodes);
+    const oldNodes = isModified || JSON.stringify(model.nodes);
     if (colorMap.RGBPoints) {
       const size = colorMap.RGBPoints.length;
       model.nodes = [];
@@ -1191,16 +1193,12 @@ function vtkColorTransferFunction(publicAPI, model) {
 
     const modifiedInvoked = publicAPI.sortAndUpdateRange();
 
-    if (!modifiedInvoked) {
-      const isModfied = [
-        [oldColorSpace, model.colorSpace],
-        [oldNanColor, model.nanColor],
-        [oldNodes, model.nodes],
-      ].some(([old, current]) => old !== JSON.stringify(current));
-      if (isModfied) publicAPI.modified();
-      return isModfied;
-    }
-    return modifiedInvoked;
+    const callModified =
+      !modifiedInvoked &&
+      (isModified || oldNodes !== JSON.stringify(model.nodes));
+    if (callModified) publicAPI.modified();
+
+    return modifiedInvoked || callModified;
   };
 }
 
