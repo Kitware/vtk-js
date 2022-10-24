@@ -19,7 +19,7 @@ function vtkForwardPass(publicAPI, model) {
     }
 
     // we just render our delegates in order
-    model.currentParent = parent;
+    model._currentParent = parent;
 
     // build
     publicAPI.setCurrentOperation('buildPass');

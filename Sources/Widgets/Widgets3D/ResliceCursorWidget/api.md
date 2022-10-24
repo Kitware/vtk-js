@@ -22,8 +22,6 @@ These sub states contain :
 
 - Opacity: Update the opacity of the lines/rotation points actors
 
-- activeLineState: Used in the behavior.js file in order to get the attribute of the selected line
-
 - activeRotationPointName: Used in the behavior.js file in order to get the selected rotation point
 
 - image: vtkImage used to place the reslice cursor
@@ -33,8 +31,6 @@ These sub states contain :
 - sphereRadius: Manages the radius of the rotation points
 
 - showCenter: Defines if the reslice cursor center is displayed or not. If not, it's still possible to move the center. The cursor mouse will be turned into 'move' cursor when you can translate the center.
-
-- updateMethodName: Used in the behavior.js in order to know which actions is going to be applied (translation, axisTransltaion, rotation)
 
 - Planes: Contains the normal and viewUp of the YZ_, XZ_ and XY_PLANE views (which is updated when a rotation is applied). It's used to compute the resliced image
 

@@ -38,8 +38,10 @@ function vtkAngleWidget(publicAPI, model) {
       case ViewTypes.VOLUME:
       default:
         return [
-          { builder: vtkSphereHandleRepresentation, labels: ['handles'] },
-          { builder: vtkSphereHandleRepresentation, labels: ['moveHandle'] },
+          {
+            builder: vtkSphereHandleRepresentation,
+            labels: ['handles', 'moveHandle'],
+          },
           {
             builder: vtkPolyLineRepresentation,
             labels: ['handles', 'moveHandle'],

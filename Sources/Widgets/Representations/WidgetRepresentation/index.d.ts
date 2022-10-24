@@ -1,9 +1,19 @@
+import vtkDataArray from "../../../Common/Core/DataArray";
+import vtkPolyData from "../../../Common/DataModel/PolyData";
+import { vtkObject } from "../../../interfaces";
 import vtkProp from "../../../Rendering/Core/Prop";
+export interface IDisplayScaleParams {
+	dispHeightFactor: number,
+	cameraPosition: number[],
+	cameraDir: number[],
+	isParallel: boolean,
+	rendererPixelDims: number[],
+}
 
 export interface IWidgetRepresentationInitialValues {
     labels?: Array<any>,
     coincidentTopologyParameters?: object,
-    displayScaleParams?: object,
+    displayScaleParams?: IDisplayScaleParams,
     scaleInPixels?: boolean
 }
 
@@ -54,6 +64,47 @@ export function extend(publicAPI: object, model: object, initialValues?: IWidget
  * @param {IWidgetRepresentationInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IWidgetRepresentationInitialValues): vtkWidgetRepresentation;
+
+/**
+ * Static function to get the pixel size of a 3D point.
+ * @param {Number[]} worldCoord 3D point in world coordinates
+ * @param {IDisplayScaleParams} displayScaleParams Display and camera information
+ */
+export function getPixelWorldHeightAtCoord(worldCoord: number[], displayScaleParams: IDisplayScaleParams): number[];
+
+export interface IWidgetPipeline {
+	source?: object,
+	filter?: object,
+	glyph?: object,
+	mapper: object,
+	actor: object
+}
+/**
+ * If provided, connects `source` (dataset or filter) to `filter`.
+ * If provided, connects `filter` (otherwise `source`) to mapper
+ * If provided, connects glyph as 2nd input to mapper. This is typically for the glyph mapper.
+ * Connects mapper to actor.
+ * @param {IWidgetPipeline} pipeline of source, filter, mapper and actor to connect
+ */
+export function connectPipeline(pipeline: IWidgetPipeline): void;
+
+/**
+ * Allocate or resize a vtkPoint(name='point'), vtkCellArray (name=
+ * 'line'|'poly') or vtkDataArray (name=any) and add it to the vtkPolyData.
+ * If allocated, the array is automatically added to the polydata
+ * Connects mapper to actor.
+ * @param {vtkPolyData} polyData The polydata to add array to
+ * @param {string} name The name of the array to add (special handling for
+ * 'point', 'line, 'poly')
+ * @param {Number} numberOfTuples The number of tuples to (re)allocate.
+ * @param {String} dataType The typed array type name.
+ * @param {Number} numberOfComponents The number of components of the array.
+ */
+ export function allocateArray(polyData: vtkPolyData,
+    name: string,
+    numberOfTuples: number,
+    dataType?: string,
+    numberOfComponents?: number): vtkDataArray|null;
 
 export declare const vtkWidgetRepresentation: {
 	newInstance: typeof newInstance;

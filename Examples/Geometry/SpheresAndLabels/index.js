@@ -68,8 +68,8 @@ renderer.resetCamera();
 // Use OpenGL as the backend to view the all this
 // ----------------------------------------------------------------------------
 
-const openglRenderWindow = vtkOpenGLRenderWindow.newInstance();
-renderWindow.addView(openglRenderWindow);
+const openGLRenderWindow = vtkOpenGLRenderWindow.newInstance();
+renderWindow.addView(openGLRenderWindow);
 
 // ----------------------------------------------------------------------------
 // Create a div section to put this into
@@ -78,7 +78,7 @@ renderWindow.addView(openglRenderWindow);
 const container = document.createElement('div');
 container.classList.add(style.container);
 document.querySelector('body').appendChild(container);
-openglRenderWindow.setContainer(container);
+openGLRenderWindow.setContainer(container);
 
 const textCanvas = document.createElement('canvas');
 textCanvas.classList.add(style.container, 'textCanvas');
@@ -91,7 +91,7 @@ textCtx = textCanvas.getContext('2d');
 // ----------------------------------------------------------------------------
 
 const interactor = vtkRenderWindowInteractor.newInstance();
-interactor.setView(openglRenderWindow);
+interactor.setView(openGLRenderWindow);
 interactor.initialize();
 interactor.bindEvents(container);
 
@@ -100,7 +100,7 @@ interactor.setInteractorStyle(vtkInteractorStyleTrackballCamera.newInstance());
 // Handle window resize
 function resize() {
   dims = container.getBoundingClientRect();
-  openglRenderWindow.setSize(dims.width, dims.height);
+  openGLRenderWindow.setSize(dims.width, dims.height);
   textCanvas.setAttribute('width', dims.width);
   textCanvas.setAttribute('height', dims.height);
   renderWindow.render();

@@ -145,7 +145,6 @@ for (let i = 0; i < 4; i++) {
     obj.interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
     obj.widgetInstance = obj.widgetManager.addWidget(widget, xyzToViewType[i]);
     obj.widgetInstance.setScaleInPixels(true);
-    obj.widgetInstance.setRotationHandlePosition(0.75);
     obj.widgetManager.enablePicking();
     // Use to update all renderers buffer when actors are moved
     obj.widgetManager.setCaptureOn(CaptureOn.MOUSE_MOVE);

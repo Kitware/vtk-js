@@ -50,7 +50,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
     }
 
     // we just render our delegates in order
-    model.currentParent = viewNode;
+    model._currentParent = viewNode;
 
     const device = viewNode.getDevice();
 

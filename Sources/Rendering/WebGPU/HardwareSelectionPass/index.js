@@ -19,7 +19,7 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
       return;
     }
 
-    model.currentParent = null;
+    model._currentParent = null;
 
     // build
     publicAPI.setCurrentOperation('buildPass');

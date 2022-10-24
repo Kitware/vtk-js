@@ -23,14 +23,14 @@ function vtkOpenGLSkybox(publicAPI, model) {
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.openGLRenderer =
+      model._openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model._openGLRenderWindow = model.openGLRenderer.getParent();
+      model._openGLRenderWindow = model._openGLRenderer.getParent();
       model.context = model._openGLRenderWindow.getContext();
       model.tris.setOpenGLRenderWindow(model._openGLRenderWindow);
       model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      const ren = model.openGLRenderer.getRenderable();
-      model.openGLCamera = model.openGLRenderer.getViewNodeFor(
+      const ren = model._openGLRenderer.getRenderable();
+      model.openGLCamera = model._openGLRenderer.getViewNodeFor(
         ren.getActiveCamera()
       );
     }
@@ -46,7 +46,7 @@ function vtkOpenGLSkybox(publicAPI, model) {
   };
 
   publicAPI.opaquePass = (prepass, renderPass) => {
-    if (prepass && !model.openGLRenderer.getSelector()) {
+    if (prepass && !model._openGLRenderer.getSelector()) {
       publicAPI.updateBufferObjects();
 
       model.context.depthMask(true);
@@ -60,7 +60,7 @@ function vtkOpenGLSkybox(publicAPI, model) {
       const texUnit = model.openGLTexture.getTextureUnit();
       model.tris.getProgram().setUniformi('sbtexture', texUnit);
 
-      const ren = model.openGLRenderer.getRenderable();
+      const ren = model._openGLRenderer.getRenderable();
 
       const keyMats = model.openGLCamera.getKeyMatrices(ren);
       const imat = new Float64Array(16);

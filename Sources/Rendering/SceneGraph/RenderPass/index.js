@@ -27,7 +27,7 @@ function vtkRenderPass(publicAPI, model) {
     }
 
     // we just render our delegates in order
-    model.currentParent = parent;
+    model._currentParent = parent;
 
     model.preDelegateOperations.forEach((val) => {
       publicAPI.setCurrentOperation(val);
@@ -65,10 +65,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['currentOperation']);
   macro.setGet(publicAPI, model, [
     'delegates',
-    'currentParent',
+    '_currentParent',
     'preDelegateOperations',
     'postDelegateOperations',
   ]);
+  macro.moveToProtected(publicAPI, model, ['currentParent']);
 
   // Object methods
   vtkRenderPass(publicAPI, model);

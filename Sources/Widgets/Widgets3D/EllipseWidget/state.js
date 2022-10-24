@@ -28,7 +28,7 @@ export default function generateState() {
         mixins: ['origin', 'color', 'scale3', 'visible', 'orientation'],
         name: 'ellipseHandle',
         initialValues: {
-          visible: false,
+          // visible: false,
           scale3: [1, 1, 1],
         },
       })
