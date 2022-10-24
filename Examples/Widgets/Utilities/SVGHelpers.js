@@ -38,8 +38,10 @@ export const VerticalTextAlignment = {
 
 /**
  * Computes the relative dy values around 0 for multiline text.
+ *
  * @param nLines
  * @param fontSize
+ * @returns a list of vertical offsets (from a zero origin) for placing multiline text.
  */
 export function multiLineTextCalculator(
   nLines,
@@ -63,6 +65,21 @@ export function multiLineTextCalculator(
   return dys;
 }
 
+/**
+ * Automatically updates an SVG rendering whenever a widget's state is updated.
+ *
+ * This update is done in two phases:
+ * 1. mapState(widgetState) takes the widget state and transforms it into an intermediate data representation.
+ * 2. render(data, h) takes the intermediate data representation and a createElement `h` function, and returns
+ *    an SVG rendering of the state encoded in `data`.
+ *
+ * See snabbdom's documentation for how to use the `h` function passed to `render()`.
+ *
+ * @param renderer the widget manager's renderer
+ * @param widgetState the widget state
+ * @param mapState (object parameter) transforms the given widget's state into an intermediate data representation to be passed to render().
+ * @param render (object parameter) returns the SVG representation given the data from mapState() and snabbdom's h render function.
+ */
 export function bindSVGRepresentation(
   renderer,
   widgetState,
