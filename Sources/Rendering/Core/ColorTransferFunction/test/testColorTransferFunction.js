@@ -9,11 +9,14 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import Constants from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/Constants';
 
 import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 
 import baseline from './testColorTransferFunction.png';
 import baseline2 from './testColorTransferFunction2.png';
+
+const { ColorSpace } = Constants;
 
 test('Test Color Transfer Function', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -156,6 +159,42 @@ test('Test discretized color transfer function', (t) => {
       `Test discretized ctf value for ${value}, expect ${expectedRGB[idx]}`
     );
   });
+
+  t.end();
+});
+
+test('Test applyColorMap calls modfied', (t) => {
+  const ctf = vtkColorTransferFunction.newInstance();
+
+  const colorMapA = {
+    ColorSpace: ColorSpace.RGB,
+    RGBPoints: [0, 0, 0, 0, 1, 0, 0, 0],
+  };
+  const colorMapB = {
+    ColorSpace: ColorSpace.RGB,
+    RGBPoints: [0, 0, 0, 0, 1, 1, 1, 1],
+  };
+
+  ctf.applyColorMap(colorMapA);
+
+  let isModfied = false;
+  ctf.onModified(() => {
+    isModfied = true;
+  });
+
+  ctf.applyColorMap(colorMapA);
+
+  t.notOk(
+    isModfied,
+    `Expect applyColorMap does not call modified with same color map`
+  );
+
+  ctf.applyColorMap(colorMapB);
+
+  t.ok(
+    isModfied,
+    `Expect applyColorMap calls modified with different color map`
+  );
 
   t.end();
 });
