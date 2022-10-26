@@ -10,10 +10,6 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.setText = (text) => {
     model.widgetState.getText().setText(text);
-    model.representations[1].setCircleProps({
-      ...model.representations[1].getCircleProps(),
-      visible: !text,
-    });
     model._interactor.render();
   };
 

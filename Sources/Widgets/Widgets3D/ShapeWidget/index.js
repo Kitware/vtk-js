@@ -10,7 +10,7 @@ function vtkShapeWidget(publicAPI, model) {
 
   const superClass = { ...publicAPI };
 
-  model.methodsToLink = ['scaleInPixels', 'textProps', 'fontProperties'];
+  model.methodsToLink = ['scaleInPixels'];
 
   publicAPI.setManipulator = (manipulator) => {
     superClass.setManipulator(manipulator);

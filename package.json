@@ -112,6 +112,7 @@
     "rollup-plugin-svgo": "1.1.0",
     "rollup-plugin-web-worker-loader": "1.6.1",
     "semantic-release": "19.0.3",
+    "snabbdom": "^3.5.1",
     "string-replace-loader": "3.1.0",
     "style-loader": "3.3.1",
     "tape": "5.5.3",

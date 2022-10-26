@@ -1,13 +1,10 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
 import vtkSphereHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/SphereHandleRepresentation';
-import vtkSVGLandmarkRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGLandmarkRepresentation';
 import vtkPlanePointManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
 
 import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/LabelWidget/behavior';
 import stateGenerator from 'vtk.js/Sources/Widgets/Widgets3D/LabelWidget/state';
-
-import { VerticalTextAlignment } from 'vtk.js/Sources/Widgets/SVG/SVGLandmarkRepresentation/Constants';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
@@ -21,12 +18,7 @@ function vtkLabelWidget(publicAPI, model) {
   const superClass = { ...publicAPI };
 
   // --- Widget Requirement ---------------------------------------------------
-  model.methodsToLink = [
-    'textProps',
-    'fontProperties',
-    'strokeFontProperties',
-    'scaleInPixels',
-  ];
+  model.methodsToLink = ['scaleInPixels'];
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
@@ -39,22 +31,6 @@ function vtkLabelWidget(publicAPI, model) {
           {
             builder: vtkSphereHandleRepresentation,
             labels: ['moveHandle'],
-          },
-          {
-            builder: vtkSVGLandmarkRepresentation,
-            initialValues: {
-              circleProps: {
-                visible: true,
-              },
-              textProps: {
-                'text-anchor': 'middle',
-                verticalAlign: VerticalTextAlignment.MIDDLE,
-              },
-              strokeFontProperties: {
-                fontStyle: 'bold',
-              },
-            },
-            labels: ['SVGtext'],
           },
         ];
     }

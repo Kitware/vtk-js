@@ -69,40 +69,6 @@ export default function widgetBehavior(publicAPI, model) {
   // Text methods
   // --------------------------------------------------------------------------
 
-  /**
-   * check for handle 2 position in comparison to handle 1 position
-   * and sets text offset to not overlap on the line representation
-   */
-
-  function getOffsetDirectionForTextPosition() {
-    const pos1 = publicAPI.getHandle(0).getOrigin();
-    const pos2 = publicAPI.getHandle(1).getOrigin();
-
-    let dySign = 1;
-
-    if (pos1 && pos2) {
-      if (pos1[0] <= pos2[0]) {
-        dySign = pos1[1] <= pos2[1] ? 1 : -1;
-      } else {
-        dySign = pos1[1] <= pos2[1] ? -1 : 1;
-      }
-    }
-    return dySign;
-  }
-
-  /**
-   * place SVGText on line according to both handle positions
-   * which purpose is to never have text representation overlapping
-   * on PolyLine representation
-   * */
-  publicAPI.placeText = () => {
-    const dySign = getOffsetDirectionForTextPosition();
-    const textPropsCp = { ...model.representations[3].getTextProps() };
-    textPropsCp.dy = dySign * Math.abs(textPropsCp.dy);
-    model.representations[3].setTextProps(textPropsCp);
-    model._interactor.render();
-  };
-
   publicAPI.setText = (text) => {
     model.widgetState.getText().setText(text);
     model._interactor.render();
@@ -222,7 +188,6 @@ export default function widgetBehavior(publicAPI, model) {
         .setShape(publicAPI.getHandle(1).getShape());
     }
     if (handleIndex === 1) {
-      publicAPI.placeText();
       publicAPI.loseFocus();
     }
   };
@@ -335,7 +300,6 @@ export default function widgetBehavior(publicAPI, model) {
     if (model._isDragging && publicAPI.isPlaced()) {
       const wasTextActive = model.widgetState.getText().getActive();
       // Recompute offsets
-      publicAPI.placeText();
       model.widgetState.deactivate();
       model.activeState = null;
       if (!wasTextActive) {

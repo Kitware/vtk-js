@@ -144,29 +144,16 @@ An example manipulator would be a plane manipulator. When instantiated with a
 plane point and normal, the plane manipulator will project mouse events onto the
 plane in 3D and return that projected point.
 
-## SVG Layer (Deprecated)
+## SVG Representation Support
 
-**Deprecation Notice**: The built-in SVG layer for widgets will be deprecated in favor of the application providing their own 2D drawing capabilities. vtk.js will remain focused on providing 3D-based interaction and visualization, allowing applications to draw overlays as necessary.
+vtk.js no longer supports SVG-based widget representations, as managing the SVG
+rendering mechanisms are better left to a separate library. All of the examples
+that used SVG representations have been rewritten to use a rendering shim based
+on snabbdom, located in `Examples/Utilities/SVGHelpers.js`.
 
-Below is a table that summarizes some widget feature needs and their availabilities 1) in vtk.js and in the Widgets framework 2) without and 3) with the SVG layer.
-
-|     Feature     | 1)vtk.js<br/>available | <br/>class, example | 2)widgets<br/>available | <br/>class, example | 3)SVG<br/>available | <br/>class, example |
-|-----------------|------------------------|---------------------|-------------------------|---------------------|---------------------|---------------------|
-| 3D depth test   | Yes | Actor, [Cone](https://kitware.github.io/vtk-js/examples/Cone.html) | Yes        | [ImageCroppingWidget](https://kitware.github.io/vtk-js/examples/ImageCroppingWidget.html)  | Never |   |
-| Always on top   | Yes | Actor2D, [Actor2D](https://kitware.github.io/vtk-js/examples/Actor2D.html) | No |   | Yes | [PolyLineWidget](https://kitware.github.io/vtk-js/examples/PolyLineWidget.html)
-| Line thickness  | Soon [#2208](https://github.com/Kitware/vtk-js/pull/2208) | Mapper2D | Hack | TubeFilter, [ResliceCursorWidget](https://kitware.github.io/vtk-js/examples/ResliceCursorWidget.html) |Yes
-| Smooth line     | Yes | Spline3D | Yes | [SplineWidget](https://kitware.github.io/vtk-js/examples/PolyLineWidget.html) | Yes |
-| Fill area       | Yes |   | Yes | SplineWidget + TriangleFilter, [SplineWidget](https://kitware.github.io/vtk-js/examples/PolyLineWidget.html) | Yes |
-| Handle          | Yes |   | Yes | ___HandleRepresentation, [LineWidget](https://kitware.github.io/vtk-js/examples/LineWidget.html) | Yes |
-| Thousands of handles | Yes | Glyph3DMapper, [Glyph3DMapper](https://kitware.github.io/vtk-js/examples/Glyph3DMapper.html) | Yes | Mixins + GlyphMapper | Never |
-| Text            | Yes | Texture, [CubeAxes](https://kitware.github.io/vtk-js/examples/CubeAxes.html) | No |  | Yes | [LineWidget](https://kitware.github.io/vtk-js/examples/LineWidget.html)
-| Screenshot      | Yes |   | Yes |   | No |
-| Mouse pick      | Yes |   | Yes | WidgetManager, [ImageCroppingWidget](https://kitware.github.io/vtk-js/examples/ImageCroppingWidget.html) | Yes | [LineWidget](https://kitware.github.io/vtk-js/examples/LineWidget.html) (text handle is pickable)
-| Mouse drag      | Yes |   | Yes | [ImageCroppingWidget](https://kitware.github.io/vtk-js/examples/ImageCroppingWidget.html)  | No |
-
-The SVG layer is provided as a proof-of-concept for SVG integration within VTK.JS.
-It is limited by its current virtual DOM implementation. We do not advise to rely on it.
-You may instead want to rely on the DOM capabilities of your JS framework (e.g. React, Vue...)
-For these reasons, efforts will be made to have 3D widgets rather than SVG widgets (that should belong to applications).
+If you are looking for a reasonably easy drop-in for rendering SVG
+representations, check out the above `SVGHelpers.js`, which requires `snabbdom`
+to be installed. An example usage can be found in the `vtkPolyLineWidget`
+example.
 
 [WidgetsDiagram]: ./gallery/widgets_diagram.png

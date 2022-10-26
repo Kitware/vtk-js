@@ -1,15 +1,11 @@
 import { radiansFromDegrees } from 'vtk.js/Sources/Common/Core/Math';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 import macro from 'vtk.js/Sources/macros';
-import vtkSelectionNode from 'vtk.js/Sources/Common/DataModel/SelectionNode';
 import Constants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
-import vtkSVGRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGRepresentation';
 import { WIDGET_PRIORITY } from 'vtk.js/Sources/Widgets/Core/AbstractWidget/Constants';
-import { diff } from './vdom';
 
 const { ViewTypes, RenderingTypes, CaptureOn } = Constants;
 const { vtkErrorMacro, vtkWarningMacro } = macro;
-const { createSvgElement, createSvgDomElement } = vtkSVGRepresentation;
 
 let viewIdCount = 1;
 
@@ -32,16 +28,6 @@ export function extractRenderingComponents(renderer) {
 }
 
 // ----------------------------------------------------------------------------
-
-function createSvgRoot(id) {
-  const svgRoot = createSvgDomElement('svg');
-  svgRoot.setAttribute('version', '1.1');
-  svgRoot.setAttribute('baseProfile', 'full');
-
-  return svgRoot;
-}
-
-// ----------------------------------------------------------------------------
 // vtkWidgetManager methods
 // ----------------------------------------------------------------------------
 
@@ -51,15 +37,7 @@ function vtkWidgetManager(publicAPI, model) {
   }
   model.classHierarchy.push('vtkWidgetManager');
   const propsWeakMap = new WeakMap();
-  const widgetToSvgMap = new WeakMap();
-  const svgVTrees = new WeakMap();
   const subscriptions = [];
-
-  // --------------------------------------------------------------------------
-  // Internal variable
-  // --------------------------------------------------------------------------
-
-  model.svgRoot = createSvgRoot(model.viewId);
 
   // --------------------------------------------------------------------------
   // API internal
@@ -85,134 +63,6 @@ function vtkWidgetManager(publicAPI, model) {
         ? widget
         : widget.getWidgetForView({ viewId: model.viewId }))
     );
-  }
-
-  // --------------------------------------------------------------------------
-  // internal SVG API
-  // --------------------------------------------------------------------------
-
-  const pendingSvgRenders = new WeakMap();
-
-  function enableSvgLayer() {
-    const container = model._apiSpecificRenderWindow.getReferenceByName('el');
-    const canvas = model._apiSpecificRenderWindow.getCanvas();
-    container.insertBefore(model.svgRoot, canvas.nextSibling);
-    const containerStyles = window.getComputedStyle(container);
-    if (containerStyles.position === 'static') {
-      container.style.position = 'relative';
-    }
-  }
-
-  function disableSvgLayer() {
-    const container = model._apiSpecificRenderWindow.getReferenceByName('el');
-    container.removeChild(model.svgRoot);
-  }
-
-  function removeFromSvgLayer(viewWidget) {
-    const group = widgetToSvgMap.get(viewWidget);
-    if (group) {
-      widgetToSvgMap.delete(viewWidget);
-      svgVTrees.delete(viewWidget);
-      model.svgRoot.removeChild(group);
-    }
-  }
-
-  function setSvgSize() {
-    const [cwidth, cheight] = model._apiSpecificRenderWindow.getViewportSize(
-      model._renderer
-    );
-    const ratio = window.devicePixelRatio || 1;
-    const bwidth = String(cwidth / ratio);
-    const bheight = String(cheight / ratio);
-    const viewBox = `0 0 ${cwidth} ${cheight}`;
-
-    const origWidth = model.svgRoot.getAttribute('width');
-    const origHeight = model.svgRoot.getAttribute('height');
-    const origViewBox = model.svgRoot.getAttribute('viewBox');
-
-    if (origWidth !== bwidth) {
-      model.svgRoot.setAttribute('width', bwidth);
-    }
-    if (origHeight !== bheight) {
-      model.svgRoot.setAttribute('height', bheight);
-    }
-    if (origViewBox !== viewBox) {
-      model.svgRoot.setAttribute('viewBox', viewBox);
-    }
-  }
-
-  function setSvgRootStyle() {
-    const viewport = model._renderer.getViewport().map((v) => v * 100);
-    model.svgRoot.setAttribute(
-      'style',
-      `position: absolute; left: ${viewport[0]}%; top: ${
-        100 - viewport[3]
-      }%; width: ${viewport[2] - viewport[0]}%; height: ${
-        viewport[3] - viewport[1]
-      }%;`
-    );
-  }
-
-  function updateSvg() {
-    if (model.useSvgLayer) {
-      for (let i = 0; i < model.widgets.length; i++) {
-        const widget = model.widgets[i];
-        const svgReps = widget
-          .getRepresentations()
-          .filter((r) => r.isA('vtkSVGRepresentation'));
-
-        let pendingContent = [];
-        if (widget.getVisibility()) {
-          pendingContent = svgReps
-            .filter((r) => r.getVisibility())
-            .map((r) => r.render());
-        }
-
-        const promise = Promise.all(pendingContent);
-
-        const renders = pendingSvgRenders.get(widget) || [];
-        renders.push(promise);
-        pendingSvgRenders.set(widget, renders);
-
-        promise.then((vnodes) => {
-          let pendingRenders = pendingSvgRenders.get(widget) || [];
-          const idx = pendingRenders.indexOf(promise);
-          if (model.deleted || widget.isDeleted() || idx === -1) {
-            return;
-          }
-
-          // throw away previous renders
-          pendingRenders = pendingRenders.slice(idx + 1);
-          pendingSvgRenders.set(widget, pendingRenders);
-
-          const oldVTree = svgVTrees.get(widget);
-          const newVTree = createSvgElement('g');
-          for (let ni = 0; ni < vnodes.length; ni++) {
-            newVTree.appendChild(vnodes[ni]);
-          }
-
-          const widgetGroup = widgetToSvgMap.get(widget);
-          let node = widgetGroup;
-
-          const patchFns = diff(oldVTree, newVTree);
-          for (let j = 0; j < patchFns.length; j++) {
-            node = patchFns[j](node);
-          }
-
-          if (!widgetGroup && node) {
-            // add
-            model.svgRoot.appendChild(node);
-            widgetToSvgMap.set(widget, node);
-          } else if (widgetGroup && !node) {
-            // delete
-            widgetGroup.remove();
-            widgetToSvgMap.delete(widget);
-          }
-
-          svgVTrees.set(widget, newVTree);
-        });
-      }
-    }
   }
 
   // --------------------------------------------------------------------------
@@ -374,14 +224,6 @@ function vtkWidgetManager(publicAPI, model) {
       FieldAssociations.FIELD_ASSOCIATION_POINTS
     );
 
-    subscriptions.push(model._interactor.onRenderEvent(updateSvg));
-
-    subscriptions.push(renderer.onModified(setSvgRootStyle));
-    setSvgRootStyle();
-
-    subscriptions.push(model._apiSpecificRenderWindow.onModified(setSvgSize));
-    setSvgSize();
-
     subscriptions.push(
       model._apiSpecificRenderWindow.onModified(updateDisplayScaleParams)
     );
@@ -425,10 +267,6 @@ function vtkWidgetManager(publicAPI, model) {
     if (model.pickingEnabled) {
       publicAPI.enablePicking();
     }
-
-    if (model.useSvgLayer) {
-      enableSvgLayer();
-    }
   };
 
   function addWidgetInternal(viewWidget) {
@@ -466,7 +304,6 @@ function vtkWidgetManager(publicAPI, model) {
 
   function removeWidgetInternal(viewWidget) {
     model._renderer.removeActor(viewWidget);
-    removeFromSvgLayer(viewWidget);
     viewWidget.delete();
   }
 
@@ -501,22 +338,6 @@ function vtkWidgetManager(publicAPI, model) {
   publicAPI.getSelectedDataForXY = async (x, y) => {
     model.selections = null;
     if (model.pickingEnabled) {
-      // First pick SVG representation
-      for (let i = 0; i < model.widgets.length; ++i) {
-        const widget = model.widgets[i];
-        const hoveredSVGReps = widget
-          .getRepresentations()
-          .filter((r) => r.isA('vtkSVGRepresentation') && r.getHover() != null);
-        if (hoveredSVGReps.length) {
-          const selection = vtkSelectionNode.newInstance();
-          selection.getProperties().compositeID = hoveredSVGReps[0].getHover();
-          selection.getProperties().widget = widget;
-          selection.getProperties().representation = hoveredSVGReps[0];
-          model.selections = [selection];
-          return publicAPI.getSelectedData();
-        }
-      }
-
       // do we require a new capture?
       if (!model._capturedBuffers || model.captureOn === CaptureOn.MOUSE_MOVE) {
         await captureBuffers(x, y, x, y);
@@ -543,22 +364,6 @@ function vtkWidgetManager(publicAPI, model) {
       'updateSelectionFromXY is deprecated, please use getSelectedDataForXY'
     );
     if (model.pickingEnabled) {
-      // First pick SVG representation
-      for (let i = 0; i < model.widgets.length; ++i) {
-        const widget = model.widgets[i];
-        const hoveredSVGReps = widget
-          .getRepresentations()
-          .filter((r) => r.isA('vtkSVGRepresentation') && r.getHover() != null);
-        if (hoveredSVGReps.length) {
-          const selection = vtkSelectionNode.newInstance();
-          selection.getProperties().compositeID = hoveredSVGReps[0].getHover();
-          selection.getProperties().widget = widget;
-          selection.getProperties().representation = hoveredSVGReps[0];
-          model.selections = [selection];
-          return;
-        }
-      }
-
       // Then pick regular representations.
       if (model.captureOn === CaptureOn.MOUSE_MOVE) {
         captureBuffers(x, y, x, y);
@@ -586,8 +391,7 @@ function vtkWidgetManager(publicAPI, model) {
     }
     const { propID, compositeID, prop } = model.selections[0].getProperties();
     let { widget, representation } = model.selections[0].getProperties();
-    // prop is undefined for SVG representation, widget is undefined for handle
-    // representation.
+    // widget is undefined for handle representation.
     if (
       model.previousSelectedData &&
       model.previousSelectedData.prop === prop &&
@@ -634,25 +438,6 @@ function vtkWidgetManager(publicAPI, model) {
 
   publicAPI.releaseFocus = () => publicAPI.grabFocus(null);
 
-  publicAPI.setUseSvgLayer = (useSvgLayer) => {
-    if (useSvgLayer !== model.useSvgLayer) {
-      model.useSvgLayer = useSvgLayer;
-
-      if (model._renderer) {
-        if (useSvgLayer) {
-          enableSvgLayer();
-          // force a render so svg widgets can be drawn
-          updateSvg();
-        } else {
-          disableSvgLayer();
-        }
-      }
-
-      return true;
-    }
-    return false;
-  };
-
   const superDelete = publicAPI.delete;
   publicAPI.delete = () => {
     while (subscriptions.length) {
@@ -679,7 +464,6 @@ const DEFAULT_VALUES = {
   selections: null,
   previousSelectedData: null,
   widgetInFocus: null,
-  useSvgLayer: true,
   captureOn: CaptureOn.MOUSE_MOVE,
 };
 
@@ -698,7 +482,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'widgets',
     'viewId',
     'pickingEnabled',
-    'useSvgLayer',
   ]);
 
   // Object specific methods
