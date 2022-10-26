@@ -1,3 +1,4 @@
+import vtkDataArray from '../../../Common/Core/DataArray';
 import { vtkObject } from '../../../interfaces';
 import { ColorSpace, Scale } from "./Constants";
 
@@ -200,6 +201,25 @@ export interface vtkColorTransferFunction extends vtkObject {
     size: number,
     withAlpha: boolean
   ): Float32Array;
+
+  /**
+   * Construct a color transfer function from a vtkDataArray.
+   * The order of values depends on the number of components
+   * of the array.
+   * 3 -> RGB
+   * 4 -> XRGB
+   * 5 -> RGBMS
+   * 6 -> XRGBMS
+   * 
+   * X represents the input value to a function
+   * RGB represents the red, green, and blue value output
+   * M represents the midpoint
+   * S represents sharpness
+   * @param {vtkDataArray} array
+   */
+   buildFunctionFromArray(
+    array: vtkDataArray,
+  ): void;
 
   /**
    * Construct a color transfer function from a table.
