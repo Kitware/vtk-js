@@ -15,16 +15,20 @@ function vtkPriorityQueue(publicAPI, model) {
     model.elements.splice(i, 0, { priority, element });
   };
 
+  publicAPI.deleteById = (id) => {
+    model.elements = model.elements.filter(({ element }) => element !== id);
+  };
+
   publicAPI.pop = () => {
     if (model.elements.length > 0) {
-      return model.elements.shift().element;
+      const element = model.elements.reduce((prev, current) =>
+        prev.priority > current.priority ? prev : current
+      );
+      publicAPI.deleteById(element.element);
+      return element.element;
     }
 
     return null;
-  };
-
-  publicAPI.deleteById = (id) => {
-    model.elements = model.elements.filter(({ element }) => element.id !== id);
   };
 
   publicAPI.length = () => model.elements.length;
