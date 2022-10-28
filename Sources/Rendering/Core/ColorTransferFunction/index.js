@@ -871,6 +871,63 @@ function vtkColorTransferFunction(publicAPI, model) {
     return model.table;
   };
 
+  publicAPI.buildFunctionFromArray = (array) => {
+    publicAPI.removeAllPoints();
+    const numComponents = array.getNumberOfComponents();
+    for (let i = 0; i < array.getNumberOfTuples(); i++) {
+      switch (numComponents) {
+        case 3: {
+          model.nodes.push({
+            x: i,
+            r: array.getComponent(i, 0),
+            g: array.getComponent(i, 1),
+            b: array.getComponent(i, 2),
+            midpoint: 0.5,
+            sharpness: 0.0,
+          });
+          break;
+        }
+        case 4: {
+          model.nodes.push({
+            x: array.getComponent(i, 0),
+            r: array.getComponent(i, 1),
+            g: array.getComponent(i, 2),
+            b: array.getComponent(i, 3),
+            midpoint: 0.5,
+            sharpness: 0.0,
+          });
+          break;
+        }
+        case 5: {
+          model.nodes.push({
+            x: i,
+            r: array.getComponent(i, 0),
+            g: array.getComponent(i, 1),
+            b: array.getComponent(i, 2),
+            midpoint: array.getComponent(i, 4),
+            sharpness: array.getComponent(i, 5),
+          });
+          break;
+        }
+        case 6: {
+          model.nodes.push({
+            x: array.getComponent(i, 0),
+            r: array.getComponent(i, 1),
+            g: array.getComponent(i, 2),
+            b: array.getComponent(i, 3),
+            midpoint: array.getComponent(i, 4),
+            sharpness: array.getComponent(i, 5),
+          });
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    }
+    publicAPI.sortAndUpdateRange();
+  };
+
   //----------------------------------------------------------------------------
   publicAPI.buildFunctionFromTable = (xStart, xEnd, size, table) => {
     let inc = 0.0;
