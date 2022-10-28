@@ -361,6 +361,18 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 *
 	 */
 	getVrResolution(): Vector2;
+
+	/**
+	 * Use to scale the size of a rendered canvas pixel to a browser CSS pixel.  
+	 * `const cssPixelWidth = renderedPixelWidth / apiRenderWindow.getComputedDevicePixelRatio()`
+	 * Rather than using window.devicePixelRatio directly, the device pixel ratio is inferred
+	 * from the container CSS pixel size and rendered image pixel size. The user can reduce the rendered size.
+	 * `apiSpecificRenderWindow.setSize(Math.floor(container.width * window.devicePixelRatio / 2), Math.floor(container.height * window.devicePixelRatio / 2))`
+	 * 
+	 * @see getContainerSize()
+	 * @see getSize()
+	 */
+	getComputedDevicePixelRatio(): number;
 }
 
 /**
