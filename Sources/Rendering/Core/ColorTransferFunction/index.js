@@ -1209,6 +1209,7 @@ function vtkColorTransferFunction(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.applyColorMap = (colorMap) => {
+    const oldColorSpace = JSON.stringify(model.colorSpace);
     if (colorMap.ColorSpace) {
       model.colorSpace = ColorSpace[colorMap.ColorSpace.toUpperCase()];
       if (model.colorSpace === undefined) {
@@ -1218,12 +1219,18 @@ function vtkColorTransferFunction(publicAPI, model) {
         model.colorSpace = ColorSpace.RGB;
       }
     }
+    let isModified = oldColorSpace !== JSON.stringify(model.colorSpace);
+
+    const oldNanColor = isModified || JSON.stringify(model.nanColor);
     if (colorMap.NanColor) {
       model.nanColor = [].concat(colorMap.NanColor);
       while (model.nanColor.length < 4) {
         model.nanColor.push(1.0);
       }
     }
+    isModified = isModified || oldNanColor !== JSON.stringify(model.nanColor);
+
+    const oldNodes = isModified || JSON.stringify(model.nodes);
     if (colorMap.RGBPoints) {
       const size = colorMap.RGBPoints.length;
       model.nodes = [];
@@ -1240,13 +1247,15 @@ function vtkColorTransferFunction(publicAPI, model) {
         });
       }
     }
-    // FIXME: not supported ?
-    // if (colorMap.IndexedColors) {
-    // }
-    // if (colorMap.Annotations) {
-    // }
 
-    publicAPI.sortAndUpdateRange();
+    const modifiedInvoked = publicAPI.sortAndUpdateRange();
+
+    const callModified =
+      !modifiedInvoked &&
+      (isModified || oldNodes !== JSON.stringify(model.nodes));
+    if (callModified) publicAPI.modified();
+
+    return modifiedInvoked || callModified;
   };
 }
 
