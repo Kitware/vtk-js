@@ -510,7 +510,7 @@ function vtkScalarsToColors(publicAPI, model) {
   publicAPI.getNumberOfAvailableColors = () => 256 * 256 * 256;
 
   publicAPI.setRange = (min, max) => publicAPI.setMappingRange(min, max);
-  publicAPI.getRange = (min, max) => publicAPI.getMappingRange();
+  publicAPI.getRange = () => publicAPI.getMappingRange();
 }
 
 // ----------------------------------------------------------------------------
