@@ -1,4 +1,4 @@
-import { mat4 } from 'gl-matrix';
+import { mat3, mat4 } from 'gl-matrix';
 import { TypedArray, Vector3 } from '../../../types';
 
 declare interface Transform {
@@ -67,9 +67,20 @@ declare interface Transform {
 	multiply(mat4x4: mat4): Transform
 
 	/**
+	 * Multiply the current matrix with the provided 3x3 matrix.
+	 * @param {mat3} mat3x3 column-first matrix
+	 */
+	 multiply3x3(mat3x3: mat3): Transform
+	
+	/**
 	 * Resets the MatrixBuilder to the Identity matrix.
-	 */	
+	 */
 	identity(): Transform
+
+	/**
+	 * Inverts the MatrixBuilder matrix.
+	 */
+	invert(): Transform
 
 	/**
 	 * Multiplies the array by the MatrixBuilder's internal matrix, in sets of

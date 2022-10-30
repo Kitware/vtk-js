@@ -490,10 +490,39 @@ export function transpose3x3(in_3x3: Matrix3x3, outT_3x3: Matrix3x3): void;
 export function invert3x3(in_3x3: Matrix3x3, outI_3x3: Matrix3x3): void;
 
 /**
+ * Set mat to the identity matrix.
+ * @param {Number} n The size of the matrix.
+ * @param {Number[]} mat The output matrix.
+ * @see isIdentity()
+ * @see identity3x3()
+ */
+export function identity(n: number, mat: number[]): void;
+
+/**
  * Set mat_3x3 to the identity matrix.
  * @param {Matrix3x3} mat_3x3 The input 3x3 matrix.
+ * @see isIdentity3x3()
+ * @see identity()
  */
 export function identity3x3(mat_3x3: Matrix3x3): void;
+
+/**
+ * Returns true if provided matrix is the identity matrix.
+ * @param {Number[]} mat The 3x3 matrix to check
+ * @param {Number} [eps] The tolerance value.
+ * @see isIdentity()
+ * @see identity()
+ */
+export function isIdentity(mat: Matrix3x3, eps?: number): boolean;
+
+/**
+ * Returns true if provided 3x3 matrix is the identity matrix.
+ * @param {Matrix3x3} mat The 3x3 matrix to check
+ * @param {Number} [eps] The tolerance value.
+ * @see isIdentity()
+ * @see identity3x3()
+ */
+export function isIdentity3x3(mat: Matrix3x3, eps?: number): boolean;
 
 /**
  * Calculate the determinant of a 3x3 matrix.
@@ -606,13 +635,14 @@ export function solveLinearSystem(A: Matrix, x: number[], size: number): number;
 
 /**
  *
- * @param {Matrix} A 
- * @param {Matrix} AI 
- * @param {Number} [size] 
+ * @param {Matrix} A The input matrix. It is modified during the inversion.
+ * @param {Matrix} AI The output inverse matrix. Can be the same as input matrix.
+ * @param {Number} [size] The square size of the matrix to invert : 4 for a 4x4
  * @param {Number[]} [index] 
  * @param {Number[]} [column] 
+ * @return AI on success, null otherwise
  */
-export function invertMatrix(A: Matrix, AI: Matrix, size?: number, index?: number[], column?: number[]): number;
+export function invertMatrix(A: Matrix, AI: Matrix, size?: number, index?: number[], column?: number[]): Matrix|null;
 
 /**
  *

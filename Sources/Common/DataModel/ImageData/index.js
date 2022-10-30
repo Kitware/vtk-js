@@ -232,52 +232,6 @@ function vtkImageData(publicAPI, model) {
     mat4.invert(model.worldToIndex, model.indexToWorld);
   };
 
-  //
-  // The direction matrix is a 3x3 basis for the I, J, K axes
-  // of the image. The rows of the matrix correspond to the
-  // axes directions in world coordinates. Direction must
-  // form an orthonormal basis, results are undefined if
-  // it is not.
-  //
-  publicAPI.setDirection = (...args) => {
-    if (model.deleted) {
-      vtkErrorMacro('instance deleted - cannot call any method');
-      return false;
-    }
-
-    let array = args;
-    // allow an array passed as a single arg.
-    if (
-      array.length === 1 &&
-      (Array.isArray(array[0]) ||
-        array[0].constructor === Float32Array ||
-        array[0].constructor === Float64Array)
-    ) {
-      array = array[0];
-    }
-
-    if (array.length !== 9) {
-      throw new RangeError('Invalid number of values for array setter');
-    }
-    let changeDetected = false;
-    model.direction.forEach((item, index) => {
-      if (item !== array[index]) {
-        if (changeDetected) {
-          return;
-        }
-        changeDetected = true;
-      }
-    });
-
-    if (changeDetected) {
-      for (let i = 0; i < 9; ++i) {
-        model.direction[i] = array[i];
-      }
-      publicAPI.modified();
-    }
-    return true;
-  };
-
   publicAPI.indexToWorld = (ain, aout = []) => {
     vec3.transformMat4(aout, ain, model.indexToWorld);
     return aout;
@@ -512,8 +466,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.worldToIndex = new Float64Array(16);
 
   // Set/Get methods
-  macro.get(publicAPI, model, ['direction', 'indexToWorld', 'worldToIndex']);
+  macro.get(publicAPI, model, ['indexToWorld', 'worldToIndex']);
   macro.setGetArray(publicAPI, model, ['origin', 'spacing'], 3);
+  macro.setGetArray(publicAPI, model, ['direction'], 9);
   macro.getArray(publicAPI, model, ['extent'], 6);
 
   // Object specific methods
