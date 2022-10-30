@@ -166,9 +166,9 @@ export function getBounds(poly, points, bounds) {
 
   for (let j = 1; j < n; j++) {
     points.getPoint(poly[j], p);
-    vtkBoundingBox.addPoint(bounds, p);
+    vtkBoundingBox.addPoint(bounds, ...p);
   }
-  const length = vtkBoundingBox.getLength(bounds);
+  const length = vtkBoundingBox.getLengths(bounds);
   return vtkMath.dot(length, length);
 }
 

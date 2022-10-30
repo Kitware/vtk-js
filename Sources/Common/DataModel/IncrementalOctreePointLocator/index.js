@@ -63,6 +63,66 @@ function vtkIncrementalOctreePointLocator(publicAPI, model) {
     return [pntIdx, dist2];
   };
 
+  publicAPI.findClosestPointInSphere = (point, radius2, maskNode, refDist2) => {
+    let pointIndx = -1;
+    let minDist2 = Number.MAX_VALUE;
+
+    const nodesBase = [];
+    nodesBase.push(model.octreeRootNode);
+
+    let checkNode;
+    let childNode;
+    let distToData;
+    let tempDist2;
+    let tempPntId;
+
+    while (!nodesBase.length === 0 && minDist2 > 0.0) {
+      checkNode = nodesBase.top();
+      nodesBase.pop();
+
+      if (!checkNode.isLeaf()) {
+        for (let i = 0; i < 8; i++) {
+          childNode = checkNode.getChild(i);
+
+          // use ( radius2 + radius2 ) to skip empty nodes
+          distToData = childNode.getNumberOfPoints()
+            ? childNode.getDistance2ToBoundary(point, model.octreeRootNode, 1)
+            : radius2 + radius2;
+
+          // If a child node is not the mask node AND its distance, specifically
+          // the data bounding box (determined by the points inside or under) to
+          // the point, is less than the threshold radius (one exception is the
+          // point's container nodes), it is pushed to the stack as a suspect.
+          if (
+            childNode !== maskNode &&
+            (distToData <= refDist2 || childNode.containsPoint(point) === 1)
+          ) {
+            nodesBase.push(childNode);
+          }
+
+          childNode = null;
+        }
+      } else {
+        // now that the node under check is a leaf, let's find the closest
+        // point therein and the minimum distance
+
+        [tempPntId, tempDist2] = publicAPI.findClosestPointInLeafNode(
+          checkNode,
+          point
+        );
+
+        if (tempDist2 < minDist2) {
+          minDist2 = tempDist2;
+          pointIndx = tempPntId;
+        }
+      }
+
+      checkNode = null;
+    }
+
+    return [minDist2 <= radius2 ? pointIndx : -1, minDist2];
+  };
+
   //------------------------------------------------------------------------------
   publicAPI.initPointInsertion = (points, bounds, estNumPts = 0) => {
     let i = 0;
@@ -127,6 +187,19 @@ function vtkIncrementalOctreePointLocator(publicAPI, model) {
 
     return true;
   };
+
+  publicAPI.findClosestPointInSphereWithTolerance = (
+    point,
+    radius2,
+    maskNode
+  ) =>
+    publicAPI.findClosestPointInSphere(
+      point,
+      radius2,
+      maskNode,
+      model.octreeMaxDimSize * model.octreeMaxDimSize * 4.0,
+      radius2
+    );
 
   //------------------------------------------------------------------------------
   publicAPI.findDuplicateFloatTypePointInVisitedLeafNode = (

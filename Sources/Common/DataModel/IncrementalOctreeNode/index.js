@@ -106,6 +106,33 @@ function vtkIncrementalOctreeNode(publicAPI, model) {
     bounds[5] = model.maxBounds[2];
   };
 
+  publicAPI.getChildIndex = (point) =>
+    Number(point[0] > model.children[0].getMaxBoundsByReference()[0]) +
+    // eslint-disable-next-line no-bitwise
+    (Number(point[1] > model.children[0].getMaxBoundsByReference()[1]) << 1) +
+    // eslint-disable-next-line no-bitwise
+    (Number(point[2] > model.children[0].getMaxBoundsByReference()[2]) << 2);
+
+  publicAPI.containsPoint = (pnt) =>
+    model.minBounds[0] < pnt[0] &&
+    pnt[0] <= model.maxBounds[0] &&
+    model.minBounds[1] < pnt[1] &&
+    pnt[1] <= model.maxBounds[1] &&
+    model.minBounds[2] < pnt[2] &&
+    pnt[2] <= model.maxBounds[2]
+      ? 1
+      : 0;
+
+  publicAPI.containsPointByData = (pnt) =>
+    model.minDataBounds[0] <= pnt[0] &&
+    pnt[0] <= model.maxDataBounds[0] &&
+    model.minDataBounds[1] <= pnt[1] &&
+    pnt[1] <= model.maxDataBounds[1] &&
+    model.minDataBounds[2] <= pnt[2] &&
+    pnt[2] <= model.maxDataBounds[2]
+      ? 1
+      : 0;
+
   //------------------------------------------------------------------------------
   publicAPI.updateCounterAndDataBounds = (point, nHits, updateData) => {
     model.numberOfPoints += nHits;
@@ -183,6 +210,7 @@ function vtkIncrementalOctreeNode(publicAPI, model) {
   publicAPI.getChild = (i) => model.children[i];
 
   //------------------------------------------------------------------------------
+  /* eslint-disable no-use-before-define */
   publicAPI.separateExactlyDuplicatePointsFromNewInsertion = (
     points,
     pntIds,
@@ -222,14 +250,14 @@ function vtkIncrementalOctreeNode(publicAPI, model) {
       // create eight child nodes
       // FIXME: May be too slow to use vtk newInstance()
       ocNode.children = [
-        vtkIncrementalOctreeNode.newInstance(),
-        vtkIncrementalOctreeNode.newInstance(),
-        vtkIncrementalOctreeNode.newInstance(),
-        vtkIncrementalOctreeNode.newInstance(),
-        vtkIncrementalOctreeNode.newInstance(),
-        vtkIncrementalOctreeNode.newInstance(),
-        vtkIncrementalOctreeNode.newInstance(),
-        vtkIncrementalOctreeNode.newInstance(),
+        newInstance(),
+        newInstance(),
+        newInstance(),
+        newInstance(),
+        newInstance(),
+        newInstance(),
+        newInstance(),
+        newInstance(),
       ];
       for (i = 0; i < 8; i++) {
         // x-bound: axis 0
@@ -244,7 +272,7 @@ function vtkIncrementalOctreeNode(publicAPI, model) {
         octMin[2] = boxPtr[OCTREE_CHILD_BOUNDS_LUT[i][2][0]][2];
         octMax[2] = boxPtr[OCTREE_CHILD_BOUNDS_LUT[i][2][1]][2];
 
-        ocNode.children[i] = vtkIncrementalOctreeNode.newInstance();
+        ocNode.children[i] = newInstance();
         ocNode.children[i].setParent(ocNode);
         ocNode.children[i].setBounds(
           octMin[0],
@@ -284,6 +312,7 @@ function vtkIncrementalOctreeNode(publicAPI, model) {
     );
     return pointIdx;
   };
+  /* eslint-enable no-use-before-define */
 
   //------------------------------------------------------------------------------
   publicAPI.createChildNodes = (
@@ -355,8 +384,9 @@ function vtkIncrementalOctreeNode(publicAPI, model) {
       octMax[2] = boxPtr[OCTREE_CHILD_BOUNDS_LUT[i][2][1]][2];
 
       // This call internally sets the cener and default data bounding box, too.
-      model.children[i] = vtkIncrementalOctreeNode.newInstance();
-      model.children[i].iD = nbNodes++;
+      // eslint-disable-next-line no-use-before-define
+      model.children[i] = newInstance();
+      // model.children[i].iD = nbNodes++;
       model.children[i].setParent(publicAPI);
       model.children[i].setBounds(
         octMin[0],
@@ -380,7 +410,7 @@ function vtkIncrementalOctreeNode(publicAPI, model) {
       tempId = pntIds[i];
       points.getPoint(tempId, tempPt);
       target = publicAPI.getChildIndex(tempPt);
-      model.children[target].getPointIdSet().insertNextId(tempId);
+      model.children[target].getPointIdSet().push(tempId);
       model.children[target].updateCounterAndDataBounds(tempPt);
       numIds[target]++;
     }
@@ -435,7 +465,7 @@ function vtkIncrementalOctreeNode(publicAPI, model) {
     // objects at hand.
     for (i = 0; i < 8; i++) {
       if (numIds[i] === 0 || i === dvidId) {
-        model.children[i].deletePointIdSet();
+        model.children[i].getPointIdSet().length = 0;
       }
     }
 
@@ -763,7 +793,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     6
   );
 
-  macro.get(publicAPI, model, ['pointIdSet']);
+  macro.get(publicAPI, model, ['pointIdSet', 'numberOfPoints']);
 
   // TODO: No get?
   macro.set(publicAPI, model, ['parent']);

@@ -49,6 +49,21 @@ export interface vtkIncrementalOctreeNode extends vtkObject {
 	getBounds(bounds: Bounds): void;
 
 	/**
+	 * @param {Vector3} point
+	 */
+	getChildIndex(point: Vector3): number;
+	
+	/**
+	 * @param {Vector3} point
+	 */
+	containsPoint(point: Vector3): boolean;
+	
+	/**
+	 * @param {Vector3} point
+	 */
+	containsPointByData(point: Vector3): boolean;
+
+	/**
 	 * Given a point inserted to either this node (a leaf node) or a descendant
 	 * leaf (of this node --- when this node is a non-leaf node), update the
 	 * counter and the data bounding box for this node only. The data bounding box
