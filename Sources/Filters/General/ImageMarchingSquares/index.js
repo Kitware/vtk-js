@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkEdgeLocator from 'vtk.js/Sources/Common/DataModel/EdgeLocator';
 
 import vtkCaseTable from './caseTable';
 
@@ -22,7 +23,7 @@ function vtkImageMarchingSquares(publicAPI, model) {
   const ids = [];
   const pixelScalars = [];
   const pixelPts = [];
-  const edgeMap = new Map();
+  const edgeLocator = vtkEdgeLocator.newInstance();
 
   // Retrieve scalars and pixel coordinates. i-j-k is origin of pixel.
   publicAPI.getPixelScalars = (i, j, k, slice, dims, origin, spacing, s) => {
@@ -70,8 +71,6 @@ function vtkImageMarchingSquares(publicAPI, model) {
     const CASE_MASK = [1, 2, 8, 4]; // case table is actually for quad
     const xyz = [];
     let pId;
-    let tmp;
-    const edge = [];
 
     publicAPI.getPixelScalars(i, j, k, slice, dims, origin, spacing, scalars);
 
@@ -96,14 +95,10 @@ function vtkImageMarchingSquares(publicAPI, model) {
         const edgeVerts = vtkCaseTable.getEdge(pixelLines[idx + eid]);
         pId = undefined;
         if (model.mergePoints) {
-          edge[0] = ids[edgeVerts[0]];
-          edge[1] = ids[edgeVerts[1]];
-          if (edge[0] > edge[1]) {
-            tmp = edge[0];
-            edge[0] = edge[1];
-            edge[1] = tmp;
-          }
-          pId = edgeMap.get(edge);
+          pId = edgeLocator.isInsertedEdge(
+            ids[edgeVerts[0]],
+            ids[edgeVerts[1]]
+          )?.value;
         }
         if (pId === undefined) {
           const t =
@@ -117,14 +112,7 @@ function vtkImageMarchingSquares(publicAPI, model) {
           points.push(xyz[0], xyz[1], z);
 
           if (model.mergePoints) {
-            edge[0] = ids[edgeVerts[0]];
-            edge[1] = ids[edgeVerts[1]];
-            if (edge[0] > edge[1]) {
-              tmp = edge[0];
-              edge[0] = edge[1];
-              edge[1] = tmp;
-            }
-            edgeMap[edge] = pId;
+            edgeLocator.insertEdge(ids[edgeVerts[0]], ids[edgeVerts[1]], pId);
           }
         }
         lines.push(pId);
@@ -181,7 +169,7 @@ function vtkImageMarchingSquares(publicAPI, model) {
           );
         }
       }
-      edgeMap.clear();
+      edgeLocator.initialize();
     }
 
     // Update output
