@@ -1,5 +1,6 @@
 import 'vtk.js/Sources/favicon';
 import * as d3 from 'd3-scale';
+import { formatDefaultLocale } from 'd3-format';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import 'vtk.js/Sources/Rendering/Profiles/Geometry';
@@ -51,6 +52,8 @@ function generateTicks(numberOfTicks) {
       .range([lastTickBounds[0], lastTickBounds[1]]);
     const samples = scale.ticks(numberOfTicks);
     const ticks = samples.map((tick) => scale(tick));
+    // Replace minus "\u2212" with hyphen-minus "\u002D" so that parseFloat() works
+    formatDefaultLocale({ minus: '\u002D' });
     const format = scale.tickFormat(
       ticks[0],
       ticks[ticks.length - 1],
