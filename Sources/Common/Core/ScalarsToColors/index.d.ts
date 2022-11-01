@@ -105,10 +105,8 @@ export interface vtkScalarsToColors extends vtkObject {
 
 	/**
 	 * 
-	 * @param {Number} min 
-	 * @param {Number} max 
 	 */
-	getRange(min: number, max: number): Range;
+	getRange(): Range;
 
 	/**
 	 * Get which component of a vector to map to colors.
