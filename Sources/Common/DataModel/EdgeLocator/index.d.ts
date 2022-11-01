@@ -1,8 +1,16 @@
+import { Nullable } from "../../../types";
+
 /**
  *
  */
 export interface IEdgeLocatorInitialValues {
 	oriented?: boolean;
+}
+
+export interface IEdge<T = unknown> {
+	key: number;
+	edgeId: number;
+	value?: T;
 }
 
 export interface vtkEdgeLocator {
@@ -15,9 +23,9 @@ export interface vtkEdgeLocator {
 	 * Returns the inserted edge or null if no edge was inserted.
 	 * @param {Number} pointId0 Edge first point id
 	 * @param {Number} pointId1 Edge last point id
-	 * @return {key, edgeId, value} or null
+	 * @return {IEdge|null} an edge object ({ key, edgeId, value }) or null
 	 */
-	isInsertedEdge(pointId0: number, pointId1: number): { key: any; edgeId: number; value?: any } | null;
+	isInsertedEdge<T = unknown>(pointId0: number, pointId1: number): Nullable<IEdge<T>>;
 
 	/**
 	 * Insert edge if it does not already exist.
@@ -25,16 +33,12 @@ export interface vtkEdgeLocator {
 	 *
 	 * @param {Number} pointId0 Edge first point id
 	 * @param {Number} pointId1 Edge last point id
-	 * @param {any} value Optional value option
-	 * @return {key, edgeId, value}
+	 * @param {unknown} value Optional value option
+	 * @return {IEdge|null} an edge object ({ key, edgeId, value }) or null
 	 * @see insertEdge()
 	 * @see isInsertedEdge()
 	 */
-	insertUniqueEdge(
-		pointId0: number,
-		pointId1: number,
-		value?: any
-	): { key: any; edgeId: number; value?: any };
+	insertUniqueEdge<T>(pointId0: number, pointId1: number, value?: T): IEdge<T>;
 
 	/**
 	 * Insert edge. If the edge already exists, it is overwritten by this
@@ -43,15 +47,12 @@ export interface vtkEdgeLocator {
 	 * Returns the newly inserted edge.
 	 * @param {Number} pointId0 Edge first point id
 	 * @param {Number} pointId1 Edge last point id
-	 * @param {any} value Optional value option
-	 * @return {key, edgeId, value} or null
+	 * @param {unknown} value Optional value option
+	 * @return {Edge|null} an edge object ({ key, edgeId, value }) or null
 	 * @see isInsertedEdge
 	 * @see insertUniqueEdge
 	 */
-	insertEdge(pointId0: number,
-		pointId1: number,
-		value?: any
-	): { key: any; edgeId: number; value?: any };
+	insertEdge<T>(pointId0: number, pointId1: number, value?: T): IEdge<T>;
 }
 
 // ----------------------------------------------------------------------------

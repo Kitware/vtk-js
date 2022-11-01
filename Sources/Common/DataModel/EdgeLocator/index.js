@@ -30,7 +30,6 @@ class EdgeLocator {
   insertEdge(pointId0, pointId1, newEdgeValue) {
     // Generate a unique key
     const key = this.computeEdgeKey(pointId0, pointId1);
-    // Didn't find key, so add a new edge entry
     const node = { key, edgeId: this.edgeMap.size, value: newEdgeValue };
     this.edgeMap.set(key, node);
     return node;
