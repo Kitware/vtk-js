@@ -135,14 +135,19 @@ function vtkRenderWindowViewNode(publicAPI, model) {
     return publicAPI.displayToNormalizedDisplay(x2, y2, z);
   };
 
+  publicAPI.getComputedDevicePixelRatio = () =>
+    model.size[0] / publicAPI.getContainerSize()[0];
+
+  publicAPI.getContainerSize = () => {
+    macro.vtkErrorMacro('not implemented');
+  };
+
   publicAPI.getPixelData = (x1, y1, x2, y2) => {
     macro.vtkErrorMacro('not implemented');
-    return undefined;
   };
 
   publicAPI.createSelector = () => {
     macro.vtkErrorMacro('not implemented');
-    return undefined;
   };
 }
 

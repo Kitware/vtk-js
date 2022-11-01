@@ -327,7 +327,18 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	setViewStream(stream: vtkViewStream): boolean;
 
 	/**
-	 *
+	 * Sets the pixel width and height of the rendered image.  
+	 * 
+	 * WebGL and WebGPU render windows apply these values to 
+	 * the width and height attribute of the canvas element.
+	 * 
+	 * To match the device resolution in browser environments, 
+	 * multiply the container size by `window.devicePixelRatio`
+	 * `apiSpecificRenderWindow.setSize(Math.floor(containerWidth * devicePixelRatio), Math.floor(containerHeight * devicePixelRatio));
+	 * See the VTK.js FullscreenRenderWindow class for an example.
+	 * 
+	 * @see getComputedDevicePixelRatio()
+	 * 
 	 * @param {Vector2} size 
 	 */
 	setSize(size: Vector2): void;
@@ -361,6 +372,19 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 *
 	 */
 	getVrResolution(): Vector2;
+
+	/**
+	 * Scales the size of a browser CSS pixel to a rendered canvas pixel.  
+	 * `const renderedPixelWidth = cssPixelWidth * apiRenderWindow.getComputedDevicePixelRatio()`
+	 * Use to scale rendered objects to a consistent perceived size or DOM pixel position.
+	 * 
+	 * Rather than using window.devicePixelRatio directly, the device pixel ratio is inferred
+	 * from the container CSS pixel size and rendered image pixel size. The user directly sets the rendered pixel size.
+	 * 
+	 * @see setSize()
+	 * @see getContainerSize()
+	 */
+	getComputedDevicePixelRatio(): number;
 }
 
 /**

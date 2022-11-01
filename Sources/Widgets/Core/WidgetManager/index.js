@@ -121,7 +121,7 @@ function vtkWidgetManager(publicAPI, model) {
     const [cwidth, cheight] = model._apiSpecificRenderWindow.getViewportSize(
       model._renderer
     );
-    const ratio = window.devicePixelRatio || 1;
+    const ratio = model._apiSpecificRenderWindow.getComputedDevicePixelRatio();
     const bwidth = String(cwidth / ratio);
     const bheight = String(cheight / ratio);
     const viewBox = `0 0 ${cwidth} ${cheight}`;
@@ -224,7 +224,11 @@ function vtkWidgetManager(publicAPI, model) {
     if (_renderer && _apiSpecificRenderWindow && _camera) {
       const [rwW, rwH] = _apiSpecificRenderWindow.getSize();
       const [vxmin, vymin, vxmax, vymax] = _renderer.getViewport();
-      const rendererPixelDims = [rwW * (vxmax - vxmin), rwH * (vymax - vymin)];
+      const pixelRatio = _apiSpecificRenderWindow.getComputedDevicePixelRatio();
+      const rendererPixelDims = [
+        (rwW * (vxmax - vxmin)) / pixelRatio,
+        (rwH * (vymax - vymin)) / pixelRatio,
+      ];
 
       const cameraPosition = _camera.getPosition();
       const cameraDir = _camera.getDirectionOfProjection();
