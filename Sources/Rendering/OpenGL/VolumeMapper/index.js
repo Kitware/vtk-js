@@ -728,7 +728,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     mat3.multiply(
       model.idxNormalMatrix,
       model.idxNormalMatrix,
-      model.currentInput.getDirection()
+      model.currentInput.getDirectionByReference()
     );
 
     const maxSamples =

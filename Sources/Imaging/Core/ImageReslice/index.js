@@ -1,7 +1,9 @@
 import { vec4, mat4 } from 'gl-matrix';
 
-import macro from 'vtk.js/Sources/macros';
+import macro, { vtkWarningMacro } from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
@@ -20,7 +22,7 @@ import Constants from 'vtk.js/Sources/Imaging/Core/ImageReslice/Constants';
 
 const { SlabMode } = Constants;
 
-const { capitalize, vtkErrorMacro } = macro;
+const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkImageReslice methods
@@ -29,6 +31,7 @@ const { capitalize, vtkErrorMacro } = macro;
 function vtkImageReslice(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageReslice');
+  const superClass = { ...publicAPI };
 
   let indexMatrix = null;
   let optimizedTransform = null;
@@ -99,6 +102,14 @@ function vtkImageReslice(publicAPI, model) {
     getImageResliceSlabTrap(tmpPtr, inComponents, sampleCount, f);
   }
 
+  publicAPI.getMTime = () => {
+    let mTime = superClass.getMTime();
+    if (model.resliceTransform) {
+      mTime = Math.max(mTime, model.resliceTransform.getMTime());
+    }
+    return mTime;
+  };
+
   publicAPI.setResliceAxes = (resliceAxes) => {
     if (!model.resliceAxes) {
       model.resliceAxes = mat4.identity(new Float64Array(16));
@@ -136,11 +147,9 @@ function vtkImageReslice(publicAPI, model) {
     const outWholeExt = [0, 0, 0, 0, 0, 0];
     const outDims = [0, 0, 0];
 
-    let matrix = null;
+    const matrix = mat4.identity(new Float64Array(16));
     if (model.resliceAxes) {
-      matrix = model.resliceAxes;
-    } else {
-      matrix = mat4.identity(new Float64Array(16));
+      mat4.multiply(matrix, matrix, model.resliceAxes);
     }
     const imatrix = new Float64Array(16);
     mat4.invert(imatrix, matrix);
@@ -250,6 +259,9 @@ function vtkImageReslice(publicAPI, model) {
     output.setDimensions(outDims);
     output.setOrigin(outOrigin);
     output.setSpacing(outSpacing);
+    if (model.outputDirection) {
+      output.setDirection(model.outputDirection);
+    }
     output.getPointData().setScalars(outScalars);
 
     publicAPI.getIndexMatrix(input, output);
@@ -385,7 +397,9 @@ function vtkImageReslice(publicAPI, model) {
     // allocate an output row of type double
     let floatPtr = null;
     if (!optimizeNearest) {
-      floatPtr = new Float64Array(inComponents * (outExt[1] - outExt[0]));
+      floatPtr = new Float64Array(
+        inComponents * (outExt[1] - outExt[0] + nsamples)
+      );
     }
 
     const background = macro.newTypedArray(
@@ -711,7 +725,19 @@ function vtkImageReslice(publicAPI, model) {
       }
     }
   };
-
+  /**
+   * The transform matrix supplied by the user converts output coordinates
+   * to input coordinates.
+   * To speed up the pixel lookup, the following function provides a
+   * matrix which converts output pixel indices to input pixel indices.
+   * This will also concatenate the ResliceAxes and the ResliceTransform
+   * if possible (if the ResliceTransform is a 4x4 matrix transform).
+   * If it does, this->OptimizedTransform will be set to nullptr, otherwise
+   * this->OptimizedTransform will be equal to this->ResliceTransform.
+   * @param {vtkPolyData} input
+   * @param {vtkPolyData} output
+   * @returns
+   */
   publicAPI.getIndexMatrix = (input, output) => {
     // first verify that we have to update the matrix
     if (indexMatrix === null) {
@@ -720,6 +746,7 @@ function vtkImageReslice(publicAPI, model) {
 
     const inOrigin = input.getOrigin();
     const inSpacing = input.getSpacing();
+    const inDirection = input.getDirection();
     const outOrigin = output.getOrigin();
     const outSpacing = output.getSpacing();
 
@@ -735,19 +762,36 @@ function vtkImageReslice(publicAPI, model) {
       mat4.copy(transform, model.resliceAxes);
     }
     if (model.resliceTransform) {
-      // TODO
+      if (model.resliceTransform.isA('vtkHomogeneousTransform')) {
+        // transform->PostMultiply();
+        // transform->Concatenate(
+        // mat4.multiply(transform, transform, model.resliceTransform.getMatrix());
+        mat4.multiply(transform, model.resliceTransform.getMatrix(), transform);
+      } else {
+        // TODO
+        vtkWarningMacro('Non homogeneous transform have not yet been ported');
+      }
+    }
+
+    if (!vtkMath.isIdentity3x3(inDirection)) {
+      const imageTransform = vtkMatrixBuilder
+        .buildFromRadian()
+        .translate(inOrigin[0], inOrigin[1], inOrigin[2])
+        .multiply3x3(inDirection)
+        .translate(-inOrigin[0], -inOrigin[1], -inOrigin[2]);
+      mat4.multiply(transform, imageTransform.getMatrix(), transform);
     }
 
     // check to see if we have an identity matrix
-    let isIdentity = publicAPI.isIdentityMatrix(transform);
+    let isIdentity = vtkMath.isIdentity(transform);
 
     // the outMatrix takes OutputData indices to OutputData coordinates,
     // the inMatrix takes InputData coordinates to InputData indices
     for (let i = 0; i < 3; i++) {
       if (
-        (optimizedTransform === null &&
+        (optimizedTransform == null &&
           (inSpacing[i] !== outSpacing[i] || inOrigin[i] !== outOrigin[i])) ||
-        (optimizedTransform !== null &&
+        (optimizedTransform != null &&
           (outSpacing[i] !== 1.0 || outOrigin[i] !== 0.0))
       ) {
         isIdentity = false;
@@ -780,6 +824,7 @@ function vtkImageReslice(publicAPI, model) {
   publicAPI.getAutoCroppedOutputBounds = (input) => {
     const inOrigin = input.getOrigin();
     const inSpacing = input.getSpacing();
+    const inDirection = input.getDirection();
     const dims = input.getDimensions();
     const inWholeExt = [0, dims[0] - 1, 0, dims[1] - 1, 0, dims[2] - 1];
 
@@ -788,6 +833,20 @@ function vtkImageReslice(publicAPI, model) {
       mat4.invert(matrix, model.resliceAxes);
     } else {
       mat4.identity(matrix);
+    }
+    let transform = null;
+    if (model.resliceTransform) {
+      transform = model.resliceTransform.getInverse();
+    }
+    let imageTransform = null;
+    if (!vtkMath.isIdentity3x3(inDirection)) {
+      imageTransform = vtkMatrixBuilder
+        .buildFromRadian()
+        .translate(inOrigin[0], inOrigin[1], inOrigin[2])
+        .multiply3x3(inDirection)
+        .translate(-inOrigin[0], -inOrigin[1], -inOrigin[2])
+        .invert()
+        .getMatrix();
     }
 
     const bounds = [
@@ -808,8 +867,12 @@ function vtkImageReslice(publicAPI, model) {
         inOrigin[2] + inWholeExt[4 + (Math.floor(i / 4) % 2)] * inSpacing[2];
       point[3] = 1.0;
 
+      if (imageTransform) {
+        vec4.transformMat4(point, point, imageTransform);
+      }
+
       if (model.resliceTransform) {
-        // TODO
+        transform.transformPoint(point, point);
       }
 
       vec4.transformMat4(point, point, matrix);
@@ -1048,24 +1111,6 @@ function vtkImageReslice(publicAPI, model) {
   };
 }
 
-function setNullArray(publicAPI, model, fieldNames) {
-  fieldNames.forEach((field) => {
-    const setterName = `set${capitalize(field)}`;
-    const superSet = publicAPI[setterName];
-    publicAPI[setterName] = (...args) => {
-      if ((args.length === 1 && args[0] == null) || model[field] == null) {
-        if (args[0] !== model[field]) {
-          model[field] = args[0];
-          publicAPI.modified();
-          return true;
-        }
-        return null;
-      }
-      return superSet(...args);
-    };
-  });
-}
-
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
@@ -1076,6 +1121,7 @@ const DEFAULT_VALUES = {
   outputDimensionality: 3,
   outputSpacing: null, // automatically computed if null
   outputOrigin: null, // automatically computed if null
+  outputDirection: null, // identity if null
   outputExtent: null, // automatically computed if null
   outputScalarType: null,
   wrap: false, // don't wrap
@@ -1091,7 +1137,7 @@ const DEFAULT_VALUES = {
   scalarScale: 1,
   backgroundColor: [0, 0, 0, 0],
   resliceAxes: null,
-  resliceTransform: null,
+  // resliceTransform: null,
   interpolator: vtkImageInterpolator.newInstance(),
   usePermuteExecute: false, // no supported yet
 };
@@ -1117,8 +1163,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'wrap',
     'mirror',
     'border',
-    'backgroundColor',
     'interpolationMode',
+    'resliceTransform',
     'slabMode',
     'slabTrapezoidIntegration',
     'slabNumberOfSlices',
@@ -1127,12 +1173,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGetArray(publicAPI, model, ['outputOrigin', 'outputSpacing'], 3);
   macro.setGetArray(publicAPI, model, ['outputExtent'], 6);
-
-  setNullArray(publicAPI, model, [
-    'outputOrigin',
-    'outputSpacing',
-    'outputExtent',
-  ]);
+  macro.setGetArray(publicAPI, model, ['outputDirection'], 9);
+  macro.setGetArray(publicAPI, model, ['backgroundColor'], 4);
 
   macro.get(publicAPI, model, ['resliceAxes']);
 

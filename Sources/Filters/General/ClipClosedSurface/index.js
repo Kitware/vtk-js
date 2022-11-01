@@ -7,9 +7,9 @@ import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkDataSetAttributes from 'vtk.js/Sources/Common/DataModel/DataSetAttributes';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkContourTriangulator from 'vtk.js/Sources/Filters/General/ContourTriangulator';
+import vtkEdgeLocator from 'vtk.js/Sources/Common/DataModel/EdgeLocator';
 
 import Constants from './Constants';
-import CCSEdgeLocator from './ccsEdgeLocator';
 
 const { vtkErrorMacro, capitalize } = macro;
 const { ScalarMode } = Constants;
@@ -71,9 +71,9 @@ function vtkClipClosedSurface(publicAPI, model) {
     // After the above swap, i0 will be kept, and i1 will be clipped
 
     // Check to see if this point has already been computed
-    const node = locator.insertUniqueEdge(i0, i1);
-    if (node.edgeId !== -1) {
-      return node.edgeId;
+    const edge = locator.insertUniqueEdge(i0, i1);
+    if (edge.value != null) {
+      return edge.value;
     }
 
     // Get the edge and interpolate the new point
@@ -94,19 +94,19 @@ function vtkClipClosedSurface(publicAPI, model) {
 
     // Make sure that new point is far enough from kept point
     if (vtkMath.distance2BetweenPoints(p, p0) < tol2) {
-      node.edgeId = i0;
+      edge.value = i0;
       return i0;
     }
 
     if (vtkMath.distance2BetweenPoints(p, p1) < tol2) {
-      node.edgeId = i1;
+      edge.value = i1;
       return i1;
     }
 
-    node.edgeId = points.insertNextTuple(p);
-    pointData.interpolateData(pointData, i0, i1, node.edgeId, t);
+    edge.value = points.insertNextTuple(p);
+    pointData.interpolateData(pointData, i0, i1, edge.value, t);
 
-    return node.edgeId;
+    return edge.value;
   }
 
   /**
@@ -114,8 +114,8 @@ function vtkClipClosedSurface(publicAPI, model) {
    *
    * @param {vtkPoints} points
    * @param {vtkDataArray} pointScalars
-   * @param {vtvtkDataSetAttributesk} pointData
-   * @param {CCSEdgeLocator} edgeLocator
+   * @param {vtkDataSetAttributesk} pointData
+   * @param {vtkEdgeLocator} edgeLocator
    * @param {vtkCellArray} inputLines
    * @param {vtkCellArray} outputLines
    * @param {vtkDataSetAttributes} inLineData
@@ -394,7 +394,7 @@ function vtkClipClosedSurface(publicAPI, model) {
    * @param {vtkPoints} points
    * @param {vtkDataArray} pointScalars
    * @param {vtkDataSetAttributes} pointData
-   * @param {CCSEdgeLocator} edgeLocator
+   * @param {vtkEdgeLocator} edgeLocator
    * @param {Number} triangulate
    * @param {vtkCellArray} inputPolys
    * @param {vtkCellArray} outputPolys
@@ -670,7 +670,7 @@ function vtkClipClosedSurface(publicAPI, model) {
     }
 
     // An edge locator to avoid point duplication while clipping
-    const edgeLocator = new CCSEdgeLocator();
+    const edgeLocator = vtkEdgeLocator.newInstance();
 
     // A temporary polydata for the contour lines that are triangulated
     const tmpContourData = vtkPolyData.newInstance();
@@ -1080,9 +1080,9 @@ const DEFAULT_VALUES = {
   generateFaces: true,
   activePlaneId: -1,
 
-  baseColor: null,
-  clipColor: null,
-  activePlaneColor: null,
+  baseColor: [255 / 255, 99 / 255, 71 / 255], // Tomato
+  clipColor: [244 / 255, 164 / 255, 96 / 255], // Sandy brown
+  activePlaneColor: [227 / 255, 207 / 255, 87 / 255], // Banana
 
   triangulationErrorDisplay: false,
   // _idList: null,

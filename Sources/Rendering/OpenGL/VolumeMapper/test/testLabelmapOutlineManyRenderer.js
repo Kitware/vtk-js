@@ -74,10 +74,10 @@ function createLabelPipeline(backgroundImageData, gc) {
   );
   labelMapData.getPointData().setScalars(dataArray);
 
-  labelMapData.setDimensions(...backgroundImageData.getDimensions());
-  labelMapData.setSpacing(...backgroundImageData.getSpacing());
-  labelMapData.setOrigin(...backgroundImageData.getOrigin());
-  labelMapData.setDirection(...backgroundImageData.getDirection());
+  labelMapData.setDimensions(backgroundImageData.getDimensionsByReference());
+  labelMapData.setSpacing(backgroundImageData.getSpacingByReference());
+  labelMapData.setOrigin(backgroundImageData.getOriginByReference());
+  labelMapData.setDirection(backgroundImageData.getDirectionByReference());
 
   labelMapData.computeTransforms();
 

@@ -2,10 +2,9 @@ import { vec3, mat4, glMatrix } from 'gl-matrix';
 
 // eslint-disable-next-line import/no-cycle
 import { areMatricesEqual } from 'vtk.js/Sources/Common/Core/Math';
+import { IDENTITY } from 'vtk.js/Sources/Common/Core/Math/Constants';
 
 const NoOp = (v) => v;
-
-const IDENTITY = mat4.identity(new Float64Array(16));
 
 const EPSILON = 1e-6;
 
@@ -81,6 +80,33 @@ class Transform {
 
   multiply(mat4x4) {
     mat4.multiply(this.matrix, this.matrix, mat4x4);
+    return this;
+  }
+
+  multiply3x3(mat3x3) {
+    mat4.multiply(this.matrix, this.matrix, [
+      mat3x3[0],
+      mat3x3[1],
+      mat3x3[2],
+      0,
+      mat3x3[3],
+      mat3x3[4],
+      mat3x3[5],
+      0,
+      mat3x3[6],
+      mat3x3[7],
+      mat3x3[8],
+      0,
+      0,
+      0,
+      0,
+      1,
+    ]);
+    return this;
+  }
+
+  invert() {
+    mat4.invert(this.matrix, this.matrix);
     return this;
   }
 

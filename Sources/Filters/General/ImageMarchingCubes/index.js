@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkEdgeLocator from 'vtk.js/Sources/Common/DataModel/EdgeLocator';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
@@ -19,7 +20,7 @@ function vtkImageMarchingCubes(publicAPI, model) {
   const voxelScalars = [];
   const voxelGradients = [];
   const voxelPts = [];
-  const edgeMap = new Map();
+  const edgeLocator = vtkEdgeLocator.newInstance();
 
   // Retrieve scalars and voxel coordinates. i-j-k is origin of voxel.
   publicAPI.getVoxelScalars = (i, j, k, slice, dims, origin, spacing, s) => {
@@ -213,8 +214,6 @@ function vtkImageMarchingCubes(publicAPI, model) {
     const xyz = [];
     const n = [];
     let pId;
-    let tmp;
-    const edge = [];
 
     publicAPI.getVoxelScalars(i, j, k, slice, dims, origin, spacing, scalars);
 
@@ -247,14 +246,10 @@ function vtkImageMarchingCubes(publicAPI, model) {
         const edgeVerts = vtkCaseTable.getEdge(voxelTris[idx + eid]);
         pId = undefined;
         if (model.mergePoints) {
-          edge[0] = ids[edgeVerts[0]];
-          edge[1] = ids[edgeVerts[1]];
-          if (edge[0] > edge[1]) {
-            tmp = edge[0];
-            edge[0] = edge[1];
-            edge[1] = tmp;
-          }
-          pId = edgeMap.get(edge);
+          pId = edgeLocator.isInsertedEdge(
+            ids[edgeVerts[0]],
+            ids[edgeVerts[1]]
+          )?.value;
         }
         if (pId === undefined) {
           const t =
@@ -285,14 +280,7 @@ function vtkImageMarchingCubes(publicAPI, model) {
           }
 
           if (model.mergePoints) {
-            edge[0] = ids[edgeVerts[0]];
-            edge[1] = ids[edgeVerts[1]];
-            if (edge[0] > edge[1]) {
-              tmp = edge[0];
-              edge[0] = edge[1];
-              edge[1] = tmp;
-            }
-            edgeMap[edge] = pId;
+            edgeLocator.insertEdge(ids[edgeVerts[0]], ids[edgeVerts[1]], pId);
           }
         }
         tris.push(pId);

@@ -576,7 +576,7 @@ export function setGet(publicAPI, model, fieldNames) {
 export function getArray(publicAPI, model, fieldNames) {
   fieldNames.forEach((field) => {
     publicAPI[`get${_capitalize(field)}`] = () =>
-      model[field] ? [].concat(model[field]) : model[field];
+      model[field] ? Array.from(model[field]) : model[field];
     publicAPI[`get${_capitalize(field)}ByReference`] = () => model[field];
   });
 }
@@ -632,9 +632,10 @@ export function setArray(
           }
         }
         changeDetected =
-          model[field] == null ||
-          model[field].some((item, index) => item !== array[index]) ||
-          model[field].length !== array.length;
+          model[field] == null || model[field].length !== array.length;
+        for (let i = 0; !changeDetected && i < array.length; ++i) {
+          changeDetected = model[field][i] !== array[i];
+        }
         if (changeDetected && needCopy) {
           array = Array.from(array);
         }
