@@ -300,8 +300,6 @@ function vtkWidgetManager(publicAPI, model) {
         }
       }
       if (wantRender) {
-        // Ken FIXME
-        model._interactor.render();
         model._interactor.render();
       }
     }
