@@ -295,7 +295,7 @@ function vtkWidgetManager(publicAPI, model) {
           model.activeWidget = w;
           wantRender = true;
         } else {
-          wantRender ||= !!w.get().activeState;
+          wantRender ||= !!w.getActiveState();
           w.deactivateAllHandles();
         }
       }
