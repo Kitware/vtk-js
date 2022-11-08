@@ -299,9 +299,10 @@ function vtkWidgetManager(publicAPI, model) {
           w.deactivateAllHandles();
         }
       }
-      if (wantRender) {
-        model._interactor.render();
-      }
+    }
+
+    if (wantRender) {
+      model._interactor.render();
     }
   }
 
