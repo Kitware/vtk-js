@@ -1,14 +1,14 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/All';
+import '@kitware/vtk.js/Rendering/Profiles/All';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
-import vtkSplineWidget from 'vtk.js/Sources/Widgets/Widgets3D/SplineWidget';
-import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkInteractorStyleImage from '@kitware/vtk.js/Interaction/Style/InteractorStyleImage';
+import vtkSplineWidget from '@kitware/vtk.js/Widgets/Widgets3D/SplineWidget';
+import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 
-import { splineKind } from 'vtk.js/Sources/Common/DataModel/Spline3D/Constants';
+import { splineKind } from '@kitware/vtk.js/Common/DataModel/Spline3D/Constants';
 
 import controlPanel from './controlPanel.html';
 

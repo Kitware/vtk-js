@@ -1,13 +1,13 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/All';
+import '@kitware/vtk.js/Rendering/Profiles/All';
 
-import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpSceneLoader from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
-import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpSceneLoader from '@kitware/vtk.js/IO/Core/HttpSceneLoader';
+import DataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper';
 
 import controlPanel from './controller.html';
 

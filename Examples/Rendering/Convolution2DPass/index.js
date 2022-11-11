@@ -1,21 +1,21 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for WebGL only)
-import 'vtk.js/Sources/Rendering/OpenGL/Profiles/Volume';
+import '@kitware/vtk.js/Rendering/OpenGL/Profiles/Volume';
 
 // Force DataAccessHelper to have access to various data source
-import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
-import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkForwardPass from 'vtk.js/Sources/Rendering/OpenGL/ForwardPass';
-import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-import vtkConvolution2DPass from 'vtk.js/Sources/Rendering/OpenGL/Convolution2DPass';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
+import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
+import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
+import vtkForwardPass from '@kitware/vtk.js/Rendering/OpenGL/ForwardPass';
+import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
+import vtkConvolution2DPass from '@kitware/vtk.js/Rendering/OpenGL/Convolution2DPass';
 import controlPanel from './controller.html';
 
 // ----------------------------------------------------------------------------
