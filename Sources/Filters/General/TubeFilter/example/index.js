@@ -1,20 +1,20 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
-import Constants from 'vtk.js/Sources/Filters/General/TubeFilter/Constants';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
+import Constants from '@kitware/vtk.js/Filters/General/TubeFilter/Constants';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import * as vtkMath from '@kitware/vtk.js/Common/Core/Math';
+import vtkPoints from '@kitware/vtk.js/Common/Core/Points';
+import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
+import vtkTubeFilter from '@kitware/vtk.js/Filters/General/TubeFilter';
 
-import { DesiredOutputPrecision } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
-import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import { DesiredOutputPrecision } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
+import { VtkDataTypes } from '@kitware/vtk.js/Common/Core/DataArray/Constants';
 
 import controlPanel from './controlPanel.html';
 

@@ -1,21 +1,21 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Volume';
+import '@kitware/vtk.js/Rendering/Profiles/Volume';
 
 // Load the itk-wasm UMD module dynamically for the example.
 // Normally, this will just go in the HTML <head>.
-import vtkResourceLoader from 'vtk.js/Sources/IO/Core/ResourceLoader';
+import vtkResourceLoader from '@kitware/vtk.js/IO/Core/ResourceLoader';
 // Fetch the data. Other options include `fetch`, axios.
-import vtkLiteHttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper';
+import vtkLiteHttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper';
 
 // To render the result in this example
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-import vtkITKHelper from 'vtk.js/Sources/Common/DataModel/ITKHelper';
+import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
+import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
+import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
+import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
