@@ -2,7 +2,7 @@
  * macros.js is the old macro.js.
  * The name change is so we do not get eaten by babel-plugin-macros.
  */
-import DeepEqual from 'deep-equal';
+import DeepEqual from 'fast-deep-equal';
 import vtk, { vtkGlobal } from './vtk';
 import ClassHierarchy from './Common/Core/ClassHierarchy';
 
