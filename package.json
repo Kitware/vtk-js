@@ -64,7 +64,7 @@
     "babel-loader": "8.2.5",
     "babel-plugin-istanbul": "6.1.1",
     "buffer": "6.0.3",
-    "commitizen": "4.2.4",
+    "commitizen": "4.2.5",
     "concurrently": "7.1.0",
     "copy-webpack-plugin": "10.2.4",
     "cross-env": "7.0.3",
