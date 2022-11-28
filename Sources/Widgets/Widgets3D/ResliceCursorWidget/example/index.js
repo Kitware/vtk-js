@@ -1,36 +1,36 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/All';
+import '@kitware/vtk.js/Rendering/Profiles/All';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkGenericRenderWindow from 'vtk.js/Sources/Rendering/Misc/GenericRenderWindow';
-import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
-import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
-import vtkImageReslice from 'vtk.js/Sources/Imaging/Core/ImageReslice';
-import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
-import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOutlineFilter from 'vtk.js/Sources/Filters/General/OutlineFilter';
-import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
-import vtkResliceCursorWidget from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget';
-import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkAnnotatedCubeActor from '@kitware/vtk.js/Rendering/Core/AnnotatedCubeActor';
+import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
+import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
+import vtkGenericRenderWindow from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow';
+import vtkImageData from '@kitware/vtk.js/Common/DataModel/ImageData';
+import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper';
+import vtkImageReslice from '@kitware/vtk.js/Imaging/Core/ImageReslice';
+import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
+import vtkInteractorStyleImage from '@kitware/vtk.js/Interaction/Style/InteractorStyleImage';
+import vtkInteractorStyleTrackballCamera from '@kitware/vtk.js/Interaction/Style/InteractorStyleTrackballCamera';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkOutlineFilter from '@kitware/vtk.js/Filters/General/OutlineFilter';
+import vtkOrientationMarkerWidget from '@kitware/vtk.js/Interaction/Widgets/OrientationMarkerWidget';
+import vtkResliceCursorWidget from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCursorWidget';
+import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 
-import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import { CaptureOn } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import vtkSphereSource from '@kitware/vtk.js/Filters/Sources/SphereSource';
+import { CaptureOn } from '@kitware/vtk.js/Widgets/Core/WidgetManager/Constants';
 
 import { vec3 } from 'gl-matrix';
-import { SlabMode } from 'vtk.js/Sources/Imaging/Core/ImageReslice/Constants';
+import { SlabMode } from '@kitware/vtk.js/Imaging/Core/ImageReslice/Constants';
 
-import { xyzToViewType } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
+import { xyzToViewType } from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 import controlPanel from './controlPanel.html';
 
 // Force the loading of HttpDataAccessHelper to support gzip decompression
-import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
 // ----------------------------------------------------------------------------
 // Define main attributes
@@ -48,8 +48,8 @@ const widget = vtkResliceCursorWidget.newInstance();
 const widgetState = widget.getWidgetState();
 widgetState.setKeepOrthogonality(true);
 widgetState.setOpacity(0.6);
-// Use devicePixelRatio in order to have the same display handle size on all devices
-widgetState.setSphereRadius(10 * window.devicePixelRatio);
+// Set size in CSS pixel space because scaleInPixels defaults to true
+widgetState.setSphereRadius(10);
 widgetState.setLineThickness(5);
 
 const showDebugActors = true;

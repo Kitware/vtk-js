@@ -113,7 +113,7 @@ In order to scale a representation such that it retains the same size in
 display space, a widget representation should use the `scaleInPixels` property
 and the `getPixelWorldHeightAtCoord(coord)` method. When `scaleInPixels` is set
 to true, a widget representation should multiply whatever scaling they perform
-by the output of `getDisplayScaleAtCoord(coord)`.
+by the output of `getPixelWorldHeightAtCoord(coord)`.
 
 Look at the `SphereHandleRepresentation` as an example for how
 `getPixelWorldHeightAtCoord` is used.

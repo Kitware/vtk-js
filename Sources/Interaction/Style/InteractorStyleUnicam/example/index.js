@@ -1,16 +1,16 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkAxesActor from 'vtk.js/Sources/Rendering/Core/AxesActor';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkInteractorStyleUnicam from 'vtk.js/Sources/Interaction/Style/InteractorStyleUnicam';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkMouseCameraTrackballZoomToMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballZoomToMouseManipulator';
-import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkAxesActor from '@kitware/vtk.js/Rendering/Core/AxesActor';
+import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkInteractorStyleUnicam from '@kitware/vtk.js/Interaction/Style/InteractorStyleUnicam';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkMouseCameraTrackballZoomToMouseManipulator from '@kitware/vtk.js/Interaction/Manipulators/MouseCameraTrackballZoomToMouseManipulator';
+import vtkOrientationMarkerWidget from '@kitware/vtk.js/Interaction/Widgets/OrientationMarkerWidget';
 
 import controlPanel from './controlPanel.html';
 

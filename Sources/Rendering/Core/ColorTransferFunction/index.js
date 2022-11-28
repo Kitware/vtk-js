@@ -871,6 +871,63 @@ function vtkColorTransferFunction(publicAPI, model) {
     return model.table;
   };
 
+  publicAPI.buildFunctionFromArray = (array) => {
+    publicAPI.removeAllPoints();
+    const numComponents = array.getNumberOfComponents();
+    for (let i = 0; i < array.getNumberOfTuples(); i++) {
+      switch (numComponents) {
+        case 3: {
+          model.nodes.push({
+            x: i,
+            r: array.getComponent(i, 0),
+            g: array.getComponent(i, 1),
+            b: array.getComponent(i, 2),
+            midpoint: 0.5,
+            sharpness: 0.0,
+          });
+          break;
+        }
+        case 4: {
+          model.nodes.push({
+            x: array.getComponent(i, 0),
+            r: array.getComponent(i, 1),
+            g: array.getComponent(i, 2),
+            b: array.getComponent(i, 3),
+            midpoint: 0.5,
+            sharpness: 0.0,
+          });
+          break;
+        }
+        case 5: {
+          model.nodes.push({
+            x: i,
+            r: array.getComponent(i, 0),
+            g: array.getComponent(i, 1),
+            b: array.getComponent(i, 2),
+            midpoint: array.getComponent(i, 4),
+            sharpness: array.getComponent(i, 5),
+          });
+          break;
+        }
+        case 6: {
+          model.nodes.push({
+            x: array.getComponent(i, 0),
+            r: array.getComponent(i, 1),
+            g: array.getComponent(i, 2),
+            b: array.getComponent(i, 3),
+            midpoint: array.getComponent(i, 4),
+            sharpness: array.getComponent(i, 5),
+          });
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    }
+    publicAPI.sortAndUpdateRange();
+  };
+
   //----------------------------------------------------------------------------
   publicAPI.buildFunctionFromTable = (xStart, xEnd, size, table) => {
     let inc = 0.0;
@@ -1152,6 +1209,7 @@ function vtkColorTransferFunction(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.applyColorMap = (colorMap) => {
+    const oldColorSpace = JSON.stringify(model.colorSpace);
     if (colorMap.ColorSpace) {
       model.colorSpace = ColorSpace[colorMap.ColorSpace.toUpperCase()];
       if (model.colorSpace === undefined) {
@@ -1161,12 +1219,18 @@ function vtkColorTransferFunction(publicAPI, model) {
         model.colorSpace = ColorSpace.RGB;
       }
     }
+    let isModified = oldColorSpace !== JSON.stringify(model.colorSpace);
+
+    const oldNanColor = isModified || JSON.stringify(model.nanColor);
     if (colorMap.NanColor) {
       model.nanColor = [].concat(colorMap.NanColor);
       while (model.nanColor.length < 4) {
         model.nanColor.push(1.0);
       }
     }
+    isModified = isModified || oldNanColor !== JSON.stringify(model.nanColor);
+
+    const oldNodes = isModified || JSON.stringify(model.nodes);
     if (colorMap.RGBPoints) {
       const size = colorMap.RGBPoints.length;
       model.nodes = [];
@@ -1183,13 +1247,15 @@ function vtkColorTransferFunction(publicAPI, model) {
         });
       }
     }
-    // FIXME: not supported ?
-    // if (colorMap.IndexedColors) {
-    // }
-    // if (colorMap.Annotations) {
-    // }
 
-    publicAPI.sortAndUpdateRange();
+    const modifiedInvoked = publicAPI.sortAndUpdateRange();
+
+    const callModified =
+      !modifiedInvoked &&
+      (isModified || oldNodes !== JSON.stringify(model.nodes));
+    if (callModified) publicAPI.modified();
+
+    return modifiedInvoked || callModified;
   };
 }
 

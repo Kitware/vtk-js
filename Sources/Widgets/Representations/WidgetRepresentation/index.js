@@ -166,6 +166,7 @@ export function allocateArray(
 function vtkWidgetRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWidgetRepresentation');
+  const superclass = { ...publicAPI };
   // Internal cache
   const cache = { mtimes: {}, states: [] };
 
@@ -282,13 +283,15 @@ function vtkWidgetRepresentation(publicAPI, model) {
   };
 
   publicAPI.setCoincidentTopologyParameters = (parameters) => {
-    model.coincidentTopologyParameters = parameters;
-    publicAPI.getActors().forEach((actor) => {
-      applyCoincidentTopologyParametersToMapper(
-        actor.getMapper(),
-        model.coincidentTopologyParameters
-      );
-    });
+    const modified = superclass.setCoincidentTopologyParameters(parameters);
+    if (modified) {
+      publicAPI.getActors().forEach((actor) => {
+        applyCoincidentTopologyParametersToMapper(
+          actor.getMapper(),
+          model.coincidentTopologyParameters
+        );
+      });
+    }
   };
 
   // Make sure setting the labels at build time works with string/array...
@@ -340,8 +343,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   vtkProp.extend(publicAPI, model, defaultValues(initialValues));
   macro.algo(publicAPI, model, 1, 1);
-  macro.get(publicAPI, model, ['labels', 'coincidentTopologyParameters']);
-  macro.set(publicAPI, model, ['displayScaleParams']);
+  macro.get(publicAPI, model, ['labels']);
+  macro.set(publicAPI, model, [
+    { type: 'object', name: 'displayScaleParams' },
+    { type: 'object', name: 'coincidentTopologyParameters' },
+  ]);
   macro.setGet(publicAPI, model, [
     'scaleInPixels',
     'activeScaleFactor',

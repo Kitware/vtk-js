@@ -1,25 +1,25 @@
 // For streamlined VR development install the WebXR emulator extension
 // https://github.com/MozillaReality/WebXR-emulator-extension
 
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
-import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import macro from 'vtk.js/Sources/macros';
-import vtkDeviceOrientationToCamera from 'vtk.js/Sources/Interaction/Misc/DeviceOrientationToCamera';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkSkybox from 'vtk.js/Sources/Rendering/Core/Skybox';
-import vtkSkyboxReader from 'vtk.js/Sources/IO/Misc/SkyboxReader';
-import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
-// import vtkMobileVR from 'vtk.js/Sources/Common/System/MobileVR';
+import HttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import macro from '@kitware/vtk.js/macros';
+import vtkDeviceOrientationToCamera from '@kitware/vtk.js/Interaction/Misc/DeviceOrientationToCamera';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkSkybox from '@kitware/vtk.js/Rendering/Core/Skybox';
+import vtkSkyboxReader from '@kitware/vtk.js/IO/Misc/SkyboxReader';
+import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
+// import vtkMobileVR from '@kitware/vtk.js/Common/System/MobileVR';
 
 // Force DataAccessHelper to have access to various data source
-import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
-import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
-import vtkResourceLoader from 'vtk.js/Sources/IO/Core/ResourceLoader';
+import vtkResourceLoader from '@kitware/vtk.js/IO/Core/ResourceLoader';
 
 import style from './SkyboxViewer.module.css';
 

@@ -1,14 +1,15 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 import * as d3 from 'd3-scale';
+import { formatDefaultLocale } from 'd3-format';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkScalarBarActor from 'vtk.js/Sources/Rendering/Core/ScalarBarActor';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkScalarBarActor from '@kitware/vtk.js/Rendering/Core/ScalarBarActor';
 import controlPanel from './controlPanel.html';
 
 // ----------------------------------------------------------------------------
@@ -51,6 +52,8 @@ function generateTicks(numberOfTicks) {
       .range([lastTickBounds[0], lastTickBounds[1]]);
     const samples = scale.ticks(numberOfTicks);
     const ticks = samples.map((tick) => scale(tick));
+    // Replace minus "\u2212" with hyphen-minus "\u002D" so that parseFloat() works
+    formatDefaultLocale({ minus: '\u002D' });
     const format = scale.tickFormat(
       ticks[0],
       ticks[ticks.length - 1],

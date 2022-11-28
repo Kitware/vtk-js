@@ -99,8 +99,12 @@ function vtkProp3D(publicAPI, model) {
   };
 
   publicAPI.setUserMatrix = (matrix) => {
+    if (vtkMath.areMatricesEqual(model.userMatrix, matrix)) {
+      return false;
+    }
     mat4.copy(model.userMatrix, matrix);
     publicAPI.modified();
+    return true;
   };
 
   publicAPI.getMatrix = () => {

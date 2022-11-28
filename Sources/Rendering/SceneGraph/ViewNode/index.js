@@ -162,6 +162,7 @@ function vtkViewNode(publicAPI, model) {
           deleted = [];
         }
         deleted.push(child);
+        child.delete();
       } else {
         child.setVisited(false);
       }
@@ -183,6 +184,14 @@ function vtkViewNode(publicAPI, model) {
       ret.setRenderable(dataObj);
     }
     return ret;
+  };
+
+  const parentDelete = publicAPI.delete;
+  publicAPI.delete = () => {
+    for (let i = 0; i < model.children.length; i++) {
+      model.children[i].delete();
+    }
+    parentDelete();
   };
 }
 

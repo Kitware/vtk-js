@@ -1,16 +1,16 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkImageMarchingCubes from 'vtk.js/Sources/Filters/General/ImageMarchingCubes';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkSampleFunction from 'vtk.js/Sources/Imaging/Hybrid/SampleFunction';
-import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
-import vtkCylinder from 'vtk.js/Sources/Common/DataModel/Cylinder';
-import vtkImplicitBoolean from 'vtk.js/Sources/Common/DataModel/ImplicitBoolean';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkImageMarchingCubes from '@kitware/vtk.js/Filters/General/ImageMarchingCubes';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkSampleFunction from '@kitware/vtk.js/Imaging/Hybrid/SampleFunction';
+import vtkPlane from '@kitware/vtk.js/Common/DataModel/Plane';
+import vtkCylinder from '@kitware/vtk.js/Common/DataModel/Cylinder';
+import vtkImplicitBoolean from '@kitware/vtk.js/Common/DataModel/ImplicitBoolean';
 
 import controlPanel from './controller.html';
 

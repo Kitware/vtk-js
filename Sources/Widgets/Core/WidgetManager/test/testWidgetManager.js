@@ -34,6 +34,10 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
 
   const container = document.querySelector('body');
   const rwContainer = gc.registerDOMElement(document.createElement('div'));
+  // maintain consistent container size across browsers
+  rwContainer.style.width = '300px';
+  rwContainer.style.height = '300px';
+
   container.appendChild(rwContainer);
 
   const grw = vtkGenericRenderWindow.newInstance({ listenWindowResize: false });

@@ -1,18 +1,18 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/All';
+import '@kitware/vtk.js/Rendering/Profiles/All';
 
-import * as macro from 'vtk.js/Sources/macros';
-import vtk from 'vtk.js/Sources/vtk';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import * as macro from '@kitware/vtk.js/macros';
+import vtk from '@kitware/vtk.js/vtk';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkCalculator from '@kitware/vtk.js/Filters/General/Calculator';
+import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
+import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
+import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
 
 import controlPanel from './controller.html';
 

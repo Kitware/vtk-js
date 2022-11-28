@@ -1,25 +1,25 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable import/no-extraneous-dependencies */
 
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
-import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
-import vtkXMLPolyDataReader from 'vtk.js/Sources/IO/XML/XMLPolyDataReader';
-import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
+import HttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
+import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
+import vtkXMLPolyDataReader from '@kitware/vtk.js/IO/XML/XMLPolyDataReader';
+import vtkTubeFilter from '@kitware/vtk.js/Filters/General/TubeFilter';
 import {
   ColorMode,
   ScalarMode,
-} from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
-import { VaryRadius } from 'vtk.js/Sources/Filters/General/TubeFilter/Constants';
+} from '@kitware/vtk.js/Rendering/Core/Mapper/Constants';
+import { VaryRadius } from '@kitware/vtk.js/Filters/General/TubeFilter/Constants';
 
 import style from './TubesViewer.module.css';
 import icon from '../../../Documentation/content/icon/favicon-96x96.png';

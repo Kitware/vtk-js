@@ -1,17 +1,17 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkLight from 'vtk.js/Sources/Rendering/Core/Light';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkOBJReader from 'vtk.js/Sources/IO/Misc/OBJReader';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
-import vtkPolyDataNormals from 'vtk.js/Sources/Filters/Core/PolyDataNormals';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkLight from '@kitware/vtk.js/Rendering/Core/Light';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkOBJReader from '@kitware/vtk.js/IO/Misc/OBJReader';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkTexture from '@kitware/vtk.js/Rendering/Core/Texture';
+import vtkPolyDataNormals from '@kitware/vtk.js/Filters/Core/PolyDataNormals';
 
-import vtkFPSMonitor from 'vtk.js/Sources/Interaction/UI/FPSMonitor';
+import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
 
 import controlPanel from './controller.html';
 

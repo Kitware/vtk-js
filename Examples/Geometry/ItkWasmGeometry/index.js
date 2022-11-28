@@ -1,19 +1,19 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
 // Load the itk-wasm UMD module dynamically for the example.
 // Normally, this will just go in the HTML <head>.
-import vtkResourceLoader from 'vtk.js/Sources/IO/Core/ResourceLoader';
+import vtkResourceLoader from '@kitware/vtk.js/IO/Core/ResourceLoader';
 // Fetch the data. Other options include `fetch`, axios.
-import vtkLiteHttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper';
+import vtkLiteHttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
-import vtkITKHelper from 'vtk.js/Sources/Common/DataModel/ITKHelper';
+import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

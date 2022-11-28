@@ -1,5 +1,11 @@
 import seedrandom from 'seedrandom';
 import macro from 'vtk.js/Sources/macros';
+import {
+  IDENTITY,
+  IDENTITY_3X3,
+  EPSILON,
+  VTK_SMALL_NUMBER,
+} from 'vtk.js/Sources/Common/Core/Math/Constants';
 
 const { vtkErrorMacro, vtkWarningMacro } = macro;
 
@@ -11,7 +17,6 @@ const { vtkErrorMacro, vtkWarningMacro } = macro;
 // ----------------------------------------------------------------------------
 let randomSeedValue = 0;
 const VTK_MAX_ROTATIONS = 20;
-const VTK_SMALL_NUMBER = 1.0e-12;
 
 function notImplemented(method) {
   return () => vtkErrorMacro(`vtkMath::${method} - NOT IMPLEMENTED`);
@@ -43,7 +48,11 @@ function swapColumnsMatrix_nxn(matrix, n, column1, column2) {
 
 export function createArray(size = 3) {
   // faster than Array.from and/or while loop
-  return Array(size).fill(0);
+  const res = Array(size);
+  for (let i = 0; i < size; ++i) {
+    res[i] = 0;
+  }
+  return res;
 }
 
 export const Pi = () => Math.PI;
@@ -697,6 +706,25 @@ export function determinant3x3(mat_3x3) {
   );
 }
 
+/**
+ * Returns true if elements of both arrays are equals.
+ * @param {Array} a an array of numbers (vector, point, matrix...)
+ * @param {Array} b an array of numbers (vector, point, matrix...)
+ * @param {Number} eps tolerance
+ */
+export function areEquals(a, b, eps = EPSILON) {
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  function isEqual(element, index) {
+    return Math.abs(element - b[index]) <= eps;
+  }
+  return a.every(isEqual);
+}
+
+export const areMatricesEqual = areEquals;
+
 export function identity3x3(mat_3x3) {
   for (let i = 0; i < 3; i++) {
     /* eslint-disable-next-line no-multi-assign */
@@ -713,6 +741,14 @@ export function identity(n, mat) {
     mat[i * n + i] = 1;
   }
   return mat;
+}
+
+export function isIdentity(mat, eps = EPSILON) {
+  return areMatricesEqual(mat, IDENTITY, eps);
+}
+
+export function isIdentity3x3(mat, eps = EPSILON) {
+  return areMatricesEqual(mat, IDENTITY_3X3, eps);
 }
 
 export function quaternionToMatrix3x3(quat_4, mat_3x3) {
@@ -747,25 +783,6 @@ export function quaternionToMatrix3x3(quat_4, mat_3x3) {
   mat_3x3[5] = (yz - wx) * f;
   mat_3x3[8] = zz * f + s;
 }
-
-/**
- * Returns true if elements of both arrays are equals.
- * @param {Array} a an array of numbers (vector, point, matrix...)
- * @param {Array} b an array of numbers (vector, point, matrix...)
- * @param {Number} eps tolerance
- */
-export function areEquals(a, b, eps = 1e-6) {
-  if (a.length !== b.length) {
-    return false;
-  }
-
-  function isEqual(element, index) {
-    return Math.abs(element - b[index]) <= eps;
-  }
-  return a.every(isEqual);
-}
-
-export const areMatricesEqual = areEquals;
 
 export function roundNumber(num, digits = 0) {
   if (!`${num}`.includes('e')) {
@@ -1425,6 +1442,7 @@ export function solveLinearSystem(A, x, size) {
   return 1;
 }
 
+// Note that A is modified during the inversion !
 export function invertMatrix(A, AI, size, index = null, column = null) {
   const tmp1Size = index || createArray(size);
   const tmp2Size = column || createArray(size);
@@ -1433,7 +1451,7 @@ export function invertMatrix(A, AI, size, index = null, column = null) {
   // Note: tmp1Size returned value is used later, tmp2Size is just working
   // memory whose values are not used in LUSolveLinearSystem
   if (luFactorLinearSystem(A, tmp1Size, size, tmp2Size) === 0) {
-    return 0;
+    return null;
   }
 
   for (let j = 0; j < size; j++) {
@@ -1449,7 +1467,7 @@ export function invertMatrix(A, AI, size, index = null, column = null) {
     }
   }
 
-  return 1;
+  return AI;
 }
 
 export function estimateMatrixCondition(A, size) {
@@ -2210,6 +2228,8 @@ export default {
   invert3x3,
   identity3x3,
   identity,
+  isIdentity,
+  isIdentity3x3,
   determinant3x3,
   quaternionToMatrix3x3,
   areEquals,
