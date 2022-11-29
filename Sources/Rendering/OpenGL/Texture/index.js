@@ -468,7 +468,7 @@ function vtkOpenGLTexture(publicAPI, model) {
           return model.context.SHORT;
         case model.useNorm16 && VtkDataTypes.UNSIGNED_SHORT:
           return model.context.UNSIGNED_SHORT;
-          case useHalfFloatType && VtkDataTypes.SHORT:
+        case useHalfFloatType && VtkDataTypes.SHORT:
           return model.context.HALF_FLOAT;
         case useHalfFloatType && VtkDataTypes.UNSIGNED_SHORT:
           return model.context.HALF_FLOAT;
@@ -1206,7 +1206,9 @@ function vtkOpenGLTexture(publicAPI, model) {
     depth,
     numComps,
     dataType,
-    data
+    data,
+    preferSizeOverAccuracy = false,
+    useExperimentalNorm16Texture = false
   ) => {
     const numPixelsIn = width * height * depth;
 
@@ -1232,16 +1234,19 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.volumeInfo.dataComputedScale = computedScale;
     model.volumeInfo.dataComputedOffset = computedOffset;
 
-    const useHalfFloat = checkUseHalfFloat(
-      dataType,
-      computedOffset,
-      computedScale,
-      preferSizeOverAccuracy
-    );
-
     // Check whether 16bit texture extension is available
     const ext = model.context.getExtension('EXT_texture_norm16');
     model.useNorm16 = ext && useExperimentalNorm16Texture;
+
+    // if we can use norm16, there is no need to use halfFloat then
+    const useHalfFloat = model.useNorm16
+      ? false
+      : checkUseHalfFloat(
+          dataType,
+          computedOffset,
+          computedScale,
+          preferSizeOverAccuracy
+        );
 
     // WebGL2 path, we have 3d textures etc
     if (model._openGLRenderWindow.getWebgl2()) {
@@ -1275,7 +1280,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       }
       if (model.useNorm16 && dataType === VtkDataTypes.UNSIGNED_SHORT) {
         for (let c = 0; c < numComps; ++c) {
-          model.volumeInfo.scale[c] = 32768.0;
+          model.volumeInfo.scale[c] = 32767.0;
         }
         return publicAPI.create3DFromRaw(
           width,
