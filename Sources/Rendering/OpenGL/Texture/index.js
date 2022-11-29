@@ -455,7 +455,7 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.getDefaultDataType = (vtkScalarType, useHalfFloatType = false) => {
+  publicAPI.getDefaultDataType = (vtkScalarType) => {
     // DON'T DEAL with VTK_CHAR as this is platform dependent.
     if (model._openGLRenderWindow.getWebgl2()) {
       switch (vtkScalarType) {
@@ -463,14 +463,16 @@ function vtkOpenGLTexture(publicAPI, model) {
         //   return model.context.BYTE;
         case VtkDataTypes.UNSIGNED_CHAR:
           return model.context.UNSIGNED_BYTE;
-        // prefer norm16 since that is accurate
+        // prefer norm16 since that is accurate compared to
+        // half float which is not
         case model.useNorm16 && VtkDataTypes.SHORT:
           return model.context.SHORT;
         case model.useNorm16 && VtkDataTypes.UNSIGNED_SHORT:
           return model.context.UNSIGNED_SHORT;
-        case useHalfFloatType && VtkDataTypes.SHORT:
+        // use half float type
+        case model.useHalfFloat && VtkDataTypes.SHORT:
           return model.context.HALF_FLOAT;
-        case useHalfFloatType && VtkDataTypes.UNSIGNED_SHORT:
+        case model.useHalfFloat && VtkDataTypes.UNSIGNED_SHORT:
           return model.context.HALF_FLOAT;
         // case VtkDataTypes.INT:
         //   return model.context.INT;
@@ -521,12 +523,9 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.getOpenGLDataType = (vtkScalarType, useHalfFloatType = false) => {
-    if (!model.openGLDataType) {
-      model.openGLDataType = publicAPI.getDefaultDataType(
-        vtkScalarType,
-        useHalfFloatType
-      );
+  publicAPI.getOpenGLDataType = (vtkScalarType, forceUpdate = false) => {
+    if (!model.openGLDataType || forceUpdate) {
+      model.openGLDataType = publicAPI.getDefaultDataType(vtkScalarType);
     }
     return model.openGLDataType;
   };
@@ -1111,8 +1110,7 @@ function vtkOpenGLTexture(publicAPI, model) {
   }
 
   function checkUseHalfFloat(dataType, offset, scale, preferSizeOverAccuracy) {
-    const useHalfFloatType = true;
-    publicAPI.getOpenGLDataType(dataType, useHalfFloatType);
+    publicAPI.getOpenGLDataType(dataType);
 
     let useHalfFloat = false;
     if (model._openGLRenderWindow.getWebgl2()) {
@@ -1146,8 +1144,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     data
   ) => {
     // Permit OpenGLDataType to be half float, if applicable, for 3D
-    const useHalfFloatType = true;
-    publicAPI.getOpenGLDataType(dataType, useHalfFloatType);
+    publicAPI.getOpenGLDataType(dataType);
 
     // Now determine the texture parameters using the arguments.
     publicAPI.getInternalFormat(dataType, numComps);
@@ -1235,8 +1232,9 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.volumeInfo.dataComputedOffset = computedOffset;
 
     // Check whether 16bit texture extension is available
-    const ext = model.context.getExtension('EXT_texture_norm16');
-    model.useNorm16 = ext && useExperimentalNorm16Texture;
+    model.useNorm16 =
+      useExperimentalNorm16Texture &&
+      model.context.getExtension('EXT_texture_norm16');
 
     // if we can use norm16, there is no need to use halfFloat then
     const useHalfFloat = model.useNorm16
@@ -1248,11 +1246,19 @@ function vtkOpenGLTexture(publicAPI, model) {
           preferSizeOverAccuracy
         );
 
+    model.useHalfFloat = useHalfFloat;
+
+    // since our default is to use half float, in case that we can't use it
+    // we need to use another type
+    if (!model.useHalfFloat) {
+      publicAPI.getOpenGLDataType(dataType, true);
+    }
+
     // WebGL2 path, we have 3d textures etc
     if (model._openGLRenderWindow.getWebgl2()) {
       if (
         dataType === VtkDataTypes.FLOAT ||
-        (useHalfFloat &&
+        (model.useHalfFloat &&
           (dataType === VtkDataTypes.SHORT ||
             dataType === VtkDataTypes.UNSIGNED_SHORT))
       ) {
@@ -1540,6 +1546,11 @@ const DEFAULT_VALUES = {
   baseLevel: 0,
   maxLevel: 1000,
   generateMipmap: false,
+  // use half float by default, but it will get set
+  // to false if the context does not support it or
+  // the voxel intensity range is out of the accurate
+  // range of half float
+  useHalfFloat: true,
 };
 
 // ----------------------------------------------------------------------------
