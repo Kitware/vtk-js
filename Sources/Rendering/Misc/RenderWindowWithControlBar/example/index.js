@@ -1,15 +1,15 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
-import vtkRenderWindowWithControlBar from 'vtk.js/Sources/Rendering/Misc/RenderWindowWithControlBar';
-import vtkSlider from 'vtk.js/Sources/Interaction/UI/Slider';
-import vtkCornerAnnotation from 'vtk.js/Sources/Interaction/UI/CornerAnnotation';
+import vtkRenderWindowWithControlBar from '@kitware/vtk.js/Rendering/Misc/RenderWindowWithControlBar';
+import vtkSlider from '@kitware/vtk.js/Interaction/UI/Slider';
+import vtkCornerAnnotation from '@kitware/vtk.js/Interaction/UI/CornerAnnotation';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
 // Define container size/position
 const body = document.querySelector('body');

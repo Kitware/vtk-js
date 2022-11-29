@@ -1,15 +1,15 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
-import vtkPLYWriter from 'vtk.js/Sources/IO/Geometry/PLYWriter';
-import vtkPLYReader from 'vtk.js/Sources/IO/Geometry/PLYReader';
-import vtkPolyDataReader from 'vtk.js/Sources/IO/Legacy/PolyDataReader';
+import vtkPLYWriter from '@kitware/vtk.js/IO/Geometry/PLYWriter';
+import vtkPLYReader from '@kitware/vtk.js/IO/Geometry/PLYReader';
+import vtkPolyDataReader from '@kitware/vtk.js/IO/Legacy/PolyDataReader';
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------

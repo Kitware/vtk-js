@@ -1,22 +1,22 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
-import 'vtk.js/Sources/Rendering/Profiles/Glyph';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Glyph';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkSphereSource from '@kitware/vtk.js/Filters/Sources/SphereSource';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
+import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
+import vtkGlyph3DMapper from '@kitware/vtk.js/Rendering/Core/Glyph3DMapper';
 
 import {
   ColorMode,
   ScalarMode,
-} from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
+} from '@kitware/vtk.js/Rendering/Core/Mapper/Constants';
 
-import { OrientationModes } from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper/Constants';
+import { OrientationModes } from '@kitware/vtk.js/Rendering/Core/Glyph3DMapper/Constants';
 
 import controlPanel from './controller.html';
 

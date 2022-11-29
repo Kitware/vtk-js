@@ -1,15 +1,15 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
-import 'vtk.js/Sources/Rendering/Profiles/Molecule'; // vtkSphereMapper + vtkStickMapper
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Molecule'; // vtkSphereMapper + vtkStickMapper
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkPDBReader from 'vtk.js/Sources/IO/Misc/PDBReader';
-import vtkSphereMapper from 'vtk.js/Sources/Rendering/Core/SphereMapper';
-import vtkStickMapper from 'vtk.js/Sources/Rendering/Core/StickMapper';
-import vtkMoleculeToRepresentation from 'vtk.js/Sources/Filters/General/MoleculeToRepresentation';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkPDBReader from '@kitware/vtk.js/IO/Misc/PDBReader';
+import vtkSphereMapper from '@kitware/vtk.js/Rendering/Core/SphereMapper';
+import vtkStickMapper from '@kitware/vtk.js/Rendering/Core/StickMapper';
+import vtkMoleculeToRepresentation from '@kitware/vtk.js/Filters/General/MoleculeToRepresentation';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

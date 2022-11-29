@@ -1,16 +1,16 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkElevationReader from 'vtk.js/Sources/IO/Misc/ElevationReader';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkInteractorStyleManipulator from 'vtk.js/Sources/Interaction/Style/InteractorStyleManipulator';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkElevationReader from '@kitware/vtk.js/IO/Misc/ElevationReader';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkInteractorStyleManipulator from '@kitware/vtk.js/Interaction/Style/InteractorStyleManipulator';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkTexture from '@kitware/vtk.js/Rendering/Core/Texture';
 
-import Manipulators from 'vtk.js/Sources/Interaction/Manipulators';
+import Manipulators from '@kitware/vtk.js/Interaction/Manipulators';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
