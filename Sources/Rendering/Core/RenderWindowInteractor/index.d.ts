@@ -1,4 +1,5 @@
 import { vtkObject, vtkSubscription } from "../../../interfaces";
+import { Nullable } from "../../../types";
 import vtkRenderer from "../Renderer";
 import { Axis, Device, Input } from "./Constants";
 
@@ -1152,7 +1153,7 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	 * @param {Number} x 
 	 * @param {Number} y 
 	 */
-	findPokedRenderer(x: number, y: number): vtkRenderer;
+	findPokedRenderer(x: number, y: number): Nullable<vtkRenderer>;
 
 	/**
 	 * only render if we are not animating. If we are animating

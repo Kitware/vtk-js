@@ -811,7 +811,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // The original order of renderers needs to remain as
     // the first one is the one we want to manipulate the camera on.
     const rc = model._view?.getRenderable()?.getRenderers();
-    if (!rc) {
+    if (!rc || rc.length === 0) {
       return null;
     }
     rc.sort((a, b) => a.getLayer() - b.getLayer());
