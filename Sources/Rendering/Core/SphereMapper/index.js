@@ -17,6 +17,7 @@ function vtkSphereMapper(publicAPI, model) {
 const DEFAULT_VALUES = {
   scaleArray: null,
   radius: 0.05,
+  scaleFactor: 1.0,
 };
 
 // ----------------------------------------------------------------------------
@@ -27,7 +28,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkMapper.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['radius', 'scaleArray']);
+  macro.setGet(publicAPI, model, ['radius', 'scaleArray', 'scaleFactor']);
 
   // Object methods
   vtkSphereMapper(publicAPI, model);

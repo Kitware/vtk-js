@@ -41,6 +41,7 @@ varying float radiusVCVSOutput;
 varying vec3 centerVCVSOutput;
 
 uniform int cameraParallel;
+uniform float scaleFactor;
 
 void main()
 {
@@ -53,9 +54,10 @@ void main()
   //VTK::Clip::Impl
 
   // compute the projected vertex position
+  vec2 scaledOffsetMC = scaleFactor * offsetMC;
   vertexVCVSOutput = MCVCMatrix * vertexMC;
   centerVCVSOutput = vertexVCVSOutput.xyz;
-  radiusVCVSOutput = length(offsetMC)*0.5;
+  radiusVCVSOutput = length(scaledOffsetMC)*0.5;
 
   // make the triangle face the camera
   if (cameraParallel == 0)
@@ -63,12 +65,12 @@ void main()
     vec3 dir = normalize(-vertexVCVSOutput.xyz);
     vec3 base2 = normalize(cross(dir,vec3(1.0,0.0,0.0)));
     vec3 base1 = cross(base2,dir);
-    vertexVCVSOutput.xyz = vertexVCVSOutput.xyz + offsetMC.x*base1 + offsetMC.y*base2;
+    vertexVCVSOutput.xyz = vertexVCVSOutput.xyz + scaledOffsetMC.x*base1 + scaledOffsetMC.y*base2;
     }
   else
     {
     // add in the offset
-    vertexVCVSOutput.xy = vertexVCVSOutput.xy + offsetMC;
+    vertexVCVSOutput.xy = vertexVCVSOutput.xy + scaledOffsetMC;
     }
 
   gl_Position = VCPCMatrix * vertexVCVSOutput;
