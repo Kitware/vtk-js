@@ -283,23 +283,25 @@ function vtkWidgetManager(publicAPI, model) {
     // Default cursor behavior
     model._apiSpecificRenderWindow.setCursor(widget ? 'pointer' : 'default');
 
+    let wantRender = false;
     if (model.widgetInFocus === widget && widget.hasFocus()) {
       activateHandle(widget);
-      // Ken FIXME
-      model._interactor.render();
-      model._interactor.render();
+      wantRender = true;
     } else {
       for (let i = 0; i < model.widgets.length; i++) {
         const w = model.widgets[i];
         if (w === widget && w.getNestedPickable()) {
           activateHandle(w);
           model.activeWidget = w;
+          wantRender = true;
         } else {
+          wantRender ||= !!w.getActiveState();
           w.deactivateAllHandles();
         }
       }
-      // Ken FIXME
-      model._interactor.render();
+    }
+
+    if (wantRender) {
       model._interactor.render();
     }
   }
@@ -524,17 +526,17 @@ function vtkWidgetManager(publicAPI, model) {
       // do we require a new capture?
       if (!model._capturedBuffers || model.captureOn === CaptureOn.MOUSE_MOVE) {
         await captureBuffers(x, y, x, y);
-      }
-
-      // or do we need a pixel that is outside the last capture?
-      const capturedRegion = model._capturedBuffers.area;
-      if (
-        x < capturedRegion[0] ||
-        x > capturedRegion[2] ||
-        y < capturedRegion[1] ||
-        y > capturedRegion[3]
-      ) {
-        await captureBuffers(x, y, x, y);
+      } else {
+        // or do we need a pixel that is outside the last capture?
+        const capturedRegion = model._capturedBuffers.area;
+        if (
+          x < capturedRegion[0] ||
+          x > capturedRegion[2] ||
+          y < capturedRegion[1] ||
+          y > capturedRegion[3]
+        ) {
+          await captureBuffers(x, y, x, y);
+        }
       }
 
       model.selections = model._capturedBuffers.generateSelection(x, y, x, y);

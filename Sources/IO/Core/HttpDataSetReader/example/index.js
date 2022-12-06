@@ -1,15 +1,15 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
 // Force the loading of HttpDataAccessHelper to support gzip decompression
-import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

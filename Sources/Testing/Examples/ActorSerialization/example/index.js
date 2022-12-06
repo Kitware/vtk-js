@@ -1,10 +1,10 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/All';
+import '@kitware/vtk.js/Rendering/Profiles/All';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtk from 'vtk.js/Sources/vtk';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtk from '@kitware/vtk.js/vtk';
 
 import actorJSON from './actor.json';
 

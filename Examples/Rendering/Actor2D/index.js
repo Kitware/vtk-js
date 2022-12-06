@@ -1,23 +1,23 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkActor2D from 'vtk.js/Sources/Rendering/Core/Actor2D';
-import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkCoordinate from 'vtk.js/Sources/Rendering/Core/Coordinate';
-import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkMapper2D from 'vtk.js/Sources/Rendering/Core/Mapper2D';
-import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
-import { DisplayLocation } from 'vtk.js/Sources/Rendering/Core/Property2D/Constants';
-import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkActor2D from '@kitware/vtk.js/Rendering/Core/Actor2D';
+import vtkCalculator from '@kitware/vtk.js/Filters/General/Calculator';
+import vtkCoordinate from '@kitware/vtk.js/Rendering/Core/Coordinate';
+import vtkSphereSource from '@kitware/vtk.js/Filters/Sources/SphereSource';
+import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkMapper2D from '@kitware/vtk.js/Rendering/Core/Mapper2D';
+import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
+import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
+import { DisplayLocation } from '@kitware/vtk.js/Rendering/Core/Property2D/Constants';
+import { Representation } from '@kitware/vtk.js/Rendering/Core/Property/Constants';
 
-import vtkFPSMonitor from 'vtk.js/Sources/Interaction/UI/FPSMonitor';
+import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
 
 import controlPanel from './controller.html';
 

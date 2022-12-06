@@ -173,6 +173,21 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
         .getProgram()
         .setUniformf('invertedDepth', model.invert ? -1.0 : 1.0);
     }
+    if (cellBO.getProgram().isUniformUsed('scaleFactor')) {
+      // apply scaling factor only if a scale array has been provided.
+      const poly = model.currentInput;
+      const pointData = poly.getPointData();
+      if (
+        model.renderable.getScaleArray() != null &&
+        pointData.hasArray(model.renderable.getScaleArray())
+      ) {
+        cellBO
+          .getProgram()
+          .setUniformf('scaleFactor', model.renderable.getScaleFactor());
+      } else {
+        cellBO.getProgram().setUniformf('scaleFactor', 1.0);
+      }
+    }
 
     superClass.setMapperShaderParameters(cellBO, ren, actor);
   };

@@ -1,6 +1,6 @@
-import vtkWSLinkClient from 'vtk.js/Sources/IO/Core/WSLinkClient';
+import vtkWSLinkClient from '@kitware/vtk.js/IO/Core/WSLinkClient';
 import SmartConnect from 'wslink/src/SmartConnect';
-import vtkRemoteView from 'vtk.js/Sources/Rendering/Misc/RemoteView';
+import vtkRemoteView from '@kitware/vtk.js/Rendering/Misc/RemoteView';
 
 vtkWSLinkClient.setSmartConnectClass(SmartConnect);
 

@@ -112,7 +112,11 @@ export function extend(publicAPI, model, initialValues = {}) {
     'handleVisibility',
     '_widgetManager',
   ]);
-  macro.get(publicAPI, model, ['representations', 'widgetState']);
+  macro.get(publicAPI, model, [
+    'representations',
+    'widgetState',
+    'activeState',
+  ]);
   macro.moveToProtected(publicAPI, model, ['widgetManager']);
   macro.event(publicAPI, model, 'ActivateHandle');
 

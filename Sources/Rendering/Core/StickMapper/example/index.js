@@ -1,17 +1,17 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
-import 'vtk.js/Sources/Rendering/Profiles/Molecule'; // vtkStickMapper
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Molecule'; // vtkStickMapper
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
-import vtkStickMapper from 'vtk.js/Sources/Rendering/Core/StickMapper';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkCalculator from '@kitware/vtk.js/Filters/General/Calculator';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkPlaneSource from '@kitware/vtk.js/Filters/Sources/PlaneSource';
+import vtkStickMapper from '@kitware/vtk.js/Rendering/Core/StickMapper';
 
-import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
+import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
 
 import controlPanel from './controlPanel.html';
 

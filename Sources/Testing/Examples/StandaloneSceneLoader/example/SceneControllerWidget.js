@@ -1,4 +1,4 @@
-import vtkHttpSceneLoader from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
+import vtkHttpSceneLoader from '@kitware/vtk.js/IO/Core/HttpSceneLoader';
 
 const SETTINGS_OPTIONS = {
   defaultSettings: {},

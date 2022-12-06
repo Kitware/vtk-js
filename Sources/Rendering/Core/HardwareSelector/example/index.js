@@ -1,28 +1,28 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable import/no-extraneous-dependencies */
 
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
-import 'vtk.js/Sources/Rendering/OpenGL/Glyph3DMapper';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/OpenGL/Glyph3DMapper';
 
-import { throttle } from 'vtk.js/Sources/macros';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
-import vtkPolydata from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
+import { throttle } from '@kitware/vtk.js/macros';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
+import vtkCylinderSource from '@kitware/vtk.js/Filters/Sources/CylinderSource';
+import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkGlyph3DMapper from '@kitware/vtk.js/Rendering/Core/Glyph3DMapper';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkSphereSource from '@kitware/vtk.js/Filters/Sources/SphereSource';
+import vtkCubeSource from '@kitware/vtk.js/Filters/Sources/CubeSource';
+import vtkPolydata from '@kitware/vtk.js/Common/DataModel/PolyData';
+import vtkMatrixBuilder from '@kitware/vtk.js/Common/Core/MatrixBuilder';
 import { mat4 } from 'gl-matrix';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
-import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import vtkMath from '@kitware/vtk.js/Common/Core/Math';
+import { FieldAssociations } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
+import { Representation } from '@kitware/vtk.js/Rendering/Core/Property/Constants';
 
 // ----------------------------------------------------------------------------
 // Constants

@@ -1,31 +1,31 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/All';
+import '@kitware/vtk.js/Rendering/Profiles/All';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
-import vtkPaintWidget from 'vtk.js/Sources/Widgets/Widgets3D/PaintWidget';
-import vtkRectangleWidget from 'vtk.js/Sources/Widgets/Widgets3D/RectangleWidget';
-import vtkEllipseWidget from 'vtk.js/Sources/Widgets/Widgets3D/EllipseWidget';
-import vtkSplineWidget from 'vtk.js/Sources/Widgets/Widgets3D/SplineWidget';
-import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
-import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import vtkPaintFilter from 'vtk.js/Sources/Filters/General/PaintFilter';
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
+import vtkPaintWidget from '@kitware/vtk.js/Widgets/Widgets3D/PaintWidget';
+import vtkRectangleWidget from '@kitware/vtk.js/Widgets/Widgets3D/RectangleWidget';
+import vtkEllipseWidget from '@kitware/vtk.js/Widgets/Widgets3D/EllipseWidget';
+import vtkSplineWidget from '@kitware/vtk.js/Widgets/Widgets3D/SplineWidget';
+import vtkInteractorStyleImage from '@kitware/vtk.js/Interaction/Style/InteractorStyleImage';
+import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
+import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper';
+import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
+import vtkPaintFilter from '@kitware/vtk.js/Filters/General/PaintFilter';
+import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
 
 // Force the loading of HttpDataAccessHelper to support gzip decompression
-import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
 import {
   BehaviorCategory,
   ShapeBehavior,
-} from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
+} from '@kitware/vtk.js/Widgets/Widgets3D/ShapeWidget/Constants';
 
-import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import { ViewTypes } from '@kitware/vtk.js/Widgets/Core/WidgetManager/Constants';
 
 import { vec3 } from 'gl-matrix';
 

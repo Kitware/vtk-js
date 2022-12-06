@@ -644,10 +644,14 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // if the opengl data type is half float
     // then the data array must be u16
-    const halfFloatExt = model.context.getExtension('OES_texture_half_float');
-    const halfFloat = model._openGLRenderWindow.getWebgl2()
-      ? model.openGLDataType === model.context.HALF_FLOAT
-      : halfFloatExt && model.openGLDataType === halfFloatExt.HALF_FLOAT_OES;
+    let halfFloat = false;
+    if (model._openGLRenderWindow.getWebgl2()) {
+      halfFloat = model.openGLDataType === model.context.HALF_FLOAT;
+    } else {
+      const halfFloatExt = model.context.getExtension('OES_texture_half_float');
+      halfFloat =
+        halfFloatExt && model.openGLDataType === halfFloatExt.HALF_FLOAT_OES;
+    }
 
     if (halfFloat) {
       for (let idx = 0; idx < data.length; idx++) {
@@ -1103,10 +1107,14 @@ function vtkOpenGLTexture(publicAPI, model) {
     const useHalfFloatType = true;
     publicAPI.getOpenGLDataType(dataType, useHalfFloatType);
 
-    const halfFloatExt = model.context.getExtension('OES_texture_half_float');
-    const useHalfFloat = model._openGLRenderWindow.getWebgl2()
-      ? model.openGLDataType === model.context.HALF_FLOAT
-      : halfFloatExt && model.openGLDataType === halfFloatExt.HALF_FLOAT_OES;
+    let useHalfFloat = false;
+    if (model._openGLRenderWindow.getWebgl2()) {
+      useHalfFloat = model.openGLDataType === model.context.HALF_FLOAT;
+    } else {
+      const halfFloatExt = model.context.getExtension('OES_texture_half_float');
+      useHalfFloat =
+        halfFloatExt && model.openGLDataType === halfFloatExt.HALF_FLOAT_OES;
+    }
 
     if (!useHalfFloat) {
       return false;

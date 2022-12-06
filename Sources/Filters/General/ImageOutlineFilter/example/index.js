@@ -1,17 +1,17 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Volume';
+import '@kitware/vtk.js/Rendering/Profiles/Volume';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
-import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
-import vtkImageOutlineFilter from 'vtk.js/Sources/Filters/General/ImageOutlineFilter';
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
+import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper';
+import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
+import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
+import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
+import vtkImageData from '@kitware/vtk.js/Common/DataModel/ImageData';
+import vtkImageOutlineFilter from '@kitware/vtk.js/Filters/General/ImageOutlineFilter';
+import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
 import controlPanel from './controlPanel.html';
 
 const fullScreenRenderWindow = vtkFullScreenRenderWindow.newInstance({

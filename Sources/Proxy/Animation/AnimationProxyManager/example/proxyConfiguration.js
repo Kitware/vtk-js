@@ -1,8 +1,8 @@
-import vtkSourceProxy from 'vtk.js/Sources/Proxy/Core/SourceProxy';
-import vtkView from 'vtk.js/Sources/Proxy/Core/ViewProxy';
-import vtkGeometryRepresentationProxy from 'vtk.js/Sources/Proxy/Representations/GeometryRepresentationProxy';
-import vtkTimeStepBasedAnimationProxy from 'vtk.js/Sources/Proxy/Animation/TimeStepBasedAnimationHandlerProxy';
-import vtkAnimationProxyManager from 'vtk.js/Sources/Proxy/Animation/AnimationProxyManager';
+import vtkSourceProxy from '@kitware/vtk.js/Proxy/Core/SourceProxy';
+import vtkView from '@kitware/vtk.js/Proxy/Core/ViewProxy';
+import vtkGeometryRepresentationProxy from '@kitware/vtk.js/Proxy/Representations/GeometryRepresentationProxy';
+import vtkTimeStepBasedAnimationProxy from '@kitware/vtk.js/Proxy/Animation/TimeStepBasedAnimationHandlerProxy';
+import vtkAnimationProxyManager from '@kitware/vtk.js/Proxy/Animation/AnimationProxyManager';
 
 export default {
   definitions: {

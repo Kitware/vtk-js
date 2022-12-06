@@ -1,6 +1,7 @@
 const path = require('path');
 
-const vtkBasePath = path.resolve('.');
+const umdVtkBasePath = path.resolve('.');
+const esmVtkBasePath = path.resolve('./Sources');
 
 const settings = require('../../webpack.settings.js');
 
@@ -46,7 +47,8 @@ module.exports = {
   },
   resolve: {
     alias: {
-      'vtk.js': '${vtkBasePath.replace(/\\/g, '\\\\')}',
+      'vtk.js': '${umdVtkBasePath.replace(/\\/g, '\\\\')}',
+      '@kitware/vtk.js': '${esmVtkBasePath.replace(/\\/g, '\\\\')}',
     },
     fallback: {
       fs: false,

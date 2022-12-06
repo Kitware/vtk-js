@@ -1,17 +1,17 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
-import 'vtk.js/Sources/Rendering/Profiles/Molecule'; // vtkSphereMapper
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Molecule'; // vtkSphereMapper
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
-import vtkSphereMapper from 'vtk.js/Sources/Rendering/Core/SphereMapper';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkCalculator from '@kitware/vtk.js/Filters/General/Calculator';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkPlaneSource from '@kitware/vtk.js/Filters/Sources/PlaneSource';
+import vtkSphereMapper from '@kitware/vtk.js/Rendering/Core/SphereMapper';
 
-import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
+import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
 
 import controlPanel from './controlPanel.html';
 
@@ -98,6 +98,12 @@ fullScreenRenderer.addController(controlPanel);
     planeSource.set({ [propertyName]: value });
     renderWindow.render();
   });
+});
+
+document.querySelector('.scaleFactor').addEventListener('input', (e) => {
+  const value = Number(e.target.value);
+  mapper.setScaleFactor(value);
+  renderWindow.render();
 });
 
 // -----------------------------------------------------------

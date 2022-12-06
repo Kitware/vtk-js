@@ -53,6 +53,7 @@ module.exports = {
               'vtk.js/Utilities': path.resolve(__dirname, 'Utilities'),
               'vtk.js/Sources': path.resolve(__dirname, 'Sources'),
               'vtk.js': path.resolve(__dirname, 'Sources'),
+              '@kitware/vtk.js': path.resolve(__dirname, 'Sources'),
             },
           },
         },

@@ -77,6 +77,7 @@ module.exports = {
     ],
     alias: [
       "'vtk.js/Sources': `${rootPath}/dist/esm`,",
+      "'@kitware/vtk.js': `${rootPath}/dist/esm`,",
       "'vtk.js': `${rootPath}`,",
     ],
   },

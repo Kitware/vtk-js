@@ -1,16 +1,16 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
-import vtkArrowSource from 'vtk.js/Sources/Filters/Sources/ArrowSource';
-import vtkOBBTree from 'vtk.js/Sources/Filters/General/OBBTree';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkTriangleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter';
-import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
+import vtkArrowSource from '@kitware/vtk.js/Filters/Sources/ArrowSource';
+import vtkOBBTree from '@kitware/vtk.js/Filters/General/OBBTree';
+import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
+import vtkTriangleFilter from '@kitware/vtk.js/Filters/General/TriangleFilter';
+import vtkTubeFilter from '@kitware/vtk.js/Filters/General/TubeFilter';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

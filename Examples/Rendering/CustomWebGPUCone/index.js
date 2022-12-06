@@ -1,14 +1,14 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for WebGPU)
-import 'vtk.js/Sources/Rendering/WebGPU/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/WebGPU/Profiles/Geometry';
 
-import * as macro from 'vtk.js/Sources/macros';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkWebGPUPolyDataMapper from 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper';
+import * as macro from '@kitware/vtk.js/macros';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkWebGPUPolyDataMapper from '@kitware/vtk.js/Rendering/WebGPU/PolyDataMapper';
 
 import controlPanel from './controller.html';
 

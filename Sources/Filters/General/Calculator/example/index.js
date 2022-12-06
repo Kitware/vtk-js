@@ -1,20 +1,20 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
-import macro from 'vtk.js/Sources/macros';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import macro from '@kitware/vtk.js/macros';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
-import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
-import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkWarpScalar from 'vtk.js/Sources/Filters/General/WarpScalar';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkCalculator from '@kitware/vtk.js/Filters/General/Calculator';
+import vtkDataSet from '@kitware/vtk.js/Common/DataModel/DataSet';
+import vtkLookupTable from '@kitware/vtk.js/Common/Core/LookupTable';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkPlaneSource from '@kitware/vtk.js/Filters/Sources/PlaneSource';
+import vtkPoints from '@kitware/vtk.js/Common/Core/Points';
+import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
+import vtkWarpScalar from '@kitware/vtk.js/Filters/General/WarpScalar';
 
 import controlPanel from './controlPanel.html';
 

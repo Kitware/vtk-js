@@ -1,24 +1,24 @@
-import 'vtk.js/Sources/favicon';
+import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import 'vtk.js/Sources/Rendering/Profiles/Geometry';
-import 'vtk.js/Sources/Rendering/Profiles/Volume';
+import '@kitware/vtk.js/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Volume';
 
 // Force DataAccessHelper to have access to various data source
-import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
-import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
-import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-// import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-// import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-// import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
+import vtkCubeSource from '@kitware/vtk.js/Filters/Sources/CubeSource';
+import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+// import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
+// import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
+// import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
 import controlPanel from './controller.html';
 
 // ----------------------------------------------------------------------------
