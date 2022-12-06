@@ -161,7 +161,6 @@ const DEFAULT_VALUES = {
   localAmbientOcclusion: false,
   LAOKernelSize: 15,
   LAOKernelRadius: 7,
-  useExperimentalNorm16Texture: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -187,7 +186,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'localAmbientOcclusion',
     'LAOKernelSize',
     'LAOKernelRadius',
-    'useExperimentalNorm16Texture',
   ]);
 
   macro.setGetArray(publicAPI, model, ['ipScalarRange'], 2);

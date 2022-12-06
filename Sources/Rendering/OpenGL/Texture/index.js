@@ -374,20 +374,11 @@ function vtkOpenGLTexture(publicAPI, model) {
     result = model._openGLRenderWindow.getDefaultTextureInternalFormat(
       vtktype,
       numComps,
-      false, // useFloat
-      model.useNorm16
+      model.oglNorm16Ext
     );
     if (result) {
       return result;
     }
-
-    // try floating point
-    result = this._openGLRenderWindow.getDefaultTextureInternalFormat(
-      vtktype,
-      numComps,
-      true, // useFloat
-      model.useNorm16
-    );
 
     if (!result) {
       vtkDebugMacro('Unsupported internal texture type!');
@@ -465,9 +456,9 @@ function vtkOpenGLTexture(publicAPI, model) {
           return model.context.UNSIGNED_BYTE;
         // prefer norm16 since that is accurate compared to
         // half float which is not
-        case model.useNorm16 && VtkDataTypes.SHORT:
+        case model.oglNorm16Ext && VtkDataTypes.SHORT:
           return model.context.SHORT;
-        case model.useNorm16 && VtkDataTypes.UNSIGNED_SHORT:
+        case model.oglNorm16Ext && VtkDataTypes.UNSIGNED_SHORT:
           return model.context.UNSIGNED_SHORT;
         // use half float type
         case model.useHalfFloat && VtkDataTypes.SHORT:
@@ -1102,6 +1093,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     for (let c = 0; c < offset.length; c++) {
       const min = offset[c];
       const max = scale[c] + min;
+
+      console.debug('min', min, 'max', max);
       if (min < -2048 || min > 2048 || max < -2048 || max > 2048) {
         return false;
       }
@@ -1174,6 +1167,10 @@ function vtkOpenGLTexture(publicAPI, model) {
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     // model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
+    // openGLDataType
+    console.debug('openGLDataType', model.openGLDataType);
+    console.debug('scaledData', scaledData[0]);
+
     model.context.texImage3D(
       model.target,
       0,
@@ -1204,8 +1201,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     numComps,
     dataType,
     data,
-    preferSizeOverAccuracy = false,
-    useExperimentalNorm16Texture = false
+    preferSizeOverAccuracy = false
   ) => {
     const numPixelsIn = width * height * depth;
 
@@ -1231,13 +1227,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.volumeInfo.dataComputedScale = computedScale;
     model.volumeInfo.dataComputedOffset = computedOffset;
 
-    // Check whether 16bit texture extension is available
-    model.useNorm16 =
-      useExperimentalNorm16Texture &&
-      model.context.getExtension('EXT_texture_norm16');
-
     // if we can use norm16, there is no need to use halfFloat then
-    const useHalfFloat = model.useNorm16
+    model.useHalfFloat = model.oglNorm16Ext
       ? false
       : checkUseHalfFloat(
           dataType,
@@ -1245,8 +1236,6 @@ function vtkOpenGLTexture(publicAPI, model) {
           computedScale,
           preferSizeOverAccuracy
         );
-
-    model.useHalfFloat = useHalfFloat;
 
     // since our default is to use half float, in case that we can't use it
     // we need to use another type
@@ -1271,7 +1260,7 @@ function vtkOpenGLTexture(publicAPI, model) {
           data
         );
       }
-      if (model.useNorm16 && dataType === VtkDataTypes.SHORT) {
+      if (model.oglNorm16Ext && dataType === VtkDataTypes.SHORT) {
         for (let c = 0; c < numComps; ++c) {
           model.volumeInfo.scale[c] = 65535.0;
         }
@@ -1284,7 +1273,7 @@ function vtkOpenGLTexture(publicAPI, model) {
           data
         );
       }
-      if (model.useNorm16 && dataType === VtkDataTypes.UNSIGNED_SHORT) {
+      if (model.oglNorm16Ext && dataType === VtkDataTypes.UNSIGNED_SHORT) {
         for (let c = 0; c < numComps; ++c) {
           model.volumeInfo.scale[c] = 32767.0;
         }
@@ -1551,6 +1540,7 @@ const DEFAULT_VALUES = {
   // the voxel intensity range is out of the accurate
   // range of half float
   useHalfFloat: true,
+  oglNorm16Ext: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -1578,6 +1568,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'wrapT',
     'wrapR',
     'generateMipmap',
+    'oglNorm16Ext',
   ]);
 
   macro.get(publicAPI, model, [

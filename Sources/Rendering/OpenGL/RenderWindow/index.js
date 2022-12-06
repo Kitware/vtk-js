@@ -528,11 +528,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.getDefaultTextureInternalFormat = (
     vtktype,
     numComps,
-    useFloat = false,
-    useNorm16 = false
+    oglNorm16Ext = null
   ) => {
     if (model.webgl2) {
-      const ext = model.context.getExtension('EXT_texture_norm16');
       switch (vtktype) {
         case VtkDataTypes.UNSIGNED_CHAR:
           switch (numComps) {
@@ -546,30 +544,30 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
             default:
               return model.context.RGBA8;
           }
-        case useNorm16 && VtkDataTypes.UNSIGNED_SHORT:
+        case oglNorm16Ext && VtkDataTypes.UNSIGNED_SHORT:
           switch (numComps) {
             case 1:
-              return ext.R16_EXT;
+              return oglNorm16Ext.R16_EXT;
             case 2:
-              return ext.RG16_EXT;
+              return oglNorm16Ext.RG16_EXT;
             case 3:
-              return ext.RGB16_EXT;
+              return oglNorm16Ext.RGB16_EXT;
             case 4:
             default:
-              return ext.RGBA16_EXT;
+              return oglNorm16Ext.RGBA16_EXT;
           }
         // prioritize norm16 over float
-        case useNorm16 && VtkDataTypes.SHORT:
+        case oglNorm16Ext && VtkDataTypes.SHORT:
           switch (numComps) {
             case 1:
-              return ext.R16_SNORM_EXT;
+              return oglNorm16Ext.R16_SNORM_EXT;
             case 2:
-              return ext.RG16_SNORM_EXT;
+              return oglNorm16Ext.RG16_SNORM_EXT;
             case 3:
-              return ext.RGB16_SNORM_EXT;
+              return oglNorm16Ext.RGB16_SNORM_EXT;
             case 4:
             default:
-              return ext.RGBA16_SNORM_EXT;
+              return oglNorm16Ext.RGBA16_SNORM_EXT;
           }
         case VtkDataTypes.FLOAT:
         default:

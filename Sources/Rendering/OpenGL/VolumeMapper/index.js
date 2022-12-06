@@ -1493,6 +1493,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (model.scalarTextureString !== toString) {
       // Build the textures
       const dims = image.getDimensions();
+      // Use norm16 for scalar texture if the extension is available
+      model.scalarTexture.setOglNorm16Ext(
+        model.context.getExtension('EXT_texture_norm16')
+      );
       model.scalarTexture.releaseGraphicsResources(model._openGLRenderWindow);
       model.scalarTexture.resetFormatAndType();
       model.scalarTexture.create3DFilterableFromRaw(
@@ -1502,8 +1506,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         numComp,
         scalars.getDataType(),
         scalars.getData(),
-        model.renderable.getPreferSizeOverAccuracy(),
-        model.renderable.getUseExperimentalNorm16Texture()
+        model.renderable.getPreferSizeOverAccuracy()
       );
       model.scalarTextureString = toString;
     }
