@@ -100,6 +100,12 @@ fullScreenRenderer.addController(controlPanel);
   });
 });
 
+document.querySelector('.scaleFactor').addEventListener('input', (e) => {
+  const value = Number(e.target.value);
+  mapper.setScaleFactor(value);
+  renderWindow.render();
+});
+
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
 // modify objects in your browser's developer console:
