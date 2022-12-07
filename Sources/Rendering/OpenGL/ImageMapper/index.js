@@ -933,7 +933,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       const dims = image.getDimensions();
       if (iType === InterpolationType.NEAREST) {
         if (
-          numComp === 4 &&
+          new Set([1, 3, 4]).has(numComp) &&
           dataType === VtkDataTypes.UNSIGNED_CHAR &&
           !iComps
         ) {
