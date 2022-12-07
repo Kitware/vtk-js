@@ -237,7 +237,7 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
         for (let id = 0; id < numPoints; ++id) {
           let radius = model.renderable.getRadius();
           if (scales) {
-            radius = scales[id];
+            radius = scales[id] * model.renderable.getScaleFactor();
           }
           tmpVBO[vboIdx++] = -2.0 * radius * cos30;
           tmpVBO[vboIdx++] = -radius;

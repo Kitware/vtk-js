@@ -18,6 +18,11 @@ export interface vtkSphereMapper extends vtkMapper {
 
 	/**
 	 * 
+	 */
+	getScaleFactor(): number;
+
+	/**
+	 * 
 	 * @param {Number} radius 
 	 */
 	setRadius(radius: number): boolean;
@@ -27,6 +32,13 @@ export interface vtkSphereMapper extends vtkMapper {
 	 * @param scaleArray 
 	 */
 	setScaleArray(scaleArray: any): boolean;
+
+/**
+	 * Factor multiplied with scale array elements. Radius is used when no scale array is given.
+	 * @param scaleFactor number to multiply with when a scale array is provided. 1 by default.
+	 * @see getScaleFactor(), setScaleArray(), setRadius()
+	 */ 
+	setScaleFactor(scaleFactor: number): boolean;
 }
 
 /**
