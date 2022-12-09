@@ -1262,7 +1262,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       }
       if (model.oglNorm16Ext && dataType === VtkDataTypes.SHORT) {
         for (let c = 0; c < numComps; ++c) {
-          model.volumeInfo.scale[c] = 65535.0;
+          model.volumeInfo.scale[c] = 32767.0;
         }
         return publicAPI.create3DFromRaw(
           width,
@@ -1275,7 +1275,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       }
       if (model.oglNorm16Ext && dataType === VtkDataTypes.UNSIGNED_SHORT) {
         for (let c = 0; c < numComps; ++c) {
-          model.volumeInfo.scale[c] = 32767.0;
+          model.volumeInfo.scale[c] = 65535.0;
         }
         return publicAPI.create3DFromRaw(
           width,
