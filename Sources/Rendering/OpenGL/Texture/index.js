@@ -1094,7 +1094,6 @@ function vtkOpenGLTexture(publicAPI, model) {
       const min = offset[c];
       const max = scale[c] + min;
 
-      console.debug('min', min, 'max', max);
       if (min < -2048 || min > 2048 || max < -2048 || max > 2048) {
         return false;
       }
@@ -1168,8 +1167,6 @@ function vtkOpenGLTexture(publicAPI, model) {
     // model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     // openGLDataType
-    console.debug('openGLDataType', model.openGLDataType);
-    console.debug('scaledData', scaledData[0]);
 
     model.context.texImage3D(
       model.target,
