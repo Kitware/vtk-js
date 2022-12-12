@@ -118,8 +118,13 @@ function vtkMouseBoxSelectionManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
 
   publicAPI.onButtonUp = (interactor, renderer) => {
-    if (!previousPosition || !currentPosition) {
+    if (!previousPosition || (!currentPosition && !model.boxChangeOnClick)) {
       return;
+    }
+
+    // needed because of boxChangeOnClick
+    if (!currentPosition) {
+      currentPosition = previousPosition;
     }
 
     publicAPI.invokeBoxSelectChange({
@@ -148,6 +153,7 @@ function vtkMouseBoxSelectionManipulator(publicAPI, model) {
 function DEFAULT_VALUES(initialValues) {
   return {
     // container: null,
+    boxChangeOnClick: false,
     renderSelection: true,
     ...initialValues,
     selectionStyle: {
@@ -169,6 +175,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.event(publicAPI, model, 'BoxSelectInput'); // Trigger while dragging
   macro.setGet(publicAPI, model, [
     'renderSelection',
+    'boxChangeOnClick',
     'selectionStyle',
     'container',
   ]);
