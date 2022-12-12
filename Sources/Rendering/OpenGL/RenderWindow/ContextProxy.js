@@ -1,3 +1,6 @@
+// This is used to access the underlying 3D context
+export const GET_UNDERLYING_CONTEXT = '__getUnderlyingContext';
+
 export function createContextProxyHandler() {
   const cache = new Map();
 
@@ -42,6 +45,7 @@ export function createContextProxyHandler() {
 
   return {
     get(gl, prop, receiver) {
+      if (prop === GET_UNDERLYING_CONTEXT) return () => gl;
       let value = Reflect.get(gl, prop, gl);
       if (value instanceof Function) {
         // prevents Illegal Invocation errors
