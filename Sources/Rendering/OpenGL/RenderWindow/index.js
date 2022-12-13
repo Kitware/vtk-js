@@ -8,7 +8,10 @@ import vtkOpenGLTextureUnitManager from 'vtk.js/Sources/Rendering/OpenGL/Texture
 import vtkOpenGLViewNodeFactory from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderWindowViewNode';
-import { createContextProxyHandler } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/ContextProxy';
+import {
+  createContextProxyHandler,
+  GET_UNDERLYING_CONTEXT,
+} from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/ContextProxy';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
 
@@ -325,7 +328,11 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       const gl = publicAPI.get3DContext();
       await gl.makeXRCompatible();
 
-      const glLayer = new global.XRWebGLLayer(model.xrSession, gl);
+      const glLayer = new global.XRWebGLLayer(
+        model.xrSession,
+        // constructor needs unproxied context
+        gl[GET_UNDERLYING_CONTEXT]()
+      );
       publicAPI.setSize(glLayer.framebufferWidth, glLayer.framebufferHeight);
 
       model.xrSession.updateRenderState({
