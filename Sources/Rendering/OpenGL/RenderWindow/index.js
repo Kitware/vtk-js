@@ -532,7 +532,11 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     return -1;
   };
 
-  publicAPI.getDefaultTextureInternalFormat = (vtktype, numComps, useFloat) => {
+  publicAPI.getDefaultTextureInternalFormat = (
+    vtktype,
+    numComps,
+    oglNorm16Ext = null
+  ) => {
     if (model.webgl2) {
       switch (vtktype) {
         case VtkDataTypes.UNSIGNED_CHAR:
@@ -546,6 +550,31 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
             case 4:
             default:
               return model.context.RGBA8;
+          }
+        case oglNorm16Ext && VtkDataTypes.UNSIGNED_SHORT:
+          switch (numComps) {
+            case 1:
+              return oglNorm16Ext.R16_EXT;
+            case 2:
+              return oglNorm16Ext.RG16_EXT;
+            case 3:
+              return oglNorm16Ext.RGB16_EXT;
+            case 4:
+            default:
+              return oglNorm16Ext.RGBA16_EXT;
+          }
+        // prioritize norm16 over float
+        case oglNorm16Ext && VtkDataTypes.SHORT:
+          switch (numComps) {
+            case 1:
+              return oglNorm16Ext.R16_SNORM_EXT;
+            case 2:
+              return oglNorm16Ext.RG16_SNORM_EXT;
+            case 3:
+              return oglNorm16Ext.RGB16_SNORM_EXT;
+            case 4:
+            default:
+              return oglNorm16Ext.RGBA16_SNORM_EXT;
           }
         case VtkDataTypes.FLOAT:
         default:

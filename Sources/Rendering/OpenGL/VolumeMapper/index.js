@@ -968,11 +968,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
       const cfun = vprop.getRGBTransferFunction(target);
       const cRange = cfun.getRange();
-      program.setUniformf(
-        `cshift${i}`,
-        (volInfo.offset[i] - cRange[0]) / (cRange[1] - cRange[0])
-      );
-      program.setUniformf(`cscale${i}`, sscale / (cRange[1] - cRange[0]));
+      const cshift = (volInfo.offset[i] - cRange[0]) / (cRange[1] - cRange[0]);
+      const cScale = sscale / (cRange[1] - cRange[0]);
+      program.setUniformf(`cshift${i}`, cshift);
+      program.setUniformf(`cscale${i}`, cScale);
     }
 
     if (model.gopacity) {
@@ -1496,6 +1495,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (model.scalarTextureString !== toString) {
       // Build the textures
       const dims = image.getDimensions();
+      // Use norm16 for scalar texture if the extension is available
+      model.scalarTexture.setOglNorm16Ext(
+        model.context.getExtension('EXT_texture_norm16')
+      );
       model.scalarTexture.releaseGraphicsResources(model._openGLRenderWindow);
       model.scalarTexture.resetFormatAndType();
       model.scalarTexture.create3DFilterableFromRaw(
