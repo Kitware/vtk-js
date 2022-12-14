@@ -776,6 +776,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.pwfTexture.setMagnificationFilter(Filter.LINEAR);
     }
 
+    const dataType = imgScalars.getDataType();
     const numComp = imgScalars.getNumberOfComponents();
     const iComps = actorProperty.getIndependentComponents();
     const numIComps = iComps ? numComp : 1;
@@ -931,7 +932,11 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       // Build the VBOs
       const dims = image.getDimensions();
       if (iType === InterpolationType.NEAREST) {
-        if (numComp === 4) {
+        if (
+          new Set([1, 3, 4]).has(numComp) &&
+          dataType === VtkDataTypes.UNSIGNED_CHAR &&
+          !iComps
+        ) {
           model.openGLTexture.setGenerateMipmap(true);
           model.openGLTexture.setMinificationFilter(Filter.NEAREST);
         } else {
@@ -939,7 +944,11 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         }
         model.openGLTexture.setMagnificationFilter(Filter.NEAREST);
       } else {
-        if (numComp === 4) {
+        if (
+          numComp === 4 &&
+          dataType === VtkDataTypes.UNSIGNED_CHAR &&
+          !iComps
+        ) {
           model.openGLTexture.setGenerateMipmap(true);
           model.openGLTexture.setMinificationFilter(
             Filter.LINEAR_MIPMAP_LINEAR
