@@ -4,6 +4,7 @@
 Instead, a `vtkSphereHandleRepresentation` is used for `rotation` and `center` handles,
 and a `vtkLineHandleRepresenttion` is used for the axes. `rotateLineInView()` now
 takes an axis name (string, e.g. 'XinY') instead of a substate.
+- SVGRepresentation and SVG widget support has been fully removed.
 
 ## From 24.x to 25
 
