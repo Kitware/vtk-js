@@ -162,6 +162,24 @@ polyLinesMapper.setInputData(polyLinesData);
 const polyLines = vtkActor.newInstance();
 polyLines.setMapper(polyLinesMapper);
 
+// An actor made of 3 cells: a vertex, a line and triangle -------------------------------------------------
+
+const multiPrimitiveMapper = vtkMapper.newInstance();
+const multiPrimitiveData = vtkPolydata.newInstance();
+const multiPrimitivePoints = [
+  1, 0.75, 0, 2, 1, 0, 2, 0.75, 0, 1.5, 1, 0, 1, 0.5, 0, 2, 0.5, 0,
+];
+multiPrimitiveData
+  .getPoints()
+  .setData(Float32Array.from(multiPrimitivePoints), 3);
+multiPrimitiveData.getVerts().setData(Uint16Array.from([1, 0]));
+multiPrimitiveData.getLines().setData(Uint16Array.from([2, 1, 2]));
+multiPrimitiveData.getPolys().setData(Uint16Array.from([3, 3, 4, 5]));
+multiPrimitiveMapper.setInputData(multiPrimitiveData);
+
+const multiPrimitive = vtkActor.newInstance();
+multiPrimitive.setMapper(multiPrimitiveMapper);
+
 // ----------------------------------------------------------------------------
 // Create Picking pointer
 // ----------------------------------------------------------------------------
@@ -193,6 +211,7 @@ renderer.addActor(coneActor);
 renderer.addActor(cylinderActor);
 renderer.addActor(pointerActor);
 renderer.addActor(polyLines);
+renderer.addActor(multiPrimitive);
 
 renderer.resetCamera();
 renderWindow.render();

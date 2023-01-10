@@ -101,6 +101,10 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
   publicAPI.buildShaders = (shaders, ren, actor) => {
     publicAPI.getShaderTemplate(shaders, ren, actor);
 
+    model.lastRenderPassShaderReplacement = model.currentRenderPass
+      ? model.currentRenderPass.getShaderReplacement()
+      : null;
+
     // apply any renderPassReplacements
     if (model.lastRenderPassShaderReplacement) {
       model.lastRenderPassShaderReplacement(shaders);
@@ -1139,17 +1143,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
 
     // has the render pass shader replacement changed? Two options
-    if (!model.currentRenderPass && model.lastRenderPassShaderReplacement) {
-      needRebuild = true;
-      model.lastRenderPassShaderReplacement = null;
-    }
     if (
-      model.currentRenderPass &&
-      model.currentRenderPass.getShaderReplacement() !==
-        model.lastRenderPassShaderReplacement
+      (!model.currentRenderPass && model.lastRenderPassShaderReplacement) ||
+      (model.currentRenderPass &&
+        model.currentRenderPass.getShaderReplacement() !==
+          model.lastRenderPassShaderReplacement)
     ) {
-      model.lastRenderPassShaderReplacement =
-        model.currentRenderPass.getShaderReplacement();
       needRebuild = true;
     }
 
@@ -1158,6 +1157,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // property modified (representation interpolation and lighting)
     // input modified
     // light complexity changed
+    // render pass shader replacement changed
     if (
       model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
       cellBO.getShaderSourceTime().getMTime() < model.renderable.getMTime() ||

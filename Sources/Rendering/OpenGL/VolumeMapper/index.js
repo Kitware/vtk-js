@@ -255,7 +255,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         'vec4 depthVec = texture2D(zBufferTexture, vec2(gl_FragCoord.x / vpWidth, gl_FragCoord.y/vpHeight));',
         'float zdepth = (depthVec.r*256.0 + depthVec.g)/257.0;',
         'zdepth = zdepth * 2.0 - 1.0;',
-        'zdepth = -2.0 * camFar * camNear / (zdepth*(camFar-camNear)-(camFar+camNear)) - camNear;',
+        'if (cameraParallel == 0) {',
+        'zdepth = -2.0 * camFar * camNear / (zdepth*(camFar-camNear)-(camFar+camNear)) - camNear;}',
+        'else {',
+        'zdepth = (zdepth + 1.0) * 0.5 * (camFar - camNear);}\n',
         'zdepth = -zdepth/rayDir.z;',
         'dists.y = min(zdepth,dists.y);',
       ]).result;
@@ -965,11 +968,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
       const cfun = vprop.getRGBTransferFunction(target);
       const cRange = cfun.getRange();
-      program.setUniformf(
-        `cshift${i}`,
-        (volInfo.offset[i] - cRange[0]) / (cRange[1] - cRange[0])
-      );
-      program.setUniformf(`cscale${i}`, sscale / (cRange[1] - cRange[0]));
+      const cshift = (volInfo.offset[i] - cRange[0]) / (cRange[1] - cRange[0]);
+      const cScale = sscale / (cRange[1] - cRange[0]);
+      program.setUniformf(`cshift${i}`, cshift);
+      program.setUniformf(`cscale${i}`, cScale);
     }
 
     if (model.gopacity) {
@@ -1493,6 +1495,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (model.scalarTextureString !== toString) {
       // Build the textures
       const dims = image.getDimensions();
+      // Use norm16 for scalar texture if the extension is available
+      model.scalarTexture.setOglNorm16Ext(
+        model.context.getExtension('EXT_texture_norm16')
+      );
       model.scalarTexture.releaseGraphicsResources(model._openGLRenderWindow);
       model.scalarTexture.resetFormatAndType();
       model.scalarTexture.create3DFilterableFromRaw(

@@ -8,7 +8,10 @@ import vtkOpenGLTextureUnitManager from 'vtk.js/Sources/Rendering/OpenGL/Texture
 import vtkOpenGLViewNodeFactory from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderWindowViewNode';
-import { createContextProxyHandler } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/ContextProxy';
+import {
+  createContextProxyHandler,
+  GET_UNDERLYING_CONTEXT,
+} from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/ContextProxy';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
 
@@ -325,7 +328,11 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       const gl = publicAPI.get3DContext();
       await gl.makeXRCompatible();
 
-      const glLayer = new global.XRWebGLLayer(model.xrSession, gl);
+      const glLayer = new global.XRWebGLLayer(
+        model.xrSession,
+        // constructor needs unproxied context
+        gl[GET_UNDERLYING_CONTEXT]()
+      );
       publicAPI.setSize(glLayer.framebufferWidth, glLayer.framebufferHeight);
 
       model.xrSession.updateRenderState({
@@ -525,7 +532,11 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     return -1;
   };
 
-  publicAPI.getDefaultTextureInternalFormat = (vtktype, numComps, useFloat) => {
+  publicAPI.getDefaultTextureInternalFormat = (
+    vtktype,
+    numComps,
+    oglNorm16Ext = null
+  ) => {
     if (model.webgl2) {
       switch (vtktype) {
         case VtkDataTypes.UNSIGNED_CHAR:
@@ -539,6 +550,31 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
             case 4:
             default:
               return model.context.RGBA8;
+          }
+        case oglNorm16Ext && VtkDataTypes.UNSIGNED_SHORT:
+          switch (numComps) {
+            case 1:
+              return oglNorm16Ext.R16_EXT;
+            case 2:
+              return oglNorm16Ext.RG16_EXT;
+            case 3:
+              return oglNorm16Ext.RGB16_EXT;
+            case 4:
+            default:
+              return oglNorm16Ext.RGBA16_EXT;
+          }
+        // prioritize norm16 over float
+        case oglNorm16Ext && VtkDataTypes.SHORT:
+          switch (numComps) {
+            case 1:
+              return oglNorm16Ext.R16_SNORM_EXT;
+            case 2:
+              return oglNorm16Ext.RG16_SNORM_EXT;
+            case 3:
+              return oglNorm16Ext.RGB16_SNORM_EXT;
+            case 4:
+            default:
+              return oglNorm16Ext.RGBA16_SNORM_EXT;
           }
         case VtkDataTypes.FLOAT:
         default:

@@ -42,7 +42,10 @@ const initialSampleDistance = 1.3;
 const actor = vtkVolume.newInstance();
 const mapper = vtkVolumeMapper.newInstance();
 mapper.setSampleDistance(initialSampleDistance);
+
+// use half float at the cost of precision to save memory
 mapper.setPreferSizeOverAccuracy(true);
+
 actor.setMapper(mapper);
 
 const radonParameters = {

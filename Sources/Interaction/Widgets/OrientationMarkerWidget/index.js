@@ -193,8 +193,8 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       selfRenderer.removeViewProp(model.actor);
 
       const renderWindow = model._interactor
-        .findPokedRenderer()
-        .getRenderWindow();
+        ?.findPokedRenderer()
+        ?.getRenderWindow();
       if (renderWindow) {
         renderWindow.removeRenderer(selfRenderer);
       }
