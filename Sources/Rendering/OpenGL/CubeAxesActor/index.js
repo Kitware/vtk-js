@@ -14,9 +14,9 @@ function vtkOpenGLCubeAxesActor(publicAPI, model) {
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.openGLRenderer =
+      model._openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model.openGLRenderWindow = model.openGLRenderer.getParent();
+      model._openGLRenderWindow = model._openGLRenderer.getParent();
 
       if (!model.CubeAxesActorHelper.getRenderable()) {
         model.CubeAxesActorHelper.setRenderable(model.renderable);
@@ -31,15 +31,15 @@ function vtkOpenGLCubeAxesActor(publicAPI, model) {
 
   publicAPI.opaquePass = (prepass, renderPass) => {
     if (prepass) {
-      const camera = model.openGLRenderer
-        ? model.openGLRenderer.getRenderable().getActiveCamera()
+      const camera = model._openGLRenderer
+        ? model._openGLRenderer.getRenderable().getActiveCamera()
         : null;
-      const tsize = model.openGLRenderer.getTiledSizeAndOrigin();
+      const tsize = model._openGLRenderer.getTiledSizeAndOrigin();
 
       model.CubeAxesActorHelper.updateAPISpecificData(
         [tsize.usize, tsize.vsize],
         camera,
-        model.openGLRenderWindow.getRenderable()
+        model._openGLRenderWindow.getRenderable()
       );
     }
   };

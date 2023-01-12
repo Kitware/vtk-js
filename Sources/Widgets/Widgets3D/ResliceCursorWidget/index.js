@@ -2,7 +2,8 @@ import macro from 'vtk.js/Sources/macros';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
-import vtkResliceCursorContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ResliceCursorContextRepresentation';
+import vtkLineHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/LineHandleRepresentation';
+import vtkSphereHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/SphereHandleRepresentation';
 
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
@@ -28,7 +29,7 @@ const { vtkErrorMacro } = macro;
 function vtkResliceCursorWidget(publicAPI, model) {
   model.classHierarchy.push('vtkResliceCursorWidget');
 
-  model.methodsToLink = ['scaleInPixels', 'rotationHandlePosition'];
+  model.methodsToLink = ['scaleInPixels'];
 
   // --------------------------------------------------------------------------
   // Private methods
@@ -244,6 +245,19 @@ function vtkResliceCursorWidget(publicAPI, model) {
     renderer.resetCameraClippingRange(bounds);
   }
 
+  /**
+   * Convenient function to return the ResliceCursorRepresentation for a given viewType
+   * @param {string} viewType
+   * @returns
+   */
+  function findRepresentationsForViewType(viewType) {
+    const widgetForViewType = publicAPI
+      .getViewIds()
+      .map((viewId) => publicAPI.getWidgetForView({ viewId }))
+      .find((widget) => widget.getViewType() === viewType);
+    return widgetForViewType.getRepresentations();
+  }
+
   // --------------------------------------------------------------------------
   // initialization
   // --------------------------------------------------------------------------
@@ -253,39 +267,51 @@ function vtkResliceCursorWidget(publicAPI, model) {
       case ViewTypes.XY_PLANE:
         return [
           {
-            builder: vtkResliceCursorContextRepresentation,
-            labels: ['AxisXinZ', 'AxisYinZ'],
+            builder: vtkLineHandleRepresentation,
+            labels: ['lineInZ'],
             initialValues: {
-              axis1Name: 'AxisXinZ',
-              axis2Name: 'AxisYinZ',
-              viewType: ViewTypes.XY_PLANE,
-              rotationEnabled: model.widgetState.getEnableRotation(),
+              useActiveColor: false,
+            },
+          },
+          {
+            builder: vtkSphereHandleRepresentation,
+            labels: ['rotationInZ', 'center'],
+            initialValues: {
+              useActiveColor: false,
             },
           },
         ];
       case ViewTypes.XZ_PLANE:
         return [
           {
-            builder: vtkResliceCursorContextRepresentation,
-            labels: ['AxisXinY', 'AxisZinY'],
+            builder: vtkLineHandleRepresentation,
+            labels: ['lineInY'],
             initialValues: {
-              axis1Name: 'AxisXinY',
-              axis2Name: 'AxisZinY',
-              viewType: ViewTypes.XZ_PLANE,
-              rotationEnabled: model.widgetState.getEnableRotation(),
+              useActiveColor: false,
+            },
+          },
+          {
+            builder: vtkSphereHandleRepresentation,
+            labels: ['rotationInY', 'center'],
+            initialValues: {
+              useActiveColor: false,
             },
           },
         ];
       case ViewTypes.YZ_PLANE:
         return [
           {
-            builder: vtkResliceCursorContextRepresentation,
-            labels: ['AxisYinX', 'AxisZinX'],
+            builder: vtkLineHandleRepresentation,
+            labels: ['lineInX'],
             initialValues: {
-              axis1Name: 'AxisYinX',
-              axis2Name: 'AxisZinX',
-              viewType: ViewTypes.YZ_PLANE,
-              rotationEnabled: model.widgetState.getEnableRotation(),
+              useActiveColor: false,
+            },
+          },
+          {
+            builder: vtkSphereHandleRepresentation,
+            labels: ['rotationInX', 'center'],
+            initialValues: {
+              useActiveColor: false,
             },
           },
         ];
@@ -302,12 +328,20 @@ function vtkResliceCursorWidget(publicAPI, model) {
     model.widgetState.setImage(image);
     const center = image.getCenter();
     model.widgetState.setCenter(center);
-    updateState(model.widgetState);
+    updateState(
+      model.widgetState,
+      publicAPI.getDisplayScaleParams(),
+      model.rotationHandlePosition
+    );
   };
 
   publicAPI.setCenter = (center) => {
     model.widgetState.setCenter(center);
-    updateState(model.widgetState);
+    updateState(
+      model.widgetState,
+      publicAPI.getDisplayScaleParams(),
+      model.rotationHandlePosition
+    );
     publicAPI.modified();
   };
 
@@ -584,6 +618,16 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
     return m;
   };
+
+  publicAPI.getDisplayScaleParams = () =>
+    [ViewTypes.YZ_PLANE, ViewTypes.XZ_PLANE, ViewTypes.XY_PLANE].reduce(
+      (res, viewType) => {
+        res[viewType] =
+          findRepresentationsForViewType(viewType)[0].getDisplayScaleParams?.();
+        return res;
+      },
+      {}
+    );
 }
 
 // ----------------------------------------------------------------------------
@@ -591,6 +635,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
 const defaultValues = (initialValues) => ({
   behavior: widgetBehavior,
   widgetState: stateGenerator(),
+  rotationHandlePosition: 0.25,
   ...initialValues,
 });
 
@@ -600,6 +645,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, defaultValues(initialValues));
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
+
+  macro.setGet(publicAPI, model, ['rotationHandlePosition']);
 
   vtkResliceCursorWidget(publicAPI, model);
 }

@@ -8,6 +8,12 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import { getPixelWorldHeightAtCoord } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
+import {
+  planeNames,
+  planeNameToViewType,
+  lineNames,
+} from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 
 const EPSILON = 10e-7;
 
@@ -156,78 +162,120 @@ export function rotateVector(vectorToBeRotated, axis, angle) {
   return rotatedVector;
 }
 
+/**
+ * Return X if lineName == XinY|XinZ, Y if lineName == YinX|YinZ and Z otherwise
+ * @param {string} lineName name of the line (YinX, ZinX, XinY, ZinY, XinZ, YinZ)
+ */
+export function getLinePlaneName(lineName) {
+  return lineName[0];
+}
+/**
+ * Return X if lineName == YinX|ZinX, Y if lineName == XinY|ZinY and Z otherwise
+ * @param {string} lineName name of the line (YinX, ZinX, XinY, ZinY, XinZ, YinZ)
+ */
+export function getLineInPlaneName(lineName) {
+  return lineName[3];
+}
+
+/**
+ * Return ZinX if lineName == YinX, YinX if lineName == ZinX, ZinY if lineName == XinY...
+ * @param {string} lineName name of the line (YinX, ZinX, XinY, ZinY, XinZ, YinZ)
+ */
+export function getOtherLineName(lineName) {
+  const linePlaneName = getLinePlaneName(lineName);
+  const lineInPlaneName = getLineInPlaneName(lineName);
+  const otherLineName = planeNames.find(
+    (planeName) => planeName !== linePlaneName && planeName !== lineInPlaneName
+  );
+  return `${otherLineName}in${lineInPlaneName}`;
+}
+
 // Update the extremities and the rotation point coordinate of the line
-function updateLine(lineState, center, axis, lineLength) {
-  const p1 = [
-    center[0] - lineLength * axis[0],
-    center[1] - lineLength * axis[1],
-    center[2] - lineLength * axis[2],
-  ];
-  const p2 = [
-    center[0] + lineLength * axis[0],
-    center[1] + lineLength * axis[1],
-    center[2] + lineLength * axis[2],
-  ];
-  // FIXME: p1 and p2 should be placed on the boundaries of the volume.
-  lineState.setPoint1(p1);
-  lineState.setPoint2(p2);
+function computeRotationHandleOrigin(
+  center,
+  axis,
+  rotationHandlePosition,
+  volumeDiagonalLength,
+  displayScaleParams
+) {
+  // FIXME: p1 and p2 could be placed on the exact boundaries of the volume.
+  let distanceToCenter = volumeDiagonalLength;
+  // displayScaleParams is not null when representation.getScaleInPixels() is true
+  if (displayScaleParams) {
+    const pixelWorldHeight = getPixelWorldHeightAtCoord(
+      center,
+      displayScaleParams
+    );
+    const { rendererPixelDims } = displayScaleParams;
+    const totalSize = Math.min(rendererPixelDims[0], rendererPixelDims[1]) / 2;
+    distanceToCenter = pixelWorldHeight * totalSize;
+  }
+  distanceToCenter *= rotationHandlePosition;
+
+  return vtkMath.multiplyAccumulate(center, axis, distanceToCenter, []);
 }
 
 // Update the reslice cursor state according to the three planes normals and the origin
-export function updateState(widgetState) {
+export function updateState(
+  widgetState,
+  displayScaleParams,
+  rotationHandlePosition
+) {
   // Compute line axis
   const xNormal = widgetState.getPlanes()[ViewTypes.YZ_PLANE].normal;
   const yNormal = widgetState.getPlanes()[ViewTypes.XZ_PLANE].normal;
   const zNormal = widgetState.getPlanes()[ViewTypes.XY_PLANE].normal;
 
-  const yzIntersectionLineAxis = vtkMath.cross(yNormal, zNormal, []);
-  const xzIntersectionLineAxis = vtkMath.cross(zNormal, xNormal, []);
-  const xyIntersectionLineAxis = vtkMath.cross(xNormal, yNormal, []);
+  const axes = {
+    XY: vtkMath.cross(xNormal, yNormal, []),
+    YZ: vtkMath.cross(yNormal, zNormal, []),
+    XZ: vtkMath.cross(zNormal, xNormal, []),
+  };
+  axes.YX = axes.XY;
+  axes.ZY = axes.YZ;
+  axes.ZX = axes.XZ;
 
   const bounds = widgetState.getImage().getBounds();
   const center = widgetState.getCenter();
 
   // Length of the principal diagonal.
-  const pdLength = 0.5 * vtkBoundingBox.getDiagonalLength(bounds);
+  const pdLength = vtkBoundingBox.getDiagonalLength(bounds);
 
-  updateLine(
-    widgetState.getAxisXinY(),
-    center,
-    xyIntersectionLineAxis,
-    pdLength
-  );
-  updateLine(
-    widgetState.getAxisYinX(),
-    center,
-    xyIntersectionLineAxis,
-    pdLength
-  );
+  widgetState.getCenterHandle().setOrigin(center);
 
-  updateLine(
-    widgetState.getAxisYinZ(),
-    center,
-    yzIntersectionLineAxis,
-    pdLength
-  );
-  updateLine(
-    widgetState.getAxisZinY(),
-    center,
-    yzIntersectionLineAxis,
-    pdLength
-  );
-
-  updateLine(
-    widgetState.getAxisXinZ(),
-    center,
-    xzIntersectionLineAxis,
-    pdLength
-  );
-  updateLine(
-    widgetState.getAxisZinX(),
-    center,
-    xzIntersectionLineAxis,
-    pdLength
-  );
+  lineNames.forEach((lineName) => {
+    const planeName = getLinePlaneName(lineName);
+    const inPlaneName = getLineInPlaneName(lineName);
+    const rotationPoint0 = computeRotationHandleOrigin(
+      center,
+      axes[`${planeName}${inPlaneName}`],
+      rotationHandlePosition,
+      pdLength,
+      displayScaleParams[planeNameToViewType[inPlaneName]]
+    );
+    widgetState[`getRotationHandle${lineName}0`]().setOrigin(rotationPoint0);
+    const rotationPoint1 = computeRotationHandleOrigin(
+      center,
+      vtkMath.multiplyScalar(axes[`${planeName}${inPlaneName}`], -1, []),
+      rotationHandlePosition,
+      pdLength,
+      displayScaleParams[planeNameToViewType[inPlaneName]]
+    );
+    widgetState[`getRotationHandle${lineName}1`]().setOrigin(rotationPoint1);
+    const lineHandle = widgetState[`getAxis${lineName}`]();
+    lineHandle.setOrigin(center);
+    const direction = vtkMath.subtract(rotationPoint0, center, []);
+    const scale = vtkMath.normalize(direction);
+    const scale3 = lineHandle.getScale3();
+    scale3[2] = 2 * scale;
+    lineHandle.setScale3(scale3);
+    const right =
+      widgetState.getPlanes()[planeNameToViewType[inPlaneName]].normal;
+    const up = vtkMath.cross(direction, right, []);
+    lineHandle.setRight(right);
+    lineHandle.setUp(up);
+    lineHandle.setDirection(direction);
+  });
 }
 
 /**
@@ -259,68 +307,4 @@ export function transformPlane(
   );
   planeToTransform.rotate(angle, targetNormal);
   planeToTransform.setCenter(targetCenter);
-}
-
-// Get name of the line in the same plane as the input
-export function getAssociatedLinesName(lineName) {
-  switch (lineName) {
-    case 'AxisXinY':
-      return 'AxisZinY';
-    case 'AxisXinZ':
-      return 'AxisYinZ';
-    case 'AxisYinX':
-      return 'AxisZinX';
-    case 'AxisYinZ':
-      return 'AxisXinZ';
-    case 'AxisZinX':
-      return 'AxisYinX';
-    case 'AxisZinY':
-      return 'AxisXinY';
-    default:
-      return '';
-  }
-}
-
-/**
- * Get the line name, constructs from the plane name and where the plane is displayed
- * Example: planeName='X' rotatedPlaneName='Y', then the return values will be 'AxisXinY'
- * @param {String} planeName Value between 'X', 'Y' and 'Z'
- * @param {String} rotatedPlaneName Value between 'X', 'Y' and 'Z'
- * @returns {String}
- */
-export function getLineNameFromPlaneAndRotatedPlaneName(
-  planeName,
-  rotatedPlaneName
-) {
-  return `Axis${planeName}in${rotatedPlaneName}`;
-}
-
-/**
- * Extract the plane name from the line name
- * Example: 'AxisXinY' will return 'X'
- * @param {String} lineName Should be following this template : 'Axis_in_' with _ a character
- * @returns {String} Value between 'X', 'Y' and 'Z' or null if an error occured
- */
-export function getPlaneNameFromLineName(lineName) {
-  const match = lineName.match('([XYZ])in[XYZ]');
-  if (match) {
-    return match[1];
-  }
-  return null;
-}
-
-/**
- * Get the orthogonal plane name of 'planeName' in a specific 'rotatedPlaneName'
- * Example: planeName='X' on rotatedPlaneName='Z', then the associated plane name
- * of 'X' plane is 'Y'
- * @param {String} planeName
- * @param {String} rotatedPlaneName
- */
-export function getAssociatedPlaneName(planeName, rotatedPlaneName) {
-  const lineName = getLineNameFromPlaneAndRotatedPlaneName(
-    planeName,
-    rotatedPlaneName
-  );
-  const associatedLine = getAssociatedLinesName(lineName);
-  return getPlaneNameFromLineName(associatedLine);
 }

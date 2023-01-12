@@ -15,9 +15,9 @@ function vtkOpenGLCamera(publicAPI, model) {
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.openGLRenderer =
+      model._openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model._openGLRenderWindow = model.openGLRenderer.getParent();
+      model._openGLRenderWindow = model._openGLRenderer.getParent();
       model.context = model._openGLRenderWindow.getContext();
     }
   };
@@ -25,7 +25,7 @@ function vtkOpenGLCamera(publicAPI, model) {
   // Renders myself
   publicAPI.opaquePass = (prepass) => {
     if (prepass) {
-      const tsize = model.openGLRenderer.getTiledSizeAndOrigin();
+      const tsize = model._openGLRenderer.getTiledSizeAndOrigin();
       model.context.viewport(
         tsize.lowerLeftU,
         tsize.lowerLeftV,
@@ -62,7 +62,7 @@ function vtkOpenGLCamera(publicAPI, model) {
       );
       mat4.transpose(model.keyMatrices.wcvc, model.keyMatrices.wcvc);
 
-      const aspectRatio = model.openGLRenderer.getAspectRatio();
+      const aspectRatio = model._openGLRenderer.getAspectRatio();
 
       mat4.copy(
         model.keyMatrices.vcpc,

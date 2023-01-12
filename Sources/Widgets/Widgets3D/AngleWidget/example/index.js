@@ -22,12 +22,12 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
 });
 const renderer = fullScreenRenderer.getRenderer();
 
-const cone = vtkCubeSource.newInstance();
+const cube = vtkCubeSource.newInstance();
 const mapper = vtkMapper.newInstance();
 const actor = vtkActor.newInstance();
 
 actor.setMapper(mapper);
-mapper.setInputConnection(cone.getOutputPort());
+mapper.setInputConnection(cube.getOutputPort());
 actor.getProperty().setOpacity(0.5);
 
 renderer.addActor(actor);
@@ -40,12 +40,13 @@ const widgetManager = vtkWidgetManager.newInstance();
 widgetManager.setRenderer(renderer);
 
 const widget = vtkAngleWidget.newInstance();
-widget.placeWidget(cone.getOutputData().getBounds());
+// widget.placeWidget(cube.getOutputData().getBounds());
 
 widgetManager.addWidget(widget);
 
 renderer.resetCamera();
 widgetManager.enablePicking();
+fullScreenRenderer.getInteractor().render();
 
 // -----------------------------------------------------------
 // UI control handling

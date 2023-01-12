@@ -82,10 +82,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
       model.openGLVolume = publicAPI.getFirstAncestorOfType('vtkOpenGLVolume');
       const actor = model.openGLVolume.getRenderable();
-      model.openGLRenderer =
+      model._openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      const ren = model.openGLRenderer.getRenderable();
-      model.openGLCamera = model.openGLRenderer.getViewNodeFor(
+      const ren = model._openGLRenderer.getRenderable();
+      model.openGLCamera = model._openGLRenderer.getViewNodeFor(
         ren.getActiveCamera()
       );
       publicAPI.renderPiece(ren, actor);
@@ -1092,14 +1092,14 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       return [model._smallViewportWidth, model._smallViewportHeight];
     }
 
-    const { usize, vsize } = model.openGLRenderer.getTiledSizeAndOrigin();
+    const { usize, vsize } = model._openGLRenderer.getTiledSizeAndOrigin();
 
     return [usize, vsize];
   };
 
   publicAPI.getRenderTargetOffset = () => {
     const { lowerLeftU, lowerLeftV } =
-      model.openGLRenderer.getTiledSizeAndOrigin();
+      model._openGLRenderer.getTiledSizeAndOrigin();
 
     return [lowerLeftU, lowerLeftV];
   };

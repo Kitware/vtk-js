@@ -43,8 +43,8 @@ renderer.resetCamera();
 // Use OpenGL as the backend to view the all this
 // ----------------------------------------------------------------------------
 
-const openglRenderWindow = vtkOpenGLRenderWindow.newInstance();
-renderWindow.addView(openglRenderWindow);
+const openGLRenderWindow = vtkOpenGLRenderWindow.newInstance();
+renderWindow.addView(openGLRenderWindow);
 
 // ----------------------------------------------------------------------------
 // Create a div section to put this into
@@ -52,21 +52,21 @@ renderWindow.addView(openglRenderWindow);
 
 const container = document.createElement('div');
 document.querySelector('body').appendChild(container);
-openglRenderWindow.setContainer(container);
+openGLRenderWindow.setContainer(container);
 
 // ----------------------------------------------------------------------------
 // Capture size of the container and set it to the renderWindow
 // ----------------------------------------------------------------------------
 
 const { width, height } = container.getBoundingClientRect();
-openglRenderWindow.setSize(width, height);
+openGLRenderWindow.setSize(width, height);
 
 // ----------------------------------------------------------------------------
 // Setup an interactor to handle mouse events
 // ----------------------------------------------------------------------------
 
 const interactor = vtkRenderWindowInteractor.newInstance();
-interactor.setView(openglRenderWindow);
+interactor.setView(openGLRenderWindow);
 interactor.initialize();
 interactor.bindEvents(container);
 

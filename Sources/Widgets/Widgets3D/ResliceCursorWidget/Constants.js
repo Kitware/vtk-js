@@ -32,9 +32,28 @@ export const viewTypeToXYZ = {
   [ViewTypes.XY_PLANE]: 2,
 };
 
+export const planeNames = ['X', 'Y', 'Z'];
+
+export const viewTypeToPlaneName = {
+  [ViewTypes.YZ_PLANE]: 'X',
+  [ViewTypes.XZ_PLANE]: 'Y',
+  [ViewTypes.XY_PLANE]: 'Z',
+};
+
+export const planeNameToViewType = {
+  X: ViewTypes.YZ_PLANE,
+  Y: ViewTypes.XZ_PLANE,
+  Z: ViewTypes.XY_PLANE,
+};
+export const lineNames = ['YinX', 'ZinX', 'XinY', 'ZinY', 'XinZ', 'YinZ'];
+
 export default {
   ScrollingMethods,
   InteractionMethodsName,
   xyzToViewType,
   viewTypeToXYZ,
+  planeNames,
+  viewTypeToPlaneName,
+  planeNameToViewType,
+  lineNames,
 };

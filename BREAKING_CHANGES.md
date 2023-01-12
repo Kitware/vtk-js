@@ -1,3 +1,11 @@
+## From 25.x to 26
+
+- **ResliceCursorWidget**: vtkResliceCursorContextRepresentation is deprecated and removed.
+Instead, a `vtkSphereHandleRepresentation` is used for `rotation` and `center` handles,
+and a `vtkLineHandleRepresenttion` is used for the axes. `rotateLineInView()` now
+takes an axis name (string, e.g. 'XinY') instead of a substate.
+- SVGRepresentation and SVG widget support has been fully removed.
+
 ## From 24.x to 25
 
 - **math**: For functions calling math functions for computations with matrices, the format must now be number[] or Matrix as defined in the typescript definitions.

@@ -53,11 +53,11 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (prepass) {
       model.currentRenderPass = null;
       model.openGLActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
-      model.openGLRenderer =
+      model._openGLRenderer =
         model.openGLActor.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model._openGLRenderWindow = model.openGLRenderer.getParent();
-      model.openGLCamera = model.openGLRenderer.getViewNodeFor(
-        model.openGLRenderer.getRenderable().getActiveCamera()
+      model._openGLRenderWindow = model._openGLRenderer.getParent();
+      model.openGLCamera = model._openGLRenderer.getViewNodeFor(
+        model._openGLRenderer.getRenderable().getActiveCamera()
       );
     }
   };
@@ -94,7 +94,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       }
     }
     const actor = model.openGLActor.getRenderable();
-    const ren = model.openGLRenderer.getRenderable();
+    const ren = model._openGLRenderer.getRenderable();
     publicAPI.renderPiece(ren, actor);
   };
 
@@ -962,7 +962,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     // hardware picking always offset due to saved zbuffer
     // This gets you above the saved surface depth buffer.
-    const selector = model.openGLRenderer.getSelector();
+    const selector = model._openGLRenderer.getSelector();
     if (
       selector &&
       selector.getFieldAssociation() ===
@@ -981,7 +981,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       '//VTK::Picking::Dec',
     ]).result;
 
-    if (!model.openGLRenderer.getSelector()) {
+    if (!model._openGLRenderer.getSelector()) {
       return;
     }
     if (
@@ -1390,10 +1390,10 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     cellBO.setMapperShaderParameters(
       ren,
       actor,
-      model.openGLRenderer.getTiledSizeAndOrigin()
+      model._openGLRenderer.getTiledSizeAndOrigin()
     );
 
-    const selector = model.openGLRenderer.getSelector();
+    const selector = model._openGLRenderer.getSelector();
     cellBO
       .getProgram()
       .setUniform3fArray(
@@ -1544,7 +1544,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       : model.openGLActor.getKeyMatrices();
 
     if (actor.getCoordinateSystem() === CoordinateSystem.DISPLAY) {
-      const size = model.openGLRenderer.getTiledSizeAndOrigin();
+      const size = model._openGLRenderer.getTiledSizeAndOrigin();
       mat4.identity(model.tmpMat4);
       model.tmpMat4[0] = 2.0 / size.usize;
       model.tmpMat4[12] = -1.0;
@@ -1671,7 +1671,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.updateMaximumPointCellIds = (ren, actor) => {
-    const selector = model.openGLRenderer.getSelector();
+    const selector = model._openGLRenderer.getSelector();
     if (!selector) {
       return;
     }
@@ -1696,16 +1696,16 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     model.primitiveIDOffset = 0;
     model.vertexIDOffset = 0;
 
-    const picking = getPickState(model.openGLRenderer);
+    const picking = getPickState(model._openGLRenderer);
     if (model.lastSelectionState !== picking) {
       model.selectionStateChanged.modified();
       model.lastSelectionState = picking;
     }
 
-    if (model.openGLRenderer.getSelector()) {
+    if (model._openGLRenderer.getSelector()) {
       switch (picking) {
         default:
-          model.openGLRenderer.getSelector().renderProp(actor);
+          model._openGLRenderer.getSelector().renderProp(actor);
       }
     }
 
@@ -1729,7 +1729,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       actor.getProperty().getEdgeVisibility() &&
       representation === Representation.SURFACE;
 
-    const selector = model.openGLRenderer.getSelector();
+    const selector = model._openGLRenderer.getSelector();
     // If we are picking points, we need to tell it to the helper
     const pointPicking =
       selector &&

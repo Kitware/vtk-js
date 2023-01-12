@@ -36,12 +36,6 @@ export interface vtkCellArray extends vtkDataArray {
 	getCell(loc: any): void;
 
 	/**
-	 * Reset the cell array by setting the number of cells to 0.
-	 * NOTE: This won't touch the actual memory of the underlying typedArray.
-	 */
-	initialize(): void;
-
-	/**
 	 * Insert a cell to this array in the next available slot.
 	 * @param {Number[]} cellPointIds The list of point ids (NOT prefixed with the number of points)
 	 * @returns {Number} Idx of where the cell was inserted

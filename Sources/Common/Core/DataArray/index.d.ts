@@ -265,8 +265,28 @@ export interface vtkDataArray extends vtkObject {
 	): void;
 
 	/**
+	 * Resize the array to the requested number of tuples and preserve data.
+	 * Increasing the array size may allocate extra memory beyond what was
+	 * requested.
+	 * Decreasing the array size will trim memory to the requested size.
+	 * model.size WILL be modified according ot the new size.
+	 * If requestedNumTuples > getNumberOfTuples(),
+	 * it creates a new typed array and copies the old values to the new array.
+	 * If requestedNumTuples < getNumberOfTuples(), the typed array is untouched,
+	 * only model.size is modified.
+	 * @param {Number} requestedNumTuples Final expected number of tuples; must be >= 0
+	 * @returns {Boolean} True if a resize occured, false otherwise
+	 * @see insertNextTuple
+	 * @see insertNextTuples
+	 * @see initialize
+	 */
+	resize(requestedNumTuples: number): boolean;
+
+	/**
 	 * Reset this array.
 	 * NOTE: This won't touch the actual memory of the underlying typedArray. 
+	 * @see insertNextTuple
+	 * @see insertNextTuples
 	 */
 	initialize(): void;
 

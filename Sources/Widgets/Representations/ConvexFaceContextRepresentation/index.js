@@ -3,6 +3,7 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ContextRepresentation';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import { allocateArray } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
@@ -25,18 +26,17 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
   model.internalPolyData.getPoints().setData(model.points, 3);
   model.internalPolyData.getPolys().setData(model.cells);
 
-  function allocateSize(size) {
-    if (model.cells.length - 1 !== size) {
-      model.points = new Float32Array(size * 3);
-      model.cells = new Uint8Array(size + 1);
-      model.cells[0] = size;
+  function allocateSize(polyData, size) {
+    const points = allocateArray(polyData, 'points', size).getData();
+    const oldCellsSize = polyData.getPolys().getNumberOfValues();
+    const cells = allocateArray(polyData, 'polys', size + 1).getData();
+    if (oldCellsSize !== cells.length) {
+      cells[0] = size;
       for (let i = 0; i < size; i++) {
-        model.cells[i + 1] = i;
+        cells[i + 1] = i;
       }
-      model.internalPolyData.getPoints().setData(model.points, 3);
-      model.internalPolyData.getPolys().setData(model.cells);
     }
-    return model.points;
+    return points;
   }
 
   // --------------------------------------------------------------------------
@@ -60,7 +60,7 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
     const list = publicAPI.getRepresentationStates(inData[0]);
     const validState = list.filter((state) => state.getOrigin());
 
-    const points = allocateSize(validState.length);
+    const points = allocateSize(allocateSize, validState.length);
 
     for (let i = 0; i < validState.length; i++) {
       const coords = validState[i].getOrigin();

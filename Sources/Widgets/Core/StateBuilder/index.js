@@ -4,6 +4,7 @@ import vtkWidgetState from 'vtk.js/Sources/Widgets/Core/WidgetState';
 
 import bounds from 'vtk.js/Sources/Widgets/Core/StateBuilder/boundsMixin';
 import color from 'vtk.js/Sources/Widgets/Core/StateBuilder/colorMixin';
+import color3 from 'vtk.js/Sources/Widgets/Core/StateBuilder/color3Mixin';
 import corner from 'vtk.js/Sources/Widgets/Core/StateBuilder/cornerMixin';
 import direction from 'vtk.js/Sources/Widgets/Core/StateBuilder/directionMixin';
 import manipulator from 'vtk.js/Sources/Widgets/Core/StateBuilder/manipulatorMixin';
@@ -25,6 +26,7 @@ const { vtkErrorMacro } = macro;
 const MIXINS = {
   bounds,
   color,
+  color3,
   corner,
   direction,
   manipulator,

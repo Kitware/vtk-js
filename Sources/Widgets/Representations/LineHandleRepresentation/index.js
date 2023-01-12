@@ -2,14 +2,18 @@ import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkGlyphRepresentation from 'vtk.js/Sources/Widgets/Representations/GlyphRepresentation';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
+import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
+import { allocateArray } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
+
+const INFINITE_RATIO = 100000;
 
 // ----------------------------------------------------------------------------
-// vtkSphereHandleRepresentation methods
+// vtkLineHandleRepresentation methods
 // ----------------------------------------------------------------------------
 
-function vtkSphereHandleRepresentation(publicAPI, model) {
+function vtkLineHandleRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSphereHandleRepresentation');
+  model.classHierarchy.push('vtkLineHandleRepresentation');
 
   // --------------------------------------------------------------------------
   // Generic rendering pipeline
@@ -30,10 +34,11 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.getGlyphResolution = () => model._pipeline.glyph.getPhiResolution();
-  publicAPI.setGlyphResolution = (resolution) =>
-    model._pipeline.glyph.setPhiResolution(resolution) ||
-    model._pipeline.glyph.setThetaResolution(resolution);
+  publicAPI.setGlyphResolution = macro.chain(
+    publicAPI.setGlyphResolution,
+    model._pipeline.glyph.setThetaResolution,
+    model._pipeline.glyph.setPhiResolution
+  );
 
   // --------------------------------------------------------------------------
 
@@ -58,26 +63,61 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     model.displayCallback = callback;
     model.displayMapper.setCallback(callback ? callbackProxy : null);
   };
+
+  /**
+   * Overwrite scale3 to optionally make lines infinite
+   */
+  const superScale3 = publicAPI.getScale3();
+  publicAPI.setScale3((polyData, states) => {
+    superScale3(polyData, states);
+    if (model.infiniteLine) {
+      const scales = allocateArray(
+        polyData,
+        'scale',
+        states.length,
+        'Float32Array',
+        3
+      ).getData();
+      for (let i = 0; i < states.length; ++i) {
+        scales[3 * i + 2] = INFINITE_RATIO;
+      }
+    }
+  });
 }
 
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 
+function defaultValues(initialValues) {
+  return {
+    infiniteLine: true,
+    glyphResolution: 4,
+    _pipeline: {
+      glyph: vtkCylinderSource.newInstance({
+        resolution: initialValues.glyphResolution ?? 4,
+        direction: [0, 0, 1],
+      }),
+    },
+    ...initialValues,
+  };
+}
+
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  vtkGlyphRepresentation.extend(publicAPI, model, initialValues);
+  vtkGlyphRepresentation.extend(publicAPI, model, defaultValues(initialValues));
+  macro.setGet(publicAPI, model, ['infiniteLine', 'glyphResolution']);
 
   // Object specific methods
-  vtkSphereHandleRepresentation(publicAPI, model);
+  vtkLineHandleRepresentation(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
 export const newInstance = macro.newInstance(
   extend,
-  'vtkSphereHandleRepresentation'
+  'vtkLineHandleRepresentation'
 );
 
 // ----------------------------------------------------------------------------

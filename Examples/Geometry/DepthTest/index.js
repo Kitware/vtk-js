@@ -289,9 +289,9 @@ resetCameraPosition();
 // Use OpenGL as the backend to view the all this
 // ----------------------------------------------------------------------------
 
-const openglRenderWindow = vtkOpenGLRenderWindow.newInstance();
-renderWindow.addView(openglRenderWindow);
-openglRenderWindow.setContainer(container);
+const openGLRenderWindow = vtkOpenGLRenderWindow.newInstance();
+renderWindow.addView(openGLRenderWindow);
+openGLRenderWindow.setContainer(container);
 
 const textCanvas = document.createElement('canvas');
 textCanvas.classList.add(style.container, 'textCanvas');
@@ -304,7 +304,7 @@ textCtx = textCanvas.getContext('2d');
 // ----------------------------------------------------------------------------
 
 const interactor = vtkRenderWindowInteractor.newInstance();
-interactor.setView(openglRenderWindow);
+interactor.setView(openGLRenderWindow);
 interactor.initialize();
 interactor.bindEvents(container);
 
@@ -315,7 +315,7 @@ function resize() {
   const dims = container.getBoundingClientRect();
   windowWidth = Math.floor(dims.width);
   windowHeight = Math.floor(dims.height);
-  openglRenderWindow.setSize(windowWidth, windowHeight);
+  openGLRenderWindow.setSize(windowWidth, windowHeight);
   textCanvas.setAttribute('width', windowWidth);
   textCanvas.setAttribute('height', windowHeight);
   if (debugHandler) {

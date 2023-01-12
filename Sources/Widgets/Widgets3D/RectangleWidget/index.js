@@ -3,7 +3,6 @@ import vtkPlanePointManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneM
 import vtkShapeWidget from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget';
 import vtkSphereHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/SphereHandleRepresentation';
 import vtkRectangleContextRepresentation from 'vtk.js/Sources/Widgets/Representations/RectangleContextRepresentation';
-import vtkSVGLandmarkRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGLandmarkRepresentation';
 import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/RectangleWidget/behavior';
 import stateGenerator from 'vtk.js/Sources/Widgets/Widgets3D/RectangleWidget/state';
 
@@ -48,13 +47,6 @@ function vtkRectangleWidget(publicAPI, model) {
           {
             builder: vtkRectangleContextRepresentation,
             labels: ['rectangleHandle'],
-          },
-          {
-            builder: vtkSVGLandmarkRepresentation,
-            initialValues: {
-              text: '',
-            },
-            labels: ['SVGtext'],
           },
         ];
     }

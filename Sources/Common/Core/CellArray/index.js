@@ -42,6 +42,7 @@ export const STATIC = {
 function vtkCellArray(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkCellArray');
+  const superClass = { ...publicAPI };
 
   publicAPI.getNumberOfCells = (recompute) => {
     if (model.numberOfCells !== undefined && !recompute) {
@@ -65,9 +66,25 @@ function vtkCellArray(publicAPI, model) {
     return model.cellSizes;
   };
 
-  const superSetData = publicAPI.setData;
+  publicAPI.resize = (requestedNumTuples) => {
+    const oldNumTuples = publicAPI.getNumberOfTuples();
+    superClass.resize(requestedNumTuples);
+    const newNumTuples = publicAPI.getNumberOfTuples();
+    if (newNumTuples < oldNumTuples) {
+      if (newNumTuples === 0) {
+        model.numberOfCells = 0;
+        model.cellSizes = [];
+      } else {
+        // We do not know how many cells are left.
+        // Set to undefined to ensure insertNextCell works correctly.
+        model.numberOfCells = undefined;
+        model.cellSizes = undefined;
+      }
+    }
+  };
+
   publicAPI.setData = (typedArray) => {
-    superSetData(typedArray, 1);
+    superClass.setData(typedArray, 1);
     model.numberOfCells = undefined;
     model.cellSizes = undefined;
   };
@@ -76,14 +93,6 @@ function vtkCellArray(publicAPI, model) {
     let cellLoc = loc;
     const numberOfPoints = model.values[cellLoc++];
     return model.values.subarray(cellLoc, cellLoc + numberOfPoints);
-  };
-
-  const superInitialize = publicAPI.initialize;
-  publicAPI.initialize = () => {
-    superInitialize();
-    // Set to undefined to ensure insertNextCell works correctly
-    model.numberOfCells = undefined;
-    model.cellSizes = undefined;
   };
 
   publicAPI.insertNextCell = (cellPointIds) => {

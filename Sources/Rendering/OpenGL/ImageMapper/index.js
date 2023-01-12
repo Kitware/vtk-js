@@ -52,16 +52,16 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.openGLImageSlice = publicAPI.getFirstAncestorOfType(
         'vtkOpenGLImageSlice'
       );
-      model.openGLRenderer =
+      model._openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model._openGLRenderWindow = model.openGLRenderer.getParent();
+      model._openGLRenderWindow = model._openGLRenderer.getParent();
       model.context = model._openGLRenderWindow.getContext();
       model.tris.setOpenGLRenderWindow(model._openGLRenderWindow);
       model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       model.pwfTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      const ren = model.openGLRenderer.getRenderable();
-      model.openGLCamera = model.openGLRenderer.getViewNodeFor(
+      const ren = model._openGLRenderer.getRenderable();
+      model.openGLCamera = model._openGLRenderer.getViewNodeFor(
         ren.getActiveCamera()
       );
       // is slice set by the camera
@@ -103,7 +103,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
   // Renders myself
   publicAPI.render = () => {
     const actor = model.openGLImageSlice.getRenderable();
-    const ren = model.openGLRenderer.getRenderable();
+    const ren = model._openGLRenderer.getRenderable();
     publicAPI.renderPiece(ren, actor);
   };
 

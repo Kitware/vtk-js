@@ -61,7 +61,9 @@ function createView(gc, viewType, widget) {
   obj.interactor.setInteractorStyle(
     gc.registerResource(vtkInteractorStyleImage.newInstance())
   );
-  obj.widgetInstance = obj.widgetManager.addWidget(widget, viewType);
+  obj.widgetInstance = gc.registerResource(
+    obj.widgetManager.addWidget(widget, viewType)
+  );
   obj.widgetManager.enablePicking();
   // Use to update all renderers buffer when actors are moved
   obj.widgetManager.setCaptureOn(CaptureOn.MOUSE_MOVE);
@@ -320,7 +322,7 @@ test('Test rendering when several rotations plane', (t) => {
       t.comment('Rotate Z by 45 degrees around Y');
       const xzWidget = viewAttributes[viewTypeToXYZ[ViewTypes.XZ_PLANE]];
       xzWidget.widgetInstance.rotateLineInView(
-        widget.getWidgetState().getAxisXinY(),
+        'XinY',
         vtkMath.radiansFromDegrees(45)
       );
       // Check X view
@@ -353,7 +355,7 @@ test('Test rendering when several rotations plane', (t) => {
       // Simulate increment of 5, seven times to have 35°
       for (let i = 0; i < 7; i++) {
         xzWidget.widgetInstance.rotateLineInView(
-          widget.getWidgetState().getAxisYinZ(),
+          'YinZ',
           vtkMath.radiansFromDegrees(5)
         );
         updateViews(true);
@@ -368,7 +370,7 @@ test('Test rendering when several rotations plane', (t) => {
       // ----------------------------------------------------------------------
       t.comment('Rotate Z by -35 degrees around Y');
       xzWidget.widgetInstance.rotateLineInView(
-        widget.getWidgetState().getAxisYinZ(),
+        'YinZ',
         vtkMath.radiansFromDegrees(-35)
       );
 

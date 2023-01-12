@@ -10,8 +10,12 @@ import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreen
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkPolyLineWidget from '@kitware/vtk.js/Widgets/Widgets3D/PolyLineWidget';
 import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
+import vtkInteractorObserver from '@kitware/vtk.js/Rendering/Core/InteractorObserver';
 
+import { bindSVGRepresentation } from 'vtk.js/Examples/Widgets/Utilities/SVGHelpers';
 import controlPanel from './controlPanel.html';
+
+const { computeWorldToDisplay } = vtkInteractorObserver;
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -47,6 +51,37 @@ widgetManager.addWidget(widget);
 renderer.resetCamera();
 widgetManager.enablePicking();
 widgetManager.grabFocus(widget);
+
+bindSVGRepresentation(renderer, widget.getWidgetState(), {
+  mapState(widgetState, { size }) {
+    const states = widgetState.getStatesWithLabel('handles') || [];
+    return states
+      .filter((state) => state.getVisible() && state.getOrigin())
+      .map((state) => {
+        const coords = computeWorldToDisplay(renderer, ...state.getOrigin());
+        return [coords[0], size[1] - coords[1]];
+      });
+  },
+  render(data, h) {
+    return data.map(([x, y], index) =>
+      h(
+        'text',
+        {
+          key: index,
+          attrs: {
+            x,
+            y,
+            dx: 12,
+            dy: -12,
+            fill: 'white',
+            'font-size': 32,
+          },
+        },
+        `L${index}`
+      )
+    );
+  },
+});
 
 // -----------------------------------------------------------
 // UI control handling
