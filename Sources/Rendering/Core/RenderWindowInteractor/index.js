@@ -1101,6 +1101,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         publicAPI.handleVisibilityChange
       );
     }
+    if (model.container) {
+      publicAPI.unbindEvents();
+    }
     superDelete();
   };
 
