@@ -788,7 +788,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     flip = false
   ) => {
     // Now determine the texture parameters using the arguments.
-    publicAPI.getOpenGLDataType(dataType);
+    publicAPI.getOpenGLDataType(dataType, true);
     publicAPI.getInternalFormat(dataType, numComps);
     publicAPI.getFormat(dataType, numComps);
 
