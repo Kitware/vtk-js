@@ -120,7 +120,7 @@ export default function widgetBehavior(publicAPI, model) {
    * @param {number} handleIndex 0, 1 or 2
    * @param {object} callData optional, see getHandleOrientation for details.
    */
-  function updateHandleOrientation(handleIndex, callData = null) {
+  function updateHandleOrientation(handleIndex) {
     const orientation = getHandleOrientation(Math.min(1, handleIndex));
     model.representations[handleIndex].setOrientation(orientation);
   }

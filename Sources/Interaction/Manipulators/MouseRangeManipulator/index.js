@@ -281,9 +281,8 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     processDelta(model.scrollListener, delta * model.scrollListener.step);
   };
 
-  publicAPI.onStartScroll = (payload) => {
+  publicAPI.onStartScroll = () => {
     model.interactionNetDelta = 0;
-    publicAPI.onScroll(payload);
   };
 }
 
