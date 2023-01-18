@@ -99,6 +99,12 @@ export interface vtkImageMapper extends vtkAbstractMapper {
 	getSlice(): number;
 
 	/**
+  	 * Return currently active image. By default, there can only be one image
+	 * for this mapper, if an input is set.
+	 */
+	getCurrentImage(): vtkImageData | null;
+
+	/**
 	 * Get the slice number at a focal point.
 	 */
 	getSliceAtFocalPoint(): boolean;
