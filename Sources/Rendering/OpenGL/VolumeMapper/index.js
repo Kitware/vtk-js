@@ -809,8 +809,28 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
       program.setUniformMatrix('vWCtoIDX', worldToIndex);
 
+      const camera = ren.getActiveCamera();
+      const [cRange0, cRange1] = camera.getClippingRange();
+      const distance = camera.getDistance();
+
+      // set the clipping range to be model.distance and model.distance + 0.1
+      // since we use the in the keyMats.wcpc (world to projection) matrix
+      // the projection matrix calculation relies on the clipping range to be
+      // set correctly. This is done inside the interactorStyleMPRSlice which
+      // limits use cases where the interactor style is not used.
+
+      camera.setClippingRange(distance, distance + 0.1);
+      const labelOutlineKeyMats = model.openGLCamera.getKeyMatrices(ren);
+
       // Get the projection coordinate to world coordinate transformation matrix.
-      mat4.invert(model.projectionToWorld, keyMats.wcpc);
+      mat4.invert(model.projectionToWorld, labelOutlineKeyMats.wcpc);
+
+      // reset the clipping range since the keyMats are cached
+      camera.setClippingRange(cRange0, cRange1);
+
+      // to re compute the matrices for the current camera and cache them
+      model.openGLCamera.getKeyMatrices(ren);
+
       program.setUniformMatrix('PCWCMatrix', model.projectionToWorld);
 
       const size = publicAPI.getRenderTargetSize();
