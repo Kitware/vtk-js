@@ -672,24 +672,25 @@ float volume_shadow(vec3 posIS, vec3 lightDirNormIS)
   }
   vec4 scalar = vec4(0.0);
   float maxdist = hit.tmax;
-  if(maxdist < EPSILON) {
-    return 1.0;
-  }
 
   // interpolate shadow ray length between: 1 unit of sample distance in IS to SQRT3, based on globalIlluminationReach
   float maxgi = mix(sampleDistanceISVS_jitter,SQRT3,giReach);
   maxdist = min(maxdist,maxgi);
+  if(maxdist < EPSILON) {
+    return 1.0;
+  }
 
   // support gradient opacity
   #ifdef vtkGradientOpacityOn
     vec4 normal;
   #endif
 
-  vec3 current_step = sampleDistanceISVS_jitter * lightDirNormIS;
-  float maxSteps = ceil(maxdist/sampleDistanceISVS_jitter);
-  float opacityDelta = 0.0;
+  float current_dist = 0.0;
+  float current_step = length(sampleDistanceISVS_jitter * lightDirNormIS);
+  float clamped_step = 0.0;
+  float sampled_dist = 0.0;
 
-  for (float i = 0.0; i < maxSteps; i++)
+  while(current_dist < maxdist)
   {
     scalar = getTextureValue(posIS);
     opacity = texture2D(otexture, vec2(scalar.r * oscale0 + oshift0, 0.5)).r;
@@ -704,18 +705,13 @@ float volume_shadow(vec3 posIS, vec3 lightDirNormIS)
       return 0.0;
     }
 
-    // optimization: increase/decrease sample distance based on changed in opacity value
-    opacityDelta = opacityPrev - opacity;
-    opacityPrev = opacity;
-    if (opacityDelta > 0.0){
-      current_step *= 0.9;
-    } else if (opacityDelta < 0.0){
-      current_step *= 1.1;
-    }
-    posIS += current_step;
+    clamped_step = min(maxdist - current_dist, current_step);
+    sampled_dist = current_dist + clamped_step;
+    posIS += sampled_dist;
+    current_dist += current_step;
   }
 
-  return shadow;  
+  return shadow;
 }
 
 vec3 applyShadowRay(vec3 tColor, vec3 posIS, vec3 viewDirectionVC)
