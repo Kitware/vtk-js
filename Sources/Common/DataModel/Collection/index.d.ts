@@ -68,7 +68,7 @@ export interface vtkCollection extends vtkObject {
 	 * Execute a passed function on every item in the collection
 	 * @param callbackfn callback function to be executed on every item in the collection
 	 */
-	forEach(callbackfn: (value: T, index: number, array: readonly T[]) => void): void;
+	forEach<T>(callbackfn: (value: T, index: number, array: readonly T[]) => void): void;
 
 	/**
 	 * Execute a passed function on every item in the collection, in order to calculate an aggregated return value.
@@ -81,7 +81,7 @@ export interface vtkCollection extends vtkObject {
 	 * Similar to forEach, but returns an array of resulting values.
 	 * @param callbackfn callback function to execute on each item in the collection, that returns a value.
 	 */
-	map(callbackfn: (value: T, index: number, array: readonly T[]) => void): void;
+	map<T>(callbackfn: (value: T, index: number, array: readonly T[]) => void): void;
 
 	/**
 	 * Check each element for modified time and update the collection's

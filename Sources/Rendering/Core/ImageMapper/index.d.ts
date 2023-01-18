@@ -2,6 +2,7 @@ import vtkCamera from "../Camera";
 import vtkAbstractMapper, { IAbstractMapperInitialValues } from "../AbstractMapper";
 import { Bounds, Vector3 } from "../../../types";
 import { SlicingMode } from "./Constants";
+import vtkImageData from "../../../Common/DataModel/ImageData";
 
 
 interface IClosestIJKAxis {

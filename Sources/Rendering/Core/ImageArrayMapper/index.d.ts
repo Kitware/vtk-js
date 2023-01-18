@@ -1,9 +1,10 @@
 import vtkCamera from "../Camera";
 import vtkAbstractImageMapper, { IAbstractImageMapperInitialValues } from "../AbstractImageMapper";
-import { IClosestIJKAxis } from "../ImageMapper";
+import IClosestIJKAxis from "../ImageMapper";
 import { Bounds } from "../../../types";
 import { SlicingMode } from "../ImageMapper/Constants";
 import vtkImageData from "../../../Common/DataModel/ImageData";
+import vtkCollection from "../../../Common/DataModel/Collection";
 
 
 interface ICoincidentTopology {

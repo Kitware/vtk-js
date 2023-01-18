@@ -35,9 +35,9 @@ export interface vtkAbstractImageMapper extends vtkAbstractMapper {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param {IImageMapperInitialValues} [initialValues] (default: {})
+ * @param {IAbstractImageMapperInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IImageMapperInitialValues): void;
+export function extend(publicAPI: object, model: object, initialValues?: IAbstractImageMapperInitialValues): void;
 
 /**
  * vtkImageMapper provides 2D image display support for vtk.
