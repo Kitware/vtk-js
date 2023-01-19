@@ -814,17 +814,38 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.context.pixelStorei(model.context.UNPACK_FLIP_Y_WEBGL, flip);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
-    model.context.texImage2D(
-      model.target,
-      0,
-      model.internalFormat,
-      model.width,
-      model.height,
-      0,
-      model.format,
-      model.openGLDataType,
-      scaledData[0]
-    );
+    if (model._openGLRenderWindow.getWebgl2()) {
+      model.context.texStorage2D(
+        model.target,
+        1,
+        model.internalFormat,
+        model.width,
+        model.height
+      );
+      model.context.texSubImage2D(
+        model.target,
+        0,
+        0,
+        0,
+        model.width,
+        model.height,
+        model.format,
+        model.openGLDataType,
+        scaledData[0]
+      );
+    } else {
+      model.context.texImage2D(
+        model.target,
+        0,
+        model.internalFormat,
+        model.width,
+        model.height,
+        0,
+        model.format,
+        model.openGLDataType,
+        scaledData[0]
+      );
+    }
 
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);
@@ -893,6 +914,15 @@ function vtkOpenGLTexture(publicAPI, model) {
     // Source texture data from the PBO.
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
+    if (model._openGLRenderWindow.getWebgl2()) {
+      model.context.texStorage2D(
+        model.target,
+        6,
+        model.internalFormat,
+        model.width,
+        model.height
+      );
+    }
     // We get the 6 images
     for (let i = 0; i < 6; i++) {
       // For each mipmap level
@@ -907,17 +937,31 @@ function vtkOpenGLTexture(publicAPI, model) {
         if (j <= model.maxLevel) {
           tempData = invertedData[6 * j + i];
         }
-        model.context.texImage2D(
-          model.context.TEXTURE_CUBE_MAP_POSITIVE_X + i,
-          j,
-          model.internalFormat,
-          w,
-          h,
-          0,
-          model.format,
-          model.openGLDataType,
-          tempData
-        );
+        if (model._openGLRenderWindow.getWebgl2()) {
+          model.context.texSubImage2D(
+            model.context.TEXTURE_CUBE_MAP_POSITIVE_X + i,
+            j,
+            0,
+            0,
+            w,
+            h,
+            model.format,
+            model.openGLDataType,
+            tempData
+          );
+        } else {
+          model.context.texImage2D(
+            model.context.TEXTURE_CUBE_MAP_POSITIVE_X + i,
+            j,
+            model.internalFormat,
+            w,
+            h,
+            0,
+            model.format,
+            model.openGLDataType,
+            tempData
+          );
+        }
         j++;
         w /= 2;
         h /= 2;
@@ -965,18 +1009,38 @@ function vtkOpenGLTexture(publicAPI, model) {
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
-    model.context.texImage2D(
-      model.target,
-      0,
-      model.internalFormat,
-      model.width,
-      model.height,
-      0,
-      model.format,
-      model.openGLDataType,
-      data
-    );
-
+    if (model._openGLRenderWindow.getWebgl2()) {
+      model.context.texStorage2D(
+        model.target,
+        1,
+        model.internalFormat,
+        model.width,
+        model.height
+      );
+      model.context.texSubImage2D(
+        model.target,
+        0,
+        0,
+        0,
+        model.width,
+        model.height,
+        model.format,
+        model.openGLDataType,
+        data
+      );
+    } else {
+      model.context.texImage2D(
+        model.target,
+        0,
+        model.internalFormat,
+        model.width,
+        model.height,
+        0,
+        model.format,
+        model.openGLDataType,
+        data
+      );
+    }
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);
     }
@@ -1037,14 +1101,38 @@ function vtkOpenGLTexture(publicAPI, model) {
     );
     const safeImage = canvas;
 
-    model.context.texImage2D(
-      model.target,
-      0,
-      model.internalFormat,
-      model.format,
-      model.openGLDataType,
-      safeImage
-    );
+    if (model._openGLRenderWindow.getWebgl2()) {
+      model.context.texStorage2D(
+        model.target,
+        1,
+        model.internalFormat,
+        model.width,
+        model.height
+      );
+      model.context.texSubImage2D(
+        model.target,
+        0,
+        0,
+        0,
+        model.width,
+        model.height,
+        model.format,
+        model.openGLDataType,
+        safeImage
+      );
+    } else {
+      model.context.texImage2D(
+        model.target,
+        0,
+        model.internalFormat,
+        model.width,
+        model.height,
+        0,
+        model.format,
+        model.openGLDataType,
+        safeImage
+      );
+    }
 
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);
@@ -1168,18 +1256,42 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // openGLDataType
 
-    model.context.texImage3D(
-      model.target,
-      0,
-      model.internalFormat,
-      model.width,
-      model.height,
-      model.depth,
-      0,
-      model.format,
-      model.openGLDataType,
-      scaledData[0]
-    );
+    if (model._openGLRenderWindow.getWebgl2()) {
+      model.context.texStorage3D(
+        model.target,
+        1,
+        model.internalFormat,
+        model.width,
+        model.height,
+        model.depth
+      );
+      model.context.texSubImage3D(
+        model.target,
+        0,
+        0,
+        0,
+        0,
+        model.width,
+        model.height,
+        model.depth,
+        model.format,
+        model.openGLDataType,
+        scaledData[0]
+      );
+    } else {
+      model.context.texImage3D(
+        model.target,
+        0,
+        model.internalFormat,
+        model.width,
+        model.height,
+        model.depth,
+        0,
+        model.format,
+        model.openGLDataType,
+        scaledData[0]
+      );
+    }
 
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);
@@ -1464,17 +1576,38 @@ function vtkOpenGLTexture(publicAPI, model) {
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
-    model.context.texImage2D(
-      model.target,
-      0,
-      model.internalFormat,
-      model.width,
-      model.height,
-      0,
-      model.format,
-      model.openGLDataType,
-      newArray
-    );
+    if (model._openGLRenderWindow.getWebgl2()) {
+      model.context.texStorage2D(
+        model.target,
+        1,
+        model.internalFormat,
+        model.width,
+        model.height
+      );
+      model.context.texSubImage2D(
+        model.target,
+        0,
+        0,
+        0,
+        model.width,
+        model.height,
+        model.format,
+        model.openGLDataType,
+        newArray
+      );
+    } else {
+      model.context.texImage2D(
+        model.target,
+        0,
+        model.internalFormat,
+        model.width,
+        model.height,
+        0,
+        model.format,
+        model.openGLDataType,
+        newArray
+      );
+    }
 
     publicAPI.deactivate();
     return true;
