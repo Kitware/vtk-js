@@ -815,24 +815,26 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     if (model._openGLRenderWindow.getWebgl2()) {
-      model.context.texStorage2D(
-        model.target,
-        1,
-        model.internalFormat,
-        model.width,
-        model.height
-      );
-      model.context.texSubImage2D(
-        model.target,
-        0,
-        0,
-        0,
-        model.width,
-        model.height,
-        model.format,
-        model.openGLDataType,
-        scaledData[0]
-      );
+      if (scaledData[0] != null) {
+        model.context.texStorage2D(
+          model.target,
+          1,
+          model.internalFormat,
+          model.width,
+          model.height
+        );
+        model.context.texSubImage2D(
+          model.target,
+          0,
+          0,
+          0,
+          model.width,
+          model.height,
+          model.format,
+          model.openGLDataType,
+          scaledData[0]
+        );
+      }
     } else {
       model.context.texImage2D(
         model.target,
@@ -938,17 +940,19 @@ function vtkOpenGLTexture(publicAPI, model) {
           tempData = invertedData[6 * j + i];
         }
         if (model._openGLRenderWindow.getWebgl2()) {
-          model.context.texSubImage2D(
-            model.context.TEXTURE_CUBE_MAP_POSITIVE_X + i,
-            j,
-            0,
-            0,
-            w,
-            h,
-            model.format,
-            model.openGLDataType,
-            tempData
-          );
+          if (tempData != null) {
+            model.context.texSubImage2D(
+              model.context.TEXTURE_CUBE_MAP_POSITIVE_X + i,
+              j,
+              0,
+              0,
+              w,
+              h,
+              model.format,
+              model.openGLDataType,
+              tempData
+            );
+          }
         } else {
           model.context.texImage2D(
             model.context.TEXTURE_CUBE_MAP_POSITIVE_X + i,
@@ -1010,24 +1014,26 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     if (model._openGLRenderWindow.getWebgl2()) {
-      model.context.texStorage2D(
-        model.target,
-        1,
-        model.internalFormat,
-        model.width,
-        model.height
-      );
-      model.context.texSubImage2D(
-        model.target,
-        0,
-        0,
-        0,
-        model.width,
-        model.height,
-        model.format,
-        model.openGLDataType,
-        data
-      );
+      if (data != null) {
+        model.context.texStorage2D(
+          model.target,
+          1,
+          model.internalFormat,
+          model.width,
+          model.height
+        );
+        model.context.texSubImage2D(
+          model.target,
+          0,
+          0,
+          0,
+          model.width,
+          model.height,
+          model.format,
+          model.openGLDataType,
+          data
+        );
+      }
     } else {
       model.context.texImage2D(
         model.target,
@@ -1102,24 +1108,26 @@ function vtkOpenGLTexture(publicAPI, model) {
     const safeImage = canvas;
 
     if (model._openGLRenderWindow.getWebgl2()) {
-      model.context.texStorage2D(
-        model.target,
-        1,
-        model.internalFormat,
-        model.width,
-        model.height
-      );
-      model.context.texSubImage2D(
-        model.target,
-        0,
-        0,
-        0,
-        model.width,
-        model.height,
-        model.format,
-        model.openGLDataType,
-        safeImage
-      );
+      if (safeImage != null) {
+        model.context.texStorage2D(
+          model.target,
+          1,
+          model.internalFormat,
+          model.width,
+          model.height
+        );
+        model.context.texSubImage2D(
+          model.target,
+          0,
+          0,
+          0,
+          model.width,
+          model.height,
+          model.format,
+          model.openGLDataType,
+          safeImage
+        );
+      }
     } else {
       model.context.texImage2D(
         model.target,
@@ -1577,24 +1585,26 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     if (model._openGLRenderWindow.getWebgl2()) {
-      model.context.texStorage2D(
-        model.target,
-        1,
-        model.internalFormat,
-        model.width,
-        model.height
-      );
-      model.context.texSubImage2D(
-        model.target,
-        0,
-        0,
-        0,
-        model.width,
-        model.height,
-        model.format,
-        model.openGLDataType,
-        newArray
-      );
+      if (newArray != null) {
+        model.context.texStorage2D(
+          model.target,
+          1,
+          model.internalFormat,
+          model.width,
+          model.height
+        );
+        model.context.texSubImage2D(
+          model.target,
+          0,
+          0,
+          0,
+          model.width,
+          model.height,
+          model.format,
+          model.openGLDataType,
+          newArray
+        );
+      }
     } else {
       model.context.texImage2D(
         model.target,
