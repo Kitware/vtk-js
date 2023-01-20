@@ -4,7 +4,7 @@ import { vec3 } from 'gl-matrix';
 export default function widgetBehavior(publicAPI, model) {
   model.painting = model._factory.getPainting();
 
-  publicAPI.handleLeftButtonPress = (callData) => {
+  publicAPI.handleLeftButtonPress = () => {
     if (!model.activeState || !model.activeState.getActive()) {
       return macro.VOID;
     }

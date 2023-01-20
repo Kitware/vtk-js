@@ -179,7 +179,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
   };
 
-  publicAPI.handleRightButtonRelease = (calldata) => {
+  publicAPI.handleRightButtonRelease = () => {
     if (
       model.widgetState.getScrollingMethod() ===
       ScrollingMethods.RIGHT_MOUSE_BUTTON
@@ -188,7 +188,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
   };
 
-  publicAPI.handleStartMouseWheel = (callData) => {
+  publicAPI.handleStartMouseWheel = () => {
     publicAPI.resetUpdateMethod();
     publicAPI.startInteraction();
   };
@@ -204,7 +204,7 @@ export default function widgetBehavior(publicAPI, model) {
     return macro.EVENT_ABORT;
   };
 
-  publicAPI.handleEndMouseWheel = (calldata) => {
+  publicAPI.handleEndMouseWheel = () => {
     publicAPI.endScrolling();
   };
 
@@ -217,7 +217,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
   };
 
-  publicAPI.handleMiddleButtonRelease = (calldata) => {
+  publicAPI.handleMiddleButtonRelease = () => {
     if (
       model.widgetState.getScrollingMethod() ===
       ScrollingMethods.MIDDLE_MOUSE_BUTTON

@@ -86,6 +86,10 @@ export function popMonitorGLContextCount(cb) {
   return GL_CONTEXT_LISTENERS.pop();
 }
 
+function _preventDefault(e) {
+  e.preventDefault();
+}
+
 // ----------------------------------------------------------------------------
 // vtkOpenGLRenderWindow methods
 // ----------------------------------------------------------------------------
@@ -99,13 +103,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.getViewNodeFactory = () => model.myFactory;
 
   // prevent default context lost handler
-  model.canvas.addEventListener(
-    'webglcontextlost',
-    (event) => {
-      event.preventDefault();
-    },
-    false
-  );
+  model.canvas.addEventListener('webglcontextlost', _preventDefault, false);
 
   model.canvas.addEventListener(
     'webglcontextrestored',
@@ -1252,7 +1250,16 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     return ret;
   };
 
+  function clearEvents() {
+    model.canvas.removeEventListener('webglcontextlost', _preventDefault);
+    model.canvas.removeEventListener(
+      'webglcontextrestored',
+      publicAPI.restoreContext
+    );
+  }
+
   publicAPI.delete = macro.chain(
+    clearEvents,
     publicAPI.delete,
     publicAPI.setViewStream,
     deleteGLContext
