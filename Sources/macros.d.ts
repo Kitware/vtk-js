@@ -290,7 +290,7 @@ export interface VtkChangeEvent {
    * @param VtkCallback
    * @param priority (default 0.0)
    */
-  onChange(VtkCallback, priority?: number): vtkSubscription;
+  onChange(VtkCallback: (...args: any) => void | symbol, priority?: number): vtkSubscription;
 }
 
 // ----------------------------------------------------------------------------

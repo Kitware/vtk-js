@@ -789,6 +789,13 @@ function vtkCubeAxesActor(publicAPI, model) {
     );
     return model.bounds;
   };
+
+  // Make sure the grid share the actor property
+  const _setProp = macro.chain(
+    publicAPI.setProperty,
+    model.gridActor.setProperty
+  );
+  publicAPI.setProperty = (p) => _setProp(p)[0];
 }
 
 // ----------------------------------------------------------------------------
