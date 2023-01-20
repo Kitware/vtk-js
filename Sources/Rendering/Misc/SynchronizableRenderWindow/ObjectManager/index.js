@@ -681,9 +681,8 @@ applyDefaultAliases();
 // ----------------------------------------------------------------------------
 
 // Avoid handling any lights at the moment
-EXCLUDE_INSTANCE_MAP.vtkOpenGLLight = {};
+// => vtk seems fine and PV could be fine as well but not tested so keeping PV exclude
 EXCLUDE_INSTANCE_MAP.vtkPVLight = {};
-EXCLUDE_INSTANCE_MAP.vtkLight = {};
 
 // ----------------------------------------------------------------------------
 // Publicly exposed methods
