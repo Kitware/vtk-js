@@ -94,6 +94,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   // map from pointerId to { pointerId: number, position: [x, y] }
   const pointerCache = new Map();
 
+  // Factor to apply on wheel spin.
+  let wheelCoefficient = 1;
+
   // Public API methods
 
   //----------------------------------------------------------------------
@@ -676,6 +679,25 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       position: getScreenEventPositionFor(event),
       deviceType: getDeviceTypeFor(event),
     };
+
+    // Wheel events are thought to scroll pages (i.e. multiple lines at once).
+    // See normalizeWheel() documentation for more context.
+    // While trackpad wheel events are many small (<1) wheel spins,
+    // mouse wheel events have absolute spin values higher than 1.
+    // Here the first spin value is "recorded", and used to normalize
+    // all the following mouse wheel events.
+    if (model.wheelTimeoutID === 0) {
+      // 0.4 is roughly half-way between a large trackpad first event and small
+      // mouse wheel first event.
+      if (Math.abs(callData.spinY) > 0.4) {
+        // Event is coming from mouse wheel
+        wheelCoefficient = Math.abs(callData.spinY);
+      } else {
+        // Event is coming from trackpad
+        wheelCoefficient = 1;
+      }
+    }
+    callData.spinY /= wheelCoefficient;
 
     if (model.wheelTimeoutID === 0) {
       publicAPI.startMouseWheelEvent(callData);
