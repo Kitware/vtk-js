@@ -369,12 +369,12 @@ function vtkOpenGLTexture(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.getDefaultInternalFormat = (vtktype, numComps) => {
     let result = 0;
-
     // try default next
     result = model._openGLRenderWindow.getDefaultTextureInternalFormat(
       vtktype,
       numComps,
-      model.oglNorm16Ext
+      model.oglNorm16Ext,
+      model.useHalfFloat
     );
     if (result) {
       return result;
@@ -456,9 +456,11 @@ function vtkOpenGLTexture(publicAPI, model) {
           return model.context.UNSIGNED_BYTE;
         // prefer norm16 since that is accurate compared to
         // half float which is not
-        case model.oglNorm16Ext && VtkDataTypes.SHORT:
+        case model.oglNorm16Ext && !model.useHalfFloat && VtkDataTypes.SHORT:
           return model.context.SHORT;
-        case model.oglNorm16Ext && VtkDataTypes.UNSIGNED_SHORT:
+        case model.oglNorm16Ext &&
+          !model.useHalfFloat &&
+          VtkDataTypes.UNSIGNED_SHORT:
           return model.context.UNSIGNED_SHORT;
         // use half float type
         case model.useHalfFloat && VtkDataTypes.SHORT:
@@ -1346,15 +1348,14 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.volumeInfo.dataComputedScale = computedScale;
     model.volumeInfo.dataComputedOffset = computedOffset;
 
-    // if we can use norm16, there is no need to use halfFloat then
-    model.useHalfFloat = model.oglNorm16Ext
-      ? false
-      : checkUseHalfFloat(
-          dataType,
-          computedOffset,
-          computedScale,
-          preferSizeOverAccuracy
-        );
+    // preferSizeOverAccuracy will override norm16 due to bug with norm16 implementation
+    // https://bugs.chromium.org/p/chromium/issues/detail?id=1408247
+    model.useHalfFloat = checkUseHalfFloat(
+      dataType,
+      computedOffset,
+      computedScale,
+      preferSizeOverAccuracy
+    );
 
     // since our default is to use half float, in case that we can't use it
     // we need to use another type
@@ -1365,21 +1366,10 @@ function vtkOpenGLTexture(publicAPI, model) {
     // WebGL2 path, we have 3d textures etc
     if (model._openGLRenderWindow.getWebgl2()) {
       if (
-        dataType === VtkDataTypes.FLOAT ||
-        (model.useHalfFloat &&
-          (dataType === VtkDataTypes.SHORT ||
-            dataType === VtkDataTypes.UNSIGNED_SHORT))
+        model.oglNorm16Ext &&
+        !model.useHalfFloat &&
+        dataType === VtkDataTypes.SHORT
       ) {
-        return publicAPI.create3DFromRaw(
-          width,
-          height,
-          depth,
-          numComps,
-          dataType,
-          data
-        );
-      }
-      if (model.oglNorm16Ext && dataType === VtkDataTypes.SHORT) {
         for (let c = 0; c < numComps; ++c) {
           model.volumeInfo.scale[c] = 32767.0;
         }
@@ -1392,10 +1382,29 @@ function vtkOpenGLTexture(publicAPI, model) {
           data
         );
       }
-      if (model.oglNorm16Ext && dataType === VtkDataTypes.UNSIGNED_SHORT) {
+      if (
+        model.oglNorm16Ext &&
+        !model.useHalfFloat &&
+        dataType === VtkDataTypes.UNSIGNED_SHORT
+      ) {
         for (let c = 0; c < numComps; ++c) {
           model.volumeInfo.scale[c] = 65535.0;
         }
+        return publicAPI.create3DFromRaw(
+          width,
+          height,
+          depth,
+          numComps,
+          dataType,
+          data
+        );
+      }
+      if (
+        dataType === VtkDataTypes.FLOAT ||
+        (model.useHalfFloat &&
+          (dataType === VtkDataTypes.SHORT ||
+            dataType === VtkDataTypes.UNSIGNED_SHORT))
+      ) {
         return publicAPI.create3DFromRaw(
           width,
           height,
