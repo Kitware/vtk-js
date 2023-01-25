@@ -670,7 +670,6 @@ float volume_shadow(vec3 posIS, vec3 lightDirNormIS)
   {
     return 1.0;
   }
-  vec4 scalar = vec4(0.0);
   float maxdist = hit.tmax;
 
   // interpolate shadow ray length between: 1 unit of sample distance in IS to SQRT3, based on globalIlluminationReach
@@ -688,8 +687,8 @@ float volume_shadow(vec3 posIS, vec3 lightDirNormIS)
   float current_dist = 0.0;
   float current_step = length(sampleDistanceISVS_jitter * lightDirNormIS);
   float clamped_step = 0.0;
-  float sampled_dist = 0.0;
 
+  vec4 scalar = vec4(0.0);
   while(current_dist < maxdist)
   {
     scalar = getTextureValue(posIS);
@@ -706,8 +705,7 @@ float volume_shadow(vec3 posIS, vec3 lightDirNormIS)
     }
 
     clamped_step = min(maxdist - current_dist, current_step);
-    sampled_dist = current_dist + clamped_step;
-    posIS += sampled_dist;
+    posIS += clamped_step * lightDirNormIS;
     current_dist += current_step;
   }
 
