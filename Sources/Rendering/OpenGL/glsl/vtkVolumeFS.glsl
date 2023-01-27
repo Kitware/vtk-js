@@ -651,8 +651,8 @@ float volume_shadow(vec3 posIS, vec3 lightDirNormIS)
   float shadow = 1.0;
   float opacity = 0.0;
 
-  // modify sample distance with a random number between 0.8 and 1.0
-  float sampleDistanceISVS_jitter = sampleDistanceISVS * mix(0.8, 1.0, random());
+  // modify sample distance with a random number between 1.5 and 3.0
+  float sampleDistanceISVS_jitter = sampleDistanceISVS * mix(1.5, 3.0, random());
   float opacityPrev = texture2D(otexture, vec2(getTextureValue(posIS).r * oscale0 + oshift0, 0.5)).r;
   
   // in case the first sample near surface has a very tiled light ray, we need to offset start position 
