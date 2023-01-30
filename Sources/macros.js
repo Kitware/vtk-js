@@ -97,8 +97,13 @@ TYPED_ARRAYS.Int16Array = Int16Array;
 TYPED_ARRAYS.Uint32Array = Uint32Array;
 TYPED_ARRAYS.Int32Array = Int32Array;
 TYPED_ARRAYS.Uint8ClampedArray = Uint8ClampedArray;
-// TYPED_ARRAYS.BigInt64Array = BigInt64Array;
-// TYPED_ARRAYS.BigUint64Array = BigUint64Array;
+
+try {
+  TYPED_ARRAYS.BigInt64Array = BigInt64Array;
+  TYPED_ARRAYS.BigUint64Array = BigUint64Array;
+} catch {
+  // ignore
+}
 
 export function newTypedArray(type, ...args) {
   return new (TYPED_ARRAYS[type] || Float64Array)(...args);
