@@ -1747,7 +1747,11 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         model.drawingEdges =
           drawSurfaceWithEdges &&
           (i === primTypes.TrisEdges || i === primTypes.TriStripsEdges);
-        if (!model.drawingEdges || !model.renderDepth) {
+        // don't draw edges when rendering depth or rendering for picking
+        if (
+          !model.drawingEdges ||
+          !(model.renderDepth || model.lastSelectionState >= 0)
+        ) {
           model.lastBoundBO = model.primitives[i];
           model.primitiveIDOffset += model.primitives[i].drawArrays(
             ren,
@@ -1962,7 +1966,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         { inRep: 'polys', cells: poly.getPolys() },
         { inRep: 'strips', cells: poly.getStrips() },
       ];
-      const drawSurfaceWithEdges = // TODO: false if picking
+      const drawSurfaceWithEdges =
         actor.getProperty().getEdgeVisibility() &&
         representation === Representation.SURFACE;
 
@@ -1983,22 +1987,23 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         } else {
           // if we have edge visibility build the edge VBOs
           if (drawSurfaceWithEdges) {
-            options.cellOffset += model.primitives[i].getCABO().createVBO(
-              primitives[i].cells,
-              primitives[i].inRep,
-              Representation.WIREFRAME,
-              {
-                ...options,
-                tcoords: null,
-                colors: null,
-                haveCellScalars: false,
-                haveCellNormals: false,
-              },
-              model.selectionWebGLIdsToVTKIds
-            );
-            options.vertexOffset += model.primitives[i]
+            // VBOs for edges in "surface with edges" are the last to be built,
+            // they are not used when picking with a hardware selector so they
+            // don't need selectionWebGLIdsToVTKIds and don't update cellOffset and vertexOffset
+            model.primitives[i]
               .getCABO()
-              .getElementCount();
+              .createVBO(
+                primitives[i].cells,
+                primitives[i].inRep,
+                Representation.WIREFRAME,
+                {
+                  ...options,
+                  tcoords: null,
+                  colors: null,
+                  haveCellScalars: false,
+                  haveCellNormals: false,
+                }
+              );
           } else {
             // otherwise free them
             model.primitives[i].releaseGraphicsResources();
