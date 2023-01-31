@@ -1,4 +1,5 @@
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import { vec3 } from 'gl-matrix';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
 const INIT_BOUNDS = [
@@ -62,11 +63,11 @@ export function addPoints(bounds, points) {
   }
   if (Array.isArray(points[0])) {
     for (let i = 0; i < points.length; ++i) {
-      addPoint(bounds, points[i]);
+      addPoint(bounds, ...points[i]);
     }
   } else {
     for (let i = 0; i < points.length; i += 3) {
-      addPoint(bounds, points.slice(i, i + 3));
+      addPoint(bounds, ...points.slice(i, i + 3));
     }
   }
   return bounds;
@@ -265,6 +266,17 @@ export function computeCornerPoints(bounds, point1, point2) {
   point2[1] = bounds[3];
   point2[2] = bounds[5];
   return point1;
+}
+
+export function transformBounds(bounds, transform, out = []) {
+  if (out.length < 6) {
+    reset(out);
+  }
+  const corners = getCorners(bounds, []);
+  for (let i = 0; i < corners.length; ++i) {
+    vec3.transformMat4(corners[i], corners[i], transform);
+  }
+  return addPoints(out, corners);
 }
 
 export function computeScale3(bounds, scale3 = []) {
@@ -637,7 +649,7 @@ class BoundingBox {
   }
 
   addPoint(...xyz) {
-    return addPoint(this.bounds, xyz);
+    return addPoint(this.bounds, ...xyz);
   }
 
   addPoints(points) {
@@ -716,6 +728,10 @@ class BoundingBox {
     return computeLocalBounds(this.bounds, u, v, w);
   }
 
+  transformBounds(transform, out = []) {
+    return transformBounds(this.bounds, transform, out);
+  }
+
   computeScale3(scale3) {
     return computeScale3(this.bounds, scale3);
   }
@@ -784,6 +800,7 @@ export const STATIC = {
   getCorners,
   computeCornerPoints,
   computeLocalBounds,
+  transformBounds,
   computeScale3,
   cutWithPlane,
   intersectBox,

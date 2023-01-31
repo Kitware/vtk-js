@@ -186,27 +186,8 @@ function vtkImageData(publicAPI, model) {
   publicAPI.getBounds = () =>
     publicAPI.extentToBounds(publicAPI.getSpatialExtent());
 
-  publicAPI.extentToBounds = (ex) => {
-    // prettier-ignore
-    const corners = [
-      [ex[0], ex[2], ex[4]],
-      [ex[1], ex[2], ex[4]],
-      [ex[0], ex[3], ex[4]],
-      [ex[1], ex[3], ex[4]],
-      [ex[0], ex[2], ex[5]],
-      [ex[1], ex[2], ex[5]],
-      [ex[0], ex[3], ex[5]],
-      [ex[1], ex[3], ex[5]]
-    ];
-
-    const bounds = [...vtkBoundingBox.INIT_BOUNDS];
-    const vout = [];
-    for (let i = 0; i < 8; ++i) {
-      publicAPI.indexToWorld(corners[i], vout);
-      vtkBoundingBox.addPoint(bounds, ...vout);
-    }
-    return bounds;
-  };
+  publicAPI.extentToBounds = (ex) =>
+    vtkBoundingBox.transformBounds(ex, model.indexToWorld);
 
   publicAPI.getSpatialExtent = () =>
     vtkBoundingBox.inflate([...model.extent], 0.5);
@@ -244,31 +225,11 @@ function vtkImageData(publicAPI, model) {
   };
   publicAPI.worldToIndexVec3 = publicAPI.worldToIndex;
 
-  publicAPI.indexToWorldBounds = (bin, bout = []) => {
-    const in1 = [0, 0, 0];
-    const in2 = [0, 0, 0];
-    vtkBoundingBox.computeCornerPoints(bin, in1, in2);
+  publicAPI.indexToWorldBounds = (bin, bout = []) =>
+    vtkBoundingBox.transformBounds(bin, model.indexToWorld, bout);
 
-    const out1 = [0, 0, 0];
-    const out2 = [0, 0, 0];
-    vec3.transformMat4(out1, in1, model.indexToWorld);
-    vec3.transformMat4(out2, in2, model.indexToWorld);
-
-    return vtkMath.computeBoundsFromPoints(out1, out2, bout);
-  };
-
-  publicAPI.worldToIndexBounds = (bin, bout = []) => {
-    const in1 = [0, 0, 0];
-    const in2 = [0, 0, 0];
-    vtkBoundingBox.computeCornerPoints(bin, in1, in2);
-
-    const out1 = [0, 0, 0];
-    const out2 = [0, 0, 0];
-    vec3.transformMat4(out1, in1, model.worldToIndex);
-    vec3.transformMat4(out2, in2, model.worldToIndex);
-
-    return vtkMath.computeBoundsFromPoints(out1, out2, bout);
-  };
+  publicAPI.worldToIndexBounds = (bin, bout = []) =>
+    vtkBoundingBox.transformBounds(bin, model.worldToIndex, bout);
 
   // Make sure the transform is correct
   publicAPI.onModified(publicAPI.computeTransforms);

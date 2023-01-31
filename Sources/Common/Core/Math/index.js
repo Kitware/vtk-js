@@ -1969,6 +1969,9 @@ export function areBoundsInitialized(bounds) {
   return !(bounds[1] - bounds[0] < 0.0);
 }
 
+/**
+ * @deprecated please use vtkBoundingBox.addPoints(vtkBoundingBox.reset([]), points)
+ */
 export function computeBoundsFromPoints(point1, point2, bounds) {
   bounds[0] = Math.min(point1[0], point2[0]);
   bounds[1] = Math.max(point1[0], point2[0]);

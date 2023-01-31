@@ -776,6 +776,7 @@ export function areBoundsInitialized(bounds: Bounds): boolean;
  * @param {Vector3} point1 The coordinate of the first point.
  * @param {Vector3} point2 The coordinate of the second point.
  * @param {Bounds} bounds Output array that hold bounds, optionally empty.
+ * @deprecated please use vtkBoundingBox.addPoints(vtkBoundingBox.reset([]), points)
  */
 export function computeBoundsFromPoints(point1: Vector3, point2: Vector3, bounds: Bounds): Bounds;
 

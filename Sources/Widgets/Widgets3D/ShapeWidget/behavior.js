@@ -208,7 +208,10 @@ export default function widgetBehavior(publicAPI, model) {
   // TODO: move to ShapeWidget/index.js
   publicAPI.getBounds = () =>
     model.point1 && model.point2
-      ? vtkMath.computeBoundsFromPoints(model.point1, model.point2, [])
+      ? vtkBoundingBox.addPoints(vtkBoundingBox.reset([]), [
+          model.point1,
+          model.point2,
+        ])
       : vtkMath.uninitializeBounds([]);
 
   // To be reimplemented by subclass
@@ -293,11 +296,10 @@ export default function widgetBehavior(publicAPI, model) {
       ...vtkBoundingBox.getMaxPoint(worldBounds),
       model._renderer
     );
-    const displayBounds = vtkMath.computeBoundsFromPoints(
+    const displayBounds = vtkBoundingBox.addPoints(vtkBoundingBox.reset([]), [
       minPoint,
       maxPoint,
-      []
-    );
+    ]);
 
     let planeOrigin = [];
     let p1 = [];
@@ -406,7 +408,10 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.updateTextPosition = (point1, point2) => {
-    const bounds = vtkMath.computeBoundsFromPoints(point1, point2, []);
+    const bounds = vtkBoundingBox.addPoints(vtkBoundingBox.reset([]), [
+      point1,
+      point2,
+    ]);
     const screenPosition = computeTextPosition(
       bounds,
       model.widgetState.getTextPosition(),
