@@ -46,6 +46,11 @@ function vtkViewProxy(publicAPI, model) {
   model.interactorStyle3D = vtkInteractorStyleManipulator.newInstance();
   model.interactorStyle2D = vtkInteractorStyleManipulator.newInstance();
 
+  /**
+   * Internal function used by publicAPI.resetCamera()
+   */
+  model._resetCamera = (bounds = null) => model.renderer.resetCamera(bounds);
+
   // Apply default interaction styles
   InteractionPresets.applyPreset('3D', model.interactorStyle3D);
   InteractionPresets.applyPreset('2D', model.interactorStyle2D);
@@ -257,9 +262,36 @@ function vtkViewProxy(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  publicAPI.setCameraParameters = ({
+    position,
+    focalPoint,
+    bounds,
+    parallelScale,
+    viewAngle,
+  }) => {
+    if (position != null) {
+      model.camera.setPosition(...position);
+    }
+    if (focalPoint != null) {
+      model.camera.setFocalPoint(...focalPoint);
+    }
+    if (bounds != null) {
+      model.renderer.resetCameraClippingRange(bounds);
+    } else {
+      model.renderer.resetCameraClippingRange();
+    }
+    if (parallelScale != null) {
+      model.camera.setParallelScale(parallelScale);
+    }
+    if (viewAngle != null) {
+      model.camera.setViewAngle(viewAngle);
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
   publicAPI.resetCamera = () => {
-    model.renderer.resetCamera();
-    model.renderer.resetCameraClippingRange();
+    model._resetCamera();
     model.interactorStyle2D.setCenterOfRotation(model.camera.getFocalPoint());
     model.interactorStyle3D.setCenterOfRotation(model.camera.getFocalPoint());
     publicAPI.renderLater();

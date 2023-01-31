@@ -2,6 +2,8 @@ import macro from 'vtk.js/Sources/macros';
 import vtkMouseRangeManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseRangeManipulator';
 import vtkViewProxy from 'vtk.js/Sources/Proxy/Core/ViewProxy';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import { vec3, mat4 } from 'gl-matrix';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 const DEFAULT_STEP_WIDTH = 512;
 
@@ -19,6 +21,32 @@ function formatAnnotationValue(value) {
     return value.toFixed(2);
   }
   return value;
+}
+
+/**
+ * Returns an array of points in world coordinates creating a coarse hull
+ * around the prop given in argument
+ * The returned array is empty if the prop is not visible or doesn't use bounds
+ *
+ * How it works: if possible, combine the mapper bounds corners with the prop matrix
+ * otherwise, returns the prop bounds corners
+ */
+function getPropCoarseHull(prop) {
+  if (!prop.getVisibility() || !prop.getUseBounds()) {
+    return [];
+  }
+  const mapperBounds = prop?.getMapper?.()?.getBounds?.();
+  const corners = [];
+  if (mapperBounds && vtkBoundingBox.isValid(mapperBounds) && prop.getMatrix) {
+    vtkBoundingBox.getCorners(mapperBounds, corners);
+    const matrix = prop.getMatrix().slice();
+    mat4.transpose(matrix, matrix);
+    corners.forEach((pt) => vec3.transformMat4(pt, pt, matrix));
+  } else {
+    const propBounds = prop.getBounds();
+    vtkBoundingBox.getCorners(propBounds, corners);
+  }
+  return corners;
 }
 
 // ----------------------------------------------------------------------------
@@ -91,6 +119,89 @@ function vtkView2DProxy(publicAPI, model) {
         }
       }
     }
+  };
+
+  const superInternalResetCamera = model._resetCamera;
+  /**
+   * If fitProps is true, calling resetCamera will exactly fit the bounds in the view
+   * Exact fitting requires useParallelRendering, and an active camera
+   * Otherwise, the default renderer.resetCamera is used and it uses a larger bounding box
+   */
+  model._resetCamera = (bounds = null) => {
+    // Always reset camera first to set physicalScale, physicalTranslation and trigger events
+    const initialReset = superInternalResetCamera(bounds);
+    if (!model.fitProps || !model.useParallelRendering || !initialReset) {
+      return initialReset;
+    }
+
+    // For each visible prop get the smallest possible convex hull using bounds corners
+    const visiblePoints = [];
+    if (bounds) {
+      // Bounds are given as argument, use their corners
+      vtkBoundingBox.getCorners(bounds, visiblePoints);
+    } else {
+      publicAPI
+        .getRepresentations()
+        .forEach((representationProxy) =>
+          [representationProxy.getActors(), representationProxy.getVolumes()]
+            .flat()
+            .forEach((prop) => visiblePoints.push(...getPropCoarseHull(prop)))
+        );
+    }
+
+    // Get the bounds in view coordinates
+    const viewBounds = vtkBoundingBox.reset([]);
+    const viewMatrix = model.camera.getViewMatrix();
+    mat4.transpose(viewMatrix, viewMatrix);
+
+    for (let i = 0; i < visiblePoints.length; ++i) {
+      const point = visiblePoints[i];
+      vec3.transformMat4(point, point, viewMatrix);
+      vtkBoundingBox.addPoint(viewBounds, ...point);
+    }
+
+    // Compute focal point and position
+    const viewFocalPoint = vtkBoundingBox.getCenter(viewBounds);
+    // Camera position in view coordinates is the center of the bounds in XY
+    // and the maximum bound + 1 in Z
+    const viewPosition = [
+      viewFocalPoint[0],
+      viewFocalPoint[1],
+      viewBounds[5] + 1,
+    ];
+    const inverseViewMatrix = new Float64Array(16);
+    const worldFocalPoint = new Float64Array(3);
+    const worldPosition = new Float64Array(3);
+    mat4.invert(inverseViewMatrix, viewMatrix);
+    vec3.transformMat4(worldFocalPoint, viewFocalPoint, inverseViewMatrix);
+    vec3.transformMat4(worldPosition, viewPosition, inverseViewMatrix);
+
+    // Compute parallel scale
+    const view = model.renderer.getRenderWindow().getViews()[0];
+    const dims = view.getViewportSize(model.renderer);
+    const aspect = dims[0] / dims[1];
+    const xLength = vtkBoundingBox.getLength(viewBounds, 0);
+    const yLength = vtkBoundingBox.getLength(viewBounds, 1);
+    const parallelScale = 0.5 * Math.max(yLength, xLength / aspect);
+
+    if (parallelScale <= 0) {
+      return initialReset;
+    }
+
+    // Compute bounds in world coordinates
+    const worldBounds = vtkBoundingBox.transformBounds(
+      viewBounds,
+      inverseViewMatrix
+    );
+
+    publicAPI.setCameraParameters({
+      position: worldPosition,
+      focalPoint: worldFocalPoint,
+      bounds: worldBounds,
+      parallelScale,
+    });
+
+    return true;
   };
 
   // --------------------------------------------------------------------------
@@ -230,6 +341,7 @@ const DEFAULT_VALUES = {
   viewUp: [0, 1, 0],
   useParallelRendering: true,
   sliceRepresentationSubscriptions: [],
+  fitProps: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -239,6 +351,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkViewProxy.extend(publicAPI, model, initialValues);
   macro.get(publicAPI, model, ['axis']);
+  macro.setGet(publicAPI, model, ['fitProps']);
 
   // Object specific methods
   vtkView2DProxy(publicAPI, model);
