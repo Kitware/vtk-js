@@ -97,6 +97,11 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	getFramebufferSize(): Vector2;
 
 	/**
+	 * Get the webgl canvas.
+	 */
+	getCanvas(): Nullable<HTMLCanvasElement>;
+
+	/**
 	 * Check if a point is in the viewport.
 	 * @param {Number} x The x coordinate.
 	 * @param {Number} y The y coordinate.
