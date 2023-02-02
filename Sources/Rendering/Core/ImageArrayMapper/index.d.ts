@@ -1,7 +1,6 @@
-import vtkCamera from "../Camera";
 import vtkAbstractImageMapper, { IAbstractImageMapperInitialValues } from "../AbstractImageMapper";
 import IClosestIJKAxis from "../ImageMapper";
-import { Bounds } from "../../../types";
+import { Bounds, Nullable } from "../../../types";
 import { SlicingMode } from "../ImageMapper/Constants";
 import vtkImageData from "../../../Common/DataModel/ImageData";
 import vtkCollection from "../../../Common/DataModel/Collection";
@@ -35,12 +34,12 @@ export interface vtkImageArrayMapper extends vtkAbstractImageMapper {
 	 * @param slice (global) slice number. If a slice number is not provided,
 	 * the function uses the current slice number (i.e. the output of getSlice()).
 	 */
-	getImage(slice?: number): vtkImageData;
+	getImage(slice?: number): Nullable<vtkImageData>;
 
 	/**
   	 * Return currently active image. This depends on the currently active slice number.
 	 */
-	getCurrentImage(): vtkImageData | null;
+	getCurrentImage(): Nullable<vtkImageData>;
 
 	/**
      * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
@@ -198,13 +197,6 @@ export interface vtkImageArrayMapper extends vtkAbstractImageMapper {
 	 * @param {Number} mode The slicing mode.
 	 */
 	setSlicingMode(mode: number): boolean;
-
-	/**
-	 * Update the mapper with latest changes to input data.
-	 * This function will re-compute the Slice-to-subSlice map
-	 * if the input collection object has been modified after the mapper.
-	 */
-	update(): void;
 
 	/**
 	 *

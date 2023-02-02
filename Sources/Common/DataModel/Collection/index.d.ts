@@ -1,5 +1,5 @@
-import vtkDataSetAttributes from '../DataSetAttributes';
-import { vtkObject } from "../../../interfaces" ;
+import { vtkObject } from "../../../interfaces";
+import { Nullable } from "../../../types";
 
 /**
  *
@@ -62,7 +62,7 @@ export interface vtkCollection extends vtkObject {
 	/**
 	 * get the current item and provided index, returns null if index is out of bounds
 	 */
-	getItem(idx: number): vtkObject | null;
+	getItem(idx: number): Nullable<vtkObject>;
 
 	/**
 	 * Execute a passed function on every item in the collection

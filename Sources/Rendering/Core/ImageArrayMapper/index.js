@@ -3,7 +3,6 @@ import vtkAbstractImageMapper from 'vtk.js/Sources/Rendering/Core/AbstractImageM
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import * as pickingHelper from 'vtk.js/Sources/Rendering/Core/AbstractImageMapper/helper';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 
 const { staticOffsetAPI, otherStaticMethods } = CoincidentTopologyHelper;
@@ -24,20 +23,30 @@ function vtkImageArrayMapper(publicAPI, model) {
   const _computeSliceToSubSliceMap = () => {
     const inputCollection = publicAPI.getInputData();
     if (!inputCollection || inputCollection.empty()) {
+      // clear the map
+      if (model.sliceToSubSliceMap.length !== 0) {
+        model.sliceToSubSliceMap.length = 0;
+        publicAPI.modified();
+      }
       return;
     }
 
-    const perImageMap = inputCollection.map((image, index) => {
-      const dim = image.getDimensions();
-      const out = new Array(dim[model.slicingMode]);
-      for (let i = 0; i < out.length; ++i) {
-        out[i] = { imageIndex: index, subSlice: i };
-      }
-      return out;
-    });
+    if (
+      model.sliceToSubSliceMap.length === 0 ||
+      inputCollection.getMTime() > publicAPI.getMTime()
+    ) {
+      const perImageMap = inputCollection.map((image, index) => {
+        const dim = image.getDimensions();
+        const out = new Array(dim[model.slicingMode]);
+        for (let i = 0; i < out.length; ++i) {
+          out[i] = { imageIndex: index, subSlice: i };
+        }
+        return out;
+      });
 
-    model.sliceToSubSliceMap = perImageMap.flat();
-    publicAPI.modified();
+      model.sliceToSubSliceMap = perImageMap.flat();
+      publicAPI.modified();
+    }
   };
 
   const _superSetInputData = publicAPI.setInputData;
@@ -57,13 +66,14 @@ function vtkImageArrayMapper(publicAPI, model) {
   };
 
   publicAPI.getImage = (slice = publicAPI.getSlice()) => {
-    const imageCollection = publicAPI.getInputData();
-    if (!imageCollection) {
+    const inputCollection = publicAPI.getInputData();
+    if (!inputCollection) {
       vtkWarningMacro('No input set.');
     } else if (slice < 0 || slice >= publicAPI.getTotalSlices()) {
       vtkWarningMacro('Invalid slice number.');
     } else {
-      return imageCollection.getItem(
+      _computeSliceToSubSliceMap();
+      return inputCollection.getItem(
         model.sliceToSubSliceMap[slice].imageIndex
       );
     }
@@ -71,25 +81,24 @@ function vtkImageArrayMapper(publicAPI, model) {
   };
 
   publicAPI.getBounds = () => {
-    const image = publicAPI.getCurrentImage();
-    if (!image) {
-      return vtkMath.createUninitializedBounds();
-    }
+    const bounds = [...vtkBoundingBox.INIT_BOUNDS];
 
     const inputCollection = publicAPI.getInputData();
-    const bounds = [...vtkBoundingBox.INIT_BOUNDS];
-    inputCollection.forEach((element) => {
-      const sb = element.getBounds();
-      vtkBoundingBox.addBounds(
-        bounds,
-        sb[0],
-        sb[1],
-        sb[2],
-        sb[3],
-        sb[4],
-        sb[5]
-      );
-    });
+    if (inputCollection && !inputCollection.empty()) {
+      inputCollection.forEach((element) => {
+        const sb = element.getBounds();
+        vtkBoundingBox.addBounds(
+          bounds,
+          sb[0],
+          sb[1],
+          sb[2],
+          sb[3],
+          sb[4],
+          sb[5]
+        );
+      });
+    }
+
     return bounds;
   };
 
@@ -111,7 +120,10 @@ function vtkImageArrayMapper(publicAPI, model) {
     return slicesCount;
   };
 
-  publicAPI.getTotalSlices = () => model.sliceToSubSliceMap.length;
+  publicAPI.getTotalSlices = () => {
+    _computeSliceToSubSliceMap();
+    return model.sliceToSubSliceMap.length;
+  };
 
   // set slice number in terms of imageIndex and subSlice number.
   publicAPI.setSlice = (slice) => {
@@ -120,13 +132,6 @@ function vtkImageArrayMapper(publicAPI, model) {
       // No input is set
       vtkWarningMacro('No input set.');
       return;
-    }
-
-    if (
-      model.sliceToSubSliceMap.length === 0 ||
-      inputCollection.getMTime() > publicAPI.getMTime()
-    ) {
-      _computeSliceToSubSliceMap();
     }
 
     const totalSlices = publicAPI.getTotalSlices();
@@ -142,29 +147,24 @@ function vtkImageArrayMapper(publicAPI, model) {
     }
   };
 
-  publicAPI.computeSlice = (imageIndex, subSlice) =>
-    model.sliceToSubSliceMap.findIndex(
+  publicAPI.computeSlice = (imageIndex, subSlice) => {
+    _computeSliceToSubSliceMap();
+    return model.sliceToSubSliceMap.findIndex(
       (x) => x.imageIndex === imageIndex && x.subSlice === subSlice
     );
+  };
 
-  publicAPI.getImageIndex = (slice = publicAPI.getSlice()) =>
-    model.sliceToSubSliceMap[slice]?.imageIndex;
+  publicAPI.getImageIndex = (slice = publicAPI.getSlice()) => {
+    _computeSliceToSubSliceMap();
+    return model.sliceToSubSliceMap[slice]?.imageIndex;
+  };
 
-  publicAPI.getSubSlice = (slice = publicAPI.getSlice()) =>
-    model.sliceToSubSliceMap[slice]?.subSlice;
+  publicAPI.getSubSlice = (slice = publicAPI.getSlice()) => {
+    _computeSliceToSubSliceMap();
+    return model.sliceToSubSliceMap[slice]?.subSlice;
+  };
 
   publicAPI.getCurrentImage = () => publicAPI.getImage(publicAPI.getSlice());
-
-  publicAPI.update = () => {
-    /*
-    const inputCollection = publicAPI.getInputData();
-    // Recompute the sliceToSubSlice map if the
-    // input collection has been modified.
-    if (inputCollection.getMTime() > publicAPI.getMTime()) {
-      _computeSliceToSubSliceMap();
-    }
-    */
-  };
 
   publicAPI.intersectWithLineForPointPicking = (p1, p2) =>
     pickingHelper.intersectWithLineForPointPicking(p1, p2, publicAPI);

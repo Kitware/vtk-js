@@ -1,6 +1,6 @@
 import vtkCamera from "../Camera";
 import vtkAbstractMapper, { IAbstractMapperInitialValues } from "../AbstractMapper";
-import { Bounds, Vector3 } from "../../../types";
+import { Bounds, Nullable, Vector3 } from "../../../types";
 import { SlicingMode } from "./Constants";
 import vtkImageData from "../../../Common/DataModel/ImageData";
 
@@ -103,7 +103,7 @@ export interface vtkImageMapper extends vtkAbstractMapper {
   	 * Return currently active image. By default, there can only be one image
 	 * for this mapper, if an input is set.
 	 */
-	getCurrentImage(): vtkImageData | null;
+	getCurrentImage(): Nullable<vtkImageData>;
 
 	/**
 	 * Get the slice number at a focal point.

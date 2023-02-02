@@ -1,5 +1,6 @@
 import vtkAbstractMapper, { IAbstractMapperInitialValues } from "../AbstractMapper";
 import vtkImageData from "../../../Common/DataModel/ImageData";
+import { Nullable } from "../../../types";
 
 
 export interface IAbstractImageMapperInitialValues extends IAbstractMapperInitialValues {
@@ -16,7 +17,7 @@ export interface vtkAbstractImageMapper extends vtkAbstractMapper {
 	/**
   	 * Return currently active image for the mapper. Overridden by deriving classes.
 	 */
-	getCurrentImage(): vtkImageData | null;
+	getCurrentImage(): Nullable<vtkImageData>;
 
 	/**
 	 * Get the slice index.
