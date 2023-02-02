@@ -2,7 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 import vtkAbstractImageMapper from 'vtk.js/Sources/Rendering/Core/AbstractImageMapper';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
-// import vtkCollection from 'vtk.js/Sources/Common/DataModel/Collection';
+import * as pickingHelper from 'vtk.js/Sources/Rendering/Core/AbstractImageMapper/helper';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 
@@ -100,11 +100,15 @@ function vtkImageArrayMapper(publicAPI, model) {
 
   publicAPI.computeTotalSlices = () => {
     const inputCollection = publicAPI.getInputData();
-    return inputCollection.reduce(
-      (accumulator, currImage) =>
-        currImage.getDimensions()[model.slicingMode] + accumulator,
-      0
-    );
+    const collectionLength = inputCollection.getNumberOfItems();
+    let slicesCount = 0;
+    for (let i = 0; i < collectionLength; ++i) {
+      const image = inputCollection.getItem(i);
+      if (image) {
+        slicesCount += image.getDimensions()[model.slicingMode];
+      }
+    }
+    return slicesCount;
   };
 
   publicAPI.getTotalSlices = () => model.sliceToSubSliceMap.length;
@@ -150,6 +154,23 @@ function vtkImageArrayMapper(publicAPI, model) {
     model.sliceToSubSliceMap[slice]?.subSlice;
 
   publicAPI.getCurrentImage = () => publicAPI.getImage(publicAPI.getSlice());
+
+  publicAPI.update = () => {
+    /*
+    const inputCollection = publicAPI.getInputData();
+    // Recompute the sliceToSubSlice map if the
+    // input collection has been modified.
+    if (inputCollection.getMTime() > publicAPI.getMTime()) {
+      _computeSliceToSubSliceMap();
+    }
+    */
+  };
+
+  publicAPI.intersectWithLineForPointPicking = (p1, p2) =>
+    pickingHelper.intersectWithLineForPointPicking(p1, p2, publicAPI);
+
+  publicAPI.intersectWithLineForCellPicking = (p1, p2) =>
+    pickingHelper.intersectWithLineForCellPicking(p1, p2, publicAPI);
 }
 
 // ----------------------------------------------------------------------------

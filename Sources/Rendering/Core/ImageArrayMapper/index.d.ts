@@ -198,6 +198,27 @@ export interface vtkImageArrayMapper extends vtkAbstractImageMapper {
 	 * @param {Number} mode The slicing mode.
 	 */
 	setSlicingMode(mode: number): boolean;
+
+	/**
+	 * Update the mapper with latest changes to input data.
+	 * This function will re-compute the Slice-to-subSlice map
+	 * if the input collection object has been modified after the mapper.
+	 */
+	update(): void;
+
+	/**
+	 *
+	 * @param {Number[]} p1 The coordinates of the first point.
+	 * @param {Number[]} p2 The coordinates of the second point.
+	 */
+	intersectWithLineForPointPicking(p1: number[], p2: number[]): any;
+
+	/**
+	 *
+	 * @param {Number[]} p1 The coordinates of the first point.
+	 * @param {Number[]} p2 The coordinates of the second point.
+	 */
+	intersectWithLineForCellPicking(p1: number[], p2: number[]): any;
 }
 
 /**

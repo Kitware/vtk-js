@@ -1,11 +1,9 @@
 import Constants from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
 import macro from 'vtk.js/Sources/macros';
 import vtkAbstractImageMapper from 'vtk.js/Sources/Rendering/Core/AbstractImageMapper';
+import * as pickingHelper from 'vtk.js/Sources/Rendering/Core/AbstractImageMapper/helper';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
-
-import { vec3 } from 'gl-matrix';
 
 const { staticOffsetAPI, otherStaticMethods } = CoincidentTopologyHelper;
 const { vtkWarningMacro } = macro;
@@ -304,127 +302,11 @@ function vtkImageMapper(publicAPI, model) {
     return image.extentToBounds(extent);
   };
 
-  function doPicking(p1, p2) {
-    const imageData = publicAPI.getCurrentImage();
-    const extent = imageData.getExtent();
+  publicAPI.intersectWithLineForPointPicking = (p1, p2) =>
+    pickingHelper.intersectWithLineForPointPicking(p1, p2, publicAPI);
 
-    // Slice origin
-    const ijk = [extent[0], extent[2], extent[4]];
-    const { ijkMode } = publicAPI.getClosestIJKAxis();
-    let nSlice = model.slice;
-    if (ijkMode !== model.slicingMode) {
-      // If not IJK slicing, get the IJK slice from the XYZ position/slice
-      nSlice = publicAPI.getSliceAtPosition(nSlice);
-    }
-    ijk[ijkMode] += nSlice;
-    const worldOrigin = [0, 0, 0];
-    imageData.indexToWorld(ijk, worldOrigin);
-
-    // Normal computation
-    ijk[ijkMode] += 1;
-    const worldNormal = [0, 0, 0];
-    imageData.indexToWorld(ijk, worldNormal);
-    worldNormal[0] -= worldOrigin[0];
-    worldNormal[1] -= worldOrigin[1];
-    worldNormal[2] -= worldOrigin[2];
-    vec3.normalize(worldNormal, worldNormal);
-
-    const intersect = vtkPlane.intersectWithLine(
-      p1,
-      p2,
-      worldOrigin,
-      worldNormal
-    );
-    if (intersect.intersection) {
-      const point = intersect.x;
-      const absoluteIJK = [0, 0, 0];
-      imageData.worldToIndex(point, absoluteIJK);
-      // `t` is the parametric position along the line
-      // defined in Plane.intersectWithLine
-      return {
-        t: intersect.t,
-        absoluteIJK,
-      };
-    }
-    return null;
-  }
-
-  publicAPI.intersectWithLineForPointPicking = (p1, p2) => {
-    const pickingData = doPicking(p1, p2);
-    if (pickingData) {
-      const imageData = publicAPI.getCurrentImage();
-      const extent = imageData.getExtent();
-
-      // Get closer integer ijk
-      // NB: point picking means closest slice, means rounding
-      const ijk = [
-        Math.round(pickingData.absoluteIJK[0]),
-        Math.round(pickingData.absoluteIJK[1]),
-        Math.round(pickingData.absoluteIJK[2]),
-      ];
-
-      // Are we outside our actual extent
-      if (
-        ijk[0] < extent[0] ||
-        ijk[0] > extent[1] ||
-        ijk[1] < extent[2] ||
-        ijk[1] > extent[3] ||
-        ijk[2] < extent[4] ||
-        ijk[2] > extent[5]
-      ) {
-        return null;
-      }
-
-      return {
-        t: pickingData.t,
-        ijk,
-      };
-    }
-    return null;
-  };
-
-  publicAPI.intersectWithLineForCellPicking = (p1, p2) => {
-    const pickingData = doPicking(p1, p2);
-    if (pickingData) {
-      const imageData = publicAPI.getCurrentImage();
-      const extent = imageData.getExtent();
-      const absIJK = pickingData.absoluteIJK;
-
-      // Get closer integer ijk
-      // NB: cell picking means closest voxel, means flooring
-      const ijk = [
-        Math.floor(absIJK[0]),
-        Math.floor(absIJK[1]),
-        Math.floor(absIJK[2]),
-      ];
-
-      // Are we outside our actual extent
-      if (
-        ijk[0] < extent[0] ||
-        ijk[0] > extent[1] - 1 ||
-        ijk[1] < extent[2] ||
-        ijk[1] > extent[3] - 1 ||
-        ijk[2] < extent[4] ||
-        ijk[2] > extent[5] - 1
-      ) {
-        return null;
-      }
-
-      // Parametric coordinates within cell
-      const pCoords = [
-        absIJK[0] - ijk[0],
-        absIJK[1] - ijk[1],
-        absIJK[2] - ijk[2],
-      ];
-
-      return {
-        t: pickingData.t,
-        ijk,
-        pCoords,
-      };
-    }
-    return null;
-  };
+  publicAPI.intersectWithLineForCellPicking = (p1, p2) =>
+    pickingHelper.intersectWithLineForCellPicking(p1, p2, publicAPI);
 
   publicAPI.getCurrentImage = () => publicAPI.getInputData();
 }
