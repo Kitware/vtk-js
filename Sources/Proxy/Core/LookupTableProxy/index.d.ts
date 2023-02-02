@@ -4,11 +4,11 @@ import vtkColorTransferFunction from '../../../Rendering/Core/ColorTransferFunct
 // [x, r/h, g/s, b/v, m=0.5, s=0.0]
 export type RGBHSVPoint = [number, number, number, number, number?, number?];
 
-export interface ILookupTableProxyMode {
-  Preset: number = 0;
-  RGBPoints: number = 1;
-  HSVPoints: number = 2;
-  Nodes: number = 3;
+export enum ILookupTableProxyMode {
+  Preset = 0,
+  RGBPoints = 1,
+  HSVPoints = 2,
+  Nodes = 3,
 }
 
 export interface vtkLookupTableProxy extends VtkProxy {
