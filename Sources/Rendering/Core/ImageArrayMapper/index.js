@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkAbstractImageMapper from 'vtk.js/Sources/Rendering/Core/AbstractImageMapper';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
-import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import * as pickingHelper from 'vtk.js/Sources/Rendering/Core/AbstractImageMapper/helper';
 import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 
@@ -81,25 +81,36 @@ function vtkImageArrayMapper(publicAPI, model) {
   };
 
   publicAPI.getBounds = () => {
-    const bounds = [...vtkBoundingBox.INIT_BOUNDS];
-
-    const inputCollection = publicAPI.getInputData();
-    if (inputCollection && !inputCollection.empty()) {
-      inputCollection.forEach((element) => {
-        const sb = element.getBounds();
-        vtkBoundingBox.addBounds(
-          bounds,
-          sb[0],
-          sb[1],
-          sb[2],
-          sb[3],
-          sb[4],
-          sb[5]
-        );
-      });
+    const image = publicAPI.getCurrentImage();
+    if (!image) {
+      return vtkMath.createUninitializedBounds();
+    }
+    if (!model.useCustomExtents) {
+      return image.getBounds();
     }
 
-    return bounds;
+    const ex = model.customDisplayExtent.slice();
+    // use sub-slice of the current image,
+    // which is the k-coordinate.
+    const nSlice = publicAPI.getSubSlice();
+    ex[4] = nSlice;
+    ex[5] = nSlice;
+    return image.extentToBounds(ex);
+  };
+
+  publicAPI.getBoundsForSlice = (
+    slice = publicAPI.getSlice(),
+    halfThickness = 0
+  ) => {
+    const image = publicAPI.getImage(slice);
+    if (!image) {
+      return vtkMath.createUninitializedBounds();
+    }
+    const extent = image.getSpatialExtent();
+    const nSlice = publicAPI.getSubSlice(slice);
+    extent[4] = nSlice - halfThickness;
+    extent[5] = nSlice + halfThickness;
+    return image.extentToBounds(extent);
   };
 
   publicAPI.getClosestIJKAxis = () => ({

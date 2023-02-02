@@ -4,6 +4,8 @@ import { Nullable } from "../../../types";
 
 
 export interface IAbstractImageMapperInitialValues extends IAbstractMapperInitialValues {
+	customDisplayExtent?: number[];
+	useCustomExtents?: boolean;
 	slice?: number;
 }
 
@@ -29,6 +31,34 @@ export interface vtkAbstractImageMapper extends vtkAbstractMapper {
 	 * @param {Number} slice The slice index.
 	 */
 	setSlice(slice: number): boolean;
+
+	/**
+	 *
+	 */
+	getUseCustomExtents(): boolean;
+
+	/**
+	 *
+	 * @param {Boolean} useCustomExtents
+	 */
+	setUseCustomExtents(useCustomExtents: boolean): boolean;
+
+	/**
+	 *
+	 * @param {Number} x1 The x coordinate of the first point.
+	 * @param {Number} x2 The x coordinate of the second point.
+	 * @param {Number} y1 The y coordinate of the first point.
+	 * @param {Number} y2 The y coordinate of the second point.
+	 * @param {Number} z1 The z coordinate of the first point.
+	 * @param {Number} z2 The z coordinate of the second point.
+	 */
+	setCustomDisplayExtent(x1: number, x2: number, y1: number, y2: number, z1: number, z2: number): boolean;
+
+	/**
+	 *
+	 * @param customDisplayExtent
+	 */
+	setCustomDisplayExtentFrom(customDisplayExtent: number[]): boolean;
 }
 
 /**

@@ -316,8 +316,6 @@ function vtkImageMapper(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  customDisplayExtent: [0, 0, 0, 0],
-  useCustomExtents: false,
   slicingMode: SlicingMode.NONE,
   closestIJKAxis: { ijkMode: SlicingMode.NONE, flip: false },
   renderToRectangle: false,
@@ -335,11 +333,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['slicingMode']);
   macro.setGet(publicAPI, model, [
     'closestIJKAxis',
-    'useCustomExtents',
     'renderToRectangle',
     'sliceAtFocalPoint',
   ]);
-  macro.setGetArray(publicAPI, model, ['customDisplayExtent'], 4);
 
   CoincidentTopologyHelper.implementCoincidentTopologyMethods(publicAPI, model);
 

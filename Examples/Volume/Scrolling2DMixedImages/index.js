@@ -181,6 +181,7 @@ function load(slicingMode) {
       console.log('setSlice: ', val);
       imageMapper.setSlice(val);
       updateWindowLevel(val);
+      renderer.resetCamera();
       renderWindow.render();
     }
   );

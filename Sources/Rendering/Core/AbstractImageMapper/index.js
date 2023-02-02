@@ -19,6 +19,8 @@ function vtkAbstractImageMapper(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   slice: 0,
+  customDisplayExtent: [0, 0, 0, 0, 0, 0],
+  useCustomExtents: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -29,7 +31,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   vtkAbstractMapper.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['slice']);
+  macro.setGet(publicAPI, model, ['slice', 'useCustomExtents']);
+  macro.setGetArray(publicAPI, model, ['customDisplayExtent'], 6);
 
   vtkAbstractImageMapper(publicAPI, model);
 }

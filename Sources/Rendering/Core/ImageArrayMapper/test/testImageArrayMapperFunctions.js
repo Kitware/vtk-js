@@ -40,8 +40,26 @@ test('Test ImageArrayMapper', (t) => {
   bounds = bounds.map((value) => value.toFixed(2));
   t.deepEqual(
     bounds,
-    ['-0.05', '0.85', '-0.05', '0.35', '-0.05', '0.45'],
+    ['-0.05', '0.75', '-0.05', '0.35', '-0.05', '0.45'],
     'getBounds'
+  );
+
+  bounds = mapper.getBoundsForSlice(1, 0.5);
+  bounds = bounds.map((value) => value.toFixed(2));
+  t.deepEqual(
+    bounds,
+    ['-0.05', '0.75', '-0.05', '0.35', '-0.05', '0.05'],
+    'getBoundsForSlice'
+  );
+
+  mapper.setUseCustomExtents(true);
+  mapper.setCustomDisplayExtentFrom([2, 7, 2, 3, 1, 1]);
+  bounds = mapper.getBounds();
+  bounds = bounds.map((value) => value.toFixed(2));
+  t.deepEqual(
+    bounds,
+    ['0.20', '0.70', '0.20', '0.30', '0.20', '0.20'],
+    'setUseCustomExtents setCustomDisplayExtentFrom'
   );
 
   const closestIJK = mapper.getClosestIJKAxis();
