@@ -1,35 +1,70 @@
 import { vtkObject } from "../../../interfaces" ;
 import { Bounds } from "../../../types";
+import { SelectionContent, SelectionField } from "./Constants";
+import vtkProp from "../../../Rendering/Core/Prop";
 
-export enum SelectionContent {
-	GLOBALIDS,
-	PEDIGREEIDS,
-	VALUES,
-	INDICES,
-	FRUSTUM,
-	LOCATIONS,
-	THRESHOLDS,
-	BLOCKS,
-	QUERY,
+export interface ISelectionNodeInitialValues {
+	contentType?: SelectionContent;
+	fieldType?: SelectionField;
+	properties?: ISelectionNodeProperties;
+	selectionList?: number[];
 }
 
-export enum SelectionField {
-	CELL,
-	POINT,
-	FIELD,
-	VERTEX,
-	EDGE,
-	ROW,
+export interface ISelectionNodeProperties {
+	propID?: number;
+	prop?: vtkProp;
+	compositeID?: number;
+	attributeID?: number;
+	pixelCount?: number;
+	displayPosition?: [number, number, number];
+	worldPosition?: [number, number, number];
 }
-
-export interface ISelectionNodeInitialValues {}
 
 export interface vtkSelectionNode extends vtkObject {
-	
 	/**
-	 * 
+	 * Get the bounds of the selection points.
 	 */
 	getBounds(): Bounds;
+
+	/**
+	 * Returns -1 if not initialized.
+	 */
+	getContentType(): SelectionContent | -1;
+
+	/**
+	 * This functions is called internally by VTK.js and is not intended for public use.
+	 */
+	setContentType(contentType: SelectionContent): void;
+
+	/**
+	 * Returns -1 if not initialized.
+	 */
+	getFieldType(): SelectionField | -1;
+
+	/**
+	 * This functions is called internally by VTK.js and is not intended for public use.
+	 */
+	setFieldType(fieldType: SelectionField): void;
+
+	/**
+	 * Get the selection properties.
+	 */
+	getProperties(): ISelectionNodeProperties;
+
+	/**
+	 * This functions is called internally by VTK.js and is not intended for public use.
+	 */
+	setProperties(properties: ISelectionNodeProperties);
+	
+	/**
+	 * Get the list of the underlying selected attribute IDs.
+	 */
+	getSelectionList(): number[];
+
+	/**
+	 * This functions is called internally by VTK.js and is not intended for public use.
+	 */
+	setSelectionList(selectionAttributeIDs: ISelectionNodeProperties);
 }
 
 /**
@@ -57,5 +92,7 @@ export function newInstance(initialValues?: ISelectionNodeInitialValues): vtkSel
 export declare const vtkSelectionNode: {
 	newInstance: typeof newInstance,
 	extend: typeof extend;
+	SelectionContent: typeof SelectionContent;
+    SelectionField: typeof SelectionField;
 };
 export default vtkSelectionNode;
