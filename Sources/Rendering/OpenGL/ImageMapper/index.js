@@ -763,6 +763,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       return;
     }
 
+    const dataType = imgScalars.getDataType();
+    const numComp = imgScalars.getNumberOfComponents();
+
+    // Re-allocate the texture because vtkOpenGLTexture uses texStorage2D
+    // which makes the texture immutable.
+    model.openGLTexture.releaseGraphicsResources(model._openGLRenderWindow);
+
     const actorProperty = actor.getProperty();
 
     // set interpolation on the texture based on property setting
@@ -779,8 +786,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.pwfTexture.setMagnificationFilter(Filter.LINEAR);
     }
 
-    const dataType = imgScalars.getDataType();
-    const numComp = imgScalars.getNumberOfComponents();
     const iComps = actorProperty.getIndependentComponents();
     const numIComps = iComps ? numComp : 1;
     const textureHeight = iComps ? 2 * numIComps : 1;
