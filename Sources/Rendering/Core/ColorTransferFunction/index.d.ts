@@ -1,10 +1,9 @@
 import vtkDataArray from '../../../Common/Core/DataArray';
-import { vtkObject } from '../../../interfaces';
+import vtkScalarsToColors from '../../../Common/Core/ScalarsToColors'
 import { ColorSpace, Scale } from "./Constants";
 
 
-/* TODO: use VtkScalarsToColors instead of VtkObject */
-export interface vtkColorTransferFunction extends vtkObject {
+export interface vtkColorTransferFunction extends vtkScalarsToColors {
   /**
    * Add a point defined in RGB
    * @param {Number} x The index of the point.
