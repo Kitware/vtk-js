@@ -1900,7 +1900,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (model.renderable.getColorCoordinates()) {
       tcoords = model.renderable.getColorCoordinates();
       if (!model.internalColorTexture) {
-        model.internalColorTexture = vtkOpenGLTexture.newInstance();
+        model.internalColorTexture = vtkOpenGLTexture.newInstance({
+          resizable: true,
+        });
       }
       const tex = model.internalColorTexture;
       // the following 4 lines allow for NPOT textures

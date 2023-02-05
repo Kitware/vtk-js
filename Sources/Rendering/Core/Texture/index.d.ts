@@ -1,11 +1,16 @@
 import { vtkAlgorithm } from "../../../interfaces";
 
+/**
+ * 
+ * @param {boolean} [resizable] Must be set to true if texture can be resized at run time (default: false)
+ */
 export interface ITextureInitialValues {
 	repeat?: boolean;
 	interpolate?: boolean;
 	edgeClamp?: boolean;
 	imageLoaded?: boolean;
 	mipLevel?: number;
+	resizable?: boolean;
 }
 
 export interface vtkTexture extends vtkAlgorithm {

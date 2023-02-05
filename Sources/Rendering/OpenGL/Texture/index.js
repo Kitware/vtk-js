@@ -814,7 +814,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.context.pixelStorei(model.context.UNPACK_FLIP_Y_WEBGL, flip);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
-    if (model._openGLRenderWindow.getWebgl2()) {
+    if (model._openGLRenderWindow.getWebgl2() && !model.resizable) {
       model.context.texStorage2D(
         model.target,
         1,
@@ -916,7 +916,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     // Source texture data from the PBO.
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
-    if (model._openGLRenderWindow.getWebgl2()) {
+    if (model._openGLRenderWindow.getWebgl2() && !model.resizable) {
       model.context.texStorage2D(
         model.target,
         6,
@@ -939,7 +939,7 @@ function vtkOpenGLTexture(publicAPI, model) {
         if (j <= model.maxLevel) {
           tempData = invertedData[6 * j + i];
         }
-        if (model._openGLRenderWindow.getWebgl2()) {
+        if (model._openGLRenderWindow.getWebgl2() && !model.resizable) {
           if (tempData != null) {
             model.context.texSubImage2D(
               model.context.TEXTURE_CUBE_MAP_POSITIVE_X + i,
@@ -1013,7 +1013,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
-    if (model._openGLRenderWindow.getWebgl2()) {
+    if (model._openGLRenderWindow.getWebgl2() && !model.resizable) {
       model.context.texStorage2D(
         model.target,
         1,
@@ -1107,7 +1107,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     );
     const safeImage = canvas;
 
-    if (model._openGLRenderWindow.getWebgl2()) {
+    if (model._openGLRenderWindow.getWebgl2() && !model.resizable) {
       model.context.texStorage2D(
         model.target,
         1,
@@ -1586,7 +1586,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
-    if (model._openGLRenderWindow.getWebgl2()) {
+    if (model._openGLRenderWindow.getWebgl2() && !model.resizable) {
       model.context.texStorage2D(
         model.target,
         1,
