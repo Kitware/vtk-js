@@ -428,7 +428,11 @@ function vtkColorTransferFunction(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   // Returns a table of RGB colors at regular intervals along the function
-  publicAPI.getTable = (xStart, xEnd, size, table) => {
+  publicAPI.getTable = (xStart_, xEnd_, size, table) => {
+    // To handle BigInt limitation
+    const xStart = Number(xStart_);
+    const xEnd = Number(xEnd_);
+
     // Special case: If either the start or end is a NaN, then all any
     // interpolation done on them is also a NaN.  Therefore, fill the table with
     // the NaN color.

@@ -1,4 +1,5 @@
 import pixelmatch from 'pixelmatch';
+import vtkRTAnalyticSource from 'vtk.js/Sources/Filters/Sources/RTAnalyticSource';
 
 let REMOVE_DOM_ELEMENTS = true;
 
@@ -167,6 +168,21 @@ function createGarbageCollector(testContext) {
   };
 }
 
+/**
+ * Convenience function to construct a test image.
+ * @param {Number[]} size Dimensions of the image as an array of size 3.
+ * @param {Number[]} spacing image voxel spacing.
+ * @returns Constructed image as vtkImageData
+ */
+function createImage(size, spacing) {
+  const source = vtkRTAnalyticSource.newInstance();
+  source.setWholeExtent([0, size[0] - 1, 0, size[1] - 1, 0, size[2] - 1]);
+  source.update();
+  const image = source.getOutputData();
+  image.setSpacing(spacing);
+  return image;
+}
+
 function keepDOM() {
   REMOVE_DOM_ELEMENTS = false;
 }
@@ -205,6 +221,7 @@ export default {
   arrayEquals,
   compareImages,
   createGarbageCollector,
+  createImage,
   keepDOM,
   objEquals,
   removeDOM,

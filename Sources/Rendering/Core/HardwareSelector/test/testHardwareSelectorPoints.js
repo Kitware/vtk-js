@@ -65,18 +65,23 @@ test.onlyIfWebGL('Test HardwareSelector Points', (tapeContext) => {
 
   renderer.addActor(actor3);
 
-  // Square polyline upper left --------------------------------
+  // Square polyline upper left with triangle poly inside --------------------------------
   // Triangle polyline lower right -----------------------------
   const mapper4 = gc.registerResource(vtkMapper.newInstance());
   const polygon = gc.registerResource(vtkPolydata.newInstance());
   const squarePoints = [-0.25, 1.25, 0, 0, 1.25, 0, 0, 1, 0, -0.25, 1, 0];
   const trianglePoints = [1, 0, 0, 1, -0.25, 0, 1.25, -0.125, 0];
+  const polyPoints = [-0.2, 1.05, 0, -0.05, 1.05, 0, -0.125, 1.2, 0];
   polygon
     .getPoints()
-    .setData(Float32Array.from([...squarePoints, ...trianglePoints]), 3);
+    .setData(
+      Float32Array.from([...squarePoints, ...trianglePoints, ...polyPoints]),
+      3
+    );
   polygon
     .getLines()
     .setData(Uint16Array.from([5, 0, 1, 2, 3, 0, 4, 4, 5, 6, 4]));
+  polygon.getPolys().setData(Uint16Array.from([3, 7, 8, 9]));
   mapper4.setInputData(polygon);
 
   const actor4 = gc.registerResource(vtkActor.newInstance());
@@ -158,6 +163,13 @@ test.onlyIfWebGL('Test HardwareSelector Points', (tapeContext) => {
     sel.selectAsync(renderer, 265, 128, 265, 128).then((res) => {
       tapeContext.ok(res[0].getProperties().propID === 7);
       tapeContext.ok(res[0].getProperties().attributeID === 1);
+    })
+  );
+  // On the triangle of the actor 4 inside the square
+  promises.push(
+    sel.selectAsync(renderer, 134, 265, 134, 265).then((res) => {
+      tapeContext.ok(res[0].getProperties().propID === 7);
+      tapeContext.ok(res[0].getProperties().attributeID === 2);
     })
   );
   Promise.all(promises).then(() => {
