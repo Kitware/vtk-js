@@ -65,7 +65,10 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         ren.getActiveCamera()
       );
       // is slice set by the camera
-      if (model.renderable.getSliceAtFocalPoint()) {
+      if (
+        model.renderable.isA('vtkImageMapper') &&
+        model.renderable.getSliceAtFocalPoint()
+      ) {
         model.renderable.setSliceFromCamera(ren.getActiveCamera());
       }
     }
@@ -705,7 +708,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     publicAPI.invokeEvent({ type: 'StartEvent' });
     model.renderable.update();
-    model.currentInput = model.renderable.getInputData();
+    model.currentInput = model.renderable.getCurrentImage();
     publicAPI.invokeEvent({ type: 'EndEvent' });
 
     if (!model.currentInput) {
@@ -760,6 +763,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       return;
     }
 
+    const dataType = imgScalars.getDataType();
+    const numComp = imgScalars.getNumberOfComponents();
+
+    // Re-allocate the texture because vtkOpenGLTexture uses texStorage2D
+    // which makes the texture immutable.
+    model.openGLTexture.releaseGraphicsResources(model._openGLRenderWindow);
+
     const actorProperty = actor.getProperty();
 
     // set interpolation on the texture based on property setting
@@ -776,8 +786,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.pwfTexture.setMagnificationFilter(Filter.LINEAR);
     }
 
-    const dataType = imgScalars.getDataType();
-    const numComp = imgScalars.getNumberOfComponents();
     const iComps = actorProperty.getIndependentComponents();
     const numIComps = iComps ? numComp : 1;
     const textureHeight = iComps ? 2 * numIComps : 1;
@@ -909,7 +917,11 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       slice = model.renderable.getSliceAtPosition(slice);
     }
 
-    const nSlice = Math.round(slice);
+    // Use sub-Slice number/offset if mapper being used is vtkImageArrayMapper,
+    // since this mapper uses a collection of vtkImageData (and not just a single vtkImageData).
+    const nSlice = model.renderable.isA('vtkImageArrayMapper')
+      ? model.renderable.getSubSlice() // get subSlice of the current (possibly multi-frame) image
+      : Math.round(slice);
 
     // Find sliceOffset
     const ext = image.getExtent();
@@ -1157,4 +1169,4 @@ export const newInstance = macro.newInstance(extend, 'vtkOpenGLImageMapper');
 export default { newInstance, extend };
 
 // Register ourself to OpenGL backend if imported
-registerOverride('vtkImageMapper', newInstance);
+registerOverride('vtkAbstractImageMapper', newInstance);
