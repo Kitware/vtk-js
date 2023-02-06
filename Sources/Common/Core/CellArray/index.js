@@ -66,6 +66,9 @@ function vtkCellArray(publicAPI, model) {
     return model.cellSizes;
   };
 
+  /**
+   * When `resize()` is being used, you then MUST use `insertNextCell()`.
+   */
   publicAPI.resize = (requestedNumTuples) => {
     const oldNumTuples = publicAPI.getNumberOfTuples();
     superClass.resize(requestedNumTuples);
