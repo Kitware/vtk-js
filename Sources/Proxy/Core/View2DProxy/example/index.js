@@ -1,4 +1,5 @@
 import '@kitware/vtk.js/favicon';
+import { mat3 } from 'gl-matrix';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
@@ -95,6 +96,18 @@ imageDataPromise.then((imageData) => {
     sourceProxy,
     view2DProxy
   );
+
+  // Scrolling through the slices shows that the bounding box of the volume fits perfectly in the view
+
+  // Rotate the prop
+  const prop = representation2DProxy.getActors()[0];
+  prop.rotateY(40);
+  prop.rotateX(25);
+  prop.rotateZ(10);
+
+  // Rotate the imageData
+  imageData.setDirection(mat3.fromRotation([], 0.6));
+
   view2DProxy.resetCamera();
 });
 
