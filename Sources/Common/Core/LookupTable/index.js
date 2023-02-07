@@ -61,7 +61,7 @@ function vtkLookupTable(publicAPI, model) {
   publicAPI.usingLogScale = () => false;
 
   //----------------------------------------------------------------------------
-  publicAPI.getNumberOfAvailableColors = () => model.table.length;
+  publicAPI.getNumberOfAvailableColors = () => model.table.length / 4;
 
   //----------------------------------------------------------------------------
   // Apply shift/scale to the scalar value v and return the index.
@@ -92,12 +92,7 @@ function vtkLookupTable(publicAPI, model) {
       index = publicAPI.linearIndexLookup(v, p);
     }
     const offset = 4 * index;
-    return [
-      table[offset],
-      table[offset + 1],
-      table[offset + 2],
-      table[offset + 3],
-    ];
+    return table.slice(offset, offset + 4);
   };
 
   publicAPI.indexedLookupFunction = (v, table, p) => {
@@ -199,6 +194,8 @@ function vtkLookupTable(publicAPI, model) {
       ainc = (model.alphaRange[1] - model.alphaRange[0]) / maxIndex;
     }
 
+    model.table.length = 4 * maxIndex + 16;
+
     const hsv = [];
     const rgba = [];
     for (let i = 0; i <= maxIndex; i++) {
@@ -232,6 +229,7 @@ function vtkLookupTable(publicAPI, model) {
     }
     model.numberOfColors = table.getNumberOfTuples();
     const data = table.getData();
+    model.table.length = data.length;
     for (let i = 0; i < data.length; i++) {
       model.table[i] = data[i];
     }

@@ -403,7 +403,7 @@ function vtkScalarBarActorHelper(publicAPI, model) {
   };
 
   // based on all the settins compute a barSegments array
-  // containing the segments opf the scalar bar
+  // containing the segments of the scalar bar
   // each segment contains
   //   corners[4][2]
   //   title - e.g. NaN, Above, ticks
@@ -854,7 +854,7 @@ const newScalarBarActorHelper = macro.newInstance(
     model.tmPolyData = vtkPolyData.newInstance();
     model.tmMapper = vtkMapper.newInstance();
     model.tmMapper.setInputData(model.tmPolyData);
-    model.tmTexture = vtkTexture.newInstance();
+    model.tmTexture = vtkTexture.newInstance({ resizable: true });
     model.tmTexture.setInterpolate(false);
     model.tmActor = vtkActor.newInstance({ parentProp: publicAPI });
     model.tmActor.setMapper(model.tmMapper);

@@ -249,6 +249,7 @@ const DEFAULT_VALUES = {
   interpolate: false,
   edgeClamp: false,
   mipLevel: 0,
+  resizable: false, // must be set at construction time if the texture can be resizable
 };
 
 // ----------------------------------------------------------------------------

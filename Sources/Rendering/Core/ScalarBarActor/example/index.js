@@ -10,6 +10,9 @@ import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkScalarBarActor from '@kitware/vtk.js/Rendering/Core/ScalarBarActor';
+import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkLookupTable from '@kitware/vtk.js/Common/Core/LookupTable';
+import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
 import controlPanel from './controlPanel.html';
 
 // ----------------------------------------------------------------------------
@@ -25,12 +28,20 @@ fullScreenRenderer.addController(controlPanel);
 // Add a cube source
 // ----------------------------------------------------------------------------
 const cone = vtkConeSource.newInstance();
+cone.update();
+const npts = cone.getOutputData().getPoints().getNumberOfPoints();
+const scalars = vtkDataArray.newInstance({ size: npts });
+for (let i = 0; i < npts; ++i) {
+  scalars.setTuple(i, [i / npts]);
+}
+cone.getOutputData().getPointData().setScalars(scalars);
+
 const mapper = vtkMapper.newInstance();
 mapper.setInputData(cone.getOutputData());
+let lut = mapper.getLookupTable();
+
 const actor = vtkActor.newInstance();
 actor.setMapper(mapper);
-actor.getProperty().setColor(0.0, 0.0, 1.0);
-actor.getProperty().setOpacity(0.5);
 
 renderer.addActor(actor);
 renderer.resetCamera();
@@ -38,7 +49,6 @@ renderWindow.render();
 
 const scalarBarActor = vtkScalarBarActor.newInstance();
 renderer.addActor(scalarBarActor);
-const lut = mapper.getLookupTable();
 scalarBarActor.setScalarsToColors(lut);
 
 // Change the number of ticks (TODO: add numberOfTicks to ScalarBarActor)
@@ -108,5 +118,60 @@ document
   .querySelector('#drawAboveRangeSwatch')
   .addEventListener('change', (event) => {
     scalarBarActor.setDrawAboveRangeSwatch(event.target.checked);
+    renderWindow.render();
+  });
+document
+  .querySelector('#interpolateScalars')
+  .addEventListener('change', (event) => {
+    mapper.setInterpolateScalarsBeforeMapping(event.target.checked);
+    renderWindow.render();
+  });
+
+document
+  .querySelector('#useColorTransferFunction')
+  .addEventListener('change', (event) => {
+    if (event.target.checked) {
+      const discretize = document.querySelector('#discretize').checked;
+      const numberOfValues = parseInt(
+        document.querySelector('#numberOfColors').value,
+        10
+      );
+      const ctf = vtkColorTransferFunction.newInstance({
+        discretize,
+        numberOfValues,
+      });
+      ctf.addRGBPoint(1.0, 0.0, 1.0, 0.0);
+      ctf.addRGBPoint(0.0, 0.0, 0.0, 1.0);
+      mapper.setLookupTable(ctf);
+    } else {
+      const numberOfColors = parseInt(
+        document.querySelector('#numberOfColors').value,
+        10
+      );
+      mapper.setLookupTable(vtkLookupTable.newInstance({ numberOfColors }));
+    }
+    lut = mapper.getLookupTable();
+    scalarBarActor.setScalarsToColors(lut);
+    renderWindow.render();
+  });
+document.querySelector('#discretize').addEventListener('change', (event) => {
+  if (lut.isA('vtkColorTransferFunction')) {
+    lut.setDiscretize(event.target.checked);
+    renderWindow.render();
+  }
+});
+document
+  .querySelector('#numberOfColors')
+  .addEventListener('change', (event) => {
+    if (lut.isA('vtkLookupTable')) {
+      lut.setNumberOfColors(parseInt(event.target.value, 10));
+      lut.modified();
+      lut.build();
+    } else {
+      lut.setNumberOfValues(parseInt(event.target.value, 10));
+    }
+    lut.modified();
+    scalarBarActor.setScalarsToColors(lut);
+    scalarBarActor.modified();
     renderWindow.render();
   });
