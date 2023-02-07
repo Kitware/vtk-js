@@ -16,7 +16,7 @@ import {
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
-import { vec4, mat4 } from 'gl-matrix';
+import { mat4 } from 'gl-matrix';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
 const VTK_INT_MAX = 2147483647;
@@ -464,10 +464,13 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
     const newResliceAxes = mat4.identity(new Float64Array(16));
 
+    const planeOrigin = planeSource.getOrigin();
+
     for (let i = 0; i < 3; i++) {
-      newResliceAxes[4 * i + 0] = planeAxis1[i];
-      newResliceAxes[4 * i + 1] = planeAxis2[i];
-      newResliceAxes[4 * i + 2] = normal[i];
+      newResliceAxes[i] = planeAxis1[i];
+      newResliceAxes[4 + i] = planeAxis2[i];
+      newResliceAxes[8 + i] = normal[i];
+      newResliceAxes[12 + i] = planeOrigin[i];
     }
 
     const spacingX =
@@ -479,18 +482,6 @@ function vtkResliceCursorWidget(publicAPI, model) {
       Math.abs(planeAxis2[0] * spacing[0]) +
       Math.abs(planeAxis2[1] * spacing[1]) +
       Math.abs(planeAxis2[2] * spacing[2]);
-
-    const planeOrigin = [...planeSource.getOrigin(), 1.0];
-    const originXYZW = [];
-    const newOriginXYZW = [];
-
-    vec4.transformMat4(originXYZW, planeOrigin, newResliceAxes);
-    mat4.transpose(newResliceAxes, newResliceAxes);
-    vec4.transformMat4(newOriginXYZW, originXYZW, newResliceAxes);
-
-    newResliceAxes[4 * 3 + 0] = newOriginXYZW[0];
-    newResliceAxes[4 * 3 + 1] = newOriginXYZW[1];
-    newResliceAxes[4 * 3 + 2] = newOriginXYZW[2];
 
     // Compute a new set of resliced extents
     let extentX = 0;
