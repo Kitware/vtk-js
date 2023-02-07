@@ -213,7 +213,7 @@ export interface vtkImageMapper extends vtkAbstractMapper {
 	 * Set the slice from a given focal point. 
 	 * @param {Boolean} sliceAtFocalPoint
 	 */
-	sliceAtFocalPoint(sliceAtFocalPoint: boolean): boolean;
+	setSliceAtFocalPoint(sliceAtFocalPoint: boolean): boolean;
 
 	/**
 	 * Set the slice for the X axis. 
