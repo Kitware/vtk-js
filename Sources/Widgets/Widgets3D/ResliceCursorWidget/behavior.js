@@ -80,21 +80,11 @@ export default function widgetBehavior(publicAPI, model) {
       ? 'point0'
       : 'point1';
 
-  // Reset "updateMethodName" attribute when no actors are selected
-  // Useful to update 'updateMethodeName' to the correct name which
-  // will be TranslateCenter by default
-  publicAPI.resetUpdateMethod = () => {
-    if (model.representations.length !== 0) {
-      model.representations[0].getSelectedState();
-    }
-  };
-
   publicAPI.startScrolling = (newPosition) => {
     if (newPosition) {
       previousPosition = newPosition;
     }
     isScrolling = true;
-    publicAPI.resetUpdateMethod();
     publicAPI.startInteraction();
   };
 
@@ -189,7 +179,6 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleStartMouseWheel = () => {
-    publicAPI.resetUpdateMethod();
     publicAPI.startInteraction();
   };
 
