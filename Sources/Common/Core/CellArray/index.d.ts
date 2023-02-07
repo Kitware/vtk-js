@@ -9,6 +9,10 @@ export interface ICellArrayInitialValues extends IDataArrayInitialValues {
 	empty?: boolean;
 }
 
+/**
+ * You are NOT allowed to modify the cell array via `getData()`.
+ * Only via `setData` or `insertNextCell`
+ */
 export interface vtkCellArray extends vtkDataArray {
 
 	/**

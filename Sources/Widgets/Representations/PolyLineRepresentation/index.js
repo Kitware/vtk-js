@@ -37,14 +37,21 @@ function vtkPolyLineRepresentation(publicAPI, model) {
       polyData.getPoints().length !== size * 3
     ) {
       points = allocateArray(polyData, 'points', size).getData();
-      const cellSize = size + 1 + (closePolyLine ? 1 : 0);
-      const cells = allocateArray(polyData, 'lines', cellSize).getData();
-      cells[0] = cells.length - 1;
-      for (let i = 1; i < cells.length; i++) {
-        cells[i] = i - 1;
-      }
-      if (closePolyLine) {
-        cells[cells.length - 1] = 0;
+      const cellSize = size + (closePolyLine ? 1 : 0);
+      if (
+        polyData.getLines().getNumberOfCells() !== 1 ||
+        polyData.getLines().getCellSizes()[0] !== cellSize
+      ) {
+        const lines = allocateArray(polyData, 'lines', cellSize + 1); // +1 for the number of points
+        const cellData = lines.getData();
+        cellData[0] = cellSize;
+        for (let i = 1; i <= cellSize; i++) {
+          cellData[i] = i - 1;
+        }
+        if (closePolyLine) {
+          cellData[cellSize - 1] = 0;
+        }
+        lines.setData(cellData);
       }
     }
     return points;
@@ -128,6 +135,7 @@ function vtkPolyLineRepresentation(publicAPI, model) {
       }
     }
 
+    outData[0].getPoints().modified();
     outData[0].modified();
 
     const lineThickness = state.getLineThickness?.() ?? model.lineThickness;
