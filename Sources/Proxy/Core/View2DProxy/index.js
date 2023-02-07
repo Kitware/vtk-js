@@ -35,17 +35,38 @@ function getPropCoarseHull(prop) {
   if (!prop.getVisibility() || !prop.getUseBounds()) {
     return [];
   }
-  const mapperBounds = prop?.getMapper?.()?.getBounds?.();
-  const corners = [];
+  let finestBounds = prop.getBounds();
+  let finestMatrix = null;
+
+  // Better bounds using mapper bounds and prop matrix
+  const mapper = prop?.getMapper?.();
+  const mapperBounds = mapper?.getBounds?.();
   if (mapperBounds && vtkBoundingBox.isValid(mapperBounds) && prop.getMatrix) {
-    vtkBoundingBox.getCorners(mapperBounds, corners);
-    const matrix = prop.getMatrix().slice();
-    mat4.transpose(matrix, matrix);
-    corners.forEach((pt) => vec3.transformMat4(pt, pt, matrix));
-  } else {
-    const propBounds = prop.getBounds();
-    vtkBoundingBox.getCorners(propBounds, corners);
+    finestBounds = mapperBounds;
+    finestMatrix = prop.getMatrix().slice();
+    mat4.transpose(finestMatrix, finestMatrix);
+
+    // Better bounds using the image data matrix and prop matrix + imageData matrix
+    if (
+      mapper.isA('vtkImageMapper') &&
+      mapper.getInputData()?.isA('vtkImageData')
+    ) {
+      prop.computeMatrix();
+      const imageData = mapper.getInputData();
+      finestBounds = imageData.getSpatialExtent();
+      const imageDataMatrix = imageData.getIndexToWorld();
+      mat4.mul(finestMatrix, finestMatrix, imageDataMatrix);
+    }
   }
+
+  // Compute corners and transform them if needed
+  // It gives a more accurate hull than computing the corners of a transformed bounding box
+  const corners = [];
+  vtkBoundingBox.getCorners(finestBounds, corners);
+  if (finestMatrix) {
+    corners.forEach((pt) => vec3.transformMat4(pt, pt, finestMatrix));
+  }
+
   return corners;
 }
 
