@@ -1438,7 +1438,7 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
     {
       tValue = getTextureValue(posIS);
       normalizedRayIntensity = normalizedRayIntensity - sampleDistance*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, 0.5)).r;
-      gl_FragData[0] = texture2D(ctexture, vec2(normalizedRayIntensity * cscale0 + cshift0, 0.5));
+      gl_FragData[0] = texture2D(ctexture, vec2(normalizedRayIntensity, 0.5));
       return;
     }
 
@@ -1459,7 +1459,7 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
     }
 
     // map normalizedRayIntensity to color
-    gl_FragData[0] = texture2D(ctexture, vec2(normalizedRayIntensity * cscale0 + cshift0, 0.5));
+    gl_FragData[0] = texture2D(ctexture, vec2(normalizedRayIntensity , 0.5));
 
   #endif
 }
