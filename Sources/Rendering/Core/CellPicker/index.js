@@ -189,7 +189,7 @@ function vtkCellPicker(publicAPI, model) {
       return Number.MAX_VALUE;
     }
 
-    if (mapper.isA('vtkImageMapper')) {
+    if (mapper.isA('vtkImageMapper') || mapper.isA('vtkImageArrayMapper')) {
       const pickData = mapper.intersectWithLineForCellPicking(p1, p2);
       if (pickData) {
         tMin = pickData.t;

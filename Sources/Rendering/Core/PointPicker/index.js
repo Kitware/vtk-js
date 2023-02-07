@@ -15,7 +15,7 @@ function vtkPointPicker(publicAPI, model) {
   publicAPI.intersectWithLine = (p1, p2, tol, mapper) => {
     let tMin = Number.MAX_VALUE;
 
-    if (mapper.isA('vtkImageMapper')) {
+    if (mapper.isA('vtkImageMapper') || mapper.isA('vtkImageArrayMapper')) {
       const pickData = mapper.intersectWithLineForPointPicking(p1, p2);
       if (pickData) {
         tMin = pickData.t;

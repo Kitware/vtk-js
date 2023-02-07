@@ -97,6 +97,11 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	getFramebufferSize(): Vector2;
 
 	/**
+	 * Get the webgl canvas.
+	 */
+	getCanvas(): Nullable<HTMLCanvasElement>;
+
+	/**
 	 * Check if a point is in the viewport.
 	 * @param {Number} x The x coordinate.
 	 * @param {Number} y The y coordinate.
@@ -269,8 +274,10 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {VtkDataTypes} vtktype 
 	 * @param {Number} numComps 
 	 * @param {Boolean} useFloat 
+	 * @param {unknown} oglNorm16Ext The WebGL EXT_texture_norm16 extension context
+	 * @param {Boolean} useHalfFloat
 	 */
-	getDefaultTextureInternalFormat(vtktype: VtkDataTypes, numComps: number, oglNorm16Ext?: unknown): void;
+	getDefaultTextureInternalFormat(vtktype: VtkDataTypes, numComps: number, oglNorm16Ext?: unknown, useHalfFloat?: boolean): void;
 
 	/**
 	 * 
