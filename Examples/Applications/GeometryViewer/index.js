@@ -330,12 +330,15 @@ function createPipeline(fileName, fileContents) {
           lut.setVectorModeToMagnitude();
         }
         componentSelector.style.display = 'block';
-        const compOpts = ['Magnitude'];
+        const compOpts = [['Magnitude', -1]];
         while (compOpts.length <= numberOfComponents) {
-          compOpts.push(`Component ${compOpts.length}`);
+          compOpts.push([`Component ${compOpts.length}`, compOpts.length - 1]);
+        }
+        if (numberOfComponents === 3 || numberOfComponents === 4) {
+          compOpts.push([`Use direct mapping`, -2]);
         }
         componentSelector.innerHTML = compOpts
-          .map((t, index) => `<option value="${index - 1}">${t}</option>`)
+          .map((t) => `<option value="${t[1]}">${t[0]}</option>`)
           .join('');
       } else {
         componentSelector.style.display = 'none';
@@ -361,7 +364,10 @@ function createPipeline(fileName, fileContents) {
   function updateColorByComponent(event) {
     if (mapper.getLookupTable()) {
       const lut = mapper.getLookupTable();
-      if (event.target.value === -1) {
+      mapper.setColorModeToMapScalars();
+      if (event.target.value === '-2') {
+        mapper.setColorModeToDirectScalars();
+      } else if (event.target.value === '-1') {
         lut.setVectorModeToMagnitude();
       } else {
         lut.setVectorModeToComponent();
