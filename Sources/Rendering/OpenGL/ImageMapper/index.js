@@ -766,10 +766,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const dataType = imgScalars.getDataType();
     const numComp = imgScalars.getNumberOfComponents();
 
-    // Re-allocate the texture because vtkOpenGLTexture uses texStorage2D
-    // which makes the texture immutable.
-    model.openGLTexture.releaseGraphicsResources(model._openGLRenderWindow);
-
     const actorProperty = actor.getProperty();
 
     // set interpolation on the texture based on property setting
@@ -1143,9 +1139,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   );
 
   model.tris = vtkHelper.newInstance();
-  model.openGLTexture = vtkOpenGLTexture.newInstance();
-  model.colorTexture = vtkOpenGLTexture.newInstance();
-  model.pwfTexture = vtkOpenGLTexture.newInstance();
+  model.openGLTexture = vtkOpenGLTexture.newInstance({ resizable: true });
+  model.colorTexture = vtkOpenGLTexture.newInstance({ resizable: true });
+  model.pwfTexture = vtkOpenGLTexture.newInstance({ resizable: true });
 
   model.imagemat = mat4.identity(new Float64Array(16));
   model.imagematinv = mat4.identity(new Float64Array(16));
