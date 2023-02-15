@@ -308,6 +308,21 @@ export interface vtkInteractorStyleManipulator extends vtkInteractorStyle {
   getMouseManipulators(): vtkCompositeMouseManipulator[];
   getMouseManipulators(): vtkCompositeMouseManipulator[];
   getMouseManipulators(): vtkCompositeMouseManipulator[];
+
+  /**
+   * Sets the center of rotation
+   * @param {Number} x
+   * @param {Number} y
+   * @param {Number} z
+   */
+  setCenterOfRotation(x: number, y: number, z: number): boolean;
+  setCenterOfRotation(xyz: Vector3): boolean;
+
+  /**
+   * Gets the center of rotation.
+   * @returns {Vector3}
+   */
+  getCenterOfRotation(): Vector3;
 }
 
 export interface IInteractorStyleManipulatorInitialValues {

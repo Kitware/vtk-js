@@ -4,7 +4,7 @@ import vtkColorTransferFunction from '../../../Rendering/Core/ColorTransferFunct
 // [x, r/h, g/s, b/v, m=0.5, s=0.0]
 export type RGBHSVPoint = [number, number, number, number, number?, number?];
 
-export enum ILookupTableProxyMode {
+export enum Mode {
   Preset = 0,
   RGBPoints = 1,
   HSVPoints = 2,
@@ -39,7 +39,7 @@ export function newInstance(
 
 export declare const vtkLookupTableProxy: {
   newInstance: typeof newInstance;
-  Mode: ILookupTableProxyMode;
+  Mode: Mode;
 };
 
 export default vtkLookupTableProxy;
