@@ -24,7 +24,7 @@ export interface vtkViewProxy extends VtkProxy {
   setContainer(container: HTMLElement | null): void;
   resize(): void;
   renderLater(): void;
-  render(blocking: boolean): void;
+  render(blocking?: boolean): void;
   resetCamera(): void;
 
   addRepresentation(representation: vtkAbstractRepresentationProxy): void;

@@ -161,4 +161,6 @@ export const newInstance = macro.newInstance(extend, 'vtkLookupTableProxy');
 
 // ----------------------------------------------------------------------------
 
+export { Mode };
+
 export default { newInstance, extend, Mode, Defaults };

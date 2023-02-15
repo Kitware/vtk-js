@@ -11,7 +11,7 @@ export interface vtkAbstractRepresentationProxy extends VtkProxy {
   setColorBy(
     arrayName: string | null,
     arrayLocation: string,
-    componentIndex: number
+    componentIndex?: number
   );
   setRescaleOnColorBy(rescale: boolean): boolean;
   getRescaleOnColorBy(): boolean;

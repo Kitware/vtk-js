@@ -1,11 +1,20 @@
-import { vtkSubscription, vtkDebouncedFunction, vtkProperty, vtkPropertyDomain } from "./interfaces";
+import {
+  vtkSubscription,
+  vtkDebouncedFunction,
+  vtkProperty,
+  vtkPropertyDomain,
+  vtkObject,
+} from './interfaces';
 
 /**
  * Allow user to redefine vtkXXXMacro method call.
  * @param name of the macro type [Log, Info, Debug, Error, Warning]
  * @param fn function to use when vtkXXXMacro is called.
  */
-export function setLoggerFunction(name: string, fn: (...args: any) => void): void;
+export function setLoggerFunction(
+  name: string,
+  fn: (...args: any) => void
+): void;
 
 /**
  * Logging function used for level: Log
@@ -92,7 +101,11 @@ export function uncapitalize(str: string): string;
  * @param precision (default: 2) how many digit you want behind the unit
  * @param chunkSize (default: 1000) base 1000 or 1024
  */
-export function formatBytesToProperUnit(size: number, precision?: number, chunkSize?: number): string;
+export function formatBytesToProperUnit(
+  size: number,
+  precision?: number,
+  chunkSize?: number
+): string;
 
 // ----------------------------------------------------------------------------
 // Convert thousand number with proper separator
@@ -103,7 +116,10 @@ export function formatBytesToProperUnit(size: number, precision?: number, chunkS
  * @param n number to format
  * @param separator (default: ' ')
  */
-export function formatNumbersWithThousandSeparator(n: number, separator?: string): string;
+export function formatNumbersWithThousandSeparator(
+  n: number,
+  separator?: string
+): string;
 
 // ----------------------------------------------------------------------------
 // Array helper
@@ -136,7 +152,7 @@ declare function getStateArrayMapFunc(item: any): any;
  *
  * @param fn function to execute
  */
-export function setImmediateVTK(fn: () => void ): void;
+export function setImmediateVTK(fn: () => void): void;
 
 /**
  * Measures the time it takes for a promise to finish from the time this function is invoked.
@@ -146,7 +162,10 @@ export function setImmediateVTK(fn: () => void ): void;
  * @param promise promise to measure
  * @param callback called with the elapsed time for the promise
  */
-export function measurePromiseExecution(promise: Promise<any>, callback: (elapsed: number) => void): void;
+export function measurePromiseExecution(
+  promise: Promise<any>,
+  callback: (elapsed: number) => void
+): void;
 
 /**
  * Turns the provided publicAPI into a VtkObject
@@ -164,7 +183,11 @@ export function obj(publicAPI?: object, model?: object): object;
  * @param model object on which protected fields are stored
  * @param fieldNames list of fields available in model that we want to expose as get{FieldName} methods on the publicAPI
  */
-export function get(publicAPI: object, model: object, fieldNames: Array<string>): void;
+export function get(
+  publicAPI: object,
+  model: object,
+  fieldNames: Array<string>
+): void;
 
 /**
  * Add setter methods to the provided publicAPI
@@ -174,7 +197,11 @@ export function get(publicAPI: object, model: object, fieldNames: Array<string>)
  * @param fieldNames list of fields available in model that we want to expose as set{FieldName} methods on the publicAPI
  * * Can be a string (the name of the field to expose) or an object (e.g. {type:enum, name: {FieldName}, enum: FieldEnum}).
  */
-export function set(publicAPI: object, model: object, fields: Array<string|object>): void;
+export function set(
+  publicAPI: object,
+  model: object,
+  fields: Array<string | object>
+): void;
 
 /**
  * Add setter+getter methods to the provided publicAPI
@@ -184,7 +211,11 @@ export function set(publicAPI: object, model: object, fields: Array<string|objec
  * @param fieldNames list of fields available in model that we want to expose as set{FieldName}+get{FieldName} methods on the publicAPI.
  * Can be a string (the name of the field to expose) or an object (e.g. {type:enum, name: {FieldName}, enum: FieldEnum}).
  */
-export function setGet(publicAPI: object, model: object, fields: Array<string|object>): void;
+export function setGet(
+  publicAPI: object,
+  model: object,
+  fields: Array<string | object>
+): void;
 
 /**
  * Add getter methods to the provided publicAPI for arrays.
@@ -200,7 +231,11 @@ export function setGet(publicAPI: object, model: object, fields: Array<string|ob
  * @param model object on which protected fields are stored
  * @param fieldNames list of fields available in model that we want to expose as get{FieldName}+get{FieldName}ByReference methods on the publicAPI
  */
-export function getArray(publicAPI: object, model: object, fields: Array<string>): void;
+export function getArray(
+  publicAPI: object,
+  model: object,
+  fields: Array<string>
+): void;
 
 /**
  * Add setter methods to the provided publicAPI for arrays.
@@ -220,7 +255,13 @@ export function getArray(publicAPI: object, model: object, fields: Array<string>
  * @param size
  * @param defaultVal
  */
-export function setArray(publicAPI: object, model: object, fieldNames: Array<string>, size: Number, defaultVal?: any): void;
+export function setArray(
+  publicAPI: object,
+  model: object,
+  fieldNames: Array<string>,
+  size: Number,
+  defaultVal?: any
+): void;
 
 /**
  * set/get XXX: add setter and getter for object of type array
@@ -230,7 +271,13 @@ export function setArray(publicAPI: object, model: object, fieldNames: Array<str
  * @param size
  * @param defaultVal
  */
-export function setGetArray(publicAPI: object, model: object, fieldNames: Array<string>, size: Number, defaultVal?: any): void;
+export function setGetArray(
+  publicAPI: object,
+  model: object,
+  fieldNames: Array<string>,
+  size: Number,
+  defaultVal?: any
+): void;
 
 /**
  * Convert model and publicAPI references to _fieldName into fieldName.
@@ -244,7 +291,11 @@ export function setGetArray(publicAPI: object, model: object, fieldNames: Array<
  * @see get
  * @see set
  */
-export function moveToProtected(publicAPI: object, model: object, fieldNames: Array<string>): void;
+export function moveToProtected(
+  publicAPI: object,
+  model: object,
+  fieldNames: Array<string>
+): void;
 
 /**
  * Add algorithm methods onto the provided publicAPI
@@ -254,7 +305,12 @@ export function moveToProtected(publicAPI: object, model: object, fieldNames: Ar
  * @param numberOfInputs
  * @param numberOfOutputs
  */
-export function algo(publicAPI: object, model: object, numberOfInputs: number, numberOfOutputs: number): void;
+export function algo(
+  publicAPI: object,
+  model: object,
+  numberOfInputs: number,
+  numberOfOutputs: number
+): void;
 
 /**
  * Symbols used as return value for callback
@@ -267,7 +323,11 @@ export const VOID: Symbol;
  */
 export const EVENT_ABORT: Symbol;
 
-export function event(publicAPI: object, model: object, eventName: string): void;
+export function event(
+  publicAPI: object,
+  model: object,
+  eventName: string
+): void;
 
 /**
  * Event callback
@@ -290,14 +350,21 @@ export interface VtkChangeEvent {
    * @param VtkCallback
    * @param priority (default 0.0)
    */
-  onChange(VtkCallback: (...args: any) => void | symbol, priority?: number): vtkSubscription;
+  onChange(
+    VtkCallback: (...args: any) => void | symbol,
+    priority?: number
+  ): vtkSubscription;
 }
 
 // ----------------------------------------------------------------------------
 // newInstance
 // ----------------------------------------------------------------------------
 
-export type VtkExtend = (publicAPI: object, model: object, initialValues: object) => void;
+export type VtkExtend = (
+  publicAPI: object,
+  model: object,
+  initialValues: object
+) => void;
 
 export function newInstance(extend: VtkExtend, className: string): any;
 
@@ -345,7 +412,11 @@ export function traverseInstanceTree(
  * @returns vtkDebouncedFunction A debounced function that can be called.
  *          Use .cancel() to clear any pending debounced call.
  */
-export function debounce(func: (...args: any) => any, wait: number, immediate?: boolean): vtkDebouncedFunction;
+export function debounce(
+  func: (...args: any) => any,
+  wait: number,
+  immediate?: boolean
+): vtkDebouncedFunction;
 
 /**
  * Creates a throttled function that only invokes `func` at most once per
@@ -354,7 +425,10 @@ export function debounce(func: (...args: any) => any, wait: number, immediate?: 
  * @param callback
  * @param delay
  */
-export function throttle(callback: (...args: any) => any, delay: number): (...args: any) => any;
+export function throttle(
+  callback: (...args: any) => any,
+  delay: number
+): (...args: any) => any;
 
 /**
  * keystore(publicAPI, model, initialKeystore)
@@ -382,7 +456,11 @@ export interface VtkKeyStore {
  * @param model
  * @param initialKeystore (default {})
  */
-export function keystore(publicAPI: object, model: object, initialKeystore?: object): void;
+export function keystore(
+  publicAPI: object,
+  model: object,
+  initialKeystore?: object
+): void;
 
 // ----------------------------------------------------------------------------
 // proxy(publicAPI, model, sectionName, propertyUI)
@@ -397,14 +475,13 @@ export function keystore(publicAPI: object, model: object, initialKeystore?: obj
 //  getProxySection() => List of properties for UI generation
 // ----------------------------------------------------------------------------
 
-export interface VtkProxyManager {
-}
+export interface VtkProxyManager {}
 
 export interface VtkProxySection {
   id: string;
   name: string;
   ui: object;
-  properties: Array<any>,
+  properties: Array<any>;
 }
 
 export interface VtkLink {
@@ -420,7 +497,7 @@ export interface VtkLink {
   persistent: boolean;
 }
 
-export interface VtkProxy extends VtkKeyStore {
+export interface VtkProxy extends VtkKeyStore, vtkObject {
   getProxyId(): string;
   getProxyGroup(): string;
   getProxyName: () => string;
@@ -451,7 +528,6 @@ export interface VtkProxy extends VtkKeyStore {
   getPropertyDomainByName: (name: string) => vtkPropertyDomain;
 
   getProxySection: () => VtkProxySection;
-  delete: () => void;
 }
 
 export function proxy(publicAPI: object, model: object): void;
@@ -472,7 +548,11 @@ export function proxy(publicAPI: object, model: object): void;
  * @param model
  * @param map
  */
-export function proxyPropertyMapping(publicAPI: object, model: object, map: object): void;
+export function proxyPropertyMapping(
+  publicAPI: object,
+  model: object,
+  map: object
+): void;
 
 /**
  * proxyPropertyState(publicAPI, model, state, defaults)
@@ -500,7 +580,12 @@ export function proxyPropertyMapping(publicAPI: object, model: object, map: obje
  * @param state (default: {})
  * @param defaults (default: {})
  */
-export function proxyPropertyState(publicAPI: object, model: object, state?: object, defaults?: object): void;
+export function proxyPropertyState(
+  publicAPI: object,
+  model: object,
+  state?: object,
+  defaults?: object
+): void;
 
 // ----------------------------------------------------------------------------
 // From : https://github.com/facebookarchive/fixed-data-table/blob/master/src/vendor_upstream/dom/normalizeWheel.js
@@ -628,47 +713,47 @@ export function normalizeWheel(wheelEvent: object): VtkNormalizedWheelEvent;
 // ----------------------------------------------------------------------------
 
 declare const Macro: {
-  algo: typeof algo,
-  capitalize: typeof capitalize,
-  chain: typeof chain,
-  debounce: typeof debounce,
-  enumToString: typeof enumToString,
-  event: typeof event,
-  EVENT_ABORT: typeof EVENT_ABORT,
-  formatBytesToProperUnit: typeof formatBytesToProperUnit,
-  formatNumbersWithThousandSeparator: typeof formatNumbersWithThousandSeparator,
-  get: typeof get,
-  getArray: typeof getArray,
+  algo: typeof algo;
+  capitalize: typeof capitalize;
+  chain: typeof chain;
+  debounce: typeof debounce;
+  enumToString: typeof enumToString;
+  event: typeof event;
+  EVENT_ABORT: typeof EVENT_ABORT;
+  formatBytesToProperUnit: typeof formatBytesToProperUnit;
+  formatNumbersWithThousandSeparator: typeof formatNumbersWithThousandSeparator;
+  get: typeof get;
+  getArray: typeof getArray;
   getCurrentGlobalMTime(): Number;
-  getStateArrayMapFunc: typeof getStateArrayMapFunc,
-  isVtkObject: typeof isVtkObject,
-  keystore: typeof keystore,
-  measurePromiseExecution: typeof measurePromiseExecution,
-  moveToProtected: typeof moveToProtected,
-  newInstance: typeof newInstance,
-  normalizeWheel: typeof normalizeWheel,
-  obj: typeof obj,
-  proxy: typeof proxy,
-  proxyPropertyMapping: typeof proxyPropertyMapping,
-  proxyPropertyState: typeof proxyPropertyState,
-  safeArrays: typeof safeArrays,
-  set: typeof set,
-  setArray: typeof setArray,
-  setGet: typeof setGet,
-  setGetArray: typeof setGetArray,
-  setImmediate: typeof setImmediateVTK,
-  setLoggerFunction: typeof setLoggerFunction,
-  throttle: typeof throttle,
-  traverseInstanceTree: typeof traverseInstanceTree,
-  TYPED_ARRAYS: typeof TYPED_ARRAYS,
-  uncapitalize: typeof uncapitalize,
-  VOID: typeof VOID,
-  vtkDebugMacro: typeof vtkDebugMacro,
-  vtkErrorMacro: typeof vtkErrorMacro,
-  vtkInfoMacro: typeof vtkInfoMacro,
-  vtkLogMacro: typeof vtkLogMacro,
-  vtkOnceErrorMacro: typeof vtkOnceErrorMacro,
-  vtkWarningMacro: typeof vtkWarningMacro,
+  getStateArrayMapFunc: typeof getStateArrayMapFunc;
+  isVtkObject: typeof isVtkObject;
+  keystore: typeof keystore;
+  measurePromiseExecution: typeof measurePromiseExecution;
+  moveToProtected: typeof moveToProtected;
+  newInstance: typeof newInstance;
+  normalizeWheel: typeof normalizeWheel;
+  obj: typeof obj;
+  proxy: typeof proxy;
+  proxyPropertyMapping: typeof proxyPropertyMapping;
+  proxyPropertyState: typeof proxyPropertyState;
+  safeArrays: typeof safeArrays;
+  set: typeof set;
+  setArray: typeof setArray;
+  setGet: typeof setGet;
+  setGetArray: typeof setGetArray;
+  setImmediate: typeof setImmediateVTK;
+  setLoggerFunction: typeof setLoggerFunction;
+  throttle: typeof throttle;
+  traverseInstanceTree: typeof traverseInstanceTree;
+  TYPED_ARRAYS: typeof TYPED_ARRAYS;
+  uncapitalize: typeof uncapitalize;
+  VOID: typeof VOID;
+  vtkDebugMacro: typeof vtkDebugMacro;
+  vtkErrorMacro: typeof vtkErrorMacro;
+  vtkInfoMacro: typeof vtkInfoMacro;
+  vtkLogMacro: typeof vtkLogMacro;
+  vtkOnceErrorMacro: typeof vtkOnceErrorMacro;
+  vtkWarningMacro: typeof vtkWarningMacro;
 };
 
 export default Macro;
