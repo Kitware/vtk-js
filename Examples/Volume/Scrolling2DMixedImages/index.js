@@ -30,11 +30,22 @@ import vtkSphereSource from '@kitware/vtk.js/Filters/Sources/SphereSource';
 // to unzip data file
 import { unzipSync } from 'fflate';
 
+const rootBody = document.querySelector('body');
+rootBody.style.background = 'rgba(65, 86, 122, 1)';
+const labelSelector = document.createElement('label');
+labelSelector.style.fontWeight = 'bold';
+labelSelector.innerText = 'Loading input data, please wait ...';
+const progressContainer = document.createElement('div');
+progressContainer.appendChild(labelSelector);
+rootBody.appendChild(progressContainer);
+
 // ----------------------------------------------------------------------------
 // Standard rendering setup for image slice
 // ----------------------------------------------------------------------------
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [65 / 255, 86 / 255, 122 / 255],
+  rootContainer: rootBody,
+  containerStyle: { height: '100%', width: '100%', position: 'absolute' },
 });
 const renderer = fullScreenRenderer.getRenderer();
 renderer.getActiveCamera().setParallelProjection(true);
@@ -228,6 +239,7 @@ async function update() {
 
   if (imageArray.length > 0) {
     imageArray.map((elem) => collection.addItem(elem));
+    labelSelector.innerText = '';
     load(vtkImageMapper.SlicingMode.K);
   }
 }
