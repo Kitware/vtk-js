@@ -1071,8 +1071,6 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     model.target = model.context.TEXTURE_2D;
     model.components = 4;
-    model.width = image.width;
-    model.height = image.height;
     model.depth = 1;
     model.numberOfDimensions = 2;
     model._openGLRenderWindow.activateTexture(publicAPI);
@@ -1085,7 +1083,9 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // Scale up the texture to the next highest power of two dimensions (if needed) and flip y.
     const needNearestPowerOfTwo =
-      !vtkMath.isPowerOfTwo(image.width) || !vtkMath.isPowerOfTwo(image.height);
+      !model._openGLRenderWindow.getWebgl2() &&
+      (!vtkMath.isPowerOfTwo(image.width) ||
+        !vtkMath.isPowerOfTwo(image.height));
     const canvas = document.createElement('canvas');
     canvas.width = needNearestPowerOfTwo
       ? vtkMath.nearestPowerOfTwo(image.width)
@@ -1093,6 +1093,10 @@ function vtkOpenGLTexture(publicAPI, model) {
     canvas.height = needNearestPowerOfTwo
       ? vtkMath.nearestPowerOfTwo(image.height)
       : image.height;
+
+    model.width = canvas.width;
+    model.height = canvas.height;
+
     const ctx = canvas.getContext('2d');
     ctx.translate(0, canvas.height);
     ctx.scale(1, -1);
