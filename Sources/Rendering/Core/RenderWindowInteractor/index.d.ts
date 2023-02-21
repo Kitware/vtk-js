@@ -1193,6 +1193,12 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	 * Stop animating if the renderWindowInteractor is deleted.
 	 */
 	delete(): void;
+
+	/**
+	 * Allow system to bypass scrolling debounce. This function must be called to allow the debounce.
+	 */
+
+	setMouseScrollDebounceBypass(bypass:boolean): void;
 }
 
 
