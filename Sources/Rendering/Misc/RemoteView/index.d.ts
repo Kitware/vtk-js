@@ -123,6 +123,12 @@ export interface vtkRemoteView extends vtkObject {
   setViewId(viewId: string): void;
 
   /**
+   * 
+   *  @param bypass
+   */
+  setMouseScrollDebounceBypass(bypass: boolean): void;
+
+  /**
    *
    * @param {HTMLElement} container The container HTML element.
    */

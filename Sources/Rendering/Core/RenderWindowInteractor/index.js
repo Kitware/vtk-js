@@ -685,12 +685,18 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       clearTimeout(model.wheelTimeoutID);
     }
 
-    // start a timer to keep us animating while we get wheel events
-    model.wheelTimeoutID = setTimeout(() => {
+    if (model.bypassDebounce) {
       publicAPI.extendAnimation(600);
       publicAPI.endMouseWheelEvent();
       model.wheelTimeoutID = 0;
-    }, 200);
+    } else {
+      // start a timer to keep us animating while we get wheel events
+      model.wheelTimeoutID = setTimeout(() => {
+        publicAPI.extendAnimation(600);
+        publicAPI.endMouseWheelEvent();
+        model.wheelTimeoutID = 0;
+      }, 200);
+    }
   };
 
   publicAPI.handleMouseUp = (event) => {
@@ -1108,6 +1114,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     superDelete();
   };
 
+  publicAPI.setMouseScrollDebounceBypass = (byPass) => {
+    model.bypassDebounce = byPass;
+  };
+
   // Use the Page Visibility API to detect when we switch away from or back to
   // this tab, and reset the animationFrameStart. When tabs are not active, browsers
   // will stop calling requestAnimationFrame callbacks.
@@ -1148,6 +1158,7 @@ const DEFAULT_VALUES = {
   lastGamepadValues: {},
   preventDefaultOnPointerDown: false,
   preventDefaultOnPointerUp: false,
+  bypassDebounce: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -1174,6 +1185,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'lastFrameTime',
     'recentAnimationFrameRate',
     '_view',
+    'bypassDebounce',
   ]);
 
   // Create get-set macros
