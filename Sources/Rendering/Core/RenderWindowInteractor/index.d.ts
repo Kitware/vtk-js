@@ -1181,7 +1181,7 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	delete(): void;
 
 	/**
-	 * Allow system to bypass scrolling debounce. This function must be called to allow the debounce.
+	 * Allow system to bypass scrolling debounce. This function must be called to allow the debounce to be bypassed
 	 */
 
 	setMouseScrollDebounceBypass(bypass:boolean): void;
