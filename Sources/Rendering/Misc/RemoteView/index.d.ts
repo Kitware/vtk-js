@@ -126,7 +126,7 @@ export interface vtkRemoteView extends vtkObject {
    * 
    *  @param bypass
    */
-  setMouseScrollDebounceBypass(bypass: boolean): void;
+  setMouseScrollDebounceByPass(bypass: boolean): void;
 
   /**
    *

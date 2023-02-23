@@ -60,6 +60,8 @@ export interface IRenderWindowInteractorInitialValues {
 	moveTimeoutID?: number;
 	preventDefaultOnPointerDown?: boolean;
 	preventDefaultOnPointerUp?: boolean;
+	mouseScrollDebounceByPass?: boolean;
+
 }
 
 interface IPosition {
@@ -1182,9 +1184,10 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 
 	/**
 	 * Allow system to bypass scrolling debounce. This function must be called to allow the debounce to be bypassed
+	 * @param mouseScrollDebounceByPass
 	 */
 
-	setMouseScrollDebounceBypass(bypass:boolean): void;
+	setMouseScrollDebounceByPass(mouseScrollDebounceByPass:boolean): void;
 }
 
 

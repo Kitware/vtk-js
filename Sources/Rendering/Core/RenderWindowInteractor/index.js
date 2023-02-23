@@ -685,7 +685,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       clearTimeout(model.wheelTimeoutID);
     }
 
-    if (model.bypassDebounce) {
+    if (model.mouseScrollDebounceByPass) {
       publicAPI.extendAnimation(600);
       publicAPI.endMouseWheelEvent();
       model.wheelTimeoutID = 0;
@@ -1114,10 +1114,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     superDelete();
   };
 
-  publicAPI.setMouseScrollDebounceBypass = (byPass) => {
-    model.bypassDebounce = byPass;
-  };
-
   // Use the Page Visibility API to detect when we switch away from or back to
   // this tab, and reset the animationFrameStart. When tabs are not active, browsers
   // will stop calling requestAnimationFrame callbacks.
@@ -1158,7 +1154,7 @@ const DEFAULT_VALUES = {
   lastGamepadValues: {},
   preventDefaultOnPointerDown: false,
   preventDefaultOnPointerUp: false,
-  bypassDebounce: false,
+  mouseScrollDebounceByPass: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -1185,7 +1181,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'lastFrameTime',
     'recentAnimationFrameRate',
     '_view',
-    'bypassDebounce',
   ]);
 
   // Create get-set macros
@@ -1199,6 +1194,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'picker',
     'preventDefaultOnPointerDown',
     'preventDefaultOnPointerUp',
+    'mouseScrollDebounceByPass',
   ]);
   macro.moveToProtected(publicAPI, model, ['view']);
 
