@@ -93,10 +93,6 @@ function vtkRemoteView(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.setMouseScrollDebounceByPass = (bypass) => {
-    model.interactor.setMouseScrollDebounceByPass(bypass);
-  };
-
   // --------------------------------------------------------------------------
   // DOM handling
   // --------------------------------------------------------------------------

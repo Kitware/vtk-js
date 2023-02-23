@@ -167,6 +167,11 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	getPreventDefaultOnPointerUp(): boolean;
 
 	/**
+	 *  @default false
+	 */
+	getMouseScrollDebounceByPass(): boolean;
+
+	/**
 	 * 
 	 * @param {IRenderWindowInteractorEvent} callData 
 	 */
@@ -851,6 +856,13 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	 */
 	setPreventDefaultOnPointerUp(preventDefault: boolean): boolean;
 
+	/**
+	 * Allow system to bypass scrolling debounce. This function must be called to allow the debounce to be bypassed
+	 * @param mouseScrollDebounceByPass
+	 */
+
+	setMouseScrollDebounceByPass(mouseScrollDebounceByPass:boolean): void;
+
    /**
 	 *
 	 * @param recognizeGestures
@@ -1181,13 +1193,6 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	 * Stop animating if the renderWindowInteractor is deleted.
 	 */
 	delete(): void;
-
-	/**
-	 * Allow system to bypass scrolling debounce. This function must be called to allow the debounce to be bypassed
-	 * @param mouseScrollDebounceByPass
-	 */
-
-	setMouseScrollDebounceByPass(mouseScrollDebounceByPass:boolean): void;
 }
 
 
