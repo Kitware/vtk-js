@@ -685,12 +685,18 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       clearTimeout(model.wheelTimeoutID);
     }
 
-    // start a timer to keep us animating while we get wheel events
-    model.wheelTimeoutID = setTimeout(() => {
+    if (model.mouseScrollDebounceByPass) {
       publicAPI.extendAnimation(600);
       publicAPI.endMouseWheelEvent();
       model.wheelTimeoutID = 0;
-    }, 200);
+    } else {
+      // start a timer to keep us animating while we get wheel events
+      model.wheelTimeoutID = setTimeout(() => {
+        publicAPI.extendAnimation(600);
+        publicAPI.endMouseWheelEvent();
+        model.wheelTimeoutID = 0;
+      }, 200);
+    }
   };
 
   publicAPI.handleMouseUp = (event) => {
@@ -1148,6 +1154,7 @@ const DEFAULT_VALUES = {
   lastGamepadValues: {},
   preventDefaultOnPointerDown: false,
   preventDefaultOnPointerUp: false,
+  mouseScrollDebounceByPass: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -1187,6 +1194,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'picker',
     'preventDefaultOnPointerDown',
     'preventDefaultOnPointerUp',
+    'mouseScrollDebounceByPass',
   ]);
   macro.moveToProtected(publicAPI, model, ['view']);
 
