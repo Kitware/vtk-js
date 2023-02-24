@@ -779,6 +779,34 @@ function vtkOpenGLTexture(publicAPI, model) {
   }
 
   //----------------------------------------------------------------------------
+  function useTexStorage(dataType) {
+    if (model._openGLRenderWindow) {
+      if (model.resizable) {
+        // Cannot use texStorage if the texture is supposed to be resizable.
+        return false;
+      }
+      if (model._openGLRenderWindow.getWebgl2()) {
+        const webGLInfo = model._openGLRenderWindow.getGLInformations();
+        if (
+          webGLInfo.RENDERER.value.match(/WebKit/gi) &&
+          navigator.platform.match(/Mac/gi) &&
+          model.oglNorm16Ext &&
+          (dataType === VtkDataTypes.UNSIGNED_SHORT ||
+            dataType === VtkDataTypes.SHORT)
+        ) {
+          // Cannot use texStorage with EXT_texture_norm16 textures on Mac M1 GPU.
+          // No errors reported but the texture is unusable.
+          return false;
+        }
+        // Use texStorage for WebGL2
+        return true;
+      }
+      return false;
+    }
+    return false;
+  }
+
+  //----------------------------------------------------------------------------
   publicAPI.create2DFromRaw = (
     width,
     height,
@@ -816,7 +844,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.context.pixelStorei(model.context.UNPACK_FLIP_Y_WEBGL, flip);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
-    if (model._openGLRenderWindow.getWebgl2() && !model.resizable) {
+    if (useTexStorage(dataType)) {
       model.context.texStorage2D(
         model.target,
         1,
@@ -918,7 +946,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     // Source texture data from the PBO.
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
-    if (model._openGLRenderWindow.getWebgl2() && !model.resizable) {
+    if (useTexStorage(dataType)) {
       model.context.texStorage2D(
         model.target,
         6,
@@ -1015,7 +1043,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
-    if (model._openGLRenderWindow.getWebgl2() && !model.resizable) {
+    if (useTexStorage(dataType)) {
       model.context.texStorage2D(
         model.target,
         1,
@@ -1113,7 +1141,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     );
     const safeImage = canvas;
 
-    if (model._openGLRenderWindow.getWebgl2() && !model.resizable) {
+    if (useTexStorage(VtkDataTypes.UNSIGNED_CHAR)) {
       model.context.texStorage2D(
         model.target,
         1,
@@ -1270,7 +1298,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // openGLDataType
 
-    if (model._openGLRenderWindow.getWebgl2()) {
+    if (useTexStorage(dataType)) {
       model.context.texStorage3D(
         model.target,
         1,
@@ -1599,7 +1627,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
-    if (model._openGLRenderWindow.getWebgl2() && !model.resizable) {
+    if (useTexStorage(dataTypeToUse)) {
       model.context.texStorage2D(
         model.target,
         1,
