@@ -1,0 +1,19 @@
+<table>
+  <tr>
+    <td>
+      <label for='rep'>Representation</label>
+      <select class='representations' style="width: 50%" id='rep'>
+        <option value='0'>Points</option>
+        <option value='1'>Wireframe</option>
+        <option value='2' selected>Surface</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <label for='res'>Resolution</label>
+      <input class='resolution' type='range' min='4' max='80' value='6' style="width: 50%" id='res'/>
+    </td>
+  </tr>
+</table>
+<textarea id='pickInfo' style="width:100%" rows=20, columns=200>Click on the cone to pick points!</textarea>

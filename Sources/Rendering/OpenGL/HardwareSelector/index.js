@@ -378,7 +378,6 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       const originalBlending = gl.isEnabled(gl.BLEND);
       gl.disable(gl.BLEND);
       model._openGLRenderWindow.traverseAllPasses();
-      model._renderer.setPreserveDepthBuffer(true);
       if (originalBlending) {
         gl.enable(gl.BLEND);
       }
@@ -390,7 +389,6 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     model.hitProps = {};
     model._openGLRenderer.setSelector(null);
     model.framebuffer.restorePreviousBindingsAndBuffers();
-    model._renderer.setPreserveDepthBuffer(false);
   };
 
   publicAPI.preCapturePass = () => {
