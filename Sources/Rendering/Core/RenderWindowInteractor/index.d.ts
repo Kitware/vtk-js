@@ -860,7 +860,7 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	 * @param mouseScrollDebounceByPass
 	 */
 
-	setMouseScrollDebounceByPass(mouseScrollDebounceByPass:boolean): void;
+	setMouseScrollDebounceByPass(mouseScrollDebounceByPass:boolean): boolean;
 
    /**
 	 *
