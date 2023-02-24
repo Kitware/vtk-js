@@ -270,13 +270,6 @@ export interface vtkColorTransferFunction extends vtkScalarsToColors {
   fillFromDataPointer(nb: number, ptr: any): void;
 
   /**
-   * Set the range of scalars being mapped.
-   * @param {Number} min
-   * @param {Number} max
-   */
-  setMappingRange(min: number, max: number): void;
-
-  /**
    * Remove all points out of the new range, and make sure there is a point at
    * each end of that range.
    * @param {Number[]} range
