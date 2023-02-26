@@ -13,6 +13,7 @@ import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreen
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
+import { XrSessionTypes } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/Constants';
 
 // Force DataAccessHelper to have access to various data source
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
@@ -113,7 +114,9 @@ resolutionChange.addEventListener('input', (e) => {
 
 vrbutton.addEventListener('click', (e) => {
   if (vrbutton.textContent === 'Send To VR') {
-    fullScreenRenderer.getApiSpecificRenderWindow().startXR();
+    fullScreenRenderer
+      .getApiSpecificRenderWindow()
+      .startXR(XrSessionTypes.HmdVR);
     vrbutton.textContent = 'Return From VR';
   } else {
     fullScreenRenderer.getApiSpecificRenderWindow().stopXR();

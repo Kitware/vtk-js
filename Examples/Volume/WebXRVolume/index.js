@@ -18,6 +18,7 @@ import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
 import vtkXMLImageDataReader from '@kitware/vtk.js/IO/XML/XMLImageDataReader';
+import { XrSessionTypes } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/Constants';
 
 import './WebXRVolume.module.css';
 
@@ -96,8 +97,6 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   renderWindow.render();
 
   // Add button to launch AR (default) or VR scene
-  const VR = 1;
-  const AR = 2;
   let xrSessionType = 0;
   const xrButton = document.createElement('button');
   let enterText = 'XR not available!';
@@ -109,13 +108,13 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   ) {
     navigator.xr.isSessionSupported('immersive-ar').then((arSupported) => {
       if (arSupported) {
-        xrSessionType = AR;
+        xrSessionType = XrSessionTypes.MobileAR;
         enterText = 'Start AR';
         xrButton.textContent = enterText;
       } else {
         navigator.xr.isSessionSupported('immersive-vr').then((vrSupported) => {
           if (vrSupported) {
-            xrSessionType = VR;
+            xrSessionType = XrSessionTypes.HmdVR;
             enterText = 'Start VR';
             xrButton.textContent = enterText;
           }
@@ -125,18 +124,14 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   }
   xrButton.addEventListener('click', () => {
     if (xrButton.textContent === enterText) {
-      if (xrSessionType === AR) {
+      if (xrSessionType === XrSessionTypes.MobileAR) {
         fullScreenRenderer.setBackground([0, 0, 0, 0]);
       }
-      fullScreenRenderer
-        .getApiSpecificRenderWindow()
-        .startXR(xrSessionType === AR);
+      fullScreenRenderer.getApiSpecificRenderWindow().startXR(xrSessionType);
       xrButton.textContent = exitText;
     } else {
       fullScreenRenderer.setBackground([...background, 255]);
-      fullScreenRenderer
-        .getApiSpecificRenderWindow()
-        .stopXR(xrSessionType === AR);
+      fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
       xrButton.textContent = enterText;
     }
   });

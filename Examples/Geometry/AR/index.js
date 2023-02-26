@@ -10,6 +10,7 @@ import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreen
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
+import { XrSessionTypes } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/Constants';
 
 // Force DataAccessHelper to have access to various data source
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
@@ -82,15 +83,16 @@ arbutton.disabled = !fullScreenRenderer
   .getApiSpecificRenderWindow()
   .getXrSupported();
 
-const SESSION_IS_AR = true;
 arbutton.addEventListener('click', (e) => {
   if (arbutton.textContent === 'Start AR') {
     fullScreenRenderer.setBackground([0, 0, 0, 0]);
-    fullScreenRenderer.getApiSpecificRenderWindow().startXR(SESSION_IS_AR);
+    fullScreenRenderer
+      .getApiSpecificRenderWindow()
+      .startXR(XrSessionTypes.MobileAR);
     arbutton.textContent = 'Exit AR';
   } else {
     fullScreenRenderer.setBackground([0, 0, 0, 255]);
-    fullScreenRenderer.getApiSpecificRenderWindow().stopXR(SESSION_IS_AR);
+    fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
     arbutton.textContent = 'Start AR';
   }
 });

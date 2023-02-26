@@ -8,12 +8,14 @@ import vtkOpenGLTextureUnitManager from 'vtk.js/Sources/Rendering/OpenGL/Texture
 import vtkOpenGLViewNodeFactory from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderWindowViewNode';
+import Constants from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/Constants';
 import {
   createContextProxyHandler,
   GET_UNDERLYING_CONTEXT,
 } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/ContextProxy';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
+const { XrSessionTypes } = Constants;
 
 const SCREENSHOT_PLACEHOLDER = {
   position: 'absolute',
@@ -293,12 +295,14 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   // Request an XR session on the user device with WebXR,
   // typically in response to a user request such as a button press
-  publicAPI.startXR = (isAR) => {
+  publicAPI.startXR = (xrSessionType) => {
     if (navigator.xr === undefined) {
       throw new Error('WebXR is not available');
     }
 
-    model.xrSessionIsAR = isAR;
+    model.xrSessionType =
+      xrSessionType !== undefined ? xrSessionType : XrSessionTypes.HmdVR;
+    const isAR = xrSessionType === XrSessionTypes.MobileAR;
     const sessionType = isAR ? 'immersive-ar' : 'immersive-vr';
     if (!navigator.xr.isSessionSupported(sessionType)) {
       if (isAR) {
@@ -357,22 +361,20 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     inputTranslateZ = DEFAULT_RESET_FACTORS.vr.translateZ
   ) => {
     // Adjust world-to-physical parameters for different modalities
-    // Default parameter values are for VR (model.xrSessionIsAR == false)
+    // Default parameter values are for HMD VR
     let rescaleFactor = inputRescaleFactor;
     let translateZ = inputTranslateZ;
 
+    const isXrSessionAR = model.xrSessionType === XrSessionTypes.MobileAR;
     if (
-      model.xrSessionIsAR &&
+      isXrSessionAR &&
       rescaleFactor === DEFAULT_RESET_FACTORS.vr.rescaleFactor
     ) {
       // Scale down by default in AR
       rescaleFactor = DEFAULT_RESET_FACTORS.ar.rescaleFactor;
     }
 
-    if (
-      model.xrSessionIsAR &&
-      translateZ === DEFAULT_RESET_FACTORS.vr.translateZ
-    ) {
+    if (isXrSessionAR && translateZ === DEFAULT_RESET_FACTORS.vr.translateZ) {
       // Default closer to the camera in AR
       translateZ = DEFAULT_RESET_FACTORS.ar.translateZ;
     }
@@ -443,7 +445,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     if (xrPose) {
       const gl = publicAPI.get3DContext();
 
-      if (model.xrSessionIsAR && model.oldCanvasSize !== undefined) {
+      if (
+        model.xrSessionType === XrSessionTypes.MobileAR &&
+        model.oldCanvasSize !== undefined
+      ) {
         gl.canvas.width = model.oldCanvasSize[0];
         gl.canvas.height = model.oldCanvasSize[1];
       }
@@ -452,19 +457,18 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.clear(gl.DEPTH_BUFFER_BIT);
+      publicAPI.setSize(glLayer.framebufferWidth, glLayer.framebufferHeight);
 
       // get the first renderer
       const ren = model.renderable.getRenderers()[0];
 
       // Do a render pass for each eye
-      xrPose.views.forEach((view) => {
+      xrPose.views.forEach((view, index) => {
         const viewport = glLayer.getViewport(view);
-
-        gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
         // TODO: Appropriate handling for AR passthrough on HMDs
         // with two eyes will require further investigation.
-        if (!model.xrSessionIsAR) {
+        if (model.xrSessionType === XrSessionTypes.HmdVR) {
           if (view.eye === 'left') {
             ren.setViewport(0, 0, 0.5, 1.0);
           } else if (view.eye === 'right') {
@@ -473,6 +477,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
             // No handling for non-eye viewport
             return;
           }
+        } else {
+          ren.setViewport(0, 0, 1, 1);
         }
 
         ren
@@ -1288,7 +1294,7 @@ const DEFAULT_VALUES = {
   defaultToWebgl2: true, // attempt webgl2 on by default
   activeFramebuffer: null,
   xrSession: null,
-  xrSessionIsAR: false,
+  xrSessionType: null,
   xrReferenceSpace: null,
   xrSupported: true,
   imageFormat: 'image/png',

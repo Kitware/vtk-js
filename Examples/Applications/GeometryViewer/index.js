@@ -18,6 +18,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 import vtkXMLPolyDataReader from '@kitware/vtk.js/IO/XML/XMLPolyDataReader';
 import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
+import { XrSessionTypes } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/Constants';
 
 // Force DataAccessHelper to have access to various data source
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
@@ -388,16 +389,17 @@ function createPipeline(fileName, fileContents) {
   // --------------------------------------------------------------------
 
   function toggleAR() {
-    const SESSION_IS_AR = true;
     if (immersionSelector.textContent === 'Start AR') {
       fullScreenRenderWindow.setBackground([...background, 0]);
       fullScreenRenderWindow
         .getApiSpecificRenderWindow()
-        .startXR(SESSION_IS_AR);
+        .startXR(XrSessionTypes.MobileAR);
       immersionSelector.textContent = 'Exit AR';
     } else {
       fullScreenRenderWindow.setBackground([...background, 255]);
-      fullScreenRenderWindow.getApiSpecificRenderWindow().stopXR(SESSION_IS_AR);
+      fullScreenRenderWindow
+        .getApiSpecificRenderWindow()
+        .stopXR(XrSessionTypes.MobileAR);
       immersionSelector.textContent = 'Start AR';
     }
   }

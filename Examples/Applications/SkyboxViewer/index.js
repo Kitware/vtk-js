@@ -13,7 +13,7 @@ import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreen
 import vtkSkybox from '@kitware/vtk.js/Rendering/Core/Skybox';
 import vtkSkyboxReader from '@kitware/vtk.js/IO/Misc/SkyboxReader';
 import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
-// import vtkMobileVR from '@kitware/vtk.js/Common/System/MobileVR';
+import { XrSessionTypes } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/Constants';
 
 // Force DataAccessHelper to have access to various data source
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
@@ -213,7 +213,9 @@ function createVisualization(container, mapReader) {
     document.querySelector('body').appendChild(button);
     button.addEventListener('click', () => {
       if (button.textContent === 'Send To VR') {
-        fullScreenRenderer.getApiSpecificRenderWindow().startXR();
+        fullScreenRenderer
+          .getApiSpecificRenderWindow()
+          .startXR(XrSessionTypes.HmdVR);
         button.textContent = 'Return From VR';
       } else {
         fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
