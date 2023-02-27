@@ -46,7 +46,6 @@ const viewColors = [
 const viewAttributes = [];
 const widget = vtkResliceCursorWidget.newInstance();
 const widgetState = widget.getWidgetState();
-widgetState.setKeepOrthogonality(true);
 widgetState.setOpacity(0.6);
 // Set size in CSS pixel space because scaleInPixels defaults to true
 widgetState.setSphereRadius(10);
@@ -62,6 +61,10 @@ const container = document.querySelector('body');
 const controlContainer = document.createElement('div');
 controlContainer.innerHTML = controlPanel;
 container.appendChild(controlContainer);
+const checkboxTranslation = document.getElementById('checkboxTranslation');
+const checkboxShowRotation = document.getElementById('checkboxShowRotation');
+const checkboxRotation = document.getElementById('checkboxRotation');
+const checkboxOrthogonality = document.getElementById('checkboxOrthogonality');
 
 // ----------------------------------------------------------------------------
 // Setup rendering code
@@ -145,6 +148,7 @@ for (let i = 0; i < 4; i++) {
     obj.interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
     obj.widgetInstance = obj.widgetManager.addWidget(widget, xyzToViewType[i]);
     obj.widgetInstance.setScaleInPixels(true);
+    obj.widgetInstance.setKeepOrthogonality(checkboxOrthogonality.checked);
     obj.widgetManager.enablePicking();
     // Use to update all renderers buffer when actors are moved
     obj.widgetManager.setCaptureOn(CaptureOn.MOUSE_MOVE);
@@ -387,19 +391,36 @@ function updateViews() {
   view3D.renderer.resetCameraClippingRange();
 }
 
-const checkboxOrthogonality = document.getElementById('checkboxOrthogality');
-checkboxOrthogonality.addEventListener('change', (ev) => {
-  widgetState.setKeepOrthogonality(checkboxOrthogonality.checked);
-});
-
-const checkboxRotation = document.getElementById('checkboxRotation');
-checkboxRotation.addEventListener('change', (ev) => {
-  widgetState.setEnableRotation(checkboxRotation.checked);
-});
-
-const checkboxTranslation = document.getElementById('checkboxTranslation');
 checkboxTranslation.addEventListener('change', (ev) => {
-  widgetState.setEnableTranslation(checkboxTranslation.checked);
+  viewAttributes.forEach((obj) =>
+    obj.widgetInstance.setEnableTranslation(checkboxTranslation.checked)
+  );
+});
+
+checkboxShowRotation.addEventListener('change', (ev) => {
+  widgetState
+    .getStatesWithLabel('rotation')
+    .forEach((handle) => handle.setVisible(checkboxShowRotation.checked));
+  viewAttributes.forEach((obj) => {
+    obj.interactor.render();
+  });
+  checkboxRotation.checked = checkboxShowRotation.checked;
+  checkboxRotation.disabled = !checkboxShowRotation.checked;
+  checkboxRotation.dispatchEvent(new Event('change'));
+});
+
+checkboxRotation.addEventListener('change', (ev) => {
+  viewAttributes.forEach((obj) =>
+    obj.widgetInstance.setEnableRotation(checkboxRotation.checked)
+  );
+  checkboxOrthogonality.disabled = !checkboxRotation.checked;
+  checkboxOrthogonality.dispatchEvent(new Event('change'));
+});
+
+checkboxOrthogonality.addEventListener('change', (ev) => {
+  viewAttributes.forEach((obj) =>
+    obj.widgetInstance.setKeepOrthogonality(checkboxOrthogonality.checked)
+  );
 });
 
 const checkboxScaleInPixels = document.getElementById('checkboxScaleInPixels');

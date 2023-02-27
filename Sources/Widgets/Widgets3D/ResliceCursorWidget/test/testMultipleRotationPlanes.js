@@ -62,8 +62,9 @@ function createView(gc, viewType, widget) {
     gc.registerResource(vtkInteractorStyleImage.newInstance())
   );
   obj.widgetInstance = gc.registerResource(
-    obj.widgetManager.addWidget(widget, viewType)
+    obj.widgetManager.addWidget(widget, viewType, { keepOrthogonality: true })
   );
+
   obj.widgetManager.enablePicking();
   // Use to update all renderers buffer when actors are moved
   obj.widgetManager.setCaptureOn(CaptureOn.MOUSE_MOVE);
@@ -100,7 +101,6 @@ test('Test rendering when several rotations plane', (t) => {
   // --------------------------------------------------------------------------
 
   const widget = gc.registerResource(vtkResliceCursorWidget.newInstance());
-  widget.getWidgetState().setKeepOrthogonality(true);
   const viewAttributes = [];
 
   /**

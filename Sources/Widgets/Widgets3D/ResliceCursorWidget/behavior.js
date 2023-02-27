@@ -25,6 +25,17 @@ export default function widgetBehavior(publicAPI, model) {
   let isScrolling = false;
   let previousPosition;
 
+  macro.setGet(publicAPI, model, ['keepOrthogonality']);
+
+  publicAPI.setEnableTranslation = (enable) => {
+    model.representations[0].setPickable(enable); // line handle
+    model.representations[2].setPickable(enable); // center handle
+  };
+
+  publicAPI.setEnableRotation = (enable) => {
+    model.representations[1].setPickable(enable); // rotation handle
+  };
+
   // FIXME: label information should be accessible from activeState instead of parent state.
   publicAPI.getActiveInteraction = () => {
     if (
@@ -406,7 +417,7 @@ export default function widgetBehavior(publicAPI, model) {
     const planeNormal = model.widgetState.getPlanes()[inViewType].normal;
     publicAPI.rotatePlane(viewType, radianAngle, planeNormal);
 
-    if (model.widgetState.getKeepOrthogonality()) {
+    if (publicAPI.getKeepOrthogonality()) {
       const otherLineName = getOtherLineName(lineName);
       const otherPlaneName = getLinePlaneName(otherLineName);
       publicAPI.rotatePlane(

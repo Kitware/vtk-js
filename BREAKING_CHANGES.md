@@ -3,7 +3,7 @@
 - **ResliceCursorWidget**: vtkResliceCursorContextRepresentation is deprecated and removed.
 Instead, a `vtkSphereHandleRepresentation` is used for `rotation` and `center` handles,
 and a `vtkLineHandleRepresenttion` is used for the axes. `rotateLineInView()` now
-takes an axis name (string, e.g. 'XinY') instead of a substate.
+takes an axis name (string, e.g. 'XinY') instead of a substate. `enableRotation`, `enableTranslation` and `keepOrthogonality` in widgetState are replaced by widget behavior accessors (e.g. `widgetInView.setEnableRotation(false)`). See RCW example.
 - SVGRepresentation and SVG widget support has been fully removed.
 
 ## From 24.x to 25

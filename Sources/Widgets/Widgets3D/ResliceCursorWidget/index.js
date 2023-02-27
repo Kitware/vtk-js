@@ -14,6 +14,8 @@ import {
   updateState,
   transformPlane,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
+import { viewTypeToPlaneName } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
+
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 import { mat4 } from 'gl-matrix';
@@ -265,51 +267,26 @@ function vtkResliceCursorWidget(publicAPI, model) {
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
       case ViewTypes.XY_PLANE:
-        return [
-          {
-            builder: vtkLineHandleRepresentation,
-            labels: ['lineInZ'],
-            initialValues: {
-              useActiveColor: false,
-            },
-          },
-          {
-            builder: vtkSphereHandleRepresentation,
-            labels: ['rotationInZ', 'center'],
-            initialValues: {
-              useActiveColor: false,
-            },
-          },
-        ];
       case ViewTypes.XZ_PLANE:
-        return [
-          {
-            builder: vtkLineHandleRepresentation,
-            labels: ['lineInY'],
-            initialValues: {
-              useActiveColor: false,
-            },
-          },
-          {
-            builder: vtkSphereHandleRepresentation,
-            labels: ['rotationInY', 'center'],
-            initialValues: {
-              useActiveColor: false,
-            },
-          },
-        ];
       case ViewTypes.YZ_PLANE:
         return [
           {
             builder: vtkLineHandleRepresentation,
-            labels: ['lineInX'],
+            labels: [`lineIn${viewTypeToPlaneName[viewType]}`],
             initialValues: {
               useActiveColor: false,
             },
           },
           {
             builder: vtkSphereHandleRepresentation,
-            labels: ['rotationInX', 'center'],
+            labels: [`rotationIn${viewTypeToPlaneName[viewType]}`],
+            initialValues: {
+              useActiveColor: false,
+            },
+          },
+          {
+            builder: vtkSphereHandleRepresentation,
+            labels: ['center'],
             initialValues: {
               useActiveColor: false,
             },

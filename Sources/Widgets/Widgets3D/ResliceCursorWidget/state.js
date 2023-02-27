@@ -20,7 +20,6 @@ export default function generateState() {
     .addField({ name: 'activeViewType', initialValue: null })
     .addField({ name: 'lineThickness', initialValue: 2 })
     .addField({ name: 'sphereRadius', initialValue: 5 })
-    .addField({ name: 'showCenter', initialValue: true })
     .addField({
       name: 'planes',
       initialValue: {
@@ -29,9 +28,6 @@ export default function generateState() {
         [ViewTypes.XY_PLANE]: { normal: [0, 0, -1], viewUp: [0, -1, 0] },
       },
     })
-    .addField({ name: 'enableRotation', initialValue: true })
-    .addField({ name: 'enableTranslation', initialValue: true })
-    .addField({ name: 'keepOrthogonality', initialValue: false })
     .addField({
       name: 'scrollingMethod',
       initialValue: ScrollingMethods.MIDDLE_MOUSE_BUTTON,
