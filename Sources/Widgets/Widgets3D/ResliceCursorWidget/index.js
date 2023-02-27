@@ -250,14 +250,15 @@ function vtkResliceCursorWidget(publicAPI, model) {
   /**
    * Convenient function to return the ResliceCursorRepresentation for a given viewType
    * @param {string} viewType
-   * @returns
+   * @returns an array of 3 representations (for line handles, rotation handles, center handle)
+   * or an empty array if the widget has not yet been added to the view type.
    */
   function findRepresentationsForViewType(viewType) {
     const widgetForViewType = publicAPI
       .getViewIds()
       .map((viewId) => publicAPI.getWidgetForView({ viewId }))
       .find((widget) => widget.getViewType() === viewType);
-    return widgetForViewType.getRepresentations();
+    return widgetForViewType ? widgetForViewType.getRepresentations() : [];
   }
 
   // --------------------------------------------------------------------------
@@ -591,7 +592,9 @@ function vtkResliceCursorWidget(publicAPI, model) {
     [ViewTypes.YZ_PLANE, ViewTypes.XZ_PLANE, ViewTypes.XY_PLANE].reduce(
       (res, viewType) => {
         res[viewType] =
-          findRepresentationsForViewType(viewType)[0].getDisplayScaleParams?.();
+          findRepresentationsForViewType(
+            viewType
+          )[0]?.getDisplayScaleParams?.();
         return res;
       },
       {}
