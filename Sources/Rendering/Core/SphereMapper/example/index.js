@@ -11,7 +11,12 @@ import vtkPlaneSource from '@kitware/vtk.js/Filters/Sources/PlaneSource';
 import vtkSphereMapper from '@kitware/vtk.js/Rendering/Core/SphereMapper';
 
 import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
+import {
+  FieldDataTypes,
+  FieldAssociations,
+} from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
+
+import { throttle } from '@kitware/vtk.js/macros';
 
 import controlPanel from './controlPanel.html';
 
@@ -87,11 +92,50 @@ renderer.addActor(actor);
 renderer.resetCamera();
 renderWindow.render();
 
+const interactor = renderWindow.getInteractor();
+const apiSpecificRenderWindow = interactor.getView();
+const hwSelector = apiSpecificRenderWindow.getSelector();
+hwSelector.setCaptureZValues(true);
+hwSelector.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_CELLS);
+
+function eventToWindowXY(event) {
+  // We know we are full screen => window.innerXXX
+  // Otherwise we can use pixel device ratio or else...
+  const { clientX, clientY } = event;
+  const [width, height] = apiSpecificRenderWindow.getSize();
+  const x = Math.round((width * clientX) / window.innerWidth);
+  const y = Math.round(height * (1 - clientY / window.innerHeight)); // Need to flip Y
+  return [x, y];
+}
+
 // -----------------------------------------------------------
 // UI control handling
 // -----------------------------------------------------------
 
 fullScreenRenderer.addController(controlPanel);
+const attributeIdDiv = document.querySelector('#attributeID');
+
+function pickOnMouseEvent(event) {
+  if (interactor.isAnimating()) {
+    // We should not do picking when interacting with the scene
+    return;
+  }
+  const [x, y] = eventToWindowXY(event);
+
+  hwSelector.getSourceDataAsync(renderer, x, y, x, y).then((result) => {
+    const selections = result?.generateSelection(x, y, x, y);
+    if (selections && selections.length >= 1) {
+      const selection = selections[0];
+      const props = selection.get().properties;
+      attributeIdDiv.textContent = props.attributeID;
+    } else {
+      attributeIdDiv.textContent = '';
+    }
+  });
+}
+
+document.addEventListener('mousemove', throttle(pickOnMouseEvent, 20));
+
 ['xResolution', 'yResolution'].forEach((propertyName) => {
   document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);

@@ -22,6 +22,8 @@ attribute vec2 offsetMC;
 // optional normal declaration
 //VTK::Normal::Dec
 
+//VTK::Picking::Dec
+
 // Texture coordinates
 //VTK::TCoord::Dec
 
@@ -45,6 +47,8 @@ uniform float scaleFactor;
 
 void main()
 {
+  //VTK::Picking::Impl
+
   //VTK::Color::Impl
 
   //VTK::Normal::Impl
