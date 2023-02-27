@@ -244,22 +244,22 @@ function defaultValues(publicAPI, model, initialValues) {
     defaultScale: 1,
     ...initialValues,
     _pipeline: {
-      source: initialValues.pipeline?.source ?? publicAPI,
+      source: initialValues._pipeline?.source ?? publicAPI,
       glyph:
-        initialValues.pipeline?.glyph ?? // in case glyph was provided
+        initialValues._pipeline?.glyph ?? // in case glyph was provided
         vtkSphereSource.newInstance({
           phiResolution: 8,
           thetaResolution: 8,
         }),
       mapper:
-        initialValues.pipeline?.mapper ?? // in case mapper was provided
+        initialValues._pipeline?.mapper ?? // in case mapper was provided
         vtkGlyph3DMapper.newInstance({
           scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
         }),
       actor:
-        initialValues.pipeline?.actor ?? // in case actor was provided
+        initialValues._pipeline?.actor ?? // in case actor was provided
         vtkActor.newInstance({ parentProp: publicAPI }),
-      ...initialValues.pipeline, // in case there is something else to add to pipeline
+      ...initialValues._pipeline, // in case there is something else to add to pipeline
     },
     applyMixin: {
       origin: initialValues.applyMixin?.origin ?? origin(publicAPI, model),
