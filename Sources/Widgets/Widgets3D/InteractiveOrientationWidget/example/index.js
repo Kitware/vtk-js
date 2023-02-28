@@ -47,7 +47,7 @@ orientationWidget.setEnabled(true);
 orientationWidget.setViewportCorner(
   vtkOrientationMarkerWidget.Corners.BOTTOM_LEFT
 );
-orientationWidget.setViewportSize(0.3);
+orientationWidget.setViewportSize(0.1);
 orientationWidget.setMinPixelSize(100);
 orientationWidget.setMaxPixelSize(300);
 
@@ -74,12 +74,11 @@ widgetManager.setRenderer(orientationWidget.getRenderer());
 
 const widget = vtkInteractiveOrientationWidget.newInstance();
 widget.placeWidget(axes.getBounds());
-// widget.setBounds(axes.getBounds());
-widget.setPlaceFactor(1);
+widget.setBounds(axes.getBounds().map((v) => v * 0.45));
 
 const vw = widgetManager.addWidget(widget);
 
-// // Manage user interaction
+// Manage user interaction
 vw.onOrientationChange(({ up, direction, action, event }) => {
   const focalPoint = camera.getFocalPoint();
   const position = camera.getPosition();
