@@ -425,8 +425,8 @@ checkboxOrthogonality.addEventListener('change', (ev) => {
 
 const checkboxScaleInPixels = document.getElementById('checkboxScaleInPixels');
 checkboxScaleInPixels.addEventListener('change', (ev) => {
+  widget.setScaleInPixels(checkboxScaleInPixels.checked);
   viewAttributes.forEach((obj) => {
-    obj.widgetInstance.setScaleInPixels(checkboxScaleInPixels.checked);
     obj.interactor.render();
   });
 });
@@ -470,4 +470,17 @@ selectInterpolationMode.addEventListener('change', (ev) => {
     obj.reslice.setInterpolationMode(Number(ev.target.selectedIndex));
   });
   updateViews();
+});
+
+const checkboxWindowLevel = document.getElementById('checkboxWindowLevel');
+checkboxWindowLevel.addEventListener('change', (ev) => {
+  viewAttributes.forEach((obj, index) => {
+    if (index < 3) {
+      obj.interactor.setInteractorStyle(
+        checkboxWindowLevel.checked
+          ? vtkInteractorStyleImage.newInstance()
+          : vtkInteractorStyleTrackballCamera.newInstance()
+      );
+    }
+  });
 });

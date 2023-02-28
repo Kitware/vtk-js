@@ -75,10 +75,7 @@ function vtkAbstractWidget(publicAPI, model) {
     }
   };
 
-  publicAPI.getViewWidgets = () =>
-    model._factory
-      .getViewIds()
-      .map((viewId) => model._factory.getWidgetForView({ viewId }));
+  publicAPI.getViewWidgets = () => model._factory.getViewWidgets();
 
   // --------------------------------------------------------------------------
   // Initialization calls

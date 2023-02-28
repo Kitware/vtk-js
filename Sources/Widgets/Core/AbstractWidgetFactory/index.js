@@ -125,6 +125,8 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
   // List of all the views the widget has been registered to.
   publicAPI.getViewIds = () => Object.keys(viewToWidget);
 
+  publicAPI.getViewWidgets = () => Object.values(viewToWidget);
+
   // --------------------------------------------------------------------------
   // Widget visibility / enable
   // --------------------------------------------------------------------------

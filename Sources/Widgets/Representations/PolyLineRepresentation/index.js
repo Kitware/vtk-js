@@ -4,8 +4,8 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
+import { getPixelWorldHeightAtCoord } from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 import vtkWidgetRepresentation, {
-  getPixelWorldHeightAtCoord,
   allocateArray,
 } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';

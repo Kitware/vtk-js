@@ -1,6 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
@@ -84,27 +83,6 @@ export function connectPipeline(pipeline) {
     pipeline.mapper.setInputConnection(pipeline.glyph.getOutputPort(), 1);
   }
   pipeline.actor.setMapper(pipeline.mapper);
-}
-
-export function getPixelWorldHeightAtCoord(worldCoord, displayScaleParams) {
-  const {
-    dispHeightFactor,
-    cameraPosition,
-    cameraDir,
-    isParallel,
-    rendererPixelDims,
-  } = displayScaleParams;
-  let scale = 1;
-  if (isParallel) {
-    scale = dispHeightFactor;
-  } else {
-    const worldCoordToCamera = [...worldCoord];
-    vtkMath.subtract(worldCoordToCamera, cameraPosition, worldCoordToCamera);
-    scale = vtkMath.dot(worldCoordToCamera, cameraDir) * dispHeightFactor;
-  }
-
-  const rHeight = rendererPixelDims[1];
-  return scale / rHeight;
 }
 
 // Internal convenient function to create a data array:
@@ -343,7 +321,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   vtkProp.extend(publicAPI, model, defaultValues(initialValues));
   macro.algo(publicAPI, model, 1, 1);
-  macro.get(publicAPI, model, ['labels']);
+  macro.get(publicAPI, model, [
+    'labels',
+    'displayScaleParams',
+    'coincidentTopologyParameters',
+  ]);
   macro.set(publicAPI, model, [
     { type: 'object', name: 'displayScaleParams' },
     { type: 'object', name: 'coincidentTopologyParameters' },
@@ -366,5 +348,4 @@ export default {
   mergeStyles,
   applyStyles,
   connectPipeline,
-  getPixelWorldHeightAtCoord,
 };

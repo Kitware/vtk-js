@@ -7,8 +7,9 @@ import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
+import { getPixelWorldHeightAtCoord } from 'vtk.js/Sources/Widgets/Core/WidgetManager';
+
 import vtkWidgetRepresentation, {
-  getPixelWorldHeightAtCoord,
   allocateArray,
 } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
@@ -22,7 +23,9 @@ export function origin(publicAPI, model) {
     const points = allocateArray(polyData, 'points', states.length).getData();
     let j = 0;
     for (let i = 0; i < states.length; ++i) {
-      const coord = states[i].getOrigin();
+      const coord = states[i].getOrigin(
+        model.scaleInPixels && model.displayScaleParams
+      );
       points[j++] = coord[0];
       points[j++] = coord[1];
       points[j++] = coord[2];
