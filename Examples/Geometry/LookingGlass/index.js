@@ -1,3 +1,6 @@
+// For streamlined VR development install the WebXR emulator extension
+// https://github.com/MozillaReality/WebXR-emulator-extension
+
 import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
@@ -10,7 +13,7 @@ import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreen
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
-import { XrSessionTypes } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/Constants';
+import { XrSessionTypes } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/Constants';
 
 // Force DataAccessHelper to have access to various data source
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
@@ -19,12 +22,23 @@ import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
 import controlPanel from './controller.html';
 
+// Import the Looking Glass WebXR Polyfill override
+// Assumes that the Looking Glass Bridge native application is already running.
+// See https://docs.lookingglassfactory.com/developer-tools/webxr
+import(
+  // eslint-disable-next-line import/no-unresolved, import/extensions
+  /* webpackIgnore: true */ 'https://unpkg.com/@lookingglass/webxr@0.3.0/dist/@lookingglass/bundle/webxr.js'
+).then((obj) => {
+  // eslint-disable-next-line no-new
+  new obj.LookingGlassWebXRPolyfill();
+});
+
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
-  background: [0, 0, 0, 255],
+  background: [0, 0, 0],
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
@@ -37,11 +51,11 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // this
 // ----------------------------------------------------------------------------
 
-const coneSource = vtkConeSource.newInstance({ height: 100, radius: 50 });
+const coneSource = vtkConeSource.newInstance({ height: 1.0, radius: 0.5 });
 const filter = vtkCalculator.newInstance();
 
 filter.setInputConnection(coneSource.getOutputPort());
-
+// filter.setFormulaSimple(FieldDataTypes.CELL, [], 'random', () => Math.random());
 filter.setFormula({
   getArrays: (inputDataSets) => ({
     input: [],
@@ -78,22 +92,31 @@ renderWindow.render();
 // -----------------------------------------------------------
 
 fullScreenRenderer.addController(controlPanel);
-const arbutton = document.querySelector('.arbutton');
-arbutton.disabled = !fullScreenRenderer
-  .getApiSpecificRenderWindow()
-  .getXrSupported();
+const representationSelector = document.querySelector('.representations');
+const resolutionChange = document.querySelector('.resolution');
+const vrbutton = document.querySelector('.vrbutton');
 
-arbutton.addEventListener('click', (e) => {
-  if (arbutton.textContent === 'Start AR') {
-    fullScreenRenderer.setBackground([0, 0, 0, 0]);
+representationSelector.addEventListener('change', (e) => {
+  const newRepValue = Number(e.target.value);
+  actor.getProperty().setRepresentation(newRepValue);
+  renderWindow.render();
+});
+
+resolutionChange.addEventListener('input', (e) => {
+  const resolution = Number(e.target.value);
+  coneSource.setResolution(resolution);
+  renderWindow.render();
+});
+
+vrbutton.addEventListener('click', (e) => {
+  if (vrbutton.textContent === 'Send To Looking Glass') {
     fullScreenRenderer
       .getApiSpecificRenderWindow()
-      .startXR(XrSessionTypes.MobileAR);
-    arbutton.textContent = 'Exit AR';
+      .startXR(XrSessionTypes.LookingGlassVR);
+    vrbutton.textContent = 'Return From Looking Glass';
   } else {
-    fullScreenRenderer.setBackground([0, 0, 0, 255]);
     fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
-    arbutton.textContent = 'Start AR';
+    vrbutton.textContent = 'Send To Looking Glass';
   }
 });
 

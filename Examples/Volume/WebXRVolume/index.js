@@ -18,6 +18,7 @@ import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
 import vtkXMLImageDataReader from '@kitware/vtk.js/IO/XML/XMLImageDataReader';
+import { XrSessionTypes } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/Constants';
 
 import './WebXRVolume.module.css';
 
@@ -55,16 +56,57 @@ const ofun = vtkPiecewiseFunction.newInstance();
 
 const {
   fileURL = 'https://data.kitware.com/api/v1/file/59de9dca8d777f31ac641dc2/download',
+  xrSessionType = null,
+  colorPreset = null,
+  resliceVolume = true,
 } = vtkURLExtract.extractURLParameters();
+
+// Validate input parameters
+let requestedXrSessionType = xrSessionType;
+if (!Object.values(XrSessionTypes).includes(requestedXrSessionType)) {
+  console.warn(
+    'Could not parse requested XR session type: ',
+    requestedXrSessionType
+  );
+  requestedXrSessionType = null;
+}
+
+if (requestedXrSessionType === XrSessionTypes.LookingGlassVR) {
+  // Import the Looking Glass WebXR Polyfill override
+  // Assumes that the Looking Glass Bridge native application is already running.
+  // See https://docs.lookingglassfactory.com/developer-tools/webxr
+  import(
+    // eslint-disable-next-line import/no-unresolved, import/extensions
+    /* webpackIgnore: true */ 'https://unpkg.com/@lookingglass/webxr@0.3.0/dist/@lookingglass/bundle/webxr.js'
+  ).then((obj) => {
+    // eslint-disable-next-line no-new
+    new obj.LookingGlassWebXRPolyfill();
+  });
+} else if (requestedXrSessionType === null) {
+  // Determine supported session type
+  navigator.xr.isSessionSupported('immersive-ar').then((arSupported) => {
+    if (arSupported) {
+      requestedXrSessionType = XrSessionTypes.MobileAR;
+    } else {
+      navigator.xr.isSessionSupported('immersive-vr').then((vrSupported) => {
+        requestedXrSessionType = vrSupported ? XrSessionTypes.HmdVR : null;
+      });
+    }
+  });
+}
 
 HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   // Read data
   vtiReader.parseAsArrayBuffer(fileContents);
 
-  // Rotate 90 degrees forward so that default head volume faces camera
-  const rotateX = mat4.create();
-  mat4.fromRotation(rotateX, vtkMath.radiansFromDegrees(90), [-1, 0, 0]);
-  reslicer.setResliceAxes(rotateX);
+  if (resliceVolume) {
+    // Rotate 90 degrees forward so that default head volume faces camera
+    const rotateX = mat4.create();
+    mat4.fromRotation(rotateX, vtkMath.radiansFromDegrees(90), [-1, 0, 0]);
+    reslicer.setResliceAxes(rotateX);
+  } else {
+    reslicer.setResliceAxes(mat4.create());
+  }
 
   const data = reslicer.getOutputData(0);
   const dataArray =
@@ -82,11 +124,43 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
     );
   mapper.setSampleDistance(sampleDistance);
 
-  ctfun.addRGBPoint(dataRange[0], 0.0, 0.3, 0.3);
-  ctfun.addRGBPoint(dataRange[1], 1.0, 1.0, 1.0);
-  ofun.addPoint(dataRange[0], 0.0);
-  ofun.addPoint((dataRange[1] - dataRange[0]) / 4, 0.0);
-  ofun.addPoint(dataRange[1], 0.5);
+  // https://github.com/Kitware/VolView/blob/f6b1aaa587d1a80ccd99dd9fbab309c58cde08f7/src/vtk/MedicalColorPresets.json
+  if (colorPreset === 'CT-AAA') {
+    ctfun.addRGBPoint(-3024, 0.0, 0, 0);
+    ctfun.addRGBPoint(143, 0.62, 0.36, 0.18);
+    ctfun.addRGBPoint(166, 0.88, 0.6, 0.29);
+    ctfun.addRGBPoint(214, 1, 1, 1);
+    ctfun.addRGBPoint(419, 1, 0.94, 0.95);
+    ctfun.addRGBPoint(3071, 0.83, 0.66, 1);
+
+    ofun.addPoint(-3024, 0);
+    ofun.addPoint(144, 0);
+    ofun.addPoint(166, 0.69);
+    ofun.addPoint(214, 0.7);
+    ofun.addPoint(420, 0.83);
+    ofun.addPoint(3071, 0.8);
+  } else if (colorPreset === 'CT-Cardiac2') {
+    ctfun.addRGBPoint(-3024, 0.0, 0, 0);
+    ctfun.addRGBPoint(42, 0.55, 0.25, 0.15);
+    ctfun.addRGBPoint(163, 0.92, 0.64, 0.06);
+    ctfun.addRGBPoint(278, 1, 0.88, 0.62);
+    ctfun.addRGBPoint(1587, 1, 1, 1);
+    ctfun.addRGBPoint(3071, 0.83, 0.66, 1);
+
+    ofun.addPoint(-3024, 0);
+    ofun.addPoint(43, 0);
+    ofun.addPoint(163, 0.42);
+    ofun.addPoint(277, 0.78);
+    ofun.addPoint(1587, 0.75);
+    ofun.addPoint(3071, 0.8);
+  } else {
+    // Scale color and opacity transfer functions to data intensity range
+    ctfun.addRGBPoint(dataRange[0], 0.0, 0.3, 0.3);
+    ctfun.addRGBPoint(dataRange[1], 1.0, 1.0, 1.0);
+    ofun.addPoint(dataRange[0], 0.0);
+    ofun.addPoint((dataRange[1] - dataRange[0]) / 4, 0.0);
+    ofun.addPoint(dataRange[1], 0.5);
+  }
   actor.getProperty().setRGBTransferFunction(0, ctfun);
   actor.getProperty().setScalarOpacity(0, ofun);
   actor.getProperty().setInterpolationTypeToLinear();
@@ -96,9 +170,6 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   renderWindow.render();
 
   // Add button to launch AR (default) or VR scene
-  const VR = 1;
-  const AR = 2;
-  let xrSessionType = 0;
   const xrButton = document.createElement('button');
   let enterText = 'XR not available!';
   const exitText = 'Exit XR';
@@ -107,36 +178,24 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
     navigator.xr !== undefined &&
     fullScreenRenderer.getApiSpecificRenderWindow().getXrSupported()
   ) {
-    navigator.xr.isSessionSupported('immersive-ar').then((arSupported) => {
-      if (arSupported) {
-        xrSessionType = AR;
-        enterText = 'Start AR';
-        xrButton.textContent = enterText;
-      } else {
-        navigator.xr.isSessionSupported('immersive-vr').then((vrSupported) => {
-          if (vrSupported) {
-            xrSessionType = VR;
-            enterText = 'Start VR';
-            xrButton.textContent = enterText;
-          }
-        });
-      }
-    });
+    enterText =
+      requestedXrSessionType === XrSessionTypes.MobileAR
+        ? 'Start AR'
+        : 'Start VR';
+    xrButton.textContent = enterText;
   }
   xrButton.addEventListener('click', () => {
     if (xrButton.textContent === enterText) {
-      if (xrSessionType === AR) {
+      if (requestedXrSessionType === XrSessionTypes.MobileAR) {
         fullScreenRenderer.setBackground([0, 0, 0, 0]);
       }
       fullScreenRenderer
         .getApiSpecificRenderWindow()
-        .startXR(xrSessionType === AR);
+        .startXR(requestedXrSessionType);
       xrButton.textContent = exitText;
     } else {
       fullScreenRenderer.setBackground([...background, 255]);
-      fullScreenRenderer
-        .getApiSpecificRenderWindow()
-        .stopXR(xrSessionType === AR);
+      fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
       xrButton.textContent = enterText;
     }
   });

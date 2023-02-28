@@ -18,6 +18,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 import vtkXMLPolyDataReader from '@kitware/vtk.js/IO/XML/XMLPolyDataReader';
 import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
+import { XrSessionTypes } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/Constants';
 
 // Force DataAccessHelper to have access to various data source
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
@@ -73,6 +74,44 @@ function updateCamera(camera) {
 function preventDefaults(e) {
   e.preventDefault();
   e.stopPropagation();
+}
+
+// WebXR
+let requestedXrSessionType =
+  userParams.xrSessionType !== undefined ? userParams.xrSessionType : null;
+if (
+  requestedXrSessionType !== null &&
+  !Object.values(XrSessionTypes).includes(requestedXrSessionType)
+) {
+  console.warn(
+    'Could not parse requested XR session type: ',
+    requestedXrSessionType
+  );
+  requestedXrSessionType = null;
+}
+
+if (requestedXrSessionType === XrSessionTypes.LookingGlassVR) {
+  // Import the Looking Glass WebXR Polyfill override
+  // Assumes that the Looking Glass Bridge native application is already running.
+  // See https://docs.lookingglassfactory.com/developer-tools/webxr
+  import(
+    // eslint-disable-next-line import/no-unresolved, import/extensions
+    /* webpackIgnore: true */ 'https://unpkg.com/@lookingglass/webxr@0.3.0/dist/@lookingglass/bundle/webxr.js'
+  ).then((obj) => {
+    // eslint-disable-next-line no-new
+    new obj.LookingGlassWebXRPolyfill();
+  });
+} else if (requestedXrSessionType === null && navigator.xr !== undefined) {
+  // Determine supported session type
+  navigator.xr.isSessionSupported('immersive-ar').then((arSupported) => {
+    if (arSupported) {
+      requestedXrSessionType = XrSessionTypes.MobileAR;
+    } else {
+      navigator.xr.isSessionSupported('immersive-vr').then((vrSupported) => {
+        requestedXrSessionType = vrSupported ? XrSessionTypes.HmdVR : null;
+      });
+    }
+  });
 }
 
 // ----------------------------------------------------------------------------
@@ -197,7 +236,10 @@ function createPipeline(fileName, fileContents) {
 
   const immersionSelector = document.createElement('button');
   immersionSelector.setAttribute('class', selectorClass);
-  immersionSelector.innerHTML = 'Start AR';
+  immersionSelector.innerHTML =
+    requestedXrSessionType === XrSessionTypes.MobileAR
+      ? 'Start AR'
+      : 'Start VR';
 
   const controlContainer = document.createElement('div');
   controlContainer.setAttribute('class', style.control);
@@ -210,8 +252,8 @@ function createPipeline(fileName, fileContents) {
 
   if (
     navigator.xr !== undefined &&
-    navigator.xr.isSessionSupported('immersive-ar') &&
-    fullScreenRenderWindow.getApiSpecificRenderWindow().getXrSupported()
+    fullScreenRenderWindow.getApiSpecificRenderWindow().getXrSupported() &&
+    requestedXrSessionType !== null
   ) {
     controlContainer.appendChild(immersionSelector);
   }
@@ -387,21 +429,29 @@ function createPipeline(fileName, fileContents) {
   // Immersion handling
   // --------------------------------------------------------------------
 
-  function toggleAR() {
-    const SESSION_IS_AR = true;
-    if (immersionSelector.textContent === 'Start AR') {
+  function toggleXR() {
+    if (requestedXrSessionType === XrSessionTypes.MobileAR) {
       fullScreenRenderWindow.setBackground([...background, 0]);
+    }
+
+    if (immersionSelector.textContent.startsWith('Start')) {
       fullScreenRenderWindow
         .getApiSpecificRenderWindow()
-        .startXR(SESSION_IS_AR);
-      immersionSelector.textContent = 'Exit AR';
+        .startXR(requestedXrSessionType);
+      immersionSelector.textContent =
+        requestedXrSessionType === XrSessionTypes.MobileAR
+          ? 'Exit AR'
+          : 'Exit VR';
     } else {
       fullScreenRenderWindow.setBackground([...background, 255]);
-      fullScreenRenderWindow.getApiSpecificRenderWindow().stopXR(SESSION_IS_AR);
-      immersionSelector.textContent = 'Start AR';
+      fullScreenRenderWindow.getApiSpecificRenderWindow().stopXR();
+      immersionSelector.textContent =
+        requestedXrSessionType === XrSessionTypes.MobileAR
+          ? 'Start AR'
+          : 'Start VR';
     }
   }
-  immersionSelector.addEventListener('click', toggleAR);
+  immersionSelector.addEventListener('click', toggleXR);
 
   // --------------------------------------------------------------------
   // Pipeline handling

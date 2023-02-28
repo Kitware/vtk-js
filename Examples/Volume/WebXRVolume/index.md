@@ -9,7 +9,17 @@ Volume rendering can be processor-intensive. Smaller volumes may give better per
 
 - [binary-head.vti](https://kitware.github.io/vtk-js/examples/WebXRVolume/WebXRVolume.html?fileURL=https://data.kitware.com/api/v1/file/59de9dca8d777f31ac641dc2/download) 15.6 MB
 - [binary-head-2.vti](https://kitware.github.io/vtk-js/examples/WebXRVolume/WebXRVolume.html?fileURL=https://data.kitware.com/api/v1/file/629921a64acac99f429a45a7/download) 361 kB
+- [Kitware_CTA_Head_and_Neck.vti](https://kitware.github.io/vtk-js/examples/WebXRVolume/WebXRVolume.html?fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-Cardiac2&resliceVolume=true) 5.025 MB
 - [tiny-image.vti](https://kitware.github.io/vtk-js/examples/WebXRVolume/WebXRVolume.html?fileURL=https://data.kitware.com/api/v1/file/624320e74acac99f42254a25/download) 1.6 kB
+
+### Looking Glass Holographic Support
+
+Holographic scenes can be rendered to a Looking Glass display by specifying the `xrSessionType` in the example URL.
+
+- [binary-head.vti (holographic)](https://kitware.github.io/vtk-js/examples/WebXRVolume/WebXRVolume.html?xrSessionType=2&fileURL=https://data.kitware.com/api/v1/file/59de9dca8d777f31ac641dc2/download) 15.6 MB
+- [3DUS-fetus.vti (holographic)](https://kitware.github.io/vtk-js/examples/WebXRVolume/WebXRVolume.html?xrSessionType=2&fileURL=https://data.kitware.com/api/v1/file/63fe43217b0dfcc98f66a85a/download) 30.22 MB
+- [Kitware_CTA_Head_and_Neck.vti (holographic)](https://kitware.github.io/vtk-js/examples/WebXRVolume/WebXRVolume.html?xrSessionType=2&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-Cardiac2&resliceVolume=false) 5.025 MB
+
 
 ### See Also
 

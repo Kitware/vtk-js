@@ -232,19 +232,34 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	get3DContext(options: I3DContextOptions): Nullable<WebGLRenderingContext>;
 
 	/**
-	 *
+	 * Request an XR session on the user device with WebXR,
+   * typically in response to a user request such as a button press.
 	 */
-	startVR(): void;
+	startXR(): void;
+
+  /**
+   * When an XR session is available, set up the XRWebGLLayer
+   * and request the first animation frame for the device
+   */
+   enterXR(): void,
+
+   /**
+    * Adjust world-to-physical parameters for different viewing modalities
+    *
+    * @param {Number} inputRescaleFactor
+    * @param {Number} inputTranslateZ
+    */
+   resetXRScene(inputRescaleFactor: number, inputTranslateZ: number): void,
+
+	/**
+	 * Request to stop the current XR session
+	 */
+	stopXR(): void;
 
 	/**
 	 *
 	 */
-	stopVR(): void;
-
-	/**
-	 *
-	 */
-	vrRender(): void;
+	xrRender(): void;
 
 	/**
 	 *

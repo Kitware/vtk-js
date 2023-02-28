@@ -59,6 +59,19 @@ vtk.js supports virtual and augmented reality rendering via the [WebXR device AP
 
 </div>
 
+### Holographic Examples
+
+<div class="gallery">
+
+[![Looking Glass Cone Example][LookingGlassCone]](../examples/LookingGlass.html)
+[![GeometryViewer Example][GeometryViewer]](../examples/GeometryViewer.html?xrSessionType=2&fileURL=https://data.kitware.com/api/v1/item/59de9de58d777f31ac641dc5/download)
+[![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer/GeometryViewer.html?xrSessionType=2&fileURL=[https://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download])
+[![GeometryViewer Chest CT][GeometryViewerchestCT]](../examples/GeometryViewer/GeometryViewer.html?xrSessionType=2&fileURL=[https://data.kitware.com/api/v1/file/61f044354acac99f42c30276/download,https://data.kitware.com/api/v1/file/61f0440f4acac99f42c30191/download,https://data.kitware.com/api/v1/file/61f044204acac99f42c30267/download])
+[![XR Volume Example][WebXRVolume]](../examples/WebXRVolume.html?xrSessionType=2)
+[![XR Gradient Example][HeadGradient]](../examples/WebXRHeadGradientCVR.html?xrSessionType=2)
+
+</div>
+
 ### For Developers
 
 Developers without access to XR hardware may find it convenient to install and use the [Mozilla WebXR emulator](https://github.com/MozillaReality/WebXR-emulator-extension) in their browser.
@@ -81,3 +94,4 @@ While WebXR has broad industry support, it is not yet implemented in all browser
 [HeadFullVolume]: ../docs/gallery/HeadFullVolume.png
 [ChestCTHybrid]: ../docs/gallery/ChestCTHybrid.png
 [HeadGradient]: ../docs/gallery/HeadGradient.png
+[LookingGlassCone]: ../docs/gallery/LookingGlassCone.png

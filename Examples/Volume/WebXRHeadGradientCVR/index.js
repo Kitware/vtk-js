@@ -18,6 +18,7 @@ import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
 import vtkXMLImageDataReader from '@kitware/vtk.js/IO/XML/XMLImageDataReader';
 import vtkImageReslice from '@kitware/vtk.js/Imaging/Core/ImageReslice';
 import vtkMath from '@kitware/vtk.js/Common/Core/Math';
+import { XrSessionTypes } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/Constants';
 
 import './WebXRVolume.module.css';
 
@@ -55,7 +56,42 @@ const ofun = vtkPiecewiseFunction.newInstance();
 
 const {
   fileURL = 'https://data.kitware.com/api/v1/file/59de9dca8d777f31ac641dc2/download',
+  xrSessionType = null,
 } = vtkURLExtract.extractURLParameters();
+
+// Validate input parameters
+let requestedXrSessionType = xrSessionType;
+if (!Object.values(XrSessionTypes).includes(requestedXrSessionType)) {
+  console.warn(
+    'Could not parse requested XR session type: ',
+    requestedXrSessionType
+  );
+  requestedXrSessionType = null;
+}
+
+if (requestedXrSessionType === XrSessionTypes.LookingGlassVR) {
+  // Import the Looking Glass WebXR Polyfill override
+  // Assumes that the Looking Glass Bridge native application is already running.
+  // See https://docs.lookingglassfactory.com/developer-tools/webxr
+  import(
+    // eslint-disable-next-line import/no-unresolved, import/extensions
+    /* webpackIgnore: true */ 'https://unpkg.com/@lookingglass/webxr@0.3.0/dist/@lookingglass/bundle/webxr.js'
+  ).then((obj) => {
+    // eslint-disable-next-line no-new
+    new obj.LookingGlassWebXRPolyfill();
+  });
+} else if (requestedXrSessionType === null) {
+  // Determine supported session type
+  navigator.xr.isSessionSupported('immersive-ar').then((arSupported) => {
+    if (arSupported) {
+      requestedXrSessionType = XrSessionTypes.MobileAR;
+    } else {
+      navigator.xr.isSessionSupported('immersive-vr').then((vrSupported) => {
+        requestedXrSessionType = vrSupported ? XrSessionTypes.HmdVR : null;
+      });
+    }
+  });
+}
 
 HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   // Read data
@@ -106,9 +142,6 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   renderWindow.render();
 
   // Add button to launch AR (default) or VR scene
-  const VR = 1;
-  const AR = 2;
-  let xrSessionType = 0;
   const xrButton = document.createElement('button');
   let enterText = 'XR not available!';
   const exitText = 'Exit XR';
@@ -117,36 +150,24 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
     navigator.xr !== undefined &&
     fullScreenRenderer.getApiSpecificRenderWindow().getXrSupported()
   ) {
-    navigator.xr.isSessionSupported('immersive-ar').then((arSupported) => {
-      if (arSupported) {
-        xrSessionType = AR;
-        enterText = 'Start AR';
-        xrButton.textContent = enterText;
-      } else {
-        navigator.xr.isSessionSupported('immersive-vr').then((vrSupported) => {
-          if (vrSupported) {
-            xrSessionType = VR;
-            enterText = 'Start VR';
-            xrButton.textContent = enterText;
-          }
-        });
-      }
-    });
+    enterText =
+      requestedXrSessionType === XrSessionTypes.MobileAR
+        ? 'Start AR'
+        : 'Start VR';
+    xrButton.textContent = enterText;
   }
   xrButton.addEventListener('click', () => {
     if (xrButton.textContent === enterText) {
-      if (xrSessionType === AR) {
+      if (requestedXrSessionType === XrSessionTypes.MobileAR) {
         fullScreenRenderer.setBackground([0, 0, 0, 0]);
       }
       fullScreenRenderer
         .getApiSpecificRenderWindow()
-        .startXR(xrSessionType === AR);
+        .startXR(requestedXrSessionType);
       xrButton.textContent = exitText;
     } else {
       fullScreenRenderer.setBackground([...background, 255]);
-      fullScreenRenderer
-        .getApiSpecificRenderWindow()
-        .stopXR(xrSessionType === AR);
+      fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
       xrButton.textContent = enterText;
     }
   });

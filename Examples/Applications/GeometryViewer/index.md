@@ -14,4 +14,9 @@ Also using extra argument to the URL allow to view remote VTP like the links bel
 - [Brain Blood Vessels](https://kitware.github.io/vtk-js/examples/GeometryViewer/index.html?fileURL=[https://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download]) 57.71 MB
 - [Chest CT](https://kitware.github.io/vtk-js/examples/GeometryViewer/index.html?fileURL=[https://data.kitware.com/api/v1/file/61f044354acac99f42c30276/download,https://data.kitware.com/api/v1/file/61f0440f4acac99f42c30191/download,https://data.kitware.com/api/v1/file/61f044204acac99f42c30267/download]) 63.75 MB
 
+Virtual reality, augmented reality, and holographic viewing is supported for WebXR devices using the `xrSessionType` URL parameter. The following links provide holographic examples for a Looking Glass display:
+- [diskout.vtp (holographic)](https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html?xrSessionType=2&fileURL=https://data.kitware.com/api/v1/item/59de9de58d777f31ac641dc5/download) 471.9 kB
+- [Brain Blood Vessels (holographic)](https://kitware.github.io/vtk-js/examples/GeometryViewer/index.html?xrSessionType=2&fileURL=[https://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download]) 57.71 MB
+- [Chest CT (holographic)](https://kitware.github.io/vtk-js/examples/GeometryViewer/index.html?xrSessionType=2&fileURL=[https://data.kitware.com/api/v1/file/61f044354acac99f42c30276/download,https://data.kitware.com/api/v1/file/61f0440f4acac99f42c30191/download,https://data.kitware.com/api/v1/file/61f044204acac99f42c30267/download]) 63.75 MB
+
 [HTML]: https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html
