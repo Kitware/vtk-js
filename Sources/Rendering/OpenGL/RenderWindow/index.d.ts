@@ -34,9 +34,9 @@ export interface IOpenGLRenderWindowInitialValues {
 }
 
 export interface ICaptureOptions {
-	resetCamera: boolean;
-	size: Size;
-	scale: number
+	resetCamera?: boolean;
+	size?: Size;
+	scale?: number
 }
 
 export interface I3DContextOptions {
@@ -320,7 +320,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {String} format
 	 * @param {ICaptureOptions} options
 	 */
-	captureNextImage(format: string, options: ICaptureOptions): Nullable<Promise<string>>;
+	captureNextImage(format: string, options?: ICaptureOptions): Nullable<Promise<string>>;
 
 	/**
 	 *

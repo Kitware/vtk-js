@@ -485,6 +485,10 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	 *
 	 */
 	setInterpolateScalarsBeforeMapping(interpolateScalarsBeforeMapping: boolean): boolean;
+
+	setResolveCoincidentTopologyToPolygonOffset(): boolean;
+
+	setResolveCoincidentTopologyToOff(): boolean;
 }
 
 /**

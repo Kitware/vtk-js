@@ -1,10 +1,9 @@
 import vtkDataArray from '../../../Common/Core/DataArray';
-import { vtkObject } from '../../../interfaces';
+import vtkScalarsToColors from '../../../Common/Core/ScalarsToColors'
 import { ColorSpace, Scale } from "./Constants";
 
 
-/* TODO: use VtkScalarsToColors instead of VtkObject */
-export interface vtkColorTransferFunction extends vtkObject {
+export interface vtkColorTransferFunction extends vtkScalarsToColors {
   /**
    * Add a point defined in RGB
    * @param {Number} x The index of the point.
@@ -269,13 +268,6 @@ export interface vtkColorTransferFunction extends vtkObject {
    * @param ptr
    */
   fillFromDataPointer(nb: number, ptr: any): void;
-
-  /**
-   * Set the range of scalars being mapped.
-   * @param {Number} min
-   * @param {Number} max
-   */
-  setMappingRange(min: number, max: number): void;
 
   /**
    * Remove all points out of the new range, and make sure there is a point at
