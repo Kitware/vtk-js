@@ -403,11 +403,24 @@ function vtkMapper(publicAPI, model) {
   };
 
   publicAPI.getIsOpaque = () => {
+    const input = publicAPI.getInputData();
+    const gasResult = publicAPI.getAbstractScalars(
+      input,
+      model.scalarMode,
+      model.arrayAccessMode,
+      model.arrayId,
+      model.colorByArrayName
+    );
+    const scalars = gasResult.scalars;
+    if (!model.scalarVisibility || scalars == null) {
+      // No scalar colors.
+      return true;
+    }
     const lut = publicAPI.getLookupTable();
     if (lut) {
       // Ensure that the lookup table is built
       lut.build();
-      return lut.isOpaque();
+      return lut.areScalarsOpaque(scalars, model.colorMode, -1);
     }
     return true;
   };

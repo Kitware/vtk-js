@@ -511,6 +511,32 @@ function vtkScalarsToColors(publicAPI, model) {
 
   publicAPI.setRange = (min, max) => publicAPI.setMappingRange(min, max);
   publicAPI.getRange = () => publicAPI.getMappingRange();
+
+  publicAPI.areScalarsOpaque = (scalars, colorMode, componentIn) => {
+    if (!scalars) {
+      return publicAPI.isOpaque();
+    }
+
+    const numberOfComponents = scalars.getNumberOfComponents();
+
+    // map scalars through lookup table only if needed
+    if (
+      (colorMode === ColorMode.DEFAULT &&
+        scalars.getDataType() === VtkDataTypes.UNSIGNED_CHAR) ||
+      colorMode === ColorMode.DIRECT_SCALARS
+    ) {
+      // we will be using the scalars directly, so look at the number of
+      // components and the range
+      if (numberOfComponents === 3 || numberOfComponents === 1) {
+        return model.alpha >= 1.0;
+      }
+      // otherwise look at the range of the alpha channel
+      const range = scalars.getRange(numberOfComponents - 1);
+      return range[0] === 255;
+    }
+
+    return true;
+  };
 }
 
 // ----------------------------------------------------------------------------
