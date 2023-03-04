@@ -40,13 +40,14 @@ export function noPosition(publicAPI, model) {
 export function color3(publicAPI, model) {
   return (polyData, states) => {
     model._pipeline.mapper.setColorByArrayName('color');
-    const colors = allocateArray(
+    const colorArray = allocateArray(
       polyData,
       'color',
       states.length,
-      'Uint8Array', // RGB
-      3
-    ).getData();
+      'Uint8Array', // RGBA
+      4
+    );
+    const colors = colorArray.getData();
     let j = 0;
     for (let i = 0; i < states.length; ++i) {
       let c3 = states[i].getColor3();
@@ -56,7 +57,9 @@ export function color3(publicAPI, model) {
       colors[j++] = c3[0];
       colors[j++] = c3[1];
       colors[j++] = c3[2];
+      colors[j++] = states[i].getOpacity();
     }
+    colorArray.dataChange();
   };
 }
 export function color(publicAPI, model) {

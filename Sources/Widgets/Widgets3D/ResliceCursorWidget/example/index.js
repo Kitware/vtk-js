@@ -46,11 +46,10 @@ const viewColors = [
 const viewAttributes = [];
 const widget = vtkResliceCursorWidget.newInstance();
 const widgetState = widget.getWidgetState();
-widgetState.setOpacity(0.6);
 // Set size in CSS pixel space because scaleInPixels defaults to true
-widgetState.setSphereRadius(10);
-widgetState.setLineThickness(5);
-
+widgetState
+  .getStatesWithLabel('sphere')
+  .forEach((handle) => handle.setScale1(20));
 const showDebugActors = true;
 
 // ----------------------------------------------------------------------------
@@ -426,6 +425,19 @@ checkboxOrthogonality.addEventListener('change', (ev) => {
 const checkboxScaleInPixels = document.getElementById('checkboxScaleInPixels');
 checkboxScaleInPixels.addEventListener('change', (ev) => {
   widget.setScaleInPixels(checkboxScaleInPixels.checked);
+  viewAttributes.forEach((obj) => {
+    obj.interactor.render();
+  });
+});
+
+const opacity = document.getElementById('opacity');
+opacity.addEventListener('input', (ev) => {
+  const opacityValue = document.getElementById('opacityValue');
+  opacityValue.innerHTML = ev.target.value;
+  widget
+    .getWidgetState()
+    .getStatesWithLabel('handles')
+    .forEach((handle) => handle.setOpacity(ev.target.value));
   viewAttributes.forEach((obj) => {
     obj.interactor.render();
   });

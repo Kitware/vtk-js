@@ -15,11 +15,8 @@ export default function generateState() {
   const state = vtkStateBuilder
     .createBuilder()
     .addField({ name: 'center', initialValue: [0, 0, 0] })
-    .addField({ name: 'opacity', initialValue: 1 })
     .addField({ name: 'image', initialValue: null })
     .addField({ name: 'activeViewType', initialValue: null })
-    .addField({ name: 'lineThickness', initialValue: 2 })
-    .addField({ name: 'sphereRadius', initialValue: 5 })
     .addField({
       name: 'planes',
       initialValue: {
@@ -35,7 +32,7 @@ export default function generateState() {
     .addField({ name: 'cameraOffsets', initialValue: {} })
     .addField({ name: 'viewUpFromViewType', initialValue: {} })
     .addStateFromMixin({
-      labels: ['handles', 'center'],
+      labels: ['handles', 'sphere', 'center'],
       mixins: ['origin', 'color3', 'scale1', 'visible', 'manipulator'],
       name: 'centerHandle',
       initialValues: {
@@ -71,6 +68,7 @@ export default function generateState() {
             axisState.addStateFromMixin({
               labels: [
                 'handles',
+                'sphere',
                 'rotation',
                 `rotationIn${view}`,
                 `${axis}in${view}`,
