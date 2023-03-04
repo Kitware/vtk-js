@@ -251,7 +251,9 @@ function vtkWidgetManager(publicAPI, model) {
     );
 
     subscriptions.push(
-      model._apiSpecificRenderWindow.onModified(updateDisplayScaleParams)
+      model._apiSpecificRenderWindow.onWindowResizeEvent(
+        updateDisplayScaleParams
+      )
     );
     subscriptions.push(model._camera.onModified(updateDisplayScaleParams));
     updateDisplayScaleParams();
