@@ -512,7 +512,11 @@ const objectSetterMap = {
   object(publicAPI, model, field) {
     return (value) => {
       if (!DeepEqual(model[field.name], value)) {
-        model[field.name] = value;
+        var _value = value;
+        if(typeof field.processed === 'function'){
+            _value = field.processed(value);
+        }
+        model[field.name] = _value;
         publicAPI.modified();
         return true;
       }
