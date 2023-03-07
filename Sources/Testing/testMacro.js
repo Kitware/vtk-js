@@ -82,7 +82,7 @@ function extend(publicAPI, model, initialValues = {}) {
     {
       name: 'myObjectProp1',
       type: 'object',
-      process: (pre) => ({ ...pre, count: pre.count * 2 }),
+      aboutToBeChanged: (pre) => ({ ...pre, count: pre.count * 2 }),
     },
   ]);
 
@@ -456,7 +456,7 @@ test('Macro methods object tests', (t) => {
   t.equal(
     myTestClass.getMyObjectProp1().count,
     12,
-    'int field should match the value processed by process configed'
+    'int field should match the value processed by aboutToBeChanged configed'
   );
 
   t.end();
