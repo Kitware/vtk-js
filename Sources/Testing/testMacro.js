@@ -36,6 +36,7 @@ const DEFAULT_VALUES = {
   _myProp12: [12],
   _myProp13: 13,
   myObjectProp: { foo: 1 },
+  myObjectProp1: { count: 3 },
 };
 
 // ----------------------------------------------------------------------------
@@ -77,6 +78,13 @@ function extend(publicAPI, model, initialValues = {}) {
 
   // Object member variables
   macro.setGet(publicAPI, model, [{ name: 'myObjectProp', type: 'object' }]);
+  macro.setGet(publicAPI, model, [
+    {
+      name: 'myObjectProp1',
+      type: 'object',
+      process: (pre) => ({ ...pre, count: pre.count * 2 }),
+    },
+  ]);
 
   // Object specific methods
   myClass(publicAPI, model);
@@ -437,6 +445,18 @@ test('Macro methods object tests', (t) => {
     myTestClass.getMyObjectProp(),
     { foo: 2 },
     'Getter shall return a copy'
+  );
+
+  t.equal(
+    myTestClass.getMyObjectProp1().count,
+    3,
+    'int field should equal to the default'
+  );
+  myTestClass.setMyObjectProp1({ count: 6, price: 3 });
+  t.equal(
+    myTestClass.getMyObjectProp1().count,
+    12,
+    'int field should match the value processed by process configed'
   );
 
   t.end();
