@@ -21,6 +21,16 @@ function centerDataSet(ds) {
     .apply(ds.getPoints().getData());
 }
 
+function shiftDataset(ds, axis) {
+  const bounds = ds.getPoints().getBounds();
+  const center = [0, 0, 0];
+  center[axis] = -bounds[axis * 2];
+  vtkMatrixBuilder
+    .buildFromDegree()
+    .translate(...center)
+    .apply(ds.getPoints().getData());
+}
+
 // ----------------------------------------------------------------------------
 
 function addColor(ds, r, g, b) {
@@ -51,23 +61,39 @@ function vtkAxesActor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkAxesActor');
 
+  const _mapper = vtkMapper.newInstance();
+  publicAPI.setMapper(_mapper);
+
   publicAPI.update = () => {
     const xAxis = vtkArrowSource
       .newInstance({ direction: [1, 0, 0], ...model.config })
       .getOutputData();
-    centerDataSet(xAxis);
+    if (model.config.recenter) {
+      centerDataSet(xAxis);
+    } else {
+      shiftDataset(xAxis, 0);
+    }
     addColor(xAxis, ...model.xAxisColor);
 
     const yAxis = vtkArrowSource
       .newInstance({ direction: [0, 1, 0], ...model.config })
       .getOutputData();
-    centerDataSet(yAxis);
+    if (model.config.recenter) {
+      centerDataSet(yAxis);
+    } else {
+      shiftDataset(yAxis, 1);
+    }
+
     addColor(yAxis, ...model.yAxisColor);
 
     const zAxis = vtkArrowSource
       .newInstance({ direction: [0, 0, 1], ...model.config })
       .getOutputData();
-    centerDataSet(zAxis);
+    if (model.config.recenter) {
+      centerDataSet(zAxis);
+    } else {
+      shiftDataset(zAxis, 2);
+    }
     addColor(zAxis, ...model.zAxisColor);
 
     const source = vtkAppendPolyData.newInstance();
@@ -75,13 +101,45 @@ function vtkAxesActor(publicAPI, model) {
     source.addInputData(yAxis);
     source.addInputData(zAxis);
 
-    // set mapper
-    const mapper = vtkMapper.newInstance();
-    mapper.setInputConnection(source.getOutputPort());
-    publicAPI.setMapper(mapper);
+    _mapper.setInputConnection(source.getOutputPort());
   };
 
   publicAPI.update();
+  const _debouncedUpdate = macro.debounce(publicAPI.update, 0);
+
+  const { setConfig, setXAxisColor, setYAxisColor, setZAxisColor } = publicAPI;
+
+  publicAPI.setConfig = (c) => {
+    if (setConfig(c)) {
+      _debouncedUpdate();
+      return true;
+    }
+    return false;
+  };
+
+  publicAPI.setXAxisColor = (c) => {
+    if (setXAxisColor(c)) {
+      _debouncedUpdate();
+      return true;
+    }
+    return false;
+  };
+
+  publicAPI.setYAxisColor = (c) => {
+    if (setYAxisColor(c)) {
+      _debouncedUpdate();
+      return true;
+    }
+    return false;
+  };
+
+  publicAPI.setZAxisColor = (c) => {
+    if (setZAxisColor(c)) {
+      _debouncedUpdate();
+      return true;
+    }
+    return false;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -90,6 +148,7 @@ function vtkAxesActor(publicAPI, model) {
 
 export const DEFAULT_VALUES = {
   config: {
+    recenter: true,
     tipResolution: 60,
     tipRadius: 0.1,
     tipLength: 0.2,
