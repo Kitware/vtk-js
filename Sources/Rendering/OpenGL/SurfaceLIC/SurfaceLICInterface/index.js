@@ -408,19 +408,23 @@ function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
     model.geometryImage.activate();
     model.vectorImage.activate();
     model.maskVectorImage.activate();
+    // Don't use location 1 as it can be used by order independant translucent pass
+    // Translucent pass uses location 1 because of this line:
+    // gl_FragData[1].r = weight;
     fb.removeColorBuffer(0);
-    fb.removeColorBuffer(1);
     fb.removeColorBuffer(2);
+    fb.removeColorBuffer(3);
     fb.setColorBuffer(model.geometryImage, 0);
-    fb.setColorBuffer(model.vectorImage, 1);
-    fb.setColorBuffer(model.maskVectorImage, 2);
+    fb.setColorBuffer(model.vectorImage, 2);
+    fb.setColorBuffer(model.maskVectorImage, 3);
     fb.setDepthBuffer(model.depthTexture);
 
     const gl = model.context;
     gl.drawBuffers([
       gl.COLOR_ATTACHMENT0,
-      gl.COLOR_ATTACHMENT1,
+      gl.NONE,
       gl.COLOR_ATTACHMENT2,
+      gl.COLOR_ATTACHMENT3,
     ]);
     gl.viewport(0, 0, ...model.size);
     gl.scissor(0, 0, ...model.size);
