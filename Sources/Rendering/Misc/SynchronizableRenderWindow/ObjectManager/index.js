@@ -25,6 +25,7 @@ import vtkImageProperty from 'vtk.js/Sources/Rendering/Core/ImageProperty';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import vtkCubeAxesActor from 'vtk.js/Sources/Rendering/Core/CubeAxesActor';
 import vtkScalarBarActor from 'vtk.js/Sources/Rendering/Core/ScalarBarActor';
+import vtkAxesActor from 'vtk.js/Sources/Rendering/Core/AxesActor';
 
 // ----------------------------------------------------------------------------
 // Some internal, module-level variables and methods
@@ -553,6 +554,10 @@ const DEFAULT_ALIASES = {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_MAPPING = {
+  vtkAxesActor: {
+    build: vtkAxesActor.newInstance,
+    update: genericUpdater,
+  },
   vtkRenderWindow: {
     build: vtkRenderWindow.newInstance,
     update: vtkRenderWindowUpdater,
