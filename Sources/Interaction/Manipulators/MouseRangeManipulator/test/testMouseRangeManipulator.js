@@ -41,5 +41,59 @@ test('Test MouseRangeManipulator addition/removal', (t) => {
     'Vertical listener removed'
   );
 
+  let sliceValue = 5;
+  manip.setScrollListener(
+    0,
+    10,
+    1,
+    () => sliceValue,
+    (x) => {
+      sliceValue = x;
+    },
+    0.5
+  );
+
+  manip.onScroll(null, null, 1);
+  t.isEqual(sliceValue, 5, 'Scrolling to larger value, attempt-1.');
+
+  manip.onScroll(null, null, 1);
+  t.isEqual(sliceValue, 6, 'Scrolling to larger value, attempt-2.');
+
+  manip.onScroll(null, null, -1);
+  t.isEqual(sliceValue, 6, 'Scrolling to smaller value, attempt-1.');
+
+  manip.onScroll(null, null, -1);
+  t.isEqual(sliceValue, 5, 'Scrolling to smaller value, attempt-2.');
+
+  manip.removeScrollListener();
+  sliceValue = 0;
+  manip.setScrollListener(
+    -5,
+    7,
+    2,
+    () => sliceValue,
+    (x) => {
+      sliceValue = x;
+    },
+    1.0
+  );
+
+  manip.onScroll(null, null, 1);
+  t.isEqual(sliceValue, 2, 'Scrolling to larger value with step=2.');
+
+  manip.onScroll(null, null, -1);
+  t.isEqual(
+    sliceValue,
+    0,
+    'Scrolling to smaller value with step=2, attempt-1.'
+  );
+
+  manip.onScroll(null, null, -1);
+  t.isEqual(
+    sliceValue,
+    -2,
+    'Scrolling to smaller value with step=2, attempt-2.'
+  );
+
   t.end();
 });

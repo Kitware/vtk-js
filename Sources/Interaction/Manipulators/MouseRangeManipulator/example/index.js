@@ -72,7 +72,7 @@ const rangeManipulator = Manipulators.vtkMouseRangeManipulator.newInstance({
 });
 rangeManipulator.setVerticalListener(wMin, wMax, 1, wGet, wSet, 1);
 rangeManipulator.setHorizontalListener(lMin, lMax, 1, lGet, lSet, 1);
-rangeManipulator.setScrollListener(kMin, kMax, 1, kGet, kSet, 1);
+rangeManipulator.setScrollListener(kMin, kMax, 1, kGet, kSet, -0.5);
 
 const iStyle = vtkInteractorStyleManipulator.newInstance();
 iStyle.addMouseManipulator(rangeManipulator);

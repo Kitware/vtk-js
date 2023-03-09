@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macros';
+import macro, { vtkWarningMacro } from 'vtk.js/Sources/macros';
 import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeMouseManipulator';
 
 // ----------------------------------------------------------------------------
@@ -29,18 +29,22 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     //  exponent of the net delta of the interaction. The further away
     // the user's cursor is from the start of the interaction, the more
     // their movements will effect the value.
-    const scalingFactor = listener.exponentialScroll
+    let scalingFactor = listener.exponentialScroll
       ? listener.scale ** Math.log2(Math.abs(model.interactionNetDelta) + 2)
       : listener.scale;
 
+    // Preserve the sign of scale (which can be used to invert the scrolling direction)
+    // after the power operation above (in case of exponentialScroll).
+    scalingFactor = Math.abs(scalingFactor) * Math.sign(listener.scale);
+
     const newDelta = delta * scalingFactor + incrementalDelta.get(listener);
 
-    let value = oldValue + newDelta;
-
     // Compute new value based on step
-    const difference = value - listener.min;
-    const stepsToDifference = Math.round(difference / listener.step);
-    value = listener.min + listener.step * stepsToDifference;
+    // In the following line, Math.abs is required so that the floor function
+    // consistently rounds to the lowest absolute integer.
+    const stepsToDifference = Math.floor(Math.abs(newDelta / listener.step));
+    let value =
+      oldValue + listener.step * stepsToDifference * Math.sign(newDelta);
     value = Math.max(value, listener.min);
     value = Math.min(value, listener.max);
 
@@ -126,11 +130,17 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     scale = 1,
     exponentialScroll = false
   ) => {
+    if (step < 0) {
+      vtkWarningMacro(
+        'Value of step cannot be negative. If you want to invert the scrolling direction, use a negative scale value instead.'
+      );
+    }
+    const stepSize = Math.abs(step);
     const getFn = Number.isFinite(getValue) ? () => getValue : getValue;
     model.scrollListener = {
       min,
       max,
-      step,
+      step: stepSize,
       getValue: getFn,
       setValue,
       scale,
