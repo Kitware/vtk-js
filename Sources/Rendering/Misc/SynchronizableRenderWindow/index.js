@@ -218,6 +218,19 @@ function setSynchronizerContext(name, ctx) {
   SYNCHRONIZER_CONTEXTS[name] = ctx;
 }
 
+function clearSynchronizerContext(name) {
+  if (name && SYNCHRONIZER_CONTEXTS[name]) {
+    delete SYNCHRONIZER_CONTEXTS[name];
+  }
+
+  if (!name) {
+    const keys = Object.keys(SYNCHRONIZER_CONTEXTS);
+    for (let i = 0; i < keys.length; i++) {
+      delete SYNCHRONIZER_CONTEXTS[keys[i]];
+    }
+  }
+}
+
 // ----------------------------------------------------------------------------
 
 function createSyncFunction(renderWindow, synchronizerContext) {
@@ -359,6 +372,7 @@ export default {
   extend,
   getSynchronizerContext,
   setSynchronizerContext,
+  clearSynchronizerContext,
   decorate,
   createInstanceMap,
   createArrayHandler,

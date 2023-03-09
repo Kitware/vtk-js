@@ -54,42 +54,42 @@ export interface IViewState {
 export interface vtkSynchronizableRenderWindow extends vtkRenderWindow {
 
   /**
-   * 
+   *
    */
   getSynchronizerContext(): ISynchronizerContext;
 
   // methods added by createSyncFunction
 
   /**
-   * 
-   * @param {IViewState} state 
+   *
+   * @param {IViewState} state
    */
   synchronize(state: IViewState): Promise<boolean>;
 
   /**
-   * 
-   * @param {String} viewId 
+   *
+   * @param {String} viewId
    */
   setSynchronizedViewId(viewId: string): void;
 
   /**
-   * 
+   *
    */
   getSynchronizedViewId(): string;
 
   /**
-   * 
-   * @param {Number} v 
+   *
+   * @param {Number} v
    */
   updateGarbageCollectorThreshold(v: number): void;
 
   /**
-   * 
+   *
    */
   getManagedInstanceIds(): string[];
 
   /**
-   * 
+   *
    */
   clearOneTimeUpdaters(): void;
 }
@@ -110,52 +110,60 @@ export function extend(publicAPI: object, model: object, initialValues?: ISynchr
 export function newInstance(initialValues?: ISynchronizableRenderWindowInitialValues): vtkSynchronizableRenderWindow;
 
 /**
- * 
- * @param {String} [name] 
+ *
+ * @param {String} [name]
  */
 export function getSynchronizerContext(name?: string): ISynchronizerContext;
 
 /**
- * 
- * @param {String} name 
- * @param {ISynchronizerContext} ctx 
+ *
+ * @param {String} name
+ * @param {Nullable<ISynchronizerContext>} ctx
  */
-export function setSynchronizerContext(name: string, ctx: ISynchronizerContext): ISynchronizerContext;
+export function setSynchronizerContext(name: string, ctx: Nullable<ISynchronizerContext>);
+
 
 /**
- * 
- * @param {vtkRenderWindow} renderWindow 
- * @param {String} [name] 
+ *
+ * @param name of the context to remove and if nothing provided clear them all.
+ */
+export function clearSynchronizerContext(name: Nullable<string>);
+
+/**
+ *
+ * @param {vtkRenderWindow} renderWindow
+ * @param {String} [name]
  */
 export function decorate(renderWindow: vtkRenderWindow, name?: string): object;
 
 /**
- * 
+ *
  */
 export function createInstanceMap(): object;
 
 /**
- * 
+ *
  */
 export function createArrayHandler(): object;
 
 /**
- * 
+ *
  */
 export function createProgressHandler(): object;
 
 /**
- * 
+ *
  */
 export function createSceneMtimeHandler(): object;
 
 /**
- * 
+ *
  */
 export declare const vtkSynchronizableRenderWindow: {
   newInstance: typeof newInstance;
   getSynchronizerContext: typeof getSynchronizerContext;
   setSynchronizerContext: typeof setSynchronizerContext;
+  clearSynchronizerContext: typeof clearSynchronizerContext;
   decorate: typeof decorate,
   createInstanceMap: typeof createInstanceMap,
   createArrayHandler: typeof createArrayHandler,
