@@ -70,7 +70,7 @@ function widgetBehavior(publicAPI, model) {
   // initialization
   // --------------------------------------------------------------------------
 
-  model.camera = model.renderer.getActiveCamera();
+  model.camera = model._renderer.getActiveCamera();
 
   model.classHierarchy.push('vtkBoxWidgetProp');
 }
