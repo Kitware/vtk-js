@@ -70,7 +70,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
   };
 
-  publicAPI.opaqueZBufferPass = (prepass) => {
+  publicAPI.zBufferPass = (prepass) => {
     if (prepass) {
       model.haveSeenDepthRequest = true;
       model.renderDepth = true;
@@ -78,6 +78,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       model.renderDepth = false;
     }
   };
+
+  publicAPI.opaqueZBufferPass = (prepass) => publicAPI.zBufferPass(prepass);
 
   publicAPI.opaquePass = (prepass) => {
     if (prepass) {

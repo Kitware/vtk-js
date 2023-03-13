@@ -47,7 +47,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
     return count;
   };
 
-  publicAPI.opaqueZBufferPass = (prepass) => {
+  publicAPI.zBufferPass = (prepass) => {
     if (prepass) {
       let clearMask = 0;
       const gl = model.context;
@@ -74,6 +74,8 @@ function vtkOpenGLRenderer(publicAPI, model) {
       gl.enable(gl.DEPTH_TEST);
     }
   };
+
+  publicAPI.opaqueZBufferPass = (prepass) => publicAPI.zBufferPass(prepass);
 
   // Renders myself
   publicAPI.cameraPass = (prepass) => {

@@ -55,7 +55,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
   // ohh someone is doing a zbuffer pass, use that for
   // intermixed volume rendering
-  publicAPI.opaqueZBufferPass = (prepass, renderPass) => {
+  publicAPI.zBufferPass = (prepass, renderPass) => {
     if (prepass) {
       const zbt = renderPass.getZBufferTexture();
       if (zbt !== model.zBufferTexture) {
@@ -63,6 +63,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
     }
   };
+
+  publicAPI.opaqueZBufferPass = (prepass, renderPass) =>
+    publicAPI.zBufferPass(prepass, renderPass);
 
   // Renders myself
   publicAPI.volumePass = (prepass, renderPass) => {

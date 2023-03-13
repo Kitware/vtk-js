@@ -46,7 +46,8 @@ function vtkForwardPass(publicAPI, model) {
 
           // do we need to capture a zbuffer?
           if (
-            (model.opaqueActorCount > 0 && model.volumeCount > 0) ||
+            ((model.opaqueActorCount > 0 || model.translucentActorCount > 0) &&
+              model.volumeCount > 0) ||
             model.depthRequested
           ) {
             const size = viewNode.getFramebufferSize();
@@ -66,7 +67,10 @@ function vtkForwardPass(publicAPI, model) {
               model.framebuffer.populateFramebuffer();
             }
             model.framebuffer.bind();
-            publicAPI.setCurrentOperation('opaqueZBufferPass');
+            // opaqueZBufferPass only renders opaque actors
+            // zBufferPass renders both translucent and opaque actors
+            // we want to be able to pick translucent actors
+            publicAPI.setCurrentOperation('zBufferPass');
             renNode.traverse(publicAPI);
             model.framebuffer.restorePreviousBindingsAndBuffers();
 
