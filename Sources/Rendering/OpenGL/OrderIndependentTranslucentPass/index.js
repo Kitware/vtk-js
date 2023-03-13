@@ -246,6 +246,7 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
     // TODO remove when webgl1 is deprecated and instead
     // have the forward pass use a texture backed zbuffer
     if (forwardPass.getOpaqueActorCount() > 0) {
+      // Don't use zBufferPass as it will also render the depth of translucent actors
       forwardPass.setCurrentOperation('opaqueZBufferPass');
       renNode.traverse(forwardPass);
     }

@@ -41,6 +41,7 @@ function vtkOpenGLCamera(publicAPI, model) {
     }
   };
   publicAPI.translucentPass = publicAPI.opaquePass;
+  publicAPI.zBufferPass = publicAPI.opaquePass;
   publicAPI.opaqueZBufferPass = publicAPI.opaquePass;
   publicAPI.volumePass = publicAPI.opaquePass;
 

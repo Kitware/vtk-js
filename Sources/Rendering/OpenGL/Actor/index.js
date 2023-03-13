@@ -44,7 +44,8 @@ function vtkOpenGLActor(publicAPI, model) {
     }
   };
 
-  publicAPI.traverseOpaqueZBufferPass = (renderPass) => {
+  // render both opaque and translucent actors
+  publicAPI.traverseZBufferPass = (renderPass) => {
     if (
       !model.renderable ||
       !model.renderable.getNestedVisibility() ||
@@ -59,6 +60,10 @@ function vtkOpenGLActor(publicAPI, model) {
 
     publicAPI.apply(renderPass, false);
   };
+
+  // only render opaque actors
+  publicAPI.traverseOpaqueZBufferPass = (renderPass) =>
+    publicAPI.traverseOpaquePass(renderPass);
 
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverseOpaquePass = (renderPass) => {
@@ -126,6 +131,9 @@ function vtkOpenGLActor(publicAPI, model) {
       }
     }
   };
+
+  publicAPI.zBufferPass = (prepass, renderPass) =>
+    publicAPI.opaquePass(prepass, renderPass);
 
   publicAPI.opaqueZBufferPass = (prepass, renderPass) =>
     publicAPI.opaquePass(prepass, renderPass);
