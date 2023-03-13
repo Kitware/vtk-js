@@ -14,6 +14,12 @@ In order to take the transpilation approach, you must use the `vtk.js` package i
 
 ## Transpiling vtk.js code
 
+Make sure that the following packages are dependencies of your project:
+
+```
+npm install autoprefixer @babel/preset-env
+```
+
 We primarily support webpack for transpiling vtk.js. The generic structure of the webpack structure is listed below, with comments.
 
 ``` js ./webpack.config.js
