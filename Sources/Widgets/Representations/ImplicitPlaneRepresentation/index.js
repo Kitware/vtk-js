@@ -11,9 +11,8 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
-import vtkWidgetRepresentation, {
-  getPixelWorldHeightAtCoord,
-} from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
+import { getPixelWorldHeightAtCoord } from 'vtk.js/Sources/Widgets/Core/WidgetManager';
+import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 import WidgetManagerConst from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import PropertyConst from 'vtk.js/Sources/Rendering/Core/Property/Constants';

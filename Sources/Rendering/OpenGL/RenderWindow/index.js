@@ -1283,6 +1283,20 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     publicAPI.setViewStream,
     deleteGLContext
   );
+
+  // Do not trigger modified for performance reasons
+  publicAPI.setActiveFramebuffer = (newActiveFramebuffer) => {
+    model.activeFramebuffer = newActiveFramebuffer;
+  };
+
+  const superSetSize = publicAPI.setSize;
+  publicAPI.setSize = (width, height) => {
+    const modified = superSetSize(width, height);
+    if (modified) {
+      publicAPI.invokeWindowResizeEvent({ width, height });
+    }
+    return modified;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -1364,6 +1378,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'vrDisplay',
     'useBackgroundImage',
     'xrSupported',
+    'activeFramebuffer',
   ]);
 
   macro.setGet(publicAPI, model, [
@@ -1375,14 +1390,10 @@ export function extend(publicAPI, model, initialValues = {}) {
     'defaultToWebgl2',
     'cursor',
     'useOffScreen',
-    // might want to make this not call modified as
-    // we change the active framebuffer a lot. Or maybe
-    // only mark modified if the size or depth
-    // of the buffer has changed
-    'activeFramebuffer',
   ]);
 
   macro.setGetArray(publicAPI, model, ['size'], 2);
+  macro.event(publicAPI, model, 'windowResizeEvent');
 
   // Object methods
   vtkOpenGLRenderWindow(publicAPI, model);

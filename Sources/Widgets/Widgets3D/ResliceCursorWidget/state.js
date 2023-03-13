@@ -15,12 +15,8 @@ export default function generateState() {
   const state = vtkStateBuilder
     .createBuilder()
     .addField({ name: 'center', initialValue: [0, 0, 0] })
-    .addField({ name: 'opacity', initialValue: 1 })
     .addField({ name: 'image', initialValue: null })
     .addField({ name: 'activeViewType', initialValue: null })
-    .addField({ name: 'lineThickness', initialValue: 2 })
-    .addField({ name: 'sphereRadius', initialValue: 5 })
-    .addField({ name: 'showCenter', initialValue: true })
     .addField({
       name: 'planes',
       initialValue: {
@@ -29,9 +25,6 @@ export default function generateState() {
         [ViewTypes.XY_PLANE]: { normal: [0, 0, -1], viewUp: [0, -1, 0] },
       },
     })
-    .addField({ name: 'enableRotation', initialValue: true })
-    .addField({ name: 'enableTranslation', initialValue: true })
-    .addField({ name: 'keepOrthogonality', initialValue: false })
     .addField({
       name: 'scrollingMethod',
       initialValue: ScrollingMethods.MIDDLE_MOUSE_BUTTON,
@@ -39,7 +32,7 @@ export default function generateState() {
     .addField({ name: 'cameraOffsets', initialValue: {} })
     .addField({ name: 'viewUpFromViewType', initialValue: {} })
     .addStateFromMixin({
-      labels: ['handles', 'center'],
+      labels: ['handles', 'sphere', 'center'],
       mixins: ['origin', 'color3', 'scale1', 'visible', 'manipulator'],
       name: 'centerHandle',
       initialValues: {
@@ -75,6 +68,7 @@ export default function generateState() {
             axisState.addStateFromMixin({
               labels: [
                 'handles',
+                'sphere',
                 'rotation',
                 `rotationIn${view}`,
                 `${axis}in${view}`,

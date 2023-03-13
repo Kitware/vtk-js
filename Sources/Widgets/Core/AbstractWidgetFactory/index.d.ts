@@ -28,6 +28,11 @@ export interface vtkAbstractWidgetFactory {
   getViewIds(): string[];
 
   /**
+   * Get a list of all the instances of the widget.
+   */
+  getViewWidgets(): vtkAbstractWidget[];
+
+  /**
    * Set the visiblity on each underlying view widget.
    * 
    * @param {Boolean} visible

@@ -5,6 +5,7 @@ import macro from 'vtk.js/Sources/macros';
  */
 const DEFAULT_VALUES = {
   color3: [255, 255, 255],
+  opacity: 255,
 };
 
 // ----------------------------------------------------------------------------
@@ -12,6 +13,7 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
   macro.setGetArray(publicAPI, model, ['color3'], 3, 255);
+  macro.setGet(publicAPI, model, ['opacity']);
 }
 
 // ----------------------------------------------------------------------------

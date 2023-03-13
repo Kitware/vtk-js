@@ -25,6 +25,17 @@ export default function widgetBehavior(publicAPI, model) {
   let isScrolling = false;
   let previousPosition;
 
+  macro.setGet(publicAPI, model, ['keepOrthogonality']);
+
+  publicAPI.setEnableTranslation = (enable) => {
+    model.representations[0].setPickable(enable); // line handle
+    model.representations[2].setPickable(enable); // center handle
+  };
+
+  publicAPI.setEnableRotation = (enable) => {
+    model.representations[1].setPickable(enable); // rotation handle
+  };
+
   // FIXME: label information should be accessible from activeState instead of parent state.
   publicAPI.getActiveInteraction = () => {
     if (
@@ -276,7 +287,7 @@ export default function widgetBehavior(publicAPI, model) {
     model.widgetState.setCenter(newCenter);
     updateState(
       model.widgetState,
-      model._factory.getDisplayScaleParams(),
+      model._factory.getScaleInPixels(),
       model._factory.getRotationHandlePosition()
     );
   };
@@ -334,7 +345,7 @@ export default function widgetBehavior(publicAPI, model) {
     model.widgetState.setCenter(newOrigin);
     updateState(
       model.widgetState,
-      model._factory.getDisplayScaleParams(),
+      model._factory.getScaleInPixels(),
       model._factory.getRotationHandlePosition()
     );
   };
@@ -362,7 +373,7 @@ export default function widgetBehavior(publicAPI, model) {
     model.widgetState.setCenter(newCenter);
     updateState(
       model.widgetState,
-      model._factory.getDisplayScaleParams(),
+      model._factory.getScaleInPixels(),
       model._factory.getRotationHandlePosition()
     );
   };
@@ -378,7 +389,7 @@ export default function widgetBehavior(publicAPI, model) {
     const center = model.widgetState.getCenter();
     const previousLineDirection = activeLineHandle.getDirection();
     vtkMath.normalize(previousLineDirection);
-    if (publicAPI.getActiveRotationPointName() === 'point0') {
+    if (publicAPI.getActiveRotationPointName() === 'point1') {
       vtkMath.multiplyScalar(previousLineDirection, -1);
     }
 
@@ -406,7 +417,7 @@ export default function widgetBehavior(publicAPI, model) {
     const planeNormal = model.widgetState.getPlanes()[inViewType].normal;
     publicAPI.rotatePlane(viewType, radianAngle, planeNormal);
 
-    if (model.widgetState.getKeepOrthogonality()) {
+    if (publicAPI.getKeepOrthogonality()) {
       const otherLineName = getOtherLineName(lineName);
       const otherPlaneName = getLinePlaneName(otherLineName);
       publicAPI.rotatePlane(
@@ -417,7 +428,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
     updateState(
       model.widgetState,
-      model._factory.getDisplayScaleParams(),
+      model._factory.getScaleInPixels(),
       model._factory.getRotationHandlePosition()
     );
   };
