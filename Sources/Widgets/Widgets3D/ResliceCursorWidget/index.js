@@ -255,7 +255,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
       .getViewIds()
       .map((viewId) => publicAPI.getWidgetForView({ viewId }))
       .find((widget) => widget.getViewType() === viewType);
-    return widgetForViewType.getRepresentations();
+    return widgetForViewType?.getRepresentations() || [];
   }
 
   // --------------------------------------------------------------------------
@@ -613,8 +613,8 @@ function vtkResliceCursorWidget(publicAPI, model) {
   publicAPI.getDisplayScaleParams = () =>
     [ViewTypes.YZ_PLANE, ViewTypes.XZ_PLANE, ViewTypes.XY_PLANE].reduce(
       (res, viewType) => {
-        res[viewType] =
-          findRepresentationsForViewType(viewType)[0].getDisplayScaleParams?.();
+        const representation = findRepresentationsForViewType(viewType)[0];
+        res[viewType] = representation?.getDisplayScaleParams?.();
         return res;
       },
       {}
