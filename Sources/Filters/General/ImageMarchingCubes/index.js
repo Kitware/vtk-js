@@ -338,6 +338,7 @@ function vtkImageMarchingCubes(publicAPI, model) {
         }
       }
     }
+    edgeLocator.initialize();
 
     // Update output
     const polydata = vtkPolyData.newInstance();
