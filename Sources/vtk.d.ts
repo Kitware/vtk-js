@@ -1,20 +1,19 @@
-interface IvtkObject {
-    vtkClass: string;
-    [attrName: string]: unknown;
+import { vtkObject } from './interfaces';
+
+interface ISerializedVtkObject {
+  vtkClass: string;
+  [attrName: string]: unknown;
 }
 
-/**
- * 
- * @param obj 
- * @return  
- */
-declare function vtk(obj: IvtkObject): unknown;
+interface Ivtk {
+  /**
+   * Deserializes a serialized VTK.js object.
+   */
+  (obj: ISerializedVtkObject): vtkObject;
 
-/**
- * Nest register method under the vtk function
- * @param vtkClassName 
- * @param constructor 
- */
-declare function register(vtkClassName: string, constructor: unknown): void;
+  register(vtkClassName: string, constructor: <T>(model: unknown) => T): void;
+}
+
+declare const vtk: Ivtk;
 
 export default vtk;
