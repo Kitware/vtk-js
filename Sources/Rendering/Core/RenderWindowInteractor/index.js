@@ -687,9 +687,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // Here the first spin value is "recorded", and used to normalize
     // all the following mouse wheel events.
     if (model.wheelTimeoutID === 0) {
-      // 0.4 is roughly half-way between a large trackpad first event and small
-      // mouse wheel first event.
-      if (Math.abs(callData.spinY) > 0.4) {
+      // we attempt to distinguish between trackpads and mice
+      // .3 will be larger than the first trackpad event,
+      // but small enough to detect some common edge case mice
+      if (Math.abs(callData.spinY) >= 0.3) {
         // Event is coming from mouse wheel
         wheelCoefficient = Math.abs(callData.spinY);
       } else {
