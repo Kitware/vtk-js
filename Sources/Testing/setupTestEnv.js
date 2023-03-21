@@ -43,12 +43,14 @@ function BufferedObjectPipe() {
   };
 
   const end = () => {
+    if (closed) return;
     closed = true;
     scheduleFlush();
   };
 
   const setReader = (r) => {
     reader = r;
+    scheduleFlush();
   };
 
   return {
