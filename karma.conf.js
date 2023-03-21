@@ -1,4 +1,3 @@
-/* eslint-disable global-require */
 const path = require('path');
 
 const webpack = require('webpack');
