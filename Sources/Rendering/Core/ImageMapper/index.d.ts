@@ -1,5 +1,5 @@
 import vtkCamera from "../Camera";
-import vtkAbstractMapper, { IAbstractMapperInitialValues } from "../AbstractMapper";
+import vtkAbstractImageMapper, { IAbstractImageMapperInitialValues } from "../AbstractImageMapper";
 import { Bounds, Nullable, Vector3 } from "../../../types";
 import { SlicingMode } from "./Constants";
 import vtkImageData from "../../../Common/DataModel/ImageData";
@@ -15,13 +15,13 @@ interface ICoincidentTopology {
 	offset: number;
 }
 
-export interface IImageMapperInitialValues extends IAbstractMapperInitialValues {
+export interface IImageMapperInitialValues extends IAbstractImageMapperInitialValues {
 	closestIJKAxis?: IClosestIJKAxis;
 	renderToRectangle?: boolean;
 	sliceAtFocalPoint?: boolean;
 }
 
-export interface vtkImageMapper extends vtkAbstractMapper {
+export interface vtkImageMapper extends vtkAbstractImageMapper {
 
   /**
    * Returns the IJK slice value from a world position or XYZ slice value
