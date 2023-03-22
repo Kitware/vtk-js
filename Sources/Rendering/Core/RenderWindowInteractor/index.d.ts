@@ -985,6 +985,12 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	getCurrentRenderer(): void;
 
 	/**
+	 * Manually sets the current renderer.
+	 * @param {vtkRenderer} ren
+	 */
+	setCurrentRenderer(ren: vtkRenderer): void;
+
+	/**
 	 *
 	 * @param container
 	 */
