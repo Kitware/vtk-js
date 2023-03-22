@@ -70,5 +70,9 @@ module.exports = {
     '**/example_/*.js',
     // ignore js files in utilities
     'Utilities/**/*.js',
+    // ignore configs
+    'karma.conf.js',
+    'webpack.*.js',
+    '.eslintrc.js',
   ],
 };
