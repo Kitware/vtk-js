@@ -52,12 +52,18 @@ function vtkFieldData(publicAPI, model) {
     model.arrays = [];
   };
   publicAPI.removeArray = (arrayName) => {
-    model.arrays = model.arrays.filter(
-      (entry) => arrayName !== entry.data.getName()
+    const index = model.arrays.findIndex(
+      (array) => array.getName() === arrayName
     );
+    return publicAPI.removeArrayByIndex(index);
   };
   publicAPI.removeArrayByIndex = (arrayIdx) => {
-    model.arrays = model.arrays.filter((entry, idx) => idx !== arrayIdx);
+    if (arrayIdx !== -1 && arrayIdx < model.arrays.length) {
+      model.arrays.splice(arrayIdx, 1);
+      // TBD modified() ?
+      return true;
+    }
+    return false;
   };
   publicAPI.getArrays = () => model.arrays.map((entry) => entry.data);
   publicAPI.getArray = (arraySpec) =>
@@ -69,14 +75,12 @@ function vtkFieldData(publicAPI, model) {
       (a, b, i) => (b.data.getName() === arrayName ? b.data : a),
       null
     );
-  publicAPI.getArrayWithIndex = (arrayName) =>
-    model.arrays.reduce(
-      (a, b, i) =>
-        b.data && b.data.getName() === arrayName
-          ? { array: b.data, index: i }
-          : a,
-      { array: null, index: -1 }
+  publicAPI.getArrayWithIndex = (arrayName) => {
+    const index = model.arrays.findIndex(
+      (array) => array.data.getName() === arrayName
     );
+    return { array: index !== -1 ? model.arrays[index].data : null, index };
+  };
   publicAPI.getArrayByIndex = (idx) =>
     idx >= 0 && idx < model.arrays.length ? model.arrays[idx].data : null;
   publicAPI.hasArray = (arrayName) =>
