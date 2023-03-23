@@ -479,6 +479,7 @@ const objectSetterMap = {
         if (field.enum[value] !== undefined) {
           if (model[field.name] !== field.enum[value]) {
             model[field.name] = field.enum[value];
+            model.modifiedField = field.name;
             publicAPI.modified();
             return true;
           }
@@ -495,6 +496,7 @@ const objectSetterMap = {
               .indexOf(value) !== -1
           ) {
             model[field.name] = value;
+            model.modifiedField = field.name;
             publicAPI.modified();
             return true;
           }
@@ -513,6 +515,7 @@ const objectSetterMap = {
     return (value) => {
       if (!DeepEqual(model[field.name], value)) {
         model[field.name] = value;
+        model.modifiedField = field.name;
         publicAPI.modified();
         return true;
       }
@@ -540,6 +543,7 @@ function findSetter(field) {
 
       if (model[field] !== value) {
         model[field] = value;
+        model.modifiedField = field;
         publicAPI.modified();
         return true;
       }
