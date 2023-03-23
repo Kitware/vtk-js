@@ -30,12 +30,24 @@ const DEFAULT_VALUES = {
   myProp6: [0.1, 0.2, 0.3, 0.4, 0.5],
   myProp7: MY_ENUM.FIRST,
   myProp8: [1, 2, 3],
+  _onMyProp8Changed: (publicAPI, model) => {
+    ++model._onMyProp8ChangedCallsCount;
+  },
+  _onMyProp8ChangedCallsCount: 0,
   myProp9: null,
   // myProp10: null,
   myProp11: 11,
+  _onMyProp11Changed: (publicAPI, model) => {
+    ++model._onMyProp11ChangedCallsCount;
+  },
+  _onMyProp11ChangedCallsCount: 0,
   _myProp12: [12],
   _myProp13: 13,
   myObjectProp: { foo: 1 },
+  _onMyObjectPropChanged: (publicAPI, model) => {
+    ++model._onMyObjectPropChangedCallsCount;
+  },
+  _onMyObjectPropChangedCallsCount: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -501,6 +513,33 @@ test('Macro methods object tests', (t) => {
 
   t.doesNotThrow(() => myTestClass.delete());
   t.notOk(myTestClass.getMyProp4(), 'All calls should do nothing after delete');
+
+  t.end();
+});
+
+test('Macro methods _onPropChanged tests', (t) => {
+  const myTestClass = newInstance();
+
+  myTestClass.setMyProp8([3, 2, 1]);
+  t.equal(myTestClass.get()._onMyProp8ChangedCallsCount, 1);
+  myTestClass.setMyProp8([3, 2, 1]);
+  t.equal(myTestClass.get()._onMyProp8ChangedCallsCount, 1);
+  myTestClass.setMyProp8([2, 3, 1]);
+  t.equal(myTestClass.get()._onMyProp8ChangedCallsCount, 2);
+
+  myTestClass.setMyProp11(42);
+  t.equal(myTestClass.get()._onMyProp11ChangedCallsCount, 1);
+  myTestClass.setMyProp11(42);
+  t.equal(myTestClass.get()._onMyProp11ChangedCallsCount, 1);
+  myTestClass.setMyProp11(43);
+  t.equal(myTestClass.get()._onMyProp11ChangedCallsCount, 2);
+
+  myTestClass.setMyObjectProp({ foo: 10 });
+  t.equal(myTestClass.get()._onMyObjectPropChangedCallsCount, 1);
+  myTestClass.setMyObjectProp({ foo: 10 });
+  t.equal(myTestClass.get()._onMyObjectPropChangedCallsCount, 1);
+  myTestClass.setMyObjectProp({ bar: 10 });
+  t.equal(myTestClass.get()._onMyObjectPropChangedCallsCount, 2);
 
   t.end();
 });
