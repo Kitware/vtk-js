@@ -27,6 +27,8 @@ import vtkCubeAxesActor from 'vtk.js/Sources/Rendering/Core/CubeAxesActor';
 import vtkScalarBarActor from 'vtk.js/Sources/Rendering/Core/ScalarBarActor';
 import vtkAxesActor from 'vtk.js/Sources/Rendering/Core/AxesActor';
 
+import BehaviorManager from '../BehaviorManager';
+
 // ----------------------------------------------------------------------------
 // Some internal, module-level variables and methods
 // ----------------------------------------------------------------------------
@@ -420,6 +422,9 @@ function vtkRenderWindowUpdater(instance, state, context) {
 
   // Now just do normal update process
   genericUpdater(instance, state, context);
+
+  // Manage any associated behaviors
+  BehaviorManager.applyBehaviors(instance, state, context);
 }
 
 // ----------------------------------------------------------------------------
