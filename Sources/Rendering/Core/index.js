@@ -19,6 +19,7 @@ import vtkGlyph3DMapper from './Glyph3DMapper';
 import vtkHardwareSelector from './HardwareSelector';
 import vtkImageMapper from './ImageMapper';
 import vtkImageProperty from './ImageProperty';
+import vtkImageResliceMapper from './ImageResliceMapper';
 import vtkImageSlice from './ImageSlice';
 import vtkInteractorObserver from './InteractorObserver';
 import vtkInteractorStyle from './InteractorStyle';
@@ -63,6 +64,7 @@ export default {
   vtkHardwareSelector,
   vtkImageMapper,
   vtkImageProperty,
+  vtkImageResliceMapper,
   vtkImageSlice,
   vtkInteractorObserver,
   vtkInteractorStyle,
