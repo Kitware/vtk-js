@@ -72,6 +72,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       model._openGLRenderWindow = model._openGLRenderer.getParent();
       model.context = model._openGLRenderWindow.getContext();
       model.tris.setOpenGLRenderWindow(model._openGLRenderWindow);
+      if (!model.openGLTexture) {
+        model.openGLTexture = vtkOpenGLTexture.newInstance();
+      }
       model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       model.pwfTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
@@ -212,25 +215,27 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
 
     const numComp = scalars.getNumberOfComponents();
 
-    const toString = `${image.getMTime()}A${scalars.getMTime()}`;
-    if (model.openGLTextureString !== toString) {
-      // Build the image scalar texture
-      const dims = image.getDimensions();
-      // Use norm16 for the 3D texture if the extension is available
-      model.openGLTexture.getOglNorm16Ext(
-        model.context.getExtension('EXT_texture_norm16')
-      );
-      model.openGLTexture.releaseGraphicsResources(model._openGLRenderWindow);
-      model.openGLTexture.resetFormatAndType();
-      model.openGLTexture.create3DFilterableFromRaw(
-        dims[0],
-        dims[1],
-        dims[2],
-        numComp,
-        scalars.getDataType(),
-        scalars.getData()
-      );
-      model.scalarTextureString = toString;
+    if (!model._externalOpenGLTexture) {
+      const toString = `${image.getMTime()}A${scalars.getMTime()}`;
+      if (model.openGLTextureString !== toString) {
+        // Build the image scalar texture
+        const dims = image.getDimensions();
+        // Use norm16 for the 3D texture if the extension is available
+        model.openGLTexture.getOglNorm16Ext(
+          model.context.getExtension('EXT_texture_norm16')
+        );
+        model.openGLTexture.releaseGraphicsResources(model._openGLRenderWindow);
+        model.openGLTexture.resetFormatAndType();
+        model.openGLTexture.create3DFilterableFromRaw(
+          dims[0],
+          dims[1],
+          dims[2],
+          numComp,
+          scalars.getDataType(),
+          scalars.getData()
+        );
+        model.openGLTextureString = toString;
+      }
     }
 
     const ppty = actor.getProperty();
@@ -1210,7 +1215,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         } else {
           const ptsArray = new Float32Array(12);
           const o = model.renderable.getSlicePlane().getOrigin();
-          console.log(o);
           if (orthoAxis === 0) {
             ptsArray[0] = o[0];
             ptsArray[1] = bounds[2];
@@ -1284,89 +1288,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           model.resliceGeom.getPointData().setNormals(normals);
           model.resliceGeom.modified();
         }
-
-        // const hypotenuseVec = [
-        //   bounds[1] - bounds[0],
-        //   bounds[3] - bounds[2],
-        //   bounds[5] - bounds[4],
-        // ];
-        // // Find the two orthogonal plane vectors
-        // const planeNormal = model.renderable.getSlicePlane().getNormal();
-        // vtkMath.normalize(planeNormal);
-        // // Find the largest component of the normal
-        // let maxi = 0;
-        // let maxv = 0;
-        // for (let i = 0; i < 3; ++i) {
-        //   const tmp = planeNormal[i] * planeNormal[i];
-        //   if (tmp > maxv) {
-        //     maxi = i;
-        //     maxv = tmp;
-        //   }
-        // }
-
-        // // Create the corresponding axis
-        // const axis = [0, 0, 0];
-        // if (planeNormal[maxi] < 0) {
-        //   axis[maxi] = -1.0;
-        // } else {
-        //   axis[maxi] = 1.0;
-        // }
-
-        // // Create the two orthogonal axes
-        // const taxis = [0, 1, 0];
-        // if (maxi === 1) {
-        //   taxis[1] = 0;
-        //   taxis[2] = 1;
-        // }
-
-        // const saxis = [0, 0, 0];
-        // vtkMath.cross(taxis, axis, saxis);
-
-        // const vec = [0, 0, 0];
-        // vtkMath.cross(axis, planeNormal, vec);
-        // let costheta = vtkMath.dot(axis, planeNormal);
-        // let sintheta = vtkMath.norm(vec);
-        // const theta = Math.atan2(sintheta, costheta);
-        // if (sintheta !== 0) {
-        //   vec[0] /= sintheta;
-        //   vec[1] /= sintheta;
-        //   vec[2] /= sintheta;
-        // }
-        // // convert to quaternion
-        // costheta = Math.cos(0.5 * theta);
-        // sintheta = Math.sin(0.5 * theta);
-        // const quat = [
-        //   costheta,
-        //   vec[0] * sintheta,
-        //   vec[1] * sintheta,
-        //   vec[2] * sintheta,
-        // ];
-        // const m = mat3.identity(new Float64Array(9));
-        // vtkMath.quaternionToMatrix3x3(quat, m);
-
-        // // Find the two vectors v1, v2
-        // const v1 = [0, 0, 0];
-        // vtkMath.multiply3x3_vect3(m, saxis, v1);
-        // vtkMath.normalize(v1);
-        // const v2 = [0, 0, 0];
-        // vtkMath.multiply3x3_vect3(m, taxis, v2);
-        // vtkMath.normalize(v2);
-
-        // const porigin = model.renderable.getSlicePlane().getOrigin();
-        // const p1 = [0, 0, 0];
-        // vtkMath.multiplyScalar(v1, vec3.dot(hypotenuseVec, v1));
-        // vec3.add(p1, porigin, v1);
-        // const p2 = [0, 0, 0];
-        // vtkMath.multiplyScalar(v2, vec3.dot(hypotenuseVec, v2));
-        // vec3.add(p2, porigin, v2);
-        // const planeSource = vtkPlaneSource.newInstance();
-        // planeSource.setOrigin(porigin);
-        // planeSource.setPoint1(p1);
-        // planeSource.setPoint2(p2);
-        // planeSource.setXResolution(1);
-        // planeSource.setYResolution(1);
-        // planeSource.update();
-        // model.resliceGeom = planeSource.getOutputData();
       } else {
         vtkErrorMacro(
           'Something went wrong.',
@@ -1375,6 +1296,13 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         );
       }
       model.resliceGeomUpdateString = resGeomString;
+    }
+  };
+
+  publicAPI.setOpenGLTexture = (oglTex) => {
+    if (oglTex) {
+      model.openGLTexture = oglTex;
+      model._externalOpenGLTexture = true;
     }
   };
 }
@@ -1390,7 +1318,6 @@ const DEFAULT_VALUES = {
   lastHaveSeenDepthRequest: false,
   lastIndependentComponents: false,
   lastTextureComponents: 0,
-  // modelToView: null,
   openGLTexture: null,
   openGLTextureString: null,
   colorTextureString: null,
@@ -1400,6 +1327,7 @@ const DEFAULT_VALUES = {
   tris: null,
   colorTexture: null,
   pwfTexture: null,
+  _externalOpenGLTexture: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -1424,6 +1352,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // model.modelToView = mat4.identity(new Float64Array(16));
   model.tmpMat4 = mat4.identity(new Float64Array(16));
+
+  macro.get(publicAPI, model, ['openGLTexture']);
 
   // Object methods
   vtkOpenGLImageResliceMapper(publicAPI, model);
