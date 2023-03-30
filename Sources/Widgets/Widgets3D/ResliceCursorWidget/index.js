@@ -625,10 +625,14 @@ function vtkResliceCursorWidget(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
-
+/**
+ * Initializes the model.
+ * @param {*} initialValues optional object of member variables. initialValues.planes is an optional list of axis names (e.g. ['X', 'Y'])
+ * @returns the initial model object
+ */
 const defaultValues = (initialValues) => ({
   behavior: widgetBehavior,
-  widgetState: stateGenerator(),
+  widgetState: stateGenerator(initialValues.planes),
   rotationHandlePosition: 0.5,
   scaleInPixels: true,
   manipulator: vtkPlaneManipulator.newInstance(),

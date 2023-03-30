@@ -2,8 +2,26 @@ import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
 import {
   ScrollingMethods,
   planeNames,
+  planeNameToViewType,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
-import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+
+const defaultPlanes = {
+  X: {
+    normal: [1, 0, 0],
+    viewUp: [0, 0, 1],
+    color3: [255, 0, 0],
+  },
+  Y: {
+    normal: [0, -1, 0],
+    viewUp: [0, 0, 1],
+    color3: [0, 255, 0],
+  },
+  Z: {
+    normal: [0, 0, -1],
+    viewUp: [0, -1, 0],
+    color3: [0, 0, 255],
+  },
+};
 
 const viewsColor3 = {
   X: [255, 0, 0], // red
@@ -11,7 +29,7 @@ const viewsColor3 = {
   Z: [0, 0, 255], // blue
 };
 
-export default function generateState() {
+export default function generateState(planes = planeNames) {
   const state = vtkStateBuilder
     .createBuilder()
     .addField({ name: 'center', initialValue: [0, 0, 0] })
@@ -19,11 +37,16 @@ export default function generateState() {
     .addField({ name: 'activeViewType', initialValue: null })
     .addField({
       name: 'planes',
-      initialValue: {
-        [ViewTypes.YZ_PLANE]: { normal: [1, 0, 0], viewUp: [0, 0, 1] },
-        [ViewTypes.XZ_PLANE]: { normal: [0, -1, 0], viewUp: [0, 0, 1] },
-        [ViewTypes.XY_PLANE]: { normal: [0, 0, -1], viewUp: [0, -1, 0] },
-      },
+      initialValue: planes.reduce(
+        (res, planeName) => ({
+          ...res,
+          [planeNameToViewType[planeName]]: {
+            normal: defaultPlanes[planeName].normal,
+            viewUp: defaultPlanes[planeName].viewUp,
+          },
+        }),
+        {}
+      ),
     })
     .addField({
       name: 'scrollingMethod',
@@ -41,9 +64,9 @@ export default function generateState() {
       },
     });
 
-  planeNames.reduce(
+  planes.reduce(
     (viewState, view) =>
-      planeNames
+      planes
         .filter((v) => v !== view)
         .reduce((axisState, axis) => {
           // Line handle
