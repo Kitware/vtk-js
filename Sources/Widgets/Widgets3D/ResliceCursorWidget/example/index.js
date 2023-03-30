@@ -263,18 +263,18 @@ function updateReslice(
     spheres: null,
   }
 ) {
-  const obj = widget.updateReslicePlane(
+  const modified = widget.updateReslicePlane(
     interactionContext.reslice,
     interactionContext.viewType
   );
-  if (obj.modified) {
+  if (modified) {
+    const resliceAxes = interactionContext.reslice.getResliceAxes();
     // Get returned modified from setter to know if we have to render
-    interactionContext.actor.setUserMatrix(
-      interactionContext.reslice.getResliceAxes()
-    );
-    interactionContext.sphereSources[0].setCenter(...obj.origin);
-    interactionContext.sphereSources[1].setCenter(...obj.point1);
-    interactionContext.sphereSources[2].setCenter(...obj.point2);
+    interactionContext.actor.setUserMatrix(resliceAxes);
+    const planeSource = widget.getPlaneSource(interactionContext.viewType);
+    interactionContext.sphereSources[0].setCenter(planeSource.getOrigin());
+    interactionContext.sphereSources[1].setCenter(planeSource.getPoint1());
+    interactionContext.sphereSources[2].setCenter(planeSource.getPoint2());
   }
   widget.updateCameraPoints(
     interactionContext.renderer,
@@ -284,7 +284,7 @@ function updateReslice(
     interactionContext.computeFocalPointOffset
   );
   view3D.renderWindow.render();
-  return obj.modified;
+  return modified;
 }
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });

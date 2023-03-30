@@ -119,11 +119,11 @@ test('Test rendering when several rotations plane', (t) => {
       // computed. If so, then this offset will be used to keep the focal point position during rotation.
     }
   ) {
-    const obj = widget.updateReslicePlane(
+    const modified = widget.updateReslicePlane(
       interactionContext.reslice,
       interactionContext.viewType
     );
-    if (obj.modified) {
+    if (modified) {
       // Get returned modified from setter to know if we have to render
       interactionContext.actor.setUserMatrix(
         interactionContext.reslice.getResliceAxes()
@@ -136,7 +136,7 @@ test('Test rendering when several rotations plane', (t) => {
       interactionContext.keepFocalPointPosition,
       interactionContext.computeFocalPointOffset
     );
-    return obj;
+    return modified;
   }
 
   // --------------------------------------------------------------------------
@@ -233,7 +233,7 @@ test('Test rendering when several rotations plane', (t) => {
        */
       function updateView(viewType) {
         const viewObj = viewAttributes.find((obj) => obj.viewType === viewType);
-        const out = updateReslice({
+        updateReslice({
           viewType,
           reslice: viewObj.reslice,
           actor: viewObj.resliceActor,
@@ -247,9 +247,6 @@ test('Test rendering when several rotations plane', (t) => {
         return {
           focalPoint: camera.getFocalPoint(),
           viewUp: camera.getViewUp(),
-          origin: out.origin,
-          point1: out.point1,
-          point2: out.point2,
         };
       }
 
@@ -271,21 +268,6 @@ test('Test rendering when several rotations plane', (t) => {
           vtkMath.roundVector(comparedValues.viewUp, [], PRECISION),
           vtkMath.roundVector(expectedValues.viewUp, [], PRECISION),
           `Camera view up on ${viewType}`
-        );
-        t.deepEqual(
-          vtkMath.roundVector(comparedValues.origin, [], PRECISION),
-          vtkMath.roundVector(expectedValues.origin, [], PRECISION),
-          `Plane origin on ${viewType}`
-        );
-        t.deepEqual(
-          vtkMath.roundVector(comparedValues.point1, [], PRECISION),
-          vtkMath.roundVector(expectedValues.point1, [], PRECISION),
-          `Plane point 1 on ${viewType}`
-        );
-        t.deepEqual(
-          vtkMath.roundVector(comparedValues.point2, [], PRECISION),
-          vtkMath.roundVector(expectedValues.point2, [], PRECISION),
-          `Plane point 2 on ${viewType}`
         );
         return comparedValues;
       }

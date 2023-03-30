@@ -409,10 +409,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
     );
   };
 
-  publicAPI.updateReslicePlane = (imageReslice, viewType) => {
-    // Calculate appropriate pixel spacing for the reslicing
-    const spacing = model.widgetState.getImage().getSpacing();
-
+  publicAPI.getPlaneSource = (viewType) => {
     // Compute original (i.e. before rotation) plane (i.e. origin, p1, p2)
     // centered on cursor center.
     const planeSource = computeReslicePlaneOrigin(viewType);
@@ -438,23 +435,30 @@ function vtkResliceCursorWidget(publicAPI, model) {
     planeSource.setPoint1(...boundedP1);
     planeSource.setPoint2(...boundedP2);
 
-    const o = planeSource.getOrigin();
+    return planeSource;
+  };
+
+  publicAPI.getResliceAxes = (viewType) => {
+    // Compute original (i.e. before rotation) plane (i.e. origin, p1, p2)
+    // centered on cursor center.
+    const planeSource = publicAPI.getPlaneSource(viewType);
+
+    // TBD: use normal from planeSource ?
+    const { normal } = model.widgetState.getPlanes()[viewType];
+
+    const planeOrigin = planeSource.getOrigin();
 
     const p1 = planeSource.getPoint1();
     const planeAxis1 = [];
-    vtkMath.subtract(p1, o, planeAxis1);
+    vtkMath.subtract(p1, planeOrigin, planeAxis1);
+    vtkMath.normalize(planeAxis1);
 
     const p2 = planeSource.getPoint2();
     const planeAxis2 = [];
-    vtkMath.subtract(p2, o, planeAxis2);
-
-    // The x,y dimensions of the plane
-    const planeSizeX = vtkMath.normalize(planeAxis1);
-    const planeSizeY = vtkMath.normalize(planeAxis2);
+    vtkMath.subtract(p2, planeOrigin, planeAxis2);
+    vtkMath.normalize(planeAxis2);
 
     const newResliceAxes = mat4.identity(new Float64Array(16));
-
-    const planeOrigin = planeSource.getOrigin();
 
     for (let i = 0; i < 3; i++) {
       newResliceAxes[i] = planeAxis1[i];
@@ -462,6 +466,25 @@ function vtkResliceCursorWidget(publicAPI, model) {
       newResliceAxes[8 + i] = normal[i];
       newResliceAxes[12 + i] = planeOrigin[i];
     }
+
+    return newResliceAxes;
+  };
+
+  publicAPI.updateReslicePlane = (imageReslice, viewType) => {
+    // Calculate appropriate pixel spacing for the reslicing
+    const spacing = model.widgetState.getImage().getSpacing();
+
+    const planeSource = publicAPI.getPlaneSource(viewType);
+    const newResliceAxes = publicAPI.getResliceAxes(viewType);
+
+    const planeOrigin = planeSource.getOrigin();
+    const p1 = planeSource.getPoint1();
+    const planeAxis1 = vtkMath.subtract(p1, planeOrigin, []);
+    const planeSizeX = vtkMath.normalize(planeAxis1);
+
+    const p2 = planeSource.getPoint2();
+    const planeAxis2 = vtkMath.subtract(p2, planeOrigin, []);
+    const planeSizeY = vtkMath.normalize(planeAxis2);
 
     const spacingX =
       Math.abs(planeAxis1[0] * spacing[0]) +
@@ -539,7 +562,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
       imageReslice.setOutputExtent([0, extentX - 1, 0, extentY - 1, 0, 0]) ||
       modified;
 
-    return { modified, origin: o, point1: p1, point2: p2 };
+    return modified;
   };
 
   /**
