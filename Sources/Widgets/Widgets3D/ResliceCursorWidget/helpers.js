@@ -7,11 +7,10 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
-import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import {
   planeNames,
   planeNameToViewType,
-  lineNames,
+  viewTypeToPlaneName,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 
 const EPSILON = 10e-7;
@@ -162,6 +161,18 @@ export function rotateVector(vectorToBeRotated, axis, angle) {
 }
 
 /**
+ * Return ['X', 'Y'] if there are only 2 planes defined in the widget state.
+ * Return ['X', 'Y', 'Z'] if there are 3 planes defined in the widget state.
+ * @param {object} widgetState the state of the widget
+ * @returns An array of plane names
+ */
+export function getPlaneNames(widgetState) {
+  return Object.keys(widgetState.getPlanes()).map(
+    (viewType) => viewTypeToPlaneName[viewType]
+  );
+}
+
+/**
  * Return X if lineName == XinY|XinZ, Y if lineName == YinX|YinZ and Z otherwise
  * @param {string} lineName name of the line (YinX, ZinX, XinY, ZinY, XinZ, YinZ)
  */
@@ -177,13 +188,37 @@ export function getLineInPlaneName(lineName) {
 }
 
 /**
+ * Returns ['XinY', 'YinX'] if planes == ['X', 'Y']
+ * ['XinY', 'XinZ', 'YinX', 'YinZ', 'ZinX', 'ZinY'] if planes == ['X', 'Y', 'Z']
+ * @param {string} planes name of the planes (e.g. ['X', 'Y'])
+ */
+export function getPlanesLineNames(planes = planeNames) {
+  const lines = [];
+  planes.forEach((plane) => {
+    planes.forEach((inPlane) => {
+      if (plane !== inPlane) {
+        lines.push(`${plane}in${inPlane}`);
+      }
+    });
+  });
+  return lines;
+}
+
+export function getLineNames(widgetState) {
+  const planes = Object.keys(widgetState.getPlanes()).map(
+    (viewType) => viewTypeToPlaneName[viewType]
+  );
+  return getPlanesLineNames(planes);
+}
+
+/**
  * Return ZinX if lineName == YinX, YinX if lineName == ZinX, ZinY if lineName == XinY...
  * @param {string} lineName name of the line (YinX, ZinX, XinY, ZinY, XinZ, YinZ)
  */
-export function getOtherLineName(lineName) {
+export function getOtherLineName(widgetState, lineName) {
   const linePlaneName = getLinePlaneName(lineName);
   const lineInPlaneName = getLineInPlaneName(lineName);
-  const otherLineName = planeNames.find(
+  const otherLineName = getPlaneNames(widgetState).find(
     (planeName) => planeName !== linePlaneName && planeName !== lineInPlaneName
   );
   return `${otherLineName}in${lineInPlaneName}`;
@@ -209,19 +244,25 @@ export function updateState(
   scaleInPixels,
   rotationHandlePosition
 ) {
-  // Compute line axis
-  const xNormal = widgetState.getPlanes()[ViewTypes.YZ_PLANE].normal;
-  const yNormal = widgetState.getPlanes()[ViewTypes.XZ_PLANE].normal;
-  const zNormal = widgetState.getPlanes()[ViewTypes.XY_PLANE].normal;
-
-  const axes = {
-    XY: vtkMath.cross(xNormal, yNormal, []),
-    YZ: vtkMath.cross(yNormal, zNormal, []),
-    XZ: vtkMath.cross(zNormal, xNormal, []),
-  };
-  axes.YX = axes.XY;
-  axes.ZY = axes.YZ;
-  axes.ZX = axes.XZ;
+  const planes = Object.keys(widgetState.getPlanes()).map(
+    (viewType) => viewTypeToPlaneName[viewType]
+  );
+  // Generates an object as such:
+  // axes = {'XY': cross(X, Y), 'YX': cross(X, Y), 'YZ': cross(Y, Z)...}
+  const axes = planes.reduce((res, plane) => {
+    planes
+      .filter((otherPlane) => plane !== otherPlane)
+      .forEach((otherPlane) => {
+        const cross = vtkMath.cross(
+          widgetState.getPlanes()[planeNameToViewType[plane]].normal,
+          widgetState.getPlanes()[planeNameToViewType[otherPlane]].normal,
+          []
+        );
+        res[`${plane}${otherPlane}`] = cross;
+        res[`${otherPlane}${plane}`] = cross;
+      });
+    return res;
+  }, {});
 
   const bounds = widgetState.getImage().getBounds();
   const center = widgetState.getCenter();
@@ -231,7 +272,7 @@ export function updateState(
 
   widgetState.getCenterHandle().setOrigin(center);
 
-  lineNames.forEach((lineName) => {
+  getPlanesLineNames(planes).forEach((lineName) => {
     const planeName = getLinePlaneName(lineName);
     const inPlaneName = getLineInPlaneName(lineName);
     const direction = axes[`${planeName}${inPlaneName}`];

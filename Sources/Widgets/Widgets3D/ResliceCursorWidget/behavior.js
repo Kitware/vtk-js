@@ -10,13 +10,13 @@ import {
   getOtherLineName,
   getLinePlaneName,
   getLineInPlaneName,
+  getLineNames,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
 import {
   ScrollingMethods,
   InteractionMethodsName,
   planeNameToViewType,
-  lineNames,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 
 export default function widgetBehavior(publicAPI, model) {
@@ -62,7 +62,7 @@ export default function widgetBehavior(publicAPI, model) {
    * @returns 'YinX', 'ZinX', 'XinY', 'ZinY', 'XinZ' or 'YinZ'
    */
   publicAPI.getActiveLineName = () =>
-    lineNames.find((lineName) =>
+    getLineNames(model.widgetState).find((lineName) =>
       model.widgetState.getStatesWithLabel(lineName).includes(model.activeState)
     );
 
@@ -76,7 +76,9 @@ export default function widgetBehavior(publicAPI, model) {
    * @returns ZinX if lineName == YinX, YinX if lineName == ZinX, ZinY if lineName == XinY...
    */
   publicAPI.getOtherLineHandle = (lineName) =>
-    model.widgetState[`getAxis${getOtherLineName(lineName)}`]?.();
+    model.widgetState[
+      `getAxis${getOtherLineName(model.widgetState, lineName)}`
+    ]?.();
 
   // FIXME: label information should be accessible from activeState instead of parent state.
   /**
@@ -440,7 +442,7 @@ export default function widgetBehavior(publicAPI, model) {
     publicAPI.rotatePlane(viewType, radianAngle, planeNormal);
 
     if (publicAPI.getKeepOrthogonality()) {
-      const otherLineName = getOtherLineName(lineName);
+      const otherLineName = getOtherLineName(model.widgetState, lineName);
       const otherPlaneName = getLinePlaneName(otherLineName);
       publicAPI.rotatePlane(
         planeNameToViewType[otherPlaneName],

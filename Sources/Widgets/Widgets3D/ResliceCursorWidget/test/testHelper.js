@@ -4,6 +4,7 @@ import {
   getOtherLineName,
   getLinePlaneName,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
+import generateState from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/state';
 
 test('Test getOtherLineName', (t) => {
   const data = [
@@ -14,9 +15,10 @@ test('Test getOtherLineName', (t) => {
     { lineName: 'XinZ', expected: 'YinZ' },
     { lineName: 'YinZ', expected: 'XinZ' },
   ];
+  const widgetState = generateState();
 
   data.forEach((testData) => {
-    const associatedPlane = getOtherLineName(testData.lineName);
+    const associatedPlane = getOtherLineName(widgetState, testData.lineName);
     t.equal(associatedPlane, testData.expected);
   });
 
