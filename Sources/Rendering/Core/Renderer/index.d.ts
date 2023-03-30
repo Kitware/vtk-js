@@ -64,6 +64,12 @@ export interface vtkRenderer extends vtkViewport {
 	addActor(actor: vtkProp): boolean;
 
 	/**
+	 * Check if the renderer already has the specified light.
+	 * @param {vtkLight} light The vtkLight instance.
+	 */
+	hasLight(light: vtkLight): boolean;
+
+	/**
 	 * Add a light to the list of lights.
 	 * @param {vtkLight} light The vtkLight instance.
 	 */
