@@ -181,9 +181,13 @@ function vtkRenderer(publicAPI, model) {
     publicAPI.modified();
   };
 
+  publicAPI.hasLight = (light) =>
+    !!model.lights.filter((item) => item === light).length;
   publicAPI.addLight = (light) => {
-    model.lights = [].concat(model.lights, light);
-    publicAPI.modified();
+    if (light && !publicAPI.hasLight(light)) {
+      model.lights = model.lights.concat(light);
+      publicAPI.modified();
+    }
   };
   publicAPI.removeLight = (light) => {
     model.lights = model.lights.filter((l) => l !== light);
