@@ -6,7 +6,7 @@ import vtkLookupTableProxy from '../LookupTableProxy';
 import vtkPiecewiseFunctionProxy from '../PiecewiseFunctionProxy';
 import { VtkProxy } from '../../../macros';
 
-export type ProxyConfiguration = Object;
+export type ProxyConfiguration = object;
 
 export interface ProxyRegistrationChangeInfo {
   action: 'register' | 'unregister';
@@ -14,6 +14,10 @@ export interface ProxyRegistrationChangeInfo {
   proxyName: string;
   proxyGroup: string;
   proxy: VtkProxy;
+}
+
+export interface IProxyManagerInitialValues {
+  proxyConfiguration?: ProxyConfiguration;
 }
 
 export interface vtkProxyManager extends vtkObject {
@@ -77,5 +81,35 @@ export interface vtkProxyManager extends vtkObject {
     dataRange: [number, number]
   ): void;
 }
+
+/**
+ * Decorates a given publicAPI + model with vtkProxyManager characteristics.
+ *
+ * @param publicAPI
+ * @param model
+ * @param {IProxyManagerInitialValues} [initialValues]
+ */
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: IProxyManagerInitialValues
+): void;
+
+/**
+ * Creates a vtkProxyManager.
+ * @param {IProxyManagerInitialValues} [initialValues]
+ */
+export function newInstance(
+  initialValues?: IProxyManagerInitialValues
+): vtkProxyManager;
+
+/**
+ * vtkProxyManager is the central manager for managing proxy resources
+ * in vtk.js.
+ */
+export declare const vtkProxyManager: {
+  newInstance: typeof newInstance;
+  extend: typeof extend;
+};
 
 export default vtkProxyManager;
