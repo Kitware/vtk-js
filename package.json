@@ -112,6 +112,7 @@
     "rollup-plugin-string": "3.0.0",
     "rollup-plugin-svgo": "2.0.0",
     "rollup-plugin-web-worker-loader": "1.6.1",
+    "rollup-plugin-license": "2.8.1",
     "semantic-release": "19.0.3",
     "snabbdom": "^3.5.1",
     "string-replace-loader": "3.1.0",

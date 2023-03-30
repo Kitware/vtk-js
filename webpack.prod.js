@@ -1,34 +1,17 @@
 // node modules
+const path = require('path');
 const { merge } = require('webpack-merge');
-const moment = require('moment');
 const webpack = require('webpack');
-const TerserPlugin = require("terser-webpack-plugin");
+const fs = require('fs');
+const TerserPlugin = require('terser-webpack-plugin');
 
 // webpack plugins
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
-  .BundleAnalyzerPlugin;
+const BundleAnalyzerPlugin =
+  require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 // config files
 const common = require('./webpack.common.js');
 const settings = require('./webpack.settings.js');
-
-// Configure file banner
-function configureBanner() {
-  return {
-    banner: [
-      '/*!',
-      ` * @project        ${settings.name}`,
-      ` * @build          ${moment().format('llll')} ET`,
-      ` * @copyright      Copyright (c) ${moment().format('YYYY')} ${
-        settings.copyright
-      }`,
-      ' *',
-      ' */',
-      '',
-    ].join('\n'),
-    raw: true,
-  };
-}
 
 // Configure Bundle Analyzer
 function configureBundleAnalyzer(name) {
@@ -46,11 +29,17 @@ function configureOptimization() {
     minimize: true,
     minimizer: [
       new TerserPlugin({
+        terserOptions:{
+          output:{
+            comments: /@license/i
+          }
+        },
         exclude: [
           // do not minify Sources/ and Utilities/ dirs
           /Sources\//,
           /Utilities\//,
         ],
+        extractComments: false,
       }),
     ],
   };
@@ -63,8 +52,10 @@ module.exports = [
     devtool: 'source-map',
     optimization: configureOptimization(),
     plugins: [
+      new webpack.BannerPlugin(
+        `@license\n ${fs.readFileSync(path.resolve(__dirname, './LICENSE'), 'utf8')}`
+      ),
       new webpack.optimize.ModuleConcatenationPlugin(),
-      new webpack.BannerPlugin(configureBanner()),
       new BundleAnalyzerPlugin(configureBundleAnalyzer('vtk')),
     ],
   }),
@@ -73,8 +64,10 @@ module.exports = [
     devtool: 'source-map',
     optimization: configureOptimization(),
     plugins: [
+      new webpack.BannerPlugin(
+        `@license\n ${fs.readFileSync(path.resolve(__dirname, './LICENSE'), 'utf8')}`
+      ),
       new webpack.optimize.ModuleConcatenationPlugin(),
-      new webpack.BannerPlugin(configureBanner()),
       new BundleAnalyzerPlugin(configureBundleAnalyzer('vtk-lite')),
     ],
   }),

@@ -120,12 +120,18 @@ const baseConfig = {
             // transforms typescript defs to use absolute imports
             if (absoluteFrom.endsWith('.d.ts')) {
               return absolutifyImports(content.toString(), (relImport) => {
-                const importPath = path.join(path.dirname(absoluteFrom), relImport);
-                return path.join('vtk.js', path.relative(__dirname, importPath));
+                const importPath = path.join(
+                  path.dirname(absoluteFrom),
+                  relImport
+                );
+                return path.join(
+                  'vtk.js',
+                  path.relative(__dirname, importPath)
+                );
               });
             }
             return content;
-          }
+          },
         },
         { from: 'Utilities/prepare.js', to: 'Utilities/prepare.js' },
         { from: 'Utilities/XMLConverter', to: 'Utilities/XMLConverter' },
@@ -145,7 +151,7 @@ const baseConfig = {
             pkg.main = './vtk.js';
             delete pkg.module;
             return JSON.stringify(pkg, null, 2);
-          }
+          },
         },
       ],
     }),
@@ -190,10 +196,11 @@ const liteConfig = merge(
     },
     resolve: {
       alias: {
-        'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps.json': path.join(
-          __dirname,
-          'Sources/Rendering/Core/ColorTransferFunction/LiteColorMaps.json'
-        ),
+        'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps.json':
+          path.join(
+            __dirname,
+            'Sources/Rendering/Core/ColorTransferFunction/LiteColorMaps.json'
+          ),
       },
       fallback: { stream: require.resolve('stream-browserify') },
     },
