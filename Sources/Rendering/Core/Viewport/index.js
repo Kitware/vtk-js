@@ -16,11 +16,10 @@ function vtkViewport(publicAPI, model) {
 
   // Public API methods
   publicAPI.getViewProps = () => model.props;
-  publicAPI.hasViewProp = (prop) =>
-    !!model.props.filter((item) => item === prop).length;
+  publicAPI.hasViewProp = (prop) => model.props.includes(prop);
   publicAPI.addViewProp = (prop) => {
     if (prop && !publicAPI.hasViewProp(prop)) {
-      model.props = model.props.concat(prop);
+      model.props.push(prop);
     }
   };
 
