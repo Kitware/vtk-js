@@ -236,6 +236,14 @@ export function updateState(
     const inPlaneName = getLineInPlaneName(lineName);
     const direction = axes[`${planeName}${inPlaneName}`];
     widgetState[`getRotationHandle${lineName}0`]().setOrigin(center);
+    widgetState[`getRotationHandle${lineName}0`]()
+      .getManipulator()
+      ?.setHandleOrigin(center);
+    widgetState[`getRotationHandle${lineName}0`]()
+      .getManipulator()
+      ?.setHandleNormal(
+        widgetState.getPlanes()[planeNameToViewType[planeName]].normal
+      );
     widgetState[`getRotationHandle${lineName}0`]().setOffset(
       computeRotationHandleOriginOffset(
         direction,
@@ -245,6 +253,14 @@ export function updateState(
       )
     );
     widgetState[`getRotationHandle${lineName}1`]().setOrigin(center);
+    widgetState[`getRotationHandle${lineName}1`]()
+      .getManipulator()
+      ?.setHandleOrigin(center);
+    widgetState[`getRotationHandle${lineName}1`]()
+      .getManipulator()
+      ?.setHandleNormal(
+        widgetState.getPlanes()[planeNameToViewType[planeName]].normal
+      );
     widgetState[`getRotationHandle${lineName}1`]().setOffset(
       computeRotationHandleOriginOffset(
         direction,
@@ -255,6 +271,12 @@ export function updateState(
     );
     const lineHandle = widgetState[`getAxis${lineName}`]();
     lineHandle.setOrigin(center);
+    lineHandle.getManipulator()?.setHandleOrigin(center);
+    lineHandle
+      .getManipulator()
+      ?.setHandleNormal(
+        widgetState.getPlanes()[planeNameToViewType[planeName]].normal
+      );
     const scale = vtkMath.normalize(direction);
     const scale3 = lineHandle.getScale3();
     scale3[2] = 2 * scale;
