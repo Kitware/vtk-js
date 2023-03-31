@@ -118,6 +118,7 @@ function createInstanceMap() {
 
   function registerInstance(id, instance) {
     instances[id] = instance;
+    instance.set({ remoteId: id }, true, true);
   }
 
   function unregisterInstance(id) {

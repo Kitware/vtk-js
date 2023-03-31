@@ -412,8 +412,6 @@ function vtkRenderWindowUpdater(instance, state, context) {
             }
             context.unregisterInstance(context.getInstanceId(viewProp));
           });
-          // Now just remove all the view props
-          renderer.removeAllViewProps();
         });
       });
   }
