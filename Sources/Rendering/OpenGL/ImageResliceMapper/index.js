@@ -60,13 +60,13 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
       model.currentRenderPass = null;
-      model.openGLImageSlice = publicAPI.getFirstAncestorOfType(
+      model._openGLImageSlice = publicAPI.getFirstAncestorOfType(
         'vtkOpenGLImageSlice'
       );
       model._openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       const ren = model._openGLRenderer.getRenderable();
-      model.openGLCamera = model._openGLRenderer.getViewNodeFor(
+      model._openGLCamera = model._openGLRenderer.getViewNodeFor(
         ren.getActiveCamera()
       );
       model._openGLRenderWindow = model._openGLRenderer.getParent();
@@ -88,7 +88,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     }
   };
 
-  publicAPI.opaqueZBufferPass = (prepass) => {
+  publicAPI.zBufferPass = (prepass) => {
     if (prepass) {
       model.haveSeenDepthRequest = true;
       model.renderDepth = true;
@@ -96,6 +96,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       model.renderDepth = false;
     }
   };
+
+  publicAPI.opaqueZBufferPass = (prepass) => publicAPI.zBufferPass(prepass);
 
   publicAPI.opaquePass = (prepass) => {
     if (prepass) {
@@ -112,7 +114,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
 
   // Renders myself
   publicAPI.render = () => {
-    const actor = model.openGLImageSlice.getRenderable();
+    const actor = model._openGLImageSlice.getRenderable();
     const ren = model._openGLRenderer.getRenderable();
     publicAPI.renderPiece(ren, actor);
   };
@@ -559,9 +561,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
     // [WMVP]C == {world, model, view, projection} coordinates
     // e.g. WCPC == world to projection coordinate transformation
-    const keyMats = model.openGLCamera.getKeyMatrices(ren);
-    const actMats = model.openGLImageSlice.getKeyMatrices();
-    // mat4.multiply(model.modelToView, keyMats.wcvc, actMats.mcwc);
+    const keyMats = model._openGLCamera.getKeyMatrices(ren);
+    const actMats = model._openGLImageSlice.getKeyMatrices();
 
     const shiftScaleEnabled = cellBO.getCABO().getCoordShiftAndScaleEnabled();
     const inverseShiftScaleMatrix = shiftScaleEnabled
@@ -948,20 +949,19 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     ).result;
 
     let tcoordFSImpl = [
-      'vec4 tvalue = texture(texture1, fragTexCoord);',
       'if (any(greaterThan(fragTexCoord, vec3(1.0))) || any(lessThan(fragTexCoord, vec3(0.0))))',
       '{',
       '  // set the background color and exit',
       '  gl_FragData[0] = backgroundColor;',
       '  return;',
       '}',
+      'vec4 tvalue = texture(texture1, fragTexCoord);',
     ];
     if (slabThickness > 0.0) {
       tcoordFSImpl = tcoordFSImpl.concat([
         '// Get the first and last samples',
         'int numSlices = 1;',
         'vec3 normalxspacing = normalWCVSOutput * spacing * 0.5;',
-        '//normalxspacing = normalxspacing * 0.5;',
         'float distTraveled = length(normalxspacing);',
         'int trapezoid = 0;',
         'while (distTraveled < slabThickness * 0.5)',
@@ -1066,10 +1066,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           ]);
       }
     }
-    // const tcoordFSImpl = [
-    //   'gl_FragData[0] = vec4(vec3(texture(texture1, fragTexCoord).r), 1.0);',
-    //   '// gl_FragData[0] = vec4(1.0, 0.0, 0.0, 1.0);',
-    // ];
     FSSource = vtkShaderProgram.substitute(
       FSSource,
       '//VTK::TCoord::Impl',
@@ -1090,7 +1086,11 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     let FSSource = shaders.Fragment;
 
     const slabThickness = model.renderable.getSlabThickness();
-    let posVCVSDec = [];
+    let posVCVSDec = ['attribute vec4 vertexWC;'];
+    // Add a unique hash to the shader to ensure that the shader program is unique to this mapper.
+    posVCVSDec = posVCVSDec.concat([
+      `//${publicAPI.getMTime()}${model.resliceGeomUpdateString}`,
+    ]);
     if (slabThickness > 0.0) {
       posVCVSDec = posVCVSDec.concat([
         'attribute vec3 normalWC;',

@@ -23,8 +23,6 @@
 // DC - Display coordinates
 // TC - Texture coordinates
 
-attribute vec4 vertexWC;
-
 // frag position in VC
 //VTK::PositionVC::Dec
 
