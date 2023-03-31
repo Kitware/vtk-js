@@ -108,7 +108,7 @@ function vtkShaderProgram(publicAPI, model) {
   };
 
   publicAPI.link = () => {
-    if (model.inked) {
+    if (model.linked) {
       return true;
     }
 
