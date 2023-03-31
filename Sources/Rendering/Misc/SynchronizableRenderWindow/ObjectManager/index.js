@@ -271,7 +271,7 @@ function genericUpdater(instance, state, context) {
   const dependencies = [];
   if (state.arrays) {
     const arraysToBind = [];
-    const promises = state.arrays.map((arrayMetadata) => {
+    const promises = Object.values(state.arrays).map((arrayMetadata) => {
       context.start(); // -> start(arrays)
       return context
         .getArray(arrayMetadata.hash, arrayMetadata.dataType, context)
@@ -474,25 +474,32 @@ function createDataSetUpdate(piecesToFetch = []) {
     context.start(); // -> start(dataset-update)
 
     // Make sure we provide container for std arrays
+    const localProperties = { ...state.properties };
     if (!state.arrays) {
-      state.arrays = [];
+      state.arrays = {};
     }
 
     // Array members
     // => convert old format to generic state.arrays
-    piecesToFetch.forEach((key) => {
+    for (let i = 0; i < piecesToFetch.length; i++) {
+      const key = piecesToFetch[i];
       if (state.properties[key]) {
         const arrayMeta = state.properties[key];
         arrayMeta.registration = `set${macro.capitalize(key)}`;
-        state.arrays.push(arrayMeta);
-        delete state.properties[key];
+        const arrayKey = `${arrayMeta.hash}_${arrayMeta.dataType}`;
+        state.arrays[arrayKey] = arrayMeta;
+        delete localProperties[key];
       }
-    });
+    }
 
     // Extract dataset fields
     const fieldsArrays = state.properties.fields || [];
-    state.arrays.push(...fieldsArrays);
-    delete state.properties.fields;
+    for (let i = 0; i < fieldsArrays.length; i++) {
+      const arrayMeta = fieldsArrays[i];
+      const arrayKey = `${arrayMeta.hash}_${arrayMeta.dataType}`;
+      state.arrays[arrayKey] = arrayMeta;
+    }
+    delete localProperties.fields;
 
     // Reset any pre-existing fields array
     const arrayToKeep = {
@@ -507,7 +514,9 @@ function createDataSetUpdate(piecesToFetch = []) {
     removeUnavailableArrays(instance.getCellData(), arrayToKeep.cellData);
 
     // Generic handling
-    const res = genericUpdater(instance, state, context);
+    const cleanState = { ...state };
+    cleanState.properties = localProperties;
+    const res = genericUpdater(instance, cleanState, context);
 
     // Finish what we started
     context.end(); // -> end(dataset-update)
