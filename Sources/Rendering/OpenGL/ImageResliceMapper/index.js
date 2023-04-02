@@ -670,6 +670,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     // render pass shader replacement changed
     const tNumComp = model.openGLTexture.getComponents();
     const iComp = actor.getProperty().getIndependentComponents();
+    const slabTh = model.renderable.getSlabThickness();
+    const slabType = model.renderable.getSlabType();
+    const slabTrap = model.renderable.getSlabTrapezoidIntegration();
 
     // has the render pass shader replacement changed? Two options
     let needRebuild = false;
@@ -687,11 +690,17 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
       cellBO.getProgram() === 0 ||
       model.lastTextureComponents !== tNumComp ||
-      model.lastIndependentComponents !== iComp
+      model.lastIndependentComponents !== iComp ||
+      model.lastSlabThickness !== slabTh ||
+      model.lastSlabType !== slabType ||
+      model.lastSlabTrapezoidIntegration !== slabTrap
     ) {
       model.lastHaveSeenDepthRequest = model.haveSeenDepthRequest;
       model.lastTextureComponents = tNumComp;
       model.lastIndependentComponents = iComp;
+      model.lastSlabThickness = slabTh;
+      model.lastSlabType = slabType;
+      model.lastSlabTrapezoidIntegration = slabTrap;
       return true;
     }
 
@@ -1313,6 +1322,9 @@ const DEFAULT_VALUES = {
   lastHaveSeenDepthRequest: false,
   lastIndependentComponents: false,
   lastTextureComponents: 0,
+  lastSlabThickness: 0,
+  lastSlabTrapezoidIntegration: 0,
+  lastSlabType: -1,
   openGLTexture: null,
   openGLTextureString: null,
   colorTextureString: null,
