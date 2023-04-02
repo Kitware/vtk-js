@@ -190,18 +190,13 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     }
   };
 
-  publicAPI.getNeedToRebuildBufferObjects = (ren, actor) => {
-    if (
-      model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
-      model.VBOBuildTime.getMTime() < actor.getMTime() ||
-      model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
-      model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
-      model.VBOBuildTime.getMTime() < model.currentInput.getMTime()
-    ) {
-      return true;
-    }
-    return false;
-  };
+  publicAPI.getNeedToRebuildBufferObjects = (ren, actor) =>
+    model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
+    model.VBOBuildTime.getMTime() < actor.getMTime() ||
+    model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
+    model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
+    model.VBOBuildTime.getMTime() < model.currentInput.getMTime() ||
+    model.VBOBuildTime.getMTime() < model.resliceGeom.getMTime();
 
   publicAPI.buildBufferObjects = (ren, actor) => {
     const image = model.currentInput;
