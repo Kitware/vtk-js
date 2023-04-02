@@ -41,24 +41,6 @@ function vtkImageResliceMapper(publicAPI, model) {
     }
     return bds;
   };
-
-  publicAPI.getBackgroundColor = (property) => {
-    // Default to opaque black
-    const color = [0, 0, 0, 1];
-    if (property) {
-      const lut = property.getRGBTransferFunction();
-      if (lut) {
-        // Return the first color defined in the color function
-        let v = property.getColorLevel() - 0.5 * property.getColorWindow();
-        if (property.getUseLookupTableScalarRange()) {
-          v = lut.getRange()[0];
-        }
-        lut.getColor(v, color);
-        color[3] = property.getOpacity();
-      }
-    }
-    return color;
-  };
 }
 
 // ----------------------------------------------------------------------------

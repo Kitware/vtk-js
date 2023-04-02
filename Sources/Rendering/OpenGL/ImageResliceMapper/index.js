@@ -657,7 +657,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     // Background color
     program.setUniform4fv(
       'backgroundColor',
-      model.renderable.getBackgroundColor(ppty)
+      model.renderable.getBackgroundColor()
     );
   };
 

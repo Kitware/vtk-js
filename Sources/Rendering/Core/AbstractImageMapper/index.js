@@ -21,6 +21,7 @@ const DEFAULT_VALUES = {
   slice: 0,
   customDisplayExtent: [0, 0, 0, 0, 0, 0],
   useCustomExtents: false,
+  backgroundColor: [0, 0, 0, 1],
 };
 
 // ----------------------------------------------------------------------------
@@ -33,6 +34,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, ['slice', 'useCustomExtents']);
   macro.setGetArray(publicAPI, model, ['customDisplayExtent'], 6);
+  macro.setGetArray(publicAPI, model, ['backgroundColor'], 4);
 
   vtkAbstractImageMapper(publicAPI, model);
 }
