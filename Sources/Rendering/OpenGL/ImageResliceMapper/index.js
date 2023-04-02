@@ -1216,6 +1216,23 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           pds.setInputConnection(cutter.getOutputPort());
           pds.update();
           model.resliceGeom = pds.getOutputData();
+          // The above method does not generate point normals
+          // Set it manually here.
+          const n = model.renderable.getSlicePlane().getNormal();
+          const npts = model.resliceGeom.getNumberOfPoints();
+          vtkMath.normalize(n);
+          const normalsData = new Float32Array(npts * 3);
+          for (let i = 0; i < npts; ++i) {
+            normalsData[3 * i] = n[0];
+            normalsData[3 * i + 1] = n[1];
+            normalsData[3 * i + 2] = n[2];
+          }
+          const normals = vtkDataArray.newInstance({
+            numberOfComponents: 3,
+            values: normalsData,
+            name: 'Normals',
+          });
+          model.resliceGeom.getPointData().setNormals(normals);
         } else {
           const ptsArray = new Float32Array(12);
           const o = model.renderable.getSlicePlane().getOrigin();
