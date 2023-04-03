@@ -1287,7 +1287,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // Source texture data from the PBO.
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    // model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
+    model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     // openGLDataType
 
