@@ -719,79 +719,79 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       model.lastRenderPassShaderReplacement(shaders);
     }
 
-    // // user specified pre replacements
-    // const openGLSpec = model.renderable.getViewSpecificProperties().OpenGL;
-    // let shaderReplacements = null;
-    // if (openGLSpec) {
-    //   shaderReplacements = openGLSpec.ShaderReplacements;
-    // }
+    // user specified pre replacements
+    const openGLSpec = model.renderable.getViewSpecificProperties().OpenGL;
+    let shaderReplacements = null;
+    if (openGLSpec) {
+      shaderReplacements = openGLSpec.ShaderReplacements;
+    }
 
-    // if (shaderReplacements) {
-    //   for (let i = 0; i < shaderReplacements.length; i++) {
-    //     const currReplacement = shaderReplacements[i];
-    //     if (currReplacement.replaceFirst) {
-    //       const shaderType = currReplacement.shaderType;
-    //       const ssrc = shaders[shaderType];
-    //       const substituteRes = vtkShaderProgram.substitute(
-    //         ssrc,
-    //         currReplacement.originalValue,
-    //         currReplacement.replacementValue,
-    //         currReplacement.replaceAll
-    //       );
-    //       shaders[shaderType] = substituteRes.result;
-    //     }
-    //   }
-    // }
+    if (shaderReplacements) {
+      for (let i = 0; i < shaderReplacements.length; i++) {
+        const currReplacement = shaderReplacements[i];
+        if (currReplacement.replaceFirst) {
+          const shaderType = currReplacement.shaderType;
+          const ssrc = shaders[shaderType];
+          const substituteRes = vtkShaderProgram.substitute(
+            ssrc,
+            currReplacement.originalValue,
+            currReplacement.replacementValue,
+            currReplacement.replaceAll
+          );
+          shaders[shaderType] = substituteRes.result;
+        }
+      }
+    }
 
     publicAPI.replaceShaderValues(shaders, ren, actor);
 
-    // // user specified post replacements
-    // if (shaderReplacements) {
-    //   for (let i = 0; i < shaderReplacements.length; i++) {
-    //     const currReplacement = shaderReplacements[i];
-    //     if (!currReplacement.replaceFirst) {
-    //       const shaderType = currReplacement.shaderType;
-    //       const ssrc = shaders[shaderType];
-    //       const substituteRes = vtkShaderProgram.substitute(
-    //         ssrc,
-    //         currReplacement.originalValue,
-    //         currReplacement.replacementValue,
-    //         currReplacement.replaceAll
-    //       );
-    //       shaders[shaderType] = substituteRes.result;
-    //     }
-    //   }
-    // }
+    // user specified post replacements
+    if (shaderReplacements) {
+      for (let i = 0; i < shaderReplacements.length; i++) {
+        const currReplacement = shaderReplacements[i];
+        if (!currReplacement.replaceFirst) {
+          const shaderType = currReplacement.shaderType;
+          const ssrc = shaders[shaderType];
+          const substituteRes = vtkShaderProgram.substitute(
+            ssrc,
+            currReplacement.originalValue,
+            currReplacement.replacementValue,
+            currReplacement.replaceAll
+          );
+          shaders[shaderType] = substituteRes.result;
+        }
+      }
+    }
   };
 
   publicAPI.getShaderTemplate = (shaders, ren, actor) => {
-    // const openGLSpecProp = model.renderable.getViewSpecificProperties().OpenGL;
+    const openGLSpecProp = model.renderable.getViewSpecificProperties().OpenGL;
 
-    const vertexShaderCode = vtkGPUImageMapperVS;
-    // if (openGLSpecProp) {
-    //   const vertexSpecProp = openGLSpecProp.VertexShaderCode;
-    //   if (vertexSpecProp !== undefined && vertexSpecProp !== '') {
-    //     vertexShaderCode = vertexSpecProp;
-    //   }
-    // }
+    let vertexShaderCode = vtkGPUImageMapperVS;
+    if (openGLSpecProp) {
+      const vertexSpecProp = openGLSpecProp.VertexShaderCode;
+      if (vertexSpecProp !== undefined && vertexSpecProp !== '') {
+        vertexShaderCode = vertexSpecProp;
+      }
+    }
     shaders.Vertex = vertexShaderCode;
 
-    const fragmentShaderCode = vtkGPUImageMapperFS;
-    // if (openGLSpecProp) {
-    //   const fragmentSpecProp = openGLSpecProp.FragmentShaderCode;
-    //   if (fragmentSpecProp !== undefined && fragmentSpecProp !== '') {
-    //     fragmentShaderCode = fragmentSpecProp;
-    //   }
-    // }
+    let fragmentShaderCode = vtkGPUImageMapperFS;
+    if (openGLSpecProp) {
+      const fragmentSpecProp = openGLSpecProp.FragmentShaderCode;
+      if (fragmentSpecProp !== undefined && fragmentSpecProp !== '') {
+        fragmentShaderCode = fragmentSpecProp;
+      }
+    }
     shaders.Fragment = fragmentShaderCode;
 
-    const geometryShaderCode = '';
-    // if (openGLSpecProp) {
-    //   const geometrySpecProp = openGLSpecProp.GeometryShaderCode;
-    //   if (geometrySpecProp !== undefined) {
-    //     geometryShaderCode = geometrySpecProp;
-    //   }
-    // }
+    let geometryShaderCode = '';
+    if (openGLSpecProp) {
+      const geometrySpecProp = openGLSpecProp.GeometryShaderCode;
+      if (geometrySpecProp !== undefined) {
+        geometryShaderCode = geometrySpecProp;
+      }
+    }
     shaders.Geometry = geometryShaderCode;
   };
 
