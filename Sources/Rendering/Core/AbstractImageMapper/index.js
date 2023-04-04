@@ -1,5 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
-import vtkAbstractMapper from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
+import vtkAbstractMapper3D from 'vtk.js/Sources/Rendering/Core/AbstractMapper3D';
 
 // ----------------------------------------------------------------------------
 // vtkAbstractImageMapper methods
@@ -30,7 +30,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Build VTK API
-  vtkAbstractMapper.extend(publicAPI, model, initialValues);
+  vtkAbstractMapper3D.extend(publicAPI, model, initialValues);
 
   macro.setGet(publicAPI, model, ['slice', 'useCustomExtents']);
   macro.setGetArray(publicAPI, model, ['customDisplayExtent'], 6);
