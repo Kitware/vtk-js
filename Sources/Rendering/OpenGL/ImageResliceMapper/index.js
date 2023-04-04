@@ -15,8 +15,8 @@ import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/Replacem
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
-import vtkGPUImageMapperVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkGPUImageMapperVS.glsl';
-import vtkGPUImageMapperFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkGPUImageMapperFS.glsl';
+import vtkImageResliceMapperVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkImageResliceMapperVS.glsl';
+import vtkImageResliceMapperFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkImageResliceMapperFS.glsl';
 
 import InterpolationType from 'vtk.js/Sources/Rendering/Core/ImageProperty/Constants';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
@@ -708,8 +708,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
   };
 
   publicAPI.getShaderTemplate = (shaders, ren, actor) => {
-    shaders.Vertex = vtkGPUImageMapperVS;
-    shaders.Fragment = vtkGPUImageMapperFS;
+    shaders.Vertex = vtkImageResliceMapperVS;
+    shaders.Fragment = vtkImageResliceMapperFS;
     shaders.Geometry = '';
   };
 
@@ -1000,9 +1000,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderPositionVC = (shaders, ren, actor) => {
-    // replace common shader code
-    // model.lastBoundBO.replaceShaderPositionVC(shaders, ren, actor);
-
     let VSSource = shaders.Vertex;
     const GSSource = shaders.Geometry;
     let FSSource = shaders.Fragment;
