@@ -1,7 +1,9 @@
 import Constants from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 import HalfFloat from 'vtk.js/Sources/Common/Core/HalfFloat';
 import * as macro from 'vtk.js/Sources/macros';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkDataArray, {
+  STATIC as dataArrayHelpers,
+} from 'vtk.js/Sources/Common/Core/DataArray';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
@@ -1188,22 +1190,13 @@ function vtkOpenGLTexture(publicAPI, model) {
     // compute min and max values per component
     const min = [];
     const max = [];
+
     for (let c = 0; c < numComps; ++c) {
-      min[c] = data[c];
-      max[c] = data[c];
+      const range = dataArrayHelpers.fastComputeRange(data, c, numComps);
+      min[c] = range.min;
+      max[c] = range.max;
     }
-    let count = 0;
-    for (let i = 0; i < numPixelsIn; ++i) {
-      for (let c = 0; c < numComps; ++c) {
-        if (data[count] < min[c]) {
-          min[c] = data[count];
-        }
-        if (data[count] > max[c]) {
-          max[c] = data[count];
-        }
-        count++;
-      }
-    }
+
     const offset = [];
     const scale = [];
     for (let c = 0; c < numComps; ++c) {
