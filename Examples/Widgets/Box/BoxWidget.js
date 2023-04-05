@@ -52,10 +52,10 @@ function widgetBehavior(publicAPI, model) {
       model.activeState &&
       model.activeState.getActive()
     ) {
-      model.manipulator.setNormal(model.camera.getDirectionOfProjection());
+      // model.manipulator.setNormal(model.camera.getDirectionOfProjection());
       const worldCoords = model.manipulator.handleEvent(
         callData,
-        model.apiSpecificRenderWindow
+        model._apiSpecificRenderWindow
       );
 
       if (worldCoords.length) {
@@ -85,6 +85,7 @@ function vtkBoxWidget(publicAPI, model) {
   // --- Widget Requirement ---------------------------------------------------
   model.behavior = widgetBehavior;
 
+  model.methodsToLink = ['scaleInPixels'];
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
       case ViewTypes.DEFAULT:

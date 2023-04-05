@@ -188,7 +188,7 @@ function vtkGlyphRepresentation(publicAPI, model) {
   publicAPI.getRepresentationStates = (input = model.inputData[0]) =>
     superClass
       .getRepresentationStates(input)
-      .filter((state) => state.getOrigin?.() && state.isVisible?.());
+      .filter((state) => state.getOrigin?.() && (state.isVisible?.() ?? true));
 
   // --------------------------------------------------------------------------
   publicAPI.getMixins = (states) => {
