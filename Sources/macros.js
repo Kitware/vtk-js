@@ -474,6 +474,7 @@ export function get(publicAPI, model, fieldNames) {
 
 const objectSetterMap = {
   enum(publicAPI, model, field) {
+    const onChanged = `_on${_capitalize(field.name)}Changed`;
     return (value) => {
       if (typeof value === 'string') {
         if (field.enum[value] !== undefined) {
@@ -494,7 +495,9 @@ const objectSetterMap = {
               .map((key) => field.enum[key])
               .indexOf(value) !== -1
           ) {
+            const previousValue = model[field.name];
             model[field.name] = value;
+            model[onChanged]?.(publicAPI, model, value, previousValue);
             publicAPI.modified();
             return true;
           }
@@ -510,9 +513,12 @@ const objectSetterMap = {
     };
   },
   object(publicAPI, model, field) {
+    const onChanged = `_on${_capitalize(field.name)}Changed`;
     return (value) => {
       if (!DeepEqual(model[field.name], value)) {
+        const previousValue = model[field.name];
         model[field.name] = value;
+        model[onChanged]?.(publicAPI, model, value, previousValue);
         publicAPI.modified();
         return true;
       }
@@ -532,6 +538,7 @@ function findSetter(field) {
     throw new TypeError('No setter for field');
   }
   return function getSetter(publicAPI, model) {
+    const onChanged = `_on${_capitalize(field)}Changed`;
     return function setter(value) {
       if (model.deleted) {
         vtkErrorMacro('instance deleted - cannot call any method');
@@ -539,7 +546,9 @@ function findSetter(field) {
       }
 
       if (model[field] !== value) {
+        const previousValue = model[field.name];
         model[field] = value;
+        model[onChanged]?.(publicAPI, model, value, previousValue);
         publicAPI.modified();
         return true;
       }
@@ -605,6 +614,7 @@ export function setArray(
         `Invalid initial number of values for array (${field})`
       );
     }
+    const onChanged = `_on${_capitalize(field)}Changed`;
 
     publicAPI[`set${_capitalize(field)}`] = (...args) => {
       if (model.deleted) {
@@ -647,7 +657,9 @@ export function setArray(
       }
 
       if (changeDetected) {
+        const previousValue = model[field.name];
         model[field] = array;
+        model[onChanged]?.(publicAPI, model, array, previousValue);
         publicAPI.modified();
       }
       return changeDetected;

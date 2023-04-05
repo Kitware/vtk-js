@@ -14,6 +14,21 @@ const { vtkErrorMacro, vtkWarningMacro } = macro;
 // ----------------------------------------------------------------------------
 const STYLE_CATEGORIES = ['active', 'inactive', 'static'];
 
+function applyCoincidentTopologyParametersToMapper(mapper, parameters) {
+  if (mapper && mapper.setResolveCoincidentTopologyToPolygonOffset) {
+    mapper.setResolveCoincidentTopologyToPolygonOffset();
+    CATEGORIES.forEach((category) => {
+      if (parameters[category]) {
+        const methodName = `setRelativeCoincidentTopology${category}OffsetParameters`;
+        if (mapper[methodName]) {
+          const { factor, offset } = parameters[category];
+          mapper[methodName](factor, offset);
+        }
+      }
+    });
+  }
+}
+
 export function mergeStyles(elementNames, ...stylesToMerge) {
   const newStyleObject = { active: {}, inactive: {}, static: {} };
   STYLE_CATEGORIES.forEach((category) => {
@@ -144,9 +159,18 @@ export function allocateArray(
 function vtkWidgetRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWidgetRepresentation');
-  const superclass = { ...publicAPI };
+
   // Internal cache
   const cache = { mtimes: {}, states: [] };
+
+  model._onCoincidentTopologyParametersChanged = () => {
+    publicAPI.getActors().forEach((actor) => {
+      applyCoincidentTopologyParametersToMapper(
+        actor.getMapper(),
+        model.coincidentTopologyParameters
+      );
+    });
+  };
 
   // --------------------------------------------------------------------------
   publicAPI.getActors = () => model.actors;
@@ -229,21 +253,6 @@ function vtkWidgetRepresentation(publicAPI, model) {
     }
   };
 
-  function applyCoincidentTopologyParametersToMapper(mapper, parameters) {
-    if (mapper && mapper.setResolveCoincidentTopologyToPolygonOffset) {
-      mapper.setResolveCoincidentTopologyToPolygonOffset();
-      CATEGORIES.forEach((category) => {
-        if (parameters[category]) {
-          const methodName = `setRelativeCoincidentTopology${category}OffsetParameters`;
-          if (mapper[methodName]) {
-            const { factor, offset } = parameters[category];
-            mapper[methodName](factor, offset);
-          }
-        }
-      });
-    }
-  }
-
   // Add warning to model.actors.push
   model.actors.push = (...args) => {
     vtkWarningMacro(
@@ -258,18 +267,6 @@ function vtkWidgetRepresentation(publicAPI, model) {
       model.coincidentTopologyParameters
     );
     Array.prototype.push.apply(model.actors, [actor]);
-  };
-
-  publicAPI.setCoincidentTopologyParameters = (parameters) => {
-    const modified = superclass.setCoincidentTopologyParameters(parameters);
-    if (modified) {
-      publicAPI.getActors().forEach((actor) => {
-        applyCoincidentTopologyParametersToMapper(
-          actor.getMapper(),
-          model.coincidentTopologyParameters
-        );
-      });
-    }
   };
 
   // Make sure setting the labels at build time works with string/array...

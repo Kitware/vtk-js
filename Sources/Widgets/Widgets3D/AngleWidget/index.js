@@ -17,8 +17,6 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 function vtkAngleWidget(publicAPI, model) {
   model.classHierarchy.push('vtkAngleWidget');
 
-  const superClass = { ...publicAPI };
-
   // --- Widget Requirement ---------------------------------------------------
 
   model.methodsToLink = [
@@ -29,6 +27,13 @@ function vtkAngleWidget(publicAPI, model) {
     'defaultScale',
     'scaleInPixels',
   ];
+
+  model._onManipulatorChanged = () => {
+    model.widgetState.getMoveHandle().setManipulator(model.manipulator);
+    model.widgetState.getHandleList().forEach((handle) => {
+      handle.setManipulator(model.manipulator);
+    });
+  };
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
@@ -70,14 +75,6 @@ function vtkAngleWidget(publicAPI, model) {
     vtkMath.subtract(handles[0].getOrigin(), handles[1].getOrigin(), vec1);
     vtkMath.subtract(handles[2].getOrigin(), handles[1].getOrigin(), vec2);
     return vtkMath.angleBetweenVectors(vec1, vec2);
-  };
-
-  publicAPI.setManipulator = (manipulator) => {
-    superClass.setManipulator(manipulator);
-    model.widgetState.getMoveHandle().setManipulator(manipulator);
-    model.widgetState.getHandleList().forEach((handle) => {
-      handle.setManipulator(manipulator);
-    });
   };
 
   // --------------------------------------------------------------------------

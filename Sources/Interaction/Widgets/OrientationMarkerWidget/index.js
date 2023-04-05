@@ -35,6 +35,8 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
     }
   }
 
+  model._onParentRendererChanged = () => publicAPI.updateViewport();
+
   publicAPI.computeViewport = () => {
     const parentRen =
       model.parentRenderer || model._interactor.getCurrentRenderer();
@@ -232,14 +234,6 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
     publicAPI.setEnabled(false);
     model.actor = actor;
     publicAPI.setEnabled(previousState);
-  };
-
-  publicAPI.setParentRenderer = (ren) => {
-    const changed = superClass.setParentRenderer(ren);
-    if (changed) {
-      publicAPI.updateViewport();
-    }
-    return changed;
   };
 
   publicAPI.getRenderer = () => selfRenderer;
