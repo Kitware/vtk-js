@@ -17,26 +17,18 @@ function vtkImageResliceMapper(publicAPI, model) {
   model.classHierarchy.push('vtkImageResliceMapper');
 
   publicAPI.getBounds = () => {
-    let bds = [0, 1, 0, 1, 0, 1];
+    let bds = [...vtkBoundingBox.INIT_BOUNDS];
     const image = publicAPI.getInputData();
     if (publicAPI.getSlicePolyData()) {
       bds = publicAPI.getSlicePolyData().getBounds();
     } else if (image) {
       bds = image.getBounds();
-      const tmpBD = bds.map((a) => ({ ...a }));
       if (publicAPI.getSlicePlane()) {
         vtkBoundingBox.cutWithPlane(
           bds,
           publicAPI.getSlicePlane().getOrigin(),
           publicAPI.getSlicePlane().getNormal()
         );
-        for (let i = 0; i < 3; ++i) {
-          if (bds[2 * i] - tmpBD[2 * i]) {
-            bds[2 * i + 1] = bds[2 * i];
-          } else if (tmpBD[2 * i + 1] - bds[2 * i + 1]) {
-            bds[2 * i] = bds[2 * i + 1];
-          }
-        }
       }
     }
     return bds;

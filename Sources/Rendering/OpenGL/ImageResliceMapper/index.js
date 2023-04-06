@@ -205,7 +205,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       return;
     }
 
-    const scalars = image.getPointData() && image.getPointData().getScalars();
+    const scalars = image.getPointData()?.getScalars();
     if (!scalars) {
       return;
     }
@@ -1236,45 +1236,15 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         } else {
           const ptsArray = new Float32Array(12);
           const o = model.renderable.getSlicePlane().getOrigin();
-          if (orthoAxis === 0) {
-            ptsArray[0] = o[0];
-            ptsArray[1] = bounds[2];
-            ptsArray[2] = bounds[4];
-            ptsArray[3] = o[0];
-            ptsArray[4] = bounds[3];
-            ptsArray[5] = bounds[4];
-            ptsArray[6] = o[0];
-            ptsArray[7] = bounds[2];
-            ptsArray[8] = bounds[5];
-            ptsArray[9] = o[0];
-            ptsArray[10] = bounds[3];
-            ptsArray[11] = bounds[5];
-          } else if (orthoAxis === 1) {
-            ptsArray[0] = bounds[0];
-            ptsArray[1] = o[1];
-            ptsArray[2] = bounds[4];
-            ptsArray[3] = bounds[1];
-            ptsArray[4] = o[1];
-            ptsArray[5] = bounds[4];
-            ptsArray[6] = bounds[0];
-            ptsArray[7] = o[1];
-            ptsArray[8] = bounds[5];
-            ptsArray[9] = bounds[1];
-            ptsArray[10] = o[1];
-            ptsArray[11] = bounds[5];
-          } else {
-            ptsArray[0] = bounds[0];
-            ptsArray[1] = bounds[2];
-            ptsArray[2] = o[2];
-            ptsArray[3] = bounds[1];
-            ptsArray[4] = bounds[2];
-            ptsArray[5] = o[2];
-            ptsArray[6] = bounds[0];
-            ptsArray[7] = bounds[3];
-            ptsArray[8] = o[2];
-            ptsArray[9] = bounds[1];
-            ptsArray[10] = bounds[3];
-            ptsArray[11] = o[2];
+          const otherAxes = [(orthoAxis + 1) % 3, (orthoAxis + 2) % 3].sort();
+          let ptIdx = 0;
+          for (let i = 0; i < 2; ++i) {
+            for (let j = 0; j < 2; ++j) {
+              ptsArray[ptIdx + orthoAxis] = o[orthoAxis];
+              ptsArray[ptIdx + otherAxes[0]] = bounds[2 * otherAxes[0] + j];
+              ptsArray[ptIdx + otherAxes[1]] = bounds[2 * otherAxes[1] + i];
+              ptIdx += 3;
+            }
           }
 
           const cellArray = new Uint16Array(8);
