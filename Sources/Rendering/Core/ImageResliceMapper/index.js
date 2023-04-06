@@ -22,9 +22,7 @@ function vtkImageResliceMapper(publicAPI, model) {
     if (publicAPI.getSlicePolyData()) {
       bds = publicAPI.getSlicePolyData().getBounds();
     } else if (image) {
-      // get bounds without the 0.5 voxel offset for each bound
-      // applied when using image.getBounds()
-      bds = image.extentToBounds(image.getExtent());
+      bds = image.getBounds();
       const tmpBD = bds;
       if (publicAPI.getSlicePlane()) {
         vtkBoundingBox.cutWithPlane(

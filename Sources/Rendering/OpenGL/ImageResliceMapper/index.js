@@ -514,21 +514,16 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       // Set the world->texture matrix
       if (program.isUniformUsed('WCTCMatrix')) {
         const image = model.currentInput;
-        const directionMat = image.getDirection();
-        // get bounds without the 0.5 voxel offset for each bound
-        // applied when using image.getBounds()
-        const bounds = image.extentToBounds(image.getExtent());
         mat4.identity(model.tmpMat4);
-        for (let i = 0; i < 3; ++i) {
-          model.tmpMat4[i * 4] = directionMat[i * 3] * (bounds[1] - bounds[0]);
-          model.tmpMat4[i * 4 + 1] =
-            directionMat[i * 3 + 1] * (bounds[3] - bounds[2]);
-          model.tmpMat4[i * 4 + 2] =
-            directionMat[i * 3 + 2] * (bounds[5] - bounds[4]);
-        }
-        model.tmpMat4[3] = bounds[0];
-        model.tmpMat4[7] = bounds[2];
-        model.tmpMat4[11] = bounds[4];
+        const bounds = image.getBounds();
+        const sc = [
+          bounds[1] - bounds[0],
+          bounds[3] - bounds[2],
+          bounds[5] - bounds[4],
+        ];
+        const o = [bounds[0], bounds[2], bounds[4]];
+        const q = [0, 0, 0, 1];
+        mat4.fromRotationTranslationScale(model.tmpMat4, q, o, sc);
         mat4.invert(model.tmpMat4, model.tmpMat4);
         if (inverseShiftScaleMatrix) {
           mat4.multiply(model.tmpMat4, model.tmpMat4, inverseShiftScaleMatrix);
@@ -959,7 +954,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     if (slabThickness > 0.0) {
       tcoordFSImpl = tcoordFSImpl.concat([
         '// Get the first and last samples',
-        ' // vec3 spSlab = vec3(slabThickness * 0.5);',
         'int numSlices = 1;',
         'vec3 normalxspacing = normalWCVSOutput * spacing * 0.5;',
         '//normalxspacing = normalxspacing * 0.5;',
@@ -1154,7 +1148,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
   publicAPI.updateResliceGeometry = () => {
     let resGeomString = '';
     const image = model.currentInput;
-    const imageBounds = image?.extentToBounds(image?.getExtent());
+    const imageBounds = image?.getBounds();
     // Orthogonal slicing by default
     let orthoSlicing = true;
     let orthoAxis = 2;
