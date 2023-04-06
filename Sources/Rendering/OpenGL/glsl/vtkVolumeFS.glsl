@@ -765,9 +765,9 @@ mat3 zBaseRotationalMatrix(vec3 startDir){
   return matrix;
 }
 
-float computeLAO(vec3 posIS, float opacity, vec3 lightDir, vec4 normal){
+float computeLAO(vec3 posIS, float op, vec3 lightDir, vec4 normal){
   // apply LAO only at selected locations, otherwise return full brightness
-  if (normal.w > 0.0 && opacity > 0.05){
+  if (normal.w > 0.0 && op > 0.05){
     float total_transmittance = 0.0;
     mat3 inverseRotateBasis = inverse(zBaseRotationalMatrix(normalize(-normal.xyz)));
     vec3 currPos, randomDirStep;
