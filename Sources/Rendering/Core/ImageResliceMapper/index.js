@@ -23,7 +23,7 @@ function vtkImageResliceMapper(publicAPI, model) {
       bds = publicAPI.getSlicePolyData().getBounds();
     } else if (image) {
       bds = image.getBounds();
-      const tmpBD = bds;
+      const tmpBD = bds.map((a) => ({ ...a }));
       if (publicAPI.getSlicePlane()) {
         vtkBoundingBox.cutWithPlane(
           bds,
