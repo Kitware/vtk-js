@@ -126,7 +126,7 @@
     "webpack-merge": "5.8.0",
     "webpack-notifier": "1.15.0",
     "wslink": "1.6.4",
-    "xml2js": "0.4.23"
+    "xml2js": "0.5.0"
   },
   "peerDependencies": {
     "@babel/preset-env": "^7.17.10",
