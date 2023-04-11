@@ -118,7 +118,7 @@
     "style-loader": "3.3.1",
     "tape": "5.5.3",
     "tape-catch": "1.0.6",
-    "webpack": "5.72.1",
+    "webpack": "5.76.0",
     "webpack-bundle-analyzer": "4.5.0",
     "webpack-cli": "4.9.2",
     "webpack-dashboard": "3.3.7",
@@ -126,7 +126,7 @@
     "webpack-merge": "5.8.0",
     "webpack-notifier": "1.15.0",
     "wslink": "1.6.4",
-    "xml2js": "0.4.23"
+    "xml2js": "0.5.0"
   },
   "peerDependencies": {
     "@babel/preset-env": "^7.17.10",
