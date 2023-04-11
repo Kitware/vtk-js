@@ -223,13 +223,11 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         );
         model.openGLTexture.releaseGraphicsResources(model._openGLRenderWindow);
         model.openGLTexture.resetFormatAndType();
-        model.openGLTexture.create3DFilterableFromRaw(
+        model.openGLTexture.create3DFilterableFromDataArray(
           dims[0],
           dims[1],
           dims[2],
-          numComp,
-          scalars.getDataType(),
-          scalars.getData()
+          scalars
         );
         model.openGLTextureString = toString;
       }
