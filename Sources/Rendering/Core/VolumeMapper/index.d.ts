@@ -4,16 +4,23 @@ import vtkAbstractMapper, { IAbstractMapperInitialValues } from "../AbstractMapp
 import { BlendMode, FilterMode } from "./Constants";
 
 /**
- * 
+ *
  */
 export interface IVolumeMapperInitialValues extends IAbstractMapperInitialValues {
-	bounds?: Bounds;
-	blendMode?: BlendMode;
-	sampleDistance?: number;
-	imageSampleDistance?: number;
-	maximumSamplesPerRay?: number;
+	anisotropy?: number;
 	autoAdjustSampleDistances?: boolean;
 	averageIPScalarRange?: Range;
+	blendMode?: BlendMode;
+	bounds?: Bounds;
+	computeNormalFromOpacity?: boolean;
+	getVolumeShadowSamplingDistFactor?: number;
+	globalIlluminationReach?: number;
+	imageSampleDistance?: number;
+	localAmbientOcclusion?: boolean;
+	maximumSamplesPerRay?: number;
+	sampleDistance?: number;
+	LAOKernelRadius?: number;
+	LAOKernelSize?: number;
 }
 
 export interface vtkVolumeMapper extends vtkAbstractMapper {
@@ -25,12 +32,12 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	getBounds(): Bounds;
 
 	/**
-	 * 
+	 *
 	 */
 	getBlendMode(): BlendMode;
 
 	/**
-	 * 
+	 *
 	 */
 	getBlendModeAsString(): string;
 
@@ -42,32 +49,32 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	getSampleDistance(): number;
 
 	/**
-	 * Sampling distance in the XY image dimensions. 
-	 * Default value of 1 meaning 1 ray cast per pixel. If set to 0.5, 4 rays will be cast per pixel. 
+	 * Sampling distance in the XY image dimensions.
+	 * Default value of 1 meaning 1 ray cast per pixel. If set to 0.5, 4 rays will be cast per pixel.
 	 * If set to 2.0, 1 ray will be cast for every 4 (2 by 2) pixels. T
 	 * @default 1.0
 	 */
 	getImageSampleDistance(): number;
 
 	/**
-	 * 
+	 *
 	 * @default 1000
 	 */
 	getMaximumSamplesPerRay(): number;
 
 	/**
-	 * 
+	 *
 	 * @default true
 	 */
 	getAutoAdjustSampleDistances(): boolean;
 
 	/**
-	 * 
+	 *
 	 */
 	getAverageIPScalarRange(): Range;
 
 	/**
-	 * 
+	 *
 	 */
 	getAverageIPScalarRangeByReference(): Range;
 
@@ -114,21 +121,21 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	getLAOKernelRadius(): number;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
+	 *
+	 * @param x
+	 * @param y
 	 */
 	setAverageIPScalarRange(x: number, y: number): boolean;
 
 	/**
-	 * 
-	 * @param {Range} averageIPScalarRange 
+	 *
+	 * @param {Range} averageIPScalarRange
 	 */
 	setAverageIPScalarRangeFrom(averageIPScalarRange: Range): boolean;
 
 	/**
 	 * Set blend mode to COMPOSITE_BLEND
-	 * @param {BlendMode} blendMode 
+	 * @param {BlendMode} blendMode
 	 */
 	setBlendMode(blendMode: BlendMode): void;
 
@@ -159,27 +166,38 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 
 	/**
 	 * Get the distance between samples used for rendering
-	 * @param sampleDistance 
+	 * @param sampleDistance
 	 */
 	setSampleDistance(sampleDistance: number): boolean;
 
 	/**
-	 * 
-	 * @param imageSampleDistance 
+	 *
+	 * @param imageSampleDistance
 	 */
 	setImageSampleDistance(imageSampleDistance: number): boolean;
 
 	/**
-	 * 
-	 * @param maximumSamplesPerRay 
+	 *
+	 * @param maximumSamplesPerRay
 	 */
 	setMaximumSamplesPerRay(maximumSamplesPerRay: number): boolean;
 
 	/**
-	 * 
-	 * @param autoAdjustSampleDistances 
+	 *
+	 * @param autoAdjustSampleDistances
 	 */
 	setAutoAdjustSampleDistances(autoAdjustSampleDistances: boolean): boolean;
+
+	/**
+	 * Set the normal computation to be dependent on the transfer function.
+	 * By default, the mapper relies on the scalar gradient for computing normals at sample locations
+	 * for lighting calculations. This is an approximation and can lead to inaccurate results.
+	 * When enabled, this property makes the mapper compute normals based on the accumulated opacity
+	 * at sample locations. This can generate a more accurate representation of edge structures in the
+	 * data but adds an overhead and drops frame rate.
+	 * @param computeNormalFromOpacity
+	 */
+	setComputeNormalFromOpacity(computeNormalFromOpacity: boolean): boolean;
 
 	/**
 	 * Set the blending coefficient that determines the interpolation between surface and volume rendering.
@@ -234,7 +252,7 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	setLAOKernelRadius(LAOKernelRadius: number): void;
 
 	/**
-	 * 
+	 *
 	 */
 	update(): void;
 }
@@ -279,11 +297,11 @@ export function createRadonTransferFunction(
 export function extend(publicAPI: object, model: object, initialValues?: IVolumeMapperInitialValues): void;
 
 /**
- * Method use to create a new instance of vtkVolumeMapper 
+ * Method use to create a new instance of vtkVolumeMapper
  */
 export function newInstance(initialValues?: IVolumeMapperInitialValues): vtkVolumeMapper;
 
-/** 
+/**
  * vtkVolumeMapper inherits from vtkMapper.
  * A volume mapper that performs ray casting on the GPU using fragment programs.
  */
