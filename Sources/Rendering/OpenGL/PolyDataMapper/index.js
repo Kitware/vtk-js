@@ -100,92 +100,10 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     publicAPI.renderPiece(ren, actor);
   };
 
-  publicAPI.buildShaders = (shaders, ren, actor) => {
-    publicAPI.getShaderTemplate(shaders, ren, actor);
-
-    model.lastRenderPassShaderReplacement = model.currentRenderPass
-      ? model.currentRenderPass.getShaderReplacement()
-      : null;
-
-    // apply any renderPassReplacements
-    if (model.lastRenderPassShaderReplacement) {
-      model.lastRenderPassShaderReplacement(shaders);
-    }
-
-    // user specified pre replacements
-    const openGLSpec = model.renderable.getViewSpecificProperties().OpenGL;
-    let shaderReplacements = null;
-    if (openGLSpec) {
-      shaderReplacements = openGLSpec.ShaderReplacements;
-    }
-
-    if (shaderReplacements) {
-      for (let i = 0; i < shaderReplacements.length; i++) {
-        const currReplacement = shaderReplacements[i];
-        if (currReplacement.replaceFirst) {
-          const shaderType = currReplacement.shaderType;
-          const ssrc = shaders[shaderType];
-          const substituteRes = vtkShaderProgram.substitute(
-            ssrc,
-            currReplacement.originalValue,
-            currReplacement.replacementValue,
-            currReplacement.replaceAll
-          );
-          shaders[shaderType] = substituteRes.result;
-        }
-      }
-    }
-
-    publicAPI.replaceShaderValues(shaders, ren, actor);
-
-    // user specified post replacements
-    if (shaderReplacements) {
-      for (let i = 0; i < shaderReplacements.length; i++) {
-        const currReplacement = shaderReplacements[i];
-        if (!currReplacement.replaceFirst) {
-          const shaderType = currReplacement.shaderType;
-          const ssrc = shaders[shaderType];
-          const substituteRes = vtkShaderProgram.substitute(
-            ssrc,
-            currReplacement.originalValue,
-            currReplacement.replacementValue,
-            currReplacement.replaceAll
-          );
-          shaders[shaderType] = substituteRes.result;
-        }
-      }
-    }
-  };
-
   publicAPI.getShaderTemplate = (shaders, ren, actor) => {
-    const openGLSpecProp = model.renderable.getViewSpecificProperties().OpenGL;
-
-    let vertexShaderCode = vtkPolyDataVS;
-    if (openGLSpecProp) {
-      const vertexSpecProp = openGLSpecProp.VertexShaderCode;
-      if (vertexSpecProp !== undefined && vertexSpecProp !== '') {
-        vertexShaderCode = vertexSpecProp;
-      }
-    }
-    shaders.Vertex = vertexShaderCode;
-
-    let fragmentShaderCode = vtkPolyDataFS;
-    if (openGLSpecProp) {
-      const fragmentSpecProp = openGLSpecProp.FragmentShaderCode;
-      if (fragmentSpecProp !== undefined && fragmentSpecProp !== '') {
-        fragmentShaderCode = fragmentSpecProp;
-      }
-    }
-    shaders.Fragment = fragmentShaderCode;
-
-    let geometryShaderCode = '';
-    if (openGLSpecProp) {
-      const geometrySpecProp = openGLSpecProp.GeometryShaderCode;
-      if (geometrySpecProp !== undefined) {
-        geometryShaderCode = geometrySpecProp;
-      }
-    }
-    shaders.Geometry = geometryShaderCode;
+    shaders.Vertex = vtkPolyDataVS;
+    shaders.Fragment = vtkPolyDataFS;
+    shaders.Geometry = '';
   };
 
   publicAPI.replaceShaderColor = (shaders, ren, actor) => {
@@ -2062,6 +1980,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
   vtkReplacementShaderMapper.implementReplaceShaderCoincidentOffset(
+    publicAPI,
+    model,
+    initialValues
+  );
+  vtkReplacementShaderMapper.implementBuildShadersWithReplacements(
     publicAPI,
     model,
     initialValues

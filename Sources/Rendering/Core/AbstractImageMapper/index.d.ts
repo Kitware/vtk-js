@@ -1,15 +1,15 @@
-import vtkAbstractMapper, { IAbstractMapperInitialValues } from "../AbstractMapper";
+import vtkAbstractMapper3D, { IAbstractMapper3DInitialValues } from "../AbstractMapper3D";
 import vtkImageData from "../../../Common/DataModel/ImageData";
 import { Nullable } from "../../../types";
 
 
-export interface IAbstractImageMapperInitialValues extends IAbstractMapperInitialValues {
+export interface IAbstractImageMapperInitialValues extends IAbstractMapper3DInitialValues {
 	customDisplayExtent?: number[];
 	useCustomExtents?: boolean;
 	slice?: number;
 }
 
-export interface vtkAbstractImageMapper extends vtkAbstractMapper {
+export interface vtkAbstractImageMapper extends vtkAbstractMapper3D {
 
 	/**
 	 *

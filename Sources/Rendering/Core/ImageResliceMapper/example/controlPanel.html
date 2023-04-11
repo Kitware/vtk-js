@@ -1,0 +1,19 @@
+<form>
+  <button class='enableSlab' type="button">Enable slab mode</button>
+  <fieldset class='slab' disabled>
+    <legend>Slab Mode</legend>
+    <fieldset class='slabTypes'>
+      <legend>Slab Type</legend>
+      <label for="min">Min</label>
+      <input type="radio" class="slabType" name="radio" value="min">&emsp;&emsp;
+      <label for="max">Max</label>
+      <input type="radio" class="slabType" name="radio" value="max"><br></br>
+      <label for="mean">Mean</label>
+      <input type="radio" class="slabType" name="radio" value="mean" checked>&emsp;&ensp;
+      <label for="sum">Sum</label>
+      <input type="radio" class="slabType" name="radio" value="sum"><br></br>
+    </fieldset>
+    <label for='slabThickness'>Slab Thickness</label>
+    <input class='slabThickness' id='slabThickness' type="range" min="1" max="40" step="1" value="10" /><br></br>
+  </fieldset>
+</form>
