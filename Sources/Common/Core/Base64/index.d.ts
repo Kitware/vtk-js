@@ -17,8 +17,8 @@ export function toArrayBuffer(b64Str: string): ArrayBuffer;
 export function fromArrayBuffer(ab: ArrayBuffer): string;
 
 interface Base64 {
-  toArrayBuffer,
-  fromArrayBuffer,
+  toArrayBuffer: typeof toArrayBuffer,
+  fromArrayBuffer: typeof fromArrayBuffer,
 }
 
 export default Base64;

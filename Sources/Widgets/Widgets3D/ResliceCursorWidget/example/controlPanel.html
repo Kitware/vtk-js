@@ -1,8 +1,14 @@
 <table>
   <tr>
-    <td>Keep orthogonality:</td>
+    <td>Allow translation:</td>
     <td>
-      <input type="checkbox" id="checkboxOrthogality" checked>
+      <input type="checkbox" id="checkboxTranslation" checked>
+    </td>
+  </tr>
+  <tr>
+    <td>Show rotation:</td>
+    <td>
+      <input type="checkbox" id="checkboxShowRotation" checked>
     </td>
   </tr>
   <tr>
@@ -12,9 +18,9 @@
     </td>
   </tr>
   <tr>
-    <td>Allow translation:</td>
+    <td>Keep orthogonality:</td>
     <td>
-      <input type="checkbox" id="checkboxTranslation" checked>
+      <input type="checkbox" id="checkboxOrthogonality" checked>
     </td>
   </tr>
   <tr>
@@ -22,6 +28,11 @@
     <td>
       <input type="checkbox" id="checkboxScaleInPixels" checked>
     </td>
+  </tr>
+  <tr>
+    <td>Opacity :</td>
+    <td><input id='opacity' type="range" min="0" max="255" step="1" value="255" style="width: 100px;"/></td>
+    <td id='opacityValue'>255</td>
   </tr>
   <tr>
     <td>Slab Mode :</td>
@@ -46,6 +57,12 @@
         <option id="nearest" selected="selected">Nearest</option>
         <option id="linear">Linear</option>
       </select>
+    </td>
+  </tr>
+  <tr>
+    <td>Window Level:</td>
+    <td>
+      <input type="checkbox" id="checkboxWindowLevel" checked>
     </td>
   </tr>
   <tr>

@@ -118,6 +118,7 @@ function createInstanceMap() {
 
   function registerInstance(id, instance) {
     instances[id] = instance;
+    instance.set({ remoteId: id }, true, true);
   }
 
   function unregisterInstance(id) {
@@ -216,6 +217,19 @@ function getSynchronizerContext(name = 'default') {
 
 function setSynchronizerContext(name, ctx) {
   SYNCHRONIZER_CONTEXTS[name] = ctx;
+}
+
+function clearSynchronizerContext(name) {
+  if (name && SYNCHRONIZER_CONTEXTS[name]) {
+    delete SYNCHRONIZER_CONTEXTS[name];
+  }
+
+  if (!name) {
+    const keys = Object.keys(SYNCHRONIZER_CONTEXTS);
+    for (let i = 0; i < keys.length; i++) {
+      delete SYNCHRONIZER_CONTEXTS[keys[i]];
+    }
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -359,6 +373,7 @@ export default {
   extend,
   getSynchronizerContext,
   setSynchronizerContext,
+  clearSynchronizerContext,
   decorate,
   createInstanceMap,
   createArrayHandler,

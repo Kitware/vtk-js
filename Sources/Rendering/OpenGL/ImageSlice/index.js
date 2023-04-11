@@ -34,9 +34,25 @@ function vtkOpenGLImageSlice(publicAPI, model) {
     }
   };
 
-  publicAPI.traverseOpaqueZBufferPass = (renderPass) => {
-    publicAPI.traverseOpaquePass(renderPass);
+  publicAPI.traverseZBufferPass = (renderPass) => {
+    if (
+      !model.renderable ||
+      !model.renderable.getNestedVisibility() ||
+      (model._openGLRenderer.getSelector() &&
+        !model.renderable.getNestedPickable())
+    ) {
+      return;
+    }
+
+    publicAPI.apply(renderPass, true);
+    model.children.forEach((child) => {
+      child.traverse(renderPass);
+    });
+    publicAPI.apply(renderPass, false);
   };
+
+  publicAPI.traverseOpaqueZBufferPass = (renderPass) =>
+    publicAPI.traverseOpaquePass(renderPass);
 
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverseOpaquePass = (renderPass) => {
@@ -88,6 +104,9 @@ function vtkOpenGLImageSlice(publicAPI, model) {
       }
     }
   };
+
+  publicAPI.zBufferPass = (prepass, renderPass) =>
+    publicAPI.opaquePass(prepass, renderPass);
 
   publicAPI.opaqueZBufferPass = (prepass, renderPass) =>
     publicAPI.opaquePass(prepass, renderPass);

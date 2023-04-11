@@ -1,6 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
@@ -14,6 +13,21 @@ const { vtkErrorMacro, vtkWarningMacro } = macro;
 
 // ----------------------------------------------------------------------------
 const STYLE_CATEGORIES = ['active', 'inactive', 'static'];
+
+function applyCoincidentTopologyParametersToMapper(mapper, parameters) {
+  if (mapper && mapper.setResolveCoincidentTopologyToPolygonOffset) {
+    mapper.setResolveCoincidentTopologyToPolygonOffset();
+    CATEGORIES.forEach((category) => {
+      if (parameters[category]) {
+        const methodName = `setRelativeCoincidentTopology${category}OffsetParameters`;
+        if (mapper[methodName]) {
+          const { factor, offset } = parameters[category];
+          mapper[methodName](factor, offset);
+        }
+      }
+    });
+  }
+}
 
 export function mergeStyles(elementNames, ...stylesToMerge) {
   const newStyleObject = { active: {}, inactive: {}, static: {} };
@@ -86,27 +100,6 @@ export function connectPipeline(pipeline) {
   pipeline.actor.setMapper(pipeline.mapper);
 }
 
-export function getPixelWorldHeightAtCoord(worldCoord, displayScaleParams) {
-  const {
-    dispHeightFactor,
-    cameraPosition,
-    cameraDir,
-    isParallel,
-    rendererPixelDims,
-  } = displayScaleParams;
-  let scale = 1;
-  if (isParallel) {
-    scale = dispHeightFactor;
-  } else {
-    const worldCoordToCamera = [...worldCoord];
-    vtkMath.subtract(worldCoordToCamera, cameraPosition, worldCoordToCamera);
-    scale = vtkMath.dot(worldCoordToCamera, cameraDir) * dispHeightFactor;
-  }
-
-  const rHeight = rendererPixelDims[1];
-  return scale / rHeight;
-}
-
 // Internal convenient function to create a data array:
 export function allocateArray(
   polyData,
@@ -166,9 +159,18 @@ export function allocateArray(
 function vtkWidgetRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWidgetRepresentation');
-  const superclass = { ...publicAPI };
+
   // Internal cache
   const cache = { mtimes: {}, states: [] };
+
+  model._onCoincidentTopologyParametersChanged = () => {
+    publicAPI.getActors().forEach((actor) => {
+      applyCoincidentTopologyParametersToMapper(
+        actor.getMapper(),
+        model.coincidentTopologyParameters
+      );
+    });
+  };
 
   // --------------------------------------------------------------------------
   publicAPI.getActors = () => model.actors;
@@ -251,21 +253,6 @@ function vtkWidgetRepresentation(publicAPI, model) {
     }
   };
 
-  function applyCoincidentTopologyParametersToMapper(mapper, parameters) {
-    if (mapper && mapper.setResolveCoincidentTopologyToPolygonOffset) {
-      mapper.setResolveCoincidentTopologyToPolygonOffset();
-      CATEGORIES.forEach((category) => {
-        if (parameters[category]) {
-          const methodName = `setRelativeCoincidentTopology${category}OffsetParameters`;
-          if (mapper[methodName]) {
-            const { factor, offset } = parameters[category];
-            mapper[methodName](factor, offset);
-          }
-        }
-      });
-    }
-  }
-
   // Add warning to model.actors.push
   model.actors.push = (...args) => {
     vtkWarningMacro(
@@ -280,18 +267,6 @@ function vtkWidgetRepresentation(publicAPI, model) {
       model.coincidentTopologyParameters
     );
     Array.prototype.push.apply(model.actors, [actor]);
-  };
-
-  publicAPI.setCoincidentTopologyParameters = (parameters) => {
-    const modified = superclass.setCoincidentTopologyParameters(parameters);
-    if (modified) {
-      publicAPI.getActors().forEach((actor) => {
-        applyCoincidentTopologyParametersToMapper(
-          actor.getMapper(),
-          model.coincidentTopologyParameters
-        );
-      });
-    }
   };
 
   // Make sure setting the labels at build time works with string/array...
@@ -343,7 +318,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   vtkProp.extend(publicAPI, model, defaultValues(initialValues));
   macro.algo(publicAPI, model, 1, 1);
-  macro.get(publicAPI, model, ['labels']);
+  macro.get(publicAPI, model, [
+    'labels',
+    'displayScaleParams',
+    'coincidentTopologyParameters',
+  ]);
   macro.set(publicAPI, model, [
     { type: 'object', name: 'displayScaleParams' },
     { type: 'object', name: 'coincidentTopologyParameters' },
@@ -366,5 +345,4 @@ export default {
   mergeStyles,
   applyStyles,
   connectPipeline,
-  getPixelWorldHeightAtCoord,
 };

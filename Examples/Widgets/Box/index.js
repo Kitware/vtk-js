@@ -2,6 +2,7 @@ import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Glyph';
 
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
@@ -49,6 +50,7 @@ function widgetRegistration(e) {
   const action = e ? e.currentTarget.dataset.action : 'addWidget';
   const viewWidget = widgetManager[action](widget);
   if (viewWidget) {
+    viewWidget.setScaleInPixels(false);
     viewWidget.setDisplayCallback((coords) => {
       overlay.style.left = '-100px';
       if (coords) {

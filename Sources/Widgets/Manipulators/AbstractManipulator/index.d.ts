@@ -58,7 +58,7 @@ export interface vtkAbstractManipulator extends vtkObject {
     /* ------------------------------------------------------------------- */
 
     /**
-     * Set the user normal. 
+     * Set the user normal.
      * This normal take precedence on the handleNormal and the widgetNormal.
      * This normal should not be set within the widget internal code.
      * @param {Vector3} normal The normal coordinate.

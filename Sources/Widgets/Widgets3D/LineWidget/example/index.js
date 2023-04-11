@@ -48,7 +48,7 @@ widgetManager.setRenderer(renderer);
 let widget = null;
 
 let lineWidget = null;
-let selectedWidgetIndex = 0;
+let selectedWidgetIndex = null;
 
 let getHandle = {};
 
@@ -176,7 +176,29 @@ function updateHandleShape(handleId) {
 function setWidgetColor(currentWidget, color) {
   currentWidget.getWidgetState().getHandle1().setColor(color);
   currentWidget.getWidgetState().getHandle2().setColor(color);
-  currentWidget.getWidgetState().getMoveHandle().setColor(color);
+
+  currentWidget.setUseActiveColor(false);
+  currentWidget.getWidgetState().getMoveHandle().setColor(0.3);
+}
+
+// Restore color
+function unselectWidget(index) {
+  if (index != null) {
+    const widgetToUnselect = widgetManager.getWidgets()[selectedWidgetIndex];
+    setWidgetColor(widgetToUnselect, 0.5); // green
+  }
+  if (index === selectedWidgetIndex) {
+    selectedWidgetIndex = null;
+  }
+}
+
+function selectWidget(index) {
+  unselectWidget(selectedWidgetIndex);
+  if (index != null) {
+    const widgetToSelect = widgetManager.getWidgets()[index];
+    setWidgetColor(widgetToSelect, 0.2); // yellow
+  }
+  selectedWidgetIndex = index;
 }
 
 const inputHandle1 = document.getElementById('idh1');
@@ -228,6 +250,7 @@ document.querySelector('#addWidget').addEventListener('click', () => {
   currentHandle = widgetManager.addWidget(widget);
   lineWidget = currentHandle;
 
+  selectWidget(widgetManager.getWidgets().length - 1);
   setupSVG(widget);
 
   getHandle = {
@@ -252,9 +275,7 @@ document.querySelector('#addWidget').addEventListener('click', () => {
       1: currentHandle.getWidgetState().getHandle1(),
       2: currentHandle.getWidgetState().getHandle2(),
     };
-    setWidgetColor(widgetManager.getWidgets()[selectedWidgetIndex], 0.5);
-    setWidgetColor(widgetManager.getWidgets()[index], 0.2);
-    selectedWidgetIndex = index;
+    selectWidget(index);
     lineWidget = currentHandle;
     document.getElementById('idh1').value =
       getHandle[1].getShape() === '' ? 'sphere' : getHandle[1].getShape();
@@ -276,10 +297,11 @@ document.querySelector('#addWidget').addEventListener('click', () => {
 });
 
 document.querySelector('#removeWidget').addEventListener('click', () => {
+  unselectWidget(selectedWidgetIndex);
   widgetManager.removeWidget(widgetManager.getWidgets()[selectedWidgetIndex]);
   if (svgCleanupCallbacks.length) svgCleanupCallbacks.pop()();
   if (widgetManager.getWidgets().length !== 0) {
-    selectedWidgetIndex = widgetManager.getWidgets().length - 1;
+    selectWidget(widgetManager.getWidgets().length - 1);
     setWidgetColor(widgetManager.getWidgets()[selectedWidgetIndex], 0.2);
   }
 });

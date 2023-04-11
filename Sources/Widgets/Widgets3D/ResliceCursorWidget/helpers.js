@@ -8,7 +8,6 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
-import { getPixelWorldHeightAtCoord } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 import {
   planeNames,
   planeNameToViewType,
@@ -190,35 +189,24 @@ export function getOtherLineName(lineName) {
   return `${otherLineName}in${lineInPlaneName}`;
 }
 
-// Update the extremities and the rotation point coordinate of the line
-function computeRotationHandleOrigin(
-  center,
+// Compute the offset of the rotation handle origin
+function computeRotationHandleOriginOffset(
   axis,
   rotationHandlePosition,
   volumeDiagonalLength,
-  displayScaleParams
+  scaleInPixels
 ) {
   // FIXME: p1 and p2 could be placed on the exact boundaries of the volume.
-  let distanceToCenter = volumeDiagonalLength;
-  // displayScaleParams is not null when representation.getScaleInPixels() is true
-  if (displayScaleParams) {
-    const pixelWorldHeight = getPixelWorldHeightAtCoord(
-      center,
-      displayScaleParams
-    );
-    const { rendererPixelDims } = displayScaleParams;
-    const totalSize = Math.min(rendererPixelDims[0], rendererPixelDims[1]) / 2;
-    distanceToCenter = pixelWorldHeight * totalSize;
-  }
-  distanceToCenter *= rotationHandlePosition;
-
-  return vtkMath.multiplyAccumulate(center, axis, distanceToCenter, []);
+  return vtkMath.multiplyScalar(
+    [...axis],
+    (rotationHandlePosition * (scaleInPixels ? 1 : volumeDiagonalLength)) / 2
+  );
 }
 
 // Update the reslice cursor state according to the three planes normals and the origin
 export function updateState(
   widgetState,
-  displayScaleParams,
+  scaleInPixels,
   rotationHandlePosition
 ) {
   // Compute line axis
@@ -246,25 +234,27 @@ export function updateState(
   lineNames.forEach((lineName) => {
     const planeName = getLinePlaneName(lineName);
     const inPlaneName = getLineInPlaneName(lineName);
-    const rotationPoint0 = computeRotationHandleOrigin(
-      center,
-      axes[`${planeName}${inPlaneName}`],
-      rotationHandlePosition,
-      pdLength,
-      displayScaleParams[planeNameToViewType[inPlaneName]]
+    const direction = axes[`${planeName}${inPlaneName}`];
+    widgetState[`getRotationHandle${lineName}0`]().setOrigin(center);
+    widgetState[`getRotationHandle${lineName}0`]().setOffset(
+      computeRotationHandleOriginOffset(
+        direction,
+        rotationHandlePosition,
+        pdLength,
+        scaleInPixels
+      )
     );
-    widgetState[`getRotationHandle${lineName}0`]().setOrigin(rotationPoint0);
-    const rotationPoint1 = computeRotationHandleOrigin(
-      center,
-      vtkMath.multiplyScalar(axes[`${planeName}${inPlaneName}`], -1, []),
-      rotationHandlePosition,
-      pdLength,
-      displayScaleParams[planeNameToViewType[inPlaneName]]
+    widgetState[`getRotationHandle${lineName}1`]().setOrigin(center);
+    widgetState[`getRotationHandle${lineName}1`]().setOffset(
+      computeRotationHandleOriginOffset(
+        direction,
+        -rotationHandlePosition,
+        pdLength,
+        scaleInPixels
+      )
     );
-    widgetState[`getRotationHandle${lineName}1`]().setOrigin(rotationPoint1);
     const lineHandle = widgetState[`getAxis${lineName}`]();
     lineHandle.setOrigin(center);
-    const direction = vtkMath.subtract(rotationPoint0, center, []);
     const scale = vtkMath.normalize(direction);
     const scale3 = lineHandle.getScale3();
     scale3[2] = 2 * scale;

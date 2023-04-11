@@ -1,4 +1,4 @@
-import { radiansFromDegrees } from 'vtk.js/Sources/Common/Core/Math';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 import macro from 'vtk.js/Sources/macros';
 import Constants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
@@ -27,6 +27,26 @@ export function extractRenderingComponents(renderer) {
   };
 }
 
+export function getPixelWorldHeightAtCoord(worldCoord, displayScaleParams) {
+  const {
+    dispHeightFactor,
+    cameraPosition,
+    cameraDir,
+    isParallel,
+    rendererPixelDims,
+  } = displayScaleParams;
+  let scale = 1;
+  if (isParallel) {
+    scale = dispHeightFactor;
+  } else {
+    const worldCoordToCamera = [...worldCoord];
+    vtkMath.subtract(worldCoordToCamera, cameraPosition, worldCoordToCamera);
+    scale = vtkMath.dot(worldCoordToCamera, cameraDir) * dispHeightFactor;
+  }
+
+  const rHeight = rendererPixelDims[1];
+  return scale / rHeight;
+}
 // ----------------------------------------------------------------------------
 // vtkWidgetManager methods
 // ----------------------------------------------------------------------------
@@ -85,7 +105,7 @@ function vtkWidgetManager(publicAPI, model) {
       const isParallel = _camera.getParallelProjection();
       const dispHeightFactor = isParallel
         ? 2 * _camera.getParallelScale()
-        : 2 * Math.tan(radiansFromDegrees(_camera.getViewAngle()) / 2);
+        : 2 * Math.tan(vtkMath.radiansFromDegrees(_camera.getViewAngle()) / 2);
 
       model.widgets.forEach((w) => {
         w.getNestedProps().forEach((r) => {
@@ -231,7 +251,9 @@ function vtkWidgetManager(publicAPI, model) {
     );
 
     subscriptions.push(
-      model._apiSpecificRenderWindow.onModified(updateDisplayScaleParams)
+      model._apiSpecificRenderWindow.onWindowResizeEvent(
+        updateDisplayScaleParams
+      )
     );
     subscriptions.push(model._camera.onModified(updateDisplayScaleParams));
     updateDisplayScaleParams();
@@ -500,4 +522,4 @@ export const newInstance = macro.newInstance(extend, 'vtkWidgetManager');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend, Constants };
+export default { newInstance, extend, Constants, getPixelWorldHeightAtCoord };

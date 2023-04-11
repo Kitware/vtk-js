@@ -7,6 +7,7 @@ import vtkProp from '../Prop';
 import vtkViewport, { IViewportInitialValues } from '../Viewport';
 import vtkVolume from '../Volume';
 import vtkTexture from '../Texture';
+import { EventHandler, vtkSubscription } from '../../../interfaces';
 
 
 export interface IRendererInitialValues extends IViewportInitialValues {
@@ -42,6 +43,13 @@ export interface IRendererInitialValues extends IViewportInitialValues {
 	pass?: number;
 }
 
+export type VtkRendererEvent =
+  | { type: 'CreateCameraEvent', camera: vtkCamera }
+  | { type: 'ActiveCameraEvent', camera: vtkCamera }
+  | { type: 'ComputeVisiblePropBoundsEvent', renderer: vtkRenderer }
+  | { type: 'ResetCameraClippingRangeEvent', renderer: vtkRenderer }
+  | { type: 'ResetCameraEvent', renderer: vtkRenderer };
+
 export interface vtkRenderer extends vtkViewport {
 
 	/**
@@ -54,6 +62,12 @@ export interface vtkRenderer extends vtkViewport {
 	 * @param {vtkProp} actor The vtkProp instance.
 	 */
 	addActor(actor: vtkProp): boolean;
+
+	/**
+	 * Check if the renderer already has the specified light.
+	 * @param {vtkLight} light The vtkLight instance.
+	 */
+	hasLight(light: vtkLight): boolean;
 
 	/**
 	 * Add a light to the list of lights.
@@ -654,6 +668,11 @@ export interface vtkRenderer extends vtkViewport {
      * @param {Number[]} background The RGB color array.
      */
     setBackground(background: number[]): boolean;
+
+	/**
+	 * Adds an event listener.
+	 */
+	onEvent(cb: EventHandler, priority?: number): Readonly<vtkSubscription>;
 }
 
 /**

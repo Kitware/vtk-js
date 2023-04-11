@@ -7,8 +7,9 @@ import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
+import { getPixelWorldHeightAtCoord } from 'vtk.js/Sources/Widgets/Core/WidgetManager';
+
 import vtkWidgetRepresentation, {
-  getPixelWorldHeightAtCoord,
   allocateArray,
 } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
@@ -22,7 +23,9 @@ export function origin(publicAPI, model) {
     const points = allocateArray(polyData, 'points', states.length).getData();
     let j = 0;
     for (let i = 0; i < states.length; ++i) {
-      const coord = states[i].getOrigin();
+      const coord = states[i].getOrigin(
+        model.scaleInPixels && model.displayScaleParams
+      );
       points[j++] = coord[0];
       points[j++] = coord[1];
       points[j++] = coord[2];
@@ -37,13 +40,14 @@ export function noPosition(publicAPI, model) {
 export function color3(publicAPI, model) {
   return (polyData, states) => {
     model._pipeline.mapper.setColorByArrayName('color');
-    const colors = allocateArray(
+    const colorArray = allocateArray(
       polyData,
       'color',
       states.length,
-      'Uint8Array', // RGB
-      3
-    ).getData();
+      'Uint8Array', // RGBA
+      4
+    );
+    const colors = colorArray.getData();
     let j = 0;
     for (let i = 0; i < states.length; ++i) {
       let c3 = states[i].getColor3();
@@ -53,7 +57,9 @@ export function color3(publicAPI, model) {
       colors[j++] = c3[0];
       colors[j++] = c3[1];
       colors[j++] = c3[2];
+      colors[j++] = states[i].getOpacity();
     }
+    colorArray.dataChange();
   };
 }
 export function color(publicAPI, model) {
@@ -182,7 +188,7 @@ function vtkGlyphRepresentation(publicAPI, model) {
   publicAPI.getRepresentationStates = (input = model.inputData[0]) =>
     superClass
       .getRepresentationStates(input)
-      .filter((state) => state.getOrigin?.() && state.isVisible?.());
+      .filter((state) => state.getOrigin?.() && (state.isVisible?.() ?? true));
 
   // --------------------------------------------------------------------------
   publicAPI.getMixins = (states) => {

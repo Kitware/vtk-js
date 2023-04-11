@@ -94,14 +94,15 @@ function vtkPolyDataNormals(publicAPI, model) {
       values: outputNormalsData,
     });
 
-    output.setPointData(input.getPointData());
-    output.setCellData(input.getCellData());
-    output.setFieldData(input.getFieldData());
     output.setPoints(input.getPoints());
     output.setVerts(input.getVerts());
     output.setLines(input.getLines());
     output.setPolys(input.getPolys());
     output.setStrips(input.getStrips());
+
+    output.getPointData().passData(input.getPointData());
+    output.getCellData().passData(input.getCellData());
+    output.getFieldData().passData(input.getFieldData());
 
     output.getPointData().setNormals(outputNormals);
 

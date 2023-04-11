@@ -124,9 +124,17 @@ export interface vtkScalarsToColors extends vtkObject {
 	getVectorSize(): number;
 
 	/**
-	 * 
+	 * @see areScalarsOpaque
 	 */
 	isOpaque(): boolean;
+
+	/**
+	 * Returns false if scalars are Uint8 LA or RGBA with A < 255,
+	 * otherwise rely on getAlpha() in case of direct mapping,
+	 * otherwise return isOpaque()
+	 * @see isOpaque, getAlpha
+	 */
+	areScalarsOpaque(scalars, colorMode, componentIn): boolean;
 
 	/**
 	 * 

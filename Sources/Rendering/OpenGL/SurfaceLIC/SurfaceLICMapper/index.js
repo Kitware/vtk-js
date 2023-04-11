@@ -32,8 +32,8 @@ function vtkOpenGLSurfaceLICMapper(publicAPI, model) {
     if (array && model.canDrawLIC) {
       FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Output::Dec', [
         '//VTK::Output::Dec',
-        'layout(location = 1) out vec4 vectorTexture;',
-        'layout(location = 2) out vec4 maskVectorTexture;',
+        'layout(location = 2) out vec4 vectorTexture;',
+        'layout(location = 3) out vec4 maskVectorTexture;',
       ]).result;
 
       const arrayName = array.getName();

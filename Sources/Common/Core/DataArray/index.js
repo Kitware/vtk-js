@@ -133,11 +133,6 @@ function vtkDataArray(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkDataArray');
 
-  function dataChange() {
-    model.ranges = null;
-    publicAPI.modified();
-  }
-
   /**
    * Resize model.values and copy the old values to the new array.
    * @param {Number} requestedNumTuples Final expected number of tuples; must be >= 0
@@ -170,18 +165,23 @@ function vtkDataArray(publicAPI, model) {
     // Requested size is smaller than currently allocated size
     if (model.size > requestedNumTuples * numComps) {
       model.size = requestedNumTuples * numComps;
-      dataChange();
+      publicAPI.dataChange();
     }
 
     return true;
   }
+
+  publicAPI.dataChange = () => {
+    model.ranges = null;
+    publicAPI.modified();
+  };
 
   publicAPI.resize = (requestedNumTuples) => {
     resize(requestedNumTuples);
     const newSize = requestedNumTuples * publicAPI.getNumberOfComponents();
     if (model.size !== newSize) {
       model.size = newSize;
-      dataChange();
+      publicAPI.dataChange();
       return true;
     }
     return false;
@@ -209,7 +209,7 @@ function vtkDataArray(publicAPI, model) {
   publicAPI.setComponent = (tupleIdx, compIdx, value) => {
     if (value !== model.values[tupleIdx * model.numberOfComponents + compIdx]) {
       model.values[tupleIdx * model.numberOfComponents + compIdx] = value;
-      dataChange();
+      publicAPI.dataChange();
     }
   };
 
@@ -382,7 +382,7 @@ function vtkDataArray(publicAPI, model) {
     if (model.size % model.numberOfComponents !== 0) {
       model.numberOfComponents = 1;
     }
-    dataChange();
+    publicAPI.dataChange();
   };
 
   // Override serialization support

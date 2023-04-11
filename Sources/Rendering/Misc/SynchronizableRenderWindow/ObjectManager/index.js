@@ -25,6 +25,9 @@ import vtkImageProperty from 'vtk.js/Sources/Rendering/Core/ImageProperty';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import vtkCubeAxesActor from 'vtk.js/Sources/Rendering/Core/CubeAxesActor';
 import vtkScalarBarActor from 'vtk.js/Sources/Rendering/Core/ScalarBarActor';
+import vtkAxesActor from 'vtk.js/Sources/Rendering/Core/AxesActor';
+
+import BehaviorManager from '../BehaviorManager';
 
 // ----------------------------------------------------------------------------
 // Some internal, module-level variables and methods
@@ -268,7 +271,7 @@ function genericUpdater(instance, state, context) {
   const dependencies = [];
   if (state.arrays) {
     const arraysToBind = [];
-    const promises = state.arrays.map((arrayMetadata) => {
+    const promises = Object.values(state.arrays).map((arrayMetadata) => {
       context.start(); // -> start(arrays)
       return context
         .getArray(arrayMetadata.hash, arrayMetadata.dataType, context)
@@ -409,8 +412,6 @@ function vtkRenderWindowUpdater(instance, state, context) {
             }
             context.unregisterInstance(context.getInstanceId(viewProp));
           });
-          // Now just remove all the view props
-          renderer.removeAllViewProps();
         });
       });
   }
@@ -419,6 +420,9 @@ function vtkRenderWindowUpdater(instance, state, context) {
 
   // Now just do normal update process
   genericUpdater(instance, state, context);
+
+  // Manage any associated behaviors
+  BehaviorManager.applyBehaviors(instance, state, context);
 }
 
 // ----------------------------------------------------------------------------
@@ -468,25 +472,32 @@ function createDataSetUpdate(piecesToFetch = []) {
     context.start(); // -> start(dataset-update)
 
     // Make sure we provide container for std arrays
+    const localProperties = { ...state.properties };
     if (!state.arrays) {
-      state.arrays = [];
+      state.arrays = {};
     }
 
     // Array members
     // => convert old format to generic state.arrays
-    piecesToFetch.forEach((key) => {
+    for (let i = 0; i < piecesToFetch.length; i++) {
+      const key = piecesToFetch[i];
       if (state.properties[key]) {
         const arrayMeta = state.properties[key];
         arrayMeta.registration = `set${macro.capitalize(key)}`;
-        state.arrays.push(arrayMeta);
-        delete state.properties[key];
+        const arrayKey = `${arrayMeta.hash}_${arrayMeta.dataType}`;
+        state.arrays[arrayKey] = arrayMeta;
+        delete localProperties[key];
       }
-    });
+    }
 
     // Extract dataset fields
     const fieldsArrays = state.properties.fields || [];
-    state.arrays.push(...fieldsArrays);
-    delete state.properties.fields;
+    for (let i = 0; i < fieldsArrays.length; i++) {
+      const arrayMeta = fieldsArrays[i];
+      const arrayKey = `${arrayMeta.hash}_${arrayMeta.dataType}`;
+      state.arrays[arrayKey] = arrayMeta;
+    }
+    delete localProperties.fields;
 
     // Reset any pre-existing fields array
     const arrayToKeep = {
@@ -501,7 +512,9 @@ function createDataSetUpdate(piecesToFetch = []) {
     removeUnavailableArrays(instance.getCellData(), arrayToKeep.cellData);
 
     // Generic handling
-    const res = genericUpdater(instance, state, context);
+    const cleanState = { ...state };
+    cleanState.properties = localProperties;
+    const res = genericUpdater(instance, cleanState, context);
 
     // Finish what we started
     context.end(); // -> end(dataset-update)
@@ -553,6 +566,10 @@ const DEFAULT_ALIASES = {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_MAPPING = {
+  vtkAxesActor: {
+    build: vtkAxesActor.newInstance,
+    update: genericUpdater,
+  },
   vtkRenderWindow: {
     build: vtkRenderWindow.newInstance,
     update: vtkRenderWindowUpdater,

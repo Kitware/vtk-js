@@ -30,15 +30,7 @@ These sub states contain :
 
 - sphereRadius: Manages the radius of the rotation points
 
-- showCenter: Defines if the reslice cursor center is displayed or not. If not, it's still possible to move the center. The cursor mouse will be turned into 'move' cursor when you can translate the center.
-
 - Planes: Contains the normal and viewUp of the YZ_, XZ_ and XY_PLANE views (which is updated when a rotation is applied). It's used to compute the resliced image
-
-- enableRotation: if false, then remove the rotation points and disable the line rotation
-
-- enableTranslation: if false, disable the translation of the axis
-
-- keepOrthogonality: if false, then rotation are totally free. Else, if one axis is rotated, then the associated one if rotating the same axis in order to keep orthogonality
 
 - scrollingMethod: Define which mouse button is used to scroll (use [Contants.js](https://github.com/Kitware/vtk-js/blob/master/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants.js)):
   * MIDDLE_MOUSE_BUTTON : Default

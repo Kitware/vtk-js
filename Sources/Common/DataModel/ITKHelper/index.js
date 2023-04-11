@@ -72,7 +72,7 @@ const itkComponentTypeToVtkArrayType = new Map([
  *
  * Requires an itk-wasm Image as input.
  */
-function convertItkToVtkImage(itkImage, options = {}) {
+export function convertItkToVtkImage(itkImage, options = {}) {
   const vtkImage = {
     origin: [0, 0, 0],
     spacing: [1, 1, 1],
@@ -197,7 +197,7 @@ function convertItkToVtkImage(itkImage, options = {}) {
  * Requires a vtk.js vtkImageData as input.
  *
  */
-function convertVtkToItkImage(vtkImage, copyData = false) {
+export function convertVtkToItkImage(vtkImage, copyData = false) {
   const dimension = 3;
   const itkImage = {
     imageType: {
@@ -255,7 +255,7 @@ function convertVtkToItkImage(vtkImage, copyData = false) {
  *
  * Requires an itk-wasm PolyData as input.
  */
-function convertItkToVtkPolyData(itkPolyData, options = {}) {
+export function convertItkToVtkPolyData(itkPolyData, options = {}) {
   const pointDataArrays = [];
   if (itkPolyData.pointData.length) {
     pointDataArrays.push({
@@ -485,7 +485,7 @@ function convertItkToVtkPolyData(itkPolyData, options = {}) {
  * Requires a vtk.js vtkPolyData as input.
  *
  */
-function convertVtkToItkPolyData(polyData, options = {}) {
+export function convertVtkToItkPolyData(polyData, options = {}) {
   const itkPolyData = {
     polyDataType: {
       pointPixelComponentType: 'float32',
