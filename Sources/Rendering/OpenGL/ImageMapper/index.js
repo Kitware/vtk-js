@@ -112,21 +112,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     publicAPI.renderPiece(ren, actor);
   };
 
-  publicAPI.buildShaders = (shaders, ren, actor) => {
-    publicAPI.getShaderTemplate(shaders, ren, actor);
-
-    model.lastRenderPassShaderReplacement = model.currentRenderPass
-      ? model.currentRenderPass.getShaderReplacement()
-      : null;
-
-    // apply any renderPassReplacements
-    if (model.lastRenderPassShaderReplacement) {
-      model.lastRenderPassShaderReplacement(shaders);
-    }
-
-    publicAPI.replaceShaderValues(shaders, ren, actor);
-  };
-
   publicAPI.getShaderTemplate = (shaders, ren, actor) => {
     shaders.Vertex = vtkPolyDataVS;
     shaders.Fragment = vtkPolyDataFS;
@@ -1135,6 +1120,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
   vtkReplacementShaderMapper.implementReplaceShaderCoincidentOffset(
+    publicAPI,
+    model,
+    initialValues
+  );
+  vtkReplacementShaderMapper.implementBuildShadersWithReplacements(
     publicAPI,
     model,
     initialValues

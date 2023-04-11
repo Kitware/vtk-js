@@ -612,8 +612,6 @@ const DEFAULT_VALUES = {
   useInvertibleColors: false,
   invertibleScalars: null,
 
-  viewSpecificProperties: null,
-
   customShaderAttributes: [],
 };
 
@@ -644,14 +642,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     'selectionWebGLIdsToVTKIds',
     'static',
     'useLookupTableScalarRange',
-    'viewSpecificProperties',
     'customShaderAttributes', // point data array names that will be transferred to the VBO
   ]);
   macro.setGetArray(publicAPI, model, ['scalarRange'], 2);
-
-  if (!model.viewSpecificProperties) {
-    model.viewSpecificProperties = {};
-  }
 
   CoincidentTopologyHelper.implementCoincidentTopologyMethods(publicAPI, model);
 
