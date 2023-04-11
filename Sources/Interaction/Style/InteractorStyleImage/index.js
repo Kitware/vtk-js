@@ -110,6 +110,19 @@ function vtkInteractorStyleImage(publicAPI, model) {
       distance = range[1];
     }
     camera.setDistance(distance);
+    const props = callData.pokedRenderer
+      .getViewProps()
+      .filter((prop) => prop.isA('vtkImageSlice'));
+    props.forEach((prop) => {
+      if (prop.getMapper().isA('vtkImageResliceMapper')) {
+        const p = prop.getMapper().getSlicePlane();
+        if (p) {
+          p.push(callData.spinY);
+          p.modified();
+          prop.getMapper().modified();
+        }
+      }
+    });
   };
 
   //----------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+import macro from 'vtk.js/Sources/macros';
 import vtkAbstractMapper from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 // ----------------------------------------------------------------------------
@@ -42,6 +43,8 @@ function vtkAbstractMapper3D(publicAPI, model) {
 const DEFAULT_VALUES = {
   bounds: [1, -1, 1, -1, 1, -1],
   center: [0, 0, 0],
+
+  viewSpecificProperties: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -57,6 +60,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   if (!model.center) {
     model.center = [0.0, 0.0, 0.0];
+  }
+
+  macro.setGet(publicAPI, model, ['viewSpecificProperties']);
+
+  if (!model.viewSpecificProperties) {
+    model.viewSpecificProperties = {};
   }
 
   vtkAbstractMapper3D(publicAPI, model);
