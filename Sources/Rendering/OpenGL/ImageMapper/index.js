@@ -1062,17 +1062,21 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         vtkErrorMacro('Reformat slicing not yet supported.');
       }
 
-      const { offset, scale } = model.openGLTexture.computeScaleOffsets(
-        numComp,
-        scalars
-      );
+      // For now, fix the image mapper, but we should probably fix the
+      // vtkImageArrayMapper as well
+      if (!model.renderable.isA('vtkImageArrayMapper')) {
+        const { offset, scale } = model.openGLTexture.computeScaleOffsets(
+          numComp,
+          scalars
+        );
 
-      model.openGLTexture.setUseHalfFloat(
-        dataType,
-        offset,
-        scale,
-        model.renderable.getPreferSizeOverAccuracy()
-      );
+        model.openGLTexture.setUseHalfFloat(
+          dataType,
+          offset,
+          scale,
+          model.renderable.getPreferSizeOverAccuracy()
+        );
+      }
 
       model.openGLTexture.create2DFromRaw(
         dims[0],
