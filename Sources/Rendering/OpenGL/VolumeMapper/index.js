@@ -1521,13 +1521,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       );
       model.scalarTexture.releaseGraphicsResources(model._openGLRenderWindow);
       model.scalarTexture.resetFormatAndType();
-      model.scalarTexture.create3DFilterableFromRaw(
+      model.scalarTexture.create3DFilterableFromDataArray(
         dims[0],
         dims[1],
         dims[2],
-        numComp,
-        scalars.getDataType(),
-        scalars.getData(),
+        scalars,
         model.renderable.getPreferSizeOverAccuracy()
       );
       model.scalarTextureString = toString;
