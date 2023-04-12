@@ -1,9 +1,7 @@
 import Constants from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 import HalfFloat from 'vtk.js/Sources/Common/Core/HalfFloat';
 import * as macro from 'vtk.js/Sources/macros';
-import vtkDataArray, {
-  STATIC as dataArrayHelpers,
-} from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
@@ -1186,25 +1184,13 @@ function vtkOpenGLTexture(publicAPI, model) {
     return true;
   };
 
-  publicAPI.computeScaleOffsets = (numComps, data) => {
-    // compute min and max values per component
-    const min = [];
-    const max = [];
-
+  // Compute scale and offset per component from min and max per component
+  publicAPI.computeScaleOffsets = (min, max, numComps) => {
+    const offset = new Array(numComps);
+    const scale = new Array(numComps);
     for (let c = 0; c < numComps; ++c) {
-      const range = dataArrayHelpers.fastComputeRange(data, c, numComps);
-      min[c] = range.min;
-      max[c] = range.max;
-    }
-
-    const offset = [];
-    const scale = [];
-    for (let c = 0; c < numComps; ++c) {
-      if (min[c] === max[c]) {
-        max[c] = min[c] + 1.0;
-      }
       offset[c] = min[c];
-      scale[c] = max[c] - min[c];
+      scale[c] = max[c] - min[c] || 1.0;
     }
     return { scale, offset };
   };
@@ -1289,7 +1275,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // Source texture data from the PBO.
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    // model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
+    model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     // openGLDataType
 
@@ -1342,16 +1328,57 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   // This method simulates a 3D texture using 2D
+  // Prefer create3DFilterableFromDataArray to enable caching of min and max values
   publicAPI.create3DFilterableFromRaw = (
     width,
     height,
     depth,
-    numComps,
+    numberOfComponents,
     dataType,
-    data,
+    values,
+    preferSizeOverAccuracy = false
+  ) =>
+    publicAPI.create3DFilterableFromDataArray(
+      width,
+      height,
+      depth,
+      vtkDataArray.newInstance({
+        numberOfComponents,
+        dataType,
+        values,
+      }),
+      preferSizeOverAccuracy
+    );
+
+  //----------------------------------------------------------------------------
+  // This method create a 3D texture from dimensions and a DataArray
+  publicAPI.create3DFilterableFromDataArray = (
+    width,
+    height,
+    depth,
+    dataArray,
     preferSizeOverAccuracy = false
   ) => {
+    const numComps = dataArray.getNumberOfComponents();
+    const dataType = dataArray.getDataType();
+    const data = dataArray.getData();
     const numPixelsIn = width * height * depth;
+
+    // Compute min max from array
+    // Using the vtkDataArray.getRange() enables caching
+    const minArray = new Array(numComps);
+    const maxArray = new Array(numComps);
+    for (let c = 0; c < numComps; ++c) {
+      const [min, max] = dataArray.getRange(c);
+      minArray[c] = min;
+      maxArray[c] = max;
+    }
+    const scaleOffsets = computeScaleOffsets(minArray, maxArray, numComps);
+
+    // Create a copy of scale and offset to avoid aliasing issues
+    // Original is read only, copy is read/write
+    // Use the copy as volumeInfo.scale and volumeInfo.offset
+    const scaleOffsetsCopy = structuredClone(scaleOffsets);
 
     // initialize offset/scale
     const offset = [];
@@ -1366,21 +1393,22 @@ function vtkOpenGLTexture(publicAPI, model) {
     // the texture value back to data values ala
     // data = texture * scale + offset
     // and texture = (data - offset)/scale
-    model.volumeInfo = { scale, offset, width, height, depth };
-
-    // Check if we can accurately use halfFloat or whether it is preferred to have a smaller size texture
-    // compute min and max values
-    const { offset: computedOffset, scale: computedScale } =
-      publicAPI.computeScaleOffsets(numComps, data);
-    model.volumeInfo.dataComputedScale = computedScale;
-    model.volumeInfo.dataComputedOffset = computedOffset;
+    model.volumeInfo = {
+      scale,
+      offset,
+      dataComputedScale: scaleOffsets.scale,
+      dataComputedOffset: scaleOffsets.offset,
+      width,
+      height,
+      depth,
+    };
 
     // preferSizeOverAccuracy will override norm16 due to bug with norm16 implementation
     // https://bugs.chromium.org/p/chromium/issues/detail?id=1408247
     publicAPI.setUseHalfFloat(
       dataType,
-      computedOffset,
-      computedScale,
+      scaleOffsets.offset,
+      scaleOffsets.scale,
       preferSizeOverAccuracy
     );
 
@@ -1456,15 +1484,15 @@ function vtkOpenGLTexture(publicAPI, model) {
       }
       // otherwise convert to float
       const newArray = new Float32Array(numPixelsIn * numComps);
-      // compute min and max values
-      model.volumeInfo.offset = computedOffset;
-      model.volumeInfo.scale = computedScale;
+      // use computed scale and offset
+      model.volumeInfo.offset = scaleOffsetsCopy.offset;
+      model.volumeInfo.scale = scaleOffsetsCopy.scale;
       let count = 0;
-      const scaleInverse = computedScale.map((s) => 1 / s);
+      const scaleInverse = scaleOffsetsCopy.scale.map((s) => 1 / s);
       for (let i = 0; i < numPixelsIn; i++) {
         for (let nc = 0; nc < numComps; nc++) {
           newArray[count] =
-            (data[count] - computedOffset[nc]) * scaleInverse[nc];
+            (data[count] - scaleOffsetsCopy.offset[nc]) * scaleInverse[nc];
           count++;
         }
       }
@@ -1481,9 +1509,6 @@ function vtkOpenGLTexture(publicAPI, model) {
     // not webgl2, deal with webgl1, no 3d textures
     // and maybe no float textures
 
-    // compute min and max values
-    const res = publicAPI.computeScaleOffsets(numComps, data);
-
     let volCopyData = (outArray, outIdx, inValue, smin, smax) => {
       outArray[outIdx] = inValue;
     };
@@ -1491,8 +1516,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     // unsigned char gets used as is
     if (dataType === VtkDataTypes.UNSIGNED_CHAR) {
       for (let c = 0; c < numComps; ++c) {
-        res.offset[c] = 0.0;
-        res.scale[c] = 255.0;
+        scaleOffsetsCopy.offset[c] = 0.0;
+        scaleOffsetsCopy.scale[c] = 255.0;
       }
     } else if (
       model.context.getExtension('OES_texture_float') &&
@@ -1569,8 +1594,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.volumeInfo.yreps = yreps;
     model.volumeInfo.xstride = xstride;
     model.volumeInfo.ystride = ystride;
-    model.volumeInfo.offset = res.offset;
-    model.volumeInfo.scale = res.scale;
+    model.volumeInfo.offset = scaleOffsetsCopy.offset;
+    model.volumeInfo.scale = scaleOffsetsCopy.scale;
 
     // OK stuff the data into the 2d TEXTURE
 
@@ -1607,8 +1632,8 @@ function vtkOpenGLTexture(publicAPI, model) {
                 newArray,
                 outIdx,
                 data[inOffset + xstride * tileX * numComps + nc],
-                res.offset[nc],
-                res.scale[nc]
+                scaleOffsetsCopy.offset[nc],
+                scaleOffsetsCopy.scale[nc]
               );
               outIdx++;
             }

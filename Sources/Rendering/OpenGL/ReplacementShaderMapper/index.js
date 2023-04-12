@@ -74,4 +74,96 @@ function implementReplaceShaderCoincidentOffset(
     }
   };
 }
-export default { implementReplaceShaderCoincidentOffset };
+
+function implementBuildShadersWithReplacements(
+  publicAPI,
+  model,
+  initialValues = {}
+) {
+  publicAPI.applyShaderReplacements = (shaders, viewSpec, pre) => {
+    let shaderReplacements = null;
+    if (viewSpec) {
+      shaderReplacements = viewSpec.ShaderReplacements;
+    }
+
+    if (shaderReplacements) {
+      for (let i = 0; i < shaderReplacements.length; i++) {
+        const currReplacement = shaderReplacements[i];
+        if (
+          (pre && currReplacement.replaceFirst) ||
+          (!pre && !currReplacement.replaceFirst)
+        ) {
+          const shaderType = currReplacement.shaderType;
+          const ssrc = shaders[shaderType];
+          const substituteRes = vtkShaderProgram.substitute(
+            ssrc,
+            currReplacement.originalValue,
+            currReplacement.replacementValue,
+            currReplacement.replaceAll
+          );
+          shaders[shaderType] = substituteRes.result;
+        }
+      }
+    }
+  };
+
+  publicAPI.buildShaders = (shaders, ren, actor) => {
+    publicAPI.getReplacedShaderTemplate(shaders, ren, actor);
+
+    model.lastRenderPassShaderReplacement = model.currentRenderPass
+      ? model.currentRenderPass.getShaderReplacement()
+      : null;
+
+    // apply any renderPassReplacements
+    if (model.lastRenderPassShaderReplacement) {
+      model.lastRenderPassShaderReplacement(shaders);
+    }
+
+    const openGLSpec = model.renderable.getViewSpecificProperties().OpenGL;
+
+    // user specified pre replacements
+    publicAPI.applyShaderReplacements(shaders, openGLSpec, true);
+
+    publicAPI.replaceShaderValues(shaders, ren, actor);
+
+    // user specified post replacements
+    publicAPI.applyShaderReplacements(shaders, openGLSpec);
+  };
+
+  publicAPI.getReplacedShaderTemplate = (shaders, ren, actor) => {
+    const openGLSpecProp = model.renderable.getViewSpecificProperties().OpenGL;
+
+    publicAPI.getShaderTemplate(shaders, ren, actor);
+    let vertexShaderCode = shaders.Vertex;
+    if (openGLSpecProp) {
+      const vertexSpecProp = openGLSpecProp.VertexShaderCode;
+      if (vertexSpecProp !== undefined && vertexSpecProp !== '') {
+        vertexShaderCode = vertexSpecProp;
+      }
+    }
+    shaders.Vertex = vertexShaderCode;
+
+    let fragmentShaderCode = shaders.Fragment;
+    if (openGLSpecProp) {
+      const fragmentSpecProp = openGLSpecProp.FragmentShaderCode;
+      if (fragmentSpecProp !== undefined && fragmentSpecProp !== '') {
+        fragmentShaderCode = fragmentSpecProp;
+      }
+    }
+    shaders.Fragment = fragmentShaderCode;
+
+    let geometryShaderCode = shaders.Geometry;
+    if (openGLSpecProp) {
+      const geometrySpecProp = openGLSpecProp.GeometryShaderCode;
+      if (geometrySpecProp !== undefined) {
+        geometryShaderCode = geometrySpecProp;
+      }
+    }
+    shaders.Geometry = geometryShaderCode;
+  };
+}
+
+export default {
+  implementReplaceShaderCoincidentOffset,
+  implementBuildShadersWithReplacements,
+};

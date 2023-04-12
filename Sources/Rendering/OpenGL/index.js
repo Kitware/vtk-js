@@ -17,6 +17,7 @@ import vtkPolyDataMapper from './PolyDataMapper';
 import vtkPolyDataMapper2D from './PolyDataMapper2D';
 import vtkRenderer from './Renderer';
 import vtkRenderWindow from './RenderWindow';
+import vtkImageResliceMapper from './ImageResliceMapper';
 import './ScalarBarActor';
 import vtkShader from './Shader';
 import vtkShaderCache from './ShaderCache';
@@ -48,8 +49,9 @@ export default {
   vtkPixelSpaceCallbackMapper,
   vtkPolyDataMapper,
   vtkPolyDataMapper2D,
-  vtkRenderer,
   vtkRenderWindow,
+  vtkRenderer,
+  vtkImageResliceMapper,
   vtkShader,
   vtkShaderCache,
   vtkShaderProgram,
