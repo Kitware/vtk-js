@@ -1186,7 +1186,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     return true;
   };
 
-  function computeScaleOffsets(numComps, numPixelsIn, data) {
+  publicAPI.computeScaleOffsets = (numComps, data) => {
     // compute min and max values per component
     const min = [];
     const max = [];
@@ -1207,7 +1207,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       scale[c] = max[c] - min[c];
     }
     return { scale, offset };
-  }
+  };
 
   // HalfFloat only represents numbers between [-2048, 2048] exactly accurate,
   // for numbers outside of this range there is a precision limitation
@@ -1224,7 +1224,12 @@ function vtkOpenGLTexture(publicAPI, model) {
     return true;
   }
 
-  function checkUseHalfFloat(dataType, offset, scale, preferSizeOverAccuracy) {
+  publicAPI.setUseHalfFloat = (
+    dataType,
+    offset,
+    scale,
+    preferSizeOverAccuracy
+  ) => {
     publicAPI.getOpenGLDataType(dataType);
 
     let useHalfFloat = false;
@@ -1236,18 +1241,15 @@ function vtkOpenGLTexture(publicAPI, model) {
         halfFloatExt && model.openGLDataType === halfFloatExt.HALF_FLOAT_OES;
     }
 
-    if (!useHalfFloat) {
-      return false;
+    if (
+      useHalfFloat &&
+      (hasExactHalfFloat(offset, scale) || preferSizeOverAccuracy)
+    ) {
+      model.useHalfFloat = true;
+    } else {
+      model.useHalfFloat = false;
     }
-
-    // Don't consider halfFloat and convert back to Float when the range of data does not generate an accurate halfFloat
-    // AND it is not preferable to have a smaller texture than an exact texture.
-    if (!hasExactHalfFloat(offset, scale) && !preferSizeOverAccuracy) {
-      return false;
-    }
-
-    return true;
-  }
+  };
 
   //----------------------------------------------------------------------------
   publicAPI.create3DFromRaw = (
@@ -1369,13 +1371,13 @@ function vtkOpenGLTexture(publicAPI, model) {
     // Check if we can accurately use halfFloat or whether it is preferred to have a smaller size texture
     // compute min and max values
     const { offset: computedOffset, scale: computedScale } =
-      computeScaleOffsets(numComps, numPixelsIn, data);
+      publicAPI.computeScaleOffsets(numComps, data);
     model.volumeInfo.dataComputedScale = computedScale;
     model.volumeInfo.dataComputedOffset = computedOffset;
 
     // preferSizeOverAccuracy will override norm16 due to bug with norm16 implementation
     // https://bugs.chromium.org/p/chromium/issues/detail?id=1408247
-    model.useHalfFloat = checkUseHalfFloat(
+    publicAPI.setUseHalfFloat(
       dataType,
       computedOffset,
       computedScale,
@@ -1480,7 +1482,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     // and maybe no float textures
 
     // compute min and max values
-    const res = computeScaleOffsets(numComps, numPixelsIn, data);
+    const res = publicAPI.computeScaleOffsets(numComps, data);
 
     let volCopyData = (outArray, outIdx, inValue, smin, smax) => {
       outArray[outIdx] = inValue;
