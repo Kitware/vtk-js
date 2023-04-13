@@ -2,6 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 import Constants from 'vtk.js/Sources/Common/DataModel/Line/Constants';
 import vtkCell from 'vtk.js/Sources/Common/DataModel/Cell';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import { quat } from 'gl-matrix';
 
 const { IntersectionState } = Constants;
 
@@ -227,13 +228,25 @@ function vtkLine(publicAPI, model) {
     weights[0] = 1.0 - pcoords[0];
     weights[1] = pcoords[0];
   };
+
+  publicAPI.evaluateOrientation = (pcoords, q, weights) => {
+    if (model.orientations) {
+      quat.slerp(q, model.orientations[0], model.orientations[1], pcoords[0]);
+      weights[0] = 1.0 - pcoords[0];
+      weights[1] = pcoords[0];
+      return true;
+    }
+    return false;
+  };
 }
 
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+const DEFAULT_VALUES = {
+  orientations: null, // an array of two quat or null
+};
 
 // ----------------------------------------------------------------------------
 
@@ -241,6 +254,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkCell.extend(publicAPI, model, initialValues);
+
+  macro.setGet(publicAPI, model, ['orientations']);
 
   vtkLine(publicAPI, model);
 }
