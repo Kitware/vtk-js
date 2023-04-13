@@ -1,1 +1,11 @@
-<button onClick="toggleParallel()">toggle Parallel projection: <i class="text">(off)</i></button>
+<form>
+  <input class='toggleParallel' type='checkbox'>Parallel Projection</input></br>
+  <input class='toggleShade' type='checkbox'>Lighting</input></br>
+  <fieldset class='shade'>
+    <legend>Lighting</legend>
+    <input class='lao' id='lao' type='checkbox'/>
+    <label for='lao'>Toggle LAO <i class='text'>(off)</label><br></br>
+    <label for='scattering'>Volumetric Scattering: <i class='stext'>(off)</i></label>
+    <input class='scattering' id='scattering' type='range' min='0' max='10' value='0'/><br></br>
+  </fieldset>
+</form>
