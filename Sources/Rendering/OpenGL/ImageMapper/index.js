@@ -1048,10 +1048,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         vtkErrorMacro('Reformat slicing not yet supported.');
       }
 
-      model.openGLTexture.create2DFilterableFromDataArray(
+      model.openGLTexture.create2DFilterableFromRaw(
         dims[0],
         dims[1],
-        imgScalars,
+        numComp,
+        imgScalars.getDataType(),
+        scalars,
         model.renderable.getPreferSizeOverAccuracy?.()
       );
       model.openGLTexture.activate();
