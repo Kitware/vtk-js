@@ -1,7 +1,9 @@
+import { mat4, quat, vec3 } from 'gl-matrix';
 import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 import macro from 'vtk.js/Sources/macros';
 import vtkAbstractMapper3D from 'vtk.js/Sources/Rendering/Core/AbstractMapper3D';
-import { vec3 } from 'gl-matrix';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkPolyLine from 'vtk.js/Sources/Common/DataModel/PolyLine';
 
 const { vtkErrorMacro } = macro;
 
@@ -15,79 +17,7 @@ function vtkImageCPRMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageCPRMapper');
 
-  /**
-   * Private attributes and methods
-   */
-
-  // A list of pairs [pointIdxA, pointIdxB]
-  model._segmentList = [];
-  model._segmentListBuildTime = {};
-  macro.obj(model._segmentListBuildTime, { mtime: 0 });
-
-  model._setSegmentList = () => {
-    const centerlinePolydata = publicAPI.getInputData(1);
-
-    // Use cached segment list if possible
-    const segmentListTime = model._segmentListBuildTime.getMTime();
-    const centerlineTime = centerlinePolydata?.getMTime();
-    if (segmentListTime > centerlineTime) {
-      return;
-    }
-
-    model._segmentList = [];
-    model._segmentListBuildTime.modified();
-    publicAPI.modified();
-
-    if (!centerlinePolydata) {
-      return;
-    }
-
-    // For each line, add all the segments of the line to the list
-    const linesData = centerlinePolydata.getLines().getData();
-    for (let i = 0; i < linesData.length; ) {
-      const nextLine = i + linesData[i] + 1;
-      for (i += 2; i < nextLine; i++) {
-        model._segmentList.push([linesData[i - 1], linesData[i]]);
-      }
-    }
-  };
-
-  // The accumulated height at index i is the sum of all segment heights between
-  // index 0 to i (included) of the segments in model._segmentList
-  model._accumulatedSegmentHeights = [];
-  model._accumulatedSegmentHeightsBuildTime = {};
-  macro.obj(model._accumulatedSegmentHeightsBuildTime, { mtime: 0 });
-
-  model._setAccumulatedHeights = () => {
-    const centerlinePolydata = publicAPI.getInputData(1);
-
-    // Use cached height list if possible
-    model._setSegmentList();
-    const heightsTime = model._accumulatedSegmentHeightsBuildTime.getMTime();
-    const segmentListTime = model._segmentListBuildTime.getMTime();
-    const centerlineTime = centerlinePolydata?.getMTime();
-    if (heightsTime > segmentListTime && heightsTime > centerlineTime) {
-      return;
-    }
-
-    model._accumulatedSegmentHeights = [];
-    model._accumulatedSegmentHeightsBuildTime.modified();
-    publicAPI.modified();
-
-    if (!centerlinePolydata) {
-      return;
-    }
-
-    const pointsDataArray = centerlinePolydata.getPoints();
-    let accumulatedHeight = 0;
-    for (let i = 0; i < model._segmentList.length; i++) {
-      const [ia, ib] = model._segmentList[i];
-      const pa = pointsDataArray.getTuples(ia, ia + 1);
-      const pb = pointsDataArray.getTuples(ib, ib + 1);
-      accumulatedHeight += vec3.dist(pa, pb);
-      model._accumulatedSegmentHeights[i] = accumulatedHeight;
-    }
-  };
+  const superClass = { ...publicAPI };
 
   /**
    * Public methods
@@ -98,50 +28,249 @@ function vtkImageCPRMapper(publicAPI, model) {
     return [0, imageWidth, 0, imageHeight, 0, 0];
   };
 
-  // An array of accumulated heights. The array at index i contains the sum of the height of all segments from 0 to i (included)
-  publicAPI.getAccumulatedSegmentHeights = () => {
-    model._setAccumulatedHeights();
-    return model._accumulatedSegmentHeights;
+  publicAPI.getOrientationDataArray = () => {
+    const pointData = publicAPI.getInputData(1)?.getPointData();
+    if (!pointData) {
+      return null;
+    }
+    if (model.orientationArrayName !== null) {
+      return pointData.getArrayByName(model.orientationArrayName) || null;
+    }
+    return (
+      pointData.getArrayByName('Orientation') ||
+      pointData.getArrayByName('Direction') ||
+      pointData.getVectors() ||
+      pointData.getTensors() ||
+      pointData.getNormals() ||
+      null
+    );
+  };
+
+  publicAPI.getOrientedCenterline = () => {
+    const inputPolydata = publicAPI.getInputData(1);
+    if (!inputPolydata) {
+      // No polydata: return previous centerline
+      // Don't reset centerline as it could have been set using setOrientedCenterline
+      return model._orientedCenterline;
+    }
+
+    // Get dependencies of centerline
+    const orientationDataArray = publicAPI.getOrientationDataArray();
+    const linesDataArray = inputPolydata.getLines();
+    const pointsDataArray = inputPolydata.getPoints();
+
+    if (!model.useUniformOrientation && !orientationDataArray) {
+      vtkErrorMacro(
+        'Failed to create oriented centerline from polydata: no orientation'
+      );
+      publicAPI._resetOrientedCenterline();
+      return model._orientedCenterline;
+    }
+
+    // If centerline didn't change, don't recompute
+    const centerlineTime = model._orientedCenterline.getMTime();
+    if (
+      centerlineTime >= publicAPI.getMTime() &&
+      centerlineTime > linesDataArray.getMTime() &&
+      centerlineTime > pointsDataArray.getMTime() &&
+      (model.useUniformOrientation ||
+        centerlineTime > orientationDataArray.getMTime())
+    ) {
+      return model._orientedCenterline;
+    }
+
+    // Get points of the centerline
+    const linesData = linesDataArray.getData();
+    if (linesData.length <= 0) {
+      // No polyline
+      publicAPI._resetOrientedCenterline();
+      return model._orientedCenterline;
+    }
+    const nPoints = linesData[0];
+    if (nPoints <= 1) {
+      // Empty centerline
+      publicAPI._resetOrientedCenterline();
+      return model._orientedCenterline;
+    }
+    const pointIndices = linesData.subarray(1, 1 + nPoints);
+
+    // Get orientations of the centerline
+    const orientations = new Array(nPoints);
+    // Function to convert from mat4, mat3, quat or vec3 to quaternion
+    let convert = () => null;
+    const numComps = model.useUniformOrientation
+      ? model.uniformOrientation.length
+      : orientationDataArray.getNumberOfComponents();
+    switch (numComps) {
+      case 16:
+        convert = mat4.getRotation;
+        break;
+      case 9:
+        convert = (outQuat, inMat) => {
+          quat.fromMat3(outQuat, inMat);
+          quat.normalize(outQuat, outQuat);
+        };
+        break;
+      case 4:
+        convert = quat.copy;
+        break;
+      case 3:
+        convert = (a, b) => quat.rotationTo(a, model.tangentDirection, b);
+        break;
+      default:
+        vtkErrorMacro('Orientation doesnt match mat4, mat3, quat or vec3');
+        publicAPI._resetOrientedCenterline();
+        return model._orientedCenterline;
+    }
+    // Function to get orientation from point index
+    let getOrientation = () => null;
+    if (model.useUniformOrientation) {
+      const outQuat = new Float64Array(4);
+      convert(outQuat, model.uniformOrientation);
+      getOrientation = () => outQuat;
+    } else {
+      const temp = new Float64Array(16);
+      getOrientation = (i) => {
+        const outQuat = new Float64Array(4);
+        orientationDataArray.getTuple(i, temp);
+        convert(outQuat, temp);
+        return outQuat;
+      };
+    }
+    // Fill the orientation array
+    for (let i = 0; i < nPoints; ++i) {
+      const pointIdx = pointIndices[i];
+      orientations[i] = getOrientation(pointIdx);
+    }
+
+    // Done recomputing
+    model._orientedCenterline.initialize(pointsDataArray, pointIndices);
+    model._orientedCenterline.setOrientations(orientations);
+    return model._orientedCenterline;
+  };
+
+  publicAPI.setOrientedCenterline = (centerline) => {
+    if (model._orientedCenterline !== centerline) {
+      model._orientedCenterline = centerline;
+      return true;
+    }
+    return false;
+  };
+
+  publicAPI._resetOrientedCenterline = () => {
+    model._orientedCenterline.initialize(vtkPoints.newInstance());
+    model._orientedCenterline.setOrientations([]);
+  };
+
+  publicAPI.getMTime = () => {
+    let mTime = superClass.getMTime();
+    if (!model._orientedCenterline) {
+      return mTime;
+    }
+
+    mTime = Math.max(mTime, model._orientedCenterline.getMTime());
+    return mTime;
   };
 
   publicAPI.getHeight = () => {
-    const accHeights = publicAPI.getAccumulatedSegmentHeights();
+    const accHeights = publicAPI
+      .getOrientedCenterline()
+      .getTotalDistanceArray();
     if (accHeights.length === 0) {
       return 0;
     }
     return accHeights[accHeights.length - 1];
   };
 
-  // Update segments and return the internal segment list (do not mutate)
-  publicAPI.getSegmentList = () => {
-    model._setSegmentList();
-    return model._segmentList;
+  publicAPI.getCenterlinePositionAndOrientation = (distance) => {
+    const centerline = publicAPI.getOrientedCenterline();
+    const subId = centerline.findSubId(distance);
+    if (subId < 0) {
+      return {};
+    }
+    const distances = centerline.getTotalDistanceArray();
+    const pcoords = [
+      (distance - distances[subId]) / (distances[subId + 1] - distances[subId]),
+    ];
+    const weights = new Array(2);
+
+    const position = new Array(3);
+    centerline.evaluateLocation(subId, pcoords, position, weights);
+
+    const orientation = new Array(4);
+    if (!centerline.evaluateOrientation(subId, pcoords, orientation, weights)) {
+      // No orientation
+      return { position };
+    }
+    return { position, orientation };
   };
 
-  publicAPI.getDirectionDataArray = () => {
-    const pointData = publicAPI.getInputData(1)?.getPointData();
-    if (!pointData) {
+  publicAPI.getCenterlineTangentDirections = () => {
+    const centerline = publicAPI.getOrientedCenterline();
+    const directionsTime = model._centerlineTangentDirectionsTime.getMTime();
+    if (directionsTime < centerline.getMTime()) {
+      const orientations = centerline.getOrientations();
+      model._centerlineTangentDirections = new Float32Array(
+        3 * orientations.length
+      );
+      const localDirection = new Array(3);
+      for (let i = 0; i < orientations.length; ++i) {
+        vec3.transformQuat(
+          localDirection,
+          model.tangentDirection,
+          orientations[i]
+        );
+        model._centerlineTangentDirections.set(localDirection, 3 * i);
+      }
+      model._centerlineTangentDirectionsTime.modified();
+    }
+    return model._centerlineTangentDirections;
+  };
+
+  publicAPI.getUniformDirection = () => {
+    const centerline = publicAPI.getOrientedCenterline();
+    const orientations = centerline.getOrientations();
+    if (!orientations || orientations.length <= 0) {
       return null;
     }
-    if (model.directionArrayName !== null) {
-      return pointData.getArrayByName(model.directionArrayName);
+    const orientation = orientations[0];
+    const direction = new Array(3);
+    vec3.transformQuat(direction, model.tangentDirection, orientation);
+    return direction;
+  };
+
+  publicAPI.getDirectionMatrix = () => {
+    const tangent = model.tangentDirection;
+    const bitangent = model.bitangentDirection;
+    const normal = model.normalDirection;
+    return new Float64Array([
+      tangent[0],
+      tangent[1],
+      tangent[2],
+      bitangent[0],
+      bitangent[1],
+      bitangent[2],
+      normal[0],
+      normal[1],
+      normal[2],
+    ]);
+  };
+
+  publicAPI.setDirectionMatrix = (mat) => {
+    if (mat4.equals(mat, publicAPI.getDirectionMatrix())) {
+      return false;
     }
-    return (
-      pointData.getArrayByName('Direction') ||
-      pointData.getVectors() ||
-      pointData.getTensors() ||
-      pointData.getNormals()
-    );
+    model.tangentDirection = [mat[0], mat[1], mat[2]];
+    model.bitangentDirection = [mat[3], mat[4], mat[5]];
+    model.normalDirection = [mat[6], mat[7], mat[8]];
+    publicAPI.modified();
+    return true;
   };
 
   // Check if the rendering can occur
   publicAPI.preRenderCheck = () => {
     if (!publicAPI.getInputData(0)) {
       vtkErrorMacro('No image data input');
-      return false;
-    }
-    if (!publicAPI.getInputData(1)) {
-      vtkErrorMacro('No centerline input');
       return false;
     }
     return true;
@@ -159,6 +288,10 @@ function vtkImageCPRMapper(publicAPI, model) {
     publicAPI.setInputConnection(imageData, 0);
 
   publicAPI.getIsOpaque = () => true;
+
+  // One can also call setOrientedCenterline and not provide a polydata centerline to input 1
+  model._orientedCenterline = vtkPolyLine.newInstance();
+  publicAPI._resetOrientedCenterline();
 }
 
 // ----------------------------------------------------------------------------
@@ -167,12 +300,14 @@ function vtkImageCPRMapper(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   width: 10,
-  uniformDirection: [1, 0, 0],
-  useUniformDirection: false,
+  uniformOrientation: [0, 0, 0, 1],
+  useUniformOrientation: false,
   preferSizeOverAccuracy: false,
-  directionArrayName: null,
-  directionArrayOffset: 0,
+  orientationArrayName: null,
   outColor: [1, 0, 0, 1],
+  tangentDirection: [1, 0, 0],
+  bitangentDirection: [0, 1, 0],
+  normalDirection: [0, 0, 1],
 };
 
 // ----------------------------------------------------------------------------
@@ -186,15 +321,20 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Two inputs: one for the ImageData and one for the PolyData (centerline)
   macro.algo(publicAPI, model, 2, 0);
 
+  model._centerlineTangentDirectionsTime = {};
+  macro.obj(model._centerlineTangentDirectionsTime, { mtime: 0 });
+
   // Setters and getters
   macro.setGet(publicAPI, model, [
     'width',
-    'useUniformDirection',
+    'uniformOrientation',
+    'useUniformOrientation',
     'preferSizeOverAccuracy',
-    'directionArrayName',
-    'directionArrayOffset',
+    'orientationArrayName',
+    'tangentDirection',
+    'bitangentDirection',
+    'normalDirection',
   ]);
-  macro.setGetArray(publicAPI, model, ['uniformDirection'], 3);
   macro.setGetArray(publicAPI, model, ['outColor'], 4);
   CoincidentTopologyHelper.implementCoincidentTopologyMethods(publicAPI, model);
 

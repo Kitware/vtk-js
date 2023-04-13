@@ -101,7 +101,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     }
 
     model.currentImageDataInput = model.renderable.getInputData(0);
-    model.currentCenterlineInput = model.renderable.getInputData(1);
+    model.currentCenterlineInput = model.renderable.getOrientedCenterline();
 
     publicAPI.renderPieceStart(ren, prop);
     publicAPI.renderPieceDraw(ren, prop);
@@ -343,38 +343,35 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
       model.VBOBuildTime.getMTime() < centerline.getMTime()
     ) {
-      const accHeights = model.renderable.getAccumulatedSegmentHeights();
+      const nPoints = centerline.getNumberOfPoints();
+      const nLines = nPoints <= 1 ? 0 : nPoints - 1;
+      const distances = centerline.getTotalDistanceArray();
       const totalHeight = model.renderable.getHeight();
-      const nPts = 4 * accHeights.length;
+      const nPts = 4 * nLines;
 
       // Create the array of point: 4 points per segment
       const ptsArray = new Float32Array(3 * nPts);
       const widthMC = model.renderable.getWidth();
 
-      for (
-        let segmentIdx = 0, offset = 0, previousHeightMC = 0;
-        segmentIdx < accHeights.length;
-        ++segmentIdx
-      ) {
-        const nextHeightMC = accHeights[segmentIdx];
-
+      for (let lineIdx = 0, offset = 0; lineIdx < nLines; ++lineIdx) {
         // Use model coordinates
         // See "setCameraShaderParameters" to see how MCPCMatrix is built
 
         // Top left
-        ptsArray.set([0, totalHeight - previousHeightMC, 0], offset);
+        ptsArray.set([0, totalHeight - distances[lineIdx], 0], offset);
         offset += 3;
         // Top right
-        ptsArray.set([widthMC, totalHeight - previousHeightMC, 0], offset);
+        ptsArray.set([widthMC, totalHeight - distances[lineIdx], 0], offset);
         offset += 3;
         // Bottom right
-        ptsArray.set([widthMC, totalHeight - nextHeightMC, 0], offset);
+        ptsArray.set(
+          [widthMC, totalHeight - distances[lineIdx + 1], 0],
+          offset
+        );
         offset += 3;
         // Bottom left
-        ptsArray.set([0, totalHeight - nextHeightMC, 0], offset);
+        ptsArray.set([0, totalHeight - distances[lineIdx + 1], 0], offset);
         offset += 3;
-
-        previousHeightMC = nextHeightMC;
       }
 
       const points = vtkDataArray.newInstance({
@@ -384,11 +381,11 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       points.setName('points');
 
       // Create the array of cells: a quad per segment
-      const cellArray = new Uint16Array(5 * accHeights.length);
+      const cellArray = new Uint16Array(5 * nLines);
       for (
-        let segmentIdx = 0, offset = 0, ptIdx = 0;
-        segmentIdx < accHeights.length;
-        ++segmentIdx
+        let lineIdx = 0, offset = 0, ptIdx = 0;
+        lineIdx < nLines;
+        ++lineIdx
       ) {
         cellArray.set([4, ptIdx + 3, ptIdx + 2, ptIdx + 1, ptIdx], offset);
         offset += 5;
@@ -401,16 +398,12 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
 
       // Create the array of centerline positions (VBO custom attribute)
       const pointsDataArray = centerline.getPoints();
-      const segmentList = model.renderable.getSegmentList();
       const centerlinePositionArray = new Float32Array(3 * nPts);
-      for (
-        let segmentIdx = 0, offset = 0;
-        segmentIdx < segmentList.length;
-        ++segmentIdx
-      ) {
-        const [paIdx, pbIdx] = segmentList[segmentIdx];
-        const pa = pointsDataArray.getTuples(paIdx, paIdx + 1);
-        const pb = pointsDataArray.getTuples(pbIdx, pbIdx + 1);
+      const pa = new Array(3);
+      const pb = new Array(3);
+      for (let lineIdx = 0, offset = 0; lineIdx < nLines; ++lineIdx) {
+        pointsDataArray.getPoint(lineIdx, pa);
+        pointsDataArray.getPoint(lineIdx + 1, pb);
 
         // Top left
         centerlinePositionArray.set(pa, offset);
@@ -437,11 +430,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       //    |____|
       //   2      3
       const quadIndexArray = new Float32Array(nPts);
-      for (
-        let segmentIdx = 0, offset = 0;
-        segmentIdx < segmentList.length;
-        ++segmentIdx
-      ) {
+      for (let lineIdx = 0, offset = 0; lineIdx < nLines; ++lineIdx) {
         quadIndexArray.set(
           [
             0, // Top left
@@ -461,32 +450,16 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
 
       const customAttributes = [centerlinePosition, quadIndex];
 
-      if (!model.renderable.getUseUniformDirection()) {
+      if (!model.renderable.getUseUniformOrientation()) {
         // For each {quad / centerline segment}, two vectors in directionDataArray give the orientation of the centerline
         // Send these two vectors to each vertex and use flat interpolation to get them as is in the fragment shader
         // The interpolation will occur in the fragment shader (slerp)
-        const directionDataArray = model.renderable.getDirectionDataArray();
-        const directionArrayOffset = model.renderable.getDirectionArrayOffset();
-        if (
-          !directionDataArray ||
-          directionDataArray.getNumberOfComponents() < 3
-        ) {
-          return;
-        }
+        const directions = model.renderable.getCenterlineTangentDirections();
         const centerlineTopDirectionArray = new Float32Array(3 * nPts);
         const centerlineBotDirectionArray = new Float32Array(3 * nPts);
-        for (
-          let segmentIdx = 0, offset = 0;
-          segmentIdx < segmentList.length;
-          ++segmentIdx
-        ) {
-          const [topDirIdx, botDirIdx] = segmentList[segmentIdx];
-          const topDir = directionDataArray
-            .getTuples(topDirIdx, topDirIdx + 1)
-            .subarray(directionArrayOffset, directionArrayOffset + 3);
-          const botDir = directionDataArray
-            .getTuples(botDirIdx, botDirIdx + 1)
-            .subarray(directionArrayOffset, directionArrayOffset + 3);
+        for (let lineIdx = 0, offset = 0; lineIdx < nLines; ++lineIdx) {
+          const topDir = directions[lineIdx];
+          const botDir = directions[lineIdx + 1];
 
           // Every vertex of each quad/segment have the same topDir and botDir
           for (let i = 0; i < 4; ++i) {
@@ -569,7 +542,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       'out vec2 quadOffsetVSOutput;',
       'out vec3 centerlinePosVSOutput;',
     ];
-    const isDirectionUniform = model.renderable.getUseUniformDirection();
+    const isDirectionUniform = model.renderable.getUseUniformOrientation();
     if (isDirectionUniform) {
       vsColorDec.push(
         'out vec3 centerlineDirVSOutput;',
