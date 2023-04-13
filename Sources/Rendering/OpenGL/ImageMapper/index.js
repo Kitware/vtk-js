@@ -1052,7 +1052,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         dims[0],
         dims[1],
         imgScalars,
-        model.renderable?.getPreferSizeOverAccuracy()
+        model.renderable.getPreferSizeOverAccuracy?.()
       );
       model.openGLTexture.activate();
       model.openGLTexture.sendParameters();
