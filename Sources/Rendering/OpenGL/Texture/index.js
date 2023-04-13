@@ -1672,8 +1672,8 @@ function vtkOpenGLTexture(publicAPI, model) {
                 newArray,
                 outIdx,
                 data[inOffset + xstride * tileX * numComps + nc],
-                scaleOffsets.offset[nc],
-                scaleOffsets.scale[nc]
+                scaleOffsetsCopy.offset[nc],
+                scaleOffsetsCopy.scale[nc]
               );
               outIdx++;
             }
