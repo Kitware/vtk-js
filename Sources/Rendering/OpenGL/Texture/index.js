@@ -1237,6 +1237,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     const dataType = dataArray.getDataType();
     const data = dataArray.getData();
 
+    // Compute min max from array
+    // Using the vtkDataArray.getRange() enables caching
     const minArray = new Array(numComps);
     const maxArray = new Array(numComps);
     for (let c = 0; c < numComps; ++c) {
@@ -1244,6 +1246,10 @@ function vtkOpenGLTexture(publicAPI, model) {
       minArray[c] = min;
       maxArray[c] = max;
     }
+
+    // Create a copy of scale and offset to avoid aliasing issues
+    // Original is read only, copy is read/write
+    // Use the copy as volumeInfo.scale and volumeInfo.offset
     const scaleOffsets = computeScaleOffsets(minArray, maxArray, numComps);
 
     const offset = [];
@@ -1426,6 +1432,8 @@ function vtkOpenGLTexture(publicAPI, model) {
       preferSizeOverAccuracy
     );
 
+  //----------------------------------------------------------------------------
+  // This method create a 3D texture from dimensions and a DataArray
   publicAPI.create3DFilterableFromDataArray = (
     width,
     height,
@@ -1438,6 +1446,11 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     const numPixelsIn = width * height * depth;
 
+    // store the information, we will need it later
+    // offset and scale are the offset and scale required to get
+    // the texture value back to data values ala
+    // data = texture * scale + offset
+    // and texture = (data - offset)/scale
     model.volumeInfo = {
       scale,
       offset,
