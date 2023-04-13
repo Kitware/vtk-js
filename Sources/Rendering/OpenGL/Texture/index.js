@@ -1185,7 +1185,7 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   // Compute scale and offset per component from min and max per component
-  publicAPI.computeScaleOffsets = (min, max, numComps) => {
+  function computeScaleOffsets(min, max, numComps) {
     const offset = new Array(numComps);
     const scale = new Array(numComps);
     for (let c = 0; c < numComps; ++c) {
@@ -1193,7 +1193,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       scale[c] = max[c] - min[c] || 1.0;
     }
     return { scale, offset };
-  };
+  }
 
   // HalfFloat only represents numbers between [-2048, 2048] exactly accurate,
   // for numbers outside of this range there is a precision limitation
@@ -1210,12 +1210,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     return true;
   }
 
-  publicAPI.setUseHalfFloat = (
-    dataType,
-    offset,
-    scale,
-    preferSizeOverAccuracy
-  ) => {
+  function setUseHalfFloat(dataType, offset, scale, preferSizeOverAccuracy) {
     publicAPI.getOpenGLDataType(dataType);
 
     let useHalfFloat = false;
@@ -1235,6 +1230,84 @@ function vtkOpenGLTexture(publicAPI, model) {
     } else {
       model.useHalfFloat = false;
     }
+  }
+
+  publicAPI.create2DFilterableFromRaw = (
+    width,
+    height,
+    numberOfComponents,
+    dataType,
+    values,
+    preferSizeOverAccuracy = false
+  ) =>
+    publicAPI.create2DFilterableFromDataArray(
+      width,
+      height,
+      vtkDataArray.newInstance({
+        numberOfComponents,
+        dataType,
+        values,
+      }),
+      preferSizeOverAccuracy
+    );
+
+  publicAPI.create2DFilterableFromDataArray = (
+    width,
+    height,
+    dataArray,
+    preferSizeOverAccuracy = false
+  ) => {
+    const numComps = dataArray.getNumberOfComponents();
+    const dataType = dataArray.getDataType();
+    const data = dataArray.getData();
+
+    // Compute min max from array
+    // Using the vtkDataArray.getRange() enables caching
+    const minArray = new Array(numComps);
+    const maxArray = new Array(numComps);
+    for (let c = 0; c < numComps; ++c) {
+      const [min, max] = dataArray.getRange(c);
+      minArray[c] = min;
+      maxArray[c] = max;
+    }
+    const scaleOffsets = computeScaleOffsets(minArray, maxArray, numComps);
+
+    // Create a copy of scale and offset to avoid aliasing issues
+    // Original is read only, copy is read/write
+    // Use the copy as volumeInfo.scale and volumeInfo.offset
+    const scaleOffsetsCopy = structuredClone(scaleOffsets);
+
+    // initialize offset/scale
+    const offset = [];
+    const scale = [];
+    for (let c = 0; c < numComps; ++c) {
+      offset[c] = 0.0;
+      scale[c] = 1.0;
+    }
+
+    // preferSizeOverAccuracy will override norm16 due to bug with norm16 implementation
+    // https://bugs.chromium.org/p/chromium/issues/detail?id=1408247
+    setUseHalfFloat(
+      dataType,
+      scaleOffsetsCopy.offset,
+      scaleOffsetsCopy.scale,
+      preferSizeOverAccuracy
+    );
+
+    // since our default is to use half float, in case that we can't use it
+    // we need to use another type
+    if (!model.useHalfFloat) {
+      publicAPI.getOpenGLDataType(dataType, true);
+    }
+
+    publicAPI.create2DFromRaw(
+      width,
+      height,
+      numComps,
+      dataType,
+      data,
+      preferSizeOverAccuracy
+    );
   };
 
   //----------------------------------------------------------------------------
@@ -1405,7 +1478,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // preferSizeOverAccuracy will override norm16 due to bug with norm16 implementation
     // https://bugs.chromium.org/p/chromium/issues/detail?id=1408247
-    publicAPI.setUseHalfFloat(
+    setUseHalfFloat(
       dataType,
       scaleOffsets.offset,
       scaleOffsets.scale,
