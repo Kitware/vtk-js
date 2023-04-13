@@ -1,26 +1,28 @@
-import { vec3, vec4 } from "gl-matrix";
+import { mat3, quat, vec3, vec4 } from "gl-matrix";
 import vtkDataArray from "../../../Common/Core/DataArray";
 import vtkImageData from "../../../Common/DataModel/ImageData";
 import vtkPolyData from "../../../Common/DataModel/PolyData";
 import { vtkOutputPort } from "../../../interfaces";
 import vtkAbstractMapper3D, { IAbstractMapper3DInitialValues } from "../AbstractMapper3D";
+import vtkPolyLine from "../../../Common/DataModel/PolyLine";
 
 interface ICoincidentTopology {
 	factor: number;
 	offset: number;
 }
 
+type TOrientation = mat4 | mat3 | quat | vec;
+
 export interface IImageCPRMapperInitialValues extends IAbstractMapper3DInitialValues{
-	width: number,
-	uniformDirection: number[],
-	useUniformDirection: boolean,
-	reformationAngle: number,
-	minHorizontalOffset: number,
-	maxHorizontalOffset: number,
-	preferSizeOverAccuracy: boolean, // Whether to use halfFloat representation of float, when it is inaccurate
-	directionArrayName: string | null,
-	directionArrayOffset: number,
-	outColor: number[],
+	width: number;
+	uniformOrientation: TOrientation; // Don't use vec3 if possible
+	useUniformOrientation: boolean;
+	preferSizeOverAccuracy: boolean; // Whether to use halfFloat representation of float, when it is inaccurate
+	orientationArrayName: string | null;
+	outColor: number[];
+	tangentDirection: vec3;
+	bitangentDirection: vec3;
+	normalDirection: vec3;
 }
 
 export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
@@ -36,37 +38,29 @@ export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
 	setWidth(width: number): boolean;
 
 	/**
-	 * Use @see useUniformDirection to use the this uniform direction instead of the direction specified by the centerline
-	 * @returns the uniform direction vector of the centerline
+	 * Use @see getUseUniformOrientation to use the uniform orientation instead of the orientation specified by the centerline
+	 * @returns the uniform orientation of the centerline
 	 */
-	getUniformDirection(): vec3;
+	getUniformOrientation(): TOrientation;
 
 	/**
-	 * @see getUniformDirection
-	 * @param direction
+	 * @see getUniformOrientation
+	 * @param orientation
 	 */
-	setUniformDirection(direction: number[]): boolean;
+	setUniformOrientation(orientation: TOrientation): boolean;
 
 	/**
-	 * @see getUniformDirection
-	 * @param x
-	 * @param y
-	 * @param z
-	 */
-	setUniformDirection(x: number, y: number, z: number): boolean;
-
-	/**
-	 * This flag specifies wether the mapper should use the uniformDirection ( @see getUniformDirection ) or the direction specified in centerline at centerline input ( @see setCenterlineData )
+	 * This flag specifies wether the mapper should use the uniformOrientation ( @see getUniformOrientation ) or the orientation specified in centerline at centerline input ( @see setCenterlineData )
 	 * Defaults to false.
-	 * @returns the useUniformDirection flag
+	 * @returns the useUniformOrientation flag
 	 */
-	getUseUniformDirection(): boolean;
+	getUseUniformOrientation(): boolean;
 	
 	/**
-	 * @see getUseUniformDirection
-	 * @param useUniformDirection
+	 * @see getUseUniformOrientation
+	 * @param useUniformOrientation
 	 */
-	setUseUniformDirection(useUniformDirection: boolean): boolean;
+	setUseUniformOrientation(useUniformOrientation: boolean): boolean;
 
 	/**
 	 * This flag indicates wether the GPU should use half float or not
@@ -84,33 +78,19 @@ export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
 	setPreferSizeOverAccuracy(preferSizeOverAccuracy: boolean): boolean;
 
 	/**
-	 * DirectionArrayName specifies the name of the data array which gives a direction vector for each point of the centerline
+	 * OrientationArrayName specifies the name of the data array which gives an orientation for each point of the centerline
 	 * The data array has to be in the PointData attribute of the centerline input
-	 * If null, look for the direction data array in: "Direction", Vectors, Tensors, Normals
-	 * The data array should have a number of components greater than 3 as the mapper only uses the vectors ( @see directionArrayOffset @see getDirectionArrayOffset )
+	 * If null, look for the orientation data array in: "Orientation", "Direction", Vectors, Tensors, Normals
+	 * The data array should be an array of mat4, mat3, quat or vec3 but using vec3 makes the CPRInteractor unusable
 	 * Default to null.
 	 */
-	getDirectionArrayName(): string | null;
+	getOrientationArrayName(): string | null;
 
 	/**
-	 * @see getDirectionArrayName
+	 * @see getOrientationArrayName
 	 * @param arrayName
 	 */
-	setDirectionArrayName(arrayName: string | null): boolean;
-
-	/**
-	 * Use this offset for tuples in the data array specifying the direction vectors of the centerline
-	 * For example, if using the y-axis of a column-major mat3 as a direction vector, you can use a directionArrayOffset of 3
-	 * For the z-axis of a mat4, use an offset of 8
-	 * Defaults to 0.
-	 */
-	getDirectionArrayOffset(): number;
-
-	/**
-	 * @see getDirectionArrayOffset
-	 * @param directionArrayOffset
-	 */
-	setDirectionArrayOffset(directionArrayOffset: number): boolean;
+	setOrientationArrayName(arrayName: string | null): boolean;
 
 	/**
 	 * The RGBA color of the image when sampling outside of the volume
@@ -132,11 +112,75 @@ export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
 	 * @param a
 	 */
 	setOutColor(r: number, g: number, b: number, a: number): boolean;
+
+	/**
+	 * For each point on the oriented centerline, the tangent direction is the direction in which the mapper will sample
+	 * Let O (a mat3) be the orientation at a point on a centerline, and N (a vec3) the tangent direction
+	 * Then the mapper will sample along O * N
+	 * Default value: [1, 0, 0]
+	 */
+	getTangentDirection(): vec3;
+
+	/**
+	 * @see getTangentDirection
+	 * @param tangent
+	 */
+	setTangentDirection(tangent: vec3): boolean;
+
+	/**
+	 * For each point on the oriented centerline, the bitangent direction forms with the normal and the tangent direction a new basis
+	 * Default value: [0, 1, 0]
+	 */
+	getBitangentDirection(): vec3;
+
+	/**
+	 * @see getTangentDirection
+	 * @param bitangent
+	 */
+	setBitangentDirection(bitangent: vec3): boolean;
+
+	/**
+	 * For each point on the oriented centerline, the normal direction is the direction along the centerline
+	 * Default value: [0, 0, 1]
+	 */
+	getNormalDirection(): vec3;
+
+	/**
+	 * @see getNormalDirection
+	 * @param normal
+	 */
+	setNormalDirection(normal: vec3): boolean;
+
+	/**
+	 * The direction matrix is the matrix composed of tangent, bitangent and normal directions
+	 * It is used to orient the camera or the actor
+	 */
+	getDirectionMatrix(): mat3;
+
+	/**
+	 * @see getDirectionMatrix
+	 * @param mat
+	 */
+	setDirectionMatrix(mat: mat3): boolean;
+
+	/**
+	 * Find the data array to use for orientation in the input polydata ( @see getOrientationArrayName )
+	 */
+	getOrientationDataArray(): null | vtkDataArray;
+
+	/**
+	 * Recompute the oriented centerline from the input polydata if needed and return the result
+	 * If there is no polydata as input, return the last oriented centerline
+	 * It means that if no polydata is given as input and the centerline is set using @see setOrientedCenterline , the given centerline will be used
+	 */
+	getOrientedCenterline(): vtkPolyLine;
 	
 	/**
-	 * @returns An array of accumulated heights. The array at index i contains the sum of the height of all segments from 0 to i (included)
+	 * Set the internal oriented centerline
+	 * WARNING: this centerline will be overwritten if the polydata centerline is specified (input 1 @see setCenterlineData )
+	 * @param centerline An oriented centerline
 	 */
-	getAccumulatedSegmentHeights(): number[];
+	setOrientedCenterline(centerline: vtkPolyLine): boolean;
 
 	/**
 	 * @returns The total height of the image in model coordinates.
@@ -144,14 +188,19 @@ export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
 	getHeight(): number;
 
 	/**
-	 * @returns An array of segments of the centerline. The segments have a shape [idxa, idxb] where idxa and idxb are the index of the points in the centerline polydata (centerline.getPoints()).
+	 * @param distance Distance from the beginning of the centerline, following the centerline, in model coordinates
+	 * @returns The position and orientation which is at the given distance from the beginning of the centerline.
+	 * If the distance is negative or greater than the length of the centerline, position and orientation are not defined.
+	 * If the centerline is not oriented, orientation is not defined.
 	 */
-	getSegmentList(): number[][];
+	getCenterlinePositionAndOrientation(distance: number): { position?: vec3, orientation?: quat };
 
 	/**
-	 * @returns The data array used to give direction vectors the centerline points. This data array is retrieved using directionArrayName ( @see getDirectionArrayName ) and uses model coordinates of the volume used as input
+	 * @returns An array of vec3 representing the direction at each point of the centerline
+	 * It is computed from the orientations of the centerline and tangentDirection
+	 * Uses caching to avoid recomputing at each frame
 	 */
-	getDirectionDataArray(): vtkDataArray;
+	getCenterlineTangentDirections(): vec3[];
 
 	/**
 	 * @returns A boolean indicating if the mapper is ready to render
@@ -326,16 +375,16 @@ export function newInstance(initialValues?: IImageCPRMapperInitialValues): vtkIm
  *
  * For each segment of the centerline the mapper creates a quad of the
  * specified width ( @see getWidth ) and of height equal to the length of the
- * segment. The position and the directions vectors of the centerline are
+ * segment. The position and the orientation of the centerline are
  * interpolated along the y-axis of the quad. The position is linearly
- * interpolated (lerp) and the direction vector is interpolated using
+ * interpolated (lerp) and the orientation is interpolated using
  * spherical linear interpolation (slerp). For a point (x, y) on the quad,
- * the value of y gives the interpolated position P and interpolated direction
- * vector D. The value of x between -0.5 and 0.5 then gives the position to
- * sample in the volume: P + x*D.
+ * the value of y gives the interpolated position P and interpolated
+ * orientation O which combined with tangentDirection gives D
+ * ( @see getTangentDirection ). The value of x between -0.5 and 0.5 then gives
+ * the position to sample in the volume: P + x*D.
  *
- * This mapper can be used to visualize tubular structures such as blood
- * vessels. By computing the right centerline positions and directions, one
+ * By computing the right centerline positions and orientations, one
  * can simulate Stretched CPR and Straightened CPR.
  * 
  * This class resolves coincident topology with the same methods as vtkMapper.
