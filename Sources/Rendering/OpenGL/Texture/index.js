@@ -1222,14 +1222,12 @@ function vtkOpenGLTexture(publicAPI, model) {
         halfFloatExt && model.openGLDataType === halfFloatExt.HALF_FLOAT_OES;
     }
 
-    if (
+    // Don't consider halfFloat and convert back to Float when the range of data does not generate an accurate halfFloat
+    // AND it is not preferable to have a smaller texture than an exact texture.
+    const isHalfFloat =
       useHalfFloat &&
-      (hasExactHalfFloat(offset, scale) || preferSizeOverAccuracy)
-    ) {
-      model.useHalfFloat = true;
-    } else {
-      model.useHalfFloat = false;
-    }
+      (hasExactHalfFloat(offset, scale) || preferSizeOverAccuracy);
+    model.useHalfFloat = isHalfFloat;
   }
 
   function processDataArray(dataArray, preferSizeOverAccuracy) {
@@ -1259,6 +1257,8 @@ function vtkOpenGLTexture(publicAPI, model) {
       scale[c] = 1.0;
     }
 
+    // preferSizeOverAccuracy will override norm16 due to bug with norm16 implementation
+    // https://bugs.chromium.org/p/chromium/issues/detail?id=1408247
     setUseHalfFloat(
       dataType,
       scaleOffsets.offset,
@@ -1266,6 +1266,8 @@ function vtkOpenGLTexture(publicAPI, model) {
       preferSizeOverAccuracy
     );
 
+    // since our default is to use half float, in case that we can't use it
+    // we need to use another type
     if (!model.useHalfFloat) {
       publicAPI.getOpenGLDataType(dataType, true);
     }
@@ -1274,7 +1276,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       numComps,
       dataType,
       data,
-      scaleOffsets: structuredClone(scaleOffsets),
+      scaleOffsets,
       offset,
       scale,
     };
@@ -1310,14 +1312,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       preferSizeOverAccuracy
     );
 
-    publicAPI.create2DFromRaw(
-      width,
-      height,
-      numComps,
-      dataType,
-      data,
-      preferSizeOverAccuracy
-    );
+    publicAPI.create2DFromRaw(width, height, numComps, dataType, data);
   };
   //----------------------------------------------------------------------------
   publicAPI.create3DFromRaw = (
@@ -1461,6 +1456,8 @@ function vtkOpenGLTexture(publicAPI, model) {
       depth,
     };
 
+    const scaleOffsetsCopy = structuredClone(scaleOffsets);
+
     // WebGL2 path, we have 3d textures etc
     if (model._openGLRenderWindow.getWebgl2()) {
       if (
@@ -1528,14 +1525,14 @@ function vtkOpenGLTexture(publicAPI, model) {
       // otherwise convert to float
       const newArray = new Float32Array(numPixelsIn * numComps);
       // use computed scale and offset
-      model.volumeInfo.offset = scaleOffsets.offset;
-      model.volumeInfo.scale = scaleOffsets.scale;
+      model.volumeInfo.offset = scaleOffsetsCopy.offset;
+      model.volumeInfo.scale = scaleOffsetsCopy.scale;
       let count = 0;
-      const scaleInverse = scaleOffsets.scale.map((s) => 1 / s);
+      const scaleInverse = scaleOffsetsCopy.scale.map((s) => 1 / s);
       for (let i = 0; i < numPixelsIn; i++) {
         for (let nc = 0; nc < numComps; nc++) {
           newArray[count] =
-            (data[count] - scaleOffsets.offset[nc]) * scaleInverse[nc];
+            (data[count] - scaleOffsetsCopy.offset[nc]) * scaleInverse[nc];
           count++;
         }
       }
@@ -1559,8 +1556,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     // unsigned char gets used as is
     if (dataType === VtkDataTypes.UNSIGNED_CHAR) {
       for (let c = 0; c < numComps; ++c) {
-        scaleOffsets.offset[c] = 0.0;
-        scaleOffsets.scale[c] = 255.0;
+        scaleOffsetsCopy.offset[c] = 0.0;
+        scaleOffsetsCopy.scale[c] = 255.0;
       }
     } else if (
       model.context.getExtension('OES_texture_float') &&
@@ -1637,8 +1634,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.volumeInfo.yreps = yreps;
     model.volumeInfo.xstride = xstride;
     model.volumeInfo.ystride = ystride;
-    model.volumeInfo.offset = scaleOffsets.offset;
-    model.volumeInfo.scale = scaleOffsets.scale;
+    model.volumeInfo.offset = scaleOffsetsCopy.offset;
+    model.volumeInfo.scale = scaleOffsetsCopy.scale;
 
     // OK stuff the data into the 2d TEXTURE
 
