@@ -1247,13 +1247,6 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     const scaleOffsets = computeScaleOffsets(minArray, maxArray, numComps);
 
-    const offset = [];
-    const scale = [];
-    for (let c = 0; c < numComps; ++c) {
-      offset[c] = 0.0;
-      scale[c] = 1.0;
-    }
-
     // preferSizeOverAccuracy will override norm16 due to bug with norm16 implementation
     // https://bugs.chromium.org/p/chromium/issues/detail?id=1408247
     setUseHalfFloat(
@@ -1274,8 +1267,6 @@ function vtkOpenGLTexture(publicAPI, model) {
       dataType,
       data,
       scaleOffsets,
-      offset,
-      scale,
     };
   }
 
@@ -1433,10 +1424,19 @@ function vtkOpenGLTexture(publicAPI, model) {
     dataArray,
     preferSizeOverAccuracy = false
   ) => {
-    const { numComps, dataType, data, scaleOffsets, offset, scale } =
-      processDataArray(dataArray, preferSizeOverAccuracy);
+    const { numComps, dataType, data, scaleOffsets } = processDataArray(
+      dataArray,
+      preferSizeOverAccuracy
+    );
 
     const numPixelsIn = width * height * depth;
+
+    const offset = [];
+    const scale = [];
+    for (let c = 0; c < numComps; ++c) {
+      offset[c] = 0.0;
+      scale[c] = 1.0;
+    }
 
     // store the information, we will need it later
     // offset and scale are the offset and scale required to get
