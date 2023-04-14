@@ -1245,9 +1245,6 @@ function vtkOpenGLTexture(publicAPI, model) {
       maxArray[c] = max;
     }
 
-    // Create a copy of scale and offset to avoid aliasing issues
-    // Original is read only, copy is read/write
-    // Use the copy as volumeInfo.scale and volumeInfo.offset
     const scaleOffsets = computeScaleOffsets(minArray, maxArray, numComps);
 
     const offset = [];
@@ -1456,6 +1453,9 @@ function vtkOpenGLTexture(publicAPI, model) {
       depth,
     };
 
+    // Create a copy of scale and offset to avoid aliasing issues
+    // Original is read only, copy is read/write
+    // Use the copy as volumeInfo.scale and volumeInfo.offset
     const scaleOffsetsCopy = structuredClone(scaleOffsets);
 
     // WebGL2 path, we have 3d textures etc
