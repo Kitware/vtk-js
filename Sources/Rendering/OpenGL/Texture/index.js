@@ -10,6 +10,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 const { Wrap, Filter } = Constants;
 const { VtkDataTypes } = vtkDataArray;
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
+const { toHalf } = HalfFloat;
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLTexture methods
@@ -656,8 +657,9 @@ function vtkOpenGLTexture(publicAPI, model) {
       for (let idx = 0; idx < data.length; idx++) {
         if (data[idx]) {
           const newArray = new Uint16Array(pixCount);
+          const src = data[idx];
           for (let i = 0; i < pixCount; i++) {
-            newArray[i] = HalfFloat.toHalf(data[idx][i]);
+            newArray[i] = toHalf(src[i]);
           }
           pixData.push(newArray);
         } else {
