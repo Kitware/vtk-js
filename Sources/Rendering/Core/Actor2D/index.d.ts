@@ -2,6 +2,7 @@ import vtkProp, { IPropInitialValues } from '../Prop';
 import vtkCoordinate from '../Coordinate';
 import vtkMapper from '../Mapper';
 import vtkProperty2D, { IProperty2DInitialValues } from '../Property2D';
+import vtkMapper2D from '../Mapper2D';
 import { Bounds } from '../../../types';
 
 /**
@@ -43,6 +44,16 @@ export interface vtkActor2D extends vtkProp {
 	 * @param {IProperty2DInitialValues} [initialValues] (default: {})
 	 */
 	 makeProperty(initialValues?: IProperty2DInitialValues): vtkProperty2D;
+
+	/**
+	 * Sets the 2D mapper.
+	 */
+	setMapper(mapper: vtkMapper2D): boolean;
+
+	/**
+	 * Gets the 2D mapper.
+	 */
+	getMapper(): vtkMapper2D;
 
 	/**
 	 * 
