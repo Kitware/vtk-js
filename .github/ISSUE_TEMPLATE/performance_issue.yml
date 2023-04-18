@@ -1,0 +1,51 @@
+name: Performance Issue
+description: Report slow behavior in vtk.js.
+title: '[Perf] '
+labels: 'type: performance ⚡️'
+body:
+  - type: markdown
+    attributes:
+      value: |
+        👋 Hello, and thank you for starting this contribution!
+
+        ❓ If you are trying to submit a question for general support, please reach out on our discourse forum instead: https://discourse.vtk.org/c/web/9
+
+        ⚡️ If you do need to report some performance issues, please complete the template below as much as possible to help us address your report.
+
+        🧱 When appropriate, assign one of the `Module: XXX` labels to your issue when creating it.
+  - type: textarea
+    id: description
+    attributes:
+      label: High-level description
+      description: A clear and concise description of the performance issue.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: A list of steps and/or code snippets required to reproduce the behavior. A live example (e.g. codesandbox, codepen) is preferred.
+    validations:
+      required: true
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: Detailed Current Behavior
+      description: |
+        A detailed description of what happens. If applicable, use:
+          - profiling data
+          - videos (drag and drop)
+          - live examples (ex: https://codepen.io/jourdain/pen/RQZWYa)
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: A list of affected platforms and their version numbers.
+      value: |
+        - vtk.js version:
+        - Browsers:
+        - OS:
+    validations:
+      required: true

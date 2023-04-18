@@ -1,0 +1,58 @@
+name: Bug Report
+description: Report a reproducible bug or regression.
+title: '[Bug] '
+labels: 'type: bug 🐞'
+assignees:
+body:
+  - type: markdown
+    attributes:
+      value: |
+        👋 Hello, and thank you for starting this contribution!
+
+        ❓ If you are trying to submit a question for general support, please reach out on our discourse forum instead: https://discourse.vtk.org/c/web/9
+
+        🐞 If you do need to report a bug, please complete the template below as much as possible to help us reproduce the bug and address your report.
+
+        🧱 When appropriate, assign one of the `Module: XXX` labels to your issue when creating it.
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug description
+      description: A description of the encountered bug.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: |
+        A list of steps and/or code snippets required to reproduce the behavior. A live example (e.g. VTK.js examples, codesandbox, codepen, etc.) is preferred.
+
+        An example codesandbox can be forked here: https://codesandbox.io/s/hello-world-cone-ql8e4
+    validations:
+      required: true
+  - type: textarea
+    id: detailed-description
+    attributes:
+      label: Detailed Behavior
+      description: A more detailed description of what happens, if applicable.
+    validations:
+      required: false
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: A detailed description of what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: A list of the relevant platforms and their version numbers.
+      value: |
+        - vtk.js version:
+        - Browsers:
+        - OS:
+    validations:
+      required: true
