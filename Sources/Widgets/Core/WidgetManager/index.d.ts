@@ -83,6 +83,13 @@ export interface vtkWidgetManager extends vtkObject {
   getWidgets(): vtkAbstractWidget[];
 
   /**
+   * Get the active widget.
+   *
+   * If no widget is active, returns null.
+   */
+  getActiveWidget(): Nullable<vtkAbstractWidget>;
+
+  /**
    * Get the view id.
    */
   getViewId(): string;
