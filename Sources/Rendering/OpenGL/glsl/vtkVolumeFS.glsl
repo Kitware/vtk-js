@@ -441,13 +441,17 @@ float computeGradientOpacityFactor(
 
     #else
     //if gradient opacity not on but using density gradient
-      vec4 computeDensityNormal(float scalar, vec3 scalarInterp)
+      vec4 computeDensityNormal(vec3 scalarInterp[2])
       {
-        vec4 opacityG;
-        float opacity = texture2D(otexture, vec2(scalar * oscale0 + oshift0, 0.5)).r;
-        opacityG.x = texture2D(otexture, vec2(scalarInterp.x * oscale0 + oshift0, 0.5)).r - opacity;
-        opacityG.y = texture2D(otexture, vec2(scalarInterp.y * oscale0 + oshift0, 0.5)).r - opacity;
-        opacityG.z = texture2D(otexture, vec2(scalarInterp.z * oscale0 + oshift0, 0.5)).r - opacity;
+        vec3 opacityG1, opacityG2;
+        opacityG1.x = texture2D(otexture, vec2(scalarInterp[0].x * oscale0 + oshift0, 0.5)).r;
+        opacityG1.y = texture2D(otexture, vec2(scalarInterp[0].y * oscale0 + oshift0, 0.5)).r;
+        opacityG1.z = texture2D(otexture, vec2(scalarInterp[0].z * oscale0 + oshift0, 0.5)).r;
+        opacityG2.x = texture2D(otexture, vec2(scalarInterp[1].x * oscale0 + oshift0, 0.5)).r;
+        opacityG2.y = texture2D(otexture, vec2(scalarInterp[1].y * oscale0 + oshift0, 0.5)).r;
+        opacityG2.z = texture2D(otexture, vec2(scalarInterp[1].z * oscale0 + oshift0, 0.5)).r;
+
+        vec4 opacityG = vec4(opacityG1 - opacityG2, 1.0f);
         // divide by spacing
         opacityG.xyz /= vSpacing;
         opacityG.w = length(opacityG.xyz);
@@ -459,15 +463,33 @@ float computeGradientOpacityFactor(
           return vec4(0.0);
         }
       }
-      vec4 computeNormalForDensity(vec3 pos, float scalar, vec3 tstep, out vec3 scalarInterp)
+
+      vec4 computeNormalForDensity(vec3 pos, vec3 tstep, out vec3 scalarInterp[2])
       {
+        vec3 xvec = vec3(tstep.x, 0.0, 0.0);
+        vec3 yvec = vec3(0.0, tstep.y, 0.0);
+        vec3 zvec = vec3(0.0, 0.0, tstep.z);
+        vec3 texPosPVec[3];
+        texPosPVec[0] = pos + xvec;
+        texPosPVec[1] = pos + yvec;
+        texPosPVec[2] = pos + zvec;
+        vec3 texPosNVec[3];
+        texPosNVec[0] = pos - xvec;
+        texPosNVec[1] = pos - yvec;
+        texPosNVec[2] = pos - zvec;
+        vec3 g1, g2;
+
+        scalarInterp[0].x = getTextureValue(texPosPVec[0]).a;
+        scalarInterp[0].y = getTextureValue(texPosPVec[1]).a;
+        scalarInterp[0].z = getTextureValue(texPosPVec[2]).a;
+        scalarInterp[1].x = getTextureValue(texPosNVec[0]).a;
+        scalarInterp[1].y = getTextureValue(texPosNVec[1]).a;
+        scalarInterp[1].z = getTextureValue(texPosNVec[2]).a;
+
         vec4 result;
-        scalarInterp.x = getTextureValue(pos + vec3(tstep.x, 0.0, 0.0)).a;
-        scalarInterp.y = getTextureValue(pos + vec3(0.0, tstep.y, 0.0)).a;
-        scalarInterp.z = getTextureValue(pos + vec3(0.0, 0.0, tstep.z)).a;
-        result.x = scalarInterp.x - scalar;
-        result.y = scalarInterp.y - scalar;
-        result.z = scalarInterp.z - scalar;
+        result.x = scalarInterp[0].x - scalarInterp[1].x;
+        result.y = scalarInterp[0].y - scalarInterp[1].y;
+        result.z = scalarInterp[0].z - scalarInterp[1].z;
         // divide by spacing
         result.xyz /= vSpacing;
         result.w = length(result.xyz);
@@ -481,13 +503,29 @@ float computeGradientOpacityFactor(
       }
     #endif
   #endif
-  // compute scalar density
-  vec4 computeNormal(vec3 pos, float scalar, vec3 tstep)
+
+  vec4 computeNormal(vec3 pos, vec3 tstep)
   {
+    vec3 xvec = vec3(tstep.x, 0.0, 0.0);
+    vec3 yvec = vec3(0.0, tstep.y, 0.0);
+    vec3 zvec = vec3(0.0, 0.0, tstep.z);
+    vec3 texPosPVec[3];
+    texPosPVec[0] = pos + xvec;
+    texPosPVec[1] = pos + yvec;
+    texPosPVec[2] = pos + zvec;
+    vec3 texPosNVec[3];
+    texPosNVec[0] = pos - xvec;
+    texPosNVec[1] = pos - yvec;
+    texPosNVec[2] = pos - zvec;
+    vec3 g1, g2;
+    g1.x = getTextureValue(texPosPVec[0]).a;
+    g1.y = getTextureValue(texPosPVec[1]).a;
+    g1.z = getTextureValue(texPosPVec[2]).a;
+    g2.x = getTextureValue(texPosNVec[0]).a;
+    g2.y = getTextureValue(texPosNVec[1]).a;
+    g2.z = getTextureValue(texPosNVec[2]).a;
     vec4 result;
-    result.x = getTextureValue(pos + vec3(tstep.x, 0.0, 0.0)).a - scalar;
-    result.y = getTextureValue(pos + vec3(0.0, tstep.y, 0.0)).a - scalar;
-    result.z = getTextureValue(pos + vec3(0.0, 0.0, tstep.z)).a - scalar;
+    result = vec4(g1 - g2, -1.0);
     // divide by spacing
     result.xyz /= vSpacing;
     result.w = length(result.xyz);
@@ -694,7 +732,7 @@ float volume_shadow(vec3 posIS, vec3 lightDirNormIS)
     scalar = getTextureValue(posIS);
     opacity = texture2D(otexture, vec2(scalar.r * oscale0 + oshift0, 0.5)).r;
     #ifdef vtkGradientOpacityOn
-      normal = computeNormal(posIS, scalar.a, vec3(1.0/vec3(volumeDimensions)));
+      normal = computeNormal(posIS, vec3(1.0/vec3(volumeDimensions)));
       opacity *= computeGradientOpacityFactor(normal.w, goscale0, goshift0, gomin0, gomax0);
     #endif
     shadow *= 1.0 - opacity;
@@ -1032,17 +1070,17 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
             normalLight = normal0;
           }
         #else
-          vec3 scalarInterp;
-          vec4 normal0 = computeNormalForDensity(posIS, tValue.a, tstep, scalarInterp);
+          vec3 scalarInterp[2];
+          vec4 normal0 = computeNormalForDensity(posIS, tstep, scalarInterp);
           if (length(normal0)>0.0){
-            normalLight = computeDensityNormal(tValue.a,scalarInterp);
+            normalLight = computeDensityNormal(scalarInterp);
             if (length(normalLight)==0.0){
               normalLight = normal0;
             }
           }
         #endif
       #else
-        vec4 normal0 = computeNormal(posIS, tValue.a, tstep);
+        vec4 normal0 = computeNormal(posIS, tstep);
         normalLight = normal0;
       #endif
     #endif
