@@ -153,9 +153,11 @@ function vtkWidgetManager(publicAPI, model) {
     // Default cursor behavior
     model._apiSpecificRenderWindow.setCursor(widget ? 'pointer' : 'default');
 
+    model.activeWidget = null;
     let wantRender = false;
     if (model.widgetInFocus === widget && widget.hasFocus()) {
       activateHandle(widget);
+      model.activeWidget = widget;
       wantRender = true;
     } else {
       for (let i = 0; i < model.widgets.length; i++) {
@@ -485,6 +487,7 @@ const DEFAULT_VALUES = {
   // _currentUpdateSelectionCallID: null,
   viewId: null,
   widgets: [],
+  activeWidget: null,
   renderer: null,
   viewType: ViewTypes.DEFAULT,
   isAnimating: false,
@@ -510,6 +513,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'widgets',
     'viewId',
     'pickingEnabled',
+    'activeWidget',
   ]);
 
   // Object specific methods
