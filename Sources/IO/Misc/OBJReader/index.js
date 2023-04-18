@@ -308,7 +308,9 @@ function vtkOBJReader(publicAPI, model) {
 
   // Fetch the actual data arrays
   publicAPI.loadData = (option = {}) =>
-    fetchData(model.url, option).then(publicAPI.parseAsText);
+    fetchData(model.url, option).then((content) =>
+      publicAPI.isDeleted() ? false : publicAPI.parseAsText(content)
+    );
 
   publicAPI.parseAsText = (content) => {
     if (!content) {
