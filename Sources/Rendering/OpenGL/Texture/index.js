@@ -1210,7 +1210,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     return true;
   }
 
-  function checkUseHalfFloat(dataType, offset, scale, preferSizeOverAccuracy) {
+  function setUseHalfFloat(dataType, offset, scale, preferSizeOverAccuracy) {
     publicAPI.getOpenGLDataType(dataType);
 
     let useHalfFloat = false;
@@ -1222,19 +1222,86 @@ function vtkOpenGLTexture(publicAPI, model) {
         halfFloatExt && model.openGLDataType === halfFloatExt.HALF_FLOAT_OES;
     }
 
-    if (!useHalfFloat) {
-      return false;
-    }
-
     // Don't consider halfFloat and convert back to Float when the range of data does not generate an accurate halfFloat
     // AND it is not preferable to have a smaller texture than an exact texture.
-    if (!hasExactHalfFloat(offset, scale) && !preferSizeOverAccuracy) {
-      return false;
-    }
-
-    return true;
+    const isHalfFloat =
+      useHalfFloat &&
+      (hasExactHalfFloat(offset, scale) || preferSizeOverAccuracy);
+    model.useHalfFloat = isHalfFloat;
   }
 
+  function processDataArray(dataArray, preferSizeOverAccuracy) {
+    const numComps = dataArray.getNumberOfComponents();
+    const dataType = dataArray.getDataType();
+    const data = dataArray.getData();
+
+    // Compute min max from array
+    // Using the vtkDataArray.getRange() enables caching
+    const minArray = new Array(numComps);
+    const maxArray = new Array(numComps);
+    for (let c = 0; c < numComps; ++c) {
+      const [min, max] = dataArray.getRange(c);
+      minArray[c] = min;
+      maxArray[c] = max;
+    }
+
+    const scaleOffsets = computeScaleOffsets(minArray, maxArray, numComps);
+
+    // preferSizeOverAccuracy will override norm16 due to bug with norm16 implementation
+    // https://bugs.chromium.org/p/chromium/issues/detail?id=1408247
+    setUseHalfFloat(
+      dataType,
+      scaleOffsets.offset,
+      scaleOffsets.scale,
+      preferSizeOverAccuracy
+    );
+
+    // since our default is to use half float, in case that we can't use it
+    // we need to use another type
+    if (!model.useHalfFloat) {
+      publicAPI.getOpenGLDataType(dataType, true);
+    }
+
+    return {
+      numComps,
+      dataType,
+      data,
+      scaleOffsets,
+    };
+  }
+
+  publicAPI.create2DFilterableFromRaw = (
+    width,
+    height,
+    numberOfComponents,
+    dataType,
+    values,
+    preferSizeOverAccuracy = false
+  ) =>
+    publicAPI.create2DFilterableFromDataArray(
+      width,
+      height,
+      vtkDataArray.newInstance({
+        numberOfComponents,
+        dataType,
+        values,
+      }),
+      preferSizeOverAccuracy
+    );
+
+  publicAPI.create2DFilterableFromDataArray = (
+    width,
+    height,
+    dataArray,
+    preferSizeOverAccuracy = false
+  ) => {
+    const { numComps, dataType, data } = processDataArray(
+      dataArray,
+      preferSizeOverAccuracy
+    );
+
+    publicAPI.create2DFromRaw(width, height, numComps, dataType, data);
+  };
   //----------------------------------------------------------------------------
   publicAPI.create3DFromRaw = (
     width,
@@ -1357,28 +1424,13 @@ function vtkOpenGLTexture(publicAPI, model) {
     dataArray,
     preferSizeOverAccuracy = false
   ) => {
-    const numComps = dataArray.getNumberOfComponents();
-    const dataType = dataArray.getDataType();
-    const data = dataArray.getData();
+    const { numComps, dataType, data, scaleOffsets } = processDataArray(
+      dataArray,
+      preferSizeOverAccuracy
+    );
+
     const numPixelsIn = width * height * depth;
 
-    // Compute min max from array
-    // Using the vtkDataArray.getRange() enables caching
-    const minArray = new Array(numComps);
-    const maxArray = new Array(numComps);
-    for (let c = 0; c < numComps; ++c) {
-      const [min, max] = dataArray.getRange(c);
-      minArray[c] = min;
-      maxArray[c] = max;
-    }
-    const scaleOffsets = computeScaleOffsets(minArray, maxArray, numComps);
-
-    // Create a copy of scale and offset to avoid aliasing issues
-    // Original is read only, copy is read/write
-    // Use the copy as volumeInfo.scale and volumeInfo.offset
-    const scaleOffsetsCopy = structuredClone(scaleOffsets);
-
-    // initialize offset/scale
     const offset = [];
     const scale = [];
     for (let c = 0; c < numComps; ++c) {
@@ -1401,20 +1453,10 @@ function vtkOpenGLTexture(publicAPI, model) {
       depth,
     };
 
-    // preferSizeOverAccuracy will override norm16 due to bug with norm16 implementation
-    // https://bugs.chromium.org/p/chromium/issues/detail?id=1408247
-    model.useHalfFloat = checkUseHalfFloat(
-      dataType,
-      scaleOffsets.offset,
-      scaleOffsets.scale,
-      preferSizeOverAccuracy
-    );
-
-    // since our default is to use half float, in case that we can't use it
-    // we need to use another type
-    if (!model.useHalfFloat) {
-      publicAPI.getOpenGLDataType(dataType, true);
-    }
+    // Create a copy of scale and offset to avoid aliasing issues
+    // Original is read only, copy is read/write
+    // Use the copy as volumeInfo.scale and volumeInfo.offset
+    const scaleOffsetsCopy = structuredClone(scaleOffsets);
 
     // WebGL2 path, we have 3d textures etc
     if (model._openGLRenderWindow.getWebgl2()) {

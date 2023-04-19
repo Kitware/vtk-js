@@ -746,6 +746,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     const imgScalars =
       image.getPointData() && image.getPointData().getScalars();
+
     if (!imgScalars) {
       return;
     }
@@ -1047,12 +1048,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         vtkErrorMacro('Reformat slicing not yet supported.');
       }
 
-      model.openGLTexture.create2DFromRaw(
+      model.openGLTexture.create2DFilterableFromRaw(
         dims[0],
         dims[1],
         numComp,
         imgScalars.getDataType(),
-        scalars
+        scalars,
+        model.renderable.getPreferSizeOverAccuracy?.()
       );
       model.openGLTexture.activate();
       model.openGLTexture.sendParameters();

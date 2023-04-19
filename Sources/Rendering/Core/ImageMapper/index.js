@@ -320,6 +320,7 @@ const DEFAULT_VALUES = {
   closestIJKAxis: { ijkMode: SlicingMode.NONE, flip: false },
   renderToRectangle: false,
   sliceAtFocalPoint: false,
+  preferSizeOverAccuracy: false, // Whether to use halfFloat representation of float, when it is inaccurate
 };
 
 // ----------------------------------------------------------------------------
@@ -335,6 +336,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'closestIJKAxis',
     'renderToRectangle',
     'sliceAtFocalPoint',
+    'preferSizeOverAccuracy',
   ]);
 
   CoincidentTopologyHelper.implementCoincidentTopologyMethods(publicAPI, model);
