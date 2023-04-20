@@ -1,5 +1,7 @@
 name: Build and Test
-on: [pull_request]
+on:
+  pull_request:
+  merge_group:
 
 jobs:
   build-test:
@@ -22,6 +24,7 @@ jobs:
       - name: Build
         run: npm run build:release
       - name: Archive build output
+        if: github.event_name != 'merge_group'
         uses: actions/upload-artifact@v3
         with:
           name: build-results
@@ -34,7 +37,7 @@ jobs:
       - name: Chrome and Firefox tests
         run: xvfb-run --auto-servernum npm run test -- --browsers Chrome,Firefox
       - name: Archive test results
-        if: always()
+        if: github.event_name != 'merge_group' && (success() || failure())
         uses: actions/upload-artifact@v3
         continue-on-error: true
         with:
