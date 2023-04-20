@@ -266,6 +266,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'image',
     'jsImageData',
     'imageLoaded',
+    'resizable',
   ]);
 
   macro.setGet(publicAPI, model, [

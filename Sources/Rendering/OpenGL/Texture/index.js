@@ -781,7 +781,7 @@ function vtkOpenGLTexture(publicAPI, model) {
   //----------------------------------------------------------------------------
   function useTexStorage(dataType) {
     if (model._openGLRenderWindow) {
-      if (model.resizable) {
+      if (model.resizable || model.renderable?.getResizable()) {
         // Cannot use texStorage if the texture is supposed to be resizable.
         return false;
       }
@@ -969,7 +969,7 @@ function vtkOpenGLTexture(publicAPI, model) {
         if (j <= model.maxLevel) {
           tempData = invertedData[6 * j + i];
         }
-        if (model._openGLRenderWindow.getWebgl2() && !model.resizable) {
+        if (useTexStorage(dataType)) {
           if (tempData != null) {
             model.context.texSubImage2D(
               model.context.TEXTURE_CUBE_MAP_POSITIVE_X + i,
