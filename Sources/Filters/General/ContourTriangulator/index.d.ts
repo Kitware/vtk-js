@@ -20,6 +20,20 @@ export interface vtkContourTriangulator extends vtkContourTriangulatorBase {
 	 * @param {any} outData
 	 */
 	requestData(inData: any, outData: any): void;
+
+	/**
+	 * Sets the behavior of the filter regarding polys.
+	 * @param {boolean} triangulate whether the filter should triangulate polys
+	 * or leave them untouched. True by default
+	 * @return {boolean} true if it changes
+	 */
+	setTriangulatePolys(triangulate: boolean): boolean;
+
+	/**
+	 * Returns the behavior of the filter regarding polys.
+	 * @return {boolean} True if the filter triangulates polys, false otherwise.
+	 */
+	getTriangulatePolys(): boolean;
 }
 
 // ----------------------------------------------------------------------------
