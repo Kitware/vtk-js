@@ -41,7 +41,7 @@ function getPropCoarseHull(prop) {
   // Better bounds using mapper bounds and prop matrix
   const mapper = prop?.getMapper?.();
   const mapperBounds = mapper?.getBounds?.();
-  if (mapperBounds && vtkBoundingBox.isValid(mapperBounds) && prop.getMatrix) {
+  if (vtkBoundingBox.isValid(mapperBounds) && prop.getMatrix) {
     finestBounds = mapperBounds;
     finestMatrix = prop.getMatrix().slice();
     mat4.transpose(finestMatrix, finestMatrix);

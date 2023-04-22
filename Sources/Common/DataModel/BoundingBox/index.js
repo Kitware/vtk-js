@@ -28,7 +28,10 @@ export function equals(a, b) {
 
 export function isValid(bounds) {
   return (
-    bounds[0] <= bounds[1] && bounds[2] <= bounds[3] && bounds[4] <= bounds[5]
+    bounds?.length >= 6 &&
+    bounds[0] <= bounds[1] &&
+    bounds[2] <= bounds[3] &&
+    bounds[4] <= bounds[5]
   );
 }
 
@@ -248,8 +251,7 @@ export function getCorners(bounds, corners) {
   for (let ix = 0; ix < 2; ix++) {
     for (let iy = 2; iy < 4; iy++) {
       for (let iz = 4; iz < 6; iz++) {
-        corners[count] = [bounds[ix], bounds[iy], bounds[iz]];
-        count++;
+        corners[count++] = [bounds[ix], bounds[iy], bounds[iz]];
       }
     }
   }
@@ -269,13 +271,11 @@ export function computeCornerPoints(bounds, point1, point2) {
 }
 
 export function transformBounds(bounds, transform, out = []) {
-  if (out.length < 6) {
-    reset(out);
-  }
   const corners = getCorners(bounds, []);
   for (let i = 0; i < corners.length; ++i) {
     vec3.transformMat4(corners[i], corners[i], transform);
   }
+  reset(out);
   return addPoints(out, corners);
 }
 
