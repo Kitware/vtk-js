@@ -1,4 +1,4 @@
-import { vec3, mat4 } from 'gl-matrix';
+import { mat4 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macros';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkProp3D from 'vtk.js/Sources/Rendering/Core/Prop3D';
@@ -89,99 +89,50 @@ function vtkImageSlice(publicAPI, model) {
     ) {
       vtkDebugMacro('Recomputing bounds...');
       model.mapperBounds = bds.map((x) => x);
-      const bbox = [];
-      vtkBoundingBox.getCorners(bds, bbox);
 
       publicAPI.computeMatrix();
       const tmp4 = new Float64Array(16);
       mat4.transpose(tmp4, model.matrix);
-      bbox.forEach((pt) => vec3.transformMat4(pt, pt, tmp4));
 
-      /* eslint-disable no-multi-assign */
-      model.bounds[0] = model.bounds[2] = model.bounds[4] = Number.MAX_VALUE;
-      model.bounds[1] = model.bounds[3] = model.bounds[5] = -Number.MAX_VALUE;
-      /* eslint-enable no-multi-assign */
-      model.bounds = model.bounds.map((d, i) =>
-        i % 2 === 0
-          ? bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d)
-          : bbox.reduce((a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a), d)
-      );
+      vtkBoundingBox.transformBounds(bds, tmp4, model.bounds);
       model.boundsMTime.modified();
     }
     return model.bounds;
   };
 
-  publicAPI.getBoundsForSlice = (slice, thickness = 0) => {
+  publicAPI.getBoundsForSlice = (slice, thickness) => {
     // Check for the special case when the mapper's bounds are unknown
     const bds = model.mapper.getBoundsForSlice(slice, thickness);
-    if (!bds || bds.length !== 6) {
-      return bds;
-    }
-
     // Check for the special case when the actor is empty.
-    if (bds[0] > bds[1]) {
+    if (!vtkBoundingBox.isValid(bds)) {
       return bds;
     }
 
-    const bbox = [];
-    vtkBoundingBox.getCorners(bds, bbox);
     publicAPI.computeMatrix();
     const tmp4 = new Float64Array(16);
     mat4.transpose(tmp4, model.matrix);
-    bbox.forEach((pt) => vec3.transformMat4(pt, pt, tmp4));
-
-    let newBounds = [
-      Number.MAX_VALUE,
-      -Number.MAX_VALUE,
-      Number.MAX_VALUE,
-      -Number.MAX_VALUE,
-      Number.MAX_VALUE,
-      -Number.MAX_VALUE,
-    ];
-    newBounds = newBounds.map((d, i) =>
-      i % 2 === 0
-        ? bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d)
-        : bbox.reduce((a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a), d)
-    );
+    const newBounds = vtkBoundingBox.transformBounds(bds, tmp4);
     return newBounds;
   };
 
   //----------------------------------------------------------------------------
   // Get the minimum X bound
-  publicAPI.getMinXBound = () => {
-    publicAPI.getBounds();
-    return model.bounds[0];
-  };
+  publicAPI.getMinXBound = () => publicAPI.getBounds()[0];
 
   // Get the maximum X bound
-  publicAPI.getMaxXBound = () => {
-    publicAPI.getBounds();
-    return model.bounds[1];
-  };
+  publicAPI.getMaxXBound = () => publicAPI.getBounds()[1];
 
   // Get the minimum Y bound
-  publicAPI.getMinYBound = () => {
-    publicAPI.getBounds();
-    return model.bounds[2];
-  };
+  publicAPI.getMinYBound = () => publicAPI.getBounds()[2];
 
   // Get the maximum Y bound
-  publicAPI.getMaxYBound = () => {
-    publicAPI.getBounds();
-    return model.bounds[3];
-  };
+  publicAPI.getMaxYBound = () => publicAPI.getBounds()[3];
 
   // Get the minimum Z bound
-  publicAPI.getMinZBound = () => {
-    publicAPI.getBounds();
-    return model.bounds[4];
-  };
+  publicAPI.getMinZBound = () => publicAPI.getBounds()[4];
 
   // Get the maximum Z bound
-  publicAPI.getMaxZBound = () => {
-    publicAPI.getBounds();
-    return model.bounds[5];
-  };
+  publicAPI.getMaxZBound = () => publicAPI.getBounds()[5];
 
   publicAPI.getMTime = () => {
     let mt = model.mtime;
@@ -228,7 +179,7 @@ const DEFAULT_VALUES = {
   mapper: null,
   property: null,
 
-  bounds: [1, -1, 1, -1, 1, -1],
+  bounds: [...vtkBoundingBox.INIT_BOUNDS],
 };
 
 // ----------------------------------------------------------------------------
