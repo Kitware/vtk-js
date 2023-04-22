@@ -649,7 +649,7 @@ export interface vtkRenderer extends vtkViewport {
      * @param {Number} r Defines the red component (between 0 and 1).
      * @param {Number} g Defines the green component (between 0 and 1).
      * @param {Number} b Defines the blue component (between 0 and 1).
-     * @param {Number} b Defines the alpha component (between 0 and 1).
+     * @param {Number} a Defines the alpha component (between 0 and 1).
      */
 	setBackground(r: number, g: number, b: number, a: number): boolean;
 
