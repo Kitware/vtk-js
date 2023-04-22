@@ -31,11 +31,11 @@ export interface vtkImageSlice extends vtkProp3D {
 
 	/**
 	 * Get the bounds for a given slice as [xmin, xmax, ymin, ymax,zmin, zmax].
-	 * @param {Number} slice The slice index.
-	 * @param {Number} [thickness] The slice thickness.
+	 * @param {Number} slice The slice index. If undefined, the current slice is considered.
+	 * @param {Number} [thickness] The slice thickness. If undefined, 0 is considered.
 	 * @return {Bounds} The bounds for a given slice.
 	 */
-	getBoundsForSlice(slice: number, thickness?: number): Bounds;
+	getBoundsForSlice(slice?: number, thickness?: number): Bounds;
 
 	/**
 	 * 
