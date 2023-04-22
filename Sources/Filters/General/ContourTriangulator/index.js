@@ -44,7 +44,7 @@ function triangulateContours(
   const newPolys = [];
   const incompletePolys = [];
 
-  const oriented = normal != null;
+  const oriented = normal?.length < 3;
   vtkCCSMakePolysFromLines(
     polyData,
     firstLine,
@@ -55,8 +55,9 @@ function triangulateContours(
   );
 
   // if no normal specified, then compute one from largest contour
-  const computedNormal = normal;
-  if (normal == null) {
+  let computedNormal = normal;
+  if (!oriented) {
+    computedNormal = [0, 0, 1];
     let maxnorm = 0;
     const n = [];
     for (let i = 0; i < newPolys.length; i++) {
@@ -239,7 +240,7 @@ function vtkContourTriangulator(publicAPI, model) {
       input.getNumberOfVerts(),
       lines.getNumberOfCells(),
       polysArray,
-      [],
+      null,
       model.triangulatePolys
     );
 
