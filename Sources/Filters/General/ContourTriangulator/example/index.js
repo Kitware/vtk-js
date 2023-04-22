@@ -63,10 +63,8 @@ for (let i = 0; i < nbPoints; i++) {
 // Build pipeline
 const filter = vtkContourTriangulator.newInstance();
 filter.setInputData(source);
-filter.update();
-const filterData = filter.getOutputData();
 
-mapper.setInputData(filterData);
+mapper.setInputConnection(filter.getOutputPort());
 
 // -----------------------------------------------------------
 
@@ -80,6 +78,6 @@ renderWindow.render();
 
 global.source = source;
 global.filter = filter;
-global.filterData = filterData;
+global.filterData = filter.getOutputData();
 global.mapper = mapper;
 global.actor = actor;

@@ -92,7 +92,7 @@ function triangulateContours(
 
   // Initialize each group to hold just one polygon.
   const numNewPolys = newPolys.length;
-  const polyGroups = [];
+  const polyGroups = new Array(numNewPolys);
   for (let i = 0; i < numNewPolys; i++) {
     polyGroups[i] = [i];
   }
@@ -210,6 +210,7 @@ function vtkContourTriangulator(publicAPI, model) {
   publicAPI.requestData = (inData, outData) => {
     // implement requestData
     const input = inData[0];
+    // FIXME: do not instantiate a new polydata each time the filter is executed.
     const output = vtkPolyData.newInstance();
     outData[0] = output;
 
@@ -271,7 +272,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Also make it an algorithm with one input and one output
   macro.algo(publicAPI, model, 1, 1);
 
-  macro.setGet(publicAPI, model, ['triangulate']);
+  macro.setGet(publicAPI, model, ['triangulatePolys']);
 
   // Object specific methods
   vtkContourTriangulator(publicAPI, model);
