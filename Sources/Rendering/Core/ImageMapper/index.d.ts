@@ -43,8 +43,9 @@ export interface vtkImageMapper extends vtkAbstractImageMapper {
 
 	/**
 	 * Get the bounds for a given slice as [xmin, xmax, ymin, ymax,zmin, zmax].
-	 * @param {Number} [slice] The slice index.
-	 * @param {Number} [halfThickness] Half the slice thickness in index space (unit voxel spacing).
+	 * @param {Number} [slice] The slice index. If undefined, the current slice is considered.
+	 * @param {Number} [halfThickness] Half the slice thickness in index space (unit voxel
+	 * spacing). If undefined, 0 is considered.
 	 * @return {Number[]} The bounds for a given slice.
 	 */
 	getBoundsForSlice(slice?: number, halfThickness?: number): number[];
