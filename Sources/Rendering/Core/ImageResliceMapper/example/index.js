@@ -86,7 +86,7 @@ widget.setPlaceFactor(1);
 const w = widgetManager.addWidget(widget);
 w.setRepresentationStyle(repStyle);
 
-reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`).then(() => {
+reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
   reader.loadData().then(() => {
     reader.update();
     const im = reader.getOutputData();
