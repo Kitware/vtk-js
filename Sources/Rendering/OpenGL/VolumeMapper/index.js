@@ -368,7 +368,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         [
           `uniform vec3 vClipPlaneNormals[6];`,
           `uniform float vClipPlaneDistances[6];`,
+          `uniform vec3 vClipPlaneOrigins[6];`,
+          `uniform int clip_numPlanes;`,
           '//VTK::ClipPlane::Dec',
+          '#define vtkClippingPlanesOn',
         ],
         false
       ).result;
@@ -1071,6 +1074,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
       const clipPlaneNormals = [];
       const clipPlaneDistances = [];
+      const clipPlaneOrigins = [];
 
       const clipPlanes = model.renderable.getClippingPlanes();
       const clipPlaneSize = clipPlanes.length;
@@ -1092,10 +1096,15 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         clipPlaneNormals.push(clipPlaneNormal[1]);
         clipPlaneNormals.push(clipPlaneNormal[2]);
         clipPlaneDistances.push(clipPlaneDist);
+        clipPlaneOrigins.push(clipPlanePos[0]);
+        clipPlaneOrigins.push(clipPlanePos[1]);
+        clipPlaneOrigins.push(clipPlanePos[2]);
       }
       const program = cellBO.getProgram();
       program.setUniform3fv(`vClipPlaneNormals`, clipPlaneNormals);
       program.setUniformfv(`vClipPlaneDistances`, clipPlaneDistances);
+      program.setUniform3fv(`vClipPlaneOrigins`, clipPlaneOrigins);
+      program.setUniformi(`clip_numPlanes`, clipPlaneSize);
     }
   };
 

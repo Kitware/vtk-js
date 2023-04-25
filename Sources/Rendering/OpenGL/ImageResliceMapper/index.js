@@ -123,7 +123,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     publicAPI.invokeEvent({ type: 'StartEvent' });
     model.renderable.update();
     model.currentInput = model.renderable.getInputData();
-    publicAPI.invokeEvent({ type: 'EndEvent' });
 
     if (!model.currentInput) {
       vtkErrorMacro('No input!');
@@ -135,6 +134,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     publicAPI.renderPieceStart(ren, actor);
     publicAPI.renderPieceDraw(ren, actor);
     publicAPI.renderPieceFinish(ren, actor);
+    publicAPI.invokeEvent({ type: 'EndEvent' });
   };
 
   publicAPI.renderPieceStart = (ren, actor) => {
