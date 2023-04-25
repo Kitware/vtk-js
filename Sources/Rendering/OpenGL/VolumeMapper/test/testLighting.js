@@ -99,7 +99,7 @@ test.onlyIfWebGL('Test Lighted Volume Rendering', (t) => {
         testUtils.compareImages(
           image,
           [baseline1, baseline2],
-          'Rendering/OpenGL/VolumeMapper/testMultiComponentComposite',
+          'Rendering/OpenGL/VolumeMapper/testLighting',
           t,
           0.05,
           gc.releaseResources
