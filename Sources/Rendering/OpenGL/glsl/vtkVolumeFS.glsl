@@ -366,6 +366,28 @@ float computeGradientOpacityFactor(
 //=======================================================================
 // compute the normal and gradient magnitude for a position, uses forward difference
 #if (vtkLightComplexity > 0) || (defined vtkGradientOpacityOn)
+#ifdef vtkClippingPlanesOn
+  void adjustClippedVoxelValues(vec3 pos, vec3 texPos[3], inout vec3 g1)
+  {
+    vec3 g1VC[3];
+    for (int i = 0; i < 3; ++i)
+    {
+      g1VC[i] = IStoVC(texPos[i]);
+    }
+    vec3 posVC = IStoVC(pos);
+    for (int i = 0; i < clip_numPlanes; ++i)
+    {
+      for (int j = 0; j < 3; ++j)
+      {
+        if(dot(vec3(vClipPlaneOrigins[i] - g1VC[j].xyz), vClipPlaneNormals[i]) > 0.0)
+        {
+          g1[j] = 0.0;
+        }
+      }
+    }
+  }
+#endif
+
   #ifdef vtkComputeNormalFromOpacity
     #ifdef vtkGradientOpacityOn
       vec4 computeDensityNormal(float gradientMag, vec3 scalarInterp[2])
@@ -426,6 +448,10 @@ float computeGradientOpacityFactor(
         scalarInterp[1].y = getTextureValue(texPosNVec[1]).a;
         scalarInterp[1].z = getTextureValue(texPosNVec[2]).a;
 
+        #ifdef vtkClippingPlanesOn
+          adjustClippedVoxelValues(pos, texPosPVec, scalarInterp[0]);
+          adjustClippedVoxelValues(pos, texPosNVec, scalarInterp[1]);
+        #endif
         vec4 result;
         result.x = scalarInterp[0].x - scalarInterp[1].x;
         result.y = scalarInterp[0].y - scalarInterp[1].y;
@@ -463,6 +489,10 @@ float computeGradientOpacityFactor(
     g2.x = getTextureValue(texPosNVec[0]).a;
     g2.y = getTextureValue(texPosNVec[1]).a;
     g2.z = getTextureValue(texPosNVec[2]).a;
+    #ifdef vtkClippingPlanesOn
+      adjustClippedVoxelValues(pos, texPosPVec, g1);
+      adjustClippedVoxelValues(pos, texPosNVec, g2);
+    #endif
     vec4 result;
     result = vec4(g1 - g2, -1.0);
     // divide by spacing
