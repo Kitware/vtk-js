@@ -134,7 +134,7 @@ export interface vtkScalarsToColors extends vtkObject {
 	 * otherwise return isOpaque()
 	 * @see isOpaque, getAlpha
 	 */
-	areScalarsOpaque(scalars, colorMode, componentIn): boolean;
+	areScalarsOpaque(scalars: any, colorMode: number, componentIn: number): boolean;
 
 	/**
 	 * 
