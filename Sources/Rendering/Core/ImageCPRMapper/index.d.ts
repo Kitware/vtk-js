@@ -112,7 +112,7 @@ export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
 	getBitangentDirection(): vec3;
 
 	/**
-	 * @see getTangentDirection
+	 * @see getBitangentDirection
 	 * @param bitangent
 	 */
 	setBitangentDirection(bitangent: vec3): boolean;
@@ -181,6 +181,11 @@ export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
 	getCenterlineTangentDirections(): vec3[];
 
 	/**
+	 * @returns The direction to sample, in model space, computed using uniform orientation and tangent direction
+	 */
+	getUniformDirection(): vec3;
+
+	/**
 	 * @returns A boolean indicating if the mapper is ready to render
 	 */
 	preRenderCheck(): boolean;
@@ -191,7 +196,7 @@ export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
 	 * Use all the segments of all the polylines (the centerline can be in multiple pieces)
 	 * The polydata can contain a PointData DataArray to specify the direction in which the mapper should sample for each point of the centerline ( @see getDirectionArrayName @see getDirectionArrayOffset )
 	 * If no such point data is specified, a uniform direction can be used instead ( @see getUniformDirection @see getUseUniformOrientation )
-	 * The points of the centerline are in model coordinates of the volume used as input ( @see setImageData ) and not index coordinates (see MCTC matrix of the OpenGL ImageCPRMapper)
+	 * The points of the centerline are in model coordinates of the volume used as input ( @see setImageDataData ) and not index coordinates (see MCTC matrix of the OpenGL ImageCPRMapper)
 	 * Use `imageData.getWorldToIndex();` or `imageData.getIndexToWorld();` to go from model coordinates to index coordinates or the other way around
 	 * @param centerlineData A polydata containing one or multiple polyline(s) and optionnally a PointData DataArray for direction
 	 */

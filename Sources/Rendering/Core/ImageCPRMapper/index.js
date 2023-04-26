@@ -227,17 +227,12 @@ function vtkImageCPRMapper(publicAPI, model) {
     return model._centerlineTangentDirections;
   };
 
-  publicAPI.getUniformDirection = () => {
-    const centerline = publicAPI.getOrientedCenterline();
-    const orientations = centerline.getOrientations();
-    if (!orientations || orientations.length <= 0) {
-      return null;
-    }
-    const orientation = orientations[0];
-    const direction = new Array(3);
-    vec3.transformQuat(direction, model.tangentDirection, orientation);
-    return direction;
-  };
+  publicAPI.getUniformDirection = () =>
+    vec3.transformQuat(
+      new Array(3),
+      model.tangentDirection,
+      model.uniformOrientation
+    );
 
   publicAPI.getDirectionMatrix = () => {
     const tangent = model.tangentDirection;
