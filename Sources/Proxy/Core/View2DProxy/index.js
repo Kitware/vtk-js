@@ -61,6 +61,9 @@ function getPropCoarseHull(prop) {
 
   // Compute corners and transform them if needed
   // It gives a more accurate hull than computing the corners of a transformed bounding box
+  if (!vtkBoundingBox.isValid(finestBounds)) {
+    return [];
+  }
   const corners = [];
   vtkBoundingBox.getCorners(finestBounds, corners);
   if (finestMatrix) {
@@ -169,6 +172,9 @@ function vtkView2DProxy(publicAPI, model) {
             .forEach((prop) => visiblePoints.push(...getPropCoarseHull(prop)))
         );
     }
+    if (!visiblePoints) {
+      return initialReset;
+    }
 
     // Get the bounds in view coordinates
     const viewBounds = vtkBoundingBox.reset([]);
@@ -181,14 +187,26 @@ function vtkView2DProxy(publicAPI, model) {
       vtkBoundingBox.addPoint(viewBounds, ...point);
     }
 
+    // Compute parallel scale
+    const view = model.renderer.getRenderWindow().getViews()[0];
+    const dims = view.getViewportSize(model.renderer);
+    const aspect = dims[1] && dims[0] ? dims[0] / dims[1] : 1;
+    const xLength = vtkBoundingBox.getLength(viewBounds, 0);
+    const yLength = vtkBoundingBox.getLength(viewBounds, 1);
+    const parallelScale = 0.5 * Math.max(yLength, xLength / aspect);
+
     // Compute focal point and position
     const viewFocalPoint = vtkBoundingBox.getCenter(viewBounds);
     // Camera position in view coordinates is the center of the bounds in XY
-    // and the maximum bound + 1 in Z
+    // and is (the maximum bound) + (the distance to see the bounds in perspective) in Z
+    const perspectiveAngle = vtkMath.radiansFromDegrees(
+      model.camera.getViewAngle()
+    );
+    const distance = parallelScale / Math.tan(perspectiveAngle * 0.5);
     const viewPosition = [
       viewFocalPoint[0],
       viewFocalPoint[1],
-      viewBounds[5] + 1,
+      viewBounds[5] + distance,
     ];
     const inverseViewMatrix = new Float64Array(16);
     const worldFocalPoint = new Float64Array(3);
@@ -196,14 +214,6 @@ function vtkView2DProxy(publicAPI, model) {
     mat4.invert(inverseViewMatrix, viewMatrix);
     vec3.transformMat4(worldFocalPoint, viewFocalPoint, inverseViewMatrix);
     vec3.transformMat4(worldPosition, viewPosition, inverseViewMatrix);
-
-    // Compute parallel scale
-    const view = model.renderer.getRenderWindow().getViews()[0];
-    const dims = view.getViewportSize(model.renderer);
-    const aspect = dims[0] / dims[1];
-    const xLength = vtkBoundingBox.getLength(viewBounds, 0);
-    const yLength = vtkBoundingBox.getLength(viewBounds, 1);
-    const parallelScale = 0.5 * Math.max(yLength, xLength / aspect);
 
     if (parallelScale <= 0) {
       return initialReset;
