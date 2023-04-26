@@ -1,7 +1,7 @@
 import { mat4, quat, vec3 } from 'gl-matrix';
 import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
+import vtkAbstractImageMapper from 'vtk.js/Sources/Rendering/Core/AbstractImageMapper';
 import macro from 'vtk.js/Sources/macros';
-import vtkAbstractMapper3D from 'vtk.js/Sources/Rendering/Core/AbstractMapper3D';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyLine from 'vtk.js/Sources/Common/DataModel/PolyLine';
 
@@ -304,7 +304,6 @@ const DEFAULT_VALUES = {
   useUniformOrientation: false,
   preferSizeOverAccuracy: false,
   orientationArrayName: null,
-  backgroundColor: [0, 0, 0, 0],
   tangentDirection: [1, 0, 0],
   bitangentDirection: [0, 1, 0],
   normalDirection: [0, 0, 1],
@@ -316,7 +315,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkAbstractMapper3D.extend(publicAPI, model, initialValues);
+  vtkAbstractImageMapper.extend(publicAPI, model, initialValues);
 
   // Two inputs: one for the ImageData and one for the PolyData (centerline)
   macro.algo(publicAPI, model, 2, 0);
@@ -335,7 +334,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'bitangentDirection',
     'normalDirection',
   ]);
-  macro.setGetArray(publicAPI, model, ['backgroundColor'], 4);
   CoincidentTopologyHelper.implementCoincidentTopologyMethods(publicAPI, model);
 
   // Object methods
