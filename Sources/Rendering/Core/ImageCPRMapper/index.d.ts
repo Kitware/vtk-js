@@ -1,4 +1,4 @@
-import { mat3, quat, vec3, vec4 } from "gl-matrix";
+import { mat3, mat4, quat, vec3 } from "gl-matrix";
 import vtkDataArray from "../../../Common/Core/DataArray";
 import vtkImageData from "../../../Common/DataModel/ImageData";
 import vtkPolyData from "../../../Common/DataModel/PolyData";
@@ -11,7 +11,7 @@ interface ICoincidentTopology {
 	offset: number;
 }
 
-type TOrientation = mat4 | mat3 | quat | vec;
+type TOrientation = mat4 | mat3 | quat | vec3;
 
 export interface IImageCPRMapperInitialValues extends IAbstractMapper3DInitialValues{
 	width: number;
