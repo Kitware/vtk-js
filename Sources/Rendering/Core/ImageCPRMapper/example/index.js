@@ -18,7 +18,6 @@ import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper';
 import vtkImageReslice from '@kitware/vtk.js/Imaging/Core/ImageReslice';
 import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
 import vtkInteractorStyleImage from '@kitware/vtk.js/Interaction/Style/InteractorStyleImage';
-import vtkMatrixBuilder from '@kitware/vtk.js/Common/Core/MatrixBuilder';
 import vtkPlaneManipulator from '@kitware/vtk.js/Widgets/Manipulators/PlaneManipulator';
 import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer';
@@ -266,19 +265,6 @@ function setCenterlineJson(centerlineJson) {
   renderWindow.render();
 }
 
-// Update the angle of reformation
-function setCenterlineAngle(centerlineAngle) {
-  const matrix = vtkMatrixBuilder
-    .buildFromDegree()
-    .rotateZ(centerlineAngle)
-    .getMatrix();
-  mapper.setTangentDirection(matrix.subarray(0, 3));
-  mapper.setBitangentDirection(matrix.subarray(4, 7));
-
-  centerline.modified();
-  renderWindow.render();
-}
-
 // Load all the centerline JSONs
 const centerlineJsons = {};
 const centerlinesLoaded = centerlinePaths.map(async (centerlinePath, i) => {
@@ -305,11 +291,6 @@ Promise.all(centerlinesLoaded).then(() => {
     setCenterlineJson(centerlineJsons[centerlineEl.value]);
   });
 });
-
-const angleEl = document.getElementById('reformationAngle');
-angleEl.addEventListener('input', (e) =>
-  setCenterlineAngle(Number(e.target.value))
-);
 
 // Read image
 reader.setUrl(volumePath).then(() => {
