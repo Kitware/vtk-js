@@ -304,7 +304,7 @@ const DEFAULT_VALUES = {
   useUniformOrientation: false,
   preferSizeOverAccuracy: false,
   orientationArrayName: null,
-  outColor: [1, 0, 0, 1],
+  backgroundColor: [0, 0, 0, 0],
   tangentDirection: [1, 0, 0],
   bitangentDirection: [0, 1, 0],
   normalDirection: [0, 0, 1],
@@ -335,7 +335,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'bitangentDirection',
     'normalDirection',
   ]);
-  macro.setGetArray(publicAPI, model, ['outColor'], 4);
+  macro.setGetArray(publicAPI, model, ['backgroundColor'], 4);
   CoincidentTopologyHelper.implementCoincidentTopologyMethods(publicAPI, model);
 
   // Object methods

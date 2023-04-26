@@ -624,7 +624,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       // opacity
       'uniform float opacity;',
       // background color (out of volume samples)
-      'uniform vec4 outColor;', // TODO: backgroundColor
+      'uniform vec4 backgroundColor;',
 
       // color shift and scale
       `uniform float cshift0;`,
@@ -735,7 +735,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       'if (any(lessThan(volumePosTC, vec3(0.0))) || any(greaterThan(volumePosTC, vec3(1.0))))',
       '{',
       '  // set the background color and exit',
-      '  gl_FragData[0] = outColor;',
+      '  gl_FragData[0] = backgroundColor;',
       '  return;',
       '}',
       'vec4 tvalue = texture(volumeTexture, volumePosTC);'
@@ -950,7 +950,10 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     cellBO.getProgram().setUniformf('width', model.renderable.getWidth());
     cellBO
       .getProgram()
-      .setUniform4f('outColor', ...model.renderable.getOutColor());
+      .setUniform4f(
+        'backgroundColor',
+        ...model.renderable.getBackgroundColor()
+      );
 
     if (cellBO.getProgram().isUniformUsed('centerlineDirection')) {
       const uniformDirection = model.renderable.getUniformDirection();

@@ -19,7 +19,7 @@ export interface IImageCPRMapperInitialValues extends IAbstractMapper3DInitialVa
 	useUniformOrientation: boolean;
 	preferSizeOverAccuracy: boolean; // Whether to use halfFloat representation of float, when it is inaccurate
 	orientationArrayName: string | null;
-	outColor: number[];
+	backgroundColor: number[];
 	tangentDirection: vec3;
 	bitangentDirection: vec3;
 	normalDirection: vec3;
@@ -96,22 +96,22 @@ export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
 	 * The RGBA color of the image when sampling outside of the volume
 	 * Defaults to an opaque red: [1, 0, 0, 1]
 	 */
-	getOutColor(): vec4;
+	getBackgroundColor(): vec4;
 
 	/**
-	 * @see getOutColor
-	 * @param outColor
+	 * @see getBackgroundColor
+	 * @param backgroundColor
 	 */
-	setOutColor(outColor: number[]): boolean;
+	setBackgroundColor(backgroundColor: number[]): boolean;
 
 	/**
-	 * @see getOutColor
+	 * @see getBackgroundColor
 	 * @param r
 	 * @param g
 	 * @param b
 	 * @param a
 	 */
-	setOutColor(r: number, g: number, b: number, a: number): boolean;
+	setBackgroundColor(r: number, g: number, b: number, a: number): boolean;
 
 	/**
 	 * For each point on the oriented centerline, the tangent direction is the direction in which the mapper will sample
