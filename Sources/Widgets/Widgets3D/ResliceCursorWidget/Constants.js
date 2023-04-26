@@ -12,6 +12,7 @@ export const InteractionMethodsName = {
   TranslateAxis: 'translateAxis',
   RotateLine: 'rotateLine',
   TranslateCenter: 'translateCenter',
+  TranslateCenterAndUpdatePlanes: 'translateCenterAndUpdatePlanes',
 };
 
 export const defaultViewUpFromViewType = {

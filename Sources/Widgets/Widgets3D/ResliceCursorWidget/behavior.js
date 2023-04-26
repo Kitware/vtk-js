@@ -85,12 +85,21 @@ export default function widgetBehavior(publicAPI, model) {
    * There are 2 rotation handles per axis: 'point0' and 'point1'.
    * This function returns which rotation handle (point0 or point1) is currently active.
    * ActiveState must be a RotationHandle.
-   * @returns 'point0' or 'point1'
+   * @returns 'point0', 'point1' or null if no point is active (e.g. line is being rotated)
    */
-  publicAPI.getActiveRotationPointName = () =>
-    model.widgetState.getStatesWithLabel('point0').includes(model.activeState)
-      ? 'point0'
-      : 'point1';
+  publicAPI.getActiveRotationPointName = () => {
+    if (
+      model.widgetState.getStatesWithLabel('point0').includes(model.activeState)
+    ) {
+      return 'point0';
+    }
+    if (
+      model.widgetState.getStatesWithLabel('point1').includes(model.activeState)
+    ) {
+      return 'point1';
+    }
+    return null;
+  };
 
   publicAPI.startScrolling = (newPosition) => {
     if (newPosition) {
@@ -411,15 +420,20 @@ export default function widgetBehavior(publicAPI, model) {
     );
 
     const center = model.widgetState.getCenter();
-    const previousLineDirection = activeLineHandle.getDirection();
-    vtkMath.normalize(previousLineDirection);
-    if (publicAPI.getActiveRotationPointName() === 'point1') {
-      vtkMath.multiplyScalar(previousLineDirection, -1);
-    }
-
     const currentVectorToOrigin = [0, 0, 0];
     vtkMath.subtract(worldCoords, center, currentVectorToOrigin);
     vtkMath.normalize(currentVectorToOrigin);
+
+    const previousLineDirection = activeLineHandle.getDirection();
+    vtkMath.normalize(previousLineDirection);
+    const activePointName = publicAPI.getActiveRotationPointName();
+    if (
+      activePointName === 'point1' ||
+      (!activePointName &&
+        vtkMath.dot(currentVectorToOrigin, previousLineDirection) < 0)
+    ) {
+      vtkMath.multiplyScalar(previousLineDirection, -1);
+    }
 
     const radianAngle = vtkMath.signedAngleBetweenVectors(
       previousLineDirection,
