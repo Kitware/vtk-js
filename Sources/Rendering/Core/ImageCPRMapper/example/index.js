@@ -85,6 +85,7 @@ reslice.setTransformInputSampling(false);
 reslice.setAutoCropOutput(true);
 reslice.setOutputDimensionality(2);
 const resliceMapper = vtkImageMapper.newInstance();
+resliceMapper.setBackgroundColor(0, 0, 0, 0);
 resliceMapper.setInputConnection(reslice.getOutputPort());
 const resliceActor = vtkImageSlice.newInstance();
 resliceActor.setMapper(resliceMapper);
@@ -102,6 +103,7 @@ const centerline = vtkPolyData.newInstance();
 
 const actor = vtkImageSlice.newInstance();
 const mapper = vtkImageCPRMapper.newInstance();
+mapper.setBackgroundColor(0, 0, 0, 0);
 actor.setMapper(mapper);
 
 mapper.setInputConnection(reader.getOutputPort(), 0);
