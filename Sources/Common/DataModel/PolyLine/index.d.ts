@@ -53,10 +53,10 @@ export interface vtkPolyLine extends vtkCell {
    * Returns an array containing for each pointIdx between 0 (included) and
    * numberOfPoints (excluded) the distance from the first point of the
    * polyline to the point at pointIdx
-   * In particular if tda = publicAPI.getTotalDistanceArray(), then tda[0] = 0
+   * In particular if tda = publicAPI.getDistancesToFirstPoint(), then tda[0] = 0
    * and tda[tda.length - 1] is the total length of the polyline
    */
-  getTotalDistanceArray(): number[]
+  getDistancesToFirstPoint(): number[]
 
   /**
    * Returns the subId of the segment at the given distance from the first
@@ -66,7 +66,7 @@ export interface vtkPolyLine extends vtkCell {
    * 
    * @param distance The distance from the first point of the polyline
    */
-  findSubId(distance: number): number;
+  findPointIdAtDistanceFromFirstPoint(distance: number): number;
 }
 
 /**

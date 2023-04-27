@@ -80,15 +80,19 @@ function vtkPolyLine(publicAPI, model) {
     return line.evaluateOrientation(pcoords, q, weights);
   };
 
-  publicAPI.getTotalDistanceArray = () => {
+  publicAPI.getDistancesToFirstPoint = () => {
     if (model.distancesTime.getMTime() < model.points.getMTime()) {
       const numPoints = publicAPI.getNumberOfPoints();
-      model.distances = new Array(numPoints);
+      if (!model.distances) {
+        model.distances = new Array(numPoints);
+      } else {
+        model.distances.length = numPoints;
+      }
       if (numPoints > 0) {
-        model.distances[0] = 0;
         const previousPoint = new Array(3);
         const currentPoint = new Array(3);
         let totalDistance = 0;
+        model.distances[0] = totalDistance;
         model.points.getPoint(0, previousPoint);
         for (let i = 1; i < numPoints; ++i) {
           model.points.getPoint(i, currentPoint);
@@ -102,8 +106,8 @@ function vtkPolyLine(publicAPI, model) {
     return model.distances;
   };
 
-  publicAPI.findSubId = (distance) => {
-    const distances = publicAPI.getTotalDistanceArray();
+  publicAPI.findPointIdAtDistanceFromFirstPoint = (distance) => {
+    const distances = publicAPI.getDistancesToFirstPoint();
     // At least two points to return an ID
     if (distances.length < 2) {
       return -1;

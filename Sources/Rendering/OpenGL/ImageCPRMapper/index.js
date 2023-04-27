@@ -345,7 +345,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     ) {
       const nPoints = centerline.getNumberOfPoints();
       const nLines = nPoints <= 1 ? 0 : nPoints - 1;
-      const distances = centerline.getTotalDistanceArray();
+      const distances = centerline.getDistancesToFirstPoint();
       const totalHeight = model.renderable.getHeight();
       const nPts = 4 * nLines;
 

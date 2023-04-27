@@ -175,7 +175,7 @@ function vtkImageCPRMapper(publicAPI, model) {
   publicAPI.getHeight = () => {
     const accHeights = publicAPI
       .getOrientedCenterline()
-      .getTotalDistanceArray();
+      .getDistancesToFirstPoint();
     if (accHeights.length === 0) {
       return 0;
     }
@@ -184,11 +184,11 @@ function vtkImageCPRMapper(publicAPI, model) {
 
   publicAPI.getCenterlinePositionAndOrientation = (distance) => {
     const centerline = publicAPI.getOrientedCenterline();
-    const subId = centerline.findSubId(distance);
+    const subId = centerline.findPointIdAtDistanceFromFirstPoint(distance);
     if (subId < 0) {
       return {};
     }
-    const distances = centerline.getTotalDistanceArray();
+    const distances = centerline.getDistancesToFirstPoint();
     const pcoords = [
       (distance - distances[subId]) / (distances[subId + 1] - distances[subId]),
     ];
