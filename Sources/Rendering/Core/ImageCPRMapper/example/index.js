@@ -26,9 +26,11 @@ import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/cprBehavior';
 
 import controlPanel from './controller.html';
+import centerlineJSON from './centerline.json';
 
 const volumePath = `${__BASE_PATH__}/data/volume/LIDC2.vti`;
-const centerlinePaths = [`${__BASE_PATH__}/data/volume/centerline.json`];
+const centerlineJsons = { 'Base centerline': centerlineJSON };
+const centerlineKeys = Object.keys(centerlineJsons);
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -223,10 +225,11 @@ function updateDistanceAndDirection() {
 }
 
 // The centerline JSON contains positions (vec3) and orientations (mat4)
-let currentJson = null;
+let currentCenterlineKey = centerlineKeys[0];
 let currentImage = null;
-function setCenterlineJson(centerlineJson) {
-  currentJson = centerlineJson;
+function setCenterlineKey(centerlineKey) {
+  currentCenterlineKey = centerlineKey;
+  const centerlineJson = centerlineJsons[centerlineKey];
   if (!currentImage) {
     return;
   }
@@ -267,32 +270,18 @@ function setCenterlineJson(centerlineJson) {
   renderWindow.render();
 }
 
-// Load all the centerline JSONs
-const centerlineJsons = {};
-const centerlinesLoaded = centerlinePaths.map(async (centerlinePath, i) => {
-  const response = await fetch(centerlinePath);
-  const centerlineJSON = await response.json();
-  centerlineJsons[centerlinePath] = centerlineJSON;
-  if (i === 0) {
-    setCenterlineJson(centerlineJSON);
-  }
-});
-
-// When loaded, create an option for each centerline
-Promise.all(centerlinesLoaded).then(() => {
-  const centerlineEl = document.getElementById('centerline');
-  const centerlineJsonsKeys = Object.keys(centerlineJsons);
-  for (let i = 0; i < centerlineJsonsKeys.length; ++i) {
-    const name = centerlineJsonsKeys[i];
-    const optionEl = document.createElement('option');
-    optionEl.innerText = name;
-    optionEl.value = name;
-    centerlineEl.appendChild(optionEl);
-  }
-  centerlineEl.addEventListener('input', () => {
-    setCenterlineJson(centerlineJsons[centerlineEl.value]);
-  });
-});
+// Create an option for each centerline
+const centerlineEl = document.getElementById('centerline');
+for (let i = 0; i < centerlineKeys.length; ++i) {
+  const name = centerlineKeys[i];
+  const optionEl = document.createElement('option');
+  optionEl.innerText = name;
+  optionEl.value = name;
+  centerlineEl.appendChild(optionEl);
+}
+centerlineEl.addEventListener('input', () =>
+  setCenterlineKey(centerlineEl.value)
+);
 
 // Read image
 reader.setUrl(volumePath).then(() => {
@@ -322,7 +311,7 @@ reader.setUrl(volumePath).then(() => {
     widget.updateCameraPoints(crossRenderer, crossViewType, true, false, true);
 
     currentImage = image;
-    setCenterlineJson(currentJson);
+    setCenterlineKey(currentCenterlineKey);
 
     global.imageData = image;
   });
@@ -342,4 +331,4 @@ global.actor = actor;
 global.renderer = stretchRenderer;
 global.renderWindow = renderWindow;
 global.centerline = centerline;
-global.centerlineJsons = centerlineJsons;
+global.centerlines = centerlineJsons;
