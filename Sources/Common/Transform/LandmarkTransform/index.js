@@ -165,8 +165,8 @@ function vtkLandmarkTransform(publicAPI, model) {
         model.sourceLandmark.getPoint(1, s1);
         model.targetLandmark.getPoint(1, t1);
 
-        let ds;
-        let dt;
+        const ds = [0, 0, 0];
+        const dt = [0, 0, 0];
         let rs = 0;
         let rt = 0;
         for (let i = 0; i < 3; i++) {
