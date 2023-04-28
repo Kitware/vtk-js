@@ -1,6 +1,7 @@
 import { vtkObject } from "../../../interfaces";
 import { ColorMode } from "../../../Rendering/Core/Mapper/Constants";
 import { Range } from "../../../types";
+import vtkDataArray from "../DataArray";
 import { ScalarMappingTarget, VectorMode } from "./Constants";
 
 /**
@@ -132,9 +133,15 @@ export interface vtkScalarsToColors extends vtkObject {
 	 * Returns false if scalars are Uint8 LA or RGBA with A < 255,
 	 * otherwise rely on getAlpha() in case of direct mapping,
 	 * otherwise return isOpaque()
+	 * 
 	 * @see isOpaque, getAlpha
+	 * 
+	 * @param {vtkDataArray} scalars 
+	 * @param {ColorMode} colorMode 
+	 * @param {Number} componentIn 
+	 * 
 	 */
-	areScalarsOpaque(scalars: any, colorMode: number, componentIn: number): boolean;
+	areScalarsOpaque(scalars: vtkDataArray, colorMode: ColorMode, componentIn: number): boolean;
 
 	/**
 	 * 
