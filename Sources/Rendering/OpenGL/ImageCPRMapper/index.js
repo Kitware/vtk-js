@@ -458,14 +458,25 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
         const centerlineTopDirectionArray = new Float32Array(3 * nPts);
         const centerlineBotDirectionArray = new Float32Array(3 * nPts);
         for (let lineIdx = 0, offset = 0; lineIdx < nLines; ++lineIdx) {
-          const topDir = directions[lineIdx];
-          const botDir = directions[lineIdx + 1];
+          const baseDirectionIdx = 3 * lineIdx;
 
           // Every vertex of each quad/segment have the same topDir and botDir
+          // Top left, Top right, Bottom right, Bottom left
           for (let i = 0; i < 4; ++i) {
-            // Top left, Top right, Bottom right, Bottom left
-            centerlineTopDirectionArray.set(topDir, offset);
-            centerlineBotDirectionArray.set(botDir, offset);
+            // Top array
+            centerlineTopDirectionArray[offset + 0] =
+              directions[baseDirectionIdx + 0];
+            centerlineTopDirectionArray[offset + 1] =
+              directions[baseDirectionIdx + 1];
+            centerlineTopDirectionArray[offset + 2] =
+              directions[baseDirectionIdx + 2];
+            // Bot array
+            centerlineBotDirectionArray[offset + 0] =
+              directions[baseDirectionIdx + 3];
+            centerlineBotDirectionArray[offset + 1] =
+              directions[baseDirectionIdx + 4];
+            centerlineBotDirectionArray[offset + 2] =
+              directions[baseDirectionIdx + 5];
             offset += 3;
           }
         }
