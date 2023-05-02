@@ -41,15 +41,16 @@ function vtkLineManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkLineManipulator');
 
-  publicAPI.handleEvent = (callData, glRenderWindow) =>
-    projectDisplayToLine(
+  publicAPI.handleEvent = (callData, glRenderWindow) => ({
+    worldCoords: projectDisplayToLine(
       callData.position.x,
       callData.position.y,
       publicAPI.getOrigin(callData),
       publicAPI.getNormal(callData),
       callData.pokedRenderer,
       glRenderWindow
-    );
+    ),
+  });
 }
 
 // ----------------------------------------------------------------------------

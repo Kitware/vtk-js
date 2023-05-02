@@ -25,15 +25,16 @@ function vtkPlaneManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPlaneManipulator');
 
-  publicAPI.handleEvent = (callData, glRenderWindow) =>
-    intersectDisplayWithPlane(
+  publicAPI.handleEvent = (callData, glRenderWindow) => ({
+    worldCoords: intersectDisplayWithPlane(
       callData.position.x,
       callData.position.y,
       publicAPI.getOrigin(callData),
       publicAPI.getNormal(callData),
       callData.pokedRenderer,
       glRenderWindow
-    );
+    ),
+  });
 }
 
 // ----------------------------------------------------------------------------

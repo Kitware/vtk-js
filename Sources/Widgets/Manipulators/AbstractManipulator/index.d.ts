@@ -1,6 +1,6 @@
 import { vtkObject } from "../../../interfaces";
 import { vtkOpenGLRenderWindow } from "../../../Rendering/OpenGL/RenderWindow"
-import { Vector3 } from "../../../types";
+import { Matrix3x3, Nullable, Vector3 } from "../../../types";
 
 /**
  *
@@ -53,7 +53,7 @@ export interface vtkAbstractManipulator extends vtkObject {
      * @param callData 
      * @param glRenderWindow 
      */
-    handleEvent(callData: any, glRenderWindow: vtkOpenGLRenderWindow): Vector3;
+    handleEvent(callData: any, glRenderWindow: vtkOpenGLRenderWindow): { worldCoords: Nullable<Vector3>, worldDirection?: Matrix3x3 };
 
     /* ------------------------------------------------------------------- */
 

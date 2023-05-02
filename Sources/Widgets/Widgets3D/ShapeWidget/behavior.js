@@ -479,7 +479,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.shapeHandle.setRight(right);
       model.shapeHandle.setDirection(normal);
     }
-    const worldCoords = manipulator.handleEvent(
+    const { worldCoords } = manipulator.handleEvent(
       callData,
       model._apiSpecificRenderWindow
     );
@@ -528,7 +528,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
 
     if (model.hasFocus) {
-      const worldCoords = manipulator.handleEvent(
+      const { worldCoords } = manipulator.handleEvent(
         e,
         model._apiSpecificRenderWindow
       );

@@ -71,7 +71,7 @@ function vtkTrackballManipulator(publicAPI, model) {
     );
     prevX = callData.position.x;
     prevY = callData.position.y;
-    return newDirection;
+    return { worldCoords: newDirection };
   };
 
   publicAPI.reset = (callData) => {

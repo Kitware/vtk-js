@@ -25,15 +25,16 @@ function vtkCPRManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkCPRManipulator');
 
-  publicAPI.handleEvent = (callData, glRenderWindow) =>
-    intersectDisplayWithPlane(
+  publicAPI.handleEvent = (callData, glRenderWindow) => ({
+    worldCoords: intersectDisplayWithPlane(
       callData.position.x,
       callData.position.y,
       publicAPI.getOrigin(callData),
       publicAPI.getNormal(callData),
       callData.pokedRenderer,
       glRenderWindow
-    );
+    ),
+  });
 }
 
 // ----------------------------------------------------------------------------
@@ -42,6 +43,9 @@ function vtkCPRManipulator(publicAPI, model) {
 
 function defaultValues(initialValues) {
   return {
+    angle: 0,
+    distance: 0,
+    polyline: null,
     ...initialValues,
   };
 }
@@ -50,6 +54,8 @@ function defaultValues(initialValues) {
 
 export function extend(publicAPI, model, initialValues = {}) {
   vtkAbstractManipulator.extend(publicAPI, model, defaultValues(initialValues));
+
+  macro.setGet(publicAPI, model, ['angle', 'distance', 'polyline']);
 
   vtkCPRManipulator(publicAPI, model);
 }

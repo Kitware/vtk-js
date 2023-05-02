@@ -58,7 +58,8 @@ export default function widgetBehavior(publicAPI, model) {
   function currentWorldCoords(e) {
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
-    return manipulator.handleEvent(e, model._apiSpecificRenderWindow);
+    return manipulator.handleEvent(e, model._apiSpecificRenderWindow)
+      .worldCoords;
   }
 
   // Update the sphere's center and radius.  Example:

@@ -41,7 +41,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.widgetState.getHandleList().length < MAX_POINTS &&
       manipulator
     ) {
-      const worldCoords = manipulator.handleEvent(
+      const { worldCoords } = manipulator.handleEvent(
         e,
         model._apiSpecificRenderWindow
       );
@@ -78,7 +78,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
-      const worldCoords = manipulator.handleEvent(
+      const { worldCoords } = manipulator.handleEvent(
         callData,
         model._apiSpecificRenderWindow
       );

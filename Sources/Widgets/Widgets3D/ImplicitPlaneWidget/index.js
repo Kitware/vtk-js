@@ -100,7 +100,7 @@ function widgetBehavior(publicAPI, model) {
 
   publicAPI.updateFromOrigin = (callData) => {
     model.planeManipulator.setWidgetNormal(model.widgetState.getNormal());
-    const worldCoords = model.planeManipulator.handleEvent(
+    const { worldCoords } = model.planeManipulator.handleEvent(
       callData,
       model._apiSpecificRenderWindow
     );
