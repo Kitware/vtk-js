@@ -174,11 +174,11 @@ export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
 	getCenterlinePositionAndOrientation(distance: number): { position?: vec3, orientation?: quat };
 
 	/**
-	 * @returns An array of vec3 representing the direction at each point of the centerline
+	 * @returns A flat array of vec3 representing the direction at each point of the centerline
 	 * It is computed from the orientations of the centerline and tangentDirection
 	 * Uses caching to avoid recomputing at each frame
 	 */
-	getCenterlineTangentDirections(): vec3[];
+	getCenterlineTangentDirections(): Float32Array;
 
 	/**
 	 * @returns The direction to sample, in model space, computed using uniform orientation and tangent direction
