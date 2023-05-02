@@ -1,3 +1,7 @@
+## From 26.x to 27
+
+- Change all `handleEvent` signatures of manipulators. Used to be `handleEvent(callData, glRenderWindow): vec3`, it is now `handleEvent(callData, glRenderWindow): { worldCoords: Nullable<vec3>, worldDirection?: mat3 }`.
+
 ## From 25.x to 26
 
 - **ResliceCursorWidget**: vtkResliceCursorContextRepresentation is deprecated and removed.

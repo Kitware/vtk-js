@@ -58,9 +58,10 @@ export default function widgetBehavior(publicAPI, model) {
     model._isDragging = true;
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
-    model.previousPosition = [
-      ...manipulator.handleEvent(callData, model._apiSpecificRenderWindow),
-    ];
+    model.previousPosition = manipulator.handleEvent(
+      callData,
+      model._apiSpecificRenderWindow
+    ).worldCoords;
     model._apiSpecificRenderWindow.setCursor('grabbing');
     model._interactor.requestAnimation(publicAPI);
   }
@@ -238,7 +239,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
-      const worldCoords = manipulator.handleEvent(
+      const { worldCoords } = manipulator.handleEvent(
         callData,
         model._apiSpecificRenderWindow
       );

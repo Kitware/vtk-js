@@ -134,7 +134,8 @@ associated representations for the particular view.
 
 Manipulators are objects that implement a single method, `handleEvent(callData,
 glRenderWindow)`. This method takes a mouse event (in `callData`) and
-transforms it into a 3D coordinate position. This is different from
+transforms it into a 3D coordinate position, returning an object containing at
+least a `worldCoords` and eventually other values. This is different from
 interactivity manipulators in that interactivity manipulators change how the
 scene is viewed via manipulating the camera, whereas widget manipulators
 transform mouse input into meaningful world coordinates, e.g. snapping

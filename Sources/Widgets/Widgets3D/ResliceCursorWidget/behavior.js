@@ -131,7 +131,7 @@ export default function widgetBehavior(publicAPI, model) {
         model.activeState?.getManipulator?.() ?? model.manipulator;
       manipulator.setWidgetOrigin(model.widgetState.getCenter());
       manipulator.setWidgetNormal(currentPlaneNormal);
-      const worldCoords = manipulator.handleEvent(
+      const { worldCoords } = manipulator.handleEvent(
         callData,
         model._apiSpecificRenderWindow
       );
@@ -317,7 +317,7 @@ export default function widgetBehavior(publicAPI, model) {
       worldCoords = manipulator.handleEvent(
         calldata,
         model._apiSpecificRenderWindow
-      );
+      ).worldCoords;
       const translation = vtkMath.subtract(worldCoords, previousPosition, []);
       vtkMath.add(center, translation, newOrigin);
     } else if (otherLineHandle) {
@@ -339,7 +339,7 @@ export default function widgetBehavior(publicAPI, model) {
       worldCoords = manipulator.handleEvent(
         calldata,
         model._apiSpecificRenderWindow
-      );
+      ).worldCoords;
       vtkLine.distanceToLine(
         worldCoords,
         lineHandle.getOrigin(),
@@ -384,7 +384,7 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI[InteractionMethodsName.TranslateCenter] = (calldata) => {
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
-    const worldCoords = manipulator.handleEvent(
+    const { worldCoords } = manipulator.handleEvent(
       calldata,
       model._apiSpecificRenderWindow
     );
@@ -405,7 +405,7 @@ export default function widgetBehavior(publicAPI, model) {
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
     const planeNormal = manipulator.getWidgetNormal();
-    const worldCoords = manipulator.handleEvent(
+    const { worldCoords } = manipulator.handleEvent(
       calldata,
       model._apiSpecificRenderWindow
     );

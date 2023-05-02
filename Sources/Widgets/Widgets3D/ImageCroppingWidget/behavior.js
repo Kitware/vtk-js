@@ -71,7 +71,7 @@ export default function widgetBehavior(publicAPI, model) {
           worldCoords = manipulator.handleEvent(
             callData,
             model._apiSpecificRenderWindow
-          );
+          ).worldCoords;
         }
 
         if (type === 'faces') {
@@ -95,7 +95,7 @@ export default function widgetBehavior(publicAPI, model) {
           worldCoords = manipulator.handleEvent(
             callData,
             model._apiSpecificRenderWindow
-          );
+          ).worldCoords;
         }
 
         if (type === 'edges') {
@@ -106,7 +106,7 @@ export default function widgetBehavior(publicAPI, model) {
           worldCoords = manipulator.handleEvent(
             callData,
             model._apiSpecificRenderWindow
-          );
+          ).worldCoords;
         }
 
         if (worldCoords.length) {
