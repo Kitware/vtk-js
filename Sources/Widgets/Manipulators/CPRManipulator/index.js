@@ -96,12 +96,24 @@ function vtkCPRManipulator(publicAPI, model) {
 // currentDistance is the distance from the first point of the centerline
 // cprActor.getMapper() should be a vtkImageCPRMapper
 function defaultValues(initialValues) {
-  return {
+  const values = {
     distanceStep: 1,
     currentDistance: 0,
     cprActor: null,
     ...initialValues,
   };
+  // Find default distanceStep from image spacing
+  // This only works if the mapper in the actor already has an ImageData
+  if (!initialValues.distanceStep) {
+    const imageSpacing = initialValues.cprActor
+      ?.getMapper()
+      ?.getInputData(0)
+      ?.getSpacing?.();
+    if (imageSpacing) {
+      values.distanceStep = Math.min(...imageSpacing);
+    }
+  }
+  return values;
 }
 
 // ----------------------------------------------------------------------------
