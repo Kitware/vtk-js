@@ -90,10 +90,7 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.translateCenterOnPlaneDirection = (nbSteps) => {
-    const stretchState = model.widgetState.getStatesWithLabel(
-      `lineIn${stretchPlaneName}`
-    )?.[0];
-    const handleScroll = stretchState?.getManipulator?.()?.handleScroll;
+    const handleScroll = model._factory.getManipulator()?.handleScroll;
     if (handleScroll) {
       const { worldCoords, worldDirection } = handleScroll(nbSteps);
       publicAPI.updateCenterAndPlanes(worldCoords, worldDirection);

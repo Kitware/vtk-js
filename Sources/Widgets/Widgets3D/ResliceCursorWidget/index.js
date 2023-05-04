@@ -669,7 +669,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['scaleInPixels', 'rotationHandlePosition']);
+  macro.setGet(publicAPI, model, [
+    'scaleInPixels',
+    'rotationHandlePosition',
+    'manipulator',
+  ]);
 
   vtkResliceCursorWidget(publicAPI, model);
 }

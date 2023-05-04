@@ -266,6 +266,7 @@ function setCenterlineKey(centerlineKey) {
   widgetState[`getAxis${stretchPlane}in${crossPlane}`]().setManipulator(
     planeManipulator
   );
+  widget.setManipulator(cprManipulator);
 
   renderWindow.render();
 }
