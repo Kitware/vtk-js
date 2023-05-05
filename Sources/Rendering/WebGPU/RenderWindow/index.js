@@ -627,6 +627,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   macro.setGetArray(publicAPI, model, ['size'], 2);
+  macro.event(publicAPI, model, 'windowResizeEvent');
 
   // Object methods
   vtkWebGPURenderWindow(publicAPI, model);
