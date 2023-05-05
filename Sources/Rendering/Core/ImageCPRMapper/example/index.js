@@ -7,6 +7,7 @@ import '@kitware/vtk.js/Rendering/Profiles/All';
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
 import { radiansFromDegrees } from 'vtk.js/Sources/Common/Core/Math';
+import { updateState } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 import { vec3, mat3, mat4 } from 'gl-matrix';
 import { ViewTypes } from '@kitware/vtk.js/Widgets/Core/WidgetManager/Constants';
 import vtkCPRManipulator from '@kitware/vtk.js/Widgets/Manipulators/CPRManipulator';
@@ -39,7 +40,11 @@ const centerlineKeys = Object.keys(centerlineJsons);
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const stretchRenderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
+
 fullScreenRenderer.addController(controlPanel);
+const angleEl = document.getElementById('angle');
+const centerlineEl = document.getElementById('centerline');
+
 const interactor = renderWindow.getInteractor();
 interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
 interactor.setDesiredUpdateRate(15.0);
@@ -122,6 +127,8 @@ function updateDistanceAndDirection() {
   const widgetPlanes = widgetState.getPlanes();
   const worldBitangent = widgetPlanes[stretchViewType].normal;
   const worldNormal = widgetPlanes[stretchViewType].viewUp;
+  widgetPlanes[crossViewType].normal = worldNormal;
+  widgetPlanes[crossViewType].viewUp = worldBitangent;
   const worldTangent = vec3.cross([], worldBitangent, worldNormal);
   vec3.normalize(worldTangent, worldTangent);
   const worldWidgetCenter = widgetState.getCenter();
@@ -144,21 +151,13 @@ function updateDistanceAndDirection() {
     distance - height
   );
   const worldActorTransform = mat4.fromValues(
-    worldTangent[0],
-    worldTangent[1],
-    worldTangent[2],
+    ...worldTangent,
     0,
-    worldNormal[0],
-    worldNormal[1],
-    worldNormal[2],
+    ...worldNormal,
     0,
-    -worldBitangent[0],
-    -worldBitangent[1],
-    -worldBitangent[2],
+    ...vec3.scale([], worldBitangent, -1),
     0,
-    worldActorTranslation[0],
-    worldActorTranslation[1],
-    worldActorTranslation[2],
+    ...worldActorTranslation,
     1
   );
   actor.setUserMatrix(worldActorTransform);
@@ -195,15 +194,9 @@ function updateDistanceAndDirection() {
   const modelDirections = mat3.fromQuat([], orientation);
   const inverseModelDirections = mat3.invert([], modelDirections);
   const worldDirections = mat3.fromValues(
-    worldTangent[0],
-    worldTangent[1],
-    worldTangent[2],
-    worldBitangent[0],
-    worldBitangent[1],
-    worldBitangent[2],
-    worldNormal[0],
-    worldNormal[1],
-    worldNormal[2]
+    ...worldTangent,
+    ...worldBitangent,
+    ...worldNormal
   );
   const baseDirections = mat3.mul([], inverseModelDirections, worldDirections);
   mapper.setDirectionMatrix(baseDirections);
@@ -222,6 +215,18 @@ function updateDistanceAndDirection() {
   // Update plane manipulator origin / normal for the cross view
   planeManipulator.setUserOrigin(worldWidgetCenter);
   planeManipulator.setUserNormal(worldNormal);
+
+  // Find the angle
+  const signedRadAngle = Math.atan2(baseDirections[1], baseDirections[0]);
+  const signedDegAngle = (signedRadAngle * 180) / Math.PI;
+  const degAngle = signedDegAngle > 0 ? signedDegAngle : 360 + signedDegAngle;
+  angleEl.value = degAngle;
+  updateState(
+    widgetState,
+    widget.getScaleInPixels(),
+    widget.getRotationHandlePosition()
+  );
+  renderWindow.render();
 }
 
 // The centerline JSON contains positions (vec3) and orientations (mat4)
@@ -272,7 +277,6 @@ function setCenterlineKey(centerlineKey) {
 }
 
 // Create an option for each centerline
-const centerlineEl = document.getElementById('centerline');
 for (let i = 0; i < centerlineKeys.length; ++i) {
   const name = centerlineKeys[i];
   const optionEl = document.createElement('option');
@@ -291,7 +295,6 @@ reader.setUrl(volumePath).then(() => {
     widget.setImage(image);
     const imageDimensions = image.getDimensions();
     const imageSpacing = image.getSpacing();
-    cprManipulator.setDistanceStep(Math.min(...imageSpacing));
     const diagonal = vec3.mul([], imageDimensions, imageSpacing);
     mapper.setWidth(2 * vec3.len(diagonal));
 
@@ -317,6 +320,35 @@ reader.setUrl(volumePath).then(() => {
     global.imageData = image;
   });
 });
+
+function setAngleFromSlider(radAngle) {
+  // Compute normal and bitangent directions from angle
+  const origin = [0, 0, 0];
+  const normalDir = [0, 0, 1];
+  const bitangentDir = [0, 1, 0];
+  vec3.rotateZ(bitangentDir, bitangentDir, origin, radAngle);
+
+  // Get orientation from distance
+  const distance = cprManipulator.getCurrentDistance();
+  const { orientation } = mapper.getCenterlinePositionAndOrientation(distance);
+  const modelDirections = mat3.fromQuat([], orientation);
+
+  // Set widget normal and viewUp from orientation and directions
+  const worldBitangent = vec3.transformMat3([], bitangentDir, modelDirections);
+  const worldNormal = vec3.transformMat3([], normalDir, modelDirections);
+  const widgetPlanes = widgetState.getPlanes();
+  widgetPlanes[stretchViewType].normal = worldBitangent;
+  widgetPlanes[stretchViewType].viewUp = worldNormal;
+  widgetPlanes[crossViewType].normal = worldNormal;
+  widgetPlanes[crossViewType].viewUp = worldBitangent;
+  widgetState.setPlanes(widgetPlanes);
+
+  updateDistanceAndDirection();
+}
+
+angleEl.addEventListener('input', () =>
+  setAngleFromSlider(radiansFromDegrees(Number.parseFloat(angleEl.value, 10)))
+);
 
 stretchViewWidgetInstance.onInteractionEvent(updateDistanceAndDirection);
 crossViewWidgetInstance.onInteractionEvent(updateDistanceAndDirection);

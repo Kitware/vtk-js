@@ -29,7 +29,7 @@ function vtkCPRManipulator(publicAPI, model) {
   publicAPI.handleEvent = (callData, glRenderWindow) => {
     const mapper = model.cprActor?.getMapper();
     if (!mapper) {
-      return { worldCoords: [0, 0, 0] };
+      return { worldCoords: null };
     }
 
     // Get normal and origin of the picking plane from the actor matrix
@@ -65,7 +65,7 @@ function vtkCPRManipulator(publicAPI, model) {
   publicAPI.distanceEvent = (distance) => {
     const mapper = model.cprActor?.getMapper();
     if (!mapper) {
-      return { worldCoords: [0, 0, 0] };
+      return { worldCoords: null };
     }
     const height = mapper.getHeight();
     const clampedDistance = Math.max(0, Math.min(height, distance));
@@ -84,8 +84,24 @@ function vtkCPRManipulator(publicAPI, model) {
   };
 
   publicAPI.handleScroll = (nbSteps) => {
-    const distance = model.currentDistance + model.distanceStep * nbSteps;
+    const distance =
+      model.currentDistance + publicAPI.getDistanceStep() * nbSteps;
     return publicAPI.distanceEvent(distance);
+  };
+
+  publicAPI.getDistanceStep = () => {
+    // Find default distanceStep from image spacing
+    // This only works if the mapper in the actor already has an ImageData
+    if (!model.distanceStep) {
+      const imageSpacing = model.cprActor
+        ?.getMapper()
+        ?.getInputData(0)
+        ?.getSpacing?.();
+      if (imageSpacing) {
+        return Math.min(...imageSpacing);
+      }
+    }
+    return model.distanceStep;
   };
 }
 
@@ -96,24 +112,12 @@ function vtkCPRManipulator(publicAPI, model) {
 // currentDistance is the distance from the first point of the centerline
 // cprActor.getMapper() should be a vtkImageCPRMapper
 function defaultValues(initialValues) {
-  const values = {
-    distanceStep: 1,
+  return {
+    distanceStep: 0,
     currentDistance: 0,
     cprActor: null,
     ...initialValues,
   };
-  // Find default distanceStep from image spacing
-  // This only works if the mapper in the actor already has an ImageData
-  if (!initialValues.distanceStep) {
-    const imageSpacing = initialValues.cprActor
-      ?.getMapper()
-      ?.getInputData(0)
-      ?.getSpacing?.();
-    if (imageSpacing) {
-      values.distanceStep = Math.min(...imageSpacing);
-    }
-  }
-  return values;
 }
 
 // ----------------------------------------------------------------------------
@@ -121,12 +125,8 @@ function defaultValues(initialValues) {
 export function extend(publicAPI, model, initialValues = {}) {
   vtkAbstractManipulator.extend(publicAPI, model, defaultValues(initialValues));
 
-  macro.setGet(publicAPI, model, [
-    'distance',
-    'distanceStep',
-    'currentDistance',
-    'cprActor',
-  ]);
+  macro.setGet(publicAPI, model, ['distance', 'currentDistance', 'cprActor']);
+  macro.set(publicAPI, model, ['distanceStep']);
 
   vtkCPRManipulator(publicAPI, model);
 }
