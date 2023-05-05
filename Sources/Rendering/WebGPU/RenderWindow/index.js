@@ -544,6 +544,11 @@ function vtkWebGPURenderWindow(publicAPI, model) {
   };
 
   publicAPI.delete = macro.chain(publicAPI.delete, publicAPI.setViewStream);
+  model._onSizeChanged = (_publicAPI, _model, newValue) =>
+    publicAPI.invokeWindowResizeEvent({
+      width: newValue[0],
+      height: newValue[1],
+    });
 }
 
 // ----------------------------------------------------------------------------
@@ -627,6 +632,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   macro.setGetArray(publicAPI, model, ['size'], 2);
+  macro.event(publicAPI, model, 'windowResizeEvent');
 
   // Object methods
   vtkWebGPURenderWindow(publicAPI, model);
