@@ -466,6 +466,16 @@ function removeUnavailableArrays(fields, availableNames) {
     fields.removeArray(namesToDelete[i]);
   }
 }
+/**
+ * Get a unique string suitable for use as state.arrays key.
+ * @param {object} arrayMeta
+ * @returns {string} array key
+ */
+function getArrayKey(arrayMeta) {
+  // Two arrays can have exactly the same hash so try to distinquish with name.
+  const namePart = arrayMeta.name ? `_${arrayMeta.name}` : '';
+  return `${arrayMeta.hash}_${arrayMeta.dataType}${namePart}`;
+}
 
 function createDataSetUpdate(piecesToFetch = []) {
   return (instance, state, context) => {
@@ -484,7 +494,7 @@ function createDataSetUpdate(piecesToFetch = []) {
       if (state.properties[key]) {
         const arrayMeta = state.properties[key];
         arrayMeta.registration = `set${macro.capitalize(key)}`;
-        const arrayKey = `${arrayMeta.hash}_${arrayMeta.dataType}`;
+        const arrayKey = getArrayKey(arrayMeta);
         state.arrays[arrayKey] = arrayMeta;
         delete localProperties[key];
       }
@@ -494,7 +504,7 @@ function createDataSetUpdate(piecesToFetch = []) {
     const fieldsArrays = state.properties.fields || [];
     for (let i = 0; i < fieldsArrays.length; i++) {
       const arrayMeta = fieldsArrays[i];
-      const arrayKey = `${arrayMeta.hash}_${arrayMeta.dataType}`;
+      const arrayKey = getArrayKey(arrayMeta);
       state.arrays[arrayKey] = arrayMeta;
     }
     delete localProperties.fields;
