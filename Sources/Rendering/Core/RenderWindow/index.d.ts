@@ -56,7 +56,9 @@ export interface vtkRenderWindow extends vtkObject {
 	captureImages(format?: string, opts?: any): Promise<string>[];
 
 	/**
-	 * 
+	 * Switch the rendering backend between WebGL and WebGPU.
+	 * By default, the WebGL backend is used. To switch, to WebGPU call
+	 * `renderWindow.setDefaultViewAPI('WebGPU')` before calling `render`.
 	 */
 	getDefaultViewAPI(): string;
 
@@ -143,8 +145,10 @@ export interface vtkRenderWindow extends vtkObject {
 	render(): void;
 
 	/**
-	 * 
-	 * @param defaultViewAPI 
+	 * Switch the rendering backend between WebGL and WebGPU.
+	 * By default, the WebGL backend is used. To switch, to WebGPU call
+	 * `renderWindow.setDefaultViewAPI('WebGPU')` before calling `render`.
+	 * @param defaultViewAPI (default: 'WebGL')
 	 */
 	setDefaultViewAPI(defaultViewAPI: DEFAULT_VIEW_API): boolean;
 
