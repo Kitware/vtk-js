@@ -1,6 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 
-const DEFAULT_VIEW_API = navigator.gpu ? 'WebGPU' : 'WebGL';
+const DEFAULT_VIEW_API = 'WebGL';
 const VIEW_CONSTRUCTORS = Object.create(null);
 
 // ----------------------------------------------------------------------------
