@@ -53,7 +53,7 @@ function vtkFieldData(publicAPI, model) {
   };
   publicAPI.removeArray = (arrayName) => {
     const index = model.arrays.findIndex(
-      (array) => array.getName() === arrayName
+      (array) => array.data.getName() === arrayName
     );
     return publicAPI.removeArrayByIndex(index);
   };

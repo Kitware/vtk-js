@@ -65,5 +65,9 @@ test('Test vtkDataSetAttributes instance', (t) => {
   // t.equal(instance.setScalars('Foo'), 0, 'Setting scalars should return index of array');
   // instance.addArray(vtkDataArray.newInstance({ name: 'Bar', numberOfComponents: 3, values: new Float32Array(3 * ntuples) }));
 
+  t.equal(instance.getNumberOfArrays(), numArrs);
+  instance.removeArray('FooScalars');
+  t.equal(instance.getNumberOfArrays(), numArrs - 1);
+
   t.end();
 });
