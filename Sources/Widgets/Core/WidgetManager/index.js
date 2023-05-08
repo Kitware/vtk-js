@@ -206,22 +206,23 @@ function vtkWidgetManager(publicAPI, model) {
 
   async function captureBuffers(x1, y1, x2, y2) {
     if (model._captureInProgress) {
+      await model._captureInProgress;
       return;
     }
-    model._captureInProgress = true;
     renderPickingBuffer();
 
     model._capturedBuffers = null;
-    model._capturedBuffers = await model._selector.getSourceDataAsync(
+    model._captureInProgress = model._selector.getSourceDataAsync(
       model._renderer,
       x1,
       y1,
       x2,
       y2
     );
+    model._capturedBuffers = await model._captureInProgress;
+    model._captureInProgress = null;
     model.previousSelectedData = null;
     renderFrontBuffer();
-    model._captureInProgress = false;
   }
 
   publicAPI.enablePicking = () => {
