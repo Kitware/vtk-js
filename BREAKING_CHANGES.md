@@ -1,3 +1,6 @@
+## From 28.x to 29
+
+- **getOpenGLRenderWindow**: `getOpenGLRenderWindow` has been renamed to `getApiSpecificRenderWindow` in `vtkFullScreenRenderWindow`, `vtkGenericRenderWindow` and `vtkViewProxy` to support WebGL and WebGPU backend.
 ## From 27.x to 28
 
 - **vtkManipulator.handleEvent**: Change all `handleEvent` signatures of manipulators. Used to be `handleEvent(callData, glRenderWindow): vec3`, it is now `handleEvent(callData, glRenderWindow): { worldCoords: Nullable<vec3>, worldDirection?: mat3 }`.

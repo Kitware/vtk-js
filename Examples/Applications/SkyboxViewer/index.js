@@ -270,8 +270,8 @@ function createVisualization(container, mapReader) {
   }
 
   if (grid) {
-    console.log(fullScreenRenderer.getOpenGLRenderWindow().getSize());
-    createGrid(...fullScreenRenderer.getOpenGLRenderWindow().getSize());
+    console.log(fullScreenRenderer.getApiSpecificRenderWindow().getSize());
+    createGrid(...fullScreenRenderer.getApiSpecificRenderWindow().getSize());
   }
 }
 

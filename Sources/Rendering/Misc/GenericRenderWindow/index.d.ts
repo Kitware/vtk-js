@@ -4,6 +4,7 @@ import vtkRenderer from "../../Core/Renderer";
 import vtkRenderWindow from "../../Core/RenderWindow";
 import vtkRenderWindowInteractor from "../../Core/RenderWindowInteractor";
 import vtkOpenGLRenderWindow from "../../OpenGL/RenderWindow";
+import vtkWebGPURenderWindow from "../../WebGPU/RenderWindow";
 
 
 /**
@@ -33,9 +34,9 @@ export interface vtkGenericRenderWindow extends vtkObject {
 	getInteractor(): vtkRenderWindowInteractor;
 
 	/**
-	 * 
+	 * Get the render back-end specific render window.
 	 */
-	getOpenGLRenderWindow(): vtkOpenGLRenderWindow;
+	getApiSpecificRenderWindow(): vtkOpenGLRenderWindow|vtkWebGPURenderWindow;
 
 	/**
 	 * 

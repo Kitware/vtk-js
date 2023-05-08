@@ -69,7 +69,7 @@ view2DContainer.className = 'viewContainer';
 const view3DProxy = proxyManager.createProxy('Views', 'View3D');
 view3DProxy.setContainer(view3DContainer);
 view3DProxy
-  .getOpenGLRenderWindow()
+  .getApiSpecificRenderWindow()
   .setSize([view3DContainer.clientWidth, view3DContainer.clientHeight]);
 
 // ----------------------------------------------------------------------------
@@ -79,7 +79,7 @@ view3DProxy
 const view2DProxy = proxyManager.createProxy('Views', 'View2D', { axis: 2 });
 view2DProxy.setContainer(view2DContainer);
 view2DProxy
-  .getOpenGLRenderWindow()
+  .getApiSpecificRenderWindow()
   .setSize([view2DContainer.clientWidth, view2DContainer.clientHeight]);
 
 // ----------------------------------------------------------------------------

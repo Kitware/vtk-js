@@ -148,6 +148,7 @@ export interface vtkRenderWindow extends vtkObject {
 	 * Switch the rendering backend between WebGL and WebGPU.
 	 * By default, the WebGL backend is used. To switch, to WebGPU call
 	 * `renderWindow.setDefaultViewAPI('WebGPU')` before calling `render`.
+	 * Must be called before `newAPISpecificView()` is called.
 	 * @param defaultViewAPI (default: 'WebGL')
 	 */
 	setDefaultViewAPI(defaultViewAPI: DEFAULT_VIEW_API): boolean;

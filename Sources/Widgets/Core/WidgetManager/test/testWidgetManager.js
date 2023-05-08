@@ -72,7 +72,7 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
       resolve = res;
     });
     grw
-      .getOpenGLRenderWindow()
+      .getApiSpecificRenderWindow()
       .captureNextImage()
       .then((image) => {
         testUtils.compareImages(
@@ -102,7 +102,7 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
       resolve = res;
     });
     grw
-      .getOpenGLRenderWindow()
+      .getApiSpecificRenderWindow()
       .captureNextImage()
       .then((image) => {
         testUtils.compareImages(
@@ -132,7 +132,7 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
       resolve = res;
     });
     grw
-      .getOpenGLRenderWindow()
+      .getApiSpecificRenderWindow()
       .captureNextImage()
       .then((image) => {
         testUtils.compareImages(
@@ -159,7 +159,7 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
       resolve = res;
     });
     grw
-      .getOpenGLRenderWindow()
+      .getApiSpecificRenderWindow()
       .captureNextImage()
       .then((image) => {
         testUtils.compareImages(
