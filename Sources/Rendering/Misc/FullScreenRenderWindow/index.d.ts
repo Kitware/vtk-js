@@ -17,6 +17,7 @@ export interface IFullScreenRenderWindowInitialValues {
 	containerStyle?: object;
 	controlPanelStyle?: object;
 	controllerVisibility?: boolean;
+	defaultViewAPI?: boolean;
 	listenWindowResize?: boolean;
 	resizeCallback?: any;
 }
@@ -42,7 +43,9 @@ export interface vtkFullScreenRenderWindow extends vtkObject {
 	delete(): void;
 
 	/**
-	 * 
+	 * Returns vtkWebGPURenderWindow if ?viewAPI='WebGPU' is in URL, or if
+	 * vtkFullScreenRenderWindow has been created with "defaultViewAPI: 'WebGPU",
+	 * otherwise vtkOpenGLRenderWindow is returned.
 	 */
 	getApiSpecificRenderWindow(): any; // vtkOpenGLRenderWindow || vtkWebGPURenderWindow
 

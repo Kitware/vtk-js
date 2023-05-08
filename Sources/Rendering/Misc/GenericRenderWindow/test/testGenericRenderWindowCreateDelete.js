@@ -39,7 +39,7 @@ test('Test vtkGenericRenderWindow create/delete', (t) => {
     grw.setContainer(rwContainer);
     grw.getRenderer().addActor(actor);
 
-    images.push(grw.getOpenGLRenderWindow().captureNextImage());
+    images.push(grw.getApiSpecificRenderWindow().captureNextImage());
     grw.getRenderWindow().render();
 
     grw.delete();

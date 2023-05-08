@@ -80,7 +80,7 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
 
   // apiSpecificRenderWindow
   model.apiSpecificRenderWindow = model.renderWindow.newAPISpecificView(
-    userParams.viewAPI
+    userParams.viewAPI ?? model.defaultViewAPI
   );
   model.apiSpecificRenderWindow.setContainer(model.container);
   model.renderWindow.addView(model.apiSpecificRenderWindow);
@@ -192,6 +192,7 @@ const DEFAULT_VALUES = {
   background: [0.32, 0.34, 0.43],
   containerStyle: null,
   controlPanelStyle: null,
+  // defaultViewAPI: undefined,
   listenWindowResize: true,
   resizeCallback: null,
   controllerVisibility: true,
