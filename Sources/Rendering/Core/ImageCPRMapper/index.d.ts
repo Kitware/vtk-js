@@ -1,9 +1,10 @@
 import { mat3, mat4, quat, vec3 } from "gl-matrix";
+import { Nullable } from "../../../types";
+import { vtkOutputPort } from "../../../interfaces";
+import vtkAbstractMapper3D, { IAbstractMapper3DInitialValues } from "../AbstractMapper3D";
 import vtkDataArray from "../../../Common/Core/DataArray";
 import vtkImageData from "../../../Common/DataModel/ImageData";
 import vtkPolyData from "../../../Common/DataModel/PolyData";
-import { vtkOutputPort } from "../../../interfaces";
-import vtkAbstractMapper3D, { IAbstractMapper3DInitialValues } from "../AbstractMapper3D";
 import vtkPolyLine from "../../../Common/DataModel/PolyLine";
 
 interface ICoincidentTopology {
@@ -18,7 +19,7 @@ export interface IImageCPRMapperInitialValues extends IAbstractMapper3DInitialVa
 	uniformOrientation: TOrientation; // Don't use vec3 if possible
 	useUniformOrientation: boolean;
 	preferSizeOverAccuracy: boolean; // Whether to use halfFloat representation of float, when it is inaccurate
-	orientationArrayName: string | null;
+	orientationArrayName: Nullable<string>;
 	tangentDirection: vec3;
 	bitangentDirection: vec3;
 	normalDirection: vec3;
@@ -83,13 +84,13 @@ export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
 	 * The data array should be an array of mat4, mat3, quat or vec3 but using vec3 makes the CPRInteractor unusable
 	 * Default to null.
 	 */
-	getOrientationArrayName(): string | null;
+	getOrientationArrayName(): Nullable<string>;
 
 	/**
 	 * @see getOrientationArrayName
 	 * @param arrayName
 	 */
-	setOrientationArrayName(arrayName: string | null): boolean;
+	setOrientationArrayName(arrayName: Nullable<string>): boolean;
 
 	/**
 	 * For each point on the oriented centerline, the tangent direction is the direction in which the mapper will sample
@@ -144,7 +145,7 @@ export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
 	/**
 	 * Find the data array to use for orientation in the input polydata ( @see getOrientationArrayName )
 	 */
-	getOrientationDataArray(): null | vtkDataArray;
+	getOrientationDataArray(): Nullable<vtkDataArray>;
 
 	/**
 	 * Recompute the oriented centerline from the input polydata if needed and return the result

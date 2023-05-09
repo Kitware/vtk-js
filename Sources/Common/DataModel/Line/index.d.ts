@@ -1,5 +1,5 @@
 import { quat } from 'gl-matrix';
-import { Vector3, Vector2 } from '../../../types';
+import { Vector3, Vector2, Nullable } from '../../../types';
 import vtkCell from '../Cell';
 
 export enum IntersectionState {
@@ -9,7 +9,7 @@ export enum IntersectionState {
 }
 
 export interface ILineInitialValues {
-	orientations: quat[] | null;
+	orientations: Nullable<quat[]>;
 }
 
 export interface IIntersectWithLine {
@@ -36,13 +36,13 @@ export interface vtkLine extends vtkCell {
 	 * Get the list of orientations (a list of quat) for each point of the line.
 	 * Can be null if the line is not oriented
 	 */
-	getOrientations(): quat[] | null;
+	getOrientations(): Nullable<quat[]>;
 
 	/**
 	 * @see getOrientations
 	 * @param orientations The list of orientation per point of the centerline
 	 */
-	setOrientations(orientations: quat[] | null): boolean;
+	setOrientations(orientations: Nullable<quat[]>): boolean;
 
 	/**
 	 * Compute the intersection point of the intersection between line and line
