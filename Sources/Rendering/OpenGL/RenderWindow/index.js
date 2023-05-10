@@ -302,10 +302,13 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
     model.xrSessionType =
       xrSessionType !== undefined ? xrSessionType : XrSessionTypes.HmdVR;
-    const isAR = xrSessionType === XrSessionTypes.MobileAR;
-    const sessionType = isAR ? 'immersive-ar' : 'immersive-vr';
+    const isXrSessionAR = [
+      XrSessionTypes.HmdAR,
+      XrSessionTypes.MobileAR,
+    ].includes(model.xrSessionType);
+    const sessionType = isXrSessionAR ? 'immersive-ar' : 'immersive-vr';
     if (!navigator.xr.isSessionSupported(sessionType)) {
-      if (isAR) {
+      if (isXrSessionAR) {
         throw new Error('Device does not support AR session');
       } else {
         throw new Error('VR display is not available');
@@ -344,7 +347,13 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       model.xrSession.requestReferenceSpace('local').then((refSpace) => {
         model.xrReferenceSpace = refSpace;
       });
-      if (model.xrSessionType === XrSessionTypes.MobileAR) {
+
+      // Initialize transparent background for augmented reality session
+      const isXrSessionAR = [
+        XrSessionTypes.HmdAR,
+        XrSessionTypes.MobileAR,
+      ].includes(model.xrSessionType);
+      if (isXrSessionAR) {
         const ren = model.renderable.getRenderers()[0];
         model.preXrSessionBackground = ren.getBackground();
         ren.setBackground([0, 0, 0, 0]);
@@ -357,7 +366,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         publicAPI.xrRender
       );
     } else {
-      throw new Error('Failed to enter VR with a null xrSession.');
+      throw new Error('Failed to enter XR with a null xrSession.');
     }
   };
 
@@ -370,7 +379,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     let rescaleFactor = inputRescaleFactor;
     let translateZ = inputTranslateZ;
 
-    const isXrSessionAR = model.xrSessionType === XrSessionTypes.MobileAR;
+    const isXrSessionAR = [
+      XrSessionTypes.HmdAR,
+      XrSessionTypes.MobileAR,
+    ].includes(model.xrSessionType);
     if (
       isXrSessionAR &&
       rescaleFactor === DEFAULT_RESET_FACTORS.vr.rescaleFactor
@@ -442,6 +454,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.xrRender = async (t, frame) => {
     const xrSession = frame.session;
+    const isXrSessionHMD = [
+      XrSessionTypes.HmdVR,
+      XrSessionTypes.HmdAR,
+    ].includes(model.xrSessionType);
 
     model.renderable
       .getInteractor()
@@ -477,9 +493,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       xrPose.views.forEach((view, index) => {
         const viewport = glLayer.getViewport(view);
 
-        // TODO: Appropriate handling for AR passthrough on HMDs
-        // with two eyes will require further investigation.
-        if (model.xrSessionType === XrSessionTypes.HmdVR) {
+        if (isXrSessionHMD) {
           if (view.eye === 'left') {
             ren.setViewport(0, 0, 0.5, 1.0);
           } else if (view.eye === 'right') {
