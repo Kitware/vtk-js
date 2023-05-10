@@ -85,13 +85,11 @@ arbutton.disabled = !fullScreenRenderer
 
 arbutton.addEventListener('click', (e) => {
   if (arbutton.textContent === 'Start AR') {
-    fullScreenRenderer.setBackground([0, 0, 0, 0]);
     fullScreenRenderer
       .getApiSpecificRenderWindow()
       .startXR(XrSessionTypes.MobileAR);
     arbutton.textContent = 'Exit AR';
   } else {
-    fullScreenRenderer.setBackground([0, 0, 0, 255]);
     fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
     arbutton.textContent = 'Start AR';
   }

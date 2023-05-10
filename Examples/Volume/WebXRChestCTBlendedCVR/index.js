@@ -140,13 +140,9 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   }
   xrButton.addEventListener('click', () => {
     if (xrButton.textContent === enterText) {
-      if (xrSessionType === XrSessionTypes.MobileAR) {
-        fullScreenRenderer.setBackground([0, 0, 0, 0]);
-      }
       fullScreenRenderer.getApiSpecificRenderWindow().startXR(xrSessionType);
       xrButton.textContent = exitText;
     } else {
-      fullScreenRenderer.setBackground([...background, 255]);
       fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
       xrButton.textContent = enterText;
     }

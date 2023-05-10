@@ -430,25 +430,24 @@ function createPipeline(fileName, fileContents) {
   // --------------------------------------------------------------------
 
   function toggleXR() {
-    if (requestedXrSessionType === XrSessionTypes.MobileAR) {
-      fullScreenRenderWindow.setBackground([...background, 0]);
-    }
-
     if (immersionSelector.textContent.startsWith('Start')) {
       fullScreenRenderWindow
         .getApiSpecificRenderWindow()
         .startXR(requestedXrSessionType);
-      immersionSelector.textContent =
-        requestedXrSessionType === XrSessionTypes.MobileAR
-          ? 'Exit AR'
-          : 'Exit VR';
+      immersionSelector.textContent = [
+        XrSessionTypes.HmdAR,
+        XrSessionTypes.MobileAR,
+      ].includes(requestedXrSessionType)
+        ? 'Exit AR'
+        : 'Exit VR';
     } else {
-      fullScreenRenderWindow.setBackground([...background, 255]);
       fullScreenRenderWindow.getApiSpecificRenderWindow().stopXR();
-      immersionSelector.textContent =
-        requestedXrSessionType === XrSessionTypes.MobileAR
-          ? 'Start AR'
-          : 'Start VR';
+      immersionSelector.textContent = [
+        XrSessionTypes.HmdAR,
+        XrSessionTypes.MobileAR,
+      ].includes(requestedXrSessionType)
+        ? 'Start AR'
+        : 'Start VR';
     }
   }
   immersionSelector.addEventListener('click', toggleXR);
