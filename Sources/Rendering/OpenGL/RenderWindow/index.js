@@ -344,6 +344,11 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       model.xrSession.requestReferenceSpace('local').then((refSpace) => {
         model.xrReferenceSpace = refSpace;
       });
+      if (model.xrSessionType === XrSessionTypes.MobileAR) {
+        const ren = model.renderable.getRenderers()[0];
+        model.preXrSessionBackground = ren.getBackground();
+        ren.setBackground([0, 0, 0, 0]);
+      }
 
       publicAPI.resetXRScene();
 
@@ -422,6 +427,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
     // Reset to default canvas
     const ren = model.renderable.getRenderers()[0];
+
+    if (model.preXrSessionBackground != null) {
+      ren.setBackground(model.preXrSessionBackground);
+      model.preXrSessionBackground = null;
+    }
+
     ren.getActiveCamera().setProjectionMatrix(null);
     ren.resetCamera();
 
