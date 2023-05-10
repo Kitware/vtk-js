@@ -698,6 +698,16 @@ float volume_shadow(vec3 posIS, vec3 lightDirNormIS)
   vec4 scalar = vec4(0.0);
   while(current_dist < maxdist)
   {
+#ifdef vtkClippingPlanesOn
+    vec3 posVC = IStoVC(posIS);
+    for (int i = 0; i < clip_numPlanes; ++i)
+    {
+      if (dot(vec3(vClipPlaneOrigins[i] - posVC), vClipPlaneNormals[i]) > 0.0)
+      {
+        current_dist = maxdist;
+      }
+    }
+#endif
     scalar = getTextureValue(posIS);
     opacity = texture2D(otexture, vec2(scalar.r * oscale0 + oshift0, 0.5)).r;
     #ifdef vtkGradientOpacityOn
