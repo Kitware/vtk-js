@@ -19,4 +19,9 @@ Virtual reality, augmented reality, and holographic viewing is supported for Web
 - [Brain Blood Vessels (holographic)](https://kitware.github.io/vtk-js/examples/GeometryViewer/index.html?xrSessionType=2&fileURL=[https://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download]) 57.71 MB
 - [Chest CT (holographic)](https://kitware.github.io/vtk-js/examples/GeometryViewer/index.html?xrSessionType=2&fileURL=[https://data.kitware.com/api/v1/file/61f044354acac99f42c30276/download,https://data.kitware.com/api/v1/file/61f0440f4acac99f42c30191/download,https://data.kitware.com/api/v1/file/61f044204acac99f42c30267/download]) 63.75 MB
 
+The following links provide augmented reality examples for head-mounted displays:
+- [Earth.vtp (AR headset)](https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html?xrSessionType=3fileURL=https://data.kitware.com/api/v1/item/59ee68d98d777f31ac64784b/download) 1.17 MB
+- [Brain Blood Vessels (AR headset)](https://kitware.github.io/vtk-js/examples/GeometryViewer/index.html?xrSessionType=3&fileURL=[https://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download]) 57.71 MB
+- [Chest CT (AR headset)](https://kitware.github.io/vtk-js/examples/GeometryViewer/index.html?xrSessionType=3&fileURL=[https://data.kitware.com/api/v1/file/61f044354acac99f42c30276/download,https://data.kitware.com/api/v1/file/61f0440f4acac99f42c30191/download,https://data.kitware.com/api/v1/file/61f044204acac99f42c30267/download]) 63.75 MB
+
 [HTML]: https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html

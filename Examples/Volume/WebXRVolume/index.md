@@ -14,12 +14,19 @@ Volume rendering can be processor-intensive. Smaller volumes may give better per
 
 ### Looking Glass Holographic Support
 
-Holographic scenes can be rendered to a Looking Glass display by specifying the `xrSessionType` in the example URL.
+Holographic scenes can be rendered to a Looking Glass display by specifying `xrSessionType=2` in the example URL.
 
 - [binary-head.vti (holographic)](https://kitware.github.io/vtk-js/examples/WebXRVolume/WebXRVolume.html?xrSessionType=2&fileURL=https://data.kitware.com/api/v1/file/59de9dca8d777f31ac641dc2/download) 15.6 MB
 - [3DUS-fetus.vti (holographic)](https://kitware.github.io/vtk-js/examples/WebXRVolume/WebXRVolume.html?xrSessionType=2&fileURL=https://data.kitware.com/api/v1/file/63fe43217b0dfcc98f66a85a/download) 30.22 MB
 - [Kitware_CTA_Head_and_Neck.vti (holographic)](https://kitware.github.io/vtk-js/examples/WebXRVolume/WebXRVolume.html?xrSessionType=2&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-Cardiac2&resliceVolume=false) 5.025 MB
 
+### Augmented Reality Head-Mounted Displays
+
+Augmented reality scenes can be rendered to a dedicated head-mounted display by specifying `xrSessionType=3` in the example URL.
+
+- [binary-head.vti](https://kitware.github.io/vtk-js/examples/WebXRVolume/WebXRVolume.html?xrSessionType=3&fileURL=https://data.kitware.com/api/v1/file/59de9dca8d777f31ac641dc2/download) 15.6 MB
+- [Kitware_CTA_Head_and_Neck.vti](https://kitware.github.io/vtk-js/examples/WebXRVolume/WebXRVolume.html?xrSessionType=3&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-Cardiac2&resliceVolume=true) 5.025 MB
+- [3DUS-fetus.vti (holographic)](https://kitware.github.io/vtk-js/examples/WebXRVolume/WebXRVolume.html?xrSessionType=3&fileURL=https://data.kitware.com/api/v1/file/63fe43217b0dfcc98f66a85a/download) 30.22 MB
 
 ### See Also
 
