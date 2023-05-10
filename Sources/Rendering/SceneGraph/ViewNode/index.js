@@ -149,29 +149,23 @@ function vtkViewNode(publicAPI, model) {
   };
 
   publicAPI.removeUnusedNodes = () => {
-    let deleted = null;
+    let visitedCount = 0;
     for (let index = 0; index < model.children.length; ++index) {
       const child = model.children[index];
       const visited = child.getVisited();
-      if (!visited) {
+      if (visited) {
+        model.children[visitedCount++] = child;
+        child.setVisited(false);
+      } else {
         const renderable = child.getRenderable();
         if (renderable) {
           model._renderableChildMap.delete(renderable);
         }
-        if (!deleted) {
-          deleted = [];
-        }
-        deleted.push(child);
         child.delete();
-      } else {
-        child.setVisited(false);
       }
     }
 
-    if (deleted) {
-      // slow does alloc but not as common
-      model.children = model.children.filter((el) => !deleted.includes(el));
-    }
+    model.children.length = visitedCount;
   };
 
   publicAPI.createViewNode = (dataObj) => {
