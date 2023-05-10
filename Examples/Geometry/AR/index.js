@@ -8,6 +8,7 @@ import vtkCalculator from '@kitware/vtk.js/Filters/General/Calculator';
 import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
 import { XrSessionTypes } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/Constants';
@@ -18,6 +19,13 @@ import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
 import controlPanel from './controller.html';
+
+// ----------------------------------------------------------------------------
+// Parse URL parameters
+// ----------------------------------------------------------------------------
+const userParams = vtkURLExtract.extractURLParameters();
+const requestedXrSessionType =
+  userParams.xrSessionType ?? XrSessionTypes.MobileAR;
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -87,7 +95,7 @@ arbutton.addEventListener('click', (e) => {
   if (arbutton.textContent === 'Start AR') {
     fullScreenRenderer
       .getApiSpecificRenderWindow()
-      .startXR(XrSessionTypes.MobileAR);
+      .startXR(requestedXrSessionType);
     arbutton.textContent = 'Exit AR';
   } else {
     fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
