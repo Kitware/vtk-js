@@ -26,14 +26,8 @@ const SCREENSHOT_PLACEHOLDER = {
 };
 
 const DEFAULT_RESET_FACTORS = {
-  vr: {
-    rescaleFactor: 1.0,
-    translateZ: -0.7, // 0.7 m forward from the camera
-  },
-  ar: {
-    rescaleFactor: 0.25, // scale down AR for viewing comfort by default
-    translateZ: -0.5, // 0.5 m forward from the camera
-  },
+  rescaleFactor: 0.25, // isotropic scale factor reduces apparent size of objects
+  translateZ: -1.5, // default translation initializes object in front of camera
 };
 
 function checkRenderTargetSupport(gl, format, type) {
@@ -371,30 +365,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.resetXRScene = (
-    inputRescaleFactor = DEFAULT_RESET_FACTORS.vr.rescaleFactor,
-    inputTranslateZ = DEFAULT_RESET_FACTORS.vr.translateZ
+    rescaleFactor = DEFAULT_RESET_FACTORS.rescaleFactor,
+    translateZ = DEFAULT_RESET_FACTORS.translateZ
   ) => {
     // Adjust world-to-physical parameters for different modalities
-    // Default parameter values are for HMD VR
-    let rescaleFactor = inputRescaleFactor;
-    let translateZ = inputTranslateZ;
-
-    const isXrSessionAR = [
-      XrSessionTypes.HmdAR,
-      XrSessionTypes.MobileAR,
-    ].includes(model.xrSessionType);
-    if (
-      isXrSessionAR &&
-      rescaleFactor === DEFAULT_RESET_FACTORS.vr.rescaleFactor
-    ) {
-      // Scale down by default in AR
-      rescaleFactor = DEFAULT_RESET_FACTORS.ar.rescaleFactor;
-    }
-
-    if (isXrSessionAR && translateZ === DEFAULT_RESET_FACTORS.vr.translateZ) {
-      // Default closer to the camera in AR
-      translateZ = DEFAULT_RESET_FACTORS.ar.translateZ;
-    }
 
     const ren = model.renderable.getRenderers()[0];
     ren.resetCamera();
@@ -403,9 +377,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     let physicalScale = camera.getPhysicalScale();
     const physicalTranslation = camera.getPhysicalTranslation();
 
+    const rescaledTranslateZ = translateZ * physicalScale;
     physicalScale /= rescaleFactor;
-    translateZ *= physicalScale;
-    physicalTranslation[2] += translateZ;
+    physicalTranslation[2] += rescaledTranslateZ;
 
     camera.setPhysicalScale(physicalScale);
     camera.setPhysicalTranslation(physicalTranslation);
