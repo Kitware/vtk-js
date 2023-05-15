@@ -18,10 +18,10 @@ import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import vtkImageResliceMapperVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkImageResliceMapperVS.glsl';
 import vtkImageResliceMapperFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkImageResliceMapperFS.glsl';
 
-import InterpolationType from 'vtk.js/Sources/Rendering/Core/ImageProperty/Constants';
-import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import { Filter } from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
+import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/ImageProperty/Constants';
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
 const { vtkErrorMacro } = macro;
