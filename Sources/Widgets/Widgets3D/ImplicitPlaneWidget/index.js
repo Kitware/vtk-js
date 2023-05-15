@@ -130,7 +130,7 @@ function widgetBehavior(publicAPI, model) {
   publicAPI.updateFromNormal = (callData) => {
     model.trackballManipulator.setWidgetNormal(model.activeState.getNormal());
 
-    const newNormal = model.trackballManipulator.handleEvent(
+    const { worldCoords: newNormal } = model.trackballManipulator.handleEvent(
       callData,
       model._apiSpecificRenderWindow
     );
