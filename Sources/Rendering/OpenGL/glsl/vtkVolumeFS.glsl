@@ -311,7 +311,7 @@ vec4 getTextureValue(vec3 ijk)
 // transformation between VC and IS space
 
 // convert vector position from idx to vc
-#if vtkLightComplexity > 0
+#if (vtkLightComplexity > 0) || (defined vtkClippingPlanesOn)
 vec3 IStoVC(vec3 posIS){
   vec3 posVC = posIS / vVCToIJK;
   return posVC.x * vPlaneNormal0 +
