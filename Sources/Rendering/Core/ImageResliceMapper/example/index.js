@@ -4,16 +4,17 @@ import '@kitware/vtk.js/favicon';
 import '@kitware/vtk.js/Rendering/Profiles/All';
 
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
+import vtkImageProperty from '@kitware/vtk.js/Rendering/Core/ImageProperty';
 import vtkImageResliceMapper from '@kitware/vtk.js/Rendering/Core/ImageResliceMapper';
 import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
-import vtkImageProperty from '@kitware/vtk.js/Rendering/Core/ImageProperty';
+import vtkInteractorStyleImage from '@kitware/vtk.js/Interaction/Style/InteractorStyleImage';
 import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
 import vtkPlane from '@kitware/vtk.js/Common/DataModel/Plane';
-import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
-import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
-import vtkInteractorStyleImage from '@kitware/vtk.js/Interaction/Style/InteractorStyleImage';
 import vtkPlaneWidget from '@kitware/vtk.js/Widgets/Widgets3D/ImplicitPlaneWidget';
 import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
+import { InterpolationType } from '@kitware/vtk.js/Rendering/Core/ImageProperty/Constants';
 import { SlabTypes } from '@kitware/vtk.js/Rendering/Core/ImageResliceMapper/Constants';
 
 // use full HttpDataAccessHelper
@@ -159,6 +160,18 @@ for (let idx = 0; idx < slabTypes.length; ++idx) {
       mapper.setSlabType(SlabTypes.SUM);
     } else {
       mapper.setSlabType(SlabTypes.MEAN);
+    }
+    renderWindow.render();
+  };
+}
+const interpTypes = document.querySelectorAll('.interp');
+for (let idx = 0; idx < interpTypes.length; ++idx) {
+  const st = interpTypes[idx];
+  st.onchange = (e) => {
+    if (e.target.value === 'linear') {
+      actor.getProperty().setInterpolationType(InterpolationType.LINEAR);
+    } else {
+      actor.getProperty().setInterpolationType(InterpolationType.NEAREST);
     }
     renderWindow.render();
   };
