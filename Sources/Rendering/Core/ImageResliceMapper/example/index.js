@@ -5,7 +5,6 @@ import '@kitware/vtk.js/Rendering/Profiles/All';
 
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
 import vtkImageProperty from '@kitware/vtk.js/Rendering/Core/ImageProperty';
 import vtkImageResliceMapper from '@kitware/vtk.js/Rendering/Core/ImageResliceMapper';
 import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
@@ -17,8 +16,12 @@ import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 import { InterpolationType } from '@kitware/vtk.js/Rendering/Core/ImageProperty/Constants';
 import { SlabTypes } from '@kitware/vtk.js/Rendering/Core/ImageResliceMapper/Constants';
 
-// use full HttpDataAccessHelper
-import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+// Load the itk-wasm UMD module dynamically for the example.
+import vtkResourceLoader from '@kitware/vtk.js/IO/Core/ResourceLoader';
+import vtkLiteHttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper';
+import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper';
+// to unzip data file
+import { unzipSync } from 'fflate';
 
 import controlPanel from './controlPanel.html';
 // ----------------------------------------------------------------------------
@@ -31,13 +34,13 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // ----------------------------------------------------------------------------
 // Example code
 // ----------------------------------------------------------------------------
-const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 
 const ppty = vtkImageProperty.newInstance();
 const mapper = vtkImageResliceMapper.newInstance();
 const slicePlane = vtkPlane.newInstance();
-slicePlane.setNormal(0, 0, 1);
+slicePlane.setNormal(0, 1, 0);
 mapper.setSlicePlane(slicePlane);
+mapper.setSlabType(SlabTypes.MAX);
 
 const actor = vtkImageSlice.newInstance();
 actor.setMapper(mapper);
@@ -87,32 +90,53 @@ widget.setPlaceFactor(1);
 const w = widgetManager.addWidget(widget);
 w.setRepresentationStyle(repStyle);
 
-reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
-  reader.loadData().then(() => {
-    reader.update();
-    const im = reader.getOutputData();
-    const bds = im.getBounds();
-    mapper.setInputData(im);
-    slicePlane.setOrigin(
-      0.5 * (bds[0] + bds[1]),
-      0.5 * (bds[2] + bds[3]),
-      0.5 * (bds[5] + bds[4])
-    );
-    widget.placeWidget(bds);
+function setImage(im) {
+  const bds = im.getBounds();
+  mapper.setInputData(im);
+  slicePlane.setOrigin(
+    0.5 * (bds[0] + bds[1]),
+    0.5 * (bds[2] + bds[3]),
+    0.5 * (bds[5] + bds[4])
+  );
+  widget.placeWidget(bds);
 
-    renderer.getActiveCamera().roll(45);
-    renderer.getActiveCamera().azimuth(-45);
-    renderer.resetCamera();
-    const planeState = widget.getWidgetState();
-    planeState.setOrigin(slicePlane.getOrigin());
-    planeState.setNormal(slicePlane.getNormal());
-    planeState.onModified(() => {
-      slicePlane.setOrigin(planeState.getOrigin());
-      slicePlane.setNormal(planeState.getNormal());
-    });
-    renderWindow.render();
+  renderer.getActiveCamera().elevation(90);
+  renderer.resetCamera();
+  const planeState = widget.getWidgetState();
+  planeState.setOrigin(slicePlane.getOrigin());
+  planeState.setNormal(slicePlane.getNormal());
+  planeState.onModified(() => {
+    slicePlane.setOrigin(planeState.getOrigin());
+    slicePlane.setNormal(planeState.getNormal());
   });
-});
+  renderWindow.render();
+}
+
+async function update() {
+  console.log('Fetching/downloading the input file, please wait...');
+  const zipFileData = await vtkLiteHttpDataAccessHelper.fetchBinary(
+    // data.kitware.com --> covid-lungs.zip
+    `https://data.kitware.com/api/v1/item/6462789f546d74240b93fab3/download`
+  );
+
+  console.log('Fetching/downloading input file done!');
+
+  const zipFileDataArray = new Uint8Array(zipFileData);
+  const decompressedFiles = unzipSync(zipFileDataArray);
+  const arrayBuffers = [];
+  Object.keys(decompressedFiles).forEach((relativePath) => {
+    if (relativePath.endsWith('.dcm')) {
+      arrayBuffers.push(decompressedFiles[relativePath].buffer);
+    }
+  });
+
+  const { image: itkImage } = await window.itk.readImageDICOMArrayBufferSeries(
+    arrayBuffers
+  );
+
+  const vtkImage = vtkITKHelper.convertItkToVtkImage(itkImage);
+  setImage(vtkImage);
+}
 
 const rgb = vtkColorTransferFunction.newInstance();
 rgb.addRGBPoint(0, 0, 0, 0);
@@ -124,8 +148,8 @@ ofun.addPoint(0, 1);
 ofun.addPoint(3926, 1);
 ppty.setPiecewiseFunction(ofun);
 
-ppty.setColorWindow(3926);
-ppty.setColorLevel(1863);
+ppty.setColorWindow(1400);
+ppty.setColorLevel(-500);
 actor.setProperty(ppty);
 
 // -----------------------------------------------------------
@@ -148,6 +172,7 @@ enableSlab.addEventListener('click', () => {
     renderWindow.render();
   }
 });
+
 const slabTypes = document.querySelectorAll('.slabType');
 for (let idx = 0; idx < slabTypes.length; ++idx) {
   const st = slabTypes[idx];
@@ -181,6 +206,14 @@ document.querySelector('.slabThickness').addEventListener('change', (e) => {
   mapper.setSlabThickness(value);
   renderWindow.render();
 });
+
+// After the itk-wasm UMD script has been loaded, `window.itk` provides the itk-wasm API.
+vtkResourceLoader
+  .loadScript(
+    'https://cdn.jsdelivr.net/npm/itk-wasm@1.0.0-b.8/dist/umd/itk-wasm.js'
+  )
+  .then(update)
+  .then(enableSlab.click());
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
