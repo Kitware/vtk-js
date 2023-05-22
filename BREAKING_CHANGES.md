@@ -1,6 +1,11 @@
+## From 27.x to 28
+
+- **vtkManipulator.handleEvent**: Change all `handleEvent` signatures of manipulators. Used to be `handleEvent(callData, glRenderWindow): vec3`, it is now `handleEvent(callData, glRenderWindow): { worldCoords: Nullable<vec3>, worldDirection?: mat3 }`.
+  - To upgrade: all instances of `const coords = manipulator.handleEvent(...)` must now be `const { worldCoords } = manipulator.handleEvent(...)`.
+
 ## From 26.x to 27
 
-- Change all `handleEvent` signatures of manipulators. Used to be `handleEvent(callData, glRenderWindow): vec3`, it is now `handleEvent(callData, glRenderWindow): { worldCoords: Nullable<vec3>, worldDirection?: mat3 }`.
+- **abstractimagemapper**: Before this change, the vtkAbstractImageMapper extended vtkAbstractMapper. Now, it extends vtkAbstractMapper3D. Applications with custom sub-classes of vtkAbstractImageMapper that have their own overrides for {set/get}Bounds and {set/get}Center would shadow the superclass methods.
 
 ## From 25.x to 26
 
