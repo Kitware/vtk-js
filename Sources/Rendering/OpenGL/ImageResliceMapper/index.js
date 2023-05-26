@@ -1074,21 +1074,17 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     // Orthogonal slicing by default
     let orthoSlicing = true;
     let orthoAxis = 2;
-    if (model.renderable.getSlicePolyData()) {
-      resGeomString = resGeomString.concat(
-        `PolyData${model.renderable.getSlicePolyData().getMTime()}`
-      );
-    } else if (model.renderable.getSlicePlane()) {
-      resGeomString = resGeomString.concat(
-        `Plane${model.renderable.getSlicePlane().getMTime()}`
-      );
+    const slicePD = model.renderable.getSlicePolyData();
+    const slicePlane = model.renderable.getSlicePlane();
+    if (slicePD) {
+      resGeomString = resGeomString.concat(`PolyData${slicePD.getMTime()}`);
+    } else if (slicePlane) {
+      resGeomString = resGeomString.concat(`Plane${slicePlane.getMTime()}`);
       if (image) {
         resGeomString = resGeomString.concat(`Image${image.getMTime()}`);
       }
       // Check to see if we can bypass oblique slicing related bounds computation
-      [orthoSlicing, orthoAxis] = isVectorAxisAligned(
-        model.renderable.getSlicePlane().getNormal()
-      );
+      [orthoSlicing, orthoAxis] = isVectorAxisAligned(slicePlane.getNormal());
     } else {
       // Create a default slice plane here
       const plane = vtkPlane.newInstance();
@@ -1099,18 +1095,23 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       }
       plane.setOrigin(bds[0], bds[2], 0.5 * (bds[5] + bds[4]));
       model.renderable.setSlicePlane(plane);
-      resGeomString = resGeomString.concat(
-        `Plane${model.renderable.getSlicePlane()?.getMTime()}`
-      );
+      resGeomString = resGeomString.concat(`Plane${slicePlane?.getMTime()}`);
       if (image) {
         resGeomString = resGeomString.concat(`Image${image.getMTime()}`);
       }
     }
 
     if (!model.resliceGeom || model.resliceGeomUpdateString !== resGeomString) {
-      if (model.renderable.getSlicePolyData()) {
-        model.resliceGeom = model.renderable.getSlicePolyData();
-      } else if (model.renderable.getSlicePlane()) {
+      if (slicePD) {
+        if (!model.resliceGeom) {
+          model.resliceGeom = vtkPolyData.newInstance();
+        }
+        model.resliceGeom.getPoints().setData(slicePD.getPoints().getData(), 3);
+        model.resliceGeom.getPolys().setData(slicePD.getPolys().getData(), 1);
+        model.resliceGeom
+          .getPointData()
+          .setNormals(slicePD.getPointData().getNormals());
+      } else if (slicePlane) {
         const bounds = image ? imageBounds : [0, 1, 0, 1, 0, 1];
         if (!orthoSlicing) {
           const cube = vtkCubeSource.newInstance();
@@ -1124,14 +1125,24 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           cube.setZLength(bounds[5] - bounds[4]);
           const cutter = vtkCutter.newInstance();
           cutter.setInputConnection(cube.getOutputPort());
-          cutter.setCutFunction(model.renderable.getSlicePlane());
+          cutter.setCutFunction(slicePlane);
           const pds = vtkClosedPolyLineToSurfaceFilter.newInstance();
           pds.setInputConnection(cutter.getOutputPort());
           pds.update();
-          model.resliceGeom = pds.getOutputData();
+          if (!model.resliceGeom) {
+            model.resliceGeom = vtkPolyData.newInstance();
+          }
+          const planePD = pds.getOutputData();
+          model.resliceGeom
+            .getPoints()
+            .setData(planePD.getPoints().getData(), 3);
+          model.resliceGeom.getPolys().setData(planePD.getPolys().getData(), 1);
+          model.resliceGeom
+            .getPointData()
+            .setNormals(planePD.getPointData().getNormals());
           // The above method does not generate point normals
           // Set it manually here.
-          const n = model.renderable.getSlicePlane().getNormal();
+          const n = slicePlane.getNormal();
           const npts = model.resliceGeom.getNumberOfPoints();
           vtkMath.normalize(n);
           const normalsData = new Float32Array(npts * 3);
@@ -1148,7 +1159,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           model.resliceGeom.getPointData().setNormals(normals);
         } else {
           const ptsArray = new Float32Array(12);
-          const o = model.renderable.getSlicePlane().getOrigin();
+          const o = slicePlane.getOrigin();
           const otherAxes = [(orthoAxis + 1) % 3, (orthoAxis + 2) % 3].sort();
           let ptIdx = 0;
           for (let i = 0; i < 2; ++i) {
@@ -1170,7 +1181,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           cellArray[6] = 3;
           cellArray[7] = 2;
 
-          const n = model.renderable.getSlicePlane().getNormal();
+          const n = slicePlane.getNormal();
           vtkMath.normalize(n);
           const normalsData = new Float32Array(12);
           for (let i = 0; i < 4; ++i) {
@@ -1190,7 +1201,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
             name: 'Normals',
           });
           model.resliceGeom.getPointData().setNormals(normals);
-          model.resliceGeom.modified();
         }
       } else {
         vtkErrorMacro(
@@ -1200,6 +1210,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         );
       }
       model.resliceGeomUpdateString = resGeomString;
+      model.resliceGeom?.modified();
     }
   };
 
