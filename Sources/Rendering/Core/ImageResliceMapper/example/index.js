@@ -4,6 +4,7 @@ import '@kitware/vtk.js/favicon';
 import '@kitware/vtk.js/Rendering/Profiles/All';
 
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkCylinderSource from '@kitware/vtk.js/Filters/Sources/CylinderSource';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkImageProperty from '@kitware/vtk.js/Rendering/Core/ImageProperty';
 import vtkImageResliceMapper from '@kitware/vtk.js/Rendering/Core/ImageResliceMapper';
@@ -41,6 +42,14 @@ const slicePlane = vtkPlane.newInstance();
 slicePlane.setNormal(0, 1, 0);
 mapper.setSlicePlane(slicePlane);
 mapper.setSlabType(SlabTypes.MAX);
+
+const slicePolyDataSource = vtkCylinderSource.newInstance({
+  height: 100,
+  radius: 100,
+  resolution: 20,
+  capping: 1,
+  center: [100, 100, 100],
+});
 
 const actor = vtkImageSlice.newInstance();
 actor.setMapper(mapper);
@@ -93,11 +102,9 @@ w.setRepresentationStyle(repStyle);
 function setImage(im) {
   const bds = im.getBounds();
   mapper.setInputData(im);
-  slicePlane.setOrigin(
-    0.5 * (bds[0] + bds[1]),
-    0.5 * (bds[2] + bds[3]),
-    0.5 * (bds[5] + bds[4])
-  );
+  const imc = im.getCenter();
+  slicePlane.setOrigin(imc);
+  slicePolyDataSource.setCenter(imc);
   widget.placeWidget(bds);
 
   renderer.getActiveCamera().elevation(90);
@@ -108,6 +115,12 @@ function setImage(im) {
   planeState.onModified(() => {
     slicePlane.setOrigin(planeState.getOrigin());
     slicePlane.setNormal(planeState.getNormal());
+    slicePolyDataSource.setCenter(planeState.getOrigin());
+    slicePolyDataSource.setDirection(planeState.getNormal());
+    if (mapper.getSlicePolyData()) {
+      slicePolyDataSource.update();
+      mapper.setSlicePolyData(slicePolyDataSource.getOutputData());
+    }
   });
   renderWindow.render();
 }
@@ -185,6 +198,19 @@ for (let idx = 0; idx < slabTypes.length; ++idx) {
       mapper.setSlabType(SlabTypes.SUM);
     } else {
       mapper.setSlabType(SlabTypes.MEAN);
+    }
+    renderWindow.render();
+  };
+}
+const sliceFunction = document.querySelectorAll('.spd');
+for (let idx = 0; idx < sliceFunction.length; ++idx) {
+  const st = sliceFunction[idx];
+  st.onchange = (e) => {
+    if (e.target.value === 'plane') {
+      mapper.setSlicePolyData(null);
+    } else {
+      slicePolyDataSource.update();
+      mapper.setSlicePolyData(slicePolyDataSource.getOutputData());
     }
     renderWindow.render();
   };
