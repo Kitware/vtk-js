@@ -115,7 +115,7 @@ function widgetBehavior(publicAPI, model) {
   publicAPI.updateFromPlane = (callData) => {
     // Move origin along normal axis
     model.lineManipulator.setWidgetNormal(model.activeState.getNormal());
-    const worldCoords = model.lineManipulator.handleEvent(
+    const { worldCoords } = model.lineManipulator.handleEvent(
       callData,
       model._apiSpecificRenderWindow
     );
