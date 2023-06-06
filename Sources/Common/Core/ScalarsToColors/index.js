@@ -532,7 +532,7 @@ function vtkScalarsToColors(publicAPI, model) {
       }
       // otherwise look at the range of the alpha channel
       const range = scalars.getRange(numberOfComponents - 1);
-      return range[0] === 255;
+      return range[0] === 1.0;
     }
 
     return true;
