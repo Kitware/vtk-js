@@ -69,7 +69,7 @@ const view2DProxy = proxyManager.createProxy('Views', 'View2D', {
 view2DProxy.setContainer(mainContainer);
 view2DProxy
   .getOpenGLRenderWindow()
-  .setSize([mainContainer.clientWidth, mainContainer.clientHeight]);
+  .setSize(mainContainer.clientWidth, mainContainer.clientHeight);
 
 fitCameraButton.addEventListener('click', () => {
   view2DProxy.setFitProps(!view2DProxy.getFitProps());
@@ -110,6 +110,8 @@ imageDataPromise.then((imageData) => {
 
   view2DProxy.resetCamera();
 });
+
+view2DProxy.getRenderer().setBackground([65 / 255, 85 / 255, 122 / 255]);
 
 global.mainContainer = mainContainer;
 global.proxyManager = proxyManager;
