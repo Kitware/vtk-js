@@ -89,7 +89,7 @@ function vtkImageMarchingSquares(publicAPI, model) {
     publicAPI.getPixelPoints(i, j, k, dims, origin, spacing);
 
     const z = origin[2] + k * spacing[2];
-    for (let idx = 0; pixelLines[idx] >= 0; idx += 3) {
+    for (let idx = 0; pixelLines[idx] >= 0; idx += 2) {
       lines.push(2);
       for (let eid = 0; eid < 2; eid++) {
         const edgeVerts = vtkCaseTable.getEdge(pixelLines[idx + eid]);
