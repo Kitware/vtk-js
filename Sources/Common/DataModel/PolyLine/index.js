@@ -81,7 +81,8 @@ function vtkPolyLine(publicAPI, model) {
   };
 
   publicAPI.getDistancesToFirstPoint = () => {
-    if (model.distancesTime.getMTime() < model.points.getMTime()) {
+    const dTime = model.distancesTime.getMTime();
+    if (dTime < model.points.getMTime() || dTime < publicAPI.getMTime()) {
       const numPoints = publicAPI.getNumberOfPoints();
       if (!model.distances) {
         model.distances = new Array(numPoints);
@@ -96,7 +97,7 @@ function vtkPolyLine(publicAPI, model) {
         model.points.getPoint(0, previousPoint);
         for (let i = 1; i < numPoints; ++i) {
           model.points.getPoint(i, currentPoint);
-          totalDistance += vec3.dist(previousPoint, currentPoint);
+          totalDistance += model.distanceFunction(previousPoint, currentPoint);
           model.distances[i] = totalDistance;
           vec3.copy(previousPoint, currentPoint);
         }
@@ -140,6 +141,7 @@ function vtkPolyLine(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   orientations: null, // an array of quat or null
+  distanceFunction: vec3.dist,
 };
 
 // ----------------------------------------------------------------------------
@@ -149,7 +151,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkCell.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['orientations']);
+  macro.setGet(publicAPI, model, ['orientations', 'distanceFunction']);
 
   model.distancesTime = {};
   macro.obj(model.distancesTime, { mtime: 0 });
