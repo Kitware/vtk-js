@@ -126,7 +126,7 @@ function pickOnMouseEvent(event) {
     const selections = result?.generateSelection(x, y, x, y);
     if (selections && selections.length >= 1) {
       const selection = selections[0];
-      const props = selection.get().properties;
+      const props = selection.getProperties();
       attributeIdDiv.textContent = props.attributeID;
     } else {
       attributeIdDiv.textContent = '';
