@@ -27,10 +27,11 @@ import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/cprBehavior';
 
 import controlPanel from './controller.html';
-import centerlineJSON from './centerline.json';
+import aortaJSON from './aorta_centerline.json';
+import spineJSON from './spine_centerline.json';
 
 const volumePath = `${__BASE_PATH__}/data/volume/LIDC2.vti`;
-const centerlineJsons = { 'Base centerline': centerlineJSON };
+const centerlineJsons = { Aorta: aortaJSON, Spine: spineJSON };
 const centerlineKeys = Object.keys(centerlineJsons);
 
 // ----------------------------------------------------------------------------
@@ -44,6 +45,7 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 fullScreenRenderer.addController(controlPanel);
 const angleEl = document.getElementById('angle');
 const centerlineEl = document.getElementById('centerline');
+const modeEl = document.getElementById('mode');
 
 const interactor = renderWindow.getInteractor();
 interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
@@ -132,10 +134,50 @@ function updateDistanceAndDirection() {
   const worldTangent = vec3.cross([], worldBitangent, worldNormal);
   vec3.normalize(worldTangent, worldTangent);
   const worldWidgetCenter = widgetState.getCenter();
+  const distance = cprManipulator.getCurrentDistance();
+
+  // CPR mapper tangent and bitangent directions update
+  const { orientation } = mapper.getCenterlinePositionAndOrientation(distance);
+  // modelDirections * baseDirections = worldDirections
+  // => baseDirections = modelDirections^(-1) * worldDirections
+  const modelDirections = mat3.fromQuat([], orientation);
+  const inverseModelDirections = mat3.invert([], modelDirections);
+  const worldDirections = mat3.fromValues(
+    ...worldTangent,
+    ...worldBitangent,
+    ...worldNormal
+  );
+  const baseDirections = mat3.mul([], inverseModelDirections, worldDirections);
+  mapper.setDirectionMatrix(baseDirections);
+
+  // Cross renderer update
+  widget.updateReslicePlane(reslice, crossViewType);
+  resliceActor.setUserMatrix(reslice.getResliceAxes());
+  widget.updateCameraPoints(crossRenderer, crossViewType, false, true, false);
+  const crossCamera = crossRenderer.getActiveCamera();
+  crossCamera.setViewUp(
+    modelDirections[3],
+    modelDirections[4],
+    modelDirections[5]
+  );
+
+  // Update plane manipulator origin / normal for the cross view
+  planeManipulator.setUserOrigin(worldWidgetCenter);
+  planeManipulator.setUserNormal(worldNormal);
+
+  // Find the angle
+  const signedRadAngle = Math.atan2(baseDirections[1], baseDirections[0]);
+  const signedDegAngle = (signedRadAngle * 180) / Math.PI;
+  const degAngle = signedDegAngle > 0 ? signedDegAngle : 360 + signedDegAngle;
+  angleEl.value = degAngle;
+  updateState(
+    widgetState,
+    widget.getScaleInPixels(),
+    widget.getRotationHandlePosition()
+  );
 
   const width = mapper.getWidth();
   const height = mapper.getHeight();
-  const distance = cprManipulator.getCurrentDistance();
 
   // CPR actor matrix update
   const worldActorTranslation = vec3.scaleAndAdd(
@@ -187,45 +229,6 @@ function updateDistanceAndDirection() {
   stretchRenderer.resetCameraClippingRange();
   interactor.render();
 
-  // CPR mapper tangent and bitangent directions update
-  const { orientation } = mapper.getCenterlinePositionAndOrientation(distance);
-  // modelDirections * baseDirections = worldDirections
-  // => baseDirections = modelDirections^(-1) * worldDirections
-  const modelDirections = mat3.fromQuat([], orientation);
-  const inverseModelDirections = mat3.invert([], modelDirections);
-  const worldDirections = mat3.fromValues(
-    ...worldTangent,
-    ...worldBitangent,
-    ...worldNormal
-  );
-  const baseDirections = mat3.mul([], inverseModelDirections, worldDirections);
-  mapper.setDirectionMatrix(baseDirections);
-
-  // Cross renderer update
-  widget.updateReslicePlane(reslice, crossViewType);
-  resliceActor.setUserMatrix(reslice.getResliceAxes());
-  widget.updateCameraPoints(crossRenderer, crossViewType, false, true, false);
-  const crossCamera = crossRenderer.getActiveCamera();
-  crossCamera.setViewUp(
-    modelDirections[3],
-    modelDirections[4],
-    modelDirections[5]
-  );
-
-  // Update plane manipulator origin / normal for the cross view
-  planeManipulator.setUserOrigin(worldWidgetCenter);
-  planeManipulator.setUserNormal(worldNormal);
-
-  // Find the angle
-  const signedRadAngle = Math.atan2(baseDirections[1], baseDirections[0]);
-  const signedDegAngle = (signedRadAngle * 180) / Math.PI;
-  const degAngle = signedDegAngle > 0 ? signedDegAngle : 360 + signedDegAngle;
-  angleEl.value = degAngle;
-  updateState(
-    widgetState,
-    widget.getScaleInPixels(),
-    widget.getRotationHandlePosition()
-  );
   renderWindow.render();
 }
 
@@ -262,7 +265,8 @@ function setCenterlineKey(centerlineKey) {
   centerline.modified();
 
   const midPointDistance = mapper.getHeight() / 2;
-  cprManipulator.setCurrentDistance(midPointDistance);
+  const { worldCoords } = cprManipulator.distanceEvent(midPointDistance);
+  widgetState.setCenter(worldCoords);
   updateDistanceAndDirection();
 
   widgetState[`getAxis${crossPlane}in${stretchPlane}`]().setManipulator(
@@ -349,6 +353,54 @@ function setAngleFromSlider(radAngle) {
 angleEl.addEventListener('input', () =>
   setAngleFromSlider(radiansFromDegrees(Number.parseFloat(angleEl.value, 10)))
 );
+
+function useStraightenedMode() {
+  mapper.setCenterPoint(null);
+  mapper.setUseUniformOrientation(false);
+  mapper.getOrientedCenterline().setDistanceFunction(vec3.dist);
+  updateDistanceAndDirection();
+}
+
+function useStretchedMode() {
+  mapper.setCenterPoint(centerline.getPoints().getPoint(0));
+  mapper.setUseUniformOrientation(true);
+  mapper.getOrientedCenterline().setDistanceFunction((a, b) => {
+    const worldTangent = vec3.transformQuat(
+      [],
+      mapper.getTangentDirection(),
+      mapper.getUniformOrientation()
+    );
+    const vec = vec3.subtract([], a, b);
+    const d2 = vec3.squaredLength(vec);
+    const x = vec3.dot(worldTangent, vec);
+    return Math.sqrt(d2 - x * x);
+  });
+  updateDistanceAndDirection();
+}
+
+let cprMode;
+function setUseStretched(value) {
+  cprMode = value;
+  switch (cprMode) {
+    case 'stretched':
+      useStretchedMode();
+      break;
+    default:
+      useStraightenedMode();
+      break;
+  }
+}
+
+const stretchEl = document.createElement('option');
+stretchEl.innerText = 'Stretched Mode';
+stretchEl.value = 'stretched';
+modeEl.appendChild(stretchEl);
+const straightEl = document.createElement('option');
+straightEl.innerText = 'Straightened Mode';
+straightEl.value = 'straightened';
+modeEl.appendChild(straightEl);
+modeEl.addEventListener('input', () => setUseStretched(modeEl.value));
+modeEl.value = 'straightened';
 
 stretchViewWidgetInstance.onInteractionEvent(updateDistanceAndDirection);
 crossViewWidgetInstance.onInteractionEvent(updateDistanceAndDirection);
