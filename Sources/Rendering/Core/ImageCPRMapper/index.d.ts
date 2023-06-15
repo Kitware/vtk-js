@@ -63,6 +63,21 @@ export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
 	setUseUniformOrientation(useUniformOrientation: boolean): boolean;
 
 	/**
+	 * A point used to offset each line of pixel in the rendering
+	 * The line of pixel is offseted such as the center of the line is as close as possible to the center point
+	 * This can be used in combination with @see getUseUniformOrientation and a custom distance function for @see getOrientedCenterline to visualize a CPR in projected mode or stretched mode
+	 * Defaults to null.
+	 * @returns the center point
+	 */
+	getCenterPoint(): Nullable<vec3>;
+	
+	/**
+	 * @see getCenterPoint
+	 * @param point
+	 */
+	setCenterPoint(point: Nullable<vec3>): boolean;
+
+	/**
 	 * This flag indicates wether the GPU should use half float or not
 	 * When true, will use half float
 	 * When false, may use half float if there is no loss of accuracy (see in Texture: checkUseHalfFloat)
@@ -346,7 +361,10 @@ export function newInstance(initialValues?: IImageCPRMapperInitialValues): vtkIm
 
 /**
  * CPR in vtkImageCPRMapper stands for Curved Planar Reformation. This mapper
- * can be used to visualize tubular structures such as blood vessels.
+ * can be used to visualize tubular structures such as blood vessels. It can be
+ * used in projected mode, stretched mode or straightened mode depending on the
+ * settings @see getUseUniformOrientation , @see getCenterPoint and the distance
+ * function of @see getOrientedCenterline .
  * 
  * This specialised mapper takes as input a vtkImageData representing a volume
  * ( @see setImageData ) and a vtkPolyData representing a centerline

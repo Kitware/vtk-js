@@ -504,6 +504,8 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
   publicAPI.getNeedToRebuildShaders = (cellBO, ren, actor) => {
     // has something changed that would require us to recreate the shader?
     // candidates are
+    // presence of centerPoint
+    // value of useUniformOrientation
     // property modified (representation interpolation and lighting)
     // input modified
     // light complexity changed
@@ -511,13 +513,19 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
 
     const tNumComp = model.volumeTexture.getComponents();
     const iComp = actor.getProperty().getIndependentComponents();
+    const useCenterPoint = !!model.renderable.getCenterPoint();
+    const useUniformOrientation = model.renderable.getUseUniformOrientation();
 
     if (
-      model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
       cellBO.getProgram() === 0 ||
+      model.lastUseCenterPoint !== useCenterPoint ||
+      model.lastUseUniformOrientation !== useUniformOrientation ||
+      model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
       model.lastTextureComponents !== tNumComp ||
       model.lastIndependentComponents !== iComp
     ) {
+      model.lastUseCenterPoint = useCenterPoint;
+      model.lastUseUniformOrientation = useUniformOrientation;
       model.lastHaveSeenDepthRequest = model.haveSeenDepthRequest;
       model.lastTextureComponents = tNumComp;
       model.lastIndependentComponents = iComp;
@@ -653,6 +661,10 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
         'in float centerlineAngleVSOutput;'
       );
     }
+    const centerPoint = model.renderable.getCenterPoint();
+    if (centerPoint) {
+      tcoordFSDec.push('uniform vec3 globalCenterPoint;');
+    }
     if (iComps) {
       for (let comp = 1; comp < tNumComp; comp++) {
         tcoordFSDec = tcoordFSDec.concat([
@@ -740,8 +752,16 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
         'interpolatedCenterlineDir = normalize(interpolatedCenterlineDir);'
       );
     }
+    if (centerPoint) {
+      tcoordFSImpl.push(
+        'float baseOffset = dot(interpolatedCenterlineDir, globalCenterPoint - centerlinePosVSOutput);',
+        'float horizontalOffset = quadOffsetVSOutput.x + baseOffset;'
+      );
+    } else {
+      tcoordFSImpl.push('float horizontalOffset = quadOffsetVSOutput.x;');
+    }
     tcoordFSImpl.push(
-      'vec3 volumePosMC = centerlinePosVSOutput + quadOffsetVSOutput.x * interpolatedCenterlineDir;',
+      'vec3 volumePosMC = centerlinePosVSOutput + horizontalOffset * interpolatedCenterlineDir;',
       'vec3 volumePosTC = (MCTCMatrix * vec4(volumePosMC, 1.0)).xyz;',
       'if (any(lessThan(volumePosTC, vec3(0.0))) || any(greaterThan(volumePosTC, vec3(1.0))))',
       '{',
@@ -971,6 +991,10 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       cellBO
         .getProgram()
         .setUniform3fArray('centerlineDirection', uniformDirection);
+    }
+    if (cellBO.getProgram().isUniformUsed('globalCenterPoint')) {
+      const centerPoint = model.renderable.getCenterPoint();
+      cellBO.getProgram().setUniform3fArray('globalCenterPoint', centerPoint);
     }
 
     // Model coordinates to image space

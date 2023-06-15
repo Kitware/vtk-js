@@ -1,5 +1,5 @@
-import { quat } from 'gl-matrix';
-import { Vector2, Vector3 } from '../../../types';
+import { quat, vec3 } from 'gl-matrix';
+import { Nullable, Vector2, Vector3 } from '../../../types';
 import vtkCell, { ICellInitialValues } from '../Cell';
 import { IIntersectWithLine } from '../Line';
 
@@ -67,6 +67,31 @@ export interface vtkPolyLine extends vtkCell {
    * @param distance The distance from the first point of the polyline
    */
   findPointIdAtDistanceFromFirstPoint(distance: number): number;
+
+  /**
+   * An array of quaternions used to orient the polyline at each of its point
+   * The length of the array has to be the same size as the number of points
+   * Defaults to null.
+   */
+  getOrientations(): Nullable<quat[]>;
+
+  /**
+   * @see getOrientations
+   * @param orientations
+   */
+  setOrientations(orientations: Nullable<quat[]>): boolean;
+
+  /**
+   * The function used in getDistancesToFirstPoint and in findPointIdAtDistanceFromFirstPoint
+   * Defaults to vec3.dist of gl-matrix
+   */
+  getDistanceFunction(): (a: vec3, b: vec3) => number;
+
+  /**
+   * @see getDistanceFunction
+   * @param f
+   */
+  setDistanceFunction(f: (a: vec3, b: vec3) => number): boolean;
 }
 
 /**
