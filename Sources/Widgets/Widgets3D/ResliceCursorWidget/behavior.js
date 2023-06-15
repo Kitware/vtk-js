@@ -419,6 +419,9 @@ export default function widgetBehavior(publicAPI, model) {
       model._apiSpecificRenderWindow
     );
 
+    if (!worldCoords || !worldCoords.length) {
+      return;
+    }
     const center = model.widgetState.getCenter();
     const currentVectorToOrigin = [0, 0, 0];
     vtkMath.subtract(worldCoords, center, currentVectorToOrigin);
