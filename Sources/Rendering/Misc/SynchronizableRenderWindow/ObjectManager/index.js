@@ -429,23 +429,38 @@ function vtkRenderWindowUpdater(instance, state, context) {
 
 function colorTransferFunctionUpdater(instance, state, context) {
   context.start(); // -> start(colorTransferFunctionUpdater)
-  const nodes = state.properties.nodes.map(
-    ([x, r, g, b, midpoint, sharpness]) => ({ x, r, g, b, midpoint, sharpness })
-  );
-  instance.set({ ...state.properties, nodes }, true);
+  if (!state.properties.nodes) {
+    instance.set(state.properties);
+  } else {
+    const nodes = state.properties.nodes.map(
+      ([x, r, g, b, midpoint, sharpness]) => ({
+        x,
+        r,
+        g,
+        b,
+        midpoint,
+        sharpness,
+      })
+    );
+    instance.set({ ...state.properties, nodes }, true);
+  }
   context.end(); // -> end(colorTransferFunctionUpdater)
 }
 
 function piecewiseFunctionUpdater(instance, state, context) {
   context.start(); // -> start(piecewiseFunctionUpdater)
-  const nodes = state.properties.nodes.map(([x, y, midpoint, sharpness]) => ({
-    x,
-    y,
-    midpoint,
-    sharpness,
-  }));
-  instance.set({ ...state.properties, nodes }, true);
-  instance.sortAndUpdateRange();
+  if (!state.properties.nodes) {
+    instance.set(state.properties);
+  } else {
+    const nodes = state.properties.nodes.map(([x, y, midpoint, sharpness]) => ({
+      x,
+      y,
+      midpoint,
+      sharpness,
+    }));
+    instance.set({ ...state.properties, nodes }, true);
+    instance.sortAndUpdateRange();
+  }
   // instance.modified();
   context.end(); // -> end(piecewiseFunctionUpdater)
 }
