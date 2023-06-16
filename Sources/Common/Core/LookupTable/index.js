@@ -219,13 +219,40 @@ function vtkLookupTable(publicAPI, model) {
   };
 
   publicAPI.setTable = (table) => {
+    // Handle JS array (assume 2D array)
+    if (Array.isArray(table)) {
+      const nbComponents = table[0].length;
+      model.numberOfColors = table.length;
+      const colorOffset = 4 - nbComponents;
+      let offset = 0;
+      // fill table
+      for (let i = 0; i < model.numberOfColors; i++) {
+        model.table[i * 4] = 255;
+        model.table[i * 4 + 1] = 255;
+        model.table[i * 4 + 2] = 255;
+        model.table[i * 4 + 3] = 255;
+      }
+      // extract colors
+      for (let i = 0; i < table.length; i++) {
+        const color = table[i];
+        for (let j = 0; j < nbComponents; j++) {
+          model.table[offset++] = color[j];
+        }
+        offset += colorOffset;
+      }
+      publicAPI.buildSpecialColors();
+      model.insertTime.modified();
+      publicAPI.modified();
+      return true;
+    }
+
     if (table.getNumberOfComponents() !== 4) {
       vtkErrorMacro('Expected 4 components for RGBA colors');
-      return;
+      return false;
     }
     if (table.getDataType() !== VtkDataTypes.UNSIGNED_CHAR) {
       vtkErrorMacro('Expected unsigned char values for RGBA colors');
-      return;
+      return false;
     }
     model.numberOfColors = table.getNumberOfTuples();
     const data = table.getData();
@@ -237,6 +264,7 @@ function vtkLookupTable(publicAPI, model) {
     publicAPI.buildSpecialColors();
     model.insertTime.modified();
     publicAPI.modified();
+    return true;
   };
 
   publicAPI.buildSpecialColors = () => {
@@ -294,6 +322,9 @@ function vtkLookupTable(publicAPI, model) {
   };
 
   if (model.table.length > 0) {
+    // Ensure that special colors are properly included in the table
+    publicAPI.buildSpecialColors();
+
     // ensure insertTime is more recently modified than buildTime if
     // a table is provided via the constructor
     model.insertTime.modified();
