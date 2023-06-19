@@ -67,13 +67,14 @@ function vtkLookupTable(publicAPI, model) {
   // Apply shift/scale to the scalar value v and return the index.
   publicAPI.linearIndexLookup = (v, p) => {
     let dIndex = 0;
+    const nv = Number(v);
 
-    if (v < p.range[0]) {
+    if (nv < p.range[0]) {
       dIndex = p.maxIndex + BELOW_RANGE_COLOR_INDEX + 1.5;
-    } else if (v > p.range[1]) {
+    } else if (nv > p.range[1]) {
       dIndex = p.maxIndex + ABOVE_RANGE_COLOR_INDEX + 1.5;
     } else {
-      dIndex = (v + p.shift) * p.scale;
+      dIndex = (nv + p.shift) * p.scale;
 
       // This conditional is needed because when v is very close to
       // p.Range[1], it may map above p.MaxIndex in the linear mapping
