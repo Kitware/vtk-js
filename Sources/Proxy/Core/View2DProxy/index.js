@@ -123,8 +123,8 @@ function vtkView2DProxy(publicAPI, model) {
     superAddRepresentation(rep);
     if (rep.setSlicingMode) {
       rep.setSlicingMode('XYZ'[model.axis]);
-      publicAPI.bindRepresentationToManipulator(rep);
     }
+    publicAPI.bindRepresentationToManipulator(rep);
   };
 
   const superRemoveRepresentation = publicAPI.removeRepresentation;

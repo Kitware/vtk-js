@@ -165,7 +165,7 @@ export interface vtkImageResliceMapper extends vtkAbstractImageMapper {
 	/**
 	 *
 	 * Enable slab slicing mode and set the slab thickness in world space (mm).
-	 * @param {Boolean} slabThickness The slab thickness in world space (mm). Default: 0. 
+	 * @param {Number} slabThickness The slab thickness in world space (mm). Default: 0.
 	 */
 	setSlabThickness(slabThickness: number): number;
 
