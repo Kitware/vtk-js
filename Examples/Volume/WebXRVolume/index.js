@@ -162,6 +162,16 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
     ofun.addPoint(214, 0.7);
     ofun.addPoint(420, 0.83);
     ofun.addPoint(3071, 0.8);
+  } else if (colorPreset === 'CT-Bone') {
+    ctfun.addRGBPoint(-3024, 0, 0, 0);
+    ctfun.addRGBPoint(-16.4458, 0.729412, 0.254902, 0.301961);
+    ctfun.addRGBPoint(641.385, 0.905882, 0.815686, 0.552941);
+    ctfun.addRGBPoint(3071.0, 1.0, 1.0, 1.0);
+
+    ofun.addPoint(-3024, 0);
+    ofun.addPoint(-16.4458, 0);
+    ofun.addPoint(641.385, 0.715686);
+    ofun.addPoint(3071, 0.705882);
   } else if (colorPreset === 'CT-Cardiac2') {
     ctfun.addRGBPoint(-3024, 0.0, 0, 0);
     ctfun.addRGBPoint(42, 0.55, 0.25, 0.15);
@@ -176,6 +186,18 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
     ofun.addPoint(277, 0.78);
     ofun.addPoint(1587, 0.75);
     ofun.addPoint(3071, 0.8);
+  } else if (colorPreset === 'CT-Chest-Contrast-Enhanced') {
+    ctfun.addRGBPoint(-3024, 0, 0, 0);
+    ctfun.addRGBPoint(67.0106, 0.54902, 0.25098, 0.14902);
+    ctfun.addRGBPoint(251.105, 0.882353, 0.603922, 0.290196);
+    ctfun.addRGBPoint(439.291, 1.0, 0.937033, 0.954531);
+    ctfun.addRGBPoint(3071.0, 0.827451, 0.658824, 1.0);
+
+    ofun.addPoint(-3024, 0);
+    ofun.addPoint(67.0106, 0);
+    ofun.addPoint(251.105, 0.446429);
+    ofun.addPoint(439.291, 0.625);
+    ofun.addPoint(3071, 0.616071);
   } else {
     // Scale color and opacity transfer functions to data intensity range
     ctfun.addRGBPoint(dataRange[0], 0.0, 0.3, 0.3);
