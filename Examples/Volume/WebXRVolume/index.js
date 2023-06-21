@@ -58,7 +58,9 @@ const {
   fileURL = 'https://data.kitware.com/api/v1/file/59de9dca8d777f31ac641dc2/download',
   xrSessionType = null,
   colorPreset = null,
-  resliceVolume = true,
+  rotateX = 0,
+  rotateY = 0,
+  rotateZ = 0,
 } = vtkURLExtract.extractURLParameters();
 
 // Validate input parameters
@@ -99,14 +101,35 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   // Read data
   vtiReader.parseAsArrayBuffer(fileContents);
 
-  if (resliceVolume) {
-    // Rotate 90 degrees forward so that default head volume faces camera
-    const rotateX = mat4.create();
-    mat4.fromRotation(rotateX, vtkMath.radiansFromDegrees(90), [-1, 0, 0]);
-    reslicer.setResliceAxes(rotateX);
-  } else {
-    reslicer.setResliceAxes(mat4.create());
+  const resliceRotation = mat4.create();
+  if (rotateX) {
+    const rotateXMat = mat4.create();
+    mat4.fromRotation(
+      rotateXMat,
+      vtkMath.radiansFromDegrees(rotateX),
+      [1, 0, 0]
+    );
+    mat4.multiply(resliceRotation, resliceRotation, rotateXMat);
   }
+  if (rotateY) {
+    const rotateYMat = mat4.create();
+    mat4.fromRotation(
+      rotateYMat,
+      vtkMath.radiansFromDegrees(rotateY),
+      [0, 1, 0]
+    );
+    mat4.multiply(resliceRotation, resliceRotation, rotateYMat);
+  }
+  if (rotateZ) {
+    const rotateZMat = mat4.create();
+    mat4.fromRotation(
+      rotateZMat,
+      vtkMath.radiansFromDegrees(rotateZ),
+      [0, 0, 1]
+    );
+    mat4.multiply(resliceRotation, resliceRotation, rotateZMat);
+  }
+  reslicer.setResliceAxes(resliceRotation);
 
   const data = reslicer.getOutputData(0);
   const dataArray =
