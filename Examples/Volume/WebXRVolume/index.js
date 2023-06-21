@@ -149,11 +149,12 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
 
   // https://github.com/Kitware/VolView/blob/f6b1aaa587d1a80ccd99dd9fbab309c58cde08f7/src/vtk/MedicalColorPresets.json
   if (colorPreset === 'CT-AAA') {
+    // Colors adjusted from VolView defaults to reduce apparent oversaturation in AR scenes
     ctfun.addRGBPoint(-3024, 0.0, 0, 0);
     ctfun.addRGBPoint(143, 0.62, 0.36, 0.18);
-    ctfun.addRGBPoint(166, 0.88, 0.6, 0.29);
-    ctfun.addRGBPoint(214, 1, 1, 1);
-    ctfun.addRGBPoint(419, 1, 0.94, 0.95);
+    ctfun.addRGBPoint(166, 0.68, 0.6, 0.34);
+    ctfun.addRGBPoint(214, 0.7, 0.7, 0.7);
+    ctfun.addRGBPoint(419, 0.9, 0.84, 0.85);
     ctfun.addRGBPoint(3071, 0.83, 0.66, 1);
 
     ofun.addPoint(-3024, 0);
