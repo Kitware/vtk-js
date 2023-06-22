@@ -324,13 +324,16 @@ function vtkMapper(publicAPI, model) {
       if (numberOfColors > 4094) {
         numberOfColors = 4094;
       }
+      if (numberOfColors < 64) {
+        numberOfColors = 64;
+      }
       numberOfColors += 2;
-      const k = (range[1] - range[0]) / (numberOfColors - 1 - 2);
+      const k = (range[1] - range[0]) / (numberOfColors - 2);
 
       const newArray = new Float64Array(numberOfColors * 2);
 
       for (let i = 0; i < numberOfColors; ++i) {
-        newArray[i] = range[0] + i * k - k; // minus k to start at below range color
+        newArray[i] = range[0] + i * k - k / 2.0; // minus k / 2 to start at below range color
         if (useLogScale) {
           newArray[i] = 10.0 ** newArray[i];
         }
