@@ -7,6 +7,7 @@ import '@kitware/vtk.js/favicon';
 import '@kitware/vtk.js/Rendering/OpenGL/Profiles/All';
 
 import macro from '@kitware/vtk.js/macros';
+import Base64 from '@kitware/vtk.js/Common/Core/Base64';
 import DataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper';
 import HttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
@@ -100,6 +101,14 @@ export function load(container, options) {
         dataAccessHelper.fetchJSON(null, 'index.json').then(onReady);
       },
     });
+  } else if (options.base64Str) {
+    const zipContent = Base64.toArrayBuffer(options.base64Str);
+    const dataAccessHelper = DataAccessHelper.get('zip', {
+      zipContent,
+      callback: (zip) => {
+        dataAccessHelper.fetchJSON(null, 'index.json').then(onReady);
+      },
+    });
   }
 }
 
@@ -161,3 +170,8 @@ setTimeout(() => {
     initLocalFileLoader();
   }
 }, 100);
+
+window.OfflineLocalView = {
+  initLocalFileLoader,
+  load,
+};
