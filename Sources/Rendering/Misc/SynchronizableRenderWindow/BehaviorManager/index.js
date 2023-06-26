@@ -49,11 +49,11 @@ const BEHAVIORS_TYPES = {
 };
 
 export function applyBehaviors(renderWindow, state, context) {
-  if (!state.behaviors || !renderWindow.getSynchronizedViewId) {
+  const rwId = renderWindow.get('synchronizedViewId').synchronizedViewId;
+  if (!state.behaviors || !rwId) {
     return;
   }
   // Apply auto behavior
-  const rwId = renderWindow.getSynchronizedViewId();
   if (!BEHAVIORS[rwId]) {
     BEHAVIORS[rwId] = {};
   }
