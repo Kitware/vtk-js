@@ -514,16 +514,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       // Set the world->texture matrix
       if (program.isUniformUsed('WCTCMatrix')) {
         const image = model.currentInput;
-        mat4.identity(model.tmpMat4);
-        const bounds = image.getBounds();
-        const sc = [
-          bounds[1] - bounds[0],
-          bounds[3] - bounds[2],
-          bounds[5] - bounds[4],
-        ];
-        const o = [bounds[0], bounds[2], bounds[4]];
-        const q = [0, 0, 0, 1];
-        mat4.fromRotationTranslationScale(model.tmpMat4, q, o, sc);
+        const dim = image.getDimensions();
+        mat4.copy(model.tmpMat4, image.getIndexToWorld());
+        mat4.scale(model.tmpMat4, model.tmpMat4, dim);
         mat4.invert(model.tmpMat4, model.tmpMat4);
         if (inverseShiftScaleMatrix) {
           mat4.multiply(model.tmpMat4, model.tmpMat4, inverseShiftScaleMatrix);
