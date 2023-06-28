@@ -5,6 +5,7 @@ import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import Base64 from 'vtk.js/Sources/Common/Core/Base64';
 import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkStringArray from 'vtk.js/Sources/Common/Core/StringArray';
 import BinaryHelper from 'vtk.js/Sources/IO/Core/BinaryHelper';
 
 // Enable data soure for DataAccessHelper
@@ -76,6 +77,78 @@ function integer64to32(array) {
 
 // ----------------------------------------------------------------------------
 
+/**
+ * Reads the data of a length-prefixed blob.
+ *
+ * Int64 headers and values are not supported.
+ *
+ * @param {Uint8Array} uint8 a uint8 view of the length-prefixed blob.
+ * @param {string} dataType
+ * @param {string} headerType either UInt64 or UInt32
+ */
+function readLengthPrefixedData(uint8, dataType, headerType) {
+  if (!['UInt64', 'UInt32'].includes(headerType)) {
+    throw new Error(`Cannot handle a header type of ${headerType}`);
+  }
+
+  let HeaderTypedArray = TYPED_ARRAY[headerType];
+  let DataTypedArray = TYPED_ARRAY[dataType];
+  let dataFallbackTo32 = false;
+
+  if (headerType === 'UInt64') {
+    HeaderTypedArray = TYPED_ARRAY.UInt32;
+  }
+
+  if (/^U?Int64$/.test(dataType)) {
+    dataFallbackTo32 = true;
+    DataTypedArray = TYPED_ARRAY[dataType.replace('64', '32')];
+  }
+
+  const { byteOffset } = uint8;
+  const dataWordSize = TYPED_ARRAY_BYTES[dataType];
+  const headerWordSize = TYPED_ARRAY_BYTES[headerType];
+
+  // slice if offset is not word aligned
+  let header;
+  if (byteOffset % headerWordSize === 0) {
+    header = new HeaderTypedArray(uint8.buffer, byteOffset, 1);
+  } else {
+    header = new HeaderTypedArray(
+      uint8.buffer.slice(byteOffset, byteOffset + headerWordSize)
+    );
+  }
+
+  const dataByteLength = Number(header[0]);
+
+  // read values
+  let values;
+  let arraySize = dataByteLength / dataWordSize;
+
+  if (dataFallbackTo32) {
+    // We are reading int64 data with an int32 typed array.
+    arraySize *= 2;
+  }
+
+  // slice if offset is not word aligned
+  const dataOffset = byteOffset + headerWordSize;
+  if (dataOffset % dataWordSize === 0) {
+    values = new DataTypedArray(uint8.buffer, dataOffset, arraySize);
+  } else {
+    values = new DataTypedArray(
+      uint8.buffer.slice(dataOffset, dataOffset + dataByteLength)
+    );
+  }
+
+  if (dataFallbackTo32) {
+    // remove higher order 32 bits
+    values = integer64to32(values);
+  }
+
+  return values;
+}
+
+// ----------------------------------------------------------------------------
+
 function readerHeader(uint8, headerType) {
   // We do not handle endianness or if more than 32 bits are needed to encode the data
   if (headerType === 'UInt64') {
@@ -107,10 +180,73 @@ function readerHeader(uint8, headerType) {
 
 // ----------------------------------------------------------------------------
 
+/**
+ * Given the return value of readerHeader, return header byte length.
+ */
+function getHeaderByteLength(header, headerType) {
+  // ignore the first number, which isn't actually part of the header.
+  const [headerWordSize] = header;
+  return (header.length - 1) * headerWordSize;
+}
+
+// ----------------------------------------------------------------------------
+
 function uncompressBlock(compressedUint8, output) {
   const uncompressedBlock = decompressSync(compressedUint8);
   output.uint8.set(uncompressedBlock, output.offset);
   output.offset += uncompressedBlock.length;
+}
+
+// ----------------------------------------------------------------------------
+
+function decompressZLib(bytes, headerType) {
+  // ----------------------------------------------------------------------
+  // Layout of the data
+  // header[N, s1, s2, blockSize1, ..., blockSizeN], [padding???], block[compressedData], ..., block[compressedData]
+  // [header] N, s1 and s2 are uint 32 or 64 (defined by header_type="UInt64" attribute on the root node)
+  // [header] s1: uncompress size of each block except the last one
+  // [header] s2: uncompress size of the last blocks
+  // [header] blockSize: size of the block in compressed space that represent to bloc to inflate in zlib. (This also give the offset to the next block)
+  // ----------------------------------------------------------------------
+
+  // Header reading: [offset, numBlocks, s1, s2]
+  const header = readerHeader(bytes, headerType);
+  const nbBlocks = header[1];
+  const s1 = header[2];
+  const s2 = header[3];
+  let dataByteLength = 0;
+
+  if (nbBlocks > 0) {
+    // If the last block's size is labeled as 0, that means the last block
+    // really has size header[2].
+    if (s2 === 0) {
+      dataByteLength = nbBlocks * s1;
+    } else {
+      dataByteLength = (nbBlocks - 1) * s1 + s2;
+    }
+  }
+
+  const buffer = new ArrayBuffer(dataByteLength);
+  const output = {
+    offset: 0,
+    uint8: new Uint8Array(buffer),
+  };
+
+  let offset = getHeaderByteLength(header, headerType);
+  // Starting from end of the data header, find the zlib header, which starts with 0x78.
+  // This accounts for any padding between the header and the compressed data.
+  while (offset < bytes.length && bytes[offset] !== 0x78) {
+    offset++;
+  }
+
+  for (let i = 0; i < nbBlocks; i++) {
+    const blockSize = header[4 + i];
+    const compressedBlock = new Uint8Array(bytes.buffer, offset, blockSize);
+    uncompressBlock(compressedBlock, output);
+    offset += blockSize;
+  }
+
+  return output.uint8;
 }
 
 // ----------------------------------------------------------------------------
@@ -144,45 +280,18 @@ function processDataArray(
       Base64.toArrayBuffer(dataArrayElem.firstChild.nodeValue.trim())
     );
     if (compressor === 'vtkZLibDataCompressor') {
-      const buffer = new ArrayBuffer(
-        TYPED_ARRAY_BYTES[dataType] * size * numberOfComponents
-      );
-      values = new TYPED_ARRAY[dataType](buffer);
-      const output = {
-        offset: 0,
-        uint8: new Uint8Array(buffer),
-      };
-      // ----------------------------------------------------------------------
-      // Layout of the data
-      // header[N, s1, s1, blockSize1, ..., blockSizeN], [padding???], block[compressedData], ..., block[compressedData]
-      // [header] N, s1 and s2 are uint 32 or 64 (defined by header_type="UInt64" attribute on the root node)
-      // [header] s1: uncompress size of each block except the last one
-      // [header] s2: uncompress size of the last blocks
-      // [header] blockSize: size of the block in compressed space that represent to bloc to inflate in zlib. (This also give the offset to the next block)
-      // ----------------------------------------------------------------------
-      // Header reading
-      const header = readerHeader(uint8, headerType);
-      const nbBlocks = header[1];
-      let offset =
-        uint8.length -
-        (header.reduce((a, b) => a + b, 0) -
-          (header[0] + header[1] + header[2] + header[3]));
-      for (let i = 0; i < nbBlocks; i++) {
-        const blockSize = header[4 + i];
-        const compressedBlock = new Uint8Array(uint8.buffer, offset, blockSize);
-        uncompressBlock(compressedBlock, output);
-        offset += blockSize;
-      }
+      const data = decompressZLib(uint8, headerType);
+      values = new TYPED_ARRAY[dataType](data.buffer);
 
       // Handle (u)int64 hoping for no overflow...
-      if (dataType.indexOf('Int64') !== -1) {
+      if (/^U?Int64$/.test(dataType)) {
         values = integer64to32(values);
       }
     } else {
       values = new TYPED_ARRAY[dataType](
         uint8.buffer,
         TYPED_ARRAY_BYTES[headerType]
-      ); // Skip the count
+      );
 
       // Handle (u)int64 hoping no overflow...
       if (dataType.indexOf('Int64') !== -1) {
@@ -190,46 +299,87 @@ function processDataArray(
       }
     }
   } else if (format === 'appended') {
-    let offset = Number(dataArrayElem.getAttribute('offset'));
-    // read header
-    // NOTE: this will incorrectly read the size if headerType is (U)Int64 and
-    // the value requires (U)Int64.
-    let header;
-    if (offset % TYPED_ARRAY_BYTES[headerType] === 0) {
-      header = new TYPED_ARRAY[headerType](binaryBuffer, offset, 1);
-    } else {
-      header = new TYPED_ARRAY[headerType](
-        binaryBuffer.slice(offset, offset + TYPED_ARRAY_BYTES[headerType])
-      );
-    }
-    let arraySize = header[0] / TYPED_ARRAY_BYTES[dataType];
-
-    // if we are dealing with Uint64, we need to get double the values since
-    // TYPED_ARRAY[Uint64] is Uint32.
-    if (dataType.indexOf('Int64') !== -1) {
-      arraySize *= 2;
-    }
-
-    offset += TYPED_ARRAY_BYTES[headerType];
-
-    // read values
-    // if offset is aligned to dataType, use view. Otherwise, slice due to misalignment.
-    if (offset % TYPED_ARRAY_BYTES[dataType] === 0) {
-      values = new TYPED_ARRAY[dataType](binaryBuffer, offset, arraySize);
-    } else {
-      values = new TYPED_ARRAY[dataType](
-        binaryBuffer.slice(offset, offset + header[0])
-      );
-    }
-    // remove higher order 32 bits assuming they're not used.
-    if (dataType.indexOf('Int64') !== -1) {
-      values = integer64to32(values);
-    }
+    const offset = Number(dataArrayElem.getAttribute('offset'));
+    values = readLengthPrefixedData(
+      new Uint8Array(binaryBuffer, offset),
+      dataType,
+      headerType
+    );
   } else {
     console.error('Format not supported', format);
   }
 
   return { name, values, numberOfComponents };
+}
+
+// ----------------------------------------------------------------------------
+
+function decodeStringArrayFromBytes(bytes) {
+  const decoder = new TextDecoder();
+  const decoded = decoder.decode(bytes);
+
+  // strings are null-terminated
+  return decoded.split('\x00').slice(0, -1);
+}
+
+// ----------------------------------------------------------------------------
+
+function processStringArray(
+  stringArrayElem,
+  compressor,
+  byteOrder,
+  headerType,
+  binaryBuffer
+) {
+  const name = stringArrayElem.getAttribute('Name');
+  const format = stringArrayElem.getAttribute('format'); // binary, ascii, appended
+  const numberOfComponents = Number(
+    stringArrayElem.getAttribute('NumberOfComponents') || '1'
+  );
+  const numberOfTuples = Number(
+    stringArrayElem.getAttribute('NumberOfTuples') || '1'
+  );
+  const nbStrings = numberOfTuples * numberOfComponents;
+  const strings = [];
+
+  if (format === 'ascii') {
+    const tokens = stringArrayElem.firstChild.nodeValue.trim().split(/\s+/);
+    let tokIdx = 0;
+    const strChars = [];
+
+    while (strings.length < nbStrings) {
+      const token = Number(tokens[tokIdx++]);
+      if (token === 0) {
+        strings.push(strChars.join(''));
+        strChars.length = 0;
+      } else {
+        strChars.push(String.fromCharCode(token));
+      }
+    }
+  } else if (format === 'binary') {
+    const uint8 = new Uint8Array(
+      Base64.toArrayBuffer(stringArrayElem.firstChild.nodeValue.trim())
+    );
+    if (compressor === 'vtkZLibDataCompressor') {
+      const decompressed = decompressZLib(uint8, headerType);
+      strings.push(...decodeStringArrayFromBytes(decompressed));
+    } else {
+      const strData = readLengthPrefixedData(uint8, 'UInt8', headerType);
+      strings.push(...decodeStringArrayFromBytes(strData));
+    }
+  } else if (format === 'appended') {
+    const offset = Number(stringArrayElem.getAttribute('offset'));
+    const values = readLengthPrefixedData(
+      new Uint8Array(binaryBuffer, offset),
+      'UInt8',
+      headerType
+    );
+    strings.push(...decodeStringArrayFromBytes(values));
+  } else {
+    macro.vtkErrorMacro(`Format not supported: ${format}`);
+  }
+
+  return { name, values: strings, numberOfComponents };
 }
 
 // ----------------------------------------------------------------------------
@@ -333,18 +483,36 @@ function handleFieldDataArrays(
   headerType,
   binaryBuffer
 ) {
-  return [...fieldDataElem.getElementsByTagName('DataArray')].map((daElem) =>
-    vtkDataArray.newInstance(
-      processDataArray(
-        Number(daElem.getAttribute('NumberOfTuples')),
-        daElem,
-        compressor,
-        byteOrder,
-        headerType,
-        binaryBuffer
+  const dataArrays = [...fieldDataElem.getElementsByTagName('DataArray')].map(
+    (daElem) =>
+      vtkDataArray.newInstance(
+        processDataArray(
+          Number(daElem.getAttribute('NumberOfTuples')),
+          daElem,
+          compressor,
+          byteOrder,
+          headerType,
+          binaryBuffer
+        )
       )
-    )
   );
+
+  const stringArrays = [...fieldDataElem.getElementsByTagName('Array')]
+    .filter((elem) => elem.getAttribute('type') === 'String')
+    .map((arrElem) => {
+      const sa = vtkStringArray.newInstance(
+        processStringArray(
+          arrElem,
+          compressor,
+          byteOrder,
+          headerType,
+          binaryBuffer
+        )
+      );
+      return sa;
+    });
+
+  return [...dataArrays, ...stringArrays];
 }
 
 // ----------------------------------------------------------------------------
@@ -398,7 +566,8 @@ function vtkXMLReader(publicAPI, model) {
 
     // Parse data here...
     const doc = parseXML(content);
-    const rootElem = doc.root().node;
+    const root = doc.root();
+    const rootElem = root.node;
     const type = rootElem.getAttribute('type');
     const compressor = rootElem.getAttribute('compressor');
     const byteOrder = rootElem.getAttribute('byte_order');
@@ -424,7 +593,26 @@ function vtkXMLReader(publicAPI, model) {
     if (findFirstTag(rootElem, 'AppendedData')) {
       const appendedDataElem = findFirstTag(rootElem, 'AppendedData');
       const encoding = appendedDataElem.getAttribute('encoding');
-      const arrayElems = findAllTags(rootElem, 'DataArray');
+      const arrays = root
+        .filter(
+          (xmlNode) => {
+            const { node } = xmlNode;
+            return (
+              node.nodeType === Node.ELEMENT_NODE &&
+              node.getAttribute('format') === 'appended' &&
+              node.hasAttribute('offset')
+            );
+          },
+          false,
+          true
+        )
+        .map((xmlNode) => ({
+          node: xmlNode.node,
+          offset: Number(xmlNode.node.getAttribute('offset')),
+        }));
+
+      // sort dataElems by increasing offset
+      arrays.sort((a, b) => a.offset - b.offset);
 
       let appendedBuffer = model.binaryBuffer;
 
@@ -435,13 +623,13 @@ function vtkXMLReader(publicAPI, model) {
 
       // get data array chunks
       const dataArrays = [];
-      for (let i = 0; i < arrayElems.length; ++i) {
-        const offset = Number(arrayElems[i].getAttribute('offset'));
+      for (let i = 0; i < arrays.length; ++i) {
+        const offset = arrays[i].offset;
         let nextOffset = 0;
-        if (i === arrayElems.length - 1) {
+        if (i === arrays.length - 1) {
           nextOffset = appendedBuffer.length || appendedBuffer.byteLength;
         } else {
-          nextOffset = Number(arrayElems[i + 1].getAttribute('offset'));
+          nextOffset = arrays[i + 1].offset;
         }
 
         if (encoding === 'base64') {
@@ -463,46 +651,7 @@ function vtkXMLReader(publicAPI, model) {
         for (let arrayidx = 0; arrayidx < dataArrays.length; ++arrayidx) {
           const dataArray = dataArrays[arrayidx];
 
-          // Header reading
-          // Refer to processDataArray() above for info on header fields
-          const header = readerHeader(dataArray, headerType);
-          const nbBlocks = header[1];
-          let compressedOffset =
-            dataArray.length -
-            (header.reduce((a, b) => a + b, 0) -
-              (header[0] + header[1] + header[2] + header[3]));
-
-          let buffer = null;
-          if (nbBlocks > 0) {
-            // If the last block's size is labeled as 0, that means the last block
-            // really has size header[2].
-            if (header[3] === 0) {
-              buffer = new ArrayBuffer(header[2] * nbBlocks);
-            } else {
-              buffer = new ArrayBuffer(header[2] * (nbBlocks - 1) + header[3]);
-            }
-          } else {
-            // if there is no blocks, then default to a zero array of size 0.
-            buffer = new ArrayBuffer(0);
-          }
-
-          // uncompressed buffer
-          const uncompressed = new Uint8Array(buffer);
-          const output = {
-            offset: 0,
-            uint8: uncompressed,
-          };
-
-          for (let i = 0; i < nbBlocks; i++) {
-            const blockSize = header[4 + i];
-            const compressedBlock = new Uint8Array(
-              dataArray.buffer,
-              compressedOffset,
-              blockSize
-            );
-            uncompressBlock(compressedBlock, output);
-            compressedOffset += blockSize;
-          }
+          const uncompressed = decompressZLib(dataArray, headerType);
 
           const data = new Uint8Array(
             uncompressed.length + TYPED_ARRAY_BYTES[headerType]
@@ -523,7 +672,7 @@ function vtkXMLReader(publicAPI, model) {
 
       for (let i = 0, offset = 0; i < dataArrays.length; ++i) {
         // set correct offsets
-        arrayElems[i].setAttribute('offset', offset);
+        arrays[i].node.setAttribute('offset', offset);
         // set final buffer data
         view.set(dataArrays[i], offset);
         offset += dataArrays[i].length;
