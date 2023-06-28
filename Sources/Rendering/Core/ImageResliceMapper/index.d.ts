@@ -78,7 +78,7 @@ export interface vtkImageResliceMapper extends vtkAbstractImageMapper {
 	 *
 	 * Get the slab composite function.
 	 */
-	getSlabType(): boolean;
+	getSlabType(): SlabTypes;
 
 	/**
 	 *
@@ -167,7 +167,7 @@ export interface vtkImageResliceMapper extends vtkAbstractImageMapper {
 	 * Enable slab slicing mode and set the slab thickness in world space (mm).
 	 * @param {Number} slabThickness The slab thickness in world space (mm). Default: 0.
 	 */
-	setSlabThickness(slabThickness: number): number;
+	setSlabThickness(slabThickness: number): boolean;
 
 	/**
 	 *
@@ -178,7 +178,7 @@ export interface vtkImageResliceMapper extends vtkAbstractImageMapper {
 	 * @param {Number} slabTrapezoidIntegration Enable/disable trapezoid integration for slab slicing.
 	 * Default: 0
 	 */
-	setSlabTrapezoidIntegration(slabTrapezoidIntegration: number): number;
+	setSlabTrapezoidIntegration(slabTrapezoidIntegration: number): boolean;
 
 	/**
 	 *
@@ -201,7 +201,7 @@ export interface vtkImageResliceMapper extends vtkAbstractImageMapper {
 	 * bounds.
 	 * @param {vtkPlane} slicePlane The implicit plane to slice the volume with. Default: null
 	 */
-	setSlicePlane(slicePlane: vtkPlane): vtkPlane;
+	setSlicePlane(slicePlane: vtkPlane): boolean;
 
 	/**
 	 *
@@ -214,7 +214,7 @@ export interface vtkImageResliceMapper extends vtkAbstractImageMapper {
 	 * bounds.
 	 * @param {vtkPolyData} slicePolyData The polydata to slice the volume with. Default: null
 	 */
-	setSlicePolyData(slicePolyData: vtkPolyData): vtkPolyData;
+	setSlicePolyData(slicePolyData: vtkPolyData): boolean;
 }
 
 /**
