@@ -57,8 +57,7 @@ function vtkStringArray(publicAPI, model) {
 
   publicAPI.getName = () => {
     if (!model.name) {
-      publicAPI.modified();
-      model.name = `vtkStringArray${publicAPI.getMTime()}`;
+      publicAPI.setName(`vtkStringArray${publicAPI.getMTime()}`);
     }
     return model.name;
   };
