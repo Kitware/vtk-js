@@ -336,8 +336,11 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
             `  diffuseL += ((df${shadowFactor}) * lightColor${lc});`,
             `  if (dot(normalVCVSOutput, lightDirectionVC${lc}) < 0.0)`,
             '    {',
-            `    float sf = pow( max(0.0, dot(lightHalfAngleVC${lc},normalVCVSOutput)), specularPower);`,
-            `    specularL += ((sf${shadowFactor}) * lightColor${lc});`,
+            `    float sf = sign(df)*pow(max(1e-5,
+                                              dot(reflect(lightDirectionVC${lc},normalVCVSOutput),
+                                                  normalize(-vertexVC.xyz))),
+                                         specularPower);`,
+            `    specularL += (sf${shadowFactor} * lightColor${lc});`,
             '    }',
           ]);
         }
@@ -416,7 +419,11 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
             `    diffuseL += ((df${shadowFactor}) * lightColor${lc});`,
             '    if (dot(normalVCVSOutput, vertLightDirectionVC) < 0.0)',
             '      {',
-            `      float sf = attenuation*pow( max(0.0, dot(lightHalfAngleVC${lc},normalVCVSOutput)), specularPower);`,
+            `      float sf = sign(df)*attenuation*pow(max(1e-5,
+                                                           dot(reflect(lightDirectionVC${lc},
+                                                                       normalVCVSOutput),
+                                                               normalize(-vertexVC.xyz))),
+                                                       specularPower);`,
             `    specularL += ((sf${shadowFactor}) * lightColor${lc});`,
             '    }',
           ]);
@@ -1367,9 +1374,6 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         model.lightDirection[0] = newLightDirection[0];
         model.lightDirection[1] = newLightDirection[1];
         model.lightDirection[2] = newLightDirection[2];
-        model.lightHalfAngle[0] = -model.lightDirection[0];
-        model.lightHalfAngle[1] = -model.lightDirection[1];
-        model.lightHalfAngle[2] = -model.lightDirection[2] + 1.0;
         vtkMath.normalize(model.lightDirection);
         program.setUniform3fArray(
           `lightColor${numberOfLights}`,
@@ -1378,10 +1382,6 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         program.setUniform3fArray(
           `lightDirectionVC${numberOfLights}`,
           model.lightDirection
-        );
-        program.setUniform3fArray(
-          `lightHalfAngleVC${numberOfLights}`,
-          model.lightHalfAngle
         );
         numberOfLights++;
       }
@@ -1962,7 +1962,6 @@ const DEFAULT_VALUES = {
   diffuseColor: [], // used internally
   specularColor: [], // used internally
   lightColor: [], // used internally
-  lightHalfAngle: [], // used internally
   lightDirection: [], // used internally
   lastHaveSeenDepthRequest: false,
   haveSeenDepthRequest: false,
