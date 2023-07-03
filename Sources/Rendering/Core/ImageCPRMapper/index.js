@@ -271,6 +271,38 @@ function vtkImageCPRMapper(publicAPI, model) {
     return true;
   };
 
+  publicAPI.useStraightenedMode = () => {
+    publicAPI.setCenterPoint(null);
+    publicAPI.setUseUniformOrientation(false);
+    publicAPI.getOrientedCenterline().setDistanceFunction(vec3.dist);
+  };
+
+  publicAPI.useStretchedMode = (centerPoint) => {
+    const centerline = publicAPI.getOrientedCenterline();
+    // Set center point
+    if (centerPoint === undefined) {
+      // Get the first point of the centerline if there is one
+      const centerlinePoints = centerline.getPoints();
+      const newCenterPoint =
+        centerlinePoints.getNumberOfTuples() > 0
+          ? centerlinePoints.getPoint(0)
+          : [0, 0, 0];
+      publicAPI.setCenterPoint(newCenterPoint);
+    } else {
+      publicAPI.setCenterPoint(centerPoint);
+    }
+    // Enable uniform orientation
+    publicAPI.setUseUniformOrientation(true);
+    // Change distance function
+    centerline.setDistanceFunction((a, b) => {
+      const direction = publicAPI.getUniformDirection();
+      const vec = vec3.subtract([], a, b);
+      const d2 = vec3.squaredLength(vec);
+      const x = vec3.dot(direction, vec);
+      return Math.sqrt(d2 - x * x);
+    });
+  };
+
   publicAPI.setCenterlineData = (centerlineData) =>
     publicAPI.setInputData(centerlineData, 1);
 

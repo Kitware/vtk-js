@@ -355,26 +355,12 @@ angleEl.addEventListener('input', () =>
 );
 
 function useStraightenedMode() {
-  mapper.setCenterPoint(null);
-  mapper.setUseUniformOrientation(false);
-  mapper.getOrientedCenterline().setDistanceFunction(vec3.dist);
+  mapper.useStraightenedMode();
   updateDistanceAndDirection();
 }
 
 function useStretchedMode() {
-  mapper.setCenterPoint(centerline.getPoints().getPoint(0));
-  mapper.setUseUniformOrientation(true);
-  mapper.getOrientedCenterline().setDistanceFunction((a, b) => {
-    const worldTangent = vec3.transformQuat(
-      [],
-      mapper.getTangentDirection(),
-      mapper.getUniformOrientation()
-    );
-    const vec = vec3.subtract([], a, b);
-    const d2 = vec3.squaredLength(vec);
-    const x = vec3.dot(worldTangent, vec);
-    return Math.sqrt(d2 - x * x);
-  });
+  mapper.useStretchedMode();
   updateDistanceAndDirection();
 }
 
