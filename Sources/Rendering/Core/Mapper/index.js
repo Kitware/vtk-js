@@ -53,6 +53,13 @@ function vtkMapper(publicAPI, model) {
     // make sure we do NOT call modified()
   };
 
+  publicAPI.setSelectionWebGLIdsToVTKIds = (selectionWebGLIdsToVTKIds) => {
+    model.selectionWebGLIdsToVTKIds = selectionWebGLIdsToVTKIds;
+    // make sure we do NOT call modified()
+    // this attribute is only used when processing a selection made with the hardware selector
+    // the mtime of the mapper doesn't need to be changed
+  };
+
   publicAPI.createDefaultLookupTable = () => {
     model.lookupTable = vtkLookupTable.newInstance();
   };
@@ -630,6 +637,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'colorCoordinates',
     'colorMapColors',
     'colorTextureMap',
+    'selectionWebGLIdsToVTKIds',
   ]);
   macro.setGet(publicAPI, model, [
     'colorByArrayName',
@@ -642,7 +650,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'renderTime',
     'scalarMode',
     'scalarVisibility',
-    'selectionWebGLIdsToVTKIds',
     'static',
     'useLookupTableScalarRange',
     'customShaderAttributes', // point data array names that will be transferred to the VBO
