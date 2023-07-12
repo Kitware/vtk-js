@@ -38,7 +38,7 @@ function vtkImageProperty(publicAPI, model) {
   };
 
   // Set the color of a volume to an RGB transfer function
-  publicAPI.setRGBTransferFunction = (index, func) => {
+  publicAPI.setRGBTransferFunction = (index = 0, func = null) => {
     // backwards compatible call without the component index
     let idx = index;
     let transferFunc = func;
@@ -59,7 +59,7 @@ function vtkImageProperty(publicAPI, model) {
     model.componentData[idx].rGBTransferFunction;
 
   // Set the piecewise function
-  publicAPI.setPiecewiseFunction = (index, func) => {
+  publicAPI.setPiecewiseFunction = (index = 0, func = null) => {
     let idx = index;
     let transferFunc = func;
     if (!Number.isInteger(index)) {
@@ -79,7 +79,7 @@ function vtkImageProperty(publicAPI, model) {
     model.componentData[idx].piecewiseFunction;
 
   // Alias to set the piecewise function
-  publicAPI.setScalarOpacity = (index, func) => {
+  publicAPI.setScalarOpacity = (index = 0, func = null) => {
     // backwards compatible call without the component index
     let idx = index;
     let transferFunc = func;
@@ -93,7 +93,7 @@ function vtkImageProperty(publicAPI, model) {
   // Alias to get the piecewise function (backwards compatibility)
   publicAPI.getScalarOpacity = (idx = 0) => publicAPI.getPiecewiseFunction(idx);
 
-  publicAPI.setComponentWeight = (index, value) => {
+  publicAPI.setComponentWeight = (index = 0, value = 1) => {
     if (index < 0 || index >= VTK_MAX_VRCOMP) {
       vtkErrorMacro('Invalid index');
       return false;
@@ -108,7 +108,7 @@ function vtkImageProperty(publicAPI, model) {
     return false;
   };
 
-  publicAPI.getComponentWeight = (index) => {
+  publicAPI.getComponentWeight = (index = 0) => {
     if (index < 0 || index >= VTK_MAX_VRCOMP) {
       vtkErrorMacro('Invalid index');
       return 0.0;
