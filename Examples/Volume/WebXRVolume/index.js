@@ -85,13 +85,13 @@ if (requestedXrSessionType === XrSessionTypes.LookingGlassVR) {
     new obj.LookingGlassWebXRPolyfill();
   });
 } else if (requestedXrSessionType === null) {
-  // Determine supported session type
-  navigator.xr.isSessionSupported('immersive-ar').then((arSupported) => {
-    if (arSupported) {
-      requestedXrSessionType = XrSessionTypes.MobileAR;
+  // Guess the session type based on what XR session(s) the device supports.
+  navigator.xr.isSessionSupported('immersive-vr').then((vrSupported) => {
+    if (vrSupported) {
+      requestedXrSessionType = XrSessionTypes.HmdVr;
     } else {
-      navigator.xr.isSessionSupported('immersive-vr').then((vrSupported) => {
-        requestedXrSessionType = vrSupported ? XrSessionTypes.HmdVR : null;
+      navigator.xr.isSessionSupported('immersive-ar').then((arSupported) => {
+        requestedXrSessionType = arSupported ? XrSessionTypes.MobileAR : null;
       });
     }
   });
