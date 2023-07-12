@@ -72,7 +72,7 @@ The following examples target a head-mounted virtual reality device, such as the
 [![VR Cone Example][VrCone]](../examples/VR.html)
 [![SkyboxViewer Example][SkyboxViewerVR]](../examples/SkyboxViewer.html?fileURL=https://data.kitware.com/api/v1/file/5ae8a89c8d777f0685796bae/download)
 [![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer/GeometryViewer.html?xrSessionType=0&fileURL=[https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html?xrSessionType=0&fileURL=%5Bhttps://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download%5D])
-[![XR Volume Example][WebXRVolume]](../examples/WebXRVolume/WebXRVolume.html?xrSessionType=0&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
+[![XR Volume Example][WebXRVolumeHeadAndNeck]](../examples/WebXRVolume/WebXRVolume.html?xrSessionType=0&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
 
 </div>
 
@@ -84,7 +84,7 @@ The following examples target a handheld or head-mounted mobile augmented realit
 
 [![AR Cone Example][ArCone]](../examples/AR.html)
 [![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer/GeometryViewer.html?xrSessionType=1&fileURL=[https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html?xrSessionType=0&fileURL=%5Bhttps://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download%5D])
-[![XR Volume Example][WebXRVolume]](../examples/WebXRVolume/WebXRVolume.html?xrSessionType=1&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
+[![XR Volume Example][WebXRVolumeHeadAndNeck]](../examples/WebXRVolume/WebXRVolume.html?xrSessionType=1&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
 
 </div>
 
@@ -98,7 +98,7 @@ Microsoft HoloLens 2 users should run the [virtual reality examples](#Virtual-Re
 
 [![AR Cone Example][ArCone]](../examples/AR/index.html?xrSessionType=3)
 [![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer/GeometryViewer.html?xrSessionType=3&fileURL=[https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html?xrSessionType=0&fileURL=%5Bhttps://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download%5D])
-[![XR Volume Example][WebXRVolume]](../examples/WebXRVolume/WebXRVolume.html?xrSessionType=3&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
+[![XR Volume Example][WebXRVolumeHeadAndNeck]](../examples/WebXRVolume/WebXRVolume.html?xrSessionType=3&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
 
 </div>
 
@@ -110,7 +110,7 @@ The following examples target holographic displays from Looking Glass Factory. M
 
 [![Looking Glass Cone Example][LookingGlassCone]](../examples/LookingGlass.html)
 [![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer/GeometryViewer.html?xrSessionType=2&fileURL=[https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html?xrSessionType=0&fileURL=%5Bhttps://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download%5D])
-[![XR Volume Example][WebXRVolume]](../examples/WebXRVolume/WebXRVolume.html?xrSessionType=2&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
+[![XR Volume Example][WebXRVolumeHeadAndNeck]](../examples/WebXRVolume/WebXRVolume.html?xrSessionType=2&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
 
 </div>
 
