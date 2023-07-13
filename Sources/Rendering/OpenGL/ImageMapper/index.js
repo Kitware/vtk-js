@@ -983,10 +983,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         let id = 0;
         for (let k = 0; k < dims[2]; k++) {
           for (let j = 0; j < dims[1]; j++) {
-            const bsIdx =
+            let bsIdx =
               (sliceOffset + j * dims[0] + k * dims[0] * dims[1]) * numComp;
             id = (k * dims[1] + j) * numComp;
-            scalars.set(basicScalars.subarray(bsIdx, bsIdx + numComp), id);
+            const end = bsIdx + numComp;
+            while (bsIdx < end) {
+              scalars[id++] = basicScalars[bsIdx++];
+            }
           }
         }
         dims[0] = dims[1];
@@ -1008,10 +1011,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         let id = 0;
         for (let k = 0; k < dims[2]; k++) {
           for (let i = 0; i < dims[0]; i++) {
-            const bsIdx =
+            let bsIdx =
               (i + sliceOffset * dims[0] + k * dims[0] * dims[1]) * numComp;
             id = (k * dims[0] + i) * numComp;
-            scalars.set(basicScalars.subarray(bsIdx, bsIdx + numComp), id);
+            const end = bsIdx + numComp;
+            while (bsIdx < end) {
+              scalars[id++] = basicScalars[bsIdx++];
+            }
           }
         }
         dims[1] = dims[2];
