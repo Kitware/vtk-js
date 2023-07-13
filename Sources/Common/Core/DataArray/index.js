@@ -231,8 +231,13 @@ function vtkDataArray(publicAPI, model) {
       : model.values.subarray(0, model.size);
 
   publicAPI.getRange = (componentIndex = -1) => {
-    const rangeIdx =
-      componentIndex < 0 ? model.numberOfComponents : componentIndex;
+    let rangeIdx = componentIndex;
+    if (rangeIdx < 0) {
+      // If scalar data, then store in slot 0 (same as componentIndex = 0).
+      // If vector data, then store in last slot.
+      rangeIdx = model.numberOfComponents === 1 ? 0 : model.numberOfComponents;
+    }
+
     let range = null;
 
     if (!model.ranges) {
