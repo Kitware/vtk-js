@@ -3,18 +3,16 @@ import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkImageProperty from 'vtk.js/Sources/Rendering/Core/ImageProperty';
 import vtkImageResliceMapper from 'vtk.js/Sources/Rendering/Core/ImageResliceMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOutlineFilter from 'vtk.js/Sources/Filters/General/OutlineFilter';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import { vec3, mat3 } from 'gl-matrix';
 
 // use full HttpDataAccessHelper
 import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
@@ -63,13 +61,6 @@ test.onlyIfWebGL('Test ImageResliceMapperShareOpenGLTexture', (t) => {
   sslicePlane.setNormal(1, 0, 0);
   smapper.setSlicePlane(sslicePlane);
 
-  const oline = gc.registerResource(vtkOutlineFilter.newInstance());
-  const omapper = gc.registerResource(vtkMapper.newInstance());
-  omapper.setInputConnection(oline.getOutputPort());
-  const oactor = gc.registerResource(vtkActor.newInstance());
-  oactor.setMapper(omapper);
-  renderer.addActor(oactor);
-
   const aactor = gc.registerResource(vtkImageSlice.newInstance());
   aactor.setMapper(amapper);
   renderer.addActor(aactor);
@@ -98,19 +89,32 @@ test.onlyIfWebGL('Test ImageResliceMapperShareOpenGLTexture', (t) => {
     reader.loadData().then(() => {
       reader.update();
       const im = reader.getOutputData();
-      const bds = im.extentToBounds(im.getExtent());
-      // const bds = im.getBounds();
       amapper.setInputData(im);
-      aslicePlane.setOrigin(bds[0], bds[2], 0.5 * (bds[5] + bds[4]));
-      cslicePlane.setOrigin(bds[0], 0.5 * (bds[3] + bds[2]), bds[4]);
       cmapper.setInputData(im);
-      sslicePlane.setOrigin(0.5 * (bds[1] + bds[0]), bds[2], bds[4]);
-      smapper.setInputData(im);
-      oline.setInputData(im);
+      const center = im.getCenter();
+      aslicePlane.setOrigin(center);
+      cslicePlane.setOrigin(center);
+      sslicePlane.setOrigin(center);
+      const mat = mat3.identity(new Float64Array(9));
+      mat3.copy(mat, im.getDirection());
 
-      renderer.getActiveCamera().roll(45);
+      const an = aslicePlane.getNormal();
+      vec3.transformMat3(an, an, mat);
+      aslicePlane.setNormal(an);
+
+      const cn = cslicePlane.getNormal();
+      vec3.transformMat3(cn, cn, mat);
+      cslicePlane.setNormal(cn);
+
+      const sn = sslicePlane.getNormal();
+      vec3.transformMat3(sn, sn, mat);
+      sslicePlane.setNormal(sn);
+
+      smapper.setInputData(im);
+
       renderer.getActiveCamera().azimuth(-45);
       renderer.resetCamera();
+      renderer.getActiveCamera().zoom(1.5);
       renderWindow.render();
 
       glwindow.captureNextImage().then((image) => {
@@ -156,8 +160,6 @@ test.onlyIfWebGL('Test ImageResliceMapperShareOpenGLTexture', (t) => {
   global.amapper = amapper;
   global.cmapper = cmapper;
   global.smapper = smapper;
-  global.oactor = oactor;
-  global.omapper = omapper;
   global.rgb = rgb;
   global.ofun = ofun;
   global.renderer = renderer;

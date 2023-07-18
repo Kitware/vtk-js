@@ -523,6 +523,11 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         }
         program.setUniformMatrix('WCTCMatrix', model.tmpMat4);
       }
+
+      if (program.isUniformUsed('vboScaling')) {
+        program.setUniform3fv('vboScaling', cellBO.getCABO().getCoordScale());
+      }
+
       cellBO.getAttributeUpdateTime().modified();
     }
 
@@ -830,6 +835,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         'uniform float slabThickness;',
         'uniform int slabType;',
         'uniform int slabTrapezoid;',
+        'uniform vec3 vboScaling;',
       ]);
       tcoordFSDec = tcoordFSDec.concat([
         'vec4 compositeValue(vec4 currVal, vec4 valToComp, int trapezoid)',
@@ -874,7 +880,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       tcoordFSImpl = tcoordFSImpl.concat([
         '// Get the first and last samples',
         'int numSlices = 1;',
-        'vec3 normalxspacing = normalWCVSOutput * spacing * 0.5;',
+        'float scaling = min(min(spacing.x, spacing.y), spacing.z) * 0.5;',
+        'vec3 normalxspacing = scaling * normalWCVSOutput;',
         'float distTraveled = length(normalxspacing);',
         'int trapezoid = 0;',
         'while (distTraveled < slabThickness * 0.5)',
@@ -887,14 +894,14 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         '    normalxspacing = normalWCVSOutput * slabThickness * 0.5 / fnumSlices;',
         '    trapezoid = slabTrapezoid;',
         '  }',
-        '  vec3 fragTCoordNeg = (WCTCMatrix * vec4(vertexWCVSOutput.xyz - fnumSlices * normalxspacing, 1.0)).xyz;',
+        '  vec3 fragTCoordNeg = (WCTCMatrix * vec4(vertexWCVSOutput.xyz - fnumSlices * normalxspacing * vboScaling, 1.0)).xyz;',
         '  if (!any(greaterThan(fragTCoordNeg, vec3(1.0))) && !any(lessThan(fragTCoordNeg, vec3(0.0))))',
         '  {',
         '    vec4 newVal = texture(texture1, fragTCoordNeg);',
         '    tvalue = compositeValue(tvalue, newVal, trapezoid);',
         '    numSlices += 1;',
         '  }',
-        '  vec3 fragTCoordPos = (WCTCMatrix * vec4(vertexWCVSOutput.xyz + fnumSlices * normalxspacing, 1.0)).xyz;',
+        '  vec3 fragTCoordPos = (WCTCMatrix * vec4(vertexWCVSOutput.xyz + fnumSlices * normalxspacing * vboScaling, 1.0)).xyz;',
         '  if (!any(greaterThan(fragTCoordNeg, vec3(1.0))) && !any(lessThan(fragTCoordNeg, vec3(0.0))))',
         '  {',
         '    vec4 newVal = texture(texture1, fragTCoordPos);',

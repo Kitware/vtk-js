@@ -13,6 +13,7 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
+import { vec3, mat3 } from 'gl-matrix';
 
 import { SlabTypes } from 'vtk.js/Sources/Rendering/Core/ImageResliceMapper/Constants';
 
@@ -121,12 +122,13 @@ test.onlyIfWebGL('Test ImageResliceMapperSlabTypes', (t) => {
     reader.loadData().then(() => {
       reader.update();
       const im = reader.getOutputData();
-      const bds = im.extentToBounds(im.getExtent());
-      slicePlane.setOrigin(
-        0.5 * (bds[0] + bds[1]),
-        0.5 * (bds[2] + bds[3]),
-        0.5 * (bds[4] + bds[5])
-      );
+      slicePlane.setOrigin(im.getCenter());
+      const mat = mat3.identity(new Float64Array(9));
+      mat3.copy(mat, im.getDirection());
+      const n = [1, 0, 0];
+      vec3.transformMat3(n, n, mat);
+      slicePlane.setNormal(n);
+
       amapper.setInputData(im);
       cmapper.setInputData(im);
       smapper.setInputData(im);
@@ -136,9 +138,12 @@ test.onlyIfWebGL('Test ImageResliceMapperSlabTypes', (t) => {
       ren2.resetCamera();
       ren3.resetCamera();
       ren4.resetCamera();
+
+      cam.roll(-30);
       cam.azimuth(-90);
       cam.roll(-90);
-      cam.zoom(1.1);
+      cam.zoom(1.5);
+
       renderWindow.render();
 
       glwindow.captureNextImage().then((image) => {
