@@ -280,7 +280,7 @@ function vtkImageCPRMapper(publicAPI, model) {
   publicAPI.useStretchedMode = (centerPoint) => {
     const centerline = publicAPI.getOrientedCenterline();
     // Set center point
-    if (centerPoint === undefined) {
+    if (!centerPoint) {
       // Get the first point of the centerline if there is one
       const centerlinePoints = centerline.getPoints();
       const newCenterPoint =

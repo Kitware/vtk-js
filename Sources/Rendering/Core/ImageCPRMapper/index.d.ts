@@ -215,7 +215,7 @@ export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
 	 * Configure the mapper and the centerline to be in strectched CPR mode
 	 * @param centerPoint The center point, optional, default to the first point of the centerline or [0, 0, 0]
 	 */
-	useStretchedMode(centerPoint?: vec3): void;
+	useStretchedMode(centerPoint?: Nullable<vec3>): void;
 
 	/**
 	 * Set the polydata used as a centerline
