@@ -69,6 +69,14 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	getAutoAdjustSampleDistances(): boolean;
 
 	/**
+	 * Get at what scale the quality is reduced when interacting for the first time with the volume
+	 * It should should be set before any call to render for this volume
+	 * The higher the scale is, the lower the quality of rendering is during interaction
+	 * @default 4
+	 */
+	getInitialInteractionScale(): number;
+
+	/**
 	 *
 	 */
 	getAverageIPScalarRange(): Range;
@@ -187,6 +195,12 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	 * @param autoAdjustSampleDistances
 	 */
 	setAutoAdjustSampleDistances(autoAdjustSampleDistances: boolean): boolean;
+
+	/**
+	 *
+	 * @param initialInteractionScale
+	 */
+	setInitialInteractionScale(initialInteractionScale: number): boolean;
 
 	/**
 	 * Set the normal computation to be dependent on the transfer function.

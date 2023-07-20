@@ -1136,6 +1136,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   publicAPI.renderPieceStart = (ren, actor) => {
     const rwi = ren.getVTKWindow().getInteractor();
 
+    if (!model._lastScale) {
+      model._lastScale = model.renderable.getInitialInteractionScale();
+    }
     model._useSmallViewport = false;
     if (rwi.isAnimating() && model._lastScale > 1.5) {
       model._useSmallViewport = true;
@@ -1166,19 +1169,15 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
             model.renderable.getImageSampleDistance() *
             model.renderable.getImageSampleDistance();
         }
-        const size = model._openGLRenderWindow.getFramebufferSize();
-        model._smallViewportWidth = Math.ceil(
-          size[0] / Math.sqrt(model._lastScale)
-        );
-        model._smallViewportHeight = Math.ceil(
-          size[1] / Math.sqrt(model._lastScale)
-        );
       });
     }
 
     // use/create/resize framebuffer if needed
     if (model._useSmallViewport) {
       const size = model._openGLRenderWindow.getFramebufferSize();
+      const scaleFactor = 1 / Math.sqrt(model._lastScale);
+      model._smallViewportWidth = Math.ceil(scaleFactor * size[0]);
+      model._smallViewportHeight = Math.ceil(scaleFactor * size[1]);
 
       // adjust viewportSize to always be at most the dest fo size
       if (model._smallViewportHeight > size[1]) {
@@ -1661,8 +1660,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.modelToView = mat4.identity(new Float64Array(16));
   model.projectionToView = mat4.identity(new Float64Array(16));
   model.projectionToWorld = mat4.identity(new Float64Array(16));
-
-  model._lastScale = 1.0;
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['context']);
