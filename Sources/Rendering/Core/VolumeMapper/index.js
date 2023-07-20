@@ -147,6 +147,7 @@ const DEFAULT_VALUES = {
   imageSampleDistance: 1.0,
   maximumSamplesPerRay: 1000,
   autoAdjustSampleDistances: true,
+  initialInteractionScale: 100.0,
   blendMode: BlendMode.COMPOSITE_BLEND,
   ipScalarRange: [-1000000.0, 1000000.0],
   filterMode: FilterMode.OFF, // ignored by WebGL so no behavior change
@@ -175,6 +176,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'imageSampleDistance',
     'maximumSamplesPerRay',
     'autoAdjustSampleDistances',
+    'initialInteractionScale',
     'blendMode',
     'filterMode',
     'preferSizeOverAccuracy',

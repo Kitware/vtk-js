@@ -262,18 +262,14 @@ function vtkWebGPUVolumePass(publicAPI, model) {
   }, publicAPI.delete);
 
   publicAPI.computeTiming = (viewNode) => {
-    model._useSmallViewport = false;
     const rwi = viewNode.getRenderable().getInteractor();
 
+    if (model._lastScale == null) {
+      const firstMapper = model.volumes[0].getRenderable().getMapper();
+      model._lastScale = firstMapper.getInitialInteractionScale() || 1.0;
+    }
+    model._useSmallViewport = false;
     if (rwi.isAnimating() && model._lastScale > 1.5) {
-      if (!model._smallViewportHeight) {
-        model._smallViewportWidth = Math.ceil(
-          viewNode.getCanvas().width / Math.sqrt(model._lastScale)
-        );
-        model._smallViewportHeight = Math.ceil(
-          viewNode.getCanvas().height / Math.sqrt(model._lastScale)
-        );
-      }
       model._useSmallViewport = true;
     }
 
@@ -305,13 +301,6 @@ function vtkWebGPUVolumePass(publicAPI, model) {
         }
         if (model._lastScale < 1.5) {
           model._lastScale = 1.5;
-        } else {
-          model._smallViewportWidth = Math.ceil(
-            viewNode.getCanvas().width / Math.sqrt(model._lastScale)
-          );
-          model._smallViewportHeight = Math.ceil(
-            viewNode.getCanvas().height / Math.sqrt(model._lastScale)
-          );
         }
       });
     }
@@ -326,6 +315,10 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     let width = model._colorTextureView.getTexture().getWidth();
     let height = model._colorTextureView.getTexture().getHeight();
     if (model._useSmallViewport) {
+      const canvas = viewNode.getCanvas();
+      const scaleFactor = 1 / Math.sqrt(model._lastScale);
+      model._smallViewportWidth = Math.ceil(scaleFactor * canvas.width);
+      model._smallViewportHeight = Math.ceil(scaleFactor * canvas.height);
       width = model._smallViewportWidth;
       height = model._smallViewportHeight;
     }
@@ -723,7 +716,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   vtkRenderPass.extend(publicAPI, model, initialValues);
 
-  model._lastScale = 2.0;
   model._mapper = vtkWebGPUSimpleMapper.newInstance();
   model._mapper.setFragmentShaderTemplate(DepthBoundsFS);
   model._mapper
