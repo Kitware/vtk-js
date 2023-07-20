@@ -179,7 +179,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     );
 
     const maxSamples =
-      vec3.length(vsize) / model.renderable.getSampleDistance();
+      vec3.length(vsize) / publicAPI.getCurrentSampleDistance(ren);
 
     FSSource = vtkShaderProgram.substitute(
       FSSource,
@@ -468,7 +468,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     );
 
     const maxSamples =
-      vec3.length(vsize) / model.renderable.getSampleDistance();
+      vec3.length(vsize) / publicAPI.getCurrentSampleDistance(ren);
 
     const state = {
       interpolationType: actor.getProperty().getInterpolationType(),
@@ -593,7 +593,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     }
 
     program.setUniformi('texture1', model.scalarTexture.getTextureUnit());
-    program.setUniformf('sampleDistance', model.renderable.getSampleDistance());
+    program.setUniformf(
+      'sampleDistance',
+      publicAPI.getCurrentSampleDistance(ren)
+    );
 
     const volInfo = model.scalarTexture.getVolumeInfo();
     const ipScalarRange = model.renderable.getIpScalarRange();
@@ -739,7 +742,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     );
 
     const maxSamples =
-      vec3.length(vsize) / model.renderable.getSampleDistance();
+      vec3.length(vsize) / publicAPI.getCurrentSampleDistance(ren);
     if (maxSamples > model.renderable.getMaximumSamplesPerRay()) {
       vtkWarningMacro(`The number of steps required ${Math.ceil(
         maxSamples
@@ -1133,6 +1136,16 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     return [lowerLeftU, lowerLeftV];
   };
 
+  publicAPI.getCurrentSampleDistance = (ren) => {
+    const rwi = ren.getVTKWindow().getInteractor();
+    const baseSampleDistance = model.renderable.getSampleDistance();
+    if (rwi.isAnimating()) {
+      const factor = model.renderable.getInteractionSampleDistanceFactor();
+      return baseSampleDistance * factor;
+    }
+    return baseSampleDistance;
+  };
+
   publicAPI.renderPieceStart = (ren, actor) => {
     const rwi = ren.getVTKWindow().getInteractor();
 
@@ -1437,7 +1450,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       for (let c = 0; c < numIComps; ++c) {
         const ofun = vprop.getScalarOpacity(c);
         const opacityFactor =
-          model.renderable.getSampleDistance() /
+          publicAPI.getCurrentSampleDistance(ren) /
           vprop.getScalarOpacityUnitDistance(c);
 
         const oRange = ofun.getRange();
