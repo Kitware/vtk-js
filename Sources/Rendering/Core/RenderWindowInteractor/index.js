@@ -430,7 +430,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------
-  publicAPI.exitPointerLock = () => document.exitPointerLock();
+  publicAPI.exitPointerLock = () => document.exitPointerLock?.();
 
   //----------------------------------------------------------------------
   publicAPI.isPointerLocked = () =>
