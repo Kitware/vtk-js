@@ -537,6 +537,30 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     return -1;
   };
 
+  publicAPI.getDefaultTextureByteSize = (
+    vtkType,
+    oglNorm16Ext = null,
+    useHalfFloat = false
+  ) => {
+    if (model.webgl2) {
+      switch (vtkType) {
+        case VtkDataTypes.UNSIGNED_CHAR:
+          return 1;
+        case oglNorm16Ext:
+        case useHalfFloat:
+        case VtkDataTypes.UNSIGNED_SHORT:
+        case VtkDataTypes.SHORT:
+        case VtkDataTypes.VOID: // Used for unsigned int depth
+          return 2;
+        default: // For all other cases, assume float
+          return 4;
+      }
+    }
+
+    // webgl1 type support is limited to 1 byte
+    return 1;
+  };
+
   publicAPI.getDefaultTextureInternalFormat = (
     vtktype,
     numComps,
