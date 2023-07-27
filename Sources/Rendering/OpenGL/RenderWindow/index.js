@@ -1310,6 +1310,16 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     }
     return modified;
   };
+
+  publicAPI.getGraphicsResourceForObject = (vtkObj) => {
+    const vtko = model._graphicsResources.get(vtkObj);
+    const vtkh = model._graphicsResourceHash.get(vtkObj);
+    return { vtkObj: vtko, hash: vtkh };
+  };
+  publicAPI.setGraphicsResourceForObject = (vtkObj, gObj, hash) => {
+    model._graphicsResources.set(vtkObj, gObj);
+    model._graphicsResourceHash.set(vtkObj, hash);
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -1368,6 +1378,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.bgImage.style.zIndex = '-1';
 
   model._textureResourceIds = new Map();
+  model._graphicsResources = new Map();
+  model._graphicsResourceHash = new Map();
 
   model.myFactory = vtkOpenGLViewNodeFactory.newInstance();
   /* eslint-disable no-use-before-define */
