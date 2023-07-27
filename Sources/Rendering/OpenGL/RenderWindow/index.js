@@ -107,11 +107,6 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     false
   );
 
-  // Cache the value here as calling it on each frame is expensive
-  const isImmersiveVrSupported =
-    navigator.xr !== undefined &&
-    navigator.xr.isSessionSupported('immersive-vr');
-
   // Auto update style
   const previousSize = [0, 0];
   function updateWindow() {
@@ -262,11 +257,6 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     }
   ) => {
     let result = null;
-
-    // Do we have webxr support
-    if (isImmersiveVrSupported) {
-      publicAPI.invokeHaveVRDisplay();
-    }
 
     const webgl2Supported = typeof WebGL2RenderingContext !== 'undefined';
     model.webgl2 = false;
@@ -1367,7 +1357,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.renderPasses[0] = vtkForwardPass.newInstance();
 
   macro.event(publicAPI, model, 'imageReady');
-  macro.event(publicAPI, model, 'haveVRDisplay');
 
   // Build VTK API
   macro.get(publicAPI, model, [
