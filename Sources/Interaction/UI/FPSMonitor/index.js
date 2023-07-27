@@ -135,6 +135,7 @@ function vtkFPSMonitor(publicAPI, model) {
       model.fpsSum -= model.buffer.shift();
     }
     renderTitle();
+    renderInfo();
     renderCanvas();
   }
 
