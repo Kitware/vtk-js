@@ -31,11 +31,10 @@ const { vtkErrorMacro } = macro;
 // helper methods
 // ----------------------------------------------------------------------------
 
-function computeFnToString(property, fn, numberOfComponents) {
-  const pwfun = fn.apply(property);
+function computeFnToString(property, pwfun, numberOfComponents) {
   if (pwfun) {
     const iComps = property.getIndependentComponents();
-    return `${property.getMTime()}-${iComps}-${numberOfComponents}`;
+    return `${pwfun.getMTime()}-${iComps}-${numberOfComponents}`;
   }
   return '0';
 }
@@ -73,10 +72,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       model._openGLRenderWindow = model._openGLRenderer.getParent();
       model.context = model._openGLRenderWindow.getContext();
       model.tris.setOpenGLRenderWindow(model._openGLRenderWindow);
-      if (!model.openGLTexture) {
-        model.openGLTexture = vtkOpenGLTexture.newInstance();
-      }
-      model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       model.pwfTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
     }
@@ -213,9 +208,14 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
 
     const numComp = scalars.getNumberOfComponents();
 
-    if (!model._externalOpenGLTexture) {
+    const tex = model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
+    if (!tex.vtkObj) {
       const toString = `${image.getMTime()}A${scalars.getMTime()}`;
       if (model.openGLTextureString !== toString) {
+        if (!model.openGLTexture) {
+          model.openGLTexture = vtkOpenGLTexture.newInstance();
+          model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+        }
         // Build the image scalar texture
         const dims = image.getDimensions();
         // Use norm16 for the 3D texture if the extension is available
@@ -232,6 +232,14 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         );
         model.openGLTextureString = toString;
       }
+      model._openGLRenderWindow.setGraphicsResourceForObject(
+        scalars,
+        model.openGLTexture,
+        model.openGLTextureString
+      );
+    } else {
+      model.openGLTexture = tex.vtkObj;
+      model.openGLTextureString = tex.hash;
     }
 
     const ppty = actor.getProperty();
@@ -241,7 +249,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
 
     const cfunToString = computeFnToString(
       ppty,
-      ppty.getRGBTransferFunction,
+      ppty.getRGBTransferFunction(),
       numIComps
     );
 
@@ -300,7 +308,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     // rendering components independently or not.
     const pwfunToString = computeFnToString(
       ppty,
-      ppty.getPiecewiseFunction,
+      ppty.getPiecewiseFunction(),
       numIComps
     );
 
@@ -1276,7 +1284,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   );
 
   model.tris = vtkHelper.newInstance();
-  model.openGLTexture = vtkOpenGLTexture.newInstance();
+  model.openGLTexture = null;
   model.colorTexture = vtkOpenGLTexture.newInstance();
   model.pwfTexture = vtkOpenGLTexture.newInstance();
   model.VBOBuildTime = {};
