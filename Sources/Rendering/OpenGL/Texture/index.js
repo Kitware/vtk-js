@@ -260,6 +260,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.width = 0;
       model.height = 0;
       model.depth = 0;
+      model.allocatedGPUMemoryInBytes = 0;
     }
     if (model.shaderProgram) {
       model.shaderProgram.releaseGraphicsResources(rwin);
@@ -890,6 +891,16 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.context.pixelStorei(model.context.UNPACK_FLIP_Y_WEBGL, false);
     }
 
+    model.allocatedGPUMemoryInBytes =
+      model.width *
+      model.height *
+      model.depth *
+      numComps *
+      model._openGLRenderWindow.getDefaultTextureByteSize(
+        dataType,
+        model.oglNorm16Ext,
+        model.useHalfFloat
+      );
     publicAPI.deactivate();
     return true;
   };
@@ -1004,6 +1015,16 @@ function vtkOpenGLTexture(publicAPI, model) {
       }
     }
 
+    model.allocatedGPUMemoryInBytes =
+      model.width *
+      model.height *
+      model.depth *
+      numComps *
+      model._openGLRenderWindow.getDefaultTextureByteSize(
+        dataType,
+        model.oglNorm16Ext,
+        model.useHalfFloat
+      );
     // generateMipmap must not be called here because we manually upload all levels
     // if it is called, all levels will be overwritten
 
@@ -1082,6 +1103,17 @@ function vtkOpenGLTexture(publicAPI, model) {
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);
     }
+
+    model.allocatedGPUMemoryInBytes =
+      model.width *
+      model.height *
+      model.depth *
+      model.components *
+      model._openGLRenderWindow.getDefaultTextureByteSize(
+        dataType,
+        model.oglNorm16Ext,
+        model.useHalfFloat
+      );
 
     publicAPI.deactivate();
     return true;
@@ -1181,6 +1213,17 @@ function vtkOpenGLTexture(publicAPI, model) {
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);
     }
+
+    model.allocatedGPUMemoryInBytes =
+      model.width *
+      model.height *
+      model.depth *
+      model.components *
+      model._openGLRenderWindow.getDefaultTextureByteSize(
+        VtkDataTypes.UNSIGNED_CHAR,
+        model.oglNorm16Ext,
+        model.useHalfFloat
+      );
 
     publicAPI.deactivate();
     return true;
@@ -1389,6 +1432,16 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.context.generateMipmap(model.target);
     }
 
+    model.allocatedGPUMemoryInBytes =
+      model.width *
+      model.height *
+      model.depth *
+      model.components *
+      model._openGLRenderWindow.getDefaultTextureByteSize(
+        dataType,
+        model.oglNorm16Ext,
+        model.useHalfFloat
+      );
     publicAPI.deactivate();
     return true;
   };
@@ -1786,6 +1839,7 @@ const DEFAULT_VALUES = {
   // range of half float
   useHalfFloat: true,
   oglNorm16Ext: null,
+  allocatedGPUMemoryInBytes: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -1823,6 +1877,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'components',
     'handle',
     'target',
+    'allocatedGPUMemoryInBytes',
   ]);
   macro.moveToProtected(publicAPI, model, ['openGLRenderWindow']);
 

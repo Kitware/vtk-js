@@ -1320,6 +1320,13 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     model._graphicsResources.set(vtkObj, gObj);
     model._graphicsResourceHash.set(vtkObj, hash);
   };
+  publicAPI.getGraphicsMemoryInfo = () => {
+    let memUsed = 0;
+    model._graphicsResources.forEach((gObj, vtkObj) => {
+      memUsed += gObj.getAllocatedGPUMemoryInBytes();
+    });
+    return (memUsed / 1000000.0).toPrecision(4);
+  };
 }
 
 // ----------------------------------------------------------------------------
