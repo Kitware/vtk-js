@@ -378,24 +378,6 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	getSize(): Vector2;
 
 	/**
-	 *
-	 * @param {Vector2} size
-	 */
-	setVrResolution(size: Vector2): void;
-
-	/**
-	 *
-	 * @param {Number} x
-	 * @param {Number} y
-	 */
-	setVrResolution(x: number, y: number): void;
-
-	/**
-	 *
-	 */
-	getVrResolution(): Vector2;
-
-	/**
 	 * Scales the size of a browser CSS pixel to a rendered canvas pixel.  
 	 * `const renderedPixelWidth = cssPixelWidth * apiRenderWindow.getComputedDevicePixelRatio()`
 	 * Use to scale rendered objects to a consistent perceived size or DOM pixel position.
