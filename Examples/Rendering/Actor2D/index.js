@@ -39,8 +39,8 @@ fpsElm.style.bottom = '10px';
 fpsElm.style.background = 'rgba(255,255,255,0.5)';
 fpsElm.style.borderRadius = '5px';
 
-// fpsMonitor.setContainer(document.querySelector('body'));
-// fpsMonitor.setRenderWindow(renderWindow);
+fpsMonitor.setContainer(document.querySelector('body'));
+fpsMonitor.setRenderWindow(renderWindow);
 
 fullScreenRenderer.setResizeCallback(fpsMonitor.update);
 
