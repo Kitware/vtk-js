@@ -1442,6 +1442,7 @@ function vtkOpenGLTexture(publicAPI, model) {
         model.oglNorm16Ext,
         model.useHalfFloat
       );
+
     publicAPI.deactivate();
     return true;
   };
