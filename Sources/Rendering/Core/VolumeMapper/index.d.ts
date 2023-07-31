@@ -72,14 +72,14 @@ export interface vtkVolumeMapper extends vtkAbstractMapper {
 	 * Get at what scale the quality is reduced when interacting for the first time with the volume
 	 * It should should be set before any call to render for this volume
 	 * The higher the scale is, the lower the quality of rendering is during interaction
-	 * @default 16
+	 * @default 1
 	 */
 	getInitialInteractionScale(): number;
 
 	/**
 	 * Get by how much the sample distance should be increased when interacting
 	 * This feature is only implemented in the OpenGL volume mapper
-	 * @default 4
+	 * @default 1
 	 */
 	getInteractionSampleDistanceFactor(): number;
 
