@@ -52,6 +52,13 @@ widgetState
   .forEach((handle) => handle.setScale1(20));
 const showDebugActors = true;
 
+const appCursorStyles = {
+  translateCenter: 'move',
+  rotateLine: 'alias',
+  translateAxis: 'pointer',
+  default: 'default',
+};
+
 // ----------------------------------------------------------------------------
 // Define html structure
 // ----------------------------------------------------------------------------
@@ -148,6 +155,7 @@ for (let i = 0; i < 4; i++) {
     obj.widgetInstance = obj.widgetManager.addWidget(widget, xyzToViewType[i]);
     obj.widgetInstance.setScaleInPixels(true);
     obj.widgetInstance.setKeepOrthogonality(checkboxOrthogonality.checked);
+    obj.widgetInstance.setCursorStyles(appCursorStyles);
     obj.widgetManager.enablePicking();
     // Use to update all renderers buffer when actors are moved
     obj.widgetManager.setCaptureOn(CaptureOn.MOUSE_MOVE);

@@ -24,7 +24,18 @@ export default function widgetBehavior(publicAPI, model) {
   let isScrolling = false;
   let previousPosition;
 
-  macro.setGet(publicAPI, model, ['keepOrthogonality']);
+  macro.setGet(publicAPI, model, [
+    'keepOrthogonality',
+    { type: 'object', name: 'cursorStyles' },
+  ]);
+
+  // Set default value for cursorStyles
+  publicAPI.setCursorStyles({
+    [InteractionMethodsName.TranslateCenter]: 'move',
+    [InteractionMethodsName.RotateLine]: 'alias',
+    [InteractionMethodsName.TranslateAxis]: 'pointer',
+    default: 'default',
+  });
 
   publicAPI.setEnableTranslation = (enable) => {
     model.representations[0].setPickable(enable); // line handle
@@ -115,19 +126,24 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.updateCursor = () => {
-    switch (publicAPI.getActiveInteraction()) {
-      case InteractionMethodsName.TranslateCenter:
-        model._apiSpecificRenderWindow.setCursor('move');
-        break;
-      case InteractionMethodsName.RotateLine:
-        model._apiSpecificRenderWindow.setCursor('alias');
-        break;
-      case InteractionMethodsName.TranslateAxis:
-        model._apiSpecificRenderWindow.setCursor('pointer');
-        break;
-      default:
-        model._apiSpecificRenderWindow.setCursor('default');
-        break;
+    const cursorStyles = publicAPI.getCursorStyles();
+    if (cursorStyles) {
+      switch (publicAPI.getActiveInteraction()) {
+        case InteractionMethodsName.TranslateCenter:
+          model._apiSpecificRenderWindow.setCursor(
+            cursorStyles.translateCenter
+          );
+          break;
+        case InteractionMethodsName.RotateLine:
+          model._apiSpecificRenderWindow.setCursor(cursorStyles.rotateLine);
+          break;
+        case InteractionMethodsName.TranslateAxis:
+          model._apiSpecificRenderWindow.setCursor(cursorStyles.translateAxis);
+          break;
+        default:
+          model._apiSpecificRenderWindow.setCursor(cursorStyles.default);
+          break;
+      }
     }
   };
 
