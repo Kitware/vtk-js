@@ -1312,11 +1312,17 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.getGraphicsResourceForObject = (vtkObj) => {
+    if (!vtkObj) {
+      return null;
+    }
     const vtko = model._graphicsResources.get(vtkObj);
     const vtkh = model._graphicsResourceHash.get(vtkObj);
     return { vtkObj: vtko, hash: vtkh };
   };
   publicAPI.setGraphicsResourceForObject = (vtkObj, gObj, hash) => {
+    if (!vtkObj) {
+      return;
+    }
     model._graphicsResources.set(vtkObj, gObj);
     model._graphicsResourceHash.set(vtkObj, hash);
   };

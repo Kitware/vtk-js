@@ -1516,56 +1516,70 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         }
         model.opacityTextureString = toString;
       }
-      model._openGLRenderWindow.setGraphicsResourceForObject(
-        scalarOpacityFunc,
-        model.opacityTexture,
-        model.opacityTextureString
-      );
+      if (scalarOpacityFunc) {
+        model._openGLRenderWindow.setGraphicsResourceForObject(
+          scalarOpacityFunc,
+          model.opacityTexture,
+          model.opacityTextureString
+        );
+      }
     } else {
       model.opacityTexture = opTex.vtkObj;
       model.opacityTextureString = opTex.hash;
     }
 
     // rebuild color tfun?
-    toString = computeFnToString(
-      vprop,
-      vprop.getRGBTransferFunction(),
-      numIComps
-    );
-    if (model.colorTextureString !== toString) {
-      const cWidth = 1024;
-      const cSize = cWidth * 2 * numIComps * 3;
-      const cTable = new Uint8Array(cSize);
-      const tmpTable = new Float32Array(cWidth * 3);
+    const colorTransferFunc = vprop.getRGBTransferFunction();
+    toString = computeFnToString(vprop, colorTransferFunc, numIComps);
+    const cTex =
+      model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
+    const reBuildC = !cTex?.vtkObj || cTex?.hash !== toString;
+    if (reBuildC) {
+      if (model.colorTextureString !== toString) {
+        const cWidth = 1024;
+        const cSize = cWidth * 2 * numIComps * 3;
+        const cTable = new Uint8Array(cSize);
+        const tmpTable = new Float32Array(cWidth * 3);
 
-      for (let c = 0; c < numIComps; ++c) {
-        const cfun = vprop.getRGBTransferFunction(c);
-        const cRange = cfun.getRange();
-        cfun.getTable(cRange[0], cRange[1], cWidth, tmpTable, 1);
-        for (let i = 0; i < cWidth * 3; ++i) {
-          cTable[c * cWidth * 6 + i] = 255.0 * tmpTable[i];
-          cTable[c * cWidth * 6 + i + cWidth * 3] = 255.0 * tmpTable[i];
+        for (let c = 0; c < numIComps; ++c) {
+          const cfun = vprop.getRGBTransferFunction(c);
+          const cRange = cfun.getRange();
+          cfun.getTable(cRange[0], cRange[1], cWidth, tmpTable, 1);
+          for (let i = 0; i < cWidth * 3; ++i) {
+            cTable[c * cWidth * 6 + i] = 255.0 * tmpTable[i];
+            cTable[c * cWidth * 6 + i + cWidth * 3] = 255.0 * tmpTable[i];
+          }
         }
+
+        model.colorTexture.releaseGraphicsResources(model._openGLRenderWindow);
+        model.colorTexture.setMinificationFilter(Filter.LINEAR);
+        model.colorTexture.setMagnificationFilter(Filter.LINEAR);
+
+        model.colorTexture.create2DFromRaw(
+          cWidth,
+          2 * numIComps,
+          3,
+          VtkDataTypes.UNSIGNED_CHAR,
+          cTable
+        );
+        model.colorTextureString = toString;
       }
-
-      model.colorTexture.releaseGraphicsResources(model._openGLRenderWindow);
-      model.colorTexture.setMinificationFilter(Filter.LINEAR);
-      model.colorTexture.setMagnificationFilter(Filter.LINEAR);
-
-      model.colorTexture.create2DFromRaw(
-        cWidth,
-        2 * numIComps,
-        3,
-        VtkDataTypes.UNSIGNED_CHAR,
-        cTable
-      );
-      model.colorTextureString = toString;
+      if (colorTransferFunc) {
+        model._openGLRenderWindow.setGraphicsResourceForObject(
+          colorTransferFunc,
+          model.colorTexture,
+          model.colorTextureString
+        );
+      }
+    } else {
+      model.colorTexture = cTex.vtkObj;
+      model.colorTextureString = cTex.hash;
     }
 
     const tex = model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
     // rebuild the scalarTexture if the data has changed
     toString = `${image.getMTime()}A${scalars.getMTime()}`;
-    const reBuildTex = !tex.vtkObj || tex.hash !== toString;
+    const reBuildTex = !tex?.vtkObj || tex?.hash !== toString;
     if (reBuildTex) {
       if (model.scalarTextureString !== toString) {
         // Build the textures
@@ -1584,6 +1598,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           model.renderable.getPreferSizeOverAccuracy()
         );
         model.scalarTextureString = toString;
+      }
+      if (scalars) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
           scalars,
           model.scalarTexture,
