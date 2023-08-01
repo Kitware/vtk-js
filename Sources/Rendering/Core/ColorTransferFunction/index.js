@@ -389,13 +389,17 @@ function vtkColorTransferFunction(publicAPI, model) {
       // todo
       const idx = publicAPI.getAnnotatedValueIndexInternal(x);
       if (idx < 0 || numNodes === 0) {
-        publicAPI.getNanColor(rgb);
+        const nanColor = publicAPI.getNanColorByReference();
+        rgb[0] = nanColor[0];
+        rgb[1] = nanColor[1];
+        rgb[2] = nanColor[2];
       } else {
         const nodeVal = [];
         publicAPI.getNodeValue(idx % numNodes, nodeVal);
-        rgb[0] = nodeVal.r;
-        rgb[1] = nodeVal.g;
-        rgb[2] = nodeVal.b;
+        // nodeVal[0] is the x value. nodeVal[1...3] is rgb.
+        rgb[0] = nodeVal[1];
+        rgb[1] = nodeVal[2];
+        rgb[2] = nodeVal[3];
       }
       return;
     }
@@ -1030,7 +1034,10 @@ function vtkColorTransferFunction(publicAPI, model) {
       rgba[3] = 1.0; // NodeColor is RGB-only.
       return;
     }
-    publicAPI.getNanColor(rgba);
+    const nanColor = publicAPI.getNanColorByReference();
+    rgba[0] = nanColor[0];
+    rgba[1] = nanColor[1];
+    rgba[2] = nanColor[2];
     rgba[3] = 1.0; // NanColor is RGB-only.
   };
 
