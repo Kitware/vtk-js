@@ -425,8 +425,23 @@ function vtkDataArray(publicAPI, model) {
   };
 
   publicAPI.deepCopy = (other) => {
+    // Retain current dataType and array reference before shallowCopy call.
+    const currentType = publicAPI.getDataType();
+    const currentArray = model.values;
     publicAPI.shallowCopy(other);
-    publicAPI.setData(other.getData().slice());
+
+    // Avoid array reallocation if size already sufficient
+    // and dataTypes match.
+    if (
+      currentArray?.length >= other.getNumberOfValues() &&
+      currentType === other.getDataType()
+    ) {
+      currentArray.set(other.getData());
+      model.values = currentArray;
+      publicAPI.dataChange();
+    } else {
+      publicAPI.setData(other.getData().slice());
+    }
   };
 
   publicAPI.interpolateTuple = (
