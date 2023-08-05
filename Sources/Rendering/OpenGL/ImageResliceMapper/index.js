@@ -3,16 +3,17 @@ import * as macro from 'vtk.js/Sources/macros';
 import { mat4, mat3, vec3 } from 'gl-matrix';
 
 import vtkClosedPolyLineToSurfaceFilter from 'vtk.js/Sources/Filters/General/ClosedPolyLineToSurfaceFilter';
-import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkCutter from 'vtk.js/Sources/Filters/Core/Cutter';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
+import vtkImageDataOutlineFilter from 'vtk.js/Sources/Filters/General/ImageDataOutlineFilter';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/ReplacementShaderMapper';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
+import vtkTransform from 'vtk.js/Sources/Common/Transform/Transform';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import vtkImageResliceMapperVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkImageResliceMapperVS.glsl';
@@ -1067,52 +1068,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     return [false, 2];
   }
 
-  function transformPoints(points, transform) {
-    const tmp = [0, 0, 0];
-    for (let i = 0; i < points.length; i += 3) {
-      const p = points.subarray(i, i + 3);
-      if (transform.length === 9) {
-        vec3.transformMat3(tmp, p, transform);
-      } else {
-        vec3.transformMat4(tmp, p, transform);
-      }
-      p[0] = tmp[0];
-      p[1] = tmp[1];
-      p[2] = tmp[2];
-    }
-  }
-
-  function imageToCubePolyData(image, outPD) {
-    // First create a cube polydata in the index-space of the image.
-    const sext = image?.getSpatialExtent();
-
-    if (sext) {
-      model.cubeSource.setXLength(sext[1] - sext[0]);
-      model.cubeSource.setYLength(sext[3] - sext[2]);
-      model.cubeSource.setZLength(sext[5] - sext[4]);
-    } else {
-      model.cubeSource.setXLength(1);
-      model.cubeSource.setYLength(1);
-      model.cubeSource.setZLength(1);
-    }
-
-    model.cubeSource.setCenter(
-      model.cubeSource.getXLength() / 2.0,
-      model.cubeSource.getYLength() / 2.0,
-      model.cubeSource.getZLength() / 2.0
-    );
-
-    model.cubeSource.update();
-    const out = model.cubeSource.getOutputData();
-    outPD.getPoints().setData(Float32Array.from(out.getPoints().getData()), 3);
-    outPD.getPolys().setData(Uint32Array.from(out.getPolys().getData()), 1);
-
-    // Now, transform the cube polydata points in-place
-    // using the image's indexToWorld transformation.
-    const points = outPD.getPoints().getData();
-    transformPoints(points, image.getIndexToWorld());
-  }
-
   publicAPI.updateResliceGeometry = () => {
     let resGeomString = '';
     const image = model.currentInput;
@@ -1167,8 +1122,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           .setNormals(slicePD.getPointData().getNormals());
       } else if (slicePlane) {
         if (!orthoSlicing) {
-          imageToCubePolyData(image, model.cubePolyData);
-          model.cutter.setInputData(model.cubePolyData);
+          model.outlineFilter.setInputData(image);
+          model.cutter.setInputConnection(model.outlineFilter.getOutputPort());
           model.cutter.setCutFunction(slicePlane);
           model.lineToSurfaceFilter.setInputConnection(
             model.cutter.getOutputPort()
@@ -1222,7 +1177,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
               ptIdx += 3;
             }
           }
-          transformPoints(ptsArray, image.getIndexToWorld());
+          model.transform.setMatrix(image.getIndexToWorld());
+          model.transform.transformPoints(ptsArray, ptsArray);
 
           const cellArray = new Uint16Array(8);
           cellArray[0] = 3;
@@ -1329,10 +1285,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.tmpMat4 = mat4.identity(new Float64Array(16));
 
   // Implicit plane to polydata related cache:
-  model.cubeSource = vtkCubeSource.newInstance();
+  model.outlineFilter = vtkImageDataOutlineFilter.newInstance({
+    generateFaces: true,
+    generateLines: false,
+  });
   model.cubePolyData = vtkPolyData.newInstance();
   model.cutter = vtkCutter.newInstance();
   model.lineToSurfaceFilter = vtkClosedPolyLineToSurfaceFilter.newInstance();
+  model.transform = vtkTransform.newInstance();
 
   macro.get(publicAPI, model, ['openGLTexture']);
 
