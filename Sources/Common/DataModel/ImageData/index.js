@@ -270,7 +270,103 @@ function vtkImageData(publicAPI, model) {
   };
 
   publicAPI.getPointGradient = function(i, j, k, s, g) {
-    console.log("soon..")
+    var ar = model.spacing;
+    var sp, sm;
+    var extent = model.extent;
+  
+    var dims = publicAPI.getDimensions();
+    var ijsize = dims[0] * dims[1];
+  
+    // Adjust i,j,k to the start of the extent
+    i -= extent[0];
+    j -= extent[2];
+    k -= extent[4];
+  
+    // Check for out-of-bounds
+    if (i < 0 || i >= dims[0] || j < 0 || j >= dims[1] || k < 0 || k >= dims[2])
+    {
+      g[0] = g[1] = g[2] = 0.0;
+      return;
+    }
+  
+    // i-axis
+    if (dims[0] == 1)
+    {
+      g[0] = 0.0;
+    }
+    else if (i == 0)
+    {
+      sp = s.getComponent(i + 1 + j * dims[0] + k * ijsize, 0);
+      sm = s.getComponent(i + j * dims[0] + k * ijsize, 0);
+      g[0] = (sm - sp) / ar[0];
+    }
+    else if (i == (dims[0] - 1))
+    {
+      sp = s.getComponent(i + j * dims[0] + k * ijsize, 0);
+      sm = s.getComponent(i - 1 + j * dims[0] + k * ijsize, 0);
+      g[0] = (sm - sp) / ar[0];
+    }
+    else
+    {
+      sp = s.getComponent(i + 1 + j * dims[0] + k * ijsize, 0);
+      sm = s.getComponent(i - 1 + j * dims[0] + k * ijsize, 0);
+      g[0] = 0.5 * (sm - sp) / ar[0];
+    }
+  
+    // j-axis
+    if (dims[1] == 1)
+    {
+      g[1] = 0.0;
+    }
+    else if (j == 0)
+    {
+      sp = s.getComponent(i + (j + 1) * dims[0] + k * ijsize, 0);
+      sm = s.getComponent(i + j * dims[0] + k * ijsize, 0);
+      g[1] = (sm - sp) / ar[1];
+    }
+    else if (j == (dims[1] - 1))
+    {
+      sp = s.getComponent(i + j * dims[0] + k * ijsize, 0);
+      sm = s.getComponent(i + (j - 1) * dims[0] + k * ijsize, 0);
+      g[1] = (sm - sp) / ar[1];
+    }
+    else
+    {
+      sp = s.getComponent(i + (j + 1) * dims[0] + k * ijsize, 0);
+      sm = s.getComponent(i + (j - 1) * dims[0] + k * ijsize, 0);
+      g[1] = 0.5 * (sm - sp) / ar[1];
+    }
+  
+    // k-axis
+    if (dims[2] == 1)
+    {
+      g[2] = 0.0;
+    }
+    else if (k == 0)
+    {
+      sp = s.getComponent(i + j * dims[0] + (k + 1) * ijsize, 0);
+      sm = s.getComponent(i + j * dims[0] + k * ijsize, 0);
+      g[2] = (sm - sp) / ar[2];
+    }
+    else if (k == (dims[2] - 1))
+    {
+      sp = s.getComponent(i + j * dims[0] + k * ijsize, 0);
+      sm = s.getComponent(i + j * dims[0] + (k - 1) * ijsize, 0);
+      g[2] = (sm - sp) / ar[2];
+    }
+    else
+    {
+      sp = s.getComponent(i + j * dims[0] + (k + 1) * ijsize, 0);
+      sm = s.getComponent(i + j * dims[0] + (k - 1) * ijsize, 0);
+      g[2] = 0.5 * (sm - sp) / ar[2];
+    }
+    
+      // Apply direction transform to get in xyz coordinate system
+      // Note: we already applied the spacing when handling the ijk
+      // axis above, and do not need to translate by the origin
+      // since this is a gradient computation
+      /// ???
+      // this->DirectionMatrix->MultiplyPoint(g, g);
   }
 
   publicAPI.getVoxelGradient = function (i, j, k, s, g) {
