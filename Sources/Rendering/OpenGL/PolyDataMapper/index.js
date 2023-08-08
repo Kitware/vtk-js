@@ -1944,6 +1944,15 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       model.VBOBuildString = toString;
     }
   };
+
+  publicAPI.getAllocatedGPUMemoryInBytes = () => {
+    let memUsed = 0;
+    model.primitives.forEach((prim) => {
+      memUsed += prim.getAllocatedGPUMemoryInBytes();
+    });
+    // Return in MB
+    return memUsed;
+  };
 }
 
 // ----------------------------------------------------------------------------

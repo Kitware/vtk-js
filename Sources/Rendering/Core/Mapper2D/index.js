@@ -141,6 +141,23 @@ function vtkMapper2D(publicAPI, model) {
     }
     model.colorBuildString = `${publicAPI.getMTime()}${scalars.getMTime()}${alpha}`;
   };
+
+  publicAPI.getPrimitiveCount = () => {
+    const input = publicAPI.getInputData();
+    const pcount = {
+      points: input.getPoints().getNumberOfValues() / 3,
+      verts:
+        input.getVerts().getNumberOfValues() -
+        input.getVerts().getNumberOfCells(),
+      lines:
+        input.getLines().getNumberOfValues() -
+        2 * input.getLines().getNumberOfCells(),
+      triangles:
+        input.getPolys().getNumberOfValues() -
+        3 * input.getPolys().getNumberOfCells(),
+    };
+    return pcount;
+  };
 }
 
 // ----------------------------------------------------------------------------
