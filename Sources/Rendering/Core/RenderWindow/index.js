@@ -96,7 +96,7 @@ function vtkRenderWindow(publicAPI, model) {
 
   publicAPI.getStatistics = () => {
     const results = { propCount: 0, invisiblePropCount: 0, gpuMem: 0 };
-    results.gpuMemoryMB = model._views[0].getGraphicsMemoryInfo();
+    results.gpuMemoryMB = model._views[0].getGraphicsMemoryInfo() / 1e6;
     model.renderers.forEach((ren) => {
       const props = ren.getViewProps();
       const gren = model._views[0].getViewNodeFor(ren);

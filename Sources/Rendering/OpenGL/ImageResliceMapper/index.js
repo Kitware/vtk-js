@@ -252,7 +252,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     toString = computeFnToString(ppty, colorTransferFunc, numIComps);
     const cTex =
       model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
-    // const cTex = null;
     const reBuildC = !cTex?.vtkObj || cTex?.hash !== toString;
     if (reBuildC) {
       if (model.colorTextureString !== toString) {
