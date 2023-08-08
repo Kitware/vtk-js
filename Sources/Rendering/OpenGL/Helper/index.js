@@ -253,6 +253,9 @@ function vtkOpenGLHelper(publicAPI, model) {
     }
     return 6;
   };
+
+  publicAPI.getAllocatedGPUMemoryInBytes = () =>
+    publicAPI.getCABO().getAllocatedGPUMemoryInBytes();
 }
 
 // ----------------------------------------------------------------------------

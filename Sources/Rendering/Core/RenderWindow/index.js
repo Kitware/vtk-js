@@ -99,11 +99,14 @@ function vtkRenderWindow(publicAPI, model) {
     results.gpuMemoryMB = model._views[0].getGraphicsMemoryInfo();
     model.renderers.forEach((ren) => {
       const props = ren.getViewProps();
+      const gren = model._views[0].getViewNodeFor(ren);
       props.forEach((prop) => {
         if (prop.getVisibility()) {
           results.propCount += 1;
           const mpr = prop.getMapper && prop.getMapper();
           if (mpr && mpr.getPrimitiveCount) {
+            const gmpr = gren.getViewNodeFor(mpr);
+            results.gpuMemoryMB += gmpr.getAllocatedGPUMemoryInBytes() / 1e6;
             const pcount = mpr.getPrimitiveCount();
             Object.keys(pcount).forEach((keyName) => {
               if (!results[keyName]) {

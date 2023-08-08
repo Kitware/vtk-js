@@ -76,6 +76,7 @@ function vtkOpenGLBufferObject(publicAPI, model) {
       data,
       model.context.STATIC_DRAW
     );
+    model.allocatedGPUMemoryInBytes = data.length * data.BYTES_PER_ELEMENT;
     dirty = false;
     return true;
   };
@@ -101,6 +102,7 @@ function vtkOpenGLBufferObject(publicAPI, model) {
       model.context.bindBuffer(convertType(internalType), null);
       model.context.deleteBuffer(internalHandle);
       internalHandle = null;
+      model.allocatedGPUMemoryInBytes = 0;
     }
   };
 
@@ -127,6 +129,7 @@ const DEFAULT_VALUES = {
   objectType: ObjectType.ARRAY_BUFFER,
   // _openGLRenderWindow: null,
   context: null,
+  allocatedGPUMemoryInBytes: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -137,7 +140,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   macro.obj(publicAPI, model);
 
-  macro.get(publicAPI, model, ['_openGLRenderWindow']);
+  macro.get(publicAPI, model, [
+    '_openGLRenderWindow',
+    'allocatedGPUMemoryInBytes',
+  ]);
   macro.moveToProtected(publicAPI, model, ['openGLRenderWindow']);
 
   vtkOpenGLBufferObject(publicAPI, model);
