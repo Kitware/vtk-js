@@ -389,6 +389,37 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @see getContainerSize()
 	 */
 	getComputedDevicePixelRatio(): number;
+
+	/**
+	 * Set graphics resources for vtk objects to be cached at the context level.
+	 * This provides mappers with a convenient API to re-use allocated GPU resources
+	 * without duplication.
+	 *
+	 * @param {Object} vtkObj VTK data object / array with resources on the GPU
+	 * @param {Object} gObj Container object that maintains a handle to the graphics resource on the GPU
+	 * @param {String} hash String hash that can be used by mappers to decide whether to discard or re-allocate
+	 * the cached resource.
+	 */
+	setGraphicsResourceForObject(vtkObj: object, gObj: object, hash: string): void;
+
+	/**
+	 * Get graphics resources for vtk objects cached at the context level.
+	 * This provides mappers with a convenient API to re-use allocated GPU resources
+	 * without duplication.
+	 *
+	 * @param {Object} vtkObj VTK data object / array with resources on the GPU
+	 * the cached resource.
+	 * @return {Object} Dictionary with the graphics resource and string hash
+	 */
+	getGraphicsResourceForObject(vtkObj: object): void;
+
+	/**
+	 * Get approximate graphics memory usage, in bytes, for the context. This is a simple computation
+	 * that analyzes how much memory is allocated on the GPU for textures, VBOs, etc. to give an
+	 * application a view of its graphics memory consumption.
+	 * Note that this ignores page resources.
+	 */
+	getGraphicsMemoryInfo(): number;
 }
 
 /**
