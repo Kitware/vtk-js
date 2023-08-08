@@ -283,15 +283,14 @@ function createQuadView(myContainer, fileContents) {
   pf.addPoint(3120, 1.0);
   const aactor = vtkImageSlice.newInstance();
   aactor.setMapper(amapper);
-  aactor.getProperty().setColorWindow(3120);
+  aactor.getProperty().setColorWindow(2120);
   aactor.getProperty().setColorLevel(2000);
   aactor.getProperty().setRGBTransferFunction(0, ctf);
-  aactor.getProperty().setPiecewiseFunction(pf);
   RENDERERS[0].addActor(aactor);
   const cactor = vtkImageSlice.newInstance();
   cactor.setMapper(cmapper);
   cactor.getProperty().setColorWindow(3120);
-  cactor.getProperty().setColorLevel(1000);
+  cactor.getProperty().setColorLevel(100);
   cactor.getProperty().setPiecewiseFunction(pf);
   RENDERERS[1].addActor(cactor);
   let cam = RENDERERS[1].getActiveCamera();
