@@ -1331,7 +1331,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     model._graphicsResources.forEach((gObj, vtkObj) => {
       memUsed += gObj.getAllocatedGPUMemoryInBytes();
     });
-    return memUsed / 1e6;
+    return memUsed;
   };
 }
 
