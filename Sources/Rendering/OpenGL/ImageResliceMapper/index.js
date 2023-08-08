@@ -218,7 +218,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         // Build the image scalar texture
         const dims = image.getDimensions();
         // Use norm16 for the 3D texture if the extension is available
-        model.openGLTexture.getOglNorm16Ext(
+        model.openGLTexture.setOglNorm16Ext(
           model.context.getExtension('EXT_texture_norm16')
         );
         model.openGLTexture.releaseGraphicsResources(model._openGLRenderWindow);
