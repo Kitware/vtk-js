@@ -1285,10 +1285,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.tmpMat4 = mat4.identity(new Float64Array(16));
 
   // Implicit plane to polydata related cache:
-  model.outlineFilter = vtkImageDataOutlineFilter.newInstance({
-    generateFaces: true,
-    generateLines: false,
-  });
+  model.outlineFilter = vtkImageDataOutlineFilter.newInstance();
+  model.outlineFilter.setGenerateFaces(true);
+  model.outlineFilter.setGenerateLines(false);
   model.cubePolyData = vtkPolyData.newInstance();
   model.cutter = vtkCutter.newInstance();
   model.lineToSurfaceFilter = vtkClosedPolyLineToSurfaceFilter.newInstance();
