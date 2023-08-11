@@ -1,7 +1,35 @@
 import macro from 'vtk.js/Sources/macros';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import { IDENTITY } from 'vtk.js/Sources/Common/Core/Math/Constants';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
+
+// prettier-ignore
+const LINE_ARRAY = [
+  2, 0, 1,
+  2, 2, 3,
+  2, 4, 5,
+  2, 6, 7,
+  2, 0, 2,
+  2, 1, 3,
+  2, 4, 6,
+  2, 5, 7,
+  2, 0, 4,
+  2, 1, 5,
+  2, 2, 6,
+  2, 3, 7,
+];
+
+// prettier-ignore
+const POLY_ARRAY = [
+  4, 0, 1, 3, 2,
+  4, 4, 6, 7, 5,
+  4, 8, 10, 11, 9,
+  4, 12, 13, 15, 14,
+  4, 16, 18, 19, 17,
+  4, 20, 21, 23, 22,
+];
 
 // ----------------------------------------------------------------------------
 // vtkCubeSource methods
@@ -19,7 +47,6 @@ function vtkCubeSource(publicAPI, model) {
     const polyData = vtkPolyData.newInstance();
     outData[0] = polyData;
 
-    const numberOfPolys = 6;
     const numberOfPoints = 24;
 
     // Define points
@@ -191,47 +218,32 @@ function vtkCubeSource(publicAPI, model) {
       .translate(...model.center)
       .apply(points);
 
-    // Define quads
-    const polys = new Uint16Array(numberOfPolys * 5);
-    polyData.getPolys().setData(polys, 1);
+    // Apply optional additionally specified matrix transformation
+    vtkMatrixBuilder.buildFromRadian().setMatrix(model.matrix).apply(points);
 
-    let polyIndex = 0;
+    // prettier-ignore
+    const rotMatrix = [
+      model.matrix[0], model.matrix[1], model.matrix[2], 0,
+      model.matrix[4], model.matrix[5], model.matrix[6], 0,
+      model.matrix[8], model.matrix[9], model.matrix[10], 0,
+      0, 0, 0, 1
+    ];
+    vtkMatrixBuilder.buildFromRadian().setMatrix(rotMatrix).apply(normals);
 
-    polys[polyIndex++] = 4;
-    polys[polyIndex++] = 0;
-    polys[polyIndex++] = 1;
-    polys[polyIndex++] = 3;
-    polys[polyIndex++] = 2;
-
-    polys[polyIndex++] = 4;
-    polys[polyIndex++] = 4;
-    polys[polyIndex++] = 6;
-    polys[polyIndex++] = 7;
-    polys[polyIndex++] = 5;
-
-    polys[polyIndex++] = 4;
-    polys[polyIndex++] = 8;
-    polys[polyIndex++] = 10;
-    polys[polyIndex++] = 11;
-    polys[polyIndex++] = 9;
-
-    polys[polyIndex++] = 4;
-    polys[polyIndex++] = 12;
-    polys[polyIndex++] = 13;
-    polys[polyIndex++] = 15;
-    polys[polyIndex++] = 14;
-
-    polys[polyIndex++] = 4;
-    polys[polyIndex++] = 16;
-    polys[polyIndex++] = 18;
-    polys[polyIndex++] = 19;
-    polys[polyIndex++] = 17;
-
-    polys[polyIndex++] = 4;
-    polys[polyIndex++] = 20;
-    polys[polyIndex++] = 21;
-    polys[polyIndex++] = 23;
-    polys[polyIndex] = 22;
+    // Lastly, generate the necessary cell arrays.
+    if (model.generateFaces) {
+      polyData.getPolys().deepCopy(model._polys);
+    } else {
+      polyData.getPolys().initialize();
+    }
+    if (model.generateLines) {
+      polyData.getLines().deepCopy(model._lineCells);
+      // only set normals for faces, not for lines.
+      polyData.getPointData().setNormals(null);
+    } else {
+      polyData.getLines().initialize();
+    }
+    polyData.modified();
   }
 
   publicAPI.setBounds = (...bounds) => {
@@ -249,14 +261,14 @@ function vtkCubeSource(publicAPI, model) {
       return;
     }
 
-    model.xLength = boundsArray[1] - boundsArray[0];
-    model.yLength = boundsArray[3] - boundsArray[2];
-    model.zLength = boundsArray[5] - boundsArray[4];
-    model.center = [
+    publicAPI.setXLength(boundsArray[1] - boundsArray[0]);
+    publicAPI.setYLength(boundsArray[3] - boundsArray[2]);
+    publicAPI.setZLength(boundsArray[5] - boundsArray[4]);
+    publicAPI.setCenter([
       (boundsArray[0] + boundsArray[1]) / 2.0,
       (boundsArray[2] + boundsArray[3]) / 2.0,
       (boundsArray[4] + boundsArray[5]) / 2.0,
-    ];
+    ]);
   };
 
   // Expose methods
@@ -273,8 +285,11 @@ const DEFAULT_VALUES = {
   zLength: 1.0,
   center: [0.0, 0.0, 0.0],
   rotations: [0.0, 0.0, 0.0],
+  matrix: [...IDENTITY],
   pointType: 'Float64Array',
   generate3DTextureCoordinates: false,
+  generateFaces: true,
+  generateLines: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -289,8 +304,20 @@ export function extend(publicAPI, model, initialValues = {}) {
     'yLength',
     'zLength',
     'generate3DTextureCoordinates',
+    'generateFaces',
+    'generateLines',
   ]);
   macro.setGetArray(publicAPI, model, ['center', 'rotations'], 3);
+  macro.setGetArray(publicAPI, model, ['matrix'], 16);
+
+  // Internal persistent/static objects
+  model._polys = vtkCellArray.newInstance({
+    values: Uint16Array.from(POLY_ARRAY),
+  });
+  model._lineCells = vtkCellArray.newInstance({
+    values: Uint16Array.from(LINE_ARRAY),
+  });
+  macro.moveToProtected(publicAPI, model, ['polys', 'lineCells']);
 
   macro.algo(publicAPI, model, 0, 1);
   vtkCubeSource(publicAPI, model);

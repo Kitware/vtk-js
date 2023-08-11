@@ -1,3 +1,4 @@
+import { mat4 } from 'gl-matrix';
 import { vtkAlgorithm, vtkObject } from "../../../interfaces";
 import { Bounds, Vector3 } from "../../../types";
 
@@ -40,6 +41,24 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
 	 * @default false
 	 */
 	getGenerate3DTextureCoordinates(): boolean;
+
+    /**
+     * Flag that indicates whether the output will generate faces of the outline.
+     * @returns {boolean}
+     */
+    getGenerateFaces(): boolean;
+
+    /**
+     * Flag that indicates whether the output will generate wireframe lines of the outline.
+     * @returns {boolean}
+     */
+    getGenerateLines(): boolean;
+
+    /**
+     * Get the 4x4 transformation set to apply as a final trasformation to the output.
+     * @param matrix
+     */
+    getMatrix(): mat4;
 
 	/**
 	 *
@@ -116,6 +135,24 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
 	 * @param generate3DTextureCoordinates
 	 */
 	setGenerate3DTextureCoordinates(generate3DTextureCoordinates: boolean): boolean;
+
+    /**
+     * Flag to indicate that the output should generate wireframe of the outline.
+     * @param {boolean} generateLines
+     */
+    setGenerateLines(generateLines: boolean): boolean;
+
+    /**
+     * Flag to indicate that the output should generate triangulated faces of the outline.
+     * @param {boolean} generateFaces
+     */
+    setGenerateFaces(generateFaces: boolean): boolean;
+
+    /**
+     * Set a 4x4 transformation that will be applied as a final trasformation to the output.
+     * @param matrix
+     */
+    setMatrix(matrix: mat4): boolean;
 
 	/**
 	 * Float array of size 3 representing the angles, in degrees, of rotation for the cube.

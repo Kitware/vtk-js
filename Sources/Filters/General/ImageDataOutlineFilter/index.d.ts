@@ -17,29 +17,30 @@ export interface vtkImageDataOutlineFilter extends vtkImageDataOutlineFilterBase
      */
     requestData(inData: vtkImageData, outData: vtkPolyData): void;
 
-	/**
-     * Flag to indicate that the output should generate triangulated faces of the outline.
-	 * @param {boolean} generateFaces
-	 */
-    setGenerateFaces(generateFaces: boolean): boolean;
-
-	/**
-	 * Flag that indicates whether the output will generate triangulated faces of the outline.
-	 * @returns {boolean}
-	 */
+    /**
+     * Flag that indicates whether the output will generate faces of the outline.
+     * @returns {boolean}
+     */
     getGenerateFaces(): boolean;
 
-	/**
+    /**
+     * Flag that indicates whether the output will generate wireframe lines of the outline.
+     * @returns {boolean}
+     */
+    getGenerateLines(): boolean;
+
+    /**
      * Flag to indicate that the output should generate wireframe of the outline.
-	 * @param {boolean} generateLines
-	 */
+     * @param {boolean} generateLines
+     */
     setGenerateLines(generateLines: boolean): boolean;
 
-	/**
-	 * Flag that indicates whether the output will generate wireframe lines of the outline.
-	 * @returns {boolean}
-	 */
-    getGenerateLines(): boolean;
+    /**
+     * Flag to indicate that the output should generate triangulated faces of the outline.
+     * @param {boolean} generateFaces
+     */
+    setGenerateFaces(generateFaces: boolean): boolean;
+
 }
 
 /**
