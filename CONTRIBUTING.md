@@ -119,6 +119,10 @@ To create and debug a test:
 The vtk.js documentation is part of the code repository and is entirely written in 
 [markdown](https://daringfireball.net/projects/markdown/).
 
+If you create an example, please list it in the [examples landing page](Documentation/content/examples/index.md).
+
+Images and GIF videos added to the [gallery](Documentation/content/docs/gallery) must be compressed as much as possible. You may want to use [ezgif.com](https://ezgif.com/).
+
 ## Reporting Issues
 
 If you encounter problems using vtk.js you may be able to find the solutions in the
