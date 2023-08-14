@@ -49,7 +49,7 @@ function vtkPolyLineRepresentation(publicAPI, model) {
           cellData[i] = i - 1;
         }
         if (closePolyLine) {
-          cellData[cellSize - 1] = 0;
+          cellData[cellSize] = 0;
         }
         lines.setData(cellData);
       }
