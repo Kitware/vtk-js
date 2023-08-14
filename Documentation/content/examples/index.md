@@ -36,7 +36,7 @@ This will allow you to see the some live code running in your browser. Just pick
 
 <div class="gallery">
 
-[![PDBReader Example][PDBReader]](./PDBReader.html)
+[![PDBReader Example][PDBReader]](./PDBReader.html "PDBReader Example")
 [![ElevationReader Example][ElevationReader]](./ElevationReader.html)
 [![VolumeContour Example][VolumeContour]](./VolumeContour.html)
 [![MultiSliceImageMapper Example][MultiSliceImageMapper]](./MultiSliceImageMapper.html)
@@ -51,3 +51,36 @@ This will allow you to see the some live code running in your browser. Just pick
 [PiecewiseGaussianWidget]: ../docs/gallery/PiecewiseGaussianWidget.jpg
 [VolumeContour]: ../docs/gallery/VolumeContour.jpg
 [ZipHttpReader]: ../docs/gallery/ZipHttpReader.jpg
+
+
+## Widgets
+
+<div class="gallery">
+
+[![AngleWidget Example][AngleWidget]](./AngleWidget.html "Angle (radian, degree) widget example")
+[![ImageCroppingWidget Example][ImageCroppingWidget]](./ImageCroppingWidget.html "Crop/Clip volume rendering with a bounding box/cube/orthogonal planes")
+[![ImplicitPlaneWidget Example][ImplicitPlaneWidget]](./ImplicitPlaneWidget.html "Translate and orient an implicit plane with normal and origin")
+[![InteractiveOrientationWidget Example][InteractiveOrientationWidget]](./InteractiveOrientationWidget.html "Corner coordinate system orientation widget")
+[![LabelWidget Example][LabelWidget]](./LabelWidget.html "Place, edit text size and color of label widget")
+[![LineWidget Example][LineWidget]](./LineWidget.html "Place and edit line/distance widget with handles")
+[![PaintWidget Example][PaintWidget]](./PaintWidget.html "Draw strokes, create rectangle, square, ellipse and disk 2D widgets")
+[![PolyLineWidget Example][PolyLineWidget]](./PolyLineWidget.html "Place multiple connected handles with text")
+[![ResliceCursorWidget Example][ResliceCursorWidget]](./ResliceCursorWidget.html "Axial Coronal and Sagittal MPR/Oblique/Reformatted/Resliced/Slab/MIP views")
+[![ShapeWidget Example][ShapeWidget]](./ShapeWidget.html "2D shape widgets with text information")
+[![SphereWidget Example][SphereWidget]](./SphereWidget.html "2D sphere widget controlled with radius")
+[![SplineWidget Example][SplineWidget]](./PaintWidget.html "Widget to draw open or closed (triangularized) sharp/smooth polygon widget")
+
+</div>
+
+[AngleWidget]: ../docs/gallery/AngleWidget.png
+[ImageCroppingWidget]: ../docs/gallery/ImageCroppingWidget.jpg
+[ImplicitPlaneWidget]: ../docs/gallery/ImplicitPlaneWidget.png
+[InteractiveOrientationWidget]: ../docs/gallery/InteractiveOrientationWidget.png
+[LabelWidget]: ../docs/gallery/LabelWidget.png
+[LineWidget]: ../docs/gallery/LineWidget.png
+[PaintWidget]: ../docs/gallery/PaintWidget.gif
+[PolyLineWidget]: ../docs/gallery/PolyLineWidget.png
+[ResliceCursorWidget]: ../docs/gallery/ResliceCursorWidget.jpg
+[ShapeWidget]: ../docs/gallery/ShapeWidget.png
+[SphereWidget]: ../docs/gallery/SphereWidget.jpg
+[SplineWidget]: ../docs/gallery/SplineWidget.gif
