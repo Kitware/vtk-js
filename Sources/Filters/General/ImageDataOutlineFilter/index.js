@@ -11,6 +11,9 @@ function vtkImageDataOutlineFilter(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageDataOutlineFilter');
 
+  // Capture "parentClass" api for internal use
+  const superClass = { ...publicAPI };
+
   publicAPI.requestData = (inData, outData) => {
     // implement requestData
     const input = inData[0];
@@ -36,14 +39,8 @@ function vtkImageDataOutlineFilter(publicAPI, model) {
     outData[0] = model._cubeSource.getOutputData();
   };
 
-  // Capture "parentClass" api for internal use
-  const superClass = { ...publicAPI };
-
-  publicAPI.getMTime = () => {
-    let mTime = superClass.getMTime();
-    mTime = Math.max(mTime, model._cubeSource.getMTime());
-    return mTime;
-  };
+  publicAPI.getMTime = () =>
+    Math.max(superClass.getMTime(), model._cubeSource.getMTime());
 
   // Forward calls for [set/get]Generate[Faces/Lines] functions to cubeSource:
   publicAPI.setGenerateFaces = model._cubeSource.setGenerateFaces;

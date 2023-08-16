@@ -1,7 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import { IDENTITY } from 'vtk.js/Sources/Common/Core/Math/Constants';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
@@ -204,31 +203,37 @@ function vtkCubeSource(publicAPI, model) {
     }
 
     // Apply rotation to the points coordinates and normals
-    vtkMatrixBuilder
-      .buildFromDegree()
-      .rotateX(model.rotations[0])
-      .rotateY(model.rotations[1])
-      .rotateZ(model.rotations[2])
-      .apply(points)
-      .apply(normals);
+    if (model.rotations) {
+      vtkMatrixBuilder
+        .buildFromDegree()
+        .rotateX(model.rotations[0])
+        .rotateY(model.rotations[1])
+        .rotateZ(model.rotations[2])
+        .apply(points)
+        .apply(normals);
+    }
 
     // Apply transformation to the points coordinates
-    vtkMatrixBuilder
-      .buildFromRadian()
-      .translate(...model.center)
-      .apply(points);
+    if (model.center) {
+      vtkMatrixBuilder
+        .buildFromRadian()
+        .translate(...model.center)
+        .apply(points);
+    }
 
     // Apply optional additionally specified matrix transformation
-    vtkMatrixBuilder.buildFromRadian().setMatrix(model.matrix).apply(points);
+    if (model.matrix) {
+      vtkMatrixBuilder.buildFromRadian().setMatrix(model.matrix).apply(points);
 
-    // prettier-ignore
-    const rotMatrix = [
-      model.matrix[0], model.matrix[1], model.matrix[2], 0,
-      model.matrix[4], model.matrix[5], model.matrix[6], 0,
-      model.matrix[8], model.matrix[9], model.matrix[10], 0,
-      0, 0, 0, 1
-    ];
-    vtkMatrixBuilder.buildFromRadian().setMatrix(rotMatrix).apply(normals);
+      // prettier-ignore
+      const rotMatrix = [
+        model.matrix[0], model.matrix[1], model.matrix[2], 0,
+        model.matrix[4], model.matrix[5], model.matrix[6], 0,
+        model.matrix[8], model.matrix[9], model.matrix[10], 0,
+        0, 0, 0, 1
+      ];
+      vtkMatrixBuilder.buildFromRadian().setMatrix(rotMatrix).apply(normals);
+    }
 
     // Lastly, generate the necessary cell arrays.
     if (model.generateFaces) {
@@ -283,9 +288,6 @@ const DEFAULT_VALUES = {
   xLength: 1.0,
   yLength: 1.0,
   zLength: 1.0,
-  center: [0.0, 0.0, 0.0],
-  rotations: [0.0, 0.0, 0.0],
-  matrix: [...IDENTITY],
   pointType: 'Float64Array',
   generate3DTextureCoordinates: false,
   generateFaces: true,
