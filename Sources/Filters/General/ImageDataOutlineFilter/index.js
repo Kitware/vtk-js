@@ -36,18 +36,19 @@ function vtkImageDataOutlineFilter(publicAPI, model) {
     outData[0] = model._cubeSource.getOutputData();
   };
 
-  // Forward calls for [set/get]Generate[Faces/Lines] functions to cubeSource:
-  publicAPI.setGenerateFaces = (generateFaces) => {
-    if (model._cubeSource.setGenerateFaces(generateFaces)) {
-      publicAPI.modified();
-    }
+  // Capture "parentClass" api for internal use
+  const superClass = { ...publicAPI };
+
+  publicAPI.getMTime = () => {
+    let mTime = superClass.getMTime();
+    mTime = Math.max(mTime, model._cubeSource.getMTime());
+    return mTime;
   };
 
-  publicAPI.setGenerateLines = (generateLines) => {
-    if (model._cubeSource.setGenerateLines(generateLines)) {
-      publicAPI.modified();
-    }
-  };
+  // Forward calls for [set/get]Generate[Faces/Lines] functions to cubeSource:
+  publicAPI.setGenerateFaces = model._cubeSource.setGenerateFaces;
+
+  publicAPI.setGenerateLines = model._cubeSource.setGenerateLines;
 
   publicAPI.getGenerateFaces = model._cubeSource.getGenerateFaces;
 
