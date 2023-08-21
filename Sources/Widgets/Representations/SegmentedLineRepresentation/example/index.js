@@ -34,8 +34,9 @@ const compositeState = vtkStateBuilder
 const z = -50;
 const points = [
   [0, 0, z],
-  [5, 0, z],
-  [5, 10, z],
+  [5, 5, z],
+  [3, 10, z],
+  [5, 15, z],
 ];
 points.forEach((point) => {
   const handle = compositeState.addHandle();
@@ -48,6 +49,7 @@ points.forEach((point) => {
 
 const widgetRep = vtkSegmentedLineRepresentation.newInstance({
   scaleInPixels: false,
+  // closePolyLine: true,
 });
 widgetRep.setInputData(compositeState);
 widgetRep.setLabels(['handles']);
