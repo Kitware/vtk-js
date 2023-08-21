@@ -9,42 +9,46 @@ import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Consta
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
-import { OrientationModes } from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper/Constants';
+import {
+  OrientationModes,
+  ScaleModes,
+} from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper/Constants';
 import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
+import { vec3 } from 'gl-matrix';
 
-// ----------------------------------------------------------------------------
-// vtkPolyLineRepresentation methods
-// ----------------------------------------------------------------------------
-
-function vtkPolyLineRepresentation(publicAPI, model) {
-  model.classHierarchy.push('vtkPolyLineRepresentation');
+function vtkSegmentedLineRepresentation(publicAPI, model) {
+  model.classHierarchy.push('vtkSegmentedLineRepresentation');
   const superClass = { ...publicAPI };
 
   const internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
 
-  function allocateSize(polyData, size, closePolyLine = false) {
-    if (!polyData.getPoints() || polyData.getPoints().length !== size * 3) {
-      allocateArray(polyData, 'points', size).getData();
+  function allocateSize(polyData, pointCount, close = false) {
+    const glyphCount = pointCount + (close ? 0 : -1);
+    if (
+      !polyData.getPoints() ||
+      polyData.getPoints().length !== glyphCount * 3
+    ) {
+      allocateArray(polyData, 'points', glyphCount).getData();
     }
 
-    const cellSize = size + (closePolyLine ? 1 : 0);
-    if (
-      polyData.getLines().getNumberOfCells() !== 1 ||
-      polyData.getLines().getCellSizes()[0] !== cellSize
-    ) {
-      const lines = allocateArray(polyData, 'lines', cellSize + 1).getData(); // +1 for the number of points
-      lines[0] = cellSize;
+    const cellSize = glyphCount + 1;
+    const oldSize = Array.from(polyData.getLines().getCellSizes())[0];
+    if (oldSize !== cellSize) {
+      const lines = allocateArray(polyData, 'lines', cellSize + 1); // +1 for to hold number of elements per cell
+      const cellArray = lines.getData();
+      cellArray[0] = cellSize;
       for (let i = 1; i <= cellSize; i++) {
-        lines[i] = i - 1;
+        cellArray[i] = i - 1;
       }
-      if (closePolyLine) {
-        lines[cellSize] = 0;
+      if (close) {
+        cellArray[cellSize] = 0;
       }
+      lines.setData(cellArray);
     }
   }
 
   /**
-   * Change the segments thickness.
+   * Change the segments' thickness.
    * @param {number} lineThickness
    */
   function applyLineThickness(lineThickness) {
@@ -67,6 +71,8 @@ function vtkPolyLineRepresentation(publicAPI, model) {
     mapper: vtkGlyph3DMapper.newInstance({
       orientationArray: 'directions',
       orientationMode: OrientationModes.DIRECTION,
+      scaleArray: 'lengths',
+      scaleMode: ScaleModes.SCALE_BY_COMPONENTS,
     }),
     actor: vtkActor.newInstance({ parentProp: publicAPI }),
   };
@@ -79,41 +85,17 @@ function vtkPolyLineRepresentation(publicAPI, model) {
     const state = inData[0];
     outData[0] = internalPolyData;
 
-    // Remove invalid and coincident points.
-    const list = publicAPI
-      .getRepresentationStates(state)
-      .reduce((subStates, subState) => {
-        const subStateOrigin =
-          subState.getOrigin && subState.getOrigin()
-            ? subState.getOrigin()
-            : null;
-        const previousSubStateOrigin =
-          subStates.length && subStates[subStates.length - 1].getOrigin();
-        if (
-          !subStateOrigin ||
-          (previousSubStateOrigin &&
-            vtkMath.areEquals(subStateOrigin, previousSubStateOrigin))
-        ) {
-          return subStates;
-        }
-        subStates.push(subState);
-        return subStates;
-      }, []);
-    const size = list.length;
+    const originStates = publicAPI.getRepresentationStates(state);
+    const points = originStates
+      .map((subState) => subState.getOrigin())
+      .filter(Boolean); // filter out states that return invalid origins
+    const pointCount = points.length;
 
-    allocateSize(internalPolyData, size, model.closePolyLine && size > 2);
+    allocateSize(internalPolyData, pointCount, model.close && pointCount > 2);
 
-    const points = internalPolyData.getPoints().getData();
+    const glyphPositions = internalPolyData.getPoints().getData();
     const lines = internalPolyData.getLines().getData();
 
-    for (let i = 0; i < size; i++) {
-      const coords = list[i].getOrigin();
-      points[i * 3] = coords[0];
-      points[i * 3 + 1] = coords[1];
-      points[i * 3 + 2] = coords[2];
-    }
-
-    // Orient glyphs to next point.
     const directions = allocateArray(
       internalPolyData,
       'directions',
@@ -121,20 +103,39 @@ function vtkPolyLineRepresentation(publicAPI, model) {
       undefined,
       3
     ).getData();
+    const lengths = allocateArray(
+      internalPolyData,
+      'lengths',
+      lines.length - 1,
+      undefined,
+      3
+    ).getData();
+
+    const pos = []; // scratch
     for (let point = 1; point < lines.length - 1; point++) {
-      const eye = lines[point] * 3;
-      const eyePoint = [points[eye], points[eye + 1], points[eye + 2]];
-      const target = lines[point + 1] * 3;
-      const targetPoint = [
-        points[target],
-        points[target + 1],
-        points[target + 2],
-      ];
-      const direction = vtkMath.subtract(targetPoint, eyePoint, []);
+      // Orient glyphs to next point.
+      const eye = points[lines[point]];
+      const target = points[lines[point + 1]];
+      const direction = vtkMath.subtract(target, eye, pos);
       const glyph = (point - 1) * 3;
-      directions[glyph] = direction[0];
-      directions[glyph + 1] = direction[1];
-      directions[glyph + 2] = direction[2];
+      [directions[glyph], directions[glyph + 1], directions[glyph + 2]] =
+        direction;
+
+      // scale to span between points
+      const distance = vec3.length(direction);
+      lengths[glyph] = distance;
+      lengths[glyph + 1] = 1;
+      lengths[glyph + 2] = 1;
+
+      // Position glyph at center of line segment.
+      vec3.normalize(pos, direction);
+      vec3.scale(pos, pos, distance / 2);
+      vec3.add(pos, eye, direction);
+      [
+        glyphPositions[glyph],
+        glyphPositions[glyph + 1],
+        glyphPositions[glyph + 2],
+      ] = pos;
     }
 
     internalPolyData.getPoints().modified();
@@ -144,14 +145,8 @@ function vtkPolyLineRepresentation(publicAPI, model) {
     applyLineThickness(lineThickness);
   };
 
-  /**
-   * When mousing over the line, if behavior != CONTEXT,
-   * returns the parent state.
-   * @param {object} prop
-   * @param {number} compositeID
-   * @returns {object}
-   */
-  publicAPI.getSelectedState = (prop, compositeID) => model.inputData[0];
+  // return array of all states
+  publicAPI.getSelectedState = () => model.inputData[0];
 
   publicAPI.updateActorVisibility = (renderingType, ctxVisible, hVisible) => {
     const state = model.inputData[0];
@@ -176,9 +171,8 @@ function vtkPolyLineRepresentation(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  threshold: Number.EPSILON,
-  closePolyLine: false,
-  lineThickness: 2,
+  close: false,
+  lineThickness: 1,
   scaleInPixels: true,
 };
 
@@ -187,20 +181,16 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   const newDefault = { ...DEFAULT_VALUES, ...initialValues };
   vtkWidgetRepresentation.extend(publicAPI, model, newDefault);
-  macro.setGet(publicAPI, model, [
-    'threshold',
-    'closePolyLine',
-    'lineThickness',
-  ]);
+  macro.setGet(publicAPI, model, ['close', 'lineThickness']);
 
-  vtkPolyLineRepresentation(publicAPI, model);
+  vtkSegmentedLineRepresentation(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
 export const newInstance = macro.newInstance(
   extend,
-  'vtkPolyLineRepresentation'
+  'vtkSegmentedLineRepresentation'
 );
 
 // ----------------------------------------------------------------------------
