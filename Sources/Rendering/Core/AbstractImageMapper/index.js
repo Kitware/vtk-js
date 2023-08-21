@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkAbstractMapper3D from 'vtk.js/Sources/Rendering/Core/AbstractMapper3D';
+import { createUninitializedBounds } from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
 // vtkAbstractImageMapper methods
@@ -11,6 +12,13 @@ function vtkAbstractImageMapper(publicAPI, model) {
   publicAPI.getIsOpaque = () => true;
 
   publicAPI.getCurrentImage = () => null;
+
+  publicAPI.getBoundsForSlice = () => {
+    macro.vtkErrorMacro(
+      'vtkAbstractImageMapper.getBoundsForSlice - NOT IMPLEMENTED'
+    );
+    return createUninitializedBounds();
+  };
 }
 
 // ----------------------------------------------------------------------------

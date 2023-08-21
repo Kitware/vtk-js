@@ -1,6 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkAbstractMapper from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import { createUninitializedBounds } from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
 // vtkAbstractMapper methods
@@ -9,6 +10,7 @@ import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 function vtkAbstractMapper3D(publicAPI, model) {
   publicAPI.getBounds = () => {
     macro.vtkErrorMacro(`vtkAbstractMapper3D.getBounds - NOT IMPLEMENTED`);
+    return createUninitializedBounds();
   };
 
   publicAPI.getCenter = () => {

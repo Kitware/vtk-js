@@ -52,9 +52,9 @@ export interface vtkImageArrayMapper extends vtkAbstractImageMapper {
 	 * @param {Number} [slice] The slice index. If undefined, the current slice is considered.
 	 * @param {Number} [halfThickness] Half the slice thickness in index space (unit voxel
 	 * spacing). If undefined, 0 is considered.
-	 * @return {Number[]} The bounds for a given slice.
+	 * @return {Bounds} The bounds for a given slice.
 	 */
-	getBoundsForSlice(slice?: number, halfThickness?: number): number[];
+	getBoundsForSlice(slice?: number, halfThickness?: number): Bounds;
 
 	/**
 	 * Get the closest IJK axis
