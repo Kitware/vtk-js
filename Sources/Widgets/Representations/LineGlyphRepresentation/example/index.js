@@ -6,7 +6,7 @@ import '@kitware/vtk.js/Rendering/Profiles/All';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkStateBuilder from '@kitware/vtk.js/Widgets/Core/StateBuilder';
 
-import vtkSegmentedLineRepresentation from '@kitware/vtk.js/Widgets/Representations/SegmentedLineRepresentation';
+import vtkLineGlyphRepresentation from '@kitware/vtk.js/Widgets/Representations/LineGlyphRepresentation';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -47,7 +47,7 @@ points.forEach((point) => {
 // Representation
 // -----------------------------------------------------------
 
-const widgetRep = vtkSegmentedLineRepresentation.newInstance({
+const widgetRep = vtkLineGlyphRepresentation.newInstance({
   scaleInPixels: false,
   close: true,
 });

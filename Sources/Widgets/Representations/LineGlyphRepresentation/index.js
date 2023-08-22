@@ -16,8 +16,8 @@ import {
 import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
 import { vec3 } from 'gl-matrix';
 
-function vtkSegmentedLineRepresentation(publicAPI, model) {
-  model.classHierarchy.push('vtkSegmentedLineRepresentation');
+function vtkLineGlyphRepresentation(publicAPI, model) {
+  model.classHierarchy.push('vtkLineGlyphRepresentation');
   const superClass = { ...publicAPI };
 
   const internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
@@ -183,14 +183,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkWidgetRepresentation.extend(publicAPI, model, newDefault);
   macro.setGet(publicAPI, model, ['close', 'lineThickness']);
 
-  vtkSegmentedLineRepresentation(publicAPI, model);
+  vtkLineGlyphRepresentation(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
 export const newInstance = macro.newInstance(
   extend,
-  'vtkSegmentedLineRepresentation'
+  'vtkLineGlyphRepresentation'
 );
 
 // ----------------------------------------------------------------------------
