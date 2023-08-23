@@ -67,6 +67,8 @@ function vtkLineGlyphRepresentation(publicAPI, model) {
     source: publicAPI,
     glyph: vtkCylinderSource.newInstance({
       direction: [1, 0, 0],
+      center: [0.5, 0, 0],
+      capping: false,
     }),
     mapper: vtkGlyph3DMapper.newInstance({
       orientationArray: 'directions',
@@ -94,48 +96,47 @@ function vtkLineGlyphRepresentation(publicAPI, model) {
     allocateSize(internalPolyData, pointCount, model.close && pointCount > 2);
 
     const glyphPositions = internalPolyData.getPoints().getData();
-    const lines = internalPolyData.getLines().getData();
+    // There can be only one line.
+    const segments = internalPolyData.getLines().getData();
 
     const directions = allocateArray(
       internalPolyData,
       'directions',
-      lines.length - 1,
+      segments.length - 1,
       undefined,
       3
     ).getData();
     const lengths = allocateArray(
       internalPolyData,
       'lengths',
-      lines.length - 1,
+      segments.length - 1,
       undefined,
       3
     ).getData();
 
-    const pos = []; // scratch
-    for (let point = 1; point < lines.length - 1; point++) {
-      // Orient glyphs to next point.
-      const eye = points[lines[point]];
-      const target = points[lines[point + 1]];
-      const direction = vtkMath.subtract(target, eye, pos);
-      const glyph = (point - 1) * 3;
-      [directions[glyph], directions[glyph + 1], directions[glyph + 2]] =
-        direction;
+    const tempVector = []; // scratch
+    for (let point = 1; point < segments.length - 1; point++) {
+      const glyph = (point - 1) * 3; // start of glyph's 3 components in the arrays
 
-      // scale to span between points
-      const distance = vec3.length(direction);
-      lengths[glyph] = distance;
-      lengths[glyph + 1] = 1;
-      lengths[glyph + 2] = 1;
-
-      // Position glyph at center of line segment.
-      vec3.normalize(pos, direction);
-      vec3.scale(pos, pos, distance / 2);
-      vec3.add(pos, eye, direction);
+      // With cylinder glyph's offset center, position at state origins.
+      const origin = points[segments[point]];
       [
         glyphPositions[glyph],
         glyphPositions[glyph + 1],
         glyphPositions[glyph + 2],
-      ] = pos;
+      ] = origin;
+
+      // Orient glyphs to next point.
+      const target = points[segments[point + 1]];
+      const direction = vtkMath.subtract(target, origin, tempVector);
+      [directions[glyph], directions[glyph + 1], directions[glyph + 2]] =
+        direction;
+
+      // Scale to span between points.
+      const distance = vec3.length(direction);
+      lengths[glyph] = distance;
+      lengths[glyph + 1] = 1;
+      lengths[glyph + 2] = 1;
     }
 
     internalPolyData.getPoints().modified();
