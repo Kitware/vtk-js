@@ -120,12 +120,23 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleMouseWheel = (callData) => {
-    publicAPI.invokeRemoteWheelEvent({
-      type: 'MouseWheel',
-      ...createRemoteEvent(callData),
-      spinY: callData.spinY,
-    });
-    publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
+    let needToSend = true;
+    if (model.wheelThrottleDelay) {
+      const ts = Date.now();
+      needToSend = model.wheelThrottleDelay < ts - model.wheelLastThrottleTime;
+      if (needToSend) {
+        model.wheelLastThrottleTime = ts;
+      }
+    }
+
+    if (needToSend) {
+      publicAPI.invokeRemoteWheelEvent({
+        type: 'MouseWheel',
+        ...createRemoteEvent(callData),
+        spinY: callData.spinY,
+      });
+      publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
+    }
   };
 
   //-------------------------------------------------------------------------
@@ -283,6 +294,8 @@ const DEFAULT_VALUES = {
   sendMouseMove: false,
   throttleDelay: 33.3, // 33.3 millisecond <=> 30 events/second
   lastThrottleTime: 0,
+  wheelThrottleDelay: 0,
+  wheelLastThrottleTime: 0,
   // remoteEventAddOn: null,
 };
 
@@ -297,6 +310,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'sendMouseMove',
     'remoteEventAddOn',
     'throttleDelay',
+    'wheelThrottleDelay',
   ]);
   macro.event(publicAPI, model, 'RemoteMouseEvent');
   macro.event(publicAPI, model, 'RemoteWheelEvent');
