@@ -9,7 +9,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 // ----------------------------------------------------------------------------
 
 function vtkOpenGLScalarBarActor(publicAPI, model) {
-  model.classHierarchy.push('vtkOpenGLScalarBarActor');
+  model.classHierarchy.add('vtkOpenGLScalarBarActor');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {

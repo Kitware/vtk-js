@@ -8,7 +8,7 @@ import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 
 function vtkXMLImageDataReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkXMLImageDataReader');
+  model.classHierarchy.add('vtkXMLImageDataReader');
 
   publicAPI.parseXML = (rootElem, type, compressor, byteOrder, headerType) => {
     const imageDataElem = rootElem.getElementsByTagName(model.dataType)[0];

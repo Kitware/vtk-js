@@ -60,7 +60,7 @@ function updateDomains(dataset, dataArray, model, updateProp) {
 
 function vtkResliceRepresentationProxy(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkResliceRepresentationProxy');
+  model.classHierarchy.add('vtkResliceRepresentationProxy');
 
   model.mapper = vtkImageResliceMapper.newInstance();
   model.actor = vtkImageSlice.newInstance();

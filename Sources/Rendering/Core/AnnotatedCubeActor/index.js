@@ -22,7 +22,7 @@ const FACE_TO_INDEX = {
 
 function vtkAnnotatedCubeActor(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkAnnotatedCubeActor');
+  model.classHierarchy.add('vtkAnnotatedCubeActor');
 
   // Make sure face properties are not references to the default value
   model.xPlusFaceProperty = { ...model.xPlusFaceProperty };

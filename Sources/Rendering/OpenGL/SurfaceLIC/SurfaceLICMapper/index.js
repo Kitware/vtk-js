@@ -13,7 +13,7 @@ const { vtkErrorMacro } = macro;
 // ----------------------------------------------------------------------------
 
 function vtkOpenGLSurfaceLICMapper(publicAPI, model) {
-  model.classHierarchy.push('vtkOpenGLSurfaceLICMapper');
+  model.classHierarchy.add('vtkOpenGLSurfaceLICMapper');
 
   const superClass = { ...publicAPI };
   publicAPI.getNeedToRebuildShaders = (cellBO, ren, actor) =>

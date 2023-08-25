@@ -134,7 +134,7 @@ function vtkColorTransferFunctionInterpolateDiverging(s, rgb1, rgb2, result) {
 
 function vtkColorTransferFunction(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkColorTransferFunction');
+  model.classHierarchy.add('vtkColorTransferFunction');
 
   // Return the number of points which specify this function
   publicAPI.getSize = () => model.nodes.length;

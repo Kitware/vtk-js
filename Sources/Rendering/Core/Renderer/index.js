@@ -19,7 +19,7 @@ function notImplemented(method) {
 
 function vtkRenderer(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkRenderer');
+  model.classHierarchy.add('vtkRenderer');
 
   // Events
   const COMPUTE_VISIBLE_PROP_BOUNDS_EVENT = {

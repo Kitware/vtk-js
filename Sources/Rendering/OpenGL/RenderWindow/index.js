@@ -92,7 +92,7 @@ function _preventDefault(e) {
 
 function vtkOpenGLRenderWindow(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLRenderWindow');
+  model.classHierarchy.add('vtkOpenGLRenderWindow');
 
   const cachingContextHandler = createContextProxyHandler();
 

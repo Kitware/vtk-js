@@ -22,7 +22,7 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // ----------------------------------------------------------------------------
 
 function vtkImageCroppingWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkImageCroppingWidget');
+  model.classHierarchy.add('vtkImageCroppingWidget');
 
   const superClass = { ...publicAPI };
 

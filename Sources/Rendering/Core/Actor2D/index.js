@@ -10,7 +10,7 @@ import { Coordinate } from 'vtk.js/Sources/Rendering/Core/Coordinate/Constants';
 
 function vtkActor2D(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkActor2D');
+  model.classHierarchy.add('vtkActor2D');
 
   publicAPI.getActors2D = () => publicAPI;
 

@@ -15,7 +15,7 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // ----------------------------------------------------------------------------
 
 function vtkAngleWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkAngleWidget');
+  model.classHierarchy.add('vtkAngleWidget');
 
   // --- Widget Requirement ---------------------------------------------------
 

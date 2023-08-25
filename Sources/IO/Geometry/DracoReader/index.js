@@ -223,7 +223,7 @@ function getPolyDataFromDracoGeometry(dracoGeometry) {
 
 function vtkDracoReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkDracoReader');
+  model.classHierarchy.add('vtkDracoReader');
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {

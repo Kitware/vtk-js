@@ -12,7 +12,7 @@ const INVALID_BOUNDS = [1, -1, 1, -1, 1, -1];
 
 function vtkPoints(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPoints');
+  model.classHierarchy.add('vtkPoints');
 
   // Forwarding methods
   publicAPI.getNumberOfPoints = publicAPI.getNumberOfTuples;

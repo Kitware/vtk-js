@@ -131,7 +131,7 @@ export const STATIC = {
 
 function vtkDataArray(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkDataArray');
+  model.classHierarchy.add('vtkDataArray');
 
   /**
    * Resize model.values and copy the old values to the new array.

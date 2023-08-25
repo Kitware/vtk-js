@@ -29,7 +29,7 @@ const EndEvent = { type: 'EndEvent' };
 
 function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLPolyDataMapper2D');
+  model.classHierarchy.add('vtkOpenGLPolyDataMapper2D');
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {

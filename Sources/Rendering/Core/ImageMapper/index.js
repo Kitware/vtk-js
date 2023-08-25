@@ -15,7 +15,7 @@ const { SlicingMode } = Constants;
 
 function vtkImageMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageMapper');
+  model.classHierarchy.add('vtkImageMapper');
 
   publicAPI.getSliceAtPosition = (pos) => {
     const image = publicAPI.getCurrentImage();

@@ -19,7 +19,7 @@ const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
 
 function vtkTubeFilter(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkTubeFilter');
+  model.classHierarchy.add('vtkTubeFilter');
 
   function computeOffset(offset, npts) {
     let newOffset = offset;

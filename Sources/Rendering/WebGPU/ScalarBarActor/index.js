@@ -9,7 +9,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactor
 // ----------------------------------------------------------------------------
 
 function vtkWebGPUScalarBarActor(publicAPI, model) {
-  model.classHierarchy.push('vtkWebGPUScalarBarActor');
+  model.classHierarchy.add('vtkWebGPUScalarBarActor');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {

@@ -9,7 +9,7 @@ import widgetBehavior from './behavior';
 import stateGenerator from './state';
 
 function vtkSphereWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkSphereWidget');
+  model.classHierarchy.add('vtkSphereWidget');
 
   const superClass = { ...publicAPI };
 

@@ -90,7 +90,7 @@ function applyTextStyle(ctx, style) {
 // most of the work.
 function vtkCubeAxesActorHelper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCubeAxesActorHelper');
+  model.classHierarchy.add('vtkCubeAxesActorHelper');
 
   publicAPI.setRenderable = (renderable) => {
     if (model.renderable === renderable) {
@@ -351,7 +351,7 @@ const newCubeAxesActorHelper = macro.newInstance(
 
 function vtkCubeAxesActor(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCubeAxesActor');
+  model.classHierarchy.add('vtkCubeAxesActor');
 
   publicAPI.setCamera = (cam) => {
     if (model.camera === cam) {

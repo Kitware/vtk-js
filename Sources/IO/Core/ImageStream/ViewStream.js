@@ -2,7 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkViewStream(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkViewStream');
+  model.classHierarchy.add('vtkViewStream');
 
   // Internal variables
   model.imageDecodingPool = [new Image(), new Image()];

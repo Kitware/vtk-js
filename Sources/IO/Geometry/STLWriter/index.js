@@ -162,7 +162,7 @@ export const STATIC = {
 
 function vtkSTLWriter(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSTLWriter');
+  model.classHierarchy.add('vtkSTLWriter');
 
   publicAPI.requestData = (inData, outData) => {
     const input = inData[0];

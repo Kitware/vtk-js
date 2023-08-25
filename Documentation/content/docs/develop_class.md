@@ -83,7 +83,7 @@ export const STATIC = {
 
 function vtkMyClass(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMyClass');
+  model.classHierarchy.add('vtkMyClass');
 
   // Capture "parentClass" api for internal use
   const superClass = Object.assign({}, publicAPI);
@@ -193,7 +193,7 @@ import ConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
 
 const coneSource = ConeSource.New({ height: 2, radius: 1, resolution: 80 });
 const polydata = coneSource.getOutputData();
-``` 
+```
 
 ### Height (set/get)
 

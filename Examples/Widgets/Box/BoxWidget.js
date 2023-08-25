@@ -72,7 +72,7 @@ function widgetBehavior(publicAPI, model) {
 
   model.camera = model._renderer.getActiveCamera();
 
-  model.classHierarchy.push('vtkBoxWidgetProp');
+  model.classHierarchy.add('vtkBoxWidgetProp');
 }
 
 // ----------------------------------------------------------------------------
@@ -80,7 +80,7 @@ function widgetBehavior(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 function vtkBoxWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkBoxWidget');
+  model.classHierarchy.add('vtkBoxWidget');
 
   // --- Widget Requirement ---------------------------------------------------
   model.behavior = widgetBehavior;

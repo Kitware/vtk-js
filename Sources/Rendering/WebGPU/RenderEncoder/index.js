@@ -15,7 +15,7 @@ const forwarded = [
 // ----------------------------------------------------------------------------
 function vtkWebGPURenderEncoder(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPURenderEncoder');
+  model.classHierarchy.add('vtkWebGPURenderEncoder');
 
   publicAPI.begin = (encoder) => {
     model.drawCallbacks = [];

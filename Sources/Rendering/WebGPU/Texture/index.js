@@ -17,7 +17,7 @@ const { BufferUsage } = vtkWebGPUBufferManager;
 
 function vtkWebGPUTexture(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUTexture');
+  model.classHierarchy.add('vtkWebGPUTexture');
 
   publicAPI.create = (device, options) => {
     model.device = device;

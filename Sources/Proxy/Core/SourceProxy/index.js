@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkSourceProxy(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSourceProxy');
+  model.classHierarchy.add('vtkSourceProxy');
 
   // API ----------------------------------------------------------------------
 

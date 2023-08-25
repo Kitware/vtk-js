@@ -32,7 +32,7 @@ export const STATIC = {
 
 function vtkCylinder(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCylinder');
+  model.classHierarchy.add('vtkCylinder');
 
   publicAPI.evaluateFunction = (xyz) => {
     const x2C = [

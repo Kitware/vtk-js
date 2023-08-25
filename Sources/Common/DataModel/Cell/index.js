@@ -8,7 +8,7 @@ import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 
 function vtkCell(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCell');
+  model.classHierarchy.add('vtkCell');
 
   publicAPI.initialize = (points, pointIdsList = null) => {
     if (!pointIdsList) {

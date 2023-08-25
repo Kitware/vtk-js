@@ -430,7 +430,7 @@ export const STATIC = {
 
 function vtkPiecewiseGaussianWidget(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPiecewiseGaussianWidget');
+  model.classHierarchy.add('vtkPiecewiseGaussianWidget');
 
   if (!model.canvas) {
     model.canvas = document.createElement('canvas');

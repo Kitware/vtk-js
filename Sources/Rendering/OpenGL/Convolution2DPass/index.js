@@ -12,7 +12,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkConvolution2DPass(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkConvolution2DPass');
+  model.classHierarchy.add('vtkConvolution2DPass');
 
   publicAPI.computeKernelWeight = function computeKernelWeight(kernel) {
     const weight = kernel.reduce((prev, curr) => prev + curr);

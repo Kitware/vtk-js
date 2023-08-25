@@ -31,7 +31,7 @@ function createDefaultTypedArrayHandler() {
 
 function vtkArraySerializer(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkArraySerializer');
+  model.classHierarchy.add('vtkArraySerializer');
   if (!model.typedArrayHandler) {
     model.typedArrayHandler = createDefaultTypedArrayHandler();
   }

@@ -8,7 +8,7 @@ import vtkSurfaceLICInterface from 'vtk.js/Sources/Rendering/Core/SurfaceLICInte
 
 function vtkSurfaceLICMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSurfaceLICMapper');
+  model.classHierarchy.add('vtkSurfaceLICMapper');
 
   publicAPI.getLicInterface = () => {
     if (!model.licInterface) {

@@ -13,7 +13,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkRadialDistortionPass(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkRadialDistortionPass');
+  model.classHierarchy.add('vtkRadialDistortionPass');
 
   // handles radial distortion and calll delegate
   publicAPI.traverse = (viewNode, parent = null) => {

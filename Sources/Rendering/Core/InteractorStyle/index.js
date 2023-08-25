@@ -27,7 +27,7 @@ const stateNames = {
 
 function vtkInteractorStyle(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkInteractorStyle');
+  model.classHierarchy.add('vtkInteractorStyle');
 
   // Public API methods
   // create bunch of Start/EndState methods

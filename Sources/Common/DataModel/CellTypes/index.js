@@ -65,7 +65,7 @@ export const STATIC = {
 
 function vtkCellTypes(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCellTypes');
+  model.classHierarchy.add('vtkCellTypes');
 
   /**
    * Allocate memory for this array. Delete old storage only if necessary.

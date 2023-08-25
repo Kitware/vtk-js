@@ -8,7 +8,7 @@ import vtkWebGPUSimpleMapper from 'vtk.js/Sources/Rendering/WebGPU/SimpleMapper'
 
 function vtkWebGPUFullScreenQuad(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUFullScreenQuad');
+  model.classHierarchy.add('vtkWebGPUFullScreenQuad');
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');

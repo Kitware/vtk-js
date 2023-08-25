@@ -10,7 +10,7 @@ const PASS_TYPES = ['Build', 'Render'];
 
 function vtkViewNode(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkViewNode');
+  model.classHierarchy.add('vtkViewNode');
 
   // Builds myself.
   publicAPI.build = (prepass) => {};

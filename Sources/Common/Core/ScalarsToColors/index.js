@@ -32,7 +32,7 @@ function floatColorToUChar(c) {
 
 function vtkScalarsToColors(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkScalarsToColors');
+  model.classHierarchy.add('vtkScalarsToColors');
 
   publicAPI.setVectorModeToMagnitude = () =>
     publicAPI.setVectorMode(VectorMode.MAGNITUDE);

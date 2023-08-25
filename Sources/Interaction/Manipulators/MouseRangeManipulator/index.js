@@ -7,7 +7,7 @@ import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulator
 
 function vtkMouseRangeManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMouseRangeManipulator');
+  model.classHierarchy.add('vtkMouseRangeManipulator');
 
   // Keep track of delta that is below the value
   // of one step to progressively increment it

@@ -396,7 +396,7 @@ const tmp2Mat4 = new Float64Array(16);
 
 function vtkWebGPUVolumePassFSQ(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUVolumePassFSQ');
+  model.classHierarchy.add('vtkWebGPUVolumePassFSQ');
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');

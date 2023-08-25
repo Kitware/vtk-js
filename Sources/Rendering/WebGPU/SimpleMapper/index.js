@@ -93,7 +93,7 @@ fn main(
 
 function vtkWebGPUSimpleMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUSimpleMapper');
+  model.classHierarchy.add('vtkWebGPUSimpleMapper');
 
   publicAPI.generateShaderDescriptions = (hash, pipeline, vertexInput) => {
     // create the shader descriptions

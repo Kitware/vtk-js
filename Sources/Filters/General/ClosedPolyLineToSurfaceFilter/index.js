@@ -118,7 +118,7 @@ class SegmentAgregator {
 
 function vtkClosedPolyLineToSurfaceFilter(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkClosedPolyLineToSurfaceFilter');
+  model.classHierarchy.add('vtkClosedPolyLineToSurfaceFilter');
 
   // --------------------------------------------------------------------------
 

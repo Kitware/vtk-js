@@ -12,7 +12,7 @@ export const LIGHT_TYPES = ['HeadLight', 'CameraLight', 'SceneLight'];
 
 function vtkLight(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkLight');
+  model.classHierarchy.add('vtkLight');
   const tmpVec = new Float64Array(3);
 
   publicAPI.getTransformedPosition = () => {

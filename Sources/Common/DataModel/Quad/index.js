@@ -17,7 +17,7 @@ function intersectionStruct() {
 
 function vtkQuad(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkQuad');
+  model.classHierarchy.add('vtkQuad');
 
   publicAPI.getCellDimension = () => 2;
   publicAPI.getCellType = () => CellType.VTK_QUAD;

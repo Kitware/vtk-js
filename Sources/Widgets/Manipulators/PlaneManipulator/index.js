@@ -23,7 +23,7 @@ export function intersectDisplayWithPlane(
 
 function vtkPlaneManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPlaneManipulator');
+  model.classHierarchy.add('vtkPlaneManipulator');
 
   publicAPI.handleEvent = (callData, glRenderWindow) => ({
     worldCoords: intersectDisplayWithPlane(

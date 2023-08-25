@@ -8,7 +8,7 @@ import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 
 function vtkCursor3D(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCursor3D');
+  model.classHierarchy.add('vtkCursor3D');
   // Public API methods
   publicAPI.setModelBounds = (bounds) => {
     if (!Array.isArray(bounds) || bounds.length < 6) {

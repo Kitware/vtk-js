@@ -12,7 +12,7 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // ----------------------------------------------------------------------------
 
 function widgetBehavior(publicAPI, model) {
-  model.classHierarchy.push('vtkPlaneWidget');
+  model.classHierarchy.add('vtkPlaneWidget');
   model._isDragging = false;
 
   publicAPI.setDisplayCallback = (callback) =>
@@ -151,7 +151,7 @@ function widgetBehavior(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 function vtkImplicitPlaneWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkPlaneWidget');
+  model.classHierarchy.add('vtkPlaneWidget');
 
   // --- Widget Requirement ---------------------------------------------------
 

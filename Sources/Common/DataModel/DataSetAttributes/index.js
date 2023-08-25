@@ -38,7 +38,7 @@ function vtkDataSetAttributes(publicAPI, model) {
   }
 
   // Set our className
-  model.classHierarchy.push('vtkDataSetAttributes');
+  model.classHierarchy.add('vtkDataSetAttributes');
   const superClass = { ...publicAPI };
 
   publicAPI.checkNumberOfComponents = (x) => true; // TODO

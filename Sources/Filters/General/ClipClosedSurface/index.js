@@ -16,7 +16,7 @@ const { ScalarMode } = Constants;
 
 function vtkClipClosedSurface(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkClipClosedSurface');
+  model.classHierarchy.add('vtkClipClosedSurface');
 
   publicAPI.getMTime = () =>
     model.clippingPlanes.reduce(

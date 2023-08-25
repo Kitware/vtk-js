@@ -9,7 +9,7 @@ const { vtkErrorMacro, vtkWarningMacro } = macro;
 // ----------------------------------------------------------------------------
 
 function vtkFieldData(publicAPI, model) {
-  model.classHierarchy.push('vtkFieldData');
+  model.classHierarchy.add('vtkFieldData');
   const superGetState = publicAPI.getState;
 
   // Decode serialized data if any

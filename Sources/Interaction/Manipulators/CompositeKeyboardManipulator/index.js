@@ -4,7 +4,7 @@
 
 function vtkCompositeKeyboardManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCompositeKeyboardManipulator');
+  model.classHierarchy.add('vtkCompositeKeyboardManipulator');
 
   publicAPI.onKeyPress = (interactor, renderer, key) => {};
   publicAPI.onKeyDown = (interactor, renderer, key) => {};

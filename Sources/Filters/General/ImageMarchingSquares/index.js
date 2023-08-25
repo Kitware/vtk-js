@@ -12,7 +12,7 @@ const { vtkErrorMacro, vtkDebugMacro } = macro;
 
 function vtkImageMarchingSquares(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageMarchingSquares');
+  model.classHierarchy.add('vtkImageMarchingSquares');
 
   publicAPI.getContourValues = () => model.contourValues;
   publicAPI.setContourValues = (cValues) => {

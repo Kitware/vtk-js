@@ -16,7 +16,7 @@ const EPSILON = 1e-6;
 
 function vtkPlaneSource(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPlaneSource');
+  model.classHierarchy.add('vtkPlaneSource');
 
   publicAPI.requestData = (inData, outData) => {
     if (model.deleted) {

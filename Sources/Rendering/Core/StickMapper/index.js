@@ -7,7 +7,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 function vtkStickMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkStickMapper');
+  model.classHierarchy.add('vtkStickMapper');
 }
 
 // ----------------------------------------------------------------------------

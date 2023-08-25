@@ -10,7 +10,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkScalarToRGBA(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkScalarToRGBA');
+  model.classHierarchy.add('vtkScalarToRGBA');
 
   publicAPI.requestData = (inData, outData) => {
     // implement requestData

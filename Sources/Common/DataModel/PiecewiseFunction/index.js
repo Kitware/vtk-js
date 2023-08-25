@@ -8,7 +8,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkPiecewiseFunction(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPiecewiseFunction');
+  model.classHierarchy.add('vtkPiecewiseFunction');
 
   // Return the number of points which specify this function
   publicAPI.getSize = () => model.nodes.length;

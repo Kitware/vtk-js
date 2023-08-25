@@ -9,7 +9,7 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 function vtkMouseCameraTrackballPanManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMouseCameraTrackballPanManipulator');
+  model.classHierarchy.add('vtkMouseCameraTrackballPanManipulator');
 
   publicAPI.onButtonDown = (interactor, renderer, position) => {
     model.previousPosition = position;

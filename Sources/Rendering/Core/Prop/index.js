@@ -13,7 +13,7 @@ function notImplemented(method) {
 
 function vtkProp(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkProp');
+  model.classHierarchy.add('vtkProp');
 
   publicAPI.getMTime = () => {
     let m1 = model.mtime;

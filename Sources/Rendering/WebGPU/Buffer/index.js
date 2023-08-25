@@ -31,7 +31,7 @@ function bufferSubData(device, destBuffer, destOffset, srcArrayBuffer) {
 
 function vtkWebGPUBuffer(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUBuffer');
+  model.classHierarchy.add('vtkWebGPUBuffer');
 
   publicAPI.create = (sizeInBytes, usage) => {
     model.handle = model.device.getHandle().createBuffer({

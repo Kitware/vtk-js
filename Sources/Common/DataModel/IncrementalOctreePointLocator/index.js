@@ -9,7 +9,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkIncrementalOctreePointLocator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkIncrementalOctreePointLocator');
+  model.classHierarchy.add('vtkIncrementalOctreePointLocator');
 
   function getLeafContainer(node, pnt) {
     return node.isLeaf()

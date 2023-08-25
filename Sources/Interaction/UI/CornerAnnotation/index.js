@@ -38,7 +38,7 @@ function applyTemplate(template, map, fallback) {
 
 function vtkCornerAnnotation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCornerAnnotation');
+  model.classHierarchy.add('vtkCornerAnnotation');
 
   // Create instance specific container
   if (!model.templates) {

@@ -17,7 +17,7 @@ export const STATIC = {};
 
 function vtkBox(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkBox');
+  model.classHierarchy.add('vtkBox');
 
   // TODO: replace with macro.setArray ?
   publicAPI.setBounds = (...bounds) => {

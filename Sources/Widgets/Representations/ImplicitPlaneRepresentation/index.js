@@ -95,7 +95,7 @@ const STYLE_DEFAULT = {
 
 function vtkImplicitPlaneRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImplicitPlaneRepresentation');
+  model.classHierarchy.add('vtkImplicitPlaneRepresentation');
 
   // --------------------------------------------------------------------------
   // Internal polydata dataset

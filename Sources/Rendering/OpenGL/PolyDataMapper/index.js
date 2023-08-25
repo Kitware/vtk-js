@@ -47,7 +47,7 @@ function getPickState(renderer) {
 
 function vtkOpenGLPolyDataMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLPolyDataMapper');
+  model.classHierarchy.add('vtkOpenGLPolyDataMapper');
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {

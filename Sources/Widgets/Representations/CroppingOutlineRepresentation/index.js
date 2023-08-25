@@ -33,7 +33,7 @@ const OUTLINE_ARRAY = [
 // algorithm may be implemented in the future.
 function vtkCroppingOutlineRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCroppingOutlineRepresentation');
+  model.classHierarchy.add('vtkCroppingOutlineRepresentation');
 
   // --------------------------------------------------------------------------
   // Internal polydata dataset

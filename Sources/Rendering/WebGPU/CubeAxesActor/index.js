@@ -9,7 +9,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactor
 // ----------------------------------------------------------------------------
 
 function vtkWebGPUCubeAxesActor(publicAPI, model) {
-  model.classHierarchy.push('vtkWebGPUCubeAxesActor');
+  model.classHierarchy.add('vtkWebGPUCubeAxesActor');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {

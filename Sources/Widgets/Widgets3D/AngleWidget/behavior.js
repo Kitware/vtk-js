@@ -4,7 +4,7 @@ import vtkPointPicker from 'vtk.js/Sources/Rendering/Core/PointPicker';
 const MAX_POINTS = 3;
 
 export default function widgetBehavior(publicAPI, model) {
-  model.classHierarchy.push('vtkAngleWidgetProp');
+  model.classHierarchy.add('vtkAngleWidgetProp');
   model._isDragging = false;
 
   const picker = vtkPointPicker.newInstance();

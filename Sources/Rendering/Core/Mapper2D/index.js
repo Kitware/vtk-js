@@ -12,7 +12,7 @@ const { ColorMode, ScalarMode, GetArray } = Constants;
 
 function vtkMapper2D(publicAPI, model) {
   // Set out className
-  model.classHierarchy.push('vtkMapper2D');
+  model.classHierarchy.add('vtkMapper2D');
 
   publicAPI.createDefaultLookupTable = () => {
     model.lookupTable = vtkLookupTable.newInstance();

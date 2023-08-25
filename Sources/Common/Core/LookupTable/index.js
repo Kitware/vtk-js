@@ -28,7 +28,7 @@ const NAN_COLOR_INDEX = 2;
 
 function vtkLookupTable(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkLookupTable');
+  model.classHierarchy.add('vtkLookupTable');
 
   //----------------------------------------------------------------------------
   // Description:

@@ -13,7 +13,7 @@ const { vtkWarningMacro } = macro;
 
 function vtkCalculator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCalculator');
+  model.classHierarchy.add('vtkCalculator');
 
   publicAPI.setFormula = (formula) => {
     if (formula === model.formula) {

@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkVariantArray(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkVariantArray');
+  model.classHierarchy.add('vtkVariantArray');
 
   // Description:
   // Return the data component at the location specified by tupleIdx and

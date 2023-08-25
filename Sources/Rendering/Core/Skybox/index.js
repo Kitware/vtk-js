@@ -7,7 +7,7 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 
 function vtkSkybox(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSkybox');
+  model.classHierarchy.add('vtkSkybox');
 
   publicAPI.getIsOpaque = () => true;
 

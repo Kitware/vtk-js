@@ -4,7 +4,7 @@ import vtkGlyphRepresentation from 'vtk.js/Sources/Widgets/Representations/Glyph
 import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
 
 function vtkSphereContextRepresentation(publicAPI, model) {
-  model.classHierarchy.push('vtkSphereContextRepresentation');
+  model.classHierarchy.add('vtkSphereContextRepresentation');
 
   publicAPI.setGlyphResolution = macro.chain(
     publicAPI.setGlyphResolution,

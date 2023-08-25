@@ -10,7 +10,7 @@ import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
 function vtkArrowSource(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkArrowSource');
+  model.classHierarchy.add('vtkArrowSource');
 
   function requestData(inData, outData) {
     if (model.deleted) {

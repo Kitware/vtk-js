@@ -48,7 +48,7 @@ function initPolyIterator(pd) {
 
 function vtkCutter(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCutter');
+  model.classHierarchy.add('vtkCutter');
 
   // Capture "parentClass" api for internal use
   const superClass = { ...publicAPI };

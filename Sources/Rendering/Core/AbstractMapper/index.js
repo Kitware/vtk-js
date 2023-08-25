@@ -5,7 +5,7 @@ import macro from 'vtk.js/Sources/macros';
 // ----------------------------------------------------------------------------
 
 function vtkAbstractMapper(publicAPI, model) {
-  model.classHierarchy.push('vtkAbstractMapper');
+  model.classHierarchy.add('vtkAbstractMapper');
   publicAPI.update = () => {
     publicAPI.getInputData();
   };

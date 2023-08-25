@@ -36,7 +36,7 @@ fn main(
 
 function vtkForwardPass(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkForwardPass');
+  model.classHierarchy.add('vtkForwardPass');
 
   // this pass implements a forward rendering pipeline
   // if both volumes and opaque geometry are present

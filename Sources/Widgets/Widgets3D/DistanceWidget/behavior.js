@@ -3,7 +3,7 @@ import macro from 'vtk.js/Sources/macros';
 const MAX_POINTS = 2;
 
 export default function widgetBehavior(publicAPI, model) {
-  model.classHierarchy.push('vtkDistanceWidgetProp');
+  model.classHierarchy.add('vtkDistanceWidgetProp');
   model._isDragging = false;
 
   // --------------------------------------------------------------------------

@@ -52,7 +52,7 @@ const newCustomMapper = macro.newInstance(
     macro.setGet(publicAPI, model, ['wonkyness']);
 
     // Set our className
-    model.classHierarchy.push('vtkCustomMapper');
+    model.classHierarchy.add('vtkCustomMapper');
   },
   'vtkCustomMapper'
 );
@@ -79,7 +79,7 @@ const newWebGPUCustomMapper = macro.newInstance(
     model.UBO.addEntry('Wonkyness', 'f32');
 
     // Set our className
-    model.classHierarchy.push('vtkWebGPUCustomMapper');
+    model.classHierarchy.add('vtkWebGPUCustomMapper');
 
     // override methods
     const superClass = { ...publicAPI };

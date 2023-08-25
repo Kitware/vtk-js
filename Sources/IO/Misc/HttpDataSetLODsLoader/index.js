@@ -17,7 +17,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkHttpDataSetLODsLoader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkHttpDataSetLODsLoader');
+  model.classHierarchy.add('vtkHttpDataSetLODsLoader');
 
   const internal = {
     downloadStack: [],

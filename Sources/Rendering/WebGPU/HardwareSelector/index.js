@@ -258,7 +258,7 @@ function generateSelectionWithData(buffdata, fx1, fy1, fx2, fy2) {
 
 function vtkWebGPUHardwareSelector(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUHardwareSelector');
+  model.classHierarchy.add('vtkWebGPUHardwareSelector');
 
   //----------------------------------------------------------------------------
   publicAPI.endSelection = () => {

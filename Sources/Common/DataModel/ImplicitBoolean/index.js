@@ -17,7 +17,7 @@ const { Operation } = Constants;
 
 function vtkImplicitBoolean(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImplicitBoolean');
+  model.classHierarchy.add('vtkImplicitBoolean');
 
   // Capture "parentClass" api for internal use
   const superClass = { ...publicAPI };

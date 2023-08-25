@@ -9,7 +9,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkImageDataOutlineFilter(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageDataOutlineFilter');
+  model.classHierarchy.add('vtkImageDataOutlineFilter');
 
   // Capture "parentClass" api for internal use
   const superClass = { ...publicAPI };

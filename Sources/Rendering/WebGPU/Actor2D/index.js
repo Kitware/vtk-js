@@ -14,7 +14,7 @@ const { CoordinateSystem } = vtkProp;
 
 function vtkWebGPUActor2D(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUActor2D');
+  model.classHierarchy.add('vtkWebGPUActor2D');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {

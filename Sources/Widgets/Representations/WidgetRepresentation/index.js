@@ -158,7 +158,7 @@ export function allocateArray(
 
 function vtkWidgetRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWidgetRepresentation');
+  model.classHierarchy.add('vtkWidgetRepresentation');
 
   // Internal cache
   const cache = { mtimes: {}, states: [] };

@@ -19,7 +19,7 @@ import {
 // algorithm may be implemented in the future.
 function vtkOutlineContextRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOutlineContextRepresentation');
+  model.classHierarchy.add('vtkOutlineContextRepresentation');
 
   // internal bounding box
   model.bbox = [...vtkBoundingBox.INIT_BOUNDS];

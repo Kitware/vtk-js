@@ -22,7 +22,7 @@ const PRESETS_OPTIONS = vtkColorMaps.rgbPresetNames.map(
 
 function vtkVolumeController(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkVolumeController');
+  model.classHierarchy.add('vtkVolumeController');
 
   model.el = document.createElement('div');
   model.el.setAttribute('class', style.container);

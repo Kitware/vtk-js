@@ -15,7 +15,7 @@ import { POLYDATA_FIELDS } from 'vtk.js/Sources/Common/DataModel/PolyData/Consta
 
 function vtkXMLPolyDataWriter(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkXMLPolyDataWriter');
+  model.classHierarchy.add('vtkXMLPolyDataWriter');
 
   // Capture "parentClass" api for internal use
   const superClass = { ...publicAPI };

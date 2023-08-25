@@ -13,7 +13,7 @@ export function registerOverride(className, fn) {
 
 function vtkWebGPUViewNodeFactory(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUViewNodeFactory');
+  model.classHierarchy.add('vtkWebGPUViewNodeFactory');
 }
 
 // ----------------------------------------------------------------------------

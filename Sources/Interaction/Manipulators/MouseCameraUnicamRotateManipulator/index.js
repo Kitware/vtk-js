@@ -19,7 +19,7 @@ const { States } = vtkInteractorStyleConstants;
 
 function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMouseCameraUnicamRotateManipulator');
+  model.classHierarchy.add('vtkMouseCameraUnicamRotateManipulator');
 
   // Setup Picker to pick points
   model.picker = vtkPointPicker.newInstance();

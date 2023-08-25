@@ -3,7 +3,7 @@ import vtkLocator from 'vtk.js/Sources/Common/DataModel/Locator';
 
 function vtkAbstractPointLocator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkAbstractPointLocator');
+  model.classHierarchy.add('vtkAbstractPointLocator');
 }
 
 // ----------------------------------------------------------------------------

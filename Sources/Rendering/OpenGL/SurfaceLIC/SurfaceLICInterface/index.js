@@ -71,7 +71,7 @@ function getQuadPoly(openGLRenderWindow) {
 }
 
 function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
-  model.classHierarchy.push('vtkOpenGLSurfaceLICInterface');
+  model.classHierarchy.add('vtkOpenGLSurfaceLICInterface');
 
   publicAPI.renderQuad = (bounds, program) => {
     const poly = model.licQuad;

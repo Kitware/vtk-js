@@ -13,7 +13,7 @@ const { vtkWarningMacro } = macro;
 
 function vtkPicker(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPicker');
+  model.classHierarchy.add('vtkPicker');
 
   const superClass = { ...publicAPI };
 

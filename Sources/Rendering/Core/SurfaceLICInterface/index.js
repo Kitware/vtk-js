@@ -7,7 +7,7 @@ import {
 } from 'vtk.js/Sources/Rendering/Core/SurfaceLICInterface/Constants';
 
 function vtkSurfaceLICInterface(publicAPI, model) {
-  model.classHierarchy.push('vtkSurfaceLICInterface');
+  model.classHierarchy.add('vtkSurfaceLICInterface');
 }
 
 const DEFAULT_VALUES = {

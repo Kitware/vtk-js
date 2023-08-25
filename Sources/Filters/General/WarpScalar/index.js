@@ -10,7 +10,7 @@ const { vtkDebugMacro, vtkErrorMacro } = macro;
 
 function vtkWarpScalar(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWarpScalar');
+  model.classHierarchy.add('vtkWarpScalar');
 
   publicAPI.requestData = (inData, outData) => {
     // implement requestData

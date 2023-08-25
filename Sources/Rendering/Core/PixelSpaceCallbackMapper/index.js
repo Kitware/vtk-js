@@ -8,7 +8,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 // ----------------------------------------------------------------------------
 
 function vtkPixelSpaceCallbackMapper(publicAPI, model) {
-  model.classHierarchy.push('vtkPixelSpaceCallbackMapper');
+  model.classHierarchy.add('vtkPixelSpaceCallbackMapper');
 
   if (!model.callback) {
     model.callback = () => {};

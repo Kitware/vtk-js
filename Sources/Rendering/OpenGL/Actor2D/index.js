@@ -9,7 +9,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 
 function vtkOpenGLActor2D(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLActor2D');
+  model.classHierarchy.add('vtkOpenGLActor2D');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {

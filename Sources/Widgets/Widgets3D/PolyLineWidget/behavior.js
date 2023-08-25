@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
 
 export default function widgetBehavior(publicAPI, model) {
-  model.classHierarchy.push('vtkPolyLineWidgetProp');
+  model.classHierarchy.add('vtkPolyLineWidgetProp');
   model._isDragging = false;
 
   // --------------------------------------------------------------------------

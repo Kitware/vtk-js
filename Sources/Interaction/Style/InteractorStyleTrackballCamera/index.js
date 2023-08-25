@@ -17,7 +17,7 @@ const { States } = vtkInteractorStyleConstants;
 
 function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkInteractorStyleTrackballCamera');
+  model.classHierarchy.add('vtkInteractorStyleTrackballCamera');
 
   // Public API methods
   publicAPI.handleMouseMove = (callData) => {

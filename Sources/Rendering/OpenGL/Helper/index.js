@@ -22,7 +22,7 @@ export const primTypes = {
 
 function vtkOpenGLHelper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLHelper');
+  model.classHierarchy.add('vtkOpenGLHelper');
 
   publicAPI.setOpenGLRenderWindow = (win) => {
     model.context = win.getContext();

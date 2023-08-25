@@ -10,7 +10,7 @@ import { strFromU8, unzipSync } from 'fflate';
 
 function vtkSkyboxReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSkyboxReader');
+  model.classHierarchy.add('vtkSkyboxReader');
 
   // Internal method to fetch Array
   function fetchData(url, option = {}) {

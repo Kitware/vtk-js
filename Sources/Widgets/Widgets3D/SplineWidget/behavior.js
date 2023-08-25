@@ -2,7 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 import { vec3 } from 'gl-matrix';
 
 export default function widgetBehavior(publicAPI, model) {
-  model.classHierarchy.push('vtkSplineWidgetProp');
+  model.classHierarchy.add('vtkSplineWidgetProp');
   model._isDragging = false;
 
   model.keysDown = {};

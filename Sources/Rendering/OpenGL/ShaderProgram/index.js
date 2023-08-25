@@ -31,7 +31,7 @@ export function substitute(source, search, replace, all) {
 
 function vtkShaderProgram(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkShaderProgram');
+  model.classHierarchy.add('vtkShaderProgram');
 
   publicAPI.compileShader = () => {
     if (!model.vertexShader.compile()) {

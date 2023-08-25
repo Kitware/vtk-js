@@ -11,7 +11,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkTextureMapToPlane(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkTextureMapToPlane');
+  model.classHierarchy.add('vtkTextureMapToPlane');
 
   function computeNormal(output) {
     const VTK_TOLERANCE = 0.001;

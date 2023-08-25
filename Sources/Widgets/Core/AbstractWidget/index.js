@@ -8,7 +8,7 @@ import { WIDGET_PRIORITY } from 'vtk.js/Sources/Widgets/Core/AbstractWidget/Cons
 // ----------------------------------------------------------------------------
 
 function vtkAbstractWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkAbstractWidget');
+  model.classHierarchy.add('vtkAbstractWidget');
   model.actorToRepresentationMap = new WeakMap();
 
   // --------------------------------------------------------------------------

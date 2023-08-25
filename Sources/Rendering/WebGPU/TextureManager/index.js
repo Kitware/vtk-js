@@ -14,7 +14,7 @@ const { VtkDataTypes } = vtkDataArray;
 
 function vtkWebGPUTextureManager(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUTextureManager');
+  model.classHierarchy.add('vtkWebGPUTextureManager');
 
   // fills in request values based on what is missing/provided
   function _fillRequest(req) {

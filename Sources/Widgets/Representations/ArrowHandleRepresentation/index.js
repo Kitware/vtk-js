@@ -24,7 +24,7 @@ const { ShapeType, Shapes2D, ShapesOrientable } = Constants;
 
 function vtkArrowHandleRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkArrowHandleRepresentation');
+  model.classHierarchy.add('vtkArrowHandleRepresentation');
 
   const superClass = { ...publicAPI };
   // --------------------------------------------------------------------------

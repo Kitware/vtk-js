@@ -10,7 +10,7 @@ import {
 
 function vtkCompositeVRManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCompositeVRManipulator');
+  model.classHierarchy.add('vtkCompositeVRManipulator');
 
   publicAPI.onButton3D = (
     interactor,

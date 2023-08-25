@@ -19,7 +19,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkWebGPUStorageBuffer(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUStorageBuffer');
+  model.classHierarchy.add('vtkWebGPUStorageBuffer');
 
   publicAPI.addEntry = (name, type) => {
     if (model._bufferEntryNames.has(name)) {

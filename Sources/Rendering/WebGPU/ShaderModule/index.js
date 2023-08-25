@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkWebGPUShaderModule(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUShaderModule');
+  model.classHierarchy.add('vtkWebGPUShaderModule');
 
   publicAPI.initialize = (device, shaderDesc) => {
     model.device = device;

@@ -10,7 +10,7 @@ const { vtkWarningMacro } = macro;
 
 function vtkTriangleFilter(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkTriangleFilter');
+  model.classHierarchy.add('vtkTriangleFilter');
 
   // requestData only supports polys for now.
   publicAPI.requestData = (inData, outData) => {

@@ -18,7 +18,7 @@ function sqr(x) {
 
 function vtkMouseCameraTrackballMultiRotateManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMouseCameraTrackballMultiRotateManipulator');
+  model.classHierarchy.add('vtkMouseCameraTrackballMultiRotateManipulator');
 
   const rotateManipulator =
     vtkMouseCameraTrackballRotateManipulator.newInstance();

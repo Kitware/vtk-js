@@ -11,7 +11,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactor
 
 function vtkWebGPUImageSlice(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUImageSlice');
+  model.classHierarchy.add('vtkWebGPUImageSlice');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {

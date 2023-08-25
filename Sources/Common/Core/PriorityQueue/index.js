@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkPriorityQueue(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkPriorityQueue');
+  model.classHierarchy.add('vtkPriorityQueue');
 
   publicAPI.push = (priority, element) => {
     // naive algo

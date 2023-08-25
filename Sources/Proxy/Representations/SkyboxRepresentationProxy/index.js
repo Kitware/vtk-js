@@ -9,7 +9,7 @@ import vtkAbstractRepresentationProxy from 'vtk.js/Sources/Proxy/Core/AbstractRe
 
 function vtkSkyboxRepresentationProxy(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSkyboxRepresentationProxy');
+  model.classHierarchy.add('vtkSkyboxRepresentationProxy');
   model.actor = vtkSkybox.newInstance();
   model.actors.push(model.actor);
 

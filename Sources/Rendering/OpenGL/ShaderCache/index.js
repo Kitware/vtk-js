@@ -13,7 +13,7 @@ const SET_GET_FIELDS = ['lastShaderBound', 'context', '_openGLRenderWindow'];
 
 function vtkShaderCache(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkShaderCache');
+  model.classHierarchy.add('vtkShaderCache');
 
   publicAPI.replaceShaderValues = (VSSource, FSSource, GSSource) => {
     // first handle renaming any Fragment shader inputs

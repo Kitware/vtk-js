@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkCompositeGestureManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCompositeGestureManipulator');
+  model.classHierarchy.add('vtkCompositeGestureManipulator');
 
   publicAPI.startInteraction = () => {};
   publicAPI.endInteraction = () => {};

@@ -8,7 +8,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkCanvasView(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCanvasView');
+  model.classHierarchy.add('vtkCanvasView');
 
   // Auto update style
   function updateWindow() {

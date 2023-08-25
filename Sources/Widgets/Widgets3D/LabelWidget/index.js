@@ -13,7 +13,7 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // ----------------------------------------------------------------------------
 
 function vtkLabelWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkLabelWidget');
+  model.classHierarchy.add('vtkLabelWidget');
 
   const superClass = { ...publicAPI };
 

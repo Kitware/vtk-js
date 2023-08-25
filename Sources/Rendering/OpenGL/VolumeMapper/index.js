@@ -47,7 +47,7 @@ function arrayEquals(a, b) {
 
 function vtkOpenGLVolumeMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLVolumeMapper');
+  model.classHierarchy.add('vtkOpenGLVolumeMapper');
 
   publicAPI.buildPass = () => {
     model.zBufferTexture = null;

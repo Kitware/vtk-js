@@ -14,7 +14,7 @@ const { staticOffsetAPI, otherStaticMethods } = CoincidentTopologyHelper;
 
 function vtkImageResliceMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageResliceMapper');
+  model.classHierarchy.add('vtkImageResliceMapper');
 
   publicAPI.getBounds = () => {
     let bds = [...vtkBoundingBox.INIT_BOUNDS];

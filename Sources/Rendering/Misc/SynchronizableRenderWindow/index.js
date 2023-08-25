@@ -301,7 +301,7 @@ function createSyncFunction(renderWindow, synchronizerContext) {
 
 function vtkSynchronizableRenderWindow(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSynchronizableRenderWindow');
+  model.classHierarchy.add('vtkSynchronizableRenderWindow');
 
   if (!model.synchronizerContext) {
     model.synchronizerContext = getSynchronizerContext(

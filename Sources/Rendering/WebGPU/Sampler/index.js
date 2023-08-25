@@ -8,7 +8,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkWebGPUSampler(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUSampler');
+  model.classHierarchy.add('vtkWebGPUSampler');
 
   publicAPI.create = (device, options = {}) => {
     model.device = device;

@@ -94,7 +94,7 @@ function readTriangle(lines, offset, points, cellArray, cellNormals) {
 
 function vtkSTLReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSTLReader');
+  model.classHierarchy.add('vtkSTLReader');
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {

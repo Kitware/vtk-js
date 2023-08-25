@@ -16,7 +16,7 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper'; // Ju
 
 function vtkPDBReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPDBReader');
+  model.classHierarchy.add('vtkPDBReader');
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {

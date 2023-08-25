@@ -7,7 +7,7 @@ function NoOp() {}
 // ----------------------------------------------------------------------------
 
 function vtkAbstractWidgetFactory(publicAPI, model) {
-  model.classHierarchy.push('vtkAbstractWidgetFactory');
+  model.classHierarchy.add('vtkAbstractWidgetFactory');
 
   // DO NOT share on the model ------------------------------------------------
   const viewToWidget = {};

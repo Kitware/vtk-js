@@ -329,7 +329,7 @@ function generateSelectionWithData(buffdata, fx1, fy1, fx2, fy2) {
 
 function vtkOpenGLHardwareSelector(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLHardwareSelector');
+  model.classHierarchy.add('vtkOpenGLHardwareSelector');
 
   //----------------------------------------------------------------------------
   publicAPI.releasePixBuffers = () => {

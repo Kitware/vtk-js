@@ -9,7 +9,7 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math/';
 
 function vtkCircleSource(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkCircleSource');
+  model.classHierarchy.add('vtkCircleSource');
 
   function requestData(inData, outData) {
     if (model.deleted) {

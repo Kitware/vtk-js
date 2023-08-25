@@ -13,7 +13,7 @@ export function registerOverride(className, fn) {
 
 function vtkOpenGLViewNodeFactory(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLViewNodeFactory');
+  model.classHierarchy.add('vtkOpenGLViewNodeFactory');
 }
 
 // ----------------------------------------------------------------------------

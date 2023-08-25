@@ -7,7 +7,7 @@ import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 
 function vtkWebGPUOpaquePass(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUOpaquePass');
+  model.classHierarchy.add('vtkWebGPUOpaquePass');
 
   // this pass implements a forward rendering pipeline
   // if both volumes and opaque geometry are present

@@ -6,7 +6,7 @@ import {
 } from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
 
 function vtkShapeWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkShapeWidget');
+  model.classHierarchy.add('vtkShapeWidget');
 
   const superClass = { ...publicAPI };
 

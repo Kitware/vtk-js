@@ -7,7 +7,7 @@ import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresent
 
 function vtkHandleRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkHandleRepresentation');
+  model.classHierarchy.add('vtkHandleRepresentation');
 }
 
 // ----------------------------------------------------------------------------

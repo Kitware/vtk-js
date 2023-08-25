@@ -15,7 +15,7 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // ----------------------------------------------------------------------------
 
 function vtkDistanceWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkDistanceWidget');
+  model.classHierarchy.add('vtkDistanceWidget');
 
   const superClass = { ...publicAPI };
 

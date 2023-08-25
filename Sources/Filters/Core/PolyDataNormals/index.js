@@ -11,7 +11,7 @@ import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 
 function vtkPolyDataNormals(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPolyDataNormals');
+  model.classHierarchy.add('vtkPolyDataNormals');
 
   publicAPI.vtkPolyDataNormalsExecute = (pointsData, polysData) => {
     if (!pointsData) {

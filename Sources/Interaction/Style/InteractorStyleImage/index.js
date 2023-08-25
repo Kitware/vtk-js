@@ -9,7 +9,7 @@ import { States } from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants'
 
 function vtkInteractorStyleImage(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkInteractorStyleImage');
+  model.classHierarchy.add('vtkInteractorStyleImage');
 
   // Public API methods
   publicAPI.superHandleMouseMove = publicAPI.handleMouseMove;

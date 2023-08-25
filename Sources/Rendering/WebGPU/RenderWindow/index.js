@@ -25,7 +25,7 @@ const SCREENSHOT_PLACEHOLDER = {
 
 function vtkWebGPURenderWindow(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPURenderWindow');
+  model.classHierarchy.add('vtkWebGPURenderWindow');
 
   publicAPI.getViewNodeFactory = () => model.myFactory;
 

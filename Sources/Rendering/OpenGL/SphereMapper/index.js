@@ -22,7 +22,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkOpenGLSphereMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLSphereMapper');
+  model.classHierarchy.add('vtkOpenGLSphereMapper');
 
   // Capture 'parentClass' api for internal use
   const superClass = { ...publicAPI };

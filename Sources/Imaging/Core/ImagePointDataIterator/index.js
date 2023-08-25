@@ -10,7 +10,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkImagePointDataIterator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImagePointDataIterator');
+  model.classHierarchy.add('vtkImagePointDataIterator');
 
   publicAPI.initialize = (image, inExtent, stencil, algorithm) => {
     const dataExtent = image.getExtent();

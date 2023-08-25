@@ -11,7 +11,7 @@ export default function widgetBehavior(publicAPI, model) {
   shapeBehavior(publicAPI, model);
   const superClass = { ...publicAPI };
 
-  model.classHierarchy.push('vtkRectangleWidgetProp');
+  model.classHierarchy.add('vtkRectangleWidgetProp');
 
   publicAPI.setCorners = (point1, point2) => {
     if (superClass.setCorners) {

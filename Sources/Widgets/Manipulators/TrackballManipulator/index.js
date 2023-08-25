@@ -53,7 +53,7 @@ export function trackballRotate(
 
 function vtkTrackballManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkTrackballManipulator');
+  model.classHierarchy.add('vtkTrackballManipulator');
 
   let prevX = 0;
   let prevY = 0;

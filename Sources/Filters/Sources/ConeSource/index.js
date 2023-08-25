@@ -8,7 +8,7 @@ import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
 function vtkConeSource(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkConeSource');
+  model.classHierarchy.add('vtkConeSource');
 
   function requestData(inData, outData) {
     if (model.deleted) {

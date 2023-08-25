@@ -16,7 +16,7 @@ import vtkWidgetRepresentation, {
 
 function vtkSplineContextRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSplineContextRepresentation');
+  model.classHierarchy.add('vtkSplineContextRepresentation');
 
   // --------------------------------------------------------------------------
   // Generic rendering pipeline

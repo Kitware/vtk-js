@@ -7,7 +7,7 @@ import { createUninitializedBounds } from 'vtk.js/Sources/Common/Core/Math';
 // ----------------------------------------------------------------------------
 
 function vtkAbstractImageMapper(publicAPI, model) {
-  model.classHierarchy.push('vtkAbstractImageMapper');
+  model.classHierarchy.add('vtkAbstractImageMapper');
 
   publicAPI.getIsOpaque = () => true;
 

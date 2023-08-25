@@ -8,7 +8,7 @@ import { Filter } from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 // ----------------------------------------------------------------------------
 function vtkFramebuffer(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkFramebuffer');
+  model.classHierarchy.add('vtkFramebuffer');
 
   publicAPI.getBothMode = () => model.context.FRAMEBUFFER;
   // publicAPI.getDrawMode = () => model.context.DRAW_FRAMEBUFFER;

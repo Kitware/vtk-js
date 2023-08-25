@@ -73,7 +73,7 @@ const ptsArray2 = new Float64Array(4);
 
 function vtkWebGPUImageMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUImageMapper');
+  model.classHierarchy.add('vtkWebGPUImageMapper');
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {

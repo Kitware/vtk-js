@@ -14,7 +14,7 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper'; // Ju
 
 function vtkMTLReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMTLReader');
+  model.classHierarchy.add('vtkMTLReader');
 
   function imageReady() {
     model.requestCount--;

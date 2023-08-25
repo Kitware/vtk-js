@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkJSONReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkJSONReader');
+  model.classHierarchy.add('vtkJSONReader');
 
   // Internal method to fetch Array
   function fetchData(url, option = {}) {

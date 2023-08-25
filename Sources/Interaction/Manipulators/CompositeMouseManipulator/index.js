@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkCompositeMouseManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCompositeMouseManipulator');
+  model.classHierarchy.add('vtkCompositeMouseManipulator');
 
   publicAPI.startInteraction = () => {};
   publicAPI.endInteraction = () => {};

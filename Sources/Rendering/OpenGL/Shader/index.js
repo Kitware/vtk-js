@@ -10,7 +10,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkShader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkShader');
+  model.classHierarchy.add('vtkShader');
 
   publicAPI.compile = () => {
     let stype = model.context.VERTEX_SHADER;

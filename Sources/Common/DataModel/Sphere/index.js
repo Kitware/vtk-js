@@ -47,7 +47,7 @@ export const STATIC = {
 
 function vtkSphere(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSphere');
+  model.classHierarchy.add('vtkSphere');
 
   publicAPI.evaluateFunction = (xyz) => {
     const retVal =

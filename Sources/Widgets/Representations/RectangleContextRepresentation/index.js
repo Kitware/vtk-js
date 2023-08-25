@@ -13,7 +13,7 @@ import { vec3 } from 'gl-matrix';
 
 function vtkRectangleContextRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkRectangleContextRepresentation');
+  model.classHierarchy.add('vtkRectangleContextRepresentation');
 
   // --------------------------------------------------------------------------
   // Generic rendering pipeline

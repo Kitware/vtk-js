@@ -37,7 +37,7 @@ export const STATIC = {
 
 function vtkInteractorObserver(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkInteractorObserver');
+  model.classHierarchy.add('vtkInteractorObserver');
 
   const superClass = { ...publicAPI };
 

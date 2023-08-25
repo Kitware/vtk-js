@@ -64,7 +64,7 @@ fn main(
 
 function vtkWebGPUSphereMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUSphereMapper');
+  model.classHierarchy.add('vtkWebGPUSphereMapper');
 
   const cellMapperBuildPass = publicAPI.buildPass;
   publicAPI.buildPass = (prepass) => {

@@ -11,7 +11,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 
 function vtkOpenGLImageSlice(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLImageSlice');
+  model.classHierarchy.add('vtkOpenGLImageSlice');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {

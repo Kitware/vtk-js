@@ -11,7 +11,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 
 function vtkOpenGLCamera(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLCamera');
+  model.classHierarchy.add('vtkOpenGLCamera');
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {

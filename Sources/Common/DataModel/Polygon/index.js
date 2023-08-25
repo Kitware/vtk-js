@@ -232,7 +232,7 @@ const STATIC = {
 
 function vtkPolygon(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkPolygon');
+  model.classHierarchy.add('vtkPolygon');
 
   function computeNormal() {
     const v1 = [0, 0, 0];

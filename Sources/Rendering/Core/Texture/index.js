@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkTexture(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkTexture');
+  model.classHierarchy.add('vtkTexture');
 
   publicAPI.imageLoaded = () => {
     model.image.removeEventListener('load', publicAPI.imageLoaded);

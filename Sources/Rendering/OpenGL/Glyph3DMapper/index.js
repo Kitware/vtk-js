@@ -24,7 +24,7 @@ const EndEvent = { type: 'EndEvent' };
 
 function vtkOpenGLGlyph3DMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLGlyph3DMapper');
+  model.classHierarchy.add('vtkOpenGLGlyph3DMapper');
 
   // Capture 'parentClass' api for internal use
   const superClass = { ...publicAPI };

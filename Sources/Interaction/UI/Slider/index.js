@@ -26,7 +26,7 @@ function findClosestValue(value, values) {
 
 function vtkSlider(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSlider');
+  model.classHierarchy.add('vtkSlider');
 
   model.el = document.createElement('div');
   model.el.setAttribute('class', style.cursor);

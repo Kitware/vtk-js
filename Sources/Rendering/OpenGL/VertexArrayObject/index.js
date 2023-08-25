@@ -7,7 +7,7 @@ import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constan
 
 function vtkOpenGLVertexArrayObject(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLVertexArrayObject');
+  model.classHierarchy.add('vtkOpenGLVertexArrayObject');
 
   // Public API methods
   publicAPI.exposedMethod = () => {

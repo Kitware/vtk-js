@@ -11,7 +11,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkCoordinate(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCoordinate');
+  model.classHierarchy.add('vtkCoordinate');
 
   publicAPI.setValue = (...args) => {
     if (model.deleted) {

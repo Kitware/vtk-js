@@ -17,7 +17,7 @@ function arraysEqual(a, b) {
 // ----------------------------------------------------------------------------
 function vtkWebGPUVertexInput(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUVertexInput');
+  model.classHierarchy.add('vtkWebGPUVertexInput');
 
   publicAPI.addBuffer = (buffer, inames, stepMode = 'vertex') => {
     let names = inames;

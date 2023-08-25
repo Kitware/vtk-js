@@ -47,7 +47,7 @@ export const STATIC = {
 
 function vtkVolumeMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkVolumeMapper');
+  model.classHierarchy.add('vtkVolumeMapper');
 
   const superClass = { ...publicAPI };
 

@@ -122,7 +122,7 @@ fn main(
 
 function vtkWebGPUStickMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUStickMapper');
+  model.classHierarchy.add('vtkWebGPUStickMapper');
 
   const cellMapperBuildPass = publicAPI.buildPass;
   publicAPI.buildPass = (prepass) => {

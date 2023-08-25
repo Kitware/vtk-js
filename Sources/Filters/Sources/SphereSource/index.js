@@ -8,7 +8,7 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 function vtkSphereSource(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSphereSource');
+  model.classHierarchy.add('vtkSphereSource');
 
   publicAPI.requestData = (inData, outData) => {
     if (model.deleted) {

@@ -13,7 +13,7 @@ const INFINITE_RATIO = 100000;
 
 function vtkLineHandleRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkLineHandleRepresentation');
+  model.classHierarchy.add('vtkLineHandleRepresentation');
 
   // --------------------------------------------------------------------------
   // Generic rendering pipeline

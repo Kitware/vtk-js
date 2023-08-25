@@ -4,7 +4,7 @@ import ViewStream from 'vtk.js/Sources/IO/Core/ImageStream/ViewStream';
 
 function vtkImageStream(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageStream');
+  model.classHierarchy.add('vtkImageStream');
 
   // --------------------------------------------------------------------------
   // Internal private method

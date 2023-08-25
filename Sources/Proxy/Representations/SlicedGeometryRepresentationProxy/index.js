@@ -13,7 +13,7 @@ import vtkAbstractRepresentationProxy from 'vtk.js/Sources/Proxy/Core/AbstractRe
 
 function vtkSlicedGeometryRepresentationProxy(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSlicedGeometryRepresentationProxy');
+  model.classHierarchy.add('vtkSlicedGeometryRepresentationProxy');
 
   // Internals
   model.plane = vtkPlane.newInstance();

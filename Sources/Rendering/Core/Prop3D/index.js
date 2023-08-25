@@ -11,7 +11,7 @@ import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 
 function vtkProp3D(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkProp3D');
+  model.classHierarchy.add('vtkProp3D');
 
   publicAPI.addPosition = (deltaXYZ) => {
     model.position = model.position.map(

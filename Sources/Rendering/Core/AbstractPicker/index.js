@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkAbstractPicker(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkAbstractPicker');
+  model.classHierarchy.add('vtkAbstractPicker');
 
   publicAPI.initialize = () => {
     model.renderer = null;

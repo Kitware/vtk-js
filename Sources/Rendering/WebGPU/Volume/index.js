@@ -11,7 +11,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactor
 
 function vtkWebGPUVolume(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUVolume');
+  model.classHierarchy.add('vtkWebGPUVolume');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {

@@ -7,7 +7,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 function vtkSphereMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSphereMapper');
+  model.classHierarchy.add('vtkSphereMapper');
 }
 
 // ----------------------------------------------------------------------------

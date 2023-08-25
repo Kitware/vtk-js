@@ -24,7 +24,7 @@ export const CELL_FACTORY = {
 
 function vtkPolyData(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPolyData');
+  model.classHierarchy.add('vtkPolyData');
 
   function camelize(str) {
     return str

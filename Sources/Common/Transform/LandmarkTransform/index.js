@@ -11,7 +11,7 @@ const { Mode } = Constants;
 
 function vtkLandmarkTransform(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkLandmarkTransform');
+  model.classHierarchy.add('vtkLandmarkTransform');
 
   function update() {
     mat4.identity(model.matrix);

@@ -19,7 +19,7 @@ export const STATIC = {};
 
 function vtkOpenGLBufferObject(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLBufferObject');
+  model.classHierarchy.add('vtkOpenGLBufferObject');
 
   // Class-specific private functions
   function convertType(type) {

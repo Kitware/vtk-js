@@ -22,7 +22,7 @@ const EPSILON = 0.000001;
 
 function vtkViewProxy(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkViewProxy');
+  model.classHierarchy.add('vtkViewProxy');
 
   // Private --------------------------------------------------------------------
 

@@ -8,7 +8,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkOpenGLTextureUnitManager(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLTextureUnitManager');
+  model.classHierarchy.add('vtkOpenGLTextureUnitManager');
 
   // ----------------------------------------------------------------------------
   // Description:

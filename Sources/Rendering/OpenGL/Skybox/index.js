@@ -18,7 +18,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkOpenGLSkybox(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLSkybox');
+  model.classHierarchy.add('vtkOpenGLSkybox');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {

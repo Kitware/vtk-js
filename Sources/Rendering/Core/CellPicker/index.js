@@ -85,7 +85,7 @@ export const STATIC = {
 
 function vtkCellPicker(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCellPicker');
+  model.classHierarchy.add('vtkCellPicker');
 
   const superClass = { ...publicAPI };
 

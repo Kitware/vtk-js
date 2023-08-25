@@ -12,7 +12,7 @@ function notImplemented(method) {
 
 function vtkViewport(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkViewport');
+  model.classHierarchy.add('vtkViewport');
 
   // Public API methods
   publicAPI.getViewProps = () => model.props;

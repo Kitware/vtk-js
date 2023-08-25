@@ -4,7 +4,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkRenderPass(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkRenderPass');
+  model.classHierarchy.add('vtkRenderPass');
 
   publicAPI.getOperation = () => model.currentOperation;
 

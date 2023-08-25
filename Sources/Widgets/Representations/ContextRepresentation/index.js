@@ -6,7 +6,7 @@ import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresent
 // ----------------------------------------------------------------------------
 
 function vtkContextRepresentation(publicAPI, model) {
-  model.classHierarchy.push('vtkContextRepresentation');
+  model.classHierarchy.add('vtkContextRepresentation');
 }
 
 // ----------------------------------------------------------------------------

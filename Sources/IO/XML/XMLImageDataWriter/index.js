@@ -11,7 +11,7 @@ import vtkXMLWriter from 'vtk.js/Sources/IO/XML/XMLWriter';
 
 function vtkXMLImageDataWriter(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkXMLImageDataWriter');
+  model.classHierarchy.add('vtkXMLImageDataWriter');
 
   // Capture "parentClass" api for internal use
   const superClass = { ...publicAPI };

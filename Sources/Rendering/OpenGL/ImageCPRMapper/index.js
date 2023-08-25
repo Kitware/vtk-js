@@ -37,7 +37,7 @@ function computeFnToString(property, fn, numberOfComponents) {
 
 function vtkOpenGLImageCPRMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLImageCPRMapper');
+  model.classHierarchy.add('vtkOpenGLImageCPRMapper');
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {

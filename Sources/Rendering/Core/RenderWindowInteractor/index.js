@@ -86,7 +86,7 @@ function pointerCacheToPositions(cache) {
 
 function vtkRenderWindowInteractor(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkRenderWindowInteractor');
+  model.classHierarchy.add('vtkRenderWindowInteractor');
 
   // Initialize list of requesters
   const animationRequesters = new Set();

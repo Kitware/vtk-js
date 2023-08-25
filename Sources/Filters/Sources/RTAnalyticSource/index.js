@@ -6,7 +6,7 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 function vtkRTAnalyticSource(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkRTAnalyticSource');
+  model.classHierarchy.add('vtkRTAnalyticSource');
 
   publicAPI.requestData = (inData, outData) => {
     if (model.deleted) {

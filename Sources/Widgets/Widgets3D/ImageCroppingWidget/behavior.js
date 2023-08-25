@@ -138,5 +138,5 @@ export default function widgetBehavior(publicAPI, model) {
 
   model._camera = model._renderer.getActiveCamera();
 
-  model.classHierarchy.push('vtkImageCroppingWidgetProp');
+  model.classHierarchy.add('vtkImageCroppingWidgetProp');
 }

@@ -14,7 +14,7 @@ import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Consta
 
 function vtkConvexFaceContextRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkConvexFaceContextRepresentation');
+  model.classHierarchy.add('vtkConvexFaceContextRepresentation');
 
   // --------------------------------------------------------------------------
   // Internal polydata dataset

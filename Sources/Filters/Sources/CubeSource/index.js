@@ -36,7 +36,7 @@ const POLY_ARRAY = [
 
 function vtkCubeSource(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCubeSource');
+  model.classHierarchy.add('vtkCubeSource');
 
   function requestData(inData, outData) {
     if (model.deleted) {

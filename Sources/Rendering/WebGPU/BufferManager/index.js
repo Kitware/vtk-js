@@ -200,7 +200,7 @@ function generateNormals(cellArray, pointArray) {
 // ----------------------------------------------------------------------------
 function vtkWebGPUBufferManager(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUBufferManager');
+  model.classHierarchy.add('vtkWebGPUBufferManager');
 
   function _createBuffer(req) {
     // if a dataArray is provided set the nativeArray

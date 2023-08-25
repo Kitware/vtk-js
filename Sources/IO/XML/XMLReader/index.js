@@ -521,7 +521,7 @@ function handleFieldDataArrays(
 
 function vtkXMLReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkXMLReader');
+  model.classHierarchy.add('vtkXMLReader');
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {

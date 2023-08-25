@@ -276,7 +276,7 @@ export const STATIC = {
 
 function vtkOBJReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOBJReader');
+  model.classHierarchy.add('vtkOBJReader');
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {

@@ -18,7 +18,7 @@ const { toHalf } = HalfFloat;
 
 function vtkOpenGLTexture(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLTexture');
+  model.classHierarchy.add('vtkOpenGLTexture');
   // Renders myself
   publicAPI.render = (renWin = null) => {
     if (renWin) {

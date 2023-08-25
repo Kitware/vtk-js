@@ -2,7 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkLocator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkLocator');
+  model.classHierarchy.add('vtkLocator');
 }
 
 // ----------------------------------------------------------------------------

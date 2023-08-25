@@ -32,7 +32,7 @@ function generateCoordinates(origin, dimensions, spacing) {
 
 function vtkSLICSource(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSLICSource');
+  model.classHierarchy.add('vtkSLICSource');
 
   publicAPI.addCluster = (
     centerX,

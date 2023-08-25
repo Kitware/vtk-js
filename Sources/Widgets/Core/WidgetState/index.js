@@ -12,7 +12,7 @@ function removeObjectInArray(array, obj) {
 // ----------------------------------------------------------------------------
 
 function vtkWidgetState(publicAPI, model) {
-  model.classHierarchy.push('vtkWidgetState');
+  model.classHierarchy.add('vtkWidgetState');
   const subscriptions = [];
   model.labels = {};
   model.nestedStates = [];

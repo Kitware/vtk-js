@@ -15,7 +15,7 @@ const { SlicingMode } = vtkImageMapper;
 
 function vtkImageArrayMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageArrayMapper');
+  model.classHierarchy.add('vtkImageArrayMapper');
 
   //------------------
   // Private functions

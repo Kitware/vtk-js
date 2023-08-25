@@ -12,7 +12,7 @@ const VTK_MAX_VRCOMP = 4;
 
 function vtkImageProperty(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageProperty');
+  model.classHierarchy.add('vtkImageProperty');
 
   publicAPI.getMTime = () => {
     let mTime = model.mtime;

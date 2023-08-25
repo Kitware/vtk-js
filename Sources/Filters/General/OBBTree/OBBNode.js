@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkOBBNode(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkOBBNode');
+  model.classHierarchy.add('vtkOBBNode');
 
   /**
    * Copy a vtkOBBNode into an other one

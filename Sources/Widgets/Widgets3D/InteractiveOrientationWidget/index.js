@@ -16,7 +16,7 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // ----------------------------------------------------------------------------
 
 function vtkInteractiveOrientationWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkInteractiveOrientationWidget');
+  model.classHierarchy.add('vtkInteractiveOrientationWidget');
 
   // --- Widget Requirement ---------------------------------------------------
 

@@ -49,7 +49,7 @@ export class WeakRefMap extends Map {
 // ----------------------------------------------------------------------------
 function vtkWebGPUDevice(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUDevice');
+  model.classHierarchy.add('vtkWebGPUDevice');
   publicAPI.initialize = (handle) => {
     model.handle = handle;
   };

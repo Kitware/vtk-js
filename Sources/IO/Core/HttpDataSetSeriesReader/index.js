@@ -57,7 +57,7 @@ function processDataSet(publicAPI, model, dataset, resolve, reject, loadData) {
 
 function vtkHttpDataSetSeriesReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkHttpDataSetSeriesReader');
+  model.classHierarchy.add('vtkHttpDataSetSeriesReader');
 
   // Empty output by default
   model.output[0] = vtk({ vtkClass: 'vtkPolyData' });

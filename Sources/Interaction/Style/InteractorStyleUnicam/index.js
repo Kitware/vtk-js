@@ -7,7 +7,7 @@ import vtkMouseCameraUnicamManipulator from 'vtk.js/Sources/Interaction/Manipula
 // ----------------------------------------------------------------------------
 
 function vtkInteractorStyleUnicam(publicAPI, model) {
-  model.classHierarchy.push('vtkInteractorStyleUnicam');
+  model.classHierarchy.add('vtkInteractorStyleUnicam');
 
   model.unicamManipulator = vtkMouseCameraUnicamManipulator.newInstance({
     button: 1,

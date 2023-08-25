@@ -39,7 +39,7 @@ export function projectDisplayToLine(
 
 function vtkLineManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkLineManipulator');
+  model.classHierarchy.add('vtkLineManipulator');
 
   publicAPI.handleEvent = (callData, glRenderWindow) => ({
     worldCoords: projectDisplayToLine(

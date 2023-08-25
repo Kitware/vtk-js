@@ -46,7 +46,7 @@ const DATASET_FIELDS = ['pointData', 'cellData', 'fieldData'];
 
 function vtkDataSet(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkDataSet');
+  model.classHierarchy.add('vtkDataSet');
 
   // Add dataset attributes
   DATASET_FIELDS.forEach((fieldName) => {

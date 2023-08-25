@@ -14,7 +14,7 @@ const { States } = vtkInteractorStyleConstants;
 
 function vtkMouseCameraUnicamManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMouseCameraUnicamManipulator');
+  model.classHierarchy.add('vtkMouseCameraUnicamManipulator');
 
   model.state = States.IS_NONE;
 

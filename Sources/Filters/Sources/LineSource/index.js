@@ -10,7 +10,7 @@ const { vtkWarningMacro } = macro;
 
 function vtkLineSource(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkLineSource');
+  model.classHierarchy.add('vtkLineSource');
 
   publicAPI.requestData = (inData, outData) => {
     if (model.deleted) {

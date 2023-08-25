@@ -39,7 +39,7 @@ function copyGaussians(gaussians) {
 
 function vtkPiecewiseFunctionProxy(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPiecewiseFunctionProxy');
+  model.classHierarchy.add('vtkPiecewiseFunctionProxy');
 
   model.piecewiseFunction =
     model.piecewiseFunction || vtkPiecewiseFunction.newInstance();

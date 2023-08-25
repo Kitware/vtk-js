@@ -11,7 +11,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 
 function vtkOpenGLActor(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLActor');
+  model.classHierarchy.add('vtkOpenGLActor');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {

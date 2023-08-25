@@ -17,7 +17,7 @@ import {
 // ----------------------------------------------------------------------------
 
 function vtkLineWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkLineWidget');
+  model.classHierarchy.add('vtkLineWidget');
 
   const superClass = { ...publicAPI };
 

@@ -16,7 +16,7 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper'; // Ju
 
 function vtkElevationReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkElevationReader');
+  model.classHierarchy.add('vtkElevationReader');
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {

@@ -18,7 +18,7 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // ----------------------------------------------------------------------------
 
 function vtkEllipseWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkEllipseWidget');
+  model.classHierarchy.add('vtkEllipseWidget');
 
   // --- Widget Requirement ---------------------------------------------------
 

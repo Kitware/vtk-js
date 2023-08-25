@@ -19,7 +19,7 @@ import {
 
 function vtkImageInterpolator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageInterpolator');
+  model.classHierarchy.add('vtkImageInterpolator');
 
   publicAPI.computeSupportSize = (matrix) => {
     let s = 1;

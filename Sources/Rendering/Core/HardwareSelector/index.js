@@ -8,7 +8,7 @@ const { FieldAssociations } = vtkDataSet;
 // ----------------------------------------------------------------------------
 
 function vtkHardwareSelector(publicAPI, model) {
-  model.classHierarchy.push('vtkHardwareSelector');
+  model.classHierarchy.add('vtkHardwareSelector');
 
   // get the source data that is used for generating a selection. This
   // must be called at least once before calling generateSelection. In

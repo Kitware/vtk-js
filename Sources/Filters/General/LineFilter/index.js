@@ -7,7 +7,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 function vtkLineFilter(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkLineFilter');
+  model.classHierarchy.add('vtkLineFilter');
 
   publicAPI.requestData = (inData, outData) => {
     const dataset = vtkPolyData.newInstance();

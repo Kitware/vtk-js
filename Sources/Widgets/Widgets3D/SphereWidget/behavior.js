@@ -13,7 +13,7 @@ export default function widgetBehavior(publicAPI, model) {
   // The last world coordinate of the mouse cursor during dragging.
   model.previousPosition = null;
 
-  model.classHierarchy.push('vtkSphereWidgetProp');
+  model.classHierarchy.add('vtkSphereWidgetProp');
 
   moveHandle.setVisible(true);
   centerHandle.setVisible(false);

@@ -127,7 +127,7 @@ export const STATIC = {
 
 function vtkLine(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkLine');
+  model.classHierarchy.add('vtkLine');
 
   function isBetweenPoints(t) {
     return t >= 0.0 && t <= 1.0;

@@ -14,7 +14,7 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // ----------------------------------------------------------------------------
 
 function vtkSplineWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkSplineWidget');
+  model.classHierarchy.add('vtkSplineWidget');
 
   const superClass = { ...publicAPI };
 

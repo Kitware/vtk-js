@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkAbstractAnimationProxy(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkAbstractAnimationProxy');
+  model.classHierarchy.add('vtkAbstractAnimationProxy');
 
   // Initialization ------------------------------------------------------------
   publicAPI.setTime = (time) => {};

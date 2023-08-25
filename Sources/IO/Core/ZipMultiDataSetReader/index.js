@@ -15,7 +15,7 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper'; // HTTP +
 
 function vtkZipMultiDataSetReader(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkZipMultiDataSetReader');
+  model.classHierarchy.add('vtkZipMultiDataSetReader');
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {

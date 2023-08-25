@@ -27,7 +27,7 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
   const bondColorData = [];
 
   // Set our className
-  model.classHierarchy.push('vtkMoleculeToRepresentation');
+  model.classHierarchy.add('vtkMoleculeToRepresentation');
 
   function addBond(
     position,

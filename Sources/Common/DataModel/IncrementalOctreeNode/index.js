@@ -63,7 +63,7 @@ const OCTREE_CHILD_BOUNDS_LUT = [
 
 function vtkIncrementalOctreeNode(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkIncrementalOctreeNode');
+  model.classHierarchy.add('vtkIncrementalOctreeNode');
 
   //------------------------------------------------------------------------------
   publicAPI.createPointIdSet = (initSize, growSize) => {

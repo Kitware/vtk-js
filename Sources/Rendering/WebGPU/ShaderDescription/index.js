@@ -9,7 +9,7 @@ import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 
 function vtkWebGPUShaderDescription(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUShaderDescription');
+  model.classHierarchy.add('vtkWebGPUShaderDescription');
 
   publicAPI.hasOutput = (name) => model.outputNames.includes(name);
 

@@ -15,7 +15,7 @@ const EVENTS = ['TestAbort', 'TestPriority'];
 // ----------------------------------------------------------------------------
 function myClass(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMyClass');
+  model.classHierarchy.add('vtkMyClass');
 }
 
 // ----------------------------------------------------------------------------

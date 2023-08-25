@@ -38,7 +38,7 @@ fn main(
 
 function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUOrderIndependentTranslucentPass');
+  model.classHierarchy.add('vtkWebGPUOrderIndependentTranslucentPass');
 
   // this pass implements a forward rendering pipeline
   // if both volumes and opaque geometry are present

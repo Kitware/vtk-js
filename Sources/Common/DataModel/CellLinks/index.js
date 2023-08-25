@@ -29,7 +29,7 @@ function resize(model, sz) {
 
 function vtkCellLinks(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCellLinks');
+  model.classHierarchy.add('vtkCellLinks');
 
   /**
    * Build the link list array. All subclasses of vtkAbstractCellLinks

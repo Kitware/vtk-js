@@ -245,7 +245,7 @@ const _indexCellBuilders = {
 
 function vtkWebGPUIndexBuffer(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUIndexBuffer');
+  model.classHierarchy.add('vtkWebGPUIndexBuffer');
 
   publicAPI.buildIndexBuffer = (req) => {
     const cellArray = req.cells;

@@ -10,7 +10,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkImageCropFilter(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageCropFilter');
+  model.classHierarchy.add('vtkImageCropFilter');
 
   // --------------------------------------------------------------------------
 

@@ -33,7 +33,7 @@ function notImplemented(method) {
 
 function vtkMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMapper');
+  model.classHierarchy.add('vtkMapper');
 
   publicAPI.getBounds = () => {
     const input = publicAPI.getInputData();

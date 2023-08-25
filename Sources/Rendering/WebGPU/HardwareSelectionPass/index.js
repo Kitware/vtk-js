@@ -8,7 +8,7 @@ import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 
 function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUHardwareSelectionPass');
+  model.classHierarchy.add('vtkWebGPUHardwareSelectionPass');
 
   // this pass implements a forward rendering pipeline
   // if both volumes and opaque geometry are present

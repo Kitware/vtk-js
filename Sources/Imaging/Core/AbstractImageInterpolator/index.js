@@ -14,7 +14,7 @@ const { ImageBorderMode } = Constants;
 
 function vtkAbstractImageInterpolator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkAbstractImageInterpolator');
+  model.classHierarchy.add('vtkAbstractImageInterpolator');
 
   publicAPI.initialize = (data) => {
     publicAPI.releaseData();

@@ -110,7 +110,7 @@ function getLightTypeIndex(light) {
 
 function vtkWebGPURenderer(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPURenderer');
+  model.classHierarchy.add('vtkWebGPURenderer');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {

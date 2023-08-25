@@ -14,7 +14,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkImageData(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageData');
+  model.classHierarchy.add('vtkImageData');
 
   publicAPI.setExtent = (...inExtent) => {
     if (model.deleted) {

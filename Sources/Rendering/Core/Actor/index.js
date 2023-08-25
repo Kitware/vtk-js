@@ -12,7 +12,7 @@ const { vtkDebugMacro } = macro;
 
 function vtkActor(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkActor');
+  model.classHierarchy.add('vtkActor');
 
   // Capture 'parentClass' api for internal use
   const superClass = { ...publicAPI };

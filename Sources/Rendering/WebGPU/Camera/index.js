@@ -11,7 +11,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactor
 
 function vtkWebGPUCamera(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUCamera');
+  model.classHierarchy.add('vtkWebGPUCamera');
 
   publicAPI.getProjectionMatrix = (outMat, aspect, cRange, windowCenter) => {
     mat4.identity(outMat);

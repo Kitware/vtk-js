@@ -24,7 +24,7 @@ function applyStyle(element, style) {
 
 function vtkMouseBoxSelectionManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMouseBoxSelectionManipulator');
+  model.classHierarchy.add('vtkMouseBoxSelectionManipulator');
 
   // Private variable
   let view = null;

@@ -93,7 +93,7 @@ function processDataArray(
 
 function vtkXMLWriter(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkXMLWriter');
+  model.classHierarchy.add('vtkXMLWriter');
 
   // Can be overridden in subclass
   publicAPI.create = (dataObject) =>

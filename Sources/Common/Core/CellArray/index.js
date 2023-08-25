@@ -41,7 +41,7 @@ export const STATIC = {
 
 function vtkCellArray(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCellArray');
+  model.classHierarchy.add('vtkCellArray');
   const superClass = { ...publicAPI };
 
   publicAPI.getNumberOfCells = (recompute) => {

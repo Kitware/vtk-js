@@ -12,7 +12,7 @@ const { vtkDebugMacro } = macro;
 
 function vtkImageSlice(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageSlice');
+  model.classHierarchy.add('vtkImageSlice');
 
   publicAPI.getActors = () => publicAPI;
   publicAPI.getImages = () => publicAPI;

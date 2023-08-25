@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkAnimationProxyManager(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkAnimationProxyManager');
+  model.classHierarchy.add('vtkAnimationProxyManager');
 
   // Initialization ------------------------------------------------------------
 

@@ -25,7 +25,7 @@ export function newAPISpecificView(name, initialValues = {}) {
 
 function vtkRenderWindow(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkRenderWindow');
+  model.classHierarchy.add('vtkRenderWindow');
 
   // Add renderer
   publicAPI.addRenderer = (renderer) => {

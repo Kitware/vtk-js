@@ -25,7 +25,7 @@ const PROPERTIES_DEFAULT = {
 
 function vtkGeometryRepresentationProxy(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkGeometryRepresentationProxy');
+  model.classHierarchy.add('vtkGeometryRepresentationProxy');
 
   // Internals
   model.mapper = vtkMapper.newInstance({

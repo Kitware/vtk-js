@@ -56,7 +56,7 @@ function safeMatrixMultiply(matrixArray, matrixType, tmpMat) {
 
 function vtkOpenGLImageResliceMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLImageResliceMapper');
+  model.classHierarchy.add('vtkOpenGLImageResliceMapper');
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {

@@ -11,7 +11,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 
 function vtkOpenGLVolume(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLVolume');
+  model.classHierarchy.add('vtkOpenGLVolume');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {

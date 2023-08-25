@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkProgressHandler(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkProgressHandler');
+  model.classHierarchy.add('vtkProgressHandler');
 
   publicAPI.startWork = () => {
     model.workCount += 1;

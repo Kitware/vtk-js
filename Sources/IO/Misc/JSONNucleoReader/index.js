@@ -14,7 +14,7 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper'; // Ju
 
 function vtkJSONNucleoReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkJSONNucleoReader');
+  model.classHierarchy.add('vtkJSONNucleoReader');
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {

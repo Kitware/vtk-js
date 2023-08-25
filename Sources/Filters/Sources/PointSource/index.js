@@ -8,7 +8,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 function vtkPointSource(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPointSource');
+  model.classHierarchy.add('vtkPointSource');
 
   publicAPI.requestData = (inData, outData) => {
     if (model.deleted) {

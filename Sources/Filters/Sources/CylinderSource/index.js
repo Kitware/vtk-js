@@ -9,7 +9,7 @@ import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
 function vtkCylinderSource(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkCylinderSource');
+  model.classHierarchy.add('vtkCylinderSource');
 
   function requestData(inData, outData) {
     if (model.deleted) {

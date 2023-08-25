@@ -27,7 +27,7 @@ const VTK_DOUBLE_MAX = Number.MAX_SAFE_INTEGER;
 
 function vtkOBBTree(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkOBBTree');
+  model.classHierarchy.add('vtkOBBTree');
 
   /**
    * Compute an OBB from the list of cells given.  This used to be
@@ -1005,18 +1005,18 @@ function vtkOBBTree(publicAPI, model) {
               if (intersects)
               {
                 vtkIdType lineId = info.intersectionLines->GetNumberOfCells();
-  
+
                 vtkIdType ptId0, ptId1;
                 int unique[2];
                 unique[0] = pointMerger->InsertUniquePoint(outpt0, ptId0);
                 unique[1] = pointMerger->InsertUniquePoint(outpt1, ptId1);
-  
+
                 int addline = 1;
                 if (ptId0 == ptId1)
                 {
                   addline = 0;
                 }
-  
+
                 if (ptId0 == ptId1 && surfaceid[0] != surfaceid[1])
                 {
                   intersectionSurfaceId->InsertValue(ptId0, 3);
@@ -1046,12 +1046,12 @@ function vtkOBBTree(publicAPI, model) {
                     }
                   }
                 }
-  
+
                 info->IntersectionPtsMap[0]->insert(std::make_pair(ptId0, cellId0));
                 info->IntersectionPtsMap[1]->insert(std::make_pair(ptId0, cellId1));
                 info->IntersectionPtsMap[0]->insert(std::make_pair(ptId1, cellId0));
                 info->IntersectionPtsMap[1]->insert(std::make_pair(ptId1, cellId1));
-  
+
                 // Check to see if duplicate line. Line can only be a duplicate
                 // line if both points are not unique and they don't
                 // equal each other
@@ -1075,18 +1075,18 @@ function vtkOBBTree(publicAPI, model) {
                   intersectionLines->InsertNextCell(2);
                   intersectionLines->InsertCellPoint(ptId0);
                   intersectionLines->InsertCellPoint(ptId1);
-  
+
                   intersectionCellIds0->InsertNextValue(cellId0);
                   intersectionCellIds1->InsertNextValue(cellId1);
-  
+
                   info->PointCellIds[0]->InsertValue(ptId0, cellId0);
                   info->PointCellIds[0]->InsertValue(ptId1, cellId0);
                   info->PointCellIds[1]->InsertValue(ptId0, cellId1);
                   info->PointCellIds[1]->InsertValue(ptId1, cellId1);
-  
+
                   info->IntersectionMap[0]->insert(std::make_pair(cellId0, lineId));
                   info->IntersectionMap[1]->insert(std::make_pair(cellId1, lineId));
-  
+
                   // Check which edges of cellId0 and cellId1 outpt0 and
                   // outpt1 are on, if any.
                   int isOnEdge = 0;

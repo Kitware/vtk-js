@@ -25,7 +25,7 @@ function substitute(source, search, replace, all = true) {
 
 function vtkWebGPUShaderCache(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUShaderCache');
+  model.classHierarchy.add('vtkWebGPUShaderCache');
 
   publicAPI.getShaderModule = (shaderDesc) => {
     // has it already been created?

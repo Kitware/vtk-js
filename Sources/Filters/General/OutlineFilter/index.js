@@ -37,7 +37,7 @@ export const LINE_ARRAY = [
 
 function vtkOutlineFilter(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOutlineFilter');
+  model.classHierarchy.add('vtkOutlineFilter');
 
   publicAPI.requestData = (inData, outData) => {
     // implement requestData

@@ -14,7 +14,7 @@ export const disconnectImageStream = SHARED_IMAGE_STREAM.disconnect;
 
 function vtkRemoteView(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkRemoteView');
+  model.classHierarchy.add('vtkRemoteView');
 
   // Constructor
   model.canvasView = vtkCanvasView.newInstance();

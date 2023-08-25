@@ -8,7 +8,7 @@ import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulator
 
 function vtkMouseCameraTrackballZoomManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMouseCameraTrackballZoomManipulator');
+  model.classHierarchy.add('vtkMouseCameraTrackballZoomManipulator');
 
   publicAPI.onButtonDown = (interactor, renderer, position) => {
     model.previousPosition = position;

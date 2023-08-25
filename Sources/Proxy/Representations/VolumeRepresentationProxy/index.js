@@ -145,7 +145,7 @@ function updateConfiguration(dataset, dataArray, { mapper, property }) {
 
 function vtkVolumeRepresentationProxy(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkVolumeRepresentationProxy');
+  model.classHierarchy.add('vtkVolumeRepresentationProxy');
 
   // Volume
   model.mapper = vtkVolumeMapper.newInstance();

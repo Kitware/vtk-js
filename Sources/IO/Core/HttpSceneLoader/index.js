@@ -361,7 +361,7 @@ function vtkHttpSceneLoader(publicAPI, model) {
   }
 
   // Set our className
-  model.classHierarchy.push('vtkHttpSceneLoader');
+  model.classHierarchy.add('vtkHttpSceneLoader');
 
   // Create scene container
   if (!model.scene) {

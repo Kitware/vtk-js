@@ -47,7 +47,7 @@ void main()
 
 function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLOrderIndependentTranslucentPass');
+  model.classHierarchy.add('vtkOpenGLOrderIndependentTranslucentPass');
 
   // build vertices etc
   publicAPI.createVertexBuffer = () => {

@@ -18,7 +18,7 @@ import 'vtk.js/Sources/Filters/Sources';
 
 function vtkGlyphRepresentationProxy(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkGlyphRepresentationProxy');
+  model.classHierarchy.add('vtkGlyphRepresentationProxy');
 
   model.property = vtkProperty.newInstance();
 

@@ -35,7 +35,7 @@ function setReadImageArrayBufferFromITK(fn) {
 
 function vtkITKImageReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkITKImageReader');
+  model.classHierarchy.add('vtkITKImageReader');
 
   // Returns a promise to signal when image is ready
   publicAPI.parseAsArrayBuffer = (arrayBuffer) => {

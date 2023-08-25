@@ -16,7 +16,7 @@ const MAX_POINTS = 2;
 const handleGetters = ['getHandle1', 'getHandle2', 'getMoveHandle'];
 
 export default function widgetBehavior(publicAPI, model) {
-  model.classHierarchy.push('vtkLineWidgetProp');
+  model.classHierarchy.add('vtkLineWidgetProp');
   model._isDragging = false;
 
   /**

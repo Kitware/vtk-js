@@ -8,7 +8,7 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 
 function vtkFollower(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkFollower');
+  model.classHierarchy.add('vtkFollower');
 
   // Capture 'parentClass' api for internal use
   const superClass = { ...publicAPI };

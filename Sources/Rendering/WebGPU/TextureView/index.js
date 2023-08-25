@@ -10,7 +10,7 @@ import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 
 function vtkWebGPUTextureView(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUTextureView');
+  model.classHierarchy.add('vtkWebGPUTextureView');
 
   publicAPI.create = (texture, options) => {
     model.texture = texture;

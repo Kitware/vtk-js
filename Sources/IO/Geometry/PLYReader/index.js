@@ -415,7 +415,7 @@ function binaryReadElement(dataview, at, properties, littleEndian) {
 
 function vtkPLYReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPLYReader');
+  model.classHierarchy.add('vtkPLYReader');
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {

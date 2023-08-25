@@ -15,7 +15,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkImageDataToCornerstoneImage(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageDataToCornerstoneImage');
+  model.classHierarchy.add('vtkImageDataToCornerstoneImage');
 
   publicAPI.requestData = (inData, outData) => {
     // implement requestData

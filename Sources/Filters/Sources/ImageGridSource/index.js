@@ -8,7 +8,7 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 function vtkImageGridSource(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageGridSource');
+  model.classHierarchy.add('vtkImageGridSource');
 
   publicAPI.requestData = (inData, outData) => {
     if (model.deleted) {

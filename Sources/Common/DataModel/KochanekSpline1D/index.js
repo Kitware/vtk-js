@@ -11,7 +11,7 @@ const VTK_EPSILON = 0.0001;
 
 function vtkKochanekSpline1D(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkKochanekSpline1D');
+  model.classHierarchy.add('vtkKochanekSpline1D');
 
   // --------------------------------------------------------------------------
 

@@ -20,7 +20,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkOpenGLStickMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLStickMapper');
+  model.classHierarchy.add('vtkOpenGLStickMapper');
 
   // Capture 'parentClass' api for internal use
   const superClass = { ...publicAPI };

@@ -10,7 +10,7 @@ const ANIMATION_REQUESTER = 'vtkMouseCameraTrackballFirstPersonManipulator';
 
 function vtkMouseCameraTrackballFirstPersonManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMouseCameraTrackballFirstPersonManipulator');
+  model.classHierarchy.add('vtkMouseCameraTrackballFirstPersonManipulator');
 
   const internal = {
     interactor: null,

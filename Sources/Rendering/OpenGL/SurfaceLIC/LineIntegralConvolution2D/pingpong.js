@@ -105,7 +105,7 @@ function allocateVectorBuffer(openGLRenderWindow, size) {
 // ----------------------------------------------------------------------------
 
 function vtkLICPingPongBufferManager(publicAPI, model) {
-  model.classHierarchy.push('vtkLICPingPongBufferManager');
+  model.classHierarchy.add('vtkLICPingPongBufferManager');
   if (!model._openGLRenderWindow) {
     console.error('Pass renderwindow to ping pong manager');
     return;

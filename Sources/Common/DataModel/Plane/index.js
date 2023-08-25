@@ -216,7 +216,7 @@ export const STATIC = {
 
 export function vtkPlane(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPlane');
+  model.classHierarchy.add('vtkPlane');
 
   publicAPI.distanceToPlane = (x) =>
     distanceToPlane(x, model.origin, model.normal);

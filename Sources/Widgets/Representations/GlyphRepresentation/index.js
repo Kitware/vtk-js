@@ -169,7 +169,7 @@ export function noOrientation(publicAPI, model) {
 
 function vtkGlyphRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkGlyphRepresentation');
+  model.classHierarchy.add('vtkGlyphRepresentation');
   const superClass = { ...publicAPI };
   const internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
 

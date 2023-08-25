@@ -7,7 +7,7 @@ import Constants from 'vtk.js/Sources/Common/DataModel/SelectionNode/Constants';
 
 function vtkSelectionNode(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSelectionNode');
+  model.classHierarchy.add('vtkSelectionNode');
 
   publicAPI.getBounds = () => model.points.getBounds();
 }

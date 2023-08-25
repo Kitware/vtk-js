@@ -5,7 +5,7 @@ import * as macro from 'vtk.js/Sources/macros';
 // ----------------------------------------------------------------------------
 function vtkWebGPUPipeline(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUPipeline');
+  model.classHierarchy.add('vtkWebGPUPipeline');
 
   publicAPI.getShaderDescriptions = () => model.shaderDescriptions;
 

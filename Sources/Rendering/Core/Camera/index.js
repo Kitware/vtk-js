@@ -23,7 +23,7 @@ const { vtkDebugMacro } = macro;
 
 function vtkCamera(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCamera');
+  model.classHierarchy.add('vtkCamera');
 
   // Set up private variables and methods
   const origin = new Float64Array(3);

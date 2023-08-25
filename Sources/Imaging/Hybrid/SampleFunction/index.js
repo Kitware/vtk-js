@@ -10,7 +10,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkSampleFunction(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSampleFunction');
+  model.classHierarchy.add('vtkSampleFunction');
 
   // Capture "parentClass" api for internal use
   const superClass = { ...publicAPI };

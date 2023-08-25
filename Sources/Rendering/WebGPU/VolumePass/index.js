@@ -119,7 +119,7 @@ fn main(
 
 function vtkWebGPUVolumePass(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUVolumePass');
+  model.classHierarchy.add('vtkWebGPUVolumePass');
 
   // create the required textures, encoders, FSQ etc
   publicAPI.initialize = (viewNode) => {

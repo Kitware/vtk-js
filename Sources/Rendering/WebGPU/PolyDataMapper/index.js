@@ -13,7 +13,7 @@ const { PrimitiveTypes } = vtkWebGPUBufferManager;
 
 function vtkWebGPUPolyDataMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUPolyDataMapper');
+  model.classHierarchy.add('vtkWebGPUPolyDataMapper');
 
   publicAPI.createCellArrayMapper = () =>
     vtkWebGPUCellArrayMapper.newInstance();

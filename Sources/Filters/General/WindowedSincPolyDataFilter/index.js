@@ -21,7 +21,7 @@ const VertexType = {
 
 function vtkWindowedSincPolyDataFilter(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWindowedSincPolyDataFilter');
+  model.classHierarchy.add('vtkWindowedSincPolyDataFilter');
 
   publicAPI.vtkWindowedSincPolyDataFilterExecute = (
     inPts,

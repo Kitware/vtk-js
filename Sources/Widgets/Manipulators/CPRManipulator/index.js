@@ -24,7 +24,7 @@ export function intersectDisplayWithPlane(
 
 function vtkCPRManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCPRManipulator');
+  model.classHierarchy.add('vtkCPRManipulator');
 
   publicAPI.handleEvent = (callData, glRenderWindow) => {
     const mapper = model.cprActor?.getMapper();

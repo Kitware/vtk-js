@@ -4,7 +4,6 @@
  */
 import DeepEqual from 'fast-deep-equal';
 import vtk, { vtkGlobal } from './vtk';
-import ClassHierarchy from './Common/Core/ClassHierarchy';
 
 let globalMTime = 0;
 
@@ -249,12 +248,9 @@ export function obj(publicAPI = {}, model = {}) {
   }
 
   if (!('classHierarchy' in model)) {
-    model.classHierarchy = new ClassHierarchy('vtkObject');
-  } else if (!(model.classHierarchy instanceof ClassHierarchy)) {
-    const hierarchy = new ClassHierarchy();
-    for (let i = 0; i < model.classHierarchy.length; i++) {
-      hierarchy.push(model.classHierarchy[i]);
-    }
+    model.classHierarchy = new Set(['vtkObject']);
+  } else if (!(model.classHierarchy instanceof Set)) {
+    const hierarchy = new Set(model.classHierarchy);
     model.classHierarchy = hierarchy;
   }
 
@@ -301,20 +297,18 @@ export function obj(publicAPI = {}, model = {}) {
 
   publicAPI.getMTime = () => model.mtime;
 
-  publicAPI.isA = (className) => {
-    let count = model.classHierarchy.length;
-    // we go backwards as that is more likely for
-    // early termination
-    while (count--) {
-      if (model.classHierarchy[count] === className) {
-        return true;
-      }
-    }
-    return false;
-  };
+  publicAPI.isA = (className) => model.classHierarchy.has(className);
 
-  publicAPI.getClassName = (depth = 0) =>
-    model.classHierarchy[model.classHierarchy.length - 1 - depth];
+  publicAPI.getClassName = (depth = 0) => {
+    const iterator = model.classHierarchy.values();
+
+    // read from the end of the set offset by depth
+    for (let i = 0; i < model.classHierarchy.size - 1 - depth; i++) {
+      iterator.next();
+    }
+
+    return iterator.next().value;
+  };
 
   publicAPI.set = (map = {}, noWarning = false, noFunction = false) => {
     let ret = false;

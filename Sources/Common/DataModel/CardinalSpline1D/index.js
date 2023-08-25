@@ -11,7 +11,7 @@ const VTK_EPSILON = 0.0001;
 
 function vtkCardinalSpline1D(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkCardinalSpline1D');
+  model.classHierarchy.add('vtkCardinalSpline1D');
 
   // --------------------------------------------------------------------------
 

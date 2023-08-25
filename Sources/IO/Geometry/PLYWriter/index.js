@@ -393,7 +393,7 @@ export const STATIC = {
 
 function vtkPLYWriter(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPLYWriter');
+  model.classHierarchy.add('vtkPLYWriter');
 
   publicAPI.requestData = (inData, outData) => {
     const input = inData[0];

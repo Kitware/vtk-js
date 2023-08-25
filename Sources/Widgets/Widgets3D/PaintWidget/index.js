@@ -14,7 +14,7 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // ----------------------------------------------------------------------------
 
 function vtkPaintWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkPaintWidget');
+  model.classHierarchy.add('vtkPaintWidget');
 
   const superClass = { ...publicAPI };
 

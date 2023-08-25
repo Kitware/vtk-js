@@ -9,7 +9,7 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 function vtkConcentricCylinderSource(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkConcentricCylinderSource');
+  model.classHierarchy.add('vtkConcentricCylinderSource');
 
   // Internal private function
   function validateCellFields() {

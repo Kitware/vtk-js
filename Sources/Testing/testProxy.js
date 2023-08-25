@@ -7,7 +7,7 @@ import vtkProxyManager from 'vtk.js/Sources/Proxy/Core/ProxyManager';
 // ----------------------------------------------------------------------------
 function testProxyClass(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkTestProxyClass');
+  model.classHierarchy.add('vtkTestProxyClass');
 }
 
 // ----------------------------------------------------------------------------

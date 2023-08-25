@@ -59,7 +59,7 @@ function addColor(ds, r, g, b) {
 
 function vtkAxesActor(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkAxesActor');
+  model.classHierarchy.add('vtkAxesActor');
 
   const _mapper = vtkMapper.newInstance();
   publicAPI.setMapper(_mapper);

@@ -13,7 +13,7 @@ import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 
 function vtkPointSet(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPointSet');
+  model.classHierarchy.add('vtkPointSet');
 
   // Create empty points
   if (!model.points) {

@@ -15,7 +15,7 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 function vtkCone(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCone');
+  model.classHierarchy.add('vtkCone');
 
   publicAPI.evaluateFunction = (x) => {
     const tanTheta = Math.tan(vtkMath.radiansFromDegrees(model.angle));

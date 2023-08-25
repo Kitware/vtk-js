@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkWebGPUBindGroup(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUBindGroup');
+  model.classHierarchy.add('vtkWebGPUBindGroup');
 
   publicAPI.setBindables = (bindables) => {
     // is there a difference between the old and new list?

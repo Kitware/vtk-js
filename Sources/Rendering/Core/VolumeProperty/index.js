@@ -14,7 +14,7 @@ const VTK_MAX_VRCOMP = 4;
 
 function vtkVolumeProperty(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkVolumeProperty');
+  model.classHierarchy.add('vtkVolumeProperty');
 
   publicAPI.getMTime = () => {
     let mTime = model.mtime;

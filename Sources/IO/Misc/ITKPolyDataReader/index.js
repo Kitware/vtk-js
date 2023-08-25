@@ -24,7 +24,7 @@ function setReadPolyDataArrayBufferFromITK(fn) {
 
 function vtkITKPolyDataReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkITKPolyDataReader');
+  model.classHierarchy.add('vtkITKPolyDataReader');
 
   // Returns a promise to signal when polyData is ready
   publicAPI.parseAsArrayBuffer = (arrayBuffer) => {

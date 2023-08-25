@@ -9,7 +9,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 // ----------------------------------------------------------------------------
 
 function vtkOpenGLCubeAxesActor(publicAPI, model) {
-  model.classHierarchy.push('vtkOpenGLCubeAxesActor');
+  model.classHierarchy.add('vtkOpenGLCubeAxesActor');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {

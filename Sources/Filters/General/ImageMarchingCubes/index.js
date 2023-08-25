@@ -14,7 +14,7 @@ const { vtkErrorMacro, vtkDebugMacro } = macro;
 
 function vtkImageMarchingCubes(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageMarchingCubes');
+  model.classHierarchy.add('vtkImageMarchingCubes');
 
   const ids = [];
   const voxelScalars = [];

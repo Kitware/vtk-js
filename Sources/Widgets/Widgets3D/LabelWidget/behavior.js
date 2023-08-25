@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
 
 export default function widgetBehavior(publicAPI, model) {
-  model.classHierarchy.push('vtkLabelWidgetProp');
+  model.classHierarchy.add('vtkLabelWidgetProp');
   model._isDragging = false;
 
   // --------------------------------------------------------------------------

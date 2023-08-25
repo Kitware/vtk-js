@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
 
 export default function widgetBehavior(publicAPI, model) {
-  model.classHierarchy.push('vtkInteractiveOrientationWidgetProp');
+  model.classHierarchy.add('vtkInteractiveOrientationWidgetProp');
   macro.event(publicAPI, model, 'OrientationChange');
 
   // --------------------------------------------------------------------------

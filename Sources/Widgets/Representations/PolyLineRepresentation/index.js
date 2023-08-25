@@ -17,7 +17,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 function vtkPolyLineRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPolyLineRepresentation');
+  model.classHierarchy.add('vtkPolyLineRepresentation');
   const superClass = { ...publicAPI };
 
   // --------------------------------------------------------------------------

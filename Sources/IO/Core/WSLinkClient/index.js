@@ -55,7 +55,7 @@ function busyWrap(methodMap, update, skipList = []) {
 
 function vtkWSLinkClient(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWSLinkClient');
+  model.classHierarchy.add('vtkWSLinkClient');
 
   // --------------------------------------------------------------------------
   // Internal methods

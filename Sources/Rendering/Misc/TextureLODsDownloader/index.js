@@ -35,7 +35,7 @@ const getRemoteFileSize = (url) =>
 
 function vtkTextureLODsDownloader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkTextureLODsDownloader');
+  model.classHierarchy.add('vtkTextureLODsDownloader');
 
   const internal = {
     downloadStack: [],

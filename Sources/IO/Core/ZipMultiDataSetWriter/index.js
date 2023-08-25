@@ -12,7 +12,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkZipMultiDataSetWriter(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkZipMultiDataSetWriter');
+  model.classHierarchy.add('vtkZipMultiDataSetWriter');
 
   publicAPI.requestData = (inData, outData) => {
     // implement requestData

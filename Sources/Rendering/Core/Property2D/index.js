@@ -11,7 +11,7 @@ const { DisplayLocation } = Constants;
 
 function vtkProperty2D(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkProperty2D');
+  model.classHierarchy.add('vtkProperty2D');
 
   publicAPI.setDisplayLocationToBackground = () =>
     publicAPI.setDisplayLocation(DisplayLocation.BACKGROUND);

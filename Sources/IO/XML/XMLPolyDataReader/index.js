@@ -65,7 +65,7 @@ function handleCells(
 
 function vtkXMLPolyDataReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkXMLPolyDataReader');
+  model.classHierarchy.add('vtkXMLPolyDataReader');
 
   publicAPI.parseXML = (rootElem, type, compressor, byteOrder, headerType) => {
     const datasetElem = rootElem.getElementsByTagName(model.dataType)[0];

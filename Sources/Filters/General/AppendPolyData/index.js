@@ -29,7 +29,7 @@ function appendCellData(dest, src, ptOffset, cellOffset) {
 
 function vtkAppendPolyData(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkAppendPolyData');
+  model.classHierarchy.add('vtkAppendPolyData');
 
   publicAPI.requestData = (inData, outData) => {
     // implement requestData

@@ -237,7 +237,7 @@ export const STATIC = {
 
 function vtkTriangle(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkTriangle');
+  model.classHierarchy.add('vtkTriangle');
 
   publicAPI.getCellDimension = () => 2;
   publicAPI.intersectWithLine = (p1, p2, tol, x, pcoords) => {

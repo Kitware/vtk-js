@@ -12,7 +12,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkWebGPUUniformBuffer(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUUniformBuffer');
+  model.classHierarchy.add('vtkWebGPUUniformBuffer');
 
   publicAPI.addEntry = (name, type) => {
     if (model._bufferEntryNames.has(name)) {

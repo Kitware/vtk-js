@@ -55,7 +55,7 @@ function vtkWidgetManager(publicAPI, model) {
   if (!model.viewId) {
     model.viewId = `view-${viewIdCount++}`;
   }
-  model.classHierarchy.push('vtkWidgetManager');
+  model.classHierarchy.add('vtkWidgetManager');
   const propsWeakMap = new WeakMap();
   const subscriptions = [];
 

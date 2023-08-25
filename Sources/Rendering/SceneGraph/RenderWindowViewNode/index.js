@@ -15,7 +15,7 @@ import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 function vtkRenderWindowViewNode(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkRenderWindowViewNode');
+  model.classHierarchy.add('vtkRenderWindowViewNode');
 
   publicAPI.getViewNodeFactory = () => null;
 

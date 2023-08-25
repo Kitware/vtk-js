@@ -79,7 +79,7 @@ function getPropCoarseHull(prop) {
 
 function vtkView2DProxy(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkView2DProxy');
+  model.classHierarchy.add('vtkView2DProxy');
 
   publicAPI.updateWidthHeightAnnotation = () => {
     const { ijkOrientation, dimensions } = model.cornerAnnotation.getMetadata();

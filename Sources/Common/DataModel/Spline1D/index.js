@@ -8,15 +8,13 @@ const { vtkErrorMacro } = macro;
 
 function vtkSpline1D(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkSpline1D');
+  model.classHierarchy.add('vtkSpline1D');
 
   // --------------------------------------------------------------------------
 
   publicAPI.computeCloseCoefficients = (size, work, x, y) => {
     vtkErrorMacro(
-      `${
-        model.classHierarchy.slice(-1)[0]
-      } should implement computeCloseCoefficients`
+      `${model.getClassName()} should implement computeCloseCoefficients`
     );
   };
 
@@ -24,18 +22,14 @@ function vtkSpline1D(publicAPI, model) {
 
   publicAPI.computeOpenCoefficients = (size, work, x, y, options = {}) => {
     vtkErrorMacro(
-      `${
-        model.classHierarchy.slice(-1)[0]
-      } should implement computeOpenCoefficients`
+      `${model.getClassName()} should implement computeOpenCoefficients`
     );
   };
 
   // --------------------------------------------------------------------------
 
   publicAPI.getValue = (intervalIndex, t) => {
-    vtkErrorMacro(
-      `${model.classHierarchy.slice(-1)[0]} should implement getValue`
-    );
+    vtkErrorMacro(`${model.getClassName()} should implement getValue`);
   };
 }
 

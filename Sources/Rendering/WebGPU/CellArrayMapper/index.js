@@ -81,7 +81,7 @@ fn cdot(a: vec3<f32>, b: vec3<f32>) -> f32 {
 
 // Lambertian diffuse model
 fn lambertDiffuse(base: vec3<f32>, N: vec3<f32>, L: vec3<f32>) -> vec3<f32> {
-  var pi: f32 = 3.14159265359; 
+  var pi: f32 = 3.14159265359;
   var NdotL: f32 = mdot(N, L);
   NdotL = pow(NdotL, 1.5);
   return (base/pi)*NdotL;
@@ -114,25 +114,25 @@ fn fujiiOrenNayar(p: vec3<f32>, o: f32, N: vec3<f32>, L: vec3<f32>, V: vec3<f32>
 fn schlickFresnelIOR(V: vec3<f32>, N: vec3<f32>, ior: f32, k: f32) -> f32 {
   var NdotV: f32 = mdot(V, N);
   var F0: f32 = (pow((ior - 1.0), 2) + k*k) / (pow((ior + 1.0), 2) + k*k); // This takes into account the roughness, which the other one does not
-  return F0 + (1 - F0) * pow((1-NdotV), 5); 
+  return F0 + (1 - F0) * pow((1-NdotV), 5);
 }
 
 // Fresnel portion of BRDF (Color ior, better)
 fn schlickFresnelRGB(V: vec3<f32>, N: vec3<f32>, F0: vec3<f32>) -> vec3<f32> {
   var NdotV: f32 = mdot(V, N);
-  return F0 + (1 - F0) * pow((1-NdotV), 5); 
+  return F0 + (1 - F0) * pow((1-NdotV), 5);
 }
 
 // Normal portion of BRDF
 // https://learnopengl.com/PBR/Theory
 // Trowbridge-Reitz GGX functions: normal, halfway, roughness^2
 fn trGGX(N: vec3<f32>, H: vec3<f32>, a: f32) -> f32 {
-  var pi: f32 = 3.14159265359; 
+  var pi: f32 = 3.14159265359;
 
   var a2: f32 = a*a;
   var NdotH = mdot(N, H);
   var NdotH2 = NdotH*NdotH;
-  
+
   var denom: f32 = NdotH2 * (a2 - 1.0) + 1.0;
 
   return a2 / max((pi*denom*denom), 0.000001);
@@ -168,7 +168,7 @@ fn cookTorrance(D: f32, F: f32, G: f32, N: vec3<f32>, V: vec3<f32>, L: vec3<f32>
 }
 
 // Different lighting calculations for different light sources
-fn calcDirectionalLight(N: vec3<f32>, V: vec3<f32>, ior: f32, roughness: f32, metallic: f32, direction: vec3<f32>, color: vec3<f32>, base: vec3<f32>) -> PBRData {  
+fn calcDirectionalLight(N: vec3<f32>, V: vec3<f32>, ior: f32, roughness: f32, metallic: f32, direction: vec3<f32>, color: vec3<f32>, base: vec3<f32>) -> PBRData {
   var L: vec3<f32> = normalize(direction); // Light Vector
   var H: vec3<f32> = normalize(L + V); // Halfway Vector
 
@@ -187,10 +187,10 @@ fn calcDirectionalLight(N: vec3<f32>, V: vec3<f32>, ior: f32, roughness: f32, me
   var specular: vec3<f32> = brdf*incoming*angle;
   // Oren-Nayar gives a clay-like effect when fully rough which some people may not want, so it might be better to give a separate
   // control property for the diffuse vs specular roughness
-  var diffuse: vec3<f32> = incoming*fujiiOrenNayar(base, roughness, N, L, V); 
+  var diffuse: vec3<f32> = incoming*fujiiOrenNayar(base, roughness, N, L, V);
   // Stores the specular and diffuse separately to allow for finer post processing
   var out = PBRData(diffuse, specular);
-  
+
   return out; // Returns angle along with color of light so the final color can be multiplied by angle as well (creates black areas)
 }
 
@@ -207,7 +207,7 @@ fn calcPointLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, roug
   // var F: f32 = schlickFresnelIOR(V, N, ior, k); // Fresnel
   var G: f32 = smithSurfaceRoughness(N, V, L, k); // Geometry
 
-  var brdf: f32 = cookTorrance(D, 1, G, N, V, L);  
+  var brdf: f32 = cookTorrance(D, 1, G, N, V, L);
   var incoming: vec3<f32> = color * (1. / (dist*dist));
   var angle: f32 = mdot(L, N);
   angle = pow(angle, 1.5); // Smoothing factor makes it less accurate, but reduces ugly "seams" bewteen light sources
@@ -218,7 +218,7 @@ fn calcPointLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, roug
   // Stores the specular and diffuse separately to allow for finer post processing
   // Could also be done (propably more properly) with a struct
   var out = PBRData(diffuse, specular);
-  
+
   return out; // Returns angle along with color of light so the final color can be multiplied by angle as well (creates black areas)
 }
 
@@ -235,8 +235,8 @@ fn calcSpotLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, rough
   // var F: f32 = schlickFresnelIOR(V, N, ior, k); // Fresnel
   var G: f32 = smithSurfaceRoughness(N, V, L, k); // Geometry
 
-  var brdf: f32 = cookTorrance(D, 1, G, N, V, L);  
-  
+  var brdf: f32 = cookTorrance(D, 1, G, N, V, L);
+
   // Cones.x is the inner phi and cones.y is the outer phi
   var theta: f32 = mdot(normalize(direction), L);
   var epsilon: f32 = cones.x - cones.y;
@@ -255,7 +255,7 @@ fn calcSpotLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, rough
   // Stores the specular and diffuse separately to allow for finer post processing
   // Could also be done (propably more properly) with a struct
   var out = PBRData(diffuse, specular);
-  
+
   return out; // Returns angle along with color of light so the final color can be multiplied by angle as well (creates black areas)
 }
 
@@ -346,7 +346,7 @@ function isEdges(hash) {
 
 function vtkWebGPUCellArrayMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUCellArrayMapper');
+  model.classHierarchy.add('vtkWebGPUCellArrayMapper');
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {

@@ -17,7 +17,7 @@ const { vtkErrorMacro } = macro;
 const EPSILON = 1e-6;
 
 export default function widgetBehavior(publicAPI, model) {
-  model.classHierarchy.push('vtkShapeWidgetProp');
+  model.classHierarchy.add('vtkShapeWidgetProp');
   model._isDragging = false;
 
   model.keysDown = {};

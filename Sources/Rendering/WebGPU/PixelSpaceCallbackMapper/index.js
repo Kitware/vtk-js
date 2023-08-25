@@ -8,7 +8,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactor
 // ----------------------------------------------------------------------------
 
 function vtkWebGPUPixelSpaceCallbackMapper(publicAPI, model) {
-  model.classHierarchy.push('vtkWebGPUPixelSpaceCallbackMapper');
+  model.classHierarchy.add('vtkWebGPUPixelSpaceCallbackMapper');
 
   publicAPI.opaquePass = (prepass, renderPass) => {
     model.WebGPURenderer =

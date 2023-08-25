@@ -10,7 +10,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkImageSliceFilter(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageSliceFilter');
+  model.classHierarchy.add('vtkImageSliceFilter');
 
   publicAPI.requestData = (inData, outData) => {
     // implement requestData

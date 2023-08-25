@@ -15,7 +15,7 @@ const END_INTERACTION_EVENT = { type: 'EndInteractionEvent' };
 
 function vtkInteractorStyleRemoteMouse(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkInteractorStyleRemoteMouse');
+  model.classHierarchy.add('vtkInteractorStyleRemoteMouse');
 
   function createRemoteEvent(callData) {
     // Fields:

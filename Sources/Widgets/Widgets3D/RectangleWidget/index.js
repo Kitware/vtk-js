@@ -18,7 +18,7 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // ----------------------------------------------------------------------------
 
 function vtkRectangleWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkRectangleWidget');
+  model.classHierarchy.add('vtkRectangleWidget');
 
   model.methodsToLink = [
     ...model.methodsToLink,

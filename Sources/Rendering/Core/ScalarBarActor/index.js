@@ -175,7 +175,7 @@ function defaultGenerateTicks(publicApi, model) {
 // most of the work.
 function vtkScalarBarActorHelper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkScalarBarActorHelper');
+  model.classHierarchy.add('vtkScalarBarActorHelper');
 
   publicAPI.setRenderable = (renderable) => {
     if (model.renderable === renderable) {
@@ -881,7 +881,7 @@ const newScalarBarActorHelper = macro.newInstance(
 //
 function vtkScalarBarActor(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkScalarBarActor');
+  model.classHierarchy.add('vtkScalarBarActor');
 
   publicAPI.setTickTextStyle = (tickStyle) => {
     model.tickTextStyle = { ...model.tickTextStyle, ...tickStyle };

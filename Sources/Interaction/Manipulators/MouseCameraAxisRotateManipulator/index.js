@@ -10,7 +10,7 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 function vtkMouseCameraAxisRotateManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMouseCameraAxisRotateManipulator');
+  model.classHierarchy.add('vtkMouseCameraAxisRotateManipulator');
 
   const negCameraDir = new Float64Array(3);
   const newCamPos = new Float64Array(3);

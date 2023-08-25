@@ -10,7 +10,7 @@ import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 function vtkAbstractRepresentationProxy(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkAbstractRepresentationProxy');
+  model.classHierarchy.add('vtkAbstractRepresentationProxy');
 
   function updateConnectivity() {
     if (model.input) {

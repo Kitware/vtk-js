@@ -205,7 +205,7 @@ export const STATIC = { triangulateContours, triangulatePolygon };
 
 function vtkContourTriangulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkContourTriangulator');
+  model.classHierarchy.add('vtkContourTriangulator');
 
   publicAPI.requestData = (inData, outData) => {
     // implement requestData

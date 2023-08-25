@@ -43,7 +43,7 @@ function shouldApplyCoordShiftAndScale(coordShift, coordScale) {
 
 function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLCellArrayBufferObject');
+  model.classHierarchy.add('vtkOpenGLCellArrayBufferObject');
 
   publicAPI.setType(ObjectType.ARRAY_BUFFER);
 

@@ -42,7 +42,7 @@ function clamp(value, min, max) {
 
 function vtkInteractorStyleMPRSlice(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkInteractorStyleMPRSlice');
+  model.classHierarchy.add('vtkInteractorStyleMPRSlice');
 
   model.trackballManipulator =
     vtkMouseCameraTrackballRotateManipulator.newInstance({

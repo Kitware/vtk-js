@@ -11,7 +11,7 @@ function vtkViewNodeFactory(publicAPI, model) {
   }
 
   // Set our className
-  model.classHierarchy.push('vtkViewNodeFactory');
+  model.classHierarchy.add('vtkViewNodeFactory');
 
   publicAPI.createNode = (dataObject) => {
     if (dataObject.isDeleted()) {

@@ -12,7 +12,7 @@ const { vtkDebugMacro } = macro;
 
 function vtkOpenGLRenderer(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOpenGLRenderer');
+  model.classHierarchy.add('vtkOpenGLRenderer');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {

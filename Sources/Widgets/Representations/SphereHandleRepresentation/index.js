@@ -9,7 +9,7 @@ import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpac
 
 function vtkSphereHandleRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSphereHandleRepresentation');
+  model.classHierarchy.add('vtkSphereHandleRepresentation');
 
   // --------------------------------------------------------------------------
   // Generic rendering pipeline

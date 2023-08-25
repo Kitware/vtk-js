@@ -249,10 +249,10 @@ This function is later used in index.js to actually build the widget state.
 The behavior.js file defines the methods of the widget behavior and typically looks like:
 
     export default function widgetBehavior(publicAPI, model) {
-      model.classHierarchy.push('vtk{NAME}WidgetProp');
-    
+      model.classHierarchy.add('vtk{NAME}WidgetProp');
+
       publicAPI.handle{XXX} = () => {...}
-    
+
       publicAPI.grabFocus = () => {...}
       publicAPI.loseFocus = () => {...}
     }
@@ -263,7 +263,7 @@ The index.js file contains the definition of the widget and glues all the parts 
 The widget behavior is set by setting the member `model.behavior = widgetBehavior`.
 The widget state is built by setting the member `model.widgetState = stateGenerator()`.
 It is in this file that the `getRepresentationsForViewType` method should be implemented.
-The strings of the array `model.methodsToLink` describe the names of methods that should be created by vtk.js to interface directly with representations. For instance if `'{NAME}'` is in `model.methodsToLink` then vtk.js will add the `set{NAME}()` and `get{NAME}()` methods to the widget behavior. These methods internally call the same methods on each representation that expose them. 
+The strings of the array `model.methodsToLink` describe the names of methods that should be created by vtk.js to interface directly with representations. For instance if `'{NAME}'` is in `model.methodsToLink` then vtk.js will add the `set{NAME}()` and `get{NAME}()` methods to the widget behavior. These methods internally call the same methods on each representation that expose them.
 
 
 

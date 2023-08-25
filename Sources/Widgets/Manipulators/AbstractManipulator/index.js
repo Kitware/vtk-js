@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkAbstractManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkAbstractManipulator');
+  model.classHierarchy.add('vtkAbstractManipulator');
 
   publicAPI.getOrigin = (callData) => {
     if (model.userOrigin) return model.userOrigin;

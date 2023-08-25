@@ -11,7 +11,7 @@ const { Corners } = Constants;
 
 function vtkOrientationMarkerWidget(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOrientationMarkerWidget');
+  model.classHierarchy.add('vtkOrientationMarkerWidget');
 
   const superClass = { ...publicAPI };
 

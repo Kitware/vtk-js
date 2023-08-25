@@ -4,7 +4,7 @@ import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import { vec3 } from 'gl-matrix';
 
 function vtkPolyLine(publicAPI, model) {
-  model.classHierarchy.push('vtkPolyLine');
+  model.classHierarchy.add('vtkPolyLine');
 
   const line = vtkLine.newInstance();
   line.getPoints().setNumberOfPoints(2);

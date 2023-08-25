@@ -13,7 +13,7 @@ const { Mode, Defaults } = Constants;
 
 function vtkLookupTableProxy(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkLookupTableProxy');
+  model.classHierarchy.add('vtkLookupTableProxy');
 
   model.lookupTable =
     model.lookupTable || vtkColorTransferFunction.newInstance();

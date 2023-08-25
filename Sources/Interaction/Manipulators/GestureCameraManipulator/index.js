@@ -10,7 +10,7 @@ import vtkInteractorStyleManipulator from 'vtk.js/Sources/Interaction/Style/Inte
 
 function vtkGestureCameraManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkGestureCameraManipulator');
+  model.classHierarchy.add('vtkGestureCameraManipulator');
 
   //--------------------------------------------------------------------------
 

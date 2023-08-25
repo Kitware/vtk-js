@@ -13,7 +13,7 @@ const ANIMATION_REQUESTER = 'vtkKeyboardCameraManipulator';
 
 function vtkKeyboardCameraManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkKeyboardCameraManipulator');
+  model.classHierarchy.add('vtkKeyboardCameraManipulator');
 
   const internal = {
     keysDown: [],

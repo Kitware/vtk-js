@@ -30,7 +30,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkImageReslice(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageReslice');
+  model.classHierarchy.add('vtkImageReslice');
   const superClass = { ...publicAPI };
 
   let indexMatrix = null;

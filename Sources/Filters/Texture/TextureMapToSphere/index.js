@@ -11,7 +11,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkTextureMapToSphere(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkTextureMapToSphere');
+  model.classHierarchy.add('vtkTextureMapToSphere');
 
   publicAPI.requestData = (inData, outData) => {
     if (model.deleted) {

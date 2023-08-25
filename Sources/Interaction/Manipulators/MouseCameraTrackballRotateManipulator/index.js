@@ -10,7 +10,7 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMouseCameraTrackballRotateManipulator');
+  model.classHierarchy.add('vtkMouseCameraTrackballRotateManipulator');
 
   const newCamPos = new Float64Array(3);
   const newFp = new Float64Array(3);

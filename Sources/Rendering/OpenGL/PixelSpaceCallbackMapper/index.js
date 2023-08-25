@@ -12,7 +12,7 @@ const { vtkDebugMacro } = macro;
 // ----------------------------------------------------------------------------
 
 function vtkOpenGLPixelSpaceCallbackMapper(publicAPI, model) {
-  model.classHierarchy.push('vtkOpenGLPixelSpaceCallbackMapper');
+  model.classHierarchy.add('vtkOpenGLPixelSpaceCallbackMapper');
 
   publicAPI.opaquePass = (prepass, renderPass) => {
     model._openGLRenderer =

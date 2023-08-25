@@ -12,7 +12,7 @@ export const SynchronizationMode = {
 };
 
 function vtkCameraSynchronizer(publicAPI, model) {
-  model.classHierarchy.push('vtkCameraSynchronizer');
+  model.classHierarchy.add('vtkCameraSynchronizer');
   const cameraState = new Float64Array(9);
   const direction = new Float64Array(3);
   const subscriptions = [];

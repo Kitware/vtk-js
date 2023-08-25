@@ -8,7 +8,7 @@ import vtkGlyphRepresentation from 'vtk.js/Sources/Widgets/Representations/Glyph
 
 function vtkCubeHandleRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCubeHandleRepresentation');
+  model.classHierarchy.add('vtkCubeHandleRepresentation');
 }
 
 // ----------------------------------------------------------------------------

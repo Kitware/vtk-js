@@ -12,7 +12,7 @@ const { vtkDebugMacro } = macro;
 
 function vtkVolume(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkVolume');
+  model.classHierarchy.add('vtkVolume');
 
   publicAPI.getVolumes = () => publicAPI;
 

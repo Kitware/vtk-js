@@ -9,7 +9,7 @@ import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresent
 
 function vtkCircleContextRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCircleContextRepresentation');
+  model.classHierarchy.add('vtkCircleContextRepresentation');
 
   // --------------------------------------------------------------------------
   // Generic rendering pipeline

@@ -23,7 +23,7 @@ function formatNumbers(n) {
 
 function vtkFPSMonitor(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkFPSMonitor');
+  model.classHierarchy.add('vtkFPSMonitor');
 
   model.fpsMonitorContainer = document.createElement('div');
   model.fpsMonitorContainer.setAttribute('class', model.orientationClass);

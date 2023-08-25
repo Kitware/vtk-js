@@ -12,7 +12,7 @@ export default function widgetBehavior(publicAPI, model) {
   shapeBehavior(publicAPI, model);
   const superClass = { ...publicAPI };
 
-  model.classHierarchy.push('vtkEllipseWidgetProp');
+  model.classHierarchy.add('vtkEllipseWidgetProp');
 
   publicAPI.setCorners = (point1, point2) => {
     if (superClass.setCorners) {

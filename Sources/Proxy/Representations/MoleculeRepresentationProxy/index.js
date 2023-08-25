@@ -12,7 +12,7 @@ import vtkAbstractRepresentationProxy from 'vtk.js/Sources/Proxy/Core/AbstractRe
 
 function vtkMoleculeRepresentationProxy(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMoleculeRepresentationProxy');
+  model.classHierarchy.add('vtkMoleculeRepresentationProxy');
 
   // Internals
   model.filter = vtkMoleculeToRepresentation.newInstance();

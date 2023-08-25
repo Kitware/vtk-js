@@ -18,7 +18,7 @@ const MOLECULE_FIELDS = [
 
 function vtkMolecule(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMolecule');
+  model.classHierarchy.add('vtkMolecule');
 }
 
 // ----------------------------------------------------------------------------

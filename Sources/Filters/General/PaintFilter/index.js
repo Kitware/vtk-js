@@ -16,7 +16,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkPaintFilter(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPaintFilter');
+  model.classHierarchy.add('vtkPaintFilter');
 
   let worker = null;
   let workerPromise = null;

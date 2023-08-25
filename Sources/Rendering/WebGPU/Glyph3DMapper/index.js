@@ -7,7 +7,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactor
 
 function vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUGlyph3DCellArrayMapper');
+  model.classHierarchy.add('vtkWebGPUGlyph3DCellArrayMapper');
 
   const superClass = { ...publicAPI };
 
@@ -129,7 +129,7 @@ const caNewInstance = macro.newInstance(
 
 function vtkWebGPUGlyph3DMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUGlyph3DMapper');
+  model.classHierarchy.add('vtkWebGPUGlyph3DMapper');
 
   publicAPI.createCellArrayMapper = () => {
     const mpr = caNewInstance();

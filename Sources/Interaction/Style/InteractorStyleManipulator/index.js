@@ -149,7 +149,7 @@ export const STATIC = {
 
 function vtkInteractorStyleManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkInteractorStyleManipulator');
+  model.classHierarchy.add('vtkInteractorStyleManipulator');
 
   model.mouseManipulators = [];
   model.keyboardManipulators = [];

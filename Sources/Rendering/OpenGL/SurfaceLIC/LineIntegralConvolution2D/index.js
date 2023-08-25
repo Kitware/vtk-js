@@ -53,7 +53,7 @@ function getVectorLookupProgram(normalize = true) {
 }
 
 function vtkLineIntegralConvolution2D(publicAPI, model) {
-  model.classHierarchy.push('vtkLineIntegralConvolution2D');
+  model.classHierarchy.add('vtkLineIntegralConvolution2D');
 
   publicAPI.buildAShader = (fSource) =>
     model._openGLRenderWindow

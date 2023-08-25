@@ -15,7 +15,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkGlyph3DMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkGlyph3DMapper');
+  model.classHierarchy.add('vtkGlyph3DMapper');
 
   /**
    * An orientation array is a vtkDataArray with 3 components. The first

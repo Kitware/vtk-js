@@ -14,7 +14,7 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // ----------------------------------------------------------------------------
 
 function vtkPolyLineWidget(publicAPI, model) {
-  model.classHierarchy.push('vtkPolyLineWidget');
+  model.classHierarchy.add('vtkPolyLineWidget');
 
   const superClass = { ...publicAPI };
 

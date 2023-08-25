@@ -10,7 +10,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkPointPicker(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPointPicker');
+  model.classHierarchy.add('vtkPointPicker');
 
   publicAPI.intersectWithLine = (p1, p2, tol, mapper) => {
     let tMin = Number.MAX_VALUE;

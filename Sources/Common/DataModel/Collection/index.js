@@ -8,7 +8,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkCollection(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCollection');
+  model.classHierarchy.add('vtkCollection');
 
   publicAPI.addItem = (item) => {
     model.collection.push(item);

@@ -12,7 +12,7 @@ import { States } from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants'
 
 function vtkVRButtonPanManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkVRButtonPanManipulator');
+  model.classHierarchy.add('vtkVRButtonPanManipulator');
 
   publicAPI.onButton3D = (
     interactorStyle,

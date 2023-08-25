@@ -12,7 +12,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkSpline3D(publicAPI, model) {
   // Set our classname
-  model.classHierarchy.push('vtkSpline3D');
+  model.classHierarchy.add('vtkSpline3D');
 
   // --------------------------------------------------------------------------
 

@@ -9,7 +9,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkImageStreamline(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageStreamline');
+  model.classHierarchy.add('vtkImageStreamline');
 
   const indices = new Int32Array(3);
   const paramCoords = new Float32Array(3);

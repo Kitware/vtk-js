@@ -6,7 +6,7 @@ import macro from 'vtk.js/Sources/macros';
 
 function vtkCompositeCameraManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCompositeCameraManipulator');
+  model.classHierarchy.add('vtkCompositeCameraManipulator');
 
   //-------------------------------------------------------------------------
   publicAPI.computeDisplayCenter = (iObserver, renderer) => {

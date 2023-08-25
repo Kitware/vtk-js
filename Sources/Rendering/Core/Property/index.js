@@ -13,7 +13,7 @@ function notImplemented(method) {
 
 function vtkProperty(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkProperty');
+  model.classHierarchy.add('vtkProperty');
 
   publicAPI.setColor = (r, g, b) => {
     if (Array.isArray(r)) {

@@ -15,7 +15,7 @@ const { staticOffsetAPI, otherStaticMethods } = CoincidentTopologyHelper;
 
 function vtkImageCPRMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkImageCPRMapper');
+  model.classHierarchy.add('vtkImageCPRMapper');
 
   const superClass = { ...publicAPI };
 
