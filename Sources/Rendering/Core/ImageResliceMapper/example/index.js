@@ -109,6 +109,8 @@ function setImage(im) {
 
   renderer.getActiveCamera().elevation(90);
   renderer.resetCamera();
+  renderer.getActiveCamera().dolly(1.5);
+  renderer.resetCameraClippingRange();
   const planeState = widget.getWidgetState();
   planeState.setOrigin(slicePlane.getOrigin());
   planeState.setNormal(slicePlane.getNormal());
