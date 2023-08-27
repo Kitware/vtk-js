@@ -52,6 +52,44 @@ This will allow you to see the some live code running in your browser. Just pick
 [VolumeContour]: ../docs/gallery/VolumeContour.jpg
 [ZipHttpReader]: ../docs/gallery/ZipHttpReader.jpg
 
+## Rendering
+
+<div class="gallery">
+
+[![ImageMapper Example][ImageMapper]](./ImageMapper.html "2D orthogonal axis image mapper")
+[![ImageResliceMapper Example][ImageResliceMapper]](./ImageResliceMapper.html "GPU 2D reslice/oblique/MPR mapper")
+[![ImageCPRMapper Example][ImageCPRMapper]](./ImageCPRMapper.html "Curved Planar Reformat GPU mapper, stretched and straightened")
+[![SphereMapper Example][SphereMapper]](./SphereMapper.html "GPU sphere mapper")
+[![StickMapper Example][StickMapper]](./StickMapper.html "GPU stick/cylinder/column mapper")
+[![Glyph3DMapper Example][Glyph3DMapper]](./Glyph3DMapper.html "Glyph mapper to render the same object multiple times")
+[![ScalarBarActor Example][ScalarBarActor]](./ScalarBarActor.html "Scalar bar/color legend/LUT actor")
+[![VolumeMapper Example][VolumeMapper]](./VolumeMapper.html "3D volume ray cast mapper witch volumetric scattering")
+[![SurfaceLICMapper Example][SurfaceLICMapper]](./SurfaceLICMapper.html "Surface Line Integral Convolution (LIC) mapper")
+
+
+</div>
+
+[Glyph3DMapper]: ../docs/gallery/Glyph3DMapper.jpg
+[ImageCPRMapper]: ../docs/gallery/ImageCPRMapper.jpg
+[ImageMapper]: ../docs/gallery/ImageMapper.jpg
+[ImageResliceMapper]: ../docs/gallery/ImageResliceMapper.gif
+[ScalarBarActor]: ../docs/gallery/ScalarBarActor.jpg
+[SphereMapper]: ../docs/gallery/SphereMapper.jpg
+[StickMapper]: ../docs/gallery/StickMapper.jpg
+[VolumeMapper]: ../docs/gallery/VolumeMapper.jpg
+[SurfaceLICMapper]: ../docs/gallery/SurfaceLICMapper.jpg
+
+## Picking/Selecting
+
+<div class="gallery">
+
+[![CellPicker Example][CellPicker]](./CellPicker.html "CPU cell picker/selector")
+[![PointPicker Example][PointPicker]](./PointPicker.html "CPU point picker/selector")
+[![HardwareSelector Example][HardwareSelector]](./HardwareSelector.html "GPU point/cell picker/selector with properties")
+
+[CellPicker]: ../docs/gallery/CellPicker.jpg
+[PointPicker]: ../docs/gallery/PointPicker.jpg
+[HardwareSelector]: ../docs/gallery/HardwareSelector.jpg
 
 ## Widgets
 
