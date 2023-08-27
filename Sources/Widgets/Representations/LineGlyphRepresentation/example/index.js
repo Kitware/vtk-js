@@ -6,6 +6,7 @@ import '@kitware/vtk.js/Rendering/Profiles/All';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkStateBuilder from '@kitware/vtk.js/Widgets/Core/StateBuilder';
 
+import vtkSphereHandleRepresentation from '@kitware/vtk.js/Widgets/Representations/SphereHandleRepresentation';
 import vtkLineGlyphRepresentation from '@kitware/vtk.js/Widgets/Representations/LineGlyphRepresentation';
 
 // ----------------------------------------------------------------------------
@@ -26,7 +27,7 @@ const compositeState = vtkStateBuilder
   .createBuilder()
   .addDynamicMixinState({
     labels: ['handles'],
-    mixins: ['origin'],
+    mixins: ['origin', 'scale1'],
     name: 'handle',
   })
   .build();
@@ -41,6 +42,7 @@ const points = [
 points.forEach((point) => {
   const handle = compositeState.addHandle();
   handle.setOrigin(point);
+  handle.setScale1(1);
 });
 
 // -----------------------------------------------------------
@@ -49,11 +51,18 @@ points.forEach((point) => {
 
 const widgetRep = vtkLineGlyphRepresentation.newInstance({
   scaleInPixels: false,
-  close: true,
+  lineThickness: 0.5, // radius of the cylinder
 });
 widgetRep.setInputData(compositeState);
 widgetRep.setLabels(['handles']);
 widgetRep.getActors().forEach(renderer.addActor);
+
+const handleRep = vtkSphereHandleRepresentation.newInstance({
+  scaleInPixels: false,
+});
+handleRep.setInputData(compositeState);
+handleRep.setLabels(['handles']);
+handleRep.getActors().forEach(renderer.addActor);
 
 renderer.resetCamera();
 renderWindow.render();

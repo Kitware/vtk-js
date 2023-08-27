@@ -49,11 +49,7 @@ function cylinderScale(publicAPI, model) {
           model.displayScaleParams
         );
       }
-      const scale = state.getScale3?.() ?? [
-        model.lineThickness,
-        model.lineThickness,
-        1,
-      ];
+      const scale = [1, model.lineThickness, model.lineThickness];
       scales[j++] = length * scale[0];
       scales[j++] = scaleFactor * scale[1];
       scales[j++] = scaleFactor * scale[2];
@@ -113,6 +109,7 @@ function defaultValues(publicAPI, model, initialValues) {
     },
     applyMixin: {
       noScale: cylinderScale(publicAPI, model),
+      scale1: cylinderScale(publicAPI, model),
       noOrientation: cylinderDirection(publicAPI, model),
     },
   };
