@@ -42,7 +42,7 @@ const points = [
 points.forEach((point) => {
   const handle = compositeState.addHandle();
   handle.setOrigin(point);
-  handle.setScale1(1);
+  handle.setScale1(1.5);
 });
 
 // -----------------------------------------------------------
@@ -51,7 +51,6 @@ points.forEach((point) => {
 
 const widgetRep = vtkLineGlyphRepresentation.newInstance({
   scaleInPixels: false,
-  lineThickness: 0.5, // radius of the cylinder
 });
 widgetRep.setInputData(compositeState);
 widgetRep.setLabels(['handles']);

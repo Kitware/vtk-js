@@ -49,6 +49,9 @@ function cylinderScale(publicAPI, model) {
           model.displayScaleParams
         );
       }
+      if (!model.forceLineThickness) {
+        scaleFactor *= state.getScale1?.() ?? 1;
+      }
       const scale = [1, model.lineThickness, model.lineThickness];
       scales[j++] = length * scale[0];
       scales[j++] = scaleFactor * scale[1];
@@ -95,14 +98,15 @@ function defaultValues(publicAPI, model, initialValues) {
   return {
     behavior: Behavior.CONTEXT,
     glyphResolution: 32,
-    lineThickness: 1,
+    lineThickness: 0.5, // radius of the cylinder
+    forceLineThickness: false,
     ...initialValues,
     _pipeline: {
       glyph:
         initialValues?.pipeline?.glyph ??
         vtkCylinderSource.newInstance({
           direction: [1, 0, 0],
-          center: [0.5, 0, 0],
+          center: [0.5, 0, 0], // origin of cylinder at end, not center
           capping: false,
         }),
       ...initialValues?.pipeline,
@@ -123,7 +127,11 @@ export function extend(publicAPI, model, initialValues = {}) {
     model,
     defaultValues(publicAPI, model, initialValues)
   );
-  macro.setGet(publicAPI, model, ['glyphResolution', 'lineThickness']);
+  macro.setGet(publicAPI, model, [
+    'glyphResolution',
+    'lineThickness',
+    'forceLineThickness',
+  ]);
   macro.get(publicAPI, model._pipeline, ['glyph', 'mapper', 'actor']);
 
   vtkLineGlyphRepresentation(publicAPI, model);
