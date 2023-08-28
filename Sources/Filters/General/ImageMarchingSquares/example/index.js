@@ -50,6 +50,7 @@ const sample = vtkSampleFunction.newInstance({
 
 // Isocontour
 const mSquares = vtkImageMarchingSquares.newInstance({ slice: 1 });
+mSquares.setSlicingMode(2);
 
 // Connect the pipeline proper
 mSquares.setInputConnection(sample.getOutputPort());
@@ -81,6 +82,13 @@ renderer.addActor(outlineActor);
 // UI control handling
 // ----------------------------------------------------------------------------
 fullScreenRenderer.addController(controlPanel);
+
+// Define the slicing mode
+document.querySelector('.slicingMode').addEventListener('input', (e) => {
+  const value = Number(e.target.value);
+  mSquares.setSlicingMode(value);
+  renderWindow.render();
+});
 
 // Define the volume resolution
 document.querySelector('.volumeResolution').addEventListener('input', (e) => {

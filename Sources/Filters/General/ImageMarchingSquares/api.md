@@ -12,10 +12,15 @@ algorithm).
 
 Set/Get an array of isocontour values.
 
-### sliceNumber
+### slice
 
-Set/Get the k-slice number of the input volume. By default the
-sliceNumber = 0.
+Set/Get the IJK slice number of the input volume. By default the
+slice = 0.
+
+### slicingMode
+
+Set/Get the slicing mode (IJK) which determines the direction to slice. By
+default the slicingMode = 2.
 
 ### mergePoints
 
