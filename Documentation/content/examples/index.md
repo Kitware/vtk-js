@@ -106,7 +106,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![ResliceCursorWidget Example][ResliceCursorWidget]](./ResliceCursorWidget.html "Axial Coronal and Sagittal MPR/Oblique/Reformatted/Resliced/Slab/MIP views")
 [![ShapeWidget Example][ShapeWidget]](./ShapeWidget.html "2D shape widgets with text information")
 [![SphereWidget Example][SphereWidget]](./SphereWidget.html "2D sphere widget controlled with radius")
-[![SplineWidget Example][SplineWidget]](./PaintWidget.html "Widget to draw open or closed (triangularized) sharp/smooth polygon widget")
+[![SplineWidget Example][SplineWidget]](./SplineWidget.html "Widget to draw open or closed (triangularized) sharp/smooth polygon widget")
 
 </div>
 
