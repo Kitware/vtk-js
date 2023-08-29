@@ -1,12 +1,12 @@
-import macro from 'vtk.js/Sources/macros';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
-import vtkGlyphRepresentation from 'vtk.js/Sources/Widgets/Representations/GlyphRepresentation';
-import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
-import { allocateArray } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
-import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
+import macro from '@kitware/vtk.js/macros';
+import * as vtkMath from '@kitware/vtk.js/Common/Core/Math';
+import vtkGlyph3DMapper from '@kitware/vtk.js/Rendering/Core/Glyph3DMapper';
+import vtkGlyphRepresentation from '@kitware/vtk.js/Widgets/Representations/GlyphRepresentation';
+import { Behavior } from '@kitware/vtk.js/Widgets/Representations/WidgetRepresentation/Constants';
+import { allocateArray } from '@kitware/vtk.js/Widgets/Representations/WidgetRepresentation';
+import vtkCylinderSource from '@kitware/vtk.js/Filters/Sources/CylinderSource';
 import { OrientationModes } from '@kitware/vtk.js/Rendering/Core/Glyph3DMapper/Constants';
-import { getPixelWorldHeightAtCoord } from 'vtk.js/Sources/Widgets/Core/WidgetManager';
+import { getPixelWorldHeightAtCoord } from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 
 function vtkLineGlyphRepresentation(publicAPI, model) {
   model.classHierarchy.push('vtkLineGlyphRepresentation');
