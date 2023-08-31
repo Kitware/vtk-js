@@ -1,6 +1,10 @@
 import macro from 'vtk.js/Sources/macros';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCutter from 'vtk.js/Sources/Filters/Core/Cutter';
+import vtkImageDataOutlineFilter from 'vtk.js/Sources/Filters/General/ImageDataOutlineFilter';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkImageResliceMapper from 'vtk.js/Sources/Rendering/Core/ImageResliceMapper';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import { SlabTypes } from 'vtk.js/Sources/Rendering/Core/ImageResliceMapper/Constants';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
@@ -72,9 +76,21 @@ function vtkResliceRepresentationProxy(publicAPI, model) {
   model.mapper.setSlicePlane(model.slicePlane);
   model.mapper.setSlabType(SlabTypes.MAX);
 
+  // for the slice polygon outline
+  model.outline = {
+    iof: vtkImageDataOutlineFilter.newInstance(),
+    sof: vtkCutter.newInstance({ cutFunction: model.slicePlane }),
+    mapper: vtkMapper.newInstance(),
+    actor: vtkActor.newInstance({ visibility: false }),
+  };
+  model.outline.sof.setInputConnection(model.outline.iof.getOutputPort());
+  model.outline.mapper.setInputConnection(model.outline.sof.getOutputPort());
+
   // connect rendering pipeline
   model.actor.setMapper(model.mapper);
   model.actors.push(model.actor);
+  model.outline.actor.setMapper(model.outline.mapper);
+  model.actors.push(model.outline.actor);
 
   function setInputData(inputDataset) {
     const state = updateDomains(
@@ -91,6 +107,7 @@ function vtkResliceRepresentationProxy(publicAPI, model) {
   // Keep things updated
   model.sourceDependencies.push(model.mapper);
   model.sourceDependencies.push({ setInputData });
+  model.sourceDependencies.push(model.outline.iof);
 
   // API ----------------------------------------------------------------------
 
@@ -128,6 +145,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkResliceRepresentationProxy(publicAPI, model);
 
   // Proxyfy
+  model.outlineActor = model.outline.actor;
+  model.outlineProperty = model.outline.actor.getProperty();
   macro.proxyPropertyMapping(publicAPI, model, {
     visibility: { modelKey: 'actor', property: 'visibility' },
     windowWidth: { modelKey: 'property', property: 'colorWindow' },
@@ -141,6 +160,9 @@ export function extend(publicAPI, model, initialValues = {}) {
       modelKey: 'mapper',
       property: 'slabTrapezoidIntegration',
     },
+    outlineVisibility: { modelKey: 'outlineActor', property: 'visibility' },
+    outlineColor: { modelKey: 'outlineProperty', property: 'color' },
+    outlineLineWidth: { modelKey: 'outlineProperty', property: 'lineWidth' },
   });
 }
 

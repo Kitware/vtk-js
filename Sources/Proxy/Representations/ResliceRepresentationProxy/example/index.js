@@ -174,6 +174,9 @@ imageDataPromise.then((imageData) => {
   representation2DProxy.setSlabThickness(30);
   representation2DProxy.setSlabTrapezoidIntegration(1.5);
   representation2DProxy.setSlabType(SlabTypes.MAX);
+  representation2DProxy.setOutlineVisibility(true);
+  representation2DProxy.setOutlineColor([1, 0, 0]);
+  representation2DProxy.setOutlineLineWidth(4.0);
 
   view2DProxy.setFitProps(false);
   view2DProxy.resetCamera();
