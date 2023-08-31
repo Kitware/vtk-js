@@ -817,6 +817,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.getGLInformations = () => {
+    if (model._glInformation) {
+      return model._glInformation;
+    }
     const gl = publicAPI.get3DContext();
 
     const glTextureFloat = gl.getExtension('OES_texture_float');
@@ -1218,6 +1221,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         result[key] = { label, value };
       }
     }
+    model._glInformation = result;
     return result;
   };
 
@@ -1393,6 +1397,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model._textureResourceIds = new Map();
   model._graphicsResources = new Map();
   model._graphicsResourceHash = new Map();
+  model._glInformation = null;
 
   model.myFactory = vtkOpenGLViewNodeFactory.newInstance();
   /* eslint-disable no-use-before-define */
