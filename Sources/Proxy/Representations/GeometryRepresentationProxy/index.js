@@ -79,6 +79,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     },
     pointSize: { modelKey: 'property', property: 'pointSize' },
     useShadow: { modelKey: 'property', property: 'lighting' },
+    lineWidth: { modelKey: 'property', property: 'lineWidth' },
     useBounds: { modelKey: 'actor', property: 'useBounds' },
   });
 }
