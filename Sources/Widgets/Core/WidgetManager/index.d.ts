@@ -100,16 +100,6 @@ export interface vtkWidgetManager extends vtkObject {
   getPickingEnabled(): boolean;
 
   /**
-   * @deprecated
-   */
-  getUseSvgLayer(): boolean;
-
-  /**
-   * @deprecated
-   */
-  setUseSvgLayer(use: boolean): boolean;
-
-  /**
    * Enable the picking.
    */
   enablePicking(): void;
@@ -166,16 +156,6 @@ export interface vtkWidgetManager extends vtkObject {
   getSelectedDataForXY(x: number, y: number): Promise<ISelectedData>;
 
   /**
-   * @deprecated
-   */
-  updateSelectionFromXY(x: number, y: number): void;
-
-  /**
-   * @deprecated
-   */
-  updateSelectionFromMouseEvent(event: MouseEvent): void;
-
-  /**
    * The all currently selected data.
    */
   getSelectedData(): ISelectedData | {};
@@ -197,10 +177,6 @@ export interface IWidgetManagerInitialValues {
   captureOn?: CaptureOn;
   viewType?: ViewTypes;
   pickingEnabled?: boolean;
-  /**
-   * @deprecated
-   */
-  useSvgLayer?: boolean;
 }
 
 /**

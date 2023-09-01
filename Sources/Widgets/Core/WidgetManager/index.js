@@ -5,7 +5,7 @@ import Constants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import { WIDGET_PRIORITY } from 'vtk.js/Sources/Widgets/Core/AbstractWidget/Constants';
 
 const { ViewTypes, RenderingTypes, CaptureOn } = Constants;
-const { vtkErrorMacro, vtkWarningMacro } = macro;
+const { vtkErrorMacro } = macro;
 
 let viewIdCount = 1;
 
@@ -391,31 +391,6 @@ function vtkWidgetManager(publicAPI, model) {
       model.selections = model._capturedBuffers.generateSelection(x, y, x, y);
     }
     return publicAPI.getSelectedData();
-  };
-
-  publicAPI.updateSelectionFromXY = (x, y) => {
-    vtkWarningMacro(
-      'updateSelectionFromXY is deprecated, please use getSelectedDataForXY'
-    );
-    if (model.pickingEnabled) {
-      // Then pick regular representations.
-      if (model.captureOn === CaptureOn.MOUSE_MOVE) {
-        captureBuffers(x, y, x, y);
-      }
-    }
-  };
-
-  publicAPI.updateSelectionFromMouseEvent = (event) => {
-    vtkWarningMacro(
-      'updateSelectionFromMouseEvent is deprecated, please use getSelectedDataForXY'
-    );
-    const { pageX, pageY } = event;
-    const { top, left, height } = model._apiSpecificRenderWindow
-      .getCanvas()
-      .getBoundingClientRect();
-    const x = pageX - left;
-    const y = height - (pageY - top);
-    publicAPI.updateSelectionFromXY(x, y);
   };
 
   publicAPI.getSelectedData = () => {
