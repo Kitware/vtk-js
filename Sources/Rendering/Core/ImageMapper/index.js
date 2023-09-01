@@ -6,7 +6,6 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 
 const { staticOffsetAPI, otherStaticMethods } = CoincidentTopologyHelper;
-const { vtkWarningMacro } = macro;
 const { SlicingMode } = Constants;
 
 // ----------------------------------------------------------------------------
@@ -148,16 +147,16 @@ function vtkImageMapper(publicAPI, model) {
   };
 
   function computeClosestIJKAxis() {
-    let inVec3;
+    let xyzMode;
     switch (model.slicingMode) {
       case SlicingMode.X:
-        inVec3 = [1, 0, 0];
+        xyzMode = 0;
         break;
       case SlicingMode.Y:
-        inVec3 = [0, 1, 0];
+        xyzMode = 1;
         break;
       case SlicingMode.Z:
-        inVec3 = [0, 0, 1];
+        xyzMode = 2;
         break;
       default:
         model.closestIJKAxis = {
@@ -167,44 +166,19 @@ function vtkImageMapper(publicAPI, model) {
         return;
     }
 
-    // Project vec3 onto direction cosines
-    const out = [0, 0, 0];
     // The direction matrix in vtkImageData is the indexToWorld rotation matrix
     // with a column-major data layout since it is stored as a WebGL matrix.
-    // We need the worldToIndex rotation matrix for the projection, and it needs
-    // to be in a row-major data layout to use vtkMath for operations.
-    // To go from the indexToWorld column-major matrix to the worldToIndex
-    // row-major matrix, we need to transpose it (column -> row) then inverse it.
-    // However, that 3x3 matrix is a rotation matrix which is orthonormal, meaning
-    // that its inverse is equal to its transpose. We therefore need to apply two
-    // transpositions resulting in a no-op.
-    const a = publicAPI.getCurrentImage().getDirection();
-    vtkMath.multiply3x3_vect3(a, inVec3, out);
-
-    let maxAbs = 0.0;
-    let ijkMode = -1;
-    let flip = false;
-    for (let axis = 0; axis < out.length; ++axis) {
-      const absValue = Math.abs(out[axis]);
-      if (absValue > maxAbs) {
-        maxAbs = absValue;
-        flip = out[axis] < 0.0;
-        ijkMode = axis;
+    const direction = publicAPI.getCurrentImage().getDirection();
+    const newMatrix = vtkMath.getSparseOrthogonalMatrix(direction);
+    // With {foo}Vector filled with 0s except at {foo}Mode position where it is 1
+    // We have xyzVector = (+/-) newMatrix * ijkVector
+    let ijkMode = 0;
+    for (; ijkMode < 3; ++ijkMode) {
+      if (newMatrix[xyzMode + 3 * ijkMode] !== 0) {
+        break;
       }
     }
-
-    if (maxAbs !== 1.0) {
-      const xyzLabel = 'IJKXYZ'[model.slicingMode];
-      const ijkLabel = 'IJKXYZ'[ijkMode];
-      vtkWarningMacro(
-        `Unaccurate slicing along ${xyzLabel} axis which ` +
-          `is not aligned with any IJK axis of the image data. ` +
-          `Using ${ijkLabel} axis  as a fallback (${maxAbs}% aligned). ` +
-          `Necessitates slice reformat that is not yet implemented.  ` +
-          `You can switch the slicing mode on your mapper to do IJK slicing instead.`
-      );
-    }
-
+    const flip = newMatrix[xyzMode + 3 * ijkMode] < 0;
     model.closestIJKAxis = { ijkMode, flip };
   }
 

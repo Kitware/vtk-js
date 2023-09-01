@@ -2146,6 +2146,56 @@ export function getMajorAxisIndex(vector) {
   return axisIndex;
 }
 
+// Return the closest orthogonal matrix of 1, -1 and 0
+// It works for both column major and row major matrices
+// This function iteratively associate a column with a row by choosing
+// the greatest absolute value from the remaining row and columns
+// For each association, a -1 or a 1 is set in the output, depending on
+// the sign of the value in the original matrix
+export function getSparseOrthogonalMatrix(matrix, n = 3) {
+  // Initialize rows and columns to available indices
+  const rows = new Array(n);
+  const cols = new Array(n);
+  for (let i = 0; i < n; ++i) {
+    rows[i] = i;
+    cols[i] = i;
+  }
+  // No need for the last iteration: i = 0
+  for (let i = n - 1; i > 0; i--) {
+    // Loop invariant:
+    // rows[0:i] and cols[0:i] contain the remaining rows and columns
+    // rows]i:n[ and cols]i:n[ contain the associations found (rows[k] is associated with cols[k])
+    let bestValue = -Infinity;
+    let bestRowI = 0;
+    let bestColI = 0;
+    for (let rowI = 0; rowI <= i; ++rowI) {
+      const row = rows[rowI];
+      for (let colI = 0; colI <= i; ++colI) {
+        const col = cols[colI];
+        const absVal = Math.abs(matrix[row + n * col]);
+        if (absVal > bestValue) {
+          bestValue = absVal;
+          bestRowI = rowI;
+          bestColI = colI;
+        }
+      }
+    }
+    // Found an association between rows[bestRowI] and cols[bestColI]
+    // Put both at the end of their array by swapping with i
+    [rows[i], rows[bestRowI]] = [rows[bestRowI], rows[i]];
+    [cols[i], cols[bestColI]] = [cols[bestColI], cols[i]];
+  }
+
+  // Convert row/column association to a matrix
+  const output = new Array(n * n).fill(0);
+  for (let i = 0; i < n; ++i) {
+    const matIdx = rows[i] + n * cols[i];
+    output[matIdx] = matrix[matIdx] < 0 ? -1 : 1;
+  }
+
+  return output;
+}
+
 export function floatToHex2(value) {
   const integer = Math.floor(value * 255);
   if (integer > 15) {
@@ -2284,6 +2334,7 @@ export default {
   // JS add-on
   createUninitializedBounds,
   getMajorAxisIndex,
+  getSparseOrthogonalMatrix,
   floatToHex2,
   floatRGB2HexCode,
   float2CssRGBA,
