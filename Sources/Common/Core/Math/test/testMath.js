@@ -754,3 +754,47 @@ test('Test singularValueDecomposition', (t) => {
   }
   t.end();
 });
+
+test('Test getSparseOrthogonalMatrix', (t) => {
+  const successMsg = 'Row/column association is correct';
+  const tests = [
+    {
+      matrix: [
+        0.702, 0.7025, -0.1163, -0.2856, 0.1281, -0.9497, -0.6523, 0.7, 0.2906,
+      ],
+      expected: [0, 1, 0, 0, 0, -1, -1, 0, 0],
+    },
+  ];
+
+  // Test all matrices of size 3x3 which are orthogonal and contain only -1, 1 and 0
+  // There are 6 x 8 = 54 matrices to test
+  const permutation = [0, 1, 2];
+  for (let permutationIdx = 0; permutationIdx < 6; ++permutationIdx) {
+    for (let signBitField = 0; signBitField < 8; ++signBitField) {
+      const matrix = new Array(9).fill(0);
+      for (let row = 0; row < permutation.length; ++row) {
+        const col = permutation[row];
+        // eslint-disable-next-line no-bitwise
+        matrix[row + 3 * col] = signBitField & (1 << row) ? -1 : 1;
+      }
+      tests.push({ matrix, expected: matrix });
+    }
+    // Next permutation
+    if (permutationIdx % 2 === 0) {
+      [permutation[0], permutation[1]] = [permutation[1], permutation[0]];
+    } else {
+      [permutation[1], permutation[2]] = [permutation[2], permutation[1]];
+    }
+  }
+
+  tests.forEach(({ matrix, expected }) => {
+    const outputMatrix = vtkMath.getSparseOrthogonalMatrix(matrix);
+    const testResult = vtkMath.areEquals(expected, outputMatrix, 0);
+    const msg = testResult
+      ? successMsg
+      : `Bad row/column association with matrix ${matrix}\nExpected: ${expected}\nGot: ${outputMatrix}`;
+    t.ok(testResult, msg);
+  });
+
+  t.end();
+});

@@ -879,6 +879,19 @@ export function createUninitializedBounds(): Bounds;
 export function getMajorAxisIndex(vector: number[]): number;
 
 /**
+ * Return the closest orthogonal matrix of 1, -1 and 0
+ * It works for both column major and row major matrices
+ * This function iteratively associate a column with a row by choosing
+ * the greatest absolute value from the remaining row and columns
+ * For each association, a -1 or a 1 is set in the output, depending on
+ * the sign of the value in the original matrix
+ * 
+ * @param {Number[]} matrix The matrix of size nxn
+ * @param {Number[]} n The size of the square matrix, defaults to 3
+ */
+export function getSparseOrthogonalMatrix(matrix: number[], n: number): number[];
+
+/**
  *
  * @param {Number} value The value to convert.
  */
@@ -1028,6 +1041,7 @@ export declare const vtkMath: {
 	isInf: typeof isInf;
 	createUninitializedBounds: typeof createUninitializedBounds;
 	getMajorAxisIndex: typeof getMajorAxisIndex;
+	getSparseOrthogonalMatrix: typeof getSparseOrthogonalMatrix;
 	floatToHex2: typeof floatToHex2;
 	floatRGB2HexCode: typeof floatRGB2HexCode;
 	float2CssRGBA: typeof float2CssRGBA;
