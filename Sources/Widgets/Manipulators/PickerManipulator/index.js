@@ -9,6 +9,8 @@ import vtkAbstractManipulator from 'vtk.js/Sources/Widgets/Manipulators/Abstract
 function vtkPickerManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPickerManipulator');
+
+  // Default picker
   model.picker = vtkCellPicker.newInstance();
   model.picker.initializePickList();
   model.picker.setPickFromList(true);
@@ -24,6 +26,10 @@ function vtkPickerManipulator(publicAPI, model) {
     return {
       worldCoords: model.position || [0, 0, 0],
     };
+  };
+
+  publicAPI.setPicker = (picker) => {
+    model.picker = picker;
   };
 
   publicAPI.addActor = (actor) => {
