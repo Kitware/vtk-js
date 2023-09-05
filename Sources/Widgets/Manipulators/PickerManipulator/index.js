@@ -3,12 +3,12 @@ import vtkCellPicker from 'vtk.js/Sources/Rendering/Core/CellPicker';
 import vtkAbstractManipulator from 'vtk.js/Sources/Widgets/Manipulators/AbstractManipulator';
 
 // ----------------------------------------------------------------------------
-// vtkActorPickManipulator methods
+// vtkPickerManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkActorPickManipulator(publicAPI, model) {
+function vtkPickerManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkActorPickManipulator');
+  model.classHierarchy.push('vtkPickerManipulator');
   model.picker = vtkCellPicker.newInstance();
   model.picker.initializePickList();
   model.picker.setPickFromList(true);
@@ -50,12 +50,12 @@ function defaultValues(initialValues) {
 export function extend(publicAPI, model, initialValues = {}) {
   vtkAbstractManipulator.extend(publicAPI, model, defaultValues(initialValues));
 
-  vtkActorPickManipulator(publicAPI, model);
+  vtkPickerManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkActorPickManipulator');
+export const newInstance = macro.newInstance(extend, 'vtkPickerManipulator');
 
 // ----------------------------------------------------------------------------
 

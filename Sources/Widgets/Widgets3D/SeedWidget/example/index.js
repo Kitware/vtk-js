@@ -6,7 +6,7 @@ import '@kitware/vtk.js/Rendering/Profiles/Glyph';
 
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
-import vtkActorPickManipulator from '@kitware/vtk.js/Widgets/Manipulators/ActorPickManipulator';
+import vtkPickerManipulator from '@kitware/vtk.js/Widgets/Manipulators/PickerManipulator';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkSeedWidget from '@kitware/vtk.js/Widgets/Widgets3D/SeedWidget';
@@ -29,8 +29,8 @@ cone.setResolution(50);
 const mapper = vtkMapper.newInstance();
 const actor = vtkActor.newInstance();
 
-// Create an instance of vtkActorPickManipulator to constrain movement to a target actor
-const manipulator = vtkActorPickManipulator.newInstance();
+// Create an instance of vtkPickerManipulator to constrain movement to a target actor
+const manipulator = vtkPickerManipulator.newInstance();
 // Set the target actor, which is representing a cone
 manipulator.addActor(actor);
 
