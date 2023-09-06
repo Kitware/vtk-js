@@ -5,8 +5,6 @@ export default function widgetBehavior(publicAPI, model) {
 
   const moveHandle = model.widgetState.getMoveHandle();
   moveHandle.setVisible(true);
-  // default color is red
-  moveHandle.setColor3(255, 0, 0);
   model._isDragging = false;
   model.previousPosition = null;
 
