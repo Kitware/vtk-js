@@ -3,8 +3,7 @@ import macro from 'vtk.js/Sources/macros';
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('SeedWidgetProp');
 
-  const state = model.widgetState;
-  const moveHandle = state.getMoveHandle();
+  const moveHandle = model.widgetState.getMoveHandle();
   moveHandle.setVisible(true);
   // default color is red
   moveHandle.setColor3(255, 0, 0);
@@ -63,7 +62,7 @@ export default function widgetBehavior(publicAPI, model) {
       model._apiSpecificRenderWindow.setCursor('pointer');
       model._isDragging = false;
       model.activeState = null;
-      state.deactivate();
+      model.widgetState.deactivate();
     }
     publicAPI.invokeEndInteractionEvent();
     return macro.EVENT_ABORT;
