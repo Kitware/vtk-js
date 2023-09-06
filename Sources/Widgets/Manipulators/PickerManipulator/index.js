@@ -21,8 +21,6 @@ function vtkPickerManipulator(publicAPI, model) {
       worldCoords: model.position || null,
     };
   };
-
-  macro.setGet(publicAPI, model, ['picker']);
 }
 
 // ----------------------------------------------------------------------------
@@ -48,6 +46,8 @@ function defaultValues(initialValues) {
 
 export function extend(publicAPI, model, initialValues = {}) {
   vtkAbstractManipulator.extend(publicAPI, model, defaultValues(initialValues));
+
+  macro.setGet(publicAPI, model, ['picker']);
 
   vtkPickerManipulator(publicAPI, model);
 }
