@@ -32,7 +32,7 @@ const actor = vtkActor.newInstance();
 // Create an instance of vtkPickerManipulator to constrain movement to a target actor
 const manipulator = vtkPickerManipulator.newInstance();
 // Set the target actor, which is representing a cone
-manipulator.addActor(actor);
+manipulator.getPicker().addPickList(actor);
 
 actor.setMapper(mapper);
 mapper.setInputConnection(cone.getOutputPort());

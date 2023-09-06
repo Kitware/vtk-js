@@ -23,14 +23,6 @@ function vtkPickerManipulator(publicAPI, model) {
   };
 
   macro.setGet(publicAPI, model, ['picker']);
-
-  publicAPI.addActor = (actor) => {
-    model.picker.addPickList(actor);
-  };
-
-  publicAPI.setTolerance = (tolerance) => {
-    model.picker.setTolerance(tolerance);
-  };
 }
 
 // ----------------------------------------------------------------------------
