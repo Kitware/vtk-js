@@ -1,15 +1,15 @@
 import macro from 'vtk.js/Sources/macros';
 
 export default function widgetBehavior(publicAPI, model) {
+  model.classHierarchy.push('SeedWidgetProp');
+
   const state = model.widgetState;
   const moveHandle = state.getMoveHandle();
   moveHandle.setVisible(true);
   // default color is red
   moveHandle.setColor3(255, 0, 0);
-
   model._isDragging = false;
   model.previousPosition = null;
-  model.classHierarchy.push('SeedWidgetProp');
 
   function isValidHandle(handle) {
     return handle === moveHandle;
