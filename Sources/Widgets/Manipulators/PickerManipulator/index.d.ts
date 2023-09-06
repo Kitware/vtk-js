@@ -1,4 +1,5 @@
 import { IAbstractManipulatorInitialValues, vtkAbstractManipulator } from "../AbstractManipulator";
+import vtkPicker from '../../../Rendering/Core/Picker/index';
 
 /**
  *
@@ -8,6 +9,16 @@ export interface IPickerManipulatorInitialValues extends IAbstractManipulatorIni
 }
 
 export interface vtkPickerManipulator extends vtkAbstractManipulator {
+
+  /**
+	 *
+	 */
+	getPicker(): vtkPicker;
+
+  /**
+	 *
+	 */
+	setPicker(picker: vtkPicker): void;
 
 }
 
