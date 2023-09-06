@@ -18,7 +18,7 @@ function vtkPickerManipulator(publicAPI, model) {
       model.position = model.picker.getPickedPositions()[0];
     }
     return {
-      worldCoords: model.position || [0, 0, 0],
+      worldCoords: model.position || null,
     };
   };
 
