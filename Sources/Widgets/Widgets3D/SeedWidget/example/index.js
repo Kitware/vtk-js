@@ -61,8 +61,20 @@ fullScreenRenderer.addController(controlPanel);
 document.querySelector('#addWidget').addEventListener('click', () => {
   widgetManager.releaseFocus(widget);
   widget = vtkSeedWidget.newInstance();
+
   // Important: set the manipulator of the widget to constrain movement to the actor
   widget.setManipulator(manipulator);
+  // Set the color of the seed (random color)
+  widget
+    .getWidgetState()
+    .getMoveHandle()
+    .setColor3(
+      Math.round(Math.random() * 255),
+      Math.round(Math.random() * 255),
+      Math.round(Math.random() * 255)
+    );
+
+  // Start placement interaction
   widget.placeWidget(cone.getOutputData().getBounds());
   widgetHandle = widgetManager.addWidget(widget);
   widgetManager.grabFocus(widget);
