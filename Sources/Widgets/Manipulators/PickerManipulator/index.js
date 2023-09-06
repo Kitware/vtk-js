@@ -10,12 +10,6 @@ function vtkPickerManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPickerManipulator');
 
-  // Default picker
-  model.picker = vtkCellPicker.newInstance();
-  model.picker.initializePickList();
-  model.picker.setPickFromList(true);
-  model.picker.setTolerance(0);
-
   publicAPI.handleEvent = (callData) => {
     const { position, pokedRenderer } = callData;
 
@@ -46,6 +40,15 @@ function vtkPickerManipulator(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 function defaultValues(initialValues) {
+  if (!initialValues.picker) {
+    // Default picker
+    const picker = vtkCellPicker.newInstance();
+    picker.initializePickList();
+    picker.setPickFromList(true);
+    picker.setTolerance(0);
+
+    initialValues.picker = picker;
+  }
   return {
     ...initialValues,
   };
