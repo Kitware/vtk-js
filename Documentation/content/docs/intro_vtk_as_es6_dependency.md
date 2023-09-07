@@ -4,7 +4,7 @@ title: Using vtk.js as an ES dependency
 This guide illustrates how to consume vtk.js as an ES dependency.
 
 This document was last updated with the following package versions:
-- `@kitware/vtk.js@v19`
+- `@kitware/vtk.js@v28`
 - `webpack@v5`
 
 ## Starting a new vtk.js project
@@ -55,6 +55,12 @@ Furthermore, you no longer need to require and add `vtkRules` into your webpack 
   }
  }
 ```
+
+### ES5 Support
+
+`@kitware/vtk.js` targets ES6+, which means projects consuming `@kitware/vtk.js` must use babel, swc, or another transpiler to target ES5 output. If you are using existing frontend tooling such as vite or create-react-app, you are already covered.
+
+Adding ES5 support is out of the scope for this documentation. Instead, please visit [babel's documentation](https://babeljs.io/) or [SWC's documentation](https://swc.rs/) to get started.
 
 ## Using vtk.js
 
