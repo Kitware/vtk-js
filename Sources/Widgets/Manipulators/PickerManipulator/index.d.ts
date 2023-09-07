@@ -1,5 +1,5 @@
 import { IAbstractManipulatorInitialValues, vtkAbstractManipulator } from "../AbstractManipulator";
-import vtkPicker from '../../../Rendering/Core/Picker/index';
+import vtkPicker from 'vtk.js/Sources/Rendering/Core/Picker';
 
 /**
  *
