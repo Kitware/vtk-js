@@ -19,6 +19,7 @@ export default function stateGenerator() {
       initialValues: {
         scale1: 20,
         visible: true,
+        direction: [0, 0, 1],
       },
     })
     .build();
