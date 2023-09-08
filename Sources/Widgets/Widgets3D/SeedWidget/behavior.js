@@ -5,6 +5,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   const moveHandle = model.widgetState.getMoveHandle();
   moveHandle.setVisible(true);
+  moveHandle.setDirection([0, 0, 1]);
   model._isDragging = false;
   model.previousPosition = null;
 
