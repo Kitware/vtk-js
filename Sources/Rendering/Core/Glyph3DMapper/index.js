@@ -134,6 +134,7 @@ function vtkGlyph3DMapper(publicAPI, model) {
       model.normalArray = new Float32Array(9 * numPts);
       const nbuff = model.normalArray.buffer;
       const tuple = [];
+      const orientation = [];
       for (let i = 0; i < numPts; ++i) {
         const z = new Float32Array(mbuff, i * 64, 16);
         trans[0] = pts[i * 3];
@@ -142,7 +143,6 @@ function vtkGlyph3DMapper(publicAPI, model) {
         mat4.translate(z, identity, trans);
 
         if (oArray) {
-          const orientation = [];
           oArray.getTuple(i, orientation);
           switch (model.orientationMode) {
             case OrientationModes.MATRIX: {
@@ -299,6 +299,9 @@ function vtkGlyph3DMapper(publicAPI, model) {
     };
     return pcount;
   };
+
+  publicAPI.setSourceConnection = (outputPort) =>
+    publicAPI.setInputConnection(outputPort, 1);
 }
 
 // ----------------------------------------------------------------------------

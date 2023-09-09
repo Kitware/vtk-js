@@ -29,7 +29,7 @@ test('Test vtkPolyDataNormals passData', (t) => {
   t.end();
 });
 
-test.only('Test vtkPolyDataNormals normals', (t) => {
+test('Test vtkPolyDataNormals normals', (t) => {
   const cube = vtkCubeSource.newInstance();
   const input = cube.getOutputData();
   const pointNormalsData = input.getPointData().getNormals().getData();
