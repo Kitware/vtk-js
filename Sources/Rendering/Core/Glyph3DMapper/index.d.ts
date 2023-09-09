@@ -1,4 +1,4 @@
-import { Bounds } from "../../../types";
+import { Bounds, Nullable, vtkPipelineConnection } from "../../../types";
 import vtkMapper, { IMapperInitialValues } from "../Mapper";
 import { OrientationModes, ScaleModes } from "./Constants";
 
@@ -88,6 +88,12 @@ export interface vtkGlyph3DMapper extends vtkMapper {
 	getPrimitiveCount(): IPrimitiveCount;
 
 	/**
+	 * Sets the name of the array to use as orientation.
+	 * @param {String} arrayName Name of the array
+	 */
+	setOrientationArray(arrayName: Nullable<string>): boolean;
+
+	/**
 	 * Orientation mode indicates if the OrientationArray provides the direction 
 	 * vector for the orientation or the rotations around each axes.
 	 * @param {OrientationModes} orientationMode The orientation mode.
@@ -138,6 +144,13 @@ export interface vtkGlyph3DMapper extends vtkMapper {
 	 * Set scale to `SCALE_BY_CONSTANT`
 	 */
 	setScaleModeToScaleByConstant(): boolean;
+
+	/**
+	 * Convenient method to set the source glyph connection
+	 * @param {vtkPipelineConnection} outputPort The output port of the glyph source.
+	 */
+	setSourceConnection(outputPort: vtkPipelineConnection): void;
+
 }
 
 /**
