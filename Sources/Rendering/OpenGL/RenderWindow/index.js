@@ -381,18 +381,24 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
             default:
               return oglNorm16Ext.RGBA16_SNORM_EXT;
           }
+        case VtkDataTypes.UNSIGNED_SHORT:
+        case VtkDataTypes.SHORT:
         case VtkDataTypes.FLOAT:
         default:
+          // useHalfFloat tells us if the texture can be accurately
+          // rendered with 16 bits or not.
           switch (numComps) {
             case 1:
-              return model.context.R16F;
+              return useHalfFloat ? model.context.R16F : model.context.R32F;
             case 2:
-              return model.context.RG16F;
+              return useHalfFloat ? model.context.RG16F : model.context.RG32F;
             case 3:
-              return model.context.RGB16F;
+              return useHalfFloat ? model.context.RGB16F : model.context.RGB32F;
             case 4:
             default:
-              return model.context.RGBA16F;
+              return useHalfFloat
+                ? model.context.RGBA16F
+                : model.context.RGBA32F;
           }
       }
     }

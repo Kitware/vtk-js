@@ -365,6 +365,20 @@ function vtkOpenGLTexture(publicAPI, model) {
       );
     }
 
+    if (
+      [
+        model.context.R32F,
+        model.context.RG32F,
+        model.context.RGB32F,
+        model.context.RGBA32F,
+      ].includes(model.internalFormat) &&
+      !model.context.getExtension('OES_texture_float_linear')
+    ) {
+      vtkWarningMacro(
+        'Failed to load OES_texture_float_linear. Texture filtering is not available for *32F internal formats.'
+      );
+    }
+
     return model.internalFormat;
   };
 
