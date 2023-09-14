@@ -260,14 +260,13 @@ export interface vtkImageMapper extends vtkAbstractImageMapper {
 	/**
 	 * Get the slicing mode. 
 	 */
-	getSlicingMode(): number;
-
+	getSlicingMode(): SlicingMode;
 
 	/**
 	 * Set the slicing mode. 
-	 * @param {Number} mode The slicing mode.
+	 * @param {SlicingMode} mode The slicing mode.
 	 */
-	setSlicingMode(mode: number): boolean;
+	setSlicingMode(mode: SlicingMode): boolean;
 
 	/**
 	 * Get the preference to use halfFloat representation of float
@@ -276,9 +275,9 @@ export interface vtkImageMapper extends vtkAbstractImageMapper {
 
 	/**
 	 * Set the preference to use halfFloat representation of float
-	 * @param {Boolean} sizeOverAccuracy
+	 * @param {Boolean} preferSizeOverAccuracy
 	 */
-	setPreferSizeOverAccuracy(sizeOverAccuracy: boolean): boolean;
+	setPreferSizeOverAccuracy(preferSizeOverAccuracy: boolean): boolean;
 }
 
 /**
