@@ -14,9 +14,9 @@ needs to keep them around
 
 make sure the specified shaders are compiled, linked, and bound
 
-### releaseCurrentShader()
+### releaseCurrentShaderProgram()
 
-Release the current shader. Basically go back to
+Release the current shader program. Basically go back to
 having no shaders loaded. This is useful for old
 legacy code that relies on no shaders being loaded.
 

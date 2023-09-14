@@ -79,9 +79,18 @@ function vtkShaderProgram(publicAPI, model) {
     if (model.shaderType === 'Unknown' || model.handle === 0) {
       return;
     }
-
-    model.context.deleteShader(model.handle);
+    publicAPI.release();
+    if (model.vertexShaderHandle !== 0) {
+      model.context.detachShader(model.handle, model.vertexShaderHandle);
+      model.vertexShaderHandle = 0;
+    }
+    if (model.fragmentShaderHandle !== 0) {
+      model.context.detachShader(model.handle, model.fragmentShaderHandle);
+      model.fragmentShaderHandle = 0;
+    }
+    model.context.deleteProgram(model.handle);
     model.handle = 0;
+    publicAPI.setCompiled(false);
   };
 
   publicAPI.bind = () => {
@@ -464,7 +473,7 @@ function vtkShaderProgram(publicAPI, model) {
 
     if (shader.getShaderType() === 'Vertex') {
       if (model.vertexShaderHandle !== 0) {
-        model.comntext.detachShader(model.handle, model.vertexShaderHandle);
+        model.context.detachShader(model.handle, model.vertexShaderHandle);
       }
       model.vertexShaderHandle = shader.getHandle();
     }
