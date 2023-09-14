@@ -5,7 +5,11 @@ import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 
 // ----------------------------------------------------------------------------
 
-const SET_GET_FIELDS = ['lastShaderBound', 'context', '_openGLRenderWindow'];
+const SET_GET_FIELDS = [
+  'lastShaderProgramBound',
+  'context',
+  '_openGLRenderWindow',
+];
 
 // ----------------------------------------------------------------------------
 // vtkShaderCache methods
@@ -139,31 +143,31 @@ function vtkShaderCache(publicAPI, model) {
       geometryCode
     );
 
-    const shader = publicAPI.getShaderProgram(
+    const shaderProgram = publicAPI.getShaderProgram(
       data.VSSource,
       data.FSSource,
       data.GSSource
     );
 
-    return publicAPI.readyShaderProgram(shader);
+    return publicAPI.readyShaderProgram(shaderProgram);
   };
 
-  publicAPI.readyShaderProgram = (shader) => {
-    if (!shader) {
+  publicAPI.readyShaderProgram = (program) => {
+    if (!program) {
       return null;
     }
 
     // compile if needed
-    if (!shader.getCompiled() && !shader.compileShader()) {
+    if (!program.getCompiled() && !program.compileShader()) {
       return null;
     }
 
     // bind if needed
-    if (!publicAPI.bindShader(shader)) {
+    if (!publicAPI.bindShaderProgram(program)) {
       return null;
     }
 
-    return shader;
+    return program;
   };
 
   publicAPI.getShaderProgram = (vertexCode, fragmentCode, geometryCode) => {
@@ -198,32 +202,32 @@ function vtkShaderCache(publicAPI, model) {
     // have to loop over all the programs were in use and invoke
     // release graphics resources individually.
 
-    publicAPI.releaseCurrentShader();
+    publicAPI.releaseCurrentShaderProgram();
 
     Object.keys(model.shaderPrograms)
       .map((key) => model.shaderPrograms[key])
-      .forEach((sp) => sp.releaseGraphicsResources(win));
+      .forEach((sp) => sp.cleanup());
   };
 
-  publicAPI.releaseGraphicsResources = () => {
+  publicAPI.releaseCurrentShaderProgram = () => {
     // release prior shader
-    if (model.astShaderBound) {
-      model.lastShaderBound.release();
-      model.lastShaderBound = null;
+    if (model.lastShaderProgramBound) {
+      model.lastShaderProgramBound.cleanup();
+      model.lastShaderProgramBound = null;
     }
   };
 
-  publicAPI.bindShader = (shader) => {
-    if (model.lastShaderBound === shader) {
+  publicAPI.bindShaderProgram = (program) => {
+    if (model.lastShaderProgramBound === program) {
       return 1;
     }
 
-    // release prior shader
-    if (model.lastShaderBound) {
-      model.lastShaderBound.release();
+    // release prior program
+    if (model.lastShaderProgramBound) {
+      model.lastShaderProgramBound.release();
     }
-    shader.bind();
-    model.lastShaderBound = shader;
+    program.bind();
+    model.lastShaderProgramBound = program;
     return 1;
   };
 }
@@ -233,7 +237,7 @@ function vtkShaderCache(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  lastShaderBound: null,
+  lastShaderProgramBound: null,
   shaderPrograms: null,
   context: null,
   // _openGLRenderWindow: null,
