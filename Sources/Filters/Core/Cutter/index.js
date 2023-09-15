@@ -7,20 +7,26 @@ function initPolyIterator(pd) {
   const polys = pd.getPolys().getData();
   const strips = pd.getStrips().getData();
   const it = {
+    cellSize: 0,
+    cell: [],
     done: false,
     polyIdx: 0,
     stripIdx: 0,
     remainingStripLength: 0,
+
     // returns a single poly cell
     next() {
-      let ret = null;
       if (it.polyIdx < polys.length) {
-        const cellSize = polys[it.polyIdx];
+        it.cellSize = polys[it.polyIdx];
         const start = it.polyIdx + 1;
-        const end = start + cellSize;
+        const end = start + it.cellSize;
         it.polyIdx = end;
-        ret = polys.subarray(start, end);
+        let p = 0;
+        for (let i = start; i < end; ++i) {
+          it.cell[p++] = polys[i];
+        }
       } else if (it.stripIdx < strips.length) {
+        it.cellSize = 3;
         if (it.remainingStripLength === 0) {
           it.remainingStripLength = strips[it.stripIdx] - 2; // sliding window of 3 points
           // stripIdx points to the last point in a triangle 3-tuple
@@ -30,15 +36,18 @@ function initPolyIterator(pd) {
         const end = it.stripIdx + 1;
         it.stripIdx++;
         it.remainingStripLength--;
-        ret = strips.subarray(start, end);
-      } else if (it.done) {
+        let p = 0;
+        for (let i = start; i < end; ++i) {
+          it.cell[p++] = strips[i];
+        }
+      } else if (!it.done) {
+        it.done = true;
+      } else {
         throw new Error('Iterator is done');
       }
-
-      it.done = it.polyIdx >= polys.length && it.stripIdx >= strips.length;
-      return ret;
     },
   };
+  it.next();
   return it;
 }
 
@@ -89,32 +98,29 @@ function vtkCutter(publicAPI, model) {
     const crossedEdges = [];
     const x1 = new Array(3);
     const x2 = new Array(3);
+    const cellPointsScalars = [];
+
     // Loop over all cells; get scalar values for all cell points
     // and process each cell.
     /* eslint-disable no-continue */
-    const it = initPolyIterator(input);
-    while (!it.done) {
+    for (const it = initPolyIterator(input); !it.done; it.next()) {
       // cell contains the point IDs/indices
-      const cell = it.next();
 
       // Check that cells have at least 3 points
-      if (cell.length <= 2) {
+      if (it.cellSize <= 2) {
         continue;
       }
 
       // Get associated scalar of points that constitute the current cell
-      const cellPointsScalars = [];
-      let pointIndex;
-      for (let i = 0; i < cell.length; i++) {
-        pointIndex = cell[i];
-        cellPointsScalars.push(model.cutScalars[pointIndex]);
+      for (let i = 0; i < it.cellSize; ) {
+        cellPointsScalars[i] = model.cutScalars[it.cell[i++]];
       }
 
       // Check if all cell points are on same side (same side == cell not crossed by cut function)
       // TODO: won't work if one point scalar is = 0 ?
       const sideFirstPoint = cellPointsScalars[0] > 0;
       let allPointsSameSide = true;
-      for (let i = 1; i < cellPointsScalars.length; i++) {
+      for (let i = 1; i < it.cell.length; i++) {
         const sideCurrentPoint = cellPointsScalars[i] > 0;
         if (sideCurrentPoint !== sideFirstPoint) {
           allPointsSameSide = false;
@@ -129,8 +135,8 @@ function vtkCutter(publicAPI, model) {
 
       // Find and compute edges which intersect cells
       const intersectedEdgesList = [];
-      for (let i = 0; i < cell.length; i++) {
-        const idNext = i + 1 === cell.length ? 0 : i + 1;
+      for (let i = 0; i < it.cellSize; i++) {
+        const idNext = i + 1 === it.cellSize ? 0 : i + 1;
 
         // Go to next edge if edge is not crossed
         // TODO: in most come cases, (numberOfPointsInCell - 1) or 0 edges of the cell
@@ -159,8 +165,8 @@ function vtkCutter(publicAPI, model) {
         }
 
         // points position
-        const pointID1 = cell[e1];
-        const pointID2 = cell[e2];
+        const pointID1 = it.cell[e1];
+        const pointID2 = it.cell[e2];
         x1[0] = pointsData[pointID1 * 3];
         x1[1] = pointsData[pointID1 * 3 + 1];
         x1[2] = pointsData[pointID1 * 3 + 2];

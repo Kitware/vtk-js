@@ -4,14 +4,20 @@ import '@kitware/vtk.js/favicon';
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
-import vtkCubeSource from '@kitware/vtk.js/Filters/Sources/CubeSource';
 import vtkCutter from '@kitware/vtk.js/Filters/Core/Cutter';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import HttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import DataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper';
+
+import vtkHttpSceneLoader from '@kitware/vtk.js/IO/Core/HttpSceneLoader';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkPlane from '@kitware/vtk.js/Common/DataModel/Plane';
 import vtkProperty from '@kitware/vtk.js/Rendering/Core/Property';
 
 import controlPanel from './controlPanel.html';
+
+// Force DataAccessHelper to have access to various data source
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -28,11 +34,9 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // ----------------------------------------------------------------------------
 
 const plane = vtkPlane.newInstance();
-const cube = vtkCubeSource.newInstance();
 
 const cutter = vtkCutter.newInstance();
 cutter.setCutFunction(plane);
-cutter.setInputConnection(cube.getOutputPort());
 
 const cutMapper = vtkMapper.newInstance();
 cutMapper.setInputConnection(cutter.getOutputPort());
@@ -45,15 +49,14 @@ cutProperty.setColor(0, 1, 0);
 renderer.addActor(cutActor);
 
 const cubeMapper = vtkMapper.newInstance();
-cubeMapper.setInputConnection(cube.getOutputPort());
+cubeMapper.setScalarVisibility(false);
 const cubeActor = vtkActor.newInstance();
 cubeActor.setMapper(cubeMapper);
 const cubeProperty = cubeActor.getProperty();
 cubeProperty.setRepresentation(vtkProperty.Representation.WIREFRAME);
 cubeProperty.setLighting(false);
+cubeProperty.setOpacity(0.1);
 renderer.addActor(cubeActor);
-
-renderer.resetCamera();
 
 // -----------------------------------------------------------
 // UI control handling
@@ -76,9 +79,6 @@ const updatePlaneFunction = () => {
   renderWindow.render();
 };
 
-// Update now
-updatePlaneFunction();
-
 // Update when changing UI
 ['originX', 'originY', 'originZ', 'normalX', 'normalY', 'normalZ'].forEach(
   (propertyName) => {
@@ -90,3 +90,29 @@ updatePlaneFunction();
     });
   }
 );
+
+HttpDataAccessHelper.fetchBinary(
+  `${__BASE_PATH__}/data/StanfordDragon.vtkjs`,
+  {}
+).then((zipContent) => {
+  const dataAccessHelper = DataAccessHelper.get('zip', {
+    zipContent,
+    callback: (zip) => {
+      const sceneImporter = vtkHttpSceneLoader.newInstance({
+        renderer,
+        dataAccessHelper,
+      });
+      sceneImporter.setUrl('index.json');
+      sceneImporter.onReady(() => {
+        console.log(sceneImporter.getScene());
+        sceneImporter.getScene()[0].actor.setVisibility(false);
+
+        const source = sceneImporter.getScene()[0].source;
+        cutter.setInputConnection(source.getOutputPort());
+        cubeMapper.setInputConnection(source.getOutputPort());
+        renderer.resetCamera();
+        updatePlaneFunction();
+      });
+    },
+  });
+});
