@@ -188,3 +188,20 @@ test('Test vtkDataArray getTuples and insertTuples', (t) => {
 
   t.end();
 });
+
+test('Test vtkDataArray findTuple', (t) => {
+  const values = Uint8Array.from([
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+  ]);
+
+  const dataArray = vtkDataArray.newInstance({
+    dataType: VtkDataTypes.UNSIGNED_CHAR,
+    values,
+    numberOfComponents: 3,
+  });
+
+  t.equal(dataArray.findTuple([9, 10, 11]), 3);
+  t.equal(dataArray.findTuple([3, 4, 4], 1), 1);
+  t.equal(dataArray.findTuple(Float32Array.from([12, 13, 14])), 4);
+  t.end();
+});

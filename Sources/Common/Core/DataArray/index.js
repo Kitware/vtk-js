@@ -8,6 +8,7 @@ const { DefaultDataType } = Constants;
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
+const EPSILON = 1e-6;
 
 // Original source from https://www.npmjs.com/package/compute-range
 // Modified to accept type arrays
@@ -318,6 +319,24 @@ function vtkDataArray(publicAPI, model) {
   publicAPI.insertNextTuples = (tuples) => {
     const idx = model.size / model.numberOfComponents;
     return publicAPI.insertTuples(idx, tuples);
+  };
+
+  publicAPI.findTuple = (tuple, precision = EPSILON) => {
+    for (let i = 0; i < model.size; i += model.numberOfComponents) {
+      if (Math.abs(tuple[0] - model.values[i]) <= precision) {
+        let match = true;
+        for (let j = 1; j < model.numberOfComponents; ++j) {
+          if (Math.abs(tuple[j] - model.values[i + j]) > precision) {
+            match = false;
+            break;
+          }
+        }
+        if (match) {
+          return i / model.numberOfComponents;
+        }
+      }
+    }
+    return -1;
   };
 
   publicAPI.getTuple = (idx, tupleToFill = []) => {
