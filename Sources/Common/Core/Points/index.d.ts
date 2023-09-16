@@ -32,6 +32,15 @@ export interface vtkPoints extends vtkDataArray {
 	getPoint(idx: number, tupleToFill?: number[]|TypedArray): number[]|TypedArray;
 
 	/**
+	 * Convenient method to search a point in the array.
+	 * This is a naïve search. Consider using a "locator" instead.
+	 * @param {Array<Number>|TypedArray} pointToSearch
+	 * @param {Number} precision (1e-6 by default)
+	 * @returns {Number} the index of the point if found, -1 otherwise.
+	 */
+	findPoint(pointToSearch: Array<number>|TypedArray, precision?: number): number;
+
+	/**
 	 * Get the number of points for this object can hold.
 	 */
 	getNumberOfPoints(): number;

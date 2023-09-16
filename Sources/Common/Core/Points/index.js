@@ -31,6 +31,7 @@ function vtkPoints(publicAPI, model) {
   };
 
   publicAPI.getPoint = publicAPI.getTuple;
+  publicAPI.findPoint = publicAPI.findTuple;
 
   publicAPI.insertNextPoint = (x, y, z) => publicAPI.insertNextTuple([x, y, z]);
 

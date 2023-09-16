@@ -202,6 +202,15 @@ export interface vtkDataArray extends vtkObject {
 	getNumberOfTuples(): number;
 
 	/**
+	 * Convenient method to search the index of the first matching tuple in the array.
+	 * This is a naïve search, consider using a "locator" instead.
+	 * @param {Array<Number>|TypedArray} tupleToSearch
+	 * @param {Number} precision (1e-6 by default)
+	 * @returns {Number} the index of the tuple if found, -1 otherwise.
+	 */
+	findTuple(tupleToSearch: Array<number>|TypedArray, precision?: number): number;
+
+	/**
 	 * Get the data type of this array as a string.
 	 * @returns {String}
 	 */
