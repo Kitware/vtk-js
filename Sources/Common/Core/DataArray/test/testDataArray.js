@@ -30,6 +30,49 @@ test('Test vtkDataArray getRange function with single-channel data.', (t) => {
   t.end();
 });
 
+test.only('Test vtkDataArray getRange function with NaN values.', (t) => {
+
+  // a data array with a NaN value
+  const da = vtkDataArray.newInstance({
+    numberOfComponents: 1,
+    values: new Float64Array([2.0, 0, NaN, 3.0, 4.0, 1.0]),
+  });
+
+  t.equal(da.getRange(0)[0], 0.0, 'getRange minimum value should be 0');
+  t.equal(da.getRange(0)[1], 4.0, 'getRange maximum value should be 4');
+
+  // a data array with NaN as first value
+  const da2 = vtkDataArray.newInstance({
+    numberOfComponents: 1,
+    values: new Float64Array([NaN, 0.0, 2.0, 3.0, 4.0, 1.0]),
+  });
+
+  t.equal(da2.getRange(0)[0], 0.0, 'getRange minimum value should be 0');
+  t.equal(da2.getRange(0)[1], 4.0, 'getRange maximum value should be 4');
+
+  // an empty data array
+  const da3 = vtkDataArray.newInstance({
+    numberOfComponents: 1,
+    values: new Float64Array([]),
+  });
+
+  t.equal(da3.getRange(0)[0], Number.MAX_VALUE, 'getRange minimum value should be MAX_VALUE');
+  t.equal(da3.getRange(0)[1], -Number.MAX_VALUE, 'getRange maximum value should be -MAX_VALUE');
+
+  // a data array with multiple components
+  const da4 = vtkDataArray.newInstance({
+    numberOfComponents: 2,
+    values: new Float64Array([NaN, 1.0, 2.0, 3.0, 5.0, NaN]),
+  });
+
+  t.equal(da4.getRange(0)[0], 2.0, 'component:0 getRange minimum value should be 2');
+  t.equal(da4.getRange(0)[1], 5.0, 'component:0 getRange maximum value should be 5');
+  t.equal(da4.getRange(1)[0], 1.0, 'component:1 getRange minimum value should be 1');
+  t.equal(da4.getRange(1)[1], 3.0, 'component:1 getRange maximum value should be 3');
+
+  t.end();
+});
+
 test('Test vtkDataArray getTuple', (t) => {
   const da = vtkDataArray.newInstance({
     numberOfComponents: 3,
