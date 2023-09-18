@@ -13,16 +13,11 @@ const { DefaultDataType } = Constants;
 // Modified to accept type arrays
 function fastComputeRange(arr, offset, numberOfComponents) {
   const len = arr.length;
-  let min;
-  let max;
+  let min = Number.MAX_VALUE;
+  let max = -Number.MAX_VALUE;
   let x;
   let i;
-
-  if (len === 0) {
-    return { min: Number.MAX_VALUE, max: -Number.MAX_VALUE };
-  }
-  min = arr[offset];
-  max = min;
+  
   for (i = offset; i < len; i += numberOfComponents) {
     x = arr[i];
     if (x < min) {
