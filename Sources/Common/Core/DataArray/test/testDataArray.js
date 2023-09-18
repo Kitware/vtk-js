@@ -30,7 +30,7 @@ test('Test vtkDataArray getRange function with single-channel data.', (t) => {
   t.end();
 });
 
-test.only('Test vtkDataArray getRange function with NaN values.', (t) => {
+test('Test vtkDataArray getRange function with NaN values.', (t) => {
   // a data array with a NaN value
   const da = vtkDataArray.newInstance({
     numberOfComponents: 1,
