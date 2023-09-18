@@ -11,17 +11,11 @@ const { vtkWarningMacro, vtkErrorMacro, normalizeWheel, vtkOnceErrorMacro } =
 // Global methods
 // ----------------------------------------------------------------------------
 
-let EMPTY_MOUSE_EVENT;
-if (typeof MouseEvent !== 'undefined') {
-  EMPTY_MOUSE_EVENT = new MouseEvent('');
-} else {
-  // Provide a fallback or handle differently for web worker context
-  EMPTY_MOUSE_EVENT = {
-    ctrlKey: false,
-    altKey: false,
-    shiftKey: false,
-  };
-}
+const EMPTY_MOUSE_EVENT = {
+  ctrlKey: false,
+  altKey: false,
+  shiftKey: false,
+};
 
 const deviceInputMap = {
   'xr-standard': [
