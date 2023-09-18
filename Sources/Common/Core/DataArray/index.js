@@ -17,7 +17,7 @@ function fastComputeRange(arr, offset, numberOfComponents) {
   let max = -Number.MAX_VALUE;
   let x;
   let i;
-  
+
   for (i = offset; i < len; i += numberOfComponents) {
     x = arr[i];
     if (x < min) {
