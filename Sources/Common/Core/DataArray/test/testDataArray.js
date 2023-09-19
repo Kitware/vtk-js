@@ -31,10 +31,10 @@ test('Test vtkDataArray getRange function with single-channel data.', (t) => {
 });
 
 test('Test vtkDataArray getRange function with NaN values.', (t) => {
-  // a data array with a NaN value
+  // a data array with a NaN value and max as first value
   const da = vtkDataArray.newInstance({
     numberOfComponents: 1,
-    values: new Float64Array([2.0, 0, NaN, 3.0, 4.0, 1.0]),
+    values: new Float64Array([4.0, 0, NaN, 3.0, 2.0, 1.0]),
   });
 
   t.equal(da.getRange(0)[0], 0.0, 'getRange minimum value should be 0');
@@ -66,29 +66,64 @@ test('Test vtkDataArray getRange function with NaN values.', (t) => {
     'getRange maximum value should be -MAX_VALUE'
   );
 
-  // a data array with multiple components
+  // a data array with all NaN values except one in the middle
   const da4 = vtkDataArray.newInstance({
+    numberOfComponents: 1,
+    values: new Float64Array([NaN, NaN, 2.0, NaN]),
+  });
+
+  t.equal(da4.getRange(0)[0], 2.0, 'getRange minimum value should be 2');
+  t.equal(da4.getRange(0)[1], 2.0, 'getRange maximum value should be 2');
+
+  // a data array with all NaN values except one at the end
+  const da5 = vtkDataArray.newInstance({
+    numberOfComponents: 1,
+    values: new Float64Array([NaN, NaN, 2.0]),
+  });
+
+  t.equal(da5.getRange(0)[0], 2.0, 'getRange minimum value should be 2');
+  t.equal(da5.getRange(0)[1], 2.0, 'getRange maximum value should be 2');
+
+  // a data array with all NaN values
+  const da6 = vtkDataArray.newInstance({
+    numberOfComponents: 1,
+    values: new Float64Array([NaN, NaN, NaN]),
+  });
+
+  t.equal(
+    da6.getRange(0)[0],
+    Number.MAX_VALUE,
+    'getRange minimum value should be MAX_VALUE'
+  );
+  t.equal(
+    da6.getRange(0)[1],
+    -Number.MAX_VALUE,
+    'getRange maximum value should be -MAX_VALUE'
+  );
+
+  // a data array with multiple components
+  const da7 = vtkDataArray.newInstance({
     numberOfComponents: 2,
     values: new Float64Array([NaN, 1.0, 2.0, 3.0, 5.0, NaN]),
   });
 
   t.equal(
-    da4.getRange(0)[0],
+    da7.getRange(0)[0],
     2.0,
     'component:0 getRange minimum value should be 2'
   );
   t.equal(
-    da4.getRange(0)[1],
+    da7.getRange(0)[1],
     5.0,
     'component:0 getRange maximum value should be 5'
   );
   t.equal(
-    da4.getRange(1)[0],
+    da7.getRange(1)[0],
     1.0,
     'component:1 getRange minimum value should be 1'
   );
   t.equal(
-    da4.getRange(1)[1],
+    da7.getRange(1)[1],
     3.0,
     'component:1 getRange maximum value should be 3'
   );
