@@ -18,7 +18,16 @@ function fastComputeRange(arr, offset, numberOfComponents) {
   let x;
   let i;
 
+  // find first non-NaN value
   for (i = offset; i < len; i += numberOfComponents) {
+    if (!Number.isNaN(arr[i])) {
+      min = arr[i];
+      max = min;
+      break;
+    }
+  }
+
+  for (; i < len; i += numberOfComponents) {
     x = arr[i];
     if (x < min) {
       min = x;
