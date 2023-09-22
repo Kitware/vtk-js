@@ -294,6 +294,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
             initialValues: {
               useActiveColor: false,
               scaleInPixels: model.scaleInPixels,
+              lighting: false,
             },
           },
           {
@@ -302,6 +303,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
             initialValues: {
               useActiveColor: false,
               scaleInPixels: model.scaleInPixels,
+              lighting: false,
             },
           },
         ];
