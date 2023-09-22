@@ -10,6 +10,7 @@ import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkWebXRRenderWindowHelper from '@kitware/vtk.js/Rendering/WebXR/RenderWindowHelper';
 import HttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
 import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
@@ -18,7 +19,7 @@ import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
 import vtkXMLImageDataReader from '@kitware/vtk.js/IO/XML/XMLImageDataReader';
 import vtkImageReslice from '@kitware/vtk.js/Imaging/Core/ImageReslice';
 import vtkMath from '@kitware/vtk.js/Common/Core/Math';
-import { XrSessionTypes } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/Constants';
+import { XrSessionTypes } from '@kitware/vtk.js/Rendering/WebXR/RenderWindowHelper/Constants';
 
 import './WebXRVolume.module.css';
 
@@ -32,6 +33,9 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
+const xrRenderWindowHelper = vtkWebXRRenderWindowHelper.newInstance({
+  renderWindow: fullScreenRenderer.getApiSpecificRenderWindow(),
+});
 
 // ----------------------------------------------------------------------------
 // Set up pipeline objects
@@ -146,10 +150,7 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   let enterText = 'XR not available!';
   const exitText = 'Exit XR';
   xrButton.textContent = enterText;
-  if (
-    navigator.xr !== undefined &&
-    fullScreenRenderer.getApiSpecificRenderWindow().getXrSupported()
-  ) {
+  if (navigator.xr !== undefined && xrRenderWindowHelper.getXrSupported()) {
     enterText =
       requestedXrSessionType === XrSessionTypes.MobileAR
         ? 'Start AR'
@@ -158,12 +159,10 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   }
   xrButton.addEventListener('click', () => {
     if (xrButton.textContent === enterText) {
-      fullScreenRenderer
-        .getApiSpecificRenderWindow()
-        .startXR(requestedXrSessionType);
+      xrRenderWindowHelper.startXR(requestedXrSessionType);
       xrButton.textContent = exitText;
     } else {
-      fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
+      xrRenderWindowHelper.stopXR();
       xrButton.textContent = enterText;
     }
   });
