@@ -1,7 +1,8 @@
 export declare enum XrSessionTypes {
 	HmdVR = 0,
 	MobileAR = 1,
-  LookingGlassVR = 2
+  	LookingGlassVR = 2,
+	HmdAR = 3
 }
 
 declare const _default: {
