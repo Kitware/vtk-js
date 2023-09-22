@@ -14,11 +14,12 @@ import vtkScalarBarActor from '@kitware/vtk.js/Rendering/Core/ScalarBarActor';
 import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkWebXRRenderWindowHelper from '@kitware/vtk.js/Rendering/WebXR/RenderWindowHelper';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 import vtkXMLPolyDataReader from '@kitware/vtk.js/IO/XML/XMLPolyDataReader';
 import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
-import { XrSessionTypes } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/Constants';
+import { XrSessionTypes } from '@kitware/vtk.js/Rendering/WebXR/RenderWindowHelper/Constants';
 
 // Force DataAccessHelper to have access to various data source
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
@@ -36,6 +37,7 @@ let autoInit = true;
 let background = [0, 0, 0];
 let fullScreenRenderWindow;
 let renderWindow;
+let xrRenderWindowHelper;
 let renderer;
 let scalarBarActor;
 
@@ -162,6 +164,9 @@ function createViewer(container) {
   });
   renderer = fullScreenRenderWindow.getRenderer();
   renderWindow = fullScreenRenderWindow.getRenderWindow();
+  xrRenderWindowHelper = vtkWebXRRenderWindowHelper.newInstance({
+    renderWindow: fullScreenRenderWindow.getApiSpecificRenderWindow(),
+  });
   renderWindow.getInteractor().setDesiredUpdateRate(15);
 
   container.appendChild(rootControllerContainer);
@@ -252,7 +257,7 @@ function createPipeline(fileName, fileContents) {
 
   if (
     navigator.xr !== undefined &&
-    fullScreenRenderWindow.getApiSpecificRenderWindow().getXrSupported() &&
+    xrRenderWindowHelper.getXrSupported() &&
     requestedXrSessionType !== null
   ) {
     controlContainer.appendChild(immersionSelector);
@@ -431,9 +436,7 @@ function createPipeline(fileName, fileContents) {
 
   function toggleXR() {
     if (immersionSelector.textContent.startsWith('Start')) {
-      fullScreenRenderWindow
-        .getApiSpecificRenderWindow()
-        .startXR(requestedXrSessionType);
+      xrRenderWindowHelper.startXR(requestedXrSessionType);
       immersionSelector.textContent = [
         XrSessionTypes.HmdAR,
         XrSessionTypes.MobileAR,
@@ -441,7 +444,7 @@ function createPipeline(fileName, fileContents) {
         ? 'Exit AR'
         : 'Exit VR';
     } else {
-      fullScreenRenderWindow.getApiSpecificRenderWindow().stopXR();
+      xrRenderWindowHelper.stopXR();
       immersionSelector.textContent = [
         XrSessionTypes.HmdAR,
         XrSessionTypes.MobileAR,
