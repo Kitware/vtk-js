@@ -96,6 +96,7 @@ function defaultValues(initialValues) {
     _pipeline: {
       glyph: vtkCylinderSource.newInstance({
         resolution: initialValues.glyphResolution ?? 4,
+        initAngle: initialValues.glyphAngle ?? Math.PI / 4,
         direction: [0, 0, 1],
       }),
     },

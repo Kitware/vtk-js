@@ -303,6 +303,9 @@ export function extend(publicAPI, model, initialValues = {}) {
       defaultValues(publicAPI, model, initialValues)
     );
   }
+  if ('lighting' in initialValues) {
+    model._pipeline.actor.getProperty().setLighting(initialValues.lighting);
+  }
 
   macro.setGet(publicAPI, model._pipeline, ['defaultScale']);
   macro.get(publicAPI, model._pipeline, ['glyph', 'mapper', 'actor']);
