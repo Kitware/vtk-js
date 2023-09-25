@@ -66,7 +66,10 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
       const gl = model.renderWindow.get3DContext();
       await gl.makeXRCompatible();
 
-      const glLayer = new global.XRWebGLLayer(
+      // XRWebGLLayer definition is deferred to here to give any WebXR polyfill
+      // an opportunity to override this definition.
+      const { XRWebGLLayer } = window;
+      const glLayer = new XRWebGLLayer(
         model.xrSession,
         // constructor needs unproxied context
         gl[GET_UNDERLYING_CONTEXT]()
