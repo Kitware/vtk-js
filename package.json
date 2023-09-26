@@ -31,6 +31,7 @@
   "module": "./dist/esm/index.js",
   "dependencies": {
     "@babel/runtime": "7.22.11",
+    "@types/webxr": "^0.5.5",
     "commander": "9.2.0",
     "d3-scale": "4.0.2",
     "fast-deep-equal": "^3.1.3",

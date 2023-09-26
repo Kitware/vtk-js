@@ -1,7 +1,6 @@
 import { vtkObject } from '../../../interfaces';
 import { Nullable } from '../../../types';
 import vtkOpenGLRenderWindow from '../../OpenGL/RenderWindow';
-import { XRSession } from window;
 
 /**
  *
