@@ -102,7 +102,7 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
 
       model.renderWindow.getRenderable().getInteractor().switchToXRAnimation();
       model.xrSceneFrame = model.xrSession.requestAnimationFrame(
-        publicAPI.xrRender
+        model.xrRender
       );
 
       publicAPI.modified();
@@ -178,7 +178,7 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.xrRender = async (t, frame) => {
+  model.xrRender = async (t, frame) => {
     const xrSession = frame.session;
     const isXrSessionHMD = [
       XrSessionTypes.HmdVR,
@@ -190,9 +190,7 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
       .getInteractor()
       .updateXRGamepads(xrSession, frame, model.xrReferenceSpace);
 
-    model.xrSceneFrame = model.xrSession.requestAnimationFrame(
-      publicAPI.xrRender
-    );
+    model.xrSceneFrame = model.xrSession.requestAnimationFrame(model.xrRender);
 
     const xrPose = frame.getViewerPose(model.xrReferenceSpace);
 
@@ -286,7 +284,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   macro.event(publicAPI, model, 'event');
 
-  macro.setGet(publicAPI, model, ['renderWindow', 'xrSession']);
+  macro.get(publicAPI, model, ['xrSession']);
+  macro.setGet(publicAPI, model, ['renderWindow']);
 
   // Object methods
   vtkWebXRRenderWindowHelper(publicAPI, model);
