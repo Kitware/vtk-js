@@ -104,6 +104,8 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
       model.xrSceneFrame = model.xrSession.requestAnimationFrame(
         publicAPI.xrRender
       );
+
+      publicAPI.modified();
     } else {
       throw new Error('Failed to enter XR with a null xrSession.');
     }
@@ -115,7 +117,7 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
   ) => {
     // Adjust world-to-physical parameters for different modalities
 
-    const ren = model.renderWindow.getRenderable().getRenderers()[0]; // TESTME
+    const ren = model.renderWindow.getRenderable().getRenderers()[0];
     ren.resetCamera();
 
     const camera = ren.getActiveCamera();
@@ -172,6 +174,8 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
 
     ren.setViewport(0.0, 0, 1.0, 1.0);
     model.renderWindow.traverseAllPasses();
+
+    publicAPI.modified();
   };
 
   publicAPI.xrRender = async (t, frame) => {
@@ -282,7 +286,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   macro.event(publicAPI, model, 'event');
 
-  macro.setGet(publicAPI, model, ['renderWindow']);
+  macro.setGet(publicAPI, model, ['renderWindow', 'xrSession']);
 
   // Object methods
   vtkWebXRRenderWindowHelper(publicAPI, model);
