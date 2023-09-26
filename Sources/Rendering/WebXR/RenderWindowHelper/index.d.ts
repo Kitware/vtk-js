@@ -1,5 +1,7 @@
 import { vtkObject } from '../../../interfaces';
+import { Nullable } from '../../../types';
 import vtkOpenGLRenderWindow from '../../OpenGL/RenderWindow';
+import { XRSession } from window;
 
 /**
  *
@@ -8,8 +10,8 @@ export interface IWebXRRenderWindowHelperInitialValues {
     initialized: boolean,
     initCanvasSize?: [number, number],
     initBackground?: [number, number, number, number],
-    renderWindow?: vtkOpenGLRenderWindow,
-    xrSession?: any,
+    renderWindow?: Nullable<vtkOpenGLRenderWindow>,
+    xrSession?: Nullable<XRSession>,
     xrSessionType: number,
     xrReferenceSpace?: any,
 }
@@ -31,7 +33,7 @@ export interface vtkWebXRRenderWindowHelper extends vtkObject {
      * When an XR session is available, set up the XRWebGLLayer
      * and request the first animation frame for the device
      */
-    enterXR(): void,
+    enterXR(): void;
 
     /**
      * Adjust world-to-physical parameters for different viewing modalities
@@ -39,17 +41,27 @@ export interface vtkWebXRRenderWindowHelper extends vtkObject {
      * @param {Number} inputRescaleFactor
      * @param {Number} inputTranslateZ
      */
-    resetXRScene(inputRescaleFactor: number, inputTranslateZ: number): void,
+    resetXRScene(inputRescaleFactor: number, inputTranslateZ: number): void;
 
 	/**
 	 * Request to stop the current XR session
 	 */
 	stopXR(): void;
 
-	/**
-	 *
-	 */
-	xrRender(): void;
+    /**
+     * Get the underlying render window to drive XR rendering.
+     */
+    getRenderWindow(): Nullable<vtkOpenGLRenderWindow>;
+
+    /**
+     * Set the underlying render window to drive XR rendering.
+     */
+    setRenderWindow(renderWindow:Nullable<vtkOpenGLRenderWindow>);
+
+    /**
+     * Get the active WebXR session.
+     */
+    getXrSession(): Nullable<XRSession>;
 }
 
 /**
