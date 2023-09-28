@@ -287,13 +287,16 @@ function createQuadView(myContainer, fileContents) {
   aactor.getProperty().setColorLevel(2000);
   aactor.getProperty().setRGBTransferFunction(0, ctf);
   RENDERERS[0].addActor(aactor);
+  let cam = RENDERERS[0].getActiveCamera();
+  cam.setParallelProjection(true);
   const cactor = vtkImageSlice.newInstance();
   cactor.setMapper(cmapper);
   cactor.getProperty().setColorWindow(3120);
   cactor.getProperty().setColorLevel(100);
   cactor.getProperty().setPiecewiseFunction(pf);
   RENDERERS[1].addActor(cactor);
-  let cam = RENDERERS[1].getActiveCamera();
+  cam = RENDERERS[1].getActiveCamera();
+  cam.setParallelProjection(true);
   cam.setPosition(0, 0, 0);
   cam.setFocalPoint(0, 1, 0);
   cam.setViewUp(0, 0, -1);
@@ -302,6 +305,7 @@ function createQuadView(myContainer, fileContents) {
   sactor.getProperty().setColorWindow(3120);
   sactor.getProperty().setColorLevel(1000);
   cam = RENDERERS[2].getActiveCamera();
+  cam.setParallelProjection(true);
   cam.setPosition(0, 0, 0);
   cam.setFocalPoint(1, 0, 0);
   cam.setViewUp(0, 0, -1);
