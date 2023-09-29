@@ -174,6 +174,10 @@ function safeArrays(model) {
   });
 }
 
+function isTypedArray(value) {
+  return Object.values(TYPED_ARRAYS).some((ctor) => value instanceof ctor);
+}
+
 // ----------------------------------------------------------------------------
 // shallow equals
 // ----------------------------------------------------------------------------
@@ -378,6 +382,8 @@ export function obj(publicAPI = {}, model = {}) {
         jsonArchive[keyName] = jsonArchive[keyName].getState();
       } else if (Array.isArray(jsonArchive[keyName])) {
         jsonArchive[keyName] = jsonArchive[keyName].map(getStateArrayMapFunc);
+      } else if (isTypedArray(jsonArchive[keyName])) {
+        jsonArchive[keyName] = Array.from(jsonArchive[keyName]);
       }
     });
 
