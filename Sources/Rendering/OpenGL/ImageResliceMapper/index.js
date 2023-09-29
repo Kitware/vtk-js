@@ -203,6 +203,12 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     if (!scalars) {
       return;
     }
+    if (model._scalars !== scalars) {
+      model._openGLRenderWindow.releaseGraphicsResourcesForObject(
+        model._scalars
+      );
+      model._scalars = scalars;
+    }
 
     const numComp = scalars.getNumberOfComponents();
     let toString = `${image.getMTime()}A${scalars.getMTime()}`;
@@ -221,7 +227,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         model.openGLTexture.setOglNorm16Ext(
           model.context.getExtension('EXT_texture_norm16')
         );
-        model.openGLTexture.releaseGraphicsResources(model._openGLRenderWindow);
         model.openGLTexture.resetFormatAndType();
         model.openGLTexture.create3DFilterableFromDataArray(
           dims[0],
@@ -335,20 +340,16 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         const pwfWidth = 1024;
         const pwfSize = pwfWidth * textureHeight;
         const pwfTable = new Uint8Array(pwfSize);
-        let pwfun = ppty.getPiecewiseFunction();
-        // support case where pwfun is added/removed
         if (!model.pwfTexture) {
           model.pwfTexture = vtkOpenGLTexture.newInstance();
           model.pwfTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
         }
-        model.pwfTexture.releaseGraphicsResources(model._openGLRenderWindow);
-        model.pwfTexture.resetFormatAndType();
-        if (pwfun) {
+        if (pwFunc) {
           const pwfFloatTable = new Float32Array(pwfSize);
           const tmpTable = new Float32Array(pwfWidth);
 
           for (let c = 0; c < numIComps; ++c) {
-            pwfun = ppty.getPiecewiseFunction(c);
+            const pwfun = ppty.getPiecewiseFunction(c);
             if (pwfun === null) {
               // Piecewise constant max if no function supplied for this component
               pwfFloatTable.fill(1.0);
@@ -368,6 +369,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
               }
             }
           }
+          model.pwfTexture.releaseGraphicsResources(model._openGLRenderWindow);
+          model.pwfTexture.resetFormatAndType();
           model.pwfTexture.create2DFromRaw(
             pwfWidth,
             textureHeight,
@@ -1297,6 +1300,7 @@ const DEFAULT_VALUES = {
   colorTexture: null,
   pwfTexture: null,
   _externalOpenGLTexture: false,
+  _scalars: null,
 };
 
 // ----------------------------------------------------------------------------

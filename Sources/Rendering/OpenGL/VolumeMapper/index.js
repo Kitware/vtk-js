@@ -1427,6 +1427,12 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (!scalars) {
       return;
     }
+    if (model._scalars !== scalars) {
+      model._openGLRenderWindow.releaseGraphicsResourcesForObject(
+        model._scalars
+      );
+      model._scalars = scalars;
+    }
 
     const vprop = actor.getProperty();
 
@@ -1482,6 +1488,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         model.opacityTexture.releaseGraphicsResources(
           model._openGLRenderWindow
         );
+        model.opacityTexture.resetFormatAndType();
         model.opacityTexture.setMinificationFilter(Filter.LINEAR);
         model.opacityTexture.setMagnificationFilter(Filter.LINEAR);
 
@@ -1552,6 +1559,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         }
 
         model.colorTexture.releaseGraphicsResources(model._openGLRenderWindow);
+        model.colorTexture.resetFormatAndType();
         model.colorTexture.setMinificationFilter(Filter.LINEAR);
         model.colorTexture.setMagnificationFilter(Filter.LINEAR);
 
@@ -1705,6 +1713,7 @@ const DEFAULT_VALUES = {
   projectionToView: null,
   avgWindowArea: 0.0,
   avgFrameTime: 0.0,
+  _scalars: null,
 };
 
 // ----------------------------------------------------------------------------
