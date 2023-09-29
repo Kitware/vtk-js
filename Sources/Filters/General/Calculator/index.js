@@ -45,11 +45,14 @@ function vtkCalculator(publicAPI, model) {
     singleValueFormula,
     options = {}
   ) => ({
-    getArrays: () => ({
-      input: publicAPI.augmentInputArrays(
-        locn,
-        arrNames.map((x) => ({ location: locn, name: x }))
-      ),
+    getArrays: (inData) => ({
+      // don't augment input data array in case of structured input dataset
+      input: inData[0].isA('vtkImageData')
+        ? arrNames.map((x) => ({ location: locn, name: x }))
+        : publicAPI.augmentInputArrays(
+            locn,
+            arrNames.map((x) => ({ location: locn, name: x }))
+          ),
       output: [
         {
           location: locn,
@@ -191,7 +194,7 @@ function vtkCalculator(publicAPI, model) {
           [
             FieldDataTypes.POINT,
             (x) => x.getPointData(),
-            (x) => x.getPoints().getNumberOfPoints(),
+            (x) => x.getNumberOfPoints(),
           ],
           [
             FieldDataTypes.CELL,
