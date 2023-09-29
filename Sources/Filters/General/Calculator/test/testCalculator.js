@@ -1,6 +1,7 @@
 import test from 'tape-catch';
 
 import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
+import vtkImageGridSource from 'vtk.js/Sources/Filters/Sources/ImageGridSource';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
@@ -89,6 +90,45 @@ test('Test vtkCalculator execution', (t) => {
   t.ok(
     Math.abs(uniform[0] - 22.55) < 1e-6,
     `The uniform result variable should be 22.55; got ${uniform[0]}.`
+  );
+
+  t.end();
+});
+
+test('make sure vtkCalculator does not crash with a vtkImageData input', (t) => {
+  const source = vtkImageGridSource.newInstance();
+  const filter = vtkCalculator.newInstance();
+
+  filter.setInputConnection(source.getOutputPort());
+  filter.setFormulaSimple(FieldDataTypes.POINT, ['scalars'], 'mask', (value) =>
+    value > 10 ? 1 : 0
+  );
+
+  source.update();
+  filter.update();
+
+  const input = source.getOutputData();
+  const output = filter.getOutputData();
+
+  t.ok(output, 'Output dataset exists');
+  t.equal(
+    output.isA('vtkImageData'),
+    true,
+    'The output dataset should be a vtkImagedata'
+  );
+  t.equal(
+    input.getNumberOfPoints(),
+    output.getNumberOfPoints(),
+    `The number of points did not change between input ${input.getNumberOfPoints()} and output ${output.getNumberOfPoints()}`
+  );
+  t.ok(
+    output.getPointData().getScalars(),
+    'Output point-scalars array exists.'
+  );
+  t.equal(
+    output.getPointData().getScalars().getName(),
+    'mask',
+    'Output point-scalars is "mask".'
   );
 
   t.end();
