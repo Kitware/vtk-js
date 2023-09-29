@@ -1337,6 +1337,16 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     });
     return memUsed;
   };
+  publicAPI.releaseGraphicsResourcesForObject = (vtkObj) => {
+    if (!vtkObj) {
+      return false;
+    }
+    model._graphicsResources.get(vtkObj)?.releaseGraphicsResources(publicAPI);
+    return (
+      model._graphicsResources.delete(vtkObj) &&
+      model._graphicsResourceHash.delete(vtkObj)
+    );
+  };
 }
 
 // ----------------------------------------------------------------------------
