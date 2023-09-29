@@ -3,11 +3,12 @@ import vtk from 'vtk.js/Sources/vtk';
 import macro from 'vtk.js/Sources/macros';
 
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';
 
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import Common from 'vtk.js/Sources/Common';
 import Filters from 'vtk.js/Sources/Filters';
 import Imaging from 'vtk.js/Sources/Imaging';
@@ -21,10 +22,11 @@ const { vtkDebugMacro } = macro;
 
 const classToTest = [
   'vtkDataArray',
-  'vtkPoints',
+  'vtkImageData',
   'vtkLookupTable',
-  'vtkScalarsToColors',
+  'vtkPoints',
   'vtkPolyData',
+  'vtkScalarsToColors',
 ];
 
 const SERIALIZABLE_CLASSES = {
@@ -55,6 +57,7 @@ const SERIALIZABLE_CLASSES = {
       },
     },
   },
+  vtkImageData,
 };
 
 function ignoreMTime(json) {
