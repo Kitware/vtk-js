@@ -22,6 +22,24 @@ Now install vtk.js as a dependency.
 $ npm install @kitware/vtk.js
 ```
 
+## Configure your project
+
+`@kitware/vtk.js` targets ES6+ output, which means if you are intending to target ES5 browsers, you must
+tell vue-cli to transpile `@kitware/vtk.js`. Update your `vue.config.js` file to look like the following
+snippet below. Visit the [vue-cli documentation](https://cli.vuejs.org/config/#transpiledependencies) for
+more info.
+
+```js
+module.exports = defineConfig({
+  ...
+  // If you want to transpile all dependencies:
+  transpileDependencies: true,
+
+  // If you selectively transpile dependencies:
+  transpileDependencies: ["@kitware/vtk.js"],
+});
+```
+
 ## Using vtk.js in your app
 
 To add a minimal vtk.js example to your app, replace `src/components/HelloWorld.vue` with the following contents.
