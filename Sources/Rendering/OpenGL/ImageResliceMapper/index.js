@@ -214,28 +214,30 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     let toString = `${image.getMTime()}A${scalars.getMTime()}`;
 
     const tex = model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
-    const reBuildTex = !tex?.vtkObj || tex?.hash !== toString;
+    const reBuildTex =
+      !tex?.vtkObj ||
+      tex?.hash !== toString ||
+      model.openGLTextureString !== toString;
     if (reBuildTex) {
-      if (model.openGLTextureString !== toString) {
-        if (!model.openGLTexture) {
-          model.openGLTexture = vtkOpenGLTexture.newInstance();
-          model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-        }
-        // Build the image scalar texture
-        const dims = image.getDimensions();
-        // Use norm16 for the 3D texture if the extension is available
-        model.openGLTexture.setOglNorm16Ext(
-          model.context.getExtension('EXT_texture_norm16')
-        );
-        model.openGLTexture.resetFormatAndType();
-        model.openGLTexture.create3DFilterableFromDataArray(
-          dims[0],
-          dims[1],
-          dims[2],
-          scalars
-        );
-        model.openGLTextureString = toString;
+      if (!model.openGLTexture) {
+        model.openGLTexture = vtkOpenGLTexture.newInstance();
+        model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       }
+      // Build the image scalar texture
+      const dims = image.getDimensions();
+      // Use norm16 for the 3D texture if the extension is available
+      model.openGLTexture.setOglNorm16Ext(
+        model.context.getExtension('EXT_texture_norm16')
+      );
+      model.openGLTexture.releaseGraphicsResources(model._openGLRenderWindow);
+      model.openGLTexture.resetFormatAndType();
+      model.openGLTexture.create3DFilterableFromDataArray(
+        dims[0],
+        dims[1],
+        dims[2],
+        scalars
+      );
+      model.openGLTextureString = toString;
       if (scalars) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
           scalars,
@@ -257,62 +259,63 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     toString = computeFnToString(ppty, colorTransferFunc, numIComps);
     const cTex =
       model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
-    const reBuildC = !cTex?.vtkObj || cTex?.hash !== toString;
+    const reBuildC =
+      !cTex?.vtkObj ||
+      cTex?.hash !== toString ||
+      model.colorTextureString !== toString;
     if (reBuildC) {
-      if (model.colorTextureString !== toString) {
-        const cWidth = 1024;
-        const cSize = cWidth * textureHeight * 3;
-        const cTable = new Uint8Array(cSize);
-        if (!model.colorTexture) {
-          model.colorTexture = vtkOpenGLTexture.newInstance();
-          model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-        }
-        if (colorTransferFunc) {
-          const tmpTable = new Float32Array(cWidth * 3);
+      const cWidth = 1024;
+      const cSize = cWidth * textureHeight * 3;
+      const cTable = new Uint8Array(cSize);
+      if (!model.colorTexture) {
+        model.colorTexture = vtkOpenGLTexture.newInstance();
+        model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      }
+      if (colorTransferFunc) {
+        const tmpTable = new Float32Array(cWidth * 3);
 
-          for (let c = 0; c < numIComps; c++) {
-            const cfun = ppty.getRGBTransferFunction(c);
-            const cRange = cfun.getRange();
-            cfun.getTable(cRange[0], cRange[1], cWidth, tmpTable, 1);
-            if (iComps) {
-              for (let i = 0; i < cWidth * 3; i++) {
-                cTable[c * cWidth * 6 + i] = 255.0 * tmpTable[i];
-                cTable[c * cWidth * 6 + i + cWidth * 3] = 255.0 * tmpTable[i];
-              }
-            } else {
-              for (let i = 0; i < cWidth * 3; i++) {
-                cTable[c * cWidth * 6 + i] = 255.0 * tmpTable[i];
-              }
+        for (let c = 0; c < numIComps; c++) {
+          const cfun = ppty.getRGBTransferFunction(c);
+          const cRange = cfun.getRange();
+          cfun.getTable(cRange[0], cRange[1], cWidth, tmpTable, 1);
+          if (iComps) {
+            for (let i = 0; i < cWidth * 3; i++) {
+              cTable[c * cWidth * 6 + i] = 255.0 * tmpTable[i];
+              cTable[c * cWidth * 6 + i + cWidth * 3] = 255.0 * tmpTable[i];
+            }
+          } else {
+            for (let i = 0; i < cWidth * 3; i++) {
+              cTable[c * cWidth * 6 + i] = 255.0 * tmpTable[i];
             }
           }
-          model.colorTexture.releaseGraphicsResources(
-            model._openGLRenderWindow
-          );
-          model.colorTexture.resetFormatAndType();
-          model.colorTexture.create2DFromRaw(
-            cWidth,
-            textureHeight,
-            3,
-            VtkDataTypes.UNSIGNED_CHAR,
-            cTable
-          );
-        } else {
-          for (let i = 0; i < cWidth * 3; ++i) {
-            cTable[i] = (255.0 * i) / ((cWidth - 1) * 3);
-            cTable[i + 1] = (255.0 * i) / ((cWidth - 1) * 3);
-            cTable[i + 2] = (255.0 * i) / ((cWidth - 1) * 3);
-          }
-          model.colorTexture.create2DFromRaw(
-            cWidth,
-            1,
-            3,
-            VtkDataTypes.UNSIGNED_CHAR,
-            cTable
-          );
         }
-
-        model.colorTextureString = toString;
+        model.colorTexture.releaseGraphicsResources(model._openGLRenderWindow);
+        model.colorTexture.resetFormatAndType();
+        model.colorTexture.create2DFromRaw(
+          cWidth,
+          textureHeight,
+          3,
+          VtkDataTypes.UNSIGNED_CHAR,
+          cTable
+        );
+      } else {
+        for (let i = 0; i < cWidth * 3; ++i) {
+          cTable[i] = (255.0 * i) / ((cWidth - 1) * 3);
+          cTable[i + 1] = (255.0 * i) / ((cWidth - 1) * 3);
+          cTable[i + 2] = (255.0 * i) / ((cWidth - 1) * 3);
+        }
+        model.colorTexture.releaseGraphicsResources(model._openGLRenderWindow);
+        model.colorTexture.resetFormatAndType();
+        model.colorTexture.create2DFromRaw(
+          cWidth,
+          1,
+          3,
+          VtkDataTypes.UNSIGNED_CHAR,
+          cTable
+        );
       }
+
+      model.colorTextureString = toString;
       if (colorTransferFunc) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
           colorTransferFunc,
@@ -332,65 +335,67 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     toString = computeFnToString(ppty, pwFunc, numIComps);
     const pwfTex =
       model._openGLRenderWindow.getGraphicsResourceForObject(pwFunc);
-    const reBuildPwf = !pwfTex?.vtkObj || pwfTex?.hash !== toString;
-
+    // rebuild opacity tfun?
+    const reBuildPwf =
+      !pwfTex?.vtkObj ||
+      pwfTex?.hash !== toString ||
+      model.pwfTextureString !== toString;
     if (reBuildPwf) {
-      // rebuild opacity tfun?
-      if (model.pwfTextureString !== toString) {
-        const pwfWidth = 1024;
-        const pwfSize = pwfWidth * textureHeight;
-        const pwfTable = new Uint8Array(pwfSize);
-        if (!model.pwfTexture) {
-          model.pwfTexture = vtkOpenGLTexture.newInstance();
-          model.pwfTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-        }
-        if (pwFunc) {
-          const pwfFloatTable = new Float32Array(pwfSize);
-          const tmpTable = new Float32Array(pwfWidth);
+      const pwfWidth = 1024;
+      const pwfSize = pwfWidth * textureHeight;
+      const pwfTable = new Uint8Array(pwfSize);
+      if (!model.pwfTexture) {
+        model.pwfTexture = vtkOpenGLTexture.newInstance();
+        model.pwfTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      }
+      if (pwFunc) {
+        const pwfFloatTable = new Float32Array(pwfSize);
+        const tmpTable = new Float32Array(pwfWidth);
 
-          for (let c = 0; c < numIComps; ++c) {
-            const pwfun = ppty.getPiecewiseFunction(c);
-            if (pwfun === null) {
-              // Piecewise constant max if no function supplied for this component
-              pwfFloatTable.fill(1.0);
+        for (let c = 0; c < numIComps; ++c) {
+          const pwfun = ppty.getPiecewiseFunction(c);
+          if (pwfun === null) {
+            // Piecewise constant max if no function supplied for this component
+            pwfFloatTable.fill(1.0);
+          } else {
+            const pwfRange = pwfun.getRange();
+            pwfun.getTable(pwfRange[0], pwfRange[1], pwfWidth, tmpTable, 1);
+            // adjust for sample distance etc
+            if (iComps) {
+              for (let i = 0; i < pwfWidth; i++) {
+                pwfFloatTable[c * pwfWidth * 2 + i] = tmpTable[i];
+                pwfFloatTable[c * pwfWidth * 2 + i + pwfWidth] = tmpTable[i];
+              }
             } else {
-              const pwfRange = pwfun.getRange();
-              pwfun.getTable(pwfRange[0], pwfRange[1], pwfWidth, tmpTable, 1);
-              // adjust for sample distance etc
-              if (iComps) {
-                for (let i = 0; i < pwfWidth; i++) {
-                  pwfFloatTable[c * pwfWidth * 2 + i] = tmpTable[i];
-                  pwfFloatTable[c * pwfWidth * 2 + i + pwfWidth] = tmpTable[i];
-                }
-              } else {
-                for (let i = 0; i < pwfWidth; i++) {
-                  pwfFloatTable[c * pwfWidth * 2 + i] = tmpTable[i];
-                }
+              for (let i = 0; i < pwfWidth; i++) {
+                pwfFloatTable[c * pwfWidth * 2 + i] = tmpTable[i];
               }
             }
           }
-          model.pwfTexture.releaseGraphicsResources(model._openGLRenderWindow);
-          model.pwfTexture.resetFormatAndType();
-          model.pwfTexture.create2DFromRaw(
-            pwfWidth,
-            textureHeight,
-            1,
-            VtkDataTypes.FLOAT,
-            pwfFloatTable
-          );
-        } else {
-          // default is opaque
-          pwfTable.fill(255.0);
-          model.pwfTexture.create2DFromRaw(
-            pwfWidth,
-            1,
-            1,
-            VtkDataTypes.UNSIGNED_CHAR,
-            pwfTable
-          );
         }
-        model.pwfTextureString = toString;
+        model.pwfTexture.releaseGraphicsResources(model._openGLRenderWindow);
+        model.pwfTexture.resetFormatAndType();
+        model.pwfTexture.create2DFromRaw(
+          pwfWidth,
+          textureHeight,
+          1,
+          VtkDataTypes.FLOAT,
+          pwfFloatTable
+        );
+      } else {
+        // default is opaque
+        pwfTable.fill(255.0);
+        model.pwfTexture.releaseGraphicsResources(model._openGLRenderWindow);
+        model.pwfTexture.resetFormatAndType();
+        model.pwfTexture.create2DFromRaw(
+          pwfWidth,
+          1,
+          1,
+          VtkDataTypes.UNSIGNED_CHAR,
+          pwfTable
+        );
       }
+      model.pwfTextureString = toString;
       if (pwFunc) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
           pwFunc,
@@ -730,7 +735,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     if (
       needRebuild ||
       model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
-      cellBO.getProgram() === 0 ||
+      cellBO.getProgram()?.getHandle() === 0 ||
       model.lastTextureComponents !== tNumComp ||
       model.lastIndependentComponents !== iComp ||
       model.lastSlabThickness !== slabTh ||
