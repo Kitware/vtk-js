@@ -106,14 +106,16 @@ function vtkRenderWindow(publicAPI, model) {
           const mpr = prop.getMapper && prop.getMapper();
           if (mpr && mpr.getPrimitiveCount) {
             const gmpr = gren.getViewNodeFor(mpr);
-            results.gpuMemoryMB += gmpr.getAllocatedGPUMemoryInBytes() / 1e6;
-            const pcount = mpr.getPrimitiveCount();
-            Object.keys(pcount).forEach((keyName) => {
-              if (!results[keyName]) {
-                results[keyName] = 0;
-              }
-              results[keyName] += pcount[keyName];
-            });
+            if (gmpr) {
+              results.gpuMemoryMB += gmpr.getAllocatedGPUMemoryInBytes() / 1e6;
+              const pcount = mpr.getPrimitiveCount();
+              Object.keys(pcount).forEach((keyName) => {
+                if (!results[keyName]) {
+                  results[keyName] = 0;
+                }
+                results[keyName] += pcount[keyName];
+              });
+            }
           }
         } else {
           results.invisiblePropCount += 1;
