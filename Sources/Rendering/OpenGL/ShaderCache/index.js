@@ -207,6 +207,7 @@ function vtkShaderCache(publicAPI, model) {
     Object.keys(model.shaderPrograms)
       .map((key) => model.shaderPrograms[key])
       .forEach((sp) => sp.cleanup());
+    model.shaderPrograms = {};
   };
 
   publicAPI.releaseCurrentShaderProgram = () => {

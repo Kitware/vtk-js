@@ -83,6 +83,12 @@ function vtkOpenGLTextureUnitManager(publicAPI, model) {
   publicAPI.free = (val) => {
     model.textureUnits[val] = false;
   };
+
+  publicAPI.freeAll = () => {
+    for (let i = 0; i < model.numberOfTextureUnits; ++i) {
+      model.textureUnits[i] = false;
+    }
+  };
 }
 
 // ----------------------------------------------------------------------------

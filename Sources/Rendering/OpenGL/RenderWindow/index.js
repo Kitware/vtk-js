@@ -1347,6 +1347,26 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       model._graphicsResourceHash.delete(vtkObj)
     );
   };
+  publicAPI.releaseGraphicsResources = () => {
+    // Clear the shader cache
+    if (model.shaderCache !== null) {
+      model.shaderCache.releaseGraphicsResources(publicAPI);
+    }
+    // Free cached graphics resources at the context level
+    model._graphicsResources.forEach((gObj, vtkObj) => {
+      gObj.releaseGraphicsResources(publicAPI);
+    });
+    model._graphicsResources.clear();
+    model._graphicsResourceHash.clear();
+    if (model.textureUnitManager !== null) {
+      model.textureUnitManager.freeAll();
+    }
+    // Finally, ask the renderers to release prop resources
+    model.renderable.getRenderersByReference().forEach((ren) => {
+      const glRen = publicAPI.getViewNodeFor(ren);
+      glRen?.releaseGraphicsResources();
+    });
+  };
 }
 
 // ----------------------------------------------------------------------------
