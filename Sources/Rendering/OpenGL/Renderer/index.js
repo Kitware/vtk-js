@@ -171,6 +171,12 @@ function vtkOpenGLRenderer(publicAPI, model) {
     if (model.selector !== null) {
       model.selector.releaseGraphicsResources();
     }
+    // Releasing resources means that the next render should re-create resources
+    if (model.renderable) {
+      model.renderable.getViewProps().forEach((prop) => {
+        prop.modified();
+      });
+    }
   };
 
   publicAPI.setOpenGLRenderWindow = (rw) => {
@@ -192,7 +198,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   context: null,
-  // _openGLRenderWindow: null,
+  _openGLRenderWindow: null,
   selector: null,
 };
 
