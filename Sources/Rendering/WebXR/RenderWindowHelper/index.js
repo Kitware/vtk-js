@@ -4,18 +4,29 @@ import { GET_UNDERLYING_CONTEXT } from 'vtk.js/Sources/Rendering/OpenGL/RenderWi
 
 const { XrSessionTypes } = Constants;
 
+//FIXME
+let LookingGlassConfig = null;
+import(
+  // eslint-disable-next-line import/no-unresolved, import/extensions
+  /* webpackIgnore: true */ 'https://unpkg.com/@lookingglass/webxr@0.4.0/dist/bundle/webxr.js'
+).then((obj) => {
+  // eslint-disable-next-line no-new
+  LookingGlassConfig = obj.LookingGlassConfig;
+  new obj.LookingGlassWebXRPolyfill();
+});
+
 const DEFAULT_RESET_FACTORS = {
   rescaleFactor: 0.25, // isotropic scale factor reduces apparent size of objects
   translateZ: -1.5, // default translation initializes object in front of camera
 };
 
 // ----------------------------------------------------------------------------
-// vtkWebXRRenderWindowHelper methods
+// vtkWebXRRenderManager methods
 // ----------------------------------------------------------------------------
 
-function vtkWebXRRenderWindowHelper(publicAPI, model) {
+function vtkWebXRRenderManager(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebXRRenderWindowHelper');
+  model.classHierarchy.push('vtkWebXRRenderManager');
 
   publicAPI.initialize = (renderWindow) => {
     if (!model.initialized) {
@@ -106,6 +117,13 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
       );
 
       publicAPI.modified();
+
+      console.log(LookingGlassConfig);
+      if (LookingGlassConfig.lkgCanvas) {
+        LookingGlassConfig.lkgCanvas.addEventListener('click', function () {
+          console.log('mouse click');
+        });
+      }
     } else {
       throw new Error('Failed to enter XR with a null xrSession.');
     }
@@ -288,15 +306,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, ['renderWindow']);
 
   // Object methods
-  vtkWebXRRenderWindowHelper(publicAPI, model);
+  vtkWebXRRenderManager(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(
-  extend,
-  'vtkWebXRRenderWindowHelper'
-);
+export const newInstance = macro.newInstance(extend, 'vtkWebXRRenderManager');
 
 // ----------------------------------------------------------------------------
 

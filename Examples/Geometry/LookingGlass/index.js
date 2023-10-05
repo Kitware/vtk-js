@@ -10,11 +10,12 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkCalculator from '@kitware/vtk.js/Filters/General/Calculator';
 import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
-import vtkWebXRRenderWindowHelper from '@kitware/vtk.js/Rendering/WebXR/RenderWindowHelper';
+import vtkWebXRLookingGlassRenderWindowHelper from '@kitware/vtk.js/Rendering/WebXR/LookingGlassRenderWindowHelper';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
 import { XrSessionTypes } from '@kitware/vtk.js/Rendering/WebXR/RenderWindowHelper/Constants';
+import vtkInteractorStyle from '@kitware/vtk.js/Rendering/Core/InteractorStyle';
 
 // Force DataAccessHelper to have access to various data source
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
@@ -28,7 +29,7 @@ import controlPanel from './controller.html';
 // See https://docs.lookingglassfactory.com/developer-tools/webxr
 import(
   // eslint-disable-next-line import/no-unresolved, import/extensions
-  /* webpackIgnore: true */ 'https://unpkg.com/@lookingglass/webxr@0.3.0/dist/@lookingglass/bundle/webxr.js'
+  /* webpackIgnore: true */ 'https://unpkg.com/@lookingglass/webxr@0.4.0/dist/bundle/webxr.js'
 ).then((obj) => {
   // eslint-disable-next-line no-new
   new obj.LookingGlassWebXRPolyfill();
@@ -43,9 +44,15 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
-const xrRenderWindowHelper = vtkWebXRRenderWindowHelper.newInstance({
-  renderWindow: fullScreenRenderer.getApiSpecificRenderWindow(),
-});
+const xrRenderWindowHelper = vtkWebXRLookingGlassRenderWindowHelper.newInstance(
+  {
+    renderWindow: fullScreenRenderer.getApiSpecificRenderWindow(),
+  }
+);
+xrRenderWindowHelper.initialize();
+
+//FIXME testing
+const style = vtkInteractorStyle.newInstance();
 
 // ----------------------------------------------------------------------------
 // Example code
