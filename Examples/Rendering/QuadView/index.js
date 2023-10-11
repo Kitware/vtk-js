@@ -335,6 +335,22 @@ function createQuadView(myContainer, fileContents) {
 }
 
 // ----------------------------------------------------------------------------
+// Main function that creates the quadview
+// ----------------------------------------------------------------------------
+function createReleaseButton(myContainer) {
+  const button = document.createElement('button');
+  button.innerText = 'Release Graphics';
+  button.style.position = 'absolute';
+  button.style.left = '1px';
+  button.style.top = '1px';
+  button.style.zIndex = 2;
+  button.addEventListener('click', () => {
+    renderWindowView.releaseGraphicsResources();
+  });
+  myContainer.appendChild(button);
+}
+
+// ----------------------------------------------------------------------------
 // Read volume and render
 // ----------------------------------------------------------------------------
 HttpDataAccessHelper.fetchBinary(
@@ -345,4 +361,5 @@ HttpDataAccessHelper.fetchBinary(
 ).then((binary) => {
   rootContainer.removeChild(progressContainer);
   createQuadView(rootContainer, binary);
+  createReleaseButton(rootContainer);
 });
