@@ -33,7 +33,7 @@ function vtkImageReslice(publicAPI, model) {
   model.classHierarchy.push('vtkImageReslice');
   const superClass = { ...publicAPI };
 
-  let indexMatrix = null;
+  const indexMatrix = mat4.identity(new Float64Array(16));
   let optimizedTransform = null;
 
   function getImageResliceSlabTrap(tmpPtr, inComponents, sampleCount, f) {
@@ -385,15 +385,6 @@ function vtkImageReslice(publicAPI, model) {
       origin[i] = newmat[4 * 3 + i];
     }
 
-    // get the input origin and spacing for conversion purposes
-    const inOrigin = model.interpolator.getOrigin();
-    const inSpacing = model.interpolator.getSpacing();
-    const inInvSpacing = [
-      1.0 / inSpacing[0],
-      1.0 / inSpacing[1],
-      1.0 / inSpacing[2],
-    ];
-
     // allocate an output row of type double
     let floatPtr = null;
     if (!optimizeNearest) {
@@ -532,7 +523,17 @@ function vtkImageReslice(publicAPI, model) {
                 }
 
                 if (optimizedTransform !== null) {
+                  // get the input origin and spacing for conversion purposes
+                  const inOrigin = model.interpolator.getOrigin();
+                  const inSpacing = model.interpolator.getSpacing();
+                  const inInvSpacing = [
+                    1.0 / inSpacing[0],
+                    1.0 / inSpacing[1],
+                    1.0 / inSpacing[2],
+                  ];
+
                   // apply the AbstractTransform if there is one
+                  // TBD: handle inDirection
                   publicAPI.applyTransform(
                     optimizedTransform,
                     inPoint,
@@ -739,31 +740,14 @@ function vtkImageReslice(publicAPI, model) {
    * @returns
    */
   publicAPI.getIndexMatrix = (input, output) => {
-    // first verify that we have to update the matrix
-    if (indexMatrix === null) {
-      indexMatrix = mat4.identity(new Float64Array(16));
-    }
-
-    const inOrigin = input.getOrigin();
-    const inSpacing = input.getSpacing();
-    const outOrigin = output.getOrigin();
-    const outSpacing = output.getSpacing();
-
     const transform = mat4.identity(new Float64Array(16));
-    const outMatrix = mat4.identity(new Float64Array(16));
-
-    if (optimizedTransform) {
-      optimizedTransform = null;
-    }
+    optimizedTransform = null;
 
     if (model.resliceAxes) {
       mat4.copy(transform, model.resliceAxes);
     }
     if (model.resliceTransform) {
       if (model.resliceTransform.isA('vtkHomogeneousTransform')) {
-        // transform->PostMultiply();
-        // transform->Concatenate(
-        // mat4.multiply(transform, transform, model.resliceTransform.getMatrix());
         mat4.multiply(transform, model.resliceTransform.getMatrix(), transform);
       } else {
         // TODO
@@ -771,37 +755,15 @@ function vtkImageReslice(publicAPI, model) {
       }
     }
 
-    // check to see if we have an identity matrix
-    let isIdentity = vtkMath.isIdentity(transform);
-
     // the outMatrix takes OutputData indices to OutputData coordinates,
+    const outMatrix = output.getIndexToWorld();
+    mat4.multiply(transform, transform, outMatrix);
+
     // the inMatrix takes InputData coordinates to InputData indices
-    const inMatrix = input.getWorldToIndex();
-    for (let i = 0; i < 3; i++) {
-      if (
-        (optimizedTransform == null &&
-          (inSpacing[i] !== outSpacing[i] || inOrigin[i] !== outOrigin[i])) ||
-        (optimizedTransform != null &&
-          (outSpacing[i] !== 1.0 || outOrigin[i] !== 0.0))
-      ) {
-        isIdentity = false;
-      }
-      outMatrix[4 * i + i] = outSpacing[i];
-      outMatrix[4 * 3 + i] = outOrigin[i];
-    }
-
-    if (!isIdentity) {
-      // transform.PreMultiply();
-      // transform.Concatenate(outMatrix);
-      mat4.multiply(transform, transform, outMatrix);
-
-      // the optimizedTransform requires data coords, not
-      // index coords, as its input
-      if (optimizedTransform == null) {
-        // transform->PostMultiply();
-        // transform->Concatenate(inMatrix);
-        mat4.multiply(transform, inMatrix, transform);
-      }
+    // the optimizedTransform requires data coords, not index coords, as its input
+    if (optimizedTransform == null) {
+      const inMatrix = input.getWorldToIndex();
+      mat4.multiply(transform, inMatrix, transform);
     }
 
     mat4.copy(indexMatrix, transform);
