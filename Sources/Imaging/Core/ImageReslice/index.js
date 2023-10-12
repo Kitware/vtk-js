@@ -746,12 +746,10 @@ function vtkImageReslice(publicAPI, model) {
 
     const inOrigin = input.getOrigin();
     const inSpacing = input.getSpacing();
-    const inDirection = input.getDirection();
     const outOrigin = output.getOrigin();
     const outSpacing = output.getSpacing();
 
     const transform = mat4.identity(new Float64Array(16));
-    const inMatrix = mat4.identity(new Float64Array(16));
     const outMatrix = mat4.identity(new Float64Array(16));
 
     if (optimizedTransform) {
@@ -773,20 +771,12 @@ function vtkImageReslice(publicAPI, model) {
       }
     }
 
-    if (!vtkMath.isIdentity3x3(inDirection)) {
-      const imageTransform = vtkMatrixBuilder
-        .buildFromRadian()
-        .translate(inOrigin[0], inOrigin[1], inOrigin[2])
-        .multiply3x3(inDirection)
-        .translate(-inOrigin[0], -inOrigin[1], -inOrigin[2]);
-      mat4.multiply(transform, imageTransform.getMatrix(), transform);
-    }
-
     // check to see if we have an identity matrix
     let isIdentity = vtkMath.isIdentity(transform);
 
     // the outMatrix takes OutputData indices to OutputData coordinates,
     // the inMatrix takes InputData coordinates to InputData indices
+    const inMatrix = input.getWorldToIndex();
     for (let i = 0; i < 3; i++) {
       if (
         (optimizedTransform == null &&
@@ -796,8 +786,6 @@ function vtkImageReslice(publicAPI, model) {
       ) {
         isIdentity = false;
       }
-      inMatrix[4 * i + i] = 1.0 / inSpacing[i];
-      inMatrix[4 * 3 + i] = -inOrigin[i] / inSpacing[i];
       outMatrix[4 * i + i] = outSpacing[i];
       outMatrix[4 * 3 + i] = outOrigin[i];
     }
