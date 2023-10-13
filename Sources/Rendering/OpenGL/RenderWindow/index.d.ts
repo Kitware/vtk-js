@@ -1,6 +1,11 @@
-import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import { Nullable, Size, Vector2, Vector3 } from '../../../types';
 import { VtkDataTypes } from '../../../Common/Core/DataArray';
+import { vtkAlgorithm, vtkObject } from '../../../interfaces';
+import vtkBufferObject from '../../OpenGL/BufferObject';
+import vtkCellArray from '../../../Common/Core/CellArray';
+import vtkDataArray from '../../../Common/Core/DataArray';
+import vtkOpenGLTexture from '../../OpenGL/Texture';
+import vtkPoints from '../../../Common/Core/Points';
 import vtkRenderer from '../../Core/Renderer';
 import vtkTexture from '../../Core/Texture';
 import vtkViewStream from '../../../IO/Core/ImageStream/ViewStream';
@@ -400,7 +405,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * @param {String} hash String hash that can be used by mappers to decide whether to discard or re-allocate
 	 * the cached resource.
 	 */
-	setGraphicsResourceForObject(vtkObj: object, gObj: object, hash: string): void;
+	setGraphicsResourceForObject(vtkObj: vtkCellArray | vtkDataArray | vtkPoints, gObj: vtkOpenGLTexture | vtkBufferObject, hash: string): void;
 
 	/**
 	 * Get graphics resources for vtk objects cached at the context level.
@@ -411,7 +416,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 * the cached resource.
 	 * @return {Object} Dictionary with the graphics resource and string hash
 	 */
-	getGraphicsResourceForObject(vtkObj: object): void;
+	getGraphicsResourceForObject(vtkObj: vtkCellArray | vtkDataArray | vtkPoints): {gObj: vtkOpenGLTexture | vtkBufferObject, hash: string};
 
 	/**
 	 * Get approximate graphics memory usage, in bytes, for the context. This is a simple computation
