@@ -544,6 +544,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   ) => {
     if (model.webgl2) {
       switch (vtkType) {
+        case VtkDataTypes.CHAR:
+        case VtkDataTypes.SIGNED_CHAR:
         case VtkDataTypes.UNSIGNED_CHAR:
           return 1;
         case oglNorm16Ext:
