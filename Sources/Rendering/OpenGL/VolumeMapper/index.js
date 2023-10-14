@@ -261,11 +261,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (model.zBufferTexture !== null) {
       FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::ZBuffer::Dec', [
         'uniform sampler2D zBufferTexture;',
-        'uniform float vpWidth;',
-        'uniform float vpHeight;',
+        'uniform float vpZWidth;',
+        'uniform float vpZHeight;',
       ]).result;
       FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::ZBuffer::Impl', [
-        'vec4 depthVec = texture2D(zBufferTexture, vec2(gl_FragCoord.x / vpWidth, gl_FragCoord.y/vpHeight));',
+        'vec4 depthVec = texture2D(zBufferTexture, vec2(gl_FragCoord.x / vpZWidth, gl_FragCoord.y/vpZHeight));',
         'float zdepth = (depthVec.r*256.0 + depthVec.g)/257.0;',
         'zdepth = zdepth * 2.0 - 1.0;',
         'if (cameraParallel == 0) {',
@@ -650,8 +650,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       const size = model._useSmallViewport
         ? [model._smallViewportWidth, model._smallViewportHeight]
         : model._openGLRenderWindow.getFramebufferSize();
-      program.setUniformf('vpWidth', size[0]);
-      program.setUniformf('vpHeight', size[1]);
+      program.setUniformf('vpZWidth', size[0]);
+      program.setUniformf('vpZHeight', size[1]);
     }
   };
 
@@ -853,8 +853,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
       const size = publicAPI.getRenderTargetSize();
 
-      program.setUniformf('vpWidth', size[0]);
-      program.setUniformf('vpHeight', size[1]);
+      program.setUniformf('vpZWidth', size[0]);
+      program.setUniformf('vpZHeight', size[1]);
 
       const offset = publicAPI.getRenderTargetOffset();
       program.setUniformf('vpOffsetX', offset[0] / size[0]);
