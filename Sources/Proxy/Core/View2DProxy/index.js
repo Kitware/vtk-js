@@ -284,6 +284,9 @@ function vtkView2DProxy(publicAPI, model) {
 
   publicAPI.bindRepresentationToManipulator = (representation) => {
     let nbListeners = 0;
+    if (!representation.getProxyId) {
+      return nbListeners;
+    }
     model.rangeManipulator.removeAllListeners();
     model.sliceRepresentation = representation;
     while (model.sliceRepresentationSubscriptions.length) {
