@@ -1115,12 +1115,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           scalars,
           model.renderable.getPreferSizeOverAccuracy?.()
         );
-        console.log(
-          'Setting',
-          scalars,
-          model.openGLTexture.getTarget(),
-          model.openGLTexture.getHandle()
-        );
         model._openGLRenderWindow.setGraphicsResourceForObject(
           scalars,
           model.openGLTexture,
