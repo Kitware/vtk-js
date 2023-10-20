@@ -775,7 +775,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       const cSize = cWidth * textureHeight * 3;
       const cTable = new Uint8Array(cSize);
       if (!model.colorTexture) {
-        model.colorTexture = vtkOpenGLTexture.newInstance();
+        model.colorTexture = vtkOpenGLTexture.newInstance({
+          resizable: true,
+        });
         model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       }
       // set interpolation on the texture based on property setting
@@ -859,7 +861,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       const pwfSize = pwfWidth * textureHeight;
       const pwfTable = new Uint8Array(pwfSize);
       if (!model.pwfTexture) {
-        model.pwfTexture = vtkOpenGLTexture.newInstance();
+        model.pwfTexture = vtkOpenGLTexture.newInstance({
+          resizable: true,
+        });
         model.pwfTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       }
       // set interpolation on the texture based on property setting
@@ -967,7 +971,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       // Build the VBOs
       const dims = image.getDimensions();
       if (!model.openGLTexture) {
-        model.openGLTexture = vtkOpenGLTexture.newInstance();
+        model.openGLTexture = vtkOpenGLTexture.newInstance({
+          resizable: true,
+        });
         model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       }
       if (iType === InterpolationType.NEAREST) {
