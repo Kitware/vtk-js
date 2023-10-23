@@ -240,7 +240,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.get3DContext = (
     options = {
-      preserveDrawingBuffer: false,
+      preserveDrawingBuffer: true,
       depth: true,
       alpha: true,
       powerPreference: 'high-performance',

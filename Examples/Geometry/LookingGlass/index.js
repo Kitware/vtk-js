@@ -15,7 +15,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
 import { XrSessionTypes } from '@kitware/vtk.js/Rendering/WebXR/RenderWindowHelper/Constants';
-import vtkInteractorStyle from '@kitware/vtk.js/Rendering/Core/InteractorStyle';
+// import vtkInteractorStyle from '@kitware/vtk.js/Rendering/Core/InteractorStyle';
 
 // Force DataAccessHelper to have access to various data source
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
@@ -27,13 +27,13 @@ import controlPanel from './controller.html';
 // Import the Looking Glass WebXR Polyfill override
 // Assumes that the Looking Glass Bridge native application is already running.
 // See https://docs.lookingglassfactory.com/developer-tools/webxr
-import(
-  // eslint-disable-next-line import/no-unresolved, import/extensions
-  /* webpackIgnore: true */ 'https://unpkg.com/@lookingglass/webxr@0.4.0/dist/bundle/webxr.js'
-).then((obj) => {
-  // eslint-disable-next-line no-new
-  new obj.LookingGlassWebXRPolyfill();
-});
+// import(
+//   // eslint-disable-next-line import/no-unresolved, import/extensions
+//   /* webpackIgnore: true */ 'https://unpkg.com/@lookingglass/webxr@0.4.0/dist/bundle/webxr.js'
+// ).then((obj) => {
+//   // eslint-disable-next-line no-new
+//   new obj.LookingGlassWebXRPolyfill();
+// });
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -44,15 +44,18 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
-const xrRenderWindowHelper = vtkWebXRLookingGlassRenderWindowHelper.newInstance(
-  {
-    renderWindow: fullScreenRenderer.getApiSpecificRenderWindow(),
-  }
+const xrRenderWindowHelper =
+  vtkWebXRLookingGlassRenderWindowHelper.newInstance();
+//   {
+//     renderWindow: fullScreenRenderer.getApiSpecificRenderWindow(),
+//   }
+// );
+xrRenderWindowHelper.initialize(
+  fullScreenRenderer.getApiSpecificRenderWindow()
 );
-xrRenderWindowHelper.initialize();
 
-//FIXME testing
-const style = vtkInteractorStyle.newInstance();
+// FIXME testing
+// const style = vtkInteractorStyle.newInstance();
 
 // ----------------------------------------------------------------------------
 // Example code

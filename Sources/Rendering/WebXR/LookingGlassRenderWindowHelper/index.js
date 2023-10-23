@@ -6,23 +6,24 @@ import vtkWebXRRenderWindowHelper from 'vtk.js/Sources/Rendering/WebXR/RenderWin
 const { XrSessionTypes } = Constants;
 
 //FIXME
-let LookingGlassConfig = null;
-import(
-  // eslint-disable-next-line import/no-unresolved, import/extensions
-  /* webpackIgnore: true */ 'https://unpkg.com/@lookingglass/webxr@0.4.0/dist/bundle/webxr.js'
-).then((obj) => {
-  // eslint-disable-next-line no-new
-  LookingGlassConfig = obj.LookingGlassConfig;
-  new obj.LookingGlassWebXRPolyfill();
-});
+// let LookingGlassConfig = null;
+// import(
+//   // eslint-disable-next-line import/no-unresolved, import/extensions
+//   /* webpackIgnore: true */ 'https://unpkg.com/@lookingglass/webxr@0.4.0/dist/bundle/webxr.js'
+// ).then((obj) => {
+//   // eslint-disable-next-line no-new
+//   LookingGlassConfig = obj.LookingGlassConfig;
+//   new obj.LookingGlassWebXRPolyfill();
+// });
 
-const DEFAULT_RESET_FACTORS = {
-  rescaleFactor: 0.25, // isotropic scale factor reduces apparent size of objects
-  translateZ: -1.5, // default translation initializes object in front of camera
-};
+// const DEFAULT_RESET_FACTORS = {
+//   rescaleFactor: 0.25, // isotropic scale factor reduces apparent size of objects
+//   translateZ: -1.5, // default translation initializes object in front of camera
+// };
 
 const LOOKING_GLASS_PACKAGE_REF =
   'https://unpkg.com/@lookingglass/webxr@0.4.0/dist/bundle/webxr.js';
+
 
 // ----------------------------------------------------------------------------
 // vtkWebXRLookingGlassRenderWindowHelper methods
@@ -30,7 +31,7 @@ const LOOKING_GLASS_PACKAGE_REF =
 
 function vtkWebXRLookingGlassRenderWindowHelper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebXRLookingGlassRenderWindowHelper');
+  model.classHierarchy.push('vtkLookingGlassWebXRRenderMethod');
 
   const superClass = { ...publicAPI };
 
@@ -43,7 +44,8 @@ function vtkWebXRLookingGlassRenderWindowHelper(publicAPI, model) {
         model.lookingGlassConfig = obj.LookingGlassConfig;
         // eslint-disable-next-line no-new
         new obj.LookingGlassWebXRPolyfill();
-        model.initialized = true;
+        superClass.initialize(renderWindow);
+        model.alwaysRender = false;
       });
     }
   };
@@ -64,112 +66,71 @@ function vtkWebXRLookingGlassRenderWindowHelper(publicAPI, model) {
     if (model.xrSession) {
       throw new Error('XR Session already exists!');
     }
-    if (xrSessionType && xrSessionType != XrSessionTypes.LookingGlassVR) {
+    if (xrSessionType && xrSessionType !== XrSessionTypes.LookingGlassVR) {
       throw new Error('Expected Looking Glass session');
     }
-
     if (!navigator.xr.isSessionSupported(LOOKING_GLASS_SESSION_TYPE)) {
       throw new Error('Looking Glass display is not available');
     }
-    navigator.xr.requestSession(LOOKING_GLASS_SESSION_TYPE).then(publicAPI.enterXR, () => {
-      throw new Error('Failed to create XR session!');
-    });
+    navigator.xr
+      .requestSession(LOOKING_GLASS_SESSION_TYPE)
+      .then((xrSession) => {
+        model.xrSessionType = xrSessionType;
+          publicAPI.enterXR(xrSession, 'local')
+        },
+        () => {
+        model.xrSessionType = null;
+        throw new Error('Failed to create XR session!');
+      });
   };
 
   // When an XR session is available, set up the XRWebGLLayer
   // and request the first animation frame for the device
-  publicAPI.enterXR = async (xrSession) => {
+  publicAPI.enterXR = async (xrSession, referenceSpace) => {
     if (!xrSession) {
       throw new Error('Failed to enter null XR session');
     }
-    await superClass.enterXR(xrSession);
+    await superClass.enterXR(xrSession, referenceSpace);
 
     console.log(model.lookingGlassConfig);
     if (model.lookingGlassConfig.lkgCanvas) {
-        /*model.lkgInteractor = vtkRenderWindowInteractor.newInstance();
+      /*model.lkgInteractor = vtkRenderWindowInteractor.newInstance();
         //model.lkgInteractor = model.renderWindow.getRenderable().getInteractor();
         model.lkgInteractor.setView(model.renderWindow);
         model.lkgInteractor.bindEvents(model.lookingGlassConfig.lkgCanvas);ctor[`onPointerEnter`]((callData) => {
             console.log('animate');
         });*/
-        model.lookingGlassConfig.lkgCanvas.addEventListener('pointermove', function () {
-            model.xrSceneFrame = model.xrSession.requestAnimationFrame(model.xrRender);
-        });
-        model.lkgIntera
+      model.lookingGlassConfig.lkgCanvas.addEventListener(
+        'pointermove',
+        function () {
+          model.xrSceneFrame = model.xrSession.requestAnimationFrame(
+            model.xrRender
+          );
+        }
+      );
+      //model.lkgIntera;
     }
   };
 
   publicAPI.stopXR = async () => {
-    if (navigator.xr === undefined) {
-      // WebXR polyfill not available so nothing to do
-      return;
-    }
-
     // TODO detach from looking glass canvas
     await superClass.stopXR();
   };
 
-  model.xrRender = async (t, frame) => {
-    const xrSession = frame.session;
-
-    model.renderWindow
-      .getRenderable()
-      .getInteractor()
-      .updateXRGamepads(xrSession, frame, model.xrReferenceSpace);
-
-    // FIXME
-    //model.xrSceneFrame = model.xrSession.requestAnimationFrame(model.xrRender);
-
-    const xrPose = frame.getViewerPose(model.xrReferenceSpace);
-
-    if (xrPose) {
-      const gl = model.renderWindow.get3DContext();
-
-      if (
-        model.xrSessionType === XrSessionTypes.MobileAR &&
-        model.initCanvasSize !== null
-      ) {
-        gl.canvas.width = model.initCanvasSize[0];
-        gl.canvas.height = model.initCanvasSize[1];
-      }
-
-      const glLayer = xrSession.renderState.baseLayer;
-      gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.clear(gl.DEPTH_BUFFER_BIT);
-      model.renderWindow.setSize(
-        glLayer.framebufferWidth,
-        glLayer.framebufferHeight
+  model.setRendererViewport = (renderer, xrView, xrViewIndex, glLayer) => {
+    const viewport = glLayer.getViewport(xrView);
+    if (model.xrSessionType !== XrSessionTypes.LookingGlassVR) {
+      throw new Error(
+        'Expected Looking Glass XR session but found type ' +
+          model.xrSessionType
       );
-
-      // get the first renderer
-      const ren = model.renderWindow.getRenderable().getRenderers()[0];
-
-      // Do a render pass for each eye
-      xrPose.views.forEach((view, index) => {
-        const viewport = glLayer.getViewport(view);
-
-        const startX = viewport.x / glLayer.framebufferWidth;
-        const startY = viewport.y / glLayer.framebufferHeight;
-        const endX = (viewport.x + viewport.width) / glLayer.framebufferWidth;
-        const endY = (viewport.y + viewport.height) / glLayer.framebufferHeight;
-        ren.setViewport(startX, startY, endX, endY);
-
-        ren
-          .getActiveCamera()
-          .computeViewParametersFromPhysicalMatrix(
-            view.transform.inverse.matrix
-          );
-        ren.getActiveCamera().setProjectionMatrix(view.projectionMatrix);
-
-        model.renderWindow.traverseAllPasses();
-      });
-
-      // Reset scissorbox before any subsequent rendering to external displays
-      // on frame end, such as rendering to a Looking Glass display.
-      gl.scissor(0, 0, glLayer.framebufferWidth, glLayer.framebufferHeight);
-      gl.disable(gl.SCISSOR_TEST);
     }
+
+    const startX = viewport.x / glLayer.framebufferWidth;
+    const startY = viewport.y / glLayer.framebufferHeight;
+    const endX = (viewport.x + viewport.width) / glLayer.framebufferWidth;
+    const endY = (viewport.y + viewport.height) / glLayer.framebufferHeight;
+    renderer.setViewport(startX, startY, endX, endY);
   };
 
   publicAPI.delete = macro.chain(publicAPI.delete);
