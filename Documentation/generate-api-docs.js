@@ -66,7 +66,7 @@ function doxToMD(items) {
           description: stripPTags(arg.description),
           required: !arg.name.startsWith(`[`),
           types:
-            arg.typesDescription === `<code>*</code>`
+            arg.typesDescription === `*`
               ? `any`
               : arg.types.join(` or `),
         })),
