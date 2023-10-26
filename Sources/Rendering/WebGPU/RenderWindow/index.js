@@ -543,12 +543,16 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     return ret;
   };
 
+  const superSetSize = publicAPI.setSize;
+  publicAPI.setSize = (width, height) => {
+    const modified = superSetSize(width, height);
+    if (modified) {
+      publicAPI.invokeWindowResizeEvent({ width, height });
+    }
+    return modified;
+  };
+
   publicAPI.delete = macro.chain(publicAPI.delete, publicAPI.setViewStream);
-  model._onSizeChanged = (_publicAPI, _model, newValue) =>
-    publicAPI.invokeWindowResizeEvent({
-      width: newValue[0],
-      height: newValue[1],
-    });
 }
 
 // ----------------------------------------------------------------------------
