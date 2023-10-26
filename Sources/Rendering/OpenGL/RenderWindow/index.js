@@ -1081,6 +1081,15 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     model.activeFramebuffer = newActiveFramebuffer;
   };
 
+  const superSetSize = publicAPI.setSize;
+  publicAPI.setSize = (width, height) => {
+    const modified = superSetSize(width, height);
+    if (modified) {
+      publicAPI.invokeWindowResizeEvent({ width, height });
+    }
+    return modified;
+  };
+
   publicAPI.getGraphicsResourceForObject = (vtkObj) => {
     if (!vtkObj) {
       return null;
@@ -1133,12 +1142,6 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       glRen?.releaseGraphicsResources();
     });
   };
-
-  model._onSizeChanged = (_publicAPI, _model, newValue) =>
-    publicAPI.invokeWindowResizeEvent({
-      width: newValue[0],
-      height: newValue[1],
-    });
 }
 
 // ----------------------------------------------------------------------------
