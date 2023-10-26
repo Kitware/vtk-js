@@ -10,10 +10,11 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkCalculator from '@kitware/vtk.js/Filters/General/Calculator';
 import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkWebXRRenderWindowHelper from '@kitware/vtk.js/Rendering/WebXR/RenderWindowHelper';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
-import { XrSessionTypes } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/Constants';
+import { XrSessionTypes } from '@kitware/vtk.js/Rendering/WebXR/RenderWindowHelper/Constants';
 
 // Force DataAccessHelper to have access to various data source
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
@@ -42,6 +43,9 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
+const xrRenderWindowHelper = vtkWebXRRenderWindowHelper.newInstance({
+  renderWindow: fullScreenRenderer.getApiSpecificRenderWindow(),
+});
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -110,12 +114,10 @@ resolutionChange.addEventListener('input', (e) => {
 
 vrbutton.addEventListener('click', (e) => {
   if (vrbutton.textContent === 'Send To Looking Glass') {
-    fullScreenRenderer
-      .getApiSpecificRenderWindow()
-      .startXR(XrSessionTypes.LookingGlassVR);
+    xrRenderWindowHelper.startXR(XrSessionTypes.LookingGlassVR);
     vrbutton.textContent = 'Return From Looking Glass';
   } else {
-    fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
+    xrRenderWindowHelper.stopXR();
     vrbutton.textContent = 'Send To Looking Glass';
   }
 });

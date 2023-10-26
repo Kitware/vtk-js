@@ -10,10 +10,11 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkCalculator from '@kitware/vtk.js/Filters/General/Calculator';
 import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkWebXRRenderWindowHelper from '@kitware/vtk.js/Rendering/WebXR/RenderWindowHelper';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
-import { XrSessionTypes } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/Constants';
+import { XrSessionTypes } from '@kitware/vtk.js/Rendering/WebXR/RenderWindowHelper/Constants';
 
 // Force DataAccessHelper to have access to various data source
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
@@ -46,6 +47,9 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
+const XRHelper = vtkWebXRRenderWindowHelper.newInstance({
+  renderWindow: fullScreenRenderer.getApiSpecificRenderWindow(),
+});
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -114,12 +118,10 @@ resolutionChange.addEventListener('input', (e) => {
 
 vrbutton.addEventListener('click', (e) => {
   if (vrbutton.textContent === 'Send To VR') {
-    fullScreenRenderer
-      .getApiSpecificRenderWindow()
-      .startXR(XrSessionTypes.HmdVR);
+    XRHelper.startXR(XrSessionTypes.HmdVR);
     vrbutton.textContent = 'Return From VR';
   } else {
-    fullScreenRenderer.getApiSpecificRenderWindow().stopXR();
+    XRHelper.stopXR();
     vrbutton.textContent = 'Send To VR';
   }
 });
