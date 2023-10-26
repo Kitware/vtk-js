@@ -170,7 +170,7 @@ function vtkCellPicker(publicAPI, model) {
     return pickResult;
   };
 
-  publicAPI.intersectWithLine = (p1, p2, tol, mapper) => {
+  publicAPI.intersectWithLine = (p1, p2, tol, actor, mapper) => {
     let tMin = Number.MAX_VALUE;
     const t1 = 0.0;
     const t2 = 1.0;
@@ -196,6 +196,16 @@ function vtkCellPicker(publicAPI, model) {
         model.cellIJK = pickData.ijk;
         model.pCoords = pickData.pCoords;
       }
+    } else if (mapper.isA('vtkVolumeMapper')) {
+      tMin = publicAPI.intersectVolumeWithLine(
+        p1,
+        p2,
+        t1,
+        t2,
+        tol,
+        actor,
+        mapper
+      );
     } else if (mapper.isA('vtkMapper')) {
       tMin = publicAPI.intersectActorWithLine(p1, p2, t1, t2, tol, mapper);
     }
@@ -241,6 +251,88 @@ function vtkCellPicker(publicAPI, model) {
         mat[6] * model.pickNormal[1] +
         mat[10] * model.pickNormal[2];
     }
+    return tMin;
+  };
+
+  publicAPI.intersectVolumeWithLine = (p1, p2, t1, t2, tol, actor, mapper) => {
+    let tMin = Number.MAX_VALUE;
+
+    const imageData = mapper.getInputData();
+    const origin = imageData.getOrigin();
+    const spacing = imageData.getSpacing();
+    const dims = imageData.getDimensions();
+    const scalars = imageData.getPointData().getScalars().getData();
+    const extent = imageData.getExtent();
+
+    // calculate opacity table
+    const numIComps = 1;
+    const oWidth = 1024;
+    const tmpTable = new Float32Array(oWidth);
+    let ofun;
+    let oRange;
+
+    for (let c = 0; c < numIComps; ++c) {
+      ofun = actor.getProperty().getScalarOpacity(c);
+      oRange = ofun.getRange();
+      ofun.getTable(oRange[0], oRange[1], oWidth, tmpTable, 1);
+    }
+    const scale = oWidth / (oRange[1] - oRange[0]);
+
+    // Make a new p1 and p2 using the clipped t1 and t2
+    const q1 = [0, 0, 0];
+    const q2 = [0, 0, 0];
+    q1[0] = p1[0];
+    q1[1] = p1[1];
+    q1[2] = p1[2];
+    q2[0] = p2[0];
+    q2[1] = p2[1];
+    q2[2] = p2[2];
+    if (t1 !== 0.0 || t2 !== 1.0) {
+      for (let j = 0; j < 3; j++) {
+        q1[j] = p1[j] * (1.0 - t1) + p2[j] * t1;
+        q2[j] = p1[j] * (1.0 - t2) + p2[j] * t2;
+      }
+    }
+
+    const x1 = [0, 0, 0];
+    const x2 = [0, 0, 0];
+    for (let i = 0; i < 3; i++) {
+      x1[i] = (p1[i] - origin[i]) / spacing[i];
+      x2[i] = (p2[i] - origin[i]) / spacing[i];
+    }
+    const x = [0, 0, 0];
+    const xi = [0, 0, 0];
+    const pcoords = [0, 0, 0];
+
+    const sliceSize = dims[1] * dims[0];
+    const rowSize = dims[0];
+    const nSteps = 100;
+    for (let t = t1; t < t2; t += 1 / nSteps) {
+      // calculate the location of the point
+      for (let j = 0; j < 3; j++) {
+        // "t" is the fractional distance between endpoints x1 and x2
+        x[j] = x1[j] * (1.0 - t) + x2[j] * t;
+
+        // Paranoia bounds check
+        if (x[j] < extent[2 * j]) {
+          x[j] = extent[2 * j];
+        } else if (x[j] > extent[2 * j + 1]) {
+          x[j] = extent[2 * j + 1];
+        }
+
+        xi[j] = Math.floor(x[j]);
+        pcoords[j] = x[j] - xi[j];
+      }
+
+      const index = xi[2] * sliceSize + xi[1] * rowSize + xi[0];
+      const value = Math.floor((scalars[index] - oRange[0]) * scale);
+      const opacity = tmpTable[value];
+      if (opacity > model.opacityThreshold) {
+        tMin = t;
+        break;
+      }
+    }
+
     return tMin;
   };
 
@@ -427,6 +519,7 @@ const DEFAULT_VALUES = {
   cellIJK: [],
   pickNormal: [],
   mapperNormal: [],
+  opacityThreshold: 0.2,
 };
 
 // ----------------------------------------------------------------------------
@@ -442,6 +535,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'mapperNormal',
     'pCoords',
     'cellIJK',
+    'opacityThreshold',
   ]);
   macro.get(publicAPI, model, ['cellId']);
 
