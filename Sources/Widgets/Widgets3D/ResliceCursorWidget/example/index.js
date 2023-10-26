@@ -135,7 +135,7 @@ for (let i = 0; i < 4; i++) {
   const obj = {
     renderWindow: grw.getRenderWindow(),
     renderer: grw.getRenderer(),
-    GLWindow: grw.getOpenGLRenderWindow(),
+    GLWindow: grw.getApiSpecificRenderWindow(),
     interactor: grw.getInteractor(),
     widgetManager: vtkWidgetManager.newInstance(),
     orientationWidget: null,

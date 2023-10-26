@@ -73,7 +73,7 @@ const view2DProxy = proxyManager.createProxy('Views', 'View2D', {
 });
 view2DProxy.setContainer(mainContainer);
 view2DProxy
-  .getOpenGLRenderWindow()
+  .getApiSpecificRenderWindow()
   .setSize(mainContainer.clientWidth, mainContainer.clientHeight);
 
 fitCameraButton.addEventListener('click', () => {

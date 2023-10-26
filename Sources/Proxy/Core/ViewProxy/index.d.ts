@@ -8,6 +8,7 @@ import { vtkSubscription, vtkObject } from '../../../interfaces';
 import vtkRenderer from '../../../Rendering/Core/Renderer';
 import vtkRenderWindow from '../../../Rendering/Core/RenderWindow';
 import vtkOpenGLRenderWindow from '../../../Rendering/OpenGL/RenderWindow';
+import vtkWebGPURenderWindow from '../../../Rendering/WebGPU/RenderWindow';
 import { VtkProxy } from '../../../macros';
 
 export interface vtkViewProxy extends VtkProxy {
@@ -66,7 +67,7 @@ export interface vtkViewProxy extends VtkProxy {
   getInteractor(): vtkRenderWindowInteractor;
   getInteractorStyle2D(): vtkInteractorStyle;
   getInteractorStyle3D(): vtkInteractorStyle;
-  getOpenGLRenderWindow(): vtkOpenGLRenderWindow;
+  getApiSpecificRenderWindow(): vtkOpenGLRenderWindow|vtkWebGPURenderWindow;
   getOrientationAxesType(): string;
   getPresetToOrientationAxes(): any;
   getRenderer(): vtkRenderer;
