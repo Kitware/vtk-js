@@ -1,6 +1,10 @@
 ## From 28.x to 29
 
-- **getOpenGLRenderWindow**: `getOpenGLRenderWindow` has been renamed to `getApiSpecificRenderWindow` in `vtkFullScreenRenderWindow`, `vtkGenericRenderWindow` and `vtkViewProxy` to support WebGL and WebGPU backend.
+- **getOpenGLRenderWindow**: `getOpenGLRenderWindow` has been renamed to `getApiSpecificRenderWindow` in `vtkFullScreenRenderWindow`, `vtkGenericRenderWindow` and `vtkViewProxy` to support WebGL and WebGPU backend. ([#2816](https://github.com/Kitware/vtk-js/pull/2816))
+- **WidgetManager**: Deprecated APIs have been fully removed. ([#2910](https://github.com/Kitware/vtk-js/pull/2910))
+- **OpenGLRenderWindow**: WebXR API has been moved into a WebXR RenderWindowHelper. ([#2924](https://github.com/Kitware/vtk-js/pull/2924))
+- **DistanceWidget**: Removed from vtk.js in favor of vtkLineWidget ([#2945](https://github.com/Kitware/vtk-js/pull/2945))
+
 ## From 27.x to 28
 
 - **vtkManipulator.handleEvent**: Change all `handleEvent` signatures of manipulators. Used to be `handleEvent(callData, glRenderWindow): vec3`, it is now `handleEvent(callData, glRenderWindow): { worldCoords: Nullable<vec3>, worldDirection?: mat3 }`.
