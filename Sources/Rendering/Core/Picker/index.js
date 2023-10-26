@@ -236,8 +236,11 @@ function vtkPicker(publicAPI, model) {
     props.forEach((prop) => {
       const mapper = prop.getMapper();
       pickable = prop.getNestedPickable() && prop.getNestedVisibility();
-      if (prop.getProperty().getOpacity() <= 0.0) {
-        pickable = false;
+
+      if (!mapper.isA('vtkVolumeMapper')) {
+        if (prop.getProperty().getOpacity() <= 0.0) {
+          pickable = false;
+        }
       }
 
       if (pickable) {
@@ -293,6 +296,7 @@ function vtkPicker(publicAPI, model) {
             p1Mapper,
             p2Mapper,
             tol * 0.333 * (scale[0] + scale[1] + scale[2]),
+            prop,
             mapper
           );
           if (t[0] < Number.MAX_VALUE) {
