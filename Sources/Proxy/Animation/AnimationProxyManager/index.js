@@ -25,10 +25,13 @@ function vtkAnimationProxyManager(publicAPI, model) {
     const nextTime = model.frames[model.currentFrameIndex + 1];
     clearTimeout(model.timeOut);
     if (model.currentFrameIndex < model.frames.length - 1) {
-      model.timeOut = setTimeout(() => {
-        publicAPI.nextFrame();
-        publicAPI.play();
-      }, (nextTime - currentTime) * 1000);
+      model.timeOut = setTimeout(
+        () => {
+          publicAPI.nextFrame();
+          publicAPI.play();
+        },
+        (nextTime - currentTime) * 1000
+      );
     } else {
       publicAPI.invokeDonePlaying();
     }

@@ -145,9 +145,8 @@ async function update() {
     }
   });
 
-  const { image: itkImage } = await window.itk.readImageDICOMArrayBufferSeries(
-    arrayBuffers
-  );
+  const { image: itkImage } =
+    await window.itk.readImageDICOMArrayBufferSeries(arrayBuffers);
 
   const vtkImage = vtkITKHelper.convertItkToVtkImage(itkImage);
   setImage(vtkImage);
