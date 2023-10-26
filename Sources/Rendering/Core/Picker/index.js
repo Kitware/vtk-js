@@ -336,16 +336,17 @@ function vtkPicker(publicAPI, model) {
       tempArray.push({
         actor: model.actors[i],
         pickedPosition: model.pickedPositions[i],
-        distance: vtkMath.distance2BetweenPoints(
+        distance2: vtkMath.distance2BetweenPoints(
           p1World,
           model.pickedPositions[i]
         ),
       });
     }
     tempArray.sort((a, b) => {
-      const keyA = a.distance;
-      const keyB = b.distance;
-      // Compare the 2 dates
+      const keyA = a.distance2;
+      const keyB = b.distance2;
+      // order the actors based on the distance2 attribute, so the near actors comes
+      // first in the list
       if (keyA < keyB) return -1;
       if (keyA > keyB) return 1;
       return 0;
