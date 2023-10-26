@@ -1,5 +1,4 @@
 import vtkAngleWidget from './AngleWidget';
-import vtkDistanceWidget from './DistanceWidget';
 import vtkEllipseWidget from './EllipseWidget';
 import vtkImageCroppingWidget from './ImageCroppingWidget';
 import vtkImplicitPlaneWidget from './ImplicitPlaneWidget';
@@ -16,7 +15,6 @@ import vtkSplineWidget from './SplineWidget';
 
 export default {
   vtkAngleWidget,
-  vtkDistanceWidget,
   vtkEllipseWidget,
   vtkImageCroppingWidget,
   vtkImplicitPlaneWidget,
