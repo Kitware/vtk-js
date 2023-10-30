@@ -7,7 +7,8 @@ import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 import vtkQuad from 'vtk.js/Sources/Common/DataModel/Quad';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
-import { vec3 } from 'gl-matrix';
+import { vec3, vec4, mat4 } from 'gl-matrix';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -197,7 +198,14 @@ function vtkCellPicker(publicAPI, model) {
         model.pCoords = pickData.pCoords;
       }
     } else if (mapper.isA('vtkVolumeMapper')) {
-      tMin = publicAPI.intersectVolumeWithLine(p1, p2, t1, t2, tol, actor);
+      tMin = publicAPI.intersectVolumeWithLine(
+        p1,
+        p2,
+        clipLine.t1,
+        clipLine.t2,
+        tol,
+        actor
+      );
     } else if (mapper.isA('vtkMapper')) {
       tMin = publicAPI.intersectActorWithLine(p1, p2, t1, t2, tol, mapper);
     }
@@ -255,20 +263,40 @@ function vtkCellPicker(publicAPI, model) {
     const dims = imageData.getDimensions();
     const scalars = imageData.getPointData().getScalars().getData();
     const extent = imageData.getExtent();
+    const direction = imageData.getDirection();
+    let imageTransform;
+    if (!vtkMath.isIdentity3x3(direction)) {
+      imageTransform = vtkMatrixBuilder
+        .buildFromRadian()
+        .translate(origin[0], origin[1], origin[2])
+        .multiply3x3(direction)
+        .translate(-origin[0], -origin[1], -origin[2])
+        .invert()
+        .getMatrix();
+    }
 
     // calculate opacity table
     const numIComps = 1;
     const oWidth = 1024;
     const tmpTable = new Float32Array(oWidth);
+    const opacityArray = new Float32Array(oWidth);
     let ofun;
     let oRange;
+    const sampleDist = volume.getMapper().getSampleDistance();
 
     for (let c = 0; c < numIComps; ++c) {
       ofun = volume.getProperty().getScalarOpacity(c);
       oRange = ofun.getRange();
       ofun.getTable(oRange[0], oRange[1], oWidth, tmpTable, 1);
+      const opacityFactor =
+        sampleDist / volume.getProperty().getScalarOpacityUnitDistance(c);
+
+      // adjust for sample distance etc
+      for (let i = 0; i < oWidth; ++i) {
+        opacityArray[i] = 1.0 - (1.0 - tmpTable[i]) ** opacityFactor;
+      }
     }
-    const scale = oWidth / (oRange[1] - oRange[0]);
+    const scale = oWidth / (oRange[1] - oRange[0] + 1);
 
     // Make a new p1 and p2 using the clipped t1 and t2
     const q1 = [0, 0, 0];
@@ -292,36 +320,54 @@ function vtkCellPicker(publicAPI, model) {
       x1[i] = (p1[i] - origin[i]) / spacing[i];
       x2[i] = (p2[i] - origin[i]) / spacing[i];
     }
-    const x = [0, 0, 0];
+    const x = [0, 0, 0, 0];
     const xi = [0, 0, 0];
     const pcoords = [0, 0, 0];
 
     const sliceSize = dims[1] * dims[0];
     const rowSize = dims[0];
     const nSteps = 100;
+    let insideVolume;
     for (let t = t1; t < t2; t += 1 / nSteps) {
       // calculate the location of the point
+      insideVolume = true;
       for (let j = 0; j < 3; j++) {
         // "t" is the fractional distance between endpoints x1 and x2
         x[j] = x1[j] * (1.0 - t) + x2[j] * t;
+      }
+      x[3] = 1.0;
+      if (imageTransform) {
+        vec4.transformMat4(x, x, imageTransform);
+      }
 
-        // Paranoia bounds check
+      for (let j = 0; j < 3; j++) {
+        // Bounds check
         if (x[j] < extent[2 * j]) {
           x[j] = extent[2 * j];
+          insideVolume = false;
         } else if (x[j] > extent[2 * j + 1]) {
           x[j] = extent[2 * j + 1];
+          insideVolume = false;
         }
 
         xi[j] = Math.floor(x[j]);
         pcoords[j] = x[j] - xi[j];
       }
 
-      const index = xi[2] * sliceSize + xi[1] * rowSize + xi[0];
-      const value = Math.floor((scalars[index] - oRange[0]) * scale);
-      const opacity = tmpTable[value];
-      if (opacity > model.opacityThreshold) {
-        tMin = t;
-        break;
+      if (insideVolume) {
+        const index = xi[2] * sliceSize + xi[1] * rowSize + xi[0];
+        let value = scalars[index];
+        if (value < oRange[0]) {
+          value = oRange[0];
+        } else if (value > oRange[1]) {
+          value = oRange[1];
+        }
+        value = Math.floor((value - oRange[0]) * scale);
+        const opacity = tmpTable[value];
+        if (opacity > model.opacityThreshold) {
+          tMin = t;
+          break;
+        }
       }
     }
 
