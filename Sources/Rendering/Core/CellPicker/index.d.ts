@@ -13,6 +13,7 @@ export interface ICellPickerInitialValues extends IPickerInitialValues {
 	cellIJK?: number[];
 	pickNormal?: number[];
 	mapperNormal?: number[];
+	opacityThreshold?:number;
 }
 
 export interface vtkCellPicker extends vtkPicker {
@@ -41,6 +42,11 @@ export interface vtkCellPicker extends vtkPicker {
 	 * 
 	 */
 	getMapperNormalByReference(): number[];
+
+	/**
+	 * Get the opacity threshold for volume picking
+	 */
+	getOpacityThreshold(): number[];
 
 	/**
 	 * Get the parametric coordinates of the picked cell.
