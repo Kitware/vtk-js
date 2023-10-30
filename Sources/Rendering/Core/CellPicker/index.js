@@ -7,7 +7,7 @@ import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 import vtkQuad from 'vtk.js/Sources/Common/DataModel/Quad';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
-import { vec3, vec4, mat4 } from 'gl-matrix';
+import { vec3, vec4 } from 'gl-matrix';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
 // ----------------------------------------------------------------------------
