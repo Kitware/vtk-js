@@ -46,7 +46,12 @@ export interface vtkCellPicker extends vtkPicker {
 	/**
 	 * Get the opacity threshold for volume picking
 	 */
-	getOpacityThreshold(): number[];
+	getOpacityThreshold(): number;
+
+	/**
+	 * Get the opacity threshold for volume picking
+	 */
+	setOpacityThreshold(value: number);
 
 	/**
 	 * Get the parametric coordinates of the picked cell.
