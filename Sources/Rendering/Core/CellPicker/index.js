@@ -571,8 +571,10 @@ export function extend(publicAPI, model, initialValues = {}) {
     'mapperNormal',
     'pCoords',
     'cellIJK',
-    'opacityThreshold',
   ]);
+
+  macro.setGet(publicAPI, model, ['opacityThreshold']);
+
   macro.get(publicAPI, model, ['cellId']);
 
   // Object methods

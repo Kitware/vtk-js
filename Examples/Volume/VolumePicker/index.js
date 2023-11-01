@@ -219,6 +219,18 @@ renderWindow.getInteractor().onRightButtonPress((callData) => {
   renderWindow.render();
 });
 
+function setOpacityFromSlider(opacityValue) {
+  picker.setOpacityThreshold(opacityValue);
+}
+
+const opacity = document.getElementById('opacity');
+const opacityLabel = document.getElementById('opacityLabel');
+
+opacity.addEventListener('input', () => {
+  setOpacityFromSlider(Number.parseFloat(opacity.value, 10));
+  opacityLabel.innerHTML = `Opacity ( ${opacity.value} )`;
+});
+
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
 // modify objects in your browser's developer console:
