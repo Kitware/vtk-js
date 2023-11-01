@@ -322,7 +322,6 @@ function vtkCellPicker(publicAPI, model) {
     }
     const x = [0, 0, 0, 0];
     const xi = [0, 0, 0];
-    const pcoords = [0, 0, 0];
 
     const sliceSize = dims[1] * dims[0];
     const rowSize = dims[0];
@@ -350,8 +349,7 @@ function vtkCellPicker(publicAPI, model) {
           insideVolume = false;
         }
 
-        xi[j] = Math.floor(x[j]);
-        pcoords[j] = x[j] - xi[j];
+        xi[j] = Math.round(x[j]);
       }
 
       if (insideVolume) {
