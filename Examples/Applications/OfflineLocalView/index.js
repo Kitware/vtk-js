@@ -33,6 +33,31 @@ function preventDefaults(e) {
   e.stopPropagation();
 }
 
+function onVisible(element, callback) {
+  new window.parent.IntersectionObserver((entries, observer) => {
+    entries.forEach((entry) => {
+      if (entry.intersectionRatio > 0) {
+        callback();
+        observer.disconnect();
+      }
+    });
+  }).observe(element);
+}
+
+function runOnVisible(callback) {
+  if (!window.frameElement) {
+    callback();
+    return true;
+  }
+  const visible = window.frameElement.getClientRects().length > 0;
+  if (!visible) {
+    onVisible(window.frameElement, callback);
+  } else {
+    callback();
+  }
+  return visible;
+}
+
 export function load(container, options) {
   autoInit = false;
   emptyContainer(container);
@@ -161,7 +186,9 @@ if (userParams.url || userParams.fileURL) {
     rootBody.style.margin = '0';
     rootBody.style.padding = '0';
   }
-  load(myContainer, userParams);
+
+  autoInit = false;
+  runOnVisible(() => load(myContainer, userParams));
 }
 
 // Auto setup if no method get called within 100ms
