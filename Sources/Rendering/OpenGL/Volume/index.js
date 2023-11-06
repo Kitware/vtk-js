@@ -77,6 +77,7 @@ function vtkOpenGLVolume(publicAPI, model) {
       } else {
         mat3.fromMat4(model.normalMatrix, model.MCWCMatrix);
         mat3.invert(model.normalMatrix, model.normalMatrix);
+        mat3.transpose(model.normalMatrix, model.normalMatrix);
       }
       model.keyMatrixTime.modified();
     }
