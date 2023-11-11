@@ -1,0 +1,29 @@
+{
+  "vtkClass": "vtkImageData",
+  "spacing": [0.541016, 0.541016, 1],
+  "origin": [-137.229, -316.229, 530],
+  "extent": [0, 511, 0, 511, 0, 294],
+  "pointData": {
+    "vtkClass": "vtkDataSetAttributes",
+    "arrays": [
+      { "data": {
+      "vtkClass": "vtkDataArray",
+      "name": "Scalars",
+      "numberOfComponents": 1,
+      "dataType": "Int16Array",
+      "ref": {
+         "encode": "LittleEndian",
+         "basepath": "data",
+         "id": "Int16_77332480-e5d8649200ff5fe4a40dce6c5488365f"
+      },
+      "size": 77332480
+    }}
+    ],
+    "activeTCoords": -1,
+    "activeScalars": 0,
+    "activeNormals": -1,
+    "activeGlobalIds": -1,
+    "activeTensors": -1,
+    "activePedigreeIds": -1,
+    "activeVectors": -1
+  }}

@@ -201,8 +201,8 @@ function vtkCellPicker(publicAPI, model) {
       tMin = publicAPI.intersectVolumeWithLine(
         p1,
         p2,
-        clipLine.t1,
-        clipLine.t2,
+        t1,
+        t2,
         tol,
         actor
       );
