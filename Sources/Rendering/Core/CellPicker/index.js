@@ -9,7 +9,7 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
 import { vec3, vec4 } from 'gl-matrix';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
-import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -199,9 +199,14 @@ function vtkCellPicker(publicAPI, model) {
         model.pCoords = pickData.pCoords;
       }
     } else if (mapper.isA('vtkVolumeMapper')) {
-      const bbox = vtkBoundingBox.newInstance();
-      bbox.setBounds(mapper.getBounds());
-      const interceptionObject = bbox.intersectBoundingBoxWithLine(p1, p2);
+      // we calculate here the parametric intercept points between the ray and the bounding box, so
+      // if the application defines for some reason a too large ray length (1e6), it restrict the calculation
+      // to the vtkVolume actor bounding box
+      const interceptionObject = vtkBox.intersectWithLine(
+        mapper.getBounds(),
+        p1,
+        p2
+      );
 
       if (interceptionObject) {
         if (interceptionObject.t1 < clipLine.t1) {

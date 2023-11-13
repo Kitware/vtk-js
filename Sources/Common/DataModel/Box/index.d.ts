@@ -27,6 +27,16 @@ export interface vtkBox extends vtkObject {
     evaluateFunction(x: Vector3): number;
 
     /**
+     * Intersect box with line and return the parametric values and points of the two intercepts
+     * @param bounds 
+     * @param p1 
+     * @param p2 
+     * returns @object {t1, t2, x1, x2} object containing the t1, t2 parametric values and
+     * x1, x2 coordinates of the line intercept points in the bounding box
+     */
+    intersectWithLine(bounds: Bounds, p1: Vector3, p2: Vector3) : object;
+
+    /**
      * 
 	 * @param {Number} x The x coordinate.
 	 * @param {Number} y The y coordinate.

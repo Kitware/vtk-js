@@ -202,7 +202,7 @@ export function getMaxPoint(bounds: Bounds): Vector3;
 export function getCorners(bounds: Bounds, corners: Vector3[]): Vector3[];
 
 /**
- * Computes the two corner poitns with min and max coords.
+ * Computes the two corner points with min and max coords.
  * @param {Bounds} bounds
  * @param {Vector3} point1
  * @param {Vector3} point2
@@ -502,7 +502,7 @@ declare class BoundingBox {
   getCorners(bounds: Bounds, corners: Vector3[]): Vector3[];
 
   /**
-   * Computes the two corner poitns with min and max coords.
+   * Computes the two corner points with min and max coords.
    * @param {Bounds} bounds
    * @param {Vector3} point1
    * @param {Vector3} point2
@@ -589,14 +589,6 @@ declare class BoundingBox {
   intersects(bounds: Bounds, bBounds: Bounds): boolean;
 
   /**
-   * Intersect box with line and return the parametric values and points of the two intercepts
-   * @param bounds 
-   * @param p1 
-   * @param p2 
-   */
-  intersectBoundingBoxWithLine(bounds: Bounds, p1: Vector3, p2: Vector3) : object;
-
-  /**
    * Does the bbox contain a given point.
    * @param {Bounds} bounds
    * @param {number} x
@@ -659,7 +651,6 @@ declare const vtkBoundingBox: {
   intersectPlane: typeof intersectPlane;
   intersect: typeof intersect;
   intersects: typeof intersects;
-  intersectBoundingBoxWithLine: typeof intersectBoundingBoxWithLine;
   containsPoint: typeof containsPoint;
   contains: typeof contains;
   INIT_BOUNDS: Bounds;
