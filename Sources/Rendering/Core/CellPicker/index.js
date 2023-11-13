@@ -9,6 +9,7 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
 import { vec3, vec4 } from 'gl-matrix';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -173,8 +174,8 @@ function vtkCellPicker(publicAPI, model) {
 
   publicAPI.intersectWithLine = (p1, p2, tol, actor, mapper) => {
     let tMin = Number.MAX_VALUE;
-    const t1 = 0.0;
-    const t2 = 1.0;
+    let t1 = 0.0;
+    let t2 = 1.0;
 
     const vtkCellPickerPlaneTol = 1e-14;
 
@@ -198,14 +199,28 @@ function vtkCellPicker(publicAPI, model) {
         model.pCoords = pickData.pCoords;
       }
     } else if (mapper.isA('vtkVolumeMapper')) {
-      tMin = publicAPI.intersectVolumeWithLine(
-        p1,
-        p2,
-        t1,
-        t2,
-        tol,
-        actor
-      );
+      const bbox = vtkBoundingBox.newInstance();
+      bbox.setBounds(mapper.getBounds());
+      const interceptionObject = bbox.intersectWithLine(p1, p2);
+
+      if (interceptionObject) {
+        if (interceptionObject.t1 < clipLine.t1) {
+          t1 = clipLine.t1;
+        } else {
+          t1 = interceptionObject.t1;
+        }
+
+        if (interceptionObject.t2 > clipLine.t2) {
+          t2 = clipLine.t2;
+        } else {
+          t2 = interceptionObject.t2;
+        }
+      } else {
+        t1 = clipLine.t1;
+        t2 = clipLine.t2;
+      }
+
+      tMin = publicAPI.intersectVolumeWithLine(p1, p2, t1, t2, tol, actor);
     } else if (mapper.isA('vtkMapper')) {
       tMin = publicAPI.intersectActorWithLine(p1, p2, t1, t2, tol, mapper);
     }
@@ -317,17 +332,20 @@ function vtkCellPicker(publicAPI, model) {
     const x1 = [0, 0, 0];
     const x2 = [0, 0, 0];
     for (let i = 0; i < 3; i++) {
-      x1[i] = (p1[i] - origin[i]) / spacing[i];
-      x2[i] = (p2[i] - origin[i]) / spacing[i];
+      x1[i] = (q1[i] - origin[i]) / spacing[i];
+      x2[i] = (q2[i] - origin[i]) / spacing[i];
     }
     const x = [0, 0, 0, 0];
     const xi = [0, 0, 0];
 
     const sliceSize = dims[1] * dims[0];
     const rowSize = dims[0];
-    const nSteps = 100;
+    // here the step is the 1 over the distance between volume index location x1 and x2
+    const step = 1 / Math.sqrt(vtkMath.distance2BetweenPoints(x1, x2));
     let insideVolume;
-    for (let t = t1; t < t2; t += 1 / nSteps) {
+    // here we reinterpret the t value as the distance between x1 and x2
+    // When calculating the tMin, we weight t between t1 and t2 values
+    for (let t = 0; t < 1; t += step) {
       // calculate the location of the point
       insideVolume = true;
       for (let j = 0; j < 3; j++) {
@@ -363,7 +381,8 @@ function vtkCellPicker(publicAPI, model) {
         value = Math.floor((value - oRange[0]) * scale);
         const opacity = tmpTable[value];
         if (opacity > model.opacityThreshold) {
-          tMin = t;
+          // returning the tMin to the original scale, if t1 > 0 or t2 < 1
+          tMin = t1 * (1.0 - t) + t2 * t;
           break;
         }
       }
