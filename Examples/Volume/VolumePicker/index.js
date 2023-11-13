@@ -84,7 +84,8 @@ actor.getProperty().setSpecularPower(8.0);
 
 mapper.setInputConnection(reader.getOutputPort());
 
-reader.setUrl('http://localhost:9999/cranio.vtkjs').then(() => {
+reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => 
+{
   reader.loadData().then(() => {
     const data = reader.getOutputData();
     const extent = data.getExtent();
