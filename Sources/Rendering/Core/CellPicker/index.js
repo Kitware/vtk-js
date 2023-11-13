@@ -201,7 +201,7 @@ function vtkCellPicker(publicAPI, model) {
     } else if (mapper.isA('vtkVolumeMapper')) {
       const bbox = vtkBoundingBox.newInstance();
       bbox.setBounds(mapper.getBounds());
-      const interceptionObject = bbox.intersectWithLine(p1, p2);
+      const interceptionObject = bbox.intersectBoundingBoxWithLine(p1, p2);
 
       if (interceptionObject) {
         if (interceptionObject.t1 < clipLine.t1) {

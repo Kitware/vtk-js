@@ -425,7 +425,7 @@ export function intersectPlane(bounds, origin, normal) {
 // Bounding box intersection code from David Gobbi.  Go through the
 // bounding planes one at a time and compute the parametric coordinate
 // of each intersection.
-export function intersectWithLine(bounds, p1, p2) {
+export function intersectBoundingBoxWithLine(bounds, p1, p2) {
   let plane1 = -1;
   let plane2 = -1;
   let t1 = 0.0;
@@ -829,8 +829,8 @@ class BoundingBox {
     return intersectPlane(this.bounds, origin, normal);
   }
 
-  intersectWithLine(p1, p2) {
-    return intersectWithLine(this.bounds, p1, p2);
+  intersectBoundingBoxWithLine(p1, p2) {
+    return interintersectBoundingBoxWithLinesectWithLine(this.bounds, p1, p2);
   }
 
   intersect(otherBounds) {
