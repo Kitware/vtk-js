@@ -594,7 +594,7 @@ declare class BoundingBox {
    * @param p1 
    * @param p2 
    */
-  intersectWithLine(bounds: Bounds, p1: Vector3, p2: Vector3) : object;
+  intersectBoundingBoxWithLine(bounds: Bounds, p1: Vector3, p2: Vector3) : object;
 
   /**
    * Does the bbox contain a given point.
@@ -659,7 +659,7 @@ declare const vtkBoundingBox: {
   intersectPlane: typeof intersectPlane;
   intersect: typeof intersect;
   intersects: typeof intersects;
-  intersectWithLine: typeof intersectWithLine;
+  intersectBoundingBoxWithLine: typeof intersectBoundingBoxWithLine;
   containsPoint: typeof containsPoint;
   contains: typeof contains;
   INIT_BOUNDS: Bounds;
