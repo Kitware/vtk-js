@@ -830,7 +830,7 @@ class BoundingBox {
   }
 
   intersectBoundingBoxWithLine(p1, p2) {
-    return interintersectBoundingBoxWithLinesectWithLine(this.bounds, p1, p2);
+    return intersectBoundingBoxWithLine(this.bounds, p1, p2);
   }
 
   intersect(otherBounds) {
