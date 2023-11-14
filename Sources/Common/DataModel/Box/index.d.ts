@@ -34,7 +34,7 @@ export interface vtkBox extends vtkObject {
      * returns @object {t1, t2, x1, x2} object containing the t1, t2 parametric values and
      * x1, x2 coordinates of the line intercept points in the bounding box
      */
-    intersectWithLine(bounds: Bounds, p1: Vector3, p2: Vector3) : object;
+    intersectWithLine(p1: Vector3, p2: Vector3) : object;
 
     /**
      * 
@@ -71,6 +71,12 @@ export function extend(publicAPI: object, model: object, initialValues?: IBoxIni
  */
 export function newInstance(initialValues?: IBoxInitialValues): vtkBox;
 
+//------------------------------------------------------------------------------
+// Bounding box intersection code from David Gobbi.  Go through the
+// bounding planes one at a time and compute the parametric coordinate
+// of each intersection and return the parametric values and the calculated points
+export function intersectWithLine(bounds, p1, p2): object;
+
 /**
  * vtkBox provides methods for creating a 1D cubic spline object from given
  * parameters, and allows for the calculation of the spline value and derivative
@@ -78,6 +84,7 @@ export function newInstance(initialValues?: IBoxInitialValues): vtkBox;
  */
 export declare const vtkBox: {
 	newInstance: typeof newInstance,
-	extend: typeof extend
+	extend: typeof extend,
+    intersectWithLine: typeof intersectWithLine
 };
 export default vtkBox;
