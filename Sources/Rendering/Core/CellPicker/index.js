@@ -209,17 +209,15 @@ function vtkCellPicker(publicAPI, model) {
       );
 
       if (interceptionObject) {
-        if (interceptionObject.t1 < clipLine.t1) {
-          t1 = clipLine.t1;
-        } else {
-          t1 = interceptionObject.t1;
-        }
+        t1 =
+          interceptionObject.t1 < clipLine.t1
+            ? clipLine.t1
+            : interceptionObject.t1;
 
-        if (interceptionObject.t2 > clipLine.t2) {
-          t2 = clipLine.t2;
-        } else {
-          t2 = interceptionObject.t2;
-        }
+        t2 =
+          interceptionObject.t2 > clipLine.t2
+            ? clipLine.t2
+            : interceptionObject.t2;
       } else {
         t1 = clipLine.t1;
         t2 = clipLine.t2;

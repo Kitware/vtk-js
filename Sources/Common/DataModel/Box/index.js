@@ -150,7 +150,7 @@ function vtkBox(publicAPI, model) {
             dist = point[i] - maxPoint[i];
           }
           if (dist > minDistance) {
-            // remember, it's engative
+            // remember, it's negative
             minDistance = dist;
           }
         } // end if inside
