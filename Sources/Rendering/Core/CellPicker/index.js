@@ -208,20 +208,14 @@ function vtkCellPicker(publicAPI, model) {
         p2
       );
 
-      if (interceptionObject) {
-        t1 =
-          interceptionObject.t1 < clipLine.t1
-            ? clipLine.t1
-            : interceptionObject.t1;
-
-        t2 =
-          interceptionObject.t2 > clipLine.t2
-            ? clipLine.t2
-            : interceptionObject.t2;
-      } else {
-        t1 = clipLine.t1;
-        t2 = clipLine.t2;
-      }
+      t1 =
+        interceptionObject?.t1 > clipLine.t1
+          ? interceptionObject.t1
+          : clipLine.t1;
+      t2 =
+        interceptionObject?.t2 < clipLine.t2
+          ? interceptionObject.t2
+          : clipLine.t2;
 
       tMin = publicAPI.intersectVolumeWithLine(p1, p2, t1, t2, tol, actor);
     } else if (mapper.isA('vtkMapper')) {
