@@ -293,7 +293,7 @@ export function convertItkToVtkPolyData(itkPolyData, options = {}) {
       vtkClass: 'vtkPoints',
       name: '_points',
       numberOfComponents: 3,
-      size: itkPolyData.numberOfPoints,
+      size: itkPolyData.points.length,
       dataType: 'Float32Array',
       buffer: itkPolyData.points.buffer,
       values: itkPolyData.points,
