@@ -5,6 +5,87 @@ import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 // Global methods
 // ----------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------
+// Bounding box intersection code from David Gobbi.  Go through the
+// bounding planes one at a time and compute the parametric coordinate
+// of each intersection and return the parametric values and the calculated points
+export function intersectWithLine(bounds, p1, p2) {
+  let plane1 = -1;
+  let plane2 = -1;
+  let t1 = 0.0;
+  let t2 = 1.0;
+
+  for (let j = 0; j < 3; j++) {
+    for (let k = 0; k < 2; k++) {
+      // Compute distances of p1 and p2 from the plane along the plane normal
+      const i = 2 * j + k;
+      const d1 = (bounds[i] - p1[j]) * (1 - 2 * k);
+      const d2 = (bounds[i] - p2[j]) * (1 - 2 * k);
+
+      // If both distances are positive, both points are outside
+      if (d1 > 0 && d2 > 0) {
+        return;
+      }
+      // If one of the distances is positive, the line crosses the plane
+      if (d1 > 0 || d2 > 0) {
+        // Compute fractional distance "t" of the crossing between p1 & p2
+        let t = 0.0;
+        if (d1 !== 0) {
+          t = d1 / (d1 - d2);
+        }
+
+        // If point p1 was clipped, adjust t1
+        if (d1 > 0) {
+          if (t >= t1) {
+            t1 = t;
+            plane1 = i;
+          }
+        }
+        // else point p2 was clipped, so adjust t2
+        else if (t <= t2) {
+          t2 = t;
+          plane2 = i;
+        }
+        // If this happens, there's no line left
+        if (t1 > t2) {
+          // Allow for planes that are coincident or slightly inverted
+          if (plane1 < 0 || plane2 < 0) {
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  function getValues(plane, t) {
+    const x = [0, 0, 0];
+    for (let count = 0; count < 2; count++) {
+      for (let i = 0; i < 3; i++) {
+        if (plane === 2 * i || plane === 2 * i + 1) {
+          x[i] = bounds[plane];
+        } else {
+          x[i] = p1[i] * (1.0 - t) + p2[i] * t;
+          if (x[i] < bounds[2 * i]) {
+            x[i] = bounds[2 * i];
+          }
+          if (x[i] > bounds[2 * i + 1]) {
+            x[i] = bounds[2 * i + 1];
+          }
+        }
+      }
+    }
+    return x;
+  }
+
+  const x1 = getValues(plane1, t1);
+  const x2 = getValues(plane2, t2);
+
+  const outObject = { t1, t2, x1, x2 };
+
+  // eslint-disable-next-line consistent-return
+  return outObject;
+}
+
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
@@ -14,7 +95,6 @@ export const STATIC = {};
 // ----------------------------------------------------------------------------
 // vtkBox methods
 // ----------------------------------------------------------------------------
-
 function vtkBox(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkBox');
@@ -111,86 +191,8 @@ function vtkBox(publicAPI, model) {
   };
 
   publicAPI.addBox = (other) => publicAPI.addBounds(other.getBounds());
-  //------------------------------------------------------------------------------
-  // Bounding box intersection code from David Gobbi.  Go through the
-  // bounding planes one at a time and compute the parametric coordinate
-  // of each intersection and return the parametric values and the calculated points
-  publicAPI.intersectWithLine = (bounds, p1, p2) => {
-    let plane1 = -1;
-    let plane2 = -1;
-    let t1 = 0.0;
-    let t2 = 1.0;
-
-    for (let j = 0; j < 3; j++) {
-      for (let k = 0; k < 2; k++) {
-        // Compute distances of p1 and p2 from the plane along the plane normal
-        const i = 2 * j + k;
-        const d1 = (bounds[i] - p1[j]) * (1 - 2 * k);
-        const d2 = (bounds[i] - p2[j]) * (1 - 2 * k);
-
-        // If both distances are positive, both points are outside
-        if (d1 > 0 && d2 > 0) {
-          return;
-        }
-        // If one of the distances is positive, the line crosses the plane
-        if (d1 > 0 || d2 > 0) {
-          // Compute fractional distance "t" of the crossing between p1 & p2
-          let t = 0.0;
-          if (d1 !== 0) {
-            t = d1 / (d1 - d2);
-          }
-
-          // If point p1 was clipped, adjust t1
-          if (d1 > 0) {
-            if (t >= t1) {
-              t1 = t;
-              plane1 = i;
-            }
-          }
-          // else point p2 was clipped, so adjust t2
-          else if (t <= t2) {
-            t2 = t;
-            plane2 = i;
-          }
-          // If this happens, there's no line left
-          if (t1 > t2) {
-            // Allow for planes that are coincident or slightly inverted
-            if (plane1 < 0 || plane2 < 0) {
-              return;
-            }
-          }
-        }
-      }
-    }
-
-    function getValues(plane, t) {
-      const x = [0, 0, 0];
-      for (let count = 0; count < 2; count++) {
-        for (let i = 0; i < 3; i++) {
-          if (plane === 2 * i || plane === 2 * i + 1) {
-            x[i] = bounds[plane];
-          } else {
-            x[i] = p1[i] * (1.0 - t) + p2[i] * t;
-            if (x[i] < bounds[2 * i]) {
-              x[i] = bounds[2 * i];
-            }
-            if (x[i] > bounds[2 * i + 1]) {
-              x[i] = bounds[2 * i + 1];
-            }
-          }
-        }
-      }
-      return x;
-    }
-
-    const x1 = getValues(plane1, t1);
-    const x2 = getValues(plane2, t2);
-
-    const outObject = { t1, t2, x1, x2 };
-
-    // eslint-disable-next-line consistent-return
-    return outObject;
-  };
+  publicAPI.intersectWithLine = (p1, p2) =>
+    intersectWithLine(model.bbox, p1, p2);
 }
 
 // ----------------------------------------------------------------------------
@@ -218,4 +220,4 @@ export const newInstance = macro.newInstance(extend, 'vtkBox');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend, ...STATIC };
+export default { newInstance, extend, intersectWithLine, ...STATIC };

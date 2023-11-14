@@ -202,8 +202,7 @@ function vtkCellPicker(publicAPI, model) {
       // we calculate here the parametric intercept points between the ray and the bounding box, so
       // if the application defines for some reason a too large ray length (1e6), it restrict the calculation
       // to the vtkVolume actor bounding box
-      const box = vtkBox.newInstance();
-      const interceptionObject = box.intersectWithLine(
+      const interceptionObject = vtkBox.intersectWithLine(
         mapper.getBounds(),
         p1,
         p2
