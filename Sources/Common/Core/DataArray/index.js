@@ -556,6 +556,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   macro.set(publicAPI, model, ['name', 'numberOfComponents']);
 
+  if (model.size % model.numberOfComponents !== 0) {
+    throw new RangeError(
+      'model.size is not a multiple of model.numberOfComponents'
+    );
+  }
+
   // Object specific methods
   vtkDataArray(publicAPI, model);
 }
