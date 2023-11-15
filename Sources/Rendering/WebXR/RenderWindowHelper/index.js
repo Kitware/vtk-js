@@ -263,6 +263,7 @@ function vtkWebXRRenderManager(publicAPI, model) {
       gl.scissor(0, 0, glLayer.framebufferWidth, glLayer.framebufferHeight);
       gl.disable(gl.SCISSOR_TEST);
     }
+
   };
 
   model.setRendererViewport = (renderer, xrView, xrViewIndex, glLayer) => {

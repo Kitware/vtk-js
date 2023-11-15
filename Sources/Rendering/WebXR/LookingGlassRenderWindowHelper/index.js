@@ -45,7 +45,6 @@ function vtkWebXRLookingGlassRenderWindowHelper(publicAPI, model) {
         // eslint-disable-next-line no-new
         new obj.LookingGlassWebXRPolyfill();
         superClass.initialize(renderWindow);
-        model.alwaysRender = false;
       });
     }
   };
@@ -86,38 +85,106 @@ function vtkWebXRLookingGlassRenderWindowHelper(publicAPI, model) {
 
   // When an XR session is available, set up the XRWebGLLayer
   // and request the first animation frame for the device
-  publicAPI.enterXR = async (xrSession, referenceSpace) => {
-    if (!xrSession) {
-      throw new Error('Failed to enter null XR session');
-    }
-    await superClass.enterXR(xrSession, referenceSpace);
+  // publicAPI.enterXR = async (xrSession, referenceSpace) => {
+  //   await superClass.enterXR(xrSession, referenceSpace);
 
-    console.log(model.lookingGlassConfig);
-    if (model.lookingGlassConfig.lkgCanvas) {
-      /*model.lkgInteractor = vtkRenderWindowInteractor.newInstance();
-        //model.lkgInteractor = model.renderWindow.getRenderable().getInteractor();
-        model.lkgInteractor.setView(model.renderWindow);
-        model.lkgInteractor.bindEvents(model.lookingGlassConfig.lkgCanvas);ctor[`onPointerEnter`]((callData) => {
-            console.log('animate');
-        });*/
-      model.lookingGlassConfig.lkgCanvas.addEventListener(
-        'pointermove',
-        function () {
-          model.xrSceneFrame = model.xrSession.requestAnimationFrame(
-            model.xrRender
-          );
-        }
-      );
-      //model.lkgIntera;
-    }
-  };
+  //   //if (model.lookingGlassConfig.lkgCanvas) {
+  //     /*model.lkgInteractor = vtkRenderWindowInteractor.newInstance();
+  //       //model.lkgInteractor = model.renderWindow.getRenderable().getInteractor();
+  //       model.lkgInteractor.setView(model.renderWindow);
+  //       model.lkgInteractor.bindEvents(model.lookingGlassConfig.lkgCanvas);ctor[`onPointerEnter`]((callData) => {
+  //           console.log('animate');
+  //       });*/
+  //     // model.lookingGlassConfig.lkgCanvas.addEventListener(
+  //     //   'pointerdown',
+  //     //   function () {
+  //     //     model.xrSceneFrame = model.xrSession.requestAnimationFrame(
+  //     //       model.xrRender
+  //     //     );
+  //     //   }
+  //   //  );
+  //     //model.lkgIntera;
+  //   //}
+  // };
 
   publicAPI.stopXR = async () => {
     // TODO detach from looking glass canvas
     await superClass.stopXR();
   };
 
-  model.setRendererViewport = (renderer, xrView, xrViewIndex, glLayer) => {
+  model.xrRender = async (t, frame) => {
+    const xrSession = frame.session;
+
+    model.renderWindow
+      .getRenderable()
+      .getInteractor()
+      .updateXRGamepads(xrSession, frame, model.xrReferenceSpace);
+
+    model.xrSceneFrame = model.xrSession.requestAnimationFrame(model.xrRender);
+
+    const xrPose = frame.getViewerPose(model.xrReferenceSpace);
+
+    if (xrPose) {
+      const gl = model.renderWindow.get3DContext();
+
+      if (
+        model.xrSessionType === XrSessionTypes.MobileAR &&
+        model.initCanvasSize !== null
+      ) {
+        gl.canvas.width = model.initCanvasSize[0];
+        gl.canvas.height = model.initCanvasSize[1];
+      }
+
+      const glLayer = xrSession.renderState.baseLayer;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.clear(gl.DEPTH_BUFFER_BIT);
+      model.renderWindow.setSize(
+        glLayer.framebufferWidth,
+        glLayer.framebufferHeight
+      );
+
+      // get the first renderer
+      const ren = model.renderWindow.getRenderable().getRenderers()[0];
+
+      // Do a render pass for each eye
+      xrPose.views.forEach((view, index) => {
+        if(index % model.viewStep === 0) {
+          // Render the view
+          model.setRendererViewport(ren, view, index, glLayer);
+
+          ren
+            .getActiveCamera()
+            .computeViewParametersFromPhysicalMatrix(
+              view.transform.inverse.matrix
+            );
+          ren.getActiveCamera().setProjectionMatrix(view.projectionMatrix);
+
+          model.renderWindow.traverseAllPasses();
+          } else {
+            // Blit (copy) the view from the last valid view
+            // TODO copy from nearest instead of floor
+            const [startX, startY, endX, endY] = model.getRendererViewport(view, glLayer);
+            let refViewIndex = index - (index % model.viewStep);
+            const [refStartX, refStartY, refEndX, refEndY] = model.getRendererViewport(xrPose.views[refViewIndex], glLayer);
+
+            // gl.blitFramebuffer(refStartX, refStartY, refEndX, refEndY,
+            //   startX, startY, endX, endY,
+            //   gl.COLOR_BUFFER_BIT,
+            //   gl.NEAREST
+            //   );
+          }
+      });
+
+      // Reset scissorbox before any subsequent rendering to external displays
+      // on frame end, such as rendering to a Looking Glass display.
+      gl.scissor(0, 0, glLayer.framebufferWidth, glLayer.framebufferHeight);
+      gl.disable(gl.SCISSOR_TEST);
+    }
+
+  };
+
+  model.getRendererViewport = (xrView, glLayer) => {
     const viewport = glLayer.getViewport(xrView);
     if (model.xrSessionType !== XrSessionTypes.LookingGlassVR) {
       throw new Error(
@@ -130,6 +197,23 @@ function vtkWebXRLookingGlassRenderWindowHelper(publicAPI, model) {
     const startY = viewport.y / glLayer.framebufferHeight;
     const endX = (viewport.x + viewport.width) / glLayer.framebufferWidth;
     const endY = (viewport.y + viewport.height) / glLayer.framebufferHeight;
+    return [startX, startY, endX, endY];
+  };
+
+  model.setRendererViewport = (renderer, xrView, xrViewIndex, glLayer) => {
+    // const viewport = glLayer.getViewport(xrView);
+    // if (model.xrSessionType !== XrSessionTypes.LookingGlassVR) {
+    //   throw new Error(
+    //     'Expected Looking Glass XR session but found type ' +
+    //       model.xrSessionType
+    //   );
+    // }
+
+    // const startX = viewport.x / glLayer.framebufferWidth;
+    // const startY = viewport.y / glLayer.framebufferHeight;
+    // const endX = (viewport.x + viewport.width) / glLayer.framebufferWidth;
+    // const endY = (viewport.y + viewport.height) / glLayer.framebufferHeight
+    const [startX, startY, endX, endY] = model.getRendererViewport(xrView, glLayer);
     renderer.setViewport(startX, startY, endX, endY);
   };
 
@@ -149,6 +233,7 @@ const DEFAULT_VALUES = {
   xrSession: null,
   xrSessionType: XrSessionTypes.LookingGlassVR,
   xrReferenceSpace: null,
+  viewStep: 5,
 };
 
 // ----------------------------------------------------------------------------
@@ -163,8 +248,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   macro.event(publicAPI, model, 'event');
 
-  macro.get(publicAPI, model, ['xrSession']);
-  macro.setGet(publicAPI, model, ['renderWindow']);
+  macro.setGet(publicAPI, model, ['viewStep']);
 
   // Object methods
   vtkWebXRLookingGlassRenderWindowHelper(publicAPI, model);
