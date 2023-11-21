@@ -204,11 +204,12 @@ export interface vtkVolumeProperty extends vtkObject {
 	 */
 	setIndependentComponents(independentComponents: boolean): boolean;
 
-	/**
-	 *
-	 * @param {Number} labelOutlineThickness 
-	 */
-	setLabelOutlineThickness(labelOutlineThickness: number): boolean;
+  /**
+   *
+   * @param {Number | Number[]} labelOutlineThickness
+  */
+  setLabelOutlineThickness(labelOutlineThickness: number | number[]): boolean;
+
 
 	/**
 	 *
