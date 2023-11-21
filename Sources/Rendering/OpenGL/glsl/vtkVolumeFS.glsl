@@ -43,7 +43,7 @@ varying vec3 vertexVCVSOutput;
 //VTK::ImageLabelOutlineOn
 
 #ifdef vtkImageLabelOutlineOn
-uniform int outlineThickness;
+uniform int outlineThickness[256];
 uniform float outlineOpacity;
 uniform float vpWidth;
 uniform float vpHeight;
@@ -974,12 +974,22 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
   // Get alpha of segment from opacity function.
   tColor.a = texture2D(otexture, vec2(centerValue.r * oscale0 + oshift0, 0.5)).r;
 
+  int segmentIndex = int(centerValue.r * 255.0);
+  // below we are using [segmentindex - 1] since the first segment is the background it will be index 0
+  int actualThickness = outlineThickness[segmentIndex -1];
+
+  // if there is no thickness defined for this segment, use the first one
+  if (actualThickness == 0) {
+    actualThickness = outlineThickness[0];
+  }
+
+
   // Only perform outline check on fragments rendering voxels that aren't invisible.
   // Saves a bunch of needless checks on the background.
   // TODO define epsilon when building shader?
   if (float(tColor.a) > 0.01) {
-    for (int i = -outlineThickness; i <= outlineThickness; i++) {
-      for (int j = -outlineThickness; j <= outlineThickness; j++) {
+    for (int i = -actualThickness; i <= actualThickness; i++) {
+      for (int j = -actualThickness; j <= actualThickness; j++) {
         if (i == 0 || j == 0) {
           continue;
         }

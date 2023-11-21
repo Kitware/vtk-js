@@ -203,6 +203,17 @@ function vtkVolumeProperty(publicAPI, model) {
   publicAPI.getInterpolationTypeAsString = () =>
     macro.enumToString(InterpolationType, model.interpolationType);
 
+  publicAPI.setLabelOutlineThickness = (thickness) => {
+    // handle the old API which was a single number for all segments
+    if (typeof thickness === 'number') {
+      model.labelOutlineThickness = [thickness];
+    } else {
+      model.labelOutlineThickness = thickness;
+    }
+
+    publicAPI.modified();
+  };
+
   const sets = [
     'useGradientOpacity',
     'scalarOpacityUnitDistance',
@@ -252,7 +263,7 @@ const DEFAULT_VALUES = {
   specular: 0.2,
   specularPower: 10.0,
   useLabelOutline: false,
-  labelOutlineThickness: 1,
+  labelOutlineThickness: [1],
   labelOutlineOpacity: 1.0,
 };
 
