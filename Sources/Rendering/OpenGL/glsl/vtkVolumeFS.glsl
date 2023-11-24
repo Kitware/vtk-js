@@ -43,7 +43,10 @@ varying vec3 vertexVCVSOutput;
 //VTK::ImageLabelOutlineOn
 
 #ifdef vtkImageLabelOutlineOn
-uniform int outlineThickness[256];
+
+// For some reason we can't pass a Uint8Array of size 983 or greater
+// to the shader, so we just use 900 size
+uniform int outlineThickness[900];
 uniform float outlineOpacity;
 uniform float vpWidth;
 uniform float vpHeight;
