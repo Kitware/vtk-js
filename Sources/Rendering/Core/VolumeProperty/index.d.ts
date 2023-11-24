@@ -204,11 +204,20 @@ export interface vtkVolumeProperty extends vtkObject {
 	 */
 	setIndependentComponents(independentComponents: boolean): boolean;
 
-  /**
-   *
-   * @param {Number | Number[]} labelOutlineThickness
-  */
-  setLabelOutlineThickness(labelOutlineThickness: number | number[]): boolean;
+	/**
+	 * It will set the label outline thickness for the labelmaps. It can accept
+	 * a single number or an array of numbers. If a single number is provided,
+	 * it will be used for all the components. If an array is provided, it indicates
+	 * the thickness for each segment index. For instance if you have a labelmap
+	 * with 3 segments (0: background 1: live 2: tumor), you can set the thickness
+	 * to [2,4] to have a thicker outline for the tumor (thickness 4). It should be 
+	 * noted that if the number of segments is greater than the number of thickness
+	 * the first thickness will be used for the remaining segments.
+	 * 
+	 * 
+	 * @param {Number | Number[]} labelOutlineThickness
+	 */
+	setLabelOutlineThickness(labelOutlineThickness: number | number[]): boolean;
 
 
 	/**

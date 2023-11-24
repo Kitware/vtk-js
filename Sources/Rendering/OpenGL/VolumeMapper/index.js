@@ -1071,7 +1071,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       const labelOutlineOpacity = actor.getProperty().getLabelOutlineOpacity();
 
       // Create an array of size 256 and make sure it is padded with zeros
-      const paddedOutlineThicknessArray = new Int32Array(256);
+      // For some reason we can't pass a Uint8Array of size 983 or greater
+      // to the shader, so we just use 900 size
+      const paddedOutlineThicknessArray = new Uint8Array(900);
       paddedOutlineThicknessArray.set(labelOutlineThickness);
 
       program.setUniformiv('outlineThickness', paddedOutlineThicknessArray);
