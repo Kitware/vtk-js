@@ -44,8 +44,6 @@ varying vec3 vertexVCVSOutput;
 
 #ifdef vtkImageLabelOutlineOn
 
-// For some reason we can't pass a Uint8Array of size 983 or greater
-// to the shader, so we just use 900 size
 uniform float outlineOpacity;
 uniform float vpWidth;
 uniform float vpHeight;
@@ -982,7 +980,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
 
   int segmentIndex = int(centerValue.r * 255.0);
   
-  // // Use texture sampling for outlineThickness
+  // Use texture sampling for outlineThickness
   float normalizedThickness = texture2D(ttexture, vec2(float(segmentIndex - 1 ) / 1024.0, 0.5)).r;
 
   int actualThickness = int(round(normalizedThickness * uMaxLabelOutlineThickness));
