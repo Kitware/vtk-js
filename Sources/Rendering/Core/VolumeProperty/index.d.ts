@@ -212,7 +212,7 @@ export interface vtkVolumeProperty extends vtkObject {
 	 * with 3 segments (0: background 1: liver 2: tumor), you can set the thickness
 	 * to [2,4] to have a thicker outline for the tumor (thickness 4). It should be 
 	 * noted that the thickness is in pixel and also the first array value will 
-	 * control the default thickness for all the segments if not specified.
+	 * control the default thickness for all labels when 0 or not specified.
 	 * 
 	 * @param {Number | Number[]} labelOutlineThickness
 	 */
