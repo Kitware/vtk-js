@@ -93,6 +93,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.scalarTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       model.opacityTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      model.labelOutlineThicknessTexture.setOpenGLRenderWindow(
+        model._openGLRenderWindow
+      );
 
       model.openGLVolume = publicAPI.getFirstAncestorOfType('vtkOpenGLVolume');
       const actor = model.openGLVolume.getRenderable();
@@ -975,6 +978,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     program.setUniformi('ctexture', model.colorTexture.getTextureUnit());
     program.setUniformi('otexture', model.opacityTexture.getTextureUnit());
     program.setUniformi('jtexture', model.jitterTexture.getTextureUnit());
+    program.setUniformi(
+      'ttexture',
+      model.labelOutlineThicknessTexture.getTextureUnit()
+    );
 
     const volInfo = model.scalarTexture.getVolumeInfo();
     const vprop = actor.getProperty();
@@ -1067,16 +1074,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       const labelOutlineThickness = actor
         .getProperty()
         .getLabelOutlineThickness();
+      const maxThickness = Math.max(...labelOutlineThickness);
+      program.setUniformf('uMaxLabelOutlineThickness', maxThickness);
 
       const labelOutlineOpacity = actor.getProperty().getLabelOutlineOpacity();
-
-      // Create an array of size 256 and make sure it is padded with zeros
-      // For some reason we can't pass a Uint8Array of size 983 or greater
-      // to the shader, so we just use 900 size
-      const paddedOutlineThicknessArray = new Uint8Array(900);
-      paddedOutlineThicknessArray.set(labelOutlineThickness);
-
-      program.setUniformiv('outlineThickness', paddedOutlineThicknessArray);
       program.setUniformf('outlineOpacity', labelOutlineOpacity);
     }
 
@@ -1269,6 +1270,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     // render the texture
     model.scalarTexture.activate();
     model.opacityTexture.activate();
+    model.labelOutlineThicknessTexture.activate();
     model.colorTexture.activate();
     model.jitterTexture.activate();
 
@@ -1284,6 +1286,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     model.scalarTexture.deactivate();
     model.colorTexture.deactivate();
     model.opacityTexture.deactivate();
+    model.labelOutlineThicknessTexture.deactivate();
     model.jitterTexture.deactivate();
   };
 
@@ -1590,6 +1593,76 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.colorTextureString = cTex.hash;
     }
 
+    const labelOutlineThicknessArray = actor
+      .getProperty()
+      .getLabelOutlineThickness();
+    const lTex = model._openGLRenderWindow.getGraphicsResourceForObject(
+      labelOutlineThicknessArray
+    );
+
+    // compute the join of the labelOutlineThicknessArray so that
+    // we can use it to decide whether to rebuild the labelOutlineThicknessTexture
+    // or not
+    toString = `${labelOutlineThicknessArray.join('')}`;
+
+    const reBuildL =
+      !lTex?.vtkObj ||
+      lTex?.hash !== toString ||
+      model.labelOutlineThicknessTextureString !== toString;
+
+    if (reBuildL) {
+      const lWidth = 1024;
+      const lHeight = 1;
+      const lSize = lWidth * lHeight;
+      const lTable = new Uint8Array(lSize);
+
+      // Assuming labelOutlineThicknessArray contains the thickness for each segment
+      // Normalize the thickness values based on the maximum thickness in the array
+      const maxThickness = Math.max(...labelOutlineThicknessArray);
+
+      for (let i = 0; i < lWidth; ++i) {
+        const thickness = labelOutlineThicknessArray[i];
+        let normalizedThickness;
+        if (thickness === undefined || thickness === null || thickness === 0) {
+          normalizedThickness = labelOutlineThicknessArray[0] / maxThickness;
+        } else {
+          normalizedThickness = thickness / maxThickness;
+        }
+        lTable[i] = 255.0 * normalizedThickness;
+      }
+
+      model.labelOutlineThicknessTexture.releaseGraphicsResources(
+        model._openGLRenderWindow
+      );
+
+      model.labelOutlineThicknessTexture.resetFormatAndType();
+      model.labelOutlineThicknessTexture.setMinificationFilter(Filter.NEAREST);
+      model.labelOutlineThicknessTexture.setMagnificationFilter(Filter.NEAREST);
+      model.labelOutlineThicknessTexture.setWrapS(Wrap.CLAMP_TO_EDGE);
+      model.labelOutlineThicknessTexture.setWrapT(Wrap.CLAMP_TO_EDGE);
+
+      // Create a 2D texture (acting as 1D) from the raw data
+      model.labelOutlineThicknessTexture.create2DFromRaw(
+        lWidth,
+        lHeight,
+        1,
+        VtkDataTypes.UNSIGNED_CHAR,
+        lTable
+      );
+
+      model.labelOutlineThicknessTextureString = toString;
+      if (labelOutlineThicknessArray) {
+        model._openGLRenderWindow.setGraphicsResourceForObject(
+          labelOutlineThicknessArray,
+          model.labelOutlineThicknessTexture,
+          model.labelOutlineThicknessTextureString
+        );
+      }
+    } else {
+      model.labelOutlineThicknessTexture = lTex.vtkObj;
+      model.labelOutlineThicknessTextureString = lTex.hash;
+    }
+
     const tex = model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
     // rebuild the scalarTexture if the data has changed
     toString = `${image.getMTime()}A${scalars.getMTime()}`;
@@ -1704,6 +1777,8 @@ const DEFAULT_VALUES = {
   colorTexture: null,
   colorTextureString: null,
   jitterTexture: null,
+  labelOutlineThicknessTexture: null,
+  labelOutlineThicknessTextureString: null,
   tris: null,
   framebuffer: null,
   copyShader: null,
@@ -1741,6 +1816,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.jitterTexture = vtkOpenGLTexture.newInstance();
   model.jitterTexture.setWrapS(Wrap.REPEAT);
   model.jitterTexture.setWrapT(Wrap.REPEAT);
+  model.labelOutlineThicknessTexture = vtkOpenGLTexture.newInstance();
   model.framebuffer = vtkOpenGLFramebuffer.newInstance();
 
   model.idxToView = mat4.identity(new Float64Array(16));
