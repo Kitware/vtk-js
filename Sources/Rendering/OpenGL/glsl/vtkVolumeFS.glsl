@@ -46,7 +46,6 @@ varying vec3 vertexVCVSOutput;
 
 // For some reason we can't pass a Uint8Array of size 983 or greater
 // to the shader, so we just use 900 size
-uniform int outlineThickness[900];
 uniform float outlineOpacity;
 uniform float vpWidth;
 uniform float vpHeight;
@@ -141,6 +140,10 @@ uniform float cscale0;
 
 // jitter texture
 uniform sampler2D jtexture;
+uniform sampler2D ttexture;
+
+uniform float uMaxLabelOutlineThickness; 
+
 
 // some 3D texture values
 uniform float sampleDistance;
@@ -978,14 +981,10 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
   tColor.a = texture2D(otexture, vec2(centerValue.r * oscale0 + oshift0, 0.5)).r;
 
   int segmentIndex = int(centerValue.r * 255.0);
-  // below we are using [segmentindex - 1] since the first segment is the background it will be index 0
-  int actualThickness = outlineThickness[segmentIndex -1];
-
-  // if there is no thickness defined for this segment, use the first one
-  if (actualThickness == 0) {
-    actualThickness = outlineThickness[0];
-  }
-
+  
+  // // Use texture sampling for outlineThickness
+  float normalizedThickness = texture2D(ttexture, vec2(float(segmentIndex - 1 ) / 1024.0, 0.5)).r;
+  int actualThickness = int(normalizedThickness * uMaxLabelOutlineThickness);
 
   // Only perform outline check on fragments rendering voxels that aren't invisible.
   // Saves a bunch of needless checks on the background.
