@@ -154,9 +154,4 @@ reader
     renderer.addVolume(labelMap.actor);
     renderer.getActiveCamera().setViewUp(1, 0, 0);
     renderWindow.render();
-
-    setTimeout(() => {
-      labelMap.actor.getProperty().setLabelOutlineThickness([2, 4]);
-      renderWindow.render();
-    }, 1000);
   });

@@ -1621,14 +1621,17 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       const maxThickness = Math.max(...labelOutlineThicknessArray);
 
       for (let i = 0; i < lWidth; ++i) {
-        const thickness = labelOutlineThicknessArray[i];
-        let normalizedThickness;
+        // Retrieve the thickness value for the current segment index.
+        // If the value is undefined, null, or 0, use the first element's value as a default.
+        let thickness = labelOutlineThicknessArray[i];
         if (thickness === undefined || thickness === null || thickness === 0) {
-          normalizedThickness = labelOutlineThicknessArray[0] / maxThickness;
-        } else {
-          normalizedThickness = thickness / maxThickness;
+          thickness = labelOutlineThicknessArray[0];
         }
-        lTable[i] = 255.0 * normalizedThickness;
+
+        // Normalize the thickness value to the range [0, 1].
+        const normalizedThickness = thickness / maxThickness;
+
+        lTable[i] = Math.round(255.0 * normalizedThickness);
       }
 
       model.labelOutlineThicknessTexture.releaseGraphicsResources(
@@ -1638,8 +1641,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.labelOutlineThicknessTexture.resetFormatAndType();
       model.labelOutlineThicknessTexture.setMinificationFilter(Filter.NEAREST);
       model.labelOutlineThicknessTexture.setMagnificationFilter(Filter.NEAREST);
-      model.labelOutlineThicknessTexture.setWrapS(Wrap.CLAMP_TO_EDGE);
-      model.labelOutlineThicknessTexture.setWrapT(Wrap.CLAMP_TO_EDGE);
 
       // Create a 2D texture (acting as 1D) from the raw data
       model.labelOutlineThicknessTexture.create2DFromRaw(
