@@ -984,7 +984,8 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
   
   // // Use texture sampling for outlineThickness
   float normalizedThickness = texture2D(ttexture, vec2(float(segmentIndex - 1 ) / 1024.0, 0.5)).r;
-  int actualThickness = int(normalizedThickness * uMaxLabelOutlineThickness);
+
+  int actualThickness = int(round(normalizedThickness * uMaxLabelOutlineThickness));
 
   // Only perform outline check on fragments rendering voxels that aren't invisible.
   // Saves a bunch of needless checks on the background.
