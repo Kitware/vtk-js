@@ -1593,76 +1593,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.colorTextureString = cTex.hash;
     }
 
-    const labelOutlineThicknessArray = actor
-      .getProperty()
-      .getLabelOutlineThickness();
-    const lTex = model._openGLRenderWindow.getGraphicsResourceForObject(
-      labelOutlineThicknessArray
-    );
-
-    // compute the join of the labelOutlineThicknessArray so that
-    // we can use it to decide whether to rebuild the labelOutlineThicknessTexture
-    // or not
-    toString = `${labelOutlineThicknessArray.join('')}`;
-
-    const reBuildL =
-      !lTex?.vtkObj ||
-      lTex?.hash !== toString ||
-      model.labelOutlineThicknessTextureString !== toString;
-
-    if (reBuildL) {
-      const lWidth = 1024;
-      const lHeight = 1;
-      const lSize = lWidth * lHeight;
-      const lTable = new Uint8Array(lSize);
-
-      // Assuming labelOutlineThicknessArray contains the thickness for each segment
-      // Normalize the thickness values based on the maximum thickness in the array
-      const maxThickness = Math.max(...labelOutlineThicknessArray);
-
-      for (let i = 0; i < lWidth; ++i) {
-        // Retrieve the thickness value for the current segment index.
-        // If the value is undefined, null, or 0, use the first element's value as a default.
-        let thickness = labelOutlineThicknessArray[i];
-        if (thickness === undefined || thickness === null || thickness === 0) {
-          thickness = labelOutlineThicknessArray[0];
-        }
-
-        // Normalize the thickness value to the range [0, 1].
-        const normalizedThickness = thickness / maxThickness;
-
-        lTable[i] = Math.round(255.0 * normalizedThickness);
-      }
-
-      model.labelOutlineThicknessTexture.releaseGraphicsResources(
-        model._openGLRenderWindow
-      );
-
-      model.labelOutlineThicknessTexture.resetFormatAndType();
-      model.labelOutlineThicknessTexture.setMinificationFilter(Filter.NEAREST);
-      model.labelOutlineThicknessTexture.setMagnificationFilter(Filter.NEAREST);
-
-      // Create a 2D texture (acting as 1D) from the raw data
-      model.labelOutlineThicknessTexture.create2DFromRaw(
-        lWidth,
-        lHeight,
-        1,
-        VtkDataTypes.UNSIGNED_CHAR,
-        lTable
-      );
-
-      model.labelOutlineThicknessTextureString = toString;
-      if (labelOutlineThicknessArray) {
-        model._openGLRenderWindow.setGraphicsResourceForObject(
-          labelOutlineThicknessArray,
-          model.labelOutlineThicknessTexture,
-          model.labelOutlineThicknessTextureString
-        );
-      }
-    } else {
-      model.labelOutlineThicknessTexture = lTex.vtkObj;
-      model.labelOutlineThicknessTextureString = lTex.hash;
-    }
+    publicAPI.updateLabelOutlineThicknessTexture(actor);
 
     const tex = model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
     // rebuild the scalarTexture if the data has changed
@@ -1761,6 +1692,80 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     }
 
     model.VBOBuildTime.modified();
+  };
+
+  publicAPI.updateLabelOutlineThicknessTexture = (actor) => {
+    const labelOutlineThicknessArray = actor
+      .getProperty()
+      .getLabelOutlineThickness();
+    const lTex = model._openGLRenderWindow.getGraphicsResourceForObject(
+      labelOutlineThicknessArray
+    );
+
+    // compute the join of the labelOutlineThicknessArray so that
+    // we can use it to decide whether to rebuild the labelOutlineThicknessTexture
+    // or not
+    const toString = `${labelOutlineThicknessArray.join('-')}`;
+
+    const reBuildL =
+      !lTex?.vtkObj ||
+      lTex?.hash !== toString ||
+      model.labelOutlineThicknessTextureString !== toString;
+
+    if (reBuildL) {
+      const lWidth = 1024;
+      const lHeight = 1;
+      const lSize = lWidth * lHeight;
+      const lTable = new Uint8Array(lSize);
+
+      // Assuming labelOutlineThicknessArray contains the thickness for each segment
+      // Normalize the thickness values based on the maximum thickness in the array
+      const maxThickness = labelOutlineThicknessArray.reduce(
+        (max, thickness) => Math.max(max, thickness),
+        -Infinity
+      );
+
+      for (let i = 0; i < lWidth; ++i) {
+        // Retrieve the thickness value for the current segment index.
+        // If the value is undefined, null, or 0, use the first element's value as a default.
+        const thickness =
+          labelOutlineThicknessArray[i] || labelOutlineThicknessArray[0];
+
+        // Normalize the thickness value to the range [0, 1].
+        const normalizedThickness = thickness / maxThickness;
+
+        lTable[i] = Math.round(255.0 * normalizedThickness);
+      }
+
+      model.labelOutlineThicknessTexture.releaseGraphicsResources(
+        model._openGLRenderWindow
+      );
+
+      model.labelOutlineThicknessTexture.resetFormatAndType();
+      model.labelOutlineThicknessTexture.setMinificationFilter(Filter.NEAREST);
+      model.labelOutlineThicknessTexture.setMagnificationFilter(Filter.NEAREST);
+
+      // Create a 2D texture (acting as 1D) from the raw data
+      model.labelOutlineThicknessTexture.create2DFromRaw(
+        lWidth,
+        lHeight,
+        1,
+        VtkDataTypes.UNSIGNED_CHAR,
+        lTable
+      );
+
+      model.labelOutlineThicknessTextureString = toString;
+      if (labelOutlineThicknessArray) {
+        model._openGLRenderWindow.setGraphicsResourceForObject(
+          labelOutlineThicknessArray,
+          model.labelOutlineThicknessTexture,
+          model.labelOutlineThicknessTextureString
+        );
+      }
+    } else {
+      model.labelOutlineThicknessTexture = lTex.vtkObj;
+      model.labelOutlineThicknessTextureString = lTex.hash;
+    }
   };
 }
 
