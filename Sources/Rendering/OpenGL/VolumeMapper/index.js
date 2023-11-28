@@ -1693,10 +1693,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       .getProperty()
       .getLabelOutlineThickness();
 
-    if (!labelOutlineThicknessArray) {
-      return;
-    }
-
     const lTex = model._openGLRenderWindow.getGraphicsResourceForObject(
       labelOutlineThicknessArray
     );
