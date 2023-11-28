@@ -140,8 +140,6 @@ uniform float cscale0;
 uniform sampler2D jtexture;
 uniform sampler2D ttexture;
 
-uniform float uMaxLabelOutlineThickness; 
-
 
 // some 3D texture values
 uniform float sampleDistance;
@@ -981,9 +979,14 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
   int segmentIndex = int(centerValue.r * 255.0);
   
   // Use texture sampling for outlineThickness
-  float normalizedThickness = texture2D(ttexture, vec2(float(segmentIndex - 1 ) / 1024.0, 0.5)).r;
+  float textureCoordinate = float(segmentIndex - 1) / 1024.0;
+  float textureValue = texture2D(ttexture, vec2(textureCoordinate, 0.5)).r;
 
-  int actualThickness = int(round(normalizedThickness * uMaxLabelOutlineThickness));
+  int actualThickness = int(textureValue * 255.0);
+
+  if (actualThickness == 0) {
+    return vec4(0, 0, 1, 1);
+  }
 
   // Only perform outline check on fragments rendering voxels that aren't invisible.
   // Saves a bunch of needless checks on the background.

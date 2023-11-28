@@ -1071,16 +1071,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     const vtkImageLabelOutline = actor.getProperty().getUseLabelOutline();
     if (vtkImageLabelOutline === true) {
-      const labelOutlineThickness = actor
-        .getProperty()
-        .getLabelOutlineThickness();
-      const maxThickness = labelOutlineThickness.reduce(
-        (max, thickness) => Math.max(max, thickness),
-        -Infinity
-      );
-
-      program.setUniformf('uMaxLabelOutlineThickness', maxThickness);
-
       const labelOutlineOpacity = actor.getProperty().getLabelOutlineOpacity();
       program.setUniformf('outlineOpacity', labelOutlineOpacity);
     }
@@ -1702,6 +1692,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const labelOutlineThicknessArray = volume
       .getProperty()
       .getLabelOutlineThickness();
+
+    if (!labelOutlineThicknessArray) {
+      return;
+    }
+
     const lTex = model._openGLRenderWindow.getGraphicsResourceForObject(
       labelOutlineThicknessArray
     );
@@ -1723,22 +1718,12 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       const lTable = new Uint8Array(lSize);
 
       // Assuming labelOutlineThicknessArray contains the thickness for each segment
-      // Normalize the thickness values based on the maximum thickness in the array
-      const maxThickness = labelOutlineThicknessArray.reduce(
-        (max, thickness) => Math.max(max, thickness),
-        -Infinity
-      );
-
       for (let i = 0; i < lWidth; ++i) {
         // Retrieve the thickness value for the current segment index.
         // If the value is undefined, null, or 0, use the first element's value as a default.
         const thickness =
           labelOutlineThicknessArray[i] || labelOutlineThicknessArray[0];
-
-        // Normalize the thickness value to the range [0, 1].
-        const normalizedThickness = thickness / maxThickness;
-
-        lTable[i] = Math.round(255.0 * normalizedThickness);
+        lTable[i] = thickness;
       }
 
       model.labelOutlineThicknessTexture.releaseGraphicsResources(
