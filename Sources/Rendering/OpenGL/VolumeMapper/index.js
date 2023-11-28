@@ -1074,7 +1074,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       const labelOutlineThickness = actor
         .getProperty()
         .getLabelOutlineThickness();
-      const maxThickness = Math.max(...labelOutlineThickness);
+      const maxThickness = labelOutlineThickness.reduce(
+        (max, thickness) => Math.max(max, thickness),
+        -Infinity
+      );
+
       program.setUniformf('uMaxLabelOutlineThickness', maxThickness);
 
       const labelOutlineOpacity = actor.getProperty().getLabelOutlineOpacity();
@@ -1694,8 +1698,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     model.VBOBuildTime.modified();
   };
 
-  publicAPI.updateLabelOutlineThicknessTexture = (actor) => {
-    const labelOutlineThicknessArray = actor
+  publicAPI.updateLabelOutlineThicknessTexture = (volume) => {
+    const labelOutlineThicknessArray = volume
       .getProperty()
       .getLabelOutlineThickness();
     const lTex = model._openGLRenderWindow.getGraphicsResourceForObject(
