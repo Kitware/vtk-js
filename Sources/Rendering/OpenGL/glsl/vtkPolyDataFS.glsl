@@ -30,6 +30,9 @@ uniform int PrimitiveIDOffset;
 // extra lighting parameters
 //VTK::Light::Dec
 
+// define vtkImageLabelOutlineOn
+//VTK::ImageLabelOutlineOn
+
 // Texture coordinates
 //VTK::TCoord::Dec
 
@@ -42,6 +45,9 @@ uniform int PrimitiveIDOffset;
 // clipping plane vars
 //VTK::Clip::Dec
 
+// label outline 
+//VTK::LabelOutline::Dec
+
 // the output of this shader
 //VTK::Output::Dec
 
@@ -52,6 +58,8 @@ uniform int PrimitiveIDOffset;
 //VTK::Coincident::Dec
 
 //VTK::ZBuffer::Dec
+
+//VTK::CustomFunction
 
 void main()
 {

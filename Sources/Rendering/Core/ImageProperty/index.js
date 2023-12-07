@@ -139,6 +139,9 @@ const DEFAULT_VALUES = {
   diffuse: 0.0,
   opacity: 1.0,
   useLookupTableScalarRange: false,
+  useLabelOutline: false,
+  labelOutlineThickness: [1],
+  labelOutlineOpacity: 1.0,
 };
 
 // ----------------------------------------------------------------------------
@@ -169,7 +172,11 @@ export function extend(publicAPI, model, initialValues = {}) {
     'diffuse',
     'opacity',
     'useLookupTableScalarRange',
+    'useLabelOutline',
+    'labelOutlineOpacity',
   ]);
+
+  macro.setGetArray(publicAPI, model, ['labelOutlineThickness']);
 
   // Object methods
   vtkImageProperty(publicAPI, model);
