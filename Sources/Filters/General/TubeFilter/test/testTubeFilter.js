@@ -1,6 +1,7 @@
 import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
+import vtk from 'vtk.js/Sources/vtk';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
@@ -233,6 +234,121 @@ test('Test vtkTubeFilter numberOfPoints', (t) => {
         4 * sidesShareVertices * numberOfSides +
         numberOfLines * numberOfSides * 2,
     'Make sure the output number of points is correct with capping.'
+  );
+
+  t.end();
+});
+
+test('Test vtkTubeFilter celldata/pointdata copying', (t) => {
+  const polydata = vtk({
+    vtkClass: 'vtkPolyData',
+    points: {
+      vtkClass: 'vtkPoints',
+      dataType: 'Float32Array',
+      numberOfComponents: 3,
+      values: [0, 0, 0, 1, 0, 0.25, 1, 1, 0, 0, 1, 0.25],
+    },
+    lines: {
+      vtkClass: 'vtkCellArray',
+      dataType: 'Uint16Array',
+      values: [2, 0, 1, 2, 1, 2, 2, 2, 3],
+    },
+    pointData: {
+      vtkClass: 'vtkDataSetAttributes',
+      activeScalars: 0,
+      arrays: [
+        {
+          data: {
+            vtkClass: 'vtkDataArray',
+            name: 'head',
+            dataType: 'Float32Array',
+            values: [0, 1, 1, 2],
+          },
+        },
+        {
+          data: {
+            vtkClass: 'vtkDataArray',
+            name: 'elevation',
+            dataType: 'Float32Array',
+            values: [1, 2, 3, 4],
+          },
+        },
+        {
+          data: {
+            vtkClass: 'vtkDataArray',
+            name: 'pressure',
+            dataType: 'Float32Array',
+            values: [2, 0, 0, 2],
+          },
+        },
+      ],
+    },
+    cellData: {
+      vtkClass: 'vtkDataSetAttributes',
+      activeScalars: 0,
+      arrays: [
+        {
+          data: {
+            vtkClass: 'vtkDataArray',
+            name: 'diameter',
+            dataType: 'Float32Array',
+            values: [1, 2, 3],
+          },
+        },
+        {
+          data: {
+            vtkClass: 'vtkDataArray',
+            name: 'flow',
+            dataType: 'Float32Array',
+            values: [2, 1, 2],
+          },
+        },
+      ],
+    },
+  });
+
+  const filter = vtkTubeFilter.newInstance();
+  filter.setNumberOfSides(3);
+
+  filter.setInputData(polydata);
+  const output = filter.getOutputData();
+
+  ['head', 'elevation', 'pressure'].forEach((name, i) => {
+    t.ok(
+      output.getPointData().getArray(i).getName() === name,
+      `Point array ${i} is the ${name} array`
+    );
+  });
+
+  ['diameter', 'flow'].forEach((name, i) => {
+    t.ok(
+      output.getCellData().getArray(i).getName() === name,
+      `Cell array ${i} is the ${name} array`
+    );
+  });
+
+  t.ok(
+    testUtils.arrayEquals(
+      output.getPointData().getArrayByName('elevation').getData(),
+      [1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4]
+    ),
+    'elevation point data is copied correctly'
+  );
+
+  t.ok(
+    testUtils.arrayEquals(
+      output.getCellData().getArrayByName('flow').getData(),
+      [2, 2, 2, 1, 1, 1, 2, 2, 2]
+    ),
+    'flow cell data is copied correctly'
+  );
+
+  t.ok(
+    testUtils.arrayEquals(
+      output.getCellData().getArrayByName('diameter').getData(),
+      [1, 1, 1, 2, 2, 2, 3, 3, 3]
+    ),
+    'diameter cell data is copied correctly'
   );
 
   t.end();
