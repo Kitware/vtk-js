@@ -701,7 +701,6 @@ function vtkTubeFilter(publicAPI, model) {
         numberOfComponents: oldArray.getNumberOfComponents(),
         size: numNewPts * oldArray.getNumberOfComponents(),
       });
-      output.getPointData().removeArrayByIndex(0); // remove oldArray from beginning
       output.getPointData().addArray(newArray); // concat newArray to end
     }
 
@@ -719,7 +718,6 @@ function vtkTubeFilter(publicAPI, model) {
         numberOfComponents: oldArray.getNumberOfComponents(),
         size: numNewCells * oldArray.getNumberOfComponents(),
       });
-      output.getCellData().removeArrayByIndex(0); // remove oldArray from beginning
       output.getCellData().addArray(newArray); // concat newArray to end
     }
 
