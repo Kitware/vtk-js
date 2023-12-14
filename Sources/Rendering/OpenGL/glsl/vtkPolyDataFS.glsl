@@ -59,7 +59,7 @@ uniform int PrimitiveIDOffset;
 
 //VTK::ZBuffer::Dec
 
-//VTK::CustomFunction
+//VTK::LabelOutlineHelperFunction
 
 void main()
 {

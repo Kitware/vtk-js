@@ -3,11 +3,6 @@ import '@kitware/vtk.js/favicon';
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
 
-// Force DataAccessHelper to have access to various data source
-import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
-import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
-
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper';
 import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
@@ -17,7 +12,7 @@ import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransf
 import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
 
 const fullScreenRenderWindow = vtkFullScreenRenderWindow.newInstance({
-  background: [0, 0, 1],
+  background: [0.5, 0.5, 0.5],
 });
 const renderWindow = fullScreenRenderWindow.getRenderWindow();
 const renderer = fullScreenRenderWindow.getRenderer();
@@ -26,7 +21,10 @@ const BACKGROUND = 0;
 const LOW_VALUE = 80;
 const HIGH_VALUE = 160;
 
-function createLabelPipeline(backgroundImageData) {
+const FIRST_SEGMENT = 1;
+const SECOND_SEGMENT = 5;
+
+function createLabelmap(backgroundImageData) {
   // Create a labelmap image the same dimensions as our background volume.
   const labelMapData = vtkImageData.newInstance(
     backgroundImageData.get('spacing', 'origin', 'direction')
@@ -34,10 +32,9 @@ function createLabelPipeline(backgroundImageData) {
 
   labelMapData.computeTransforms();
 
-  const values = new Uint8Array(backgroundImageData.getNumberOfPoints());
   const dataArray = vtkDataArray.newInstance({
-    numberOfComponents: 1, // labelmap with single component
-    values,
+    numberOfComponents: 1,
+    values: new Uint8Array(backgroundImageData.getNumberOfPoints()),
   });
   labelMapData.getPointData().setScalars(dataArray);
 
@@ -66,27 +63,28 @@ function createLabelPipeline(backgroundImageData) {
 
   // Set up labelMap color and opacity mapping
   labelMap.cfun.addRGBPoint(0, 0, 0, 0); // label "1" will be red
-  labelMap.cfun.addRGBPoint(1, 1, 0, 0); // label "1" will be red
-  labelMap.cfun.addRGBPoint(5, 0, 1, 0); // label "2" will be green
+  labelMap.cfun.addRGBPoint(FIRST_SEGMENT, 1, 0, 0); // label "1" will be red
+  labelMap.cfun.addRGBPoint(SECOND_SEGMENT, 0, 1, 0); // label "5" will be green
   labelMap.ofun.addPoint(0, 0);
-  labelMap.ofun.addPoint(1, 0.1); // Red will have an opacity of 0.2.
-  labelMap.ofun.addPoint(5, 0.1); // Green will have an opacity of 0.2.
-  labelMap.ofun.setClamping(false);
+  labelMap.ofun.addPoint(FIRST_SEGMENT, 0.1); // Red will have an opacity of 0.1.
+  labelMap.ofun.addPoint(SECOND_SEGMENT, 0.1); // Green will have an opacity of 0.1.
 
   labelMap.actor.getProperty().setRGBTransferFunction(0, labelMap.cfun);
   labelMap.actor.getProperty().setScalarOpacity(0, labelMap.ofun);
   labelMap.actor.getProperty().setInterpolationTypeToNearest();
+
   labelMap.actor.getProperty().setUseLabelOutline(true);
-  labelMap.actor.getProperty().setLabelOutlineThickness([1, 1, 1, 1, 5]);
+  // Label outline thickness is for first segment -> 2 (positioned at array index 0), second segment -> 4
+  // (positioned at array index 4)
+  labelMap.actor.getProperty().setLabelOutlineThickness([2, 1, 1, 1, 4]);
   labelMap.actor.getProperty().setLabelOutlineOpacity(1.0);
 
+  // This is very important to make sure the labelmap is rendered
+  // correctly
   labelMap.actor.getProperty().setUseLookupTableScalarRange(true);
-  return labelMap;
-}
 
-function fillBlobForThreshold(imageData, backgroundImageData) {
-  const dims = imageData.getDimensions();
-  const values = imageData.getPointData().getScalars().getData();
+  const dims = labelMap.imageData.getDimensions();
+  const values = labelMap.imageData.getPointData().getScalars().getData();
 
   const backgroundValues = backgroundImageData
     .getPointData()
@@ -94,20 +92,20 @@ function fillBlobForThreshold(imageData, backgroundImageData) {
     .getData();
   const size = dims[0] * dims[1] * dims[2];
 
-  // Head
   for (let i = 0; i < size; i++) {
     if (backgroundValues[i] === LOW_VALUE) {
-      values[i] = 1;
+      values[i] = FIRST_SEGMENT;
     } else if (backgroundValues[i] === HIGH_VALUE) {
-      values[i] = 5;
+      values[i] = SECOND_SEGMENT;
     }
   }
 
-  imageData.getPointData().getScalars().setData(values);
+  labelMap.imageData.getPointData().getScalars().setData(values);
+
+  return labelMap;
 }
 
 // Create a one slice vtkImageData that has four quadrants of different values
-
 const imageData = vtkImageData.newInstance();
 const dims = [10, 10, 1];
 imageData.setSpacing(1, 1, 1);
@@ -140,13 +138,7 @@ imageData.getPointData().setScalars(dataArray);
 imageData.modified();
 
 const data = imageData;
-const labelMap = createLabelPipeline(data);
-
-fillBlobForThreshold(labelMap.imageData, data);
-
-// for (let j = 3; j < 255; j++) {
-//   labelMap.cfun.addRGBPoint(j, 0, 0, 0); // label "1" will be red
-// }
+const labelMap = createLabelmap(data);
 
 const actor = vtkImageSlice.newInstance();
 const mapper = vtkImageMapper.newInstance();

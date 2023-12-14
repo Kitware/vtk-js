@@ -13,7 +13,7 @@ import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunct
 
 import baseline from './testImageLabelOutline.png';
 
-test.only('Test ImageMapper', (t) => {
+test('Test ImageMapper', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkImageMapper testImage');
 
