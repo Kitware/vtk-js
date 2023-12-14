@@ -37,6 +37,18 @@ function computeFnToString(property, pwfun, numberOfComponents) {
   return '0';
 }
 
+function splitStringOnEnter(inputString) {
+  // Split the input string into an array of lines based on "Enter" (newline) characters
+  const lines = inputString.split('\n');
+
+  // Remove any leading or trailing whitespace from each line and filter out empty lines
+  const trimmedLines = lines
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  return trimmedLines;
+}
+
 // ----------------------------------------------------------------------------
 // vtkOpenGLImageMapper methods
 // ----------------------------------------------------------------------------
@@ -101,23 +113,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     return null;
   };
 
-  publicAPI.getRenderTargetSize = () => {
-    if (model._useSmallViewport) {
-      return [model._smallViewportWidth, model._smallViewportHeight];
-    }
-
-    const { usize, vsize } = model._openGLRenderer.getTiledSizeAndOrigin();
-
-    return [usize, vsize];
-  };
-
-  publicAPI.getRenderTargetOffset = () => {
-    const { lowerLeftU, lowerLeftV } =
-      model._openGLRenderer.getTiledSizeAndOrigin();
-
-    return [lowerLeftU, lowerLeftV];
-  };
-
   // Renders myself
   publicAPI.render = () => {
     const actor = model.openGLImageSlice.getRenderable();
@@ -158,18 +153,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     const tNumComp = model.openGLTexture.getComponents();
     const iComps = actor.getProperty().getIndependentComponents();
-
-    function splitStringOnEnter(inputString) {
-      // Split the input string into an array of lines based on "Enter" (newline) characters
-      const lines = inputString.split('\n');
-
-      // Remove any leading or trailing whitespace from each line and filter out empty lines
-      const trimmedLines = lines
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0);
-
-      return trimmedLines;
-    }
 
     let tcoordDec = [
       'varying vec2 tcoordVCVSOutput;',
@@ -250,26 +233,23 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     ).result;
 
     // check for the outline thickness and opacity
-    // const vtkImageLabelOutline = actor.getProperty().getUseLabelOutline();
-    // if (vtkImageLabelOutline === true) {
-    FSSource = vtkShaderProgram.substitute(
-      FSSource,
-      '//VTK::LabelOutline::Dec',
-      [
-        'uniform int outlineThickness;',
-        'uniform float vpWidth;',
-        'uniform float vpHeight;',
-        'uniform float vpOffsetX;',
-        'uniform float vpOffsetY;',
-        'uniform mat4 PCWCMatrix;',
-        'uniform mat4 vWCtoIDX;',
-        'uniform ivec3 imageDimensions;',
-      ]
-    ).result;
-    // }
-
     const vtkImageLabelOutline = actor.getProperty().getUseLabelOutline();
     if (vtkImageLabelOutline === true) {
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::LabelOutline::Dec',
+        [
+          'uniform int outlineThickness;',
+          'uniform float vpWidth;',
+          'uniform float vpHeight;',
+          'uniform float vpOffsetX;',
+          'uniform float vpOffsetY;',
+          'uniform mat4 PCWCMatrix;',
+          'uniform mat4 vWCtoIDX;',
+          'uniform ivec3 imageDimensions;',
+        ]
+      ).result;
+
       FSSource = vtkShaderProgram.substitute(
         FSSource,
         '//VTK::ImageLabelOutlineOn',
@@ -278,7 +258,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
       FSSource = vtkShaderProgram.substitute(
         FSSource,
-        '//VTK::CustomFunction',
+        '//VTK::LabelOutlineHelperFunction',
         [
           '#ifdef vtkImageLabelOutlineOn',
           'vec3 fragCoordToIndexSpace(vec4 fragCoord) {',
@@ -365,10 +345,10 @@ function vtkOpenGLImageMapper(publicAPI, model) {
                   int actualThickness = int(textureValue * 255.0);
 
                   if (actualThickness == 0) {
-                    gl_FragData[0] = vec4(1.0, 1.0, 0.0, 1.0);
+                    gl_FragData[0] = vec4(0.0, 0.0, 1.0, 1.0);
                     return;
                   }
-                  if (scalarOpacity * opacity > 0.01) {
+                  if (opacityToUse > 0.01) {
                     for (int i = -actualThickness; i <= actualThickness; i++) {
                       for (int j = -actualThickness; j <= actualThickness; j++) {
                         if (i == 0 || j == 0) {
@@ -789,7 +769,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     program.setUniformMatrix('MCPCMatrix', model.imagemat);
 
-    if (actor.getProperty().getUseLabelOutline() === true) {
+    const vtkImageLabelOutline = actor.getProperty().getUseLabelOutline();
+    if (vtkImageLabelOutline === true) {
       const worldToIndex = image.getWorldToIndex();
 
       const imageDimensions = image.getDimensions();
@@ -1424,6 +1405,23 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.labelOutlineThicknessTexture = lTex.vtkObj;
       model.labelOutlineThicknessTextureString = lTex.hash;
     }
+  };
+
+  publicAPI.getRenderTargetSize = () => {
+    if (model._useSmallViewport) {
+      return [model._smallViewportWidth, model._smallViewportHeight];
+    }
+
+    const { usize, vsize } = model._openGLRenderer.getTiledSizeAndOrigin();
+
+    return [usize, vsize];
+  };
+
+  publicAPI.getRenderTargetOffset = () => {
+    const { lowerLeftU, lowerLeftV } =
+      model._openGLRenderer.getTiledSizeAndOrigin();
+
+    return [lowerLeftU, lowerLeftV];
   };
 }
 
