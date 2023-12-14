@@ -1746,9 +1746,9 @@ export function normalizeWheel(wheelEvent) {
 
   return {
     spinX: sX,
-    spinY: sY,
+    spinY: sY || sX,
     pixelX: pX,
-    pixelY: pY,
+    pixelY: pY || pX,
   };
 }
 
