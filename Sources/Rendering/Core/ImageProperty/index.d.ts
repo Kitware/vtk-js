@@ -18,6 +18,8 @@ export interface IImagePropertyInitialValues {
 	opacity?: number;
 	componentData?: IComponentData[];
 	useLookupTableScalarRange?: boolean;
+	useLabelOutline?: boolean;
+	labelOutlineThickness?: number | number[];
 }
 
 export interface vtkImageProperty extends vtkObject {
@@ -91,6 +93,26 @@ export interface vtkImageProperty extends vtkObject {
 	 * @param {Number} [idx]
 	 */
 	getScalarOpacity(idx?: number): vtkPiecewiseFunction;
+
+	/**
+	 * gets the label outline thickness 
+	 */
+	getLabelOutlineThickness(): number;
+
+	/**
+	 * It will set the label outline thickness for the labelmaps. It can accept
+	 * a single number or an array of numbers. If a single number is provided,
+	 * it will be used for all the segments. If an array is provided, it indicates
+	 * the thickness for each segment index. For instance if you have a labelmap
+	 * with 3 segments (0: background 1: liver 2: tumor), you can set the thickness
+	 * to [2,4] to have a thicker outline for the tumor (thickness 4). It should be 
+	 * noted that the thickness is in pixel and also the first array value will 
+	 * control the default thickness for all labels when 0 or not specified.
+	 * 
+	 * @param {Number | Number[]} labelOutlineThickness
+	 */
+	setLabelOutlineThickness(labelOutlineThickness: number | number[]): boolean;
+
 
 	/**
 	 * Set the ambient lighting coefficient.

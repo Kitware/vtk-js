@@ -11,7 +11,7 @@ export interface IVolumePropertyInitialValues  {
 	specular?: number;
 	specularPower?: number;
 	useLabelOutline?: boolean;
-	labelOutlineThickness?: number;
+	labelOutlineThickness?: number | number[];
 }
 
 export interface vtkVolumeProperty extends vtkObject {
@@ -92,7 +92,7 @@ export interface vtkVolumeProperty extends vtkObject {
 	getOpacityMode(index: number): OpacityMode;
 
 	/**
-	 *
+	 * gets the label outline thickness 
 	 */
 	getLabelOutlineThickness(): number;
 
