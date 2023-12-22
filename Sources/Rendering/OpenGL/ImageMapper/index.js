@@ -39,13 +39,15 @@ function computeFnToString(property, pwfun, numberOfComponents) {
 
 function splitStringOnEnter(inputString) {
   // Split the input string into an array of lines based on "Enter" (newline) characters
-  const lines = inputString.split('\n');
-
   // Remove any leading or trailing whitespace from each line and filter out empty lines
-  const trimmedLines = lines
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-
+  const lines = inputString.split('\n');
+  const trimmedLines = [];
+  for (let i = 0; i < lines.length; ++i) {
+    const trimmedLine = lines[i].trim();
+    if (trimmedLine.length > 0) {
+      trimmedLines.push(trimmedLine);
+    }
+  }
   return trimmedLines;
 }
 
