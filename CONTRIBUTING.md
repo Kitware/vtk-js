@@ -121,7 +121,7 @@ The vtk.js documentation is part of the code repository and is entirely written 
 
 If you create an example, please list it in the [examples landing page](Documentation/content/examples/index.md).
 
-Images and GIF videos added to the [gallery](Documentation/content/docs/gallery) must be compressed as much as possible. You may want to use [ezgif.com](https://ezgif.com/).
+Images and GIF videos added to the [gallery](Documentation/content/docs/gallery) must be compressed as much as possible (e.g. 432px by 300px with 50% JPEG compression). You may want to use [ezgif.com](https://ezgif.com/).
 
 ## Reporting Issues
 
