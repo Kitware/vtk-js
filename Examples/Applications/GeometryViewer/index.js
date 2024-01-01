@@ -103,7 +103,7 @@ if (requestedXrSessionType === XrSessionTypes.LookingGlassVR) {
     // eslint-disable-next-line no-new
     new obj.LookingGlassWebXRPolyfill();
   });
-} else if (requestedXrSessionType === null) {
+} else if (requestedXrSessionType === null && navigator.xr !== undefined) {
   // Guess the session type based on what XR session(s) the device supports
   navigator.xr.isSessionSupported('immersive-vr').then((vrSupported) => {
     if (vrSupported) {
