@@ -27,7 +27,12 @@ export function projectDisplayToLine(
   const denominator = vtkMath.dot(normal, lineDirection);
 
   const result = lineDirection.slice();
-  vtkMath.multiplyScalar(result, numerator / denominator);
+  if (denominator === 0) {
+    // no change is allowed
+    vtkMath.multiplyScalar(result, 0);
+  } else {
+    vtkMath.multiplyScalar(result, numerator / denominator);
+  }
   vtkMath.add(lineOrigin, result, result);
 
   return result;
