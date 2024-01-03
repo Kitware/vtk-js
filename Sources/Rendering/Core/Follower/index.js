@@ -45,7 +45,7 @@ function vtkFollower(publicAPI, model) {
         // compute a vpn
         const vpn = new Float64Array(3);
         if (model.camera.getParallelProjection()) {
-          vec3.set(vpn, model.camera.getViewPlaneNormal());
+          vec3.set(vpn, ...model.camera.getViewPlaneNormal());
         } else {
           vec3.set(vpn, ...model.position);
           vec3.subtract(vpn, model.camera.getPosition(), vpn);
