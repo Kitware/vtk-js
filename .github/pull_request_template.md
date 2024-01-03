@@ -1,6 +1,6 @@
 <!--
 👋 Hello, and thank you for starting this contribution!
-📖 Make sure you've read our CONTRIBUTING.md guide before submitting your pull request.
+📖 Make sure you've read our [CONTRIBUTING.md](https://github.com/Kitware/vtk-js/blob/master/CONTRIBUTING.md) guide before submitting your pull request.
 ❗️ Please follow the template below to help other contributors review your work.
 -->
 
