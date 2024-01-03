@@ -198,8 +198,9 @@ if __name__ == "__main__":
 
 ```
 
-And run it via the following command line:
+In order to run the server, you will need a [ParaView (5.6+) binary](https://www.paraview.org/download/) and run the following command line where the Python file provided as argument is available [here](https://github.com/Kitware/vtk-js/blob/master/Sources/Rendering/Misc/RemoteView/example/pv-server.py)
 
 ```sh
-pvpython pv_server.py --port 1234
+/.../pvpython ./pv-server.py --port 1234
 ```
+

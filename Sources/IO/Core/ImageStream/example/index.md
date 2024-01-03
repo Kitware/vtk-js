@@ -1,8 +1,8 @@
 This example aims to provide an example on how to configure a vtk.js RenderWindow to support remote rendering via a ParaView over WebSocket using WSLink while still having local 3D overlay.
 
-In order to run the server, you will need a ParaView (5.6+) binary and run the following command line where the Python file provided as argument is available [here](https://github.com/Kitware/vtk-js/blob/master/Sources/IO/Core/ImageStream/example/pvw-server.py)
+In order to run the server, you will need a [ParaView (5.6+) binary](https://www.paraview.org/download/) and run the following command line where the Python file provided as argument is available [here](https://github.com/Kitware/vtk-js/blob/master/Sources/IO/Core/ImageStream/example/pvw-server.py)
 
-```
+```sh
 /.../pvpython ./pvw-server.py --port 1234
 ```
 

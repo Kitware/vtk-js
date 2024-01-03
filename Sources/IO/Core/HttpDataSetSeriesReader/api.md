@@ -1,4 +1,4 @@
-The vtkHttpDataSetSeriesReader object is a reader which can load datasets that can vary over time. It is a wrapper over multiple [httpDataSetReader](IO_Core_HttpDataSetReader.html).
+The vtkHttpDataSetSeriesReader object is a reader which can load datasets that can vary over time. It is a wrapper over multiple [HttpDataSetReader](IO_Core_HttpDataSetReader.html).
 
 ## Usage
 
