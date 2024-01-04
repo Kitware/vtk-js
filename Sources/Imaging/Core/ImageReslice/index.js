@@ -121,7 +121,7 @@ function vtkImageReslice(publicAPI, model) {
       publicAPI.modified();
       return true;
     }
-    return null;
+    return false;
   };
 
   publicAPI.requestData = (inData, outData) => {
@@ -735,8 +735,8 @@ function vtkImageReslice(publicAPI, model) {
    * if possible (if the ResliceTransform is a 4x4 matrix transform).
    * If it does, this->OptimizedTransform will be set to nullptr, otherwise
    * this->OptimizedTransform will be equal to this->ResliceTransform.
-   * @param {vtkPolyData} input
-   * @param {vtkPolyData} output
+   * @param {vtkImageData} input
+   * @param {vtkImageData} output
    * @returns
    */
   publicAPI.getIndexMatrix = (input, output) => {
@@ -1009,10 +1009,10 @@ function vtkImageReslice(publicAPI, model) {
         }
       }
       if (k !== 1) {
-        return 0;
+        return false;
       }
     }
-    return 1;
+    return true;
   };
 
   // TODO: to move in vtkMath and add tolerance
@@ -1043,7 +1043,7 @@ function vtkImageReslice(publicAPI, model) {
         }
       }
       if (j >= 3) {
-        return 0;
+        return false;
       }
       let x = matrix[4 * j + i];
       let y = matrix[4 * 3 + i];
@@ -1054,10 +1054,10 @@ function vtkImageReslice(publicAPI, model) {
       const fx = vtkInterpolationMathFloor(x, 0).error;
       const fy = vtkInterpolationMathFloor(y, 0).error;
       if (fx !== 0 || fy !== 0) {
-        return 0;
+        return false;
       }
     }
-    return 1;
+    return true;
   };
 }
 
@@ -1129,7 +1129,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['resliceAxes']);
 
   // Object specific methods
-  macro.algo(publicAPI, model, 1, 1);
   vtkImageReslice(publicAPI, model);
 }
 
