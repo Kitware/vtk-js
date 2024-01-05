@@ -24,7 +24,9 @@ const ARRAY_BUILDERS = {
 // Global methods
 // ----------------------------------------------------------------------------
 
+const cachedPromises = {};
 const cachedArrays = {};
+const MiB = 1024 * 1024;
 
 const GEOMETRY_ARRAYS = {
   vtkPolyData(dataset) {
@@ -145,18 +147,51 @@ function vtkHttpDataSetReader(publicAPI, model) {
   // Internal method to fetch Array
   function fetchArray(array, options = {}) {
     const arrayId = `${array.ref.id}|${array.vtkClass}`;
-    if (!cachedArrays[arrayId]) {
+
+    // Check if array is present in cache
+    if (cachedArrays[arrayId]) {
+      // Update last access for cache retention rules
+      cachedArrays[arrayId].lastAccess = new Date();
+      return cachedArrays[arrayId].array;
+    }
+
+    if (!cachedPromises[arrayId]) {
       // Cache the promise while fetching
-      cachedArrays[arrayId] = model.dataAccessHelper
+      cachedPromises[arrayId] = model.dataAccessHelper
         .fetchArray(publicAPI, model.baseURL, array, options)
         .then((newArray) => {
-          // Replace the promise with the array in cache once downloaded
-          cachedArrays[arrayId] = newArray;
+          // Remove cached promise
+          delete cachedPromises[arrayId];
+
+          // Return here if caching is disabled
+          if (!model.cacheArrays) {
+            return newArray;
+          }
+
+          // Add array to cache
+          cachedArrays[arrayId] = { array: newArray, lastAccess: new Date() };
+
+          // Check cache size
+          const cacheSizeLimit = model.maxCacheSize * MiB;
+          let cacheSize = Object.values(cachedArrays).reduce(
+            (accSize, entry) => accSize + entry.array.values.byteLength,
+            0
+          );
+
+          // Delete cache entries until size is below the limit
+          const sortedArrayCache = Object.entries(cachedArrays).sort((a, b) =>
+            Math.sign(b[1].lastAccess - a[1].lastAccess)
+          );
+          while (cacheSize > cacheSizeLimit) {
+            const [oldId, entry] = sortedArrayCache.pop();
+            delete cachedArrays[oldId];
+            cacheSize -= entry.array.values.byteLength;
+          }
+
           return newArray;
         });
     } else {
-      // cacheArrays[arrayId] can be a promise or value
-      Promise.resolve(cachedArrays[arrayId]).then((cachedArray) => {
+      Promise.resolve(cachedPromises[arrayId]).then((cachedArray) => {
         if (array !== cachedArray) {
           Object.assign(array, cachedArray);
           delete array.ref;
@@ -164,7 +199,7 @@ function vtkHttpDataSetReader(publicAPI, model) {
       });
     }
 
-    return Promise.resolve(cachedArrays[arrayId]);
+    return Promise.resolve(cachedPromises[arrayId]);
   }
 
   // Fetch dataset (metadata)
@@ -336,6 +371,8 @@ const DEFAULT_VALUES = {
   url: null,
   baseURL: null,
   requestCount: 0,
+  cacheArrays: true,
+  maxCacheSize: 2048,
   // dataAccessHelper: null,
 };
 
@@ -352,8 +389,15 @@ export function extend(publicAPI, model, initialValues = {}) {
     'url',
     'baseURL',
     'dataAccessHelper',
+    'cacheArrays',
+    'maxCacheSize',
   ]);
-  macro.set(publicAPI, model, ['dataAccessHelper', 'progressCallback']);
+  macro.set(publicAPI, model, [
+    'dataAccessHelper',
+    'progressCallback',
+    'cacheArrays',
+    'maxCacheSize',
+  ]);
   macro.getArray(publicAPI, model, ['arrays']);
   macro.algo(publicAPI, model, 0, 1);
   macro.event(publicAPI, model, 'busy');

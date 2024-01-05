@@ -149,6 +149,33 @@ export interface vtkHttpDataSetReader extends vtkHttpDataSetReaderBase {
 	getUrl(): string;
 
 	/**
+	 * Gets if arrays are stored in cache.
+	 */
+	getCacheArrays(): boolean;
+
+	/**
+	 * Sets if arrays are stpred in cache.
+	 */
+	setCacheArrays(value: boolean): void;
+
+
+	/**
+	 * Gets the maximum size cached arrays are allowed to occupy.
+	 * Size is given in MiB.
+	 * If cache size is exceeded, the arrays that where not accessed
+	 * the longest are removed.
+	 */
+	getMaxCacheSize(): number;
+
+	/**
+	 * Sets the maximum size cached arrays are allowed to occupy.
+	 * Size is given in MiB.
+	 * If cache size is exceeded, the arrays that where not accessed
+	 * the longest are removed.
+	 */
+	setMaxCacheSize(value: numnber): void;
+
+	/**
 	 * 
 	 * @param {Boolean} busy 
 	 */
