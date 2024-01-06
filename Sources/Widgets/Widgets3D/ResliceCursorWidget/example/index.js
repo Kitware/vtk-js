@@ -14,6 +14,7 @@ import vtkImageReslice from '@kitware/vtk.js/Imaging/Core/ImageReslice';
 import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
 import vtkInteractorStyleImage from '@kitware/vtk.js/Interaction/Style/InteractorStyleImage';
 import vtkInteractorStyleTrackballCamera from '@kitware/vtk.js/Interaction/Style/InteractorStyleTrackballCamera';
+import vtkMath from '@kitware/vtk.js/Common/Core/Math';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkOutlineFilter from '@kitware/vtk.js/Filters/General/OutlineFilter';
 import vtkOrientationMarkerWidget from '@kitware/vtk.js/Interaction/Widgets/OrientationMarkerWidget';
@@ -122,12 +123,19 @@ const initialPlanesState = { ...widgetState.getPlanes() };
 let view3D = null;
 
 for (let i = 0; i < 4; i++) {
+  const elementParent = document.createElement('div');
+  elementParent.setAttribute('class', 'view');
+  elementParent.style.width = '50%';
+  elementParent.style.height = '300px';
+  elementParent.style.display = 'inline-block';
+
   const element = document.createElement('div');
   element.setAttribute('class', 'view');
-  element.style.width = '50%';
-  element.style.height = '300px';
-  element.style.display = 'inline-block';
-  container.appendChild(element);
+  element.style.width = '100%';
+  element.style.height = '100%';
+  elementParent.appendChild(element);
+
+  container.appendChild(elementParent);
 
   const grw = vtkGenericRenderWindow.newInstance();
   grw.setContainer(element);
@@ -252,6 +260,37 @@ for (let i = 0; i < 4; i++) {
   obj.orientationWidget.setViewportSize(0.15);
   obj.orientationWidget.setMinPixelSize(100);
   obj.orientationWidget.setMaxPixelSize(300);
+
+  // create sliders
+  if (i < 3) {
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = 0;
+    slider.max = 200;
+    slider.style.bottom = '0px';
+    slider.style.width = '100%';
+    elementParent.appendChild(slider);
+    obj.slider = slider;
+
+    slider.addEventListener('change', (ev) => {
+      const newDistanceToP1 = ev.target.value;
+      const dirProj = widget.getWidgetState().getPlanes()[
+        xyzToViewType[i]
+      ].normal;
+      const planeExtremities = widget.getPlaneExtremities(xyzToViewType[i]);
+      const newCenter = vtkMath.multiplyAccumulate(
+        planeExtremities[0],
+        dirProj,
+        Number(newDistanceToP1),
+        []
+      );
+      widget.setCenter(newCenter);
+      obj.widgetInstance.invokeInternalInteractionEvent();
+      viewAttributes.forEach((obj2) => {
+        obj2.interactor.render();
+      });
+    });
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -269,6 +308,7 @@ function updateReslice(
     computeFocalPointOffset: false, // Defines if the display offset between reslice center and focal point has to be
     // computed. If so, then this offset will be used to keep the focal point position during rotation.
     spheres: null,
+    slider: null,
   }
 ) {
   const modified = widget.updateReslicePlane(
@@ -283,6 +323,24 @@ function updateReslice(
     interactionContext.sphereSources[0].setCenter(planeSource.getOrigin());
     interactionContext.sphereSources[1].setCenter(planeSource.getPoint1());
     interactionContext.sphereSources[2].setCenter(planeSource.getPoint2());
+
+    if (interactionContext.slider) {
+      const planeExtremities = widget.getPlaneExtremities(
+        interactionContext.viewType
+      );
+      const length = Math.sqrt(
+        vtkMath.distance2BetweenPoints(planeExtremities[0], planeExtremities[1])
+      );
+      const dist = Math.sqrt(
+        vtkMath.distance2BetweenPoints(
+          planeExtremities[0],
+          widgetState.getCenter()
+        )
+      );
+      interactionContext.slider.min = 0;
+      interactionContext.slider.max = length;
+      interactionContext.slider.value = dist;
+    }
   }
   widget.updateCameraPoints(
     interactionContext.renderer,
@@ -349,6 +407,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
                 keepFocalPointPosition,
                 computeFocalPointOffset,
                 sphereSources: obj.sphereSources,
+                slider: obj.slider,
               });
             }
           );
@@ -363,6 +422,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         keepFocalPointPosition: false, // Don't update the focal point as we already set it to the center of the image
         computeFocalPointOffset: true, // Allow to compute the current offset between display reslice center and display focal point
         sphereSources: obj.sphereSources,
+        slider: obj.slider,
       });
       obj.interactor.render();
     });
