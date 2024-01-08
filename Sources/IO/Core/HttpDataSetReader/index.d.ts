@@ -158,6 +158,11 @@ export interface vtkHttpDataSetReader extends vtkHttpDataSetReaderBase {
 	 */
 	setCacheArrays(value: boolean): void;
 
+	/**
+	 * Gets an array of all cached array ids.
+	 */
+	getCachedArrayIds(): string[];
+
 
 	/**
 	 * Gets the maximum size cached arrays are allowed to occupy.
@@ -173,7 +178,7 @@ export interface vtkHttpDataSetReader extends vtkHttpDataSetReaderBase {
 	 * If cache size is exceeded, the arrays that where not accessed
 	 * the longest are removed.
 	 */
-	setMaxCacheSize(value: numnber): void;
+	setMaxCacheSize(value: number): void;
 
 	/**
 	 * 
