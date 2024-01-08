@@ -41,14 +41,14 @@ function createMockIndexJSON(fileId, byteLength) {
 }
 
 const MockData = {
-  'test01/index.json': createMockIndexJSON('test01', 100 * MiB),
-  'test01/data/test01.gz': new Uint8Array(100 * MiB),
-  'test02/index.json': createMockIndexJSON('test02', 200 * MiB),
-  'test02/data/test02.gz': new Uint8Array(200 * MiB),
-  'test03/index.json': createMockIndexJSON('test03', 150 * MiB),
-  'test03/data/test03.gz': new Uint8Array(150 * MiB),
-  'test04/index.json': createMockIndexJSON('test04', 400 * MiB),
-  'test04/data/test04.gz': new Uint8Array(400 * MiB),
+  'test01/index.json': () => createMockIndexJSON('test01', 100 * MiB),
+  'test01/data/test01.gz': () => new Uint8Array(100 * MiB),
+  'test02/index.json': () => createMockIndexJSON('test02', 200 * MiB),
+  'test02/data/test02.gz': () => new Uint8Array(200 * MiB),
+  'test03/index.json': () => createMockIndexJSON('test03', 150 * MiB),
+  'test03/data/test03.gz': () => new Uint8Array(150 * MiB),
+  'test04/index.json': () => createMockIndexJSON('test04', 400 * MiB),
+  'test04/data/test04.gz': () => new Uint8Array(400 * MiB),
 };
 
 // ----------------------------------------------------------------------------
@@ -83,7 +83,7 @@ function fetchJSON(instance, url, options = {}) {
       reject(new Error(`No such JSON ${url}`));
       return;
     }
-    resolve(MockData[filename]);
+    resolve(MockData[filename]());
   });
 
   CallTrackers.forEach((t) => {
@@ -112,7 +112,7 @@ function fetchArray(instance, baseURL, array, options = {}) {
       return;
     }
 
-    array.buffer = MockData[filename];
+    array.buffer = MockData[filename]();
     array.values = macro.newTypedArray(array.dataType, array.buffer);
     delete array.ref;
 

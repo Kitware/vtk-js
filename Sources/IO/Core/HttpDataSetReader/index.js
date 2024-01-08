@@ -149,7 +149,7 @@ function vtkHttpDataSetReader(publicAPI, model) {
     const arrayId = `${array.ref.id}|${array.vtkClass}`;
 
     // Check if array is present in cache
-    if (cachedArrays[arrayId]) {
+    if (model.arrayCachingEnabled && cachedArrays[arrayId]) {
       // Update last access for cache retention rules
       cachedArrays[arrayId].lastAccess = new Date();
       return cachedArrays[arrayId].array;
@@ -164,7 +164,7 @@ function vtkHttpDataSetReader(publicAPI, model) {
           delete cachedPromises[arrayId];
 
           // Return here if caching is disabled
-          if (!model.cacheArrays) {
+          if (!model.arrayCachingEnabled) {
             return newArray;
           }
 
@@ -183,16 +183,11 @@ function vtkHttpDataSetReader(publicAPI, model) {
             0
           );
 
-          console.log(`Cache size: ${cacheSize}`);
-          console.log(`Cache limit: ${cacheSizeLimit}`);
-
           // Delete cache entries until size is below the limit
           while (cacheSize > cacheSizeLimit && sortedArrayCache.length > 0) {
             const [oldId, entry] = sortedArrayCache.pop();
-            console.log(`Remove "${oldId}"`);
             delete cachedArrays[oldId];
             cacheSize -= entry.array.values.byteLength;
-            console.log(`Reduced cache size: ${cacheSize}`);
           }
 
           // Edge case: If the new entry is bigger than the cache limit
@@ -386,7 +381,7 @@ const DEFAULT_VALUES = {
   url: null,
   baseURL: null,
   requestCount: 0,
-  cacheArrays: true,
+  arrayCachingEnabled: true,
   maxCacheSize: 2048,
   // dataAccessHelper: null,
 };
@@ -404,13 +399,13 @@ export function extend(publicAPI, model, initialValues = {}) {
     'url',
     'baseURL',
     'dataAccessHelper',
-    'cacheArrays',
+    'arrayCachingEnabled',
     'maxCacheSize',
   ]);
   macro.set(publicAPI, model, [
     'dataAccessHelper',
     'progressCallback',
-    'cacheArrays',
+    'arrayCachingEnabled',
     'maxCacheSize',
   ]);
   macro.getArray(publicAPI, model, ['arrays']);

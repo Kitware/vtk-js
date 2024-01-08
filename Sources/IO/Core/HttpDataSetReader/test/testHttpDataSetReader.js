@@ -4,8 +4,11 @@ import vtkHttpDataSetReader from '..';
 import MockDataAccessHelper from '../../DataAccessHelper/MockDataAccessHelper';
 
 function runTests(testCases) {
+  // reverse test case array so that pop() returns the first test
   testCases.reverse();
 
+  // definition of test runner method
+  // -> Runs all test cases until none are left, or an error occurs
   const processNextTestCase = () => {
     const testCase = testCases.pop();
     if (!testCase) {
@@ -22,6 +25,7 @@ function runTests(testCases) {
     );
   };
 
+  // start test sequence with first test
   processNextTestCase();
 }
 
@@ -75,6 +79,7 @@ function fetchArrayTest(
           `${prefix} Method "fetchArray()" is called ${expectedFetchArrayCallCount} times.`
         );
 
+        // if expected cache entries are specified, verify that they match the cache entries in the reader
         if (finalExpectedCacheItems && Array.isArray(finalExpectedCacheItems)) {
           const cachedArrayIds = reader.getCachedArrayIds().sort().join(',');
           const expectedArrayIds = finalExpectedCacheItems.sort().join(',');
@@ -134,7 +139,7 @@ test('Caching capabilities of vtkHttpDataSetReader with unlimited cache.', (t) =
   ]);
 });
 
-test.only('Caching capabilities of vtkHttpDataSetReader with limited cache.', (t) => {
+test('Caching capabilities of vtkHttpDataSetReader with limited cache.', (t) => {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
   reader.setDataAccessHelper(MockDataAccessHelper);
 
@@ -179,5 +184,39 @@ test.only('Caching capabilities of vtkHttpDataSetReader with limited cache.', (t
 
     // load array that is too big for cache -> Cache will become empty
     fetchArrayTest(t, reader, callTracker, 'http://mockData/test04', false, []),
+  ]);
+});
+
+test('Disabled cache on vtkHttpDataSetReader.', (t) => {
+  const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
+  reader.setDataAccessHelper(MockDataAccessHelper);
+
+  const callTracker = MockDataAccessHelper.getCallTracker();
+
+  runTests([
+    // disable caching
+    (resolve, _) => {
+      reader.setArrayCachingEnabled(false);
+      t.equals(reader.getArrayCachingEnabled(), false, 'Cache was disabled');
+      resolve();
+    },
+
+    // load non-cached array 1
+    fetchArrayTest(t, reader, callTracker, 'http://mockData/test01', false, []),
+
+    // load non-cached array 2
+    fetchArrayTest(t, reader, callTracker, 'http://mockData/test02', false, []),
+
+    // load array for the second time and it is still not cached
+    fetchArrayTest(t, reader, callTracker, 'http://mockData/test01', false, []),
+
+    // load non-cached array 3
+    fetchArrayTest(t, reader, callTracker, 'http://mockData/test03', false, []),
+
+    // load array for the second time and it is still not cached
+    fetchArrayTest(t, reader, callTracker, 'http://mockData/test02', false, []),
+
+    // load array for the second time and it is still not cached
+    fetchArrayTest(t, reader, callTracker, 'http://mockData/test03', false, []),
   ]);
 });
