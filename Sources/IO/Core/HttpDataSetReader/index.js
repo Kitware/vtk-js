@@ -168,6 +168,11 @@ function vtkHttpDataSetReader(publicAPI, model) {
             return newArray;
           }
 
+          // sort old cache without new entry (potentially needed for creating space)
+          const sortedArrayCache = Object.entries(cachedArrays).sort((a, b) =>
+            Math.sign(a[1].lastAccess - b[1].lastAccess)
+          );
+
           // Add array to cache
           cachedArrays[arrayId] = { array: newArray, lastAccess: new Date() };
 
@@ -178,14 +183,21 @@ function vtkHttpDataSetReader(publicAPI, model) {
             0
           );
 
+          console.log(`Cache size: ${cacheSize}`);
+          console.log(`Cache limit: ${cacheSizeLimit}`);
+
           // Delete cache entries until size is below the limit
-          const sortedArrayCache = Object.entries(cachedArrays).sort((a, b) =>
-            Math.sign(b[1].lastAccess - a[1].lastAccess)
-          );
-          while (cacheSize > cacheSizeLimit) {
+          while (cacheSize > cacheSizeLimit && sortedArrayCache.length > 0) {
             const [oldId, entry] = sortedArrayCache.pop();
+            console.log(`Remove "${oldId}"`);
             delete cachedArrays[oldId];
             cacheSize -= entry.array.values.byteLength;
+            console.log(`Reduced cache size: ${cacheSize}`);
+          }
+
+          // Edge case: If the new entry is bigger than the cache limit
+          if (cacheSize > cacheSizeLimit) {
+            delete cachedArrays[arrayId];
           }
 
           return newArray;
@@ -355,6 +367,9 @@ function vtkHttpDataSetReader(publicAPI, model) {
       activeArray[0].enable = enable;
     }
   };
+
+  // return id's of cached arrays
+  publicAPI.getCachedArrayIds = () => Object.keys(cachedArrays);
 
   // return Busy state
   publicAPI.isBusy = () => !!model.requestCount;
