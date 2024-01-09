@@ -1,32 +1,35 @@
 import test from 'tape-catch';
 
-import vtkHttpDataSetReader from '..';
-import MockDataAccessHelper from '../../DataAccessHelper/MockDataAccessHelper';
+import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
+import MockDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/MockDataAccessHelper';
 
 function runTests(testCases) {
-  // reverse test case array so that pop() returns the first test
-  testCases.reverse();
+  return new Promise((resolve) => {
+    // reverse test case array so that pop() returns the first test
+    testCases.reverse();
 
-  // definition of test runner method
-  // -> Runs all test cases until none are left, or an error occurs
-  const processNextTestCase = () => {
-    const testCase = testCases.pop();
-    if (!testCase) {
-      return;
-    }
-
-    new Promise(testCase).then(
-      (_) => {
-        processNextTestCase();
-      },
-      (err) => {
-        console.error(err);
+    // definition of test runner method
+    // -> Runs all test cases until none are left, or an error occurs
+    const processNextTestCase = () => {
+      const testCase = testCases.pop();
+      if (!testCase) {
+        resolve();
+        return;
       }
-    );
-  };
 
-  // start test sequence with first test
-  processNextTestCase();
+      new Promise(testCase).then(
+        (_) => {
+          processNextTestCase();
+        },
+        (err) => {
+          console.error(err);
+        }
+      );
+    };
+
+    // start test sequence with first test
+    processNextTestCase();
+  });
 }
 
 function equals(t, actual, expected, description) {
@@ -70,13 +73,13 @@ function fetchArrayTest(
           t,
           callTracker.fetchJSON.length,
           expectedFetchJSONCallCount,
-          `${prefix} Method "fetchJSON()" is called ${expectedFetchJSONCallCount} times.`
+          `${prefix} Method "fetchJSON()" is called ${expectedFetchJSONCallCount} time(s).`
         );
         equals(
           t,
           callTracker.fetchArray.length,
           expectedFetchArrayCallCount,
-          `${prefix} Method "fetchArray()" is called ${expectedFetchArrayCallCount} times.`
+          `${prefix} Method "fetchArray()" is called ${expectedFetchArrayCallCount} time(s).`
         );
 
         // if expected cache entries are specified, verify that they match the cache entries in the reader
@@ -93,7 +96,6 @@ function fetchArrayTest(
             );
           }
         }
-
         resolve(v);
       },
       (err) => reject(err)
@@ -104,17 +106,18 @@ function fetchArrayTest(
 test('Caching capabilities of vtkHttpDataSetReader with unlimited cache.', (t) => {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
   reader.setDataAccessHelper(MockDataAccessHelper);
+  reader.clearCache();
 
   const callTracker = MockDataAccessHelper.getCallTracker();
 
   runTests([
     // set cache to unlimited size
     (resolve, _) => {
-      reader.setMaxCacheSize(undefined);
+      reader.setMaxCacheSize(-1);
       t.equals(
         reader.getMaxCacheSize(),
-        undefined,
-        'Cache was set to "undefined" for unlimited caching'
+        -1,
+        'Cache was set to "-1" for unlimited caching'
       );
       resolve();
     },
@@ -136,12 +139,13 @@ test('Caching capabilities of vtkHttpDataSetReader with unlimited cache.', (t) =
 
     // load cached array
     fetchArrayTest(t, reader, callTracker, 'http://mockData/test03', true),
-  ]);
+  ]).then(t.end);
 });
 
 test('Caching capabilities of vtkHttpDataSetReader with limited cache.', (t) => {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
   reader.setDataAccessHelper(MockDataAccessHelper);
+  reader.clearCache();
 
   const callTracker = MockDataAccessHelper.getCallTracker();
 
@@ -184,20 +188,25 @@ test('Caching capabilities of vtkHttpDataSetReader with limited cache.', (t) => 
 
     // load array that is too big for cache -> Cache will become empty
     fetchArrayTest(t, reader, callTracker, 'http://mockData/test04', false, []),
-  ]);
+  ]).then(t.end);
 });
 
 test('Disabled cache on vtkHttpDataSetReader.', (t) => {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
   reader.setDataAccessHelper(MockDataAccessHelper);
+  reader.clearCache();
 
   const callTracker = MockDataAccessHelper.getCallTracker();
 
-  runTests([
+  const createDisabledCacheTests = (disable) => [
     // disable caching
     (resolve, _) => {
-      reader.setArrayCachingEnabled(false);
-      t.equals(reader.getArrayCachingEnabled(), false, 'Cache was disabled');
+      reader.setMaxCacheSize(disable);
+      t.equals(
+        reader.getMaxCacheSize(),
+        disable,
+        `Cache was disabled through setting maxCacheSize to "${disable}"`
+      );
       resolve();
     },
 
@@ -218,5 +227,12 @@ test('Disabled cache on vtkHttpDataSetReader.', (t) => {
 
     // load array for the second time and it is still not cached
     fetchArrayTest(t, reader, callTracker, 'http://mockData/test03', false, []),
-  ]);
+  ];
+
+  // verify that cache can be disable by setting maxCacheSize to "0", "null" and "undefined"
+  runTests([
+    ...createDisabledCacheTests(0),
+    ...createDisabledCacheTests(null),
+    ...createDisabledCacheTests(undefined),
+  ]).then(t.end);
 });

@@ -3,7 +3,7 @@
  */
 
 export interface MockDataAccessHelperCallTrackerEntry {
-	promise: Promise;
+	promise: Promise<object[]>;
 	called: Date;
 }
 
@@ -18,7 +18,7 @@ export interface MockDataAccessHelper {
 	fetchText(instance: any, url: string, options?: object): Promise<string>;
 	fetchBinary(instance: any, url: string, options?: object): Promise<ArrayBuffer>;
 	fetchImage(instance: any, url: string, options?: object): Promise<HTMLImageElement>;
-	getCallTracker();
+	getCallTracker(): MockDataAccessHelperCallTracker;
 }
 
 export default MockDataAccessHelper;
