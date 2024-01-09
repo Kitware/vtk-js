@@ -172,7 +172,7 @@ function vtkHttpDataSetReader(publicAPI, model) {
           cachedArrays[arrayId] = { array: newArray, lastAccess: new Date() };
 
           // If maxCacheSize is set to -1 the cache is unlimited
-          if (model.maxCacheSize === -1) {
+          if (model.maxCacheSize < 0) {
             return newArray;
           }
 
