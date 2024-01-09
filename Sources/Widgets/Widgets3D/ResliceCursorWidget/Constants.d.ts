@@ -1,4 +1,15 @@
+import { Vector3 } from '../../../types';
 import { ViewTypes } from '../../Core/WidgetManager/Constants';
+
+// Different types of plane from ViewTypes:
+export type PlaneViewType = ViewTypes.YZ_PLANE | ViewTypes.XZ_PLANE | ViewTypes.XY_PLANE;
+
+// 0, 1, 2 for X, Y, Z
+export type AxisIndex = 0 | 1 | 2;
+
+// Should be X, Y, Z
+export type PlaneName = typeof planeNames extends (infer U)[] ? U : never;
+
 
 export declare enum ScrollingMethods {
   MIDDLE_MOUSE_BUTTON = 0,
@@ -15,48 +26,29 @@ export declare enum InteractionMethodsName {
   TranslateCenterAndUpdatePlanes = 'translateCenterAndUpdatePlanes',
 }
 
-export declare type defaultViewUpFromViewType = {
-  [ViewTypes.YZ_PLANE]: [0, 0, 1], // Sagittal
-  [ViewTypes.XZ_PLANE]: [0, 0, 1], // Coronal
-  [ViewTypes.XY_PLANE]: [0, -1, 0], // Axial
-}
+export declare const defaultViewUpFromViewType: { [plane in PlaneViewType]: Vector3 };
 
-export declare type xyzToViewType = [
-  ViewTypes.YZ_PLANE,
-  ViewTypes.XZ_PLANE,
-  ViewTypes.XY_PLANE,
-];
+export declare const xyzToViewType: [PlaneViewType, PlaneViewType, PlaneViewType];
 
-export declare type viewTypeToXYZ = {
-  [ViewTypes.YZ_PLANE]: 0,
-  [ViewTypes.XZ_PLANE]: 1,
-  [ViewTypes.XY_PLANE]: 2,
-}
+export declare const viewTypeToXYZ: { [plane in PlaneViewType]: AxisIndex };
 
-export declare type planeNames = ['X', 'Y', 'Z'];
+export declare const planeNames: ['X', 'Y', 'Z'];
 
-export declare type viewTypeToPlaneName = {
-  [ViewTypes.YZ_PLANE]: 'X',
-  [ViewTypes.XZ_PLANE]: 'Y',
-  [ViewTypes.XY_PLANE]: 'Z',
-}
+export declare const viewTypeToPlaneName: { [plane in PlaneViewType]: PlaneName };
 
-export declare type planeNameToViewType = {
-  X: ViewTypes.YZ_PLANE,
-  Y: ViewTypes.XZ_PLANE,
-  Z: ViewTypes.XY_PLANE,
-}
-export declare type lineNames = ['YinX', 'ZinX', 'XinY', 'ZinY', 'XinZ', 'YinZ'];
+export declare const planeNameToViewType: { [planeName in PlaneName]: PlaneViewType };
+
+export declare const lineNames: ['YinX', 'ZinX', 'XinY', 'ZinY', 'XinZ', 'YinZ'];
 
 declare const _default: {
   ScrollingMethods: typeof ScrollingMethods;
   InteractionMethodsName: typeof InteractionMethodsName;
-  xyzToViewType: xyzToViewType;
-  viewTypeToXYZ: viewTypeToXYZ;
-  planeNames: planeNames;
-  viewTypeToPlaneName: viewTypeToPlaneName;
-  planeNameToViewType: planeNameToViewType;
-  lineNames: lineNames;
-}
+  xyzToViewType: typeof xyzToViewType;
+  viewTypeToXYZ: typeof viewTypeToXYZ;
+  planeNames: typeof planeNames;
+  viewTypeToPlaneName: typeof viewTypeToPlaneName;
+  planeNameToViewType: typeof planeNameToViewType;
+  lineNames: typeof lineNames;
+};
 
 export default _default;
