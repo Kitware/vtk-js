@@ -1,5 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 import vtkPlaneManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
@@ -319,12 +321,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
   publicAPI.setImage = (image) => {
     model.widgetState.setImage(image);
     const center = image.getCenter();
-    model.widgetState.setCenter(center);
-    updateState(
-      model.widgetState,
-      model.scaleInPixels,
-      model.rotationHandlePosition
-    );
+    publicAPI.setCenter(center);
   };
 
   publicAPI.setCenter = (center) => {
@@ -647,6 +644,32 @@ function vtkResliceCursorWidget(publicAPI, model) {
       );
     }
   );
+
+  publicAPI.getPlaneExtremities = (viewType) => {
+    const dirProj = publicAPI.getWidgetState().getPlanes()[viewType].normal;
+    const length = vtkBoundingBox.getDiagonalLength(
+      publicAPI.getWidgetState().getImage().getBounds()
+    );
+    const p1 = vtkMath.multiplyAccumulate(
+      publicAPI.getWidgetState().getCenter(),
+      dirProj,
+      -length,
+      []
+    );
+    const p2 = vtkMath.multiplyAccumulate(
+      publicAPI.getWidgetState().getCenter(),
+      dirProj,
+      length,
+      []
+    );
+    // FIXME: support oriented bounds
+    const intersectionPoints = vtkBox.intersectWithLine(
+      publicAPI.getWidgetState().getImage().getBounds(),
+      p1,
+      p2
+    );
+    return [intersectionPoints.x1, intersectionPoints.x2];
+  };
 }
 
 // ----------------------------------------------------------------------------
