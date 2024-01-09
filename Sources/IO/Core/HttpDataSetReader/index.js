@@ -149,10 +149,10 @@ function vtkHttpDataSetReader(publicAPI, model) {
     const arrayId = `${array.ref.id}|${array.vtkClass}`;
 
     // Check if array is present in cache
-    if (model.arrayCachingEnabled && cachedArrays[arrayId]) {
+    if (model.maxCacheSize && cachedArrays[arrayId]) {
       // Update last access for cache retention rules
       cachedArrays[arrayId].lastAccess = new Date();
-      return cachedArrays[arrayId].array;
+      return Promise.resolve(cachedArrays[arrayId].array);
     }
 
     if (!cachedPromises[arrayId]) {
@@ -164,17 +164,22 @@ function vtkHttpDataSetReader(publicAPI, model) {
           delete cachedPromises[arrayId];
 
           // Return here if caching is disabled
-          if (!model.arrayCachingEnabled) {
+          if (!model.maxCacheSize) {
             return newArray;
           }
 
-          // sort old cache without new entry (potentially needed for creating space)
-          const sortedArrayCache = Object.entries(cachedArrays).sort((a, b) =>
-            Math.sign(a[1].lastAccess - b[1].lastAccess)
-          );
-
           // Add array to cache
           cachedArrays[arrayId] = { array: newArray, lastAccess: new Date() };
+
+          // If maxCacheSize is set to -1 the cache is unlimited
+          if (model.maxCacheSize === -1) {
+            return newArray;
+          }
+
+          // sort cache according to access times (potentially needed for creating space)
+          const sortedArrayCache = Object.entries(cachedArrays).sort((a, b) =>
+            Math.sign(b[1].lastAccess - a[1].lastAccess)
+          );
 
           // Check cache size
           const cacheSizeLimit = model.maxCacheSize * MiB;
@@ -191,16 +196,16 @@ function vtkHttpDataSetReader(publicAPI, model) {
           }
 
           // Edge case: If the new entry is bigger than the cache limit
-          if (cacheSize > cacheSizeLimit) {
-            delete cachedArrays[arrayId];
+          if (!cachedArrays[arrayId]) {
+            macro.vtkWarningMacro('Cache size is too small for the dataset');
           }
 
           return newArray;
         });
     } else {
-      Promise.resolve(cachedPromises[arrayId]).then((cachedArray) => {
-        if (array !== cachedArray) {
-          Object.assign(array, cachedArray);
+      Promise.resolve(cachedPromises[arrayId]).then((cachedPromise) => {
+        if (array !== cachedPromise) {
+          Object.assign(array, cachedPromise);
           delete array.ref;
         }
       });
@@ -366,6 +371,10 @@ function vtkHttpDataSetReader(publicAPI, model) {
   // return id's of cached arrays
   publicAPI.getCachedArrayIds = () => Object.keys(cachedArrays);
 
+  // clear global array cache
+  publicAPI.clearCache = () =>
+    Object.keys(cachedArrays).forEach((k) => delete cachedArrays[k]);
+
   // return Busy state
   publicAPI.isBusy = () => !!model.requestCount;
 }
@@ -399,13 +408,11 @@ export function extend(publicAPI, model, initialValues = {}) {
     'url',
     'baseURL',
     'dataAccessHelper',
-    'arrayCachingEnabled',
     'maxCacheSize',
   ]);
   macro.set(publicAPI, model, [
     'dataAccessHelper',
     'progressCallback',
-    'arrayCachingEnabled',
     'maxCacheSize',
   ]);
   macro.getArray(publicAPI, model, ['arrays']);
