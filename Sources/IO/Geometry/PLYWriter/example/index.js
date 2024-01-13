@@ -22,19 +22,19 @@ const reader = vtkPolyDataReader.newInstance();
 const writerReader = vtkPLYReader.newInstance();
 
 const writer = vtkPLYWriter.newInstance();
+writer.setInputConnection(reader.getOutputPort());
 reader
   .setUrl(`${__BASE_PATH__}/data/legacy/sphere.vtk`, { loadData: true })
   .then(() => {
-    writer.setInputData(reader.getOutputData());
-
     // writer.setTextureFileName('mytexture.jpg');
 
     const fileContents = writer.getOutputData();
+    writerReader.parseAsText(new TextEncoder().encode(fileContents));
     // Can also use a static function to write to PLY:
     // const fileContents = vtkPLYWriter.writePLY(reader.getOutputData());
+    // writerReader.parseAsArrayBuffer(fileContents.buffer);
 
     // Display the resulting PLY
-    writerReader.parseAsArrayBuffer(fileContents.buffer);
     renderer.resetCamera();
     renderWindow.render();
 
