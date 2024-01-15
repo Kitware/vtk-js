@@ -67,7 +67,7 @@ export interface vtkPixelSpaceCallbackMapper extends vtkMapper {
 	 * 
 	 * @param callback 
 	 */
-	setCallback(callback: () => any): boolean
+	setCallback(callback: (coords: any, camera: vtkCamera, aspect: number, depthValues: number[]) => any): boolean
 	
 
 	/**
