@@ -3,6 +3,7 @@ import vtkAbstractPicker, { IAbstractPickerInitialValues } from "../AbstractPick
 import vtkActor from "../Actor";
 import vtkMapper from '../Mapper';
 import vtkRenderer from '../Renderer';
+import { vtkSubscription } from "../../../interfaces";
 
 
 export interface IPickerInitialValues extends IAbstractPickerInitialValues {
@@ -12,6 +13,8 @@ export interface IPickerInitialValues extends IAbstractPickerInitialValues {
 	pickedPositions?: Array<any>;
 	globalTMin?: number;
 }
+
+type OnPickChangeCallback = (pickedPositions: Vector3[]) => void
 
 export interface vtkPicker extends vtkAbstractPicker {
 
@@ -36,6 +39,11 @@ export interface vtkPicker extends vtkAbstractPicker {
 	getMapperPosition(): Vector3;
 
 	/**
+	 * Get position in mapper (i.e., non-transformed) coordinates of pick point.
+	 */
+	getMapperPositionByReference(): Vector3;
+
+	/**
 	 * Get a list of the points the actors returned by getActors were intersected at.
 	 */
 	getPickedPositions(): Vector3[];
@@ -46,14 +54,18 @@ export interface vtkPicker extends vtkAbstractPicker {
 	getTolerance(): number;
 
 	/**
-	 * Invoke a pick change event.
+	 * Invoke a pick change event with the list of picked points.
+	 * This function is called internally by VTK.js and is not intended for public use.
+	 * @param {Vector3[]} pickedPositions
 	 */
-	invokePickChange(pickedPositions: number[]): unknown;
+	invokePickChange(pickedPositions: Vector3[]): void;
 
 	/**
-	 * FIXME: this needs to be check again
+	 * Execute the given callback when the pickChange event is fired.
+	 * The callback receives an array of picked point positions.
+	 * @param {OnPickChangeCallback}
 	 */
-	//onPickChange(pickedPositions: number[]): any;
+	onPickChange(callback: OnPickChangeCallback): vtkSubscription;
 
 	/**
 	 * Intersect data with specified ray.
@@ -79,6 +91,12 @@ export interface vtkPicker extends vtkAbstractPicker {
 	 * @param {Number} z The z coordinate.
 	 */
 	setMapperPosition(x: number, y: number, z: number): boolean;
+
+	/**
+	 * Set position in mapper coordinates of pick point.
+	 * @param {Vector3} mapperPosition The mapper coordinates of pick point.
+	 */
+	setMapperPositionFrom(mapperPosition: Vector3): boolean;
 
 	/**
 	 * Specify tolerance for performing pick operation. Tolerance is specified
