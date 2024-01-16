@@ -5,20 +5,15 @@ import { vtkAlgorithm, vtkObject } from '../../../interfaces';
  * Interface for initial values of BufferObject
  */
 export interface IBufferObjectInitialValues {
-  objectType: ObjectType;
+  objectType?: ObjectType | ObjectType.ARRAY_BUFFER;
   context?: WebGLRenderingContext | WebGL2RenderingContext;
-  allocatedGPUMemoryInBytes: number;
+  allocatedGPUMemoryInBytes?: number | 0;
 }
-
-/**
- * Base type for vtkOpenGLBufferObject excluding the 'set' method from vtkObject
- */
-type vtkOpenGLBufferObjectBase = Omit<vtkObject, 'set'> & vtkAlgorithm;
 
 /**
  * Interface for OpenGL Buffer Object
  */
-export interface vtkOpenGLBufferObject extends vtkOpenGLBufferObjectBase {
+export interface vtkOpenGLBufferObject extends vtkObject {
   /**
    * Uploads data to the buffer object.
    * @param data The data to be uploaded.
