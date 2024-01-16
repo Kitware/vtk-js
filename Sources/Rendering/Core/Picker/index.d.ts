@@ -1,8 +1,9 @@
-import { Vector3 } from "../../../types";
+import { Vector3, Nullable } from "../../../types";
 import vtkAbstractPicker, { IAbstractPickerInitialValues } from "../AbstractPicker";
 import vtkActor from "../Actor";
 import vtkMapper from '../Mapper';
 import vtkRenderer from '../Renderer';
+import { vtkSubscription } from "../../../interfaces";
 
 
 export interface IPickerInitialValues extends IAbstractPickerInitialValues {
@@ -13,6 +14,8 @@ export interface IPickerInitialValues extends IAbstractPickerInitialValues {
 	globalTMin?: number;
 }
 
+type OnPickChangeCallback = (pickedPositions: Vector3[]) => void
+
 export interface vtkPicker extends vtkAbstractPicker {
 
 	/**
@@ -21,29 +24,29 @@ export interface vtkPicker extends vtkAbstractPicker {
 	getActors(): vtkActor[];
 
 	/**
-	 * Get a pointer to the dataset that was picked (if any).
+	 * Get the dataset that was picked (if any).
 	 */
 	getDataSet(): any;
 
 	/**
 	 * Get mapper that was picked (if any)
 	 */
-	getMapper(): null | vtkMapper;
+	getMapper(): Nullable<vtkMapper>;
 
 	/**
 	 * Get position in mapper (i.e., non-transformed) coordinates of pick point.
 	 */
-	getMapperPosition(): number[];
+	getMapperPosition(): Vector3;
 
 	/**
-	 * 
+	 * Get position in mapper (i.e., non-transformed) coordinates of pick point.
 	 */
-	getMapperPositionByReference(): number[];
+	getMapperPositionByReference(): Vector3;
 
 	/**
-	 * Get a list of the points the actors returned by GetProp3Ds were intersected at.
+	 * Get a list of the points the actors returned by getActors were intersected at.
 	 */
-	getPickedPositions(): number[];
+	getPickedPositions(): Vector3[];
 
 	/**
 	 * Get tolerance for performing pick operation.
@@ -51,14 +54,18 @@ export interface vtkPicker extends vtkAbstractPicker {
 	getTolerance(): number;
 
 	/**
-	 * FIXME: this needs to be check again
+	 * Invoke a pick change event with the list of picked points.
+	 * This function is called internally by VTK.js and is not intended for public use.
+	 * @param {Vector3[]} pickedPositions
 	 */
-	//invokePickChange(pickedPositions: number[]): any;
+	invokePickChange(pickedPositions: Vector3[]): void;
 
 	/**
-	 * FIXME: this needs to be check again
+	 * Execute the given callback when the pickChange event is fired.
+	 * The callback receives an array of picked point positions.
+	 * @param {OnPickChangeCallback}
 	 */
-	//onPickChange(pickedPositions: number[]): any;
+	onPickChange(callback: OnPickChangeCallback): vtkSubscription;
 
 	/**
 	 * Intersect data with specified ray.
@@ -72,10 +79,10 @@ export interface vtkPicker extends vtkAbstractPicker {
 
 	/**
 	 * Perform pick operation with selection point provided.
-	 * @param selection 
-	 * @param {vtkRenderer} renderer The vtkRenderer instance.
+	 * @param {Vector3} selection First two values should be x-y pixel coordinate, the third is usually zero.
+	 * @param {vtkRenderer} renderer The renderer on which you want to do picking.
 	 */
-	pick(selection: any, renderer: vtkRenderer): any;
+	pick(selection: Vector3, renderer: vtkRenderer): void;
 
 	/**
 	 * Set position in mapper coordinates of pick point.
@@ -92,7 +99,9 @@ export interface vtkPicker extends vtkAbstractPicker {
 	setMapperPositionFrom(mapperPosition: Vector3): boolean;
 
 	/**
-	 * Specify tolerance for performing pick operation.
+	 * Specify tolerance for performing pick operation. Tolerance is specified
+	 * as fraction of rendering window size. (Rendering window size is measured
+	 * across diagonal.)
 	 * @param {Number} tolerance The tolerance value.
 	 */
 	setTolerance(tolerance: number): boolean;
@@ -127,6 +136,11 @@ export function newInstance(initialValues?: IPickerInitialValues): vtkPicker;
  * the prop itself, the data set, and the mapper. 
  * For vtkPicker the closest prop is the one whose center point (i.e., center of bounding box) projected on the view ray is closest
  * to the camera. Subclasses of vtkPicker use other methods for computing the pick point.
+ * 
+ * vtkPicker is used for quick geometric picking. If you desire more precise
+ * picking of points or cells based on the geometry of any vtkProp3D, use the
+ * subclasses vtkPointPicker or vtkCellPicker.  For hardware-accelerated
+ * picking of any type of vtkProp, use vtkPropPicker or vtkWorldPointPicker.
  */
 export declare const vtkPicker: {
 	newInstance: typeof newInstance,

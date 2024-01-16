@@ -361,9 +361,9 @@ function writePLY(
     }
 
     if (normals) {
-      nx = normals.getData()[i * 2];
-      ny = normals.getData()[i * 2 + 1];
-      nz = normals.getData()[i * 2 + 2];
+      nx = normals.getData()[i * 3];
+      ny = normals.getData()[i * 3 + 1];
+      nz = normals.getData()[i * 3 + 2];
     }
 
     writer.writeVertice(x, y, z, nx, ny, nz, u, v, r, g, b);
