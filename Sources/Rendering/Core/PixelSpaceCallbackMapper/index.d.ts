@@ -65,9 +65,30 @@ export interface vtkPixelSpaceCallbackMapper extends vtkMapper {
 	 * 
 	 * depthBuffer: Uint8Array
 	 * 
-	 * @param callback 
+	 * @example
+	 * ```js
+	 * // there is some text canvas and label data
+	 * const textCtx = textCanvas.getContext('2d');
+	 * const psMapper = vtkPixelSpaceCallbackMapper.newInstance();
+	 * psMapper.setInputData(pointPoly);
+	 * psMapper.setCallback((coords, camera, aspect, depthBuffer) => {
+	 *   textCtx.clearRect(0, 0, oglCtx.drawingBufferWidth, oglCtx.drawingBufferHeight);
+	 *   coords.forEach((xy, idx) => {
+	 * 	   let label = data.labels[idx]
+	 * 	   textCtx.fillStyle = "white";
+	 * 	   textCtx.font = "12px Arial";
+	 * 	   textCtx.fillText(label, xy[0], oglCtx.drawingBufferHeight - xy[1]);
+	 * 	 })
+	 * })
+	 * 
+	 * const textActor = vtkActor.newInstance();
+	 * textActor.setMapper(psMapper);
+	 * renderer.addActor(textActor);
+	 * ```
+	 * 
+	 * @param callback called with coords, camera, aspect and depthBuffer
 	 */
-	setCallback(callback: (coords: any, camera: vtkCamera, aspect: number, depthValues: number[]) => any): boolean
+	setCallback(callback: (coords: any, camera: vtkCamera, aspect: number, depthBuffer: number[]) => any): boolean
 	
 
 	/**
