@@ -54,7 +54,7 @@ export interface vtkSelectionNode extends vtkObject {
 	/**
 	 * This functions is called internally by VTK.js and is not intended for public use.
 	 */
-	setProperties(properties: ISelectionNodeProperties):any;
+	setProperties(properties: ISelectionNodeProperties): boolean;
 	
 	/**
 	 * Get the list of the underlying selected attribute IDs.
@@ -64,7 +64,7 @@ export interface vtkSelectionNode extends vtkObject {
 	/**
 	 * This functions is called internally by VTK.js and is not intended for public use.
 	 */
-	setSelectionList(selectionAttributeIDs: ISelectionNodeProperties):any;
+	setSelectionList(selectionAttributeIDs: ISelectionNodeProperties): boolean;
 }
 
 /**

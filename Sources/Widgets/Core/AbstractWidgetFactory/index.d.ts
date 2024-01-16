@@ -72,7 +72,7 @@ export interface vtkAbstractWidgetFactory<WidgetInstance extends vtkAbstractWidg
    * 
    * @param {Bounds} bounds 
    */
-  placeWidget(bounds: Bounds):any;
+  placeWidget(bounds: Bounds): void;
 
   /**
    * Get the place factor.
