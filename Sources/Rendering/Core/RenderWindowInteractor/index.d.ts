@@ -93,7 +93,7 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	 *
 	 * @default null
 	 */
-	getContainer(): HTMLElement;
+	getContainer(): Nullable<HTMLElement>;
 
 	/**
 	 *
@@ -828,6 +828,13 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	rotateEvent(args: any): any;
 
 	/**
+	 * Add an HTMLElement as the new container for the interactor.
+	 * All events will be bound to this new container.
+	 * Any old container will be removed along with its listeners.
+	 */
+	setContainer(container: Nullable<HTMLElement>): boolean;
+
+	/**
 	 * Turn on/off the automatic repositioning of lights as the camera moves.
 	 * @param lightFollowCamera
 	 */
@@ -992,12 +999,15 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 
 	/**
 	 *
-	 * @param container
+	 * @param container kept for backward compatibility.
+	 * @deprecated please use vtkRenderWindowInteractor.setContainer(container: HTMLElement)
+	 *     which will also bind events.
 	 */
 	bindEvents(container: any): void;
 
 	/**
 	 *
+	 * @deprecated please use vtkRenderWindowInteractor.setContainer(null) instead.
 	 */
 	unbindEvents(): void;
 
