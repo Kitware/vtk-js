@@ -523,8 +523,8 @@ export function vtkCCSMakePolysFromLines(
             let ptsEnd = npts - 1;
             if (endIdx === 1) {
               pit = npts - 1 - (completePoly ? 1 : 0);
-              ptsIt = pts + 1;
-              ptsEnd = pts + npts - (completePoly ? 1 : 0);
+              ptsIt = 1;
+              ptsEnd = npts - (completePoly ? 1 : 0);
             }
             while (ptsIt !== ptsEnd) {
               poly[--pit] = poly[ptsIt++];
