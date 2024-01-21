@@ -97,7 +97,8 @@ function vtkRenderWindow(publicAPI, model) {
   publicAPI.getStatistics = () => {
     const results = { propCount: 0, invisiblePropCount: 0, gpuMemoryMB: 0 };
     model._views.forEach((v) => {
-      results.gpuMemoryMB += v.getGraphicsMemoryInfo() / 1e6;
+      if (v.getGraphicsMemoryInfo)
+        results.gpuMemoryMB += v.getGraphicsMemoryInfo() / 1e6;
     });
     model.renderers.forEach((ren) => {
       const props = ren.getViewProps();
@@ -109,7 +110,10 @@ function vtkRenderWindow(publicAPI, model) {
           if (mpr && mpr.getPrimitiveCount) {
             const gmpr = gren.getViewNodeFor(mpr);
             if (gmpr) {
-              results.gpuMemoryMB += gmpr.getAllocatedGPUMemoryInBytes() / 1e6;
+              if (gmpr.getAllocatedGPUMemoryInBytes) {
+                results.gpuMemoryMB +=
+                  gmpr.getAllocatedGPUMemoryInBytes() / 1e6;
+              }
               const pcount = mpr.getPrimitiveCount();
               Object.keys(pcount).forEach((keyName) => {
                 if (!results[keyName]) {
