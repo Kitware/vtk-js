@@ -73,7 +73,7 @@ fn main(
   var tcoord: vec4<f32> = vec4<f32>(input.vertexVC.xy, -1, 1);
   var V: vec4<f32> = normalize(mapperUBO.FSQMatrix * tcoord); // vec2<f32>((input.tcoordVS.x - 0.5) * 2, -(input.tcoordVS.y - 0.5) * 2);
   // textureSampleLevel gets rid of some ugly artifacts
-  var background = textureSampleLevel(EnvironmentTexture, EnvironmentTextureSampler, vecToRectCoord(V.xyz), 0);
+  var background = textureSampleLevel(EnvironmentTexture, EnvironmentTextureSampler, vecToRectCoord(V.xyz), 0.0);
   var computedColor: vec4<f32> = vec4<f32>(background.rgb, 1);
 
   //VTK::RenderEncoder::Impl
