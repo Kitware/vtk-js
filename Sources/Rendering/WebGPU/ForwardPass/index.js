@@ -25,7 +25,7 @@ fn main(
 {
   var output: fragmentOutput;
 
-  var computedColor: vec4<f32> = clamp(textureSampleLevel(opaquePassColorTexture, finalPassSampler, input.tcoordVS, 0),vec4<f32>(0.0),vec4<f32>(1.0));
+  var computedColor: vec4<f32> = clamp(textureSampleLevel(opaquePassColorTexture, finalPassSampler, input.tcoordVS, 0.0),vec4<f32>(0.0),vec4<f32>(1.0));
 
   //VTK::RenderEncoder::Impl
   return output;
