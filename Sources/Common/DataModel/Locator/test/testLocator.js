@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import vtkLocator from 'vtk.js/Sources/Common/DataModel/Locator';
 
 test('Test vtkLocator instance', (t) => {

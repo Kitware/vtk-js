@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import { vec3 } from 'gl-matrix';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 

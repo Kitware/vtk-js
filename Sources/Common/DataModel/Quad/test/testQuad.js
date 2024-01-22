@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import vtkQuad from 'vtk.js/Sources/Common/DataModel/Quad';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import { QuadWithLineIntersectionState } from 'vtk.js/Sources/Common/DataModel/Quad/Constants';

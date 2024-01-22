@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 import vtkDataSetAttributes from 'vtk.js/Sources/Common/DataModel/DataSetAttributes';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';

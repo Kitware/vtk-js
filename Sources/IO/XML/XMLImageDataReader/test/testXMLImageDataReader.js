@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import vtkXMLImageDataReader from '../index';
 import vtkMath from '../../../../Common/Core/Math';
 

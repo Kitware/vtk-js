@@ -118,7 +118,6 @@
     "string-replace-loader": "3.1.0",
     "style-loader": "3.3.1",
     "tape": "5.5.3",
-    "tape-catch": "1.0.6",
     "webpack": "5.76.0",
     "webpack-bundle-analyzer": "4.5.0",
     "webpack-cli": "4.9.2",

@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 
 test('Test vtkPoints instance', (t) => {

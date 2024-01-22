@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 

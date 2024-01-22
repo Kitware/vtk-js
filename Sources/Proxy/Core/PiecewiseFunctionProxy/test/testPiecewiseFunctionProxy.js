@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 import vtkPiecewiseFunctionProxy from 'vtk.js/Sources/Proxy/Core/PiecewiseFunctionProxy';
 import Constants from 'vtk.js/Sources/Proxy/Core/PiecewiseFunctionProxy/Constants';

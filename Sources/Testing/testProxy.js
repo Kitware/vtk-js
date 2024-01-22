@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import macro from 'vtk.js/Sources/macros';
 import vtkProxyManager from 'vtk.js/Sources/Proxy/Core/ProxyManager';
 

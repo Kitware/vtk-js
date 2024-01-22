@@ -5,7 +5,7 @@ import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import baseline from './testSkyboxBackground.png';

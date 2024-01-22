@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
 import { getCellTriangles } from 'vtk.js/Sources/Filters/General/OBBTree/helper';

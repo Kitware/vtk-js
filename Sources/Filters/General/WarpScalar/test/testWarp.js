@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 import vtkWarpScalar from 'vtk.js/Sources/Filters/General/WarpScalar';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';

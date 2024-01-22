@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)

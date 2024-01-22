@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import vtkClipClosedSurface from 'vtk.js/Sources/Filters/General/ClipClosedSurface';
 import vtkLineSource from 'vtk.js/Sources/Filters/Sources/LineSource';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';

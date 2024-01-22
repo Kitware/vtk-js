@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkTextureMapToSphere from 'vtk.js/Sources/Filters/Texture/TextureMapToSphere';
 

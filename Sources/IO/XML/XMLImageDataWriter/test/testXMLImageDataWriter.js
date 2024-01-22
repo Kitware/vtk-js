@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import vtkImageDataWriter from '../index';
 import vtkImageData from '../../../../Common/DataModel/ImageData';
 
