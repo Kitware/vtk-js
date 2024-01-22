@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 import { boundPlane } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';

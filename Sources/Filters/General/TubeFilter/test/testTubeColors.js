@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';

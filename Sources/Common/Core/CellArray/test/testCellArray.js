@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';

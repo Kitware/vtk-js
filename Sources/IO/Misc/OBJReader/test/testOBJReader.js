@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkOBJReader from 'vtk.js/Sources/IO/Misc/OBJReader';
 import vtkPolyDataNormals from 'vtk.js/Sources/Filters/Core/PolyDataNormals';

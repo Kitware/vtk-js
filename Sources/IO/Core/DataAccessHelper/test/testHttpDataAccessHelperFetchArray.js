@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import HttpDataAccessHelper from '../HttpDataAccessHelper';
 
 test('Test array.ref.url is used', (t) => {

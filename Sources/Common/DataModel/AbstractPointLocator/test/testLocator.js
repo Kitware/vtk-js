@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import vtkAbstractPointLocator from 'vtk.js/Sources/Common/DataModel/AbstractPointLocator';
 
 test('Test vtkAbstractPointLocator instance', (t) => {

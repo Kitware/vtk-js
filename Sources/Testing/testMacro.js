@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import macro from 'vtk.js/Sources/macros';
 
 const MY_ENUM = {
@@ -140,7 +140,7 @@ test('Macro methods array tests', (t) => {
     DEFAULT_VALUES.myProp1,
     'Initial gets should match defaults'
   );
-  // we must wrap the non-existent call inside another function to avoid test program exiting, and tape-catch generating error.
+  // we must wrap the non-existent call inside another function to avoid test program exiting, and tape generating error.
   t.throws(
     () => myTestClass.setMyProp1(1, 1, 1),
     /TypeError/,

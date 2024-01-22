@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import { SlicingMode } from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';

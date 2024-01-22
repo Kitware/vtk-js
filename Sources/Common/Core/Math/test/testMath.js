@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 test('Test angleBetweenVector', (t) => {

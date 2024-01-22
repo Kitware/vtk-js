@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 import vtkImageArrayMapper from 'vtk.js/Sources/Rendering/Core/ImageArrayMapper';
 

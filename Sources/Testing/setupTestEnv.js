@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 // Load default classes for tests
 import '../IO/Core/DataAccessHelper/HtmlDataAccessHelper';

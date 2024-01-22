@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 

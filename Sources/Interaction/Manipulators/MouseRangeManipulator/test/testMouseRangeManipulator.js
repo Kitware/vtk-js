@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 import vtkMouseRangeManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseRangeManipulator';
 

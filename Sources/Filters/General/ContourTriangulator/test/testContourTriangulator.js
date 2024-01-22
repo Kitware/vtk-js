@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import vtkContourTriangulator from 'vtk.js/Sources/Filters/General/ContourTriangulator';
 import { reverseElements } from '../helper';
 

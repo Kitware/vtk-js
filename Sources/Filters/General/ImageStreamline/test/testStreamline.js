@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';

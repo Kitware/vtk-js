@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';

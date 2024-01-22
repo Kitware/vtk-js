@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
