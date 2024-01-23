@@ -23,3 +23,5 @@ jobs:
         run: npx commitlint --from=${{ github.event.pull_request.base.sha }}
       - name: Tests must not use test.only
         run: bash .github/workflows/test-only-check.sh
+      - name: API docs should generate without error
+        run: npm run doc:generate-api
