@@ -42,6 +42,7 @@ function fetchArrayTest(
     const timeout = setTimeout(() => {
       console.log('Ran into timeout during test.');
       resolve();
+      t.end();
     }, 100);
 
     reader.setUrl(url, { loadData: true }).then(
