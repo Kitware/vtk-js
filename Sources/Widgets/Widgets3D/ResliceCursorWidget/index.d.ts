@@ -75,7 +75,7 @@ export interface vtkResliceCursorWidget extends vtkAbstractWidgetFactory {
    * Return an array of the first and the last possible points of the plane
    * along its normal.
    * @param {ViewTypes} viewType
-   * @returns {[Vector3, Vector3]} first and last points
+   * @returns {Array<Vector3>} two Vector3 arrays (first and last points)
    */
   getPlaneExtremities(viewType: ViewTypes): Array<Vector3>;
 
