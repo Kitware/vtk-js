@@ -1,35 +1,17 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import MockDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/MockDataAccessHelper';
 
 function runTests(testCases) {
-  return new Promise((resolve) => {
-    // reverse test case array so that pop() returns the first test
-    testCases.reverse();
-
-    // definition of test runner method
-    // -> Runs all test cases until none are left, or an error occurs
-    const processNextTestCase = () => {
-      const testCase = testCases.pop();
-      if (!testCase) {
-        resolve();
-        return;
-      }
-
-      new Promise(testCase).then(
-        (_) => {
-          processNextTestCase();
-        },
-        (err) => {
-          console.error(err);
-        }
-      );
-    };
-
-    // start test sequence with first test
-    processNextTestCase();
+  let promise = Promise.resolve();
+  testCases.forEach((testCase) => {
+    promise = promise.then(() => new Promise(testCase));
   });
+  promise.catch((err) => {
+    console.error(err);
+  });
+  return promise;
 }
 
 function equals(t, actual, expected, description) {
@@ -103,7 +85,7 @@ function fetchArrayTest(
   };
 }
 
-test('Caching capabilities of vtkHttpDataSetReader with unlimited cache.', (t) => {
+test('Caching capabilities of vtkHttpDataSetReader with unlimited cache.', async (t) => {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
   reader.setDataAccessHelper(MockDataAccessHelper);
   reader.clearCache();
@@ -230,9 +212,10 @@ test('Disabled cache on vtkHttpDataSetReader.', (t) => {
   ];
 
   // verify that cache can be disable by setting maxCacheSize to "0", "null" and "undefined"
-  runTests([
+  await runTests([
     ...createDisabledCacheTests(0),
     ...createDisabledCacheTests(null),
     ...createDisabledCacheTests(undefined),
-  ]).then(t.end);
+  ]);
+  t.end();
 });
