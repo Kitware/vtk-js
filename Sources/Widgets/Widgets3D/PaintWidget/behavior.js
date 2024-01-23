@@ -32,42 +32,39 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleEvent = (callData) => {
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
-    if (manipulator && model.activeState && model.activeState.getActive()) {
-      const normal = model._camera.getDirectionOfProjection();
-      const up = model._camera.getViewUp();
-      const right = [];
-      vec3.cross(right, up, normal);
-      model.activeState.setUp(...up);
-      model.activeState.setRight(...right);
-      model.activeState.setDirection(...normal);
-
-      const { worldCoords } = manipulator.handleEvent(
-        callData,
-        model._apiSpecificRenderWindow
-      );
-
-      if (worldCoords.length) {
-        model.widgetState.setTrueOrigin(...worldCoords);
-        model.activeState.setOrigin(...worldCoords);
-
-        if (model.painting) {
-          const trailCircle = model.widgetState.addTrail();
-          trailCircle.set(
-            model.activeState.get(
-              'origin',
-              'up',
-              'right',
-              'direction',
-              'scale1'
-            )
-          );
-        }
-      }
-
-      publicAPI.invokeInteractionEvent();
-      return macro.EVENT_ABORT;
+    if (!(manipulator && model.activeState && model.activeState.getActive())) {
+      return macro.VOID;
     }
-    return macro.VOID;
+
+    const normal = model._camera.getDirectionOfProjection();
+    const up = model._camera.getViewUp();
+    const right = [];
+    vec3.cross(right, up, normal);
+    model.activeState.setUp(...up);
+    model.activeState.setRight(...right);
+    model.activeState.setDirection(...normal);
+
+    const { worldCoords } = manipulator.handleEvent(
+      callData,
+      model._apiSpecificRenderWindow
+    );
+
+    if (!worldCoords.length) {
+      return macro.VOID;
+    }
+
+    model.widgetState.setTrueOrigin(...worldCoords);
+    model.activeState.setOrigin(...worldCoords);
+
+    if (model.painting) {
+      const trailCircle = model.widgetState.addTrail();
+      trailCircle.set(
+        model.activeState.get('origin', 'up', 'right', 'direction', 'scale1')
+      );
+    }
+
+    publicAPI.invokeInteractionEvent();
+    return macro.EVENT_ABORT;
   };
 
   publicAPI.grabFocus = () => {
