@@ -1,5 +1,7 @@
 import { mat4 } from 'gl-matrix';
-import vtkAbstractWidgetFactory from '../../Core/AbstractWidgetFactory';
+import { vtkAbstractWidgetFactory, IAbstractWidgetFactoryInitialValues } from '../../Core/AbstractWidgetFactory';
+import vtkResliceCursorWidgetDefaultInstance from './behavior';
+import vtkAbstractWidget from '../../Core/AbstractWidget'
 import vtkImageData from '../../../Common/DataModel/ImageData';
 import vtkImageReslice from '../../../Imaging/Core/ImageReslice';
 import vtkPlaneSource from '../../../Filters/Sources/PlaneSource';
@@ -16,7 +18,7 @@ export interface IDisplayScaleParams {
   rendererPixelDims: Vector2
 }
 
-export interface vtkResliceCursorWidget extends vtkAbstractWidgetFactory {
+export interface vtkResliceCursorWidget<WidgetInstance extends vtkAbstractWidget = vtkResliceCursorWidgetDefaultInstance> extends vtkAbstractWidgetFactory<WidgetInstance> {
 
   /**
    * @param {ViewTypes} viewType
@@ -81,7 +83,7 @@ export interface vtkResliceCursorWidget extends vtkAbstractWidgetFactory {
 
 }
 
-export interface IResliceCursorWidgetInitialValues {}
+export interface IResliceCursorWidgetInitialValues<WidgetInstance extends vtkAbstractWidget> extends IAbstractWidgetFactoryInitialValues<WidgetInstance> {}
 
 /**
  * Method used to decorate a given object (publicAPI+model) with vtkResliceCursorWidget characteristics.
@@ -90,18 +92,18 @@ export interface IResliceCursorWidgetInitialValues {}
  * @param model object on which data structure will be bounds (protected)
  * @param initialValues (default: {})
  */
-export function extend(
+export function extend<WidgetInstance extends vtkAbstractWidget>(
   publicAPI: object,
   model: object,
-  initialValues?: IResliceCursorWidgetInitialValues
-): vtkResliceCursorWidget;
+  initialValues?: IResliceCursorWidgetInitialValues<WidgetInstance>
+): void;
 
 /**
  * Method used to create a new instance of vtkResliceCursorWidget
  * 
  * @param initialValues for pre-setting some of its content
  */
-export function newInstance(initialValues?: IResliceCursorWidgetInitialValues): vtkResliceCursorWidget;
+export function newInstance<WidgetInstance extends vtkAbstractWidget = vtkResliceCursorWidgetDefaultInstance>(initialValues?: IResliceCursorWidgetInitialValues<WidgetInstance>): vtkResliceCursorWidget<WidgetInstance>;
 
 export declare const vtkResliceCursorWidget: {
   newInstance: typeof newInstance;

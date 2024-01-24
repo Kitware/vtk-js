@@ -1,8 +1,9 @@
-import vtkAbstractWidgetFactory from "../../Core/AbstractWidgetFactory";
+import { vtkAbstractWidgetFactory, IAbstractWidgetFactoryInitialValues } from "../../Core/AbstractWidgetFactory";
+import vtkAbstractWidget from '../../Core/AbstractWidget'
 import { Bounds } from "../../../types";
 import { ViewTypes } from "../../Core/WidgetManager/Constants";
 
-export interface vtkInteractiveOrientationWidget extends vtkAbstractWidgetFactory {
+export interface vtkInteractiveOrientationWidget<WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget> extends vtkAbstractWidgetFactory<WidgetInstance> {
   /**
    * Set the widget bounds
    * 
@@ -16,6 +17,8 @@ export interface vtkInteractiveOrientationWidget extends vtkAbstractWidgetFactor
   getRepresentationForViewType(viewType: ViewTypes): unknown;
 }
 
+export interface IInteractiveOrientationWidgetInitialValues<WidgetInstance extends vtkAbstractWidget> extends IAbstractWidgetFactoryInitialValues<WidgetInstance> {}
+
 /**
  * Method use to decorate a given object (publicAPI+model) with vtkInteractiveOrientationWidget characteristics.
  *
@@ -23,14 +26,14 @@ export interface vtkInteractiveOrientationWidget extends vtkAbstractWidgetFactor
  * @param model object on which data structure will be bounds (protected)
  * @param {object} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues? : Record<string, unknown>): void;
+export function extend<WidgetInstance extends vtkAbstractWidget>(publicAPI: object, model: object, initialValues? : IInteractiveOrientationWidgetInitialValues<WidgetInstance>): void;
 
 /**
  * Creates a new instance of vtkInteractiveOrientationWidget
  * 
  * @param {object} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues? : Record<string, unknown>): vtkInteractiveOrientationWidget;
+export function newInstance<WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget>(initialValues? : IInteractiveOrientationWidgetInitialValues<WidgetInstance>): vtkInteractiveOrientationWidget<WidgetInstance>;
 
 export declare const vtkInteractiveOrientationWidget: {
 	newInstance: typeof newInstance,
