@@ -63,6 +63,15 @@ export interface vtkDataArray extends vtkObject {
 	getData(): number[]|TypedArray;
 
 	/**
+	 * Call this method when the underlying data has changed
+	 * This method calls `modified()`
+	 * For example, when you need to modify chunks of the array, it is faster
+	 * to get the underlying array with `getData()`, modify it, and then call
+	 * `dataChange()`.
+	 */
+	dataChange(): void;
+
+	/**
 	 * Get the range of the given component.
 	 *
 	 * @param {Number} componentIndex (default: -1)
