@@ -49,7 +49,7 @@ export default function widgetBehavior(publicAPI, model) {
       model._apiSpecificRenderWindow
     );
 
-    if (!worldCoords.length) {
+    if (!worldCoords?.length) {
       return macro.VOID;
     }
 
