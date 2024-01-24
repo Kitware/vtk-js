@@ -2,7 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 import vtkAbstractPicker from 'vtk.js/Sources/Rendering/Core/AbstractPicker';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import { mat4, vec4 } from 'gl-matrix';
+import { mat4, vec3, vec4 } from 'gl-matrix';
 
 const { vtkErrorMacro } = macro;
 const { vtkWarningMacro } = macro;
@@ -100,10 +100,8 @@ function vtkPicker(publicAPI, model) {
   function pick3DInternal(renderer, tolerance, p1World, p2World) {
     const p1Mapper = new Float64Array(4);
     const p2Mapper = new Float64Array(4);
-    const t = [];
 
     const ray = [];
-    let pickable;
     const hitPosition = [];
 
     if (!renderer) {
@@ -117,111 +115,93 @@ function vtkPicker(publicAPI, model) {
     //  Note that only vtkProp3D's can be picked by vtkPicker.
     const props = model.pickFromList ? model.pickList : renderer.getActors();
 
-    const scale = [];
+    // pre-allocate some arrays.
+    const transformScale = new Float64Array(3);
+    const pickedPosition = new Float64Array(3);
+
+    // Loop over props.
+    // Transform ray (defined from position of camera to selection point) into coordinates of mapper (not
+    // transformed to actors coordinates!  Reduces overall computation!!!).
+    // Note that only vtkProp3D's can be picked by vtkPicker.
     props.forEach((prop) => {
       const mapper = prop.getMapper();
-      pickable =
+      const propIsNotFullyTranslucent =
+        prop.getProperty?.()?.getOpacity() > 0.0;
+      const pickable =
         prop.getNestedPickable() &&
         prop.getNestedVisibility() &&
-        prop.getProperty().getOpacity() > 0.0;
+        propIsNotFullyTranslucent;
 
-      //  If actor can be picked, get its composite matrix, invert it, and
-      //  use the inverted matrix to transform the ray points into mapper
-      //  coordinates.
-      if (pickable) {
-        model.transformMatrix = prop.getMatrix().slice(0);
+      if (!pickable) {
+        // prop cannot be picked
+        return;
+      }
 
-        mat4.transpose(model.transformMatrix, model.transformMatrix);
-        mat4.invert(model.transformMatrix, model.transformMatrix);
+      // The prop is candidate for picking:
+      // - get its composite matrix and invert it
+      // - use the inverted matrix to transform the ray points into mapper coordinates
+      model.transformMatrix = prop.getMatrix().slice(0);
+      mat4.transpose(model.transformMatrix, model.transformMatrix);
 
-        // Extract scale
-        const col1 = [
-          model.transformMatrix[0],
-          model.transformMatrix[1],
-          model.transformMatrix[2],
-        ];
-        const col2 = [
-          model.transformMatrix[4],
-          model.transformMatrix[5],
-          model.transformMatrix[6],
-        ];
-        const col3 = [
-          model.transformMatrix[8],
-          model.transformMatrix[9],
-          model.transformMatrix[10],
-        ];
+      mat4.invert(model.transformMatrix, model.transformMatrix);
 
-        scale[0] = vtkMath.norm(col1);
-        scale[1] = vtkMath.norm(col2);
-        scale[2] = vtkMath.norm(col3);
+      vec4.transformMat4(p1Mapper, p1World, model.transformMatrix);
+      vec4.transformMat4(p2Mapper, p2World, model.transformMatrix);
 
-        vec4.transformMat4(p1Mapper, p1World, model.transformMatrix);
-        vec4.transformMat4(p2Mapper, p2World, model.transformMatrix);
+      vec3.scale(p1Mapper, p1Mapper, 1 / p1Mapper[3]);
+      vec3.scale(p2Mapper, p2Mapper, 1 / p2Mapper[3]);
 
-        p1Mapper[0] /= p1Mapper[3];
-        p1Mapper[1] /= p1Mapper[3];
-        p1Mapper[2] /= p1Mapper[3];
+      vtkMath.subtract(p2Mapper, p1Mapper, ray);
 
-        p2Mapper[0] /= p2Mapper[3];
-        p2Mapper[1] /= p2Mapper[3];
-        p2Mapper[2] /= p2Mapper[3];
+      // We now have the ray endpoints in mapper coordinates.
+      // Compare it with the mapper bounds to check if intersection is possible.
 
-        for (let i = 0; i < 3; i++) {
-          ray[i] = p2Mapper[i] - p1Mapper[i];
-        }
+      // Get the bounding box of the mapper.
+      // Note that the tolerance is added to the bounding box to make sure things on the edge of the
+      // bounding box are picked correctly.
+      const bounds = mapper
+        ? vtkBoundingBox.inflate(mapper.getBounds(), tolerance)
+        : [...vtkBoundingBox.INIT_BOUNDS];
 
-        //  Have the ray endpoints in mapper space, now need to compare this
-        //  with the mapper bounds to see whether intersection is possible.
-        //
-        //  Get the bounding box of the modeller.  Note that the tolerance is
-        //  added to the bounding box to make sure things on the edge of the
-        //  bounding box are picked correctly.
-        const bounds = mapper
-          ? vtkBoundingBox.inflate(mapper.getBounds(), tolerance)
-          : [0, 0, 0, 0, 0, 0];
+      if (vtkBoundingBox.intersectBox(bounds, p1Mapper, ray, hitPosition, [])) {
+        mat4.getScaling(transformScale, model.transformMatrix);
 
-        if (
-          vtkBoundingBox.intersectBox(bounds, p1Mapper, ray, hitPosition, t)
-        ) {
-          t[0] = publicAPI.intersectWithLine(
-            p1Mapper,
-            p2Mapper,
-            tolerance * 0.333 * (scale[0] + scale[1] + scale[2]),
-            prop,
-            mapper
-          );
+        // TODO: better naming?
+        const t = publicAPI.intersectWithLine(
+          p1Mapper,
+          p2Mapper,
+          tolerance *
+            0.333 *
+            (transformScale[0] + transformScale[1] + transformScale[2]),
+          prop,
+          mapper
+        );
 
-          if (t[0] < Number.MAX_VALUE) {
-            const p = [];
-            p[0] = (1.0 - t[0]) * p1World[0] + t[0] * p2World[0];
-            p[1] = (1.0 - t[0]) * p1World[1] + t[0] * p2World[1];
-            p[2] = (1.0 - t[0]) * p1World[2] + t[0] * p2World[2];
+        if (t < Number.MAX_VALUE) {
+          pickedPosition[0] = (1.0 - t) * p1World[0] + t * p2World[0];
+          pickedPosition[1] = (1.0 - t) * p1World[1] + t * p2World[1];
+          pickedPosition[2] = (1.0 - t) * p1World[2] + t * p2World[2];
 
-            let actorId = -1;
-            for (let i = 0; i < model.actors.length; i++) {
-              if (model.actors[i] === prop) {
-                actorId = i;
-                break;
-              }
+          const actorIndex = model.actors.indexOf(prop);
+
+          if (actorIndex !== -1) {
+            // If already in list, compare the previous position we the new one,
+            // and update if the new is closer.
+            const previousPickedPosition = model.pickedPositions[actorIndex];
+            if (
+              vtkMath.distance2BetweenPoints(p1World, pickedPosition) <
+              vtkMath.distance2BetweenPoints(p1World, previousPickedPosition)
+            ) {
+              model.pickedPositions[actorIndex] = pickedPosition.slice(0);
             }
-
-            if (actorId !== -1) {
-              // If already in list, set point to the closest point
-              const oldPoint = model.pickedPositions[actorId];
-              if (
-                vtkMath.distance2BetweenPoints(p1World, p) <
-                vtkMath.distance2BetweenPoints(p1World, oldPoint)
-              ) {
-                model.pickedPositions[actorId] = p;
-              }
-            } else {
-              model.actors.push(prop);
-              model.pickedPositions.push(p);
-            }
+          } else {
+            model.actors.push(prop);
+            model.pickedPositions.push(pickedPosition.slice(0));
           }
-        } // if visible and pickable and not transparent
+        }
       }
     });
+
     // sort array by distance
     const tempArray = [];
     for (let i = 0; i < model.pickedPositions.length; i++) {
@@ -259,11 +239,7 @@ function vtkPicker(publicAPI, model) {
     }
 
     const center = mapper.getCenter();
-
-    const ray = [];
-    for (let i = 0; i < 3; i++) {
-      ray[i] = p2[i] - p1[i];
-    }
+    const ray = vec3.subtract(new Float64Array(3), p2, p1);
 
     const rayFactor = vtkMath.dot(ray, ray);
     if (rayFactor === 0.0) {
@@ -282,10 +258,11 @@ function vtkPicker(publicAPI, model) {
   // To be overridden in subclasses
   publicAPI.pick = (selection, renderer) => {
     if (selection.length !== 3) {
-      vtkWarningMacro('vtkPicker::pick: selectionPt needs three components');
+      vtkWarningMacro('vtkPicker.pick - selection needs three components');
     }
 
     if (!renderer) {
+      vtkErrorMacro('vtkPicker.pick - renderer cannot be null');
       throw new Error('renderer cannot be null');
     }
 
@@ -300,7 +277,6 @@ function vtkPicker(publicAPI, model) {
     model.selectionPoint[1] = selectionY;
     model.selectionPoint[2] = selectionZ;
 
-    let displayCoords = [];
     const p1World = new Float64Array(4);
     const p2World = new Float64Array(4);
 
@@ -312,8 +288,15 @@ function vtkPicker(publicAPI, model) {
 
     const view = renderer.getRenderWindow().getViews()[0];
     const dims = view.getViewportSize(renderer);
+
+    if (dims[1] === 0) {
+      vtkWarningMacro('vtkPicker.pick - viewport area is 0');
+      return;
+    }
+
     const aspect = dims[0] / dims[1];
 
+    let displayCoords = [];
     displayCoords = renderer.worldToNormalizedDisplay(
       cameraFP[0],
       cameraFP[1],
@@ -393,6 +376,38 @@ function vtkPicker(publicAPI, model) {
       computeTolerance(selectionZ, aspect, renderer) * model.tolerance;
 
     pick3DInternal(model.renderer, tolerance, p1World, p2World);
+  };
+
+  publicAPI.pick3DPoint = (selectionPoint, focalPoint, renderer) => {
+    if (!renderer) {
+      throw new Error('renderer cannot be null');
+    }
+
+    initialize();
+    model.renderer = renderer;
+
+    const selectionX = selectionPoint[0];
+    const selectionY = selectionPoint[1];
+    const selectionZ = selectionPoint[2];
+
+    model.selectionPoint[0] = selectionX;
+    model.selectionPoint[1] = selectionY;
+    model.selectionPoint[2] = selectionZ;
+
+    const view = renderer.getRenderWindow().getViews()[0];
+    const dims = view.getViewportSize(renderer);
+
+    if (dims[1] === 0) {
+      vtkWarningMacro('vtkPicker.pick3DPoint - viewport area is 0');
+      return;
+    }
+
+    const aspect = dims[0] / dims[1];
+
+    const tolerance =
+      computeTolerance(selectionZ, aspect, renderer) * model.tolerance;
+
+    pick3DInternal(renderer, tolerance, selectionPoint, focalPoint);
   };
 }
 
