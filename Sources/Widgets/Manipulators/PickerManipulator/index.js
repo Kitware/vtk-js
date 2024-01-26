@@ -14,11 +14,13 @@ function vtkPickerManipulator(publicAPI, model) {
     const { position, pokedRenderer } = callData;
 
     model.picker.pick([position.x, position.y, 0.0], pokedRenderer);
-    if (model.picker.getActors().length > 0) {
+    if (model.picker.getPickedPositions().length > 0) {
       model.position = model.picker.getPickedPositions()[0];
+    } else {
+      model.position = null;
     }
     return {
-      worldCoords: model.position || null,
+      worldCoords: model.position,
     };
   };
 }
