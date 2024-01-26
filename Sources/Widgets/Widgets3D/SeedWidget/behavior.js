@@ -38,13 +38,13 @@ export default function widgetBehavior(publicAPI, model) {
     const worldCoords = currentWorldCoords(e);
 
     if (model.activeState === moveHandle) {
-      if (!moveHandle.getOrigin()) {
+      if (!moveHandle.getOrigin() && worldCoords) {
         moveHandle.setOrigin(worldCoords);
+        model.previousPosition = [...worldCoords];
       }
     }
     model._isDragging = true;
     model._apiSpecificRenderWindow.setCursor('grabbing');
-    model.previousPosition = [...currentWorldCoords(e)];
     publicAPI.invokeStartInteractionEvent();
     return macro.EVENT_ABORT;
   };
@@ -73,8 +73,10 @@ export default function widgetBehavior(publicAPI, model) {
     }
     if (!model.activeState) throw Error('no activestate');
     const worldCoords = currentWorldCoords(e);
-    model.activeState.setOrigin(worldCoords);
-    model.previousPosition = worldCoords;
+    if (worldCoords) {
+      model.activeState.setOrigin(worldCoords);
+      model.previousPosition = worldCoords;
+    }
     return macro.VOID;
   };
 
