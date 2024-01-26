@@ -4,8 +4,20 @@ import { vec3 } from 'gl-matrix';
 export default function widgetBehavior(publicAPI, model) {
   model.painting = model._factory.getPainting();
 
-  publicAPI.handleLeftButtonPress = () => {
-    if (!model.activeState || !model.activeState.getActive()) {
+  publicAPI.handleLeftButtonPress = (callData) => {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
+    if (!(manipulator && model.activeState && model.activeState.getActive())) {
+      return macro.VOID;
+    }
+
+    const { worldCoords } = manipulator.handleEvent(
+      callData,
+      model._apiSpecificRenderWindow
+    );
+
+    if (!worldCoords?.length) {
+      model.painting = false;
       return macro.VOID;
     }
 
@@ -26,7 +38,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.widgetState.clearTrailList();
     }
     model.painting = false;
-    return model.hasFocus ? macro.EVENT_ABORT : macro.VOID;
+    return macro.VOID;
   };
 
   publicAPI.handleEvent = (callData) => {
@@ -61,6 +73,8 @@ export default function widgetBehavior(publicAPI, model) {
       trailCircle.set(
         model.activeState.get('origin', 'up', 'right', 'direction', 'scale1')
       );
+    } else {
+      return macro.VOID;
     }
 
     publicAPI.invokeInteractionEvent();
