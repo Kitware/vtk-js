@@ -92,7 +92,7 @@ function createView(gc, viewType, widget) {
  * If you don't, the viewUp computation will fail because it uses the previous viewUp value.
  * The manipulations I did in the example, have to be exactly reported in the test (one click = one rotation step = update all views)
  */
-test('Test rendering when several rotations plane', (t) => {
+test('Test rendering when several rotations plane', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.comment('ResliceCursorWidgets rendering');
 
@@ -161,209 +161,206 @@ test('Test rendering when several rotations plane', (t) => {
   const reader = gc.registerResource(
     vtkHttpDataSetReader.newInstance({ fetchGzip: true })
   );
-  reader.setUrl(`${__BASE_PATH__}/Data/volume/LIDC2.vti`).then(() => {
-    reader.loadData().then(() => {
-      const image = reader.getOutputData();
-      widget.setImage(image);
+  await reader.setUrl(`${__BASE_PATH__}/Data/volume/LIDC2.vti`);
+  await reader.loadData();
 
-      viewAttributes.forEach((obj, i) => {
-        obj.reslice.setInputData(image);
-        obj.renderer.addActor(obj.resliceActor);
+  const image = reader.getOutputData();
+  widget.setImage(image);
 
-        const reslice = obj.reslice;
-        const viewType = xyzToViewType[i];
+  viewAttributes.forEach((obj, i) => {
+    obj.reslice.setInputData(image);
+    obj.renderer.addActor(obj.resliceActor);
 
-        viewAttributes.forEach((v) => {
-          v.widgetInstance.onInteractionEvent(
-            ({ computeFocalPointOffset, canUpdateFocalPoint }) => {
-              const activeViewType = widget
-                .getWidgetState()
-                .getActiveViewType();
-              const keepFocalPointPosition =
-                activeViewType !== viewType && canUpdateFocalPoint;
-              updateReslice({
-                viewType,
-                reslice,
-                actor: obj.resliceActor,
-                renderer: obj.renderer,
-                resetFocalPoint: false,
-                keepFocalPointPosition,
-                computeFocalPointOffset,
-              });
-            }
-          );
-        });
+    const reslice = obj.reslice;
+    const viewType = xyzToViewType[i];
 
-        updateReslice({
-          viewType,
-          reslice,
-          actor: obj.resliceActor,
-          renderer: obj.renderer,
-          resetFocalPoint: true, // At first initilization, center the focal point to the image center
-          keepFocalPointPosition: false, // Don't update the focal point as we already set it to the center of the image
-          computeFocalPointOffset: true, // Allow to compute the current offset between display reslice center and display focal point
-        });
-        obj.renderWindow.render();
-      });
-
-      // ----------------------------------------------------------------------
-      // Defines methods used for testing
-
-      /**
-       * Update all views after being moved axis or center
-       */
-      function updateViews(keepFocalPointPosition = false) {
-        viewAttributes.forEach((obj, i) => {
+    viewAttributes.forEach((v) => {
+      v.widgetInstance.onInteractionEvent(
+        ({ computeFocalPointOffset, canUpdateFocalPoint }) => {
+          const activeViewType = widget.getWidgetState().getActiveViewType();
+          const keepFocalPointPosition =
+            activeViewType !== viewType && canUpdateFocalPoint;
           updateReslice({
-            viewType: xyzToViewType[i],
-            reslice: obj.reslice,
+            viewType,
+            reslice,
             actor: obj.resliceActor,
             renderer: obj.renderer,
             resetFocalPoint: false,
             keepFocalPointPosition,
-            computeFocalPointOffset: false,
+            computeFocalPointOffset,
           });
-          obj.renderWindow.render();
-        });
-      }
-
-      /**
-       * Update the reslice view and get correct compared values (camera focal points and view up, origin, point1 and point2)
-       * @param {ViewType} viewType Defines view type
-       */
-      function updateView(viewType) {
-        const viewObj = viewAttributes.find((obj) => obj.viewType === viewType);
-        updateReslice({
-          viewType,
-          reslice: viewObj.reslice,
-          actor: viewObj.resliceActor,
-          renderer: viewObj.renderer,
-          resetFocalPoint: false,
-          keepFocalPointPosition: true,
-          computeFocalpointOffset: false,
-        });
-
-        const camera = viewObj.renderer.getActiveCamera();
-        return {
-          focalPoint: camera.getFocalPoint(),
-          viewUp: camera.getViewUp(),
-        };
-      }
-
-      /**
-       * Update the reslice view and compare it to ground truthes values
-       * @param {ViewType} viewType Defines the viewType
-       * @param {Object} expectedValues Contains ground truthes values that will be compared (focalPoint, viewUp, origin, point1, point2)
-       * @returns {Object} Contains compared values extacted from views (focal point, viewup, origin, point1, point2)
-       */
-      function updateAndCompareView(viewType, expectedValues) {
-        const comparedValues = updateView(viewType);
-
-        t.deepEqual(
-          vtkMath.roundVector(comparedValues.focalPoint, [], PRECISION),
-          vtkMath.roundVector(expectedValues.focalPoint, [], PRECISION),
-          `Camera focal point on ${viewType}`
-        );
-        t.deepEqual(
-          vtkMath.roundVector(comparedValues.viewUp, [], PRECISION),
-          vtkMath.roundVector(expectedValues.viewUp, [], PRECISION),
-          `Camera view up on ${viewType}`
-        );
-        return comparedValues;
-      }
-
-      // ----------------------------------------------------------------------
-      // Check initialization
-      // Check X view
-      t.comment('Initialization');
-      updateAndCompareView(ViewTypes.YZ_PLANE, {
-        focalPoint: [179.296875, 179.296875, 165],
-        viewUp: [0, 0, 1],
-        origin: [179.296875, -0.703125, -1.25],
-        point1: [179.296875, 359.296875, -1.25],
-        point2: [179.296875, -0.703125, 331.25],
-      });
-      // Check Y view
-      updateAndCompareView(ViewTypes.XZ_PLANE, {
-        focalPoint: [179.296875, 179.296875, 165],
-        viewUp: [0, 0, 1],
-        origin: [-0.703125, 179.296875, -1.25],
-        point1: [359.296875, 179.296875, -1.25],
-        point2: [-0.703125, 179.296875, 331.25],
-      });
-      // Check Z view
-      updateAndCompareView(ViewTypes.XY_PLANE, {
-        focalPoint: [179.296875, 179.296875, 165],
-        viewUp: [0, -1, 0],
-        origin: [-0.703125, 359.296875, 165],
-        point1: [359.296875, 359.296875, 165],
-        point2: [-0.703125, -0.703125, 165],
-      });
-
-      // ----------------------------------------------------------------------
-      t.comment('Rotate Z by 45 degrees around Y');
-      const xzWidget = viewAttributes[viewTypeToXYZ[ViewTypes.XZ_PLANE]];
-      xzWidget.widgetInstance.rotateLineInView(
-        'XinY',
-        vtkMath.radiansFromDegrees(45)
+        }
       );
-      // Check X view
-      const XView45 = updateAndCompareView(ViewTypes.YZ_PLANE, {
-        focalPoint: [179.296875, 179.296875, 165],
-        viewUp: [-0.707106, 0, 0.707106],
-        origin: [345.54687, -0.703125, -1.25],
-        point1: [345.54687, 359.296875, -1.25],
-        point2: [13.04687, -0.703125, 331.25],
-      });
-      // Check Y view
-      const YView45 = updateAndCompareView(ViewTypes.XZ_PLANE, {
-        focalPoint: [179.296875, 179.296875, 165],
-        viewUp: [0, 0, 1],
-        origin: [-0.703125, 179.296875, -1.25],
-        point1: [359.296875, 179.296875, -1.25],
-        point2: [-0.703125, 179.296875, 331.25],
-      });
-      // Check Z view
-      const ZView45 = updateAndCompareView(ViewTypes.XY_PLANE, {
-        focalPoint: [179.296875, 179.296875, 165],
-        viewUp: [0, -1, 0],
-        origin: [13.04687, 359.296875, -1.25],
-        point1: [345.54687, 359.296875, 331.25],
-        point2: [13.04687, -0.703125, -1.25],
-      });
-
-      // ----------------------------------------------------------------------
-      t.comment('Rotate 7 times Y by 5 degrees around Z (35°)');
-      // Simulate increment of 5, seven times to have 35°
-      for (let i = 0; i < 7; i++) {
-        xzWidget.widgetInstance.rotateLineInView(
-          'YinZ',
-          vtkMath.radiansFromDegrees(5)
-        );
-        updateViews(true);
-      }
-      // Check X view
-      updateView(ViewTypes.YZ_PLANE);
-      // Check Y view
-      updateView(ViewTypes.XZ_PLANE);
-      // Check Z view
-      updateView(ViewTypes.XY_PLANE);
-
-      // ----------------------------------------------------------------------
-      t.comment('Rotate Z by -35 degrees around Y');
-      xzWidget.widgetInstance.rotateLineInView(
-        'YinZ',
-        vtkMath.radiansFromDegrees(-35)
-      );
-
-      // Check X view
-      updateAndCompareView(ViewTypes.YZ_PLANE, XView45);
-      // Check Y view
-      updateAndCompareView(ViewTypes.XZ_PLANE, YView45);
-      // Check Z view
-      updateAndCompareView(ViewTypes.XY_PLANE, ZView45);
-
-      gc.releaseResources();
     });
+
+    updateReslice({
+      viewType,
+      reslice,
+      actor: obj.resliceActor,
+      renderer: obj.renderer,
+      resetFocalPoint: true, // At first initilization, center the focal point to the image center
+      keepFocalPointPosition: false, // Don't update the focal point as we already set it to the center of the image
+      computeFocalPointOffset: true, // Allow to compute the current offset between display reslice center and display focal point
+    });
+    obj.renderWindow.render();
   });
+
+  // ----------------------------------------------------------------------
+  // Defines methods used for testing
+
+  /**
+   * Update all views after being moved axis or center
+   */
+  function updateViews(keepFocalPointPosition = false) {
+    viewAttributes.forEach((obj, i) => {
+      updateReslice({
+        viewType: xyzToViewType[i],
+        reslice: obj.reslice,
+        actor: obj.resliceActor,
+        renderer: obj.renderer,
+        resetFocalPoint: false,
+        keepFocalPointPosition,
+        computeFocalPointOffset: false,
+      });
+      obj.renderWindow.render();
+    });
+  }
+
+  /**
+   * Update the reslice view and get correct compared values (camera focal points and view up, origin, point1 and point2)
+   * @param {ViewType} viewType Defines view type
+   */
+  function updateView(viewType) {
+    const viewObj = viewAttributes.find((obj) => obj.viewType === viewType);
+    updateReslice({
+      viewType,
+      reslice: viewObj.reslice,
+      actor: viewObj.resliceActor,
+      renderer: viewObj.renderer,
+      resetFocalPoint: false,
+      keepFocalPointPosition: true,
+      computeFocalpointOffset: false,
+    });
+
+    const camera = viewObj.renderer.getActiveCamera();
+    return {
+      focalPoint: camera.getFocalPoint(),
+      viewUp: camera.getViewUp(),
+    };
+  }
+
+  /**
+   * Update the reslice view and compare it to ground truthes values
+   * @param {ViewType} viewType Defines the viewType
+   * @param {Object} expectedValues Contains ground truthes values that will be compared (focalPoint, viewUp, origin, point1, point2)
+   * @returns {Object} Contains compared values extacted from views (focal point, viewup, origin, point1, point2)
+   */
+  function updateAndCompareView(viewType, expectedValues) {
+    const comparedValues = updateView(viewType);
+
+    t.deepEqual(
+      vtkMath.roundVector(comparedValues.focalPoint, [], PRECISION),
+      vtkMath.roundVector(expectedValues.focalPoint, [], PRECISION),
+      `Camera focal point on ${viewType}`
+    );
+    t.deepEqual(
+      vtkMath.roundVector(comparedValues.viewUp, [], PRECISION),
+      vtkMath.roundVector(expectedValues.viewUp, [], PRECISION),
+      `Camera view up on ${viewType}`
+    );
+    return comparedValues;
+  }
+
+  // ----------------------------------------------------------------------
+  // Check initialization
+  // Check X view
+  t.comment('Initialization');
+  updateAndCompareView(ViewTypes.YZ_PLANE, {
+    focalPoint: [179.296875, 179.296875, 165],
+    viewUp: [0, 0, 1],
+    origin: [179.296875, -0.703125, -1.25],
+    point1: [179.296875, 359.296875, -1.25],
+    point2: [179.296875, -0.703125, 331.25],
+  });
+  // Check Y view
+  updateAndCompareView(ViewTypes.XZ_PLANE, {
+    focalPoint: [179.296875, 179.296875, 165],
+    viewUp: [0, 0, 1],
+    origin: [-0.703125, 179.296875, -1.25],
+    point1: [359.296875, 179.296875, -1.25],
+    point2: [-0.703125, 179.296875, 331.25],
+  });
+  // Check Z view
+  updateAndCompareView(ViewTypes.XY_PLANE, {
+    focalPoint: [179.296875, 179.296875, 165],
+    viewUp: [0, -1, 0],
+    origin: [-0.703125, 359.296875, 165],
+    point1: [359.296875, 359.296875, 165],
+    point2: [-0.703125, -0.703125, 165],
+  });
+
+  // ----------------------------------------------------------------------
+  t.comment('Rotate Z by 45 degrees around Y');
+  const xzWidget = viewAttributes[viewTypeToXYZ[ViewTypes.XZ_PLANE]];
+  xzWidget.widgetInstance.rotateLineInView(
+    'XinY',
+    vtkMath.radiansFromDegrees(45)
+  );
+  // Check X view
+  const XView45 = updateAndCompareView(ViewTypes.YZ_PLANE, {
+    focalPoint: [179.296875, 179.296875, 165],
+    viewUp: [-0.707106, 0, 0.707106],
+    origin: [345.54687, -0.703125, -1.25],
+    point1: [345.54687, 359.296875, -1.25],
+    point2: [13.04687, -0.703125, 331.25],
+  });
+  // Check Y view
+  const YView45 = updateAndCompareView(ViewTypes.XZ_PLANE, {
+    focalPoint: [179.296875, 179.296875, 165],
+    viewUp: [0, 0, 1],
+    origin: [-0.703125, 179.296875, -1.25],
+    point1: [359.296875, 179.296875, -1.25],
+    point2: [-0.703125, 179.296875, 331.25],
+  });
+  // Check Z view
+  const ZView45 = updateAndCompareView(ViewTypes.XY_PLANE, {
+    focalPoint: [179.296875, 179.296875, 165],
+    viewUp: [0, -1, 0],
+    origin: [13.04687, 359.296875, -1.25],
+    point1: [345.54687, 359.296875, 331.25],
+    point2: [13.04687, -0.703125, -1.25],
+  });
+
+  // ----------------------------------------------------------------------
+  t.comment('Rotate 7 times Y by 5 degrees around Z (35°)');
+  // Simulate increment of 5, seven times to have 35°
+  for (let i = 0; i < 7; i++) {
+    xzWidget.widgetInstance.rotateLineInView(
+      'YinZ',
+      vtkMath.radiansFromDegrees(5)
+    );
+    updateViews(true);
+  }
+  // Check X view
+  updateView(ViewTypes.YZ_PLANE);
+  // Check Y view
+  updateView(ViewTypes.XZ_PLANE);
+  // Check Z view
+  updateView(ViewTypes.XY_PLANE);
+
+  // ----------------------------------------------------------------------
+  t.comment('Rotate Z by -35 degrees around Y');
+  xzWidget.widgetInstance.rotateLineInView(
+    'YinZ',
+    vtkMath.radiansFromDegrees(-35)
+  );
+
+  // Check X view
+  updateAndCompareView(ViewTypes.YZ_PLANE, XView45);
+  // Check Y view
+  updateAndCompareView(ViewTypes.XZ_PLANE, YView45);
+  // Check Z view
+  updateAndCompareView(ViewTypes.XY_PLANE, ZView45);
+
+  gc.releaseResources();
 });
