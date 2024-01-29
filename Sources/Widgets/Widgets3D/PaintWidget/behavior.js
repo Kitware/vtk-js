@@ -8,6 +8,7 @@ export default function widgetBehavior(publicAPI, model) {
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
     if (!(manipulator && model.activeState && model.activeState.getActive())) {
+      model.painting = false;
       return macro.VOID;
     }
 
@@ -45,6 +46,7 @@ export default function widgetBehavior(publicAPI, model) {
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
     if (!(manipulator && model.activeState && model.activeState.getActive())) {
+      model.painting = false;
       return macro.VOID;
     }
 
