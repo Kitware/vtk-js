@@ -12,14 +12,6 @@ export function projectDisplayToLine(
   renderer,
   glRenderWindow
 ) {
-  const near = glRenderWindow.displayToWorld(x, y, 0, renderer);
-  const far = glRenderWindow.displayToWorld(x, y, 1, renderer);
-  const viewDir = [0, 0, 0];
-  vtkMath.subtract(far, near, viewDir);
-
-  const normal = [0, 0, 0];
-  vtkMath.cross(lineDirection, viewDir, normal);
-  vtkMath.cross(normal, viewDir, normal);
   // if the active camera viewPlaneNormal and line direction are parallel, no change is allowed
   const dotProduct = Math.abs(
     vtkMath.dot(renderer.getActiveCamera().getViewPlaneNormal(), lineDirection)
@@ -28,6 +20,14 @@ export function projectDisplayToLine(
   if (1 - dotProduct < EPSILON) {
     return [];
   }
+  const near = glRenderWindow.displayToWorld(x, y, 0, renderer);
+  const far = glRenderWindow.displayToWorld(x, y, 1, renderer);
+  const viewDir = [0, 0, 0];
+  vtkMath.subtract(far, near, viewDir);
+
+  const normal = [0, 0, 0];
+  vtkMath.cross(lineDirection, viewDir, normal);
+  vtkMath.cross(normal, viewDir, normal);
 
   const numerator = vtkMath.dot(
     [near[0] - lineOrigin[0], near[1] - lineOrigin[1], near[2] - lineOrigin[2]],
