@@ -2,8 +2,8 @@ import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import vtkAbstractManipulator from 'vtk.js/Sources/Widgets/Manipulators/AbstractManipulator';
+import { EPSILON } from 'vtk.js/Sources/Common/Core/Math/Constants';
 
-const EPSILON = 1e-4;
 export function projectDisplayToLine(
   x,
   y,
