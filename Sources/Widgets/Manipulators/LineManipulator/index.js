@@ -3,6 +3,7 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import vtkAbstractManipulator from 'vtk.js/Sources/Widgets/Manipulators/AbstractManipulator';
 
+const EPSILON = 1e-4;
 export function projectDisplayToLine(
   x,
   y,
@@ -19,6 +20,14 @@ export function projectDisplayToLine(
   const normal = [0, 0, 0];
   vtkMath.cross(lineDirection, viewDir, normal);
   vtkMath.cross(normal, viewDir, normal);
+  // if the active camera viewPlaneNormal and line direction are parallel, no change is allowed
+  const dotProduct = Math.abs(
+    vtkMath.dot(renderer.getActiveCamera().getViewPlaneNormal(), lineDirection)
+  );
+
+  if (1 - dotProduct < EPSILON) {
+    return [];
+  }
 
   const numerator = vtkMath.dot(
     [near[0] - lineOrigin[0], near[1] - lineOrigin[1], near[2] - lineOrigin[2]],
