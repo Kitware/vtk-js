@@ -3,9 +3,6 @@ import '@kitware/vtk.js/favicon';
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
 
-// Load the itk-wasm UMD module dynamically for the example.
-// Normally, this will just go in the HTML <head>.
-import vtkResourceLoader from '@kitware/vtk.js/IO/Core/ResourceLoader';
 // Fetch the data. Other options include `fetch`, axios.
 import vtkLiteHttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper';
 
@@ -63,11 +60,19 @@ async function update() {
     `https://data.kitware.com/api/v1/file/5d2a36ff877dfcc902fae6d9/download`
   );
 
-  const { image: itkImage, webWorker } = await window.itk.readImageArrayBuffer(
-    null,
-    volumeArrayBuffer,
-    'knee.mha'
+  // Load the itk-wasm ESM module dynamically for the example.
+  // This can also go in the HTML <head>.
+  // Or `npm install @itk-wasm/image-io` and import it directly.
+  const { readImage } = await import(
+    // eslint-disable-next-line import/no-unresolved, import/extensions
+    /* webpackIgnore: true */ 'https://cdn.jsdelivr.net/npm/@itk-wasm/image-io@1.1.0/dist/bundle/index-worker-embedded.min.js'
   );
+
+  const { image: itkImage, webWorker } = await readImage({
+    data: new Uint8Array(volumeArrayBuffer),
+    path: 'knee.mha',
+  });
+  // Optionally terminate the web worker when it is no longer needed
   webWorker.terminate();
 
   const vtkImage = vtkITKHelper.convertItkToVtkImage(itkImage);
@@ -81,13 +86,6 @@ async function update() {
   renderWindow.render();
 }
 update();
-
-// After the itk-wasm UMD script has been loaded, `window.itk` provides the itk-wasm API.
-vtkResourceLoader
-  .loadScript(
-    'https://cdn.jsdelivr.net/npm/itk-wasm@1.0.0-b.8/dist/umd/itk-wasm.js'
-  )
-  .then(update);
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
