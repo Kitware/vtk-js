@@ -35,7 +35,7 @@ function shiftDataset(ds, axis) {
 
 function addColor(ds, r, g, b) {
   const size = ds.getPoints().getData().length;
-  const rgbArray = new Uint8Array(size);
+  const rgbArray = new Uint8ClampedArray(size);
   let offset = 0;
 
   while (offset < size) {
