@@ -471,9 +471,9 @@ export function multiply3x3_mat3(a_3x3: Matrix3x3, b_3x3: Matrix3x3, out_3x3: Ma
  * @param {Number} colA 
  * @param {Number} rowB 
  * @param {Number} colB 
- * @param {Matrix} out_rowXcol 
+ * @param {Matrix} outRowAColB 
  */
-export function multiplyMatrix(a: Matrix, b: Matrix, rowA: number, colA: number, rowB: number, colB: number, out_rowXcol: Matrix): void;
+export function multiplyMatrix(a: Matrix, b: Matrix, rowA: number, colA: number, rowB: number, colB: number, outRowAColB: Matrix): void;
 
 /**
  * Transpose a 3x3 matrix.
