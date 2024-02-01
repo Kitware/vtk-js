@@ -400,7 +400,7 @@ function vtkWebGPUStickMapper(publicAPI, model) {
           if (colorComponents !== 4) {
             vtkErrorMacro('this should be 4');
           }
-          const tmpVBO = new Uint8Array(numPoints * 4);
+          const tmpVBO = new Uint8ClampedArray(numPoints * 4);
           let vboIdx = 0;
           const colorData = c.getData();
           for (let id = 0; id < numPoints; ++id) {

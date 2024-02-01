@@ -228,7 +228,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     if (model.colorTextureString !== cfunToString) {
       const cWidth = 1024;
       const cSize = cWidth * textureHeight * 3;
-      const cTable = new Uint8Array(cSize);
+      const cTable = new Uint8ClampedArray(cSize);
       let cfun = ppty.getRGBTransferFunction();
       if (cfun) {
         const tmpTable = new Float32Array(cWidth * 3);
@@ -287,7 +287,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     if (model.pwfTextureString !== pwfunToString) {
       const pwfWidth = 1024;
       const pwfSize = pwfWidth * textureHeight;
-      const pwfTable = new Uint8Array(pwfSize);
+      const pwfTable = new Uint8ClampedArray(pwfSize);
       let pwfun = ppty.getPiecewiseFunction();
       // support case where pwfun is added/removed
       model.pwfTexture.releaseGraphicsResources(model._openGLRenderWindow);

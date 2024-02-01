@@ -269,7 +269,7 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
           if (colorComponents !== 4) {
             vtkErrorMacro('this should be 4');
           }
-          const tmpVBO = new Uint8Array(3 * numPoints * 4);
+          const tmpVBO = new Uint8ClampedArray(3 * numPoints * 4);
           let vboIdx = 0;
           const colorData = c.getData();
           for (let id = 0; id < numPoints; ++id) {

@@ -536,7 +536,9 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     }
 
     // allocate the image array
-    const colorArray = new Uint8Array(model.numRows * 2 * model.rowLength * 4);
+    const colorArray = new Uint8ClampedArray(
+      model.numRows * 2 * model.rowLength * 4
+    );
     const opacityArray = new Float32Array(model.numRows * 2 * model.rowLength);
 
     let imgRow = 0;

@@ -40,7 +40,7 @@ function vtkScalarToRGBA(publicAPI, model) {
 
     const rgba = [0, 0, 0, 0];
     const data = scalars.getData();
-    const rgbaArray = new Uint8Array(data.length * 4);
+    const rgbaArray = new Uint8ClampedArray(data.length * 4);
     let offset = 0;
     for (let idx = 0; idx < data.length; idx++) {
       const x = data[idx];

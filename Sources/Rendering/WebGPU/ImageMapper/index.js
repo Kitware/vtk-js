@@ -271,7 +271,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 
     if (model.colorTextureString !== cfunToString) {
       model.numRows = numIComps;
-      const colorArray = new Uint8Array(
+      const colorArray = new Uint8ClampedArray(
         model.numRows * 2 * model.rowLength * 4
       );
 

@@ -1512,7 +1512,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           ofTable
         );
       } else {
-        const oTable = new Uint8Array(oSize);
+        const oTable = new Uint8ClampedArray(oSize);
         for (let i = 0; i < oSize; ++i) {
           oTable[i] = 255.0 * ofTable[i];
         }
@@ -1549,7 +1549,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (reBuildC) {
       const cWidth = 1024;
       const cSize = cWidth * 2 * numIComps * 3;
-      const cTable = new Uint8Array(cSize);
+      const cTable = new Uint8ClampedArray(cSize);
       const tmpTable = new Float32Array(cWidth * 3);
 
       for (let c = 0; c < numIComps; ++c) {
