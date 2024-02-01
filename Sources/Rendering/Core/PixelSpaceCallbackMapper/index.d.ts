@@ -1,3 +1,4 @@
+import { Vector3 } from "../../../types";
 import vtkCamera from "../Camera";
 import vtkMapper, { IMapperInitialValues } from "../Mapper";
 
@@ -88,7 +89,7 @@ export interface vtkPixelSpaceCallbackMapper extends vtkMapper {
 	 * 
 	 * @param callback called with coords, camera, aspect and depthBuffer
 	 */
-	setCallback(callback: (coords: any, camera: vtkCamera, aspect: number, depthBuffer: number[]) => any): boolean
+	setCallback(callback: (coords: Vector3[], camera: vtkCamera, aspect: number, depthBuffer: Uint8Array) => any): boolean
 	
 
 	/**
