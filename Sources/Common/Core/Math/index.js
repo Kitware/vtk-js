@@ -609,7 +609,7 @@ export function multiply3x3_mat3(a_3x3, b_3x3, out_3x3) {
   }
 }
 
-export function multiplyMatrix(a, b, rowA, colA, rowB, colB, out_rowXcol) {
+export function multiplyMatrix(a, b, rowA, colA, rowB, colB, outRowAColB) {
   // we need colA == rowB
   if (colA !== rowB) {
     vtkErrorMacro('Number of columns of A must match number of rows of B.');
@@ -623,10 +623,10 @@ export function multiplyMatrix(a, b, rowA, colA, rowB, colB, out_rowXcol) {
   for (let i = 0; i < rowA; i++) {
     // output col
     for (let j = 0; j < colB; j++) {
-      out_rowXcol[i * colB + j] = 0;
+      outRowAColB[i * colB + j] = 0;
       // sum for this point
       for (let k = 0; k < colA; k++) {
-        out_rowXcol[i * colB + j] += copyA[i * colA + k] * copyB[j + colB * k];
+        outRowAColB[i * colB + j] += copyA[i * colA + k] * copyB[j + colB * k];
       }
     }
   }
