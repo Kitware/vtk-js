@@ -3,8 +3,6 @@ import test from 'tape';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import MockDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/MockDataAccessHelper';
 
-const maxTestDurationMS = 3000;
-
 function runTests(testCases) {
   let promise = Promise.resolve();
   testCases.forEach((testCase) => {
@@ -38,12 +36,6 @@ function fetchArrayTest(
       callTracker.fetchJSON.length,
       callTracker.fetchArray.length,
     ];
-
-    const timeout = setTimeout(() => {
-      console.log('Ran into timeout during test.');
-      resolve();
-      t.end();
-    }, 100);
 
     reader.setUrl(url, { loadData: true }).then(
       (v) => {
@@ -88,10 +80,8 @@ function fetchArrayTest(
           }
         }
         resolve(v);
-        clearTimeout(timeout);
       },
       (err) => {
-        clearTimeout(timeout);
         reject(err);
       }
     );
@@ -100,12 +90,11 @@ function fetchArrayTest(
 
 test('Caching capabilities of vtkHttpDataSetReader with unlimited cache.', async (t) => {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
+  const originalAccessHelper = reader.getDataAccessHelper();
   reader.setDataAccessHelper(MockDataAccessHelper);
   reader.clearCache();
 
   const callTracker = MockDataAccessHelper.getCallTracker();
-
-  const timeout = setTimeout(t.end, maxTestDurationMS);
 
   await runTests([
     // set cache to unlimited size
@@ -138,23 +127,26 @@ test('Caching capabilities of vtkHttpDataSetReader with unlimited cache.', async
     fetchArrayTest(t, reader, callTracker, 'http://mockData/test03', true),
   ]);
   t.end();
-  clearTimeout(timeout);
+
+  reader.setDataAccessHelper(originalAccessHelper);
+  // clearTimeout(timeout);
 });
 
 test('Caching capabilities of vtkHttpDataSetReader with limited cache.', async (t) => {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
+  const originalAccessHelper = reader.getDataAccessHelper();
   reader.setDataAccessHelper(MockDataAccessHelper);
   reader.clearCache();
 
   const callTracker = MockDataAccessHelper.getCallTracker();
 
-  const timeout = setTimeout(t.end, maxTestDurationMS);
+  // const timeout = setTimeout(t.end, maxTestDurationMS);
 
   await runTests([
-    // set cache to 300 MiB -> Forces to dispose items accessed furthest in the past
+    // set cache to 30 MiB -> Forces to dispose items accessed furthest in the past
     (resolve, _) => {
-      reader.setMaxCacheSize(300);
-      t.equals(reader.getMaxCacheSize(), 300, 'Cache was set to "300 MiB"');
+      reader.setMaxCacheSize(30);
+      t.equals(reader.getMaxCacheSize(), 30, 'Cache was set to "300 MiB"');
       resolve();
     },
 
@@ -191,17 +183,18 @@ test('Caching capabilities of vtkHttpDataSetReader with limited cache.', async (
     fetchArrayTest(t, reader, callTracker, 'http://mockData/test04', false, []),
   ]);
   t.end();
-  clearTimeout(timeout);
+
+  reader.setDataAccessHelper(originalAccessHelper);
+  // clearTimeout(timeout);
 });
 
 test('Disabled cache on vtkHttpDataSetReader.', async (t) => {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
+  const originalAccessHelper = reader.getDataAccessHelper();
   reader.setDataAccessHelper(MockDataAccessHelper);
   reader.clearCache();
 
   const callTracker = MockDataAccessHelper.getCallTracker();
-
-  const timeout = setTimeout(t.end, maxTestDurationMS);
 
   const createDisabledCacheTests = (disable) => [
     // disable caching
@@ -241,5 +234,6 @@ test('Disabled cache on vtkHttpDataSetReader.', async (t) => {
     ...createDisabledCacheTests(undefined),
   ]);
   t.end();
-  clearTimeout(timeout);
+
+  reader.setDataAccessHelper(originalAccessHelper);
 });
