@@ -41,14 +41,14 @@ function createMockIndexJSON(fileId, byteLength) {
 }
 
 const MockData = {
-  'test01/index.json': () => createMockIndexJSON('test01', 100 * MiB),
-  'test01/data/test01.gz': () => new Uint8Array(100 * MiB),
-  'test02/index.json': () => createMockIndexJSON('test02', 200 * MiB),
-  'test02/data/test02.gz': () => new Uint8Array(200 * MiB),
-  'test03/index.json': () => createMockIndexJSON('test03', 150 * MiB),
-  'test03/data/test03.gz': () => new Uint8Array(150 * MiB),
-  'test04/index.json': () => createMockIndexJSON('test04', 400 * MiB),
-  'test04/data/test04.gz': () => new Uint8Array(400 * MiB),
+  'test01/index.json': () => createMockIndexJSON('test01', 10 * MiB),
+  'test01/data/test01.gz': () => new Uint8Array(10 * MiB),
+  'test02/index.json': () => createMockIndexJSON('test02', 20 * MiB),
+  'test02/data/test02.gz': () => new Uint8Array(20 * MiB),
+  'test03/index.json': () => createMockIndexJSON('test03', 15 * MiB),
+  'test03/data/test03.gz': () => new Uint8Array(15 * MiB),
+  'test04/index.json': () => createMockIndexJSON('test04', 40 * MiB),
+  'test04/data/test04.gz': () => new Uint8Array(40 * MiB),
 };
 
 // ----------------------------------------------------------------------------
