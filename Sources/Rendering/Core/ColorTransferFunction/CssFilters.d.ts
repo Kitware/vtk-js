@@ -26,13 +26,13 @@ export type FilterMatrix = Matrix;
  * Use applyFilter() function to use it
  * It is NOT the identity
  */
-export function getNewFilter(): FilterMatrix;
+export function createCSSFilter(): FilterMatrix;
 
 /**
  * Convert a filter to an identity matrix or create a new identity filter
  * @param outFilter If specified, the outFilter is converted to identity filter
  */
-export function getIdentityFilter(outFilter?: FilterMatrix): FilterMatrix;
+export function createIdentityFilter(outFilter?: FilterMatrix): FilterMatrix;
 
 /**
  * Combine two filters into a single filter
@@ -62,7 +62,7 @@ export function applyFilter(filter: FilterMatrix, r: number, g: number, b: numbe
  * @param intercept 
  * @param outFilter Optional output, a new filter is created if not specified
  */
-export function getLinearFilter(slope: number, intercept: number, outFilter?: FilterMatrix): FilterMatrix;
+export function createLinearFilter(slope: number, intercept: number, outFilter?: FilterMatrix): FilterMatrix;
 
 /**
  * A contrast filter
@@ -72,7 +72,7 @@ export function getLinearFilter(slope: number, intercept: number, outFilter?: Fi
  * @param contrast 
  * @param outFilter Optional output, a new filter is created if not specified
  */
-export function getContrastFilter(contrast: number, outFilter?: FilterMatrix): FilterMatrix;
+export function createContrastFilter(contrast: number, outFilter?: FilterMatrix): FilterMatrix;
 
 /**
  * A saturate filter
@@ -82,7 +82,7 @@ export function getContrastFilter(contrast: number, outFilter?: FilterMatrix): F
  * @param saturate 
  * @param outFilter Optional output, a new filter is created if not specified
  */
-export function getSaturateFilter(saturate: number, outFilter?: FilterMatrix): FilterMatrix;
+export function createSaturateFilter(saturate: number, outFilter?: FilterMatrix): FilterMatrix;
 
 /**
  * A brightness filter
@@ -92,7 +92,7 @@ export function getSaturateFilter(saturate: number, outFilter?: FilterMatrix): F
  * @param brightness 
  * @param outFilter Optional output, a new filter is created if not specified
  */
-export function getBrightnessFilter(brightness: number, outFilter?: FilterMatrix): FilterMatrix;
+export function createBrightnessFilter(brightness: number, outFilter?: FilterMatrix): FilterMatrix;
 
 /**
  * An invert filter
@@ -102,4 +102,4 @@ export function getBrightnessFilter(brightness: number, outFilter?: FilterMatrix
  * @param invert 
  * @param outFilter Optional output, a new filter is created if not specified
  */
-export function getInvertFilter(invert: number, outFilter?: FilterMatrix): FilterMatrix;
+export function createInvertFilter(invert: number, outFilter?: FilterMatrix): FilterMatrix;

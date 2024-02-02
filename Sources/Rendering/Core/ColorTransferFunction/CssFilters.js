@@ -19,18 +19,18 @@ import { identity, multiplyMatrix } from 'vtk.js/Sources/Common/Core/Math';
 
 export const luminanceWeights = [0.213, 0.715, 0.072];
 
-export function getNewFilter() {
+export function createCSSFilter() {
   return new Array(25);
 }
 
-export function getIdentityFilter(outFilter = getNewFilter()) {
+export function createIdentityFilter(outFilter = createCSSFilter()) {
   return identity(5, outFilter);
 }
 
 export function combineFilters(
   baseFilter,
   newFilter,
-  outFilter = getNewFilter()
+  outFilter = createCSSFilter()
 ) {
   multiplyMatrix(newFilter, baseFilter, 5, 5, 5, 5, outFilter);
   return outFilter;
@@ -42,8 +42,12 @@ export function applyFilter(filter, r, g, b, a = 1) {
   return vec.slice(0, 4);
 }
 
-export function getLinearFilter(slope, intercept, outFilter = getNewFilter()) {
-  getIdentityFilter(outFilter);
+export function createLinearFilter(
+  slope,
+  intercept,
+  outFilter = createCSSFilter()
+) {
+  createIdentityFilter(outFilter);
   for (let row = 0; row < 3; ++row) {
     outFilter[row * 5 + row] = slope;
     outFilter[row * 5 + 4] = intercept;
@@ -53,16 +57,16 @@ export function getLinearFilter(slope, intercept, outFilter = getNewFilter()) {
 
 // https://www.w3.org/TR/filter-effects-1/#contrastEquivalent
 // https://www.w3.org/TR/filter-effects-1/#attr-valuedef-type-linear
-export function getContrastFilter(contrast, outFilter = getNewFilter()) {
+export function createContrastFilter(contrast, outFilter = createCSSFilter()) {
   const slope = contrast;
   const intercept = -(0.5 * contrast) + 0.5;
-  return getLinearFilter(slope, intercept, outFilter);
+  return createLinearFilter(slope, intercept, outFilter);
 }
 
 // https://www.w3.org/TR/filter-effects-1/#saturateEquivalent
 // https://www.w3.org/TR/filter-effects-1/#ref-for-attr-valuedef-type-saturate
-export function getSaturateFilter(saturate, outFilter = getNewFilter()) {
-  getIdentityFilter(outFilter);
+export function createSaturateFilter(saturate, outFilter = createCSSFilter()) {
+  createIdentityFilter(outFilter);
   for (let col = 0; col < 3; ++col) {
     const columnLuminance = luminanceWeights[col];
     const diagonalValue = columnLuminance + (1 - columnLuminance) * saturate;
@@ -76,16 +80,19 @@ export function getSaturateFilter(saturate, outFilter = getNewFilter()) {
 
 // https://www.w3.org/TR/filter-effects-1/#brightnessEquivalent
 // https://www.w3.org/TR/filter-effects-1/#attr-valuedef-type-linear
-export function getBrightnessFilter(brightness, outFilter = getNewFilter()) {
+export function createBrightnessFilter(
+  brightness,
+  outFilter = createCSSFilter()
+) {
   const slope = brightness;
   const intercept = 0;
-  return getLinearFilter(slope, intercept, outFilter);
+  return createLinearFilter(slope, intercept, outFilter);
 }
 
 // https://www.w3.org/TR/filter-effects-1/#invertEquivalent
 // https://www.w3.org/TR/filter-effects-1/#attr-valuedef-type-table
-export function getInvertFilter(invert, outFilter = getNewFilter()) {
+export function createInvertFilter(invert, outFilter = createCSSFilter()) {
   const slope = 1 - 2 * invert;
   const intercept = invert;
-  return getLinearFilter(slope, intercept, outFilter);
+  return createLinearFilter(slope, intercept, outFilter);
 }
