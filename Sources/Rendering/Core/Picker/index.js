@@ -104,15 +104,6 @@ function vtkPicker(publicAPI, model) {
     const ray = [];
     const hitPosition = [];
 
-    if (!renderer) {
-      vtkErrorMacro('You must specify a renderer.');
-      return;
-    }
-
-    //  Loop over all props.  Transform ray (defined from position of
-    //  camera to selection point) into coordinates of mapper (not
-    //  transformed to actors coordinates!  Reduces overall computation!!!).
-    //  Note that only vtkProp3D's can be picked by vtkPicker.
     const props = model.pickFromList ? model.pickList : renderer.getActors();
 
     // pre-allocate some arrays.
@@ -185,8 +176,8 @@ function vtkPicker(publicAPI, model) {
           const actorIndex = model.actors.indexOf(prop);
 
           if (actorIndex !== -1) {
-            // If already in list, compare the previous position we the new one,
-            // and update if the new is closer.
+            // If already in list, compare the previous picked position with the new one.
+            // Store the new one if it is closer from the ray endpoint.
             const previousPickedPosition = model.pickedPositions[actorIndex];
             if (
               vtkMath.distance2BetweenPoints(p1World, pickedPosition) <
@@ -386,13 +377,7 @@ function vtkPicker(publicAPI, model) {
     initialize();
     model.renderer = renderer;
 
-    const selectionX = selectionPoint[0];
-    const selectionY = selectionPoint[1];
-    const selectionZ = selectionPoint[2];
-
-    model.selectionPoint[0] = selectionX;
-    model.selectionPoint[1] = selectionY;
-    model.selectionPoint[2] = selectionZ;
+    vec3.copy(model.selectionPoint, selectionPoint);
 
     const view = renderer.getRenderWindow().getViews()[0];
     const dims = view.getViewportSize(renderer);
@@ -405,7 +390,8 @@ function vtkPicker(publicAPI, model) {
     const aspect = dims[0] / dims[1];
 
     const tolerance =
-      computeTolerance(selectionZ, aspect, renderer) * model.tolerance;
+      computeTolerance(model.selectionPoint[2], aspect, renderer) *
+      model.tolerance;
 
     pick3DInternal(renderer, tolerance, selectionPoint, focalPoint);
   };

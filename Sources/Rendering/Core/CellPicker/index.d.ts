@@ -2,7 +2,9 @@ import vtkCell from '../../../Common/DataModel/Cell';
 import { Vector3 } from '../../../types';
 import vtkMapper from '../Mapper';
 import vtkPicker, { IPickerInitialValues } from '../Picker';
+import vtkProp3D from '../Prop3D';
 import vtkRenderer from '../Renderer';
+import { Nullable } from "../../../types";
 
 /**
  * 
@@ -88,10 +90,11 @@ export interface vtkCellPicker extends vtkPicker {
 	 * 
 	 * @param {Vector3} p1 
 	 * @param {Vector3} p2 
-	 * @param {Number} tol 
+	 * @param {Number} tolerance
+	 * @param {Nullable<vtkProp3D>} actor
 	 * @param {vtkMapper} mapper The vtkMapper instance.
 	 */
-	intersectWithLine(p1: Vector3, p2: Vector3, tol: number, mapper: vtkMapper): number;
+	intersectWithLine(p1: Vector3, p2: Vector3, tolerance: number, actor: Nullable<vtkProp3D>, mapper: vtkMapper): number;
 
 	/**
 	 * 
@@ -99,10 +102,21 @@ export interface vtkCellPicker extends vtkPicker {
 	 * @param {Vector3} p2 
 	 * @param {Number} t1 
 	 * @param {Number} t2 
-	 * @param {Number} tol 
+	 * @param {Number} tolerance
 	 * @param {vtkMapper} mapper The vtkMapper instance.
 	 */
-	intersectActorWithLine(p1: Vector3, p2: Vector3, t1: number, t2: number, tol: number, mapper: vtkMapper): number;
+	intersectActorWithLine(p1: Vector3, p2: Vector3, t1: number, t2: number, tolerance: number, mapper: vtkMapper): number;
+
+	/**
+	 * 
+	 * @param {Vector3} p1 
+	 * @param {Vector3} p2 
+	 * @param {Number} t1 
+	 * @param {Number} t2 
+	 * @param {Number} tolerance
+	 * @param {vtkMapper} mapper The vtkMapper instance.
+	 */
+	intersectVolumeWithLine(p1: Vector3, p2: Vector3, t1: number, t2: number, tolerance: number, mapper: vtkMapper): number;
 }
 
 /**
