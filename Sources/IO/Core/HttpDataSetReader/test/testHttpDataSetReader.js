@@ -1,7 +1,7 @@
 import test from 'tape';
 
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import MockDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/MockDataAccessHelper';
+import MockDataAccessHelper from 'vtk.js/Sources/IO/Core/HttpDataSetReader/test/MockDataAccessHelper';
 
 function runTests(testCases) {
   let promise = Promise.resolve();
