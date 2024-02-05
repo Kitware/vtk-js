@@ -1,12 +1,12 @@
 import vtkPiecewiseFunction from "../../../Common/DataModel/PiecewiseFunction";
 import { Bounds, Range } from "../../../types";
-import vtkAbstractMapper, { IAbstractMapperInitialValues } from "../AbstractMapper";
+import vtkAbstractMapper3D, { IAbstractMapper3DInitialValues } from "../AbstractMapper3D";
 import { BlendMode, FilterMode } from "./Constants";
 
 /**
  *
  */
-export interface IVolumeMapperInitialValues extends IAbstractMapperInitialValues {
+export interface IVolumeMapperInitialValues extends IAbstractMapper3DInitialValues {
 	anisotropy?: number;
 	autoAdjustSampleDistances?: boolean;
 	averageIPScalarRange?: Range;
@@ -23,7 +23,7 @@ export interface IVolumeMapperInitialValues extends IAbstractMapperInitialValues
 	LAOKernelSize?: number;
 }
 
-export interface vtkVolumeMapper extends vtkAbstractMapper {
+export interface vtkVolumeMapper extends vtkAbstractMapper3D {
 
 	/**
      * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].

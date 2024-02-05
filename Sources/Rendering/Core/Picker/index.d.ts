@@ -2,6 +2,7 @@ import { Vector3, Nullable } from "../../../types";
 import vtkAbstractPicker, { IAbstractPickerInitialValues } from "../AbstractPicker";
 import vtkActor from "../Actor";
 import vtkMapper from '../Mapper';
+import vtkProp3D from '../Prop3D';
 import vtkRenderer from '../Renderer';
 import { vtkSubscription } from "../../../interfaces";
 
@@ -72,10 +73,11 @@ export interface vtkPicker extends vtkAbstractPicker {
 	 * Project the center point of the mapper onto the ray and determine its parametric value
 	 * @param {Vector3} p1 
 	 * @param {Vector3} p2 
-	 * @param {Number} tol 
+	 * @param {Number} tolerance
+	 * @param {Nullable<vtkProp3D>} prop
 	 * @param {vtkMapper} mapper 
 	 */
-	intersectWithLine(p1: Vector3, p2: Vector3, tol: number, mapper: vtkMapper): number;
+	intersectWithLine(p1: Vector3, p2: Vector3, tolerance: number, prop: Nullable<vtkProp3D>, mapper: vtkMapper): number;
 
 	/**
 	 * Perform pick operation with selection point provided.
@@ -83,6 +85,15 @@ export interface vtkPicker extends vtkAbstractPicker {
 	 * @param {vtkRenderer} renderer The renderer on which you want to do picking.
 	 */
 	pick(selection: Vector3, renderer: vtkRenderer): void;
+
+	/**
+	 * Perform pick operation with the provided selection and focal points.
+	 * Both point are in world coordinates.
+	 * @param {Vector3} selectionPoint
+	 * @param {Vector3} focalPoint
+	 * @param {vtkRenderer} renderer
+	 */
+	pick3DPoint(selectionPoint: Vector3, focalPoint: Vector3, renderer: vtkRenderer): void;
 
 	/**
 	 * Set position in mapper coordinates of pick point.
@@ -141,6 +152,8 @@ export function newInstance(initialValues?: IPickerInitialValues): vtkPicker;
  * picking of points or cells based on the geometry of any vtkProp3D, use the
  * subclasses vtkPointPicker or vtkCellPicker.  For hardware-accelerated
  * picking of any type of vtkProp, use vtkPropPicker or vtkWorldPointPicker.
+ *
+ * Note that only vtkProp3D's can be picked by vtkPicker.
  */
 export declare const vtkPicker: {
 	newInstance: typeof newInstance,
