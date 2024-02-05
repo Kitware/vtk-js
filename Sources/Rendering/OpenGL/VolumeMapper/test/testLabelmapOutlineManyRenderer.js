@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
@@ -145,7 +145,7 @@ function fillBlobForThreshold(imageData, backgroundImageData) {
   imageData.getPointData().getScalars().setData(values);
 }
 
-test.skip('Test Labelmap Outline with many renderers', (t) => {
+test.skip('Test Labelmap Outline with many renderers', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'LabelmapOutline manyRenderers');
 
@@ -184,121 +184,124 @@ test.skip('Test Labelmap Outline with many renderers', (t) => {
     fetchGzip: true,
   });
 
-  reader
-    .setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`, { loadData: true })
-    .then(() => {
-      const data = reader.getOutputData();
-      const labelMap = createLabelPipeline(data, gc);
-      fillBlobForThreshold(labelMap.imageData, data);
+  await reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`, {
+    loadData: true,
+  });
 
-      for (let i = 0; i < 2; i++) {
-        const mapper = gc.registerResource(vtkVolumeMapper.newInstance());
-        mapper.setInputData(data);
-        const el = gc.registerDOMElement(document.createElement('div'));
-        el.classList.add('renderer');
-        el.style.width = '400px';
-        el.style.height = '400px';
+  const data = reader.getOutputData();
+  const labelMap = createLabelPipeline(data, gc);
+  fillBlobForThreshold(labelMap.imageData, data);
 
-        el.id = rendererId++;
-        bodyElement.appendChild(el);
+  for (let i = 0; i < 2; i++) {
+    const mapper = gc.registerResource(vtkVolumeMapper.newInstance());
+    mapper.setInputData(data);
+    const el = gc.registerDOMElement(document.createElement('div'));
+    el.classList.add('renderer');
+    el.style.width = '400px';
+    el.style.height = '400px';
 
-        const actor = gc.registerResource(vtkVolume.newInstance());
-        actor.getProperty().setInterpolationTypeToNearest();
+    el.id = rendererId++;
+    bodyElement.appendChild(el);
 
-        actor.setMapper(mapper);
+    const actor = gc.registerResource(vtkVolume.newInstance());
+    actor.getProperty().setInterpolationTypeToNearest();
 
-        const ofun = vtkPiecewiseFunction.newInstance();
-        ofun.addPoint(0, 0);
-        ofun.addPoint(1, 1.0);
-        actor.getProperty().setScalarOpacity(0, ofun);
+    actor.setMapper(mapper);
 
-        const sourceDataRGBTransferFunction = actor
-          .getProperty()
-          .getRGBTransferFunction(0);
-        sourceDataRGBTransferFunction.setMappingRange(324, 2324);
+    const ofun = vtkPiecewiseFunction.newInstance();
+    ofun.addPoint(0, 0);
+    ofun.addPoint(1, 1.0);
+    actor.getProperty().setScalarOpacity(0, ofun);
 
-        const renderer = gc.registerResource(vtkRenderer.newInstance());
-        renderer.addVolume(actor);
-        renderer.addVolume(labelMap.actor);
+    const sourceDataRGBTransferFunction = actor
+      .getProperty()
+      .getRGBTransferFunction(0);
+    sourceDataRGBTransferFunction.setMappingRange(324, 2324);
 
-        renderWindow.addRenderer(renderer);
-        renderer.resetCamera();
+    const renderer = gc.registerResource(vtkRenderer.newInstance());
+    renderer.addVolume(actor);
+    renderer.addVolume(labelMap.actor);
 
-        // MPR slice custom, for some reason doesn't work if we set it as interactorStyle
-        const camera = renderer.getActiveCamera();
-        const normal = camera.getDirectionOfProjection();
-        // prevent zoom manipulator from messing with our focal point
-        camera.setFreezeFocalPoint(true);
-        vtkMath.normalize(normal);
+    renderWindow.addRenderer(renderer);
+    renderer.resetCamera();
 
-        const bounds = mapper.getBounds();
+    // MPR slice custom, for some reason doesn't work if we set it as interactorStyle
+    const camera = renderer.getActiveCamera();
+    const normal = camera.getDirectionOfProjection();
+    // prevent zoom manipulator from messing with our focal point
+    camera.setFreezeFocalPoint(true);
+    vtkMath.normalize(normal);
 
-        // diagonal will be used as "width" of camera scene
-        const diagonal = Math.sqrt(
-          vtkMath.distance2BetweenPoints(
-            [bounds[0], bounds[2], bounds[4]],
-            [bounds[1], bounds[3], bounds[5]]
-          )
-        );
+    const bounds = mapper.getBounds();
 
-        // center will be used as initial focal point
-        const center = [
-          (bounds[0] + bounds[1]) / 2.0,
-          (bounds[2] + bounds[3]) / 2.0,
-          (bounds[4] + bounds[5]) / 2.0,
-        ];
+    // diagonal will be used as "width" of camera scene
+    const diagonal = Math.sqrt(
+      vtkMath.distance2BetweenPoints(
+        [bounds[0], bounds[2], bounds[4]],
+        [bounds[1], bounds[3], bounds[5]]
+      )
+    );
 
-        const angle = 90;
-        // distance from camera to focal point
-        const dist = diagonal / (2 * Math.tan((angle / 360) * Math.PI));
+    // center will be used as initial focal point
+    const center = [
+      (bounds[0] + bounds[1]) / 2.0,
+      (bounds[2] + bounds[3]) / 2.0,
+      (bounds[4] + bounds[5]) / 2.0,
+    ];
 
-        const cameraPos = [
-          center[0] - normal[0] * dist,
-          center[1] - normal[1] * dist,
-          center[2] - normal[2] * dist,
-        ];
+    const angle = 90;
+    // distance from camera to focal point
+    const dist = diagonal / (2 * Math.tan((angle / 360) * Math.PI));
 
-        // set viewUp based on DOP rotation
-        const oldDop = camera.getDirectionOfProjection();
-        const transform = vtkMatrixBuilder
-          .buildFromDegree()
-          .identity()
-          .rotateFromDirections(oldDop, normal);
+    const cameraPos = [
+      center[0] - normal[0] * dist,
+      center[1] - normal[1] * dist,
+      center[2] - normal[2] * dist,
+    ];
 
-        const viewUp = [0, 1, 0];
-        transform.apply(viewUp);
+    // set viewUp based on DOP rotation
+    const oldDop = camera.getDirectionOfProjection();
+    const transform = vtkMatrixBuilder
+      .buildFromDegree()
+      .identity()
+      .rotateFromDirections(oldDop, normal);
 
-        camera.setParallelProjection(true);
+    const viewUp = [0, 1, 0];
+    transform.apply(viewUp);
 
-        camera.setPosition(...cameraPos);
-        camera.setDistance(dist);
-        // camera.setFocalPoint(center)
-        // should be set after pos and distance
-        camera.setDirectionOfProjection(...normal);
-        camera.setViewUp(...viewUp);
-        camera.setViewAngle(angle);
-        camera.setClippingRange(dist, dist + 0.1);
-        camera.setParallelScale(20);
+    camera.setParallelProjection(true);
 
-        updateViewPort(el, renderer);
-        renderer.getActiveCamera().setViewUp(1, 0, 0);
-        renderWindow.render();
+    camera.setPosition(...cameraPos);
+    camera.setDistance(dist);
+    // camera.setFocalPoint(center)
+    // should be set after pos and distance
+    camera.setDirectionOfProjection(...normal);
+    camera.setViewUp(...viewUp);
+    camera.setViewAngle(angle);
+    camera.setClippingRange(dist, dist + 0.1);
+    camera.setParallelScale(20);
 
-        // Keep track of renderer
-        RENDERERS[el.id] = renderer;
-      }
+    updateViewPort(el, renderer);
+    renderer.getActiveCamera().setViewUp(1, 0, 0);
+    renderWindow.render();
 
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline1],
-          'Rendering/OpenGL/VolumeMapper/testLabelmapOutlineManyRenderer',
-          t,
-          1.5,
-          gc.releaseResources
-        );
-      });
+    // Keep track of renderer
+    RENDERERS[el.id] = renderer;
+  }
 
-      recomputeViewports(renderWindow);
-    });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline1],
+        'Rendering/OpenGL/VolumeMapper/testLabelmapOutlineManyRenderer',
+        t,
+        1.5,
+        gc.releaseResources
+      )
+    );
+
+  recomputeViewports(renderWindow);
+  return promise;
 });

@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -14,7 +14,7 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import baseline1 from './testComposite.png';
 import baseline2 from './testComposite_2.png';
 
-test('Test Composite Volume Rendering', (t) => {
+test('Test Composite Volume Rendering', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkVolumeMapper Composite');
   // testUtils.keepDOM();
@@ -68,25 +68,26 @@ test('Test Composite Volume Rendering', (t) => {
   interactor.initialize();
   interactor.bindEvents(renderWindowContainer);
 
-  reader.setUrl(`${__BASE_PATH__}/Data/volume/LIDC2.vti`).then(() => {
-    reader.loadData().then(() => {
-      renderer.addVolume(actor);
-      renderer.resetCamera();
-      renderer.getActiveCamera().zoom(1.5);
-      renderer.getActiveCamera().elevation(70);
-      renderer.resetCameraClippingRange();
+  await reader.setUrl(`${__BASE_PATH__}/Data/volume/LIDC2.vti`);
+  await reader.loadData();
+  renderer.addVolume(actor);
+  renderer.resetCamera();
+  renderer.getActiveCamera().zoom(1.5);
+  renderer.getActiveCamera().elevation(70);
+  renderer.resetCameraClippingRange();
 
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline1, baseline2],
-          'Rendering/Core/VolumeMapper/testComposite',
-          t,
-          3.0,
-          gc.releaseResources
-        );
-      });
-      renderWindow.render();
-    });
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline1, baseline2],
+        'Rendering/Core/VolumeMapper/testComposite',
+        t,
+        3.0,
+        gc.releaseResources
+      )
+    );
+  renderWindow.render();
+  return promise;
 });

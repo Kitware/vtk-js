@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -21,7 +21,7 @@ import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeAc
 import baseline1 from './testIntermixedImage.png';
 // import baseline2 from './testIntermixedImage_1.png';
 
-test('Test Composite Volume Rendering: intermixed image', (t) => {
+test('Test Composite Volume Rendering: intermixed image', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkVolumeMapper IntermixedImage');
   // testUtils.keepDOM();
@@ -154,28 +154,29 @@ test('Test Composite Volume Rendering: intermixed image', (t) => {
   orientationWidget.setMinPixelSize(100);
   orientationWidget.setMaxPixelSize(300);
 
-  reader.setUrl(`${__BASE_PATH__}/Data/volume/LIDC2.vti`).then(() => {
-    reader.loadData().then(() => {
-      renderer.addVolume(volume);
-      renderer.resetCamera();
-      renderer.getActiveCamera().zoom(1.5);
-      renderer.getActiveCamera().elevation(70);
-      renderer.getActiveCamera().orthogonalizeViewUp();
-      renderer.getActiveCamera().azimuth(-20);
-      renderer.resetCameraClippingRange();
-      renderWindow.render();
+  await reader.setUrl(`${__BASE_PATH__}/Data/volume/LIDC2.vti`);
+  await reader.loadData();
+  renderer.addVolume(volume);
+  renderer.resetCamera();
+  renderer.getActiveCamera().zoom(1.5);
+  renderer.getActiveCamera().elevation(70);
+  renderer.getActiveCamera().orthogonalizeViewUp();
+  renderer.getActiveCamera().azimuth(-20);
+  renderer.resetCameraClippingRange();
+  renderWindow.render();
 
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline1],
-          'Rendering/Core/VolumeMapper/testIntermixedImage',
-          t,
-          5.0,
-          gc.releaseResources
-        );
-      });
-      renderWindow.render();
-    });
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline1],
+        'Rendering/Core/VolumeMapper/testIntermixedImage',
+        t,
+        5.0,
+        gc.releaseResources
+      )
+    );
+  renderWindow.render();
+  return promise;
 });

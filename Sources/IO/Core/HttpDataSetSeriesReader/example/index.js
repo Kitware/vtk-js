@@ -23,6 +23,9 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
+renderer.getActiveCamera().setPosition(6, 3, 7);
+renderer.getActiveCamera().setFocalPoint(0, 2, 0);
+
 // ----------------------------------------------------------------------------
 // Example code
 // ----------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
@@ -15,7 +15,7 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import { SlicingMode } from '../../../Core/ImageMapper/Constants';
 import baseline from './testImageWindowLevel.png';
 
-test('Test ImageMapper window level', (t) => {
+test('Test ImageMapper window level', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkOpenGLImageMapper testImage windowlevel');
 
@@ -96,29 +96,31 @@ test('Test ImageMapper window level', (t) => {
   glwindow.setSize(400, 400);
   t.ok('rendering', 'vtkOpenGLImageMapper mapper set up');
 
-  reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`).then(() => {
-    reader.loadData().then(() => {
-      t.ok('rendering', 'vtkOpenGLImageMapper data loaded');
-      ren1.addActor(actor1);
-      ren2.addActor(actor2);
-      mapper2.setSlicingMode(SlicingMode.I);
-      mapper1.setSlicingMode(SlicingMode.I);
-      mapper2.setSlice(40);
-      mapper1.setSlice(40);
-      ren1.resetCamera();
-      ren2.resetCamera();
-      renderWindow.render();
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline],
-          'Rendering/OpenGL/ImageMapperWindowLevel',
-          t,
-          0.05,
-          gc.releaseResources
-        );
-      });
-      renderWindow.render();
-    });
-  });
+  await reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`);
+  await reader.loadData();
+
+  t.ok('rendering', 'vtkOpenGLImageMapper data loaded');
+  ren1.addActor(actor1);
+  ren2.addActor(actor2);
+  mapper2.setSlicingMode(SlicingMode.I);
+  mapper1.setSlicingMode(SlicingMode.I);
+  mapper2.setSlice(40);
+  mapper1.setSlice(40);
+  ren1.resetCamera();
+  ren2.resetCamera();
+  renderWindow.render();
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/OpenGL/ImageMapperWindowLevel',
+        t,
+        0.05,
+        gc.releaseResources
+      )
+    );
+  renderWindow.render();
+  return promise;
 });

@@ -5,16 +5,16 @@ import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import baseline from './testSkyboxBackground.png';
 
-test.onlyIfWebGL('Test vtkOpenGLSkybox Background Rendering', (t) => {
+test.onlyIfWebGL('Test vtkOpenGLSkybox Background Rendering', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('Rendering', 'Filter: OpenGLTexture');
 
-  function callBackfunction(loadedTexture) {
+  function onLoadedTexture(loadedTexture) {
     // Create come control UI
     const container = document.querySelector('body');
     const renderWindowContainer = gc.registerDOMElement(
@@ -45,37 +45,35 @@ test.onlyIfWebGL('Test vtkOpenGLSkybox Background Rendering', (t) => {
     renderWindow.addView(glwindow);
     glwindow.setSize(400, 400);
 
-    glwindow.captureNextImage().then((image) => {
-      testUtils.compareImages(
-        image,
-        [baseline],
-        'Rendering/OpenGL/Skybox/',
-        t,
-        0.5,
-        gc.releaseResources
+    const promise = glwindow
+      .captureNextImage()
+      .then((image) =>
+        testUtils.compareImages(
+          image,
+          [baseline],
+          'Rendering/OpenGL/Skybox/',
+          t,
+          0.5,
+          gc.releaseResources
+        )
       );
-    });
     renderWindow.render();
+    return promise;
   }
 
   // function to load texture
-  function loadTexture(texturePath, endCallBack) {
+  async function loadTexture(texturePath) {
     const reader = gc.registerResource(
       vtkHttpDataSetReader.newInstance({ fetchGzip: true })
     );
-    reader.setUrl(texturePath).then(() => {
-      reader.loadData().then(() => {
-        const textureImage = reader.getOutputData();
-        if (endCallBack) {
-          // check if endcallback exists
-          endCallBack(textureImage);
-        }
-      }); // end loadData
-    }); // end set url
+    await reader.setUrl(texturePath);
+    await reader.loadData();
+    const textureImage = reader.getOutputData();
+    return textureImage;
   }
 
   const path = `${__BASE_PATH__}/Data/skybox/mountains/right.jpg`;
 
   // It will contains all vtkImageData which will textured the cube
-  loadTexture(path, callBackfunction);
+  return onLoadedTexture(await loadTexture(path));
 });

@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';

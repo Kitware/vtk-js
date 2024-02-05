@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
 import vtkImageGridSource from 'vtk.js/Sources/Filters/Sources/ImageGridSource';

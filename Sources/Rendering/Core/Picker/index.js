@@ -33,6 +33,62 @@ function vtkPicker(publicAPI, model) {
     model.globalTMin = Number.MAX_VALUE;
   }
 
+  /**
+   * Compute the tolerance in world coordinates.
+   * Do this by determining the world coordinates of the diagonal points of the
+   * window, computing the width of the window in world coordinates, and
+   * multiplying by the tolerance.
+   * @param {Number} selectionZ
+   * @param {Number} aspect
+   * @param {vtkRenderer} renderer
+   * @returns {Number} the computed tolerance
+   */
+  function computeTolerance(selectionZ, aspect, renderer) {
+    let tolerance = 0.0;
+
+    const view = renderer.getRenderWindow().getViews()[0];
+    const viewport = renderer.getViewport();
+    const winSize = view.getSize();
+
+    let x = winSize[0] * viewport[0];
+    let y = winSize[1] * viewport[1];
+
+    const normalizedLeftDisplay = view.displayToNormalizedDisplay(
+      x,
+      y,
+      selectionZ
+    );
+    const windowLowerLeft = renderer.normalizedDisplayToWorld(
+      normalizedLeftDisplay[0],
+      normalizedLeftDisplay[1],
+      normalizedLeftDisplay[2],
+      aspect
+    );
+
+    x = winSize[0] * viewport[2];
+    y = winSize[1] * viewport[3];
+
+    const normalizedRightDisplay = view.displayToNormalizedDisplay(
+      x,
+      y,
+      selectionZ
+    );
+    const windowUpperRight = renderer.normalizedDisplayToWorld(
+      normalizedRightDisplay[0],
+      normalizedRightDisplay[1],
+      normalizedRightDisplay[2],
+      aspect
+    );
+
+    for (let i = 0; i < 3; i++) {
+      tolerance +=
+        (windowUpperRight[i] - windowLowerLeft[i]) *
+        (windowUpperRight[i] - windowLowerLeft[i]);
+    }
+
+    return Math.sqrt(tolerance);
+  }
+
   // Intersect data with specified ray.
   // Project the center point of the mapper onto the ray and determine its parametric value
   publicAPI.intersectWithLine = (p1, p2, tol, mapper) => {
@@ -80,13 +136,7 @@ function vtkPicker(publicAPI, model) {
     let tB;
     const p1World = [];
     const p2World = [];
-    let viewport = [];
-    let winSize = [];
-    let x;
-    let y;
-    let windowLowerLeft = [];
-    let windowUpperRight = [];
-    let tol = 0.0;
+
     let props = [];
     let pickable = false;
     const p1Mapper = new Float64Array(4);
@@ -126,7 +176,10 @@ function vtkPicker(publicAPI, model) {
       displayCoords[1],
       displayCoords[2]
     );
+
     selectionZ = displayCoords[2];
+    const tolerance =
+      computeTolerance(selectionZ, aspect, renderer) * model.tolerance;
 
     // Convert the selection point into world coordinates.
     const normalizedDisplay = view.displayToNormalizedDisplay(
@@ -184,49 +237,6 @@ function vtkPicker(publicAPI, model) {
     p1World[3] = 1.0;
     p2World[3] = 1.0;
 
-    // Compute the tolerance in world coordinates.  Do this by
-    // determining the world coordinates of the diagonal points of the
-    // window, computing the width of the window in world coordinates, and
-    // multiplying by the tolerance.
-    viewport = renderer.getViewport();
-    if (renderer.getRenderWindow()) {
-      winSize = renderer.getRenderWindow().getViews()[0].getSize();
-    }
-    x = winSize[0] * viewport[0];
-    y = winSize[1] * viewport[1];
-    const normalizedLeftDisplay = view.displayToNormalizedDisplay(
-      x,
-      y,
-      selectionZ
-    );
-    windowLowerLeft = renderer.normalizedDisplayToWorld(
-      normalizedLeftDisplay[0],
-      normalizedLeftDisplay[1],
-      normalizedLeftDisplay[2],
-      aspect
-    );
-
-    x = winSize[0] * viewport[2];
-    y = winSize[1] * viewport[3];
-    const normalizedRightDisplay = view.displayToNormalizedDisplay(
-      x,
-      y,
-      selectionZ
-    );
-    windowUpperRight = renderer.normalizedDisplayToWorld(
-      normalizedRightDisplay[0],
-      normalizedRightDisplay[1],
-      normalizedRightDisplay[2],
-      aspect
-    );
-
-    for (let i = 0; i < 3; i++) {
-      tol +=
-        (windowUpperRight[i] - windowLowerLeft[i]) *
-        (windowUpperRight[i] - windowLowerLeft[i]);
-    }
-
-    tol = Math.sqrt(tol) * model.tolerance;
     if (model.pickFromList) {
       props = model.pickList;
     } else {
@@ -284,7 +294,7 @@ function vtkPicker(publicAPI, model) {
 
         if (mapper) {
           bbox.setBounds(mapper.getBounds());
-          bbox.inflate(tol);
+          bbox.inflate(tolerance);
         } else {
           bbox.reset();
         }
@@ -293,7 +303,7 @@ function vtkPicker(publicAPI, model) {
           t[0] = publicAPI.intersectWithLine(
             p1Mapper,
             p2Mapper,
-            tol * 0.333 * (scale[0] + scale[1] + scale[2]),
+            tolerance * 0.333 * (scale[0] + scale[1] + scale[2]),
             prop,
             mapper
           );

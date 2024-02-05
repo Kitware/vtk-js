@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -23,7 +23,7 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
 import baseline from './testImageResliceMapperSlabTypes.png';
 
-test.onlyIfWebGL('Test ImageResliceMapperSlabTypes', (t) => {
+test.onlyIfWebGL('Test ImageResliceMapperSlabTypes', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkImageResliceMapper testImageResliceMapperSlabTypes');
 
@@ -118,47 +118,52 @@ test.onlyIfWebGL('Test ImageResliceMapperSlabTypes', (t) => {
   ren2.setActiveCamera(cam);
   ren3.setActiveCamera(cam);
   ren4.setActiveCamera(cam);
-  reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`).then(() => {
-    reader.loadData().then(() => {
-      reader.update();
-      const im = reader.getOutputData();
-      slicePlane.setOrigin(im.getCenter());
-      const mat = mat3.identity(new Float64Array(9));
-      mat3.copy(mat, im.getDirection());
-      const n = [1, 0, 0];
-      vec3.transformMat3(n, n, mat);
-      slicePlane.setNormal(n);
+  const promise = reader
+    .setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`)
+    .then(() =>
+      reader.loadData().then(() => {
+        reader.update();
+        const im = reader.getOutputData();
+        slicePlane.setOrigin(im.getCenter());
+        const mat = mat3.identity(new Float64Array(9));
+        mat3.copy(mat, im.getDirection());
+        const n = [1, 0, 0];
+        vec3.transformMat3(n, n, mat);
+        slicePlane.setNormal(n);
 
-      amapper.setInputData(im);
-      cmapper.setInputData(im);
-      smapper.setInputData(im);
-      zmapper.setInputData(im);
+        amapper.setInputData(im);
+        cmapper.setInputData(im);
+        smapper.setInputData(im);
+        zmapper.setInputData(im);
 
-      ren1.resetCamera();
-      ren2.resetCamera();
-      ren3.resetCamera();
-      ren4.resetCamera();
+        ren1.resetCamera();
+        ren2.resetCamera();
+        ren3.resetCamera();
+        ren4.resetCamera();
 
-      cam.roll(-30);
-      cam.azimuth(-90);
-      cam.roll(-90);
-      cam.zoom(1.5);
+        cam.roll(-30);
+        cam.azimuth(-90);
+        cam.roll(-90);
+        cam.zoom(1.5);
 
-      renderWindow.render();
+        renderWindow.render();
 
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline],
-          'Rendering/Core/ImageResliceMapper',
-          t,
-          1,
-          gc.releaseResources
-        );
-      });
-      renderWindow.render();
-    });
-  });
+        const p = glwindow
+          .captureNextImage()
+          .then((image) =>
+            testUtils.compareImages(
+              image,
+              [baseline],
+              'Rendering/Core/ImageResliceMapper',
+              t,
+              1,
+              gc.releaseResources
+            )
+          );
+        renderWindow.render();
+        return p;
+      })
+    );
 
   const property = gc.registerResource(vtkImageProperty.newInstance());
 
@@ -198,4 +203,6 @@ test.onlyIfWebGL('Test ImageResliceMapperSlabTypes', (t) => {
   global.ren3 = ren3;
   global.ren4 = ren4;
   global.renderWindow = renderWindow;
+
+  return promise;
 });

@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -14,7 +14,7 @@ import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
 import baseline from './testMinimumIntensityProjection.png';
 
-test('Test Minimum Intensity Projection Volume Rendering', (t) => {
+test('Test Minimum Intensity Projection Volume Rendering', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkVolumeMapper MinIP');
   // testUtils.keepDOM();
@@ -75,23 +75,24 @@ test('Test Minimum Intensity Projection Volume Rendering', (t) => {
   interactor.initialize();
   interactor.bindEvents(renderWindowContainer);
 
-  reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`).then(() => {
-    reader.loadData().then(() => {
-      renderer.addVolume(actor);
-      renderer.resetCamera();
-      renderer.getActiveCamera().elevation(-120);
+  await reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`);
+  await reader.loadData();
+  renderer.addVolume(actor);
+  renderer.resetCamera();
+  renderer.getActiveCamera().elevation(-120);
 
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline],
-          'Rendering/Core/VolumeMapper/testMinimumIntensityProjection',
-          t,
-          1.5,
-          gc.releaseResources
-        );
-      });
-      renderWindow.render();
-    });
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/Core/VolumeMapper/testMinimumIntensityProjection',
+        t,
+        1.5,
+        gc.releaseResources
+      )
+    );
+  renderWindow.render();
+  return promise;
 });

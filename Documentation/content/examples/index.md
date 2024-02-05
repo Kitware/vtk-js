@@ -36,21 +36,15 @@ This will allow you to see the some live code running in your browser. Just pick
 
 <div class="gallery">
 
-[![PDBReader Example][PDBReader]](./PDBReader.html "PDBReader Example")
-[![ElevationReader Example][ElevationReader]](./ElevationReader.html)
 [![VolumeContour Example][VolumeContour]](./VolumeContour.html)
 [![MultiSliceImageMapper Example][MultiSliceImageMapper]](./MultiSliceImageMapper.html)
 [![PiecewiseGaussianWidget Example][PiecewiseGaussianWidget]](./PiecewiseGaussianWidget.html)
-[![ZipHttpReader Example][ZipHttpReader]](./ZipHttpReader.html)
 
 </div>
 
-[ElevationReader]: ../docs/gallery/ElevationReader.jpg
 [MultiSliceImageMapper]: ../docs/gallery/MultiSliceImageMapper.jpg
-[PDBReader]: ../docs/gallery/PDBReader.jpg
 [PiecewiseGaussianWidget]: ../docs/gallery/PiecewiseGaussianWidget.jpg
 [VolumeContour]: ../docs/gallery/VolumeContour.jpg
-[ZipHttpReader]: ../docs/gallery/ZipHttpReader.jpg
 
 ## Applications
 
@@ -100,33 +94,41 @@ This will allow you to see the some live code running in your browser. Just pick
 
 <div class="gallery">
 
-[![DracoReader Example][DracoReader]](./DracoReader.html "Draco reader(drc)")
-[![PLYReader Example][PLYReader]](./PLYReader.html "PLY reader(ply)")
-[![PLYWriter Example][PLYWriter]](./PLYWriter.html "PLY writer(ply)")
-[![STLReader Example][STLReader]](./STLReader.html "STL reader(stl)")
-[![STLWriter Example][STLWriter]](./STLWriter.html "STL writer(stl)")
-[![PolyDataReader Example][PolyDataReader]](./PolyDataReader.html "VTK legacy reader(VTK)")
-[![ElevationReader Example][ElevationReader]](./ElevationReader.html "Elevation reader(CSV, JPG)")
+[![DracoReader Example][DracoReaderWithIcon]](./DracoReader.html "Draco reader(drc)")
+[![PLYReader Example][PLYReaderWithIcon]](./PLYReader.html "PLY reader(ply)")
+[![PLYWriter Example][PLYWriterWithIcon]](./PLYWriter.html "PLY writer(ply)")
+[![STLReader Example][STLReaderWithIcon]](./STLReader.html "STL reader(stl)")
+[![STLWriter Example][STLWriterWithIcon]](./STLWriter.html "STL writer(stl)")
+[![PolyDataReader Example][PolyDataReaderWithIcon]](./PolyDataReader.html "VTK legacy reader(VTK)")
+[![ElevationReader Example][ElevationReaderWithIcon]](./ElevationReader.html "Elevation reader(CSV, JPG)")
 [![OBJReader Example][OBJReaderWithIcon]](./OBJReader.html "OBJ reader(OBJ, MTL, JPG)")
 [![PDBReader Example][PDBReaderWithIcon]](./PDBReader.html "PDB reader(OBJ, MTL, JPG)")
-[![XMLImageDataWriter Example][XMLImageDataWriter]](./XMLImageDataWriter.html "ImageData XML writer(VTI)")
-[![XMLPolyDataDataWriter Example][XMLPolyDataWriter]](./XMLPolyDataWriter.html "PolyData XML writer(VTP)")
+[![XMLImageDataWriter Example][XMLImageDataWriterWithIcon]](./XMLImageDataWriter.html "ImageData XML writer(VTI)")
+[![XMLPolyDataDataWriter Example][XMLPolyDataWriterWithIcon]](./XMLPolyDataWriter.html "PolyData XML writer(VTP)")
 [![ZipHttpReader Example][ZipHttpReaderWithIcon]](./ZipHttpReader.html "ZIP http reader(ZIP)")
+[![HttpDataSetReader Example][HttpDataSetReaderWithIcon]](./HttpDataSetReader.html "Import a VTK dataset")
+[![HttpDataSetSeriesReader Example][HttpDataSetSeriesReaderWithIcon]](./HttpDataSetSeriesReader.html "Import a VTK dataset with time support.")
+[![HttpSceneLoader Example][HttpSceneLoaderWithIcon]](./HttpSceneLoader.html "Import a VTK scene (data + representation)")
+[![OfflineLocalView Example][OfflineLocalViewWithIcon]](./OfflineLocalView.html "Load a serialized scene (VTKSZ)")
 
 </div>
 
-[DracoReader]: ../docs/gallery/DracoReaderWithIcon.jpg
-[PLYReader]: ../docs/gallery/PLYReaderWithIcon.jpg
-[PLYWriter]: ../docs/gallery/PLYWriterWithIcon.jpg
-[STLReader]: ../docs/gallery/STLReaderWithIcon.jpg
-[STLWriter]: ../docs/gallery/STLWriterWithIcon.jpg
-[PolyDataReader]: ../docs/gallery/VTKReaderWithIcon.jpg
-[ElevationReader]: ../docs/gallery/ElevationReaderWithIcon.jpg
+[DracoReaderWithIcon]: ../docs/gallery/DracoReaderWithIcon.jpg
+[PLYReaderWithIcon]: ../docs/gallery/PLYReaderWithIcon.jpg
+[PLYWriterWithIcon]: ../docs/gallery/PLYWriterWithIcon.jpg
+[STLReaderWithIcon]: ../docs/gallery/STLReaderWithIcon.jpg
+[STLWriterWithIcon]: ../docs/gallery/STLWriterWithIcon.jpg
+[PolyDataReaderWithIcon]: ../docs/gallery/VTKReaderWithIcon.jpg
+[ElevationReaderWithIcon]: ../docs/gallery/ElevationReaderWithIcon.jpg
 [OBJReaderWithIcon]: ../docs/gallery/OBJReaderWithIcon.jpg
 [PDBReaderWithIcon]: ../docs/gallery/PDBReaderWithIcon.jpg
-[XMLImageDataWriter]: ../docs/gallery/XMLImageDataWriterWithIcon.jpg
-[XMLPolyDataWriter]: ../docs/gallery/XMLPolyDataWriterWithIcon.jpg
+[XMLImageDataWriterWithIcon]: ../docs/gallery/XMLImageDataWriterWithIcon.jpg
+[XMLPolyDataWriterWithIcon]: ../docs/gallery/XMLPolyDataWriterWithIcon.jpg
 [ZipHttpReaderWithIcon]: ../docs/gallery/ZipHttpReaderWithIcon.jpg
+[HttpDataSetReaderWithIcon]: ../docs/gallery/HttpDataSetReaderWithIcon.jpg
+[HttpDataSetSeriesReaderWithIcon]: ../docs/gallery/HttpDataSetSeriesReaderWithIcon.gif
+[HttpSceneLoaderWithIcon]: ../docs/gallery/HttpSceneLoaderWithIcon.jpg
+[OfflineLocalViewWithIcon]: ../docs/gallery/OfflineLocalViewWithIcon.jpg
 
 ## Rendering
 
@@ -141,7 +143,6 @@ This will allow you to see the some live code running in your browser. Just pick
 [![ScalarBarActor Example][ScalarBarActor]](./ScalarBarActor.html "Scalar bar/color legend/LUT actor")
 [![VolumeMapper Example][VolumeMapper]](./VolumeMapper.html "3D volume ray cast mapper witch volumetric scattering")
 [![SurfaceLICMapper Example][SurfaceLICMapper]](./SurfaceLICMapper.html "Surface Line Integral Convolution (LIC) mapper")
-
 
 </div>
 
@@ -162,6 +163,8 @@ This will allow you to see the some live code running in your browser. Just pick
 [![CellPicker Example][CellPicker]](./CellPicker.html "CPU cell picker/selector")
 [![PointPicker Example][PointPicker]](./PointPicker.html "CPU point picker/selector")
 [![HardwareSelector Example][HardwareSelector]](./HardwareSelector.html "GPU point/cell picker/selector with properties")
+
+</div>
 
 [CellPicker]: ../docs/gallery/CellPicker.jpg
 [PointPicker]: ../docs/gallery/PointPicker.jpg
@@ -194,7 +197,20 @@ This will allow you to see the some live code running in your browser. Just pick
 [LineWidget]: ../docs/gallery/LineWidget.png
 [PaintWidget]: ../docs/gallery/PaintWidget.gif
 [PolyLineWidget]: ../docs/gallery/PolyLineWidget.png
-[ResliceCursorWidget]: ../docs/gallery/ResliceCursorWidget.jpg
+[ResliceCursorWidget]: ../docs/gallery/ResliceCursorWidget.gif
 [ShapeWidget]: ../docs/gallery/ShapeWidget.png
 [SphereWidget]: ../docs/gallery/SphereWidget.jpg
 [SplineWidget]: ../docs/gallery/SplineWidget.gif
+
+## Connectivity
+
+<div class="gallery">
+
+[![RemoteView Example][RemoteViewWithLogos]](./RemoteView.html "Connect a VTK or ParaView Python backend server via WebSockets")
+[![ImageStream Example][ImageStreamWithLogos]](./ImageStream.html "Stream a ParaView Python backend server via WebSockets under a VTK.js rendering")
+
+
+</div>
+
+[RemoteViewWithLogos]: ../docs/gallery/RemoteViewWithLogos.jpg
+[ImageStreamWithLogos]: ../docs/gallery/ImageStreamWithLogos.jpg

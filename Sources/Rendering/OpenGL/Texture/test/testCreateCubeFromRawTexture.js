@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
@@ -7,16 +8,16 @@ import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import baseline from './testCreateCubeFromRawTexture.png';
 
-test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
+test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('Rendering', 'Filter: OpenGLTexture');
 
-  function callBackfunction(loadedTextures) {
+  function onLoadedTextures(loadedTextures) {
     // Create come control UI
     const container = document.querySelector('body');
     const renderWindowContainer = gc.registerDOMElement(
@@ -63,44 +64,33 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
     renderer.getActiveCamera().elevation(30);
     renderer.resetCameraClippingRange();
 
-    glwindow.captureNextImage().then((image) => {
-      testUtils.compareImages(
-        image,
-        [baseline],
-        'Rendering/OpenGL/Texture/',
-        t,
-        0.5,
-        gc.releaseResources
+    const promise = glwindow
+      .captureNextImage()
+      .then((image) =>
+        testUtils.compareImages(
+          image,
+          [baseline],
+          'Rendering/OpenGL/Texture/',
+          t,
+          0.5,
+          gc.releaseResources
+        )
       );
-    });
     renderWindow.render();
+    return promise;
   }
 
-  // Recursive function to load texture one by one
-  function loadTexture(
-    idTexture,
-    texturePathList,
-    textureImageList,
-    endCallBack
-  ) {
-    if (idTexture === texturePathList.length) {
-      if (endCallBack) {
-        // check if endcallback exists
-        endCallBack(textureImageList);
-      }
-      return;
-    }
-
+  async function loadTexture(texturePathList) {
     const reader = gc.registerResource(
       vtkHttpDataSetReader.newInstance({ fetchGzip: true })
     );
-    reader.setUrl(texturePathList[idTexture]).then(() => {
-      reader.loadData().then(() => {
-        textureImageList.push(reader.getOutputData());
-        const nextID = idTexture + 1;
-        loadTexture(nextID, texturePathList, textureImageList, endCallBack);
-      }); // end loadData
-    }); // end set url
+    const textures = [];
+    for (let i = 0; i < texturePathList.length; i++) {
+      await reader.setUrl(texturePathList[i]);
+      await reader.loadData();
+      textures.push(reader.getOutputData());
+    }
+    return textures;
   }
 
   const path = `${__BASE_PATH__}/Data/skybox/mountains/`;
@@ -112,7 +102,5 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
   texturePathList.push(`${path}front.jpg`); // front is +z on a cube
   texturePathList.push(`${path}back.jpg`);
 
-  // It will contains all vtkImageData which will textured the cube
-  const textures = [];
-  loadTexture(0, texturePathList, textures, callBackfunction);
+  return onLoadedTextures(await loadTexture(texturePathList));
 });

@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -14,7 +14,7 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import baseline1 from './testComposite16Bit.png';
 import baseline2 from './testComposite16Bit_2.png';
 
-test('Test Composite Volume Rendering', (t) => {
+test('Test Composite Volume Rendering', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkVolumeMapper Composite16Bit');
   // testUtils.keepDOM();
@@ -70,21 +70,22 @@ test('Test Composite Volume Rendering', (t) => {
   interactor.initialize();
   interactor.bindEvents(renderWindowContainer);
 
-  reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`).then(() => {
-    reader.loadData().then(() => {
-      renderer.addVolume(actor);
-      renderer.resetCamera();
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline1, baseline2],
-          'Rendering/Core/VolumeMapper/testComposite16Bit',
-          t,
-          1.5,
-          gc.releaseResources
-        );
-      });
-      renderWindow.render();
-    });
-  });
+  await reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`);
+  await reader.loadData();
+  renderer.addVolume(actor);
+  renderer.resetCamera();
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline1, baseline2],
+        'Rendering/Core/VolumeMapper/testComposite16Bit',
+        t,
+        1.5,
+        gc.releaseResources
+      )
+    );
+  renderWindow.render();
+  return promise;
 });

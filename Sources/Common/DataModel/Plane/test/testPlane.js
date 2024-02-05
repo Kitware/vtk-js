@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
 test('Test vtkPlane instance', (t) => {

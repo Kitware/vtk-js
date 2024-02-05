@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -13,7 +13,7 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
 import baseline1 from './testCompositeParallelProjection.png';
 
-test('Test Composite Volume Rendering with parallel projection', (t) => {
+test('Test Composite Volume Rendering with parallel projection', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkOpenGLVolumeMapper CompositeParallelProjection');
   // testUtils.keepDOM();
@@ -67,24 +67,25 @@ test('Test Composite Volume Rendering with parallel projection', (t) => {
   interactor.initialize();
   interactor.bindEvents(renderWindowContainer);
 
-  reader.setUrl(`${__BASE_PATH__}/Data/volume/LIDC2.vti`).then(() => {
-    reader.loadData().then(() => {
-      renderer.addVolume(actor);
-      renderer.resetCamera();
-      renderer.getActiveCamera().zoom(1.5);
-      renderer.getActiveCamera().setParallelProjection(true);
+  await reader.setUrl(`${__BASE_PATH__}/Data/volume/LIDC2.vti`);
+  await reader.loadData();
+  renderer.addVolume(actor);
+  renderer.resetCamera();
+  renderer.getActiveCamera().zoom(1.5);
+  renderer.getActiveCamera().setParallelProjection(true);
 
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline1],
-          'Rendering/Core/VolumeMapper/testCompositeParallelProjection',
-          t,
-          1.5,
-          gc.releaseResources
-        );
-      });
-      renderWindow.render();
-    });
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline1],
+        'Rendering/Core/VolumeMapper/testCompositeParallelProjection',
+        t,
+        1.5,
+        gc.releaseResources
+      )
+    );
+  renderWindow.render();
+  return promise;
 });

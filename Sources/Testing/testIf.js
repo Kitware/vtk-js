@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 test.onlyIfWebGL('onlyIfWebGL', (t) => {
   t.ok(1, 'onlyIfWebGL enabled');

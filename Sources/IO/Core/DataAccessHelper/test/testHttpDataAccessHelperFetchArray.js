@@ -1,7 +1,7 @@
-import test from 'tape-catch';
+import test from 'tape';
 import HttpDataAccessHelper from '../HttpDataAccessHelper';
 
-test('Test array.ref.url is used', (t) => {
+test('Test array.ref.url is used', async (t) => {
   const expectedUrl = 'https://test.io/load_dataset?param1=testing';
 
   const array = {
@@ -12,16 +12,25 @@ test('Test array.ref.url is used', (t) => {
 
   const oldXmlHttpRequest = window.XMLHttpRequest;
 
-  // Mock XmlHttpRequest
-  window.XMLHttpRequest = function MockedXmlHttpRequestConstructor() {
-    this.open = (method, url, async = true) => {
-      t.equals(url, expectedUrl, 'xhr.open gets the same URL as array.ref.url');
-      t.end();
+  await new Promise((resolve) => {
+    // Mock XmlHttpRequest
+    window.XMLHttpRequest = function MockedXmlHttpRequestConstructor() {
+      this.open = (method, url, async = true) => {
+        t.equals(
+          url,
+          expectedUrl,
+          'xhr.open gets the same URL as array.ref.url'
+        );
 
-      // Clear mock
-      window.XMLHttpRequest = oldXmlHttpRequest;
+        // Clear mock
+        window.XMLHttpRequest = oldXmlHttpRequest;
+
+        resolve();
+      };
     };
-  };
 
-  HttpDataAccessHelper.fetchArray({}, '', array);
+    HttpDataAccessHelper.fetchArray({}, '', array);
+  });
+
+  t.end();
 });

@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -18,7 +18,7 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
 import baseline from './testVolumeMapperClip.png';
 
-test.onlyIfWebGL('Test Volume Mapper Clip', (t) => {
+test.onlyIfWebGL('Test Volume Mapper Clip', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkVolumeMapper Clip');
   // testUtils.keepDOM();
@@ -83,37 +83,39 @@ test.onlyIfWebGL('Test Volume Mapper Clip', (t) => {
   interactor.initialize();
   interactor.bindEvents(renderWindowContainer);
 
-  reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`).then(() => {
-    reader.loadData().then(() => {
-      renderer.addVolume(actor);
-      actor.getProperty().setInterpolationTypeToLinear();
-      const im = reader.getOutputData();
-      const bds = im.getBounds();
-      clipPlane.setOrigin(
-        0.5 * (bds[0] + bds[1]),
-        0.5 * (bds[2] + bds[3]),
-        0.5 * (bds[4] + bds[5])
-      );
+  await reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`);
+  await reader.loadData();
 
-      renderer.resetCamera();
-      const cam = renderer.getActiveCamera();
-      cam.setPosition(-433.55, -264.9, 6.33);
-      cam.setFocalPoint(156.47, 183.3, 84.39);
-      cam.setViewUp(-0.09, 0.27, -0.96);
-      cam.zoom(1.2);
-      renderer.resetCameraClippingRange();
+  renderer.addVolume(actor);
+  actor.getProperty().setInterpolationTypeToLinear();
+  const im = reader.getOutputData();
+  const bds = im.getBounds();
+  clipPlane.setOrigin(
+    0.5 * (bds[0] + bds[1]),
+    0.5 * (bds[2] + bds[3]),
+    0.5 * (bds[4] + bds[5])
+  );
 
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline],
-          'Rendering/Core/VolumeMapper/testVolumeMapperClip',
-          t,
-          1.5,
-          gc.releaseResources
-        );
-      });
-      renderWindow.render();
-    });
-  });
+  renderer.resetCamera();
+  const cam = renderer.getActiveCamera();
+  cam.setPosition(-433.55, -264.9, 6.33);
+  cam.setFocalPoint(156.47, 183.3, 84.39);
+  cam.setViewUp(-0.09, 0.27, -0.96);
+  cam.zoom(1.2);
+  renderer.resetCameraClippingRange();
+
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/Core/VolumeMapper/testVolumeMapperClip',
+        t,
+        1.5,
+        gc.releaseResources
+      )
+    );
+  renderWindow.render();
+  return promise;
 });

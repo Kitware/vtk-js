@@ -4,8 +4,21 @@ import { vec3 } from 'gl-matrix';
 export default function widgetBehavior(publicAPI, model) {
   model.painting = model._factory.getPainting();
 
-  publicAPI.handleLeftButtonPress = () => {
-    if (!model.activeState || !model.activeState.getActive()) {
+  publicAPI.handleLeftButtonPress = (callData) => {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
+    if (!(manipulator && model.activeState && model.activeState.getActive())) {
+      model.painting = false;
+      return macro.VOID;
+    }
+
+    const { worldCoords } = manipulator.handleEvent(
+      callData,
+      model._apiSpecificRenderWindow
+    );
+
+    if (!worldCoords?.length) {
+      model.painting = false;
       return macro.VOID;
     }
 
@@ -26,48 +39,48 @@ export default function widgetBehavior(publicAPI, model) {
       model.widgetState.clearTrailList();
     }
     model.painting = false;
-    return model.hasFocus ? macro.EVENT_ABORT : macro.VOID;
+    return macro.VOID;
   };
 
   publicAPI.handleEvent = (callData) => {
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
-    if (manipulator && model.activeState && model.activeState.getActive()) {
-      const normal = model._camera.getDirectionOfProjection();
-      const up = model._camera.getViewUp();
-      const right = [];
-      vec3.cross(right, up, normal);
-      model.activeState.setUp(...up);
-      model.activeState.setRight(...right);
-      model.activeState.setDirection(...normal);
-
-      const { worldCoords } = manipulator.handleEvent(
-        callData,
-        model._apiSpecificRenderWindow
-      );
-
-      if (worldCoords.length) {
-        model.widgetState.setTrueOrigin(...worldCoords);
-        model.activeState.setOrigin(...worldCoords);
-
-        if (model.painting) {
-          const trailCircle = model.widgetState.addTrail();
-          trailCircle.set(
-            model.activeState.get(
-              'origin',
-              'up',
-              'right',
-              'direction',
-              'scale1'
-            )
-          );
-        }
-      }
-
-      publicAPI.invokeInteractionEvent();
-      return macro.EVENT_ABORT;
+    if (!(manipulator && model.activeState && model.activeState.getActive())) {
+      model.painting = false;
+      return macro.VOID;
     }
-    return macro.VOID;
+
+    const normal = model._camera.getDirectionOfProjection();
+    const up = model._camera.getViewUp();
+    const right = [];
+    vec3.cross(right, up, normal);
+    model.activeState.setUp(...up);
+    model.activeState.setRight(...right);
+    model.activeState.setDirection(...normal);
+
+    const { worldCoords } = manipulator.handleEvent(
+      callData,
+      model._apiSpecificRenderWindow
+    );
+
+    if (!worldCoords?.length) {
+      return macro.VOID;
+    }
+
+    model.widgetState.setTrueOrigin(...worldCoords);
+    model.activeState.setOrigin(...worldCoords);
+
+    if (model.painting) {
+      const trailCircle = model.widgetState.addTrail();
+      trailCircle.set(
+        model.activeState.get('origin', 'up', 'right', 'direction', 'scale1')
+      );
+    } else {
+      return macro.VOID;
+    }
+
+    publicAPI.invokeInteractionEvent();
+    return macro.EVENT_ABORT;
   };
 
   publicAPI.grabFocus = () => {

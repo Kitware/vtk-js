@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -14,7 +14,7 @@ import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
 import baseline from './testMaximumIntensityProjection.png';
 
-test('Test Maximum Intensity Projection Volume Rendering', (t) => {
+test('Test Maximum Intensity Projection Volume Rendering', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkVolumeMapper MIP');
   // testUtils.keepDOM();
@@ -76,22 +76,24 @@ test('Test Maximum Intensity Projection Volume Rendering', (t) => {
   interactor.initialize();
   interactor.bindEvents(renderWindowContainer);
 
-  reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`).then(() => {
-    reader.loadData().then(() => {
-      renderer.addVolume(actor);
-      renderer.resetCamera();
+  await reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`);
+  await reader.loadData();
 
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline],
-          'Rendering/Core/VolumeMapper/testMaximumIntensityProjection',
-          t,
-          1.5,
-          gc.releaseResources
-        );
-      });
-      renderWindow.render();
-    });
-  });
+  renderer.addVolume(actor);
+  renderer.resetCamera();
+
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/Core/VolumeMapper/testMaximumIntensityProjection',
+        t,
+        1.5,
+        gc.releaseResources
+      )
+    );
+  renderWindow.render();
+  return promise;
 });

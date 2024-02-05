@@ -92,6 +92,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderWindowInteractor');
 
+  // Capture "parentClass" api for internal use
+  const superClass = { ...publicAPI };
+
   // Initialize list of requesters
   const animationRequesters = new Set();
 
@@ -215,8 +218,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     return event.pointerType || '';
   }
 
-  publicAPI.bindEvents = (container) => {
-    model.container = container;
+  const _bindEvents = () => {
+    if (model.container === null) {
+      return;
+    }
+
+    const { container } = model;
     container.addEventListener('contextmenu', preventDefault);
     container.addEventListener('wheel', publicAPI.handleWheel);
     container.addEventListener('DOMMouseScroll', publicAPI.handleWheel);
@@ -247,24 +254,59 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     container.style.webkitTapHighlightColor = 'rgba(0,0,0,0)';
   };
 
-  publicAPI.unbindEvents = () => {
+  // For backward compatibility.
+  // Necessary for using unbind/bindEvent without calling setContainer.
+  publicAPI.bindEvents = (container) => {
+    if (container === null) {
+      return;
+    }
+    const res = superClass.setContainer(container);
+    if (res) {
+      _bindEvents();
+    }
+  };
+
+  const _unbindEvents = () => {
+    // Clear any previous timeouts and state variables that control mouse / touchpad behavior.
+    clearTimeout(model.moveTimeoutID);
+    clearTimeout(model.wheelTimeoutID);
+    model.moveTimeoutID = 0;
+    model.wheelTimeoutID = 0;
+    wheelCoefficient = 1.0;
+
     const { container } = model;
-    container.removeEventListener('contextmenu', preventDefault);
-    container.removeEventListener('wheel', publicAPI.handleWheel);
-    container.removeEventListener('DOMMouseScroll', publicAPI.handleWheel);
-    container.removeEventListener('pointerenter', publicAPI.handlePointerEnter);
-    container.removeEventListener('pointerleave', publicAPI.handlePointerLeave);
-    container.removeEventListener('pointermove', publicAPI.handlePointerMove, {
-      passive: false,
-    });
-    container.removeEventListener('pointerdown', publicAPI.handlePointerDown, {
-      passive: false,
-    });
-    container.removeEventListener('pointerup', publicAPI.handlePointerUp);
-    container.removeEventListener(
-      'pointercancel',
-      publicAPI.handlePointerCancel
-    );
+    if (container) {
+      container.removeEventListener('contextmenu', preventDefault);
+      container.removeEventListener('wheel', publicAPI.handleWheel);
+      container.removeEventListener('DOMMouseScroll', publicAPI.handleWheel);
+      container.removeEventListener(
+        'pointerenter',
+        publicAPI.handlePointerEnter
+      );
+      container.removeEventListener(
+        'pointerleave',
+        publicAPI.handlePointerLeave
+      );
+      container.removeEventListener(
+        'pointermove',
+        publicAPI.handlePointerMove,
+        {
+          passive: false,
+        }
+      );
+      container.removeEventListener(
+        'pointerdown',
+        publicAPI.handlePointerDown,
+        {
+          passive: false,
+        }
+      );
+      container.removeEventListener('pointerup', publicAPI.handlePointerUp);
+      container.removeEventListener(
+        'pointercancel',
+        publicAPI.handlePointerCancel
+      );
+    }
     document.removeEventListener('keypress', publicAPI.handleKeyPress);
     document.removeEventListener('keydown', publicAPI.handleKeyDown);
     document.removeEventListener('keyup', publicAPI.handleKeyUp);
@@ -272,8 +314,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       'pointerlockchange',
       publicAPI.handlePointerLockChange
     );
-    model.container = null;
     pointerCache.clear();
+  };
+
+  publicAPI.unbindEvents = () => {
+    _unbindEvents();
+    superClass.setContainer(null);
   };
 
   publicAPI.handleKeyPress = (event) => {
@@ -1126,8 +1172,16 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     model.currentRenderer = r;
   };
 
+  publicAPI.setContainer = (container) => {
+    _unbindEvents();
+    const res = superClass.setContainer(container ?? null);
+    if (res) {
+      _bindEvents();
+    }
+    return res;
+  };
+
   // Stop animating if the renderWindowInteractor is deleted.
-  const superDelete = publicAPI.delete;
   publicAPI.delete = () => {
     while (animationRequesters.size) {
       publicAPI.cancelAnimation(animationRequesters.values().next().value);
@@ -1139,9 +1193,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       );
     }
     if (model.container) {
-      publicAPI.unbindEvents();
+      publicAPI.setContainer(null);
     }
-    superDelete();
+    superClass.delete();
   };
 
   // Use the Page Visibility API to detect when we switch away from or back to
@@ -1206,7 +1260,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create get-only macros
   macro.get(publicAPI, model, [
     'initialized',
-    'container',
     'interactorStyle',
     'lastFrameTime',
     'recentAnimationFrameRate',
@@ -1215,6 +1268,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Create get-set macros
   macro.setGet(publicAPI, model, [
+    'container',
     'lightFollowCamera',
     'enabled',
     'enableRender',

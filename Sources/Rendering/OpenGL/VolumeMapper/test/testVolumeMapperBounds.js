@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -13,7 +13,7 @@ import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindo
 
 import baseline1 from './testVolumeMapperBounds.png';
 
-test.onlyIfWebGL('Test Volume Mapper Bounds', (t) => {
+test.onlyIfWebGL('Test Volume Mapper Bounds', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkVolumeMapper Bounds');
   // testUtils.keepDOM();
@@ -63,29 +63,30 @@ test.onlyIfWebGL('Test Volume Mapper Bounds', (t) => {
   interactor.initialize();
   interactor.bindEvents(renderWindowContainer);
 
-  reader
-    .setUrl(
-      'https://kitware.github.io/vtk-js-datasets/data/vti/syntheticSlicesData.vti/'
-    )
-    .then(() => {
-      reader.loadData().then(() => {
-        renderer.addVolume(actor);
-        actor.getProperty().setInterpolationTypeToNearest();
+  await reader.setUrl(
+    'https://kitware.github.io/vtk-js-datasets/data/vti/syntheticSlicesData.vti/'
+  );
+  await reader.loadData();
 
-        renderer.resetCamera();
-        renderer.getActiveCamera().elevation(90);
+  renderer.addVolume(actor);
+  actor.getProperty().setInterpolationTypeToNearest();
 
-        glwindow.captureNextImage().then((image) => {
-          testUtils.compareImages(
-            image,
-            [baseline1],
-            'Rendering/Core/VolumeMapper/testVolumeMapperBounds',
-            t,
-            1.5,
-            gc.releaseResources
-          );
-        });
-        renderWindow.render();
-      });
-    });
+  renderer.resetCamera();
+  renderer.getActiveCamera().elevation(90);
+
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline1],
+        'Rendering/Core/VolumeMapper/testVolumeMapperBounds',
+        t,
+        1.5,
+        gc.releaseResources
+      )
+    );
+  renderWindow.render();
+
+  return promise;
 });

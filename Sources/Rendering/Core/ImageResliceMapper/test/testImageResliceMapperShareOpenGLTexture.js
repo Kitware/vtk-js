@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -20,7 +20,7 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
 import baseline from './testImageResliceMapperShareOpenGLTexture.png';
 
-test.onlyIfWebGL('Test ImageResliceMapperShareOpenGLTexture', (t) => {
+test.onlyIfWebGL('Test ImageResliceMapperShareOpenGLTexture', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok(
     'rendering',
@@ -85,51 +85,56 @@ test.onlyIfWebGL('Test ImageResliceMapperShareOpenGLTexture', (t) => {
   const oglsmapper = oglrenderer.getViewNodeFor(smapper);
   oglsmapper.setOpenGLTexture(oglamapper.getOpenGLTexture());
 
-  reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`).then(() => {
-    reader.loadData().then(() => {
-      reader.update();
-      const im = reader.getOutputData();
-      amapper.setInputData(im);
-      cmapper.setInputData(im);
-      const center = im.getCenter();
-      aslicePlane.setOrigin(center);
-      cslicePlane.setOrigin(center);
-      sslicePlane.setOrigin(center);
-      const mat = mat3.identity(new Float64Array(9));
-      mat3.copy(mat, im.getDirection());
+  const promise = reader
+    .setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`)
+    .then(() =>
+      reader.loadData().then(() => {
+        reader.update();
+        const im = reader.getOutputData();
+        amapper.setInputData(im);
+        cmapper.setInputData(im);
+        const center = im.getCenter();
+        aslicePlane.setOrigin(center);
+        cslicePlane.setOrigin(center);
+        sslicePlane.setOrigin(center);
+        const mat = mat3.identity(new Float64Array(9));
+        mat3.copy(mat, im.getDirection());
 
-      const an = aslicePlane.getNormal();
-      vec3.transformMat3(an, an, mat);
-      aslicePlane.setNormal(an);
+        const an = aslicePlane.getNormal();
+        vec3.transformMat3(an, an, mat);
+        aslicePlane.setNormal(an);
 
-      const cn = cslicePlane.getNormal();
-      vec3.transformMat3(cn, cn, mat);
-      cslicePlane.setNormal(cn);
+        const cn = cslicePlane.getNormal();
+        vec3.transformMat3(cn, cn, mat);
+        cslicePlane.setNormal(cn);
 
-      const sn = sslicePlane.getNormal();
-      vec3.transformMat3(sn, sn, mat);
-      sslicePlane.setNormal(sn);
+        const sn = sslicePlane.getNormal();
+        vec3.transformMat3(sn, sn, mat);
+        sslicePlane.setNormal(sn);
 
-      smapper.setInputData(im);
+        smapper.setInputData(im);
 
-      renderer.getActiveCamera().azimuth(-45);
-      renderer.resetCamera();
-      renderer.getActiveCamera().zoom(1.5);
-      renderWindow.render();
+        renderer.getActiveCamera().azimuth(-45);
+        renderer.resetCamera();
+        renderer.getActiveCamera().zoom(1.5);
+        renderWindow.render();
 
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline],
-          'Rendering/Core/ImageResliceMapper',
-          t,
-          1,
-          gc.releaseResources
-        );
-      });
-      renderWindow.render();
-    });
-  });
+        const p = glwindow
+          .captureNextImage()
+          .then((image) =>
+            testUtils.compareImages(
+              image,
+              [baseline],
+              'Rendering/Core/ImageResliceMapper',
+              t,
+              1,
+              gc.releaseResources
+            )
+          );
+        renderWindow.render();
+        return p;
+      })
+    );
 
   const property = gc.registerResource(vtkImageProperty.newInstance());
 
@@ -164,4 +169,6 @@ test.onlyIfWebGL('Test ImageResliceMapperShareOpenGLTexture', (t) => {
   global.ofun = ofun;
   global.renderer = renderer;
   global.renderWindow = renderWindow;
+
+  return promise;
 });

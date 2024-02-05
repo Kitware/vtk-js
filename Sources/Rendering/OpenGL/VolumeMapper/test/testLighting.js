@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
@@ -15,7 +15,7 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import baseline1 from './testLighting.png';
 import baseline2 from './testLighting_2.png';
 
-test.onlyIfWebGL('Test Lighted Volume Rendering', (t) => {
+test.onlyIfWebGL('Test Lighted Volume Rendering', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkOpenGLVolumeMapper Lighting');
   // testUtils.keepDOM();
@@ -84,28 +84,31 @@ test.onlyIfWebGL('Test Lighted Volume Rendering', (t) => {
     vtkInteractorStyleTrackballCamera.newInstance()
   );
 
-  reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`).then(() => {
-    reader.loadData().then(() => {
-      renderer.addVolume(actor);
-      renderer.resetCamera();
-      renderer.getActiveCamera().elevation(70);
-      renderer.getActiveCamera().orthogonalizeViewUp();
-      renderer.getActiveCamera().azimuth(-90);
-      renderer.getActiveCamera().zoom(1.4);
-      renderer.resetCameraClippingRange();
-      renderer.updateLightsGeometryToFollowCamera();
-      renderWindow.render();
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline1, baseline2],
-          'Rendering/OpenGL/VolumeMapper/testLighting',
-          t,
-          0.05,
-          gc.releaseResources
-        );
-      });
-      renderWindow.render();
-    });
-  });
+  await reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`);
+  await reader.loadData();
+
+  renderer.addVolume(actor);
+  renderer.resetCamera();
+  renderer.getActiveCamera().elevation(70);
+  renderer.getActiveCamera().orthogonalizeViewUp();
+  renderer.getActiveCamera().azimuth(-90);
+  renderer.getActiveCamera().zoom(1.4);
+  renderer.resetCameraClippingRange();
+  renderer.updateLightsGeometryToFollowCamera();
+  renderWindow.render();
+
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline1, baseline2],
+        'Rendering/OpenGL/VolumeMapper/testLighting',
+        t,
+        0.05,
+        gc.releaseResources
+      )
+    );
+  renderWindow.render();
+  return promise;
 });

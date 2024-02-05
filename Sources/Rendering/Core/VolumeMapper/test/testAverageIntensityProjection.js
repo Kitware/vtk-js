@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
@@ -14,7 +14,7 @@ import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
 import baseline from './testAverageIntensityProjection.png';
 
-test.skip('Test Average Intensity Projection Volume Rendering', (t) => {
+test.skip('Test Average Intensity Projection Volume Rendering', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkVolumeMapper AverageIP');
   // testUtils.keepDOM();
@@ -76,26 +76,26 @@ test.skip('Test Average Intensity Projection Volume Rendering', (t) => {
   interactor.initialize();
   interactor.bindEvents(renderWindowContainer);
 
-  reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`).then(() => {
-    reader.loadData().then(() => {
-      renderer.addVolume(actor);
-      renderer.resetCamera();
+  await reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`);
+  await reader.loadData();
 
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline],
-          'Rendering/Core/VolumeMapper/testAverageIntensityProjection',
-          t,
-          {
-            // be stricter here
-            pixelThreshold: 0.01,
-            mismatchTolerance: 1.0,
-          },
-          gc.releaseResources
-        );
-      });
-      renderWindow.render();
-    });
-  });
+  renderer.addVolume(actor);
+  renderer.resetCamera();
+
+  const promise = glwindow.captureNextImage().then((image) =>
+    testUtils.compareImages(
+      image,
+      [baseline],
+      'Rendering/Core/VolumeMapper/testAverageIntensityProjection',
+      t,
+      {
+        // be stricter here
+        pixelThreshold: 0.01,
+        mismatchTolerance: 1.0,
+      },
+      gc.releaseResources
+    )
+  );
+  renderWindow.render();
+  return promise;
 });

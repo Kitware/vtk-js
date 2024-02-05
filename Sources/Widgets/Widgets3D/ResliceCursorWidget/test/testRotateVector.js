@@ -1,4 +1,4 @@
-import test from 'tape-catch';
+import test from 'tape';
 
 import { radiansFromDegrees, areEquals } from 'vtk.js/Sources/Common/Core/Math';
 
