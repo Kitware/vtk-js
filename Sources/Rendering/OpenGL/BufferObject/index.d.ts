@@ -5,9 +5,9 @@ import { vtkAlgorithm, vtkObject } from '../../../interfaces';
  * Interface for initial values of BufferObject
  */
 export interface IBufferObjectInitialValues {
-  objectType?: ObjectType | ObjectType.ARRAY_BUFFER;
+  objectType?: ObjectType;
   context?: WebGLRenderingContext | WebGL2RenderingContext;
-  allocatedGPUMemoryInBytes?: number | 0;
+  allocatedGPUMemoryInBytes?: number;
 }
 
 /**
