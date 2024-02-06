@@ -1,7 +1,5 @@
-import { vtkAlgorithm, vtkObject } from '@kitware/vtk.js/interfaces';
-import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
-import { Vector3 } from '@kitware/vtk.js/types';
-
+import { vtkAlgorithm, vtkObject } from '../../../interfaces';
+import vtkPolyData from '../../../Common/DataModel/PolyData';
 /**
  * Initial configuration values for vtkContourLoopExtraction instances.
  */
