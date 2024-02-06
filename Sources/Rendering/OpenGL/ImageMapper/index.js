@@ -346,36 +346,40 @@ function vtkOpenGLImageMapper(publicAPI, model) {
                   float textureValue = texture2D(labelOutlineTexture1, vec2(textureCoordinate, 0.5)).r;
                   int actualThickness = int(textureValue * 255.0);
 
+                  if (segmentIndex == 0){
+                    gl_FragData[0] = vec4(0.0, 1.0, 1.0, 0.0);
+                    return;
+                  }
+
                   if (actualThickness == 0) {
                     gl_FragData[0] = vec4(0.0, 0.0, 1.0, 1.0);
                     return;
                   }
-                  if (opacityToUse > 0.01) {
-                    for (int i = -actualThickness; i <= actualThickness; i++) {
-                      for (int j = -actualThickness; j <= actualThickness; j++) {
-                        if (i == 0 || j == 0) {
-                          continue;
-                        }
-                        vec4 neighborPixelCoord = vec4(gl_FragCoord.x + float(i),
-                          gl_FragCoord.y + float(j),
-                          gl_FragCoord.z, gl_FragCoord.w);
-                        vec3 neighborPosIS = fragCoordToIndexSpace(neighborPixelCoord);
-                        float value = texture2D(texture1, neighborPosIS.xy).r;
-                        if (value != centerValue) {
-                          pixelOnBorder = true;
-                          break;
-                        }
+
+                  for (int i = -actualThickness; i <= actualThickness; i++) {
+                    for (int j = -actualThickness; j <= actualThickness; j++) {
+                      if (i == 0 || j == 0) {
+                        continue;
                       }
-                      if (pixelOnBorder == true) {
+                      vec4 neighborPixelCoord = vec4(gl_FragCoord.x + float(i),
+                        gl_FragCoord.y + float(j),
+                        gl_FragCoord.z, gl_FragCoord.w);
+                      vec3 neighborPosIS = fragCoordToIndexSpace(neighborPixelCoord);
+                      float value = texture2D(texture1, neighborPosIS.xy).r;
+                      if (value != centerValue) {
+                        pixelOnBorder = true;
                         break;
                       }
                     }
                     if (pixelOnBorder == true) {
-                      gl_FragData[0] = vec4(tColor, outlineOpacity);
+                      break;
                     }
-                    else {
-                      gl_FragData[0] = vec4(tColor, opacityToUse);
-                    }
+                  }
+                  if (pixelOnBorder == true) {
+                    gl_FragData[0] = vec4(tColor, outlineOpacity);
+                  }
+                  else {
+                    gl_FragData[0] = vec4(tColor, opacityToUse);
                   }
                 #else
                   float intensity = texture2D(texture1, tcoordVCVSOutput).r;
