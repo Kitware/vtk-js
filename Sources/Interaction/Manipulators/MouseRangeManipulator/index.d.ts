@@ -1,7 +1,7 @@
-import { vtkObject } from '../../../interfaces';
 import vtkCompositeMouseManipulator, {
   ICompositeMouseManipulatorInitialValues,
 } from '../../../Interaction/Manipulators/CompositeMouseManipulator';
+import { vtkObject } from '../../../interfaces';
 
 export interface IMouseRangeManipulatorInitialValues
   extends ICompositeMouseManipulatorInitialValues {}
