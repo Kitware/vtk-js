@@ -988,41 +988,46 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
     return vec4(0, 0, 1, 1);
   }
 
+  // If it is the background (segment index 0), we should quickly bail out. 
+  // Previously, this was determined by tColor.a, which was incorrect as it
+  // prevented the outline from appearing when the fill is 0.
+  if (segmentIndex == 0){
+    return vec4(0, 0, 0, 0);
+  }
+
   // Only perform outline check on fragments rendering voxels that aren't invisible.
   // Saves a bunch of needless checks on the background.
   // TODO define epsilon when building shader?
-  if (float(tColor.a) > 0.01) {
-    for (int i = -actualThickness; i <= actualThickness; i++) {
-      for (int j = -actualThickness; j <= actualThickness; j++) {
-        if (i == 0 || j == 0) {
-          continue;
-        }
-
-        vec4 neighborPixelCoord = vec4(gl_FragCoord.x + float(i),
-          gl_FragCoord.y + float(j),
-          gl_FragCoord.z, gl_FragCoord.w);
-
-        vec3 neighborPosIS = fragCoordToIndexSpace(neighborPixelCoord);
-        vec4 value = getTextureValue(neighborPosIS);
-
-        // If any of my neighbours are not the same value as I
-        // am, this means I am on the border of the segment.
-        // We can break the loops
-        if (any(notEqual(value, centerValue))) {
-          pixelOnBorder = true;
-          break;
-        }
+  for (int i = -actualThickness; i <= actualThickness; i++) {
+    for (int j = -actualThickness; j <= actualThickness; j++) {
+      if (i == 0 || j == 0) {
+        continue;
       }
 
-      if (pixelOnBorder == true) {
+      vec4 neighborPixelCoord = vec4(gl_FragCoord.x + float(i),
+        gl_FragCoord.y + float(j),
+        gl_FragCoord.z, gl_FragCoord.w);
+
+      vec3 neighborPosIS = fragCoordToIndexSpace(neighborPixelCoord);
+      vec4 value = getTextureValue(neighborPosIS);
+
+      // If any of my neighbours are not the same value as I
+      // am, this means I am on the border of the segment.
+      // We can break the loops
+      if (any(notEqual(value, centerValue))) {
+        pixelOnBorder = true;
         break;
       }
     }
 
-    // If I am on the border, I am displayed at full opacity
     if (pixelOnBorder == true) {
-      tColor.a = outlineOpacity;
+      break;
     }
+  }
+
+  // If I am on the border, I am displayed at full opacity
+  if (pixelOnBorder == true) {
+    tColor.a = outlineOpacity;
   }
 
 #else
