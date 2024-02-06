@@ -1,5 +1,6 @@
 import vtkPiecewiseFunction from "../../../Common/DataModel/PiecewiseFunction";
 import { vtkObject } from "../../../interfaces";
+import { Nullable } from "../../../types";
 import vtkColorTransferFunction from "../ColorTransferFunction";
 import { InterpolationType, OpacityMode } from "./Constants";
 
@@ -279,14 +280,14 @@ export interface vtkVolumeProperty extends vtkObject {
 	 * @param {Number} index 
 	 * @param {vtkColorTransferFunction} func 
 	 */
-	setRGBTransferFunction(index: number, func: vtkColorTransferFunction): boolean;
+	setRGBTransferFunction(index: number, func?: Nullable<vtkColorTransferFunction>): boolean;
 
 	/**
 	 * Set the scalar opacity of a volume to a transfer function
 	 * @param {Number} index 
 	 * @param {vtkPiecewiseFunction} func 
 	 */
-	setScalarOpacity(index: number, func: vtkPiecewiseFunction): boolean;
+	setScalarOpacity(index: number, func?: Nullable<vtkPiecewiseFunction>): boolean;
 
 	/**
 	 * Set the scalar component weights.

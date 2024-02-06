@@ -80,7 +80,7 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 	 *
 	 * @param {HTMLElement} el The container element.
 	 */
-	setContainer(el: HTMLElement): void;
+	setContainer(el: Nullable<HTMLElement>): void;
 
 	/**
 	 * Get the container element.

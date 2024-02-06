@@ -1,6 +1,5 @@
 import { vtkObject } from "../../../interfaces";
-import vtkAnnotatedCubeActor from "../../../Rendering/Core/AnnotatedCubeActor";
-import vtkAxesActor from "../../../Rendering/Core/AxesActor";
+import vtkActor from "../../../Rendering/Core/Actor";
 import vtkRenderer from "../../../Rendering/Core/Renderer";
 import vtkRenderWindowInteractor from "../../../Rendering/Core/RenderWindowInteractor";
 import { Nullable } from "../../../types";
@@ -11,7 +10,7 @@ import { Corners } from "./Constants";
  * 
  */
 export interface IOrientationMarkerWidgetInitialValues {
-	actor?: vtkAnnotatedCubeActor | vtkAxesActor,
+	actor?: vtkActor,
 	interactor?: vtkRenderWindowInteractor,
 	parentRenderer?: vtkRenderer,
 	viewportCorner?: Corners,
@@ -39,7 +38,7 @@ export interface vtkOrientationMarkerWidget extends vtkObject {
 	/**
 	 * 
 	 */
-	getActor(): vtkAnnotatedCubeActor | vtkAxesActor;
+	getActor(): vtkActor;
 
 	/**
 	 * Gets the parent renderer, if any.
@@ -85,9 +84,9 @@ export interface vtkOrientationMarkerWidget extends vtkObject {
 	
 	/**
 	 * Get the actor associated with the widget.
-	 * @param {vtkAnnotatedCubeActor | vtkAxesActor} actor The actor instance.
+	 * @param {vtkActor} actor The actor instance.
 	 */
-	setActor(actor: vtkAnnotatedCubeActor | vtkAxesActor): void;
+	setActor(actor: vtkActor): void;
 
 	/**
 	 * Sets the parent renderer
