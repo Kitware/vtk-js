@@ -398,6 +398,11 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 
 	/**
 	 *
+	 */
+	invokeRenderEvent(): void;
+
+	/**
+	 *
 	 * @param cb The callback to be called
 	 */
 	onStartAnimation(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
@@ -658,6 +663,13 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	 * @param {Number} [priority] The priority of the event.
 	 */
 	onEndInteractionEvent(cb: InteractorEventCallback, priority?: number): Readonly<vtkSubscription>;
+
+	/**
+	 *
+	 * @param {Function} cb The callback to be called.
+	 * @param {Number} [priority] The priority of the event.
+	 */
+	onRenderEvent(cb: () => void, priority?: number): Readonly<vtkSubscription>;
 
 	/**
 	 *
