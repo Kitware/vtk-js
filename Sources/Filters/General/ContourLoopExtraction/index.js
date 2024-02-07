@@ -8,7 +8,7 @@ const Dir = {
 
 const visited = new Set();
 
-function vtkContourLoopExtractionCtor(publicAPI, model) {
+function vtkContourLoopExtraction(publicAPI, model) {
   publicAPI.requestData = (inData, outData) => {
     const [input] = inData;
 
@@ -118,7 +118,6 @@ function vtkContourLoopExtractionCtor(publicAPI, model) {
     const outLines = output.getLines();
     outLines.resize(0);
 
-    // Optional merging of contours can happen here
     loops.forEach((loop) => {
       outLines.insertNextCell(loop.map((pt) => pt.ptId));
     });
@@ -139,7 +138,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   macro.algo(publicAPI, model, 1, 1);
 
-  vtkContourLoopExtractionCtor(publicAPI, model);
+  vtkContourLoopExtraction(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
@@ -151,6 +150,4 @@ export const newInstance = macro.newInstance(
 
 // ----------------------------------------------------------------------------
 
-const vtkContourLoopExtraction = { newInstance, extend };
-
-export default vtkContourLoopExtraction;
+export default { newInstance, extend };
