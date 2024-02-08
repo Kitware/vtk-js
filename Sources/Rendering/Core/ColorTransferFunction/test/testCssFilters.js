@@ -59,7 +59,10 @@ test('Fuzzy test all CssFilters', (t) => {
       const error = referenceOutput[channel] - filtersOutput[channel];
       // The error depends on the values of each filter
       // For example, using a color of [127.5, 127.5, 128.49] with a saturate of 1000 creates big errors
-      t.assert(Math.abs(error) <= 7 / 255);
+      // This is because the CSS filters use uint8 instead of floating point numbers
+      if (Math.abs(error) > 7 / 255) {
+        t.fail('Error is too big');
+      }
     }
   }
   t.end();
