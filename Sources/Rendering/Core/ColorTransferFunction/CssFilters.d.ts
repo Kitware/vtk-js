@@ -36,7 +36,10 @@ export function createIdentityFilter(outFilter?: FilterMatrix): FilterMatrix;
 
 /**
  * Combine two filters into a single filter
- * The order matters
+ * Warning: it is NOT an operation inspired by CSS filters
+ * For this, apply filters one by one using applyFilter
+ * The clamping step is not applied between each filter when the filters are combined
+ * The order of the filters matters
  * @param baseFilter The first filter that will be applied
  * @param newFilter The second filter that will be applied
  * @param outFilter An optional filter that will contain the combined filter
@@ -45,6 +48,7 @@ export function combineFilters(baseFilter: FilterMatrix, newFilter: FilterMatrix
 
 /**
  * Apply a filter to a rgb(a) point
+ * It is a multiplication by the matrix and a clamping
  * @param filter The filter
  * @param r The red channel (between 0 and 1)
  * @param g The green channel (between 0 and 1)

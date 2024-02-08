@@ -39,7 +39,19 @@ export function combineFilters(
 export function applyFilter(filter, r, g, b, a = 1) {
   const vec = [r, g, b, a, 1];
   multiplyMatrix(filter, vec, 5, 5, 5, 1, vec);
-  return vec.slice(0, 4);
+  // Clamp R, G, B, A
+  const output = new Array(4);
+  for (let i = 0; i < 4; ++i) {
+    const value = vec[i];
+    if (value < 0) {
+      output[i] = 0;
+    } else if (value > 1) {
+      output[i] = 1;
+    } else {
+      output[i] = value;
+    }
+  }
+  return output;
 }
 
 export function createLinearFilter(
