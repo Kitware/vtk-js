@@ -112,7 +112,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, [
     'representations',
     'widgetState',
-    'activeState',
+    'activeState', // stores the last activated sub state(handle)
   ]);
   macro.moveToProtected(publicAPI, model, ['widgetManager']);
   macro.event(publicAPI, model, 'ActivateHandle');
