@@ -1104,133 +1104,139 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
     #endif
   #endif
 
-  // single component is always independent
-  #if vtkNumComponents == 1
-    vec3 tColor = texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, 0.5)).rgb;
-    float alpha = goFactor.x*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, 0.5)).r;
-    if (alpha < EPSILON){
-      return vec4(0.0);
-    }
-  #endif
-
   #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
-    vec3 tColor = mix0*texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, height0)).rgb;
+    // independent components
+    // single component is always independent
+    vec3 tColor0 = mix0*texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, height0)).rgb;
     float pwfValue0 = texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, height0)).r;
-    #if !defined(vtkComponent0Proportional)
-      float alpha = goFactor.x*mix0*pwfValue0;
-    #else
-      tColor *= pwfValue0;
-      float alpha = mix(pwfValue0, 1.0, (1.0 - mix0));
-    #endif
 
     vec3 tColor1 = mix1*texture2D(ctexture, vec2(tValue.g * cscale1 + cshift1, height1)).rgb;
     float pwfValue1 = texture2D(otexture, vec2(tValue.g * oscale1 + oshift1, height1)).r;
+
+    #if vtkNumComponents >= 3
+      vec3 tColor2 = mix2*texture2D(ctexture, vec2(tValue.b * cscale2 + cshift2, height2)).rgb;
+      float pwfValue2 = texture2D(otexture, vec2(tValue.b * oscale2 + oshift2, height2)).r;
+    #endif
+
+    #if vtkNumComponents >= 4
+      vec3 tColor3 = mix3*texture2D(ctexture, vec2(tValue.a * cscale3 + cshift3, height3)).rgb;
+      float pwfValue3 = texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, height3)).r;
+    #endif
+
+    // process color and opacity for each component
+    #if !defined(vtkComponent0Proportional)
+      float alpha = goFactor.x*mix0*pwfValue0;
+      #if vtkLightComplexity > 0
+        applyLighting(tColor0, normal0);
+      #endif
+    #else
+      tColor0 *= pwfValue0;
+      float alpha = mix(pwfValue0, 1.0, (1.0 - mix0));
+    #endif
+
     #if !defined(vtkComponent1Proportional)
       alpha += goFactor.y*mix1*pwfValue1;
+      #if vtkLightComplexity > 0
+        applyLighting(tColor1, normal1);
+      #endif
     #else
       tColor1 *= pwfValue1;
       alpha *= mix(pwfValue1, 1.0, (1.0 - mix1));
     #endif
 
     #if vtkNumComponents >= 3
-      vec3 tColor2 = mix2*texture2D(ctexture, vec2(tValue.b * cscale2 + cshift2, height2)).rgb;
-      float pwfValue2 = texture2D(otexture, vec2(tValue.b * oscale2 + oshift2, height2)).r;
       #if !defined(vtkComponent2Proportional)
         alpha += goFactor.z*mix2*pwfValue2;
+        #if vtkLightComplexity > 0
+          applyLighting(tColor2, normal2);
+        #endif
       #else
         tColor2 *= pwfValue2;
         alpha *= mix(pwfValue2, 1.0, (1.0 - mix2));
       #endif
-
-      #if vtkNumComponents >= 4
-        vec3 tColor3 = mix3*texture2D(ctexture, vec2(tValue.a * cscale3 + cshift3, height3)).rgb;
-        float pwfValue3 = texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, height3)).r;
-        #if !defined(vtkComponent3Proportional)
-          alpha += goFactor.w*mix3*pwfValue3;
-        #else
-          tColor3 *= pwfValue3;
-          alpha *= mix(pwfValue3, 1.0, (1.0 - mix3));
-        #endif
-      #endif
-    #endif
-  #else // then not independent
-
-  #if vtkNumComponents == 2
-    vec3 tColor = vec3(tValue.r * cscale0 + cshift0);
-    float alpha = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale1 + oshift1, 0.5)).r;
-  #endif
-  #if vtkNumComponents == 3
-    vec3 tColor;
-    tColor.r = tValue.r * cscale0 + cshift0;
-    tColor.g = tValue.g * cscale1 + cshift1;
-    tColor.b = tValue.b * cscale2 + cshift2;
-    float alpha = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale0 + oshift0, 0.5)).r;
-  #endif
-  #if vtkNumComponents == 4
-    vec3 tColor;
-    tColor.r = tValue.r * cscale0 + cshift0;
-    tColor.g = tValue.g * cscale1 + cshift1;
-    tColor.b = tValue.b * cscale2 + cshift2;
-    float alpha = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, 0.5)).r;
-  #endif
-  #endif // dependent
-
-  // apply lighting if requested as appropriate
-  #if vtkLightComplexity > 0
-    #if !defined(vtkComponent0Proportional)
-      #if vtkNumComponents == 1
-        #ifdef SurfaceShadowOn
-            #if vtkLightComplexity < 3
-                vec3 tColorS = applyLightingDirectional(posIS, vec4(tColor, alpha), normalLight);
-            #else
-                vec3 tColorS = applyLightingPositional(posIS, vec4(tColor, alpha), normalLight, IStoVC(posIS));
-            #endif
-        #endif
-
-        #ifdef VolumeShadowOn
-          vec3 tColorVS = applyShadowRay(tColor, posIS, rayDirVC);
-          #ifdef SurfaceShadowOn
-            float vol_coef = volumetricScatteringBlending * (1.0 - alpha / 2.0) * (1.0 - atan(normalLight.w) * INV4PI);
-            tColor = (1.0-vol_coef) * tColorS + vol_coef * tColorVS;
-          #else
-            tColor = tColorVS;
-          #endif
-        #else
-            tColor = tColorS;
-        #endif
-
-      #else
-        applyLighting(tColor, normal0);
-      #endif
     #endif
 
-    #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
-      #if !defined(vtkComponent1Proportional)
-        applyLighting(tColor1, normal1);
-      #endif
-    #if vtkNumComponents >= 3
-      #if !defined(vtkComponent2Proportional)
-        applyLighting(tColor2, normal2);
-      #endif
     #if vtkNumComponents >= 4
       #if !defined(vtkComponent3Proportional)
-        applyLighting(tColor3, normal3);
+        alpha += goFactor.w*mix3*pwfValue3;
+        #if vtkLightComplexity > 0
+          applyLighting(tColor3, normal3);
+        #endif
+      #else
+        tColor3 *= pwfValue3;
+        alpha *= mix(pwfValue3, 1.0, (1.0 - mix3));
       #endif
     #endif
-    #endif
-    #endif
-  #endif
 
-// perform final independent blend as needed
-#if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
-  tColor += tColor1;
-#if vtkNumComponents >= 3
-  tColor += tColor2;
-#if vtkNumComponents >= 4
-  tColor += tColor3;
-#endif
-#endif
-#endif
+    // perform final independent blend
+    vec3 tColor = tColor0 + tColor1;
+    #if vtkNumComponents >= 3
+      tColor += tColor2;
+    #endif
+    #if vtkNumComponents >= 4
+      tColor += tColor3;
+    #endif
+
+  #else
+    // dependent components
+    #if vtkNumComponents == 1
+      vec3 tColor = texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, 0.5)).rgb;
+      float alpha = goFactor.x*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, 0.5)).r;
+      if (alpha < EPSILON){
+        return vec4(0.0);
+      }
+    #endif
+    #if vtkNumComponents == 2
+      vec3 tColor = vec3(tValue.r * cscale0 + cshift0);
+      float alpha = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale1 + oshift1, 0.5)).r;
+    #endif
+    #if vtkNumComponents == 3
+      vec3 tColor;
+      tColor.r = tValue.r * cscale0 + cshift0;
+      tColor.g = tValue.g * cscale1 + cshift1;
+      tColor.b = tValue.b * cscale2 + cshift2;
+      float alpha = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale0 + oshift0, 0.5)).r;
+    #endif
+    #if vtkNumComponents == 4
+      vec3 tColor;
+      tColor.r = tValue.r * cscale0 + cshift0;
+      tColor.g = tValue.g * cscale1 + cshift1;
+      tColor.b = tValue.b * cscale2 + cshift2;
+      float alpha = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, 0.5)).r;
+    #endif
+
+    #if vtkLightComplexity > 0
+      // apply lighting
+      #ifdef SurfaceShadowOn
+        #if vtkLightComplexity < 3
+          vec3 tColorS = applyLightingDirectional(posIS, vec4(tColor, alpha), normalLight);
+        #else
+          vec3 tColorS = applyLightingPositional(posIS, vec4(tColor, alpha), normalLight, IStoVC(posIS));
+        #endif
+      #endif
+      #ifdef VolumeShadowOn
+        vec3 tColorVS = applyShadowRay(tColor, posIS, rayDirVC);
+      #endif
+      #ifdef VolumeShadowOn
+        #ifdef SurfaceShadowOn
+          // surface shadows + volumetric shadows
+          float vol_coef = volumetricScatteringBlending * (1.0 - alpha / 2.0) * (1.0 - atan(normalLight.w) * INV4PI);
+          tColor = (1.0-vol_coef) * tColorS + vol_coef * tColorVS;
+        #else
+          // volumetric shadows only
+          tColor = tColorVS;
+        #endif
+      #else
+        #ifdef SurfaceShadowOn
+          // surface shadows only
+          tColor = tColorS;
+        #else
+          // no shadows
+          applyLighting(tColor, normal3);
+        #endif
+      #endif
+    #endif
+  #endif // dependent
 
 #endif
 return vec4(tColor, alpha);
