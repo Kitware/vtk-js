@@ -487,13 +487,13 @@ export interface vtkRenderer extends vtkViewport {
 	 * 
 	 * @param {Boolean} preserveColorBuffer 
 	 */
-	setPreserveColorbuffer(preserveColorBuffer: boolean): boolean;
+	setPreserveColorBuffer(preserveColorBuffer: boolean): boolean;
 
 	/**
 	 * 
 	 * @param {Boolean} preserveDepthBuffer 
 	 */
-	setPreserveDepthbuffer(preserveDepthBuffer: boolean): boolean;
+	setPreserveDepthBuffer(preserveDepthBuffer: boolean): boolean;
 
 	/**
 	 * 
@@ -520,30 +520,30 @@ export interface vtkRenderer extends vtkViewport {
 	setUseShadows(useShadows: boolean): boolean;
 
 	/**
-	 * 
+	 * Specify the rendering window in which to draw.
 	 * @param {vtkRenderWindow} renderWindow 
 	 */
 	setRenderWindow(renderWindow: vtkRenderWindow): void;
 
 	/**
-	 * 
+	 * Remove an actor from the list of actors.
 	 * @param {vtkProp} actor 
 	 */
 	removeActor(actor: vtkProp): void;
 
 	/**
-	 * 
+	 * Remove all actors from the list of actors.
 	 */
 	removeAllActors(): void;
 
 	/**
-	 * 
-	 * @param {vtkVolume} volume 
+	 * Remove a volume from the list of volumes.
+	 * @param {vtkVolume} volume The volume object to remove.
 	 */
 	removeVolume(volume: vtkVolume): void;
 
 	/**
-	 * 
+	 * Remove all volumes from the list of volumes.
 	 */
 	removeAllVolumes(): void;
 
