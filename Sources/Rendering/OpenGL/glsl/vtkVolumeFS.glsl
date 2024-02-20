@@ -33,6 +33,11 @@ varying vec3 vertexVCVSOutput;
 // possibly define vtkIndependentComponents
 //VTK::IndependentComponentsOn
 
+// possibly define if independent components are actually used 
+#if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
+  #define UseIndependentComponents
+#endif
+
 // possibly define any "proportional" components
 //VTK::vtkProportionalComponents
 
@@ -79,7 +84,7 @@ uniform float goscale0;
 uniform float goshift0;
 uniform float gomin0;
 uniform float gomax0;
-#if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
+#ifdef UseIndependentComponents
 uniform float goscale1;
 uniform float goshift1;
 uniform float gomin1;
@@ -150,7 +155,7 @@ uniform vec3 vVCToIJK;
 // the tfuns have a height of 2XnumComps pixels so the
 // values are computed to hit the middle of the two rows
 // for that component
-#ifdef vtkIndependentComponentsOn
+#ifdef UseIndependentComponents
 #if vtkNumComponents == 2
 uniform float mix0;
 uniform float mix1;
@@ -962,6 +967,94 @@ float computeLAO(vec3 posIS, float op, vec3 lightDir, vec4 normal){
   #endif
 #endif
 
+#ifdef UseIndependentComponents
+
+struct ComponentInfo {
+  vec3 color;
+  float opacity;
+  vec4 normal;
+};
+
+/*
+ * Mix the color informations from all the independent components to get a single rgba output
+ *
+ * goFactor is computed if vtkGradientOpacityOn
+ * it is not computed for proportional components
+ * goFactor values that are not computed equal 1
+ *
+ * applyLighting() is only defined when vtkLightComplexity > 0
+ *
+ * mix0, mix1, ... are defined for each component that is used
+ */
+vec4 mixColorsForIndependentComponents(
+  ComponentInfo comp0,
+  ComponentInfo comp1,
+  #if vtkNumComponents >= 3
+  ComponentInfo comp2,
+  #if vtkNumComponents >= 4
+  ComponentInfo comp3,
+  #endif
+  #endif
+  vec4 goFactor
+) {
+  #if !defined(vtkComponent0Proportional)
+    float alpha = goFactor.x*mix0*comp0.opacity;
+    #if vtkLightComplexity > 0
+      applyLighting(comp0.color, comp0.normal);
+    #endif
+  #else
+    comp0.color *= comp0.opacity;
+    float alpha = mix(comp0.opacity, 1.0, (1.0 - mix0));
+  #endif
+
+  #if !defined(vtkComponent1Proportional)
+    alpha += goFactor.y*mix1*comp1.opacity;
+    #if vtkLightComplexity > 0
+      applyLighting(comp1.color, comp1.normal);
+    #endif
+  #else
+    comp1.color *= comp1.opacity;
+    alpha *= mix(comp1.opacity, 1.0, (1.0 - mix1));
+  #endif
+
+  #if vtkNumComponents >= 3
+    #if !defined(vtkComponent2Proportional)
+      alpha += goFactor.z*mix2*comp2.opacity;
+      #if vtkLightComplexity > 0
+        applyLighting(comp2.color, comp2.normal);
+      #endif
+    #else
+      comp2.color *= comp2.opacity;
+      alpha *= mix(comp2.opacity, 1.0, (1.0 - mix2));
+    #endif
+  #endif
+
+  #if vtkNumComponents >= 4
+    #if !defined(vtkComponent3Proportional)
+      alpha += goFactor.w*mix3*comp3.opacity;
+      #if vtkLightComplexity > 0
+        applyLighting(comp3.color, comp3.normal);
+      #endif
+    #else
+      comp3.color *= comp3.opacity;
+      alpha *= mix(comp3.opacity, 1.0, (1.0 - mix3));
+    #endif
+  #endif
+
+  // perform final independent blend
+  vec3 tColor = mix0 * comp0.color + mix1 * comp1.color;
+  #if vtkNumComponents >= 3
+    tColor += mix2 * comp2.color;
+  #endif
+  #if vtkNumComponents >= 4
+    tColor += mix3 * comp3.color;
+  #endif
+
+  return vec4(tColor, alpha);
+}
+
+#endif
+
 //=======================================================================
 // Given a texture value compute the color and opacity
 //
@@ -1038,7 +1131,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
 
   // compute the normal vectors as needed
   #if (vtkLightComplexity > 0) || defined(vtkGradientOpacityOn)
-    #if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
+    #ifdef UseIndependentComponents
       mat4 normalMat = computeMat4Normal(posIS, tValue, tstep);
       #if !defined(vtkComponent0Proportional)
         vec4 normal0 = normalMat[0];
@@ -1084,7 +1177,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
       goFactor.x =
         computeGradientOpacityFactor(normal0.a, goscale0, goshift0, gomin0, gomax0);
     #endif
-    #if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
+    #ifdef UseIndependentComponents
       #if !defined(vtkComponent1Proportional)
         goFactor.y =
           computeGradientOpacityFactor(normal1.a, goscale1, goshift1, gomin1, gomax1);
@@ -1104,78 +1197,36 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
     #endif
   #endif
 
-  #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
+  #ifdef UseIndependentComponents
     // independent components
-    // single component is always independent
-    vec3 tColor0 = mix0*texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, height0)).rgb;
+    vec3 tColor0 = texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, height0)).rgb;
     float pwfValue0 = texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, height0)).r;
 
-    vec3 tColor1 = mix1*texture2D(ctexture, vec2(tValue.g * cscale1 + cshift1, height1)).rgb;
+    vec3 tColor1 = texture2D(ctexture, vec2(tValue.g * cscale1 + cshift1, height1)).rgb;
     float pwfValue1 = texture2D(otexture, vec2(tValue.g * oscale1 + oshift1, height1)).r;
 
     #if vtkNumComponents >= 3
-      vec3 tColor2 = mix2*texture2D(ctexture, vec2(tValue.b * cscale2 + cshift2, height2)).rgb;
+      vec3 tColor2 = texture2D(ctexture, vec2(tValue.b * cscale2 + cshift2, height2)).rgb;
       float pwfValue2 = texture2D(otexture, vec2(tValue.b * oscale2 + oshift2, height2)).r;
     #endif
 
     #if vtkNumComponents >= 4
-      vec3 tColor3 = mix3*texture2D(ctexture, vec2(tValue.a * cscale3 + cshift3, height3)).rgb;
+      vec3 tColor3 = texture2D(ctexture, vec2(tValue.a * cscale3 + cshift3, height3)).rgb;
       float pwfValue3 = texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, height3)).r;
     #endif
 
     // process color and opacity for each component
-    #if !defined(vtkComponent0Proportional)
-      float alpha = goFactor.x*mix0*pwfValue0;
-      #if vtkLightComplexity > 0
-        applyLighting(tColor0, normal0);
+    vec4 finalColor = mixColorsForIndependentComponents(
+      ComponentInfo(tColor0, pwfValue0, normal0),
+      ComponentInfo(tColor1, pwfValue1, normal1),
+      #if vtkNumComponents >= 3
+      ComponentInfo(tColor2, pwfValue2, normal2),
+      #if vtkNumComponents >= 4
+      ComponentInfo(tColor3, pwfValue3, normal3),
       #endif
-    #else
-      tColor0 *= pwfValue0;
-      float alpha = mix(pwfValue0, 1.0, (1.0 - mix0));
-    #endif
-
-    #if !defined(vtkComponent1Proportional)
-      alpha += goFactor.y*mix1*pwfValue1;
-      #if vtkLightComplexity > 0
-        applyLighting(tColor1, normal1);
       #endif
-    #else
-      tColor1 *= pwfValue1;
-      alpha *= mix(pwfValue1, 1.0, (1.0 - mix1));
-    #endif
-
-    #if vtkNumComponents >= 3
-      #if !defined(vtkComponent2Proportional)
-        alpha += goFactor.z*mix2*pwfValue2;
-        #if vtkLightComplexity > 0
-          applyLighting(tColor2, normal2);
-        #endif
-      #else
-        tColor2 *= pwfValue2;
-        alpha *= mix(pwfValue2, 1.0, (1.0 - mix2));
-      #endif
-    #endif
-
-    #if vtkNumComponents >= 4
-      #if !defined(vtkComponent3Proportional)
-        alpha += goFactor.w*mix3*pwfValue3;
-        #if vtkLightComplexity > 0
-          applyLighting(tColor3, normal3);
-        #endif
-      #else
-        tColor3 *= pwfValue3;
-        alpha *= mix(pwfValue3, 1.0, (1.0 - mix3));
-      #endif
-    #endif
-
-    // perform final independent blend
-    vec3 tColor = tColor0 + tColor1;
-    #if vtkNumComponents >= 3
-      tColor += tColor2;
-    #endif
-    #if vtkNumComponents >= 4
-      tColor += tColor3;
-    #endif
+      goFactor
+    );
 
   #else
     // dependent components
@@ -1236,10 +1287,11 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
         #endif
       #endif
     #endif
+    vec4 finalColor = vec4(tColor, alpha);
   #endif // dependent
 
 #endif
-return vec4(tColor, alpha);
+return finalColor;
 }
 
 bool valueWithinScalarRange(vec4 val, vec4 min, vec4 max) {
@@ -1249,17 +1301,18 @@ bool valueWithinScalarRange(vec4 val, vec4 min, vec4 max) {
       withinRange = true;
     }
   #endif
-  #if defined(vtkIndependentComponentsOn) && vtkNumComponents == 2
-     if (val.r >= min.r && val.r <= max.r &&
-        val.g >= min.g && val.g <= max.g) {
-      withinRange = true;
-    }
-  #endif
-  #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 3
-    if (all(greaterThanEqual(val, ipScalarRangeMin)) &&
-        all(lessThanEqual(val, ipScalarRangeMax))) {
-      withinRange = true;
-    }
+  #ifdef UseIndependentComponents
+    #if vtkNumComponents == 2
+      if (val.r >= min.r && val.r <= max.r &&
+          val.g >= min.g && val.g <= max.g) {
+        withinRange = true;
+      }
+    #else
+      if (all(greaterThanEqual(val, ipScalarRangeMin)) &&
+          all(lessThanEqual(val, ipScalarRangeMax))) {
+        withinRange = true;
+      }
+    #endif
   #endif
   return withinRange;
 }
