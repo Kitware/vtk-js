@@ -9,7 +9,12 @@ export const OpacityMode = {
   PROPORTIONAL: 1,
 };
 
+export const ColorMixPreset = {
+  ADDITING: 0,
+};
+
 export default {
   InterpolationType,
   OpacityMode,
+  ColorMixPreset,
 };

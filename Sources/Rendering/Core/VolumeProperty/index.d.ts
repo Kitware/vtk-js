@@ -2,9 +2,10 @@ import vtkPiecewiseFunction from "../../../Common/DataModel/PiecewiseFunction";
 import { vtkObject } from "../../../interfaces";
 import { Nullable } from "../../../types";
 import vtkColorTransferFunction from "../ColorTransferFunction";
-import { InterpolationType, OpacityMode } from "./Constants";
+import { ColorMixPreset, InterpolationType, OpacityMode } from "./Constants";
 
 export interface IVolumePropertyInitialValues  {
+	customColorMixCode?: Nullable<string>;
 	independentComponents?: boolean;
 	shade?: boolean;
 	ambient?: number;
@@ -68,6 +69,16 @@ export interface vtkVolumeProperty extends vtkObject {
 	 * @param {Number} index
 	 */
 	getGradientOpacityMinimumValue(index: number): number;
+
+	/**
+	 * 
+	 */
+	getCustomColorMixCode(): Nullable<string>;
+
+	/**
+	 * 
+	 */
+	getColorMixPreset(): Nullable<ColorMixPreset>;
 
 	/**
 	 *
@@ -181,6 +192,25 @@ export interface vtkVolumeProperty extends vtkObject {
 	 * @param {vtkPiecewiseFunction} func 
 	 */
 	setGrayTransferFunction(index: number, func: vtkPiecewiseFunction): boolean;
+
+	/**
+	 * Set this to null or an empty string to use the default rendering.
+	 * Setting this to a non-empty string will enable independant components in
+	 * the shader. The given code will be used to mix the colors from each
+	 * component.
+	 * Each component is available as a rgba vec4: `comp0`, `comp1`...
+	 * There are other useful functions or variable available. To find them,
+	 * see `//VTK::CustomComponentsColorMix::Impl` tag in `vtkVolumeFS.glsl`.
+	 * @param {Null | String} customColorMixCode 
+	 */
+	setCustomColorMixCode(customColorMixCode: Nullable<string>): boolean;
+
+	/**
+	 * Set the color mix code to a preset value
+	 * Set to null to not use any preset
+	 * If a customColorMixCode is set, the colorMixPreset is ignored
+	 */
+	setColorMixPreset(preset: Nullable<ColorMixPreset>): boolean;
 
 	/**
 	 * Does the data have independent components, or do some define color only?

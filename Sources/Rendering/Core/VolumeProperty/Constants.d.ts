@@ -9,8 +9,13 @@ export declare enum OpacityMode {
 	PROPORTIONAL = 1,
 }
 
+export declare enum ColorMixPreset {
+	ADDITING = 0,
+}
+
 declare const _default: {
 	InterpolationType: typeof InterpolationType;
 	OpacityMode: typeof OpacityMode;
+	ColorMixPreset: typeof ColorMixPreset;
 };
 export default _default;

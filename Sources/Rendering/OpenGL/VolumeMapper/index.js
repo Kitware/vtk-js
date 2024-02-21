@@ -18,6 +18,7 @@ import {
 import {
   InterpolationType,
   OpacityMode,
+  ColorMixPreset,
 } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 import { BlendMode } from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
@@ -174,6 +175,42 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           proportionalComponents.join('\n')
         ).result;
       }
+    }
+
+    let colorMixCode = actor.getProperty().getCustomColorMixCode();
+    const colorMixPreset = actor.getProperty().getColorMixPreset();
+    if (!colorMixCode) {
+      switch (colorMixPreset) {
+        case ColorMixPreset.ADDITING:
+          colorMixCode = `
+            float opacity0 = goFactor.x * pwfValue0;
+            float opacity1 = goFactor.y * pwfValue1;
+            float opacitySum = opacity0 + opacity1;
+            if (opacitySum == 0.0) {
+              return vec4(0.0);
+            }
+            #if vtkLightComplexity > 0
+              applyLighting(tColor0, normal0);
+              applyLighting(tColor1, normal1);
+            #endif
+            vec3 mixedColor = mix(tColor0, tColor1, opacity1 / opacitySum);
+            return vec4(mixedColor, opacitySum);`;
+          break;
+        default:
+          break;
+      }
+    }
+    if (colorMixCode) {
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::CustomComponentsColorMixOn',
+        '#define vtkCustomComponentsColorMix'
+      ).result;
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::CustomComponentsColorMix::Impl',
+        colorMixCode
+      ).result;
     }
 
     // WebGL only supports loops over constants
