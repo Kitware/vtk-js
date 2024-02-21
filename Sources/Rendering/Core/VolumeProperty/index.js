@@ -244,6 +244,8 @@ function vtkVolumeProperty(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  customColorMixCode: null,
+  colorMixPreset: null,
   independentComponents: true,
   interpolationType: InterpolationType.FAST_LINEAR,
   shade: false,
@@ -287,6 +289,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   }
 
   macro.setGet(publicAPI, model, [
+    'customColorMixCode',
+    'colorMixPreset',
     'independentComponents',
     'interpolationType',
     'shade',
