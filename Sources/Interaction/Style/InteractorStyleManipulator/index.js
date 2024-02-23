@@ -709,7 +709,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+const defaultValues = (initialValues) => ({
   cachedMousePosition: null,
   currentManipulator: null,
   currentWheelManipulator: null,
@@ -719,12 +719,13 @@ const DEFAULT_VALUES = {
   // gestureManipulators: null,
   centerOfRotation: [0, 0, 0],
   rotationFactor: 1,
-};
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   // Inheritance
   vtkInteractorStyle.extend(publicAPI, model, initialValues);
