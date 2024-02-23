@@ -343,6 +343,7 @@ function vtkWidgetManager(publicAPI, model) {
   }
 
   function onWidgetRemoved() {
+    publicAPI.modified();
     model._renderer.getRenderWindow().getInteractor().render();
     publicAPI.renderWidgets();
   }
