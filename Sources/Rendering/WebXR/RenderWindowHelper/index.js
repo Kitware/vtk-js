@@ -1,6 +1,10 @@
 import macro from 'vtk.js/Sources/macros';
 import Constants from 'vtk.js/Sources/Rendering/WebXR/RenderWindowHelper/Constants';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkLineSource from '@kitware/vtk.js/Filters/Sources/LineSource';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import { GET_UNDERLYING_CONTEXT } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/ContextProxy';
+import { vec3 } from 'gl-matrix';
 
 const { XrSessionTypes } = Constants;
 
@@ -8,6 +12,26 @@ const DEFAULT_RESET_FACTORS = {
   rescaleFactor: 0.25, // isotropic scale factor reduces apparent size of objects
   translateZ: -1.5, // default translation initializes object in front of camera
 };
+
+function createRay() {
+  const targetRayLineSource = vtkLineSource.newInstance();
+  const targetRayMapper = vtkMapper.newInstance();
+  targetRayMapper.setInputConnection(targetRayLineSource.getOutputPort());
+
+  const targetRayActor = vtkActor.newInstance();
+  targetRayActor.getProperty().setColor(1, 0, 0);
+  targetRayActor.getProperty().setLineWidth(5);
+
+  targetRayActor.setMapper(targetRayMapper);
+  targetRayActor.setPickable(false);
+
+  return {
+    lineSource: targetRayLineSource,
+    mapper: targetRayMapper,
+    actor: targetRayActor,
+    visible: false,
+  };
+}
 
 // ----------------------------------------------------------------------------
 // vtkWebXRRenderWindowHelper methods
@@ -184,6 +208,72 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
       XrSessionTypes.HmdVR,
       XrSessionTypes.HmdAR,
     ].includes(model.xrSessionType);
+    if (isXrSessionHMD && model.drawControllersRay && model.xrReferenceSpace) {
+      const renderer = model.renderWindow.getRenderable().getRenderers()[0];
+      const camera = renderer.getActiveCamera();
+      const physicalToWorldMatrix = [];
+      camera.getPhysicalToWorldMatrix(physicalToWorldMatrix);
+
+      xrSession.inputSources.forEach((inputSource) => {
+        if (
+          inputSource.targetRaySpace == null ||
+          inputSource.gripSpace == null ||
+          inputSource.targetRayMode !== 'tracked-pointer'
+        ) {
+          return;
+        }
+
+        if (model.inputSourceToRay[inputSource.handedness] == null) {
+          model.inputSourceToRay[inputSource.handedness] = createRay();
+        }
+
+        const ray = model.inputSourceToRay[inputSource.handedness];
+
+        const targetRayPose = frame.getPose(
+          inputSource.targetRaySpace,
+          model.xrReferenceSpace
+        );
+
+        if (targetRayPose == null) {
+          return;
+        }
+
+        const targetRayPosition = vec3.fromValues(
+          targetRayPose.transform.position.x,
+          targetRayPose.transform.position.y,
+          targetRayPose.transform.position.z
+        );
+
+        const dir = camera.physicalOrientationToWorldDirection([
+          targetRayPose.transform.orientation.x,
+          targetRayPose.transform.orientation.y,
+          targetRayPose.transform.orientation.z,
+          targetRayPose.transform.orientation.w,
+        ]);
+
+        const targetRayWorldPosition = vec3.transformMat4(
+          [],
+          targetRayPosition,
+          physicalToWorldMatrix
+        );
+
+        const dist = renderer.getActiveCamera().getClippingRange()[1];
+
+        if (!ray.visible) {
+          renderer.addActor(ray.actor);
+          ray.visible = true;
+        }
+
+        ray.lineSource.setPoint1(
+          targetRayWorldPosition[0] - dir[0] * dist,
+          targetRayWorldPosition[1] - dir[1] * dist,
+          targetRayWorldPosition[2] - dir[2] * dist
+        );
+        ray.lineSource.setPoint2(...targetRayWorldPosition);
+      });
+
+      model.renderWindow.render();
+    }
 
     model.renderWindow
       .getRenderable()
@@ -265,27 +355,31 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  initialized: false,
-  initCanvasSize: null,
-  initBackground: null,
-  renderWindow: null,
-  xrSession: null,
-  xrSessionType: 0,
-  xrReferenceSpace: null,
-};
+function defaultValues() {
+  return {
+    initialized: false,
+    drawControllersRay: false,
+    inputSourceToRay: {},
+    initCanvasSize: null,
+    initBackground: null,
+    renderWindow: null,
+    xrSession: null,
+    xrSessionType: 0,
+    xrReferenceSpace: null,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(), initialValues);
 
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.event(publicAPI, model, 'event');
 
   macro.get(publicAPI, model, ['xrSession']);
-  macro.setGet(publicAPI, model, ['renderWindow']);
+  macro.setGet(publicAPI, model, ['renderWindow', 'drawControllersRay']);
 
   // Object methods
   vtkWebXRRenderWindowHelper(publicAPI, model);
