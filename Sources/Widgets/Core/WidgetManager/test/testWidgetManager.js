@@ -29,6 +29,35 @@ test('Test vtkWidgetManager', (t) => {
   container.removeChild(rwContainer);
 });
 
+test('Test vtkWidgetManager add/remove onModified calls', (t) => {
+  const container = document.querySelector('body');
+  const rwContainer = document.createElement('div');
+  container.appendChild(rwContainer);
+  const grw = vtkGenericRenderWindow.newInstance({ listenWindowResize: false });
+  grw.setContainer(rwContainer);
+
+  const widgetManager = vtkWidgetManager.newInstance();
+  widgetManager.setRenderer(grw.getRenderer());
+
+  let modifiedCount = 0;
+  const onModified = () => {
+    modifiedCount++;
+  };
+  const sub = widgetManager.onModified(onModified);
+
+  const widget = vtkPolyLineWidget.newInstance();
+  widgetManager.addWidget(widget);
+  t.equal(modifiedCount, 1, 'Add triggers onModified');
+
+  widgetManager.removeWidget(widget);
+  t.equal(modifiedCount, 2, 'Remove triggers onModified');
+
+  t.end();
+
+  container.removeChild(rwContainer);
+  sub.unsubscribe();
+});
+
 test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
   const gc = testUtils.createGarbageCollector(t);
 
