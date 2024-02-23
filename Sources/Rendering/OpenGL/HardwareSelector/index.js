@@ -357,7 +357,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       model.framebuffer.setOpenGLRenderWindow(model._openGLRenderWindow);
       model.framebuffer.saveCurrentBindingsAndBuffers();
       const fbSize = model.framebuffer.getSize();
-      if (fbSize[0] !== size[0] || fbSize[1] !== size[1]) {
+      if (!fbSize || fbSize[0] !== size[0] || fbSize[1] !== size[1]) {
         model.framebuffer.create(size[0], size[1]);
         // this calls model.framebuffer.bind()
         model.framebuffer.populateFramebuffer();

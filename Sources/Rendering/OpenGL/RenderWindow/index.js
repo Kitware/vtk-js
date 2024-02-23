@@ -218,10 +218,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.getFramebufferSize = () => {
-    if (model.activeFramebuffer) {
-      return model.activeFramebuffer.getSize();
-    }
-    return model.size;
+    const fbSize = model.activeFramebuffer?.getSize();
+    return fbSize || model.size;
   };
 
   publicAPI.getPixelData = (x1, y1, x2, y2) => {
