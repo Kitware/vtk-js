@@ -301,7 +301,9 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
         model.state,
         ed.device,
         ed.input,
-        ed.pressed
+        ed.pressed,
+        ed.targetPosition,
+        ed.targetOrientation
       );
       if (ed.pressed) {
         publicAPI.startCameraPose();

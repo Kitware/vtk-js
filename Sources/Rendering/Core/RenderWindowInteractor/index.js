@@ -601,56 +601,75 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         inputSource.gripSpace == null
           ? null
           : xrFrame.getPose(inputSource.gripSpace, xrRefSpace);
-      const gp = inputSource.gamepad;
+
+      const targetRayPose =
+        inputSource.gripSpace == null
+          ? null
+          : xrFrame.getPose(inputSource.targetRaySpace, xrRefSpace);
+
+      const gamepad = inputSource.gamepad;
       const hand = inputSource.handedness;
-      if (gp) {
-        if (!(gp.index in model.lastGamepadValues)) {
-          model.lastGamepadValues[gp.index] = {
-            left: { buttons: {} },
-            right: { buttons: {} },
-            none: { buttons: {} },
-          };
+
+      if (!gamepad) {
+        return;
+      }
+
+      if (!(gamepad.index in model.lastGamepadValues)) {
+        model.lastGamepadValues[gamepad.index] = {
+          left: { buttons: {} },
+          right: { buttons: {} },
+          none: { buttons: {} },
+        };
+      }
+
+      for (let buttonIdx = 0; buttonIdx < gamepad.buttons.length; ++buttonIdx) {
+        if (
+          !(buttonIdx in model.lastGamepadValues[gamepad.index][hand].buttons)
+        ) {
+          model.lastGamepadValues[gamepad.index][hand].buttons[
+            buttonIdx
+          ] = false;
         }
-        for (let b = 0; b < gp.buttons.length; ++b) {
-          if (!(b in model.lastGamepadValues[gp.index][hand].buttons)) {
-            model.lastGamepadValues[gp.index][hand].buttons[b] = false;
-          }
-          if (
-            model.lastGamepadValues[gp.index][hand].buttons[b] !==
-              gp.buttons[b].pressed &&
-            gripPose != null
-          ) {
-            publicAPI.button3DEvent({
-              gamepad: gp,
-              position: gripPose.transform.position,
-              orientation: gripPose.transform.orientation,
-              pressed: gp.buttons[b].pressed,
-              device:
-                inputSource.handedness === 'left'
-                  ? Device.LeftController
-                  : Device.RightController,
-              input:
-                deviceInputMap[gp.mapping] && deviceInputMap[gp.mapping][b]
-                  ? deviceInputMap[gp.mapping][b]
-                  : Input.Trigger,
-            });
-            model.lastGamepadValues[gp.index][hand].buttons[b] =
-              gp.buttons[b].pressed;
-          }
-          if (
-            model.lastGamepadValues[gp.index][hand].buttons[b] &&
-            gripPose != null
-          ) {
-            publicAPI.move3DEvent({
-              gamepad: gp,
-              position: gripPose.transform.position,
-              orientation: gripPose.transform.orientation,
-              device:
-                inputSource.handedness === 'left'
-                  ? Device.LeftController
-                  : Device.RightController,
-            });
-          }
+        if (
+          model.lastGamepadValues[gamepad.index][hand].buttons[buttonIdx] !==
+            gamepad.buttons[buttonIdx].pressed &&
+          gripPose != null
+        ) {
+          publicAPI.button3DEvent({
+            gamepad,
+            position: gripPose.transform.position,
+            orientation: gripPose.transform.orientation,
+            targetPosition: targetRayPose.transform.position,
+            targetOrientation: targetRayPose.transform.orientation,
+            pressed: gamepad.buttons[buttonIdx].pressed,
+            device:
+              inputSource.handedness === 'left'
+                ? Device.LeftController
+                : Device.RightController,
+            input:
+              deviceInputMap[gamepad.mapping] &&
+              deviceInputMap[gamepad.mapping][buttonIdx]
+                ? deviceInputMap[gamepad.mapping][buttonIdx]
+                : Input.Trigger,
+          });
+          model.lastGamepadValues[gamepad.index][hand].buttons[buttonIdx] =
+            gamepad.buttons[buttonIdx].pressed;
+        }
+        if (
+          model.lastGamepadValues[gamepad.index][hand].buttons[buttonIdx] &&
+          gripPose != null
+        ) {
+          publicAPI.move3DEvent({
+            gamepad,
+            position: gripPose.transform.position,
+            orientation: gripPose.transform.orientation,
+            targetPosition: targetRayPose.transform.position,
+            targetOrientation: targetRayPose.transform.orientation,
+            device:
+              inputSource.handedness === 'left'
+                ? Device.LeftController
+                : Device.RightController,
+          });
         }
       }
     });
