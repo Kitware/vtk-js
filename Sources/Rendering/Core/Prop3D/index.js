@@ -5,6 +5,8 @@ import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 
+const VTK_EPSILON = 1e-6;
+
 // ----------------------------------------------------------------------------
 // vtkProp3D methods
 // ----------------------------------------------------------------------------
@@ -27,6 +29,9 @@ function vtkProp3D(publicAPI, model) {
     const w = quat.getAxisAngle(oaxis, q);
     return [vtkMath.degreesFromRadians(w), oaxis[0], oaxis[1], oaxis[2]];
   };
+
+  publicAPI.getOrientationQuaternion = (out = []) =>
+    mat4.getRotation(out, model.rotation);
 
   publicAPI.rotateX = (val) => {
     if (val === 0.0) {
@@ -78,6 +83,19 @@ function vtkProp3D(publicAPI, model) {
     const quatMat = new Float64Array(16);
     mat4.fromQuat(quatMat, q);
     mat4.multiply(model.rotation, model.rotation, quatMat);
+    publicAPI.modified();
+  };
+
+  publicAPI.rotateQuaternion = (orientationQuaternion) => {
+    if (Math.abs(orientationQuaternion[3]) >= 1 - VTK_EPSILON) {
+      return;
+    }
+
+    const oriQuatMat = mat4.fromQuat(
+      new Float64Array(16),
+      orientationQuaternion
+    );
+    mat4.multiply(model.rotation, model.rotation, oriQuatMat);
     publicAPI.modified();
   };
 
