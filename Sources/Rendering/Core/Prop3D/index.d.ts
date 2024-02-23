@@ -1,4 +1,4 @@
-import { mat4 } from "gl-matrix";
+import { mat4, quat } from "gl-matrix";
 import { Bounds, Vector3, Range } from "../../../types";
 import vtkProp, { IPropInitialValues } from "../Prop";
 
@@ -89,6 +89,13 @@ export interface vtkProp3D extends vtkProp {
 	getOrientationWXYZ(): number[];
 
 	/**
+	 * Get the orientation quaternion of the Prop3D.
+	 * out is optional and will be created if not supplied.
+	 * @param {quat | undefined} out
+	 */
+	getOrientationQuaternion(out?: quat): quat;
+
+	/**
 	 * Get a reference to the Prop3D’s 4x4 composite matrix.
 	 * Get the matrix from the position, origin, scale and orientation This
 	 * matrix is cached, so multiple GetMatrix() calls will be efficient.
@@ -166,6 +173,14 @@ export interface vtkProp3D extends vtkProp {
 	 * @param {Number} z The z coordinate.
 	 */
 	rotateWXYZ(degrees: number, x: number, y: number, z: number): void;
+
+	/**
+	 * Rotate the Prop3D by the provided orientation quaternion.
+	 * If the provided quaternion is identity (~epsilon), this function does nothing.
+	 * The quaternion should follow the gl-matrix convention: [x,y,z,w]
+	 * @param {quat} orientationQuaternion The quaternion to rotate the prop by.
+	 */
+	rotateQuaternion(orientationQuaternion: quat): void;
 
 	/**
 	 * Orientation is specified as X, Y and Z rotations in that order,
