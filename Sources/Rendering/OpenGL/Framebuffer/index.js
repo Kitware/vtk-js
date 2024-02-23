@@ -225,12 +225,8 @@ function vtkFramebuffer(publicAPI, model) {
   };
 
   publicAPI.getSize = () => {
-    const size = [0, 0];
-    if (model.glFramebuffer !== null) {
-      size[0] = model.glFramebuffer.width;
-      size[1] = model.glFramebuffer.height;
-    }
-    return size;
+    if (model.glFramebuffer == null) return null;
+    return [model.glFramebuffer.width, model.glFramebuffer.height];
   };
 
   publicAPI.populateFramebuffer = () => {
