@@ -54,7 +54,7 @@ const writeLines = (lines) => {
 };
 
 const writePoints = (pts, normals, tcoords) => {
-  let outputData = '';
+  const outputData = [];
   const nbPts = pts.getNumberOfPoints();
 
   let p;
@@ -62,14 +62,14 @@ const writePoints = (pts, normals, tcoords) => {
   // Positions
   for (let i = 0; i < nbPts; i++) {
     p = pts.getPoint(i, p);
-    outputData += `v ${p[0]} ${p[1]} ${p[2]}\n`;
+    outputData.push[`v ${p[0]} ${p[1]} ${p[2]}`];
   }
 
   // Normals
   if (normals) {
     for (let i = 0; i < nbPts; i++) {
       p = normals.getTuple(i, p);
-      outputData += `vn ${p[0]} ${p[1]} ${p[2]}\n`;
+      outputData.push[`vn ${p[0]} ${p[1]} ${p[2]}`];
     }
   }
 
@@ -77,13 +77,23 @@ const writePoints = (pts, normals, tcoords) => {
   if (tcoords) {
     for (let i = 0; i < nbPts; i++) {
       p = tcoords.getTuple(i, p);
-      outputData += `vt ${p[0]} ${p[1]}\n`;
+      outputData.push[`vt ${p[0]} ${p[1]}`];
     }
   }
-  return outputData;
+  return outputData.join('/n');
 };
 
-const writeOBJ = (polyData) => {
+const writeMtl = (baseName, textureFileName) => {
+  const outputData = [];
+  // set material
+  const mtlName = 'material_0';
+  outputData.push[`newmtl ${mtlName}`];
+  outputData.push[`map_Kd ${textureFileName}`];
+  return outputData.join('/n');
+};
+
+
+const writeOBJ = (polyData, textureFileName) => {
   let outputData = '# VTK.js generated OBJ File\n';
   const pts = polyData.getPoints();
   const polys = polyData.getPolys();
@@ -139,13 +149,20 @@ function vtkOBJWriter(publicAPI, model) {
 
   publicAPI.requestData = (inData, outData) => {
     const input = inData[0];
+    const inputTexture = inData[1];
 
     if (!input || !input.isA('vtkPolyData')) {
       vtkErrorMacro('Invalid or missing input');
       return;
     }
 
+    if (!inputTexture || !input.isA('vtkTexture')) {
+      vtkErrorMacro('Invalid or missing input');
+      return;
+    }
+
     outData[0] = writeOBJ(input);
+    outData[1], outData[2] = writeMtl(input);
   };
 }
 
@@ -164,7 +181,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   // Also make it an algorithm with one input and one output
-  macro.algo(publicAPI, model, 1, 1);
+  macro.algo(publicAPI, model, 2, 2);
 
   // Object specific methods
   vtkOBJWriter(publicAPI, model);
