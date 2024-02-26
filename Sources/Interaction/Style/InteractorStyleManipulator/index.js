@@ -360,39 +360,23 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.findMouseManipulator = (button, shift, control, alt) => {
-    // Look for a matching camera manipulator
-    let manipulator = null;
-    let count = model.mouseManipulators.length;
-    while (count--) {
-      const manip = model.mouseManipulators[count];
-      if (
+  publicAPI.findMouseManipulator = (button, shift, control, alt) =>
+    model.mouseManipulators.find(
+      (manip) =>
         manip &&
         manip.getButton() === button &&
         manip.getShift() === shift &&
         manip.getControl() === control &&
         manip.getAlt() === alt &&
         manip.isDragEnabled()
-      ) {
-        manipulator = manip;
-      }
-    }
-    return manipulator;
-  };
+    );
 
   //-------------------------------------------------------------------------
-  publicAPI.findVRManipulator = (device, input) => {
-    // Look for a matching camera manipulator
-    let manipulator = null;
-    let count = model.vrManipulators.length;
-    while (count--) {
-      const manip = model.vrManipulators[count];
-      if (manip && manip.getDevice() === device && manip.getInput() === input) {
-        manipulator = manip;
-      }
-    }
-    return manipulator;
-  };
+  publicAPI.findVRManipulator = (device, input) =>
+    model.vrManipulators.find(
+      (manip) =>
+        manip && manip.getDevice() === device && manip.getInput() === input
+    );
 
   //-------------------------------------------------------------------------
   publicAPI.handleLeftButtonRelease = () => {
