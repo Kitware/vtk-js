@@ -379,6 +379,17 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     );
 
   //-------------------------------------------------------------------------
+  publicAPI.findScrollManipulator = (shift, control, alt) =>
+    model.mouseManipulators.find(
+      (manip) =>
+        manip &&
+        manip.isScrollEnabled() &&
+        manip.getShift() === shift &&
+        manip.getControl() === control &&
+        manip.getAlt() === alt
+    );
+
+  //-------------------------------------------------------------------------
   publicAPI.handleLeftButtonRelease = () => {
     publicAPI.onButtonUp(1);
   };
@@ -411,34 +422,32 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   };
 
   //-------------------------------------------------------------------------
+  function assignMouseWheelManipulator(callData) {
+    const manipulator = publicAPI.findScrollManipulator(
+      callData.shiftKey,
+      callData.controlKey,
+      callData.altKey
+    );
+    if (!manipulator) return null;
+    model.currentWheelManipulator = manipulator;
+
+    model.currentWheelManipulator.onStartScroll(
+      model._interactor,
+      callData.pokedRenderer,
+      callData.spinY
+    );
+    model.currentWheelManipulator.startInteraction();
+    return manipulator;
+  }
+
+  //-------------------------------------------------------------------------
   publicAPI.handleStartMouseWheel = (callData) => {
     // Must not be processing a wheel interaction to start another.
     if (model.currentWheelManipulator) {
       return;
     }
 
-    let manipulator = null;
-    let count = model.mouseManipulators.length;
-    while (count--) {
-      const manip = model.mouseManipulators[count];
-      if (
-        manip &&
-        manip.isScrollEnabled() &&
-        manip.getShift() === callData.shiftKey &&
-        manip.getControl() === callData.controlKey &&
-        manip.getAlt() === callData.altKey
-      ) {
-        manipulator = manip;
-      }
-    }
-    if (manipulator) {
-      model.currentWheelManipulator = manipulator;
-      model.currentWheelManipulator.onStartScroll(
-        model._interactor,
-        callData.pokedRenderer,
-        callData.spinY
-      );
-      model.currentWheelManipulator.startInteraction();
+    if (assignMouseWheelManipulator(callData)) {
       model._interactor.requestAnimation(publicAPI.handleStartMouseWheel);
       publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
     } else {
@@ -462,6 +471,10 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleMouseWheel = (callData) => {
+    if (!model.currentWheelManipulator) {
+      assignMouseWheelManipulator(callData);
+    }
+
     if (
       model.currentWheelManipulator &&
       model.currentWheelManipulator.onScroll
@@ -479,6 +492,9 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   publicAPI.handleMouseMove = (callData) => {
     model.cachedMousePosition = callData.position;
+    if (!model.currentManipulator) {
+      assignMouseManipulator(model.currentButton, callData);
+    }
     if (model.currentManipulator && model.currentManipulator.onMouseMove) {
       model.currentManipulator.onMouseMove(
         model._interactor,
