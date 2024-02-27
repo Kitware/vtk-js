@@ -205,8 +205,10 @@ function vtkHttpDataSetReader(publicAPI, model) {
       // cacheArrays[arrayId] can be a promise or value
       Promise.resolve(cachedArraysAndPromises[arrayId]).then((cachedArray) => {
         if (array !== cachedArray) {
-          //  Update last access for cache retention rules
-          cachedArraysMetaData[arrayId].lastAccess = new Date();
+          //  Update last access for cache retention rules (if caching is enabled)
+          if (model.maxCacheSize) {
+            cachedArraysMetaData[arrayId].lastAccess = new Date();
+          }
 
           // Assign cached array as result
           Object.assign(array, cachedArray);

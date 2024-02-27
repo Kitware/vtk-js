@@ -3,6 +3,7 @@ import macro from 'vtk.js/Sources/macros';
 
 const MockBaseURL = 'http://mockData';
 const MiB = 1024 * 1024;
+let fetchArrayDelayMs = 0;
 
 function createMockIndexJSON(fileId, byteLength) {
   return {
@@ -99,31 +100,33 @@ function fetchJSON(instance, url, options = {}) {
 function fetchArray(instance, baseURL, array, options = {}) {
   const url = `${baseURL}/${array.ref.basepath}/${array.ref.id}.gz`;
   const promise = new Promise((resolve, reject) => {
-    if (!baseURL.startsWith(MockBaseURL)) {
-      reject(new Error(`No such array ${url}`));
-      return;
-    }
+    setTimeout(() => {
+      if (!baseURL.startsWith(MockBaseURL)) {
+        reject(new Error(`No such array ${url}`));
+        return;
+      }
 
-    const dataId = url.split('/').slice(-3)[0];
-    const filename = `${dataId}/${array.ref.basepath}/${array.ref.id}.gz`;
+      const dataId = url.split('/').slice(-3)[0];
+      const filename = `${dataId}/${array.ref.basepath}/${array.ref.id}.gz`;
 
-    if (!MockData[filename]) {
-      reject(new Error(`No such array ${url}`));
-      return;
-    }
+      if (!MockData[filename]) {
+        reject(new Error(`No such array ${url}`));
+        return;
+      }
 
-    array.buffer = MockData[filename]();
-    array.values = macro.newTypedArray(array.dataType, array.buffer);
-    delete array.ref;
+      array.buffer = MockData[filename]();
+      array.values = macro.newTypedArray(array.dataType, array.buffer);
+      delete array.ref;
 
-    if (instance?.invokeBusy) {
-      instance.invokeBusy(false);
-    }
-    if (instance?.modified) {
-      instance.modified();
-    }
-    resolve(array);
-  });
+      if (instance?.invokeBusy) {
+        instance.invokeBusy(false);
+      }
+      if (instance?.modified) {
+        instance.modified();
+      }
+      resolve(array);
+    });
+  }, fetchArrayDelayMs);
 
   CallTrackers.forEach((t) => {
     t.fetchArray.push({
@@ -141,6 +144,10 @@ function fetchImage(instance, url, options = {}) {
   });
 }
 
+function setFetchArrayDelayMs(delay) {
+  fetchArrayDelayMs = delay;
+}
+
 // ----------------------------------------------------------------------------
 
 const MockDataAccessHelper = {
@@ -149,6 +156,7 @@ const MockDataAccessHelper = {
   fetchArray,
   fetchImage,
   getCallTracker,
+  setFetchArrayDelayMs,
 };
 
 registerType('mock', (options) => MockDataAccessHelper);

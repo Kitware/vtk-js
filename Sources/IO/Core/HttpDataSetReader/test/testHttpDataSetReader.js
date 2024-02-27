@@ -237,3 +237,45 @@ test('Disabled cache on vtkHttpDataSetReader.', async (t) => {
 
   reader.setDataAccessHelper(originalAccessHelper);
 });
+
+test('Disabled cache does not raise error on concurrent access.', async (t) => {
+  const readers = [
+    vtkHttpDataSetReader.newInstance({ fetchGzip: true }),
+    vtkHttpDataSetReader.newInstance({ fetchGzip: true }),
+  ];
+
+  MockDataAccessHelper.setFetchArrayDelayMs(100);
+
+  readers.forEach((reader) => {
+    reader.setDataAccessHelper(MockDataAccessHelper);
+    reader.clearCache();
+  });
+  const disableOption = null;
+
+  await runTests([
+    // disable caching on all readers
+    (resolve, _) => {
+      readers.forEach((reader) => {
+        reader.setMaxCacheSize(disableOption);
+        t.equals(
+          reader.getMaxCacheSize(),
+          disableOption,
+          `Cache was disabled through setting maxCacheSize to "${disableOption}"`
+        );
+        resolve();
+      });
+    },
+
+    // ensure that concurrent calls from multiple readers does not raise errors
+    (resolve, _) => {
+      readers.forEach((reader) => {
+        const p = reader.setUrl('http://mockData/test01', { loadData: true });
+        p.then(() => {
+          resolve();
+        });
+      });
+    },
+  ]);
+
+  MockDataAccessHelper.setFetchArrayDelayMs(0);
+});
