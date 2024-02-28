@@ -327,6 +327,11 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
     gl.depthFunc(gl.LEQUAL);
     model.translucentRGBATexture.deactivate();
     model.translucentRTexture.deactivate();
+
+    // restore scissor + viewport from renderer
+    const ts = renNode.getTiledSizeAndOrigin();
+    gl.scissor(ts.lowerLeftU, ts.lowerLeftV, ts.usize, ts.vsize);
+    gl.viewport(ts.lowerLeftU, ts.lowerLeftV, ts.usize, ts.vsize);
   };
 
   publicAPI.getShaderReplacement = () => {
