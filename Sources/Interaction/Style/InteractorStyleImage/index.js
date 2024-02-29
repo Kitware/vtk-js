@@ -206,7 +206,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
       viewportHeight = 2.0 * distance * Math.tan(0.5 * angle);
     }
 
-    const size = rwi.getView().getViewportSize(renderer);
+    const size = rwi.getView().getSize();
     const delta = (dy * viewportHeight) / size[1];
     distance += delta;
 
