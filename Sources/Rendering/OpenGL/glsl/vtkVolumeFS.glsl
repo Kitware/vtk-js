@@ -1207,7 +1207,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
       return vec4(tColor, alpha);
     #else
       /*
-       * Mix the color informations from all the independent components to get a single rgba output
+       * Mix the color information from all the independent components to get a single rgba output
        *
        * goFactor is computed if vtkGradientOpacityOn
        * it is not computed for proportional components
