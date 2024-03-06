@@ -18,7 +18,6 @@ import {
 import {
   InterpolationType,
   OpacityMode,
-  ColorMixPreset,
 } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 import { BlendMode } from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
@@ -43,6 +42,14 @@ function arrayEquals(a, b) {
     }
   }
   return true;
+}
+
+// TODO: Do we want this in some shared utility? Shouldwe just use lodash.isEqual
+function deepEqual(a, b) {
+  return (
+    typeof a === typeof b &&
+    (typeof a !== 'object' || arrayEquals(Object.entries(a), Object.entries(b)))
+  );
 }
 
 function computeFnToString(property, pwfun, numberOfComponents) {
@@ -177,29 +184,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
     }
 
-    let colorMixCode = actor.getProperty().getCustomColorMixCode();
-    const colorMixPreset = actor.getProperty().getColorMixPreset();
-    if (!colorMixCode) {
-      switch (colorMixPreset) {
-        case ColorMixPreset.ADDITING:
-          colorMixCode = `
-            float opacity0 = goFactor.x * pwfValue0;
-            float opacity1 = goFactor.y * pwfValue1;
-            float opacitySum = opacity0 + opacity1;
-            if (opacitySum == 0.0) {
-              return vec4(0.0);
-            }
-            #if vtkLightComplexity > 0
-              applyLighting(tColor0, normal0);
-              applyLighting(tColor1, normal1);
-            #endif
-            vec3 mixedColor = mix(tColor0, tColor1, opacity1 / opacitySum);
-            return vec4(mixedColor, opacitySum);`;
-          break;
-        default:
-          break;
-      }
-    }
+    const colorMixCode = actor.getProperty().getColorMixCode();
     if (colorMixCode) {
       FSSource = vtkShaderProgram.substitute(
         FSSource,
@@ -522,6 +507,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       vec3.length(vsize) / publicAPI.getCurrentSampleDistance(ren);
 
     const state = {
+      colorMixCode: actor.getProperty().getColorMixCode(),
       interpolationType: actor.getProperty().getInterpolationType(),
       useLabelOutline: actor.getProperty().getUseLabelOutline(),
       numComp,
@@ -535,23 +521,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     // We only need to rebuild the shader if one of these variables has changed,
     // since they are used in the shader template replacement step.
-    if (
-      !model.previousState ||
-      model.previousState.interpolationType !== state.interpolationType ||
-      model.previousState.useLabelOutline !== state.useLabelOutline ||
-      model.previousState.numComp !== state.numComp ||
-      model.previousState.usesProportionalComponents !==
-        state.usesProportionalComponents ||
-      model.previousState.iComps !== state.iComps ||
-      model.previousState.maxSamples !== state.maxSamples ||
-      model.previousState.useGradientOpacity !== state.useGradientOpacity ||
-      model.previousState.blendMode !== state.blendMode ||
-      !arrayEquals(
-        model.previousState.proportionalComponents,
-        state.proportionalComponents
-      )
-    ) {
-      model.previousState = { ...state };
+    if (!model.previousState || !deepEqual(model.previousState, state)) {
+      model.previousState = state;
 
       return true;
     }

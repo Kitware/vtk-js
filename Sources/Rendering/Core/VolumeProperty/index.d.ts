@@ -71,6 +71,11 @@ export interface vtkVolumeProperty extends vtkObject {
 	getGradientOpacityMinimumValue(index: number): number;
 
 	/**
+	 * Get the color mix code from customColorMixCode and colorMixPreset
+	 */
+	getColorMixCode(): Nullable<string>;
+
+	/**
 	 * 
 	 */
 	getCustomColorMixCode(): Nullable<string>;
