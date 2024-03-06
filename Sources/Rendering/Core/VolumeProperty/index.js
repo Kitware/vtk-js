@@ -3,7 +3,7 @@ import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransfe
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import Constants from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 
-const { InterpolationType, OpacityMode, ColorMixPreset } = Constants;
+const { InterpolationType, OpacityMode } = Constants;
 const { vtkErrorMacro } = macro;
 
 const VTK_MAX_VRCOMP = 4;
@@ -203,28 +203,14 @@ function vtkVolumeProperty(publicAPI, model) {
   publicAPI.getInterpolationTypeAsString = () =>
     macro.enumToString(InterpolationType, model.interpolationType);
 
-  publicAPI.getColorMixCode = () => {
+  publicAPI.getColorMixCode = (apiSpecificPresets) => {
     if (model.customColorMixCode) {
       return model.customColorMixCode;
     }
-    switch (model.colorMixPreset) {
-      case ColorMixPreset.ADDITING:
-        return `
-          float opacity0 = goFactor.x * pwfValue0;
-          float opacity1 = goFactor.y * pwfValue1;
-          float opacitySum = opacity0 + opacity1;
-          if (opacitySum == 0.0) {
-            return vec4(0.0);
-          }
-          #if vtkLightComplexity > 0
-            applyLighting(tColor0, normal0);
-            applyLighting(tColor1, normal1);
-          #endif
-          vec3 mixedColor = mix(tColor0, tColor1, opacity1 / opacitySum);
-          return vec4(mixedColor, opacitySum);`;
-      default:
-        return null;
+    if (model.colorMixPreset != null) {
+      return apiSpecificPresets[model.colorMixPreset];
     }
+    return null;
   };
 
   const sets = [

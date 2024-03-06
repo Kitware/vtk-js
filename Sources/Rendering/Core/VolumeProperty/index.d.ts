@@ -72,8 +72,9 @@ export interface vtkVolumeProperty extends vtkObject {
 
 	/**
 	 * Get the color mix code from customColorMixCode and colorMixPreset
+	 * The code depends on the API when using presets
 	 */
-	getColorMixCode(): Nullable<string>;
+	getColorMixCode(apiSpecificPresets: { [preset in ColorMixPreset]: string }): Nullable<string>;
 
 	/**
 	 * 
