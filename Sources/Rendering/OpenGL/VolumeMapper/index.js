@@ -26,6 +26,8 @@ import vtkVolumeFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeFS.glsl';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
+import { ApiSpecificPresets } from './Constants';
+
 const { vtkWarningMacro, vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
@@ -184,7 +186,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
     }
 
-    const colorMixCode = actor.getProperty().getColorMixCode();
+    const colorMixCode = actor
+      .getProperty()
+      .getColorMixCode(ApiSpecificPresets);
     if (colorMixCode) {
       FSSource = vtkShaderProgram.substitute(
         FSSource,
@@ -507,7 +511,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       vec3.length(vsize) / publicAPI.getCurrentSampleDistance(ren);
 
     const state = {
-      colorMixCode: actor.getProperty().getColorMixCode(),
+      colorMixCode: actor.getProperty().getColorMixCode(ApiSpecificPresets),
       interpolationType: actor.getProperty().getInterpolationType(),
       useLabelOutline: actor.getProperty().getUseLabelOutline(),
       numComp,
