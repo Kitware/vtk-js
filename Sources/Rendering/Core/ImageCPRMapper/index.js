@@ -103,7 +103,10 @@ function vtkImageCPRMapper(publicAPI, model) {
       : orientationDataArray.getNumberOfComponents();
     switch (numComps) {
       case 16:
-        convert = mat4.getRotation;
+        convert = (outQuat, inMat) => {
+          mat4.getRotation(outQuat, inMat);
+          quat.normalize(outQuat, outQuat);
+        };
         break;
       case 9:
         convert = (outQuat, inMat) => {
