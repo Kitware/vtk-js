@@ -6,6 +6,7 @@ import vtkDataArray from "../../../Common/Core/DataArray";
 import vtkImageData from "../../../Common/DataModel/ImageData";
 import vtkPolyData from "../../../Common/DataModel/PolyData";
 import vtkPolyLine from "../../../Common/DataModel/PolyLine";
+import { ProjectionMode } from "./Constants";
 
 interface ICoincidentTopology {
 	factor: number;
@@ -156,6 +157,51 @@ export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
 	 * @param mat
 	 */
 	setDirectionMatrix(mat: mat3): boolean;
+
+	/**
+	 * Thickness of the projection slab in image coordinates (NOT in voxels)
+	 * Usually in millimeters if the spacing of the input image is set from a DICOM
+	 */
+	getProjectionSlabThickness(): number;
+
+	/**
+	 * @see getProjectionSlabThickness
+	 * @param projectionSlabThickness
+	 */
+	setProjectionSlabThickness(ProjectionSlabThickness: number): boolean;
+
+	/**
+	 * Total number of samples of the volume done by the projection mode
+	 * If this number is equal or less than 1, projection is disabled
+	 * Using an odd number is advised
+	 * If this number is even, the center of the slab will not be sampled
+	 */
+	getProjectionSlabNumberOfSamples(): number;
+
+	/**
+	 * @see getProjectionSlabNumberOfSamples
+	 * @param projectionSlabNumberOfSamples
+	 */
+	setProjectionSlabNumberOfSamples(projectionSlabNumberOfSamples: number): boolean;
+
+	/**
+	 * Returns wether projection is enabled
+	 * It is based on the number of samples
+	 * @see getProjectionSlabNumberOfSamples
+	 */
+	isProjectionEnabled(): boolean;
+
+	/**
+	 * The different modes of projection
+	 * Available modes include MIP, MinIP and AverageIP
+	 */
+	getProjectionMode(): ProjectionMode;
+
+	/**
+	 * @see getProjectionMode
+	 * @param projectionMode
+	 */
+	setProjectionMode(projectionMode: ProjectionMode): boolean;
 
 	/**
 	 * Find the data array to use for orientation in the input polydata ( @see getOrientationArrayName )
