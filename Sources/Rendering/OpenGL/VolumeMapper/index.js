@@ -1,4 +1,5 @@
 import * as macro from 'vtk.js/Sources/macros';
+import DeepEqual from 'fast-deep-equal';
 import { vec3, mat3, mat4 } from 'gl-matrix';
 // import vtkBoundingBox       from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
@@ -33,26 +34,6 @@ const { vtkWarningMacro, vtkErrorMacro } = macro;
 // ----------------------------------------------------------------------------
 // helper methods
 // ----------------------------------------------------------------------------
-// TODO: Do we want this in some shared utility? Shouldwe just use lodash.isEqual
-function arrayEquals(a, b) {
-  if (a.length !== b.length) {
-    return false;
-  }
-  for (let i = 0; i < a.length; ++i) {
-    if (a[i] !== b[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-// TODO: Do we want this in some shared utility? Shouldwe just use lodash.isEqual
-function deepEqual(a, b) {
-  return (
-    typeof a === typeof b &&
-    (typeof a !== 'object' || arrayEquals(Object.entries(a), Object.entries(b)))
-  );
-}
 
 function computeFnToString(property, pwfun, numberOfComponents) {
   if (pwfun) {
@@ -525,7 +506,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     // We only need to rebuild the shader if one of these variables has changed,
     // since they are used in the shader template replacement step.
-    if (!model.previousState || !deepEqual(model.previousState, state)) {
+    if (!model.previousState || !DeepEqual(model.previousState, state)) {
       model.previousState = state;
 
       return true;

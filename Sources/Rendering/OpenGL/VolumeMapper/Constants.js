@@ -4,7 +4,7 @@ export const ApiSpecificPresets = {
   [ColorMixPreset.ADDITING]: `
   float opacity0 = goFactor.x * pwfValue0;
   float opacity1 = goFactor.y * pwfValue1;
-  float opacitySum = opacity0 + opacity1;
+  float opacitySum = clamp(opacity0 + opacity1, 0.0, 1.0);
   if (opacitySum == 0.0) {
     return vec4(0.0);
   }
