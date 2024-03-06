@@ -1,15 +1,16 @@
 import macro from 'vtk.js/Sources/macros';
 import { mat4, vec3 } from 'gl-matrix';
-import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
-import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
-import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/ReplacementShaderMapper';
-import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
-import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 import { Filter } from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/ImageProperty/Constants';
+import { ProjectionMode } from 'vtk.js/Sources/Rendering/Core/ImageCPRMapper/Constants';
+import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
+import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
+import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/ReplacementShaderMapper';
+import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
+import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import vtkPolyDataVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
@@ -451,46 +452,39 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       const customAttributes = [centerlinePosition, quadIndex];
 
       if (!model.renderable.getUseUniformOrientation()) {
-        // For each {quad / centerline segment}, two vectors in directionDataArray give the orientation of the centerline
-        // Send these two vectors to each vertex and use flat interpolation to get them as is in the fragment shader
-        // The interpolation will occur in the fragment shader (slerp)
-        const directions = model.renderable.getCenterlineTangentDirections();
-        const centerlineTopDirectionArray = new Float32Array(3 * nPts);
-        const centerlineBotDirectionArray = new Float32Array(3 * nPts);
-        for (let lineIdx = 0, offset = 0; lineIdx < nLines; ++lineIdx) {
-          const baseDirectionIdx = 3 * lineIdx;
-
-          // Every vertex of each quad/segment have the same topDir and botDir
-          // Top left, Top right, Bottom right, Bottom left
-          for (let i = 0; i < 4; ++i) {
-            // Top array
-            centerlineTopDirectionArray[offset + 0] =
-              directions[baseDirectionIdx + 0];
-            centerlineTopDirectionArray[offset + 1] =
-              directions[baseDirectionIdx + 1];
-            centerlineTopDirectionArray[offset + 2] =
-              directions[baseDirectionIdx + 2];
-            // Bot array
-            centerlineBotDirectionArray[offset + 0] =
-              directions[baseDirectionIdx + 3];
-            centerlineBotDirectionArray[offset + 1] =
-              directions[baseDirectionIdx + 4];
-            centerlineBotDirectionArray[offset + 2] =
-              directions[baseDirectionIdx + 5];
-            offset += 3;
+        // For each quad (i.e. centerline segment), a top and bottom quaternion give the orientation
+        // Send both quaternions to each vertex and use flat interpolation to get them "as is" in the fragment shader
+        // The interpolation of the quaternions will occur in the fragment shader (slerp)
+        const orientationQuats =
+          model.renderable.getOrientedCenterline().getOrientations() ?? [];
+        const centerlineTopOrientationArray = new Float32Array(4 * nPts);
+        const centerlineBotOrientationArray = new Float32Array(4 * nPts);
+        for (let quadIdx = 0; quadIdx < nLines; ++quadIdx) {
+          // All vertices of a given quad have the same topDir and botDir
+          // Polyline goes from top to bottom
+          const topQuat = orientationQuats[quadIdx];
+          const botQuat = orientationQuats[quadIdx + 1];
+          for (let pointInQuadIdx = 0; pointInQuadIdx < 4; ++pointInQuadIdx) {
+            const pointIdx = pointInQuadIdx + 4 * quadIdx;
+            const quaternionArrayOffset = 4 * pointIdx;
+            centerlineTopOrientationArray.set(topQuat, quaternionArrayOffset);
+            centerlineBotOrientationArray.set(botQuat, quaternionArrayOffset);
           }
         }
-        const centerlineTopDirection = vtkDataArray.newInstance({
-          numberOfComponents: 3,
-          values: centerlineTopDirectionArray,
-          name: 'centerlineTopDirection',
+        const centerlineTopOrientation = vtkDataArray.newInstance({
+          numberOfComponents: 4,
+          values: centerlineTopOrientationArray,
+          name: 'centerlineTopOrientation',
         });
-        const centerlineBotDirection = vtkDataArray.newInstance({
-          numberOfComponents: 3,
-          values: centerlineBotDirectionArray,
-          name: 'centerlineBotDirection',
+        const centerlineBotOrientation = vtkDataArray.newInstance({
+          numberOfComponents: 4,
+          values: centerlineBotOrientationArray,
+          name: 'centerlineBotOrientation',
         });
-        customAttributes.push(centerlineTopDirection, centerlineBotDirection);
+        customAttributes.push(
+          centerlineTopOrientation,
+          centerlineBotOrientation
+        );
       }
 
       model.tris.getCABO().createVBO(cells, 'polys', Representation.SURFACE, {
@@ -515,17 +509,22 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     const iComp = actor.getProperty().getIndependentComponents();
     const useCenterPoint = !!model.renderable.getCenterPoint();
     const useUniformOrientation = model.renderable.getUseUniformOrientation();
+    const projectionMode =
+      model.renderable.isProjectionEnabled() &&
+      model.renderable.getProjectionMode();
 
     if (
       cellBO.getProgram() === 0 ||
       model.lastUseCenterPoint !== useCenterPoint ||
       model.lastUseUniformOrientation !== useUniformOrientation ||
+      model.lastProjectionMode !== projectionMode ||
       model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
       model.lastTextureComponents !== tNumComp ||
       model.lastIndependentComponents !== iComp
     ) {
       model.lastUseCenterPoint = useCenterPoint;
       model.lastUseUniformOrientation = useUniformOrientation;
+      model.lastProjectionMode = projectionMode;
       model.lastHaveSeenDepthRequest = model.haveSeenDepthRequest;
       model.lastTextureComponents = tNumComp;
       model.lastIndependentComponents = iComp;
@@ -544,6 +543,26 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     let VSSource = shaders.Vertex;
     let FSSource = shaders.Fragment;
 
+    // https://glmatrix.net/docs/vec3.js.html#line522
+    const applyQuaternionToVecShaderFunction = [
+      'vec3 applyQuaternionToVec(vec4 q, vec3 v) {',
+      '  float uvx = q.y * v.z - q.z * v.y;',
+      '  float uvy = q.z * v.x - q.x * v.z;',
+      '  float uvz = q.x * v.y - q.y * v.x;',
+      '  float uuvx = q.y * uvz - q.z * uvy;',
+      '  float uuvy = q.z * uvx - q.x * uvz;',
+      '  float uuvz = q.x * uvy - q.y * uvx;',
+      '  float w2 = q.w * 2.0;',
+      '  uvx *= w2;',
+      '  uvy *= w2;',
+      '  uvz *= w2;',
+      '  uuvx *= 2.0;',
+      '  uuvy *= 2.0;',
+      '  uuvz *= 2.0;',
+      '  return vec3(v.x + uvx + uuvx, v.y + uvy + uuvy, v.z + uvz + uuvz);',
+      '}',
+    ];
+
     // Vertex shader main replacements
     VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Camera::Dec', [
       'uniform mat4 MCPCMatrix;',
@@ -561,19 +580,27 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       'out vec2 quadOffsetVSOutput;',
       'out vec3 centerlinePosVSOutput;',
     ];
+    const useProjection = model.renderable.isProjectionEnabled();
     const isDirectionUniform = model.renderable.getUseUniformOrientation();
     if (isDirectionUniform) {
       vsColorDec.push(
-        'out vec3 centerlineDirVSOutput;',
-        'uniform vec3 centerlineDirection;'
+        'out vec3 samplingDirVSOutput;',
+        'uniform vec4 centerlineOrientation;',
+        'uniform vec3 tangentDirection;',
+        ...applyQuaternionToVecShaderFunction
       );
+      if (useProjection) {
+        vsColorDec.push(
+          'out vec3 projectionDirVSOutput;',
+          'uniform vec3 bitangentDirection;'
+        );
+      }
     } else {
       vsColorDec.push(
-        'out vec3 centerlineTopDirVSOutput;',
-        'out vec3 centerlineBotDirVSOutput;',
-        'out float centerlineAngleVSOutput;',
-        'attribute vec3 centerlineTopDirection;',
-        'attribute vec3 centerlineBotDirection;'
+        'out vec4 centerlineTopOrientationVSOutput;',
+        'out vec4 centerlineBotOrientationVSOutput;',
+        'attribute vec4 centerlineTopOrientation;',
+        'attribute vec4 centerlineBotOrientation;'
       );
     }
     VSSource = vtkShaderProgram.substitute(
@@ -589,35 +616,18 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       'centerlinePosVSOutput = centerlinePosition;',
     ];
     if (isDirectionUniform) {
-      vsColorImpl.push('centerlineDirVSOutput = centerlineDirection;');
+      vsColorImpl.push(
+        'samplingDirVSOutput = applyQuaternionToVec(centerlineOrientation, tangentDirection);'
+      );
+      if (useProjection) {
+        vsColorImpl.push(
+          'projectionDirVSOutput = applyQuaternionToVec(centerlineOrientation, bitangentDirection);'
+        );
+      }
     } else {
       vsColorImpl.push(
-        // When u and v are unit vectors: uvAngle = 2 * atan2(|| u - v ||, || u + v ||)
-        // When u != -v: || u + v || > 0
-        // When x > 0: atan2(y, x) = atan(y/x)
-        // Thus: dirAngle = 2 * atan(|| topDir - botDir || / || topDir + botDir ||)
-        // This is more stable and should not be to slow compared to acos(dot(u, v))
-        'vec3 sumVec = centerlineTopDirection + centerlineBotDirection;',
-        'float sumLen2 = dot(sumVec, sumVec);',
-        'float diffLen2 = 4.0 - sumLen2;',
-        'if (diffLen2 < 0.001) {',
-        '  // vectors are too close to each other, use lerp',
-        '  centerlineAngleVSOutput = -1.0; // use negative angle as a flag for lerp',
-        '  centerlineTopDirVSOutput = centerlineTopDirection;',
-        '  centerlineBotDirVSOutput = centerlineBotDirection;',
-        '} else if (sumLen2 == 0.0) {',
-        "  // vector are opposite to each other, don't make a choice for the user",
-        '  // use slerp without direction, it will display the centerline color on each row of pixel',
-        '  centerlineAngleVSOutput = 0.0;',
-        '  centerlineTopDirVSOutput = vec3(0.0);',
-        '  centerlineBotDirVSOutput = vec3(0.0);',
-        '} else {',
-        '  // use slerp',
-        '  centerlineAngleVSOutput = 2.0 * atan(sqrt(diffLen2/sumLen2));',
-        '  float sinAngle = sin(centerlineAngleVSOutput);',
-        '  centerlineTopDirVSOutput = centerlineTopDirection / sinAngle;',
-        '  centerlineBotDirVSOutput = centerlineBotDirection / sinAngle;',
-        '}'
+        'centerlineTopOrientationVSOutput = centerlineTopOrientation;',
+        'centerlineBotOrientationVSOutput = centerlineBotOrientation;'
       );
     }
     VSSource = vtkShaderProgram.substitute(
@@ -652,14 +662,29 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       `uniform float pwfshift0;`,
       `uniform float pwfscale0;`,
     ];
+    if (useProjection) {
+      tcoordFSDec.push(
+        'uniform vec3 spacing;',
+        'uniform int projectionSlabNumberOfSamples;',
+        'uniform float projectionConstantOffset;',
+        'uniform float projectionStepLength;'
+      );
+    }
     if (isDirectionUniform) {
-      tcoordFSDec.push('in vec3 centerlineDirVSOutput;');
+      tcoordFSDec.push('in vec3 samplingDirVSOutput;');
+      if (useProjection) {
+        tcoordFSDec.push('in vec3 projectionDirVSOutput;');
+      }
     } else {
       tcoordFSDec.push(
-        'in vec3 centerlineTopDirVSOutput;',
-        'in vec3 centerlineBotDirVSOutput;',
-        'in float centerlineAngleVSOutput;'
+        'uniform vec3 tangentDirection;',
+        'in vec4 centerlineTopOrientationVSOutput;',
+        'in vec4 centerlineBotOrientationVSOutput;',
+        ...applyQuaternionToVecShaderFunction
       );
+      if (useProjection) {
+        tcoordFSDec.push('uniform vec3 bitangentDirection;');
+      }
     }
     const centerPoint = model.renderable.getCenterPoint();
     if (centerPoint) {
@@ -730,47 +755,103 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
 
     let tcoordFSImpl = [];
     if (isDirectionUniform) {
-      tcoordFSImpl.push(
-        'vec3 interpolatedCenterlineDir = centerlineDirVSOutput;'
-      );
+      tcoordFSImpl.push('vec3 samplingDirection = samplingDirVSOutput;');
+      if (useProjection) {
+        tcoordFSImpl.push('vec3 projectionDirection = projectionDirVSOutput;');
+      }
     } else {
       // Slerp or lerp between centerlineTopDirVSOutput and centerlineBotDirVSOutput
       // We use quadOffsetVSOutput.y: bottom = 0.0; top = 1.0;
       tcoordFSImpl.push(
-        'vec3 interpolatedCenterlineDir;',
-        'if (centerlineAngleVSOutput < 0.0) {',
-        '  // Lerp',
-        '  interpolatedCenterlineDir = quadOffsetVSOutput.y * centerlineTopDirVSOutput + (1.0 - quadOffsetVSOutput.y) * centerlineBotDirVSOutput;',
+        // Slerp / Lerp
+        'vec4 q0 = centerlineBotOrientationVSOutput;',
+        'vec4 q1 = centerlineTopOrientationVSOutput;',
+        'float qCosAngle = dot(q0, q1);',
+        'vec4 interpolatedOrientation;',
+        'if (qCosAngle > 0.999 || qCosAngle < -0.999) {',
+        '  // Use LERP instead of SLERP when the two quaternions are close or opposite',
+        '  interpolatedOrientation = normalize(mix(q0, q1, quadOffsetVSOutput.y));',
         '} else {',
-        '  // Slerp',
-        '  float topInterpolationAngle = quadOffsetVSOutput.y * centerlineAngleVSOutput;',
-        '  float botInterpolationAngle = centerlineAngleVSOutput - topInterpolationAngle;',
-        '  interpolatedCenterlineDir = sin(topInterpolationAngle) * centerlineTopDirVSOutput + sin(botInterpolationAngle) * centerlineBotDirVSOutput;',
+        '  float omega = acos(qCosAngle);',
+        '  interpolatedOrientation = normalize(sin((1.0 - quadOffsetVSOutput.y) * omega) * q0 + sin(quadOffsetVSOutput.y * omega) * q1);',
         '}',
-        '// Slerp should give a normalized vector but when sin(angle) is small, rounding error occurs',
-        '// Normalize for both lerp and slerp',
-        'interpolatedCenterlineDir = normalize(interpolatedCenterlineDir);'
+        'vec3 samplingDirection = applyQuaternionToVec(interpolatedOrientation, tangentDirection);'
       );
+      if (useProjection) {
+        tcoordFSImpl.push(
+          'vec3 projectionDirection = applyQuaternionToVec(interpolatedOrientation, bitangentDirection);'
+        );
+      }
     }
     if (centerPoint) {
       tcoordFSImpl.push(
-        'float baseOffset = dot(interpolatedCenterlineDir, globalCenterPoint - centerlinePosVSOutput);',
+        'float baseOffset = dot(samplingDirection, globalCenterPoint - centerlinePosVSOutput);',
         'float horizontalOffset = quadOffsetVSOutput.x + baseOffset;'
       );
     } else {
       tcoordFSImpl.push('float horizontalOffset = quadOffsetVSOutput.x;');
     }
     tcoordFSImpl.push(
-      'vec3 volumePosMC = centerlinePosVSOutput + horizontalOffset * interpolatedCenterlineDir;',
+      'vec3 volumePosMC = centerlinePosVSOutput + horizontalOffset * samplingDirection;',
       'vec3 volumePosTC = (MCTCMatrix * vec4(volumePosMC, 1.0)).xyz;',
       'if (any(lessThan(volumePosTC, vec3(0.0))) || any(greaterThan(volumePosTC, vec3(1.0))))',
       '{',
       '  // set the background color and exit',
       '  gl_FragData[0] = backgroundColor;',
       '  return;',
-      '}',
-      'vec4 tvalue = texture(volumeTexture, volumePosTC);'
+      '}'
     );
+
+    if (useProjection) {
+      const projectionMode = model.renderable.getProjectionMode();
+      switch (projectionMode) {
+        case ProjectionMode.MIN:
+          tcoordFSImpl.push(
+            'const vec4 initialProjectionTextureValue = vec4(1.0);'
+          );
+          break;
+        case ProjectionMode.MAX:
+        case ProjectionMode.AVERAGE:
+        default:
+          tcoordFSImpl.push(
+            'const vec4 initialProjectionTextureValue = vec4(0.0);'
+          );
+          break;
+      }
+
+      // Loop on all the samples of the projection
+      tcoordFSImpl.push(
+        'vec3 projectionScaledDirection = projectionDirection / spacing;',
+        'vec3 projectionStep = projectionStepLength * projectionScaledDirection;',
+        'vec3 projectionStartPosition = volumePosTC + projectionConstantOffset * projectionScaledDirection;',
+        'vec4 tvalue = initialProjectionTextureValue;',
+        'for (int projectionSampleIdx = 0; projectionSampleIdx < projectionSlabNumberOfSamples; ++projectionSampleIdx) {',
+        '  vec3 projectionSamplePosition = projectionStartPosition + float(projectionSampleIdx) * projectionStep;',
+        '  vec4 sampledTextureValue = texture(volumeTexture, projectionSamplePosition);'
+      );
+      switch (projectionMode) {
+        case ProjectionMode.MAX:
+          tcoordFSImpl.push('  tvalue = max(tvalue, sampledTextureValue);');
+          break;
+        case ProjectionMode.MIN:
+          tcoordFSImpl.push('  tvalue = min(tvalue, sampledTextureValue);');
+          break;
+        case ProjectionMode.AVERAGE:
+        default:
+          tcoordFSImpl.push('  tvalue = tvalue + sampledTextureValue;');
+          break;
+      }
+      tcoordFSImpl.push('}');
+
+      // Process the total if needed
+      if (projectionMode === ProjectionMode.AVERAGE) {
+        tcoordFSImpl.push(
+          'tvalue = tvalue / float(projectionSlabNumberOfSamples);'
+        );
+      }
+    } else {
+      tcoordFSImpl.push('vec4 tvalue = texture(volumeTexture, volumePosTC);');
+    }
     if (iComps) {
       const rgba = ['r', 'g', 'b', 'a'];
       for (let comp = 0; comp < tNumComp; ++comp) {
@@ -923,23 +1004,25 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
   };
 
   publicAPI.setMapperShaderParameters = (cellBO, ren, actor) => {
+    const program = cellBO.getProgram();
+    const cellArrayBufferObject = cellBO.getCABO();
     if (
-      cellBO.getCABO().getElementCount() &&
+      cellArrayBufferObject.getElementCount() &&
       (model.VBOBuildTime.getMTime() >
         cellBO.getAttributeUpdateTime().getMTime() ||
         cellBO.getShaderSourceTime().getMTime() >
           cellBO.getAttributeUpdateTime().getMTime())
     ) {
-      if (cellBO.getProgram().isAttributeUsed('vertexMC')) {
+      if (program.isAttributeUsed('vertexMC')) {
         if (
           !cellBO
             .getVAO()
             .addAttributeArray(
-              cellBO.getProgram(),
-              cellBO.getCABO(),
+              program,
+              cellArrayBufferObject,
               'vertexMC',
-              cellBO.getCABO().getVertexOffset(),
-              cellBO.getCABO().getStride(),
+              cellArrayBufferObject.getVertexOffset(),
+              cellArrayBufferObject.getStride(),
               model.context.FLOAT,
               3,
               model.context.FALSE
@@ -956,15 +1039,15 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
         .forEach((data) => {
           if (
             data &&
-            cellBO.getProgram().isAttributeUsed(data.name) &&
+            program.isAttributeUsed(data.name) &&
             !cellBO
               .getVAO()
               .addAttributeArray(
-                cellBO.getProgram(),
-                cellBO.getCABO(),
+                program,
+                cellArrayBufferObject,
                 data.name,
                 data.offset,
-                cellBO.getCABO().getStride(),
+                cellArrayBufferObject.getStride(),
                 model.context.FLOAT,
                 data.components,
                 model.context.FALSE
@@ -977,24 +1060,53 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     }
 
     const texUnit = model.volumeTexture.getTextureUnit();
-    cellBO.getProgram().setUniformi('volumeTexture', texUnit);
-    cellBO.getProgram().setUniformf('width', model.renderable.getWidth());
+    program.setUniformi('volumeTexture', texUnit);
+    program.setUniformf('width', model.renderable.getWidth());
     cellBO
       .getProgram()
-      .setUniform4f(
-        'backgroundColor',
-        ...model.renderable.getBackgroundColor()
-      );
+      .setUniform4fv('backgroundColor', model.renderable.getBackgroundColor());
 
-    if (cellBO.getProgram().isUniformUsed('centerlineDirection')) {
-      const uniformDirection = model.renderable.getUniformDirection();
+    if (program.isUniformUsed('tangentDirection')) {
+      const tangentDirection = model.renderable.getTangentDirection();
       cellBO
         .getProgram()
-        .setUniform3fArray('centerlineDirection', uniformDirection);
+        .setUniform3fArray('tangentDirection', tangentDirection);
     }
-    if (cellBO.getProgram().isUniformUsed('globalCenterPoint')) {
+    if (program.isUniformUsed('bitangentDirection')) {
+      const bitangentDirection = model.renderable.getBitangentDirection();
+      cellBO
+        .getProgram()
+        .setUniform3fArray('bitangentDirection', bitangentDirection);
+    }
+    if (program.isUniformUsed('centerlineOrientation')) {
+      const uniformOrientation = model.renderable.getUniformOrientation();
+      cellBO
+        .getProgram()
+        .setUniform4fv('centerlineOrientation', uniformOrientation);
+    }
+    if (program.isUniformUsed('globalCenterPoint')) {
       const centerPoint = model.renderable.getCenterPoint();
-      cellBO.getProgram().setUniform3fArray('globalCenterPoint', centerPoint);
+      program.setUniform3fArray('globalCenterPoint', centerPoint);
+    }
+    // Projection uniforms
+    if (model.renderable.isProjectionEnabled()) {
+      const image = model.currentImageDataInput;
+      const spacing = image.getSpacing();
+      const projectionSlabThickness =
+        model.renderable.getProjectionSlabThickness();
+      const projectionSlabNumberOfSamples =
+        model.renderable.getProjectionSlabNumberOfSamples();
+
+      program.setUniform3fArray('spacing', spacing);
+      program.setUniformi(
+        'projectionSlabNumberOfSamples',
+        projectionSlabNumberOfSamples
+      );
+      const constantOffset = -0.5 * projectionSlabThickness;
+      program.setUniformf('projectionConstantOffset', constantOffset);
+      const stepLength =
+        projectionSlabThickness / (projectionSlabNumberOfSamples - 1);
+      program.setUniformf('projectionStepLength', stepLength);
     }
 
     // Model coordinates to image space
@@ -1008,7 +1120,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       vec3.inverse([], image.getDimensions())
     );
     const MCTCMatrix = mat4.mul(ICTCMatrix, ICTCMatrix, MCICMatrix);
-    cellBO.getProgram().setUniformMatrix('MCTCMatrix', MCTCMatrix);
+    program.setUniformMatrix('MCTCMatrix', MCTCMatrix);
 
     if (model.haveSeenDepthRequest) {
       cellBO
@@ -1024,9 +1136,10 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
         numClipPlanes = 6;
       }
 
-      const shiftScaleEnabled = cellBO.getCABO().getCoordShiftAndScaleEnabled();
+      const shiftScaleEnabled =
+        cellArrayBufferObject.getCoordShiftAndScaleEnabled();
       const inverseShiftScaleMatrix = shiftScaleEnabled
-        ? cellBO.getCABO().getInverseShiftAndScaleMatrix()
+        ? cellArrayBufferObject.getInverseShiftAndScaleMatrix()
         : null;
       const mat = inverseShiftScaleMatrix
         ? mat4.copy(model.imagematinv, actor.getMatrix())
@@ -1057,17 +1170,17 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
           planeEquations.push(planeEquation[j]);
         }
       }
-      cellBO.getProgram().setUniformi('numClipPlanes', numClipPlanes);
-      cellBO.getProgram().setUniform4fv('clipPlanes', planeEquations);
+      program.setUniformi('numClipPlanes', numClipPlanes);
+      program.setUniform4fv('clipPlanes', planeEquations);
     }
 
     // handle coincident
-    if (cellBO.getProgram().isUniformUsed('coffset')) {
+    if (program.isUniformUsed('coffset')) {
       const cp = publicAPI.getCoincidentParameters(ren, actor);
-      cellBO.getProgram().setUniformf('coffset', cp.offset);
+      program.setUniformf('coffset', cp.offset);
       // cfactor isn't always used when coffset is.
-      if (cellBO.getProgram().isUniformUsed('cfactor')) {
-        cellBO.getProgram().setUniformf('cfactor', cp.factor);
+      if (program.isUniformUsed('cfactor')) {
+        program.setUniformf('cfactor', cp.factor);
       }
     }
   };

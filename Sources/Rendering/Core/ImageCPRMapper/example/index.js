@@ -6,6 +6,7 @@ import '@kitware/vtk.js/Rendering/Profiles/All';
 // Force the loading of HttpDataAccessHelper to support gzip decompression
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
+import { ProjectionMode } from '@kitware/vtk.js/Rendering/Core/ImageCPRMapper/Constants';
 import { radiansFromDegrees } from 'vtk.js/Sources/Common/Core/Math';
 import { updateState } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 import { vec3, mat3, mat4 } from 'gl-matrix';
@@ -44,8 +45,12 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 
 fullScreenRenderer.addController(controlPanel);
 const angleEl = document.getElementById('angle');
+const animateEl = document.getElementById('animate');
 const centerlineEl = document.getElementById('centerline');
 const modeEl = document.getElementById('mode');
+const projectionModeEl = document.getElementById('projectionMode');
+const projectionThicknessEl = document.getElementById('projectionThickness');
+const projectionSamplesEl = document.getElementById('projectionSamples');
 
 const interactor = renderWindow.getInteractor();
 interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
@@ -354,6 +359,20 @@ angleEl.addEventListener('input', () =>
   setAngleFromSlider(radiansFromDegrees(Number.parseFloat(angleEl.value, 10)))
 );
 
+let animationId;
+animateEl.addEventListener('change', () => {
+  if (animateEl.checked) {
+    animationId = setInterval(() => {
+      const currentAngle = radiansFromDegrees(
+        Number.parseFloat(angleEl.value, 10)
+      );
+      setAngleFromSlider(currentAngle + 0.1);
+    }, 60);
+  } else {
+    clearInterval(animationId);
+  }
+});
+
 function useStraightenedMode() {
   mapper.useStraightenedMode();
   updateDistanceAndDirection();
@@ -387,6 +406,34 @@ straightEl.value = 'straightened';
 modeEl.appendChild(straightEl);
 modeEl.addEventListener('input', () => setUseStretched(modeEl.value));
 modeEl.value = 'straightened';
+
+Object.keys(ProjectionMode).forEach((projectionMode) => {
+  const optionEl = document.createElement('option');
+  optionEl.innerText =
+    projectionMode.charAt(0) + projectionMode.substring(1).toLowerCase();
+  optionEl.value = projectionMode;
+  projectionModeEl.appendChild(optionEl);
+});
+
+projectionModeEl.addEventListener('input', (ev) => {
+  mapper.setProjectionMode(ProjectionMode[projectionModeEl.value]);
+  renderWindow.render();
+});
+
+projectionThicknessEl.addEventListener('input', (ev) => {
+  const thickness = Number.parseFloat(projectionThicknessEl.value, 10);
+  mapper.setProjectionSlabThickness(thickness);
+  renderWindow.render();
+});
+mapper.setProjectionSlabThickness(0.1);
+projectionThicknessEl.value = mapper.getProjectionSlabThickness();
+
+projectionSamplesEl.addEventListener('input', (ev) => {
+  const samples = Number.parseInt(projectionSamplesEl.value, 10);
+  mapper.setProjectionSlabNumberOfSamples(samples);
+  renderWindow.render();
+});
+projectionSamplesEl.value = mapper.getProjectionSlabNumberOfSamples();
 
 stretchViewWidgetInstance.onInteractionEvent(updateDistanceAndDirection);
 crossViewWidgetInstance.onInteractionEvent(updateDistanceAndDirection);
