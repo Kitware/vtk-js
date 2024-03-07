@@ -20,6 +20,7 @@ import {
 import {
   InterpolationType,
   OpacityMode,
+  ColorMixPreset,
 } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 import { BlendMode } from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
@@ -27,8 +28,6 @@ import vtkVolumeVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeVS.glsl';
 import vtkVolumeFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeFS.glsl';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
-
-import { ApiSpecificPresets } from './Constants';
 
 const { vtkWarningMacro, vtkErrorMacro } = macro;
 
@@ -42,6 +41,30 @@ function computeFnToString(property, pwfun, numberOfComponents) {
     return `${pwfun.getMTime()}-${iComps}-${numberOfComponents}`;
   }
   return '0';
+}
+
+function getColorCodeFromPreset(colorMixPreset) {
+  switch (colorMixPreset) {
+    case ColorMixPreset.CUSTOM:
+      return '//VTK::CustomColorMix';
+    case ColorMixPreset.ADDITING:
+      return `
+        float opacity0 = goFactor.x * pwfValue0;
+        float opacity1 = goFactor.y * pwfValue1;
+        float opacitySum = clamp(opacity0 + opacity1, 0.0, 1.0);
+        if (opacitySum == 0.0) {
+          return vec4(0.0);
+        }
+        #if vtkLightComplexity > 0
+          applyLighting(tColor0, normal0);
+          applyLighting(tColor1, normal1);
+        #endif
+        vec3 mixedColor = mix(tColor0, tColor1, opacity1 / opacitySum);
+        return vec4(mixedColor, opacitySum);
+`;
+    default:
+      return null;
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -163,9 +186,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
     }
 
-    const colorMixCode = actor
-      .getProperty()
-      .getColorMixCode(ApiSpecificPresets);
+    const colorMixPreset = actor.getProperty().getColorMixPreset();
+    const colorMixCode = getColorCodeFromPreset(colorMixPreset);
     if (colorMixCode) {
       FSSource = vtkShaderProgram.substitute(
         FSSource,
@@ -488,7 +510,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       vec3.length(vsize) / publicAPI.getCurrentSampleDistance(ren);
 
     const state = {
-      colorMixCode: actor.getProperty().getColorMixCode(ApiSpecificPresets),
+      colorMixPreset: actor.getProperty().getColorMixPreset(),
       interpolationType: actor.getProperty().getInterpolationType(),
       useLabelOutline: actor.getProperty().getUseLabelOutline(),
       numComp,

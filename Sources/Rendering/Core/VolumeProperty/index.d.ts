@@ -5,7 +5,6 @@ import vtkColorTransferFunction from "../ColorTransferFunction";
 import { ColorMixPreset, InterpolationType, OpacityMode } from "./Constants";
 
 export interface IVolumePropertyInitialValues  {
-	customColorMixCode?: Nullable<string>;
 	independentComponents?: boolean;
 	shade?: boolean;
 	ambient?: number;
@@ -69,17 +68,6 @@ export interface vtkVolumeProperty extends vtkObject {
 	 * @param {Number} index
 	 */
 	getGradientOpacityMinimumValue(index: number): number;
-
-	/**
-	 * Get the color mix code from customColorMixCode and colorMixPreset
-	 * The code depends on the API when using presets
-	 */
-	getColorMixCode(apiSpecificPresets: { [preset in ColorMixPreset]: string }): Nullable<string>;
-
-	/**
-	 * 
-	 */
-	getCustomColorMixCode(): Nullable<string>;
 
 	/**
 	 * 
@@ -200,21 +188,16 @@ export interface vtkVolumeProperty extends vtkObject {
 	setGrayTransferFunction(index: number, func: vtkPiecewiseFunction): boolean;
 
 	/**
-	 * Set this to null or an empty string to use the default rendering.
-	 * Setting this to a non-empty string will enable independant components in
-	 * the shader. The given code will be used to mix the colors from each
-	 * component.
+	 * Set the color mix code to a preset value
+	 * Set to null to use no preset
+	 * See the test `testColorMix` for an example on how to use this preset.
+	 *
+	 * If set to `CUSTOM`, a tag `//VTK::CustomColorMix` is made available to the
+	 * user who can user shader replacements to put its own code. The given code
+	 * will be used to mix the colors from each component.
 	 * Each component is available as a rgba vec4: `comp0`, `comp1`...
 	 * There are other useful functions or variable available. To find them,
 	 * see `//VTK::CustomComponentsColorMix::Impl` tag in `vtkVolumeFS.glsl`.
-	 * @param {Null | String} customColorMixCode 
-	 */
-	setCustomColorMixCode(customColorMixCode: Nullable<string>): boolean;
-
-	/**
-	 * Set the color mix code to a preset value
-	 * Set to null to not use any preset
-	 * If a customColorMixCode is set, the colorMixPreset is ignored
 	 */
 	setColorMixPreset(preset: Nullable<ColorMixPreset>): boolean;
 

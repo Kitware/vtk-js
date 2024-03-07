@@ -127,16 +127,28 @@ test('Test Volume Rendering: custom shader code', async (t) => {
 
   t.comment('testCustomCode');
 
-  // Don't need to setColorMixPreset(null) because customColorMixCode has priority
-  volume.getProperty().setCustomColorMixCode(`
-  float opacity1 = pwfValue1;
-  if (opacity1 > 0.5) {
-    return vec4(0.0, 1.0, 1.0, 0.1);
-  } else {
-    float opacity0 = goFactor.x * pwfValue0;
-    return vec4(tColor0, opacity0);
-  }
-`);
+  volume.getProperty().setColorMixPreset(ColorMixPreset.CUSTOM);
+  const mapperViewProp = vmapper.getViewSpecificProperties();
+  mapperViewProp.OpenGL = {
+    ShaderReplacements: [
+      {
+        shaderType: 'Fragment',
+        originalValue: '//VTK::CustomColorMix',
+        replaceFirst: false,
+        replacementValue: `
+          float opacity1 = pwfValue1;
+          if (opacity1 > 0.5) {
+            return vec4(0.0, 1.0, 1.0, 0.1);
+          } else {
+            float opacity0 = goFactor.x * pwfValue0;
+            return vec4(tColor0, opacity0);
+          }
+        `,
+        replaceAll: false,
+      },
+    ],
+  };
+  vmapper.modified();
 
   let testCustomCodeResolve;
   const testCustomCodePromise = new Promise((res) => {
@@ -161,7 +173,6 @@ test('Test Volume Rendering: custom shader code', async (t) => {
 
   t.comment('testAdditingWithLigting');
 
-  volume.getProperty().setCustomColorMixCode(null);
   volume.getProperty().setColorMixPreset(ColorMixPreset.ADDITING);
 
   volume.getProperty().setGradientOpacityMinimumValue(0, 2);

@@ -10,7 +10,8 @@ export declare enum OpacityMode {
 }
 
 export declare enum ColorMixPreset {
-	ADDITING = 0,
+	CUSTOM = 0,
+	ADDITING = 1,
 }
 
 declare const _default: {

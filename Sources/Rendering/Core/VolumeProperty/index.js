@@ -203,16 +203,6 @@ function vtkVolumeProperty(publicAPI, model) {
   publicAPI.getInterpolationTypeAsString = () =>
     macro.enumToString(InterpolationType, model.interpolationType);
 
-  publicAPI.getColorMixCode = (apiSpecificPresets) => {
-    if (model.customColorMixCode) {
-      return model.customColorMixCode;
-    }
-    if (model.colorMixPreset != null) {
-      return apiSpecificPresets[model.colorMixPreset];
-    }
-    return null;
-  };
-
   const sets = [
     'useGradientOpacity',
     'scalarOpacityUnitDistance',
@@ -254,7 +244,6 @@ function vtkVolumeProperty(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  customColorMixCode: null,
   colorMixPreset: null,
   independentComponents: true,
   interpolationType: InterpolationType.FAST_LINEAR,
@@ -299,7 +288,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   }
 
   macro.setGet(publicAPI, model, [
-    'customColorMixCode',
     'colorMixPreset',
     'independentComponents',
     'interpolationType',
