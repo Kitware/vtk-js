@@ -10,7 +10,7 @@ import vtkInteractorStyleImage from '@kitware/vtk.js/Interaction/Style/Interacto
 import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 import vtkLabelWidget from '@kitware/vtk.js/Widgets/Widgets3D/LabelWidget';
 
-import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
+import vtkInteractorObserver from '@kitware/vtk.js/Rendering/Core/InteractorObserver';
 import {
   bindSVGRepresentation,
   multiLineTextCalculator,
