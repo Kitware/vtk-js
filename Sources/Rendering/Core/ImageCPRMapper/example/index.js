@@ -7,8 +7,8 @@ import '@kitware/vtk.js/Rendering/Profiles/All';
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
 import { ProjectionMode } from '@kitware/vtk.js/Rendering/Core/ImageCPRMapper/Constants';
-import { radiansFromDegrees } from 'vtk.js/Sources/Common/Core/Math';
-import { updateState } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
+import { radiansFromDegrees } from '@kitware/vtk.js/Common/Core/Math';
+import { updateState } from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 import { vec3, mat3, mat4 } from 'gl-matrix';
 import { ViewTypes } from '@kitware/vtk.js/Widgets/Core/WidgetManager/Constants';
 import vtkCPRManipulator from '@kitware/vtk.js/Widgets/Manipulators/CPRManipulator';
@@ -25,7 +25,7 @@ import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer';
 import vtkResliceCursorWidget from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCursorWidget';
 import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
-import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/cprBehavior';
+import widgetBehavior from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCursorWidget/cprBehavior';
 
 import controlPanel from './controller.html';
 import aortaJSON from './aorta_centerline.json';

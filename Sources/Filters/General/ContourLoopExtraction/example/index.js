@@ -13,7 +13,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkPlane from '@kitware/vtk.js/Common/DataModel/Plane';
 import vtkProperty from '@kitware/vtk.js/Rendering/Core/Property';
 import vtkContourLoopExtraction from '@kitware/vtk.js/Filters/General/ContourLoopExtraction';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
 import vtkPoints from '@kitware/vtk.js/Common/Core/Points';
 import vtkCellArray from '@kitware/vtk.js/Common/Core/CellArray';
 import controlPanel from './controlPanel.html';
