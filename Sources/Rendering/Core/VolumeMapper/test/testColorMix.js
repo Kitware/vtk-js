@@ -14,7 +14,7 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import { ColorMixPreset } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 
 import baseline1 from './testColorMixCustom.png';
-import baseline2 from './testColorMixAdditing.png';
+import baseline2 from './testColorMixAdditive.png';
 
 test('Test Volume Rendering: custom shader code', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -171,9 +171,9 @@ test('Test Volume Rendering: custom shader code', async (t) => {
 
   // ----------------------------------------------------------------
 
-  t.comment('testAdditingWithLigting');
+  t.comment('testAdditiveWithLigting');
 
-  volume.getProperty().setColorMixPreset(ColorMixPreset.ADDITING);
+  volume.getProperty().setColorMixPreset(ColorMixPreset.ADDITIVE);
 
   volume.getProperty().setGradientOpacityMinimumValue(0, 2);
   volume.getProperty().setGradientOpacityMinimumOpacity(0, 0.0);
@@ -196,9 +196,9 @@ test('Test Volume Rendering: custom shader code', async (t) => {
   light.setIntensity(1.0);
   renderer.addLight(light);
 
-  let testAdditingResolve;
-  const testAdditingPromise = new Promise((res) => {
-    testAdditingResolve = res;
+  let testAdditiveResolve;
+  const testAdditivePromise = new Promise((res) => {
+    testAdditiveResolve = res;
   });
 
   glwindow.captureNextImage().then((image) => {
@@ -208,13 +208,13 @@ test('Test Volume Rendering: custom shader code', async (t) => {
       'Rendering/Core/VolumeMapper/testColorMix',
       t,
       3.0,
-      testAdditingResolve
+      testAdditiveResolve
     );
   });
 
   renderWindow.render();
 
-  await testAdditingPromise;
+  await testAdditivePromise;
 
   // ----------------------------------------------------------------
 

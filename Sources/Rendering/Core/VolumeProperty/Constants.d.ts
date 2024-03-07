@@ -10,8 +10,11 @@ export declare enum OpacityMode {
 }
 
 export declare enum ColorMixPreset {
+	// Add a `//VTK::CustomColorMix` tag to the Fragment shader
+	// See usage in file `testColorMix` and in function `setColorMixPreset`
 	CUSTOM = 0,
-	ADDITING = 1,
+	// Adds the opacities and the colors weighted by opacity
+	ADDITIVE = 1,
 }
 
 declare const _default: {

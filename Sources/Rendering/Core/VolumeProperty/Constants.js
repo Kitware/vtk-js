@@ -11,7 +11,7 @@ export const OpacityMode = {
 
 export const ColorMixPreset = {
   CUSTOM: 0,
-  ADDITING: 1,
+  ADDITIVE: 1,
 };
 
 export default {
