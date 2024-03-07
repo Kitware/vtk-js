@@ -8,6 +8,7 @@ import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
+import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/ReplacementShaderMapper';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkVertexArrayObject from 'vtk.js/Sources/Rendering/OpenGL/VertexArrayObject';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
@@ -98,11 +99,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       );
       publicAPI.renderPiece(ren, actor);
     }
-  };
-
-  publicAPI.buildShaders = (shaders, ren, actor) => {
-    publicAPI.getShaderTemplate(shaders, ren, actor);
-    publicAPI.replaceShaderValues(shaders, ren, actor);
   };
 
   publicAPI.getShaderTemplate = (shaders, ren, actor) => {
@@ -1789,6 +1785,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
+
+  vtkReplacementShaderMapper.implementBuildShadersWithReplacements(
+    publicAPI,
+    model,
+    initialValues
+  );
 
   model.VBOBuildTime = {};
   macro.obj(model.VBOBuildTime, { mtime: 0 });

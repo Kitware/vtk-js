@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
-import vtkAbstractMapper from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
+import vtkAbstractMapper3D from 'vtk.js/Sources/Rendering/Core/AbstractMapper3D';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 
 const { BlendMode, FilterMode } = Constants;
@@ -170,7 +170,7 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  vtkAbstractMapper.extend(publicAPI, model, initialValues);
+  vtkAbstractMapper3D.extend(publicAPI, model, initialValues);
 
   macro.setGet(publicAPI, model, [
     'sampleDistance',
