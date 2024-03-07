@@ -47,20 +47,20 @@ function getColorCodeFromPreset(colorMixPreset) {
   switch (colorMixPreset) {
     case ColorMixPreset.CUSTOM:
       return '//VTK::CustomColorMix';
-    case ColorMixPreset.ADDITING:
+    case ColorMixPreset.ADDITIVE:
       return `
         float opacity0 = goFactor.x * pwfValue0;
         float opacity1 = goFactor.y * pwfValue1;
-        float opacitySum = clamp(opacity0 + opacity1, 0.0, 1.0);
-        if (opacitySum == 0.0) {
+        float opacitySum = opacity0 + opacity1;
+        if (opacitySum <= 0.0) {
           return vec4(0.0);
         }
         #if vtkLightComplexity > 0
           applyLighting(tColor0, normal0);
           applyLighting(tColor1, normal1);
         #endif
-        vec3 mixedColor = mix(tColor0, tColor1, opacity1 / opacitySum);
-        return vec4(mixedColor, opacitySum);
+        vec3 mixedColor = (opacity0 * tColor0 + opacity1 * tColor1) / opacitySum;
+        return vec4(mixedColor, min(1.0, opacitySum));
 `;
     default:
       return null;
