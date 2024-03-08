@@ -1,8 +1,20 @@
 import macro from 'vtk.js/Sources/macros';
 import Constants from 'vtk.js/Sources/Rendering/WebXR/RenderWindowHelper/Constants';
 import { GET_UNDERLYING_CONTEXT } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/ContextProxy';
+const { vtkWarningMacro } = macro;
 
 const { XrSessionTypes } = Constants;
+
+//FIXME
+let LookingGlassConfig = null;
+import(
+  // eslint-disable-next-line import/no-unresolved, import/extensions
+  /* webpackIgnore: true */ 'https://unpkg.com/@lookingglass/webxr@0.4.0/dist/bundle/webxr.js'
+).then((obj) => {
+  // eslint-disable-next-line no-new
+  LookingGlassConfig = obj.LookingGlassConfig;
+  new obj.LookingGlassWebXRPolyfill();
+});
 
 const DEFAULT_RESET_FACTORS = {
   rescaleFactor: 0.25, // isotropic scale factor reduces apparent size of objects
@@ -10,105 +22,122 @@ const DEFAULT_RESET_FACTORS = {
 };
 
 // ----------------------------------------------------------------------------
-// vtkWebXRRenderWindowHelper methods
+// vtkWebXRRenderManager methods
 // ----------------------------------------------------------------------------
 
-function vtkWebXRRenderWindowHelper(publicAPI, model) {
+function vtkWebXRRenderManager(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebXRRenderWindowHelper');
+  model.classHierarchy.push('vtkWebXRRenderManager');
 
   publicAPI.initialize = (renderWindow) => {
     if (!model.initialized) {
       model.renderWindow = renderWindow;
+      model.alwaysRender = true;
       model.initialized = true;
     }
   };
 
   publicAPI.getXrSupported = () => navigator.xr !== undefined;
 
+  publicAPI.isSessionHMD = (xrSessionType) =>
+    [XrSessionTypes.HmdVR, XrSessionTypes.HmdAR].includes(xrSessionType);
+
+  publicAPI.isSessionAR = (xrSessionType) =>
+    [XrSessionTypes.HmdAR, XrSessionTypes.MobileAR].includes(xrSessionType);
+
   // Request an XR session on the user device with WebXR,
   // typically in response to a user request such as a button press
-  publicAPI.startXR = (xrSessionType) => {
+  publicAPI.startXR = (xrSessionType, referenceSpace) => {
     if (navigator.xr === undefined) {
       throw new Error('WebXR is not available');
     }
-
-    model.xrSessionType =
-      xrSessionType !== undefined ? xrSessionType : XrSessionTypes.HmdVR;
-    const isXrSessionAR = [
-      XrSessionTypes.HmdAR,
-      XrSessionTypes.MobileAR,
-    ].includes(model.xrSessionType);
-    const sessionType = isXrSessionAR ? 'immersive-ar' : 'immersive-vr';
-    if (!navigator.xr.isSessionSupported(sessionType)) {
-      if (isXrSessionAR) {
-        throw new Error('Device does not support AR session');
-      } else {
-        throw new Error('VR display is not available');
-      }
+    if (xrSessionType === undefined || xrSessionType === null) {
+      throw new Error('Must request an XR session type');
     }
-    if (model.xrSession === null) {
-      navigator.xr.requestSession(sessionType).then(publicAPI.enterXR, () => {
-        throw new Error('Failed to create XR session!');
-      });
-    } else {
+    if (model.xrSession) {
       throw new Error('XR Session already exists!');
     }
+
+    if (referenceSpace === undefined || referenceSpace === null) {
+      referenceSpace = 'local';
+    }
+
+    const sessionType = publicAPI.isSessionAR(xrSessionType)
+      ? 'immersive-ar'
+      : 'immersive-vr';
+    if (!navigator.xr.isSessionSupported(sessionType)) {
+      if (publicAPI.isSessionAR(xrSessionType)) {
+        throw new Error('Device does not support AR session');
+      } else {
+        throw new Error('Device does not support VR session');
+      }
+    }
+
+    navigator.xr.requestSession(sessionType).then(
+      (xrSession) => {
+        model.xrSessionType = xrSessionType;
+        publicAPI.enterXR(xrSession, referenceSpace);
+      },
+      () => {
+        model.xrSessionType = null;
+        throw new Error('Failed to create XR session!');
+      }
+    );
   };
 
   // When an XR session is available, set up the XRWebGLLayer
   // and request the first animation frame for the device
-  publicAPI.enterXR = async (xrSession) => {
+  publicAPI.enterXR = async (xrSession, referenceSpace) => {
+    if (!xrSession) {
+      throw new Error('Failed to enter XR with a null xrSession.');
+    }
+
     model.xrSession = xrSession;
     model.initCanvasSize = model.renderWindow.getSize();
 
-    if (model.xrSession !== null) {
-      const gl = model.renderWindow.get3DContext();
-      await gl.makeXRCompatible();
+    const gl = model.renderWindow.get3DContext();
+    await gl.makeXRCompatible();
 
-      // XRWebGLLayer definition is deferred to here to give any WebXR polyfill
-      // an opportunity to override this definition.
-      const { XRWebGLLayer } = window;
-      const glLayer = new XRWebGLLayer(
-        model.xrSession,
-        // constructor needs unproxied context
-        gl[GET_UNDERLYING_CONTEXT]()
+    // XRWebGLLayer definition is deferred to here to give any WebXR polyfill
+    // an opportunity to override this definition.
+    const { XRWebGLLayer } = window;
+    const glLayer = new XRWebGLLayer(
+      model.xrSession,
+      // constructor needs unproxied context
+      gl[GET_UNDERLYING_CONTEXT]()
+    );
+    model.renderWindow.setSize(
+      glLayer.framebufferWidth,
+      glLayer.framebufferHeight
+    );
+
+    model.xrSession.updateRenderState({
+      baseLayer: glLayer,
+    });
+
+    if (referenceSpace !== 'local') {
+      vtkWarningMacro(
+        'VTK.js expects "local" XRReferenceSpace but received: ' +
+          referenceSpace
       );
-      model.renderWindow.setSize(
-        glLayer.framebufferWidth,
-        glLayer.framebufferHeight
-      );
-
-      model.xrSession.updateRenderState({
-        baseLayer: glLayer,
-      });
-
-      model.xrSession.requestReferenceSpace('local').then((refSpace) => {
-        model.xrReferenceSpace = refSpace;
-      });
-
-      // Initialize transparent background for augmented reality session
-      const isXrSessionAR = [
-        XrSessionTypes.HmdAR,
-        XrSessionTypes.MobileAR,
-      ].includes(model.xrSessionType);
-      if (isXrSessionAR) {
-        const ren = model.renderWindow.getRenderable().getRenderers()[0];
-        model.initBackground = ren.getBackground();
-        ren.setBackground([0, 0, 0, 0]);
-      }
-
-      publicAPI.resetXRScene();
-
-      model.renderWindow.getRenderable().getInteractor().switchToXRAnimation();
-      model.xrSceneFrame = model.xrSession.requestAnimationFrame(
-        model.xrRender
-      );
-
-      publicAPI.modified();
-    } else {
-      throw new Error('Failed to enter XR with a null xrSession.');
     }
+    model.xrSession.requestReferenceSpace(referenceSpace).then((refSpace) => {
+      model.xrReferenceSpace = refSpace;
+    });
+
+    // Initialize transparent background for augmented reality session
+    if (publicAPI.isSessionAR(model.xrSessionType)) {
+      const ren = model.renderWindow.getRenderable().getRenderers()[0];
+      model.initBackground = ren.getBackground();
+      ren.setBackground([0, 0, 0, 0]);
+    }
+
+    publicAPI.resetXRScene();
+
+    model.renderWindow.getRenderable().getInteractor().switchToXRAnimation();
+    model.xrSceneFrame = model.xrSession.requestAnimationFrame(model.xrRender);
+
+    publicAPI.modified();
   };
 
   publicAPI.resetXRScene = (
@@ -180,22 +209,20 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
 
   model.xrRender = async (t, frame) => {
     const xrSession = frame.session;
-    const isXrSessionHMD = [
-      XrSessionTypes.HmdVR,
-      XrSessionTypes.HmdAR,
-    ].includes(model.xrSessionType);
 
     model.renderWindow
       .getRenderable()
       .getInteractor()
       .updateXRGamepads(xrSession, frame, model.xrReferenceSpace);
 
-    model.xrSceneFrame = model.xrSession.requestAnimationFrame(model.xrRender);
+    if (model.alwaysRender) {
+      model.xrSceneFrame = model.xrSession.requestAnimationFrame(model.xrRender);
+    }
 
     const xrPose = frame.getViewerPose(model.xrReferenceSpace);
 
     if (xrPose) {
-      const gl = model.renderWindow.get3DContext();
+      const gl = model.renderWindow.get3DContext({preserveDrawingBuffer: true});
 
       if (
         model.xrSessionType === XrSessionTypes.MobileAR &&
@@ -219,27 +246,7 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
 
       // Do a render pass for each eye
       xrPose.views.forEach((view, index) => {
-        const viewport = glLayer.getViewport(view);
-
-        if (isXrSessionHMD) {
-          if (view.eye === 'left') {
-            ren.setViewport(0, 0, 0.5, 1.0);
-          } else if (view.eye === 'right') {
-            ren.setViewport(0.5, 0, 1.0, 1.0);
-          } else {
-            // No handling for non-eye viewport
-            return;
-          }
-        } else if (model.xrSessionType === XrSessionTypes.LookingGlassVR) {
-          const startX = viewport.x / glLayer.framebufferWidth;
-          const startY = viewport.y / glLayer.framebufferHeight;
-          const endX = (viewport.x + viewport.width) / glLayer.framebufferWidth;
-          const endY =
-            (viewport.y + viewport.height) / glLayer.framebufferHeight;
-          ren.setViewport(startX, startY, endX, endY);
-        } else {
-          ren.setViewport(0, 0, 1, 1);
-        }
+        model.setRendererViewport(ren, view, index, glLayer);
 
         ren
           .getActiveCamera()
@@ -255,6 +262,30 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
       // on frame end, such as rendering to a Looking Glass display.
       gl.scissor(0, 0, glLayer.framebufferWidth, glLayer.framebufferHeight);
       gl.disable(gl.SCISSOR_TEST);
+    }
+
+  };
+
+  model.setRendererViewport = (renderer, xrView, xrViewIndex, glLayer) => {
+    const viewport = glLayer.getViewport(xrView);
+
+    if (publicAPI.isSessionHMD(model.xrSessionType)) {
+      if (xrView.eye === 'left') {
+        renderer.setViewport(0, 0, 0.5, 1.0);
+      } else if (xrView.eye === 'right') {
+        renderer.setViewport(0.5, 0, 1.0, 1.0);
+      } else {
+        // No handling for non-eye viewport
+        // pass
+      }
+    } else if (model.xrSessionType === XrSessionTypes.LookingGlassVR) {
+      const startX = viewport.x / glLayer.framebufferWidth;
+      const startY = viewport.y / glLayer.framebufferHeight;
+      const endX = (viewport.x + viewport.width) / glLayer.framebufferWidth;
+      const endY = (viewport.y + viewport.height) / glLayer.framebufferHeight;
+      renderer.setViewport(startX, startY, endX, endY);
+    } else {
+      renderer.setViewport(0, 0, 1, 1);
     }
   };
 
@@ -284,19 +315,16 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   macro.event(publicAPI, model, 'event');
 
-  macro.get(publicAPI, model, ['xrSession']);
+  macro.get(publicAPI, model, ['xrSession', 'xrSessionType']);
   macro.setGet(publicAPI, model, ['renderWindow']);
 
   // Object methods
-  vtkWebXRRenderWindowHelper(publicAPI, model);
+  vtkWebXRRenderManager(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(
-  extend,
-  'vtkWebXRRenderWindowHelper'
-);
+export const newInstance = macro.newInstance(extend, 'vtkWebXRRenderManager');
 
 // ----------------------------------------------------------------------------
 
