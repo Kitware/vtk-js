@@ -62,6 +62,15 @@ function getColorCodeFromPreset(colorMixPreset) {
         vec3 mixedColor = (opacity0 * tColor0 + opacity1 * tColor1) / opacitySum;
         return vec4(mixedColor, min(1.0, opacitySum));
 `;
+    case ColorMixPreset.COLORIZE:
+      return `
+        float opacity0 = goFactor.x * pwfValue0;
+        vec3 color = tColor0 * mix(vec3(1.0), tColor1, pwfValue1);
+        #if vtkLightComplexity > 0
+          applyLighting(color, normal0);
+        #endif
+        return vec4(color, opacity0);
+`;
     default:
       return null;
   }
