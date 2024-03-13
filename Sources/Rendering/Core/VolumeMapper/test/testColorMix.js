@@ -13,8 +13,9 @@ import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import { ColorMixPreset } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 
-import baseline1 from './testColorMixCustom.png';
-import baseline2 from './testColorMixAdditive.png';
+import baselineCustom from './testColorMixCustom.png';
+import baselineAdditive from './testColorMixAdditive.png';
+import baselineColorize from './testColorMixColorize.png';
 
 test('Test Volume Rendering: custom shader code', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -122,6 +123,7 @@ test('Test Volume Rendering: custom shader code', async (t) => {
   renderer.getActiveCamera().roll(90);
   renderer.getActiveCamera().azimuth(-60);
   renderer.resetCamera();
+  renderer.getActiveCamera().zoom(2.5);
 
   // ----------------------------------------------------------------
 
@@ -158,7 +160,7 @@ test('Test Volume Rendering: custom shader code', async (t) => {
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,
-      [baseline1],
+      [baselineCustom],
       'Rendering/Core/VolumeMapper/testColorMix',
       t,
       3.0,
@@ -204,7 +206,7 @@ test('Test Volume Rendering: custom shader code', async (t) => {
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,
-      [baseline2],
+      [baselineAdditive],
       'Rendering/Core/VolumeMapper/testColorMix',
       t,
       3.0,
@@ -213,8 +215,32 @@ test('Test Volume Rendering: custom shader code', async (t) => {
   });
 
   renderWindow.render();
-
   await testAdditivePromise;
+
+  // ----------------------------------------------------------------
+
+  t.comment('testColorizeWithLigting');
+
+  volume.getProperty().setColorMixPreset(ColorMixPreset.COLORIZE);
+
+  let testColorizeResolve;
+  const testColorizePromise = new Promise((res) => {
+    testColorizeResolve = res;
+  });
+
+  glwindow.captureNextImage().then((image) => {
+    testUtils.compareImages(
+      image,
+      [baselineColorize],
+      'Rendering/Core/VolumeMapper/testColorMix',
+      t,
+      3.0,
+      testColorizeResolve
+    );
+  });
+
+  renderWindow.render();
+  await testColorizePromise;
 
   // ----------------------------------------------------------------
 
