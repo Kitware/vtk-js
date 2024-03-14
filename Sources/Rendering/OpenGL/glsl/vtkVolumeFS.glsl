@@ -146,6 +146,25 @@ uniform sampler2D ctexture;
 uniform float cshift0;
 uniform float cscale0;
 
+#if vtkNumComponents >= 2
+uniform float oshift1;
+uniform float oscale1;
+uniform float cshift1;
+uniform float cscale1;
+#endif
+#if vtkNumComponents >= 3
+uniform float oshift2;
+uniform float oscale2;
+uniform float cshift2;
+uniform float cscale2;
+#endif
+#if vtkNumComponents >= 4
+uniform float oshift3;
+uniform float oscale3;
+uniform float cshift3;
+uniform float cscale3;
+#endif
+
 // jitter texture
 uniform sampler2D jtexture;
 uniform sampler2D ttexture;
@@ -191,25 +210,6 @@ uniform float mix3;
 #endif
 #endif
 
-#if vtkNumComponents >= 2
-uniform float oshift1;
-uniform float oscale1;
-uniform float cshift1;
-uniform float cscale1;
-#endif
-#if vtkNumComponents >= 3
-uniform float oshift2;
-uniform float oscale2;
-uniform float cshift2;
-uniform float cscale2;
-#endif
-#if vtkNumComponents >= 4
-uniform float oshift3;
-uniform float oscale3;
-uniform float cshift3;
-uniform float cscale3;
-#endif
-
 uniform vec4 ipScalarRangeMin;
 uniform vec4 ipScalarRangeMax;
 
@@ -237,14 +237,16 @@ uniform highp sampler3D texture1;
 vec4 getTextureValue(vec3 pos)
 {
   vec4 tmp = texture(texture1, pos);
-#if vtkNumComponents == 1
-  tmp.a = tmp.r;
-#endif
-#if vtkNumComponents == 2
-  tmp.a = tmp.g;
-#endif
-#if vtkNumComponents == 3
-  tmp.a = length(tmp.rgb);
+#ifndef UseIndependentComponents
+  #if vtkNumComponents == 1
+    tmp.a = tmp.r;
+  #endif
+  #if vtkNumComponents == 2
+    tmp.a = tmp.g;
+  #endif
+  #if vtkNumComponents == 3
+    tmp.a = length(tmp.rgb);
+  #endif
 #endif
   return tmp;
 }
@@ -372,119 +374,103 @@ vec3 rotateToIDX(vec3 dirVC){
 float computeGradientOpacityFactor(
   float normalMag, float goscale, float goshift, float gomin, float gomax)
 {
-#if defined(vtkGradientOpacityOn)
   return clamp(normalMag * goscale + goshift, gomin, gomax);
-#else
-  return 1.0;
-#endif
 }
 
 //=======================================================================
 // compute the normal and gradient magnitude for a position, uses forward difference
 #if (vtkLightComplexity > 0) || (defined vtkGradientOpacityOn)
-#ifdef vtkClippingPlanesOn
-  void adjustClippedVoxelValues(vec3 pos, vec3 texPos[3], inout vec3 g1)
-  {
-    vec3 g1VC[3];
-    for (int i = 0; i < 3; ++i)
+  #ifdef vtkClippingPlanesOn
+    void adjustClippedVoxelValues(vec3 pos, vec3 texPos[3], inout vec3 g1)
     {
-      g1VC[i] = IStoVC(texPos[i]);
-    }
-    vec3 posVC = IStoVC(pos);
-    for (int i = 0; i < clip_numPlanes; ++i)
-    {
-      for (int j = 0; j < 3; ++j)
+      vec3 g1VC[3];
+      for (int i = 0; i < 3; ++i)
       {
-        if(dot(vec3(vClipPlaneOrigins[i] - g1VC[j].xyz), vClipPlaneNormals[i]) > 0.0)
+        g1VC[i] = IStoVC(texPos[i]);
+      }
+      vec3 posVC = IStoVC(pos);
+      for (int i = 0; i < clip_numPlanes; ++i)
+      {
+        for (int j = 0; j < 3; ++j)
         {
-          g1[j] = 0.0;
+          if(dot(vec3(vClipPlaneOrigins[i] - g1VC[j].xyz), vClipPlaneNormals[i]) > 0.0)
+          {
+            g1[j] = 0.0;
+          }
         }
       }
     }
-  }
-#endif
-
-  #ifdef vtkComputeNormalFromOpacity
-    #ifdef vtkGradientOpacityOn
-      vec4 computeDensityNormal(float gradientMag, vec3 scalarInterp[2])
-      {
-    #else
-      //if gradient opacity not on but using density gradient
-      vec4 computeDensityNormal(vec3 scalarInterp[2])
-      {
-    #endif
-        vec3 opacityG1, opacityG2;
-        opacityG1.x = texture2D(otexture, vec2(scalarInterp[0].x * oscale0 + oshift0, 0.5)).r;
-        opacityG1.y = texture2D(otexture, vec2(scalarInterp[0].y * oscale0 + oshift0, 0.5)).r;
-        opacityG1.z = texture2D(otexture, vec2(scalarInterp[0].z * oscale0 + oshift0, 0.5)).r;
-        opacityG2.x = texture2D(otexture, vec2(scalarInterp[1].x * oscale0 + oshift0, 0.5)).r;
-        opacityG2.y = texture2D(otexture, vec2(scalarInterp[1].y * oscale0 + oshift0, 0.5)).r;
-        opacityG2.z = texture2D(otexture, vec2(scalarInterp[1].z * oscale0 + oshift0, 0.5)).r;
-    #ifdef vtkGradientOpacityOn
-        float gradOpacityFactor = 1.0f;
-        if (gradientMag >= 0.0){
-          gradOpacityFactor = computeGradientOpacityFactor(gradientMag, goscale0, goshift0, gomin0, gomax0);
-        }
-        opacityG1.xyz *= gradOpacityFactor;
-        opacityG2.xyz *= gradOpacityFactor;
-    #endif
-
-        vec4 opacityG = vec4(opacityG1 - opacityG2, 1.0f);
-        // divide by spacing
-        opacityG.xyz /= vSpacing;
-        opacityG.w = length(opacityG.xyz);
-        // rotate to View Coords
-        rotateToViewCoord(opacityG.xyz);
-        if (length(opacityG.xyz) > 0.0) {
-          return vec4(normalize(opacityG.xyz),opacityG.w);
-        } else {
-          return vec4(0.0);
-        }
-      }
-
-      vec4 computeNormalForDensity(vec3 pos, vec3 tstep, out vec3 scalarInterp[2])
-      {
-        vec3 xvec = vec3(tstep.x, 0.0, 0.0);
-        vec3 yvec = vec3(0.0, tstep.y, 0.0);
-        vec3 zvec = vec3(0.0, 0.0, tstep.z);
-        vec3 texPosPVec[3];
-        texPosPVec[0] = pos + xvec;
-        texPosPVec[1] = pos + yvec;
-        texPosPVec[2] = pos + zvec;
-        vec3 texPosNVec[3];
-        texPosNVec[0] = pos - xvec;
-        texPosNVec[1] = pos - yvec;
-        texPosNVec[2] = pos - zvec;
-        vec3 g1, g2;
-
-        scalarInterp[0].x = getTextureValue(texPosPVec[0]).a;
-        scalarInterp[0].y = getTextureValue(texPosPVec[1]).a;
-        scalarInterp[0].z = getTextureValue(texPosPVec[2]).a;
-        scalarInterp[1].x = getTextureValue(texPosNVec[0]).a;
-        scalarInterp[1].y = getTextureValue(texPosNVec[1]).a;
-        scalarInterp[1].z = getTextureValue(texPosNVec[2]).a;
-
-        #ifdef vtkClippingPlanesOn
-          adjustClippedVoxelValues(pos, texPosPVec, scalarInterp[0]);
-          adjustClippedVoxelValues(pos, texPosNVec, scalarInterp[1]);
-        #endif
-        vec4 result;
-        result.x = scalarInterp[0].x - scalarInterp[1].x;
-        result.y = scalarInterp[0].y - scalarInterp[1].y;
-        result.z = scalarInterp[0].z - scalarInterp[1].z;
-        // divide by spacing
-        result.xyz /= vSpacing;
-        result.w = length(result.xyz);
-        // rotate to View Coords
-        rotateToViewCoord(result.xyz);
-        if (length(result.xyz) > 0.0) {
-          return vec4(normalize(result.xyz),result.w);
-        } else {
-          return vec4(0.0);
-        }
-      }
   #endif
 
+  #ifdef vtkComputeNormalFromOpacity
+    vec4 computeDensityNormal(vec3 opacityUCoords[2], float opactityTextureHeight, float gradientOpacity) {
+      vec3 opacityG1, opacityG2;
+      opacityG1.x = texture2D(otexture, vec2(opacityUCoords[0].x, opactityTextureHeight)).r;
+      opacityG1.y = texture2D(otexture, vec2(opacityUCoords[0].y, opactityTextureHeight)).r;
+      opacityG1.z = texture2D(otexture, vec2(opacityUCoords[0].z, opactityTextureHeight)).r;
+      opacityG2.x = texture2D(otexture, vec2(opacityUCoords[1].x, opactityTextureHeight)).r;
+      opacityG2.y = texture2D(otexture, vec2(opacityUCoords[1].y, opactityTextureHeight)).r;
+      opacityG2.z = texture2D(otexture, vec2(opacityUCoords[1].z, opactityTextureHeight)).r;
+      opacityG1.xyz *= gradientOpacity;
+      opacityG2.xyz *= gradientOpacity;
+
+      vec4 opacityG = vec4(opacityG1 - opacityG2, 1.0f);
+      // divide by spacing
+      opacityG.xyz /= vSpacing;
+      opacityG.w = length(opacityG.xyz);
+      // rotate to View Coords
+      rotateToViewCoord(opacityG.xyz);
+      if (!all(equal(opacityG.xyz, vec3(0.0)))) {
+        return vec4(normalize(opacityG.xyz),opacityG.w);
+      } else {
+        return vec4(0.0);
+      }
+    }
+
+    vec4 computeNormalForDensity(vec3 pos, vec3 tstep, out vec3 scalarInterp[2], const int opacityComponent)
+    {
+      vec3 xvec = vec3(tstep.x, 0.0, 0.0);
+      vec3 yvec = vec3(0.0, tstep.y, 0.0);
+      vec3 zvec = vec3(0.0, 0.0, tstep.z);
+      vec3 texPosPVec[3];
+      texPosPVec[0] = pos + xvec;
+      texPosPVec[1] = pos + yvec;
+      texPosPVec[2] = pos + zvec;
+      vec3 texPosNVec[3];
+      texPosNVec[0] = pos - xvec;
+      texPosNVec[1] = pos - yvec;
+      texPosNVec[2] = pos - zvec;
+      vec3 g1, g2;
+
+      scalarInterp[0].x = getTextureValue(texPosPVec[0])[opacityComponent];
+      scalarInterp[0].y = getTextureValue(texPosPVec[1])[opacityComponent];
+      scalarInterp[0].z = getTextureValue(texPosPVec[2])[opacityComponent];
+      scalarInterp[1].x = getTextureValue(texPosNVec[0])[opacityComponent];
+      scalarInterp[1].y = getTextureValue(texPosNVec[1])[opacityComponent];
+      scalarInterp[1].z = getTextureValue(texPosNVec[2])[opacityComponent];
+
+      #ifdef vtkClippingPlanesOn
+        adjustClippedVoxelValues(pos, texPosPVec, scalarInterp[0]);
+        adjustClippedVoxelValues(pos, texPosNVec, scalarInterp[1]);
+      #endif
+      vec4 result;
+      result.x = scalarInterp[0].x - scalarInterp[1].x;
+      result.y = scalarInterp[0].y - scalarInterp[1].y;
+      result.z = scalarInterp[0].z - scalarInterp[1].z;
+      // divide by spacing
+      result.xyz /= vSpacing;
+      result.w = length(result.xyz);
+      // rotate to View Coords
+      rotateToViewCoord(result.xyz);
+      if (length(result.xyz) > 0.0) {
+        return vec4(normalize(result.xyz),result.w);
+      } else {
+        return vec4(0.0);
+      }
+    }
+  #endif
+
+  // only works with dependent components
   vec4 computeNormal(vec3 pos, vec3 tstep)
   {
     vec3 xvec = vec3(tstep.x, 0.0, 0.0);
@@ -702,11 +688,6 @@ float volume_shadow(vec3 posIS, vec3 lightDirNormIS)
     return 1.0;
   }
 
-  // support gradient opacity
-  #ifdef vtkGradientOpacityOn
-    vec4 normal;
-  #endif
-
   float current_dist = 0.0;
   float current_step = length(sampleDistanceISVS_jitter * lightDirNormIS);
   float clamped_step = 0.0;
@@ -726,8 +707,8 @@ float volume_shadow(vec3 posIS, vec3 lightDirNormIS)
 #endif
     scalar = getTextureValue(posIS);
     opacity = texture2D(otexture, vec2(scalar.r * oscale0 + oshift0, 0.5)).r;
-    #ifdef vtkGradientOpacityOn
-      normal = computeNormal(posIS, vec3(1.0/vec3(volumeDimensions)));
+    #if defined(vtkGradientOpacityOn) && !defined(UseIndependentComponents)
+      vec4 normal = computeNormal(posIS, vec3(1.0/vec3(volumeDimensions)));
       opacity *= computeGradientOpacityFactor(normal.w, goscale0, goshift0, gomin0, gomax0);
     #endif
     shadow *= 1.0 - opacity;
@@ -976,6 +957,46 @@ float computeLAO(vec3 posIS, float op, vec3 lightDir, vec4 normal){
   #endif
 #endif
 
+// LAO of surface shadows and volume shadows only work with dependent components
+vec3 applyAllLightning(vec3 tColor, float alpha, vec3 posIS, vec4 normalLight) {
+  #if vtkLightComplexity > 0
+    // surface shadows if needed
+    #ifdef SurfaceShadowOn
+      #if vtkLightComplexity < 3
+        vec3 tColorS = applyLightingDirectional(posIS, vec4(tColor, alpha), normalLight);
+      #else
+        vec3 tColorS = applyLightingPositional(posIS, vec4(tColor, alpha), normalLight, IStoVC(posIS));
+      #endif
+    #endif
+
+    // volume shadows if needed
+    #ifdef VolumeShadowOn
+      vec3 tColorVS = applyShadowRay(tColor, posIS, rayDirVC);
+    #endif
+
+    // merge
+    #ifdef VolumeShadowOn
+      #ifdef SurfaceShadowOn
+        // surface shadows + volumetric shadows
+        float vol_coef = volumetricScatteringBlending * (1.0 - alpha / 2.0) * (1.0 - atan(normalLight.w) * INV4PI);
+        tColor = (1.0-vol_coef) * tColorS + vol_coef * tColorVS;
+      #else
+        // volumetric shadows only
+        tColor = tColorVS;
+      #endif
+    #else
+      #ifdef SurfaceShadowOn
+        // surface shadows only
+        tColor = tColorS;
+      #else
+        // no shadows
+        applyLighting(tColor, normal3);
+      #endif
+    #endif
+  #endif
+  return tColor;
+}
+
 //=======================================================================
 // Given a texture value compute the color and opacity
 //
@@ -1049,83 +1070,9 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
 #else
   // compute the normal and gradient magnitude if needed
   // We compute it as a vec4 if possible otherwise a mat4
-  //
-  vec4 goFactor = vec4(1.0,1.0,1.0,1.0);
-
-  // compute the normal vectors as needed
-  #if (vtkLightComplexity > 0) || defined(vtkGradientOpacityOn)
-    #ifdef UseIndependentComponents
-      mat4 normalMat = computeMat4Normal(posIS, tValue, tstep);
-      #if !defined(vtkComponent0Proportional)
-        vec4 normal0 = normalMat[0];
-      #endif
-      #if vtkNumComponents > 1
-        #if !defined(vtkComponent1Proportional)
-          vec4 normal1 = normalMat[1];
-        #endif
-        #if vtkNumComponents > 2
-          #if !defined(vtkComponent2Proportional)
-            vec4 normal2 = normalMat[2];
-          #endif
-          #if vtkNumComponents > 3
-            #if !defined(vtkComponent3Proportional)
-              vec4 normal3 = normalMat[3];
-            #endif
-          #endif
-        #endif
-      #endif
-    #else
-      vec4 normalLight;
-      #ifdef vtkComputeNormalFromOpacity
-        vec3 scalarInterp[2];
-        vec4 normal0 = computeNormalForDensity(posIS, tstep, scalarInterp);
-        if (length(normal0)>0.0){
-          #ifdef vtkGradientOpacityOn
-            normalLight = computeDensityNormal(normal0.w, scalarInterp);
-          #else
-            normalLight = computeDensityNormal(scalarInterp);
-          #endif
-          if (length(normalLight) == 0.0){
-            normalLight = normal0;
-          }
-        }
-      #else
-        vec4 normal0 = computeNormal(posIS, tstep);
-        normalLight = normal0;
-      #endif
-    #endif
-  #endif
-
-  // compute gradient opacity factors as needed
-  #if defined(vtkGradientOpacityOn)
-    #if !defined(vtkComponent0Proportional)
-      goFactor.x =
-        computeGradientOpacityFactor(normal0.a, goscale0, goshift0, gomin0, gomax0);
-    #endif
-    #ifdef UseIndependentComponents
-      #if vtkNumComponents > 1
-        #if !defined(vtkComponent1Proportional)
-          goFactor.y =
-            computeGradientOpacityFactor(normal1.a, goscale1, goshift1, gomin1, gomax1);
-        #endif
-        #if vtkNumComponents > 2
-          #if !defined(vtkComponent2Proportional)
-            goFactor.z =
-              computeGradientOpacityFactor(normal2.a, goscale2, goshift2, gomin2, gomax2);
-          #endif
-          #if vtkNumComponents > 3
-            #if !defined(vtkComponent3Proportional)
-              goFactor.w =
-                computeGradientOpacityFactor(normal3.a, goscale3, goshift3, gomin3, gomax3);
-            #endif
-          #endif
-        #endif
-      #endif
-    #endif
-  #endif
 
   #ifdef UseIndependentComponents
-    // independent components
+    // sample textures
     vec3 tColor0 = texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, height0)).rgb;
     float pwfValue0 = texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, height0)).r;
 
@@ -1144,12 +1091,46 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
       #endif
     #endif
 
-    // process color and opacity for each component
     #if !defined(vtkCustomComponentsColorMix)
+      // default path for component color mix
+
+      // compute the normal vectors as needed
+      #if (vtkLightComplexity > 0) || defined(vtkGradientOpacityOn)
+        mat4 normalMat = computeMat4Normal(posIS, tValue, tstep);
+      #endif
+
+      // compute gradient opacity factors as needed
+      vec4 goFactor = vec4(1.0, 1.0 ,1.0 ,1.0);
+      #if defined(vtkGradientOpacityOn)
+        #if !defined(vtkComponent0Proportional)
+          goFactor.x =
+            computeGradientOpacityFactor(normalMat[0].a, goscale0, goshift0, gomin0, gomax0);
+        #endif
+        #if vtkNumComponents > 1
+          #if !defined(vtkComponent1Proportional)
+            goFactor.y =
+              computeGradientOpacityFactor(normalMat[1].a, goscale1, goshift1, gomin1, gomax1);
+          #endif
+          #if vtkNumComponents > 2
+            #if !defined(vtkComponent2Proportional)
+              goFactor.z =
+                computeGradientOpacityFactor(normalMat[2].a, goscale2, goshift2, gomin2, gomax2);
+            #endif
+            #if vtkNumComponents > 3
+              #if !defined(vtkComponent3Proportional)
+                goFactor.w =
+                  computeGradientOpacityFactor(normalMat[3].a, goscale3, goshift3, gomin3, gomax3);
+              #endif
+            #endif
+          #endif
+        #endif
+      #endif
+
+      // process color and opacity for each component
       #if !defined(vtkComponent0Proportional)
         float alpha = goFactor.x*mix0*pwfValue0;
         #if vtkLightComplexity > 0
-          applyLighting(tColor0, normal0);
+          applyLighting(tColor0, normalMat[0]);
         #endif
       #else
         tColor0 *= pwfValue0;
@@ -1160,7 +1141,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
         #if !defined(vtkComponent1Proportional)
           alpha += goFactor.y*mix1*pwfValue1;
           #if vtkLightComplexity > 0
-            applyLighting(tColor1, normal1);
+            applyLighting(tColor1, normalMat[1]);
           #endif
         #else
           tColor1 *= pwfValue1;
@@ -1171,7 +1152,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
           #if !defined(vtkComponent2Proportional)
             alpha += goFactor.z*mix2*pwfValue2;
             #if vtkLightComplexity > 0
-              applyLighting(tColor2, normal2);
+              applyLighting(tColor2, normalMat[2]);
             #endif
           #else
             tColor2 *= pwfValue2;
@@ -1183,7 +1164,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
           #if !defined(vtkComponent3Proportional)
             alpha += goFactor.w*mix3*pwfValue3;
             #if vtkLightComplexity > 0
-              applyLighting(tColor3, normal3);
+              applyLighting(tColor3, normalMat[3]);
             #endif
           #else
             tColor3 *= pwfValue3;
@@ -1208,79 +1189,85 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
     #else
       /*
        * Mix the color information from all the independent components to get a single rgba output
+       * Gradient opactity factors and normals are not computed
        *
-       * goFactor is computed if vtkGradientOpacityOn
-       * it is not computed for proportional components
-       * goFactor values that are not computed equal 1
+       * You can compute these using:
+       * - computeMat4Normal: always available, compute normal only for non proportional components, used by default independent component mix
+       * - computeDensityNormal & computeNormalForDensity: available if ((LightComplexity > 0) || GradientOpacityOn) && ComputeNormalFromOpacity),
+       *                                                   used by dependent component color mix, see code for Additive preset in OpenGl/VolumeMapper
+       * - computeGradientOpacityFactor: always available, used in a lot of places
        *
-       * normals are available if vtkLightComplexity > 0 or vtkGradientOpacityOn
-       * they are not computed for proportional components
-       *
-       * applyLighting() is only defined when vtkLightComplexity > 0
-       *
-       * mix0, mix1, ... are defined for each component that is used
+       * Using applyAllLightning() is advised for shading but some features don't work well with it (volume shadows, LAO)
+       * mix0, mix1, ... are defined for each component that is used and correspond to the componentWeight
        */
       //VTK::CustomComponentsColorMix::Impl
     #endif
   #else
     // dependent components
+
+    // compute normal if needed
+    #if (vtkLightComplexity > 0) || defined(vtkGradientOpacityOn)
+      // use component 3 of the opacity texture as getTextureValue() sets alpha to the opacity value
+      #ifdef vtkComputeNormalFromOpacity
+        vec3 scalarInterp[2];
+        vec4 normal0 = computeNormalForDensity(posIS, tstep, scalarInterp, 3);
+      #else
+        vec4 normal0 = computeNormal(posIS, tstep);
+      #endif
+    #endif
+
+    // compute gradient opacity factor enabled
+    #if defined(vtkGradientOpacityOn)
+      float gradientOpacity = computeGradientOpacityFactor(normal0.a, goscale0, goshift0, gomin0, gomax0);
+    #else
+      const float gradientOpacity = 1.0;
+    #endif
+
+    // get color and opacity
     #if vtkNumComponents == 1
       vec3 tColor = texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, 0.5)).rgb;
-      float alpha = goFactor.x*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, 0.5)).r;
+      float alpha = gradientOpacity*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, 0.5)).r;
       if (alpha < EPSILON){
         return vec4(0.0);
       }
     #endif
     #if vtkNumComponents == 2
       vec3 tColor = vec3(tValue.r * cscale0 + cshift0);
-      float alpha = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale1 + oshift1, 0.5)).r;
+      float alpha = gradientOpacity*texture2D(otexture, vec2(tValue.a * oscale1 + oshift1, 0.5)).r;
     #endif
     #if vtkNumComponents == 3
       vec3 tColor;
       tColor.r = tValue.r * cscale0 + cshift0;
       tColor.g = tValue.g * cscale1 + cshift1;
       tColor.b = tValue.b * cscale2 + cshift2;
-      float alpha = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale0 + oshift0, 0.5)).r;
+      float alpha = gradientOpacity*texture2D(otexture, vec2(tValue.a * oscale0 + oshift0, 0.5)).r;
     #endif
     #if vtkNumComponents == 4
       vec3 tColor;
       tColor.r = tValue.r * cscale0 + cshift0;
       tColor.g = tValue.g * cscale1 + cshift1;
       tColor.b = tValue.b * cscale2 + cshift2;
-      float alpha = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, 0.5)).r;
+      float alpha = gradientOpacity*texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, 0.5)).r;
     #endif
 
-    #if vtkLightComplexity > 0
-      // apply lighting
-      #ifdef SurfaceShadowOn
-        #if vtkLightComplexity < 3
-          vec3 tColorS = applyLightingDirectional(posIS, vec4(tColor, alpha), normalLight);
-        #else
-          vec3 tColorS = applyLightingPositional(posIS, vec4(tColor, alpha), normalLight, IStoVC(posIS));
-        #endif
-      #endif
-      #ifdef VolumeShadowOn
-        vec3 tColorVS = applyShadowRay(tColor, posIS, rayDirVC);
-      #endif
-      #ifdef VolumeShadowOn
-        #ifdef SurfaceShadowOn
-          // surface shadows + volumetric shadows
-          float vol_coef = volumetricScatteringBlending * (1.0 - alpha / 2.0) * (1.0 - atan(normalLight.w) * INV4PI);
-          tColor = (1.0-vol_coef) * tColorS + vol_coef * tColorVS;
-        #else
-          // volumetric shadows only
-          tColor = tColorVS;
-        #endif
+    // lighting
+    #if (vtkLightComplexity > 0)
+      #ifdef vtkComputeNormalFromOpacity
+        vec4 normalLight;
+        if (!all(equal(normal0, vec4(0.0)))) {
+          scalarInterp[0] = scalarInterp[0] * oscale0 + oshift0;
+          scalarInterp[1] = scalarInterp[1] * oscale0 + oshift0;
+          normalLight = computeDensityNormal(scalarInterp, 0.5, gradientOpacity);
+          if (all(equal(normalLight, vec4(0.0)))) {
+            normalLight = normal0;
+          }
+        }
       #else
-        #ifdef SurfaceShadowOn
-          // surface shadows only
-          tColor = tColorS;
-        #else
-          // no shadows
-          applyLighting(tColor, normal3);
-        #endif
+        vec4 normalLight = normal0;
       #endif
+      tColor = applyAllLightning(tColor, alpha, posIS, normalLight);
     #endif
+
     return vec4(tColor, alpha);
   #endif // dependent
 #endif

@@ -102,7 +102,7 @@ test('Test Volume Rendering: custom shader code', async (t) => {
   const maskCtfun = gc.registerResource(vtkColorTransferFunction.newInstance());
   maskCtfun.addRGBPoint(0, 0, 0, 0);
   maskCtfun.addRGBPoint(0.9999, 0, 0, 0);
-  maskCtfun.addRGBPoint(1, 1, 0, 0);
+  maskCtfun.addRGBPoint(1, 1, 0, 1);
 
   const maskOfun = gc.registerResource(vtkPiecewiseFunction.newInstance());
   maskOfun.addPoint(0, 0);
@@ -138,11 +138,16 @@ test('Test Volume Rendering: custom shader code', async (t) => {
         originalValue: '//VTK::CustomColorMix',
         replaceFirst: false,
         replacementValue: `
-          float opacity1 = pwfValue1;
-          if (opacity1 > 0.5) {
+          if (pwfValue1 > 0.5) {
             return vec4(0.0, 1.0, 1.0, 0.1);
           } else {
-            float opacity0 = goFactor.x * pwfValue0;
+            mat4 normalMat = computeMat4Normal(posIS, tValue, tstep);
+            float opacity0 = pwfValue0;
+            #ifdef vtkGradientOpacityOn
+              float gof0 = computeGradientOpacityFactor(normalMat[0].a, goscale0, goshift0, gomin0, gomax0);
+              opacity0 *= gof0;
+            #endif
+            tColor0 = applyAllLightning(tColor0, opacity0, posIS, normalMat[0]);
             return vec4(tColor0, opacity0);
           }
         `,
@@ -177,14 +182,15 @@ test('Test Volume Rendering: custom shader code', async (t) => {
 
   volume.getProperty().setColorMixPreset(ColorMixPreset.ADDITIVE);
 
+  volume.getProperty().setUseGradientOpacity(0, true);
   volume.getProperty().setGradientOpacityMinimumValue(0, 2);
   volume.getProperty().setGradientOpacityMinimumOpacity(0, 0.0);
   volume.getProperty().setGradientOpacityMaximumValue(0, 20);
   volume.getProperty().setGradientOpacityMaximumOpacity(0, 1.0);
   volume.getProperty().setScalarOpacityUnitDistance(0, 2.955);
   volume.getProperty().setShade(true);
-  volume.getProperty().setAmbient(0.0);
-  volume.getProperty().setDiffuse(1);
+  volume.getProperty().setAmbient(0.3);
+  volume.getProperty().setDiffuse(0.7);
   volume.getProperty().setSpecular(1);
 
   renderer.removeAllLights();
@@ -193,7 +199,7 @@ test('Test Volume Rendering: custom shader code', async (t) => {
   light.setPositional(true);
   light.setPosition(450, 300, 200);
   light.setFocalPoint(0, 0, 0);
-  light.setColor(1, 1, 1);
+  light.setColor(0, 1, 1);
   light.setConeAngle(25);
   light.setIntensity(1.0);
   renderer.addLight(light);
@@ -222,6 +228,8 @@ test('Test Volume Rendering: custom shader code', async (t) => {
   t.comment('testColorizeWithLigting');
 
   volume.getProperty().setColorMixPreset(ColorMixPreset.COLORIZE);
+  renderer.getActiveCamera().azimuth(-60);
+  renderer.getActiveCamera().elevation(-20);
 
   let testColorizeResolve;
   const testColorizePromise = new Promise((res) => {
