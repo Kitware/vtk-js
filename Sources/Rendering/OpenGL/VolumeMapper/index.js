@@ -49,26 +49,69 @@ function getColorCodeFromPreset(colorMixPreset) {
       return '//VTK::CustomColorMix';
     case ColorMixPreset.ADDITIVE:
       return `
-        float opacity0 = goFactor.x * pwfValue0;
-        float opacity1 = goFactor.y * pwfValue1;
+        // compute normals
+        mat4 normalMat = computeMat4Normal(posIS, tValue, tstep);
+        #if (vtkLightComplexity > 0) && defined(vtkComputeNormalFromOpacity)
+          vec3 scalarInterp0[2];
+          vec4 normalLight0 = computeNormalForDensity(posIS, tstep, scalarInterp0, 0);
+          scalarInterp0[0] = scalarInterp0[0] * oscale0 + oshift0;
+          scalarInterp0[1] = scalarInterp0[1] * oscale0 + oshift0;
+          normalLight0 = computeDensityNormal(scalarInterp0, height0, 1.0);
+
+          vec3 scalarInterp1[2];
+          vec4 normalLight1 = computeNormalForDensity(posIS, tstep, scalarInterp1, 1);
+          scalarInterp1[0] = scalarInterp1[0] * oscale1 + oshift1;
+          scalarInterp1[1] = scalarInterp1[1] * oscale1 + oshift1;
+          normalLight1 = computeDensityNormal(scalarInterp1, height1, 1.0);
+        #else
+          vec4 normalLight0 = normalMat[0];
+          vec4 normalLight1 = normalMat[1];
+        #endif
+
+        // compute opacities
+        float opacity0 = pwfValue0;
+        float opacity1 = pwfValue1;
+        #ifdef vtkGradientOpacityOn
+          float gof0 = computeGradientOpacityFactor(normalMat[0].a, goscale0, goshift0, gomin0, gomax0);
+          opacity0 *= gof0;
+          float gof1 = computeGradientOpacityFactor(normalMat[1].a, goscale1, goshift1, gomin1, gomax1);
+          opacity1 *= gof1;
+        #endif
         float opacitySum = opacity0 + opacity1;
         if (opacitySum <= 0.0) {
           return vec4(0.0);
         }
-        #if vtkLightComplexity > 0
-          applyLighting(tColor0, normal0);
-          applyLighting(tColor1, normal1);
-        #endif
+
+        // mix the colors and opacities
+        tColor0 = applyAllLightning(tColor0, opacity0, posIS, normalLight0);
+        tColor1 = applyAllLightning(tColor1, opacity1, posIS, normalLight1);
         vec3 mixedColor = (opacity0 * tColor0 + opacity1 * tColor1) / opacitySum;
         return vec4(mixedColor, min(1.0, opacitySum));
 `;
     case ColorMixPreset.COLORIZE:
       return `
-        float opacity0 = goFactor.x * pwfValue0;
-        vec3 color = tColor0 * mix(vec3(1.0), tColor1, pwfValue1);
-        #if vtkLightComplexity > 0
-          applyLighting(color, normal0);
+        // compute normals
+        mat4 normalMat = computeMat4Normal(posIS, tValue, tstep);
+        #if (vtkLightComplexity > 0) && defined(vtkComputeNormalFromOpacity)
+          vec3 scalarInterp0[2];
+          vec4 normalLight0 = computeNormalForDensity(posIS, tstep, scalarInterp0, 0);
+          scalarInterp0[0] = scalarInterp0[0] * oscale0 + oshift0;
+          scalarInterp0[1] = scalarInterp0[1] * oscale0 + oshift0;
+          normalLight0 = computeDensityNormal(scalarInterp0, height0, 1.0);
+        #else
+          vec4 normalLight0 = normalMat[0];
         #endif
+
+        // compute opacities
+        float opacity0 = pwfValue0;
+        #ifdef vtkGradientOpacityOn
+          float gof0 = computeGradientOpacityFactor(normalMat[0].a, goscale0, goshift0, gomin0, gomax0);
+          opacity0 *= gof0;
+        #endif
+
+        // mix the colors and opacities
+        vec3 color = tColor0 * mix(vec3(1.0), tColor1, pwfValue1);
+        color = applyAllLightning(color, opacity0, posIS, normalLight0);
         return vec4(color, opacity0);
 `;
     default:
