@@ -4,6 +4,7 @@ import '@kitware/vtk.js/favicon';
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
+import { ColorMixPreset } from '@kitware/vtk.js/Rendering/Core/VolumeProperty/Constants';
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
 import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
@@ -32,6 +33,7 @@ const { Representation, Shading } = vtkProperty;
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0, 0, 0],
 });
+fullScreenRenderer.addController(controlPanel);
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 renderer.setTwoSidedLighting(false);
@@ -44,6 +46,9 @@ renderer.setTwoSidedLighting(false);
 // ----------------------------------------------------------------------------
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
+const volumeOptions = {};
+const volumeSelectElem = document.getElementById('volume');
+const presetSelectElem = document.getElementById('preset');
 
 const actor = vtkVolume.newInstance();
 const mapper = vtkVolumeMapper.newInstance();
@@ -74,11 +79,10 @@ actor.getProperty().setGradientOpacityMaximumValue(0, 20);
 actor.getProperty().setGradientOpacityMaximumOpacity(0, 1.0);
 actor.getProperty().setScalarOpacityUnitDistance(0, 2.955);
 actor.getProperty().setShade(true);
-actor.getProperty().setAmbient(0.5);
-actor.getProperty().setDiffuse(0.7);
-actor.getProperty().setSpecular(0.0);
+actor.getProperty().setAmbient(0.3);
+actor.getProperty().setDiffuse(1);
+actor.getProperty().setSpecular(1);
 
-mapper.setInputConnection(reader.getOutputPort());
 renderer.addVolume(actor);
 
 renderer.removeAllLights();
@@ -140,8 +144,110 @@ if (light.getPositional()) {
   renderer.addActor(lca);
 }
 
+Object.keys(ColorMixPreset).forEach((key) => {
+  if (key === 'CUSTOM') {
+    // Don't enable custom mode
+    // This requires adding a shader replacement as in testColorMix.js
+    return;
+  }
+  const name = key.at(0).toUpperCase() + key.slice(1).toLowerCase();
+  const optionElem = document.createElement('option');
+  optionElem.label = name;
+  optionElem.value = key;
+  presetSelectElem.appendChild(optionElem);
+});
+
+{
+  const optionElem = document.createElement('option');
+  optionElem.label = 'Default';
+  optionElem.value = '';
+  presetSelectElem.appendChild(optionElem);
+}
+
+const setColorMixPreset = (presetKey) => {
+  const preset = presetKey ? ColorMixPreset[presetKey] : null;
+  actor.getProperty().setColorMixPreset(preset);
+  presetSelectElem.value = presetKey;
+};
+
+volumeSelectElem.addEventListener('change', () => {
+  const { comp, data } = volumeOptions[volumeSelectElem.value];
+  setColorMixPreset('');
+  if (comp === 1) {
+    presetSelectElem.style.display = 'none';
+  } else {
+    presetSelectElem.style.display = 'block';
+  }
+  const array = mapper.getInputData().getPointData().getArray(0);
+  array.setData(data);
+  array.setNumberOfComponents(comp);
+  mapper.modified();
+  renderWindow.render();
+});
+
+presetSelectElem.addEventListener('change', () => {
+  const presetKey = presetSelectElem.value;
+  setColorMixPreset(presetKey);
+  renderWindow.render();
+});
+
 reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
   reader.loadData().then(() => {
+    const imageData = reader.getOutputData();
+    mapper.setInputData(imageData);
+
+    const array = imageData.getPointData().getArray(0);
+    const baseComp = 1;
+    const baseData = array.getData();
+    const newComp = 2;
+    const newData = new Float32Array(newComp * baseData.length);
+    const dims = imageData.getDimensions();
+    for (let z = 0; z < dims[2]; ++z) {
+      for (let y = 0; y < dims[1]; ++y) {
+        for (let x = 0; x < dims[0]; ++x) {
+          const iTuple = x + dims[0] * (y + dims[1] * z);
+          newData[iTuple * newComp + 0] = baseData[iTuple];
+          const isInMask =
+            x >= 0.3 * dims[0] &&
+            x <= 0.7 * dims[0] &&
+            y >= 0.3 * dims[1] &&
+            y <= 0.7 * dims[1] &&
+            z >= 0.3 * dims[2] &&
+            z <= 0.7 * dims[2];
+          newData[iTuple * newComp + 1] = isInMask ? 1 : 0;
+        }
+      }
+    }
+
+    volumeOptions['Base volume'] = {
+      comp: baseComp,
+      data: baseData,
+    };
+    volumeOptions['Labelmap volume'] = {
+      comp: newComp,
+      data: newData,
+    };
+
+    Object.keys(volumeOptions).forEach((key) => {
+      const optionElem = document.createElement('option');
+      optionElem.value = key;
+      optionElem.label = key;
+      volumeSelectElem.appendChild(optionElem);
+    });
+
+    const maskCtfun = vtkColorTransferFunction.newInstance();
+    maskCtfun.addRGBPoint(0, 0, 0, 0);
+    maskCtfun.addRGBPoint(0.9999, 0, 0, 0);
+    maskCtfun.addRGBPoint(1, 1, 0, 1);
+
+    const maskOfun = vtkPiecewiseFunction.newInstance();
+    maskOfun.addPoint(0, 0);
+    maskOfun.addPoint(0.9999, 0);
+    maskOfun.addPoint(1, 1);
+
+    actor.getProperty().setRGBTransferFunction(1, maskCtfun);
+    actor.getProperty().setScalarOpacity(1, maskOfun);
+
     const interactor = renderWindow.getInteractor();
     interactor.setDesiredUpdateRate(15.0);
     renderer.getActiveCamera().azimuth(90);
@@ -154,7 +260,6 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
 
 // TEST  ==============
 
-fullScreenRenderer.addController(controlPanel);
 let isLAO = false;
 const button = document.querySelector('.text');
 
