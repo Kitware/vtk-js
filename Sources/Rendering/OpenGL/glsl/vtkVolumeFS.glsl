@@ -30,16 +30,11 @@ varying vec3 vertexVCVSOutput;
 // possibly define vtkTrilinearOn
 //VTK::TrilinearOn
 
-// possibly define vtkIndependentComponents
+// possibly define UseIndependentComponents
 //VTK::IndependentComponentsOn
 
 // possibly define vtkCustomComponentsColorMix
 //VTK::CustomComponentsColorMixOn
-
-// possibly define if independent components are actually used 
-#if (defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2) || defined(vtkCustomComponentsColorMix)
-  #define UseIndependentComponents
-#endif
 
 // possibly define any "proportional" components
 //VTK::vtkProportionalComponents
