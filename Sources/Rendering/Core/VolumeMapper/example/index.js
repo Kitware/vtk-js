@@ -162,6 +162,7 @@ Object.keys(ColorMixPreset).forEach((key) => {
   optionElem.label = 'Default';
   optionElem.value = '';
   presetSelectElem.appendChild(optionElem);
+  presetSelectElem.value = optionElem.value;
 }
 
 const setColorMixPreset = (presetKey) => {
@@ -172,8 +173,8 @@ const setColorMixPreset = (presetKey) => {
 
 volumeSelectElem.addEventListener('change', () => {
   const { comp, data } = volumeOptions[volumeSelectElem.value];
-  setColorMixPreset('');
   if (comp === 1) {
+    setColorMixPreset('');
     presetSelectElem.style.display = 'none';
   } else {
     presetSelectElem.style.display = 'block';
@@ -200,21 +201,29 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
     const baseComp = 1;
     const baseData = array.getData();
     const newComp = 2;
-    const newData = new Float32Array(newComp * baseData.length);
+    const cubeData = new Float32Array(newComp * baseData.length);
+    const sphereData = new Float32Array(newComp * baseData.length);
     const dims = imageData.getDimensions();
     for (let z = 0; z < dims[2]; ++z) {
       for (let y = 0; y < dims[1]; ++y) {
         for (let x = 0; x < dims[0]; ++x) {
           const iTuple = x + dims[0] * (y + dims[1] * z);
-          newData[iTuple * newComp + 0] = baseData[iTuple];
-          const isInMask =
+          const isInCube =
             x >= 0.3 * dims[0] &&
             x <= 0.7 * dims[0] &&
             y >= 0.3 * dims[1] &&
             y <= 0.7 * dims[1] &&
             z >= 0.3 * dims[2] &&
             z <= 0.7 * dims[2];
-          newData[iTuple * newComp + 1] = isInMask ? 1 : 0;
+          cubeData[iTuple * newComp + 0] = baseData[iTuple];
+          cubeData[iTuple * newComp + 1] = isInCube ? 1 : 0;
+          const isInSphere =
+            (x / dims[0] - 0.5) ** 2 +
+              (y / dims[1] - 0.5) ** 2 +
+              (z / dims[2] - 0.5) ** 2 <
+            0.2 ** 2;
+          sphereData[iTuple * newComp + 0] = baseData[iTuple];
+          sphereData[iTuple * newComp + 1] = isInSphere ? 1 : 0;
         }
       }
     }
@@ -223,9 +232,13 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
       comp: baseComp,
       data: baseData,
     };
-    volumeOptions['Labelmap volume'] = {
+    volumeOptions['Sphere labelmap volume'] = {
       comp: newComp,
-      data: newData,
+      data: sphereData,
+    };
+    volumeOptions['Cube labelmap volume'] = {
+      comp: newComp,
+      data: cubeData,
     };
 
     Object.keys(volumeOptions).forEach((key) => {
