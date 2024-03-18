@@ -39,6 +39,9 @@ varying vec3 vertexVCVSOutput;
 // possibly define any "proportional" components
 //VTK::vtkProportionalComponents
 
+// possibly define any components that are forced to nearest interpolation
+//VTK::vtkForceNearestComponents
+
 // Define the blend mode to use
 #define vtkBlendMode //VTK::BlendMode
 
@@ -232,17 +235,39 @@ uniform highp sampler3D texture1;
 vec4 getTextureValue(vec3 pos)
 {
   vec4 tmp = texture(texture1, pos);
-#ifndef UseIndependentComponents
-  #if vtkNumComponents == 1
-    tmp.a = tmp.r;
+
+  #if defined(vtkComponent0ForceNearest) || \
+      defined(vtkComponent1ForceNearest) || \
+      defined(vtkComponent2ForceNearest) || \
+      defined(vtkComponent3ForceNearest)
+    vec3 nearestPos = (floor(pos * vec3(volumeDimensions)) + 0.5) / vec3(volumeDimensions);
+    vec4 nearestValue = texture(texture1, nearestPos);
+    #ifdef vtkComponent0ForceNearest
+      tmp[0] = nearestValue[0];
+    #endif
+    #ifdef vtkComponent1ForceNearest
+      tmp[1] = nearestValue[1];
+    #endif
+    #ifdef vtkComponent2ForceNearest
+      tmp[2] = nearestValue[2];
+    #endif
+    #ifdef vtkComponent3ForceNearest
+      tmp[3] = nearestValue[3];
+    #endif
   #endif
-  #if vtkNumComponents == 2
-    tmp.a = tmp.g;
+
+  #ifndef UseIndependentComponents
+    #if vtkNumComponents == 1
+      tmp.a = tmp.r;
+    #endif
+    #if vtkNumComponents == 2
+      tmp.a = tmp.g;
+    #endif
+    #if vtkNumComponents == 3
+      tmp.a = length(tmp.rgb);
+    #endif
   #endif
-  #if vtkNumComponents == 3
-    tmp.a = length(tmp.rgb);
-  #endif
-#endif
+
   return tmp;
 }
 

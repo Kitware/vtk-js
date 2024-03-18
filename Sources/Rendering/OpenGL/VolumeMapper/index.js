@@ -190,10 +190,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderValues = (shaders, ren, actor) => {
+    const actorProps = actor.getProperty();
     let FSSource = shaders.Fragment;
 
     // define some values in the shader
-    const iType = actor.getProperty().getInterpolationType();
+    const iType = actorProps.getInterpolationType();
     if (iType === InterpolationType.LINEAR) {
       FSSource = vtkShaderProgram.substitute(
         FSSource,
@@ -202,7 +203,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       ).result;
     }
 
-    const vtkImageLabelOutline = actor.getProperty().getUseLabelOutline();
+    const vtkImageLabelOutline = actorProps.getUseLabelOutline();
     if (vtkImageLabelOutline === true) {
       FSSource = vtkShaderProgram.substitute(
         FSSource,
@@ -225,27 +226,33 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         '//VTK::IndependentComponentsOn',
         '#define UseIndependentComponents'
       ).result;
+    }
 
-      // Define any proportional components
-      const proportionalComponents = [];
-      for (let nc = 0; nc < numComp; nc++) {
-        if (
-          actor.getProperty().getOpacityMode(nc) === OpacityMode.PROPORTIONAL
-        ) {
-          proportionalComponents.push(`#define vtkComponent${nc}Proportional`);
-        }
+    // Define any proportional components
+    const proportionalComponents = [];
+    const forceNearestComponents = [];
+    for (let nc = 0; nc < numComp; nc++) {
+      if (actorProps.getOpacityMode(nc) === OpacityMode.PROPORTIONAL) {
+        proportionalComponents.push(`#define vtkComponent${nc}Proportional`);
       }
-
-      if (proportionalComponents.length > 0) {
-        FSSource = vtkShaderProgram.substitute(
-          FSSource,
-          '//VTK::vtkProportionalComponents',
-          proportionalComponents.join('\n')
-        ).result;
+      if (actorProps.getForceNearestInterpolation(nc)) {
+        forceNearestComponents.push(`#define vtkComponent${nc}ForceNearest`);
       }
     }
 
-    const colorMixPreset = actor.getProperty().getColorMixPreset();
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
+      '//VTK::vtkProportionalComponents',
+      proportionalComponents.join('\n')
+    ).result;
+
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
+      '//VTK::vtkForceNearestComponents',
+      forceNearestComponents.join('\n')
+    ).result;
+
+    const colorMixPreset = actorProps.getColorMixPreset();
     const colorMixCode = getColorCodeFromPreset(colorMixPreset);
     if (colorMixCode) {
       FSSource = vtkShaderProgram.substitute(
@@ -310,7 +317,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
       if (
         model.renderable.getLocalAmbientOcclusion() &&
-        actor.getProperty().getAmbient() > 0.0
+        actorProps.getAmbient() > 0.0
       ) {
         FSSource = vtkShaderProgram.substitute(
           FSSource,
@@ -324,7 +331,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const numIComps = useIndependentComps ? numComp : 1;
     model.gopacity = false;
     for (let nc = 0; !model.gopacity && nc < numIComps; ++nc) {
-      model.gopacity ||= actor.getProperty().getUseGradientOpacity(nc);
+      model.gopacity ||= actorProps.getUseGradientOpacity(nc);
     }
     if (model.gopacity) {
       FSSource = vtkShaderProgram.substitute(
@@ -544,10 +551,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     recomputeLightComplexity(actor, ren.getLights());
 
     const numComp = model.scalarTexture.getComponents();
-    const iComps = actorProps.getIndependentComponents();
     const opacityModes = [];
+    const forceNearestInterps = [];
     for (let nc = 0; nc < numComp; nc++) {
       opacityModes.push(actorProps.getOpacityMode(nc));
+      forceNearestInterps.push(actorProps.getForceNearestInterpolation(nc));
     }
 
     const ext = model.currentInput.getSpatialExtent();
@@ -566,16 +574,17 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const hasZBufferTexture = !!model.zBufferTexture;
 
     const state = {
+      iComps: actorProps.getIndependentComponents(),
       colorMixPreset: actorProps.getColorMixPreset(),
       interpolationType: actorProps.getInterpolationType(),
       useLabelOutline: actorProps.getUseLabelOutline(),
       numComp,
-      iComps,
       maxSamples,
       useGradientOpacity: actorProps.getUseGradientOpacity(0),
       blendMode: model.renderable.getBlendMode(),
       hasZBufferTexture,
       opacityModes,
+      forceNearestInterps,
     };
 
     // We need to rebuild the shader if one of these variables has changed,
