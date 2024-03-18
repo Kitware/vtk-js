@@ -342,14 +342,13 @@ function vtkResliceCursorWidget(publicAPI, model) {
     renderer,
     viewType,
     resetFocalPoint,
-    keepCenterFocalDistance,
     computeFocalPointOffset
   ) => {
     publicAPI.resetCamera(
       renderer,
       viewType,
       resetFocalPoint,
-      keepCenterFocalDistance
+      !computeFocalPointOffset
     );
 
     if (computeFocalPointOffset) {

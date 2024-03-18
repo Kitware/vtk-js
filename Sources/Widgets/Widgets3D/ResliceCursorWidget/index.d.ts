@@ -33,7 +33,6 @@ export interface vtkResliceCursorWidget<WidgetInstance extends vtkAbstractWidget
     renderer: vtkRenderer,
     viewType: ViewTypes,
     resetFocalPoint: boolean,
-    keepCenterFocalDistance: boolean,
     computeFocalPointOffset: boolean
   ): void;
 

@@ -1,3 +1,8 @@
+## From 29.x to 30
+
+- **ResliceCursorWidget.interactionEvent**: no longer pass an object of computeFocalPointOffset, canUpdateFocalPoint but simply the type of the handle that triggers the event. Those values can easily be recomputed by the consumers of the event. Regarding `computeFocalPointOffset`, it is no longer adviced to compute focal point offset for each interaction, instead observing `startInteraction()` should be considered (see ResliceCursorWidget example).
+  - **ResliceCursorWidget.invokeInternalInteractionEvent(methodName)**: has been removed and should be replaced by `ResliceCursorWidget.invokeInteractionEvent(methodName)`.
+
 ## From 28.x to 29
 
 - **getOpenGLRenderWindow**: `getOpenGLRenderWindow` has been renamed to `getApiSpecificRenderWindow` in `vtkFullScreenRenderWindow`, `vtkGenericRenderWindow` and `vtkViewProxy` to support WebGL and WebGPU backend. ([#2816](https://github.com/Kitware/vtk-js/pull/2816))
