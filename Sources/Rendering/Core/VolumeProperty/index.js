@@ -211,6 +211,7 @@ function vtkVolumeProperty(publicAPI, model) {
     'gradientOpacityMaximumValue',
     'gradientOpacityMaximumOpacity',
     'opacityMode',
+    'forceNearestInterpolation',
   ];
   sets.forEach((val) => {
     const cap = macro.capitalize(val);
@@ -232,6 +233,7 @@ function vtkVolumeProperty(publicAPI, model) {
     'gradientOpacityMaximumValue',
     'gradientOpacityMaximumOpacity',
     'opacityMode',
+    'forceNearestInterpolation',
   ];
   gets.forEach((val) => {
     const cap = macro.capitalize(val);
@@ -283,6 +285,7 @@ export function extend(publicAPI, model, initialValues = {}) {
         useGradientOpacity: false,
 
         componentWeight: 1.0,
+        forceNearestInterpolation: false,
       });
     }
   }

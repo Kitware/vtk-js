@@ -136,6 +136,12 @@ export interface vtkVolumeProperty extends vtkObject {
 	getUseGradientOpacity(index: number): boolean;
 
 	/**
+	 * @see setForceNearestInterpolation
+	 * @param {Number} index
+	 */
+	getForceNearestInterpolation(index: number): boolean;
+
+	/**
 	 *
 	 */
 	getUseLabelOutline(): boolean;
@@ -314,6 +320,15 @@ export interface vtkVolumeProperty extends vtkObject {
 	 * @param {Number} value 
 	 */
 	setComponentWeight(index: number, value: number): boolean;
+
+	/**
+	 * Force the nearest neighbor interpolation of one or more of the components
+	 * The interpolation for the rest of the volume is set using `setInterpolationType`
+	 * @see setInterpolationType
+	 * @param {Number} index
+	 * @param {Boolean} value
+	 */
+	setForceNearestInterpolation(index: number, value: boolean): boolean;
 
 	/**
 	 * Get the scalar component weights.

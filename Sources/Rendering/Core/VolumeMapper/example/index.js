@@ -49,6 +49,7 @@ const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 const volumeOptions = {};
 const volumeSelectElem = document.getElementById('volume');
 const presetSelectElem = document.getElementById('preset');
+const forceNearestElem = document.getElementById('forceNearest');
 
 const actor = vtkVolume.newInstance();
 const mapper = vtkVolumeMapper.newInstance();
@@ -144,6 +145,14 @@ if (light.getPositional()) {
   renderer.addActor(lca);
 }
 
+{
+  const optionElem = document.createElement('option');
+  optionElem.label = 'Default';
+  optionElem.value = '';
+  presetSelectElem.appendChild(optionElem);
+  presetSelectElem.value = optionElem.value;
+}
+
 Object.keys(ColorMixPreset).forEach((key) => {
   if (key === 'CUSTOM') {
     // Don't enable custom mode
@@ -157,19 +166,31 @@ Object.keys(ColorMixPreset).forEach((key) => {
   presetSelectElem.appendChild(optionElem);
 });
 
-{
-  const optionElem = document.createElement('option');
-  optionElem.label = 'Default';
-  optionElem.value = '';
-  presetSelectElem.appendChild(optionElem);
-  presetSelectElem.value = optionElem.value;
-}
-
 const setColorMixPreset = (presetKey) => {
   const preset = presetKey ? ColorMixPreset[presetKey] : null;
   actor.getProperty().setColorMixPreset(preset);
   presetSelectElem.value = presetKey;
 };
+
+function updateForceNearestElem(comp) {
+  forceNearestElem.replaceChildren();
+  for (let c = 0; c < comp; ++c) {
+    const checkboxElem = document.createElement('input');
+    checkboxElem.type = 'checkbox';
+    checkboxElem.checked = actor.getProperty().getForceNearestInterpolation(c);
+    checkboxElem.addEventListener('change', () => {
+      actor.getProperty().setForceNearestInterpolation(c, checkboxElem.checked);
+      renderWindow.render();
+    });
+    forceNearestElem.appendChild(checkboxElem);
+    const labelElem = document.createElement('label');
+    labelElem.innerText = `Force linear interpolation for component ${c}`;
+    forceNearestElem.appendChild(labelElem);
+    forceNearestElem.appendChild(document.createElement('br'));
+  }
+}
+
+updateForceNearestElem(1);
 
 volumeSelectElem.addEventListener('change', () => {
   const { comp, data } = volumeOptions[volumeSelectElem.value];
@@ -179,6 +200,7 @@ volumeSelectElem.addEventListener('change', () => {
   } else {
     presetSelectElem.style.display = 'block';
   }
+  updateForceNearestElem(comp);
   const array = mapper.getInputData().getPointData().getArray(0);
   array.setData(data);
   array.setNumberOfComponents(comp);
