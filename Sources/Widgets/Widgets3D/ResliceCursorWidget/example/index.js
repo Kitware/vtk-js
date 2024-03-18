@@ -27,7 +27,10 @@ import { CaptureOn } from '@kitware/vtk.js/Widgets/Core/WidgetManager/Constants'
 import { vec3 } from 'gl-matrix';
 import { SlabMode } from '@kitware/vtk.js/Imaging/Core/ImageReslice/Constants';
 
-import { xyzToViewType } from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCursorWidget/Constants';
+import {
+  xyzToViewType,
+  InteractionMethodsName,
+} from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 import controlPanel from './controlPanel.html';
 
 // Force the loading of HttpDataAccessHelper to support gzip decompression
@@ -45,7 +48,9 @@ const viewColors = [
 ];
 
 const viewAttributes = [];
+window.va = viewAttributes;
 const widget = vtkResliceCursorWidget.newInstance();
+window.widget = widget;
 const widgetState = widget.getWidgetState();
 // Set size in CSS pixel space because scaleInPixels defaults to true
 widgetState
@@ -285,7 +290,9 @@ for (let i = 0; i < 4; i++) {
         []
       );
       widget.setCenter(newCenter);
-      obj.widgetInstance.invokeInternalInteractionEvent();
+      obj.widgetInstance.invokeInteractionEvent(
+        obj.widgetInstance.getActiveInteraction()
+      );
       viewAttributes.forEach((obj2) => {
         obj2.interactor.render();
       });
@@ -304,7 +311,6 @@ function updateReslice(
     actor: null,
     renderer: null,
     resetFocalPoint: false, // Reset the focal point to the center of the display image
-    keepFocalPointPosition: false, // Defines if the focal point position is kepts (same display distance from reslice cursor center)
     computeFocalPointOffset: false, // Defines if the display offset between reslice center and focal point has to be
     // computed. If so, then this offset will be used to keep the focal point position during rotation.
     spheres: null,
@@ -346,7 +352,6 @@ function updateReslice(
     interactionContext.renderer,
     interactionContext.viewType,
     interactionContext.resetFocalPoint,
-    interactionContext.keepFocalPointPosition,
     interactionContext.computeFocalPointOffset
   );
   view3D.renderWindow.render();
@@ -386,25 +391,40 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         // Note: Need to refresh also the current view because of adding the mouse wheel
         // to change slicer
         .forEach((v) => {
+          // Store the FocalPoint offset before "interacting".
+          // The offset may have been changed externally when manipulating the camera
+          // or interactorstyle.
+          v.widgetInstance.onStartInteractionEvent(() => {
+            updateReslice({
+              viewType,
+              reslice,
+              actor: obj.resliceActor,
+              renderer: obj.renderer,
+              resetFocalPoint: false,
+              computeFocalPointOffset: true,
+              sphereSources: obj.sphereSources,
+              slider: obj.slider,
+            });
+          });
+
           // Interactions in other views may change current plane
           v.widgetInstance.onInteractionEvent(
-            // computeFocalPointOffset: Boolean which defines if the offset between focal point and
-            // reslice cursor display center has to be recomputed (while translation is applied)
             // canUpdateFocalPoint: Boolean which defines if the focal point can be updated because
             // the current interaction is a rotation
-            ({ computeFocalPointOffset, canUpdateFocalPoint }) => {
+            (interactionMethodName) => {
+              const canUpdateFocalPoint =
+                interactionMethodName === InteractionMethodsName.RotateLine;
               const activeViewType = widget
                 .getWidgetState()
                 .getActiveViewType();
-              const keepFocalPointPosition =
-                activeViewType !== viewType && canUpdateFocalPoint;
+              const computeFocalPointOffset =
+                activeViewType === viewType || !canUpdateFocalPoint;
               updateReslice({
                 viewType,
                 reslice,
                 actor: obj.resliceActor,
                 renderer: obj.renderer,
                 resetFocalPoint: false,
-                keepFocalPointPosition,
                 computeFocalPointOffset,
                 sphereSources: obj.sphereSources,
                 slider: obj.slider,
@@ -419,7 +439,6 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         actor: obj.resliceActor,
         renderer: obj.renderer,
         resetFocalPoint: true, // At first initilization, center the focal point to the image center
-        keepFocalPointPosition: false, // Don't update the focal point as we already set it to the center of the image
         computeFocalPointOffset: true, // Allow to compute the current offset between display reslice center and display focal point
         sphereSources: obj.sphereSources,
         slider: obj.slider,
@@ -447,7 +466,6 @@ function updateViews() {
       actor: obj.resliceActor,
       renderer: obj.renderer,
       resetFocalPoint: true,
-      keepFocalPointPosition: false,
       computeFocalPointOffset: true,
       sphereSources: obj.sphereSources,
       resetViewUp: true,

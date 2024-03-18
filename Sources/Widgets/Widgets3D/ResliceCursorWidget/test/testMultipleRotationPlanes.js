@@ -133,7 +133,6 @@ test('Test rendering when several rotations plane', async (t) => {
       interactionContext.renderer,
       interactionContext.viewType,
       interactionContext.resetFocalPoint,
-      interactionContext.keepFocalPointPosition,
       interactionContext.computeFocalPointOffset
     );
     return modified;

@@ -185,7 +185,7 @@ export default function widgetBehavior(publicAPI, model) {
         publicAPI.translateCenterOnPlaneDirection(step);
         previousPosition = callData.position;
 
-        publicAPI.invokeInternalInteractionEvent();
+        publicAPI.invokeInteractionEvent(publicAPI.getActiveInteraction());
       }
     }
     return macro.VOID;
@@ -226,7 +226,7 @@ export default function widgetBehavior(publicAPI, model) {
     isScrolling = true;
     publicAPI.translateCenterOnPlaneDirection(step);
 
-    publicAPI.invokeInternalInteractionEvent(
+    publicAPI.invokeInteractionEvent(
       // Force interaction mode because mouse cursor could be above rotation handle
       InteractionMethodsName.TranslateCenter
     );
@@ -261,23 +261,10 @@ export default function widgetBehavior(publicAPI, model) {
     if (model.activeState.getActive()) {
       const methodName = publicAPI.getActiveInteraction();
       publicAPI[methodName](callData);
-      publicAPI.invokeInternalInteractionEvent(methodName);
+      publicAPI.invokeInteractionEvent(methodName);
       return macro.EVENT_ABORT;
     }
     return macro.VOID;
-  };
-
-  publicAPI.invokeInternalInteractionEvent = (
-    methodName = publicAPI.getActiveInteraction()
-  ) => {
-    const computeFocalPointOffset =
-      methodName !== InteractionMethodsName.RotateLine;
-    const canUpdateFocalPoint =
-      methodName === InteractionMethodsName.RotateLine;
-    publicAPI.invokeInteractionEvent({
-      computeFocalPointOffset,
-      canUpdateFocalPoint,
-    });
   };
 
   publicAPI.startInteraction = () => {

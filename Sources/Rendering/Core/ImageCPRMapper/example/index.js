@@ -158,7 +158,7 @@ function updateDistanceAndDirection() {
   // Cross renderer update
   widget.updateReslicePlane(reslice, crossViewType);
   resliceActor.setUserMatrix(reslice.getResliceAxes());
-  widget.updateCameraPoints(crossRenderer, crossViewType, false, true, false);
+  widget.updateCameraPoints(crossRenderer, crossViewType, false, false);
   const crossCamera = crossRenderer.getActiveCamera();
   crossCamera.setViewUp(
     modelDirections[3],
@@ -309,19 +309,13 @@ reader.setUrl(volumePath).then(() => {
 
     actor.setUserMatrix(widget.getResliceAxes(stretchViewType));
     stretchRenderer.addVolume(actor);
-    widget.updateCameraPoints(
-      stretchRenderer,
-      stretchViewType,
-      true,
-      false,
-      true
-    );
+    widget.updateCameraPoints(stretchRenderer, stretchViewType, true, true);
 
     reslice.setInputData(image);
     crossRenderer.addActor(resliceActor);
     widget.updateReslicePlane(reslice, crossViewType);
     resliceActor.setUserMatrix(reslice.getResliceAxes());
-    widget.updateCameraPoints(crossRenderer, crossViewType, true, false, true);
+    widget.updateCameraPoints(crossRenderer, crossViewType, true, true);
 
     currentImage = image;
     setCenterlineKey(currentCenterlineKey);
