@@ -1,7 +1,8 @@
-import macro from 'vtk.js/Sources/macros';
+import { mat4, quat, vec3, vec4 } from 'gl-matrix';
 import vtkCompositeVRManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeVRManipulator';
 import vtkPicker from 'vtk.js/Sources/Rendering/Core/Picker';
-import { vec3, vec4, mat4, quat } from 'gl-matrix';
+import macro from 'vtk.js/Sources/macros';
+import { States } from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 
 // ----------------------------------------------------------------------------
 // vtk3DControllerModelSelectorManipulator methods
@@ -93,21 +94,21 @@ function vtk3DControllerModelSelectorManipulator(publicAPI, model) {
     prop.rotateQuaternion(propNewOrientation);
   }
 
-  publicAPI.onButton3D = (
-    _interactorStyle,
-    renderer,
-    _state,
-    _device,
-    _input,
-    pressed,
-    targetPosition,
-    targetOrientation
-  ) => {
+  function releasePickedProp() {
+    model.lastOrientation = null;
+    model.lastWorldPosition = null;
+
+    if (pickedProp) {
+      pickedProp.setDragable(true);
+    }
+
+    pickedProp = null;
+  }
+
+  publicAPI.onButton3D = (interactorStyle, renderer, state, eventData) => {
     // If the button is not pressed, clear the state
-    if (!pressed) {
-      model.lastOrientation = null;
-      model.lastWorldPosition = null;
-      pickedProp = null;
+    if (!eventData.pressed) {
+      releasePickedProp();
       return macro.VOID;
     }
 
@@ -143,12 +144,13 @@ function vtk3DControllerModelSelectorManipulator(publicAPI, model) {
     const props = picker.getActors();
 
     // If we have picked props, store the first one.
-    if (props.length > 0) {
+    if (props.length > 0 && props[0].getNestedDragable()) {
       pickedProp = props[0];
+
+      // prevent the prop from being dragged somewhere else
+      pickedProp.setDragable(false);
     } else {
-      model.lastOrientation = null;
-      model.lastWorldPosition = null;
-      pickedProp = null;
+      releasePickedProp();
     }
 
     return macro.EVENT_ABORT;
@@ -161,7 +163,7 @@ function vtk3DControllerModelSelectorManipulator(publicAPI, model) {
   publicAPI.onMove3D = (_interactorStyle, renderer, _state, eventData) => {
     // If we are not interacting with any prop, we have nothing to do.
     // Also check for dragable
-    if (pickedProp == null || !pickedProp.getNestedDragable()) {
+    if (state !== States.IS_CAMERA_POSE || pickedProp == null) {
       return macro.VOID;
     }
 
