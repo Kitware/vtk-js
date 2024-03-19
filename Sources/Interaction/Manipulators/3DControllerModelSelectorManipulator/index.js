@@ -1,10 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkCompositeVRManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeVRManipulator';
-import {
-  Device,
-  Input,
-} from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
-import { vec3, mat4, quat } from 'gl-matrix';
+import vtkPicker from 'vtk.js/Sources/Rendering/Core/Picker';
+import { vec3, vec4, mat4, quat } from 'gl-matrix';
 
 // ----------------------------------------------------------------------------
 // vtk3DControllerModelSelectorManipulator methods
@@ -13,66 +10,86 @@ import { vec3, mat4, quat } from 'gl-matrix';
 function vtk3DControllerModelSelectorManipulator(publicAPI, model) {
   model.classHierarchy.push('vtk3DControllerModelSelectorManipulator');
 
+  const picker = vtkPicker.newInstance();
+
   // The current prop we are manipulating, if any.
   let pickedProp;
 
-  function positionProp(prop, worldPosition, orientation) {
-    const translation = vec3.subtract(
-      [],
-      worldPosition,
-      model.lastWorldPosition
-    );
+  // pre-allocate array buffers
+  const physicalToWorldMatrix = new Float64Array(16);
 
-    const lastOrientationConjugated = quat.conjugate([], model.lastOrientation);
+  // arrays holding deltas from lastWorldPosition and lastOrientation
+  const translation = new Float64Array(3);
+  const rotation = new Float64Array(4);
+  const lastOrientationConjugate = new Float64Array(4);
+  const orientationAxis = new Float64Array(3);
 
-    const newOrientation = quat.multiply(
-      [],
-      orientation,
-      lastOrientationConjugated
-    );
-    quat.normalize(newOrientation, newOrientation);
+  // arrays holding the transform
+  const computedTransform = new Float64Array(16);
+  const computedTransformRotation = new Float64Array(4);
 
-    const newOrientationAxis = [];
-    const newOrientationAngle = quat.getAxisAngle(
-      newOrientationAxis,
-      newOrientation
+  // arrays holding the current state of pickedProp.
+  const transposedPropMatrix = new Float64Array(16);
+  const propCurrentOrientation = new Float64Array(4);
+  const propCurrentOrientationConjugate = new Float64Array(4);
+
+  // arrays holding the new properties that must be assigned to pickedProp.
+  const propNewTranslation = new Float64Array(3);
+  const propNewScaling = new Float64Array(3);
+  const propNewOrientation = new Float64Array(4);
+
+  function applyPositionAndOrientationToProp(prop, worldPosition, orientation) {
+    vec3.subtract(translation, worldPosition, model.lastWorldPosition);
+
+    quat.conjugate(lastOrientationConjugate, model.lastOrientation);
+
+    quat.multiply(rotation, orientation, lastOrientationConjugate);
+    quat.normalize(rotation, rotation);
+
+    const rotationAngle = quat.getAxisAngle(orientationAxis, rotation);
+
+    // reset to identity
+    mat4.identity(computedTransform);
+
+    // compute transform
+    mat4.translate(computedTransform, computedTransform, worldPosition);
+    mat4.rotate(
+      computedTransform,
+      computedTransform,
+      rotationAngle,
+      orientationAxis
     );
+    mat4.translate(
+      computedTransform,
+      computedTransform,
+      vec3.negate(new Float64Array(3), worldPosition)
+    );
+    mat4.translate(computedTransform, computedTransform, translation);
 
     // lookup the prop internal matrix
-    const matrix = [...mat4.transpose([], prop.getMatrix())];
+    mat4.transpose(transposedPropMatrix, prop.getMatrix());
+    // apply the new computedTransform to the prop internal matrix
+    mat4.multiply(computedTransform, computedTransform, transposedPropMatrix);
 
-    // compute our transform
-    const transform = mat4.create();
-    mat4.translate(transform, transform, worldPosition);
-    mat4.rotate(transform, transform, newOrientationAngle, newOrientationAxis);
-    mat4.translate(transform, transform, vec3.negate([], worldPosition));
-    mat4.translate(transform, transform, translation);
-
-    // multiply our transform by the prop internal matrix
-    mat4.multiply(transform, transform, matrix);
-
-    // Multiply the transform with the current prop orientation to get the delta
-    // that we have to apply to the prop
-    const matRotation = mat4.getRotation([], transform);
-    const propCurrentOrientation = prop.getOrientationQuaternion();
-    const propCurrentOrientationConjugated = quat.conjugate(
-      [],
-      propCurrentOrientation
-    );
-    const propNewOrientation = quat.multiply(
-      [],
-      propCurrentOrientationConjugated,
-      matRotation
+    // Multiply the computedTransform with the current prop orientation to get the delta
+    // that must be applied to the prop
+    mat4.getRotation(computedTransformRotation, computedTransform);
+    prop.getOrientationQuaternion(propCurrentOrientation);
+    quat.conjugate(propCurrentOrientationConjugate, propCurrentOrientation);
+    quat.multiply(
+      propNewOrientation,
+      propCurrentOrientationConjugate,
+      computedTransformRotation
     );
 
     quat.normalize(propNewOrientation, propNewOrientation);
 
-    const matTranslation = mat4.getTranslation([], transform);
-    const matScaling = mat4.getScaling([], transform);
+    mat4.getTranslation(propNewTranslation, computedTransform);
+    mat4.getScaling(propNewScaling, computedTransform);
 
     // Update the prop internal matrix
-    prop.setPosition(...matTranslation);
-    prop.setScale(...matScaling);
+    prop.setPosition(...propNewTranslation);
+    prop.setScale(...propNewScaling);
     prop.rotateQuaternion(propNewOrientation);
   }
 
@@ -91,15 +108,14 @@ function vtk3DControllerModelSelectorManipulator(publicAPI, model) {
       model.lastOrientation = null;
       model.lastWorldPosition = null;
       pickedProp = null;
-      return;
+      return macro.VOID;
     }
 
     const camera = renderer.getActiveCamera();
-    const physicalToWorldMatrix = [];
     camera.getPhysicalToWorldMatrix(physicalToWorldMatrix);
 
-    // Since the targetPosition we get is in physical coordinates,
-    // transform it using the physicalToWorldMatrix to get it in woorld coordinates
+    // Since targetPosition is in physical coordinates,
+    // transform it using the physicalToWorldMatrix to get it in world coordinates
     const targetRayWorldPosition = vec3.transformMat4(
       [],
       [targetPosition.x, targetPosition.y, targetPosition.z],
@@ -123,35 +139,46 @@ function vtk3DControllerModelSelectorManipulator(publicAPI, model) {
     ];
 
     // Perform picking on the given renderer
-    model.picker.pick3DPoint(rayPoint1, rayPoint2, renderer);
-    const props = model.picker.getActors();
+    picker.pick3DPoint(rayPoint1, rayPoint2, renderer);
+    const props = picker.getActors();
 
     // If we have picked props, store the first one.
     if (props.length > 0) {
       pickedProp = props[0];
+    } else {
+      model.lastOrientation = null;
+      model.lastWorldPosition = null;
+      pickedProp = null;
     }
+
+    return macro.EVENT_ABORT;
   };
+
+  // pre-allocation to reduce gc in onMove3D
+  const currentTargetRayWorldPosition = new Float64Array(3);
+  const currentTargetRayOrientation = new Float64Array(4);
 
   publicAPI.onMove3D = (_interactorStyle, renderer, _state, eventData) => {
     // If we are not interacting with any prop, we have nothing to do.
-    if (pickedProp == null) {
-      return;
+    // Also check for dragable
+    if (pickedProp == null || !pickedProp.getNestedDragable()) {
+      return macro.VOID;
     }
 
     const camera = renderer.getActiveCamera();
-    const physicalToWorldMatrix = [];
     camera.getPhysicalToWorldMatrix(physicalToWorldMatrix);
 
     const { targetPosition } = eventData;
 
-    const targetRayWorldPosition = vec3.transformMat4(
-      [],
+    vec3.transformMat4(
+      currentTargetRayWorldPosition,
       [targetPosition.x, targetPosition.y, targetPosition.z],
       physicalToWorldMatrix
     );
 
     // this is a unit quaternion
-    const targetRayOrientation = quat.fromValues(
+    vec4.set(
+      currentTargetRayOrientation,
       eventData.targetOrientation.x,
       eventData.targetOrientation.y,
       eventData.targetOrientation.z,
@@ -159,11 +186,21 @@ function vtk3DControllerModelSelectorManipulator(publicAPI, model) {
     );
 
     if (model.lastWorldPosition && model.lastOrientation) {
-      positionProp(pickedProp, targetRayWorldPosition, targetRayOrientation);
+      applyPositionAndOrientationToProp(
+        pickedProp,
+        currentTargetRayWorldPosition,
+        currentTargetRayOrientation
+      );
+    } else {
+      // allocate
+      model.lastWorldPosition = new Float64Array(3);
+      model.lastOrientation = new Float64Array(4);
     }
 
-    model.lastWorldPosition = [...targetRayWorldPosition];
-    model.lastOrientation = [...targetRayOrientation];
+    vec3.copy(model.lastWorldPosition, currentTargetRayWorldPosition);
+    vec4.copy(model.lastOrientation, currentTargetRayOrientation);
+
+    return macro.EVENT_ABORT;
   };
 }
 
@@ -171,17 +208,13 @@ function vtk3DControllerModelSelectorManipulator(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  device: Device.RightController,
-  input: Input.TrackPad,
-};
+const DEFAULT_VALUES = {};
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  macro.setGet(publicAPI, model, ['picker']);
   macro.get(publicAPI, model, ['lastWorldPosition', 'lastOrientation']);
   macro.obj(publicAPI, model);
   vtkCompositeVRManipulator.extend(publicAPI, model, initialValues);
