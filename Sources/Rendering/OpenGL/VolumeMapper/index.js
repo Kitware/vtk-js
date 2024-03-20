@@ -178,14 +178,14 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     shaders.Geometry = '';
   };
 
-  publicAPI.useIndependentComponents = (actor) => {
-    const iComps = actor.getProperty().getIndependentComponents();
+  publicAPI.useIndependentComponents = (actorProperty) => {
+    const iComps = actorProperty.getIndependentComponents();
     const image = model.currentInput;
     const numComp = image
       ?.getPointData()
       ?.getScalars()
       ?.getNumberOfComponents();
-    const colorMixPreset = actor.getProperty().getColorMixPreset();
+    const colorMixPreset = actorProperty.getColorMixPreset();
     return (iComps && numComp >= 2) || !!colorMixPreset;
   };
 
@@ -219,7 +219,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       `#define vtkNumComponents ${numComp}`
     ).result;
 
-    const useIndependentComps = publicAPI.useIndependentComponents(actor);
+    const useIndependentComps = publicAPI.useIndependentComponents(actorProps);
     if (useIndependentComps) {
       FSSource = vtkShaderProgram.substitute(
         FSSource,
@@ -1054,7 +1054,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     // set the component mix when independent
     const numComp = model.scalarTexture.getComponents();
-    const useIndependentComps = publicAPI.useIndependentComponents(actor);
+    const useIndependentComps = publicAPI.useIndependentComponents(vprop);
     if (useIndependentComps) {
       for (let i = 0; i < numComp; i++) {
         program.setUniformf(
@@ -1519,7 +1519,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     }
 
     const numComp = scalars.getNumberOfComponents();
-    const useIndependentComps = publicAPI.useIndependentComponents(actor);
+    const useIndependentComps = publicAPI.useIndependentComponents(vprop);
     const numIComps = useIndependentComps ? numComp : 1;
 
     const scalarOpacityFunc = vprop.getScalarOpacity();
