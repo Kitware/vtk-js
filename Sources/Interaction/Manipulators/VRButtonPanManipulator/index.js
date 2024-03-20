@@ -14,22 +14,15 @@ function vtkVRButtonPanManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkVRButtonPanManipulator');
 
-  publicAPI.onButton3D = (
-    interactorStyle,
-    renderer,
-    state,
-    device,
-    input,
-    pressed
-  ) => {
-    if (pressed) {
+  publicAPI.onButton3D = (interactorStyle, renderer, state, eventData) => {
+    if (eventData.pressed) {
       interactorStyle.startCameraPose();
     } else if (state === States.IS_CAMERA_POSE) {
       interactorStyle.endCameraPose();
     }
   };
 
-  publicAPI.onMove3D = (interactorStyle, renderer, state, data) => {
+  publicAPI.onMove3D = (interactorStyle, renderer, state, eventData) => {
     if (state !== States.IS_CAMERA_POSE) {
       return;
     }
@@ -40,13 +33,15 @@ function vtkVRButtonPanManipulator(publicAPI, model) {
     const oldTrans = camera.getPhysicalTranslation();
 
     // look at the y axis to determine how fast / what direction to move
-    const speed = data.gamepad.axes[1];
+    const speed = eventData.gamepad.axes[1];
 
     // 0.05 meters / frame movement
     const pscale = speed * 0.05 * camera.getPhysicalScale();
 
     // convert orientation to world coordinate direction
-    const dir = camera.physicalOrientationToWorldDirection(data.orientation);
+    const dir = camera.physicalOrientationToWorldDirection(
+      eventData.orientation
+    );
 
     camera.setPhysicalTranslation(
       oldTrans[0] + dir[0] * pscale,

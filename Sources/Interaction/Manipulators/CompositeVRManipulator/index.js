@@ -12,22 +12,8 @@ function vtkCompositeVRManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkCompositeVRManipulator');
 
-  publicAPI.onButton3D = (
-    interactor,
-    renderer,
-    state,
-    device,
-    input,
-    pressed
-  ) => {};
-  publicAPI.onMove3D = (
-    interactor,
-    renderer,
-    state,
-    device,
-    input,
-    pressed
-  ) => {};
+  publicAPI.onButton3D = (interactorStyle, renderer, state, eventData) => {};
+  publicAPI.onMove3D = (interactorStyle, renderer, state, eventData) => {};
 }
 
 // ----------------------------------------------------------------------------
