@@ -206,7 +206,8 @@ function vtkScalarsToColors(publicAPI, model) {
     // map scalars through lookup table only if needed
     if (
       (colorMode === ColorMode.DEFAULT &&
-        scalars.getDataType() === VtkDataTypes.UNSIGNED_CHAR) ||
+        (scalars.getDataType() === VtkDataTypes.UNSIGNED_CHAR ||
+          scalars.getDataType() === VtkDataTypes.UNSIGNED_CHAR_CLAMPED)) ||
       (colorMode === ColorMode.DIRECT_SCALARS && scalars)
     ) {
       newColors = publicAPI.convertToRGBA(
