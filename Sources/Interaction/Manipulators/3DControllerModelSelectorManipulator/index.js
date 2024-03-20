@@ -115,6 +115,8 @@ function vtk3DControllerModelSelectorManipulator(publicAPI, model) {
     const camera = renderer.getActiveCamera();
     camera.getPhysicalToWorldMatrix(physicalToWorldMatrix);
 
+    const { targetPosition, targetOrientation } = eventData;
+
     // Since targetPosition is in physical coordinates,
     // transform it using the physicalToWorldMatrix to get it in world coordinates
     const targetRayWorldPosition = vec3.transformMat4(
@@ -160,7 +162,7 @@ function vtk3DControllerModelSelectorManipulator(publicAPI, model) {
   const currentTargetRayWorldPosition = new Float64Array(3);
   const currentTargetRayOrientation = new Float64Array(4);
 
-  publicAPI.onMove3D = (_interactorStyle, renderer, _state, eventData) => {
+  publicAPI.onMove3D = (interactorStyle, renderer, state, eventData) => {
     // If we are not interacting with any prop, we have nothing to do.
     // Also check for dragable
     if (state !== States.IS_CAMERA_POSE || pickedProp == null) {

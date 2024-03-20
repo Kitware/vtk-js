@@ -1,28 +1,28 @@
 import { States } from '../../../Rendering/Core/InteractorStyle/Constants';
 import vtkRenderer from '../../../Rendering/Core/Renderer';
-import vtkRenderWindowInteractor from '../../../Rendering/Core/RenderWindowInteractor';
+import vtkInteractorObserver from '../../../Rendering/Core/InteractorObserver';
 import {
   Device,
   Input,
 } from '../../../Rendering/Core/RenderWindowInteractor/Constants';
+import {
+  I3DEvent,
+  IButton3DEvent,
+} from '../../../Rendering/Core/RenderWindowInteractor';
 
 export interface vtkCompositeVRManipulator {
   onButton3D(
-    interactor: vtkRenderWindowInteractor,
+    interactorStyle: vtkInteractorObserver,
     renderer: vtkRenderer,
     state: States,
-    device: Device,
-    input: Input,
-    pressed: boolean
+    eventData: IButton3DEvent
   ): void;
 
   onMove3D(
-    interactor: vtkRenderWindowInteractor,
+    interactorStyle: vtkInteractorObserver,
     renderer: vtkRenderer,
     state: States,
-    device: Device,
-    input: Input,
-    pressed: boolean
+    eventData: I3DEvent
   ): void;
 }
 

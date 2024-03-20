@@ -81,6 +81,20 @@ export interface IRenderWindowInteractorEvent {
 	type: InteractorEventType;
 }
 
+export interface I3DEvent {
+	gamepad: Gamepad;
+	position: DOMPointReadOnly;
+	orientation: DOMPointReadOnly;
+	targetPosition: DOMPointReadOnly;
+	targetOrientation: DOMPointReadOnly;
+	device: Device;
+}
+
+export interface IButton3DEvent extends I3DEvent {
+	pressed: boolean;
+	input: Input;
+}
+
 export interface vtkRenderWindowInteractor extends vtkObject {
 
 	/**
@@ -678,10 +692,11 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	animationEvent(args: any): any;
 
 	/**
-	 *
+	 * Triggers the 'Button3D' event.
+	 * 
 	 * @param args
 	 */
-	button3DEvent(args: any): any;
+	button3DEvent(eventPayload: IButton3DEvent): void;
 
 	/**
 	 *
@@ -804,10 +819,11 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 	mouseWheelEvent(args: any): any;
 
 	/**
-	 *
-	 * @param args
+	 * Triggers the 'Move3D' event.
+	 * 
+	 * @param eventPayload
 	 */
-	move3DEvent(args: any): any;
+	move3DEvent(eventPayload: I3DEvent): void;
 
 	/**
 	 *
