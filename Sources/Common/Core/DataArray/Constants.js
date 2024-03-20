@@ -15,6 +15,7 @@ export const VtkDataTypes = {
   CHAR: 'Int8Array',
   SIGNED_CHAR: 'Int8Array',
   UNSIGNED_CHAR: 'Uint8Array',
+  UNSIGNED_CHAR_CLAMPED: 'Uint8ClampedArray', // should be used for VTK.js internal purpose only
   SHORT: 'Int16Array',
   UNSIGNED_SHORT: 'Uint16Array',
   INT: 'Int32Array',
