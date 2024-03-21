@@ -15,12 +15,22 @@ export interface vtkAxesActor extends vtkActor {
 	/**
 	 * 
 	 */
-	getXAxisColor(): number[];
+	getXConfig(): object;
 
 	/**
 	 * 
 	 */
-	getXAxisColorByReference(): number[];
+	getYConfig(): object;
+
+	/**
+	 * 
+	 */
+	getZConfig(): object;
+
+	/**
+	 * 
+	 */
+	getXAxisColor(): number[];
 
 	/**
 	 * 
@@ -30,23 +40,31 @@ export interface vtkAxesActor extends vtkActor {
 	/**
 	 * 
 	 */
-	getYAxisColorByReference(): number[];
-
-	/**
-	 * 
-	 */
 	getZAxisColor(): number[];
-
-	/**
-	 * 
-	 */
-	getZAxisColorByReference(): number[];
 
 	/**
 	 * 
 	 * @param config 
 	 */
 	setConfig(config: object): boolean;
+
+	/**
+	 * 
+	 * @param config 
+	 */
+	setXConfig(config: object): boolean;
+
+	/**
+	 * 
+	 * @param config 
+	 */
+	setYConfig(config: object): boolean;
+
+	/**
+	 * 
+	 * @param config 
+	 */
+	setZConfig(config: object): boolean;
 
 	/**
 	 * Set X axis color.
@@ -57,12 +75,6 @@ export interface vtkAxesActor extends vtkActor {
 	setXAxisColor(r: number, g: number, b: number): boolean;
 
 	/**
-	 * Set X axis color.
-	 * @param XAxisColor 
-	 */
-	setXAxisColorFrom(XAxisColor: number[]): boolean;
-
-	/**
 	 * Set Y axis color.
 	 * @param {Number} r Defines the red component (between 0 and 1).
 	 * @param {Number} g Defines the green component (between 0 and 1).
@@ -71,24 +83,12 @@ export interface vtkAxesActor extends vtkActor {
 	setYAxisColor(r: number, g: number, b: number): boolean;
 
 	/**
-	 * Set Y axis color.
-	 * @param YAxisColor 
-	 */
-	setYAxisColorFrom(YAxisColor: number[]): boolean;
-
-	/**
 	 * Set Z axis color.
 	 * @param {Number} r Defines the red component (between 0 and 1).
 	 * @param {Number} g Defines the green component (between 0 and 1).
 	 * @param {Number} b Defines the blue component (between 0 and 1).
 	 */
 	setZAxisColor(r: number, g: number, b: number): boolean;
-
-	/**
-	 * Set E axis color.
-	 * @param ZAxisColor 
-	 */
-	setZAxisColorFrom(ZAxisColor: number[]): boolean;
 
 	/**
 	 * 

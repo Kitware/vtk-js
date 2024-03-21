@@ -21,10 +21,14 @@ function centerDataSet(ds) {
     .apply(ds.getPoints().getData());
 }
 
-function shiftDataset(ds, axis) {
+function shiftDataset(ds, axis, invert = false) {
   const bounds = ds.getPoints().getBounds();
   const center = [0, 0, 0];
-  center[axis] = -bounds[axis * 2];
+  if (invert) {
+    center[axis] = -bounds[axis * 2 + 1];
+  } else {
+    center[axis] = -bounds[axis * 2];
+  }
   vtkMatrixBuilder
     .buildFromDegree()
     .translate(...center)
@@ -65,36 +69,48 @@ function vtkAxesActor(publicAPI, model) {
   publicAPI.setMapper(_mapper);
 
   publicAPI.update = () => {
+    let currentConfig = {
+      ...model.config,
+      ...model.xConfig,
+    };
+
     const xAxis = vtkArrowSource
-      .newInstance({ direction: [1, 0, 0], ...model.config })
+      .newInstance({ direction: [1, 0, 0], ...currentConfig })
       .getOutputData();
     if (model.config.recenter) {
       centerDataSet(xAxis);
     } else {
-      shiftDataset(xAxis, 0);
+      shiftDataset(xAxis, 0, currentConfig.invert);
     }
-    addColor(xAxis, ...model.xAxisColor);
+    addColor(xAxis, ...currentConfig.color);
 
+    currentConfig = {
+      ...model.config,
+      ...model.yConfig,
+    };
     const yAxis = vtkArrowSource
-      .newInstance({ direction: [0, 1, 0], ...model.config })
+      .newInstance({ direction: [0, 1, 0], ...currentConfig })
       .getOutputData();
     if (model.config.recenter) {
       centerDataSet(yAxis);
     } else {
-      shiftDataset(yAxis, 1);
+      shiftDataset(yAxis, 1, currentConfig.invert);
     }
+    addColor(yAxis, ...currentConfig.color);
 
-    addColor(yAxis, ...model.yAxisColor);
-
+    currentConfig = {
+      ...model.config,
+      ...model.zConfig,
+    };
     const zAxis = vtkArrowSource
-      .newInstance({ direction: [0, 0, 1], ...model.config })
+      .newInstance({ direction: [0, 0, 1], ...currentConfig })
       .getOutputData();
     if (model.config.recenter) {
       centerDataSet(zAxis);
     } else {
-      shiftDataset(zAxis, 2);
+      shiftDataset(zAxis, 2, currentConfig.invert);
     }
-    addColor(zAxis, ...model.zAxisColor);
+    addColor(zAxis, ...currentConfig.color);
 
     const source = vtkAppendPolyData.newInstance();
     source.setInputData(xAxis);
@@ -107,76 +123,68 @@ function vtkAxesActor(publicAPI, model) {
   publicAPI.update();
   const _debouncedUpdate = macro.debounce(publicAPI.update, 0);
 
-  const { setConfig, setXAxisColor, setYAxisColor, setZAxisColor } = publicAPI;
+  publicAPI.setXAxisColor = (color) =>
+    publicAPI.setXConfig({ ...publicAPI.getXConfig(), color });
 
-  publicAPI.setConfig = (c) => {
-    if (setConfig(c)) {
-      _debouncedUpdate();
-      return true;
-    }
-    return false;
-  };
+  publicAPI.setYAxisColor = (color) =>
+    publicAPI.setYConfig({ ...publicAPI.getYConfig(), color });
 
-  publicAPI.setXAxisColor = (c) => {
-    if (setXAxisColor(c)) {
-      _debouncedUpdate();
-      return true;
-    }
-    return false;
-  };
+  publicAPI.setZAxisColor = (color) =>
+    publicAPI.setZConfig({ ...publicAPI.getZConfig(), color });
 
-  publicAPI.setYAxisColor = (c) => {
-    if (setYAxisColor(c)) {
-      _debouncedUpdate();
-      return true;
-    }
-    return false;
-  };
+  publicAPI.getXAxisColor = () => model.getXConfig().color;
 
-  publicAPI.setZAxisColor = (c) => {
-    if (setZAxisColor(c)) {
-      _debouncedUpdate();
-      return true;
-    }
-    return false;
-  };
+  publicAPI.getYAxisColor = () => model.getYConfig().color;
+
+  publicAPI.getZAxisColor = () => model.getZConfig().color;
+
+  model._onConfigChanged = _debouncedUpdate;
+  model._onXConfigChanged = _debouncedUpdate;
+  model._onYConfigChanged = _debouncedUpdate;
+  model._onZConfigChanged = _debouncedUpdate;
 }
 
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 
-export const DEFAULT_VALUES = {
-  config: {
-    recenter: true,
-    tipResolution: 60,
-    tipRadius: 0.1,
-    tipLength: 0.2,
-    shaftResolution: 60,
-    shaftRadius: 0.03,
-    invert: false,
-  },
-  xAxisColor: [255, 0, 0],
-  yAxisColor: [255, 255, 0],
-  zAxisColor: [0, 128, 0],
-};
+function defaultValues(initialValues) {
+  return {
+    config: {
+      recenter: true,
+      tipResolution: 60,
+      tipRadius: 0.1,
+      tipLength: 0.2,
+      shaftResolution: 60,
+      shaftRadius: 0.03,
+      invert: false,
+      ...initialValues?.config,
+    },
+    xConfig: {
+      color: [255, 0, 0],
+      invert: false,
+      ...initialValues?.xConfig,
+    },
+    yConfig: {
+      color: [255, 255, 0],
+      invert: false,
+      ...initialValues?.yConfig,
+    },
+    zConfig: {
+      color: [0, 128, 0],
+      invert: false,
+      ...initialValues?.zConfig,
+    },
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-
   // Inheritance
-  vtkActor.extend(publicAPI, model, initialValues);
+  vtkActor.extend(publicAPI, model, defaultValues(initialValues));
 
-  macro.setGet(publicAPI, model, ['config']);
-  macro.setGetArray(
-    publicAPI,
-    model,
-    ['xAxisColor', 'yAxisColor', 'zAxisColor'],
-    3,
-    255
-  );
+  macro.setGet(publicAPI, model, ['config', 'xConfig', 'yConfig', 'zConfig']);
 
   // Object methods
   vtkAxesActor(publicAPI, model);
