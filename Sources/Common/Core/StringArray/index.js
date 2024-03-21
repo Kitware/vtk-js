@@ -52,6 +52,7 @@ function vtkStringArray(publicAPI, model) {
     newInstance({
       name: model.name,
       numberOfComponents: model.numberOfComponents,
+      empty: true,
     });
   /* eslint-enable no-use-before-define */
 
