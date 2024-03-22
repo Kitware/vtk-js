@@ -664,7 +664,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     ];
     if (useProjection) {
       tcoordFSDec.push(
-        'uniform vec3 spacing;',
+        'uniform vec3 volumeSizeMC;',
         'uniform int projectionSlabNumberOfSamples;',
         'uniform float projectionConstantOffset;',
         'uniform float projectionStepLength;'
@@ -821,7 +821,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
 
       // Loop on all the samples of the projection
       tcoordFSImpl.push(
-        'vec3 projectionScaledDirection = projectionDirection / spacing;',
+        'vec3 projectionScaledDirection = projectionDirection / volumeSizeMC;',
         'vec3 projectionStep = projectionStepLength * projectionScaledDirection;',
         'vec3 projectionStartPosition = volumePosTC + projectionConstantOffset * projectionScaledDirection;',
         'vec4 tvalue = initialProjectionTextureValue;',
@@ -1092,12 +1092,14 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     if (model.renderable.isProjectionEnabled()) {
       const image = model.currentImageDataInput;
       const spacing = image.getSpacing();
+      const dimensions = image.getDimensions();
       const projectionSlabThickness =
         model.renderable.getProjectionSlabThickness();
       const projectionSlabNumberOfSamples =
         model.renderable.getProjectionSlabNumberOfSamples();
 
-      program.setUniform3fArray('spacing', spacing);
+      const volumeSize = vec3.mul([], spacing, dimensions);
+      program.setUniform3fArray('volumeSizeMC', volumeSize);
       program.setUniformi(
         'projectionSlabNumberOfSamples',
         projectionSlabNumberOfSamples
