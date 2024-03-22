@@ -1,7 +1,8 @@
 ## From 29.x to 30
 
-- **ResliceCursorWidget.interactionEvent**: no longer pass an object of computeFocalPointOffset, canUpdateFocalPoint but simply the type of the handle that triggers the event. Those values can easily be recomputed by the consumers of the event. Regarding `computeFocalPointOffset`, it is no longer adviced to compute focal point offset for each interaction, instead observing `startInteraction()` should be considered (see ResliceCursorWidget example).
-  - **ResliceCursorWidget.invokeInternalInteractionEvent(methodName)**: has been removed and should be replaced by `ResliceCursorWidget.invokeInteractionEvent(methodName)`.
+- **ResliceCursorWidget.interactionEvent**: no longer pass an object of `{computeFocalPointOffset, canUpdateFocalPoint}` but simply the type of the handle that triggers the event (e.g. `InteractionMethodsName.RotateLine`). The removed values can easily be recomputed by the consumers of the event by checking the type of the handle. Regarding `computeFocalPointOffset`, it is no longer advised to compute focal point offset for each interaction, instead observing `startInteraction()` should be considered (see ResliceCursorWidget example).
+- **ResliceCursorWidget.invokeInternalInteractionEvent(methodName)**: has been removed and should be replaced by `ResliceCursorWidget.invokeInteractionEvent(methodName)`.
+- **ResliceCursorWidget.updateCameraPoints(renderer, viewType, resetFocalPoint, keepCenterFocalDistance, computeFocalPointOffset)** has lost the `keepCenterFocalDistance` parameter (because it was ALWAYS the negate of `computeFocalPointOffset`). The new signature is `ResliceCursorWidget.updateCameraPoints(renderer, viewType, resetFocalPoint, keepCenterFocalDistance, computeFocalPointOffset)`
 
 ## From 28.x to 29
 
