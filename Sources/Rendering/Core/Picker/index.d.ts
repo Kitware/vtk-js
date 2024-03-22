@@ -69,17 +69,6 @@ export interface vtkPicker extends vtkAbstractPicker {
 	onPickChange(callback: OnPickChangeCallback): vtkSubscription;
 
 	/**
-	 * Intersect data with specified ray.
-	 * Project the center point of the mapper onto the ray and determine its parametric value
-	 * @param {Vector3} p1 
-	 * @param {Vector3} p2 
-	 * @param {Number} tolerance
-	 * @param {Nullable<vtkProp3D>} prop
-	 * @param {vtkMapper} mapper 
-	 */
-	intersectWithLine(p1: Vector3, p2: Vector3, tolerance: number, prop: Nullable<vtkProp3D>, mapper: vtkMapper): number;
-
-	/**
 	 * Perform pick operation with selection point provided.
 	 * @param {Vector3} selection First two values should be x-y pixel coordinate, the third is usually zero.
 	 * @param {vtkRenderer} renderer The renderer on which you want to do picking.

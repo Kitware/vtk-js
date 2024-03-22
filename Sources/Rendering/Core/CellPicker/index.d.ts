@@ -85,38 +85,6 @@ export interface vtkCellPicker extends vtkPicker {
 	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	pick(selection: any, renderer: vtkRenderer): void;
-
-	/**
-	 * 
-	 * @param {Vector3} p1 
-	 * @param {Vector3} p2 
-	 * @param {Number} tolerance
-	 * @param {Nullable<vtkProp3D>} actor
-	 * @param {vtkMapper} mapper The vtkMapper instance.
-	 */
-	intersectWithLine(p1: Vector3, p2: Vector3, tolerance: number, actor: Nullable<vtkProp3D>, mapper: vtkMapper): number;
-
-	/**
-	 * 
-	 * @param {Vector3} p1 
-	 * @param {Vector3} p2 
-	 * @param {Number} t1 
-	 * @param {Number} t2 
-	 * @param {Number} tolerance
-	 * @param {vtkMapper} mapper The vtkMapper instance.
-	 */
-	intersectActorWithLine(p1: Vector3, p2: Vector3, t1: number, t2: number, tolerance: number, mapper: vtkMapper): number;
-
-	/**
-	 * 
-	 * @param {Vector3} p1 
-	 * @param {Vector3} p2 
-	 * @param {Number} t1 
-	 * @param {Number} t2 
-	 * @param {Number} tolerance
-	 * @param {vtkMapper} mapper The vtkMapper instance.
-	 */
-	intersectVolumeWithLine(p1: Vector3, p2: Vector3, t1: number, t2: number, tolerance: number, mapper: vtkMapper): number;
 }
 
 /**

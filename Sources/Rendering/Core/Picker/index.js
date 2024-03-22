@@ -157,8 +157,7 @@ function vtkPicker(publicAPI, model) {
       if (vtkBoundingBox.intersectBox(bounds, p1Mapper, ray, hitPosition, [])) {
         mat4.getScaling(transformScale, model.transformMatrix);
 
-        // TODO: better naming?
-        const t = publicAPI.intersectWithLine(
+        const t = model.intersectWithLine(
           p1Mapper,
           p2Mapper,
           tolerance *
@@ -224,7 +223,7 @@ function vtkPicker(publicAPI, model) {
 
   // Intersect data with specified ray.
   // Project the center point of the mapper onto the ray and determine its parametric value
-  publicAPI.intersectWithLine = (p1, p2, tolerance, prop, mapper) => {
+  model.intersectWithLine = (p1, p2, tolerance, prop, mapper) => {
     if (!mapper) {
       return Number.MAX_VALUE;
     }
