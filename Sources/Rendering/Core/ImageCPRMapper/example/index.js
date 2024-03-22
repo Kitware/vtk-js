@@ -421,8 +421,15 @@ projectionModeEl.addEventListener('input', (ev) => {
 });
 
 projectionThicknessEl.addEventListener('input', (ev) => {
-  const thickness = Number.parseFloat(projectionThicknessEl.value, 10);
-  mapper.setProjectionSlabThickness(thickness);
+  const thicknessRatio = Number.parseFloat(projectionThicknessEl.value, 10);
+  const image = mapper.getInputData();
+  if (image) {
+    const spacing = image.getSpacing();
+    const dimensions = image.getDimensions();
+    const diagonal = vec3.len(vec3.mul([], spacing, dimensions));
+    const thickness = diagonal * thicknessRatio;
+    mapper.setProjectionSlabThickness(thickness);
+  }
   renderWindow.render();
 });
 mapper.setProjectionSlabThickness(0.1);
