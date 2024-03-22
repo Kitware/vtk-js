@@ -34,26 +34,6 @@ export interface vtkPointPicker extends vtkPicker {
 	getUseCells(): boolean;
 
 	/**
-	 * 
-	 * @param {Vector3} p1 
-	 * @param {Vector3} p2 
-	 * @param {Number} tolerance 
-	 * @param {vtkProp3D} actor
-	 * @param {vtkMapper} mapper 
-	 */
-	intersectWithLine(p1: Vector3, p2: Vector3, tolerance: number, actor: Nullable<vtkProp3D>, mapper: vtkMapper): number;
-
-	/**
-	 * 
-	 * @param {Vector3} p1 
-	 * @param {Vector3} p2 
-	 * @param {Number} tolerance
-	 * @param {vtkProp3D} actor
-	 * @param {vtkMapper} mapper 
-	 */
-	intersectActorWithLine(p1: Vector3, p2: Vector3, tolerance: number, mapper: vtkMapper): number;
-
-	/**
 	 * Specify whether the point search should be based on cell points or directly on the point list.
 	 * @param useCells 
 	 */
