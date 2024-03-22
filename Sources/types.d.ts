@@ -56,7 +56,7 @@ declare type Matrix3x3 = [
   number
 ];
 /**
- * @deprecated The `Point` type is depracted, please use `Vector3` instead.
+ * @deprecated The `Point` type is deprecated, please use `Vector3` instead.
  */
 declare type Point = Vector3;
 declare type HSLColor = [number, number, number];
