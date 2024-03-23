@@ -3,6 +3,8 @@
 - **ResliceCursorWidget.interactionEvent**: no longer pass an object of computeFocalPointOffset, canUpdateFocalPoint but simply the type of the handle that triggers the event. Those values can easily be recomputed by the consumers of the event. Regarding `computeFocalPointOffset`, it is no longer adviced to compute focal point offset for each interaction, instead observing `startInteraction()` should be considered (see ResliceCursorWidget example).
   - **ResliceCursorWidget.invokeInternalInteractionEvent(methodName)**: has been removed and should be replaced by `ResliceCursorWidget.invokeInteractionEvent(methodName)`.
 
+- **vtkAxesActor**: `setXAxisColor`, `setYAxisColor`, `setZAxisColor` now take a single `RGBColor` (array of 3 numbers) instead of 3 numbers for each color component. The `get*AxisColor` methods now return an array of 3 numbers instead of an object with `r`, `g`, `b` properties.
+
 ## From 28.x to 29
 
 - **getOpenGLRenderWindow**: `getOpenGLRenderWindow` has been renamed to `getApiSpecificRenderWindow` in `vtkFullScreenRenderWindow`, `vtkGenericRenderWindow` and `vtkViewProxy` to support WebGL and WebGPU backend. ([#2816](https://github.com/Kitware/vtk-js/pull/2816))
@@ -82,9 +84,9 @@ SplineWidget's handles now scale up automatically.
 
 ## From 19.x to 20
 
-In ShapeWidget: 
-- `setLabelTextCallback` is replaced by `text` substate.  
-- `setPixelScale` has been removed. It should be replaced by point handle `scale1` mixin and `scaleInPixels`.  
+In ShapeWidget:
+- `setLabelTextCallback` is replaced by `text` substate.
+- `setPixelScale` has been removed. It should be replaced by point handle `scale1` mixin and `scaleInPixels`.
 - `useHandles` has been removed. It should be replaced by `setHandleVisibility`.
 - `resetAfterPointPlacement` is now false by default.
 
