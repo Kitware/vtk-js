@@ -151,7 +151,12 @@ function vtkWidgetManager(publicAPI, model) {
     }
 
     // Default cursor behavior
-    model._apiSpecificRenderWindow.setCursor(widget ? 'pointer' : 'default');
+    const cursorStyles = publicAPI.getCursorStyles();
+    const style = widget ? 'hover' : 'default';
+    const cursor = cursorStyles[style];
+    if (cursor) {
+      model._apiSpecificRenderWindow.setCursor(cursor);
+    }
 
     model.activeWidget = null;
     let wantRender = false;
@@ -461,7 +466,7 @@ function vtkWidgetManager(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+const defaultValues = (initialValues = {}) => ({
   // _camera: null,
   // _selector: null,
   // _currentUpdateSelectionCallID: null,
@@ -476,16 +481,25 @@ const DEFAULT_VALUES = {
   previousSelectedData: null,
   widgetInFocus: null,
   captureOn: CaptureOn.MOUSE_MOVE,
-};
+  ...initialValues,
+
+  cursorStyles: initialValues.cursorStyles
+    ? { ...initialValues.cursorStyles }
+    : {
+        default: 'default',
+        hover: 'pointer',
+      },
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, [
     'captureOn',
+    'cursorStyles',
     { type: 'enum', name: 'viewType', enum: ViewTypes },
   ]);
   macro.get(publicAPI, model, [

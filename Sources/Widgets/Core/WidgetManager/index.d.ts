@@ -171,6 +171,23 @@ export interface vtkWidgetManager extends vtkObject {
    * Release the focus.
    */
   releaseFocus(): void;
+
+  /**
+   * Sets the default cursor styles.
+   *
+   * Known style keys:
+   * - default: when not interacting with a widget
+   * - hover: when hovering over a widget.
+   *
+   * If a known style key is not present, the cursor style will not be changed.
+   * @param {Record<string, string>} cursorStyles
+   */
+  setCursorStyles(cursorStyles: Record<string, string>): boolean;
+
+  /**
+   * Retrieves the current cursor styles.
+   */
+  getCursorStyles(): Record<string, string>;
 }
 
 export interface IWidgetManagerInitialValues {
