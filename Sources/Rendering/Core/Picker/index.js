@@ -116,12 +116,14 @@ function vtkPicker(publicAPI, model) {
     // Note that only vtkProp3D's can be picked by vtkPicker.
     props.forEach((prop) => {
       const mapper = prop.getMapper();
-      const propIsNotFullyTranslucent =
-        prop.getProperty?.()?.getOpacity() > 0.0;
+
+      const propIsFullyTranslucent =
+        prop.getProperty?.().getOpacity?.() === 0.0;
+
       const pickable =
         prop.getNestedPickable() &&
         prop.getNestedVisibility() &&
-        propIsNotFullyTranslucent;
+        !propIsFullyTranslucent;
 
       if (!pickable) {
         // prop cannot be picked

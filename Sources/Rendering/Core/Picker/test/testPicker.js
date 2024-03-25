@@ -1,13 +1,17 @@
 import test from 'tape';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkPicker from 'vtk.js/Sources/Rendering/Core/Picker';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkPicker from 'vtk.js/Sources/Rendering/Core/Picker';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkRTAnalyticSource from 'vtk.js/Sources/Filters/Sources/RTAnalyticSource';
+import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
+import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
+import 'vtk.js/Sources/Rendering/Profiles/Volume';
 
 function setupRenderingComponents(gc) {
   const container = document.querySelector('body');
@@ -134,6 +138,36 @@ test.onlyIfWebGL('vtkPicker.pick3DPoint - multiple actors', (t) => {
 
   const pickedActors = picker.getActors();
   t.equal(pickedActors.length, 2);
+
+  gc.releaseResources();
+});
+
+test.onlyIfWebGL('vtkPicker.pick - volume', (t) => {
+  const gc = testUtils.createGarbageCollector(t);
+  const renderer = setupRenderingComponents(gc);
+
+  const source = vtkRTAnalyticSource.newInstance();
+  const size = 50;
+  source.setWholeExtent([0, size, 0, size, 0, size]);
+  source.update();
+
+  const volumeMapper = vtkVolumeMapper.newInstance();
+  volumeMapper.setInputConnection(source.getOutputPort());
+  const volume = vtkVolume.newInstance();
+  volume.setMapper(volumeMapper);
+  renderer.addVolume(volume);
+
+  const picker = vtkPicker.newInstance();
+
+  picker.setPickFromList(1);
+  picker.initializePickList();
+  picker.addPickList(volume);
+
+  picker.pick([200, 200, 1.0], renderer);
+
+  const pickedActors = picker.getActors();
+  t.equal(pickedActors.length, 1);
+  t.ok(pickedActors[0] === volume);
 
   gc.releaseResources();
 });
