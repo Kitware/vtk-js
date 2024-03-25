@@ -184,7 +184,7 @@ function updateForceNearestElem(comp) {
     });
     forceNearestElem.appendChild(checkboxElem);
     const labelElem = document.createElement('label');
-    labelElem.innerText = `Force linear interpolation for component ${c}`;
+    labelElem.innerText = `Force nearest interpolation for component ${c}`;
     forceNearestElem.appendChild(labelElem);
     forceNearestElem.appendChild(document.createElement('br'));
   }
