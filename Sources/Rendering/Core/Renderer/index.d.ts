@@ -89,7 +89,7 @@ export interface vtkRenderer extends vtkViewport {
 	/**
 	 * Create and add a light to renderer.
 	 */
-	createLight(): vtkLight;
+	createLight(): void;
 
 	/**
 	 * Compute the bounding box of all the visible props Used in ResetCamera() and ResetCameraClippingRange()
@@ -342,12 +342,12 @@ export interface vtkRenderer extends vtkViewport {
 	getVolumesByReference(): vtkVolume[];
 
 	/**
-	 * Create a new Camera sutible for use with this type of Renderer.
+	 * Create a new Camera suitable for use with this type of Renderer.
 	 */
 	makeCamera(): vtkCamera;
 
 	/**
-	 * Create a new Light sutible for use with this type of Renderer.
+	 * Create a new Light suitable for use with this type of Renderer.
 	 */
 	makeLight(): vtkLight;
 
