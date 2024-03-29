@@ -5,7 +5,9 @@ import vtkForwardPass from 'vtk.js/Sources/Rendering/OpenGL/ForwardPass';
 import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import vtkShaderCache from 'vtk.js/Sources/Rendering/OpenGL/ShaderCache';
 import vtkOpenGLTextureUnitManager from 'vtk.js/Sources/Rendering/OpenGL/TextureUnitManager';
-import vtkOpenGLViewNodeFactory from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
+import vtkOpenGLViewNodeFactory, {
+  registerOverride,
+} from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderWindowViewNode';
 import { createContextProxyHandler } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/ContextProxy';
@@ -1206,9 +1208,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   model._glInformation = null;
 
   model.myFactory = vtkOpenGLViewNodeFactory.newInstance();
-  /* eslint-disable no-use-before-define */
-  model.myFactory.registerOverride('vtkRenderWindow', newInstance);
-  /* eslint-enable no-use-before-define */
 
   model.shaderCache = vtkShaderCache.newInstance();
   model.shaderCache.setOpenGLRenderWindow(publicAPI);
@@ -1263,3 +1262,6 @@ export default {
   pushMonitorGLContextCount,
   popMonitorGLContextCount,
 };
+
+// Register ourself to OpenGL backend if imported
+registerOverride('vtkRenderWindow', newInstance);

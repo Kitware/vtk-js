@@ -12,14 +12,6 @@ export interface vtkViewNodeFactory extends vtkObject {
 	 * @param dataObject 
 	 */
 	createNode(dataObject: any): void;
-
-	/**
-	 * Give a function pointer to a class that will manufacture a vtkViewNode
-	 * when given a class name string.
-	 * @param className 
-	 * @param func 
-	 */
-	registerOverride(className: any, func: any): void;
 }
 
 /**
