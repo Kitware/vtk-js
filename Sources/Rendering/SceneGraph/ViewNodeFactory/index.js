@@ -37,10 +37,6 @@ function vtkViewNodeFactory(publicAPI, model) {
     vn.setMyFactory(publicAPI);
     return vn;
   };
-
-  publicAPI.registerOverride = (className, func) => {
-    model.overrides[className] = func;
-  };
 }
 
 // ----------------------------------------------------------------------------

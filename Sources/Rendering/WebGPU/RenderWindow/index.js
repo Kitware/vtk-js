@@ -4,7 +4,9 @@ import vtkForwardPass from 'vtk.js/Sources/Rendering/WebGPU/ForwardPass';
 import vtkWebGPUBuffer from 'vtk.js/Sources/Rendering/WebGPU/Buffer';
 import vtkWebGPUDevice from 'vtk.js/Sources/Rendering/WebGPU/Device';
 import vtkWebGPUHardwareSelector from 'vtk.js/Sources/Rendering/WebGPU/HardwareSelector';
-import vtkWebGPUViewNodeFactory from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+import vtkWebGPUViewNodeFactory, {
+  registerOverride,
+} from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderWindowViewNode';
 import HalfFloat from 'vtk.js/Sources/Common/Core/HalfFloat';
@@ -600,9 +602,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkRenderWindowViewNode.extend(publicAPI, model, initialValues);
 
   model.myFactory = vtkWebGPUViewNodeFactory.newInstance();
-  /* eslint-disable no-use-before-define */
-  model.myFactory.registerOverride('vtkRenderWindow', newInstance);
-  /* eslint-enable no-use-before-define */
 
   // setup default forward pass rendering
   model.renderPasses[0] = vtkForwardPass.newInstance();
@@ -658,3 +657,6 @@ export default {
   newInstance,
   extend,
 };
+
+// Register ourself to WebGPU backend if imported
+registerOverride('vtkRenderWindow', newInstance);
