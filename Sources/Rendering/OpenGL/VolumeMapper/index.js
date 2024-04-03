@@ -1663,10 +1663,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const tex = model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
     // rebuild the scalarTexture if the data has changed
     toString = `${image.getMTime()}A${scalars.getMTime()}`;
-    const reBuildTex =
-      !tex?.vtkObj ||
-      tex?.hash !== toString ||
-      model.scalarTextureString !== toString;
+    const reBuildTex = !tex?.vtkObj || tex?.hash !== toString;
     if (reBuildTex) {
       // Build the textures
       const dims = image.getDimensions();
@@ -1683,17 +1680,15 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         scalars,
         model.renderable.getPreferSizeOverAccuracy()
       );
-      model.scalarTextureString = toString;
       if (scalars) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
           scalars,
           model.scalarTexture,
-          model.scalarTextureString
+          toString
         );
       }
     } else {
       model.scalarTexture = tex.vtkObj;
-      model.scalarTextureString = tex.hash;
     }
 
     if (!model.tris.getCABO().getElementCount()) {
