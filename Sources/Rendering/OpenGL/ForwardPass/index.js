@@ -28,11 +28,11 @@ function vtkForwardPass(publicAPI, model) {
     const numlayers = viewNode.getRenderable().getNumberOfLayers();
 
     // iterate over renderers
-    const renderers = viewNode.getChildren();
+    const renderers = viewNode.getRenderable().getRenderersByReference();
     for (let i = 0; i < numlayers; i++) {
       for (let index = 0; index < renderers.length; index++) {
-        const renNode = renderers[index];
-        const ren = viewNode.getRenderable().getRenderers()[index];
+        const ren = renderers[index];
+        const renNode = viewNode.getViewNodeFor(ren);
 
         if (ren.getDraw() && ren.getLayer() === i) {
           // check for both opaque and volume actors
