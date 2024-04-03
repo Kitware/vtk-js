@@ -67,6 +67,12 @@ export interface vtkViewNode extends vtkObject {
 	getFirstAncestorOfType(type: any): void;
 
 	/**
+	 * Find the last parent/grandparent of the desired type
+	 * @param type 
+	 */
+	getLastAncestorOfType(type: any): void;
+
+	/**
 	 * 
 	 */
 	getMyFactory(): any;
