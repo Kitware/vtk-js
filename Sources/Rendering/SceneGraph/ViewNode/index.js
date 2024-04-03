@@ -70,6 +70,20 @@ function vtkViewNode(publicAPI, model) {
     return model._parent.getFirstAncestorOfType(type);
   };
 
+  publicAPI.getLastAncestorOfType = (type) => {
+    if (!model._parent) {
+      return null;
+    }
+    const lastAncestor = model._parent.getLastAncestorOfType(type);
+    if (lastAncestor) {
+      return lastAncestor;
+    }
+    if (model._parent.isA(type)) {
+      return model._parent;
+    }
+    return null;
+  };
+
   // add a missing node/child for the passed in renderables. This should
   // be called only in between prepareNodes and removeUnusedNodes
   publicAPI.addMissingNode = (dobj) => {
