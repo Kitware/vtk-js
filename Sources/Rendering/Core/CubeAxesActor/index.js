@@ -81,6 +81,22 @@ function applyTextStyle(ctx, style) {
   ctx.font = `${style.fontStyle} ${style.fontSize}px ${style.fontFamily}`;
 }
 
+function defaultGenerateTicks(publicApi, model) {
+  return (dataBounds) => {
+    const ticks = [];
+    const tickStrings = [];
+    for (let i = 0; i < 3; i++) {
+      const scale = d3
+        .scaleLinear()
+        .domain([dataBounds[i * 2], dataBounds[i * 2 + 1]]);
+      ticks[i] = scale.ticks(5);
+      const format = scale.tickFormat(5);
+      tickStrings[i] = ticks[i].map(format);
+    }
+    return { ticks, tickStrings };
+  };
+}
+
 // many properties of this actor depend on the API specific view The main
 // dependency being the resolution as that drives what font sizes to use.
 // Bacause of this we need to do some of the calculations in a API specific
@@ -643,27 +659,23 @@ function vtkCubeAxesActor(publicAPI, model) {
       }
 
       // compute tick marks for axes
-      const ticks = [];
-      const tickStrings = [];
-      for (let i = 0; i < 3; i++) {
-        const scale = d3
-          .scaleLinear()
-          .domain([model.dataBounds[i * 2], model.dataBounds[i * 2 + 1]]);
-        ticks[i] = scale.ticks(5);
-        const format = scale.tickFormat(5);
-        tickStrings[i] = ticks[i].map(format);
-      }
+      const t = model.generateTicks(model.dataBounds);
 
       // update gridlines / edge lines
-      publicAPI.updatePolyData(facesToDraw, edgesToDraw, ticks);
+      publicAPI.updatePolyData(facesToDraw, edgesToDraw, t.ticks);
 
       // compute label world coords and text
-      publicAPI.updateTextData(facesToDraw, edgesToDraw, ticks, tickStrings);
+      publicAPI.updateTextData(
+        facesToDraw,
+        edgesToDraw,
+        t.ticks,
+        t.tickStrings
+      );
 
       // rebuild the texture only when force or changed bounds, face
       // visibility changes do to change the atlas
       if (boundsChanged || model.forceUpdate) {
-        publicAPI.updateTextureAtlas(tickStrings);
+        publicAPI.updateTextureAtlas(t.tickStrings);
       }
     }
 
@@ -802,7 +814,7 @@ function vtkCubeAxesActor(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-function defaultValues(initialValues) {
+function defaultValues(publicAPI, model, initialValues) {
   return {
     boundsScaleFactor: 1.3,
     camera: null,
@@ -811,30 +823,35 @@ function defaultValues(initialValues) {
     gridLines: true,
     axisLabels: null,
     axisTitlePixelOffset: 35.0,
+    tickLabelPixelOffset: 12.0,
+    generateTicks: defaultGenerateTicks(publicAPI, model),
+    ...initialValues,
     axisTextStyle: {
       fontColor: 'white',
       fontStyle: 'normal',
       fontSize: 18,
       fontFamily: 'serif',
+      ...initialValues?.axisTextStyle,
     },
-    tickLabelPixelOffset: 12.0,
     tickTextStyle: {
       fontColor: 'white',
       fontStyle: 'normal',
       fontSize: 14,
       fontFamily: 'serif',
+      ...initialValues?.tickTextStyle,
     },
-    ...initialValues,
   };
 }
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, defaultValues(initialValues));
-
   // Inheritance
-  vtkActor.extend(publicAPI, model, initialValues);
+  vtkActor.extend(
+    publicAPI,
+    model,
+    defaultValues(publicAPI, model, initialValues)
+  );
 
   // internal variables
   model.lastFacesToDraw = [false, false, false, false, false, false];
@@ -870,6 +887,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'faceVisibilityAngle',
     'gridLines',
     'tickLabelPixelOffset',
+    'generateTicks',
   ]);
 
   macro.setGetArray(publicAPI, model, ['dataBounds'], 6);
