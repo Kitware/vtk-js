@@ -3,6 +3,9 @@ import '@kitware/vtk.js/favicon';
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
+import * as d3scale from 'd3-scale';
+import * as d3array from 'd3-array';
+
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkCubeAxesActor from '@kitware/vtk.js/Rendering/Core/CubeAxesActor';
 import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
@@ -40,6 +43,18 @@ renderer.addActor(actor);
 const cubeAxes = vtkCubeAxesActor.newInstance();
 cubeAxes.setCamera(renderer.getActiveCamera());
 cubeAxes.setDataBounds(actor.getBounds());
+// Replace ticks from axis 0
+function myGenerateTicks(defaultGenerateTicks) {
+  return (dataBounds) => {
+    const res = defaultGenerateTicks(dataBounds);
+    const scale = d3scale.scaleLinear().domain([dataBounds[0], dataBounds[1]]);
+    res.ticks[0] = d3array.range(dataBounds[0], dataBounds[1], 0.1);
+    const format = scale.tickFormat(res.ticks[0].length);
+    res.tickStrings[0] = res.ticks[0].map(format);
+    return res;
+  };
+}
+cubeAxes.setGenerateTicks(myGenerateTicks(cubeAxes.getGenerateTicks()));
 renderer.addActor(cubeAxes);
 
 renderer.resetCamera();
