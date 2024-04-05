@@ -81,20 +81,18 @@ function applyTextStyle(ctx, style) {
   ctx.font = `${style.fontStyle} ${style.fontSize}px ${style.fontFamily}`;
 }
 
-function defaultGenerateTicks(publicApi, model) {
-  return (dataBounds) => {
-    const ticks = [];
-    const tickStrings = [];
-    for (let i = 0; i < 3; i++) {
-      const scale = d3
-        .scaleLinear()
-        .domain([dataBounds[i * 2], dataBounds[i * 2 + 1]]);
-      ticks[i] = scale.ticks(5);
-      const format = scale.tickFormat(5);
-      tickStrings[i] = ticks[i].map(format);
-    }
-    return { ticks, tickStrings };
-  };
+function defaultGenerateTicks(dataBounds) {
+  const ticks = [];
+  const tickStrings = [];
+  for (let i = 0; i < 3; i++) {
+    const scale = d3
+      .scaleLinear()
+      .domain([dataBounds[i * 2], dataBounds[i * 2 + 1]]);
+    ticks[i] = scale.ticks(5);
+    const format = scale.tickFormat(5);
+    tickStrings[i] = ticks[i].map(format);
+  }
+  return { ticks, tickStrings };
 }
 
 // many properties of this actor depend on the API specific view The main
@@ -824,7 +822,7 @@ function defaultValues(publicAPI, model, initialValues) {
     axisLabels: null,
     axisTitlePixelOffset: 35.0,
     tickLabelPixelOffset: 12.0,
-    generateTicks: defaultGenerateTicks(publicAPI, model),
+    generateTicks: defaultGenerateTicks,
     ...initialValues,
     axisTextStyle: {
       fontColor: 'white',
@@ -865,7 +863,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model._tmAtlas = new Map();
 
   // for texture atlas
-  model.tmTexture = vtkTexture.newInstance();
+  model.tmTexture = vtkTexture.newInstance({ resizable: true });
   model.tmTexture.setInterpolate(false);
 
   publicAPI.getProperty().setDiffuse(0.0);
@@ -913,4 +911,9 @@ export const newInstance = macro.newInstance(extend, 'vtkCubeAxesActor');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend, newCubeAxesActorHelper };
+export default {
+  newInstance,
+  extend,
+  newCubeAxesActorHelper,
+  defaultGenerateTicks,
+};

@@ -44,17 +44,15 @@ const cubeAxes = vtkCubeAxesActor.newInstance();
 cubeAxes.setCamera(renderer.getActiveCamera());
 cubeAxes.setDataBounds(actor.getBounds());
 // Replace ticks from axis 0
-function myGenerateTicks(defaultGenerateTicks) {
-  return (dataBounds) => {
-    const res = defaultGenerateTicks(dataBounds);
-    const scale = d3scale.scaleLinear().domain([dataBounds[0], dataBounds[1]]);
-    res.ticks[0] = d3array.range(dataBounds[0], dataBounds[1], 0.1);
-    const format = scale.tickFormat(res.ticks[0].length);
-    res.tickStrings[0] = res.ticks[0].map(format);
-    return res;
-  };
+function myGenerateTicks(dataBounds) {
+  const res = vtkCubeAxesActor.defaultGenerateTicks(dataBounds);
+  const scale = d3scale.scaleLinear().domain([dataBounds[0], dataBounds[1]]);
+  res.ticks[0] = d3array.range(dataBounds[0], dataBounds[1], 0.1);
+  const format = scale.tickFormat(res.ticks[0].length);
+  res.tickStrings[0] = res.ticks[0].map(format);
+  return res;
 }
-cubeAxes.setGenerateTicks(myGenerateTicks(cubeAxes.getGenerateTicks()));
+cubeAxes.setGenerateTicks(myGenerateTicks);
 renderer.addActor(cubeAxes);
 
 renderer.resetCamera();
