@@ -9,6 +9,7 @@ export interface IRenderWindowInitialValues {
 	interactor?: any,
 	neverRendered?: boolean,
 	numberOfLayers?: number
+	childRenderWindows?: vtkRenderWindow[],
 }
 
 interface IStatistics {
@@ -41,6 +42,12 @@ export interface vtkRenderWindow extends vtkObject {
 	 * @param {vtkRenderer} renderer The vtkRenderer instance.
 	 */
 	addRenderer(renderer: vtkRenderer): void;
+
+	/**
+	 * Add a child render window
+	 * @param {vtkRenderWindow} renderWindow The vtkRenderWindow instance.
+	 */
+	addRenderWindow(renderWindow: vtkRenderWindow): void;
 
 	/**
 	 * Add renderer
@@ -86,6 +93,16 @@ export interface vtkRenderWindow extends vtkObject {
 	 * 
 	 */
 	getRenderersByReference(): vtkRenderer[];
+
+	/**
+	 * 
+	 */
+	getChildRenderWindows(): vtkRenderWindow[];
+
+	/**
+	 * 
+	 */
+	getChildRenderWindowsByReference(): vtkRenderWindow[];
 
 	/**
 	 * 
