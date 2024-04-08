@@ -88,22 +88,27 @@ function vtkViewNode(publicAPI, model) {
   // be called only in between prepareNodes and removeUnusedNodes
   publicAPI.addMissingNode = (dobj) => {
     if (!dobj) {
-      return;
+      return undefined;
     }
-    const result = model._renderableChildMap.get(dobj);
+
     // if found just mark as visited
+    const result = model._renderableChildMap.get(dobj);
     if (result !== undefined) {
       result.setVisited(true);
-    } else {
-      // otherwise create a node
-      const newNode = publicAPI.createViewNode(dobj);
-      if (newNode) {
-        newNode.setParent(publicAPI);
-        newNode.setVisited(true);
-        model._renderableChildMap.set(dobj, newNode);
-        model.children.push(newNode);
-      }
+      return result;
     }
+
+    // otherwise create a node
+    const newNode = publicAPI.createViewNode(dobj);
+    if (newNode) {
+      newNode.setParent(publicAPI);
+      newNode.setVisited(true);
+      model._renderableChildMap.set(dobj, newNode);
+      model.children.push(newNode);
+      return newNode;
+    }
+
+    return undefined;
   };
 
   // add missing nodes/children for the passed in renderables. This should
@@ -115,20 +120,7 @@ function vtkViewNode(publicAPI, model) {
 
     for (let index = 0; index < dataObjs.length; ++index) {
       const dobj = dataObjs[index];
-      const result = model._renderableChildMap.get(dobj);
-      // if found just mark as visited
-      if (result !== undefined) {
-        result.setVisited(true);
-      } else {
-        // otherwise create a node
-        const newNode = publicAPI.createViewNode(dobj);
-        if (newNode) {
-          newNode.setParent(publicAPI);
-          newNode.setVisited(true);
-          model._renderableChildMap.set(dobj, newNode);
-          model.children.push(newNode);
-        }
-      }
+      publicAPI.addMissingNode(dobj);
     }
   };
 
