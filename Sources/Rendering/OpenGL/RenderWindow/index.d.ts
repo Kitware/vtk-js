@@ -18,6 +18,7 @@ export interface IOpenGLRenderWindowInitialValues {
 	shaderCache?: null;
 	initialized?: boolean;
 	context?: WebGLRenderingContext | WebGL2RenderingContext;
+	context2D?: CanvasRenderingContext2D;
 	canvas?: HTMLCanvasElement;
 	cursorVisibility?: boolean;
 	cursor?: string;
@@ -38,13 +39,6 @@ export interface ICaptureOptions {
 	resetCamera?: boolean;
 	size?: Size;
 	scale?: number
-}
-
-export interface I3DContextOptions {
-    preserveDrawingBuffer?: boolean;
-    depth?: boolean;
-    alpha?: boolean;
-    powerPreference?: string;
 }
 
 type vtkOpenGLRenderWindowBase = vtkObject & Omit<vtkAlgorithm,
@@ -228,9 +222,44 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
 
 	/**
 	 *
-	 * @param {I3DContextOptions} options
+	 * @param {WebGLContextAttributes} options
 	 */
-	get3DContext(options: I3DContextOptions): Nullable<WebGLRenderingContext>;
+	get3DContext(options: WebGLContextAttributes): Nullable<WebGLRenderingContext>;
+
+	/**
+	 *
+	 * @param {CanvasRenderingContext2DSettings} options
+	 */
+	get2DContext(options: CanvasRenderingContext2DSettings): Nullable<CanvasRenderingContext2D>;
+
+	/**
+	 * Copy the content of the root parent, if there is one, to the canvas
+	 */
+	copyParentContent(): void;
+
+	/**
+	 * Resize this render window using the size of its children
+	 * The new size of the renderwindow is the size of the bounding box
+	 * containing all the child render windows
+	 */
+	resizeFromChildRenderWindows(): void;
+
+	/**
+	 * Returns the last ancestor of type vtkOpenGLRenderWindow if there is one
+	 * If there is no parent vtkOpenGLRenderWindow, returns undefined
+	 */
+	getRootOpenGLRenderWindow(): vtkOpenGLRenderWindow | undefined;
+
+	/**
+	 * The context 2D is created during initialization instead of the WebGL context
+	 * when there is a parent render window
+	 */
+	getContext2D(): CanvasRenderingContext2D | undefined;
+
+	/**
+	 *
+	 */
+	setContext2D(context2D: CanvasRenderingContext2D | undefined): boolean;
 
 	/**
 	 *
