@@ -22,7 +22,7 @@ const SCREENSHOT_PLACEHOLDER = {
   height: '100%',
 };
 
-const rootParentMethodsToProxy = [
+const parentMethodsToProxy = [
   'activateTexture',
   'deactivateTexture',
   'disableCullFace',
@@ -198,7 +198,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.initialize = () => {
     if (!model.initialized) {
       // Set root parent if there is one
-      // Some methods of the root parent are proxied (see rootParentMethodsToProxy)
+      // Some methods of the root parent are proxied (see parentMethodsToProxy)
       model.rootOpenGLRenderWindow = publicAPI.getLastAncestorOfType(
         'vtkOpenGLRenderWindow'
       );
@@ -1258,7 +1258,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   // Proxy some methods if needed
   const publicAPIBeforeProxy = { ...publicAPI };
-  rootParentMethodsToProxy.forEach((methodName) => {
+  parentMethodsToProxy.forEach((methodName) => {
     publicAPI[methodName] = (...args) => {
       if (model.rootOpenGLRenderWindow) {
         // Proxy only methods when the render window has a parent
