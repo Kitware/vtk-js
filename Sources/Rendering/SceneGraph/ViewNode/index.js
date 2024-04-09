@@ -139,6 +139,10 @@ function vtkViewNode(publicAPI, model) {
       if (cindex === -1) {
         child.setParent(publicAPI);
         model.children.push(child);
+        const childRenderable = child.getRenderable();
+        if (childRenderable) {
+          model._renderableChildMap.set(childRenderable, child);
+        }
       }
       child.setVisited(true);
     }
