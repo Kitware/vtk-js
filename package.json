@@ -131,7 +131,7 @@
   "peerDependencies": {
     "@babel/preset-env": "^7.17.10",
     "autoprefixer": "^10.4.7",
-    "wslink": "^1.1.0"
+    "wslink": ">=1.1.0 || ^2.0.0"
   },
   "scripts": {
     "validate": "prettier --config ./prettier.config.js --list-different \"Sources/**/*.js\" \"Examples/**/*.js\"",
