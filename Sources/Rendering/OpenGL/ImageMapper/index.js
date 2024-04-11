@@ -351,11 +351,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
                     return;
                   }
 
-                  if (actualThickness == 0) {
-                    gl_FragData[0] = vec4(0.0, 0.0, 1.0, 1.0);
-                    return;
-                  }
-
                   for (int i = -actualThickness; i <= actualThickness; i++) {
                     for (int j = -actualThickness; j <= actualThickness; j++) {
                       if (i == 0 || j == 0) {
