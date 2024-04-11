@@ -1039,9 +1039,6 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
 
   int actualThickness = int(textureValue * 255.0);
 
-  if (actualThickness == 0) {
-    return vec4(0, 0, 1, 1);
-  }
 
   // If it is the background (segment index 0), we should quickly bail out. 
   // Previously, this was determined by tColor.a, which was incorrect as it
