@@ -214,10 +214,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     let toString = `${image.getMTime()}A${scalars.getMTime()}`;
 
     const tex = model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
-    const reBuildTex =
-      !tex?.vtkObj ||
-      tex?.hash !== toString ||
-      model.openGLTextureString !== toString;
+    const reBuildTex = !tex?.vtkObj || tex?.hash !== toString;
     if (reBuildTex) {
       if (!model.openGLTexture) {
         model.openGLTexture = vtkOpenGLTexture.newInstance();
@@ -237,17 +234,15 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         dims[2],
         scalars
       );
-      model.openGLTextureString = toString;
       if (scalars) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
           scalars,
           model.openGLTexture,
-          model.openGLTextureString
+          toString
         );
       }
     } else {
       model.openGLTexture = tex.vtkObj;
-      model.openGLTextureString = tex.hash;
     }
 
     const ppty = actor.getProperty();
@@ -1296,7 +1291,6 @@ const DEFAULT_VALUES = {
   lastSlabTrapezoidIntegration: 0,
   lastSlabType: -1,
   openGLTexture: null,
-  openGLTextureString: null,
   colorTextureString: null,
   pwfTextureString: null,
   resliceGeom: null,

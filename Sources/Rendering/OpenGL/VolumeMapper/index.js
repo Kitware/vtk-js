@@ -1831,7 +1831,6 @@ const DEFAULT_VALUES = {
   context: null,
   VBOBuildTime: null,
   scalarTexture: null,
-  scalarTextureString: null,
   opacityTexture: null,
   opacityTextureString: null,
   colorTexture: null,
