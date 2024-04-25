@@ -1782,7 +1782,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // Assuming labelOutlineThicknessArray contains the thickness for each segment
       for (let i = 0; i < lWidth; ++i) {
         // Retrieve the thickness value for the current segment index.
-        // If the value is undefined, use the first element's value as a default, otherwise use the value (event if 0)
+        // If the value is undefined, use the first element's value as a default, otherwise use the value (even if 0)
         const thickness =
           typeof labelOutlineThicknessArray[i] !== 'undefined'
             ? labelOutlineThicknessArray[i]
