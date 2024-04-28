@@ -1133,17 +1133,16 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       resGeomString = resGeomString.concat(`Plane${slicePlane.getMTime()}`);
       if (image) {
         resGeomString = resGeomString.concat(`Image${image.getMTime()}`);
+        // Check to see if we can bypass oblique slicing related bounds computation
+        // Compute a world-to-image-orientation matrix.
+        // Ignore the translation component since we are
+        // using it on vectors rather than positions.
+        const w2io = mat3.invert(mat3.create(), image.getDirection());
+        // transform the cutting plane normal to image local coords
+        const imageLocalNormal = [...slicePlane.getNormal()];
+        vec3.transformMat3(imageLocalNormal, imageLocalNormal, w2io);
+        [orthoSlicing, orthoAxis] = isVectorAxisAligned(imageLocalNormal);
       }
-      // Check to see if we can bypass oblique slicing related bounds computation
-      // Compute a world-to-image-orientation matrix.
-      // Ignore the translation component since we are
-      // using it on vectors rather than positions.
-      const w2io = mat3.fromValues(image?.getDirection());
-      mat3.invert(w2io, w2io);
-      // transform the cutting plane normal to image local coords
-      const imageLocalNormal = [...slicePlane.getNormal()];
-      vec3.transformMat3(imageLocalNormal, imageLocalNormal, w2io);
-      [orthoSlicing, orthoAxis] = isVectorAxisAligned(imageLocalNormal);
     } else {
       // Create a default slice plane here
       const plane = vtkPlane.newInstance();
