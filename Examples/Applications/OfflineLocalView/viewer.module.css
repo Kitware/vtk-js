@@ -49,3 +49,11 @@
   border-radius: 10px;
   user-select: none;
 }
+
+body {
+  margin: 0;
+}
+
+html { 
+  overflow: hidden; 
+}
