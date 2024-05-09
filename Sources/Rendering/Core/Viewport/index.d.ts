@@ -18,9 +18,10 @@ export interface IViewportInitialValues {
 export interface vtkViewport extends vtkObject {
 
     /**
-     * Not Implemented yet
+     * Adds a 2D actor to the scene.
+     * @param prop
      */
-    addActor2D(): any;
+    addActor2D(prop: vtkActor2D): void;
 
     /**
      * Add a prop to the list of props.
