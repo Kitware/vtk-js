@@ -342,7 +342,7 @@ export interface vtkDataArray extends vtkObject {
  * @param {Number} [component] (default: 0) indice to use inside tuple size
  * @param {Number} [numberOfComponents] (default: 1) size of the tuple
  */
-export function computeRange(values: number[], component?: number, numberOfComponents?: number): vtkRange;
+export function computeRange(values: ArrayLike<number>, component?: number, numberOfComponents?: number): vtkRange;
 
 /**
  * Compute range of a given array, it only supports 1D arrays.
@@ -351,7 +351,7 @@ export function computeRange(values: number[], component?: number, numberOfCompo
  * @param {Number} offset offset index to select the desired component in the tuple
  * @param {Number} numberOfComponents size of tuple in a multi-channel array
  */
-export function fastComputeRange(values: number[], offset: number, numberOfComponents: number): vtkRange;
+export function fastComputeRange(values: ArrayLike<number>, offset: number, numberOfComponents: number): vtkRange;
 
 /**
  * @deprecated please use `fastComputeRange` instead
