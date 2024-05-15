@@ -660,7 +660,11 @@ function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['name', 'disableAnimation']);
+  macro.setGet(publicAPI, model, [
+    'name',
+    'disableAnimation',
+    'resetCameraOnFirstRender',
+  ]);
   macro.get(publicAPI, model, [
     'annotationOpacity',
     'camera',
