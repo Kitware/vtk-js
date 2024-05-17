@@ -34,3 +34,10 @@ export function handleTypeFromName(name) {
   }
   return 'faces';
 }
+
+export function calculateDirection(v1, v2) {
+  const direction = vec3.create();
+  vec3.subtract(direction, v1, v2);
+  vec3.normalize(direction, direction);
+  return direction;
+}
