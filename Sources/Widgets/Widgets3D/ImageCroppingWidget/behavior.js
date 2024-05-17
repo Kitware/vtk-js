@@ -3,8 +3,8 @@ import macro from 'vtk.js/Sources/macros';
 import {
   AXES,
   transformVec3,
-  rotateVec3,
   handleTypeFromName,
+  calculateDirection,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ImageCroppingWidget/helpers';
 
 export default function widgetBehavior(publicAPI, model) {
@@ -75,11 +75,6 @@ export default function widgetBehavior(publicAPI, model) {
         }
 
         if (type === 'faces') {
-          // constraint axis is line defined by the index and center point.
-          // Since our index point is defined inside a box [0, 2, 0, 2, 0, 2],
-          // center point is [1, 1, 1].
-          const constraintAxis = [1 - index[0], 1 - index[1], 1 - index[2]];
-
           // get center of current crop box
           const center = [
             (planes[0] + planes[1]) / 2,
@@ -88,9 +83,10 @@ export default function widgetBehavior(publicAPI, model) {
           ];
 
           // manipulator should be a line manipulator
-          manipulator.setHandleOrigin(transformVec3(center, indexToWorldT));
+          const worldCenter = transformVec3(center, indexToWorldT);
+          manipulator.setHandleOrigin(worldCenter);
           manipulator.setHandleNormal(
-            rotateVec3(constraintAxis, indexToWorldT)
+            calculateDirection(model.activeState.getOrigin(), worldCenter)
           );
           worldCoords = manipulator.handleEvent(
             callData,
@@ -101,8 +97,21 @@ export default function widgetBehavior(publicAPI, model) {
         if (type === 'edges') {
           // constrain to a plane with a normal parallel to the edge
           const edgeAxis = index.map((a) => (a === 1 ? a : 0));
+          const faceName = edgeAxis.map((i) => AXES[i + 1]).join('');
+          const handle = model.widgetState.getStatesWithLabel(faceName)[0];
+          // get center of current crop box
+          const center = [
+            (planes[0] + planes[1]) / 2,
+            (planes[2] + planes[3]) / 2,
+            (planes[4] + planes[5]) / 2,
+          ];
 
-          manipulator.setHandleNormal(rotateVec3(edgeAxis, indexToWorldT));
+          // manipulator should be a line manipulator
+          const worldCenter = transformVec3(center, indexToWorldT);
+
+          manipulator.setHandleNormal(
+            calculateDirection(handle.getOrigin(), worldCenter)
+          );
           worldCoords = manipulator.handleEvent(
             callData,
             model._apiSpecificRenderWindow
