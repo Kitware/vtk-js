@@ -5,6 +5,7 @@ import {
   transformVec3,
   handleTypeFromName,
   calculateDirection,
+  calculateCropperCenter,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ImageCroppingWidget/helpers';
 
 export default function widgetBehavior(publicAPI, model) {
@@ -76,14 +77,8 @@ export default function widgetBehavior(publicAPI, model) {
 
         if (type === 'faces') {
           // get center of current crop box
-          const center = [
-            (planes[0] + planes[1]) / 2,
-            (planes[2] + planes[3]) / 2,
-            (planes[4] + planes[5]) / 2,
-          ];
+          const worldCenter = calculateCropperCenter(planes, indexToWorldT);
 
-          // manipulator should be a line manipulator
-          const worldCenter = transformVec3(center, indexToWorldT);
           manipulator.setHandleOrigin(worldCenter);
           manipulator.setHandleNormal(
             calculateDirection(model.activeState.getOrigin(), worldCenter)
@@ -100,14 +95,7 @@ export default function widgetBehavior(publicAPI, model) {
           const faceName = edgeAxis.map((i) => AXES[i + 1]).join('');
           const handle = model.widgetState.getStatesWithLabel(faceName)[0];
           // get center of current crop box
-          const center = [
-            (planes[0] + planes[1]) / 2,
-            (planes[2] + planes[3]) / 2,
-            (planes[4] + planes[5]) / 2,
-          ];
-
-          // manipulator should be a line manipulator
-          const worldCenter = transformVec3(center, indexToWorldT);
+          const worldCenter = calculateCropperCenter(planes, indexToWorldT);
 
           manipulator.setHandleNormal(
             calculateDirection(handle.getOrigin(), worldCenter)
