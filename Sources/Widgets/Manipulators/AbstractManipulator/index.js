@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
+import { subtract } from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
 // vtkAbstractManipulator methods
@@ -7,6 +8,8 @@ import macro from 'vtk.js/Sources/macros';
 function vtkAbstractManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkAbstractManipulator');
+
+  model._prevWorldCoords = [];
 
   publicAPI.getOrigin = (callData) => {
     if (model.userOrigin) return model.userOrigin;
@@ -26,6 +29,27 @@ function vtkAbstractManipulator(publicAPI, model) {
     if (model.handleNormal) return model.handleNormal;
     if (model.widgetNormal) return model.widgetNormal;
     return [0, 0, 1];
+  };
+
+  model._computeDeltaFromPrevCoords = (curWorldCoords) => {
+    if (!model._prevWorldCoords?.length || !curWorldCoords?.length)
+      return [0, 0, 0];
+    return subtract(curWorldCoords, model._prevWorldCoords, []);
+  };
+
+  model._addWorldDeltas = (manipulatorResults) => {
+    const { worldCoords: curWorldCoords } = manipulatorResults;
+    const worldDelta = model._computeDeltaFromPrevCoords(curWorldCoords);
+    if (curWorldCoords) model._prevWorldCoords = curWorldCoords;
+
+    const deltas = {
+      worldDelta,
+    };
+
+    return {
+      ...manipulatorResults,
+      ...deltas,
+    };
   };
 }
 

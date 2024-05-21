@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
+import { add } from 'vtk.js/Sources/Common/Core/Math';
 import { vec3 } from 'gl-matrix';
 
 export default function widgetBehavior(publicAPI, model) {
@@ -197,13 +198,19 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonPress = (e) => {
+    const manipulator =
+      model.activeState?.getManipulator?.() ?? model.manipulator;
     if (
+      !manipulator ||
       !model.activeState ||
       !model.activeState.getActive() ||
       !model.pickable
     ) {
       return macro.VOID;
     }
+
+    // update worldDelta
+    manipulator.handleEvent(e, model._apiSpecificRenderWindow);
 
     if (model.activeState === model.moveHandle) {
       if (model.widgetState.getHandleList().length === 0) {
@@ -215,6 +222,7 @@ export default function widgetBehavior(publicAPI, model) {
           model.moveHandle.setVisible(false);
           model.activeState = hoveredHandle;
           hoveredHandle.activate();
+
           model._isDragging = true;
           model.lastHandle.setVisible(true);
         } else {
@@ -302,7 +310,7 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
-    const { worldCoords } = manipulator.handleEvent(
+    const { worldCoords, worldDelta } = manipulator.handleEvent(
       callData,
       model._apiSpecificRenderWindow
     );
@@ -322,11 +330,16 @@ export default function widgetBehavior(publicAPI, model) {
       model.lastHandle.setVisible(true);
     }
 
-    if (
-      worldCoords.length &&
-      (model._isDragging || model.activeState === model.moveHandle)
-    ) {
-      model.activeState.setOrigin(worldCoords);
+    const isHandleMoving =
+      model._isDragging || model.activeState === model.moveHandle;
+
+    if (worldCoords.length && isHandleMoving) {
+      const curOrigin = model.activeState.getOrigin();
+      if (curOrigin) {
+        model.activeState.setOrigin(add(curOrigin, worldDelta, []));
+      } else {
+        model.activeState.setOrigin(worldCoords);
+      }
       if (model._isDragging) {
         model.draggedPoint = true;
       }

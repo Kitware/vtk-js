@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
+import { add } from 'vtk.js/Sources/Common/Core/Math';
 
 import {
   AXES,
@@ -14,7 +15,7 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.setDisplayCallback = (callback) =>
     model.representations[0].setDisplayCallback(callback);
 
-  publicAPI.handleLeftButtonPress = () => {
+  publicAPI.handleLeftButtonPress = (callData) => {
     if (
       !model.activeState ||
       !model.activeState.getActive() ||
@@ -23,6 +24,10 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
     if (model.dragable) {
+      // updates worldDelta
+      model.activeState
+        .getManipulator()
+        .handleEvent(callData, model._apiSpecificRenderWindow);
       model._isDragging = true;
       model._apiSpecificRenderWindow.setCursor('grabbing');
       model._interactor.requestAnimation(publicAPI);
@@ -66,13 +71,14 @@ export default function widgetBehavior(publicAPI, model) {
         const indexToWorldT = model.widgetState.getIndexToWorldT();
 
         let worldCoords = [];
+        let worldDelta = [];
 
         if (type === 'corners') {
           // manipulator should be a plane manipulator
-          worldCoords = manipulator.handleEvent(
+          ({ worldCoords, worldDelta } = manipulator.handleEvent(
             callData,
             model._apiSpecificRenderWindow
-          ).worldCoords;
+          ));
         }
 
         if (type === 'faces') {
@@ -83,10 +89,10 @@ export default function widgetBehavior(publicAPI, model) {
           manipulator.setHandleNormal(
             calculateDirection(model.activeState.getOrigin(), worldCenter)
           );
-          worldCoords = manipulator.handleEvent(
+          ({ worldCoords, worldDelta } = manipulator.handleEvent(
             callData,
             model._apiSpecificRenderWindow
-          ).worldCoords;
+          ));
         }
 
         if (type === 'edges') {
@@ -100,13 +106,13 @@ export default function widgetBehavior(publicAPI, model) {
           manipulator.setHandleNormal(
             calculateDirection(handle.getOrigin(), worldCenter)
           );
-          worldCoords = manipulator.handleEvent(
+          ({ worldCoords, worldDelta } = manipulator.handleEvent(
             callData,
             model._apiSpecificRenderWindow
-          ).worldCoords;
+          ));
         }
 
-        if (worldCoords.length) {
+        if (worldCoords.length && worldDelta.length) {
           // transform worldCoords to indexCoords, and then update the croppingPlanes() state with setPlanes().
           const worldToIndexT = model.widgetState.getWorldToIndexT();
           const indexCoords = transformVec3(worldCoords, worldToIndexT);
@@ -119,7 +125,9 @@ export default function widgetBehavior(publicAPI, model) {
             }
           }
 
-          model.activeState.setOrigin(...worldCoords);
+          model.activeState.setOrigin(
+            add(model.activeState.getOrigin(), worldDelta, [])
+          );
           model.widgetState.getCroppingPlanes().setPlanes(...planes);
 
           return macro.EVENT_ABORT;

@@ -19,9 +19,9 @@ function vtkPickerManipulator(publicAPI, model) {
     } else {
       model.position = null;
     }
-    return {
+    return model._addWorldDeltas({
       worldCoords: model.position,
-    };
+    });
   };
 }
 

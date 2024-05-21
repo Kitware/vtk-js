@@ -49,11 +49,37 @@ export interface vtkAbstractManipulator extends vtkObject {
     setUseCameraNormal(useCameraNormal: boolean): boolean;
 
     /**
-     * 
+     * Processes a vtkRenderWindowInteractor event into 3D world positional info.
+     *
+     * Returns an object containing:
+     * - worldCoords: a 3D coordinate corresponding to the 2D event.
+     * - worldDelta: a 3D position delta between the current and the previous call to handleEvent.
+     * - worldDirection: a 3D directional vector. Only on select manipulators.
+     *
+     * worldCoords can be null if the pointer event enters an invalid manipulator region. For example,
+     * the PickerManipulator returns null when the pointer event is off of the picked geometry.
+     *
+     * worldDelta only makes sense between two calls of `handleEvent`. In a queue of `handleEvent` calls,
+     * the i-th call returns the delta between the i-th worldCoords and the (i-1)-th worldCoords.
+     * Thus, calling `handleEvent` is necessary for maintaining a valid worldDelta even when the return
+     * value is ignored.
+     *
+     * There are three cases where worldDelta needs to handle null events:
+     * 1. the first call to `handleEvent`, since there is no previously cached event position.
+     *    worldDelta is set to [0, 0, 0].
+     * 2. if the current `handleEvent` call returns a null worldCoords. worldDelta is set to [0, 0, 0].
+     * 3. if the previous `handleEvent` call returned a null worldCoords. In this case, worldDelta is the
+     *     delta between the current worldCoords and the previous non-null worldCoords, referring to the
+     *     previous 2 cases when applicable.
+     *
      * @param callData 
      * @param glRenderWindow 
      */
-    handleEvent(callData: any, glRenderWindow: vtkOpenGLRenderWindow): { worldCoords: Nullable<Vector3>, worldDirection?: Matrix3x3 };
+    handleEvent(callData: any, glRenderWindow: vtkOpenGLRenderWindow): {
+      worldCoords: Nullable<Vector3>,
+      worldDelta: Vector3,
+      worldDirection?: Matrix3x3,
+    };
 
     /* ------------------------------------------------------------------- */
 
