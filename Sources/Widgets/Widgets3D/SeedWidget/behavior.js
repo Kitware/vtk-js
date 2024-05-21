@@ -6,7 +6,6 @@ export default function widgetBehavior(publicAPI, model) {
   const moveHandle = model.widgetState.getMoveHandle();
   moveHandle.setVisible(true);
   model._isDragging = false;
-  model.previousPosition = null;
 
   function isValidHandle(handle) {
     return handle === moveHandle;
@@ -40,7 +39,6 @@ export default function widgetBehavior(publicAPI, model) {
     if (model.activeState === moveHandle) {
       if (!moveHandle.getOrigin() && worldCoords) {
         moveHandle.setOrigin(worldCoords);
-        model.previousPosition = [...worldCoords];
       }
     }
     model._isDragging = true;
@@ -55,7 +53,6 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
     if (isPlaced()) {
-      model.previousPosition = null;
       model._widgetManager.enablePicking();
       model._apiSpecificRenderWindow.setCursor('pointer');
       model._isDragging = false;
@@ -73,10 +70,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
     if (!model.activeState) throw Error('no activestate');
     const worldCoords = currentWorldCoords(e);
-    if (worldCoords) {
-      model.activeState.setOrigin(worldCoords);
-      model.previousPosition = worldCoords;
-    }
+    model.activeState.setOrigin(worldCoords);
     return macro.VOID;
   };
 

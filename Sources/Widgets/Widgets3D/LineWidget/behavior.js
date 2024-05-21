@@ -1,6 +1,6 @@
 import Constants from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/Constants';
 import macro from 'vtk.js/Sources/macros';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math/';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import {
   calculateTextPosition,
   updateTextPosition,
@@ -58,10 +58,7 @@ export default function widgetBehavior(publicAPI, model) {
     model._isDragging = true;
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
-    model.previousPosition = manipulator.handleEvent(
-      callData,
-      model._apiSpecificRenderWindow
-    ).worldCoords;
+    manipulator.handleEvent(callData, model._apiSpecificRenderWindow);
     model._apiSpecificRenderWindow.setCursor('grabbing');
     model._interactor.requestAnimation(publicAPI);
   }
@@ -239,37 +236,41 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
-      const { worldCoords } = manipulator.handleEvent(
+      const { worldCoords, worldDelta } = manipulator.handleEvent(
         callData,
         model._apiSpecificRenderWindow
       );
-      const translation = model.previousPosition
-        ? vtkMath.subtract(worldCoords, model.previousPosition, [])
-        : [0, 0, 0];
-      model.previousPosition = worldCoords;
-      if (
+
+      const isHandleMoving =
         // is placing first or second handle
         model.activeState === model.widgetState.getMoveHandle() ||
         // is dragging already placed first or second handle
-        model._isDragging
-      ) {
-        if (model.activeState.setOrigin) {
-          model.activeState.setOrigin(worldCoords);
+        model._isDragging;
+
+      // the line state doesn't have setOrigin
+      const isDraggingLine = !model.activeState.setOrigin;
+
+      if (isHandleMoving) {
+        if (!isDraggingLine) {
+          const curOrigin = model.activeState.getOrigin();
+          if (curOrigin) {
+            model.activeState.setOrigin(
+              vtkMath.add(model.activeState.getOrigin(), worldDelta, [])
+            );
+          } else {
+            model.activeState.setOrigin(worldCoords);
+          }
           publicAPI.updateHandleVisibility(
             publicAPI.getHandleIndex(model.activeState)
           );
         } else {
-          // Dragging line
-          publicAPI
-            .getHandle(0)
-            .setOrigin(
-              vtkMath.add(publicAPI.getHandle(0).getOrigin(), translation, [])
-            );
-          publicAPI
-            .getHandle(1)
-            .setOrigin(
-              vtkMath.add(publicAPI.getHandle(1).getOrigin(), translation, [])
-            );
+          // Dragging line; move all handles
+          for (let i = 0; i < 2; i++) {
+            const handleOrigin = publicAPI.getHandle(i).getOrigin();
+            publicAPI
+              .getHandle(i)
+              .setOrigin(vtkMath.add(handleOrigin, worldDelta, []));
+          }
         }
         publicAPI.updateHandleOrientations();
         updateTextPosition(model);

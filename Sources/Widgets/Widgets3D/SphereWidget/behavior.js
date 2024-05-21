@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
+import { add } from 'vtk.js/Sources/Common/Core/Math';
 import { vec3 } from 'gl-matrix';
 
 export default function widgetBehavior(publicAPI, model) {
@@ -10,8 +11,6 @@ export default function widgetBehavior(publicAPI, model) {
 
   // Set while moving the center or border handle.
   model._isDragging = false;
-  // The last world coordinate of the mouse cursor during dragging.
-  model.previousPosition = null;
 
   model.classHierarchy.push('vtkSphereWidgetProp');
 
@@ -58,8 +57,7 @@ export default function widgetBehavior(publicAPI, model) {
   function currentWorldCoords(e) {
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
-    return manipulator.handleEvent(e, model._apiSpecificRenderWindow)
-      .worldCoords;
+    return manipulator.handleEvent(e, model._apiSpecificRenderWindow);
   }
 
   // Update the sphere's center and radius.  Example:
@@ -92,7 +90,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState = null;
       return macro.VOID;
     }
-    const worldCoords = currentWorldCoords(e);
+    const { worldCoords } = currentWorldCoords(e);
 
     if (model.activeState === moveHandle) {
       // Initial sphere placement.
@@ -100,12 +98,14 @@ export default function widgetBehavior(publicAPI, model) {
         centerHandle.setOrigin(worldCoords);
       } else if (!borderHandle.getOrigin()) {
         borderHandle.setOrigin(worldCoords);
+        publicAPI.loseFocus();
       }
       updateSphere();
+      return macro.EVENT_ABORT;
     }
+
     model._isDragging = true;
     model._apiSpecificRenderWindow.setCursor('grabbing');
-    model.previousPosition = [...currentWorldCoords(e)];
     publicAPI.invokeStartInteractionEvent();
     return macro.EVENT_ABORT;
   };
@@ -116,7 +116,6 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
     if (isPlaced()) {
-      model.previousPosition = null;
       model._widgetManager.enablePicking();
       model._apiSpecificRenderWindow.setCursor('pointer');
       model._isDragging = false;
@@ -128,51 +127,38 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleMouseMove = (e) => {
-    if (!model._isDragging) {
-      model.activeState = null;
-      return macro.VOID;
+    if (!model.activeState) return macro.VOID;
+    const { worldCoords, worldDelta } = currentWorldCoords(e);
+
+    if (model.hasFocus) {
+      model.activeState.setOrigin(worldCoords);
+    } else if (model._isDragging) {
+      model.activeState.setOrigin(
+        add(model.activeState.getOrigin(), worldDelta, [])
+      );
     }
-    if (!model.activeState) throw Error('no activestate');
-    const worldCoords = currentWorldCoords(e);
-    model.activeState.setOrigin(worldCoords);
-    if (model.activeState === centerHandle) {
-      // When the sphere is fully placed, and the user is moving the
-      // center, we move the whole sphere.
-      if (borderHandle.getOrigin()) {
-        if (!model.previousPosition) {
-          // !previousPosition here happens only immediately
-          // after grabFocus, but grabFocus resets
-          // borderHandle.origin.
-          throw Error(`no pos ${model.activeState} ${model.previousPosition}`);
-        }
-        const translation = vec3.sub(
-          vec3.create(),
-          worldCoords,
-          model.previousPosition
-        );
-        borderHandle.setOrigin(
-          vec3.add(vec3.create(), borderHandle.getOrigin(), translation)
-        );
-      }
-    }
-    model.previousPosition = worldCoords;
+
     updateSphere();
     return macro.VOID;
   };
 
+  const superGrabFocus = publicAPI.grabFocus;
+
   publicAPI.grabFocus = () => {
+    superGrabFocus();
     moveHandle.setVisible(true);
     centerHandle.setVisible(false);
     borderHandle.setVisible(false);
     centerHandle.setOrigin(null);
     borderHandle.setOrigin(null);
-    model._isDragging = true;
     model.activeState = moveHandle;
     model._interactor.render();
   };
 
+  const superLoseFocus = publicAPI.loseFocus;
+
   publicAPI.loseFocus = () => {
-    model._isDragging = false;
+    superLoseFocus();
     model.activeState = null;
   };
 }

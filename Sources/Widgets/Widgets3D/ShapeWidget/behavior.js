@@ -479,7 +479,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.shapeHandle.setRight(right);
       model.shapeHandle.setDirection(normal);
     }
-    const { worldCoords } = manipulator.handleEvent(
+    const { worldCoords, worldDelta } = manipulator.handleEvent(
       callData,
       model._apiSpecificRenderWindow
     );
@@ -498,11 +498,11 @@ export default function widgetBehavior(publicAPI, model) {
       }
     } else if (model._isDragging) {
       if (model.activeState === model.point1Handle) {
-        model.point1Handle.setOrigin(worldCoords);
-        model.point1 = worldCoords;
+        vtkMath.add(model.point1Handle.getOrigin(), worldDelta, model.point1);
+        model.point1Handle.setOrigin(model.point1);
       } else {
-        model.point2Handle.setOrigin(worldCoords);
-        model.point2 = worldCoords;
+        vtkMath.add(model.point2Handle.getOrigin(), worldDelta, model.point2);
+        model.point2Handle.setOrigin(model.point2);
       }
       publicAPI.updateShapeBounds();
       publicAPI.invokeInteractionEvent();
@@ -527,11 +527,12 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
 
+    const { worldCoords } = manipulator.handleEvent(
+      e,
+      model._apiSpecificRenderWindow
+    );
+
     if (model.hasFocus) {
-      const { worldCoords } = manipulator.handleEvent(
-        e,
-        model._apiSpecificRenderWindow
-      );
       if (!model.point1) {
         model.point1Handle.setOrigin(worldCoords);
         publicAPI.placePoint1(model.point1Handle.getOrigin());

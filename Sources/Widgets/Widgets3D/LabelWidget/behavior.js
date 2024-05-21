@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
+import { add } from 'vtk.js/Sources/Common/Core/Math';
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkLabelWidgetProp');
@@ -46,14 +47,15 @@ export default function widgetBehavior(publicAPI, model) {
 
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
+    const { worldCoords } = manipulator.handleEvent(
+      e,
+      model._apiSpecificRenderWindow
+    );
+
     if (
       model.activeState === model.widgetState.getMoveHandle() &&
       manipulator
     ) {
-      const { worldCoords } = manipulator.handleEvent(
-        e,
-        model._apiSpecificRenderWindow
-      );
       // Commit handle to location
       const moveHandle = model.widgetState.getMoveHandle();
       moveHandle.setOrigin(worldCoords);
@@ -118,21 +120,28 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
-      const { worldCoords } = manipulator.handleEvent(
+      const { worldCoords, worldDelta } = manipulator.handleEvent(
         callData,
         model._apiSpecificRenderWindow
       );
 
-      if (
-        worldCoords.length &&
-        (model.activeState === model.widgetState.getMoveHandle() ||
-          model._isDragging)
-      ) {
-        model.activeState.setOrigin(worldCoords);
-        model.widgetState.getText().setOrigin(model.activeState.getOrigin());
-        publicAPI.invokeInteractionEvent();
-        return macro.EVENT_ABORT;
-      }
+      const isHandleMoving =
+        model.widgetState.getMoveHandle() === model.activeState ||
+        model._isDragging;
+
+      if (!isHandleMoving || !worldCoords.length || !worldDelta.length)
+        return macro.VOID;
+
+      const curOrigin = model.activeState.getOrigin();
+      const newOrigin = curOrigin
+        ? add(curOrigin, worldDelta, [])
+        : worldCoords;
+
+      model.activeState.setOrigin(newOrigin);
+      model.widgetState.getText().setOrigin(newOrigin);
+
+      publicAPI.invokeInteractionEvent();
+      return macro.EVENT_ABORT;
     }
 
     return macro.VOID;
