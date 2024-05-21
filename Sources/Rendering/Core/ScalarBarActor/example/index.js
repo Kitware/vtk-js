@@ -11,6 +11,7 @@ import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreen
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkScalarBarActor from '@kitware/vtk.js/Rendering/Core/ScalarBarActor';
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
+import { Scale } from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/Constants';
 import vtkLookupTable from '@kitware/vtk.js/Common/Core/LookupTable';
 import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
 import controlPanel from './controlPanel.html';
@@ -78,9 +79,17 @@ function generateTicks(numberOfTicks) {
 }
 scalarBarActor.setGenerateTicks(generateTicks(10));
 
+const logInput = document.querySelector('#log');
 const minInput = document.querySelector('#min');
+const updateMinInputColor = () => {
+  minInput.style.color =
+    logInput.checked && parseFloat(minInput.value) === 0 ? 'red' : null;
+};
+
 const onMinChanged = () => {
+  mapper.setUseLookupTableScalarRange(true);
   lut.setRange(parseFloat(minInput.value), lut.getRange()[1]);
+  updateMinInputColor();
   renderWindow.render();
 };
 minInput.addEventListener('input', onMinChanged);
@@ -88,6 +97,7 @@ onMinChanged();
 
 const maxInput = document.querySelector('#max');
 const onMaxChanged = () => {
+  mapper.setUseLookupTableScalarRange(true);
   lut.setRange(lut.getRange()[0], parseFloat(maxInput.value));
   renderWindow.render();
 };
@@ -130,27 +140,31 @@ document
 document
   .querySelector('#useColorTransferFunction')
   .addEventListener('change', (event) => {
-    if (event.target.checked) {
-      const discretize = document.querySelector('#discretize').checked;
-      const numberOfValues = parseInt(
-        document.querySelector('#numberOfColors').value,
-        10
-      );
+    const useColorTransferFunction = event.target.checked;
+
+    const discretizeInput = document.querySelector('#discretize');
+    discretizeInput.disabled = !useColorTransferFunction;
+    logInput.disabled = !useColorTransferFunction;
+    const numberOfColorsInput = document.querySelector('#numberOfColors');
+
+    if (useColorTransferFunction) {
+      const discretize = discretizeInput.checked;
+      const scale = logInput.checked ? Scale.LOG10 : Scale.LINEAR;
+      const numberOfValues = parseInt(numberOfColorsInput.value, 10);
       const ctf = vtkColorTransferFunction.newInstance({
         discretize,
         numberOfValues,
+        scale,
       });
       ctf.addRGBPoint(1.0, 0.0, 1.0, 0.0);
       ctf.addRGBPoint(0.0, 0.0, 0.0, 1.0);
       mapper.setLookupTable(ctf);
     } else {
-      const numberOfColors = parseInt(
-        document.querySelector('#numberOfColors').value,
-        10
-      );
+      const numberOfColors = parseInt(numberOfColorsInput.value, 10);
       mapper.setLookupTable(vtkLookupTable.newInstance({ numberOfColors }));
     }
     lut = mapper.getLookupTable();
+    lut.setRange(parseFloat(minInput.value), parseFloat(maxInput.value));
     scalarBarActor.setScalarsToColors(lut);
     renderWindow.render();
   });
@@ -159,6 +173,14 @@ document.querySelector('#discretize').addEventListener('change', (event) => {
     lut.setDiscretize(event.target.checked);
     renderWindow.render();
   }
+});
+logInput.addEventListener('change', (event) => {
+  const useLog = event.target.checked;
+  if (lut.isA('vtkColorTransferFunction')) {
+    lut.setScale(useLog ? Scale.LOG10 : Scale.LINEAR);
+    renderWindow.render();
+  }
+  updateMinInputColor();
 });
 document
   .querySelector('#numberOfColors')
