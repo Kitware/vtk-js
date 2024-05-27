@@ -144,7 +144,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   // Renders myself
   publicAPI.volumePass = (prepass, renderPass) => {
     if (prepass) {
-      model._openGLRenderWindow = publicAPI.getFirstAncestorOfType(
+      model._openGLRenderWindow = publicAPI.getLastAncestorOfType(
         'vtkOpenGLRenderWindow'
       );
       model.context = model._openGLRenderWindow.getContext();

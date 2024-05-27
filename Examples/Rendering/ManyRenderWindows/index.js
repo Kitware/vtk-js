@@ -135,7 +135,15 @@ function applyStyle(element) {
   element.style.height = `${height}px`;
   element.style.margin = '20px';
   element.style.border = 'solid 2px #333';
+  element.style['text-align'] = 'center';
   return element;
+}
+
+function createRemoveButton() {
+  const buttonEl = document.createElement('button');
+  buttonEl.innerText = 'Remove render window';
+  buttonEl.style.display = 'inline-block';
+  return buttonEl;
 }
 
 function addRenderWindow() {
@@ -174,6 +182,17 @@ function addRenderWindow() {
   interactor.setInteractorStyle(
     vtkInteractorStyleTrackballCamera.newInstance()
   );
+
+  const button = createRemoveButton();
+  button.addEventListener('click', () => {
+    rootContainer.removeChild(container);
+    mainRenderWindow.removeRenderWindow(renderWindow);
+    mainRenderWindowView.removeNode(renderWindowView);
+    interactor.delete();
+    renderWindow.delete();
+    renderWindowView.delete();
+  });
+  container.appendChild(button);
 
   return renderWindow;
 }

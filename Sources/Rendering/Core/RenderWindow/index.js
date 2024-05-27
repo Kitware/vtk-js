@@ -152,6 +152,16 @@ function vtkRenderWindow(publicAPI, model) {
     publicAPI.modified();
     return true;
   };
+
+  publicAPI.removeRenderWindow = (child) => {
+    const childIndex = model.childRenderWindows.findIndex((x) => x === child);
+    if (childIndex < 0) {
+      return false;
+    }
+    model.childRenderWindows.splice(childIndex, 1);
+    publicAPI.modified();
+    return true;
+  };
 }
 
 // ----------------------------------------------------------------------------

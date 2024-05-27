@@ -27,6 +27,14 @@ export interface vtkViewNode extends vtkObject {
   addMissingNode(dobj: any): vtkViewNode | undefined;
 
   /**
+   * Removes a child view node
+   * If the node is not found, returns false
+   * Otherwise, removes the node from the children list and returns true
+   * @param dobj
+   */
+  removeNode(dobj: any): boolean;
+
+  /**
    *
    * @param dataObjs
    */

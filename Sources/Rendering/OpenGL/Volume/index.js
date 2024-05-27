@@ -19,7 +19,7 @@ function vtkOpenGLVolume(publicAPI, model) {
       return;
     }
     if (prepass) {
-      model._openGLRenderWindow = publicAPI.getFirstAncestorOfType(
+      model._openGLRenderWindow = publicAPI.getLastAncestorOfType(
         'vtkOpenGLRenderWindow'
       );
       model._openGLRenderer =

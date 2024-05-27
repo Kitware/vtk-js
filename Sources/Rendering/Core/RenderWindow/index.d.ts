@@ -149,6 +149,12 @@ export interface vtkRenderWindow extends vtkObject {
   removeRenderer(renderer: vtkRenderer): void;
 
   /**
+   * Remove a child render window added using addRenderWindow(renderWindow)
+   * @param {vtkRenderWindow} renderWindow The vtkRenderWindow instance.
+   */
+  removeRenderWindow(renderWindow: vtkRenderWindow): boolean;
+
+  /**
    * Remove renderer
    * @param view
    */

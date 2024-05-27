@@ -148,6 +148,15 @@ function vtkViewNode(publicAPI, model) {
     }
   };
 
+  publicAPI.removeNode = (child) => {
+    const childIdx = model.children.findIndex((x) => x === child);
+    if (childIdx < 0) {
+      return false;
+    }
+    model.children.splice(childIdx, 1);
+    return true;
+  };
+
   publicAPI.prepareNodes = () => {
     for (let index = 0; index < model.children.length; ++index) {
       model.children[index].setVisited(false);
