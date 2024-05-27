@@ -1183,10 +1183,11 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       if (model.context) {
         deleteGLContext();
       }
+      publicAPI.setContainer();
+      publicAPI.setViewStream();
     },
     clearEvents,
-    publicAPI.delete,
-    publicAPI.setViewStream
+    publicAPI.delete
   );
 
   // Do not trigger modified for performance reasons

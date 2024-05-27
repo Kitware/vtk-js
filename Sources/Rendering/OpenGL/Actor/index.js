@@ -16,7 +16,7 @@ function vtkOpenGLActor(publicAPI, model) {
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model._openGLRenderWindow = publicAPI.getFirstAncestorOfType(
+      model._openGLRenderWindow = publicAPI.getLastAncestorOfType(
         'vtkOpenGLRenderWindow'
       );
       model._openGLRenderer =
