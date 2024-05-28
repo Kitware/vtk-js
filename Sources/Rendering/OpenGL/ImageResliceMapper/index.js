@@ -190,7 +190,10 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
     model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
     model.VBOBuildTime.getMTime() < model.currentInput.getMTime() ||
-    model.VBOBuildTime.getMTime() < model.resliceGeom.getMTime();
+    model.VBOBuildTime.getMTime() < model.resliceGeom.getMTime() ||
+    !model.openGLTexture?.getHandle() ||
+    !model.colorTexture?.getHandle() ||
+    !model.pwfTexture?.getHandle();
 
   publicAPI.buildBufferObjects = (ren, actor) => {
     const image = model.currentInput;
@@ -214,7 +217,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     let toString = `${image.getMTime()}A${scalars.getMTime()}`;
 
     const tex = model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
-    const reBuildTex = !tex?.vtkObj || tex?.hash !== toString;
+    const reBuildTex = !tex?.vtkObj?.getHandle() || tex?.hash !== toString;
     if (reBuildTex) {
       if (!model.openGLTexture) {
         model.openGLTexture = vtkOpenGLTexture.newInstance();
@@ -255,7 +258,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     const cTex =
       model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
     const reBuildC =
-      !cTex?.vtkObj ||
+      !cTex?.vtkObj?.getHandle() ||
       cTex?.hash !== toString ||
       model.colorTextureString !== toString;
     if (reBuildC) {
@@ -332,7 +335,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       model._openGLRenderWindow.getGraphicsResourceForObject(pwFunc);
     // rebuild opacity tfun?
     const reBuildPwf =
-      !pwfTex?.vtkObj ||
+      !pwfTex?.vtkObj?.getHandle() ||
       pwfTex?.hash !== toString ||
       model.pwfTextureString !== toString;
     if (reBuildPwf) {

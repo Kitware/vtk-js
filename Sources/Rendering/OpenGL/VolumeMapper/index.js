@@ -1476,7 +1476,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.VBOBuildTime.getMTime() < actor.getMTime() ||
       model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
       model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
-      model.VBOBuildTime.getMTime() < model.currentInput.getMTime()
+      model.VBOBuildTime.getMTime() < model.currentInput.getMTime() ||
+      !model.scalarTexture?.getHandle() ||
+      !model.colorTexture?.getHandle() ||
+      !model.labelOutlineThicknessTexture?.getHandle()
     ) {
       return true;
     }
@@ -1614,7 +1617,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const cTex =
       model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
     const reBuildC =
-      !cTex?.vtkObj ||
+      !cTex?.vtkObj?.getHandle() ||
       cTex?.hash !== toString ||
       model.colorTextureString !== toString;
     if (reBuildC) {
@@ -1663,7 +1666,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const tex = model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
     // rebuild the scalarTexture if the data has changed
     toString = `${image.getMTime()}A${scalars.getMTime()}`;
-    const reBuildTex = !tex?.vtkObj || tex?.hash !== toString;
+    const reBuildTex = !tex?.vtkObj?.getHandle() || tex?.hash !== toString;
     if (reBuildTex) {
       // Build the textures
       const dims = image.getDimensions();
@@ -1769,7 +1772,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const toString = `${labelOutlineThicknessArray.join('-')}`;
 
     const reBuildL =
-      !lTex?.vtkObj ||
+      !lTex?.vtkObj?.getHandle() ||
       lTex?.hash !== toString ||
       model.labelOutlineThicknessTextureString !== toString;
 

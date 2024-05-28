@@ -99,27 +99,26 @@ function createImageActor(imageData) {
   return actor;
 }
 
-async function createActors(numberOfActors) {
+async function readImageData() {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
   await reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`);
   await reader.loadData();
   const imageData = reader.getOutputData();
 
-  const actors = [];
-  for (let i = 0; i < numberOfActors; ++i) {
-    if (Math.random() > 0.5) {
-      actors.push(createVolumeActor(imageData));
-    } else {
-      actors.push(createImageActor(imageData));
-    }
-  }
-
-  return actors;
+  return imageData;
 }
 
-const mainRenderWindow = vtkRenderWindow.newInstance();
-const mainRenderWindowView = mainRenderWindow.newAPISpecificView();
-mainRenderWindow.addView(mainRenderWindowView);
+let mainRenderWindow;
+let mainRenderWindowView;
+function resetMainRenderWindowAndView() {
+  mainRenderWindow = vtkRenderWindow.newInstance();
+  mainRenderWindowView = mainRenderWindow.newAPISpecificView();
+  mainRenderWindow.addView(mainRenderWindowView);
+  // Main view has to be initialized before the first "render" from a child render window
+  // We initialize before creating the child render windows because the interactor initialization calls "render" on them
+  mainRenderWindowView.initialize();
+}
+resetMainRenderWindowAndView();
 
 const rootContainer = document.createElement('div');
 rootContainer.style.display = 'flex';
@@ -127,6 +126,10 @@ rootContainer.style['align-items'] = 'center';
 rootContainer.style['justify-content'] = 'space-between';
 rootContainer.style['flex-wrap'] = 'wrap';
 document.body.appendChild(rootContainer);
+
+const addRenderWindowButton = document.createElement('button');
+addRenderWindowButton.innerText = 'Create a new render window';
+rootContainer.appendChild(addRenderWindowButton);
 
 function applyStyle(element) {
   const width = Math.floor(200 + Math.random() * 200);
@@ -146,7 +149,11 @@ function createRemoveButton() {
   return buttonEl;
 }
 
-function addRenderWindow() {
+const childRenderWindows = [];
+function addRenderWindow(actor) {
+  if (mainRenderWindow.isDeleted()) {
+    resetMainRenderWindowAndView();
+  }
   // Create a child renderwindow
   const renderWindow = vtkRenderWindow.newInstance();
   mainRenderWindow.addRenderWindow(renderWindow);
@@ -189,47 +196,66 @@ function addRenderWindow() {
     mainRenderWindow.removeRenderWindow(renderWindow);
     mainRenderWindowView.removeNode(renderWindowView);
     interactor.delete();
-    renderWindow.delete();
     renderWindowView.delete();
+    renderWindow.delete();
+    if (mainRenderWindow.getChildRenderWindowsByReference().length === 0) {
+      // When there is no child render window anymore, delete the main render window
+      // We also release the graphics resources, which is not very import as when the context is destroyed, the resources should be freed
+      // The release of shared graphics resources is not automatic and can be done by hand when the resource is not needed anymore
+      const imageData = actor.getMapper().getInputData();
+      const scalars = imageData.getPointData().getScalars();
+      mainRenderWindowView.releaseGraphicsResourcesForObject(scalars);
+      mainRenderWindowView.delete();
+      mainRenderWindow.delete();
+    }
   });
   container.appendChild(button);
 
+  // Create the corresponding renderer
+  const background = [
+    0.5 * Math.random() + 0.25,
+    0.5 * Math.random() + 0.25,
+    0.5 * Math.random() + 0.25,
+  ];
+  const renderer = vtkRenderer.newInstance({ background });
+  renderWindow.addRenderer(renderer);
+
+  // Add the actor and reset camera
+  renderer.addActor(actor);
+  const camera = renderer.getActiveCamera();
+  camera.yaw(90);
+  camera.roll(90);
+  camera.azimuth(Math.random() * 360);
+  renderer.resetCamera();
+
+  childRenderWindows.push(renderWindow);
+
   return renderWindow;
+}
+
+function createRandomActor(imageData) {
+  if (Math.random() > 0.5) {
+    return createVolumeActor(imageData);
+  }
+  return createImageActor(imageData);
 }
 
 // ----------------------------------------------------------------------------
 // Fill up page
 // ----------------------------------------------------------------------------
 
-const childRenderWindows = [];
-createActors(64).then((actors) => {
-  // Main view has to be initialized before the first "render" from a child render window
-  // We initialize before creating the child render windows because the interactor initialization calls "render" on them
-  mainRenderWindowView.initialize();
-
-  actors.forEach((actor) => {
-    const childRenderWindow = addRenderWindow();
-
-    // Create the corresponding renderer
-    const background = [
-      0.5 * Math.random() + 0.25,
-      0.5 * Math.random() + 0.25,
-      0.5 * Math.random() + 0.25,
-    ];
-    const renderer = vtkRenderer.newInstance({ background });
-    childRenderWindow.addRenderer(renderer);
-
-    // Add the actor and reset camera
-    renderer.addActor(actor);
-    const camera = renderer.getActiveCamera();
-    camera.yaw(90);
-    camera.roll(90);
-    camera.azimuth(Math.random() * 360);
-    renderer.resetCamera();
-
-    childRenderWindows.push(childRenderWindow);
+readImageData().then((imageData) => {
+  // The button to add render windows
+  addRenderWindowButton.addEventListener('click', () => {
+    addRenderWindow(createRandomActor(imageData));
+    mainRenderWindowView.resizeFromChildRenderWindows();
+    mainRenderWindow.render();
   });
 
+  // Create several render windows and do the first resize and render
+  for (let i = 0; i < 64; i++) {
+    addRenderWindow(createRandomActor(imageData));
+  }
   mainRenderWindowView.resizeFromChildRenderWindows();
   mainRenderWindow.render();
 });
