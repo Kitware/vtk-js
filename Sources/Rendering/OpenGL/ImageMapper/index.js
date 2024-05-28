@@ -882,19 +882,16 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     }
   };
 
-  publicAPI.getNeedToRebuildBufferObjects = (ren, actor) => {
-    // first do a coarse check
-    if (
-      model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
-      model.VBOBuildTime.getMTime() < actor.getMTime() ||
-      model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
-      model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
-      model.VBOBuildTime.getMTime() < model.currentInput.getMTime()
-    ) {
-      return true;
-    }
-    return false;
-  };
+  publicAPI.getNeedToRebuildBufferObjects = (ren, actor) =>
+    model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
+    model.VBOBuildTime.getMTime() < actor.getMTime() ||
+    model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
+    model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
+    model.VBOBuildTime.getMTime() < model.currentInput.getMTime() ||
+    !model.openGLTexture?.getHandle() ||
+    !model.colorTexture?.getHandle() ||
+    !model.labelOutlineThicknessTexture?.getHandle() ||
+    !model.pwfTexture?.getHandle();
 
   publicAPI.buildBufferObjects = (ren, actor) => {
     const image = model.currentInput;
@@ -930,7 +927,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
 
     const reBuildC =
-      !cTex?.vtkObj ||
+      !cTex?.vtkObj?.getHandle() ||
       cTex?.hash !== cfunToString ||
       model.colorTextureString !== cfunToString;
     if (reBuildC) {
@@ -1016,7 +1013,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model._openGLRenderWindow.getGraphicsResourceForObject(pwFunc);
     // rebuild opacity tfun?
     const reBuildPwf =
-      !pwfTex?.vtkObj ||
+      !pwfTex?.vtkObj?.getHandle() ||
       pwfTex?.hash !== pwfunToString ||
       model.pwfTextureString !== pwfunToString;
     if (reBuildPwf) {
@@ -1275,7 +1272,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
       const tex =
         model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
-      if (!tex?.vtkObj) {
+      if (!tex?.vtkObj?.getHandle()) {
         if (model._scalars !== scalars) {
           model._openGLRenderWindow.releaseGraphicsResourcesForObject(
             model._scalars
@@ -1363,7 +1360,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const toString = `${labelOutlineThicknessArray.join('-')}`;
 
     const reBuildL =
-      !lTex?.vtkObj ||
+      !lTex?.vtkObj?.getHandle() ||
       lTex?.hash !== toString ||
       model.labelOutlineThicknessTextureString !== toString;
 
