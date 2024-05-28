@@ -566,9 +566,14 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       if (program.isUniformUsed('WCTCMatrix')) {
         const image = model.currentInput;
         const dim = image.getDimensions();
-        mat4.copy(model.tmpMat4, image.getIndexToWorld());
-        mat4.scale(model.tmpMat4, model.tmpMat4, dim);
-        mat4.invert(model.tmpMat4, model.tmpMat4);
+        mat4.identity(model.tmpMat4);
+        mat4.scale(
+          model.tmpMat4,
+          model.tmpMat4,
+          dim.map((v) => 1 / v)
+        );
+        mat4.translate(model.tmpMat4, model.tmpMat4, [0.5, 0.5, 0.5]);
+        mat4.multiply(model.tmpMat4, model.tmpMat4, image.getWorldToIndex());
         if (inverseShiftScaleMatrix) {
           mat4.multiply(model.tmpMat4, model.tmpMat4, inverseShiftScaleMatrix);
         }
