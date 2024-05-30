@@ -153,6 +153,11 @@ function vtkViewNode(publicAPI, model) {
     if (childIdx < 0) {
       return false;
     }
+    const renderable = child.getRenderable();
+    if (renderable) {
+      model._renderableChildMap.delete(renderable);
+    }
+    child.delete();
     model.children.splice(childIdx, 1);
     return true;
   };
