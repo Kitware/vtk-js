@@ -271,7 +271,7 @@ function createPipeline(fileName, fileContents) {
   const lookupTable = vtkColorTransferFunction.newInstance();
   const source = vtpReader.getOutputData(0);
   const mapper = vtkMapper.newInstance({
-    interpolateScalarsBeforeMapping: false,
+    interpolateScalarsBeforeMapping: true,
     useLookupTableScalarRange: true,
     lookupTable,
     scalarVisibility: false,
@@ -288,7 +288,9 @@ function createPipeline(fileName, fileContents) {
   function applyPreset() {
     const preset = vtkColorMaps.getPresetByName(presetSelector.value);
     lookupTable.applyColorMap(preset);
-    lookupTable.setMappingRange(dataRange[0], dataRange[1]);
+    // Offset to avoid a range of length 0
+    const offset = dataRange[1] === dataRange[0] ? 1 : 0;
+    lookupTable.setMappingRange(dataRange[0] - offset, dataRange[1] + offset);
     lookupTable.updateRange();
     renderWindow.render();
   }
@@ -352,7 +354,6 @@ function createPipeline(fileName, fileContents) {
 
   function updateColorBy(event) {
     const [location, colorByArrayName] = event.target.value.split(':');
-    const interpolateScalarsBeforeMapping = location === 'PointData';
     let colorMode = ColorMode.DEFAULT;
     let scalarMode = ScalarMode.DEFAULT;
     const scalarVisibility = location.length > 0;
@@ -399,7 +400,7 @@ function createPipeline(fileName, fileContents) {
     mapper.set({
       colorByArrayName,
       colorMode,
-      interpolateScalarsBeforeMapping,
+      interpolateScalarsBeforeMapping: true,
       scalarMode,
       scalarVisibility,
     });
