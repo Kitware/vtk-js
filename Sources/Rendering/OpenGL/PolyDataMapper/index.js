@@ -1822,9 +1822,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       tcoords = null;
     }
 
+    // Flag to check if tcoords are per cell instead of per point
+    let useTCoordsPerCell = false;
     // handle color mapping via texture
     if (model.renderable.getColorCoordinates()) {
       tcoords = model.renderable.getColorCoordinates();
+      useTCoordsPerCell = model.renderable.getAreScalarsMappedFromCells();
       if (!model.internalColorTexture) {
         model.internalColorTexture = vtkOpenGLTexture.newInstance({
           resizable: true,
@@ -1868,6 +1871,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         colors: c,
         cellOffset: 0,
         vertexOffset: 0, // Used to keep track of vertex ids across primitives for selection
+        useTCoordsPerCell,
         haveCellScalars: model.haveCellScalars,
         haveCellNormals: model.haveCellNormals,
         customAttributes: model.renderable

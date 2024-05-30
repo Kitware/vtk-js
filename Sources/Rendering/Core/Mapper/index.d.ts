@@ -3,6 +3,7 @@ import vtkAbstractMapper3D, {
   IAbstractMapper3DInitialValues,
 } from '../AbstractMapper3D';
 import { ColorMode, GetArray, ScalarMode } from './Constants';
+import vtkDataArray from '../../../Common/Core/DataArray';
 
 interface IPrimitiveCount {
   points: number;
@@ -77,26 +78,18 @@ export interface vtkMapper extends vtkAbstractMapper3D {
   /**
    *
    * @param input
-   * @param output
-   * @param numScalars
-   * @param numComps
    * @param component
    * @param range
-   * @param tableRange
    * @param tableNumberOfColors
    * @param useLogScale
    */
   createColorTextureCoordinates(
-    input: any,
-    output: any,
-    numScalars: number,
-    numComps: number,
+    input: vtkDataArray,
     component: number,
     range: any,
-    tableRange: any,
     tableNumberOfColors: number,
     useLogScale: boolean
-  ): void;
+  ): vtkDataArray;
 
   /**
    * Create default lookup table. Generally used to create one when
@@ -119,6 +112,17 @@ export interface vtkMapper extends vtkAbstractMapper3D {
     arrayId: any,
     arrayName: any
   ): IAbstractScalars;
+
+  /**
+   * When scalars are mapped from cells,
+   * there is one color coordinate per cell instead of one per point
+   * in the vtkDataArray getColorCoordinates().
+   * It means that when getAreScalarsMappedFromCells() is true,
+   * the number of tuples in getColorCoordinates() is the number of points,
+   * and when getAreScalarsMappedFromCells() is false,
+   * the number of tuples in getColorCoordinates() is the number of cells.
+   */
+  getAreScalarsMappedFromCells(): boolean;
 
   /**
    *
