@@ -106,13 +106,19 @@ export interface vtkAxesActor extends vtkActor {
  * @param model object on which data structure will be bounds (protected)
  * @param {IAxesActorInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IAxesActorInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: IAxesActorInitialValues
+): void;
 
 /**
  * Method use to create a new instance of vtkAxesActor.
  * @param {IAxesActorInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: IAxesActorInitialValues): vtkAxesActor;
+export function newInstance(
+  initialValues?: IAxesActorInitialValues
+): vtkAxesActor;
 
 /**
  * vtkAxesActor is a hybrid 2D/3D actor used to represent 3D axes in a scene.
@@ -128,7 +134,7 @@ export function newInstance(initialValues?: IAxesActorInitialValues): vtkAxesAct
  * @see [vtkOrientationMarkerWidget](./Interaction_Widgets_OrientationMarkerWidget.html)
  */
 export declare const vtkAxesActor: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+  newInstance: typeof newInstance;
+  extend: typeof extend;
 };
 export default vtkAxesActor;

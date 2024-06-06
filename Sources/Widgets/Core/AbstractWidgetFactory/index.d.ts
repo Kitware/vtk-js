@@ -1,9 +1,9 @@
-import vtkAbstractWidget from "../AbstractWidget";
-import vtkRenderer from "../../../Rendering/Core/Renderer";
-import vtkWidgetState from "../WidgetState";
-import { ViewTypes } from "../WidgetManager/Constants";
-import { Bounds, Nullable } from "../../../types";
-import { EventHandler, vtkSubscription, vtkObject } from "../../../interfaces";
+import vtkAbstractWidget from '../AbstractWidget';
+import vtkRenderer from '../../../Rendering/Core/Renderer';
+import vtkWidgetState from '../WidgetState';
+import { ViewTypes } from '../WidgetManager/Constants';
+import { Bounds, Nullable } from '../../../types';
+import { EventHandler, vtkSubscription, vtkObject } from '../../../interfaces';
 
 export interface IGetWidgetForViewParams {
   viewId: number;
@@ -12,12 +12,14 @@ export interface IGetWidgetForViewParams {
   initialValues?: object;
 }
 
-export interface vtkAbstractWidgetFactory<WidgetInstance extends vtkAbstractWidget> extends vtkObject {
+export interface vtkAbstractWidgetFactory<
+  WidgetInstance extends vtkAbstractWidget
+> extends vtkObject {
   /**
-   * Will return the widget associated with the view with Id id `locator.viewId`. 
+   * Will return the widget associated with the view with Id id `locator.viewId`.
    * If there is no widget associated with the view, a new widget will be constructed, provided
    * that the renderer, viewType, and optionally initialValues are also provided.
-   * 
+   *
    * @param {IGetWidgetForViewParams} locator
    */
   getWidgetForView(locator: IGetWidgetForViewParams): Nullable<WidgetInstance>;
@@ -34,43 +36,43 @@ export interface vtkAbstractWidgetFactory<WidgetInstance extends vtkAbstractWidg
 
   /**
    * Set the visiblity on each underlying view widget.
-   * 
+   *
    * @param {Boolean} visible
    */
-  setVisibility(visible: boolean): void 
+  setVisibility(visible: boolean): void;
 
   /**
    * Set the pickable flag for each underlying view widget.
-   * 
-   * @param {Boolean} pickable 
+   *
+   * @param {Boolean} pickable
    */
-  setPickable(pickable: boolean): void
+  setPickable(pickable: boolean): void;
 
   /**
    * Set the dragable flag for each underlying view widget.
-   * 
-   * @param {Boolean} dragable 
+   *
+   * @param {Boolean} dragable
    */
-  setDragable(dragable: boolean): void
+  setDragable(dragable: boolean): void;
 
   /**
    * Set the context visibility for each associated view widget.
-   * 
-   * @param {Boolean} visible 
+   *
+   * @param {Boolean} visible
    */
-  setContextVisibility(visible: boolean): void
+  setContextVisibility(visible: boolean): void;
 
   /**
    * Set the handles visibility for each underlying view widget.
-   * 
-   * @param {Boolean} visible 
+   *
+   * @param {Boolean} visible
    */
-  setHandleVisiblity(visible: boolean): void
+  setHandleVisiblity(visible: boolean): void;
 
   /**
    * Place a new widget at the given bounds.
-   * 
-   * @param {Bounds} bounds 
+   *
+   * @param {Bounds} bounds
    */
   placeWidget(bounds: Bounds): void;
 
@@ -81,8 +83,8 @@ export interface vtkAbstractWidgetFactory<WidgetInstance extends vtkAbstractWidg
 
   /**
    * Set the place factor.
-   * 
-   * @param {Number} factor 
+   *
+   * @param {Number} factor
    */
   setPlaceFactor(factor: number): void;
 
@@ -93,15 +95,18 @@ export interface vtkAbstractWidgetFactory<WidgetInstance extends vtkAbstractWidg
 
   /**
    * Register a callback to be called when the WidgetChange event arise.
-   * 
+   *
    * @param {EventHandler} cb The callback to be invoked.
    * @param {Number} [priority] The priority of this subscription
    */
-  onWidgetChangeEvent(cb: EventHandler, priority?: number): Readonly<vtkSubscription>;
+  onWidgetChangeEvent(
+    cb: EventHandler,
+    priority?: number
+  ): Readonly<vtkSubscription>;
 
   /**
    * Invoke the WidgetChange event
-   * 
+   *
    * @param args The event payload
    */
   invokeWidgetChangeEvent(...args: unknown[]): void;
@@ -112,7 +117,7 @@ export interface vtkAbstractWidgetFactory<WidgetInstance extends vtkAbstractWidg
  * This is because typescript is completely "structural" and doesn't have any way to declare "nominal" types
  * See: https://github.com/microsoft/TypeScript/issues/202
  * For example, in this code, widgetInstance is a vtkResliceCursorWidgetCPRInstance:
- * 
+ *
  * import vtkResliceCursorWidget from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCursorWidget';
  * import widgetBehavior from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCursorWidget/cprBehavior';
  *
@@ -123,9 +128,14 @@ export interface vtkAbstractWidgetFactory<WidgetInstance extends vtkAbstractWidg
  * const widgetInstance = widgetManager.addWidget(widget);
  */
 declare const ExtendSymbol: unique symbol;
-export type ExtendWidgetBehavior<WidgetInstance> = ((publicAPI: object, model: object) => void) & { [ExtendSymbol]: WidgetInstance };
+export type ExtendWidgetBehavior<WidgetInstance> = ((
+  publicAPI: object,
+  model: object
+) => void) & { [ExtendSymbol]: WidgetInstance };
 
-export interface IAbstractWidgetFactoryInitialValues<WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget> {
+export interface IAbstractWidgetFactoryInitialValues<
+  WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget
+> {
   behavior?: ExtendWidgetBehavior<WidgetInstance>;
 }
 
@@ -136,18 +146,28 @@ export interface IAbstractWidgetFactoryInitialValues<WidgetInstance extends vtkA
  * @param model object on which data structure will be bounds (protected)
  * @param initialValues (default: {})
  */
-export function extend<WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget>(publicAPI: object, model: object, initialValues?: IAbstractWidgetFactoryInitialValues<WidgetInstance>): void;
+export function extend<
+  WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget
+>(
+  publicAPI: object,
+  model: object,
+  initialValues?: IAbstractWidgetFactoryInitialValues<WidgetInstance>
+): void;
 
 /**
  * Method used to create a new instance of vtkAbstractWidgetFactory
- * 
+ *
  * @param initialValues for pre-setting some of its content
  */
-export function newInstance<WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget>(initialValues?: IAbstractWidgetFactoryInitialValues<WidgetInstance>): vtkAbstractWidgetFactory<WidgetInstance>;
+export function newInstance<
+  WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget
+>(
+  initialValues?: IAbstractWidgetFactoryInitialValues<WidgetInstance>
+): vtkAbstractWidgetFactory<WidgetInstance>;
 
 export declare const vtkAbstractWidgetFactory: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+  newInstance: typeof newInstance;
+  extend: typeof extend;
 };
 
 export default vtkAbstractWidgetFactory;

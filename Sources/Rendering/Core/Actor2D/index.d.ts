@@ -6,106 +6,105 @@ import vtkMapper2D from '../Mapper2D';
 import { Bounds } from '../../../types';
 
 /**
- * 
+ *
  */
 export interface IActor2DInitialValues extends IPropInitialValues {
-	mapper?: vtkMapper;
-	property?: vtkProperty2D;
-	layerNumber?: number;
-	positionCoordinate?: vtkCoordinate;
-	positionCoordinate2?: vtkCoordinate;
+  mapper?: vtkMapper;
+  property?: vtkProperty2D;
+  layerNumber?: number;
+  positionCoordinate?: vtkCoordinate;
+  positionCoordinate2?: vtkCoordinate;
 }
 
 export interface vtkActor2D extends vtkProp {
-	/**
-	 * 
-	 * @return  
-	 */
-	getActors2D(): any;
+  /**
+   *
+   * @return
+   */
+  getActors2D(): any;
 
-	/**
-	 * 
-	 * @return  
-	 */
-	getIsOpaque(): boolean;
+  /**
+   *
+   * @return
+   */
+  getIsOpaque(): boolean;
 
+  /**
+   * Return the property object that controls this actors surface
+   * properties. This should be an instance of a vtkProperty2D object. Every
+   * actor must have a property associated with it. If one isn’t specified,
+   * then one will be generated automatically. Multiple actors can share one
+   * property object.
+   */
+  getProperty(): vtkProperty2D;
 
-	/**
-	 * Return the property object that controls this actors surface
-	 * properties. This should be an instance of a vtkProperty2D object. Every
-	 * actor must have a property associated with it. If one isn’t specified,
-	 * then one will be generated automatically. Multiple actors can share one
-	 * property object.
-	 */
-	getProperty(): vtkProperty2D;
+  /**
+   * Create a new property suitable for use with this type of Actor.
+   * @param {IProperty2DInitialValues} [initialValues] (default: {})
+   */
+  makeProperty(initialValues?: IProperty2DInitialValues): vtkProperty2D;
 
-	/**
-	 * Create a new property suitable for use with this type of Actor.
-	 * @param {IProperty2DInitialValues} [initialValues] (default: {})
-	 */
-	 makeProperty(initialValues?: IProperty2DInitialValues): vtkProperty2D;
+  /**
+   * Sets the 2D mapper.
+   */
+  setMapper(mapper: vtkMapper2D): boolean;
 
-	/**
-	 * Sets the 2D mapper.
-	 */
-	setMapper(mapper: vtkMapper2D): boolean;
+  /**
+   * Gets the 2D mapper.
+   */
+  getMapper(): vtkMapper2D;
 
-	/**
-	 * Gets the 2D mapper.
-	 */
-	getMapper(): vtkMapper2D;
+  /**
+   *
+   */
+  hasTranslucentPolygonalGeometry(): boolean;
 
-	/**
-	 * 
-	 */
-	hasTranslucentPolygonalGeometry(): boolean;
+  /**
+   * Set the Prop2D's position in display coordinates.
+   * @param XPos
+   * @param YPos
+   */
+  setDisplayPosition(XPos: any, YPos: any): void;
 
-	/**
-	 * Set the Prop2D's position in display coordinates.
-	 * @param XPos 
-	 * @param YPos 
-	 */
-	setDisplayPosition(XPos: any, YPos: any): void;
+  /**
+   *
+   * @param w
+   */
+  setWidth(w: number): void;
 
-	/**
-	 * 
-	 * @param w 
-	 */
-	setWidth(w: number): void;
+  /**
+   *
+   * @param w
+   */
+  setHeight(h: number): void;
 
-	/**
-	 * 
-	 * @param w 
-	 */
-	setHeight(h: number): void;
+  /**
+   *
+   */
+  getWidth(): number;
 
-	/**
-	 * 
-	 */
-	getWidth(): number;
+  /**
+   *
+   */
+  getHeight(): number;
 
-	/**
-	 * 
-	 */
-	getHeight(): number;
+  /**
+   * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
+   * @return {Bounds} The bounds for the mapper.
+   */
+  getBounds(): Bounds;
 
-	/**
-	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
-	 * @return {Bounds} The bounds for the mapper.
-	 */
-	getBounds(): Bounds;
+  /**
+   * Return the actual vtkCoordinate reference that the mapper should use
+   * to position the actor. This is used internally by the mappers and should
+   * be overridden in specialized subclasses and otherwise ignored.
+   */
+  getActualPositionCoordinate(): vtkCoordinate;
 
-	/**
-	 * Return the actual vtkCoordinate reference that the mapper should use
-	 * to position the actor. This is used internally by the mappers and should
-	 * be overridden in specialized subclasses and otherwise ignored.
-	 */
-	getActualPositionCoordinate(): vtkCoordinate;
-
-	/**
-	 * 
-	 */
-	getActualPositionCoordinate2(): vtkCoordinate;
+  /**
+   *
+   */
+  getActualPositionCoordinate2(): vtkCoordinate;
 }
 
 /**
@@ -115,7 +114,11 @@ export interface vtkActor2D extends vtkProp {
  * @param model object on which data structure will be bounds (protected)
  * @param {IActor2DInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IActor2DInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: IActor2DInitialValues
+): void;
 
 /**
  * Method use to create a new instance of vtkActor2D
@@ -133,7 +136,7 @@ export function newInstance(initialValues?: IActor2DInitialValues): vtkActor2D;
  * @see [vtkProperty2D](./Rendering_Core_Property2D.html)
  */
 export declare const vtkActor2D: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+  newInstance: typeof newInstance;
+  extend: typeof extend;
 };
 export default vtkActor2D;

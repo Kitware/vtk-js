@@ -5,7 +5,6 @@ import { RGBColor } from '../../../types';
 
 export interface vtkResliceRepresentationProxy
   extends vtkAbstractRepresentationProxy {
-
   // proxy property mappings
 
   setVisibility(visible: boolean): boolean;

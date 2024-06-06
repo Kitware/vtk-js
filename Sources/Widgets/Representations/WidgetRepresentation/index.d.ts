@@ -1,53 +1,53 @@
-import vtkDataArray from "../../../Common/Core/DataArray";
-import vtkPolyData from "../../../Common/DataModel/PolyData";
-import { vtkObject } from "../../../interfaces";
-import vtkProp from "../../../Rendering/Core/Prop";
+import vtkDataArray from '../../../Common/Core/DataArray';
+import vtkPolyData from '../../../Common/DataModel/PolyData';
+import { vtkObject } from '../../../interfaces';
+import vtkProp from '../../../Rendering/Core/Prop';
 export interface IDisplayScaleParams {
-	dispHeightFactor: number,
-	cameraPosition: number[],
-	cameraDir: number[],
-	isParallel: boolean,
-	rendererPixelDims: number[],
+  dispHeightFactor: number;
+  cameraPosition: number[];
+  cameraDir: number[];
+  isParallel: boolean;
+  rendererPixelDims: number[];
 }
 
 export interface IWidgetRepresentationInitialValues {
-    labels?: Array<any>,
-    coincidentTopologyParameters?: object,
-    displayScaleParams?: IDisplayScaleParams,
-    scaleInPixels?: boolean
+  labels?: Array<any>;
+  coincidentTopologyParameters?: object;
+  displayScaleParams?: IDisplayScaleParams;
+  scaleInPixels?: boolean;
 }
 
 export interface vtkWidgetRepresentation extends vtkProp {
-    getLabels(): Array<any>;
-    setLabels(labels: Array<any>): void;
+  getLabels(): Array<any>;
+  setLabels(labels: Array<any>): void;
 
-    /**
-     * Gets the coincident topology parameters applied on the actor mappers
-     */
-    getCoincidentTopologyParameters(): object;
-    /**
-     * Sets the coincident topology parameters applied on the actor mappers
-     */
-    setCoincidentTopologyParameters(parameters: object): boolean;
+  /**
+   * Gets the coincident topology parameters applied on the actor mappers
+   */
+  getCoincidentTopologyParameters(): object;
+  /**
+   * Sets the coincident topology parameters applied on the actor mappers
+   */
+  setCoincidentTopologyParameters(parameters: object): boolean;
 
-    /**
-     * Sets the current view and camera scale parameters.
-     * Called by the WidgetManager.
-     * @see setScaleInPixels()
-     */
-    setDisplayScaleParams(params: object): boolean;
+  /**
+   * Sets the current view and camera scale parameters.
+   * Called by the WidgetManager.
+   * @see setScaleInPixels()
+   */
+  setDisplayScaleParams(params: object): boolean;
 
-    /**
-     * Gets wether actors should have a fix size in display coordinates.
-     * @see setScaleInPixels()
-     */
-    getScaleInPixels(): boolean;
+  /**
+   * Gets wether actors should have a fix size in display coordinates.
+   * @see setScaleInPixels()
+   */
+  getScaleInPixels(): boolean;
 
-    /**
-     * Sets wether actors should have a fix size in display coordinates.
-     * @see getScaleInPixels()
-     */
-    setScaleInPixels(scale: boolean): boolean;
+  /**
+   * Sets wether actors should have a fix size in display coordinates.
+   * @see getScaleInPixels()
+   */
+  setScaleInPixels(scale: boolean): boolean;
 }
 
 /**
@@ -57,27 +57,36 @@ export interface vtkWidgetRepresentation extends vtkProp {
  * @param model object on which data structure will be bounds (protected)
  * @param {IWidgetRepresentationInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IWidgetRepresentationInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: IWidgetRepresentationInitialValues
+): void;
 
 /**
  * Method use to create a new instance of vtkWidgetRepresentation
  * @param {IWidgetRepresentationInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: IWidgetRepresentationInitialValues): vtkWidgetRepresentation;
+export function newInstance(
+  initialValues?: IWidgetRepresentationInitialValues
+): vtkWidgetRepresentation;
 
 /**
  * Static function to get the pixel size of a 3D point.
  * @param {Number[]} worldCoord 3D point in world coordinates
  * @param {IDisplayScaleParams} displayScaleParams Display and camera information
  */
-export function getPixelWorldHeightAtCoord(worldCoord: number[], displayScaleParams: IDisplayScaleParams): number[];
+export function getPixelWorldHeightAtCoord(
+  worldCoord: number[],
+  displayScaleParams: IDisplayScaleParams
+): number[];
 
 export interface IWidgetPipeline {
-	source?: object,
-	filter?: object,
-	glyph?: object,
-	mapper: object,
-	actor: object
+  source?: object;
+  filter?: object;
+  glyph?: object;
+  mapper: object;
+  actor: object;
 }
 /**
  * If provided, connects `source` (dataset or filter) to `filter`.
@@ -100,14 +109,16 @@ export function connectPipeline(pipeline: IWidgetPipeline): void;
  * @param {String} dataType The typed array type name.
  * @param {Number} numberOfComponents The number of components of the array.
  */
- export function allocateArray(polyData: vtkPolyData,
-    name: string,
-    numberOfTuples: number,
-    dataType?: string,
-    numberOfComponents?: number): vtkDataArray|null;
+export function allocateArray(
+  polyData: vtkPolyData,
+  name: string,
+  numberOfTuples: number,
+  dataType?: string,
+  numberOfComponents?: number
+): vtkDataArray | null;
 
 export declare const vtkWidgetRepresentation: {
-	newInstance: typeof newInstance;
-	extend: typeof extend;
-}
+  newInstance: typeof newInstance;
+  extend: typeof extend;
+};
 export default vtkWidgetRepresentation;

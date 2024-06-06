@@ -1,70 +1,72 @@
-import { vtkAlgorithm, vtkObject } from "../../../interfaces";
-import vtkPlane from "../../../Common/DataModel/Plane";
-import { mat4 } from "gl-matrix";
+import { vtkAlgorithm, vtkObject } from '../../../interfaces';
+import vtkPlane from '../../../Common/DataModel/Plane';
+import { mat4 } from 'gl-matrix';
 
 /**
- * 
+ *
  */
 export interface IAbstractMapperInitialValues {
-	clippingPlanes?: vtkPlane[];
+  clippingPlanes?: vtkPlane[];
 }
 
-type vtkAbstractMapperBase = vtkObject & Omit<vtkAlgorithm,
-	| 'getOutputData'
-	| 'getOutputPort'> ;
+type vtkAbstractMapperBase = vtkObject &
+  Omit<vtkAlgorithm, 'getOutputData' | 'getOutputPort'>;
 
 export interface vtkAbstractMapper extends vtkAbstractMapperBase {
+  /**
+   * Added plane needs to be a vtkPlane object.
+   * @param {vtkPlane} plane
+   */
+  addClippingPlane(plane: vtkPlane): boolean;
 
-	/**
-	 * Added plane needs to be a vtkPlane object.
-	 * @param {vtkPlane} plane
-	 */
-	addClippingPlane(plane: vtkPlane): boolean;
+  /**
+   * Get number of clipping planes.
+   * @return {Number} The number of clipping planes.
+   */
+  getNumberOfClippingPlanes(): number;
 
-	/**
-	 * Get number of clipping planes.
-	 * @return {Number} The number of clipping planes.
-	 */
-	getNumberOfClippingPlanes(): number;
+  /**
+   * Get all clipping planes.
+   * @return {vtkPlane[]} An array of the clipping planes objects
+   */
+  getClippingPlanes(): vtkPlane[];
 
-	/**
-	 * Get all clipping planes.
-	 * @return {vtkPlane[]} An array of the clipping planes objects
-	 */
-	getClippingPlanes(): vtkPlane[];
+  /**
+   * Remove all clipping planes.
+   * @return true if there were planes, false otherwise.
+   */
+  removeAllClippingPlanes(): boolean;
 
-	/**
-	 * Remove all clipping planes.
-	 * @return true if there were planes, false otherwise.
-	 */
-	removeAllClippingPlanes(): boolean;
+  /**
+   * Remove clipping plane.
+   * @param {vtkPlane} plane
+   * @return true if plane existed and therefore is removed, false otherwise.
+   */
+  removeClippingPlane(plane: vtkPlane): boolean;
 
-	 /**
-	  * Remove clipping plane.
-	  * @param {vtkPlane} plane
-	  * @return true if plane existed and therefore is removed, false otherwise.
-	  */
-	removeClippingPlane(plane: vtkPlane): boolean;
+  /**
+   * Set clipping planes.
+   * @param {vtkPlane[]} planes
+   */
+  setClippingPlanes(planes: vtkPlane[]): void;
 
-	/**
-	 * Set clipping planes.
-	 * @param {vtkPlane[]} planes
-	 */
-	setClippingPlanes(planes: vtkPlane[]): void;
+  /**
+   * Get the ith clipping plane as a homogeneous plane equation.
+   * Use getNumberOfClippingPlanes() to get the number of planes.
+   * @param {mat4} propMatrix
+   * @param {Number} i
+   * @param {Number[]} hnormal
+   */
+  getClippingPlaneInDataCoords(
+    propMatrix: mat4,
+    i: number,
+    hnormal: number[]
+  ): void;
 
-	/**
-	 * Get the ith clipping plane as a homogeneous plane equation.
-	 * Use getNumberOfClippingPlanes() to get the number of planes.
-	 * @param {mat4} propMatrix
-	 * @param {Number} i
-	 * @param {Number[]} hnormal
-	 */
-	getClippingPlaneInDataCoords(propMatrix : mat4, i : number, hnormal : number[]): void;
-
-	/**
-	 * 
-	 */
-	update(): void;
+  /**
+   *
+   */
+  update(): void;
 }
 
 /**
@@ -74,7 +76,11 @@ export interface vtkAbstractMapper extends vtkAbstractMapperBase {
  * @param model object on which data structure will be bounds (protected)
  * @param {IAbstractMapperInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IAbstractMapperInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: IAbstractMapperInitialValues
+): void;
 
 /**
  * vtkAbstractMapper is an abstract class to specify interface between data and
@@ -83,6 +89,6 @@ export function extend(publicAPI: object, model: object, initialValues?: IAbstra
  * data.
  */
 export declare const vtkAbstractMapper: {
-	extend: typeof extend,
+  extend: typeof extend;
 };
 export default vtkAbstractMapper;

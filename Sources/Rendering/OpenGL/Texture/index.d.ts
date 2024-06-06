@@ -1,9 +1,9 @@
-import { Wrap, Filter } from "./Constants";
+import { Wrap, Filter } from './Constants';
 import vtkOpenGLRenderWindow from '../RenderWindow';
 import { Nullable } from '../../../types';
-import { VtkDataTypes } from "../../../Common/Core/DataArray";
+import { VtkDataTypes } from '../../../Common/Core/DataArray';
 import { vtkViewNode } from '../../../Rendering/SceneGraph/ViewNode';
-import { vtkObject } from "../../../interfaces" ;
+import { vtkObject } from '../../../interfaces';
 
 /**
  * Initial values for creating a new instance of vtkOpenGLTexture.
@@ -185,7 +185,14 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param flip Whether to flip the texture vertically.
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
-  create2DFromRaw(width: number, height: number, numComps: number, dataType: VtkDataTypes, data: any, flip: boolean): boolean;
+  create2DFromRaw(
+    width: number,
+    height: number,
+    numComps: number,
+    dataType: VtkDataTypes,
+    data: any,
+    flip: boolean
+  ): boolean;
 
   /**
    * Creates a cube texture from raw data.
@@ -197,7 +204,14 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param flip Whether to flip the texture vertically.
    * @returns {boolean} True if the cube texture was successfully created, false otherwise.
    */
-  createCubeFromRaw(width: number, height: number, numComps: number, dataType: VtkDataTypes, data: any, flip: boolean): boolean;
+  createCubeFromRaw(
+    width: number,
+    height: number,
+    numComps: number,
+    dataType: VtkDataTypes,
+    data: any,
+    flip: boolean
+  ): boolean;
 
   /**
    * Creates a 2D texture from an image.
@@ -216,7 +230,14 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param preferSizeOverAccuracy Whether to prefer texture size over accuracy.
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
-  create2DFilterableFromRaw(width: number, height: number, numComps: number, dataType: VtkDataTypes, data: any, preferSizeOverAccuracy: boolean): boolean;
+  create2DFilterableFromRaw(
+    width: number,
+    height: number,
+    numComps: number,
+    dataType: VtkDataTypes,
+    data: any,
+    preferSizeOverAccuracy: boolean
+  ): boolean;
 
   /**
    * Creates a 2D filterable texture from a data array, with a preference for size over accuracy if necessary.
@@ -226,7 +247,12 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param preferSizeOverAccuracy Whether to prefer texture size over accuracy.
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
-  create2DFilterableFromDataArray(width: number, height: number, dataArray: any, preferSizeOverAccuracy: boolean): boolean;
+  create2DFilterableFromDataArray(
+    width: number,
+    height: number,
+    dataArray: any,
+    preferSizeOverAccuracy: boolean
+  ): boolean;
 
   /**
    * Creates a 3D texture from raw data.
@@ -238,7 +264,14 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param data The raw data for the texture.
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
-  create3DFromRaw(width: number, height: number, depth: number, numComps: number, dataType: VtkDataTypes, data: any): boolean;
+  create3DFromRaw(
+    width: number,
+    height: number,
+    depth: number,
+    numComps: number,
+    dataType: VtkDataTypes,
+    data: any
+  ): boolean;
 
   /**
    * Creates a 3D filterable texture from raw data, with a preference for size over accuracy if necessary.
@@ -251,7 +284,15 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param preferSizeOverAccuracy Whether to prefer texture size over accuracy.
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
-  create3DFilterableFromRaw(width: number, height: number, depth: number, numComps: number, dataType: VtkDataTypes, values: any, preferSizeOverAccuracy: boolean): boolean;
+  create3DFilterableFromRaw(
+    width: number,
+    height: number,
+    depth: number,
+    numComps: number,
+    dataType: VtkDataTypes,
+    values: any,
+    preferSizeOverAccuracy: boolean
+  ): boolean;
 
   /**
    * Creates a 3D filterable texture from a data array, with a preference for size over accuracy if necessary.
@@ -262,7 +303,13 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param preferSizeOverAccuracy Whether to prefer texture size over accuracy.
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
-  create3DFilterableFromDataArray(width: number, height: number, depth: number, dataArray: any, preferSizeOverAccuracy: boolean): boolean;
+  create3DFilterableFromDataArray(
+    width: number,
+    height: number,
+    depth: number,
+    dataArray: any,
+    preferSizeOverAccuracy: boolean
+  ): boolean;
 
   /**
    * Sets the OpenGL render window in which the texture will be used.
@@ -276,7 +323,6 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @returns {number} The maximum texture size.
    */
   getMaximumTextureSize(ctx: any): number;
-
 }
 
 /**
@@ -285,21 +331,27 @@ export interface vtkOpenGLTexture extends vtkViewNode {
  * @param model The model to use.
  * @param initialValues The initial values to apply.
  */
-export function extend(publicAPI: object, model: object, initialValues?: ITextureInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: ITextureInitialValues
+): void;
 
 /**
  * Creates a new instance of vtkOpenGLTexture with the given initial values.
  * @param initialValues The initial values to use.
  * @returns The new instance.
  */
-export function newInstance(initialValues?: ITextureInitialValues): vtkOpenGLTexture;
+export function newInstance(
+  initialValues?: ITextureInitialValues
+): vtkOpenGLTexture;
 
 /**
  * vtkOpenGLTexture static API.
  */
 export declare const vtkOpenGLTexture: {
-  newInstance: typeof newInstance,
-  extend: typeof extend,
+  newInstance: typeof newInstance;
+  extend: typeof extend;
 };
 
 export default vtkOpenGLTexture;

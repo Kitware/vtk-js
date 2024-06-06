@@ -1,122 +1,119 @@
-import { vtkObject } from "../../../interfaces";
-import { RGBAColor, RGBColor } from "../../../types";
-import vtkRenderer from "../../Core/Renderer";
-import vtkRenderWindow from "../../Core/RenderWindow";
-import vtkRenderWindowInteractor from "../../Core/RenderWindowInteractor";
+import { vtkObject } from '../../../interfaces';
+import { RGBAColor, RGBColor } from '../../../types';
+import vtkRenderer from '../../Core/Renderer';
+import vtkRenderWindow from '../../Core/RenderWindow';
+import vtkRenderWindowInteractor from '../../Core/RenderWindowInteractor';
 
 // import vtkOpenGLRenderWindow from "../../../OpenGL/RenderWindow";
 // import vtkWebGPURenderWindow from "../../../WebGPU/RenderWindow";
-
 
 /**
  *
  */
 export interface IFullScreenRenderWindowInitialValues {
-	background?: RGBColor | RGBAColor;
-	container?: HTMLElement
-	containerStyle?: object;
-	controlPanelStyle?: object;
-	controllerVisibility?: boolean;
-	defaultViewAPI?: boolean;
-	listenWindowResize?: boolean;
-	resizeCallback?: any;
+  background?: RGBColor | RGBAColor;
+  container?: HTMLElement;
+  containerStyle?: object;
+  controlPanelStyle?: object;
+  controllerVisibility?: boolean;
+  defaultViewAPI?: boolean;
+  listenWindowResize?: boolean;
+  resizeCallback?: any;
 }
 
-
 export interface vtkFullScreenRenderWindow extends vtkObject {
+  /**
+   *
+   * @param {HTMLElement} html
+   */
+  addController(html: HTMLElement): void;
 
-	/**
-	 * 
-	 * @param {HTMLElement} html 
-	 */
-	addController(html : HTMLElement): void;
-		
-	/**
-	 * Representation API
-	 * @param representation 
-	 */
-	addRepresentation(representation : any): void;
+  /**
+   * Representation API
+   * @param representation
+   */
+  addRepresentation(representation: any): void;
 
-	/**
-	 * Release GL context
-	 */
-	delete(): void;
+  /**
+   * Release GL context
+   */
+  delete(): void;
 
-	/**
-	 * Returns vtkWebGPURenderWindow if ?viewAPI='WebGPU' is in URL, or if
-	 * vtkFullScreenRenderWindow has been created with "defaultViewAPI: 'WebGPU",
-	 * otherwise vtkOpenGLRenderWindow is returned.
-	 */
-	getApiSpecificRenderWindow(): any; // vtkOpenGLRenderWindow || vtkWebGPURenderWindow
+  /**
+   * Returns vtkWebGPURenderWindow if ?viewAPI='WebGPU' is in URL, or if
+   * vtkFullScreenRenderWindow has been created with "defaultViewAPI: 'WebGPU",
+   * otherwise vtkOpenGLRenderWindow is returned.
+   */
+  getApiSpecificRenderWindow(): any; // vtkOpenGLRenderWindow || vtkWebGPURenderWindow
 
-	/**
-	 * Get container element
-	 */
-	getContainer(): HTMLElement;
+  /**
+   * Get container element
+   */
+  getContainer(): HTMLElement;
 
-	/**
-	 * Get control container element
-	 */
-	getControlContainer(): HTMLElement;
+  /**
+   * Get control container element
+   */
+  getControlContainer(): HTMLElement;
 
-	/**
-	 * Get interactor object
-	 */
-	getInteractor(): vtkRenderWindowInteractor;
+  /**
+   * Get interactor object
+   */
+  getInteractor(): vtkRenderWindowInteractor;
 
-	/**
-	 * Get Render windows object
-	 */
-	getRenderWindow(): vtkRenderWindow;
+  /**
+   * Get Render windows object
+   */
+  getRenderWindow(): vtkRenderWindow;
 
-	/**
-	 * Get Renderer object
-	 */
-	getRenderer(): vtkRenderer;
+  /**
+   * Get Renderer object
+   */
+  getRenderer(): vtkRenderer;
 
-	/**
-	 * Get root container element
-	 */
-	getRootContainer(): HTMLElement;
+  /**
+   * Get root container element
+   */
+  getRootContainer(): HTMLElement;
 
-	/**
-	 * Remove controller
-	 */
-	removeController(): void;
+  /**
+   * Remove controller
+   */
+  removeController(): void;
 
-	/**
-	 * Remove representation
-	 * @param representation 
-	 */
-	removeRepresentation(representation : any): void;
+  /**
+   * Remove representation
+   * @param representation
+   */
+  removeRepresentation(representation: any): void;
 
-	/**
-	 * Handle window resize
-	 */
-	resize(): void;
+  /**
+   * Handle window resize
+   */
+  resize(): void;
 
-	/**
-	 * Set background color
-	 * @param {RGBColor | RGBAColor} background The background color.
-	 */
-	setBackground(background: RGBColor | RGBAColor): boolean;
+  /**
+   * Set background color
+   * @param {RGBColor | RGBAColor} background The background color.
+   */
+  setBackground(background: RGBColor | RGBAColor): boolean;
 
-	/**
-	 * Hide or show controller
-	 * @param {Boolean} visible 
-	 */
-	setControllerVisibility(visible : boolean): void;
+  /**
+   * Hide or show controller
+   * @param {Boolean} visible
+   */
+  setControllerVisibility(visible: boolean): void;
 
-	/**
-	 * 
-	 * @param cb 
-	 */
-	setResizeCallback(cb : any): void;
+  /**
+   *
+   * @param cb
+   */
+  setResizeCallback(cb: any): void;
 
-	/**
-	 * Toggle controller visibility
-	 */
-	toggleControllerVisibility(): void;
+  /**
+   * Toggle controller visibility
+   */
+  toggleControllerVisibility(): void;
 }
 
 /**
@@ -126,20 +123,26 @@ export interface vtkFullScreenRenderWindow extends vtkObject {
  * @param model object on which data structure will be bounds (protected)
  * @param {IFullScreenRenderWindowInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IFullScreenRenderWindowInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: IFullScreenRenderWindowInitialValues
+): void;
 
 /**
  * Method used to create a new instance of vtkFullScreenRenderWindow
  * @param {IFullScreenRenderWindowInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: IFullScreenRenderWindowInitialValues): vtkFullScreenRenderWindow;
+export function newInstance(
+  initialValues?: IFullScreenRenderWindowInitialValues
+): vtkFullScreenRenderWindow;
 
 /**
  * vtkFullScreenRenderWindow provides a skeleton for implementing a fullscreen
  * render window.
  */
 export declare const vtkFullScreenRenderWindow: {
-	newInstance: typeof newInstance;
-	extend: typeof extend;
-}
+  newInstance: typeof newInstance;
+  extend: typeof extend;
+};
 export default vtkFullScreenRenderWindow;

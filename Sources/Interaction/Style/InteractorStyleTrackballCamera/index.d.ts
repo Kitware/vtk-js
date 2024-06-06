@@ -109,28 +109,40 @@ export interface vtkInteractorStyleTrackballCamera extends vtkInteractorStyle {
    * @param renderer the renderer
    * @param position the display position
    */
-  handleMouseRotate(renderer: vtkRenderer, position: { x: number, y: number }): void;
+  handleMouseRotate(
+    renderer: vtkRenderer,
+    position: { x: number; y: number }
+  ): void;
 
   /**
    * Handles spin with a mouse.
    * @param renderer the renderer
    * @param position the display position
    */
-  handleMouseSpin(renderer: vtkRenderer, position: { x: number, y: number }): void;
+  handleMouseSpin(
+    renderer: vtkRenderer,
+    position: { x: number; y: number }
+  ): void;
 
   /**
    * Handles pan with a mouse.
    * @param renderer the renderer
    * @param position the display position
    */
-  handleMousePan(renderer: vtkRenderer, position: { x: number, y: number }): void;
+  handleMousePan(
+    renderer: vtkRenderer,
+    position: { x: number; y: number }
+  ): void;
 
   /**
    * Handles dolly with a mouse.
    * @param renderer the renderer
    * @param position the display position
    */
-  handleMouseDolly(renderer: vtkRenderer, position: { x: number, y: number }): void;
+  handleMouseDolly(
+    renderer: vtkRenderer,
+    position: { x: number; y: number }
+  ): void;
 
   /**
    * Handles a wheel event.
@@ -155,7 +167,6 @@ export function newInstance(
   initialValues?: IInteractorStyleTrackballCameraInitialValues
 ): vtkInteractorStyleTrackballCamera;
 
-
 export function extend(
   publicAPI: object,
   model: object,
@@ -165,6 +176,6 @@ export function extend(
 export const vtkInteractorStyleTrackballCamera: {
   newInstance: typeof newInstance;
   extend: typeof extend;
-}
+};
 
 export default vtkInteractorStyleTrackballCamera;

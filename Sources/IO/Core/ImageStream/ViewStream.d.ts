@@ -23,16 +23,16 @@ export interface IViewStreamInitialValues {
 }
 
 interface IMetaData {
-  size: Size,
-  id: string,
-  memory: number,
-  workTime: number,
+  size: Size;
+  id: string;
+  memory: number;
+  workTime: number;
 }
 
 interface IEvent {
-  url: string,
-  fps: number[],
-  metadata: IMetaData,
+  url: string;
+  fps: number[];
+  metadata: IMetaData;
 }
 
 export interface vtkViewStream extends vtkObject {

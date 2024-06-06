@@ -1,91 +1,90 @@
-import { vtkObject } from "../../../interfaces";
-import vtkViewNode from "../ViewNode";
+import { vtkObject } from '../../../interfaces';
+import vtkViewNode from '../ViewNode';
 
 /**
- * 
+ *
  */
 export interface IRenderPassInitialValues {
-	delegates: Array<any>;
-	preDelegateOperations: Array<any>;
-	postDelegateOperations: Array<any>;
+  delegates: Array<any>;
+  preDelegateOperations: Array<any>;
+  postDelegateOperations: Array<any>;
 }
 
 export interface vtkRenderPass extends vtkObject {
+  /**
+   *
+   */
+  getCurrentOperation(): string;
 
-	/**
-	 * 
-	 */
-	getCurrentOperation(): string;
+  /**
+   *
+   */
+  getCurrentParent(): any;
 
-	/**
-	 * 
-	 */
-	getCurrentParent(): any;
+  /**
+   *
+   */
+  getDelegates(): any;
 
-	/**
-	 * 
-	 */
-	getDelegates(): any;
+  /**
+   *
+   */
+  getOperation(): void;
 
-	/**
-	 * 
-	 */
-	getOperation(): void;
+  /**
+   *
+   */
+  getPostDelegateOperations(): any;
 
-	/**
-	 * 
-	 */
-	getPostDelegateOperations(): any;
+  /**
+   *
+   */
+  getPreDelegateOperations(): any;
 
-	/**
-	 * 
-	 */
-	getPreDelegateOperations(): any;
+  /**
+   *
+   */
+  getTraverseOperation(): string;
 
-	/**
-	 * 
-	 */
-	getTraverseOperation(): string;
+  /**
+   *
+   * @param {String} val
+   */
+  setCurrentOperation(val: string): void;
 
-	/**
-	 * 
-	 * @param {String} val 
-	 */
-	setCurrentOperation(val: string): void;
+  /**
+   *
+   * @param currentParent
+   */
+  setCurrentParent(currentParent: any): boolean;
 
-	/**
-	 * 
-	 * @param currentParent 
-	 */
-	setCurrentParent(currentParent: any): boolean;
+  /**
+   *
+   * @param delegates
+   */
+  setDelegates(delegates: any): boolean;
 
-	/**
-	 * 
-	 * @param delegates 
-	 */
-	setDelegates(delegates: any): boolean;
+  /**
+   *
+   * @param postDelegateOperations
+   */
+  setPostDelegateOperations(postDelegateOperations: any): boolean;
 
-	/**
-	 * 
-	 * @param postDelegateOperations 
-	 */
-	setPostDelegateOperations(postDelegateOperations: any): boolean;
+  /**
+   *
+   * @param preDelegateOperations
+   */
+  setPreDelegateOperations(preDelegateOperations: any): boolean;
 
-	/**
-	 * 
-	 * @param preDelegateOperations 
-	 */
-	setPreDelegateOperations(preDelegateOperations: any): boolean;
-
-	/**
-	 * by default this class will traverse all of its
-	 * preDelegateOperations, then call its delegate render passes
-	 * the traverse all of its postDelegateOperations
-	 * any of those three arrays can be empty
-	 * @param viewNode 
-	 * @param parent 
-	 */
-	traverse(viewNode: vtkViewNode, parent: any): void;
+  /**
+   * by default this class will traverse all of its
+   * preDelegateOperations, then call its delegate render passes
+   * the traverse all of its postDelegateOperations
+   * any of those three arrays can be empty
+   * @param viewNode
+   * @param parent
+   */
+  traverse(viewNode: vtkViewNode, parent: any): void;
 }
 
 /**
@@ -95,19 +94,25 @@ export interface vtkRenderPass extends vtkObject {
  * @param model object on which data structure will be bounds (protected)
  * @param {IRenderPassInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IRenderPassInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: IRenderPassInitialValues
+): void;
 
 /**
  * Method used to create a new instance of vtkRenderPass.
  * @param {IRenderPassInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: IRenderPassInitialValues): vtkRenderPass;
+export function newInstance(
+  initialValues?: IRenderPassInitialValues
+): vtkRenderPass;
 
 /**
  * vtkRenderPass is a deferred class with a simple deferred method Render.
  */
 export declare const vtkRenderPass: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+  newInstance: typeof newInstance;
+  extend: typeof extend;
 };
 export default vtkRenderPass;

@@ -17,8 +17,8 @@ export function toHalf(input: number): number;
 export function fromHalf(input: number): number;
 
 export declare const HalfFloat: {
-	toHalf: typeof toHalf;
-	fromHalf: typeof fromHalf;
-}
+  toHalf: typeof toHalf;
+  fromHalf: typeof fromHalf;
+};
 
 export default HalfFloat;

@@ -1,152 +1,163 @@
-import { vtkAlgorithm, vtkObject, vtkSubscription } from "../../../interfaces";
-import HtmlDataAccessHelper from "../../Core/DataAccessHelper/HtmlDataAccessHelper";
-import HttpDataAccessHelper from "../../Core/DataAccessHelper/HttpDataAccessHelper";
-import JSZipDataAccessHelper from "../../Core/DataAccessHelper/JSZipDataAccessHelper";
-import LiteHttpDataAccessHelper from "../../Core/DataAccessHelper/LiteHttpDataAccessHelper";
-
+import { vtkAlgorithm, vtkObject, vtkSubscription } from '../../../interfaces';
+import HtmlDataAccessHelper from '../../Core/DataAccessHelper/HtmlDataAccessHelper';
+import HttpDataAccessHelper from '../../Core/DataAccessHelper/HttpDataAccessHelper';
+import JSZipDataAccessHelper from '../../Core/DataAccessHelper/JSZipDataAccessHelper';
+import LiteHttpDataAccessHelper from '../../Core/DataAccessHelper/LiteHttpDataAccessHelper';
 
 interface IElevationReaderOptions {
-	binary?: boolean;
-	compression?: string;
-	progressCallback?: any;
+  binary?: boolean;
+  compression?: string;
+  progressCallback?: any;
 }
 
 /**
- * 
+ *
  */
 export interface IElevationReaderInitialValues {
-	origin?: number[];
-	xSpacing?: number;
-	ySpacing?: number;
-	zScaling?: number;
-	xDirection?: number;
-	yDirection?: number;
-	requestCount?: number;
+  origin?: number[];
+  xSpacing?: number;
+  ySpacing?: number;
+  zScaling?: number;
+  xDirection?: number;
+  yDirection?: number;
+  requestCount?: number;
 }
 
-type vtkElevationReaderBase = vtkObject & Omit<vtkAlgorithm,
-	| 'getInputData'
-	| 'setInputData'
-	| 'setInputConnection'
-	| 'getInputConnection'
-	| 'addInputConnection'
-	| 'addInputData'>;
+type vtkElevationReaderBase = vtkObject &
+  Omit<
+    vtkAlgorithm,
+    | 'getInputData'
+    | 'setInputData'
+    | 'setInputConnection'
+    | 'getInputConnection'
+    | 'addInputConnection'
+    | 'addInputData'
+  >;
 
 export interface vtkElevationReader extends vtkElevationReaderBase {
+  /**
+   *
+   */
+  getDataAccessHelper():
+    | HtmlDataAccessHelper
+    | HttpDataAccessHelper
+    | JSZipDataAccessHelper
+    | LiteHttpDataAccessHelper;
 
-	/**
-	 * 
-	 */
-	getDataAccessHelper(): HtmlDataAccessHelper | HttpDataAccessHelper | JSZipDataAccessHelper | LiteHttpDataAccessHelper;
+  /**
+   * Get the url of the object to load.
+   */
+  getUrl(): string;
 
-	/**
-	 * Get the url of the object to load.
-	 */
-	getUrl(): string;
+  /**
+   *
+   */
+  getXDirection(): number;
 
-	/**
-	 * 
-	 */
-	getXDirection(): number;
+  /**
+   *
+   */
+  getXSpacing(): number;
 
-	/**
-	 * 
-	 */
-	getXSpacing(): number;
+  /**
+   *
+   */
+  getYDirection(): number;
 
-	/**
-	 * 
-	 */
-	getYDirection(): number;
+  /**
+   *
+   */
+  getYSpacing(): number;
 
-	/**
-	 * 
-	 */
-	getYSpacing(): number;
+  /**
+   *
+   */
+  getZScaling(): number;
 
-	/**
-	 * 
-	 */
-	getZScaling(): number;
+  /**
+   *
+   * @param {Boolean} busy
+   */
+  invokeBusy(busy: boolean): void;
 
-	/**
-	 * 
-	 * @param {Boolean} busy 
-	 */
-	invokeBusy(busy: boolean): void;
+  /**
+   *
+   */
+  isBusy(): number;
 
-	/**
-	 * 
-	 */
-	isBusy(): number;
+  /**
+   * Load the object data.
+   * @param {IElevationReaderOptions} [options]
+   */
+  loadData(options?: IElevationReaderOptions): Promise<any>;
 
-	/**
-	 * Load the object data.
-	 * @param {IElevationReaderOptions} [options] 
-	 */
-	loadData(options?: IElevationReaderOptions): Promise<any>;
+  /**
+   *
+   * @param callback
+   */
+  onBusy(callback: (busy: boolean) => any): vtkSubscription;
 
-	/**
-	 * 
-	 * @param callback 
-	 */
-	onBusy(callback: (busy: boolean) => any): vtkSubscription;
+  /**
+   * Parse data as text.
+   * @param {String} content The content to parse.
+   */
+  parseAsText(content: string): void;
 
-	/**
-	 * Parse data as text.
-	 * @param {String} content The content to parse. 
-	 */
-	parseAsText(content: string): void;
+  /**
+   *
+   * @param inData
+   * @param outData
+   */
+  requestData(inData: any, outData: any): void;
 
-	/**
-	 *
-	 * @param inData 
-	 * @param outData 
-	 */
-	requestData(inData: any, outData: any): void;
+  /**
+   *
+   * @param dataAccessHelper
+   */
+  setDataAccessHelper(
+    dataAccessHelper:
+      | HtmlDataAccessHelper
+      | HttpDataAccessHelper
+      | JSZipDataAccessHelper
+      | LiteHttpDataAccessHelper
+  ): boolean;
 
-	/**
-	 * 
-	 * @param dataAccessHelper 
-	 */
-	setDataAccessHelper(dataAccessHelper: HtmlDataAccessHelper | HttpDataAccessHelper | JSZipDataAccessHelper | LiteHttpDataAccessHelper): boolean;
+  /**
+   * Set the url of the object to load.
+   * @param {String} url the url of the object to load.
+   * @param {IElevationReaderOptions} [option] The Elevation reader options.
+   */
+  setUrl(url: string, option?: IElevationReaderOptions): Promise<any>;
 
-	/**
-	 * Set the url of the object to load.
-	 * @param {String} url the url of the object to load.
-	 * @param {IElevationReaderOptions} [option] The Elevation reader options.
-	 */
-	setUrl(url: string, option?: IElevationReaderOptions): Promise<any>;
+  /**
+   *
+   * @param {Number} xDirection
+   */
+  setXDirection(xDirection: number): boolean;
 
-	/**
-	 * 
-	 * @param {Number} xDirection 
-	 */
-	setXDirection(xDirection: number): boolean;
+  /**
+   *
+   * @param {Number} xSpacing
+   */
+  setXSpacing(xSpacing: number): boolean;
 
-	/**
-	 * 
-	 * @param {Number} xSpacing 
-	 */
-	setXSpacing(xSpacing: number): boolean;
+  /**
+   *
+   * @param {Number} yDirection
+   */
+  setYDirection(yDirection: number): boolean;
 
-	/**
-	 * 
-	 * @param {Number} yDirection 
-	 */
-	setYDirection(yDirection: number): boolean;
+  /**
+   *
+   * @param {Number} ySpacing
+   */
+  setYSpacing(ySpacing: number): boolean;
 
-	/**
-	 * 
-	 * @param {Number} ySpacing 
-	 */
-	setYSpacing(ySpacing: number): boolean;
-
-	/**
-	 * 
-	 * @param {Number} zScaling 
-	 */
-	setZScaling(zScaling: number): boolean;
+  /**
+   *
+   * @param {Number} zScaling
+   */
+  setZScaling(zScaling: number): boolean;
 }
 
 /**
@@ -156,14 +167,19 @@ export interface vtkElevationReader extends vtkElevationReaderBase {
  * @param model object on which data structure will be bounds (protected)
  * @param {IElevationReaderInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IElevationReaderInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: IElevationReaderInitialValues
+): void;
 
 /**
  * Method used to create a new instance of vtkElevationReader
  * @param {IElevationReaderInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: IElevationReaderInitialValues): vtkElevationReader;
-
+export function newInstance(
+  initialValues?: IElevationReaderInitialValues
+): vtkElevationReader;
 
 /**
  * The vtkElevationReader aims to read a text file formatted as below and create
@@ -195,7 +211,7 @@ export function newInstance(initialValues?: IElevationReaderInitialValues): vtkE
  * are meant to give you control on that end.
  */
 export declare const vtkElevationReader: {
-	newInstance: typeof newInstance;
-	extend: typeof extend;
-}
+  newInstance: typeof newInstance;
+  extend: typeof extend;
+};
 export default vtkElevationReader;

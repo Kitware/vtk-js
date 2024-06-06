@@ -1,9 +1,9 @@
-import { vtkObject } from "../../../interfaces";
+import { vtkObject } from '../../../interfaces';
 
 export interface vtkWidgetState extends vtkObject {
   /**
    * Set the active flag of the widget state instance
-   * 
+   *
    * @param active The active flag
    */
   setActive(active: boolean): boolean;
@@ -15,7 +15,7 @@ export interface vtkWidgetState extends vtkObject {
 
   /**
    * Bind a state to one or more labels. If no label is provided, the default one will be used.
-   * 
+   *
    * @param {vtkWidgetState} subState The state to bound.
    * @param {String | String[]} [labels] The labels to which the state should be bound.
    */
@@ -23,7 +23,7 @@ export interface vtkWidgetState extends vtkObject {
 
   /**
    * Unbind a specific state from the widget state instance
-   * 
+   *
    * @param {vtkWidgetState} subState The state to be unbound.
    */
   unbindState(subState: vtkWidgetState): void;
@@ -40,21 +40,21 @@ export interface vtkWidgetState extends vtkObject {
 
   /**
    * Deactivate thie widget state instance and all its sub states, except the `excludingState` argument.
-   * 
+   *
    * @param {vtkWidgetState} [excludingState] A sub-state instance that should not be deactivated.
    */
   deactivate(excludingState?: vtkWidgetState): void;
 
   /**
    * Activate only the passed in sub state. Every other sub states will be deactivated.
-   * 
+   *
    * @param {vtkWidgetState} subState The sub-state that should be activated.
    */
   activateOnly(subState: vtkWidgetState): void;
 
   /**
    * Get every states that are associated with the given label.
-   * 
+   *
    * @param {String} label The label from which to retrieve the states.
    */
   getStatesWithLabel(label: string): vtkWidgetState[];
@@ -72,7 +72,11 @@ export interface vtkWidgetState extends vtkObject {
  * @param model object on which data structure will be bounds (protected)
  * @param {object} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: object): vtkWidgetState;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: object
+): vtkWidgetState;
 
 export declare const vtkWidgetState: {
   extend: typeof extend;

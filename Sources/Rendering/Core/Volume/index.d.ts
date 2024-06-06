@@ -1,84 +1,85 @@
-import { Bounds, Nullable } from "../../../types";
-import vtkProp3D, { IProp3DInitialValues } from "../Prop3D";
-import vtkVolumeMapper from "../VolumeMapper";
-import vtkVolumeProperty, { IVolumePropertyInitialValues } from "../VolumeProperty";
+import { Bounds, Nullable } from '../../../types';
+import vtkProp3D, { IProp3DInitialValues } from '../Prop3D';
+import vtkVolumeMapper from '../VolumeMapper';
+import vtkVolumeProperty, {
+  IVolumePropertyInitialValues,
+} from '../VolumeProperty';
 
 /**
- * 
+ *
  */
 export interface IVolumeInitialValues extends IProp3DInitialValues {
-	mapper?: vtkVolumeMapper;
-	property?: vtkVolumeProperty;
-	bounds?: Bounds;
+  mapper?: vtkVolumeMapper;
+  property?: vtkVolumeProperty;
+  bounds?: Bounds;
 }
 
 /**
- * 
+ *
  */
 export interface vtkVolume extends vtkProp3D {
+  /**
+   * Get the volume mapper
+   */
+  getMapper(): Nullable<vtkVolumeMapper>;
 
-	/**
-	 * Get the volume mapper
-	 */
-	getMapper(): Nullable<vtkVolumeMapper>;
+  /**
+   * For some exporters and other other operations we must be able to collect
+   * all the actors or volumes.
+   */
+  getVolumes(): vtkVolume[];
 
-	/**
-	 * For some exporters and other other operations we must be able to collect
-	 * all the actors or volumes.
-	 */
-	getVolumes(): vtkVolume[];
+  /**
+   * Get the volume property
+   */
+  getProperty(): vtkVolumeProperty;
 
-	/**
-	 * Get the volume property
-	 */
-	getProperty(): vtkVolumeProperty;
+  /**
+   * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+   * @return {Bounds} The bounds for the mapper.
+   */
+  getBounds(): Bounds;
 
-	/**
-	 * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-	 * @return {Bounds} The bounds for the mapper.
-	 */
-	getBounds(): Bounds;
+  /**
+   * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
+   */
+  getBoundsByReference(): Bounds;
 
-	/**
-	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
-	 */
-	getBoundsByReference(): Bounds;
+  /**
+   * Get the `Modified Time` which is a monotonic increasing integer
+   * global for all vtkObjects.
+   *
+   * This allow to solve a question such as:
+   *  - Is that object created/modified after another one?
+   *  - Do I need to re-execute this filter, or not? ...
+   *
+   * @return {Number} the global modified time.
+   */
+  getMTime(): number;
 
-	/**
-	 * Get the `Modified Time` which is a monotonic increasing integer
-	 * global for all vtkObjects.
-	 *
-	 * This allow to solve a question such as:
-	 *  - Is that object created/modified after another one?
-	 *  - Do I need to re-execute this filter, or not? ...
-	 *
-	 * @return {Number} the global modified time.
-	 */
-	getMTime(): number;
+  /**
+   * Get the mtime of anything that would cause the rendered image to appear
+   * differently
+   */
+  getRedrawMTime(): number;
 
-	/**
-	 * Get the mtime of anything that would cause the rendered image to appear
-	 * differently
-	 */
-	getRedrawMTime(): number;
+  /**
+   * Create a new property suitable for use with this type of Actor.
+   * @param {IVolumePropertyInitialValues} [initialValues] (default: {})
+   */
+  makeProperty(initialValues?: IVolumePropertyInitialValues): vtkVolumeProperty;
 
-	/**
-	 * Create a new property suitable for use with this type of Actor.
-	 * @param {IVolumePropertyInitialValues} [initialValues] (default: {})
-	 */
-	makeProperty(initialValues?: IVolumePropertyInitialValues): vtkVolumeProperty;
+  /**
+   * Set the volume mapper
+   * @param {vtkVolumeMapper} mapper
+   */
+  setMapper(mapper: vtkVolumeMapper): boolean;
 
-	/**
-	 * Set the volume mapper
-	 * @param {vtkVolumeMapper} mapper 
-	 */
-	setMapper(mapper: vtkVolumeMapper): boolean;
-
-	/**
-	 * Set the volume property
-	 * @param {vtkVolumeProperty} property 
-	 */
-	setProperty(property: vtkVolumeProperty): boolean;
+  /**
+   * Set the volume property
+   * @param {vtkVolumeProperty} property
+   */
+  setProperty(property: vtkVolumeProperty): boolean;
 }
 
 /**
@@ -88,10 +89,14 @@ export interface vtkVolume extends vtkProp3D {
  * @param model object on which data structure will be bounds (protected)
  * @param {IVolumeInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IVolumeInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: IVolumeInitialValues
+): void;
 
 /**
- * Method use to create a new instance of vtkVolume 
+ * Method use to create a new instance of vtkVolume
  */
 export function newInstance(initialValues?: IVolumeInitialValues): vtkVolume;
 
@@ -172,7 +177,7 @@ export function newInstance(initialValues?: IVolumeInitialValues): vtkVolume;
  * @see [vtkVolumeProperty](./Rendering_Core_VolumeProperty.html) 
  */
 export declare const vtkVolume: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+  newInstance: typeof newInstance;
+  extend: typeof extend;
 };
 export default vtkVolume;

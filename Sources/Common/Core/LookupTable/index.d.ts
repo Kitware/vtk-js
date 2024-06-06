@@ -1,261 +1,259 @@
-import { Range, RGBAColor } from "../../../types";
-import vtkScalarsToColors from "../ScalarsToColors";
+import { Range, RGBAColor } from '../../../types';
+import vtkScalarsToColors from '../ScalarsToColors';
 
 /**
- * 
+ *
  */
-export interface ILookupTableInitialValues {
-}
+export interface ILookupTableInitialValues {}
 
 export interface vtkLookupTable extends vtkScalarsToColors {
+  /**
+   *
+   */
+  buildSpecialColors(): void;
 
-	/**
-	 * 
-	 */
-	buildSpecialColors(): void;
+  /**
+   *
+   */
+  forceBuild(): void;
 
-	/**
-	 * 
-	 */
-	forceBuild(): void;
+  /**
+   *
+   */
+  getAboveRangeColor(): RGBAColor;
 
-	/**
-	 * 
-	 */
-	getAboveRangeColor(): RGBAColor;
+  /**
+   *
+   */
+  getAboveRangeColorByReference(): RGBAColor;
 
-	/**
-	 * 
-	 */
-	getAboveRangeColorByReference(): RGBAColor;
+  /**
+   *
+   */
+  getAlphaRange(): Range;
 
-	/**
-	 * 
-	 */
-	getAlphaRange(): Range;
+  /**
+   *
+   */
+  getAlphaRangeByReference(): Range;
 
-	/**
-	 * 
-	 */
-	getAlphaRangeByReference(): Range;
+  /**
+   *
+   */
+  getBelowRangeColor(): RGBAColor;
 
-	/**
-	 * 
-	 */
-	getBelowRangeColor(): RGBAColor;
+  /**
+   *
+   */
+  getBelowRangeColorByReference(): RGBAColor;
 
-	/**
-	 * 
-	 */
-	getBelowRangeColorByReference(): RGBAColor;
+  /**
+   *
+   */
+  getHueRange(): Range;
 
-	/**
-	 * 
-	 */
-	getHueRange(): Range;
+  /**
+   *
+   */
+  getHueRangeByReference(): Range;
 
-	/**
-	 * 
-	 */
-	getHueRangeByReference(): Range;
+  /**
+   *
+   */
+  getNanColor(): RGBAColor;
 
-	/**
-	 * 
-	 */
-	getNanColor(): RGBAColor;
+  /**
+   *
+   */
+  getNanColorByReference(): RGBAColor;
 
-	/**
-	 * 
-	 */
-	getNanColorByReference(): RGBAColor;
-	
-	/**
-	 * 
-	 */
-	getNumberOfAnnotatedValues(): number;
-	
-	/**
-	 * 
-	 */
-	getNumberOfAvailableColors(): number;
-	
-	/**
-	 * 
-	 */
-	getNumberOfColors(): number;
-	
-	/**
-	 * 
-	 */
-	getRange(): Range;
-	
-	/**
-	 * 
-	 */
-	getSaturationRange(): Range;
-	
-	/**
-	 * 
-	 */
-	getSaturationRangeByReference(): Range;
-	
-	/**
-	 * 
-	 */
-	getUseAboveRangeColor(): boolean;
-	
-	/**
-	 * 
-	 */
-	getUseBelowRangeColor(): boolean;
-	
-	/**
-	 * 
-	 */
-	getValueRange(): Range;
-	
-	/**
-	 * 
-	 */
-	getValueRangeByReference(): Range;
+  /**
+   *
+   */
+  getNumberOfAnnotatedValues(): number;
 
-	/**
-	 * 
-	 * @param v 
-	 * @param table 
-	 * @param p 
-	 */
-	indexedLookupFunction(v: number, table: any, p: object): RGBAColor;
+  /**
+   *
+   */
+  getNumberOfAvailableColors(): number;
 
-	/**
-	 * 
-	 * @param v 
-	 * @param p 
-	 */
-	linearIndexLookup(v: number, p: object): number;
+  /**
+   *
+   */
+  getNumberOfColors(): number;
 
-	/**
-	 * 
-	 * @param v 
-	 * @param table 
-	 * @param p 
-	 */
-	linearLookup(v: number, table: any, p: object): RGBAColor;
+  /**
+   *
+   */
+  getRange(): Range;
 
-	/**
-	 * 
-	 * @param range 
-	 * @param p 
-	 */
-	lookupShiftAndScale(range: Range, p: object): boolean
+  /**
+   *
+   */
+  getSaturationRange(): Range;
 
-	/**
-	 * 
-	 * @param aboveRangeColor 
-	 */
-	setAboveRangeColor(aboveRangeColor: RGBAColor): boolean;
+  /**
+   *
+   */
+  getSaturationRangeByReference(): Range;
 
-	/**
-	 * 
-	 * @param aboveRangeColor 
-	 */
-	setAboveRangeColorFrom(aboveRangeColor: RGBAColor): boolean;
+  /**
+   *
+   */
+  getUseAboveRangeColor(): boolean;
 
-	/**
-	 * 
-	 * @param alphaRange 
-	 */
-	setAlphaRange(alphaRange: Range): boolean;
+  /**
+   *
+   */
+  getUseBelowRangeColor(): boolean;
 
-	/**
-	 * 
-	 * @param alphaRange 
-	 */
-	setAlphaRangeFrom(alphaRange: Range): boolean;
+  /**
+   *
+   */
+  getValueRange(): Range;
 
-	/**
-	 * 
-	 * @param belowRangeColor 
-	 */
-	setBelowRangeColor(belowRangeColor: RGBAColor): boolean;
+  /**
+   *
+   */
+  getValueRangeByReference(): Range;
 
-	/**
-	 * 
-	 * @param belowRangeColor 
-	 */
-	setBelowRangeColorFrom(belowRangeColor: RGBAColor): boolean;
+  /**
+   *
+   * @param v
+   * @param table
+   * @param p
+   */
+  indexedLookupFunction(v: number, table: any, p: object): RGBAColor;
 
-	/**
-	 * 
-	 * @param hueRange 
-	 */
-	setHueRange(hueRange: Range): boolean;
+  /**
+   *
+   * @param v
+   * @param p
+   */
+  linearIndexLookup(v: number, p: object): number;
 
-	/**
-	 * 
-	 * @param hueRange 
-	 */
-	setHueRangeFrom(hueRange: Range): boolean;
+  /**
+   *
+   * @param v
+   * @param table
+   * @param p
+   */
+  linearLookup(v: number, table: any, p: object): RGBAColor;
 
-	/**
-	 * 
-	 * @param nanColor 
-	 */
-	setNanColor(nanColor: RGBAColor): boolean;
+  /**
+   *
+   * @param range
+   * @param p
+   */
+  lookupShiftAndScale(range: Range, p: object): boolean;
 
-	/**
-	 * 
-	 * @param nanColor 
-	 */
-	setNanColorFrom(nanColor: RGBAColor): boolean;
+  /**
+   *
+   * @param aboveRangeColor
+   */
+  setAboveRangeColor(aboveRangeColor: RGBAColor): boolean;
 
-	/**
-	 * 
-	 * @param numberOfColors 
-	 */
-	setNumberOfColors(numberOfColors: number): boolean;
+  /**
+   *
+   * @param aboveRangeColor
+   */
+  setAboveRangeColorFrom(aboveRangeColor: RGBAColor): boolean;
 
-	/**
-	 * 
-	 * @param saturationRange 
-	 */
-	setSaturationRange(saturationRange: Range): boolean;
+  /**
+   *
+   * @param alphaRange
+   */
+  setAlphaRange(alphaRange: Range): boolean;
 
-	/**
-	 * 
-	 * @param saturationRange 
-	 */
-	setSaturationRangeFrom(saturationRange: Range): boolean;
+  /**
+   *
+   * @param alphaRange
+   */
+  setAlphaRangeFrom(alphaRange: Range): boolean;
 
-	/**
-	 * 
-	 * @param table 
-	 */
-	setTable(table: any): boolean;
+  /**
+   *
+   * @param belowRangeColor
+   */
+  setBelowRangeColor(belowRangeColor: RGBAColor): boolean;
 
-	/**
-	 * 
-	 * @param useAboveRangeColor 
-	 */
-	setUseAboveRangeColor(useAboveRangeColor: boolean): boolean;
+  /**
+   *
+   * @param belowRangeColor
+   */
+  setBelowRangeColorFrom(belowRangeColor: RGBAColor): boolean;
 
-	/**
-	 * 
-	 * @param useBelowRangeColor 
-	 */
-	setUseBelowRangeColor(useBelowRangeColor: boolean): boolean;
+  /**
+   *
+   * @param hueRange
+   */
+  setHueRange(hueRange: Range): boolean;
 
-	/**
-	 * 
-	 * @param valueRange 
-	 */
-	setValueRange(valueRange: Range): boolean;
+  /**
+   *
+   * @param hueRange
+   */
+  setHueRangeFrom(hueRange: Range): boolean;
 
-	/**
-	 * 
-	 * @param valueRange 
-	 */
-	setValueRangeFrom(valueRange: Range): boolean;
+  /**
+   *
+   * @param nanColor
+   */
+  setNanColor(nanColor: RGBAColor): boolean;
+
+  /**
+   *
+   * @param nanColor
+   */
+  setNanColorFrom(nanColor: RGBAColor): boolean;
+
+  /**
+   *
+   * @param numberOfColors
+   */
+  setNumberOfColors(numberOfColors: number): boolean;
+
+  /**
+   *
+   * @param saturationRange
+   */
+  setSaturationRange(saturationRange: Range): boolean;
+
+  /**
+   *
+   * @param saturationRange
+   */
+  setSaturationRangeFrom(saturationRange: Range): boolean;
+
+  /**
+   *
+   * @param table
+   */
+  setTable(table: any): boolean;
+
+  /**
+   *
+   * @param useAboveRangeColor
+   */
+  setUseAboveRangeColor(useAboveRangeColor: boolean): boolean;
+
+  /**
+   *
+   * @param useBelowRangeColor
+   */
+  setUseBelowRangeColor(useBelowRangeColor: boolean): boolean;
+
+  /**
+   *
+   * @param valueRange
+   */
+  setValueRange(valueRange: Range): boolean;
+
+  /**
+   *
+   * @param valueRange
+   */
+  setValueRangeFrom(valueRange: Range): boolean;
 }
 
 /**
@@ -265,20 +263,25 @@ export interface vtkLookupTable extends vtkScalarsToColors {
  * @param model object on which data structure will be bounds (protected)
  * @param {ILookupTableInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: ILookupTableInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: ILookupTableInitialValues
+): void;
 
 /**
  * Method used to create a new instance of vtkLookupTable
  * @param {ILookupTableInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: ILookupTableInitialValues): vtkLookupTable;
-
+export function newInstance(
+  initialValues?: ILookupTableInitialValues
+): vtkLookupTable;
 
 /**
  * vtkLookupTable is a 2D widget for manipulating a marker prop
  */
 export declare const vtkLookupTable: {
-	newInstance: typeof newInstance;
-	extend: typeof extend;
-}
+  newInstance: typeof newInstance;
+  extend: typeof extend;
+};
 export default vtkLookupTable;

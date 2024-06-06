@@ -5,11 +5,11 @@ export interface ISeedWidgetHandleState {
   getOrigin(): Vector3;
   setOrigin(arg: Vector3): void;
   getColor3(): string;
-  setColor3(arg: string):void;
+  setColor3(arg: string): void;
   getScale1(): number;
   setScale1(arg: number): void;
   getVisible(): boolean;
-  setVisible(arg: boolean):void
+  setVisible(arg: boolean): void;
   setShape(arg: string): void;
   getShape(): string;
 }

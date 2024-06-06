@@ -50,7 +50,6 @@ export interface vtkOpenGLBufferObject extends vtkObject {
    * @returns {string} The error message.
    */
   getError(): string;
-
 }
 
 /**
@@ -70,7 +69,9 @@ export function extend(
  * @param initialValues The initial values to use.
  * @returns {vtkOpenGLBufferObject} The new instance.
  */
-export function newInstance(initialValues?: IBufferObjectInitialValues): vtkOpenGLBufferObject;
+export function newInstance(
+  initialValues?: IBufferObjectInitialValues
+): vtkOpenGLBufferObject;
 
 /**
  * Object containing the newInstance and extend functions for vtkOpenGLBufferObject.
