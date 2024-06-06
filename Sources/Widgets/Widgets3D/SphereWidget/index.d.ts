@@ -5,11 +5,11 @@ export interface ISphereWidgetHandleState {
   getOrigin(): Vector3;
   setOrigin(arg: Vector3): void;
   getColor(): string;
-  setColor(arg: string):void;
+  setColor(arg: string): void;
   getScale1(): number;
   setScale1(arg: number): void;
   getVisible(): boolean;
-  setVisible(arg: boolean):void
+  setVisible(arg: boolean): void;
   setShape(arg: string): void;
   getShape(): string;
 }
@@ -41,7 +41,9 @@ export interface vtkSphereWidget {
 
 export interface ISphereWidgetInitialValues {}
 
-export function newInstance(props?: ISphereWidgetInitialValues): vtkSphereWidget;
+export function newInstance(
+  props?: ISphereWidgetInitialValues
+): vtkSphereWidget;
 
 export const vtkSphereWidget: {
   newInstance: typeof newInstance;

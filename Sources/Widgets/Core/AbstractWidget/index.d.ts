@@ -1,11 +1,11 @@
 import vtkInteractorObserver from '../../../Rendering/Core/InteractorObserver';
 import vtkProp from '../../../Rendering/Core/Prop';
-import vtkRenderer from "../../../Rendering/Core/Renderer";
+import vtkRenderer from '../../../Rendering/Core/Renderer';
 import vtkWidgetManager from '../WidgetManager';
 import vtkWidgetRepresentation from '../../Representations/WidgetRepresentation';
 import vtkWidgetState from '../WidgetState';
-import { Bounds } from "../../../types";
-import { RenderingTypes } from "../WidgetManager/Constants";
+import { Bounds } from '../../../types';
+import { RenderingTypes } from '../WidgetManager/Constants';
 import { EventHandler, vtkSubscription } from '../../../interfaces';
 
 export interface vtkAbstractWidget extends vtkProp, vtkInteractorObserver {
@@ -22,12 +22,12 @@ export interface vtkAbstractWidget extends vtkProp, vtkInteractorObserver {
   /**
    * Activate a handle, identified by both a state and a representation.
    * Will also invoke appropriate events.
-   * 
+   *
    * @param locator An object describing the handle to activate.
    */
-  activateHandle(locator: { 
-    selectedState: vtkWidgetState; 
-    representation: vtkWidgetRepresentation; 
+  activateHandle(locator: {
+    selectedState: vtkWidgetState;
+    representation: vtkWidgetRepresentation;
   }): void;
 
   /**
@@ -37,7 +37,7 @@ export interface vtkAbstractWidget extends vtkProp, vtkInteractorObserver {
 
   /**
    * Returns true if the widget instance holds the given actor, false otherwise.
-   * 
+   *
    * @param {vtkProp} actor
    */
   hasActor(actor: vtkProp): boolean;
@@ -61,7 +61,7 @@ export interface vtkAbstractWidget extends vtkProp, vtkInteractorObserver {
 
   /**
    * Place a widget at the given bounds.
-   * 
+   *
    * @param {Bounds} bounds
    */
   placeWidget(bounds: Bounds): void;
@@ -73,22 +73,22 @@ export interface vtkAbstractWidget extends vtkProp, vtkInteractorObserver {
 
   /**
    * Set the place factor.
-   * 
+   *
    * @param {Number} factor The place factor.
    */
   setPlaceFactor(factor: number): void;
 
   /**
    * Get the `vtkWidgetRepresentation` instance associated with the given `vtkActor` instance.
-   * 
-   * @param {vtkProp} actor 
+   *
+   * @param {vtkProp} actor
    */
   getRepresentationFromActor(actor: vtkProp): vtkWidgetRepresentation;
 
   /**
    * Update all the widget representations for render.
-   * 
-   * @param {RenderingTypes} renderingType Default value if `RenderingTypes.FRONT_BUFFER` 
+   *
+   * @param {RenderingTypes} renderingType Default value if `RenderingTypes.FRONT_BUFFER`
    */
   updateRepresentationForRender(renderingType: RenderingTypes): void;
 
@@ -97,11 +97,10 @@ export interface vtkAbstractWidget extends vtkProp, vtkInteractorObserver {
    */
   getViewWidgets(): vtkAbstractWidget[];
 
-
   /**
    * Set the context visibility.
-   * 
-   * @param {Boolean} visible 
+   *
+   * @param {Boolean} visible
    */
   setContextVisibility(visible: boolean): void;
 
@@ -112,8 +111,8 @@ export interface vtkAbstractWidget extends vtkProp, vtkInteractorObserver {
 
   /**
    * Defines if the handles should be visible or not.
-   * 
-   * @param {Boolean} visible 
+   *
+   * @param {Boolean} visible
    */
   setHandleVisibility(visible: boolean): void;
 
@@ -124,7 +123,7 @@ export interface vtkAbstractWidget extends vtkProp, vtkInteractorObserver {
 
   /**
    * Set the widget manager associated with the widget instance.
-   * 
+   *
    * @param {vtkWidgetManager} wm The widget manager instance
    */
   setWidgetManager(wm: vtkWidgetManager): void;
@@ -146,15 +145,18 @@ export interface vtkAbstractWidget extends vtkProp, vtkInteractorObserver {
 
   /**
    * Register a callback to be invoked when the `ActivateHandle` event occurs.
-   * 
+   *
    * @param {EventHandler} cb The callback to register
    * @param {Number} [priority] Priority of this subscription
    */
-  onActivateHandle(cb: EventHandler, priority?: number): Readonly<vtkSubscription>;
+  onActivateHandle(
+    cb: EventHandler,
+    priority?: number
+  ): Readonly<vtkSubscription>;
 
   /**
    * Invoke the `ActivateHandle` event with the given payload.
-   * 
+   *
    * @param args The event payload
    */
   invokeActivateHandle(...args: unknown[]): void;
@@ -167,11 +169,15 @@ export interface vtkAbstractWidget extends vtkProp, vtkInteractorObserver {
  * @param model object on which data structure will be bounds (protected)
  * @param initialValues (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues? : object): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: object
+): void;
 
 /**
  * Method used to create a new instance of vtkAbstractWidget
- * 
+ *
  * @param initialValues For pre-setting some of its content
  */
 export function newInstance(initialValues?: object): vtkAbstractWidget;
@@ -180,8 +186,8 @@ export function newInstance(initialValues?: object): vtkAbstractWidget;
  * vtkAbstractWidget is an abstract class to construct a widget.
  */
 export declare const vtkAbstractWidget: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+  newInstance: typeof newInstance;
+  extend: typeof extend;
 };
 
 export default vtkAbstractWidget;

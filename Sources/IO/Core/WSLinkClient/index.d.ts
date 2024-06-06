@@ -17,7 +17,6 @@ import vtkImageStream from '../ImageStream';
 export function setSmartConnectClass(smartConnectClass: object): void;
 
 export interface vtkWSLinkClient extends vtkObject {
-
   /**
    * Virtually increase work load to maybe keep isBusy() on
    * while executing a synchronous task.
@@ -47,7 +46,10 @@ export interface vtkWSLinkClient extends vtkObject {
    * @param {Object} config
    * @param {Function} [configDecorator] (default: null)
    */
-  connect(config: object, configDecorator?: (config: object) => object): Promise<vtkWSLinkClient>;
+  connect(
+    config: object,
+    configDecorator?: (config: object) => object
+  ): Promise<vtkWSLinkClient>;
 
   /**
    * Disconnect from server
@@ -166,7 +168,11 @@ export interface vtkWSLinkClient extends vtkObject {
  * @param model object on which data structure will be bounds (protected)
  * @param {object} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: object): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: object
+): void;
 
 // ----------------------------------------------------------------------------
 
@@ -180,10 +186,10 @@ export function newInstance(initialValues?: object): vtkWSLinkClient;
  * vtkWSLinkClient is a WSLink client for talking to a server over WebSocket
  */
 export declare const vtkWSLinkClient: {
-  newInstance: typeof newInstance,
-  extend: typeof extend,
+  newInstance: typeof newInstance;
+  extend: typeof extend;
   // static
-  setSmartConnectClass: typeof setSmartConnectClass,
+  setSmartConnectClass: typeof setSmartConnectClass;
 };
 
 export default vtkWSLinkClient;

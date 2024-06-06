@@ -1,15 +1,15 @@
-import { vtkObject } from "../../../interfaces";
+import { vtkObject } from '../../../interfaces';
 
 /**
  *
  */
 export interface ILocatorInitialValues {
-	dataSet?: number[];
-	maxLevel?: number;
-	level?: number;
-	automatic?: boolean;
-	tolerance?: number;
-	useExistingSearchStructure?: boolean;
+  dataSet?: number[];
+  maxLevel?: number;
+  level?: number;
+  automatic?: boolean;
+  tolerance?: number;
+  useExistingSearchStructure?: boolean;
 }
 
 export interface vtkLocator extends vtkObject {}
@@ -26,9 +26,9 @@ export interface vtkLocator extends vtkObject {}
  * @param {ILocatorInitialValues} [initialValues] (default: {})
  */
 export function extend(
-	publicAPI: object,
-	model: object,
-	initialValues?: ILocatorInitialValues
+  publicAPI: object,
+  model: object,
+  initialValues?: ILocatorInitialValues
 ): void;
 
 // ----------------------------------------------------------------------------
@@ -37,7 +37,7 @@ export function extend(
  * vtkLocator
  */
 export declare const vtkLocator: {
-	extend: typeof extend;
+  extend: typeof extend;
 };
 
 export default vtkLocator;

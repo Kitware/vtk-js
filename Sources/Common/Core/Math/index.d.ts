@@ -1,4 +1,16 @@
-import { Bounds, Extent, HSVColor, RGBAColor, RGBColor, Matrix, Matrix3x3, Range, Vector2, Vector3, Vector4 } from "../../../types";
+import {
+  Bounds,
+  Extent,
+  HSVColor,
+  RGBAColor,
+  RGBColor,
+  Matrix,
+  Matrix3x3,
+  Range,
+  Vector2,
+  Vector3,
+  Vector4,
+} from '../../../types';
 
 /**
  *
@@ -13,7 +25,12 @@ export function createArray(size?: number): number[];
  * @param {Number} row1 index of first row to swap with the other.
  * @param {Number} row2 index of second row to swap with the other.
  */
-export function swapRowsMatrix_nxn(matrix: number[], n: number, row1: number, row2: number): void;
+export function swapRowsMatrix_nxn(
+  matrix: number[],
+  n: number,
+  row1: number,
+  row2: number
+): void;
 
 /**
  * Given two columns indices, swap the two columns of a nxn matrix
@@ -22,7 +39,12 @@ export function swapRowsMatrix_nxn(matrix: number[], n: number, row1: number, ro
  * @param {Number} column1 index of first col to swap with the other.
  * @param {Number} column2 index of second col to swap with the other.
  */
- export function swapColumnsMatrix_nxn(matrix: number[], n: number, column1: number, column2: number): void;
+export function swapColumnsMatrix_nxn(
+  matrix: number[],
+  n: number,
+  column1: number,
+  column2: number
+): void;
 
 /**
  * Get the number π.
@@ -97,7 +119,11 @@ export function arrayMax(arr: number[], offset: number, stride: number): number;
  * @param {Number} offset The offset.
  * @param {Number} stride The stride.
  */
-export function arrayRange(arr: number[], offset: number, stride: number): number[];
+export function arrayRange(
+  arr: number[],
+  offset: number,
+  stride: number
+): number[];
 
 /**
  * Gives the exponent of the lowest power of two not less than x.
@@ -197,8 +223,8 @@ export function subtract(a: Vector3, b: Vector3, out: Vector3): Vector3;
 
 /**
  *
- * @param {Vector3} vec 
- * @param {Number} scalar 
+ * @param {Vector3} vec
+ * @param {Number} scalar
  * @example
  * ```js
  * vec[3] * scalar => vec[3]
@@ -208,8 +234,8 @@ export function multiplyScalar(vec: Vector3, scalar: number): Vector3;
 
 /**
  *
- * @param {Vector2} vec 
- * @param {Number} scalar 
+ * @param {Vector2} vec
+ * @param {Number} scalar
  * @example
  * ```js
  * vec[3] * scalar => vec[3]
@@ -220,7 +246,7 @@ export function multiplyScalar2D(vec: Vector2, scalar: number): Vector2;
 /**
  *
  * @param {Vector3} a
- * @param {Vector3} b 
+ * @param {Vector3} b
  * @param {Number} scalar
  * @param {Vector3} out
  * @example
@@ -228,20 +254,30 @@ export function multiplyScalar2D(vec: Vector2, scalar: number): Vector2;
  * a[3] +  b[3] * scalar => out[3]
  * ```
  */
-export function multiplyAccumulate(a: Vector3, b: Vector3, scalar: number, out: Vector3): Vector3;
+export function multiplyAccumulate(
+  a: Vector3,
+  b: Vector3,
+  scalar: number,
+  out: Vector3
+): Vector3;
 
 /**
  *
  * @param {Vector2} a
  * @param {Vector2} b
- * @param {Number} scalar 
+ * @param {Number} scalar
  * @param {Vector2} out
  * @example
  * ```js
  * a[2] + b[2] * scalar => out[2]
  * ```
  */
-export function multiplyAccumulate2D(a: Vector2, b: Vector2, scalar: number, out: Vector2): Vector2;
+export function multiplyAccumulate2D(
+  a: Vector2,
+  b: Vector2,
+  scalar: number,
+  out: Vector2
+): Vector2;
 
 /**
  *
@@ -272,8 +308,8 @@ export function cross(x: Vector3, y: Vector3, out: Vector3): Vector3;
 
 /**
  *
- * @param {Number[]} x 
- * @param {Number} n 
+ * @param {Number[]} x
+ * @param {Number} n
  */
 export function norm(x: number[], n: number): number;
 
@@ -290,7 +326,12 @@ export function normalize(x: Vector3): number;
  * @param {Vector3} z The third vector.
  * @param {Number} theta
  */
-export function perpendiculars(x: Vector3, y: Vector3, z: Vector3, theta: number): void;
+export function perpendiculars(
+  x: Vector3,
+  y: Vector3,
+  z: Vector3,
+  theta: number
+): void;
 
 /**
  *
@@ -298,7 +339,11 @@ export function perpendiculars(x: Vector3, y: Vector3, z: Vector3, theta: number
  * @param {Vector3} b
  * @param {Vector3} projection
  */
-export function projectVector(a: Vector3, b: Vector3, projection: Vector3): boolean;
+export function projectVector(
+  a: Vector3,
+  b: Vector3,
+  projection: Vector3
+): boolean;
 
 /**
  *
@@ -314,7 +359,11 @@ export function dot2D(x: Vector2, y: Vector2): number;
  * @param {Vector2} b The second 2D vector.
  * @param {Vector2} projection The projection 2D vector.
  */
-export function projectVector2D(a: Vector2, b: Vector2, projection: Vector2): boolean;
+export function projectVector2D(
+  a: Vector2,
+  b: Vector2,
+  projection: Vector2
+): boolean;
 
 /**
  * Compute distance squared between two points p1 and p2.
@@ -330,7 +379,6 @@ export function distance2BetweenPoints(x: Vector3, y: Vector3): number;
  */
 export function angleBetweenVectors(v1: Vector3, v2: Vector3): number;
 
-
 /**
  * Signed angle between v1 and v2 with regards to plane defined by normal vN.
  * angle between v1 and v2 with regards to plane defined by normal vN.Signed
@@ -338,10 +386,13 @@ export function angleBetweenVectors(v1: Vector3, v2: Vector3): number;
  * vN.t3(mat_3x3, in_3, out_3)
  * @param {Vector3} v1 The first 3D vector.
  * @param {Vector3} v2 The second 3D vector.
- * @param {Vector3} vN 
+ * @param {Vector3} vN
  */
-export function signedAngleBetweenVectors(v1: Vector3, v2: Vector3, vN: Vector3): number;
-
+export function signedAngleBetweenVectors(
+  v1: Vector3,
+  v2: Vector3,
+  vN: Vector3
+): number;
 
 /**
  * Compute the amplitude of a Gaussian function with mean=0 and specified variance.
@@ -349,7 +400,11 @@ export function signedAngleBetweenVectors(v1: Vector3, v2: Vector3, vN: Vector3)
  * @param {Number} variance The variance value.
  * @param {Number} position The position value.
  */
-export function gaussianAmplitude(mean: number, variance: number, position: number): number;
+export function gaussianAmplitude(
+  mean: number,
+  variance: number,
+  position: number
+): number;
 
 /**
  * Compute the amplitude of an unnormalized Gaussian function with mean=0 and
@@ -358,7 +413,11 @@ export function gaussianAmplitude(mean: number, variance: number, position: numb
  * @param {Number} variance The variance value.
  * @param {Number} position The position value.
  */
-export function gaussianWeight(mean: number, variance: number, position: number): number;
+export function gaussianWeight(
+  mean: number,
+  variance: number,
+  position: number
+): number;
 
 /**
  * Outer product of two 2-vectors.
@@ -382,98 +441,144 @@ export function normalize2D(x: Vector2): number;
 
 /**
  *
- * @param {Number[]} args 
+ * @param {Number[]} args
  */
 export function determinant2x2(args: number[]): number;
 
 /**
  * Fill a 4x4 matrix with the given row vectors
- * @param {Vector4} row0 
+ * @param {Vector4} row0
  * @param {Vector4} row1
  * @param {Vector4} row2
  * @param {Vector4} row3
  * @param {Matrix} mat
  */
-export function rowsToMat4(row0: Vector4, row1: Vector4, row2: Vector4, row3: Vector4, mat: Matrix): Matrix;
+export function rowsToMat4(
+  row0: Vector4,
+  row1: Vector4,
+  row2: Vector4,
+  row3: Vector4,
+  mat: Matrix
+): Matrix;
 
 /**
  * Fill a 4x4 matrix with the given column vectors
- * @param {Vector4} column0 
+ * @param {Vector4} column0
  * @param {Vector4} column1
  * @param {Vector4} column2
  * @param {Vector4} column3
  * @param {Matrix} mat
  */
-export function columnsToMat4(column0: Vector4, column1: Vector4, column2: Vector4, column3: Vector4, mat: Matrix): Matrix;
+export function columnsToMat4(
+  column0: Vector4,
+  column1: Vector4,
+  column2: Vector4,
+  column3: Vector4,
+  mat: Matrix
+): Matrix;
 
- /**
+/**
  * Fill a 3x3 matrix with the given row vectors
- * @param {Vector3} row0 
+ * @param {Vector3} row0
  * @param {Vector3} row1
  * @param {Vector3} row2
  * @param {Matrix} mat
  */
-export function rowsToMat3(row0: Vector3, row1: Vector3, row2: Vector3, mat: Matrix): Matrix;
+export function rowsToMat3(
+  row0: Vector3,
+  row1: Vector3,
+  row2: Vector3,
+  mat: Matrix
+): Matrix;
 
- /**
+/**
  * Fill a 3x3 matrix with the given column vectors
- * @param {Vector3} column0 
+ * @param {Vector3} column0
  * @param {Vector3} column1
  * @param {Vector3} column2
  * @param {Matrix} mat
  */
-export function columnsToMat3(column0: Vector3, column1: Vector3, column2: Vector3, mat: Matrix): Matrix;
+export function columnsToMat3(
+  column0: Vector3,
+  column1: Vector3,
+  column2: Vector3,
+  mat: Matrix
+): Matrix;
 
 /**
  * LU Factorization of a 3x3 matrix.
- * @param {Matrix3x3} mat_3x3 
- * @param {Vector3} index_3 
+ * @param {Matrix3x3} mat_3x3
+ * @param {Vector3} index_3
  */
 export function LUFactor3x3(mat_3x3: Matrix3x3, index_3: Vector3): void;
 
 /**
  * LU back substitution for a 3x3 matrix.
- * @param {Matrix3x3} mat_3x3 
- * @param {Vector3} index_3 
- * @param {Vector3} x_3 
+ * @param {Matrix3x3} mat_3x3
+ * @param {Vector3} index_3
+ * @param {Vector3} x_3
  */
-export function LUSolve3x3(mat_3x3: Matrix3x3, index_3: Vector3, x_3: Vector3): void;
+export function LUSolve3x3(
+  mat_3x3: Matrix3x3,
+  index_3: Vector3,
+  x_3: Vector3
+): void;
 
 /**
  * Solve mat_3x3y_3 = x_3 for y and place the result in y.
- * @param {Matrix3x3} mat_3x3 
- * @param {Vector3} x_3 
- * @param {Vector3} y_3 
+ * @param {Matrix3x3} mat_3x3
+ * @param {Vector3} x_3
+ * @param {Vector3} y_3
  */
-export function linearSolve3x3(mat_3x3: Matrix3x3, x_3: Vector3, y_3: Vector3): void;
+export function linearSolve3x3(
+  mat_3x3: Matrix3x3,
+  x_3: Vector3,
+  y_3: Vector3
+): void;
 
 /**
  *
- * @param {Matrix3x3} mat_3x3 
- * @param {Vector3} in_3 
- * @param {Vector3} out_3 
+ * @param {Matrix3x3} mat_3x3
+ * @param {Vector3} in_3
+ * @param {Vector3} out_3
  */
-export function multiply3x3_vect3(mat_3x3: Matrix3x3, in_3: Vector3, out_3: Vector3): void;
+export function multiply3x3_vect3(
+  mat_3x3: Matrix3x3,
+  in_3: Vector3,
+  out_3: Vector3
+): void;
 
 /**
  *
- * @param {Matrix3x3} a_3x3 
- * @param {Matrix3x3} b_3x3 
- * @param {Matrix3x3} out_3x3 
+ * @param {Matrix3x3} a_3x3
+ * @param {Matrix3x3} b_3x3
+ * @param {Matrix3x3} out_3x3
  */
-export function multiply3x3_mat3(a_3x3: Matrix3x3, b_3x3: Matrix3x3, out_3x3: Matrix3x3): void;
+export function multiply3x3_mat3(
+  a_3x3: Matrix3x3,
+  b_3x3: Matrix3x3,
+  out_3x3: Matrix3x3
+): void;
 
 /**
  * Multiply two matrices.
- * @param {Matrix} a 
- * @param {Matrix} b 
- * @param {Number} rowA 
- * @param {Number} colA 
- * @param {Number} rowB 
- * @param {Number} colB 
- * @param {Matrix} outRowAColB 
+ * @param {Matrix} a
+ * @param {Matrix} b
+ * @param {Number} rowA
+ * @param {Number} colA
+ * @param {Number} rowB
+ * @param {Number} colB
+ * @param {Matrix} outRowAColB
  */
-export function multiplyMatrix(a: Matrix, b: Matrix, rowA: number, colA: number, rowB: number, colB: number, outRowAColB: Matrix): void;
+export function multiplyMatrix(
+  a: Matrix,
+  b: Matrix,
+  rowA: number,
+  colA: number,
+  rowB: number,
+  colB: number,
+  outRowAColB: Matrix
+): void;
 
 /**
  * Transpose a 3x3 matrix.
@@ -533,9 +638,12 @@ export function determinant3x3(mat_3x3: Matrix3x3): number;
 /**
  *
  * @param {Vector4} quat_4
- * @param {Matrix3x3} mat_3x3 
+ * @param {Matrix3x3} mat_3x3
  */
-export function quaternionToMatrix3x3(quat_4: Vector4, mat_3x3: Matrix3x3): void;
+export function quaternionToMatrix3x3(
+  quat_4: Vector4,
+  mat_3x3: Matrix3x3
+): void;
 
 /**
  * Returns true if elements of both arrays are equals.
@@ -547,89 +655,118 @@ export function areEquals(a: number[], b: number[], eps?: number): boolean;
 
 /**
  *
- * @param {Number} num 
- * @param {Number} [digits] 
+ * @param {Number} num
+ * @param {Number} [digits]
  */
 export function roundNumber(num: number, digits?: number): number;
 
 /**
  *
- * @param {Vector3} vector 
- * @param {Vector3} [out]  
- * @param {Number} [digits] 
+ * @param {Vector3} vector
+ * @param {Vector3} [out]
+ * @param {Number} [digits]
  */
-export function roundVector(vector: Vector3, out?: Vector3, digits?: number): Vector3;
+export function roundVector(
+  vector: Vector3,
+  out?: Vector3,
+  digits?: number
+): Vector3;
 
 /**
-* Jacobi iteration for the solution of eigenvectors/eigenvalues. Input matrix a is modified (the upper triangle is filled with zeros)
-* @param {Matrix} a real symetric nxn matrix
-* @param {Number} n matrix size
-* @param {Number[]} w vector of size n to store eigenvalues (stored in decreasing order)
-* @param {Number[]} v matrix of size nxn to store eigenvectors (stored in decreasing order, normalized)
-*/
+ * Jacobi iteration for the solution of eigenvectors/eigenvalues. Input matrix a is modified (the upper triangle is filled with zeros)
+ * @param {Matrix} a real symetric nxn matrix
+ * @param {Number} n matrix size
+ * @param {Number[]} w vector of size n to store eigenvalues (stored in decreasing order)
+ * @param {Number[]} v matrix of size nxn to store eigenvectors (stored in decreasing order, normalized)
+ */
 export function jacobiN(a: Matrix, n: number, w: number[], v: number[]): number;
 
 /**
  *
- * @param {Matrix3x3} mat_3x3 
- * @param {Vector4} quat_4 
+ * @param {Matrix3x3} mat_3x3
+ * @param {Vector4} quat_4
  */
-export function matrix3x3ToQuaternion(mat_3x3: Matrix3x3, quat_4: Vector4): void;
+export function matrix3x3ToQuaternion(
+  mat_3x3: Matrix3x3,
+  quat_4: Vector4
+): void;
 
 /**
  *
- * @param {Vector4} quat_1 
- * @param {Vector4} quat_2 
- * @param {Vector4} quat_out 
+ * @param {Vector4} quat_1
+ * @param {Vector4} quat_2
+ * @param {Vector4} quat_out
  */
-export function multiplyQuaternion(quat_1: Vector4, quat_2: Vector4, quat_out: Vector4): void;
+export function multiplyQuaternion(
+  quat_1: Vector4,
+  quat_2: Vector4,
+  quat_out: Vector4
+): void;
 
 /**
  *
- * @param {Matrix3x3} a_3x3 
- * @param {Matrix3x3} out_3x3 
+ * @param {Matrix3x3} a_3x3
+ * @param {Matrix3x3} out_3x3
  */
 export function orthogonalize3x3(a_3x3: Matrix3x3, out_3x3: Matrix3x3): void;
 
 /**
  *
- * @param {Matrix3x3} a_3x3 
- * @param {Vector3} w_3 
- * @param {Matrix3x3} v_3x3 
+ * @param {Matrix3x3} a_3x3
+ * @param {Vector3} w_3
+ * @param {Matrix3x3} v_3x3
  */
-export function diagonalize3x3(a_3x3: Matrix3x3, w_3: Vector3, v_3x3: Matrix3x3): void;
+export function diagonalize3x3(
+  a_3x3: Matrix3x3,
+  w_3: Vector3,
+  v_3x3: Matrix3x3
+): void;
 
 /**
  *
- * @param {Matrix3x3} a_3x3 
- * @param {Matrix3x3} u_3x3 
- * @param {Vector3} w_3 
- * @param {Matrix3x3} vT_3x3 
+ * @param {Matrix3x3} a_3x3
+ * @param {Matrix3x3} u_3x3
+ * @param {Vector3} w_3
+ * @param {Matrix3x3} vT_3x3
  */
-export function singularValueDecomposition3x3(a_3x3: Matrix3x3, u_3x3: Matrix3x3, w_3: Vector3, vT_3x3: Matrix3x3): void;
+export function singularValueDecomposition3x3(
+  a_3x3: Matrix3x3,
+  u_3x3: Matrix3x3,
+  w_3: Vector3,
+  vT_3x3: Matrix3x3
+): void;
 
 /**
  *
- * @param {Matrix} A 
- * @param {Number[]} index 
- * @param {Number} size 
+ * @param {Matrix} A
+ * @param {Number[]} index
+ * @param {Number} size
  */
-export function luFactorLinearSystem(A: Matrix, index: number[], size: number): number;
+export function luFactorLinearSystem(
+  A: Matrix,
+  index: number[],
+  size: number
+): number;
 
 /**
  *
- * @param {Matrix} A 
- * @param {Number[]} index 
- * @param {Number[]} x 
- * @param {Number} size 
+ * @param {Matrix} A
+ * @param {Number[]} index
+ * @param {Number[]} x
+ * @param {Number} size
  */
-export function luSolveLinearSystem(A: Matrix, index: number[], x: number[], size: number): void;
+export function luSolveLinearSystem(
+  A: Matrix,
+  index: number[],
+  x: number[],
+  size: number
+): void;
 
 /**
  *
- * @param {Matrix} A 
- * @param {Number[]} x 
- * @param {Number} size 
+ * @param {Matrix} A
+ * @param {Number[]} x
+ * @param {Number} size
  */
 export function solveLinearSystem(A: Matrix, x: number[], size: number): number;
 
@@ -638,24 +775,30 @@ export function solveLinearSystem(A: Matrix, x: number[], size: number): number;
  * @param {Matrix} A The input matrix. It is modified during the inversion.
  * @param {Matrix} AI The output inverse matrix. Can be the same as input matrix.
  * @param {Number} [size] The square size of the matrix to invert : 4 for a 4x4
- * @param {Number[]} [index] 
- * @param {Number[]} [column] 
+ * @param {Number[]} [index]
+ * @param {Number[]} [column]
  * @return AI on success, null otherwise
  */
-export function invertMatrix(A: Matrix, AI: Matrix, size?: number, index?: number[], column?: number[]): Matrix|null;
+export function invertMatrix(
+  A: Matrix,
+  AI: Matrix,
+  size?: number,
+  index?: number[],
+  column?: number[]
+): Matrix | null;
 
 /**
  *
- * @param {Matrix} A 
- * @param {Number} size 
+ * @param {Matrix} A
+ * @param {Number} size
  */
 export function estimateMatrixCondition(A: Matrix, size: number): number;
 
 /**
  *
- * @param {Matrix3x3} a_3x3 
- * @param {Number[]} w 
- * @param {Number[]} v 
+ * @param {Matrix3x3} a_3x3
+ * @param {Number[]} w
+ * @param {Number[]} v
  */
 export function jacobi(a_3x3: Matrix3x3, w: number[], v: number[]): number;
 
@@ -668,12 +811,17 @@ export function jacobi(a_3x3: Matrix3x3, w: number[], v: number[]): number;
  * by xOrder, M' dimension is xOrder by yOrder. M' should be pre-allocated. All
  * matrices are row major. The resultant matrix M' should be pre-multiplied to
  * X' to get 0', or transposed and then post multiplied to X to get 0
- * @param {Number} numberOfSamples 
- * @param {Matrix} xt 
- * @param {Number} xOrder 
- * @param {Matrix} mt 
+ * @param {Number} numberOfSamples
+ * @param {Matrix} xt
+ * @param {Number} xOrder
+ * @param {Matrix} mt
  */
-export function solveHomogeneousLeastSquares(numberOfSamples: number, xt: Matrix, xOrder: number, mt: Matrix): number;
+export function solveHomogeneousLeastSquares(
+  numberOfSamples: number,
+  xt: Matrix,
+  xOrder: number,
+  mt: Matrix
+): number;
 
 /**
  * Solves for the least squares best fit matrix for the equation X'M' = Y'. Uses
@@ -686,20 +834,28 @@ export function solveHomogeneousLeastSquares(numberOfSamples: number, xt: Matrix
  * Y==0, and if so, invokes SolveHomogeneousLeastSquares. For better performance
  * when the system is known not to be homogeneous, invoke with
  * checkHomogeneous=0.
- * @param {Number} numberOfSamples 
- * @param {Matrix} xt 
- * @param {Number} xOrder 
- * @param {Matrix} yt 
- * @param {Number} yOrder 
- * @param {Matrix} mt 
- * @param {Boolean} [checkHomogeneous] 
+ * @param {Number} numberOfSamples
+ * @param {Matrix} xt
+ * @param {Number} xOrder
+ * @param {Matrix} yt
+ * @param {Number} yOrder
+ * @param {Matrix} mt
+ * @param {Boolean} [checkHomogeneous]
  */
-export function solveLeastSquares(numberOfSamples: number, xt: Matrix, xOrder: number, yt: Matrix, yOrder: number, mt: Matrix, checkHomogeneous?: boolean): number;
+export function solveLeastSquares(
+  numberOfSamples: number,
+  xt: Matrix,
+  xOrder: number,
+  yt: Matrix,
+  yOrder: number,
+  mt: Matrix,
+  checkHomogeneous?: boolean
+): number;
 
 /**
  *
- * @param {String} hexStr 
- * @param {Number[]} [outFloatArray] 
+ * @param {String} hexStr
+ * @param {Number[]} [outFloatArray]
  */
 export function hex2float(hexStr: string, outFloatArray?: number[]): number[];
 
@@ -719,21 +875,21 @@ export function hsv2rgb(hsv: HSVColor, rgb: RGBColor): void;
 
 /**
  *
- * @param {Vector3} lab 
- * @param {Vector3} xyz 
+ * @param {Vector3} lab
+ * @param {Vector3} xyz
  */
 export function lab2xyz(lab: Vector3, xyz: Vector3): void;
 
 /**
  *
- * @param {Vector3} xyz 
- * @param {Vector3} lab 
+ * @param {Vector3} xyz
+ * @param {Vector3} lab
  */
 export function xyz2lab(xyz: Vector3, lab: Vector3): void;
 
 /**
  *
- * @param {Vector3} xyz 
+ * @param {Vector3} xyz
  * @param {RGBColor} rgb An Array of the RGB color.
  */
 export function xyz2rgb(xyz: Vector3, rgb: RGBColor): void;
@@ -741,20 +897,20 @@ export function xyz2rgb(xyz: Vector3, rgb: RGBColor): void;
 /**
  *
  * @param {RGBColor} rgb An Array of the RGB color.
- * @param {Vector3} xyz 
+ * @param {Vector3} xyz
  */
 export function rgb2xyz(rgb: RGBColor, xyz: Vector3): void;
 
 /**
  *
- * @param {RGBColor} rgb 
- * @param {Vector3} lab 
+ * @param {RGBColor} rgb
+ * @param {Vector3} lab
  */
 export function rgb2lab(rgb: RGBColor, lab: Vector3): void;
 
 /**
  *
- * @param {Vector3} lab 
+ * @param {Vector3} lab
  * @param {RGBColor} rgb An Array of the RGB color.
  */
 export function lab2rgb(lab: Vector3, rgb: RGBColor): void;
@@ -778,7 +934,11 @@ export function areBoundsInitialized(bounds: Bounds): boolean;
  * @param {Bounds} bounds Output array that hold bounds, optionally empty.
  * @deprecated please use vtkBoundingBox.addPoints(vtkBoundingBox.reset([]), points)
  */
-export function computeBoundsFromPoints(point1: Vector3, point2: Vector3, bounds: Bounds): Bounds;
+export function computeBoundsFromPoints(
+  point1: Vector3,
+  point2: Vector3,
+  bounds: Bounds
+): Bounds;
 
 /**
  * Clamp some value against a range.
@@ -786,7 +946,11 @@ export function computeBoundsFromPoints(point1: Vector3, point2: Vector3, bounds
  * @param {Number} minValue The minimum value.
  * @param {Number} maxValue The maximum value.
  */
-export function clampValue(value: number, minValue: number, maxValue: number): number;
+export function clampValue(
+  value: number,
+  minValue: number,
+  maxValue: number
+): number;
 
 /**
  * Clamp some vector against a range.
@@ -795,19 +959,24 @@ export function clampValue(value: number, minValue: number, maxValue: number): n
  * @param {Vector3} maxVector The maximum vector.
  * @param {Vector3} out The output vector.
  */
-export function clampVector(vector: Vector3, minVector: Vector3, maxVector: Vector3, out: Vector3): Vector3;
+export function clampVector(
+  vector: Vector3,
+  minVector: Vector3,
+  maxVector: Vector3,
+  out: Vector3
+): Vector3;
 
 /**
  *
- * @param {Vector3} vector 
- * @param {Vector3} out 
+ * @param {Vector3} vector
+ * @param {Vector3} out
  */
 export function roundVector(vector: Vector3, out: Vector3): Vector3;
 
 /**
  *
- * @param {Number} value 
- * @param {Range} range 
+ * @param {Number} value
+ * @param {Range} range
  */
 export function clampAndNormalizeValue(value: number, range: Range): number;
 
@@ -827,7 +996,10 @@ export function getAdjustedScalarRange(): void;
  * @param {Extent} extent1 The first extent.
  * @param {Extent} extent2 The second extent.
  */
-export function extentIsWithinOtherExtent(extent1: Extent, extent2: Extent): number;
+export function extentIsWithinOtherExtent(
+  extent1: Extent,
+  extent2: Extent
+): number;
 
 /**
  * Check if first 3D bounds is within the second 3D bounds.
@@ -835,7 +1007,11 @@ export function extentIsWithinOtherExtent(extent1: Extent, extent2: Extent): num
  * @param {Bounds} bounds2_6 The second bounds.
  * @param {Vector3} delta_3 The error margin along each axis.
  */
-export function boundsIsWithinOtherBounds(bounds1_6: Bounds, bounds2_6: Bounds, delta_3: Vector3): number;
+export function boundsIsWithinOtherBounds(
+  bounds1_6: Bounds,
+  bounds2_6: Bounds,
+  delta_3: Vector3
+): number;
 
 /**
  * Check if point is within the given 3D bounds.
@@ -843,7 +1019,11 @@ export function boundsIsWithinOtherBounds(bounds1_6: Bounds, bounds2_6: Bounds, 
  * @param {Bounds} bounds_6 The bounds.
  * @param {Vector3} delta_3 The error margin along each axis.
  */
-export function pointIsWithinBounds(point_3: Vector3, bounds_6: Bounds, delta_3: Vector3): number;
+export function pointIsWithinBounds(
+  point_3: Vector3,
+  bounds_6: Bounds,
+  delta_3: Vector3
+): number;
 
 /**
  * In Euclidean space, there is a unique circle passing through any given three
@@ -859,7 +1039,12 @@ export function pointIsWithinBounds(point_3: Vector3, bounds_6: Bounds, delta_3:
  * @param {Vector3} p3 The coordinate of the third point.
  * @param {Vector3} center The coordinate of the center point.
  */
-export function solve3PointCircle(p1: Vector3, p2: Vector3, p3: Vector3, center: Vector3): number;
+export function solve3PointCircle(
+  p1: Vector3,
+  p2: Vector3,
+  p3: Vector3,
+  center: Vector3
+): number;
 
 /**
  * Determines whether the passed value is a infinite number.
@@ -874,7 +1059,7 @@ export function createUninitializedBounds(): Bounds;
 
 /**
  *
- * @param {Number[]} vector 
+ * @param {Number[]} vector
  */
 export function getMajorAxisIndex(vector: number[]): number;
 
@@ -885,11 +1070,14 @@ export function getMajorAxisIndex(vector: number[]): number;
  * the greatest absolute value from the remaining row and columns
  * For each association, a -1 or a 1 is set in the output, depending on
  * the sign of the value in the original matrix
- * 
+ *
  * @param {Number[]} matrix The matrix of size nxn
  * @param {Number[]} n The size of the square matrix, defaults to 3
  */
-export function getSparseOrthogonalMatrix(matrix: number[], n: number): number[];
+export function getSparseOrthogonalMatrix(
+  matrix: number[],
+  n: number
+): number[];
 
 /**
  *
@@ -899,10 +1087,13 @@ export function floatToHex2(value: number): string;
 
 /**
  *
- * @param {RGBColor} rgbArray 
- * @param {string} [prefix] 
+ * @param {RGBColor} rgbArray
+ * @param {string} [prefix]
  */
-export function floatRGB2HexCode(rgbArray: RGBColor | RGBAColor, prefix?: string): string;
+export function floatRGB2HexCode(
+  rgbArray: RGBColor | RGBAColor,
+  prefix?: string
+): string;
 
 /**
  * Convert RGB or RGBA color array to CSS representation
@@ -936,119 +1127,119 @@ export function isFinite(value: any): boolean;
  * number generation (for backward compatibility only).
  */
 export declare const vtkMath: {
-	createArray: typeof createArray;
-	swapRowsMatrix_nxn: typeof swapRowsMatrix_nxn;
-	swapColumnsMatrix_nxn: typeof swapColumnsMatrix_nxn;
-	Pi: typeof Pi;
-	radiansFromDegrees: typeof radiansFromDegrees;
-	degreesFromRadians: typeof degreesFromRadians;
-	round: typeof round;
-	floor: typeof floor;
-	ceil: typeof ceil;
-	min: typeof min;
-	max: typeof max;
-	arrayMin: typeof arrayMin;
-	arrayMax: typeof arrayMax;
-	arrayRange: typeof arrayRange;
-	ceilLog2: typeof ceilLog2;
-	factorial: typeof factorial;
-	gaussian: typeof gaussian;
-	nearestPowerOfTwo: typeof nearestPowerOfTwo;
-	isPowerOfTwo: typeof isPowerOfTwo;
-	binomial: typeof binomial;
-	beginCombination: typeof beginCombination;
-	nextCombination: typeof nextCombination;
-	randomSeed: typeof randomSeed;
-	getSeed: typeof getSeed;
-	random: typeof random;
-	add: typeof add;
-	subtract: typeof subtract;
-	multiplyScalar: typeof multiplyScalar;
-	multiplyScalar2D: typeof multiplyScalar2D;
-	multiplyAccumulate: typeof multiplyAccumulate;
-	multiplyAccumulate2D: typeof multiplyAccumulate2D;
-	dot: typeof dot;
-	outer: typeof outer;
-	cross: typeof cross;
-	norm: typeof norm;
-	normalize: typeof normalize;
-	perpendiculars: typeof perpendiculars;
-	projectVector: typeof projectVector;
-	dot2D: typeof dot2D;
-	projectVector2D: typeof projectVector2D;
-	distance2BetweenPoints: typeof distance2BetweenPoints;
-	angleBetweenVectors: typeof angleBetweenVectors;
-	gaussianAmplitude: typeof gaussianAmplitude;
-	gaussianWeight: typeof gaussianWeight;
-	outer2D: typeof outer2D;
-	norm2D: typeof norm2D;
-	normalize2D: typeof normalize2D;
-	determinant2x2: typeof determinant2x2;
-	rowsToMat4: typeof rowsToMat4;
-	columnsToMat4: typeof columnsToMat4;
-	rowsToMat3: typeof rowsToMat3;
-	columnsToMat3: typeof columnsToMat3;
-	LUFactor3x3: typeof LUFactor3x3;
-	LUSolve3x3: typeof LUSolve3x3;
-	linearSolve3x3: typeof linearSolve3x3;
-	multiply3x3_vect3: typeof multiply3x3_vect3;
-	multiply3x3_mat3: typeof multiply3x3_mat3;
-	multiplyMatrix: typeof multiplyMatrix;
-	transpose3x3: typeof transpose3x3;
-	invert3x3: typeof invert3x3;
-	identity3x3: typeof identity3x3;
-	determinant3x3: typeof determinant3x3;
-	quaternionToMatrix3x3: typeof quaternionToMatrix3x3;
-	areEquals: typeof areEquals;
-	areMatricesEqual: typeof areEquals;
-	roundNumber: typeof roundNumber;
-	roundVector: typeof roundVector;
-	jacobiN: typeof jacobiN;
-	matrix3x3ToQuaternion: typeof matrix3x3ToQuaternion;
-	multiplyQuaternion: typeof multiplyQuaternion;
-	orthogonalize3x3: typeof orthogonalize3x3;
-	diagonalize3x3: typeof diagonalize3x3;
-	singularValueDecomposition3x3: typeof singularValueDecomposition3x3;
-	luFactorLinearSystem: typeof luFactorLinearSystem;
-	luSolveLinearSystem: typeof luSolveLinearSystem;
-	solveLinearSystem: typeof solveLinearSystem;
-	invertMatrix: typeof invertMatrix;
-	estimateMatrixCondition: typeof estimateMatrixCondition;
-	jacobi: typeof jacobi;
-	solveHomogeneousLeastSquares: typeof solveHomogeneousLeastSquares;
-	solveLeastSquares: typeof solveLeastSquares;
-	hex2float: typeof hex2float;
-	rgb2hsv: typeof rgb2hsv;
-	hsv2rgb: typeof hsv2rgb;
-	lab2xyz: typeof lab2xyz;
-	xyz2lab: typeof xyz2lab;
-	xyz2rgb: typeof xyz2rgb;
-	rgb2xyz: typeof rgb2xyz;
-	rgb2lab: typeof rgb2lab;
-	lab2rgb: typeof lab2rgb;
-	uninitializeBounds: typeof uninitializeBounds;
-	areBoundsInitialized: typeof areBoundsInitialized;
-	computeBoundsFromPoints: typeof computeBoundsFromPoints;
-	clampValue: typeof clampValue;
-	clampVector: typeof clampVector;
-	clampAndNormalizeValue: typeof clampAndNormalizeValue;
-	getScalarTypeFittingRange: typeof getScalarTypeFittingRange;
-	getAdjustedScalarRange: typeof getAdjustedScalarRange;
-	extentIsWithinOtherExtent: typeof extentIsWithinOtherExtent;
-	boundsIsWithinOtherBounds: typeof boundsIsWithinOtherBounds;
-	pointIsWithinBounds: typeof pointIsWithinBounds;
-	solve3PointCircle: typeof solve3PointCircle;
-	isInf: typeof isInf;
-	createUninitializedBounds: typeof createUninitializedBounds;
-	getMajorAxisIndex: typeof getMajorAxisIndex;
-	getSparseOrthogonalMatrix: typeof getSparseOrthogonalMatrix;
-	floatToHex2: typeof floatToHex2;
-	floatRGB2HexCode: typeof floatRGB2HexCode;
-	float2CssRGBA: typeof float2CssRGBA;
-	inf: number;
-	negInf: number;
-	isNan: typeof isNaN,
-	isNaN: typeof isNaN;
-	isFinite: typeof isFinite
-}
+  createArray: typeof createArray;
+  swapRowsMatrix_nxn: typeof swapRowsMatrix_nxn;
+  swapColumnsMatrix_nxn: typeof swapColumnsMatrix_nxn;
+  Pi: typeof Pi;
+  radiansFromDegrees: typeof radiansFromDegrees;
+  degreesFromRadians: typeof degreesFromRadians;
+  round: typeof round;
+  floor: typeof floor;
+  ceil: typeof ceil;
+  min: typeof min;
+  max: typeof max;
+  arrayMin: typeof arrayMin;
+  arrayMax: typeof arrayMax;
+  arrayRange: typeof arrayRange;
+  ceilLog2: typeof ceilLog2;
+  factorial: typeof factorial;
+  gaussian: typeof gaussian;
+  nearestPowerOfTwo: typeof nearestPowerOfTwo;
+  isPowerOfTwo: typeof isPowerOfTwo;
+  binomial: typeof binomial;
+  beginCombination: typeof beginCombination;
+  nextCombination: typeof nextCombination;
+  randomSeed: typeof randomSeed;
+  getSeed: typeof getSeed;
+  random: typeof random;
+  add: typeof add;
+  subtract: typeof subtract;
+  multiplyScalar: typeof multiplyScalar;
+  multiplyScalar2D: typeof multiplyScalar2D;
+  multiplyAccumulate: typeof multiplyAccumulate;
+  multiplyAccumulate2D: typeof multiplyAccumulate2D;
+  dot: typeof dot;
+  outer: typeof outer;
+  cross: typeof cross;
+  norm: typeof norm;
+  normalize: typeof normalize;
+  perpendiculars: typeof perpendiculars;
+  projectVector: typeof projectVector;
+  dot2D: typeof dot2D;
+  projectVector2D: typeof projectVector2D;
+  distance2BetweenPoints: typeof distance2BetweenPoints;
+  angleBetweenVectors: typeof angleBetweenVectors;
+  gaussianAmplitude: typeof gaussianAmplitude;
+  gaussianWeight: typeof gaussianWeight;
+  outer2D: typeof outer2D;
+  norm2D: typeof norm2D;
+  normalize2D: typeof normalize2D;
+  determinant2x2: typeof determinant2x2;
+  rowsToMat4: typeof rowsToMat4;
+  columnsToMat4: typeof columnsToMat4;
+  rowsToMat3: typeof rowsToMat3;
+  columnsToMat3: typeof columnsToMat3;
+  LUFactor3x3: typeof LUFactor3x3;
+  LUSolve3x3: typeof LUSolve3x3;
+  linearSolve3x3: typeof linearSolve3x3;
+  multiply3x3_vect3: typeof multiply3x3_vect3;
+  multiply3x3_mat3: typeof multiply3x3_mat3;
+  multiplyMatrix: typeof multiplyMatrix;
+  transpose3x3: typeof transpose3x3;
+  invert3x3: typeof invert3x3;
+  identity3x3: typeof identity3x3;
+  determinant3x3: typeof determinant3x3;
+  quaternionToMatrix3x3: typeof quaternionToMatrix3x3;
+  areEquals: typeof areEquals;
+  areMatricesEqual: typeof areEquals;
+  roundNumber: typeof roundNumber;
+  roundVector: typeof roundVector;
+  jacobiN: typeof jacobiN;
+  matrix3x3ToQuaternion: typeof matrix3x3ToQuaternion;
+  multiplyQuaternion: typeof multiplyQuaternion;
+  orthogonalize3x3: typeof orthogonalize3x3;
+  diagonalize3x3: typeof diagonalize3x3;
+  singularValueDecomposition3x3: typeof singularValueDecomposition3x3;
+  luFactorLinearSystem: typeof luFactorLinearSystem;
+  luSolveLinearSystem: typeof luSolveLinearSystem;
+  solveLinearSystem: typeof solveLinearSystem;
+  invertMatrix: typeof invertMatrix;
+  estimateMatrixCondition: typeof estimateMatrixCondition;
+  jacobi: typeof jacobi;
+  solveHomogeneousLeastSquares: typeof solveHomogeneousLeastSquares;
+  solveLeastSquares: typeof solveLeastSquares;
+  hex2float: typeof hex2float;
+  rgb2hsv: typeof rgb2hsv;
+  hsv2rgb: typeof hsv2rgb;
+  lab2xyz: typeof lab2xyz;
+  xyz2lab: typeof xyz2lab;
+  xyz2rgb: typeof xyz2rgb;
+  rgb2xyz: typeof rgb2xyz;
+  rgb2lab: typeof rgb2lab;
+  lab2rgb: typeof lab2rgb;
+  uninitializeBounds: typeof uninitializeBounds;
+  areBoundsInitialized: typeof areBoundsInitialized;
+  computeBoundsFromPoints: typeof computeBoundsFromPoints;
+  clampValue: typeof clampValue;
+  clampVector: typeof clampVector;
+  clampAndNormalizeValue: typeof clampAndNormalizeValue;
+  getScalarTypeFittingRange: typeof getScalarTypeFittingRange;
+  getAdjustedScalarRange: typeof getAdjustedScalarRange;
+  extentIsWithinOtherExtent: typeof extentIsWithinOtherExtent;
+  boundsIsWithinOtherBounds: typeof boundsIsWithinOtherBounds;
+  pointIsWithinBounds: typeof pointIsWithinBounds;
+  solve3PointCircle: typeof solve3PointCircle;
+  isInf: typeof isInf;
+  createUninitializedBounds: typeof createUninitializedBounds;
+  getMajorAxisIndex: typeof getMajorAxisIndex;
+  getSparseOrthogonalMatrix: typeof getSparseOrthogonalMatrix;
+  floatToHex2: typeof floatToHex2;
+  floatRGB2HexCode: typeof floatRGB2HexCode;
+  float2CssRGBA: typeof float2CssRGBA;
+  inf: number;
+  negInf: number;
+  isNan: typeof isNaN;
+  isNaN: typeof isNaN;
+  isFinite: typeof isFinite;
+};
 export default vtkMath;

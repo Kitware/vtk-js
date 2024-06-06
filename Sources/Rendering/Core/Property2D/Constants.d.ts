@@ -4,6 +4,6 @@ export declare enum DisplayLocation {
 }
 
 declare const _default: {
-	DisplayLocation: typeof DisplayLocation;
+  DisplayLocation: typeof DisplayLocation;
 };
 export default _default;

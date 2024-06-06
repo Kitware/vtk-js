@@ -9,6 +9,6 @@ export declare enum Coordinate {
 }
 
 declare const _default: {
-	Coordinate: typeof Coordinate;
+  Coordinate: typeof Coordinate;
 };
 export default _default;

@@ -5,36 +5,34 @@ import vtkDataSet, { IDataSetInitialValues } from '../DataSet';
 /**
  *
  */
-export interface IPointSetInitialValues extends IDataSetInitialValues {
-}
+export interface IPointSetInitialValues extends IDataSetInitialValues {}
 
 export interface vtkPointSet extends vtkDataSet {
+  /**
+   * Compute the (X, Y, Z) bounds of the data.
+   */
+  computeBounds(): void;
 
-	/**
-	 * Compute the (X, Y, Z) bounds of the data.
-	 */
-	computeBounds(): void;
+  /**
+   * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+   * @return {Bounds} The bounds for the mapper.
+   */
+  getBounds(): Bounds;
 
-	/**
-	 * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-	 * @return {Bounds} The bounds for the mapper.
-	 */
-	getBounds(): Bounds;
+  /**
+   *
+   */
+  getNumberOfPoints(): number;
 
-	/**
-	 *
-	 */
-	getNumberOfPoints(): number;
+  /**
+   *
+   */
+  getPoints(): vtkPoints;
 
-	/**
-	 *
-	 */
-	getPoints(): vtkPoints;
-
-	/**
-	 *
-	 */
-	setPoints(points: vtkPoints): boolean;
+  /**
+   *
+   */
+  setPoints(points: vtkPoints): boolean;
 }
 
 /**
@@ -44,13 +42,19 @@ export interface vtkPointSet extends vtkDataSet {
  * @param model object on which data structure will be bounds (protected)
  * @param {IPointSetInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IPointSetInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: IPointSetInitialValues
+): void;
 
 /**
  * Method used to create a new instance of vtkPointSet.
  * @param {IPointSetInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: IPointSetInitialValues): vtkPointSet;
+export function newInstance(
+  initialValues?: IPointSetInitialValues
+): vtkPointSet;
 
 /**
  * vtkPointSet is an abstract class that specifies the interface for
@@ -61,7 +65,7 @@ export function newInstance(initialValues?: IPointSetInitialValues): vtkPointSet
  * positions implicitly.
  */
 export declare const vtkPointSet: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+  newInstance: typeof newInstance;
+  extend: typeof extend;
 };
 export default vtkPointSet;

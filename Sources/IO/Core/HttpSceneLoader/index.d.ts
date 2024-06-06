@@ -1,89 +1,88 @@
-import { vtkObject } from "../../../interfaces";
-import vtkAnnotatedCubeActor from "../../../Rendering/Core/AnnotatedCubeActor";
-import vtkAxesActor from "../../../Rendering/Core/AxesActor";
-import vtkRenderer from "../../../Rendering/Core/Renderer";
-import vtkRenderWindowInteractor from "../../../Rendering/Core/RenderWindowInteractor";
+import { vtkObject } from '../../../interfaces';
+import vtkAnnotatedCubeActor from '../../../Rendering/Core/AnnotatedCubeActor';
+import vtkAxesActor from '../../../Rendering/Core/AxesActor';
+import vtkRenderer from '../../../Rendering/Core/Renderer';
+import vtkRenderWindowInteractor from '../../../Rendering/Core/RenderWindowInteractor';
 
 /**
- * 
+ *
  */
 export interface IHttpSceneLoaderInitialValues {
-	fetchGzip?: boolean,
-	url?: string,
-	baseURL?: string,
-	animationHandler?: null,
-	startLODLoaders?: boolean,
+  fetchGzip?: boolean;
+  url?: string;
+  baseURL?: string;
+  animationHandler?: null;
+  startLODLoaders?: boolean;
 }
 
 export interface vtkHttpSceneLoader extends vtkObject {
+  /**
+   *
+   */
+  getAnimationHandler(): any; // vtkTimeStepBasedAnimationHandler
 
-	/**
-	 * 
-	 */
-	getAnimationHandler(): any; // vtkTimeStepBasedAnimationHandler
+  /**
+   *
+   */
+  getBaseURL(): string;
 
-	/**
-	 * 
-	 */
-	getBaseURL(): string;
+  /**
+   *
+   * @param {Boolean} fetchGzip
+   */
+  getFetchGzip(fetchGzip: boolean): boolean;
 
-	/**
-	 * 
-	 * @param {Boolean} fetchGzip 
-	 */
-	getFetchGzip(fetchGzip: boolean): boolean;
+  /**
+   *
+   */
+  getMetadata(): any;
 
-	/**
-	 * 
-	 */
-	getMetadata(): any;
+  /**
+   *
+   */
+  getRenderer(): vtkRenderer;
 
-	/**
-	 * 
-	 */
-	getRenderer(): vtkRenderer;
+  /**
+   *
+   */
+  getScene(): object;
 
-	/**
-	 * 
-	 */
-	getScene(): object;
+  /**
+   *
+   */
+  getUrl(): string;
 
-	/**
-	 * 
-	 */
-	getUrl(): string;
+  /**
+   *
+   */
+  invokeReady(): void;
 
-	/**
-	 * 
-	 */
-	invokeReady(): void;
+  /**
+   *
+   */
+  onReady(): void;
 
-	/**
-	 * 
-	 */
-	onReady(): void;
+  /**
+   *
+   */
+  resetScene(): void;
 
-	/**
-	 * 
-	 */
-	resetScene(): void;
+  /**
+   *
+   * @param {vtkRenderer} renderer The vtkRenderer instance.
+   */
+  setRenderer(renderer: vtkRenderer): boolean;
 
-	/**
-	 * 
-	 * @param {vtkRenderer} renderer The vtkRenderer instance. 
-	 */
-	setRenderer(renderer: vtkRenderer): boolean;
+  /**
+   *
+   * @param {String} url
+   */
+  setUrl(url: string): void;
 
-	/**
-	 * 
-	 * @param {String} url 
-	 */
-	setUrl(url: string): void;
-
-	/**
-	 * 
-	 */
-	update(): void;
+  /**
+   *
+   */
+  update(): void;
 }
 
 /**
@@ -93,25 +92,31 @@ export interface vtkHttpSceneLoader extends vtkObject {
  * @param model object on which data structure will be bounds (protected)
  * @param {IHttpSceneLoaderInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IHttpSceneLoaderInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: IHttpSceneLoaderInitialValues
+): void;
 
 /**
  * Method used to create a new instance of vtkHttpSceneLoader
  * @param {IHttpSceneLoaderInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: IHttpSceneLoaderInitialValues): vtkHttpSceneLoader;
+export function newInstance(
+  initialValues?: IHttpSceneLoaderInitialValues
+): vtkHttpSceneLoader;
 
 /**
- * 
- * @param sceneItem 
- * @param settings 
+ *
+ * @param sceneItem
+ * @param settings
  */
 export function applySettings(sceneItem: object, settings: object): void;
 
 /**
- * 
- * @param typeName 
- * @param handler 
+ *
+ * @param typeName
+ * @param handler
  */
 export function updateDatasetTypeMapping(typeName: string, handler: any): void;
 
@@ -119,9 +124,9 @@ export function updateDatasetTypeMapping(typeName: string, handler: any): void;
  * vtkHttpSceneLoader
  */
 export declare const vtkHttpSceneLoader: {
-	newInstance: typeof newInstance;
-	extend: typeof extend;
-	applySettings: typeof applySettings;
-	updateDatasetTypeMapping: typeof updateDatasetTypeMapping;
-}
+  newInstance: typeof newInstance;
+  extend: typeof extend;
+  applySettings: typeof applySettings;
+  updateDatasetTypeMapping: typeof updateDatasetTypeMapping;
+};
 export default vtkHttpSceneLoader;

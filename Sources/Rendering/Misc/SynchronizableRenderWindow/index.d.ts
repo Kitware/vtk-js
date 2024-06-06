@@ -1,32 +1,41 @@
-import { Nullable } from "../../../types";
-import vtkRenderWindow, { IRenderWindowInitialValues } from "../../Core/RenderWindow";
+import { Nullable } from '../../../types';
+import vtkRenderWindow, {
+  IRenderWindowInitialValues,
+} from '../../Core/RenderWindow';
 
 // Keeps state for client / server scene synchronization.
 export interface ISynchronizerContext {
-    // Set a function that fetches the data array for the given object.
-    setFetchArrayFunction(fetcher: (hash: string, dataType: any) => Promise<ArrayBuffer>): void;
-    // Invokes the fetcher registered by setFetchArrayFunction.
-    getArray(sha: string, dataType: any, context: ISynchronizerContext): Promise<ArrayBuffer>;
-    emptyCachedArrays(): void;
-    freeOldArrays(threshold: number, context: ISynchronizerContext): void;
+  // Set a function that fetches the data array for the given object.
+  setFetchArrayFunction(
+    fetcher: (hash: string, dataType: any) => Promise<ArrayBuffer>
+  ): void;
+  // Invokes the fetcher registered by setFetchArrayFunction.
+  getArray(
+    sha: string,
+    dataType: any,
+    context: ISynchronizerContext
+  ): Promise<ArrayBuffer>;
+  emptyCachedArrays(): void;
+  freeOldArrays(threshold: number, context: ISynchronizerContext): void;
 
-    // instanceMap
-    getInstance(id: any): any;
-    getInstanceId(instance: any): any | null;
-    registerInstance(id: any, instance: any): void;
-    unregister(id: any): void;
-    emptyCachedInstances(): void;
+  // instanceMap
+  getInstance(id: any): any;
+  getInstanceId(instance: any): any | null;
+  registerInstance(id: any, instance: any): void;
+  unregister(id: any): void;
+  emptyCachedInstances(): void;
 
-    // sceneMtimeHandler
-    getMtime(): number;
-    incrementMtime(viewId: string): number;
-    setActiveViewId(viewId: string): void;
-    getActiveViewId(): string;
+  // sceneMtimeHandler
+  getMtime(): number;
+  incrementMtime(viewId: string): number;
+  setActiveViewId(viewId: string): void;
+  getActiveViewId(): string;
 
-    // TODO: fill progresshandler
+  // TODO: fill progresshandler
 }
 
-export interface ISynchronizableRenderWindowInitialValues extends IRenderWindowInitialValues {
+export interface ISynchronizableRenderWindowInitialValues
+  extends IRenderWindowInitialValues {
   synchronizerContextName?: string; // default: 'default':
   synchronizerContext?: Nullable<ISynchronizerContext>;
   synchronizedViewId?: Nullable<string>;
@@ -41,7 +50,7 @@ export interface IViewState {
   mtime: number;
   // ID of the parent. Null for the root.
   parent?: Nullable<string>;
-  properties?: {[key: string]: any};
+  properties?: { [key: string]: any };
   // Child objects.
   dependencies?: IViewState[];
   extra?: any;
@@ -52,7 +61,6 @@ export interface IViewState {
 }
 
 export interface vtkSynchronizableRenderWindow extends vtkRenderWindow {
-
   /**
    *
    */
@@ -101,13 +109,19 @@ export interface vtkSynchronizableRenderWindow extends vtkRenderWindow {
  * @param model object on which data structure will be bounds (protected)
  * @param {ISynchronizableRenderWindowInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: ISynchronizableRenderWindowInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: ISynchronizableRenderWindowInitialValues
+): void;
 
 /**
  * Method used to create a new instance of vtkSynchronizableRenderWindow
  * @param {ISynchronizableRenderWindowInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: ISynchronizableRenderWindowInitialValues): vtkSynchronizableRenderWindow;
+export function newInstance(
+  initialValues?: ISynchronizableRenderWindowInitialValues
+): vtkSynchronizableRenderWindow;
 
 /**
  *
@@ -120,8 +134,10 @@ export function getSynchronizerContext(name?: string): ISynchronizerContext;
  * @param {String} name
  * @param {Nullable<ISynchronizerContext>} ctx
  */
-export function setSynchronizerContext(name: string, ctx: Nullable<ISynchronizerContext>);
-
+export function setSynchronizerContext(
+  name: string,
+  ctx: Nullable<ISynchronizerContext>
+);
 
 /**
  *
@@ -164,11 +180,11 @@ export declare const vtkSynchronizableRenderWindow: {
   getSynchronizerContext: typeof getSynchronizerContext;
   setSynchronizerContext: typeof setSynchronizerContext;
   clearSynchronizerContext: typeof clearSynchronizerContext;
-  decorate: typeof decorate,
-  createInstanceMap: typeof createInstanceMap,
-  createArrayHandler: typeof createArrayHandler,
-  createProgressHandler: typeof createProgressHandler,
-  createSceneMtimeHandler: typeof createSceneMtimeHandler,
-  vtkObjectManager: object
+  decorate: typeof decorate;
+  createInstanceMap: typeof createInstanceMap;
+  createArrayHandler: typeof createArrayHandler;
+  createProgressHandler: typeof createProgressHandler;
+  createSceneMtimeHandler: typeof createSceneMtimeHandler;
+  vtkObjectManager: object;
 };
 export default vtkSynchronizableRenderWindow;

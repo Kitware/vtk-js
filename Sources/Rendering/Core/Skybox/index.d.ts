@@ -1,36 +1,35 @@
-import vtkActor, { IActorInitialValues } from "../Actor";
+import vtkActor, { IActorInitialValues } from '../Actor';
 
 export interface ISkyboxInitialValues extends IActorInitialValues {
-	format?: string;
+  format?: string;
 }
 
 export interface vtkSkybox extends vtkActor {
+  /**
+   *
+   */
+  getFromat(): string;
 
-	/**
-	 * 
-	 */
-	getFromat(): string;
+  /**
+   *
+   */
+  getIsOpaque(): boolean;
 
-	/**
-	 * 
-	 */
-	getIsOpaque(): boolean;
+  /**
+   *
+   */
+  getSupportsSelection(): boolean;
 
-	/**
-	 * 
-	 */
-	getSupportsSelection(): boolean;
+  /**
+   *
+   */
+  hasTranslucentPolygonalGeometry(): boolean;
 
-	/**
-	 * 
-	 */
-	hasTranslucentPolygonalGeometry(): boolean;
-
-	/**
-	 * 
-	 * @param format 
-	 */
-	setFromat(format: string): boolean;
+  /**
+   *
+   * @param format
+   */
+  setFromat(format: string): boolean;
 }
 
 /**
@@ -40,18 +39,22 @@ export interface vtkSkybox extends vtkActor {
  * @param model object on which data structure will be bounds (protected)
  * @param {ISkyboxInitialValues} [initialValues] (default: {})
  */
- export function extend(publicAPI: object, model: object, initialValues?: ISkyboxInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: ISkyboxInitialValues
+): void;
 
- /**
-  * Method use to create a new instance of vtkSkybox 
-  */
- export function newInstance(initialValues?: ISkyboxInitialValues): vtkSkybox;
- 
- /** 
-  * 
-  */
- export declare const vtkSkybox: {
-	 newInstance: typeof newInstance,
-	 extend: typeof extend,
- };
- export default vtkSkybox;
+/**
+ * Method use to create a new instance of vtkSkybox
+ */
+export function newInstance(initialValues?: ISkyboxInitialValues): vtkSkybox;
+
+/**
+ *
+ */
+export declare const vtkSkybox: {
+  newInstance: typeof newInstance;
+  extend: typeof extend;
+};
+export default vtkSkybox;

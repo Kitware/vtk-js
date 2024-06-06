@@ -1,71 +1,70 @@
 import vtkActor, { IActorInitialValues } from '../Actor';
 
 export interface IStyle {
-	text?: string;
-	faceColor?: string;
-	faceRotation?: number;
-	fontFamily?: string;
-	fontColor?: string;
-	fontStyle?: string;
-	fontSizeScale?: (res: number) => number;
-	edgeThickness?: number;
-	edgeColor?: string;
-	resolution?: number;
+  text?: string;
+  faceColor?: string;
+  faceRotation?: number;
+  fontFamily?: string;
+  fontColor?: string;
+  fontStyle?: string;
+  fontSizeScale?: (res: number) => number;
+  edgeThickness?: number;
+  edgeColor?: string;
+  resolution?: number;
 }
 
 export interface IFaceProperty extends IStyle {
-	text?: string;
-	faceRotation?: number;
+  text?: string;
+  faceRotation?: number;
 }
 
 /**
  *
  */
-export interface IAnnotatedCubeActorInitialValues extends IActorInitialValues {
-}
+export interface IAnnotatedCubeActorInitialValues extends IActorInitialValues {}
 
 export interface vtkAnnotatedCubeActor extends vtkActor {
-	/**
-	 * Set the default style.
-	 * @param {IStyle} style
-	 */
-	setDefaultStyle(style: IStyle): boolean;
+  /**
+   * Set the default style.
+   * @param {IStyle} style
+   */
+  setDefaultStyle(style: IStyle): boolean;
 
-	/**
-	 * The +X face property.
-	 * @param {IFaceProperty} prop +X face property
-	 */
-	setXPlusFaceProperty(prop: IFaceProperty): boolean;
+  /**
+   * The +X face property.
+   * @param {IFaceProperty} prop +X face property
+   */
+  setXPlusFaceProperty(prop: IFaceProperty): boolean;
 
-	/**
-	 * The -X face property.
-	 * @param {IFaceProperty} prop The -X face property.
-	 */
-	setXMinusFaceProperty(prop: IFaceProperty): boolean;
+  /**
+   * The -X face property.
+   * @param {IFaceProperty} prop The -X face property.
+   */
+  setXMinusFaceProperty(prop: IFaceProperty): boolean;
 
-	/**
-	 * The +Y face property.
-	 * @param {IFaceProperty} prop The +Y face property.
-	 */
-	setYPlusFaceProperty(prop: IFaceProperty): boolean;
+  /**
+   * The +Y face property.
+   * @param {IFaceProperty} prop The +Y face property.
+   */
+  setYPlusFaceProperty(prop: IFaceProperty): boolean;
 
-	/**
-	 * The -Y face property.
-	 * @param {IFaceProperty} prop The -Y ace property.
-	 */
-	setYMinusFaceProperty(prop: IFaceProperty): boolean;
+  /**
+   * The -Y face property.
+   * @param {IFaceProperty} prop The -Y ace property.
+   */
+  setYMinusFaceProperty(prop: IFaceProperty): boolean;
 
-	/**
-	 * The +Z face property.
-	 * @param {IFaceProperty} prop The +Z face property.
-	 */
-	setZPlusFaceProperty(prop: IFaceProperty): boolean;
+  /**
+   * The +Z face property.
+   * @param {IFaceProperty} prop The +Z face property.
+   */
+  setZPlusFaceProperty(prop: IFaceProperty): boolean;
 
-	/**
-	 * The -Z face property.
-	 * @param {IFaceProperty} prop The -Z face property.
-	 */
-	setZMinusFaceProperty(prop: IFaceProperty): boolean;
+  /**
+   * The -Z face property.
+   * @param {IFaceProperty} prop The -Z face property.
+   */
+  setZMinusFaceProperty(prop: IFaceProperty): boolean;
 }
 
 /**
@@ -75,13 +74,19 @@ export interface vtkAnnotatedCubeActor extends vtkActor {
  * @param model object on which data structure will be bounds (protected)
  * @param {IAnnotatedCubeActorInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IAnnotatedCubeActorInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: IAnnotatedCubeActorInitialValues
+): void;
 
 /**
  * Method use to create a new instance of vtkAnnotatedCubeActor
  * @param {IAnnotatedCubeActorInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: IAnnotatedCubeActorInitialValues): vtkAnnotatedCubeActor;
+export function newInstance(
+  initialValues?: IAnnotatedCubeActorInitialValues
+): vtkAnnotatedCubeActor;
 
 /**
  * All propertyObjects may have any of the following keys:
@@ -100,7 +105,7 @@ export function newInstance(initialValues?: IAnnotatedCubeActorInitialValues): v
  * If a key is not specified, then the default value is used.
  */
 export declare const vtkAnnotatedCubeActor: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+  newInstance: typeof newInstance;
+  extend: typeof extend;
 };
 export default vtkAnnotatedCubeActor;
