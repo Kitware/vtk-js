@@ -47,16 +47,32 @@ function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
 
-    model.lineManipulator.setWidgetOrigin(model.widgetState.getOrigin());
-    model.planeManipulator.setWidgetOrigin(model.widgetState.getOrigin());
+    model.lineManipulator.setWidgetOrigin(model.activeState.getOrigin());
+    model.lineManipulator.setWidgetNormal(model.activeState.getNormal());
+    model.planeManipulator.setWidgetOrigin(model.activeState.getOrigin());
+    model.planeManipulator.setWidgetNormal(model.activeManipulator.getNormal());
     model.trackballManipulator.reset(callData); // setup trackball delta
+    model.trackballManipulator.setWidgetNormal(model.activeState.getNormal());
 
-    // updates worldDelta
-    model.lineManipulator.handleEvent(callData, model._apiSpecificRenderWindow);
-    model.planeManipulator.handleEvent(
-      callData,
-      model._apiSpecificRenderWindow
-    );
+    // update worldDelta with the proper manipulator
+    let activeManipulator = null;
+    switch (model.activeState.getUpdateMethodName()) {
+      case 'updateFromOrigin':
+        activeManipulator = model.planeManipulator;
+        break;
+      case 'updateFromPlane':
+        activeManipulator = model.lineManipulator;
+        break;
+      case 'updateFromNormal':
+        activeManipulator = model.trackballManipulator;
+        break;
+      default:
+      // skip
+    }
+
+    if (activeManipulator) {
+      activeManipulator.handleEvent(callData, model._apiSpecificRenderWindow);
+    }
 
     if (model.dragable) {
       model._draggingWidgetOrigin = model.widgetState.getOrigin();
