@@ -50,7 +50,7 @@ function widgetBehavior(publicAPI, model) {
     model.lineManipulator.setWidgetOrigin(model.activeState.getOrigin());
     model.lineManipulator.setWidgetNormal(model.activeState.getNormal());
     model.planeManipulator.setWidgetOrigin(model.activeState.getOrigin());
-    model.planeManipulator.setWidgetNormal(model.activeManipulator.getNormal());
+    model.planeManipulator.setWidgetNormal(model.activeState.getNormal());
     model.trackballManipulator.reset(callData); // setup trackball delta
     model.trackballManipulator.setWidgetNormal(model.activeState.getNormal());
 
