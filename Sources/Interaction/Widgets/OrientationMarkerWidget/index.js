@@ -148,7 +148,7 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       }
       // Highest number is foreground
       selfRenderer.setLayer(renderWindow.getNumberOfLayers() - 1);
-      selfRenderer.setInteractive(false);
+      selfRenderer.setInteractive(model.interactiveRenderer);
 
       selfRenderer.addViewProp(model.actor);
       model.actor.setVisibility(true);
@@ -281,6 +281,7 @@ export const DEFAULT_VALUES = {
   minPixelSize: 50,
   maxPixelSize: 200,
   parentRenderer: null,
+  interactiveRenderer: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -291,7 +292,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
 
-  macro.get(publicAPI, model, ['enabled', 'viewportCorner', 'viewportSize']);
+  macro.get(publicAPI, model, [
+    'enabled',
+    'viewportCorner',
+    'viewportSize',
+    'interactiveRenderer',
+  ]);
 
   // NOTE: setting these while the widget is enabled will
   // not update the widget.
