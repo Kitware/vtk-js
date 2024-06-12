@@ -300,7 +300,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       // register the manipulator for this device
       model.currentVRManipulators.set(ed.device, manipulator);
 
-      manipulator.onButton3D(publicAPI, ed.pokedRenderer, model.state, ed);
+      manipulator.onButton3D(publicAPI, model.getRenderer(ed), model.state, ed);
 
       if (ed.pressed) {
         publicAPI.startCameraPose();
@@ -322,7 +322,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     const manipulator = model.currentVRManipulators.get(ed.device);
 
     if (manipulator && model.state === States.IS_CAMERA_POSE) {
-      manipulator.onMove3D(publicAPI, ed.pokedRenderer, model.state, ed);
+      manipulator.onMove3D(publicAPI, model.getRenderer(ed), model.state, ed);
     }
   };
 
@@ -350,7 +350,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       model.currentManipulator.startInteraction();
       model.currentManipulator.onButtonDown(
         model._interactor,
-        callData.pokedRenderer,
+        model.getRenderer(callData),
         callData.position
       );
       model._interactor.requestAnimation(publicAPI.onButtonDown);
@@ -452,7 +452,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       model.currentWheelManipulator = manipulator;
       model.currentWheelManipulator.onStartScroll(
         model._interactor,
-        callData.pokedRenderer,
+        model.getRenderer(callData),
         callData.spinY
       );
       model.currentWheelManipulator.startInteraction();
@@ -485,7 +485,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     ) {
       model.currentWheelManipulator.onScroll(
         model._interactor,
-        callData.pokedRenderer,
+        model.getRenderer(callData),
         callData.spinY,
         model.cachedMousePosition
       );
@@ -499,7 +499,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     if (model.currentManipulator && model.currentManipulator.onMouseMove) {
       model.currentManipulator.onMouseMove(
         model._interactor,
-        callData.pokedRenderer,
+        model.getRenderer(callData),
         callData.position
       );
       publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
@@ -515,7 +515,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       .forEach((manipulator) => {
         manipulator.onKeyPress(
           model._interactor,
-          callData.pokedRenderer,
+          model.getRenderer(callData),
           callData.key
         );
         publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
@@ -529,7 +529,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       .forEach((manipulator) => {
         manipulator.onKeyDown(
           model._interactor,
-          callData.pokedRenderer,
+          model.getRenderer(callData),
           callData.key
         );
         publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
@@ -543,7 +543,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       .forEach((manipulator) => {
         manipulator.onKeyUp(
           model._interactor,
-          callData.pokedRenderer,
+          model.getRenderer(callData),
           callData.key
         );
         publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
@@ -652,7 +652,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       if (manipulator && manipulator.isPinchEnabled()) {
         manipulator.onPinch(
           model._interactor,
-          callData.pokedRenderer,
+          model.getRenderer(callData),
           callData.scale
         );
         actionCount++;
@@ -672,7 +672,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       if (manipulator && manipulator.isPanEnabled()) {
         manipulator.onPan(
           model._interactor,
-          callData.pokedRenderer,
+          model.getRenderer(callData),
           callData.translation
         );
         actionCount++;
@@ -692,7 +692,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       if (manipulator && manipulator.isRotateEnabled()) {
         manipulator.onRotate(
           model._interactor,
-          callData.pokedRenderer,
+          model.getRenderer(callData),
           callData.rotation
         );
         actionCount++;

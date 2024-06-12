@@ -55,6 +55,9 @@ function vtkInteractorStyle(publicAPI, model) {
     };
   });
 
+  model.getRenderer = (callData) =>
+    model.focusedRenderer || callData.pokedRenderer;
+
   //----------------------------------------------------------------------------
   publicAPI.handleKeyPress = (callData) => {
     const rwi = model._interactor;
@@ -62,13 +65,13 @@ function vtkInteractorStyle(publicAPI, model) {
     switch (callData.key) {
       case 'r':
       case 'R':
-        callData.pokedRenderer.resetCamera();
+        model.getRenderer(callData).resetCamera();
         rwi.render();
         break;
 
       case 'w':
       case 'W':
-        ac = callData.pokedRenderer.getActors();
+        ac = model.getRenderer(callData).getActors();
         ac.forEach((anActor) => {
           const prop = anActor.getProperty();
           if (prop.setRepresentationToWireframe) {
@@ -80,7 +83,7 @@ function vtkInteractorStyle(publicAPI, model) {
 
       case 's':
       case 'S':
-        ac = callData.pokedRenderer.getActors();
+        ac = model.getRenderer(callData).getActors();
         ac.forEach((anActor) => {
           const prop = anActor.getProperty();
           if (prop.setRepresentationToSurface) {
@@ -92,7 +95,7 @@ function vtkInteractorStyle(publicAPI, model) {
 
       case 'v':
       case 'V':
-        ac = callData.pokedRenderer.getActors();
+        ac = model.getRenderer(callData).getActors();
         ac.forEach((anActor) => {
           const prop = anActor.getProperty();
           if (prop.setRepresentationToPoints) {
@@ -125,6 +128,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkInteractorObserver.extend(publicAPI, model, initialValues);
+
+  macro.setGet(publicAPI, model, ['focusedRenderer']);
 
   // Object specific methods
   vtkInteractorStyle(publicAPI, model);
