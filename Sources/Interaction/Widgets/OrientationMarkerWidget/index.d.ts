@@ -145,6 +145,13 @@ export interface vtkOrientationMarkerWidget extends vtkObject {
    * Updates the orientation widget viewport size.
    */
   updateViewport(): void;
+
+  /**
+   * An instance of this class will spawn its own renderer, by default non interactive.
+   * This behavior is configurable through the interactiveRenderer property when initializing the instance.
+   * @returns true if the renderer was created as interactive, false otherwise.
+   */
+  getInteractiveRenderer(): boolean;
 }
 
 /**
