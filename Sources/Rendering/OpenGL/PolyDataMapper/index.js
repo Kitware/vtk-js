@@ -1947,9 +1947,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         publicAPI.updateMaximumPointCellIds();
       }
 
-      model.VBOBuildTime.modified();
       model.VBOBuildString = toString;
     }
+    model.VBOBuildTime.modified();
   };
 
   publicAPI.getAllocatedGPUMemoryInBytes = () => {
