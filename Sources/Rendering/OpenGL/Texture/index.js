@@ -27,7 +27,9 @@ function vtkOpenGLTexture(publicAPI, model) {
       model._openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       // sync renderable properties
-      model._openGLRenderWindow = model._openGLRenderer.getParent();
+      model._openGLRenderWindow = model._openGLRenderer.getLastAncestorOfType(
+        'vtkOpenGLRenderWindow'
+      );
     }
     model.context = model._openGLRenderWindow.getContext();
     if (model.renderable.getInterpolate()) {
