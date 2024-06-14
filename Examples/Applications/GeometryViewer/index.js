@@ -270,6 +270,8 @@ function createPipeline(fileName, fileContents) {
 
   const lookupTable = vtkColorTransferFunction.newInstance();
   const source = vtpReader.getOutputData(0);
+  // interpolateScalarsBeforeMapping is only used when displaying point data
+  // This setting is not relevant for cell data
   const mapper = vtkMapper.newInstance({
     interpolateScalarsBeforeMapping: true,
     useLookupTableScalarRange: true,

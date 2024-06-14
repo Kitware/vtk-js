@@ -14,6 +14,7 @@ interface IPrimitiveCount {
 
 interface IAbstractScalars {
   cellFlag: boolean;
+  scalars: Nullable<vtkDataArray>;
 }
 
 interface ICoincidentTopology {
@@ -55,9 +56,13 @@ export interface vtkMapper extends vtkAbstractMapper3D {
    * When rendering multiblock datasets, if any 2 blocks provide different
    * lookup tables for the scalars, then also we cannot use textures. This case
    * can be handled if required.
-   * @param input
+   * @param scalars
+   * @param cellFlag True when the scalars are per cell instead of per point
    */
-  canUseTextureMapForColoring(input: any): boolean;
+  canUseTextureMapForColoring(
+    scalars: vtkDataArray,
+    cellFlag: boolean
+  ): boolean;
 
   /**
    * Call to force a rebuild of color result arrays on next MapScalars.

@@ -198,7 +198,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       ).result;
     } else {
       if (
-        model.renderable.getInterpolateScalarsBeforeMapping() &&
+        (model.renderable.getAreScalarsMappedFromCells() ||
+          model.renderable.getInterpolateScalarsBeforeMapping()) &&
         model.renderable.getColorCoordinates() &&
         !model.drawingEdges
       ) {
