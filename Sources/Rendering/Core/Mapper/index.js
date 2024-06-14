@@ -165,7 +165,7 @@ function vtkMapper(publicAPI, model) {
     // Decide between texture color or vertex color.
     // Cell data always uses vertex color.
     // Only point data can use both texture and vertex coloring.
-    if (publicAPI.canUseTextureMapForColoring(input)) {
+    if (publicAPI.canUseTextureMapForColoring(scalars, cellFlag)) {
       publicAPI.mapScalarsToTexture(scalars, alpha);
     } else {
       model.colorCoordinates = null;
@@ -413,7 +413,11 @@ function vtkMapper(publicAPI, model) {
     return true;
   };
 
-  publicAPI.canUseTextureMapForColoring = (input) => {
+  publicAPI.canUseTextureMapForColoring = (scalars, cellFlag) => {
+    if (cellFlag) {
+      return true; // cell data always use textures.
+    }
+
     if (!model.interpolateScalarsBeforeMapping) {
       return false; // user doesn't want us to use texture maps at all.
     }
@@ -422,15 +426,6 @@ function vtkMapper(publicAPI, model) {
     if (model.lookupTable && model.lookupTable.getIndexedLookup()) {
       return false;
     }
-
-    const gasResult = publicAPI.getAbstractScalars(
-      input,
-      model.scalarMode,
-      model.arrayAccessMode,
-      model.arrayId,
-      model.colorByArrayName
-    );
-    const scalars = gasResult.scalars;
 
     if (!scalars) {
       // no scalars on this dataset, we don't care if texture is used at all.
