@@ -69,7 +69,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       model._openGLCamera = model._openGLRenderer.getViewNodeFor(
         ren.getActiveCamera()
       );
-      model._openGLRenderWindow = model._openGLRenderer.getParent();
+      model._openGLRenderWindow = model._openGLRenderer.getLastAncestorOfType(
+        'vtkOpenGLRenderWindow'
+      );
       model.context = model._openGLRenderWindow.getContext();
       model.tris.setOpenGLRenderWindow(model._openGLRenderWindow);
     }

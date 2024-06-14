@@ -55,7 +55,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       model.openGLActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
       model._openGLRenderer =
         model.openGLActor.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model._openGLRenderWindow = model._openGLRenderer.getParent();
+      model._openGLRenderWindow = model._openGLRenderer.getLastAncestorOfType(
+        'vtkOpenGLRenderWindow'
+      );
       model.openGLCamera = model._openGLRenderer.getViewNodeFor(
         model._openGLRenderer.getRenderable().getActiveCamera()
       );
