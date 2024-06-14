@@ -193,11 +193,15 @@ function addRenderWindow(actor) {
   const button = createRemoveButton();
   button.addEventListener('click', () => {
     rootContainer.removeChild(container);
-    mainRenderWindow.removeRenderWindow(renderWindow);
-    mainRenderWindowView.removeNode(renderWindowView);
     interactor.delete();
-    renderWindowView.delete();
+
+    // The core renderWindow is managed by the user, so delete it
+    mainRenderWindow.removeRenderWindow(renderWindow);
     renderWindow.delete();
+
+    // The node renderWindowView is managed by vtk.js backend, and removed automatically
+    mainRenderWindowView.removeNode(renderWindowView);
+
     if (mainRenderWindow.getChildRenderWindowsByReference().length === 0) {
       // When there is no child render window anymore, delete the main render window
       // We also release the graphics resources, which is not very import as when the context is destroyed, the resources should be freed
