@@ -1,4 +1,5 @@
 import { vtkObject } from '../../../interfaces';
+import { Nullable } from '../../../types';
 import vtkColorTransferFunction from '../ColorTransferFunction';
 import vtkPiecewiseFunction from '../../../Common/DataModel/PiecewiseFunction';
 import { InterpolationType } from './Constants';
@@ -79,13 +80,13 @@ export interface vtkImageProperty extends vtkObject {
    * Get the component weighting function.
    * @param {Number} [idx]
    */
-  getPiecewiseFunction(idx?: number): vtkPiecewiseFunction;
+  getPiecewiseFunction(idx?: number): Nullable<vtkPiecewiseFunction>;
 
   /**
    * Get the currently set RGB transfer function.
    * @param {Number} [idx]
    */
-  getRGBTransferFunction(idx?: number): vtkColorTransferFunction;
+  getRGBTransferFunction(idx?: number): Nullable<vtkColorTransferFunction>;
 
   /**
    * Alias to get the piecewise function (backwards compatibility)
@@ -176,7 +177,10 @@ export interface vtkImageProperty extends vtkObject {
    * @param {Number} index
    * @param {vtkPiecewiseFunction} func
    */
-  setPiecewiseFunction(index: number, func: vtkPiecewiseFunction): boolean;
+  setPiecewiseFunction(
+    index: number,
+    func: Nullable<vtkPiecewiseFunction>
+  ): boolean;
 
   /**
    * Set the color of a volume to an RGB transfer function
@@ -185,7 +189,7 @@ export interface vtkImageProperty extends vtkObject {
    */
   setRGBTransferFunction(
     index: number,
-    func: vtkColorTransferFunction
+    func: Nullable<vtkColorTransferFunction>
   ): boolean;
 
   /**
@@ -193,7 +197,10 @@ export interface vtkImageProperty extends vtkObject {
    * @param {Number} index
    * @param {vtkPiecewiseFunction} func
    */
-  setScalarOpacity(index: number, func: vtkPiecewiseFunction): boolean;
+  setScalarOpacity(
+    index: number,
+    func: Nullable<vtkPiecewiseFunction>
+  ): boolean;
 
   /**
    * Use the range that is set on the lookup table, instead of setting the range from the
