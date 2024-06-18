@@ -8,7 +8,13 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
+import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
+import {
+  FieldDataTypes,
+  FieldAssociations,
+} from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
 test('Test HardwareSelector', (tapeContext) => {
   const gc = testUtils.createGarbageCollector(tapeContext);
@@ -60,9 +66,39 @@ test('Test HardwareSelector', (tapeContext) => {
   actor3.getProperty().setEdgeVisibility(true);
   actor3.getProperty().setEdgeColor(1.0, 0.5, 0.5);
   actor3.getProperty().setDiffuseColor(0.5, 1.0, 0.5);
+  actor3.getProperty().setOpacity(0.8);
   actor3.setPosition(1.0, 1.0, 1.0);
-
   renderer.addActor(actor3);
+  const ConeSource = gc.registerResource(vtkConeSource.newInstance());
+  const filter = vtkCalculator.newInstance();
+
+  filter.setInputConnection(ConeSource.getOutputPort());
+  filter.setFormula({
+    getArrays: (inputDataSets) => ({
+      input: [],
+      output: [
+        {
+          location: FieldDataTypes.CELL,
+          name: 'Random',
+          dataType: 'Float32Array',
+          attribute: AttributeTypes.SCALARS,
+        },
+      ],
+    }),
+    evaluate: (arraysIn, arraysOut) => {
+      const [scalars] = arraysOut.map((d) => d.getData());
+      for (let i = 0; i < scalars.length; i++) {
+        scalars[i] = Math.random();
+      }
+    },
+  });
+  const mapper4 = gc.registerResource(vtkMapper.newInstance());
+  mapper4.setInputConnection(filter.getOutputPort());
+  const actor4 = gc.registerResource(vtkActor.newInstance());
+  actor4.setMapper(mapper4);
+  actor4.getProperty().setOpacity(0.5);
+  actor4.setPosition(1.0, 1.0, 1.25);
+  renderer.addActor(actor4);
 
   // now create something to view it, in this case webgl
   const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
@@ -80,14 +116,15 @@ test('Test HardwareSelector', (tapeContext) => {
     sel.selectAsync(renderer, 200, 200, 300, 300).then((res) => {
       // res[1] should be at 1.0, 1.0, 1.5 in world coords
       const allGood =
-        res.length === 2 &&
-        res[0].getProperties().prop === actor &&
-        res[1].getProperties().prop === actor3 &&
-        Math.abs(res[1].getProperties().worldPosition[0] - 1.0) < 0.02 &&
-        Math.abs(res[1].getProperties().worldPosition[1] - 1.0) < 0.02 &&
-        Math.abs(res[1].getProperties().worldPosition[2] - 1.5) < 0.02;
+        res.length === 3 &&
+        res[0].getProperties().prop === actor4 &&
+        res[1].getProperties().prop === actor &&
+        res[2].getProperties().prop === actor3 &&
+        Math.abs(res[2].getProperties().worldPosition[0] - 1.0) < 0.02 &&
+        Math.abs(res[2].getProperties().worldPosition[1] - 1.0) < 0.02 &&
+        Math.abs(res[2].getProperties().worldPosition[2] - 1.5) < 0.02;
 
-      tapeContext.ok(res.length === 2, 'Two props selected');
+      tapeContext.ok(res.length === 3, 'Three props selected');
       tapeContext.ok(allGood, 'Correct props were selected');
     })
   );
