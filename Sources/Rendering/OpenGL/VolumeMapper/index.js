@@ -1534,7 +1534,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       numIComps
     );
     const reBuildOp =
-      !opTex.vtkObj ||
+      !opTex?.oglObject ||
       opTex.hash !== toString ||
       model.opacityTextureString !== toString;
     if (reBuildOp) {
@@ -1603,7 +1603,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         );
       }
     } else {
-      model.opacityTexture = opTex.vtkObj;
+      model.opacityTexture = opTex.oglObject;
       model.opacityTextureString = opTex.hash;
     }
 
@@ -1617,7 +1617,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const cTex =
       model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
     const reBuildC =
-      !cTex?.vtkObj?.getHandle() ||
+      !cTex?.oglObject?.getHandle() ||
       cTex?.hash !== toString ||
       model.colorTextureString !== toString;
     if (reBuildC) {
@@ -1657,7 +1657,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         );
       }
     } else {
-      model.colorTexture = cTex.vtkObj;
+      model.colorTexture = cTex.oglObject;
       model.colorTextureString = cTex.hash;
     }
 
@@ -1666,7 +1666,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const tex = model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
     // rebuild the scalarTexture if the data has changed
     toString = `${image.getMTime()}A${scalars.getMTime()}`;
-    const reBuildTex = !tex?.vtkObj?.getHandle() || tex?.hash !== toString;
+    const reBuildTex = !tex?.oglObject?.getHandle() || tex?.hash !== toString;
     if (reBuildTex) {
       // Build the textures
       const dims = image.getDimensions();
@@ -1691,7 +1691,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         );
       }
     } else {
-      model.scalarTexture = tex.vtkObj;
+      model.scalarTexture = tex.oglObject;
     }
 
     if (!model.tris.getCABO().getElementCount()) {
@@ -1772,7 +1772,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const toString = `${labelOutlineThicknessArray.join('-')}`;
 
     const reBuildL =
-      !lTex?.vtkObj?.getHandle() ||
+      !lTex?.oglObject?.getHandle() ||
       lTex?.hash !== toString ||
       model.labelOutlineThicknessTextureString !== toString;
 
@@ -1820,7 +1820,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         );
       }
     } else {
-      model.labelOutlineThicknessTexture = lTex.vtkObj;
+      model.labelOutlineThicknessTexture = lTex.oglObject;
       model.labelOutlineThicknessTextureString = lTex.hash;
     }
   };

@@ -454,9 +454,9 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
    * the cached resource.
    * @return {Object} Dictionary with the graphics resource and string hash
    */
-  getGraphicsResourceForObject(
-    vtkObj: vtkCellArray | vtkDataArray | vtkPoints
-  ): { gObj: vtkOpenGLTexture | vtkBufferObject; hash: string };
+  getGraphicsResourceForObject<T extends vtkCellArray | vtkDataArray | vtkPoints>(
+    vtkObj: T
+  ): { coreObject: T, oglObject: vtkOpenGLTexture | vtkBufferObject; hash: string };
 
   /**
    * Get approximate graphics memory usage, in bytes, for the context. This is a simple computation
