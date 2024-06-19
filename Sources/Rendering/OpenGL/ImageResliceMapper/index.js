@@ -219,7 +219,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     let toString = `${image.getMTime()}A${scalars.getMTime()}`;
 
     const tex = model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
-    const reBuildTex = !tex?.vtkObj?.getHandle() || tex?.hash !== toString;
+    const reBuildTex = !tex?.oglObject?.getHandle() || tex?.hash !== toString;
     if (reBuildTex) {
       if (!model.openGLTexture) {
         model.openGLTexture = vtkOpenGLTexture.newInstance();
@@ -247,7 +247,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         );
       }
     } else {
-      model.openGLTexture = tex.vtkObj;
+      model.openGLTexture = tex.oglObject;
     }
 
     const ppty = actor.getProperty();
@@ -260,7 +260,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     const cTex =
       model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
     const reBuildC =
-      !cTex?.vtkObj?.getHandle() ||
+      !cTex?.oglObject?.getHandle() ||
       cTex?.hash !== toString ||
       model.colorTextureString !== toString;
     if (reBuildC) {
@@ -324,7 +324,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         );
       }
     } else {
-      model.colorTexture = cTex.vtkObj;
+      model.colorTexture = cTex.oglObject;
       model.colorTextureString = cTex.hash;
     }
 
@@ -337,7 +337,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       model._openGLRenderWindow.getGraphicsResourceForObject(pwFunc);
     // rebuild opacity tfun?
     const reBuildPwf =
-      !pwfTex?.vtkObj?.getHandle() ||
+      !pwfTex?.oglObject?.getHandle() ||
       pwfTex?.hash !== toString ||
       model.pwfTextureString !== toString;
     if (reBuildPwf) {
@@ -404,7 +404,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         );
       }
     } else {
-      model.pwfTexture = pwfTex.vtkObj;
+      model.pwfTexture = pwfTex.oglObject;
       model.pwfTextureString = pwfTex.hash;
     }
 
