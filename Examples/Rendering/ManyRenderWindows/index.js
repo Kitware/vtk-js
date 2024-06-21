@@ -204,11 +204,6 @@ function addRenderWindow(actor) {
 
     if (mainRenderWindow.getChildRenderWindowsByReference().length === 0) {
       // When there is no child render window anymore, delete the main render window
-      // We also release the graphics resources, which is not very import as when the context is destroyed, the resources should be freed
-      // The release of shared graphics resources is not automatic and can be done by hand when the resource is not needed anymore
-      const imageData = actor.getMapper().getInputData();
-      const scalars = imageData.getPointData().getScalars();
-      mainRenderWindowView.releaseGraphicsResourcesForObject(scalars);
       mainRenderWindowView.delete();
       mainRenderWindow.delete();
     }
