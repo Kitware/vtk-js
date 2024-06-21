@@ -441,8 +441,8 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
    */
   setGraphicsResourceForObject(
     vtkObj: vtkCellArray | vtkDataArray | vtkPoints,
-    gObj: vtkOpenGLTexture | vtkBufferObject,
-    hash: string
+    gObj: Nullable<vtkOpenGLTexture | vtkBufferObject>,
+    hash: Nullable<string>
   ): void;
 
   /**
@@ -454,9 +454,17 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
    * the cached resource.
    * @return {Object} Dictionary with the graphics resource and string hash
    */
-  getGraphicsResourceForObject<T extends vtkCellArray | vtkDataArray | vtkPoints>(
+  getGraphicsResourceForObject<
+    T extends vtkCellArray | vtkDataArray | vtkPoints
+  >(
     vtkObj: T
-  ): { coreObject: T, oglObject: vtkOpenGLTexture | vtkBufferObject; hash: string };
+  ):
+    | {
+        coreObject: T;
+        oglObject: Nullable<vtkOpenGLTexture | vtkBufferObject>;
+        hash: Nullable<string>;
+      }
+    | undefined;
 
   /**
    * Get approximate graphics memory usage, in bytes, for the context. This is a simple computation
