@@ -161,11 +161,6 @@ export interface vtkProperty extends vtkObject {
   getRepresentationAsString(): string;
 
   /**
-   * Check if the shading is set.
-   */
-  getShading(): boolean;
-
-  /**
    * Get the specular lighting coefficient.
    * @default 0
    */
@@ -442,12 +437,6 @@ export interface vtkProperty extends vtkObject {
    * Set representation to 1 means `WIREFRAM`'
    */
   setRepresentationToWireframe(): boolean;
-
-  /**
-   * Enable/Disable shading.
-   * @param {Boolean} shading
-   */
-  setShading(shading: boolean): boolean;
 
   /**
    * Set the specular lighting coefficient.
