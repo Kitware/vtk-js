@@ -89,6 +89,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         !oldOglRenderWindow.isDeleted() &&
         oldOglRenderWindow !== model._openGLRenderWindow
       ) {
+        // We unregister ourself when the render window changes
         unregisterGraphicsResources(oldOglRenderWindow);
       }
       model.context = model._openGLRenderWindow.getContext();
@@ -1462,10 +1463,10 @@ const DEFAULT_VALUES = {
   lastHaveSeenDepthRequest: false,
   haveSeenDepthRequest: false,
   lastTextureComponents: 0,
-  _scalars: null,
-  _colorTransferFunc: null,
-  _pwFunc: null,
-  _labelOutlineThicknessArray: null,
+  // _scalars: null,
+  // _colorTransferFunc: null,
+  // _pwFunc: null,
+  // _labelOutlineThicknessArray: null,
 };
 
 // ----------------------------------------------------------------------------

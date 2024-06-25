@@ -164,6 +164,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         !oldOglRenderWindow.isDeleted() &&
         oldOglRenderWindow !== model._openGLRenderWindow
       ) {
+        // We unregister ourself when the render window changes
         unregisterGraphicsResources(oldOglRenderWindow);
       }
       model.context = model._openGLRenderWindow.getContext();
@@ -1894,10 +1895,10 @@ const DEFAULT_VALUES = {
   projectionToView: null,
   avgWindowArea: 0.0,
   avgFrameTime: 0.0,
-  _scalars: null,
-  _scalarOpacityFunc: null,
-  _colorTransferFunc: null,
-  _labelOutlineThicknessArray: null,
+  // _scalars: null,
+  // _scalarOpacityFunc: null,
+  // _colorTransferFunc: null,
+  // _labelOutlineThicknessArray: null,
 };
 
 // ----------------------------------------------------------------------------

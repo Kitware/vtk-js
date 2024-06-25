@@ -85,6 +85,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         !oldOglRenderWindow.isDeleted() &&
         oldOglRenderWindow !== model._openGLRenderWindow
       ) {
+        // We unregister ourself when the render window changes
         unregisterGraphicsResources(oldOglRenderWindow);
       }
       model.context = model._openGLRenderWindow.getContext();
@@ -1326,9 +1327,9 @@ const DEFAULT_VALUES = {
   colorTexture: null,
   pwfTexture: null,
   _externalOpenGLTexture: false,
-  _scalars: null,
-  _colorTransferFunc: null,
-  _pwFunc: null,
+  // _scalars: null,
+  // _colorTransferFunc: null,
+  // _pwFunc: null,
 };
 
 // ----------------------------------------------------------------------------
