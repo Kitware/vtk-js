@@ -130,6 +130,15 @@ This will allow you to see the some live code running in your browser. Just pick
 [HttpSceneLoaderWithIcon]: ../docs/gallery/HttpSceneLoaderWithIcon.jpg
 [OfflineLocalViewWithIcon]: ../docs/gallery/OfflineLocalViewWithIcon.jpg
 
+## Filtering
+
+<div class="gallery">
+
+[![ThresholdPoints Example][ThresholdPoints]](./ThresholdPoints.html "Cut/Treshold points with point data criteria")
+</div>
+
+[ThresholdPoints]: ../docs/gallery/ThresholdPoints.jpg
+
 ## Rendering
 
 <div class="gallery">
