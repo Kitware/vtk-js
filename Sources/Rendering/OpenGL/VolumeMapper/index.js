@@ -164,7 +164,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         !oldOglRenderWindow.isDeleted() &&
         oldOglRenderWindow !== model._openGLRenderWindow
       ) {
-        // We unregister ourself when the render window changes
+        // Unregister the mapper when the render window changes
         unregisterGraphicsResources(oldOglRenderWindow);
       }
       model.context = model._openGLRenderWindow.getContext();
@@ -1612,14 +1612,16 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           model.opacityTexture,
           toString
         );
-        model._openGLRenderWindow.unregisterGraphicsResourceUser(
-          model._scalarOpacityFunc,
-          publicAPI
-        );
-        model._openGLRenderWindow.registerGraphicsResourceUser(
-          scalarOpacityFunc,
-          publicAPI
-        );
+        if (scalarOpacityFunc !== model._scalarOpacityFunc) {
+          model._openGLRenderWindow.registerGraphicsResourceUser(
+            scalarOpacityFunc,
+            publicAPI
+          );
+          model._openGLRenderWindow.unregisterGraphicsResourceUser(
+            model._scalarOpacityFunc,
+            publicAPI
+          );
+        }
         model._scalarOpacityFunc = scalarOpacityFunc;
       }
     } else {
@@ -1671,14 +1673,16 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           model.colorTexture,
           toString
         );
-        model._openGLRenderWindow.unregisterGraphicsResourceUser(
-          model._colorTransferFunc,
-          publicAPI
-        );
-        model._openGLRenderWindow.registerGraphicsResourceUser(
-          colorTransferFunc,
-          publicAPI
-        );
+        if (colorTransferFunc !== model._colorTransferFunc) {
+          model._openGLRenderWindow.registerGraphicsResourceUser(
+            colorTransferFunc,
+            publicAPI
+          );
+          model._openGLRenderWindow.unregisterGraphicsResourceUser(
+            model._colorTransferFunc,
+            publicAPI
+          );
+        }
         model._colorTransferFunc = colorTransferFunc;
       }
     } else {
@@ -1714,14 +1718,16 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           model.scalarTexture,
           toString
         );
-        model._openGLRenderWindow.unregisterGraphicsResourceUser(
-          model._scalars,
-          publicAPI
-        );
-        model._openGLRenderWindow.registerGraphicsResourceUser(
-          scalars,
-          publicAPI
-        );
+        if (scalars !== model._scalars) {
+          model._openGLRenderWindow.registerGraphicsResourceUser(
+            scalars,
+            publicAPI
+          );
+          model._openGLRenderWindow.unregisterGraphicsResourceUser(
+            model._scalars,
+            publicAPI
+          );
+        }
         model._scalars = scalars;
       }
     } else {
@@ -1848,14 +1854,16 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           model.labelOutlineThicknessTexture,
           toString
         );
-        model._openGLRenderWindow.unregisterGraphicsResourceUser(
-          model._labelOutlineThicknessArray,
-          publicAPI
-        );
-        model._openGLRenderWindow.registerGraphicsResourceUser(
-          labelOutlineThicknessArray,
-          publicAPI
-        );
+        if (labelOutlineThicknessArray !== model._labelOutlineThicknessArray) {
+          model._openGLRenderWindow.registerGraphicsResourceUser(
+            labelOutlineThicknessArray,
+            publicAPI
+          );
+          model._openGLRenderWindow.unregisterGraphicsResourceUser(
+            model._labelOutlineThicknessArray,
+            publicAPI
+          );
+        }
         model._labelOutlineThicknessArray = labelOutlineThicknessArray;
       }
     } else {

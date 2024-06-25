@@ -85,7 +85,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         !oldOglRenderWindow.isDeleted() &&
         oldOglRenderWindow !== model._openGLRenderWindow
       ) {
-        // We unregister ourself when the render window changes
+        // Unregister the mapper when the render window changes
         unregisterGraphicsResources(oldOglRenderWindow);
       }
       model.context = model._openGLRenderWindow.getContext();
@@ -252,14 +252,16 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           model.openGLTexture,
           toString
         );
-        model._openGLRenderWindow.unregisterGraphicsResourceUser(
-          model._scalars,
-          publicAPI
-        );
-        model._openGLRenderWindow.registerGraphicsResourceUser(
-          scalars,
-          publicAPI
-        );
+        if (scalars !== model._scalars) {
+          model._openGLRenderWindow.registerGraphicsResourceUser(
+            scalars,
+            publicAPI
+          );
+          model._openGLRenderWindow.unregisterGraphicsResourceUser(
+            model._scalars,
+            publicAPI
+          );
+        }
         model._scalars = scalars;
       }
     } else {
@@ -330,14 +332,16 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           model.colorTexture,
           toString
         );
-        model._openGLRenderWindow.unregisterGraphicsResourceUser(
-          model._colorTransferFunc,
-          publicAPI
-        );
-        model._openGLRenderWindow.registerGraphicsResourceUser(
-          colorTransferFunc,
-          publicAPI
-        );
+        if (colorTransferFunc !== model._colorTransferFunc) {
+          model._openGLRenderWindow.registerGraphicsResourceUser(
+            colorTransferFunc,
+            publicAPI
+          );
+          model._openGLRenderWindow.unregisterGraphicsResourceUser(
+            model._colorTransferFunc,
+            publicAPI
+          );
+        }
         model._colorTransferFunc = colorTransferFunc;
       }
     } else {
@@ -411,14 +415,16 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           model.pwfTexture,
           toString
         );
-        model._openGLRenderWindow.unregisterGraphicsResourceUser(
-          model._pwFunc,
-          publicAPI
-        );
-        model._openGLRenderWindow.registerGraphicsResourceUser(
-          pwFunc,
-          publicAPI
-        );
+        if (pwFunc !== model._pwFunc) {
+          model._openGLRenderWindow.registerGraphicsResourceUser(
+            pwFunc,
+            publicAPI
+          );
+          model._openGLRenderWindow.unregisterGraphicsResourceUser(
+            model._pwFunc,
+            publicAPI
+          );
+        }
         model._pwFunc = pwFunc;
       }
     } else {
