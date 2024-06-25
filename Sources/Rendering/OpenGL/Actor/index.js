@@ -152,7 +152,10 @@ function vtkOpenGLActor(publicAPI, model) {
   // Renders myself
   publicAPI.translucentPass = (prepass, renderPass) => {
     if (prepass) {
-      model.context.depthMask(false);
+      model.context.depthMask(
+        model._openGLRenderer.getSelector() &&
+          model.renderable.getNestedPickable()
+      );
       publicAPI.activateTextures();
     } else if (model.activeTextures) {
       for (let index = 0; index < model.activeTextures.length; index++) {
