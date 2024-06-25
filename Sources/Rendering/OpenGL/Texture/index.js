@@ -168,6 +168,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     if (model.context && model.handle) {
       model.context.deleteTexture(model.handle);
     }
+    model._paramCache = null;
     model.handle = 0;
     model.numberOfDimensions = 0;
     model.target = 0;
@@ -252,6 +253,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       rwin.activateTexture(publicAPI);
       rwin.deactivateTexture(publicAPI);
       model.context.deleteTexture(model.handle);
+      model._paramCache = null;
       model.handle = 0;
       model.numberOfDimensions = 0;
       model.target = 0;
@@ -457,6 +459,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.resetFormatAndType = () => {
+    model._paramCache = null;
     model.format = 0;
     model.internalFormat = 0;
     model._forceInternalFormat = false;
@@ -613,13 +616,119 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  function updateArrayDataType(dataType, data, depth = false) {
+
+  /**
+   * Gets the extent's size.
+   * @param {Extent} extent
+   */
+  function getExtentSize(extent) {
+    const [xmin, xmax, ymin, ymax, zmin, zmax] = extent;
+    return [xmax - xmin + 1, ymax - ymin + 1, zmax - zmin + 1];
+  }
+
+  //----------------------------------------------------------------------------
+
+  /**
+   * Gets the number of pixels in the extent.
+   * @param {Extent} extent
+   */
+  function getExtentPixelCount(extent) {
+    const [sx, sy, sz] = getExtentSize(extent);
+    return sx * sy * sz;
+  }
+
+  //----------------------------------------------------------------------------
+
+  /**
+   * Reads a flattened extent from the image data and writes to the given output array.
+   *
+   * Assumes X varies the fastest and Z varies the slowest.
+   *
+   * @param {*} data
+   * @param {*} dataDims
+   * @param {Extent} extent
+   * @param {TypedArray} outArray
+   * @param {number} outOffset
+   * @returns
+   */
+  function readExtentIntoArray(data, dataDims, extent, outArray, outOffset) {
+    const [xmin, xmax, ymin, ymax, zmin, zmax] = extent;
+    const [dx, dy] = dataDims;
+    const sxy = dx * dy;
+
+    let writeOffset = outOffset;
+    for (let zi = zmin; zi <= zmax; zi++) {
+      const zOffset = zi * sxy;
+      for (let yi = ymin; yi <= ymax; yi++) {
+        const zyOffset = zOffset + yi * dx;
+        // explicit alternative to data.subarray,
+        // due to potential perf issues on v8
+        for (
+          let readOffset = zyOffset + xmin, end = zyOffset + xmax;
+          readOffset <= end;
+          readOffset++, writeOffset++
+        ) {
+          outArray[writeOffset] = data[readOffset];
+        }
+      }
+    }
+  }
+
+  //----------------------------------------------------------------------------
+
+  /**
+   * Reads several image extents into a contiguous pixel array.
+   *
+   * @param {*} data
+   * @param {Extent[]} extent
+   * @param {TypedArrayConstructor} typedArrayConstructor optional typed array constructor
+   * @returns
+   */
+  function readExtents(data, extents, typedArrayConstructor = null) {
+    const constructor = typedArrayConstructor || data.constructor;
+    const numPixels = extents.reduce(
+      (count, extent) => count + getExtentPixelCount(extent),
+      0
+    );
+    const extentPixels = new constructor(numPixels);
+    const dataDims = [model.width, model.height, model.depth];
+
+    let writeOffset = 0;
+    extents.forEach((extent) => {
+      readExtentIntoArray(data, dataDims, extent, extentPixels, writeOffset);
+      writeOffset += getExtentPixelCount(extent);
+    });
+
+    return extentPixels;
+  }
+
+  //----------------------------------------------------------------------------
+
+  /**
+   * Modifies the typed array types for webgl based on the given dataType.
+   *
+   * When sub-image extents are provided, the extents are all concatenated together into one typed array in the return output.
+   *
+   * @param {VtkDataTypes} dataType the VTK data type
+   * @param {TypedArray[]} data An array of typed arrays, one for each texture
+   * @param {boolean} depth should depth be used (default: false)
+   * @param {Array<Extent>} imageExtents only consider these image extents (default: [])
+   * @returns an array of newly typed arrays, one for each texture
+   */
+  function updateArrayDataType(
+    dataType,
+    data,
+    depth = false,
+    imageExtents = []
+  ) {
     const pixData = [];
 
     let pixCount = model.width * model.height * model.components;
     if (depth) {
       pixCount *= model.depth;
     }
+
+    const onlyUpdateExtents = !!imageExtents.length;
 
     // if the opengl data type is float
     // then the data array must be float
@@ -629,11 +738,15 @@ function vtkOpenGLTexture(publicAPI, model) {
     ) {
       for (let idx = 0; idx < data.length; idx++) {
         if (data[idx]) {
-          const dataArrayToCopy =
-            data[idx].length > pixCount
-              ? data[idx].subarray(0, pixCount)
-              : data[idx];
-          pixData.push(new Float32Array(dataArrayToCopy));
+          if (onlyUpdateExtents) {
+            pixData.push(readExtents(data[idx], imageExtents, Float32Array));
+          } else {
+            const dataArrayToCopy =
+              data[idx].length > pixCount
+                ? data[idx].subarray(0, pixCount)
+                : data[idx];
+            pixData.push(new Float32Array(dataArrayToCopy));
+          }
         } else {
           pixData.push(null);
         }
@@ -648,11 +761,15 @@ function vtkOpenGLTexture(publicAPI, model) {
     ) {
       for (let idx = 0; idx < data.length; idx++) {
         if (data[idx]) {
-          const dataArrayToCopy =
-            data[idx].length > pixCount
-              ? data[idx].subarray(0, pixCount)
-              : data[idx];
-          pixData.push(new Uint8Array(dataArrayToCopy));
+          if (onlyUpdateExtents) {
+            pixData.push(readExtents(data[idx], imageExtents, Uint8Array));
+          } else {
+            const dataArrayToCopy =
+              data[idx].length > pixCount
+                ? data[idx].subarray(0, pixCount)
+                : data[idx];
+            pixData.push(new Uint8Array(dataArrayToCopy));
+          }
         } else {
           pixData.push(null);
         }
@@ -673,9 +790,14 @@ function vtkOpenGLTexture(publicAPI, model) {
     if (halfFloat) {
       for (let idx = 0; idx < data.length; idx++) {
         if (data[idx]) {
-          const newArray = new Uint16Array(pixCount);
-          const src = data[idx];
-          for (let i = 0; i < pixCount; i++) {
+          const src = onlyUpdateExtents
+            ? readExtents(data[idx], imageExtents)
+            : data[idx];
+          const newArray = new Uint16Array(
+            onlyUpdateExtents ? src.length : pixCount
+          );
+          const newArrayLen = newArray.length;
+          for (let i = 0; i < newArrayLen; i++) {
             newArray[i] = toHalf(src[i]);
           }
           pixData.push(newArray);
@@ -688,7 +810,11 @@ function vtkOpenGLTexture(publicAPI, model) {
     // The output has to be filled
     if (pixData.length === 0) {
       for (let i = 0; i < data.length; i++) {
-        pixData.push(data[i]);
+        pixData.push(
+          onlyUpdateExtents && data[i]
+            ? readExtents(data[i], imageExtents)
+            : data[i]
+        );
       }
     }
 
@@ -1370,7 +1496,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     depth,
     numComps,
     dataType,
-    data
+    data,
+    updatedExtents = []
   ) => {
     // Permit OpenGLDataType to be half float, if applicable, for 3D
     publicAPI.getOpenGLDataType(dataType);
@@ -1393,55 +1520,114 @@ function vtkOpenGLTexture(publicAPI, model) {
     model._openGLRenderWindow.activateTexture(publicAPI);
     publicAPI.createTexture();
     publicAPI.bind();
+
+    const hasUpdatedExtents = updatedExtents.length > 0;
+    const paramCache = model._paramCache;
+
+    // It's possible for the texture parameters to change while
+    // streaming, so check for such a change.
+    const rebuildEntireTexture =
+      !hasUpdatedExtents ||
+      !paramCache ||
+      !paramCache.tex3dAllocated ||
+      paramCache.prevInternalFormat !== model.internalFormat ||
+      paramCache.prevFormat !== model.format ||
+      paramCache.prevOpenGLDataType !== model.openGLDataType ||
+      paramCache.prevWidth !== model.width ||
+      paramCache.prevHeight !== model.height;
+
     // Create an array of texture with one texture
     const dataArray = [data];
     const is3DArray = true;
-    const pixData = updateArrayDataType(dataType, dataArray, is3DArray);
+    const pixData = updateArrayDataType(
+      dataType,
+      dataArray,
+      is3DArray,
+      // if we need to reallocate the entire texture, then process the entire volume
+      rebuildEntireTexture ? [] : updatedExtents
+    );
     const scaledData = scaleTextureToHighestPowerOfTwo(pixData);
 
     // Source texture data from the PBO.
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
-    // openGLDataType
-
-    if (useTexStorage(dataType)) {
-      model.context.texStorage3D(
-        model.target,
-        1,
-        model.internalFormat,
-        model.width,
-        model.height,
-        model.depth
-      );
-      if (scaledData[0] != null) {
-        model.context.texSubImage3D(
+    if (rebuildEntireTexture) {
+      if (useTexStorage(dataType)) {
+        model.context.texStorage3D(
+          model.target,
+          1,
+          model.internalFormat,
+          model.width,
+          model.height,
+          model.depth
+        );
+        if (scaledData[0] != null) {
+          model.context.texSubImage3D(
+            model.target,
+            0,
+            0,
+            0,
+            0,
+            model.width,
+            model.height,
+            model.depth,
+            model.format,
+            model.openGLDataType,
+            scaledData[0]
+          );
+        }
+      } else {
+        model.context.texImage3D(
           model.target,
           0,
-          0,
-          0,
-          0,
+          model.internalFormat,
           model.width,
           model.height,
           model.depth,
+          0,
           model.format,
           model.openGLDataType,
           scaledData[0]
         );
       }
-    } else {
-      model.context.texImage3D(
-        model.target,
-        0,
-        model.internalFormat,
-        model.width,
-        model.height,
-        model.depth,
-        0,
-        model.format,
-        model.openGLDataType,
-        scaledData[0]
-      );
+
+      model._paramCache = {
+        tex3dAllocated: true,
+        prevInternalFormat: model.internalFormat,
+        prevFormat: model.format,
+        prevOpenGLDataType: model.openGLDataType,
+        prevWidth: model.width,
+        prevHeight: model.height,
+      };
+    } else if (hasUpdatedExtents) {
+      const extentPixels = scaledData[0];
+      let readOffset = 0;
+      for (let i = 0; i < updatedExtents.length; i++) {
+        const extent = updatedExtents[i];
+        const extentSize = getExtentSize(extent);
+        const extentPixelCount = getExtentPixelCount(extent);
+        const textureData = new extentPixels.constructor(
+          extentPixels.buffer,
+          readOffset,
+          extentPixelCount
+        );
+        readOffset += textureData.byteLength;
+
+        model.context.texSubImage3D(
+          model.target,
+          0,
+          extent[0],
+          extent[2],
+          extent[4],
+          extentSize[0],
+          extentSize[1],
+          extentSize[2],
+          model.format,
+          model.openGLDataType,
+          textureData
+        );
+      }
     }
 
     if (model.generateMipmap) {
@@ -1473,7 +1659,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     numberOfComponents,
     dataType,
     values,
-    preferSizeOverAccuracy = false
+    preferSizeOverAccuracy = false,
+    updatedExtents = []
   ) =>
     publicAPI.create3DFilterableFromDataArray(
       width,
@@ -1484,7 +1671,8 @@ function vtkOpenGLTexture(publicAPI, model) {
         dataType,
         values,
       }),
-      preferSizeOverAccuracy
+      preferSizeOverAccuracy,
+      updatedExtents
     );
 
   //----------------------------------------------------------------------------
@@ -1494,7 +1682,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     height,
     depth,
     dataArray,
-    preferSizeOverAccuracy = false
+    preferSizeOverAccuracy = false,
+    updatedExtents = []
   ) => {
     const { numComps, dataType, data, scaleOffsets } = processDataArray(
       dataArray,
@@ -1546,7 +1735,8 @@ function vtkOpenGLTexture(publicAPI, model) {
           depth,
           numComps,
           dataType,
-          data
+          data,
+          updatedExtents
         );
       }
       if (
@@ -1563,7 +1753,8 @@ function vtkOpenGLTexture(publicAPI, model) {
           depth,
           numComps,
           dataType,
-          data
+          data,
+          updatedExtents
         );
       }
       if (
@@ -1578,7 +1769,8 @@ function vtkOpenGLTexture(publicAPI, model) {
           depth,
           numComps,
           dataType,
-          data
+          data,
+          updatedExtents
         );
       }
       if (dataType === VtkDataTypes.UNSIGNED_CHAR) {
@@ -1591,7 +1783,13 @@ function vtkOpenGLTexture(publicAPI, model) {
           depth,
           numComps,
           dataType,
-          data
+          data,
+          updatedExtents
+        );
+      }
+      if (updatedExtents.length) {
+        vtkWarningMacro(
+          'Cannot perform extent updates with the given data type'
         );
       }
       // otherwise convert to float
@@ -1827,6 +2025,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 const DEFAULT_VALUES = {
   _openGLRenderWindow: null,
   _forceInternalFormat: false,
+  _paramCache: null,
   context: null,
   handle: 0,
   sendParametersTime: null,

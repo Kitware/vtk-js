@@ -220,24 +220,39 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
 
     const tex = model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
     const reBuildTex = !tex?.vtkObj?.getHandle() || tex?.hash !== toString;
-    if (reBuildTex) {
-      if (!model.openGLTexture) {
-        model.openGLTexture = vtkOpenGLTexture.newInstance();
-        model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      }
-      // Build the image scalar texture
-      const dims = image.getDimensions();
-      // Use norm16 for the 3D texture if the extension is available
+    const hasUpdatedExtents = !!model.renderable.getUpdatedExtents().length;
+
+    if (!model.openGLTexture) {
+      model.openGLTexture = vtkOpenGLTexture.newInstance();
+      model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+    }
+
+    // reset the scalars texture if there are no updated extents
+    if (reBuildTex && !hasUpdatedExtents) {
+      // Use norm16 for scalar texture if the extension is available
       model.openGLTexture.setOglNorm16Ext(
         model.context.getExtension('EXT_texture_norm16')
       );
+
       model.openGLTexture.releaseGraphicsResources(model._openGLRenderWindow);
       model.openGLTexture.resetFormatAndType();
+    }
+
+    if (reBuildTex || hasUpdatedExtents) {
+      // If hasUpdatedExtents, then the texture is partially updated
+      const updatedExtents = [...model.renderable.getUpdatedExtents()];
+      // clear the array to acknowledge the update.
+      model.renderable.setUpdatedExtents([]);
+
+      // Build the image scalar texture
+      const dims = image.getDimensions();
       model.openGLTexture.create3DFilterableFromDataArray(
         dims[0],
         dims[1],
         dims[2],
-        scalars
+        scalars,
+        false,
+        updatedExtents
       );
       if (scalars) {
         model._openGLRenderWindow.setGraphicsResourceForObject(

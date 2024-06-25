@@ -189,7 +189,7 @@ test.onlyIfWebGL('Test ImageDataOutlineFilter', (t) => {
     return promise;
   }
 
-  [
+  return [
     testImageDataOutlineAsLines,
     testImageDataOutlineAsFaces,
     gc.releaseResources,
