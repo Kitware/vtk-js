@@ -15,7 +15,8 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
-import baseline from './testImageResliceMapperBorderRendering.png';
+import baselineOrtho from './testImageResliceMapperBorderRenderingOrtho.png';
+import baselineOblique from './testImageResliceMapperBorderRenderingOblique.png';
 
 test.onlyIfWebGL('Test ImageResliceMapper', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -24,7 +25,17 @@ test.onlyIfWebGL('Test ImageResliceMapper', (t) => {
     'vtkImageResliceMapper testImageResliceMapperBorderRendering'
   );
 
+  // Create container
+  const bodyElem = document.querySelector('body');
+  const container = gc.registerDOMElement(document.createElement('div'));
+  bodyElem.appendChild(container);
+
   const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
+  glwindow.setContainer(container);
+  renderWindow.addView(glwindow);
+  glwindow.setSize(400, 400);
+
   const renderer = gc.registerResource(vtkRenderer.newInstance());
   renderWindow.addRenderer(renderer);
 
@@ -36,7 +47,6 @@ test.onlyIfWebGL('Test ImageResliceMapper', (t) => {
   const ppty = gc.registerResource(vtkImageProperty.newInstance());
   const mapper = gc.registerResource(vtkImageResliceMapper.newInstance());
   const slicePlane = gc.registerResource(vtkPlane.newInstance());
-  slicePlane.setNormal(0, 1, 0);
   mapper.setSlicePlane(slicePlane);
   mapper.setSlabType(SlabTypes.MAX);
 
@@ -97,35 +107,41 @@ test.onlyIfWebGL('Test ImageResliceMapper', (t) => {
   imageData.getPointData().setScalars(scalars);
 
   mapper.setInputData(imageData);
-  slicePlane.setOrigin([0, imageDimension - 0.5, 0]);
 
   renderer.getActiveCamera().elevation(90);
-  renderer.resetCamera();
   renderer.getActiveCamera().dolly(1.5);
+  renderer.resetCamera();
   renderer.resetCameraClippingRange();
 
-  // Create container
-  const bodyElem = document.querySelector('body');
-  const container = gc.registerDOMElement(document.createElement('div'));
-  bodyElem.appendChild(container);
+  function strictBaselineTest(baseline) {
+    return new Promise((resolve) => {
+      glwindow.captureNextImage().then((image) => {
+        testUtils.compareImages(
+          image,
+          [baseline],
+          'Rendering/Core/ImageResliceMapper',
+          t,
+          {
+            pixelThreshold: 0.001, // 0.1% (range is [0, 1])
+            mismatchTolerance: 0.1, // 0.1% (raw percentage)
+          },
+          resolve
+        );
+      });
+      renderWindow.render();
+    });
+  }
 
-  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
-  glwindow.setContainer(container);
-  renderWindow.addView(glwindow);
-  glwindow.setSize(400, 400);
+  async function runRegresionTests() {
+    slicePlane.setOrigin([0, imageDimension - 0.5, 0]);
+    slicePlane.setNormal(0, 1, 0);
+    await strictBaselineTest(baselineOrtho);
+    const sqrt2 = Math.sqrt(2);
+    slicePlane.setOrigin(imageData.getCenter());
+    slicePlane.setNormal(sqrt2, sqrt2, 0);
+    await strictBaselineTest(baselineOblique);
+    gc.releaseResources();
+  }
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/Core/ImageResliceMapper',
-      t,
-      {
-        pixelThreshold: 0.001, // 0.1% (range is [0, 1])
-        mismatchTolerance: 0.1, // 0.1% (raw percentage)
-      },
-      gc.releaseResources
-    );
-  });
-  renderWindow.render();
+  runRegresionTests();
 });
