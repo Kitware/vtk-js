@@ -1240,8 +1240,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
             [0, 0, 0]
           );
           const otherAxes = [(orthoAxis + 1) % 3, (orthoAxis + 2) % 3].sort();
-          const dim = image.getDimensions();
-          const ext = [0, dim[0] - 1, 0, dim[1] - 1, 0, dim[2] - 1];
+          const ext = image.getSpatialExtent();
           let ptIdx = 0;
           for (let i = 0; i < 2; ++i) {
             for (let j = 0; j < 2; ++j) {
