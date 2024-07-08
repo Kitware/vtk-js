@@ -1,6 +1,6 @@
 import { Nullable, Size, Vector2, Vector3 } from '../../../types';
+import { vtkAlgorithm } from '../../../interfaces';
 import { VtkDataTypes } from '../../../Common/Core/DataArray';
-import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import vtkBufferObject from '../../OpenGL/BufferObject';
 import vtkCellArray from '../../../Common/Core/CellArray';
 import vtkDataArray from '../../../Common/Core/DataArray';
@@ -8,6 +8,7 @@ import vtkOpenGLTexture from '../../OpenGL/Texture';
 import vtkPoints from '../../../Common/Core/Points';
 import vtkRenderer from '../../Core/Renderer';
 import vtkTexture from '../../Core/Texture';
+import vtkViewNode from '../../SceneGraph/ViewNode';
 import vtkViewStream from '../../../IO/Core/ImageStream/ViewStream';
 
 /**
@@ -41,18 +42,7 @@ export interface ICaptureOptions {
   scale?: number;
 }
 
-type vtkOpenGLRenderWindowBase = vtkObject &
-  Omit<
-    vtkAlgorithm,
-    | 'getInputData'
-    | 'setInputData'
-    | 'setInputConnection'
-    | 'getInputConnection'
-    | 'addInputConnection'
-    | 'addInputData'
-  >;
-
-export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
+export interface vtkOpenGLRenderWindow extends vtkViewNode {
   /**
    * Builds myself.
    * @param {Boolean} prepass
