@@ -89,6 +89,11 @@ export interface vtkOpenGLRenderWindow extends vtkViewNode {
   getCanvas(): Nullable<HTMLCanvasElement>;
 
   /**
+   * Set the webgl canvas.
+   */
+  setCanvas(canvas: Nullable<HTMLCanvasElement>): boolean;
+
+  /**
    * Check if a point is in the viewport.
    * @param {Number} x The x coordinate.
    * @param {Number} y The y coordinate.
