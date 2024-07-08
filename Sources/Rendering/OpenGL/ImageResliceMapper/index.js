@@ -599,7 +599,10 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       }
 
       if (program.isUniformUsed('vboScaling')) {
-        program.setUniform3fv('vboScaling', cellBO.getCABO().getCoordScale());
+        program.setUniform3fv(
+          'vboScaling',
+          cellBO.getCABO().getCoordScale() ?? [1, 1, 1]
+        );
       }
 
       cellBO.getAttributeUpdateTime().modified();
