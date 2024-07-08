@@ -590,6 +590,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         const image = model.currentInput;
         const dim = image.getDimensions();
         mat4.copy(model.tmpMat4, image.getIndexToWorld());
+        mat4.translate(model.tmpMat4, model.tmpMat4, [-0.5, -0.5, -0.5]);
         mat4.scale(model.tmpMat4, model.tmpMat4, dim);
         mat4.invert(model.tmpMat4, model.tmpMat4);
         if (inverseShiftScaleMatrix) {
