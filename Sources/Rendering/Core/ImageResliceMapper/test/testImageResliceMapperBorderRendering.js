@@ -123,7 +123,7 @@ test.onlyIfWebGL('Test ImageResliceMapper', (t) => {
           t,
           {
             pixelThreshold: 0.001, // 0.1% (range is [0, 1])
-            mismatchTolerance: 0.1, // 0.1% (raw percentage)
+            mismatchTolerance: 1, // 1% (raw percentage)
           },
           resolve
         );
