@@ -20,11 +20,6 @@ interface IAbstractScalars {
   scalars: Nullable<vtkDataArray>;
 }
 
-interface IScalarToTextureCoordinate {
-  texCoordS: number;
-  texCoordT: number;
-}
-
 export interface IMapperInitialValues extends IAbstractMapper3DInitialValues {
   static?: boolean;
   scalarVisibility?: boolean;
@@ -79,22 +74,6 @@ export interface vtkMapper
    *
    */
   colorToValue(): void;
-
-  /**
-   *
-   * @param input
-   * @param component
-   * @param range
-   * @param tableNumberOfColors
-   * @param useLogScale
-   */
-  createColorTextureCoordinates(
-    input: vtkDataArray,
-    component: number,
-    range: any,
-    tableNumberOfColors: number,
-    useLogScale: boolean
-  ): vtkDataArray;
 
   /**
    * Create default lookup table. Generally used to create one when
@@ -259,6 +238,11 @@ export interface vtkMapper
   getViewSpecificProperties(): object;
 
   /**
+   * The number of mapped colors in range
+   */
+  getNumberOfColorsInRange(): number;
+
+  /**
    * Map the scalars (if there are any scalars and ScalarVisibility is on)
    * through the lookup table, returning an unsigned char RGBA array. This is
    * typically done as part of the rendering process. The alpha parameter
@@ -272,25 +256,6 @@ export interface vtkMapper
    * @param {Number} alpha
    */
   mapScalars(input: any, alpha: number): void;
-
-  /**
-   *
-   * @param scalars
-   * @param {Number} alpha
-   */
-  mapScalarsToTexture(scalars: any, alpha: number): void;
-
-  /**
-   *
-   * @param {Number} scalarValue
-   * @param {Number} rangeMin
-   * @param {Number} invRangeWidth
-   */
-  scalarToTextureCoordinate(
-    scalarValue: number,
-    rangeMin: number,
-    invRangeWidth: number
-  ): IScalarToTextureCoordinate;
 
   /**
    *
