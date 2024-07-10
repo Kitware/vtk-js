@@ -78,8 +78,8 @@ test.onlyIfWebGL('Test ImageResliceMapper', (t) => {
 
   const imageData = gc.registerResource(vtkImageData.newInstance());
 
-  imageData.setOrigin(0, 0, 0);
-  imageData.setSpacing(1, 1, 1);
+  imageData.setOrigin(1, 2, 3);
+  imageData.setSpacing(4, 5, 6);
   imageData.setExtent(
     0,
     imageDimension - 1,
