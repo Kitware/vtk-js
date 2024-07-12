@@ -31,7 +31,7 @@ function notImplemented(method) {
  * Increase by one the 3D coordinates
  * It will follow a zigzag pattern so that each coordinate is the neighbor of the next coordinate
  * This enables interpolation between two texels without issues
- * Note: we can't interpolate texture coordinates using this pattern
+ * Note: texture coordinates can't be interpolated using this pattern
  * @param {vec3} coordinates The 3D coordinates using integers for each coorinate
  * @param {vec3} dimensions The 3D dimensions of the volume
  */
@@ -119,7 +119,7 @@ function getZigZagTextureCoordinatesFromTexelPosition(
     textureCoordinate[0] += xDirection * remainder;
   }
 
-  // We now have the textureCoordinates in index space, convert to texture space
+  // textureCoordinates are in index space, convert to texture space
   textureCoordinate[0] = (textureCoordinate[0] + 0.5) / dimensions[0];
   textureCoordinate[1] = (textureCoordinate[1] + 0.5) / dimensions[1];
   textureCoordinate[2] = (textureCoordinate[2] + 0.5) / dimensions[2];
@@ -161,22 +161,21 @@ function getOrCreateColorTextureCoordinates(
     return cachedResult;
   }
 
-  // We have to change the range used for computing texture
-  // coordinates slightly to accommodate the special above- and
-  // below-range colors that are the first and last texels,
-  // respectively.
+  // The range used for computing coordinates have to change
+  // slightly to accommodate the special above- and below-range
+  // colors that are the first and last texels, respectively.
   const scalarTexelWidth = (range[1] - range[0]) / (numberOfColorsInRange - 1);
   const [paddedRangeMin, paddedRangeMax] = [
     range[0] - scalarTexelWidth,
     range[1] + scalarTexelWidth,
   ];
 
-  // We use the center of the voxel
+  // Use the center of the voxel
   const textureSOrigin = paddedRangeMin - 0.5 * scalarTexelWidth;
   const textureSCoeff =
     1.0 / (paddedRangeMax - paddedRangeMin + scalarTexelWidth);
 
-  // We compute in index space first
+  // Compute in index space first
   const texelIndexOrigin = paddedRangeMin;
   const texelIndexCoeff =
     (numberOfColorsInRange + 1) / (paddedRangeMax - paddedRangeMin);
@@ -569,10 +568,10 @@ function vtkMapper(publicAPI, model) {
         : model.lookupTable.getVectorComponent();
 
     // Create new coordinates if necessary, this function uses cache if possible.
-    // We can't use a zigzag pattern with point data, as interpolation of texture coordinates will be wrong
-    // We can use zigzag pattern with cell data, as there will be no texture coordinates interpolation
+    // A zigzag pattern can't be used with point data, as interpolation of texture coordinates will be wrong
+    // A zigzag pattern can be used with cell data, as there will be no texture coordinates interpolation
     // The texture generated using a zigzag pattern in one dimension is the same as without zigzag
-    // Therefore, we can use the same code for texture generation of point/cell data but not for texture coordinates
+    // Therefore, the same code can be used for texture generation of point/cell data but not for texture coordinates
     model.colorCoordinates = getOrCreateColorTextureCoordinates(
       scalars,
       scalarComponent,

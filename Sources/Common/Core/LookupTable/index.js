@@ -61,7 +61,7 @@ function vtkLookupTable(publicAPI, model) {
   publicAPI.usingLogScale = () => false;
 
   //----------------------------------------------------------------------------
-  // Remove special colors (min, max, NaN) from available colors
+  // Don't count special colors (min, max, NaN) as available colors
   publicAPI.getNumberOfAvailableColors = () => model.table.length / 4 - 3;
 
   //----------------------------------------------------------------------------
