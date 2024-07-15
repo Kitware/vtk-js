@@ -18,7 +18,7 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import baselineOrtho from './testImageResliceMapperBorderRenderingOrtho.png';
 import baselineOblique from './testImageResliceMapperBorderRenderingOblique.png';
 
-test.onlyIfWebGL('Test ImageResliceMapper', (t) => {
+test.onlyIfWebGL('Test ImageResliceMapper', async (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok(
     'rendering',
@@ -132,16 +132,12 @@ test.onlyIfWebGL('Test ImageResliceMapper', (t) => {
     });
   }
 
-  async function runRegresionTests() {
-    slicePlane.setOrigin([0, imageDimension - 0.5, 0]);
-    slicePlane.setNormal(0, 1, 0);
-    await strictBaselineTest(baselineOrtho);
-    const sqrt2 = Math.sqrt(2);
-    slicePlane.setOrigin(imageData.getCenter());
-    slicePlane.setNormal(sqrt2, sqrt2, 0);
-    await strictBaselineTest(baselineOblique);
-    gc.releaseResources();
-  }
-
-  runRegresionTests();
+  slicePlane.setOrigin([0, imageDimension - 0.5, 0]);
+  slicePlane.setNormal(0, 1, 0);
+  await strictBaselineTest(baselineOrtho);
+  const sqrt2 = Math.sqrt(2);
+  slicePlane.setOrigin(imageData.getCenter());
+  slicePlane.setNormal(sqrt2, sqrt2, 0);
+  await strictBaselineTest(baselineOblique);
+  gc.releaseResources();
 });
