@@ -414,7 +414,7 @@ function vtkMapper(publicAPI, model) {
   };
 
   publicAPI.canUseTextureMapForColoring = (scalars, cellFlag) => {
-    if (cellFlag) {
+    if (cellFlag && !(model.colorMode === ColorMode.DIRECT_SCALARS)) {
       return true; // cell data always use textures.
     }
 
