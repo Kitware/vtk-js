@@ -1087,7 +1087,11 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.copyParentContent = () => {
     const rootParent = model.rootOpenGLRenderWindow;
-    if (!rootParent || !model.context2D) {
+    if (
+      !rootParent ||
+      !model.context2D ||
+      model.children.some((oglRenderer) => !!oglRenderer.getSelector?.())
+    ) {
       return;
     }
     const parentCanvas = rootParent.getCanvas();
