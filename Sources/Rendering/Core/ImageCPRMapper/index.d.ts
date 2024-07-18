@@ -9,11 +9,9 @@ import vtkImageData from '../../../Common/DataModel/ImageData';
 import vtkPolyData from '../../../Common/DataModel/PolyData';
 import vtkPolyLine from '../../../Common/DataModel/PolyLine';
 import { ProjectionMode } from './Constants';
-
-interface ICoincidentTopology {
-  factor: number;
-  offset: number;
-}
+import CoincidentTopologyHelper, {
+  StaticCoincidentTopologyMethods,
+} from '../Mapper/CoincidentTopologyHelper';
 
 type TOrientation = mat4 | mat3 | quat | vec3;
 
@@ -29,7 +27,9 @@ export interface IImageCPRMapperInitialValues
   normalDirection: vec3;
 }
 
-export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
+export interface vtkImageCPRMapper
+  extends vtkAbstractMapper3D,
+    CoincidentTopologyHelper {
   /**
    * @returns the width of the image in model coordinates of the input volume
    */
@@ -307,124 +307,6 @@ export interface vtkImageCPRMapper extends vtkAbstractMapper3D {
    * @param imageData
    */
   setImageConnection(imageData: vtkOutputPort): void;
-
-  /**
-   *
-   */
-  getResolveCoincidentTopology(): ICoincidentTopology;
-
-  /**
-   *
-   */
-  getResolveCoincidentTopologyAsString(): ICoincidentTopology;
-
-  /**
-   *
-   */
-  getResolveCoincidentTopologyLineOffsetParameters(): ICoincidentTopology;
-
-  /**
-   *
-   */
-  getResolveCoincidentTopologyPointOffsetParameters(): ICoincidentTopology;
-
-  /**
-   *
-   */
-  getResolveCoincidentTopologyPolygonOffsetFaces(): ICoincidentTopology;
-
-  /**
-   *
-   */
-  getResolveCoincidentTopologyPolygonOffsetParameters(): ICoincidentTopology;
-
-  /**
-   *
-   * @param {Number} factor
-   * @param {Number} offset
-   */
-  setRelativeCoincidentTopologyLineOffsetParameters(
-    factor: number,
-    offset: number
-  ): boolean;
-
-  /**
-   *
-   * @param {Number} factor
-   * @param {Number} offset
-   */
-  setRelativeCoincidentTopologyPointOffsetParameters(
-    factor: number,
-    offset: number
-  ): boolean;
-
-  /**
-   *
-   * @param {Number} factor
-   * @param {Number} offset
-   */
-  setRelativeCoincidentTopologyPolygonOffsetParameters(
-    factor: number,
-    offset: number
-  ): boolean;
-
-  /**
-   *
-   * @param resolveCoincidentTopology
-   * @default false
-   */
-  setResolveCoincidentTopology(resolveCoincidentTopology: boolean): boolean;
-
-  /**
-   *
-   * @param {Number} factor
-   * @param {Number} offset
-   */
-  setResolveCoincidentTopologyLineOffsetParameters(
-    factor: number,
-    offset: number
-  ): boolean;
-
-  /**
-   *
-   * @param {Number} factor
-   * @param {Number} offset
-   */
-  setResolveCoincidentTopologyPointOffsetParameters(
-    factor: number,
-    offset: number
-  ): boolean;
-
-  /**
-   *
-   * @param value
-   */
-  setResolveCoincidentTopologyPolygonOffsetFaces(value: number): boolean;
-
-  /**
-   *
-   * @param {Number} factor
-   * @param {Number} offset
-   */
-  setResolveCoincidentTopologyPolygonOffsetParameters(
-    factor: number,
-    offset: number
-  ): boolean;
-
-  /**
-   *
-   */
-  setResolveCoincidentTopologyToDefault(): boolean;
-
-  /**
-   *
-   */
-  setResolveCoincidentTopologyToOff(): boolean;
-
-  /**
-   *
-   */
-  setResolveCoincidentTopologyToPolygonOffset(): boolean;
 }
 
 /**
@@ -483,5 +365,5 @@ export function newInstance(
 export declare const vtkImageCPRMapper: {
   newInstance: typeof newInstance;
   extend: typeof extend;
-};
+} & StaticCoincidentTopologyMethods;
 export default vtkImageCPRMapper;

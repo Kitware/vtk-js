@@ -6,11 +6,9 @@ import vtkPlane from '../../../Common/DataModel/Plane';
 import vtkPolyData from '../../../Common/DataModel/PolyData';
 import { Bounds, Nullable, Vector3 } from '../../../types';
 import { SlabTypes } from './Constants';
-
-interface ICoincidentTopology {
-  factor: number;
-  offset: number;
-}
+import CoincidentTopologyHelper, {
+  StaticCoincidentTopologyMethods,
+} from '../Mapper/CoincidentTopologyHelper';
 
 export interface IImageResliceMapperInitialValues
   extends IAbstractImageMapperInitialValues {
@@ -21,7 +19,9 @@ export interface IImageResliceMapperInitialValues
   slicePolyData?: vtkPolyData;
 }
 
-export interface vtkImageResliceMapper extends vtkAbstractImageMapper {
+export interface vtkImageResliceMapper
+  extends vtkAbstractImageMapper,
+    CoincidentTopologyHelper {
   /**
    * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
    * @return {Bounds} The bounds for the mapper.
@@ -32,36 +32,6 @@ export interface vtkImageResliceMapper extends vtkAbstractImageMapper {
    *
    */
   getIsOpaque(): boolean;
-
-  /**
-   *
-   */
-  getResolveCoincidentTopology(): ICoincidentTopology;
-
-  /**
-   *
-   */
-  getResolveCoincidentTopologyAsString(): ICoincidentTopology;
-
-  /**
-   *
-   */
-  getResolveCoincidentTopologyLineOffsetParameters(): ICoincidentTopology;
-
-  /**
-   *
-   */
-  getResolveCoincidentTopologyPointOffsetParameters(): ICoincidentTopology;
-
-  /**
-   *
-   */
-  getResolveCoincidentTopologyPolygonOffsetFaces(): ICoincidentTopology;
-
-  /**
-   *
-   */
-  getResolveCoincidentTopologyPolygonOffsetParameters(): ICoincidentTopology;
 
   /**
    *
@@ -92,94 +62,6 @@ export interface vtkImageResliceMapper extends vtkAbstractImageMapper {
    * Get the custom polydata used to slice the volume with.
    */
   getSlicePolyData(): vtkPolyData;
-
-  /**
-   *
-   * @param {Number} factor
-   * @param {Number} offset
-   */
-  setRelativeCoincidentTopologyLineOffsetParameters(
-    factor: number,
-    offset: number
-  ): boolean;
-
-  /**
-   *
-   * @param {Number} factor
-   * @param {Number} offset
-   */
-  setRelativeCoincidentTopologyPointOffsetParameters(
-    factor: number,
-    offset: number
-  ): boolean;
-
-  /**
-   *
-   * @param {Number} factor
-   * @param {Number} offset
-   */
-  setRelativeCoincidentTopologyPolygonOffsetParameters(
-    factor: number,
-    offset: number
-  ): boolean;
-
-  /**
-   *
-   * @param resolveCoincidentTopology
-   * @default false
-   */
-  setResolveCoincidentTopology(resolveCoincidentTopology: boolean): boolean;
-
-  /**
-   *
-   * @param {Number} factor
-   * @param {Number} offset
-   */
-  setResolveCoincidentTopologyLineOffsetParameters(
-    factor: number,
-    offset: number
-  ): boolean;
-
-  /**
-   *
-   * @param {Number} factor
-   * @param {Number} offset
-   */
-  setResolveCoincidentTopologyPointOffsetParameters(
-    factor: number,
-    offset: number
-  ): boolean;
-
-  /**
-   *
-   * @param value
-   */
-  setResolveCoincidentTopologyPolygonOffsetFaces(value: number): boolean;
-
-  /**
-   *
-   * @param {Number} factor
-   * @param {Number} offset
-   */
-  setResolveCoincidentTopologyPolygonOffsetParameters(
-    factor: number,
-    offset: number
-  ): boolean;
-
-  /**
-   *
-   */
-  setResolveCoincidentTopologyToDefault(): boolean;
-
-  /**
-   *
-   */
-  setResolveCoincidentTopologyToOff(): boolean;
-
-  /**
-   *
-   */
-  setResolveCoincidentTopologyToPolygonOffset(): boolean;
 
   /**
    *
@@ -266,5 +148,5 @@ export function newInstance(
 export declare const vtkImageResliceMapper: {
   newInstance: typeof newInstance;
   extend: typeof extend;
-};
+} & StaticCoincidentTopologyMethods;
 export default vtkImageResliceMapper;
