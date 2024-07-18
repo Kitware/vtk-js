@@ -24,6 +24,7 @@ import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/ImageProperty/C
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
+import { Resolve } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 
 const { vtkErrorMacro } = macro;
 
@@ -118,7 +119,11 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
   };
 
   publicAPI.getCoincidentParameters = (ren, actor) => {
-    if (model.renderable.getResolveCoincidentTopology()) {
+    if (
+      // backwards compat with code that (errorneously) set this to boolean
+      // eslint-disable-next-line eqeqeq
+      model.renderable.getResolveCoincidentTopology() == Resolve.PolygonOffset
+    ) {
       return model.renderable.getCoincidentTopologyPolygonOffsetParameters();
     }
     return null;

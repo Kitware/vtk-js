@@ -18,6 +18,7 @@ import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/ImageProperty/C
 import vtkPolyDataVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/ReplacementShaderMapper';
+import { Resolve } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
@@ -133,7 +134,11 @@ function vtkOpenGLImageMapper(publicAPI, model) {
   };
 
   publicAPI.getCoincidentParameters = (ren, actor) => {
-    if (model.renderable.getResolveCoincidentTopology()) {
+    if (
+      // backwards compat with code that (errorneously) set this to boolean
+      // eslint-disable-next-line eqeqeq
+      model.renderable.getResolveCoincidentTopology() == Resolve.PolygonOffset
+    ) {
       return model.renderable.getCoincidentTopologyPolygonOffsetParameters();
     }
     return null;
@@ -359,7 +364,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
               ...splitStringOnEnter(
                 `
                 #ifdef vtkImageLabelOutlineOn
-                  vec3 centerPosIS = fragCoordToIndexSpace(gl_FragCoord); 
+                  vec3 centerPosIS = fragCoordToIndexSpace(gl_FragCoord);
                   float centerValue = texture2D(texture1, centerPosIS.xy).r;
                   bool pixelOnBorder = false;
                   vec3 tColor = texture2D(colorTexture1, vec2(centerValue * cscale0 + cshift0, 0.5)).rgb;

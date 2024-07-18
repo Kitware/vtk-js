@@ -1,5 +1,10 @@
-let resolveCoincidentTopologyPolygonOffsetFaces = 1;
-let resolveCoincidentTopology = 0;
+export const Resolve = {
+  Off: 0,
+  PolygonOffset: 1,
+};
+
+let resolveCoincidentTopologyPolygonOffsetFaces = Resolve.PolygonOffset;
+let resolveCoincidentTopology = Resolve.Off;
 
 export const RESOLVE_COINCIDENT_TOPOLOGY_MODE = [
   'VTK_RESOLVE_OFF',
@@ -27,15 +32,15 @@ export function setResolveCoincidentTopology(mode = 0) {
 }
 
 export function setResolveCoincidentTopologyToDefault() {
-  return setResolveCoincidentTopology(0); // VTK_RESOLVE_OFF
+  return setResolveCoincidentTopology(Resolve.Off);
 }
 
 export function setResolveCoincidentTopologyToOff() {
-  return setResolveCoincidentTopology(0); // VTK_RESOLVE_OFF
+  return setResolveCoincidentTopology(Resolve.Off);
 }
 
 export function setResolveCoincidentTopologyToPolygonOffset() {
-  return setResolveCoincidentTopology(1); // VTK_RESOLVE_POLYGON_OFFSET
+  return setResolveCoincidentTopology(Resolve.PolygonOffset);
 }
 
 export function getResolveCoincidentTopologyAsString() {
@@ -43,6 +48,7 @@ export function getResolveCoincidentTopologyAsString() {
 }
 
 export default {
+  Resolve,
   getResolveCoincidentTopologyAsString,
   getResolveCoincidentTopologyPolygonOffsetFaces,
   getResolveCoincidentTopology,
