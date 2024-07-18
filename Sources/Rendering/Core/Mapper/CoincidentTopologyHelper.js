@@ -5,8 +5,26 @@ import macro from 'vtk.js/Sources/macros';
 function addCoincidentTopologyMethods(publicAPI, model, nameList) {
   nameList.forEach((item) => {
     publicAPI[`get${item.method}`] = () => model[item.key];
-    publicAPI[`set${item.method}`] = (factor, offset) => {
-      model[item.key] = { factor, offset };
+    publicAPI[`set${item.method}`] = function setCoincidentTopologyParams(
+      factor,
+      offset
+    ) {
+      let newFactor;
+      let newOffset;
+      if (arguments.length === 1) {
+        // first param is an object containing the properties
+        ({ factor: newFactor, offset: newOffset } = factor);
+      } else {
+        newFactor = factor;
+        newOffset = offset;
+      }
+
+      const changed =
+        model[item.key]?.factor !== newFactor ||
+        model[item.key]?.offset !== newOffset;
+
+      model[item.key] = { factor: newFactor, offset: newOffset };
+      return changed;
     };
   });
 }
