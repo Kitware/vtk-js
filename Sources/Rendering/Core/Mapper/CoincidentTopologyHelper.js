@@ -54,8 +54,6 @@ function implementCoincidentTopologyMethods(publicAPI, model) {
     model.resolveCoincidentTopology = false;
   }
 
-  macro.setGet(publicAPI, model, ['resolveCoincidentTopology']);
-
   // Relative methods
   model.topologyOffset = {
     Polygon: { factor: 0, offset: 0 },
@@ -70,6 +68,8 @@ function implementCoincidentTopologyMethods(publicAPI, model) {
   Object.keys(staticOffsetAPI).forEach((methodName) => {
     publicAPI[methodName] = staticOffsetAPI[methodName];
   });
+
+  macro.setGet(publicAPI, model, ['resolveCoincidentTopology']);
 
   addCoincidentTopologyMethods(
     publicAPI,
