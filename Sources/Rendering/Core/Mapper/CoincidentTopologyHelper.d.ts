@@ -3,6 +3,11 @@ export interface ICoincidentTopology {
   offset: number;
 }
 
+export enum Resolve {
+  Off,
+  PolygonOffset,
+}
+
 export interface StaticCoincidentTopologyMethods {
   /**
    *
@@ -88,12 +93,12 @@ export interface StaticCoincidentTopologyMethods {
    *
    * @param mode
    */
-  setResolveCoincidentTopology(mode?: number): boolean;
+  setResolveCoincidentTopology(mode?: Resolve): boolean;
 
   /**
    *
    */
-  getResolveCoincidentTopology(): number;
+  getResolveCoincidentTopology(): Resolve;
 
   /**
    *
@@ -117,10 +122,7 @@ export interface StaticCoincidentTopologyMethods {
 }
 
 export default interface CoincidentTopologyHelper
-  extends Omit<
-    StaticCoincidentTopologyMethods,
-    'setResolveCoincidentTopology' | 'getResolveCoincidentTopology'
-  > {
+  extends StaticCoincidentTopologyMethods {
   /**
    *
    * @param {ICoincidentTopology} params
@@ -174,17 +176,6 @@ export default interface CoincidentTopologyHelper
     factor: number,
     offset: number
   ): boolean;
-
-  /**
-   *
-   * @param resolveCoincidentTopology
-   */
-  setResolveCoincidentTopology(resolveCoincidentTopology: boolean): boolean;
-
-  /**
-   *
-   */
-  getResolveCoincidentTopology(): boolean;
 
   /**
    *

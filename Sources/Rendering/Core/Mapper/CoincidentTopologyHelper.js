@@ -1,31 +1,22 @@
 /* eslint-disable arrow-body-style */
-import otherStaticMethods from 'vtk.js/Sources/Rendering/Core/Mapper/Static';
+import otherStaticMethods, {
+  Resolve,
+} from 'vtk.js/Sources/Rendering/Core/Mapper/Static';
 import macro from 'vtk.js/Sources/macros';
+
+export { Resolve } from 'vtk.js/Sources/Rendering/Core/Mapper/Static';
 
 function addCoincidentTopologyMethods(publicAPI, model, nameList) {
   nameList.forEach((item) => {
     publicAPI[`get${item.method}`] = () => model[item.key];
-    publicAPI[`set${item.method}`] = function setCoincidentTopologyParams(
-      factor,
-      offset
-    ) {
-      let newFactor;
-      let newOffset;
-      if (arguments.length === 1) {
-        // first param is an object containing the properties
-        ({ factor: newFactor, offset: newOffset } = factor);
-      } else {
-        newFactor = factor;
-        newOffset = offset;
+    publicAPI[`set${item.method}`] = macro.objectSetterMap.object(
+      publicAPI,
+      model,
+      {
+        name: item.key,
+        params: ['factor', 'offset'],
       }
-
-      const changed =
-        model[item.key]?.factor !== newFactor ||
-        model[item.key]?.offset !== newOffset;
-
-      model[item.key] = { factor: newFactor, offset: newOffset };
-      return changed;
-    };
+    );
   });
 }
 
@@ -54,6 +45,8 @@ function implementCoincidentTopologyMethods(publicAPI, model) {
     model.resolveCoincidentTopology = false;
   }
 
+  macro.setGet(publicAPI, model, ['resolveCoincidentTopology']);
+
   // Relative methods
   model.topologyOffset = {
     Polygon: { factor: 0, offset: 0 },
@@ -68,8 +61,6 @@ function implementCoincidentTopologyMethods(publicAPI, model) {
   Object.keys(staticOffsetAPI).forEach((methodName) => {
     publicAPI[methodName] = staticOffsetAPI[methodName];
   });
-
-  macro.setGet(publicAPI, model, ['resolveCoincidentTopology']);
 
   addCoincidentTopologyMethods(
     publicAPI,
@@ -119,4 +110,5 @@ export default {
   staticOffsetAPI,
   otherStaticMethods,
   CATEGORIES,
+  Resolve,
 };

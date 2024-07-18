@@ -18,6 +18,7 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 
 import { PassTypes } from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector/Constants';
 import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
+import { Resolve } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 
 const { FieldAssociations } = vtkDataSet;
 
@@ -859,7 +860,10 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     };
     const prop = actor.getProperty();
     if (
-      model.renderable.getResolveCoincidentTopology() ||
+      // backwards compat with code that (errorneously) set this to boolean
+      // eslint-disable-next-line eqeqeq
+      model.renderable.getResolveCoincidentTopology() ==
+        Resolve.PolygonOffset ||
       (prop.getEdgeVisibility() &&
         prop.getRepresentation() === Representation.SURFACE)
     ) {

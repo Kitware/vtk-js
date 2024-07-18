@@ -16,6 +16,7 @@ import vtkPolyDataVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.gl
 import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
+import { Resolve } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 
 const { vtkErrorMacro } = macro;
 
@@ -80,7 +81,9 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
   };
 
   publicAPI.getCoincidentParameters = (ren, actor) => {
-    if (model.renderable.getResolveCoincidentTopology()) {
+    if (
+      model.renderable.getResolveCoincidentTopology() === Resolve.PolygonOffset
+    ) {
       return model.renderable.getCoincidentTopologyPolygonOffsetParameters();
     }
     return null;
