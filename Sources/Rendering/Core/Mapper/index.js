@@ -156,7 +156,7 @@ function vtkMapper(publicAPI, model) {
     const toString = `${publicAPI.getMTime()}${scalars.getMTime()}${alpha}`;
     if (model.colorBuildString === toString) return;
 
-    if (!model.useLookupTableScalarRange) {
+    if (model.useLookupTableScalarRange) {
       publicAPI
         .getLookupTable()
         .setRange(model.scalarRange[0], model.scalarRange[1]);
