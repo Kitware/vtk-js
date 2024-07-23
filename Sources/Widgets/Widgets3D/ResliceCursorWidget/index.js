@@ -34,7 +34,7 @@ const { vtkErrorMacro } = macro;
 function vtkResliceCursorWidget(publicAPI, model) {
   model.classHierarchy.push('vtkResliceCursorWidget');
 
-  model.methodsToLink = ['scaleInPixels'];
+  model.methodsToLink = ['scaleInPixels', 'holeWidth', 'infiniteLine'];
 
   // --------------------------------------------------------------------------
   // Private methods
