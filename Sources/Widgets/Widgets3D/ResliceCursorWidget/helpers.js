@@ -318,10 +318,7 @@ export function updateState(
       ?.setHandleNormal(
         widgetState.getPlanes()[planeNameToViewType[planeName]].normal
       );
-    const scale = vtkMath.normalize(direction);
-    const scale3 = lineHandle.getScale3();
-    scale3[2] = 2 * scale;
-    lineHandle.setScale3(scale3);
+    vtkMath.normalize(direction);
     const right =
       widgetState.getPlanes()[planeNameToViewType[inPlaneName]].normal;
     const up = vtkMath.cross(direction, right, []);
