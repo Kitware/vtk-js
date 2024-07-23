@@ -70,6 +70,14 @@ export interface vtkResliceCursorWidget<
 
   getScaleInPixels(): boolean;
 
+  setHoleWidth(holeWidth: number): boolean;
+
+  getHoleWidth(): number;
+
+  setInfiniteLine(infiniteLine: boolean): boolean;
+
+  getInfiniteLine(): boolean;
+
   setRotationHandlePosition(position: number): boolean;
 
   getRotationHandlePosition(): number;
