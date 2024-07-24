@@ -18,6 +18,7 @@ function vtkOpenGLVolume(publicAPI, model) {
     if (!model.renderable || !model.renderable.getVisibility()) {
       return;
     }
+
     if (prepass) {
       model._openGLRenderWindow = publicAPI.getLastAncestorOfType(
         'vtkOpenGLRenderWindow'
