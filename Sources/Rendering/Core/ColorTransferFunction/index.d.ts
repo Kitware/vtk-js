@@ -1,7 +1,6 @@
 import vtkDataArray from '../../../Common/Core/DataArray';
-import vtkScalarsToColors from '../../../Common/Core/ScalarsToColors'
-import { ColorSpace, Scale } from "./Constants";
-
+import vtkScalarsToColors from '../../../Common/Core/ScalarsToColors';
+import { ColorSpace, Scale } from './Constants';
 
 export interface vtkColorTransferFunction extends vtkScalarsToColors {
   /**
@@ -209,16 +208,14 @@ export interface vtkColorTransferFunction extends vtkScalarsToColors {
    * 4 -> XRGB
    * 5 -> RGBMS
    * 6 -> XRGBMS
-   * 
+   *
    * X represents the input value to a function
    * RGB represents the red, green, and blue value output
    * M represents the midpoint
    * S represents sharpness
    * @param {vtkDataArray} array
    */
-   buildFunctionFromArray(
-    array: vtkDataArray,
-  ): void;
+  buildFunctionFromArray(array: vtkDataArray): void;
 
   /**
    * Construct a color transfer function from a table.

@@ -8,7 +8,6 @@ import vtkQuad from 'vtk.js/Sources/Common/DataModel/Quad';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
 import { vec3, vec4 } from 'gl-matrix';
-import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
 
 // ----------------------------------------------------------------------------
@@ -270,22 +269,11 @@ function vtkCellPicker(publicAPI, model) {
     let tMin = Number.MAX_VALUE;
     const mapper = volume.getMapper();
     const imageData = mapper.getInputData();
-    const origin = imageData.getOrigin();
-    const spacing = imageData.getSpacing();
     const dims = imageData.getDimensions();
     const scalars = imageData.getPointData().getScalars().getData();
     const extent = imageData.getExtent();
-    const direction = imageData.getDirection();
-    let imageTransform;
-    if (!vtkMath.isIdentity3x3(direction)) {
-      imageTransform = vtkMatrixBuilder
-        .buildFromRadian()
-        .translate(origin[0], origin[1], origin[2])
-        .multiply3x3(direction)
-        .translate(-origin[0], -origin[1], -origin[2])
-        .invert()
-        .getMatrix();
-    }
+    // get the world to index transform to correctly transform from world to volume index
+    const imageTransform = imageData.getWorldToIndex();
 
     // calculate opacity table
     const numIComps = 1;
@@ -311,8 +299,8 @@ function vtkCellPicker(publicAPI, model) {
     const scale = oWidth / (oRange[1] - oRange[0] + 1);
 
     // Make a new p1 and p2 using the clipped t1 and t2
-    const q1 = [0, 0, 0];
-    const q2 = [0, 0, 0];
+    const q1 = [0, 0, 0, 1];
+    const q2 = [0, 0, 0, 1];
     q1[0] = p1[0];
     q1[1] = p1[1];
     q1[2] = p1[2];
@@ -326,13 +314,13 @@ function vtkCellPicker(publicAPI, model) {
       }
     }
 
-    const x1 = [0, 0, 0];
-    const x2 = [0, 0, 0];
-    for (let i = 0; i < 3; i++) {
-      x1[i] = (q1[i] - origin[i]) / spacing[i];
-      x2[i] = (q2[i] - origin[i]) / spacing[i];
-    }
-    const x = [0, 0, 0, 0];
+    // convert q1, q2 world coordinates to x1, x2 volume index coordinates
+    const x1 = [0, 0, 0, 0];
+    const x2 = [0, 0, 0, 0];
+    vec4.transformMat4(x1, q1, imageTransform);
+    vec4.transformMat4(x2, q2, imageTransform);
+
+    const x = [0, 0, 0];
     const xi = [0, 0, 0];
 
     const sliceSize = dims[1] * dims[0];
@@ -349,11 +337,6 @@ function vtkCellPicker(publicAPI, model) {
         // "t" is the fractional distance between endpoints x1 and x2
         x[j] = x1[j] * (1.0 - t) + x2[j] * t;
       }
-      x[3] = 1.0;
-      if (imageTransform) {
-        vec4.transformMat4(x, x, imageTransform);
-      }
-
       for (let j = 0; j < 3; j++) {
         // Bounds check
         if (x[j] < extent[2 * j]) {

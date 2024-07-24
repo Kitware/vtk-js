@@ -22,7 +22,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   // Public API methods
   publicAPI.handleMouseMove = (callData) => {
     const pos = callData.position;
-    const renderer = callData.pokedRenderer;
+    const renderer = model.getRenderer(callData);
 
     switch (model.state) {
       case States.IS_ROTATE:
@@ -87,7 +87,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   publicAPI.updateCameraPose = (ed) => {
     // move the world in the direction of the
     // controller
-    const camera = ed.pokedRenderer.getActiveCamera();
+    const camera = model.getRenderer(ed).getActiveCamera();
     const oldTrans = camera.getPhysicalTranslation();
 
     // look at the y axis to determine how fast / what direction to move
@@ -198,7 +198,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.handlePinch = (callData) => {
     publicAPI.dollyByFactor(
-      callData.pokedRenderer,
+      model.getRenderer(callData),
       callData.scale / model.previousScale
     );
     model.previousScale = callData.scale;
@@ -206,13 +206,13 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.handlePan = (callData) => {
-    const camera = callData.pokedRenderer.getActiveCamera();
+    const camera = model.getRenderer(callData).getActiveCamera();
 
     // Calculate the focal depth since we'll be using it a lot
     let viewFocus = camera.getFocalPoint();
 
     viewFocus = publicAPI.computeWorldToDisplay(
-      callData.pokedRenderer,
+      model.getRenderer(callData),
       viewFocus[0],
       viewFocus[1],
       viewFocus[2]
@@ -222,7 +222,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const trans = callData.translation;
     const lastTrans = model.previousTranslation;
     const newPickPoint = publicAPI.computeDisplayToWorld(
-      callData.pokedRenderer,
+      model.getRenderer(callData),
       viewFocus[0] + trans[0] - lastTrans[0],
       viewFocus[1] + trans[1] - lastTrans[1],
       focalDepth
@@ -231,7 +231,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     // Has to recalc old mouse point since the viewport has moved,
     // so can't move it outside the loop
     const oldPickPoint = publicAPI.computeDisplayToWorld(
-      callData.pokedRenderer,
+      model.getRenderer(callData),
       viewFocus[0],
       viewFocus[1],
       focalDepth
@@ -258,7 +258,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     );
 
     if (model._interactor.getLightFollowCamera()) {
-      callData.pokedRenderer.updateLightsGeometryToFollowCamera();
+      model.getRenderer(callData).updateLightsGeometryToFollowCamera();
     }
 
     camera.orthogonalizeViewUp();
@@ -268,7 +268,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.handleRotate = (callData) => {
-    const camera = callData.pokedRenderer.getActiveCamera();
+    const camera = model.getRenderer(callData).getActiveCamera();
     camera.roll(callData.rotation - model.previousRotation);
     camera.orthogonalizeViewUp();
     model.previousRotation = callData.rotation;
@@ -416,7 +416,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.handleMouseWheel = (callData) => {
     const dyf = 1 - callData.spinY / model.zoomFactor;
-    publicAPI.dollyByFactor(callData.pokedRenderer, dyf);
+    publicAPI.dollyByFactor(model.getRenderer(callData), dyf);
   };
 
   //----------------------------------------------------------------------------

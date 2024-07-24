@@ -1324,9 +1324,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'useAboveRangeColor',
     'useBelowRangeColor',
-    'colorSpace',
     'discretize',
     'numberOfValues',
+    { type: 'enum', name: 'colorSpace', enum: ColorSpace },
+    { type: 'enum', name: 'scale', enum: Scale },
   ]);
 
   macro.setArray(

@@ -29,7 +29,7 @@ function vtkCPRManipulator(publicAPI, model) {
   publicAPI.handleEvent = (callData, glRenderWindow) => {
     const mapper = model.cprActor?.getMapper();
     if (!mapper) {
-      return { worldCoords: null };
+      return model._addWorldDeltas({ worldCoords: null });
     }
 
     // Get normal and origin of the picking plane from the actor matrix
@@ -59,7 +59,7 @@ function vtkCPRManipulator(publicAPI, model) {
     const height = mapper.getHeight();
     const distance = height - modelPlanePicking[1];
 
-    return publicAPI.distanceEvent(distance);
+    return model._addWorldDeltas(publicAPI.distanceEvent(distance));
   };
 
   publicAPI.distanceEvent = (distance) => {

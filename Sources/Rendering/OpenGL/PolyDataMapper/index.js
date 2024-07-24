@@ -55,7 +55,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       model.openGLActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
       model._openGLRenderer =
         model.openGLActor.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model._openGLRenderWindow = model._openGLRenderer.getParent();
+      model._openGLRenderWindow = model._openGLRenderer.getLastAncestorOfType(
+        'vtkOpenGLRenderWindow'
+      );
       model.openGLCamera = model._openGLRenderer.getViewNodeFor(
         model._openGLRenderer.getRenderable().getActiveCamera()
       );
@@ -196,7 +198,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       ).result;
     } else {
       if (
-        model.renderable.getInterpolateScalarsBeforeMapping() &&
+        (model.renderable.getAreScalarsMappedFromCells() ||
+          model.renderable.getInterpolateScalarsBeforeMapping()) &&
         model.renderable.getColorCoordinates() &&
         !model.drawingEdges
       ) {
@@ -1820,9 +1823,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       tcoords = null;
     }
 
+    // Flag to check if tcoords are per cell instead of per point
+    let useTCoordsPerCell = false;
     // handle color mapping via texture
     if (model.renderable.getColorCoordinates()) {
       tcoords = model.renderable.getColorCoordinates();
+      useTCoordsPerCell = model.renderable.getAreScalarsMappedFromCells();
       if (!model.internalColorTexture) {
         model.internalColorTexture = vtkOpenGLTexture.newInstance({
           resizable: true,
@@ -1866,6 +1872,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         colors: c,
         cellOffset: 0,
         vertexOffset: 0, // Used to keep track of vertex ids across primitives for selection
+        useTCoordsPerCell,
         haveCellScalars: model.haveCellScalars,
         haveCellNormals: model.haveCellNormals,
         customAttributes: model.renderable
@@ -1940,9 +1947,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         publicAPI.updateMaximumPointCellIds();
       }
 
-      model.VBOBuildTime.modified();
       model.VBOBuildString = toString;
     }
+    model.VBOBuildTime.modified();
   };
 
   publicAPI.getAllocatedGPUMemoryInBytes = () => {

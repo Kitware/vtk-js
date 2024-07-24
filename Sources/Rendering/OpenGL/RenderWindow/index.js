@@ -44,7 +44,8 @@ const parentMethodsToProxy = [
   'getWebgl2',
   'makeCurrent',
   'releaseGraphicsResources',
-  'releaseGraphicsResourcesForObject',
+  'registerGraphicsResourceUser',
+  'unregisterGraphicsResourceUser',
   'restoreContext',
   'setActiveFramebuffer',
   'setContext',
@@ -1086,7 +1087,11 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.copyParentContent = () => {
     const rootParent = model.rootOpenGLRenderWindow;
-    if (!rootParent || !model.context2D) {
+    if (
+      !rootParent ||
+      !model.context2D ||
+      model.children.some((oglRenderer) => !!oglRenderer.getSelector?.())
+    ) {
       return;
     }
     const parentCanvas = rootParent.getCanvas();
@@ -1183,10 +1188,11 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       if (model.context) {
         deleteGLContext();
       }
+      publicAPI.setContainer();
+      publicAPI.setViewStream();
     },
     clearEvents,
-    publicAPI.delete,
-    publicAPI.setViewStream
+    publicAPI.delete
   );
 
   // Do not trigger modified for performance reasons
@@ -1203,49 +1209,66 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     return modified;
   };
 
-  publicAPI.getGraphicsResourceForObject = (vtkObj) => {
-    if (!vtkObj) {
-      return null;
+  publicAPI.registerGraphicsResourceUser = (coreObject, newUser) => {
+    // Try to create the graphics resource if it doesn't exist
+    if (!model._graphicsResources.has(coreObject)) {
+      publicAPI.setGraphicsResourceForObject(coreObject, null, null);
     }
-    const vtko = model._graphicsResources.get(vtkObj);
-    const vtkh = model._graphicsResourceHash.get(vtkObj);
-    return { vtkObj: vtko, hash: vtkh };
+    // Add newUser to the set of users
+    const sharedResource = model._graphicsResources.get(coreObject);
+    sharedResource?.users.add(newUser);
   };
-  publicAPI.setGraphicsResourceForObject = (vtkObj, gObj, hash) => {
-    if (!vtkObj) {
+
+  publicAPI.unregisterGraphicsResourceUser = (coreObject, oldUser) => {
+    const sharedResource = model._graphicsResources.get(coreObject);
+    if (!sharedResource) {
       return;
     }
-    model._graphicsResources.set(vtkObj, gObj);
-    model._graphicsResourceHash.set(vtkObj, hash);
+    sharedResource.users.delete(oldUser);
+    // Release graphics resources when the number of users reaches 0
+    if (!sharedResource.users.size) {
+      sharedResource.oglObject?.releaseGraphicsResources(publicAPI);
+      model._graphicsResources.delete(coreObject);
+    }
   };
+
+  publicAPI.getGraphicsResourceForObject = (coreObject) =>
+    model._graphicsResources.get(coreObject);
+
+  publicAPI.setGraphicsResourceForObject = (coreObject, oglObject, hash) => {
+    if (!coreObject) {
+      return;
+    }
+    const sharedResource = model._graphicsResources.get(coreObject);
+    // Release the old resource
+    sharedResource?.oglObject?.releaseGraphicsResources(publicAPI);
+    // Keep the same users that have registered for this coreObject
+    model._graphicsResources.set(coreObject, {
+      coreObject,
+      oglObject,
+      hash,
+      users: sharedResource?.users ?? new Set(),
+    });
+  };
+
   publicAPI.getGraphicsMemoryInfo = () => {
     let memUsed = 0;
-    model._graphicsResources.forEach((gObj, vtkObj) => {
-      memUsed += gObj.getAllocatedGPUMemoryInBytes();
+    model._graphicsResources.forEach(({ oglObject }) => {
+      memUsed += oglObject.getAllocatedGPUMemoryInBytes();
     });
     return memUsed;
   };
-  publicAPI.releaseGraphicsResourcesForObject = (vtkObj) => {
-    if (!vtkObj) {
-      return false;
-    }
-    model._graphicsResources.get(vtkObj)?.releaseGraphicsResources(publicAPI);
-    return (
-      model._graphicsResources.delete(vtkObj) &&
-      model._graphicsResourceHash.delete(vtkObj)
-    );
-  };
+
   publicAPI.releaseGraphicsResources = () => {
     // Clear the shader cache
     if (model.shaderCache !== null) {
       model.shaderCache.releaseGraphicsResources(publicAPI);
     }
     // Free cached graphics resources at the context level
-    model._graphicsResources.forEach((gObj, vtkObj) => {
-      gObj.releaseGraphicsResources(publicAPI);
+    model._graphicsResources.forEach(({ oglObject }) => {
+      oglObject.releaseGraphicsResources(publicAPI);
     });
     model._graphicsResources.clear();
-    model._graphicsResourceHash.clear();
     if (model.textureUnitManager !== null) {
       model.textureUnitManager.freeAll();
     }
@@ -1325,7 +1348,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model._textureResourceIds = new Map();
   model._graphicsResources = new Map();
-  model._graphicsResourceHash = new Map();
   model._glInformation = null;
 
   model.myFactory = vtkOpenGLViewNodeFactory.newInstance();

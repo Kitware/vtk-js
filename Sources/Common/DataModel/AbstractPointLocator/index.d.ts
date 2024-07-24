@@ -1,28 +1,28 @@
-import { vtkObject } from "../../../interfaces";
-import { Bounds } from "../../../types";
-import { ILocatorInitialValues } from "../Locator";
+import { vtkObject } from '../../../interfaces';
+import { Bounds } from '../../../types';
+import { ILocatorInitialValues } from '../Locator';
 
 /**
  *
  */
 export interface IAbstractPointLocatorInitialValues
-	extends ILocatorInitialValues {
-	bounds?: Bounds;
-	numberOfBuckets: number;
+  extends ILocatorInitialValues {
+  bounds?: Bounds;
+  numberOfBuckets: number;
 }
 
 export interface vtkAbstractPointLocator extends vtkObject {
-	/**
-	 * Set the bounds of this object.
-	 * @param {Bounds} input
-	 */
-	setBounds(input: Bounds): void;
+  /**
+   * Set the bounds of this object.
+   * @param {Bounds} input
+   */
+  setBounds(input: Bounds): void;
 
-	/**
-	 * Get the bounds of this object.
-	 * @returns {Bounds}
-	 */
-	getBounds(): Bounds;
+  /**
+   * Get the bounds of this object.
+   * @returns {Bounds}
+   */
+  getBounds(): Bounds;
 }
 
 // ----------------------------------------------------------------------------
@@ -37,9 +37,9 @@ export interface vtkAbstractPointLocator extends vtkObject {
  * @param {IAbstractPointLocatorInitialValues} [initialValues] (default: {})
  */
 export function extend(
-	publicAPI: object,
-	model: object,
-	initialValues?: IAbstractPointLocatorInitialValues
+  publicAPI: object,
+  model: object,
+  initialValues?: IAbstractPointLocatorInitialValues
 ): void;
 
 // ----------------------------------------------------------------------------
@@ -48,7 +48,7 @@ export function extend(
  * vtkAbstractPointLocator
  */
 export declare const vtkAbstractPointLocator: {
-	extend: typeof extend;
+  extend: typeof extend;
 };
 
 export default vtkAbstractPointLocator;

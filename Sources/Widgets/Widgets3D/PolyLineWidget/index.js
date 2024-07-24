@@ -68,15 +68,6 @@ function vtkPolyLineWidget(publicAPI, model) {
   // initialization
   // --------------------------------------------------------------------------
 
-  model.widgetState.onBoundsChange((bounds) => {
-    const center = [
-      (bounds[0] + bounds[1]) * 0.5,
-      (bounds[2] + bounds[3]) * 0.5,
-      (bounds[4] + bounds[5]) * 0.5,
-    ];
-    model.widgetState.getMoveHandle().setOrigin(center);
-  });
-
   // Default manipulator
   publicAPI.setManipulator(
     model.manipulator ||

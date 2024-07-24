@@ -1,158 +1,156 @@
-import { vtkObject, vtkProperty } from "../../../interfaces";
+import { vtkObject, vtkProperty } from '../../../interfaces';
 import vtkRenderer from '../Renderer';
-import { Coordinate } from "./Constants";
-
+import { Coordinate } from './Constants';
 
 /**
  *
  */
 export interface ICoordinateInitialValues {
-	coordinateSystem?: number,
-	value?: number[],
-	renderer?: vtkRenderer,
-	referenceCoordinate?: any,
-	computing?: number,
-	computedWorldValue?: number[],
-	computedDoubleDisplayValue?: number[],
+  coordinateSystem?: number;
+  value?: number[];
+  renderer?: vtkRenderer;
+  referenceCoordinate?: any;
+  computing?: number;
+  computedWorldValue?: number[];
+  computedDoubleDisplayValue?: number[];
 }
 
 export interface vtkCoordinate extends vtkObject {
+  /**
+   *
+   * @param {vtkRenderer} ren The vtkRenderer instance.
+   */
+  getComputedWorldValue(ren: vtkRenderer): number[];
 
-	/**
-	 *
-	 * @param {vtkRenderer} ren The vtkRenderer instance.
-	 */
-	getComputedWorldValue(ren: vtkRenderer): number[];
+  /**
+   *
+   * @param {vtkRenderer} ren The vtkRenderer instance.
+   */
+  getComputedViewportValue(ren: vtkRenderer): number[];
 
-	/**
-	 *
-	 * @param {vtkRenderer} ren The vtkRenderer instance.
-	 */
-	getComputedViewportValue(ren: vtkRenderer): number[];
+  /**
+   *
+   * @param {vtkRenderer} ren The vtkRenderer instance.
+   */
+  getComputedDisplayValue(ren: vtkRenderer): number[];
 
-	/**
-	 *
-	 * @param {vtkRenderer} ren The vtkRenderer instance.
-	 */
-	getComputedDisplayValue(ren: vtkRenderer): number[];
+  /**
+   *
+   * @param {vtkRenderer} ren The vtkRenderer instance.
+   */
+  getComputedLocalDisplayValue(ren: vtkRenderer): number[];
 
-	/**
-	 *
-	 * @param {vtkRenderer} ren The vtkRenderer instance.
-	 */
-	getComputedLocalDisplayValue(ren: vtkRenderer): number[];
+  /**
+   *
+   * @param {vtkRenderer} ren The vtkRenderer instance.
+   */
+  getComputedValue(ren: vtkRenderer): number[];
 
-	/**
-	 *
-	 * @param {vtkRenderer} ren The vtkRenderer instance.
-	 */
-	getComputedValue(ren: vtkRenderer): number[];
+  /**
+   *
+   * @param {vtkRenderer} ren The vtkRenderer instance.
+   */
+  getComputedDoubleViewportValue(ren: vtkRenderer): number[];
 
-	/**
-	 *
-	 * @param {vtkRenderer} ren The vtkRenderer instance.
-	 */
-	getComputedDoubleViewportValue(ren: vtkRenderer): number[];
+  /**
+   *
+   * @param {vtkRenderer} ren The vtkRenderer instance.
+   */
+  getComputedDoubleDisplayValue(ren: vtkRenderer): number[];
 
-	/**
-	 *
-	 * @param {vtkRenderer} ren The vtkRenderer instance.
-	 */
-	getComputedDoubleDisplayValue(ren: vtkRenderer): number[];
+  /**
+   * Get the coordinate system which this coordinate is defined in. The
+   * options are Display, Normalized Display, Viewport, Normalized Viewport,
+   * View, and World.
+   */
+  getCoordinateSystem(): Coordinate;
 
-	/**
-	 * Get the coordinate system which this coordinate is defined in. The
-	 * options are Display, Normalized Display, Viewport, Normalized Viewport,
-	 * View, and World.
-	 */
-	getCoordinateSystem(): Coordinate;
+  /**
+   * Get the coordinate system which this coordinate is defined in as string.
+   */
+  getCoordinateSystemAsString(): string;
 
-	/**
-	 * Get the coordinate system which this coordinate is defined in as string.
-	 */
-	getCoordinateSystemAsString(): string;
+  /**
+   * Get the value of this coordinate.
+   */
+  getValue(): number[];
 
-	/**
-	 * Get the value of this coordinate.
-	 */
-	getValue(): number[];
+  /**
+   *
+   */
+  getReferenceCoordinate(): vtkCoordinate;
 
-	/**
-	 *
-	 */
-	getReferenceCoordinate(): vtkCoordinate;
+  /**
+   * Get mapper that was picked (if any)
+   */
+  getRenderer(): vtkRenderer;
 
-	/**
-	 * Get mapper that was picked (if any)
-	 */
-	getRenderer(): vtkRenderer;
+  /**
+   * Set the coordinate system which this coordinate is defined in. The
+   * options are Display, Normalized Display, Viewport, Normalized Viewport,
+   * View, and World.
+   * @param {Coordinate} coordinateSystem
+   */
+  setCoordinateSystem(coordinateSystem: Coordinate): boolean;
 
-	/**
-	 * Set the coordinate system which this coordinate is defined in. The
-	 * options are Display, Normalized Display, Viewport, Normalized Viewport,
-	 * View, and World.
-	 * @param {Coordinate} coordinateSystem 
-	 */
-	setCoordinateSystem(coordinateSystem: Coordinate): boolean
+  /**
+   * Set the coordinate system to Coordinate.DISPLAY
+   */
+  setCoordinateSystemToDisplay(): void;
 
-	/**
-	 * Set the coordinate system to Coordinate.DISPLAY
-	 */
-	setCoordinateSystemToDisplay(): void;
+  /**
+   * Set the coordinate system to Coordinate.NORMALIZED_DISPLAY
+   */
+  setCoordinateSystemToNormalizedDisplay(): void;
 
-	/**
-	 * Set the coordinate system to Coordinate.NORMALIZED_DISPLAY
-	 */
-	setCoordinateSystemToNormalizedDisplay(): void;
+  /**
+   * Set the coordinate system to Coordinate.NORMALIZED_VIEWPORT
+   */
+  setCoordinateSystemToNormalizedViewport(): void;
 
-	/**
-	 * Set the coordinate system to Coordinate.NORMALIZED_VIEWPORT
-	 */
-	setCoordinateSystemToNormalizedViewport(): void;
+  /**
+   * Set the coordinate system to Coordinate.PROJECTION
+   */
+  setCoordinateSystemToProjection(): void;
 
-	/**
-	 * Set the coordinate system to Coordinate.PROJECTION
-	 */
-	setCoordinateSystemToProjection(): void;
+  /**
+   * Set the coordinate system to Coordinate.VIEW
+   */
+  setCoordinateSystemToView(): void;
 
-	/**
-	 * Set the coordinate system to Coordinate.VIEW
-	 */
-	setCoordinateSystemToView(): void;
+  /**
+   * Set the coordinate system to Coordinate.VIEWPORT
+   */
+  setCoordinateSystemToViewport(): void;
 
-	/**
-	 * Set the coordinate system to Coordinate.VIEWPORT
-	 */
-	setCoordinateSystemToViewport(): void;
+  /**
+   * Set the coordinate system to Coordinate.WORLD
+   */
+  setCoordinateSystemToWorld(): void;
 
-	/**
-	 * Set the coordinate system to Coordinate.WORLD
-	 */
-	setCoordinateSystemToWorld(): void;
+  /**
+   *
+   * @param {vtkProperty} property
+   */
+  setProperty(property: vtkProperty): boolean;
 
-	/**
-	 *
-	 * @param {vtkProperty} property 
-	 */
-	setProperty(property: vtkProperty): boolean;
+  /**
+   *
+   * @param {vtkCoordinate} referenceCoordinate
+   */
+  setReferenceCoordinate(referenceCoordinate: vtkCoordinate): boolean;
 
-	/**
-	 *
-	 * @param {vtkCoordinate} referenceCoordinate 
-	 */
-	setReferenceCoordinate(referenceCoordinate: vtkCoordinate): boolean;
+  /**
+   *
+   * @param {vtkRenderer} renderer
+   */
+  setRenderer(renderer: vtkRenderer): boolean;
 
-	/**
-	 *
-	 * @param {vtkRenderer} renderer 
-	 */
-	setRenderer(renderer: vtkRenderer): boolean;
-
-	/**
-	 * Set the value of this coordinate.
-	 * @param value 
-	 */
-	setValue(value: number[]): boolean;
+  /**
+   * Set the value of this coordinate.
+   * @param value
+   */
+  setValue(value: number[]): boolean;
 }
 
 /**
@@ -163,14 +161,20 @@ export interface vtkCoordinate extends vtkObject {
  * @param model object on which data structure will be bounds (protected)
  * @param {ICoordinateInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: ICoordinateInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: ICoordinateInitialValues
+): void;
 
 /**
  * Method use to create a new instance of vtkCoordinate
  * @param {ICoordinateInitialValues} [initialValues] for pre-setting some of its
  * content
  */
-export function newInstance(initialValues?: ICoordinateInitialValues): vtkCoordinate;
+export function newInstance(
+  initialValues?: ICoordinateInitialValues
+): vtkCoordinate;
 
 /**
  * vtkCoordinate represents position in a variety of coordinate systems, and
@@ -210,7 +214,7 @@ export function newInstance(initialValues?: ICoordinateInitialValues): vtkCoordi
  * create composite groups of things like vtkActor2D that are positioned
  * relative to one another.
  *
- * !!! note 
+ * !!! note
  *     In cascaded sequences, each vtkCoordinate object may be specified in different coordinate systems!
  *
  * How the data may go from a dataset through the rendering pipeline in steps
@@ -243,8 +247,8 @@ export function newInstance(initialValues?: ICoordinateInitialValues): vtkCoordi
  * @see [vtkActor](./Rendering_Core_Actor.html)2D
  */
 export declare const vtkCoordinate: {
-	newInstance: typeof newInstance;
-	extend: typeof extend;
-	Coordinate: typeof Coordinate;
+  newInstance: typeof newInstance;
+  extend: typeof extend;
+  Coordinate: typeof Coordinate;
 };
 export default vtkCoordinate;

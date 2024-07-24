@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
+import { add } from 'vtk.js/Sources/Common/Core/Math';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
 import vtkImplicitPlaneRepresentation from 'vtk.js/Sources/Widgets/Representations/ImplicitPlaneRepresentation';
 import vtkLineManipulator from 'vtk.js/Sources/Widgets/Manipulators/LineManipulator';
@@ -14,6 +15,8 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkPlaneWidget');
   model._isDragging = false;
+  // used to track the constrained widget position
+  model._draggingWidgetOrigin = [0, 0, 0];
 
   publicAPI.setDisplayCallback = (callback) =>
     model.representations[0].setDisplayCallback(callback);
@@ -44,11 +47,35 @@ function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
 
-    model.lineManipulator.setWidgetOrigin(model.widgetState.getOrigin());
-    model.planeManipulator.setWidgetOrigin(model.widgetState.getOrigin());
+    model.lineManipulator.setWidgetOrigin(model.activeState.getOrigin());
+    model.lineManipulator.setWidgetNormal(model.activeState.getNormal());
+    model.planeManipulator.setWidgetOrigin(model.activeState.getOrigin());
+    model.planeManipulator.setWidgetNormal(model.activeState.getNormal());
     model.trackballManipulator.reset(callData); // setup trackball delta
+    model.trackballManipulator.setWidgetNormal(model.activeState.getNormal());
+
+    // update worldDelta with the proper manipulator
+    let activeManipulator = null;
+    switch (model.activeState.getUpdateMethodName()) {
+      case 'updateFromOrigin':
+        activeManipulator = model.planeManipulator;
+        break;
+      case 'updateFromPlane':
+        activeManipulator = model.lineManipulator;
+        break;
+      case 'updateFromNormal':
+        activeManipulator = model.trackballManipulator;
+        break;
+      default:
+      // skip
+    }
+
+    if (activeManipulator) {
+      activeManipulator.handleEvent(callData, model._apiSpecificRenderWindow);
+    }
 
     if (model.dragable) {
+      model._draggingWidgetOrigin = model.widgetState.getOrigin();
       model._isDragging = true;
       model._apiSpecificRenderWindow.setCursor('grabbing');
       model._interactor.requestAnimation(publicAPI);
@@ -100,13 +127,16 @@ function widgetBehavior(publicAPI, model) {
 
   publicAPI.updateFromOrigin = (callData) => {
     model.planeManipulator.setWidgetNormal(model.widgetState.getNormal());
-    const { worldCoords } = model.planeManipulator.handleEvent(
+    const { worldCoords, worldDelta } = model.planeManipulator.handleEvent(
       callData,
       model._apiSpecificRenderWindow
     );
 
-    if (model.widgetState.containsPoint(worldCoords)) {
-      model.activeState.setOrigin(worldCoords);
+    add(model._draggingWidgetOrigin, worldDelta, model._draggingWidgetOrigin);
+
+    // test containment of interaction coords
+    if (model.widgetState.containsPoint(...worldCoords)) {
+      model.activeState.setOrigin(model._draggingWidgetOrigin);
     }
   };
 
@@ -115,13 +145,15 @@ function widgetBehavior(publicAPI, model) {
   publicAPI.updateFromPlane = (callData) => {
     // Move origin along normal axis
     model.lineManipulator.setWidgetNormal(model.activeState.getNormal());
-    const { worldCoords } = model.lineManipulator.handleEvent(
+    const { worldDelta } = model.lineManipulator.handleEvent(
       callData,
       model._apiSpecificRenderWindow
     );
 
-    if (model.widgetState.containsPoint(...worldCoords)) {
-      model.activeState.setOrigin(worldCoords);
+    add(model._draggingWidgetOrigin, worldDelta, model._draggingWidgetOrigin);
+
+    if (model.widgetState.containsPoint(...model._draggingWidgetOrigin)) {
+      model.activeState.setOrigin(model._draggingWidgetOrigin);
     }
   };
 

@@ -134,8 +134,8 @@
     "wslink": ">=1.1.0 || ^2.0.0"
   },
   "scripts": {
-    "validate": "prettier --config ./prettier.config.js --list-different \"Sources/**/*.js\" \"Examples/**/*.js\"",
-    "reformat": "prettier --config ./prettier.config.js --write \"Sources/**/*.js\" \"Examples/**/*.js\"",
+    "validate": "prettier --config ./prettier.config.js --list-different \"Sources/**/*.[tj]s\" \"Examples/**/*.[tj]s\"",
+    "reformat": "prettier --config ./prettier.config.js --write \"Sources/**/*.[tj]s\" \"Examples/**/*.[tj]s\"",
     "reformat-only": "prettier --single-quote --trailing-comma es5 --print-width 80 --arrow-parens always --write",
     "lint-fix": "eslint --fix Sources Examples",
     "lint": "eslint Sources Examples",

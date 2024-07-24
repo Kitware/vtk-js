@@ -34,3 +34,20 @@ export function handleTypeFromName(name) {
   }
   return 'faces';
 }
+
+export function calculateCropperCenter(planes, transform) {
+  // get center of current crop box
+  const center = [
+    (planes[0] + planes[1]) / 2,
+    (planes[2] + planes[3]) / 2,
+    (planes[4] + planes[5]) / 2,
+  ];
+  return transformVec3(center, transform);
+}
+
+export function calculateDirection(v1, v2) {
+  const direction = vec3.create();
+  vec3.subtract(direction, v1, v2);
+  vec3.normalize(direction, direction);
+  return direction;
+}

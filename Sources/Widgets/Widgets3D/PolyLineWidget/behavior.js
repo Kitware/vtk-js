@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
+import { add } from 'vtk.js/Sources/Common/Core/Math';
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkPolyLineWidgetProp');
@@ -26,18 +27,25 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
 
-    const { worldCoords } = manipulator.handleEvent(
+    const { worldCoords, worldDelta } = manipulator.handleEvent(
       callData,
       model._apiSpecificRenderWindow
     );
 
-    if (
-      worldCoords.length &&
-      (model.activeState === model.widgetState.getMoveHandle() ||
-        model._isDragging) &&
-      model.activeState.setOrigin // e.g. the line is pickable but not draggable
-    ) {
-      model.activeState.setOrigin(worldCoords);
+    const isHandleMoving =
+      model.activeState === model.widgetState.getMoveHandle() ||
+      model._isDragging;
+
+    // the line is pickable but not draggable
+    const isPickingLine = !model.activeState.setOrigin;
+
+    if (worldCoords.length && isHandleMoving && !isPickingLine) {
+      const curOrigin = model.activeState.getOrigin();
+      if (curOrigin) {
+        model.activeState.setOrigin(add(curOrigin, worldDelta, []));
+      } else {
+        model.activeState.setOrigin(worldCoords);
+      }
       publicAPI.invokeInteractionEvent();
       return macro.EVENT_ABORT;
     }
@@ -87,6 +95,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
+
     if (
       model.activeState === model.widgetState.getMoveHandle() &&
       manipulator
@@ -99,6 +108,8 @@ export default function widgetBehavior(publicAPI, model) {
       newHandle.setScale1(moveHandle.getScale1());
       newHandle.setManipulator(manipulator);
     } else if (model.dragable) {
+      // Update worldDelta
+      manipulator.handleEvent(e, model._apiSpecificRenderWindow);
       model._isDragging = true;
       model._apiSpecificRenderWindow.setCursor('grabbing');
       model._interactor.requestAnimation(publicAPI);

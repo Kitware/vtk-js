@@ -1,6 +1,6 @@
-export declare const POLYDATA_FIELDS : string[];
+export declare const POLYDATA_FIELDS: string[];
 
 declare const _default: {
-	POLYDATA_FIELDS: typeof POLYDATA_FIELDS;
+  POLYDATA_FIELDS: typeof POLYDATA_FIELDS;
 };
 export default _default;

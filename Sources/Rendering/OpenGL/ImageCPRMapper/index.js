@@ -48,7 +48,9 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       );
       model._openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model._openGLRenderWindow = model._openGLRenderer.getParent();
+      model._openGLRenderWindow = model._openGLRenderer.getLastAncestorOfType(
+        'vtkOpenGLRenderWindow'
+      );
       model.context = model._openGLRenderWindow.getContext();
       model.openGLCamera = model._openGLRenderer.getViewNodeFor(
         model._openGLRenderer.getRenderable().getActiveCamera()

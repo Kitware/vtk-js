@@ -133,52 +133,52 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
 
     const cellBuilders = {
       // easy, every input point becomes an output point
-      anythingToPoints(numPoints, cellPts, offset) {
+      anythingToPoints(numPoints, cellPts, offset, cellId) {
         for (let i = 0; i < numPoints; ++i) {
-          addAPoint(cellPts[offset + i]);
+          addAPoint(cellPts[offset + i], cellId);
         }
       },
-      linesToWireframe(numPoints, cellPts, offset) {
+      linesToWireframe(numPoints, cellPts, offset, cellIdx) {
         // for lines we add a bunch of segments
         for (let i = 0; i < numPoints - 1; ++i) {
-          addAPoint(cellPts[offset + i]);
-          addAPoint(cellPts[offset + i + 1]);
+          addAPoint(cellPts[offset + i], cellIdx);
+          addAPoint(cellPts[offset + i + 1], cellIdx);
         }
       },
-      polysToWireframe(numPoints, cellPts, offset) {
+      polysToWireframe(numPoints, cellPts, offset, cellIdx) {
         // for polys we add a bunch of segments and close it
         if (numPoints > 2) {
           for (let i = 0; i < numPoints; ++i) {
-            addAPoint(cellPts[offset + i]);
-            addAPoint(cellPts[offset + ((i + 1) % numPoints)]);
+            addAPoint(cellPts[offset + i], cellIdx);
+            addAPoint(cellPts[offset + ((i + 1) % numPoints)], cellIdx);
           }
         }
       },
-      stripsToWireframe(numPoints, cellPts, offset) {
+      stripsToWireframe(numPoints, cellPts, offset, cellIdx) {
         if (numPoints > 2) {
           // for strips we add a bunch of segments and close it
           for (let i = 0; i < numPoints - 1; ++i) {
-            addAPoint(cellPts[offset + i]);
-            addAPoint(cellPts[offset + i + 1]);
+            addAPoint(cellPts[offset + i], cellIdx);
+            addAPoint(cellPts[offset + i + 1], cellIdx);
           }
           for (let i = 0; i < numPoints - 2; i++) {
-            addAPoint(cellPts[offset + i]);
-            addAPoint(cellPts[offset + i + 2]);
+            addAPoint(cellPts[offset + i], cellIdx);
+            addAPoint(cellPts[offset + i + 2], cellIdx);
           }
         }
       },
-      polysToSurface(npts, cellPts, offset) {
+      polysToSurface(npts, cellPts, offset, cellIdx) {
         for (let i = 0; i < npts - 2; i++) {
-          addAPoint(cellPts[offset + 0]);
-          addAPoint(cellPts[offset + i + 1]);
-          addAPoint(cellPts[offset + i + 2]);
+          addAPoint(cellPts[offset + 0], cellIdx);
+          addAPoint(cellPts[offset + i + 1], cellIdx);
+          addAPoint(cellPts[offset + i + 2], cellIdx);
         }
       },
-      stripsToSurface(npts, cellPts, offset) {
+      stripsToSurface(npts, cellPts, offset, cellIdx) {
         for (let i = 0; i < npts - 2; i++) {
-          addAPoint(cellPts[offset + i]);
-          addAPoint(cellPts[offset + i + 1 + (i % 2)]);
-          addAPoint(cellPts[offset + i + 1 + ((i + 1) % 2)]);
+          addAPoint(cellPts[offset + i], cellIdx);
+          addAPoint(cellPts[offset + i + 1 + (i % 2)], cellIdx);
+          addAPoint(cellPts[offset + i + 1 + ((i + 1) % 2)], cellIdx);
         }
       },
     };
@@ -304,16 +304,16 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     }
 
     let pointCount = options.vertexOffset;
-    addAPoint = function addAPointFunc(i) {
+    addAPoint = function addAPointFunc(pointId, cellId) {
       // Keep track of original point and cell ids, for selection
       if (selectionMaps) {
-        selectionMaps.points[pointCount] = i;
+        selectionMaps.points[pointCount] = pointId;
         selectionMaps.cells[pointCount] = cellCount + options.cellOffset;
       }
       ++pointCount;
 
       // Vertices
-      pointIdx = i * 3;
+      pointIdx = pointId * 3;
 
       if (!model.coordShiftAndScaleEnabled) {
         packedVBO[vboidx++] = pointData[pointIdx++];
@@ -333,7 +333,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
         if (options.haveCellNormals) {
           normalIdx = (cellCount + options.cellOffset) * 3;
         } else {
-          normalIdx = i * 3;
+          normalIdx = pointId * 3;
         }
         packedVBO[vboidx++] = normalData[normalIdx++];
         packedVBO[vboidx++] = normalData[normalIdx++];
@@ -341,14 +341,18 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       }
 
       model.customData.forEach((attr) => {
-        custIdx = i * attr.components;
+        custIdx = pointId * attr.components;
         for (let j = 0; j < attr.components; ++j) {
           packedVBO[vboidx++] = attr.data[custIdx++];
         }
       });
 
       if (tcoordData !== null) {
-        tcoordIdx = i * textureComponents;
+        if (options.useTCoordsPerCell) {
+          tcoordIdx = cellId * textureComponents;
+        } else {
+          tcoordIdx = pointId * textureComponents;
+        }
         for (let j = 0; j < textureComponents; ++j) {
           packedVBO[vboidx++] = tcoordData[tcoordIdx++];
         }
@@ -358,7 +362,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
         if (options.haveCellScalars) {
           colorIdx = (cellCount + options.cellOffset) * colorComponents;
         } else {
-          colorIdx = i * colorComponents;
+          colorIdx = pointId * colorComponents;
         }
         packedUCVBO[ucidx++] = colorData[colorIdx++];
         packedUCVBO[ucidx++] = colorData[colorIdx++];
@@ -368,10 +372,10 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       }
     };
 
-    for (let index = 0; index < size; ) {
-      func(array[index], array, index + 1);
-      index += array[index] + 1;
-      cellCount++;
+    // Browse the cell array: the index is at the beginning of a cell
+    // The value of 'array' at the position 'index' is the number of points in the cell
+    for (let index = 0; index < size; index += array[index] + 1, cellCount++) {
+      func(array[index], array, index + 1, cellCount + options.cellOffset);
     }
     model.elementCount = caboCount;
     publicAPI.upload(packedVBO, ObjectType.ARRAY_BUFFER);

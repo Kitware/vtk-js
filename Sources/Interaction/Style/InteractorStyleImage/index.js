@@ -15,7 +15,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
   publicAPI.superHandleMouseMove = publicAPI.handleMouseMove;
   publicAPI.handleMouseMove = (callData) => {
     const pos = callData.position;
-    const renderer = callData.pokedRenderer;
+    const renderer = model.getRenderer(callData);
 
     switch (model.state) {
       case States.IS_WINDOW_LEVEL:
@@ -101,7 +101,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
 
   //--------------------------------------------------------------------------
   publicAPI.handleMouseWheel = (callData) => {
-    const camera = callData.pokedRenderer.getActiveCamera();
+    const camera = model.getRenderer(callData).getActiveCamera();
 
     let distance = camera.getDistance();
     distance += callData.spinY;
@@ -115,7 +115,8 @@ function vtkInteractorStyleImage(publicAPI, model) {
       distance = range[1];
     }
     camera.setDistance(distance);
-    const props = callData.pokedRenderer
+    const props = model
+      .getRenderer(callData)
       .getViewProps()
       .filter((prop) => prop.isA('vtkImageSlice'));
     props.forEach((prop) => {

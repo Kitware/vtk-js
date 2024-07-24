@@ -17,7 +17,7 @@ function vtkOpenGLActor2D(publicAPI, model) {
       if (!model.renderable) {
         return;
       }
-      model._openGLRenderWindow = publicAPI.getFirstAncestorOfType(
+      model._openGLRenderWindow = publicAPI.getLastAncestorOfType(
         'vtkOpenGLRenderWindow'
       );
       model._openGLRenderer =

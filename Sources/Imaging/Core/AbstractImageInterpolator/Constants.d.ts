@@ -11,8 +11,8 @@ export declare enum InterpolationMode {
 }
 
 declare const _default: {
-	ImageBorderMode: typeof ImageBorderMode;
-	InterpolationMode: typeof InterpolationMode;
+  ImageBorderMode: typeof ImageBorderMode;
+  InterpolationMode: typeof InterpolationMode;
 };
 
 export default _default;

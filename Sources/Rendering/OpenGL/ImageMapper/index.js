@@ -59,6 +59,19 @@ function vtkOpenGLImageMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLImageMapper');
 
+  function unregisterGraphicsResources(renderWindow) {
+    // The openGLTexture is not shared
+    model.openGLTexture.releaseGraphicsResources(renderWindow);
+    // All these other resources are shared
+    [
+      model._colorTransferFunc,
+      model._pwFunc,
+      model._labelOutlineThicknessArray,
+    ].forEach((coreObject) =>
+      renderWindow.unregisterGraphicsResourceUser(coreObject, publicAPI)
+    );
+  }
+
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
       model.currentRenderPass = null;
@@ -67,7 +80,18 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       );
       model._openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      model._openGLRenderWindow = model._openGLRenderer.getParent();
+      const oldOglRenderWindow = model._openGLRenderWindow;
+      model._openGLRenderWindow = model._openGLRenderer.getLastAncestorOfType(
+        'vtkOpenGLRenderWindow'
+      );
+      if (
+        oldOglRenderWindow &&
+        !oldOglRenderWindow.isDeleted() &&
+        oldOglRenderWindow !== model._openGLRenderWindow
+      ) {
+        // Unregister the mapper when the render window changes
+        unregisterGraphicsResources(oldOglRenderWindow);
+      }
       model.context = model._openGLRenderWindow.getContext();
       model.tris.setOpenGLRenderWindow(model._openGLRenderWindow);
       const ren = model._openGLRenderer.getRenderable();
@@ -882,19 +906,16 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     }
   };
 
-  publicAPI.getNeedToRebuildBufferObjects = (ren, actor) => {
-    // first do a coarse check
-    if (
-      model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
-      model.VBOBuildTime.getMTime() < actor.getMTime() ||
-      model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
-      model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
-      model.VBOBuildTime.getMTime() < model.currentInput.getMTime()
-    ) {
-      return true;
-    }
-    return false;
-  };
+  publicAPI.getNeedToRebuildBufferObjects = (ren, actor) =>
+    model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
+    model.VBOBuildTime.getMTime() < actor.getMTime() ||
+    model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
+    model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
+    model.VBOBuildTime.getMTime() < model.currentInput.getMTime() ||
+    !model.openGLTexture?.getHandle() ||
+    !model.colorTexture?.getHandle() ||
+    !model.labelOutlineThicknessTexture?.getHandle() ||
+    !model.pwfTexture?.getHandle();
 
   publicAPI.buildBufferObjects = (ren, actor) => {
     const image = model.currentInput;
@@ -930,19 +951,15 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
 
     const reBuildC =
-      !cTex?.vtkObj ||
-      cTex?.hash !== cfunToString ||
-      model.colorTextureString !== cfunToString;
+      !cTex?.oglObject?.getHandle() || cTex?.hash !== cfunToString;
     if (reBuildC) {
+      model.colorTexture = vtkOpenGLTexture.newInstance({
+        resizable: true,
+      });
+      model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       const cWidth = 1024;
       const cSize = cWidth * textureHeight * 3;
       const cTable = new Uint8ClampedArray(cSize);
-      if (!model.colorTexture) {
-        model.colorTexture = vtkOpenGLTexture.newInstance({
-          resizable: true,
-        });
-        model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      }
       // set interpolation on the texture based on property setting
       if (iType === InterpolationType.NEAREST) {
         model.colorTexture.setMinificationFilter(Filter.NEAREST);
@@ -970,7 +987,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
             }
           }
         }
-        model.colorTexture.releaseGraphicsResources(model._openGLRenderWindow);
         model.colorTexture.resetFormatAndType();
         model.colorTexture.create2DFromRaw(
           cWidth,
@@ -994,17 +1010,26 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         );
       }
 
-      model.colorTextureString = cfunToString;
       if (colorTransferFunc) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
           colorTransferFunc,
           model.colorTexture,
-          model.colorTextureString
+          cfunToString
         );
+        if (colorTransferFunc !== model._colorTransferFunc) {
+          model._openGLRenderWindow.registerGraphicsResourceUser(
+            colorTransferFunc,
+            publicAPI
+          );
+          model._openGLRenderWindow.unregisterGraphicsResourceUser(
+            model._colorTransferFunc,
+            publicAPI
+          );
+        }
+        model._colorTransferFunc = colorTransferFunc;
       }
     } else {
-      model.colorTexture = cTex.vtkObj;
-      model.colorTextureString = cTex.hash;
+      model.colorTexture = cTex.oglObject;
     }
 
     // Build piecewise function buffer.  This buffer is used either
@@ -1016,19 +1041,15 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model._openGLRenderWindow.getGraphicsResourceForObject(pwFunc);
     // rebuild opacity tfun?
     const reBuildPwf =
-      !pwfTex?.vtkObj ||
-      pwfTex?.hash !== pwfunToString ||
-      model.pwfTextureString !== pwfunToString;
+      !pwfTex?.oglObject?.getHandle() || pwfTex?.hash !== pwfunToString;
     if (reBuildPwf) {
       const pwfWidth = 1024;
       const pwfSize = pwfWidth * textureHeight;
       const pwfTable = new Uint8ClampedArray(pwfSize);
-      if (!model.pwfTexture) {
-        model.pwfTexture = vtkOpenGLTexture.newInstance({
-          resizable: true,
-        });
-        model.pwfTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      }
+      model.pwfTexture = vtkOpenGLTexture.newInstance({
+        resizable: true,
+      });
+      model.pwfTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       // set interpolation on the texture based on property setting
       if (iType === InterpolationType.NEAREST) {
         model.pwfTexture.setMinificationFilter(Filter.NEAREST);
@@ -1063,7 +1084,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
             }
           }
         }
-        model.pwfTexture.releaseGraphicsResources(model._openGLRenderWindow);
         model.pwfTexture.resetFormatAndType();
         model.pwfTexture.create2DFromRaw(
           pwfWidth,
@@ -1084,17 +1104,26 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         );
       }
 
-      model.pwfTextureString = pwfunToString;
       if (pwFunc) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
           pwFunc,
           model.pwfTexture,
-          model.pwfTextureString
+          pwfunToString
         );
+        if (pwFunc !== model._pwFunc) {
+          model._openGLRenderWindow.registerGraphicsResourceUser(
+            pwFunc,
+            publicAPI
+          );
+          model._openGLRenderWindow.unregisterGraphicsResourceUser(
+            model._pwFunc,
+            publicAPI
+          );
+        }
+        model._pwFunc = pwFunc;
       }
     } else {
-      model.pwfTexture = pwfTex.vtkObj;
-      model.pwfTextureString = pwfTex.hash;
+      model.pwfTexture = pwfTex.oglObject;
     }
 
     // Build outline thickness buffer
@@ -1140,8 +1169,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         model.openGLTexture = vtkOpenGLTexture.newInstance({
           resizable: true,
         });
-        model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       }
+      model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       // Use norm16 for scalar texture if the extension is available
       model.openGLTexture.setOglNorm16Ext(
         model.context.getExtension('EXT_texture_norm16')
@@ -1273,33 +1302,17 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         vtkErrorMacro('Reformat slicing not yet supported.');
       }
 
-      const tex =
-        model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
-      if (!tex?.vtkObj) {
-        if (model._scalars !== scalars) {
-          model._openGLRenderWindow.releaseGraphicsResourcesForObject(
-            model._scalars
-          );
-          model._scalars = scalars;
-        }
-        model.openGLTexture.resetFormatAndType();
-        model.openGLTexture.create2DFilterableFromRaw(
-          dims[0],
-          dims[1],
-          numComp,
-          imgScalars.getDataType(),
-          scalars,
-          model.renderable.getPreferSizeOverAccuracy?.()
-        );
-        model._openGLRenderWindow.setGraphicsResourceForObject(
-          scalars,
-          model.openGLTexture,
-          model.VBOBuildString
-        );
-      } else {
-        model.openGLTexture = tex.vtkObj;
-        model.VBOBuildString = tex.hash;
-      }
+      // Don't share this resource as `scalars` is created in this function
+      // so it is impossible to share
+      model.openGLTexture.resetFormatAndType();
+      model.openGLTexture.create2DFilterableFromRaw(
+        dims[0],
+        dims[1],
+        numComp,
+        imgScalars.getDataType(),
+        scalars,
+        model.renderable.getPreferSizeOverAccuracy?.()
+      );
       model.openGLTexture.activate();
       model.openGLTexture.sendParameters();
       model.openGLTexture.deactivate();
@@ -1340,15 +1353,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
   };
 
   publicAPI.updatelabelOutlineThicknessTexture = (image) => {
-    if (!model.labelOutlineThicknessTexture) {
-      model.labelOutlineThicknessTexture = vtkOpenGLTexture.newInstance({
-        resizable: false,
-      });
-      model.labelOutlineThicknessTexture.setOpenGLRenderWindow(
-        model._openGLRenderWindow
-      );
-    }
-
     const labelOutlineThicknessArray = image
       .getProperty()
       .getLabelOutlineThickness();
@@ -1362,10 +1366,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     // or not
     const toString = `${labelOutlineThicknessArray.join('-')}`;
 
-    const reBuildL =
-      !lTex?.vtkObj ||
-      lTex?.hash !== toString ||
-      model.labelOutlineThicknessTextureString !== toString;
+    const reBuildL = !lTex?.oglObject?.getHandle() || lTex?.hash !== toString;
 
     if (reBuildL) {
       const lWidth = 1024;
@@ -1383,7 +1384,10 @@ function vtkOpenGLImageMapper(publicAPI, model) {
             : labelOutlineThicknessArray[0];
         lTable[i] = thickness;
       }
-      model.labelOutlineThicknessTexture.releaseGraphicsResources(
+      model.labelOutlineThicknessTexture = vtkOpenGLTexture.newInstance({
+        resizable: false,
+      });
+      model.labelOutlineThicknessTexture.setOpenGLRenderWindow(
         model._openGLRenderWindow
       );
 
@@ -1400,17 +1404,26 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         lTable
       );
 
-      model.labelOutlineThicknessTextureString = toString;
       if (labelOutlineThicknessArray) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
           labelOutlineThicknessArray,
           model.labelOutlineThicknessTexture,
-          model.labelOutlineThicknessTextureString
+          toString
         );
+        if (labelOutlineThicknessArray !== model._labelOutlineThicknessArray) {
+          model._openGLRenderWindow.registerGraphicsResourceUser(
+            labelOutlineThicknessArray,
+            publicAPI
+          );
+          model._openGLRenderWindow.unregisterGraphicsResourceUser(
+            model._labelOutlineThicknessArray,
+            publicAPI
+          );
+        }
+        model._labelOutlineThicknessArray = labelOutlineThicknessArray;
       }
     } else {
-      model.labelOutlineThicknessTexture = lTex.vtkObj;
-      model.labelOutlineThicknessTextureString = lTex.hash;
+      model.labelOutlineThicknessTexture = lTex.oglObject;
     }
   };
 
@@ -1430,6 +1443,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     return [lowerLeftU, lowerLeftV];
   };
+
+  publicAPI.delete = macro.chain(() => {
+    if (model._openGLRenderWindow) {
+      unregisterGraphicsResources(model._openGLRenderWindow);
+    }
+  }, publicAPI.delete);
 }
 
 // ----------------------------------------------------------------------------
@@ -1450,7 +1469,10 @@ const DEFAULT_VALUES = {
   lastHaveSeenDepthRequest: false,
   haveSeenDepthRequest: false,
   lastTextureComponents: 0,
-  _scalars: null,
+  // _scalars: null,
+  // _colorTransferFunc: null,
+  // _pwFunc: null,
+  // _labelOutlineThicknessArray: null,
 };
 
 // ----------------------------------------------------------------------------

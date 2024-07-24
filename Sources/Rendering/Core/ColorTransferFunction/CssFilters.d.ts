@@ -15,7 +15,7 @@
  * [R, G, B, A, 1] vectors, with each channel between 0 and 1.
  */
 
-import { Matrix, Vector3 } from "../../../types";
+import { Matrix, Vector3 } from '../../../types';
 
 export const luminanceWeights: Vector3;
 export type FilterMatrix = Matrix;
@@ -44,7 +44,11 @@ export function createIdentityFilter(outFilter?: FilterMatrix): FilterMatrix;
  * @param newFilter The second filter that will be applied
  * @param outFilter An optional filter that will contain the combined filter
  */
-export function combineFilters(baseFilter: FilterMatrix, newFilter: FilterMatrix, outFilter?: FilterMatrix): FilterMatrix;
+export function combineFilters(
+  baseFilter: FilterMatrix,
+  newFilter: FilterMatrix,
+  outFilter?: FilterMatrix
+): FilterMatrix;
 
 /**
  * Apply a filter to a rgb(a) point
@@ -56,54 +60,76 @@ export function combineFilters(baseFilter: FilterMatrix, newFilter: FilterMatrix
  * @param a The optional alpha channel (between 0 and 1), defaults to 1
  * @returns A vector of size 4 [r, g, b, a]
  */
-export function applyFilter(filter: FilterMatrix, r: number, g: number, b: number, a?: number): [number, number, number, number];
+export function applyFilter(
+  filter: FilterMatrix,
+  r: number,
+  g: number,
+  b: number,
+  a?: number
+): [number, number, number, number];
 
 /**
  * A generic linear filter
  * See svg equivalent for parameters and a specification
  * https://www.w3.org/TR/filter-effects-1/#attr-valuedef-type-linear
- * @param slope 
- * @param intercept 
+ * @param slope
+ * @param intercept
  * @param outFilter Optional output, a new filter is created if not specified
  */
-export function createLinearFilter(slope: number, intercept: number, outFilter?: FilterMatrix): FilterMatrix;
+export function createLinearFilter(
+  slope: number,
+  intercept: number,
+  outFilter?: FilterMatrix
+): FilterMatrix;
 
 /**
  * A contrast filter
  * See css/svg equivalent for parameters and a specification
  * https://www.w3.org/TR/filter-effects-1/#contrastEquivalent
  * https://www.w3.org/TR/filter-effects-1/#attr-valuedef-type-linear
- * @param contrast 
+ * @param contrast
  * @param outFilter Optional output, a new filter is created if not specified
  */
-export function createContrastFilter(contrast: number, outFilter?: FilterMatrix): FilterMatrix;
+export function createContrastFilter(
+  contrast: number,
+  outFilter?: FilterMatrix
+): FilterMatrix;
 
 /**
  * A saturate filter
  * See css/svg equivalent for parameters and a specification
  * https://www.w3.org/TR/filter-effects-1/#saturateEquivalent
  * https://www.w3.org/TR/filter-effects-1/#ref-for-attr-valuedef-type-saturate
- * @param saturate 
+ * @param saturate
  * @param outFilter Optional output, a new filter is created if not specified
  */
-export function createSaturateFilter(saturate: number, outFilter?: FilterMatrix): FilterMatrix;
+export function createSaturateFilter(
+  saturate: number,
+  outFilter?: FilterMatrix
+): FilterMatrix;
 
 /**
  * A brightness filter
  * See css/svg equivalent for parameters and a specification
  * https://www.w3.org/TR/filter-effects-1/#brightnessEquivalent
  * https://www.w3.org/TR/filter-effects-1/#attr-valuedef-type-linear
- * @param brightness 
+ * @param brightness
  * @param outFilter Optional output, a new filter is created if not specified
  */
-export function createBrightnessFilter(brightness: number, outFilter?: FilterMatrix): FilterMatrix;
+export function createBrightnessFilter(
+  brightness: number,
+  outFilter?: FilterMatrix
+): FilterMatrix;
 
 /**
  * An invert filter
  * See css/svg equivalent for parameters and a specification
  * https://www.w3.org/TR/filter-effects-1/#invertEquivalent
  * https://www.w3.org/TR/filter-effects-1/#attr-valuedef-type-table
- * @param invert 
+ * @param invert
  * @param outFilter Optional output, a new filter is created if not specified
  */
-export function createInvertFilter(invert: number, outFilter?: FilterMatrix): FilterMatrix;
+export function createInvertFilter(
+  invert: number,
+  outFilter?: FilterMatrix
+): FilterMatrix;

@@ -1,39 +1,39 @@
-import { vtkAlgorithm, vtkObject } from "../../../interfaces";
-import { Nullable, TypedArray, Vector3 } from "../../../types";
-import vtkCellArray from "../../../Common/Core/CellArray";
-import vtkPolyData from "../../../Common/DataModel/PolyData";
-import vtkPoints from "../../../Common/Core/Points";
+import { vtkAlgorithm, vtkObject } from '../../../interfaces';
+import { Nullable, TypedArray, Vector3 } from '../../../types';
+import vtkCellArray from '../../../Common/Core/CellArray';
+import vtkPolyData from '../../../Common/DataModel/PolyData';
+import vtkPoints from '../../../Common/Core/Points';
 
 /**
  *
  */
 export interface IContourTriangulatorInitialValues {
-	triangulatePolys?: boolean;
+  triangulatePolys?: boolean;
 }
 
 type vtkContourTriangulatorBase = vtkObject & vtkAlgorithm;
 
 export interface vtkContourTriangulator extends vtkContourTriangulatorBase {
-	/**
-	 *
-	 * @param {any} inData
-	 * @param {any} outData
-	 */
-	requestData(inData: any, outData: any): void;
+  /**
+   *
+   * @param {any} inData
+   * @param {any} outData
+   */
+  requestData(inData: any, outData: any): void;
 
-	/**
-	 * Sets the behavior of the filter regarding polys.
-	 * @param {boolean} triangulate whether the filter should triangulate polys
-	 * or leave them untouched. True by default
-	 * @return {boolean} true if it changes
-	 */
-	setTriangulatePolys(triangulate: boolean): boolean;
+  /**
+   * Sets the behavior of the filter regarding polys.
+   * @param {boolean} triangulate whether the filter should triangulate polys
+   * or leave them untouched. True by default
+   * @return {boolean} true if it changes
+   */
+  setTriangulatePolys(triangulate: boolean): boolean;
 
-	/**
-	 * Returns the behavior of the filter regarding polys.
-	 * @return {boolean} True if the filter triangulates polys, false otherwise.
-	 */
-	getTriangulatePolys(): boolean;
+  /**
+   * Returns the behavior of the filter regarding polys.
+   * @return {boolean} True if the filter triangulates polys, false otherwise.
+   */
+  getTriangulatePolys(): boolean;
 }
 
 // ----------------------------------------------------------------------------
@@ -72,13 +72,13 @@ export interface vtkContourTriangulator extends vtkContourTriangulatorBase {
  * false otherwise.
  */
 export function triangulateContours(
-	polyData: vtkPolyData,
-	firstLine: number,
-	numLines: number,
-	polys: vtkCellArray,
-	normal: Nullable<Vector3>,
-	triangulatePolys?: boolean,
-	diagnoseOnTriangulationError?: boolean
+  polyData: vtkPolyData,
+  firstLine: number,
+  numLines: number,
+  polys: vtkCellArray,
+  normal: Nullable<Vector3>,
+  triangulatePolys?: boolean,
+  diagnoseOnTriangulationError?: boolean
 ): boolean;
 
 /**
@@ -94,9 +94,9 @@ export function triangulateContours(
  * false otherwise.
  */
 export function triangulatePolygon(
-	polygon: Array<number> | TypedArray,
-	points: vtkPoints,
-	triangles: vtkCellArray
+  polygon: Array<number> | TypedArray,
+  points: vtkPoints,
+  triangles: vtkCellArray
 ): boolean;
 
 /**
@@ -107,9 +107,9 @@ export function triangulatePolygon(
  * @param {IContourTriangulatorInitialValues} [initialValues] (default: {})
  */
 export function extend(
-	publicAPI: object,
-	model: object,
-	initialValues?: IContourTriangulatorInitialValues
+  publicAPI: object,
+  model: object,
+  initialValues?: IContourTriangulatorInitialValues
 ): void;
 
 // ----------------------------------------------------------------------------
@@ -119,18 +119,18 @@ export function extend(
  * @param {IContourTriangulatorInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(
-	initialValues?: IContourTriangulatorInitialValues
+  initialValues?: IContourTriangulatorInitialValues
 ): vtkContourTriangulator;
 
 /**
  * vtkContourTriangulator
  */
 export declare const vtkContourTriangulator: {
-	newInstance: typeof newInstance;
-	extend: typeof extend;
-	// static
-	triangulateContours: typeof triangulateContours;
-	triangulatePolygon: typeof triangulatePolygon;
+  newInstance: typeof newInstance;
+  extend: typeof extend;
+  // static
+  triangulateContours: typeof triangulateContours;
+  triangulatePolygon: typeof triangulatePolygon;
 };
 
 export default vtkContourTriangulator;

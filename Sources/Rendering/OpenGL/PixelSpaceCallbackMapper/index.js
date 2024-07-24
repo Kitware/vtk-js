@@ -17,7 +17,9 @@ function vtkOpenGLPixelSpaceCallbackMapper(publicAPI, model) {
   publicAPI.opaquePass = (prepass, renderPass) => {
     model._openGLRenderer =
       publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-    model._openGLRenderWindow = model._openGLRenderer.getParent();
+    model._openGLRenderWindow = model._openGLRenderer.getLastAncestorOfType(
+      'vtkOpenGLRenderWindow'
+    );
     const aspectRatio = model._openGLRenderer.getAspectRatio();
     const camera = model._openGLRenderer
       ? model._openGLRenderer.getRenderable().getActiveCamera()

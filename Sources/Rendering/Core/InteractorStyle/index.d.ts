@@ -1,5 +1,7 @@
 import { EventHandler, vtkSubscription } from '../../../interfaces';
+import { Nullable } from '../../../types';
 import vtkInteractorObserver from '../InteractorObserver';
+import vtkRenderer from '../Renderer';
 
 export interface vtkInteractorStyle extends vtkInteractorObserver {
   /**
@@ -210,6 +212,19 @@ export interface vtkInteractorStyle extends vtkInteractorObserver {
    * Handles a keypress.
    */
   handleKeyPress(callData: unknown): void;
+
+  /**
+   * Explicitly defines a renderer to be used for event handling.
+   * If never called or called with null, the pokedRenderer of the event will be used.
+   *
+   * @param {Nullable<vtkRenderer>} renderer
+   */
+  setFocusedRenderer(renderer: Nullable<vtkRenderer>): boolean;
+
+  /**
+   * Get the renderer used for event handling, returns null if not set.
+   */
+  getFocusedRenderer(): Nullable<vtkRenderer>;
 }
 
 export interface IInteractorStyleInitialValues {

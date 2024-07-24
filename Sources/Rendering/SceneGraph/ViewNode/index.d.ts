@@ -1,156 +1,162 @@
-import { vtkObject } from "../../../interfaces";
-import vtkRenderPass from "../RenderPass";
+import { vtkObject } from '../../../interfaces';
+import vtkRenderPass from '../RenderPass';
 
 export enum PASS_TYPES {
-	'Build',
-	'Render'
+  'Build',
+  'Render',
 }
 
 /**
- * 
+ *
  */
 export interface IViewNodeInitialValues {
-	parent?: null,
-	renderable?: null,
-	myFactory?: null,
-	children?: Array<any>;
-	visited?: boolean;
+  parent?: null;
+  renderable?: null;
+  myFactory?: null;
+  children?: Array<any>;
+  visited?: boolean;
 }
 
 export interface vtkViewNode extends vtkObject {
+  /**
+   * Add a child view node to this node, created from the renderable given as argument
+   * If the node creation fails or the argument is falsy, returns undefined
+   * Otherwise, returns the newly created node or the existing node
+   * @param dobj
+   */
+  addMissingNode(dobj: any): vtkViewNode | undefined;
 
-	/**
-	 * Add a child view node to this node, created from the renderable given as argument
-	 * If the node creation fails or the argument is falsy, returns undefined
-	 * Otherwise, returns the newly created node or the existing node
-	 * @param dobj 
-	 */
-	addMissingNode(dobj: any): vtkViewNode | undefined;
+  /**
+   * Removes a child view node
+   * If the node is not found, returns false
+   * Otherwise, removes the node from the children list and returns true
+   * @param dobj
+   */
+  removeNode(dobj: any): boolean;
 
-	/**
-	 * 
-	 * @param dataObjs 
-	 */
-	addMissingNodes(dataObjs: any): void;
+  /**
+   *
+   * @param dataObjs
+   */
+  addMissingNodes(dataObjs: any): void;
 
-	/**
-	 * 
-	 * @param {vtkRenderPass} renderPass 
-	 * @param prepass 
-	 */
-	apply(renderPass: vtkRenderPass, prepass: boolean): void;
+  /**
+   *
+   * @param {vtkRenderPass} renderPass
+   * @param prepass
+   */
+  apply(renderPass: vtkRenderPass, prepass: boolean): void;
 
-	/**
-	 * Builds myself.
-	 * @param prepass 
-	 */
-	build(prepass: any): void;
+  /**
+   * Builds myself.
+   * @param prepass
+   */
+  build(prepass: any): void;
 
-	/**
-	 * 
-	 * @param dataObj 
-	 */
-	createViewNode(dataObj: any): void;
+  /**
+   *
+   * @param dataObj
+   */
+  createViewNode(dataObj: any): void;
 
-	/**
-	 * 
-	 */
-	getChildren(): any;
+  /**
+   *
+   */
+  getChildren(): any;
 
-	/**
-	 * 
-	 */
-	getChildrenByReference(): any;
+  /**
+   *
+   */
+  getChildrenByReference(): any;
 
-	/**
-	 * Find the first parent/grandparent of the desired type
-	 * @param type 
-	 */
-	getFirstAncestorOfType(type: any): void;
+  /**
+   * Find the first parent/grandparent of the desired type
+   * @param type
+   */
+  getFirstAncestorOfType(type: any): void;
 
-	/**
-	 * Find the last parent/grandparent of the desired type
-	 * @param type 
-	 */
-	getLastAncestorOfType(type: any): void;
+  /**
+   * Find the last parent/grandparent of the desired type
+   * @param type
+   */
+  getLastAncestorOfType(type: any): void;
 
-	/**
-	 * 
-	 */
-	getMyFactory(): any;
+  /**
+   *
+   */
+  getMyFactory(): any;
 
-	/**
-	 * 
-	 */
-	getParent(): any;
+  /**
+   *
+   */
+  getParent(): any;
 
-	/**
-	 * Get The data object (thing to be rendered).
-	 */
-	getRenderable(): any;
+  /**
+   * Get The data object (thing to be rendered).
+   */
+  getRenderable(): any;
 
-	/**
-	 * Returns the view node that corresponding to the provided object
-	 * Will return NULL if a match is not found in self or descendents
-	 * @param dataObject 
-	 */
-	getViewNodeFor(dataObject: any): any;
+  /**
+   * Returns the view node that corresponding to the provided object
+   * Will return NULL if a match is not found in self or descendents
+   * @param dataObject
+   */
+  getViewNodeFor(dataObject: any): any;
 
-	/**
-	 * 
-	 */
-	getVisited(): boolean;
+  /**
+   *
+   */
+  getVisited(): boolean;
 
+  //invokeEvent
+  //onEvent(callback: (instance: vtkObject) => any): vtkSubscription;
 
-	//invokeEvent
-	//onEvent(callback: (instance: vtkObject) => any): vtkSubscription;
+  /**
+   *
+   */
+  prepareNodes(): void;
 
-	/**
-	 * 
-	 */
-	prepareNodes(): void;
+  /**
+   *
+   */
+  removeUnusedNodes(): void;
 
-	/**
-	 * 
-	 */
-	removeUnusedNodes(): void;
+  /**
+   * Makes calls to make self visible.
+   * @param prepass
+   */
+  render(prepass: any): void;
 
-	/**
-	 * Makes calls to make self visible.
-	 * @param prepass 
-	 */
-	render(prepass: any): void;
+  /**
+   *
+   * @param myFactory
+   */
+  setMyFactory(myFactory: any): boolean;
 
-	/**
-	 * 
-	 * @param myFactory 
-	 */
-	setMyFactory(myFactory: any): boolean;
+  /**
+   *
+   * @param parent
+   */
+  setParent(parent: any): boolean;
 
-	/**
-	 * 
-	 * @param parent 
-	 */
-	setParent(parent: any): boolean;
+  /**
+   *
+   * @param renderable
+   */
+  setRenderable(renderable: any): boolean;
 
-	/**
-	 * 
-	 * @param renderable 
-	 */
-	setRenderable(renderable: any): boolean;
+  /**
+   *
+   * @param val
+   */
+  setVisited(val: boolean): void;
 
-	/**
-	 * 
-	 * @param val 
-	 */
-	setVisited(val: boolean): void;
-
-	/**
-	 * Traverse this node with the specified pass. If you want to traverse your
-	 * children in a specific order or way override this method
-	 * @param {vtkRenderPass} renderPass 
-	 */
-	traverse(renderPass: vtkRenderPass): void;
+  /**
+   * Traverse this node with the specified pass. If you want to traverse your
+   * children in a specific order or way override this method
+   * @param {vtkRenderPass} renderPass
+   */
+  traverse(renderPass: vtkRenderPass): void;
 }
 
 /**
@@ -160,17 +166,23 @@ export interface vtkViewNode extends vtkObject {
  * @param model object on which data structure will be bounds (protected)
  * @param {IViewNodeInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IViewNodeInitialValues): void;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: IViewNodeInitialValues
+): void;
 
 /**
  * Method used to create a new instance of vtkViewNode.
  * @param {IViewNodeInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: IViewNodeInitialValues): vtkViewNode;
+export function newInstance(
+  initialValues?: IViewNodeInitialValues
+): vtkViewNode;
 
 /**
  * a node within a VTK scene graph
- * 
+ *
  * This is the superclass for all nodes within a VTK scene graph. It contains
  * the API for a node. It supports the essential operations such as graph
  * creation, state storage and traversal. Child classes adapt this to VTK's
@@ -178,7 +190,7 @@ export function newInstance(initialValues?: IViewNodeInitialValues): vtkViewNode
  * different rendering libraries.
  */
 export declare const vtkViewNode: {
-	newInstance: typeof newInstance,
-	extend: typeof extend,
+  newInstance: typeof newInstance;
+  extend: typeof extend;
 };
 export default vtkViewNode;

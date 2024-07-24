@@ -3,7 +3,8 @@ import vtkRenderer from '../../../Rendering/Core/Renderer';
 import vtkImageProperty from '../../../Rendering/Core/ImageProperty';
 import vtkInteractorStyleTrackballCamera from '../../../Interaction/Style/InteractorStyleTrackballCamera';
 
-export interface vtkInteractorStyleImage extends vtkInteractorStyleTrackballCamera {
+export interface vtkInteractorStyleImage
+  extends vtkInteractorStyleTrackballCamera {
   /**
    * Handles a mouse move.
    * @param callData event data
@@ -45,18 +46,18 @@ export interface vtkInteractorStyleImage extends vtkInteractorStyleTrackballCame
    * @param renderer the renderer
    * @param position the display position
    */
-  windowLevel(renderer: vtkRenderer, position: { x: number, y: number }): void;
+  windowLevel(renderer: vtkRenderer, position: { x: number; y: number }): void;
 
   /**
    * Set slice from position.
    * @param renderer the renderer
    * @param position the display position
    */
-  slice(renderer: vtkRenderer, position: { x: number, y: number }): void;
+  slice(renderer: vtkRenderer, position: { x: number; y: number }): void;
 
   /**
    * Sets the current image property.
-   * 
+   *
    * This is a way of dealing with images as if they were layers.
    * It looks through the renderer's list of props and sets the
    * interactor ivars from the Nth image that it finds.  You can

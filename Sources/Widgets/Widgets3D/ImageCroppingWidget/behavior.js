@@ -1,10 +1,12 @@
 import macro from 'vtk.js/Sources/macros';
+import { add } from 'vtk.js/Sources/Common/Core/Math';
 
 import {
   AXES,
   transformVec3,
-  rotateVec3,
   handleTypeFromName,
+  calculateDirection,
+  calculateCropperCenter,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ImageCroppingWidget/helpers';
 
 export default function widgetBehavior(publicAPI, model) {
@@ -13,7 +15,7 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.setDisplayCallback = (callback) =>
     model.representations[0].setDisplayCallback(callback);
 
-  publicAPI.handleLeftButtonPress = () => {
+  publicAPI.handleLeftButtonPress = (callData) => {
     if (
       !model.activeState ||
       !model.activeState.getActive() ||
@@ -22,6 +24,10 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
     if (model.dragable) {
+      // updates worldDelta
+      model.activeState
+        .getManipulator()
+        .handleEvent(callData, model._apiSpecificRenderWindow);
       model._isDragging = true;
       model._apiSpecificRenderWindow.setCursor('grabbing');
       model._interactor.requestAnimation(publicAPI);
@@ -65,51 +71,48 @@ export default function widgetBehavior(publicAPI, model) {
         const indexToWorldT = model.widgetState.getIndexToWorldT();
 
         let worldCoords = [];
+        let worldDelta = [];
 
         if (type === 'corners') {
           // manipulator should be a plane manipulator
-          worldCoords = manipulator.handleEvent(
+          ({ worldCoords, worldDelta } = manipulator.handleEvent(
             callData,
             model._apiSpecificRenderWindow
-          ).worldCoords;
+          ));
         }
 
         if (type === 'faces') {
-          // constraint axis is line defined by the index and center point.
-          // Since our index point is defined inside a box [0, 2, 0, 2, 0, 2],
-          // center point is [1, 1, 1].
-          const constraintAxis = [1 - index[0], 1 - index[1], 1 - index[2]];
-
           // get center of current crop box
-          const center = [
-            (planes[0] + planes[1]) / 2,
-            (planes[2] + planes[3]) / 2,
-            (planes[4] + planes[5]) / 2,
-          ];
+          const worldCenter = calculateCropperCenter(planes, indexToWorldT);
 
-          // manipulator should be a line manipulator
-          manipulator.setHandleOrigin(transformVec3(center, indexToWorldT));
+          manipulator.setHandleOrigin(worldCenter);
           manipulator.setHandleNormal(
-            rotateVec3(constraintAxis, indexToWorldT)
+            calculateDirection(model.activeState.getOrigin(), worldCenter)
           );
-          worldCoords = manipulator.handleEvent(
+          ({ worldCoords, worldDelta } = manipulator.handleEvent(
             callData,
             model._apiSpecificRenderWindow
-          ).worldCoords;
+          ));
         }
 
         if (type === 'edges') {
           // constrain to a plane with a normal parallel to the edge
           const edgeAxis = index.map((a) => (a === 1 ? a : 0));
+          const faceName = edgeAxis.map((i) => AXES[i + 1]).join('');
+          const handle = model.widgetState.getStatesWithLabel(faceName)[0];
+          // get center of current crop box
+          const worldCenter = calculateCropperCenter(planes, indexToWorldT);
 
-          manipulator.setHandleNormal(rotateVec3(edgeAxis, indexToWorldT));
-          worldCoords = manipulator.handleEvent(
+          manipulator.setHandleNormal(
+            calculateDirection(handle.getOrigin(), worldCenter)
+          );
+          ({ worldCoords, worldDelta } = manipulator.handleEvent(
             callData,
             model._apiSpecificRenderWindow
-          ).worldCoords;
+          ));
         }
 
-        if (worldCoords.length) {
+        if (worldCoords.length && worldDelta.length) {
           // transform worldCoords to indexCoords, and then update the croppingPlanes() state with setPlanes().
           const worldToIndexT = model.widgetState.getWorldToIndexT();
           const indexCoords = transformVec3(worldCoords, worldToIndexT);
@@ -122,7 +125,9 @@ export default function widgetBehavior(publicAPI, model) {
             }
           }
 
-          model.activeState.setOrigin(...worldCoords);
+          model.activeState.setOrigin(
+            add(model.activeState.getOrigin(), worldDelta, [])
+          );
           model.widgetState.getCroppingPlanes().setPlanes(...planes);
 
           return macro.EVENT_ABORT;

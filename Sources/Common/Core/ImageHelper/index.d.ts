@@ -1,9 +1,9 @@
-import vtkImageData from "../../../Common/DataModel/ImageData";
+import vtkImageData from '../../../Common/DataModel/ImageData';
 
 interface ITransform {
-	flipX: boolean;
-	flipY: boolean;
-	rotate: number;
+  flipX: boolean;
+  flipY: boolean;
+  rotate: number;
 }
 
 /**
@@ -14,11 +14,17 @@ interface ITransform {
  * @param {HTMLCanvasElement} canvas The HTML canvas to convert.
  * @param {Number[]} [boundingBox] A bounding box of type [top, left, width, height]
  */
-export function canvasToImageData(canvas : HTMLCanvasElement, boundingBox?: number[]): vtkImageData;
+export function canvasToImageData(
+  canvas: HTMLCanvasElement,
+  boundingBox?: number[]
+): vtkImageData;
 
 /**
  * Converts an Image object to a vtkImageData.
  * @param {HTMLImageElement} image The HTML image to convert.
  * @param {ITransform} [transform] default={flipX: false, flipY: false, rotate: 0}
  */
-export function imageToImageData(image : HTMLImageElement, transform?: ITransform): vtkImageData;
+export function imageToImageData(
+  image: HTMLImageElement,
+  transform?: ITransform
+): vtkImageData;

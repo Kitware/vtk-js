@@ -1,27 +1,27 @@
-import { vtkObject } from "../../../interfaces";
-import vtkPoints from "../../Core/Points";
-import vtkIncrementalOctreeNode from "../IncrementalOctreeNode";
-import { IAbstractPointLocatorInitialValues } from "../AbstractPointLocator";
+import { vtkObject } from '../../../interfaces';
+import vtkPoints from '../../Core/Points';
+import vtkIncrementalOctreeNode from '../IncrementalOctreeNode';
+import { IAbstractPointLocatorInitialValues } from '../AbstractPointLocator';
 
 /**
  *
  */
 export interface IIncrementalOctreePointLocatorInitialValues
-	extends IAbstractPointLocatorInitialValues {
-	fudgeFactor: number;
-	octreeMaxDimSize: number;
-	buildCubicOctree: boolean;
-	maxPointsPerLeaf: number;
-	insertTolerance2: number;
-	locatorPoints: vtkPoints;
-	octreeRootNode: vtkIncrementalOctreeNode;
-	numberOfNodes: number;
+  extends IAbstractPointLocatorInitialValues {
+  fudgeFactor: number;
+  octreeMaxDimSize: number;
+  buildCubicOctree: boolean;
+  maxPointsPerLeaf: number;
+  insertTolerance2: number;
+  locatorPoints: vtkPoints;
+  octreeRootNode: vtkIncrementalOctreeNode;
+  numberOfNodes: number;
 }
 
 type vtkIncrementalOctreePointLocatorBase = vtkObject;
 
 export interface vtkIncrementalOctreePointLocator
-	extends vtkIncrementalOctreePointLocatorBase {}
+  extends vtkIncrementalOctreePointLocatorBase {}
 
 // ----------------------------------------------------------------------------
 // Static API
@@ -35,9 +35,9 @@ export interface vtkIncrementalOctreePointLocator
  * @param {object} [initialValues] (default: {})
  */
 export function extend(
-	publicAPI: object,
-	model: object,
-	initialValues?: IIncrementalOctreePointLocatorInitialValues
+  publicAPI: object,
+  model: object,
+  initialValues?: IIncrementalOctreePointLocatorInitialValues
 ): void;
 
 // ----------------------------------------------------------------------------
@@ -47,15 +47,15 @@ export function extend(
  * @param {IIncrementalOctreePointLocatorInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(
-	initialValues?: IIncrementalOctreePointLocatorInitialValues
+  initialValues?: IIncrementalOctreePointLocatorInitialValues
 ): vtkIncrementalOctreePointLocator;
 
 /**
  * vtkIncrementalOctreePointLocator
  */
 export declare const vtkIncrementalOctreePointLocator: {
-	newInstance: typeof newInstance;
-	extend: typeof extend;
+  newInstance: typeof newInstance;
+  extend: typeof extend;
 };
 
 export default vtkIncrementalOctreePointLocator;

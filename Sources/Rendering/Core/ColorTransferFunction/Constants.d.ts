@@ -11,7 +11,7 @@ export declare enum Scale {
 }
 
 declare const _default: {
-	ColorSpace: typeof ColorSpace;
-	Scale: typeof Scale;
+  ColorSpace: typeof ColorSpace;
+  Scale: typeof Scale;
 };
 export default _default;

@@ -1,8 +1,12 @@
-import vtkInteractorStyleManipulator, { IInteractorStyleManipulatorInitialValues } from '../../../Interaction/Style/InteractorStyleManipulator';
+import vtkInteractorStyleManipulator, {
+  IInteractorStyleManipulatorInitialValues,
+} from '../../../Interaction/Style/InteractorStyleManipulator';
 
-export interface vtkInteractorStyleHMDXR extends vtkInteractorStyleManipulator {}
+export interface vtkInteractorStyleHMDXR
+  extends vtkInteractorStyleManipulator {}
 
-export interface IInteractorStyleHMDXRInitialValues extends IInteractorStyleManipulatorInitialValues {}
+export interface IInteractorStyleHMDXRInitialValues
+  extends IInteractorStyleManipulatorInitialValues {}
 
 export function newInstance(
   initialValues?: IInteractorStyleHMDXRInitialValues

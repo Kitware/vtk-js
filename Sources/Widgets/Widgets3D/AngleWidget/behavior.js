@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
+import { add } from 'vtk.js/Sources/Common/Core/Math';
 import vtkPointPicker from 'vtk.js/Sources/Rendering/Core/PointPicker';
 
 const MAX_POINTS = 3;
@@ -43,15 +44,16 @@ export default function widgetBehavior(publicAPI, model) {
     picker.setPickList(publicAPI.getNestedProps());
     const manipulator =
       model.activeState?.getManipulator?.() ?? model.manipulator;
+    const { worldCoords } = manipulator.handleEvent(
+      e,
+      model._apiSpecificRenderWindow
+    );
+
     if (
       model.activeState === model.widgetState.getMoveHandle() &&
       model.widgetState.getHandleList().length < MAX_POINTS &&
       manipulator
     ) {
-      const { worldCoords } = manipulator.handleEvent(
-        e,
-        model._apiSpecificRenderWindow
-      );
       // Commit handle to location
       const moveHandle = model.widgetState.getMoveHandle();
       moveHandle.setOrigin(...worldCoords);
@@ -85,18 +87,22 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
-      const { worldCoords } = manipulator.handleEvent(
+      const { worldCoords, worldDelta } = manipulator.handleEvent(
         callData,
         model._apiSpecificRenderWindow
       );
 
-      if (
-        worldCoords.length &&
-        (model.activeState === model.widgetState.getMoveHandle() ||
-          model._isDragging) &&
-        model.activeState.setOrigin // e.g. the line is pickable but not draggable
-      ) {
-        model.activeState.setOrigin(worldCoords);
+      const isHandleMoving =
+        model.activeState === model.widgetState.getMoveHandle() ||
+        model._isDragging;
+
+      if (isHandleMoving && worldCoords.length && model.activeState.setOrigin) {
+        const curOrigin = model.activeState.getOrigin();
+        if (curOrigin) {
+          model.activeState.setOrigin(add(curOrigin, worldDelta, []));
+        } else {
+          model.activeState.setOrigin(worldCoords);
+        }
         publicAPI.invokeInteractionEvent();
         return macro.EVENT_ABORT;
       }
