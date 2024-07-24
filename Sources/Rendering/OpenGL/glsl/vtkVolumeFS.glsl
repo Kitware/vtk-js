@@ -48,7 +48,6 @@ varying vec3 vertexVCVSOutput;
 // Possibly define vtkImageLabelOutlineOn
 //VTK::ImageLabelOutlineOn
 
-#ifdef vtkImageLabelOutlineOn
 
 uniform float outlineOpacity;
 uniform float vpWidth;
@@ -57,7 +56,6 @@ uniform float vpOffsetX;
 uniform float vpOffsetY;
 uniform mat4 PCWCMatrix;
 uniform mat4 vWCtoIDX;
-#endif
 
 // define vtkLightComplexity
 //VTK::LightComplexity
@@ -171,6 +169,8 @@ uniform sampler2D ttexture;
 // some 3D texture values
 uniform float sampleDistance;
 uniform vec3 vVCToIJK;
+uniform vec3 volumeSpacings; // spacing in the world coorindates
+
 
 // the heights defined below are the locations
 // for the up to four components of the tfuns
@@ -210,6 +210,28 @@ uniform float mix3;
 
 uniform vec4 ipScalarRangeMin;
 uniform vec4 ipScalarRangeMax;
+
+const int MAX_SEGMENT_INDEX = 256; // Define as per expected maximum
+// bool seenSegmentsByOriginalPos[MAX_SEGMENT_INDEX];
+#define MAX_SEGMENTS 256
+#define UINT_SIZE 32
+#define BITMASK_SIZE ((MAX_SEGMENTS + UINT_SIZE - 1) / UINT_SIZE)
+
+uint bitmask[BITMASK_SIZE];
+
+// Set the corresponding bit in the bitmask
+void setBit(int segmentIndex) {
+  int index = segmentIndex / UINT_SIZE;
+  int bitIndex = segmentIndex % UINT_SIZE;
+  bitmask[index] |= 1u << bitIndex;
+}
+
+// Check if a bit is set in the bitmask
+bool isBitSet(int segmentIndex) {
+  int index = segmentIndex / UINT_SIZE;
+  int bitIndex = segmentIndex % UINT_SIZE;
+  return ((bitmask[index] & (1u << bitIndex)) != 0u);
+}
 
 // declaration for intermixed geometry
 //VTK::ZBuffer::Dec
@@ -530,7 +552,6 @@ float computeGradientOpacityFactor(
   }
 #endif
 
-#ifdef vtkImageLabelOutlineOn
 vec3 fragCoordToIndexSpace(vec4 fragCoord) {
   vec4 pcPos = vec4(
     (fragCoord.x / vpWidth - vpOffsetX - 0.5) * 2.0,
@@ -546,7 +567,17 @@ vec3 fragCoordToIndexSpace(vec4 fragCoord) {
   // half voxel fix for labelmapOutline
   return (index + vec3(0.5)) / vec3(volumeDimensions);
 }
-#endif
+
+vec3 fragCoordToWorld(vec4 fragCoord) {
+  vec4 pcPos = vec4(
+    (fragCoord.x / vpWidth - vpOffsetX - 0.5) * 2.0,
+    (fragCoord.y / vpHeight - vpOffsetY - 0.5) * 2.0,
+    (fragCoord.z - 0.5) * 2.0,
+    1.0);
+
+  vec4 worldCoord = PCWCMatrix * pcPos;
+  return worldCoord.xyz;
+}
 
 //=======================================================================
 // compute the normals and gradient magnitudes for a position
@@ -1017,12 +1048,12 @@ vec3 applyAllLightning(vec3 tColor, float alpha, vec3 posIS, vec4 normalLight) {
   return tColor;
 }
 
-//=======================================================================
-// Given a texture value compute the color and opacity
-//
+  
 vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
 {
-#ifdef vtkImageLabelOutlineOn
+
+// if labeloutline and not independent components
+#if defined(vtkImageLabelOutlineOn) && !defined(UseIndependentComponents)
   vec3 centerPosIS = fragCoordToIndexSpace(gl_FragCoord); // pos in texture space
   vec4 centerValue = getTextureValue(centerPosIS);
   bool pixelOnBorder = false;
@@ -1089,6 +1120,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
   // We compute it as a vec4 if possible otherwise a mat4
 
   #ifdef UseIndependentComponents
+
     // sample textures
     vec3 tColor0 = texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, height0)).rgb;
     float pwfValue0 = texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, height0)).r;
@@ -1314,6 +1346,63 @@ bool valueWithinScalarRange(vec4 val, vec4 min, vec4 max) {
   return withinRange;
 }
 
+#if vtkBlendMode == 22 &&  defined(UseIndependentComponents)
+bool checkOnEdgeForNeighbor(int i, int j, int s, vec3 stepIS) {
+    vec4 neighborPixelCoord = vec4(gl_FragCoord.x + float(i), gl_FragCoord.y + float(j), gl_FragCoord.z, gl_FragCoord.w);
+    vec3 originalNeighborPosIS = fragCoordToIndexSpace(neighborPixelCoord);
+
+    bool justSawIt = false;
+
+    vec3 neighborPosIS = originalNeighborPosIS;
+
+    float stepsTraveled = 0.0;
+
+
+    // float neighborValue;
+    for (int k = 0; k < //VTK::MaximumSamplesValue /2 ; ++k) {
+        ivec3 texCoord = ivec3(neighborPosIS * vec3(volumeDimensions));
+        vec4 texValue = texelFetch(texture1, texCoord, 0);
+
+        if (int(texValue.g) == s) {
+            justSawIt = true;
+            break;
+        }
+        neighborPosIS += stepIS;
+    }
+
+    if (justSawIt){
+      return false;
+    }
+
+   
+    neighborPosIS = originalNeighborPosIS;
+    for (int k = 0; k < //VTK::MaximumSamplesValue /2 ; ++k) {
+        ivec3 texCoord = ivec3(neighborPosIS * vec3(volumeDimensions));
+        vec4 texValue = texelFetch(texture1, texCoord, 0);
+
+        if (int(texValue.g) == s) {
+            justSawIt = true;
+            break;
+        }
+        neighborPosIS -= stepIS;
+    }
+
+
+    if (!justSawIt) {
+        // onedge
+        vec3 tColorSegment = texture2D(ctexture, vec2(float(s) * cscale1 + cshift1, height1)).rgb;
+        float pwfValueSegment = texture2D(otexture, vec2(float(s) * oscale1 + oshift1, height1)).r;
+        gl_FragData[0] = vec4(tColorSegment, pwfValueSegment);
+        return true;
+    }
+
+    // not on edge
+    return false;
+}
+
+#endif
+
+
 //=======================================================================
 // Apply the specified blend mode operation along the ray's path.
 //
@@ -1326,6 +1415,9 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
   vec3 stepIS = normalize(delta)*sampleDistanceIS;
   float raySteps = length(delta)/sampleDistanceIS;
 
+
+
+  // Initialize arrays to false
   // avoid 0.0 jitter
   float jitter = 0.01 + 0.99*texture2D(jtexture, gl_FragCoord.xy/32.0).r;
   float stepsTraveled = jitter;
@@ -1334,6 +1426,7 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
   vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
   vec4 tValue;
   vec4 tColor;
+
 
   // if we have less than one step then pick the middle point
   // as our value
@@ -1345,7 +1438,188 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
   // Perform initial step at the volume boundary
   // compute the scalar
   tValue = getTextureValue(posIS);
+  
+  #if vtkBlendMode == 22 
 
+   
+
+    if (raySteps <= 1.0)
+    {
+      gl_FragData[0] = getColorForValue(tValue, posIS, tstep);
+      return;
+    }
+
+    vec4 value = tValue;
+    posIS += (jitter*stepIS);
+    vec3 maxPosIS = posIS; // Store the position of the max value
+    int segmentIndex = int(value.g);
+    bool originalPosHasSeenNonZero = false;
+
+    uint bitmask = 0u;
+
+    if (segmentIndex != 0) {
+      // Tried using the segment index in an boolean array but reading 
+      // from the array by dynamic indexing was horrondously slow
+      // so use bit masking instead and assign 1 to the bit corresponding to the segment index
+      // and later check if the bit is set via bit operations
+      setBit(segmentIndex);
+    }
+    
+    // Sample along the ray until MaximumSamplesValue,
+    // ending slightly inside the total distance
+    for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
+    {
+      // If we have reached the last step, break
+      if (stepsTraveled + 1.0 >= raySteps) { break; }
+
+      // compute the scalar
+      tValue = getTextureValue(posIS);
+      segmentIndex = int(tValue.g);
+
+
+      if (segmentIndex != 0) {
+        originalPosHasSeenNonZero = true;
+        setBit(segmentIndex);
+      }
+
+      if (tValue.r > value.r) {
+        value =  tValue; // Update the max value
+        maxPosIS = posIS; // Update the position where max occurred
+      }
+
+      // Otherwise, continue along the ray
+      stepsTraveled++;
+      posIS += stepIS;
+    }
+
+
+    // Perform the last step along the ray using the
+    // residual distance
+    posIS = endIS;
+    tValue = getTextureValue(posIS);
+
+     if (tValue.r > value.r) {
+        value = tValue; // Update the max value
+        maxPosIS = posIS; // Update the position where max occurred
+      }  
+
+      // If we have not seen any non-zero segments, we can return early
+      // and grab color from the actual center value first component (image)
+     if (!originalPosHasSeenNonZero) {
+      gl_FragData[0] = getColorForValue(value, maxPosIS, tstep);
+      return;
+    }
+
+    // probably we can make this configurable but for now we will use the same
+    // sample distance as the original sample distance
+    float neighborSampleDistanceIS = sampleDistanceIS;
+
+  
+
+    vec3 neighborRayStepsIS = stepIS;
+    float neighborRaySteps = raySteps;
+
+
+    bool shouldLookInAllNeighbors = false;
+
+    
+    float minVoxelSpacing = min(volumeSpacings[0], min(volumeSpacings[1], volumeSpacings[2]));
+    vec4 base = vec4(gl_FragCoord.x, gl_FragCoord.y, gl_FragCoord.z, gl_FragCoord.w);
+
+    vec4 baseXPlus = vec4(gl_FragCoord.x + 1.0, gl_FragCoord.y, gl_FragCoord.z, gl_FragCoord.w);
+    vec4 baseYPlus = vec4(gl_FragCoord.x, gl_FragCoord.y + 1.0, gl_FragCoord.z, gl_FragCoord.w);
+
+    vec3 baseWorld = fragCoordToWorld(base);
+    vec3 baseXPlusWorld = fragCoordToWorld(baseXPlus);
+    vec3 baseYPlusWorld = fragCoordToWorld(baseYPlus);
+
+    float XPlusDiff = length(baseXPlusWorld - baseWorld);
+    float YPlusDiff = length(baseYPlusWorld - baseWorld);
+
+    float minFragSpacingWorld = min(XPlusDiff, YPlusDiff);
+
+    // if (minSpacing < 1.0){
+    //   gl_FragData[0] = vec4(0.0, 1.0, 0.0, 1.0);
+    //   return;
+    // }
+
+
+    for (int s = 1; s < MAX_SEGMENT_INDEX; s++) {
+      // bail out quickly if the segment index has not 
+      // been seen by the center segment
+      if (!isBitSet(s)) {
+       continue;
+      }
+
+
+       // Use texture sampling for outlineThickness so that we can have 
+       // per segment thickness
+      float textureCoordinate = float(s - 1) / 1024.0;
+      float textureValue = texture2D(ttexture, vec2(textureCoordinate, 0.5)).r;
+
+      int actualThickness = int(textureValue * 255.0);
+
+      
+
+
+      // check the extreme points in the neighborhood since there is a better
+      // chance of finding the edge there, so that we can bail out 
+      // faster if we find the edge
+      bool onEdge = checkOnEdgeForNeighbor(-actualThickness, -actualThickness, s, stepIS);
+      if (onEdge) {
+        return;
+      }
+
+
+
+      onEdge = checkOnEdgeForNeighbor(actualThickness, actualThickness, s, stepIS);
+      if (onEdge) {
+        return;
+      }
+
+      
+      onEdge =  checkOnEdgeForNeighbor(actualThickness, -actualThickness, s, stepIS);
+      if (onEdge) {
+        return;
+      }
+
+      onEdge =  checkOnEdgeForNeighbor(-actualThickness, +actualThickness, s, stepIS); 
+      if (onEdge) {
+        return;
+      }
+
+      // since the next step is computationally expensive, we need to perform
+      // some optimizations to avoid it if possible. One of the optimizations
+      // is to check the whether the minimum of the voxel spacing is greater than 
+      // the 2 * the thickness of the outline segment. If that is the case
+      // then we can safely skip the next step since we can be sure that the
+      // the previous 4 checks on the extreme points would caught the entirity 
+      // of the all the fragments inside. i.e., this happens when we zoom out, 
+
+      if (minVoxelSpacing > (2.0 * float(actualThickness) - 1.0) * minFragSpacingWorld) {
+        continue;
+      }
+
+      
+      // Loop through the rest, skipping the processed extremes and the center
+      for (int i = -actualThickness; i <= actualThickness; i++) {
+            for (int j = -actualThickness; j <= actualThickness; j++) {
+                if (i == 0 && j == 0) continue; // Skip the center
+                if (abs(i) == actualThickness && abs(j) == actualThickness) continue; // Skip corners
+
+                if (checkOnEdgeForNeighbor(i, j, s, stepIS )) {
+                    return;
+                }
+          }
+      }
+    }
+
+    vec3 tColor0 = texture2D(ctexture, vec2(value.r * cscale0 + cshift0, height0)).rgb;
+    float pwfValue0 = texture2D(otexture, vec2(value.r * oscale0 + oshift0, height0)).r;
+    gl_FragData[0] = vec4(tColor0, pwfValue0);
+
+
+  #endif
   #if vtkBlendMode == 0 // COMPOSITE_BLEND
     // now map through opacity and color
     tColor = getColorForValue(tValue, posIS, tstep);

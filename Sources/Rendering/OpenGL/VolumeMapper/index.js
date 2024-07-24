@@ -838,6 +838,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     vec3.divide(vctoijk, vctoijk, vsize);
     program.setUniform3f('vVCToIJK', vctoijk[0], vctoijk[1], vctoijk[2]);
     program.setUniform3i('volumeDimensions', dims[0], dims[1], dims[2]);
+    program.setUniform3f('volumeSpacings', spc[0], spc[1], spc[2]);
 
     if (!model._openGLRenderWindow.getWebgl2()) {
       const volInfo = model.scalarTexture.getVolumeInfo();
@@ -890,45 +891,43 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformf(`vPlaneDistance${i}`, dist);
     }
 
-    if (actor.getProperty().getUseLabelOutline()) {
-      const image = model.currentInput;
-      const worldToIndex = image.getWorldToIndex();
+    const image = model.currentInput;
+    const worldToIndex = image.getWorldToIndex();
 
-      program.setUniformMatrix('vWCtoIDX', worldToIndex);
+    program.setUniformMatrix('vWCtoIDX', worldToIndex);
 
-      const camera = ren.getActiveCamera();
-      const [cRange0, cRange1] = camera.getClippingRange();
-      const distance = camera.getDistance();
+    const camera = ren.getActiveCamera();
+    const [cRange0, cRange1] = camera.getClippingRange();
+    const distance = camera.getDistance();
 
-      // set the clipping range to be model.distance and model.distance + 0.1
-      // since we use the in the keyMats.wcpc (world to projection) matrix
-      // the projection matrix calculation relies on the clipping range to be
-      // set correctly. This is done inside the interactorStyleMPRSlice which
-      // limits use cases where the interactor style is not used.
+    // set the clipping range to be model.distance and model.distance + 0.1
+    // since we use the in the keyMats.wcpc (world to projection) matrix
+    // the projection matrix calculation relies on the clipping range to be
+    // set correctly. This is done inside the interactorStyleMPRSlice which
+    // limits use cases where the interactor style is not used.
 
-      camera.setClippingRange(distance, distance + 0.1);
-      const labelOutlineKeyMats = model.openGLCamera.getKeyMatrices(ren);
+    camera.setClippingRange(distance, distance + 0.1);
+    const labelOutlineKeyMats = model.openGLCamera.getKeyMatrices(ren);
 
-      // Get the projection coordinate to world coordinate transformation matrix.
-      mat4.invert(model.projectionToWorld, labelOutlineKeyMats.wcpc);
+    // Get the projection coordinate to world coordinate transformation matrix.
+    mat4.invert(model.projectionToWorld, labelOutlineKeyMats.wcpc);
 
-      // reset the clipping range since the keyMats are cached
-      camera.setClippingRange(cRange0, cRange1);
+    // reset the clipping range since the keyMats are cached
+    camera.setClippingRange(cRange0, cRange1);
 
-      // to re compute the matrices for the current camera and cache them
-      model.openGLCamera.getKeyMatrices(ren);
+    // to re compute the matrices for the current camera and cache them
+    model.openGLCamera.getKeyMatrices(ren);
 
-      program.setUniformMatrix('PCWCMatrix', model.projectionToWorld);
+    program.setUniformMatrix('PCWCMatrix', model.projectionToWorld);
 
-      const size = publicAPI.getRenderTargetSize();
+    const size = publicAPI.getRenderTargetSize();
 
-      program.setUniformf('vpWidth', size[0]);
-      program.setUniformf('vpHeight', size[1]);
+    program.setUniformf('vpWidth', size[0]);
+    program.setUniformf('vpHeight', size[1]);
 
-      const offset = publicAPI.getRenderTargetOffset();
-      program.setUniformf('vpOffsetX', offset[0] / size[0]);
-      program.setUniformf('vpOffsetY', offset[1] / size[1]);
-    }
+    const offset = publicAPI.getRenderTargetOffset();
+    program.setUniformf('vpOffsetX', offset[0] / size[0]);
+    program.setUniformf('vpOffsetY', offset[1] / size[1]);
 
     mat4.invert(model.projectionToView, keyMats.vcpc);
     program.setUniformMatrix('PCVCMatrix', model.projectionToView);
