@@ -5,6 +5,7 @@ export declare enum BlendMode {
   AVERAGE_INTENSITY_BLEND = 3,
   ADDITIVE_INTENSITY_BLEND = 4,
   RADON_TRANSFORM_BLEND = 5,
+  LABELMAP_EDGE_PROJECTION_BLEND = 6,
 }
 
 export declare enum FilterMode {

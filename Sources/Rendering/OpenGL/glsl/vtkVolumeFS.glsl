@@ -552,15 +552,22 @@ float computeGradientOpacityFactor(
   }
 #endif
 
-vec3 fragCoordToIndexSpace(vec4 fragCoord) {
-  vec4 pcPos = vec4(
+vec4 fragCoordToPCPos(vec4 fragCoord) {
+  return vec4(
     (fragCoord.x / vpWidth - vpOffsetX - 0.5) * 2.0,
     (fragCoord.y / vpHeight - vpOffsetY - 0.5) * 2.0,
     (fragCoord.z - 0.5) * 2.0,
     1.0);
+}
 
-  vec4 worldCoord = PCWCMatrix * pcPos;
-  vec4 vertex = (worldCoord/worldCoord.w);
+vec4 pcPosToWorldCoord(vec4 pcPos) {
+  return PCWCMatrix * pcPos;
+}
+
+vec3 fragCoordToIndexSpace(vec4 fragCoord) {
+  vec4 pcPos = fragCoordToPCPos(fragCoord);
+  vec4 worldCoord = pcPosToWorldCoord(pcPos);
+  vec4 vertex = (worldCoord / worldCoord.w);
 
   vec3 index = (vWCtoIDX * vertex).xyz;
 
@@ -569,15 +576,11 @@ vec3 fragCoordToIndexSpace(vec4 fragCoord) {
 }
 
 vec3 fragCoordToWorld(vec4 fragCoord) {
-  vec4 pcPos = vec4(
-    (fragCoord.x / vpWidth - vpOffsetX - 0.5) * 2.0,
-    (fragCoord.y / vpHeight - vpOffsetY - 0.5) * 2.0,
-    (fragCoord.z - 0.5) * 2.0,
-    1.0);
-
-  vec4 worldCoord = PCWCMatrix * pcPos;
+  vec4 pcPos = fragCoordToPCPos(fragCoord);
+  vec4 worldCoord = pcPosToWorldCoord(pcPos);
   return worldCoord.xyz;
 }
+
 
 //=======================================================================
 // compute the normals and gradient magnitudes for a position
@@ -1346,7 +1349,7 @@ bool valueWithinScalarRange(vec4 val, vec4 min, vec4 max) {
   return withinRange;
 }
 
-#if vtkBlendMode == 22 &&  defined(UseIndependentComponents)
+#if vtkBlendMode == 6 &&  defined(UseIndependentComponents)
 bool checkOnEdgeForNeighbor(int i, int j, int s, vec3 stepIS) {
     vec4 neighborPixelCoord = vec4(gl_FragCoord.x + float(i), gl_FragCoord.y + float(j), gl_FragCoord.z, gl_FragCoord.w);
     vec3 originalNeighborPosIS = fragCoordToIndexSpace(neighborPixelCoord);
@@ -1415,8 +1418,6 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
   vec3 stepIS = normalize(delta)*sampleDistanceIS;
   float raySteps = length(delta)/sampleDistanceIS;
 
-
-
   // Initialize arrays to false
   // avoid 0.0 jitter
   float jitter = 0.01 + 0.99*texture2D(jtexture, gl_FragCoord.xy/32.0).r;
@@ -1426,7 +1427,6 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
   vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
   vec4 tValue;
   vec4 tColor;
-
 
   // if we have less than one step then pick the middle point
   // as our value
@@ -1439,10 +1439,7 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
   // compute the scalar
   tValue = getTextureValue(posIS);
   
-  #if vtkBlendMode == 22 
-
-   
-
+  #if vtkBlendMode == 6 
     if (raySteps <= 1.0)
     {
       gl_FragData[0] = getColorForValue(tValue, posIS, tstep);
@@ -1476,7 +1473,6 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
       tValue = getTextureValue(posIS);
       segmentIndex = int(tValue.g);
 
-
       if (segmentIndex != 0) {
         originalPosHasSeenNonZero = true;
         setBit(segmentIndex);
@@ -1492,20 +1488,19 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
       posIS += stepIS;
     }
 
-
     // Perform the last step along the ray using the
     // residual distance
     posIS = endIS;
     tValue = getTextureValue(posIS);
 
-     if (tValue.r > value.r) {
-        value = tValue; // Update the max value
-        maxPosIS = posIS; // Update the position where max occurred
-      }  
+    if (tValue.r > value.r) {
+      value = tValue; // Update the max value
+      maxPosIS = posIS; // Update the position where max occurred
+    }  
 
-      // If we have not seen any non-zero segments, we can return early
-      // and grab color from the actual center value first component (image)
-     if (!originalPosHasSeenNonZero) {
+    // If we have not seen any non-zero segments, we can return early
+    // and grab color from the actual center value first component (image)
+    if (!originalPosHasSeenNonZero) {
       gl_FragData[0] = getColorForValue(value, maxPosIS, tstep);
       return;
     }
@@ -1514,15 +1509,10 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
     // sample distance as the original sample distance
     float neighborSampleDistanceIS = sampleDistanceIS;
 
-  
-
     vec3 neighborRayStepsIS = stepIS;
     float neighborRaySteps = raySteps;
-
-
     bool shouldLookInAllNeighbors = false;
 
-    
     float minVoxelSpacing = min(volumeSpacings[0], min(volumeSpacings[1], volumeSpacings[2]));
     vec4 base = vec4(gl_FragCoord.x, gl_FragCoord.y, gl_FragCoord.z, gl_FragCoord.w);
 
@@ -1538,12 +1528,6 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
 
     float minFragSpacingWorld = min(XPlusDiff, YPlusDiff);
 
-    // if (minSpacing < 1.0){
-    //   gl_FragData[0] = vec4(0.0, 1.0, 0.0, 1.0);
-    //   return;
-    // }
-
-
     for (int s = 1; s < MAX_SEGMENT_INDEX; s++) {
       // bail out quickly if the segment index has not 
       // been seen by the center segment
@@ -1551,39 +1535,22 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
        continue;
       }
 
-
-       // Use texture sampling for outlineThickness so that we can have 
-       // per segment thickness
+      // Use texture sampling for outlineThickness so that we can have 
+      // per segment thickness
       float textureCoordinate = float(s - 1) / 1024.0;
       float textureValue = texture2D(ttexture, vec2(textureCoordinate, 0.5)).r;
 
       int actualThickness = int(textureValue * 255.0);
 
-      
-
-
       // check the extreme points in the neighborhood since there is a better
       // chance of finding the edge there, so that we can bail out 
       // faster if we find the edge
-      bool onEdge = checkOnEdgeForNeighbor(-actualThickness, -actualThickness, s, stepIS);
-      if (onEdge) {
-        return;
-      }
+      bool onEdge =
+          checkOnEdgeForNeighbor(-actualThickness, -actualThickness, s, stepIS) ||
+          checkOnEdgeForNeighbor(actualThickness, actualThickness, s, stepIS) ||
+          checkOnEdgeForNeighbor(actualThickness, -actualThickness, s, stepIS) ||
+          checkOnEdgeForNeighbor(-actualThickness, +actualThickness, s, stepIS);
 
-
-
-      onEdge = checkOnEdgeForNeighbor(actualThickness, actualThickness, s, stepIS);
-      if (onEdge) {
-        return;
-      }
-
-      
-      onEdge =  checkOnEdgeForNeighbor(actualThickness, -actualThickness, s, stepIS);
-      if (onEdge) {
-        return;
-      }
-
-      onEdge =  checkOnEdgeForNeighbor(-actualThickness, +actualThickness, s, stepIS); 
       if (onEdge) {
         return;
       }
@@ -1593,20 +1560,17 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
       // is to check the whether the minimum of the voxel spacing is greater than 
       // the 2 * the thickness of the outline segment. If that is the case
       // then we can safely skip the next step since we can be sure that the
-      // the previous 4 checks on the extreme points would caught the entirity 
+      // the previous 4 checks on the extreme points would caught the entirety 
       // of the all the fragments inside. i.e., this happens when we zoom out, 
-
       if (minVoxelSpacing > (2.0 * float(actualThickness) - 1.0) * minFragSpacingWorld) {
         continue;
       }
-
       
       // Loop through the rest, skipping the processed extremes and the center
       for (int i = -actualThickness; i <= actualThickness; i++) {
             for (int j = -actualThickness; j <= actualThickness; j++) {
                 if (i == 0 && j == 0) continue; // Skip the center
                 if (abs(i) == actualThickness && abs(j) == actualThickness) continue; // Skip corners
-
                 if (checkOnEdgeForNeighbor(i, j, s, stepIS )) {
                     return;
                 }
@@ -1617,8 +1581,6 @@ void applyBlend(vec3 posIS, vec3 endIS, vec3 tdims)
     vec3 tColor0 = texture2D(ctexture, vec2(value.r * cscale0 + cshift0, height0)).rgb;
     float pwfValue0 = texture2D(otexture, vec2(value.r * oscale0 + oshift0, height0)).r;
     gl_FragData[0] = vec4(tColor0, pwfValue0);
-
-
   #endif
   #if vtkBlendMode == 0 // COMPOSITE_BLEND
     // now map through opacity and color

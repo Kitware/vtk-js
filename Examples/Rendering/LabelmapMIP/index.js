@@ -4,6 +4,7 @@ import '@kitware/vtk.js/favicon';
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
+import { ColorMixPreset } from '@kitware/vtk.js/Rendering/Core/VolumeProperty/Constants';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
@@ -28,14 +29,39 @@ const { BlendMode } = Constants;
  *
  * Regular Blend Modes: [ADDITIVE_INTENSITY_BLEND, COMPOSITE_BLEND]
  *
- * However, the new blend mode MIP_LABELMAP_BLEND renders the labelmap
+ * However, the new blend mode LABELMAP_EDGE_PROJECTION_BLEND renders the labelmap
  * segment edges so that they are visible in the MIP rendering. This is
  * particularly useful for medical imaging applications.
  *
- * New Blend Mode: [MIP_LABELMAP_BLEND]
+ * New Blend Mode: [LABELMAP_EDGE_PROJECTION_BLEND]
  *
  */
-const BLEND = BlendMode.MIP_LABELMAP_BLEND; // options: [ADDITIVE_INTENSITY_BLEND, MIP_LABELMAP_BLEND]
+const controlPanel = `
+<table>
+  <tr>
+    <td>
+      <label for="modeselect">Blend Mode:</label>
+      <select id="modeselect">
+        <option value="regular">Regular MIP</option>
+        <option value="edge">Labelmap Edge MIP</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <label for="thickness1">Segment 1 Thickness:</label>
+      <input type="number" id="thickness1" value="3" min="1" max="10" step="1">
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <label for="thickness2">Segment 2 Thickness:</label>
+      <input type="number" id="thickness2" value="3" min="1" max="10" step="1">
+    </td>
+  </tr>
+
+</table>
+`;
 
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0, 0, 0],
@@ -47,8 +73,6 @@ const actor = vtkVolume.newInstance();
 const mapper = vtkVolumeMapper.newInstance();
 mapper.setBlendModeToMaximumIntensity();
 actor.setMapper(mapper);
-
-renderer.addVolume(actor);
 
 // ----------------------------------------------------------------------------
 // Common functions
@@ -157,6 +181,8 @@ function createRegularLabelmap(imageData, dims, center, radius1, radius2) {
   // set interpolation to nearest to avoid blending
   labelmapActor.getProperty().setInterpolationTypeToNearest();
   renderer.addVolume(labelmapActor);
+
+  return labelmapActor;
 }
 
 function createAdvancedMIPLabelmap(imageData, dims, center, radius1, radius2) {
@@ -181,7 +207,7 @@ function createAdvancedMIPLabelmap(imageData, dims, center, radius1, radius2) {
     numberOfComponents
   );
 
-  actor.getProperty().setColorMixPreset(1);
+  actor.getProperty().setColorMixPreset(ColorMixPreset.ADDITIVE);
 
   const maskCtfun = vtkColorTransferFunction.newInstance();
   maskCtfun.addRGBPoint(0, 0, 0, 0);
@@ -205,7 +231,8 @@ function createAdvancedMIPLabelmap(imageData, dims, center, radius1, radius2) {
   actor.getProperty().setLabelOutlineThickness(3);
   // per label thickness
   //   actor.getProperty().setLabelOutlineThickness([5, 1]);
-  mapper.setBlendMode(BlendMode.MIP_LABELMAP_BLEND);
+
+  return actor;
 }
 
 // ----------------------------------------------------------------------------
@@ -214,12 +241,32 @@ function createAdvancedMIPLabelmap(imageData, dims, center, radius1, radius2) {
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 
+function updateOutlineThickness() {
+  const thickness1 = parseInt(document.querySelector('#thickness1').value, 10);
+  const thickness2 = parseInt(document.querySelector('#thickness2').value, 10);
+  actor.getProperty().setLabelOutlineThickness([thickness1, thickness2]);
+  renderWindow.render();
+}
+
 reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
   reader.loadData().then(() => {
     const imageData = reader.getOutputData();
-    mapper.setInputData(imageData);
 
-    setupTransferFunctions();
+    function createBasePipeline() {
+      renderer.removeVolume(actor);
+      mapper.setInputData(imageData);
+
+      renderer.addVolume(actor);
+      setupTransferFunctions();
+
+      actor.getProperty().setInterpolationTypeToLinear();
+      actor.getProperty().setForceNearestInterpolation(1, true);
+
+      renderer.resetCamera();
+      renderWindow.render();
+    }
+
+    createBasePipeline();
 
     const dims = imageData.getDimensions();
     const center = dims.map((d) => Math.floor(d / 2));
@@ -227,11 +274,48 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
     const radius1 = Math.floor(minDim / 6);
     const radius2 = Math.floor(minDim / 6);
 
-    // Choose the labelmap creation method based on the blend mode
-    if (BLEND === BlendMode.MIP_LABELMAP_BLEND) {
-      createAdvancedMIPLabelmap(imageData, dims, center, radius1, radius2);
-    } else {
-      createRegularLabelmap(imageData, dims, center, radius1, radius2);
+    let edgeLabelmapActor = null;
+    let regularLabelmapActor = null;
+
+    function updateBlendMode(mode) {
+      if (mode === 'edge') {
+        // remove the regular labelmap if it exists
+        if (regularLabelmapActor) {
+          renderer.removeVolume(regularLabelmapActor);
+          regularLabelmapActor = null;
+        }
+
+        edgeLabelmapActor = createAdvancedMIPLabelmap(
+          imageData,
+          dims,
+          center,
+          radius1,
+          radius2
+        );
+        mapper.setBlendMode(BlendMode.LABELMAP_EDGE_PROJECTION_BLEND);
+      } else {
+        if (edgeLabelmapActor) {
+          renderer.removeVolume(edgeLabelmapActor);
+          edgeLabelmapActor = null;
+
+          createBasePipeline();
+        }
+
+        regularLabelmapActor = createRegularLabelmap(
+          imageData,
+          dims,
+          center,
+          radius1,
+          radius2
+        );
+        mapper.setBlendMode(BlendMode.MAXIMUM_INTENSITY_BLEND);
+        // set the labelmap to be additive
+        regularLabelmapActor
+          .getMapper()
+          .setBlendMode(BlendMode.COMPOSITE_BLEND);
+      }
+      renderer.resetCamera();
+      renderWindow.render();
     }
 
     actor.getProperty().setInterpolationTypeToLinear();
@@ -239,14 +323,26 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
 
     renderer.resetCamera();
     renderWindow.render();
+
+    updateBlendMode('regular');
+
+    fullScreenRenderer.addController(controlPanel);
+
+    const modeSelect = document.querySelector('#modeselect');
+    modeSelect.addEventListener('change', (event) => {
+      updateBlendMode(event.target.value);
+    });
+
+    const thickness1Input = document.querySelector('#thickness1');
+    const thickness2Input = document.querySelector('#thickness2');
+
+    thickness1Input.addEventListener('change', updateOutlineThickness);
+    thickness2Input.addEventListener('change', updateOutlineThickness);
+
+    // Initial thickness setup
+    updateOutlineThickness();
   });
 });
-
-// ----------------------------------------------------------------------------
-// UI control handling
-// ----------------------------------------------------------------------------
-
-// Add UI controls here if needed
 
 // ----------------------------------------------------------------------------
 // Make some variables global so that you can inspect and
