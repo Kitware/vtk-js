@@ -14,6 +14,12 @@ export default interface vtkResliceCursorWidgetDefaultInstance
   extends vtkAbstractWidget {
   getActiveInteraction(): Nullable<InteractionMethodsName>;
 
+  getScaleInPixels(): boolean;
+  setScaleInPixels(scaleInPixels: boolean): boolean;
+
+  getHoleWidth(): number;
+  setHoleWidth(holeWidth: number): boolean;
+
   setKeepOrthogonality(keepOrthogonality: boolean): boolean;
   getKeepOrthogonality(): boolean;
 
