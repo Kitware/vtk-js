@@ -41,7 +41,7 @@ vt 0.0 1.0
 
 f 1/1 2/2 3/3
 f -1/-1 -2/-2 -3/-3
-`
+`;
 
 test('Test trackDuplicates', (t) => {
   const objReader = vtkOBJReader.newInstance({
