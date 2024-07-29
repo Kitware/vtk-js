@@ -74,6 +74,14 @@ export interface vtkResliceCursorWidget<
 
   getHoleWidth(): number;
 
+  /**
+   * Defines the length of the line
+   * The scaling of each line representation always define the dimensions of the circle / elipse (X and Y axes)
+   * The unit of this scaling is either in world coordinates or in pixels depending in scaleInPixels
+   * When the line is finite, this scaling on the Z axis also defines the length of the line
+   * When the line is infinite, the scaling on the Z axis is automatically huge
+   * @param infiniteLine
+   */
   setInfiniteLine(infiniteLine: boolean): boolean;
 
   getInfiniteLine(): boolean;
