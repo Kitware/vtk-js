@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkGlyphRepresentation from 'vtk.js/Sources/Widgets/Representations/GlyphRepresentation';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
@@ -69,6 +70,9 @@ function vtkLineHandleRepresentation(publicAPI, model) {
   const superPublicAPI = { ...publicAPI };
   publicAPI.requestData = (inData, outData) => {
     superPublicAPI.requestData(inData, outData);
+    if (!model.holeWidth) {
+      return;
+    }
     const internalPolyData = outData[0];
 
     // Duplicate points and point data
@@ -86,10 +90,45 @@ function vtkLineHandleRepresentation(publicAPI, model) {
     // Change the scale and origin of each line
     const states = publicAPI.getRepresentationStates(inData[0]);
     const nStates = states.length;
-    const scaleArray = dataArrays.find((array) => array.getName() === 'scale');
-    const orientationArray = dataArrays.find(
-      (array) => array.getName() === 'orientation'
-    );
+    const nGlyphs = 2 * nStates;
+    let scaleArray = internalPolyData.getPointData().getArrayByName('scale');
+    if (scaleArray?.getNumberOfTuples() !== nGlyphs) {
+      model._pipeline.mapper.setScaleArray('scale');
+      model._pipeline.mapper.setScaleFactor(1);
+      model._pipeline.mapper.setScaling(true);
+      model._pipeline.mapper.setScaleMode(
+        vtkGlyph3DMapper.ScaleModes.SCALE_BY_COMPONENTS
+      );
+      scaleArray = allocateArray(
+        internalPolyData,
+        'scale',
+        nGlyphs,
+        'Float32Array',
+        3
+      );
+      const scale = [10, 10, 1000];
+      const scaleData = scaleArray.getData();
+      for (let i = 0; i < scaleData.length; i += scale.length) {
+        scaleData.set(scale, i);
+      }
+    }
+    let orientationArray = internalPolyData
+      .getPointData()
+      .getArrayByName('orientation');
+    if (orientationArray?.getNumberOfTuples() !== nGlyphs) {
+      orientationArray = allocateArray(
+        internalPolyData,
+        'orientation',
+        nGlyphs,
+        'Float32Array',
+        9
+      );
+      const identity = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+      const orientationData = orientationArray.getData();
+      for (let i = 0; i < orientationData.length; i += identity.length) {
+        orientationData.set(identity, i);
+      }
+    }
     for (let i = 0; i < nStates; ++i) {
       const j = i + nStates;
       const scale = scaleArray.getTuple(i);
@@ -102,8 +141,6 @@ function vtkLineHandleRepresentation(publicAPI, model) {
       scaleArray.setTuple(j, scale);
 
       // Add or subtract an offset to each point depending on the hole width
-      const offset = vec3.fromValues(0, 0, 0.5);
-      vec3.mul(offset, offset, scale);
       let holeWidth = model.holeWidth;
       if (publicAPI.getScaleInPixels()) {
         holeWidth *= getPixelWorldHeightAtCoord(
@@ -111,7 +148,7 @@ function vtkLineHandleRepresentation(publicAPI, model) {
           model.displayScaleParams
         );
       }
-      vec3.add(offset, offset, vec3.fromValues(0, 0, holeWidth));
+      const offset = vec3.fromValues(0, 0, 0.5 * scale[2] + holeWidth);
       vec3.transformMat3(offset, offset, orientationMatrix);
       points.setTuple(i, vec3.add(vec3.create(), originalPoint, offset));
       points.setTuple(j, vec3.sub(vec3.create(), originalPoint, offset));

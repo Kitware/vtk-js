@@ -75,7 +75,7 @@ export default function generateState(planes = planeNames) {
             mixins: [
               'origin',
               'color3',
-              'scale3', // scale3[2] will be automatically overwritten
+              'scale3',
               'orientation',
               'visible',
               'manipulator',
