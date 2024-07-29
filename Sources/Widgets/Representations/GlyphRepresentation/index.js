@@ -147,7 +147,7 @@ export function direction(publicAPI, model) {
       polyData,
       'orientation',
       states.length,
-      'Float32Array',
+      'Float64Array',
       9
     ).getData();
     for (let i = 0; i < states.length; ++i) {
