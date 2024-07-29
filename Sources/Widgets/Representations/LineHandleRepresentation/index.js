@@ -1,6 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkGlyphRepresentation from 'vtk.js/Sources/Widgets/Representations/GlyphRepresentation';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
@@ -90,55 +89,23 @@ function vtkLineHandleRepresentation(publicAPI, model) {
     // Change the scale and origin of each line
     const states = publicAPI.getRepresentationStates(inData[0]);
     const nStates = states.length;
-    const nGlyphs = 2 * nStates;
-    let scaleArray = internalPolyData.getPointData().getArrayByName('scale');
-    if (scaleArray?.getNumberOfTuples() !== nGlyphs) {
-      model._pipeline.mapper.setScaleArray('scale');
-      model._pipeline.mapper.setScaleFactor(1);
-      model._pipeline.mapper.setScaling(true);
-      model._pipeline.mapper.setScaleMode(
-        vtkGlyph3DMapper.ScaleModes.SCALE_BY_COMPONENTS
-      );
-      scaleArray = allocateArray(
-        internalPolyData,
-        'scale',
-        nGlyphs,
-        'Float32Array',
-        3
-      );
-      const scale = [10, 10, 1000];
-      const scaleData = scaleArray.getData();
-      for (let i = 0; i < scaleData.length; i += scale.length) {
-        scaleData.set(scale, i);
-      }
-    }
-    let orientationArray = internalPolyData
+    const scaleArray = internalPolyData.getPointData().getArrayByName('scale');
+    const orientationArray = internalPolyData
       .getPointData()
       .getArrayByName('orientation');
-    if (orientationArray?.getNumberOfTuples() !== nGlyphs) {
-      orientationArray = allocateArray(
-        internalPolyData,
-        'orientation',
-        nGlyphs,
-        'Float32Array',
-        9
-      );
-      const identity = [1, 0, 0, 0, 1, 0, 0, 0, 1];
-      const orientationData = orientationArray.getData();
-      for (let i = 0; i < orientationData.length; i += identity.length) {
-        orientationData.set(identity, i);
-      }
-    }
+    const defaultScale = [1, 1, 1];
+    const defaultOrientation = [1, 0, 0, 0, 1, 0, 0, 0, 1];
     for (let i = 0; i < nStates; ++i) {
       const j = i + nStates;
-      const scale = scaleArray.getTuple(i);
-      const orientationMatrix = orientationArray.getTuple(i);
+      const scale = scaleArray?.getTuple(i) ?? defaultScale;
+      const orientationMatrix =
+        orientationArray?.getTuple(i) ?? defaultOrientation;
       const originalPoint = points.getTuple(i);
 
       // Divide the scale by two in the direction of the cylinder, as we duplicate the line
       scale[2] *= 0.5;
-      scaleArray.setTuple(i, scale);
-      scaleArray.setTuple(j, scale);
+      scaleArray?.setTuple(i, scale);
+      scaleArray?.setTuple(j, scale);
 
       // Add or subtract an offset to each point depending on the hole width
       let holeWidth = model.holeWidth;
