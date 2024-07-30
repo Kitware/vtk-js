@@ -287,6 +287,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![VolumeMapperParallelProjection Example][VolumeMapperParallelProjection]](./VolumeMapperParallelProjection.html "VolumeMapperParallelProjection")
 [![VolumeRenderingWithPolyData Example][VolumeRenderingWithPolyData]](./VolumeRenderingWithPolyData.html "VolumeRenderingWithPolyData")
 [![VolumeMapper Example][VolumeMapper]](./VolumeMapper.html "3D volume ray cast mapper witch volumetric scattering")
+[![LabelmapEdgeProjection Example][LabelmapEdgeProjection]](./LabelmapEdgeProjection.html "Labelmap edge projection in the volume")
 
 </div>
 
@@ -297,6 +298,8 @@ This will allow you to see the some live code running in your browser. Just pick
 [VolumeMapperParallelProjection]: ../docs/gallery/VolumeMapperParallelProjection.jpg
 [VolumeRenderingWithPolyData]: ../docs/gallery/VolumeRenderingWithPolyData.jpg
 [VolumeMapper]: ../docs/gallery/VolumeMapper.jpg
+[LabelmapEdgeProjection]: ../docs/gallery/LabelmapEdgeProjection.gif
+
 
 # Interaction/Picking/Selecting
 
