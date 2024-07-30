@@ -215,12 +215,24 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       ).result;
     }
 
-    const vtkImageLabelOutline = actorProps.getUseLabelOutline();
+    const vtkImageLabelOutline = publicAPI.isLabelmapOutlineRequired(actor);
     if (vtkImageLabelOutline === true) {
       FSSource = vtkShaderProgram.substitute(
         FSSource,
         '//VTK::ImageLabelOutlineOn',
         '#define vtkImageLabelOutlineOn'
+      ).result;
+    }
+
+    const LabelEdgeProjection =
+      model.renderable.getBlendMode() ===
+      BlendMode.LABELMAP_EDGE_PROJECTION_BLEND;
+
+    if (LabelEdgeProjection) {
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::LabelEdgeProjectionOn',
+        '#define vtkLabelEdgeProjectionOn'
       ).result;
     }
 
@@ -589,7 +601,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       iComps: actorProps.getIndependentComponents(),
       colorMixPreset: actorProps.getColorMixPreset(),
       interpolationType: actorProps.getInterpolationType(),
-      useLabelOutline: actorProps.getUseLabelOutline(),
+      useLabelOutline: publicAPI.isLabelmapOutlineRequired(actor),
       numComp,
       maxSamples,
       useGradientOpacity: actorProps.getUseGradientOpacity(0),
@@ -903,43 +915,45 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformf(`vPlaneDistance${i}`, dist);
     }
 
-    const image = model.currentInput;
-    const worldToIndex = image.getWorldToIndex();
+    if (publicAPI.isLabelmapOutlineRequired(actor)) {
+      const image = model.currentInput;
+      const worldToIndex = image.getWorldToIndex();
 
-    program.setUniformMatrix('vWCtoIDX', worldToIndex);
+      program.setUniformMatrix('vWCtoIDX', worldToIndex);
 
-    const camera = ren.getActiveCamera();
-    const [cRange0, cRange1] = camera.getClippingRange();
-    const distance = camera.getDistance();
+      const camera = ren.getActiveCamera();
+      const [cRange0, cRange1] = camera.getClippingRange();
+      const distance = camera.getDistance();
 
-    // set the clipping range to be model.distance and model.distance + 0.1
-    // since we use the in the keyMats.wcpc (world to projection) matrix
-    // the projection matrix calculation relies on the clipping range to be
-    // set correctly. This is done inside the interactorStyleMPRSlice which
-    // limits use cases where the interactor style is not used.
+      // set the clipping range to be model.distance and model.distance + 0.1
+      // since we use the in the keyMats.wcpc (world to projection) matrix
+      // the projection matrix calculation relies on the clipping range to be
+      // set correctly. This is done inside the interactorStyleMPRSlice which
+      // limits use cases where the interactor style is not used.
 
-    camera.setClippingRange(distance, distance + 0.1);
-    const labelOutlineKeyMats = model.openGLCamera.getKeyMatrices(ren);
+      camera.setClippingRange(distance, distance + 0.1);
+      const labelOutlineKeyMats = model.openGLCamera.getKeyMatrices(ren);
 
-    // Get the projection coordinate to world coordinate transformation matrix.
-    mat4.invert(model.projectionToWorld, labelOutlineKeyMats.wcpc);
+      // Get the projection coordinate to world coordinate transformation matrix.
+      mat4.invert(model.projectionToWorld, labelOutlineKeyMats.wcpc);
 
-    // reset the clipping range since the keyMats are cached
-    camera.setClippingRange(cRange0, cRange1);
+      // reset the clipping range since the keyMats are cached
+      camera.setClippingRange(cRange0, cRange1);
 
-    // to re compute the matrices for the current camera and cache them
-    model.openGLCamera.getKeyMatrices(ren);
+      // to re compute the matrices for the current camera and cache them
+      model.openGLCamera.getKeyMatrices(ren);
 
-    program.setUniformMatrix('PCWCMatrix', model.projectionToWorld);
+      program.setUniformMatrix('PCWCMatrix', model.projectionToWorld);
 
-    const size = publicAPI.getRenderTargetSize();
+      const size = publicAPI.getRenderTargetSize();
 
-    program.setUniformf('vpWidth', size[0]);
-    program.setUniformf('vpHeight', size[1]);
+      program.setUniformf('vpWidth', size[0]);
+      program.setUniformf('vpHeight', size[1]);
 
-    const offset = publicAPI.getRenderTargetOffset();
-    program.setUniformf('vpOffsetX', offset[0] / size[0]);
-    program.setUniformf('vpOffsetY', offset[1] / size[1]);
+      const offset = publicAPI.getRenderTargetOffset();
+      program.setUniformf('vpOffsetX', offset[0] / size[0]);
+      program.setUniformf('vpOffsetY', offset[1] / size[1]);
+    }
 
     mat4.invert(model.projectionToView, keyMats.vcpc);
     program.setUniformMatrix('PCVCMatrix', model.projectionToView);
@@ -1146,7 +1160,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
     }
 
-    const vtkImageLabelOutline = actor.getProperty().getUseLabelOutline();
+    const vtkImageLabelOutline = publicAPI.isLabelmapOutlineRequired(actor);
     if (vtkImageLabelOutline === true) {
       const labelOutlineOpacity = actor.getProperty().getLabelOutlineOpacity();
       program.setUniformf('outlineOpacity', labelOutlineOpacity);
@@ -1868,6 +1882,16 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     } else {
       model.labelOutlineThicknessTexture = lTex.oglObject;
     }
+  };
+
+  publicAPI.isLabelmapOutlineRequired = (actor) => {
+    const prop = actor.getProperty();
+    const renderable = model.renderable;
+
+    return (
+      prop.getUseLabelOutline() ||
+      renderable.getBlendMode() === BlendMode.LABELMAP_EDGE_PROJECTION_BLEND
+    );
   };
 }
 
