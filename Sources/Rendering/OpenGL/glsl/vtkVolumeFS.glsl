@@ -48,14 +48,41 @@ varying vec3 vertexVCVSOutput;
 // Possibly define vtkImageLabelOutlineOn
 //VTK::ImageLabelOutlineOn
 
+// Possibly define vtkLabelEdgeProjectionOn
+//VTK::LabelEdgeProjectionOn
 
-uniform float outlineOpacity;
-uniform float vpWidth;
-uniform float vpHeight;
-uniform float vpOffsetX;
-uniform float vpOffsetY;
-uniform mat4 PCWCMatrix;
-uniform mat4 vWCtoIDX;
+
+#ifdef vtkImageLabelOutlineOn
+  uniform float outlineOpacity;
+  uniform float vpWidth;
+  uniform float vpHeight;
+  uniform float vpOffsetX;
+  uniform float vpOffsetY;
+  uniform mat4 PCWCMatrix;
+  uniform mat4 vWCtoIDX;
+
+  const int MAX_SEGMENT_INDEX = 256; // Define as per expected maximum
+  // bool seenSegmentsByOriginalPos[MAX_SEGMENT_INDEX];
+  #define MAX_SEGMENTS 256
+  #define UINT_SIZE 32
+  #define BITMASK_SIZE ((MAX_SEGMENTS + UINT_SIZE - 1) / UINT_SIZE)
+
+  uint bitmask[BITMASK_SIZE];
+
+  // Set the corresponding bit in the bitmask
+  void setBit(int segmentIndex) {
+    int index = segmentIndex / UINT_SIZE;
+    int bitIndex = segmentIndex % UINT_SIZE;
+    bitmask[index] |= 1u << bitIndex;
+  }
+
+  // Check if a bit is set in the bitmask
+  bool isBitSet(int segmentIndex) {
+    int index = segmentIndex / UINT_SIZE;
+    int bitIndex = segmentIndex % UINT_SIZE;
+    return ((bitmask[index] & (1u << bitIndex)) != 0u);
+  }
+#endif
 
 // define vtkLightComplexity
 //VTK::LightComplexity
@@ -210,28 +237,6 @@ uniform float mix3;
 
 uniform vec4 ipScalarRangeMin;
 uniform vec4 ipScalarRangeMax;
-
-const int MAX_SEGMENT_INDEX = 256; // Define as per expected maximum
-// bool seenSegmentsByOriginalPos[MAX_SEGMENT_INDEX];
-#define MAX_SEGMENTS 256
-#define UINT_SIZE 32
-#define BITMASK_SIZE ((MAX_SEGMENTS + UINT_SIZE - 1) / UINT_SIZE)
-
-uint bitmask[BITMASK_SIZE];
-
-// Set the corresponding bit in the bitmask
-void setBit(int segmentIndex) {
-  int index = segmentIndex / UINT_SIZE;
-  int bitIndex = segmentIndex % UINT_SIZE;
-  bitmask[index] |= 1u << bitIndex;
-}
-
-// Check if a bit is set in the bitmask
-bool isBitSet(int segmentIndex) {
-  int index = segmentIndex / UINT_SIZE;
-  int bitIndex = segmentIndex % UINT_SIZE;
-  return ((bitmask[index] & (1u << bitIndex)) != 0u);
-}
 
 // declaration for intermixed geometry
 //VTK::ZBuffer::Dec
@@ -552,35 +557,37 @@ float computeGradientOpacityFactor(
   }
 #endif
 
-vec4 fragCoordToPCPos(vec4 fragCoord) {
-  return vec4(
-    (fragCoord.x / vpWidth - vpOffsetX - 0.5) * 2.0,
-    (fragCoord.y / vpHeight - vpOffsetY - 0.5) * 2.0,
-    (fragCoord.z - 0.5) * 2.0,
-    1.0);
-}
 
-vec4 pcPosToWorldCoord(vec4 pcPos) {
-  return PCWCMatrix * pcPos;
-}
+#ifdef vtkImageLabelOutlineOn
+  vec4 fragCoordToPCPos(vec4 fragCoord) {
+    return vec4(
+      (fragCoord.x / vpWidth - vpOffsetX - 0.5) * 2.0,
+      (fragCoord.y / vpHeight - vpOffsetY - 0.5) * 2.0,
+      (fragCoord.z - 0.5) * 2.0,
+      1.0);
+  }
 
-vec3 fragCoordToIndexSpace(vec4 fragCoord) {
-  vec4 pcPos = fragCoordToPCPos(fragCoord);
-  vec4 worldCoord = pcPosToWorldCoord(pcPos);
-  vec4 vertex = (worldCoord / worldCoord.w);
+  vec4 pcPosToWorldCoord(vec4 pcPos) {
+    return PCWCMatrix * pcPos;
+  }
 
-  vec3 index = (vWCtoIDX * vertex).xyz;
+  vec3 fragCoordToIndexSpace(vec4 fragCoord) {
+    vec4 pcPos = fragCoordToPCPos(fragCoord);
+    vec4 worldCoord = pcPosToWorldCoord(pcPos);
+    vec4 vertex = (worldCoord / worldCoord.w);
 
-  // half voxel fix for labelmapOutline
-  return (index + vec3(0.5)) / vec3(volumeDimensions);
-}
+    vec3 index = (vWCtoIDX * vertex).xyz;
 
-vec3 fragCoordToWorld(vec4 fragCoord) {
-  vec4 pcPos = fragCoordToPCPos(fragCoord);
-  vec4 worldCoord = pcPosToWorldCoord(pcPos);
-  return worldCoord.xyz;
-}
+    // half voxel fix for labelmapOutline
+    return (index + vec3(0.5)) / vec3(volumeDimensions);
+  }
 
+  vec3 fragCoordToWorld(vec4 fragCoord) {
+    vec4 pcPos = fragCoordToPCPos(fragCoord);
+    vec4 worldCoord = pcPosToWorldCoord(pcPos);
+    return worldCoord.xyz;
+  }
+#endif
 
 //=======================================================================
 // compute the normals and gradient magnitudes for a position
@@ -1055,8 +1062,9 @@ vec3 applyAllLightning(vec3 tColor, float alpha, vec3 posIS, vec4 normalLight) {
 vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
 {
 
-// if labeloutline and not independent components
-#if defined(vtkImageLabelOutlineOn) && !defined(UseIndependentComponents)
+// If labeloutline and not the edge labelmap, since in the edge labelmap blend
+// we need the underlying data to sample through
+#if defined(vtkImageLabelOutlineOn) && !defined(vtkLabelEdgeProjectionOn)
   vec3 centerPosIS = fragCoordToIndexSpace(gl_FragCoord); // pos in texture space
   vec4 centerValue = getTextureValue(centerPosIS);
   bool pixelOnBorder = false;
@@ -1349,7 +1357,7 @@ bool valueWithinScalarRange(vec4 val, vec4 min, vec4 max) {
   return withinRange;
 }
 
-#if vtkBlendMode == 6 &&  defined(UseIndependentComponents)
+#if vtkBlendMode == 6 
 bool checkOnEdgeForNeighbor(int i, int j, int s, vec3 stepIS) {
     vec4 neighborPixelCoord = vec4(gl_FragCoord.x + float(i), gl_FragCoord.y + float(j), gl_FragCoord.z, gl_FragCoord.w);
     vec3 originalNeighborPosIS = fragCoordToIndexSpace(neighborPixelCoord);
