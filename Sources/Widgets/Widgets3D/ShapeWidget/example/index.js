@@ -346,6 +346,33 @@ document.querySelector('.widget').addEventListener('input', (ev) => {
   }
 });
 
+document.querySelector('.place').addEventListener('click', () => {
+  if (activeWidget !== 'rectangleWidget') {
+    const widget = widgets[activeWidget];
+    const widgetIndex = activeWidget === 'ellipseWidget' ? 1 : 2;
+    const handle =
+      activeWidget === 'ellipseWidget'
+        ? scene.ellipseHandle
+        : scene.circleHandle;
+    const coord1 = [0, 0, 0];
+    const coord2 = [100, 100, 100];
+    const slicePos = image.imageMapper.getSlice();
+    const axis = image.imageMapper.getSlicingMode() % 3;
+    coord1[axis] = slicePos;
+    coord2[axis] = slicePos;
+    handle.grabFocus();
+    handle.placePoint1(coord1);
+    handle.placePoint2(coord2);
+    // Place circle
+    handle.setCorners(coord1, coord2);
+    // Recompute text position
+    handle.invokeInteractionEvent();
+    handle.loseFocus();
+    updateWidgetVisibility(widget, coord1, axis, widgetIndex);
+    scene.renderWindow.render();
+  }
+});
+
 document.querySelector('.reset').addEventListener('click', () => {
   resetWidgets();
   scene.renderWindow.render();
