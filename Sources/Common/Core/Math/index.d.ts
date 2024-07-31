@@ -311,7 +311,7 @@ export function cross(x: Vector3, y: Vector3, out: Vector3): Vector3;
  * @param {Number[]} x
  * @param {Number} n
  */
-export function norm(x: number[], n: number): number;
+export function norm(x: number[], n: number = 3): number;
 
 /**
  * Normalize in place. Returns norm.
