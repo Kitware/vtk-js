@@ -125,7 +125,10 @@ function getZigZagTextureCoordinatesFromTexelPosition(
   textureCoordinate[2] = (textureCoordinate[2] + 0.5) / dimensions[2];
 }
 
-const colorTextureCoordinatesCache = new Map();
+// Associate an input vtkDataArray to an object { stringHash, textureCoordinates }
+// A single dataArray only caches one array of texture coordinates, so this cache is useless when
+// the input data array is used with two different lookup tables (which is very unlikely)
+const colorTextureCoordinatesCache = new WeakMap();
 /**
  * The minimum of the range is mapped to the center of the first texel excluding min texel (texel at index distance 1)
  * The maximum of the range is mapped to the center of the last texel excluding max and NaN texels (texel at index distance numberOfColorsInRange)
@@ -155,10 +158,11 @@ function getOrCreateColorTextureCoordinates(
     const arg = arguments[argIndex];
     argStrings[argIndex] = arg.getMTime?.() ?? arg;
   }
-  const cacheString = argStrings.join('/');
-  const cachedResult = colorTextureCoordinatesCache.get(cacheString);
-  if (cachedResult) {
-    return cachedResult;
+  const stringHash = argStrings.join('/');
+
+  const cachedResult = colorTextureCoordinatesCache.get(input);
+  if (cachedResult && cachedResult.stringHash === stringHash) {
+    return cachedResult.textureCoordinates;
   }
 
   // The range used for computing coordinates have to change
@@ -279,7 +283,10 @@ function getOrCreateColorTextureCoordinates(
     }
   }
 
-  colorTextureCoordinatesCache.set(cacheString, output);
+  colorTextureCoordinatesCache.set(input, {
+    stringHash,
+    textureCoordinates: output,
+  });
   return output;
 }
 
@@ -480,7 +487,7 @@ function vtkMapper(publicAPI, model) {
       const maxColorsInRangeForCells = maxTextureWidthForCells ** 3 - 3; // 3D but keep a color for min, max and NaN
       const maxTextureWidthForPoints = 4096;
       const maxColorsInRangeForPoints = maxTextureWidthForPoints - 2; // 1D but keep a color for min and max (NaN is in a different row)
-      // Minimum number of colors excluding minColor, maxColor and NaNColor
+      // Minimum number of colors in range (excluding special colors like minColor, maxColor and NaNColor)
       const minColorsInRange = 2;
       // Maximum number of colors, limited by the maximum possible texture size
       const maxColorsInRange = cellFlag
