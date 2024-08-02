@@ -706,34 +706,38 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const volInfo = model.scalarTexture.getVolumeInfo();
     const ipScalarRange = model.renderable.getIpScalarRange();
 
-    const minVals = [];
-    const maxVals = [];
-    for (let i = 0; i < 4; i++) {
-      // convert iprange from 0-1 into data range values
-      minVals[i] =
-        ipScalarRange[0] * volInfo.dataComputedScale[i] +
-        volInfo.dataComputedOffset[i];
-      maxVals[i] =
-        ipScalarRange[1] * volInfo.dataComputedScale[i] +
-        volInfo.dataComputedOffset[i];
-      // convert data ranges into texture values
-      minVals[i] = (minVals[i] - volInfo.offset[i]) / volInfo.scale[i];
-      maxVals[i] = (maxVals[i] - volInfo.offset[i]) / volInfo.scale[i];
+    // In some situations, we might not have computed the scale and offset
+    // for the data range, or it might not be needed.
+    if (volInfo.dataComputedScale?.length) {
+      const minVals = [];
+      const maxVals = [];
+      for (let i = 0; i < 4; i++) {
+        // convert iprange from 0-1 into data range values
+        minVals[i] =
+          ipScalarRange[0] * volInfo.dataComputedScale[i] +
+          volInfo.dataComputedOffset[i];
+        maxVals[i] =
+          ipScalarRange[1] * volInfo.dataComputedScale[i] +
+          volInfo.dataComputedOffset[i];
+        // convert data ranges into texture values
+        minVals[i] = (minVals[i] - volInfo.offset[i]) / volInfo.scale[i];
+        maxVals[i] = (maxVals[i] - volInfo.offset[i]) / volInfo.scale[i];
+      }
+      program.setUniform4f(
+        'ipScalarRangeMin',
+        minVals[0],
+        minVals[1],
+        minVals[2],
+        minVals[3]
+      );
+      program.setUniform4f(
+        'ipScalarRangeMax',
+        maxVals[0],
+        maxVals[1],
+        maxVals[2],
+        maxVals[3]
+      );
     }
-    program.setUniform4f(
-      'ipScalarRangeMin',
-      minVals[0],
-      minVals[1],
-      minVals[2],
-      minVals[3]
-    );
-    program.setUniform4f(
-      'ipScalarRangeMax',
-      maxVals[0],
-      maxVals[1],
-      maxVals[2],
-      maxVals[3]
-    );
 
     // if we have a zbuffer texture then set it
     if (model.zBufferTexture !== null) {
