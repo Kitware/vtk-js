@@ -707,7 +707,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     // In some situations, we might not have computed the scale and offset
     // for the data range, or it might not be needed.
-    if (volInfo.dataComputedScale?.length) {
+    if (volInfo?.dataComputedScale?.length) {
       const minVals = [];
       const maxVals = [];
       for (let i = 0; i < 4; i++) {
