@@ -612,10 +612,19 @@ function vtkOpenGLTexture(publicAPI, model) {
     }
   };
 
-  //----------------------------------------------------------------------------
-  function updateArrayDataType(dataType, data, depth = false) {
+  /**
+   * Updates the data array to match the required data type for OpenGL.
+   *
+   * This function takes the input data and converts it to the appropriate
+   * format required by the OpenGL texture, based on the specified data type.
+   *
+   * @param {string} dataType - The original data type of the input data.
+   * @param {Array} data - The input data array that needs to be updated.
+   * @param {boolean} [depth=false] - Indicates whether the data is a 3D array.
+   * @returns {Array} The updated data array that matches the OpenGL data type.
+   */
+  publicAPI.updateArrayDataTypeForGL = (dataType, data, depth = false) => {
     const pixData = [];
-
     let pixCount = model.width * model.height * model.components;
     if (depth) {
       pixCount *= model.depth;
@@ -693,7 +702,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     }
 
     return pixData;
-  }
+  };
 
   //----------------------------------------------------------------------------
   function scaleTextureToHighestPowerOfTwo(data) {
@@ -856,7 +865,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // Create an array of texture with one texture
     const dataArray = [data];
-    const pixData = updateArrayDataType(dataType, dataArray);
+    const pixData = publicAPI.updateArrayDataTypeForGL(dataType, dataArray);
     const scaledData = scaleTextureToHighestPowerOfTwo(pixData);
 
     // Source texture data from the PBO.
@@ -944,7 +953,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     publicAPI.createTexture();
     publicAPI.bind();
 
-    const pixData = updateArrayDataType(dataType, data);
+    const pixData = publicAPI.updateArrayDataTypeForGL(dataType, data);
     const scaledData = scaleTextureToHighestPowerOfTwo(pixData);
 
     // invert the data because opengl is messed up with cube maps
@@ -1364,7 +1373,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     publicAPI.create2DFromRaw(width, height, numComps, dataType, data);
   };
 
-  publicAPI.updateVolumeScaleForOpenGL = (dataType, numComps) => {
+  publicAPI.updateVolumeInfoForGL = (dataType, numComps) => {
     let isScalingApplied = false;
 
     // Initialize volume info if it doesn't exist
@@ -1438,7 +1447,10 @@ function vtkOpenGLTexture(publicAPI, model) {
     let dataTypeToUse = dataType;
     let dataToUse = data;
 
-    if (!publicAPI.updateVolumeScaleForOpenGL(dataTypeToUse, numComps)) {
+    if (
+      !publicAPI.updateVolumeInfoForGL(dataTypeToUse, numComps) &&
+      dataToUse
+    ) {
       const numPixelsIn = width * height * depth;
       const scaleOffsetsCopy = structuredClone(model.volumeInfo);
       // otherwise convert to float
@@ -1484,7 +1496,11 @@ function vtkOpenGLTexture(publicAPI, model) {
     // Create an array of texture with one texture
     const dataArray = [dataToUse];
     const is3DArray = true;
-    const pixData = updateArrayDataType(dataTypeToUse, dataArray, is3DArray);
+    const pixData = publicAPI.updateArrayDataTypeForGL(
+      dataTypeToUse,
+      dataArray,
+      is3DArray
+    );
     const scaledData = scaleTextureToHighestPowerOfTwo(pixData);
 
     // Source texture data from the PBO.
