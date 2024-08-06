@@ -331,6 +331,23 @@ export function extend(
   initialValues?: IOpenGLHardwareSelectorInitialValues
 ): void;
 
+/**
+ * The WebGL implementation of the hardware selector renders the id of the VBO
+ * vertices (gl_VertexID) with an offset to a RGBA texture.
+ * Only the RGB channels of the RGBA texture are used. This means that a single
+ * render can only draw 24 bits of information. To reach 32 bits, the hardware
+ * selector renders a second pass which only writes in the R channel of the
+ * texture.
+ *
+ * Note:
+ * - With Webgl 2, it is now possible to render directly to a R32 texture and
+ * even render to multiple render targets.
+ * - The raw pixel buffers fetched from WebGL are processed in the core mapper
+ * (see `processSelectorPixelBuffers`) instead of the PolydataMapper.
+ * - The processing of the raw pixel buffers does not output an UInt32Array as
+ * we could expect, but one or two textures with the same layout as the RGBA
+ * textures as input.
+ */
 export const vtkOpenGLHardwareSelector: {
   newInstance: typeof newInstance;
   extend: typeof extend;

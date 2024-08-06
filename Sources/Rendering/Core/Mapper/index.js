@@ -740,11 +740,11 @@ function vtkMapper(publicAPI, model) {
         let inValue = 0;
         inValue += rawHighData[pos];
         inValue *= 256;
-        inValue += rawLowData[pos];
+        inValue += rawLowData[pos + 2];
         inValue *= 256;
         inValue += rawLowData[pos + 1];
         inValue *= 256;
-        inValue += rawLowData[pos + 2];
+        inValue += rawLowData[pos];
 
         const outValue = idMap[inValue];
         const highData = selector.getPixelBuffer(PassTypes.ID_HIGH24);
