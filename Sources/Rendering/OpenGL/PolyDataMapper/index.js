@@ -955,7 +955,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         FSSource = vtkShaderProgram.substitute(
           FSSource,
           '//VTK::Picking::Impl',
-          '  gl_FragData[0] = vec4(float(idx)/255.0, 0.0, 0.0, 1.0);'
+          '  gl_FragData[0] = vec4(float((idx/16777216)%256)/255.0, 0.0, 0.0, 1.0);'
         ).result;
         break;
       default:
@@ -1761,6 +1761,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (publicAPI.getNeedToRebuildBufferObjects(ren, actor)) {
       publicAPI.buildBufferObjects(ren, actor);
     }
+    // Always call this function as the selector can change
+    publicAPI.updateMaximumPointCellIds();
   };
 
   publicAPI.getNeedToRebuildBufferObjects = (ren, actor) => {
@@ -1948,7 +1950,6 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         model.renderable.setSelectionWebGLIdsToVTKIds(
           model.selectionWebGLIdsToVTKIds
         );
-        publicAPI.updateMaximumPointCellIds();
       }
 
       model.VBOBuildString = toString;
