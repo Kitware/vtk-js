@@ -1846,6 +1846,11 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     return -1;
   };
+
+  // set use half float
+  publicAPI.setUseHalfFloat = (use) => {
+    model.useHalfFloat = use;
+  };
 }
 
 // ----------------------------------------------------------------------------
