@@ -10,4 +10,8 @@ export function getTransferFunctionHash(
     : '0';
 }
 
-export default { getTransferFunctionHash };
+export function getImageDataHash(image, scalars) {
+  return `${image.getMTime()}A${scalars.getMTime()}`;
+}
+
+export default { getTransferFunctionHash, getImageDataHash };

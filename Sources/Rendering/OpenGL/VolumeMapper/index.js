@@ -24,7 +24,10 @@ import {
 } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 import { BlendMode } from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
-import { getTransferFunctionHash } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/resourceSharingHelper';
+import {
+  getTransferFunctionHash,
+  getImageDataHash,
+} from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/resourceSharingHelper';
 
 import vtkVolumeVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeVS.glsl';
 import vtkVolumeFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeFS.glsl';
@@ -1704,7 +1707,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     const tex = model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
     // rebuild the scalarTexture if the data has changed
-    toString = `${image.getMTime()}A${scalars.getMTime()}`;
+    toString = getImageDataHash(image, scalars);
     const reBuildTex = !tex?.oglObject?.getHandle() || tex?.hash !== toString;
     if (reBuildTex) {
       model.scalarTexture = vtkOpenGLTexture.newInstance();
