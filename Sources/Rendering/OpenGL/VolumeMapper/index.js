@@ -24,6 +24,8 @@ import {
 } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 import { BlendMode } from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
+import { getTransferFunctionHash } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/resourceSharingHelper';
+
 import vtkVolumeVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeVS.glsl';
 import vtkVolumeFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeFS.glsl';
 
@@ -34,10 +36,6 @@ const { vtkWarningMacro, vtkErrorMacro } = macro;
 // ----------------------------------------------------------------------------
 // helper methods
 // ----------------------------------------------------------------------------
-
-function computeFnToString(pwfun, useIComps, numberOfComponents) {
-  return pwfun ? `${pwfun.getMTime()}-${useIComps}-${numberOfComponents}` : '0';
-}
 
 function getColorCodeFromPreset(colorMixPreset) {
   switch (colorMixPreset) {
@@ -1555,7 +1553,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const scalarOpacityFunc = vprop.getScalarOpacity();
     const opTex =
       model._openGLRenderWindow.getGraphicsResourceForObject(scalarOpacityFunc);
-    let toString = computeFnToString(
+    let toString = getTransferFunctionHash(
       scalarOpacityFunc,
       useIndependentComps,
       numIComps
@@ -1643,7 +1641,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     // rebuild color tfun?
     const colorTransferFunc = vprop.getRGBTransferFunction();
-    toString = computeFnToString(
+    toString = getTransferFunctionHash(
       colorTransferFunc,
       useIndependentComps,
       numIComps
