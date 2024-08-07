@@ -41,6 +41,13 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLImageCPRMapper');
 
+  function unregisterGraphicsResources(renderWindow) {
+    [model._scalars, model._colorTransferFunc, model._pwFunc].forEach(
+      (coreObject) =>
+        renderWindow.unregisterGraphicsResourceUser(coreObject, publicAPI)
+    );
+  }
+
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
       model.currentRenderPass = null;
@@ -49,18 +56,23 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       );
       model._openGLRenderer =
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+      const oldOglRenderWindow = model._openGLRenderWindow;
       model._openGLRenderWindow = model._openGLRenderer.getLastAncestorOfType(
         'vtkOpenGLRenderWindow'
       );
+      if (
+        oldOglRenderWindow &&
+        !oldOglRenderWindow.isDeleted() &&
+        oldOglRenderWindow !== model._openGLRenderWindow
+      ) {
+        unregisterGraphicsResources(oldOglRenderWindow);
+      }
       model.context = model._openGLRenderWindow.getContext();
       model.openGLCamera = model._openGLRenderer.getViewNodeFor(
         model._openGLRenderer.getRenderable().getActiveCamera()
       );
 
       model.tris.setOpenGLRenderWindow(model._openGLRenderWindow);
-      model.volumeTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      model.pwfTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
     }
   };
 
@@ -147,30 +159,8 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     if (publicAPI.getNeedToRebuildBufferObjects(ren, actor)) {
       publicAPI.buildBufferObjects(ren, actor);
     }
-  };
-
-  publicAPI.getNeedToRebuildBufferObjects = (ren, actor) => {
-    // first do a coarse check
-    // Note that the actor's mtime includes it's properties mtime
-    const vmtime = model.VBOBuildTime.getMTime();
-    if (
-      vmtime < publicAPI.getMTime() ||
-      vmtime < model.renderable.getMTime() ||
-      vmtime < actor.getMTime() ||
-      vmtime < model.currentImageDataInput.getMTime() ||
-      vmtime < model.currentCenterlineInput.getMTime()
-    ) {
-      return true;
-    }
-    return false;
-  };
-
-  publicAPI.buildBufferObjects = (ren, actor) => {
-    const image = model.currentImageDataInput;
-    const centerline = model.currentCenterlineInput;
-    const actorProperty = actor.getProperty();
-
     // Set interpolation on the texture based on property setting
+    const actorProperty = actor.getProperty();
     if (actorProperty.getInterpolationType() === InterpolationType.NEAREST) {
       model.volumeTexture.setMinificationFilter(Filter.NEAREST);
       model.volumeTexture.setMagnificationFilter(Filter.NEAREST);
@@ -186,61 +176,104 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       model.pwfTexture.setMinificationFilter(Filter.LINEAR);
       model.pwfTexture.setMagnificationFilter(Filter.LINEAR);
     }
+  };
+
+  publicAPI.getNeedToRebuildBufferObjects = (ren, actor) => {
+    // first do a coarse check
+    // Note that the actor's mtime includes it's properties mtime
+    const vmtime = model.VBOBuildTime.getMTime();
+    return (
+      vmtime < publicAPI.getMTime() ||
+      vmtime < model.renderable.getMTime() ||
+      vmtime < actor.getMTime() ||
+      vmtime < model.currentImageDataInput.getMTime() ||
+      vmtime < model.currentCenterlineInput.getMTime() ||
+      !model.volumeTexture?.getHandle()
+    );
+  };
+
+  publicAPI.buildBufferObjects = (ren, actor) => {
+    const image = model.currentImageDataInput;
+    const centerline = model.currentCenterlineInput;
 
     // Rebuild the volumeTexture if the data has changed
-    const imageTime = image.getMTime();
-    if (model.volumeTextureTime !== imageTime) {
+    const scalars = image?.getPointData()?.getScalars();
+    if (!scalars) {
+      return;
+    }
+    const cachedScalarsEntry =
+      model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
+    const volumeTextureHash = `${image.getMTime()}A${scalars.getMTime()}`;
+    const reBuildTex =
+      !cachedScalarsEntry?.oglObject?.getHandle() ||
+      cachedScalarsEntry?.hash !== volumeTextureHash;
+    if (reBuildTex) {
+      model.volumeTexture = vtkOpenGLTexture.newInstance();
+      model.volumeTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       // Build the textures
       const dims = image.getDimensions();
-      const scalars = image.getPointData().getScalars();
-      if (!scalars) {
-        return;
-      }
       // Use norm16 for scalar texture if the extension is available
       model.volumeTexture.setOglNorm16Ext(
         model.context.getExtension('EXT_texture_norm16')
       );
-      model.volumeTexture.releaseGraphicsResources(model._openGLRenderWindow);
       model.volumeTexture.resetFormatAndType();
-      model.volumeTexture.create3DFilterableFromRaw(
+      model.volumeTexture.create3DFilterableFromDataArray(
         dims[0],
         dims[1],
         dims[2],
-        scalars.getNumberOfComponents(),
-        scalars.getDataType(),
-        scalars.getData(),
+        scalars,
         model.renderable.getPreferSizeOverAccuracy()
       );
-      model.volumeTextureTime = imageTime;
+      model._openGLRenderWindow.setGraphicsResourceForObject(
+        scalars,
+        model.volumeTexture,
+        volumeTextureHash
+      );
+      if (scalars !== model._scalars) {
+        model._openGLRenderWindow.registerGraphicsResourceUser(
+          scalars,
+          publicAPI
+        );
+        model._openGLRenderWindow.unregisterGraphicsResourceUser(
+          model._scalars,
+          publicAPI
+        );
+      }
+      model._scalars = scalars;
+    } else {
+      model.volumeTexture = cachedScalarsEntry.oglObject;
     }
 
     // Rebuild the color texture if needed
-    const scalars = image.getPointData() && image.getPointData().getScalars();
-    if (!scalars) {
-      return;
-    }
     const numComp = scalars.getNumberOfComponents();
     const ppty = actor.getProperty();
     const iComps = ppty.getIndependentComponents();
     const numIComps = iComps ? numComp : 1;
     const textureHeight = iComps ? 2 * numIComps : 1;
 
-    const cfunToString = computeFnToString(
+    const colorTransferFunc = ppty.getRGBTransferFunction();
+    const colorTextureHash = computeFnToString(
       ppty,
       ppty.getRGBTransferFunction,
       numIComps
     );
 
-    if (model.colorTextureString !== cfunToString) {
+    const cachedColorEntry =
+      model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
+    const reBuildColorTexture =
+      !cachedColorEntry?.oglObject?.getHandle() ||
+      cachedColorEntry?.hash !== colorTextureHash;
+    if (reBuildColorTexture) {
       const cWidth = 1024;
       const cSize = cWidth * textureHeight * 3;
       const cTable = new Uint8ClampedArray(cSize);
-      let cfun = ppty.getRGBTransferFunction();
-      if (cfun) {
+      model.colorTexture = vtkOpenGLTexture.newInstance();
+      model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      if (colorTransferFunc) {
         const tmpTable = new Float32Array(cWidth * 3);
 
         for (let c = 0; c < numIComps; c++) {
-          cfun = ppty.getRGBTransferFunction(c);
+          const cfun = ppty.getRGBTransferFunction(c);
           const cRange = cfun.getRange();
           cfun.getTable(cRange[0], cRange[1], cWidth, tmpTable, 1);
           if (iComps) {
@@ -254,7 +287,6 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
             }
           }
         }
-        model.colorTexture.releaseGraphicsResources(model._openGLRenderWindow);
         model.colorTexture.resetFormatAndType();
         model.colorTexture.create2DFromRaw(
           cWidth,
@@ -269,6 +301,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
           cTable[i + 1] = (255.0 * i) / ((cWidth - 1) * 3);
           cTable[i + 2] = (255.0 * i) / ((cWidth - 1) * 3);
         }
+        model.colorTexture.resetFormatAndType();
         model.colorTexture.create2DFromRaw(
           cWidth,
           1,
@@ -278,32 +311,54 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
         );
       }
 
-      model.colorTextureString = cfunToString;
+      if (colorTransferFunc) {
+        model._openGLRenderWindow.setGraphicsResourceForObject(
+          colorTransferFunc,
+          model.colorTexture,
+          colorTextureHash
+        );
+        if (colorTransferFunc !== model._colorTransferFunc) {
+          model._openGLRenderWindow.registerGraphicsResourceUser(
+            colorTransferFunc,
+            publicAPI
+          );
+          model._openGLRenderWindow.unregisterGraphicsResourceUser(
+            model._colorTransferFunc,
+            publicAPI
+          );
+        }
+        model._colorTransferFunc = colorTransferFunc;
+      }
+    } else {
+      model.colorTexture = cachedColorEntry.oglObject;
     }
 
     // Build piecewise function buffer.  This buffer is used either
     // for component weighting or opacity, depending on whether we're
     // rendering components independently or not.
-    const pwfunToString = computeFnToString(
+    const pwFunc = ppty.getPiecewiseFunction();
+    const pwfTextureHash = computeFnToString(
       ppty,
       ppty.getPiecewiseFunction,
       numIComps
     );
-
-    if (model.pwfTextureString !== pwfunToString) {
+    const cachedPwfEntry =
+      model._openGLRenderWindow.getGraphicsResourceForObject(pwFunc);
+    const reBuildPwf =
+      !cachedPwfEntry?.oglObject?.getHandle() ||
+      cachedPwfEntry?.hash !== pwfTextureHash;
+    if (reBuildPwf) {
       const pwfWidth = 1024;
       const pwfSize = pwfWidth * textureHeight;
       const pwfTable = new Uint8ClampedArray(pwfSize);
-      let pwfun = ppty.getPiecewiseFunction();
-      // support case where pwfun is added/removed
-      model.pwfTexture.releaseGraphicsResources(model._openGLRenderWindow);
-      model.pwfTexture.resetFormatAndType();
-      if (pwfun) {
+      model.pwfTexture = vtkOpenGLTexture.newInstance();
+      model.pwfTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      if (pwFunc) {
         const pwfFloatTable = new Float32Array(pwfSize);
         const tmpTable = new Float32Array(pwfWidth);
 
         for (let c = 0; c < numIComps; ++c) {
-          pwfun = ppty.getPiecewiseFunction(c);
+          const pwfun = ppty.getPiecewiseFunction(c);
           if (pwfun === null) {
             // Piecewise constant max if no function supplied for this component
             pwfFloatTable.fill(1.0);
@@ -323,6 +378,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
             }
           }
         }
+        model.pwfTexture.resetFormatAndType();
         model.pwfTexture.create2DFromRaw(
           pwfWidth,
           textureHeight,
@@ -333,6 +389,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       } else {
         // default is opaque
         pwfTable.fill(255.0);
+        model.pwfTexture.resetFormatAndType();
         model.pwfTexture.create2DFromRaw(
           pwfWidth,
           1,
@@ -341,7 +398,26 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
           pwfTable
         );
       }
-      model.pwfTextureString = pwfunToString;
+      if (pwFunc) {
+        model._openGLRenderWindow.setGraphicsResourceForObject(
+          pwFunc,
+          model.pwfTexture,
+          pwfTextureHash
+        );
+        if (pwFunc !== model._pwFunc) {
+          model._openGLRenderWindow.registerGraphicsResourceUser(
+            pwFunc,
+            publicAPI
+          );
+          model._openGLRenderWindow.unregisterGraphicsResourceUser(
+            model._pwFunc,
+            publicAPI
+          );
+        }
+        model._pwFunc = pwFunc;
+      }
+    } else {
+      model.pwfTexture = cachedPwfEntry.oglObject;
     }
 
     // Rebuild the image vertices if needed
@@ -1308,6 +1384,12 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     publicAPI.setCameraShaderParameters(cellBO, ren, actor);
     publicAPI.setPropertyShaderParameters(cellBO, ren, actor);
   };
+
+  publicAPI.delete = macro.chain(() => {
+    if (model._openGLRenderWindow) {
+      unregisterGraphicsResources(model._openGLRenderWindow);
+    }
+  }, publicAPI.delete);
 }
 
 // ----------------------------------------------------------------------------
@@ -1317,11 +1399,8 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
 const DEFAULT_VALUES = {
   currentRenderPass: null,
   volumeTexture: null,
-  volumeTextureTime: 0,
   colorTexture: null,
-  colorTextureString: null,
   pwfTexture: null,
-  pwfTextureString: null,
   tris: null,
   lastHaveSeenDepthRequest: false,
   haveSeenDepthRequest: false,
@@ -1329,6 +1408,9 @@ const DEFAULT_VALUES = {
   lastIndependentComponents: 0,
   imagemat: null,
   imagematinv: null,
+  // _scalars: null,
+  // _colorTransferFunc: null,
+  // _pwFunc: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -1348,9 +1430,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.algo(publicAPI, model, 2, 0);
 
   model.tris = vtkHelper.newInstance();
-  model.volumeTexture = vtkOpenGLTexture.newInstance();
-  model.colorTexture = vtkOpenGLTexture.newInstance();
-  model.pwfTexture = vtkOpenGLTexture.newInstance();
+  model.volumeTexture = null;
+  model.colorTexture = null;
+  model.pwfTexture = null;
 
   model.imagemat = mat4.identity(new Float64Array(16));
   model.imagematinv = mat4.identity(new Float64Array(16));
