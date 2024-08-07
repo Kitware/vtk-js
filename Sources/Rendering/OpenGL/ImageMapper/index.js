@@ -15,6 +15,8 @@ import {
 } from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/ImageProperty/Constants';
 
+import { getTransferFunctionHash } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/resourceSharingHelper';
+
 import vtkPolyDataVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/ReplacementShaderMapper';
@@ -29,14 +31,6 @@ const { SlicingMode } = Constants;
 // ----------------------------------------------------------------------------
 // helper methods
 // ----------------------------------------------------------------------------
-
-function computeFnToString(property, pwfun, numberOfComponents) {
-  if (pwfun) {
-    const iComps = property.getIndependentComponents();
-    return `${pwfun.getMTime()}-${iComps}-${numberOfComponents}`;
-  }
-  return '0';
-}
 
 function splitStringOnEnter(inputString) {
   // Split the input string into an array of lines based on "Enter" (newline) characters
@@ -947,9 +941,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const textureHeight = iComps ? 2 * numIComps : 1;
 
     const colorTransferFunc = actorProperty.getRGBTransferFunction();
-    const cfunToString = computeFnToString(
-      actorProperty,
+    const cfunToString = getTransferFunctionHash(
       colorTransferFunc,
+      iComps,
       numIComps
     );
     const cTex =
@@ -1041,7 +1035,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     // for component weighting or opacity, depending on whether we're
     // rendering components independently or not.
     const pwFunc = actorProperty.getPiecewiseFunction();
-    const pwfunToString = computeFnToString(actorProperty, pwFunc, numIComps);
+    const pwfunToString = getTransferFunctionHash(pwFunc, iComps, numIComps);
     const pwfTex =
       model._openGLRenderWindow.getGraphicsResourceForObject(pwFunc);
     // rebuild opacity tfun?

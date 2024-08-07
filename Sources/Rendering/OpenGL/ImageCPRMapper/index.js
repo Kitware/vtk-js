@@ -12,6 +12,8 @@ import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/Replacem
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
+import { getTransferFunctionHash } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/resourceSharingHelper';
+
 import vtkPolyDataVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 
@@ -19,19 +21,6 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 import { Resolve } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 
 const { vtkErrorMacro } = macro;
-
-// ----------------------------------------------------------------------------
-// helper methods
-// ----------------------------------------------------------------------------
-
-function computeFnToString(property, fn, numberOfComponents) {
-  const pwfun = fn.apply(property);
-  if (pwfun) {
-    const iComps = property.getIndependentComponents();
-    return `${property.getMTime()}-${iComps}-${numberOfComponents}`;
-  }
-  return '0';
-}
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLImageCPRMapper methods
@@ -252,9 +241,9 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     const textureHeight = iComps ? 2 * numIComps : 1;
 
     const colorTransferFunc = ppty.getRGBTransferFunction();
-    const colorTextureHash = computeFnToString(
-      ppty,
-      ppty.getRGBTransferFunction,
+    const colorTextureHash = getTransferFunctionHash(
+      colorTransferFunc,
+      iComps,
       numIComps
     );
 
@@ -337,11 +326,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     // for component weighting or opacity, depending on whether we're
     // rendering components independently or not.
     const pwFunc = ppty.getPiecewiseFunction();
-    const pwfTextureHash = computeFnToString(
-      ppty,
-      ppty.getPiecewiseFunction,
-      numIComps
-    );
+    const pwfTextureHash = getTransferFunctionHash(pwFunc, iComps, numIComps);
     const cachedPwfEntry =
       model._openGLRenderWindow.getGraphicsResourceForObject(pwFunc);
     const reBuildPwf =
