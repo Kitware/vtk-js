@@ -12,7 +12,10 @@ import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/Replacem
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
-import { getTransferFunctionHash } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/resourceSharingHelper';
+import {
+  getTransferFunctionHash,
+  getImageDataHash,
+} from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/resourceSharingHelper';
 
 import vtkPolyDataVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
@@ -192,7 +195,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     }
     const cachedScalarsEntry =
       model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
-    const volumeTextureHash = `${image.getMTime()}A${scalars.getMTime()}`;
+    const volumeTextureHash = getImageDataHash(image, scalars);
     const reBuildTex =
       !cachedScalarsEntry?.oglObject?.getHandle() ||
       cachedScalarsEntry?.hash !== volumeTextureHash;
