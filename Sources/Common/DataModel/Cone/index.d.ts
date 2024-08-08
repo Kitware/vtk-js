@@ -13,7 +13,7 @@ export interface vtkCone extends vtkObject {
    * Given the point x evaluate the cone equation.
    * @param {Vector3} x The point coordinate.
    */
-  evaluateFunction(x: Vector3): number[];
+  evaluateFunction(x: Vector3): number;
 
   /**
    * Given the point x evaluate the equation for the cone gradient.
@@ -54,11 +54,7 @@ export function newInstance(initialValues?: IConeInitialValues): vtkCone;
 
 /**
  * vtkCone computes the implicit function and/or gradient for a cone. vtkCone is
- * a concrete implementation of vtkImplicitFunction. TODO: Currently the cone's
- * axis of rotation is along the x-axis with the apex at the origin. To
- * transform this to a different location requires the application of a
- * transformation matrix. This can be performed by supporting transforms at the
- * implicit function level, and should be added.
+ * a concrete implementation of vtkImplicitFunction.
  */
 export declare const vtkCone: {
   newInstance: typeof newInstance;

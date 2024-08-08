@@ -14,7 +14,14 @@ import vtkInteractorStyleImage from '@kitware/vtk.js/Interaction/Style/Interacto
 import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
 import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper';
 import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
+import vtkImplicitBoolean from '@kitware/vtk.js/Common/DataModel/ImplicitBoolean';
+import vtkMatrixBuilder from '@kitware/vtk.js/Common/Core/MatrixBuilder';
+import vtkMath from '@kitware/vtk.js/Common/Core/Math';
+import vtkPlane from '@kitware/vtk.js/Common/DataModel/Plane';
 import vtkSphere from '@kitware/vtk.js/Common/DataModel/Sphere';
+import vtkTransform from '@kitware/vtk.js/Common/Transform/Transform';
+import { VTK_SMALL_NUMBER } from 'vtk.js/Sources/Common/Core/Math/Constants';
+
 import vtkInteractorObserver from '@kitware/vtk.js/Rendering/Core/InteractorObserver';
 import {
   bindSVGRepresentation,
@@ -35,7 +42,16 @@ import { vec3 } from 'gl-matrix';
 import controlPanel from './controlPanel.html';
 
 const { computeWorldToDisplay } = vtkInteractorObserver;
+const { Operation } = vtkImplicitBoolean;
 
+const slicingModeNormal = {
+  [vtkImageMapper.SlicingMode.X]: [1, 0, 0],
+  [vtkImageMapper.SlicingMode.Y]: [0, 1, 0],
+  [vtkImageMapper.SlicingMode.Z]: [0, 0, 0],
+  [vtkImageMapper.SlicingMode.I]: [1, 0, 0],
+  [vtkImageMapper.SlicingMode.J]: [0, 1, 0],
+  [vtkImageMapper.SlicingMode.K]: [0, 0, 1],
+};
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
@@ -228,12 +244,62 @@ reader
     scene.ellipseHandle.getRepresentations()[1].setDrawFace(false);
     scene.ellipseHandle.getRepresentations()[1].setOpacity(1);
 
+    // isPointInEllipse supports arbitrary plane (not just axis-aligned)
+    const isPointInEllipse = vtkImplicitBoolean.newInstance();
+    isPointInEllipse.setOperation(Operation.INTERSECTION);
+    const positivePlane = vtkPlane.newInstance();
+    isPointInEllipse.addFunction(positivePlane);
+    const negativePlane = vtkPlane.newInstance();
+    isPointInEllipse.addFunction(negativePlane);
+    const currentEllipse = vtkSphere.newInstance();
+    const transform = vtkTransform.newInstance();
+    currentEllipse.setTransform(transform);
+    isPointInEllipse.addFunction(currentEllipse);
+
     // set text display callback
     scene.ellipseHandle.onInteractionEvent(() => {
       const worldBounds = scene.ellipseHandle.getBounds();
+      const planeNormal = slicingModeNormal[image.imageMapper.getSlicingMode()];
+      const planeOrigin = [0, 0, 0];
+      planeOrigin[image.imageMapper.getSlicingMode() % 3] =
+        image.imageMapper.getSlice();
+      image.data.indexToWorld(planeOrigin, planeOrigin);
+      positivePlane.setOrigin(planeOrigin);
+      negativePlane.setOrigin(planeOrigin);
+      positivePlane.setNormal(planeNormal);
+      negativePlane.setNormal(vtkMath.multiplyScalar([...planeNormal], -1));
+      const rotationMatrix = vtkMatrixBuilder
+        .buildFromRadian()
+        .translate(...planeOrigin)
+        .rotateFromDirections(planeNormal, [0, 0, 1])
+        .translate(...vtkMath.multiplyScalar([...planeOrigin], -1));
+      const corner1 = widgets.ellipseWidget
+        .getWidgetState()
+        .getPoint1Handle()
+        .getOrigin();
+      const corner2 = widgets.ellipseWidget
+        .getWidgetState()
+        .getPoint2Handle()
+        .getOrigin();
+      rotationMatrix.apply(corner1);
+      rotationMatrix.apply(corner2);
+      transform.setMatrix(rotationMatrix.getMatrix());
+      currentEllipse.setRadius([
+        Math.max(Math.abs(corner2[0] - corner1[0]) / 2, 1 + VTK_SMALL_NUMBER),
+        Math.max(Math.abs(corner2[1] - corner1[1]) / 2, 1),
+        10,
+      ]);
+      currentEllipse.setCenter([
+        (corner1[0] + corner2[0]) / 2,
+        (corner1[1] + corner2[1]) / 2,
+        (corner1[2] + corner2[2]) / 2,
+      ]);
+
+      const w = [];
       const { average, minimum, maximum } = image.data.computeHistogram(
         worldBounds,
-        vtkSphere.isPointIn3DEllipse
+        (coord, _) =>
+          isPointInEllipse.functionValue(image.data.indexToWorld(coord, w)) <= 0
       );
 
       const text = `average: ${average.toFixed(
