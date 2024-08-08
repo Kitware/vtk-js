@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkImplicitFunction from 'vtk.js/Sources/Common/DataModel/ImplicitFunction';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -209,7 +210,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Object methods
-  macro.obj(publicAPI, model);
+  vtkImplicitFunction.extend(publicAPI, model, initialValues);
 
   vtkBox(publicAPI, model);
 }

@@ -1,6 +1,10 @@
 import test from 'tape';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 import vtkRTAnalyticSource from 'vtk.js/Sources/Filters/Sources/RTAnalyticSource';
+import vtkImplicitBoolean from 'vtk.js/Sources/Common/DataModel/ImplicitBoolean';
+import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
+
+const { Operation } = vtkImplicitBoolean;
 
 test('Test vtkImageData instance', (t) => {
   t.ok(vtkImageData, 'Make sure the class definition exists');
@@ -59,7 +63,21 @@ test('Test vtkImageData histogram', (t) => {
   );
 
   // masking function that ignores the bottom 10 and top 10 rows of voxels.
-  const voxelFunc = (idx) => idx[0] > 9 && idx[0] < 40;
+  const implicitFunc = vtkImplicitBoolean.newInstance({
+    operation: Operation.INTERSECTION,
+  });
+  implicitFunc.addFunction(
+    vtkPlane.newInstance({
+      origin: [10 * spacing, 0, 0],
+      normal: [-1, 0, 0],
+    })
+  );
+  implicitFunc.addFunction(
+    vtkPlane.newInstance({
+      origin: [39 * spacing, 0, 0],
+      normal: [1, 0, 0],
+    })
+  );
 
   const baseline2 = {
     minimum: 9,
@@ -70,7 +88,7 @@ test('Test vtkImageData histogram', (t) => {
     count: 78030,
   };
 
-  const histWithMask = image.computeHistogram(bounds, voxelFunc);
+  const histWithMask = image.computeHistogram(bounds, implicitFunc);
 
   t.ok(
     histWithMask.minimum === baseline2.minimum &&
@@ -82,7 +100,7 @@ test('Test vtkImageData histogram', (t) => {
     'computeHistogram test with masking function'
   );
 
-  const voxelFuncNone = (idx) => false;
+  const implicitFuncNone = { functionValue: (xyz) => 1 };
   const baseline3 = {
     minimum: Infinity,
     maximum: -Infinity,
@@ -91,7 +109,7 @@ test('Test vtkImageData histogram', (t) => {
     sigma: 0,
     count: 0,
   };
-  const histNone = image.computeHistogram(bounds, voxelFuncNone);
+  const histNone = image.computeHistogram(bounds, implicitFuncNone);
 
   t.ok(
     histNone.minimum === baseline3.minimum &&
