@@ -1,5 +1,6 @@
 import { vtkObject } from '../../../interfaces';
 import { Bounds, Vector3 } from '../../../types';
+import vtkImplicitFunction from '../ImplicitFunction';
 
 export interface IBoxInitialValues {
   bbox?: Bounds;
@@ -12,7 +13,7 @@ export interface IBoxIntersections {
   x2: Vector3;
 }
 
-export interface vtkBox extends vtkObject {
+export interface vtkBox extends vtkImplicitFunction {
   /**
    * Add the bounds for the box.
    * @param {Bounds} bounds

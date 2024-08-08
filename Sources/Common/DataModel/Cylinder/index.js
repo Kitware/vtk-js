@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkImplicitFunction from 'vtk.js/Sources/Common/DataModel/ImplicitFunction';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -85,7 +86,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Object methods
-  macro.obj(publicAPI, model);
+  vtkImplicitFunction.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, ['radius']);
   macro.setGetArray(publicAPI, model, ['center', 'axis'], 3);
 

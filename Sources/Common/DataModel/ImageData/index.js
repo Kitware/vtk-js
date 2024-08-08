@@ -237,7 +237,7 @@ function vtkImageData(publicAPI, model) {
 
   publicAPI.getCenter = () => vtkBoundingBox.getCenter(publicAPI.getBounds());
 
-  publicAPI.computeHistogram = (worldBounds, voxelFunc = null) => {
+  publicAPI.computeHistogram = (worldBounds, voxelFunction = null) => {
     const bounds = [0, 0, 0, 0, 0, 0];
     publicAPI.worldToIndexBounds(worldBounds, bounds);
 
@@ -278,7 +278,7 @@ function vtkImageData(publicAPI, model) {
       for (let y = point1[1]; y <= point2[1]; y++) {
         let index = point1[0] + y * yStride + z * zStride;
         for (let x = point1[0]; x <= point2[0]; x++) {
-          if (!voxelFunc || voxelFunc([x, y, z], bounds)) {
+          if (!voxelFunction || voxelFunction([x, y, z], bounds)) {
             const pixel = pixels[index];
 
             if (pixel > maximum) maximum = pixel;
