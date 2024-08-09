@@ -16,6 +16,11 @@ import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkTransform from 'vtk.js/Sources/Common/Transform/Transform';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
+import {
+  getTransferFunctionHash,
+  getImageDataHash,
+} from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/resourceSharingHelper';
+
 import vtkImageResliceMapperVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkImageResliceMapperVS.glsl';
 import vtkImageResliceMapperFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkImageResliceMapperFS.glsl';
 
@@ -31,14 +36,6 @@ const { vtkErrorMacro } = macro;
 // ----------------------------------------------------------------------------
 // helper methods
 // ----------------------------------------------------------------------------
-
-function computeFnToString(property, pwfun, numberOfComponents) {
-  if (pwfun) {
-    const iComps = property.getIndependentComponents();
-    return `${pwfun.getMTime()}-${iComps}-${numberOfComponents}`;
-  }
-  return '0';
-}
 
 function safeMatrixMultiply(matrixArray, matrixType, tmpMat) {
   matrixType.identity(tmpMat);
@@ -231,7 +228,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     }
 
     const numComp = scalars.getNumberOfComponents();
-    let toString = `${image.getMTime()}A${scalars.getMTime()}`;
+    let toString = getImageDataHash(image, scalars);
 
     const tex = model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
     const reBuildTex = !tex?.oglObject?.getHandle() || tex?.hash !== toString;
@@ -251,24 +248,22 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         dims[2],
         scalars
       );
-      if (scalars) {
-        model._openGLRenderWindow.setGraphicsResourceForObject(
+      model._openGLRenderWindow.setGraphicsResourceForObject(
+        scalars,
+        model.openGLTexture,
+        toString
+      );
+      if (scalars !== model._scalars) {
+        model._openGLRenderWindow.registerGraphicsResourceUser(
           scalars,
-          model.openGLTexture,
-          toString
+          publicAPI
         );
-        if (scalars !== model._scalars) {
-          model._openGLRenderWindow.registerGraphicsResourceUser(
-            scalars,
-            publicAPI
-          );
-          model._openGLRenderWindow.unregisterGraphicsResourceUser(
-            model._scalars,
-            publicAPI
-          );
-        }
-        model._scalars = scalars;
+        model._openGLRenderWindow.unregisterGraphicsResourceUser(
+          model._scalars,
+          publicAPI
+        );
       }
+      model._scalars = scalars;
     } else {
       model.openGLTexture = tex.oglObject;
     }
@@ -279,7 +274,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     const textureHeight = iComps ? 2 * numIComps : 1;
 
     const colorTransferFunc = ppty.getRGBTransferFunction();
-    toString = computeFnToString(ppty, colorTransferFunc, numIComps);
+    toString = getTransferFunctionHash(colorTransferFunc, iComps, numIComps);
     const cTex =
       model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
     const reBuildC = !cTex?.oglObject?.getHandle() || cTex?.hash !== toString;
@@ -357,7 +352,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     // for component weighting or opacity, depending on whether we're
     // rendering components independently or not.
     const pwFunc = ppty.getPiecewiseFunction();
-    toString = computeFnToString(ppty, pwFunc, numIComps);
+    toString = getTransferFunctionHash(pwFunc, iComps, numIComps);
     const pwfTex =
       model._openGLRenderWindow.getGraphicsResourceForObject(pwFunc);
     // rebuild opacity tfun?
