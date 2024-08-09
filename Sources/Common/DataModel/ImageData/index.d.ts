@@ -1,6 +1,7 @@
 import { mat3, mat4, ReadonlyVec3, vec3 } from 'gl-matrix';
 import { Bounds, Extent, Vector3 } from '../../../types';
 import vtkDataSet, { IDataSetInitialValues } from '../DataSet';
+import vtkImplicitFunction from '../ImplicitFunction';
 
 /**
  *
@@ -24,13 +25,16 @@ export interface vtkImageData extends vtkDataSet {
    * Returns an object with `{ minimum, maximum, average, variance, sigma, count }`
    * of the imageData points found within the provided `worldBounds`.
    *
-   * `voxelFunc(index, bounds)` is an optional function that is called with
-   * the `[i,j,k]` index and index `bounds`, expected to return truthy if the
-   * data point should be counted in the histogram, and falsey if not.
+   * `implicitFunc` is an optional implicit function that is called with
+   * the `[i,j,k]` index, expected to return a 0 or negative scalar if the
+   * data point should be counted in the histogram, and a positive scalar if not.
    * @param {Bounds} worldBounds The bounds of the world.
-   * @param [voxelFunc]
+   * @param [implicitFunc]
    */
-  computeHistogram(worldBounds: Bounds, voxelFunc?: any): IComputeHistogram;
+  computeHistogram(
+    worldBounds: Bounds,
+    implicitFunc?: vtkImplicitFunction
+  ): IComputeHistogram;
 
   /**
    * Returns an `array[3]` of values to multiply an `[i,j,k]` index to convert

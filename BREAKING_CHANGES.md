@@ -1,3 +1,8 @@
+## From 32.x to 33
+
+- **vtkImageData.computeHistogram**: second parameter voxelFunc is replaced by a vtkImplicitFunction that takes in a world coordinate.
+When the evaluated implicit function returns a scalar <=0, the voxel is considred for the histogram. Otherwise it is discarded.
+
 ## From 31.x to 32
 
 - **vtkMapper**: remove `mapScalarsToTexture` from the public API. The function becomes protected and its API changes. This shouldn't cause any issue in most cases.
