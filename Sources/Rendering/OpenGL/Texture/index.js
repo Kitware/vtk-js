@@ -392,7 +392,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       vtktype,
       numComps,
       model.oglNorm16Ext,
-      model.useHalfFloat
+      publicAPI.useHalfFloat()
     );
     if (result) {
       return result;
@@ -407,6 +407,8 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     return result;
   };
+
+  publicAPI.useHalfFloat = () => model.enableHalfFloat && model.canUseHalfFloat;
 
   //----------------------------------------------------------------------------
   publicAPI.setInternalFormat = (iFormat) => {
@@ -465,6 +467,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.getDefaultDataType = (vtkScalarType) => {
+    const useHalfFloat = publicAPI.useHalfFloat();
     // DON'T DEAL with VTK_CHAR as this is platform dependent.
     if (model._openGLRenderWindow.getWebgl2()) {
       switch (vtkScalarType) {
@@ -474,16 +477,14 @@ function vtkOpenGLTexture(publicAPI, model) {
           return model.context.UNSIGNED_BYTE;
         // prefer norm16 since that is accurate compared to
         // half float which is not
-        case model.oglNorm16Ext && !model.useHalfFloat && VtkDataTypes.SHORT:
+        case model.oglNorm16Ext && !useHalfFloat && VtkDataTypes.SHORT:
           return model.context.SHORT;
-        case model.oglNorm16Ext &&
-          !model.useHalfFloat &&
-          VtkDataTypes.UNSIGNED_SHORT:
+        case model.oglNorm16Ext && !useHalfFloat && VtkDataTypes.UNSIGNED_SHORT:
           return model.context.UNSIGNED_SHORT;
         // use half float type
-        case model.useHalfFloat && VtkDataTypes.SHORT:
+        case useHalfFloat && VtkDataTypes.SHORT:
           return model.context.HALF_FLOAT;
-        case model.useHalfFloat && VtkDataTypes.UNSIGNED_SHORT:
+        case useHalfFloat && VtkDataTypes.UNSIGNED_SHORT:
           return model.context.HALF_FLOAT;
         // case VtkDataTypes.INT:
         //   return model.context.INT;
@@ -924,7 +925,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       model._openGLRenderWindow.getDefaultTextureByteSize(
         dataType,
         model.oglNorm16Ext,
-        model.useHalfFloat
+        publicAPI.useHalfFloat()
       );
     publicAPI.deactivate();
     return true;
@@ -1048,7 +1049,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       model._openGLRenderWindow.getDefaultTextureByteSize(
         dataType,
         model.oglNorm16Ext,
-        model.useHalfFloat
+        publicAPI.useHalfFloat()
       );
     // generateMipmap must not be called here because we manually upload all levels
     // if it is called, all levels will be overwritten
@@ -1137,7 +1138,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       model._openGLRenderWindow.getDefaultTextureByteSize(
         dataType,
         model.oglNorm16Ext,
-        model.useHalfFloat
+        publicAPI.useHalfFloat()
       );
 
     publicAPI.deactivate();
@@ -1247,7 +1248,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       model._openGLRenderWindow.getDefaultTextureByteSize(
         VtkDataTypes.UNSIGNED_CHAR,
         model.oglNorm16Ext,
-        model.useHalfFloat
+        publicAPI.useHalfFloat()
       );
 
     publicAPI.deactivate();
@@ -1280,7 +1281,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     return true;
   }
 
-  function setUseHalfFloat(dataType, offset, scale, preferSizeOverAccuracy) {
+  function setCanUseHalfFloat(dataType, offset, scale, preferSizeOverAccuracy) {
     publicAPI.getOpenGLDataType(dataType);
 
     let useHalfFloat = false;
@@ -1297,7 +1298,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     const isHalfFloat =
       useHalfFloat &&
       (hasExactHalfFloat(offset, scale) || preferSizeOverAccuracy);
-    model.useHalfFloat = isHalfFloat;
+    model.canUseHalfFloat = isHalfFloat;
   }
 
   function processDataArray(dataArray, preferSizeOverAccuracy) {
@@ -1319,7 +1320,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // preferSizeOverAccuracy will override norm16 due to bug with norm16 implementation
     // https://bugs.chromium.org/p/chromium/issues/detail?id=1408247
-    setUseHalfFloat(
+    setCanUseHalfFloat(
       dataType,
       scaleOffsets.offset,
       scaleOffsets.scale,
@@ -1328,7 +1329,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // since our default is to use half float, in case that we can't use it
     // we need to use another type
-    if (!model.useHalfFloat) {
+    if (!publicAPI.useHalfFloat()) {
       publicAPI.getOpenGLDataType(dataType, true);
     }
 
@@ -1375,6 +1376,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   publicAPI.updateVolumeInfoForGL = (dataType, numComps) => {
     let isScalingApplied = false;
+    const useHalfFloat = publicAPI.useHalfFloat();
 
     // Initialize volume info if it doesn't exist
     if (!model.volumeInfo?.scale || !model.volumeInfo?.offset) {
@@ -1393,7 +1395,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     // Handle SHORT data type with EXT_texture_norm16 extension
     if (
       model.oglNorm16Ext &&
-      !model.useHalfFloat &&
+      !useHalfFloat &&
       dataType === VtkDataTypes.SHORT
     ) {
       for (let c = 0; c < numComps; ++c) {
@@ -1405,7 +1407,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     // Handle UNSIGNED_SHORT data type with EXT_texture_norm16 extension
     if (
       model.oglNorm16Ext &&
-      !model.useHalfFloat &&
+      !useHalfFloat &&
       dataType === VtkDataTypes.UNSIGNED_SHORT
     ) {
       for (let c = 0; c < numComps; ++c) {
@@ -1425,7 +1427,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     // No scaling needed for FLOAT or HalfFloat (SHORT/UNSIGNED_SHORT)
     if (
       dataType === VtkDataTypes.FLOAT ||
-      (model.useHalfFloat &&
+      (useHalfFloat &&
         (dataType === VtkDataTypes.SHORT ||
           dataType === VtkDataTypes.UNSIGNED_SHORT))
     ) {
@@ -1560,7 +1562,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       model._openGLRenderWindow.getDefaultTextureByteSize(
         dataTypeToUse,
         model.oglNorm16Ext,
-        model.useHalfFloat
+        publicAPI.useHalfFloat()
       );
 
     publicAPI.deactivate();
@@ -1848,8 +1850,8 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   // set use half float
-  publicAPI.setUseHalfFloat = (use) => {
-    model.useHalfFloat = use;
+  publicAPI.enableUseHalfFloat = (use) => {
+    model.enableUseHalfFloat = use;
   };
 }
 
@@ -1883,13 +1885,12 @@ const DEFAULT_VALUES = {
   baseLevel: 0,
   maxLevel: 1000,
   generateMipmap: false,
-  // use half float by default, but it will get set
-  // to false if the context does not support it or
-  // the voxel intensity range is out of the accurate
-  // range of half float
-  useHalfFloat: true,
   oglNorm16Ext: null,
   allocatedGPUMemoryInBytes: 0,
+  // by default it is enabled
+  enableUseHalfFloat: true,
+  // but by default we don't know if we can use half float base on the data range
+  canUseHalfFloat: false,
 };
 
 // ----------------------------------------------------------------------------
