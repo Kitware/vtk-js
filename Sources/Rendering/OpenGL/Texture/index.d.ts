@@ -176,6 +176,23 @@ export interface vtkOpenGLTexture extends vtkViewNode {
   getOpenGLWrapMode(vtktype: Wrap): any;
 
   /**
+   * Updates the data array to match the required data type for OpenGL.
+   *
+   * This function takes the input data and converts it to the appropriate
+   * format required by the OpenGL texture, based on the specified data type.
+   *
+   * @param {string} dataType - The original data type of the input data.
+   * @param {Array} data - The input data array that needs to be updated.
+   * @param {boolean} [depth=false] - Indicates whether the data is a 3D array.
+   * @returns {Array} The updated data array that matches the OpenGL data type.
+   */
+  updateArrayDataTypeForGL(
+    dataType: VtkDataTypes,
+    data: any,
+    depth?: boolean
+  ): void;
+
+  /**
    * Creates a 2D texture from raw data.
    * @param width The width of the texture.
    * @param height The height of the texture.
@@ -323,6 +340,15 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @returns {number} The maximum texture size.
    */
   getMaximumTextureSize(ctx: any): number;
+
+  /**
+   * Public API to disable half float usage.
+   * Half float is automatically enabled when creating the texture,
+   * but users may want to disable it in certain cases
+   * (e.g., streaming data where the full range is not yet available).
+   * @param useHalfFloat - whether to use half float
+   */
+  enableUseHalfFloat(useHalfFloat: boolean): void;
 }
 
 /**
