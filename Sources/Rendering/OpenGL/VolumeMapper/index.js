@@ -5,7 +5,6 @@ import { vec3, mat3, mat4 } from 'gl-matrix';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
 import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/ReplacementShaderMapper';
@@ -1490,14 +1489,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     publicAPI.renderPieceStart(ren, actor);
     publicAPI.renderPieceDraw(ren, actor);
     publicAPI.renderPieceFinish(ren, actor);
-  };
-
-  publicAPI.computeBounds = (ren, actor) => {
-    if (!publicAPI.getInput()) {
-      vtkMath.uninitializeBounds(model.Bounds);
-      return;
-    }
-    model.bounds = publicAPI.getInput().getBounds();
   };
 
   publicAPI.updateBufferObjects = (ren, actor) => {
