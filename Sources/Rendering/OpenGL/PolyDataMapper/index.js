@@ -1748,14 +1748,6 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     publicAPI.renderPieceFinish(ren, actor);
   };
 
-  publicAPI.computeBounds = (ren, actor) => {
-    if (!publicAPI.getInput()) {
-      vtkMath.uninitializeBounds(model.bounds);
-      return;
-    }
-    model.bounds = publicAPI.getInput().getBounds();
-  };
-
   publicAPI.updateBufferObjects = (ren, actor) => {
     // Rebuild buffers if needed
     if (publicAPI.getNeedToRebuildBufferObjects(ren, actor)) {
