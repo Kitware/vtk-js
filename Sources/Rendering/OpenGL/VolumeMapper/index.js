@@ -1482,7 +1482,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     publicAPI.invokeEvent({ type: 'EndEvent' });
 
     if (!model.currentInput) {
-      vtkErrorMacro('No input!');
       return;
     }
 
