@@ -35,17 +35,6 @@ export interface vtkVolume extends vtkProp3D {
   getProperty(): vtkVolumeProperty;
 
   /**
-   * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-   * @return {Bounds} The bounds for the mapper.
-   */
-  getBounds(): Bounds;
-
-  /**
-   * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
-   */
-  getBoundsByReference(): Bounds;
-
-  /**
    * Get the `Modified Time` which is a monotonic increasing integer
    * global for all vtkObjects.
    *
