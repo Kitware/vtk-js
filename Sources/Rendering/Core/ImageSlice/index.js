@@ -4,8 +4,6 @@ import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkProp3D from 'vtk.js/Sources/Rendering/Core/Prop3D';
 import vtkImageProperty from 'vtk.js/Sources/Rendering/Core/ImageProperty';
 
-const { vtkDebugMacro } = macro;
-
 // ----------------------------------------------------------------------------
 // vtkImageSlice methods
 // ----------------------------------------------------------------------------
@@ -52,51 +50,6 @@ function vtkImageSlice(publicAPI, model) {
       model.property = publicAPI.makeProperty();
     }
     return model.property;
-  };
-
-  publicAPI.getBounds = () => {
-    if (model.mapper === null) {
-      return model.bounds;
-    }
-
-    // Check for the special case when the mapper's bounds are unknown
-    const bds = model.mapper.getBounds();
-    if (!bds || bds.length !== 6) {
-      return bds;
-    }
-
-    // Check for the special case when the actor is empty.
-    if (bds[0] > bds[1]) {
-      // No need to copy bds, a new array is created when calling getBounds()
-      model.mapperBounds = bds;
-      model.bounds = [1, -1, 1, -1, 1, -1];
-      model.boundsMTime.modified();
-      return bds;
-    }
-
-    // Check if we have cached values for these bounds - we cache the
-    // values returned by model.mapper.getBounds() and we store the time
-    // of caching. If the values returned this time are different, or
-    // the modified time of this class is newer than the cached time,
-    // then we need to rebuild.
-    if (
-      !model.mapperBounds ||
-      !bds.every((_, i) => bds[i] === model.mapperBounds[i]) ||
-      publicAPI.getMTime() > model.boundsMTime.getMTime()
-    ) {
-      vtkDebugMacro('Recomputing bounds...');
-      // No need to copy bds, a new array is created when calling getBounds()
-      model.mapperBounds = bds;
-
-      // Compute actor bounds from matrix and mapper bounds
-      publicAPI.computeMatrix();
-      const transposedMatrix = new Float64Array(16);
-      mat4.transpose(transposedMatrix, model.matrix);
-      vtkBoundingBox.transformBounds(bds, transposedMatrix, model.bounds);
-
-      model.boundsMTime.modified();
-    }
-    return model.bounds;
   };
 
   publicAPI.getBoundsForSlice = (slice, thickness) => {
@@ -177,8 +130,6 @@ function vtkImageSlice(publicAPI, model) {
 const DEFAULT_VALUES = {
   mapper: null,
   property: null,
-
-  bounds: [...vtkBoundingBox.INIT_BOUNDS],
 };
 
 // ----------------------------------------------------------------------------
@@ -196,7 +147,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.set(publicAPI, model, ['property']);
   macro.setGet(publicAPI, model, ['mapper']);
-  macro.getArray(publicAPI, model, ['bounds'], 6);
 
   // Object methods
   vtkImageSlice(publicAPI, model);
