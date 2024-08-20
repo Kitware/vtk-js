@@ -1,4 +1,4 @@
-import { vec3, mat4 } from 'gl-matrix';
+import { mat4 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macros';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkProp3D from 'vtk.js/Sources/Rendering/Core/Prop3D';
@@ -38,7 +38,8 @@ function vtkVolume(publicAPI, model) {
 
     // Check for the special case when the actor is empty.
     if (bds[0] > bds[1]) {
-      model.mapperBounds = bds.concat(); // copy the mapper's bounds
+      // No need to copy bds, a new array is created when calling getBounds()
+      model.mapperBounds = bds;
       model.bounds = [1, -1, 1, -1, 1, -1];
       model.boundsMTime.modified();
       return bds;
@@ -49,33 +50,21 @@ function vtkVolume(publicAPI, model) {
     // of caching. If the values returned this time are different, or
     // the modified time of this class is newer than the cached time,
     // then we need to rebuild.
-    const zip = (rows) => rows[0].map((_, c) => rows.map((row) => row[c]));
     if (
       !model.mapperBounds ||
-      !zip([bds, model.mapperBounds]).reduce(
-        (a, b) => a && b[0] === b[1],
-        true
-      ) ||
+      !bds.every((_, i) => bds[i] === model.mapperBounds[i]) ||
       publicAPI.getMTime() > model.boundsMTime.getMTime()
     ) {
       vtkDebugMacro('Recomputing bounds...');
-      model.mapperBounds = bds.map((x) => x);
-      const bbox = [];
-      vtkBoundingBox.getCorners(bds, bbox);
-      publicAPI.computeMatrix();
-      const tmp4 = new Float64Array(16);
-      mat4.transpose(tmp4, model.matrix);
-      bbox.forEach((pt) => vec3.transformMat4(pt, pt, tmp4));
+      // No need to copy bds, a new array is created when calling getBounds()
+      model.mapperBounds = bds;
 
-      /* eslint-disable no-multi-assign */
-      model.bounds[0] = model.bounds[2] = model.bounds[4] = Number.MAX_VALUE;
-      model.bounds[1] = model.bounds[3] = model.bounds[5] = -Number.MAX_VALUE;
-      /* eslint-enable no-multi-assign */
-      model.bounds = model.bounds.map((d, i) =>
-        i % 2 === 0
-          ? bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d)
-          : bbox.reduce((a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a), d)
-      );
+      // Compute actor bounds from matrix and mapper bounds
+      publicAPI.computeMatrix();
+      const transposedMatrix = new Float64Array(16);
+      mat4.transpose(transposedMatrix, model.matrix);
+      vtkBoundingBox.transformBounds(bds, transposedMatrix, model.bounds);
+
       model.boundsMTime.modified();
     }
     return model.bounds;

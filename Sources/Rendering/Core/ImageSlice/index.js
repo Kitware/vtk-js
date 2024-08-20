@@ -67,7 +67,8 @@ function vtkImageSlice(publicAPI, model) {
 
     // Check for the special case when the actor is empty.
     if (bds[0] > bds[1]) {
-      model.mapperBounds = bds.concat(); // copy the mapper's bounds
+      // No need to copy bds, a new array is created when calling getBounds()
+      model.mapperBounds = bds;
       model.bounds = [1, -1, 1, -1, 1, -1];
       model.boundsMTime.modified();
       return bds;
@@ -78,23 +79,21 @@ function vtkImageSlice(publicAPI, model) {
     // of caching. If the values returned this time are different, or
     // the modified time of this class is newer than the cached time,
     // then we need to rebuild.
-    const zip = (rows) => rows[0].map((_, c) => rows.map((row) => row[c]));
     if (
       !model.mapperBounds ||
-      !zip([bds, model.mapperBounds]).reduce(
-        (a, b) => a && b[0] === b[1],
-        true
-      ) ||
+      !bds.every((_, i) => bds[i] === model.mapperBounds[i]) ||
       publicAPI.getMTime() > model.boundsMTime.getMTime()
     ) {
       vtkDebugMacro('Recomputing bounds...');
-      model.mapperBounds = bds.map((x) => x);
+      // No need to copy bds, a new array is created when calling getBounds()
+      model.mapperBounds = bds;
 
+      // Compute actor bounds from matrix and mapper bounds
       publicAPI.computeMatrix();
-      const tmp4 = new Float64Array(16);
-      mat4.transpose(tmp4, model.matrix);
+      const transposedMatrix = new Float64Array(16);
+      mat4.transpose(transposedMatrix, model.matrix);
+      vtkBoundingBox.transformBounds(bds, transposedMatrix, model.bounds);
 
-      vtkBoundingBox.transformBounds(bds, tmp4, model.bounds);
       model.boundsMTime.modified();
     }
     return model.bounds;
