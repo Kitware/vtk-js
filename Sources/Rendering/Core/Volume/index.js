@@ -10,23 +10,33 @@ function vtkVolume(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkVolume');
 
-  publicAPI.getVolumes = () => publicAPI;
+  publicAPI.getVolumes = () => [publicAPI];
 
   publicAPI.makeProperty = vtkVolumeProperty.newInstance;
 
-  publicAPI.getProperty = () => {
-    if (model.property === null) {
-      model.property = publicAPI.makeProperty();
+  publicAPI.getProperty = (mapperInputPort = 0) => {
+    if (model.properties[mapperInputPort] == null) {
+      model.properties[mapperInputPort] = publicAPI.makeProperty();
     }
-    return model.property;
+    return model.properties[mapperInputPort];
+  };
+
+  publicAPI.setProperty = (property, mapperInputPort = 0) => {
+    if (model.properties[mapperInputPort] === property) {
+      return false;
+    }
+    model.properties[mapperInputPort] = property;
+    return true;
   };
 
   publicAPI.getMTime = () => {
     let mt = model.mtime;
-    if (model.property !== null) {
-      const time = model.property.getMTime();
-      mt = time > mt ? time : mt;
-    }
+    model.properties.forEach((property) => {
+      if (property !== null) {
+        const time = property.getMTime();
+        mt = time > mt ? time : mt;
+      }
+    });
     return mt;
   };
 
@@ -52,7 +62,7 @@ function vtkVolume(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   mapper: null,
-  property: null,
+  properties: [],
 };
 
 // ----------------------------------------------------------------------------
@@ -68,8 +78,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(model.boundsMTime);
 
   // Build VTK API
-  macro.set(publicAPI, model, ['property']);
-  macro.setGet(publicAPI, model, ['mapper']);
+  macro.setGet(publicAPI, model, ['mapper', 'properties']);
 
   // Object methods
   vtkVolume(publicAPI, model);
