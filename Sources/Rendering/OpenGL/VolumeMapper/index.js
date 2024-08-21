@@ -123,6 +123,24 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLVolumeMapper');
 
+  function useIndependentComponents(actorProperty, image) {
+    const iComps = actorProperty.getIndependentComponents();
+    const numComp = image
+      ?.getPointData()
+      ?.getScalars()
+      ?.getNumberOfComponents();
+    const colorMixPreset = actorProperty.getColorMixPreset();
+    return (iComps && numComp >= 2) || !!colorMixPreset;
+  }
+
+  function isLabelmapOutlineRequired(actorProperty) {
+    return (
+      actorProperty.getUseLabelOutline() ||
+      model.renderable.getBlendMode() ===
+        BlendMode.LABELMAP_EDGE_PROJECTION_BLEND
+    );
+  }
+
   function unregisterGraphicsResources(renderWindow) {
     [
       model._scalars,
@@ -190,17 +208,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     shaders.Geometry = '';
   };
 
-  publicAPI.useIndependentComponents = (actorProperty) => {
-    const iComps = actorProperty.getIndependentComponents();
-    const image = model.currentInput;
-    const numComp = image
-      ?.getPointData()
-      ?.getScalars()
-      ?.getNumberOfComponents();
-    const colorMixPreset = actorProperty.getColorMixPreset();
-    return (iComps && numComp >= 2) || !!colorMixPreset;
-  };
-
   publicAPI.replaceShaderValues = (shaders, ren, actor) => {
     const actorProps = actor.getProperty();
     let FSSource = shaders.Fragment;
@@ -215,7 +222,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       ).result;
     }
 
-    const vtkImageLabelOutline = publicAPI.isLabelmapOutlineRequired(actor);
+    const vtkImageLabelOutline = isLabelmapOutlineRequired(actorProps);
     if (vtkImageLabelOutline === true) {
       FSSource = vtkShaderProgram.substitute(
         FSSource,
@@ -243,7 +250,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       `#define vtkNumComponents ${numComp}`
     ).result;
 
-    const useIndependentComps = publicAPI.useIndependentComponents(actorProps);
+    const useIndependentComps = useIndependentComponents(
+      actorProps,
+      model.currentInput
+    );
     if (useIndependentComps) {
       FSSource = vtkShaderProgram.substitute(
         FSSource,
@@ -907,7 +917,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformf(`vPlaneDistance${i}`, dist);
     }
 
-    if (publicAPI.isLabelmapOutlineRequired(actor)) {
+    const vprop = actor.getProperty();
+    if (isLabelmapOutlineRequired(vprop)) {
       const image = model.currentInput;
       const worldToIndex = image.getWorldToIndex();
 
@@ -1017,7 +1028,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformfv('lightExponent', lightExponent);
       program.setUniformiv('lightPositional', lightPositional);
     }
-    const vprop = actor.getProperty();
     if (vprop.getVolumetricScatteringBlending() > 0.0) {
       program.setUniformf('giReach', vprop.getGlobalIlluminationReach());
       program.setUniformf(
@@ -1060,7 +1070,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     // set the component mix when independent
     const numComp = model.scalarTexture.getComponents();
-    const useIndependentComps = publicAPI.useIndependentComponents(vprop);
+    const useIndependentComps = useIndependentComponents(
+      vprop,
+      model.currentInput
+    );
     if (useIndependentComps) {
       for (let i = 0; i < numComp; i++) {
         program.setUniformf(
@@ -1141,9 +1154,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
     }
 
-    const vtkImageLabelOutline = publicAPI.isLabelmapOutlineRequired(actor);
+    const vtkImageLabelOutline = isLabelmapOutlineRequired(vprop);
     if (vtkImageLabelOutline === true) {
-      const labelOutlineOpacity = actor.getProperty().getLabelOutlineOpacity();
+      const labelOutlineOpacity = vprop.getLabelOutlineOpacity();
       program.setUniformf('outlineOpacity', labelOutlineOpacity);
     }
 
@@ -1520,7 +1533,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     }
 
     const numComp = scalars.getNumberOfComponents();
-    const useIndependentComps = publicAPI.useIndependentComponents(vprop);
+    const useIndependentComps = useIndependentComponents(
+      vprop,
+      model.currentInput
+    );
     const numIComps = useIndependentComps ? numComp : 1;
 
     const scalarOpacityFunc = vprop.getScalarOpacity();
@@ -1853,16 +1869,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     } else {
       model.labelOutlineThicknessTexture = lTex.oglObject;
     }
-  };
-
-  publicAPI.isLabelmapOutlineRequired = (actor) => {
-    const prop = actor.getProperty();
-    const renderable = model.renderable;
-
-    return (
-      prop.getUseLabelOutline() ||
-      renderable.getBlendMode() === BlendMode.LABELMAP_EDGE_PROJECTION_BLEND
-    );
   };
 }
 
