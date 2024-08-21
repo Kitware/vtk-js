@@ -30,9 +30,15 @@ export interface vtkVolume extends vtkProp3D {
   getVolumes(): vtkVolume[];
 
   /**
-   * Get the volume property
+   * Get the volume property for the specified mapper input port, which defaults to 0
    */
-  getProperty(): vtkVolumeProperty;
+  getProperty(mapperInputPort = 0): vtkVolumeProperty;
+
+  /**
+   * Get the volume properties array
+   * Each element of the array corresponds to a mapper input port
+   */
+  getProperties(): vtkVolumeProperty[];
 
   /**
    * Get the `Modified Time` which is a monotonic increasing integer
@@ -65,10 +71,17 @@ export interface vtkVolume extends vtkProp3D {
   setMapper(mapper: vtkVolumeMapper): boolean;
 
   /**
-   * Set the volume property
+   * Set the volume property for the specified mapper input port, which defaults to 0
    * @param {vtkVolumeProperty} property
    */
-  setProperty(property: vtkVolumeProperty): boolean;
+  setProperty(property: vtkVolumeProperty, mapperInputPort = 0): boolean;
+
+  /**
+   * Set the volume properties array
+   * Each element of the array corresponds to a mapper input port
+   * @param {vtkVolumeProperty[]} properties
+   */
+  setProperties(properties: vtkVolumeProperty[]): boolean;
 }
 
 /**
