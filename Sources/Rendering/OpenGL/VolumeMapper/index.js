@@ -568,17 +568,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   };
 
   publicAPI.getNeedToRebuildShaders = (cellBO, ren, actor) => {
-    const actorProps = actor.getProperty();
-
     recomputeLightComplexity(actor, ren.getLights());
 
     const numComp = model.scalarTexture.getComponents();
-    const opacityModes = [];
-    const forceNearestInterps = [];
-    for (let nc = 0; nc < numComp; nc++) {
-      opacityModes.push(actorProps.getOpacityMode(nc));
-      forceNearestInterps.push(actorProps.getForceNearestInterpolation(nc));
-    }
 
     const ext = model.currentInput.getSpatialExtent();
     const spc = model.currentInput.getSpacing();
@@ -596,17 +588,15 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const hasZBufferTexture = !!model.zBufferTexture;
 
     const state = {
-      iComps: actorProps.getIndependentComponents(),
-      colorMixPreset: actorProps.getColorMixPreset(),
-      interpolationType: actorProps.getInterpolationType(),
-      useLabelOutline: publicAPI.isLabelmapOutlineRequired(actor),
       numComp,
       maxSamples,
-      useGradientOpacity: actorProps.getUseGradientOpacity(0),
       blendMode: model.renderable.getBlendMode(),
       hasZBufferTexture,
-      opacityModes,
-      forceNearestInterps,
+      // The actor MTime takes its properties into account
+      // When it changes, it means that the shaders need to be updated because either:
+      // - the actor has been updated
+      // - a different actor is used with this mapper
+      actorTime: actor.getMTime(),
     };
 
     // We need to rebuild the shader if one of these variables has changed,
@@ -1490,7 +1480,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
       model.VBOBuildTime.getMTime() < actor.getMTime() ||
       model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
-      model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
       model.VBOBuildTime.getMTime() < model.currentInput.getMTime() ||
       !model.scalarTexture?.getHandle() ||
       !model.colorTexture?.getHandle() ||
