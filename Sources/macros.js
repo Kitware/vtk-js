@@ -912,7 +912,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
         count++;
       }
     }
-    if (publicAPI.shouldUpdate() && publicAPI.requestData) {
+    if (publicAPI.requestData && publicAPI.shouldUpdate()) {
       publicAPI.requestData(ins, model.output);
     }
   };

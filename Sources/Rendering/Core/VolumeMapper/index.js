@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 import vtkAbstractMapper3D from 'vtk.js/Sources/Rendering/Core/AbstractMapper3D';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 
 const { BlendMode } = Constants;
@@ -82,20 +82,17 @@ function vtkVolumeMapper(publicAPI, model) {
   model.classHierarchy.push('vtkVolumeMapper');
 
   publicAPI.getBounds = () => {
-    const input = publicAPI.getInputData();
-    if (!input) {
-      model.bounds = vtkMath.createUninitializedBounds();
-    } else {
-      if (!model.static) {
-        publicAPI.update();
+    model.bounds = [...vtkBoundingBox.INIT_BOUNDS];
+    if (!model.static) {
+      publicAPI.update();
+    }
+    for (let inputIndex = 0; inputIndex < model.numberOfInputs; inputIndex++) {
+      const input = publicAPI.getInputData(inputIndex);
+      if (input) {
+        vtkBoundingBox.addBounds(model.bounds, input.getBounds());
       }
-      model.bounds = input.getBounds();
     }
     return model.bounds;
-  };
-
-  publicAPI.update = () => {
-    publicAPI.getInputData();
   };
 
   publicAPI.setBlendModeToComposite = () => {
@@ -144,7 +141,7 @@ function vtkVolumeMapper(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  bounds: [1, -1, 1, -1, 1, -1],
+  bounds: [...vtkBoundingBox.INIT_BOUNDS],
   sampleDistance: 1.0,
   imageSampleDistance: 1.0,
   maximumSamplesPerRay: 1000,
