@@ -94,6 +94,7 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
   const source = vtiReader.getOutputData(0);
 
   const actor = vtkVolume.newInstance();
+  const actorProperty = actor.getProperty();
   const mapper = vtkVolumeMapper.newInstance();
 
   actor.setMapper(mapper);
@@ -124,43 +125,42 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
         .reduce((a, b) => a + b, 0)
     );
   mapper.setSampleDistance(sampleDistance / 2.5);
-  mapper.setComputeNormalFromOpacity(false);
-  mapper.setGlobalIlluminationReach(0.0);
-  mapper.setVolumetricScatteringBlending(0.0);
-  mapper.setVolumeShadowSamplingDistFactor(5.0);
 
   // Add transfer function
   const lookupTable = vtkColorTransferFunction.newInstance();
   const piecewiseFunction = vtkPiecewiseFunction.newInstance();
-  actor.getProperty().setRGBTransferFunction(0, lookupTable);
-  actor.getProperty().setScalarOpacity(0, piecewiseFunction);
+  actorProperty.setRGBTransferFunction(0, lookupTable);
+  actorProperty.setScalarOpacity(0, piecewiseFunction);
 
   // Set actor properties
-  actor.getProperty().setInterpolationTypeToLinear();
-  actor
-    .getProperty()
-    .setScalarOpacityUnitDistance(
-      0,
-      vtkBoundingBox.getDiagonalLength(source.getBounds()) /
-        Math.max(...source.getDimensions())
-    );
-  actor.getProperty().setGradientOpacityMinimumValue(0, 0);
+  actorProperty.setComputeNormalFromOpacity(false);
+  actorProperty.setGlobalIlluminationReach(0.0);
+  actorProperty.setVolumeShadowSamplingDistFactor(5.0);
+  actorProperty.setVolumetricScatteringBlending(0.0);
+  actorProperty.setInterpolationTypeToLinear();
+  actorProperty.setScalarOpacityUnitDistance(
+    0,
+    vtkBoundingBox.getDiagonalLength(source.getBounds()) /
+      Math.max(...source.getDimensions())
+  );
+  actorProperty.setGradientOpacityMinimumValue(0, 0);
   const dataArray =
     source.getPointData().getScalars() || source.getPointData().getArrays()[0];
   const dataRange = dataArray.getRange();
-  actor
-    .getProperty()
-    .setGradientOpacityMaximumValue(0, (dataRange[1] - dataRange[0]) * 0.05);
-  actor.getProperty().setShade(true);
-  actor.getProperty().setUseGradientOpacity(0, false);
-  actor.getProperty().setGradientOpacityMinimumOpacity(0, 0.0);
-  actor.getProperty().setGradientOpacityMaximumOpacity(0, 1.0);
-  actor.getProperty().setAmbient(0.0);
-  actor.getProperty().setDiffuse(2.0);
-  actor.getProperty().setSpecular(0.0);
-  actor.getProperty().setSpecularPower(0.0);
-  actor.getProperty().setUseLabelOutline(false);
-  actor.getProperty().setLabelOutlineThickness(2);
+  actorProperty.setGradientOpacityMaximumValue(
+    0,
+    (dataRange[1] - dataRange[0]) * 0.05
+  );
+  actorProperty.setShade(true);
+  actorProperty.setUseGradientOpacity(0, false);
+  actorProperty.setGradientOpacityMinimumOpacity(0, 0.0);
+  actorProperty.setGradientOpacityMaximumOpacity(0, 1.0);
+  actorProperty.setAmbient(0.0);
+  actorProperty.setDiffuse(2.0);
+  actorProperty.setSpecular(0.0);
+  actorProperty.setSpecularPower(0.0);
+  actorProperty.setUseLabelOutline(false);
+  actorProperty.setLabelOutlineThickness(2);
   renderer.addActor(actor);
 
   // Control UI for sample distance, transfer function, and shadow on/off
@@ -191,22 +191,22 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
   // Add sliders to tune volume shadow effect
   function updateVSB(e) {
     const vsb = Number(e.target.value);
-    mapper.setVolumetricScatteringBlending(vsb);
+    actorProperty.setVolumetricScatteringBlending(vsb);
     renderWindow.render();
   }
   function updateGlobalReach(e) {
     const gir = Number(e.target.value);
-    mapper.setGlobalIlluminationReach(gir);
+    actorProperty.setGlobalIlluminationReach(gir);
     renderWindow.render();
   }
   function updateSD(e) {
     const sd = Number(e.target.value);
-    mapper.setVolumeShadowSamplingDistFactor(sd);
+    actorProperty.setVolumeShadowSamplingDistFactor(sd);
     renderWindow.render();
   }
   function updateAT(e) {
     const at = Number(e.target.value);
-    mapper.setAnisotropy(at);
+    actorProperty.setAnisotropy(at);
     renderWindow.render();
   }
   const el = document.querySelector('.volumeBlending');
@@ -235,7 +235,7 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
   const buttonID = document.querySelector('.text2');
   function toggleDensityNormal() {
     isDensity = !isDensity;
-    mapper.setComputeNormalFromOpacity(isDensity);
+    actorProperty.setComputeNormalFromOpacity(isDensity);
     buttonID.innerText = `(${isDensity ? 'on' : 'off'})`;
     renderWindow.render();
   }

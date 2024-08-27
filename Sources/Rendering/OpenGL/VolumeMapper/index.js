@@ -325,14 +325,14 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     // set shadow blending flag
     if (model.lightComplexity > 0) {
-      if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
+      if (actorProps.getVolumetricScatteringBlending() > 0.0) {
         FSSource = vtkShaderProgram.substitute(
           FSSource,
           '//VTK::VolumeShadowOn',
           `#define VolumeShadowOn`
         ).result;
       }
-      if (model.renderable.getVolumetricScatteringBlending() < 1.0) {
+      if (actorProps.getVolumetricScatteringBlending() < 1.0) {
         FSSource = vtkShaderProgram.substitute(
           FSSource,
           '//VTK::SurfaceShadowOn',
@@ -340,7 +340,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         ).result;
       }
       if (
-        model.renderable.getLocalAmbientOcclusion() &&
+        actorProps.getLocalAmbientOcclusion() &&
         actorProps.getAmbient() > 0.0
       ) {
         FSSource = vtkShaderProgram.substitute(
@@ -366,7 +366,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     }
 
     // set normal from density
-    if (model.renderable.getComputeNormalFromOpacity()) {
+    if (actorProps.getComputeNormalFromOpacity()) {
       FSSource = vtkShaderProgram.substitute(
         FSSource,
         '//VTK::vtkComputeNormalFromOpacity',
@@ -411,6 +411,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (model.lightComplexity === 0) {
       return;
     }
+    const vprop = actor.getProperty();
     let FSSource = shaders.Fragment;
     // check for shadow maps - not implemented yet, skip
     // const shadowFactor = '';
@@ -453,7 +454,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       ).result;
     }
 
-    if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
+    if (vprop.getVolumetricScatteringBlending() > 0.0) {
       FSSource = vtkShaderProgram.substitute(
         FSSource,
         '//VTK::VolumeShadow::Dec',
@@ -467,16 +468,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         false
       ).result;
     }
-    if (
-      model.renderable.getLocalAmbientOcclusion() &&
-      actor.getProperty().getAmbient() > 0.0
-    ) {
+    if (vprop.getLocalAmbientOcclusion() && vprop.getAmbient() > 0.0) {
       FSSource = vtkShaderProgram.substitute(
         FSSource,
         '//VTK::LAO::Dec',
         [
           `uniform int kernelRadius;`,
-          `uniform vec2 kernelSample[${model.renderable.getLAOKernelRadius()}];`,
+          `uniform vec2 kernelSample[${vprop.getLAOKernelRadius()}];`,
           `uniform int kernelSize;`,
         ],
         false
@@ -703,7 +701,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     );
 
     const volInfo = model.scalarTexture.getVolumeInfo();
-    const ipScalarRange = model.renderable.getIpScalarRange();
+    const ipScalarRange = actor.getProperty().getIpScalarRange();
 
     // In some situations, we might not have computed the scale and offset
     // for the data range, or it might not be needed.
@@ -1029,30 +1027,22 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformfv('lightExponent', lightExponent);
       program.setUniformiv('lightPositional', lightPositional);
     }
-    if (model.renderable.getVolumetricScatteringBlending() > 0.0) {
-      program.setUniformf(
-        'giReach',
-        model.renderable.getGlobalIlluminationReach()
-      );
+    const vprop = actor.getProperty();
+    if (vprop.getVolumetricScatteringBlending() > 0.0) {
+      program.setUniformf('giReach', vprop.getGlobalIlluminationReach());
       program.setUniformf(
         'volumetricScatteringBlending',
-        model.renderable.getVolumetricScatteringBlending()
+        vprop.getVolumetricScatteringBlending()
       );
       program.setUniformf(
         'volumeShadowSamplingDistFactor',
-        model.renderable.getVolumeShadowSamplingDistFactor()
+        vprop.getVolumeShadowSamplingDistFactor()
       );
-      program.setUniformf('anisotropy', model.renderable.getAnisotropy());
-      program.setUniformf(
-        'anisotropy2',
-        model.renderable.getAnisotropy() ** 2.0
-      );
+      program.setUniformf('anisotropy', vprop.getAnisotropy());
+      program.setUniformf('anisotropy2', vprop.getAnisotropy() ** 2.0);
     }
-    if (
-      model.renderable.getLocalAmbientOcclusion() &&
-      actor.getProperty().getAmbient() > 0.0
-    ) {
-      const ks = model.renderable.getLAOKernelSize();
+    if (vprop.getLocalAmbientOcclusion() && vprop.getAmbient() > 0.0) {
+      const ks = vprop.getLAOKernelSize();
       program.setUniformi('kernelSize', ks);
       const kernelSample = [];
       for (let i = 0; i < ks; i++) {
@@ -1060,10 +1050,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         kernelSample[i * 2 + 1] = Math.random() * 0.5;
       }
       program.setUniform2fv('kernelSample', kernelSample);
-      program.setUniformi(
-        'kernelRadius',
-        model.renderable.getLAOKernelRadius()
-      );
+      program.setUniformi('kernelRadius', vprop.getLAOKernelRadius());
     }
   };
 
@@ -1718,7 +1705,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         dims[1],
         dims[2],
         scalars,
-        model.renderable.getPreferSizeOverAccuracy()
+        vprop.getPreferSizeOverAccuracy()
       );
       if (scalars) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
