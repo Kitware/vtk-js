@@ -723,10 +723,10 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
 
       // handle filteringMode
       const tScale = model.textureViews[vidx + 4].getTexture().getScale();
-      const ipScalarRange = volMapr.getIpScalarRange();
+      const ipScalarRange = actor.getProperty().getIpScalarRange();
       ipScalarRangeArray[vidx * 4] = ipScalarRange[0] / tScale;
       ipScalarRangeArray[vidx * 4 + 1] = ipScalarRange[1] / tScale;
-      ipScalarRangeArray[vidx * 4 + 2] = volMapr.getFilterMode();
+      ipScalarRangeArray[vidx * 4 + 2] = actor.getProperty().getFilterMode();
     }
     model.SSBO.addEntry('SCTCMatrix', 'mat4x4<f32>');
     model.SSBO.addEntry('planeNormals', 'mat4x4<f32>');

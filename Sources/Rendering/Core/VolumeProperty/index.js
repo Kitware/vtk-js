@@ -1,9 +1,10 @@
 import macro from 'vtk.js/Sources/macros';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import Constants from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 
-const { InterpolationType, OpacityMode } = Constants;
+const { InterpolationType, OpacityMode, FilterMode } = Constants;
 const { vtkErrorMacro } = macro;
 
 const VTK_MAX_VRCOMP = 4;
@@ -15,6 +16,8 @@ const VTK_MAX_VRCOMP = 4;
 function vtkVolumeProperty(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkVolumeProperty');
+
+  const superClass = { ...publicAPI };
 
   publicAPI.getMTime = () => {
     let mTime = model.mtime;
@@ -239,6 +242,46 @@ function vtkVolumeProperty(publicAPI, model) {
     const cap = macro.capitalize(val);
     publicAPI[`get${cap}`] = (index) => model.componentData[index][`${val}`];
   });
+
+  publicAPI.setAverageIPScalarRange = (min, max) => {
+    console.warn('setAverageIPScalarRange is deprecated use setIpScalarRange');
+    publicAPI.setIpScalarRange(min, max);
+  };
+
+  publicAPI.getFilterModeAsString = () =>
+    macro.enumToString(FilterMode, model.filterMode);
+
+  publicAPI.setFilterModeToOff = () => {
+    publicAPI.setFilterMode(FilterMode.OFF);
+  };
+
+  publicAPI.setFilterModeToNormalized = () => {
+    publicAPI.setFilterMode(FilterMode.NORMALIZED);
+  };
+
+  publicAPI.setFilterModeToRaw = () => {
+    publicAPI.setFilterMode(FilterMode.RAW);
+  };
+
+  publicAPI.setGlobalIlluminationReach = (gl) =>
+    superClass.setGlobalIlluminationReach(vtkMath.clampValue(gl, 0.0, 1.0));
+
+  publicAPI.setVolumetricScatteringBlending = (vsb) =>
+    superClass.setVolumetricScatteringBlending(
+      vtkMath.clampValue(vsb, 0.0, 1.0)
+    );
+
+  publicAPI.setVolumeShadowSamplingDistFactor = (vsdf) =>
+    superClass.setVolumeShadowSamplingDistFactor(vsdf >= 1.0 ? vsdf : 1.0);
+
+  publicAPI.setAnisotropy = (at) =>
+    superClass.setAnisotropy(vtkMath.clampValue(at, -0.99, 0.99));
+
+  publicAPI.setLAOKernelSize = (ks) =>
+    superClass.setLAOKernelSize(vtkMath.floor(vtkMath.clampValue(ks, 1, 32)));
+
+  publicAPI.setLAOKernelRadius = (kr) =>
+    superClass.setLAOKernelRadius(kr >= 1 ? kr : 1);
 }
 
 // ----------------------------------------------------------------------------
@@ -257,6 +300,21 @@ const DEFAULT_VALUES = {
   useLabelOutline: false,
   labelOutlineThickness: [1],
   labelOutlineOpacity: 1.0,
+
+  // Properties moved from volume mapper
+  ipScalarRange: [-1000000.0, 1000000.0],
+  filterMode: FilterMode.OFF, // ignored by WebGL so no behavior change
+  preferSizeOverAccuracy: false, // Whether to use halfFloat representation of float, when it is inaccurate
+  computeNormalFromOpacity: false,
+  // volume shadow parameters
+  volumetricScatteringBlending: 0.0,
+  globalIlluminationReach: 0.0,
+  volumeShadowSamplingDistFactor: 5.0,
+  anisotropy: 0.0,
+  // local ambient occlusion
+  localAmbientOcclusion: false,
+  LAOKernelSize: 15,
+  LAOKernelRadius: 7,
 };
 
 // ----------------------------------------------------------------------------
@@ -301,7 +359,21 @@ export function extend(publicAPI, model, initialValues = {}) {
     'specularPower',
     'useLabelOutline',
     'labelOutlineOpacity',
+    // Properties moved from volume mapper
+    'filterMode',
+    'preferSizeOverAccuracy',
+    'computeNormalFromOpacity',
+    'volumetricScatteringBlending',
+    'globalIlluminationReach',
+    'volumeShadowSamplingDistFactor',
+    'anisotropy',
+    'localAmbientOcclusion',
+    'LAOKernelSize',
+    'LAOKernelRadius',
   ]);
+
+  // Property moved from volume mapper
+  macro.setGetArray(publicAPI, model, ['ipScalarRange'], 2);
 
   macro.setGetArray(publicAPI, model, ['labelOutlineThickness']);
 
