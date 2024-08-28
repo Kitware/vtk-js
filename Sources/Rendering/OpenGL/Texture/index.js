@@ -408,7 +408,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     return result;
   };
 
-  publicAPI.useHalfFloat = () => model.enableHalfFloat && model.canUseHalfFloat;
+  publicAPI.useHalfFloat = () => model.canUseHalfFloat;
 
   //----------------------------------------------------------------------------
   publicAPI.setInternalFormat = (iFormat) => {
@@ -1284,21 +1284,28 @@ function vtkOpenGLTexture(publicAPI, model) {
   function setCanUseHalfFloat(dataType, offset, scale, preferSizeOverAccuracy) {
     publicAPI.getOpenGLDataType(dataType);
 
+    // Don't consider halfFloat and convert back to Float when the range of data does not generate an accurate halfFloat
+    // AND it is not preferable to have a smaller texture than an exact texture.
+    const isExactHalfFloat =
+      hasExactHalfFloat(offset, scale) || preferSizeOverAccuracy;
+
     let useHalfFloat = false;
     if (model._openGLRenderWindow.getWebgl2()) {
-      useHalfFloat = model.openGLDataType === model.context.HALF_FLOAT;
+      // If OES_texture_float_linear is not available, and using a half float would still be exact, force half floats
+      // This is because half floats are always texture filterable in webgl2, while full *32F floats are not (unless the extension is present)
+      const forceHalfFloat =
+        model.openGLDataType === model.context.FLOAT &&
+        model.context.getExtension('OES_texture_float_linear') === null &&
+        isExactHalfFloat;
+      useHalfFloat =
+        forceHalfFloat || model.openGLDataType === model.context.HALF_FLOAT;
     } else {
       const halfFloatExt = model.context.getExtension('OES_texture_half_float');
       useHalfFloat =
         halfFloatExt && model.openGLDataType === halfFloatExt.HALF_FLOAT_OES;
     }
 
-    // Don't consider halfFloat and convert back to Float when the range of data does not generate an accurate halfFloat
-    // AND it is not preferable to have a smaller texture than an exact texture.
-    const isHalfFloat =
-      useHalfFloat &&
-      (hasExactHalfFloat(offset, scale) || preferSizeOverAccuracy);
-    model.canUseHalfFloat = isHalfFloat;
+    model.canUseHalfFloat = useHalfFloat && isExactHalfFloat;
   }
 
   function processDataArray(dataArray, preferSizeOverAccuracy) {
