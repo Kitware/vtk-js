@@ -408,7 +408,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     return result;
   };
 
-  publicAPI.useHalfFloat = () => model.canUseHalfFloat;
+  publicAPI.useHalfFloat = () =>
+    model.enableUseHalfFloat && model.canUseHalfFloat;
 
   //----------------------------------------------------------------------------
   publicAPI.setInternalFormat = (iFormat) => {
