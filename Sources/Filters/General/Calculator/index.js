@@ -47,7 +47,7 @@ function vtkCalculator(publicAPI, model) {
   ) => ({
     getArrays: (inData) => ({
       // don't augment input data array in case of structured input dataset
-      input: inData[0].isA('vtkImageData')
+      input: inData[0]?.isA('vtkImageData')
         ? arrNames.map((x) => ({ location: locn, name: x }))
         : publicAPI.augmentInputArrays(
             locn,
