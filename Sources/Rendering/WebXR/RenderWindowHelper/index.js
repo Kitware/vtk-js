@@ -1,8 +1,8 @@
 import macro from 'vtk.js/Sources/macros';
 import Constants from 'vtk.js/Sources/Rendering/WebXR/RenderWindowHelper/Constants';
-import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
-import vtkLineSource from '@kitware/vtk.js/Filters/Sources/LineSource';
-import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkLineSource from 'vtk.js/Sources/Filters/Sources/LineSource';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import { GET_UNDERLYING_CONTEXT } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/ContextProxy';
 import { vec3 } from 'gl-matrix';
 
@@ -397,4 +397,5 @@ export const newInstance = macro.newInstance(
 export default {
   newInstance,
   extend,
+  ...Constants,
 };
