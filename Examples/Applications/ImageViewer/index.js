@@ -146,18 +146,29 @@ function createUI(renderWindow, interactorStyle, imageSlice) {
   windowLevel.appendChild(levelLabel);
   windowLevel.appendChild(levelSelector);
 
+  function updateWindowLevel() {
+    const cw = Number(windowSelector.value);
+    const cl = Number(levelSelector.value);
+    imageSlice.getProperty().setColorWindow(cw);
+    imageSlice.getProperty().setColorLevel(cl);
+    const minRange = cl - cw * 0.5;
+    const maxRange = cl + cw * 0.5;
+    lookupTable.setMappingRange(minRange, maxRange);
+    lookupTable.updateRange();
+    renderWindow.getInteractor().render();
+  }
   function updateWindowLevelSelectors() {
-    windowSelector.value = imageSlice.getProperty().getColorWindow();
-    levelSelector.value = imageSlice.getProperty().getColorLevel();
+    windowSelector.value = Number(
+      imageSlice.getProperty().getColorWindow()
+    ).toFixed(0);
+    levelSelector.value = Number(
+      imageSlice.getProperty().getColorLevel()
+    ).toFixed(0);
+    updateWindowLevel();
   }
   updateWindowLevelSelectors();
   interactorStyle.onInteractionEvent(updateWindowLevelSelectors);
 
-  function updateWindowLevel() {
-    imageSlice.getProperty().setColorWindow(Number(windowSelector.value));
-    imageSlice.getProperty().setColorLevel(Number(levelSelector.value));
-    renderWindow.getInteractor().render();
-  }
   windowSelector.addEventListener('input', updateWindowLevel);
   levelSelector.addEventListener('input', updateWindowLevel);
 
