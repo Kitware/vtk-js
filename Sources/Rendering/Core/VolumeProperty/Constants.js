@@ -10,19 +10,10 @@ export const OpacityMode = {
 };
 
 export const ColorMixPreset = {
-  CUSTOM: 0,
+  DEFAULT: 0,
   ADDITIVE: 1,
   COLORIZE: 2,
-};
-
-export const BlendMode = {
-  COMPOSITE_BLEND: 0,
-  MAXIMUM_INTENSITY_BLEND: 1,
-  MINIMUM_INTENSITY_BLEND: 2,
-  AVERAGE_INTENSITY_BLEND: 3,
-  ADDITIVE_INTENSITY_BLEND: 4,
-  RADON_TRANSFORM_BLEND: 5,
-  LABELMAP_EDGE_PROJECTION_BLEND: 6,
+  CUSTOM: 3,
 };
 
 export const FilterMode = {
@@ -35,6 +26,5 @@ export default {
   InterpolationType,
   OpacityMode,
   ColorMixPreset,
-  BlendMode,
   FilterMode,
 };

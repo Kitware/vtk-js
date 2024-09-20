@@ -4,7 +4,8 @@ import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransfe
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import Constants from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 
-const { InterpolationType, OpacityMode, FilterMode } = Constants;
+const { InterpolationType, OpacityMode, FilterMode, ColorMixPreset } =
+  Constants;
 const { vtkErrorMacro } = macro;
 
 const VTK_MAX_VRCOMP = 4;
@@ -271,9 +272,6 @@ function vtkVolumeProperty(publicAPI, model) {
       vtkMath.clampValue(vsb, 0.0, 1.0)
     );
 
-  publicAPI.setVolumeShadowSamplingDistFactor = (vsdf) =>
-    superClass.setVolumeShadowSamplingDistFactor(vsdf >= 1.0 ? vsdf : 1.0);
-
   publicAPI.setAnisotropy = (at) =>
     superClass.setAnisotropy(vtkMath.clampValue(at, -0.99, 0.99));
 
@@ -289,7 +287,7 @@ function vtkVolumeProperty(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  colorMixPreset: null,
+  colorMixPreset: ColorMixPreset.DEFAULT,
   independentComponents: true,
   interpolationType: InterpolationType.FAST_LINEAR,
   shade: false,
@@ -309,7 +307,6 @@ const DEFAULT_VALUES = {
   // volume shadow parameters
   volumetricScatteringBlending: 0.0,
   globalIlluminationReach: 0.0,
-  volumeShadowSamplingDistFactor: 5.0,
   anisotropy: 0.0,
   // local ambient occlusion
   localAmbientOcclusion: false,
@@ -365,7 +362,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'computeNormalFromOpacity',
     'volumetricScatteringBlending',
     'globalIlluminationReach',
-    'volumeShadowSamplingDistFactor',
     'anisotropy',
     'localAmbientOcclusion',
     'LAOKernelSize',

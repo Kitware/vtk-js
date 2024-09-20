@@ -1,13 +1,11 @@
-// Don't use the constants from this file
+export const BlendMode = {
+  COMPOSITE_BLEND: 0,
+  MAXIMUM_INTENSITY_BLEND: 1,
+  MINIMUM_INTENSITY_BLEND: 2,
+  AVERAGE_INTENSITY_BLEND: 3,
+  ADDITIVE_INTENSITY_BLEND: 4,
+  RADON_TRANSFORM_BLEND: 5,
+  LABELMAP_EDGE_PROJECTION_BLEND: 6,
+};
 
-// Prefer constants from volume property:
-import Constants, {
-  BlendMode as OriginalBlendMode,
-  FilterMode as OriginalFilterMode,
-} from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
-
-export const BlendMode = OriginalBlendMode;
-
-export const FilterMode = OriginalFilterMode;
-
-export default Constants;
+export default { BlendMode };

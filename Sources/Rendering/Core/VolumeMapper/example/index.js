@@ -145,14 +145,6 @@ if (light.getPositional()) {
   renderer.addActor(lca);
 }
 
-{
-  const optionElem = document.createElement('option');
-  optionElem.label = 'Default';
-  optionElem.value = '';
-  presetSelectElem.appendChild(optionElem);
-  presetSelectElem.value = optionElem.value;
-}
-
 Object.keys(ColorMixPreset).forEach((key) => {
   if (key === 'CUSTOM') {
     // Don't enable custom mode
@@ -167,7 +159,7 @@ Object.keys(ColorMixPreset).forEach((key) => {
 });
 
 const setColorMixPreset = (presetKey) => {
-  const preset = presetKey ? ColorMixPreset[presetKey] : null;
+  const preset = ColorMixPreset[presetKey];
   actor.getProperty().setColorMixPreset(preset);
   presetSelectElem.value = presetKey;
 };
@@ -195,7 +187,7 @@ updateForceNearestElem(1);
 volumeSelectElem.addEventListener('change', () => {
   const { comp, data } = volumeOptions[volumeSelectElem.value];
   if (comp === 1) {
-    setColorMixPreset('');
+    setColorMixPreset('DEFAULT');
     presetSelectElem.style.display = 'none';
   } else {
     presetSelectElem.style.display = 'block';

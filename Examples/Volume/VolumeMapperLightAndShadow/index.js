@@ -2,7 +2,6 @@ import '@kitware/vtk.js/favicon';
 
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
-import macro from '@kitware/vtk.js/macros';
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
@@ -14,6 +13,7 @@ import HttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpD
 import vtkVolumeController from '@kitware/vtk.js/Interaction/UI/VolumeController';
 import vtkBoundingBox from '@kitware/vtk.js/Common/DataModel/BoundingBox';
 import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
+import vtkImageData from '@kitware/vtk.js/Common/DataModel/ImageData';
 
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkSphereSource from '@kitware/vtk.js/Filters/Sources/SphereSource';
@@ -30,19 +30,6 @@ const myContainer = rootBody;
 const fpsMonitor = vtkFPSMonitor.newInstance();
 const progressContainer = document.createElement('div');
 myContainer.appendChild(progressContainer);
-
-const progressCallback = (progressEvent) => {
-  if (progressEvent.lengthComputable) {
-    const percent = Math.floor(
-      (100 * progressEvent.loaded) / progressEvent.total
-    );
-    progressContainer.innerHTML = `Loading ${percent}%`;
-  } else {
-    progressContainer.innerHTML = macro.formatBytesToProperUnit(
-      progressEvent.loaded
-    );
-  }
-};
 
 // ----------------------------------------------------------------------------
 // Main function to set up and render volume
@@ -94,11 +81,23 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
   const source = vtiReader.getOutputData(0);
 
   const actor = vtkVolume.newInstance();
-  const actorProperty = actor.getProperty();
+  const actorProperty = actor.getProperty(0);
   const mapper = vtkVolumeMapper.newInstance();
 
   actor.setMapper(mapper);
-  mapper.setInputData(source);
+  mapper.addInputData(source);
+
+  for (let i = 0; i < 0; ++i) {
+    const otherImageData = vtkImageData.newInstance();
+    otherImageData.setPointData(source.getPointData());
+    otherImageData.setDimensions(...source.getDimensions());
+    otherImageData.setSpacing(...source.getSpacing());
+    otherImageData.setOrigin(...source.getOrigin());
+    otherImageData.setDirection(...source.getDirection());
+    otherImageData.setOrigin(...[120 * (i + 1), 0, 0]);
+    mapper.addInputData(otherImageData);
+    actor.setProperty(actorProperty, 1 + i);
+  }
 
   // Add one positional light
   const bounds = actor.getBounds();
@@ -125,6 +124,7 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
         .reduce((a, b) => a + b, 0)
     );
   mapper.setSampleDistance(sampleDistance / 2.5);
+  mapper.setVolumeShadowSamplingDistFactor(5.0);
 
   // Add transfer function
   const lookupTable = vtkColorTransferFunction.newInstance();
@@ -135,7 +135,6 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
   // Set actor properties
   actorProperty.setComputeNormalFromOpacity(false);
   actorProperty.setGlobalIlluminationReach(0.0);
-  actorProperty.setVolumeShadowSamplingDistFactor(5.0);
   actorProperty.setVolumetricScatteringBlending(0.0);
   actorProperty.setInterpolationTypeToLinear();
   actorProperty.setScalarOpacityUnitDistance(
@@ -161,7 +160,6 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
   actorProperty.setSpecularPower(0.0);
   actorProperty.setUseLabelOutline(false);
   actorProperty.setLabelOutlineThickness(2);
-  renderer.addActor(actor);
 
   // Control UI for sample distance, transfer function, and shadow on/off
   const controllerWidget = vtkVolumeController.newInstance({
@@ -201,7 +199,7 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
   }
   function updateSD(e) {
     const sd = Number(e.target.value);
-    actorProperty.setVolumeShadowSamplingDistFactor(sd);
+    mapper.setVolumeShadowSamplingDistFactor(sd);
     renderWindow.render();
   }
   function updateAT(e) {
@@ -257,6 +255,9 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
     renderer.addActor(actorSphere);
   }
 
+  // Add the volume actor here to avoid compiling the shader twice
+  renderer.addActor(actor);
+
   // Camera and first render
   renderer.resetCamera();
   renderWindow.render();
@@ -279,11 +280,7 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
 // Read volume and render
 // ----------------------------------------------------------------------------
 HttpDataAccessHelper.fetchBinary(
-  'https://data.kitware.com/api/v1/item/59de9dc98d777f31ac641dc1/download',
-  {
-    progressCallback,
-  }
+  `${__BASE_PATH__}/data/volume/head-binary.vti`
 ).then((binary) => {
-  myContainer.removeChild(progressContainer);
   createVolumeShadowViewer(myContainer, binary);
 });

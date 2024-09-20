@@ -45,7 +45,6 @@ const methodNamesMovedToVolumeProperties = [
   'getLAOKernelSize',
   'getLocalAmbientOcclusion',
   'getPreferSizeOverAccuracy',
-  'getVolumeShadowSamplingDistFactor',
   'getVolumetricScatteringBlending',
   'setAnisotropy',
   'setAverageIPScalarRange',
@@ -61,7 +60,6 @@ const methodNamesMovedToVolumeProperties = [
   'setLAOKernelSize',
   'setLocalAmbientOcclusion',
   'setPreferSizeOverAccuracy',
-  'setVolumeShadowSamplingDistFactor',
   'setVolumetricScatteringBlending',
 ];
 
@@ -81,17 +79,13 @@ function vtkVolumeMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkVolumeMapper');
 
+  const superClass = { ...publicAPI };
+
   publicAPI.getBounds = () => {
-    model.bounds = [...vtkBoundingBox.INIT_BOUNDS];
     if (!model.static) {
       publicAPI.update();
     }
-    for (let inputIndex = 0; inputIndex < model.numberOfInputs; inputIndex++) {
-      const input = publicAPI.getInputData(inputIndex);
-      if (input) {
-        vtkBoundingBox.addBounds(model.bounds, input.getBounds());
-      }
-    }
+    model.bounds = [...publicAPI.getInputData().getBounds()];
     return model.bounds;
   };
 
@@ -122,6 +116,9 @@ function vtkVolumeMapper(publicAPI, model) {
   publicAPI.getBlendModeAsString = () =>
     macro.enumToString(BlendMode, model.blendMode);
 
+  publicAPI.setVolumeShadowSamplingDistFactor = (vsdf) =>
+    superClass.setVolumeShadowSamplingDistFactor(vsdf >= 1.0 ? vsdf : 1.0);
+
   // Instead of a "undefined is not a function" error, give more context and advice for these widely used methods
   methodNamesMovedToVolumeProperties.forEach((removedMethodName) => {
     const removedMethod = () => {
@@ -149,6 +146,7 @@ const DEFAULT_VALUES = {
   initialInteractionScale: 1.0,
   interactionSampleDistanceFactor: 1.0,
   blendMode: BlendMode.COMPOSITE_BLEND,
+  volumeShadowSamplingDistFactor: 5.0,
 };
 
 // ----------------------------------------------------------------------------
@@ -166,6 +164,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'initialInteractionScale',
     'interactionSampleDistanceFactor',
     'blendMode',
+    'volumeShadowSamplingDistFactor',
   ]);
 
   macro.event(publicAPI, model, 'lightingActivated');

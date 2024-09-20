@@ -109,7 +109,7 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   actor.getProperty().setSpecular(0.0);
   actor.getProperty().setGlobalIlluminationReach(0.1);
   actor.getProperty().setVolumetricScatteringBlending(0.5);
-  actor.getProperty().setVolumeShadowSamplingDistFactor(1.0);
+  mapper.setVolumeShadowSamplingDistFactor(1.0);
   mapper.setAutoAdjustSampleDistances(false);
 
   // Set up rendering

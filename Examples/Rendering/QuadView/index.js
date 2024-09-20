@@ -158,12 +158,12 @@ function createVolumeView(renderer, source) {
         .reduce((a, b) => a + b, 0)
     );
   mapper.setSampleDistance(sampleDistance / 2.5);
+  mapper.setVolumeShadowSamplingDistFactor(5.0);
 
   // Set volume properties
   const volProp = vtkVolumeProperty.newInstance();
   volProp.setComputeNormalFromOpacity(false);
   volProp.setGlobalIlluminationReach(0.0);
-  volProp.setVolumeShadowSamplingDistFactor(5.0);
   volProp.setVolumetricScatteringBlending(0.5);
   volProp.setInterpolationTypeToLinear();
   volProp.setScalarOpacityUnitDistance(

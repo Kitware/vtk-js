@@ -13,6 +13,7 @@ export interface IVolumePropertyInitialValues {
   specularPower?: number;
   useLabelOutline?: boolean;
   labelOutlineThickness?: number | number[];
+  colorMixPreset?: ColorMixPreset;
 }
 
 export interface vtkVolumeProperty extends vtkObject {
@@ -71,7 +72,7 @@ export interface vtkVolumeProperty extends vtkObject {
   /**
    *
    */
-  getColorMixPreset(): Nullable<ColorMixPreset>;
+  getColorMixPreset(): ColorMixPreset;
 
   /**
    *
@@ -194,7 +195,7 @@ export interface vtkVolumeProperty extends vtkObject {
 
   /**
    * Set the color mix code to a preset value
-   * Set to null to use no preset
+   * Defaults to ColorMixPreset.DEFAULT
    * See the test `testColorMix` for an example on how to use this preset.
    *
    * If set to `CUSTOM`, a tag `//VTK::CustomColorMix` is made available to the
@@ -202,9 +203,9 @@ export interface vtkVolumeProperty extends vtkObject {
    * will be used to mix the colors from each component.
    * Each component is available as a rgba vec4: `comp0`, `comp1`...
    * There are other useful functions or variable available. To find them,
-   * see `//VTK::CustomComponentsColorMix::Impl` tag in `vtkVolumeFS.glsl`.
+   * see `//VTK::CustomColorMix` tag in `vtkVolumeFS.glsl`.
    */
-  setColorMixPreset(preset: Nullable<ColorMixPreset>): boolean;
+  setColorMixPreset(preset: ColorMixPreset): boolean;
 
   /**
    * Does the data have independent components, or do some define color only?
@@ -394,12 +395,6 @@ export interface vtkVolumeProperty extends vtkObject {
   getGlobalIlluminationReach(): number;
 
   /**
-   * Get the multipler for volume shadow sampling distance
-   * @default 5.0
-   */
-  getVolumeShadowSamplingDistFactor(): number;
-
-  /**
    * Get anisotropy of volume shadow scatter
    * @default 0.0
    */
@@ -462,20 +457,6 @@ export interface vtkVolumeProperty extends vtkObject {
    * @param globalIlluminationReach
    */
   setGlobalIlluminationReach(globalIlluminationReach: number): void;
-
-  /**
-   * Set the multipler for volume shadow sampling distance. This function is only effective when volumeScatterBlendCoef is greater than 0.
-   * For VSSampleDistanceFactor >= 1.0, volume shadow sampling distance = VSSampleDistanceFactor * SampleDistance.
-   * @param VSSampleDistanceFactor
-   */
-  setVolumeShadowSamplingDistFactor(VSSampleDistanceFactor: number): void;
-
-  /**
-   * Set the multipler for volume shadow sampling distance. This function is only effective when volumeScatterBlendCoef is greater than 0.
-   * For VSSampleDistanceFactor >= 1.0, volume shadow sampling distance = VSSampleDistanceFactor * SampleDistance.
-   * @param VSSampleDistanceFactor
-   */
-  setVolumeShadowSamplingDistFactor(VSSampleDistanceFactor: number): void;
 
   /**
    * Set anisotropy of volume shadow scatter. This function is only effective when volumeScatterBlendCoef is greater than 0.

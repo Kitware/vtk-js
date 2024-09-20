@@ -42,6 +42,12 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
   getSampleDistance(): number;
 
   /**
+   * Get the multipler for volume shadow sampling distance
+   * @default 5.0
+   */
+  getVolumeShadowSamplingDistFactor(): number;
+
+  /**
    * Sampling distance in the XY image dimensions.
    * Default value of 1 meaning 1 ray cast per pixel. If set to 0.5, 4 rays will be cast per pixel.
    * If set to 2.0, 1 ray will be cast for every 4 (2 by 2) pixels. T
@@ -112,6 +118,13 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
    * @param sampleDistance
    */
   setSampleDistance(sampleDistance: number): boolean;
+
+  /**
+   * Set the multipler for volume shadow sampling distance. This function is only effective when volumeScatterBlendCoef is greater than 0.
+   * For VSSampleDistanceFactor >= 1.0, volume shadow sampling distance = VSSampleDistanceFactor * SampleDistance.
+   * @param VSSampleDistanceFactor
+   */
+  setVolumeShadowSamplingDistFactor(VSSampleDistanceFactor: number): void;
 
   /**
    *

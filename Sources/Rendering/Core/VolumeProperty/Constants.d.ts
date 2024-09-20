@@ -10,9 +10,7 @@ export declare enum OpacityMode {
 }
 
 export declare enum ColorMixPreset {
-  // Add a `//VTK::CustomColorMix` tag to the Fragment shader
-  // See usage in file `testColorMix` and in function `setColorMixPreset`
-  CUSTOM = 0,
+  DEFAULT = 0,
 
   // Two components preset
   // Out color: sum of colors weighted by opacity
@@ -23,16 +21,10 @@ export declare enum ColorMixPreset {
   // Out color: color of the first component, colorized by second component with an intensity that is the second component's opacity
   // Out opacity: opacity of the first component
   COLORIZE = 2,
-}
 
-export declare enum BlendMode {
-  COMPOSITE_BLEND = 0,
-  MAXIMUM_INTENSITY_BLEND = 1,
-  MINIMUM_INTENSITY_BLEND = 2,
-  AVERAGE_INTENSITY_BLEND = 3,
-  ADDITIVE_INTENSITY_BLEND = 4,
-  RADON_TRANSFORM_BLEND = 5,
-  LABELMAP_EDGE_PROJECTION_BLEND = 6,
+  // Add a `//VTK::CustomColorMix` tag to the Fragment shader
+  // See usage in file `testColorMix` and in function `setColorMixPreset`
+  CUSTOM = 3,
 }
 
 export declare enum FilterMode {
@@ -45,7 +37,6 @@ declare const _default: {
   InterpolationType: typeof InterpolationType;
   OpacityMode: typeof OpacityMode;
   ColorMixPreset: typeof ColorMixPreset;
-  BlendMode: typeof BlendMode;
   FilterMode: typeof FilterMode;
 };
 export default _default;
