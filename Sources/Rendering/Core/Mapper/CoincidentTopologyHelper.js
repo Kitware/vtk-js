@@ -29,7 +29,10 @@ const staticOffsetModel = {
   Line: { factor: 1, offset: -1 },
   Point: { factor: 0, offset: -2 },
 };
-const staticOffsetAPI = {};
+const noOp = () => undefined;
+const staticOffsetAPI = {
+  modified: noOp,
+};
 
 addCoincidentTopologyMethods(
   staticOffsetAPI,
@@ -58,9 +61,11 @@ function implementCoincidentTopologyMethods(publicAPI, model) {
   Object.keys(otherStaticMethods).forEach((methodName) => {
     publicAPI[methodName] = otherStaticMethods[methodName];
   });
-  Object.keys(staticOffsetAPI).forEach((methodName) => {
-    publicAPI[methodName] = staticOffsetAPI[methodName];
-  });
+  Object.keys(staticOffsetAPI)
+    .filter((methodName) => methodName !== 'modified') // don't override instance's modified
+    .forEach((methodName) => {
+      publicAPI[methodName] = staticOffsetAPI[methodName];
+    });
 
   addCoincidentTopologyMethods(
     publicAPI,
