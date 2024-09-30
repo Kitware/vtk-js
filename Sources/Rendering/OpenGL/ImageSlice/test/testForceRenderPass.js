@@ -106,7 +106,7 @@ test.onlyIfWebGL('Test ImageMapper forceOpaque', (t) => {
   renderWindow.render();
 });
 
-test.onlyIfWebGL.only('Test ImageMapper forceTranslucent', (t) => {
+test.onlyIfWebGL('Test ImageMapper forceTranslucent', (t) => {
   const { glWindow, renderWindow, actorAbove, actorBelow, gc } = setupSlices(t);
 
   actorBelow.getProperty().setOpacity(0.9);
