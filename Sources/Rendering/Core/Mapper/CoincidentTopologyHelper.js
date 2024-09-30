@@ -29,7 +29,10 @@ const staticOffsetModel = {
   Line: { factor: 1, offset: -1 },
   Point: { factor: 0, offset: -2 },
 };
-const staticOffsetAPI = {};
+const noOp = () => undefined;
+const staticOffsetAPI = {
+  modified: noOp,
+};
 
 addCoincidentTopologyMethods(
   staticOffsetAPI,
