@@ -1,9 +1,9 @@
 import vtkPiecewiseFunction from '../../../Common/DataModel/PiecewiseFunction';
-import { Bounds, Range } from '../../../types';
+import { Bounds } from '../../../types';
 import vtkAbstractMapper3D, {
   IAbstractMapper3DInitialValues,
 } from '../AbstractMapper3D';
-import { BlendMode, FilterMode } from './Constants';
+import { BlendMode } from './Constants';
 
 /**
  *
@@ -223,6 +223,5 @@ export declare const vtkVolumeMapper: {
   newInstance: typeof newInstance;
   extend: typeof extend;
   BlendMode: typeof BlendMode;
-  FilterMode: typeof FilterMode;
 };
 export default vtkVolumeMapper;

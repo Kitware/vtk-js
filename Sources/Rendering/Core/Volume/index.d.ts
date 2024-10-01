@@ -31,8 +31,9 @@ export interface vtkVolume extends vtkProp3D {
 
   /**
    * Get the volume property for the specified mapper input port, which defaults to 0
+   * @param {number} mapperInputPort Defaults to 0
    */
-  getProperty(mapperInputPort = 0): vtkVolumeProperty;
+  getProperty(mapperInputPort?: number): vtkVolumeProperty;
 
   /**
    * Get the volume properties array
@@ -73,8 +74,9 @@ export interface vtkVolume extends vtkProp3D {
   /**
    * Set the volume property for the specified mapper input port, which defaults to 0
    * @param {vtkVolumeProperty} property
+   * @param {number} mapperInputPort Defaults to 0
    */
-  setProperty(property: vtkVolumeProperty, mapperInputPort = 0): boolean;
+  setProperty(property: vtkVolumeProperty, mapperInputPort?: number): boolean;
 
   /**
    * Set the volume properties array
