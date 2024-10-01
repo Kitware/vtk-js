@@ -142,7 +142,7 @@ test('Test Volume Rendering: custom shader code', async (t) => {
           if (opacity1 > 0.5) {
             return vec4(0.0, 1.0, 1.0, 0.1);
           } else {
-            vec3 posIS = VCtoIS(posVC);
+            vec3 posIS = posVCtoIS(posVC);
             mat4 normalMat = computeMat4Normal(posIS, tValue);
             float opacity0 = getOpacityFromTexture(tValue[0], 0, volume.transferFunctionsSampleHeight[0]);
             vec3 color0 = getColorFromTexture(tValue[0], 0, volume.transferFunctionsSampleHeight[0]);

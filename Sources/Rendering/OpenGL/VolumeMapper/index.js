@@ -112,11 +112,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   }
 
   function unregisterGraphicsResources(renderWindow) {
-    graphicsResourceReferenceCount
-      .keys()
-      .forEach((coreObject) =>
-        renderWindow.unregisterGraphicsResourceUser(coreObject, publicAPI)
-      );
+    // Convert to an array using the spread operator as Firefox doesn't support Iterator.forEach()
+    [...graphicsResourceReferenceCount.keys()].forEach((coreObject) =>
+      renderWindow.unregisterGraphicsResourceUser(coreObject, publicAPI)
+    );
   }
 
   publicAPI.buildPass = () => {
