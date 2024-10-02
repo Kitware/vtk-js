@@ -13,7 +13,6 @@ import HttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpD
 import vtkVolumeController from '@kitware/vtk.js/Interaction/UI/VolumeController';
 import vtkBoundingBox from '@kitware/vtk.js/Common/DataModel/BoundingBox';
 import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
-import vtkImageData from '@kitware/vtk.js/Common/DataModel/ImageData';
 
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkSphereSource from '@kitware/vtk.js/Filters/Sources/SphereSource';
@@ -86,18 +85,6 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
 
   actor.setMapper(mapper);
   mapper.addInputData(source);
-
-  for (let i = 0; i < 0; ++i) {
-    const otherImageData = vtkImageData.newInstance();
-    otherImageData.setPointData(source.getPointData());
-    otherImageData.setDimensions(...source.getDimensions());
-    otherImageData.setSpacing(...source.getSpacing());
-    otherImageData.setOrigin(...source.getOrigin());
-    otherImageData.setDirection(...source.getDirection());
-    otherImageData.setOrigin(...[120 * (i + 1), 0, 0]);
-    mapper.addInputData(otherImageData);
-    actor.setProperty(actorProperty, 1 + i);
-  }
 
   // Add one positional light
   const bounds = actor.getBounds();
