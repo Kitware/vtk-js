@@ -1672,9 +1672,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     model._colorTextureCore = colorTransferFunc;
 
     // rebuild scalarTextures?
-    model.currentValidInputs.forEach(({ imageData }, component) => {
+    model.currentValidInputs.forEach(({ imageData, inputIndex }, component) => {
       // rebuild the scalarTexture if the data has changed
-      const volumeProperty = volumeProperties[component];
+      const volumeProperty = volumeProperties[inputIndex];
       const scalars = imageData.getPointData().getScalars();
       const tex =
         model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
