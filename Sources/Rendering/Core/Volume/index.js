@@ -14,32 +14,6 @@ function vtkVolume(publicAPI, model) {
 
   publicAPI.makeProperty = vtkVolumeProperty.newInstance;
 
-  publicAPI.getProperty = (mapperInputPort = 0) => {
-    if (model.properties[mapperInputPort] == null) {
-      model.properties[mapperInputPort] = publicAPI.makeProperty();
-    }
-    return model.properties[mapperInputPort];
-  };
-
-  publicAPI.setProperty = (property, mapperInputPort = 0) => {
-    if (model.properties[mapperInputPort] === property) {
-      return false;
-    }
-    model.properties[mapperInputPort] = property;
-    return true;
-  };
-
-  publicAPI.getMTime = () => {
-    let mt = model.mtime;
-    model.properties.forEach((property) => {
-      if (property !== null) {
-        const time = property.getMTime();
-        mt = time > mt ? time : mt;
-      }
-    });
-    return mt;
-  };
-
   publicAPI.getRedrawMTime = () => {
     let mt = model.mtime;
     if (model.mapper !== null) {
@@ -62,7 +36,6 @@ function vtkVolume(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   mapper: null,
-  properties: [],
 };
 
 // ----------------------------------------------------------------------------
@@ -78,7 +51,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(model.boundsMTime);
 
   // Build VTK API
-  macro.setGet(publicAPI, model, ['mapper', 'properties']);
+  macro.setGet(publicAPI, model, ['mapper']);
 
   // Object methods
   vtkVolume(publicAPI, model);

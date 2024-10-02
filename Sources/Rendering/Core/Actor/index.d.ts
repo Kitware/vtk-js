@@ -58,16 +58,6 @@ export interface vtkActor extends vtkProp3D {
   getMapper(): Nullable<vtkMapper>;
 
   /**
-   * Get the property object that controls this actors surface
-   * properties. This should be an instance of a vtkProperty object. Every
-   * actor must have a property associated with it. If one isn’t specified,
-   * then one will be generated automatically. Multiple actors can share one
-   * property object.
-   * @return {vtkProperty} The property object
-   */
-  getProperty(): vtkProperty;
-
-  /**
    * Check whether if the actor supports selection
    * @return {Boolean} true if the actor support selection.
    */
@@ -105,11 +95,12 @@ export interface vtkActor extends vtkProp3D {
    */
   setMapper(mapper: vtkMapper): boolean;
 
-  /**
-   * Set the property object that controls this actors surface properties.
-   * @param {vtkProperty} property The vtkProperty instance.
-   */
+  // Inherited from vtkProp3D, but takes a vtkProperty instead of a generic vtkObject
+  getProperty(mapperInputPort?: number): vtkProperty;
+  getProperties(): vtkProperty[];
+  setProperty(mapperInputPort: number, property: vtkProperty): boolean;
   setProperty(property: vtkProperty): boolean;
+  setProperties(properties: vtkProperty[]): boolean;
 }
 
 /**

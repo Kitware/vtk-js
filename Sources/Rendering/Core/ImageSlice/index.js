@@ -23,12 +23,12 @@ function vtkImageSlice(publicAPI, model) {
       return false;
     }
     // make sure we have a property
-    if (!model.property) {
+    if (!model.properties[0]) {
       // force creation of a property
       publicAPI.getProperty();
     }
 
-    let isOpaque = model.property.getOpacity() >= 1.0;
+    let isOpaque = model.properties[0].getOpacity() >= 1.0;
 
     // are we using an opaque scalar array, if any?
     isOpaque = isOpaque && (!model.mapper || model.mapper.getIsOpaque());
@@ -44,13 +44,6 @@ function vtkImageSlice(publicAPI, model) {
   publicAPI.hasTranslucentPolygonalGeometry = () => false;
 
   publicAPI.makeProperty = vtkImageProperty.newInstance;
-
-  publicAPI.getProperty = () => {
-    if (model.property === null) {
-      model.property = publicAPI.makeProperty();
-    }
-    return model.property;
-  };
 
   publicAPI.getBoundsForSlice = (slice, thickness) => {
     // Check for the special case when the mapper's bounds are unknown
@@ -86,16 +79,6 @@ function vtkImageSlice(publicAPI, model) {
   // Get the maximum Z bound
   publicAPI.getMaxZBound = () => publicAPI.getBounds()[5];
 
-  publicAPI.getMTime = () => {
-    let mt = model.mtime;
-    if (model.property !== null) {
-      const time = model.property.getMTime();
-      mt = time > mt ? time : mt;
-    }
-
-    return mt;
-  };
-
   publicAPI.getRedrawMTime = () => {
     let mt = model.mtime;
     if (model.mapper !== null) {
@@ -108,14 +91,13 @@ function vtkImageSlice(publicAPI, model) {
         mt = time > mt ? time : mt;
       }
     }
-    if (model.property !== null) {
-      let time = model.property.getMTime();
-      mt = time > mt ? time : mt;
-      if (model.property.getRGBTransferFunction() !== null) {
-        time = model.property.getRGBTransferFunction().getMTime();
-        mt = time > mt ? time : mt;
+    model.properties.forEach((property) => {
+      mt = Math.max(mt, property.getMTime());
+      const rgbFunc = property.getRGBTransferFunction();
+      if (rgbFunc !== null) {
+        mt = Math.max(mt, rgbFunc.getMTime());
       }
-    }
+    });
     return mt;
   };
 
@@ -129,7 +111,6 @@ function vtkImageSlice(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   mapper: null,
-  property: null,
   forceOpaque: false,
   forceTranslucent: false,
 };
@@ -147,7 +128,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(model.boundsMTime);
 
   // Build VTK API
-  macro.set(publicAPI, model, ['property']);
   macro.setGet(publicAPI, model, ['mapper', 'forceOpaque', 'forceTranslucent']);
 
   // Object methods

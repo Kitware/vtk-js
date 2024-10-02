@@ -230,6 +230,32 @@ function vtkProp3D(publicAPI, model) {
   }
 
   publicAPI.onModified(updateIdentityFlag);
+
+  publicAPI.getProperty = (mapperInputPort = 0) => {
+    if (model.properties[mapperInputPort] == null) {
+      model.properties[mapperInputPort] = publicAPI.makeProperty?.();
+    }
+    return model.properties[mapperInputPort];
+  };
+
+  publicAPI.setProperty = (property, mapperInputPort = 0) => {
+    if (model.properties[mapperInputPort] === property) {
+      return false;
+    }
+    model.properties[mapperInputPort] = property;
+    return true;
+  };
+
+  publicAPI.getMTime = () => {
+    let mt = model.mtime;
+    model.properties.forEach((property) => {
+      if (property !== null) {
+        const time = property.getMTime();
+        mt = time > mt ? time : mt;
+      }
+    });
+    return mt;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -243,6 +269,7 @@ const DEFAULT_VALUES = {
   rotation: null,
   scale: [1, 1, 1],
   bounds: [...vtkBoundingBox.INIT_BOUNDS],
+  properties: [],
 
   userMatrix: null,
   userMatrixMTime: null,
@@ -267,6 +294,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['isIdentity']);
   macro.getArray(publicAPI, model, ['orientation']);
   macro.setGetArray(publicAPI, model, ['origin', 'position', 'scale'], 3);
+  macro.setGet(publicAPI, model, ['properties']);
 
   // Object internal instance
   model.matrix = mat4.identity(new Float64Array(16));

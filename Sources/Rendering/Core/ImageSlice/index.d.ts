@@ -43,6 +43,11 @@ export interface vtkImageSlice extends vtkProp3D {
   /**
    *
    */
+  getProperties(): vtkImageProperty[];
+
+  /**
+   *
+   */
   getMapper(): vtkAbstractImageMapper;
 
   /**
@@ -123,6 +128,13 @@ export interface vtkImageSlice extends vtkProp3D {
    * @param {vtkImageProperty} property The vtkImageProperty instance.
    */
   setProperty(property: vtkImageProperty): boolean;
+
+  /**
+   * Set the actor properties array
+   * Each element of the array corresponds to a mapper input port
+   * @param {vtkImageProperty[]} properties
+   */
+  setProperties(properties: vtkImageProperty[]): boolean;
 
   /**
    *

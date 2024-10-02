@@ -23,12 +23,12 @@ function vtkActor(publicAPI, model) {
       return false;
     }
     // make sure we have a property
-    if (!model.property) {
+    if (!model.properties[0]) {
       // force creation of a property
       publicAPI.getProperty();
     }
 
-    let isOpaque = model.property.getOpacity() >= 1.0;
+    let isOpaque = model.properties[0].getOpacity() >= 1.0;
 
     // are we using an opaque texture, if any?
     isOpaque = isOpaque && (!model.texture || !model.texture.isTranslucent());
@@ -44,9 +44,9 @@ function vtkActor(publicAPI, model) {
       return false;
     }
     // make sure we have a property
-    if (model.property === null) {
+    if (!model.properties[0]) {
       // force creation of a property
-      publicAPI.setProperty(publicAPI.makeProperty());
+      publicAPI.getProperty();
     }
 
     // is this actor opaque ?
@@ -55,19 +55,8 @@ function vtkActor(publicAPI, model) {
 
   publicAPI.makeProperty = vtkProperty.newInstance;
 
-  publicAPI.getProperty = () => {
-    if (model.property === null) {
-      model.property = publicAPI.makeProperty();
-    }
-    return model.property;
-  };
-
   publicAPI.getMTime = () => {
     let mt = superClass.getMTime();
-    if (model.property !== null) {
-      const time = model.property.getMTime();
-      mt = time > mt ? time : mt;
-    }
 
     if (model.backfaceProperty !== null) {
       const time = model.backfaceProperty.getMTime();
@@ -108,7 +97,6 @@ function vtkActor(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   mapper: null,
-  property: null,
   backfaceProperty: null,
 
   forceOpaque: false,
@@ -128,7 +116,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(model.boundsMTime);
 
   // Build VTK API
-  macro.set(publicAPI, model, ['property']);
   macro.setGet(publicAPI, model, [
     'backfaceProperty',
     'forceOpaque',
