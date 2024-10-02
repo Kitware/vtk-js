@@ -1537,7 +1537,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       useIndependentComps,
       numIComps
     );
-    const reBuildOp = !opTex?.oglObject || opTex.hash !== opacityFuncHash;
+    const reBuildOp =
+      !opTex?.oglObject?.getHandle() || opTex.hash !== opacityFuncHash;
     if (reBuildOp) {
       const newOpacityTexture = vtkOpenGLTexture.newInstance();
       newOpacityTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
