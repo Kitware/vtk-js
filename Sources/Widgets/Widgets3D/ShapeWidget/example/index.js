@@ -14,13 +14,18 @@ import vtkInteractorStyleImage from '@kitware/vtk.js/Interaction/Style/Interacto
 import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
 import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper';
 import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
+import vtkImageReslice from '@kitware/vtk.js/Imaging/Core/ImageReslice';
+
 import vtkImplicitBoolean from '@kitware/vtk.js/Common/DataModel/ImplicitBoolean';
 import vtkMatrixBuilder from '@kitware/vtk.js/Common/Core/MatrixBuilder';
 import vtkMath from '@kitware/vtk.js/Common/Core/Math';
+import vtkResliceCursorWidget from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCursorWidget';
 import vtkPlane from '@kitware/vtk.js/Common/DataModel/Plane';
 import vtkSphere from '@kitware/vtk.js/Common/DataModel/Sphere';
 import vtkTransform from '@kitware/vtk.js/Common/Transform/Transform';
 import { VTK_SMALL_NUMBER } from 'vtk.js/Sources/Common/Core/Math/Constants';
+
+// import { xyzToViewType } from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 
 import vtkInteractorObserver from '@kitware/vtk.js/Rendering/Core/InteractorObserver';
 import {
@@ -44,14 +49,14 @@ import controlPanel from './controlPanel.html';
 const { computeWorldToDisplay } = vtkInteractorObserver;
 const { Operation } = vtkImplicitBoolean;
 
-const slicingModeNormal = {
-  [vtkImageMapper.SlicingMode.X]: [1, 0, 0],
-  [vtkImageMapper.SlicingMode.Y]: [0, 1, 0],
-  [vtkImageMapper.SlicingMode.Z]: [0, 0, 0],
-  [vtkImageMapper.SlicingMode.I]: [1, 0, 0],
-  [vtkImageMapper.SlicingMode.J]: [0, 1, 0],
-  [vtkImageMapper.SlicingMode.K]: [0, 0, 1],
-};
+// const slicingModeNormal = {
+//   [vtkImageMapper.SlicingMode.X]: [1, 0, 0],
+//   [vtkImageMapper.SlicingMode.Y]: [0, 1, 0],
+//   [vtkImageMapper.SlicingMode.Z]: [0, 0, 0],
+//   [vtkImageMapper.SlicingMode.I]: [1, 0, 0],
+//   [vtkImageMapper.SlicingMode.J]: [0, 1, 0],
+//   [vtkImageMapper.SlicingMode.K]: [0, 0, 1],
+// };
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
@@ -70,6 +75,29 @@ scene.openGLRenderWindow =
   scene.fullScreenRenderer.getApiSpecificRenderWindow();
 scene.camera = scene.renderer.getActiveCamera();
 
+scene.widgetManager = vtkWidgetManager.newInstance();
+scene.widgetManager.setRenderer(scene.renderer);
+
+scene.rcw = vtkResliceCursorWidget.newInstance({ planes: ['Z'] });
+scene.rcwInstance = scene.widgetManager.addWidget(
+  scene.rcw,
+  ViewTypes.XY_PLANE,
+  { keepOrthogonality: true }
+);
+scene.widgetManager.enablePicking(); // FIXME: really needed ?
+
+scene.reslice = vtkImageReslice.newInstance();
+// scene.reslice.setSlabMode(SlabMode.MEAN);
+// scene.reslice.setSlabNumberOfSlices(1);
+scene.reslice.setTransformInputSampling(false);
+scene.reslice.setAutoCropOutput(true);
+scene.reslice.setOutputDimensionality(2);
+scene.resliceMapper = vtkImageMapper.newInstance();
+scene.resliceMapper.setInputConnection(scene.reslice.getOutputPort());
+scene.resliceActor = vtkImageSlice.newInstance();
+scene.resliceActor.setMapper(scene.resliceMapper);
+scene.renderer.addActor(scene.resliceActor);
+
 // setup 2D view
 scene.camera.setParallelProjection(true);
 scene.iStyle = vtkInteractorStyleImage.newInstance();
@@ -77,24 +105,24 @@ scene.iStyle.setInteractionMode('IMAGE_SLICING');
 scene.renderWindow.getInteractor().setInteractorStyle(scene.iStyle);
 scene.fullScreenRenderer.addController(controlPanel);
 
-function setCamera(sliceMode, renderer, data) {
-  const ijk = [0, 0, 0];
-  const position = [0, 0, 0];
-  const focalPoint = [0, 0, 0];
-  const viewUp = sliceMode === 1 ? [0, 0, 1] : [0, 1, 0];
-  data.indexToWorld(ijk, focalPoint);
-  ijk[sliceMode] = 1;
-  data.indexToWorld(ijk, position);
-  renderer.getActiveCamera().set({ focalPoint, position, viewUp });
-  renderer.resetCamera();
-}
+// function setCamera(sliceMode, renderer, data) {
+//   const ijk = [0, 0, 0];
+//   const position = [0, 0, 0];
+//   const focalPoint = [0, 0, 0];
+//   const viewUp = sliceMode === 1 ? [0, 0, 1] : [0, 1, 0];
+//   data.indexToWorld(ijk, focalPoint);
+//   ijk[sliceMode] = 1;
+//   data.indexToWorld(ijk, position);
+//   renderer.getActiveCamera().set({ focalPoint, position, viewUp });
+//   renderer.resetCamera();
+// }
 
 // ----------------------------------------------------------------------------
 // Widget manager
 // ----------------------------------------------------------------------------
 
-scene.widgetManager = vtkWidgetManager.newInstance();
-scene.widgetManager.setRenderer(scene.renderer);
+// scene.widgetManager = vtkWidgetManager.newInstance();
+// scene.widgetManager.setRenderer(scene.renderer);
 
 // Widgets
 const widgets = {};
@@ -177,62 +205,125 @@ function readyAll() {
   ready(scene, true);
 }
 
-function updateControlPanel(im, ds) {
-  const slicingMode = im.getSlicingMode();
-  const extent = ds.getExtent();
+function updateControlPanel(slicingMode, ds) {
+  // const slicingMode = im.getSlicingMode();
+  // const extent = ds.getExtent();
+  const extent = ds.getBounds();
   document.querySelector('.slice').setAttribute('min', extent[slicingMode * 2]);
   document
     .querySelector('.slice')
     .setAttribute('max', extent[slicingMode * 2 + 1]);
 }
 
-function updateWidgetVisibility(widget, slicePos, i, widgetIndex) {
+function updateWidgetVisibility(widget, slicePos, i, handle) {
   /* testing if the widget is on the slice and has been placed to modify visibility */
   const widgetVisibility =
-    !scene.widgetManager.getWidgets()[widgetIndex].getPoint1() ||
+    !handle.getPoint1() ||
     widget.getWidgetState().getPoint1Handle().getOrigin()[i] === slicePos[i];
   return widget.setVisibility(widgetVisibility);
 }
 
 function updateWidgetsVisibility(slicePos, slicingMode) {
-  updateWidgetVisibility(widgets.rectangleWidget, slicePos, slicingMode, 0);
-  updateWidgetVisibility(widgets.ellipseWidget, slicePos, slicingMode, 1);
-  updateWidgetVisibility(widgets.circleWidget, slicePos, slicingMode, 2);
+  updateWidgetVisibility(
+    widgets.rectangleWidget,
+    slicePos,
+    slicingMode,
+    scene.rectangleHandle
+  );
+  updateWidgetVisibility(
+    widgets.ellipseWidget,
+    slicePos,
+    slicingMode,
+    scene.ellipseHandle
+  );
+  updateWidgetVisibility(
+    widgets.circleWidget,
+    slicePos,
+    slicingMode,
+    scene.circleHandle
+  );
 }
 
 // ----------------------------------------------------------------------------
 // Load image
 // ----------------------------------------------------------------------------
 
-const image = {
-  imageMapper: vtkImageMapper.newInstance(),
-  actor: vtkImageSlice.newInstance(),
-};
+// const image = {
+//   imageMapper: vtkImageMapper.newInstance(),
+//   actor: vtkImageSlice.newInstance(),
+// };
+let imageData = null;
+let slicingMode = 2;
 
-// background image pipeline
-image.actor.setMapper(image.imageMapper);
+// // background image pipeline
+// image.actor.setMapper(image.imageMapper);
+
+function updateReslice(
+  interactionContext = {
+    viewType: '',
+    reslice: null,
+    actor: null,
+    renderer: null,
+    resetFocalPoint: false, // Reset the focal point to the center of the display image
+    computeFocalPointOffset: false, // Defines if the display offset between reslice center and focal point has to be
+    // computed. If so, then this offset will be used to keep the focal point position during rotation.
+  }
+) {
+  const modified = scene.rcw.updateReslicePlane(
+    interactionContext.reslice,
+    interactionContext.viewType
+  );
+  if (modified) {
+    const resliceAxes = interactionContext.reslice.getResliceAxes();
+    // Get returned modified from setter to know if we have to render
+    interactionContext.actor.setUserMatrix(resliceAxes);
+  }
+  scene.rcw.updateCameraPoints(
+    interactionContext.renderer,
+    interactionContext.viewType,
+    interactionContext.resetFocalPoint,
+    interactionContext.computeFocalPointOffset
+  );
+  // scene.renderWindow.render();
+  return modified;
+}
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 reader
   .setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`, { loadData: true })
   .then(() => {
-    const data = reader.getOutputData();
-    image.data = data;
+    // const data = reader.getOutputData();
+    imageData = reader.getOutputData();
+    // image.data = data;
 
     // set input data
-    image.imageMapper.setInputData(data);
+    // image.imageMapper.setInputData(data);
+    scene.reslice.setInputData(imageData);
+    scene.rcw.setImage(imageData);
+
+    updateReslice({
+      viewType: ViewTypes.XY_PLANE,
+      reslice: scene.reslice,
+      actor: scene.resliceActor,
+      renderer: scene.renderer,
+      resetFocalPoint: true, // At first initilization, center the focal point to the image center
+      computeFocalPointOffset: true, // Allow to compute the current offset between display reslice center and display focal point
+      // sphereSources: obj.sphereSources,
+      // slider: obj.slider,
+    });
+    scene.renderWindow.getInteractor().render();
 
     // add actors to renderers
-    scene.renderer.addViewProp(image.actor);
-    // default slice orientation/mode and camera view
-    const sliceMode = vtkImageMapper.SlicingMode.K;
-    image.imageMapper.setSlicingMode(sliceMode);
-    image.imageMapper.setSlice(0);
+    // scene.renderer.addViewProp(image.actor);
+    // // default slice orientation/mode and camera view
+    // const sliceMode = vtkImageMapper.SlicingMode.K;
+    // image.imageMapper.setSlicingMode(sliceMode);
+    // image.imageMapper.setSlice(0);
 
     // set 2D camera position
-    setCamera(sliceMode, scene.renderer, image.data);
+    // setCamera(sliceMode, scene.renderer, image.data);
 
-    updateControlPanel(image.imageMapper, data);
+    updateControlPanel(slicingMode, imageData);
 
     scene.rectangleHandle.getRepresentations()[1].setDrawBorder(true);
     scene.rectangleHandle.getRepresentations()[1].setDrawFace(false);
@@ -247,32 +338,37 @@ reader
     // isPointInEllipse supports arbitrary plane (not just axis-aligned)
     const isPointInEllipse = vtkImplicitBoolean.newInstance();
     isPointInEllipse.setOperation(Operation.INTERSECTION);
+    const transform = vtkTransform.newInstance();
+    isPointInEllipse.setTransform(transform);
     const positivePlane = vtkPlane.newInstance();
     isPointInEllipse.addFunction(positivePlane);
     const negativePlane = vtkPlane.newInstance();
     isPointInEllipse.addFunction(negativePlane);
     const currentEllipse = vtkSphere.newInstance();
-    const transform = vtkTransform.newInstance();
-    currentEllipse.setTransform(transform);
+    // const transform = vtkTransform.newInstance();
+    // currentEllipse.setTransform(transform);
     isPointInEllipse.addFunction(currentEllipse);
 
     // set text display callback
     scene.ellipseHandle.onInteractionEvent(() => {
       const worldBounds = scene.ellipseHandle.getBounds();
-      const planeNormal = slicingModeNormal[image.imageMapper.getSlicingMode()];
-      const planeOrigin = [0, 0, 0];
-      planeOrigin[image.imageMapper.getSlicingMode() % 3] =
-        image.imageMapper.getSlice();
-      image.data.indexToWorld(planeOrigin, planeOrigin);
+      const plane = scene.rcw.getWidgetState().getPlanes()[ViewTypes.XY_PLANE];
+      const planeNormal = [...plane.normal];
+      // const planeOrigin = [0, 0, 0];
+      // planeOrigin[image.imageMapper.getSlicingMode() % 3] =
+      //   image.imageMapper.getSlice();
+      // image.data.indexToWorld(planeOrigin, planeOrigin);
+      const planeOrigin = scene.rcw.getWidgetState().getCenter();
       positivePlane.setOrigin(planeOrigin);
       negativePlane.setOrigin(planeOrigin);
       positivePlane.setNormal(planeNormal);
       negativePlane.setNormal(vtkMath.multiplyScalar([...planeNormal], -1));
-      const rotationMatrix = vtkMatrixBuilder
-        .buildFromRadian()
-        .translate(...planeOrigin)
-        .rotateFromDirections(planeNormal, [0, 0, 1])
-        .translate(...vtkMath.multiplyScalar([...planeOrigin], -1));
+      // const rotationMatrix = vtkMatrixBuilder
+      //   .buildFromRadian()
+      //   .translate(...planeOrigin)
+      //   .rotateFromDirections(planeNormal, [0, 0, 1])
+      //   .translate(...vtkMath.multiplyScalar([...planeOrigin], -1));
+      const rotationMatrix = vtkMatrixBuilder.buildFromRadian();
       const corner1 = widgets.ellipseWidget
         .getWidgetState()
         .getPoint1Handle()
@@ -296,10 +392,10 @@ reader
       ]);
 
       const w = [];
-      const { average, minimum, maximum } = image.data.computeHistogram(
+      const { average, minimum, maximum } = imageData.computeHistogram(
         worldBounds,
         (coord, _) =>
-          isPointInEllipse.functionValue(image.data.indexToWorld(coord, w)) <= 0
+          isPointInEllipse.functionValue(imageData.indexToWorld(coord, w)) <= 0
       );
 
       const text = `average: ${average.toFixed(
@@ -338,15 +434,14 @@ reader
     });
 
     const update = () => {
-      const slicingMode = image.imageMapper.getSlicingMode() % 3;
-
       if (slicingMode > -1) {
-        const ijk = [0, 0, 0];
-        const slicePos = [0, 0, 0];
+        // const ijk = [0, 0, 0];
+        // const slicePos = [0, 0, 0];
 
         // position
-        ijk[slicingMode] = image.imageMapper.getSlice();
-        data.indexToWorld(ijk, slicePos);
+        // ijk[slicingMode] = image.imageMapper.getSlice();
+        // data.indexToWorld(ijk, slicePos);
+        const slicePos = scene.rcw.getWidgetState().getCenter();
 
         widgets.rectangleWidget.getManipulator().setUserOrigin(slicePos);
         widgets.ellipseWidget.getManipulator().setUserOrigin(slicePos);
@@ -359,10 +454,11 @@ reader
         // update UI
         document
           .querySelector('.slice')
-          .setAttribute('max', data.getDimensions()[slicingMode] - 1);
+          .setAttribute('max', imageData.getDimensions()[slicingMode] - 1);
       }
     };
-    image.imageMapper.onModified(update);
+    // image.imageMapper.onModified(update);
+    scene.rcw.getWidgetState().onModified(update);
     // trigger initial update
     update();
 
@@ -381,20 +477,41 @@ function resetWidgets() {
   scene.rectangleHandle.reset();
   scene.ellipseHandle.reset();
   scene.circleHandle.reset();
-  const slicingMode = image.imageMapper.getSlicingMode() % 3;
+  // const slicingMode = image.imageMapper.getSlicingMode() % 3;
   updateWidgetsVisibility(null, slicingMode);
   scene.widgetManager.grabFocus(widgets[activeWidget]);
 }
 
 document.querySelector('.slice').addEventListener('input', (ev) => {
-  image.imageMapper.setSlice(Number(ev.target.value));
+  // image.imageMapper.setSlice(Number(ev.target.value));
+  const pos = [...scene.rcw.getWidgetState().getCenter()];
+  pos[slicingMode] = Number(ev.target.value);
+  scene.rcw.setCenter(pos);
+  updateReslice({
+    viewType: ViewTypes.XY_PLANE,
+    reslice: scene.reslice,
+    actor: scene.resliceActor,
+    renderer: scene.renderer,
+    resetFocalPoint: true,
+    computeFocalPointOffset: true,
+  });
+  scene.renderWindow.render();
 });
 
 document.querySelector('.axis').addEventListener('input', (ev) => {
   const sliceMode = 'IJKXYZ'.indexOf(ev.target.value) % 3;
-  image.imageMapper.setSlicingMode(sliceMode);
+  const normal = [0, 0, 0];
+  normal[sliceMode] = 1;
+  // image.imageMapper.setSlicingMode(sliceMode);
+  slicingMode = sliceMode;
+  scene.rcwInstance.setViewPlane(ViewTypes.XY_PLANE, normal);
 
-  setCamera(sliceMode, scene.renderer, image.data);
+  updateControlPanel(slicingMode, imageData);
+  document.querySelector('.slice').value = scene.rcw
+    .getWidgetState()
+    .getCenter()[slicingMode];
+
+  // setCamera(sliceMode, scene.renderer, image.data);
   resetWidgets();
   scene.renderWindow.render();
 });
@@ -422,10 +539,13 @@ document.querySelector('.place').addEventListener('click', () => {
         : scene.circleHandle;
     const coord1 = [0, 0, 0];
     const coord2 = [100, 100, 100];
-    const slicePos = image.imageMapper.getSlice();
-    const axis = image.imageMapper.getSlicingMode() % 3;
-    coord1[axis] = slicePos;
-    coord2[axis] = slicePos;
+    // const slicePos = image.imageMapper.getSlice();
+    // const axis = image.imageMapper.getSlicingMode() % 3;
+    // coord1[axis] = slicePos;
+    // coord2[axis] = slicePos;
+    const center = scene.rcw.getWidgetState().getCenter();
+    coord1[slicingMode] = center[slicingMode];
+    coord2[slicingMode] = center[slicingMode];
     handle.grabFocus();
     handle.placePoint1(coord1);
     handle.placePoint2(coord2);
@@ -434,7 +554,8 @@ document.querySelector('.place').addEventListener('click', () => {
     // Recompute text position
     handle.invokeInteractionEvent();
     handle.loseFocus();
-    updateWidgetVisibility(widget, coord1, axis, widgetIndex);
+    // updateWidgetVisibility(widget, coord1, axis, widgetIndex);
+    updateWidgetVisibility(widget, coord1, slicingMode, widgetIndex);
     scene.renderWindow.render();
   }
 });
