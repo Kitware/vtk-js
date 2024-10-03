@@ -161,6 +161,7 @@ export function rotateVector(vectorToBeRotated, axis, angle) {
 }
 
 /**
+ * Return ['X'] if there are only 1 plane defined in the widget state.
  * Return ['X', 'Y'] if there are only 2 planes defined in the widget state.
  * Return ['X', 'Y', 'Z'] if there are 3 planes defined in the widget state.
  * @param {object} widgetState the state of the widget
