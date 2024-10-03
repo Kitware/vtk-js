@@ -17,7 +17,7 @@ import vtkTransform from 'vtk.js/Sources/Common/Transform/Transform';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import {
-  getTransferFunctionHash,
+  getTransferFunctionsHash,
   getImageDataHash,
 } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/resourceSharingHelper';
 
@@ -341,14 +341,21 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     const numIComps = iComps ? model.numberOfComponents : 1;
     const textureHeight = iComps ? 2 * numIComps : 1;
 
-    const colorTransferFunc = firstActorProperty.getRGBTransferFunction();
-    const colorFuncHash = getTransferFunctionHash(
-      colorTransferFunc,
+    const colorTransferFunctions = [];
+    for (let component = 0; component < numIComps; ++component) {
+      colorTransferFunctions.push(
+        firstActorProperty.getRGBTransferFunction(component)
+      );
+    }
+    const colorFuncHash = getTransferFunctionsHash(
+      colorTransferFunctions,
       iComps,
       numIComps
     );
-    const cTex =
-      model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
+    const firstColorTransferFunc = firstActorProperty.getRGBTransferFunction();
+    const cTex = model._openGLRenderWindow.getGraphicsResourceForObject(
+      firstColorTransferFunc
+    );
     const reBuildC =
       !cTex?.oglObject?.getHandle() || cTex?.hash !== colorFuncHash;
     if (reBuildC) {
@@ -357,7 +364,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       const cTable = new Uint8ClampedArray(cSize);
       const newColorTexture = vtkOpenGLTexture.newInstance();
       newColorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      if (colorTransferFunc) {
+      if (firstColorTransferFunc) {
         const tmpTable = new Float32Array(cWidth * 3);
 
         for (let c = 0; c < numIComps; c++) {
@@ -403,9 +410,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         );
       }
 
-      if (colorTransferFunc) {
+      if (firstColorTransferFunc) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
-          colorTransferFunc,
+          firstColorTransferFunc,
           newColorTexture,
           colorFuncHash
         );
@@ -417,17 +424,25 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     replaceGraphicsResource(
       model._openGLRenderWindow,
       model._colorTextureCore,
-      colorTransferFunc
+      firstColorTransferFunc
     );
-    model._colorTextureCore = colorTransferFunc;
+    model._colorTextureCore = firstColorTransferFunc;
 
     // Build piecewise function buffer.  This buffer is used either
     // for component weighting or opacity, depending on whether we're
     // rendering components independently or not.
-    const pwFunc = firstActorProperty.getPiecewiseFunction();
-    const opacityFuncHash = getTransferFunctionHash(pwFunc, iComps, numIComps);
+    const opacityFunctions = [];
+    for (let component = 0; component < numIComps; ++component) {
+      opacityFunctions.push(firstActorProperty.getPiecewiseFunction(component));
+    }
+    const opacityFuncHash = getTransferFunctionsHash(
+      opacityFunctions,
+      iComps,
+      numIComps
+    );
+    const firstPwFunc = firstActorProperty.getPiecewiseFunction();
     const pwfTex =
-      model._openGLRenderWindow.getGraphicsResourceForObject(pwFunc);
+      model._openGLRenderWindow.getGraphicsResourceForObject(firstPwFunc);
     const reBuildPwf =
       !pwfTex?.oglObject?.getHandle() || pwfTex?.hash !== opacityFuncHash;
     if (reBuildPwf) {
@@ -436,7 +451,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       const pwfTable = new Uint8ClampedArray(pwfSize);
       const newOpacityTexture = vtkOpenGLTexture.newInstance();
       newOpacityTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      if (pwFunc) {
+      if (firstPwFunc) {
         const pwfFloatTable = new Float32Array(pwfSize);
         const tmpTable = new Float32Array(pwfWidth);
 
@@ -481,9 +496,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           pwfTable
         );
       }
-      if (pwFunc) {
+      if (firstPwFunc) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
-          pwFunc,
+          firstPwFunc,
           newOpacityTexture,
           opacityFuncHash
         );
@@ -495,9 +510,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     replaceGraphicsResource(
       model._openGLRenderWindow,
       model._pwfTextureCore,
-      pwFunc
+      firstPwFunc
     );
-    model._pwfTextureCore = pwFunc;
+    model._pwfTextureCore = firstPwFunc;
 
     const vboString = `${model.resliceGeom.getMTime()}A${model.renderable.getSlabThickness()}`;
     if (
@@ -1098,7 +1113,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       const rgba = ['r', 'g', 'b', 'a'];
       for (let comp = 0; comp < tNumComp; ++comp) {
         tcoordFSImpl = tcoordFSImpl.concat([
-          `vec3 tcolor${comp} = mix${comp} * texture2D(colorTexture1, vec2(tvalue.${rgba[comp]} * cscale${comp} + cshift${comp}, height${comp})).rgb;`,
+          `vec3 tcolor${comp} = texture2D(colorTexture1, vec2(tvalue.${rgba[comp]} * cscale${comp} + cshift${comp}, height${comp})).rgb;`,
           `float compWeight${comp} = mix${comp} * texture2D(pwfTexture1, vec2(tvalue.${rgba[comp]} * pwfscale${comp} + pwfshift${comp}, height${comp})).r;`,
         ]);
       }

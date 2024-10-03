@@ -1,12 +1,14 @@
 // See typescript header for documentation
 
-export function getTransferFunctionHash(
-  transferFunction,
+export function getTransferFunctionsHash(
+  transferFunctions,
   useIndependentComponents,
   numberOfComponents
 ) {
-  return transferFunction
-    ? `${transferFunction.getMTime()}-${useIndependentComponents}-${numberOfComponents}`
+  return transferFunctions.length > 0
+    ? `${transferFunctions
+        .map((tf) => tf?.getMTime() ?? 'x')
+        .join('/')}-${useIndependentComponents}-${numberOfComponents}`
     : '0';
 }
 
@@ -17,4 +19,4 @@ export function getImageDataHash(image, scalars) {
   return `${scalars.getMTime()}`;
 }
 
-export default { getTransferFunctionHash, getImageDataHash };
+export default { getTransferFunctionsHash, getImageDataHash };
