@@ -10,13 +10,21 @@ export const OpacityMode = {
 };
 
 export const ColorMixPreset = {
-  CUSTOM: 0,
+  DEFAULT: 0,
   ADDITIVE: 1,
   COLORIZE: 2,
+  CUSTOM: 3,
+};
+
+export const FilterMode = {
+  OFF: 0,
+  NORMALIZED: 1,
+  RAW: 2,
 };
 
 export default {
   InterpolationType,
   OpacityMode,
   ColorMixPreset,
+  FilterMode,
 };
