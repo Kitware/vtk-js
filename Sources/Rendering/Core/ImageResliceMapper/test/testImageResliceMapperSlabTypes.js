@@ -107,11 +107,11 @@ test.onlyIfWebGL('Test ImageResliceMapperSlabTypes', async (t) => {
   const oglren4 = glwindow.getViewNodeFor(ren4);
   const oglamapper = oglren1.getViewNodeFor(amapper);
   const oglcmapper = oglren2.getViewNodeFor(cmapper);
-  oglcmapper.setOpenGLTexture(oglamapper.getOpenGLTexture());
+  oglcmapper.setScalarTextures(oglamapper.getScalarTextures());
   const oglsmapper = oglren3.getViewNodeFor(smapper);
-  oglsmapper.setOpenGLTexture(oglamapper.getOpenGLTexture());
+  oglsmapper.setScalarTextures(oglamapper.getScalarTextures());
   const oglzmapper = oglren4.getViewNodeFor(zmapper);
-  oglzmapper.setOpenGLTexture(oglamapper.getOpenGLTexture());
+  oglzmapper.setScalarTextures(oglamapper.getScalarTextures());
 
   const cam = gc.registerResource(vtkCamera.newInstance());
   ren1.setActiveCamera(cam);
