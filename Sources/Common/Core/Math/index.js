@@ -57,6 +57,16 @@ export function createArray(size = 3) {
 
 export const Pi = () => Math.PI;
 
+export function ldexp(x, exponent) {
+  if (exponent > 1023) {
+    return x * 2 ** 1023 * 2 ** (exponent - 1023);
+  }
+  if (exponent < -1074) {
+    return x * 2 ** -1074 * 2 ** (exponent + 1074);
+  }
+  return x * 2 ** exponent;
+}
+
 export function radiansFromDegrees(deg) {
   return (deg / 180) * Math.PI;
 }
@@ -2227,6 +2237,7 @@ export function float2CssRGBA(rgbArray) {
 
 export default {
   Pi,
+  ldexp,
   radiansFromDegrees,
   degreesFromRadians,
   round,
