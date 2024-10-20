@@ -184,6 +184,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![HttpDataSetSeriesReader Example][HttpDataSetSeriesReaderWithIcon]](./HttpDataSetSeriesReader.html "Import a VTK dataset with time support.")
 [![HttpSceneLoader Example][HttpSceneLoaderWithIcon]](./HttpSceneLoader.html "Import a VTK scene (data + representation)")
 [![OfflineLocalView Example][OfflineLocalViewWithIcon]](./OfflineLocalView.html "Load a serialized scene (VTKSZ)")
+[![G-Code Example][GCodeReaderWithIcon]](./GCodeReader.html "G-Code reader(gcode)")
 
 </div>
 
@@ -203,6 +204,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [HttpDataSetSeriesReaderWithIcon]: ../docs/gallery/HttpDataSetSeriesReaderWithIcon.gif
 [HttpSceneLoaderWithIcon]: ../docs/gallery/HttpSceneLoaderWithIcon.jpg
 [OfflineLocalViewWithIcon]: ../docs/gallery/OfflineLocalViewWithIcon.jpg
+[GCodeReaderWithIcon]: ../docs/gallery/GCodeReaderWithIcon.jpg
 
 # Actors
 
