@@ -3,6 +3,7 @@ import vtkPLYReader from './PLYReader';
 import vtkDracoReader from './DracoReader';
 import vtkSTLWriter from './STLWriter';
 import vtkPLYWriter from './PLYWriter';
+import vtkGLTFImporter from './GLTFImporter';
 
 export default {
   vtkSTLReader,
@@ -10,4 +11,5 @@ export default {
   vtkDracoReader,
   vtkSTLWriter,
   vtkPLYWriter,
+  vtkGLTFImporter,
 };
