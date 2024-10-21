@@ -1,0 +1,89 @@
+<table>
+  <tr>
+    <td colspan="2">
+      <h3 style="margin: 5px 0;">Options</h3>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Renderer
+    </td>
+    <td>
+      <input type="radio" id="webgl" class="viewAPI" name="viewAPI" value="WebGL" checked>
+      <label for="webgl">WebGL</label>
+      <input type="radio" id="webgpu" class="viewAPI" name="viewAPI" value="WebGPU">
+      <label for="webgpu">WebGPU</label>
+    </td>
+  </tr>
+  <tr>
+    <td>Models</td>
+    <td>
+      <select class="models" style="width: 100%"></select>
+    </td>
+  </tr>
+  <tr>
+    <td>Flavor</td>
+    <td>
+      <select class="flavor" style="width: 100%"></select>
+    </td>
+  </tr>
+  <tr>
+    <td>Scenes</td>
+    <td>
+      <select class="scenes" style="width: 100%">
+        <option value="0">Default Scene</option>
+      </select>
+    </td>
+  </tr>
+  <tr class="animations-container" style="display: none;">
+    <td>Animations</td>
+    <td>
+      <select class="animations" style="width: 100%"></select>
+    </td>
+  <tr>
+    <td>Cameras</td>
+    <td>
+      <select class="cameras" style="width: 100%">
+        <option value="0">Default Camera</option>
+      </select>
+    </td>
+  </tr>
+  <tr class="variants-container" style="display: none;">
+    <td>Variants</td>
+    <td>
+      <select class="variants" style="width: 100%"></select>
+    </td>
+  </tr>
+</table>
+<table>
+  <td colspan="2">
+    <h3 style="margin: 5px 0;">Environment Properties</h3>
+  </td>
+  <tr>
+    <td>
+      <label>Use Textured Background: </label>
+      <input class='use-background' type='checkbox'/>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <label>Specular Strength: </label>
+      <input class='e-specular' type='range' min='0.0' max='2.0' value='1.0' step='0.01' oninput="this.nextElementSibling.value = this.value"/>
+      <output>1.00</output>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <label>Diffuse Strength: </label>
+      <input class='e-diffuse' type='range' min='0.0' max='2.0' value='1.0' step='0.01' oninput="this.nextElementSibling.value = this.value"/>
+      <output>1.00</output>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <label>FOV: </label>
+      <input class='angle' type='range' min='30' max='120' value='30' step='1' oninput="this.nextElementSibling.value = this.value"/>
+      <output>30</output>
+    </td>
+  </tr>
+</table>
