@@ -18,18 +18,6 @@ export interface vtkImageSlice extends vtkProp3D {
   getActors(): any;
 
   /**
-   * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-   * @return {Bounds} The bounds for the mapper.
-   */
-  getBounds(): Bounds;
-
-  /**
-   * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-   * @return {Bounds} The bounds for the mapper.
-   */
-  getBoundsByReference(): Bounds;
-
-  /**
    * Get the bounds for a given slice as [xmin, xmax, ymin, ymax,zmin, zmax].
    * @param {Number} slice The slice index. If undefined, the current slice is considered.
    * @param {Number} [thickness] The slice thickness. If undefined, 0 is considered.
@@ -46,11 +34,6 @@ export interface vtkImageSlice extends vtkProp3D {
    *
    */
   getIsOpaque(): boolean;
-
-  /**
-   *
-   */
-  getProperty(): vtkImageProperty;
 
   /**
    *
@@ -132,12 +115,6 @@ export interface vtkImageSlice extends vtkProp3D {
 
   /**
    *
-   * @param {vtkImageProperty} property The vtkImageProperty instance.
-   */
-  setProperty(property: vtkImageProperty): boolean;
-
-  /**
-   *
    * @param {boolean} forceOpaque If true, render during opaque pass even if opacity value is below 1.0.
    */
   setForceOpaque(forceOpaque: boolean): boolean;
@@ -147,6 +124,13 @@ export interface vtkImageSlice extends vtkProp3D {
    * @param {boolean} forceTranslucent If true, render during translucent pass even if opacity value is 1.0.
    */
   setForceTranslucent(forceTranslucent: boolean): boolean;
+
+  // Inherited from vtkProp3D, but takes a vtkImageProperty instead of a generic vtkObject
+  getProperty(mapperInputPort?: number): vtkImageProperty;
+  getProperties(): vtkImageProperty[];
+  setProperty(mapperInputPort: number, property: vtkImageProperty): boolean;
+  setProperty(property: vtkImageProperty): boolean;
+  setProperties(properties: vtkImageProperty[]): boolean;
 }
 
 /**
