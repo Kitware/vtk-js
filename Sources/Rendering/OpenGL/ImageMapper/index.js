@@ -804,7 +804,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       const worldToIndex = image.getWorldToIndex();
 
       const imageDimensions = image.getDimensions();
-      const sliceAxis = model.renderable.getClosestIJKAxis().ijkMode;
+      let sliceAxis = model.renderable.getClosestIJKAxis().ijkMode;
+
+      // SlicingMode.NONE equates to SlicingMode.K
+      if (sliceAxis === SlicingMode.NONE) {
+        sliceAxis = SlicingMode.K;
+      }
 
       program.setUniform3i(
         'imageDimensions',
