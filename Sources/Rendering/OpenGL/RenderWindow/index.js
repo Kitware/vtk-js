@@ -598,6 +598,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           // remember the main canvas original size, then resize it
           model._screenshot.originalSize = model.size;
           model.size = model._screenshot.size;
+          model.rootOpenGLRenderWindow?.resizeFromChildRenderWindows();
           model._screenshot.size = null;
 
           // process the resize
@@ -1075,10 +1076,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         model.renderPasses[index].traverse(publicAPI, null);
       }
     }
+    publicAPI.copyParentContent();
     if (model.notifyStartCaptureImage) {
       getCanvasDataURL();
     }
-    publicAPI.copyParentContent();
     const childrenRW = model.renderable.getChildRenderWindowsByReference();
     for (let i = 0; i < childrenRW.length; ++i) {
       publicAPI.getViewNodeFor(childrenRW[i])?.traverseAllPasses();

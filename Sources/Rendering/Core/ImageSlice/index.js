@@ -130,6 +130,8 @@ function vtkImageSlice(publicAPI, model) {
 const DEFAULT_VALUES = {
   mapper: null,
   property: null,
+  forceOpaque: false,
+  forceTranslucent: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -146,7 +148,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.set(publicAPI, model, ['property']);
-  macro.setGet(publicAPI, model, ['mapper']);
+  macro.setGet(publicAPI, model, ['mapper', 'forceOpaque', 'forceTranslucent']);
 
   // Object methods
   vtkImageSlice(publicAPI, model);

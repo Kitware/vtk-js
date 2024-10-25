@@ -123,6 +123,18 @@ export interface vtkImageSlice extends vtkProp3D {
    * @param {vtkImageProperty} property The vtkImageProperty instance.
    */
   setProperty(property: vtkImageProperty): boolean;
+
+  /**
+   *
+   * @param {boolean} forceOpaque If true, render during opaque pass even if opacity value is below 1.0.
+   */
+  setForceOpaque(forceOpaque: boolean): boolean;
+
+  /**
+   *
+   * @param {boolean} forceTranslucent If true, render during translucent pass even if opacity value is 1.0.
+   */
+  setForceTranslucent(forceTranslucent: boolean): boolean;
 }
 
 /**

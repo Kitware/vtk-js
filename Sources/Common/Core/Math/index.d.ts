@@ -52,6 +52,11 @@ export function swapColumnsMatrix_nxn(
 export function Pi(): number;
 
 /**
+ * Calculates x times (2 to the power of exponent).
+ */
+export function ldexp(x: number, exponent: number): number;
+
+/**
  * Convert degrees to radians.
  * @param {Number} deg The value in degrees.
  */
