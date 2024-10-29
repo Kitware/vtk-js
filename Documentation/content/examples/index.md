@@ -72,7 +72,7 @@ This will allow you to see the some live code running in your browser. Just pick
 
 [![ImplicitBoolean Example][ImplicitBoolean]](./ImplicitBoolean.html "ImplicitBoolean")
 
-<div>
+</div>
 
 [ImplicitBoolean]: ../docs/gallery/ImplicitBoolean.jpg
 
@@ -83,7 +83,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![MultiSliceImageMapper Example][MultiSliceImageMappergif]](./MultiSliceImageMapper.html "MultiSliceImageMapper")
 [![TestVolumeTypes Example][TestVolumeTypes]](./TestVolumeTypes.html "TestVolumeTypes")
 
-<div>
+</div>
 
 [MultiSliceImageMappergif]: ../docs/gallery/MultiSliceImageMapper.gif
 [TestVolumeTypes]: ../docs/gallery/TestVolumeTypes.jpg
@@ -108,7 +108,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![Cutter Example][Cutter]](./Cutter.html "Cutter")
 [![PolyDataNormals Example][PolyDataNormals]](./PolyDataNormals.html "PolyDataNormals")
 
-<div>
+</div>
 
 [Calculator2]: ../docs/gallery/Calculator2.jpg
 [ClipClosedSurface]: ../docs/gallery/ClipClosedSurface.jpg
@@ -186,6 +186,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![OfflineLocalView Example][OfflineLocalViewWithIcon]](./OfflineLocalView.html "Load a serialized scene (VTKSZ)")
 [![G-Code Example][GCodeReaderWithIcon]](./GCodeReader.html "G-Code reader(gcode)")
 [![HDRReader Example][HDRReaderWithIcon]](./HDRReader.html "Load an HDR image")
+[![TGAReader Example][TGAReaderWithIcon]](./TGAReader.html "Load an TGA image")
 
 </div>
 
@@ -207,6 +208,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [OfflineLocalViewWithIcon]: ../docs/gallery/OfflineLocalViewWithIcon.jpg
 [GCodeReaderWithIcon]: ../docs/gallery/GCodeReaderWithIcon.jpg
 [HDRReaderWithIcon]: ../docs/gallery/HDRReaderWithIcon.jpg
+[TGAReaderWithIcon]: ../docs/gallery/TGAReaderWithIcon.jpg
 
 # Actors
 
@@ -272,7 +274,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![ImageCPRMapper Example][ImageCPRMapper]](./ImageCPRMapper.html "Curved Planar Reformat GPU mapper, stretched and straightened")
 [![VolumeOutline Example][VolumeOutline]](./VolumeOutline.html "VolumeOutline")
 
-<div>
+</div>
 
 [ImageLabelOutline]: ../docs/gallery/ImageLabelOutline.jpg
 [ImageCPRMapper]: ../docs/gallery/ImageCPRMapper.jpg
