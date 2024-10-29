@@ -1246,6 +1246,10 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     shaders.Fragment = FSSource;
   };
 
+  /**
+   * Returns true if the normal is almost axis aligned.
+   * Has a side effect to normalize the vector.
+   */
   function isVectorAxisAligned(n) {
     vtkMath.normalize(n);
     const tmpN = [0, 0, 0];
@@ -1253,7 +1257,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       vec3.zero(tmpN);
       tmpN[i] = 1.0;
       const dotP = vtkMath.dot(n, tmpN);
-      if (dotP < -0.999 || dotP > 0.999) {
+      if (dotP < -0.999999 || dotP > 0.999999) {
         return [true, i];
       }
     }
