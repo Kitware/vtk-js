@@ -81,9 +81,9 @@ test.onlyIfWebGL('Test ImageResliceMapperShareOpenGLTexture', async (t) => {
   const oglrenderer = glwindow.getViewNodeFor(renderer);
   const oglamapper = oglrenderer.getViewNodeFor(amapper);
   const oglcmapper = oglrenderer.getViewNodeFor(cmapper);
-  oglcmapper.setOpenGLTexture(oglamapper.getOpenGLTexture());
+  oglcmapper.setScalarTextures(oglamapper.getScalarTextures());
   const oglsmapper = oglrenderer.getViewNodeFor(smapper);
-  oglsmapper.setOpenGLTexture(oglamapper.getOpenGLTexture());
+  oglsmapper.setScalarTextures(oglamapper.getScalarTextures());
 
   const promise = reader
     .setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`)

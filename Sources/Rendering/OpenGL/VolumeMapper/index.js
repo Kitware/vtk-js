@@ -24,7 +24,7 @@ import {
 import { BlendMode } from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
 import {
-  getTransferFunctionHash,
+  getTransferFunctionsHash,
   getImageDataHash,
 } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/resourceSharingHelper';
 
@@ -1493,6 +1493,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   publicAPI.getNeedToRebuildBufferObjects = (ren, actor) =>
     model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
     model.VBOBuildTime.getMTime() < actor.getMTime() ||
+    model.VBOBuildTime.getMTime() <
+      actor.getProperty(model.currentValidInputs[0].inputIndex)?.getMTime() ||
     model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
     model.currentValidInputs.some(
       ({ imageData }) => model.VBOBuildTime.getMTime() < imageData.getMTime()
@@ -1529,13 +1531,18 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const numIComps = useIndependentComps ? numberOfComponents : 1;
 
     // rebuild opacity tfun?
-    const scalarOpacityFunc = firstVolumeProperty.getScalarOpacity();
-    const opTex =
-      model._openGLRenderWindow.getGraphicsResourceForObject(scalarOpacityFunc);
-    const opacityFuncHash = getTransferFunctionHash(
-      scalarOpacityFunc,
+    const opacityFunctions = [];
+    for (let component = 0; component < numIComps; ++component) {
+      opacityFunctions.push(firstVolumeProperty.getScalarOpacity(component));
+    }
+    const opacityFuncHash = getTransferFunctionsHash(
+      opacityFunctions,
       useIndependentComps,
       numIComps
+    );
+    const firstScalarOpacityFunc = firstVolumeProperty.getScalarOpacity();
+    const opTex = model._openGLRenderWindow.getGraphicsResourceForObject(
+      firstScalarOpacityFunc
     );
     const reBuildOp =
       !opTex?.oglObject?.getHandle() || opTex.hash !== opacityFuncHash;
@@ -1596,9 +1603,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           oTable
         );
       }
-      if (scalarOpacityFunc) {
+      if (firstScalarOpacityFunc) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
-          scalarOpacityFunc,
+          firstScalarOpacityFunc,
           newOpacityTexture,
           opacityFuncHash
         );
@@ -1610,19 +1617,26 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     replaceGraphicsResource(
       model._openGLRenderWindow,
       model._opacityTextureCore,
-      scalarOpacityFunc
+      firstScalarOpacityFunc
     );
-    model._opacityTextureCore = scalarOpacityFunc;
+    model._opacityTextureCore = firstScalarOpacityFunc;
 
     // rebuild color tfun?
-    const colorTransferFunc = firstVolumeProperty.getRGBTransferFunction();
-    const colorFuncHash = getTransferFunctionHash(
-      colorTransferFunc,
+    const colorTransferFunctions = [];
+    for (let component = 0; component < numIComps; ++component) {
+      colorTransferFunctions.push(
+        firstVolumeProperty.getRGBTransferFunction(component)
+      );
+    }
+    const colorFuncHash = getTransferFunctionsHash(
+      colorTransferFunctions,
       useIndependentComps,
       numIComps
     );
-    const cTex =
-      model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
+    const firstColorTransferFunc = firstVolumeProperty.getRGBTransferFunction();
+    const cTex = model._openGLRenderWindow.getGraphicsResourceForObject(
+      firstColorTransferFunc
+    );
     const reBuildC =
       !cTex?.oglObject?.getHandle() || cTex?.hash !== colorFuncHash;
     if (reBuildC) {
@@ -1654,13 +1668,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         VtkDataTypes.UNSIGNED_CHAR,
         cTable
       );
-      if (colorTransferFunc) {
-        model._openGLRenderWindow.setGraphicsResourceForObject(
-          colorTransferFunc,
-          newColorTexture,
-          colorFuncHash
-        );
-      }
+      model._openGLRenderWindow.setGraphicsResourceForObject(
+        firstColorTransferFunc,
+        newColorTexture,
+        colorFuncHash
+      );
       model.colorTexture = newColorTexture;
     } else {
       model.colorTexture = cTex.oglObject;
@@ -1668,9 +1680,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     replaceGraphicsResource(
       model._openGLRenderWindow,
       model._colorTextureCore,
-      colorTransferFunc
+      firstColorTransferFunc
     );
-    model._colorTextureCore = colorTransferFunc;
+    model._colorTextureCore = firstColorTransferFunc;
 
     // rebuild scalarTextures?
     model.currentValidInputs.forEach(({ imageData, inputIndex }, component) => {
