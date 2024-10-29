@@ -44,25 +44,24 @@ function createVolumeActor(imageData) {
   // Create and setup the mapper
   const mapper = vtkVolumeMapper.newInstance();
   mapper.setSampleDistance(0.7);
-  mapper.setVolumetricScatteringBlending(0);
-  mapper.setLocalAmbientOcclusion(0);
-  mapper.setLAOKernelSize(10);
-  mapper.setLAOKernelRadius(5);
-  mapper.setComputeNormalFromOpacity(true);
   mapper.setInputData(imageData);
 
   // Create and setup the actor
   const actor = vtkVolume.newInstance();
-  actor
-    .getProperty()
-    .setRGBTransferFunction(0, getRandomColorTransferFunction());
-  actor.getProperty().setScalarOpacity(0, sharedOpacityFunction);
-  actor.getProperty().setInterpolationTypeToLinear();
-  actor.getProperty().setShade(true);
-  actor.getProperty().setAmbient(0.3);
-  actor.getProperty().setDiffuse(0.8);
-  actor.getProperty().setSpecular(1);
-  actor.getProperty().setSpecularPower(8);
+  const actorProperty = actor.getProperty();
+  actorProperty.setComputeNormalFromOpacity(true);
+  actorProperty.setLAOKernelRadius(5);
+  actorProperty.setLAOKernelSize(10);
+  actorProperty.setLocalAmbientOcclusion(0);
+  actorProperty.setVolumetricScatteringBlending(0);
+  actorProperty.setRGBTransferFunction(0, getRandomColorTransferFunction());
+  actorProperty.setScalarOpacity(0, sharedOpacityFunction);
+  actorProperty.setInterpolationTypeToLinear();
+  actorProperty.setShade(true);
+  actorProperty.setAmbient(0.3);
+  actorProperty.setDiffuse(0.8);
+  actorProperty.setSpecular(1);
+  actorProperty.setSpecularPower(8);
   actor.setMapper(mapper);
 
   return actor;

@@ -69,9 +69,6 @@ test.onlyIfWebGL('Test Volume Mapper Shadow Clip', (t) => {
   im.getPointData().setScalars(farray);
 
   mapper.setInputData(im);
-  mapper.setComputeNormalFromOpacity(true);
-  mapper.setVolumetricScatteringBlending(1.0);
-  mapper.setGlobalIlluminationReach(1.0);
 
   const clipPlane = vtkPlane.newInstance();
   clipPlane.setNormal(-0.5, -0.5, 1);
@@ -85,6 +82,9 @@ test.onlyIfWebGL('Test Volume Mapper Shadow Clip', (t) => {
   const ofun = gc.registerResource(vtkPiecewiseFunction.newInstance());
   ofun.addPoint(0, 0);
   ofun.addPoint(255, 1);
+  actor.getProperty().setComputeNormalFromOpacity(true);
+  actor.getProperty().setGlobalIlluminationReach(1.0);
+  actor.getProperty().setVolumetricScatteringBlending(1.0);
   actor.getProperty().setRGBTransferFunction(0, ctfun);
   actor.getProperty().setScalarOpacity(0, ofun);
   actor.getProperty().setAmbient(0.5);

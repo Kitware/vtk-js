@@ -136,8 +136,8 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
 
   // CVR
   actor.getProperty().setShade(true);
-  mapper.setGlobalIlluminationReach(0.0);
-  mapper.setVolumetricScatteringBlending(0.0);
+  actor.getProperty().setGlobalIlluminationReach(0.0);
+  actor.getProperty().setVolumetricScatteringBlending(0.0);
   mapper.setVolumeShadowSamplingDistFactor(1.0);
   mapper.setAutoAdjustSampleDistances(false);
 
