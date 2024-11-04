@@ -1354,7 +1354,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
   publicAPI.updatelabelOutlineThicknessTexture = (image) => {
     const labelOutlineThicknessArray = image
       .getProperty()
-      .getLabelOutlineThickness();
+      .getLabelOutlineThicknessByReference();
 
     const lTex = model._openGLRenderWindow.getGraphicsResourceForObject(
       labelOutlineThicknessArray
