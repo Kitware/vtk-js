@@ -376,7 +376,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
                   int actualThickness = int(textureValue * 255.0);
 
                   if (segmentIndex == 0){
-                    gl_FragData[0] = vec4(0.0, 1.0, 1.0, 0.0);
+                    gl_FragData[0] = vec4(0.0, 0.0, 0.0, 0.0);
                     return;
                   }
 
