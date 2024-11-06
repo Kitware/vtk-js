@@ -187,7 +187,8 @@ This will allow you to see the some live code running in your browser. Just pick
 [![OfflineLocalView Example][OfflineLocalViewWithIcon]](./OfflineLocalView.html "Load a serialized scene (VTKSZ)")
 [![G-Code Example][GCodeReaderWithIcon]](./GCodeReader.html "G-Code reader(gcode)")
 [![HDRReader Example][HDRReaderWithIcon]](./HDRReader.html "Load an HDR image")
-[![TGAReader Example][TGAReaderWithIcon]](./TGAReader.html "Load an TGA image")
+[![TGAReader Example][TGAReaderWithIcon]](./TGAReader.html "Load a TGA image")
+[![TIFFReader Example][TIFFReaderWithIcon]](./TGAReader.html "Load a TIFF image")
 
 </div>
 
@@ -211,6 +212,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [GCodeReaderWithIcon]: ../docs/gallery/GCodeReaderWithIcon.jpg
 [HDRReaderWithIcon]: ../docs/gallery/HDRReaderWithIcon.jpg
 [TGAReaderWithIcon]: ../docs/gallery/TGAReaderWithIcon.jpg
+[TIFFReaderWithIcon]: ../docs/gallery/TIFFReaderWithIcon.jpg
 
 # Actors
 
