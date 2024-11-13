@@ -58,7 +58,7 @@ const variantsModels = [
 ];
 
 const environmentTex = createTextureWithMipmap(
-  '/Data/pbr/kiara_dawn_4k.jpg',
+  `${__BASE_PATH__}/data/pbr/kiara_dawn_4k.jpg`,
   8
 );
 renderer.setUseEnvironmentTextureAsBackground(false);
@@ -265,10 +265,13 @@ fetch(`${baseUrl}/${modelsFolder}/model-index.json`)
 
     if (selectedFlavor === 'glTF-Draco') {
       vtkResourceLoader
-        .loadScript('https://unpkg.com/draco3d@1.3.4/draco_decoder_nodejs.js')
+        .loadScript(
+          'https://unpkg.com/draco3dgltf@1.3.6/draco_decoder_gltf_nodejs.js'
+        )
         .then(() => {
           // Set decoder function to the vtk reader
-          reader.setDracoDecoder(window.CreateDracoModule);
+          // eslint-disable-next-line no-undef
+          reader.setDracoDecoder(DracoDecoderModule);
           reader
             .setUrl(url, { binary: true, sceneId: selectedScene })
             .then(reader.onReady(ready));
