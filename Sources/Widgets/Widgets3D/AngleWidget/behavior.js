@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import { add } from 'vtk.js/Sources/Common/Core/Math';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkPointPicker from 'vtk.js/Sources/Rendering/Core/PointPicker';
 
 const MAX_POINTS = 3;
@@ -10,6 +11,18 @@ export default function widgetBehavior(publicAPI, model) {
 
   const picker = vtkPointPicker.newInstance();
   picker.setPickFromList(1);
+
+  publicAPI.getBounds = () =>
+    model.widgetState
+      .getHandleList()
+      .reduce(
+        (bounds, handle) =>
+          vtkBoundingBox.inflate(
+            vtkBoundingBox.addPoint(bounds, ...handle.getOrigin()),
+            publicAPI.getScaleInPixels() ? 0 : handle.getScale1() / 2
+          ),
+        [...vtkBoundingBox.INIT_BOUNDS]
+      );
 
   // --------------------------------------------------------------------------
   // Display 2D
