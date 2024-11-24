@@ -55,6 +55,7 @@ const variantsModels = [
   'MaterialsVariantsShoe',
   'GlamVelvetSofa',
   'SheenChair',
+  'AntiqueCamera',
 ];
 
 const environmentTex = createTextureWithMipmap(
@@ -247,7 +248,7 @@ fetch(`${baseUrl}/${modelsFolder}/model-index.json`)
     });
 
     selectedModel = userParms.model || modelsNames[0];
-    const variants = Object.keys(modelsDictionary[selectedModel]);
+    const variants = Object.keys(modelsDictionary[selectedModel]).sort();
 
     selectedFlavor = userParms.flavor || variants[0];
     variants.forEach((variant) => {

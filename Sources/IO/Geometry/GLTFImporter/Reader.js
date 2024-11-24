@@ -43,19 +43,15 @@ async function parseGLTF(gltf, options) {
 }
 
 /**
- * Creates VTK polydata from a GLTF mesh
- * @param {GLTFMesh} mesh - The GLTF mesh
+ * Creates VTK polydata from a GLTF mesh primitive
+ * @param {GLTFPrimitive} primitive - The GLTF mesh primitive
  * @returns {vtkPolyData} The created VTK polydata
  */
-async function createPolyDataFromGLTFMesh(mesh) {
-  const primitive = mesh.primitives[0]; // For simplicity, we'll just use the first primitive
-
+async function createPolyDataFromGLTFMesh(primitive) {
   if (!primitive || !primitive.attributes) {
-    vtkWarningMacro('Mesh has no position data, skipping');
+    vtkWarningMacro('Primitive has no position data, skipping');
     return null;
   }
-
-  const mode = primitive.mode;
 
   if (primitive.extensions?.KHR_draco_mesh_compression) {
     return handleKHRDracoMeshCompression(
@@ -136,10 +132,10 @@ async function createPolyDataFromGLTFMesh(mesh) {
   });
 
   // Handle indices if available
-  if (primitive.indices !== undefined) {
+  if (primitive.indices != null) {
     const indices = primitive.indices.value;
     const nCells = indices.length - 2;
-    switch (mode) {
+    switch (primitive.mode) {
       case MODES.GL_LINE_STRIP:
       case MODES.GL_TRIANGLE_STRIP:
       case MODES.GL_LINE_LOOP:
@@ -154,7 +150,7 @@ async function createPolyDataFromGLTFMesh(mesh) {
     }
   }
 
-  switch (mode) {
+  switch (primitive.mode) {
     case MODES.GL_TRIANGLES:
     case MODES.GL_TRIANGLE_FAN:
       polyData.setPolys(cells);
@@ -179,7 +175,7 @@ async function createPolyDataFromGLTFMesh(mesh) {
 
 /**
  * Creates a VTK property from a GLTF material
- * @param {*} model - The vtk model object
+ * @param {object} model - The vtk model object
  * @param {GLTFMaterial} material - The GLTF material
  * @param {vtkActor} actor - The VTK actor
  */
@@ -191,13 +187,13 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
   const property = actor.getProperty();
   const pbr = material.pbrMetallicRoughness;
 
-  if (pbr !== undefined) {
+  if (pbr != null) {
     if (
       !pbr?.metallicFactor ||
       pbr?.metallicFactor <= 0 ||
       pbr?.metallicFactor >= 1
     ) {
-      vtkWarningMacro(
+      vtkDebugMacro(
         'Invalid material.pbrMetallicRoughness.metallicFactor value. Using default value instead.'
       );
     } else metallicFactor = pbr.metallicFactor;
@@ -206,14 +202,14 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
       pbr?.roughnessFactor <= 0 ||
       pbr?.roughnessFactor >= 1
     ) {
-      vtkWarningMacro(
+      vtkDebugMacro(
         'Invalid material.pbrMetallicRoughness.roughnessFactor value. Using default value instead.'
       );
     } else roughnessFactor = pbr.roughnessFactor;
 
     const color = pbr.baseColorFactor;
 
-    if (color !== undefined) {
+    if (color != null) {
       property.setDiffuseColor(color[0], color[1], color[2]);
       property.setOpacity(color[3]);
     }
@@ -226,7 +222,7 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
       const extensions = pbr.baseColorTexture.extensions;
       const tex = pbr.baseColorTexture.texture;
 
-      if (tex.extensions !== undefined) {
+      if (tex.extensions != null) {
         const extensionsNames = Object.keys(tex.extensions);
         extensionsNames.forEach((extensionName) => {
           // TODO: Handle KHR_texture_basisu extension
@@ -305,7 +301,7 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
       property.setEmissionTexture(emissiveTex);
 
       // Handle mutiple Uvs
-      if (material.emissiveTexture.texCoord !== undefined) {
+      if (material.emissiveTexture.texCoord != null) {
         const pd = actor.getMapper().getInputData().getPointData();
         pd.setActiveTCoords(`TEXCOORD_${material.emissiveTexture.texCoord}`);
       }
@@ -324,14 +320,14 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
       );
       property.setNormalTexture(normalTex);
 
-      if (material.normalTexture.scale !== undefined) {
+      if (material.normalTexture.scale != null) {
         property.setNormalStrength(material.normalTexture.scale);
       }
     }
   }
 
   // Material extensions
-  if (material.extensions !== undefined) {
+  if (material.extensions != null) {
     const extensionsNames = Object.keys(material.extensions);
     extensionsNames.forEach((extensionName) => {
       const extension = material.extensions[extensionName];
@@ -360,17 +356,17 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
 
 /**
  * Handles primitive extensions
+ * @param {string} nodeId The GLTF node id
  * @param {*} extensions The extensions object
  * @param {*} model The vtk model object
- * @param {GLTFNode} node The GLTF node
  */
-function handlePrimitiveExtensions(extensions, model, node) {
+function handlePrimitiveExtensions(nodeId, extensions, model) {
   const extensionsNames = Object.keys(extensions);
   extensionsNames.forEach((extensionName) => {
     const extension = extensions[extensionName];
     switch (extensionName) {
       case 'KHR_materials_variants':
-        model.variantMappings.set(node.id, extension.mappings);
+        model.variantMappings.set(nodeId, extension.mappings);
         break;
       default:
         vtkWarningMacro(`Unhandled extension: ${extensionName}`);
@@ -383,37 +379,47 @@ function handlePrimitiveExtensions(extensions, model, node) {
  * @param {GLTFMesh} mesh - The GLTF mesh
  * @returns {vtkActor} The created VTK actor
  */
-async function createActorFromGTLFNode(model, node, worldMatrix) {
+async function createActorFromGTLFNode(worldMatrix) {
   const actor = vtkActor.newInstance();
   const mapper = vtkMapper.newInstance();
   mapper.setColorModeToDirectScalars();
   actor.setMapper(mapper);
   actor.setUserMatrix(worldMatrix);
 
-  if (node.mesh !== undefined) {
-    const polyData = await createPolyDataFromGLTFMesh(node.mesh);
-    mapper.setInputData(polyData);
+  const polydata = vtkPolyData.newInstance();
+  mapper.setInputData(polydata);
+  return actor;
+}
 
-    const primitive = node.mesh.primitives[0]; // the first one for now
+/**
+ * Creates a VTK actor from a GLTF mesh
+ * @param {GLTFMesh} mesh - The GLTF mesh
+ * @returns {vtkActor} The created VTK actor
+ */
+async function createActorFromGTLFPrimitive(model, primitive, worldMatrix) {
+  const actor = vtkActor.newInstance();
+  const mapper = vtkMapper.newInstance();
+  mapper.setColorModeToDirectScalars();
+  actor.setMapper(mapper);
+  actor.setUserMatrix(worldMatrix);
 
-    // Support for materials
-    if (primitive.material !== undefined) {
-      await createPropertyFromGLTFMaterial(model, primitive.material, actor);
-    }
+  const polydata = await createPolyDataFromGLTFMesh(primitive);
+  mapper.setInputData(polydata);
 
-    if (primitive.extensions !== undefined) {
-      handlePrimitiveExtensions(primitive.extensions, model, node);
-    }
-  } else {
-    const polyData = vtkPolyData.newInstance();
-    mapper.setInputData(polyData);
+  // Support for materials
+  if (primitive.material != null) {
+    await createPropertyFromGLTFMaterial(model, primitive.material, actor);
+  }
+
+  if (primitive.extensions != null) {
+    handlePrimitiveExtensions(`${primitive.name}`, primitive.extensions, model);
   }
 
   return actor;
 }
 
 /**
- *
+ * Creates a GLTF animation object
  * @param {GLTFAnimation} animation
  * @returns
  */
@@ -443,7 +449,7 @@ function getTransformationMatrix(node) {
   const scale = node.scale ?? vec3.fromValues(1.0, 1.0, 1.0);
 
   const matrix =
-    node.matrix !== undefined
+    node.matrix != null
       ? mat4.clone(node.matrix)
       : mat4.fromRotationTranslationScale(
           mat4.create(),
@@ -475,13 +481,24 @@ async function processNode(
   );
 
   // Create actor for the current node
-  const actor = await createActorFromGTLFNode(model, node, worldMatrix);
-  if (actor) {
-    actor.setUserMatrix(worldMatrix);
+  if (node.mesh != null) {
+    const nodeActor = await createActorFromGTLFNode(worldMatrix);
     if (parentActor) {
-      actor.setParentProp(parentActor);
+      nodeActor.setParentProp(parentActor);
     }
-    model.actors.set(node.id, actor);
+    model.actors.set(`${node.id}`, nodeActor);
+
+    await Promise.all(
+      node.mesh.primitives.map(async (primitive, i) => {
+        const actor = await createActorFromGTLFPrimitive(
+          model,
+          primitive,
+          worldMatrix
+        );
+        actor.setParentProp(nodeActor);
+        model.actors.set(`${node.id}_${primitive.name}`, actor);
+      })
+    );
   }
 
   // Handle KHRLightsPunctual extension

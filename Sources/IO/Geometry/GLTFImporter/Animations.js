@@ -148,7 +148,7 @@ function createAnimationSampler(glTFSampler) {
         result = cubicSplineInterpolate(path, t0, t1, i0, i1, time);
         break;
       default:
-        throw new Error(
+        vtkWarningMacro(
           `Unknown interpolation method: ${glTFSampler.interpolation}`
         );
     }
