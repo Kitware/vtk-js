@@ -160,7 +160,7 @@ class GLTFParser {
     if (mesh.primitives) {
       mesh.primitives = mesh.primitives.map((primitive, idx) => {
         const attributes = primitive.attributes;
-        primitive.name = `submesh-${idx}`;
+        primitive.name = `primitive-${idx}`;
         primitive.attributes = {};
         for (const attribute in attributes) {
           const attr = SEMANTIC_ATTRIBUTE_MAP[attribute];

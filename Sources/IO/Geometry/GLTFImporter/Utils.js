@@ -184,7 +184,7 @@ export function createVTKTextureFromGLTFTexture(image, sampler, extensions) {
         texture.setInterpolate(true);
       }
     } else {
-      texture.MipmapOn();
+      texture.setMipLevel(8);
       texture.setInterpolate(true);
       texture.setEdgeClamp(true);
     }
