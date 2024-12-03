@@ -408,6 +408,10 @@ export function extend(
 
 /**
  * Method use to create a new instance of vtkDataArray
+ *
+ * If the provided `values` is a plain Array and `dataType` is not explicitly provided,
+ * then the vtkDataArray data type will be a Float32Array.
+ *
  * @param {object} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: object): vtkDataArray;
