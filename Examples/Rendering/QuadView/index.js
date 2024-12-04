@@ -158,28 +158,27 @@ function createVolumeView(renderer, source) {
         .reduce((a, b) => a + b, 0)
     );
   mapper.setSampleDistance(sampleDistance / 2.5);
-  mapper.setComputeNormalFromOpacity(false);
-  mapper.setGlobalIlluminationReach(0.0);
-  mapper.setVolumetricScatteringBlending(0.5);
-  mapper.setVolumeShadowSamplingDistFactor(5.0);
 
   // Set volume properties
   const volProp = vtkVolumeProperty.newInstance();
+  volProp.setComputeNormalFromOpacity(false);
+  volProp.setGlobalIlluminationReach(0.0);
+  volProp.setVolumeShadowSamplingDistFactor(5.0);
+  volProp.setVolumetricScatteringBlending(0.5);
   volProp.setInterpolationTypeToLinear();
-  volume
-    .getProperty()
-    .setScalarOpacityUnitDistance(
-      0,
-      vtkBoundingBox.getDiagonalLength(source.getBounds()) /
-        Math.max(...source.getDimensions())
-    );
+  volProp.setScalarOpacityUnitDistance(
+    0,
+    vtkBoundingBox.getDiagonalLength(source.getBounds()) /
+      Math.max(...source.getDimensions())
+  );
   volProp.setGradientOpacityMinimumValue(0, 0);
   const dataArray =
     source.getPointData().getScalars() || source.getPointData().getArrays()[0];
   const dataRange = dataArray.getRange();
-  volume
-    .getProperty()
-    .setGradientOpacityMaximumValue(0, (dataRange[1] - dataRange[0]) * 0.05);
+  volProp.setGradientOpacityMaximumValue(
+    0,
+    (dataRange[1] - dataRange[0]) * 0.05
+  );
   volProp.setShade(true);
   volProp.setUseGradientOpacity(0, false);
   volProp.setGradientOpacityMinimumOpacity(0, 0.0);
