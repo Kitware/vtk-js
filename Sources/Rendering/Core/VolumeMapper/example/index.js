@@ -54,11 +54,6 @@ const forceNearestElem = document.getElementById('forceNearest');
 const actor = vtkVolume.newInstance();
 const mapper = vtkVolumeMapper.newInstance();
 mapper.setSampleDistance(0.7);
-mapper.setVolumetricScatteringBlending(0);
-mapper.setLocalAmbientOcclusion(0);
-mapper.setLAOKernelSize(10);
-mapper.setLAOKernelRadius(5);
-mapper.setComputeNormalFromOpacity(true);
 actor.setMapper(mapper);
 
 // create color and opacity transfer functions
@@ -70,6 +65,11 @@ ctfun.addRGBPoint(255, 0.3, 0.3, 0.5);
 const ofun = vtkPiecewiseFunction.newInstance();
 ofun.addPoint(0.0, 0.1);
 ofun.addPoint(255.0, 1.0);
+actor.getProperty().setComputeNormalFromOpacity(true);
+actor.getProperty().setLAOKernelRadius(5);
+actor.getProperty().setLAOKernelSize(10);
+actor.getProperty().setLocalAmbientOcclusion(0);
+actor.getProperty().setVolumetricScatteringBlending(0);
 actor.getProperty().setRGBTransferFunction(0, ctfun);
 actor.getProperty().setScalarOpacity(0, ofun);
 actor.getProperty().setInterpolationTypeToLinear();
@@ -145,14 +145,6 @@ if (light.getPositional()) {
   renderer.addActor(lca);
 }
 
-{
-  const optionElem = document.createElement('option');
-  optionElem.label = 'Default';
-  optionElem.value = '';
-  presetSelectElem.appendChild(optionElem);
-  presetSelectElem.value = optionElem.value;
-}
-
 Object.keys(ColorMixPreset).forEach((key) => {
   if (key === 'CUSTOM') {
     // Don't enable custom mode
@@ -167,7 +159,7 @@ Object.keys(ColorMixPreset).forEach((key) => {
 });
 
 const setColorMixPreset = (presetKey) => {
-  const preset = presetKey ? ColorMixPreset[presetKey] : null;
+  const preset = ColorMixPreset[presetKey];
   actor.getProperty().setColorMixPreset(preset);
   presetSelectElem.value = presetKey;
 };
@@ -195,7 +187,7 @@ updateForceNearestElem(1);
 volumeSelectElem.addEventListener('change', () => {
   const { comp, data } = volumeOptions[volumeSelectElem.value];
   if (comp === 1) {
-    setColorMixPreset('');
+    setColorMixPreset('DEFAULT');
     presetSelectElem.style.display = 'none';
   } else {
     presetSelectElem.style.display = 'block';
@@ -301,7 +293,7 @@ const button = document.querySelector('.text');
 const lao = document.querySelector('.lao');
 lao.addEventListener('click', (e) => {
   isLAO = !isLAO;
-  mapper.setLocalAmbientOcclusion(isLAO);
+  actor.getProperty().setLocalAmbientOcclusion(isLAO);
   button.innerText = `(${isLAO ? 'on' : 'off'})`;
   renderWindow.render();
 });
@@ -311,7 +303,7 @@ vs.addEventListener('input', (e) => {
   const b = (0.1 * Number(e.target.value)).toPrecision(1);
   const sbutton = document.querySelector('.stext');
   sbutton.innerText = `(${b > 0 ? b : 'off'})`;
-  mapper.setVolumetricScatteringBlending(b);
+  actor.getProperty().setVolumetricScatteringBlending(b);
   renderWindow.render();
 });
 
