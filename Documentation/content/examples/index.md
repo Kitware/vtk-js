@@ -107,6 +107,8 @@ This will allow you to see the some live code running in your browser. Just pick
 [![TubeFilter Example][TubeFilter]](./TubeFilter.html "TubeFilter")
 [![Cutter Example][Cutter]](./Cutter.html "Cutter")
 [![PolyDataNormals Example][PolyDataNormals]](./PolyDataNormals.html "PolyDataNormals")
+[![ThresholdPoints Example][ThresholdPoints]](./ThresholdPoints.html "Cut/Treshold points with point data criteria")
+
 
 </div>
 
@@ -125,6 +127,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [TubeFilter]: ../docs/gallery/TubeFilter.jpg
 [Cutter]: ../docs/gallery/Cutter.jpg
 [PolyDataNormals]: ../docs/gallery/PolyDataNormals.jpg
+[ThresholdPoints]: ../docs/gallery/ThresholdPoints.jpg
 
 # Sources
 
