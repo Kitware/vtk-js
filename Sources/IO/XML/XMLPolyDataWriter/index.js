@@ -50,6 +50,11 @@ function vtkXMLPolyDataWriter(publicAPI, model) {
       'CellData',
       dataObject.getCellData()
     );
+    publicAPI.processDataSetAttributes(
+      piece,
+      'FieldData',
+      dataObject.getFieldData()
+    );
     publicAPI.processDataArray(piece.ele('Points'), dataObject.getPoints());
 
     POLYDATA_FIELDS.forEach((cellType) => {
