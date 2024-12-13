@@ -354,22 +354,16 @@ reader
       const maxRadius = Math.ceil(Math.max(ijkRadius[0], ijkRadius[1]));
       const ellipseBounds = [
         -maxRadius,
-        0,
-        0,
-        maxRadius,
-        0,
-        0,
-        0,
         -maxRadius,
         0,
-        0,
+        maxRadius,
         maxRadius,
         0,
-        (-maxRadius * Math.sqrt(2)) / 2,
-        (-maxRadius * Math.sqrt(2)) / 2,
+        -maxRadius,
+        maxRadius,
         0,
-        (maxRadius * Math.sqrt(2)) / 2,
-        (maxRadius * Math.sqrt(2)) / 2,
+        maxRadius,
+        -maxRadius,
         0,
       ];
       ijkToWorldMatrix.apply(ellipseBounds);
