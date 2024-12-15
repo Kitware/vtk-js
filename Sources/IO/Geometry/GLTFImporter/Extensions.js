@@ -86,7 +86,7 @@ export function handleKHRLightsPunctual(extension, transformMatrix, model) {
  *
  * @param {object} extension - The KHR_draco_mesh_compression extension object.
  */
-export async function handleKHRDracoMeshCompression(extension) {
+export function handleKHRDracoMeshCompression(extension) {
   const reader = vtkDracoReader.newInstance();
   reader.parse(extension.bufferView);
   return reader.getOutputData();
