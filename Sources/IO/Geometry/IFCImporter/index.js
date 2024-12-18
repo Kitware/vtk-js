@@ -14,6 +14,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkAppendPolyData from 'vtk.js/Sources/Filters/General/AppendPolyData';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
+import { mat3 } from 'gl-matrix';
 
 const { vtkErrorMacro } = macro;
 
@@ -94,11 +95,16 @@ function vtkIFCImporter(publicAPI, model) {
         .buildFromRadian()
         .setMatrix(userMatrix);
 
+      const normalMatrix = vtkMatrixBuilder
+        .buildFromRadian()
+        .multiply3x3(mat3.fromMat4(mat3.create(), userMatrix));
+
       for (let i = 0; i < vertices.length; i += 6) {
         const point = [vertices[i], vertices[i + 1], vertices[i + 2]];
         const normal = [vertices[i + 3], vertices[i + 4], vertices[i + 5]];
 
-        transformMatrix.apply(point).apply(normal);
+        transformMatrix.apply(point);
+        normalMatrix.apply(normal);
 
         pointValues[i / 2] = point[0];
         pointValues[i / 2 + 1] = point[1];
@@ -244,32 +250,32 @@ function vtkIFCImporter(publicAPI, model) {
   publicAPI.importActors = (renderer) => {
     if (model.mergeGeometries) {
       const opaqueMeshes = meshes.filter((mesh) => mesh.color.w === 1);
-      let apd = vtkAppendPolyData.newInstance();
+      const oapd = vtkAppendPolyData.newInstance();
 
       opaqueMeshes.forEach((mesh) => {
         const pd = createColoredPolyDataFromIFCMesh(mesh);
-        apd.addInputData(pd);
+        oapd.addInputData(pd);
       });
 
       let mapper = vtkMapper.newInstance();
       mapper.setColorModeToDirectScalars();
-      mapper.setInputConnection(apd.getOutputPort());
+      mapper.setInputConnection(oapd.getOutputPort());
 
       let actor = vtkActor.newInstance();
       actor.setMapper(mapper);
       renderer.addActor(actor);
 
       const transparentMeshes = meshes.filter((mesh) => mesh.color.w < 1);
-      apd = vtkAppendPolyData.newInstance();
+      const tapd = vtkAppendPolyData.newInstance();
 
       transparentMeshes.forEach((mesh) => {
         const pd = createColoredPolyDataFromIFCMesh(mesh);
-        apd.addInputData(pd);
+        tapd.addInputData(pd);
       });
 
       mapper = vtkMapper.newInstance();
       mapper.setColorModeToDirectScalars();
-      mapper.setInputConnection(apd.getOutputPort());
+      mapper.setInputConnection(tapd.getOutputPort());
 
       actor = vtkActor.newInstance();
       actor.setMapper(mapper);
