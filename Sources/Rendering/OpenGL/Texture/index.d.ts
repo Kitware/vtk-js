@@ -349,6 +349,19 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param useHalfFloat - whether to use half float
    */
   enableUseHalfFloat(useHalfFloat: boolean): void;
+
+  /**
+   * Even when the EXT_texture_norm16 extension is present, linear filtering
+   * might not be supported for normalized fixed point textures.
+   *
+   * There seems to be no way of checking for support, aside from actually
+   * trying to render a texture and seeing if the pixels are black or not.
+   *
+   * @param useLinearNorm16 When this is false (the default), the texture will
+   * avoid using EXT_texture_norm16 entirely if filtering is set to linear.
+   * Set this to true to use it anyway.
+   */
+  enableLinearNorm16Ext(useLinearNorm16: boolean): void;
 }
 
 /**
