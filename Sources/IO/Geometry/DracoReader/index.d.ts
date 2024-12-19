@@ -118,15 +118,15 @@ export function newInstance(
 ): vtkDracoReader;
 
 /**
- *
+ * Get the draco decoder
  */
 export function getDracoDecoder(): any;
 
 /**
- *
- * @param createDracoModule
+ * Set the draco decoder
+ * @param dracoDecoder
  */
-export function setDracoDecoder(createDracoModule: any): void;
+export function setDracoDecoder(dracoDecoder: any): Promise<any>;
 
 /**
  * Load the WASM decoder from url and set the decoderModule
