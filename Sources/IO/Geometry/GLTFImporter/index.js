@@ -144,8 +144,8 @@ function vtkGLTFImporter(publicAPI, model) {
     publicAPI.parse(model.parseData);
   };
 
-  publicAPI.setDracoDecoder = (decoder) => {
-    vtkDracoReader.setDracoDecoder(decoder);
+  publicAPI.setDracoDecoder = async (dracoDecoder) => {
+    await vtkDracoReader.setDracoDecoder(dracoDecoder);
   };
 
   publicAPI.importActors = () => {

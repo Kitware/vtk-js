@@ -267,12 +267,12 @@ fetch(`${baseUrl}/${modelsFolder}/model-index.json`)
     if (selectedFlavor === 'glTF-Draco') {
       vtkResourceLoader
         .loadScript(
-          'https://unpkg.com/draco3dgltf@1.3.6/draco_decoder_gltf_nodejs.js'
+          'https://unpkg.com/draco3dgltf@1.5.7/draco_decoder_gltf_nodejs.js'
         )
-        .then(() => {
+        .then(async () => {
           // Set decoder function to the vtk reader
           // eslint-disable-next-line no-undef
-          reader.setDracoDecoder(DracoDecoderModule);
+          await reader.setDracoDecoder(DracoDecoderModule);
           reader
             .setUrl(url, { binary: true, sceneId: selectedScene })
             .then(reader.onReady(ready));

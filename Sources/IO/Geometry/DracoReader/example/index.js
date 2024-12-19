@@ -49,16 +49,13 @@ function update() {
 // Dynamic script loading from CDN
 // ----------------------------------------------------------------------------
 
-// Prevent error when draco try to set the export on module
-window.module = {};
-
 // Add new script tag with draco CDN
 vtkResourceLoader
-  .loadScript('https://unpkg.com/draco3d@1.3.4/draco_decoder_nodejs.js')
-  .then(() => {
+  .loadScript('https://unpkg.com/draco3d@1.5.7/draco_decoder_nodejs.js')
+  .then(async () => {
     // Set decoder function to the vtk reader
-    vtkDracoReader.setDracoDecoder(window.CreateDracoModule);
-
+    // eslint-disable-next-line no-undef
+    await vtkDracoReader.setDracoDecoder(DracoDecoderModule);
     // Trigger data download
     reader
       .setUrl(

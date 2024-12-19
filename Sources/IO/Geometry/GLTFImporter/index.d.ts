@@ -183,25 +183,25 @@ export interface vtkGLTFImporter extends vtkGLTFImporterBase {
 
   /**
    * Set the camera id.
-   * @param cameraId
+   * @param cameraId The camera id.
    */
   setCamera(cameraId: string): void;
 
   /**
    * Set the Draco decoder.
-   * @param mappings
+   * @param dracoDecoder
    */
-  setDracoDecoder(decoder: any): void;
+  setDracoDecoder(dracoDecoder: any): void;
 
   /**
    * Set the vtk Renderer.
-   * @param renderer
+   * @param renderer The vtk Renderer.
    */
   setRenderer(renderer: vtkRenderer): void;
 
   /**
    * Switch to a variant.
-   * @param variantIndex
+   * @param variantIndex The index of the variant to switch to.
    */
   switchToVariant(variantIndex: number): void;
 }
