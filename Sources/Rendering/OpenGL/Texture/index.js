@@ -160,6 +160,17 @@ function vtkOpenGLTexture(publicAPI, model) {
     }
   };
 
+  const getNorm16Ext = () => {
+    if (
+      !model.enableLinearNorm16Ext &&
+      (model.minificationFilter === Filter.LINEAR ||
+        model.magnificationFilter === Filter.LINEAR)
+    ) {
+      return undefined;
+    }
+    return model.oglNorm16Ext;
+  };
+
   //----------------------------------------------------------------------------
   publicAPI.destroyTexture = () => {
     // deactivate it first
@@ -391,7 +402,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     result = model._openGLRenderWindow.getDefaultTextureInternalFormat(
       vtktype,
       numComps,
-      model.oglNorm16Ext,
+      getNorm16Ext(),
       publicAPI.useHalfFloat()
     );
     if (result) {
@@ -478,9 +489,9 @@ function vtkOpenGLTexture(publicAPI, model) {
           return model.context.UNSIGNED_BYTE;
         // prefer norm16 since that is accurate compared to
         // half float which is not
-        case model.oglNorm16Ext && !useHalfFloat && VtkDataTypes.SHORT:
+        case getNorm16Ext() && !useHalfFloat && VtkDataTypes.SHORT:
           return model.context.SHORT;
-        case model.oglNorm16Ext && !useHalfFloat && VtkDataTypes.UNSIGNED_SHORT:
+        case getNorm16Ext() && !useHalfFloat && VtkDataTypes.UNSIGNED_SHORT:
           return model.context.UNSIGNED_SHORT;
         // use half float type
         case useHalfFloat && VtkDataTypes.SHORT:
@@ -820,7 +831,7 @@ function vtkOpenGLTexture(publicAPI, model) {
         if (
           webGLInfo.RENDERER.value.match(/WebKit/gi) &&
           navigator.platform.match(/Mac/gi) &&
-          model.oglNorm16Ext &&
+          getNorm16Ext() &&
           (dataType === VtkDataTypes.UNSIGNED_SHORT ||
             dataType === VtkDataTypes.SHORT)
         ) {
@@ -925,7 +936,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       numComps *
       model._openGLRenderWindow.getDefaultTextureByteSize(
         dataType,
-        model.oglNorm16Ext,
+        getNorm16Ext(),
         publicAPI.useHalfFloat()
       );
     publicAPI.deactivate();
@@ -1049,7 +1060,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       numComps *
       model._openGLRenderWindow.getDefaultTextureByteSize(
         dataType,
-        model.oglNorm16Ext,
+        getNorm16Ext(),
         publicAPI.useHalfFloat()
       );
     // generateMipmap must not be called here because we manually upload all levels
@@ -1138,7 +1149,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.components *
       model._openGLRenderWindow.getDefaultTextureByteSize(
         dataType,
-        model.oglNorm16Ext,
+        getNorm16Ext(),
         publicAPI.useHalfFloat()
       );
 
@@ -1248,7 +1259,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.components *
       model._openGLRenderWindow.getDefaultTextureByteSize(
         VtkDataTypes.UNSIGNED_CHAR,
-        model.oglNorm16Ext,
+        getNorm16Ext(),
         publicAPI.useHalfFloat()
       );
 
@@ -1401,11 +1412,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     }
 
     // Handle SHORT data type with EXT_texture_norm16 extension
-    if (
-      model.oglNorm16Ext &&
-      !useHalfFloat &&
-      dataType === VtkDataTypes.SHORT
-    ) {
+    if (getNorm16Ext() && !useHalfFloat && dataType === VtkDataTypes.SHORT) {
       for (let c = 0; c < numComps; ++c) {
         model.volumeInfo.scale[c] = 32767.0; // Scale to [-1, 1] range
       }
@@ -1414,7 +1421,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // Handle UNSIGNED_SHORT data type with EXT_texture_norm16 extension
     if (
-      model.oglNorm16Ext &&
+      getNorm16Ext() &&
       !useHalfFloat &&
       dataType === VtkDataTypes.UNSIGNED_SHORT
     ) {
@@ -1569,7 +1576,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.components *
       model._openGLRenderWindow.getDefaultTextureByteSize(
         dataTypeToUse,
-        model.oglNorm16Ext,
+        getNorm16Ext(),
         publicAPI.useHalfFloat()
       );
 
@@ -1861,6 +1868,10 @@ function vtkOpenGLTexture(publicAPI, model) {
   publicAPI.enableUseHalfFloat = (use) => {
     model.enableUseHalfFloat = use;
   };
+
+  publicAPI.enableLinearNorm16Ext = (enabled) => {
+    model.enableLinearNorm16Ext = enabled;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -1894,6 +1905,7 @@ const DEFAULT_VALUES = {
   maxLevel: 1000,
   generateMipmap: false,
   oglNorm16Ext: null,
+  enableLinearNorm16Ext: false,
   allocatedGPUMemoryInBytes: 0,
   // by default it is enabled
   enableUseHalfFloat: true,
