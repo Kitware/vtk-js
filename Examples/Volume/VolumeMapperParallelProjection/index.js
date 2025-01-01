@@ -39,7 +39,7 @@ fullScreenRenderer.addController(controlPanel);
 // ----------------------------------------------------------------------------
 
 // SETUP ================
-// Load script from https://unpkg.com/vtk.js then...
+// Load script from https://cdn.skypack.dev/@kitware/vtk.js then...
 
 const cubeSource = vtkCubeSource.newInstance();
 
