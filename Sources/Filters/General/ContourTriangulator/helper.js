@@ -1775,9 +1775,11 @@ export function vtkCCSFindCuts(
 
   // Search for potential cuts (need to find two cuts)
   let cutId = 0;
-  // Initialize cuts as a 2D array with two elements
-  cuts[0] = [0, 0];
-  cuts[1] = [0, 0];
+
+  cuts[0][0] = 0;
+  cuts[0][1] = 0;
+  cuts[1][0] = 0;
+  cuts[1][1] = 0;
 
   let foundCut = false;
   for (cutId = 0; cutId < 2; cutId++) {
@@ -2015,12 +2017,15 @@ export function vtkCCSCutHoleyPolys(
       // Do a quick search first, then do an exhaustive search.
       let madeCut = 0;
       let inner = 0;
+      const cuts = [
+        [0, 0],
+        [0, 0],
+      ];
       for (let exhaustive = 0; exhaustive < 2 && !madeCut; exhaustive++) {
         for (let j = 1; j < polyGroup.length; j++) {
           inner = innerBySize[j][1];
           innerPolyId = polyGroup[inner];
 
-          const cuts = [];
           if (
             vtkCCSFindCuts(
               polys,
