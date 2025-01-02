@@ -1775,10 +1775,9 @@ export function vtkCCSFindCuts(
 
   // Search for potential cuts (need to find two cuts)
   let cutId = 0;
-  cuts[0][0] = 0;
-  cuts[0][1] = 0;
-  cuts[1][0] = 0;
-  cuts[1][1] = 0;
+  // Initialize cuts as a 2D array with two elements
+  cuts[0] = [0, 0];
+  cuts[1] = [0, 0];
 
   let foundCut = false;
   for (cutId = 0; cutId < 2; cutId++) {
