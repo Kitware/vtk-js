@@ -183,6 +183,17 @@ function vtkWidgetManager(publicAPI, model) {
     }
   }
 
+  const deactivateAllWidgets = () => {
+    let wantRender = false;
+    for (let i = 0; i < model.widgets.length; i++) {
+      const w = model.widgets[i];
+      wantRender ||= !!w.getActiveState();
+      w.deactivateAllHandles();
+    }
+
+    if (wantRender) model._interactor.render();
+  };
+
   const handleEvent = async (callData, fromTouchEvent = false) => {
     if (
       !model.isAnimating &&
@@ -192,6 +203,8 @@ function vtkWidgetManager(publicAPI, model) {
       const callID = Symbol('UpdateSelection');
       model._currentUpdateSelectionCallID = callID;
       await updateSelection(callData, fromTouchEvent, callID);
+    } else {
+      deactivateAllWidgets();
     }
   };
 
