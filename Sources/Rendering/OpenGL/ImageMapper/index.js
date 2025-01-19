@@ -1237,6 +1237,14 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       const spatialExt = image.getSpatialExtent();
       const basicScalars = imgScalars.getData();
       let scalars = null;
+      /** 
+       * if available, used to store the range of the scalars array. If
+       * available, pre-setting the scalras range can prevent it being
+       * calculated again.
+       * 
+       * @type{ import("../../../interfaces").vtkRange[]|undefined } 
+       **/
+      let ranges = undefined;
       // Get right scalars according to slicing mode
       if (ijkMode === SlicingMode.I) {
         scalars = new basicScalars.constructor(dims[2] * dims[1] * numComp);
@@ -1310,6 +1318,24 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         ptsArray[9] = spatialExt[1];
         ptsArray[10] = spatialExt[3];
         ptsArray[11] = sliceDepth;
+        if( sliceOffset === 0 ) {
+          // If the sliceOffset is 0, the scalars array is a view of the
+          // original scalars array. As a micro-optimzation, we can get the
+          // range from the original scalars array. and set the range to the
+          // scalars array.  This means there is not need to re-calculate the
+          // ranges for the scalars array.
+          ranges = []
+          for( let i = 0; i < numComp; i++ ) {
+            const [min, max] = imgScalars.getRange(i);
+            /** @type{ import("../../../interfaces").vtkRange } */
+            const range = {
+              min,
+              max,
+              component: i,
+            }
+            ranges.push( range );
+          }
+        }
       } else {
         vtkErrorMacro('Reformat slicing not yet supported.');
       }
@@ -1323,7 +1349,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         numComp,
         imgScalars.getDataType(),
         scalars,
-        model.renderable.getPreferSizeOverAccuracy?.()
+        model.renderable.getPreferSizeOverAccuracy?.(),
+        ranges
       );
       model.openGLTexture.activate();
       model.openGLTexture.sendParameters();
