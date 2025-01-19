@@ -1368,7 +1368,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     numberOfComponents,
     dataType,
     values,
-    preferSizeOverAccuracy = false
+    preferSizeOverAccuracy = false,
+    ranges = undefined
   ) =>
     publicAPI.create2DFilterableFromDataArray(
       width,
@@ -1377,6 +1378,7 @@ function vtkOpenGLTexture(publicAPI, model) {
         numberOfComponents,
         dataType,
         values,
+        ranges,
       }),
       preferSizeOverAccuracy
     );

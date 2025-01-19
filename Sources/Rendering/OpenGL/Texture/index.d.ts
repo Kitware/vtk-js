@@ -3,7 +3,7 @@ import vtkOpenGLRenderWindow from '../RenderWindow';
 import { Nullable } from '../../../types';
 import { VtkDataTypes } from '../../../Common/Core/DataArray';
 import { vtkViewNode } from '../../../Rendering/SceneGraph/ViewNode';
-import { vtkObject } from '../../../interfaces';
+import { vtkObject, vtkRange } from '../../../interfaces';
 
 /**
  * Initial values for creating a new instance of vtkOpenGLTexture.
@@ -245,6 +245,7 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param dataType The data type of the texture.
    * @param data The raw data for the texture.
    * @param preferSizeOverAccuracy Whether to prefer texture size over accuracy.
+   * @param ranges The ranges of the data (optional).
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
   create2DFilterableFromRaw(
@@ -253,7 +254,8 @@ export interface vtkOpenGLTexture extends vtkViewNode {
     numComps: number,
     dataType: VtkDataTypes,
     data: any,
-    preferSizeOverAccuracy: boolean
+    preferSizeOverAccuracy: boolean,
+    ranges?: vtkRange[]
   ): boolean;
 
   /**
