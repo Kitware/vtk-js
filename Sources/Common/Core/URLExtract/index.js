@@ -39,13 +39,8 @@ function extractURLParameters(
 ) {
   const summary = {};
   const convert = castToNativeType ? toNativeType : identity;
-  const queryTokens = (query || '')
-    .replace(/#.*/, '') // remove hash query
-    .replace('?', '') // Remove ? from the head
-    .split('&'); // extract token pair
-
-  queryTokens.forEach((token) => {
-    const [key, value] = token.split('=').map((s) => decodeURIComponent(s));
+  const params = new URLSearchParams(query);
+  params.forEach((value, key) => {
     if (key) {
       summary[key] = value ? convert(value) : true;
     }
