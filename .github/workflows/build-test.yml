@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04]
-        node: [18, 20]
+        node: [20, 22]
     name: ${{ matrix.os }} and node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v2
@@ -38,9 +38,9 @@ jobs:
         run: xvfb-run --auto-servernum npm run test -- --browsers Chrome,Firefox
       - name: Archive test results
         if: github.event_name != 'merge_group' && (success() || failure())
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
-          name: test-results
+          name: test-results-${{ matrix.runs_on }}-node_${{ matrix.node }}
           path: Utilities/TestResults/Test-Report.html
           retention-days: 15
