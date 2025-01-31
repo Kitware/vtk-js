@@ -47,10 +47,20 @@ function vtkViewport(publicAPI, model) {
   }
 
   publicAPI.getViewPropsWithNestedProps = () => {
-    const allPropsArray = [];
-    for (let i = 0; i < model.props.length; i++) {
-      gatherProps(model.props[i], allPropsArray);
+    let allPropsArray = [];
+    // Handle actor2D instances separately so that they can be overlayed and layered
+    const actors2D = publicAPI.getActors2D();
+    // Sort the actor2D list using its layer number
+    actors2D.sort((a, b) => a.getLayerNumber() - b.getLayerNumber());
+    // Filter out all the actor2D instances
+    const newPropList = model.props.filter((item) => !actors2D.includes(item));
+    for (let i = 0; i < newPropList.length; i++) {
+      gatherProps(newPropList[i], allPropsArray);
     }
+    // Finally, add the actor2D props at the end of the list
+    // This works because, when traversing the render pass in vtkOpenGLRenderer, the children are
+    // traversed in the order that they are added to the list
+    allPropsArray = allPropsArray.concat(actors2D);
     return allPropsArray;
   };
 
