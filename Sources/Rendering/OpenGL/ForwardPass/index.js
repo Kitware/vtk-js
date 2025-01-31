@@ -40,8 +40,8 @@ function vtkForwardPass(publicAPI, model) {
           model.translucentActorCount = 0;
           model.volumeCount = 0;
           model.overlayActorCount = 0;
-          publicAPI.setCurrentOperation('queryPass');
 
+          publicAPI.setCurrentOperation('queryPass');
           renNode.traverse(publicAPI);
 
           // do we need to capture a zbuffer?
