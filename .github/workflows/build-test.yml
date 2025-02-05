@@ -27,7 +27,7 @@ jobs:
         if: github.event_name != 'merge_group'
         uses: actions/upload-artifact@v4
         with:
-          name: build-results
+          name: build-results-${{ matrix.runs_on }}-node_${{ matrix.node }}
           path: dist
           retention-days: 15
       - name: Validate generated typescript definitions
