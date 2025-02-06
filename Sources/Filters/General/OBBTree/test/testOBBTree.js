@@ -135,6 +135,11 @@ test('Test OBB tree deep copy', (t) => {
     'Cells per node'
   );
 
+  obbTreeSource.delete();
+  obbTreeTarget.delete();
+  mesh.delete();
+  source.delete();
+
   t.end();
 });
 

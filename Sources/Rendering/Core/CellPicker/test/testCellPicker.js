@@ -35,12 +35,12 @@ test('Test vtkCellPicker image mapper', (t) => {
   rtSource.setCenter(100, 100, 100);
   rtSource.setStandardDeviation(0.3);
 
-  const mapper = vtkImageMapper.newInstance();
+  const mapper = gc.registerResource(vtkImageMapper.newInstance());
   mapper.setInputConnection(rtSource.getOutputPort());
   mapper.setSlicingMode(SlicingMode.K);
   mapper.setSlice(12);
 
-  const actor = vtkImageSlice.newInstance();
+  const actor = gc.registerResource(vtkImageSlice.newInstance());
   actor.getProperty().setColorWindow(100);
   actor.getProperty().setColorLevel(50);
   actor.setMapper(mapper);
@@ -110,9 +110,9 @@ test('Test vtkCellPicker on triangles', (t) => {
   polyData.getPoints().setData(points);
   polyData.getPolys().setData(polys);
 
-  const mapper = vtkMapper.newInstance();
+  const mapper = gc.registerResource(vtkMapper.newInstance());
   mapper.setInputData(polyData);
-  const actor = vtkActor.newInstance();
+  const actor = gc.registerResource(vtkActor.newInstance());
   actor.setMapper(mapper);
 
   renderer.addActor(actor);
@@ -166,13 +166,13 @@ test('Test vtkCellPicker on quads', (t) => {
   // Create what we will view
   const points = Float32Array.from([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0]);
   const polys = new Float32Array([4, 0, 1, 2, 3]);
-  const polyData = vtkPolyData.newInstance();
+  const polyData = gc.registerResource(vtkPolyData.newInstance());
   polyData.getPoints().setData(points);
   polyData.getPolys().setData(polys);
 
-  const mapper = vtkMapper.newInstance();
+  const mapper = gc.registerResource(vtkMapper.newInstance());
   mapper.setInputData(polyData);
-  const actor = vtkActor.newInstance();
+  const actor = gc.registerResource(vtkActor.newInstance());
   actor.setMapper(mapper);
 
   renderer.addActor(actor);
