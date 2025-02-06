@@ -183,15 +183,26 @@ export default {
               return relatifyImports(content.toString(), (relImport) => {
                 let importPath = relImport;
                 const baseName = path.basename(base);
+                const baseDir = path.dirname(base);
 
                 if (
-                  baseName === 'index.d.ts' &&
-                  path.dirname(base) !== 'Sources' &&
-                  (importPath.startsWith('../') || importPath.startsWith('./'))
+                  baseName !== 'index.d.ts' ||
+                  path.dirname(base) === 'Sources'
+                ) {
+                  return importPath;
+                }
+
+                // implicity imports ../index.d.ts -> ../<parent_dir_name>.d.ts
+                if (importPath === '..') {
+                  return `../${path.basename(path.dirname(baseDir))}`;
+                }
+
+                if (
+                  importPath.startsWith('../') ||
+                  importPath.startsWith('./')
                 ) {
                   // this file will be moved up one folder, so
                   // all of its relative imports must be adjusted.
-                  const baseDir = path.dirname(base);
                   const resolvedImportPath = path.resolve(
                     `${baseDir}/${importPath}`
                   );
