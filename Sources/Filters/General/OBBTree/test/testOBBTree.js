@@ -1,4 +1,5 @@
 import test from 'tape';
+import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -92,11 +93,12 @@ test('Test OBB tree transform', (t) => {
 });
 
 test('Test OBB tree deep copy', (t) => {
-  const source = vtkCubeSource.newInstance();
+  const gc = testUtils.createGarbageCollector(t);
+  const source = gc.registerResource(vtkCubeSource.newInstance());
   source.update();
-  const mesh = source.getOutputData();
+  const mesh = gc.registerResource(source.getOutputData());
 
-  const obbTreeSource = vtkOBBTree.newInstance();
+  const obbTreeSource = gc.registerResource(vtkOBBTree.newInstance());
   obbTreeSource.setDataset(mesh);
   obbTreeSource.setMaxLevel(2);
   obbTreeSource.setAutomatic(false);
@@ -110,7 +112,7 @@ test('Test OBB tree deep copy', (t) => {
   obbTreeSource.computeOBBFromDataset(mesh, corner, max, mid, min, size);
   const sourceNode = obbTreeSource.getTree();
 
-  const obbTreeTarget = vtkOBBTree.newInstance();
+  const obbTreeTarget = gc.registerResource(vtkOBBTree.newInstance());
   obbTreeTarget.deepCopy(obbTreeSource);
   const copiedTree = obbTreeTarget.getTree();
 
@@ -135,12 +137,7 @@ test('Test OBB tree deep copy', (t) => {
     'Cells per node'
   );
 
-  obbTreeSource.delete();
-  obbTreeTarget.delete();
-  mesh.delete();
-  source.delete();
-
-  t.end();
+  gc.releaseResources();
 });
 
 test('Test OBB tree collision', (t) => {

@@ -94,7 +94,7 @@ module.exports = function init(config) {
       },
     },
     browserNoActivityTimeout: 120000,
-    browserDisconnectTimeout: 10000,
+    browserDisconnectTimeout: 60000,
     browserDisconnectTolerance: 3,
 
     port: 9876,
