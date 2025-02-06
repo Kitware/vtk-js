@@ -143,7 +143,7 @@
     "lint": "eslint Sources Examples",
     "doc": "kw-doc -c ./Documentation/config.js",
     "doc:www": "npm t -- --single-run && kw-doc -c ./Documentation/config.js -s",
-    "doc:publish": "kw-doc -c ./Documentation/config.js -mp",
+    "doc:minified": "kw-doc -c ./Documentation/config.js -m",
     "doc:generate-api": "node ./Documentation/generate-api-docs.js",
     "example": "node ./Utilities/ExampleRunner/example-runner-cli.js -c ./Documentation/config.js",
     "example:https": "node ./Utilities/ExampleRunner/example-runner-cli.js --server-type https -c ./Documentation/config.js",
