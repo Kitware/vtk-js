@@ -51,11 +51,33 @@ jobs:
           git config --global user.name "Github Actions"
           git config --global user.email "sebastien.jourdain@kitware.com"
           npm run semantic-release
+  deploy_docs:
+    if: github.ref == 'refs/heads/master'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm ci
       - name: Build API docs
-        if: github.ref == 'refs/heads/master'
         run: npm run doc:generate-api
-      - name: Publish docs
-        if: github.ref == 'refs/heads/master'
-        env:
-          GIT_PUBLISH_URL: https://${{ secrets.GH_PUBLISH_CREDS }}@github.com/Kitware/vtk-js.git
-        run: npm run doc:publish
+      - name: Build docs
+        run: npm run doc:minified
+      - name: Upload docs as a Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./Documentation/build-tmp/public/
+      - name: Deploy docs
+        uses: actions/deploy-pages@v4
