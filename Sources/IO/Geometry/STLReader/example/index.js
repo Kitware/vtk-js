@@ -7,7 +7,7 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkSTLReader from '@kitware/vtk.js/IO/Geometry/STLReader';
-
+import vtkPolyDataNormals from '@kitware/vtk.js/Filters/Core/PolyDataNormals';
 // ----------------------------------------------------------------------------
 // Example code
 // ----------------------------------------------------------------------------
@@ -17,7 +17,9 @@ const mapper = vtkMapper.newInstance({ scalarVisibility: false });
 const actor = vtkActor.newInstance();
 
 actor.setMapper(mapper);
-mapper.setInputConnection(reader.getOutputPort());
+const normals = vtkPolyDataNormals.newInstance();
+normals.setInputConnection(reader.getOutputPort());
+mapper.setInputConnection(normals.getOutputPort());
 
 // ----------------------------------------------------------------------------
 
@@ -54,6 +56,7 @@ function handleFile(event) {
     const fileReader = new FileReader();
     fileReader.onload = function onLoad(e) {
       reader.parseAsArrayBuffer(fileReader.result);
+      reader.removeDuplicateVertices(5);
       update();
     };
     fileReader.readAsArrayBuffer(files[0]);

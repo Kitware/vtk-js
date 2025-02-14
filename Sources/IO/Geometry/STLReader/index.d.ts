@@ -94,6 +94,12 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
    * @param {ISTLReaderOptions} [option] The STL reader options.
    */
   setUrl(url: string, option?: ISTLReaderOptions): Promise<string | any>;
+
+  /**
+   *
+   * @param offset
+   */
+  removeDuplicateVertices(offset: number = 5): void;
 }
 
 /**
