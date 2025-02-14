@@ -331,6 +331,60 @@ function vtkSTLReader(publicAPI, model) {
   publicAPI.requestData = (inData, outData) => {
     publicAPI.parse(model.parseData);
   };
+
+  publicAPI.removeDuplicateVertices = (offset = 5) => {
+    if (!model.output || !model.output[0]) {
+      console.warn('Load polydata first.');
+      return;
+    }
+    const polydata = model.output[0];
+
+    const vertices = polydata.getPoints().getData();
+    const faces = polydata.getPolys().getData();
+
+    if (!vertices || !faces) {
+      console.warn('No valid polydata.');
+      return;
+    }
+
+    const vMap = new Map();
+    const vIndexMap = new Map();
+    let vInc = 0;
+    for (let i = 0; i < vertices.length; i += 3) {
+      const k1 = (vertices[i] * 10 ** offset).toFixed(0);
+      const k2 = (vertices[i + 1] * 10 ** offset).toFixed(0);
+      const k3 = (vertices[i + 2] * 10 ** offset).toFixed(0);
+      const key = `${k1},${k2},${k3}`;
+      if (vMap.get(key) !== undefined) {
+        vIndexMap.set(i / 3, vMap.get(key));
+      } else {
+        vIndexMap.set(i / 3, vInc);
+        vMap.set(key, vInc);
+        vInc++;
+      }
+    }
+
+    const outVerts = new Float32Array(vMap.size * 3);
+    vMap.keys().forEach((k) => {
+      const j = vMap.get(k) * 3;
+      [outVerts[j], outVerts[j + 1], outVerts[j + 2]] = k
+        .split(',')
+        .map((e) => +e * 10 ** -offset);
+    });
+
+    const outFaces = new Int32Array(faces);
+    for (let i = 0; i < faces.length; i += 4) {
+      outFaces[i] = 3;
+      outFaces[i + 1] = vIndexMap.get(faces[i + 1]);
+      outFaces[i + 2] = vIndexMap.get(faces[i + 2]);
+      outFaces[i + 3] = vIndexMap.get(faces[i + 3]);
+    }
+
+    polydata.getPoints().setData(outVerts);
+    polydata.getPolys().setData(outFaces);
+
+    publicAPI.modified();
+  };
 }
 
 // ----------------------------------------------------------------------------
