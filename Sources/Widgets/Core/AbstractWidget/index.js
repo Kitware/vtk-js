@@ -75,7 +75,15 @@ function vtkAbstractWidget(publicAPI, model) {
     }
   };
 
+  // --------------------------------------------------------------------------
+
   publicAPI.getViewWidgets = () => model._factory.getViewWidgets();
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.handleRendererChange = (ev) => {
+    publicAPI.deactivateAllHandles();
+  };
 
   // --------------------------------------------------------------------------
   // Initialization calls
