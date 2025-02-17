@@ -68,6 +68,7 @@ const handledEvents = [
   'Interaction',
   'EndInteraction',
   'AnimationFrameRateUpdate',
+  'RendererChange',
 ];
 
 function preventDefault(event) {
@@ -163,7 +164,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   function updateCurrentRenderer(x, y) {
     if (!model._forcedRenderer) {
+      const oldRenderer = model.currentRenderer;
       model.currentRenderer = publicAPI.findPokedRenderer(x, y);
+      if (oldRenderer !== model.currentRenderer) {
+        publicAPI.rendererChangeEvent();
+      }
     }
   }
 
@@ -1188,7 +1193,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.setCurrentRenderer = (r) => {
     model._forcedRenderer = !!r;
-    model.currentRenderer = r;
+    if (r !== model.currentRenderer) {
+      model.currentRenderer = r;
+      publicAPI.rendererChangeEvent();
+    }
   };
 
   publicAPI.setContainer = (container) => {

@@ -41,6 +41,7 @@ declare enum handledEvents {
   'Interaction',
   'EndInteraction',
   'AnimationFrameRateUpdate',
+  'RendererChange',
 }
 
 /**
@@ -411,6 +412,12 @@ export interface vtkRenderWindowInteractor extends vtkObject {
    * @param {IRenderWindowInteractorEvent} callData
    */
   invokeEndInteractionEvent(callData: IRenderWindowInteractorEvent): void;
+
+  /**
+   *
+   * @param {IRenderWindowInteractorEvent} callData
+   */
+  invokeRendererChangeEvent(callData: IRenderWindowInteractorEvent): void;
 
   /**
    *
@@ -796,6 +803,16 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 
   /**
    *
+   * @param {InteractorEventCallback} cb The callback to be called.
+   * @param {Number} [priority] The priority of the event.
+   */
+  onRendererChangeEvent(
+    cb: InteractorEventCallback,
+    priority?: number
+  ): Readonly<vtkSubscription>;
+
+  /**
+   *
    * @param {Function} cb The callback to be called.
    * @param {Number} [priority] The priority of the event.
    */
@@ -970,6 +987,12 @@ export interface vtkRenderWindowInteractor extends vtkObject {
    * @param args
    */
   rotateEvent(args: any): any;
+
+  /**
+   *
+   * @param args
+   */
+  rendererChangeEvent(): any;
 
   /**
    * Add an HTMLElement as the new container for the interactor.
