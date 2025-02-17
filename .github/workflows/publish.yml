@@ -71,6 +71,8 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm ci
+      - name: Build
+        run: npm run build:release
       - name: Build API docs
         run: npm run doc:generate-api
       - name: Build docs
