@@ -1320,9 +1320,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         ptsArray[11] = sliceDepth;
         if( sliceOffset === 0 ) {
           // If the sliceOffset is 0, the scalars array is a view of the
-          // original scalars array. As a micro-optimzation, we can get the
-          // range from the original scalars array. and set the range to the
-          // scalars array.  This means there is not need to re-calculate the
+          // original scalars array. As a micro-optimization, we can get the
+          // range from the original scalars array and set the range to the
+          // scalars array.  This means there is no need to re-calculate the
           // ranges for the scalars array.
           ranges = []
           for( let i = 0; i < numComp; i++ ) {
