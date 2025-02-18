@@ -8,8 +8,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04]
-        node: [18, 20]
+        os: [ubuntu-24.04]
+        node: [22]
     name: ${{ matrix.os }} and node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v2
@@ -25,9 +25,9 @@ jobs:
         run: npm run build:release
       - name: Archive build output
         if: github.event_name != 'merge_group'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: build-results
+          name: build-results-${{ matrix.runs_on }}-node_${{ matrix.node }}
           path: dist
           retention-days: 15
       - name: Validate generated typescript definitions
@@ -38,9 +38,9 @@ jobs:
         run: xvfb-run --auto-servernum npm run test -- --browsers Chrome,Firefox
       - name: Archive test results
         if: github.event_name != 'merge_group' && (success() || failure())
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
-          name: test-results
+          name: test-results-${{ matrix.runs_on }}-node_${{ matrix.node }}
           path: Utilities/TestResults/Test-Report.html
           retention-days: 15

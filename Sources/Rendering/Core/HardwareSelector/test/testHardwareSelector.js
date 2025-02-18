@@ -129,7 +129,7 @@ test('Test HardwareSelector', (tapeContext) => {
     })
   );
 
-  Promise.all(promises).then(() => {
+  return Promise.all(promises).then(() => {
     gc.releaseResources();
   });
 });

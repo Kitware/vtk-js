@@ -57,13 +57,13 @@ test('Test HardwareSelector', (tapeContext) => {
 
   console.time('first normal render');
   let previousTime = Date.now();
-  glwindow.captureNextImage().then(() => {
+  const p1 = glwindow.captureNextImage().then(() => {
     const taTime = Date.now() - previousTime;
     console.timeEnd('first normal render');
 
     console.time('second normal render');
     previousTime = Date.now();
-    glwindow.captureNextImage().then(() => {
+    const p2 = glwindow.captureNextImage().then(() => {
       const tbTime = Date.now() - previousTime;
       console.timeEnd('second normal render');
 
@@ -72,7 +72,7 @@ test('Test HardwareSelector', (tapeContext) => {
 
       console.time('hardware render');
       previousTime = Date.now();
-      sel.selectAsync(renderer, 200, 200, 300, 300).then((res) => {
+      return sel.selectAsync(renderer, 200, 200, 300, 300).then((res) => {
         const tcTime = Date.now() - previousTime;
         console.timeEnd('hardware render');
 
@@ -86,6 +86,8 @@ test('Test HardwareSelector', (tapeContext) => {
       });
     });
     renderWindow.render();
+    return p2;
   });
   renderWindow.render();
+  return p1;
 });

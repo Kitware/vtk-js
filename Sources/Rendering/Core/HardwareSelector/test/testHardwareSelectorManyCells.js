@@ -14,6 +14,8 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
+// Feb 2025: Github Actions takes a long time to render this dataset,
+// so it could be flaky.
 test('Test HardwareSelector', (tapeContext) => {
   const gc = testUtils.createGarbageCollector(tapeContext);
   tapeContext.ok('rendering', 'vtkHardwareSelector TestHardwareSelector');
