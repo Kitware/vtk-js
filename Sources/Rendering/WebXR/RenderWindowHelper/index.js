@@ -173,6 +173,15 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
       const gl = model.renderWindow.get3DContext();
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
+      // Remove controllers ray
+      const ren = model.renderWindow.getRenderable().getRenderers()[0];
+      model.xrSession.inputSources.forEach((inputSource) => {
+        if (model.inputSourceToRay[inputSource.handedness]) {
+          ren.removeActor(model.inputSourceToRay[inputSource.handedness].actor);
+          model.inputSourceToRay[inputSource.handedness].visible = false;
+        }
+      });
+
       await model.xrSession.end().catch((error) => {
         if (!(error instanceof DOMException)) {
           throw error;
