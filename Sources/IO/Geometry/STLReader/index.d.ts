@@ -47,6 +47,11 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
   getUrl(): string;
 
   /**
+   * Get tolerance when removeDuplicateVertices is set
+   */
+  getRemoveDuplicateVertices(): number;
+
+  /**
    * Load the object data.
    * @param {ISTLReaderOptions} [options]
    */
@@ -78,6 +83,12 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
 
   /**
    *
+   * @param tolerance
+   */
+  removeDuplicateVertices(tolerance: number = 5): void;
+
+  /**
+   *
    * @param dataAccessHelper
    */
   setDataAccessHelper(
@@ -96,10 +107,10 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
   setUrl(url: string, option?: ISTLReaderOptions): Promise<string | any>;
 
   /**
-   *
-   * @param offset
+   * Turn on/off automatic removeDuplicateVertices
+   * @param {Number} tolerance
    */
-  removeDuplicateVertices(offset: number = 5): void;
+  setRemoveDuplicateVertices(tolerance: number): boolean;
 }
 
 /**
