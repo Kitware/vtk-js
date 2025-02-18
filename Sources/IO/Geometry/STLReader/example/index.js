@@ -13,6 +13,7 @@ import vtkPolyDataNormals from '@kitware/vtk.js/Filters/Core/PolyDataNormals';
 // ----------------------------------------------------------------------------
 
 const reader = vtkSTLReader.newInstance();
+reader.setRemoveDuplicateVertices(5);
 const mapper = vtkMapper.newInstance({ scalarVisibility: false });
 const actor = vtkActor.newInstance();
 
@@ -56,7 +57,6 @@ function handleFile(event) {
     const fileReader = new FileReader();
     fileReader.onload = function onLoad(e) {
       reader.parseAsArrayBuffer(fileReader.result);
-      reader.removeDuplicateVertices(5);
       update();
     };
     fileReader.readAsArrayBuffer(files[0]);
