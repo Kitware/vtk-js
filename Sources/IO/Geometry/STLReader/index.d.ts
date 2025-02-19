@@ -83,12 +83,6 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
 
   /**
    *
-   * @param tolerance
-   */
-  removeDuplicateVertices(tolerance: number = 5): void;
-
-  /**
-   *
    * @param dataAccessHelper
    */
   setDataAccessHelper(
@@ -108,7 +102,10 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
 
   /**
    * Turn on/off automatic removeDuplicateVertices
-   * @param {Number} tolerance
+   * After reading the STL file, if `tolerance` is >= 0, then points with the same coordinates at 10 power tolerance are merged.
+   * For a smooth rendering, you might want to compute normals with vtkPolyDataNormals.
+   *
+   *  @param {Number} tolerance
    */
   setRemoveDuplicateVertices(tolerance: number): boolean;
 }
