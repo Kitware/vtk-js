@@ -1238,9 +1238,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       const basicScalars = imgScalars.getData();
       let scalars = null;
       /**
-       * if available, used to store the range of the scalars array. If
-       * available, pre-setting the scalras range can prevent it being
-       * calculated again.
+       * Used to store the range of the scalars array, if available. Pre-setting
+       * the scalars range can prevent it being calculated again.
        *
        * @type{ import("../../../interfaces").vtkRange[]|undefined }
        **/
