@@ -1242,8 +1242,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
        * the scalars range can prevent it being calculated again.
        *
        * @type{ import("../../../interfaces").vtkRange[]|undefined }
-       **/
-      let ranges = undefined;
+       */
+      let ranges;
       // Get right scalars according to slicing mode
       if (ijkMode === SlicingMode.I) {
         scalars = new basicScalars.constructor(dims[2] * dims[1] * numComp);
