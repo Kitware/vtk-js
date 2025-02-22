@@ -1323,17 +1323,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           // range from the original scalars array and set the range to the
           // scalars array.  This means there is no need to re-calculate the
           // ranges for the scalars array.
-          ranges = [];
-          for (let i = 0; i < numComp; i++) {
-            const [min, max] = imgScalars.getRange(i);
-            /** @type{ import("../../../interfaces").vtkRange } */
-            const range = {
-              min,
-              max,
-              component: i,
-            };
-            ranges.push(range);
-          }
+          ranges = imgScalars.getRanges();
         }
       } else {
         vtkErrorMacro('Reformat slicing not yet supported.');
