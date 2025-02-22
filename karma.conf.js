@@ -93,8 +93,8 @@ module.exports = function init(config) {
         flags: ['--enable-unsafe-webgpu'],
       },
     },
-    // browserNoActivityTimeout: 600000,
-    browserDisconnectTimeout: 100000,
+    browserNoActivityTimeout: 120000,
+    browserDisconnectTimeout: 60000,
     browserDisconnectTolerance: 3,
 
     port: 9876,

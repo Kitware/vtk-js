@@ -1,5 +1,6 @@
 import { vtkObject } from '../../../interfaces';
 import { Vector3 } from '../../../types';
+import vtkImplicitFunction from '../ImplicitFunction';
 
 /**
  *
@@ -10,13 +11,13 @@ export interface ICylinderInitialValues {
   axis?: number[];
 }
 
-export interface vtkCylinder extends vtkObject {
+export interface vtkCylinder extends vtkImplicitFunction {
   /**
    * Given the point xyz (three floating value) evaluate the cylinder
    * equation.
    * @param {Vector3} xyz The point coordinate.
    */
-  evaluateFunction(xyz: Vector3): number[];
+  evaluateFunction(xyz: Vector3): number;
 
   /**
    * Given the point xyz (three floating values) evaluate the equation for the

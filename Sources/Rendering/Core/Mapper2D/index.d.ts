@@ -34,11 +34,6 @@ interface IAbstractScalars {
   cellFlag: boolean;
 }
 
-interface IScalarToTextureCoordinate {
-  texCoordS: number;
-  texCoordT: number;
-}
-
 export interface IMapper2DInitialValues extends IAbstractMapperInitialValues {
   arrayAccessMode?: number;
   colorMode?: number;

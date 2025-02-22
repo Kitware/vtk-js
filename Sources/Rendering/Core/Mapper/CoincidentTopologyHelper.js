@@ -1,13 +1,22 @@
 /* eslint-disable arrow-body-style */
-import otherStaticMethods from 'vtk.js/Sources/Rendering/Core/Mapper/Static';
+import otherStaticMethods, {
+  Resolve,
+} from 'vtk.js/Sources/Rendering/Core/Mapper/Static';
 import macro from 'vtk.js/Sources/macros';
+
+export { Resolve } from 'vtk.js/Sources/Rendering/Core/Mapper/Static';
 
 function addCoincidentTopologyMethods(publicAPI, model, nameList) {
   nameList.forEach((item) => {
     publicAPI[`get${item.method}`] = () => model[item.key];
-    publicAPI[`set${item.method}`] = (factor, offset) => {
-      model[item.key] = { factor, offset };
-    };
+    publicAPI[`set${item.method}`] = macro.objectSetterMap.object(
+      publicAPI,
+      model,
+      {
+        name: item.key,
+        params: ['factor', 'offset'],
+      }
+    );
   });
 }
 
@@ -20,7 +29,10 @@ const staticOffsetModel = {
   Line: { factor: 1, offset: -1 },
   Point: { factor: 0, offset: -2 },
 };
-const staticOffsetAPI = {};
+const noOp = () => undefined;
+const staticOffsetAPI = {
+  modified: noOp,
+};
 
 addCoincidentTopologyMethods(
   staticOffsetAPI,
@@ -49,9 +61,11 @@ function implementCoincidentTopologyMethods(publicAPI, model) {
   Object.keys(otherStaticMethods).forEach((methodName) => {
     publicAPI[methodName] = otherStaticMethods[methodName];
   });
-  Object.keys(staticOffsetAPI).forEach((methodName) => {
-    publicAPI[methodName] = staticOffsetAPI[methodName];
-  });
+  Object.keys(staticOffsetAPI)
+    .filter((methodName) => methodName !== 'modified') // don't override instance's modified
+    .forEach((methodName) => {
+      publicAPI[methodName] = staticOffsetAPI[methodName];
+    });
 
   addCoincidentTopologyMethods(
     publicAPI,
@@ -101,4 +115,5 @@ export default {
   staticOffsetAPI,
   otherStaticMethods,
   CATEGORIES,
+  Resolve,
 };

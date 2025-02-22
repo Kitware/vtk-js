@@ -28,6 +28,21 @@ f 3/3 4/5 1/1
 f 4/6 3/4 5/7
 `;
 
+const sampleOBJ2 = `
+# (0,0,0)
+v 0.0 0.0 0.0
+vt 0.0 0.0
+# (1,0,0)
+v 1.0 0.0 0.0
+vt 1.0 0.0
+# (0,1,0)
+v 0.0 1.0 0.0
+vt 0.0 1.0
+
+f 1/1 2/2 3/3
+f -1/-1 -2/-2 -3/-3
+`;
+
 test('Test trackDuplicates', (t) => {
   const objReader = vtkOBJReader.newInstance({
     splitMode: 'useMtl',
@@ -107,5 +122,17 @@ test('Test normals with trackDuplicates', (t) => {
     [0, -0.4472135901451111, 0.8944271802902222],
     'normal(1, 1) = (0, -0.4472135901451111, 0.8944271802902222)'
   );
+  t.end();
+});
+
+test('Test negative indices', (t) => {
+  const objReader = vtkOBJReader.newInstance({
+    splitMode: 'useMtl',
+  });
+  objReader.parseAsText(sampleOBJ2);
+  const polyData = objReader.getOutputData();
+  const polys = Array.from(polyData.getPolys().getData());
+  t.deepEqual(polys.slice(0, 4), [3, 0, 1, 2], 'poly(0) = (0, 1, 2)');
+  t.deepEqual(polys.slice(4, 8), [3, 2, 1, 0], 'poly(1) = (2, 1, 0)');
   t.end();
 });

@@ -179,6 +179,9 @@ const DEFAULT_VALUES = {
   mapper: null,
   property: null,
 
+  forceOpaque: false,
+  forceTranslucent: false,
+
   bounds: [...vtkBoundingBox.INIT_BOUNDS],
 };
 
@@ -196,7 +199,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.set(publicAPI, model, ['property']);
-  macro.setGet(publicAPI, model, ['mapper']);
+  macro.setGet(publicAPI, model, ['mapper', 'forceOpaque', 'forceTranslucent']);
+
   macro.getArray(publicAPI, model, ['bounds'], 6);
 
   // Object methods

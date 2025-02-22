@@ -1,0 +1,13 @@
+diff --git a/node_modules/dox/lib/dox.js b/node_modules/dox/lib/dox.js
+index be4786e..8fb9a0b 100644
+--- a/node_modules/dox/lib/dox.js
++++ b/node_modules/dox/lib/dox.js
+@@ -450,6 +450,8 @@ exports.parseTagTypes = function(str, tag) {
+       return [type.subject.name]
+     } else if (type && type.value) {
+       return transform(type.value);
++    } else if (type && type.type === "ANY") {
++      return ['*'];
+     } else {
+       return type.toString();
+     }

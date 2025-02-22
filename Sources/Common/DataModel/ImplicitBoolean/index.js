@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import Constants from 'vtk.js/Sources/Common/DataModel/ImplicitBoolean/Constants';
+import vtkImplicitFunction from 'vtk.js/Sources/Common/DataModel/ImplicitFunction';
 
 const { Operation } = Constants;
 
@@ -71,7 +72,7 @@ function vtkImplicitBoolean(publicAPI, model) {
       value = Number.MAX_VALUE;
       for (let i = 0; i < model.functions.length; ++i) {
         const f = model.functions[i];
-        const v = f.evaluateFunction(xyz);
+        const v = f.functionValue(xyz);
         if (v < value) {
           value = v;
         }
@@ -80,14 +81,14 @@ function vtkImplicitBoolean(publicAPI, model) {
       value = -Number.MAX_VALUE;
       for (let i = 0; i < model.functions.length; ++i) {
         const f = model.functions[i];
-        const v = f.evaluateFunction(xyz);
+        const v = f.functionValue(xyz);
         if (v > value) {
           value = v;
         }
       }
     } else {
       const firstF = model.functions[0];
-      value = firstF.evaluateFunction(xyz);
+      value = firstF.functionValue(xyz);
       for (let i = 1; i < model.functions.length; ++i) {
         const f = model.functions[i];
         const v = -1.0 * f.evaluateFunction(xyz);
@@ -133,7 +134,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Object methods
-  macro.obj(publicAPI, model);
+  vtkImplicitFunction.extend(publicAPI, model, initialValues);
 
   macro.setGet(publicAPI, model, ['operation']);
 

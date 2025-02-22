@@ -534,6 +534,15 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
+  if (
+    Array.isArray(initialValues.values) &&
+    initialValues.dataType === undefined
+  ) {
+    console.warn(
+      'vtkDataArray.newInstance: no dataType provided, converting to Float32Array'
+    );
+  }
+
   if (!model.empty && !model.values && !model.size) {
     throw new TypeError(
       'Cannot create vtkDataArray object without: size > 0, values'

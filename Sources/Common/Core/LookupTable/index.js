@@ -61,7 +61,8 @@ function vtkLookupTable(publicAPI, model) {
   publicAPI.usingLogScale = () => false;
 
   //----------------------------------------------------------------------------
-  publicAPI.getNumberOfAvailableColors = () => model.table.length / 4;
+  // Don't count special colors (min, max, NaN) as available colors
+  publicAPI.getNumberOfAvailableColors = () => model.table.length / 4 - 3;
 
   //----------------------------------------------------------------------------
   // Apply shift/scale to the scalar value v and return the index.

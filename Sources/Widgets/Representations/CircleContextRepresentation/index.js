@@ -2,6 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 import vtkCircleSource from 'vtk.js/Sources/Filters/Sources/CircleSource';
 import vtkGlyphRepresentation from 'vtk.js/Sources/Widgets/Representations/GlyphRepresentation';
 import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
+import { Resolve } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 
 // ----------------------------------------------------------------------------
 // vtkCircleContextRepresentation methods
@@ -16,7 +17,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   model._pipeline.actor.getProperty().setOpacity(0.2);
-  model._pipeline.mapper.setResolveCoincidentTopology(true);
+  model._pipeline.mapper.setResolveCoincidentTopology(Resolve.PolygonOffset);
   model._pipeline.mapper.setRelativeCoincidentTopologyPolygonOffsetParameters(
     -1,
     -1

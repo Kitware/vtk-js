@@ -4,6 +4,8 @@ import vtkGlyphRepresentation from 'vtk.js/Sources/Widgets/Representations/Glyph
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
 import { allocateArray } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
+import { getPixelWorldHeightAtCoord } from 'vtk.js/Sources/Widgets/Core/WidgetManager';
+import { vec3 } from 'gl-matrix';
 
 const INFINITE_RATIO = 100000;
 
@@ -64,6 +66,67 @@ function vtkLineHandleRepresentation(publicAPI, model) {
     model.displayMapper.setCallback(callback ? callbackProxy : null);
   };
 
+  const superPublicAPI = { ...publicAPI };
+  publicAPI.requestData = (inData, outData) => {
+    superPublicAPI.requestData(inData, outData);
+    if (!model.holeWidth) {
+      return;
+    }
+    const internalPolyData = outData[0];
+
+    // Duplicate points and point data
+    const points = internalPolyData.getPoints();
+    const dataArrays = internalPolyData.getPointData().getArrays();
+    [points, ...dataArrays].forEach((array) => {
+      const oldNumberOfValues = array.getNumberOfValues();
+      array.resize(2 * array.getNumberOfTuples());
+      const arrayData = array.getData();
+      for (let i = 0; i < oldNumberOfValues; ++i) {
+        arrayData[i + oldNumberOfValues] = arrayData[i];
+      }
+    });
+
+    // Change the scale and origin of each line
+    const states = publicAPI.getRepresentationStates(inData[0]);
+    const nStates = states.length;
+    const scaleArray = internalPolyData.getPointData().getArrayByName('scale');
+    const orientationArray = internalPolyData
+      .getPointData()
+      .getArrayByName('orientation');
+    const defaultScale = [1, 1, 1];
+    const defaultOrientation = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+    for (let i = 0; i < nStates; ++i) {
+      const j = i + nStates;
+      const scale = scaleArray?.getTuple(i) ?? defaultScale;
+      const orientationMatrix =
+        orientationArray?.getTuple(i) ?? defaultOrientation;
+      const originalPoint = points.getTuple(i);
+
+      // Divide the scale by two in the direction of the cylinder, as we duplicate the line
+      scale[2] *= 0.5;
+      scaleArray?.setTuple(i, scale);
+      scaleArray?.setTuple(j, scale);
+
+      // Add or subtract an offset to each point depending on the hole width
+      let holeWidth = model.holeWidth;
+      if (publicAPI.getScaleInPixels()) {
+        holeWidth *= getPixelWorldHeightAtCoord(
+          originalPoint,
+          model.displayScaleParams
+        );
+      }
+      const offset = vec3.fromValues(0, 0, 0.5 * scale[2] + holeWidth);
+      vec3.transformMat3(offset, offset, orientationMatrix);
+      points.setTuple(i, vec3.add(vec3.create(), originalPoint, offset));
+      points.setTuple(j, vec3.sub(vec3.create(), originalPoint, offset));
+    }
+  };
+
+  publicAPI.getSelectedState = (prop, compositeID) => {
+    const representationStates = publicAPI.getRepresentationStates();
+    return representationStates[compositeID % representationStates.length];
+  };
+
   /**
    * Overwrite scale3 to optionally make lines infinite
    */
@@ -93,6 +156,7 @@ function defaultValues(initialValues) {
   return {
     infiniteLine: true,
     glyphResolution: 4,
+    holeWidth: 0,
     _pipeline: {
       glyph: vtkCylinderSource.newInstance({
         resolution: initialValues.glyphResolution ?? 4,
@@ -108,7 +172,11 @@ function defaultValues(initialValues) {
 
 export function extend(publicAPI, model, initialValues = {}) {
   vtkGlyphRepresentation.extend(publicAPI, model, defaultValues(initialValues));
-  macro.setGet(publicAPI, model, ['infiniteLine', 'glyphResolution']);
+  macro.setGet(publicAPI, model, [
+    'infiniteLine',
+    'glyphResolution',
+    'holeWidth',
+  ]);
 
   // Object specific methods
   vtkLineHandleRepresentation(publicAPI, model);

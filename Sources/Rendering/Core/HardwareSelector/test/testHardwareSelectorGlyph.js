@@ -33,10 +33,10 @@ test('Test HardwareSelectorGlyph', (tapeContext) => {
   renderWindow.addRenderer(renderer);
   renderer.setBackground(0.32, 0.34, 0.43);
 
-  const planeSource = vtkPlaneSource.newInstance();
-  const simpleFilter = vtkCalculator.newInstance();
-  const mapper = vtkGlyph3DMapper.newInstance();
-  const actor = vtkActor.newInstance();
+  const planeSource = gc.registerResource(vtkPlaneSource.newInstance());
+  const simpleFilter = gc.registerResource(vtkCalculator.newInstance());
+  const mapper = gc.registerResource(vtkGlyph3DMapper.newInstance());
+  const actor = gc.registerResource(vtkActor.newInstance());
 
   simpleFilter.setFormula({
     getArrays: (inputDataSets) => ({
@@ -87,7 +87,7 @@ test('Test HardwareSelectorGlyph', (tapeContext) => {
 
   mapper.setInputConnection(simpleFilter.getOutputPort(), 0);
 
-  const coneSource = vtkConeSource.newInstance();
+  const coneSource = gc.registerResource(vtkConeSource.newInstance());
   coneSource.setResolution(12);
   mapper.setInputConnection(coneSource.getOutputPort(), 1);
   mapper.setOrientationArray('pressure');
@@ -107,7 +107,7 @@ test('Test HardwareSelectorGlyph', (tapeContext) => {
   const sel = glwindow.getSelector();
   sel.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_POINTS);
 
-  sel.selectAsync(renderer, 200, 200, 250, 300).then((res) => {
+  return sel.selectAsync(renderer, 200, 200, 250, 300).then((res) => {
     const allGood = res.length === 7 && res[0].getProperties().prop === actor;
 
     tapeContext.ok(res.length === 7, 'Seven glyphs selected');

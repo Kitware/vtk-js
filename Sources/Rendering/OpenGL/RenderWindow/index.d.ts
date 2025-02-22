@@ -1,6 +1,6 @@
 import { Nullable, Size, Vector2, Vector3 } from '../../../types';
+import { vtkAlgorithm } from '../../../interfaces';
 import { VtkDataTypes } from '../../../Common/Core/DataArray';
-import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import vtkBufferObject from '../../OpenGL/BufferObject';
 import vtkCellArray from '../../../Common/Core/CellArray';
 import vtkDataArray from '../../../Common/Core/DataArray';
@@ -8,6 +8,7 @@ import vtkOpenGLTexture from '../../OpenGL/Texture';
 import vtkPoints from '../../../Common/Core/Points';
 import vtkRenderer from '../../Core/Renderer';
 import vtkTexture from '../../Core/Texture';
+import vtkViewNode from '../../SceneGraph/ViewNode';
 import vtkViewStream from '../../../IO/Core/ImageStream/ViewStream';
 
 /**
@@ -41,18 +42,7 @@ export interface ICaptureOptions {
   scale?: number;
 }
 
-type vtkOpenGLRenderWindowBase = vtkObject &
-  Omit<
-    vtkAlgorithm,
-    | 'getInputData'
-    | 'setInputData'
-    | 'setInputConnection'
-    | 'getInputConnection'
-    | 'addInputConnection'
-    | 'addInputData'
-  >;
-
-export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
+export interface vtkOpenGLRenderWindow extends vtkViewNode {
   /**
    * Builds myself.
    * @param {Boolean} prepass
@@ -97,6 +87,11 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
    * Get the webgl canvas.
    */
   getCanvas(): Nullable<HTMLCanvasElement>;
+
+  /**
+   * Set the webgl canvas.
+   */
+  setCanvas(canvas: Nullable<HTMLCanvasElement>): boolean;
 
   /**
    * Check if a point is in the viewport.
@@ -441,8 +436,8 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
    */
   setGraphicsResourceForObject(
     vtkObj: vtkCellArray | vtkDataArray | vtkPoints,
-    gObj: vtkOpenGLTexture | vtkBufferObject,
-    hash: string
+    gObj: Nullable<vtkOpenGLTexture | vtkBufferObject>,
+    hash: Nullable<string>
   ): void;
 
   /**
@@ -454,9 +449,17 @@ export interface vtkOpenGLRenderWindow extends vtkOpenGLRenderWindowBase {
    * the cached resource.
    * @return {Object} Dictionary with the graphics resource and string hash
    */
-  getGraphicsResourceForObject(
-    vtkObj: vtkCellArray | vtkDataArray | vtkPoints
-  ): { gObj: vtkOpenGLTexture | vtkBufferObject; hash: string };
+  getGraphicsResourceForObject<
+    T extends vtkCellArray | vtkDataArray | vtkPoints
+  >(
+    vtkObj: T
+  ):
+    | {
+        coreObject: T;
+        oglObject: Nullable<vtkOpenGLTexture | vtkBufferObject>;
+        hash: Nullable<string>;
+      }
+    | undefined;
 
   /**
    * Get approximate graphics memory usage, in bytes, for the context. This is a simple computation

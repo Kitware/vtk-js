@@ -375,7 +375,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     // Browse the cell array: the index is at the beginning of a cell
     // The value of 'array' at the position 'index' is the number of points in the cell
     for (let index = 0; index < size; index += array[index] + 1, cellCount++) {
-      func(array[index], array, index + 1, cellCount);
+      func(array[index], array, index + 1, cellCount + options.cellOffset);
     }
     model.elementCount = caboCount;
     publicAPI.upload(packedVBO, ObjectType.ARRAY_BUFFER);

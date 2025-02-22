@@ -161,6 +161,7 @@ export function rotateVector(vectorToBeRotated, axis, angle) {
 }
 
 /**
+ * Return ['X'] if there are only 1 plane defined in the widget state.
  * Return ['X', 'Y'] if there are only 2 planes defined in the widget state.
  * Return ['X', 'Y', 'Z'] if there are 3 planes defined in the widget state.
  * @param {object} widgetState the state of the widget
@@ -318,10 +319,7 @@ export function updateState(
       ?.setHandleNormal(
         widgetState.getPlanes()[planeNameToViewType[planeName]].normal
       );
-    const scale = vtkMath.normalize(direction);
-    const scale3 = lineHandle.getScale3();
-    scale3[2] = 2 * scale;
-    lineHandle.setScale3(scale3);
+    vtkMath.normalize(direction);
     const right =
       widgetState.getPlanes()[planeNameToViewType[inPlaneName]].normal;
     const up = vtkMath.cross(direction, right, []);

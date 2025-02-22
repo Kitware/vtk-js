@@ -35,8 +35,8 @@ const texture = vtkTexture.newInstance();
 const texturePathList = [
   `${__BASE_PATH__}/data/skybox/mountains/right.jpg`,
   `${__BASE_PATH__}/data/skybox/mountains/left.jpg`,
-  `${__BASE_PATH__}/data/skybox/mountains/bottom.jpg`,
   `${__BASE_PATH__}/data/skybox/mountains/top.jpg`,
+  `${__BASE_PATH__}/data/skybox/mountains/bottom.jpg`,
   `${__BASE_PATH__}/data/skybox/mountains/front.jpg`,
   `${__BASE_PATH__}/data/skybox/mountains/back.jpg`,
 ];

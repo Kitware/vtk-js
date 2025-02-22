@@ -499,6 +499,28 @@ export default function widgetBehavior(publicAPI, model) {
     };
   };
 
+  /**
+   * Rotate a line by a specified angle
+   * @param {string} lineName The line name to rotate (e.g. YinX, ZinX, XinY, ZinY, XinZ, YinZ)
+   * @param {Number} radianAngle Applied angle in radian
+   */
+  publicAPI.setViewPlane = (viewType, normal, viewUp) => {
+    let newViewUp = viewUp;
+    if (newViewUp == null) {
+      newViewUp = model.widgetState.getPlanes()[viewType].viewUp;
+    }
+    model.widgetState.getPlanes()[viewType] = {
+      normal,
+      viewUp: newViewUp,
+    };
+
+    updateState(
+      model.widgetState,
+      model._factory.getScaleInPixels(),
+      model._factory.getRotationHandlePosition()
+    );
+  };
+
   // --------------------------------------------------------------------------
   // initialization
   // --------------------------------------------------------------------------

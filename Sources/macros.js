@@ -519,8 +519,22 @@ const objectSetterMap = {
     };
   },
   object(publicAPI, model, field) {
+    if (field.params?.length === 1) {
+      vtkWarningMacro(
+        'Setter of type "object" with a single "param" field is not supported'
+      );
+    }
     const onChanged = `_on${_capitalize(field.name)}Changed`;
-    return (value) => {
+    return (...args) => {
+      let value;
+      if (args.length > 1 && field.params?.length) {
+        value = field.params.reduce(
+          (acc, prop, idx) => Object.assign(acc, { [prop]: args[idx] }),
+          {}
+        );
+      } else {
+        value = args[0];
+      }
       if (!DeepEqual(model[field.name], value)) {
         const previousValue = model[field.name];
         model[field.name] = value;
@@ -1800,4 +1814,6 @@ export default {
   vtkLogMacro,
   vtkOnceErrorMacro,
   vtkWarningMacro,
+  // vtk.js internal use
+  objectSetterMap,
 };

@@ -1,3 +1,11 @@
+## From 31.x to 32
+
+- **vtkMapper**: remove `mapScalarsToTexture` from the public API. The function becomes protected and its API changes. This shouldn't cause any issue in most cases.
+
+## From 30.x to 31
+
+- **Picking**: write to depth buffer for translucent pass when picking. This change fixes a picking issue with multiple translucent actors overlaid on top of each other. The hardware selector would just register the propID of the last rendered prop. This was because we explicitly turn off writing to the depth buffer when rendering translucent props as OIT doesn't need it. This change enables writing to the depth buffer when picking in the translucent pass. Applications relying on picked propID would see a difference in the IDs returned by the hardware selector.
+
 ## From 29.x to 30
 
 - **ResliceCursorWidget.interactionEvent**: no longer pass an object of `{computeFocalPointOffset, canUpdateFocalPoint}` but simply the type of the handle that triggers the event (e.g. `InteractionMethodsName.RotateLine`). The removed values can easily be recomputed by the consumers of the event by checking the type of the handle. Regarding `computeFocalPointOffset`, it is no longer advised to compute focal point offset for each interaction, instead observing `startInteraction()` should be considered (see ResliceCursorWidget example).

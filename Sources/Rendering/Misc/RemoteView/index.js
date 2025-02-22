@@ -17,7 +17,9 @@ function vtkRemoteView(publicAPI, model) {
   model.classHierarchy.push('vtkRemoteView');
 
   // Constructor
-  model.canvasView = vtkCanvasView.newInstance();
+  model.canvasView = vtkCanvasView.newInstance({
+    canvas: model.canvasElement,
+  });
   model.interactorStyle = vtkInteractorStyleRemoteMouse.newInstance();
 
   model.interactor = vtkRenderWindowInteractor.newInstance();
@@ -61,6 +63,8 @@ function vtkRemoteView(publicAPI, model) {
       model.viewStream.delete();
     }
   }, publicAPI.delete);
+
+  publicAPI.getCanvasElement = () => model.canvasView.getCanvas();
 
   // --------------------------------------------------------------------------
   // remote handing
@@ -201,6 +205,7 @@ const DEFAULT_VALUES = {
   rpcMouseEvent: 'viewport.mouse.interaction',
   rpcGestureEvent: null,
   rpcWheelEvent: null,
+  canvasElement: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -219,6 +224,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'interactiveRatio',
     'stillQuality',
     'stillRatio',
+    'canvasElement',
   ]);
   macro.setGet(publicAPI, model, [
     'session',

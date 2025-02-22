@@ -482,6 +482,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     const rpasses = model._openGLRenderWindow.getRenderPasses();
 
     publicAPI.beginSelection();
+    const pixelBufferSavedPasses = [];
     for (
       model.currentPass = PassTypes.MIN_KNOWN_PASS;
       model.currentPass <= PassTypes.MAX_KNOWN_PASS;
@@ -503,9 +504,17 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
         publicAPI.postCapturePass(model.currentPass);
 
         publicAPI.savePixelBuffer(model.currentPass);
-        publicAPI.processPixelBuffers();
+        pixelBufferSavedPasses.push(model.currentPass);
       }
     }
+
+    // Process pixel buffers
+    pixelBufferSavedPasses.forEach((pass) => {
+      model.currentPass = pass;
+      publicAPI.processPixelBuffers();
+    });
+    model.currentPass = PassTypes.MAX_KNOWN_PASS;
+
     publicAPI.endSelection();
 
     // restore original background
@@ -860,9 +869,9 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
   //----------------------------------------------------------------------------
 
-  publicAPI.attach = (w, r) => {
-    model._openGLRenderWindow = w;
-    model._renderer = r;
+  publicAPI.attach = (openGLRenderWindow, renderer) => {
+    model._openGLRenderWindow = openGLRenderWindow;
+    model._renderer = renderer;
   };
 
   // override

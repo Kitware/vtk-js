@@ -148,8 +148,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Create internal instances
-  model.canvas = document.createElement('canvas');
-  model.canvas.style.width = '100%';
+  if (!model.canvas) {
+    model.canvas = document.createElement('canvas');
+    model.canvas.style.width = '100%';
+  }
 
   // Create internal bgImage
   model.bgImage = new Image();

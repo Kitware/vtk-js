@@ -7,6 +7,8 @@ import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
+import supportsNorm16Linear from './supportsNorm16Linear';
+
 const { Wrap, Filter } = Constants;
 const { VtkDataTypes } = vtkDataArray;
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
@@ -158,6 +160,17 @@ function vtkOpenGLTexture(publicAPI, model) {
     if (model.handle) {
       publicAPI.activate();
     }
+  };
+
+  const getNorm16Ext = () => {
+    if (
+      (model.minificationFilter === Filter.LINEAR ||
+        model.magnificationFilter === Filter.LINEAR) &&
+      !supportsNorm16Linear()
+    ) {
+      return undefined;
+    }
+    return model.oglNorm16Ext;
   };
 
   //----------------------------------------------------------------------------
@@ -393,8 +406,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     result = model._openGLRenderWindow.getDefaultTextureInternalFormat(
       vtktype,
       numComps,
-      model.oglNorm16Ext,
-      model.useHalfFloat
+      getNorm16Ext(),
+      publicAPI.useHalfFloat()
     );
     if (result) {
       return result;
@@ -409,6 +422,9 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     return result;
   };
+
+  publicAPI.useHalfFloat = () =>
+    model.enableUseHalfFloat && model.canUseHalfFloat;
 
   //----------------------------------------------------------------------------
   publicAPI.setInternalFormat = (iFormat) => {
@@ -468,6 +484,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.getDefaultDataType = (vtkScalarType) => {
+    const useHalfFloat = publicAPI.useHalfFloat();
     // DON'T DEAL with VTK_CHAR as this is platform dependent.
     if (model._openGLRenderWindow.getWebgl2()) {
       switch (vtkScalarType) {
@@ -477,16 +494,14 @@ function vtkOpenGLTexture(publicAPI, model) {
           return model.context.UNSIGNED_BYTE;
         // prefer norm16 since that is accurate compared to
         // half float which is not
-        case model.oglNorm16Ext && !model.useHalfFloat && VtkDataTypes.SHORT:
+        case getNorm16Ext() && !useHalfFloat && VtkDataTypes.SHORT:
           return model.context.SHORT;
-        case model.oglNorm16Ext &&
-          !model.useHalfFloat &&
-          VtkDataTypes.UNSIGNED_SHORT:
+        case getNorm16Ext() && !useHalfFloat && VtkDataTypes.UNSIGNED_SHORT:
           return model.context.UNSIGNED_SHORT;
         // use half float type
-        case model.useHalfFloat && VtkDataTypes.SHORT:
+        case useHalfFloat && VtkDataTypes.SHORT:
           return model.context.HALF_FLOAT;
-        case model.useHalfFloat && VtkDataTypes.UNSIGNED_SHORT:
+        case useHalfFloat && VtkDataTypes.UNSIGNED_SHORT:
           return model.context.HALF_FLOAT;
         // case VtkDataTypes.INT:
         //   return model.context.INT;
@@ -705,24 +720,24 @@ function vtkOpenGLTexture(publicAPI, model) {
   //----------------------------------------------------------------------------
 
   /**
-   * Modifies the typed array types for webgl based on the given dataType.
+   * Updates the data array to match the required data type for OpenGL.
    *
-   * When sub-image extents are provided, the extents are all concatenated together into one typed array in the return output.
+   * This function takes the input data and converts it to the appropriate
+   * format required by the OpenGL texture, based on the specified data type.
    *
-   * @param {VtkDataTypes} dataType the VTK data type
-   * @param {TypedArray[]} data An array of typed arrays, one for each texture
-   * @param {boolean} depth should depth be used (default: false)
+   * @param {string} dataType - The original data type of the input data.
+   * @param {Array} data - The input data array that needs to be updated.
+   * @param {boolean} [depth=false] - Indicates whether the data is a 3D array.
    * @param {Array<Extent>} imageExtents only consider these image extents (default: [])
-   * @returns an array of newly typed arrays, one for each texture
+   * @returns {Array} The updated data array that matches the OpenGL data type.
    */
-  function updateArrayDataType(
+  publicAPI.updateArrayDataTypeForGL = (
     dataType,
     data,
     depth = false,
     imageExtents = []
-  ) {
+  ) => {
     const pixData = [];
-
     let pixCount = model.width * model.height * model.components;
     if (depth) {
       pixCount *= model.depth;
@@ -819,7 +834,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     }
 
     return pixData;
-  }
+  };
 
   //----------------------------------------------------------------------------
   function scaleTextureToHighestPowerOfTwo(data) {
@@ -935,7 +950,7 @@ function vtkOpenGLTexture(publicAPI, model) {
         if (
           webGLInfo.RENDERER.value.match(/WebKit/gi) &&
           navigator.platform.match(/Mac/gi) &&
-          model.oglNorm16Ext &&
+          getNorm16Ext() &&
           (dataType === VtkDataTypes.UNSIGNED_SHORT ||
             dataType === VtkDataTypes.SHORT)
         ) {
@@ -982,7 +997,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // Create an array of texture with one texture
     const dataArray = [data];
-    const pixData = updateArrayDataType(dataType, dataArray);
+    const pixData = publicAPI.updateArrayDataTypeForGL(dataType, dataArray);
     const scaledData = scaleTextureToHighestPowerOfTwo(pixData);
 
     // Source texture data from the PBO.
@@ -1040,8 +1055,8 @@ function vtkOpenGLTexture(publicAPI, model) {
       numComps *
       model._openGLRenderWindow.getDefaultTextureByteSize(
         dataType,
-        model.oglNorm16Ext,
-        model.useHalfFloat
+        getNorm16Ext(),
+        publicAPI.useHalfFloat()
       );
     publicAPI.deactivate();
     return true;
@@ -1070,7 +1085,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     publicAPI.createTexture();
     publicAPI.bind();
 
-    const pixData = updateArrayDataType(dataType, data);
+    const pixData = publicAPI.updateArrayDataTypeForGL(dataType, data);
     const scaledData = scaleTextureToHighestPowerOfTwo(pixData);
 
     // invert the data because opengl is messed up with cube maps
@@ -1164,8 +1179,8 @@ function vtkOpenGLTexture(publicAPI, model) {
       numComps *
       model._openGLRenderWindow.getDefaultTextureByteSize(
         dataType,
-        model.oglNorm16Ext,
-        model.useHalfFloat
+        getNorm16Ext(),
+        publicAPI.useHalfFloat()
       );
     // generateMipmap must not be called here because we manually upload all levels
     // if it is called, all levels will be overwritten
@@ -1253,8 +1268,8 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.components *
       model._openGLRenderWindow.getDefaultTextureByteSize(
         dataType,
-        model.oglNorm16Ext,
-        model.useHalfFloat
+        getNorm16Ext(),
+        publicAPI.useHalfFloat()
       );
 
     publicAPI.deactivate();
@@ -1363,8 +1378,8 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.components *
       model._openGLRenderWindow.getDefaultTextureByteSize(
         VtkDataTypes.UNSIGNED_CHAR,
-        model.oglNorm16Ext,
-        model.useHalfFloat
+        getNorm16Ext(),
+        publicAPI.useHalfFloat()
       );
 
     publicAPI.deactivate();
@@ -1397,24 +1412,31 @@ function vtkOpenGLTexture(publicAPI, model) {
     return true;
   }
 
-  function setUseHalfFloat(dataType, offset, scale, preferSizeOverAccuracy) {
+  function setCanUseHalfFloat(dataType, offset, scale, preferSizeOverAccuracy) {
     publicAPI.getOpenGLDataType(dataType);
+
+    // Don't consider halfFloat and convert back to Float when the range of data does not generate an accurate halfFloat
+    // AND it is not preferable to have a smaller texture than an exact texture.
+    const isExactHalfFloat =
+      hasExactHalfFloat(offset, scale) || preferSizeOverAccuracy;
 
     let useHalfFloat = false;
     if (model._openGLRenderWindow.getWebgl2()) {
-      useHalfFloat = model.openGLDataType === model.context.HALF_FLOAT;
+      // If OES_texture_float_linear is not available, and using a half float would still be exact, force half floats
+      // This is because half floats are always texture filterable in webgl2, while full *32F floats are not (unless the extension is present)
+      const forceHalfFloat =
+        model.openGLDataType === model.context.FLOAT &&
+        model.context.getExtension('OES_texture_float_linear') === null &&
+        isExactHalfFloat;
+      useHalfFloat =
+        forceHalfFloat || model.openGLDataType === model.context.HALF_FLOAT;
     } else {
       const halfFloatExt = model.context.getExtension('OES_texture_half_float');
       useHalfFloat =
         halfFloatExt && model.openGLDataType === halfFloatExt.HALF_FLOAT_OES;
     }
 
-    // Don't consider halfFloat and convert back to Float when the range of data does not generate an accurate halfFloat
-    // AND it is not preferable to have a smaller texture than an exact texture.
-    const isHalfFloat =
-      useHalfFloat &&
-      (hasExactHalfFloat(offset, scale) || preferSizeOverAccuracy);
-    model.useHalfFloat = isHalfFloat;
+    model.canUseHalfFloat = useHalfFloat && isExactHalfFloat;
   }
 
   function processDataArray(dataArray, preferSizeOverAccuracy) {
@@ -1436,7 +1458,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // preferSizeOverAccuracy will override norm16 due to bug with norm16 implementation
     // https://bugs.chromium.org/p/chromium/issues/detail?id=1408247
-    setUseHalfFloat(
+    setCanUseHalfFloat(
       dataType,
       scaleOffsets.offset,
       scaleOffsets.scale,
@@ -1445,7 +1467,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // since our default is to use half float, in case that we can't use it
     // we need to use another type
-    if (!model.useHalfFloat) {
+    if (!publicAPI.useHalfFloat()) {
       publicAPI.getOpenGLDataType(dataType, true);
     }
 
@@ -1489,6 +1511,66 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     publicAPI.create2DFromRaw(width, height, numComps, dataType, data);
   };
+
+  publicAPI.updateVolumeInfoForGL = (dataType, numComps) => {
+    let isScalingApplied = false;
+    const useHalfFloat = publicAPI.useHalfFloat();
+
+    // Initialize volume info if it doesn't exist
+    if (!model.volumeInfo?.scale || !model.volumeInfo?.offset) {
+      model.volumeInfo = {
+        scale: new Array(numComps),
+        offset: new Array(numComps),
+      };
+    }
+
+    // Default scaling and offset
+    for (let c = 0; c < numComps; ++c) {
+      model.volumeInfo.scale[c] = 1.0;
+      model.volumeInfo.offset[c] = 0.0;
+    }
+
+    // Handle SHORT data type with EXT_texture_norm16 extension
+    if (getNorm16Ext() && !useHalfFloat && dataType === VtkDataTypes.SHORT) {
+      for (let c = 0; c < numComps; ++c) {
+        model.volumeInfo.scale[c] = 32767.0; // Scale to [-1, 1] range
+      }
+      isScalingApplied = true;
+    }
+
+    // Handle UNSIGNED_SHORT data type with EXT_texture_norm16 extension
+    if (
+      getNorm16Ext() &&
+      !useHalfFloat &&
+      dataType === VtkDataTypes.UNSIGNED_SHORT
+    ) {
+      for (let c = 0; c < numComps; ++c) {
+        model.volumeInfo.scale[c] = 65535.0; // Scale to [0, 1] range
+      }
+      isScalingApplied = true;
+    }
+
+    // Handle UNSIGNED_CHAR data type
+    if (dataType === VtkDataTypes.UNSIGNED_CHAR) {
+      for (let c = 0; c < numComps; ++c) {
+        model.volumeInfo.scale[c] = 255.0; // Scale to [0, 1] range
+      }
+      isScalingApplied = true;
+    }
+
+    // No scaling needed for FLOAT or HalfFloat (SHORT/UNSIGNED_SHORT)
+    if (
+      dataType === VtkDataTypes.FLOAT ||
+      (useHalfFloat &&
+        (dataType === VtkDataTypes.SHORT ||
+          dataType === VtkDataTypes.UNSIGNED_SHORT))
+    ) {
+      isScalingApplied = true;
+    }
+
+    return isScalingApplied;
+  };
+
   //----------------------------------------------------------------------------
   publicAPI.create3DFromRaw = (
     width,
@@ -1499,12 +1581,40 @@ function vtkOpenGLTexture(publicAPI, model) {
     data,
     updatedExtents = []
   ) => {
+    let dataTypeToUse = dataType;
+    let dataToUse = data;
+
+    if (
+      !publicAPI.updateVolumeInfoForGL(dataTypeToUse, numComps) &&
+      dataToUse
+    ) {
+      const numPixelsIn = width * height * depth;
+      const scaleOffsetsCopy = structuredClone(model.volumeInfo);
+      // otherwise convert to float
+      const newArray = new Float32Array(numPixelsIn * numComps);
+      // use computed scale and offset
+      model.volumeInfo.offset = scaleOffsetsCopy.offset;
+      model.volumeInfo.scale = scaleOffsetsCopy.scale;
+      let count = 0;
+      const scaleInverse = scaleOffsetsCopy.scale.map((s) => 1 / s);
+      for (let i = 0; i < numPixelsIn; i++) {
+        for (let nc = 0; nc < numComps; nc++) {
+          newArray[count] =
+            (dataToUse[count] - scaleOffsetsCopy.offset[nc]) * scaleInverse[nc];
+          count++;
+        }
+      }
+
+      dataTypeToUse = VtkDataTypes.FLOAT;
+      dataToUse = newArray;
+    }
+
     // Permit OpenGLDataType to be half float, if applicable, for 3D
-    publicAPI.getOpenGLDataType(dataType);
+    publicAPI.getOpenGLDataType(dataTypeToUse);
 
     // Now determine the texture parameters using the arguments.
-    publicAPI.getInternalFormat(dataType, numComps);
-    publicAPI.getFormat(dataType, numComps);
+    publicAPI.getInternalFormat(dataTypeToUse, numComps);
+    publicAPI.getFormat(dataTypeToUse, numComps);
 
     if (!model.internalFormat || !model.format || !model.openGLDataType) {
       vtkErrorMacro('Failed to determine texture parameters.');
@@ -1537,13 +1647,12 @@ function vtkOpenGLTexture(publicAPI, model) {
       paramCache.prevHeight !== model.height;
 
     // Create an array of texture with one texture
-    const dataArray = [data];
+    const dataArray = [dataToUse];
     const is3DArray = true;
-    const pixData = updateArrayDataType(
-      dataType,
+    const pixData = publicAPI.updateArrayDataTypeForGL(
+      dataTypeToUse,
       dataArray,
       is3DArray,
-      // if we need to reallocate the entire texture, then process the entire volume
       rebuildEntireTexture ? [] : updatedExtents
     );
     const scaledData = scaleTextureToHighestPowerOfTwo(pixData);
@@ -1553,7 +1662,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     if (rebuildEntireTexture) {
-      if (useTexStorage(dataType)) {
+      if (useTexStorage(dataTypeToUse)) {
         model.context.texStorage3D(
           model.target,
           1,
@@ -1640,9 +1749,9 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.depth *
       model.components *
       model._openGLRenderWindow.getDefaultTextureByteSize(
-        dataType,
-        model.oglNorm16Ext,
-        model.useHalfFloat
+        dataTypeToUse,
+        getNorm16Ext(),
+        publicAPI.useHalfFloat()
       );
 
     publicAPI.deactivate();
@@ -1690,8 +1799,6 @@ function vtkOpenGLTexture(publicAPI, model) {
       preferSizeOverAccuracy
     );
 
-    const numPixelsIn = width * height * depth;
-
     const offset = [];
     const scale = [];
     for (let c = 0; c < numComps; ++c) {
@@ -1717,104 +1824,22 @@ function vtkOpenGLTexture(publicAPI, model) {
     // Create a copy of scale and offset to avoid aliasing issues
     // Original is read only, copy is read/write
     // Use the copy as volumeInfo.scale and volumeInfo.offset
-    const scaleOffsetsCopy = structuredClone(scaleOffsets);
 
     // WebGL2 path, we have 3d textures etc
     if (model._openGLRenderWindow.getWebgl2()) {
-      if (
-        model.oglNorm16Ext &&
-        !model.useHalfFloat &&
-        dataType === VtkDataTypes.SHORT
-      ) {
-        for (let c = 0; c < numComps; ++c) {
-          model.volumeInfo.scale[c] = 32767.0;
-        }
-        return publicAPI.create3DFromRaw(
-          width,
-          height,
-          depth,
-          numComps,
-          dataType,
-          data,
-          updatedExtents
-        );
-      }
-      if (
-        model.oglNorm16Ext &&
-        !model.useHalfFloat &&
-        dataType === VtkDataTypes.UNSIGNED_SHORT
-      ) {
-        for (let c = 0; c < numComps; ++c) {
-          model.volumeInfo.scale[c] = 65535.0;
-        }
-        return publicAPI.create3DFromRaw(
-          width,
-          height,
-          depth,
-          numComps,
-          dataType,
-          data,
-          updatedExtents
-        );
-      }
-      if (
-        dataType === VtkDataTypes.FLOAT ||
-        (model.useHalfFloat &&
-          (dataType === VtkDataTypes.SHORT ||
-            dataType === VtkDataTypes.UNSIGNED_SHORT))
-      ) {
-        return publicAPI.create3DFromRaw(
-          width,
-          height,
-          depth,
-          numComps,
-          dataType,
-          data,
-          updatedExtents
-        );
-      }
-      if (dataType === VtkDataTypes.UNSIGNED_CHAR) {
-        for (let c = 0; c < numComps; ++c) {
-          model.volumeInfo.scale[c] = 255.0;
-        }
-        return publicAPI.create3DFromRaw(
-          width,
-          height,
-          depth,
-          numComps,
-          dataType,
-          data,
-          updatedExtents
-        );
-      }
-      if (updatedExtents.length) {
-        vtkWarningMacro(
-          'Cannot perform extent updates with the given data type'
-        );
-      }
-      // otherwise convert to float
-      const newArray = new Float32Array(numPixelsIn * numComps);
-      // use computed scale and offset
-      model.volumeInfo.offset = scaleOffsetsCopy.offset;
-      model.volumeInfo.scale = scaleOffsetsCopy.scale;
-      let count = 0;
-      const scaleInverse = scaleOffsetsCopy.scale.map((s) => 1 / s);
-      for (let i = 0; i < numPixelsIn; i++) {
-        for (let nc = 0; nc < numComps; nc++) {
-          newArray[count] =
-            (data[count] - scaleOffsetsCopy.offset[nc]) * scaleInverse[nc];
-          count++;
-        }
-      }
       return publicAPI.create3DFromRaw(
         width,
         height,
         depth,
         numComps,
-        VtkDataTypes.FLOAT,
-        newArray
+        dataType,
+        data,
+        updatedExtents
       );
     }
+
+    const numPixelsIn = width * height * depth;
+    const scaleOffsetsCopy = structuredClone(scaleOffsets);
 
     // not webgl2, deal with webgl1, no 3d textures
     // and maybe no float textures
@@ -2016,6 +2041,11 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     return -1;
   };
+
+  // set use half float
+  publicAPI.enableUseHalfFloat = (use) => {
+    model.enableUseHalfFloat = use;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -2049,13 +2079,12 @@ const DEFAULT_VALUES = {
   baseLevel: 0,
   maxLevel: 1000,
   generateMipmap: false,
-  // use half float by default, but it will get set
-  // to false if the context does not support it or
-  // the voxel intensity range is out of the accurate
-  // range of half float
-  useHalfFloat: true,
   oglNorm16Ext: null,
   allocatedGPUMemoryInBytes: 0,
+  // by default it is enabled
+  enableUseHalfFloat: true,
+  // but by default we don't know if we can use half float base on the data range
+  canUseHalfFloat: false,
 };
 
 // ----------------------------------------------------------------------------

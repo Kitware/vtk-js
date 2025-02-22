@@ -6,27 +6,25 @@ body:
   - type: markdown
     attributes:
       value: |
-        👋 Hello, and thank you for starting this contribution!
-
-        ❓ If you are trying to submit a question for general support, please reach out on our discourse forum instead: https://discourse.vtk.org/c/web/9
-
-        🐞 If you do need to report a bug, please complete the template below as much as possible to help us reproduce the bug and address your report.
+        ❓ If this a question or request for support please use the forum: https://discourse.vtk.org/c/web/9
 
         🧱 When appropriate, assign one of the `Module: XXX` labels to your issue when creating it.
+
+        🙌 Thank you for starting this contribution!
   - type: textarea
     id: description
     attributes:
-      label: Feature Request
-      description: A clear and concise description of what need or problem you're trying to address.
+      label: Motivation
+      description: What need or problem would you like addressed?
     validations:
       required: true
   - type: textarea
     id: feature
     attributes:
-      label: Motivation and Detailed Description
+      label: Detailed Description
       description: |
-        A clear description of the feature/enhancement you'd like to see being added.
-        If applicable, use:
+        Describe the enhancement you'd like added.
+        Consider including:
 
         - potential alternatives
         - screenshots

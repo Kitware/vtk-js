@@ -1019,7 +1019,9 @@ function vtkColorTransferFunction(publicAPI, model) {
       // has been called.
       return model.tableSize;
     }
-    return 16777216; // 2^24
+    const nNodes = model.nodes?.length ?? 0;
+    // The minimum is 4094 colors so that it fills in the 4096 texels texture in `mapScalarsToTexture`
+    return Math.max(4094, nNodes);
   };
 
   //----------------------------------------------------------------------------

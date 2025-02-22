@@ -104,10 +104,10 @@ test.onlyIfWebGL('Test vtkPointPicker line source', (t) => {
     resolution: 10,
   });
 
-  const mapper = vtkMapper.newInstance();
+  const mapper = gc.registerResource(vtkMapper.newInstance());
   mapper.setInputConnection(lineSource.getOutputPort());
 
-  const actor = vtkActor.newInstance();
+  const actor = gc.registerResource(vtkActor.newInstance());
   actor.getProperty().setPointSize(1);
   actor.getProperty().setRepresentation(Representation.WIREFRAME);
   actor.setMapper(mapper);

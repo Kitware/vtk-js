@@ -37,9 +37,14 @@ function begin(splitMode) {
 
 function faceMap(str) {
   const idxs = str.split('/').map((i) => Number(i));
-  const vertexIdx = idxs[0] - 1;
-  const textCoordIdx = idxs[1] ? idxs[1] - 1 : vertexIdx;
-  const vertexNormal = idxs[2] ? idxs[2] - 1 : vertexIdx;
+  let vertexIdx = idxs[0] - 1;
+  vertexIdx = vertexIdx < 0 ? vertexIdx + 1 + data.v.length / 3 : vertexIdx;
+  let textCoordIdx = idxs[1] ? idxs[1] - 1 : vertexIdx;
+  textCoordIdx =
+    textCoordIdx < 0 ? textCoordIdx + 1 + data.vt.length / 2 : textCoordIdx;
+  let vertexNormal = idxs[2] ? idxs[2] - 1 : vertexIdx;
+  vertexNormal =
+    vertexNormal < 0 ? vertexNormal + 1 + data.vn.length / 3 : vertexNormal;
   return [vertexIdx, textCoordIdx, vertexNormal];
 }
 

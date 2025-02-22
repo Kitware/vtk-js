@@ -1,5 +1,6 @@
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import macro from 'vtk.js/Sources/macros';
+import vtkImplicitFunction from 'vtk.js/Sources/Common/DataModel/ImplicitFunction';
 
 const PLANE_TOLERANCE = 1.0e-6;
 const COINCIDE = 'coincide';
@@ -282,7 +283,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Object methods
-  macro.obj(publicAPI, model);
+  vtkImplicitFunction.extend(publicAPI, model, initialValues);
 
   macro.setGetArray(publicAPI, model, ['normal', 'origin'], 3);
 

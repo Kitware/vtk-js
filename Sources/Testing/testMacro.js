@@ -44,6 +44,7 @@ const DEFAULT_VALUES = {
   _myProp12: [12],
   _myProp13: 13,
   myObjectProp: { foo: 1 },
+  myParameterizedObjectProp: { foo: 1, bar: 2 },
   _onMyObjectPropChanged: (publicAPI, model) => {
     ++model._onMyObjectPropChangedCallsCount;
   },
@@ -89,6 +90,13 @@ function extend(publicAPI, model, initialValues = {}) {
 
   // Object member variables
   macro.setGet(publicAPI, model, [{ name: 'myObjectProp', type: 'object' }]);
+  macro.setGet(publicAPI, model, [
+    {
+      name: 'myParameterizedObjectProp',
+      type: 'object',
+      params: ['foo', 'bar'],
+    },
+  ]);
 
   // Object specific methods
   myClass(publicAPI, model);
@@ -449,6 +457,27 @@ test('Macro methods object tests', (t) => {
     myTestClass.getMyObjectProp(),
     { foo: 2 },
     'Getter shall return a copy'
+  );
+
+  myTestClass.setMyParameterizedObjectProp({ foo: 12, bar: 89, baz: 13 });
+  t.deepEqual(
+    myTestClass.getMyParameterizedObjectProp(),
+    { foo: 12, bar: 89, baz: 13 },
+    'Setter changes on a different object'
+  );
+
+  myTestClass.setMyParameterizedObjectProp(16, 52);
+  t.deepEqual(
+    myTestClass.getMyParameterizedObjectProp(),
+    { foo: 16, bar: 52 },
+    'Object setter with multiple arguments'
+  );
+
+  myTestClass.setMyParameterizedObjectProp(1, 2, 3);
+  t.deepEqual(
+    myTestClass.getMyParameterizedObjectProp(),
+    { foo: 1, bar: 2 },
+    'Object setter ignores extraneous arguments'
   );
 
   t.end();

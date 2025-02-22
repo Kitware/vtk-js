@@ -202,7 +202,7 @@ function vtkLineIntegralConvolution2D(publicAPI, model) {
     const gl = model.context;
 
     let fb = model.framebuffer;
-    const fbSize = fb.getSize();
+    const fbSize = fb?.getSize();
     if (!fb || !fbSize || size[0] !== fbSize || size[1] !== fbSize) {
       fb = vtkFrameBuffer.newInstance();
       fb.setOpenGLRenderWindow(model._openGLRenderWindow);

@@ -101,11 +101,7 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
 
   // Add one positional light
   const bounds = actor.getBounds();
-  const center = [
-    (bounds[1] - bounds[0]) / 2.0,
-    (bounds[3] - bounds[2]) / 2.0,
-    (bounds[5] - bounds[4]) / 2.0,
-  ];
+  const center = vtkBoundingBox.getCenter(bounds);
   renderer.removeAllLights();
   const light = vtkLight.newInstance();
   const lightPos = [center[0] + 300, center[1] + 50, center[2] - 50];

@@ -1,5 +1,6 @@
 import { vtkObject } from '../../../interfaces';
 import { Vector3 } from '../../../types';
+import vtkImplicitFunction from '../ImplicitFunction';
 
 /**
  *
@@ -16,7 +17,7 @@ interface IIntersectWithLine {
   x: Vector3;
 }
 
-export interface vtkPlane extends vtkObject {
+export interface vtkPlane extends vtkImplicitFunction {
   /**
    * Get the distance of a point x to a plane defined by n (x-p0) = 0.
    * The normal n must be magnitude = 1.

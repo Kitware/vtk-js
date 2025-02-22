@@ -27,7 +27,6 @@ export interface vtkImageData extends vtkDataSet {
    * `voxelFunc(index, bounds)` is an optional function that is called with
    * the `[i,j,k]` index and index `bounds`, expected to return truthy if the
    * data point should be counted in the histogram, and falsey if not.
-   * @param {Bounds} worldBounds The bounds of the world.
    * @param [voxelFunc]
    */
   computeHistogram(worldBounds: Bounds, voxelFunc?: any): IComputeHistogram;

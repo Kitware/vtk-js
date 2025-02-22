@@ -172,7 +172,7 @@ test.onlyIfWebGL('Test HardwareSelector Points', (tapeContext) => {
       tapeContext.ok(res[0].getProperties().attributeID === 2);
     })
   );
-  Promise.all(promises).then(() => {
+  return Promise.all(promises).then(() => {
     gc.releaseResources();
   });
 });

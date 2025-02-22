@@ -167,6 +167,14 @@ for (let i = 0; i < 4; i++) {
     obj.interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
     obj.widgetInstance = obj.widgetManager.addWidget(widget, xyzToViewType[i]);
     obj.widgetInstance.setScaleInPixels(true);
+    obj.widgetInstance.setHoleWidth(50);
+    obj.widgetInstance.setInfiniteLine(false);
+    widgetState
+      .getStatesWithLabel('line')
+      .forEach((state) => state.setScale3(4, 4, 300));
+    widgetState
+      .getStatesWithLabel('center')
+      .forEach((state) => state.setOpacity(128));
     obj.widgetInstance.setKeepOrthogonality(checkboxOrthogonality.checked);
     obj.widgetInstance.setCursorStyles(appCursorStyles);
     obj.widgetManager.enablePicking();

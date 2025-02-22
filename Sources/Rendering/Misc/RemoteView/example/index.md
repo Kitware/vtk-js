@@ -204,3 +204,13 @@ In order to run the server, you will need a [ParaView (5.6+) binary](https://www
 /.../pvpython ./pv-server.py --port 1234
 ```
 
+__Caution__: For ParaView 5.13 the web dependencies have been removed in favor of using your own venv along ParaView pvpython. In order to make that example for with ParaView 5.13, you will need to do the following. 
+
+```sh
+python3.10 -m venv .pv-venv
+source ./.pv-venv/bin/activate
+pip install wslink
+
+/.../pvpython --venv .pv-venv ./pv-server.py --port 1234
+```
+

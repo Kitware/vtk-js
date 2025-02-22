@@ -63,7 +63,7 @@ export interface IRenderWindowInteractorInitialValues {
   mouseScrollDebounceByPass?: boolean;
 }
 
-interface IPosition {
+export interface IPosition {
   type: string;
 }
 

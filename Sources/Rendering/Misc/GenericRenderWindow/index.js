@@ -80,6 +80,9 @@ function vtkGenericRenderWindow(publicAPI, model) {
   publicAPI.delete = macro.chain(
     publicAPI.setContainer,
     model._apiSpecificRenderWindow.delete,
+    () => {
+      window.removeEventListener('resize', publicAPI.resize);
+    },
     publicAPI.delete
   );
 

@@ -13,21 +13,27 @@ interface IRemoteViewInitialValues {
   rpcGestureEvent?: any;
   rpcWheelEvent?: any;
   viewStream?: vtkViewStream;
+  canvasElement?: HTMLCanvasElement;
 }
 
 export interface vtkRemoteView extends vtkObject {
   /**
-   * Get container element
+   * Get container HTML element
    */
   getContainer(): HTMLElement;
 
   /**
-   *
+   * Get vtkViewStream object
    */
   getViewStream(): vtkViewStream;
 
   /**
-   *
+   * Get the canvas HTML element
+   */
+  getCanvasElement(): HTMLCanvasElement;
+
+  /**
+   * Get the vtkCanvasView object
    */
   getCanvasView(): vtkCanvasView;
 

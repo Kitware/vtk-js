@@ -160,7 +160,7 @@ function vtkLineWidget(publicAPI, model) {
     model.widgetState.getMoveHandle().setOrigin(center);
   });
 
-  model.widgetState.getPositionOnLine().onModified(() => {
+  let linePosSub = model.widgetState.getPositionOnLine().onModified(() => {
     updateTextPosition(model);
   });
 
@@ -169,6 +169,11 @@ function vtkLineWidget(publicAPI, model) {
     model.manipulator ||
       vtkPlanePointManipulator.newInstance({ useCameraNormal: true })
   );
+
+  publicAPI.delete = macro.chain(publicAPI.delete, () => {
+    linePosSub.unsubscribe();
+    linePosSub = null;
+  });
 }
 
 // ----------------------------------------------------------------------------

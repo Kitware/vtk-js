@@ -119,6 +119,12 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
     publicAPI.setControllerVisibility(!model.controllerVisibility);
   };
 
+  function handleKeypress(e) {
+    if (String.fromCharCode(e.charCode) === 'c') {
+      publicAPI.toggleControllerVisibility();
+    }
+  }
+
   publicAPI.addController = (html) => {
     model.controlContainer = document.createElement('div');
     applyStyle(
@@ -130,11 +136,7 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
 
     publicAPI.setControllerVisibility(model.controllerVisibility);
 
-    model.rootContainer.addEventListener('keypress', (e) => {
-      if (String.fromCharCode(e.charCode) === 'c') {
-        publicAPI.toggleControllerVisibility();
-      }
-    });
+    model.rootContainer.addEventListener('keypress', handleKeypress);
   };
 
   // Update BG color
@@ -156,6 +158,10 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   publicAPI.delete = macro.chain(
     publicAPI.setContainer,
     model.apiSpecificRenderWindow.delete,
+    () => {
+      model.rootContainer?.removeEventListener('keypress', handleKeypress);
+      window.removeEventListener('resize', publicAPI.resize);
+    },
     publicAPI.delete
   );
 

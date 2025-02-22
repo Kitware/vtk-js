@@ -42,7 +42,7 @@ widgetManager.setRenderer(renderer);
 const widget = vtkAngleWidget.newInstance();
 // widget.placeWidget(cube.getOutputData().getBounds());
 
-widgetManager.addWidget(widget);
+const widgetInView = widgetManager.addWidget(widget);
 
 renderer.resetCamera();
 widgetManager.enablePicking();
@@ -53,6 +53,8 @@ fullScreenRenderer.getInteractor().render();
 // -----------------------------------------------------------
 
 fullScreenRenderer.addController(controlPanel);
+
+widgetInView.onEndInteractionEvent(() => renderer.resetCameraClippingRange());
 
 widget.getWidgetState().onModified(() => {
   document.querySelector('#angle').innerText = widget.getAngle();
