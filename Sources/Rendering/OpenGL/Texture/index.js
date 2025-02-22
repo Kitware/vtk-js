@@ -1,3 +1,4 @@
+import deepEqual from 'fast-deep-equal';
 import Constants from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 import HalfFloat from 'vtk.js/Sources/Common/Core/HalfFloat';
 import * as macro from 'vtk.js/Sources/macros';
@@ -21,6 +22,17 @@ const { toHalf } = HalfFloat;
 function vtkOpenGLTexture(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLTexture');
+
+  function getTexParams() {
+    return {
+      internalFormat: model.internalFormat,
+      format: model.format,
+      openGLDataType: model.openGLDataType,
+      width: model.width,
+      height: model.height,
+    };
+  }
+
   // Renders myself
   publicAPI.render = (renWin = null) => {
     if (renWin) {
@@ -181,7 +193,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     if (model.context && model.handle) {
       model.context.deleteTexture(model.handle);
     }
-    model._paramCache = null;
+    model._prevTexParams = null;
     model.handle = 0;
     model.numberOfDimensions = 0;
     model.target = 0;
@@ -266,7 +278,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       rwin.activateTexture(publicAPI);
       rwin.deactivateTexture(publicAPI);
       model.context.deleteTexture(model.handle);
-      model._paramCache = null;
+      model._prevTexParams = null;
       model.handle = 0;
       model.numberOfDimensions = 0;
       model.target = 0;
@@ -475,7 +487,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.resetFormatAndType = () => {
-    model._paramCache = null;
+    model._prevTexParams = null;
     model.format = 0;
     model.internalFormat = 0;
     model._forceInternalFormat = false;
@@ -1632,19 +1644,11 @@ function vtkOpenGLTexture(publicAPI, model) {
     publicAPI.bind();
 
     const hasUpdatedExtents = updatedExtents.length > 0;
-    const paramCache = model._paramCache;
 
     // It's possible for the texture parameters to change while
     // streaming, so check for such a change.
     const rebuildEntireTexture =
-      !hasUpdatedExtents ||
-      !paramCache ||
-      !paramCache.tex3dAllocated ||
-      paramCache.prevInternalFormat !== model.internalFormat ||
-      paramCache.prevFormat !== model.format ||
-      paramCache.prevOpenGLDataType !== model.openGLDataType ||
-      paramCache.prevWidth !== model.width ||
-      paramCache.prevHeight !== model.height;
+      !hasUpdatedExtents || !deepEqual(model._prevTexParams, getTexParams());
 
     // Create an array of texture with one texture
     const dataArray = [dataToUse];
@@ -1701,14 +1705,7 @@ function vtkOpenGLTexture(publicAPI, model) {
         );
       }
 
-      model._paramCache = {
-        tex3dAllocated: true,
-        prevInternalFormat: model.internalFormat,
-        prevFormat: model.format,
-        prevOpenGLDataType: model.openGLDataType,
-        prevWidth: model.width,
-        prevHeight: model.height,
-      };
+      model._prevTexParams = getTexParams();
     } else if (hasUpdatedExtents) {
       const extentPixels = scaledData[0];
       let readOffset = 0;
@@ -2055,7 +2052,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 const DEFAULT_VALUES = {
   _openGLRenderWindow: null,
   _forceInternalFormat: false,
-  _paramCache: null,
+  _prevTexParams: null,
   context: null,
   handle: 0,
   sendParametersTime: null,

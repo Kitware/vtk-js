@@ -1713,32 +1713,25 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     // rebuild the scalarTexture if the data has changed
     toString = getImageDataHash(image, scalars);
     const reBuildTex = !tex?.oglObject?.getHandle() || tex?.hash !== toString;
-    const hasUpdatedExtents = !!model.renderable.getUpdatedExtents().length;
-    if (reBuildTex) {
-      if (!hasUpdatedExtents) {
-        model.scalarTexture = vtkOpenGLTexture.newInstance();
-        model.scalarTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-        // Build the textures
-        // Use norm16 for scalar texture if the extension is available
-        model.scalarTexture.setOglNorm16Ext(
-          model.context.getExtension('EXT_texture_norm16')
-        );
-        model.scalarTexture.resetFormatAndType();
-      }
+    const updatedExtents = model.renderable.getUpdatedExtents();
+    const hasUpdatedExtents = !!updatedExtents.length;
 
-      // If hasUpdatedExtents, then the texture is partially updated
-      const updatedExtents = [...model.renderable.getUpdatedExtents()];
-      // clear the array to acknowledge the update.
-      model.renderable.setUpdatedExtents([]);
-
+    if (reBuildTex && !hasUpdatedExtents) {
+      model.scalarTexture = vtkOpenGLTexture.newInstance();
+      model.scalarTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      // Build the textures
       const dims = image.getDimensions();
+      // Use norm16 for scalar texture if the extension is available
+      model.scalarTexture.setOglNorm16Ext(
+        model.context.getExtension('EXT_texture_norm16')
+      );
+      model.scalarTexture.resetFormatAndType();
+
       model.scalarTexture.create3DFilterableFromDataArray(
         dims[0],
         dims[1],
         dims[2],
-        scalars,
-        model.renderable.getPreferSizeOverAccuracy(),
-        updatedExtents
+        scalars
       );
 
       if (scalars) {
@@ -1761,6 +1754,22 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
     } else {
       model.scalarTexture = tex.oglObject;
+    }
+
+    if (hasUpdatedExtents) {
+      // If hasUpdatedExtents, then the texture is partially updated.
+      // clear the array to acknowledge the update.
+      model.renderable.setUpdatedExtents([]);
+
+      const dims = image.getDimensions();
+      model.scalarTexture.create3DFilterableFromDataArray(
+        dims[0],
+        dims[1],
+        dims[2],
+        scalars,
+        false,
+        updatedExtents
+      );
     }
 
     if (!model.tris.getCABO().getElementCount()) {

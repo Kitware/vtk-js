@@ -232,23 +232,18 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
 
     const tex = model._openGLRenderWindow.getGraphicsResourceForObject(scalars);
     const reBuildTex = !tex?.oglObject?.getHandle() || tex?.hash !== toString;
-    const hasUpdatedExtents = !!model.renderable.getUpdatedExtents().length;
-    if (reBuildTex) {
-      if (!hasUpdatedExtents) {
-        model.openGLTexture = vtkOpenGLTexture.newInstance();
-        model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-        // Build the image scalar texture
-        // Use norm16 for the 3D texture if the extension is available
-        model.openGLTexture.setOglNorm16Ext(
-          model.context.getExtension('EXT_texture_norm16')
-        );
-        model.openGLTexture.resetFormatAndType();
-      }
+    const updatedExtents = model.renderable.getUpdatedExtents();
+    const hasUpdatedExtents = !!updatedExtents.length;
 
-      // If hasUpdatedExtents, then the texture is partially updated
-      const updatedExtents = [...model.renderable.getUpdatedExtents()];
-      // clear the array to acknowledge the update.
-      model.renderable.setUpdatedExtents([]);
+    if (reBuildTex && !hasUpdatedExtents) {
+      model.openGLTexture = vtkOpenGLTexture.newInstance();
+      model.openGLTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+      // Build the image scalar texture
+      // Use norm16 for the 3D texture if the extension is available
+      model.openGLTexture.setOglNorm16Ext(
+        model.context.getExtension('EXT_texture_norm16')
+      );
+      model.openGLTexture.resetFormatAndType();
 
       // Build the image scalar texture
       const dims = image.getDimensions();
@@ -278,6 +273,22 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       model._scalars = scalars;
     } else {
       model.openGLTexture = tex.oglObject;
+    }
+
+    if (hasUpdatedExtents) {
+      // If hasUpdatedExtents, then the texture is partially updated.
+      // clear the array to acknowledge the update.
+      model.renderable.setUpdatedExtents([]);
+
+      const dims = image.getDimensions();
+      model.openGLTexture.create3DFilterableFromDataArray(
+        dims[0],
+        dims[1],
+        dims[2],
+        scalars,
+        false,
+        updatedExtents
+      );
     }
 
     const ppty = actor.getProperty();
