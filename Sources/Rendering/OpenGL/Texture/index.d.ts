@@ -245,7 +245,7 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param dataType The data type of the texture.
    * @param data The raw data for the texture.
    * @param [preferSizeOverAccuracy=false] Whether to prefer texture size over accuracy. Defaults to false.
-   * @param [ranges] The ranges of the data (optional).
+   * @param [ranges] The precomputed ranges of the data (optional). Provided to prevent computation of the data ranges.
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
   create2DFilterableFromRaw(
