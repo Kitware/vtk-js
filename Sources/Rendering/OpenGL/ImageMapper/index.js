@@ -1237,13 +1237,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       const spatialExt = image.getSpatialExtent();
       const basicScalars = imgScalars.getData();
       let scalars = null;
-      /**
-       * Used to store the range of the scalars array, if available. Pre-setting
-       * the scalars range can prevent it being calculated again.
-       *
-       * @type{ import("../../../interfaces").vtkRange[]|undefined }
-       */
-      let ranges;
       // Get right scalars according to slicing mode
       if (ijkMode === SlicingMode.I) {
         scalars = new basicScalars.constructor(dims[2] * dims[1] * numComp);
@@ -1317,17 +1310,24 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         ptsArray[9] = spatialExt[1];
         ptsArray[10] = spatialExt[3];
         ptsArray[11] = sliceDepth;
-        if (sliceOffset === 0) {
-          // If the sliceOffset is 0, the scalars array is a view of the
-          // original scalars array. As a micro-optimization, we can get the
-          // range from the original scalars array and set the range to the
-          // scalars array.  This means there is no need to re-calculate the
-          // ranges for the scalars array.
-          ranges = imgScalars.getRanges();
-        }
       } else {
         vtkErrorMacro('Reformat slicing not yet supported.');
       }
+
+      /**
+       *
+       * Fetch the ranges of the source volume, `imgScalars`, and use them when
+       * creating the texture. Whilst the pre-calculated ranges may not be
+       * strictly correct for the slice, it is guarateed to be within the
+       * source volume's range.
+       *
+       * There is a significant performance improvement by pre-setting the range
+       * of the scalars array particaulrly when scrolling through the source
+       * volume as there is no need to calculate the range of the slice scalar.
+       *
+       * @type{ import("../../../interfaces").vtkRange[] }
+       */
+      const ranges = imgScalars.getRanges();
 
       // Don't share this resource as `scalars` is created in this function
       // so it is impossible to share
