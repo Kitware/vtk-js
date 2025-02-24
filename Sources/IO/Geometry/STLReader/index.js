@@ -407,7 +407,7 @@ const DEFAULT_VALUES = {
   // baseURL: null,
   // dataAccessHelper: null,
   // url: null,
-  removeDuplicateVertices: 0,
+  removeDuplicateVertices: -1,
 };
 
 // ----------------------------------------------------------------------------
