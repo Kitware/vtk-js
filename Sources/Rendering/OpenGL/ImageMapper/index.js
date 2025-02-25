@@ -1314,6 +1314,21 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         vtkErrorMacro('Reformat slicing not yet supported.');
       }
 
+      /**
+       *
+       * Fetch the ranges of the source volume, `imgScalars`, and use them when
+       * creating the texture. Whilst the pre-calculated ranges may not be
+       * strictly correct for the slice, it is guarateed to be within the
+       * source volume's range.
+       *
+       * There is a significant performance improvement by pre-setting the range
+       * of the scalars array particaulrly when scrolling through the source
+       * volume as there is no need to calculate the range of the slice scalar.
+       *
+       * @type{ import("../../../interfaces").vtkRange[] }
+       */
+      const ranges = imgScalars.getRanges();
+
       // Don't share this resource as `scalars` is created in this function
       // so it is impossible to share
       model.openGLTexture.resetFormatAndType();
@@ -1323,7 +1338,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         numComp,
         imgScalars.getDataType(),
         scalars,
-        model.renderable.getPreferSizeOverAccuracy?.()
+        model.renderable.getPreferSizeOverAccuracy?.(),
+        ranges
       );
       model.openGLTexture.activate();
       model.openGLTexture.sendParameters();

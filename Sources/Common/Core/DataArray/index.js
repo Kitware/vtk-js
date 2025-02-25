@@ -281,6 +281,22 @@ function vtkDataArray(publicAPI, model) {
     return model.rangeTuple;
   };
 
+  publicAPI.getRanges = () => {
+    /** @type {import('../../../interfaces').vtkRange[]} */
+    const ranges = [];
+    for (let i = 0; i < model.numberOfComponents; i++) {
+      const [min, max] = publicAPI.getRange(i);
+      /** @type {import('../../../interfaces').vtkRange} */
+      const range = {
+        min,
+        max,
+        component: i,
+      };
+      ranges.push(range);
+    }
+    return ranges;
+  };
+
   publicAPI.setTuple = (idx, tuple) => {
     const offset = idx * model.numberOfComponents;
     for (let i = 0; i < model.numberOfComponents; i++) {
