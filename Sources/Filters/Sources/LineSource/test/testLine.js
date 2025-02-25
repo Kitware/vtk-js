@@ -11,7 +11,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import baseline from './baseline.png';
 
 test.onlyIfWebGL('Test vtkLineSource Rendering', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkLineSource Rendering');
 
   // Create some control UI
@@ -44,15 +44,18 @@ test.onlyIfWebGL('Test vtkLineSource Rendering', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Filters/Sources/LineSource/testLine',
-      t,
-      1,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Filters/Sources/LineSource/testLine',
+        t,
+        1
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

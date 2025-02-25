@@ -14,8 +14,8 @@ import baseline2 from './testColorTransferFunctionPresets2.png';
 const MAX_NUMBER_OF_PRESETS = 200;
 const NUMBER_PER_LINE = 20;
 
-test('Test ColorTransferFunction Presets', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test ColorTransferFunction Presets', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkMapper ColorTransferFunction Presets');
 
   // Create some control UI
@@ -58,15 +58,18 @@ test('Test ColorTransferFunction Presets', (t) => {
   camera.zoom(1.45);
   renderWindow.render();
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline, baseline2],
-      'Rendering/Core/ColorTransferFunction/testColorTransferFunctionPresets',
-      t,
-      4.8,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline, baseline2],
+        'Rendering/Core/ColorTransferFunction/testColorTransferFunctionPresets',
+        t,
+        4.8
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

@@ -13,7 +13,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import baseline from './testCategoricalColors.png';
 
 test.onlyIfWebGL('Test Categorical Colors', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkLookupTable TestCategoricalColors');
   // testUtils.keepDOM();
 
@@ -108,15 +108,18 @@ test.onlyIfWebGL('Test Categorical Colors', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Common/Core/LookupTable/testCategoricalColors',
-      t,
-      5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Common/Core/LookupTable/testCategoricalColors',
+        t,
+        5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

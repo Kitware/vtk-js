@@ -19,7 +19,7 @@ import baselineOrtho from './testImageResliceMapperBorderRenderingOrtho.png';
 import baselineOblique from './testImageResliceMapperBorderRenderingOblique.png';
 
 test.onlyIfWebGL('Test ImageResliceMapper', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok(
     'rendering',
     'vtkImageResliceMapper testImageResliceMapperBorderRendering'
@@ -114,22 +114,20 @@ test.onlyIfWebGL('Test ImageResliceMapper', async (t) => {
   renderer.resetCameraClippingRange();
 
   function strictBaselineTest(baseline) {
-    return new Promise((resolve) => {
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline],
-          'Rendering/Core/ImageResliceMapper',
-          t,
-          {
-            pixelThreshold: 0.001, // 0.1% (range is [0, 1])
-            mismatchTolerance: 1, // 1% (raw percentage)
-          },
-          resolve
-        );
-      });
-      renderWindow.render();
-    });
+    const promise = glwindow.captureNextImage().then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/Core/ImageResliceMapper',
+        t,
+        {
+          pixelThreshold: 0.001, // 0.1% (range is [0, 1])
+          mismatchTolerance: 1, // 1% (raw percentage)
+        }
+      )
+    );
+    renderWindow.render();
+    return promise;
   }
 
   slicePlane.setOrigin([0, imageDimension - 0.5, 0]);

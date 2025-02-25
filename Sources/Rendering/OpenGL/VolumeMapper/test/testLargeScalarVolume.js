@@ -15,7 +15,7 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import baseline1 from './testLargeScalars.png';
 
 test.onlyIfWebGL('Test Volume Rendering of Large Scalar Values', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkOpenGLVolumeMapper LargeScalars');
   // testUtils.keepDOM();
 
@@ -122,15 +122,18 @@ test.onlyIfWebGL('Test Volume Rendering of Large Scalar Values', (t) => {
   renderer.getActiveCamera().elevation(70);
   renderer.resetCameraClippingRange();
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline1],
-      'Rendering/OpenGL/VolumeMapper/testLargeScalarsVolume',
-      t,
-      1.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline1],
+        'Rendering/OpenGL/VolumeMapper/testLargeScalarsVolume',
+        t,
+        1.5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

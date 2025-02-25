@@ -27,8 +27,8 @@ function addActor(gc, renderer, size) {
   mapper.setInputConnection(source.getOutputPort());
 }
 
-test('Test HardwareSelector', (tapeContext) => {
-  const gc = testUtils.createGarbageCollector(tapeContext);
+test.onlyIfWebGL('Test HardwareSelector', (tapeContext) => {
+  const gc = testUtils.createGarbageCollector();
   tapeContext.ok('rendering', 'vtkHardwareSelector TestHardwareSelector');
 
   // Create some control UI

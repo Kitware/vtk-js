@@ -90,7 +90,7 @@ test('Test addInputData edge case', (t) => {
 });
 
 test.onlyIfWebGL('Test vtkAppendPolyData rendering', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkAppendPolyData Rendering');
 
   // Create some control UI
@@ -162,15 +162,18 @@ test.onlyIfWebGL('Test vtkAppendPolyData rendering', (t) => {
   camera.azimuth(40);
   renderer.resetCamera();
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Filters/General/AppendPolyData/testAppendPolyData',
-      t,
-      2.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Filters/General/AppendPolyData/testAppendPolyData',
+        t,
+        2.5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

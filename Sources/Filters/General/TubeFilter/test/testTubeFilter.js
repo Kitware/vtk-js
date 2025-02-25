@@ -120,7 +120,7 @@ test('Test vtkTubeFilter execution', (t) => {
 });
 
 test.onlyIfWebGL('Test vtkTubeFilter rendering', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkTubeFilter Rendering');
 
   // Create some control UI
@@ -170,17 +170,20 @@ test.onlyIfWebGL('Test vtkTubeFilter rendering', (t) => {
   camera.yaw(40);
   renderer.resetCamera();
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Filters/General/TubeFilter/testTubeFilter',
-      t,
-      2.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Filters/General/TubeFilter/testTubeFilter',
+        t,
+        2.5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });
 
 test('Test vtkTubeFilter numberOfPoints', (t) => {

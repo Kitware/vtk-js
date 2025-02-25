@@ -11,8 +11,8 @@ import vtkScalarBarActor from 'vtk.js/Sources/Rendering/Core/ScalarBarActor';
 import baseline from './testScalarBar.png';
 import baseline2 from './testScalarBar2.png';
 
-test('Test ScalarBar', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test ScalarBar', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkLookupTable TestScalarBar');
 
   // Create some control UI
@@ -87,15 +87,18 @@ test('Test ScalarBar', (t) => {
   renderer.resetCamera();
   renderWindow.render();
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline, baseline2],
-      'Common/Core/LookupTable/testScalarBar',
-      t,
-      5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline, baseline2],
+        'Common/Core/LookupTable/testScalarBar',
+        t,
+        5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

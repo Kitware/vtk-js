@@ -14,8 +14,8 @@ import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constant
 
 import baseline from './testDisableScalarColoring.png';
 
-test('Test vtkSphereMapper Rendering', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test vtkSphereMapper Rendering', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkSphereMapper Rendering');
 
   // Create some control UI
@@ -101,15 +101,18 @@ test('Test vtkSphereMapper Rendering', (t) => {
   mapper.setScalarVisibility(false);
   mapper.setColorByArrayName(null);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/Core/SphereMapper/testDisableScalarColoring',
-      t,
-      1.0,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/Core/SphereMapper/testDisableScalarColoring',
+        t,
+        1.0
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

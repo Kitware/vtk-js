@@ -23,7 +23,7 @@ test.onlyIfWebGL(
     const ellipseCenter = [(size / 2) * spacing, (size / 2) * spacing, zSlice];
     const ellipseScale = [radius * spacing, 2 * radius * spacing, 10];
 
-    const gc = testUtils.createGarbageCollector(t);
+    const gc = testUtils.createGarbageCollector();
 
     // Create some control UI
     const container = document.querySelector('body');
@@ -99,18 +99,21 @@ test.onlyIfWebGL(
     renderWindow.addView(glwindow);
     glwindow.setSize(400, 400);
 
-    paintFilter.endStroke().then(() => {
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline],
-          'Filters/General/PaintFilter/test/testPaintEllipse',
-          t,
-          1,
-          gc.releaseResources
-        );
-      });
+    return paintFilter.endStroke().then(() => {
+      const promise = glwindow
+        .captureNextImage()
+        .then((image) =>
+          testUtils.compareImages(
+            image,
+            [baseline],
+            'Filters/General/PaintFilter/test/testPaintEllipse',
+            t,
+            1
+          )
+        )
+        .finally(gc.releaseResources);
       renderWindow.render();
+      return promise;
     });
   }
 );

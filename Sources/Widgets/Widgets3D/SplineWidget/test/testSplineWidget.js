@@ -9,7 +9,7 @@ import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 import baseline from './testSplineWidget.png';
 
 test.onlyIfWebGL('Test vtkSplineWidget rendering and picking', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
 
   const container = document.querySelector('body');
   const renderWindowContainer = gc.registerDOMElement(
@@ -100,21 +100,17 @@ test.onlyIfWebGL('Test vtkSplineWidget rendering and picking', (t) => {
   renderer.resetCamera();
 
   function testRender() {
-    let resolve;
-    const promise = new Promise((res) => {
-      console.log('resolved');
-      resolve = res;
-    });
-    glwindow.captureNextImage().then((image) => {
-      testUtils.compareImages(
-        image,
-        [baseline],
-        'Widgets/Widgets3D/SplineWidget/test/testSplineWidget',
-        t,
-        2.5,
-        resolve
+    const promise = glwindow
+      .captureNextImage()
+      .then((image) =>
+        testUtils.compareImages(
+          image,
+          [baseline],
+          'Widgets/Widgets3D/SplineWidget/test/testSplineWidget',
+          t,
+          2.5
+        )
       );
-    });
     // Trigger a next image
     renderWindow.render();
     return promise;
@@ -135,8 +131,7 @@ test.onlyIfWebGL('Test vtkSplineWidget rendering and picking', (t) => {
     });
   }
 
-  [testRender, testSelect, gc.releaseResources].reduce(
-    (current, next) => current.then(next),
-    Promise.resolve()
-  );
+  return [testRender, testSelect]
+    .reduce((current, next) => current.then(next), Promise.resolve())
+    .finally(gc.releaseResources);
 });

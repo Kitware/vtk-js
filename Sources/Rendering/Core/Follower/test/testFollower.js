@@ -10,8 +10,8 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 
 import baseline from './testFollower.png';
 
-test('Test Follower class', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test Follower class', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkFollower');
 
   // Create some control UI
@@ -42,7 +42,7 @@ test('Test Follower class', (t) => {
   actor.setCamera(renderer.getActiveCamera());
   renderer.addActor(actor);
 
-  reader
+  return reader
     .setUrl(
       `${__BASE_PATH__}/Data/obj/space-shuttle-orbiter/space-shuttle-orbiter.obj`
     )
@@ -58,16 +58,19 @@ test('Test Follower class', (t) => {
       renderer.getActiveCamera().azimuth(10);
       renderer.getActiveCamera().elevation(10);
       renderer.getActiveCamera().orthogonalizeViewUp();
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline],
-          'Rendering/Core/Follower/testFollower',
-          t,
-          1.5,
-          gc.releaseResources
-        );
-      });
+      const promise = glwindow
+        .captureNextImage()
+        .then((image) =>
+          testUtils.compareImages(
+            image,
+            [baseline],
+            'Rendering/Core/Follower/testFollower',
+            t,
+            1.5
+          )
+        )
+        .finally(gc.releaseResources);
       renderWindow.render();
+      return promise;
     });
 });

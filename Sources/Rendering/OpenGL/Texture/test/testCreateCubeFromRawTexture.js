@@ -14,7 +14,7 @@ import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import baseline from './testCreateCubeFromRawTexture.png';
 
 test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('Rendering', 'Filter: OpenGLTexture');
 
   function onLoadedTextures(loadedTextures) {
@@ -72,8 +72,7 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', async (t) => {
           [baseline],
           'Rendering/OpenGL/Texture/',
           t,
-          0.5,
-          gc.releaseResources
+          0.5
         )
       );
     renderWindow.render();
@@ -102,5 +101,7 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', async (t) => {
   texturePathList.push(`${path}front.jpg`); // front is +z on a cube
   texturePathList.push(`${path}back.jpg`);
 
-  return onLoadedTextures(await loadTexture(texturePathList));
+  return onLoadedTextures(await loadTexture(texturePathList)).finally(
+    gc.releaseResources
+  );
 });

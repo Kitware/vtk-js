@@ -24,7 +24,7 @@ function testClippingPlanes(
   baseline,
   description
 ) {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkOpenGLImageMapper testImage');
 
   // Create some control UI
@@ -136,26 +136,29 @@ function testClippingPlanes(
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      `Rendering/OpenGL/ImageMapper${description}`,
-      t,
-      3,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        `Rendering/OpenGL/ImageMapper${description}`,
+        t,
+        3
+      )
+    )
+    .finally(gc.releaseResources);
 
   renderWindow.render();
+  return promise;
 }
 
-test.onlyIfWebGL('Test ImageMapper ClippingPlanes No Rotation', (t) => {
+test.onlyIfWebGL('Test ImageMapper ClippingPlanes No Rotation', async (t) => {
   const direction = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0];
   const rotation = 0.0;
   const clipPlaneNormal = [1.0, 0.0, 0.0];
   const description = 'NoRotation';
-  testClippingPlanes(
+  await testClippingPlanes(
     t,
     direction,
     rotation,
@@ -165,12 +168,12 @@ test.onlyIfWebGL('Test ImageMapper ClippingPlanes No Rotation', (t) => {
   );
 });
 
-test.onlyIfWebGL('Test ImageMapper ClippingPlanes Rotation', (t) => {
+test.onlyIfWebGL('Test ImageMapper ClippingPlanes Rotation', async (t) => {
   const direction = [0.866, 0.5, 0, -0.5, 0.866, 0, 0, 0, 1];
   const rotation = 30.0;
   const clipPlaneNormal = [1.0, 0.0, 0.0];
   const description = 'Rotation';
-  testClippingPlanes(
+  await testClippingPlanes(
     t,
     direction,
     rotation,
@@ -180,17 +183,20 @@ test.onlyIfWebGL('Test ImageMapper ClippingPlanes Rotation', (t) => {
   );
 });
 
-test.onlyIfWebGL('Test ImageMapper ClippingPlanes Rotation Clip Plane', (t) => {
-  const direction = [0.866, 0.5, 0, -0.5, 0.866, 0, 0, 0, 1];
-  const rotation = 30.0;
-  const clipPlaneNormal = [0.707, 0.707, 0.0];
-  const description = 'RotationClipPlane';
-  testClippingPlanes(
-    t,
-    direction,
-    rotation,
-    clipPlaneNormal,
-    baselineRotationClipPlane,
-    description
-  );
-});
+test.onlyIfWebGL(
+  'Test ImageMapper ClippingPlanes Rotation Clip Plane',
+  async (t) => {
+    const direction = [0.866, 0.5, 0, -0.5, 0.866, 0, 0, 0, 1];
+    const rotation = 30.0;
+    const clipPlaneNormal = [0.707, 0.707, 0.0];
+    const description = 'RotationClipPlane';
+    await testClippingPlanes(
+      t,
+      direction,
+      rotation,
+      clipPlaneNormal,
+      baselineRotationClipPlane,
+      description
+    );
+  }
+);

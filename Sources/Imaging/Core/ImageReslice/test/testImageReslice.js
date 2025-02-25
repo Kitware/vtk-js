@@ -50,7 +50,7 @@ function createSyntheticImageData(
 }
 
 test.onlyIfWebGL('Test vtkImageReslice rendering', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.comment('vtkImageReslice rendering');
 
   // Create some control UI
@@ -111,26 +111,24 @@ test.onlyIfWebGL('Test vtkImageReslice rendering', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline1],
-      'Imaging/Core/ImageReslice/testImageReslice',
-      t,
-      2.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline1],
+        'Imaging/Core/ImageReslice/testImageReslice',
+        t,
+        2.5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
-  // function sleep(delay) {
-  //   const start = new Date().getTime();
-  //   while (new Date().getTime() < start + delay);
-  // }
-  // sleep(500);
+  return promise;
 });
 
 test.onlyIfWebGL('Test vtkImageReslice reslice transform', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.comment('vtkImageReslice reslice transform');
 
   // Create some control UI
@@ -198,22 +196,20 @@ test.onlyIfWebGL('Test vtkImageReslice reslice transform', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline1],
-      'Imaging/Core/ImageReslice/testImageReslice',
-      t,
-      2.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline1],
+        'Imaging/Core/ImageReslice/testImageReslice',
+        t,
+        2.5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
-  // function sleep(delay) {
-  //   const start = new Date().getTime();
-  //   while (new Date().getTime() < start + delay) renderWindow.render();
-  // }
-  // sleep(500);
+  return promise;
 });
 
 // For comparison purpose, see below the same test in VTK/Python:
