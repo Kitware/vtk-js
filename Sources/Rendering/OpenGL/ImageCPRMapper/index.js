@@ -199,6 +199,9 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     const reBuildTex =
       !cachedScalarsEntry?.oglObject?.getHandle() ||
       cachedScalarsEntry?.hash !== volumeTextureHash;
+    const updatedExtents = model.renderable.getUpdatedExtents();
+    const hasUpdatedExtents = !!updatedExtents.length;
+
     if (reBuildTex) {
       model.volumeTexture = vtkOpenGLTexture.newInstance();
       model.volumeTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
@@ -234,6 +237,22 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       model._scalars = scalars;
     } else {
       model.volumeTexture = cachedScalarsEntry.oglObject;
+    }
+
+    if (hasUpdatedExtents) {
+      // If hasUpdatedExtents, then the texture is partially updated.
+      // clear the array to acknowledge the update.
+      model.renderable.setUpdatedExtents([]);
+
+      const dims = image.getDimensions();
+      model.volumeTexture.create3DFilterableFromDataArray(
+        dims[0],
+        dims[1],
+        dims[2],
+        scalars,
+        false,
+        updatedExtents
+      );
     }
 
     // Rebuild the color texture if needed

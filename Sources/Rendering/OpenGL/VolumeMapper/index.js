@@ -1713,7 +1713,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     // rebuild the scalarTexture if the data has changed
     toString = getImageDataHash(image, scalars);
     const reBuildTex = !tex?.oglObject?.getHandle() || tex?.hash !== toString;
-    if (reBuildTex) {
+    const updatedExtents = model.renderable.getUpdatedExtents();
+    const hasUpdatedExtents = !!updatedExtents.length;
+
+    if (reBuildTex && !hasUpdatedExtents) {
       model.scalarTexture = vtkOpenGLTexture.newInstance();
       model.scalarTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       // Build the textures
@@ -1723,13 +1726,14 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         model.context.getExtension('EXT_texture_norm16')
       );
       model.scalarTexture.resetFormatAndType();
+
       model.scalarTexture.create3DFilterableFromDataArray(
         dims[0],
         dims[1],
         dims[2],
-        scalars,
-        model.renderable.getPreferSizeOverAccuracy()
+        scalars
       );
+
       if (scalars) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
           scalars,
@@ -1750,6 +1754,22 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
     } else {
       model.scalarTexture = tex.oglObject;
+    }
+
+    if (hasUpdatedExtents) {
+      // If hasUpdatedExtents, then the texture is partially updated.
+      // clear the array to acknowledge the update.
+      model.renderable.setUpdatedExtents([]);
+
+      const dims = image.getDimensions();
+      model.scalarTexture.create3DFilterableFromDataArray(
+        dims[0],
+        dims[1],
+        dims[2],
+        scalars,
+        false,
+        updatedExtents
+      );
     }
 
     if (!model.tris.getCABO().getElementCount()) {
