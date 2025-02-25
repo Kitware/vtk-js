@@ -213,13 +213,13 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
         model.context.getExtension('EXT_texture_norm16')
       );
       model.volumeTexture.resetFormatAndType();
-      model.volumeTexture.create3DFilterableFromDataArray(
-        dims[0],
-        dims[1],
-        dims[2],
-        scalars,
-        model.renderable.getPreferSizeOverAccuracy()
-      );
+      model.volumeTexture.create3DFilterableFromDataArray({
+        width: dims[0],
+        height: dims[1],
+        depth: dims[2],
+        dataArray: scalars,
+        preferSizeOverAccuracy: model.renderable.getPreferSizeOverAccuracy(),
+      });
       model._openGLRenderWindow.setGraphicsResourceForObject(
         scalars,
         model.volumeTexture,
@@ -246,14 +246,13 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       property.setUpdatedExtents([]);
 
       const dims = image.getDimensions();
-      model.volumeTexture.create3DFilterableFromDataArray(
-        dims[0],
-        dims[1],
-        dims[2],
-        scalars,
-        false,
-        updatedExtents
-      );
+      model.volumeTexture.create3DFilterableFromDataArray({
+        width: dims[0],
+        height: dims[1],
+        depth: dims[2],
+        dataArray: scalars,
+        updatedExtents,
+      });
     }
 
     // Rebuild the color texture if needed
@@ -309,13 +308,13 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
           }
         }
         model.colorTexture.resetFormatAndType();
-        model.colorTexture.create2DFromRaw(
-          cWidth,
-          textureHeight,
-          3,
-          VtkDataTypes.UNSIGNED_CHAR,
-          cTable
-        );
+        model.colorTexture.create2DFromRaw({
+          width: cWidth,
+          height: textureHeight,
+          numComps: 3,
+          dataType: VtkDataTypes.UNSIGNED_CHAR,
+          data: cTable,
+        });
       } else {
         for (let i = 0; i < cWidth * 3; ++i) {
           cTable[i] = (255.0 * i) / ((cWidth - 1) * 3);
@@ -323,13 +322,13 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
           cTable[i + 2] = (255.0 * i) / ((cWidth - 1) * 3);
         }
         model.colorTexture.resetFormatAndType();
-        model.colorTexture.create2DFromRaw(
-          cWidth,
-          1,
-          3,
-          VtkDataTypes.UNSIGNED_CHAR,
-          cTable
-        );
+        model.colorTexture.create2DFromRaw({
+          width: cWidth,
+          height: 1,
+          numComps: 3,
+          dataType: VtkDataTypes.UNSIGNED_CHAR,
+          data: cTable,
+        });
       }
 
       if (firstColorTransferFunc) {
@@ -407,24 +406,24 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
           }
         }
         model.pwfTexture.resetFormatAndType();
-        model.pwfTexture.create2DFromRaw(
-          pwfWidth,
-          textureHeight,
-          1,
-          VtkDataTypes.FLOAT,
-          pwfFloatTable
-        );
+        model.pwfTexture.create2DFromRaw({
+          width: pwfWidth,
+          height: textureHeight,
+          numComps: 1,
+          dataType: VtkDataTypes.FLOAT,
+          data: pwfFloatTable,
+        });
       } else {
         // default is opaque
         pwfTable.fill(255.0);
         model.pwfTexture.resetFormatAndType();
-        model.pwfTexture.create2DFromRaw(
-          pwfWidth,
-          1,
-          1,
-          VtkDataTypes.UNSIGNED_CHAR,
-          pwfTable
-        );
+        model.pwfTexture.create2DFromRaw({
+          width: pwfWidth,
+          height: 1,
+          numComps: 1,
+          dataType: VtkDataTypes.UNSIGNED_CHAR,
+          data: pwfTable,
+        });
       }
       if (firstPwFunc) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
