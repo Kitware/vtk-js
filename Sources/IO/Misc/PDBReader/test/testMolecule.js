@@ -13,7 +13,7 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import baseline from './testMolecule_with_bonds.png';
 
 test.onlyIfWebGL('Test MoleculeMapper', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('IO: PDBReader', 'Filter: MoleculeToRepresentation');
 
   // Create some control UI
@@ -72,24 +72,23 @@ test.onlyIfWebGL('Test MoleculeMapper', (t) => {
 
   // fetch caffeine.pdb file from Girder
   t.ok('waiting for download');
-  reader.setUrl(`${__BASE_PATH__}/Data/molecule/pdb/caffeine.pdb`).then(() => {
-    t.ok('download complete');
+  return reader
+    .setUrl(`${__BASE_PATH__}/Data/molecule/pdb/caffeine.pdb`)
+    .then(() => {
+      t.ok('download complete');
 
-    // once data upload, render
-    renderer.resetCamera();
-    renderWindow.render();
+      // once data upload, render
+      renderer.resetCamera();
+      renderWindow.render();
 
-    // the data have to be uploaded before capturing and comparing the images
-    glwindow.captureNextImage().then((image) => {
-      testUtils.compareImages(
-        image,
-        [baseline],
-        'IO/Misc/PDBReader',
-        t,
-        1,
-        gc.releaseResources
-      );
+      // the data have to be uploaded before capturing and comparing the images
+      const promise = glwindow
+        .captureNextImage()
+        .then((image) =>
+          testUtils.compareImages(image, [baseline], 'IO/Misc/PDBReader', t, 1)
+        )
+        .finally(gc.releaseResources);
+      renderWindow.render();
+      return promise;
     });
-    renderWindow.render();
-  });
 });

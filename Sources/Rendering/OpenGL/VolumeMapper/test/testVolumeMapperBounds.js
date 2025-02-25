@@ -14,7 +14,7 @@ import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindo
 import baseline1 from './testVolumeMapperBounds.png';
 
 test.onlyIfWebGL('Test Volume Mapper Bounds', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkVolumeMapper Bounds');
   // testUtils.keepDOM();
 
@@ -82,10 +82,10 @@ test.onlyIfWebGL('Test Volume Mapper Bounds', async (t) => {
         [baseline1],
         'Rendering/Core/VolumeMapper/testVolumeMapperBounds',
         t,
-        1.5,
-        gc.releaseResources
+        1.5
       )
-    );
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
 
   return promise;

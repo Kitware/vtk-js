@@ -12,7 +12,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import baseline from './testPlane.png';
 
 test.onlyIfWebGL('Test vtkPlaneSource Rendering', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkPlaneSource Rendering');
 
   // Create some control UI
@@ -59,16 +59,19 @@ test.onlyIfWebGL('Test vtkPlaneSource Rendering', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Filters/Sources/PlaneSource/testPlane',
-      t,
-      1,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Filters/Sources/PlaneSource/testPlane',
+        t,
+        1
+      )
+    )
+    .finally(gc.releaseResources);
   renderer.resetCamera();
   renderWindow.render();
+  return promise;
 });

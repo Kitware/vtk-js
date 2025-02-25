@@ -11,8 +11,8 @@ import createScalarMap from './createScalarMap';
 import baseline from './testColorTransferFunctionInterpolation.png';
 import baseline2 from './testColorTransferFunctionInterpolation2.png';
 
-test('Test ColorTransferFunction Interpolation', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test ColorTransferFunction Interpolation', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkMapper ColorTransferFunction Interpolaiton');
 
   // testUtils.keepDOM();
@@ -49,15 +49,18 @@ test('Test ColorTransferFunction Interpolation', (t) => {
   renderer.resetCamera();
   renderWindow.render();
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline, baseline2],
-      'Rendering/Core/ColorTransferFunction/testColorTransferFunctionInterpolation',
-      t,
-      5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline, baseline2],
+        'Rendering/Core/ColorTransferFunction/testColorTransferFunctionInterpolation',
+        t,
+        5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

@@ -12,7 +12,7 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import basepoint from './testPointSource.png';
 
 test.onlyIfWebGL('Test vtkPointSource Rendering', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkPointSource Rendering');
 
   // Create some control UI
@@ -48,15 +48,18 @@ test.onlyIfWebGL('Test vtkPointSource Rendering', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [basepoint],
-      'Filters/Sources/PointSource/testPointSource',
-      t,
-      1.0,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [basepoint],
+        'Filters/Sources/PointSource/testPointSource',
+        t,
+        1.0
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

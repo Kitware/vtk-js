@@ -19,7 +19,7 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import baseline from './testVolumeMapperClip.png';
 
 test.onlyIfWebGL('Test Volume Mapper Clip', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkVolumeMapper Clip');
   // testUtils.keepDOM();
 
@@ -112,10 +112,10 @@ test.onlyIfWebGL('Test Volume Mapper Clip', async (t) => {
         [baseline],
         'Rendering/Core/VolumeMapper/testVolumeMapperClip',
         t,
-        1.5,
-        gc.releaseResources
+        1.5
       )
-    );
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
   return promise;
 });

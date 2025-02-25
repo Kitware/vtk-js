@@ -13,7 +13,7 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import baseline from './testConeImplicitFunction.png';
 
 test.onlyIfWebGL('Test Cone Implicit Function', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'Cone Implicit Function');
 
   // Create some control UI
@@ -59,15 +59,18 @@ test.onlyIfWebGL('Test Cone Implicit Function', (t) => {
 
   renderWindow.render();
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Common/DataModel/Cone/testConeImplicitFunction',
-      t,
-      1.0,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Common/DataModel/Cone/testConeImplicitFunction',
+        t,
+        1.0
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

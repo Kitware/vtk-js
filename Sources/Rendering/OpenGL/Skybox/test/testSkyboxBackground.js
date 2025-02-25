@@ -11,7 +11,7 @@ import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import baseline from './testSkyboxBackground.png';
 
 test.onlyIfWebGL('Test vtkOpenGLSkybox Background Rendering', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('Rendering', 'Filter: OpenGLTexture');
 
   function onLoadedTexture(loadedTexture) {
@@ -53,8 +53,7 @@ test.onlyIfWebGL('Test vtkOpenGLSkybox Background Rendering', async (t) => {
           [baseline],
           'Rendering/OpenGL/Skybox/',
           t,
-          0.5,
-          gc.releaseResources
+          0.5
         )
       );
     renderWindow.render();
@@ -75,5 +74,5 @@ test.onlyIfWebGL('Test vtkOpenGLSkybox Background Rendering', async (t) => {
   const path = `${__BASE_PATH__}/Data/skybox/mountains/right.jpg`;
 
   // It will contains all vtkImageData which will textured the cube
-  return onLoadedTexture(await loadTexture(path));
+  return onLoadedTexture(await loadTexture(path)).finally(gc.releaseResources);
 });

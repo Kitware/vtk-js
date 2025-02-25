@@ -13,8 +13,8 @@ import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import baseline from './testMultipleRenderers.png';
 import baseline2 from './testMultipleRenderers2.png';
 
-test('Test multiple renderers', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test multiple renderers', (t) => {
+  const gc = testUtils.createGarbageCollector();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -82,17 +82,18 @@ test('Test multiple renderers', (t) => {
   lowerLeftRenderer.resetCamera();
   lowerRightRenderer.resetCamera();
 
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline, baseline2],
+        'Rendering/Core/RenderWindow/testMultipleRenderers',
+        t,
+        5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
-
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline, baseline2],
-      'Rendering/Core/RenderWindow/testMultipleRenderers',
-      t,
-      5,
-      gc.releaseResources
-    );
-  });
-  renderWindow.render();
+  return promise;
 });

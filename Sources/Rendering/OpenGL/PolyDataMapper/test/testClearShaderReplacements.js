@@ -11,7 +11,7 @@ import vtkOBJReader from 'vtk.js/Sources/IO/Misc/OBJReader';
 import baseline from './testClearShaderReplacement.png';
 
 test.onlyIfWebGL('Test Clear Shader Replacements', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkOpenGLPolyDataMapper ClearShaderReplacements');
 
   // Create some control UI
@@ -77,7 +77,7 @@ test.onlyIfWebGL('Test Clear Shader Replacements', (t) => {
   actor.getProperty().setOpacity(1.0);
   renderer.addActor(actor);
 
-  reader
+  return reader
     .setUrl(
       `${__BASE_PATH__}/Data/obj/space-shuttle-orbiter/space-shuttle-orbiter.obj`
     )
@@ -111,16 +111,19 @@ test.onlyIfWebGL('Test Clear Shader Replacements', (t) => {
       renderWindow.addView(glwindow);
       glwindow.setSize(400, 400);
 
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline],
-          'Rendering/OpenGL/PolyDataMapper/testShaderReplacementsClear',
-          t,
-          1.5,
-          gc.releaseResources
-        );
-      });
+      const promise = glwindow
+        .captureNextImage()
+        .then((image) =>
+          testUtils.compareImages(
+            image,
+            [baseline],
+            'Rendering/OpenGL/PolyDataMapper/testShaderReplacementsClear',
+            t,
+            1.5
+          )
+        )
+        .finally(gc.releaseResources);
       renderWindow.render();
+      return promise;
     });
 });

@@ -16,8 +16,8 @@ import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constant
 import baseline from './testGlyph3DMapper.png';
 import baseline2 from './testGlyph3DMapper2.png';
 
-test('Test vtkGlyph3DMapper Rendering', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test vtkGlyph3DMapper Rendering', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkGlyph3DMapper Rendering');
 
   // Create some control UI
@@ -106,15 +106,18 @@ test('Test vtkGlyph3DMapper Rendering', (t) => {
 
   renderWindow.render();
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline, baseline2],
-      'Rendering/Core/Glyph3DMapper/testGlyph3DMapper',
-      t,
-      1.0,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline, baseline2],
+        'Rendering/Core/Glyph3DMapper/testGlyph3DMapper',
+        t,
+        1.0
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

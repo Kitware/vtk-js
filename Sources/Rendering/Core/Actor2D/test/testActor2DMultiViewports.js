@@ -14,8 +14,8 @@ import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants
 
 import baseline from './testActor2DMultiViewports.png';
 
-test('Test Actor2D MultiViewports', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test Actor2D MultiViewports', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkActor2D MultiViewports');
 
   // Create some control UI
@@ -85,15 +85,18 @@ test('Test Actor2D MultiViewports', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/Core/Actor2D/testActor2DMultiViewport.js',
-      t,
-      1,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/Core/Actor2D/testActor2DMultiViewport.js',
+        t,
+        1
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

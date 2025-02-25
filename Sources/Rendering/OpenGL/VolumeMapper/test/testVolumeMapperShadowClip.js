@@ -20,7 +20,7 @@ import baseline from './testVolumeMapperShadowClip.png';
 // Test the volume mapper with clipping combined with volumetric scattering
 // This tests that the rays cast for volumetric shadow calculation ignore clipped voxels.
 test.onlyIfWebGL('Test Volume Mapper Shadow Clip', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkVolumeMapper Shadow Clip');
 
   // Create some control UI
@@ -127,15 +127,18 @@ test.onlyIfWebGL('Test Volume Mapper Shadow Clip', (t) => {
   cam.roll(45);
   renderer.resetCameraClippingRange();
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/Core/VolumeMapper/testVolumeMapperClip',
-      t,
-      1.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/Core/VolumeMapper/testVolumeMapperClip',
+        t,
+        1.5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

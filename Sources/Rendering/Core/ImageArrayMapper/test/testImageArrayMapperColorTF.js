@@ -12,8 +12,8 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
 import baseline from '../../ImageMapper/test/testImageColorTransferFunction.png';
 
-test('Test ImageArrayMapper Color TFun', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test ImageArrayMapper Color TFun', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkImageArrayMapper Color Transfer Function testImage');
 
   // Create some control UI
@@ -69,15 +69,18 @@ test('Test ImageArrayMapper Color TFun', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/Core/ImageArrayMapper',
-      t,
-      5.0,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/Core/ImageArrayMapper',
+        t,
+        5.0
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

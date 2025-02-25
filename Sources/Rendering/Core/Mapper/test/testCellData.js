@@ -21,7 +21,7 @@ import {
 import baseline from './testCellData.png';
 
 test.onlyIfWebGL('Test Color Mapping With Cell Data', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkMapper CellData');
 
   // Create some control UI
@@ -116,22 +116,20 @@ test.onlyIfWebGL('Test Color Mapping With Cell Data', async (t) => {
   glwindow.setSize(400, 400);
 
   function baselineTest(baselineImage) {
-    return new Promise((resolve) => {
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baselineImage],
-          'Rendering/Core/Mapper/testCellData',
-          t,
-          {
-            pixelThreshold: 0.01, // 1% (range is [0, 1])
-            mismatchTolerance: 1, // 1% (raw percentage)
-          },
-          resolve
-        );
-      });
-      renderWindow.render();
-    });
+    const promise = glwindow.captureNextImage().then((image) =>
+      testUtils.compareImages(
+        image,
+        [baselineImage],
+        'Rendering/Core/Mapper/testCellData',
+        t,
+        {
+          pixelThreshold: 0.01, // 1% (range is [0, 1])
+          mismatchTolerance: 1, // 1% (raw percentage)
+        }
+      )
+    );
+    renderWindow.render();
+    return promise;
   }
 
   // Using a color transfer function

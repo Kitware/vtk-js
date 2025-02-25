@@ -12,7 +12,7 @@ import baseline1 from './testCube.png';
 import baseline2 from './testCube_2.png';
 
 test.onlyIfWebGL('Test vtkCubeSource Rendering', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkCubeSource Rendering');
 
   // Create some control UI
@@ -73,15 +73,18 @@ test.onlyIfWebGL('Test vtkCubeSource Rendering', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline1, baseline2],
-      'Filters/Sources/CubeSource/testCube',
-      t,
-      2.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline1, baseline2],
+        'Filters/Sources/CubeSource/testCube',
+        t,
+        2.5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });
