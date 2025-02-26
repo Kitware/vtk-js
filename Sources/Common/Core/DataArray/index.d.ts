@@ -84,6 +84,11 @@ export interface vtkDataArray extends vtkObject {
   setRange(rangeValue: vtkRange, componentIndex: number): Range;
 
   /**
+   *
+   */
+  getRanges(): vtkRange[];
+
+  /**
    * Set the given tuple at the given index.
    * @param {Number} idx
    * @param {Array<Number>|TypedArray} tuple

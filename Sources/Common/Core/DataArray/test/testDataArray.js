@@ -131,6 +131,36 @@ test('Test vtkDataArray getRange function with NaN values.', (t) => {
   t.end();
 });
 
+test('Test vtkDataArray getRanges function with single-channel data.', (t) => {
+  // create a data array with a single channel.
+  const newArray = new Uint16Array(256 * 3);
+
+  // fill the new array with the pattern 0,1,2,3,4,5, ..., 767.
+  for (let i = 0; i < 256 * 3; ++i) {
+    newArray[i] = i;
+  }
+
+  const da = vtkDataArray.newInstance({
+    numberOfComponents: 1,
+    values: newArray,
+  });
+
+  t.ok(
+    da.getRanges().length === 1,
+    'getRanges should return an array of 1 vtkRange objects'
+  );
+  t.ok(
+    da.getRanges()[0].min === 0,
+    'the first component returned by getRanges minimum value should be 0'
+  );
+  t.ok(
+    da.getRanges()[0].max === 767,
+    'the first component returned by getRanges maximum value should be 767'
+  );
+
+  t.end();
+});
+
 test('Test vtkDataArray getTuple', (t) => {
   const da = vtkDataArray.newInstance({
     numberOfComponents: 3,
@@ -199,6 +229,39 @@ test('Test vtkDataArray getRange function with multi-channel data.', (t) => {
     compareFloat(vecRange[1].toFixed(3), 441.673),
     'vector magnitude max value should be 441.673'
   );
+  t.end();
+});
+
+test('Test vtkDataArray getRanges function with multi-channel data.', (t) => {
+  // create a data array with 3 channel data.
+  const newArray = new Uint16Array(256 * 3);
+
+  // fill the new array with the pattern 1,2,3, 1,2,3
+  // such that each channel has 1,1,1  2,2,2  3,3,3 respectively.
+  for (let i = 0; i < 256; ++i) {
+    newArray[i * 3] = i;
+    newArray[i * 3 + 1] = i * 2;
+    newArray[i * 3 + 2] = i * 3;
+  }
+
+  const da = vtkDataArray.newInstance({
+    numberOfComponents: 3,
+    values: newArray,
+  });
+
+  const ranges = da.getRanges();
+
+  t.ok(
+    ranges.length === 3,
+    'getRanges should return an array of 3 vtkRange objects'
+  );
+  t.ok(ranges[0].min === 0, 'component:0 minimum value should be 0');
+  t.ok(ranges[0].max === 255, 'component:0 maximum value should be 255');
+  t.ok(ranges[1].min === 0, 'component:1 minimum value should be 0');
+  t.ok(ranges[1].max === 510, 'component:1 maximum value should be 510');
+  t.ok(ranges[2].min === 0, 'component:2 minimum value should be 0');
+  t.ok(ranges[2].max === 765, 'component:2 maximum value should be 765');
+
   t.end();
 });
 
