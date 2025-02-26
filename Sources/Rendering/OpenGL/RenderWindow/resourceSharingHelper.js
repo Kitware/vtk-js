@@ -11,7 +11,10 @@ export function getTransferFunctionHash(
 }
 
 export function getImageDataHash(image, scalars) {
-  return `${image.getMTime()}A${scalars.getMTime()}`;
+  // Don't use the image data, as the scalars will define the texture
+  // If using the image data in the hash, it will cause issues when two image data
+  // using the same scalars are in the same mapper (for example the VolumeMapper)
+  return `${scalars.getMTime()}`;
 }
 
 export default { getTransferFunctionHash, getImageDataHash };
