@@ -161,6 +161,62 @@ function vtkProp3D(publicAPI, model) {
     }
   };
 
+  publicAPI.getBoundsByReference = () => {
+    if (model.mapper === null) {
+      return model.bounds;
+    }
+
+    // Check for the special case when the mapper's bounds are unknown
+    const bds = model.mapper.getBounds();
+    if (!bds || bds.length !== 6) {
+      return bds;
+    }
+
+    // Check for the special case when the actor is empty.
+    if (bds[0] > bds[1]) {
+      // No need to copy bds, a new array is created when calling getBounds()
+      model.mapperBounds = bds;
+      model.bounds = [...vtkBoundingBox.INIT_BOUNDS];
+      model.boundsMTime.modified();
+      return bds;
+    }
+
+    // Check if we have cached values for these bounds - we cache the
+    // values returned by model.mapper.getBounds() and we store the time
+    // of caching. If the values returned this time are different, or
+    // the modified time of this class is newer than the cached time,
+    // then we need to rebuild.
+    if (
+      !model.mapperBounds ||
+      !bds.every((_, i) => bds[i] === model.mapperBounds[i]) ||
+      publicAPI.getMTime() > model.boundsMTime.getMTime()
+    ) {
+      macro.vtkDebugMacro('Recomputing bounds...');
+      // No need to copy bds, a new array is created when calling getBounds()
+      model.mapperBounds = bds;
+
+      // Compute actor bounds from matrix and mapper bounds
+      publicAPI.computeMatrix();
+      const transposedMatrix = new Float64Array(16);
+      mat4.transpose(transposedMatrix, model.matrix);
+      vtkBoundingBox.transformBounds(bds, transposedMatrix, model.bounds);
+
+      model.boundsMTime.modified();
+    }
+
+    return model.bounds;
+  };
+
+  publicAPI.getBounds = () => {
+    const bounds = publicAPI.getBoundsByReference();
+    // Handle case when bounds are not iterable (for example null or undefined)
+    try {
+      return [...bounds];
+    } catch {
+      return bounds;
+    }
+  };
+
   publicAPI.getCenter = () => vtkBoundingBox.getCenter(model.bounds);
   publicAPI.getLength = () => vtkBoundingBox.getLength(model.bounds);
   publicAPI.getXRange = () => vtkBoundingBox.getXRange(model.bounds);
@@ -186,7 +242,7 @@ const DEFAULT_VALUES = {
   orientation: [0, 0, 0],
   rotation: null,
   scale: [1, 1, 1],
-  bounds: [1, -1, 1, -1, 1, -1],
+  bounds: [...vtkBoundingBox.INIT_BOUNDS],
 
   userMatrix: null,
   userMatrixMTime: null,
@@ -208,7 +264,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(model.matrixMTime);
 
   // Build VTK API
-  macro.get(publicAPI, model, ['bounds', 'isIdentity']);
+  macro.get(publicAPI, model, ['isIdentity']);
   macro.getArray(publicAPI, model, ['orientation']);
   macro.setGetArray(publicAPI, model, ['origin', 'position', 'scale'], 3);
 

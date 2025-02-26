@@ -19,10 +19,16 @@ export interface vtkProp3D extends vtkProp {
   addPosition(deltaXYZ: number[]): void;
 
   /**
-   * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
-   * @return {Bounds} The bounds for the mapper.
+   * Get the bounds of this actor as [xmin, xmax, ymin, ymax, zmin, zmax].
+   * They are the bounds of the underlying mapper, transformed using the actor's matrix.
+   * @return {Bounds} The bounds for the actor.
    */
   getBounds(): Bounds;
+
+  /**
+   * Same as getBounds() but the returned array is not copied, so it should not be written to.
+   */
+  getBoundsByReference(): Bounds;
 
   /**
    * Check if there was a modification or transformation.

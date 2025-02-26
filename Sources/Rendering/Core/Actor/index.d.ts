@@ -37,12 +37,6 @@ export interface vtkActor extends vtkProp3D {
   getBackfaceProperty(): vtkProperty;
 
   /**
-   * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-   * @return {Bounds} The bounds for the mapper.
-   */
-  getBounds(): Bounds;
-
-  /**
    * Check whether the opaque is forced or not.
    */
   getForceOpaque(): boolean;

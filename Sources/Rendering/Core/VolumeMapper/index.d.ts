@@ -10,20 +10,12 @@ import { BlendMode, FilterMode } from './Constants';
  */
 export interface IVolumeMapperInitialValues
   extends IAbstractMapper3DInitialValues {
-  anisotropy?: number;
   autoAdjustSampleDistances?: boolean;
-  averageIPScalarRange?: Range;
   blendMode?: BlendMode;
   bounds?: Bounds;
-  computeNormalFromOpacity?: boolean;
-  getVolumeShadowSamplingDistFactor?: number;
-  globalIlluminationReach?: number;
-  imageSampleDistance?: number;
-  localAmbientOcclusion?: boolean;
   maximumSamplesPerRay?: number;
   sampleDistance?: number;
-  LAOKernelRadius?: number;
-  LAOKernelSize?: number;
+  volumeShadowSamplingDistFactor?: number;
 }
 
 export interface vtkVolumeMapper extends vtkAbstractMapper3D {
@@ -83,71 +75,6 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
    * @default 1
    */
   getInteractionSampleDistanceFactor(): number;
-
-  /**
-   *
-   */
-  getAverageIPScalarRange(): Range;
-
-  /**
-   *
-   */
-  getAverageIPScalarRangeByReference(): Range;
-
-  /**
-   * Get the blending coefficient that interpolates between surface and volume rendering
-   * @default 0.0
-   */
-  getVolumetricScatteringBlending(): number;
-
-  /**
-   * Get the global illumination reach of volume shadow
-   * @default 0.0
-   */
-  getGlobalIlluminationReach(): number;
-
-  /**
-   * Get the multipler for volume shadow sampling distance
-   * @default 5.0
-   */
-  getVolumeShadowSamplingDistFactor(): number;
-
-  /**
-   * Get anisotropy of volume shadow scatter
-   * @default 0.0
-   */
-  getAnisotropy(): number;
-
-  /**
-   * Get local ambient occlusion flag
-   * @default false
-   */
-  getLocalAmbientOcclusion(): boolean;
-
-  /**
-   * Get kernel size for local ambient occlusion
-   * @default 15
-   */
-  getLAOKernelSize(): number;
-
-  /**
-   * Get kernel radius for local ambient occlusion
-   * @default 7
-   */
-  getLAOKernelRadius(): number;
-
-  /**
-   *
-   * @param x
-   * @param y
-   */
-  setAverageIPScalarRange(x: number, y: number): boolean;
-
-  /**
-   *
-   * @param {Range} averageIPScalarRange
-   */
-  setAverageIPScalarRangeFrom(averageIPScalarRange: Range): boolean;
 
   /**
    * Set blend mode to COMPOSITE_BLEND
@@ -217,69 +144,6 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
   setInteractionSampleDistanceFactor(
     interactionSampleDistanceFactor: number
   ): boolean;
-
-  /**
-   * Set the normal computation to be dependent on the transfer function.
-   * By default, the mapper relies on the scalar gradient for computing normals at sample locations
-   * for lighting calculations. This is an approximation and can lead to inaccurate results.
-   * When enabled, this property makes the mapper compute normals based on the accumulated opacity
-   * at sample locations. This can generate a more accurate representation of edge structures in the
-   * data but adds an overhead and drops frame rate.
-   * @param computeNormalFromOpacity
-   */
-  setComputeNormalFromOpacity(computeNormalFromOpacity: boolean): boolean;
-
-  /**
-   * Set the blending coefficient that determines the interpolation between surface and volume rendering.
-   * Default value of 0.0 means shadow effect is computed with phong model.
-   * Value of 1.0 means shadow is created by volume occlusion.
-   * @param volumeScatterBlendCoef
-   */
-  setVolumetricScatteringBlending(volumeScatterBlendCoef: number): void;
-
-  /**
-   * Set the global illumination reach of volume shadow. This function is only effective when volumeScatterBlendCoef is greater than 0.
-   * Default value of 0.0 means only the neighboring voxel is considered when creating global shadow.
-   * Value of 1.0 means the shadow ray traverses through the entire volume.
-   * @param globalIlluminationReach
-   */
-  setGlobalIlluminationReach(globalIlluminationReach: number): void;
-
-  /**
-   * Set the multipler for volume shadow sampling distance. This function is only effective when volumeScatterBlendCoef is greater than 0.
-   * For VSSampleDistanceFactor >= 1.0, volume shadow sampling distance = VSSampleDistanceFactor * SampleDistance.
-   * @param VSSampleDistanceFactor
-   */
-  setVolumeShadowSamplingDistFactor(VSSampleDistanceFactor: number): void;
-
-  /**
-   * Set anisotropy of volume shadow scatter. This function is only effective when volumeScatterBlendCoef is greater than 0.
-   * Default value of 0.0 means light scatters uniformly in all directions.
-   * Value of -1.0 means light scatters backward, value of 1.0 means light scatters forward.
-   * @param anisotropy
-   */
-  setAnisotropy(anisotropy: number): void;
-
-  /**
-   * Set whether to turn on local ambient occlusion (LAO). LAO is only effective if shading is on and volumeScatterBlendCoef is set to 0.
-   * LAO effect is added to ambient lighting, so the ambient component of the actor needs to be great than 0.
-   * @param localAmbientOcclusion
-   */
-  setLocalAmbientOcclusion(localAmbientOcclusion: boolean): void;
-
-  /**
-   * Set kernel size for local ambient occlusion. It specifies the number of rays that are randomly sampled in the hemisphere.
-   * Value is clipped between 1 and 32.
-   * @param LAOKernelSize
-   */
-  setLAOKernelSize(LAOKernelSize: number): void;
-
-  /**
-   * Set kernel radius for local ambient occlusion. It specifies the number of samples that are considered on each random ray.
-   * Value must be greater than or equal to 1.
-   * @param LAOKernelRadius
-   */
-  setLAOKernelRadius(LAOKernelRadius: number): void;
 
   /**
    *
