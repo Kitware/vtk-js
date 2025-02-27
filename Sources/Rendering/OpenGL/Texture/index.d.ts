@@ -199,17 +199,24 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param numComps The number of components in the texture.
    * @param dataType The data type of the texture.
    * @param data The raw data for the texture.
-   * @param flip Whether to flip the texture vertically.
+   * @param flip Whether to flip the texture vertically. Defaults to false.
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
-  create2DFromRaw(
-    width: number,
-    height: number,
-    numComps: number,
-    dataType: VtkDataTypes,
-    data: any,
-    flip: boolean
-  ): boolean;
+  create2DFromRaw({
+    width,
+    height,
+    numComps,
+    dataType,
+    data,
+    flip,
+  }: {
+    width: number;
+    height: number;
+    numComps: number;
+    dataType: VtkDataTypes;
+    data: any;
+    flip?: boolean;
+  }): boolean;
 
   /**
    * Creates a cube texture from raw data.
@@ -218,17 +225,21 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param numComps The number of components in the texture.
    * @param dataType The data type of the texture.
    * @param data The raw data for the texture.
-   * @param flip Whether to flip the texture vertically.
    * @returns {boolean} True if the cube texture was successfully created, false otherwise.
    */
-  createCubeFromRaw(
-    width: number,
-    height: number,
-    numComps: number,
-    dataType: VtkDataTypes,
-    data: any,
-    flip: boolean
-  ): boolean;
+  createCubeFromRaw({
+    width,
+    height,
+    numComps,
+    dataType,
+    data,
+  }: {
+    width: number;
+    height: number;
+    numComps: number;
+    dataType: VtkDataTypes;
+    data: any;
+  }): boolean;
 
   /**
    * Creates a 2D texture from an image.
@@ -247,14 +258,21 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param preferSizeOverAccuracy Whether to prefer texture size over accuracy.
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
-  create2DFilterableFromRaw(
-    width: number,
-    height: number,
-    numComps: number,
-    dataType: VtkDataTypes,
-    data: any,
-    preferSizeOverAccuracy: boolean
-  ): boolean;
+  create2DFilterableFromRaw({
+    width,
+    height,
+    numComps,
+    dataType,
+    data,
+    preferSizeOverAccuracy,
+  }: {
+    width: number;
+    height: number;
+    numComps: number;
+    dataType: VtkDataTypes;
+    data: any;
+    preferSizeOverAccuracy?: boolean;
+  }): boolean;
 
   /**
    * Creates a 2D filterable texture from a data array, with a preference for size over accuracy if necessary.
@@ -264,12 +282,17 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param preferSizeOverAccuracy Whether to prefer texture size over accuracy.
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
-  create2DFilterableFromDataArray(
-    width: number,
-    height: number,
-    dataArray: any,
-    preferSizeOverAccuracy: boolean
-  ): boolean;
+  create2DFilterableFromDataArray({
+    width,
+    height,
+    dataArray,
+    preferSizeOverAccuracy,
+  }: {
+    width: number;
+    height: number;
+    dataArray: any;
+    preferSizeOverAccuracy?: boolean;
+  }): boolean;
 
   /**
    * Creates a 3D texture from raw data.
@@ -281,14 +304,21 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param data The raw data for the texture.
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
-  create3DFromRaw(
-    width: number,
-    height: number,
-    depth: number,
-    numComps: number,
-    dataType: VtkDataTypes,
-    data: any
-  ): boolean;
+  create3DFromRaw({
+    width,
+    height,
+    depth,
+    numComps,
+    dataType,
+    data,
+  }: {
+    width: number;
+    height: number;
+    depth: number;
+    numComps: number;
+    dataType: VtkDataTypes;
+    data: any;
+  }): boolean;
 
   /**
    * Creates a 3D filterable texture from raw data, with a preference for size over accuracy if necessary.
@@ -297,19 +327,27 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param depth The depth of the texture.
    * @param numComps The number of components in the texture.
    * @param dataType The data type of the texture.
-   * @param values The raw data for the texture.
+   * @param data The raw data for the texture.
    * @param preferSizeOverAccuracy Whether to prefer texture size over accuracy.
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
-  create3DFilterableFromRaw(
-    width: number,
-    height: number,
-    depth: number,
-    numComps: number,
-    dataType: VtkDataTypes,
-    values: any,
-    preferSizeOverAccuracy: boolean
-  ): boolean;
+  create3DFilterableFromRaw({
+    width,
+    height,
+    depth,
+    numComps,
+    dataType,
+    data,
+    preferSizeOverAccuracy,
+  }: {
+    width: number;
+    height: number;
+    depth: number;
+    numComps: number;
+    dataType: VtkDataTypes;
+    data: any;
+    preferSizeOverAccuracy?: boolean;
+  }): boolean;
 
   /**
    * Creates a 3D filterable texture from a data array, with a preference for size over accuracy if necessary.
@@ -320,13 +358,19 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param preferSizeOverAccuracy Whether to prefer texture size over accuracy.
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
-  create3DFilterableFromDataArray(
-    width: number,
-    height: number,
-    depth: number,
-    dataArray: any,
-    preferSizeOverAccuracy: boolean
-  ): boolean;
+  create3DFilterableFromDataArray({
+    width,
+    height,
+    depth,
+    dataArray,
+    preferSizeOverAccuracy,
+  }: {
+    width: number;
+    height: number;
+    depth: number;
+    dataArray: any;
+    preferSizeOverAccuracy?: boolean;
+  }): boolean;
 
   /**
    * Sets the OpenGL render window in which the texture will be used.
