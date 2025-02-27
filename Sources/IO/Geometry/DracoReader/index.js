@@ -1,8 +1,9 @@
-import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import macro from 'vtk.js/Sources/macros';
+import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkPolyDataNormals from 'vtk.js/Sources/Filters/Core/PolyDataNormals';
 
 // Enable data soure for DataAccessHelper
 import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper'; // Just need HTTP
@@ -11,8 +12,7 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper'; // Ju
 // import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper'; // zip
 
 const { vtkErrorMacro } = macro;
-let decoderModule = {};
-
+let decoderModule = null;
 // ----------------------------------------------------------------------------
 // static methods
 // ----------------------------------------------------------------------------
@@ -52,8 +52,12 @@ function setWasmBinary(url, binaryName) {
   });
 }
 
-function setDracoDecoder(createDracoModule) {
-  decoderModule = createDracoModule({});
+/**
+ * Set the Draco decoder module
+ * @param {*} dracoDecoder
+ */
+async function setDracoDecoder(dracoDecoder) {
+  decoderModule = await dracoDecoder({});
 }
 
 function getDracoDecoder() {
@@ -63,161 +67,192 @@ function getDracoDecoder() {
 // ----------------------------------------------------------------------------
 // vtkDracoReader methods
 // ----------------------------------------------------------------------------
-
-function decodeBuffer(buffer) {
-  const byteArray = new Int8Array(buffer);
-  const decoder = new decoderModule.Decoder();
-  const decoderBuffer = new decoderModule.DecoderBuffer();
-  decoderBuffer.Init(byteArray, byteArray.length);
-
-  const geometryType = decoder.GetEncodedGeometryType(decoderBuffer);
-
-  let dracoGeometry;
-  if (geometryType === decoderModule.TRIANGULAR_MESH) {
-    dracoGeometry = new decoderModule.Mesh();
-    const status = decoder.DecodeBufferToMesh(decoderBuffer, dracoGeometry);
-    if (!status.ok()) {
-      vtkErrorMacro(`Could not decode Draco file: ${status.error_msg()}`);
-    }
-  } else {
-    vtkErrorMacro('Wrong geometry type, expected mesh, got point cloud.');
+function getDracoDataType(attributeType) {
+  switch (attributeType) {
+    case Float32Array:
+      return decoderModule.DT_FLOAT32;
+    case Int8Array:
+      return decoderModule.DT_INT8;
+    case Int16Array:
+      return decoderModule.DT_INT16;
+    case Int32Array:
+      return decoderModule.DT_INT32;
+    case Uint8Array:
+      return decoderModule.DT_UINT8;
+    case Uint16Array:
+      return decoderModule.DT_UINT16;
+    case Uint32Array:
+      return decoderModule.DT_UINT32;
+    default:
+      return decoderModule.DT_FLOAT32;
   }
-
-  decoderModule.destroy(decoderBuffer);
-  decoderModule.destroy(decoder);
-  return dracoGeometry;
 }
 
-function getDracoAttributeAsFloat32Array(dracoGeometry, attributeId) {
-  const decoder = new decoderModule.Decoder();
-  const attribute = decoder.GetAttribute(dracoGeometry, attributeId);
-  const numberOfComponents = attribute.num_components();
-  const numberOfPoints = dracoGeometry.num_points();
+/**
+ * Decode a single attribute
+ * @param {*} decoder The Draco decoder
+ * @param {*} dracoGeometry The geometry to decode
+ * @param {*} attributeName The name of the attribute
+ * @param {*} attributeType The type of the attribute
+ * @param {*} attribute The attribute to decode
+ * @returns object with name, array, itemSize
+ */
+function decodeAttribute(
+  decoder,
+  dracoGeometry,
+  attributeName,
+  attributeType,
+  attribute
+) {
+  const numComponents = attribute.num_components();
+  const numPoints = dracoGeometry.num_points();
+  const numValues = numPoints * numComponents;
 
-  const attributeData = new decoderModule.DracoFloat32Array();
-  decoder.GetAttributeFloatForAllPoints(
+  const byteLength = numValues * attributeType.BYTES_PER_ELEMENT;
+  const dataType = getDracoDataType(attributeType);
+
+  const ptr = decoderModule._malloc(byteLength);
+  decoder.GetAttributeDataArrayForAllPoints(
     dracoGeometry,
     attribute,
-    attributeData
+    dataType,
+    byteLength,
+    ptr
   );
 
-  let i = numberOfPoints * numberOfComponents;
-  const attributeArray = new Float32Array(i);
-  while (i--) {
-    attributeArray[i] = attributeData.GetValue(i);
-  }
+  // eslint-disable-next-line new-cap
+  const array = new attributeType(
+    decoderModule.HEAPF32.buffer,
+    ptr,
+    numValues
+  ).slice();
 
-  return attributeArray;
+  decoderModule._free(ptr);
+
+  return {
+    name: attributeName,
+    array,
+    itemSize: numComponents,
+  };
 }
 
-function getPolyDataFromDracoGeometry(dracoGeometry) {
-  const decoder = new decoderModule.Decoder();
+/**
+ * Decode the indices of the geometry
+ * @param {*} decoder The Draco decoder
+ * @param {*} dracoGeometry The geometry to decode
+ * @returns The indices array of the geometry
+ */
+function decodeIndices(decoder, dracoGeometry) {
+  const numFaces = dracoGeometry.num_faces();
+  const numIndices = numFaces * 3;
+  const byteLength = numIndices * 4;
 
-  // Get position attribute ID
-  const positionAttributeId = decoder.GetAttributeId(
-    dracoGeometry,
-    decoderModule.POSITION
-  );
+  const ptr = decoderModule._malloc(byteLength);
+  decoder.GetTrianglesUInt32Array(dracoGeometry, byteLength, ptr);
+  const indices = new Uint32Array(
+    decoderModule.HEAPF32.buffer,
+    ptr,
+    numIndices
+  ).slice();
+  decoderModule._free(ptr);
+  return indices;
+}
 
-  if (positionAttributeId === -1) {
-    console.error('No position attribute found in the decoded model.');
-    decoderModule.destroy(decoder);
-    decoderModule.destroy(dracoGeometry);
-    return null;
+/**
+ * Get the polyData from the Draco geometry
+ * @param {*} decoder The Draco decoder
+ * @param {*} dracoGeometry The geometry to decode
+ * @returns {vtkPolyData} The polyData of the geometry
+ */
+function getPolyDataFromDracoGeometry(decoder, dracoGeometry) {
+  const indices = decodeIndices(decoder, dracoGeometry);
+  const nCells = indices.length - 2;
+
+  const cells = vtkCellArray.newInstance();
+  cells.resize((4 * indices.length) / 3);
+  for (let cellId = 0; cellId < nCells; cellId += 3) {
+    const cell = indices.slice(cellId, cellId + 3);
+    cells.insertNextCell(cell);
   }
 
-  const positionArray = getDracoAttributeAsFloat32Array(
-    dracoGeometry,
-    positionAttributeId,
-    decoderModule
-  );
+  const polyData = vtkPolyData.newInstance({ polys: cells });
 
-  // Read indices
-  let i = dracoGeometry.num_faces();
-  const indices = new Uint32Array(i * 4);
-  const indicesArray = new decoderModule.DracoInt32Array();
-  while (i--) {
-    decoder.GetFaceFromMesh(dracoGeometry, i, indicesArray);
-    const index = i * 4;
-    indices[index] = 3;
-    indices[index + 1] = indicesArray.GetValue(0);
-    indices[index + 2] = indicesArray.GetValue(1);
-    indices[index + 3] = indicesArray.GetValue(2);
-  }
+  // Look for attributes
+  const attributeIDs = {
+    points: 'POSITION',
+    normals: 'NORMAL',
+    scalars: 'COLOR',
+    tcoords: 'TEX_COORD',
+  };
 
-  // Create polyData and add positions and indinces
-  const cellArray = vtkCellArray.newInstance({ values: indices });
-  const polyData = vtkPolyData.newInstance({ polys: cellArray });
-  polyData.getPoints().setData(positionArray);
+  Object.keys(attributeIDs).forEach((attributeName) => {
+    const attributeType = Float32Array;
 
-  // Look for other attributes
-  const pointData = polyData.getPointData();
-
-  // Normals
-  const normalAttributeId = decoder.GetAttributeId(
-    dracoGeometry,
-    decoderModule.NORMAL
-  );
-
-  if (normalAttributeId !== -1) {
-    const normalArray = getDracoAttributeAsFloat32Array(
+    const attributeID = decoder.GetAttributeId(
       dracoGeometry,
-      decoderModule.NORMAL,
-      decoderModule
+      decoderModule[attributeIDs[attributeName]]
     );
 
-    const normals = vtkDataArray.newInstance({
-      numberOfComponents: 3,
-      values: normalArray,
-      name: 'Normals',
-    });
-    pointData.setNormals(normals);
-  }
+    if (attributeID === -1) return;
 
-  // Texture coordinates
-  const texCoordAttributeId = decoder.GetAttributeId(
-    dracoGeometry,
-    decoderModule.TEX_COORD
-  );
+    const attribute = decoder.GetAttribute(dracoGeometry, attributeID);
 
-  if (texCoordAttributeId !== -1) {
-    const texCoordArray = getDracoAttributeAsFloat32Array(
+    const attributeResult = decodeAttribute(
+      decoder,
       dracoGeometry,
-      texCoordAttributeId,
-      decoderModule
+      attributeName,
+      attributeType,
+      attribute
     );
 
-    const texCoords = vtkDataArray.newInstance({
-      numberOfComponents: 2,
-      values: texCoordArray,
-      name: 'TCoords',
-    });
-    pointData.setTCoords(texCoords);
+    const pointData = polyData.getPointData();
+    switch (attributeName) {
+      case 'points':
+        polyData
+          .getPoints()
+          .setData(attributeResult.array, attributeResult.itemSize);
+        break;
+      case 'normals':
+        pointData.setNormals(
+          vtkDataArray.newInstance({
+            numberOfComponents: attributeResult.itemSize,
+            values: attributeResult.array,
+            name: 'Normals',
+          })
+        );
+        break;
+      case 'scalars':
+        pointData.setScalars(
+          vtkDataArray.newInstance({
+            numberOfComponents: attributeResult.itemSize,
+            values: attributeResult.array,
+            name: 'Scalars',
+          })
+        );
+        break;
+      case 'tcoords':
+        pointData.setTCoords(
+          vtkDataArray.newInstance({
+            numberOfComponents: attributeResult.itemSize,
+            values: attributeResult.array,
+            name: 'TCoords',
+          })
+        );
+        break;
+      default:
+        break;
+    }
+  });
+
+  // we will generate normals if they're missing
+  const hasNormals = polyData.getPointData().getNormals();
+  if (!hasNormals) {
+    const pdn = vtkPolyDataNormals.newInstance();
+    pdn.setInputData(polyData);
+    pdn.setComputePointNormals(true);
+    return pdn.getOutputData();
   }
 
-  // Scalars
-  const colorAttributeId = decoder.GetAttributeId(
-    dracoGeometry,
-    decoderModule.COLOR
-  );
-
-  if (colorAttributeId !== -1) {
-    const colorArray = getDracoAttributeAsFloat32Array(
-      dracoGeometry,
-      colorAttributeId,
-      decoderModule
-    );
-
-    const scalars = vtkDataArray.newInstance({
-      numberOfComponents: 3,
-      values: colorArray,
-      name: 'Scalars',
-    });
-
-    pointData.setScalars(scalars);
-  }
-
-  decoderModule.destroy(decoder);
   return polyData;
 }
 
@@ -285,9 +320,30 @@ function vtkDracoReader(publicAPI, model) {
     }
 
     model.parseData = content;
-    const dracoGeometry = decodeBuffer(content);
-    const polyData = getPolyDataFromDracoGeometry(dracoGeometry);
+
+    const byteArray = new Int8Array(content);
+
+    const decoder = new decoderModule.Decoder();
+    const buffer = new decoderModule.DecoderBuffer();
+    buffer.Init(byteArray, byteArray.length);
+
+    const geometryType = decoder.GetEncodedGeometryType(buffer);
+    let dracoGeometry;
+    if (geometryType === decoderModule.TRIANGULAR_MESH) {
+      dracoGeometry = new decoderModule.Mesh();
+      const status = decoder.DecodeBufferToMesh(buffer, dracoGeometry);
+      if (!status.ok()) {
+        vtkErrorMacro(`Could not decode Draco file: ${status.error_msg()}`);
+        return;
+      }
+    } else {
+      vtkErrorMacro('Wrong geometry type, expected mesh, got point cloud.');
+      return;
+    }
+    const polyData = getPolyDataFromDracoGeometry(decoder, dracoGeometry);
     decoderModule.destroy(dracoGeometry);
+    decoderModule.destroy(buffer);
+    decoderModule.destroy(decoder);
     model.output[0] = polyData;
   };
 

@@ -1,0 +1,85 @@
+export const BINARY_HEADER_MAGIC = 'glTF';
+export const BINARY_HEADER_LENGTH = 12;
+export const BINARY_CHUNK_TYPES = { JSON: 0x4e4f534a, BIN: 0x004e4942 };
+export const BINARY_HEADER_INTS = 3;
+export const BINARY_CHUNK_HEADER_INTS = 2;
+
+export const MIN_LIGHT_ATTENUATION = 0.01;
+
+export const COMPONENTS = {
+  SCALAR: 1,
+  VEC2: 2,
+  VEC3: 3,
+  VEC4: 4,
+  MAT2: 4,
+  MAT3: 9,
+  MAT4: 16,
+};
+
+export const BYTES = {
+  5120: 1, // BYTE
+  5121: 1, // UNSIGNED_BYTE
+  5122: 2, // SHORT
+  5123: 2, // UNSIGNED_SHORT
+  5125: 4, // UNSIGNED_INT
+  5126: 4, // FLOAT
+};
+
+export const MODES = {
+  GL_POINTS: 0,
+  GL_LINES: 1,
+  GL_LINE_LOOP: 2,
+  GL_LINE_STRIP: 3,
+  GL_TRIANGLES: 4,
+  GL_TRIANGLE_STRIP: 5,
+  GL_TRIANGLE_FAN: 6,
+};
+
+export const ARRAY_TYPES = {
+  5120: Int8Array,
+  5121: Uint8Array,
+  5122: Int16Array,
+  5123: Uint16Array,
+  5125: Uint32Array,
+  5126: Float32Array,
+};
+
+export const GL_SAMPLER = {
+  NEAREST: 9728,
+  LINEAR: 9729,
+  NEAREST_MIPMAP_NEAREST: 9984,
+  LINEAR_MIPMAP_NEAREST: 9985,
+  NEAREST_MIPMAP_LINEAR: 9986,
+  LINEAR_MIPMAP_LINEAR: 9987,
+  REPEAT: 10497,
+  CLAMP_TO_EDGE: 33071,
+  MIRRORED_REPEAT: 33648,
+  TEXTURE_MAG_FILTER: 10240,
+  TEXTURE_MIN_FILTER: 10241,
+  TEXTURE_WRAP_S: 10242,
+  TEXTURE_WRAP_T: 10243,
+};
+
+export const DEFAULT_SAMPLER = {
+  magFilter: GL_SAMPLER.NEAREST,
+  minFilter: GL_SAMPLER.LINEAR_MIPMAP_LINEAR,
+  wrapS: GL_SAMPLER.REPEAT,
+  wrapT: GL_SAMPLER.REPEAT,
+};
+
+export const SEMANTIC_ATTRIBUTE_MAP = {
+  NORMAL: 'normal',
+  POSITION: 'position',
+  TEXCOORD_0: 'texcoord0',
+  TEXCOORD_1: 'texcoord1',
+  WEIGHTS_0: 'weight',
+  JOINTS_0: 'joint',
+  COLOR_0: 'color',
+  TANGENT: 'tangent',
+};
+
+export const ALPHA_MODE = {
+  OPAQUE: 'OPAQUE',
+  MASK: 'MASK',
+  BLEND: 'BLEND',
+};

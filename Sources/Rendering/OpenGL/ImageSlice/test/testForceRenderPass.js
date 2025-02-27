@@ -14,7 +14,7 @@ import forceTranslucentBaseline from './testForceTranslucent.png';
 import { SlicingMode } from '../../../Core/ImageMapper/Constants';
 
 const setupSlices = (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkOpenGLImageMapper testImage');
 
   // Create some control UI
@@ -93,17 +93,20 @@ test.onlyIfWebGL('Test ImageMapper forceOpaque', (t) => {
   // Make actorBelow get rendered in same pass as actorAbove
   actorBelow.setForceOpaque(true);
 
-  glWindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [forceOpaqueBaseline],
-      'Rendering/OpenGL/ImageSlice',
-      t,
-      0.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glWindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [forceOpaqueBaseline],
+        'Rendering/OpenGL/ImageSlice',
+        t,
+        0.5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });
 
 test.onlyIfWebGL('Test ImageMapper forceTranslucent', (t) => {
@@ -114,15 +117,18 @@ test.onlyIfWebGL('Test ImageMapper forceTranslucent', (t) => {
   // keep translucent blending
   actorAbove.setForceTranslucent(true);
 
-  glWindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [forceTranslucentBaseline],
-      'Rendering/OpenGL/ImageSlice',
-      t,
-      0.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glWindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [forceTranslucentBaseline],
+        'Rendering/OpenGL/ImageSlice',
+        t,
+        0.5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

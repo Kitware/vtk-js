@@ -11,8 +11,8 @@ import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransfe
 import baseline from './testScalarBar.png';
 import baseline2 from './testScalarBar2.png';
 
-test('Test vtkScalarBarActor Rendering', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test vtkScalarBarActor Rendering', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkScalarBarActor Rendering');
 
   // Create some control UI
@@ -53,15 +53,18 @@ test('Test vtkScalarBarActor Rendering', (t) => {
 
   renderer.addActor(scalarBarActor);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline, baseline2],
-      'Rendering/Core/ScalarBarActor/testScalarBarActor',
-      t,
-      0.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline, baseline2],
+        'Rendering/Core/ScalarBarActor/testScalarBarActor',
+        t,
+        0.5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

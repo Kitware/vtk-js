@@ -30,7 +30,7 @@ test('Test vtkWidgetManager', (t) => {
 });
 
 test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
 
   const container = document.querySelector('body');
   const rwContainer = gc.registerDOMElement(document.createElement('div'));
@@ -67,23 +67,18 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
     camera.setParallelProjection(false);
     camera.setParallelScale(1);
 
-    let resolve;
-    const promise = new Promise((res) => {
-      resolve = res;
-    });
-    grw
+    const promise = grw
       .getApiSpecificRenderWindow()
       .captureNextImage()
-      .then((image) => {
+      .then((image) =>
         testUtils.compareImages(
           image,
           [noScaleInPixelsWithPerspectiveBaseline],
           'Widgets/Core/WidgetManager/test/testNoScaleInPixelsWithPerspective',
           t,
-          0.5,
-          resolve
-        );
-      });
+          0.5
+        )
+      );
     // Trigger a next image
     grw.getInteractor().render();
     return promise;
@@ -97,23 +92,18 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
     camera.setParallelProjection(true);
     camera.setParallelScale(100);
 
-    let resolve;
-    const promise = new Promise((res) => {
-      resolve = res;
-    });
-    grw
+    const promise = grw
       .getApiSpecificRenderWindow()
       .captureNextImage()
-      .then((image) => {
+      .then((image) =>
         testUtils.compareImages(
           image,
           [noScaleInPixelsWithParallelBaseline],
           'Widgets/Core/WidgetManager/test/testNoScaleInPixelsWithParallel',
           t,
-          0.5,
-          resolve
-        );
-      });
+          0.5
+        )
+      );
     // Trigger a next image
     grw.getInteractor().render();
     return promise;
@@ -127,23 +117,18 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
     camera.setParallelProjection(false);
     camera.setParallelScale(1);
 
-    let resolve;
-    const promise = new Promise((res) => {
-      resolve = res;
-    });
-    grw
+    const promise = grw
       .getApiSpecificRenderWindow()
       .captureNextImage()
-      .then((image) => {
+      .then((image) =>
         testUtils.compareImages(
           image,
           [scaleInPixelsWithPerspectiveBaseline],
           'Widgets/Core/WidgetManager/test/testScaleInPixelsWithPerspective',
           t,
-          0.5,
-          resolve
-        );
-      });
+          0.5
+        )
+      );
     // Trigger a next image
     grw.getInteractor().render();
     return promise;
@@ -154,33 +139,29 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
     camera.setParallelProjection(true);
     camera.setParallelScale(100);
 
-    let resolve;
-    const promise = new Promise((res) => {
-      resolve = res;
-    });
-    grw
+    const promise = grw
       .getApiSpecificRenderWindow()
       .captureNextImage()
-      .then((image) => {
+      .then((image) =>
         testUtils.compareImages(
           image,
           [scaleInPixelsWithParallelBaseline],
           'Widgets/Core/WidgetManager/test/scaleInPixelsWithParallel',
           t,
-          0.5,
-          resolve
-        );
-      });
+          0.5
+        )
+      );
     // Trigger a next image
     grw.getInteractor().render();
     return promise;
   }
 
-  [
+  return [
     testNoScaleInPixelsWithPerspective,
     testNoScaleInPixelsWithParallel,
     testScaleInPixelsWithPerspective,
     testScaleInPixelsWithParallel,
-    gc.releaseResources,
-  ].reduce((current, next) => current.then(next), Promise.resolve());
+  ]
+    .reduce((current, next) => current.then(next), Promise.resolve())
+    .finally(gc.releaseResources);
 });

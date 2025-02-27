@@ -16,7 +16,7 @@ import { OpacityMode } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Consta
 import baseline1 from './testProportionalComponents.png';
 
 test.onlyIfWebGL('Test Volume Rendering with Proportional Component', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkOpenGLVolumeMapper ProportionalComponent');
   // testUtils.keepDOM();
 
@@ -168,15 +168,18 @@ test.onlyIfWebGL('Test Volume Rendering with Proportional Component', (t) => {
   renderer.getActiveCamera().setFocalPoint(center[0], center[1], center[2]);
   renderer.resetCameraClippingRange();
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline1],
-      'Rendering/OpenGL/VolumeMapper/testProportionalComponents',
-      t,
-      1.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline1],
+        'Rendering/OpenGL/VolumeMapper/testProportionalComponents',
+        t,
+        1.5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

@@ -4,6 +4,7 @@ import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
+import { SlicingMode } from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
@@ -11,11 +12,13 @@ import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransfe
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 
-import baseline from './testImageLabelOutline.png';
+import baselineI from './testImageLabelOutline_I.png';
+import baselineJ from './testImageLabelOutline_J.png';
+import baselineK from './testImageLabelOutline_K.png';
 
-test('Test ImageMapper', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkImageMapper testImage');
+test.onlyIfWebGL('Test ImageMapper label outline', (t) => {
+  const gc = testUtils.createGarbageCollector();
+  t.ok('rendering', 'vtkImageMapper label outline');
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -129,9 +132,9 @@ test('Test ImageMapper', (t) => {
   // Create a one slice vtkImageData that has four quadrants of different values
 
   const imageData = gc.registerResource(vtkImageData.newInstance());
-  const dims = [10, 10, 1];
+  const dims = [10, 10, 10];
   imageData.setSpacing(1, 1, 1);
-  imageData.setOrigin(0.1, 0.1, 0.1);
+  imageData.setOrigin(0, 0, 0);
   imageData.setDirection(1, 0, 0, 0, 1, 0, 0, 0, 1);
   imageData.setExtent(0, dims[0] - 1, 0, dims[1] - 1, 0, dims[2] - 1);
 
@@ -140,14 +143,16 @@ test('Test ImageMapper', (t) => {
   const values = new Uint8Array(dims[0] * dims[1] * dims[2]);
 
   let i = 0;
-  for (let y = 0; y < dims[1]; y++) {
-    for (let x = 0; x < dims[0]; x++, i++) {
-      if ((x < 3 && y < 3) || (x > 7 && y > 7)) {
-        values[i] = BACKGROUND;
-      } else if (x > 4 && x < 6 && y > 4 && y < 7) {
-        values[i] = LOW_VALUE;
-      } else {
-        values[i] = HIGH_VALUE;
+  for (let z = 0; z < dims[2]; z++) {
+    for (let y = 0; y < dims[1]; y++) {
+      for (let x = 0; x < dims[0]; x++, i++) {
+        if ((x < 3 && y < 3) || (x > 7 && y > 7)) {
+          values[i] = BACKGROUND;
+        } else if (x > 4 && x < 6 && y > 4 && y < 7) {
+          values[i] = LOW_VALUE;
+        } else {
+          values[i] = HIGH_VALUE;
+        }
       }
     }
   }
@@ -185,15 +190,69 @@ test('Test ImageMapper', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/Core/ImageMapperLabelOutline',
-      t,
-      1,
-      gc.releaseResources
-    );
-  });
-  renderWindow.render();
+  function testWithSlicing(slicingMode, baseline) {
+    const PARAMS = {
+      I: {
+        mode: SlicingMode.I,
+        cameraPos: [1, 0, 0],
+        cameraDir: [1, 0, 0],
+        cameraUp: [0, 1, 0],
+        slice: 2,
+      },
+      J: {
+        mode: SlicingMode.J,
+        cameraPos: [0, 1, 0],
+        cameraDir: [0, 1, 0],
+        cameraUp: [0, 0, 1],
+        slice: 6,
+      },
+      K: {
+        mode: SlicingMode.K,
+        cameraPos: [0, 0, 1],
+        cameraDir: [0, 0, -1],
+        cameraUp: [0, 1, 0],
+        slice: 5,
+      },
+    };
+
+    const params = PARAMS[slicingMode];
+
+    return function testSlicingLabelOutline() {
+      t.comment(`testImageLabelOutline: ${slicingMode} slicing`);
+
+      mapper.setSlicingMode(params.mode);
+      mapper.setSlice(params.slice);
+      labelMap.mapper.setSlicingMode(params.mode);
+      labelMap.mapper.setSlice(params.slice);
+
+      renderer.getActiveCamera().setPosition(...params.cameraPos);
+      renderer.getActiveCamera().setDirectionOfProjection(...params.cameraDir);
+      renderer.getActiveCamera().setViewUp(...params.cameraUp);
+      renderer.resetCamera();
+      renderer.resetCameraClippingRange();
+
+      const promise = glwindow
+        .captureNextImage()
+        .then((image) =>
+          testUtils.compareImages(
+            image,
+            [baseline],
+            `Rendering/Core/ImageMapperLabelOutline_${slicingMode}`,
+            t,
+            1
+          )
+        );
+
+      renderWindow.render();
+      return promise;
+    };
+  }
+
+  return [
+    testWithSlicing('I', baselineI),
+    testWithSlicing('J', baselineJ),
+    testWithSlicing('K', baselineK),
+  ]
+    .reduce((cur, next) => cur.then(next), Promise.resolve())
+    .finally(gc.releaseResources);
 });

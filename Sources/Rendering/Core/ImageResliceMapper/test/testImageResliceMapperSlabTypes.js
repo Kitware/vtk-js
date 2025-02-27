@@ -24,7 +24,7 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import baseline from './testImageResliceMapperSlabTypes.png';
 
 test.onlyIfWebGL('Test ImageResliceMapperSlabTypes', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkImageResliceMapper testImageResliceMapperSlabTypes');
 
   // Create some control UI
@@ -156,14 +156,14 @@ test.onlyIfWebGL('Test ImageResliceMapperSlabTypes', async (t) => {
               [baseline],
               'Rendering/Core/ImageResliceMapper',
               t,
-              1,
-              gc.releaseResources
+              1
             )
           );
         renderWindow.render();
         return p;
       })
-    );
+    )
+    .finally(gc.releaseResources);
 
   const property = gc.registerResource(vtkImageProperty.newInstance());
 

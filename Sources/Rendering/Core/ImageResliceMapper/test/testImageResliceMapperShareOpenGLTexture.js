@@ -21,7 +21,7 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import baseline from './testImageResliceMapperShareOpenGLTexture.png';
 
 test.onlyIfWebGL('Test ImageResliceMapperShareOpenGLTexture', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok(
     'rendering',
     'vtkImageResliceMapper testImageResliceMapperShareOpenGLTexture'
@@ -127,14 +127,14 @@ test.onlyIfWebGL('Test ImageResliceMapperShareOpenGLTexture', async (t) => {
               [baseline],
               'Rendering/Core/ImageResliceMapper',
               t,
-              1,
-              gc.releaseResources
+              1
             )
           );
         renderWindow.render();
         return p;
       })
-    );
+    )
+    .finally(gc.releaseResources);
 
   const property = gc.registerResource(vtkImageProperty.newInstance());
 

@@ -11,7 +11,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import baseline from './testEdgeVisibility.png';
 
 test.skip('Test Edge Visibility', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkMapper EdgeVisibility');
 
   // Create some control UI
@@ -44,15 +44,18 @@ test.skip('Test Edge Visibility', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/Core/Mapper/testEdgeVisibility.js',
-      t,
-      1,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/Core/Mapper/testEdgeVisibility.js',
+        t,
+        1
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

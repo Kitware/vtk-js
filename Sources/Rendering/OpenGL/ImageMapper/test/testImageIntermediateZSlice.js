@@ -13,7 +13,7 @@ import baseline from './testImageIntermediateZSlice.png';
 import { SlicingMode } from '../../../Core/ImageMapper/Constants';
 
 test.onlyIfWebGL('Test ImageMapper intermediate slices', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkOpenGLImageMapper testImage');
 
   // Create some control UI
@@ -94,15 +94,18 @@ test.onlyIfWebGL('Test ImageMapper intermediate slices', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/OpenGL/ImageMapper',
-      t,
-      0.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/OpenGL/ImageMapper',
+        t,
+        0.5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

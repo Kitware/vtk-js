@@ -7,17 +7,20 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkSTLReader from '@kitware/vtk.js/IO/Geometry/STLReader';
-
+import vtkPolyDataNormals from '@kitware/vtk.js/Filters/Core/PolyDataNormals';
 // ----------------------------------------------------------------------------
 // Example code
 // ----------------------------------------------------------------------------
 
 const reader = vtkSTLReader.newInstance();
+reader.setRemoveDuplicateVertices(5);
 const mapper = vtkMapper.newInstance({ scalarVisibility: false });
 const actor = vtkActor.newInstance();
 
 actor.setMapper(mapper);
-mapper.setInputConnection(reader.getOutputPort());
+const normals = vtkPolyDataNormals.newInstance();
+normals.setInputConnection(reader.getOutputPort());
+mapper.setInputConnection(normals.getOutputPort());
 
 // ----------------------------------------------------------------------------
 

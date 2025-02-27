@@ -15,8 +15,8 @@ import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constant
 import baseline from './testSphere.png';
 import baseline2 from './testSphere2.png';
 
-test('Test SphereMapper', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test SphereMapper', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkSphereMapper testSphere');
 
   // Create some control UI
@@ -105,15 +105,18 @@ test('Test SphereMapper', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline, baseline2],
-      'Rendering/Core/SphereMapper',
-      t,
-      1,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline, baseline2],
+        'Rendering/Core/SphereMapper',
+        t,
+        1
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

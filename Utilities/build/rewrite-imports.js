@@ -7,7 +7,7 @@ module.exports = (code, replaceFunc) => {
       importRegex.lastIndex++;
     }
 
-    if (m[1].startsWith('../') || m[1].startsWith('./')) {
+    if (m[1] === '..' || m[1].startsWith('../') || m[1].startsWith('./')) {
       const importPath = replaceFunc(m[1]);
       const origLen = code.length;
       code = code.replace(m[0], `from '${importPath}'`);

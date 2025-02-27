@@ -17,8 +17,8 @@ import baselineCustom from './testColorMixCustom.png';
 import baselineAdditive from './testColorMixAdditive.png';
 import baselineColorize from './testColorMixColorize.png';
 
-test('Test Volume Rendering: custom shader code', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test Volume Rendering: custom shader code', async (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkVolumeMapper Custom shader code');
 
   // Create some control UI
@@ -160,21 +160,17 @@ test('Test Volume Rendering: custom shader code', async (t) => {
   };
   vmapper.modified();
 
-  let testCustomCodeResolve;
-  const testCustomCodePromise = new Promise((res) => {
-    testCustomCodeResolve = res;
-  });
-
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baselineCustom],
-      'Rendering/Core/VolumeMapper/testColorMix',
-      t,
-      3.0,
-      testCustomCodeResolve
+  const testCustomCodePromise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baselineCustom],
+        'Rendering/Core/VolumeMapper/testColorMix',
+        t,
+        3.0
+      )
     );
-  });
 
   renderWindow.render();
   await testCustomCodePromise;
@@ -207,21 +203,17 @@ test('Test Volume Rendering: custom shader code', async (t) => {
   light.setIntensity(1.0);
   renderer.addLight(light);
 
-  let testAdditiveResolve;
-  const testAdditivePromise = new Promise((res) => {
-    testAdditiveResolve = res;
-  });
-
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baselineAdditive],
-      'Rendering/Core/VolumeMapper/testColorMix',
-      t,
-      3.0,
-      testAdditiveResolve
+  const testAdditivePromise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baselineAdditive],
+        'Rendering/Core/VolumeMapper/testColorMix',
+        t,
+        3.0
+      )
     );
-  });
 
   renderWindow.render();
   await testAdditivePromise;
@@ -234,26 +226,22 @@ test('Test Volume Rendering: custom shader code', async (t) => {
   renderer.getActiveCamera().azimuth(-60);
   renderer.getActiveCamera().elevation(-20);
 
-  let testColorizeResolve;
-  const testColorizePromise = new Promise((res) => {
-    testColorizeResolve = res;
-  });
-
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baselineColorize],
-      'Rendering/Core/VolumeMapper/testColorMix',
-      t,
-      3.0,
-      testColorizeResolve
+  const testColorizePromise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baselineColorize],
+        'Rendering/Core/VolumeMapper/testColorMix',
+        t,
+        3.0
+      )
     );
-  });
 
   renderWindow.render();
   await testColorizePromise;
 
   // ----------------------------------------------------------------
 
-  await gc.releaseResources();
+  gc.releaseResources();
 });

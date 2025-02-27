@@ -122,6 +122,64 @@ function vtkSTLReader(publicAPI, model) {
     });
   }
 
+  function removeDuplicateVertices(tolerance) {
+    const polydata = model.output[0];
+
+    const points = polydata.getPoints().getData();
+    const faces = polydata.getPolys().getData();
+
+    if (!points || !faces) {
+      console.warn('No valid polydata.');
+      return;
+    }
+
+    const vMap = new Map();
+    const vIndexMap = new Map();
+    let vInc = 0;
+    let pointsChanged = false;
+    for (let i = 0; i < points.length; i += 3) {
+      const k1 = (points[i] * 10 ** tolerance).toFixed(0);
+      const k2 = (points[i + 1] * 10 ** tolerance).toFixed(0);
+      const k3 = (points[i + 2] * 10 ** tolerance).toFixed(0);
+      const key = `${k1},${k2},${k3}`;
+      if (vMap.get(key) !== undefined) {
+        vIndexMap.set(i / 3, vMap.get(key));
+        pointsChanged = true;
+      } else {
+        vIndexMap.set(i / 3, vInc);
+        vMap.set(key, vInc);
+        vInc++;
+      }
+    }
+
+    const outVerts = new Float32Array(vMap.size * 3);
+    const keys = Array.from(vMap.keys());
+
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i];
+      const j = vMap.get(k) * 3;
+      const coords = k.split(',').map((e) => +e * 10 ** -tolerance);
+      outVerts[j] = coords[0];
+      outVerts[j + 1] = coords[1];
+      outVerts[j + 2] = coords[2];
+    }
+
+    const outFaces = new Int32Array(faces);
+    for (let i = 0; i < faces.length; i += 4) {
+      outFaces[i] = 3;
+      outFaces[i + 1] = vIndexMap.get(faces[i + 1]);
+      outFaces[i + 2] = vIndexMap.get(faces[i + 2]);
+      outFaces[i + 3] = vIndexMap.get(faces[i + 3]);
+    }
+
+    polydata.getPoints().setData(outVerts);
+    polydata.getPolys().setData(outFaces);
+
+    if (pointsChanged) {
+      publicAPI.modified();
+    }
+  }
+
   // Set DataSet url
   publicAPI.setUrl = (url, option = { binary: true }) => {
     model.url = url;
@@ -289,6 +347,10 @@ function vtkSTLReader(publicAPI, model) {
 
     // Add new output
     model.output[0] = polydata;
+
+    if (model.removeDuplicateVertices >= 0) {
+      removeDuplicateVertices(model.removeDuplicateVertices);
+    }
   };
 
   publicAPI.parseAsText = (content) => {
@@ -326,6 +388,10 @@ function vtkSTLReader(publicAPI, model) {
 
     // Add new output
     model.output[0] = polydata;
+
+    if (model.removeDuplicateVertices >= 0) {
+      removeDuplicateVertices(model.removeDuplicateVertices);
+    }
   };
 
   publicAPI.requestData = (inData, outData) => {
@@ -341,6 +407,7 @@ const DEFAULT_VALUES = {
   // baseURL: null,
   // dataAccessHelper: null,
   // url: null,
+  removeDuplicateVertices: -1,
 };
 
 // ----------------------------------------------------------------------------
@@ -351,7 +418,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.get(publicAPI, model, ['url', 'baseURL']);
-  macro.setGet(publicAPI, model, ['dataAccessHelper']);
+  macro.setGet(publicAPI, model, [
+    'dataAccessHelper',
+    'removeDuplicateVertices',
+  ]);
   macro.algo(publicAPI, model, 0, 1);
 
   // vtkSTLReader methods

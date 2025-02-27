@@ -11,8 +11,8 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
 import baseline from '../../ImageMapper/test/testImage.png';
 
-test('Test ImageArrayMapper', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test ImageArrayMapper', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkImageArrayMapper testImage');
 
   // Create some control UI
@@ -65,15 +65,18 @@ test('Test ImageArrayMapper', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/Core/ImageArrayMapper',
-      t,
-      1,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/Core/ImageArrayMapper',
+        t,
+        1
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

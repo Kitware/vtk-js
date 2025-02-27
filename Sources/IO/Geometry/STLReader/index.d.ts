@@ -47,6 +47,11 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
   getUrl(): string;
 
   /**
+   * Get tolerance when removeDuplicateVertices is set
+   */
+  getRemoveDuplicateVertices(): number;
+
+  /**
    * Load the object data.
    * @param {ISTLReaderOptions} [options]
    */
@@ -94,6 +99,15 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
    * @param {ISTLReaderOptions} [option] The STL reader options.
    */
   setUrl(url: string, option?: ISTLReaderOptions): Promise<string | any>;
+
+  /**
+   * Turn on/off automatic removeDuplicateVertices
+   * After reading the STL file, if `tolerance` is >= 0, then points with the same coordinates at 10 power tolerance are merged.
+   * For a smooth rendering, you might want to compute normals with vtkPolyDataNormals.
+   *
+   *  @param {Number} tolerance
+   */
+  setRemoveDuplicateVertices(tolerance: number): boolean;
 }
 
 /**

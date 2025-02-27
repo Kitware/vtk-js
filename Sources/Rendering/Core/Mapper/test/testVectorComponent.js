@@ -14,8 +14,8 @@ import baseline2 from './testVectorComponent2.png';
 
 const { GetArray } = vtkMapper;
 
-test('Test VectorComponent', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test VectorComponent', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkMapper Vector Component');
 
   // Create some control UI
@@ -60,15 +60,18 @@ test('Test VectorComponent', (t) => {
 
   renderWindow.render();
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline, baseline2],
-      'Rendering/Core/Mapper/testVectorComponent.js',
-      t,
-      5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline, baseline2],
+        'Rendering/Core/Mapper/testVectorComponent.js',
+        t,
+        5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

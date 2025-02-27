@@ -18,7 +18,7 @@ import baseline1 from './testLargeScalarImage.png';
 const { SlicingMode } = Constants;
 
 test.onlyIfWebGL('Test Volume Rendering of Large Scalar Values', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkOpenGLVolumeMapper LargeScalars');
 
   // DOM elements
@@ -102,15 +102,18 @@ test.onlyIfWebGL('Test Volume Rendering of Large Scalar Values', (t) => {
   renderer.resetCameraClippingRange();
   renderer.getActiveCamera().setParallelProjection(true);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline1],
-      'Rendering/OpenGL/ImageMapper/testLargeScalarsImage',
-      t,
-      1.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline1],
+        'Rendering/OpenGL/ImageMapper/testLargeScalarsImage',
+        t,
+        1.5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

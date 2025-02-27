@@ -72,7 +72,7 @@ This will allow you to see the some live code running in your browser. Just pick
 
 [![ImplicitBoolean Example][ImplicitBoolean]](./ImplicitBoolean.html "ImplicitBoolean")
 
-<div>
+</div>
 
 [ImplicitBoolean]: ../docs/gallery/ImplicitBoolean.jpg
 
@@ -83,7 +83,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![MultiSliceImageMapper Example][MultiSliceImageMappergif]](./MultiSliceImageMapper.html "MultiSliceImageMapper")
 [![TestVolumeTypes Example][TestVolumeTypes]](./TestVolumeTypes.html "TestVolumeTypes")
 
-<div>
+</div>
 
 [MultiSliceImageMappergif]: ../docs/gallery/MultiSliceImageMapper.gif
 [TestVolumeTypes]: ../docs/gallery/TestVolumeTypes.jpg
@@ -107,8 +107,10 @@ This will allow you to see the some live code running in your browser. Just pick
 [![TubeFilter Example][TubeFilter]](./TubeFilter.html "TubeFilter")
 [![Cutter Example][Cutter]](./Cutter.html "Cutter")
 [![PolyDataNormals Example][PolyDataNormals]](./PolyDataNormals.html "PolyDataNormals")
+[![ThresholdPoints Example][ThresholdPoints]](./ThresholdPoints.html "Cut/Treshold points with point data criteria")
 
-<div>
+
+</div>
 
 [Calculator2]: ../docs/gallery/Calculator2.jpg
 [ClipClosedSurface]: ../docs/gallery/ClipClosedSurface.jpg
@@ -125,6 +127,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [TubeFilter]: ../docs/gallery/TubeFilter.jpg
 [Cutter]: ../docs/gallery/Cutter.jpg
 [PolyDataNormals]: ../docs/gallery/PolyDataNormals.jpg
+[ThresholdPoints]: ../docs/gallery/ThresholdPoints.jpg
 
 # Sources
 
@@ -173,6 +176,8 @@ This will allow you to see the some live code running in your browser. Just pick
 [![PLYWriter Example][PLYWriterWithIcon]](./PLYWriter.html "PLY writer(ply)")
 [![STLReader Example][STLReaderWithIcon]](./STLReader.html "STL reader(stl)")
 [![STLWriter Example][STLWriterWithIcon]](./STLWriter.html "STL writer(stl)")
+[![GLTFImporter Example][GLTFImporterWithIcon]](./GLTFImporter.html "GLTF importer(gltf, glb)")
+[![IFCImporter Example][IFCImporterWithIcon]](./IFCImporter.html "IFC importer(ifc)")
 [![PolyDataReader Example][PolyDataReaderWithIcon]](./PolyDataReader.html "VTK legacy reader(VTK)")
 [![ElevationReader Example][ElevationReaderWithIcon]](./ElevationReader.html "Elevation reader(CSV, JPG)")
 [![OBJReader Example][OBJReaderWithIcon]](./OBJReader.html "OBJ reader(OBJ, MTL, JPG)")
@@ -186,6 +191,8 @@ This will allow you to see the some live code running in your browser. Just pick
 [![OfflineLocalView Example][OfflineLocalViewWithIcon]](./OfflineLocalView.html "Load a serialized scene (VTKSZ)")
 [![G-Code Example][GCodeReaderWithIcon]](./GCodeReader.html "G-Code reader(gcode)")
 [![HDRReader Example][HDRReaderWithIcon]](./HDRReader.html "Load an HDR image")
+[![TGAReader Example][TGAReaderWithIcon]](./TGAReader.html "Load a TGA image")
+[![TIFFReader Example][TIFFReaderWithIcon]](./TGAReader.html "Load a TIFF image")
 
 </div>
 
@@ -194,6 +201,8 @@ This will allow you to see the some live code running in your browser. Just pick
 [PLYWriterWithIcon]: ../docs/gallery/PLYWriterWithIcon.jpg
 [STLReaderWithIcon]: ../docs/gallery/STLReaderWithIcon.jpg
 [STLWriterWithIcon]: ../docs/gallery/STLWriterWithIcon.jpg
+[GLTFImporterWithIcon]: ../docs/gallery/GLTFImporterWithIcon.jpg
+[IFCImporterWithIcon]: ../docs/gallery/IFCImporterWithIcon.jpg
 [PolyDataReaderWithIcon]: ../docs/gallery/VTKReaderWithIcon.jpg
 [ElevationReaderWithIcon]: ../docs/gallery/ElevationReaderWithIcon.jpg
 [OBJReaderWithIcon]: ../docs/gallery/OBJReaderWithIcon.jpg
@@ -207,6 +216,8 @@ This will allow you to see the some live code running in your browser. Just pick
 [OfflineLocalViewWithIcon]: ../docs/gallery/OfflineLocalViewWithIcon.jpg
 [GCodeReaderWithIcon]: ../docs/gallery/GCodeReaderWithIcon.jpg
 [HDRReaderWithIcon]: ../docs/gallery/HDRReaderWithIcon.jpg
+[TGAReaderWithIcon]: ../docs/gallery/TGAReaderWithIcon.jpg
+[TIFFReaderWithIcon]: ../docs/gallery/TIFFReaderWithIcon.jpg
 
 # Actors
 
@@ -272,7 +283,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![ImageCPRMapper Example][ImageCPRMapper]](./ImageCPRMapper.html "Curved Planar Reformat GPU mapper, stretched and straightened")
 [![VolumeOutline Example][VolumeOutline]](./VolumeOutline.html "VolumeOutline")
 
-<div>
+</div>
 
 [ImageLabelOutline]: ../docs/gallery/ImageLabelOutline.jpg
 [ImageCPRMapper]: ../docs/gallery/ImageCPRMapper.jpg

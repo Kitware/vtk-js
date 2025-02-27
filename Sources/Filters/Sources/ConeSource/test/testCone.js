@@ -12,7 +12,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import baseline from './testCone.png';
 
 test.onlyIfWebGL('Test vtkConeSource Rendering', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkConeSource Rendering');
 
   // Create some control UI
@@ -55,15 +55,18 @@ test.onlyIfWebGL('Test vtkConeSource Rendering', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Filters/Sources/ConeSource/testCone',
-      t,
-      2.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Filters/Sources/ConeSource/testCone',
+        t,
+        2.5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

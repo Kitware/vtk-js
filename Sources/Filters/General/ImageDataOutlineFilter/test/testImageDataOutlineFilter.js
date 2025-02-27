@@ -22,7 +22,7 @@ import baselineFaces from './testImageDataOutlineFilter_Faces.png';
 import baselineLines from './testImageDataOutlineFilter_Lines.png';
 
 test.onlyIfWebGL('Test ImageDataOutlineFilter', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -140,21 +140,17 @@ test.onlyIfWebGL('Test ImageDataOutlineFilter', (t) => {
     idoline.setGenerateLines(true);
     idoline.setGenerateFaces(false);
 
-    let resolve;
-    const promise = new Promise((res) => {
-      resolve = res;
-    });
-
-    glwindow.captureNextImage().then((image) => {
-      testUtils.compareImages(
-        image,
-        [baselineLines],
-        'Filters/General/ImageDataOutlineFilter_Lines',
-        t,
-        1,
-        resolve
+    const promise = glwindow
+      .captureNextImage()
+      .then((image) =>
+        testUtils.compareImages(
+          image,
+          [baselineLines],
+          'Filters/General/ImageDataOutlineFilter_Lines',
+          t,
+          1
+        )
       );
-    });
 
     renderWindow.render();
     return promise;
@@ -169,29 +165,23 @@ test.onlyIfWebGL('Test ImageDataOutlineFilter', (t) => {
     idoline.setGenerateLines(false);
     idoline.setGenerateFaces(true);
 
-    let resolve;
-    const promise = new Promise((res) => {
-      resolve = res;
-    });
-
-    glwindow.captureNextImage().then((image) => {
-      testUtils.compareImages(
-        image,
-        [baselineFaces],
-        'Filters/General/ImageDataOutlineFilter_Faces',
-        t,
-        1,
-        resolve
+    const promise = glwindow
+      .captureNextImage()
+      .then((image) =>
+        testUtils.compareImages(
+          image,
+          [baselineFaces],
+          'Filters/General/ImageDataOutlineFilter_Faces',
+          t,
+          1
+        )
       );
-    });
 
     renderWindow.render();
     return promise;
   }
 
-  [
-    testImageDataOutlineAsLines,
-    testImageDataOutlineAsFaces,
-    gc.releaseResources,
-  ].reduce((current, next) => current.then(next), Promise.resolve());
+  return [testImageDataOutlineAsLines, testImageDataOutlineAsFaces]
+    .reduce((current, next) => current.then(next), Promise.resolve())
+    .finally(gc.releaseResources);
 });

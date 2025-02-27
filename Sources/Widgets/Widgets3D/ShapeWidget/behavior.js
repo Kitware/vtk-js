@@ -475,6 +475,9 @@ export default function widgetBehavior(publicAPI, model) {
       const up = model._camera.getViewUp();
       const right = [];
       vec3.cross(right, up, normal);
+      vtkMath.normalize(right);
+      vec3.cross(up, normal, right);
+      vtkMath.normalize(up);
       model.shapeHandle.setUp(up);
       model.shapeHandle.setRight(right);
       model.shapeHandle.setDirection(normal);

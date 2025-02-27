@@ -271,6 +271,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           'uniform mat4 PCWCMatrix;',
           'uniform mat4 vWCtoIDX;',
           'uniform ivec3 imageDimensions;',
+          'uniform int sliceAxis;',
         ]
       ).result;
 
@@ -299,6 +300,11 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           '',
           '  // half voxel fix for labelmapOutline',
           '  return (index + vec3(0.5)) / vec3(imageDimensions);',
+          '}',
+          'vec2 getSliceCoords(vec3 coord, int axis) {',
+          '  if (axis == 0) return coord.yz;',
+          '  if (axis == 1) return coord.xz;',
+          '  if (axis == 2) return coord.xy;',
           '}',
           '#endif',
         ]
@@ -358,7 +364,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
                 `
                 #ifdef vtkImageLabelOutlineOn
                   vec3 centerPosIS = fragCoordToIndexSpace(gl_FragCoord);
-                  float centerValue = texture2D(texture1, centerPosIS.xy).r;
+                  float centerValue = texture2D(texture1, getSliceCoords(centerPosIS, sliceAxis)).r;
                   bool pixelOnBorder = false;
                   vec3 tColor = texture2D(colorTexture1, vec2(centerValue * cscale0 + cshift0, 0.5)).rgb;
                   float scalarOpacity = texture2D(pwfTexture1, vec2(centerValue * pwfscale0 + pwfshift0, 0.5)).r;
@@ -369,7 +375,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
                   int actualThickness = int(textureValue * 255.0);
 
                   if (segmentIndex == 0){
-                    gl_FragData[0] = vec4(0.0, 1.0, 1.0, 0.0);
+                    gl_FragData[0] = vec4(0.0, 0.0, 0.0, 0.0);
                     return;
                   }
 
@@ -382,7 +388,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
                         gl_FragCoord.y + float(j),
                         gl_FragCoord.z, gl_FragCoord.w);
                       vec3 neighborPosIS = fragCoordToIndexSpace(neighborPixelCoord);
-                      float value = texture2D(texture1, neighborPosIS.xy).r;
+                      float value = texture2D(texture1, getSliceCoords(neighborPosIS, sliceAxis)).r;
                       if (value != centerValue) {
                         pixelOnBorder = true;
                         break;
@@ -797,13 +803,20 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       const worldToIndex = image.getWorldToIndex();
 
       const imageDimensions = image.getDimensions();
+      let sliceAxis = model.renderable.getClosestIJKAxis().ijkMode;
+
+      // SlicingMode.NONE equates to SlicingMode.K
+      if (sliceAxis === SlicingMode.NONE) {
+        sliceAxis = SlicingMode.K;
+      }
 
       program.setUniform3i(
         'imageDimensions',
         imageDimensions[0],
         imageDimensions[1],
-        1
+        imageDimensions[2]
       );
+      program.setUniformi('sliceAxis', sliceAxis);
 
       program.setUniformMatrix('vWCtoIDX', worldToIndex);
       const labelOutlineKeyMats = model.openGLCamera.getKeyMatrices(ren);
@@ -1360,7 +1373,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
   publicAPI.updatelabelOutlineThicknessTexture = (image) => {
     const labelOutlineThicknessArray = image
       .getProperty()
-      .getLabelOutlineThickness();
+      .getLabelOutlineThicknessByReference();
 
     const lTex = model._openGLRenderWindow.getGraphicsResourceForObject(
       labelOutlineThicknessArray

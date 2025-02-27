@@ -12,17 +12,65 @@ interface IPrimitiveCount {
 export interface IGlyph3DMapperInitialValues extends IMapperInitialValues {
   orient?: boolean;
   orientationMode?: OrientationModes;
-  orientationArray?: number[];
+  orientationArray?: string;
   scaling?: boolean;
   scaleFactor?: number;
   scaleMode?: ScaleModes;
-  scaleArray?: number[];
+  scaleArray?: string;
   matrixArray?: number[];
   normalArray?: number[];
   colorArray?: number[];
 }
 
 export interface vtkGlyph3DMapper extends vtkMapper {
+  /**
+   * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+   * @return {Bounds} The bounds for the mapper.
+   */
+  getBounds(): Bounds;
+
+  /**
+   *
+   */
+  buildArrays(): void;
+
+  /**
+   *
+   */
+  getPrimitiveCount(): IPrimitiveCount;
+
+  /**
+   * Get scale mode
+   * @default `SCALE_BY_MAGNITUDE`
+   */
+  getScaleMode(): ScaleModes;
+
+  /**
+   * Get scale factor to scale object by.
+   */
+  getScaleFactor(): number;
+
+  /**
+   * Get scale mode as string
+   */
+  getScaleModeAsString(): string;
+
+  /**
+   * Sets the name of the array to use as scale values.
+   * @param {String} arrayName Name of the array
+   */
+  setScaleArray(arrayName: Nullable<string>): boolean;
+
+  /**
+   * Gets the name of the array used as scale values.
+   */
+  getScaleArray(): string;
+
+  /**
+   * Get scale mode as array
+   */
+  getScaleArrayData(): number[];
+
   /**
    * An orientation array is a vtkDataArray with 3 components. The first
    * component is the angle of rotation along the X axis. The second component
@@ -49,47 +97,15 @@ export interface vtkGlyph3DMapper extends vtkMapper {
   getOrientationArrayData(): number[];
 
   /**
-   * Get scale factor to scale object by.
-   */
-  getScaleFactor(): number;
-
-  /**
-   * Get scale mode
-   * @default `SCALE_BY_MAGNITUDE`
-   */
-  getScaleMode(): ScaleModes;
-
-  /**
-   * Get scale mode as string
-   */
-  getScaleModeAsString(): string;
-
-  /**
-   * Get scale mode as array
-   */
-  getScaleArrayData(): number[];
-
-  /**
-   * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-   * @return {Bounds} The bounds for the mapper.
-   */
-  getBounds(): Bounds;
-
-  /**
-   *
-   */
-  buildArrays(): void;
-
-  /**
-   *
-   */
-  getPrimitiveCount(): IPrimitiveCount;
-
-  /**
    * Sets the name of the array to use as orientation.
    * @param {String} arrayName Name of the array
    */
   setOrientationArray(arrayName: Nullable<string>): boolean;
+
+  /**
+   * Gets the name of the array used as orientation values.
+   */
+  getOrientationArray(): string;
 
   /**
    * Orientation mode indicates if the OrientationArray provides the direction

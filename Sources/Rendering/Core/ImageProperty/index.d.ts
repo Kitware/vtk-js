@@ -95,6 +95,28 @@ export interface vtkImageProperty extends vtkObject {
   getScalarOpacity(idx?: number): vtkPiecewiseFunction;
 
   /**
+   * Enable label outline rendering.
+   * @param {Boolean} useLabelOutline
+   */
+  setUseLabelOutline(useLabelOutline: boolean): boolean;
+
+  /**
+   * Check if label outline rendering.
+   */
+  getUseLabelOutline(): boolean;
+
+  /**
+   * Set the 0 to 1 opacity of the label outline.
+   * @param {Number} opacity
+   */
+  setLabelOutlineOpacity(opacity: number): boolean;
+
+  /**
+   * Get the 0 to 1 opacity of the label outline.
+   */
+  getLabelOutlineOpacity(): number;
+
+  /**
    * gets the label outline thickness
    */
   getLabelOutlineThickness(): number;

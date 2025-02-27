@@ -12,7 +12,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import baseline from './testCylinder.png';
 
 test.onlyIfWebGL('Test vtkCylinderSource Rendering', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkCylinderSource Rendering');
 
   // Create some control UI
@@ -55,15 +55,18 @@ test.onlyIfWebGL('Test vtkCylinderSource Rendering', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Filters/Sources/CylinderSource/testCylinder',
-      t,
-      2.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Filters/Sources/CylinderSource/testCylinder',
+        t,
+        2.5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

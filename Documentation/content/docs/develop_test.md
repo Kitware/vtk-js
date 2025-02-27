@@ -45,15 +45,15 @@ test('Validate vtkMyClass properties', (t) => {
 ```js ClassName/test/testRendering.js
 import test from 'tape';
 
-import vtkOpenGLRenderWindow from '../../../../Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow from '../../../../Rendering/Core/RenderWindow';
-import vtkRenderer from '../../../../Rendering/Core/Renderer';
-import vtkConeSource from '../../../../Filters/Sources/ConeSource';
-import vtkActor from '../../../../Rendering/Core/Actor';
-import vtkMapper from '../../../../Rendering/Core/Mapper';
+import vtkOpenGLRenderWindow from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow';
+import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow';
+import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer';
+import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
 import baseline from './testClassName.png';
-import testUtils from '../../../../Testing/testUtils';
+import testUtils from '@kitware/vtk.js/Testing/testUtils';
 
 test.onlyIfWebGL('Test vtkClassName Rendering', (t) => {
   // Create some control UI
@@ -82,11 +82,12 @@ test.onlyIfWebGL('Test vtkClassName Rendering', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
+  const promise = glwindow.captureNextImage().then((image) => {
     // compareImages(image, baselines, testName, tapeContext, threshold = 5, nextCallback = null)
-    testUtils.compareImages(image, [baseline], 'Filters/Sources/ConeSource/', t);
+    return testUtils.compareImages(image, [baseline], 'Filters/Sources/ConeSource/', t);
   });
   renderWindow.render();
+  return promise;
 });
 ```
 
@@ -133,9 +134,9 @@ Follow the following procedure to create a new baseline or change an existing ba
 
 - Add an invalid baseline (any PNG file) and rename it as the required baseline.
   For example, to create a baseline for `testCylinder.js` copy *testCone.png* to *Sources/Filters/Sources/CylinderSource/test/testCylinder.png*.
-- Run the test as per [Running a single test for debugging](#Running-a-single-test-for-debugging). The test should fail because of the invalid baseline. 
+- Run the test as per [Running a single test for debugging](#Running-a-single-test-for-debugging). The test should fail because of the invalid baseline.
 - The test execution creates a file **Utilities/TestResults/Test-Report.html**. Open this in the browser.
 - The file should show the test output versus the invalid baseline image, as well as a diff.
   Right-click on the test output image and save it as the valid baseline.
 - Re-run the test to ensure that it passes with the valid baseline.
-- Commit the baseline image to the git source tree. 
+- Commit the baseline image to the git source tree.
