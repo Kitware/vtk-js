@@ -17,7 +17,7 @@ import baselineJ from './testImageLabelOutline_J.png';
 import baselineK from './testImageLabelOutline_K.png';
 
 test.onlyIfWebGL('Test ImageMapper label outline', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkImageMapper label outline');
 
   // Create some control UI
@@ -219,7 +219,6 @@ test.onlyIfWebGL('Test ImageMapper label outline', (t) => {
 
     return function testSlicingLabelOutline() {
       t.comment(`testImageLabelOutline: ${slicingMode} slicing`);
-      const { promise, resolve } = Promise.withResolvers();
 
       mapper.setSlicingMode(params.mode);
       mapper.setSlice(params.slice);
@@ -232,26 +231,28 @@ test.onlyIfWebGL('Test ImageMapper label outline', (t) => {
       renderer.resetCamera();
       renderer.resetCameraClippingRange();
 
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline],
-          `Rendering/Core/ImageMapperLabelOutline_${slicingMode}`,
-          t,
-          1,
-          resolve
+      const promise = glwindow
+        .captureNextImage()
+        .then((image) =>
+          testUtils.compareImages(
+            image,
+            [baseline],
+            `Rendering/Core/ImageMapperLabelOutline_${slicingMode}`,
+            t,
+            1
+          )
         );
-      });
 
       renderWindow.render();
       return promise;
     };
   }
 
-  [
+  return [
     testWithSlicing('I', baselineI),
     testWithSlicing('J', baselineJ),
     testWithSlicing('K', baselineK),
-    gc.releaseResources,
-  ].reduce((cur, next) => cur.then(next), Promise.resolve());
+  ]
+    .reduce((cur, next) => cur.then(next), Promise.resolve())
+    .finally(gc.releaseResources);
 });

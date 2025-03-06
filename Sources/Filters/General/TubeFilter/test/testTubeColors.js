@@ -118,7 +118,7 @@ test('Test vtkTubeFilter colorMapping', (t) => {
 });
 
 test.onlyIfWebGL('Test vtkTubeFilter color map rendering', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -154,15 +154,19 @@ test.onlyIfWebGL('Test vtkTubeFilter color map rendering', (t) => {
   camera.yaw(40);
   renderer.resetCamera();
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Filters/General/TubeFilter/testTubeColors',
-      t,
-      2.5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Filters/General/TubeFilter/testTubeColors',
+        t,
+        2.5
+      )
+    )
+    .finally(gc.releaseResources);
+
   renderWindow.render();
+  return promise;
 });

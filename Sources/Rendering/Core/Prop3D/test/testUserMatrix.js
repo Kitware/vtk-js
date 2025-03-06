@@ -12,8 +12,8 @@ import { mat4 } from 'gl-matrix';
 
 import baseline from './testUserMatrix.png';
 
-test('Test Set Actor User Matrix', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test Set Actor User Matrix', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkActor SetUserMatrix');
 
   // Create some control UI
@@ -49,7 +49,7 @@ test('Test Set Actor User Matrix', (t) => {
 
   actor.rotateZ(45);
 
-  reader
+  return reader
     .setUrl(
       `${__BASE_PATH__}/Data/obj/space-shuttle-orbiter/space-shuttle-orbiter.obj`
     )
@@ -62,16 +62,19 @@ test('Test Set Actor User Matrix', (t) => {
       renderWindow.addView(glwindow);
       glwindow.setSize(400, 400);
 
-      glwindow.captureNextImage().then((image) => {
-        testUtils.compareImages(
-          image,
-          [baseline],
-          'Rendering/Core/Prop3D/testUserMatrix',
-          t,
-          1.5,
-          gc.releaseResources
-        );
-      });
+      const promise = glwindow
+        .captureNextImage()
+        .then((image) =>
+          testUtils.compareImages(
+            image,
+            [baseline],
+            'Rendering/Core/Prop3D/testUserMatrix',
+            t,
+            1.5
+          )
+        )
+        .finally(gc.releaseResources);
       renderWindow.render();
+      return promise;
     });
 });

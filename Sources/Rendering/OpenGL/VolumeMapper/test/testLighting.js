@@ -16,7 +16,7 @@ import baseline1 from './testLighting.png';
 import baseline2 from './testLighting_2.png';
 
 test.onlyIfWebGL('Test Lighted Volume Rendering', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkOpenGLVolumeMapper Lighting');
   // testUtils.keepDOM();
 
@@ -105,10 +105,10 @@ test.onlyIfWebGL('Test Lighted Volume Rendering', async (t) => {
         [baseline1, baseline2],
         'Rendering/OpenGL/VolumeMapper/testLighting',
         t,
-        0.05,
-        gc.releaseResources
+        0.05
       )
-    );
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
   return promise;
 });

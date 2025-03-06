@@ -11,8 +11,8 @@ import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransfe
 
 import baseline from './testImageColorTransferFunction.png';
 
-test('Test ImageMapper Color TFun', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test ImageMapper Color TFun', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkImageMapper Color Transfer Function testImage');
 
   // Create some control UI
@@ -66,15 +66,18 @@ test('Test ImageMapper Color TFun', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/Core/ImageMapper',
-      t,
-      5.0,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/Core/ImageMapper',
+        t,
+        5.0
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

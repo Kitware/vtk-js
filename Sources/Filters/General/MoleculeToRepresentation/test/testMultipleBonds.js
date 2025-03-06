@@ -14,7 +14,7 @@ import testMolecule from 'vtk.js/Data/molecule/test-multiple-bonds.cjson';
 import baseline from './testMolecule_multiple_bonds.png';
 
 test.onlyIfWebGL('Test MultipleBonds', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('Filter: MoleculeToRepresentation');
 
   // Create some control UI
@@ -71,15 +71,18 @@ test.onlyIfWebGL('Test MultipleBonds', (t) => {
   glwindow.setSize(400, 400);
 
   // capturing and comparing the images
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Filters/General/MoleculeToRepresentation/testMultipleBonds',
-      t,
-      1,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Filters/General/MoleculeToRepresentation/testMultipleBonds',
+        t,
+        1
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

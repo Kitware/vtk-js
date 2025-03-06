@@ -14,8 +14,8 @@ import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constant
 
 import baseline from './testStick.png';
 
-test('Test StickMapper', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test StickMapper', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkStickMapper testStick');
 
   // Create some control UI
@@ -128,15 +128,18 @@ test('Test StickMapper', (t) => {
   renderer.getActiveCamera().setClippingRange(1.0, 10.0);
   renderer.getActiveCamera().azimuth(10.0);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/Core/StickMapper',
-      t,
-      1,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/Core/StickMapper',
+        t,
+        1
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

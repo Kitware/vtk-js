@@ -18,7 +18,7 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import baseline from './testImageResliceMapper.png';
 
 test.onlyIfWebGL('Test ImageResliceMapper', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkImageResliceMapper testImageResliceMapper');
 
   // Create some control UI
@@ -99,15 +99,18 @@ test.onlyIfWebGL('Test ImageResliceMapper', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/Core/ImageResliceMapper',
-      t,
-      1,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/Core/ImageResliceMapper',
+        t,
+        1
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

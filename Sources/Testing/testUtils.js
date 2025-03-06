@@ -31,14 +31,7 @@ function getImageDataFromURI(imageDataURI) {
  * @param tapeContext tape testing context
  * @param opts if number: mismatch tolerance. if object: tolerance and pixel threshold
  */
-async function compareImages(
-  image,
-  baselines,
-  testName,
-  tapeContext,
-  opts,
-  nextCallback
-) {
+async function compareImages(image, baselines, testName, tapeContext, opts) {
   // defaults
   let pixelThreshold = 0.1;
   let mismatchTolerance = 5; // percent
@@ -109,12 +102,6 @@ async function compareImages(
       expected: mismatchTolerance,
     }
   );
-
-  if (nextCallback) {
-    nextCallback();
-  } else {
-    tapeContext.end();
-  }
 }
 
 function createGarbageCollector(testContext) {

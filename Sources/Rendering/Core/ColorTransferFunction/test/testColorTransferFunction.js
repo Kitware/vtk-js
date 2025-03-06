@@ -15,8 +15,8 @@ import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 import baseline from './testColorTransferFunction.png';
 import baseline2 from './testColorTransferFunction2.png';
 
-test('Test Color Transfer Function', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test Color Transfer Function', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkMapper ColorTransferFunction');
 
   // Create some control UI
@@ -109,17 +109,20 @@ test('Test Color Transfer Function', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline, baseline2],
-      'Rendering/Core/ColorTransferFunction/testColorTransferFunction',
-      t,
-      5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline, baseline2],
+        'Rendering/Core/ColorTransferFunction/testColorTransferFunction',
+        t,
+        5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });
 
 test('Test discretized color transfer function', (t) => {

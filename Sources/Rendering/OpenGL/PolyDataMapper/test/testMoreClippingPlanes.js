@@ -12,9 +12,8 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import baseline from './testMoreClippingPlanes.png';
 
-test('Test PolyDataMapper Clipping Planes 2', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
-  // TODO switch back to onlyIfWebGL
+test.onlyIfWebGL('Test PolyDataMapper Clipping Planes 2', (t) => {
+  const gc = testUtils.createGarbageCollector();
   // Create some control UI
   const container = document.querySelector('body');
   const renderWindowContainer = gc.registerDOMElement(
@@ -125,15 +124,12 @@ test('Test PolyDataMapper Clipping Planes 2', (t) => {
     vtkMath.multiply3x3_vect3(rotationMatrix, normal, normal);
   }
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'TestMoreClippingPlanes',
-      t,
-      2,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(image, [baseline], 'TestMoreClippingPlanes', t, 2)
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

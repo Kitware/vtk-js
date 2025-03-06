@@ -12,8 +12,8 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import baseline from './testInterpolateScalarsBeforeMapping.png';
 
-test('Test Interpolate Scalars Before Mapping', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+test.onlyIfWebGL('Test Interpolate Scalars Before Mapping', (t) => {
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkMapper InterpolateScalarsBeforeColors');
 
   // Create some control UI
@@ -103,15 +103,18 @@ test('Test Interpolate Scalars Before Mapping', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/Core/Mapper/testInterpolateScalarsBeforeMapping',
-      t,
-      5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/Core/Mapper/testInterpolateScalarsBeforeMapping',
+        t,
+        5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

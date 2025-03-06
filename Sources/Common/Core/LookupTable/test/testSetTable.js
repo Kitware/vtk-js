@@ -13,7 +13,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import baseline from './testSetTable.png';
 
 test.onlyIfWebGL('Test LookupTable setTable', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   t.ok('rendering', 'vtkLookupTable TestSetTable');
   // testUtils.keepDOM();
 
@@ -132,15 +132,18 @@ test.onlyIfWebGL('Test LookupTable setTable', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  glwindow.captureNextImage().then((image) => {
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Common/Core/LookupTable/testSetTable',
-      t,
-      5,
-      gc.releaseResources
-    );
-  });
+  const promise = glwindow
+    .captureNextImage()
+    .then((image) =>
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Common/Core/LookupTable/testSetTable',
+        t,
+        5
+      )
+    )
+    .finally(gc.releaseResources);
   renderWindow.render();
+  return promise;
 });

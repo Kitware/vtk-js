@@ -15,7 +15,7 @@ import baseline from './viewProxy2D.png';
 test.onlyIfWebGL(
   'Test vtkProxy2D Rendering with vtkImageSlice representation',
   (t) => {
-    const gc = testUtils.createGarbageCollector(t);
+    const gc = testUtils.createGarbageCollector();
     t.ok('rendering', 'vtkView2DProxy Rendering');
 
     const source = gc.registerResource(vtkRTAnalyticSource.newInstance());
@@ -54,16 +54,19 @@ test.onlyIfWebGL(
 
     const glWindow = viewProxy.getRenderer().getRenderWindow().getViews()[0];
     glWindow.setSize(400, 400);
-    glWindow.captureNextImage().then((capturedImage) => {
-      testUtils.compareImages(
-        capturedImage,
-        [baseline],
-        'Proxy/Core/View2DProxy/testView2DProxy',
-        t,
-        5,
-        gc.releaseResources
-      );
-    });
+    const promise = glWindow
+      .captureNextImage()
+      .then((capturedImage) =>
+        testUtils.compareImages(
+          capturedImage,
+          [baseline],
+          'Proxy/Core/View2DProxy/testView2DProxy',
+          t,
+          5
+        )
+      )
+      .finally(gc.releaseResources);
     glWindow.render();
+    return promise;
   }
 );
