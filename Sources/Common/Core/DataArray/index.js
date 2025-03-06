@@ -478,11 +478,17 @@ function vtkDataArray(publicAPI, model) {
     return sortedObj;
   };
 
+  /**
+   * @param {import("./index").vtkDataArray} other
+   */
   publicAPI.deepCopy = (other) => {
     // Retain current dataType and array reference before shallowCopy call.
     const currentType = publicAPI.getDataType();
     const currentArray = model.values;
     publicAPI.shallowCopy(other);
+
+    // set the ranges
+    model.ranges = other.getRanges();
 
     // Avoid array reallocation if size already sufficient
     // and dataTypes match.
