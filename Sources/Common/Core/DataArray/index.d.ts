@@ -84,9 +84,17 @@ export interface vtkDataArray extends vtkObject {
   setRange(rangeValue: vtkRange, componentIndex: number): Range;
 
   /**
+   * Returns an array of the ranges for each component of the DataArray.
+   * Defaults to computing all the ranges if they aren't already computed.
    *
+   * Passing `getRanges(false)` will return  a clone of the ranges that have
+   * already been computed. This is useful when you want to avoid recomputing
+   * the ranges, which can be expensive.
+   *
+   * @param {boolean} [computeRanges] (default: true)
+   * @returns {vtkRange[]}
    */
-  getRanges(): vtkRange[];
+  getRanges(computeRanges = true): vtkRange[];
 
   /**
    * Set the given tuple at the given index.
