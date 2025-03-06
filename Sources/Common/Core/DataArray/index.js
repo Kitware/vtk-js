@@ -281,7 +281,10 @@ function vtkDataArray(publicAPI, model) {
     return model.rangeTuple;
   };
 
-  publicAPI.getRanges = () => {
+  publicAPI.getRanges = (computeRanges = true) => {
+    if (!computeRanges) {
+      return structuredClone(model.ranges);
+    }
     /** @type {import('../../../interfaces').vtkRange[]} */
     const ranges = [];
     for (let i = 0; i < model.numberOfComponents; i++) {
@@ -291,6 +294,18 @@ function vtkDataArray(publicAPI, model) {
         min,
         max,
         component: i,
+      };
+      ranges.push(range);
+    }
+    // where the number of components is greater than 1, the last element in
+    // the range array is the min,max magnitude of the entire dataset.
+    if (model.numberOfComponents > 1) {
+      /** @type {import('../../../interfaces').vtkRange} */
+      const [min, max] = publicAPI.getRange(-1);
+      const range = {
+        min,
+        max,
+        component: -1,
       };
       ranges.push(range);
     }
