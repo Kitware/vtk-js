@@ -3,6 +3,10 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
+function compareFloat(a, b) {
+  return Math.abs(a - b) < Number.EPSILON;
+}
+
 test('Test vtkDataArray instance', (t) => {
   t.ok(vtkDataArray, 'Make sure the class definition exists');
   const instance = vtkDataArray.newInstance({ size: 256 });
@@ -219,7 +223,6 @@ test('Test vtkDataArray getRange function with multi-channel data.', (t) => {
     newArray[i * 3 + 2] = i;
   }
 
-  const compareFloat = (a, b) => Math.abs(a - b) < Number.EPSILON;
   const vecRange = da.getRange(-1);
   t.ok(
     compareFloat(vecRange[0].toFixed(2), 0.0),
@@ -252,8 +255,8 @@ test('Test vtkDataArray getRanges function with multi-channel data.', (t) => {
   const ranges = da.getRanges();
 
   t.ok(
-    ranges.length === 3,
-    'getRanges should return an array of 3 vtkRange objects'
+    ranges.length === 4,
+    'getRanges should return an array of 4 vtkRange objects'
   );
   t.ok(ranges[0].min === 0, 'component:0 minimum value should be 0');
   t.ok(ranges[0].max === 255, 'component:0 maximum value should be 255');
@@ -261,6 +264,14 @@ test('Test vtkDataArray getRanges function with multi-channel data.', (t) => {
   t.ok(ranges[1].max === 510, 'component:1 maximum value should be 510');
   t.ok(ranges[2].min === 0, 'component:2 minimum value should be 0');
   t.ok(ranges[2].max === 765, 'component:2 maximum value should be 765');
+  t.ok(
+    ranges[2].min === 0,
+    'component:-1 vector magnitude minimum should be 0'
+  );
+  t.ok(
+    compareFloat(ranges[3].max, 954.1226336273551),
+    'component:-1 vector magnitude maximum should be 954.1226336273551'
+  );
 
   t.end();
 });
