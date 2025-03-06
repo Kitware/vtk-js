@@ -1322,7 +1322,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
        * source volume's range.
        *
        * There is a significant performance improvement by pre-setting the range
-       * of the scalars array particaulrly when scrolling through the source
+       * of the scalars array particularly when scrolling through the source
        * volume as there is no need to calculate the range of the slice scalar.
        *
        * @type{ import("../../../interfaces").vtkRange[] }
