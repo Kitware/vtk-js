@@ -293,19 +293,17 @@ function vtkDataArray(publicAPI, model) {
       const range = {
         min,
         max,
-        component: i,
       };
       ranges.push(range);
     }
     // where the number of components is greater than 1, the last element in
     // the range array is the min,max magnitude of the entire dataset.
     if (model.numberOfComponents > 1) {
-      /** @type {import('../../../interfaces').vtkRange} */
       const [min, max] = publicAPI.getRange(-1);
+      /** @type {import('../../../interfaces').vtkRange} */
       const range = {
         min,
         max,
-        component: -1,
       };
       ranges.push(range);
     }
