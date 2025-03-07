@@ -94,7 +94,7 @@ export interface vtkDataArray extends vtkObject {
    * @param {boolean} [computeRanges] (default: true)
    * @returns {vtkRange[]}
    */
-  getRanges(computeRanges = true): vtkRange[];
+  getRanges(computeRanges: boolean): vtkRange[];
 
   /**
    * Set the given tuple at the given index.
