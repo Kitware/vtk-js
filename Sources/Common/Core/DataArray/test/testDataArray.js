@@ -237,41 +237,92 @@ test('Test vtkDataArray getRange function with multi-channel data.', (t) => {
 
 test('Test vtkDataArray getRanges function with multi-channel data.', (t) => {
   // create a data array with 3 channel data.
-  const newArray = new Uint16Array(256 * 3);
+  const numberOfPixels = 10;
+  const numberOfComponents = 4;
+  const newArray = new Uint16Array(numberOfPixels * numberOfComponents);
 
   // fill the new array with the pattern 1,2,3, 1,2,3
   // such that each channel has 1,1,1  2,2,2  3,3,3 respectively.
-  for (let i = 0; i < 256; ++i) {
-    newArray[i * 3] = i;
-    newArray[i * 3 + 1] = i * 2;
-    newArray[i * 3 + 2] = i * 3;
+  for (let i = 0; i < numberOfPixels; ++i) {
+    newArray[i * numberOfComponents] = i;
+    newArray[i * numberOfComponents + 1] = i * 2;
+    newArray[i * numberOfComponents + 2] = i * 3;
+    newArray[i * numberOfComponents + 3] = i * 4;
   }
 
   const da = vtkDataArray.newInstance({
-    numberOfComponents: 3,
+    numberOfComponents,
     values: newArray,
   });
 
   const ranges = da.getRanges();
 
   t.ok(
-    ranges.length === 4,
-    'getRanges should return an array of 4 vtkRange objects'
+    ranges.length === numberOfComponents + 1,
+    'getRanges should return an array of 5 vtkRange objects'
   );
   t.ok(ranges[0].min === 0, 'component:0 minimum value should be 0');
-  t.ok(ranges[0].max === 255, 'component:0 maximum value should be 255');
+  t.ok(ranges[0].max === 9, 'component:0 maximum value should be 9');
   t.ok(ranges[1].min === 0, 'component:1 minimum value should be 0');
-  t.ok(ranges[1].max === 510, 'component:1 maximum value should be 510');
+  t.ok(ranges[1].max === 18, 'component:1 maximum value should be 18');
   t.ok(ranges[2].min === 0, 'component:2 minimum value should be 0');
-  t.ok(ranges[2].max === 765, 'component:2 maximum value should be 765');
+  t.ok(ranges[2].max === 27, 'component:2 maximum value should be 27 ');
   t.ok(
     ranges[2].min === 0,
     'component:-1 vector magnitude minimum should be 0'
   );
   t.ok(
-    compareFloat(ranges[3].max, 954.1226336273551),
-    'component:-1 vector magnitude maximum should be 954.1226336273551'
+    ranges[3].max === 36,
+    'component:-1 vector magnitude maximum should be 36'
   );
+
+  t.end();
+});
+
+test('Test vtkDataArray getRanges(false) (`computeRanges=false`) function with multi-channel data', (t) => {
+  // create a data array with 3 channel data.
+  const numberOfPixels = 10;
+  const numberOfComponents = 4;
+  const newArray = new Uint16Array(numberOfPixels * numberOfComponents);
+
+  // fill the new array with the pattern 1,2,3, 1,2,3
+  // such that each channel has 1,1,1  2,2,2  3,3,3 respectively.
+  for (let i = 0; i < numberOfPixels; ++i) {
+    newArray[i * numberOfComponents] = i;
+    newArray[i * numberOfComponents + 1] = i * 2;
+    newArray[i * numberOfComponents + 2] = i * 3;
+    newArray[i * numberOfComponents + 3] = i * 4;
+  }
+
+  const da = vtkDataArray.newInstance({
+    numberOfComponents,
+    values: newArray,
+  });
+
+  // set `computeRanges` to false.  This will prevent the ranges from being
+  // computed and will return only the ranges previously computer (if any).
+  const ranges = da.getRanges(false);
+
+  t.ok(ranges === undefined, `getRanges should return undefined`);
+
+  // now fetch the range for component 0.
+  da.getRange(0);
+
+  // now fetch the ranges again with `computeRanges` set to false.
+  const updatedRanges = da.getRanges(false);
+
+  // `updatedRanges` should now be only the range for component 0. because if
+  // was computed in `da.getRange(0)`
+  t.ok(
+    updatedRanges.length === numberOfComponents + 1,
+    'getRanges should return an array of 5 vtkRange objects'
+  );
+  t.ok(updatedRanges[0].min === 0, 'component:0 minimum value should be 0');
+  t.ok(updatedRanges[0].max === 9, 'component:0 maximum value should be 9');
+  t.ok(updatedRanges[1] === null, 'component:1 should be null');
+  t.ok(updatedRanges[2] === null, 'component:2 should be null');
+  t.ok(updatedRanges[3] === null, 'component:3 should be null');
+  t.ok(updatedRanges[4] === null, 'component:-1 should be null');
 
   t.end();
 });
