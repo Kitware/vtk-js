@@ -3,10 +3,6 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
-function compareFloat(a, b) {
-  return Math.abs(a - b) < Number.EPSILON;
-}
-
 test('Test vtkDataArray instance', (t) => {
   t.ok(vtkDataArray, 'Make sure the class definition exists');
   const instance = vtkDataArray.newInstance({ size: 256 });
@@ -223,6 +219,7 @@ test('Test vtkDataArray getRange function with multi-channel data.', (t) => {
     newArray[i * 3 + 2] = i;
   }
 
+  const compareFloat = (a, b) => Math.abs(a - b) < Number.EPSILON;
   const vecRange = da.getRange(-1);
   t.ok(
     compareFloat(vecRange[0].toFixed(2), 0.0),
