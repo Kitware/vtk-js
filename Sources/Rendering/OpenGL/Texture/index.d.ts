@@ -301,7 +301,10 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param dataType The data type of the texture.
    * @param values The raw data for the texture.
    * @param preferSizeOverAccuracy Whether to prefer texture size over accuracy.
-   * @returns {boolean} True if the texture was successfully created, false otherwise.
+   * @param [ranges] The precomputed ranges of the data (optional). Provided to
+   * prevent computation of the data ranges.
+   * @returns {boolean} True if the texture was successfully created, false
+   * otherwise.
    */
   create3DFilterableFromRaw(
     width: number,
@@ -310,7 +313,8 @@ export interface vtkOpenGLTexture extends vtkViewNode {
     numComps: number,
     dataType: VtkDataTypes,
     values: any,
-    preferSizeOverAccuracy: boolean
+    preferSizeOverAccuracy: boolean,
+    ranges?: vtkRange[]
   ): boolean;
 
   /**
