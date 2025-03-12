@@ -486,7 +486,7 @@ function vtkDataArray(publicAPI, model) {
     publicAPI.shallowCopy(other);
 
     // set the ranges
-    model.ranges = other.getRanges();
+    model.ranges = structuredClone(other.getRanges());
 
     // Avoid array reallocation if size already sufficient
     // and dataTypes match.
