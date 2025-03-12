@@ -1318,7 +1318,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
        *
        * Fetch the ranges of the source volume, `imgScalars`, and use them when
        * creating the texture. Whilst the pre-calculated ranges may not be
-       * strictly correct for the slice, it is guarateed to be within the
+       * strictly correct for the slice, it is guaranteed to be within the
        * source volume's range.
        *
        * There is a significant performance improvement by pre-setting the range
