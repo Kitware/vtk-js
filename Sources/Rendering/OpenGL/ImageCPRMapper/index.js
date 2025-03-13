@@ -13,7 +13,7 @@ import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import {
-  getTransferFunctionHash,
+  getTransferFunctionsHash,
   getImageDataHash,
 } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/resourceSharingHelper';
 
@@ -243,15 +243,21 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     const numIComps = iComps ? numComp : 1;
     const textureHeight = iComps ? 2 * numIComps : 1;
 
-    const colorTransferFunc = ppty.getRGBTransferFunction();
-    const colorTextureHash = getTransferFunctionHash(
-      colorTransferFunc,
+    const colorTransferFunctions = [];
+    for (let component = 0; component < numIComps; ++component) {
+      colorTransferFunctions.push(ppty.getRGBTransferFunction(component));
+    }
+    const colorTextureHash = getTransferFunctionsHash(
+      colorTransferFunctions,
       iComps,
       numIComps
     );
 
+    const firstColorTransferFunc = ppty.getRGBTransferFunction();
     const cachedColorEntry =
-      model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
+      model._openGLRenderWindow.getGraphicsResourceForObject(
+        firstColorTransferFunc
+      );
     const reBuildColorTexture =
       !cachedColorEntry?.oglObject?.getHandle() ||
       cachedColorEntry?.hash !== colorTextureHash;
@@ -261,7 +267,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       const cTable = new Uint8ClampedArray(cSize);
       model.colorTexture = vtkOpenGLTexture.newInstance();
       model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      if (colorTransferFunc) {
+      if (firstColorTransferFunc) {
         const tmpTable = new Float32Array(cWidth * 3);
 
         for (let c = 0; c < numIComps; c++) {
@@ -303,15 +309,15 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
         );
       }
 
-      if (colorTransferFunc) {
+      if (firstColorTransferFunc) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
-          colorTransferFunc,
+          firstColorTransferFunc,
           model.colorTexture,
           colorTextureHash
         );
-        if (colorTransferFunc !== model._colorTransferFunc) {
+        if (firstColorTransferFunc !== model._colorTransferFunc) {
           model._openGLRenderWindow.registerGraphicsResourceUser(
-            colorTransferFunc,
+            firstColorTransferFunc,
             publicAPI
           );
           model._openGLRenderWindow.unregisterGraphicsResourceUser(
@@ -319,7 +325,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
             publicAPI
           );
         }
-        model._colorTransferFunc = colorTransferFunc;
+        model._colorTransferFunc = firstColorTransferFunc;
       }
     } else {
       model.colorTexture = cachedColorEntry.oglObject;
@@ -328,10 +334,18 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     // Build piecewise function buffer.  This buffer is used either
     // for component weighting or opacity, depending on whether we're
     // rendering components independently or not.
-    const pwFunc = ppty.getPiecewiseFunction();
-    const pwfTextureHash = getTransferFunctionHash(pwFunc, iComps, numIComps);
+    const opacityFunctions = [];
+    for (let component = 0; component < numIComps; ++component) {
+      opacityFunctions.push(ppty.getPiecewiseFunction(component));
+    }
+    const pwfTextureHash = getTransferFunctionsHash(
+      opacityFunctions,
+      iComps,
+      numIComps
+    );
+    const firstPwFunc = ppty.getPiecewiseFunction();
     const cachedPwfEntry =
-      model._openGLRenderWindow.getGraphicsResourceForObject(pwFunc);
+      model._openGLRenderWindow.getGraphicsResourceForObject(firstPwFunc);
     const reBuildPwf =
       !cachedPwfEntry?.oglObject?.getHandle() ||
       cachedPwfEntry?.hash !== pwfTextureHash;
@@ -341,7 +355,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       const pwfTable = new Uint8ClampedArray(pwfSize);
       model.pwfTexture = vtkOpenGLTexture.newInstance();
       model.pwfTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      if (pwFunc) {
+      if (firstPwFunc) {
         const pwfFloatTable = new Float32Array(pwfSize);
         const tmpTable = new Float32Array(pwfWidth);
 
@@ -386,15 +400,15 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
           pwfTable
         );
       }
-      if (pwFunc) {
+      if (firstPwFunc) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
-          pwFunc,
+          firstPwFunc,
           model.pwfTexture,
           pwfTextureHash
         );
-        if (pwFunc !== model._pwFunc) {
+        if (firstPwFunc !== model._pwFunc) {
           model._openGLRenderWindow.registerGraphicsResourceUser(
-            pwFunc,
+            firstPwFunc,
             publicAPI
           );
           model._openGLRenderWindow.unregisterGraphicsResourceUser(
@@ -402,7 +416,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
             publicAPI
           );
         }
-        model._pwFunc = pwFunc;
+        model._pwFunc = firstPwFunc;
       }
     } else {
       model.pwfTexture = cachedPwfEntry.oglObject;
