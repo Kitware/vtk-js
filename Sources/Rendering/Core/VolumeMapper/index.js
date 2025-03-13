@@ -1,10 +1,10 @@
 import macro from 'vtk.js/Sources/macros';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 import vtkAbstractMapper3D from 'vtk.js/Sources/Rendering/Core/AbstractMapper3D';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 
-const { BlendMode, FilterMode } = Constants;
+const { BlendMode } = Constants;
 
 function createRadonTransferFunction(
   firstAbsorbentMaterialHounsfieldValue,
@@ -33,6 +33,36 @@ function createRadonTransferFunction(
   return ofun;
 }
 
+const methodNamesMovedToVolumeProperties = [
+  'getAnisotropy',
+  'getComputeNormalFromOpacity',
+  'getFilterMode',
+  'getFilterModeAsString',
+  'getGlobalIlluminationReach',
+  'getIpScalarRange',
+  'getIpScalarRangeByReference',
+  'getLAOKernelRadius',
+  'getLAOKernelSize',
+  'getLocalAmbientOcclusion',
+  'getPreferSizeOverAccuracy',
+  'getVolumetricScatteringBlending',
+  'setAnisotropy',
+  'setAverageIPScalarRange',
+  'setComputeNormalFromOpacity',
+  'setFilterMode',
+  'setFilterModeToNormalized',
+  'setFilterModeToOff',
+  'setFilterModeToRaw',
+  'setGlobalIlluminationReach',
+  'setIpScalarRange',
+  'setIpScalarRangeFrom',
+  'setLAOKernelRadius',
+  'setLAOKernelSize',
+  'setLocalAmbientOcclusion',
+  'setPreferSizeOverAccuracy',
+  'setVolumetricScatteringBlending',
+];
+
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
@@ -52,20 +82,17 @@ function vtkVolumeMapper(publicAPI, model) {
   const superClass = { ...publicAPI };
 
   publicAPI.getBounds = () => {
-    const input = publicAPI.getInputData();
-    if (!input) {
-      model.bounds = vtkMath.createUninitializedBounds();
-    } else {
-      if (!model.static) {
-        publicAPI.update();
+    model.bounds = [...vtkBoundingBox.INIT_BOUNDS];
+    if (!model.static) {
+      publicAPI.update();
+    }
+    for (let inputIndex = 0; inputIndex < model.numberOfInputs; inputIndex++) {
+      const input = publicAPI.getInputData(inputIndex);
+      if (input) {
+        vtkBoundingBox.addBounds(model.bounds, input.getBounds());
       }
-      model.bounds = input.getBounds();
     }
     return model.bounds;
-  };
-
-  publicAPI.update = () => {
-    publicAPI.getInputData();
   };
 
   publicAPI.setBlendModeToComposite = () => {
@@ -95,54 +122,29 @@ function vtkVolumeMapper(publicAPI, model) {
   publicAPI.getBlendModeAsString = () =>
     macro.enumToString(BlendMode, model.blendMode);
 
-  publicAPI.setAverageIPScalarRange = (min, max) => {
-    console.warn('setAverageIPScalarRange is deprecated use setIpScalarRange');
-    publicAPI.setIpScalarRange(min, max);
-  };
-
-  publicAPI.getFilterModeAsString = () =>
-    macro.enumToString(FilterMode, model.filterMode);
-
-  publicAPI.setFilterModeToOff = () => {
-    publicAPI.setFilterMode(FilterMode.OFF);
-  };
-
-  publicAPI.setFilterModeToNormalized = () => {
-    publicAPI.setFilterMode(FilterMode.NORMALIZED);
-  };
-
-  publicAPI.setFilterModeToRaw = () => {
-    publicAPI.setFilterMode(FilterMode.RAW);
-  };
-
-  publicAPI.setGlobalIlluminationReach = (gl) =>
-    superClass.setGlobalIlluminationReach(vtkMath.clampValue(gl, 0.0, 1.0));
-
-  publicAPI.setVolumetricScatteringBlending = (vsb) =>
-    superClass.setVolumetricScatteringBlending(
-      vtkMath.clampValue(vsb, 0.0, 1.0)
-    );
-
   publicAPI.setVolumeShadowSamplingDistFactor = (vsdf) =>
     superClass.setVolumeShadowSamplingDistFactor(vsdf >= 1.0 ? vsdf : 1.0);
 
-  publicAPI.setAnisotropy = (at) =>
-    superClass.setAnisotropy(vtkMath.clampValue(at, -0.99, 0.99));
-
-  publicAPI.setLAOKernelSize = (ks) =>
-    superClass.setLAOKernelSize(vtkMath.floor(vtkMath.clampValue(ks, 1, 32)));
-
-  publicAPI.setLAOKernelRadius = (kr) =>
-    superClass.setLAOKernelRadius(kr >= 1 ? kr : 1);
+  // Instead of a "undefined is not a function" error, give more context and advice for these widely used methods
+  methodNamesMovedToVolumeProperties.forEach((removedMethodName) => {
+    const removedMethod = () => {
+      throw new Error(
+        `The method "volumeMapper.${removedMethodName}()" doesn't exist anymore. ` +
+          `It is a rendering property that has been moved to the volume property. ` +
+          `Replace your code with:\n` +
+          `volumeActor.getProperty().${removedMethodName}()\n`
+      );
+    };
+    publicAPI[removedMethodName] = removedMethod;
+  });
 }
 
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 
-// TODO: what values to use for averageIPScalarRange to get GLSL to use max / min values like [-Math.inf, Math.inf]?
 const DEFAULT_VALUES = {
-  bounds: [1, -1, 1, -1, 1, -1],
+  bounds: [...vtkBoundingBox.INIT_BOUNDS],
   sampleDistance: 1.0,
   imageSampleDistance: 1.0,
   maximumSamplesPerRay: 1000,
@@ -150,19 +152,7 @@ const DEFAULT_VALUES = {
   initialInteractionScale: 1.0,
   interactionSampleDistanceFactor: 1.0,
   blendMode: BlendMode.COMPOSITE_BLEND,
-  ipScalarRange: [-1000000.0, 1000000.0],
-  filterMode: FilterMode.OFF, // ignored by WebGL so no behavior change
-  preferSizeOverAccuracy: false, // Whether to use halfFloat representation of float, when it is inaccurate
-  computeNormalFromOpacity: false,
-  // volume shadow parameters
-  volumetricScatteringBlending: 0.0,
-  globalIlluminationReach: 0.0,
   volumeShadowSamplingDistFactor: 5.0,
-  anisotropy: 0.0,
-  // local ambient occlusion
-  localAmbientOcclusion: false,
-  LAOKernelSize: 15,
-  LAOKernelRadius: 7,
 };
 
 // ----------------------------------------------------------------------------
@@ -180,19 +170,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'initialInteractionScale',
     'interactionSampleDistanceFactor',
     'blendMode',
-    'filterMode',
-    'preferSizeOverAccuracy',
-    'computeNormalFromOpacity',
-    'volumetricScatteringBlending',
-    'globalIlluminationReach',
     'volumeShadowSamplingDistFactor',
-    'anisotropy',
-    'localAmbientOcclusion',
-    'LAOKernelSize',
-    'LAOKernelRadius',
   ]);
-
-  macro.setGetArray(publicAPI, model, ['ipScalarRange'], 2);
 
   macro.event(publicAPI, model, 'lightingActivated');
 
