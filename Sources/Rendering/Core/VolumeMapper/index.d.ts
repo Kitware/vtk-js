@@ -1,5 +1,5 @@
 import vtkPiecewiseFunction from '../../../Common/DataModel/PiecewiseFunction';
-import { Bounds, Range } from '../../../types';
+import { Bounds, Range, Extent } from '../../../types';
 import vtkAbstractMapper3D, {
   IAbstractMapper3DInitialValues,
 } from '../AbstractMapper3D';
@@ -280,6 +280,39 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
    * @param LAOKernelRadius
    */
   setLAOKernelRadius(LAOKernelRadius: number): void;
+
+  /**
+   * Set kernel size for local ambient occlusion. It specifies the number of rays that are randomly sampled in the hemisphere.
+   * Value is clipped between 1 and 32.
+   * @param LAOKernelSize
+   */
+  setLAOKernelSize(LAOKernelSize: number): void;
+
+  /**
+   * Set kernel radius for local ambient occlusion. It specifies the number of samples that are considered on each random ray.
+   * Value must be greater than or equal to 1.
+   * @param LAOKernelRadius
+   */
+  setLAOKernelRadius(LAOKernelRadius: number): void;
+
+  /**
+   * Tells the mapper to only update the specified extents.
+   *
+   * If there are zero extents, the mapper updates the entire volume texture.
+   * Otherwise, the mapper will only update the texture by the specified extents
+   * during the next render call.
+   *
+   * This array is cleared after a successful render.
+   * @param extents
+   */
+  setUpdatedExtents(extents: Extent[]): boolean;
+
+  /**
+   * Retrieves the updated extents.
+   *
+   * This array is cleared after every successful render.
+   */
+  getUpdatedExtents(): Extent[];
 
   /**
    *
