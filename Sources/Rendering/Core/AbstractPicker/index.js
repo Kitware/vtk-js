@@ -44,7 +44,7 @@ const DEFAULT_VALUES = {
   renderer: null,
   selectionPoint: [0.0, 0.0, 0.0],
   pickPosition: [0.0, 0.0, 0.0],
-  pickFromList: 0,
+  pickFromList: false,
   pickList: [],
 };
 

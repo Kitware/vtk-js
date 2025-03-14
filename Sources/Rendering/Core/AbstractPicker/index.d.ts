@@ -1,6 +1,6 @@
 import { vtkObject } from '../../../interfaces';
 import { Vector3 } from '../../../types';
-import vtkActor from '../Actor';
+import vtkProp3D from '../Prop3D';
 import vtkRenderer from '../Renderer';
 
 /**
@@ -10,8 +10,8 @@ export interface IAbstractPickerInitialValues {
   renderer?: vtkRenderer;
   selectionPoint?: Vector3;
   pickPosition?: Vector3;
-  pickFromList?: number;
-  pickList?: vtkActor[];
+  pickFromList?: boolean;
+  pickList?: vtkProp3D[];
 }
 
 /**
@@ -20,15 +20,15 @@ export interface IAbstractPickerInitialValues {
 export interface vtkAbstractPicker extends vtkObject {
   /**
    *
-   * @param {vtkActor} actor
+   * @param {vtkProp3D} prop
    */
-  addPickList(actor: vtkActor): void;
+  addPickList(prop: vtkProp3D): void;
 
   /**
    *
-   * @param {vtkActor} actor
+   * @param {vtkProp3D} prop
    */
-  deletePickList(actor: vtkActor): void;
+  deletePickList(prop: vtkProp3D): void;
 
   /**
    *
@@ -38,7 +38,7 @@ export interface vtkAbstractPicker extends vtkObject {
   /**
    *
    */
-  getPickList(): boolean;
+  getPickList(): vtkProp3D[];
 
   /**
    * Get the picked position
@@ -82,17 +82,17 @@ export interface vtkAbstractPicker extends vtkObject {
 
   /**
    *
-   * @param {Number}  pickFromList
-   * @default 0
+   * @param {Boolean}  pickFromList
+   * @default false
    */
-  setPickFromList(pickFromList: number): boolean;
+  setPickFromList(pickFromList: boolean): boolean;
 
   /**
    *
-   * @param {vtkActor[]} pickList
+   * @param {vtkProp3D[]} pickList
    * @default []
    */
-  setPickList(pickList: vtkActor[]): boolean;
+  setPickList(pickList: vtkProp3D[]): boolean;
 }
 
 /**
