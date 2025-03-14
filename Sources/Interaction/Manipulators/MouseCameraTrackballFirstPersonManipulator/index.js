@@ -25,8 +25,9 @@ function vtkMouseCameraTrackballFirstPersonManipulator(publicAPI, model) {
 
     if (model.usePointerLock && !interactor.isPointerLocked()) {
       Object.assign(internal, { interactor, renderer });
-      interactor.requestPointerLock();
-      publicAPI.startPointerLockInteraction();
+      Promise.resolve(interactor.requestPointerLock()).then(() => {
+        publicAPI.startPointerLockInteraction();
+      });
     }
   };
 
