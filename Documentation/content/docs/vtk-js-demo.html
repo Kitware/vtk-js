@@ -1,26 +1,32 @@
 <!DOCTYPE html>
 <html>
-<body>
-<script type="text/javascript" src="https://unpkg.com/@babel/polyfill@7.0.0/dist/polyfill.js"></script>
-<script type="text/javascript" src="https://unpkg.com/vtk.js"></script>
-<script type="text/javascript">
-  // --------------------------------------------------------------------------
-  // Example code
-  // --------------------------------------------------------------------------
-  var fullScreenRenderer = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance();
-  var actor = vtk.Rendering.Core.vtkActor.newInstance();
-  var mapper = vtk.Rendering.Core.vtkMapper.newInstance();
-  var cone = vtk.Filters.Sources.vtkConeSource.newInstance();
-
-  actor.setMapper(mapper);
-  mapper.setInputConnection(cone.getOutputPort());
-
-  var renderer = fullScreenRenderer.getRenderer();
-  renderer.addActor(actor);
-  renderer.resetCamera();
-
-  var renderWindow = fullScreenRenderer.getRenderWindow();
-  renderWindow.render();
-</script>
-</body>
+  <body>
+    <script type="importmap">
+      {
+        "imports": {
+          "@kitware/vtk.js/": "https://cdn.skypack.dev/@kitware/vtk.js/"
+        }
+      }
+    </script>
+    <script type="module">
+      import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+      import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+      import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
+      import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
+      // --------------------------------------------------------------------------
+      // Example code
+      // --------------------------------------------------------------------------
+      const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
+      const actor = vtkActor.newInstance();
+      const mapper = vtkMapper.newInstance();
+      const cone = vtkConeSource.newInstance();
+      actor.setMapper(mapper);
+      mapper.setInputConnection(cone.getOutputPort());
+      const renderer = fullScreenRenderer.getRenderer();
+      renderer.addActor(actor);
+      renderer.resetCamera();
+      const renderWindow = fullScreenRenderer.getRenderWindow();
+      renderWindow.render();
+    </script>
+  </body>
 </html>
