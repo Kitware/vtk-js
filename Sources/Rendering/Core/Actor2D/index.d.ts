@@ -55,6 +55,28 @@ export interface vtkActor2D extends vtkProp {
   getMapper(): vtkMapper2D;
 
   /**
+   * Set the layer number for this 2D actor.
+   * The scenegraph uses this layer number to sort actor 2D overlays/underlays on top of each other.
+   * The actor2D with the highest layer number is going to be rendered at the very front i.e. it is
+   * the top-most layer.
+   * If two actor2D instances share the same layer number, they are rendered in the order in which
+   * they were added to the renderer via `addActor` or `addActor2D`.
+   * By default, each actor2D has a layer number of 0.
+   */
+  setLayerNumber(layer: number): void;
+
+  /**
+   * Get the layer number for this 2D actor.
+   * The scenegraph uses this layer number to sort actor 2D overlays/underlays on top of each other.
+   * The actor2D with the highest layer number is going to be rendered at the very front i.e. it is
+   * the top-most layer.
+   * If two actor2D instances share the same layer number, they are rendered in the order in which
+   * they were added to the renderer via `addActor` or `addActor2D`.
+   * By default, each actor2D has a layer number of 0.
+   */
+  getLayerNumber(): number;
+
+  /**
    *
    */
   hasTranslucentPolygonalGeometry(): boolean;

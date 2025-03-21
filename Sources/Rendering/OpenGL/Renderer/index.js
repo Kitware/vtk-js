@@ -24,7 +24,10 @@ function vtkOpenGLRenderer(publicAPI, model) {
       publicAPI.updateLights();
       publicAPI.prepareNodes();
       publicAPI.addMissingNode(model.renderable.getActiveCamera());
-      publicAPI.addMissingNodes(model.renderable.getViewPropsWithNestedProps());
+      publicAPI.addMissingNodes(
+        model.renderable.getViewPropsWithNestedProps(),
+        true
+      );
       publicAPI.removeUnusedNodes();
     }
   };
