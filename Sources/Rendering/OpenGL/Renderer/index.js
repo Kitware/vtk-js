@@ -24,16 +24,10 @@ function vtkOpenGLRenderer(publicAPI, model) {
       publicAPI.updateLights();
       publicAPI.prepareNodes();
       publicAPI.addMissingNode(model.renderable.getActiveCamera());
-      // Force all actor2D instances to be sorted and re-pushed as scenegraph nodes.
-      // This ensures that they are rendered in the correct order.
-      const actors2D = model.renderable.getActors2D();
-      actors2D.forEach((ac) => {
-        const vn = publicAPI.getViewNodeFor(ac);
-        if (vn !== undefined) {
-          publicAPI.removeNode(vn);
-        }
-      });
-      publicAPI.addMissingNodes(model.renderable.getViewPropsWithNestedProps());
+      publicAPI.addMissingNodes(
+        model.renderable.getViewPropsWithNestedProps(),
+        true
+      );
       publicAPI.removeUnusedNodes();
     }
   };
