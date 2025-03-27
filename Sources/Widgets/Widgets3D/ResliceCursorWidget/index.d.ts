@@ -12,14 +12,7 @@ import vtkRenderer from '../../../Rendering/Core/Renderer';
 import vtkPlaneManipulator from '../../Manipulators/PlaneManipulator';
 import { ViewTypes } from '../../../Widgets/Core/WidgetManager/Constants';
 import { Vector2, Vector3 } from '../../../types';
-
-export interface IDisplayScaleParams {
-  dispHeightFactor: number;
-  cameraPosition: Vector3;
-  cameraDir: Vector3;
-  isParallel: false;
-  rendererPixelDims: Vector2;
-}
+import { IDisplayScaleParams } from '../../../Widgets/Core/WidgetManager';
 
 export interface vtkResliceCursorWidget<
   WidgetInstance extends vtkAbstractWidget = vtkResliceCursorWidgetDefaultInstance
