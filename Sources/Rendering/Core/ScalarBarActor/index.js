@@ -701,10 +701,13 @@ function vtkScalarBarActorHelper(publicAPI, model) {
       (tickSeg.corners[2][spacedAxis] - tickSeg.corners[0][spacedAxis]);
     const ticks = publicAPI.getTicks();
     const tickStrings = publicAPI.getTickStrings();
+    const tickPositions = publicAPI.getTickPositions();
     for (let t = 0; t < ticks.length; t++) {
-      const tickPos =
-        (ticks[t] - model.lastTickBounds[0]) /
-        (model.lastTickBounds[1] - model.lastTickBounds[0]);
+      // If tickPositions is not set, use a normalized position
+      const tickPos = tickPositions
+        ? tickPositions[t]
+        : (ticks[t] - model.lastTickBounds[0]) /
+          (model.lastTickBounds[1] - model.lastTickBounds[0]);
       tmpv3[spacedAxis] = tickSegmentStart + tickSegmentSize * tickPos;
       publicAPI.createPolyDataForOneLabel(
         tickStrings[t],
@@ -820,6 +823,7 @@ const newScalarBarActorHelper = macro.newInstance(
       'topTitle',
       'ticks',
       'tickStrings',
+      'tickPositions',
     ]);
     macro.get(publicAPI, model, [
       'lastSize',
