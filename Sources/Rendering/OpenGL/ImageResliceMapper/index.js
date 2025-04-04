@@ -302,7 +302,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
     const reBuildC = !cTex?.oglObject?.getHandle() || cTex?.hash !== toString;
     if (reBuildC) {
-      const cWidth = 1024;
+      const cWidth = model.renderable.getColorTextureWidth();
       const cSize = cWidth * textureHeight * 3;
       const cTable = new Uint8ClampedArray(cSize);
       model.colorTexture = vtkOpenGLTexture.newInstance();
@@ -382,7 +382,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     const reBuildPwf =
       !pwfTex?.oglObject?.getHandle() || pwfTex?.hash !== toString;
     if (reBuildPwf) {
-      const pwfWidth = 1024;
+      const pwfWidth = model.renderable.getOpacityTextureWidth();
       const pwfSize = pwfWidth * textureHeight;
       const pwfTable = new Uint8ClampedArray(pwfSize);
       model.pwfTexture = vtkOpenGLTexture.newInstance();

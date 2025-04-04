@@ -275,7 +275,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       !cachedColorEntry?.oglObject?.getHandle() ||
       cachedColorEntry?.hash !== colorTextureHash;
     if (reBuildColorTexture) {
-      const cWidth = 1024;
+      const cWidth = model.renderable.getColorTextureWidth();
       const cSize = cWidth * textureHeight * 3;
       const cTable = new Uint8ClampedArray(cSize);
       model.colorTexture = vtkOpenGLTexture.newInstance();
@@ -355,7 +355,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       !cachedPwfEntry?.oglObject?.getHandle() ||
       cachedPwfEntry?.hash !== pwfTextureHash;
     if (reBuildPwf) {
-      const pwfWidth = 1024;
+      const pwfWidth = model.renderable.getOpacityTextureWidth();
       const pwfSize = pwfWidth * textureHeight;
       const pwfTable = new Uint8ClampedArray(pwfSize);
       model.pwfTexture = vtkOpenGLTexture.newInstance();
