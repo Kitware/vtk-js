@@ -164,6 +164,9 @@ const defaultValues = (initialValues) => ({
   LAOKernelSize: 15,
   LAOKernelRadius: 7,
   updatedExtents: [],
+  colorTextureWidth: 1024,
+  opacityTextureWidth: 1024,
+  labelOutlineTextureWidth: 1024,
   ...initialValues,
 });
 
@@ -193,6 +196,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     'LAOKernelSize',
     'LAOKernelRadius',
     'updatedExtents',
+    'colorTextureWidth',
+    'opacityTextureWidth',
+    'labelOutlineTextureWidth',
   ]);
 
   macro.setGetArray(publicAPI, model, ['ipScalarRange'], 2);

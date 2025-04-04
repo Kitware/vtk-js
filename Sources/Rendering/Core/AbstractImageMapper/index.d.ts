@@ -122,6 +122,54 @@ export interface vtkAbstractImageMapper extends vtkAbstractMapper3D {
    * @param customDisplayExtent
    */
   setCustomDisplayExtentFrom(customDisplayExtent: number[]): boolean;
+
+  /**
+   * Set the opacity texture width.
+   *
+   * The default width (1024) should be fine in most instances.
+   * Only set this property if your opacity function range width is
+   * larger than 1024.
+   *
+   * @param {Number} width the texture width (defaults to 1024)
+   */
+  setOpacityTextureWidth(width: number): boolean;
+
+  /**
+   * Get the opacity texture width.
+   */
+  getOpacityTextureWidth(): number;
+
+  /**
+   * Set the color texture width.
+   *
+   * The default width (1024) should be fine in most instances.
+   * Only set this property if your color transfer function range width is
+   * larger than 1024.
+   *
+   * @param {Number} width the texture width (defaults to 1024)
+   */
+  setColorTextureWidth(width: number): boolean;
+
+  /**
+   * Get the color texture width.
+   */
+  getColorTextureWidth(): number;
+
+  /**
+   * Set the label outline texture width.
+   *
+   * The default width (1024) should be fine in most instances.
+   * Only set this property if you have more than 1024 labels
+   * that you want to render with thickness.
+   *
+   * @param {Number} width the texture width (defaults to 1024)
+   */
+  setLabelOutlineTextureWidth(width: number): boolean;
+
+  /**
+   * Get the label outline texture width.
+   */
+  getLabelOutlineTextureWidth(): number;
 }
 
 /**

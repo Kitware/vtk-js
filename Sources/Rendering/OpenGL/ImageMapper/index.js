@@ -969,7 +969,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         resizable: true,
       });
       model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      const cWidth = 1024;
+      const cWidth = model.renderable.getColorTextureWidth();
       const cSize = cWidth * textureHeight * 3;
       const cTable = new Uint8ClampedArray(cSize);
       // set interpolation on the texture based on property setting
@@ -1055,7 +1055,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const reBuildPwf =
       !pwfTex?.oglObject?.getHandle() || pwfTex?.hash !== pwfunToString;
     if (reBuildPwf) {
-      const pwfWidth = 1024;
+      const pwfWidth = model.renderable.getOpacityTextureWidth();
       const pwfSize = pwfWidth * textureHeight;
       const pwfTable = new Uint8ClampedArray(pwfSize);
       model.pwfTexture = vtkOpenGLTexture.newInstance({
@@ -1397,7 +1397,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const reBuildL = !lTex?.oglObject?.getHandle() || lTex?.hash !== toString;
 
     if (reBuildL) {
-      const lWidth = 1024;
+      const lWidth = model.renderable.getLabelOutlineTextureWidth();
       const lHeight = 1;
       const lSize = lWidth * lHeight;
       const lTable = new Uint8Array(lSize);
