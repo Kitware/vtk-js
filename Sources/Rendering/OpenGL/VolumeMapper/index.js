@@ -1570,7 +1570,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.opacityTexture = vtkOpenGLTexture.newInstance();
       model.opacityTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
       // rebuild opacity tfun?
-      const oWidth = 1024;
+      const oWidth = model.renderable.getOpacityTextureWidth();
       const oSize = oWidth * 2 * numIComps;
       const ofTable = new Float32Array(oSize);
       const tmpTable = new Float32Array(oWidth);
@@ -1659,7 +1659,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (reBuildC) {
       model.colorTexture = vtkOpenGLTexture.newInstance();
       model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      const cWidth = 1024;
+      const cWidth = model.renderable.getColorTextureWidth();
       const cSize = cWidth * 2 * numIComps * 3;
       const cTable = new Uint8ClampedArray(cSize);
       const tmpTable = new Float32Array(cWidth * 3);
@@ -1856,7 +1856,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.labelOutlineThicknessTexture.setOpenGLRenderWindow(
         model._openGLRenderWindow
       );
-      const lWidth = 1024;
+      const lWidth = model.renderable.getLabelOutlineTextureWidth();
       const lHeight = 1;
       const lSize = lWidth * lHeight;
       const lTable = new Uint8Array(lSize);
