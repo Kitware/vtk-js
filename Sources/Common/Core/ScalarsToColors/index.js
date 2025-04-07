@@ -3,7 +3,7 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import Constants from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper/Constants'; // Need to go inside Constants otherwise dependency loop
 
-const { ScalarMappingTarget, VectorMode } = Constants;
+const { ScalarMappingTarget, Scale, VectorMode } = Constants;
 const { VtkDataTypes } = vtkDataArray;
 const { ColorMode } = vtkMapper;
 const { vtkErrorMacro } = macro;
@@ -553,6 +553,7 @@ const DEFAULT_VALUES = {
   annotationArray: null,
   annotatedValueMap: null,
   indexedLookup: false,
+  scale: Scale.LINEAR,
 };
 
 // ----------------------------------------------------------------------------

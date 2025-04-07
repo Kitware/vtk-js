@@ -11,7 +11,13 @@ export const ScalarMappingTarget = {
   RGBA: 4,
 };
 
+export const Scale = {
+  LINEAR: 0,
+  LOG10: 1,
+};
+
 export default {
   VectorMode,
   ScalarMappingTarget,
+  Scale,
 };
