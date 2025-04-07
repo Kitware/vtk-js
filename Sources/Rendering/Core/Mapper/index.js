@@ -138,7 +138,6 @@ const colorTextureCoordinatesCache = new WeakMap();
  * @param {Range} range The range of the scalars
  * @param {Number} numberOfColorsInRange The number of colors that are used in the range
  * @param {vec3} dimensions The dimensions of the texture
- * @param {boolean} useLogScale If log scale should be used to transform input scalars
  * @param {boolean} useZigzagPattern If a zigzag pattern should be used. Otherwise 1 row for colors (including min and max) and 1 row for NaN are used.
  * @returns A vtkDataArray containing the texture coordinates (2D or 3D)
  */
@@ -148,7 +147,6 @@ function getOrCreateColorTextureCoordinates(
   range,
   numberOfColorsInRange,
   dimensions,
-  useLogScale,
   useZigzagPattern
 ) {
   // Caching using the "arguments" special object (because it is a pure function)
@@ -222,11 +220,6 @@ function getOrCreateColorTextureCoordinates(
       scalarValue = inputV[inputIdx + component];
     }
     inputIdx += numComps;
-
-    // Apply log scale if necessary
-    if (useLogScale) {
-      scalarValue = vtkLookupTable.applyLogScale(scalarValue, range, range);
-    }
 
     // Convert to texture coordinates and update output
     if (vtkMath.isNan(scalarValue)) {
@@ -452,11 +445,6 @@ function vtkMapper(publicAPI, model) {
   model.mapScalarsToTexture = (scalars, cellFlag, alpha) => {
     const range = model.lookupTable.getRange();
     const useLogScale = model.lookupTable.usingLogScale();
-    if (useLogScale) {
-      // convert range to log.
-      vtkLookupTable.getLogRange(range, range);
-    }
-
     const origAlpha = model.lookupTable.getAlpha();
 
     // Get rid of vertex color array.  Only texture or vertex coloring
@@ -529,8 +517,12 @@ function vtkMapper(publicAPI, model) {
       const numberOfNonSpecialColors = model.numberOfColorsInRange;
       const numberOfNonNaNColors = numberOfNonSpecialColors + 2;
       const textureCoordinates = [0, 0, 0];
-      const rangeMin = range[0];
-      const rangeDifference = range[1] - range[0];
+
+      const scaledRange = useLogScale
+        ? [Math.log10(range[0]), Math.log10(range[1])]
+        : range;
+      const rangeMin = scaledRange[0];
+      const rangeDifference = scaledRange[1] - scaledRange[0];
       for (let i = 0; i < numberOfNonNaNColors; ++i) {
         const scalarsArrayIndex = getIndexFromCoordinates(
           textureCoordinates,
@@ -538,12 +530,14 @@ function vtkMapper(publicAPI, model) {
         );
 
         // Minus 1 start at min color
-        const scalarValue =
+        const intermediateValue =
           rangeMin +
           (rangeDifference * (i - 1)) / (numberOfNonSpecialColors - 1);
-        scalarsArray[scalarsArrayIndex] = useLogScale
-          ? 10.0 ** scalarValue
-          : scalarValue;
+        const scalarValue = useLogScale
+          ? 10.0 ** intermediateValue
+          : intermediateValue;
+
+        scalarsArray[scalarsArrayIndex] = scalarValue;
 
         // Colors are zigzagging to allow interpolation between two neighbor colors when coloring cells
         updateZigzaggingCoordinates(textureCoordinates, textureDimensions);
@@ -585,7 +579,6 @@ function vtkMapper(publicAPI, model) {
       range,
       model.numberOfColorsInRange,
       model.colorTextureMap.getDimensions(),
-      useLogScale,
       cellFlag
     );
   };
