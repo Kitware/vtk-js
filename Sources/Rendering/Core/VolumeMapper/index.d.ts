@@ -342,6 +342,17 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
    * Only set this property if your color transfer function range width is
    * larger than 1024.
    *
+   * A reasonable max texture size would be either 2048 or 4096, as those
+   * widths are supported by the vast majority of devices. Any width larger
+   * than that will have issues with device support.
+   *
+   * Specifying a width that is less than or equal to 0 will use the largest
+   * possible texture width on the device. Use this with caution! The max texture
+   * width of one device may not be the same for another device.
+   *
+   * You can find more information about supported texture widths at the following link:
+   * https://web3dsurvey.com/webgl/parameters/MAX_TEXTURE_SIZE
+   *
    * @param {Number} width the texture width (defaults to 1024)
    */
   setColorTextureWidth(width: number): boolean;
@@ -357,6 +368,17 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
    * The default width (1024) should be fine in most instances.
    * Only set this property if you have more than 1024 labels
    * that you want to render with thickness.
+   *
+   * A reasonable max texture size would be either 2048 or 4096, as those
+   * widths are supported by the vast majority of devices. Any width larger
+   * than that will have issues with device support.
+   *
+   * Specifying a width that is less than or equal to 0 will use the largest
+   * possible texture width on the device. Use this with caution! The max texture
+   * width of one device may not be the same for another device.
+   *
+   * You can find more information about supported texture widths at the following link:
+   * https://web3dsurvey.com/webgl/parameters/MAX_TEXTURE_SIZE
    *
    * @param {Number} width the texture width (defaults to 1024)
    */
