@@ -1,3 +1,7 @@
+## From 32.x to 33
+
+- **vtkRenderWindowInteractor**: KeyPress, KeyDown and KeyUp events are now observed on the container and no longer on the document. "tabIndex=0" is now automatically added on RWI containers to give focus on your render windows and catch key events. Check the KeyPressEvents example for usage.
+
 ## From 31.x to 32
 
 - **vtkMapper**: remove `mapScalarsToTexture` from the public API. The function becomes protected and its API changes. This shouldn't cause any issue in most cases.
