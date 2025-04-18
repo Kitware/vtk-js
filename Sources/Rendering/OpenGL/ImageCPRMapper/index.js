@@ -199,6 +199,9 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     const reBuildTex =
       !cachedScalarsEntry?.oglObject?.getHandle() ||
       cachedScalarsEntry?.hash !== volumeTextureHash;
+    const updatedExtents = model.renderable.getUpdatedExtents();
+    const hasUpdatedExtents = !!updatedExtents.length;
+
     if (reBuildTex) {
       model.volumeTexture = vtkOpenGLTexture.newInstance();
       model.volumeTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
@@ -236,6 +239,22 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       model.volumeTexture = cachedScalarsEntry.oglObject;
     }
 
+    if (hasUpdatedExtents) {
+      // If hasUpdatedExtents, then the texture is partially updated.
+      // clear the array to acknowledge the update.
+      model.renderable.setUpdatedExtents([]);
+
+      const dims = image.getDimensions();
+      model.volumeTexture.create3DFilterableFromDataArray(
+        dims[0],
+        dims[1],
+        dims[2],
+        scalars,
+        false,
+        updatedExtents
+      );
+    }
+
     // Rebuild the color texture if needed
     const numComp = scalars.getNumberOfComponents();
     const ppty = actor.getProperty();
@@ -262,7 +281,10 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       !cachedColorEntry?.oglObject?.getHandle() ||
       cachedColorEntry?.hash !== colorTextureHash;
     if (reBuildColorTexture) {
-      const cWidth = 1024;
+      let cWidth = model.renderable.getColorTextureWidth();
+      if (cWidth <= 0) {
+        cWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+      }
       const cSize = cWidth * textureHeight * 3;
       const cTable = new Uint8ClampedArray(cSize);
       model.colorTexture = vtkOpenGLTexture.newInstance();
@@ -350,7 +372,10 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       !cachedPwfEntry?.oglObject?.getHandle() ||
       cachedPwfEntry?.hash !== pwfTextureHash;
     if (reBuildPwf) {
-      const pwfWidth = 1024;
+      let pwfWidth = model.renderable.getOpacityTextureWidth();
+      if (pwfWidth <= 0) {
+        pwfWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+      }
       const pwfSize = pwfWidth * textureHeight;
       const pwfTable = new Uint8ClampedArray(pwfSize);
       model.pwfTexture = vtkOpenGLTexture.newInstance();

@@ -1549,7 +1549,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (reBuildOp) {
       const newOpacityTexture = vtkOpenGLTexture.newInstance();
       newOpacityTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      const oWidth = 1024;
+      let oWidth = model.renderable.getOpacityTextureWidth();
+      if (oWidth <= 0) {
+        oWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+      }
       const oSize = oWidth * 2 * numIComps;
       const ofTable = new Float32Array(oSize);
       const tmpTable = new Float32Array(oWidth);
@@ -1642,7 +1645,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (reBuildC) {
       const newColorTexture = vtkOpenGLTexture.newInstance();
       newColorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      const cWidth = 1024;
+      let cWidth = model.renderable.getColorTextureWidth();
+      if (cWidth <= 0) {
+        cWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+      }
       const cSize = cWidth * 2 * numIComps * 3;
       const cTable = new Uint8ClampedArray(cSize);
       const tmpTable = new Float32Array(cWidth * 3);
@@ -1694,7 +1700,12 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       const scalarsHash = getImageDataHash(imageData, scalars);
       const reBuildTex =
         !tex?.oglObject?.getHandle() || tex?.hash !== scalarsHash;
-      if (reBuildTex) {
+
+      // TODO use volumeProperty
+      const updatedExtents = model.renderable.getUpdatedExtents();
+      const hasUpdatedExtents = !!updatedExtents.length;
+
+      if (reBuildTex && !hasUpdatedExtents) {
         const newScalarTexture = vtkOpenGLTexture.newInstance();
         newScalarTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
         // Build the textures
@@ -1720,6 +1731,24 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       } else {
         model.scalarTextures[component] = tex.oglObject;
       }
+
+      // TODO use volumeProperty
+      if (hasUpdatedExtents) {
+        // If hasUpdatedExtents, then the texture is partially updated.
+        // clear the array to acknowledge the update.
+        model.renderable.setUpdatedExtents([]);
+
+        const dims = imageData.getDimensions();
+        model.scalarTextures[component].create3DFilterableFromDataArray(
+          dims[0],
+          dims[1],
+          dims[2],
+          scalars,
+          false,
+          updatedExtents
+        );
+      }
+
       replaceGraphicsResource(
         model._openGLRenderWindow,
         model._scalarTexturesCore[component],
@@ -1742,7 +1771,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       newLabelOutlineThicknessTexture.setOpenGLRenderWindow(
         model._openGLRenderWindow
       );
-      const lWidth = 1024;
+      let lWidth = model.renderable.getLabelOutlineTextureWidth();
+      if (lWidth <= 0) {
+        lWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+      }
       const lHeight = 1;
       const lSize = lWidth * lHeight;
       const lTable = new Uint8Array(lSize);

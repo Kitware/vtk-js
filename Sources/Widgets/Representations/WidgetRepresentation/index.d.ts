@@ -2,13 +2,7 @@ import vtkDataArray from '../../../Common/Core/DataArray';
 import vtkPolyData from '../../../Common/DataModel/PolyData';
 import { vtkObject } from '../../../interfaces';
 import vtkProp from '../../../Rendering/Core/Prop';
-export interface IDisplayScaleParams {
-  dispHeightFactor: number;
-  cameraPosition: number[];
-  cameraDir: number[];
-  isParallel: boolean;
-  rendererPixelDims: number[];
-}
+import { IDisplayScaleParams } from '../../../Widgets/Core/WidgetManager';
 
 export interface IWidgetRepresentationInitialValues {
   labels?: Array<any>;
