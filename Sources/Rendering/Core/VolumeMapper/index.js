@@ -148,8 +148,6 @@ const defaultValues = (initialValues) => ({
   interactionSampleDistanceFactor: 1.0,
   blendMode: BlendMode.COMPOSITE_BLEND,
   volumeShadowSamplingDistFactor: 5.0,
-  // TODO move to volumeProperty
-  updatedExtents: [],
   colorTextureWidth: 1024,
   opacityTextureWidth: 1024,
   labelOutlineTextureWidth: 1024,
@@ -172,7 +170,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'interactionSampleDistanceFactor',
     'blendMode',
     'volumeShadowSamplingDistFactor',
-    'updatedExtents',
     'colorTextureWidth',
     'opacityTextureWidth',
     'labelOutlineTextureWidth',

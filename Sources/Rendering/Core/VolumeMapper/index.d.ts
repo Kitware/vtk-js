@@ -1,5 +1,5 @@
 import vtkPiecewiseFunction from '../../../Common/DataModel/PiecewiseFunction';
-import { Bounds, Extent } from '../../../types';
+import { Bounds } from '../../../types';
 import vtkAbstractMapper3D, {
   IAbstractMapper3DInitialValues,
 } from '../AbstractMapper3D';
@@ -157,25 +157,6 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
   setInteractionSampleDistanceFactor(
     interactionSampleDistanceFactor: number
   ): boolean;
-
-  /**
-   * Tells the mapper to only update the specified extents.
-   *
-   * If there are zero extents, the mapper updates the entire volume texture.
-   * Otherwise, the mapper will only update the texture by the specified extents
-   * during the next render call.
-   *
-   * This array is cleared after a successful render.
-   * @param extents
-   */
-  setUpdatedExtents(extents: Extent[]): boolean;
-
-  /**
-   * Retrieves the updated extents.
-   *
-   * This array is cleared after every successful render.
-   */
-  getUpdatedExtents(): Extent[];
 
   /**
    *

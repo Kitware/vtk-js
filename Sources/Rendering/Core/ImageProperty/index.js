@@ -130,7 +130,7 @@ function vtkImageProperty(publicAPI, model) {
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
-const DEFAULT_VALUES = {
+const defaultValues = (initialValues) => ({
   independentComponents: false,
   interpolationType: InterpolationType.LINEAR,
   colorWindow: 255,
@@ -142,12 +142,14 @@ const DEFAULT_VALUES = {
   useLabelOutline: false,
   labelOutlineThickness: [1],
   labelOutlineOpacity: 1.0,
-};
+  updatedExtents: [],
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -174,6 +176,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'useLookupTableScalarRange',
     'useLabelOutline',
     'labelOutlineOpacity',
+    'updatedExtents',
   ]);
 
   macro.setGetArray(publicAPI, model, ['labelOutlineThickness']);

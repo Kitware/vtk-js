@@ -1,6 +1,6 @@
 import vtkPiecewiseFunction from '../../../Common/DataModel/PiecewiseFunction';
 import { vtkObject } from '../../../interfaces';
-import { Nullable } from '../../../types';
+import { Extent, Nullable } from '../../../types';
 import vtkColorTransferFunction from '../ColorTransferFunction';
 import { ColorMixPreset, InterpolationType, OpacityMode } from './Constants';
 
@@ -486,6 +486,25 @@ export interface vtkVolumeProperty extends vtkObject {
    * @param LAOKernelRadius
    */
   setLAOKernelRadius(LAOKernelRadius: number): void;
+
+  /**
+   * Informs the mapper to only update the specified extents at the next render.
+   *
+   * If there are zero extents, the mapper updates the entire volume texture.
+   * Otherwise, the mapper will only update the texture by the specified extents
+   * during the next render call.
+   *
+   * This array is cleared after a successful render.
+   * @param extents
+   */
+  setUpdatedExtents(extents: Extent[]): boolean;
+
+  /**
+   * Retrieves the updated extents.
+   *
+   * This array is cleared after every successful render.
+   */
+  getUpdatedExtents(): Extent[];
 }
 
 /**
