@@ -286,7 +286,7 @@ function vtkVolumeProperty(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+const defaultValues = (initialValues) => ({
   colorMixPreset: ColorMixPreset.DEFAULT,
   independentComponents: true,
   interpolationType: InterpolationType.FAST_LINEAR,
@@ -312,12 +312,15 @@ const DEFAULT_VALUES = {
   localAmbientOcclusion: false,
   LAOKernelSize: 15,
   LAOKernelRadius: 7,
-};
+  updatedExtents: [],
+
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -366,6 +369,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'localAmbientOcclusion',
     'LAOKernelSize',
     'LAOKernelRadius',
+    'updatedExtents',
   ]);
 
   // Property moved from volume mapper

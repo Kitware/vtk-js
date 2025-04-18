@@ -293,6 +293,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     !model.pwfTexture?.getHandle();
 
   publicAPI.buildBufferObjects = (ren, actor) => {
+    const actorProperties = actor.getProperties();
+
     model.currentValidInputs.forEach(({ imageData }, component) => {
       // rebuild the scalarTexture if the data has changed
       const scalars = imageData.getPointData().getScalars();
@@ -302,8 +304,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       const reBuildTex =
         !tex?.oglObject?.getHandle() || tex?.hash !== scalarsHash;
 
-      // TODO use volumeProperty
-      const updatedExtents = model.renderable.getUpdatedExtents();
+      const actorProperty = actorProperties[component];
+      const updatedExtents = actorProperty.getUpdatedExtents();
       const hasUpdatedExtents = !!updatedExtents.length;
 
       if (reBuildTex && !hasUpdatedExtents) {
@@ -332,11 +334,10 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         model.scalarTextures[component] = tex.oglObject;
       }
 
-      // TODO use volumeProperty
       if (hasUpdatedExtents) {
         // If hasUpdatedExtents, then the texture is partially updated.
         // clear the array to acknowledge the update.
-        model.renderable.setUpdatedExtents([]);
+        actorProperty.setUpdatedExtents([]);
 
         const dims = imageData.getDimensions();
         model.scalarTextures[component].create3DFilterableFromDataArray(
@@ -358,7 +359,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     });
 
     const firstValidInput = model.currentValidInputs[0];
-    const actorProperties = actor.getProperties();
     const firstActorProperty = actorProperties[firstValidInput.inputIndex];
     const iComps = firstActorProperty.getIndependentComponents();
     const numIComps = iComps ? model.numberOfComponents : 1;

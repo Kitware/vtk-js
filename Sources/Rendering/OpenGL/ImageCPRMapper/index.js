@@ -187,6 +187,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
   publicAPI.buildBufferObjects = (ren, actor) => {
     const image = model.currentImageDataInput;
     const centerline = model.currentCenterlineInput;
+    const property = actor.getProperty();
 
     // Rebuild the volumeTexture if the data has changed
     const scalars = image?.getPointData()?.getScalars();
@@ -199,7 +200,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     const reBuildTex =
       !cachedScalarsEntry?.oglObject?.getHandle() ||
       cachedScalarsEntry?.hash !== volumeTextureHash;
-    const updatedExtents = model.renderable.getUpdatedExtents();
+    const updatedExtents = property.getUpdatedExtents();
     const hasUpdatedExtents = !!updatedExtents.length;
 
     if (reBuildTex) {
@@ -242,7 +243,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     if (hasUpdatedExtents) {
       // If hasUpdatedExtents, then the texture is partially updated.
       // clear the array to acknowledge the update.
-      model.renderable.setUpdatedExtents([]);
+      property.setUpdatedExtents([]);
 
       const dims = image.getDimensions();
       model.volumeTexture.create3DFilterableFromDataArray(
