@@ -293,6 +293,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     !model.pwfTexture?.getHandle();
 
   publicAPI.buildBufferObjects = (ren, actor) => {
+    const actorProperties = actor.getProperties();
+
     model.currentValidInputs.forEach(({ imageData }, component) => {
       // rebuild the scalarTexture if the data has changed
       const scalars = imageData.getPointData().getScalars();
@@ -301,7 +303,12 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       const scalarsHash = getImageDataHash(imageData, scalars);
       const reBuildTex =
         !tex?.oglObject?.getHandle() || tex?.hash !== scalarsHash;
-      if (reBuildTex) {
+
+      const actorProperty = actorProperties[component];
+      const updatedExtents = actorProperty.getUpdatedExtents();
+      const hasUpdatedExtents = !!updatedExtents.length;
+
+      if (reBuildTex && !hasUpdatedExtents) {
         const newScalarTexture = vtkOpenGLTexture.newInstance();
         newScalarTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
         // Build the textures
@@ -326,6 +333,23 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       } else {
         model.scalarTextures[component] = tex.oglObject;
       }
+
+      if (hasUpdatedExtents) {
+        // If hasUpdatedExtents, then the texture is partially updated.
+        // clear the array to acknowledge the update.
+        actorProperty.setUpdatedExtents([]);
+
+        const dims = imageData.getDimensions();
+        model.scalarTextures[component].create3DFilterableFromDataArray(
+          dims[0],
+          dims[1],
+          dims[2],
+          scalars,
+          false,
+          updatedExtents
+        );
+      }
+
       replaceGraphicsResource(
         model._openGLRenderWindow,
         model._scalarTexturesCore[component],
@@ -335,7 +359,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     });
 
     const firstValidInput = model.currentValidInputs[0];
-    const actorProperties = actor.getProperties();
     const firstActorProperty = actorProperties[firstValidInput.inputIndex];
     const iComps = firstActorProperty.getIndependentComponents();
     const numIComps = iComps ? model.numberOfComponents : 1;
@@ -359,7 +382,10 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     const reBuildC =
       !cTex?.oglObject?.getHandle() || cTex?.hash !== colorFuncHash;
     if (reBuildC) {
-      const cWidth = 1024;
+      let cWidth = model.renderable.getColorTextureWidth();
+      if (cWidth <= 0) {
+        cWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+      }
       const cSize = cWidth * textureHeight * 3;
       const cTable = new Uint8ClampedArray(cSize);
       const newColorTexture = vtkOpenGLTexture.newInstance();
@@ -446,7 +472,10 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     const reBuildPwf =
       !pwfTex?.oglObject?.getHandle() || pwfTex?.hash !== opacityFuncHash;
     if (reBuildPwf) {
-      const pwfWidth = 1024;
+      let pwfWidth = model.renderable.getOpacityTextureWidth();
+      if (pwfWidth <= 0) {
+        pwfWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+      }
       const pwfSize = pwfWidth * textureHeight;
       const pwfTable = new Uint8ClampedArray(pwfSize);
       const newOpacityTexture = vtkOpenGLTexture.newInstance();

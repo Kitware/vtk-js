@@ -39,18 +39,19 @@ function vtkImageResliceMapper(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+const defaultValues = (initialValues) => ({
   slabThickness: 0.0,
   slabTrapezoidIntegration: 0,
   slabType: SlabTypes.MEAN,
   slicePlane: null,
   slicePolyData: null,
-};
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   // Build VTK API
   vtkAbstractImageMapper.extend(publicAPI, model, initialValues);

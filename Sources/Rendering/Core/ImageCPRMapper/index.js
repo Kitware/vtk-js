@@ -331,7 +331,7 @@ function vtkImageCPRMapper(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+const defaultValues = (initialValues) => ({
   width: 10,
   uniformOrientation: [0, 0, 0, 1],
   useUniformOrientation: false,
@@ -344,12 +344,13 @@ const DEFAULT_VALUES = {
   projectionSlabThickness: 1,
   projectionSlabNumberOfSamples: 1,
   projectionMode: ProjectionMode.MAX,
-};
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   // Inheritance
   vtkAbstractImageMapper.extend(publicAPI, model, initialValues);

@@ -967,7 +967,10 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         resizable: true,
       });
       model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      const cWidth = 1024;
+      let cWidth = model.renderable.getColorTextureWidth();
+      if (cWidth <= 0) {
+        cWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+      }
       const cSize = cWidth * textureHeight * 3;
       const cTable = new Uint8ClampedArray(cSize);
       // set interpolation on the texture based on property setting
@@ -1061,7 +1064,10 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const reBuildPwf =
       !pwfTex?.oglObject?.getHandle() || pwfTex?.hash !== pwfunToString;
     if (reBuildPwf) {
-      const pwfWidth = 1024;
+      let pwfWidth = model.renderable.getOpacityTextureWidth();
+      if (pwfWidth <= 0) {
+        pwfWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+      }
       const pwfSize = pwfWidth * textureHeight;
       const pwfTable = new Uint8ClampedArray(pwfSize);
       model.pwfTexture = vtkOpenGLTexture.newInstance({
@@ -1320,6 +1326,21 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         vtkErrorMacro('Reformat slicing not yet supported.');
       }
 
+      /**
+       *
+       * Fetch the ranges of the source volume, `imgScalars`, and use them when
+       * creating the texture. Whilst the pre-calculated ranges may not be
+       * strictly correct for the slice, it is guaranteed to be within the
+       * source volume's range.
+       *
+       * There is a significant performance improvement by pre-setting the range
+       * of the scalars array particularly when scrolling through the source
+       * volume as there is no need to calculate the range of the slice scalar.
+       *
+       * @type{ import("../../../interfaces").vtkRange[] }
+       */
+      const ranges = imgScalars.getRanges();
+
       // Don't share this resource as `scalars` is created in this function
       // so it is impossible to share
       model.openGLTexture.resetFormatAndType();
@@ -1329,7 +1350,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         numComp,
         imgScalars.getDataType(),
         scalars,
-        model.renderable.getPreferSizeOverAccuracy?.()
+        model.renderable.getPreferSizeOverAccuracy?.(),
+        ranges
       );
       model.openGLTexture.activate();
       model.openGLTexture.sendParameters();
@@ -1387,7 +1409,10 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const reBuildL = !lTex?.oglObject?.getHandle() || lTex?.hash !== toString;
 
     if (reBuildL) {
-      const lWidth = 1024;
+      let lWidth = model.renderable.getLabelOutlineTextureWidth();
+      if (lWidth <= 0) {
+        lWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+      }
       const lHeight = 1;
       const lSize = lWidth * lHeight;
       const lTable = new Uint8Array(lSize);

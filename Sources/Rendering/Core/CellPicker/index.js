@@ -277,7 +277,10 @@ function vtkCellPicker(publicAPI, model) {
 
     // calculate opacity table
     const numIComps = 1;
-    const oWidth = 1024;
+    let oWidth = mapper.getOpacityTextureWidth();
+    if (oWidth <= 0) {
+      oWidth = 1024;
+    }
     const tmpTable = new Float32Array(oWidth);
     const opacityArray = new Float32Array(oWidth);
     let ofun;

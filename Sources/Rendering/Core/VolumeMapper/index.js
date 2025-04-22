@@ -137,7 +137,8 @@ function vtkVolumeMapper(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+// TODO: what values to use for averageIPScalarRange to get GLSL to use max / min values like [-Math.inf, Math.inf]?
+const defaultValues = (initialValues) => ({
   bounds: [...vtkBoundingBox.INIT_BOUNDS],
   sampleDistance: 1.0,
   imageSampleDistance: 1.0,
@@ -147,12 +148,16 @@ const DEFAULT_VALUES = {
   interactionSampleDistanceFactor: 1.0,
   blendMode: BlendMode.COMPOSITE_BLEND,
   volumeShadowSamplingDistFactor: 5.0,
-};
+  colorTextureWidth: 1024,
+  opacityTextureWidth: 1024,
+  labelOutlineTextureWidth: 1024,
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   vtkAbstractMapper3D.extend(publicAPI, model, initialValues);
 
@@ -165,6 +170,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     'interactionSampleDistanceFactor',
     'blendMode',
     'volumeShadowSamplingDistFactor',
+    'colorTextureWidth',
+    'opacityTextureWidth',
+    'labelOutlineTextureWidth',
   ]);
 
   macro.event(publicAPI, model, 'lightingActivated');

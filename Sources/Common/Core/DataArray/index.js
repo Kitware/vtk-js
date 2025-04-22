@@ -281,6 +281,35 @@ function vtkDataArray(publicAPI, model) {
     return model.rangeTuple;
   };
 
+  publicAPI.getRanges = (computeRanges = true) => {
+    if (!computeRanges) {
+      return structuredClone(model.ranges);
+    }
+    /** @type {import('../../../interfaces').vtkRange[]} */
+    const ranges = [];
+    for (let i = 0; i < model.numberOfComponents; i++) {
+      const [min, max] = publicAPI.getRange(i);
+      /** @type {import('../../../interfaces').vtkRange} */
+      const range = {
+        min,
+        max,
+      };
+      ranges.push(range);
+    }
+    // where the number of components is greater than 1, the last element in
+    // the range array is the min,max magnitude of the entire dataset.
+    if (model.numberOfComponents > 1) {
+      const [min, max] = publicAPI.getRange(-1);
+      /** @type {import('../../../interfaces').vtkRange} */
+      const range = {
+        min,
+        max,
+      };
+      ranges.push(range);
+    }
+    return ranges;
+  };
+
   publicAPI.setTuple = (idx, tuple) => {
     const offset = idx * model.numberOfComponents;
     for (let i = 0; i < model.numberOfComponents; i++) {
@@ -447,11 +476,17 @@ function vtkDataArray(publicAPI, model) {
     return sortedObj;
   };
 
+  /**
+   * @param {import("./index").vtkDataArray} other
+   */
   publicAPI.deepCopy = (other) => {
     // Retain current dataType and array reference before shallowCopy call.
     const currentType = publicAPI.getDataType();
     const currentArray = model.values;
     publicAPI.shallowCopy(other);
+
+    // set the ranges
+    model.ranges = structuredClone(other.getRanges());
 
     // Avoid array reallocation if size already sufficient
     // and dataTypes match.

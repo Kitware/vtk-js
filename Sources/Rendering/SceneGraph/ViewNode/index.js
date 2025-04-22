@@ -113,14 +113,27 @@ function vtkViewNode(publicAPI, model) {
 
   // add missing nodes/children for the passed in renderables. This should
   // be called only in between prepareNodes and removeUnusedNodes
-  publicAPI.addMissingNodes = (dataObjs) => {
+  publicAPI.addMissingNodes = (dataObjs, enforceOrder = false) => {
     if (!dataObjs || !dataObjs.length) {
       return;
     }
 
     for (let index = 0; index < dataObjs.length; ++index) {
       const dobj = dataObjs[index];
-      publicAPI.addMissingNode(dobj);
+      const node = publicAPI.addMissingNode(dobj);
+      if (
+        enforceOrder &&
+        node !== undefined &&
+        model.children[index] !== node
+      ) {
+        for (let i = index + 1; i < model.children.length; ++i) {
+          if (model.children[i] === node) {
+            model.children.splice(i, 1);
+            model.children.splice(index, 0, node);
+            break;
+          }
+        }
+      }
     }
   };
 
