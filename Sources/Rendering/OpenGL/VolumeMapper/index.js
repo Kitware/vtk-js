@@ -1514,13 +1514,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
       model.jitterTexture.setMinificationFilter(Filter.NEAREST);
       model.jitterTexture.setMagnificationFilter(Filter.NEAREST);
-      model.jitterTexture.create2DFromRaw(
-        32,
-        32,
-        1,
-        VtkDataTypes.FLOAT,
-        jitterArray
-      );
+      model.jitterTexture.create2DFromRaw({
+        width: 32,
+        height: 32,
+        numComps: 1,
+        dataType: VtkDataTypes.FLOAT,
+        data: jitterArray,
+      });
     }
 
     const volumeProperties = actor.getProperties();
@@ -1586,25 +1586,25 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         (model.context.getExtension('OES_texture_float') &&
           model.context.getExtension('OES_texture_float_linear'))
       ) {
-        newOpacityTexture.create2DFromRaw(
-          oWidth,
-          2 * numIComps,
-          1,
-          VtkDataTypes.FLOAT,
-          ofTable
-        );
+        newOpacityTexture.create2DFromRaw({
+          width: oWidth,
+          height: 2 * numIComps,
+          numComps: 1,
+          dataType: VtkDataTypes.FLOAT,
+          data: ofTable,
+        });
       } else {
         const oTable = new Uint8ClampedArray(oSize);
         for (let i = 0; i < oSize; ++i) {
           oTable[i] = 255.0 * ofTable[i];
         }
-        newOpacityTexture.create2DFromRaw(
-          oWidth,
-          2 * numIComps,
-          1,
-          VtkDataTypes.UNSIGNED_CHAR,
-          oTable
-        );
+        newOpacityTexture.create2DFromRaw({
+          width: oWidth,
+          height: 2 * numIComps,
+          numComps: 1,
+          dataType: VtkDataTypes.UNSIGNED_CHAR,
+          data: oTable,
+        });
       }
       if (firstScalarOpacityFunc) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
@@ -1667,13 +1667,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       newColorTexture.setMinificationFilter(Filter.LINEAR);
       newColorTexture.setMagnificationFilter(Filter.LINEAR);
 
-      newColorTexture.create2DFromRaw(
-        cWidth,
-        2 * numIComps,
-        3,
-        VtkDataTypes.UNSIGNED_CHAR,
-        cTable
-      );
+      newColorTexture.create2DFromRaw({
+        width: cWidth,
+        height: 2 * numIComps,
+        numComps: 3,
+        dataType: VtkDataTypes.UNSIGNED_CHAR,
+        data: cTable,
+      });
       model._openGLRenderWindow.setGraphicsResourceForObject(
         firstColorTransferFunc,
         newColorTexture,
@@ -1714,13 +1714,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           model.context.getExtension('EXT_texture_norm16')
         );
         newScalarTexture.resetFormatAndType();
-        newScalarTexture.create3DFilterableFromDataArray(
-          dims[0],
-          dims[1],
-          dims[2],
-          scalars,
-          volumeProperty.getPreferSizeOverAccuracy()
-        );
+        newScalarTexture.create3DFilterableFromDataArray({
+          width: dims[0],
+          height: dims[1],
+          depth: dims[2],
+          dataArray: scalars,
+          preferSizeOverAccuracy: volumeProperty.getPreferSizeOverAccuracy(),
+        });
         model._openGLRenderWindow.setGraphicsResourceForObject(
           scalars,
           newScalarTexture,
@@ -1737,14 +1737,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         volumeProperty.setUpdatedExtents([]);
 
         const dims = imageData.getDimensions();
-        model.scalarTextures[component].create3DFilterableFromDataArray(
-          dims[0],
-          dims[1],
-          dims[2],
-          scalars,
-          false,
-          updatedExtents
-        );
+        model.scalarTextures[component].create3DFilterableFromDataArray({
+          width: dims[0],
+          height: dims[1],
+          depth: dims[2],
+          dataArray: scalars,
+          updatedExtents,
+        });
       }
 
       replaceGraphicsResource(
@@ -1794,13 +1793,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       newLabelOutlineThicknessTexture.setMagnificationFilter(Filter.NEAREST);
 
       // Create a 2D texture (acting as 1D) from the raw data
-      newLabelOutlineThicknessTexture.create2DFromRaw(
-        lWidth,
-        lHeight,
-        1,
-        VtkDataTypes.UNSIGNED_CHAR,
-        lTable
-      );
+      newLabelOutlineThicknessTexture.create2DFromRaw({
+        width: lWidth,
+        height: lHeight,
+        numComps: 1,
+        dataType: VtkDataTypes.UNSIGNED_CHAR,
+        data: lTable,
+      });
 
       if (labelOutlineThicknessArray) {
         model._openGLRenderWindow.setGraphicsResourceForObject(

@@ -66,7 +66,13 @@ function allocateBuffer(openGLRenderWindow, [width, height], filter, wrapping) {
   });
   texture.setOpenGLRenderWindow(openGLRenderWindow);
   texture.setInternalFormat(gl.RGBA32F);
-  texture.create2DFromRaw(width, height, 4, 'Float32Array', null);
+  texture.create2DFromRaw({
+    width,
+    height,
+    numComps: 4,
+    dataType: 'Float32Array',
+    data: null,
+  });
   texture.activate();
   texture.sendParameters();
   texture.deactivate();
