@@ -1,0 +1,51 @@
+<style>
+    #view-1:focus {
+      outline: none; /* remove default */
+      box-shadow: 0 0 20px 10px rgba(0, 255, 0, 0.6); /* red glow */
+      z-index: 1; /* move forward (works only if position!=static) */
+      position: relative;
+    }
+    #view-2:focus, #view-2:focus-visible {
+      outline: none; /* remove default */
+    }
+
+    input:focus {
+      outline: none;
+      border: 2px solid teal;
+      box-shadow: 0 0 4px teal;
+    }
+
+    /* Optional: Use focus-visible for keyboard-only styling */
+    select:focus-visible {
+      outline: 3px dashed orange;
+    }
+  </style>
+<h3>Click or press tab until you "focus" a render window, then type keys (e.g. r, w, s)</h3>
+<table>
+  <tr>
+    <td>Click with mouse then press space key:</td>
+    <td>
+      <input type="checkbox" id="checkboxTranslation" checked>
+    </td>
+  </tr>
+  <tr>
+    <td>Click then key up and down :</td>
+    <td><input id='slider' type="range" min="0" max="255" step="1" value="255" style="width: 100px;"/></td>
+  </tr>
+  <tr>
+    <td>Use key up and down to browse through:</td>
+    <td>
+      <select id="select">
+        <option>One</option>
+        <option>Two</option>
+        <option selected="selected">Three</option>
+        <option>Four</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <button id="buttonReset">Click and press space key</button>
+    </td>
+  </tr>
+</table>
