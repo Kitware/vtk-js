@@ -40,11 +40,12 @@ const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 const initialSampleDistance = 1.3;
 
 const actor = vtkVolume.newInstance();
+const actorProperty = actor.getProperty();
 const mapper = vtkVolumeMapper.newInstance();
 mapper.setSampleDistance(initialSampleDistance);
 
 // use half float at the cost of precision to save memory
-mapper.setPreferSizeOverAccuracy(true);
+actorProperty.setPreferSizeOverAccuracy(true);
 
 actor.setMapper(mapper);
 
@@ -125,16 +126,16 @@ function updateSampleDistance(event) {
 }
 
 function updateScalarMin(event) {
-  mapper.setIpScalarRange(
+  actorProperty.setIpScalarRange(
     event.target.valueAsNumber,
-    mapper.getIpScalarRange()[1]
+    actorProperty.getIpScalarRange()[1]
   );
   renderWindow.render();
 }
 
 function updateScalarMax(event) {
-  mapper.setIpScalarRange(
-    mapper.getIpScalarRange()[0],
+  actorProperty.setIpScalarRange(
+    actorProperty.getIpScalarRange()[0],
     event.target.valueAsNumber
   );
   renderWindow.render();
@@ -146,7 +147,7 @@ function updateBlendMode(event) {
   const radonScalars = document.querySelectorAll('.radonScalar');
 
   mapper.setBlendMode(currentBlendMode);
-  mapper.setIpScalarRange(0.0, 1.0);
+  actorProperty.setIpScalarRange(0.0, 1.0);
 
   // if average or additive blend mode
   for (let i = 0; i < ipScalarEls.length; i += 1) {

@@ -1,6 +1,7 @@
 import { mat4, quat } from 'gl-matrix';
 import { Bounds, Vector3, Range } from '../../../types';
 import vtkProp, { IPropInitialValues } from '../Prop';
+import { vtkObject } from '../../../interfaces';
 
 export interface IProp3DInitialValues extends IPropInitialValues {
   origin?: number[];
@@ -19,10 +20,16 @@ export interface vtkProp3D extends vtkProp {
   addPosition(deltaXYZ: number[]): void;
 
   /**
-   * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
-   * @return {Bounds} The bounds for the mapper.
+   * Get the bounds of this actor as [xmin, xmax, ymin, ymax, zmin, zmax].
+   * They are the bounds of the underlying mapper, transformed using the actor's matrix.
+   * @return {Bounds} The bounds for the actor.
    */
   getBounds(): Bounds;
+
+  /**
+   * Same as getBounds() but the returned array is not copied, so it should not be written to.
+   */
+  getBoundsByReference(): Bounds;
 
   /**
    * Check if there was a modification or transformation.
@@ -130,6 +137,21 @@ export interface vtkProp3D extends vtkProp {
    * Get the transformation matrix set for your own use.
    */
   getUserMatrix(): mat4;
+
+  /**
+   * Get the actor property for the specified mapper input port, which defaults to 0
+   * It controls this actors rendering properties. If one isn’t specified,
+   * then one will be generated automatically. Multiple actors can share one
+   * property object.
+   * @param {number} mapperInputPort Defaults to 0
+   */
+  getProperty(mapperInputPort?: number): vtkObject;
+
+  /**
+   * Get the actor properties array
+   * Each element of the array corresponds to a mapper input port
+   */
+  getProperties(): vtkObject[];
 
   /**
    * Rotate the Prop3D in degrees about the X axis using the right hand
@@ -256,6 +278,21 @@ export interface vtkProp3D extends vtkProp {
    * Generate the matrix based on internal model.
    */
   computeMatrix(): void;
+
+  /**
+   * Set the actor property for the specified mapper input port, which defaults to 0
+   * @param {vtkObject} property
+   * @param {number} mapperInputPort Is 0 when not given
+   */
+  setProperty(mapperInputPort: number, property: vtkObject): boolean;
+  setProperty(property: vtkObject): boolean;
+
+  /**
+   * Set the actor properties array
+   * Each element of the array corresponds to a mapper input port
+   * @param {vtkObject[]} properties
+   */
+  setProperties(properties: vtkObject[]): boolean;
 }
 
 /**

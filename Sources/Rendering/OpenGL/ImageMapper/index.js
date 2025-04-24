@@ -4,7 +4,6 @@ import * as macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
@@ -15,7 +14,7 @@ import {
 } from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/ImageProperty/Constants';
 
-import { getTransferFunctionHash } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/resourceSharingHelper';
+import { getTransferFunctionsHash } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/resourceSharingHelper';
 
 import vtkPolyDataVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
@@ -903,14 +902,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     publicAPI.renderPieceFinish(ren, actor);
   };
 
-  publicAPI.computeBounds = (ren, actor) => {
-    if (!publicAPI.getInput()) {
-      vtkMath.uninitializeBounds(model.bounds);
-      return;
-    }
-    model.bounds = publicAPI.getInput().getBounds();
-  };
-
   publicAPI.updateBufferObjects = (ren, actor) => {
     // Rebuild buffers if needed
     if (publicAPI.getNeedToRebuildBufferObjects(ren, actor)) {
@@ -953,14 +944,21 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const numIComps = iComps ? numComp : 1;
     const textureHeight = iComps ? 2 * numIComps : 1;
 
-    const colorTransferFunc = actorProperty.getRGBTransferFunction();
-    const cfunToString = getTransferFunctionHash(
-      colorTransferFunc,
+    const colorTransferFunctions = [];
+    for (let component = 0; component < numIComps; ++component) {
+      colorTransferFunctions.push(
+        actorProperty.getRGBTransferFunction(component)
+      );
+    }
+    const cfunToString = getTransferFunctionsHash(
+      colorTransferFunctions,
       iComps,
       numIComps
     );
-    const cTex =
-      model._openGLRenderWindow.getGraphicsResourceForObject(colorTransferFunc);
+    const firstColorTransferFunc = actorProperty.getRGBTransferFunction();
+    const cTex = model._openGLRenderWindow.getGraphicsResourceForObject(
+      firstColorTransferFunc
+    );
 
     const reBuildC =
       !cTex?.oglObject?.getHandle() || cTex?.hash !== cfunToString;
@@ -984,7 +982,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         model.colorTexture.setMagnificationFilter(Filter.LINEAR);
       }
 
-      if (colorTransferFunc) {
+      if (firstColorTransferFunc) {
         const tmpTable = new Float32Array(cWidth * 3);
 
         for (let c = 0; c < numIComps; c++) {
@@ -1025,15 +1023,15 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         );
       }
 
-      if (colorTransferFunc) {
+      if (firstColorTransferFunc) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
-          colorTransferFunc,
+          firstColorTransferFunc,
           model.colorTexture,
           cfunToString
         );
-        if (colorTransferFunc !== model._colorTransferFunc) {
+        if (firstColorTransferFunc !== model._colorTransferFunc) {
           model._openGLRenderWindow.registerGraphicsResourceUser(
-            colorTransferFunc,
+            firstColorTransferFunc,
             publicAPI
           );
           model._openGLRenderWindow.unregisterGraphicsResourceUser(
@@ -1041,7 +1039,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
             publicAPI
           );
         }
-        model._colorTransferFunc = colorTransferFunc;
+        model._colorTransferFunc = firstColorTransferFunc;
       }
     } else {
       model.colorTexture = cTex.oglObject;
@@ -1050,10 +1048,18 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     // Build piecewise function buffer.  This buffer is used either
     // for component weighting or opacity, depending on whether we're
     // rendering components independently or not.
-    const pwFunc = actorProperty.getPiecewiseFunction();
-    const pwfunToString = getTransferFunctionHash(pwFunc, iComps, numIComps);
+    const opacityFunctions = [];
+    for (let component = 0; component < numIComps; ++component) {
+      opacityFunctions.push(actorProperty.getPiecewiseFunction(component));
+    }
+    const pwfunToString = getTransferFunctionsHash(
+      opacityFunctions,
+      iComps,
+      numIComps
+    );
+    const firstPwFunc = actorProperty.getPiecewiseFunction();
     const pwfTex =
-      model._openGLRenderWindow.getGraphicsResourceForObject(pwFunc);
+      model._openGLRenderWindow.getGraphicsResourceForObject(firstPwFunc);
     // rebuild opacity tfun?
     const reBuildPwf =
       !pwfTex?.oglObject?.getHandle() || pwfTex?.hash !== pwfunToString;
@@ -1077,7 +1083,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         model.pwfTexture.setMagnificationFilter(Filter.LINEAR);
       }
 
-      if (pwFunc) {
+      if (firstPwFunc) {
         const pwfFloatTable = new Float32Array(pwfSize);
         const tmpTable = new Float32Array(pwfWidth);
 
@@ -1122,15 +1128,15 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         );
       }
 
-      if (pwFunc) {
+      if (firstPwFunc) {
         model._openGLRenderWindow.setGraphicsResourceForObject(
-          pwFunc,
+          firstPwFunc,
           model.pwfTexture,
           pwfunToString
         );
-        if (pwFunc !== model._pwFunc) {
+        if (firstPwFunc !== model._pwFunc) {
           model._openGLRenderWindow.registerGraphicsResourceUser(
-            pwFunc,
+            firstPwFunc,
             publicAPI
           );
           model._openGLRenderWindow.unregisterGraphicsResourceUser(
@@ -1138,7 +1144,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
             publicAPI
           );
         }
-        model._pwFunc = pwFunc;
+        model._pwFunc = firstPwFunc;
       }
     } else {
       model.pwfTexture = pwfTex.oglObject;
