@@ -4,6 +4,7 @@ import macro from 'vtk.js/Sources/macros';
 import vtkBufferObject from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
 import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import { computeCoordShiftAndScale } from 'vtk.js/Sources/Rendering/OpenGL/CellArrayBufferObject/helpers';
 
 const { vtkErrorMacro } = macro;
 
@@ -250,36 +251,10 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     let ucidx = 0;
 
     // Find out if shift scale should be used
-    // Compute squares of diagonal size and distance from the origin
-    let diagSq = 0.0;
-    let distSq = 0.0;
-    for (let i = 0; i < 3; ++i) {
-      const range = options.points.getRange(i);
-
-      const delta = range[1] - range[0];
-      diagSq += delta * delta;
-
-      const distShift = 0.5 * (range[1] + range[0]);
-      distSq += distShift * distShift;
-    }
-
-    const useShiftAndScale =
-      diagSq > 0 &&
-      (Math.abs(distSq) / diagSq > 1.0e6 || // If data is far from the origin relative to its size
-        Math.abs(Math.log10(diagSq)) > 3.0 || // If the size is huge when not far from the origin
-        (diagSq === 0 && distSq > 1.0e6)); // If data is a point, but far from the origin
+    const { useShiftAndScale, coordShift, coordScale } =
+      computeCoordShiftAndScale(options.points);
 
     if (useShiftAndScale) {
-      // Compute shift and scale vectors
-      const coordShift = new Float64Array(3);
-      const coordScale = new Float64Array(3);
-      for (let i = 0; i < 3; ++i) {
-        const range = options.points.getRange(i);
-        const delta = range[1] - range[0];
-
-        coordShift[i] = 0.5 * (range[1] + range[0]);
-        coordScale[i] = delta > 0 ? 1.0 / delta : 1.0;
-      }
       publicAPI.setCoordShiftAndScale(coordShift, coordScale);
     } else if (model.coordShiftAndScaleEnabled === true) {
       // Make sure to reset
