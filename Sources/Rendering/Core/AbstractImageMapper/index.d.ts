@@ -1,7 +1,8 @@
-import vtkAbstractMapper3D, {
+import {
+  vtkAbstractMapper3D,
   IAbstractMapper3DInitialValues,
 } from '../AbstractMapper3D';
-import vtkImageData from '../../../Common/DataModel/ImageData';
+import { vtkImageData } from '../../../Common/DataModel/ImageData';
 import { Bounds, Extent, Nullable, RGBAColor } from '../../../types';
 
 export interface IAbstractImageMapperInitialValues

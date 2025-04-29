@@ -1,4 +1,4 @@
-import Macro from './macros';
+import Macro from 'vtk.js/Sources/macros';
 
-export * from './macros';
+export * from 'vtk.js/Sources/macros';
 export default Macro;
