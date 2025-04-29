@@ -1,10 +1,6 @@
 {
   "include": ["Sources/**/*.d.ts", "Utilities/**/*.d.ts"],
   "compilerOptions": {
-    "paths": {
-      "@kitware/vtk.js/*": ["./Sources/*"],
-      "vtk.js/*": ["./*"]
-    },
     "noEmit": true
   }
 }
