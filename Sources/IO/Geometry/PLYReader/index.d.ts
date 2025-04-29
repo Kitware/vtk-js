@@ -16,11 +16,13 @@ interface IPLYReaderOptions {
 export interface IPLYReaderInitialValues {
   /**
    * Controls whether points are duplicated for face-texture mapping.
+   * Default is true.
    */
   duplicatePointsForFaceTexture?: boolean;
 
   /**
    * The tolerance used to determine if two points are the same.
+   * Default is 0.000001.
    */
   faceTextureTolerance?: number;
 }

@@ -184,7 +184,8 @@ function postProcess(
   }
 
   // Process face texture coordinates
-  if (hasFaceTCoords && !hasVertTCoords) {
+  if (hasFaceTCoords && !hasVertTCoords && nbFaces > 0) {
+    // don't use array.shift, because buffer.indices will be used later
     let idxVerts = 0;
     let idxCoord = 0;
 
@@ -230,8 +231,8 @@ function postProcess(
                 // Check if we already have a point with these texture coordinates
                 if (pointIds.has(key)) {
                   const candidates = pointIds.get(key);
-                  // eslint-disable-next-line no-restricted-syntax
-                  for (const candidateId of candidates) {
+                  for (let i = 0, len = candidates.length; i < len; i++) {
+                    const candidateId = candidates[i];
                     const samePosition =
                       Math.abs(
                         pointValues[candidateId * 3] - pointValues[vertId * 3]
@@ -350,14 +351,27 @@ function postProcess(
   }
 
   const polydata = vtkPolyData.newInstance();
-
   polydata.getPoints().setData(pointValues, 3);
+
+  // If we have faces, add them as polys
+  if (nbFaces > 0) {
+    polydata.getPolys().setData(Uint32Array.from(buffer.indices));
+  } else {
+    // Point cloud - create a vertex list containing all points
+    const verts = new Uint32Array(nbVerts * 2);
+    for (let i = 0; i < nbVerts; i++) {
+      verts[i * 2] = 1; // number of points in vertex cell (always 1)
+      verts[i * 2 + 1] = i; // point index
+    }
+    polydata.getVerts().setData(verts);
+  }
+
   if (hasColor) {
     polydata.getPointData().setScalars(
       vtkDataArray.newInstance({
         numberOfComponents: 3,
         values: colorArray,
-        name: 'Scalars',
+        name: 'RGB',
       })
     );
   }
@@ -382,8 +396,6 @@ function postProcess(
       })
     );
   }
-
-  polydata.getPolys().setData(Uint32Array.from(buffer.indices));
 
   return polydata;
 }
@@ -472,7 +484,7 @@ function handleElement(buffer, name, element) {
 
     if (vertexIndices && vertexIndices.length > 0) {
       buffer.indices.push(vertexIndices.length);
-      vertexIndices.forEach((val) => {
+      vertexIndices.forEach((val, idx) => {
         buffer.indices.push(val);
       });
     }

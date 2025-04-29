@@ -39,10 +39,8 @@ mapper.setInputConnection(reader.getOutputPort());
 // ----------------------------------------------------------------------------
 
 function refresh() {
-  const resetCamera = renderer.resetCamera;
-  const render = renderWindow.render;
-  resetCamera();
-  render();
+  renderer.resetCamera();
+  renderWindow.render();
 }
 
 function update() {
@@ -116,9 +114,7 @@ fileInput.addEventListener('change', handleFile);
 
 checkbox.addEventListener('change', (e) => {
   const value = e.target.checked;
-  console.log('duplicate points for face texture', value);
   window.location = `?duplicatePointsForFaceTexture=${value}`;
-  refresh();
 });
 
 // ----------------------------------------------------------------------------
