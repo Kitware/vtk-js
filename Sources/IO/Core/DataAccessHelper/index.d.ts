@@ -1,7 +1,7 @@
-import HtmlDataAccessHelper from './HtmlDataAccessHelper';
-import HttpDataAccessHelper from './HttpDataAccessHelper';
-import JSZipDataAccessHelper from './JSZipDataAccessHelper';
-import LiteHttpDataAccessHelper from './LiteHttpDataAccessHelper';
+import { HtmlDataAccessHelper } from './HtmlDataAccessHelper';
+import { HttpDataAccessHelper } from './HttpDataAccessHelper';
+import { JSZipDataAccessHelper } from './JSZipDataAccessHelper';
+import { LiteHttpDataAccessHelper } from './LiteHttpDataAccessHelper';
 
 export function has(type: string): boolean;
 export function get(

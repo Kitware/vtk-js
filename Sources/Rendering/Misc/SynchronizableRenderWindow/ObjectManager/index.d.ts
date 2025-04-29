@@ -97,4 +97,5 @@ export interface IObjectManager {
   alwaysUpdateCamera(): void;
 }
 
-export default IObjectManager;
+declare const _default: IObjectManager;
+export default _default;

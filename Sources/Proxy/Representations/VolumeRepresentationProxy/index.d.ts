@@ -1,5 +1,5 @@
-import vtkAbstractRepresentationProxy from '../../Core/AbstractRepresentationProxy';
-import vtkImageCropFilter from '../../../Filters/General/ImageCropFilter';
+import { vtkAbstractRepresentationProxy } from '../../Core/AbstractRepresentationProxy';
+import { vtkImageCropFilter } from '../../../Filters/General/ImageCropFilter';
 
 export interface vtkVolumeRepresentationProxy
   extends vtkAbstractRepresentationProxy {
@@ -41,4 +41,5 @@ export interface vtkVolumeRepresentationProxy
   setCroppingPlanes(planes: number[]): boolean;
 }
 
-export default vtkVolumeRepresentationProxy;
+declare const _default: vtkVolumeRepresentationProxy;
+export default _default;

@@ -23,4 +23,5 @@ export interface JSZipDataAccessHelper {
   create(createOptions: object): IJSZipDataAccessHelper;
 }
 
-export default JSZipDataAccessHelper;
+declare const _default: JSZipDataAccessHelper;
+export default _default;
