@@ -116,7 +116,12 @@ function parseHeader(data) {
   return header;
 }
 
-function postProcess(buffer, elements) {
+function postProcess(
+  buffer,
+  elements,
+  faceTextureTolerance,
+  duplicatePointsForFaceTexture
+) {
   const vertElement = elements.find((element) => element.name === 'vertex');
   const faceElement = elements.find((element) => element.name === 'face');
 
@@ -130,16 +135,21 @@ function postProcess(buffer, elements) {
     nbFaces = faceElement.count;
   }
 
-  const pointValues = new Float32Array(nbVerts * 3);
-  const colorArray = new Uint8Array(nbVerts * 3);
-  const tcoordsArray = new Float32Array(nbVerts * 2);
-  const normalsArray = new Float32Array(nbVerts * 3);
+  let pointValues = new Float32Array(nbVerts * 3);
+  let colorArray = new Uint8Array(nbVerts * 3);
+  let tcoordsArray = new Float32Array(nbVerts * 2);
+  let normalsArray = new Float32Array(nbVerts * 3);
 
   const hasColor = buffer.colors.length > 0;
   const hasVertTCoords = buffer.uvs.length > 0;
   const hasNorms = buffer.normals.length > 0;
   const hasFaceTCoords = buffer.faceVertexUvs.length > 0;
 
+  // For duplicate point handling
+  const pointIds = new Map(); // Maps texture coords to arrays of point IDs
+  let nextPointId = nbVerts;
+
+  // Initialize base points
   for (let vertIdx = 0; vertIdx < nbVerts; vertIdx++) {
     let a = vertIdx * 3 + 0;
     let b = vertIdx * 3 + 1;
@@ -160,6 +170,10 @@ function postProcess(buffer, elements) {
       b = vertIdx * 2 + 1;
       tcoordsArray[a] = buffer.uvs[a];
       tcoordsArray[b] = buffer.uvs[b];
+    } else {
+      // Initialize with sentinel value
+      tcoordsArray[vertIdx * 2] = -1;
+      tcoordsArray[vertIdx * 2 + 1] = -1;
     }
 
     if (hasNorms) {
@@ -169,23 +183,168 @@ function postProcess(buffer, elements) {
     }
   }
 
-  if (!hasVertTCoords && hasFaceTCoords) {
-    // don't use array.shift, because buffer.indices will be used later
+  // Process face texture coordinates
+  if (hasFaceTCoords && !hasVertTCoords) {
     let idxVerts = 0;
     let idxCoord = 0;
-    for (let faceIdx = 0; faceIdx < nbFaces; ++faceIdx) {
-      const nbFaceVerts = buffer.indices[idxVerts++];
-      const texcoords = buffer.faceVertexUvs[idxCoord++];
-      if (texcoords && nbFaceVerts * 2 === texcoords.length) {
-        // grab the vertex index
-        for (let vertIdx = 0; vertIdx < nbFaceVerts; ++vertIdx) {
-          const vert = buffer.indices[idxVerts++];
-          // new texture stored at the current face
-          tcoordsArray[vert * 2 + 0] = texcoords[vertIdx * 2 + 0];
-          tcoordsArray[vert * 2 + 1] = texcoords[vertIdx * 2 + 1];
+
+    if (duplicatePointsForFaceTexture) {
+      // Arrays to store duplicated point data
+      const extraPoints = [];
+      const extraColors = [];
+      const extraNormals = [];
+      const extraTCoords = [];
+
+      for (let faceIdx = 0; faceIdx < nbFaces; ++faceIdx) {
+        const nbFaceVerts = buffer.indices[idxVerts++];
+        const texcoords = buffer.faceVertexUvs[idxCoord++];
+
+        if (texcoords && nbFaceVerts * 2 === texcoords.length) {
+          for (let vertIdx = 0; vertIdx < nbFaceVerts; ++vertIdx) {
+            const vertId = buffer.indices[idxVerts + vertIdx];
+            const newTex = [texcoords[vertIdx * 2], texcoords[vertIdx * 2 + 1]];
+            const currentTex = [
+              tcoordsArray[vertId * 2],
+              tcoordsArray[vertId * 2 + 1],
+            ];
+
+            if (currentTex[0] === -1) {
+              // First time seeing texture coordinates for this vertex
+              tcoordsArray[vertId * 2] = newTex[0];
+              tcoordsArray[vertId * 2 + 1] = newTex[1];
+              const key = `${newTex[0]},${newTex[1]}`;
+              if (!pointIds.has(key)) {
+                pointIds.set(key, []);
+              }
+              pointIds.get(key).push(vertId);
+            } else {
+              // Check if we need to duplicate the vertex
+              const needsDuplication =
+                Math.abs(currentTex[0] - newTex[0]) > faceTextureTolerance ||
+                Math.abs(currentTex[1] - newTex[1]) > faceTextureTolerance;
+
+              if (needsDuplication) {
+                const key = `${newTex[0]},${newTex[1]}`;
+                let existingPointId = -1;
+
+                // Check if we already have a point with these texture coordinates
+                if (pointIds.has(key)) {
+                  const candidates = pointIds.get(key);
+                  // eslint-disable-next-line no-restricted-syntax
+                  for (const candidateId of candidates) {
+                    const samePosition =
+                      Math.abs(
+                        pointValues[candidateId * 3] - pointValues[vertId * 3]
+                      ) <= faceTextureTolerance &&
+                      Math.abs(
+                        pointValues[candidateId * 3 + 1] -
+                          pointValues[vertId * 3 + 1]
+                      ) <= faceTextureTolerance &&
+                      Math.abs(
+                        pointValues[candidateId * 3 + 2] -
+                          pointValues[vertId * 3 + 2]
+                      ) <= faceTextureTolerance;
+
+                    if (samePosition) {
+                      existingPointId = candidateId;
+                      break;
+                    }
+                  }
+                }
+
+                if (existingPointId === -1) {
+                  // Create new point
+                  extraPoints.push(
+                    pointValues[vertId * 3],
+                    pointValues[vertId * 3 + 1],
+                    pointValues[vertId * 3 + 2]
+                  );
+                  if (hasColor) {
+                    extraColors.push(
+                      colorArray[vertId * 3],
+                      colorArray[vertId * 3 + 1],
+                      colorArray[vertId * 3 + 2]
+                    );
+                  }
+                  if (hasNorms) {
+                    extraNormals.push(
+                      normalsArray[vertId * 3],
+                      normalsArray[vertId * 3 + 1],
+                      normalsArray[vertId * 3 + 2]
+                    );
+                  }
+                  extraTCoords.push(newTex[0], newTex[1]);
+
+                  if (!pointIds.has(key)) {
+                    pointIds.set(key, []);
+                  }
+                  pointIds.get(key).push(nextPointId);
+                  buffer.indices[idxVerts + vertIdx] = nextPointId;
+                  nextPointId++;
+                } else {
+                  buffer.indices[idxVerts + vertIdx] = existingPointId;
+                }
+              }
+            }
+          }
         }
-      } else {
         idxVerts += nbFaceVerts;
+      }
+
+      // Extend arrays with duplicated points if needed
+      if (extraPoints.length > 0) {
+        const newPointCount = nbVerts + extraPoints.length / 3;
+        const newPointValues = new Float32Array(newPointCount * 3);
+        const newTcoordsArray = new Float32Array(newPointCount * 2);
+        const newColorArray = hasColor
+          ? new Uint8Array(newPointCount * 3)
+          : null;
+        const newNormalsArray = hasNorms
+          ? new Float32Array(newPointCount * 3)
+          : null;
+
+        // Copy existing data
+        newPointValues.set(pointValues);
+        newTcoordsArray.set(tcoordsArray);
+        if (hasColor && newColorArray) {
+          newColorArray.set(colorArray);
+        }
+        if (hasNorms && newNormalsArray) {
+          newNormalsArray.set(normalsArray);
+        }
+
+        // Add new data
+        newPointValues.set(extraPoints, nbVerts * 3);
+        newTcoordsArray.set(extraTCoords, nbVerts * 2);
+        if (hasColor && newColorArray) {
+          newColorArray.set(extraColors, nbVerts * 3);
+        }
+        if (hasNorms && newNormalsArray) {
+          newNormalsArray.set(extraNormals, nbVerts * 3);
+        }
+
+        pointValues = newPointValues;
+        tcoordsArray = newTcoordsArray;
+        if (hasColor) {
+          colorArray = newColorArray;
+        }
+        if (hasNorms) {
+          normalsArray = newNormalsArray;
+        }
+      }
+    } else {
+      for (let faceIdx = 0; faceIdx < nbFaces; ++faceIdx) {
+        const nbFaceVerts = buffer.indices[idxVerts++];
+        const texcoords = buffer.faceVertexUvs[idxCoord++];
+        if (texcoords && nbFaceVerts * 2 === texcoords.length) {
+          for (let vertIdx = 0; vertIdx < nbFaceVerts; ++vertIdx) {
+            const vert = buffer.indices[idxVerts++];
+            tcoordsArray[vert * 2] = texcoords[vertIdx * 2];
+            tcoordsArray[vert * 2 + 1] = texcoords[vertIdx * 2 + 1];
+          }
+        } else {
+          idxVerts += nbFaceVerts;
+        }
       }
     }
   }
@@ -313,7 +472,7 @@ function handleElement(buffer, name, element) {
 
     if (vertexIndices && vertexIndices.length > 0) {
       buffer.indices.push(vertexIndices.length);
-      vertexIndices.forEach((val, idx) => {
+      vertexIndices.forEach((val) => {
         buffer.indices.push(val);
       });
     }
@@ -481,7 +640,10 @@ function vtkPLYReader(publicAPI, model) {
     }
 
     // Header
-    const text = BinaryHelper.arrayBufferToString(content);
+    let text = content;
+    if (content instanceof ArrayBuffer) {
+      text = BinaryHelper.arrayBufferToString(content);
+    }
     const header = parseHeader(text);
 
     // ascii/binary detection
@@ -489,7 +651,7 @@ function vtkPLYReader(publicAPI, model) {
 
     // Check if ascii format
     if (!isBinary) {
-      publicAPI.parseAsText(content);
+      publicAPI.parseAsText(text);
       return;
     }
 
@@ -526,7 +688,12 @@ function vtkPLYReader(publicAPI, model) {
       }
     }
 
-    const polydata = postProcess(buffer, header.elements);
+    const polydata = postProcess(
+      buffer,
+      header.elements,
+      model.faceTextureTolerance,
+      model.duplicatePointsForFaceTexture
+    );
 
     // Add new output
     model.output[0] = polydata;
@@ -546,7 +713,10 @@ function vtkPLYReader(publicAPI, model) {
     model.parseData = content;
 
     // Header
-    const text = BinaryHelper.arrayBufferToString(content);
+    let text = content;
+    if (content instanceof ArrayBuffer) {
+      text = BinaryHelper.arrayBufferToString(content);
+    }
     const header = parseHeader(text);
 
     // ascii/binary detection
@@ -593,7 +763,12 @@ function vtkPLYReader(publicAPI, model) {
       }
     }
 
-    const polydata = postProcess(buffer, header.elements);
+    const polydata = postProcess(
+      buffer,
+      header.elements,
+      model.faceTextureTolerance,
+      model.duplicatePointsForFaceTexture
+    );
 
     // Add new output
     model.output[0] = polydata;
@@ -612,6 +787,8 @@ const DEFAULT_VALUES = {
   // baseURL: null,
   // dataAccessHelper: null,
   // url: null,
+  faceTextureTolerance: 1e-6,
+  duplicatePointsForFaceTexture: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -621,7 +798,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, ['url', 'baseURL']);
+  macro.get(publicAPI, model, [
+    'url',
+    'baseURL',
+    'duplicatePointsForFaceTexture',
+    'faceTextureTolerance',
+  ]);
   macro.setGet(publicAPI, model, ['dataAccessHelper']);
   macro.algo(publicAPI, model, 0, 1);
 

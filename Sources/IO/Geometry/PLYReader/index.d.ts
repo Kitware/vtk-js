@@ -13,7 +13,17 @@ interface IPLYReaderOptions {
 /**
  *
  */
-export interface IPLYReaderInitialValues {}
+export interface IPLYReaderInitialValues {
+  /**
+   * Controls whether points are duplicated for face-texture mapping.
+   */
+  duplicatePointsForFaceTexture?: boolean;
+
+  /**
+   * The tolerance used to determine if two points are the same.
+   */
+  faceTextureTolerance?: number;
+}
 
 type vtkPLYReaderBase = vtkObject &
   Omit<
@@ -40,6 +50,16 @@ export interface vtkPLYReader extends vtkPLYReaderBase {
     | HttpDataAccessHelper
     | JSZipDataAccessHelper
     | LiteHttpDataAccessHelper;
+
+  /**
+   * Controls whether points are duplicated for face-texture mapping.
+   */
+  getDuplicatePointsForFaceTexture(): boolean;
+
+  /**
+   * Get the tolerance used to determine if two points are the same.
+   */
+  getFaceTextureTolerance(): number;
 
   /**
    * Get the url of the object to load.
