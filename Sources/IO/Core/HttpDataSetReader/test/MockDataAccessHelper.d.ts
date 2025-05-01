@@ -34,5 +34,5 @@ export interface MockDataAccessHelper {
   getCallTracker(): MockDataAccessHelperCallTracker;
 }
 
-declare const _default: MockDataAccessHelper;
-export default _default;
+declare const MockDataAccessHelper: MockDataAccessHelper;
+export default MockDataAccessHelper;
