@@ -21,5 +21,5 @@ interface Base64 {
   fromArrayBuffer: typeof fromArrayBuffer;
 }
 
-declare const _default: Base64;
-export default _default;
+declare const Base64: Base64;
+export default Base64;

@@ -19,5 +19,5 @@ export interface HttpDataAccessHelper {
   ): Promise<HTMLImageElement>;
 }
 
-declare const _default: HttpDataAccessHelper;
-export default _default;
+declare const HttpDataAccessHelper: HttpDataAccessHelper;
+export default HttpDataAccessHelper;
