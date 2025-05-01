@@ -1,15 +1,17 @@
-import vtkCamera from '../Camera';
-import vtkAbstractImageMapper, {
+import { vtkCamera } from '../Camera';
+import {
+  vtkAbstractImageMapper,
   IAbstractImageMapperInitialValues,
 } from '../AbstractImageMapper';
 import { Bounds, Nullable, Vector3 } from '../../../types';
 import { SlicingMode } from './Constants';
-import vtkImageData from '../../../Common/DataModel/ImageData';
-import CoincidentTopologyHelper, {
+import { vtkImageData } from '../../../Common/DataModel/ImageData';
+import {
+  CoincidentTopologyHelper,
   StaticCoincidentTopologyMethods,
 } from '../Mapper/CoincidentTopologyHelper';
 
-interface IClosestIJKAxis {
+export interface IClosestIJKAxis {
   ijkMode: SlicingMode;
   flip: boolean;
 }
@@ -212,4 +214,5 @@ export declare const vtkImageMapper: {
   extend: typeof extend;
   SlicingMode: typeof SlicingMode;
 } & StaticCoincidentTopologyMethods;
+
 export default vtkImageMapper;

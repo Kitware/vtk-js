@@ -1,6 +1,6 @@
 import { States } from '../../../Rendering/Core/InteractorStyle/Constants';
-import vtkRenderer from '../../../Rendering/Core/Renderer';
-import vtkInteractorObserver from '../../../Rendering/Core/InteractorObserver';
+import { vtkRenderer } from '../../../Rendering/Core/Renderer';
+import { vtkInteractorObserver } from '../../../Rendering/Core/InteractorObserver';
 import {
   Device,
   Input,

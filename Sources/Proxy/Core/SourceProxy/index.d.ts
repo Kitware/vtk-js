@@ -19,4 +19,5 @@ export interface vtkSourceProxy<T> extends VtkProxy {
   getInputProxy(): vtkSourceProxy<T> | null;
 }
 
-export default vtkSourceProxy;
+declare const _default: vtkSourceProxy<unknown>;
+export default _default;

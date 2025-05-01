@@ -1,5 +1,5 @@
-import vtkRenderer from '../Renderer';
-import vtkRenderWindowInteractor from '../RenderWindowInteractor';
+import { vtkRenderer } from '../Renderer';
+import { vtkRenderWindowInteractor } from '../RenderWindowInteractor';
 import { vtkObject, EventHandler, vtkSubscription } from '../../../interfaces';
 import { Vector3 } from '../../../types';
 
@@ -138,4 +138,5 @@ export interface vtkInteractorObserver extends vtkObject {
   ): Vector3;
 }
 
-export default vtkInteractorObserver;
+declare const _default: vtkInteractorObserver;
+export default _default;

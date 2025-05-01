@@ -1,5 +1,5 @@
 import { RGBColor } from '../../../types';
-import vtkAbstractRepresentationProxy from '../../Core/AbstractRepresentationProxy';
+import { vtkAbstractRepresentationProxy } from '../../Core/AbstractRepresentationProxy';
 
 export interface vtkGeometryRepresentationProxy
   extends vtkAbstractRepresentationProxy {
@@ -33,4 +33,5 @@ export interface vtkGeometryRepresentationProxy
   setLineWidth(width: number): boolean;
 }
 
-export default vtkGeometryRepresentationProxy;
+declare const _default: vtkGeometryRepresentationProxy;
+export default _default;

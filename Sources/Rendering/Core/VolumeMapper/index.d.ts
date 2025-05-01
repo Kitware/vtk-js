@@ -1,6 +1,7 @@
-import vtkPiecewiseFunction from '../../../Common/DataModel/PiecewiseFunction';
+import { vtkPiecewiseFunction } from '../../../Common/DataModel/PiecewiseFunction';
 import { Bounds, Range, Extent } from '../../../types';
-import vtkAbstractMapper3D, {
+import {
+  vtkAbstractMapper3D,
   IAbstractMapper3DInitialValues,
 } from '../AbstractMapper3D';
 import { BlendMode, FilterMode } from './Constants';

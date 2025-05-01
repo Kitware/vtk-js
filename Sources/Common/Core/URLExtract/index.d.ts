@@ -13,3 +13,9 @@ export function extractURLParameters(
  * @param {String} str The type value as string.
  */
 export function toNativeType(str: string): void;
+
+declare const _default: {
+  toNativeType: typeof toNativeType;
+  extractURLParameters: typeof extractURLParameters;
+};
+export default _default;
