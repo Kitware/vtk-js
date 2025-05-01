@@ -15,10 +15,7 @@ export function extractURLParameters(
 export function toNativeType(str: string): void;
 
 declare const _default: {
-  toNativeType(str: string): any;
-  extractURLParameters(
-    castToNativeType?: boolean,
-    query?: string
-  ): Record<string, any>;
+  toNativeType: typeof toNativeType;
+  extractURLParameters: typeof extractURLParameters;
 };
 export default _default;
