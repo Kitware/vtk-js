@@ -136,6 +136,7 @@ const colorTextureCoordinatesCache = new WeakMap();
  * @param {vtkDataArray} input The input data array used for coloring
  * @param {Number} component The component of the input data array that is used for coloring (-1 for magnitude of the vectors)
  * @param {Range} range The range of the scalars
+ * @param {boolean} useLogScale Should the values be transformed to logarithmic scale. When true, the range must already be in logarithmic scale.
  * @param {Number} numberOfColorsInRange The number of colors that are used in the range
  * @param {vec3} dimensions The dimensions of the texture
  * @param {boolean} useZigzagPattern If a zigzag pattern should be used. Otherwise 1 row for colors (including min and max) and 1 row for NaN are used.
@@ -145,6 +146,7 @@ function getOrCreateColorTextureCoordinates(
   input,
   component,
   range,
+  useLogScale,
   numberOfColorsInRange,
   dimensions,
   useZigzagPattern
@@ -219,6 +221,10 @@ function getOrCreateColorTextureCoordinates(
     } else {
       scalarValue = inputV[inputIdx + component];
     }
+    if (useLogScale) {
+      scalarValue = Math.log10(scalarValue);
+    }
+
     inputIdx += numComps;
 
     // Convert to texture coordinates and update output
@@ -446,6 +452,9 @@ function vtkMapper(publicAPI, model) {
     const range = model.lookupTable.getRange();
     const useLogScale = model.lookupTable.usingLogScale();
     const origAlpha = model.lookupTable.getAlpha();
+    const scaledRange = useLogScale
+      ? [Math.log10(range[0]), Math.log10(range[1])]
+      : range;
 
     // Get rid of vertex color array.  Only texture or vertex coloring
     // can be active at one time.  The existence of the array is the
@@ -518,9 +527,6 @@ function vtkMapper(publicAPI, model) {
       const numberOfNonNaNColors = numberOfNonSpecialColors + 2;
       const textureCoordinates = [0, 0, 0];
 
-      const scaledRange = useLogScale
-        ? [Math.log10(range[0]), Math.log10(range[1])]
-        : range;
       const rangeMin = scaledRange[0];
       const rangeDifference = scaledRange[1] - scaledRange[0];
       for (let i = 0; i < numberOfNonNaNColors; ++i) {
@@ -576,7 +582,8 @@ function vtkMapper(publicAPI, model) {
     model.colorCoordinates = getOrCreateColorTextureCoordinates(
       scalars,
       scalarComponent,
-      range,
+      scaledRange,
+      useLogScale,
       model.numberOfColorsInRange,
       model.colorTextureMap.getDimensions(),
       cellFlag
