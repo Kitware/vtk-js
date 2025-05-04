@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
+import { MouseButton } from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
 import vtkInteractorStyle from 'vtk.js/Sources/Rendering/Core/InteractorStyle';
 
 const { vtkDebugMacro } = macro;
@@ -268,19 +269,19 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   publicAPI.handleLeftButtonPress = (callData) => {
     model.previousPosition = callData.position;
-    publicAPI.onButtonDown(1, callData);
+    publicAPI.onButtonDown(MouseButton.LeftButton, callData);
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleMiddleButtonPress = (callData) => {
     model.previousPosition = callData.position;
-    publicAPI.onButtonDown(2, callData);
+    publicAPI.onButtonDown(MouseButton.MiddleButton, callData);
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleRightButtonPress = (callData) => {
     model.previousPosition = callData.position;
-    publicAPI.onButtonDown(3, callData);
+    publicAPI.onButtonDown(MouseButton.RightButton, callData);
   };
 
   //-------------------------------------------------------------------------
@@ -397,17 +398,17 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleLeftButtonRelease = () => {
-    publicAPI.onButtonUp(1);
+    publicAPI.onButtonUp(MouseButton.LeftButton);
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleMiddleButtonRelease = () => {
-    publicAPI.onButtonUp(2);
+    publicAPI.onButtonUp(MouseButton.MiddleButton);
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleRightButtonRelease = () => {
-    publicAPI.onButtonUp(3);
+    publicAPI.onButtonUp(MouseButton.RightButton);
   };
 
   //-------------------------------------------------------------------------
@@ -421,10 +422,16 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     ) {
       model.currentManipulator.onButtonUp(model._interactor);
       model.currentManipulator.endInteraction();
-      model.currentManipulator = null;
-      model._interactor.cancelAnimation(publicAPI.onButtonDown);
+      if (!model._interactor.isPointerLocked()) {
+        model.currentManipulator = null;
+      }
       publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
     }
+  };
+
+  //-------------------------------------------------------------------------
+  publicAPI.handleEndPointerLock = () => {
+    model.currentManipulator = null;
   };
 
   //-------------------------------------------------------------------------

@@ -184,6 +184,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       x: scaleX * (source.clientX - bounds.left),
       y: scaleY * (bounds.height - source.clientY + bounds.top),
       z: 0,
+      movementX: scaleX * source.movementX,
+      movementY: scaleY * source.movementY,
     };
 
     // if multitouch, do not update the current renderer

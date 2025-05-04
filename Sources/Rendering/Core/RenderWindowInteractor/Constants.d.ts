@@ -23,9 +23,16 @@ export declare enum Axis {
   ThumbstickY = 4,
 }
 
+export declare enum MouseButton {
+  LeftButton = 1,
+  MiddleButton = 2,
+  RightButton = 3,
+}
+
 declare const _default: {
   Device: typeof Device;
   Input: typeof Input;
   Axis: typeof Axis;
+  MouseButton: typeof MouseButton;
 };
 export default _default;

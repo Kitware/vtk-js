@@ -6,6 +6,7 @@ import vtkInteractorStyle from '../../../Rendering/Core/InteractorStyle';
 import {
   Device,
   Input,
+  MouseButton,
 } from '../../../Rendering/Core/RenderWindowInteractor/Constants';
 import { Nullable, Vector3 } from '../../../types';
 
@@ -120,7 +121,7 @@ export interface vtkInteractorStyleManipulator extends vtkInteractorStyle {
    * @param alt alt enabled
    */
   findMouseManipulator(
-    button: number,
+    button: MouseButton,
     shift: boolean,
     scroll: boolean,
     alt: boolean
@@ -285,13 +286,13 @@ export interface vtkInteractorStyleManipulator extends vtkInteractorStyle {
    * @param button which button
    * @param callData event data
    */
-  onButtonDown(button: number, callData: unknown): void;
+  onButtonDown(button: MouseButton, callData: unknown): void;
 
   /**
    * Handles a button up event.
    * @param button which button
    */
-  onButtonUp(button: number): void;
+  onButtonUp(button: MouseButton): void;
 
   /**
    * Sets the rotation factor.
