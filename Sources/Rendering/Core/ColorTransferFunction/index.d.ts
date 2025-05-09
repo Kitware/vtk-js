@@ -312,6 +312,30 @@ export interface vtkColorTransferFunction extends vtkScalarsToColors {
    * @param colorMap
    */
   applyColorMap(colorMap: any): void;
+
+  /**
+   * Get the color space of the color transfer function.
+   * @returns {ColorSpace}
+   */
+  getColorSpace(): ColorSpace;
+
+  /**
+   * Set the color space of the color transfer function.
+   * @param {ColorSpace} colorSpace
+   */
+  setColorSpace(colorSpace: ColorSpace): void;
+
+  /**
+   * Get the scale of the color transfer function.
+   * @returns {Scale}
+   */
+  getScale(): Scale;
+
+  /**
+   * Set the scale of the color transfer function.
+   * @param {Scale} scale
+   */
+  setScale(scale: Scale): void;
 }
 
 /**
