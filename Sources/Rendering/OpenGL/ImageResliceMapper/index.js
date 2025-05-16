@@ -318,12 +318,12 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           model.context.getExtension('EXT_texture_norm16')
         );
         newScalarTexture.resetFormatAndType();
-        newScalarTexture.create3DFilterableFromDataArray(
-          dims[0],
-          dims[1],
-          dims[2],
-          scalars
-        );
+        newScalarTexture.create3DFilterableFromDataArray({
+          width: dims[0],
+          height: dims[1],
+          depth: dims[2],
+          dataArray: scalars,
+        });
         model._openGLRenderWindow.setGraphicsResourceForObject(
           scalars,
           newScalarTexture,
@@ -340,14 +340,13 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         actorProperty.setUpdatedExtents([]);
 
         const dims = imageData.getDimensions();
-        model.scalarTextures[component].create3DFilterableFromDataArray(
-          dims[0],
-          dims[1],
-          dims[2],
-          scalars,
-          false,
-          updatedExtents
-        );
+        model.scalarTextures[component].create3DFilterableFromDataArray({
+          width: dims[0],
+          height: dims[1],
+          depth: dims[2],
+          dataArray: scalars,
+          updatedExtents,
+        });
       }
 
       replaceGraphicsResource(
@@ -409,13 +408,13 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           }
         }
         newColorTexture.resetFormatAndType();
-        newColorTexture.create2DFromRaw(
-          cWidth,
-          textureHeight,
-          3,
-          VtkDataTypes.UNSIGNED_CHAR,
-          cTable
-        );
+        newColorTexture.create2DFromRaw({
+          width: cWidth,
+          height: textureHeight,
+          numComps: 3,
+          dataType: VtkDataTypes.UNSIGNED_CHAR,
+          data: cTable,
+        });
       } else {
         for (let column = 0; column < cWidth * 3; ++column) {
           const opacity = (255.0 * column) / ((cWidth - 1) * 3);
@@ -427,13 +426,13 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           }
         }
         newColorTexture.resetFormatAndType();
-        newColorTexture.create2DFromRaw(
-          cWidth,
-          1,
-          3,
-          VtkDataTypes.UNSIGNED_CHAR,
-          cTable
-        );
+        newColorTexture.create2DFromRaw({
+          width: cWidth,
+          height: 1,
+          numComps: 3,
+          dataType: VtkDataTypes.UNSIGNED_CHAR,
+          data: cTable,
+        });
       }
 
       if (firstColorTransferFunc) {
@@ -506,24 +505,24 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           }
         }
         newOpacityTexture.resetFormatAndType();
-        newOpacityTexture.create2DFromRaw(
-          pwfWidth,
-          textureHeight,
-          1,
-          VtkDataTypes.FLOAT,
-          pwfFloatTable
-        );
+        newOpacityTexture.create2DFromRaw({
+          width: pwfWidth,
+          height: textureHeight,
+          numComps: 1,
+          dataType: VtkDataTypes.FLOAT,
+          data: pwfFloatTable,
+        });
       } else {
         // default is opaque
         pwfTable.fill(255.0);
         newOpacityTexture.resetFormatAndType();
-        newOpacityTexture.create2DFromRaw(
-          pwfWidth,
-          textureHeight,
-          1,
-          VtkDataTypes.UNSIGNED_CHAR,
-          pwfTable
-        );
+        newOpacityTexture.create2DFromRaw({
+          width: pwfWidth,
+          height: textureHeight,
+          numComps: 1,
+          dataType: VtkDataTypes.UNSIGNED_CHAR,
+          data: pwfTable,
+        });
       }
       if (firstPwFunc) {
         model._openGLRenderWindow.setGraphicsResourceForObject(

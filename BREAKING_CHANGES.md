@@ -1,6 +1,8 @@
 ## From 32.x to 33
 
 - **vtkMapper**: many properties have moved to `vtkVolumeProperty`. The full list of changed methods is: `getAnisotropy`, `getComputeNormalFromOpacity`, `getFilterMode`, `getFilterModeAsString`, `getGlobalIlluminationReach`, `getIpScalarRange`, `getIpScalarRangeByReference`, `getLAOKernelRadius`, `getLAOKernelSize`, `getLocalAmbientOcclusion`, `getPreferSizeOverAccuracy`, `getVolumetricScatteringBlending`, `setAnisotropy`, `setAverageIPScalarRange`, `setComputeNormalFromOpacity`, `setFilterMode`, `setFilterModeToNormalized`, `setFilterModeToOff`, `setFilterModeToRaw`, `setGlobalIlluminationReach`, `setIpScalarRange`, `setIpScalarRangeFrom`, `setLAOKernelRadius`, `setLAOKernelSize`, `setLocalAmbientOcclusion`, `setPreferSizeOverAccuracy`, `setVolumetricScatteringBlending`.
+- **vtkOpenGLTexture**: The public `create2D*` and `create3D*` methods used to have positional parameters. These methods now use named parameters via passing in an object record.
+
 ## From 31.x to 32
 
 - **vtkMapper**: remove `mapScalarsToTexture` from the public API. The function becomes protected and its API changes. This shouldn't cause any issue in most cases.

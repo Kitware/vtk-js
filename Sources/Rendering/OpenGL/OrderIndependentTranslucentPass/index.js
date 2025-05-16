@@ -103,35 +103,35 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
     model.translucentRGBATexture.setFormat(gl.RGBA);
     model.translucentRGBATexture.setOpenGLDataType(gl.HALF_FLOAT);
     model.translucentRGBATexture.setOpenGLRenderWindow(viewNode);
-    model.translucentRGBATexture.create2DFromRaw(
-      size[0],
-      size[1],
-      4,
-      'Float32Array',
-      null
-    );
+    model.translucentRGBATexture.create2DFromRaw({
+      width: size[0],
+      height: size[1],
+      numComps: 4,
+      dataType: 'Float32Array',
+      data: null,
+    });
 
     model.translucentRTexture = vtkOpenGLTexture.newInstance();
     model.translucentRTexture.setInternalFormat(gl.R16F);
     model.translucentRTexture.setFormat(gl.RED);
     model.translucentRTexture.setOpenGLDataType(gl.HALF_FLOAT);
     model.translucentRTexture.setOpenGLRenderWindow(viewNode);
-    model.translucentRTexture.create2DFromRaw(
-      size[0],
-      size[1],
-      1,
-      'Float32Array',
-      null
-    );
+    model.translucentRTexture.create2DFromRaw({
+      width: size[0],
+      height: size[1],
+      numComps: 1,
+      dataType: 'Float32Array',
+      data: null,
+    });
 
     model.translucentZTexture = vtkOpenGLTexture.newInstance();
     model.translucentZTexture.setOpenGLRenderWindow(viewNode);
-    model.translucentZTexture.createDepthFromRaw(
-      size[0],
-      size[1],
-      'Float32Array',
-      null
-    );
+    model.translucentZTexture.createDepthFromRaw({
+      width: size[0],
+      height: size[1],
+      dataType: 'Float32Array',
+      data: null,
+    });
 
     model.framebuffer.setColorBuffer(model.translucentRGBATexture, 0);
     model.framebuffer.setColorBuffer(model.translucentRTexture, 1);
