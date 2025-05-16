@@ -1,7 +1,7 @@
 import { EventHandler, vtkSubscription } from '../../../interfaces';
 import { Nullable } from '../../../types';
-import vtkInteractorObserver from '../InteractorObserver';
-import vtkRenderer from '../Renderer';
+import { vtkInteractorObserver } from '../InteractorObserver';
+import { vtkRenderer } from '../Renderer';
 
 export interface vtkInteractorStyle extends vtkInteractorObserver {
   /**

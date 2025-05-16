@@ -1,7 +1,8 @@
-import vtkViewProxy from '../ViewProxy';
+import { vtkViewProxy } from '../ViewProxy';
 
 export interface vtkView2DProxy extends vtkViewProxy {
   getAxis(): number;
 }
 
-export default vtkView2DProxy;
+declare const _default: vtkView2DProxy;
+export default _default;

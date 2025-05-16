@@ -1,9 +1,9 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
-import vtkRenderer from '../../../Rendering/Core/Renderer';
-import HtmlDataAccessHelper from '../../Core/DataAccessHelper/HtmlDataAccessHelper';
-import HttpDataAccessHelper from '../../Core/DataAccessHelper/HttpDataAccessHelper';
-import JSZipDataAccessHelper from '../../Core/DataAccessHelper/JSZipDataAccessHelper';
-import LiteHttpDataAccessHelper from '../../Core/DataAccessHelper/LiteHttpDataAccessHelper';
+import { vtkRenderer } from '../../../Rendering/Core/Renderer';
+import { HtmlDataAccessHelper } from '../../Core/DataAccessHelper/HtmlDataAccessHelper';
+import { HttpDataAccessHelper } from '../../Core/DataAccessHelper/HttpDataAccessHelper';
+import { JSZipDataAccessHelper } from '../../Core/DataAccessHelper/JSZipDataAccessHelper';
+import { LiteHttpDataAccessHelper } from '../../Core/DataAccessHelper/LiteHttpDataAccessHelper';
 
 interface IIFCImporterOptions {
   compression?: string;

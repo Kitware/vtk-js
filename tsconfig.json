@@ -1,0 +1,6 @@
+{
+  "include": ["Sources/**/*.d.ts", "Utilities/**/*.d.ts"],
+  "compilerOptions": {
+    "noEmit": true
+  }
+}

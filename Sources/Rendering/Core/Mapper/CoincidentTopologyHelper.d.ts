@@ -121,7 +121,7 @@ export interface StaticCoincidentTopologyMethods {
   getResolveCoincidentTopologyAsString(): string;
 }
 
-export default interface CoincidentTopologyHelper
+export interface CoincidentTopologyHelper
   extends StaticCoincidentTopologyMethods {
   /**
    *
@@ -192,3 +192,6 @@ export default interface CoincidentTopologyHelper
    */
   getCoincidentTopologyPointOffsetParameters(): ICoincidentTopology;
 }
+
+declare const _default: CoincidentTopologyHelper;
+export default _default;

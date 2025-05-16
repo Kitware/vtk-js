@@ -1,5 +1,5 @@
-import vtkInteractorObserver from '../../../Rendering/Core/InteractorObserver';
-import vtkRenderer from '../../../Rendering/Core/Renderer';
+import { vtkInteractorObserver } from '../../../Rendering/Core/InteractorObserver';
+import { vtkRenderer } from '../../../Rendering/Core/Renderer';
 import { Vector2, Vector3 } from '../../../types';
 
 export interface vtkCompositeCameraManipulator {

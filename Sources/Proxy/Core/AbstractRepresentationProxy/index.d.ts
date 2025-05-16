@@ -1,9 +1,9 @@
 import { vtkObject } from '../../../interfaces';
 import { VtkProxy } from '../../../macros';
-import vtkSourceProxy from '../SourceProxy';
-import vtkAbstractMapper from '../../../Rendering/Core/AbstractMapper';
-import vtkActor from '../../../Rendering/Core/Actor';
-import vtkVolume from '../../../Rendering/Core/Volume';
+import { vtkSourceProxy } from '../SourceProxy';
+import { vtkAbstractMapper } from '../../../Rendering/Core/AbstractMapper';
+import { vtkActor } from '../../../Rendering/Core/Actor';
+import { vtkVolume } from '../../../Rendering/Core/Volume';
 
 export interface vtkAbstractRepresentationProxy extends VtkProxy {
   setInput<T>(source: vtkSourceProxy<T>): void;
@@ -21,4 +21,5 @@ export interface vtkAbstractRepresentationProxy extends VtkProxy {
   getVolumes(): vtkVolume[];
 }
 
+declare const vtkAbstractRepresentationProxy: vtkAbstractRepresentationProxy;
 export default vtkAbstractRepresentationProxy;
