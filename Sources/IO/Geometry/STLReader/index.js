@@ -152,31 +152,31 @@ function vtkSTLReader(publicAPI, model) {
       }
     }
 
-    const outVerts = new Float32Array(vMap.size * 3);
-    const keys = Array.from(vMap.keys());
-
-    for (let i = 0; i < keys.length; i++) {
-      const k = keys[i];
-      const j = vMap.get(k) * 3;
-      const coords = k.split(',').map((e) => +e * 10 ** -tolerance);
-      outVerts[j] = coords[0];
-      outVerts[j + 1] = coords[1];
-      outVerts[j + 2] = coords[2];
-    }
-
-    const outFaces = new Int32Array(faces);
-    for (let i = 0; i < faces.length; i += 4) {
-      outFaces[i] = 3;
-      outFaces[i + 1] = vIndexMap.get(faces[i + 1]);
-      outFaces[i + 2] = vIndexMap.get(faces[i + 2]);
-      outFaces[i + 3] = vIndexMap.get(faces[i + 3]);
-    }
-
-    polydata.getPoints().setData(outVerts);
-    polydata.getPolys().setData(outFaces);
-
     if (pointsChanged) {
-      publicAPI.modified();
+      const outVerts = new Float32Array(vMap.size * 3);
+      const keys = Array.from(vMap.keys());
+
+      for (let i = 0; i < keys.length; i++) {
+        const k = keys[i];
+        const j = vMap.get(k) * 3;
+        const coords = k.split(',').map((e) => +e * 10 ** -tolerance);
+        outVerts[j] = coords[0];
+        outVerts[j + 1] = coords[1];
+        outVerts[j + 2] = coords[2];
+      }
+
+      const outFaces = new Int32Array(faces.length);
+      for (let i = 0; i < faces.length; i += 4) {
+        outFaces[i] = 3;
+        outFaces[i + 1] = vIndexMap.get(faces[i + 1]);
+        outFaces[i + 2] = vIndexMap.get(faces[i + 2]);
+        outFaces[i + 3] = vIndexMap.get(faces[i + 3]);
+      }
+
+      polydata.getPoints().setData(outVerts);
+      polydata.getPolys().setData(outFaces);
+
+      polydata.modified();
     }
   }
 

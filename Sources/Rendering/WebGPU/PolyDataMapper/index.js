@@ -5,6 +5,8 @@ import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
+import { vtkErrorMacro } from 'vtk.js/Sources/macros';
+
 const { PrimitiveTypes } = vtkWebGPUBufferManager;
 
 // ----------------------------------------------------------------------------
@@ -34,6 +36,11 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.updateCellArrayMappers = (poly) => {
+    if (!poly) {
+      vtkErrorMacro('No input!');
+      return;
+    }
+
     const prims = [
       poly.getVerts(),
       poly.getLines(),
