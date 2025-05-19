@@ -244,13 +244,13 @@ function vtkFramebuffer(publicAPI, model) {
     texture.setOpenGLRenderWindow(model._openGLRenderWindow);
     texture.setMinificationFilter(Filter.LINEAR);
     texture.setMagnificationFilter(Filter.LINEAR);
-    texture.create2DFromRaw(
-      model.glFramebuffer.width,
-      model.glFramebuffer.height,
-      4,
-      VtkDataTypes.UNSIGNED_CHAR,
-      null
-    );
+    texture.create2DFromRaw({
+      width: model.glFramebuffer.width,
+      height: model.glFramebuffer.height,
+      numComps: 4,
+      dataType: VtkDataTypes.UNSIGNED_CHAR,
+      data: null,
+    });
     publicAPI.setColorBuffer(texture);
 
     // for now do not count on having a depth buffer texture
