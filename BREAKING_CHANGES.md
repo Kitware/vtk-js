@@ -1,6 +1,7 @@
-## From 32.x to 33
+## From 33.x to 34
 
 - **vtkMapper**: many properties have moved to `vtkVolumeProperty`. The full list of changed methods is: `getAnisotropy`, `getComputeNormalFromOpacity`, `getFilterMode`, `getFilterModeAsString`, `getGlobalIlluminationReach`, `getIpScalarRange`, `getIpScalarRangeByReference`, `getLAOKernelRadius`, `getLAOKernelSize`, `getLocalAmbientOcclusion`, `getPreferSizeOverAccuracy`, `getVolumetricScatteringBlending`, `setAnisotropy`, `setAverageIPScalarRange`, `setComputeNormalFromOpacity`, `setFilterMode`, `setFilterModeToNormalized`, `setFilterModeToOff`, `setFilterModeToRaw`, `setGlobalIlluminationReach`, `setIpScalarRange`, `setIpScalarRangeFrom`, `setLAOKernelRadius`, `setLAOKernelSize`, `setLocalAmbientOcclusion`, `setPreferSizeOverAccuracy`, `setVolumetricScatteringBlending`.
+- **vtkRenderWindowInteractor**: KeyPress, KeyDown and KeyUp events are now observed on the container and no longer on the document. "tabIndex=0" is now automatically added on RWI containers to give focus on your render windows and catch key events. Check the KeyPressEvents example for usage.
 - **vtkOpenGLTexture**: The public `create2D*` and `create3D*` methods used to have positional parameters. These methods now use named parameters via passing in an object record.
 
 ## From 31.x to 32
