@@ -1,10 +1,12 @@
 import { Bounds, Nullable, Range } from '../../../types';
-import vtkAbstractMapper3D, {
+import {
+  vtkAbstractMapper3D,
   IAbstractMapper3DInitialValues,
 } from '../AbstractMapper3D';
 import { ColorMode, GetArray, ScalarMode } from './Constants';
-import vtkDataArray from '../../../Common/Core/DataArray';
-import CoincidentTopologyHelper, {
+import { vtkDataArray } from '../../../Common/Core/DataArray';
+import {
+  CoincidentTopologyHelper,
   StaticCoincidentTopologyMethods,
 } from './CoincidentTopologyHelper';
 

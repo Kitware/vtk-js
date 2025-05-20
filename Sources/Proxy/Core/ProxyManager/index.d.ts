@@ -1,9 +1,9 @@
 import { vtkObject } from '../../../interfaces';
-import vtkSourceProxy from '../SourceProxy';
-import vtkViewProxy from '../ViewProxy';
-import vtkAbstractRepresentationProxy from '../AbstractRepresentationProxy';
-import vtkLookupTableProxy from '../LookupTableProxy';
-import vtkPiecewiseFunctionProxy from '../PiecewiseFunctionProxy';
+import { vtkSourceProxy } from '../SourceProxy';
+import { vtkViewProxy } from '../ViewProxy';
+import { vtkAbstractRepresentationProxy } from '../AbstractRepresentationProxy';
+import { vtkLookupTableProxy } from '../LookupTableProxy';
+import { vtkPiecewiseFunctionProxy } from '../PiecewiseFunctionProxy';
 import { VtkProxy } from '../../../macros';
 
 export type ProxyConfiguration = object;

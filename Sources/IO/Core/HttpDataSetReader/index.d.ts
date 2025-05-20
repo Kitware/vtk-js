@@ -1,8 +1,8 @@
 import { vtkAlgorithm, vtkObject, vtkSubscription } from '../../../interfaces';
-import HtmlDataAccessHelper from '../DataAccessHelper/HtmlDataAccessHelper';
-import HttpDataAccessHelper from '../DataAccessHelper/HttpDataAccessHelper';
-import JSZipDataAccessHelper from '../DataAccessHelper/JSZipDataAccessHelper';
-import LiteHttpDataAccessHelper from '../DataAccessHelper/LiteHttpDataAccessHelper';
+import { HtmlDataAccessHelper } from '../DataAccessHelper/HtmlDataAccessHelper';
+import { HttpDataAccessHelper } from '../DataAccessHelper/HttpDataAccessHelper';
+import { JSZipDataAccessHelper } from '../DataAccessHelper/JSZipDataAccessHelper';
+import { LiteHttpDataAccessHelper } from '../DataAccessHelper/LiteHttpDataAccessHelper';
 
 /**
  *

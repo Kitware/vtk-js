@@ -1,12 +1,14 @@
-import vtkAbstractImageMapper, {
+import {
+  vtkAbstractImageMapper,
   IAbstractImageMapperInitialValues,
 } from '../AbstractImageMapper';
-import IClosestIJKAxis from '../ImageMapper';
+import { IClosestIJKAxis } from '../ImageMapper';
 import { Bounds, Nullable } from '../../../types';
 import { SlicingMode } from '../ImageMapper/Constants';
-import vtkImageData from '../../../Common/DataModel/ImageData';
-import vtkCollection from '../../../Common/DataModel/Collection';
-import CoincidentTopologyHelper, {
+import { vtkImageData } from '../../../Common/DataModel/ImageData';
+import { vtkCollection } from '../../../Common/DataModel/Collection';
+import {
+  CoincidentTopologyHelper,
   StaticCoincidentTopologyMethods,
 } from '../Mapper/CoincidentTopologyHelper';
 

@@ -1,9 +1,8 @@
-import vtkInteractorObserver from '../../../Rendering/Core/InteractorObserver';
-import vtkProp from '../../../Rendering/Core/Prop';
-import vtkRenderer from '../../../Rendering/Core/Renderer';
-import vtkWidgetManager from '../WidgetManager';
-import vtkWidgetRepresentation from '../../Representations/WidgetRepresentation';
-import vtkWidgetState from '../WidgetState';
+import { vtkInteractorObserver } from '../../../Rendering/Core/InteractorObserver';
+import { vtkProp } from '../../../Rendering/Core/Prop';
+import { vtkWidgetManager } from '../WidgetManager';
+import { vtkWidgetRepresentation } from '../../Representations/WidgetRepresentation';
+import { vtkWidgetState } from '../WidgetState';
 import { Bounds } from '../../../types';
 import { RenderingTypes } from '../WidgetManager/Constants';
 import { EventHandler, vtkSubscription } from '../../../interfaces';
