@@ -1,5 +1,5 @@
 import { vtkObject } from '../../../interfaces';
-import { RGBColor } from '../../../types';
+import { Nullable, RGBColor } from '../../../types';
 import { Interpolation, Representation, Shading } from './Constants';
 import { vtkTexture } from '../../Core/Texture';
 
@@ -14,6 +14,8 @@ export interface IPropertyInitialValues {
   normalTexture?: vtkTexture;
   ambientOcclusionTexture?: vtkTexture;
   emissionTexture?: vtkTexture;
+  RMTexture?: vtkTexture;
+  ORMTexture?: vtkTexture;
   edgeColor?: RGBColor;
   ambient?: number;
   diffuse?: number;
@@ -216,32 +218,42 @@ export interface vtkProperty extends vtkObject {
   /**
    * Get the diffuse texture.
    */
-  getDiffuseTexture(): vtkTexture;
+  getDiffuseTexture(): Nullable<vtkTexture>;
 
   /**
    * Get the metallic texture.
    */
-  getMetallicTexture(): vtkTexture;
+  getMetallicTexture(): Nullable<vtkTexture>;
+
+  /**
+   * Get the roughness & metallic texture.
+   */
+  getRMTexture(): Nullable<vtkTexture>;
+
+  /**
+   * Get the occlusion, roughness & metallic texture.
+   */
+  getORMTexture(): Nullable<vtkTexture>;
 
   /**
    * Get the roughness texture.
    */
-  getRoughnessTexture(): vtkTexture;
+  getRoughnessTexture(): Nullable<vtkTexture>;
 
   /**
    * Get the normal texture.
    */
-  getNormalTexture(): vtkTexture;
+  getNormalTexture(): Nullable<vtkTexture>;
 
   /**
    * Get the ambient occlusion texture.
    */
-  getAmbientOcclusionTexture(): vtkTexture;
+  getAmbientOcclusionTexture(): Nullable<vtkTexture>;
 
   /**
    * Get the emission texture.
    */
-  getEmissionTexture(): vtkTexture;
+  getEmissionTexture(): Nullable<vtkTexture>;
 
   /**
    * Set the ambient lighting coefficient.
@@ -499,6 +511,18 @@ export interface vtkProperty extends vtkObject {
    * @param {vtkTexture} roughnessTexture
    */
   setRoughnessTexture(roughnessTexture: vtkTexture): boolean;
+
+  /**
+   * Set the roughness & metallic texture.
+   * @param {vtkTexture} RMTexture
+   */
+  setRMTexture(RMTexture: vtkTexture): boolean;
+
+  /**
+   * Set the occlusion, roughness & metallic texture.
+   * @param {vtkTexture} ORMTexture
+   */
+  setORMTexture(ORMTexture: vtkTexture): boolean;
 
   /**
    * Set the normal texture.
