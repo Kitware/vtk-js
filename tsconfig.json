@@ -1,5 +1,6 @@
 {
   "include": ["Sources/**/*.d.ts", "Utilities/**/*.d.ts"],
+  "exclude": ["Utilities/build/macro-shim.d.ts"],
   "compilerOptions": {
     "noEmit": true
   }

@@ -1,4 +1,4 @@
-import Macro from '../../Sources/macros';
+import Macro from './macros';
 
-export * from '../../Sources/macros';
+export * from './macros';
 export default Macro;
