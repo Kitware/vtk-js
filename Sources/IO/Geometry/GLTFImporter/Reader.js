@@ -252,25 +252,18 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
       }
     }
 
+    // Handle metallic-roughness texture (metallicRoughnessTexture)
     if (pbr.metallicRoughnessTexture) {
       const extensions = pbr.metallicRoughnessTexture.extensions;
       const tex = pbr.metallicRoughnessTexture.texture;
       const sampler = tex.sampler;
-      const metallicImage = await loadImage(tex.source, 'b');
-      const metallicTex = createVTKTextureFromGLTFTexture(
-        metallicImage,
+      const rmImage = await loadImage(tex.source);
+      const rmTex = createVTKTextureFromGLTFTexture(
+        rmImage,
         sampler,
         extensions
       );
-      property.setMetallicTexture(metallicTex);
-
-      const roughnessImage = await loadImage(tex.source, 'g');
-      const roughnessTex = createVTKTextureFromGLTFTexture(
-        roughnessImage,
-        sampler,
-        extensions
-      );
-      property.setRoughnessTexture(roughnessTex);
+      property.setRMTexture(rmTex);
     }
 
     // Handle ambient occlusion texture (occlusionTexture)
