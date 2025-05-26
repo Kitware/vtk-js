@@ -181,6 +181,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![PolyDataReader Example][PolyDataReaderWithIcon]](./PolyDataReader.html "VTK legacy reader(VTK)")
 [![ElevationReader Example][ElevationReaderWithIcon]](./ElevationReader.html "Elevation reader(CSV, JPG)")
 [![OBJReader Example][OBJReaderWithIcon]](./OBJReader.html "OBJ reader(OBJ, MTL, JPG)")
+[![OBJWriter Example][OBJWriterWithIcon]](./OBJWriter.html "OBJ writer(OBJ, ZIP)")
 [![PDBReader Example][PDBReaderWithIcon]](./PDBReader.html "PDB reader(OBJ, MTL, JPG)")
 [![XMLImageDataWriter Example][XMLImageDataWriterWithIcon]](./XMLImageDataWriter.html "ImageData XML writer(VTI)")
 [![XMLPolyDataDataWriter Example][XMLPolyDataWriterWithIcon]](./XMLPolyDataWriter.html "PolyData XML writer(VTP)")
@@ -206,6 +207,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [PolyDataReaderWithIcon]: ../docs/gallery/VTKReaderWithIcon.jpg
 [ElevationReaderWithIcon]: ../docs/gallery/ElevationReaderWithIcon.jpg
 [OBJReaderWithIcon]: ../docs/gallery/OBJReaderWithIcon.jpg
+[OBJWriterWithIcon]: ../docs/gallery/OBJWriterWithIcon.jpg
 [PDBReaderWithIcon]: ../docs/gallery/PDBReaderWithIcon.jpg
 [XMLImageDataWriterWithIcon]: ../docs/gallery/XMLImageDataWriterWithIcon.jpg
 [XMLPolyDataWriterWithIcon]: ../docs/gallery/XMLPolyDataWriterWithIcon.jpg
