@@ -48,13 +48,14 @@ function vtkWebGPUBuffer(publicAPI, model) {
   };
 
   publicAPI.createAndWrite = (data, usage) => {
+    const paddedSize = Math.ceil(data.byteLength / 4) * 4;
     model.handle = model.device.getHandle().createBuffer({
-      size: data.byteLength,
+      size: paddedSize,
       usage,
       mappedAtCreation: true,
       label: model.label,
     });
-    model.sizeInBytes = data.byteLength;
+    model.sizeInBytes = paddedSize;
     model.usage = usage;
     new Uint8Array(model.handle.getMappedRange()).set(
       new Uint8Array(data.buffer)
