@@ -88,48 +88,54 @@ function vtkWebGPUTexture(publicAPI, model) {
     let bufferBytesPerRow = model.width * tDetails.stride;
 
     const fixAll = (arr, height, depth) => {
-      // bytesPerRow must be a multiple of 256 so we might need to rebuild
-      // the data here before passing to the buffer. e.g. if it is unorm8x4 then
-      // we need to have width be a multiple of 64
-      const inWidthInBytes =
-        (arr.length / (height * depth)) * arr.BYTES_PER_ELEMENT;
-
-      // is this a half float texture?
+      // Check if the texture is half float
       const halfFloat =
         tDetails.elementSize === 2 && tDetails.sampleType === 'float';
 
-      // if we need to copy the data
-      if (halfFloat || inWidthInBytes % 256) {
-        const inArray = arr;
-        const inWidth = inWidthInBytes / inArray.BYTES_PER_ELEMENT;
+      const bytesPerElement = arr.BYTES_PER_ELEMENT;
+      const inWidthInBytes = (arr.length / (height * depth)) * bytesPerElement;
 
-        const outBytesPerElement = tDetails.elementSize;
-        const outWidthInBytes =
-          256 * Math.floor((inWidth * outBytesPerElement + 255) / 256);
-        const outWidth = outWidthInBytes / outBytesPerElement;
+      // No changes needed if not half float and already aligned
+      if (!halfFloat && inWidthInBytes % 256 === 0) {
+        return [arr, inWidthInBytes];
+      }
 
-        const outArray = macro.newTypedArray(
-          halfFloat ? 'Uint16Array' : inArray.constructor.name,
-          outWidth * height * depth
-        );
+      // Calculate dimensions for the new buffer
+      const inWidth = inWidthInBytes / bytesPerElement;
+      const outBytesPerElement = tDetails.elementSize;
+      const outWidthInBytes =
+        256 * Math.floor((inWidth * outBytesPerElement + 255) / 256);
+      const outWidth = outWidthInBytes / outBytesPerElement;
 
-        for (let v = 0; v < height * depth; v++) {
-          if (halfFloat) {
-            for (let i = 0; i < inWidth; i++) {
-              outArray[v * outWidth + i] = HalfFloat.toHalf(
-                inArray[v * inWidth + i]
-              );
-            }
-          } else {
-            outArray.set(
-              inArray.subarray(v * inWidth, (v + 1) * inWidth),
-              v * outWidth
-            );
+      // Create the output array
+      const outArray = macro.newTypedArray(
+        halfFloat ? 'Uint16Array' : arr.constructor.name,
+        outWidth * height * depth
+      );
+
+      // Copy and convert data when needed
+      const totalRows = height * depth;
+      if (halfFloat) {
+        for (let v = 0; v < totalRows; v++) {
+          const inOffset = v * inWidth;
+          const outOffset = v * outWidth;
+          for (let i = 0; i < inWidth; i++) {
+            outArray[outOffset + i] = HalfFloat.toHalf(arr[inOffset + i]);
           }
         }
-        return [outArray, outWidthInBytes];
+      } else if (outWidth === inWidth) {
+        // If the output width is the same as input, just copy
+        outArray.set(arr);
+      } else {
+        for (let v = 0; v < totalRows; v++) {
+          outArray.set(
+            arr.subarray(v * inWidth, (v + 1) * inWidth),
+            v * outWidth
+          );
+        }
       }
-      return [arr, inWidthInBytes];
+
+      return [outArray, outWidthInBytes];
     };
 
     if (req.nativeArray) {
