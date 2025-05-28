@@ -98,19 +98,21 @@ export function extend(
 export function newInstance(initialValues?: ITextureInitialValues): vtkTexture;
 
 /**
- * Method used to create mipmaps from given texture data. Works best with textures that have a
- * width and a height that are powers of two.
+ * Generates mipmaps for a given GPU texture using a compute shader.
  *
- * @param nativeArray the array of data to create mipmaps from.
- * @param width the width of the data
- * @param height the height of the data
- * @param level the level to which additional mipmaps are generated.
+ * This function iteratively generates each mip level for the provided texture,
+ * using a bilinear downsampling compute shader implemented in WGSL. It creates
+ * the necessary pipeline, bind groups, and dispatches compute passes for each
+ * mip level.
+ *
+ * @param {GPUDevice} device - The WebGPU device used to create resources and submit commands.
+ * @param {GPUTexture} texture - The GPU texture for which mipmaps will be generated.
+ * @param {number} mipLevelCount - The total number of mip levels to generate (including the base level).
  */
 export function generateMipmaps(
-  nativeArray: any,
-  width: number,
-  height: number,
-  level: number
+  device: any,
+  texture: any,
+  mipLevelCount: number
 ): Array<Uint8ClampedArray>;
 
 /**

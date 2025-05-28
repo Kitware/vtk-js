@@ -1,3 +1,4 @@
+/* eslint-disable no-bitwise */
 import macro from 'vtk.js/Sources/macros';
 
 // ----------------------------------------------------------------------------
@@ -139,101 +140,146 @@ function vtkTexture(publicAPI, model) {
   };
 }
 
-// Use nativeArray instead of self
-const generateMipmaps = (nativeArray, width, height, level) => {
-  // TODO: FIX UNEVEN TEXTURE MIP GENERATION:
-  // When textures don't have standard ratios, higher mip levels
-  // result in their color chanels getting messed up and shifting
-  // 3x3 gaussian kernel
-  const g3m = [1, 2, 1]; // eslint-disable-line
-  const g3w = 4; // eslint-disable-line
-  // 5x5 gaussian kernel
-  const g5m = [1, 2, 4, 2, 1]; // eslint-disable-line
-  const g5w = 10; // eslint-disable-line
-  // 7x7 gaussian kernel
-  const g7m = [1, 2, 6, 8, 6, 2, 1]; // eslint-disable-line
-  const g7w = 26; // eslint-disable-line
+/**
+ * Generates mipmaps for a given GPU texture using a compute shader.
+ *
+ * This function iteratively generates each mip level for the provided texture,
+ * using a bilinear downsampling compute shader implemented in WGSL. It creates
+ * the necessary pipeline, bind groups, and dispatches compute passes for each
+ * mip level.
+ *
+ * @param {GPUDevice} device - The WebGPU device used to create resources and submit commands.
+ * @param {GPUTexture} texture - The GPU texture for which mipmaps will be generated. Must be created with mip levels.
+ * @param {number} mipLevelCount - The total number of mip levels to generate (including the base level).
+ */
+const generateMipmaps = (device, texture, mipLevelCount) => {
+  const computeShaderCode = `
+    @group(0) @binding(0) var inputTexture: texture_2d<f32>;
+    @group(0) @binding(1) var outputTexture: texture_storage_2d<rgba8unorm, write>;
 
-  const kernel = g3m;
-  const kernelWeight = g3w;
+    @compute @workgroup_size(8, 8)
+    fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
+      let texelCoord = vec2<i32>(global_id.xy);
+      let outputSize = textureDimensions(outputTexture);
 
-  const hs = nativeArray.length / (width * height); // TODO: support for textures with depth more than 1
-  let currentWidth = width;
-  let currentHeight = height;
-  let imageData = nativeArray;
-  const maps = [imageData];
-
-  for (let i = 0; i < level; i++) {
-    const oldData = [...imageData];
-    currentWidth /= 2;
-    currentHeight /= 2;
-    imageData = new Uint8ClampedArray(currentWidth * currentHeight * hs);
-    const vs = hs * currentWidth;
-
-    // Scale down
-    let shift = 0;
-    for (let p = 0; p < imageData.length; p += hs) {
-      if (p % vs === 0) {
-        shift += 2 * hs * currentWidth;
+      if (texelCoord.x >= i32(outputSize.x) || texelCoord.y >= i32(outputSize.y)) {
+        return;
       }
 
-      for (let c = 0; c < hs; c++) {
-        let sample = oldData[shift + c];
-        sample += oldData[shift + hs + c];
-        sample += oldData[shift - 2 * vs + c];
-        sample += oldData[shift - 2 * vs + hs + c];
-        sample /= 4;
-        imageData[p + c] = sample;
-      }
+      let inputSize = textureDimensions(inputTexture);
+      let scale = vec2<f32>(inputSize) / vec2<f32>(outputSize);
 
-      shift += 2 * hs;
+      // Compute the floating-point source coordinate
+      let srcCoord = (vec2<f32>(texelCoord) + 0.5) * scale - 0.5;
+
+      // Get integer coordinates for the four surrounding texels
+      let x0 = i32(floor(srcCoord.x));
+      let x1 = min(x0 + 1, i32(inputSize.x) - 1);
+      let y0 = i32(floor(srcCoord.y));
+      let y1 = min(y0 + 1, i32(inputSize.y) - 1);
+
+      // Compute the weights
+      let wx = srcCoord.x - f32(x0);
+      let wy = srcCoord.y - f32(y0);
+
+      // Fetch the four texels
+      let c00 = textureLoad(inputTexture, vec2<i32>(x0, y0), 0);
+      let c10 = textureLoad(inputTexture, vec2<i32>(x1, y0), 0);
+      let c01 = textureLoad(inputTexture, vec2<i32>(x0, y1), 0);
+      let c11 = textureLoad(inputTexture, vec2<i32>(x1, y1), 0);
+
+      // Bilinear interpolation
+      let color = mix(
+        mix(c00, c10, wx),
+        mix(c01, c11, wx),
+        wy
+      );
+
+      textureStore(outputTexture, texelCoord, color);
     }
+  `;
 
-    // Horizontal Pass
-    let dataCopy = [...imageData];
-    for (let p = 0; p < imageData.length; p += hs) {
-      for (let c = 0; c < hs; c++) {
-        let x = -(kernel.length - 1) / 2;
-        let kw = kernelWeight;
-        let value = 0.0;
-        for (let k = 0; k < kernel.length; k++) {
-          let index = p + c + x * hs;
-          const lineShift = (index % vs) - ((p + c) % vs);
-          if (lineShift > hs) index += vs;
-          if (lineShift < -hs) index -= vs;
-          if (dataCopy[index]) {
-            value += dataCopy[index] * kernel[k];
-          } else {
-            kw -= kernel[k];
-          }
-          x += 1;
-        }
-        imageData[p + c] = value / kw;
-      }
-    }
-    // Vertical Pass
-    dataCopy = [...imageData];
-    for (let p = 0; p < imageData.length; p += hs) {
-      for (let c = 0; c < hs; c++) {
-        let x = -(kernel.length - 1) / 2;
-        let kw = kernelWeight;
-        let value = 0.0;
-        for (let k = 0; k < kernel.length; k++) {
-          const index = p + c + x * vs;
-          if (dataCopy[index]) {
-            value += dataCopy[index] * kernel[k];
-          } else {
-            kw -= kernel[k];
-          }
-          x += 1;
-        }
-        imageData[p + c] = value / kw;
-      }
-    }
+  const computeShader = device.createShaderModule({
+    code: computeShaderCode,
+  });
 
-    maps.push(imageData);
+  const bindGroupLayout = device.createBindGroupLayout({
+    entries: [
+      {
+        binding: 0,
+        // eslint-disable-next-line no-undef
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { sampleType: 'float' },
+      },
+      {
+        binding: 1,
+        // eslint-disable-next-line no-undef
+        visibility: GPUShaderStage.COMPUTE,
+        storageTexture: { format: 'rgba8unorm', access: 'write-only' },
+      },
+      {
+        binding: 2,
+        // eslint-disable-next-line no-undef
+        visibility: GPUShaderStage.COMPUTE,
+        sampler: { type: 'filtering' },
+      },
+    ],
+  });
+
+  const pipelineLayout = device.createPipelineLayout({
+    bindGroupLayouts: [bindGroupLayout],
+  });
+
+  const pipeline = device.createComputePipeline({
+    layout: pipelineLayout,
+    compute: {
+      module: computeShader,
+      entryPoint: 'main',
+    },
+  });
+
+  const sampler = device.createSampler({
+    magFilter: 'linear',
+    minFilter: 'linear',
+  });
+
+  // Generate each mip level
+  for (let mipLevel = 1; mipLevel < mipLevelCount; mipLevel++) {
+    const srcView = texture.createView({
+      baseMipLevel: mipLevel - 1,
+      mipLevelCount: 1,
+    });
+
+    const dstView = texture.createView({
+      baseMipLevel: mipLevel,
+      mipLevelCount: 1,
+    });
+
+    const bindGroup = device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+        { binding: 0, resource: srcView },
+        { binding: 1, resource: dstView },
+        { binding: 2, resource: sampler },
+      ],
+    });
+
+    const commandEncoder = device.createCommandEncoder();
+    const computePass = commandEncoder.beginComputePass();
+
+    computePass.setPipeline(pipeline);
+    computePass.setBindGroup(0, bindGroup);
+
+    const mipWidth = Math.max(1, texture.width >> mipLevel);
+    const mipHeight = Math.max(1, texture.height >> mipLevel);
+    const workgroupsX = Math.ceil(mipWidth / 8);
+    const workgroupsY = Math.ceil(mipHeight / 8);
+
+    computePass.dispatchWorkgroups(workgroupsX, workgroupsY);
+    computePass.end();
+
+    device.queue.submit([commandEncoder.finish()]);
   }
-  return maps;
 };
 
 // ----------------------------------------------------------------------------
