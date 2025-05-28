@@ -160,7 +160,7 @@ function vtkForwardPass(publicAPI, model) {
                 srcFactor: 'src-alpha',
                 dstFactor: 'one-minus-src-alpha',
               },
-              alpha: { srcfactor: 'one', dstFactor: 'one-minus-src-alpha' },
+              alpha: { srcFactor: 'one', dstFactor: 'one-minus-src-alpha' },
             },
           },
         ],
