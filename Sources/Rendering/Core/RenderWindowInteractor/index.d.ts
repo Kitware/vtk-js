@@ -1198,7 +1198,7 @@ export interface vtkRenderWindowInteractor extends vtkObject {
   /**
    *
    */
-  requestPointerLock(): void;
+  requestPointerLock(): Promise<void> | undefined;
 
   /**
    *
