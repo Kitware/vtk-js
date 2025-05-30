@@ -139,95 +139,98 @@ function vtkTexture(publicAPI, model) {
   };
 }
 
-// Use nativeArray instead of self
 const generateMipmaps = (nativeArray, width, height, level) => {
-  // TODO: FIX UNEVEN TEXTURE MIP GENERATION:
-  // When textures don't have standard ratios, higher mip levels
-  // result in their color chanels getting messed up and shifting
-  // 3x3 gaussian kernel
-  const g3m = [1, 2, 1]; // eslint-disable-line
-  const g3w = 4; // eslint-disable-line
-  // 5x5 gaussian kernel
-  const g5m = [1, 2, 4, 2, 1]; // eslint-disable-line
-  const g5w = 10; // eslint-disable-line
-  // 7x7 gaussian kernel
-  const g7m = [1, 2, 6, 8, 6, 2, 1]; // eslint-disable-line
-  const g7w = 26; // eslint-disable-line
+  // Define Gaussian kernels
+  const kernels = {
+    g3: { weights: [1, 2, 1], totalWeight: 4 },
+    // g5: { weights: [1, 2, 4, 2, 1], totalWeight: 10 },
+    // g7: { weights: [1, 2, 6, 8, 6, 2, 1], totalWeight: 26 }
+  };
 
-  const kernel = g3m;
-  const kernelWeight = g3w;
+  const { weights } = kernels.g3;
+  const kernelRadius = Math.floor(weights.length / 2);
 
-  const hs = nativeArray.length / (width * height); // TODO: support for textures with depth more than 1
+  const channels = nativeArray.length / (width * height); // Components per pixel
   let currentWidth = width;
   let currentHeight = height;
   let imageData = nativeArray;
   const maps = [imageData];
 
   for (let i = 0; i < level; i++) {
-    const oldData = [...imageData];
-    currentWidth /= 2;
-    currentHeight /= 2;
-    imageData = new Uint8ClampedArray(currentWidth * currentHeight * hs);
-    const vs = hs * currentWidth;
+    const prevData = imageData;
+    currentWidth = Math.max(1, Math.floor(currentWidth / 2));
+    currentHeight = Math.max(1, Math.floor(currentHeight / 2));
+    const prevWidth = currentWidth * 2;
 
-    // Scale down
-    let shift = 0;
-    for (let p = 0; p < imageData.length; p += hs) {
-      if (p % vs === 0) {
-        shift += 2 * hs * currentWidth;
+    // Allocate new smaller mipmap level
+    imageData = new Uint8ClampedArray(currentWidth * currentHeight * channels);
+
+    // Fast downsampling first (2x2 box filter)
+    for (let y = 0; y < currentHeight; y++) {
+      for (let x = 0; x < currentWidth; x++) {
+        const targetIdx = (y * currentWidth + x) * channels;
+        const sourceIdx = (y * 2 * prevWidth + x * 2) * channels;
+
+        for (let c = 0; c < channels; c++) {
+          // Average 4 pixels
+          imageData[targetIdx + c] = Math.floor(
+            (prevData[sourceIdx + c] +
+              prevData[sourceIdx + channels + c] +
+              prevData[sourceIdx + prevWidth * channels + c] +
+              prevData[sourceIdx + prevWidth * channels + channels + c]) /
+              4
+          );
+        }
       }
-
-      for (let c = 0; c < hs; c++) {
-        let sample = oldData[shift + c];
-        sample += oldData[shift + hs + c];
-        sample += oldData[shift - 2 * vs + c];
-        sample += oldData[shift - 2 * vs + hs + c];
-        sample /= 4;
-        imageData[p + c] = sample;
-      }
-
-      shift += 2 * hs;
     }
 
-    // Horizontal Pass
-    let dataCopy = [...imageData];
-    for (let p = 0; p < imageData.length; p += hs) {
-      for (let c = 0; c < hs; c++) {
-        let x = -(kernel.length - 1) / 2;
-        let kw = kernelWeight;
-        let value = 0.0;
-        for (let k = 0; k < kernel.length; k++) {
-          let index = p + c + x * hs;
-          const lineShift = (index % vs) - ((p + c) % vs);
-          if (lineShift > hs) index += vs;
-          if (lineShift < -hs) index -= vs;
-          if (dataCopy[index]) {
-            value += dataCopy[index] * kernel[k];
-          } else {
-            kw -= kernel[k];
+    // Apply Gaussian blur for smoothing
+    // Horizontal pass
+    const tempData = new Uint8ClampedArray(imageData);
+    const rowSize = currentWidth * channels;
+
+    for (let y = 0; y < currentHeight; y++) {
+      for (let x = 0; x < currentWidth; x++) {
+        for (let c = 0; c < channels; c++) {
+          const targetIdx = (y * currentWidth + x) * channels + c;
+          let sum = 0;
+          let usedWeight = 0;
+
+          for (let k = -kernelRadius; k <= kernelRadius; k++) {
+            const sourceX = Math.min(Math.max(0, x + k), currentWidth - 1);
+            const sourceIdx = y * rowSize + sourceX * channels + c;
+            const weight = weights[k + kernelRadius];
+
+            sum += tempData[sourceIdx] * weight;
+            usedWeight += weight;
           }
-          x += 1;
+
+          imageData[targetIdx] = Math.round(sum / usedWeight);
         }
-        imageData[p + c] = value / kw;
       }
     }
-    // Vertical Pass
-    dataCopy = [...imageData];
-    for (let p = 0; p < imageData.length; p += hs) {
-      for (let c = 0; c < hs; c++) {
-        let x = -(kernel.length - 1) / 2;
-        let kw = kernelWeight;
-        let value = 0.0;
-        for (let k = 0; k < kernel.length; k++) {
-          const index = p + c + x * vs;
-          if (dataCopy[index]) {
-            value += dataCopy[index] * kernel[k];
-          } else {
-            kw -= kernel[k];
+
+    // Vertical pass
+    const tempData2 = new Uint8ClampedArray(imageData);
+
+    for (let y = 0; y < currentHeight; y++) {
+      for (let x = 0; x < currentWidth; x++) {
+        for (let c = 0; c < channels; c++) {
+          const targetIdx = (y * currentWidth + x) * channels + c;
+          let sum = 0;
+          let usedWeight = 0;
+
+          for (let k = -kernelRadius; k <= kernelRadius; k++) {
+            const sourceY = Math.min(Math.max(0, y + k), currentHeight - 1);
+            const sourceIdx = sourceY * rowSize + x * channels + c;
+            const weight = weights[k + kernelRadius];
+
+            sum += tempData2[sourceIdx] * weight;
+            usedWeight += weight;
           }
-          x += 1;
+
+          imageData[targetIdx] = Math.round(sum / usedWeight);
         }
-        imageData[p + c] = value / kw;
       }
     }
 
