@@ -3,23 +3,16 @@ import {
   vtkAbstractWidgetFactory,
   IAbstractWidgetFactoryInitialValues,
 } from '../../Core/AbstractWidgetFactory';
-import vtkResliceCursorWidgetDefaultInstance from './behavior';
-import vtkAbstractWidget from '../../Core/AbstractWidget';
-import vtkImageData from '../../../Common/DataModel/ImageData';
-import vtkImageReslice from '../../../Imaging/Core/ImageReslice';
-import vtkPlaneSource from '../../../Filters/Sources/PlaneSource';
-import vtkRenderer from '../../../Rendering/Core/Renderer';
-import vtkPlaneManipulator from '../../Manipulators/PlaneManipulator';
+import { vtkResliceCursorWidgetDefaultInstance } from './behavior';
+import { vtkAbstractWidget } from '../../Core/AbstractWidget';
+import { vtkImageData } from '../../../Common/DataModel/ImageData';
+import { vtkImageReslice } from '../../../Imaging/Core/ImageReslice';
+import { vtkPlaneSource } from '../../../Filters/Sources/PlaneSource';
+import { vtkRenderer } from '../../../Rendering/Core/Renderer';
+import { vtkPlaneManipulator } from '../../Manipulators/PlaneManipulator';
 import { ViewTypes } from '../../../Widgets/Core/WidgetManager/Constants';
 import { Vector2, Vector3 } from '../../../types';
-
-export interface IDisplayScaleParams {
-  dispHeightFactor: number;
-  cameraPosition: Vector3;
-  cameraDir: Vector3;
-  isParallel: false;
-  rendererPixelDims: Vector2;
-}
+import { IDisplayScaleParams } from '../../../Widgets/Core/WidgetManager';
 
 export interface vtkResliceCursorWidget<
   WidgetInstance extends vtkAbstractWidget = vtkResliceCursorWidgetDefaultInstance

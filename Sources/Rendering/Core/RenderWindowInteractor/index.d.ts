@@ -1,7 +1,7 @@
 import { vtkObject, vtkSubscription } from '../../../interfaces';
 import { Nullable } from '../../../types';
 import vtkRenderer from '../Renderer';
-import { Axis, Device, Input } from './Constants';
+import { Axis, Device, Input, MouseButton } from './Constants';
 
 declare enum handledEvents {
   'StartAnimation',
@@ -1397,5 +1397,6 @@ export declare const vtkRenderWindowInteractor: {
   Device: typeof Device;
   Input: typeof Input;
   Axis: typeof Axis;
+  MouseButton: typeof MouseButton;
 };
 export default vtkRenderWindowInteractor;

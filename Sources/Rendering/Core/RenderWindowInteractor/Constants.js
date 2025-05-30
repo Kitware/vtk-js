@@ -23,8 +23,15 @@ export const Axis = {
   ThumbstickY: 4,
 };
 
+export const MouseButton = {
+  LeftButton: 1,
+  MiddleButton: 2,
+  RightButton: 3,
+};
+
 export default {
   Device,
   Input,
   Axis,
+  MouseButton,
 };

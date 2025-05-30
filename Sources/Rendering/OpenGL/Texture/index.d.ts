@@ -1,6 +1,6 @@
 import { Wrap, Filter } from './Constants';
 import vtkOpenGLRenderWindow from '../RenderWindow';
-import { Nullable } from '../../../types';
+import { Extent, Nullable } from '../../../types';
 import { VtkDataTypes } from '../../../Common/Core/DataArray';
 import { vtkViewNode } from '../../../Rendering/SceneGraph/ViewNode';
 import { vtkObject, vtkRange } from '../../../interfaces';
@@ -275,12 +275,16 @@ export interface vtkOpenGLTexture extends vtkViewNode {
 
   /**
    * Creates a 3D texture from raw data.
+   *
+   * updatedExtents is currently incompatible with webgl1, since there's no extent scaling.
+   *
    * @param width The width of the texture.
    * @param height The height of the texture.
    * @param depth The depth of the texture.
    * @param numComps The number of components in the texture.
    * @param dataType The data type of the texture.
    * @param data The raw data for the texture.
+   * @param updatedExtents Only update the specified extents (default: [])
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
   create3DFromRaw(
@@ -289,11 +293,15 @@ export interface vtkOpenGLTexture extends vtkViewNode {
     depth: number,
     numComps: number,
     dataType: VtkDataTypes,
-    data: any
+    data: any,
+    updatedExtents?: Extent[]
   ): boolean;
 
   /**
    * Creates a 3D filterable texture from raw data, with a preference for size over accuracy if necessary.
+   *
+   * updatedExtents is currently incompatible with webgl1, since there's no extent scaling.
+   *
    * @param width The width of the texture.
    * @param height The height of the texture.
    * @param depth The depth of the texture.
@@ -302,6 +310,7 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param values The raw data for the texture.
    * @param preferSizeOverAccuracy Whether to prefer texture size over accuracy.
    * @param [ranges] The precomputed ranges of the data (optional). Provided to
+   * @param updatedExtents Only update the specified extents (default: [])
    * prevent computation of the data ranges.
    * @returns {boolean} True if the texture was successfully created, false
    * otherwise.
@@ -314,16 +323,21 @@ export interface vtkOpenGLTexture extends vtkViewNode {
     dataType: VtkDataTypes,
     values: any,
     preferSizeOverAccuracy: boolean,
-    ranges?: vtkRange[]
+    ranges?: vtkRange[],
+    updatedExtents?: Extent[]
   ): boolean;
 
   /**
    * Creates a 3D filterable texture from a data array, with a preference for size over accuracy if necessary.
+   *
+   * updatedExtents is currently incompatible with webgl1, since there's no extent scaling.
+   *
    * @param width The width of the texture.
    * @param height The height of the texture.
    * @param depth The depth of the texture.
    * @param dataArray The data array to use for the texture.
    * @param preferSizeOverAccuracy Whether to prefer texture size over accuracy.
+   * @param updatedExtents Only update the specified extents (default: [])
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
   create3DFilterableFromDataArray(
@@ -331,7 +345,8 @@ export interface vtkOpenGLTexture extends vtkViewNode {
     height: number,
     depth: number,
     dataArray: any,
-    preferSizeOverAccuracy: boolean
+    preferSizeOverAccuracy: boolean,
+    updatedExtents?: Extent[]
   ): boolean;
 
   /**

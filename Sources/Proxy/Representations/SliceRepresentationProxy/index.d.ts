@@ -1,4 +1,4 @@
-import vtkAbstractRepresentationProxy from '../../Core/AbstractRepresentationProxy';
+import { vtkAbstractRepresentationProxy } from '../../Core/AbstractRepresentationProxy';
 
 export interface vtkSliceRepresentationProxy
   extends vtkAbstractRepresentationProxy {
@@ -24,4 +24,5 @@ export interface vtkSliceRepresentationProxy
   getSlice(): number;
 }
 
-export default vtkSliceRepresentationProxy;
+declare const _default: vtkSliceRepresentationProxy;
+export default _default;

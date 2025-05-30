@@ -12,6 +12,14 @@ import { vtkObject } from '../../../interfaces';
 import { CaptureOn, ViewTypes } from './Constants';
 import { Nullable } from '../../../types';
 
+export interface IDisplayScaleParams {
+  dispHeightFactor: number;
+  cameraPosition: number[];
+  cameraDir: number[];
+  isParallel: boolean;
+  rendererPixelDims: number[];
+}
+
 export interface ISelectedData {
   requestCount: number;
   propID: number;
@@ -45,7 +53,10 @@ export function extractRenderingComponents(
  * (vertical) distance that matches a display distance of 30px for a coordinate
  * `coord`, you would compute `30 * getPixelWorldHeightAtCoord(coord)`.
  */
-export function getPixelWorldHeightAtCoord(coord: []): Number;
+export function getPixelWorldHeightAtCoord(
+  coord: [],
+  displayScaleParams: IDisplayScaleParams
+): Number;
 
 export interface vtkWidgetManager extends vtkObject {
   /**

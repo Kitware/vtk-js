@@ -1,15 +1,17 @@
 import { mat3, mat4, quat, vec3 } from 'gl-matrix';
-import { Nullable } from '../../../types';
+import { Extent, Nullable } from '../../../types';
 import { vtkOutputPort } from '../../../interfaces';
-import vtkAbstractMapper3D, {
+import {
+  vtkAbstractMapper3D,
   IAbstractMapper3DInitialValues,
 } from '../AbstractMapper3D';
-import vtkDataArray from '../../../Common/Core/DataArray';
-import vtkImageData from '../../../Common/DataModel/ImageData';
-import vtkPolyData from '../../../Common/DataModel/PolyData';
-import vtkPolyLine from '../../../Common/DataModel/PolyLine';
+import { vtkDataArray } from '../../../Common/Core/DataArray';
+import { vtkImageData } from '../../../Common/DataModel/ImageData';
+import { vtkPolyData } from '../../../Common/DataModel/PolyData';
+import { vtkPolyLine } from '../../../Common/DataModel/PolyLine';
 import { ProjectionMode } from './Constants';
-import CoincidentTopologyHelper, {
+import {
+  CoincidentTopologyHelper,
   StaticCoincidentTopologyMethods,
 } from '../Mapper/CoincidentTopologyHelper';
 
@@ -307,6 +309,25 @@ export interface vtkImageCPRMapper
    * @param imageData
    */
   setImageConnection(imageData: vtkOutputPort): void;
+
+  /**
+   * Tells the mapper to only update the specified extents.
+   *
+   * If there are zero extents, the mapper updates the entire volume texture.
+   * Otherwise, the mapper will only update the texture by the specified extents
+   * during the next render call.
+   *
+   * This array is cleared after a successful render.
+   * @param extents
+   */
+  setUpdatedExtents(extents: Extent[]): boolean;
+
+  /**
+   * Retrieves the updated extents.
+   *
+   * This array is cleared after every successful render.
+   */
+  getUpdatedExtents(): Extent[];
 }
 
 /**

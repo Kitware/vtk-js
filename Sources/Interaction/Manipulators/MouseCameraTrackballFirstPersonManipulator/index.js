@@ -15,74 +15,30 @@ function vtkMouseCameraTrackballFirstPersonManipulator(publicAPI, model) {
   const internal = {
     interactor: null,
     renderer: null,
-    previousPosition: null,
   };
 
   //--------------------------------------------------------------------------
 
   publicAPI.onButtonDown = (interactor, renderer, position) => {
-    internal.previousPosition = position;
-
     if (model.usePointerLock && !interactor.isPointerLocked()) {
       Object.assign(internal, { interactor, renderer });
-      Promise.resolve(interactor.requestPointerLock()).then(() => {
-        publicAPI.startPointerLockInteraction();
-      });
+      interactor.requestPointerLock();
     }
-  };
-
-  //--------------------------------------------------------------------------
-
-  publicAPI.startPointerLockInteraction = () => {
-    const { interactor } = internal;
-
-    // TODO: at some point, this should perhaps be done in
-    // RenderWindowInteractor instead of here.
-    // We need to hook into mousemove directly for two reasons:
-    // 1. We need to keep receiving mouse move events after the mouse button
-    //    is released. This is currently not possible with
-    //    vtkInteractorStyleManipulator.
-    // 2. Since the mouse is stationary in pointer lock mode, we need the
-    //    event.movementX and event.movementY info, which are not currently
-    //    passed via interactor.onMouseMove.
-    document.addEventListener('mousemove', publicAPI.onPointerLockMove);
-
-    let subscription = null;
-    const endInteraction = () => {
-      document.removeEventListener('mousemove', publicAPI.onPointerLockMove);
-      subscription.unsubscribe();
-    };
-    subscription = interactor.onEndPointerLock(endInteraction);
-  };
-
-  //--------------------------------------------------------------------------
-
-  publicAPI.onPointerLockMove = (e) => {
-    const sensitivity = model.sensitivity;
-    const yaw = -1 * e.movementX * sensitivity;
-    const pitch = -1 * e.movementY * sensitivity;
-
-    publicAPI.moveCamera(yaw, pitch);
   };
 
   //--------------------------------------------------------------------------
 
   publicAPI.onMouseMove = (interactor, renderer, position) => {
-    // This is currently only being called for non pointer lock mode
     if (!position) {
       return;
     }
 
-    const { previousPosition } = internal;
-
     const sensitivity = model.sensitivity;
-    const yaw = (previousPosition.x - position.x) * sensitivity;
-    const pitch = (position.y - previousPosition.y) * sensitivity;
+    const yaw = -position.movementX * sensitivity;
+    const pitch = -position.movementY * sensitivity;
 
     Object.assign(internal, { interactor, renderer });
     publicAPI.moveCamera(yaw, pitch);
-
-    internal.previousPosition = position;
   };
 
   //--------------------------------------------------------------------------

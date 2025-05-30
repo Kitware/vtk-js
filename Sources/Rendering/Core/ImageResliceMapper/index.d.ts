@@ -1,12 +1,13 @@
-import vtkAbstractImageMapper, {
+import {
+  vtkAbstractImageMapper,
   IAbstractImageMapperInitialValues,
 } from '../AbstractImageMapper';
-import vtkImageData from '../../../Common/DataModel/ImageData';
-import vtkPlane from '../../../Common/DataModel/Plane';
-import vtkPolyData from '../../../Common/DataModel/PolyData';
-import { Bounds, Nullable, Vector3 } from '../../../types';
+import { vtkPlane } from '../../../Common/DataModel/Plane';
+import { vtkPolyData } from '../../../Common/DataModel/PolyData';
+import { Bounds, Extent } from '../../../types';
 import { SlabTypes } from './Constants';
-import CoincidentTopologyHelper, {
+import {
+  CoincidentTopologyHelper,
   StaticCoincidentTopologyMethods,
 } from '../Mapper/CoincidentTopologyHelper';
 
@@ -116,6 +117,25 @@ export interface vtkImageResliceMapper
    * @param {vtkPolyData} slicePolyData The polydata to slice the volume with. Default: null
    */
   setSlicePolyData(slicePolyData: vtkPolyData): boolean;
+
+  /**
+   * Tells the mapper to only update the specified extents.
+   *
+   * If there are zero extents, the mapper updates the entire volume texture.
+   * Otherwise, the mapper will only update the texture by the specified extents
+   * during the next render call.
+   *
+   * This array is cleared after a successful render.
+   * @param extents
+   */
+  setUpdatedExtents(extents: Extent[]): boolean;
+
+  /**
+   * Retrieves the updated extents.
+   *
+   * This array is cleared after every successful render.
+   */
+  getUpdatedExtents(): Extent[];
 }
 
 /**

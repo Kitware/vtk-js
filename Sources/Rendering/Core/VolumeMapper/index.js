@@ -141,7 +141,7 @@ function vtkVolumeMapper(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 // TODO: what values to use for averageIPScalarRange to get GLSL to use max / min values like [-Math.inf, Math.inf]?
-const DEFAULT_VALUES = {
+const defaultValues = (initialValues) => ({
   bounds: [1, -1, 1, -1, 1, -1],
   sampleDistance: 1.0,
   imageSampleDistance: 1.0,
@@ -163,12 +163,17 @@ const DEFAULT_VALUES = {
   localAmbientOcclusion: false,
   LAOKernelSize: 15,
   LAOKernelRadius: 7,
-};
+  updatedExtents: [],
+  colorTextureWidth: 1024,
+  opacityTextureWidth: 1024,
+  labelOutlineTextureWidth: 1024,
+  ...initialValues,
+});
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   vtkAbstractMapper3D.extend(publicAPI, model, initialValues);
 
@@ -190,6 +195,10 @@ export function extend(publicAPI, model, initialValues = {}) {
     'localAmbientOcclusion',
     'LAOKernelSize',
     'LAOKernelRadius',
+    'updatedExtents',
+    'colorTextureWidth',
+    'opacityTextureWidth',
+    'labelOutlineTextureWidth',
   ]);
 
   macro.setGetArray(publicAPI, model, ['ipScalarRange'], 2);

@@ -1,6 +1,6 @@
-import type vtkPolyData from '../../../Common/DataModel/PolyData';
-import type vtkPlane from '../../../Common/DataModel/Plane';
-import vtkAbstractRepresentationProxy from '../../Core/AbstractRepresentationProxy';
+import { vtkPolyData } from '../../../Common/DataModel/PolyData';
+import { vtkPlane } from '../../../Common/DataModel/Plane';
+import { vtkAbstractRepresentationProxy } from '../../Core/AbstractRepresentationProxy';
 import { RGBColor } from '../../../types';
 
 export interface vtkResliceRepresentationProxy
@@ -33,4 +33,5 @@ export interface vtkResliceRepresentationProxy
   getSlabTrapezoidIntegration(): number;
 }
 
-export default vtkResliceRepresentationProxy;
+declare const _default: vtkResliceRepresentationProxy;
+export default _default;

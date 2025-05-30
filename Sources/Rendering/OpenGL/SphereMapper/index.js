@@ -13,6 +13,7 @@ import vtkSphereMapperVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkSphereMap
 import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
+import { computeCoordShiftAndScale } from 'vtk.js/Sources/Rendering/OpenGL/CellArrayBufferObject/helpers';
 
 const { vtkErrorMacro } = macro;
 
@@ -202,14 +203,32 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
       program.setUniformMatrix('VCPCMatrix', keyMats.vcpc);
     }
 
+    // mat4.create() defaults to Float32Array b/c of gl-matrix's settings.
+    // We need Float64Array to avoid loss of precision with large coordinates.
+    const tmp4 = new Float64Array(16);
+
     if (program.isUniformUsed('MCVCMatrix')) {
       if (!actor.getIsIdentity()) {
         const actMats = model.openGLActor.getKeyMatrices();
-        const tmp4 = new Float64Array(16);
         mat4.multiply(tmp4, keyMats.wcvc, actMats.mcwc);
+        if (cellBO.getCABO().getCoordShiftAndScaleEnabled()) {
+          mat4.multiply(
+            tmp4,
+            tmp4,
+            cellBO.getCABO().getInverseShiftAndScaleMatrix()
+          );
+        }
         program.setUniformMatrix('MCVCMatrix', tmp4);
       } else {
-        program.setUniformMatrix('MCVCMatrix', keyMats.wcvc);
+        mat4.copy(tmp4, keyMats.wcvc);
+        if (cellBO.getCABO().getCoordShiftAndScaleEnabled()) {
+          mat4.multiply(
+            tmp4,
+            tmp4,
+            cellBO.getCABO().getInverseShiftAndScaleMatrix()
+          );
+        }
+        program.setUniformMatrix('MCVCMatrix', tmp4);
       }
     }
 
@@ -275,6 +294,12 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
     let pointIdx = 0;
     let colorIdx = 0;
 
+    const { useShiftAndScale, coordShift, coordScale } =
+      computeCoordShiftAndScale(points);
+    if (useShiftAndScale) {
+      vbo.setCoordShiftAndScale(coordShift, coordScale);
+    }
+
     //
     // Generate points and point data for sides
     //
@@ -287,9 +312,13 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
       }
 
       pointIdx = i * 3;
-      packedVBO[vboIdx++] = pointArray[pointIdx++];
-      packedVBO[vboIdx++] = pointArray[pointIdx++];
-      packedVBO[vboIdx++] = pointArray[pointIdx++];
+      const ptX = (pointArray[pointIdx++] - coordShift[0]) * coordScale[0];
+      const ptY = (pointArray[pointIdx++] - coordShift[1]) * coordScale[1];
+      const ptZ = (pointArray[pointIdx++] - coordShift[2]) * coordScale[2];
+
+      packedVBO[vboIdx++] = ptX;
+      packedVBO[vboIdx++] = ptY;
+      packedVBO[vboIdx++] = ptZ;
       packedVBO[vboIdx++] = -2.0 * radius * cos30;
       packedVBO[vboIdx++] = -radius;
       if (colorData) {
@@ -300,10 +329,9 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
         packedUCVBO[ucIdx++] = colorData[colorIdx + 3];
       }
 
-      pointIdx = i * 3;
-      packedVBO[vboIdx++] = pointArray[pointIdx++];
-      packedVBO[vboIdx++] = pointArray[pointIdx++];
-      packedVBO[vboIdx++] = pointArray[pointIdx++];
+      packedVBO[vboIdx++] = ptX;
+      packedVBO[vboIdx++] = ptY;
+      packedVBO[vboIdx++] = ptZ;
       packedVBO[vboIdx++] = 2.0 * radius * cos30;
       packedVBO[vboIdx++] = -radius;
       if (colorData) {
@@ -313,10 +341,9 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
         packedUCVBO[ucIdx++] = colorData[colorIdx + 3];
       }
 
-      pointIdx = i * 3;
-      packedVBO[vboIdx++] = pointArray[pointIdx++];
-      packedVBO[vboIdx++] = pointArray[pointIdx++];
-      packedVBO[vboIdx++] = pointArray[pointIdx++];
+      packedVBO[vboIdx++] = ptX;
+      packedVBO[vboIdx++] = ptY;
+      packedVBO[vboIdx++] = ptZ;
       packedVBO[vboIdx++] = 0.0;
       packedVBO[vboIdx++] = 2.0 * radius;
       if (colorData) {

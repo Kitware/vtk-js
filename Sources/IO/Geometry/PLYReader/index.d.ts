@@ -1,8 +1,8 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
-import HtmlDataAccessHelper from '../../Core/DataAccessHelper/HtmlDataAccessHelper';
-import HttpDataAccessHelper from '../../Core/DataAccessHelper/HttpDataAccessHelper';
-import JSZipDataAccessHelper from '../../Core/DataAccessHelper/JSZipDataAccessHelper';
-import LiteHttpDataAccessHelper from '../../Core/DataAccessHelper/LiteHttpDataAccessHelper';
+import { HtmlDataAccessHelper } from '../../Core/DataAccessHelper/HtmlDataAccessHelper';
+import { HttpDataAccessHelper } from '../../Core/DataAccessHelper/HttpDataAccessHelper';
+import { JSZipDataAccessHelper } from '../../Core/DataAccessHelper/JSZipDataAccessHelper';
+import { LiteHttpDataAccessHelper } from '../../Core/DataAccessHelper/LiteHttpDataAccessHelper';
 
 interface IPLYReaderOptions {
   binary?: boolean;
@@ -13,7 +13,19 @@ interface IPLYReaderOptions {
 /**
  *
  */
-export interface IPLYReaderInitialValues {}
+export interface IPLYReaderInitialValues {
+  /**
+   * Controls whether points are duplicated for face-texture mapping.
+   * Default is true.
+   */
+  duplicatePointsForFaceTexture?: boolean;
+
+  /**
+   * The tolerance used to determine if two points are the same.
+   * Default is 0.000001.
+   */
+  faceTextureTolerance?: number;
+}
 
 type vtkPLYReaderBase = vtkObject &
   Omit<
@@ -40,6 +52,16 @@ export interface vtkPLYReader extends vtkPLYReaderBase {
     | HttpDataAccessHelper
     | JSZipDataAccessHelper
     | LiteHttpDataAccessHelper;
+
+  /**
+   * Controls whether points are duplicated for face-texture mapping.
+   */
+  getDuplicatePointsForFaceTexture(): boolean;
+
+  /**
+   * Get the tolerance used to determine if two points are the same.
+   */
+  getFaceTextureTolerance(): number;
 
   /**
    * Get the url of the object to load.

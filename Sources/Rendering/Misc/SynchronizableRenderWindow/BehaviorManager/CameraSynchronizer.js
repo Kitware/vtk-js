@@ -41,8 +41,8 @@ function vtkCameraSynchronizer(publicAPI, model) {
   }
 
   // Update listeners automatically
-  model._srcRendererChanged = updateListeners;
-  model._dstRendererChanged = updateListeners;
+  model._onSrcRendererChanged = updateListeners;
+  model._onDstRendererChanged = updateListeners;
 
   function updatePreviousValues(position, focalPoint, viewUp) {
     if (

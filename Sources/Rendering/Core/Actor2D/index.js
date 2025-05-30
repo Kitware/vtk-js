@@ -162,7 +162,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.set(publicAPI, model, ['property']);
-  macro.setGet(publicAPI, model, ['mapper']);
+  macro.setGet(publicAPI, model, ['mapper', 'layerNumber']);
 
   // Object methods
   vtkActor2D(publicAPI, model);

@@ -1,8 +1,8 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
-import HtmlDataAccessHelper from '../../Core/DataAccessHelper/HtmlDataAccessHelper';
-import HttpDataAccessHelper from '../../Core/DataAccessHelper/HttpDataAccessHelper';
-import JSZipDataAccessHelper from '../../Core/DataAccessHelper/JSZipDataAccessHelper';
-import LiteHttpDataAccessHelper from '../../Core/DataAccessHelper/LiteHttpDataAccessHelper';
+import { HtmlDataAccessHelper } from '../../Core/DataAccessHelper/HtmlDataAccessHelper';
+import { HttpDataAccessHelper } from '../../Core/DataAccessHelper/HttpDataAccessHelper';
+import { JSZipDataAccessHelper } from '../../Core/DataAccessHelper/JSZipDataAccessHelper';
+import { LiteHttpDataAccessHelper } from '../../Core/DataAccessHelper/LiteHttpDataAccessHelper';
 
 interface ITIFFReaderOptions {
   compression?: string;

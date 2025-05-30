@@ -1,14 +1,14 @@
-import vtkActor from '../../../Rendering/Core/Actor';
-import vtkAbstractRepresentationProxy from '../AbstractRepresentationProxy';
+import { vtkActor } from '../../../Rendering/Core/Actor';
+import { vtkAbstractRepresentationProxy } from '../AbstractRepresentationProxy';
 import { Vector3, Vector4 } from '../../../types';
-import vtkCamera from '../../../Rendering/Core/Camera';
-import vtkRenderWindowInteractor from '../../../Rendering/Core/RenderWindowInteractor';
-import vtkInteractorStyle from '../../../Rendering/Core/InteractorStyle';
+import { vtkCamera } from '../../../Rendering/Core/Camera';
+import { vtkRenderWindowInteractor } from '../../../Rendering/Core/RenderWindowInteractor';
+import { vtkInteractorStyle } from '../../../Rendering/Core/InteractorStyle';
 import { vtkSubscription, vtkObject } from '../../../interfaces';
-import vtkRenderer from '../../../Rendering/Core/Renderer';
-import vtkRenderWindow from '../../../Rendering/Core/RenderWindow';
-import vtkOpenGLRenderWindow from '../../../Rendering/OpenGL/RenderWindow';
-import vtkWebGPURenderWindow from '../../../Rendering/WebGPU/RenderWindow';
+import { vtkRenderer } from '../../../Rendering/Core/Renderer';
+import { vtkRenderWindow } from '../../../Rendering/Core/RenderWindow';
+import { vtkOpenGLRenderWindow } from '../../../Rendering/OpenGL/RenderWindow';
+import { vtkWebGPURenderWindow } from '../../../Rendering/WebGPU/RenderWindow';
 import { VtkProxy } from '../../../macros';
 
 export interface vtkViewProxy extends VtkProxy {
@@ -84,4 +84,5 @@ export interface vtkViewProxy extends VtkProxy {
   // TODO proxy property mappings
 }
 
-export default vtkViewProxy;
+declare const _default: vtkViewProxy;
+export default _default;
