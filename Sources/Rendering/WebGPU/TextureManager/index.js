@@ -1,3 +1,5 @@
+/* eslint-disable no-bitwise */
+/* eslint-disable no-undef */
 import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkWebGPUTexture from 'vtk.js/Sources/Rendering/WebGPU/Texture';
@@ -68,6 +70,10 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       req.height = req.image.height;
       req.depth = 1;
       req.format = 'rgba8unorm';
+      req.usage =
+        GPUTextureUsage.STORAGE_BINDING |
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.TEXTURE_BINDING;
     }
 
     // fill in based on js imageData
@@ -78,6 +84,10 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       req.format = 'rgba8unorm';
       req.flip = true;
       req.nativeArray = req.jsImageData.data;
+      req.usage =
+        GPUTextureUsage.STORAGE_BINDING |
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.TEXTURE_BINDING;
     }
 
     if (req.canvas) {
@@ -120,7 +130,7 @@ function vtkWebGPUTextureManager(publicAPI, model) {
   // get a texture or create it if not cached.
   // this is the main entry point
   publicAPI.getTexture = (req) => {
-    // if we have a source the get/create/cache the texture
+    // if we have a source then get/create/cache the texture
     if (req.hash) {
       // if a matching texture already exists then return it
       return model.device.getCachedObject(req.hash, _createTexture, req);
