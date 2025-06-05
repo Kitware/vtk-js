@@ -102,7 +102,7 @@ test.onlyIfWebGL('Test Volume Mapper Updated Extents', async (t) => {
   }
 
   // Update only a portion of the volume rendering texture
-  mapper.setUpdatedExtents([
+  actor.getProperty().setUpdatedExtents([
     [0, mid - 1, 0, mid - 1, 0, mid - 1],
     [mid - 1, sideLen - 1, mid - 1, sideLen - 1, mid - 1, sideLen - 1],
   ]);

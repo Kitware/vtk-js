@@ -974,6 +974,12 @@ export interface vtkRenderWindowInteractor extends vtkObject {
   /**
    * Add an HTMLElement as the new container for the interactor.
    * All events will be bound to this new container.
+   *
+   * container will gain the tabIndex=0 attribute to catch keyboard events.
+   * container must have focus (manually via click or tab, or programmatically
+   * via `.focus()`) to receive keypress events
+   * Outline on focus can be customized with CSS :focus pseudo-class.
+   *
    * Any old container will be removed along with its listeners.
    */
   setContainer(container: Nullable<HTMLElement>): boolean;

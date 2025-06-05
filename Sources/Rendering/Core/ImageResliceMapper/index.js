@@ -45,7 +45,6 @@ const defaultValues = (initialValues) => ({
   slabType: SlabTypes.MEAN,
   slicePlane: null,
   slicePolyData: null,
-  updatedExtents: [],
   ...initialValues,
 });
 
@@ -63,7 +62,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'slabType',
     'slicePlane',
     'slicePolyData',
-    'updatedExtents',
   ]);
   CoincidentTopologyHelper.implementCoincidentTopologyMethods(publicAPI, model);
 

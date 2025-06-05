@@ -138,17 +138,20 @@ test.onlyIfWebGL('Test Volume Rendering: custom shader code', async (t) => {
         originalValue: '//VTK::CustomColorMix',
         replaceFirst: false,
         replacementValue: `
-          if (pwfValue1 > 0.5) {
+          float opacity1 = getOpacityFromTexture(tValue[1], 1, volume.transferFunctionsSampleHeight[1]);
+          if (opacity1 > 0.5) {
             return vec4(0.0, 1.0, 1.0, 0.1);
           } else {
-            mat4 normalMat = computeMat4Normal(posIS, tValue, tstep);
-            float opacity0 = pwfValue0;
-            #ifdef vtkGradientOpacityOn
-              float gof0 = computeGradientOpacityFactor(normalMat[0].a, goscale0, goshift0, gomin0, gomax0);
-              opacity0 *= gof0;
+            vec3 posIS = posVCtoIS(posVC);
+            mat4 normalMat = computeMat4Normal(posIS, tValue);
+            float opacity0 = getOpacityFromTexture(tValue[0], 0, volume.transferFunctionsSampleHeight[0]);
+            vec3 color0 = getColorFromTexture(tValue[0], 0, volume.transferFunctionsSampleHeight[0]);
+            #if defined(EnabledGradientOpacity)
+              float gradientOpacity = computeGradientOpacityFactor(normal0.a, 0);
+              opacity0 *= gradientOpacity;
             #endif
-            tColor0 = applyAllLightning(tColor0, opacity0, posIS, normalMat[0]);
-            return vec4(tColor0, opacity0);
+            color0 = applyAllLightning(color0, opacity0, posVC, normalMat[0]);
+            return vec4(color0, opacity0);
           }
         `,
         replaceAll: false,

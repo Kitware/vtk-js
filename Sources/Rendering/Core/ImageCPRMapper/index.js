@@ -344,7 +344,6 @@ const defaultValues = (initialValues) => ({
   projectionSlabThickness: 1,
   projectionSlabNumberOfSamples: 1,
   projectionMode: ProjectionMode.MAX,
-  updatedExtents: [],
   ...initialValues,
 });
 
@@ -376,7 +375,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'projectionSlabThickness',
     'projectionSlabNumberOfSamples',
     'projectionMode',
-    'updatedExtents',
   ]);
   CoincidentTopologyHelper.implementCoincidentTopologyMethods(publicAPI, model);
 

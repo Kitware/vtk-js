@@ -326,6 +326,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![InteractorStyleTrackballCamera Example][InteractorStyleTrackballCamera]](./InteractorStyleTrackballCamera.html "InteractorStyleTrackballCamera")
 [![InteractorStyleUnicam Example][InteractorStyleUnicam]](./InteractorStyleUnicam.html "InteractorStyleUnicam")
 [![KeyboardCameraManipulator Example][KeyboardCameraManipulator]](./KeyboardCameraManipulator.html "KeyboardCameraManipulator")
+[![KeyPressEvents Example][KeyPressEvents]](./KeyPressEvents.html "KeyPressEvents")
 [![MouseRangeManipulator Example][MouseRangeManipulator]](./MouseRangeManipulator.html "MouseRangeManipulator")
 [![PiecewiseGaussianWidget Example][PiecewiseGaussianWidget]](./PiecewiseGaussianWidget.html "PiecewiseGaussianWidget")
 [![TimeStepBasedAnimationHandler Example][TimeStepBasedAnimationHandler]](./TimeStepBasedAnimationHandler.html "TimeStepBasedAnimationHandler")
