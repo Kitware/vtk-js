@@ -4,6 +4,10 @@
 - **vtkRenderWindowInteractor**: KeyPress, KeyDown and KeyUp events are now observed on the container and no longer on the document. "tabIndex=0" is now automatically added on RWI containers to give focus on your render windows and catch key events. Check the KeyPressEvents example for usage.
 - **vtkOpenGLTexture**: The public `create2D*` and `create3D*` methods used to have positional parameters. These methods now use named parameters via passing in an object record.
 
+## From 32.x to 33
+
+- **vtkColorTransferFunction**, **vtkMapper**: Previous log scaling was disabled but functionality is now quite different from what it maybe was before it was disabled. ColorTransfer function now maps the model.nodes in logarithmic scales so there's an even spacing between powers of ten.
+
 ## From 31.x to 32
 
 - **vtkMapper**: remove `mapScalarsToTexture` from the public API. The function becomes protected and its API changes. This shouldn't cause any issue in most cases.
