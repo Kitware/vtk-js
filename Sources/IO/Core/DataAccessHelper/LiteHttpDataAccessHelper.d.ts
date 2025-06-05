@@ -19,4 +19,5 @@ export interface LiteHttpDataAccessHelper {
   ): Promise<HTMLImageElement>;
 }
 
+declare const LiteHttpDataAccessHelper: LiteHttpDataAccessHelper;
 export default LiteHttpDataAccessHelper;

@@ -8,14 +8,28 @@ import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreen
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkPLYReader from '@kitware/vtk.js/IO/Geometry/PLYReader';
 import vtkTexture from '@kitware/vtk.js/Rendering/Core/Texture';
+import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
+
+import controlPanel from './controller.html';
+
+// ----------------------------------------------------------------------------
+// Standard rendering code setup
+// ----------------------------------------------------------------------------
+const userParams = vtkURLExtract.extractURLParameters();
+const url = userParams.fileURL;
+const duplicatePointsForFaceTexture =
+  userParams.duplicatePointsForFaceTexture || false;
+
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
+const renderer = fullScreenRenderer.getRenderer();
+const renderWindow = fullScreenRenderer.getRenderWindow();
 
 // ----------------------------------------------------------------------------
 // Example code
 // ----------------------------------------------------------------------------
-
-let renderer = null;
-let renderWindow = null;
-const reader = vtkPLYReader.newInstance();
+const reader = vtkPLYReader.newInstance({
+  duplicatePointsForFaceTexture,
+});
 const mapper = vtkMapper.newInstance({ scalarVisibility: false });
 const actor = vtkActor.newInstance();
 
@@ -25,19 +39,11 @@ mapper.setInputConnection(reader.getOutputPort());
 // ----------------------------------------------------------------------------
 
 function refresh() {
-  if (renderer && renderWindow) {
-    const resetCamera = renderer.resetCamera;
-    const render = renderWindow.render;
-    resetCamera();
-    render();
-  }
+  renderer.resetCamera();
+  renderWindow.render();
 }
 
 function update() {
-  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
-  renderer = fullScreenRenderer.getRenderer();
-  renderWindow = fullScreenRenderer.getRenderWindow();
-
   renderer.addActor(actor);
 
   actor.getMapper().setScalarVisibility(true);
@@ -51,13 +57,11 @@ function update() {
 // Use a file reader to load a local file
 // ----------------------------------------------------------------------------
 
-const myContainer = document.querySelector('body');
-const fileContainer = document.createElement('div');
-fileContainer.innerHTML =
-  '<div>Select a ply file or a ply file with its texture file.<br/><input type="file" class="file" multiple/></div>';
-myContainer.appendChild(fileContainer);
+fullScreenRenderer.addController(controlPanel);
 
-const fileInput = fileContainer.querySelector('input');
+const fileInput = document.querySelector('input');
+const checkbox = document.querySelector('#duplicate_points_for_face_texture');
+checkbox.checked = duplicatePointsForFaceTexture;
 
 function handlePlyFile(file) {
   const fileReader = new FileReader();
@@ -88,10 +92,8 @@ function handleFile(event) {
   const dataTransfer = event.dataTransfer;
   const files = event.target.files || dataTransfer.files;
   if (files.length === 1) {
-    myContainer.removeChild(fileContainer);
     handlePlyFile(files[0]);
   } else if (files.length > 1) {
-    myContainer.removeChild(fileContainer);
     Array.from(files).forEach((file) => {
       const name = file.name.toLowerCase();
       if (name.endsWith('.ply')) {
@@ -110,8 +112,15 @@ function handleFile(event) {
 
 fileInput.addEventListener('change', handleFile);
 
+checkbox.addEventListener('change', (e) => {
+  const value = e.target.checked;
+  window.location = `?duplicatePointsForFaceTexture=${value}`;
+});
+
 // ----------------------------------------------------------------------------
 // Use the reader to download a file
 // ----------------------------------------------------------------------------
 
-// reader.setUrl(`${__BASE_PATH__}/data/ply/mesh.ply`, { binary: true }).then(update);
+if (url) {
+  reader.setUrl(url).then(update);
+}

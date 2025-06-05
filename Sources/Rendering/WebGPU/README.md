@@ -24,6 +24,7 @@ instead calling renderWindow.newAPISpecificView('WebGPU') should be all that
 is needed.
 
 # ToDo
+
 - add device.lost handler
 - create background class to encapsulate, background clear,
   gradient background, texture background, skybox etc
@@ -66,7 +67,7 @@ Here are some quick notes on the WebGPU classes and how they work together. Clas
 
 - Device - one instance, represents a GPU, holds objects that can be shared including the buffer manager, texture manager, shader cache, and pipelines
 
-- BufferManager - one instance, manages and caches buffers (chunks of memeory), owned by the Device
+- BufferManager - one instance, manages and caches buffers (chunks of memory), owned by the Device
 
 - Buffer - many instances, represents a chunk of memory, often a vtkDataArray, managed by the buffer manager so that multiple mappers can share a common buffer. Textures can also be buffer backed. Owned by the buffermanager.
 
@@ -115,6 +116,7 @@ encoders in the WebGPU spec.
 
 There is a notion of bindable things in this implementation. BingGroups keep an array of
 bindable things that it uses/manages. Right now these unclude UBOs, SSBOs, and TextureViews and Smaplers. A bindable thing must answer to the following interface
+
 ```
 set/getName
 getBindGroupLayoutEntry()
@@ -170,6 +172,12 @@ The simple mapper is a viewnode subclass so it can handle render passes. The Ful
 ## IndexBuffers
 
 The WebGPU backend supports the standard IndexBuffer and VertexBuffer combination to render primatives. Due to vtk's use of celldata which doesn;t always map well to graphics primitives, the IndexBuffer class has methods to create a index buffer where each primitive has a unique provoking point. That way cell data can be rendered as point data using a flat interpolation. The IndexBuffer class holds array to map between the flat indexbuffer and original vtk data.
+
+> :warning: WebGPU spec requires buffer sizes to be aligned to 4 bytes. If your
+data size is not a multiple of 4, you need to pad the buffer size to the next
+multiple of 4. For Float32Array data, this is automatically satisfied since each
+float is 4 bytes.
+
 ## Private API
 
 Note that none of the classes in the WebGPU directory are meant to be accessed directly by application code. These classes implement one view of the data (WebGPU as opposed to WebGL). Typical applicaiton code will interface with the RenderWindowViewNode superclass (in the SceneGraph) directory as the main entry point for a view such as WebGL or WebGPU. As such, changes to the API of the WebGPU classes are considered private changes, internal to the implementation of this view.
@@ -225,7 +233,7 @@ You can offset geometry by a factor cF ranging from 0.0 to 1.0 using the followi
 
 The physically based rendering implementation is relatively basic in its current state. It uses a metallic roughness workflow,
 supporting diffuse, roughness, metallic, normal, emission (ambient occlusion is yet to be supported since there is no ambient
-lighting). The specular component is computed with the Cook-Torrance BRDF which utilizes the Trowbridge-Reitz GGX normal distribution, 
+lighting). The specular component is computed with the Cook-Torrance BRDF which utilizes the Trowbridge-Reitz GGX normal distribution,
 Shlick fresnel approximation, and Smith's method with Schlick GGX. The diffuse is computed using Yasuhiro Fujii's improvement on the
 Oren–Nayar reflectance model. As of right now, there are a few limitations to take note of:
 

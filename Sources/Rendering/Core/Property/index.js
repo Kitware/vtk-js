@@ -127,6 +127,9 @@ const DEFAULT_VALUES = {
 
   shading: false,
   materialName: null,
+
+  ORMTexture: null,
+  RMTexture: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -162,6 +165,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'normalTexture',
     'ambientOcclusionTexture',
     'emissionTexture',
+    'ORMTexture',
+    'RMTexture',
   ]);
   macro.setGetArray(
     publicAPI,

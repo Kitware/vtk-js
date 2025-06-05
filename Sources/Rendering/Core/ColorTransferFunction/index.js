@@ -430,12 +430,22 @@ function vtkColorTransferFunction(publicAPI, model) {
     return rgb[2];
   };
 
+  publicAPI.logScaleEnabled = () => model.scale === Scale.LOG10;
+
+  publicAPI.usingLogScale = () =>
+    publicAPI.logScaleEnabled() && model.mappingRange[0] > 0.0;
+
   //----------------------------------------------------------------------------
   // Returns a table of RGB colors at regular intervals along the function
   publicAPI.getTable = (xStart_, xEnd_, size, table) => {
+    // Note: This requires range[0] <= range[1].
+    const usingLogScale = publicAPI.usingLogScale();
+
     // To handle BigInt limitation
-    const xStart = Number(xStart_);
-    const xEnd = Number(xEnd_);
+    const xStart = usingLogScale
+      ? Math.log10(Number(xStart_))
+      : Number(xStart_);
+    const xEnd = usingLogScale ? Math.log10(Number(xEnd_)) : Number(xEnd_);
 
     // Special case: If either the start or end is a NaN, then all any
     // interpolation done on them is also a NaN.  Therefore, fill the table with
@@ -475,18 +485,12 @@ function vtkColorTransferFunction(publicAPI, model) {
     const tmpVec = [];
 
     // If the scale is logarithmic, make sure the range is valid.
-    let usingLogScale = model.scale === Scale.LOG10;
+    let scaledMappingRange = model.mappingRange;
     if (usingLogScale) {
-      // Note: This requires range[0] <= range[1].
-      usingLogScale = model.mappingRange[0] > 0.0;
-    }
-
-    let logStart = 0.0;
-    let logEnd = 0.0;
-    let logX = 0.0;
-    if (usingLogScale) {
-      logStart = Math.log10(xStart);
-      logEnd = Math.log10(xEnd);
+      scaledMappingRange = [
+        Math.log10(model.mappingRange[0]),
+        Math.log10(model.mappingRange[1]),
+      ];
     }
 
     // For each table entry
@@ -498,15 +502,7 @@ function vtkColorTransferFunction(publicAPI, model) {
       // it halfway between start and end (usually start and end will
       // be the same in this case)
       if (size > 1) {
-        if (usingLogScale) {
-          logX = logStart + (i / (size - 1.0)) * (logEnd - logStart);
-          x = 10.0 ** logX;
-        } else {
-          x = xStart + (i / (size - 1.0)) * (xEnd - xStart);
-        }
-      } else if (usingLogScale) {
-        logX = 0.5 * (logStart + logEnd);
-        x = 10.0 ** logX;
+        x = xStart + (i / (size - 1.0)) * (xEnd - xStart);
       } else {
         x = 0.5 * (xStart + xEnd);
       }
@@ -515,7 +511,7 @@ function vtkColorTransferFunction(publicAPI, model) {
       // discretize (round down to the closest integer),
       // then map back to mappingRange
       if (model.discretize) {
-        const range = model.mappingRange;
+        const range = scaledMappingRange;
         if (x >= range[0] && x <= range[1]) {
           const numberOfValues = model.numberOfValues;
           const deltaRange = range[1] - range[0];
@@ -543,10 +539,6 @@ function vtkColorTransferFunction(publicAPI, model) {
         if (idx < numNodes) {
           x1 = model.nodes[idx - 1].x;
           x2 = model.nodes[idx].x;
-          if (usingLogScale) {
-            x1 = Math.log10(x1);
-            x2 = Math.log10(x2);
-          }
 
           rgb1[0] = model.nodes[idx - 1].r;
           rgb2[0] = model.nodes[idx].r;
@@ -575,7 +567,7 @@ function vtkColorTransferFunction(publicAPI, model) {
       }
 
       // Are we at or past the end? If so, just use the last value
-      if (x > model.mappingRange[1]) {
+      if (x > scaledMappingRange[1]) {
         table[tidx] = 0.0;
         table[tidx + 1] = 0.0;
         table[tidx + 2] = 0.0;
@@ -590,7 +582,7 @@ function vtkColorTransferFunction(publicAPI, model) {
             table[tidx + 2] = lastB;
           }
         }
-      } else if (x < model.mappingRange[0] || (vtkMath.isInf(x) && x < 0)) {
+      } else if (x < scaledMappingRange[0] || (vtkMath.isInf(x) && x < 0)) {
         // we are before the first node? If so, duplicate this node's values.
         // We have to deal with -inf here
         table[tidx] = 0.0;
@@ -627,11 +619,7 @@ function vtkColorTransferFunction(publicAPI, model) {
         // sharpness to get the curve shape we want and to have
         // it pass through (y1+y2)/2 at the midpoint.
         let s = 0.0;
-        if (usingLogScale) {
-          s = (logX - x1) / (x2 - x1);
-        } else {
-          s = (x - x1) / (x2 - x1);
-        }
+        s = (x - x1) / (x2 - x1);
 
         // Readjust based on the midpoint - linear adjustment
         if (s < midpoint) {
@@ -1064,7 +1052,10 @@ function vtkColorTransferFunction(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.setMappingRange = (min, max) => {
     const range = [min, max];
+    const scaledRange = [min, max];
     const originalRange = publicAPI.getRange();
+    const logScaleEnabled = publicAPI.logScaleEnabled();
+
     if (originalRange[1] === range[1] && originalRange[0] === range[0]) {
       return;
     }
@@ -1074,8 +1065,20 @@ function vtkColorTransferFunction(publicAPI, model) {
       return;
     }
 
-    const scale = (range[1] - range[0]) / (originalRange[1] - originalRange[0]);
-    const shift = range[0] - originalRange[0] * scale;
+    if (logScaleEnabled) {
+      if (range[0] <= 0.0) {
+        console.warn(
+          'attempt to set log scale color range with non-positive minimum'
+        );
+      } else {
+        scaledRange[0] = Math.log10(range[0]);
+        scaledRange[1] = Math.log10(range[1]);
+      }
+    }
+
+    const scale =
+      (scaledRange[1] - scaledRange[0]) / (originalRange[1] - originalRange[0]);
+    const shift = scaledRange[0] - originalRange[0] * scale;
 
     for (let i = 0; i < model.nodes.length; ++i) {
       model.nodes[i].x = model.nodes[i].x * scale + shift;

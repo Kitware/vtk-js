@@ -1,15 +1,17 @@
 import { mat3, mat4, quat, vec3 } from 'gl-matrix';
 import { Nullable } from '../../../types';
 import { vtkOutputPort } from '../../../interfaces';
-import vtkAbstractMapper3D, {
+import {
+  vtkAbstractMapper3D,
   IAbstractMapper3DInitialValues,
 } from '../AbstractMapper3D';
-import vtkDataArray from '../../../Common/Core/DataArray';
-import vtkImageData from '../../../Common/DataModel/ImageData';
-import vtkPolyData from '../../../Common/DataModel/PolyData';
-import vtkPolyLine from '../../../Common/DataModel/PolyLine';
+import { vtkDataArray } from '../../../Common/Core/DataArray';
+import { vtkImageData } from '../../../Common/DataModel/ImageData';
+import { vtkPolyData } from '../../../Common/DataModel/PolyData';
+import { vtkPolyLine } from '../../../Common/DataModel/PolyLine';
 import { ProjectionMode } from './Constants';
-import CoincidentTopologyHelper, {
+import {
+  CoincidentTopologyHelper,
   StaticCoincidentTopologyMethods,
 } from '../Mapper/CoincidentTopologyHelper';
 

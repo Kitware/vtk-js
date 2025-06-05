@@ -819,6 +819,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     code = fDesc.getCode();
 
     const actor = model.WebGPUActor.getRenderable();
+    const property = actor.getProperty();
 
     const checkDims = (texture) => {
       if (!texture) return false;
@@ -827,15 +828,16 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     };
 
     const usedTextures = [];
+    const diffuseTexture = property.getDiffuseTexture?.();
 
     if (
-      actor.getProperty().getDiffuseTexture?.()?.getImageLoaded() ||
+      diffuseTexture?.getImageLoaded() ||
       actor.getTextures()[0] ||
       model.colorTexture
     ) {
       if (
         // Chained or statements here are questionable
-        checkDims(actor.getProperty().getDiffuseTexture?.()) ||
+        checkDims(diffuseTexture) ||
         checkDims(actor.getTextures()[0]) ||
         checkDims(model.colorTexture)
       ) {
@@ -844,38 +846,65 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         );
       }
     }
-    if (actor.getProperty().getRoughnessTexture?.()?.getImageLoaded()) {
-      if (checkDims(actor.getProperty().getRoughnessTexture())) {
+
+    const ormTexture = property.getORMTexture?.();
+    const rmTexture = property.getRMTexture?.();
+    const roughnessTexture = property.getRoughnessTexture?.();
+    const metallicTexture = property.getMetallicTexture?.();
+    const ambientOcclusionTexture = property.getAmbientOcclusionTexture?.();
+    const emissionTexture = property.getEmissionTexture?.();
+    const normalTexture = property.getNormalTexture?.();
+
+    // ORM texture support: if present, sample R/G/B for AO/Roughness/Metallic
+    if (ormTexture?.getImageLoaded()) {
+      if (checkDims(ormTexture)) {
         usedTextures.push(
-          '_roughnessMap = textureSample(RoughnessTexture, RoughnessTextureSampler, input.tcoordVS);'
+          '_ambientOcclusionMap = textureSample(ORMTexture, ORMTextureSampler, input.tcoordVS).rrra;',
+          '_roughnessMap = textureSample(ORMTexture, ORMTextureSampler, input.tcoordVS).ggga;',
+          '_metallicMap = textureSample(ORMTexture, ORMTextureSampler, input.tcoordVS).bbba;'
         );
       }
-    }
-    if (actor.getProperty().getMetallicTexture?.()?.getImageLoaded()) {
-      if (checkDims(actor.getProperty().getMetallicTexture())) {
+    } else if (rmTexture?.getImageLoaded()) {
+      if (checkDims(rmTexture)) {
         usedTextures.push(
-          '_metallicMap = textureSample(MetallicTexture, MetallicTextureSampler, input.tcoordVS);'
+          '_roughnessMap = textureSample(RMTexture, RMTextureSampler, input.tcoordVS).ggga;',
+          '_metallicMap = textureSample(RMTexture, RMTextureSampler, input.tcoordVS).bbba;'
         );
       }
-    }
-    if (actor.getProperty().getNormalTexture?.()?.getImageLoaded()) {
-      if (checkDims(actor.getProperty().getNormalTexture())) {
-        usedTextures.push(
-          '_normalMap = textureSample(NormalTexture, NormalTextureSampler, input.tcoordVS);'
-        );
+    } else {
+      if (roughnessTexture?.getImageLoaded()) {
+        if (checkDims(roughnessTexture)) {
+          usedTextures.push(
+            '_roughnessMap = textureSample(RoughnessTexture, RoughnessTextureSampler, input.tcoordVS);'
+          );
+        }
+      }
+      if (metallicTexture?.getImageLoaded()) {
+        if (checkDims(metallicTexture)) {
+          usedTextures.push(
+            '_metallicMap = textureSample(MetallicTexture, MetallicTextureSampler, input.tcoordVS);'
+          );
+        }
+      }
+      if (ambientOcclusionTexture?.getImageLoaded()) {
+        if (checkDims(ambientOcclusionTexture)) {
+          usedTextures.push(
+            '_ambientOcclusionMap = textureSample(AmbientOcclusionTexture, AmbientOcclusionTextureSampler, input.tcoordVS);'
+          );
+        }
       }
     }
-    if (actor.getProperty().getAmbientOcclusionTexture?.()?.getImageLoaded()) {
-      if (checkDims(actor.getProperty().getAmbientOcclusionTexture())) {
-        usedTextures.push(
-          '_ambientOcclusionMap = textureSample(AmbientOcclusionTexture, AmbientOcclusionTextureSampler, input.tcoordVS);'
-        );
-      }
-    }
-    if (actor.getProperty().getEmissionTexture?.()?.getImageLoaded()) {
-      if (checkDims(actor.getProperty().getEmissionTexture())) {
+    if (emissionTexture?.getImageLoaded()) {
+      if (checkDims(emissionTexture)) {
         usedTextures.push(
           '_emissionMap = textureSample(EmissionTexture, EmissionTextureSampler, input.tcoordVS);'
+        );
+      }
+    }
+    if (normalTexture?.getImageLoaded()) {
+      if (checkDims(normalTexture)) {
+        usedTextures.push(
+          '_normalMap = textureSample(NormalTexture, NormalTextureSampler, input.tcoordVS);'
         );
       }
     }
@@ -1144,6 +1173,14 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     }
     if (model.colorTexture) {
       const pair = ['Diffuse', model.colorTexture];
+      textures.push(pair);
+    }
+    if (actor.getProperty().getORMTexture?.()) {
+      const pair = ['ORM', actor.getProperty().getORMTexture()];
+      textures.push(pair);
+    }
+    if (actor.getProperty().getRMTexture?.()) {
+      const pair = ['RM', actor.getProperty().getRMTexture()];
       textures.push(pair);
     }
     if (actor.getProperty().getRoughnessTexture?.()) {

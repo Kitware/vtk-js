@@ -1,11 +1,13 @@
-import vtkAbstractImageMapper, {
+import {
+  vtkAbstractImageMapper,
   IAbstractImageMapperInitialValues,
 } from '../AbstractImageMapper';
-import vtkPlane from '../../../Common/DataModel/Plane';
-import vtkPolyData from '../../../Common/DataModel/PolyData';
+import { vtkPlane } from '../../../Common/DataModel/Plane';
+import { vtkPolyData } from '../../../Common/DataModel/PolyData';
 import { Bounds } from '../../../types';
 import { SlabTypes } from './Constants';
-import CoincidentTopologyHelper, {
+import {
+  CoincidentTopologyHelper,
   StaticCoincidentTopologyMethods,
 } from '../Mapper/CoincidentTopologyHelper';
 
