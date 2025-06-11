@@ -26,10 +26,31 @@ function vtkTexture(publicAPI, model) {
       publicAPI.setInputConnection(null);
       model.image = null;
       model.canvas = null;
+      model.imageBitmap = null;
     }
 
     model.jsImageData = imageData;
     model.imageLoaded = true;
+    publicAPI.modified();
+  };
+
+  publicAPI.setImageBitmap = (imageBitmap) => {
+    if (model.imageBitmap === imageBitmap) {
+      return;
+    }
+
+    // clear other entries
+    if (imageBitmap !== null) {
+      publicAPI.setInputData(null);
+      publicAPI.setInputConnection(null);
+      model.image = null;
+      model.canvas = null;
+      model.jsImageData = null;
+    }
+
+    model.imageBitmap = imageBitmap;
+    model.imageLoaded = true;
+
     publicAPI.modified();
   };
 
@@ -43,6 +64,7 @@ function vtkTexture(publicAPI, model) {
       publicAPI.setInputData(null);
       publicAPI.setInputConnection(null);
       model.image = null;
+      model.imageBitmap = null;
       model.jsImageData = null;
     }
 
@@ -61,6 +83,7 @@ function vtkTexture(publicAPI, model) {
       publicAPI.setInputConnection(null);
       model.canvas = null;
       model.jsImageData = null;
+      model.imageBitmap = null;
     }
 
     model.image = image;
@@ -98,6 +121,11 @@ function vtkTexture(publicAPI, model) {
       width = model.image.width;
       height = model.image.height;
     }
+    if (model.imageBitmap) {
+      width = model.imageBitmap.width;
+      height = model.imageBitmap.height;
+    }
+
     const dimensionality = (width > 1) + (height > 1) + (depth > 1);
     return dimensionality;
   };
@@ -108,6 +136,11 @@ function vtkTexture(publicAPI, model) {
     if (model.jsImageData) {
       return model.jsImageData();
     }
+
+    if (model.imageBitmap) {
+      return model.imageBitmap();
+    }
+
     if (model.canvas) {
       const context = model.canvas.getContext('2d');
       const imageData = context.getImageData(
@@ -231,6 +264,7 @@ const generateMipmaps = (device, texture, mipLevelCount) => {
   });
 
   const pipeline = device.createComputePipeline({
+    label: 'ComputeMipmapPipeline',
     layout: pipelineLayout,
     compute: {
       module: computeShader,
@@ -264,7 +298,9 @@ const generateMipmaps = (device, texture, mipLevelCount) => {
       ],
     });
 
-    const commandEncoder = device.createCommandEncoder();
+    const commandEncoder = device.createCommandEncoder({
+      label: `MipmapGenerateCommandEncoder`,
+    });
     const computePass = commandEncoder.beginComputePass();
 
     computePass.setPipeline(pipeline);
@@ -290,6 +326,7 @@ const DEFAULT_VALUES = {
   image: null,
   canvas: null,
   jsImageData: null,
+  imageBitmap: null,
   imageLoaded: false,
   repeat: false,
   interpolate: false,
@@ -311,6 +348,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'canvas',
     'image',
     'jsImageData',
+    'imageBitmap',
     'imageLoaded',
     'resizable',
   ]);
