@@ -1,5 +1,3 @@
-/* eslint-disable no-bitwise */
-/* eslint-disable no-undef */
 import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkWebGPUTexture from 'vtk.js/Sources/Rendering/WebGPU/Texture';
@@ -70,10 +68,14 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       req.height = req.image.height;
       req.depth = 1;
       req.format = 'rgba8unorm';
+      /* eslint-disable no-undef */
+      /* eslint-disable no-bitwise */
       req.usage =
         GPUTextureUsage.STORAGE_BINDING |
         GPUTextureUsage.COPY_DST |
         GPUTextureUsage.TEXTURE_BINDING;
+      /* eslint-enable no-undef */
+      /* eslint-enable no-bitwise */
     }
 
     // fill in based on js imageData
@@ -84,10 +86,31 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       req.format = 'rgba8unorm';
       req.flip = true;
       req.nativeArray = req.jsImageData.data;
+      /* eslint-disable no-undef */
+      /* eslint-disable no-bitwise */
       req.usage =
         GPUTextureUsage.STORAGE_BINDING |
         GPUTextureUsage.COPY_DST |
         GPUTextureUsage.TEXTURE_BINDING;
+      /* eslint-enable no-undef */
+      /* eslint-enable no-bitwise */
+    }
+
+    if (req.imageBitmap) {
+      req.width = req.imageBitmap.width;
+      req.height = req.imageBitmap.height;
+      req.depth = 1;
+      req.format = 'rgba8unorm';
+      req.flip = true;
+      /* eslint-disable no-undef */
+      /* eslint-disable no-bitwise */
+      req.usage =
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.RENDER_ATTACHMENT |
+        GPUTextureUsage.COPY_SRC;
+      /* eslint-enable no-undef */
+      /* eslint-enable no-bitwise */
     }
 
     if (req.canvas) {
@@ -121,7 +144,7 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     });
 
     // fill the texture if we have data
-    if (req.nativeArray || req.image || req.canvas) {
+    if (req.nativeArray || req.image || req.canvas || req.imageBitmap) {
       newTex.writeImageData(req);
     }
     return newTex;
@@ -156,6 +179,8 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       treq.image = srcTexture.getImage();
     } else if (srcTexture.getJsImageData()) {
       treq.jsImageData = srcTexture.getJsImageData();
+    } else if (srcTexture.getImageBitmap()) {
+      treq.imageBitmap = srcTexture.getImageBitmap();
     } else if (srcTexture.getCanvas()) {
       treq.canvas = srcTexture.getCanvas();
     }

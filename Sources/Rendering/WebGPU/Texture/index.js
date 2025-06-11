@@ -1,11 +1,8 @@
 import macro from 'vtk.js/Sources/macros';
 import HalfFloat from 'vtk.js/Sources/Common/Core/HalfFloat';
-import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
 import vtkWebGPUTextureView from 'vtk.js/Sources/Rendering/WebGPU/TextureView';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
-
-const { BufferUsage } = vtkWebGPUBufferManager;
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -62,14 +59,19 @@ function vtkWebGPUTexture(publicAPI, model) {
 
   publicAPI.writeImageData = (req) => {
     let nativeArray = [];
-    if (req.canvas) {
+    const _copyImageToTexture = (source) => {
       model.device.getHandle().queue.copyExternalImageToTexture(
         {
-          source: req.canvas,
+          source,
           flipY: req.flip,
         },
-        { texture: model.handle, premultipliedAlpha: true },
-        [model.width, model.height, model.depth]
+        {
+          texture: model.handle,
+          premultipliedAlpha: true,
+          mipLevel: 0,
+          origin: { x: 0, y: 0, z: 0 },
+        },
+        [source.width, source.height, model.depth]
       );
 
       // Generate mipmaps on GPU if needed
@@ -82,6 +84,20 @@ function vtkWebGPUTexture(publicAPI, model) {
       }
 
       model.ready = true;
+    };
+
+    if (req.canvas) {
+      _copyImageToTexture(req.canvas);
+      return;
+    }
+
+    if (req.imageBitmap) {
+      req.width = req.imageBitmap.width;
+      req.height = req.imageBitmap.height;
+      req.depth = 1;
+      req.format = 'rgba8unorm';
+      req.flip = false;
+      _copyImageToTexture(req.imageBitmap);
       return;
     }
 
@@ -97,6 +113,15 @@ function vtkWebGPUTexture(publicAPI, model) {
     const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(model.format);
     let bufferBytesPerRow = model.width * tDetails.stride;
 
+    /**
+     * Align texture data to ensure bytesPerRow is a multiple of 256.
+     * This is necessary for WebGPU texture uploads, especially for half-float formats.
+     * It also handles half-float conversion if the texture format requires it.
+     * @param {*} arr - The input array containing texture data.
+     * @param {*} height - The height of the texture.
+     * @param {*} depth - The depth of the texture (1 for 2D textures).
+     * @returns
+     */
     const alignTextureData = (arr, height, depth) => {
       // bytesPerRow must be a multiple of 256 so we might need to rebuild
       // the data here before passing to the buffer. e.g. if it is unorm8x4 then
@@ -156,9 +181,7 @@ function vtkWebGPUTexture(publicAPI, model) {
     }
 
     if (req.image) {
-      const canvas = document.createElement('canvas');
-      canvas.width = req.image.width;
-      canvas.height = req.image.height;
+      const canvas = new OffscreenCanvas(req.image.width, req.image.height);
       const ctx = canvas.getContext('2d');
       ctx.translate(0, canvas.height);
       ctx.scale(1, -1);
@@ -183,68 +206,42 @@ function vtkWebGPUTexture(publicAPI, model) {
       nativeArray = imageData.data;
     }
 
-    const cmdEnc = model.device.createCommandEncoder();
+    const is3D = publicAPI.getDimensionality() === 3;
+    const alignedTextureData = alignTextureData(
+      nativeArray,
+      model.height,
+      is3D ? model.depth : 1
+    );
+    bufferBytesPerRow = alignedTextureData[1];
+    const data = alignedTextureData[0];
 
-    if (publicAPI.getDimensionality() !== 3) {
-      // Non-3D
-      // First, upload the base mip level (level 0)
-      const ret = alignTextureData(nativeArray, model.height, 1);
-      bufferBytesPerRow = ret[1];
-      const buffRequest = {
-        dataArray: req.dataArray ? req.dataArray : null,
-        nativeArray: ret[0],
-        usage: BufferUsage.Texture,
-      };
-      const buff = model.device.getBufferManager().getBuffer(buffRequest);
-      cmdEnc.copyBufferToTexture(
-        {
-          buffer: buff.getHandle(),
-          offset: 0,
-          bytesPerRow: bufferBytesPerRow,
-          rowsPerImage: model.height,
-        },
-        {
-          texture: model.handle,
-          mipLevel: 0,
-        },
-        [model.width, model.height, 1]
-      );
-
-      // Submit the base level upload
-      model.device.submitCommandEncoder(cmdEnc);
-
-      // Generate remaining mip levels on GPU
-      if (model.mipLevel > 0) {
-        vtkTexture.generateMipmaps(
-          model.device.getHandle(),
-          model.handle,
-          model.mipLevel + 1
-        );
+    model.device.getHandle().queue.writeTexture(
+      {
+        texture: model.handle,
+        mipLevel: 0,
+        origin: { x: 0, y: 0, z: 0 },
+      },
+      data,
+      {
+        offset: 0,
+        bytesPerRow: bufferBytesPerRow,
+        rowsPerImage: model.height,
+      },
+      {
+        width: model.width,
+        height: model.height,
+        depthOrArrayLayers: is3D ? model.depth : 1,
       }
-      model.ready = true;
-    } else {
-      // 3D, no mipmaps
-      const ret = alignTextureData(nativeArray, model.height, model.depth);
-      bufferBytesPerRow = ret[1];
-      const buffRequest = {
-        dataArray: req.dataArray ? req.dataArray : null,
-        usage: BufferUsage.Texture,
-      };
-      buffRequest.nativeArray = ret[0];
-      const buff = model.device.getBufferManager().getBuffer(buffRequest);
-      cmdEnc.copyBufferToTexture(
-        {
-          buffer: buff.getHandle(),
-          offset: 0,
-          bytesPerRow: bufferBytesPerRow,
-          rowsPerImage: model.height,
-        },
-        { texture: model.handle },
-        [model.width, model.height, model.depth]
+    );
+
+    if (!is3D && model.mipLevel > 0) {
+      vtkTexture.generateMipmaps(
+        model.device.getHandle(),
+        model.handle,
+        model.mipLevel + 1
       );
-      model.device.submitCommandEncoder(cmdEnc);
-      model.ready = true;
     }
+    model.ready = true;
   };
 
   // when data is pulled out of this texture what scale must be applied to
