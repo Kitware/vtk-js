@@ -134,11 +134,11 @@ function vtkTexture(publicAPI, model) {
     if (!model.imageLoaded || publicAPI.getInputData()) return null;
 
     if (model.jsImageData) {
-      return model.jsImageData();
+      return model.jsImageData;
     }
 
     if (model.imageBitmap) {
-      return model.imageBitmap();
+      return model.imageBitmap;
     }
 
     if (model.canvas) {
@@ -151,21 +151,16 @@ function vtkTexture(publicAPI, model) {
       );
       return imageData;
     }
+
     if (model.image) {
-      const canvas = document.createElement('canvas');
-      canvas.width = model.image.width;
-      canvas.height = model.image.height;
+      const width = model.image.width;
+      const height = model.image.height;
+      const canvas = new OffscreenCanvas(width, height);
       const context = canvas.getContext('2d');
-      context.translate(0, canvas.height);
+      context.translate(0, height);
       context.scale(1, -1);
-      context.drawImage(
-        model.image,
-        0,
-        0,
-        model.image.width,
-        model.image.height
-      );
-      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      context.drawImage(model.image, 0, 0, width, height);
+      const imageData = context.getImageData(0, 0, width, height);
       return imageData;
     }
 

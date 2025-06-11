@@ -107,8 +107,7 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       req.usage =
         GPUTextureUsage.TEXTURE_BINDING |
         GPUTextureUsage.COPY_DST |
-        GPUTextureUsage.RENDER_ATTACHMENT |
-        GPUTextureUsage.COPY_SRC;
+        GPUTextureUsage.RENDER_ATTACHMENT;
       /* eslint-enable no-undef */
       /* eslint-enable no-bitwise */
     }

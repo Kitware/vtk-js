@@ -15,7 +15,6 @@ export interface ITextureInitialValues {
 }
 
 export interface vtkTexture extends vtkAlgorithm {
-
   /**
    * Returns the canvas used by the texture.
    */
@@ -39,12 +38,12 @@ export interface vtkTexture extends vtkAlgorithm {
   /**
    * Returns the image used by the texture.
    */
-  getImage(): HTMLImageElement;
+  getImage(): Nullable<HTMLImageElement>;
 
   /**
    * Returns an ImageBitmap object.
    */
-  getImageBitmap(): ImageBitmap;
+  getImageBitmap(): Nullable<ImageBitmap>;
 
   /**
    * Returns true if the image is loaded.
@@ -52,9 +51,11 @@ export interface vtkTexture extends vtkAlgorithm {
   getImageLoaded(): boolean;
 
   /**
-   * Returns the input image data as a JavaScript ImageData object.
+   * Returns the input image data object.
    */
-  getInputAsJsImageData(): any;
+  getInputAsJsImageData(): Nullable<
+    ImageData | ImageBitmap | HTMLCanvasElement | HTMLImageElement
+  >;
 
   /**
    * Returns the current mip level of the texture.
@@ -105,7 +106,7 @@ export interface vtkTexture extends vtkAlgorithm {
    * Sets the input image data as a JavaScript ImageData object.
    * @param imageData
    */
-  setJsImageData(imageData: any): void;
+  setJsImageData(imageData: ImageData): void;
 
   /**
    * Sets the current mip level of the texture.
@@ -164,6 +165,11 @@ export function generateMipmaps(
  * create visualization pipelines to read, process, and construct textures. Note
  * that textures will only work if texture coordinates are also defined, and if
  * the rendering system supports texture.
+ *
+ * This class is used in both WebGL and WebGPU rendering backends, but the
+ * implementation details may vary. In WebGL, it uses HTMLImageElement and
+ * HTMLCanvasElement for textures, while in WebGPU, it uses HTMLImageElement,
+ * HTMLCanvasElement, and ImageBitmap.
  */
 export declare const vtkTexture: {
   newInstance: typeof newInstance;
