@@ -41,7 +41,7 @@ fullScreenRenderer.addController(controlPanel);
 // ----------------------------------------------------------------------------
 
 // SETUP ================
-// Load script from https://unpkg.com/vtk.js then...
+// Load script from https://cdn.skypack.dev/@kitware/vtk.js then...
 
 const clipPlane1 = vtkPlane.newInstance();
 const clipPlane2 = vtkPlane.newInstance();
