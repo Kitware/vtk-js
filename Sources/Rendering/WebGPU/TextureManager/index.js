@@ -68,12 +68,14 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       req.height = req.image.height;
       req.depth = 1;
       req.format = 'rgba8unorm';
+      req.flip = true;
       /* eslint-disable no-undef */
       /* eslint-disable no-bitwise */
       req.usage =
         GPUTextureUsage.STORAGE_BINDING |
         GPUTextureUsage.COPY_DST |
-        GPUTextureUsage.TEXTURE_BINDING;
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.RENDER_ATTACHMENT;
       /* eslint-enable no-undef */
       /* eslint-enable no-bitwise */
     }
@@ -91,7 +93,8 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       req.usage =
         GPUTextureUsage.STORAGE_BINDING |
         GPUTextureUsage.COPY_DST |
-        GPUTextureUsage.TEXTURE_BINDING;
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.RENDER_ATTACHMENT;
       /* eslint-enable no-undef */
       /* eslint-enable no-bitwise */
     }
@@ -105,8 +108,9 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       /* eslint-disable no-undef */
       /* eslint-disable no-bitwise */
       req.usage =
-        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.STORAGE_BINDING |
         GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.TEXTURE_BINDING |
         GPUTextureUsage.RENDER_ATTACHMENT;
       /* eslint-enable no-undef */
       /* eslint-enable no-bitwise */
@@ -121,8 +125,9 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       /* eslint-disable no-undef */
       /* eslint-disable no-bitwise */
       req.usage =
-        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.STORAGE_BINDING |
         GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.TEXTURE_BINDING |
         GPUTextureUsage.RENDER_ATTACHMENT;
       /* eslint-enable no-undef */
       /* eslint-enable no-bitwise */
@@ -131,7 +136,7 @@ function vtkWebGPUTextureManager(publicAPI, model) {
 
   // create a texture (used by getTexture)
   function _createTexture(req) {
-    const newTex = vtkWebGPUTexture.newInstance();
+    const newTex = vtkWebGPUTexture.newInstance({ label: req.label });
 
     newTex.create(model.device, {
       width: req.width,
@@ -170,8 +175,8 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     return model.device.getTextureManager().getTexture(treq);
   };
 
-  publicAPI.getTextureForVTKTexture = (srcTexture) => {
-    const treq = { time: srcTexture.getMTime() };
+  publicAPI.getTextureForVTKTexture = (srcTexture, label = undefined) => {
+    const treq = { time: srcTexture.getMTime(), label };
     if (srcTexture.getInputData()) {
       treq.imageData = srcTexture.getInputData();
     } else if (srcTexture.getImage()) {

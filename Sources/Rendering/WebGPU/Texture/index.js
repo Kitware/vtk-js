@@ -96,18 +96,29 @@ function vtkWebGPUTexture(publicAPI, model) {
       req.height = req.imageBitmap.height;
       req.depth = 1;
       req.format = 'rgba8unorm';
-      req.flip = false;
+      req.flip = true;
       _copyImageToTexture(req.imageBitmap);
       return;
     }
 
-    if (req.jsImageData && !req.nativeArray) {
+    if (req.jsImageData) {
       req.width = req.jsImageData.width;
       req.height = req.jsImageData.height;
       req.depth = 1;
       req.format = 'rgba8unorm';
       req.flip = true;
-      req.nativeArray = req.jsImageData.data;
+      _copyImageToTexture(req.jsImageData);
+      return;
+    }
+
+    if (req.image) {
+      req.width = req.image.width;
+      req.height = req.image.height;
+      req.depth = 1;
+      req.format = 'rgba8unorm';
+      req.flip = true;
+      _copyImageToTexture(req.image);
+      return;
     }
 
     const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(model.format);
@@ -178,32 +189,6 @@ function vtkWebGPUTexture(publicAPI, model) {
 
     if (req.nativeArray) {
       nativeArray = req.nativeArray;
-    }
-
-    if (req.image) {
-      const canvas = new OffscreenCanvas(req.image.width, req.image.height);
-      const ctx = canvas.getContext('2d');
-      ctx.translate(0, canvas.height);
-      ctx.scale(1, -1);
-      ctx.drawImage(
-        req.image,
-        0,
-        0,
-        req.image.width,
-        req.image.height,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
-      const imageData = ctx.getImageData(
-        0,
-        0,
-        req.image.width,
-        req.image.height
-      );
-
-      nativeArray = imageData.data;
     }
 
     const is3D = publicAPI.getDimensionality() === 3;

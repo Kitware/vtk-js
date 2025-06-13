@@ -1,7 +1,5 @@
-import WebworkerPromise from 'webworker-promise';
 import macro from 'vtk.js/Sources/macros';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
-import Worker from 'vtk.js/Sources/IO/Geometry/GLTFImporter/ORMTexture.worker';
 import {
   BYTES,
   COMPONENTS,
@@ -89,37 +87,16 @@ export function resolveUrl(url, originalPath) {
 /**
  * Loads image from buffer or URI
  * @param {*} image
- * @param {*} channel
  * @returns
  */
-export async function loadImage(image, channel, forceReLoad = false) {
-  // Initialize cache if it doesn't exist
-  if (!image.cache) {
-    image.cache = {};
-  }
-
-  // Return cached result for the channel if available and not forced to reload
-  if (!forceReLoad && image.cache[channel]) {
-    return image.cache[channel];
-  }
-
-  const worker = new WebworkerPromise(new Worker());
-
+export async function loadImage(image) {
   if (image.bufferView) {
-    return worker
-      .postMessage({
-        imageBuffer: image.bufferView.data,
-        mimeType: image.mimeType,
-        channel,
-      })
-      .then((result) => {
-        // Cache the bitmap based on the channel
-        image.cache[channel] = result.bitmap;
-        return result.bitmap;
-      })
-      .finally(() => {
-        worker.terminate();
-      });
+    const blob = new Blob([image.bufferView.data], { type: image.mimeType });
+    const bitmap = await createImageBitmap(blob, {
+      colorSpaceConversion: 'none',
+      imageOrientation: 'flipY',
+    });
+    return bitmap;
   }
 
   if (image.uri) {
@@ -128,7 +105,6 @@ export async function loadImage(image, channel, forceReLoad = false) {
       const img = new Image();
       img.crossOrigin = 'Anonymous';
       img.onload = () => {
-        image.cache[channel] = img; // Cache the loaded image based on the channel
         resolve(img);
       };
       img.onerror = reject;
@@ -189,7 +165,6 @@ export function createVTKTextureFromGLTFTexture(image, sampler, extensions) {
       texture.setEdgeClamp(true);
     }
   }
-
-  texture.setJsImageData(image);
+  texture.setImageBitmap(image);
   return texture;
 }
