@@ -857,14 +857,14 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       if (roughnessTexture?.getImageLoaded()) {
         if (checkDims(roughnessTexture)) {
           usedTextures.push(
-            '_roughnessMap = textureSample(RoughnessTexture, RoughnessTextureSampler, input.tcoordVS);'
+            '_roughnessMap = textureSample(RoughnessTexture, RoughnessTextureSampler, input.tcoordVS).ggga;'
           );
         }
       }
       if (metallicTexture?.getImageLoaded()) {
         if (checkDims(metallicTexture)) {
           usedTextures.push(
-            '_metallicMap = textureSample(MetallicTexture, MetallicTextureSampler, input.tcoordVS);'
+            '_metallicMap = textureSample(MetallicTexture, MetallicTextureSampler, input.tcoordVS).bbba;'
           );
         }
       }
@@ -1136,23 +1136,26 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     }
     if (idata) {
       model.colorTexture.setInputData(idata);
-      newTextures.push(['Diffuse', model.colorTexture]);
+      newTextures.push(['DiffuseTexture', model.colorTexture]);
     }
 
     const actor = model.WebGPUActor.getRenderable();
     const renderer = model.WebGPURenderer.getRenderable();
     const textures = [
-      ['Diffuse', actor.getProperty().getDiffuseTexture?.()],
-      ['Diffuse', actor.getTextures()[0]],
-      ['Diffuse', model.colorTexture],
-      ['ORM', actor.getProperty().getORMTexture?.()],
-      ['RM', actor.getProperty().getRMTexture?.()],
-      ['Roughness', actor.getProperty().getRoughnessTexture?.()],
-      ['Metallic', actor.getProperty().getMetallicTexture?.()],
-      ['Normal', actor.getProperty().getNormalTexture?.()],
-      ['AmbientOcclusion', actor.getProperty().getAmbientOcclusionTexture?.()],
-      ['Emission', actor.getProperty().getEmissionTexture?.()],
-      ['Environment', renderer.getEnvironmentTexture?.()],
+      ['DiffuseTexture', actor.getProperty().getDiffuseTexture?.()],
+      ['DiffuseTexture', actor.getTextures()[0]],
+      ['DiffuseTexture', model.colorTexture],
+      ['ORMTexture', actor.getProperty().getORMTexture?.()],
+      ['RMTexture', actor.getProperty().getRMTexture?.()],
+      ['RoughnessTexture', actor.getProperty().getRoughnessTexture?.()],
+      ['MetallicTexture', actor.getProperty().getMetallicTexture?.()],
+      ['NormalTexture', actor.getProperty().getNormalTexture?.()],
+      [
+        'AmbientOcclusionTexture',
+        actor.getProperty().getAmbientOcclusionTexture?.(),
+      ],
+      ['EmissionTexture', actor.getProperty().getEmissionTexture?.()],
+      ['EnvironmentTexture', renderer.getEnvironmentTexture?.()],
     ];
     textures.forEach(([name, tex]) => {
       if (!tex) return;
@@ -1173,7 +1176,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     newTextures.forEach(([textureName, srcTexture]) => {
       const newTex = model.device
         .getTextureManager()
-        .getTextureForVTKTexture(srcTexture);
+        .getTextureForVTKTexture(srcTexture, textureName);
 
       if (!newTex.getReady()) return;
       let found = false;
@@ -1186,7 +1189,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       }
       if (!found) {
         usedTextures[model.textures.length] = true;
-        const tview = newTex.createView(`${textureName}Texture`);
+        const tview = newTex.createView(textureName);
         model.textures.push(newTex);
         model.textureViews.push(tview);
 
@@ -1199,24 +1202,26 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         else if (srcTexture.getRepeat()) addressMode = 'repeat';
 
         // Handle environment texture separately
-        if (textureName !== 'Environment') {
-          tview.addSampler(model.device, {
-            addressModeU: addressMode,
-            addressModeV: addressMode,
-            addressModeW: addressMode,
-            minFilter: interpolate,
-            magFilter: interpolate,
-          });
-        } else {
-          tview.addSampler(model.device, {
+        let options = {
+          addressModeU: addressMode,
+          addressModeV: addressMode,
+          addressModeW: addressMode,
+          minFilter: interpolate,
+          magFilter: interpolate,
+        };
+
+        if (textureName === 'EnvironmentTexture') {
+          options = {
             addressModeU: 'repeat',
             addressModeV: 'clamp-to-edge',
             addressModeW: 'repeat',
             minFilter: interpolate,
             magFilter: interpolate,
             mipmapFilter: 'linear',
-          });
+          };
         }
+
+        tview.addSampler(model.device, options);
       }
     });
 

@@ -299,30 +299,42 @@ class GLTFParser {
     // WebGLBuffer's using the bufferViews.
     if (accessor.bufferView) {
       const buffer = accessor.bufferView.buffer;
-      const { ArrayType, byteLength } = getAccessorArrayTypeAndLength(
+      const { ArrayType } = getAccessorArrayTypeAndLength(
         accessor,
         accessor.bufferView
       );
-      const byteOffset =
-        (accessor.bufferView.byteOffset || 0) +
-        (accessor.byteOffset || 0) +
-        buffer.byteOffset;
+      const baseByteOffset =
+        (accessor.bufferView.byteOffset || 0) + buffer.byteOffset;
+      const byteOffset = baseByteOffset + (accessor.byteOffset || 0);
 
-      let slicedBufffer = buffer.arrayBuffer.slice(
-        byteOffset,
-        byteOffset + byteLength
-      );
-
+      let arrayBufferView;
       if (accessor.bufferView.byteStride) {
-        slicedBufffer = this.getValueFromInterleavedBuffer(
-          buffer,
+        // Only extract if stride is not equal to element size
+        if (accessor.bufferView.byteStride === accessor.bytesPerElement) {
+          arrayBufferView = new ArrayType(
+            buffer.arrayBuffer,
+            byteOffset,
+            accessor.count * accessor.components
+          );
+        } else {
+          // Interleaved buffer, extract only needed bytes
+          const interleavedBuffer = this.getValueFromInterleavedBuffer(
+            buffer,
+            byteOffset,
+            accessor.bufferView.byteStride,
+            accessor.bytesPerElement,
+            accessor.count
+          );
+          arrayBufferView = new ArrayType(interleavedBuffer);
+        }
+      } else {
+        arrayBufferView = new ArrayType(
+          buffer.arrayBuffer,
           byteOffset,
-          accessor.bufferView.byteStride,
-          accessor.bytesPerElement,
-          accessor.count
+          accessor.count * accessor.components
         );
       }
-      accessor.value = new ArrayType(slicedBufffer);
+      accessor.value = arrayBufferView;
     }
 
     return accessor;

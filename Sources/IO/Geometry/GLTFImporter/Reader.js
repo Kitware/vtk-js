@@ -167,6 +167,7 @@ async function createPolyDataFromGLTFMesh(primitive) {
       polyData.setStrips(cells);
       break;
     default:
+      cells.delete();
       vtkWarningMacro('Invalid primitive draw mode. Ignoring connectivity.');
   }
 
@@ -242,14 +243,7 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
         extensions
       );
 
-      // FIXME: Workaround for textures not showing up in WebGL
-      const viewAPI = model.renderer.getRenderWindow();
-      const isWebGL = viewAPI.getViews()[0].isA('vtkOpenGLRenderWindow');
-      if (isWebGL) {
-        actor.addTexture(diffuseTex);
-      } else {
-        property.setDiffuseTexture(diffuseTex);
-      }
+      property.setDiffuseTexture(diffuseTex);
     }
 
     // Handle metallic-roughness texture (metallicRoughnessTexture)
@@ -271,7 +265,7 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
       const extensions = material.occlusionTexture.extensions;
       const tex = material.occlusionTexture.texture;
       const sampler = tex.sampler;
-      const aoImage = await loadImage(tex.source, 'r');
+      const aoImage = await loadImage(tex.source);
       const aoTex = createVTKTextureFromGLTFTexture(
         aoImage,
         sampler,
@@ -361,6 +355,8 @@ function handlePrimitiveExtensions(nodeId, extensions, model) {
       case 'KHR_materials_variants':
         model.variantMappings.set(nodeId, extension.mappings);
         break;
+      case 'KHR_draco_mesh_compression':
+        break;
       default:
         vtkWarningMacro(`Unhandled extension: ${extensionName}`);
     }
@@ -376,6 +372,7 @@ async function createActorFromGTLFNode(worldMatrix) {
   const actor = vtkActor.newInstance();
   const mapper = vtkMapper.newInstance();
   mapper.setColorModeToDirectScalars();
+  mapper.setInterpolateScalarsBeforeMapping(true);
   actor.setMapper(mapper);
   actor.setUserMatrix(worldMatrix);
 
@@ -393,6 +390,8 @@ async function createActorFromGTLFPrimitive(model, primitive, worldMatrix) {
   const actor = vtkActor.newInstance();
   const mapper = vtkMapper.newInstance();
   mapper.setColorModeToDirectScalars();
+  mapper.setInterpolateScalarsBeforeMapping(true);
+
   actor.setMapper(mapper);
   actor.setUserMatrix(worldMatrix);
 
