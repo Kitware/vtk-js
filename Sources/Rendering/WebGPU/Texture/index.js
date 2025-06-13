@@ -1,11 +1,8 @@
 import macro from 'vtk.js/Sources/macros';
 import HalfFloat from 'vtk.js/Sources/Common/Core/HalfFloat';
-import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
 import vtkWebGPUTextureView from 'vtk.js/Sources/Rendering/WebGPU/TextureView';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
-
-const { BufferUsage } = vtkWebGPUBufferManager;
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -62,16 +59,45 @@ function vtkWebGPUTexture(publicAPI, model) {
 
   publicAPI.writeImageData = (req) => {
     let nativeArray = [];
-    if (req.canvas) {
+    const _copyImageToTexture = (source) => {
       model.device.getHandle().queue.copyExternalImageToTexture(
         {
-          source: req.canvas,
+          source,
           flipY: req.flip,
         },
-        { texture: model.handle, premultipliedAlpha: true },
-        [model.width, model.height, model.depth]
+        {
+          texture: model.handle,
+          premultipliedAlpha: true,
+          mipLevel: 0,
+          origin: { x: 0, y: 0, z: 0 },
+        },
+        [source.width, source.height, model.depth]
       );
+
+      // Generate mipmaps on GPU if needed
+      if (publicAPI.getDimensionality() !== 3 && model.mipLevel > 0) {
+        vtkTexture.generateMipmaps(
+          model.device.getHandle(),
+          model.handle,
+          model.mipLevel + 1
+        );
+      }
+
       model.ready = true;
+    };
+
+    if (req.canvas) {
+      _copyImageToTexture(req.canvas);
+      return;
+    }
+
+    if (req.imageBitmap) {
+      req.width = req.imageBitmap.width;
+      req.height = req.imageBitmap.height;
+      req.depth = 1;
+      req.format = 'rgba8unorm';
+      req.flip = false;
+      _copyImageToTexture(req.imageBitmap);
       return;
     }
 
@@ -87,49 +113,67 @@ function vtkWebGPUTexture(publicAPI, model) {
     const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(model.format);
     let bufferBytesPerRow = model.width * tDetails.stride;
 
-    const fixAll = (arr, height, depth) => {
+    /**
+     * Align texture data to ensure bytesPerRow is a multiple of 256.
+     * This is necessary for WebGPU texture uploads, especially for half-float formats.
+     * It also handles half-float conversion if the texture format requires it.
+     * @param {*} arr - The input array containing texture data.
+     * @param {*} height - The height of the texture.
+     * @param {*} depth - The depth of the texture (1 for 2D textures).
+     * @returns
+     */
+    const alignTextureData = (arr, height, depth) => {
       // bytesPerRow must be a multiple of 256 so we might need to rebuild
       // the data here before passing to the buffer. e.g. if it is unorm8x4 then
       // we need to have width be a multiple of 64
-      const inWidthInBytes =
-        (arr.length / (height * depth)) * arr.BYTES_PER_ELEMENT;
-
-      // is this a half float texture?
+      // Check if the texture is half float
       const halfFloat =
         tDetails.elementSize === 2 && tDetails.sampleType === 'float';
 
-      // if we need to copy the data
-      if (halfFloat || inWidthInBytes % 256) {
-        const inArray = arr;
-        const inWidth = inWidthInBytes / inArray.BYTES_PER_ELEMENT;
+      const bytesPerElement = arr.BYTES_PER_ELEMENT;
+      const inWidthInBytes = (arr.length / (height * depth)) * bytesPerElement;
 
-        const outBytesPerElement = tDetails.elementSize;
-        const outWidthInBytes =
-          256 * Math.floor((inWidth * outBytesPerElement + 255) / 256);
-        const outWidth = outWidthInBytes / outBytesPerElement;
+      // No changes needed if not half float and already aligned
+      if (!halfFloat && inWidthInBytes % 256 === 0) {
+        return [arr, inWidthInBytes];
+      }
 
-        const outArray = macro.newTypedArray(
-          halfFloat ? 'Uint16Array' : inArray.constructor.name,
-          outWidth * height * depth
-        );
+      // Calculate dimensions for the new buffer
+      const inWidth = inWidthInBytes / bytesPerElement;
+      const outBytesPerElement = tDetails.elementSize;
+      const outWidthInBytes =
+        256 * Math.floor((inWidth * outBytesPerElement + 255) / 256);
+      const outWidth = outWidthInBytes / outBytesPerElement;
 
-        for (let v = 0; v < height * depth; v++) {
-          if (halfFloat) {
-            for (let i = 0; i < inWidth; i++) {
-              outArray[v * outWidth + i] = HalfFloat.toHalf(
-                inArray[v * inWidth + i]
-              );
-            }
-          } else {
-            outArray.set(
-              inArray.subarray(v * inWidth, (v + 1) * inWidth),
-              v * outWidth
-            );
+      // Create the output array
+      const outArray = macro.newTypedArray(
+        halfFloat ? 'Uint16Array' : arr.constructor.name,
+        outWidth * height * depth
+      );
+
+      // Copy and convert data when needed
+      const totalRows = height * depth;
+      if (halfFloat) {
+        for (let v = 0; v < totalRows; v++) {
+          const inOffset = v * inWidth;
+          const outOffset = v * outWidth;
+          for (let i = 0; i < inWidth; i++) {
+            outArray[outOffset + i] = HalfFloat.toHalf(arr[inOffset + i]);
           }
         }
-        return [outArray, outWidthInBytes];
+      } else if (outWidth === inWidth) {
+        // If the output width is the same as input, just copy
+        outArray.set(arr);
+      } else {
+        for (let v = 0; v < totalRows; v++) {
+          outArray.set(
+            arr.subarray(v * inWidth, (v + 1) * inWidth),
+            v * outWidth
+          );
+        }
       }
-      return [arr, inWidthInBytes];
+
+      return [outArray, outWidthInBytes];
     };
 
     if (req.nativeArray) {
@@ -137,9 +181,7 @@ function vtkWebGPUTexture(publicAPI, model) {
     }
 
     if (req.image) {
-      const canvas = document.createElement('canvas');
-      canvas.width = req.image.width;
-      canvas.height = req.image.height;
+      const canvas = new OffscreenCanvas(req.image.width, req.image.height);
       const ctx = canvas.getContext('2d');
       ctx.translate(0, canvas.height);
       ctx.scale(1, -1);
@@ -164,72 +206,42 @@ function vtkWebGPUTexture(publicAPI, model) {
       nativeArray = imageData.data;
     }
 
-    const cmdEnc = model.device.createCommandEncoder();
+    const is3D = publicAPI.getDimensionality() === 3;
+    const alignedTextureData = alignTextureData(
+      nativeArray,
+      model.height,
+      is3D ? model.depth : 1
+    );
+    bufferBytesPerRow = alignedTextureData[1];
+    const data = alignedTextureData[0];
 
-    if (publicAPI.getDimensionality() !== 3) {
-      // Non-3D, supports mipmaps
-      const mips = vtkTexture.generateMipmaps(
-        nativeArray,
-        model.width,
-        model.height,
-        model.mipLevel
-      );
-      let currentWidth = model.width;
-      let currentHeight = model.height;
-      for (let m = 0; m <= model.mipLevel; m++) {
-        const fix = fixAll(mips[m], currentHeight, 1);
-        bufferBytesPerRow = fix[1];
-        const buffRequest = {
-          dataArray: req.dataArray ? req.dataArray : null,
-          nativeArray: fix[0],
-          /* eslint-disable no-undef */
-          usage: BufferUsage.Texture,
-          /* eslint-enable no-undef */
-        };
-        const buff = model.device.getBufferManager().getBuffer(buffRequest);
-        cmdEnc.copyBufferToTexture(
-          {
-            buffer: buff.getHandle(),
-            offset: 0,
-            bytesPerRow: bufferBytesPerRow,
-            rowsPerImage: currentHeight,
-          },
-          {
-            texture: model.handle,
-            mipLevel: m,
-          },
-          [currentWidth, currentHeight, 1]
-        );
-        currentWidth /= 2;
-        currentHeight /= 2;
+    model.device.getHandle().queue.writeTexture(
+      {
+        texture: model.handle,
+        mipLevel: 0,
+        origin: { x: 0, y: 0, z: 0 },
+      },
+      data,
+      {
+        offset: 0,
+        bytesPerRow: bufferBytesPerRow,
+        rowsPerImage: model.height,
+      },
+      {
+        width: model.width,
+        height: model.height,
+        depthOrArrayLayers: is3D ? model.depth : 1,
       }
-      model.device.submitCommandEncoder(cmdEnc);
-      model.ready = true;
-    } else {
-      // 3D, no mipmaps
-      const fix = fixAll(nativeArray, model.height, model.depth);
-      bufferBytesPerRow = fix[1];
-      const buffRequest = {
-        dataArray: req.dataArray ? req.dataArray : null,
-        /* eslint-disable no-undef */
-        usage: BufferUsage.Texture,
-        /* eslint-enable no-undef */
-      };
-      buffRequest.nativeArray = fix[0];
-      const buff = model.device.getBufferManager().getBuffer(buffRequest);
-      cmdEnc.copyBufferToTexture(
-        {
-          buffer: buff.getHandle(),
-          offset: 0,
-          bytesPerRow: bufferBytesPerRow,
-          rowsPerImage: model.height,
-        },
-        { texture: model.handle },
-        [model.width, model.height, model.depth]
+    );
+
+    if (!is3D && model.mipLevel > 0) {
+      vtkTexture.generateMipmaps(
+        model.device.getHandle(),
+        model.handle,
+        model.mipLevel + 1
       );
-      model.device.submitCommandEncoder(cmdEnc);
-      model.ready = true;
     }
+    model.ready = true;
   };
 
   // when data is pulled out of this texture what scale must be applied to
