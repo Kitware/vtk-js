@@ -12,7 +12,7 @@ import supportsNorm16Linear from './supportsNorm16Linear';
 
 const { Wrap, Filter } = Constants;
 const { VtkDataTypes } = vtkDataArray;
-const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
+const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro, requiredParam } = macro;
 const { toHalf } = HalfFloat;
 
 // ----------------------------------------------------------------------------
@@ -92,14 +92,14 @@ function vtkOpenGLTexture(publicAPI, model) {
           publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
         }
         const canvas = model.renderable.getCanvas();
-        publicAPI.create2DFromRaw(
-          canvas.width,
-          canvas.height,
-          4,
-          VtkDataTypes.UNSIGNED_CHAR,
-          canvas,
-          true
-        );
+        publicAPI.create2DFromRaw({
+          width: canvas.width,
+          height: canvas.height,
+          numComps: 4,
+          dataType: VtkDataTypes.UNSIGNED_CHAR,
+          data: canvas,
+          flip: true,
+        });
         publicAPI.activate();
         publicAPI.sendParameters();
         model.textureBuildTime.modified();
@@ -111,14 +111,14 @@ function vtkOpenGLTexture(publicAPI, model) {
           model.generateMipmap = true;
           publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
         }
-        publicAPI.create2DFromRaw(
-          jsid.width,
-          jsid.height,
-          4,
-          VtkDataTypes.UNSIGNED_CHAR,
-          jsid.data,
-          true
-        );
+        publicAPI.create2DFromRaw({
+          width: jsid.width,
+          height: jsid.height,
+          numComps: 4,
+          dataType: VtkDataTypes.UNSIGNED_CHAR,
+          data: jsid.data,
+          flip: true,
+        });
         publicAPI.activate();
         publicAPI.sendParameters();
         model.textureBuildTime.modified();
@@ -148,21 +148,21 @@ function vtkOpenGLTexture(publicAPI, model) {
           publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
         }
         if (data.length % 6 === 0) {
-          publicAPI.createCubeFromRaw(
-            ext[1] - ext[0] + 1,
-            ext[3] - ext[2] + 1,
-            inScalars.getNumberOfComponents(),
-            inScalars.getDataType(),
-            data
-          );
+          publicAPI.createCubeFromRaw({
+            width: ext[1] - ext[0] + 1,
+            height: ext[3] - ext[2] + 1,
+            numComps: inScalars.getNumberOfComponents(),
+            dataType: inScalars.getDataType(),
+            data,
+          });
         } else {
-          publicAPI.create2DFromRaw(
-            ext[1] - ext[0] + 1,
-            ext[3] - ext[2] + 1,
-            inScalars.getNumberOfComponents(),
-            inScalars.getDataType(),
-            inScalars.getData()
-          );
+          publicAPI.create2DFromRaw({
+            width: ext[1] - ext[0] + 1,
+            height: ext[3] - ext[2] + 1,
+            numComps: inScalars.getNumberOfComponents(),
+            dataType: inScalars.getDataType(),
+            data: inScalars.getData(),
+          });
         }
         publicAPI.activate();
         publicAPI.sendParameters();
@@ -979,14 +979,15 @@ function vtkOpenGLTexture(publicAPI, model) {
   }
 
   //----------------------------------------------------------------------------
-  publicAPI.create2DFromRaw = (
-    width,
-    height,
-    numComps,
-    dataType,
-    data,
-    flip = false
-  ) => {
+
+  publicAPI.create2DFromRaw = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    numComps = requiredParam('numComps'),
+    dataType = requiredParam('dataType'),
+    data = requiredParam('data'),
+    flip = false,
+  } = {}) => {
     // Now determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(dataType, true);
     publicAPI.getInternalFormat(dataType, numComps);
@@ -1075,7 +1076,13 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.createCubeFromRaw = (width, height, numComps, dataType, data) => {
+  publicAPI.createCubeFromRaw = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    numComps = requiredParam('numComps'),
+    dataType = requiredParam('dataType'),
+    data = requiredParam('data'),
+  } = {}) => {
     // Now determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(dataType);
     publicAPI.getInternalFormat(dataType, numComps);
@@ -1202,7 +1209,12 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.createDepthFromRaw = (width, height, dataType, data) => {
+  publicAPI.createDepthFromRaw = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    dataType = requiredParam('dataType'),
+    data = requiredParam('data'),
+  } = {}) => {
     // Now determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(dataType);
     model.format = model.context.DEPTH_COMPONENT;
@@ -1491,39 +1503,39 @@ function vtkOpenGLTexture(publicAPI, model) {
     };
   }
 
-  publicAPI.create2DFilterableFromRaw = (
-    width,
-    height,
-    numberOfComponents,
-    dataType,
-    values,
+  publicAPI.create2DFilterableFromRaw = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    numComps = requiredParam('numComps'),
+    dataType = requiredParam('dataType'),
+    data = requiredParam('data'),
     preferSizeOverAccuracy = false,
-    ranges = undefined
-  ) =>
-    publicAPI.create2DFilterableFromDataArray(
+    ranges = undefined,
+  } = {}) =>
+    publicAPI.create2DFilterableFromDataArray({
       width,
       height,
-      vtkDataArray.newInstance({
-        numberOfComponents,
+      dataArray: vtkDataArray.newInstance({
+        numComps,
         dataType,
-        values,
+        values: data,
         ranges,
       }),
-      preferSizeOverAccuracy
-    );
+      preferSizeOverAccuracy,
+    });
 
-  publicAPI.create2DFilterableFromDataArray = (
-    width,
-    height,
-    dataArray,
-    preferSizeOverAccuracy = false
-  ) => {
+  publicAPI.create2DFilterableFromDataArray = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    dataArray = requiredParam('dataArray'),
+    preferSizeOverAccuracy = false,
+  } = {}) => {
     const { numComps, dataType, data } = processDataArray(
       dataArray,
       preferSizeOverAccuracy
     );
 
-    publicAPI.create2DFromRaw(width, height, numComps, dataType, data);
+    publicAPI.create2DFromRaw({ width, height, numComps, dataType, data });
   };
 
   publicAPI.updateVolumeInfoForGL = (dataType, numComps) => {
@@ -1586,15 +1598,15 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.create3DFromRaw = (
-    width,
-    height,
-    depth,
-    numComps,
-    dataType,
-    data,
-    updatedExtents = []
-  ) => {
+  publicAPI.create3DFromRaw = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    depth = requiredParam('depth'),
+    numComps = requiredParam('numComps'),
+    dataType = requiredParam('dataType'),
+    data = requiredParam('data'),
+    updatedExtents = [],
+  } = {}) => {
     let dataTypeToUse = dataType;
     let dataToUse = data;
 
@@ -1760,41 +1772,41 @@ function vtkOpenGLTexture(publicAPI, model) {
   //----------------------------------------------------------------------------
   // This method simulates a 3D texture using 2D
   // Prefer create3DFilterableFromDataArray to enable caching of min and max values
-  publicAPI.create3DFilterableFromRaw = (
-    width,
-    height,
-    depth,
-    numberOfComponents,
-    dataType,
-    values,
+  publicAPI.create3DFilterableFromRaw = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    depth = requiredParam('depth'),
+    numComps = requiredParam('numComps'),
+    dataType = requiredParam('dataType'),
+    data = requiredParam('data'),
     preferSizeOverAccuracy = false,
     ranges = undefined,
-    updatedExtents = []
-  ) =>
-    publicAPI.create3DFilterableFromDataArray(
+    updatedExtents = [],
+  } = {}) =>
+    publicAPI.create3DFilterableFromDataArray({
       width,
       height,
       depth,
-      vtkDataArray.newInstance({
-        numberOfComponents,
+      dataArray: vtkDataArray.newInstance({
+        numComps,
         dataType,
-        values,
+        values: data,
         ranges,
       }),
       preferSizeOverAccuracy,
-      updatedExtents
-    );
+      updatedExtents,
+    });
 
   //----------------------------------------------------------------------------
   // This method create a 3D texture from dimensions and a DataArray
-  publicAPI.create3DFilterableFromDataArray = (
-    width,
-    height,
-    depth,
-    dataArray,
+  publicAPI.create3DFilterableFromDataArray = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    depth = requiredParam('depth'),
+    dataArray = requiredParam('dataArray'),
     preferSizeOverAccuracy = false,
-    updatedExtents = []
-  ) => {
+    updatedExtents = [],
+  } = {}) => {
     const { numComps, dataType, data, scaleOffsets } = processDataArray(
       dataArray,
       preferSizeOverAccuracy
@@ -1828,15 +1840,15 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // WebGL2 path, we have 3d textures etc
     if (model._openGLRenderWindow.getWebgl2()) {
-      return publicAPI.create3DFromRaw(
+      return publicAPI.create3DFromRaw({
         width,
         height,
         depth,
         numComps,
         dataType,
         data,
-        updatedExtents
-      );
+        updatedExtents,
+      });
     }
 
     const numPixelsIn = width * height * depth;

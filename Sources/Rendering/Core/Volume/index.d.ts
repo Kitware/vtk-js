@@ -30,22 +30,6 @@ export interface vtkVolume extends vtkProp3D {
   getVolumes(): vtkVolume[];
 
   /**
-   * Get the volume property
-   */
-  getProperty(): vtkVolumeProperty;
-
-  /**
-   * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-   * @return {Bounds} The bounds for the mapper.
-   */
-  getBounds(): Bounds;
-
-  /**
-   * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
-   */
-  getBoundsByReference(): Bounds;
-
-  /**
    * Get the `Modified Time` which is a monotonic increasing integer
    * global for all vtkObjects.
    *
@@ -75,11 +59,12 @@ export interface vtkVolume extends vtkProp3D {
    */
   setMapper(mapper: vtkVolumeMapper): boolean;
 
-  /**
-   * Set the volume property
-   * @param {vtkVolumeProperty} property
-   */
+  // Inherited from vtkProp3D, but takes a vtkVolumeProperty instead of a generic vtkObject
+  getProperty(mapperInputPort?: number): vtkVolumeProperty;
+  getProperties(): vtkVolumeProperty[];
+  setProperty(mapperInputPort: number, property: vtkVolumeProperty): boolean;
   setProperty(property: vtkVolumeProperty): boolean;
+  setProperties(properties: vtkVolumeProperty[]): boolean;
 }
 
 /**

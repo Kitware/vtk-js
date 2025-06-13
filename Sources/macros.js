@@ -8,6 +8,10 @@ import ClassHierarchy from './Common/Core/ClassHierarchy';
 
 let globalMTime = 0;
 
+export const requiredParam = (name) => {
+  throw new Error(`Named parameter '${name}' is missing`);
+};
+
 export const VOID = Symbol('void');
 
 function getCurrentGlobalMTime() {
@@ -912,7 +916,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
         count++;
       }
     }
-    if (publicAPI.shouldUpdate() && publicAPI.requestData) {
+    if (publicAPI.requestData && publicAPI.shouldUpdate()) {
       publicAPI.requestData(ins, model.output);
     }
   };
@@ -1816,4 +1820,5 @@ export default {
   vtkWarningMacro,
   // vtk.js internal use
   objectSetterMap,
+  requiredParam,
 };

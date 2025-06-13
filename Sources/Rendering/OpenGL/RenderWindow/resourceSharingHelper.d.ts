@@ -9,8 +9,8 @@ import { vtkObject } from '../../../interfaces';
  * @param useIndependentComponents A boolean taken from the image or volume property, using getIndependentComponents()
  * @param numberOfComponents Taken from the data array, using getNumberOfComponents()
  */
-export function getTransferFunctionHash(
-  transferFunction: vtkObject | undefined,
+export function getTransferFunctionsHash(
+  transferFunctions: (vtkObject | null | undefined)[],
   useIndependentComponents: boolean,
   numberOfComponents: number
 ): string;
@@ -27,7 +27,7 @@ export function getImageDataHash(
 ): string;
 
 declare const defaultExport: {
-  getTransferFunctionHash: typeof getTransferFunctionHash;
+  getTransferFunctionsHash: typeof getTransferFunctionsHash;
   getImageDataHash: typeof getImageDataHash;
 };
 
