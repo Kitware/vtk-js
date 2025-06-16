@@ -1318,7 +1318,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.create2DFromImage = (image) => {
-    // Now determine the texture parameters using the arguments.
+    // Determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(VtkDataTypes.UNSIGNED_CHAR);
     publicAPI.getInternalFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
     publicAPI.getFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
@@ -1336,41 +1336,58 @@ function vtkOpenGLTexture(publicAPI, model) {
     publicAPI.createTexture();
     publicAPI.bind();
 
-    // Source texture data from the PBO.
-    // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
-
-    // Scale up the texture to the next highest power of two dimensions (if needed) and flip y.
     const needNearestPowerOfTwo =
       !model._openGLRenderWindow.getWebgl2() &&
       (!vtkMath.isPowerOfTwo(image.width) ||
         !vtkMath.isPowerOfTwo(image.height));
-    const canvas = document.createElement('canvas');
-    canvas.width = needNearestPowerOfTwo
-      ? vtkMath.nearestPowerOfTwo(image.width)
-      : image.width;
-    canvas.height = needNearestPowerOfTwo
-      ? vtkMath.nearestPowerOfTwo(image.height)
-      : image.height;
 
-    model.width = canvas.width;
-    model.height = canvas.height;
+    let textureSource = image;
+    let targetWidth = image.width;
+    let targetHeight = image.height;
 
-    const ctx = canvas.getContext('2d');
-    ctx.translate(0, canvas.height);
-    ctx.scale(1, -1);
-    ctx.drawImage(
-      image,
-      0,
-      0,
-      image.width,
-      image.height,
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-    const safeImage = canvas;
+    let flipY = true;
+
+    // For WebGL1, we need to scale the image to the nearest power of two
+    // dimensions if the image is not already a power of two. For WebGL2, we can
+    // use the image as is. Note: Chrome has a perf issue where the path
+    // HTMLImageElement -> Canvas -> texSubImage2D is faster than
+    // HTMLImageElement -> texSubImage2D directly. See
+    // https://issues.chromium.org/issues/41311312#comment7
+    // Tested on Chrome 137.0.7151.104 Windows 11
+    const isChrome = window.chrome;
+
+    if (needNearestPowerOfTwo || isChrome) {
+      const canvas = new OffscreenCanvas(
+        vtkMath.nearestPowerOfTwo(image.width),
+        vtkMath.nearestPowerOfTwo(image.height)
+      );
+      targetWidth = canvas.width;
+      targetHeight = canvas.height;
+
+      const ctx = canvas.getContext('2d');
+      ctx.translate(0, canvas.height);
+      ctx.scale(1, -1);
+      ctx.drawImage(
+        image,
+        0,
+        0,
+        image.width,
+        image.height,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+      textureSource = canvas;
+      flipY = false; // we are flipping the image manually using translate/scale
+    }
+
+    model.width = targetWidth;
+    model.height = targetHeight;
+
+    // Source texture data from the PBO.
+    model.context.pixelStorei(model.context.UNPACK_FLIP_Y_WEBGL, flipY);
+    model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     if (useTexStorage(VtkDataTypes.UNSIGNED_CHAR)) {
       model.context.texStorage2D(
@@ -1380,19 +1397,17 @@ function vtkOpenGLTexture(publicAPI, model) {
         model.width,
         model.height
       );
-      if (safeImage != null) {
-        model.context.texSubImage2D(
-          model.target,
-          0,
-          0,
-          0,
-          model.width,
-          model.height,
-          model.format,
-          model.openGLDataType,
-          safeImage
-        );
-      }
+      model.context.texSubImage2D(
+        model.target,
+        0,
+        0,
+        0,
+        model.width,
+        model.height,
+        model.format,
+        model.openGLDataType,
+        textureSource
+      );
     } else {
       model.context.texImage2D(
         model.target,
@@ -1403,7 +1418,7 @@ function vtkOpenGLTexture(publicAPI, model) {
         0,
         model.format,
         model.openGLDataType,
-        safeImage
+        textureSource
       );
     }
 
