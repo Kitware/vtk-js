@@ -246,7 +246,14 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param image The image to use for the texture.
    * @returns {boolean} True if the texture was successfully created, false otherwise.
    */
-  create2DFromImage(image: any): boolean;
+  create2DFromImage(image: HTMLImageElement): boolean;
+
+  /**
+   * Creates a 2D texture from an ImageBitmap.
+   * @param imageBitmap  The ImageBitmap to use for the texture.
+   *  @returns {boolean} True if the texture was successfully created, false otherwise.
+   */
+  create2DFromImageBitmap(imageBitmap: ImageBitmap): boolean;
 
   /**
    * Creates a 2D filterable texture from raw data, with a preference for size over accuracy if necessary.

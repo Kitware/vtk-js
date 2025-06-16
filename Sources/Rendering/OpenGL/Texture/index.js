@@ -71,6 +71,22 @@ function vtkOpenGLTexture(publicAPI, model) {
       !model.handle ||
       model.renderable.getMTime() > model.textureBuildTime.getMTime()
     ) {
+      if (model.renderable.getImageBitmap() !== null) {
+        if (model.renderable.getInterpolate()) {
+          model.generateMipmap = true;
+          publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
+        }
+        // Have an Image which may not be complete
+        if (
+          model.renderable.getImageBitmap() &&
+          model.renderable.getImageLoaded()
+        ) {
+          publicAPI.create2DFromImageBitmap(model.renderable.getImageBitmap());
+          publicAPI.activate();
+          publicAPI.sendParameters();
+          model.textureBuildTime.modified();
+        }
+      }
       // if we have an Image
       if (model.renderable.getImage() !== null) {
         if (model.renderable.getInterpolate()) {
@@ -1388,6 +1404,84 @@ function vtkOpenGLTexture(publicAPI, model) {
         model.format,
         model.openGLDataType,
         safeImage
+      );
+    }
+
+    if (model.generateMipmap) {
+      model.context.generateMipmap(model.target);
+    }
+
+    model.allocatedGPUMemoryInBytes =
+      model.width *
+      model.height *
+      model.depth *
+      model.components *
+      model._openGLRenderWindow.getDefaultTextureByteSize(
+        VtkDataTypes.UNSIGNED_CHAR,
+        getNorm16Ext(),
+        publicAPI.useHalfFloat()
+      );
+
+    publicAPI.deactivate();
+    return true;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.create2DFromImageBitmap = (imageBitmap) => {
+    // Determine the texture parameters.
+    publicAPI.getOpenGLDataType(VtkDataTypes.UNSIGNED_CHAR);
+    publicAPI.getInternalFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
+    publicAPI.getFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
+
+    if (!model.internalFormat || !model.format || !model.openGLDataType) {
+      vtkErrorMacro('Failed to determine texture parameters.');
+      return false;
+    }
+
+    model.target = model.context.TEXTURE_2D;
+    model.components = 4;
+    model.depth = 1;
+    model.numberOfDimensions = 2;
+    model._openGLRenderWindow.activateTexture(publicAPI);
+    publicAPI.createTexture();
+    publicAPI.bind();
+
+    // Prepare texture unpack alignment
+    model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
+
+    model.width = imageBitmap.width;
+    model.height = imageBitmap.height;
+
+    if (useTexStorage(VtkDataTypes.UNSIGNED_CHAR)) {
+      model.context.texStorage2D(
+        model.target,
+        1,
+        model.internalFormat,
+        model.width,
+        model.height
+      );
+      model.context.texSubImage2D(
+        model.target,
+        0,
+        0,
+        0,
+        model.width,
+        model.height,
+        model.format,
+        model.openGLDataType,
+        imageBitmap
+      );
+    } else {
+      model.context.texImage2D(
+        model.target,
+        0,
+        model.internalFormat,
+        model.width,
+        model.height,
+        0,
+        model.format,
+        model.openGLDataType,
+        imageBitmap
       );
     }
 
