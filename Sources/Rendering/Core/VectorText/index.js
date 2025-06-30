@@ -15,7 +15,7 @@ import {
   triangulateShape,
 } from './Utils';
 
-const { vtkErrorMacro } = macro;
+const { vtkErrorMacro, vtkWarningMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkVectorText methods
@@ -33,8 +33,9 @@ function vtkVectorText(publicAPI, model) {
    * Process a shape into 3D geometry
    * @param {Object} shape - The shape to process
    * @param {Array} offsetSize - The offset size for positioning the shape
+   * @param {Array} letterColor - The color for the shape
    */
-  function addShape(shape, offsetSize) {
+  function addShape(shape, offsetSize, letterColor) {
     // extract contour + holes, offset them
     const curveSegments = model.curveSegments;
     const steps = model.steps;
@@ -73,7 +74,7 @@ function vtkVectorText(publicAPI, model) {
 
     // Check if we have enough points to create a shape
     if (vertices.length < 3) {
-      console.warn('Not enough points to create a shape');
+      vtkWarningMacro('Not enough points to create a shape');
       return;
     }
 
@@ -196,7 +197,9 @@ function vtkVectorText(publicAPI, model) {
       bevelEnabled,
       bevelSegments,
       model.verticesArray,
-      model.uvArray
+      model.uvArray,
+      model.colorArray,
+      letterColor
     );
     buildSideFaces(
       layers,
@@ -206,7 +209,9 @@ function vtkVectorText(publicAPI, model) {
       steps,
       bevelSegments,
       model.verticesArray,
-      model.uvArray
+      model.uvArray,
+      model.colorArray,
+      letterColor
     );
   }
 
@@ -305,6 +310,7 @@ function vtkVectorText(publicAPI, model) {
   function buildPolyData() {
     model.verticesArray = [];
     model.uvArray = [];
+    model.colorArray = [];
     const polyData = vtkPolyData.newInstance();
     const cells = vtkCellArray.newInstance();
     const pointData = polyData.getPointData();
@@ -319,7 +325,15 @@ function vtkVectorText(publicAPI, model) {
     vtkMath.subtract(boundingSize.min, boundingSize.max, offsetSize);
 
     // Process each shape
-    model.shapes.forEach((shape) => addShape(shape, offsetSize));
+    let letterIndex = 0;
+    model.shapes.forEach((shape) => {
+      let color = null;
+      if (typeof model.perLetterFaceColors === 'function') {
+        color = model.perLetterFaceColors(letterIndex) || [1, 1, 1];
+      }
+      addShape(shape, offsetSize, color);
+      letterIndex++;
+    });
 
     // Create triangle indices
     const vertexCount = model.verticesArray.length / 3;
@@ -350,9 +364,20 @@ function vtkVectorText(publicAPI, model) {
       values: new Float32Array(model.uvArray),
       name: 'TEXCOORD_0',
     });
-
     pointData.addArray(da);
     pointData.setActiveTCoords(da.getName());
+
+    // Set color array if present
+    if (model.colorArray && model.colorArray.length) {
+      const ca = vtkDataArray.newInstance({
+        numberOfComponents: 3,
+        values: new Float32Array(model.colorArray),
+        name: 'Colors',
+      });
+      pointData.addArray(ca);
+      pointData.setActiveScalars(ca.getName());
+    }
+
     return polyData;
   }
 
@@ -393,6 +418,7 @@ function vtkVectorText(publicAPI, model) {
  * verticesArray: Array of vertex coordinates
  * uvArray: Array of texture coordinates
  * font: Font object (from opentype.js)
+ * earcut: Earcut module for triangulation
  * fontSize: Font size in points
  * depth: Depth of the extruded text
  * steps: Number of steps in extrusion (for curved surfaces)
@@ -403,12 +429,14 @@ function vtkVectorText(publicAPI, model) {
  * bevelOffset: Offset of the bevel
  * bevelSegments: Number of segments in the bevel
  * text: The text to render
+ * perLetterFaceColors: Function to get per-letter face colors
  */
 const DEFAULT_VALUES = {
   shapes: [],
   verticesArray: [],
   uvArray: [],
   font: null,
+  earcut: null, // Earcut module for triangulation
   fontSize: 10,
   depth: 1,
   steps: 1,
@@ -419,6 +447,7 @@ const DEFAULT_VALUES = {
   bevelOffset: 0,
   bevelSegments: 1,
   text: null,
+  perLetterFaceColors: null, // (letterIndex: number) => [r,g,b]
 };
 
 export function extend(publicAPI, model, initialValues = {}) {
@@ -441,6 +470,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'bevelSize',
     'bevelOffset',
     'bevelSegments',
+    'perLetterFaceColors',
   ]);
 
   macro.set(publicAPI, model, ['font']);

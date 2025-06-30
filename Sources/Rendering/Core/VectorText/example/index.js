@@ -47,6 +47,9 @@ fontKeys.forEach((key) => {
 });
 fontSelect.value = selectedFont;
 
+let text = 'I love VTK.js!';
+let size = 16;
+
 // ----------------------------------------------------------------------------
 // Add a cone source
 // ----------------------------------------------------------------------------
@@ -61,11 +64,20 @@ async function load() {
     .then((response) => response.arrayBuffer())
     .then((buffer) => {
       const font = fontModule.parse(buffer);
+      // Generate a random color based on the letter index
+      function perLetterFaceColors(letterIndex) {
+        const seed = letterIndex * 9301 + 49297;
+        const r = (Math.sin(seed) + 1) / 2;
+        const g = (Math.sin(seed + 1) + 1) / 2;
+        const b = (Math.sin(seed + 2) + 1) / 2;
+        return [r, g, b];
+      }
       pd = vtkVectorText.newInstance({
         font,
         bevelEnabled: bevelInput.checked,
-        text: 'I love VTK.js!',
-        size: 16,
+        text,
+        size,
+        perLetterFaceColors,
         earcut: earcutModule.default,
       });
       mapper.setInputConnection(pd.getOutputPort());
@@ -76,14 +88,14 @@ async function load() {
     });
 
   textInput.addEventListener('input', (event) => {
-    const text = event.target.value;
+    text = event.target.value;
     pd.setText(text);
     renderer.resetCamera();
     renderWindow.render();
   });
 
   fontSize.addEventListener('input', (event) => {
-    const size = event.target.value;
+    size = event.target.value;
     pd.setFontSize(size);
     renderer.resetCamera();
     renderWindow.render();
