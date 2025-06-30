@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
 import { MouseButton } from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
 import vtkInteractorStyle from 'vtk.js/Sources/Rendering/Core/InteractorStyle';
-import { mat4, vec3, vec4 } from 'gl-matrix';
+import { mat4, vec3 } from 'gl-matrix';
 
 const { vtkDebugMacro } = macro;
 const { States } = vtkInteractorStyle;
@@ -135,45 +135,79 @@ function dollyByFactor(interactor, renderer, factor) {
   }
 }
 
-function getCameraMatrix(renderer) {
+function getCameraMatrix(renderer, tempMatrix) {
   const cam = renderer.getActiveCamera();
   if (cam) {
-    const M = mat4.create();
-    mat4.copy(M, cam.getViewMatrix());
-    return M;
+    mat4.copy(tempMatrix, cam.getViewMatrix());
+    return tempMatrix;
   }
   return null;
 }
 
-function computeNewCenterOfRotation(beforeM, renderer, oldCenterOfRotation) {
-  const cam = renderer.getActiveCamera();
-  if (!cam || !beforeM) {
-    return oldCenterOfRotation;
-  }
+/**
+ * Transforms a vector by the transformation delta between two matrices.
+ *
+ * @param {Object} tempObjects - Temporary matrices/vectors for computation
+ * @param {mat4} beforeMatrix - Matrix before transformation
+ * @param {mat4} afterMatrix - Matrix after transformation
+ * @param {Array} vector - Vector to transform [x, y, z]
+ * @returns {Array} Transformed vector [x, y, z]
+ */
+function transformVectorByTransformation(
+  tempObjects,
+  beforeMatrix,
+  afterMatrix,
+  vector
+) {
+  const { matrixA, matrixB, identityMatrix, newCenter } = tempObjects;
 
   // The view matrix from vtk.js is row-major, but gl-matrix expects column-major.
   // We need to transpose them before use.
-  const beforeMatrix = mat4.create();
-  mat4.transpose(beforeMatrix, beforeM);
+  mat4.transpose(matrixA, beforeMatrix);
 
-  const afterMatrixRowMajor = cam.getViewMatrix();
-  const afterMatrix = mat4.create();
-  mat4.transpose(afterMatrix, afterMatrixRowMajor);
+  mat4.transpose(matrixB, afterMatrix);
+  mat4.invert(matrixB, matrixB);
 
-  // Now we can proceed with column-major matrices.
-  const invAfterM = mat4.create();
-  mat4.invert(invAfterM, afterMatrix);
+  // Compute delta transformation matrix
+  mat4.multiply(matrixA, matrixB, matrixA);
 
-  const deltaM = mat4.create();
-  // deltaM = inv(afterM) * beforeM
-  mat4.multiply(deltaM, invAfterM, beforeMatrix);
-
-  if (!mat4.equals(deltaM, mat4.identity(mat4.create()))) {
-    const center = vec4.fromValues(...oldCenterOfRotation, 1);
-    vec4.transformMat4(center, center, deltaM);
-    return vec3.fromValues(center[0], center[1], center[2]);
+  // Apply transformation if matrix changed
+  if (!mat4.equals(matrixA, identityMatrix)) {
+    vec3.transformMat4(newCenter, vector, matrixA);
+    return newCenter;
   }
-  return oldCenterOfRotation;
+  return vector;
+}
+
+/**
+ * Computes the new center of rotation based on camera movement.
+ * When the camera moves (pan), the center of rotation should move
+ * by the same transformation to maintain consistent rotation behavior.
+ *
+ * @param {Object} tempObjects - Temporary matrices/vectors for computation
+ * @param {Object} renderer - VTK renderer
+ * @param {mat4} beforeCameraMatrix - Camera view matrix before movement
+ * @param {Array} oldCenterOfRotation - Previous center of rotation [x, y, z]
+ * @returns {Array} New center of rotation [x, y, z]
+ */
+function computeNewCenterOfRotation(
+  tempObjects,
+  renderer,
+  beforeCameraMatrix,
+  oldCenterOfRotation
+) {
+  const cam = renderer.getActiveCamera();
+  if (!cam || !beforeCameraMatrix) {
+    return oldCenterOfRotation;
+  }
+  const afterMatrixRowMajor = cam.getViewMatrix();
+
+  return transformVectorByTransformation(
+    tempObjects,
+    beforeCameraMatrix,
+    afterMatrixRowMajor,
+    oldCenterOfRotation
+  );
 }
 
 // ----------------------------------------------------------------------------
@@ -193,6 +227,15 @@ export const STATIC = {
 function vtkInteractorStyleManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkInteractorStyleManipulator');
+
+  // Initialize temporary objects to reduce garbage collection
+  const tempCameraMatrix = mat4.create();
+  const tempComputeObjects = {
+    matrixA: mat4.create(),
+    matrixB: mat4.create(),
+    identityMatrix: mat4.identity(mat4.create()),
+    newCenter: vec3.create(),
+  };
 
   model.currentVRManipulators = new Map();
   model.mouseManipulators = [];
@@ -547,7 +590,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     model.cachedMousePosition = callData.position;
     if (model.currentManipulator && model.currentManipulator.onMouseMove) {
       const renderer = model.getRenderer(callData);
-      const beforeM = getCameraMatrix(renderer);
+      const beforeCameraMatrix = getCameraMatrix(renderer, tempCameraMatrix);
 
       model.currentManipulator.onMouseMove(
         model._interactor,
@@ -556,14 +599,12 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       );
 
       const newCenter = computeNewCenterOfRotation(
-        beforeM,
+        tempComputeObjects,
         renderer,
+        beforeCameraMatrix,
         model.centerOfRotation
       );
-
-      if (!vec3.equals(model.centerOfRotation, newCenter)) {
-        publicAPI.setCenterOfRotation(newCenter);
-      }
+      publicAPI.setCenterOfRotation(newCenter);
 
       publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
     }
@@ -729,31 +770,26 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.handlePan = (callData) => {
     const renderer = model.getRenderer(callData);
-    const beforeM = getCameraMatrix(renderer);
+    const beforeCameraMatrix = getCameraMatrix(renderer, tempCameraMatrix);
 
     let count = model.gestureManipulators.length;
     let actionCount = 0;
     while (count--) {
       const manipulator = model.gestureManipulators[count];
       if (manipulator && manipulator.isPanEnabled()) {
-        manipulator.onPan(
-          model._interactor,
-          model.getRenderer(callData),
-          callData.translation
-        );
+        manipulator.onPan(model._interactor, renderer, callData.translation);
         actionCount++;
       }
     }
     if (actionCount) {
       const newCenter = computeNewCenterOfRotation(
-        beforeM,
+        tempComputeObjects,
         renderer,
+        beforeCameraMatrix,
         model.centerOfRotation
       );
+      publicAPI.setCenterOfRotation(newCenter);
 
-      if (!vec3.equals(model.centerOfRotation, newCenter)) {
-        publicAPI.setCenterOfRotation(newCenter);
-      }
       publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
     }
   };
