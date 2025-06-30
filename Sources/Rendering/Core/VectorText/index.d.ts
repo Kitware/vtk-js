@@ -1,4 +1,5 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
+import { Nullable, RGBColor } from '../../../types';
 
 export interface IVectorTextInitialValues {
   fontSize?: number;
@@ -12,6 +13,8 @@ export interface IVectorTextInitialValues {
   bevelOffset?: number;
   bevelSegments?: number;
   font?: any;
+  earcut?: any; // Earcut module for triangulation
+  perLetterFaceColors?: (letterIndex: number) => [number, number, number];
 }
 
 type vtkVectorTextBase = vtkObject & vtkAlgorithm;
@@ -53,11 +56,6 @@ export interface vtkVectorText extends vtkVectorTextBase {
   getDepth(): number;
 
   /**
-   * Returns the font object used for rendering the text.
-   */
-  getFont(): any;
-
-  /**
    * Returns the current font size.
    */
   getFontSize(): number;
@@ -71,6 +69,12 @@ export interface vtkVectorText extends vtkVectorTextBase {
    * Returns the current text string.
    */
   getText(): string;
+
+  /**
+   * Gets or sets the per-letter face color function.
+   * @param fn - Function mapping letter index to [r,g,b] color.
+   */
+  getPerLetterFaceColors(): Nullable<(letterIndex: number) => RGBColor>;
 
   /**
    * Enables or disables beveling.
@@ -138,6 +142,12 @@ export interface vtkVectorText extends vtkVectorTextBase {
    * @param text - The new text to display.
    */
   setText(text: string): boolean;
+
+  /**
+   * Sets the per-letter face color function.
+   * @param fn - Function mapping letter index to [r,g,b] color.
+   */
+  setPerLetterFaceColors(fn: (letterIndex: number) => RGBColor): boolean;
 }
 
 /**

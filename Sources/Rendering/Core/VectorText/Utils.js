@@ -426,8 +426,21 @@ function scalePoint(pt, vec, size) {
  * @param {Number} c - Third index
  * @param {Array} verticesArray - The output vertices array
  * @param {Array} uvArray - The output UV array
+ * @param {Array} colorArray - The output color array
+ * @param {Array} color - The color [r, g, b]
+ * @param {Boolean} perFaceUV - Flag for per-face UV mapping
+ * @param {Number} faceIndex - Index of the face for UV mapping
  */
-function addTriangle(layers, a, b, c, verticesArray, uvArray) {
+function addTriangle(
+  layers,
+  a,
+  b,
+  c,
+  verticesArray,
+  uvArray,
+  colorArray,
+  color
+) {
   const tri = [a, c, b];
   tri.forEach((i) => {
     verticesArray.push(layers[i * 3], layers[i * 3 + 1], layers[i * 3 + 2]);
@@ -445,6 +458,9 @@ function addTriangle(layers, a, b, c, verticesArray, uvArray) {
   uvs.forEach((uv) => {
     uvArray.push(uv[0], uv[1]);
   });
+  if (colorArray && color) {
+    for (let i = 0; i < 3; ++i) colorArray.push(color[0], color[1], color[2]);
+  }
 }
 
 /**
@@ -456,8 +472,20 @@ function addTriangle(layers, a, b, c, verticesArray, uvArray) {
  * @param {Number} d - Fourth index
  * @param {Array} verticesArray - The output vertices array
  * @param {Array} uvArray - The output UV array
+ * @param {Array} colorArray - The output color array
+ * @param {Array} color - The color [r, g, b]
  */
-function addQuad(layers, a, b, c, d, verticesArray, uvArray) {
+function addQuad(
+  layers,
+  a,
+  b,
+  c,
+  d,
+  verticesArray,
+  uvArray,
+  colorArray,
+  color
+) {
   const quad = [a, d, b, b, d, c];
   quad.forEach((i) =>
     verticesArray.push(layers[i * 3], layers[i * 3 + 1], layers[i * 3 + 2])
@@ -482,6 +510,10 @@ function addQuad(layers, a, b, c, d, verticesArray, uvArray) {
   uvArray.push(uvs[1][0], uvs[1][1]);
   uvArray.push(uvs[2][0], uvs[2][1]);
   uvArray.push(uvs[3][0], uvs[3][1]);
+
+  if (colorArray && color) {
+    for (let i = 0; i < 6; ++i) colorArray.push(color[0], color[1], color[2]);
+  }
 }
 
 /**
@@ -503,7 +535,9 @@ function buildLidFaces(
   bevelEnabled,
   bevelSegments,
   verticesArray,
-  uvArray
+  uvArray,
+  colorArray,
+  color
 ) {
   if (bevelEnabled) {
     let layer = 0;
@@ -515,7 +549,9 @@ function buildLidFaces(
         b + offset,
         a + offset,
         verticesArray,
-        uvArray
+        uvArray,
+        colorArray,
+        color
       );
     });
 
@@ -530,13 +566,15 @@ function buildLidFaces(
         b + offset,
         c + offset,
         verticesArray,
-        uvArray
+        uvArray,
+        colorArray,
+        color
       );
     });
   } else {
     // Bottom faces
     faces.forEach(([a, b, c]) => {
-      addTriangle(layers, c, b, a, verticesArray, uvArray);
+      addTriangle(layers, c, b, a, verticesArray, uvArray, colorArray, color);
     });
 
     // Top faces
@@ -548,7 +586,9 @@ function buildLidFaces(
         b + offset,
         c + offset,
         verticesArray,
-        uvArray
+        uvArray,
+        colorArray,
+        color
       );
     });
   }
@@ -573,7 +613,9 @@ function buildWalls(
   steps,
   bevelSegments,
   verticesArray,
-  uvArray
+  uvArray,
+  colorArray,
+  color
 ) {
   const totalLayers = steps + bevelSegments * 2;
   for (let i = 0; i < contour.length; i++) {
@@ -589,7 +631,7 @@ function buildWalls(
       const c = layerOffset + k + slen2;
       const d = layerOffset + j + slen2;
 
-      addQuad(layers, a, b, c, d, verticesArray, uvArray);
+      addQuad(layers, a, b, c, d, verticesArray, uvArray, colorArray, color);
     }
   }
 }
@@ -613,7 +655,9 @@ function buildSideFaces(
   steps,
   bevelSegments,
   verticesArray,
-  uvArray
+  uvArray,
+  colorArray,
+  color
 ) {
   let layerOffset = 0;
   // Create contour walls
@@ -625,7 +669,9 @@ function buildSideFaces(
     steps,
     bevelSegments,
     verticesArray,
-    uvArray
+    uvArray,
+    colorArray,
+    color
   );
   layerOffset += contour.length;
 
@@ -640,7 +686,9 @@ function buildSideFaces(
       steps,
       bevelSegments,
       verticesArray,
-      uvArray
+      uvArray,
+      colorArray,
+      color
     );
     layerOffset += ahole.length;
   }
