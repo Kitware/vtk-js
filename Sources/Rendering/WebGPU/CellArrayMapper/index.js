@@ -63,6 +63,30 @@ struct PBRData {
   specular: vec3<f32>,
 }
 
+struct Material {
+  ior: f32,
+  roughness: f32,
+  metallic: f32,
+  base: vec3<f32>,
+};
+
+struct DirectionalLight {
+  direction: vec3<f32>,
+  color: vec3<f32>,
+};
+
+struct PointLight {
+  position: vec3<f32>,
+  color: vec3<f32>,
+};
+
+struct SpotLight {
+  position: vec3<f32>,
+  direction: vec3<f32>,
+  cones: vec2<f32>,
+  color: vec3<f32>,
+};
+
 const pi: f32 = 3.14159265359;
 
 // Dot product with the max already in it
@@ -167,53 +191,51 @@ fn cookTorrance(D: f32, F: f32, G: f32, N: vec3<f32>, V: vec3<f32>, L: vec3<f32>
 }
 
 // Different lighting calculations for different light sources
-fn calcDirectionalLight(N: vec3<f32>, V: vec3<f32>, ior: f32, roughness: f32, metallic: f32, direction: vec3<f32>, color: vec3<f32>, base: vec3<f32>) -> PBRData {
-  var L: vec3<f32> = normalize(direction); // Light Vector
+fn calcDirectionalLight(N: vec3<f32>, V: vec3<f32>, mat: Material, light: DirectionalLight) -> PBRData {
+  var L: vec3<f32> = normalize(light.direction); // Light Vector
   var H: vec3<f32> = normalize(L + V); // Halfway Vector
 
-  var alpha = roughness*roughness;
-  var k: f32 = alpha*alpha / 2;
+  var alpha = mat.roughness * mat.roughness;
+  var k: f32 = alpha * alpha / 2.0;
 
   var D: f32 = trGGX(N, H, alpha); // Distribution
   // var F: f32 = schlickFresnelIOR(V, N, ior, k); // Fresnel
   var G: f32 = smithSurfaceRoughness(N, V, L, k); // Geometry
 
   var brdf: f32 = cookTorrance(D, 1.0, G, N, V, L); // Fresnel term is replaced with 1 because it is added later
-  var incoming: vec3<f32> = color;
+  var incoming: vec3<f32> = light.color;
   var angle: f32 = mdot(L, N);
   angle = pow(angle, 1.5);
 
-  var specular: vec3<f32> = brdf*incoming*angle;
+  var specular: vec3<f32> = brdf * incoming * angle;
   // Oren-Nayar gives a clay-like effect when fully rough which some people may not want, so it might be better to give a separate
   // control property for the diffuse vs specular roughness
-  var diffuse: vec3<f32> = incoming*fujiiOrenNayar(base, roughness, N, L, V);
+  var diffuse: vec3<f32> = incoming * fujiiOrenNayar(mat.base, mat.roughness, N, L, V);
   // Stores the specular and diffuse separately to allow for finer post processing
   var out = PBRData(diffuse, specular);
 
   return out; // Returns angle along with color of light so the final color can be multiplied by angle as well (creates black areas)
 }
 
-// TODO: find some way to reduce the number of arguments going in here
-fn calcPointLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, roughness: f32, metallic: f32, position: vec3<f32>, color: vec3<f32>, base: vec3<f32>) -> PBRData {
-  var L: vec3<f32> = normalize(position - fragPos); // Light Vector
-  var H: vec3<f32> = normalize(L + V); // Halfway Vector
-  var dist = distance(position, fragPos);
+fn calcPointLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, mat: Material, light: PointLight) -> PBRData {
+  var L: vec3<f32> = normalize(light.position - fragPos);
+  var H: vec3<f32> = normalize(L + V);
+  var dist = distance(light.position, fragPos);
 
-  var alpha = roughness*roughness;
-  var k: f32 = alpha*alpha / 2.0; // could also be pow(alpha + 1.0, 2) / 8
+  var alpha = mat.roughness * mat.roughness;
+  var k: f32 = alpha * alpha / 2.0;
 
   var D: f32 = trGGX(N, H, alpha); // Distribution
-  // var F: f32 = schlickFresnelIOR(V, N, ior, k); // Fresnel
+  var F: f32 = schlickFresnelIOR(V, N, mat.ior, k); // Fresnel
   var G: f32 = smithSurfaceRoughness(N, V, L, k); // Geometry
 
   var brdf: f32 = cookTorrance(D, 1.0, G, N, V, L);
-  var incoming: vec3<f32> = color * (1.0 / (dist*dist));
+  var incoming: vec3<f32> = light.color * (1.0 / (dist * dist));
   var angle: f32 = mdot(L, N);
-  angle = pow(angle, 1.5); // Smoothing factor makes it less accurate, but reduces ugly "seams" bewteen light sources
+  angle = pow(angle, 1.5); // Smoothing factor makes it less accurate, but reduces ugly "seams" between light sources
 
-  var specular: vec3<f32> = brdf*incoming*angle;
-  var diffuse: vec3<f32> = incoming*fujiiOrenNayar(base, roughness, N, L, V);
-
+  var specular: vec3<f32> = brdf * incoming * angle;
+  var diffuse: vec3<f32> = incoming * fujiiOrenNayar(mat.base, mat.roughness, N, L, V);
   // Stores the specular and diffuse separately to allow for finer post processing
   // Could also be done (propably more properly) with a struct
   var out = PBRData(diffuse, specular);
@@ -222,13 +244,13 @@ fn calcPointLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, roug
 }
 
 // For a reason unknown to me, spheres dont seem to behave propperly with head-on spot lights
-fn calcSpotLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, roughness: f32, metallic: f32, position: vec3<f32>, direction: vec3<f32>, cones: vec2<f32>, color: vec3<f32>, base: vec3<f32>) -> PBRData {
-  var L: vec3<f32> = normalize(position - fragPos);
+fn calcSpotLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, mat: Material, light: SpotLight) -> PBRData {
+  var L: vec3<f32> = normalize(light.position - fragPos);
   var H: vec3<f32> = normalize(L + V); // Halfway Vector
-  var dist = distance(position, fragPos);
+  var dist = distance(light.position, fragPos);
 
-  var alpha = roughness*roughness;
-  var k: f32 = alpha*alpha / 2.0; // could also be pow(alpha + 1.0, 2) / 8
+  var alpha = mat.roughness * mat.roughness;
+  var k: f32 = alpha * alpha / 2.0; // could also be pow(alpha + 1.0, 2) / 8
 
   var D: f32 = trGGX(N, H, alpha); // Distribution
   // var F: f32 = schlickFresnelIOR(V, N, ior, k); // Fresnel
@@ -236,20 +258,19 @@ fn calcSpotLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, rough
 
   var brdf: f32 = cookTorrance(D, 1.0, G, N, V, L);
 
-  // Cones.x is the inner phi and cones.y is the outer phi
-  var theta: f32 = mdot(normalize(direction), L);
-  var epsilon: f32 = cones.x - cones.y;
-  var intensity: f32 = (theta - cones.y) / epsilon;
+  var theta: f32 = mdot(normalize(light.direction), L);
+  var epsilon: f32 = light.cones.x - light.cones.y;
+  var intensity: f32 = (theta - light.cones.y) / epsilon;
   intensity = clamp(intensity, 0.0, 1.0);
-  intensity /= dist*dist;
+  intensity /= dist * dist;
 
-  var incoming: vec3<f32> = color * intensity;
+  var incoming: vec3<f32> = light.color * intensity;
 
   var angle: f32 = mdot(L, N);
-  angle = pow(angle, 1.5); // Smoothing factor makes it less accurate, but reduces ugly "seams" bewteen light sources
+  angle = pow(angle, 1.5); // Smoothing factor makes it less accurate, but reduces ugly "seams" between light sources
 
-  var specular: vec3<f32> = brdf*incoming*angle;
-  var diffuse: vec3<f32> = incoming*fujiiOrenNayar(base, roughness, N, L, V);
+  var specular: vec3<f32> = brdf * incoming * angle;
+  var diffuse: vec3<f32> = incoming * fujiiOrenNayar(mat.base, mat.roughness, N, L, V);
 
   // Stores the specular and diffuse separately to allow for finer post processing
   // Could also be done (propably more properly) with a struct
@@ -302,6 +323,7 @@ fn main(
   var ambientColor: vec4<f32> = mapperUBO.AmbientColor;
   var diffuseColor: vec4<f32> = mapperUBO.DiffuseColor;
   var opacity: f32 = mapperUBO.Opacity;
+  var ior: f32 = mapperUBO.BaseIOR;
 
   // This should be declared somewhere else
   var _diffuseMap: vec4<f32> = vec4<f32>(1.0);
@@ -631,52 +653,56 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     ) {
       const lightingCode = [
         // Vectors needed for light calculations
-        '  var fragPos: vec3<f32> = vec3<f32>(input.vertexVC.xyz);',
-        '  var V: vec3<f32> = mix(normalize(-fragPos), vec3<f32>(0, 0, 1), f32(rendererUBO.cameraParallel)); // View Vector',
+        '  let fragPos = vec3<f32>(input.vertexVC.xyz);',
+        '  let V = mix(normalize(-fragPos), vec3<f32>(0, 0, 1), f32(rendererUBO.cameraParallel)); // View Vector',
         // Values needed for light calculations
-        '  var baseColor: vec3<f32> = _diffuseMap.rgb * diffuseColor.rgb;',
-        '  var roughness: f32 = max(0.000001, mapperUBO.Roughness * _roughnessMap.r);', // Need to have a different way of sampling greyscale values aside from .r
-        '  var metallic: f32 = mapperUBO.Metallic * _metallicMap.r;',
-        '  var alpha: f32 = roughness*roughness;',
-        '  var ior: f32 = mapperUBO.BaseIOR;',
-        '  var k: f32 = alpha*alpha / 2;',
+        '  let baseColor = _diffuseMap.rgb * diffuseColor.rgb;',
+        '  let roughness = max(0.000001, mapperUBO.Roughness * _roughnessMap.r);', // Need to have a different way of sampling greyscale values aside from .r
+        '  let metallic = mapperUBO.Metallic * _metallicMap.r;',
+        '  let alpha = roughness * roughness;',
+        '  let k = alpha * alpha / 2.0;',
         // Split diffuse and specular components
-        '  var diffuse: vec3<f32> = vec3<f32>(0.);',
-        '  var specular: vec3<f32> = vec3<f32>(0.);',
-        '  var emission: vec3<f32> = _emissionMap.rgb * mapperUBO.Emission;',
+        '  var diffuse = vec3<f32>(0.);',
+        '  var specular = vec3<f32>(0.);',
+        '  let emission = _emissionMap.rgb * mapperUBO.Emission;',
+        '',
+        '  // Material struct',
+        '  let mat = Material(ior, roughness, metallic, baseColor);',
+        '',
         // Summing diffuse and specular components of directional lights
         '  {',
-        '    var i: i32 = 0;',
+        '    var i = 0;',
         '    loop {',
-        '      if !(i < rendererUBO.LightCount) { break; }',
+        '      if (!(i < rendererUBO.LightCount)) { break; }',
         '      switch (i32(rendererLightSSBO.values[i].LightData.x)) {',
         '         // Point Light',
         '         case 0 {',
-        '           var color: vec3<f32> = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w;',
-        '           var pos: vec3<f32> = (rendererLightSSBO.values[i].LightPos).xyz;',
-        '           var calculated: PBRData = calcPointLight(normal, V, fragPos, ior, roughness, metallic, pos, color, baseColor);',
-        '           diffuse += max(vec3<f32>(0), calculated.diffuse);',
-        '           specular += max(vec3<f32>(0), calculated.specular);',
+        '           let color = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w;',
+        '           let pos = (rendererLightSSBO.values[i].LightPos).xyz;',
+        '           let pointLight = PointLight(pos, color);',
+        '           let result = calcPointLight(normal, V, fragPos, mat, pointLight);',
+        '           diffuse += max(vec3<f32>(0), result.diffuse);',
+        '           specular += max(vec3<f32>(0), result.specular);',
         '          }',
         '         // Directional light',
         '         case 1 {',
-        '           var dir: vec3<f32> = (rendererUBO.WCVCNormals * vec4<f32>(normalize(rendererLightSSBO.values[i].LightDir.xyz), 0.)).xyz;',
-        '           dir = normalize(dir);',
-        '           var color: vec3<f32> = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w;',
-        '           var calculated: PBRData = calcDirectionalLight(normal, V, ior, roughness, metallic, dir, color, baseColor); // diffuseColor.rgb needs to be fixed with a more dynamic diffuse color',
-        '           diffuse += max(vec3<f32>(0), calculated.diffuse);',
-        '           specular += max(vec3<f32>(0), calculated.specular);',
+        '           let dir = normalize((rendererUBO.WCVCNormals * vec4<f32>(normalize(rendererLightSSBO.values[i].LightDir.xyz), 0.)).xyz);',
+        '           let color = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w;',
+        '           let dirLight = DirectionalLight(dir, color);',
+        '           let result = calcDirectionalLight(normal, V, mat, dirLight); // diffuseColor.rgb needs to be fixed with a more dynamic diffuse color',
+        '           diffuse += max(vec3<f32>(0), result.diffuse);',
+        '           specular += max(vec3<f32>(0), result.specular);',
         '         }',
         '         // Spot Light',
         '         case 2 {',
-        '           var color: vec3<f32> = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w;',
-        '           var pos: vec3<f32> = (rendererLightSSBO.values[i].LightPos).xyz;',
-        '           var dir: vec3<f32> = (rendererUBO.WCVCNormals * vec4<f32>(normalize(rendererLightSSBO.values[i].LightDir.xyz), 0.)).xyz;',
-        '           dir = normalize(dir);',
-        '           var cones: vec2<f32> = vec2<f32>(rendererLightSSBO.values[i].LightData.y, rendererLightSSBO.values[i].LightData.z);',
-        '           var calculated: PBRData = calcSpotLight(normal, V, fragPos, ior, roughness, metallic, pos, dir, cones, color, baseColor);',
-        '           diffuse += max(vec3<f32>(0), calculated.diffuse);',
-        '           specular += max(vec3<f32>(0), calculated.specular);',
+        '           let color = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w;',
+        '           let pos = (rendererLightSSBO.values[i].LightPos).xyz;',
+        '           let dir = normalize((rendererUBO.WCVCNormals * vec4<f32>(normalize(rendererLightSSBO.values[i].LightDir.xyz), 0.)).xyz);',
+        '           let cones = vec2<f32>(rendererLightSSBO.values[i].LightData.y, rendererLightSSBO.values[i].LightData.z);',
+        '           let spotLight = SpotLight(pos, dir, cones, color);',
+        '           let result = calcSpotLight(normal, V, fragPos, mat, spotLight);',
+        '           diffuse += max(vec3<f32>(0), result.diffuse);',
+        '           specular += max(vec3<f32>(0), result.specular);',
         '         }',
         '         default { continue; }',
         '       }',
@@ -684,36 +710,32 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         '    }',
         '  }',
         // Final variables for combining specular and diffuse
-        '  var fresnel: f32 = schlickFresnelIOR(V, normal, ior, k); // Fresnel',
-        '  fresnel = min(1.0, fresnel);',
+        '  let fresnel = min(1.0, schlickFresnelIOR(V, normal, ior, k)); // Fresnel',
         '  // This could be controlled with its own variable (that isnt base color) for better artistic control',
-        '  var fresnelMetallic: vec3<f32> = schlickFresnelRGB(V, normal, baseColor); // Fresnel for metal, takes color into account',
-        '  var kS: vec3<f32> = mix(vec3<f32>(fresnel), fresnelMetallic, metallic);',
-        '  kS = min(vec3<f32>(1.0), kS);',
-        '  var kD: vec3<f32> = (1.0 - kS) * (1.0 - metallic);',
-        '  var PBR: vec3<f32> = mapperUBO.DiffuseIntensity*kD*diffuse + kS*specular;',
-        '  PBR += emission;',
-        '  computedColor = vec4<f32>(PBR, mapperUBO.Opacity);',
+        '  let fresnelMetallic = schlickFresnelRGB(V, normal, baseColor); // Fresnel for metal, takes color into account',
+        '  let kS = min(vec3<f32>(1.0), mix(vec3<f32>(fresnel), fresnelMetallic, metallic));',
+        '  let kD = (1.0 - kS) * (1.0 - metallic);',
+        '  let PBR = mapperUBO.DiffuseIntensity * kD * diffuse + kS * specular;',
+        '  computedColor = vec4<f32>(PBR + emission, mapperUBO.Opacity);',
       ];
       if (renderer.getEnvironmentTexture()?.getImageLoaded()) {
         lightingCode.push(
           '  // To get diffuse IBL, the texture is sampled with normals in worldspace',
-          '  var diffuseIBLCoords: vec3<f32> = (transpose(rendererUBO.WCVCNormals) * vec4<f32>(normal, 1.)).xyz;',
-          '  var diffuseCoords: vec2<f32> = vecToRectCoord(diffuseIBLCoords);',
+          '  let diffuseIBLCoords = (transpose(rendererUBO.WCVCNormals) * vec4<f32>(normal, 1.)).xyz;',
+          '  let diffuseCoords = vecToRectCoord(diffuseIBLCoords);',
           '  // To get specular IBL, the texture is sampled as the worldspace reflection between the normal and view vectors',
           '  // Reflections are first calculated in viewspace, then converted to worldspace to sample the environment',
-          '  var VreflN: vec3<f32> = normalize(reflect(-V, normal));',
-          '  var reflectionIBLCoords = (transpose(rendererUBO.WCVCNormals) * vec4<f32>(VreflN, 1.)).xyz;',
-          '  var specularCoords: vec2<f32> = vecToRectCoord(reflectionIBLCoords);',
-          '  var diffuseIBL = textureSampleLevel(EnvironmentTexture, EnvironmentTextureSampler, diffuseCoords, rendererUBO.MaxEnvironmentMipLevel);',
+          '  let VreflN = normalize(reflect(-V, normal));',
+          '  let reflectionIBLCoords = (transpose(rendererUBO.WCVCNormals) * vec4<f32>(VreflN, 1.)).xyz;',
+          '  let specularCoords = vecToRectCoord(reflectionIBLCoords);',
+          '  let diffuseIBL = textureSampleLevel(EnvironmentTexture, EnvironmentTextureSampler, diffuseCoords, rendererUBO.MaxEnvironmentMipLevel);',
           // Level multiplier should be set by UBO
-          '  var level = roughness * rendererUBO.MaxEnvironmentMipLevel;',
-          '  var specularIBL = textureSampleLevel(EnvironmentTexture, EnvironmentTextureSampler, specularCoords, level);', // Manual mip smoothing since not all formats support smooth level sampling
-          '  var specularIBLContribution: vec3<f32> = specularIBL.rgb*rendererUBO.BackgroundSpecularStrength;',
-          '  computedColor += vec4<f32>(specularIBLContribution*kS, 0);',
-          '  var diffuseIBLContribution: vec3<f32> = diffuseIBL.rgb*rendererUBO.BackgroundDiffuseStrength;',
-          '  diffuseIBLContribution *= baseColor * _ambientOcclusionMap.rgb;', // Multipy by baseColor may be changed
-          '  computedColor += vec4<f32>(diffuseIBLContribution*kD, 0);'
+          '  let level = roughness * rendererUBO.MaxEnvironmentMipLevel;',
+          '  let specularIBL = textureSampleLevel(EnvironmentTexture, EnvironmentTextureSampler, specularCoords, level);', // Manual mip smoothing since not all formats support smooth level sampling
+          '  let specularIBLContribution = specularIBL.rgb * rendererUBO.BackgroundSpecularStrength;',
+          '  computedColor += vec4<f32>(specularIBLContribution * kS, 0);',
+          '  let diffuseIBLContribution = diffuseIBL.rgb * rendererUBO.BackgroundDiffuseStrength;',
+          '  computedColor += vec4<f32>(diffuseIBLContribution * baseColor * _ambientOcclusionMap.rgb * kD, 0);'
         );
       }
       code = vtkWebGPUShaderCache.substitute(
@@ -725,8 +747,8 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       // If theres no normals, just set the specular color to be flat
     } else {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Light::Impl', [
-        '  var diffuse: vec3<f32> = diffuseColor.rgb;',
-        '  var specular: vec3<f32> = mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
+        '  let diffuse = diffuseColor.rgb;',
+        '  let specular = mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
         '  computedColor = vec4<f32>(diffuse * _diffuseMap.rgb, mapperUBO.Opacity);',
       ]).result;
       fDesc.setCode(code);
