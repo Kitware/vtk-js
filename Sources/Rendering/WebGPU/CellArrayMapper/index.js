@@ -345,6 +345,8 @@ fn main(
 
   //VTK::Select::Impl
 
+  // Use texture alpha for transparency
+  computedColor.a = mapperUBO.Opacity * _diffuseMap.a;
   if (computedColor.a == 0.0) { discard; };
 
   //VTK::Position::Impl
