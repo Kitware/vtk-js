@@ -350,7 +350,6 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
         '//VTK::Color::Impl',
         colorImpl.concat([
           '  diffuseColor = vertexColorVSOutput.rgb;',
-          '  ambientColor = vertexColorVSOutput.rgb;',
           '  opacity = opacity*vertexColorVSOutput.a;',
         ])
       ).result;
