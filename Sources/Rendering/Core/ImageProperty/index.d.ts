@@ -106,15 +106,21 @@ export interface vtkImageProperty extends vtkObject {
   getUseLabelOutline(): boolean;
 
   /**
-   * Set the 0 to 1 opacity of the label outline.
-   * @param {Number} opacity
+   * Set opacity of the label outline.
+   *
+   * Opacity must be between 0 and 1.
+   * If the given opacity is a number, the opacity will apply to all outline segments.
+   * If the given opacity is an array of numbers, each opacity value will apply to the
+   * label equal to the opacity value's index + 1. (This is the same behavior as setLabelOutlineThickness).
+   *
+   * @param {Number | Number[]} opacity
    */
-  setLabelOutlineOpacity(opacity: number): boolean;
+  setLabelOutlineOpacity(opacity: number | number[]): boolean;
 
   /**
    * Get the 0 to 1 opacity of the label outline.
    */
-  getLabelOutlineOpacity(): number;
+  getLabelOutlineOpacity(): number | number[];
 
   /**
    * gets the label outline thickness

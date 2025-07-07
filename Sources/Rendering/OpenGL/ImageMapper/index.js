@@ -61,6 +61,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model._colorTransferFunc,
       model._pwFunc,
       model._labelOutlineThicknessArray,
+      model._labelOutlineOpacity,
     ].forEach((coreObject) =>
       renderWindow.unregisterGraphicsResourceUser(coreObject, publicAPI)
     );
@@ -189,10 +190,16 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       'uniform sampler2D texture1;',
       'uniform sampler2D colorTexture1;',
       'uniform sampler2D pwfTexture1;',
-      'uniform sampler2D labelOutlineTexture1;',
       'uniform float opacity;',
-      'uniform float outlineOpacity;',
     ];
+    if (actor.getProperty().getUseLabelOutline()) {
+      tcoordDec = tcoordDec.concat([
+        // outline thickness
+        'uniform sampler2D labelOutlineTexture1;',
+        // outline opacity
+        'uniform sampler2D labelOutlineOpacityTexture1;',
+      ]);
+    }
     if (iComps) {
       for (let comp = 1; comp < tNumComp; comp++) {
         tcoordDec = tcoordDec.concat([
@@ -263,7 +270,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         FSSource,
         '//VTK::LabelOutline::Dec',
         [
-          'uniform int outlineThickness;',
           'uniform float vpWidth;',
           'uniform float vpHeight;',
           'uniform float vpOffsetX;',
@@ -372,6 +378,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
                   int segmentIndex = int(centerValue * 255.0);
                   float textureCoordinate = float(segmentIndex - 1) / 1024.0;
                   float textureValue = texture2D(labelOutlineTexture1, vec2(textureCoordinate, 0.5)).r;
+                  float outlineOpacity = texture2D(labelOutlineOpacityTexture1, vec2(textureCoordinate, 0.5)).r;
                   int actualThickness = int(textureValue * 255.0);
 
                   if (segmentIndex == 0){
@@ -547,6 +554,10 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       needRebuild ||
       model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
       cellBO.getProgram()?.getHandle() === 0 ||
+      cellBO.getShaderSourceTime().getMTime() < model.renderable.getMTime() ||
+      cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime() ||
+      cellBO.getShaderSourceTime().getMTime() <
+        actor.getProperty().getMTime() ||
       model.lastTextureComponents !== tNumComp ||
       model.lastIndependentComponents !== iComp
     ) {
@@ -721,11 +732,19 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const texOpacityUnit = model.pwfTexture.getTextureUnit();
     cellBO.getProgram().setUniformi('pwfTexture1', texOpacityUnit);
 
-    const outlineThicknessUnit =
-      model.labelOutlineThicknessTexture.getTextureUnit();
-    cellBO
-      .getProgram()
-      .setUniformi('labelOutlineTexture1', outlineThicknessUnit);
+    if (actor.getProperty().getUseLabelOutline()) {
+      const outlineThicknessUnit =
+        model.labelOutlineThicknessTexture.getTextureUnit();
+      cellBO
+        .getProgram()
+        .setUniformi('labelOutlineTexture1', outlineThicknessUnit);
+
+      const texOutlineOpacityUnit =
+        model.labelOutlineOpacityTexture.getTextureUnit();
+      cellBO
+        .getProgram()
+        .setUniformi('labelOutlineOpacityTexture1', texOutlineOpacityUnit);
+    }
 
     if (model.renderable.getNumberOfClippingPlanes()) {
       // add all the clipping planes
@@ -767,14 +786,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       }
       cellBO.getProgram().setUniformi('numClipPlanes', numClipPlanes);
       cellBO.getProgram().setUniform4fv('clipPlanes', planeEquations);
-    }
-
-    // outline thickness and opacity
-    const vtkImageLabelOutline = actor.getProperty().getUseLabelOutline();
-
-    if (vtkImageLabelOutline === true) {
-      const outlineOpacity = actor.getProperty().getLabelOutlineOpacity();
-      cellBO.getProgram().setUniformf('outlineOpacity', outlineOpacity);
     }
   };
 
@@ -862,7 +873,10 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     // activate the texture
     model.openGLTexture.activate();
     model.colorTexture.activate();
-    model.labelOutlineThicknessTexture.activate();
+    if (actor.getProperty().getUseLabelOutline()) {
+      model.labelOutlineThicknessTexture.activate();
+      model.labelOutlineOpacityTexture.activate();
+    }
     model.pwfTexture.activate();
 
     // draw polygons
@@ -875,7 +889,10 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     model.openGLTexture.deactivate();
     model.colorTexture.deactivate();
-    model.labelOutlineThicknessTexture.deactivate();
+    if (actor.getProperty().getUseLabelOutline()) {
+      model.labelOutlineThicknessTexture.deactivate();
+      model.labelOutlineOpacityTexture.deactivate();
+    }
     model.pwfTexture.deactivate();
   };
 
@@ -917,7 +934,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     model.VBOBuildTime.getMTime() < model.currentInput.getMTime() ||
     !model.openGLTexture?.getHandle() ||
     !model.colorTexture?.getHandle() ||
-    !model.labelOutlineThicknessTexture?.getHandle() ||
+    (actor.getProperty().getUseLabelOutline() &&
+      (!model.labelOutlineThicknessTexture?.getHandle() ||
+        !model.labelOutlineOpacityTexture?.getHandle())) ||
     !model.pwfTexture?.getHandle();
 
   publicAPI.buildBufferObjects = (ren, actor) => {
@@ -1150,8 +1169,11 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.pwfTexture = pwfTex.oglObject;
     }
 
-    // Build outline thickness buffer
-    publicAPI.updatelabelOutlineThicknessTexture(actor);
+    if (actor.getProperty().getUseLabelOutline()) {
+      // Build outline thickness + opacity buffers
+      publicAPI.updatelabelOutlineThicknessTexture(actor);
+      publicAPI.updateLabelOutlineOpacityTexture(actor);
+    }
 
     // Find what IJK axis and what direction to slice along
     const { ijkMode } = model.renderable.getClosestIJKAxis();
@@ -1393,6 +1415,85 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     }
   };
 
+  publicAPI.updateLabelOutlineOpacityTexture = (image) => {
+    let labelOutlineOpacity = image.getProperty().getLabelOutlineOpacity();
+
+    // when the labelOutlineOpacity is a number, we use _cachedLabelOutlineOpacityObj
+    // as a stable object reference for `[labelOutlineOpacity]`.
+    if (typeof labelOutlineOpacity === 'number') {
+      if (model._cachedLabelOutlineOpacityObj?.[0] === labelOutlineOpacity) {
+        labelOutlineOpacity = model._cachedLabelOutlineOpacityObj;
+      } else {
+        labelOutlineOpacity = [labelOutlineOpacity];
+      }
+      model._cachedLabelOutlineOpacityObj = labelOutlineOpacity;
+    }
+
+    const lTex =
+      model._openGLRenderWindow.getGraphicsResourceForObject(
+        labelOutlineOpacity
+      );
+
+    const toString = `${labelOutlineOpacity.join('-')}`;
+    const reBuildL = !lTex?.oglObject?.getHandle() || lTex?.hash !== toString;
+
+    if (reBuildL) {
+      let lWidth = model.renderable.getLabelOutlineTextureWidth();
+      if (lWidth <= 0) {
+        lWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+      }
+      const lHeight = 1;
+      const lSize = lWidth * lHeight;
+      const lTable = new Float32Array(lSize);
+
+      for (let i = 0; i < lWidth; ++i) {
+        // Retrieve the opacity value for the current segment index.
+        // If the value is undefined, use the first element's value as a default, otherwise use the value (even if 0)
+        lTable[i] = labelOutlineOpacity[i] ?? labelOutlineOpacity[0];
+      }
+      model.labelOutlineOpacityTexture = vtkOpenGLTexture.newInstance({
+        resizable: false,
+      });
+      model.labelOutlineOpacityTexture.setOpenGLRenderWindow(
+        model._openGLRenderWindow
+      );
+
+      model.labelOutlineOpacityTexture.resetFormatAndType();
+      model.labelOutlineOpacityTexture.setMinificationFilter(Filter.NEAREST);
+      model.labelOutlineOpacityTexture.setMagnificationFilter(Filter.NEAREST);
+
+      // Create a 2D texture (acting as 1D) from the raw data
+      model.labelOutlineOpacityTexture.create2DFromRaw({
+        width: lWidth,
+        height: lHeight,
+        numComps: 1,
+        dataType: VtkDataTypes.FLOAT,
+        data: lTable,
+      });
+
+      if (labelOutlineOpacity) {
+        model._openGLRenderWindow.setGraphicsResourceForObject(
+          labelOutlineOpacity,
+          model.labelOutlineOpacityTexture,
+          toString
+        );
+        if (labelOutlineOpacity !== model._labelOutlineOpacity) {
+          model._openGLRenderWindow.registerGraphicsResourceUser(
+            labelOutlineOpacity,
+            publicAPI
+          );
+          model._openGLRenderWindow.unregisterGraphicsResourceUser(
+            model._labelOutlineOpacity,
+            publicAPI
+          );
+        }
+        model._labelOutlineOpacity = labelOutlineOpacity;
+      }
+    } else {
+      model.labelOutlineOpacityTexture = lTex.oglObject;
+    }
+  };
+
   publicAPI.updatelabelOutlineThicknessTexture = (image) => {
     const labelOutlineThicknessArray = image
       .getProperty()
@@ -1509,7 +1610,7 @@ const DEFAULT_VALUES = {
   colorTexture: null,
   pwfTexture: null,
   labelOutlineThicknessTexture: null,
-  labelOutlineThicknessTextureString: null,
+  labelOutlineOpacityTexture: null,
   lastHaveSeenDepthRequest: false,
   haveSeenDepthRequest: false,
   lastTextureComponents: 0,
