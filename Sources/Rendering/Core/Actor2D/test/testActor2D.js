@@ -40,7 +40,7 @@ test.onlyIfWebGL('Test Actor2D', (t) => {
 
   const actor2D = gc.registerResource(vtkActor2D.newInstance());
   actor2D.getProperty().setColor([0.5, 0.8, 0]);
-  actor2D.getProperty().setOpacity(0.3);
+  actor2D.getProperty().setOpacity(0.5);
   actor2D.getProperty().setDisplayLocation(DisplayLocation.FOREGROUND);
   actor2D.getProperty().setRepresentation(Representation.SURFACE);
   actor2D.setLayerNumber(2);
