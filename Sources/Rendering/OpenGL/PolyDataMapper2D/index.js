@@ -3,7 +3,6 @@ import { mat4 } from 'gl-matrix';
 
 import * as macro from 'vtk.js/Sources/macros';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
-import vtkMapper2D from 'vtk.js/Sources/Rendering/Core/Mapper2D';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData2DFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyData2DFS.glsl';
 import vtkPolyData2DVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyData2DVS.glsl';
@@ -17,8 +16,6 @@ import { round } from 'vtk.js/Sources/Common/Core/Math';
 import { DisplayLocation } from 'vtk.js/Sources/Rendering/Core/Property2D/Constants';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
-
-import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
 const { primTypes } = vtkHelper;
 const { Filter, Wrap } = vtkOpenGLTexture;
@@ -353,14 +350,12 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
           '  opacity = opacity*vertexColorVSOutput.a;',
         ])
       ).result;
-    } else {
-      if (model.renderable.getAreScalarsMappedFromCells()) {
-        colorImpl = colorImpl.concat([
-          '  vec4 texColor = texture2D(texture1, tcoordVCVSOutput.st);',
-          '  diffuseColor = texColor.rgb;',
-          '  opacity = opacity*texColor.a;',
-        ]);
-      }
+    } else if (model.renderable.getAreScalarsMappedFromCells()) {
+      colorImpl = colorImpl.concat([
+        '  vec4 texColor = texture2D(texture1, tcoordVCVSOutput.st);',
+        '  diffuseColor = texColor.rgb;',
+        '  opacity = opacity*texColor.a;',
+      ]);
     }
 
     colorImpl = colorImpl.concat([
@@ -597,7 +592,7 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
         model.internalColorTexture &&
         cellBO.getProgram().isUniformUsed('texture1')
       ) {
-        let texUnit = model.internalColorTexture.getTextureUnit();
+        const texUnit = model.internalColorTexture.getTextureUnit();
         if (texUnit > -1) {
           cellBO
             .getProgram()

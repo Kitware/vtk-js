@@ -10,13 +10,14 @@ import Constants from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
 const { ColorMode, ScalarMode, GetArray } = Constants;
 const { VectorMode } = vtkScalarsToColors;
+const { VtkDataTypes } = vtkDataArray;
 
 /**
  * Increase by one the 3D coordinates
  * It will follow a zigzag pattern so that each coordinate is the neighbor of the next coordinate
  * This enables interpolation between two texels without issues
  * Note: texture coordinates can't be interpolated using this pattern
- * @param {vec3} coordinates The 3D coordinates using integers for each coorinate
+ * @param {vec3} coordinates The 3D coordinates using integers for each coordinate
  * @param {vec3} dimensions The 3D dimensions of the volume
  */
 function updateZigzaggingCoordinates(coordinates, dimensions) {
@@ -438,7 +439,7 @@ function vtkMapper2D(publicAPI, model) {
         scalars.getDataType() === VtkDataTypes.UNSIGNED_CHAR) ||
       model.colorMode === ColorMode.DIRECT_SCALARS
     ) {
-      // Don't use texture is direct coloring using RGB unsigned chars is
+      // Don't use texture if direct coloring using RGB unsigned chars is
       // requested.
       return false;
     }
