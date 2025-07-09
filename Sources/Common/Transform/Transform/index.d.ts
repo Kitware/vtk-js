@@ -1,6 +1,8 @@
-import { mat4, vec3 } from 'gl-matrix';
+import { mat3, mat4, vec3 } from 'gl-matrix';
 import { vtkObject } from '../../../interfaces';
 import { TypedArray } from '../../../types';
+import vtkDataArray from '../../Core/DataArray';
+import vtkPoints from '../../Core/Points';
 
 export interface ITransformInitialValues {
   preMultiplyFlag?: boolean;
@@ -144,6 +146,115 @@ export interface vtkTransform extends vtkObject {
    * @returns A new transform with an inversed internal matrix. Also copy the premultiply flag @see getPreMultiplyFlag.
    */
   getInverse(): vtkTransform;
+
+  /**
+   * Create a translation matrix and concatenate it with the current
+   * transformation according to preMultiply or postMultiply semantics.
+   * @param {Number} x X component of the translation
+   * @param {Number} y Y component of the translation
+   * @param {Number} z Z component of the translation
+   */
+  translate(x: number, y: number, z: number): void;
+
+  /**
+   * Create a rotation matrix and concatenate it with the current transformation
+   * according to preMultiply or postMultiply semantics.
+   * The angle is expressed in degrees.
+   * @param {Number} angle Angle in degrees
+   * @param {Number} x X component of the rotation axis
+   * @param {Number} y Y component of the rotation axis
+   * @param {Number} z Z component of the rotation axis
+   */
+  rotateWXYZ(angle: number, x: number, y: number, z: number): void;
+
+  /**
+   * Create a rotation matrix and concatenate it with the current transformation
+   * according to preMultiply or postMultiply semantics.
+   * The angle is expressed in degrees.
+   * @param {Number} angle Angle in degrees
+   */
+  rotateX(angle: number): void;
+
+  /**
+   * Create a rotation matrix about the X, Y, or Z axis and concatenate it with
+   * the current transformation according to preMultiply or postMultiply
+   * semantics.
+   * @param {Number} angle Angle in degrees
+   */
+  rotateY(angle: number): void;
+
+  /**
+   * Create a rotation matrix about the X, Y, or Z axis and concatenate it with
+   * the current transformation according to preMultiply or postMultiply
+   * semantics.
+   * @param {Number} angle Angle in degrees
+   */
+  rotateZ(angle: number): void;
+
+  /**
+   * Create a scale matrix (i.e. set the diagonal elements to x, y, z) and
+   * concatenate it with the current transformation according to preMultiply or
+   * postMultiply semantics.
+   * @param {Number} x Diagonal element for X axis
+   * @param {Number} y Diagonal element for Y axis
+   * @param {Number} z Diagonal element for Z axis
+   */
+  scale(x: number, y: number, z: number): void;
+
+  /**
+   * Apply the transformation to a normal.
+   * @param {vec3} inNormal The normal vector to transform
+   * @param {vec3} outNormal The output vector
+   * @returns {vec3} The transformed normal vector
+   */
+  transformNormal(inNormal: vec3, outNormal?: vec3): vec3;
+
+  /**
+   * Apply the transformation to a series of normals, and append the results to
+   * outNormals.
+   * @param {vtkDataArray} inNormals The normal vectors to transform
+   * @param {vtkDataArray} outNormals The output array
+   */
+  transformNormals(inNormals: vtkDataArray, outNormals: vtkDataArray): void;
+
+  /**
+   * Transform points, normals, and vectors simultaneously.
+   * @param {vtkPoints} inPoints Input points
+   * @param {vtkPoints} outPoints Output points
+   * @param {vtkDataArray} inNormals Input normals
+   * @param {vtkDataArray} outNormals Output normals
+   * @param {vtkDataArray} inVectors Input vectors
+   * @param {vtkDataArray} outVectors Output vectors
+   * @param {Array<vtkDataArray>} inVectorsArr Optional input vectors arrays
+   * @param {Array<vtkDataArray>} outVectorsArr Optional output vectors arrays
+   */
+  transformPointsNormalsVectors(
+    inPoints: vtkPoints,
+    outPoints: vtkPoints,
+    inNormals: vtkDataArray,
+    outNormals: vtkDataArray,
+    inVectors: vtkDataArray,
+    outVectors: vtkDataArray,
+    inVectorsArr?: Array<vtkDataArray>,
+    outVectorsArr?: Array<vtkDataArray>
+  ): void;
+
+  /**
+   * Apply the transformation to a vector.
+   * @param {vec3} inVector The vector to transform
+   * @param {vec3} outVector The output vector
+   * @param {mat3} [matrix=null] if null (default), the Transform matrix is being used.
+   * @returns {vec3} The transformed vector
+   */
+  transformVector(inVector: vec3, outVector?: vec3, matrix?: mat3): vec3;
+
+  /**
+   * Apply the transformation to a series of vectors, and append the results to
+   * outVectors.
+   * @param {vtkDataArray} inVectors The vectors to transform
+   * @param {vtkDataArray} outVectors The output array
+   */
+  transformVectors(inVectors: vtkDataArray, outVectors: vtkDataArray): void;
 }
 
 /**
