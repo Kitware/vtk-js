@@ -16,6 +16,7 @@ import vtkPointSource from './PointSource';
 import vtkRTAnalyticSource from './RTAnalyticSource';
 import vtkSLICSource from './SLICSource';
 import vtkSphereSource from './SphereSource';
+import vtkTorusSource from './TorusSource';
 
 export default {
   vtkArcSource,
@@ -36,4 +37,5 @@ export default {
   vtkRTAnalyticSource,
   vtkSLICSource,
   vtkSphereSource,
+  vtkTorusSource,
 };
