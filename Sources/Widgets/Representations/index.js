@@ -8,8 +8,11 @@ import vtkImplicitPlaneRepresentation from './ImplicitPlaneRepresentation';
 import vtkLineHandleRepresentation from './LineHandleRepresentation';
 import vtkOutlineContextRepresentation from './OutlineContextRepresentation';
 import vtkPolyLineRepresentation from './PolyLineRepresentation';
+import vtkRotateTransformHandleRepresentation from './RotateTransformHandleRepresentation';
+import vtkScaleTransformHandleRepresentation from './ScaleTransformHandleRepresentation';
 import vtkSphereHandleRepresentation from './SphereHandleRepresentation';
 import vtkSplineContextRepresentation from './SplineContextRepresentation';
+import vtkTranslateTransformHandleRepresentation from './TranslateTransformHandleRepresentation';
 import vtkWidgetRepresentation from './WidgetRepresentation';
 
 export default {
@@ -23,7 +26,10 @@ export default {
   vtkLineHandleRepresentation,
   vtkOutlineContextRepresentation,
   vtkPolyLineRepresentation,
+  vtkRotateTransformHandleRepresentation,
+  vtkScaleTransformHandleRepresentation,
   vtkSphereHandleRepresentation,
   vtkSplineContextRepresentation,
+  vtkTranslateTransformHandleRepresentation,
   vtkWidgetRepresentation,
 };

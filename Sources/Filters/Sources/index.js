@@ -13,6 +13,7 @@ import vtkPointSource from './PointSource';
 import vtkRTAnalyticSource from './RTAnalyticSource';
 import vtkSLICSource from './SLICSource';
 import vtkSphereSource from './SphereSource';
+import vtkTorusSource from './TorusSource';
 
 export default {
   vtkArrowSource,
@@ -30,4 +31,5 @@ export default {
   vtkRTAnalyticSource,
   vtkSLICSource,
   vtkSphereSource,
+  vtkTorusSource,
 };
