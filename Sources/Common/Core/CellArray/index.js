@@ -2,6 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
+const { isVtkObject } = macro;
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
@@ -98,7 +99,13 @@ function vtkCellArray(publicAPI, model) {
     return model.values.subarray(cellLoc, cellLoc + numberOfPoints);
   };
 
-  publicAPI.insertNextCell = (cellPointIds) => {
+  publicAPI.insertNextCell = (cell) => {
+    let cellPointIds;
+    if (isVtkObject(cell)) {
+      cellPointIds = cell.getPointsIds();
+    } else {
+      cellPointIds = cell;
+    }
     const cellId = publicAPI.getNumberOfCells();
     publicAPI.insertNextTuples([cellPointIds.length, ...cellPointIds]);
     // By computing the number of cells earlier, we made sure that numberOfCells is defined

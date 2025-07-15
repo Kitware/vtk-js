@@ -18,6 +18,7 @@ import vtkSelectionNode from './SelectionNode';
 import vtkSphere from './Sphere';
 import vtkStructuredData from './StructuredData';
 import vtkTriangle from './Triangle';
+import vtkTriangleStrip from './TriangleStrip';
 
 export default {
   vtkBoundingBox,
@@ -40,4 +41,5 @@ export default {
   vtkSphere,
   vtkStructuredData,
   vtkTriangle,
+  vtkTriangleStrip,
 };
