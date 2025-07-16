@@ -311,9 +311,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         'pointercancel',
         publicAPI.handlePointerCancel
       );
+      container.removeEventListener('keypress', publicAPI.handleKeyPress);
+      container.removeEventListener('keydown', publicAPI.handleKeyDown);
     }
-    container.removeEventListener('keypress', publicAPI.handleKeyPress);
-    container.removeEventListener('keydown', publicAPI.handleKeyDown);
+
     document.removeEventListener('keyup', publicAPI.handleKeyUp);
     document.removeEventListener(
       'pointerlockchange',
