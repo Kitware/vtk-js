@@ -68,6 +68,8 @@ function vtkCellArray(publicAPI, model) {
 
   /**
    * When `resize()` is being used, you then MUST use `insertNextCell()`.
+   * @see vtkCellArray#insertNextCell
+   * @see vtkDataArray#allocate
    */
   publicAPI.resize = (requestedNumTuples) => {
     const oldNumTuples = publicAPI.getNumberOfTuples();
