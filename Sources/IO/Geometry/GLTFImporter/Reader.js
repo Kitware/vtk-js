@@ -142,7 +142,7 @@ async function createPolyDataFromGLTFMesh(primitive) {
         vtkWarningMacro('GL_LINE_LOOP not implemented');
         break;
       default:
-        cells.resize((4 * indices.length) / 3);
+        cells.allocate((4 * indices.length) / 3);
         for (let cellId = 0; cellId < nCells; cellId += 3) {
           const cell = indices.slice(cellId, cellId + 3);
           cells.insertNextCell(cell);

@@ -169,7 +169,7 @@ function getPolyDataFromDracoGeometry(decoder, dracoGeometry) {
   const nCells = indices.length - 2;
 
   const cells = vtkCellArray.newInstance();
-  cells.resize((4 * indices.length) / 3);
+  cells.allocate((4 * indices.length) / 3);
   for (let cellId = 0; cellId < nCells; cellId += 3) {
     const cell = indices.slice(cellId, cellId + 3);
     cells.insertNextCell(cell);
