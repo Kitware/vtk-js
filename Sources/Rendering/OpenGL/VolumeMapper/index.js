@@ -1438,23 +1438,36 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         model.currentValidInputs.push({ imageData, inputIndex });
       }
     }
-    const volumeProperties = actor.getProperties();
-    const firstValidInput = model.currentValidInputs[0];
-    const firstImageData = firstValidInput.imageData;
-    const firstScalars = firstImageData.getPointData().getScalars();
-    const firstVolumeProperty = volumeProperties[firstValidInput.inputIndex];
-
-    // Get the number of lights
     let newNumberOfLights = 0;
-    if (
-      firstVolumeProperty.getShade() &&
-      model.renderable.getBlendMode() === BlendMode.COMPOSITE_BLEND
-    ) {
-      ren.getLights().forEach((light) => {
-        if (light.getSwitch() > 0) {
-          newNumberOfLights++;
-        }
-      });
+    if (model.currentValidInputs.length > 0) {
+      const volumeProperties = actor.getProperties();
+      const firstValidInput = model.currentValidInputs[0];
+      const firstImageData = firstValidInput.imageData;
+      const firstScalars = firstImageData.getPointData().getScalars();
+      const firstVolumeProperty = volumeProperties[firstValidInput.inputIndex];
+
+      // Get the number of lights
+      if (
+        firstVolumeProperty.getShade() &&
+        model.renderable.getBlendMode() === BlendMode.COMPOSITE_BLEND
+      ) {
+        ren.getLights().forEach((light) => {
+          if (light.getSwitch() > 0) {
+            newNumberOfLights++;
+          }
+        });
+      }
+
+      // Number of components
+      const numberOfValidInputs = model.currentValidInputs.length;
+      const multiTexturePerVolumeEnabled = numberOfValidInputs > 1;
+      model.numberOfComponents = multiTexturePerVolumeEnabled
+        ? numberOfValidInputs
+        : firstScalars.getNumberOfComponents();
+      model.useIndependentComponents = getUseIndependentComponents(
+        firstVolumeProperty,
+        model.numberOfComponents
+      );
     }
     if (newNumberOfLights !== model.numberOfLights) {
       model.numberOfLights = newNumberOfLights;
@@ -1466,17 +1479,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (model.currentValidInputs.length === 0) {
       return;
     }
-
-    // Number of components
-    const numberOfValidInputs = model.currentValidInputs.length;
-    const multiTexturePerVolumeEnabled = numberOfValidInputs > 1;
-    model.numberOfComponents = multiTexturePerVolumeEnabled
-      ? numberOfValidInputs
-      : firstScalars.getNumberOfComponents();
-    model.useIndependentComponents = getUseIndependentComponents(
-      firstVolumeProperty,
-      model.numberOfComponents
-    );
 
     publicAPI.renderPieceStart(ren, actor);
     publicAPI.renderPieceDraw(ren, actor);
