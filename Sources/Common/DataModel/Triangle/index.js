@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macros';
+import macro, { TYPED_ARRAYS } from 'vtk.js/Sources/macros';
 import vtkCell from 'vtk.js/Sources/Common/DataModel/Cell';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
@@ -614,12 +614,9 @@ function vtkTriangle(publicAPI, model) {
    * @param {Number[]} derivs - The derivatives.
    */
   publicAPI.derivatives = (subId, pcoords, values, dim, derivs) => {
-    const x0 = [];
-    const x1 = [];
-    const x2 = [];
-    model.points.getPoint(0, x0);
-    model.points.getPoint(1, x1);
-    model.points.getPoint(2, x2);
+    const x0 = model.points.getPoint(0);
+    const x1 = model.points.getPoint(1);
+    const x2 = model.points.getPoint(2);
 
     const n = [];
     const v10 = [];
@@ -627,11 +624,8 @@ function vtkTriangle(publicAPI, model) {
     const v = [];
     computeNormal(x0, x1, x2, n);
 
-    for (let i = 0; i < 3; i++) {
-      v10[i] = x1[i] - x0[i];
-      v[i] = x2[i] - x0[i];
-    }
-
+    vtkMath.subtract(x1, x0, v10);
+    vtkMath.subtract(x2, x0, v);
     vtkMath.cross(n, v10, v20);
 
     const lenX = vtkMath.normalize(v10); // check for degenerate triangle
@@ -658,7 +652,7 @@ function vtkTriangle(publicAPI, model) {
     const J = [v1[0] - v0[0], v1[1] - v0[1], v2[0] - v0[0], v2[1] - v0[1]];
 
     // Compute inverse Jacobian (expects flat array)
-    const JI = new Array(4).fill(0.0);
+    const JI = macro.newTypedArray(TYPED_ARRAYS.Float64Array, 4);
     vtkMath.invertMatrix(J, JI, 2); // returns flat array [JI00, JI01, JI10, JI11]
 
     // Compute derivatives
