@@ -61,6 +61,19 @@ export function pointInPolygon(
 ): PolygonIntersectionState;
 
 /**
+ * Compute the centroid of a polygon.
+ * @param {Array<number>} poly - Array of point indices for the polygon
+ * @param {vtkPoints} points - vtkPoints instance
+ * @param {Vector3} [centroid] - Optional output array (length 3)
+ * @returns {Vector3} The centroid as [x, y, z]
+ */
+export function computeCentroid(
+  poly: Array<number>,
+  points: TypedArray,
+  centroid?: Vector3
+): Vector3;
+
+/**
  * Method used to decorate a given object (publicAPI+model) with vtkPolygon characteristics.
  *
  * @param publicAPI object on which methods will be bounds (public)
