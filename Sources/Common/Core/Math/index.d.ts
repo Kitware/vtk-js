@@ -203,7 +203,7 @@ export function getSeed(): number;
 export function random(minValue: number, maxValue: number): number;
 
 /**
- * Addition of two 3-vectors.
+ * Add two 3-vectors.
  * @param {Vector3} a The first 3D vector.
  * @param {Vector3} b The second 3D vector.
  * @param {Vector3} out The output 3D vector.
@@ -215,7 +215,7 @@ export function random(minValue: number, maxValue: number): number;
 export function add(a: Vector3, b: Vector3, out: Vector3): Vector3;
 
 /**
- * Subtraction of two 3-vectors.
+ * Substract two 3-vectors.
  * @param {Vector3} a The first 3D vector.
  * @param {Vector3} b The second 3D vector.
  * @param {Vector3} out The output 3D vector.
@@ -227,7 +227,7 @@ export function add(a: Vector3, b: Vector3, out: Vector3): Vector3;
 export function subtract(a: Vector3, b: Vector3, out: Vector3): Vector3;
 
 /**
- *
+ * Multiply a 3-vector by a scalar.
  * @param {Vector3} vec
  * @param {Number} scalar
  * @example
@@ -238,7 +238,7 @@ export function subtract(a: Vector3, b: Vector3, out: Vector3): Vector3;
 export function multiplyScalar(vec: Vector3, scalar: number): Vector3;
 
 /**
- *
+ * Multiply a 3-vector by a scalar.
  * @param {Vector2} vec
  * @param {Number} scalar
  * @example
@@ -249,7 +249,7 @@ export function multiplyScalar(vec: Vector3, scalar: number): Vector3;
 export function multiplyScalar2D(vec: Vector2, scalar: number): Vector2;
 
 /**
- *
+ * Multiply two 3-vectors.
  * @param {Vector3} a
  * @param {Vector3} b
  * @param {Number} scalar
@@ -267,7 +267,7 @@ export function multiplyAccumulate(
 ): Vector3;
 
 /**
- *
+ * Multiply two 2-vectors.
  * @param {Vector2} a
  * @param {Vector2} b
  * @param {Number} scalar
@@ -285,7 +285,7 @@ export function multiplyAccumulate2D(
 ): Vector2;
 
 /**
- *
+ * Dot product of two 3-vectors.
  * @param {Vector3} x
  * @param {Vector3} y
  * @example
@@ -312,17 +312,23 @@ export function outer(x: Vector3, y: Vector3, out_3x3: Matrix3x3): void;
 export function cross(x: Vector3, y: Vector3, out: Vector3): Vector3;
 
 /**
- *
- * @param {Number[]} x
- * @param {Number} n
+ * Compute the norm of a vector.
+ * @param {Number[]} x The vector to compute the norm of.
+ * @param {Number} [n] The number of components to consider (default is 3).
  */
-export function norm(x: number[], n: number): number;
+export function norm(x: number[], n?: number): number;
 
 /**
  * Normalize in place. Returns norm.
- * @param {Vector3} x The vector to normlize.
+ * @param {Number[]} x The vector to normalize.
  */
-export function normalize(x: Vector3): number;
+export function normalize(x: number[]): number;
+
+/**
+ * Normalize in place. Returns norm.
+ * @param {Number[]} x The vector to normalize.
+ */
+export function normalize4D(x: number[]): number;
 
 /**
  * Given a unit vector v1, find two unit vectors v2 and v3 such that v1 cross v2 = v3
@@ -339,10 +345,10 @@ export function perpendiculars(
 ): void;
 
 /**
- *
- * @param {Vector3} a
- * @param {Vector3} b
- * @param {Vector3} projection
+ * Project vector `a` onto vector `b` and returns the result in projection vector.
+ * @param {Vector3} a The first 3D vector.
+ * @param {Vector3} b The second 3D vector.
+ * @param {Vector3} projection The projection 3D vector.
  */
 export function projectVector(
   a: Vector3,
@@ -351,7 +357,7 @@ export function projectVector(
 ): boolean;
 
 /**
- *
+ * Compute the dot product of two 2D vectors.
  * @param {Vector2} x
  * @param {Vector2} y
  */

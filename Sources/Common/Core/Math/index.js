@@ -275,6 +275,17 @@ export function normalize(x) {
   return den;
 }
 
+export function normalize4D(x) {
+  const den = norm(x, 3);
+  if (den !== 0.0) {
+    x[0] /= den;
+    x[1] /= den;
+    x[2] /= den;
+    x[3] /= den;
+  }
+  return den;
+}
+
 export function perpendiculars(x, y, z, theta) {
   const x2 = x[0] * x[0];
   const y2 = x[1] * x[1];

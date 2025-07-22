@@ -156,11 +156,11 @@ export interface vtkCamera extends vtkObject {
   getFreezeFocalPoint(): boolean;
 
   /**
-   * Not implemented yet
    * Get the plane equations that bound the view frustum.
-   * @param {Number} aspect Camera frustum aspect ratio.
+   * @param {Number} [aspect] Camera frustum aspect ratio (default: 1.0).
+   * @param {Float64Array} [planes] Optional array to fill with the plane equations.
    */
-  getFrustumPlanes(aspect: number): void;
+  getFrustumPlanes(aspect?: number, planes?: Float64Array): Float64Array;
 
   /**
    * Not implemented yet
