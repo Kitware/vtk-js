@@ -159,7 +159,7 @@ function transformVectorByTransformation(
   afterMatrix,
   vector
 ) {
-  const { matrixA, matrixB, identityMatrix, newCenter } = tempObjects;
+  const { matrixA, matrixB, newCenter } = tempObjects;
 
   // The view matrix from vtk.js is row-major, but gl-matrix expects column-major.
   // We need to transpose them before use.
@@ -171,12 +171,8 @@ function transformVectorByTransformation(
   // Compute delta transformation matrix
   mat4.multiply(matrixA, matrixB, matrixA);
 
-  // Apply transformation if matrix changed
-  if (!mat4.equals(matrixA, identityMatrix)) {
-    vec3.transformMat4(newCenter, vector, matrixA);
-    return newCenter;
-  }
-  return vector;
+  vec3.transformMat4(newCenter, vector, matrixA);
+  return newCenter;
 }
 
 /**
@@ -233,7 +229,6 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   const tempComputeObjects = {
     matrixA: mat4.create(),
     matrixB: mat4.create(),
-    identityMatrix: mat4.identity(mat4.create()),
     newCenter: vec3.create(),
   };
 
