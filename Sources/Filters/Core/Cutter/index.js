@@ -279,6 +279,7 @@ function vtkCutter(publicAPI, model) {
       const name = pointData.getArrayName(arrayIdx);
       const array = vtkDataArray.newInstance({
         name,
+        dataType: pointData.getArrayByIndex(arrayIdx).getDataType(),
         values: newPointData[name],
         numberOfComponents: pointData
           .getArrayByIndex(arrayIdx)
