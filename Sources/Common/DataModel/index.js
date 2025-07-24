@@ -12,6 +12,7 @@ import vtkLine from './Line';
 import vtkMolecule from './Molecule';
 import vtkPiecewiseFunction from './PiecewiseFunction';
 import vtkPlane from './Plane';
+import vtkPlanes from './Planes';
 import vtkPointSet from './PointSet';
 import vtkPolyData from './PolyData';
 import vtkSelectionNode from './SelectionNode';
@@ -35,6 +36,7 @@ export default {
   vtkMolecule,
   vtkPiecewiseFunction,
   vtkPlane,
+  vtkPlanes,
   vtkPointSet,
   vtkPolyData,
   vtkSelectionNode,
