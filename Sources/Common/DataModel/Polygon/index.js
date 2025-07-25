@@ -215,6 +215,31 @@ export function getNormal(poly, points, normal) {
   return vtkMath.normalize(normal);
 }
 
+/**
+ * Compute the centroid of a polygon.
+ * @param {Array<number>} poly - Array of point indices for the polygon
+ * @param {vtkPoints} points - vtkPoints instance
+ * @param {Vector3} [centroid] - Optional output array (length 3)
+ * @returns {Vector3} The centroid as [x, y, z]
+ */
+export function computeCentroid(poly, points, centroid = [0, 0, 0]) {
+  centroid[0] = 0;
+  centroid[1] = 0;
+  centroid[2] = 0;
+  const n = poly.length;
+  const p = [];
+  for (let i = 0; i < n; i++) {
+    points.getPoint(poly[i], p);
+    centroid[0] += p[0];
+    centroid[1] += p[1];
+    centroid[2] += p[2];
+  }
+  centroid[0] /= n;
+  centroid[1] /= n;
+  centroid[2] /= n;
+  return centroid;
+}
+
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
@@ -224,6 +249,7 @@ const STATIC = {
   pointInPolygon,
   getBounds,
   getNormal,
+  computeCentroid,
 };
 
 // ----------------------------------------------------------------------------
