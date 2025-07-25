@@ -143,7 +143,10 @@ function vtkOpenGLTexture(publicAPI, model) {
       const input = model.renderable.getInputData(0);
       if (input && input.getPointData().getScalars()) {
         const ext = input.getExtent();
+        const newWidth = ext[1] - ext[0] + 1;
+        const newHeight = ext[3] - ext[2] + 1;
         const inScalars = input.getPointData().getScalars();
+        const newComponents = inScalars.getNumberOfComponents();
 
         // do we have a cube map? Six inputs
         const data = [];
@@ -156,6 +159,31 @@ function vtkOpenGLTexture(publicAPI, model) {
             data.push(scalars);
           }
         }
+
+        // Check if we can update existing texture without recreation.
+        // Avoid GL_INVALID_OPERATION: glTexStorage2D: Texture is immutable.
+        const isSameGeometry =
+          model.width === newWidth &&
+          model.height === newHeight &&
+          model.components === newComponents;
+        const canUpdate =
+          model.handle &&
+          isSameGeometry &&
+          model.numberOfDimensions === 2 &&
+          data.length <= 1; // Not a cube map
+
+        if (canUpdate) {
+          const success = publicAPI.update2DFromRaw({
+            data: inScalars.getData(),
+            dataType: inScalars.getDataType(),
+          });
+          if (success) {
+            model.textureBuildTime.modified();
+            return;
+          }
+        }
+
+        // Full texture creation needed
         if (
           model.renderable.getInterpolate() &&
           inScalars.getNumberOfComponents() === 4
@@ -165,17 +193,17 @@ function vtkOpenGLTexture(publicAPI, model) {
         }
         if (data.length % 6 === 0) {
           publicAPI.createCubeFromRaw({
-            width: ext[1] - ext[0] + 1,
-            height: ext[3] - ext[2] + 1,
-            numComps: inScalars.getNumberOfComponents(),
+            width: newWidth,
+            height: newHeight,
+            numComps: newComponents,
             dataType: inScalars.getDataType(),
             data,
           });
         } else {
           publicAPI.create2DFromRaw({
-            width: ext[1] - ext[0] + 1,
-            height: ext[3] - ext[2] + 1,
-            numComps: inScalars.getNumberOfComponents(),
+            width: newWidth,
+            height: newHeight,
+            numComps: newComponents,
             dataType: inScalars.getDataType(),
             data: inScalars.getData(),
           });
@@ -1087,6 +1115,52 @@ function vtkOpenGLTexture(publicAPI, model) {
         getNorm16Ext(),
         publicAPI.useHalfFloat()
       );
+    publicAPI.deactivate();
+    return true;
+  };
+
+  //----------------------------------------------------------------------------
+  // Update existing 2D texture data without recreating the texture
+  publicAPI.update2DFromRaw = ({
+    data = requiredParam('data'),
+    dataType = requiredParam('dataType'),
+    flip = false,
+  } = {}) => {
+    if (!model.handle) {
+      vtkErrorMacro('No texture to update');
+      return false;
+    }
+
+    model._openGLRenderWindow.activateTexture(publicAPI);
+    publicAPI.bind();
+
+    const dataArray = [data];
+    const pixData = publicAPI.updateArrayDataTypeForGL(dataType, dataArray);
+    const scaledData = scaleTextureToHighestPowerOfTwo(pixData);
+
+    model.context.pixelStorei(model.context.UNPACK_FLIP_Y_WEBGL, flip);
+    model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
+
+    model.context.texSubImage2D(
+      model.target,
+      0, // level
+      0, // xoffset
+      0, // yoffset
+      model.width,
+      model.height,
+      model.format,
+      model.openGLDataType,
+      scaledData[0]
+    );
+
+    if (model.generateMipmap) {
+      model.context.generateMipmap(model.target);
+    }
+
+    if (flip) {
+      model.context.pixelStorei(model.context.UNPACK_FLIP_Y_WEBGL, false);
+    }
+
     publicAPI.deactivate();
     return true;
   };

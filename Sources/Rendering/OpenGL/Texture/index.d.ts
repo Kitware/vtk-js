@@ -219,6 +219,26 @@ export interface vtkOpenGLTexture extends vtkViewNode {
   }): boolean;
 
   /**
+   * Updates existing 2D texture data without recreating the texture.
+   * This method uses texSubImage2D to efficiently update texture data when
+   * the texture dimensions and format haven't changed, avoiding GL_INVALID_OPERATION
+   * errors that occur when trying to recreate immutable WebGL2 textures.
+   * @param data The raw data for the texture update.
+   * @param dataType The data type of the texture data.
+   * @param flip Whether to flip the texture vertically. Defaults to false.
+   * @returns {boolean} True if the texture was successfully updated, false otherwise.
+   */
+  update2DFromRaw({
+    data,
+    dataType,
+    flip,
+  }: {
+    data: any;
+    dataType: VtkDataTypes;
+    flip?: boolean;
+  }): boolean;
+
+  /**
    * Creates a cube texture from raw data.
    * @param width The width of each face of the cube texture.
    * @param height The height of each face of the cube texture.
