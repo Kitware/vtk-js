@@ -181,7 +181,9 @@ function vtkOBJWriter(publicAPI, model) {
     zipContent[`${modelFilename}.obj`] = strToU8(model.output[0]);
     zipContent[`${materialFilename}.mtl`] = strToU8(model.mtl);
 
-    const canvas = new OffscreenCanvas(imageData.width, imageData.height);
+    const canvas = document.createElement('canvas');
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
     const ctx = canvas.getContext('2d');
     ctx.putImageData(imageData, 0, 0);
 
