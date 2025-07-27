@@ -1,3 +1,4 @@
+import vtkArcSource from './ArcSource';
 import vtkArrowSource from './ArrowSource';
 import vtkCircleSource from './CircleSource';
 import vtkConcentricCylinderSource from './ConcentricCylinderSource';
@@ -15,6 +16,7 @@ import vtkSLICSource from './SLICSource';
 import vtkSphereSource from './SphereSource';
 
 export default {
+  vtkArcSource,
   vtkArrowSource,
   vtkCircleSource,
   vtkConcentricCylinderSource,

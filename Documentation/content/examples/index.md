@@ -133,6 +133,7 @@ This will allow you to see the some live code running in your browser. Just pick
 
 <div class="gallery">
 
+[![ArcSource Example][ArcSource]](./ArcSource.html "ArcSource")
 [![ArrowSource Example][ArrowSource]](./ArrowSource.html "ArrowSource")
 [![CircleSource Example][CircleSource]](./CircleSource.html "CircleSource")
 [![ConcentricCylinderSource Example][ConcentricCylinderSource]](./ConcentricCylinderSource.html "ConcentricCylinderSource")
@@ -150,7 +151,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![WindowedSincPolyDataFilter Example][WindowedSincPolyDataFilter]](./WindowedSincPolyDataFilter.html "WindowedSincPolyDataFilter")
 
 <div>
-
+[ArcSource]: ../docs/gallery/ArcSource.jpg
 [ArrowSource]: ../docs/gallery/ArrowSource.jpg
 [CircleSource]: ../docs/gallery/CircleSource.jpg
 [ConcentricCylinderSource]: ../docs/gallery/ConcentricCylinderSource.jpg
