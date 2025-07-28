@@ -11,6 +11,7 @@ import {
   SCALE_HANDLE_RADIUS,
   SCALE_HANDLE_CUBE_SIDE_LENGTH,
   SCALE_HANDLE_PIXEL_SCALE,
+  TransformMode,
 } from './constants';
 
 import widgetBehavior from './behavior';
@@ -127,11 +128,8 @@ function vtkTransformControlsWidget(publicAPI, model) {
     });
   };
 
-  const parentSetMode = publicAPI.setMode;
-  publicAPI.setMode = (mode) => {
-    if (parentSetMode(mode)) {
-      publicAPI.updateHandleVisibility();
-    }
+  model._onModeChanged = () => {
+    publicAPI.updateHandleVisibility();
   };
 
   // --- Widget Requirement ---------------------------------------------------
@@ -154,7 +152,7 @@ function vtkTransformControlsWidget(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  mode: 'translate',
+  mode: TransformMode.TRANSLATE,
 };
 
 // ----------------------------------------------------------------------------
@@ -178,4 +176,4 @@ export const newInstance = macro.newInstance(
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, TransformMode };

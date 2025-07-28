@@ -11,8 +11,10 @@ function rotatePolyData(pd, direction) {
     .rotateFromDirections([0, 1, 0], direction)
     .apply(points);
 
+  pd.getPoints().modified();
   pd.modified();
 }
+
 function translatePolyData(pd, translation) {
   const points = pd.getPoints().getData();
 
@@ -29,10 +31,6 @@ function vtkTransformHandleSource(publicAPI, model) {
   model.classHierarchy.push('vtkTransformHandleSource');
 
   function requestData(inData, outData) {
-    if (model.deleted) {
-      return;
-    }
-
     const cylinderSource = vtkCylinderSource.newInstance({
       height: model.height,
       initAngle: model.initAngle,
@@ -90,7 +88,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkCylinderSource.extend(publicAPI, model, initialValues);
-  macro.algo(publicAPI, model, 1, 1);
+  macro.algo(publicAPI, model, 2, 1);
 
   vtkTransformHandleSource(publicAPI, model);
 }
