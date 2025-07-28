@@ -10,6 +10,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 
 import vtkTransformControlsWidget from '@kitware/vtk.js/Widgets/Widgets3D/TransformControlsWidget';
+const { TransformMode } = vtkTransformControlsWidget;
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -62,8 +63,6 @@ viewWidget.setActiveColor([255, 255, 0]);
 viewWidget.getRepresentations().forEach((rep) =>
   rep.getActors().forEach((actor) => {
     actor.getProperty().setAmbient(1);
-    actor.getProperty().setSpecular(0);
-    actor.getProperty().setDiffuse(1);
   })
 );
 
@@ -86,15 +85,15 @@ global.vw = viewWidget;
 window.onkeydown = (ev) => {
   switch (ev.key) {
     case 'q':
-      widget.setMode('rotate');
+      widget.setMode(TransformMode.ROTATE);
       renderWindow.render();
       break;
     case 't':
-      widget.setMode('translate');
+      widget.setMode(TransformMode.TRANSLATE);
       renderWindow.render();
       break;
     case 'x':
-      widget.setMode('scale');
+      widget.setMode(TransformMode.SCALE);
       renderWindow.render();
       break;
   }

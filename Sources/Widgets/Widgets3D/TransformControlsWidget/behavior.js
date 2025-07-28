@@ -23,7 +23,7 @@ export default function widgetBehavior(publicAPI, model) {
     dragStartCoord: [0, 0, 0],
   };
 
-  publicAPI.getBounds = () => [vtkBoundingBox.INIT_BOUNDS];
+  publicAPI.getBounds = () => [...vtkBoundingBox.INIT_BOUNDS];
 
   publicAPI.setDisplayCallback = (callback) =>
     model.representations[0].setDisplayCallback(callback);
@@ -83,10 +83,8 @@ export default function widgetBehavior(publicAPI, model) {
       scaleState.startScale = model.widgetState.getTransform().getScale()[
         axisIndex
       ];
-      scaleState.startDistFromOrigin = vec3.dist(
-        worldCoords,
-        model.activeState.getOrigin()
-      );
+      scaleState.startDistFromOrigin =
+        vec3.dist(worldCoords, model.activeState.getOrigin()) || 0.0001;
     }
   };
 

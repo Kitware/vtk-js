@@ -14,10 +14,6 @@ function vtkTorusSource(publicAPI, model) {
   model.classHierarchy.push('vtkTorusSource');
 
   function requestData(inData, outData) {
-    if (model.deleted) {
-      return;
-    }
-
     let dataset = outData[0];
 
     // Points
@@ -29,13 +25,15 @@ function vtkTorusSource(publicAPI, model) {
 
     for (let ti = 0; ti <= model.tubeResolution; ti++) {
       const v = (ti / model.tubeResolution) * TAU;
+      const cosV = Math.cos(v);
+      const sinV = Math.sin(v);
       for (let ri = 0; ri <= model.resolution; ri++) {
         const u = (ri / model.resolution) * model.arcLength;
         points[pointIdx++] =
-          (model.radius + model.tubeRadius * Math.cos(v)) * Math.cos(u);
+          (model.radius + model.tubeRadius * cosV) * Math.cos(u);
         points[pointIdx++] =
-          (model.radius + model.tubeRadius * Math.cos(v)) * Math.sin(u);
-        points[pointIdx++] = model.tubeRadius * Math.sin(v);
+          (model.radius + model.tubeRadius * cosV) * Math.sin(u);
+        points[pointIdx++] = model.tubeRadius * sinV;
       }
     }
 
