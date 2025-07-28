@@ -144,6 +144,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![Cursor3D Example][Cursor3D]](./Cursor3D.html "Cursor3D")
 [![CylinderSource Example][CylinderSource]](./CylinderSource.html "CylinderSource")
 [![EllipseArcSource Example][EllipseArcSource]](./EllipseArcSource.html "EllipseArcSource")
+[![FrustumSource Example][FrustumSource]](./FrustumSource.html "FrustumSource")
 [![LineSource Example][LineSource]](./LineSource.html "LineSource")
 [![PlaneSource Example][PlaneSource]](./PlaneSource.html "PlaneSource")
 [![PointSource Example][PointSource]](./PointSource.html "PointSource")
@@ -164,6 +165,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [Cursor3D]: ../docs/gallery/Cursor3D.gif
 [CylinderSource]: ../docs/gallery/CylinderSource.jpg
 [EllipseArcSource]: ../docs/gallery/EllipseArcSource.jpg
+[FrustumSource]: ../docs/gallery/FrustumSource.jpg
 [LineSource]: ../docs/gallery/LineSource.jpg
 [PlaneSource]: ../docs/gallery/PlaneSource.jpg
 [PointSource]: ../docs/gallery/PointSource.jpg
