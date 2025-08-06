@@ -251,6 +251,7 @@ export default {
           transform(content) {
             const pkg = JSON.parse(content);
             pkg.name = '@kitware/vtk.js';
+            pkg.type = 'module';
             pkg.main = './index.js';
             pkg.module = './index.js';
             pkg.types = './index.d.ts';
