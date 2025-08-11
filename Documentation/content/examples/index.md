@@ -144,6 +144,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![LineSource Example][LineSource]](./LineSource.html "LineSource")
 [![PlaneSource Example][PlaneSource]](./PlaneSource.html "PlaneSource")
 [![PointSource Example][PointSource]](./PointSource.html "PointSource")
+[![PlatonicSolidSource Example][PlatonicSolidSource]](./PlatonicSolidSource.html "PlatonicSolidSource")
 [![SLICSource Example][SLICSource]](./SLICSource.html "SLICSource")
 [![SphereSource Example][SphereSource]](./SphereSource.html "SphereSource")
 [![WarpScalar Example][WarpScalargif]](./WarpScalar.html "WarpScalar")
@@ -162,6 +163,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [LineSource]: ../docs/gallery/LineSource.jpg
 [PlaneSource]: ../docs/gallery/PlaneSource.jpg
 [PointSource]: ../docs/gallery/PointSource.jpg
+[PlatonicSolidSource]: ../docs/gallery/PlatonicSolidSource.jpg
 [SLICSource]: ../docs/gallery/SLICSource.jpg
 [SphereSource]: ../docs/gallery/SphereSource.gif
 [WarpScalargif]: ../docs/gallery/WarpScalar.gif

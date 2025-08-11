@@ -9,6 +9,7 @@ import vtkDiskSource from './DiskSource';
 import vtkImageGridSource from './ImageGridSource';
 import vtkLineSource from './LineSource';
 import vtkPlaneSource from './PlaneSource';
+import vtkPlatonicSolidSource from './PlatonicSolidSource';
 import vtkPointSource from './PointSource';
 import vtkRTAnalyticSource from './RTAnalyticSource';
 import vtkSLICSource from './SLICSource';
@@ -26,6 +27,7 @@ export default {
   vtkImageGridSource,
   vtkLineSource,
   vtkPlaneSource,
+  vtkPlatonicSolidSource,
   vtkPointSource,
   vtkRTAnalyticSource,
   vtkSLICSource,
