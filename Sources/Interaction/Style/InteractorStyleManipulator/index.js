@@ -1,7 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import { MouseButton } from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
 import vtkInteractorStyle from 'vtk.js/Sources/Rendering/Core/InteractorStyle';
-import { mat4, vec3 } from 'gl-matrix';
 
 const { vtkDebugMacro } = macro;
 const { States } = vtkInteractorStyle;
@@ -135,77 +134,6 @@ function dollyByFactor(interactor, renderer, factor) {
   }
 }
 
-function getCameraMatrix(renderer, tempMatrix) {
-  const cam = renderer.getActiveCamera();
-  if (cam) {
-    mat4.copy(tempMatrix, cam.getViewMatrix());
-    return tempMatrix;
-  }
-  return null;
-}
-
-/**
- * Transforms a vector by the transformation delta between two matrices.
- *
- * @param {Object} tempObjects - Temporary matrices/vectors for computation
- * @param {mat4} beforeMatrix - Matrix before transformation
- * @param {mat4} afterMatrix - Matrix after transformation
- * @param {Array} vector - Vector to transform [x, y, z]
- * @returns {Array} Transformed vector [x, y, z]
- */
-function transformVectorByTransformation(
-  tempObjects,
-  beforeMatrix,
-  afterMatrix,
-  vector
-) {
-  const { matrixA, matrixB, newCenter } = tempObjects;
-
-  // The view matrix from vtk.js is row-major, but gl-matrix expects column-major.
-  // We need to transpose them before use.
-  mat4.transpose(matrixA, beforeMatrix);
-
-  mat4.transpose(matrixB, afterMatrix);
-  mat4.invert(matrixB, matrixB);
-
-  // Compute delta transformation matrix
-  mat4.multiply(matrixA, matrixB, matrixA);
-
-  vec3.transformMat4(newCenter, vector, matrixA);
-  return newCenter;
-}
-
-/**
- * Computes the new center of rotation based on camera movement.
- * When the camera moves (pan), the center of rotation should move
- * by the same transformation to maintain consistent rotation behavior.
- *
- * @param {Object} tempObjects - Temporary matrices/vectors for computation
- * @param {Object} renderer - VTK renderer
- * @param {mat4} beforeCameraMatrix - Camera view matrix before movement
- * @param {Array} oldCenterOfRotation - Previous center of rotation [x, y, z]
- * @returns {Array} New center of rotation [x, y, z]
- */
-function computeNewCenterOfRotation(
-  tempObjects,
-  renderer,
-  beforeCameraMatrix,
-  oldCenterOfRotation
-) {
-  const cam = renderer.getActiveCamera();
-  if (!cam || !beforeCameraMatrix) {
-    return oldCenterOfRotation;
-  }
-  const afterMatrixRowMajor = cam.getViewMatrix();
-
-  return transformVectorByTransformation(
-    tempObjects,
-    beforeCameraMatrix,
-    afterMatrixRowMajor,
-    oldCenterOfRotation
-  );
-}
-
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
@@ -223,14 +151,6 @@ export const STATIC = {
 function vtkInteractorStyleManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkInteractorStyleManipulator');
-
-  // Initialize temporary objects to reduce garbage collection
-  const tempCameraMatrix = mat4.create();
-  const tempComputeObjects = {
-    matrixA: mat4.create(),
-    matrixB: mat4.create(),
-    newCenter: vec3.create(),
-  };
 
   model.currentVRManipulators = new Map();
   model.mouseManipulators = [];
@@ -584,23 +504,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   publicAPI.handleMouseMove = (callData) => {
     model.cachedMousePosition = callData.position;
     if (model.currentManipulator && model.currentManipulator.onMouseMove) {
-      const renderer = model.getRenderer(callData);
-      const beforeCameraMatrix = getCameraMatrix(renderer, tempCameraMatrix);
-
       model.currentManipulator.onMouseMove(
         model._interactor,
-        renderer,
+        model.getRenderer(callData),
         callData.position
       );
-
-      const newCenter = computeNewCenterOfRotation(
-        tempComputeObjects,
-        renderer,
-        beforeCameraMatrix,
-        model.centerOfRotation
-      );
-      publicAPI.setCenterOfRotation(newCenter);
-
       publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
     }
   };
@@ -765,7 +673,6 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.handlePan = (callData) => {
     const renderer = model.getRenderer(callData);
-    const beforeCameraMatrix = getCameraMatrix(renderer, tempCameraMatrix);
 
     let count = model.gestureManipulators.length;
     let actionCount = 0;
@@ -776,15 +683,8 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
         actionCount++;
       }
     }
-    if (actionCount) {
-      const newCenter = computeNewCenterOfRotation(
-        tempComputeObjects,
-        renderer,
-        beforeCameraMatrix,
-        model.centerOfRotation
-      );
-      publicAPI.setCenterOfRotation(newCenter);
 
+    if (actionCount) {
       publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
     }
   };
