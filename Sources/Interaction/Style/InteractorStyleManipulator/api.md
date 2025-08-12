@@ -22,6 +22,8 @@ sent to it. Also, changing the CenterOfRotation during interaction i.e. after a
 button press but before a button up has no effect until the next button press.  The
 default value is [0, 0, 0].
 
+For automatic center adjustment during panning operations, use `MouseCameraTrackballPanManipulatorAutoCenter` instead of the standard `MouseCameraTrackballPanManipulator`.
+
 ### rotationFactor
 
 Set/Get the rotation factor.  Propagates the rotation factor to the manipulators.
