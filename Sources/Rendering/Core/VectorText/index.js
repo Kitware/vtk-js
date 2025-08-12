@@ -328,7 +328,7 @@ function vtkVectorText(publicAPI, model) {
     let letterIndex = 0;
     model.shapes.forEach((shape) => {
       let color = null;
-      if (typeof model.perLetterFaceColors === 'function') {
+      if (model.perLetterFaceColors) {
         color = model.perLetterFaceColors(letterIndex) || [1, 1, 1];
       }
       addShape(shape, offsetSize, color);
@@ -356,12 +356,12 @@ function vtkVectorText(publicAPI, model) {
     polyData.setPolys(cells);
 
     // Set points (vertices)
-    polyData.getPoints().setData(new Float32Array(model.verticesArray), 3);
+    polyData.getPoints().setData(Float32Array.from(model.verticesArray), 3);
 
     // Set texture coordinates
     const da = vtkDataArray.newInstance({
       numberOfComponents: 2,
-      values: new Float32Array(model.uvArray),
+      values: Float32Array.from(model.uvArray),
       name: 'TEXCOORD_0',
     });
     pointData.addArray(da);
@@ -371,7 +371,7 @@ function vtkVectorText(publicAPI, model) {
     if (model.colorArray && model.colorArray.length) {
       const ca = vtkDataArray.newInstance({
         numberOfComponents: 3,
-        values: new Float32Array(model.colorArray),
+        values: Uint8Array.from(model.colorArray),
         name: 'Colors',
       });
       pointData.addArray(ca);
