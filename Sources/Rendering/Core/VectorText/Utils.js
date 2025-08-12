@@ -459,7 +459,8 @@ function addTriangle(
     uvArray.push(uv[0], uv[1]);
   });
   if (colorArray && color) {
-    for (let i = 0; i < 3; ++i) colorArray.push(color[0], color[1], color[2]);
+    for (let i = 0; i < 3; ++i)
+      colorArray.push(color[0] * 255, color[1] * 255, color[2] * 255);
   }
 }
 
@@ -512,7 +513,8 @@ function addQuad(
   uvArray.push(uvs[3][0], uvs[3][1]);
 
   if (colorArray && color) {
-    for (let i = 0; i < 6; ++i) colorArray.push(color[0], color[1], color[2]);
+    for (let i = 0; i < 6; ++i)
+      colorArray.push(color[0] * 255, color[1] * 255, color[2] * 255);
   }
 }
 
