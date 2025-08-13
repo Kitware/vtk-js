@@ -1,6 +1,6 @@
 import { vtkObject } from '../../../interfaces';
 import { Bounds } from '../../../types';
-import { ILocatorInitialValues } from '../Locator';
+import vtkLocator, { ILocatorInitialValues } from '../Locator';
 
 /**
  *
@@ -11,7 +11,7 @@ export interface IAbstractPointLocatorInitialValues
   numberOfBuckets: number;
 }
 
-export interface vtkAbstractPointLocator extends vtkObject {
+export interface vtkAbstractPointLocator extends vtkLocator {
   /**
    * Set the bounds of this object.
    * @param {Bounds} input
