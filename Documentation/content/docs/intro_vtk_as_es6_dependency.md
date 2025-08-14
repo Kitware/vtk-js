@@ -1,23 +1,26 @@
-title: Using vtk.js as an ES dependency
+---
+title: Using VTK.js as an ES dependency
 ---
 
-This guide illustrates how to consume vtk.js as an ES dependency.
+# Using VTK.js as an ES dependency
+
+This guide illustrates how to consume VTK.js as an ES dependency.
 
 This document was last updated with the following package versions:
 - `@kitware/vtk.js@v28`
 - `webpack@v5`
 
-## Starting a new vtk.js project
+## Starting a new VTK.js project
 
-There are several ways to start a new vtk.js project. Below lists a few ways you can begin using vtk.js with your favorite project build tool.
+There are several ways to start a new VTK.js project. Below lists a few ways you can begin using VTK.js with your favorite project build tool.
 
-- [vtk.js from scratch (with webpack)](./vtk_vanilla.html)
-- [vtk.js with React](./vtk_react.html)
-- [vtk.js with vue](./vtk_vue.html)
+- [VTK.js from scratch (with webpack)](./vtk_vanilla.html)
+- [VTK.js with React](./vtk_react.html)
+- [VTK.js with vue](./vtk_vue.html)
 
-## Adding vtk.js to an existing project
+## Adding VTK.js to an existing project
 
-You can add vtk.js to an existing project as follows:
+You can add VTK.js to an existing project as follows:
 
 ```sh
 $ npm install --save @kitware/vtk.js
@@ -27,22 +30,22 @@ $ npm install --save @kitware/vtk.js
 
 Both packages are updated to the same version, so using one or the other will not affect the features provided. They do differ in how they are consumed.
 
-`@kitware/vtk.js` is the ES module build of vtk.js. This build is designed to remove the additional build config required to use the original `vtk.js.`. You will most likely want to use this package, as there are no extra build config steps required after installation.
+`@kitware/vtk.js` is the ES module build of VTK.js. This build is designed to remove the additional build config required to use the original `vtk.js.`. You will most likely want to use this package, as there are no extra build config steps required after installation.
 
 **Important**: Please refer to the "Migrating from vtk.js to @kitware/vtk.js" section below on some information regarding changes to import paths.
 
-`vtk.js` provides the UMD package, but for a while provided the older means of consuming vtk.js. The older approach required additional webpack configuration in order to process the glsl, worker, and js files in vtk.js. It is strongly recommended to instead use `@kitware/vtk.js`, but if you cannot migrate or need to use the original `vtk.js` package, then check out [how to use the old `vtk.js` package](./old_intro_vtk_es6.html).
+`vtk.js` provides the UMD package, but for a while provided the older means of consuming VTK.js. The older approach required additional webpack configuration in order to process the glsl, worker, and js files in VTK.js. It is strongly recommended to instead use `@kitware/vtk.js`, but if you cannot migrate or need to use the original `vtk.js` package, then check out [how to use the old `vtk.js` package](./old_intro_vtk_es6.html).
 
 ### Migrating from `vtk.js` to `@kitware/vtk.js`
 
-The `@kitware/vtk.js` package makes some slight, yet major, changes to how vtk.js components are imported. Instead of importing from `/Sources/`, all component paths are relative to the package root, like so:
+The `@kitware/vtk.js` package makes some slight, yet major, changes to how VTK.js components are imported. Instead of importing from `/Sources/`, all component paths are relative to the package root, like so:
 
 ```diff
 -import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 +import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer';
 ```
 
-**Important**: For every vtk.js example you encounter, be sure to rewrite the imports to match the vtk.js package that you are using.
+**Important**: For every VTK.js example you encounter, be sure to rewrite the imports to match the VTK.js package that you are using.
 
 Furthermore, you no longer need to require and add `vtkRules` into your webpack config.
 
@@ -62,9 +65,9 @@ Furthermore, you no longer need to require and add `vtkRules` into your webpack 
 
 Adding ES5 support is out of the scope for this documentation. Instead, please visit [babel's documentation](https://babeljs.io/) or [SWC's documentation](https://swc.rs/) to get started.
 
-## Using vtk.js
+## Using VTK.js
 
-vtk.js is comprised of many different modules that are organized in several different folders. Below is an overview of where you can find certain classes.
+VTK.js is comprised of many different modules that are organized in several different folders. Below is an overview of where you can find certain classes.
 
 - Common: core classes including vtkImageData and vtkPolyData
 - Filters: data processing, manipulation, and generation
@@ -79,12 +82,12 @@ For example, to use the vtkPolyData class, you will need the following import:
 import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
 ```
 
-To see actual usage of vtk.js, check out one of the [start-from-scratch links](#Starting-a-new-vtk-js-project).
-To learn more about vtk.js, check out our [tutorials](./tutorial.html).
+To see actual usage of VTK.js, check out one of the [start-from-scratch links](#Starting-a-new-vtk-js-project).
+To learn more about VTK.js, check out our [tutorials](./tutorial.html).
 
 ## How to try another example
 
-Now that you have the base structure for building ES6 code with vtk.js you may want to try out some other example.
+Now that you have the base structure for building ES6 code with VTK.js you may want to try out some other example.
 
 If you want to list all the existing examples you can run the following command on any Unix base system. This is just to show where they are located.
 
@@ -110,7 +113,7 @@ In that specific example, that is indeed the case. Therefore, the set of rules n
 
 To add the missing one just edit the following section of your `./webpack.config.js`.
 
-```./webpack.config.js
+```js
 [...]
 
 // Optional if you want to load *.css and *.module.css files

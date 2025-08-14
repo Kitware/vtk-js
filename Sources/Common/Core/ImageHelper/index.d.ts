@@ -12,7 +12,7 @@ interface ITransform {
  * Optionally supply a bounding box to get a particular subset of the canvas.
  *
  * @param {HTMLCanvasElement} canvas The HTML canvas to convert.
- * @param {Number[]} [boundingBox] A bounding box of type [top, left, width, height]
+ * @param {Number[]} [boundingBox] A bounding box array.
  */
 export function canvasToImageData(
   canvas: HTMLCanvasElement,
@@ -22,7 +22,7 @@ export function canvasToImageData(
 /**
  * Converts an Image object to a vtkImageData.
  * @param {HTMLImageElement} image The HTML image to convert.
- * @param {ITransform} [transform] default={flipX: false, flipY: false, rotate: 0}
+ * @param {ITransform} [transform] The transform object to apply to the image.
  */
 export function imageToImageData(
   image: HTMLImageElement,

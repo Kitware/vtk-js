@@ -1,11 +1,14 @@
-title: Building vtk.js
+---
+title: Building VTK.js
 ---
 
-VTK.js is a library and should be used as ES6 dependency. However, it is worth building vtk.js to validate the style and to generate the JavaScript file for external script usage as described [here](intro_vtk_as_external_script.html).
+# Building VTK.js
+
+VTK.js is a library and should be used as ES6 dependency. However, it is worth building VTK.js to validate the style and to generate the JavaScript file for external script usage as described [here](intro_vtk_as_external_script.html).
 
 The library can be built with webpack automatically. Webpack can either gather all the source files and concatenate them with little modification, or it can build it for production which will minify the generated file.
 
-## Building vtk.js
+## Building VTK.js
 
 First, install dependencies by running `npm install`.
 
@@ -41,4 +44,4 @@ $ npm run doc -- -s -f ExampleNameThatDoesNotExist
 
 ## Building versus installing
 
-When you use vtk.js as a dependency in your project (e.g. [like this](https://kitware.github.io/vtk-js/docs/vtk_vanilla.html)) you are pulling a package that was put together by the continuous integration. When developing vtk.js, you will have to put that package together yourself, and we call that "building."
+When you use VTK.js as a dependency in your project (e.g. [like this](https://kitware.github.io/vtk-js/docs/vtk_vanilla.html)) you are pulling a package that was put together by the continuous integration. When developing VTK.js, you will have to put that package together yourself, and we call that "building."

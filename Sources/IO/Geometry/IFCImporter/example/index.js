@@ -54,7 +54,7 @@ function update() {
 // Importer usage example
 // ----------------------------------------------------------------------------
 vtkResourceLoader
-  .loadScript('https://cdn.jsdelivr.net/npm/web-ifc@0.0.64/web-ifc-api-iife.js')
+  .loadScript('https://esm.sh/web-ifc@0.0.64/web-ifc-api-iife.js')
   .then(() => {
     // Pass WebIFC api to vtkIFCImporter
     vtkIFCImporter.setIFCAPI(window.WebIFC);

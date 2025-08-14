@@ -1,7 +1,10 @@
-title: Using vtk.js with vue.js
+---
+title: Using VTK.js with Vue.js
 ---
 
-This is a quickstart tutorial for using vtk.js with vue.js.
+# Using VTK.js with Vue.js
+
+This is a quickstart tutorial for using VTK.js with Vue.js.
 
 ## Initialize your project
 

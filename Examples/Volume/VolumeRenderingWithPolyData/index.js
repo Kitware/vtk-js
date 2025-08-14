@@ -43,7 +43,7 @@ let plane2Ctrl;
 // ----------------------------------------------------------------------------
 
 // SETUP ================
-// Load script from https://cdn.skypack.dev/@kitware/vtk.js then...
+// Load script from https://esm.sh/@kitware/vtk.js then...
 
 const clipPlane1 = vtkPlane.newInstance();
 const clipPlane2 = vtkPlane.newInstance();

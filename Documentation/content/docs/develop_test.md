@@ -1,15 +1,18 @@
-title: Creating a test in vtk.js
+---
+title: Creating a test in VTK.js
 ---
 
-This guide illustrates how to add tests to the vtk.js repository and how to run and debug them.
+# Creating a test in VTK.js
+
+This guide illustrates how to add tests to the VTK.js repository and how to run and debug them.
 
 First each VTK class can have several tests spread among several files but we also have infrastructure for global tests which live inside __Sources/Testing/test*.js__.
 
-vtk.js uses [tape](https://github.com/ljharb/tape) for running tests. Please refer to tape's documentation for more information about the test harness API.
+VTK.js uses [tape](https://github.com/ljharb/tape) for running tests. Please refer to tape's documentation for more information about the test harness API.
 
 ## Class tests
 
-In order to add test to vtk.js you will need to create a __test__ directory underneath your class directory.
+In order to add test to VTK.js you will need to create a __test__ directory underneath your class directory.
 
 That __test__ directory should contain as many test file as you like with their associated baselines if any. By convention we expect each test file to be prefixed with __test__ similar to *testDataArray.js*.
 
@@ -17,7 +20,8 @@ That __test__ directory should contain as many test file as you like with their 
 
 Some vtkClass'es don't necessarily involve rendering and can be tested without a WebGL environment. In which case a plain JavaScript test could be written as follows and an additional test() function could be added within the same file:
 
-```js ClassName/test/testExample.js
+```js
+// ClassName/test/testExample.js
 import test from 'tape';
 
 import vtkMyClass from '..';
@@ -42,7 +46,8 @@ test('Validate vtkMyClass properties', (t) => {
 
 ## Testing rendering with image comparison
 
-```js ClassName/test/testRendering.js
+```js
+// ClassName/test/testRendering.js
 import test from 'tape';
 
 import vtkOpenGLRenderWindow from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow';

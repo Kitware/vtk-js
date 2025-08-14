@@ -1,7 +1,10 @@
-title: (Old approach) Transpiling vtk.js manually
+---
+title: (Old approach) Transpiling VTK.js manually
 ---
 
-This guide illustrates how to consume vtk.js by way of transpiling. Please note that this method is *discouraged*, and it is recommended instead to follow [the modern approach outlined in the introduction](./intro_vtk_as_es6_dependency.html).
+# (Old approach) Transpiling VTK.js manually
+
+This guide illustrates how to consume VTK.js by way of transpiling. Please note that this method is *discouraged*, and it is recommended instead to follow [the modern approach outlined in the introduction](./intro_vtk_as_es6_dependency.html).
 
 ## Which package to use
 
@@ -12,7 +15,7 @@ In order to take the transpilation approach, you must use the `vtk.js` package i
 +import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 ```
 
-## Transpiling vtk.js code
+## Transpiling VTK.js code
 
 Make sure that the following packages are dependencies of your project:
 
@@ -20,10 +23,12 @@ Make sure that the following packages are dependencies of your project:
 npm install autoprefixer @babel/preset-env
 ```
 
-We primarily support webpack for transpiling vtk.js. The generic structure of the webpack structure is listed below, with comments.
+We primarily support webpack for transpiling VTK.js. The generic structure of the webpack structure is listed below, with comments.
 
-``` js ./webpack.config.js
-// Required in order to build vtk.js alongside your project
+webpack.config.js :
+
+``` js
+// Required in order to build VTK.js alongside your project
 var vtkRules = require('vtk.js/Utilities/config/dependency.js').webpack.core.rules;
 
 // Optional if you want to load *.css and *.module.css files
@@ -60,9 +65,9 @@ module.exports = {
 };
 ```
 
-### with create-react-app
+### With create-react-app
 
-If you are using `create-react-app` or `react-app-rewired`, you will need to override the default build config. Specifically, there is a `file-loader` rule that outputs assets to `static/media/*`. In order for vtk.js glsl files to not be split out (since vtk.js does dynamic shader generation), you will need to add an exclude condition to that `file-loader`, like so:
+If you are using `create-react-app` or `react-app-rewired`, you will need to override the default build config. Specifically, there is a `file-loader` rule that outputs assets to `static/media/*`. In order for VTK.js glsl files to not be split out (since VTK.js does dynamic shader generation), you will need to add an exclude condition to that `file-loader`, like so:
 
 ```js
 {

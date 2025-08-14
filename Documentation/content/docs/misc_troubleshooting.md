@@ -1,6 +1,10 @@
+---
 title: Troubleshooting
 ---
-In case you're experiencing problems using vtk.js, here is a list of solutions to some frequently encountered issues. If this page doesn't help you solve your problem, try doing a search on [GitHub](https://github.com/kitware/vtk-js/issues) or our [Mailing list](http://www.paraview.org/mailman/listinfo/vtk).
+
+# Troubleshooting
+
+In case you're experiencing problems using VTK.js, here is a list of solutions to some frequently encountered issues. If this page doesn't help you solve your problem, try doing a search on [GitHub](https://github.com/kitware/vtk-js/issues) or our [Discourse](https://discourse.vtk.org/c/web/9).
 
 ## Can't find application
 

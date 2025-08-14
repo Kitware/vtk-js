@@ -1,7 +1,10 @@
-title: Starting a vtk.js project from scratch
+---
+title: Starting a VTK.js project from scratch
 ---
 
-This is a quickstart tutorial for using vanilla vtk.js.
+# Starting a VTK.js project from scratch
+
+This is a quickstart tutorial for using vanilla VTK.js.
 
 ## Initialize your project
 

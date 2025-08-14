@@ -1,5 +1,8 @@
+---
 title: Widgets
 ---
+
+# Widgets
 
 Widgets allow users to interact with scene objects and drive functionality
 through clicking, dragging, and touch.

@@ -1,7 +1,10 @@
-title: Using vtk.js with React
+---
+title: Using VTK.js with React
 ---
 
-This is a quickstart tutorial for using vtk.js with React.
+# Using VTK.js with React
+
+This is a quickstart tutorial for using VTK.js with React.
 
 ## Initialize your project
 

@@ -161,13 +161,12 @@ export function newInstance(
 ): vtkCircleSource;
 
 /**
-/**
  * vtkCircleSource creates a circle.
- * 
+ *
  * @example
  * ```js
  * import vtkCircleSource from '@kitware/vtk.js/Filters/Sources/CircleSource';
- * 
+ *
  * const circle = vtkCircleSource.newInstance({ radius: 1, resolution: 80 });
  * const polydata = circle.getOutputData();
  * ```

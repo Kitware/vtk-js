@@ -1,14 +1,17 @@
+---
 title: Tools
 ---
 
-vtk.js is an Open Source Framework for building Web application for Scientific Visualization.
+# Tools
+
+VTK.js is an Open Source Framework for building Web application for Scientific Visualization.
 
 The following guide explain our software process and tools use to build and develop this framework.
 
 ## Commitizen
 
 We rely on Semantic-release to manage our change log, tagging and publishing
-to NPM via Travis.
+to NPM via GitHub Actions.
 
 In order to maintain that process each commit message should follow a specific
 formatting. To ensure that formatting, we use Commitizen which can be triggered
