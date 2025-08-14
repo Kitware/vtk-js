@@ -1,0 +1,302 @@
+/* Layout and Container Styles */
+.VPNav {
+  position: sticky !important;
+  top: 0 !important;
+  backdrop-filter: blur(8px);
+}
+
+.VPContent {
+  margin: 0 !important;
+  padding-top: 0 !important;
+  position: relative;
+}
+
+.VPNavBar .divider-line {
+  background-color: var(--vp-c-gutter) !important;
+}
+
+.VPDoc.has-aside .content-container {
+  max-width: 100%;
+}
+
+.content {
+  border: 0 !important;
+}
+
+/* Navigation Styles */
+.VPNavBar.has-sidebar .divider {
+  width: 100%;
+  padding: 0 !important;
+}
+
+.logo {
+  width: 150px;
+  color: var(--vp-c-brand-1);
+}
+
+/* Sidebar Styles */
+.VPSidebar {
+  padding-bottom: 32px !important;
+}
+
+.VPSidebarItem {
+  padding-bottom: 0 !important;
+}
+
+.group + .group {
+  border: 0 !important;
+}
+
+.group .items {
+  margin-left: 10px;
+  display: block;
+  transition: all 0.3s ease;
+}
+
+/* Aside Styles */
+.aside {
+  padding-left: 0 !important;
+  width: 224px !important;
+  max-width: 300px !important;
+  width: 300px !important;
+}
+
+.aside-container {
+  padding-top: calc(var(--vp-nav-height) + 20px) !important;
+}
+
+/* Typography and Content Styles */
+.vp-doc h1 {
+  margin-top: 20px !important;
+}
+
+.vp-doc h2 {
+  margin: 0 !important;
+  border: 0 !important;
+}
+
+.vp-doc p,
+.vp-doc summary {
+  margin-bottom: 0 !important;
+}
+
+/* Link Styles */
+.vp-doc a {
+  text-decoration: none;
+}
+
+.vp-doc a:hover {
+  color: var(--vp-c-brand-2);
+  text-decoration: underline;
+}
+
+.vp-doc .header-anchor {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  padding: 2px;
+}
+
+.vp-doc .header-anchor:hover {
+  background-color: #f9f3f4;
+  color: #62748e;
+}
+
+/* Hero Section */
+.VPHero {
+  .image-bg {
+    opacity: 0.8;
+    transition: opacity 1s ease;
+  }
+  .image-container:hover .image-bg {
+    opacity: 0.4;
+  }
+}
+
+.mask {
+  color: var(--vp-c-brand-2);
+  opacity: 0.3;
+  position: absolute;
+  top: -1px;
+  width: 100%;
+}
+
+/* Custom Block Styles */
+.custom-block .custom-block-title {
+  font-size: 16px;
+}
+
+.custom-block.tip .custom-block-title {
+  color: var(--vp-c-brand-1);
+}
+
+/* Code Group Styles */
+.vp-code-group .tabs label {
+  background-color: transparent;
+}
+
+/* Table Styles */
+table {
+  width: 100% !important;
+  display: table !important;
+}
+
+/* Active State and Hover Styles */
+.link.active,
+.link.active span,
+.VPNavBarMenuLink:hover span,
+.VPSidebarItem.is-active .link,
+.VPSidebar .link:hover {
+  color: var(--vp-c-brand-1);
+}
+
+/* Dark Mode Specific Styles */
+.dark .vp-doc .custom-block a {
+  transition: color 0.25s;
+}
+
+/* View Transition Styles */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root),
+.dark::view-transition-new(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root),
+.dark::view-transition-old(root) {
+  z-index: 9999;
+}
+
+/* Media Queries */
+@media (min-width: 1440px) {
+  .VPDoc.has-aside .content-container.content-container {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 960px) {
+  .VPNav {
+    .VPNavBarMenuLink,
+    .VPNavBarMenuGroup .button {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+  }
+}
+
+@media (min-width: 960px) {
+  /* .VPNavBar.has-sidebar .title {
+    background: #fff!important;
+  } */
+  .VPNavBarTitle.has-sidebar .title {
+    border: 0 !important;
+  }
+  .VPSidebar {
+    padding-top: 0 !important;
+    scrollbar-width: thin;
+    scrollbar-gutter: stable;
+  }
+  .VPDoc {
+    padding: 0 !important;
+  }
+  .VPLocalNav {
+    padding-top: 0 !important;
+  }
+}
+
+.HPHero {
+  background-image: linear-gradient(
+      to right,
+      var(--vp-c-gutter) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, var(--vp-c-gutter) 1px, transparent 1px);
+  background-size: 4rem 4rem;
+  background-position: -30px 0px;
+  mask-image: radial-gradient(
+    ellipse 60% 50% at 50% 0%,
+    #000 70%,
+    transparent 110%
+  );
+  width: 100%;
+  height: 100dvh;
+  position: absolute;
+}
+
+.VPHero {
+  display: flex;
+  flex-direction: column;
+}
+.VPHero .main {
+  display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.VPLocalNav {
+  padding-top: 0 !important;
+}
+
+.VPSidebarItem .items {
+    display: block!important;
+    height: auto;
+    overflow: hidden;
+        transition-duration: 500ms;
+        transition-property: all;
+          opacity: 1;
+  }
+
+.VPSidebarItem.collapsed .items {
+  height: 0;
+  opacity: 0;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-start: 10px;
+}
+
+.exampleLink,
+.ghLink {
+  padding: 0.25rem 0.8rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: calc(var(--radius));
+  margin-right: 10px;
+  display: flex;
+  gap: 0.25em;
+  text-decoration: none!important;
+  color: var(--vp-c-text-1)!important;
+}
+
+.ghLink .icon {
+  mask-image: url(/svg/source.svg);
+  background-color: var(--vp-c-text-1)!important;
+  background-position: 50%;
+  background-size: 100%;
+  background-repeat: no-repeat;
+  width: 1.5em;
+  height: 1.5em;
+}
+
+.exampleLink:hover,
+.ghLink:hover {
+  border-color: var(--vp-code-color);
+}
+
+.item[role="button"] {
+border-radius: calc(var(--radius) - 3px);
+  padding: 0 calc(var(--spacing) * 2)
+}
+
+.item[role="button"]:hover {
+  background-color: #141415;
+}
+
