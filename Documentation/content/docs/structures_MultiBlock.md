@@ -1,5 +1,8 @@
+---
 title: MultiBlock
 ---
+
+# MultiBlock
 
 A MultiBlock is a set of other VTK data structures.
 

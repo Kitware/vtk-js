@@ -1,5 +1,8 @@
+---
 title: WebXR Examples
 ---
+
+# WebXR Examples
 
 <style>
 .categories {
@@ -32,7 +35,7 @@ title: WebXR Examples
   }
 </style>
 
-vtk.js supports virtual and augmented reality rendering via the [WebXR device API](https://www.w3.org/TR/webxr/) for most standalone and PC-based mixed reality (XR) devices.
+VTK.js supports virtual and augmented reality rendering via the [WebXR device API](https://www.w3.org/TR/webxr/) for most standalone and PC-based mixed reality (XR) devices.
 
 ## General Examples
 
@@ -50,7 +53,7 @@ to select the desired VR, AR, or holographic session type.
 
 ## Cinematic Examples
 
-The following examples demonstrate cinematic rendering in mixed reality with vtk.js. We recommend running these examples on an XR device connected to a PC with a dedicated GPU.
+The following examples demonstrate cinematic rendering in mixed reality with VTK.js. We recommend running these examples on an XR device connected to a PC with a dedicated GPU.
 
 <div class="gallery">
 
@@ -61,7 +64,7 @@ The following examples demonstrate cinematic rendering in mixed reality with vtk
 
 ## Dedicated examples
 
-WebXR rendering with vtk.js can be tailored for a specific XR target platform. The following examples are intended to run on a subset of supported XR devices.
+WebXR rendering with VTK.js can be tailored for a specific XR target platform. The following examples are intended to run on a subset of supported XR devices.
 
 ### Virtual Reality Examples (`immersive-vr`)
 
@@ -104,7 +107,7 @@ Microsoft HoloLens 2 users should run the [virtual reality examples](#Virtual-Re
 
 ### Holographic Examples
 
-The following examples target holographic displays from Looking Glass Factory. More information on requirements for holographic rendering with vtk.js may be found [here](https://kitware.github.io/vtk-js/examples/LookingGlass.html).
+The following examples target holographic displays from Looking Glass Factory. More information on requirements for holographic rendering with VTK.js may be found [here](https://kitware.github.io/vtk-js/examples/LookingGlass.html).
 
 <div class="gallery">
 
@@ -158,31 +161,31 @@ While WebXR has broad industry support, it is not yet implemented in all browser
 
 A WebXR device may be compatible with more than one type of session. For instance, the Meta Quest 2 headset supports fully immersive virtual reality sessions as well as augmented reality sessions with passthrough.
 
-Several vtk.js XR-capable examples support more than one type of XR session. For these examples, the desired session type may be requested by adding the parameter `&xrSessionType=<value>` to the end of the example URL. Session type values are defined in the [OpenGL RenderWindow](https://github.com/Kitware/vtk-js/blob/master/Sources/Rendering/OpenGL/RenderWindow/Constants.js).
+Several VTK.js XR-capable examples support more than one type of XR session. For these examples, the desired session type may be requested by adding the parameter `&xrSessionType=<value>` to the end of the example URL. Session type values are defined in the [OpenGL RenderWindow](https://github.com/Kitware/vtk-js/blob/master/Sources/Rendering/OpenGL/RenderWindow/Constants.js).
 
 ## Frequently Asked Questions
 
-### How do I run vtk.js examples on a standalone headset?
+### How do I run VTK.js examples on a standalone headset?
 
 1. Verify that your web browser supports the WebXR API. Consult resources such as [CanIUse.com](https://caniuse.com/webxr) to find this information.
-1. Navigate to one of the vtk.js examples listed above in your standalone headset.
+1. Navigate to one of the VTK.js examples listed above in your standalone headset.
 1. Click the "Enter XR" button that appears overlaid on the scene. You may be prompted to give the website permission to launch XR experiences.
 1. The immersive XR experience should launch.
 
 If you encounter difficulty running examples after attempting the steps above, please enter an issue in the [VTK.js GitHub repository](https://github.com/Kitware/vtk-js/issues).
 
-### How do I run vtk.js examples on my iPhone?
+### How do I run VTK.js examples on my iPhone?
 
-As of 2023 the Safari for iOS browser does not support WebXR experiences. The Mozilla Reality browser application does support WebXR on iOS. Follow these steps to run vtk.js WebXR examples on your iPhone:
+As of 2023 the Safari for iOS browser does not support WebXR experiences. The Mozilla Reality browser application does support WebXR on iOS. Follow these steps to run VTK.js WebXR examples on your iPhone:
 
 1. Download Mozilla Reality from the App Store
 2. Open Mozilla Reality
-3. Navigate to any vtk.js handheld augmented reality example
+3. Navigate to any VTK.js handheld augmented reality example
 4. Launch the augmented reality scene
 
-### Does vtk.js support rendering with WebGPU for WebXR experiences?
+### Does VTK.js support rendering with WebGPU for WebXR experiences?
 
-vtk.js currently relies on WebGL to support WebXR rendering. See [GitHub discussion](https://github.com/gpuweb/gpuweb/issues/2778) for more information on WebGPU support for WebXR. More details on vtk.js support for WebGPU can be found [here](../develop_webgpu.html).
+VTK.js currently relies on WebGL to support WebXR rendering. See [GitHub discussion](https://github.com/gpuweb/gpuweb/issues/2778) for more information on WebGPU support for WebXR. More details on VTK.js support for WebGPU can be found [here](../develop_webgpu.html).
 
 ### Where can I find more information about planned VTK.js WebXR development?
 

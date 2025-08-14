@@ -83,12 +83,20 @@ jobs:
       - name: Build examples
         run: npm run build:examples
       - name: Build API docs
-        run: npm run doc:generate-api
+        run: npm run docs:generate-api
+      - name: Build docs examples
+        run: npm run docs:generate-examples
+      - name: Build docs sidebar
+        run: npm run docs:generate-sidebar
+      - name: Build docs gallery
+        run: npm run docs:generate-gallery
       - name: Build docs
-        run: npm run doc:minified
+        run: npm run docs:build
+      - name: Build docs examples
+        run: npm run docs:build-examples
       - name: Upload docs as a Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./Documentation/build-tmp/public/
+          path: ./Documentation/.vitepress/dist/
       - name: Deploy docs
         uses: actions/deploy-pages@v4

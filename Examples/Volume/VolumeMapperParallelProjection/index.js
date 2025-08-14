@@ -39,7 +39,7 @@ const gui = new GUI();
 // ----------------------------------------------------------------------------
 
 // SETUP ================
-// Load script from https://cdn.skypack.dev/@kitware/vtk.js then...
+// Load script from https://esm.sh/@kitware/vtk.js then...
 
 const cubeSource = vtkCubeSource.newInstance();
 

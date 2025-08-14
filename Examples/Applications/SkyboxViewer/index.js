@@ -27,9 +27,7 @@ import style from './SkyboxViewer.module.css';
 // Dynamically load WebXR polyfill from CDN for WebVR and Cardboard API backwards compatibility
 if (navigator.xr === undefined) {
   vtkResourceLoader
-    .loadScript(
-      'https://cdn.jsdelivr.net/npm/webxr-polyfill@latest/build/webxr-polyfill.js'
-    )
+    .loadScript('https://esm.sh/webxr-polyfill@latest/build/webxr-polyfill.js')
     .then(() => {
       // eslint-disable-next-line no-new, no-undef
       new WebXRPolyfill();

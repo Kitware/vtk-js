@@ -1,9 +1,12 @@
-title: Creating a new example in vtk.js
+---
+title: Creating a new example in VTK.js
 ---
 
-This guide illustrates how to add an example to the vtk.js repository and how to run and debug it.
+# Creating a new example in VTK.js
 
-First each VTK class can have one example but many examples can be added using the standalone approach.
+This guide illustrates how to add an example to the VTK.js repository and how to run and debug it.
+
+First each VTK.js class can have one example but many examples can be added using the standalone approach.
 
 ## Class example
 
@@ -17,6 +20,7 @@ Sometime, we want to build an example to illustrate a more complex usage that sh
 
 Our current structure is as follows:
 
+```plaintext
 - Examples
   - Serialization
     - Actor
@@ -28,6 +32,7 @@ Our current structure is as follows:
       - index.js
     - Texture
       - index.js
+````
 
 Those examples will be automatically picked up when building the website and will be gathered in groups like described below:
 

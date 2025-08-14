@@ -10,3 +10,6 @@ coverage/
 .env
 Utilities/TestResults
 .idea
+Documentation/.vitepress/cache/
+Documentation/.vitepress/dist/
+

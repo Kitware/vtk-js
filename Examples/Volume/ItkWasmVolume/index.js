@@ -65,7 +65,7 @@ async function update() {
   // Or `npm install @itk-wasm/image-io` and import it directly.
   const { readImage } = await import(
     // eslint-disable-next-line import/no-unresolved, import/extensions
-    /* webpackIgnore: true */ 'https://cdn.jsdelivr.net/npm/@itk-wasm/image-io@1.1.0/dist/bundle/index-worker-embedded.min.js'
+    /* webpackIgnore: true */ 'https://esm.sh/@itk-wasm/image-io@1.1.0/dist/bundle/index-worker-embedded.min.js'
   );
 
   const { image: itkImage, webWorker } = await readImage({

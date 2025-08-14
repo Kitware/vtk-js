@@ -1,9 +1,12 @@
+---
 title: ParametricDataset
 ---
 
+# ParametricDataset
+
 A ParametricDataset is a set of datasets which may change based on a set of parameters.
 
-## Structure 
+## Structure
 
 ```js
 {
@@ -40,7 +43,7 @@ A ParametricDataset is a set of datasets which may change based on a set of para
   QueryDataModelControl: { // Optional information
     arguments_order: [ 'contour', 'clip', 'time' ],
     arguments: {
-      contours: { 
+      contours: {
         ui: 'slider',
         loop: 'modulo'
       },

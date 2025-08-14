@@ -1,7 +1,10 @@
+---
 title: Contributing
 ---
 
-We welcome you to join the development of vtk.js. This document will help you through the process.
+# Contributing
+
+We welcome you to join the development of VTK.js. This document will help you through the process.
 
 ## Before You Start
 
@@ -13,8 +16,8 @@ Please follow the coding style:
 
 ## Workflow
 
-1. The vtk.js source is maintained [on GitHub](https://github.com/kitware/vtk-js).
-2. [Fork vtk.js](https://help.github.com/articles/fork-a-repo/) into your user's namespace on GitHub.
+1. The VTK.js source is maintained [on GitHub](https://github.com/kitware/vtk-js).
+2. [Fork VTK.js](https://help.github.com/articles/fork-a-repo/) into your user's namespace on GitHub.
 3. Clone the repository to your computer.
 
     ```sh
@@ -22,7 +25,7 @@ Please follow the coding style:
     $ cd vtk-js
     ```
 
-4. Run the install script for vtk.js dependencies:
+4. Run the install script for VTK.js dependencies:
     ```sh
     $ npm install
     ```
@@ -53,10 +56,10 @@ Please follow the coding style:
     $ git push origin new_feature
     ```
 
-7. Visit your fork in Github, browse to the "**Pull Requests**" link on the left, and use the 
+7. Visit your fork in Github, browse to the "**Pull Requests**" link on the left, and use the
    "**New Pull Request**" button in the upper right to create a Pull Request.
 
-    For more information see: 
+    For more information see:
     [Create a Pull Request](https://help.github.com/articles/creating-a-pull-request/)
 
 8. vtk.js uses GitHub for code review and Travis-CI to test proposed patches before they are merged.
@@ -64,7 +67,7 @@ Please follow the coding style:
 ## Notice
 
 - Don't modify the version number in `package.json`.
-- Your pull request will only get merged when tests passed. Don't forget to run tests before 
+- Your pull request will only get merged when tests passed. Don't forget to run tests before
   submission.
 
     ```
@@ -73,14 +76,14 @@ Please follow the coding style:
 
 ## Updating Documentation
 
-The vtk.js documentation is part of the code repository and is entirely written in 
+The VTK.js documentation is part of the code repository and is entirely written in
 [markdown](https://daringfireball.net/projects/markdown/).
 
 ## Reporting Issues
 
-If you encounter problems using vtk.js you may be able to find the solutions in the
-[troubleshooting docs](https://kitware.github.io/vtk-js/docs/misc_troubleshooting.html), in an 
-existing [GitHub issue](https://github.com/kitware/vtk-js/issues), or via the 
-[mailing list](http://www.vtk.org/VTK/help/mailing.html).
-If you can't find the answer, please 
+If you encounter problems using VTK.js you may be able to find the solutions in the
+[troubleshooting docs](https://kitware.github.io/vtk-js/docs/misc_troubleshooting.html), in an
+existing [GitHub issue](https://github.com/kitware/vtk-js/issues), or via the
+[Discourse](https://discourse.vtk.org/c/web/9).
+If you can't find the answer, please
 [report a new issue on GitHub](https://github.com/Kitware/vtk-js/issues/new).

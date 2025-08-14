@@ -1,5 +1,8 @@
+---
 title: DataArray
 ---
+
+# DataArray
 
 A data array is meant to keep track of numerical values while providing associated metadata such as size, tupleSize, data type, array name, component names and so on.
 
@@ -10,12 +13,12 @@ The possible data types are only available in the language itself as typed array
 | Type              | Bytes    | C type   |
 | ----------------- | -------- | -------- |
 | Int8Array         | 1 8-bit  | int8_t   |
-| Uint8Array        | 1 8-bit  | uint8_t  |  
-| Uint8ClampedArray | 1 8-bit  | uint8_t  |  
-| Int16Array        | 2 16-bit | int16_t  |  
-| Uint16Array       | 2 16-bit | uint16_t |  
-| Int32Array        | 4 32-bit | int32_t  |  
-| Uint32Array       | 4 32-bit | uint32_t |  
+| Uint8Array        | 1 8-bit  | uint8_t  |
+| Uint8ClampedArray | 1 8-bit  | uint8_t  |
+| Int16Array        | 2 16-bit | int16_t  |
+| Uint16Array       | 2 16-bit | uint16_t |
+| Int32Array        | 4 32-bit | int32_t  |
+| Uint32Array       | 4 32-bit | uint32_t |
 | Float32Array      | 4 32-bit | float    |
 | Float64Array      | 8 64-bit | double   |
 
@@ -35,7 +38,7 @@ The possible data types are only available in the language itself as typed array
     { min: -5.23, max: 25.7, component: 0, name: 'Scalar' },
   ],
 }
-``` 
+```
 
 ## Vector array in memory
 
@@ -54,7 +57,7 @@ The possible data types are only available in the language itself as typed array
     { min: -35.3, max: 125.7, component: -1, name: 'Magnitude' },
   ],
 }
-``` 
+```
 
 ## Scalar array reference
 
@@ -83,4 +86,4 @@ it in memory.
     { min: -35.3, max: 125.7, component: -1, name: 'Magnitude' },
   ],
 }
-``` 
+```

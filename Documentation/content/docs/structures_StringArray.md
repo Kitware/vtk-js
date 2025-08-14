@@ -1,5 +1,8 @@
+---
 title: StringArray
 ---
+
+# StringArray
 
 A String array is meant to keep track of String values. It is basically a standard JavaScript array where each value is expected to be a String.
 
@@ -14,7 +17,7 @@ A String array is meant to keep track of String values. It is basically a standa
   dataType: 'string',
   values: [ 'Player 1', 'Player 2', 'Palyer 3', ...],
 }
-``` 
+```
 
 ## String array reference
 
@@ -37,4 +40,4 @@ it in memory like the previously described ones.
     encode: 'JSON',
   },
 }
-``` 
+```

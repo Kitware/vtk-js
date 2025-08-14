@@ -1,5 +1,8 @@
+---
 title: Developing Widgets
 ---
+
+# Developing Widgets
 
 Widgets allow users to interact with scene objects and drive functionality through clicking, dragging, and touch.
 This documentation presents the new vtk.js widget infrastructure introduced on Aug 28, 2018.
@@ -219,7 +222,7 @@ For consistency, when a focus widget sets the active state, the `model.activeSta
 
 ##### Animations
 
-A widget can request animations. Animations tell vtk.js to re-render when necessary. Animations are not required since the widget can trigger a render by calling `model.interactor.render()` so they are only useful if you don't want to think about renders. A widget starts an animation by calling `model.interactor.startAnimation(publicAPI)` and stops it by calling `model.interactor.cancelAnimation(publicAPI)`.
+A widget can request animations. Animations tell VTK.js to re-render when necessary. Animations are not required since the widget can trigger a render by calling `model.interactor.render()` so they are only useful if you don't want to think about renders. A widget starts an animation by calling `model.interactor.startAnimation(publicAPI)` and stops it by calling `model.interactor.cancelAnimation(publicAPI)`.
 
 ### Code architecture
 
@@ -234,13 +237,15 @@ Note that widgets may have all their code into index.js, but the architecture co
 
 The state.js file contains the state building function which usually looks like:
 
-    export default function generateState() {
-      return vtkStateBuilder
-        .createBuilder()
-        .addStateFromMixin({ ... })
-        .addDynamicMixinState({ ... })
-        .build();
-    }
+```js
+  export default function generateState() {
+    return vtkStateBuilder
+      .createBuilder()
+      .addStateFromMixin({ ... })
+      .addDynamicMixinState({ ... })
+      .build();
+  }
+```
 
 This function is later used in index.js to actually build the widget state.
 
@@ -248,38 +253,21 @@ This function is later used in index.js to actually build the widget state.
 
 The behavior.js file defines the methods of the widget behavior and typically looks like:
 
-    export default function widgetBehavior(publicAPI, model) {
-      model.classHierarchy.push('vtk{NAME}WidgetProp');
-    
-      publicAPI.handle{XXX} = () => {...}
-    
-      publicAPI.grabFocus = () => {...}
-      publicAPI.loseFocus = () => {...}
-    }
+```js
+export default function widgetBehavior(publicAPI, model) {
+  model.classHierarchy.push('vtk{NAME}WidgetProp');
+
+  publicAPI.handle{XXX} = () => {...}
+
+  publicAPI.grabFocus = () => {...}
+  publicAPI.loseFocus = () => {...}
+}
+```
 
 #### index.js
 
-The index.js file contains the definition of the widget and glues all the parts together. The widget definition is a regular vtk.js [class](https://kitware.github.io/vtk-js/docs/develop_class.html).
+The index.js file contains the definition of the widget and glues all the parts together. The widget definition is a regular VTK.js [class](https://kitware.github.io/vtk-js/docs/develop_class.html).
 The widget behavior is set by setting the member `model.behavior = widgetBehavior`.
 The widget state is built by setting the member `model.widgetState = stateGenerator()`.
 It is in this file that the `getRepresentationsForViewType` method should be implemented.
-The strings of the array `model.methodsToLink` describe the names of methods that should be created by vtk.js to interface directly with representations. For instance if `'{NAME}'` is in `model.methodsToLink` then vtk.js will add the `set{NAME}()` and `get{NAME}()` methods to the widget behavior. These methods internally call the same methods on each representation that expose them. 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+The strings of the array `model.methodsToLink` describe the names of methods that should be created by VTK.js to interface directly with representations. For instance if `'{NAME}'` is in `model.methodsToLink` then VTK.js will add the `set{NAME}()` and `get{NAME}()` methods to the widget behavior. These methods internally call the same methods on each representation that expose them.

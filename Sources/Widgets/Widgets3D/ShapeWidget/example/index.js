@@ -23,7 +23,7 @@ import vtkResliceCursorWidget from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCur
 import vtkPlane from '@kitware/vtk.js/Common/DataModel/Plane';
 import vtkSphere from '@kitware/vtk.js/Common/DataModel/Sphere';
 import vtkTransform from '@kitware/vtk.js/Common/Transform/Transform';
-import { VTK_SMALL_NUMBER } from 'vtk.js/Sources/Common/Core/Math/Constants';
+import { VTK_SMALL_NUMBER } from '@kitware/vtk.js/Common/Core/Math/Constants';
 
 import vtkInteractorObserver from '@kitware/vtk.js/Rendering/Core/InteractorObserver';
 import {

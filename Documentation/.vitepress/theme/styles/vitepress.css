@@ -1,0 +1,147 @@
+#app .VPMenu {
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  background: var(--popover);
+}
+
+#app .VPMenu .link {
+  font-size: 0.875rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+#app .DocSearch-Button {
+  border-radius: 0.375rem;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  height: 2rem;
+}
+
+#app .VPNav {
+  background: var(--background);
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border);
+}
+
+#app .VPNav .divider {
+  display: none;
+}
+
+#app .VPFooter {
+  border-top-style: solid;
+}
+
+#app .VPSidebar {
+  border-right-width: 1px;
+  border-right-style: solid;
+  border-right-color: var(--border);
+  background: var(--background);
+  scrollbar-width: thin;
+}
+
+#app .VPSidebar .VPSidebarItem .items {
+  border-style: none;
+}
+
+#app .VPNavBarTitle a.title {
+  border-bottom: 0 !important;
+}
+
+#app .aside .content {
+  border-style: none;
+}
+
+#app .prev-next {
+  border-width: 0;
+  padding-top: 0;
+}
+
+#app .prev-next .pager-link {
+  border-style: solid;
+}
+
+/* .vp-doc h2 {
+  border-top-width: 0;
+  margin-top: 2.5rem;
+  padding-top: 0;
+  padding-bottom: 0.75rem;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border);
+}
+
+.vp-doc h2 .header-anchor {
+  top: 0;
+}
+
+.vp-doc [class*='language-'] pre {
+  border-radius: 0.375rem;
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+  font-size: 1rem;
+  font-family: monospace;
+}
+
+.vp-doc [class*='language-'] pre code {
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+} */
+
+.VPSidebarItem .items {
+  display: block !important;
+  height: auto;
+  overflow: hidden;
+  transition-duration: 500ms;
+  transition-property: all;
+  opacity: 1;
+}
+
+.VPSidebarItem.collapsed .items {
+  height: 0;
+  opacity: 0;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-start: 10px;
+}
+
+.exampleLink,
+.ghLink {
+  padding: 0.25rem 0.8rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: calc(var(--radius));
+  margin-right: 10px;
+  display: flex;
+  gap: 0.25em;
+  text-decoration: none !important;
+  color: var(--vp-c-text-1) !important;
+}
+
+.ghLink svg {
+  width: 1.5em;
+  height: 1.5em;
+}
+
+.exampleLink:hover,
+.ghLink:hover {
+  border-color: var(--vp-code-color);
+}
+
+.markdown-copy-buttons-inner {
+  margin: 0 !important;
+  position: absolute !important;
+  right: 0;
+  top: 0;
+  box-shadow: none !important;
+
+  :hover {
+    box-shadow: none !important;
+    translate: none !important;
+  }
+}

@@ -1,5 +1,8 @@
+---
 title: VTK data structures
 ---
+
+# VTK data structures
 
 The JavaScript language is obviously less rigid than C++. Therefore instead of following a one to one class mapping between C++ and JavaScript, we rather use generic JavaScript objects which do not contain any methods and instead provide helper functions which decorate those data structures with methods when useful.
 

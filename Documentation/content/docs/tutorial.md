@@ -1,5 +1,8 @@
-title:  Tutorials and Training
 ---
+title: Tutorials and Training
+---
+
+# Tutorials and Training
 
 ## Tutorials featuring VTK.js and OHIF web apps
 

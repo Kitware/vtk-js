@@ -4,11 +4,25 @@
     <script type="importmap">
       {
         "imports": {
-          "@kitware/vtk.js/": "https://cdn.skypack.dev/@kitware/vtk.js/"
+          "@kitware/vtk.js/": "https://esm.sh/@kitware/vtk.js/",
+          "d3-format": "https://esm.sh/d3-format",
+          "d3-scale": "https://esm.sh/d3-scale",
+          "earcut-js": "https://esm.sh/earcut",
+          "fast-deep-equal": "https://esm.sh/fast-deep-equal/es6/index.js",
+          "fflate": "https://esm.sh/fflate",
+          "gl-matrix": "https://esm.sh/gl-matrix",
+          "lil-gui": "https://esm.sh/lil-gui/",
+          "pako": "https://esm.sh/pako",
+          "seedrandom": "https://esm.sh/seedrandom",
+          "spark-md5": "https://esm.sh/spark-md5",
+          "webworker-promise": "https://esm.sh/webworker-promise/",
+          "xmlbuilder2": "https://esm.sh/xmlbuilder2/",
         }
       }
     </script>
     <script type="module">
+      import '@kitware/vtk.js/Rendering/Profiles/Geometry';
+
       import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
       import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
       import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
