@@ -301,9 +301,16 @@ export interface vtkCamera extends vtkObject {
   getViewAngle(): number;
 
   /**
-   *
+   * Get the view transform
    */
   getViewMatrix(): mat4;
+
+  /**
+   * Get the model transform matrix for the camera.
+   * This matrix could be used for model related transformations such as scale, shear, rotations and translations.
+   * @returns {mat4} mat The value of the model transform matrix.
+   */
+  getModelTransformMatrix(): mat4;
 
   /**
    * Get the ViewPlaneNormal.
@@ -674,7 +681,14 @@ export interface vtkCamera extends vtkObject {
    * Set the view matrix for the camera.
    * @param {mat4} mat The value of the view matrix.
    */
-  setViewMatrix(mat: mat4): boolean;
+  setViewMatrix(mat: mat4): void;
+
+  /**
+   * Set the model transform matrix for the camera.
+   * This matrix could be used for model related transformations such as scale, shear, rotations and translations.
+   * @param {mat4} mat The value of the model transform matrix.
+   */
+  setModelTransformMatrixMatrix(mat: mat4): void;
 
   /**
    * Set the view up direction for the camera.

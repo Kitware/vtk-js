@@ -10,6 +10,7 @@ import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreen
 import vtkPlaneSource from '@kitware/vtk.js/Filters/Sources/PlaneSource';
 import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
 import vtkGlyph3DMapper from '@kitware/vtk.js/Rendering/Core/Glyph3DMapper';
+import vtkTransform from '@kitware/vtk.js/Common/Transform/Transform';
 
 import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
@@ -93,8 +94,12 @@ mapper.setScalarRange(0.0, 0.1);
 
 actor.setMapper(mapper);
 
+const transform = vtkTransform.newInstance();
+transform.scale(1, 2, 1);
+
 renderer.addActor(actor);
 renderer.resetCamera();
+renderer.getActiveCamera().setModelTransformMatrix(transform.getMatrix());
 renderWindow.render();
 
 // -----------------------------------------------------------
