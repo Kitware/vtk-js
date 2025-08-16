@@ -35,6 +35,8 @@ function vtkPoints(publicAPI, model) {
 
   publicAPI.insertNextPoint = (x, y, z) => publicAPI.insertNextTuple([x, y, z]);
 
+  publicAPI.insertPoint = (ptId, point) => publicAPI.insertTuple(ptId, point);
+
   publicAPI.getBounds = () => {
     if (publicAPI.getNumberOfComponents() === 3) {
       const xRange = publicAPI.getRange(0);
@@ -50,8 +52,9 @@ function vtkPoints(publicAPI, model) {
     }
 
     if (publicAPI.getNumberOfComponents() !== 2) {
-      vtkErrorMacro(`getBounds called on an array with components of
-        ${publicAPI.getNumberOfComponents()}`);
+      vtkErrorMacro(
+        `getBounds called on an array with components of ${publicAPI.getNumberOfComponents()}`
+      );
       return INVALID_BOUNDS;
     }
 
