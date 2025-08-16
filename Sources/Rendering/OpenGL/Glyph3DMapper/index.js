@@ -183,6 +183,52 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
     superClass.replaceShaderNormal(shaders, ren, actor);
   };
 
+  publicAPI.replaceShaderClip = (shaders, ren, actor) => {
+    if (model.hardwareSupport) {
+      let VSSource = shaders.Vertex;
+      let FSSource = shaders.Fragment;
+
+      if (model.renderable.getNumberOfClippingPlanes()) {
+        const numClipPlanes = model.renderable.getNumberOfClippingPlanes();
+        VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Clip::Dec', [
+          'uniform int numClipPlanes;',
+          `uniform vec4 clipPlanes[${numClipPlanes}];`,
+          `varying float clipDistancesVSOutput[${numClipPlanes}];`,
+        ]).result;
+
+        VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Clip::Impl', [
+          `for (int planeNum = 0; planeNum < ${numClipPlanes}; planeNum++)`,
+          '    {',
+          '    if (planeNum >= numClipPlanes)',
+          '        {',
+          '        break;',
+          '        }',
+          '    vec4 gVertex = gMatrix * vertexMC;',
+          '    clipDistancesVSOutput[planeNum] = dot(clipPlanes[planeNum], gVertex);',
+          '    }',
+        ]).result;
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Clip::Dec', [
+          'uniform int numClipPlanes;',
+          `varying float clipDistancesVSOutput[${numClipPlanes}];`,
+        ]).result;
+
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Clip::Impl', [
+          `for (int planeNum = 0; planeNum < ${numClipPlanes}; planeNum++)`,
+          '    {',
+          '    if (planeNum >= numClipPlanes)',
+          '        {',
+          '        break;',
+          '        }',
+          '    if (clipDistancesVSOutput[planeNum] < 0.0) discard;',
+          '    }',
+        ]).result;
+      }
+      shaders.Vertex = VSSource;
+      shaders.Fragment = FSSource;
+    }
+    superClass.replaceShaderClip(shaders, ren, actor);
+  };
+
   publicAPI.replaceShaderColor = (shaders, ren, actor) => {
     if (model.hardwareSupport && model.renderable.getColorArray()) {
       let VSSource = shaders.Vertex;
