@@ -116,6 +116,17 @@ function vtkProp3D(publicAPI, model) {
     return true;
   };
 
+  publicAPI.setOrientationFromQuaternion = (q) => {
+    const rotation = mat4.create();
+    mat4.fromQuat(rotation, q);
+    if (!vtkMath.areMatricesEqual(rotation, model.rotation)) {
+      model.rotation = rotation;
+      publicAPI.modified();
+      return true;
+    }
+    return false;
+  };
+
   publicAPI.setUserMatrix = (matrix) => {
     if (vtkMath.areMatricesEqual(model.userMatrix, matrix)) {
       return false;
