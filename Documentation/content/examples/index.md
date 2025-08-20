@@ -354,6 +354,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [InteractorStyleTrackballCamera]: ../docs/gallery/InteractorStyleTrackballCamera.jpg
 [InteractorStyleUnicam]: ../docs/gallery/InteractorStyleUnicam.jpg
 [KeyboardCameraManipulator]: ../docs/gallery/KeyboardCameraManipulator.jpg
+[KeyPressEvents]: ../docs/gallery/KeyPresEvents.jpg
 [MouseRangeManipulator]: ../docs/gallery/MouseRangeManipulator.jpg
 [PiecewiseGaussianWidget]: ../docs/gallery/PiecewiseGaussianWidget.jpg
 [TimeStepBasedAnimationHandler]: ../docs/gallery/TimeStepBasedAnimationHandler.gif
