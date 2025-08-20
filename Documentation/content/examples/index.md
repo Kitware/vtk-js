@@ -380,6 +380,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![ShapeWidget Example][ShapeWidget]](./ShapeWidget.html "2D shape widgets with text information")
 [![SphereWidget Example][SphereWidget]](./SphereWidget.html "2D sphere widget controlled with radius")
 [![SplineWidget Example][SplineWidget]](./PaintWidget.html "Widget to draw open or closed (triangularized) sharp/smooth polygon widget")
+[![TransformControlsWidget Example][TransformControlsWidget]](./TransformControlsWidget.html "Transform controls for translate, scale, rotate")
 
 </div>
 
@@ -396,6 +397,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [SphereWidget]: ../docs/gallery/SphereWidget.jpg
 [SplineWidget]: ../docs/gallery/SplineWidget.gif
 [Box]: ../docs/gallery/Box.jpg
+[TransformControlsWidget]: ../docs/gallery/TransformControlsWidget.png
 
 # Connectivity
 
