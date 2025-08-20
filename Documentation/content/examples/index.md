@@ -149,7 +149,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![WarpScalar Example][WarpScalargif]](./WarpScalar.html "WarpScalar")
 [![WindowedSincPolyDataFilter Example][WindowedSincPolyDataFilter]](./WindowedSincPolyDataFilter.html "WindowedSincPolyDataFilter")
 
-<div>
+</div>
 
 [ArrowSource]: ../docs/gallery/ArrowSource.jpg
 [CircleSource]: ../docs/gallery/CircleSource.jpg
@@ -342,6 +342,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [InteractorStyleTrackballCamera]: ../docs/gallery/InteractorStyleTrackballCamera.jpg
 [InteractorStyleUnicam]: ../docs/gallery/InteractorStyleUnicam.jpg
 [KeyboardCameraManipulator]: ../docs/gallery/KeyboardCameraManipulator.jpg
+[KeyPressEvents]: ../docs/gallery/KeyPresEvents.jpg
 [MouseRangeManipulator]: ../docs/gallery/MouseRangeManipulator.jpg
 [PiecewiseGaussianWidget]: ../docs/gallery/PiecewiseGaussianWidget.jpg
 [TimeStepBasedAnimationHandler]: ../docs/gallery/TimeStepBasedAnimationHandler.gif
