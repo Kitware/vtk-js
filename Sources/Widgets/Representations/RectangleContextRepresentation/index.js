@@ -39,10 +39,6 @@ function vtkRectangleContextRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
-
     const list = publicAPI.getRepresentationStates(inData[0]);
     // FIXME: support list > 1.
     const state = list[0];

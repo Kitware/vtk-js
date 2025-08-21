@@ -10,11 +10,7 @@ function vtkConeSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkConeSource');
 
-  function requestData(inData, outData) {
-    if (model.deleted) {
-      return;
-    }
-
+  publicAPI.requestData = (inData, outData) => {
     const angle = (2 * Math.PI) / model.resolution;
     const xbot = -model.height / 2.0;
     const numberOfPoints = model.resolution + 1;
@@ -72,10 +68,7 @@ function vtkConeSource(publicAPI, model) {
 
     // Update output
     outData[0] = dataset;
-  }
-
-  // Expose methods
-  publicAPI.requestData = requestData;
+  };
 }
 
 // ----------------------------------------------------------------------------

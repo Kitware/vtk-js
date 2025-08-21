@@ -916,7 +916,11 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
         count++;
       }
     }
-    if (publicAPI.requestData && publicAPI.shouldUpdate()) {
+    if (
+      publicAPI.requestData &&
+      !publicAPI.isDeleted() &&
+      publicAPI.shouldUpdate()
+    ) {
       publicAPI.requestData(ins, model.output);
     }
   };

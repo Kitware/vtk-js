@@ -72,8 +72,9 @@ function vtkConcentricCylinderSource(publicAPI, model) {
   publicAPI.getMaskLayer = (index) =>
     index === undefined ? model.mask : model.mask[index];
 
-  function requestData(inData, outData) {
-    if (model.deleted || !model.radius.length) {
+  publicAPI.requestData = (inData, outData) => {
+    if (!model.radius.length) {
+      macro.vtkErrorMacro('No radius defined');
       return;
     }
 
@@ -391,10 +392,7 @@ function vtkConcentricCylinderSource(publicAPI, model) {
 
     // Update output
     outData[0] = dataset;
-  }
-
-  // Expose methods
-  publicAPI.requestData = requestData;
+  };
 }
 
 // ----------------------------------------------------------------------------
