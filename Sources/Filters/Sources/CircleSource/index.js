@@ -16,7 +16,7 @@ function vtkCircleSource(publicAPI, model) {
       return;
     }
 
-    let dataset = outData[0];
+    const dataset = outData[0] || vtkPolyData.newInstance();
 
     // Points
     const points = macro.newTypedArray(model.pointType, model.resolution * 3);
@@ -39,7 +39,6 @@ function vtkCircleSource(publicAPI, model) {
     // connect endpoints
     edges[edges.length - 1] = edges[1];
 
-    dataset = vtkPolyData.newInstance();
     dataset.getPoints().setData(points, 3);
     if (model.lines) {
       dataset.getLines().setData(edges, 1);

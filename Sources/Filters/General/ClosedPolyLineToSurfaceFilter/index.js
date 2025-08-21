@@ -130,7 +130,7 @@ function vtkClosedPolyLineToSurfaceFilter(publicAPI, model) {
       return;
     }
 
-    const output = vtkPolyData.newInstance();
+    const output = outData[0] || vtkPolyData.newInstance();
     output.shallowCopy(input);
 
     // Extract faces

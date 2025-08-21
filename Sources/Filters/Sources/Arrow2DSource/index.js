@@ -9,9 +9,7 @@ const { ShapeType } = Constants;
 // vtkArrow2DSource methods
 // ----------------------------------------------------------------------------
 
-function vtkStarSource(publicAPI, model) {
-  const dataset = vtkPolyData.newInstance();
-
+function vtkStarSource(publicAPI, model, dataset) {
   const points = macro.newTypedArray(model.pointType, 10 * 3);
   const edges = new Uint32Array(11);
   edges[0] = 10;
@@ -30,9 +28,7 @@ function vtkStarSource(publicAPI, model) {
   return dataset;
 }
 
-function vtk6PointsArrow(publicAPI, model) {
-  const dataset = vtkPolyData.newInstance();
-
+function vtk6PointsArrow(publicAPI, model, dataset) {
   const points = macro.newTypedArray(model.pointType, 6 * 3);
 
   const thickOp = model.height * 0.5 * model.thickness;
@@ -84,9 +80,7 @@ function vtk6PointsArrow(publicAPI, model) {
   return dataset;
 }
 
-function vtk4PointsArrow(publicAPI, model) {
-  const dataset = vtkPolyData.newInstance();
-
+function vtk4PointsArrow(publicAPI, model, dataset) {
   const points = macro.newTypedArray(model.pointType, 4 * 3);
 
   const thickOp = (model.height / 3) * model.thickness;
@@ -121,9 +115,7 @@ function vtk4PointsArrow(publicAPI, model) {
   return dataset;
 }
 
-function vtkTriangleSource(publicAPI, model) {
-  const dataset = vtkPolyData.newInstance();
-
+function vtkTriangleSource(publicAPI, model, dataset) {
   const points = macro.newTypedArray(model.pointType, 3 * 3);
 
   const baseOffsetOp = model.height * (1 - model.base);
@@ -157,7 +149,8 @@ function vtkArrow2DSource(publicAPI, model) {
   };
 
   publicAPI.requestData = (inData, outData) => {
-    outData[0] = shapeToSource[model.shape](publicAPI, model);
+    const dataset = outData[0] || vtkPolyData.newInstance();
+    outData[0] = shapeToSource[model.shape](publicAPI, model, dataset);
 
     vtkMatrixBuilder
       .buildFromRadian()
