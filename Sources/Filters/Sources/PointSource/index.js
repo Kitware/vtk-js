@@ -21,7 +21,7 @@ function vtkPointSource(publicAPI, model) {
     const pointDataType = dataset
       ? dataset.getPoints().getDataType()
       : model.pointType;
-    const pd = vtkPolyData.newInstance();
+    const pd = dataset || vtkPolyData.newInstance();
 
     // hand create a point cloud
     const numPts = model.numberOfPoints;

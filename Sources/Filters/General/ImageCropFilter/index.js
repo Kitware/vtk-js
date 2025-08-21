@@ -111,12 +111,11 @@ function vtkImageCropFilter(publicAPI, model) {
         index += slice.length;
       }
     }
-    const outImage = vtkImageData.newInstance({
-      extent: cropped,
-      origin: input.getOrigin(),
-      direction: input.getDirection(),
-      spacing: input.getSpacing(),
-    });
+    const outImage = outData[0] || vtkImageData.newInstance();
+    outImage.setExtent(cropped);
+    outImage.setOrigin(input.getOrigin());
+    outImage.setSpacing(input.getSpacing());
+    outImage.setDirection(input.getDirection());
 
     const croppedScalars = vtkDataArray.newInstance({
       name: scalars.getName(),

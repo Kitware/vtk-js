@@ -15,8 +15,6 @@ function vtkConeSource(publicAPI, model) {
       return;
     }
 
-    let dataset = outData[0];
-
     const angle = (2 * Math.PI) / model.resolution;
     const xbot = -model.height / 2.0;
     const numberOfPoints = model.resolution + 1;
@@ -68,7 +66,7 @@ function vtkConeSource(publicAPI, model) {
       .rotateFromDirections([1, 0, 0], model.direction)
       .apply(points);
 
-    dataset = vtkPolyData.newInstance();
+    const dataset = outData[0] || vtkPolyData.newInstance();
     dataset.getPoints().setData(points, 3);
     dataset.getPolys().setData(polys, 1);
 

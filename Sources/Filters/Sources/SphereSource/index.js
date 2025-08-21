@@ -19,7 +19,7 @@ function vtkSphereSource(publicAPI, model) {
     const pointDataType = dataset
       ? dataset.getPoints().getDataType()
       : model.pointType;
-    dataset = vtkPolyData.newInstance();
+    dataset = dataset || vtkPolyData.newInstance();
 
     // ----------------------------------------------------------------------
     let numPoles = 0;

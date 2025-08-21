@@ -43,7 +43,7 @@ function vtkCubeSource(publicAPI, model) {
       return;
     }
 
-    const polyData = vtkPolyData.newInstance();
+    const polyData = outData[0] || vtkPolyData.newInstance();
     outData[0] = polyData;
 
     const numberOfPoints = 24;

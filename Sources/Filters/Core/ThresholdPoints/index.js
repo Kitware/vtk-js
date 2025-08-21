@@ -51,7 +51,7 @@ function vtkThresholdPoints(publicAPI, model) {
 
   publicAPI.requestData = (inData, outData) => {
     const input = inData[0];
-    const output = vtkPolyData.newInstance();
+    const output = outData[0] || vtkPolyData.newInstance();
     outData[0] = output;
 
     if (model.criterias.length === 0) {
