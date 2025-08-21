@@ -38,11 +38,7 @@ function vtkCubeSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkCubeSource');
 
-  function requestData(inData, outData) {
-    if (model.deleted) {
-      return;
-    }
-
+  publicAPI.requestData = (inData, outData) => {
     const polyData = outData[0] || vtkPolyData.newInstance();
     outData[0] = polyData;
 
@@ -249,7 +245,7 @@ function vtkCubeSource(publicAPI, model) {
       polyData.getLines().initialize();
     }
     polyData.modified();
-  }
+  };
 
   publicAPI.setBounds = (...bounds) => {
     let boundsArray = [];
@@ -275,9 +271,6 @@ function vtkCubeSource(publicAPI, model) {
       (boundsArray[4] + boundsArray[5]) / 2.0,
     ]);
   };
-
-  // Expose methods
-  publicAPI.requestData = requestData;
 }
 
 // ----------------------------------------------------------------------------

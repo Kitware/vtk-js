@@ -95,10 +95,6 @@ function vtkSLICSource(publicAPI, model) {
   publicAPI.getNumberOfClusters = () => model.clusters.length;
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
-
     const dataSize =
       model.dimensions[0] * model.dimensions[1] * model.dimensions[2];
 

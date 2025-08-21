@@ -19,10 +19,6 @@ function vtkPlaneSource(publicAPI, model) {
   model.classHierarchy.push('vtkPlaneSource');
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
-
     const dataset = outData[0];
 
     // Check input

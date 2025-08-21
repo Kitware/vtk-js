@@ -58,10 +58,6 @@ function vtkSplineContextRepresentation(publicAPI, model) {
     );
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
-
     const widgetState = inData[0];
     const closed = widgetState.getSplineClosed();
 

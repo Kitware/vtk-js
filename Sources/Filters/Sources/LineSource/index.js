@@ -13,10 +13,6 @@ function vtkLineSource(publicAPI, model) {
   model.classHierarchy.push('vtkLineSource');
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
-
     const dataset = outData[0];
 
     // Check input

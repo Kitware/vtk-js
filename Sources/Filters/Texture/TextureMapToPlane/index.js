@@ -98,9 +98,6 @@ function vtkTextureMapToPlane(publicAPI, model) {
   }
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
     const input = inData[0];
     const nbPoints = input.getPoints().getNumberOfPoints();
     if (nbPoints < 3 && model.automaticPlaneGeneration) {

@@ -25,12 +25,6 @@ function vtkDiskSource(publicAPI, model) {
       pointType,
     } = model;
 
-    if (model.deleted) {
-      return;
-    }
-
-    let dataset = outData[0];
-
     // Points
     const points = vtkPoints.newInstance({
       dataType: pointType,
@@ -114,7 +108,7 @@ function vtkDiskSource(publicAPI, model) {
     }
     polys.setData(cellData, cellCount, 1);
 
-    dataset = vtkPolyData.newInstance();
+    const dataset = outData[0] || vtkPolyData.newInstance();
     dataset.setPoints(points);
     dataset.setPolys(polys);
 

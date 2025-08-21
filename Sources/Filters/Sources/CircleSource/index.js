@@ -11,11 +11,7 @@ function vtkCircleSource(publicAPI, model) {
   // Set our classname
   model.classHierarchy.push('vtkCircleSource');
 
-  function requestData(inData, outData) {
-    if (model.deleted) {
-      return;
-    }
-
+  publicAPI.requestData = (inData, outData) => {
     const dataset = outData[0] || vtkPolyData.newInstance();
 
     // Points
@@ -57,10 +53,7 @@ function vtkCircleSource(publicAPI, model) {
 
     // Update output
     outData[0] = dataset;
-  }
-
-  // Expose methods
-  publicAPI.requestData = requestData;
+  };
 }
 
 // ----------------------------------------------------------------------------
