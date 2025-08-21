@@ -153,7 +153,8 @@ This will allow you to see the some live code running in your browser. Just pick
 [![WarpScalar Example][WarpScalargif]](./WarpScalar.html "WarpScalar")
 [![WindowedSincPolyDataFilter Example][WindowedSincPolyDataFilter]](./WindowedSincPolyDataFilter.html "WindowedSincPolyDataFilter")
 
-<div>
+</div>
+
 [ArcSource]: ../docs/gallery/ArcSource.jpg
 [ArrowSource]: ../docs/gallery/ArrowSource.jpg
 [CircleSource]: ../docs/gallery/CircleSource.jpg
@@ -350,6 +351,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [InteractorStyleTrackballCamera]: ../docs/gallery/InteractorStyleTrackballCamera.jpg
 [InteractorStyleUnicam]: ../docs/gallery/InteractorStyleUnicam.jpg
 [KeyboardCameraManipulator]: ../docs/gallery/KeyboardCameraManipulator.jpg
+[KeyPressEvents]: ../docs/gallery/KeyPresEvents.jpg
 [MouseRangeManipulator]: ../docs/gallery/MouseRangeManipulator.jpg
 [PiecewiseGaussianWidget]: ../docs/gallery/PiecewiseGaussianWidget.jpg
 [TimeStepBasedAnimationHandler]: ../docs/gallery/TimeStepBasedAnimationHandler.gif
@@ -374,6 +376,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![ShapeWidget Example][ShapeWidget]](./ShapeWidget.html "2D shape widgets with text information")
 [![SphereWidget Example][SphereWidget]](./SphereWidget.html "2D sphere widget controlled with radius")
 [![SplineWidget Example][SplineWidget]](./PaintWidget.html "Widget to draw open or closed (triangularized) sharp/smooth polygon widget")
+[![TransformControlsWidget Example][TransformControlsWidget]](./TransformControlsWidget.html "Transform controls for translate, scale, rotate")
 
 </div>
 
@@ -390,6 +393,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [SphereWidget]: ../docs/gallery/SphereWidget.jpg
 [SplineWidget]: ../docs/gallery/SplineWidget.gif
 [Box]: ../docs/gallery/Box.jpg
+[TransformControlsWidget]: ../docs/gallery/TransformControlsWidget.png
 
 # Connectivity
 
