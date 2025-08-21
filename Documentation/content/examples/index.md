@@ -108,7 +108,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![Cutter Example][Cutter]](./Cutter.html "Cutter")
 [![PolyDataNormals Example][PolyDataNormals]](./PolyDataNormals.html "PolyDataNormals")
 [![ThresholdPoints Example][ThresholdPoints]](./ThresholdPoints.html "Cut/Treshold points with point data criteria")
-
+[![ShrinkPolyData Example][ShrinkPolyData]](./ShrinkPolyData.html "ShrinkPolyData")
 
 </div>
 
@@ -128,11 +128,13 @@ This will allow you to see the some live code running in your browser. Just pick
 [Cutter]: ../docs/gallery/Cutter.jpg
 [PolyDataNormals]: ../docs/gallery/PolyDataNormals.jpg
 [ThresholdPoints]: ../docs/gallery/ThresholdPoints.jpg
+[ShrinkPolyData]: ../docs/gallery/ShrinkPolyData.jpg
 
 # Sources
 
 <div class="gallery">
 
+[![ArcSource Example][ArcSource]](./ArcSource.html "ArcSource")
 [![ArrowSource Example][ArrowSource]](./ArrowSource.html "ArrowSource")
 [![CircleSource Example][CircleSource]](./CircleSource.html "CircleSource")
 [![ConcentricCylinderSource Example][ConcentricCylinderSource]](./ConcentricCylinderSource.html "ConcentricCylinderSource")
@@ -141,9 +143,11 @@ This will allow you to see the some live code running in your browser. Just pick
 [![CubeSource Example][CubeSource]](./CubeSource.html "CubeSource")
 [![Cursor3D Example][Cursor3D]](./Cursor3D.html "Cursor3D")
 [![CylinderSource Example][CylinderSource]](./CylinderSource.html "CylinderSource")
+[![EllipseArcSource Example][EllipseArcSource]](./EllipseArcSource.html "EllipseArcSource")
 [![LineSource Example][LineSource]](./LineSource.html "LineSource")
 [![PlaneSource Example][PlaneSource]](./PlaneSource.html "PlaneSource")
 [![PointSource Example][PointSource]](./PointSource.html "PointSource")
+[![PlatonicSolidSource Example][PlatonicSolidSource]](./PlatonicSolidSource.html "PlatonicSolidSource")
 [![SLICSource Example][SLICSource]](./SLICSource.html "SLICSource")
 [![SphereSource Example][SphereSource]](./SphereSource.html "SphereSource")
 [![WarpScalar Example][WarpScalargif]](./WarpScalar.html "WarpScalar")
@@ -151,6 +155,7 @@ This will allow you to see the some live code running in your browser. Just pick
 
 </div>
 
+[ArcSource]: ../docs/gallery/ArcSource.jpg
 [ArrowSource]: ../docs/gallery/ArrowSource.jpg
 [CircleSource]: ../docs/gallery/CircleSource.jpg
 [ConcentricCylinderSource]: ../docs/gallery/ConcentricCylinderSource.jpg
@@ -159,9 +164,11 @@ This will allow you to see the some live code running in your browser. Just pick
 [CubeSource]: ../docs/gallery/CubeSource.jpg
 [Cursor3D]: ../docs/gallery/Cursor3D.gif
 [CylinderSource]: ../docs/gallery/CylinderSource.jpg
+[EllipseArcSource]: ../docs/gallery/EllipseArcSource.jpg
 [LineSource]: ../docs/gallery/LineSource.jpg
 [PlaneSource]: ../docs/gallery/PlaneSource.jpg
 [PointSource]: ../docs/gallery/PointSource.jpg
+[PlatonicSolidSource]: ../docs/gallery/PlatonicSolidSource.jpg
 [SLICSource]: ../docs/gallery/SLICSource.jpg
 [SphereSource]: ../docs/gallery/SphereSource.gif
 [WarpScalargif]: ../docs/gallery/WarpScalar.gif
@@ -181,6 +188,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![PolyDataReader Example][PolyDataReaderWithIcon]](./PolyDataReader.html "VTK legacy reader(VTK)")
 [![ElevationReader Example][ElevationReaderWithIcon]](./ElevationReader.html "Elevation reader(CSV, JPG)")
 [![OBJReader Example][OBJReaderWithIcon]](./OBJReader.html "OBJ reader(OBJ, MTL, JPG)")
+[![OBJWriter Example][OBJWriterWithIcon]](./OBJWriter.html "OBJ writer(OBJ, ZIP)")
 [![PDBReader Example][PDBReaderWithIcon]](./PDBReader.html "PDB reader(OBJ, MTL, JPG)")
 [![XMLImageDataWriter Example][XMLImageDataWriterWithIcon]](./XMLImageDataWriter.html "ImageData XML writer(VTI)")
 [![XMLPolyDataDataWriter Example][XMLPolyDataWriterWithIcon]](./XMLPolyDataWriter.html "PolyData XML writer(VTP)")
@@ -206,6 +214,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [PolyDataReaderWithIcon]: ../docs/gallery/VTKReaderWithIcon.jpg
 [ElevationReaderWithIcon]: ../docs/gallery/ElevationReaderWithIcon.jpg
 [OBJReaderWithIcon]: ../docs/gallery/OBJReaderWithIcon.jpg
+[OBJWriterWithIcon]: ../docs/gallery/OBJWriterWithIcon.jpg
 [PDBReaderWithIcon]: ../docs/gallery/PDBReaderWithIcon.jpg
 [XMLImageDataWriterWithIcon]: ../docs/gallery/XMLImageDataWriterWithIcon.jpg
 [XMLPolyDataWriterWithIcon]: ../docs/gallery/XMLPolyDataWriterWithIcon.jpg

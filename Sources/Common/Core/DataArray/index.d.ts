@@ -168,6 +168,7 @@ export interface vtkDataArray extends vtkObject {
    *
    * @see insertNextTuple
    * @see getNumberOfTuples
+   * @see allocate
    *
    * @param {Number} idx
    * @param {Array<Number>|TypedArray} tuple
@@ -189,6 +190,7 @@ export interface vtkDataArray extends vtkObject {
    * NOTE: May resize the data values array. "Safe" version of setTuple.
    *
    * @see insertTuple
+   * @see allocate
    *
    * @param {Array<Number>|TypedArray} tuple
    * @returns {Number} Index of the inserted tuple.
@@ -304,6 +306,18 @@ export interface vtkDataArray extends vtkObject {
   ): void;
 
   /**
+   * Resize the array to the requested number of extra tuples
+   * (added to the current number of tuples) and preserve data.
+   * model.size WILL NOT be modified.
+   * This is useful before multiple calls to `insertNextTuple()` or `insertNextTuples()`.
+   * @param {Number} extraNumTuples Number of tuples to allocate memory wise.
+   * @see insertNextTuple
+   * @see insertNextTuples
+   * @see allocate
+   */
+  allocate(extraNumTuples: number): void;
+
+  /**
    * Resize the array to the requested number of tuples and preserve data.
    * Increasing the array size may allocate extra memory beyond what was
    * requested.
@@ -318,6 +332,7 @@ export interface vtkDataArray extends vtkObject {
    * @see insertNextTuple
    * @see insertNextTuples
    * @see initialize
+   * @see allocate
    */
   resize(requestedNumTuples: number): boolean;
 

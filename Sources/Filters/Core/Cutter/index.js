@@ -1,4 +1,5 @@
 import * as macro from 'vtk.js/Sources/macros';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 const { vtkErrorMacro } = macro;
@@ -75,10 +76,18 @@ function vtkCutter(publicAPI, model) {
   function dataSetCutter(input, output) {
     const points = input.getPoints();
     const pointsData = points.getData();
+    const pointData = input.getPointData();
     const numPts = points.getNumberOfPoints();
     const newPointsData = [];
     const newLinesData = [];
     const newPolysData = [];
+    const newPointData = {}; // TODO: cell data must also be processed
+
+    // Initialize arrays
+    const numberOfArrays = pointData.getNumberOfArrays();
+    for (let arrayIdx = 0; arrayIdx < numberOfArrays; arrayIdx++) {
+      newPointData[pointData.getArrayName(arrayIdx)] = [];
+    }
 
     if (!model.cutScalars || model.cutScalars.length < numPts) {
       model.cutScalars = new Float32Array(numPts);
@@ -181,11 +190,27 @@ function vtkCutter(publicAPI, model) {
           x1[2] + t * (x2[2] - x1[2]),
         ];
 
+        const computedIntersectedArrays = {};
+        for (let arrayIdx = 0; arrayIdx < numberOfArrays; arrayIdx++) {
+          const array = pointData.getArrayByIndex(arrayIdx);
+          const name = pointData.getArrayName(arrayIdx);
+          const data = array.getData();
+          const n = array.getNumberOfComponents();
+          const computedIntersectedArray = new Array(n);
+          for (let j = 0; j < n; j++) {
+            const scalar1 = data[n * pointID1 + j];
+            const scalar2 = data[n * pointID2 + j];
+            computedIntersectedArray.push(scalar1 + t * (scalar2 - scalar1)); // FIXME: won't work when the array contains "normals" or "IDs"
+          }
+          computedIntersectedArrays[name] = computedIntersectedArray;
+        }
+
         // Keep track of it
         intersectedEdgesList.push({
           pointEdge1: pointID1, // id of one point of the edge
           pointEdge2: pointID2, // id of one point of the edge
           intersectedPoint: computedIntersectedPoint, // 3D coordinate of points that intersected edge
+          intersectedArrays: computedIntersectedArrays, // value(s) of the intersected arrays
           newPointID: -1, // id of the intersected point when it will be added into vtkPoints
         });
       }
@@ -217,6 +242,9 @@ function vtkCutter(publicAPI, model) {
           newPointsData.push(intersectedEdge.intersectedPoint[0]);
           newPointsData.push(intersectedEdge.intersectedPoint[1]);
           newPointsData.push(intersectedEdge.intersectedPoint[2]);
+          Object.keys(intersectedEdge.intersectedArrays).forEach((name) => {
+            newPointData[name].push(...intersectedEdge.intersectedArrays[name]);
+          });
           intersectedEdgesList[i].newPointID = newPointsData.length / 3 - 1;
           crossedEdges.push(intersectedEdgesList[i]);
         }
@@ -244,6 +272,21 @@ function vtkCutter(publicAPI, model) {
       macro.newTypedArrayFrom(points.getDataType(), newPointsData),
       3
     );
+
+    // Set scalars
+    const outputPointData = output.getPointData();
+    for (let arrayIdx = 0; arrayIdx < numberOfArrays; arrayIdx++) {
+      const name = pointData.getArrayName(arrayIdx);
+      const array = vtkDataArray.newInstance({
+        name,
+        dataType: pointData.getArrayByIndex(arrayIdx).getDataType(),
+        values: newPointData[name],
+        numberOfComponents: pointData
+          .getArrayByIndex(arrayIdx)
+          .getNumberOfComponents(),
+      });
+      outputPointData.addArray(array);
+    }
 
     // Set lines
     if (newLinesData.length !== 0) {

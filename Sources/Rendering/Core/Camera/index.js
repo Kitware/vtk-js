@@ -343,9 +343,44 @@ function vtkCamera(publicAPI, model) {
   publicAPI.setObliqueAngles = (alpha, beta) => {};
   publicAPI.getOrientation = () => {};
   publicAPI.getOrientationWXYZ = () => {};
-  publicAPI.getFrustumPlanes = (aspect) => {
-    // Return array of 24 params (4 params for each of 6 plane equations)
+
+  publicAPI.getFrustumPlanes = (
+    aspect = 1.0,
+    planes = new Float64Array(24)
+  ) => {
+    const normals = [
+      // Left
+      [1, 0, 0, 1],
+      // Right
+      [-1, 0, 0, 1],
+      // Bottom
+      [0, 1, 0, 1],
+      // Top
+      [0, -1, 0, 1],
+      // Near
+      [0, 0, 1, 1],
+      // Far
+      [0, 0, -1, 1],
+    ];
+
+    // Get the composite projection matrix
+    const matrix = publicAPI.getCompositeProjectionMatrix(aspect, -1, 1);
+
+    // Transform the normals to world coordinates
+    for (let i = 0; i < 6; i++) {
+      vec4.transformMat4(normals[i], normals[i], matrix);
+
+      // Normalize the plane normal
+      vtkMath.normalize4D(normals[i]);
+
+      planes[4 * i + 0] = normals[i][0];
+      planes[4 * i + 1] = normals[i][1];
+      planes[4 * i + 2] = normals[i][2];
+      planes[4 * i + 3] = normals[i][3];
+    }
+    return planes;
   };
+
   publicAPI.getCameraLightTransformMatrix = (matrix) => {
     mat4.copy(matrix, model.cameraLightTransform);
     return matrix;
@@ -463,6 +498,12 @@ function vtkCamera(publicAPI, model) {
     publicAPI.computeViewParametersFromViewMatrix(tmpMatrix);
   };
 
+  publicAPI.setModelTransformMatrix = (mat) => {
+    model.modelTransformMatrix = mat;
+  };
+
+  publicAPI.getModelTransformMatrix = () => model.modelTransformMatrix;
+
   publicAPI.setViewMatrix = (mat) => {
     model.viewMatrix = mat;
     if (model.viewMatrix) {
@@ -474,6 +515,10 @@ function vtkCamera(publicAPI, model) {
 
   publicAPI.getViewMatrix = () => {
     if (model.viewMatrix) {
+      if (model.modelTransformMatrix) {
+        mat4.multiply(tmpMatrix, model.viewMatrix, model.modelTransformMatrix);
+        return tmpMatrix;
+      }
       return model.viewMatrix;
     }
 
@@ -487,7 +532,11 @@ function vtkCamera(publicAPI, model) {
     mat4.transpose(tmpMatrix, tmpMatrix);
 
     const result = new Float64Array(16);
-    mat4.copy(result, tmpMatrix);
+    if (model.modelTransformMatrix) {
+      mat4.multiply(result, tmpMatrix, model.modelTransformMatrix);
+    } else {
+      mat4.copy(result, tmpMatrix);
+    }
     return result;
   };
 
@@ -732,6 +781,7 @@ export const DEFAULT_VALUES = {
   freezeFocalPoint: false,
   projectionMatrix: null,
   viewMatrix: null,
+  modelTransformMatrix: null,
   cameraLightTransform: mat4.create(),
 
   // used for world to physical transformations
