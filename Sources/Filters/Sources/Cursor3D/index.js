@@ -94,9 +94,6 @@ function vtkCursor3D(publicAPI, model) {
   };
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
     let numPts = 0;
     let numLines = 0;
     // Check bounding box and origin

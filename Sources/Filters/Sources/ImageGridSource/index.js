@@ -11,10 +11,6 @@ function vtkImageGridSource(publicAPI, model) {
   model.classHierarchy.push('vtkImageGridSource');
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
-
     const state = {};
     const dataset = {
       type: 'vtkImageData',

@@ -11,10 +11,6 @@ function vtkPointSource(publicAPI, model) {
   model.classHierarchy.push('vtkPointSource');
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
-
     const dataset = outData[0];
 
     // Check input

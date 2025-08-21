@@ -11,10 +11,6 @@ function vtkSphereSource(publicAPI, model) {
   model.classHierarchy.push('vtkSphereSource');
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
-
     let dataset = outData[0];
     const pointDataType = dataset
       ? dataset.getPoints().getDataType()
