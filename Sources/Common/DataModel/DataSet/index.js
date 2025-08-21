@@ -65,6 +65,14 @@ function vtkDataSet(publicAPI, model) {
       model[fieldName].shallowCopy(other.getReferenceByName(fieldName));
     });
   };
+
+  const superGetMTime = publicAPI.getMTime;
+  publicAPI.getMTime = () =>
+    DATASET_FIELDS.reduce(
+      (mTime, fieldName) =>
+        Math.max(mTime, model[fieldName]?.getMTime() ?? mTime),
+      superGetMTime()
+    );
 }
 
 // ----------------------------------------------------------------------------

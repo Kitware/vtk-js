@@ -36,6 +36,12 @@ function vtkPointSet(publicAPI, model) {
     model.points = vtkPoints.newInstance();
     model.points.shallowCopy(other.getPoints());
   };
+
+  const superGetMTime = publicAPI.getMTime;
+  publicAPI.getMTime = () => {
+    const mTime = superGetMTime();
+    return Math.max(mTime, model.points?.getMTime() ?? mTime);
+  };
 }
 
 // ----------------------------------------------------------------------------
