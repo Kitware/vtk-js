@@ -45,7 +45,8 @@ function vtkImageSliceFilter(publicAPI, model) {
       values: sliceRawArray,
     });
 
-    const output = vtkImageData.newInstance(datasetDefinition);
+    const output = outData[0] || vtkImageData.newInstance();
+    output.set(datasetDefinition);
     output.getPointData().setScalars(sliceArray);
 
     outData[0] = output;

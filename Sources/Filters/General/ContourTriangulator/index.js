@@ -211,7 +211,7 @@ function vtkContourTriangulator(publicAPI, model) {
     // implement requestData
     const input = inData[0];
     // FIXME: do not instantiate a new polydata each time the filter is executed.
-    const output = vtkPolyData.newInstance();
+    const output = outData[0] || vtkPolyData.newInstance();
     outData[0] = output;
 
     if (!input) {

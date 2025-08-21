@@ -49,7 +49,7 @@ function vtkOutlineFilter(publicAPI, model) {
     }
 
     const bounds = input.getBounds();
-    const output = vtkPolyData.newInstance();
+    const output = outData[0] || vtkPolyData.newInstance();
 
     output
       .getPoints()
