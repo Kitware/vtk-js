@@ -393,6 +393,18 @@ function vtkImageData(publicAPI, model) {
       .getScalars()
       .getComponent(offsetIndex, comp);
   };
+
+  const superInitialize = publicAPI.initialize;
+  publicAPI.initialize = () => {
+    publicAPI.set({
+      direction: mat3.identity(model.direction),
+      spacing: [1.0, 1.0, 1.0],
+      origin: [0.0, 0.0, 0.0],
+      extent: [0, -1, 0, -1, 0, -1],
+      dataDescription: StructuredType.EMPTY,
+    });
+    return superInitialize();
+  };
 }
 
 // ----------------------------------------------------------------------------

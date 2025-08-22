@@ -19,7 +19,7 @@ function vtkLineSource(publicAPI, model) {
     const pointDataType = dataset
       ? dataset.getPoints().getDataType()
       : model.pointType;
-    const pd = dataset || vtkPolyData.newInstance();
+    const pd = dataset?.initialize() || vtkPolyData.newInstance();
     const v21 = [];
     vtkMath.subtract(model.point2, model.point1, v21);
     if (vtkMath.norm(v21) <= 0.0) {

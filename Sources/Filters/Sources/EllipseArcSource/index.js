@@ -26,7 +26,7 @@ function vtkEllipseArcSource(publicAPI, model) {
     const numPts = resolution + 1;
     const tc = [0.0, 0.0];
 
-    const output = outData[0] || vtkPolyData.newInstance();
+    const output = outData[0]?.initialize() || vtkPolyData.newInstance();
 
     // Make sure the normal vector is normalized
     const normal = [...model.normal];

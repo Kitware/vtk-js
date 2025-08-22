@@ -149,7 +149,7 @@ function vtkArrow2DSource(publicAPI, model) {
   };
 
   publicAPI.requestData = (inData, outData) => {
-    const dataset = outData[0] || vtkPolyData.newInstance();
+    const dataset = outData[0]?.initialize() || vtkPolyData.newInstance();
     outData[0] = shapeToSource[model.shape](publicAPI, model, dataset);
 
     vtkMatrixBuilder

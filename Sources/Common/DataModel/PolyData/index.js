@@ -65,6 +65,12 @@ function vtkPolyData(publicAPI, model) {
       superGetMTime()
     );
 
+  const superInitialize = publicAPI.initialize;
+  publicAPI.initialize = () => {
+    POLYDATA_FIELDS.forEach((type) => model[type]?.initialize());
+    return superInitialize();
+  };
+
   publicAPI.buildCells = () => {
     // here are the number of cells we have
     const nVerts = publicAPI.getNumberOfVerts();

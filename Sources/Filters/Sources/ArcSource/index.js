@@ -21,7 +21,7 @@ function vtkArcSource(publicAPI, model) {
     const numPts = model.resolution + 1;
     const tc = [0.0, 0.0];
 
-    const output = outData[0] || vtkPolyData.newInstance();
+    const output = outData[0]?.initialize() || vtkPolyData.newInstance();
 
     let angle = 0.0;
     let radius = 0.5;

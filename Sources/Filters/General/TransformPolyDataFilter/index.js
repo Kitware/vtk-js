@@ -155,7 +155,7 @@ function vtkTransformPolyDataFilter(publicAPI, model) {
 
   publicAPI.requestData = (inData, outData) => {
     const input = inData[0];
-    const output = outData[0] || vtkPolyData.newInstance();
+    const output = outData[0]?.initialize() || vtkPolyData.newInstance();
 
     if (transformPolyData(input, output)) {
       outData[0] = output;

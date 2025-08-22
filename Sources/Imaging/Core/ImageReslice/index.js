@@ -255,7 +255,7 @@ function vtkImageReslice(publicAPI, model) {
     });
 
     // Update output
-    const output = vtkImageData.newInstance();
+    const output = outData[0]?.initialize() || vtkImageData.newInstance();
     output.setDimensions(outDims);
     output.setOrigin(outOrigin);
     output.setSpacing(outSpacing);
