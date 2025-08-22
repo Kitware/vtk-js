@@ -314,7 +314,7 @@ function vtkCutter(publicAPI, model) {
       return;
     }
 
-    const output = outData[0] || vtkPolyData.newInstance();
+    const output = outData[0]?.initialize() || vtkPolyData.newInstance();
 
     dataSetCutter(input, output);
 

@@ -229,7 +229,8 @@ export interface vtkDataSetAttributes extends vtkFieldData {
   removeArrayByIndex(arrayIdx: number): void;
 
   /**
-   *
+   * Called when initialize() is called.
+   * @see initialize
    */
   initializeAttributeCopyFlags(): void;
 

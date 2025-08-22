@@ -12,7 +12,7 @@ function vtkCircleSource(publicAPI, model) {
   model.classHierarchy.push('vtkCircleSource');
 
   publicAPI.requestData = (inData, outData) => {
-    const dataset = outData[0] || vtkPolyData.newInstance();
+    const dataset = outData[0]?.initialize() || vtkPolyData.newInstance();
 
     // Points
     const points = macro.newTypedArray(model.pointType, model.resolution * 3);

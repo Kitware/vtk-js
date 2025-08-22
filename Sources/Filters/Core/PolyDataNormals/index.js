@@ -98,7 +98,7 @@ function vtkPolyDataNormals(publicAPI, model) {
       return;
     }
 
-    const output = outData[0] || vtkPolyData.newInstance();
+    const output = outData[0]?.initialize() || vtkPolyData.newInstance();
 
     output.setPoints(input.getPoints());
     output.setVerts(input.getVerts());

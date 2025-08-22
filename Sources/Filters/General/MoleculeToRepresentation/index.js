@@ -62,8 +62,8 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
     }
 
     // output
-    const SphereData = outData[0] || vtkPolyData.newInstance();
-    const StickData = outData[1] || vtkPolyData.newInstance();
+    const SphereData = outData[0]?.initialize() || vtkPolyData.newInstance();
+    const StickData = outData[1]?.initialize() || vtkPolyData.newInstance();
 
     // Fetch from input molecule data
     let numPts = 0;

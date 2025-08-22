@@ -112,7 +112,7 @@ function vtkTextureMapToSphere(publicAPI, model) {
       values: tcoordsData,
     });
 
-    const output = outData[0] || vtkPolyData.newInstance();
+    const output = outData[0]?.initialize() || vtkPolyData.newInstance();
     output
       .getPoints()
       .setData(new Float32Array(input.getPoints().getData()), 3);

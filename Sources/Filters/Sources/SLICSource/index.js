@@ -98,7 +98,7 @@ function vtkSLICSource(publicAPI, model) {
     const dataSize =
       model.dimensions[0] * model.dimensions[1] * model.dimensions[2];
 
-    const imageData = outData[0] || vtkImageData.newInstance();
+    const imageData = outData[0]?.initialize() || vtkImageData.newInstance();
     imageData.setSpacing(...model.spacing);
     imageData.setExtent(
       0,

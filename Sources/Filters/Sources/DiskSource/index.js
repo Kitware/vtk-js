@@ -108,7 +108,7 @@ function vtkDiskSource(publicAPI, model) {
     }
     polys.setData(cellData, cellCount, 1);
 
-    const dataset = outData[0] || vtkPolyData.newInstance();
+    const dataset = outData[0]?.initialize() || vtkPolyData.newInstance();
     dataset.setPoints(points);
     dataset.setPolys(polys);
 

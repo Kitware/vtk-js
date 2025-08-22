@@ -10,7 +10,7 @@ function vtkLineFilter(publicAPI, model) {
   model.classHierarchy.push('vtkLineFilter');
 
   publicAPI.requestData = (inData, outData) => {
-    const dataset = outData[0] || vtkPolyData.newInstance();
+    const dataset = outData[0]?.initialize() || vtkPolyData.newInstance();
 
     dataset.getPoints().setData(inData[0].getPoints().getData());
     dataset.getLines().setData(inData[0].getLines().getData());

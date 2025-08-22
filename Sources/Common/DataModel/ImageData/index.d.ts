@@ -21,6 +21,13 @@ interface IComputeHistogram {
 
 export interface vtkImageData extends vtkDataSet {
   /**
+   * Reinitialize the state (direction, spacing, origin, extent, etc.)
+   * and the data set.
+   * @see vtkDataSet::initialize()
+   */
+  initialize(): void;
+
+  /**
    * Returns an object with `{ minimum, maximum, average, variance, sigma, count }`
    * of the imageData points found within the provided `worldBounds`.
    *

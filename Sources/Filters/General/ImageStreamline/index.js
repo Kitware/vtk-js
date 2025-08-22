@@ -262,7 +262,7 @@ function vtkImageStreamline(publicAPI, model) {
       offset2 += data[0].length;
     });
 
-    const output = outData[0] || vtkPolyData.newInstance();
+    const output = outData[0]?.initialize() || vtkPolyData.newInstance();
     output.getPoints().setData(pointArray, 3);
     output.getLines().setData(cellArray);
 

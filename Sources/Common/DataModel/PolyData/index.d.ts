@@ -9,6 +9,12 @@ export interface IPolyDataInitialValues extends IPointSetInitialValues {}
 
 export interface vtkPolyData extends vtkPointSet {
   /**
+   * Empty the cells and initialize the point set.
+   * @see vtkPointSet::initialize()
+   */
+  initialize(): void;
+
+  /**
    * Create data structure that allows random access of cells.
    */
   buildCells(): void;

@@ -25,7 +25,7 @@ function vtkPlaneSource(publicAPI, model) {
     const pointDataType = dataset
       ? dataset.getPoints().getDataType()
       : model.pointType;
-    const pd = dataset || vtkPolyData.newInstance();
+    const pd = dataset?.initialize() || vtkPolyData.newInstance();
     const v10 = [];
     const v20 = [];
     vtkMath.subtract(model.point1, model.origin, v10);

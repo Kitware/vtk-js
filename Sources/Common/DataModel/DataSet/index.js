@@ -73,6 +73,11 @@ function vtkDataSet(publicAPI, model) {
         Math.max(mTime, model[fieldName]?.getMTime() ?? mTime),
       superGetMTime()
     );
+
+  publicAPI.initialize = () => {
+    DATASET_FIELDS.forEach((fieldName) => model[fieldName]?.initialize());
+    return publicAPI;
+  };
 }
 
 // ----------------------------------------------------------------------------

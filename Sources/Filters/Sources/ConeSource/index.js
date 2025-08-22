@@ -62,7 +62,7 @@ function vtkConeSource(publicAPI, model) {
       .rotateFromDirections([1, 0, 0], model.direction)
       .apply(points);
 
-    const dataset = outData[0] || vtkPolyData.newInstance();
+    const dataset = outData[0]?.initialize() || vtkPolyData.newInstance();
     dataset.getPoints().setData(points, 3);
     dataset.getPolys().setData(polys, 1);
 

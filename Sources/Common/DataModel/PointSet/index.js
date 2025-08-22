@@ -42,6 +42,12 @@ function vtkPointSet(publicAPI, model) {
     const mTime = superGetMTime();
     return Math.max(mTime, model.points?.getMTime() ?? mTime);
   };
+
+  const superInitialize = publicAPI.initialize;
+  publicAPI.initialize = () => {
+    model.points?.initialize();
+    return superInitialize();
+  };
 }
 
 // ----------------------------------------------------------------------------
