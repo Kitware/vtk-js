@@ -9,6 +9,13 @@ export interface IDataSetInitialValues {}
 
 export interface vtkDataSet extends vtkObject {
   /**
+   * Initialize the field, cell and point data.
+   * @see vtkDataSetAttributes::initialize()
+   * @see vtkFieldData::initialize()
+   */
+  initialize(): void;
+
+  /**
    * Get dataset's cell data
    */
   getCellData(): vtkDataSetAttributes;

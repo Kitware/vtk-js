@@ -307,11 +307,10 @@ function vtkVectorText(publicAPI, model) {
    * Creates a vtkPolyData from the processed shapes
    * @returns {Object} vtkPolyData instance
    */
-  function buildPolyData() {
+  function buildPolyData(polyData) {
     model.verticesArray = [];
     model.uvArray = [];
     model.colorArray = [];
-    const polyData = vtkPolyData.newInstance();
     const cells = vtkCellArray.newInstance();
     const pointData = polyData.getPointData();
 
@@ -404,7 +403,9 @@ function vtkVectorText(publicAPI, model) {
     }
 
     buildShape();
-    outData[0] = buildPolyData();
+    const polyData = outData[0]?.initialize() || vtkPolyData.newInstance();
+    buildPolyData(polyData);
+    outData[0] = polyData;
   };
 }
 

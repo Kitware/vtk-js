@@ -135,7 +135,6 @@ test.onlyIfWebGL('Test vtkAppendPolyData rendering', (t) => {
 
   const plane = vtkPlaneSource.newInstance({ xResolution: 5, yResolution: 10 });
   calc.setInputConnection(plane.getOutputPort());
-  const planeData = calc.getOutputData();
   const plane2 = vtkPlaneSource.newInstance({
     xResolution: 10,
     yResolution: 5,
@@ -143,11 +142,13 @@ test.onlyIfWebGL('Test vtkAppendPolyData rendering', (t) => {
   plane2.setOrigin(0.5, 0, -0.5);
   plane2.setPoint1(0.5, 0, 0.5);
   plane2.setPoint2(0.5, 1, -0.5);
-  calc.setInputConnection(plane2.getOutputPort());
+  const calc2 = vtkCalculator.newInstance();
+  calc2.setFormula(calc.getFormula());
+  calc2.setInputConnection(plane2.getOutputPort());
 
   const filter = vtkAppendPolyData.newInstance();
-  filter.setInputConnection(calc.getOutputPort());
-  filter.addInputData(planeData);
+  filter.setInputConnection(calc2.getOutputPort());
+  filter.addInputConnection(calc.getOutputPort());
   mapper.setInputConnection(filter.getOutputPort());
 
   // now create something to view it, in this case webgl

@@ -182,7 +182,7 @@ function vtkPlatonicSolidSource(publicAPI, model) {
   model.classHierarchy.push('vtkPlatonicSolidSource');
 
   publicAPI.requestData = (inData, outData) => {
-    const output = outData[0] || vtkPolyData.newInstance();
+    const output = outData[0]?.initialize() || vtkPolyData.newInstance();
 
     let solidData;
     switch (model.solidType) {

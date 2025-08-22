@@ -260,7 +260,7 @@ function vtkImageMarchingSquares(publicAPI, model) {
     }
 
     // Update output
-    const polydata = outData[0] || vtkPolyData.newInstance();
+    const polydata = outData[0]?.initialize() || vtkPolyData.newInstance();
     polydata.getPoints().setData(new Float32Array(points), 3);
     polydata.getLines().setData(new Uint32Array(lines));
     outData[0] = polydata;

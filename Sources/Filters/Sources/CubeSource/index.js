@@ -39,7 +39,7 @@ function vtkCubeSource(publicAPI, model) {
   model.classHierarchy.push('vtkCubeSource');
 
   publicAPI.requestData = (inData, outData) => {
-    const polyData = outData[0] || vtkPolyData.newInstance();
+    const polyData = outData[0]?.initialize() || vtkPolyData.newInstance();
     outData[0] = polyData;
 
     const numberOfPoints = 24;

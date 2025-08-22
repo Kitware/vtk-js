@@ -22,12 +22,16 @@ interface IArrayWithIndex {
 
 export interface vtkFieldData extends vtkObject {
   /**
-   *
+   * Initialize fields, clear flags and restore copy beahvior.
+   * @see initializeFields
+   * @see clearFieldFlags
+   * @see copyAllOn
    */
   initialize(): void;
 
   /**
-   *
+   * Delete all arrays and clear flags.
+   * @see initialize
    */
   initializeFields(): void;
 
