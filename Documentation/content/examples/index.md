@@ -153,7 +153,8 @@ This will allow you to see the some live code running in your browser. Just pick
 [![WarpScalar Example][WarpScalargif]](./WarpScalar.html "WarpScalar")
 [![WindowedSincPolyDataFilter Example][WindowedSincPolyDataFilter]](./WindowedSincPolyDataFilter.html "WindowedSincPolyDataFilter")
 
-<div>
+</div>
+
 [ArcSource]: ../docs/gallery/ArcSource.jpg
 [ArrowSource]: ../docs/gallery/ArrowSource.jpg
 [CircleSource]: ../docs/gallery/CircleSource.jpg
@@ -341,6 +342,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![CellPicker Example][CellPicker]](./CellPicker.html "CPU cell picker/selector")
 [![PointPicker Example][PointPicker]](./PointPicker.html "CPU point picker/selector")
 [![HardwareSelector Example][HardwareSelector]](./HardwareSelector.html "GPU point/cell picker/selector with properties")
+[![PointLocator Example][PointLocator]](./PointLocator.html "PointLocator")
 
 </div>
 
@@ -356,6 +358,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [CellPicker]: ../docs/gallery/CellPicker.jpg
 [PointPicker]: ../docs/gallery/PointPicker.jpg
 [HardwareSelector]: ../docs/gallery/HardwareSelector.jpg
+[PointLocator]: ../docs/gallery/PointLocator.jpg
 
 # Widgets
 

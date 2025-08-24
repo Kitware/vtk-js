@@ -325,6 +325,37 @@ export function cutWithPlane(
   normal: Vector3
 ): boolean;
 
+/**
+ * Clamp the divisions to ensure the total number doesn't exceed targetBins
+ * @param {Number} targetBins - Maximum number of bins allowed
+ * @param {Number[]} divs - Divisions array to adjust [divX, divY, divZ]
+ */
+export function clampDivisions(targetBins: number, divs: number[]): void;
+
+/**
+ * Compute the number of divisions given the current bounding box and a
+ * target number of buckets/bins. Handles degenerate bounding boxes properly.
+ * @param {Bounds} bounds - The bounding box
+ * @param {Number} totalBins - Target number of bins
+ * @param {Number[]} divs - Output array to store divisions [divX, divY, divZ]
+ * @param {Bounds} [adjustedBounds] - Output array to store adjusted bounds if needed
+ * @returns {Number} The actual total number of bins
+ */
+export function computeDivisions(
+  bounds: Bounds,
+  totalBins: number,
+  divs: number[],
+  adjustedBounds?: Bounds
+): number;
+
+/**
+ * Calculate the squared distance from point x to the specified bounds.
+ * @param {Vector3} x  The point coordinates
+ * @param {Bounds} bounds  The bounding box coordinates
+ * @returns {Number} The squared distance to the bounds
+ */
+export function distance2ToBounds(x: Vector3, bounds: Bounds): number;
+
 declare class BoundingBox {
   getBounds(): Bounds;
   /**
@@ -409,10 +440,9 @@ declare class BoundingBox {
 
   /**
    * Inflates a bounding box.
-   * @param {Bounds} bounds
-   * @param {number} delta
+   * @param {number} [delta] The amount to inflate the bounding box by.
    */
-  inflate(bounds: Bounds, delta: number): Bounds;
+  inflate(delta?: number): Bounds;
 
   /**
    * Scales a bounding box.
@@ -611,6 +641,14 @@ declare class BoundingBox {
    * @param {Vector3} normal
    */
   cutWithPlane(bounds: Bounds, origin: Vector3, normal: Vector3): boolean;
+
+  /**
+   * Calculate the squared distance from point x to the specified bounds.
+   * @param {Vector3} x  The point coordinates
+   * @param {Bounds} bounds  The bounding box coordinates
+   * @returns {Number} The squared distance to the bounds
+   */
+  distance2ToBounds(x: Vector3, bounds: Bounds): number;
 }
 
 export interface IBoundingBoxInitialValues {
@@ -653,6 +691,7 @@ declare const vtkBoundingBox: {
   intersects: typeof intersects;
   containsPoint: typeof containsPoint;
   contains: typeof contains;
+  distance2ToBounds: typeof distance2ToBounds;
   INIT_BOUNDS: Bounds;
 };
 

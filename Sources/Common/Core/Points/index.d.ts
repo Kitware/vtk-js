@@ -81,6 +81,14 @@ export interface vtkPoints extends vtkDataArray {
    * @returns {Number} Index of the inserted point.
    */
   insertNextPoint(x: number, y: number, z: number): number;
+
+  /**
+   * Insert the [x,y,z] coordinates of a point at the given index.
+   * @param {Number} ptId The index of point.
+   * @param {Number[]} point The [x, y, z] coordinates of the point.
+   * @returns {Number} The index of the inserted point.
+   */
+  insertPoint(ptId: number, point: number[]): number;
 }
 
 /**

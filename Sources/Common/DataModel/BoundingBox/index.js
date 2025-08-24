@@ -119,13 +119,46 @@ export function setMaxPoint(bounds, x, y, z) {
   return xMax !== x || yMax !== y || zMax !== z;
 }
 
-export function inflate(bounds, delta) {
+function inflate(bounds, delta) {
+  if (delta == null) {
+    // eslint-disable-next-line no-use-before-define
+    return minInflate(bounds);
+  }
   bounds[0] -= delta;
   bounds[1] += delta;
   bounds[2] -= delta;
   bounds[3] += delta;
   bounds[4] -= delta;
   bounds[5] += delta;
+  return bounds;
+}
+
+function minInflate(bounds) {
+  const nonZero = [0, 0, 0];
+  let maxIdx = -1;
+  let max = 0.0;
+  let w = 0.0;
+  for (let i = 0; i < 3; ++i) {
+    w = bounds[i * 2 + 1] - bounds[i * 2];
+    if (w > max) {
+      max = w;
+      maxIdx = i;
+    }
+    nonZero[i] = w > 0.0 ? 1 : 0;
+  }
+
+  if (maxIdx < 0) {
+    return inflate(bounds, 0.5);
+  }
+
+  // Any zero width sides are bumped out 1% of max side
+  for (let i = 0; i < 3; ++i) {
+    if (!nonZero[i]) {
+      const d = 0.005 * max;
+      bounds[i * 2] -= d;
+      bounds[i * 2 + 1] += d;
+    }
+  }
   return bounds;
 }
 
@@ -616,6 +649,157 @@ export function cutWithPlane(bounds, origin, normal) {
   return true;
 }
 
+/**
+ * Clamp the divisions to ensure the total number doesn't exceed targetBins
+ * @param {Number} targetBins - Maximum number of bins allowed
+ * @param {Array} divs - Divisions array to adjust [divX, divY, divZ]
+ */
+export function clampDivisions(targetBins, divs) {
+  for (let i = 0; i < 3; ++i) {
+    divs[i] = divs[i] < 1 ? 1 : divs[i];
+  }
+
+  let numBins = divs[0] * divs[1] * divs[2];
+  while (numBins > targetBins) {
+    for (let i = 0; i < 3; ++i) {
+      divs[i] = divs[i] > 1 ? divs[i] - 1 : 1;
+    }
+    numBins = divs[0] * divs[1] * divs[2];
+  }
+}
+
+/**
+ * Compute the number of divisions given the current bounding box and a
+ * target number of buckets/bins. Handles degenerate bounding boxes properly.
+ * @param {Bounds} bounds - The bounding box
+ * @param {Number} totalBins - Target number of bins
+ * @param {Array} divs - Output array to store divisions [divX, divY, divZ]
+ * @param {Array} [adjustedBounds] - Output array to store adjusted bounds if needed
+ * @returns {Number} The actual total number of bins
+ */
+export function computeDivisions(bounds, totalBins, divs, adjustedBounds = []) {
+  // This will always produce at least one bin
+  // eslint-disable-next-line no-param-reassign
+  totalBins = totalBins <= 0 ? 1 : totalBins;
+
+  // First determine the maximum length of the side of the bounds. Keep track
+  // of zero width sides of the bounding box.
+  let numNonZero = 0;
+  const nonZero = [0, 0, 0];
+  let maxIdx = -1;
+  let max = 0.0;
+  const lengths = getLengths(bounds);
+
+  // Use a finite tolerance when detecting zero width sides
+  const totLen = lengths[0] + lengths[1] + lengths[2];
+  const zeroDetectionTolerance = totLen * (0.001 / 3.0);
+
+  for (let i = 0; i < 3; ++i) {
+    if (lengths[i] > max) {
+      maxIdx = i;
+      max = lengths[i];
+    }
+    if (lengths[i] > zeroDetectionTolerance) {
+      nonZero[i] = 1;
+      numNonZero++;
+    } else {
+      nonZero[i] = 0;
+    }
+  }
+
+  // Get min and max points
+  const minPoint = getMinPoint(bounds);
+  const maxPoint = getMaxPoint(bounds);
+
+  // If the bounding box is degenerate, then one bin of arbitrary size
+  if (numNonZero < 1) {
+    divs[0] = 1;
+    divs[1] = 1;
+    divs[2] = 1;
+    adjustedBounds[0] = minPoint[0] - 0.5;
+    adjustedBounds[1] = maxPoint[0] + 0.5;
+    adjustedBounds[2] = minPoint[1] - 0.5;
+    adjustedBounds[3] = maxPoint[1] + 0.5;
+    adjustedBounds[4] = minPoint[2] - 0.5;
+    adjustedBounds[5] = maxPoint[2] + 0.5;
+    return 1;
+  }
+
+  // Compute the divisions roughly in proportion to the bounding box edge lengths
+  let f = totalBins;
+  f /= nonZero[0] ? lengths[0] / totLen : 1.0;
+  f /= nonZero[1] ? lengths[1] / totLen : 1.0;
+  f /= nonZero[2] ? lengths[2] / totLen : 1.0;
+  f **= 1.0 / numNonZero;
+
+  for (let i = 0; i < 3; ++i) {
+    divs[i] = nonZero[i] ? Math.floor((f * lengths[i]) / totLen) : 1;
+    divs[i] = divs[i] < 1 ? 1 : divs[i];
+  }
+
+  // Make sure that we do not exceed the totalBins
+  clampDivisions(totalBins, divs);
+
+  // Now compute the final bounds, making sure it is a non-zero volume
+  const delta = (0.5 * lengths[maxIdx]) / divs[maxIdx];
+  for (let i = 0; i < 3; ++i) {
+    if (nonZero[i]) {
+      adjustedBounds[2 * i] = minPoint[i];
+      adjustedBounds[2 * i + 1] = maxPoint[i];
+    } else {
+      adjustedBounds[2 * i] = minPoint[i] - delta;
+      adjustedBounds[2 * i + 1] = maxPoint[i] + delta;
+    }
+  }
+
+  return divs[0] * divs[1] * divs[2];
+}
+
+/**
+ * Calculate the squared distance from point x to the specified bounds.
+ * @param {Vector3} x  The point coordinates
+ * @param {Bounds} bounds  The bounding box coordinates
+ * @returns {Number} The squared distance to the bounds
+ */
+export function distance2ToBounds(x, bounds) {
+  // Are we within the bounds?
+  if (
+    x[0] >= bounds[0] &&
+    x[0] <= bounds[1] &&
+    x[1] >= bounds[2] &&
+    x[1] <= bounds[3] &&
+    x[2] >= bounds[4] &&
+    x[2] <= bounds[5]
+  ) {
+    return 0.0;
+  }
+
+  const deltas = [0.0, 0.0, 0.0];
+
+  // dx
+  if (x[0] < bounds[0]) {
+    deltas[0] = bounds[0] - x[0];
+  } else if (x[0] > bounds[1]) {
+    deltas[0] = x[0] - bounds[1];
+  }
+
+  // dy
+  if (x[1] < bounds[2]) {
+    deltas[1] = bounds[2] - x[1];
+  } else if (x[1] > bounds[3]) {
+    deltas[1] = x[1] - bounds[3];
+  }
+
+  // dz
+  if (x[2] < bounds[4]) {
+    deltas[2] = bounds[4] - x[2];
+  } else if (x[2] > bounds[5]) {
+    deltas[2] = x[2] - bounds[5];
+  }
+
+  return vtkMath.dot(deltas, deltas);
+}
+
 // ----------------------------------------------------------------------------
 // Light Weight class
 // ----------------------------------------------------------------------------
@@ -763,6 +947,14 @@ class BoundingBox {
   contains(otherBounds) {
     return intersects(this.bounds, otherBounds);
   }
+
+  computeDivisions(totalBins, divs, adjustedBounds = []) {
+    return computeDivisions(this.bounds, totalBins, divs, adjustedBounds);
+  }
+
+  distance2ToBounds(x) {
+    return distance2ToBounds(x, this.bounds);
+  }
 }
 
 function newInstance(initialValues) {
@@ -809,6 +1001,9 @@ export const STATIC = {
   intersects,
   containsPoint,
   contains,
+  computeDivisions,
+  clampDivisions,
+  distance2ToBounds,
   INIT_BOUNDS,
 };
 
