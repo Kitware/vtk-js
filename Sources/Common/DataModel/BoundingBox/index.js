@@ -259,12 +259,17 @@ export function getMaxLength(bounds) {
   return l[2];
 }
 
-export function getDiagonalLength(bounds) {
+export function getDiagonalLength2(bounds) {
   if (isValid(bounds)) {
     const l = getLengths(bounds);
-    return Math.sqrt(l[0] * l[0] + l[1] * l[1] + l[2] * l[2]);
+    return l[0] * l[0] + l[1] * l[1] + l[2] * l[2];
   }
   return null;
+}
+
+export function getDiagonalLength(bounds) {
+  const lenght2 = getDiagonalLength2(bounds);
+  return lenght2 !== null ? Math.sqrt(lenght2) : null;
 }
 
 export function getMinPoint(bounds) {
@@ -878,6 +883,10 @@ class BoundingBox {
 
   getDiagonalLength() {
     return getDiagonalLength(this.bounds);
+  }
+
+  getDiagonalLength2() {
+    return getDiagonalLength2(this.bounds);
   }
 
   getMinPoint() {

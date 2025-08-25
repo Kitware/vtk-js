@@ -1,5 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 
 // ----------------------------------------------------------------------------
@@ -40,42 +40,15 @@ function vtkCell(publicAPI, model) {
     }
   };
 
-  publicAPI.getBounds = () => {
-    const nbPoints = model.points.getNumberOfPoints();
-    const x = [];
-    if (nbPoints) {
-      model.points.getPoint(0, x);
-      model.bounds[0] = x[0];
-      model.bounds[1] = x[0];
-      model.bounds[2] = x[1];
-      model.bounds[3] = x[1];
-      model.bounds[4] = x[2];
-      model.bounds[5] = x[2];
-
-      for (let i = 1; i < nbPoints; i++) {
-        model.points.getPoint(i, x);
-        model.bounds[0] = x[0] < model.bounds[0] ? x[0] : model.bounds[0];
-        model.bounds[1] = x[0] > model.bounds[1] ? x[0] : model.bounds[1];
-        model.bounds[2] = x[1] < model.bounds[2] ? x[1] : model.bounds[2];
-        model.bounds[3] = x[1] > model.bounds[3] ? x[1] : model.bounds[3];
-        model.bounds[4] = x[2] < model.bounds[4] ? x[2] : model.bounds[4];
-        model.bounds[5] = x[2] > model.bounds[5] ? x[2] : model.bounds[5];
-      }
-    } else {
-      vtkMath.uninitializeBounds(model.bounds);
-    }
-    return model.bounds;
-  };
+  publicAPI.getBounds = () => model.points.getBounds();
 
   publicAPI.getLength2 = () => {
-    publicAPI.getBounds();
-    let length = 0.0;
-    let diff = 0;
-    for (let i = 0; i < 3; i++) {
-      diff = model.bounds[2 * i + 1] - model.bounds[2 * i];
-      length += diff * diff;
-    }
-    return length;
+    const lengths = vtkBoundingBox.getLengths(publicAPI.getBounds());
+    return (
+      lengths[0] * lengths[0] +
+      lengths[1] * lengths[1] +
+      lengths[2] * lengths[2]
+    );
   };
 
   publicAPI.getParametricDistance = (pcoords) => {

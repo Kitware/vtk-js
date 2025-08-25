@@ -1,6 +1,7 @@
 import { mat4 } from 'gl-matrix';
 import { Bounds, Vector2, Vector3 } from '../../../types';
 import vtkPoints from '../../Core/Points';
+import { Nullable } from '../../../types';
 
 /**
  * Tests whether two bounds equal.
@@ -176,10 +177,16 @@ export function getZRange(bounds: Bounds): Vector2;
 export function getMaxLength(bounds: Bounds): number;
 
 /**
- * Gets the diagonal of the bounding box.
+ * Gets the diagonal length of the bounding box.
  * @param {Bounds} bounds
  */
-export function getDiagonalLength(bounds: Bounds): number;
+export function getDiagonalLength(bounds: Bounds): Nullable<number>;
+
+/**
+ * Gets the squared diagonal length of the bounding box.
+ * @param {Bounds} bounds
+ */
+export function getDiagonalLength2(bounds: Bounds): Nullable<number>;
 
 /**
  * Gets the min point.
@@ -506,10 +513,16 @@ declare class BoundingBox {
   getMaxLength(bounds: Bounds): number;
 
   /**
-   * Gets the diagonal of the bounding box.
+   * Gets the diagonal length of the bounding box.
    * @param {Bounds} bounds
    */
-  getDiagonalLength(bounds: Bounds): number;
+  getDiagonalLength(bounds: Bounds): Nullable<number>;
+
+  /**
+   * Gets the squared diagonal length of the bounding box.
+   * @param {Bounds} bounds
+   */
+  getDiagonalLength2(bounds: Bounds): Nullable<number>;
 
   /**
    * Gets the min point.
@@ -674,6 +687,7 @@ declare const vtkBoundingBox: {
   getLengths: typeof getLengths;
   getMaxLength: typeof getMaxLength;
   getDiagonalLength: typeof getDiagonalLength;
+  getDiagonalLength2: typeof getDiagonalLength2;
   getMinPoint: typeof getMinPoint;
   getMaxPoint: typeof getMaxPoint;
   getXRange: typeof getXRange;
