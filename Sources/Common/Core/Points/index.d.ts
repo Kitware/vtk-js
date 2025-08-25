@@ -17,10 +17,20 @@ export interface vtkPoints extends vtkDataArray {
   computeBounds(): Bounds;
 
   /**
-   * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+   * Get a copy of the bounds of the array.
+   * Bounds are [xmin, xmax, ymin, ymax,zmin, zmax].
+   * Will recompute the bounds if necessary.
    * @return {Bounds} The bounds for the mapper.
    */
   getBounds(): Bounds;
+
+  /**
+   * Get a reference to the model bounds of the array.
+   * Bounds are [xmin, xmax, ymin, ymax,zmin, zmax].
+   * Will recompute the bounds if necessary.
+   * @return {Bounds} The bounds for the mapper.
+   */
+  getBoundsByReference(): Bounds;
 
   /**
    * Get the coordinate of a point.
