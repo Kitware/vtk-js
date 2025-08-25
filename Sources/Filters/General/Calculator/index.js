@@ -264,7 +264,8 @@ function vtkCalculator(publicAPI, model) {
 
     const arraySpec = model.formula.getArrays(inData);
 
-    const newDataSet = vtk({ vtkClass: inData[0].getClassName() });
+    const newDataSet =
+      outData[0]?.initialize() || vtk({ vtkClass: inData[0].getClassName() });
     newDataSet.shallowCopy(inData[0]);
     outData[0] = newDataSet;
 

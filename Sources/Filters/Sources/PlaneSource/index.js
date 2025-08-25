@@ -19,17 +19,13 @@ function vtkPlaneSource(publicAPI, model) {
   model.classHierarchy.push('vtkPlaneSource');
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
-
     const dataset = outData[0];
 
     // Check input
     const pointDataType = dataset
       ? dataset.getPoints().getDataType()
       : model.pointType;
-    const pd = vtkPolyData.newInstance();
+    const pd = dataset?.initialize() || vtkPolyData.newInstance();
     const v10 = [];
     const v20 = [];
     vtkMath.subtract(model.point1, model.origin, v10);

@@ -72,15 +72,14 @@ function vtkConcentricCylinderSource(publicAPI, model) {
   publicAPI.getMaskLayer = (index) =>
     index === undefined ? model.mask : model.mask[index];
 
-  function requestData(inData, outData) {
-    if (model.deleted || !model.radius.length) {
+  publicAPI.requestData = (inData, outData) => {
+    if (!model.radius.length) {
+      macro.vtkErrorMacro('No radius defined');
       return;
     }
 
     // Make sure we have consistency
     validateCellFields();
-
-    let dataset = outData[0];
 
     const numLayers = model.radius.length;
     const zRef = model.height / 2.0;
@@ -384,7 +383,7 @@ function vtkConcentricCylinderSource(publicAPI, model) {
       .rotateFromDirections([0, 0, 1], model.direction)
       .apply(points);
 
-    dataset = vtkPolyData.newInstance();
+    const dataset = outData[0]?.initialize() || vtkPolyData.newInstance();
     dataset.getPoints().setData(points, 3);
     dataset.getPolys().setData(polys, 1);
     dataset
@@ -393,10 +392,7 @@ function vtkConcentricCylinderSource(publicAPI, model) {
 
     // Update output
     outData[0] = dataset;
-  }
-
-  // Expose methods
-  publicAPI.requestData = requestData;
+  };
 }
 
 // ----------------------------------------------------------------------------

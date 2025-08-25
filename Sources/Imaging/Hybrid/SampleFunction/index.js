@@ -41,7 +41,7 @@ function vtkSampleFunction(publicAPI, model) {
       vtkErrorMacro('Bad volume dimensions');
       return;
     }
-    const volume = vtkImageData.newInstance();
+    const volume = outData[0]?.initialize() || vtkImageData.newInstance();
     const origin = [
       model.modelBounds[0],
       model.modelBounds[2],

@@ -9,10 +9,6 @@ function vtkRTAnalyticSource(publicAPI, model) {
   model.classHierarchy.push('vtkRTAnalyticSource');
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
-
     const state = {};
     const dataset = {
       type: 'vtkImageData',

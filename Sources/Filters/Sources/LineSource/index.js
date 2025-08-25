@@ -13,17 +13,13 @@ function vtkLineSource(publicAPI, model) {
   model.classHierarchy.push('vtkLineSource');
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
-
     const dataset = outData[0];
 
     // Check input
     const pointDataType = dataset
       ? dataset.getPoints().getDataType()
       : model.pointType;
-    const pd = vtkPolyData.newInstance();
+    const pd = dataset?.initialize() || vtkPolyData.newInstance();
     const v21 = [];
     vtkMath.subtract(model.point2, model.point1, v21);
     if (vtkMath.norm(v21) <= 0.0) {

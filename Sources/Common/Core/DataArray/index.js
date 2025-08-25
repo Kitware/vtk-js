@@ -198,9 +198,10 @@ function vtkDataArray(publicAPI, model) {
     return false;
   };
 
-  // FIXME, to rename into "clear()" or "reset()"
+  // Restore the array to initial state
   publicAPI.initialize = () => {
     publicAPI.resize(0);
+    return publicAPI;
   };
 
   publicAPI.getElementComponentSize = () => model.values.BYTES_PER_ELEMENT;

@@ -58,17 +58,13 @@ function vtkSplineContextRepresentation(publicAPI, model) {
     );
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
-
     const widgetState = inData[0];
+    outData[0] = model.internalPolyData;
     const closed = widgetState.getSplineClosed();
 
     const list = publicAPI.getRepresentationStates(widgetState);
     const inPoints = list.map((state) => state.getOrigin());
     if (inPoints.length <= 1) {
-      outData[0] = model.internalPolyData;
       return;
     }
 
@@ -132,7 +128,6 @@ function vtkSplineContextRepresentation(publicAPI, model) {
       .setData(model.outputBorder ? outCells : []);
 
     model.internalPolyData.modified();
-    outData[0] = model.internalPolyData;
 
     model._pipelines.area.filter.update();
     model._pipelines.border.actor

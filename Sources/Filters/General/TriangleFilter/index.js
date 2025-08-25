@@ -80,7 +80,7 @@ function vtkTriangleFilter(publicAPI, model) {
       }
     }
 
-    const dataset = vtkPolyData.newInstance();
+    const dataset = outData[0]?.initialize() || vtkPolyData.newInstance();
     dataset
       .getPoints()
       .setData(macro.newTypedArrayFrom(pointsDataType, newPoints));

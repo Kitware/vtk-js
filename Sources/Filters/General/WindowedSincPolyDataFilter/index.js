@@ -624,7 +624,7 @@ function vtkWindowedSincPolyDataFilter(publicAPI, model) {
     if (!input) {
       return;
     }
-    const output = vtkPolyData.newInstance();
+    const output = outData[0]?.initialize() || vtkPolyData.newInstance();
 
     const outputPoints = publicAPI.vtkWindowedSincPolyDataFilterExecute(
       input.getPoints(),

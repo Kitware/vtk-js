@@ -33,6 +33,7 @@ publicAPI.requestData = (inData, outData) => {
 };
 
 test('Macro methods algo tests', (t) => {
+  macro.obj(publicAPI, model);
   macro.algo(publicAPI, model, numInputs, numOutputs);
 
   // Override shouldUpdate to prevent the need of getMTime()

@@ -341,7 +341,7 @@ function vtkImageMarchingCubes(publicAPI, model) {
     edgeLocator.initialize();
 
     // Update output
-    const polydata = vtkPolyData.newInstance();
+    const polydata = outData[0]?.initialize() || vtkPolyData.newInstance();
     polydata.getPoints().setData(new Float32Array(pBuffer), 3);
     polydata.getPolys().setData(new Uint32Array(tBuffer));
     if (model.computeNormals) {

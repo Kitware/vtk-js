@@ -9,6 +9,12 @@ export interface IPointSetInitialValues extends IDataSetInitialValues {}
 
 export interface vtkPointSet extends vtkDataSet {
   /**
+   * Empty the points and initialize the data set and .
+   * @see vtkDataSet::initialize()
+   */
+  initialize(): void;
+
+  /**
    * Compute the (X, Y, Z) bounds of the data.
    */
   computeBounds(): void;

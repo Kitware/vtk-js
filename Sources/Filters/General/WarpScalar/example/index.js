@@ -55,21 +55,19 @@ const randFilter = macro.newInstance((publicAPI, model) => {
   macro.obj(publicAPI, model); // make it an object
   macro.algo(publicAPI, model, 1, 1); // mixin algorithm code 1 in, 1 out
   publicAPI.requestData = (inData, outData) => {
-    // implement requestData
-    if (!outData[0] || inData[0].getMTime() > outData[0].getMTime()) {
-      const newArray = new Float32Array(
-        inData[0].getPoints().getNumberOfPoints()
-      );
-      for (let i = 0; i < newArray.length; i++) {
-        newArray[i] = i % 2 ? 1 : 0;
-      }
-
-      const da = vtkDataArray.newInstance({ name: 'spike', values: newArray });
-      const newDataSet = vtk({ vtkClass: inData[0].getClassName() });
-      newDataSet.shallowCopy(inData[0]);
-      newDataSet.getPointData().setScalars(da);
-      outData[0] = newDataSet;
+    const newArray = new Float32Array(
+      inData[0].getPoints().getNumberOfPoints()
+    );
+    for (let i = 0; i < newArray.length; i++) {
+      newArray[i] = i % 2 ? 1 : 0;
     }
+
+    const da = vtkDataArray.newInstance({ name: 'spike', values: newArray });
+    const newDataSet =
+      outData[0]?.initialize() || vtk({ vtkClass: inData[0].getClassName() });
+    newDataSet.shallowCopy(inData[0]);
+    newDataSet.getPointData().setScalars(da);
+    outData[0] = newDataSet;
   };
 })();
 

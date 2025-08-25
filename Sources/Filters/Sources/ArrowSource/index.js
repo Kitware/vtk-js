@@ -12,11 +12,7 @@ function vtkArrowSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkArrowSource');
 
-  function requestData(inData, outData) {
-    if (model.deleted) {
-      return;
-    }
-
+  publicAPI.requestData = (inData, outData) => {
     const cylinder = vtkCylinderSource.newInstance({ capping: true });
     cylinder.setResolution(model.shaftResolution);
     cylinder.setRadius(model.shaftRadius);
@@ -80,10 +76,7 @@ function vtkArrowSource(publicAPI, model) {
       // Update output
       outData[0] = append.getOutputData();
     }
-  }
-
-  // Expose methods
-  publicAPI.requestData = requestData;
+  };
 }
 
 // ----------------------------------------------------------------------------

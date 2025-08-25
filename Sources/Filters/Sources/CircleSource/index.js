@@ -11,12 +11,8 @@ function vtkCircleSource(publicAPI, model) {
   // Set our classname
   model.classHierarchy.push('vtkCircleSource');
 
-  function requestData(inData, outData) {
-    if (model.deleted) {
-      return;
-    }
-
-    let dataset = outData[0];
+  publicAPI.requestData = (inData, outData) => {
+    const dataset = outData[0]?.initialize() || vtkPolyData.newInstance();
 
     // Points
     const points = macro.newTypedArray(model.pointType, model.resolution * 3);
@@ -39,7 +35,6 @@ function vtkCircleSource(publicAPI, model) {
     // connect endpoints
     edges[edges.length - 1] = edges[1];
 
-    dataset = vtkPolyData.newInstance();
     dataset.getPoints().setData(points, 3);
     if (model.lines) {
       dataset.getLines().setData(edges, 1);
@@ -58,10 +53,7 @@ function vtkCircleSource(publicAPI, model) {
 
     // Update output
     outData[0] = dataset;
-  }
-
-  // Expose methods
-  publicAPI.requestData = requestData;
+  };
 }
 
 // ----------------------------------------------------------------------------

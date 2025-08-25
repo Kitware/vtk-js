@@ -31,6 +31,8 @@ function vtkImageCropFilter(publicAPI, model) {
       vtkErrorMacro('Invalid or missing input');
       return;
     }
+    const outImage = outData[0]?.initialize() || vtkImageData.newInstance();
+    outData[0] = outImage;
 
     const scalars = input.getPointData().getScalars();
 
@@ -60,9 +62,7 @@ function vtkImageCropFilter(publicAPI, model) {
       cropped[4] === extent[4] &&
       cropped[5] === extent[5]
     ) {
-      const sameAsInput = vtkImageData.newInstance();
-      sameAsInput.shallowCopy(input); // Force new mtime
-      outData[0] = sameAsInput;
+      outImage.shallowCopy(input); // Force new mtime
       return;
     }
 
@@ -111,12 +111,10 @@ function vtkImageCropFilter(publicAPI, model) {
         index += slice.length;
       }
     }
-    const outImage = vtkImageData.newInstance({
-      extent: cropped,
-      origin: input.getOrigin(),
-      direction: input.getDirection(),
-      spacing: input.getSpacing(),
-    });
+    outImage.setExtent(cropped);
+    outImage.setOrigin(input.getOrigin());
+    outImage.setSpacing(input.getSpacing());
+    outImage.setDirection(input.getDirection());
 
     const croppedScalars = vtkDataArray.newInstance({
       name: scalars.getName(),
@@ -125,8 +123,6 @@ function vtkImageCropFilter(publicAPI, model) {
     });
 
     outImage.getPointData().setScalars(croppedScalars);
-
-    outData[0] = outImage;
   };
 
   publicAPI.isResetAvailable = () => {

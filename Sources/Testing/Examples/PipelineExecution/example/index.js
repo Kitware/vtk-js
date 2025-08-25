@@ -94,7 +94,6 @@ const randFilter = macro.newInstance((publicAPI, model) => {
   macro.obj(publicAPI, model); // make it an object
   macro.algo(publicAPI, model, 1, 1); // mixin algorithm code 1 in, 1 out
   publicAPI.requestData = (inData, outData) => {
-    // implement requestData
     updateExecution(2);
     const newArray = new Float32Array(
       inData[0].getPoints().getNumberOfPoints()
@@ -104,7 +103,8 @@ const randFilter = macro.newInstance((publicAPI, model) => {
     }
 
     const da = vtkDataArray.newInstance({ name: 'spike', values: newArray });
-    const newDataSet = vtk({ vtkClass: inData[0].getClassName() });
+    const newDataSet =
+      outData[0]?.initialize() || vtk({ vtkClass: inData[0].getClassName() });
     newDataSet.shallowCopy(inData[0]);
     newDataSet.getPointData().setScalars(da);
     outData[0] = newDataSet;

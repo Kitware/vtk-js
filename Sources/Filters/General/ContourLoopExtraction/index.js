@@ -12,10 +12,8 @@ function vtkContourLoopExtraction(publicAPI, model) {
   publicAPI.requestData = (inData, outData) => {
     const [input] = inData;
 
-    if (!outData[0]) {
-      outData[0] = vtkPolyData.newInstance();
-    }
-    const [output] = outData;
+    const output = outData[0]?.initialize() || vtkPolyData.newInstance();
+    outData[0] = output;
     publicAPI.extractContours(input, output);
     output.modified();
   };

@@ -93,6 +93,10 @@ Return the Max Length of the box
 
 Return the length of the diagonal or null if not valid.
 
+### getDiagonalLength2(bounds[6]) : Number
+
+Return the squared length of the diagonal or null if not valid.
+
 ### inflate(bounds[6], delta)
 
 Expand the Box by delta on each side, the box will grow by

@@ -46,7 +46,10 @@ function vtkAppendPolyData(publicAPI, model) {
     }
 
     // Allocate output
-    const output = vtkPolyData.newInstance();
+    const output =
+      outData[0] && inData[0] !== outData[0]
+        ? outData[0].initialize()
+        : vtkPolyData.newInstance();
 
     let numPts = 0;
     let pointType = 0;

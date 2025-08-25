@@ -5,6 +5,7 @@ import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
+// import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
 import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
@@ -33,6 +34,23 @@ function createConePipeline() {
   mapper.setInputConnection(coneSource.getOutputPort());
 
   renderer.addActor(actor);
+
+  // const polyData = vtkPolyData.newInstance();
+  // const pointCount = Math.round(10000000 / 5);
+  // const points = new Float32Array(3 * pointCount);
+  // points.fill(1);
+  // polyData.getPoints().setData(points);
+  // polyData.getPoints().setRange({ min: 1, max: 1 }, 0);
+  // polyData.getPoints().setRange({ min: 1, max: 1 }, 1);
+  // polyData.getPoints().setRange({ min: 1, max: 1 }, 2);
+  // const polys = new Uint32Array(1000);
+  // polys.fill(1);
+  // polyData.getPolys().setData(polys);
+  // const mapper2 = vtkMapper.newInstance();
+  // mapper2.setInputData(polyData);
+  // const actor2 = vtkActor.newInstance();
+  // actor2.setMapper(mapper2);
+  // renderer.addActor(actor2);
   return { coneSource, mapper, actor };
 }
 
@@ -54,7 +72,7 @@ fullScreenRenderer.addController(controlPanel);
 ['height', 'radius', 'resolution'].forEach((propertyName) => {
   document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);
-    pipelines[0].coneSource.set({ [propertyName]: value });
+    // pipelines[0].coneSource.set({ [propertyName]: value });
     pipelines[1].coneSource.set({ [propertyName]: value });
     renderWindow.render();
   });

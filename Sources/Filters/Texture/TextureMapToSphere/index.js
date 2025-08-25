@@ -14,9 +14,6 @@ function vtkTextureMapToSphere(publicAPI, model) {
   model.classHierarchy.push('vtkTextureMapToSphere');
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
     const input = inData[0];
 
     const nbPoints = input.getPoints().getNumberOfPoints();
@@ -115,7 +112,7 @@ function vtkTextureMapToSphere(publicAPI, model) {
       values: tcoordsData,
     });
 
-    const output = vtkPolyData.newInstance();
+    const output = outData[0]?.initialize() || vtkPolyData.newInstance();
     output
       .getPoints()
       .setData(new Float32Array(input.getPoints().getData()), 3);

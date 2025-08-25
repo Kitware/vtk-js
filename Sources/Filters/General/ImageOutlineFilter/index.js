@@ -19,9 +19,8 @@ function vtkImageOutlineFilter(publicAPI, model) {
       return;
     }
 
-    const output = vtkImageData.newInstance(
-      input.get('spacing', 'origin', 'direction')
-    );
+    const output = outData[0]?.initialize() || vtkImageData.newInstance();
+    output.set(input.get('spacing', 'origin', 'direction'));
 
     const getIndex = (point, dims) =>
       point[0] + point[1] * dims[0] + point[2] * dims[0] * dims[1];
