@@ -109,6 +109,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [![PolyDataNormals Example][PolyDataNormals]](./PolyDataNormals.html "PolyDataNormals")
 [![ThresholdPoints Example][ThresholdPoints]](./ThresholdPoints.html "Cut/Treshold points with point data criteria")
 [![ShrinkPolyData Example][ShrinkPolyData]](./ShrinkPolyData.html "ShrinkPolyData")
+[![CleanPolyData Example][CleanPolyData]](./CleanPolyData.html "CleanPolyData")
 
 </div>
 
@@ -129,6 +130,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [PolyDataNormals]: ../docs/gallery/PolyDataNormals.jpg
 [ThresholdPoints]: ../docs/gallery/ThresholdPoints.jpg
 [ShrinkPolyData]: ../docs/gallery/ShrinkPolyData.jpg
+[CleanPolyData]: ../docs/gallery/CleanPolyData.jpg
 
 # Sources
 
