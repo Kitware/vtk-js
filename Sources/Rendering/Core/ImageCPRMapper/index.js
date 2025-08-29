@@ -1,4 +1,5 @@
 import { mat4, quat, vec3 } from 'gl-matrix';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 import vtkAbstractImageMapper from 'vtk.js/Sources/Rendering/Core/AbstractImageMapper';
 import macro from 'vtk.js/Sources/macros';
@@ -21,12 +22,19 @@ function vtkImageCPRMapper(publicAPI, model) {
   const superClass = { ...publicAPI };
 
   /**
-   * Public methods
+   * Reimplemented from AbstractMapper3D
    */
-  publicAPI.getBounds = () => {
+  publicAPI.computeBounds = () => {
     const imageWidth = publicAPI.getWidth();
     const imageHeight = publicAPI.getHeight();
-    return [0, imageWidth, 0, imageHeight, 0, 0];
+    vtkBoundingBox.setBounds(model.bounds, [
+      0,
+      imageWidth,
+      0,
+      imageHeight,
+      0,
+      0,
+    ]);
   };
 
   publicAPI.getOrientationDataArray = () => {

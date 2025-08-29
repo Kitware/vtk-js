@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkAbstractMapper3D from 'vtk.js/Sources/Rendering/Core/AbstractMapper3D';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
@@ -297,17 +298,16 @@ function vtkMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkMapper');
 
-  publicAPI.getBounds = () => {
+  publicAPI.computeBounds = () => {
     const input = publicAPI.getInputData();
     if (!input) {
-      model.bounds = vtkMath.createUninitializedBounds();
+      vtkBoundingBox.reset(model.bounds);
     } else {
       if (!model.static) {
         publicAPI.update();
       }
-      model.bounds = input.getBounds();
+      vtkBoundingBox.setBounds(model.bounds, input.getBounds());
     }
-    return model.bounds;
   };
 
   publicAPI.setForceCompileOnly = (v) => {

@@ -11,6 +11,7 @@ import { Resolve } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopology
 function vtkCircleContextRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkCircleContextRepresentation');
+  const superClass = { ...publicAPI };
 
   // --------------------------------------------------------------------------
   // Generic rendering pipeline
@@ -25,22 +26,27 @@ function vtkCircleContextRepresentation(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.setGlyphResolution = macro.chain(
-    publicAPI.setGlyphResolution,
-    model._pipeline.glyph.setResolution
-  );
+  publicAPI.setGlyphResolution = (r) => {
+    const res = superClass.setGlyphResolution(r);
+    model._pipeline.glyph.setResolution(r);
+    return res;
+  };
 
   // --------------------------------------------------------------------------
 
-  publicAPI.setDrawBorder = macro.chain(publicAPI.setDrawBorder, (draw) =>
-    model._pipeline.glyph.setLines(draw)
-  );
+  publicAPI.setDrawBorder = (draw) => {
+    const res = superClass.setDrawBorder(draw);
+    model._pipeline.glyph.setLines(draw);
+    return res;
+  };
 
   // --------------------------------------------------------------------------
 
-  publicAPI.setDrawFace = macro.chain(publicAPI.setDrawFace, (draw) =>
-    model._pipeline.glyph.setFace(draw)
-  );
+  publicAPI.setDrawFace = (draw) => {
+    const res = superClass.setDrawFace(draw);
+    model._pipeline.glyph.setFace(draw);
+    return res;
+  };
 
   // --------------------------------------------------------------------------
 
