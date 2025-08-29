@@ -1,3 +1,8 @@
+## From 34.x to 35
+
+- **vtkMapper**: mappers should overwrite `computeBounds()` instead of `getBounds` that now calls `computeBounds()` before returning a copy of the mapper bounds.
+
+
 ## From 33.x to 34
 
 - **vtkMapper**: many properties have moved to `vtkVolumeProperty`. The full list of changed methods is: `getAnisotropy`, `getComputeNormalFromOpacity`, `getFilterMode`, `getFilterModeAsString`, `getGlobalIlluminationReach`, `getIpScalarRange`, `getIpScalarRangeByReference`, `getLAOKernelRadius`, `getLAOKernelSize`, `getLocalAmbientOcclusion`, `getPreferSizeOverAccuracy`, `getVolumetricScatteringBlending`, `setAnisotropy`, `setAverageIPScalarRange`, `setComputeNormalFromOpacity`, `setFilterMode`, `setFilterModeToNormalized`, `setFilterModeToOff`, `setFilterModeToRaw`, `setGlobalIlluminationReach`, `setIpScalarRange`, `setIpScalarRangeFrom`, `setLAOKernelRadius`, `setLAOKernelSize`, `setLocalAmbientOcclusion`, `setPreferSizeOverAccuracy`, `setVolumetricScatteringBlending`.
