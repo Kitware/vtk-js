@@ -117,6 +117,9 @@ function vtkCellArray(publicAPI, model) {
     }
     return cellId;
   };
+
+  publicAPI.getMaxCellSize = () =>
+    publicAPI.getCellSizes().reduce((a, b) => Math.max(a, b), 0);
 }
 
 // ----------------------------------------------------------------------------
