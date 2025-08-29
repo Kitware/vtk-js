@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkAbstractImageMapper from 'vtk.js/Sources/Rendering/Core/AbstractImageMapper';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import * as pickingHelper from 'vtk.js/Sources/Rendering/Core/AbstractImageMapper/helper';
@@ -80,13 +81,16 @@ function vtkImageArrayMapper(publicAPI, model) {
     return null;
   };
 
-  publicAPI.getBounds = () => {
+  // reimplemented from AbstractMapper3D
+  publicAPI.computeBounds = () => {
     const image = publicAPI.getCurrentImage();
     if (!image) {
-      return vtkMath.createUninitializedBounds();
+      vtkBoundingBox.reset(model.bounds);
+      return;
     }
     if (!model.useCustomExtents) {
-      return image.getBounds();
+      vtkBoundingBox.setBounds(model.bounds, image.getBounds());
+      return;
     }
 
     const ex = model.customDisplayExtent.slice();
@@ -95,7 +99,7 @@ function vtkImageArrayMapper(publicAPI, model) {
     const nSlice = publicAPI.getSubSlice();
     ex[4] = nSlice;
     ex[5] = nSlice;
-    return image.extentToBounds(ex);
+    vtkBoundingBox.setBounds(model.bounds, image.extentToBounds(ex));
   };
 
   publicAPI.getBoundsForSlice = (

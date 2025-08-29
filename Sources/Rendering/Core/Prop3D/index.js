@@ -161,24 +161,20 @@ function vtkProp3D(publicAPI, model) {
     }
   };
 
-  publicAPI.getBoundsByReference = () => {
+  publicAPI.computeBounds = () => {
     if (model.mapper === null) {
-      return model.bounds;
+      vtkBoundingBox.reset(model.bounds);
+      return;
     }
 
-    // Check for the special case when the mapper's bounds are unknown
+    // Check for the special case when the mapper's bounds are invalid
     const bds = model.mapper.getBounds();
-    if (!bds || bds.length !== 6) {
-      return bds;
-    }
-
-    // Check for the special case when the actor is empty.
-    if (bds[0] > bds[1]) {
+    if (!bds || bds.length !== 6 || !vtkBoundingBox.isValid(bds)) {
       // No need to copy bds, a new array is created when calling getBounds()
       model.mapperBounds = bds;
-      model.bounds = [...vtkBoundingBox.INIT_BOUNDS];
+      vtkBoundingBox.reset(model.bounds);
       model.boundsMTime.modified();
-      return bds;
+      return;
     }
 
     // Check if we have cached values for these bounds - we cache the
@@ -203,25 +199,29 @@ function vtkProp3D(publicAPI, model) {
 
       model.boundsMTime.modified();
     }
-
-    return model.bounds;
   };
 
+  const superGetBounds = publicAPI.getBounds;
   publicAPI.getBounds = () => {
-    const bounds = publicAPI.getBoundsByReference();
-    // Handle case when bounds are not iterable (for example null or undefined)
-    try {
-      return [...bounds];
-    } catch {
-      return bounds;
-    }
+    publicAPI.computeBounds();
+    return superGetBounds();
   };
 
-  publicAPI.getCenter = () => vtkBoundingBox.getCenter(model.bounds);
-  publicAPI.getLength = () => vtkBoundingBox.getLength(model.bounds);
-  publicAPI.getXRange = () => vtkBoundingBox.getXRange(model.bounds);
-  publicAPI.getYRange = () => vtkBoundingBox.getYRange(model.bounds);
-  publicAPI.getZRange = () => vtkBoundingBox.getZRange(model.bounds);
+  const superGetBoundsByReference = publicAPI.getBoundsByReference;
+  publicAPI.getBoundsByReference = () => {
+    publicAPI.computeBounds();
+    return superGetBoundsByReference();
+  };
+  publicAPI.getCenter = () =>
+    vtkBoundingBox.getCenter(publicAPI.getBoundsByReference());
+  publicAPI.getLength = () =>
+    vtkBoundingBox.getLength(publicAPI.getBoundsByReference());
+  publicAPI.getXRange = () =>
+    vtkBoundingBox.getXRange(publicAPI.getBoundsByReference());
+  publicAPI.getYRange = () =>
+    vtkBoundingBox.getYRange(publicAPI.getBoundsByReference());
+  publicAPI.getZRange = () =>
+    vtkBoundingBox.getZRange(publicAPI.getBoundsByReference());
 
   publicAPI.getUserMatrix = () => model.userMatrix;
 
@@ -271,12 +271,12 @@ function vtkProp3D(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  bounds: [...vtkBoundingBox.INIT_BOUNDS],
   origin: [0, 0, 0],
   position: [0, 0, 0],
   orientation: [0, 0, 0],
   rotation: null,
   scale: [1, 1, 1],
-  bounds: [...vtkBoundingBox.INIT_BOUNDS],
   properties: [],
 
   userMatrix: null,
@@ -303,6 +303,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.getArray(publicAPI, model, ['orientation']);
   macro.setGetArray(publicAPI, model, ['origin', 'position', 'scale'], 3);
   macro.setGet(publicAPI, model, ['properties']);
+  macro.getArray(publicAPI, model, ['bounds'], 6);
 
   // Object internal instance
   model.matrix = mat4.identity(new Float64Array(16));

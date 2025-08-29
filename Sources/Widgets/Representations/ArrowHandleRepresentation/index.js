@@ -115,11 +115,13 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.setGlyphResolution = macro.chain(
-    publicAPI.setGlyphResolution,
-    (r) => model._pipeline.glyph.setPhiResolution(r),
-    (r) => model._pipeline.glyph.setThetaResolution(r)
-  );
+  const superSetGlyphResolution = publicAPI.setGlyphResolution;
+  publicAPI.setGlyphResolution = (r) => {
+    const res = superSetGlyphResolution(r);
+    model._pipeline.glyph.setPhiResolution(r);
+    model._pipeline.glyph.setThetaResolution(r);
+    return res;
+  };
 
   // --------------------------------------------------------------------------
 

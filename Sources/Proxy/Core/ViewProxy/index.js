@@ -353,10 +353,11 @@ function vtkViewProxy(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.setBackground = macro.chain(
-    model.renderer.setBackground,
-    updateAnnotationColor
-  );
+  publicAPI.setBackground = (...args) => {
+    const res = model.renderer.setBackground(...args);
+    updateAnnotationColor();
+    return res;
+  };
 
   // --------------------------------------------------------------------------
 

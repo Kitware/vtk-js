@@ -1,6 +1,7 @@
 import Constants from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
 import macro from 'vtk.js/Sources/macros';
 import vtkAbstractImageMapper from 'vtk.js/Sources/Rendering/Core/AbstractImageMapper';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import * as pickingHelper from 'vtk.js/Sources/Rendering/Core/AbstractImageMapper/helper';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
@@ -204,13 +205,15 @@ function vtkImageMapper(publicAPI, model) {
     return model.closestIJKAxis;
   };
 
-  publicAPI.getBounds = () => {
+  publicAPI.computeBounds = () => {
     const image = publicAPI.getCurrentImage();
     if (!image) {
-      return vtkMath.createUninitializedBounds();
+      vtkBoundingBox.reset(model.bounds);
+      return;
     }
     if (!model.useCustomExtents) {
-      return image.getBounds();
+      vtkBoundingBox.setBounds(model.bounds, image.getBounds());
+      return;
     }
 
     const ex = model.customDisplayExtent.slice();
@@ -237,7 +240,7 @@ function vtkImageMapper(publicAPI, model) {
         break;
     }
 
-    return image.extentToBounds(ex);
+    vtkBoundingBox.setBounds(model.bounds, image.extentToBounds(ex));
   };
 
   publicAPI.getBoundsForSlice = (slice = model.slice, halfThickness = 0) => {

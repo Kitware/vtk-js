@@ -638,17 +638,17 @@ function vtkResliceCursorWidget(publicAPI, model) {
       },
       {}
     );
-  publicAPI.setScaleInPixels = macro.chain(
-    publicAPI.setScaleInPixels,
-    (scale) => {
-      publicAPI.getViewWidgets().forEach((w) => w.setScaleInPixels(scale));
-      updateState(
-        model.widgetState,
-        model.scaleInPixels,
-        model.rotationHandlePosition
-      );
-    }
-  );
+  const superSetScaleInPixels = publicAPI.setScaleInPixels;
+  publicAPI.setScaleInPixels = (scale) => {
+    const res = superSetScaleInPixels(scale);
+    publicAPI.getViewWidgets().forEach((w) => w.setScaleInPixels(scale));
+    updateState(
+      model.widgetState,
+      model.scaleInPixels,
+      model.rotationHandlePosition
+    );
+    return res;
+  };
 
   publicAPI.getPlaneExtremities = (viewType) => {
     const dirProj = publicAPI.getWidgetState().getPlanes()[viewType].normal;

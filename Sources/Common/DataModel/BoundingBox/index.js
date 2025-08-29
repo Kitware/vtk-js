@@ -49,14 +49,23 @@ export function reset(bounds) {
   return setBounds(bounds, INIT_BOUNDS);
 }
 
-export function addPoint(bounds, x, y, z) {
+export function addPoint(bounds, xOrPoint, y, z) {
   const [xMin, xMax, yMin, yMax, zMin, zMax] = bounds;
-  bounds[0] = xMin < x ? xMin : x;
-  bounds[1] = xMax > x ? xMax : x;
-  bounds[2] = yMin < y ? yMin : y;
-  bounds[3] = yMax > y ? yMax : y;
-  bounds[4] = zMin < z ? zMin : z;
-  bounds[5] = zMax > z ? zMax : z;
+  if (typeof xOrPoint === 'number') {
+    bounds[0] = xMin < xOrPoint ? xMin : xOrPoint;
+    bounds[1] = xMax > xOrPoint ? xMax : xOrPoint;
+    bounds[2] = yMin < y ? yMin : y;
+    bounds[3] = yMax > y ? yMax : y;
+    bounds[4] = zMin < z ? zMin : z;
+    bounds[5] = zMax > z ? zMax : z;
+  } else {
+    bounds[0] = xMin < xOrPoint[0] ? xMin : xOrPoint[0];
+    bounds[1] = xMax > xOrPoint[0] ? xMax : xOrPoint[0];
+    bounds[2] = yMin < xOrPoint[1] ? yMin : xOrPoint[1];
+    bounds[3] = yMax > xOrPoint[1] ? yMax : xOrPoint[1];
+    bounds[4] = zMin < xOrPoint[2] ? zMin : xOrPoint[2];
+    bounds[5] = zMax > xOrPoint[2] ? zMax : xOrPoint[2];
+  }
   return bounds;
 }
 
