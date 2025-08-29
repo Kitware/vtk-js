@@ -788,7 +788,7 @@ function vtkCubeAxesActor(publicAPI, model) {
   // as it relies on the pixel size of the window. Every time the camera
   // changes the bounds change. This method simplifies by just expanding
   // the grid bounds by a user specified factor.
-  publicAPI.getBounds = () => {
+  publicAPI.computeBounds = () => {
     publicAPI.update();
     vtkBoundingBox.setBounds(model.bounds, model.gridActor.getBounds());
     vtkBoundingBox.scaleAboutCenter(
@@ -797,7 +797,6 @@ function vtkCubeAxesActor(publicAPI, model) {
       model.boundsScaleFactor,
       model.boundsScaleFactor
     );
-    return model.bounds;
   };
 
   // Make sure the grid share the actor property

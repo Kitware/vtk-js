@@ -66,22 +66,16 @@ function vtkGlyph3DMapper(publicAPI, model) {
     return idata.getPointData().getArray(model.scaleArray);
   };
 
-  publicAPI.getBounds = () => {
-    const idata = publicAPI.getInputData(0);
-    const gdata = publicAPI.getInputData(1);
-    if (!idata || !gdata) {
-      return vtkMath.createUninitializedBounds();
-    }
-
-    // first we build the arrays used for the glyphing
-    publicAPI.buildArrays();
-    return model.bounds;
-  };
+  publicAPI.computeBounds = () => publicAPI.buildArrays();
 
   publicAPI.buildArrays = () => {
     // if the mtgime requires it, rebuild
     const idata = publicAPI.getInputData(0);
     const gdata = publicAPI.getInputData(1);
+    if (!idata || !gdata) {
+      vtkBoundingBox.reset(model.bounds);
+      return;
+    }
     if (
       model.buildTime.getMTime() < gdata.getMTime() ||
       model.buildTime.getMTime() < idata.getMTime() ||
@@ -114,12 +108,7 @@ function vtkGlyph3DMapper(publicAPI, model) {
       // overall bounds while building the arrays
       const corners = [];
       vtkBoundingBox.getCorners(gbounds, corners);
-      model.bounds[0] = vtkBoundingBox.INIT_BOUNDS[0];
-      model.bounds[1] = vtkBoundingBox.INIT_BOUNDS[1];
-      model.bounds[2] = vtkBoundingBox.INIT_BOUNDS[2];
-      model.bounds[3] = vtkBoundingBox.INIT_BOUNDS[3];
-      model.bounds[4] = vtkBoundingBox.INIT_BOUNDS[4];
-      model.bounds[5] = vtkBoundingBox.INIT_BOUNDS[5];
+      vtkBoundingBox.reset(model.bounds);
 
       const tcorner = new Float64Array(3);
 
@@ -225,24 +214,7 @@ function vtkGlyph3DMapper(publicAPI, model) {
         // update bounds
         for (let p = 0; p < 8; ++p) {
           vec3.transformMat4(tcorner, corners[p], z);
-          if (tcorner[0] < model.bounds[0]) {
-            model.bounds[0] = tcorner[0];
-          }
-          if (tcorner[1] < model.bounds[2]) {
-            model.bounds[2] = tcorner[1];
-          }
-          if (tcorner[2] < model.bounds[4]) {
-            model.bounds[4] = tcorner[2];
-          }
-          if (tcorner[0] > model.bounds[1]) {
-            model.bounds[1] = tcorner[0];
-          }
-          if (tcorner[1] > model.bounds[3]) {
-            model.bounds[3] = tcorner[1];
-          }
-          if (tcorner[2] > model.bounds[5]) {
-            model.bounds[5] = tcorner[2];
-          }
+          vtkBoundingBox.addPoint(model.bounds, tcorner);
         }
 
         const n = new Float32Array(nbuff, i * 36, 9);
@@ -332,9 +304,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.buildTime = {};
   macro.obj(model.buildTime, { mtime: 0 });
-
-  model.boundsTime = {};
-  macro.obj(model.boundsTime, { mtime: 0 });
 
   macro.setGet(publicAPI, model, [
     'orient',
