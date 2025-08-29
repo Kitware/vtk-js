@@ -66,9 +66,15 @@ export interface vtkPolyData extends vtkPointSet {
   getLines(): vtkCellArray;
 
   /**
-   *
+   * Get the links between points and cells.
    */
-  getLinks(): any;
+  getLinks(): any; // vtkCellLinks
+
+  /**
+   * Get the maximum cell size.
+   * Returns 0 if there is no cell.
+   */
+  getMaxCellSize(): number;
 
   /**
    * Determine the number of cells composing the polydata.
@@ -104,7 +110,7 @@ export interface vtkPolyData extends vtkPointSet {
    * Topological inquiry to get cells using point.
    * @param ptId
    */
-  getPointCells(ptId: any): void;
+  getPointCells(ptId: number): void;
 
   /**
    * Get the cell array defining polys.

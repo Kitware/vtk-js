@@ -46,6 +46,11 @@ export interface vtkCellArray extends vtkDataArray {
    * @returns {Number} Idx of where the cell was inserted
    */
   insertNextCell(cellPointIds: number[]): number;
+
+  /**
+   * Get the maximum cell size.
+   */
+  getMaxCellSize(): number;
 }
 
 /**
