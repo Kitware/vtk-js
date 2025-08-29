@@ -117,6 +117,20 @@ function vtkCellArray(publicAPI, model) {
     }
     return cellId;
   };
+
+  publicAPI.getMaxCellSize = () => {
+    const cellSizes = publicAPI.getCellSizes();
+    if (cellSizes.length === 0) {
+      return 0;
+    }
+    let len = cellSizes.length;
+    let max = -Infinity;
+
+    while (len--) {
+      max = cellSizes[len] > max ? cellSizes[len] : max;
+    }
+    return max;
+  };
 }
 
 // ----------------------------------------------------------------------------
