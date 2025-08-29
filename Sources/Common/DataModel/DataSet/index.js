@@ -1,38 +1,9 @@
 import macro from 'vtk.js/Sources/macros';
 import vtk from 'vtk.js/Sources/vtk';
 import vtkDataSetAttributes from 'vtk.js/Sources/Common/DataModel/DataSetAttributes';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import Constants from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
-
-// import vtkBoundingBox from '../BoundingBox';
-// import * as vtkMath from '../../Core/Math';
-//
-// function getBounds(dataset) {
-//   if (dataset.bounds) {
-//     return dataset.bounds;
-//   }
-//   if (dataset.type && dataset[dataset.type]) {
-//     const ds = dataset[dataset.type];
-//     if (ds.bounds) {
-//       return ds.bounds;
-//     }
-//     if (ds.Points && ds.Points.bounds) {
-//       return ds.Points.bounds;
-//     }
-
-//     if (ds.Points && ds.Points.values) {
-//       const array = ds.Points.values;
-//       const bbox = [...vtkBoundingBox.INIT_BOUNDS];
-//       const size = array.length;
-//       const delta = ds.Points.numberOfComponents ? ds.Points.numberOfComponents : 3;
-//       for (let idx = 0; idx < size; idx += delta) {
-//         vtkBoundingBox.addPoint(bbox, array[idx * delta], array[(idx * delta) + 1], array[(idx * delta) + 2]);
-//       }
-//       ds.Points.bounds = bbox;
-//       return ds.Points.bounds;
-//     }
-//   }
-//   return vtkMath.createUninitializedBounds();
-// }
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -56,6 +27,87 @@ function vtkDataSet(publicAPI, model) {
       model[fieldName] = vtk(model[fieldName]);
     }
   });
+
+  //------------------------------------------------------------------------------
+  // Compute the data bounding box from data points.
+  publicAPI.computeBounds = () => {
+    if (
+      (model.modifiedTime &&
+        model.computeTime &&
+        model.modifiedTime > model.computeTime) ||
+      !model.computeTime
+    ) {
+      const points = publicAPI.getPoints();
+      if (points?.getNumberOfPoints()) {
+        // Compute bounds from points
+        const bounds = vtkBoundingBox.INIT_BOUNDS.slice();
+        const numberOfPoints = points.getNumberOfPoints();
+        for (let i = 0; i < numberOfPoints; i++) {
+          const pt = points.getPoint(i);
+          vtkBoundingBox.addPoint(bounds, pt[0], pt[1], pt[2]);
+        }
+        model.bounds = bounds;
+      } else {
+        model.bounds = vtkMath.createUninitializedBounds();
+      }
+      // Update computeTime
+      model.computeTime = Date.now();
+    }
+  };
+
+  /**
+   * Returns the bounds as [xmin, xmax, ymin, ymax, zmin, zmax]
+   */
+  publicAPI.getBounds = () => {
+    if (model.bounds && model.bounds.length === 6) {
+      return model.bounds;
+    }
+    // fallback: try to get bounds from pointData if available
+    if (publicAPI.getPoints && publicAPI.getPoints()) {
+      return publicAPI.getPoints().getBounds();
+    }
+    return vtkMath.createUninitializedBounds();
+  };
+
+  /**
+   * Returns the squared length of the diagonal of the bounding box
+   */
+  publicAPI.getLength2 = () => {
+    const bounds = publicAPI.getBounds();
+    if (!bounds || bounds.length !== 6) return 0;
+    return vtkBoundingBox.getDiagonalLength2(bounds);
+  };
+
+  /**
+   * Returns the length of the diagonal of the bounding box
+   */
+  publicAPI.getLength = () => Math.sqrt(publicAPI.getLength2());
+
+  /**
+   * Returns the center of the bounding box as [x, y, z]
+   */
+  publicAPI.getCenter = () => {
+    const bounds = publicAPI.getBounds();
+    if (!bounds || bounds.length !== 6) return [0, 0, 0];
+    return [
+      (bounds[0] + bounds[1]) / 2,
+      (bounds[2] + bounds[3]) / 2,
+      (bounds[4] + bounds[5]) / 2,
+    ];
+  };
+
+  /**
+   * Get the bounding box of a cell with the given cellId
+   * @param {Number} cellId - The id of the cell
+   * @returns {Number[]} - The bounds as [xmin, xmax, ymin, ymax, zmin, zmax]
+   */
+  publicAPI.getCellBounds = (cellId) => {
+    const cell = publicAPI.getCell(cellId);
+    if (cell) {
+      return cell.getBounds();
+    }
+    return vtkMath.createUninitializedBounds();
+  };
 
   const superShallowCopy = publicAPI.shallowCopy;
   publicAPI.shallowCopy = (other, debug = false) => {

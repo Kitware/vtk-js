@@ -993,6 +993,7 @@ export const STATIC = {
   getLengths,
   getMaxLength,
   getDiagonalLength,
+  getDiagonalLength2,
   getMinPoint,
   getMaxPoint,
   getXRange,

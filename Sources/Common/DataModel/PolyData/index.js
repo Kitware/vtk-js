@@ -5,8 +5,12 @@ import vtkCellLinks from 'vtk.js/Sources/Common/DataModel/CellLinks';
 import vtkCellTypes from 'vtk.js/Sources/Common/DataModel/CellTypes';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import vtkPointSet from 'vtk.js/Sources/Common/DataModel/PointSet';
-import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
+import vtkQuad from 'vtk.js/Sources/Common/DataModel/Quad';
+import vtkPolyLine from 'vtk.js/Sources/Common/DataModel//PolyLine';
+import vtkPolygon from 'vtk.js/Sources/Common/DataModel/Polygon';
 
+import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
+import vtkTriangleStrip from 'vtk.js/Sources/Common/DataModel/TriangleStrip';
 import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
 import { POLYDATA_FIELDS } from 'vtk.js/Sources/Common/DataModel/PolyData/Constants';
 
@@ -14,8 +18,12 @@ const { vtkWarningMacro } = macro;
 
 export const CELL_FACTORY = {
   [CellType.VTK_LINE]: vtkLine,
+  [CellType.VTK_QUAD]: vtkQuad,
   [CellType.VTK_POLY_LINE]: vtkLine,
   [CellType.VTK_TRIANGLE]: vtkTriangle,
+  [CellType.VTK_TRIANGLE_STRIP]: vtkTriangleStrip,
+  [CellType.VTK_POLY_LINE]: vtkPolyLine,
+  [CellType.VTK_POLYGON]: vtkPolygon,
 };
 
 // ----------------------------------------------------------------------------
@@ -241,6 +249,28 @@ function vtkPolyData(publicAPI, model) {
     const cell = cellHint || CELL_FACTORY[cellInfo.cellType].newInstance();
     cell.initialize(publicAPI.getPoints(), cellInfo.cellPointIds);
     return cell;
+  };
+
+  publicAPI.getMaxCellSize = () => {
+    let maxCellSize = 0;
+
+    if (model.verts) {
+      maxCellSize = Math.max(maxCellSize, model.verts.getMaxCellSize());
+    }
+
+    if (model.lines) {
+      maxCellSize = Math.max(maxCellSize, model.lines.getMaxCellSize());
+    }
+
+    if (model.polys) {
+      maxCellSize = Math.max(maxCellSize, model.polys.getMaxCellSize());
+    }
+
+    if (model.strips) {
+      maxCellSize = Math.max(maxCellSize, model.strips.getMaxCellSize());
+    }
+
+    return maxCellSize;
   };
 }
 
