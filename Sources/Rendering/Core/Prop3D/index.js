@@ -238,6 +238,13 @@ function vtkProp3D(publicAPI, model) {
     return model.properties[mapperInputPort];
   };
 
+  publicAPI.getProperties = () => {
+    if (model.properties.length === 0) {
+      model.properties[0] = publicAPI.makeProperty?.();
+    }
+    return model.properties;
+  };
+
   publicAPI.setProperty = (firstArg, secondArg) => {
     // Two options for argument layout:
     // - (mapperInputPort, property)
