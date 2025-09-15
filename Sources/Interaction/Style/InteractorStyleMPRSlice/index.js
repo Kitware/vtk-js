@@ -1,28 +1,17 @@
 import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkInteractorStyleManipulator from 'vtk.js/Sources/Interaction/Style/InteractorStyleManipulator';
 import vtkMouseCameraTrackballRotateManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballRotateManipulator';
 import vtkMouseCameraTrackballPanManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballPanManipulator';
 import vtkMouseCameraTrackballZoomManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballZoomManipulator';
 import vtkMouseRangeManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseRangeManipulator';
 
+import { mat4 } from 'gl-matrix';
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
-
-function boundsToCorners(bounds) {
-  return [
-    [bounds[0], bounds[2], bounds[4]],
-    [bounds[0], bounds[2], bounds[5]],
-    [bounds[0], bounds[3], bounds[4]],
-    [bounds[0], bounds[3], bounds[5]],
-    [bounds[1], bounds[2], bounds[4]],
-    [bounds[1], bounds[2], bounds[5]],
-    [bounds[1], bounds[3], bounds[4]],
-    [bounds[1], bounds[3], bounds[5]],
-  ];
-}
 
 // ----------------------------------------------------------------------------
 
@@ -153,14 +142,9 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
 
     if (model.volumeMapper) {
       const range = publicAPI.getSliceRange();
-      const bounds = model.volumeMapper.getBounds();
 
       const clampedSlice = clamp(slice, ...range);
-      const center = [
-        (bounds[0] + bounds[1]) / 2.0,
-        (bounds[2] + bounds[3]) / 2.0,
-        (bounds[4] + bounds[5]) / 2.0,
-      ];
+      const center = model.volumeMapper.getCenter();
 
       const distance = camera.getDistance();
       const dop = camera.getDirectionOfProjection();
@@ -193,37 +177,33 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
     if (model.volumeMapper) {
       const sliceNormal = publicAPI.getSliceNormal();
 
-      if (
-        sliceNormal[0] === cache.sliceNormal[0] &&
-        sliceNormal[1] === cache.sliceNormal[1] &&
-        sliceNormal[2] === cache.sliceNormal[2]
-      ) {
+      if (vtkMath.areEquals(sliceNormal, cache.sliceNormal)) {
         return cache.sliceRange;
       }
 
-      const bounds = model.volumeMapper.getBounds();
-      const points = boundsToCorners(bounds);
-
       // Get rotation matrix from normal to +X (since bounds is aligned to XYZ)
-      const transform = vtkMatrixBuilder
+      const sliceOrientation = vtkMatrixBuilder
         .buildFromDegree()
         .identity()
         .rotateFromDirections(sliceNormal, [1, 0, 0]);
+      const imageAlongSliceNormal = mat4.create();
+      mat4.multiply(
+        imageAlongSliceNormal,
+        sliceOrientation.getMatrix(),
+        model.volumeMapper.getInputData().getIndexToWorld()
+      );
 
-      points.forEach((pt) => transform.apply(pt));
+      // Transform the 8 corners of the input data's bounding box
+      // to rotate into the slice plane space without the intermediate
+      // axis-aligned box (provided by getBounds) which would grow the bounds.
+      const transformedBounds = vtkBoundingBox.transformBounds(
+        model.volumeMapper.getInputData().getSpatialExtent(),
+        imageAlongSliceNormal
+      );
 
       // range is now maximum X distance
-      let minX = Infinity;
-      let maxX = -Infinity;
-      for (let i = 0; i < 8; i++) {
-        const x = points[i][0];
-        if (x > maxX) {
-          maxX = x;
-        }
-        if (x < minX) {
-          minX = x;
-        }
-      }
+      const minX = transformedBounds[0];
+      const maxX = transformedBounds[1];
 
       cache.sliceNormal = sliceNormal;
       cache.sliceRange = [minX, maxX];
