@@ -285,14 +285,14 @@ function oppositeSign(a, b) {
 }
 
 export function getCorners(bounds, corners) {
-  let count = 0;
-  for (let ix = 0; ix < 2; ix++) {
-    for (let iy = 2; iy < 4; iy++) {
-      for (let iz = 4; iz < 6; iz++) {
-        corners[count++] = [bounds[ix], bounds[iy], bounds[iz]];
-      }
-    }
-  }
+  corners[0] = [bounds[0], bounds[2], bounds[4]];
+  corners[1] = [bounds[0], bounds[2], bounds[5]];
+  corners[2] = [bounds[0], bounds[3], bounds[4]];
+  corners[3] = [bounds[0], bounds[3], bounds[5]];
+  corners[4] = [bounds[1], bounds[2], bounds[4]];
+  corners[5] = [bounds[1], bounds[2], bounds[5]];
+  corners[6] = [bounds[1], bounds[3], bounds[4]];
+  corners[7] = [bounds[1], bounds[3], bounds[5]];
   return corners;
 }
 
