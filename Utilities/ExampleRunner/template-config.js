@@ -69,14 +69,16 @@ module.exports = {
         colors: true,
       },
     },
-    proxy: {
-      '/data/**': {
-        target: 'http://${settings.devServerConfig.host()}:${settings.devServerConfig.port()}/Data',
-        pathRewrite: {
-          '^/data': ''
+    proxy: [
+      {
+        '/data/**': {
+          target: 'http://${settings.devServerConfig.host()}:${settings.devServerConfig.port()}/Data',
+          pathRewrite: {
+            '^/data': ''
+          },
         },
       },
-    },
+    ],
   },
 };
 `;
