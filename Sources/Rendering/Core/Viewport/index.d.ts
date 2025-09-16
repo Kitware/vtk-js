@@ -65,7 +65,7 @@ export interface vtkViewport extends vtkObject {
   /**
    *
    */
-  getViewport(): vtkViewport;
+  getViewport(): [number, number, number, number];
 
   /**
    *
