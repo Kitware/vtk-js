@@ -9,6 +9,7 @@ export interface IImageDataInitialValues extends IDataSetInitialValues {
   spacing?: number[];
   origin?: number[];
   extent?: number[];
+  direction?: number[];
 }
 
 interface IComputeHistogram {
