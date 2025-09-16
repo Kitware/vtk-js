@@ -232,7 +232,9 @@ function vtkImageData(publicAPI, model) {
     vtkBoundingBox.transformBounds(bin, model.worldToIndex, bout);
 
   // Make sure the transform is correct
-  publicAPI.onModified(publicAPI.computeTransforms);
+  model._onOriginChanged = publicAPI.computeTransforms;
+  model._onDirectionChanged = publicAPI.computeTransforms;
+  model._onSpacingChanged = publicAPI.computeTransforms;
   publicAPI.computeTransforms();
 
   publicAPI.getCenter = () => vtkBoundingBox.getCenter(publicAPI.getBounds());
