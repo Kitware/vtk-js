@@ -120,7 +120,7 @@ function vtkBox(publicAPI, model) {
     vtkBoundingBox.setBounds(model.bbox, boundsArray);
   };
 
-  publicAPI.getBounds = () => model.bbox;
+  publicAPI.getBounds = () => [...model.bbox];
 
   publicAPI.evaluateFunction = (x, y, z) => {
     const point = Array.isArray(x) ? x : [x, y, z];

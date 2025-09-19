@@ -15,10 +15,29 @@ export interface IAbstractMapper3DInitialValues
 export interface vtkAbstractMapper3D extends vtkAbstractMapper {
   /**
    * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-   * @default 0
-   * @return {Bounds} The bounds for the mapper.
+   * Bounds are (re)computed if needed.
+   * @return {Bounds} A copy of the bounds for the mapper.
+   * @see getBoundsByReference
+   * @see computeBounds
    */
   getBounds(): Bounds;
+
+  /**
+   * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+   * Bounds are (re)computed if needed.
+   * @return {Bounds} The bounds array of the mapper.
+   * @see getBounds
+   * @see computeBounds
+   */
+  getBoundsByReference(): Bounds;
+
+  /**
+   * Compute the bounds for this mapper.
+   * Must be implemented by sub-classes. Called by getBounds methods.
+   * @see getBoundsByReference
+   * @see getBounds
+   */
+  computeBounds(): void;
 
   /**
    * Get the center of this mapper’s data.
