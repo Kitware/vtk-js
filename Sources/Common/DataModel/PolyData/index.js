@@ -5,8 +5,11 @@ import vtkCellLinks from 'vtk.js/Sources/Common/DataModel/CellLinks';
 import vtkCellTypes from 'vtk.js/Sources/Common/DataModel/CellTypes';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import vtkPointSet from 'vtk.js/Sources/Common/DataModel/PointSet';
+import vtkPolyLine from 'vtk.js/Sources/Common/DataModel/PolyLine';
+import vtkPolygon from 'vtk.js/Sources/Common/DataModel/Polygon';
+import vtkQuad from 'vtk.js/Sources/Common/DataModel/Quad';
 import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
-
+import vtkTriangleStrip from 'vtk.js/Sources/Common/DataModel/TriangleStrip';
 import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
 import { POLYDATA_FIELDS } from 'vtk.js/Sources/Common/DataModel/PolyData/Constants';
 
@@ -14,8 +17,12 @@ const { vtkWarningMacro } = macro;
 
 export const CELL_FACTORY = {
   [CellType.VTK_LINE]: vtkLine,
+  [CellType.VTK_QUAD]: vtkQuad,
   [CellType.VTK_POLY_LINE]: vtkLine,
   [CellType.VTK_TRIANGLE]: vtkTriangle,
+  [CellType.VTK_TRIANGLE_STRIP]: vtkTriangleStrip,
+  [CellType.VTK_POLY_LINE]: vtkPolyLine,
+  [CellType.VTK_POLYGON]: vtkPolygon,
 };
 
 // ----------------------------------------------------------------------------
@@ -242,6 +249,12 @@ function vtkPolyData(publicAPI, model) {
     cell.initialize(publicAPI.getPoints(), cellInfo.cellPointIds);
     return cell;
   };
+
+  publicAPI.getMaxCellSize = () =>
+    POLYDATA_FIELDS.reduce(
+      (max, type) => Math.max(max, model[type]?.getMaxCellSize?.() ?? 0),
+      0
+    );
 }
 
 // ----------------------------------------------------------------------------
