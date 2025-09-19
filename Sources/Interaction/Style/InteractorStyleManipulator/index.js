@@ -425,6 +425,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       if (!model._interactor.isPointerLocked()) {
         model.currentManipulator = null;
       }
+      model._interactor.cancelAnimation(publicAPI.onButtonDown);
       publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
     }
   };
