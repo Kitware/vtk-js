@@ -11,13 +11,7 @@ function vtkCylinderSource(publicAPI, model) {
   // Set our classname
   model.classHierarchy.push('vtkCylinderSource');
 
-  function requestData(inData, outData) {
-    if (model.deleted) {
-      return;
-    }
-
-    let dataset = outData[0];
-
+  publicAPI.requestData = (inData, outData) => {
     const angle = (2.0 * Math.PI) / model.resolution;
     let numberOfPoints = 2 * model.resolution;
     let numberOfPolys = 5 * model.resolution;
@@ -160,7 +154,7 @@ function vtkCylinderSource(publicAPI, model) {
       .translate(...model.center.map((c) => c * -1))
       .apply(points);
 
-    dataset = vtkPolyData.newInstance();
+    const dataset = outData[0]?.initialize() || vtkPolyData.newInstance();
     dataset.getPoints().setData(points, 3);
     dataset.getPolys().setData(polys, 1);
     dataset.getPointData().setNormals(normals);
@@ -168,10 +162,7 @@ function vtkCylinderSource(publicAPI, model) {
 
     // Update output
     outData[0] = dataset;
-  }
-
-  // Expose methods
-  publicAPI.requestData = requestData;
+  };
 }
 
 // ----------------------------------------------------------------------------

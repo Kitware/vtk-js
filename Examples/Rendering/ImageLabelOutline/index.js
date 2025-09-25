@@ -76,8 +76,11 @@ function createLabelmap(backgroundImageData) {
   labelMap.actor.getProperty().setUseLabelOutline(true);
   // Label outline thickness is for first segment -> 2 (positioned at array index 0), second segment -> 4
   // (positioned at array index 4)
-  labelMap.actor.getProperty().setLabelOutlineThickness([2, 1, 1, 1, 4]);
-  labelMap.actor.getProperty().setLabelOutlineOpacity(1.0);
+  labelMap.actor.getProperty().setLabelOutlineThickness([4, 1, 1, 1, 8]);
+  // Sets the outline opacity similarly to the outline thickness
+  labelMap.actor.getProperty().setLabelOutlineOpacity([0.5, 1, 1, 1, 0.8]);
+  // or you can set a global outline opacity
+  // labelMap.actor.getProperty().setLabelOutlineOpacity(1.0);
 
   // This is very important to make sure the labelmap is rendered
   // correctly

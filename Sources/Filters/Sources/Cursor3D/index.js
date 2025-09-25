@@ -94,9 +94,6 @@ function vtkCursor3D(publicAPI, model) {
   };
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
     let numPts = 0;
     let numLines = 0;
     // Check bounding box and origin
@@ -148,7 +145,7 @@ function vtkCursor3D(publicAPI, model) {
     if (numPts === 0) {
       return;
     }
-    const polyData = vtkPolyData.newInstance();
+    const polyData = outData[0]?.initialize() || vtkPolyData.newInstance();
     const newPts = vtkPoints.newInstance({ size: numPts * 3 });
     //  vtkCellArray is a supporting object that explicitly represents cell
     //  connectivity. The cell array structure is a raw integer list

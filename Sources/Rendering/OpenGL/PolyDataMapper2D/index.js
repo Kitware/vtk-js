@@ -3,13 +3,13 @@ import { mat4 } from 'gl-matrix';
 
 import * as macro from 'vtk.js/Sources/macros';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
-import vtkMapper2D from 'vtk.js/Sources/Rendering/Core/Mapper2D';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData2DFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyData2DFS.glsl';
 import vtkPolyData2DVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyData2DVS.glsl';
 import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/ReplacementShaderMapper';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
 
 import { round } from 'vtk.js/Sources/Common/Core/Math';
 
@@ -18,7 +18,7 @@ import { DisplayLocation } from 'vtk.js/Sources/Rendering/Core/Property2D/Consta
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
 const { primTypes } = vtkHelper;
-const { ScalarMode } = vtkMapper2D;
+const { Filter, Wrap } = vtkOpenGLTexture;
 const { vtkErrorMacro } = macro;
 const StartEvent = { type: 'StartEvent' };
 const EndEvent = { type: 'EndEvent' };
@@ -91,6 +91,12 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
     ) {
       return;
     }
+
+    // cull back face to avoid double drawing
+    const gl = model.context;
+    model._openGLRenderWindow.enableCullFace();
+    gl.cullFace(gl.BACK);
+
     publicAPI.renderPieceStart(ren, actor);
     publicAPI.renderPieceDraw(ren, actor);
     publicAPI.renderPieceFinish(ren, actor);
@@ -105,6 +111,13 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
           model._openGLRenderer.getSelector().renderProp(actor);
       }
     }
+
+    // If we are coloring by texture, then load the texture map.
+    // Use Map as indicator, because texture hangs around.
+    if (model.renderable.getColorTextureMap()) {
+      model.internalColorTexture.activate();
+    }
+
     // make sure the BOs are up to date
     publicAPI.updateBufferObjects(ren, actor);
 
@@ -161,28 +174,45 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
 
     model.renderable.mapScalars(poly, actor.getProperty().getOpacity());
     const c = model.renderable.getColorMapColors();
-
-    model.haveCellScalars = false;
-    const scalarMode = model.renderable.getScalarMode();
-    if (model.renderable.getScalarVisibility()) {
-      // We must figure out how the scalars should be mapped to the polydata.
-      if (
-        (scalarMode === ScalarMode.USE_CELL_DATA ||
-          scalarMode === ScalarMode.USE_CELL_FIELD_DATA ||
-          scalarMode === ScalarMode.USE_FIELD_DATA ||
-          !poly.getPointData().getScalars()) &&
-        scalarMode !== ScalarMode.USE_POINT_FIELD_DATA &&
-        c
-      ) {
-        model.haveCellScalars = true;
-      }
-    }
-
     const representation = actor.getProperty().getRepresentation();
 
     let tcoords = poly.getPointData().getTCoords();
     if (!model.openGLActor2D.getActiveTextures()) {
       tcoords = null;
+    }
+
+    // Flag to check if tcoords are per cell instead of per point
+    let useTCoordsPerCell = false;
+    // handle color mapping via texture
+    if (model.renderable.getColorCoordinates()) {
+      tcoords = model.renderable.getColorCoordinates();
+      useTCoordsPerCell = model.renderable.getAreScalarsMappedFromCells();
+      if (!model.internalColorTexture) {
+        model.internalColorTexture = vtkOpenGLTexture.newInstance({
+          resizable: true,
+        });
+      }
+      const tex = model.internalColorTexture;
+      // the following 4 lines allow for NPOT textures
+      tex.setMinificationFilter(Filter.NEAREST);
+      tex.setMagnificationFilter(Filter.NEAREST);
+      tex.setWrapS(Wrap.CLAMP_TO_EDGE);
+      tex.setWrapT(Wrap.CLAMP_TO_EDGE);
+      tex.setOpenGLRenderWindow(model._openGLRenderWindow);
+
+      const input = model.renderable.getColorTextureMap();
+      const ext = input.getExtent();
+      const inScalars = input.getPointData().getScalars();
+      tex.create2DFromRaw({
+        width: ext[1] - ext[0] + 1,
+        height: ext[3] - ext[2] + 1,
+        numComps: inScalars.getNumberOfComponents(),
+        dataType: inScalars.getDataType(),
+        data: inScalars.getData(),
+      });
+      tex.activate();
+      tex.sendParameters();
+      tex.deactivate();
     }
 
     const transformCoordinate = model.renderable.getTransformCoordinate();
@@ -216,7 +246,8 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
         tcoords,
         colors: c,
         cellOffset: 0,
-        haveCellScalars: model.haveCellSCalars,
+        useTCoordsPerCell,
+        haveCellScalars: model.renderable.getAreScalarsMappedFromCells(),
         customAttributes: model.renderable
           .getCustomShaderAttributes()
           .map((arrayName) => poly.getPointData().getArrayByName(arrayName)),
@@ -264,6 +295,9 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
     if (model.lastBoundBO) {
       model.lastBoundBO.getVAO().release();
     }
+    if (model.renderable.getColorTextureMap()) {
+      model.internalColorTexture.deactivate();
+    }
   };
 
   publicAPI.replaceShaderValues = (shaders, ren, actor) => {
@@ -277,43 +311,67 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
     let VSSource = shaders.Vertex;
     let GSSource = shaders.Geometry;
     let FSSource = shaders.Fragment;
-    if (model.haveCellScalars) {
-      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Dec', [
-        'uniform samplerBuffer texture1;',
-      ]).result;
-      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl', [
-        'gl_FragData[0] = texelFetchBuffer(texture1, gl_PrimitiveID + PrimitiveIDOffset);',
-      ]).result;
-    }
+
+    // create the color property declarations
+    // these are always defined
+    let colorDec = [
+      'uniform vec3 diffuseColorUniform;',
+      'uniform float opacityUniform;',
+    ];
+
+    // now handle the more complex fragment shader implementation
+    let colorImpl = [
+      'vec3 diffuseColor = diffuseColorUniform;',
+      'float opacity = opacityUniform;',
+    ];
+
+    // add scalar vertex colors
     if (model.lastBoundBO.getCABO().getColorComponents() !== 0) {
+      colorDec = colorDec.concat(['varying vec4 vertexColorVSOutput;']);
       VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Color::Dec', [
-        'in vec4 diffuseColor;',
-        'out vec4 fcolorVSOutput;',
+        'attribute vec4 scalarColor;',
+        'varying vec4 vertexColorVSOutput;',
       ]).result;
       VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Color::Impl', [
-        'fcolorVSOutput = diffuseColor;',
+        'vertexColorVSOutput =  scalarColor;',
       ]).result;
       GSSource = vtkShaderProgram.substitute(GSSource, '//VTK::Color::Dec', [
-        'in vec4 fcolorVSOutput[];\n',
-        'out vec4 fcolorGSOutput;',
+        'in vec4 vertexColorVSOutput[];',
+        'out vec4 vertexColorGSOutput;',
       ]).result;
       GSSource = vtkShaderProgram.substitute(GSSource, '//VTK::Color::Impl', [
-        'fcolorGSOutput = fcolorVSOutput[i];',
+        'vertexColorGSOutput = vertexColorVSOutput[i];',
       ]).result;
-      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Dec', [
-        'in vec4 fcolorVSOutput;',
-      ]).result;
-      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl', [
-        'gl_FragData[0] = fcolorVSOutput;',
-      ]).result;
-    } else {
-      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Dec', [
-        'uniform vec4 diffuseColor;',
-      ]).result;
-      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl', [
-        'gl_FragData[0] = diffuseColor;',
-      ]).result;
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::Color::Impl',
+        colorImpl.concat([
+          '  diffuseColor = vertexColorVSOutput.rgb;',
+          '  opacity = opacity*vertexColorVSOutput.a;',
+        ])
+      ).result;
+    } else if (model.renderable.getAreScalarsMappedFromCells()) {
+      colorImpl = colorImpl.concat([
+        '  vec4 texColor = texture2D(texture1, tcoordVCVSOutput.st);',
+        '  diffuseColor = texColor.rgb;',
+        '  opacity = opacity*texColor.a;',
+      ]);
     }
+
+    colorImpl = colorImpl.concat([
+      'gl_FragData[0] = vec4(diffuseColor, opacity);',
+    ]);
+
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
+      '//VTK::Color::Dec',
+      colorDec
+    ).result;
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
+      '//VTK::Color::Impl',
+      colorImpl
+    ).result;
 
     shaders.Vertex = VSSource;
     shaders.Geometry = GSSource;
@@ -388,7 +446,7 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
         ).result;
       }
 
-      if (model.haveCellScalars) {
+      if (model.renderable.getAreScalarsMappedFromCells()) {
         GSSource = vtkShaderProgram.substitute(
           GSSource,
           '//VTK::PrimID::Impl',
@@ -508,12 +566,41 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
         cellBO.getVAO().removeAttributeArray('tcoordMC');
       }
       if (
+        cellBO.getProgram().isAttributeUsed('scalarColor') &&
+        cellBO.getCABO().getColorComponents()
+      ) {
+        if (
+          !cellBO
+            .getVAO()
+            .addAttributeArray(
+              cellBO.getProgram(),
+              cellBO.getCABO().getColorBO(),
+              'scalarColor',
+              cellBO.getCABO().getColorOffset(),
+              cellBO.getCABO().getColorBOStride(),
+              model.context.UNSIGNED_BYTE,
+              4,
+              true
+            )
+        ) {
+          vtkErrorMacro('Error setting scalarColor in shader VAO.');
+        }
+      } else {
+        cellBO.getVAO().removeAttributeArray('scalarColor');
+      }
+      if (
         model.internalColorTexture &&
         cellBO.getProgram().isUniformUsed('texture1')
       ) {
-        cellBO
-          .getProgram()
-          .setUniformi('texture1', model.internalColorTexture.getTextureUnit());
+        const texUnit = model.internalColorTexture.getTextureUnit();
+        if (texUnit > -1) {
+          cellBO
+            .getProgram()
+            .setUniformi(
+              'texture1',
+              model.internalColorTexture.getTextureUnit()
+            );
+        }
       }
       const tus = model.openGLActor2D.getActiveTextures();
       if (tus) {
@@ -553,9 +640,9 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
       const program = cellBO.getProgram();
       const ppty = actor.getProperty();
       const opacity = ppty.getOpacity();
+      program.setUniformf('opacityUniform', opacity);
       const dColor = ppty.getColor();
-      const diffuseColor = [dColor[0], dColor[1], dColor[2], opacity];
-      program.setUniform4f('diffuseColor', diffuseColor);
+      program.setUniform3fArray('diffuseColorUniform', dColor);
     }
   };
 

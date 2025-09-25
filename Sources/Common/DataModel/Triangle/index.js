@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macros';
+import macro, { TYPED_ARRAYS } from 'vtk.js/Sources/macros';
 import vtkCell from 'vtk.js/Sources/Common/DataModel/Cell';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
@@ -30,6 +30,19 @@ function computeNormal(v1, v2, v3, n) {
     n[1] /= length;
     n[2] /= length;
   }
+}
+
+function interpolationDerivs(derivs) {
+  // Order: [dN1/dr, dN2/dr, dN3/dr, dN1/ds, dN2/ds, dN3/ds]
+  // r-derivatives
+  derivs[0] = -1.0;
+  derivs[1] = 1.0;
+  derivs[2] = 0.0;
+
+  // s-derivatives
+  derivs[3] = -1.0;
+  derivs[4] = 0.0;
+  derivs[5] = 1.0;
 }
 
 function intersectWithTriangle(p1, q1, r1, p2, q2, r2, tolerance = 1e-6) {
@@ -228,6 +241,7 @@ function intersectWithTriangle(p1, q1, r1, p2, q2, r2, tolerance = 1e-6) {
 export const STATIC = {
   computeNormalDirection,
   computeNormal,
+  interpolationDerivs,
   intersectWithTriangle,
 };
 
@@ -240,6 +254,7 @@ function vtkTriangle(publicAPI, model) {
   model.classHierarchy.push('vtkTriangle');
 
   publicAPI.getCellDimension = () => 2;
+
   publicAPI.intersectWithLine = (p1, p2, tol, x, pcoords) => {
     const outObj = {
       subId: 0,
@@ -338,6 +353,17 @@ function vtkTriangle(publicAPI, model) {
     return outObj;
   };
 
+  /**
+   * Evaluates whether the specified point is inside (1), outside (0), or
+   * indeterminate (-1) for the cell; computes parametric coordinates, sub-cell
+   * ID (if applicable), squared distance to the cell (and closest point if
+   * requested), and interpolation weights for the cell.
+   *
+   * @param {Vector3} x The x point coordinate.
+   * @param {Vector3} closestPoint The closest point coordinate.
+   * @param {Vector3} pcoords The parametric coordinates.
+   * @param {Number[]} weights The number of weights.
+   */
   publicAPI.evaluatePosition = (x, closestPoint, pcoords, weights) => {
     // will return obj
     const outObj = { subId: 0, dist2: 0, evaluation: -1 };
@@ -526,6 +552,13 @@ function vtkTriangle(publicAPI, model) {
     return outObj;
   };
 
+  /**
+   * Determine global coordinates (x) from the given subId and parametric
+   * coordinates.
+   * @param {Vector3} pcoords The parametric coordinates.
+   * @param {Vector3} x The x point coordinate.
+   * @param {Number[]} weights The number of weights.
+   */
   publicAPI.evaluateLocation = (pcoords, x, weights) => {
     const p0 = [];
     const p1 = [];
@@ -544,6 +577,10 @@ function vtkTriangle(publicAPI, model) {
     weights[2] = pcoords[1];
   };
 
+  /**
+   * Get the distance of the parametric coordinate provided to the cell.
+   * @param {Vector3} pcoords The parametric coordinates.
+   */
   publicAPI.getParametricDistance = (pcoords) => {
     let pDist;
     let pDistMax = 0.0;
@@ -566,6 +603,113 @@ function vtkTriangle(publicAPI, model) {
       }
     }
     return pDistMax;
+  };
+
+  /**
+   * Get the derivatives of the triangle strip.
+   * @param {Number} subId - The sub-id of the triangle.
+   * @param {Vector3} pcoords - The parametric coordinates.
+   * @param {Number[]} values - The values at the points.
+   * @param {Number} dim - The dimension.
+   * @param {Number[]} derivs - The derivatives.
+   */
+  publicAPI.derivatives = (subId, pcoords, values, dim, derivs) => {
+    const x0 = model.points.getPoint(0);
+    const x1 = model.points.getPoint(1);
+    const x2 = model.points.getPoint(2);
+
+    const n = [];
+    const v10 = [];
+    const v20 = [];
+    const v = [];
+    computeNormal(x0, x1, x2, n);
+
+    vtkMath.subtract(x1, x0, v10);
+    vtkMath.subtract(x2, x0, v);
+    vtkMath.cross(n, v10, v20);
+
+    const lenX = vtkMath.normalize(v10); // check for degenerate triangle
+
+    if (lenX <= 0.0 || vtkMath.normalize(v20) <= 0.0) {
+      // degenerate
+      for (let j = 0; j < dim; j++) {
+        for (let i = 0; i < 3; i++) {
+          derivs[j * dim + i] = 0.0;
+        }
+      }
+      return;
+    }
+
+    // 2D coordinates
+    const v0 = [0, 0];
+    const v1 = [lenX, 0];
+    const v2 = [vtkMath.dot(v, v10), vtkMath.dot(v, v20)];
+
+    const functionDerivs = new Array(6);
+    interpolationDerivs(functionDerivs);
+
+    // Compute Jacobian: Jacobian is constant for a triangle.
+    const J = [v1[0] - v0[0], v1[1] - v0[1], v2[0] - v0[0], v2[1] - v0[1]];
+
+    // Compute inverse Jacobian (expects flat array)
+    const JI = macro.newTypedArray(TYPED_ARRAYS.Float64Array, 4);
+    vtkMath.invertMatrix(J, JI, 2); // returns flat array [JI00, JI01, JI10, JI11]
+
+    // Compute derivatives
+    for (let j = 0; j < dim; j++) {
+      let sum0 = 0.0;
+      let sum1 = 0.0;
+      for (let i = 0; i < 3; i++) {
+        sum0 += functionDerivs[i] * values[dim * i + j];
+        sum1 += functionDerivs[3 + i] * values[dim * i + j];
+      }
+      const dBydx = sum0 * JI[0] + sum1 * JI[1];
+      const dBydy = sum0 * JI[2] + sum1 * JI[3];
+
+      // Transform into global system (dot product with global axes)
+      derivs[3 * j] = dBydx * v10[0] + dBydy * v20[0];
+      derivs[3 * j + 1] = dBydx * v10[1] + dBydy * v20[1];
+      derivs[3 * j + 2] = dBydx * v10[2] + dBydy * v20[2];
+    }
+  };
+
+  /**
+   * Get the nearest cell boundary to the specified parametric
+   * coordinates and whether the point is inside or outside the cell.
+   * @param {Number} subId The sub-id of the cell.
+   * @param {Vector3} pcoords The parametric coordinates.
+   * @param {Vector2} pts The points of the cell.
+   */
+  publicAPI.cellBoundary = (subId, pcoords, pts) => {
+    const t1 = pcoords[0] - pcoords[1];
+    const t2 = 0.5 * (1.0 - pcoords[0]) - pcoords[1];
+    const t3 = 2.0 * pcoords[0] + pcoords[1] - 1.0;
+
+    // compare against three lines in parametric space that divide element
+    // into three pieces
+    if (t1 >= 0.0 && t2 >= 0.0) {
+      pts[0] = model.pointsIds[0];
+      pts[1] = model.pointsIds[1];
+    } else if (t2 < 0.0 && t3 >= 0.0) {
+      pts[0] = model.pointsIds[1];
+      pts[1] = model.pointsIds[2];
+    } // ( t1 < 0.0 && t3 < 0.0 )
+    else {
+      pts[0] = model.pointsIds[2];
+      pts[1] = model.pointsIds[0];
+    }
+
+    if (
+      pcoords[0] < 0.0 ||
+      pcoords[1] < 0.0 ||
+      pcoords[0] > 1.0 ||
+      pcoords[1] > 1.0 ||
+      1.0 - pcoords[0] - pcoords[1] < 0.0
+    ) {
+      return false; // outside of triangle
+    }
+
+    return true; // inside triangle
   };
 }
 

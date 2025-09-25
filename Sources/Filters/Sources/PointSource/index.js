@@ -11,17 +11,13 @@ function vtkPointSource(publicAPI, model) {
   model.classHierarchy.push('vtkPointSource');
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
-
     const dataset = outData[0];
 
     // Check input
     const pointDataType = dataset
       ? dataset.getPoints().getDataType()
       : model.pointType;
-    const pd = vtkPolyData.newInstance();
+    const pd = dataset?.initialize() || vtkPolyData.newInstance();
 
     // hand create a point cloud
     const numPts = model.numberOfPoints;

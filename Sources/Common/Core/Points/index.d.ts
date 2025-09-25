@@ -17,10 +17,20 @@ export interface vtkPoints extends vtkDataArray {
   computeBounds(): Bounds;
 
   /**
-   * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+   * Get a copy of the bounds of the array.
+   * Bounds are [xmin, xmax, ymin, ymax,zmin, zmax].
+   * Will recompute the bounds if necessary.
    * @return {Bounds} The bounds for the mapper.
    */
   getBounds(): Bounds;
+
+  /**
+   * Get a reference to the model bounds of the array.
+   * Bounds are [xmin, xmax, ymin, ymax,zmin, zmax].
+   * Will recompute the bounds if necessary.
+   * @return {Bounds} The bounds for the mapper.
+   */
+  getBoundsByReference(): Bounds;
 
   /**
    * Get the coordinate of a point.
@@ -81,6 +91,14 @@ export interface vtkPoints extends vtkDataArray {
    * @returns {Number} Index of the inserted point.
    */
   insertNextPoint(x: number, y: number, z: number): number;
+
+  /**
+   * Insert the [x,y,z] coordinates of a point at the given index.
+   * @param {Number} ptId The index of point.
+   * @param {Number[]} point The [x, y, z] coordinates of the point.
+   * @returns {Number} The index of the inserted point.
+   */
+  insertPoint(ptId: number, point: number[]): number;
 }
 
 /**

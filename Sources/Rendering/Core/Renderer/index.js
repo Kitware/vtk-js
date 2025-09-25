@@ -412,17 +412,19 @@ function vtkRenderer(publicAPI, model) {
 
     // default so that the bounding sphere fits within the view fustrum
 
-    // compute the distance from the intersection of the view frustum with the
-    // bounding sphere. Basically in 2D draw a circle representing the bounding
-    // sphere in 2D then draw a horizontal line going out from the center of
-    // the circle. That is the camera view. Then draw a line from the camera
-    // position to the point where it intersects the circle. (it will be tangent
-    // to the circle at this point, this is important, only go to the tangent
-    // point, do not draw all the way to the view plane). Then draw the radius
-    // from the tangent point to the center of the circle. You will note that
-    // this forms a right triangle with one side being the radius, another being
-    // the target distance for the camera, then just find the target dist using
-    // a sin.
+    // Viewing the scene from the side in 2D:
+    // Draw a circle representing the bounding sphere containing all pixels.
+    // Then, draw a horizontal line going out from the center of the circle.
+    // The camera is somewhere on this line.
+    // Picture the view frustrum, moving through the circle.
+    // Draw a line from the intersection of the view frustrum and the bounding sphere to line the camera is on, ensuring that the line is tangent to the circle.
+    // Draw the radius from the tangent point to the center of the circle.
+    // You will note that this forms a right triangle with sides:
+    // - radius
+    // - the line formed by the intersection of the view frustrum and the bounding sphere
+    // - the target distance for the camera.
+    // We can use trigonometry to solve for that distance.
+
     const angle = vtkMath.radiansFromDegrees(model.activeCamera.getViewAngle());
     const parallelScale = radius;
     const distance = radius / Math.sin(angle * 0.5);

@@ -52,7 +52,12 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     // and they handle the rendering of that cell array
     const cellMappers = [];
     let cellOffset = 0;
-    for (let i = PrimitiveTypes.Points; i <= PrimitiveTypes.Triangles; i++) {
+    // Handle all primitive types including strips
+    for (
+      let i = PrimitiveTypes.Points;
+      i <= PrimitiveTypes.TriangleStrips;
+      i++
+    ) {
       if (prims[i].getNumberOfValues() > 0) {
         if (!model.primitives[i]) {
           model.primitives[i] = publicAPI.createCellArrayMapper();
@@ -70,26 +75,44 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       }
     }
 
+    // Handle edge visibility for both triangles and triangle strips
     if (model.WebGPUActor.getRenderable().getProperty().getEdgeVisibility()) {
-      for (
-        let i = PrimitiveTypes.TriangleEdges;
-        i <= PrimitiveTypes.TriangleStripEdges;
-        i++
-      ) {
-        if (prims[i - 2].getNumberOfValues() > 0) {
-          if (!model.primitives[i]) {
-            model.primitives[i] = publicAPI.createCellArrayMapper();
-          }
-          const cellMapper = model.primitives[i];
-          cellMapper.setCellArray(prims[i - 2]);
-          cellMapper.setCurrentInput(poly);
-          cellMapper.setCellOffset(model.primitives[i - 2].getCellOffset());
-          cellMapper.setPrimitiveType(i);
-          cellMapper.setRenderable(model.renderable);
-          cellMappers.push(cellMapper);
-        } else {
-          model.primitives[i] = null;
+      // Handle triangle edges
+      if (prims[PrimitiveTypes.Triangles].getNumberOfValues() > 0) {
+        const i = PrimitiveTypes.TriangleEdges;
+        if (!model.primitives[i]) {
+          model.primitives[i] = publicAPI.createCellArrayMapper();
         }
+        const cellMapper = model.primitives[i];
+        cellMapper.setCellArray(prims[PrimitiveTypes.Triangles]);
+        cellMapper.setCurrentInput(poly);
+        cellMapper.setCellOffset(
+          model.primitives[PrimitiveTypes.Triangles].getCellOffset()
+        );
+        cellMapper.setPrimitiveType(i);
+        cellMapper.setRenderable(model.renderable);
+        cellMappers.push(cellMapper);
+      } else {
+        model.primitives[PrimitiveTypes.TriangleEdges] = null;
+      }
+
+      // Handle triangle strip edges
+      if (prims[PrimitiveTypes.TriangleStrips].getNumberOfValues() > 0) {
+        const i = PrimitiveTypes.TriangleStripEdges;
+        if (!model.primitives[i]) {
+          model.primitives[i] = publicAPI.createCellArrayMapper();
+        }
+        const cellMapper = model.primitives[i];
+        cellMapper.setCellArray(prims[PrimitiveTypes.TriangleStrips]);
+        cellMapper.setCurrentInput(poly);
+        cellMapper.setCellOffset(
+          model.primitives[PrimitiveTypes.TriangleStrips].getCellOffset()
+        );
+        cellMapper.setPrimitiveType(i);
+        cellMapper.setRenderable(model.renderable);
+        cellMappers.push(cellMapper);
+      } else {
+        model.primitives[PrimitiveTypes.TriangleStripEdges] = null;
       }
     }
 

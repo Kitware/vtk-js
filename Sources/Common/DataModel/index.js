@@ -12,12 +12,14 @@ import vtkLine from './Line';
 import vtkMolecule from './Molecule';
 import vtkPiecewiseFunction from './PiecewiseFunction';
 import vtkPlane from './Plane';
+import vtkPlanes from './Planes';
 import vtkPointSet from './PointSet';
 import vtkPolyData from './PolyData';
 import vtkSelectionNode from './SelectionNode';
 import vtkSphere from './Sphere';
 import vtkStructuredData from './StructuredData';
 import vtkTriangle from './Triangle';
+import vtkTriangleStrip from './TriangleStrip';
 
 export default {
   vtkBoundingBox,
@@ -34,10 +36,12 @@ export default {
   vtkMolecule,
   vtkPiecewiseFunction,
   vtkPlane,
+  vtkPlanes,
   vtkPointSet,
   vtkPolyData,
   vtkSelectionNode,
   vtkSphere,
   vtkStructuredData,
   vtkTriangle,
+  vtkTriangleStrip,
 };

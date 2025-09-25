@@ -1,5 +1,5 @@
 import { vtkObject } from '../../../interfaces';
-import { Nullable } from '../../../types';
+import { Extent, Nullable } from '../../../types';
 import vtkColorTransferFunction from '../ColorTransferFunction';
 import vtkPiecewiseFunction from '../../../Common/DataModel/PiecewiseFunction';
 import { InterpolationType } from './Constants';
@@ -106,15 +106,21 @@ export interface vtkImageProperty extends vtkObject {
   getUseLabelOutline(): boolean;
 
   /**
-   * Set the 0 to 1 opacity of the label outline.
-   * @param {Number} opacity
+   * Set opacity of the label outline.
+   *
+   * Opacity must be between 0 and 1.
+   * If the given opacity is a number, the opacity will apply to all outline segments.
+   * If the given opacity is an array of numbers, each opacity value will apply to the
+   * label equal to the opacity value's index + 1. (This is the same behavior as setLabelOutlineThickness).
+   *
+   * @param {Number | Number[]} opacity
    */
-  setLabelOutlineOpacity(opacity: number): boolean;
+  setLabelOutlineOpacity(opacity: number | number[]): boolean;
 
   /**
    * Get the 0 to 1 opacity of the label outline.
    */
-  getLabelOutlineOpacity(): number;
+  getLabelOutlineOpacity(): number | number[];
 
   /**
    * gets the label outline thickness
@@ -231,6 +237,25 @@ export interface vtkImageProperty extends vtkObject {
    * @param {Boolean} useLookupTableScalarRange
    */
   setUseLookupTableScalarRange(useLookupTableScalarRange: boolean): boolean;
+
+  /**
+   * Informs the mapper to only update the specified extents at the next render.
+   *
+   * If there are zero extents, the mapper updates the entire volume texture.
+   * Otherwise, the mapper will only update the texture by the specified extents
+   * during the next render call.
+   *
+   * This array is cleared after a successful render.
+   * @param extents
+   */
+  setUpdatedExtents(extents: Extent[]): boolean;
+
+  /**
+   * Retrieves the updated extents.
+   *
+   * This array is cleared after every successful render.
+   */
+  getUpdatedExtents(): Extent[];
 }
 
 /**

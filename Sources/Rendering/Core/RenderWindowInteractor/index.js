@@ -239,8 +239,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     });
     container.addEventListener('pointerup', publicAPI.handlePointerUp);
     container.addEventListener('pointercancel', publicAPI.handlePointerCancel);
-    document.addEventListener('keypress', publicAPI.handleKeyPress);
-    document.addEventListener('keydown', publicAPI.handleKeyDown);
+    container.addEventListener('keypress', publicAPI.handleKeyPress);
+    container.addEventListener('keydown', publicAPI.handleKeyDown);
+    // Observe keyup on document in case the focus changes
+    // between keydown and keyup.
     document.addEventListener('keyup', publicAPI.handleKeyUp);
 
     document.addEventListener(
@@ -248,6 +250,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       publicAPI.handlePointerLockChange
     );
 
+    container.tabIndex = 0; // to receive key events
     // using touchAction is more performant than preventDefault
     // in a touchstart handler.
     container.style.touchAction = 'none';
@@ -308,9 +311,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         'pointercancel',
         publicAPI.handlePointerCancel
       );
+      container.removeEventListener('keypress', publicAPI.handleKeyPress);
+      container.removeEventListener('keydown', publicAPI.handleKeyDown);
     }
-    document.removeEventListener('keypress', publicAPI.handleKeyPress);
-    document.removeEventListener('keydown', publicAPI.handleKeyDown);
+
     document.removeEventListener('keyup', publicAPI.handleKeyUp);
     document.removeEventListener(
       'pointerlockchange',

@@ -7,8 +7,10 @@ import vtkHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelecto
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkOpenGLPolyDataMapper from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
+import { computeCoordShiftAndScale } from 'vtk.js/Sources/Rendering/OpenGL/CellArrayBufferObject/helpers';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
+import { primTypes } from '../Helper';
 
 const { vtkErrorMacro } = macro;
 const { Representation } = vtkProperty;
@@ -17,6 +19,19 @@ const { PassTypes } = vtkHardwareSelector;
 
 const StartEvent = { type: 'StartEvent' };
 const EndEvent = { type: 'EndEvent' };
+
+const MAT4_BYTE_SIZE = 64;
+const MAT4_ELEMENT_COUNT = 16;
+
+function applyShiftScaleToMat(mat, shift, scale) {
+  // the translation component of a 4x4 column-major matrix
+  mat[12] = (mat[12] - shift[0]) * scale[0];
+  mat[13] = (mat[13] - shift[1]) * scale[1];
+  mat[14] = (mat[14] - shift[2]) * scale[2];
+  mat[0] *= scale[0];
+  mat[5] *= scale[1];
+  mat[10] *= scale[2];
+}
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLSphereMapper methods
@@ -166,6 +181,52 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
       }
     }
     superClass.replaceShaderNormal(shaders, ren, actor);
+  };
+
+  publicAPI.replaceShaderClip = (shaders, ren, actor) => {
+    if (model.hardwareSupport) {
+      let VSSource = shaders.Vertex;
+      let FSSource = shaders.Fragment;
+
+      if (model.renderable.getNumberOfClippingPlanes()) {
+        const numClipPlanes = model.renderable.getNumberOfClippingPlanes();
+        VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Clip::Dec', [
+          'uniform int numClipPlanes;',
+          `uniform vec4 clipPlanes[${numClipPlanes}];`,
+          `varying float clipDistancesVSOutput[${numClipPlanes}];`,
+        ]).result;
+
+        VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Clip::Impl', [
+          `for (int planeNum = 0; planeNum < ${numClipPlanes}; planeNum++)`,
+          '    {',
+          '    if (planeNum >= numClipPlanes)',
+          '        {',
+          '        break;',
+          '        }',
+          '    vec4 gVertex = gMatrix * vertexMC;',
+          '    clipDistancesVSOutput[planeNum] = dot(clipPlanes[planeNum], gVertex);',
+          '    }',
+        ]).result;
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Clip::Dec', [
+          'uniform int numClipPlanes;',
+          `varying float clipDistancesVSOutput[${numClipPlanes}];`,
+        ]).result;
+
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Clip::Impl', [
+          `for (int planeNum = 0; planeNum < ${numClipPlanes}; planeNum++)`,
+          '    {',
+          '    if (planeNum >= numClipPlanes)',
+          '        {',
+          '        break;',
+          '        }',
+          '    if (clipDistancesVSOutput[planeNum] < 0.0) discard;',
+          '    }',
+        ]).result;
+      }
+      shaders.Vertex = VSSource;
+      shaders.Fragment = FSSource;
+    }
+    superClass.replaceShaderClip(shaders, ren, actor);
   };
 
   publicAPI.replaceShaderColor = (shaders, ren, actor) => {
@@ -630,9 +691,14 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
   };
 
   publicAPI.buildBufferObjects = (ren, actor) => {
+    const garray = model.renderable.getMatrixArray();
+
+    const pts = model.renderable.getInputData(0).getPoints();
+    const { useShiftAndScale, coordShift, coordScale } =
+      computeCoordShiftAndScale(pts);
+
     if (model.hardwareSupport) {
       // update the buffer objects if needed
-      const garray = model.renderable.getMatrixArray();
       const narray = model.renderable.getNormalArray();
       const carray = model.renderable.getColorArray();
       if (!model.matrixBuffer) {
@@ -645,6 +711,19 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
         model.pickBuffer = vtkBufferObject.newInstance();
         model.pickBuffer.setOpenGLRenderWindow(model._openGLRenderWindow);
       }
+
+      if (useShiftAndScale) {
+        const buf = garray.buffer;
+        for (
+          let ptIdx = 0;
+          ptIdx < garray.byteLength;
+          ptIdx += MAT4_BYTE_SIZE
+        ) {
+          const mat = new Float32Array(buf, ptIdx, MAT4_ELEMENT_COUNT);
+          applyShiftScaleToMat(mat, coordShift, coordScale);
+        }
+      }
+
       if (
         model.renderable.getBuildTime().getMTime() >
         model.glyphBOBuildTime.getMTime()
@@ -674,7 +753,18 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
         model.glyphBOBuildTime.modified();
       }
     }
-    return superClass.buildBufferObjects(ren, actor);
+
+    superClass.buildBufferObjects(ren, actor);
+
+    // apply shift + scale to primitives AFTER vtkOpenGLPolyDataMapper.buildBufferObjects
+    // so that the Glyph3DMapper gets the last say in the shift + scale
+    if (useShiftAndScale) {
+      for (let i = primTypes.Start; i < primTypes.End; i++) {
+        model.primitives[i]
+          .getCABO()
+          .setCoordShiftAndScale(coordShift, coordScale);
+      }
+    }
   };
 }
 

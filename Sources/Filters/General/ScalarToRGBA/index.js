@@ -63,7 +63,8 @@ function vtkScalarToRGBA(publicAPI, model) {
       'origin',
       'direction'
     );
-    const output = vtkImageData.newInstance(datasetDefinition);
+    const output = outData[0]?.initialize() || vtkImageData.newInstance();
+    output.set(datasetDefinition);
     output.getPointData().setScalars(colorArray);
 
     outData[0] = output;

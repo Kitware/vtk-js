@@ -49,39 +49,36 @@ const vecSource = macro.newInstance((publicAPI, model) => {
   macro.obj(publicAPI, model); // make it an object
   macro.algo(publicAPI, model, 0, 1); // mixin algorithm code 1 in, 1 out
   publicAPI.requestData = (inData, outData) => {
-    // implement requestData
-    if (!outData[0]) {
-      const id = vtkImageData.newInstance();
-      id.setSpacing(0.1, 0.1, 0.1);
-      id.setExtent(0, 9, 0, 9, 0, 9);
-      const dims = [10, 10, 10];
+    const id = outData[0]?.initialize() || vtkImageData.newInstance();
+    id.setSpacing(0.1, 0.1, 0.1);
+    id.setExtent(0, 9, 0, 9, 0, 9);
+    const dims = [10, 10, 10];
 
-      const newArray = new Float32Array(3 * dims[0] * dims[1] * dims[2]);
+    const newArray = new Float32Array(3 * dims[0] * dims[1] * dims[2]);
 
-      let i = 0;
-      for (let z = 0; z <= 9; z++) {
-        for (let y = 0; y <= 9; y++) {
-          for (let x = 0; x <= 9; x++) {
-            newArray[i++] = 0.1 * x;
-            const v = 0.1 * y;
-            newArray[i++] = v * v;
-            newArray[i++] = 0;
-          }
+    let i = 0;
+    for (let z = 0; z <= 9; z++) {
+      for (let y = 0; y <= 9; y++) {
+        for (let x = 0; x <= 9; x++) {
+          newArray[i++] = 0.1 * x;
+          const v = 0.1 * y;
+          newArray[i++] = v * v;
+          newArray[i++] = 0;
         }
       }
-
-      const da = vtkDataArray.newInstance({
-        numberOfComponents: 3,
-        values: newArray,
-      });
-      da.setName('vectors');
-
-      const cpd = id.getPointData();
-      cpd.setVectors(da);
-
-      // Update output
-      outData[0] = id;
     }
+
+    const da = vtkDataArray.newInstance({
+      numberOfComponents: 3,
+      values: newArray,
+    });
+    da.setName('vectors');
+
+    const cpd = id.getPointData();
+    cpd.setVectors(da);
+
+    // Update output
+    outData[0] = id;
   };
 })();
 

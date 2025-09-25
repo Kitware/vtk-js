@@ -195,6 +195,27 @@ test('Test transpose3x3', (t) => {
   t.end();
 });
 
+test('Test normalize', (t) => {
+  const x = [1, 2, 3];
+  const res1 = vtkMath.normalize(x);
+  t.ok(res1 === Math.sqrt(14), 'normalize x');
+  t.ok(x[0] === 1 / Math.sqrt(14), 'normalize x[0]');
+  t.ok(x[1] === 2 / Math.sqrt(14), 'normalize x[1]');
+  t.ok(x[2] === 3 / Math.sqrt(14), 'normalize x[2]');
+  t.end();
+});
+
+test('Test normalize4D', (t) => {
+  const x = [2, 3, 4, 5];
+  const res1 = vtkMath.normalize4D(x);
+  t.ok(res1 === Math.sqrt(29), 'normalize x');
+  t.ok(x[0] === 2 / Math.sqrt(29), 'normalize4D x[0]');
+  t.ok(x[1] === 3 / Math.sqrt(29), 'normalize4D x[1]');
+  t.ok(x[2] === 4 / Math.sqrt(29), 'normalize4D x[2]');
+  t.ok(x[3] === 5 / Math.sqrt(29), 'normalize4D x[3]');
+  t.end();
+});
+
 test('Test Multiply Matrix', (t) => {
   const nullMatrix = [0, 0, 0, 0];
   const m2x2 = [1, 1, 2, 4];

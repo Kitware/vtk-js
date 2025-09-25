@@ -41,6 +41,9 @@ import vtkSkybox from './Skybox';
 import vtkSphereMapper from './SphereMapper';
 import vtkStickMapper from './StickMapper';
 import vtkTexture from './Texture';
+import vtkTextActor from './TextActor';
+import vtkTextProperty from './TextProperty';
+import vtkVector from './VectorText';
 import vtkViewport from './Viewport';
 import vtkVolume from './Volume';
 import vtkVolumeMapper from './VolumeMapper';
@@ -86,6 +89,9 @@ export default {
   vtkSphereMapper,
   vtkStickMapper,
   vtkTexture,
+  vtkTextActor,
+  vtkTextProperty,
+  vtkVector,
   vtkViewport,
   vtkVolume,
   vtkVolumeMapper,

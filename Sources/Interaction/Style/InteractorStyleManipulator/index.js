@@ -425,6 +425,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       if (!model._interactor.isPointerLocked()) {
         model.currentManipulator = null;
       }
+      model._interactor.cancelAnimation(publicAPI.onButtonDown);
       publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
     }
   };
@@ -672,19 +673,18 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.handlePan = (callData) => {
+    const renderer = model.getRenderer(callData);
+
     let count = model.gestureManipulators.length;
     let actionCount = 0;
     while (count--) {
       const manipulator = model.gestureManipulators[count];
       if (manipulator && manipulator.isPanEnabled()) {
-        manipulator.onPan(
-          model._interactor,
-          model.getRenderer(callData),
-          callData.translation
-        );
+        manipulator.onPan(model._interactor, renderer, callData.translation);
         actionCount++;
       }
     }
+
     if (actionCount) {
       publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
     }

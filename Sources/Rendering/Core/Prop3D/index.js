@@ -116,6 +116,17 @@ function vtkProp3D(publicAPI, model) {
     return true;
   };
 
+  publicAPI.setOrientationFromQuaternion = (q) => {
+    const rotation = mat4.create();
+    mat4.fromQuat(rotation, q);
+    if (!vtkMath.areMatricesEqual(rotation, model.rotation)) {
+      model.rotation = rotation;
+      publicAPI.modified();
+      return true;
+    }
+    return false;
+  };
+
   publicAPI.setUserMatrix = (matrix) => {
     if (vtkMath.areMatricesEqual(model.userMatrix, matrix)) {
       return false;
@@ -161,6 +172,62 @@ function vtkProp3D(publicAPI, model) {
     }
   };
 
+  publicAPI.getBoundsByReference = () => {
+    if (model.mapper === null) {
+      return model.bounds;
+    }
+
+    // Check for the special case when the mapper's bounds are unknown
+    const bds = model.mapper.getBounds();
+    if (!bds || bds.length !== 6) {
+      return bds;
+    }
+
+    // Check for the special case when the actor is empty.
+    if (bds[0] > bds[1]) {
+      // No need to copy bds, a new array is created when calling getBounds()
+      model.mapperBounds = bds;
+      model.bounds = [...vtkBoundingBox.INIT_BOUNDS];
+      model.boundsMTime.modified();
+      return bds;
+    }
+
+    // Check if we have cached values for these bounds - we cache the
+    // values returned by model.mapper.getBounds() and we store the time
+    // of caching. If the values returned this time are different, or
+    // the modified time of this class is newer than the cached time,
+    // then we need to rebuild.
+    if (
+      !model.mapperBounds ||
+      !bds.every((_, i) => bds[i] === model.mapperBounds[i]) ||
+      publicAPI.getMTime() > model.boundsMTime.getMTime()
+    ) {
+      macro.vtkDebugMacro('Recomputing bounds...');
+      // No need to copy bds, a new array is created when calling getBounds()
+      model.mapperBounds = bds;
+
+      // Compute actor bounds from matrix and mapper bounds
+      publicAPI.computeMatrix();
+      const transposedMatrix = new Float64Array(16);
+      mat4.transpose(transposedMatrix, model.matrix);
+      vtkBoundingBox.transformBounds(bds, transposedMatrix, model.bounds);
+
+      model.boundsMTime.modified();
+    }
+
+    return model.bounds;
+  };
+
+  publicAPI.getBounds = () => {
+    const bounds = publicAPI.getBoundsByReference();
+    // Handle case when bounds are not iterable (for example null or undefined)
+    try {
+      return [...bounds];
+    } catch {
+      return bounds;
+    }
+  };
+
   publicAPI.getCenter = () => vtkBoundingBox.getCenter(model.bounds);
   publicAPI.getLength = () => vtkBoundingBox.getLength(model.bounds);
   publicAPI.getXRange = () => vtkBoundingBox.getXRange(model.bounds);
@@ -174,6 +241,47 @@ function vtkProp3D(publicAPI, model) {
   }
 
   publicAPI.onModified(updateIdentityFlag);
+
+  publicAPI.getProperty = (mapperInputPort = 0) => {
+    if (model.properties[mapperInputPort] == null) {
+      model.properties[mapperInputPort] = publicAPI.makeProperty?.();
+    }
+    return model.properties[mapperInputPort];
+  };
+
+  publicAPI.getProperties = () => {
+    if (model.properties.length === 0) {
+      model.properties[0] = publicAPI.makeProperty?.();
+    }
+    return model.properties;
+  };
+
+  publicAPI.setProperty = (firstArg, secondArg) => {
+    // Two options for argument layout:
+    // - (mapperInputPort, property)
+    // - (property)
+    const useInputPortArgument = Number.isInteger(firstArg);
+    const [mapperInputPort, property] = useInputPortArgument
+      ? [firstArg, secondArg]
+      : [0, firstArg];
+
+    if (model.properties[mapperInputPort] === property) {
+      return false;
+    }
+    model.properties[mapperInputPort] = property;
+    return true;
+  };
+
+  publicAPI.getMTime = () => {
+    let mt = model.mtime;
+    model.properties.forEach((property) => {
+      if (property !== null) {
+        const time = property.getMTime();
+        mt = time > mt ? time : mt;
+      }
+    });
+    return mt;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -186,7 +294,8 @@ const DEFAULT_VALUES = {
   orientation: [0, 0, 0],
   rotation: null,
   scale: [1, 1, 1],
-  bounds: [1, -1, 1, -1, 1, -1],
+  bounds: [...vtkBoundingBox.INIT_BOUNDS],
+  properties: [],
 
   userMatrix: null,
   userMatrixMTime: null,
@@ -208,9 +317,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(model.matrixMTime);
 
   // Build VTK API
-  macro.get(publicAPI, model, ['bounds', 'isIdentity']);
+  macro.get(publicAPI, model, ['isIdentity']);
   macro.getArray(publicAPI, model, ['orientation']);
   macro.setGetArray(publicAPI, model, ['origin', 'position', 'scale'], 3);
+  macro.setGet(publicAPI, model, ['properties']);
 
   // Object internal instance
   model.matrix = mat4.identity(new Float64Array(16));

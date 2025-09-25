@@ -48,8 +48,8 @@ In general VTK tries to be as portable as possible; the specific configurations 
 
 vtk.js supports the following development environments:
 
-- Node 14+
-- NPM 7+
+- Node 22+
+- NPM 10+
 
 and we use [@babel/preset-env](https://www.npmjs.com/package/@babel/preset-env) with the [defaults](https://github.com/Kitware/vtk-js/blob/master/.browserslistrc) set of [browsers target](https://browserl.ist/?q=defaults).
 But when built from source this could be adjusted to support any browser as long they provide WebGL.
@@ -78,4 +78,3 @@ See [Copyright.txt][] for details.
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for instructions on how to contribute.
-

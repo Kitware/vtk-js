@@ -12,7 +12,7 @@ import supportsNorm16Linear from './supportsNorm16Linear';
 
 const { Wrap, Filter } = Constants;
 const { VtkDataTypes } = vtkDataArray;
-const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
+const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro, requiredParam } = macro;
 const { toHalf } = HalfFloat;
 
 // ----------------------------------------------------------------------------
@@ -71,6 +71,22 @@ function vtkOpenGLTexture(publicAPI, model) {
       !model.handle ||
       model.renderable.getMTime() > model.textureBuildTime.getMTime()
     ) {
+      if (model.renderable.getImageBitmap() !== null) {
+        if (model.renderable.getInterpolate()) {
+          model.generateMipmap = true;
+          publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
+        }
+        // Have an Image which may not be complete
+        if (
+          model.renderable.getImageBitmap() &&
+          model.renderable.getImageLoaded()
+        ) {
+          publicAPI.create2DFromImageBitmap(model.renderable.getImageBitmap());
+          publicAPI.activate();
+          publicAPI.sendParameters();
+          model.textureBuildTime.modified();
+        }
+      }
       // if we have an Image
       if (model.renderable.getImage() !== null) {
         if (model.renderable.getInterpolate()) {
@@ -92,14 +108,14 @@ function vtkOpenGLTexture(publicAPI, model) {
           publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
         }
         const canvas = model.renderable.getCanvas();
-        publicAPI.create2DFromRaw(
-          canvas.width,
-          canvas.height,
-          4,
-          VtkDataTypes.UNSIGNED_CHAR,
-          canvas,
-          true
-        );
+        publicAPI.create2DFromRaw({
+          width: canvas.width,
+          height: canvas.height,
+          numComps: 4,
+          dataType: VtkDataTypes.UNSIGNED_CHAR,
+          data: canvas,
+          flip: true,
+        });
         publicAPI.activate();
         publicAPI.sendParameters();
         model.textureBuildTime.modified();
@@ -111,14 +127,14 @@ function vtkOpenGLTexture(publicAPI, model) {
           model.generateMipmap = true;
           publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
         }
-        publicAPI.create2DFromRaw(
-          jsid.width,
-          jsid.height,
-          4,
-          VtkDataTypes.UNSIGNED_CHAR,
-          jsid.data,
-          true
-        );
+        publicAPI.create2DFromRaw({
+          width: jsid.width,
+          height: jsid.height,
+          numComps: 4,
+          dataType: VtkDataTypes.UNSIGNED_CHAR,
+          data: jsid.data,
+          flip: true,
+        });
         publicAPI.activate();
         publicAPI.sendParameters();
         model.textureBuildTime.modified();
@@ -148,21 +164,21 @@ function vtkOpenGLTexture(publicAPI, model) {
           publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
         }
         if (data.length % 6 === 0) {
-          publicAPI.createCubeFromRaw(
-            ext[1] - ext[0] + 1,
-            ext[3] - ext[2] + 1,
-            inScalars.getNumberOfComponents(),
-            inScalars.getDataType(),
-            data
-          );
+          publicAPI.createCubeFromRaw({
+            width: ext[1] - ext[0] + 1,
+            height: ext[3] - ext[2] + 1,
+            numComps: inScalars.getNumberOfComponents(),
+            dataType: inScalars.getDataType(),
+            data,
+          });
         } else {
-          publicAPI.create2DFromRaw(
-            ext[1] - ext[0] + 1,
-            ext[3] - ext[2] + 1,
-            inScalars.getNumberOfComponents(),
-            inScalars.getDataType(),
-            inScalars.getData()
-          );
+          publicAPI.create2DFromRaw({
+            width: ext[1] - ext[0] + 1,
+            height: ext[3] - ext[2] + 1,
+            numComps: inScalars.getNumberOfComponents(),
+            dataType: inScalars.getDataType(),
+            data: inScalars.getData(),
+          });
         }
         publicAPI.activate();
         publicAPI.sendParameters();
@@ -979,14 +995,15 @@ function vtkOpenGLTexture(publicAPI, model) {
   }
 
   //----------------------------------------------------------------------------
-  publicAPI.create2DFromRaw = (
-    width,
-    height,
-    numComps,
-    dataType,
-    data,
-    flip = false
-  ) => {
+
+  publicAPI.create2DFromRaw = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    numComps = requiredParam('numComps'),
+    dataType = requiredParam('dataType'),
+    data = requiredParam('data'),
+    flip = false,
+  } = {}) => {
     // Now determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(dataType, true);
     publicAPI.getInternalFormat(dataType, numComps);
@@ -1075,7 +1092,13 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.createCubeFromRaw = (width, height, numComps, dataType, data) => {
+  publicAPI.createCubeFromRaw = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    numComps = requiredParam('numComps'),
+    dataType = requiredParam('dataType'),
+    data = requiredParam('data'),
+  } = {}) => {
     // Now determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(dataType);
     publicAPI.getInternalFormat(dataType, numComps);
@@ -1202,7 +1225,12 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.createDepthFromRaw = (width, height, dataType, data) => {
+  publicAPI.createDepthFromRaw = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    dataType = requiredParam('dataType'),
+    data = requiredParam('data'),
+  } = {}) => {
     // Now determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(dataType);
     model.format = model.context.DEPTH_COMPONENT;
@@ -1290,7 +1318,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.create2DFromImage = (image) => {
-    // Now determine the texture parameters using the arguments.
+    // Determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(VtkDataTypes.UNSIGNED_CHAR);
     publicAPI.getInternalFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
     publicAPI.getFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
@@ -1308,41 +1336,58 @@ function vtkOpenGLTexture(publicAPI, model) {
     publicAPI.createTexture();
     publicAPI.bind();
 
-    // Source texture data from the PBO.
-    // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
-
-    // Scale up the texture to the next highest power of two dimensions (if needed) and flip y.
     const needNearestPowerOfTwo =
       !model._openGLRenderWindow.getWebgl2() &&
       (!vtkMath.isPowerOfTwo(image.width) ||
         !vtkMath.isPowerOfTwo(image.height));
-    const canvas = document.createElement('canvas');
-    canvas.width = needNearestPowerOfTwo
-      ? vtkMath.nearestPowerOfTwo(image.width)
-      : image.width;
-    canvas.height = needNearestPowerOfTwo
-      ? vtkMath.nearestPowerOfTwo(image.height)
-      : image.height;
 
-    model.width = canvas.width;
-    model.height = canvas.height;
+    let textureSource = image;
+    let targetWidth = image.width;
+    let targetHeight = image.height;
 
-    const ctx = canvas.getContext('2d');
-    ctx.translate(0, canvas.height);
-    ctx.scale(1, -1);
-    ctx.drawImage(
-      image,
-      0,
-      0,
-      image.width,
-      image.height,
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-    const safeImage = canvas;
+    let flipY = true;
+
+    // For WebGL1, we need to scale the image to the nearest power of two
+    // dimensions if the image is not already a power of two. For WebGL2, we can
+    // use the image as is. Note: Chrome has a perf issue where the path
+    // HTMLImageElement -> Canvas -> texSubImage2D is faster than
+    // HTMLImageElement -> texSubImage2D directly. See
+    // https://issues.chromium.org/issues/41311312#comment7
+    // Tested on Chrome 137.0.7151.104 Windows 11
+    const isChrome = window.chrome;
+
+    if (needNearestPowerOfTwo || isChrome) {
+      const canvas = new OffscreenCanvas(
+        vtkMath.nearestPowerOfTwo(image.width),
+        vtkMath.nearestPowerOfTwo(image.height)
+      );
+      targetWidth = canvas.width;
+      targetHeight = canvas.height;
+
+      const ctx = canvas.getContext('2d');
+      ctx.translate(0, canvas.height);
+      ctx.scale(1, -1);
+      ctx.drawImage(
+        image,
+        0,
+        0,
+        image.width,
+        image.height,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+      textureSource = canvas;
+      flipY = false; // we are flipping the image manually using translate/scale
+    }
+
+    model.width = targetWidth;
+    model.height = targetHeight;
+
+    // Source texture data from the PBO.
+    model.context.pixelStorei(model.context.UNPACK_FLIP_Y_WEBGL, flipY);
+    model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     if (useTexStorage(VtkDataTypes.UNSIGNED_CHAR)) {
       model.context.texStorage2D(
@@ -1352,19 +1397,17 @@ function vtkOpenGLTexture(publicAPI, model) {
         model.width,
         model.height
       );
-      if (safeImage != null) {
-        model.context.texSubImage2D(
-          model.target,
-          0,
-          0,
-          0,
-          model.width,
-          model.height,
-          model.format,
-          model.openGLDataType,
-          safeImage
-        );
-      }
+      model.context.texSubImage2D(
+        model.target,
+        0,
+        0,
+        0,
+        model.width,
+        model.height,
+        model.format,
+        model.openGLDataType,
+        textureSource
+      );
     } else {
       model.context.texImage2D(
         model.target,
@@ -1375,7 +1418,85 @@ function vtkOpenGLTexture(publicAPI, model) {
         0,
         model.format,
         model.openGLDataType,
-        safeImage
+        textureSource
+      );
+    }
+
+    if (model.generateMipmap) {
+      model.context.generateMipmap(model.target);
+    }
+
+    model.allocatedGPUMemoryInBytes =
+      model.width *
+      model.height *
+      model.depth *
+      model.components *
+      model._openGLRenderWindow.getDefaultTextureByteSize(
+        VtkDataTypes.UNSIGNED_CHAR,
+        getNorm16Ext(),
+        publicAPI.useHalfFloat()
+      );
+
+    publicAPI.deactivate();
+    return true;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.create2DFromImageBitmap = (imageBitmap) => {
+    // Determine the texture parameters.
+    publicAPI.getOpenGLDataType(VtkDataTypes.UNSIGNED_CHAR);
+    publicAPI.getInternalFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
+    publicAPI.getFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
+
+    if (!model.internalFormat || !model.format || !model.openGLDataType) {
+      vtkErrorMacro('Failed to determine texture parameters.');
+      return false;
+    }
+
+    model.target = model.context.TEXTURE_2D;
+    model.components = 4;
+    model.depth = 1;
+    model.numberOfDimensions = 2;
+    model._openGLRenderWindow.activateTexture(publicAPI);
+    publicAPI.createTexture();
+    publicAPI.bind();
+
+    // Prepare texture unpack alignment
+    model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
+
+    model.width = imageBitmap.width;
+    model.height = imageBitmap.height;
+
+    if (useTexStorage(VtkDataTypes.UNSIGNED_CHAR)) {
+      model.context.texStorage2D(
+        model.target,
+        1,
+        model.internalFormat,
+        model.width,
+        model.height
+      );
+      model.context.texSubImage2D(
+        model.target,
+        0,
+        0,
+        0,
+        model.width,
+        model.height,
+        model.format,
+        model.openGLDataType,
+        imageBitmap
+      );
+    } else {
+      model.context.texImage2D(
+        model.target,
+        0,
+        model.internalFormat,
+        model.width,
+        model.height,
+        0,
+        model.format,
+        model.openGLDataType,
+        imageBitmap
       );
     }
 
@@ -1491,39 +1612,39 @@ function vtkOpenGLTexture(publicAPI, model) {
     };
   }
 
-  publicAPI.create2DFilterableFromRaw = (
-    width,
-    height,
-    numberOfComponents,
-    dataType,
-    values,
+  publicAPI.create2DFilterableFromRaw = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    numComps = requiredParam('numComps'),
+    dataType = requiredParam('dataType'),
+    data = requiredParam('data'),
     preferSizeOverAccuracy = false,
-    ranges = undefined
-  ) =>
-    publicAPI.create2DFilterableFromDataArray(
+    ranges = undefined,
+  } = {}) =>
+    publicAPI.create2DFilterableFromDataArray({
       width,
       height,
-      vtkDataArray.newInstance({
-        numberOfComponents,
+      dataArray: vtkDataArray.newInstance({
+        numComps,
         dataType,
-        values,
+        values: data,
         ranges,
       }),
-      preferSizeOverAccuracy
-    );
+      preferSizeOverAccuracy,
+    });
 
-  publicAPI.create2DFilterableFromDataArray = (
-    width,
-    height,
-    dataArray,
-    preferSizeOverAccuracy = false
-  ) => {
+  publicAPI.create2DFilterableFromDataArray = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    dataArray = requiredParam('dataArray'),
+    preferSizeOverAccuracy = false,
+  } = {}) => {
     const { numComps, dataType, data } = processDataArray(
       dataArray,
       preferSizeOverAccuracy
     );
 
-    publicAPI.create2DFromRaw(width, height, numComps, dataType, data);
+    publicAPI.create2DFromRaw({ width, height, numComps, dataType, data });
   };
 
   publicAPI.updateVolumeInfoForGL = (dataType, numComps) => {
@@ -1586,15 +1707,15 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.create3DFromRaw = (
-    width,
-    height,
-    depth,
-    numComps,
-    dataType,
-    data,
-    updatedExtents = []
-  ) => {
+  publicAPI.create3DFromRaw = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    depth = requiredParam('depth'),
+    numComps = requiredParam('numComps'),
+    dataType = requiredParam('dataType'),
+    data = requiredParam('data'),
+    updatedExtents = [],
+  } = {}) => {
     let dataTypeToUse = dataType;
     let dataToUse = data;
 
@@ -1760,41 +1881,41 @@ function vtkOpenGLTexture(publicAPI, model) {
   //----------------------------------------------------------------------------
   // This method simulates a 3D texture using 2D
   // Prefer create3DFilterableFromDataArray to enable caching of min and max values
-  publicAPI.create3DFilterableFromRaw = (
-    width,
-    height,
-    depth,
-    numberOfComponents,
-    dataType,
-    values,
+  publicAPI.create3DFilterableFromRaw = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    depth = requiredParam('depth'),
+    numComps = requiredParam('numComps'),
+    dataType = requiredParam('dataType'),
+    data = requiredParam('data'),
     preferSizeOverAccuracy = false,
     ranges = undefined,
-    updatedExtents = []
-  ) =>
-    publicAPI.create3DFilterableFromDataArray(
+    updatedExtents = [],
+  } = {}) =>
+    publicAPI.create3DFilterableFromDataArray({
       width,
       height,
       depth,
-      vtkDataArray.newInstance({
-        numberOfComponents,
+      dataArray: vtkDataArray.newInstance({
+        numComps,
         dataType,
-        values,
+        values: data,
         ranges,
       }),
       preferSizeOverAccuracy,
-      updatedExtents
-    );
+      updatedExtents,
+    });
 
   //----------------------------------------------------------------------------
   // This method create a 3D texture from dimensions and a DataArray
-  publicAPI.create3DFilterableFromDataArray = (
-    width,
-    height,
-    depth,
-    dataArray,
+  publicAPI.create3DFilterableFromDataArray = ({
+    width = requiredParam('width'),
+    height = requiredParam('height'),
+    depth = requiredParam('depth'),
+    dataArray = requiredParam('dataArray'),
     preferSizeOverAccuracy = false,
-    updatedExtents = []
-  ) => {
+    updatedExtents = [],
+  } = {}) => {
     const { numComps, dataType, data, scaleOffsets } = processDataArray(
       dataArray,
       preferSizeOverAccuracy
@@ -1828,15 +1949,15 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // WebGL2 path, we have 3d textures etc
     if (model._openGLRenderWindow.getWebgl2()) {
-      return publicAPI.create3DFromRaw(
+      return publicAPI.create3DFromRaw({
         width,
         height,
         depth,
         numComps,
         dataType,
         data,
-        updatedExtents
-      );
+        updatedExtents,
+      });
     }
 
     const numPixelsIn = width * height * depth;

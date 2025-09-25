@@ -386,7 +386,7 @@ function vtkWebGPURenderer(publicAPI, model) {
 
       const environmentTextureHash = device
         .getTextureManager()
-        .getTextureForVTKTexture(model.backgroundTex);
+        .getTextureForVTKTexture(model.backgroundTex, 'EnvironmentTexture');
       if (environmentTextureHash.getReady()) {
         const tview = environmentTextureHash.createView(`EnvironmentTexture`);
         model.clearFSQ.setTextureViews([tview]);

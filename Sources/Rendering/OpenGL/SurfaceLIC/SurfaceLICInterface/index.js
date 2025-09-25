@@ -268,7 +268,13 @@ function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
         autoParameters: false,
       });
       texture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      texture.create2DFromRaw(length, length, 4, 'Float32Array', values);
+      texture.create2DFromRaw({
+        width: length,
+        height: length,
+        numComps: 4,
+        dataType: 'Float32Array',
+        data: values,
+      });
       texture.activate();
       texture.sendParameters();
       texture.deactivate();
@@ -328,7 +334,13 @@ function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
     });
     texture.setOpenGLRenderWindow(openGLRenderWindow);
     texture.setInternalFormat(gl.RGBA32F);
-    texture.create2DFromRaw(...model.size, 4, 'Float32Array', null);
+    texture.create2DFromRaw({
+      width: model.size[0],
+      height: model.size[1],
+      numComps: 4,
+      dataType: 'Float32Array',
+      data: null,
+    });
     texture.activate();
     texture.sendParameters();
     texture.deactivate();
@@ -343,7 +355,12 @@ function vtkOpenGLSurfaceLICInterface(publicAPI, model) {
       autoParameters: false,
     });
     texture.setOpenGLRenderWindow(openGLRenderWindow);
-    texture.createDepthFromRaw(...model.size, 'Float32Array', null);
+    texture.createDepthFromRaw({
+      width: model.size[0],
+      height: model.size[1],
+      dataType: 'Float32Array',
+      data: null,
+    });
     texture.activate();
     texture.sendParameters();
     texture.deactivate();

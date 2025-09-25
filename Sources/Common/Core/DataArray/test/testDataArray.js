@@ -428,3 +428,83 @@ test('Test vtkDataArray findTuple', (t) => {
   t.equal(dataArray.findTuple(Float32Array.from([12, 13, 14])), 4);
   t.end();
 });
+
+test('Test vtkDataArray allocate function', (t) => {
+  // create an empty data array with 3 channel data.
+  const da = vtkDataArray.newInstance({
+    numberOfComponents: 3,
+    empty: true,
+  });
+
+  t.equal(da.getNumberOfTuples(), 0, 'empty');
+
+  da.allocate(2);
+  let oldData = da.getData();
+
+  t.equal(
+    da.getNumberOfTuples(),
+    0,
+    'allocate does not change number of tuples'
+  );
+
+  da.insertNextTuple([1, 2, 3]);
+  da.insertNextTuple([1, 2, 3]);
+
+  t.equal(da.getNumberOfTuples(), 2, 'inserted 2 tuples');
+  t.equal(da.getData().buffer, oldData.buffer, 'no array allocation on insert');
+
+  da.allocate(2);
+
+  t.equal(
+    da.getNumberOfTuples(),
+    2,
+    'allocate does not change number of tuples'
+  );
+  t.notEqual(
+    da.getData().buffer,
+    oldData.buffer,
+    'reallocate array on allocate'
+  );
+  oldData = da.getData();
+
+  da.insertNextTuple([1, 2, 3]);
+  da.insertNextTuple([1, 2, 3]);
+
+  t.ok(da.getNumberOfTuples() === 4, '2 more tuples');
+  t.equal(da.getData().buffer, oldData.buffer, 'no array allocation on insert');
+
+  t.end();
+});
+
+test('Test vtkDataArray resize function', (t) => {
+  // create an empty data array with 3 channel data.
+  const da = vtkDataArray.newInstance({
+    numberOfComponents: 3,
+    empty: true,
+  });
+
+  t.ok(da.getNumberOfTuples() === 0, 'empty');
+
+  da.resize(2);
+
+  t.ok(da.getNumberOfTuples() === 2, 'resize does change the number of tuples');
+
+  da.insertNextTuple([1, 2, 3]);
+  da.insertNextTuple([1, 2, 3]);
+
+  t.ok(da.getNumberOfTuples() === 4, 'inserted 2 tuples');
+
+  const oldData = da.getData();
+  da.resize(2);
+
+  t.ok(da.getNumberOfTuples() === 2, 'resize reduces the number of tuples');
+  t.equal(da.getData().buffer, oldData.buffer, 'no array allocation on shrink');
+
+  da.insertNextTuple([1, 2, 3]);
+  da.insertNextTuple([1, 2, 3]);
+
+  t.ok(da.getNumberOfTuples() === 4, '2 more tuples');
+  t.equal(da.getData().buffer, oldData.buffer, 'no array allocation on shrink');
+
+  t.end();
+});

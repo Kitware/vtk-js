@@ -156,11 +156,11 @@ export interface vtkCamera extends vtkObject {
   getFreezeFocalPoint(): boolean;
 
   /**
-   * Not implemented yet
    * Get the plane equations that bound the view frustum.
-   * @param {Number} aspect Camera frustum aspect ratio.
+   * @param {Number} [aspect] Camera frustum aspect ratio (default: 1.0).
+   * @param {Float64Array} [planes] Optional array to fill with the plane equations.
    */
-  getFrustumPlanes(aspect: number): void;
+  getFrustumPlanes(aspect?: number, planes?: Float64Array): Float64Array;
 
   /**
    * Not implemented yet
@@ -301,9 +301,16 @@ export interface vtkCamera extends vtkObject {
   getViewAngle(): number;
 
   /**
-   *
+   * Get the view transform
    */
   getViewMatrix(): mat4;
+
+  /**
+   * Get the model transform matrix for the camera.
+   * This matrix could be used for model related transformations such as scale, shear, rotations and translations.
+   * @returns {mat4} mat The value of the model transform matrix.
+   */
+  getModelTransformMatrix(): mat4;
 
   /**
    * Get the ViewPlaneNormal.
@@ -674,7 +681,14 @@ export interface vtkCamera extends vtkObject {
    * Set the view matrix for the camera.
    * @param {mat4} mat The value of the view matrix.
    */
-  setViewMatrix(mat: mat4): boolean;
+  setViewMatrix(mat: mat4): void;
+
+  /**
+   * Set the model transform matrix for the camera.
+   * This matrix could be used for model related transformations such as scale, shear, rotations and translations.
+   * @param {mat4} mat The value of the model transform matrix.
+   */
+  setModelTransformMatrixMatrix(mat: mat4): void;
 
   /**
    * Set the view up direction for the camera.

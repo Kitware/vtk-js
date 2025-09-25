@@ -237,7 +237,7 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
       state.getActive() && state.getActiveHandle()
     );
 
-    const output = vtkPolyData.newInstance();
+    const output = outData[0]?.initialize() || vtkPolyData.newInstance();
     output.shallowCopy(model._pipelines.plane.filter.getOutputData());
     outData[0] = output;
   };

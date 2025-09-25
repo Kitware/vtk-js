@@ -63,14 +63,19 @@ export interface vtkViewport extends vtkObject {
   getSize(): Size;
 
   /**
-   *
+   * Viewport for the Viewport to draw in the rendering window.
+   * Coordinates are expressed as (xmin,ymin,xmax,ymax), where each
+   * coordinate is 0 <= coordinate <= 1.0.
+   * @returns {Number[]}
+   * @see getViewportByReference()
+   * @see setViewport()
    */
-  getViewport(): vtkViewport;
+  getViewport(): [number, number, number, number];
 
   /**
    *
    */
-  getViewportByReference(): vtkViewport;
+  getViewportByReference(): [number, number, number, number];
 
   /**
    *

@@ -12,6 +12,7 @@ import vtkResliceCursorWidget from './ResliceCursorWidget';
 import vtkShapeWidget from './ShapeWidget';
 import vtkSphereWidget from './SphereWidget';
 import vtkSplineWidget from './SplineWidget';
+import vtkTransformControlsWidget from './TransformControlsWidget';
 
 export default {
   vtkAngleWidget,
@@ -28,4 +29,5 @@ export default {
   vtkShapeWidget,
   vtkSphereWidget,
   vtkSplineWidget,
+  vtkTransformControlsWidget,
 };

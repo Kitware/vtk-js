@@ -232,7 +232,9 @@ function vtkImageData(publicAPI, model) {
     vtkBoundingBox.transformBounds(bin, model.worldToIndex, bout);
 
   // Make sure the transform is correct
-  publicAPI.onModified(publicAPI.computeTransforms);
+  model._onOriginChanged = publicAPI.computeTransforms;
+  model._onDirectionChanged = publicAPI.computeTransforms;
+  model._onSpacingChanged = publicAPI.computeTransforms;
   publicAPI.computeTransforms();
 
   publicAPI.getCenter = () => vtkBoundingBox.getCenter(publicAPI.getBounds());
@@ -392,6 +394,18 @@ function vtkImageData(publicAPI, model) {
       .getPointData()
       .getScalars()
       .getComponent(offsetIndex, comp);
+  };
+
+  const superInitialize = publicAPI.initialize;
+  publicAPI.initialize = () => {
+    publicAPI.set({
+      direction: mat3.identity(model.direction),
+      spacing: [1.0, 1.0, 1.0],
+      origin: [0.0, 0.0, 0.0],
+      extent: [0, -1, 0, -1, 0, -1],
+      dataDescription: StructuredType.EMPTY,
+    });
+    return superInitialize();
   };
 }
 

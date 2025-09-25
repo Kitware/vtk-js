@@ -63,6 +63,32 @@ struct PBRData {
   specular: vec3<f32>,
 }
 
+struct Material {
+  ior: f32,
+  roughness: f32,
+  metallic: f32,
+  base: vec3<f32>,
+};
+
+struct DirectionalLight {
+  direction: vec3<f32>,
+  color: vec3<f32>,
+};
+
+struct PointLight {
+  position: vec3<f32>,
+  color: vec3<f32>,
+};
+
+struct SpotLight {
+  position: vec3<f32>,
+  direction: vec3<f32>,
+  cones: vec2<f32>,
+  color: vec3<f32>,
+};
+
+const pi: f32 = 3.14159265359;
+
 // Dot product with the max already in it
 fn mdot(a: vec3<f32>, b: vec3<f32>) -> f32 {
   return max(0.0, dot(a, b));
@@ -81,7 +107,6 @@ fn cdot(a: vec3<f32>, b: vec3<f32>) -> f32 {
 
 // Lambertian diffuse model
 fn lambertDiffuse(base: vec3<f32>, N: vec3<f32>, L: vec3<f32>) -> vec3<f32> {
-  var pi: f32 = 3.14159265359; 
   var NdotL: f32 = mdot(N, L);
   NdotL = pow(NdotL, 1.5);
   return (base/pi)*NdotL;
@@ -127,12 +152,10 @@ fn schlickFresnelRGB(V: vec3<f32>, N: vec3<f32>, F0: vec3<f32>) -> vec3<f32> {
 // https://learnopengl.com/PBR/Theory
 // Trowbridge-Reitz GGX functions: normal, halfway, roughness^2
 fn trGGX(N: vec3<f32>, H: vec3<f32>, a: f32) -> f32 {
-  var pi: f32 = 3.14159265359; 
-
   var a2: f32 = a*a;
   var NdotH = mdot(N, H);
   var NdotH2 = NdotH*NdotH;
-  
+
   var denom: f32 = NdotH2 * (a2 - 1.0) + 1.0;
 
   return a2 / max((pi*denom*denom), 0.000001);
@@ -168,94 +191,91 @@ fn cookTorrance(D: f32, F: f32, G: f32, N: vec3<f32>, V: vec3<f32>, L: vec3<f32>
 }
 
 // Different lighting calculations for different light sources
-fn calcDirectionalLight(N: vec3<f32>, V: vec3<f32>, ior: f32, roughness: f32, metallic: f32, direction: vec3<f32>, color: vec3<f32>, base: vec3<f32>) -> PBRData {  
-  var L: vec3<f32> = normalize(direction); // Light Vector
+fn calcDirectionalLight(N: vec3<f32>, V: vec3<f32>, mat: Material, light: DirectionalLight) -> PBRData {
+  var L: vec3<f32> = normalize(light.direction); // Light Vector
   var H: vec3<f32> = normalize(L + V); // Halfway Vector
 
-  var alpha = roughness*roughness;
-  var k: f32 = alpha*alpha / 2;
+  var alpha = mat.roughness * mat.roughness;
+  var k: f32 = alpha * alpha / 2.0;
 
   var D: f32 = trGGX(N, H, alpha); // Distribution
   // var F: f32 = schlickFresnelIOR(V, N, ior, k); // Fresnel
   var G: f32 = smithSurfaceRoughness(N, V, L, k); // Geometry
 
   var brdf: f32 = cookTorrance(D, 1.0, G, N, V, L); // Fresnel term is replaced with 1 because it is added later
-  var incoming: vec3<f32> = color;
+  var incoming: vec3<f32> = light.color;
   var angle: f32 = mdot(L, N);
   angle = pow(angle, 1.5);
 
-  var specular: vec3<f32> = brdf*incoming*angle;
+  var specular: vec3<f32> = brdf * incoming * angle;
   // Oren-Nayar gives a clay-like effect when fully rough which some people may not want, so it might be better to give a separate
   // control property for the diffuse vs specular roughness
-  var diffuse: vec3<f32> = incoming*fujiiOrenNayar(base, roughness, N, L, V); 
+  var diffuse: vec3<f32> = incoming * fujiiOrenNayar(mat.base, mat.roughness, N, L, V);
   // Stores the specular and diffuse separately to allow for finer post processing
   var out = PBRData(diffuse, specular);
-  
+
   return out; // Returns angle along with color of light so the final color can be multiplied by angle as well (creates black areas)
 }
 
-// TODO: find some way to reduce the number of arguments going in here
-fn calcPointLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, roughness: f32, metallic: f32, position: vec3<f32>, color: vec3<f32>, base: vec3<f32>) -> PBRData {
-  var L: vec3<f32> = normalize(position - fragPos); // Light Vector
-  var H: vec3<f32> = normalize(L + V); // Halfway Vector
-  var dist = distance(position, fragPos);
+fn calcPointLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, mat: Material, light: PointLight) -> PBRData {
+  var L: vec3<f32> = normalize(light.position - fragPos);
+  var H: vec3<f32> = normalize(L + V);
+  var dist = distance(light.position, fragPos);
 
-  var alpha = roughness*roughness;
-  var k: f32 = alpha*alpha / 2.0; // could also be pow(alpha + 1.0, 2) / 8
+  var alpha = mat.roughness * mat.roughness;
+  var k: f32 = alpha * alpha / 2.0;
 
   var D: f32 = trGGX(N, H, alpha); // Distribution
-  // var F: f32 = schlickFresnelIOR(V, N, ior, k); // Fresnel
+  var F: f32 = schlickFresnelIOR(V, N, mat.ior, k); // Fresnel
   var G: f32 = smithSurfaceRoughness(N, V, L, k); // Geometry
 
   var brdf: f32 = cookTorrance(D, 1.0, G, N, V, L);
-  var incoming: vec3<f32> = color * (1.0 / (dist*dist));
+  var incoming: vec3<f32> = light.color * (1.0 / (dist * dist));
   var angle: f32 = mdot(L, N);
-  angle = pow(angle, 1.5); // Smoothing factor makes it less accurate, but reduces ugly "seams" bewteen light sources
+  angle = pow(angle, 1.5); // Smoothing factor makes it less accurate, but reduces ugly "seams" between light sources
 
-  var specular: vec3<f32> = brdf*incoming*angle;
-  var diffuse: vec3<f32> = incoming*fujiiOrenNayar(base, roughness, N, L, V);
-
+  var specular: vec3<f32> = brdf * incoming * angle;
+  var diffuse: vec3<f32> = incoming * fujiiOrenNayar(mat.base, mat.roughness, N, L, V);
   // Stores the specular and diffuse separately to allow for finer post processing
   // Could also be done (propably more properly) with a struct
   var out = PBRData(diffuse, specular);
-  
+
   return out; // Returns angle along with color of light so the final color can be multiplied by angle as well (creates black areas)
 }
 
 // For a reason unknown to me, spheres dont seem to behave propperly with head-on spot lights
-fn calcSpotLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, roughness: f32, metallic: f32, position: vec3<f32>, direction: vec3<f32>, cones: vec2<f32>, color: vec3<f32>, base: vec3<f32>) -> PBRData {
-  var L: vec3<f32> = normalize(position - fragPos);
+fn calcSpotLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, mat: Material, light: SpotLight) -> PBRData {
+  var L: vec3<f32> = normalize(light.position - fragPos);
   var H: vec3<f32> = normalize(L + V); // Halfway Vector
-  var dist = distance(position, fragPos);
+  var dist = distance(light.position, fragPos);
 
-  var alpha = roughness*roughness;
-  var k: f32 = alpha*alpha / 2.0; // could also be pow(alpha + 1.0, 2) / 8
+  var alpha = mat.roughness * mat.roughness;
+  var k: f32 = alpha * alpha / 2.0; // could also be pow(alpha + 1.0, 2) / 8
 
   var D: f32 = trGGX(N, H, alpha); // Distribution
   // var F: f32 = schlickFresnelIOR(V, N, ior, k); // Fresnel
   var G: f32 = smithSurfaceRoughness(N, V, L, k); // Geometry
 
   var brdf: f32 = cookTorrance(D, 1.0, G, N, V, L);
-  
-  // Cones.x is the inner phi and cones.y is the outer phi
-  var theta: f32 = mdot(normalize(direction), L);
-  var epsilon: f32 = cones.x - cones.y;
-  var intensity: f32 = (theta - cones.y) / epsilon;
-  intensity = clamp(intensity, 0.0, 1.0);
-  intensity /= dist*dist;
 
-  var incoming: vec3<f32> = color * intensity;
+  var theta: f32 = mdot(normalize(light.direction), L);
+  var epsilon: f32 = light.cones.x - light.cones.y;
+  var intensity: f32 = (theta - light.cones.y) / epsilon;
+  intensity = clamp(intensity, 0.0, 1.0);
+  intensity /= dist * dist;
+
+  var incoming: vec3<f32> = light.color * intensity;
 
   var angle: f32 = mdot(L, N);
-  angle = pow(angle, 1.5); // Smoothing factor makes it less accurate, but reduces ugly "seams" bewteen light sources
+  angle = pow(angle, 1.5); // Smoothing factor makes it less accurate, but reduces ugly "seams" between light sources
 
-  var specular: vec3<f32> = brdf*incoming*angle;
-  var diffuse: vec3<f32> = incoming*fujiiOrenNayar(base, roughness, N, L, V);
+  var specular: vec3<f32> = brdf * incoming * angle;
+  var diffuse: vec3<f32> = incoming * fujiiOrenNayar(mat.base, mat.roughness, N, L, V);
 
   // Stores the specular and diffuse separately to allow for finer post processing
   // Could also be done (propably more properly) with a struct
   var out = PBRData(diffuse, specular);
-  
+
   return out; // Returns angle along with color of light so the final color can be multiplied by angle as well (creates black areas)
 }
 
@@ -263,7 +283,6 @@ fn calcSpotLight(N: vec3<f32>, V: vec3<f32>, fragPos: vec3<f32>, ior: f32, rough
 // Takes in a vector and converts it to an equivalent coordinate in a rectilinear texture. Should be replaced with cubemaps at some point
 fn vecToRectCoord(dir: vec3<f32>) -> vec2<f32> {
   var tau: f32 = 6.28318530718;
-  var pi: f32 = 3.14159265359;
   var out: vec2<f32> = vec2<f32>(0.0);
 
   out.x = atan2(dir.z, dir.x) / tau;
@@ -304,6 +323,7 @@ fn main(
   var ambientColor: vec4<f32> = mapperUBO.AmbientColor;
   var diffuseColor: vec4<f32> = mapperUBO.DiffuseColor;
   var opacity: f32 = mapperUBO.Opacity;
+  var ior: f32 = mapperUBO.BaseIOR;
 
   // This should be declared somewhere else
   var _diffuseMap: vec4<f32> = vec4<f32>(1.0);
@@ -325,6 +345,8 @@ fn main(
 
   //VTK::Select::Impl
 
+  // Use texture alpha for transparency
+  computedColor.a = mapperUBO.Opacity * _diffuseMap.a;
   if (computedColor.a == 0.0) { discard; };
 
   //VTK::Position::Impl
@@ -385,90 +407,76 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
   };
 
   publicAPI.updateUBO = () => {
-    // make sure the data is up to date
     const actor = model.WebGPUActor.getRenderable();
     const ppty = actor.getProperty();
     const utime = model.UBO.getSendTime();
-
     if (
-      publicAPI.getMTime() > utime ||
-      ppty.getMTime() > utime ||
-      model.renderable.getMTime() > utime
+      publicAPI.getMTime() <= utime &&
+      ppty.getMTime() <= utime &&
+      model.renderable.getMTime() <= utime
     ) {
-      // Matricies
-      const keyMats = model.WebGPUActor.getKeyMatrices(model.WebGPURenderer);
-      model.UBO.setArray('BCWCMatrix', keyMats.bcwc);
-      model.UBO.setArray('BCSCMatrix', keyMats.bcsc);
-      model.UBO.setArray('MCWCNormals', keyMats.normalMatrix);
-
-      if (model.is2D) {
-        model.UBO.setValue(
-          'ZValue',
-          model.WebGPUActor.getRenderable()
-            .getProperty()
-            .getDisplayLocation() === DisplayLocation.FOREGROUND
-            ? 1.0
-            : 0.0
-        );
-
-        const aColor = ppty.getColorByReference();
-        model.UBO.setValue('AmbientIntensity', 1.0);
-        model.UBO.setArray('DiffuseColor', [
-          aColor[0],
-          aColor[1],
-          aColor[2],
-          1.0,
-        ]);
-        model.UBO.setValue('DiffuseIntensity', 0.0);
-        model.UBO.setValue('SpecularIntensity', 0.0);
-      } else {
-        // Base Colors
-        let aColor = ppty.getAmbientColorByReference();
-        model.UBO.setValue('AmbientIntensity', ppty.getAmbient());
-        model.UBO.setArray('AmbientColor', [
-          aColor[0],
-          aColor[1],
-          aColor[2],
-          1.0,
-        ]);
-        model.UBO.setValue('DiffuseIntensity', ppty.getDiffuse());
-        aColor = ppty.getDiffuseColorByReference();
-        model.UBO.setArray('DiffuseColor', [
-          aColor[0],
-          aColor[1],
-          aColor[2],
-          1.0,
-        ]);
-        // Roughness
-        model.UBO.setValue('Roughness', ppty.getRoughness());
-        model.UBO.setValue('BaseIOR', ppty.getBaseIOR());
-        // Metallic
-        model.UBO.setValue('Metallic', ppty.getMetallic());
-        // Normal
-        model.UBO.setValue('NormalStrength', ppty.getNormalStrength());
-        // Emission
-        model.UBO.setValue('Emission', ppty.getEmission());
-        // Specular
-        model.UBO.setValue('SpecularIntensity', ppty.getSpecular());
-        aColor = ppty.getSpecularColorByReference();
-        model.UBO.setArray('SpecularColor', [
-          aColor[0],
-          aColor[1],
-          aColor[2],
-          1.0,
-        ]);
-      }
-      // Edge and line rendering
-      const aColor = ppty.getEdgeColorByReference?.();
-      if (aColor) {
-        model.UBO.setArray('EdgeColor', [aColor[0], aColor[1], aColor[2], 1.0]);
-      }
-      model.UBO.setValue('LineWidth', ppty.getLineWidth());
-      model.UBO.setValue('Opacity', ppty.getOpacity());
-      model.UBO.setValue('PropID', model.WebGPUActor.getPropID());
-      const device = model.WebGPURenderWindow.getDevice();
-      model.UBO.sendIfNeeded(device);
+      return;
     }
+
+    // --- Matrix Updates ---
+    const keyMats = model.WebGPUActor.getKeyMatrices(model.WebGPURenderer);
+    model.UBO.setArray('BCWCMatrix', keyMats.bcwc);
+    model.UBO.setArray('BCSCMatrix', keyMats.bcsc);
+    model.UBO.setArray('MCWCNormals', keyMats.normalMatrix);
+
+    // --- 2D or 3D ---
+    if (model.is2D) {
+      const displayLoc =
+        ppty.getDisplayLocation?.() ?? DisplayLocation.BACKGROUND;
+      model.UBO.setValue(
+        'ZValue',
+        displayLoc === DisplayLocation.FOREGROUND ? 1.0 : 0.0
+      );
+      const aColor = ppty.getColorByReference();
+      model.UBO.setValue('AmbientIntensity', 1.0);
+      model.UBO.setArray('DiffuseColor', [...aColor, 1.0]);
+      model.UBO.setValue('DiffuseIntensity', 0.0);
+      model.UBO.setValue('SpecularIntensity', 0.0);
+    } else {
+      // Base Colors
+      model.UBO.setValue('AmbientIntensity', ppty.getAmbient());
+      model.UBO.setArray('AmbientColor', [
+        ...ppty.getAmbientColorByReference(),
+        1.0,
+      ]);
+      model.UBO.setValue('DiffuseIntensity', ppty.getDiffuse());
+      model.UBO.setArray('DiffuseColor', [
+        ...ppty.getDiffuseColorByReference(),
+        1.0,
+      ]);
+      // Roughness
+      model.UBO.setValue('Roughness', ppty.getRoughness());
+      model.UBO.setValue('BaseIOR', ppty.getBaseIOR());
+      // Metallic
+      model.UBO.setValue('Metallic', ppty.getMetallic());
+      // Normal
+      model.UBO.setValue('NormalStrength', ppty.getNormalStrength());
+      // Emission
+      model.UBO.setValue('Emission', ppty.getEmission());
+      // Specular
+      model.UBO.setValue('SpecularIntensity', ppty.getSpecular());
+      if (ppty.getSpecularColorByReference()) {
+        model.UBO.setArray('SpecularColor', [
+          ...ppty.getSpecularColorByReference(),
+          1.0,
+        ]);
+      }
+    }
+
+    // --- Edge and Misc ---
+    const edgeColor = ppty.getEdgeColorByReference?.();
+    if (edgeColor) model.UBO.setArray('EdgeColor', [...edgeColor, 1.0]);
+    model.UBO.setValue('LineWidth', ppty.getLineWidth());
+    model.UBO.setValue('Opacity', ppty.getOpacity());
+    model.UBO.setValue('PropID', model.WebGPUActor.getPropID());
+
+    // Only send if needed
+    model.UBO.sendIfNeeded(model.WebGPURenderWindow.getDevice());
   };
 
   publicAPI.haveWideLines = () => {
@@ -646,55 +654,57 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       !hash.includes('sel')
     ) {
       const lightingCode = [
-        // Constants
-        '  var pi: f32 = 3.14159265359;',
         // Vectors needed for light calculations
-        '  var fragPos: vec3<f32> = vec3<f32>(input.vertexVC.xyz);',
-        '  var V: vec3<f32> = mix(normalize(-fragPos), vec3<f32>(0, 0, 1), f32(rendererUBO.cameraParallel)); // View Vector',
+        '  let fragPos = vec3<f32>(input.vertexVC.xyz);',
+        '  let V = mix(normalize(-fragPos), vec3<f32>(0, 0, 1), f32(rendererUBO.cameraParallel)); // View Vector',
         // Values needed for light calculations
-        '  var baseColor: vec3<f32> = _diffuseMap.rgb * diffuseColor.rgb;',
-        '  var roughness: f32 = max(0.000001, mapperUBO.Roughness * _roughnessMap.r);', // Need to have a different way of sampling greyscale values aside from .r
-        '  var metallic: f32 = mapperUBO.Metallic * _metallicMap.r;',
-        '  var alpha: f32 = roughness*roughness;',
-        '  var ior: f32 = mapperUBO.BaseIOR;',
-        '  var k: f32 = alpha*alpha / 2;',
+        '  let baseColor = _diffuseMap.rgb * diffuseColor.rgb;',
+        '  let roughness = max(0.000001, mapperUBO.Roughness * _roughnessMap.r);', // Need to have a different way of sampling greyscale values aside from .r
+        '  let metallic = mapperUBO.Metallic * _metallicMap.r;',
+        '  let alpha = roughness * roughness;',
+        '  let k = alpha * alpha / 2.0;',
         // Split diffuse and specular components
-        '  var diffuse: vec3<f32> = vec3<f32>(0.);',
-        '  var specular: vec3<f32> = vec3<f32>(0.);',
-        '  var emission: vec3<f32> = _emissionMap.rgb * mapperUBO.Emission;',
+        '  var diffuse = vec3<f32>(0.);',
+        '  var specular = vec3<f32>(0.);',
+        '  let emission = _emissionMap.rgb * mapperUBO.Emission;',
+        '',
+        '  // Material struct',
+        '  let mat = Material(ior, roughness, metallic, baseColor);',
+        '',
         // Summing diffuse and specular components of directional lights
         '  {',
-        '    var i: i32 = 0;',
+        '    var i = 0;',
         '    loop {',
-        '      if !(i < rendererUBO.LightCount) { break; }',
+        '      if (!(i < rendererUBO.LightCount)) { break; }',
         '      switch (i32(rendererLightSSBO.values[i].LightData.x)) {',
         '         // Point Light',
         '         case 0 {',
-        '           var color: vec3<f32> = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w;',
-        '           var pos: vec3<f32> = (rendererLightSSBO.values[i].LightPos).xyz;',
-        '           var calculated: PBRData = calcPointLight(normal, V, fragPos, ior, roughness, metallic, pos, color, baseColor);',
-        '           diffuse += max(vec3<f32>(0), calculated.diffuse);',
-        '           specular += max(vec3<f32>(0), calculated.specular);',
+        '           let color = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w;',
+        '           let pos = (rendererLightSSBO.values[i].LightPos).xyz;',
+        '           let pointLight = PointLight(pos, color);',
+        '           let result = calcPointLight(normal, V, fragPos, mat, pointLight);',
+        '           diffuse += max(vec3<f32>(0), result.diffuse);',
+        '           specular += max(vec3<f32>(0), result.specular);',
         '          }',
         '         // Directional light',
         '         case 1 {',
-        '           var dir: vec3<f32> = (rendererUBO.WCVCNormals * vec4<f32>(normalize(rendererLightSSBO.values[i].LightDir.xyz), 0.)).xyz;',
-        '           dir = normalize(dir);',
-        '           var color: vec3<f32> = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w;',
-        '           var calculated: PBRData = calcDirectionalLight(normal, V, ior, roughness, metallic, dir, color, baseColor); // diffuseColor.rgb needs to be fixed with a more dynamic diffuse color',
-        '           diffuse += max(vec3<f32>(0), calculated.diffuse);',
-        '           specular += max(vec3<f32>(0), calculated.specular);',
+        '           let dir = normalize((rendererUBO.WCVCNormals * vec4<f32>(normalize(rendererLightSSBO.values[i].LightDir.xyz), 0.)).xyz);',
+        '           let color = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w;',
+        '           let dirLight = DirectionalLight(dir, color);',
+        '           let result = calcDirectionalLight(normal, V, mat, dirLight); // diffuseColor.rgb needs to be fixed with a more dynamic diffuse color',
+        '           diffuse += max(vec3<f32>(0), result.diffuse);',
+        '           specular += max(vec3<f32>(0), result.specular);',
         '         }',
         '         // Spot Light',
         '         case 2 {',
-        '           var color: vec3<f32> = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w;',
-        '           var pos: vec3<f32> = (rendererLightSSBO.values[i].LightPos).xyz;',
-        '           var dir: vec3<f32> = (rendererUBO.WCVCNormals * vec4<f32>(normalize(rendererLightSSBO.values[i].LightDir.xyz), 0.)).xyz;',
-        '           dir = normalize(dir);',
-        '           var cones: vec2<f32> = vec2<f32>(rendererLightSSBO.values[i].LightData.y, rendererLightSSBO.values[i].LightData.z);',
-        '           var calculated: PBRData = calcSpotLight(normal, V, fragPos, ior, roughness, metallic, pos, dir, cones, color, baseColor);',
-        '           diffuse += max(vec3<f32>(0), calculated.diffuse);',
-        '           specular += max(vec3<f32>(0), calculated.specular);',
+        '           let color = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w;',
+        '           let pos = (rendererLightSSBO.values[i].LightPos).xyz;',
+        '           let dir = normalize((rendererUBO.WCVCNormals * vec4<f32>(normalize(rendererLightSSBO.values[i].LightDir.xyz), 0.)).xyz);',
+        '           let cones = vec2<f32>(rendererLightSSBO.values[i].LightData.y, rendererLightSSBO.values[i].LightData.z);',
+        '           let spotLight = SpotLight(pos, dir, cones, color);',
+        '           let result = calcSpotLight(normal, V, fragPos, mat, spotLight);',
+        '           diffuse += max(vec3<f32>(0), result.diffuse);',
+        '           specular += max(vec3<f32>(0), result.specular);',
         '         }',
         '         default { continue; }',
         '       }',
@@ -702,36 +712,32 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         '    }',
         '  }',
         // Final variables for combining specular and diffuse
-        '  var fresnel: f32 = schlickFresnelIOR(V, normal, ior, k); // Fresnel',
-        '  fresnel = min(1.0, fresnel);',
+        '  let fresnel = min(1.0, schlickFresnelIOR(V, normal, ior, k)); // Fresnel',
         '  // This could be controlled with its own variable (that isnt base color) for better artistic control',
-        '  var fresnelMetallic: vec3<f32> = schlickFresnelRGB(V, normal, baseColor); // Fresnel for metal, takes color into account',
-        '  var kS: vec3<f32> = mix(vec3<f32>(fresnel), fresnelMetallic, metallic);',
-        '  kS = min(vec3<f32>(1.0), kS);',
-        '  var kD: vec3<f32> = (1.0 - kS) * (1.0 - metallic);',
-        '  var PBR: vec3<f32> = mapperUBO.DiffuseIntensity*kD*diffuse + kS*specular;',
-        '  PBR += emission;',
-        '  computedColor = vec4<f32>(PBR, mapperUBO.Opacity);',
+        '  let fresnelMetallic = schlickFresnelRGB(V, normal, baseColor); // Fresnel for metal, takes color into account',
+        '  let kS = min(vec3<f32>(1.0), mix(vec3<f32>(fresnel), fresnelMetallic, metallic));',
+        '  let kD = (1.0 - kS) * (1.0 - metallic);',
+        '  let PBR = mapperUBO.DiffuseIntensity * kD * diffuse + kS * specular;',
+        '  computedColor = vec4<f32>(PBR + emission, mapperUBO.Opacity);',
       ];
       if (renderer.getEnvironmentTexture()?.getImageLoaded()) {
         lightingCode.push(
           '  // To get diffuse IBL, the texture is sampled with normals in worldspace',
-          '  var diffuseIBLCoords: vec3<f32> = (transpose(rendererUBO.WCVCNormals) * vec4<f32>(normal, 1.)).xyz;',
-          '  var diffuseCoords: vec2<f32> = vecToRectCoord(diffuseIBLCoords);',
+          '  let diffuseIBLCoords = (transpose(rendererUBO.WCVCNormals) * vec4<f32>(normal, 1.)).xyz;',
+          '  let diffuseCoords = vecToRectCoord(diffuseIBLCoords);',
           '  // To get specular IBL, the texture is sampled as the worldspace reflection between the normal and view vectors',
           '  // Reflections are first calculated in viewspace, then converted to worldspace to sample the environment',
-          '  var VreflN: vec3<f32> = normalize(reflect(-V, normal));',
-          '  var reflectionIBLCoords = (transpose(rendererUBO.WCVCNormals) * vec4<f32>(VreflN, 1.)).xyz;',
-          '  var specularCoords: vec2<f32> = vecToRectCoord(reflectionIBLCoords);',
-          '  var diffuseIBL = textureSampleLevel(EnvironmentTexture, EnvironmentTextureSampler, diffuseCoords, rendererUBO.MaxEnvironmentMipLevel);',
+          '  let VreflN = normalize(reflect(-V, normal));',
+          '  let reflectionIBLCoords = (transpose(rendererUBO.WCVCNormals) * vec4<f32>(VreflN, 1.)).xyz;',
+          '  let specularCoords = vecToRectCoord(reflectionIBLCoords);',
+          '  let diffuseIBL = textureSampleLevel(EnvironmentTexture, EnvironmentTextureSampler, diffuseCoords, rendererUBO.MaxEnvironmentMipLevel);',
           // Level multiplier should be set by UBO
-          '  var level = roughness * rendererUBO.MaxEnvironmentMipLevel;',
-          '  var specularIBL = textureSampleLevel(EnvironmentTexture, EnvironmentTextureSampler, specularCoords, level);', // Manual mip smoothing since not all formats support smooth level sampling
-          '  var specularIBLContribution: vec3<f32> = specularIBL.rgb*rendererUBO.BackgroundSpecularStrength;',
-          '  computedColor += vec4<f32>(specularIBLContribution*kS, 0);',
-          '  var diffuseIBLContribution: vec3<f32> = diffuseIBL.rgb*rendererUBO.BackgroundDiffuseStrength;',
-          '  diffuseIBLContribution *= baseColor * _ambientOcclusionMap.rgb;', // Multipy by baseColor may be changed
-          '  computedColor += vec4<f32>(diffuseIBLContribution*kD, 0);'
+          '  let level = roughness * rendererUBO.MaxEnvironmentMipLevel;',
+          '  let specularIBL = textureSampleLevel(EnvironmentTexture, EnvironmentTextureSampler, specularCoords, level);', // Manual mip smoothing since not all formats support smooth level sampling
+          '  let specularIBLContribution = specularIBL.rgb * rendererUBO.BackgroundSpecularStrength;',
+          '  computedColor += vec4<f32>(specularIBLContribution * kS, 0);',
+          '  let diffuseIBLContribution = diffuseIBL.rgb * rendererUBO.BackgroundDiffuseStrength;',
+          '  computedColor += vec4<f32>(diffuseIBLContribution * baseColor * _ambientOcclusionMap.rgb * kD, 0);'
         );
       }
       code = vtkWebGPUShaderCache.substitute(
@@ -743,8 +749,8 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       // If theres no normals, just set the specular color to be flat
     } else {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Light::Impl', [
-        '  var diffuse: vec3<f32> = diffuseColor.rgb;',
-        '  var specular: vec3<f32> = mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
+        '  let diffuse = diffuseColor.rgb;',
+        '  let specular = mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
         '  computedColor = vec4<f32>(diffuse * _diffuseMap.rgb, mapperUBO.Opacity);',
       ]).result;
       fDesc.setCode(code);
@@ -875,21 +881,21 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       if (roughnessTexture?.getImageLoaded()) {
         if (checkDims(roughnessTexture)) {
           usedTextures.push(
-            '_roughnessMap = textureSample(RoughnessTexture, RoughnessTextureSampler, input.tcoordVS);'
+            '_roughnessMap = textureSample(RoughnessTexture, RoughnessTextureSampler, input.tcoordVS).ggga;'
           );
         }
       }
       if (metallicTexture?.getImageLoaded()) {
         if (checkDims(metallicTexture)) {
           usedTextures.push(
-            '_metallicMap = textureSample(MetallicTexture, MetallicTextureSampler, input.tcoordVS);'
+            '_metallicMap = textureSample(MetallicTexture, MetallicTextureSampler, input.tcoordVS).bbba;'
           );
         }
       }
       if (ambientOcclusionTexture?.getImageLoaded()) {
         if (checkDims(ambientOcclusionTexture)) {
           usedTextures.push(
-            '_ambientOcclusionMap = textureSample(AmbientOcclusionTexture, AmbientOcclusionTextureSampler, input.tcoordVS);'
+            '_ambientOcclusionMap = textureSample(AmbientOcclusionTexture, AmbientOcclusionTextureSampler, input.tcoordVS).rrra;'
           );
         }
       }
@@ -1000,19 +1006,18 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
     const vertexInput = model.vertexInput;
     const points = pd.getPoints();
-    let indexBuffer;
 
-    // get the flat mapping indexBuffer for the cells
+    // --- Index Buffer ---
+    let indexBuffer = null;
     if (cells) {
-      const buffRequest = {
+      indexBuffer = device.getBufferManager().getBuffer({
         hash: `R${representation}P${primType}${cells.getMTime()}`,
         usage: BufferUsage.Index,
         cells,
         numberOfPoints: points.getNumberOfPoints(),
         primitiveType: primType,
         representation,
-      };
-      indexBuffer = device.getBufferManager().getBuffer(buffRequest);
+      });
       vertexInput.setIndexBuffer(indexBuffer);
     } else {
       vertexInput.setIndexBuffer(null);
@@ -1027,26 +1032,28 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     // - format
     // - usage
     // - packExtra - covered by format
-
-    // points
+    // --- Points Buffer ---
     if (points) {
       const shift = model.WebGPUActor.getBufferShift(model.WebGPURenderer);
-      const buffRequest = {
-        hash: `${points.getMTime()}I${indexBuffer.getMTime()}${shift.join()}float32x4`,
-        usage: BufferUsage.PointArray,
-        format: 'float32x4',
-        dataArray: points,
-        indexBuffer,
-        shift,
-        packExtra: true,
-      };
-      const buff = device.getBufferManager().getBuffer(buffRequest);
-      vertexInput.addBuffer(buff, ['vertexBC']);
+      vertexInput.addBuffer(
+        device.getBufferManager().getBuffer({
+          hash: `${points.getMTime()}I${
+            indexBuffer?.getMTime?.() ?? 0
+          }${shift.join()}float32x4`,
+          usage: BufferUsage.PointArray,
+          format: 'float32x4',
+          dataArray: points,
+          indexBuffer,
+          shift,
+          packExtra: true,
+        }),
+        ['vertexBC']
+      );
     } else {
       vertexInput.removeBufferIfPresent('vertexBC');
     }
 
-    // normals, only used for surface rendering
+    // --- Normals ---
     const usage = publicAPI.getUsage(representation, primType);
     model._usesCellNormals = false;
     if (
@@ -1067,16 +1074,20 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         buffRequest.hash = `${normals.getMTime()}I${indexBuffer.getMTime()}snorm8x4`;
         buffRequest.dataArray = normals;
         buffRequest.usage = BufferUsage.PointArray;
-        const buff = device.getBufferManager().getBuffer(buffRequest);
-        vertexInput.addBuffer(buff, ['normalMC']);
+        vertexInput.addBuffer(
+          device.getBufferManager().getBuffer(buffRequest),
+          ['normalMC']
+        );
       } else if (primType === PrimitiveTypes.Triangles) {
         model._usesCellNormals = true;
         buffRequest.hash = `PFN${points.getMTime()}I${indexBuffer.getMTime()}snorm8x4`;
         buffRequest.dataArray = points;
         buffRequest.cells = cells;
         buffRequest.usage = BufferUsage.NormalsFromPoints;
-        const buff = device.getBufferManager().getBuffer(buffRequest);
-        vertexInput.addBuffer(buff, ['normalMC']);
+        vertexInput.addBuffer(
+          device.getBufferManager().getBuffer(buffRequest),
+          ['normalMC']
+        );
       } else {
         vertexInput.removeBufferIfPresent('normalMC');
       }
@@ -1084,42 +1095,38 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       vertexInput.removeBufferIfPresent('normalMC');
     }
 
-    // deal with colors but only if modified
+    // --- Colors ---
     let haveColors = false;
     if (model.renderable.getScalarVisibility()) {
       const c = model.renderable.getColorMapColors();
       if (c && !edges) {
         const scalarMode = model.renderable.getScalarMode();
-        let haveCellScalars = false;
         // We must figure out how the scalars should be mapped to the polydata.
-        if (
+        const haveCellScalars =
           (scalarMode === ScalarMode.USE_CELL_DATA ||
             scalarMode === ScalarMode.USE_CELL_FIELD_DATA ||
             scalarMode === ScalarMode.USE_FIELD_DATA ||
             !pd.getPointData().getScalars()) &&
           scalarMode !== ScalarMode.USE_POINT_FIELD_DATA &&
-          c
-        ) {
-          haveCellScalars = true;
-        }
-        const buffRequest = {
-          usage: BufferUsage.PointArray,
-          format: 'unorm8x4',
-          hash: `${haveCellScalars}${c.getMTime()}I${indexBuffer.getMTime()}unorm8x4`,
-          dataArray: c,
-          indexBuffer,
-          cellData: haveCellScalars,
-          cellOffset: 0,
-        };
-        const buff = device.getBufferManager().getBuffer(buffRequest);
-        vertexInput.addBuffer(buff, ['colorVI']);
+          c;
+        vertexInput.addBuffer(
+          device.getBufferManager().getBuffer({
+            usage: BufferUsage.PointArray,
+            format: 'unorm8x4',
+            hash: `${haveCellScalars}${c.getMTime()}I${indexBuffer.getMTime()}unorm8x4`,
+            dataArray: c,
+            indexBuffer,
+            cellData: haveCellScalars,
+            cellOffset: 0,
+          }),
+          ['colorVI']
+        );
         haveColors = true;
       }
     }
-    if (!haveColors) {
-      vertexInput.removeBufferIfPresent('colorVI');
-    }
+    if (!haveColors) vertexInput.removeBufferIfPresent('colorVI');
 
+    // --- Texture Coordinates ---
     let tcoords = null;
     if (
       model.renderable.getInterpolateScalarsBeforeMapping?.() &&
@@ -1130,155 +1137,117 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       tcoords = pd.getPointData().getTCoords();
     }
     if (tcoords && !edges) {
-      const buff = device
-        .getBufferManager()
-        .getBufferForPointArray(tcoords, vertexInput.getIndexBuffer());
-      vertexInput.addBuffer(buff, ['tcoord']);
+      vertexInput.addBuffer(
+        device
+          .getBufferManager()
+          .getBufferForPointArray(tcoords, vertexInput.getIndexBuffer()),
+        ['tcoord']
+      );
     } else {
       vertexInput.removeBufferIfPresent('tcoord');
     }
   };
 
   publicAPI.updateTextures = () => {
-    // we keep track of new and used textures so
-    // that we can clean up any unused textures so we don't hold onto them
+    // Track textures in-use and new
     const usedTextures = [];
     const newTextures = [];
 
-    // do we have a scalar color texture
+    // Add scalar color texture if available
     const idata = model.renderable.getColorTextureMap?.();
+    if (idata && !model.colorTexture) {
+      model.colorTexture = vtkTexture.newInstance({ label: 'polyDataColor' });
+    }
     if (idata) {
-      if (!model.colorTexture) {
-        model.colorTexture = vtkTexture.newInstance({ label: 'polyDataColor' });
-      }
       model.colorTexture.setInputData(idata);
-      newTextures.push(['Diffuse', model.colorTexture]);
+      newTextures.push(['DiffuseTexture', model.colorTexture]);
     }
 
-    // actor textures?
     const actor = model.WebGPUActor.getRenderable();
     const renderer = model.WebGPURenderer.getRenderable();
-
-    // Reusing the old code for new and old textures, just loading in from properties instead of actor.getTextures()
-    const textures = [];
-
-    // Feels like there should be a better way than individually adding all
-    if (actor.getProperty().getDiffuseTexture?.()) {
-      const pair = ['Diffuse', actor.getProperty().getDiffuseTexture()];
-      textures.push(pair);
-    }
-    if (actor.getTextures()[0]) {
-      const pair = ['Diffuse', actor.getTextures()[0]];
-      textures.push(pair);
-    }
-    if (model.colorTexture) {
-      const pair = ['Diffuse', model.colorTexture];
-      textures.push(pair);
-    }
-    if (actor.getProperty().getORMTexture?.()) {
-      const pair = ['ORM', actor.getProperty().getORMTexture()];
-      textures.push(pair);
-    }
-    if (actor.getProperty().getRMTexture?.()) {
-      const pair = ['RM', actor.getProperty().getRMTexture()];
-      textures.push(pair);
-    }
-    if (actor.getProperty().getRoughnessTexture?.()) {
-      const pair = ['Roughness', actor.getProperty().getRoughnessTexture()];
-      textures.push(pair);
-    }
-    if (actor.getProperty().getMetallicTexture?.()) {
-      const pair = ['Metallic', actor.getProperty().getMetallicTexture()];
-      textures.push(pair);
-    }
-    if (actor.getProperty().getNormalTexture?.()) {
-      const pair = ['Normal', actor.getProperty().getNormalTexture()];
-      textures.push(pair);
-    }
-    if (actor.getProperty().getAmbientOcclusionTexture?.()) {
-      const pair = [
-        'AmbientOcclusion',
-        actor.getProperty().getAmbientOcclusionTexture(),
-      ];
-      textures.push(pair);
-    }
-    if (actor.getProperty().getEmissionTexture?.()) {
-      const pair = ['Emission', actor.getProperty().getEmissionTexture()];
-      textures.push(pair);
-    }
-    if (renderer.getEnvironmentTexture?.()) {
-      const pair = ['Environment', renderer.getEnvironmentTexture()];
-      textures.push(pair);
-    }
-
-    for (let i = 0; i < textures.length; i++) {
+    const textures = [
+      ['DiffuseTexture', actor.getProperty().getDiffuseTexture?.()],
+      ['DiffuseTexture', actor.getTextures()[0]],
+      ['DiffuseTexture', model.colorTexture],
+      ['ORMTexture', actor.getProperty().getORMTexture?.()],
+      ['RMTexture', actor.getProperty().getRMTexture?.()],
+      ['RoughnessTexture', actor.getProperty().getRoughnessTexture?.()],
+      ['MetallicTexture', actor.getProperty().getMetallicTexture?.()],
+      ['NormalTexture', actor.getProperty().getNormalTexture?.()],
+      [
+        'AmbientOcclusionTexture',
+        actor.getProperty().getAmbientOcclusionTexture?.(),
+      ],
+      ['EmissionTexture', actor.getProperty().getEmissionTexture?.()],
+      ['EnvironmentTexture', renderer.getEnvironmentTexture?.()],
+    ];
+    textures.forEach(([name, tex]) => {
+      if (!tex) return;
       if (
-        textures[i][1].getInputData() ||
-        textures[i][1].getJsImageData() ||
-        textures[i][1].getCanvas()
+        tex.getInputData() ||
+        tex.getJsImageData() ||
+        tex.getCanvas() ||
+        tex.getImageBitmap()
       ) {
-        newTextures.push(textures[i]);
+        newTextures.push([name, tex]);
       }
-      if (textures[i][1].getImage() && textures[i][1].getImageLoaded()) {
-        newTextures.push(textures[i]);
+      if (tex.getImage() && tex.getImageLoaded()) {
+        newTextures.push([name, tex]);
       }
-    }
+    });
 
-    for (let i = 0; i < newTextures.length; i++) {
-      const srcTexture = newTextures[i][1];
-      const textureName = newTextures[i][0];
+    // Add textures to manager only if not present
+    newTextures.forEach(([textureName, srcTexture]) => {
       const newTex = model.device
         .getTextureManager()
-        .getTextureForVTKTexture(srcTexture); // Generates hash
-      if (newTex.getReady()) {
-        // is this a new texture
-        let found = false;
-        for (let t = 0; t < model.textures.length; t++) {
-          if (model.textures[t] === newTex) {
-            found = true;
-            usedTextures[t] = true;
-          }
-        }
-        if (!found) {
-          usedTextures[model.textures.length] = true;
-          const tview = newTex.createView(`${textureName}Texture`);
-          model.textures.push(newTex);
-          model.textureViews.push(tview);
-          const interpolate = srcTexture.getInterpolate()
-            ? 'linear'
-            : 'nearest';
-          let addressMode = null;
-          if (
-            !addressMode &&
-            srcTexture.getEdgeClamp() &&
-            srcTexture.getRepeat()
-          )
-            addressMode = 'mirror-repeat';
-          if (!addressMode && srcTexture.getEdgeClamp())
-            addressMode = 'clamp-to-edge';
-          if (!addressMode && srcTexture.getRepeat()) addressMode = 'repeat';
+        .getTextureForVTKTexture(srcTexture, textureName);
 
-          if (textureName !== 'Environment') {
-            tview.addSampler(model.device, {
-              addressModeU: addressMode,
-              addressModeV: addressMode,
-              addressModeW: addressMode,
-              minFilter: interpolate,
-              magFilter: interpolate,
-            });
-          } else {
-            tview.addSampler(model.device, {
-              addressModeU: 'repeat',
-              addressModeV: 'clamp-to-edge',
-              addressModeW: 'repeat',
-              minFilter: interpolate,
-              magFilter: interpolate,
-              mipmapFilter: 'linear',
-            });
-          }
+      if (!newTex.getReady()) return;
+      let found = false;
+      for (let t = 0; t < model.textures.length; ++t) {
+        if (model.textures[t] === newTex) {
+          found = true;
+          usedTextures[t] = true;
+          break;
         }
       }
-    }
+      if (!found) {
+        usedTextures[model.textures.length] = true;
+        const tview = newTex.createView(textureName);
+        model.textures.push(newTex);
+        model.textureViews.push(tview);
+
+        // Sampler setup
+        const interpolate = srcTexture.getInterpolate() ? 'linear' : 'nearest';
+        let addressMode = null;
+        if (srcTexture.getEdgeClamp() && srcTexture.getRepeat())
+          addressMode = 'mirror-repeat';
+        else if (srcTexture.getEdgeClamp()) addressMode = 'clamp-to-edge';
+        else if (srcTexture.getRepeat()) addressMode = 'repeat';
+
+        // Handle environment texture separately
+        let options = {
+          addressModeU: addressMode,
+          addressModeV: addressMode,
+          addressModeW: addressMode,
+          minFilter: interpolate,
+          magFilter: interpolate,
+        };
+
+        if (textureName === 'EnvironmentTexture') {
+          options = {
+            addressModeU: 'repeat',
+            addressModeV: 'clamp-to-edge',
+            addressModeW: 'repeat',
+            minFilter: interpolate,
+            magFilter: interpolate,
+            mipmapFilter: 'linear',
+          };
+        }
+
+        tview.addSampler(model.device, options);
+      }
+    });
 
     // remove unused textures
     for (let i = model.textures.length - 1; i >= 0; i--) {

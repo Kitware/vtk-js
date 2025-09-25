@@ -149,21 +149,23 @@ function vtkDataArray(publicAPI, model) {
     }
 
     const numComps = publicAPI.getNumberOfComponents();
-    const curNumTuples = model.values.length / (numComps > 0 ? numComps : 1);
-    if (requestedNumTuples === curNumTuples) {
+    const numAllocatedTuples =
+      model.values.length / (numComps > 0 ? numComps : 1);
+    if (requestedNumTuples === numAllocatedTuples) {
       return true;
     }
 
-    if (requestedNumTuples > curNumTuples) {
+    if (requestedNumTuples > numAllocatedTuples) {
       // Requested size is bigger than current size.  Allocate enough
       // memory to fit the requested size and be more than double the
       // currently allocated memory.
       const oldValues = model.values;
       model.values = macro.newTypedArray(
         model.dataType,
-        (requestedNumTuples + curNumTuples) * numComps
+        (requestedNumTuples + numAllocatedTuples) * numComps
       );
       model.values.set(oldValues);
+      // The actual number of tuples is not increased, only memory is allocated.
       return true;
     }
 
@@ -181,6 +183,10 @@ function vtkDataArray(publicAPI, model) {
     publicAPI.modified();
   };
 
+  publicAPI.allocate = (extraNumTuples) => {
+    resize(publicAPI.getNumberOfTuples() + extraNumTuples);
+  };
+
   publicAPI.resize = (requestedNumTuples) => {
     resize(requestedNumTuples);
     const newSize = requestedNumTuples * publicAPI.getNumberOfComponents();
@@ -192,9 +198,10 @@ function vtkDataArray(publicAPI, model) {
     return false;
   };
 
-  // FIXME, to rename into "clear()" or "reset()"
+  // Restore the array to initial state
   publicAPI.initialize = () => {
     publicAPI.resize(0);
+    return publicAPI;
   };
 
   publicAPI.getElementComponentSize = () => model.values.BYTES_PER_ELEMENT;

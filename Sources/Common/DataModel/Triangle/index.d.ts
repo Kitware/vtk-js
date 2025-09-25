@@ -1,4 +1,4 @@
-import { Vector3 } from '../../../types';
+import { Vector2, Vector3 } from '../../../types';
 import vtkCell, { ICellInitialValues } from '../Cell';
 
 export interface ITriangleInitialValues extends ICellInitialValues {}
@@ -9,6 +9,14 @@ export interface IIntersectWithLine {
   subId: number;
   evaluation?: number;
   betweenPoints?: boolean;
+}
+
+export interface IIntersectWithTriangle {
+  intersect: boolean;
+  coplanar: boolean;
+  pt1: Vector3;
+  pt2: Vector3;
+  surfaceId: number;
 }
 
 export interface vtkTriangle extends vtkCell {
@@ -48,23 +56,36 @@ export interface vtkTriangle extends vtkCell {
   ): IIntersectWithLine;
 
   /**
-   * Evaluate the position of x in relation with triangle.
-   *
-   * Compute the closest point in the cell.
-   * - pccords parametric coordinate (computed in function)
-   * - weights Interpolation weights in cell.
-   * - the number of weights is equal to the number of points defining the
-   *   cell (computed in function).
-   *
-   * A javascript object is returned :
-   *
-   * ```js
-   * {
-   *   evaluation: 1 = inside 0 = outside -1 = problem during execution
-   *   subId: always set to 0
-   *   dist2: squared distance from x to cell
-   * }
-   * ```
+   * Get the nearest cell boundary to the specified parametric
+   * coordinates and whether the point is inside or outside the cell.
+   * @param {Number} subId The sub-id of the cell.
+   * @param {Vector3} pcoords The parametric coordinates.
+   * @param {Vector2} pts The points of the cell.
+   */
+  cellBoundary(subId: number, pcoords: Vector3, pts: Vector2): boolean;
+
+  /**
+   * Get the derivatives of the triangle at the specified parametric
+   * coordinates.
+   * @param {Number} subId - The sub-id of the triangle.
+   * @param {Vector3} pcoords - The parametric coordinates.
+   * @param {Number[]} values - The values at the points.
+   * @param {Number} dim - The dimension.
+   * @param {Number[]} derivs - The derivatives.
+   */
+  derivatives(
+    subId: number,
+    pcoords: Vector3,
+    values: any,
+    dim: number,
+    derivs: number[]
+  ): void;
+
+  /**
+   * Evaluates whether the specified point is inside (1), outside (0), or
+   * indeterminate (-1) for the cell; computes parametric coordinates, sub-cell
+   * ID (if applicable), squared distance to the cell (and closest point if
+   * requested), and interpolation weights for the cell.
    *
    * @param {Vector3} x The x point coordinate.
    * @param {Vector3} closestPoint The closest point coordinate.
@@ -79,7 +100,8 @@ export interface vtkTriangle extends vtkCell {
   ): IIntersectWithLine;
 
   /**
-   * Determine global coordinate (x]) from subId and parametric coordinates.
+   * Determine global coordinates (x) from the given subId and parametric
+   * coordinates.
    * @param {Vector3} pcoords The parametric coordinates.
    * @param {Vector3} x The x point coordinate.
    * @param {Number[]} weights The number of weights.
@@ -145,6 +167,31 @@ export function computeNormal(
 ): void;
 
 /**
+ * Compute the interpolation functions/derivatives
+ * @param {Number[]} derivs - The derivatives.
+ */
+export function interpolationDerivs(derivs: number[]): void;
+
+/**
+ * Compute the intersection between two triangles.
+ * @param {Vector3} p1 The first point coordinate of the first triangle.
+ * @param {Vector3} q1 The second point coordinate of the first triangle.
+ * @param {Vector3} r1 The third point coordinate of the first triangle.
+ * @param {Vector3} p2 The first point coordinate of the second triangle.
+ * @param {Vector3} q2 The second point coordinate of the second triangle.
+ * @param {Vector3} r2 The third point coordinate of the second triangle.
+ */
+export function intersectWithTriangle(
+  p1: Vector3,
+  q1: Vector3,
+  r1: Vector3,
+  p2: Vector3,
+  q2: Vector3,
+  r2: Vector3,
+  tolerance?: number
+): IIntersectWithTriangle;
+
+/**
  * vtkTriangle is a cell which representant a triangle. It contains static
  * method to make some computations directly link to triangle.
  *
@@ -155,5 +202,7 @@ export declare const vtkTriangle: {
   extend: typeof extend;
   computeNormalDirection: typeof computeNormalDirection;
   computeNormal: typeof computeNormal;
+  interpolationDerivs: typeof interpolationDerivs;
+  intersectWithTriangle: typeof intersectWithTriangle;
 };
 export default vtkTriangle;

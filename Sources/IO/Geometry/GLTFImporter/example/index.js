@@ -31,16 +31,18 @@ const modelsFolder = 'Models';
 const modelsDictionary = {};
 
 function createTextureWithMipmap(src, level) {
-  const img = new Image();
-  img.crossOrigin = 'Anonymous';
-  img.src = src;
   const tex = vtkTexture.newInstance();
   tex.setMipLevel(level);
-  img.onload = () => {
-    tex.setInterpolate(true);
-    tex.setEdgeClamp(true);
-    tex.setImage(img);
-  };
+
+  fetch(src)
+    .then((response) => response.blob())
+    .then((blob) => createImageBitmap(blob))
+    .then((imageBitmap) => {
+      tex.setInterpolate(true);
+      tex.setEdgeClamp(true);
+      tex.setImageBitmap(imageBitmap);
+    });
+
   return tex;
 }
 
@@ -51,12 +53,7 @@ const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
 // Workaround for the variant switch
-const variantsModels = [
-  'MaterialsVariantsShoe',
-  'GlamVelvetSofa',
-  'SheenChair',
-  'AntiqueCamera',
-];
+const modelsWithEnvironmentTex = ['DamagedHelmet', 'FlightHelmet'];
 
 const environmentTex = createTextureWithMipmap(
   `${__BASE_PATH__}/data/pbr/kiara_dawn_4k.jpg`,
@@ -64,9 +61,10 @@ const environmentTex = createTextureWithMipmap(
 );
 renderer.setUseEnvironmentTextureAsBackground(false);
 
-if (variantsModels.includes(userParms.model)) {
+if (!modelsWithEnvironmentTex.includes(userParms.model)) {
+  renderer.setEnvironmentTexture(environmentTex);
   renderer.setEnvironmentTextureDiffuseStrength(0);
-  renderer.setEnvironmentTextureSpecularStrength(0);
+  renderer.setEnvironmentTextureSpecularStrength(0.8);
 } else {
   renderer.setEnvironmentTexture(environmentTex);
   renderer.setEnvironmentTextureDiffuseStrength(1);
@@ -237,17 +235,18 @@ fetch(`${baseUrl}/${modelsFolder}/model-index.json`)
     });
 
     const modelsNames = Object.keys(modelsDictionary);
+    const dhModelIdx = modelsNames.indexOf('DamagedHelmet');
+    selectedModel = userParms.model || modelsNames[dhModelIdx];
     modelsNames.forEach((modelName) => {
       const option = document.createElement('option');
       option.value = modelName;
       option.textContent = modelName;
-      if (userParms.model === modelName) {
+      if (selectedModel === modelName) {
         option.selected = true;
       }
       modelSelector.appendChild(option);
     });
 
-    selectedModel = userParms.model || modelsNames[0];
     const variants = Object.keys(modelsDictionary[selectedModel]).sort();
 
     selectedFlavor = userParms.flavor || variants[0];
@@ -264,7 +263,10 @@ fetch(`${baseUrl}/${modelsFolder}/model-index.json`)
     const path = modelsDictionary[selectedModel][selectedFlavor];
     const url = `${baseUrl}/${path}`;
 
-    if (selectedFlavor === 'glTF-Draco') {
+    if (
+      selectedFlavor === 'glTF-Draco' ||
+      selectedFlavor === 'glTF-Binary-KTX-ETC1S-Draco'
+    ) {
       vtkResourceLoader
         .loadScript(
           'https://unpkg.com/draco3dgltf@1.5.7/draco_decoder_gltf_nodejs.js'

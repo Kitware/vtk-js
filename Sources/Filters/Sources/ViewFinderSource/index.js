@@ -4,7 +4,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 function vtkViewFinderSource(publicAPI, model) {
   publicAPI.requestData = (inData, outData) => {
-    const dataset = vtkPolyData.newInstance();
+    const dataset = outData[0]?.initialize() || vtkPolyData.newInstance();
 
     const points = macro.newTypedArray(model.pointType, 3 * 16);
 

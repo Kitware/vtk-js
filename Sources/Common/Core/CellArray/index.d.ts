@@ -39,6 +39,9 @@ export interface vtkCellArray extends vtkDataArray {
 
   /**
    * Insert a cell to this array in the next available slot.
+   * This may re-allocate a new typed array if the current one is not large enough.
+   * If the final size of the array is known up-front, it is more efficient to call
+   * `allocate()` before calling `insertNextCell()` multiple times.
    * @param {Number[]} cellPointIds The list of point ids (NOT prefixed with the number of points)
    * @returns {Number} Idx of where the cell was inserted
    */

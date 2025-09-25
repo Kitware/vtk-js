@@ -82,7 +82,10 @@ function vtkWarpScalar(publicAPI, model) {
         inPoints[ptOffset + 2] + model.scaleFactor * s * n[2];
     }
 
-    const newDataSet = vtk({ vtkClass: input.getClassName() });
+    const newDataSet =
+      outData[0] && outData[0] !== inData[0]
+        ? outData[0].initialize()
+        : vtk({ vtkClass: input.getClassName() });
     newDataSet.shallowCopy(input);
     const points = vtkPoints.newInstance();
     points.setData(newPtsData, 3);

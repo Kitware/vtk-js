@@ -1748,14 +1748,6 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     publicAPI.renderPieceFinish(ren, actor);
   };
 
-  publicAPI.computeBounds = (ren, actor) => {
-    if (!publicAPI.getInput()) {
-      vtkMath.uninitializeBounds(model.bounds);
-      return;
-    }
-    model.bounds = publicAPI.getInput().getBounds();
-  };
-
   publicAPI.updateBufferObjects = (ren, actor) => {
     // Rebuild buffers if needed
     if (publicAPI.getNeedToRebuildBufferObjects(ren, actor)) {
@@ -1851,13 +1843,13 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       const input = model.renderable.getColorTextureMap();
       const ext = input.getExtent();
       const inScalars = input.getPointData().getScalars();
-      tex.create2DFromRaw(
-        ext[1] - ext[0] + 1,
-        ext[3] - ext[2] + 1,
-        inScalars.getNumberOfComponents(),
-        inScalars.getDataType(),
-        inScalars.getData()
-      );
+      tex.create2DFromRaw({
+        width: ext[1] - ext[0] + 1,
+        height: ext[3] - ext[2] + 1,
+        numComps: inScalars.getNumberOfComponents(),
+        dataType: inScalars.getDataType(),
+        data: inScalars.getData(),
+      });
       tex.activate();
       tex.sendParameters();
       tex.deactivate();
