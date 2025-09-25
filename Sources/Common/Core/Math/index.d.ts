@@ -788,7 +788,7 @@ export function solveLinearSystem(A: Matrix, x: number[], size: number): number;
  * @param {Number} [size] The square size of the matrix to invert : 4 for a 4x4
  * @param {Number[]} [index]
  * @param {Number[]} [column]
- * @return AI on success, null otherwise
+ * @returns AI on success, null otherwise
  */
 export function invertMatrix(
   A: Matrix,
@@ -1136,6 +1136,7 @@ export function isFinite(value: any): boolean;
  * operations such as dot and cross products and vector norm; matrix determinant
  * for 2x2 and 3x3 matrices; univariate polynomial solvers; and for random
  * number generation (for backward compatibility only).
+ * **Contrary to the rest of vtk.js, vtkMath is in row-major format (similar to VTK C++).**
  */
 export declare const vtkMath: {
   createArray: typeof createArray;

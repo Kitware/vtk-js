@@ -131,6 +131,7 @@ declare function buildFromRadian(): Transform;
  * The `vtkMatrixBuilder` class provides a system to create a mat4
  * transformation matrix. All functions return the MatrixBuilder Object
  * instance, allowing transformations to be chained.
+ * **Note**: Contrary to vtkMath, vtkMatrixBuilder uses column-major format.
  *
  * @example
  * ```js
