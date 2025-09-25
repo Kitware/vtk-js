@@ -286,6 +286,7 @@ export function newInstance(
  * Most of the methods for manipulating this transformation (e.g. transformMatrices, transformMatrix) (TODO: Translate, Rotate, Concatenate...) can operate in either PreMultiply (the default) or PostMultiply mode. In PreMultiply mode, the translation, concatenation, etc. will occur before any transformations which are represented by the current matrix. In PostMultiply mode, the additional transformation will occur after any transformations represented by the current matrix.
  *
  * This class performs all of its operations in a right handed coordinate system with right handed rotations. Some other graphics libraries use left handed coordinate systems and rotations.
+ * **Note**: vtkTransform uses column-major format.
  *
  * @example
  * ```js

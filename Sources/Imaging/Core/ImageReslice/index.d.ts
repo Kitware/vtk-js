@@ -666,7 +666,8 @@ export function newInstance(
  * slice rather than a volume. You can use both the resliceAxes and the
  * resliceTransform at the same time, in order to extract slices from a
  * volume that you have applied a transformation to.
- * */
+ * **Note**: vtkImageReslice uses column-major format.
+ */
 export declare const vtkImageReslice: {
   newInstance: typeof newInstance;
   extend: typeof extend;
