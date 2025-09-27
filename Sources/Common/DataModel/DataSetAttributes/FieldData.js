@@ -32,7 +32,7 @@ function vtkFieldData(publicAPI, model) {
   publicAPI.copyStructure = (other) => {
     publicAPI.initializeFields();
     model.copyFieldFlags = other.getCopyFieldFlags().map((x) => x); // Deep-copy
-    model.arrays = other.arrays().map((x) => ({ array: x })); // Deep-copy
+    model.arrays = other.getArrays().map((x) => ({ data: x })); // Deep-copy
     // TODO: Copy array information objects (once we support information objects)
   };
 
