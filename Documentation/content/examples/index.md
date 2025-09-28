@@ -239,12 +239,16 @@ This will allow you to see the some live code running in your browser. Just pick
 [![ScalarBarActor Example][ScalarBarActor]](./ScalarBarActor.html "Scalar bar/color legend/LUT actor")
 [![Actor2D Example][Actor2D]](./Actor2D.html "Actor2D")
 [![CubeAxes Example][CubeAxes]](./CubeAxes.html "Cube axes around an actor")
+[![TextActor Example][TextActor]](./TextActor.html "2D text in a 3D scene")
+[![VectorText Example][VectorText]](./VectorText.html "PolyData 3D text")
 
 </div>
 
 [ScalarBarActor]: ../docs/gallery/ScalarBarActor.jpg
 [Actor2D]: ../docs/gallery/Actor2D.jpg
 [CubeAxes]: ../docs/gallery/CubeAxes.jpg
+[TextActor]: ../docs/gallery/TextActor.jpg
+[VectorText]: ../docs/gallery/VectorText.jpg
 
 # Rendering
 
