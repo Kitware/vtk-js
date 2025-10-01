@@ -214,12 +214,12 @@ function getOrCreateColorTextureCoordinates(
     if (useMagnitude) {
       let sum = 0;
       for (let compIdx = 0; compIdx < numComps; ++compIdx) {
-        const compValue = inputV[inputIdx + compIdx];
+        const compValue = Number(inputV[inputIdx + compIdx]);
         sum += compValue * compValue;
       }
       scalarValue = Math.sqrt(sum);
     } else {
-      scalarValue = inputV[inputIdx + component];
+      scalarValue = Number(inputV[inputIdx + component]);
     }
     if (useLogScale) {
       scalarValue = Math.log10(scalarValue);
