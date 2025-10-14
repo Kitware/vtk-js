@@ -19,6 +19,7 @@ function vtkViewStream(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   function imageLoaded(e) {
+    if (model.deleted) return;
     const id = Number(this.dataset.id);
     publicAPI.invokeImageReady(model.eventPool[id]);
   }
