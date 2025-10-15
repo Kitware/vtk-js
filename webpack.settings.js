@@ -12,6 +12,9 @@ module.exports = {
     dist: {
       base: './dist/umd/',
     },
+    examples: {
+      base: './dist/examples',
+    },
   },
   urls: {
     publicPath: '/dist/umd/',
