@@ -13,6 +13,7 @@ import vtkLineSource from './LineSource';
 import vtkPlaneSource from './PlaneSource';
 import vtkPlatonicSolidSource from './PlatonicSolidSource';
 import vtkPointSource from './PointSource';
+import vtkRegularPolygonSource from './RegularPolygonSource';
 import vtkRTAnalyticSource from './RTAnalyticSource';
 import vtkSLICSource from './SLICSource';
 import vtkSphereSource from './SphereSource';
@@ -34,6 +35,7 @@ export default {
   vtkPlaneSource,
   vtkPlatonicSolidSource,
   vtkPointSource,
+  vtkRegularPolygonSource,
   vtkRTAnalyticSource,
   vtkSLICSource,
   vtkSphereSource,
