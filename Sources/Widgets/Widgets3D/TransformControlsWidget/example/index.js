@@ -10,6 +10,9 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 
 import vtkTransformControlsWidget from '@kitware/vtk.js/Widgets/Widgets3D/TransformControlsWidget';
+
+import controlPanel from './controller.html';
+
 const { TransformMode } = vtkTransformControlsWidget;
 
 // ----------------------------------------------------------------------------
@@ -82,19 +85,30 @@ global.r = renderer;
 global.rw = renderWindow;
 global.vw = viewWidget;
 
+function setTransformMode(mode) {
+  widget.setMode(mode);
+  renderWindow.render();
+}
+
+fullScreenRenderer.addController(controlPanel);
+
+const transformModeSelector = document.querySelector('.mode');
+transformModeSelector.addEventListener('change', (e) => {
+  const idx = Number(e.target.value);
+  const mode = e.target[idx].dataset.mode; // Retrieve mode from HTML
+  setTransformMode(mode);
+});
+
+const keyMap = {
+  t: TransformMode.TRANSLATE,
+  q: TransformMode.ROTATE,
+  x: TransformMode.SCALE,
+};
+
 window.onkeydown = (ev) => {
-  switch (ev.key) {
-    case 'q':
-      widget.setMode(TransformMode.ROTATE);
-      renderWindow.render();
-      break;
-    case 't':
-      widget.setMode(TransformMode.TRANSLATE);
-      renderWindow.render();
-      break;
-    case 'x':
-      widget.setMode(TransformMode.SCALE);
-      renderWindow.render();
-      break;
+  const mode = keyMap[ev.key];
+  if (mode !== undefined) {
+    transformModeSelector.value = Object.values(keyMap).indexOf(mode);
+    setTransformMode(keyMap[ev.key]);
   }
 };

@@ -169,6 +169,8 @@ export default function widgetBehavior(publicAPI, model) {
       translation[axisIndex] = translateState.startPos + delta;
       model.widgetState.getTransform().setTranslation(translation);
     }
+
+    return macro.EVENT_ABORT;
   };
 
   publicAPI.handleScaleEvent = (callData, axis, axisIndex) => {
@@ -189,6 +191,8 @@ export default function widgetBehavior(publicAPI, model) {
       scales[axisIndex] = scale;
       model.widgetState.getTransform().setScale(scales);
     }
+
+    return macro.EVENT_ABORT;
   };
 
   publicAPI.handleRotateEvent = (callData) => {
