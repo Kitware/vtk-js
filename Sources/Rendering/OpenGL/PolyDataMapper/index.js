@@ -1258,7 +1258,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       const numClipPlanes = model.renderable.getNumberOfClippingPlanes();
       const planeEquations = [];
 
-      const shiftScaleEnabled = cellBO.getCABO().getCoordShiftAndScaleEnabled();
+      const shiftScaleEnabled =
+        model.renderable.coordShiftScaleEnabled &&
+        cellBO.getCABO().getCoordShiftAndScaleEnabled();
       const inverseShiftScaleMatrix = shiftScaleEnabled
         ? cellBO.getCABO().getInverseShiftAndScaleMatrix()
         : null;
@@ -1460,7 +1462,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const camm = model.openGLCamera.getKeyMatrixTime().getMTime();
     const progm = program.getLastCameraMTime();
 
-    const shiftScaleEnabled = cellBO.getCABO().getCoordShiftAndScaleEnabled();
+    const shiftScaleEnabled =
+      model.renderable.coordShiftScaleEnabled &&
+      cellBO.getCABO().getCoordShiftAndScaleEnabled();
     const inverseShiftScaleMatrix = shiftScaleEnabled
       ? cellBO.getCABO().getInverseShiftAndScaleMatrix()
       : null;
@@ -2018,7 +2022,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   }
 
   // Build VTK API
-  macro.setGet(publicAPI, model, ['context']);
+  macro.setGet(publicAPI, model, ['context', 'coordShiftScaleEnabled']);
 
   model.VBOBuildTime = {};
   macro.obj(model.VBOBuildTime, { mtime: 0 });

@@ -35,6 +35,7 @@ export interface IMapperInitialValues extends IAbstractMapper3DInitialValues {
   interpolateScalarsBeforeMapping?: boolean;
   forceCompileOnly?: number;
   useInvertibleColors?: boolean;
+  coordShiftScaleEnabled?: boolean;
   customShaderAttributes?: any;
 }
 
@@ -467,6 +468,15 @@ export interface vtkMapper
   setInterpolateScalarsBeforeMapping(
     interpolateScalarsBeforeMapping: boolean
   ): boolean;
+
+  /**
+   * Control whether the mapper should automatically shift and scale
+   * the coordinates to improve precision. This is enabled by default.
+   *
+   * @param {Boolean} coordShiftScaleEnabled
+   * @default true
+   */
+  setCoordShiftScaleEnabled(coordShiftScaleEnabled: boolean): boolean;
 }
 
 /**
