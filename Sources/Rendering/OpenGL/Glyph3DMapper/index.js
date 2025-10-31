@@ -694,8 +694,14 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
     const garray = model.renderable.getMatrixArray();
 
     const pts = model.renderable.getInputData(0).getPoints();
-    const { useShiftAndScale, coordShift, coordScale } =
-      computeCoordShiftAndScale(pts);
+    let useShiftAndScale = false;
+    let coordShift = 0.0;
+    let coordScale = 1.0;
+
+    if (model.coordShiftAndScaleEnabled && pts) {
+      ({ useShiftAndScale, coordShift, coordScale } =
+        computeCoordShiftAndScale(pts));
+    }
 
     if (model.hardwareSupport) {
       // update the buffer objects if needed
