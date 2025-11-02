@@ -2022,7 +2022,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   }
 
   // Build VTK API
-  macro.setGet(publicAPI, model, ['context', 'coordShiftScaleEnabled']);
+  macro.setGet(publicAPI, model, ['context']);
 
   model.VBOBuildTime = {};
   macro.obj(model.VBOBuildTime, { mtime: 0 });

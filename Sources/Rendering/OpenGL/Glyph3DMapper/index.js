@@ -698,7 +698,7 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
     let coordShift = 0.0;
     let coordScale = 1.0;
 
-    if (model.coordShiftAndScaleEnabled && pts) {
+    if (model.renderable.getCoordShiftScaleEnabled() && pts) {
       ({ useShiftAndScale, coordShift, coordScale } =
         computeCoordShiftAndScale(pts));
     }
