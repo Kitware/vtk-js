@@ -61,17 +61,9 @@ function vtkDataSetAttributes(publicAPI, model) {
       );
       return -1;
     }
-    let currentAttribute = model[`active${attType}`];
-    if (currentAttribute >= 0 && currentAttribute < model.arrays.length) {
-      if (model.arrays[currentAttribute] === arr) {
-        return currentAttribute;
-      }
-      // FIXME setting an array actually changes its index
-      publicAPI.removeArrayByIndex(currentAttribute);
-    }
 
     if (arr) {
-      currentAttribute = publicAPI.addArray(arr);
+      const currentAttribute = publicAPI.addArray(arr);
       model[`active${attType}`] = currentAttribute;
     } else {
       model[`active${attType}`] = -1;
