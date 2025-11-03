@@ -7,8 +7,10 @@ import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
+import Constants from 'vtk.js/Sources/Rendering/Core/ScalarBarActor/Constants';
 
 const { VectorMode } = vtkScalarsToColors;
+const { Orientation } = Constants;
 
 // ----------------------------------------------------------------------------
 // vtkScalarBarActor
@@ -91,9 +93,9 @@ function defaultAutoLayout(publicAPI, model) {
 
     // Determine orientation: user-forced, or auto based on aspect ratio
     let isVertical = false;
-    if (model.barOrientation === 'vertical') {
+    if (model.orientation === Orientation.VERTICAL) {
       isVertical = true;
-    } else if (model.barOrientation === 'horizontal') {
+    } else if (model.orientation === Orientation.HORIZONTAL) {
       isVertical = false;
     } else {
       // auto: use aspect ratio (original behavior)
@@ -914,29 +916,11 @@ function vtkScalarBarActor(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.setOrientationToHorizontal = () => {
-    model.barOrientation = 'horizontal';
-    publicAPI.modified();
-  };
+  publicAPI.setOrientationToHorizontal = () =>
+    publicAPI.setOrientation(Orientation.HORIZONTAL);
 
-  publicAPI.setOrientationToVertical = () => {
-    model.barOrientation = 'vertical';
-    publicAPI.modified();
-  };
-
-  publicAPI.setBarOrientation = (orientation) => {
-    if (
-      orientation === 'horizontal' ||
-      orientation === 'vertical' ||
-      orientation === null ||
-      orientation === undefined
-    ) {
-      model.barOrientation = orientation;
-      publicAPI.modified();
-      return true;
-    }
-    return false;
-  };
+  publicAPI.setOrientationToVertical = () =>
+    publicAPI.setOrientation(Orientation.VERTICAL);
 
   publicAPI.resetAutoLayoutToDefault = () => {
     publicAPI.setAutoLayout(defaultAutoLayout(publicAPI, model));
@@ -979,7 +963,7 @@ function defaultValues(initialValues) {
     drawNanAnnotation: true,
     drawBelowRangeSwatch: true,
     drawAboveRangeSwatch: true,
-    barOrientation: null,
+    orientation: null,
     ...initialValues,
   };
 }
@@ -1010,7 +994,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'drawNanAnnotation',
     'drawBelowRangeSwatch',
     'drawAboveRangeSwatch',
-    'barOrientation',
+    'orientation',
   ]);
   macro.get(publicAPI, model, ['axisTextStyle', 'tickTextStyle']);
   macro.getArray(publicAPI, model, [
@@ -1036,4 +1020,4 @@ export const newInstance = macro.newInstance(extend, 'vtkScalarBarActor');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend, newScalarBarActorHelper };
+export default { newInstance, extend, newScalarBarActorHelper, ...Constants };
