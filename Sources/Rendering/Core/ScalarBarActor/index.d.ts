@@ -42,6 +42,7 @@ export interface IScalarBarActorInitialValues extends IActorInitialValues {
   drawBelowRangeSwatch?: boolean;
   drawAboveRangeSwatch?: boolean;
   drawNanAnnotation?: boolean;
+  barOrientation?: 'horizontal' | 'vertical' | null;
 }
 
 export interface vtkScalarBarActor extends vtkActor {
@@ -221,6 +222,27 @@ export interface vtkScalarBarActor extends vtkActor {
    * @param {IStyle} axisTextStyle
    */
   setAxisTextStyle(axisTextStyle: IStyle): boolean;
+
+  /**
+   * Get the current bar orientation setting
+   */
+  getBarOrientation(): 'horizontal' | 'vertical' | null;
+
+  /**
+   * Forces the scalar bar to use horizontal orientation regardless of aspect ratio
+   */
+  setOrientationToHorizontal(): boolean;
+
+  /**
+   * Forces the scalar bar to use vertical orientation regardless of aspect ratio
+   */
+  setOrientationToVertical(): boolean;
+
+  /**
+   * Set the orientation of the scalar bar
+   * @param orientation 'horizontal' to force horizontal, 'vertical' to force vertical, or null/undefined for auto
+   */
+  setBarOrientation(orientation: 'horizontal' | 'vertical' | null): boolean;
 
   /**
    *
