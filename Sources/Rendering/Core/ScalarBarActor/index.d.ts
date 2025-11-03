@@ -19,7 +19,7 @@ export interface IStyle {
   fontColor?: string;
   fontStyle?: string;
   fontFamily?: string;
-  fontSize?: string;
+  fontSize?: number | string;
 }
 
 /**

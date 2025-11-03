@@ -67,12 +67,16 @@ function defaultAutoLayout(publicAPI, model) {
     Object.assign(axisTextStyle, model.axisTextStyle);
     Object.assign(tickTextStyle, model.tickTextStyle);
 
-    // compute a reasonable font size first
-    axisTextStyle.fontSize = Math.max(24 * minAdjust, 12);
-    if (helper.getLastAspectRatio() > 1.0) {
-      tickTextStyle.fontSize = Math.max(20 * minAdjust, 10);
-    } else {
-      tickTextStyle.fontSize = Math.max(16 * minAdjust, 10);
+    // compute a reasonable font size first, but only if user hasn't explicitly set it
+    if (axisTextStyle.fontSize === undefined) {
+      axisTextStyle.fontSize = Math.max(24 * minAdjust, 12);
+    }
+    if (tickTextStyle.fontSize === undefined) {
+      if (helper.getLastAspectRatio() > 1.0) {
+        tickTextStyle.fontSize = Math.max(20 * minAdjust, 10);
+      } else {
+        tickTextStyle.fontSize = Math.max(16 * minAdjust, 10);
+      }
     }
 
     // rebuild the text atlas
@@ -924,14 +928,14 @@ function defaultValues(initialValues) {
     axisTextStyle: {
       fontColor: 'white',
       fontStyle: 'normal',
-      fontSize: 18,
+      fontSize: undefined,
       fontFamily: 'serif',
     },
     tickLabelPixelOffset: 14.0,
     tickTextStyle: {
       fontColor: 'white',
       fontStyle: 'normal',
-      fontSize: 14,
+      fontSize: undefined,
       fontFamily: 'serif',
     },
     generateTicks: null,
