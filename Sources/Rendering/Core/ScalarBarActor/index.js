@@ -84,8 +84,19 @@ function defaultAutoLayout(publicAPI, model) {
 
     const boxSize = helper.getBoxSizeByReference();
 
+    // Determine orientation: user-forced, or auto based on aspect ratio
+    let isVertical = false;
+    if (model.barOrientation === 'vertical') {
+      isVertical = true;
+    } else if (model.barOrientation === 'horizontal') {
+      isVertical = false;
+    } else {
+      // auto: use aspect ratio (original behavior)
+      isVertical = helper.getLastAspectRatio() > 1.0;
+    }
+
     // if vertical
-    if (helper.getLastAspectRatio() > 1.0) {
+    if (isVertical) {
       helper.setTickLabelPixelOffset(0.3 * tickTextStyle.fontSize);
 
       // if the title will fit within the width of the bar then that looks
@@ -897,6 +908,30 @@ function vtkScalarBarActor(publicAPI, model) {
     publicAPI.modified();
   };
 
+  publicAPI.setOrientationToHorizontal = () => {
+    model.barOrientation = 'horizontal';
+    publicAPI.modified();
+  };
+
+  publicAPI.setOrientationToVertical = () => {
+    model.barOrientation = 'vertical';
+    publicAPI.modified();
+  };
+
+  publicAPI.setBarOrientation = (orientation) => {
+    if (
+      orientation === 'horizontal' ||
+      orientation === 'vertical' ||
+      orientation === null ||
+      orientation === undefined
+    ) {
+      model.barOrientation = orientation;
+      publicAPI.modified();
+      return true;
+    }
+    return false;
+  };
+
   publicAPI.resetAutoLayoutToDefault = () => {
     publicAPI.setAutoLayout(defaultAutoLayout(publicAPI, model));
   };
@@ -938,6 +973,7 @@ function defaultValues(initialValues) {
     drawNanAnnotation: true,
     drawBelowRangeSwatch: true,
     drawAboveRangeSwatch: true,
+    barOrientation: null,
     ...initialValues,
   };
 }
@@ -968,6 +1004,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'drawNanAnnotation',
     'drawBelowRangeSwatch',
     'drawAboveRangeSwatch',
+    'barOrientation',
   ]);
   macro.get(publicAPI, model, ['axisTextStyle', 'tickTextStyle']);
   macro.getArray(publicAPI, model, [
