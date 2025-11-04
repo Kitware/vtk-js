@@ -26,11 +26,12 @@ const { VectorMode } = vtkScalarsToColors;
 //
 // ----------------------------------------------------------------------------
 
-function applyTextStyle(ctx, style) {
+function applyTextStyle(ctx, style, defaultFontSize) {
   ctx.strokeStyle = style.strokeColor;
   ctx.lineWidth = style.strokeSize;
   ctx.fillStyle = style.fontColor;
-  ctx.font = `${style.fontStyle} ${style.fontSize}px ${style.fontFamily}`;
+  const fontSize = style.fontSize ?? defaultFontSize;
+  ctx.font = `${style.fontStyle} ${fontSize}px ${style.fontFamily}`;
 }
 
 // ----------------------------------------------------------------------------
@@ -279,7 +280,7 @@ function vtkScalarBarActorHelper(publicAPI, model) {
     const newTmAtlas = new Map();
     let maxWidth = 0;
     let totalHeight = 1; // start one pixel in so we have a border
-    applyTextStyle(model.tmContext, model.axisTextStyle);
+    applyTextStyle(model.tmContext, model.axisTextStyle, 14);
     let metrics = model.tmContext.measureText(model.renderable.getAxisLabel());
     let entry = {
       height: metrics.actualBoundingBoxAscent + 2,
@@ -296,7 +297,7 @@ function vtkScalarBarActorHelper(publicAPI, model) {
     // and the ticks, NaN Below and Above
     results.tickWidth = 0;
     results.tickHeight = 0;
-    applyTextStyle(model.tmContext, model.tickTextStyle);
+    applyTextStyle(model.tmContext, model.tickTextStyle, 8);
     const strings = [...publicAPI.getTickStrings(), 'NaN', 'Below', 'Above'];
     for (let t = 0; t < strings.length; t++) {
       if (!newTmAtlas.has(strings[t])) {
@@ -349,7 +350,8 @@ function vtkScalarBarActorHelper(publicAPI, model) {
 
     // draw the text onto the texture
     newTmAtlas.forEach((value, key) => {
-      applyTextStyle(model.tmContext, value.textStyle);
+      const defaultSize = value.textStyle === model.axisTextStyle ? 14 : 8;
+      applyTextStyle(model.tmContext, value.textStyle, defaultSize);
       model.tmContext.fillText(key, 1, value.startingHeight + value.height - 1);
     });
 
