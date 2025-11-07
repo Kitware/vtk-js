@@ -1625,7 +1625,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       width,
       height,
       dataArray: vtkDataArray.newInstance({
-        numComps,
+        numberOfComponents: numComps,
         dataType,
         values: data,
         ranges,
@@ -1897,7 +1897,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       height,
       depth,
       dataArray: vtkDataArray.newInstance({
-        numComps,
+        numberOfComponents: numComps,
         dataType,
         values: data,
         ranges,
