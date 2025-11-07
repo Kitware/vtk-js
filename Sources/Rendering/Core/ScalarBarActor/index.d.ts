@@ -22,7 +22,7 @@ export interface IStyle {
   fontSize?: number | string;
 }
 
-export type Orientation = 'horizontal' | 'vertical' | null;
+export type Orientation = 'horizontal' | 'vertical' | 'auto' | null;
 
 /**
  *
