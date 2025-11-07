@@ -280,7 +280,7 @@ function vtkScalarBarActorHelper(publicAPI, model) {
     const newTmAtlas = new Map();
     let maxWidth = 0;
     let totalHeight = 1; // start one pixel in so we have a border
-    applyTextStyle(model.tmContext, model.axisTextStyle, 14);
+    applyTextStyle(model.tmContext, model.axisTextStyle, 18);
     let metrics = model.tmContext.measureText(model.renderable.getAxisLabel());
     let entry = {
       height: metrics.actualBoundingBoxAscent + 2,
@@ -297,7 +297,7 @@ function vtkScalarBarActorHelper(publicAPI, model) {
     // and the ticks, NaN Below and Above
     results.tickWidth = 0;
     results.tickHeight = 0;
-    applyTextStyle(model.tmContext, model.tickTextStyle, 8);
+    applyTextStyle(model.tmContext, model.tickTextStyle, 14);
     const strings = [...publicAPI.getTickStrings(), 'NaN', 'Below', 'Above'];
     for (let t = 0; t < strings.length; t++) {
       if (!newTmAtlas.has(strings[t])) {
@@ -350,7 +350,7 @@ function vtkScalarBarActorHelper(publicAPI, model) {
 
     // draw the text onto the texture
     newTmAtlas.forEach((value, key) => {
-      const defaultSize = value.textStyle === model.axisTextStyle ? 14 : 8;
+      const defaultSize = value.textStyle === model.axisTextStyle ? 18 : 14;
       applyTextStyle(model.tmContext, value.textStyle, defaultSize);
       model.tmContext.fillText(key, 1, value.startingHeight + value.height - 1);
     });
