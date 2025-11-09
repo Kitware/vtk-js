@@ -58,8 +58,10 @@ renderer.resetCamera();
 
 const gui = new GUI();
 const params = {
-  AddWidget: () => {
-    widgetManager.releaseFocus(widget);
+  AddWidget: (eventOrCenter = null) => {
+    if (widgetHandle) {
+      widgetHandle.endInteract();
+    }
     widget = vtkSeedWidget.newInstance();
 
     // Important: set the manipulator of the widget to constrain movement to the actor
@@ -77,8 +79,11 @@ const params = {
     // Start placement interaction
     widget.placeWidget(cone.getOutputData().getBounds());
     widgetHandle = widgetManager.addWidget(widget);
-    widgetManager.grabFocus(widget);
-    renderWindow.render();
+    if (Array.isArray(eventOrCenter)) {
+      widgetHandle.setCenter(eventOrCenter);
+    } else {
+      widgetHandle.startInteract();
+    }
   },
   RemoveWidget: () => {
     const widgets = widgetManager.getWidgets();
@@ -90,6 +95,8 @@ const params = {
 
 gui.add(params, 'AddWidget').name('Add widget');
 gui.add(params, 'RemoveWidget').name('Remove widget');
+
+params.AddWidget([0.5, 0, 0]);
 
 // -----------------------------------------------------------
 // globals

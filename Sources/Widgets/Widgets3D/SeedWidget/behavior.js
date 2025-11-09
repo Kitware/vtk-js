@@ -22,11 +22,23 @@ export default function widgetBehavior(publicAPI, model) {
       .worldCoords;
   }
 
-  // Update the handle's center.  Example:
-  // handle.setCenter([1,2,3]);
   publicAPI.setCenter = (newCenter) => {
     moveHandle.setOrigin(newCenter);
+    model._interactor.render();
+  };
+
+  publicAPI.startInteract = () => {
     model._widgetManager.enablePicking();
+    publicAPI.grabFocus();
+    model._apiSpecificRenderWindow.setCursor('grabbing');
+    publicAPI.invokeStartInteractionEvent();
+  };
+
+  publicAPI.endInteract = () => {
+    publicAPI.loseFocus();
+    model._apiSpecificRenderWindow.setCursor('pointer');
+    model.widgetState.deactivate();
+    publicAPI.invokeEndInteractionEvent();
   };
 
   publicAPI.handleLeftButtonPress = (e) => {
@@ -38,12 +50,10 @@ export default function widgetBehavior(publicAPI, model) {
 
     if (model.activeState === moveHandle) {
       if (!moveHandle.getOrigin() && worldCoords) {
-        moveHandle.setOrigin(worldCoords);
+        publicAPI.setCenter(worldCoords);
       }
     }
-    model._isDragging = true;
-    model._apiSpecificRenderWindow.setCursor('grabbing');
-    publicAPI.invokeStartInteractionEvent();
+    publicAPI.startInteract();
     return macro.EVENT_ABORT;
   };
 
@@ -53,13 +63,8 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
     if (isPlaced()) {
-      model._widgetManager.enablePicking();
-      model._apiSpecificRenderWindow.setCursor('pointer');
-      model._isDragging = false;
-      model.activeState = null;
-      model.widgetState.deactivate();
+      publicAPI.endInteract();
     }
-    publicAPI.invokeEndInteractionEvent();
     return macro.EVENT_ABORT;
   };
 
@@ -78,7 +83,6 @@ export default function widgetBehavior(publicAPI, model) {
     moveHandle.setVisible(true);
     model._isDragging = true;
     model.activeState = moveHandle;
-    model._interactor.render();
   };
 
   publicAPI.loseFocus = () => {
