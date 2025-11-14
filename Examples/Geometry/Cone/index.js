@@ -13,7 +13,7 @@ import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constan
 
 import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -91,20 +91,20 @@ fpsMonitor.update();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-const representationSelector = document.querySelector('.representations');
-const resolutionChange = document.querySelector('.resolution');
-
-representationSelector.addEventListener('change', (e) => {
-  const newRepValue = Number(e.target.value);
-  actor.getProperty().setRepresentation(newRepValue);
-  renderWindow.render();
-  fpsMonitor.update();
-});
-
-resolutionChange.addEventListener('input', (e) => {
-  const resolution = Number(e.target.value);
-  coneSource.setResolution(resolution);
+const gui = new GUI();
+const params = {
+  Representation: 2,
+  Resolution: 6,
+};
+gui
+  .add(params, 'Representation', { Points: 0, Wireframe: 1, Surface: 2 })
+  .onChange((val) => {
+    actor.getProperty().setRepresentation(Number(val));
+    renderWindow.render();
+    fpsMonitor.update();
+  });
+gui.add(params, 'Resolution', 4, 80, 1).onChange((val) => {
+  coneSource.setResolution(Number(val));
   renderWindow.render();
   fpsMonitor.update();
 });

@@ -9,7 +9,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkPlatonicSolidSource from '@kitware/vtk.js/Filters/Sources/PlatonicSolidSource';
 import { SolidType } from '@kitware/vtk.js/Filters/Sources/PlatonicSolidSource/Constants';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -40,20 +40,24 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  solidType: 'VTK_SOLID_DODECAHEDRON',
+};
 
-const solidTypeSelect = document.querySelector('select[name="solidType"]');
-solidTypeSelect.addEventListener('change', (event) => {
-  const solidType = event.target.value;
-  platonicSolidSource.setSolidType(SolidType[solidType.toUpperCase()]);
-  renderWindow.render();
-});
-
-// Set the initial value of the select element
-solidTypeSelect.value = 'VTK_SOLID_DODECAHEDRON';
-
-// Render the initial state
-renderWindow.render();
+gui
+  .add(params, 'solidType', [
+    'VTK_SOLID_TETRAHEDRON',
+    'VTK_SOLID_CUBE',
+    'VTK_SOLID_OCTAHEDRON',
+    'VTK_SOLID_DODECAHEDRON',
+    'VTK_SOLID_ICOSAHEDRON',
+  ])
+  .name('Solid type')
+  .onChange((value) => {
+    platonicSolidSource.setSolidType(SolidType[value]);
+    renderWindow.render();
+  });
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

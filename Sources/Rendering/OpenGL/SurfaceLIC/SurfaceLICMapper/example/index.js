@@ -12,7 +12,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
 import vtkSurfaceLICMapper from '@kitware/vtk.js/Rendering/Core/SurfaceLICMapper';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 const { GetArray } = vtkMapper;
 
@@ -41,82 +41,48 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
+const params = {
+  enableLIC: true,
+  numberOfSteps: 30,
+  stepSize: 0.5,
+  normalizeVectors: true,
+  enhancedLIC: true,
+  LICIntensity: 0.8,
+  viewPortScale: 1 / window.devicePixelRatio,
+  antiAlias: 1,
+  contrast: 2,
+  noiseType: 1,
+  noiseTextureSize: 256,
+  noiseGrainSize: 1,
+  numberOfNoiseLevels: 4,
+  minNoiseValue: 0.0,
+  maxNoiseValue: 1.0,
+  noiseImpulseProbability: 0.2,
+  noiseSeed: 0,
+  colorMode: 0,
+};
 function updateLIC() {
-  const enableLIC = document.querySelector('#enableLIC').checked;
-  const numberOfSteps = Number.parseInt(
-    document.querySelector('#numberOfSteps').value,
-    10
+  licInterface.setEnableLIC(params.enableLIC);
+  licInterface.setNumberOfSteps(Number(params.numberOfSteps));
+  licInterface.setStepSize(Number(params.stepSize));
+  licInterface.setNormalizeVectors(params.normalizeVectors);
+  licInterface.setEnhancedLIC(params.enhancedLIC);
+  licInterface.setLICIntensity(Number(params.LICIntensity));
+  licInterface.setViewPortScale(Number(params.viewPortScale));
+  licInterface.setAntiAlias(Number(params.antiAlias));
+  licInterface.setNoiseTextureSize(Number(params.noiseTextureSize));
+  licInterface.setNumberOfNoiseLevels(Number(params.numberOfNoiseLevels));
+  licInterface.setNoiseGrainSize(Number(params.noiseGrainSize));
+  licInterface.setMinNoiseValue(Number(params.minNoiseValue));
+  licInterface.setMaxNoiseValue(Number(params.maxNoiseValue));
+  licInterface.setNoiseImpulseProbability(
+    Number(params.noiseImpulseProbability)
   );
-  const stepSize = Number.parseFloat(document.querySelector('#stepSize').value);
-  const normalizeVectors = document.querySelector('#normalizeVectors').checked;
-  const enhancedLIC = document.querySelector('#enhancedLIC').checked;
-  const LICIntensity = Number.parseFloat(
-    document.querySelector('#LICIntensity').value
-  );
-  const viewPortScale = Number.parseFloat(
-    document.querySelector('#viewPortScale').value
-  );
-  const antiAlias = Number.parseInt(
-    document.querySelector('#antiAlias').value,
-    10
-  );
-  const noiseTextureSize = Number.parseInt(
-    document.querySelector('#noiseTextureSize').value,
-    10
-  );
-  const noiseGrainSize = Number.parseInt(
-    document.querySelector('#noiseGrainSize').value,
-    10
-  );
-  const numberOfNoiseLevels = Number.parseInt(
-    document.querySelector('#numberOfNoiseLevels').value,
-    10
-  );
-  const minNoiseValue = Number.parseFloat(
-    document.querySelector('#minNoiseValue').value
-  );
-  const maxNoiseValue = Number.parseFloat(
-    document.querySelector('#maxNoiseValue').value
-  );
-  const noiseImpulseProbability = Number.parseFloat(
-    document.querySelector('#noiseImpulseProbability').value
-  );
-  const noiseSeed = Number.parseFloat(
-    document.querySelector('#noiseSeed').value
-  );
+  licInterface.setNoiseGeneratorSeed(Number(params.noiseSeed));
 
-  const contrast = Number.parseInt(
-    document.querySelector('#contrast').value,
-    10
-  );
-  const noiseType = Number.parseInt(
-    document.querySelector('#noiseType').value,
-    10
-  );
-  const colorMode = Number.parseInt(
-    document.querySelector('#colorMode').value,
-    10
-  );
-
-  licInterface.setEnableLIC(enableLIC);
-  licInterface.setNumberOfSteps(numberOfSteps);
-  licInterface.setStepSize(stepSize);
-  licInterface.setNormalizeVectors(normalizeVectors);
-  licInterface.setEnhancedLIC(enhancedLIC);
-  licInterface.setLICIntensity(LICIntensity);
-  licInterface.setViewPortScale(viewPortScale);
-  licInterface.setAntiAlias(antiAlias);
-  licInterface.setNoiseTextureSize(noiseTextureSize);
-  licInterface.setNumberOfNoiseLevels(numberOfNoiseLevels);
-  licInterface.setNoiseGrainSize(noiseGrainSize);
-  licInterface.setMinNoiseValue(minNoiseValue);
-  licInterface.setMaxNoiseValue(maxNoiseValue);
-  licInterface.setNoiseImpulseProbability(noiseImpulseProbability);
-  licInterface.setNoiseGeneratorSeed(noiseSeed);
-
-  licInterface.setNoiseTextureType(noiseType);
-  licInterface.setColorMode(colorMode);
-  licInterface.setEnhanceContrast(contrast);
+  licInterface.setNoiseTextureType(Number(params.noiseType));
+  licInterface.setColorMode(Number(params.colorMode));
+  licInterface.setEnhanceContrast(Number(params.contrast));
 
   renderWindow.render();
 }
@@ -127,35 +93,79 @@ function rebuildNoiseTexture() {
 }
 
 function initControls() {
-  document.querySelector('#viewPortScale').value = 1 / window.devicePixelRatio;
+  const gui = new GUI();
+  const licFolder = gui.addFolder('LIC Configuration');
+  licFolder.add(params, 'enableLIC').name('Enable LIC').onChange(updateLIC);
+  licFolder
+    .add(params, 'numberOfSteps', 0, 100, 1)
+    .name('Number of steps')
+    .onChange(updateLIC);
+  licFolder
+    .add(params, 'stepSize', 0, 100, 0.1)
+    .name('Step size')
+    .onChange(updateLIC);
+  licFolder
+    .add(params, 'normalizeVectors')
+    .name('Normalize vectors')
+    .onChange(updateLIC);
+  licFolder.add(params, 'enhancedLIC').name('Enhanced LIC').onChange(updateLIC);
+  licFolder
+    .add(params, 'LICIntensity', 0, 1, 0.01)
+    .name('LIC Intensity')
+    .onChange(updateLIC);
+  licFolder
+    .add(params, 'colorMode', { Blend: 0, Multiply: 1 })
+    .name('Color Mode')
+    .onChange(updateLIC);
+  licFolder
+    .add(params, 'antiAlias', 0, 100, 1)
+    .name('Anti aliasing steps')
+    .onChange(updateLIC);
+  licFolder
+    .add(params, 'contrast', { None: 0, LIC: 1, Color: 2, Both: 3 })
+    .name('Contrast enhance')
+    .onChange(updateLIC);
+  licFolder
+    .add(params, 'viewPortScale', 0, 1, 0.1)
+    .name('Viewport scale')
+    .onChange(updateLIC);
 
-  const ids = [
-    '#enableLIC',
-    '#numberOfSteps',
-    '#stepSize',
-    '#normalizeVectors',
-    '#enhancedLIC',
-    '#LICIntensity',
-    '#viewPortScale',
-    '#antiAlias',
-    '#contrast',
-    '#noiseType',
-    '#noiseTextureSize',
-    '#noiseGrainSize',
-    '#numberOfNoiseLevels',
-    '#minNoiseValue',
-    '#maxNoiseValue',
-    '#noiseImpulseProbability',
-    '#noiseSeed',
-    '#colorMode',
-  ];
-  ids.forEach((id) => {
-    document.querySelector(id).addEventListener('change', updateLIC);
-  });
-
-  document
-    .querySelector('#rebuildNoise')
-    .addEventListener('click', rebuildNoiseTexture);
+  const noiseFolder = gui.addFolder('Noise texture');
+  noiseFolder
+    .add(params, 'noiseType', { Uniform: 0, Gaussian: 1 })
+    .name('Noise texture type')
+    .onChange(updateLIC);
+  noiseFolder
+    .add(params, 'noiseTextureSize', 16, 2048, 1)
+    .name('Noise texture size')
+    .onChange(updateLIC);
+  noiseFolder
+    .add(params, 'noiseGrainSize', 1, 1000, 1)
+    .name('Noise grain size')
+    .onChange(updateLIC);
+  noiseFolder
+    .add(params, 'numberOfNoiseLevels', 1, 1000, 1)
+    .name('Number of noise levels')
+    .onChange(updateLIC);
+  noiseFolder
+    .add(params, 'minNoiseValue', 0.0, 1.0, 0.01)
+    .name('Min noise value')
+    .onChange(updateLIC);
+  noiseFolder
+    .add(params, 'maxNoiseValue', 0.0, 1.0, 0.01)
+    .name('Max noise value')
+    .onChange(updateLIC);
+  noiseFolder
+    .add(params, 'noiseImpulseProbability', 0.0, 1.0, 0.01)
+    .name('Impulse probability')
+    .onChange(updateLIC);
+  noiseFolder
+    .add(params, 'noiseSeed', 0, 1000, 1)
+    .name('RNG seed')
+    .onChange(updateLIC);
+  noiseFolder
+    .add({ rebuildNoiseTexture }, 'rebuildNoiseTexture')
+    .name('Rebuild noise texture');
 }
 // ----------------------------------------------------------------------------
 
@@ -165,7 +175,6 @@ function update() {
   renderer.resetCamera();
   renderer.getActiveCamera().azimuth(160);
 
-  fullScreenRenderer.addController(controlPanel);
   initControls();
   updateLIC();
 }

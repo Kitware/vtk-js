@@ -9,7 +9,7 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
 import vtkShrinkPolyData from '@kitware/vtk.js/Filters/General/ShrinkPolyData';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -18,8 +18,6 @@ import controlPanel from './controlPanel.html';
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
-
-fullScreenRenderer.addController(controlPanel);
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -43,10 +41,15 @@ reader.setUrl(`${__BASE_PATH__}/data/cow.vtp`).then(() => {
   });
 });
 
-['shrinkFactor'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    shrinkPolyData.set({ [propertyName]: value });
+const gui = new GUI();
+const params = {
+  shrinkFactor: 0.25,
+};
+
+gui
+  .add(params, 'shrinkFactor', 0.1, 1.0, 0.1)
+  .name('Shrink factor')
+  .onChange((value) => {
+    shrinkPolyData.set({ shrinkFactor: Number(value) });
     renderWindow.render();
   });
-});

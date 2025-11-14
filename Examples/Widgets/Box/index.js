@@ -7,8 +7,9 @@ import '@kitware/vtk.js/Rendering/Profiles/Glyph';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 
+import GUI from 'lil-gui';
+
 import vtkBoxWidget from './BoxWidget';
-import controlPanel from './controlPanel.html';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -82,23 +83,54 @@ widgetRegistration();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  pickable: true,
+  visibility: true,
+  contextVisibility: true,
+  handleVisibility: true,
+  addWidget: () => widgetRegistration(),
+  removeWidget: () =>
+    widgetRegistration({
+      currentTarget: { dataset: { action: 'removeWidget' } },
+    }),
+};
 
-function updateFlag(e) {
-  const value = !!e.target.checked;
-  const name = e.currentTarget.dataset.name;
-  widget.set({ [name]: value }); // can be called on either viewWidget or parentWidget
+gui
+  .add(params, 'pickable')
+  .name('Pickable')
+  .onChange((value) => {
+    widget.set({ pickable: !!value });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
 
-  widgetManager.enablePicking();
-  renderWindow.render();
-}
+gui
+  .add(params, 'visibility')
+  .name('Visibility')
+  .onChange((value) => {
+    widget.set({ visibility: !!value });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
 
-const elems = document.querySelectorAll('.flag');
-for (let i = 0; i < elems.length; i++) {
-  elems[i].addEventListener('change', updateFlag);
-}
+gui
+  .add(params, 'contextVisibility')
+  .name('Context visibility')
+  .onChange((value) => {
+    widget.set({ contextVisibility: !!value });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
 
-const buttons = document.querySelectorAll('button');
-for (let i = 0; i < buttons.length; i++) {
-  buttons[i].addEventListener('click', widgetRegistration);
-}
+gui
+  .add(params, 'handleVisibility')
+  .name('Handle visibility')
+  .onChange((value) => {
+    widget.set({ handleVisibility: !!value });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
+
+gui.add(params, 'addWidget').name('Add widget');
+gui.add(params, 'removeWidget').name('Remove widget');

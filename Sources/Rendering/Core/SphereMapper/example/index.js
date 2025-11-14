@@ -18,7 +18,7 @@ import {
 
 import { throttle } from '@kitware/vtk.js/macros';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -112,8 +112,42 @@ function eventToWindowXY(event) {
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-const attributeIdDiv = document.querySelector('#attributeID');
+const gui = new GUI();
+const params = {
+  xResolution: 10,
+  yResolution: 10,
+  scaleFactor: 1.0,
+  attributeID: '',
+};
+
+gui
+  .add(params, 'xResolution', 1, 25, 1)
+  .name('X resolution')
+  .onChange((value) => {
+    planeSource.set({ xResolution: Number(value) });
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'yResolution', 1, 25, 1)
+  .name('Y resolution')
+  .onChange((value) => {
+    planeSource.set({ yResolution: Number(value) });
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'scaleFactor', 0.1, 5.0, 0.1)
+  .name('Scale factor')
+  .onChange((value) => {
+    mapper.setScaleFactor(Number(value));
+    renderWindow.render();
+  });
+
+const attributeController = gui
+  .add(params, 'attributeID')
+  .name('Picking attribute ID')
+  .listen();
 
 function pickOnMouseEvent(event) {
   if (interactor.isAnimating()) {
@@ -127,28 +161,16 @@ function pickOnMouseEvent(event) {
     if (selections && selections.length >= 1) {
       const selection = selections[0];
       const props = selection.getProperties();
-      attributeIdDiv.textContent = props.attributeID;
+      params.attributeID = props.attributeID;
+      attributeController.updateDisplay?.();
     } else {
-      attributeIdDiv.textContent = '';
+      params.attributeID = '';
+      attributeController.updateDisplay?.();
     }
   });
 }
 
 document.addEventListener('mousemove', throttle(pickOnMouseEvent, 20));
-
-['xResolution', 'yResolution'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    planeSource.set({ [propertyName]: value });
-    renderWindow.render();
-  });
-});
-
-document.querySelector('.scaleFactor').addEventListener('input', (e) => {
-  const value = Number(e.target.value);
-  mapper.setScaleFactor(value);
-  renderWindow.render();
-});
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

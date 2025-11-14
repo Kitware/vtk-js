@@ -8,7 +8,7 @@ import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreen
 import vtkSphereHandleRepresentation from '@kitware/vtk.js/Widgets/Representations/SphereHandleRepresentation';
 import vtkStateBuilder from '@kitware/vtk.js/Widgets/Core/StateBuilder';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -87,57 +87,207 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
 
-function updateState(e) {
-  const { name, field, index } = e.currentTarget.dataset;
-  const value = Number(e.currentTarget.value);
+const groupParams = {
+  SphereGroups: 'all',
+  CubeGroups: 'all',
+};
+
+gui
+  .add(groupParams, 'SphereGroups', [
+    'all',
+    'none',
+    'a',
+    'b',
+    'c',
+    'd',
+    'ab',
+    'ac',
+    'bc',
+    'b,c',
+    'a,b,c',
+    'b,c,d',
+    'a,b,c,d',
+  ])
+  .name('Sphere groups')
+  .onChange((value) => {
+    reps.sphere.set({ labels: value });
+    renderWindow.render();
+  });
+
+gui
+  .add(groupParams, 'CubeGroups', [
+    'all',
+    'none',
+    'a',
+    'b',
+    'c',
+    'd',
+    'ab',
+    'ac',
+    'bc',
+    'b,c',
+    'a,b,c',
+    'b,c,d',
+    'a,b,c,d',
+  ])
+  .name('Cube groups')
+  .onChange((value) => {
+    reps.cube.set({ labels: value });
+    renderWindow.render();
+  });
+
+const glyphParams = {
+  GlyphResolution: 8,
+  ActiveScale: 1.2,
+  ActiveColor: 0,
+};
+
+gui
+  .add(glyphParams, 'GlyphResolution', 3, 60, 1)
+  .name('Glyph resolution')
+  .onChange((value) => {
+    reps.sphere.set({ glyphResolution: value });
+    reps.cube.set({ glyphResolution: value });
+    renderWindow.render();
+  });
+
+gui
+  .add(glyphParams, 'ActiveScale', 0.5, 2, 0.1)
+  .name('Active scale')
+  .onChange((value) => {
+    reps.sphere.set({ activeScaleFactor: value });
+    reps.cube.set({ activeScaleFactor: value });
+    renderWindow.render();
+  });
+
+gui
+  .add(glyphParams, 'ActiveColor', 0, 1, 0.1)
+  .name('Active color')
+  .onChange((value) => {
+    reps.sphere.set({ activeColor: value });
+    reps.cube.set({ activeColor: value });
+    renderWindow.render();
+  });
+
+const stateParams = {
+  AActive: true,
+  ARadius: 0.5,
+  AColor: 0.5,
+  AOriginX: -1,
+  AOriginY: 0,
+  AOriginZ: 0,
+
+  BActive: true,
+  BRadius: 0.5,
+  BColor: 0.5,
+  BOriginX: 0,
+  BOriginY: 0,
+  BOriginZ: 0,
+
+  CActive: true,
+  CRadius: 0.5,
+  CColor: 0.5,
+  COriginX: 1,
+  COriginY: 0,
+  COriginZ: 0,
+};
+
+function applyStateField(field, paramsPrefix) {
   const stateObj = compositeState.get(field)[field];
-  if (name) {
-    stateObj.set({ [name]: value });
-  } else {
-    const center = stateObj.getOrigin();
-    center[Number(index)] = value;
-    stateObj.setOrigin(center);
-  }
+  const active = stateParams[`${paramsPrefix}Active`];
+  const radius = stateParams[`${paramsPrefix}Radius`];
+  const color = stateParams[`${paramsPrefix}Color`];
+  const origin = [
+    stateParams[`${paramsPrefix}OriginX`],
+    stateParams[`${paramsPrefix}OriginY`],
+    stateParams[`${paramsPrefix}OriginZ`],
+  ];
 
+  stateObj.set({
+    active,
+    scale1: radius,
+    color,
+  });
+  stateObj.setOrigin(origin);
   renderWindow.render();
 }
 
-// -----------------------------------------------------------
+const groupA = gui.addFolder('State A');
+groupA
+  .add(stateParams, 'AActive')
+  .name('Active')
+  .onChange(() => applyStateField('a', 'A'));
+groupA
+  .add(stateParams, 'ARadius', 0.1, 1, 0.1)
+  .name('Radius')
+  .onChange(() => applyStateField('a', 'A'));
+groupA
+  .add(stateParams, 'AColor', 0, 1, 0.1)
+  .name('Color')
+  .onChange(() => applyStateField('a', 'A'));
+groupA
+  .add(stateParams, 'AOriginX', -1, 1, 0.1)
+  .name('Origin X')
+  .onChange(() => applyStateField('a', 'A'));
+groupA
+  .add(stateParams, 'AOriginY', -1, 1, 0.1)
+  .name('Origin Y')
+  .onChange(() => applyStateField('a', 'A'));
+groupA
+  .add(stateParams, 'AOriginZ', -1, 1, 0.1)
+  .name('Origin Z')
+  .onChange(() => applyStateField('a', 'A'));
 
-const fieldsElems = document.querySelectorAll('.stateField');
-for (let i = 0; i < fieldsElems.length; i++) {
-  fieldsElems[i].addEventListener('input', updateState);
-}
+const groupB = gui.addFolder('State B');
+groupB
+  .add(stateParams, 'BActive')
+  .name('Active')
+  .onChange(() => applyStateField('b', 'B'));
+groupB
+  .add(stateParams, 'BRadius', 0.1, 1, 0.1)
+  .name('Radius')
+  .onChange(() => applyStateField('b', 'B'));
+groupB
+  .add(stateParams, 'BColor', 0, 1, 0.1)
+  .name('Color')
+  .onChange(() => applyStateField('b', 'B'));
+groupB
+  .add(stateParams, 'BOriginX', -1, 1, 0.1)
+  .name('Origin X')
+  .onChange(() => applyStateField('b', 'B'));
+groupB
+  .add(stateParams, 'BOriginY', -1, 1, 0.1)
+  .name('Origin Y')
+  .onChange(() => applyStateField('b', 'B'));
+groupB
+  .add(stateParams, 'BOriginZ', -1, 1, 0.1)
+  .name('Origin Z')
+  .onChange(() => applyStateField('b', 'B'));
 
-// -----------------------------------------------------------
-
-const toggleElems = document.querySelectorAll('.active');
-for (let i = 0; i < toggleElems.length; i++) {
-  toggleElems[i].addEventListener('change', (e) => {
-    const { field } = e.currentTarget.dataset;
-    const active = !!e.target.checked;
-    const stateObj = compositeState.get(field)[field];
-    stateObj.set({ active });
-
-    renderWindow.render();
-  });
-}
-
-// -----------------------------------------------------------
-
-const glyphElems = document.querySelectorAll('.glyph');
-for (let i = 0; i < glyphElems.length; i++) {
-  glyphElems[i].addEventListener('input', (e) => {
-    const { field, rep } = e.currentTarget.dataset;
-    const strValue = e.currentTarget.value;
-    const numValue = Number(strValue);
-    const arrayValue = strValue.split(',');
-    const value = Number.isNaN(numValue) ? strValue : numValue;
-    reps[rep || 'sphere'].set({
-      [field]: arrayValue.length > 1 ? arrayValue : value,
-    });
-    renderWindow.render();
-  });
-}
+const groupC = gui.addFolder('State C');
+groupC
+  .add(stateParams, 'CActive')
+  .name('Active')
+  .onChange(() => applyStateField('c', 'C'));
+groupC
+  .add(stateParams, 'CRadius', 0.1, 1, 0.1)
+  .name('Radius')
+  .onChange(() => applyStateField('c', 'C'));
+groupC
+  .add(stateParams, 'CColor', 0, 1, 0.1)
+  .name('Color')
+  .onChange(() => applyStateField('c', 'C'));
+groupC
+  .add(stateParams, 'COriginX', -1, 1, 0.1)
+  .name('Origin X')
+  .onChange(() => applyStateField('c', 'C'));
+groupC
+  .add(stateParams, 'COriginY', -1, 1, 0.1)
+  .name('Origin Y')
+  .onChange(() => applyStateField('c', 'C'));
+groupC
+  .add(stateParams, 'COriginZ', -1, 1, 0.1)
+  .name('Origin Z')
+  .onChange(() => applyStateField('c', 'C'));

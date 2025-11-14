@@ -18,7 +18,7 @@ import vtkSphereSource from '@kitware/vtk.js/Filters/Sources/SphereSource';
 
 import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -113,24 +113,33 @@ fpsMonitor.update();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-const representationSelector = document.querySelector('.representations');
-const resolutionChange = document.querySelector('.resolution');
-const pickInfo = document.getElementById('pickInfo');
-
-representationSelector.addEventListener('change', (e) => {
-  const newRepValue = Number(e.target.value);
-  actor.getProperty().setRepresentation(newRepValue);
+const gui = new GUI();
+const params = { Representation: 2, Resolution: 6 };
+gui
+  .add(params, 'Representation', { Points: 0, Wireframe: 1, Surface: 2 })
+  .onChange((val) => {
+    actor.getProperty().setRepresentation(Number(val));
+    renderWindow.render();
+    fpsMonitor.update();
+  });
+gui.add(params, 'Resolution', 4, 80, 1).onChange((val) => {
+  coneSource.setResolution(Number(val));
   renderWindow.render();
   fpsMonitor.update();
 });
 
-resolutionChange.addEventListener('input', (e) => {
-  const resolution = Number(e.target.value);
-  coneSource.setResolution(resolution);
-  renderWindow.render();
-  fpsMonitor.update();
-});
+const pickInfoObj = {
+  'Screen Position': '',
+  'Pick Info': '',
+};
+const pickInfoFolder = gui.addFolder('Picking Info');
+pickInfoFolder.add(pickInfoObj, 'Screen Position').listen();
+pickInfoFolder.add(pickInfoObj, 'Pick Info').listen();
+
+function updatePickInfo(screenPos, pickData) {
+  pickInfoObj['Screen Position'] = screenPos;
+  pickInfoObj['Pick Info'] = pickData;
+}
 
 function handlePicking(xp, yp, tolerance) {
   const x1 = Math.floor(xp - tolerance);
@@ -216,11 +225,7 @@ function onMouseDown(e) {
       console.warn('e1 null', e1);
       return;
     }
-    let pickInfoText = `Screen Position: ${sc.x}, ${sc.y} \nPick Info:\n`;
-    pickInfoText += `${JSON.stringify(e1[0], null, 10)}`;
-    pickInfo.innerHTML = pickInfoText;
-    console.log(pickInfoText);
-
+    updatePickInfo(`${sc.x}, ${sc.y}`, JSON.stringify(e1[0], null, 2));
     sphereSource.setCenter(e1[0].worldPosition);
     renderWindow.render();
     fpsMonitor.update();

@@ -19,7 +19,7 @@ import { Representation } from '@kitware/vtk.js/Rendering/Core/Property/Constant
 
 import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -124,22 +124,24 @@ fpsMonitor.update();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-const representationSelector = document.querySelector('.representations');
-const resolutionChange = document.querySelector('.resolution');
-
-representationSelector.addEventListener('change', (e) => {
-  const newRepValue = Number(e.target.value);
-  actor2D.getProperty().setRepresentation(newRepValue);
-  actor.getProperty().setRepresentation(newRepValue);
-  renderWindow.render();
-  fpsMonitor.update();
-});
-
-resolutionChange.addEventListener('input', (e) => {
-  const resolution = Number(e.target.value);
-  sphereSource.setThetaResolution(resolution);
-  coneSource.setResolution(resolution);
+const gui = new GUI();
+const params = {
+  Representation: 2,
+  Resolution: 10,
+};
+gui
+  .add(params, 'Representation', { Points: 0, Wireframe: 1, Surface: 2 })
+  .onChange((val) => {
+    const rep = Number(val);
+    actor2D.getProperty().setRepresentation(rep);
+    actor.getProperty().setRepresentation(rep);
+    renderWindow.render();
+    fpsMonitor.update();
+  });
+gui.add(params, 'Resolution', 4, 80, 1).onChange((val) => {
+  const res = Number(val);
+  sphereSource.setThetaResolution(res);
+  coneSource.setResolution(res);
   renderWindow.render();
   fpsMonitor.update();
 });

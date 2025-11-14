@@ -15,6 +15,7 @@ import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
 import vtkImageData from '@kitware/vtk.js/Common/DataModel/ImageData';
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import GUI from 'lil-gui';
 
 const { BlendMode } = Constants;
 
@@ -36,33 +37,6 @@ const { BlendMode } = Constants;
  * New Blend Mode: [LABELMAP_EDGE_PROJECTION_BLEND]
  *
  */
-const controlPanel = `
-<table>
-  <tr>
-    <td>
-      <label for="modeselect">Blend Mode:</label>
-      <select id="modeselect">
-        <option value="regular">Regular MIP</option>
-        <option value="edge">Labelmap Edge MIP</option>
-      </select>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <label for="thickness1">Segment 1 Thickness:</label>
-      <input type="number" id="thickness1" value="3" min="1" max="10" step="1">
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <label for="thickness2">Segment 2 Thickness:</label>
-      <input type="number" id="thickness2" value="3" min="1" max="10" step="1">
-    </td>
-  </tr>
-
-</table>
-`;
-
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0, 0, 0],
 });
@@ -75,28 +49,39 @@ mapper.setBlendModeToMaximumIntensity();
 actor.setMapper(mapper);
 
 // ----------------------------------------------------------------------------
+// GUI controls (replace controlPanel)
+// ----------------------------------------------------------------------------
+const gui = new GUI();
+const guiParams = {
+  blendMode: 'regular',
+  thickness1: 3,
+  thickness2: 3,
+};
+
+let imageData;
+let dims;
+let center;
+let radius1;
+let radius2;
+let edgeLabelmapActor = null;
+let regularLabelmapActor = null;
+
+// ----------------------------------------------------------------------------
 // Common functions
 // ----------------------------------------------------------------------------
 
-function createSphericalLabel(
-  data,
-  dims,
-  center,
-  radius,
-  label,
-  numberOfComponents
-) {
-  for (let k = 0; k < dims[2]; k++) {
-    for (let j = 0; j < dims[1]; j++) {
-      for (let i = 0; i < dims[0]; i++) {
-        const dx = i - center[0];
-        const dy = j - center[1];
-        const dz = k - center[2];
+function createSphericalLabel(data, d, c, radius, label, numberOfComponents) {
+  for (let k = 0; k < d[2]; k++) {
+    for (let j = 0; j < d[1]; j++) {
+      for (let i = 0; i < d[0]; i++) {
+        const dx = i - c[0];
+        const dy = j - c[1];
+        const dz = k - c[2];
         const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
         if (distance <= radius) {
           const index =
-            (k * dims[1] * dims[0] + j * dims[0] + i) * numberOfComponents + 1;
+            (k * d[1] * d[0] + j * d[0] + i) * numberOfComponents + 1;
           data[index] = label;
         }
       }
@@ -121,10 +106,10 @@ function setupTransferFunctions() {
 // Labelmap creation functions
 // ----------------------------------------------------------------------------
 
-function createRegularLabelmap(imageData, dims, center, radius1, radius2) {
-  const values = new Uint8Array(imageData.getNumberOfPoints());
+function createRegularLabelmap(imgData, d, c, r1, r2) {
+  const values = new Uint8Array(imgData.getNumberOfPoints());
   const labelMapData = vtkImageData.newInstance(
-    imageData.get('spacing', 'origin', 'direction')
+    imgData.get('spacing', 'origin', 'direction')
   );
 
   const dataArray = vtkDataArray.newInstance({
@@ -133,27 +118,20 @@ function createRegularLabelmap(imageData, dims, center, radius1, radius2) {
   });
   labelMapData.getPointData().setScalars(dataArray);
 
-  labelMapData.setDimensions(...imageData.getDimensions());
-  labelMapData.setSpacing(...imageData.getSpacing());
-  labelMapData.setOrigin(...imageData.getOrigin());
-  labelMapData.setDirection(...imageData.getDirection());
+  labelMapData.setDimensions(...imgData.getDimensions());
+  labelMapData.setSpacing(...imgData.getSpacing());
+  labelMapData.setOrigin(...imgData.getOrigin());
+  labelMapData.setDirection(...imgData.getDirection());
 
   const labelmapArray = labelMapData.getPointData().getScalars().getData();
   const numberOfComponents = 1;
 
+  createSphericalLabel(labelmapArray, d, c, r1, 1, numberOfComponents);
   createSphericalLabel(
     labelmapArray,
-    dims,
-    center,
-    radius1,
-    1,
-    numberOfComponents
-  );
-  createSphericalLabel(
-    labelmapArray,
-    dims,
-    [center[0] + 2 * radius1, center[1] + 2 * radius1, center[2] + 2 * radius1],
-    radius2,
+    d,
+    [c[0] + 2 * r1, c[1] + 2 * r1, c[2] + 2 * r1],
+    r2,
     2,
     numberOfComponents
   );
@@ -185,8 +163,8 @@ function createRegularLabelmap(imageData, dims, center, radius1, radius2) {
   return labelmapActor;
 }
 
-function createAdvancedMIPLabelmap(imageData, dims, center, radius1, radius2) {
-  const array = imageData.getPointData().getArray(0);
+function createAdvancedMIPLabelmap(imgData, d, c, r1, r2) {
+  const array = imgData.getPointData().getArray(0);
   const baseData = array.getData();
 
   const numberOfComponents = 2;
@@ -197,12 +175,12 @@ function createAdvancedMIPLabelmap(imageData, dims, center, radius1, radius2) {
     cubeData[i * numberOfComponents] = baseData[i];
   }
 
-  createSphericalLabel(cubeData, dims, center, radius1, 1, numberOfComponents);
+  createSphericalLabel(cubeData, d, c, r1, 1, numberOfComponents);
   createSphericalLabel(
     cubeData,
-    dims,
-    [center[0] + 2 * radius1, center[1] + 2 * radius1, center[2] + 2 * radius1],
-    radius2,
+    d,
+    [c[0] + 2 * r1, c[1] + 2 * r1, c[2] + 2 * r1],
+    r2,
     2,
     numberOfComponents
   );
@@ -235,88 +213,100 @@ function createAdvancedMIPLabelmap(imageData, dims, center, radius1, radius2) {
   return actor;
 }
 
+function createBasePipeline() {
+  renderer.removeVolume(actor);
+  mapper.setInputData(imageData);
+
+  renderer.addVolume(actor);
+  setupTransferFunctions();
+
+  actor.getProperty().setInterpolationTypeToLinear();
+  actor.getProperty().setForceNearestInterpolation(1, true);
+
+  renderer.resetCamera();
+  renderWindow.render();
+}
+
+function updateOutlineThickness() {
+  actor
+    .getProperty()
+    .setLabelOutlineThickness([guiParams.thickness1, guiParams.thickness2]);
+  renderWindow.render();
+}
+
+function updateBlendMode(mode) {
+  if (!imageData || !dims || !center || !radius1 || !radius2) return;
+  if (mode === 'edge') {
+    if (regularLabelmapActor) {
+      renderer.removeVolume(regularLabelmapActor);
+      regularLabelmapActor = null;
+    }
+    edgeLabelmapActor = createAdvancedMIPLabelmap(
+      imageData,
+      dims,
+      center,
+      radius1,
+      radius2
+    );
+    mapper.setBlendMode(BlendMode.LABELMAP_EDGE_PROJECTION_BLEND);
+  } else {
+    if (edgeLabelmapActor) {
+      renderer.removeVolume(edgeLabelmapActor);
+      edgeLabelmapActor = null;
+      createBasePipeline();
+    }
+    regularLabelmapActor = createRegularLabelmap(
+      imageData,
+      dims,
+      center,
+      radius1,
+      radius2
+    );
+    mapper.setBlendMode(BlendMode.MAXIMUM_INTENSITY_BLEND);
+    regularLabelmapActor.getMapper().setBlendMode(BlendMode.COMPOSITE_BLEND);
+  }
+  renderer.resetCamera();
+  renderWindow.render();
+}
+
+gui
+  .add(guiParams, 'blendMode', {
+    'Regular MIP': 'regular',
+    'Labelmap Edge MIP': 'edge',
+  })
+  .name('Blend Mode')
+  .onChange((mode) => {
+    updateBlendMode(mode);
+  });
+gui
+  .add(guiParams, 'thickness1', 1, 10, 1)
+  .name('Segment 1 Thickness')
+  .onChange(updateOutlineThickness);
+gui
+  .add(guiParams, 'thickness2', 1, 10, 1)
+  .name('Segment 2 Thickness')
+  .onChange(updateOutlineThickness);
+
 // ----------------------------------------------------------------------------
 // Main execution
 // ----------------------------------------------------------------------------
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 
-function updateOutlineThickness() {
-  const thickness1 = parseInt(document.querySelector('#thickness1').value, 10);
-  const thickness2 = parseInt(document.querySelector('#thickness2').value, 10);
-  actor.getProperty().setLabelOutlineThickness([thickness1, thickness2]);
-  renderWindow.render();
-}
-
 reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
   reader.loadData().then(() => {
-    const imageData = reader.getOutputData();
+    imageData = reader.getOutputData();
 
-    function createBasePipeline() {
-      renderer.removeVolume(actor);
-      mapper.setInputData(imageData);
+    dims = imageData.getDimensions();
+    center = dims.map((d) => Math.floor(d / 2));
+    const minDim = Math.min(...dims);
+    radius1 = Math.floor(minDim / 6);
+    radius2 = Math.floor(minDim / 6);
 
-      renderer.addVolume(actor);
-      setupTransferFunctions();
-
-      actor.getProperty().setInterpolationTypeToLinear();
-      actor.getProperty().setForceNearestInterpolation(1, true);
-
-      renderer.resetCamera();
-      renderWindow.render();
-    }
+    edgeLabelmapActor = null;
+    regularLabelmapActor = null;
 
     createBasePipeline();
-
-    const dims = imageData.getDimensions();
-    const center = dims.map((d) => Math.floor(d / 2));
-    const minDim = Math.min(...dims);
-    const radius1 = Math.floor(minDim / 6);
-    const radius2 = Math.floor(minDim / 6);
-
-    let edgeLabelmapActor = null;
-    let regularLabelmapActor = null;
-
-    function updateBlendMode(mode) {
-      if (mode === 'edge') {
-        // remove the regular labelmap if it exists
-        if (regularLabelmapActor) {
-          renderer.removeVolume(regularLabelmapActor);
-          regularLabelmapActor = null;
-        }
-
-        edgeLabelmapActor = createAdvancedMIPLabelmap(
-          imageData,
-          dims,
-          center,
-          radius1,
-          radius2
-        );
-        mapper.setBlendMode(BlendMode.LABELMAP_EDGE_PROJECTION_BLEND);
-      } else {
-        if (edgeLabelmapActor) {
-          renderer.removeVolume(edgeLabelmapActor);
-          edgeLabelmapActor = null;
-
-          createBasePipeline();
-        }
-
-        regularLabelmapActor = createRegularLabelmap(
-          imageData,
-          dims,
-          center,
-          radius1,
-          radius2
-        );
-        mapper.setBlendMode(BlendMode.MAXIMUM_INTENSITY_BLEND);
-        // set the labelmap to be additive
-        regularLabelmapActor
-          .getMapper()
-          .setBlendMode(BlendMode.COMPOSITE_BLEND);
-      }
-      renderer.resetCamera();
-      renderWindow.render();
-    }
 
     actor.getProperty().setInterpolationTypeToLinear();
     actor.getProperty().setForceNearestInterpolation(1, true);
@@ -324,22 +314,8 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
     renderer.resetCamera();
     renderWindow.render();
 
-    updateBlendMode('regular');
+    updateBlendMode(guiParams.blendMode);
 
-    fullScreenRenderer.addController(controlPanel);
-
-    const modeSelect = document.querySelector('#modeselect');
-    modeSelect.addEventListener('change', (event) => {
-      updateBlendMode(event.target.value);
-    });
-
-    const thickness1Input = document.querySelector('#thickness1');
-    const thickness2Input = document.querySelector('#thickness2');
-
-    thickness1Input.addEventListener('change', updateOutlineThickness);
-    thickness2Input.addEventListener('change', updateOutlineThickness);
-
-    // Initial thickness setup
     updateOutlineThickness();
   });
 });

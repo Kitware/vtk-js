@@ -10,7 +10,7 @@ import vtkPLYReader from '@kitware/vtk.js/IO/Geometry/PLYReader';
 import vtkTexture from '@kitware/vtk.js/Rendering/Core/Texture';
 import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -57,11 +57,28 @@ function update() {
 // Use a file reader to load a local file
 // ----------------------------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+gui
+  .add({ duplicatePointsForFaceTexture }, 'duplicatePointsForFaceTexture')
+  .name('Duplicate points for face texture')
+  .onChange((value) => {
+    window.location = `?duplicatePointsForFaceTexture=${Boolean(value)}`;
+  });
 
-const fileInput = document.querySelector('input');
-const checkbox = document.querySelector('#duplicate_points_for_face_texture');
-checkbox.checked = duplicatePointsForFaceTexture;
+const fileInput = document.createElement('input');
+fileInput.type = 'file';
+fileInput.multiple = true;
+fileInput.style.display = 'none';
+document.body.appendChild(fileInput);
+
+gui
+  .add(
+    {
+      open: () => fileInput.click(),
+    },
+    'open'
+  )
+  .name('Open PLY/Texture File');
 
 function handlePlyFile(file) {
   const fileReader = new FileReader();
@@ -111,11 +128,6 @@ function handleFile(event) {
 }
 
 fileInput.addEventListener('change', handleFile);
-
-checkbox.addEventListener('change', (e) => {
-  const value = e.target.checked;
-  window.location = `?duplicatePointsForFaceTexture=${value}`;
-});
 
 // ----------------------------------------------------------------------------
 // Use the reader to download a file

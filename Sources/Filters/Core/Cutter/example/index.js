@@ -14,7 +14,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkPlane from '@kitware/vtk.js/Common/DataModel/Plane';
 import vtkProperty from '@kitware/vtk.js/Rendering/Core/Property';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // Force DataAccessHelper to have access to various data source
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
@@ -62,8 +62,6 @@ renderer.addActor(cubeActor);
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-
 const state = {
   originX: 0,
   originY: 0,
@@ -79,17 +77,53 @@ const updatePlaneFunction = () => {
   renderWindow.render();
 };
 
-// Update when changing UI
-['originX', 'originY', 'originZ', 'normalX', 'normalY', 'normalZ'].forEach(
-  (propertyName) => {
-    const elem = document.querySelector(`.${propertyName}`);
-    elem.addEventListener('input', (e) => {
-      const value = Number(e.target.value);
-      state[propertyName] = value;
-      updatePlaneFunction();
-    });
-  }
-);
+const gui = new GUI();
+
+const originFolder = gui.addFolder('Origin');
+originFolder
+  .add(state, 'originX', -6, 6, 0.01)
+  .name('X')
+  .onChange((value) => {
+    state.originX = Number(value);
+    updatePlaneFunction();
+  });
+originFolder
+  .add(state, 'originY', -0.5, 0.5, 0.01)
+  .name('Y')
+  .onChange((value) => {
+    state.originY = Number(value);
+    updatePlaneFunction();
+  });
+originFolder
+  .add(state, 'originZ', -0.5, 0.5, 0.01)
+  .name('Z')
+  .onChange((value) => {
+    state.originZ = Number(value);
+    updatePlaneFunction();
+  });
+
+const normalFolder = gui.addFolder('Normal');
+normalFolder
+  .add(state, 'normalX', -1, 1, 0.01)
+  .name('X')
+  .onChange((value) => {
+    state.normalX = Number(value);
+    updatePlaneFunction();
+  });
+normalFolder
+  .add(state, 'normalY', -1, 1, 0.01)
+  .name('Y')
+  .onChange((value) => {
+    state.normalY = Number(value);
+    updatePlaneFunction();
+  });
+normalFolder
+  .add(state, 'normalZ', -1, 1, 0.01)
+  .name('Z')
+  .onChange((value) => {
+    state.normalZ = Number(value);
+    updatePlaneFunction();
+  });
 
 HttpDataAccessHelper.fetchBinary(
   `${__BASE_PATH__}/data/StanfordDragon.vtkjs`,

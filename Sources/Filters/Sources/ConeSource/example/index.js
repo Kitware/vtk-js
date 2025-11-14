@@ -9,15 +9,13 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
-  background: [0, 0, 0],
-});
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -67,45 +65,99 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  height: 1.0,
+  radius: 1.0,
+  resolution: 6,
+  capping: true,
+  centerX: 0,
+  centerY: 0,
+  centerZ: 0,
+  directionX: 1,
+  directionY: 0,
+  directionZ: 0,
+};
 
-['height', 'radius', 'resolution'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    // pipelines[0].coneSource.set({ [propertyName]: value });
-    pipelines[1].coneSource.set({ [propertyName]: value });
-    renderWindow.render();
+function updateDimensions() {
+  pipelines.forEach(({ coneSource }) => {
+    coneSource.set({
+      height: params.height,
+      radius: params.radius,
+      resolution: params.resolution,
+      capping: params.capping,
+    });
   });
-});
-
-document.querySelector('.capping').addEventListener('change', (e) => {
-  const capping = !!e.target.checked;
-  pipelines[0].coneSource.set({ capping });
-  pipelines[1].coneSource.set({ capping });
   renderWindow.render();
-});
-
-const centerElems = document.querySelectorAll('.center');
-const directionElems = document.querySelectorAll('.direction');
+}
 
 function updateTransformedCone() {
-  const center = [0, 0, 0];
-  const direction = [1, 0, 0];
-  for (let i = 0; i < 3; i++) {
-    center[Number(centerElems[i].dataset.index)] = Number(centerElems[i].value);
-    direction[Number(directionElems[i].dataset.index)] = Number(
-      directionElems[i].value
-    );
-  }
-  console.log('updateTransformedCone', center, direction);
+  const center = [params.centerX, params.centerY, params.centerZ];
+  const direction = [params.directionX, params.directionY, params.directionZ];
   pipelines[1].coneSource.set({ center, direction });
   renderWindow.render();
 }
 
-for (let i = 0; i < 3; i++) {
-  centerElems[i].addEventListener('input', updateTransformedCone);
-  directionElems[i].addEventListener('input', updateTransformedCone);
-}
+gui
+  .add(params, 'height', 0.5, 2.0, 0.1)
+  .name('Height')
+  .onChange((value) => {
+    params.height = Number(value);
+    updateDimensions();
+  });
+
+gui
+  .add(params, 'radius', 0.5, 2.0, 0.1)
+  .name('Radius')
+  .onChange((value) => {
+    params.radius = Number(value);
+    updateDimensions();
+  });
+
+gui
+  .add(params, 'resolution', 4, 100, 1)
+  .name('Resolution')
+  .onChange((value) => {
+    params.resolution = Number(value);
+    updateDimensions();
+  });
+
+gui
+  .add(params, 'capping')
+  .name('Capping')
+  .onChange((value) => {
+    params.capping = !!value;
+    updateDimensions();
+  });
+
+gui
+  .add(params, 'centerX', -1.0, 1.0, 0.1)
+  .name('Center X')
+  .onChange(updateTransformedCone);
+gui
+  .add(params, 'centerY', -1.0, 1.0, 0.1)
+  .name('Center Y')
+  .onChange(updateTransformedCone);
+gui
+  .add(params, 'centerZ', -1.0, 1.0, 0.1)
+  .name('Center Z')
+  .onChange(updateTransformedCone);
+
+gui
+  .add(params, 'directionX', -1.0, 1.0, 0.1)
+  .name('Direction X')
+  .onChange(updateTransformedCone);
+gui
+  .add(params, 'directionY', -1.0, 1.0, 0.1)
+  .name('Direction Y')
+  .onChange(updateTransformedCone);
+gui
+  .add(params, 'directionZ', -1.0, 1.0, 0.1)
+  .name('Direction Z')
+  .onChange(updateTransformedCone);
+
+updateDimensions();
+updateTransformedCone();
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

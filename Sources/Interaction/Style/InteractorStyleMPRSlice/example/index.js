@@ -12,14 +12,13 @@ import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
 import vtkInteractorStyleMPRSlice from '@kitware/vtk.js/Interaction/Style/InteractorStyleMPRSlice';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 const fullScreenRenderWindow = vtkFullScreenRenderWindow.newInstance({
   background: [0, 0, 0],
 });
 const renderWindow = fullScreenRenderWindow.getRenderWindow();
 const renderer = fullScreenRenderWindow.getRenderer();
-fullScreenRenderWindow.addController(controlPanel);
 
 const istyle = vtkInteractorStyleMPRSlice.newInstance();
 renderWindow.getInteractor().setInteractorStyle(istyle);
@@ -57,32 +56,44 @@ reader
   });
 
 // ----------------------------------------------------------------------------
-// UI
+// UI (lil-gui)
 // ----------------------------------------------------------------------------
+
+const gui = new GUI();
+const params = {
+  Slice: 0,
+  SliceRange: '',
+  SliceNormal: '',
+};
+
+const sliceCtrl = gui
+  .add(params, 'Slice')
+  .name('Slice')
+  .onChange((value) => {
+    istyle.setSlice(Number(value));
+    renderWindow.render();
+  });
+
+gui.add(params, 'SliceRange').name('Slice Range').listen();
+gui.add(params, 'SliceNormal').name('Slice Normal').listen();
 
 function updateUI() {
   const range = istyle.getSliceRange();
   const slice = istyle.getSlice();
   const normal = istyle.getSliceNormal();
 
-  const sliceSlider = document.querySelector('.slice');
-  sliceSlider.min = range[0];
-  sliceSlider.max = range[1];
-  sliceSlider.value = slice;
+  sliceCtrl.min(range[0]);
+  sliceCtrl.max(range[1]);
+  sliceCtrl.setValue(slice);
 
   function toFixed(n) {
     return Number.parseFloat(n).toFixed(6);
   }
 
-  document.querySelector('.sliceText').innerText = toFixed(slice);
-  document.querySelector('.normal').innerText = normal.map(toFixed).join(', ');
-  document.querySelector('.range').innerText = range.map(toFixed).join(', ');
+  params.SliceRange = range.map(toFixed).join(', ');
+  params.SliceNormal = normal.map(toFixed).join(', ');
+  sliceCtrl.updateDisplay?.();
 }
-
-document.querySelector('.slice').oninput = function onInput(ev) {
-  istyle.setSlice(Number.parseFloat(ev.target.value));
-  renderWindow.render();
-};
 
 istyle.onModified(updateUI);
 updateUI();

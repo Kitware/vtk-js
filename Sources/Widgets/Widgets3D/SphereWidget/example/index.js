@@ -11,7 +11,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkSphereWidget from '@kitware/vtk.js/Widgets/Widgets3D/SphereWidget';
 import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -49,21 +49,26 @@ renderer.resetCamera();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  AddWidget: () => {
+    widgetManager.releaseFocus(widget);
+    widget = vtkSphereWidget.newInstance();
+    widget.placeWidget(cube.getOutputData().getBounds());
+    widgetHandle = widgetManager.addWidget(widget);
+    widgetManager.grabFocus(widget);
+    renderWindow.render();
+  },
+  RemoveWidget: () => {
+    const widgets = widgetManager.getWidgets();
+    if (!widgets.length) return;
+    widgetManager.removeWidget(widgets[widgets.length - 1]);
+    renderWindow.render();
+  },
+};
 
-document.querySelector('#addWidget').addEventListener('click', () => {
-  widgetManager.releaseFocus(widget);
-  widget = vtkSphereWidget.newInstance();
-  widget.placeWidget(cube.getOutputData().getBounds());
-  widgetHandle = widgetManager.addWidget(widget);
-  widgetManager.grabFocus(widget);
-});
-
-document.querySelector('#removeWidget').addEventListener('click', () => {
-  const widgets = widgetManager.getWidgets();
-  if (!widgets.length) return;
-  widgetManager.removeWidget(widgets[widgets.length - 1]);
-});
+gui.add(params, 'AddWidget').name('Add widget');
+gui.add(params, 'RemoveWidget').name('Remove widget');
 
 // -----------------------------------------------------------
 // globals

@@ -24,14 +24,19 @@ function getAlpha(xx, yy, pb, area) {
   return pb[offset + 3];
 }
 
-function convert(xx, yy, pb, area) {
+function convert(xx, yy, pb, area, caller = null) {
   if (!pb) {
     return 0;
   }
+
+  // console.log(caller);
+  // console.log('convert', xx, yy, pb, area);
   const offset = (yy * (area[2] - area[0] + 1) + xx) * 4;
+
   const r = pb[offset];
   const g = pb[offset + 1];
   const b = pb[offset + 2];
+  // console.log(b, g, r, (b * 256 + g) * 256 + r);
   return (b * 256 + g) * 256 + r;
 }
 
@@ -74,7 +79,8 @@ function getPixelInformationWithData(
       displayPosition[0],
       displayPosition[1],
       buffdata.pixBuffer[PassTypes.ACTOR_PASS],
-      buffdata.area
+      buffdata.area,
+      'getPixelInformationWithData1'
     );
     if (actorid <= 0 || actorid - idOffset >= buffdata.props.length) {
       // the pixel did not hit any actor.
@@ -91,7 +97,8 @@ function getPixelInformationWithData(
       displayPosition[0],
       displayPosition[1],
       buffdata.pixBuffer[PassTypes.COMPOSITE_INDEX_PASS],
-      buffdata.area
+      buffdata.area,
+      'getPixelInformationWithData2'
     );
     if (compositeID < 0 || compositeID > 0xffffff) {
       compositeID = 0;
@@ -125,13 +132,15 @@ function getPixelInformationWithData(
       displayPosition[0],
       displayPosition[1],
       buffdata.pixBuffer[PassTypes.ID_LOW24],
-      buffdata.area
+      buffdata.area,
+      'getPixelInformationWithData3'
     );
     const high24 = convert(
       displayPosition[0],
       displayPosition[1],
       buffdata.pixBuffer[PassTypes.ID_HIGH24],
-      buffdata.area
+      buffdata.area,
+      'getPixelInformationWithData4'
     );
     info.attributeID = getID(low24, high24, 0);
 
@@ -598,7 +607,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     let offset = 0;
     for (let yy = 0; yy <= model.area[3] - model.area[1]; yy++) {
       for (let xx = 0; xx <= model.area[2] - model.area[0]; xx++) {
-        let val = convert(xx, yy, pixelbuffer, model.area);
+        let val = convert(xx, yy, pixelbuffer, model.area, 'buildPropHitList');
         if (val > 0) {
           val--;
           if (!(val in model.hitProps)) {
@@ -671,6 +680,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   ) => {
     // Base case
     const maxDist = maxDistance < 0 ? 0 : maxDistance;
+    console.log('getPixelInformation called', maxDist);
     if (maxDist === 0) {
       outSelectedPosition[0] = inDisplayPosition[0];
       outSelectedPosition[1] = inDisplayPosition[1];
@@ -683,18 +693,25 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
         return null;
       }
 
+      console.log(inDisplayPosition);
+      console.log(model.area);
       // offset inDisplayPosition based on the lower-left-corner of the Area.
       const displayPosition = [
         inDisplayPosition[0] - model.area[0],
         inDisplayPosition[1] - model.area[1],
       ];
 
+      console.log('adjusted displayPosition', displayPosition);
+
       const actorid = convert(
         displayPosition[0],
         displayPosition[1],
         model.pixBuffer[PassTypes.ACTOR_PASS],
-        model.area
+        model.area,
+        'getPixelInformation'
       );
+
+      console.log('actorid', actorid);
       if (actorid <= 0 || actorid - idOffset >= model.props.length) {
         // the pixel did not hit any actor.
         return null;
@@ -709,7 +726,8 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
         displayPosition[0],
         displayPosition[1],
         model.pixBuffer[PassTypes.COMPOSITE_INDEX_PASS],
-        model.area
+        model.area,
+        'getPixelInformation2'
       );
       if (compositeID < 0 || compositeID > 0xffffff) {
         compositeID = 0;
@@ -743,13 +761,15 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
         displayPosition[0],
         displayPosition[1],
         model.pixBuffer[PassTypes.ID_LOW24],
-        model.area
+        model.area,
+        'getPixelInformation3'
       );
       const high24 = convert(
         displayPosition[0],
         displayPosition[1],
         model.pixBuffer[PassTypes.ID_HIGH24],
-        model.area
+        model.area,
+        'getPixelInformation4'
       );
       info.attributeID = getID(low24, high24);
 

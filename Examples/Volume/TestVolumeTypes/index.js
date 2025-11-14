@@ -15,36 +15,16 @@ import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper';
 import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
 import Constants from '@kitware/vtk.js/Rendering/Core/ImageMapper/Constants';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 const { SlicingMode } = Constants;
-
-// Create some control UI
-const container = document.querySelector('body');
-container.style.width = '450px';
-container.style.height = '450px';
-const renderWindowContainer = document.createElement('div');
-container.appendChild(renderWindowContainer);
-
-const style = {
-  margin: '0',
-  padding: '0',
-  position: 'absolute',
-  top: '0',
-  left: '0',
-  width: '100vw',
-  height: '100vw',
-  overflow: 'hidden',
-};
 
 // create what we will view
 const fullScreenRenderWindow = vtkFullScreenRenderWindow.newInstance({
   background: [0, 0, 0],
-  containerStyle: style,
 });
 const renderWindow = fullScreenRenderWindow.getRenderWindow();
 const renderer = fullScreenRenderWindow.getRenderer();
-fullScreenRenderWindow.addController(controlPanel);
 renderer.setBackground(0.2, 0.2, 0.2);
 
 const actor = vtkVolume.newInstance();
@@ -144,6 +124,15 @@ let independent = true;
 let withGO = 1;
 let dataType = 2;
 
+const gui = new GUI();
+const params = {
+  lighting: !!lighting,
+  numComp,
+  independent,
+  gradientOpacity: !!withGO,
+  dataType: 'Float32',
+};
+
 const configureScene = (
   shade,
   numberOfComponents,
@@ -224,53 +213,53 @@ function redrawScene() {
   renderWindow.render();
 }
 
-function updateLighting(e) {
-  const elt = e ? e.target : document.querySelector('.lighting');
-  lighting = elt.checked ? 1 : 0;
-  redrawScene();
-}
+gui
+  .add(params, 'lighting')
+  .name('Lighting')
+  .onChange((value) => {
+    lighting = value ? 1 : 0;
+    redrawScene();
+  });
 
-function updateNumberOfComponents(e) {
-  const elt = e ? e.target : document.querySelector('.numComp');
-  numComp = Number(elt.value);
-  redrawScene();
-}
+gui
+  .add(params, 'numComp', 1, 4, 1)
+  .name('Components')
+  .onChange((value) => {
+    numComp = Number(value);
+    redrawScene();
+  });
 
-function updateIndependent(e) {
-  const elt = e ? e.target : document.querySelector('.independent');
-  independent = elt.checked;
-  redrawScene();
-}
+gui
+  .add(params, 'independent')
+  .name('Independent components')
+  .onChange((value) => {
+    independent = !!value;
+    redrawScene();
+  });
 
-function updateGradientOpacity(e) {
-  const elt = e ? e.target : document.querySelector('.gradientOpacity');
-  withGO = elt.checked ? 1 : 0;
-  redrawScene();
-}
+gui
+  .add(params, 'gradientOpacity')
+  .name('Gradient opacity')
+  .onChange((value) => {
+    withGO = value ? 1 : 0;
+    redrawScene();
+  });
 
-function updateDataType(e) {
-  const elt = e ? e.target : document.querySelector('.dataType');
-  dataType = Number(elt.value);
-  redrawScene();
-}
+gui
+  .add(params, 'dataType', ['Uint8', 'Int16', 'Float32'])
+  .name('Datatype')
+  .onChange((value) => {
+    if (value === 'Uint8') {
+      dataType = 0;
+    } else if (value === 'Int16') {
+      dataType = 1;
+    } else {
+      dataType = 2;
+    }
+    redrawScene();
+  });
 
-document.querySelector('.lighting').addEventListener('input', updateLighting);
-
-document
-  .querySelector('.numComp')
-  .addEventListener('input', updateNumberOfComponents);
-
-document
-  .querySelector('.independent')
-  .addEventListener('input', updateIndependent);
-
-document
-  .querySelector('.gradientOpacity')
-  .addEventListener('input', updateGradientOpacity);
-
-document.querySelector('.dataType').addEventListener('input', updateDataType);
-
-configureScene(lighting, numComp, independent, withGO, dataType);
+redrawScene();
 
 renderer.resetCamera();
 renderer.getActiveCamera().elevation(20);

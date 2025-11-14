@@ -1,4 +1,3 @@
-/* eslint-disable */
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 import '@kitware/vtk.js/Rendering/Profiles/Glyph';
@@ -11,7 +10,7 @@ import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 
 import vtkTransformControlsWidget from '@kitware/vtk.js/Widgets/Widgets3D/TransformControlsWidget';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 const { TransformMode } = vtkTransformControlsWidget;
 
@@ -64,8 +63,8 @@ viewWidget.setUseActiveColor(true);
 viewWidget.setActiveColor([255, 255, 0]);
 
 viewWidget.getRepresentations().forEach((rep) =>
-  rep.getActors().forEach((actor) => {
-    actor.getProperty().setAmbient(1);
+  rep.getActors().forEach((a) => {
+    a.getProperty().setAmbient(1);
   })
 );
 
@@ -90,14 +89,15 @@ function setTransformMode(mode) {
   renderWindow.render();
 }
 
-fullScreenRenderer.addController(controlPanel);
-
-const transformModeSelector = document.querySelector('.mode');
-transformModeSelector.addEventListener('change', (e) => {
-  const idx = Number(e.target.value);
-  const mode = e.target[idx].dataset.mode; // Retrieve mode from HTML
-  setTransformMode(mode);
-});
+const gui = new GUI();
+const params = { Mode: 'translate' };
+gui
+  .add(params, 'Mode', {
+    Translation: 'translate',
+    Rotation: 'rotate',
+    Scale: 'scale',
+  })
+  .onChange((mode) => setTransformMode(mode));
 
 const keyMap = {
   t: TransformMode.TRANSLATE,
@@ -108,7 +108,6 @@ const keyMap = {
 window.onkeydown = (ev) => {
   const mode = keyMap[ev.key];
   if (mode !== undefined) {
-    transformModeSelector.value = Object.values(keyMap).indexOf(mode);
     setTransformMode(keyMap[ev.key]);
   }
 };

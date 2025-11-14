@@ -18,7 +18,7 @@ import {
 
 import { OrientationModes } from '@kitware/vtk.js/Rendering/Core/Glyph3DMapper/Constants';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -131,25 +131,24 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-
+const gui = new GUI();
+const params = { AngleX: 0, AngleY: 0, AngleZ: 0, Angles: 'X(0), Y(0), Z(0)' };
 function updateAngles() {
-  const x = Number(document.querySelector('.xAngle').value);
-  const y = Number(document.querySelector('.yAngle').value);
-  const z = Number(document.querySelector('.zAngle').value);
+  const x = Number(params.AngleX);
+  const y = Number(params.AngleY);
+  const z = Number(params.AngleZ);
   for (let i = 0; i < anglesArray.length; i += 3) {
     anglesArray[i] = (Math.PI * x) / 180;
     anglesArray[i + 1] = (Math.PI * y) / 180;
     anglesArray[i + 2] = (Math.PI * z) / 180;
   }
   anglesDataArray.modified();
-  baseGrid.modified(); // Should not be needed
+  baseGrid.modified();
   renderWindow.render();
-  document.querySelector('.txt').innerHTML = `X(${x}), Y(${y}), Z(${z})`;
+  params.Angles = `X(${x}), Y(${y}), Z(${z})`;
 }
-
-document.querySelectorAll('.angle').forEach((elem) => {
-  elem.addEventListener('input', updateAngles);
-});
-
+gui.add(params, 'AngleX', 0, 90, 1).onChange(updateAngles);
+gui.add(params, 'AngleY', 0, 90, 1).onChange(updateAngles);
+gui.add(params, 'AngleZ', 0, 90, 1).onChange(updateAngles);
+gui.add(params, 'Angles').listen().disable();
 updateAngles();

@@ -9,7 +9,7 @@ import vtkPlaneSource from '@kitware/vtk.js/Filters/Sources/PlaneSource';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import { Representation } from '@kitware/vtk.js/Rendering/Core/Property/Constants';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -42,15 +42,27 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  xResolution: 10,
+  yResolution: 10,
+};
 
-['xResolution', 'yResolution'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    planeSource.set({ [propertyName]: value });
+gui
+  .add(params, 'xResolution', 1, 25, 1)
+  .name('X resolution')
+  .onChange((value) => {
+    planeSource.set({ xResolution: Number(value) });
     renderWindow.render();
   });
-});
+
+gui
+  .add(params, 'yResolution', 1, 25, 1)
+  .name('Y resolution')
+  .onChange((value) => {
+    planeSource.set({ yResolution: Number(value) });
+    renderWindow.render();
+  });
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

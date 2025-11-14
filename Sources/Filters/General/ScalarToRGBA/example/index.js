@@ -15,7 +15,7 @@ import vtkScalarToRGBA from '@kitware/vtk.js/Filters/General/ScalarToRGBA';
 import vtkPlaneSource from '@kitware/vtk.js/Filters/Sources/PlaneSource';
 import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
 
-import controller from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -69,11 +69,20 @@ renderer.addActor(actor);
 renderer.resetCamera();
 renderWindow.render();
 
-// UI slider
-fullScreenRenderer.addController(controller);
-document.querySelector('.sliceIndex').addEventListener('input', (e) => {
-  const sliceIndex = Number(e.target.value);
-  sliceFilter.setSliceIndex(sliceIndex);
-  texture.modified();
-  renderWindow.render();
-});
+// ----------------------------------------------------------------------------
+// UI (lil-gui)
+// ----------------------------------------------------------------------------
+
+const gui = new GUI();
+const params = {
+  SliceIndex: 0,
+};
+
+gui
+  .add(params, 'SliceIndex', -10, 10, 1)
+  .name('Slice index')
+  .onChange((value) => {
+    sliceFilter.setSliceIndex(Number(value));
+    texture.modified();
+    renderWindow.render();
+  });

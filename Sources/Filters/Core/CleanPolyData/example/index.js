@@ -14,7 +14,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkGlyph3DMapper from '@kitware/vtk.js/Rendering/Core/Glyph3DMapper';
 import vtkArrowSource from '@kitware/vtk.js/Filters/Sources/ArrowSource';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -23,12 +23,6 @@ import controlPanel from './controlPanel.html';
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
-
-// -----------------------------------------------------------
-// UI control handling
-// -----------------------------------------------------------
-
-fullScreenRenderer.addController(controlPanel);
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -96,12 +90,6 @@ const initialLines = initialPolyData.getLines().getNumberOfCells();
 const initialPolys = initialPolyData.getPolys().getNumberOfCells();
 const initialStrips = initialPolyData.getStrips().getNumberOfCells();
 
-document.querySelector('.initial-points').textContent = initialPoints;
-document.querySelector('.initial-cells').textContent = initialCells;
-document.querySelector('.initial-lines').textContent = initialLines;
-document.querySelector('.initial-polys').textContent = initialPolys;
-document.querySelector('.initial-strips').textContent = initialStrips;
-
 const finalPolyData = cleanPolyData.getOutputData();
 const finalPoints = finalPolyData.getNumberOfPoints();
 const finalCells = finalPolyData.getNumberOfCells();
@@ -109,8 +97,58 @@ const finalLines = finalPolyData.getLines().getNumberOfCells();
 const finalPolys = finalPolyData.getPolys().getNumberOfCells();
 const finalStrips = finalPolyData.getStrips().getNumberOfCells();
 
-document.querySelector('.final-points').textContent = finalPoints;
-document.querySelector('.final-cells').textContent = finalCells;
-document.querySelector('.final-lines').textContent = finalLines;
-document.querySelector('.final-polys').textContent = finalPolys;
-document.querySelector('.final-strips').textContent = finalStrips;
+const gui = new GUI();
+const beforeFolder = gui.addFolder('Before(Left Cube)');
+const afterFolder = gui.addFolder('After(Right Cube)');
+
+beforeFolder
+  .add({ initialPoints }, 'initialPoints')
+  .name(`Initial points`)
+  .listen()
+  .disable();
+beforeFolder
+  .add({ initialCells }, 'initialCells')
+  .name(`Initial cells`)
+  .listen()
+  .disable();
+beforeFolder
+  .add({ initialLines }, 'initialLines')
+  .name(`Initial lines`)
+  .listen()
+  .disable();
+beforeFolder
+  .add({ initialPolys }, 'initialPolys')
+  .name(`Initial polys`)
+  .listen()
+  .disable();
+beforeFolder
+  .add({ initialStrips }, 'initialStrips')
+  .name(`Initial strips`)
+  .listen()
+  .disable();
+
+afterFolder
+  .add({ finalPoints }, 'finalPoints')
+  .name(`Final points`)
+  .listen()
+  .disable();
+afterFolder
+  .add({ finalCells }, 'finalCells')
+  .name(`Final cells`)
+  .listen()
+  .disable();
+afterFolder
+  .add({ finalLines }, 'finalLines')
+  .name(`Final lines`)
+  .listen()
+  .disable();
+afterFolder
+  .add({ finalPolys }, 'finalPolys')
+  .name(`Final polys`)
+  .listen()
+  .disable();
+afterFolder
+  .add({ finalStrips }, 'finalStrips')
+  .name(`Final strips`)
+  .listen()
+  .disable();

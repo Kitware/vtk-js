@@ -3,6 +3,9 @@ import '@kitware/vtk.js/favicon';
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
 
+// Force the loading of HttpDataAccessHelper to support gzip decompression
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
 import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper';
@@ -12,14 +15,14 @@ import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
 import vtkImageData from '@kitware/vtk.js/Common/DataModel/ImageData';
 import vtkImageOutlineFilter from '@kitware/vtk.js/Filters/General/ImageOutlineFilter';
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
-import controlPanel from './controlPanel.html';
+
+import GUI from 'lil-gui';
 
 const fullScreenRenderWindow = vtkFullScreenRenderWindow.newInstance({
   background: [0, 0, 0],
 });
 const renderWindow = fullScreenRenderWindow.getRenderWindow();
 const renderer = fullScreenRenderWindow.getRenderer();
-fullScreenRenderWindow.addController(controlPanel);
 
 const imageActor = vtkImageSlice.newInstance();
 const imageMapper = vtkImageMapper.newInstance();
@@ -86,31 +89,43 @@ reader
       labelmapMapper.setSlice(imageMapper.getSlice());
     });
     labelmapActor.setMapper(labelmapMapper);
-    const el = document.querySelector('.sliceK');
-    el.setAttribute('min', extent[4]);
-    el.setAttribute('max', extent[5]);
-    el.setAttribute('value', 30);
-    document.querySelector('.isFilterOn').addEventListener('change', (e) => {
-      labelmapMapper.setInputData(
-        e.target.checked ? outline.getOutputData() : labelMap
-      );
-      renderWindow.render();
-    });
+    const gui = new GUI();
+    const params = {
+      slice: 30,
+      axis: 'K',
+      contoursOnly: true,
+    };
+
+    gui
+      .add(params, 'contoursOnly')
+      .name('Contours only')
+      .onChange((value) => {
+        labelmapMapper.setInputData(value ? outline.getOutputData() : labelMap);
+        renderWindow.render();
+      });
+
+    gui
+      .add(params, 'slice', extent[4], extent[5], 1)
+      .name('Slice')
+      .onChange((value) => {
+        imageActor.getMapper().setSlice(Number(value));
+        renderWindow.render();
+      });
+
+    gui
+      .add(params, 'axis', ['I', 'J', 'K'])
+      .name('Slice axis')
+      .onChange((value) => {
+        const sliceMode = 'IJKXYZ'.indexOf(value);
+        imageMapper.setSlicingMode(sliceMode);
+        labelmapMapper.setSlicingMode(sliceMode);
+        outline.setSlicingMode(sliceMode);
+        renderWindow.render();
+      });
     renderer.resetCamera();
     renderer.resetCameraClippingRange();
     renderWindow.render();
   });
-document.querySelector('.sliceK').addEventListener('input', (e) => {
-  imageActor.getMapper().setSlice(Number(e.target.value));
-  renderWindow.render();
-});
-document.querySelector('.axis').addEventListener('input', (ev) => {
-  const sliceMode = 'IJKXYZ'.indexOf(ev.target.value);
-  imageMapper.setSlicingMode(sliceMode);
-  labelmapMapper.setSlicingMode(sliceMode);
-  outline.setSlicingMode(sliceMode);
-  renderWindow.render();
-});
 
 global.fullScreen = fullScreenRenderWindow;
 global.imageActor = imageActor;

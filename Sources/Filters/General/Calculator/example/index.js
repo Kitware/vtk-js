@@ -16,7 +16,7 @@ import vtkPoints from '@kitware/vtk.js/Common/Core/Points';
 import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
 import vtkWarpScalar from '@kitware/vtk.js/Filters/General/WarpScalar';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 const { ColorMode, ScalarMode } = vtkMapper;
 const { FieldDataTypes } = vtkDataSet;
@@ -32,9 +32,7 @@ const FORMULA = [
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
-  background: [0.9, 0.9, 0.9],
-});
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -97,11 +95,20 @@ renderWindow.render();
 // UI control handling
 // ----------------------------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  xResolution: 50,
+  yResolution: 50,
+  scaleFactor: 1,
+  planeVisible: true,
+  formula: FORMULA[0],
+  min: 0,
+  max: 1,
+};
 
 function updateScalarRange() {
-  const min = Number(document.querySelector('.min').value);
-  const max = Number(document.querySelector('.max').value);
+  const min = Number(params.min);
+  const max = Number(params.max);
   if (!Number.isNaN(min) && !Number.isNaN(max)) {
     lookupTable.setMappingRange(min, max);
     renderWindow.render();
@@ -109,21 +116,19 @@ function updateScalarRange() {
 }
 
 function applyFormula() {
-  const el = document.querySelector('.formula');
+  const formulaStr = params.formula;
   let fn = null;
   try {
     /* eslint-disable no-new-func */
-    fn = new Function('x,y', `return ${el.value}`);
+    fn = new Function('x,y', `return ${formulaStr}`);
     /* eslint-enable no-new-func */
   } catch (exc) {
     if (!('name' in exc && exc.name === 'SyntaxError')) {
       vtkErrorMacro(`Unexpected exception ${exc}`);
-      el.style.background = '#fbb';
       return;
     }
   }
   if (fn) {
-    el.style.background = '#fff';
     const formulaObj = simpleFilter.createSimpleFormulaObject(
       FieldDataTypes.POINT,
       [],
@@ -161,8 +166,8 @@ function applyFormula() {
         .getPointData()
         .getScalars()
         .getRange();
-      document.querySelector('.min').value = min;
-      document.querySelector('.max').value = max;
+      params.min = min;
+      params.max = max;
       lookupTable.setMappingRange(min, max);
 
       renderWindow.render();
@@ -171,45 +176,71 @@ function applyFormula() {
       vtkErrorMacro(`Unexpected exception ${exc}`);
     }
   }
-  el.style.background = '#ffb';
 }
 
-['xResolution', 'yResolution'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    planeSource.set({ [propertyName]: value });
+gui
+  .add(params, 'xResolution', 2, 100, 1)
+  .name('X resolution')
+  .onChange((value) => {
+    planeSource.set({ xResolution: Number(value) });
     renderWindow.render();
   });
-});
 
-['scaleFactor'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    warpScalar.set({ [propertyName]: value });
+gui
+  .add(params, 'yResolution', 2, 100, 1)
+  .name('Y resolution')
+  .onChange((value) => {
+    planeSource.set({ yResolution: Number(value) });
     renderWindow.render();
   });
-});
 
-// Checkbox
-document.querySelector('.visibility').addEventListener('change', (e) => {
-  planeActor.setVisibility(!!e.target.checked);
-  renderWindow.render();
-});
+gui
+  .add(params, 'scaleFactor', 0, 2, 0.1)
+  .name('Displacement scale')
+  .onChange((value) => {
+    warpScalar.set({ scaleFactor: Number(value) });
+    renderWindow.render();
+  });
 
-document.querySelector('.formula').addEventListener('input', applyFormula);
+gui
+  .add(params, 'planeVisible')
+  .name('Plane visibility')
+  .onChange((value) => {
+    planeActor.setVisibility(!!value);
+    renderWindow.render();
+  });
 
-['min', 'max'].forEach((selector) => {
-  document
-    .querySelector(`.${selector}`)
-    .addEventListener('input', updateScalarRange);
-});
+gui
+  .add(params, 'formula')
+  .name('Formula')
+  .onFinishChange(() => {
+    applyFormula();
+  });
 
-document.querySelector('.next').addEventListener('click', (e) => {
-  formulaIdx = (formulaIdx + 1) % FORMULA.length;
-  document.querySelector('.formula').value = FORMULA[formulaIdx];
-  applyFormula();
-  renderWindow.render();
-});
+const rangeFolder = gui.addFolder('Scalar range');
+rangeFolder
+  .add(params, 'min')
+  .name('Min')
+  .onFinishChange(() => updateScalarRange());
+rangeFolder
+  .add(params, 'max')
+  .name('Max')
+  .onFinishChange(() => updateScalarRange());
+
+gui
+  .add(
+    {
+      next: () => {
+        formulaIdx = (formulaIdx + 1) % FORMULA.length;
+        params.formula = FORMULA[formulaIdx];
+        gui.controllers.forEach((c) => c.updateDisplay?.());
+        applyFormula();
+        renderWindow.render();
+      },
+    },
+    'next'
+  )
+  .name('Next formula');
 
 // Eecompute scalar range
 applyFormula();

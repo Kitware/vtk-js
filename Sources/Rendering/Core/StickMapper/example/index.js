@@ -13,7 +13,7 @@ import vtkStickMapper from '@kitware/vtk.js/Rendering/Core/StickMapper';
 import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -113,14 +113,27 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-['xResolution', 'yResolution'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    planeSource.set({ [propertyName]: value });
+const gui = new GUI();
+const params = {
+  xResolution: 10,
+  yResolution: 10,
+};
+
+gui
+  .add(params, 'xResolution', 1, 25, 1)
+  .name('X resolution')
+  .onChange((value) => {
+    planeSource.set({ xResolution: Number(value) });
     renderWindow.render();
   });
-});
+
+gui
+  .add(params, 'yResolution', 1, 25, 1)
+  .name('Y resolution')
+  .onChange((value) => {
+    planeSource.set({ yResolution: Number(value) });
+    renderWindow.render();
+  });
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

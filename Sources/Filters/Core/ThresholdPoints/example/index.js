@@ -17,7 +17,7 @@ import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constan
 import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
 import vtkScalarBarActor from '@kitware/vtk.js/Rendering/Core/ScalarBarActor';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 const { ColorMode, ScalarMode } = vtkMapper;
 
@@ -28,8 +28,6 @@ const { ColorMode, ScalarMode } = vtkMapper;
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0.9, 0.9, 0.9],
 });
-fullScreenRenderer.addController(controlPanel);
-
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -115,9 +113,12 @@ renderer.addActor(actor);
 // UI control handling
 // ----------------------------------------------------------------------------
 
-const thresholdArray = document.querySelector('#thresholdArray');
-const thresholdOperation = document.querySelector('#thresholdOperation');
-const thresholdValue = document.querySelector('#thresholdValue');
+const gui = new GUI();
+const params = {
+  thresholdArray: 'sine wave',
+  thresholdOperation: 'Above',
+  thresholdValue: 30,
+};
 function updateCriterias(arrayName, operation, value) {
   thresholder.setCriterias([
     {
@@ -130,37 +131,44 @@ function updateCriterias(arrayName, operation, value) {
 }
 function onCriteriaChanged(event) {
   updateCriterias(
-    thresholdArray.value,
-    thresholdOperation.value,
-    thresholdValue.value
+    params.thresholdArray,
+    params.thresholdOperation,
+    params.thresholdValue
   );
   if (event != null) {
     renderWindow.render();
   }
 }
-onCriteriaChanged();
 function onArrayChanged(event) {
-  if (thresholdArray.value === 'x' || thresholdArray.value === 'y') {
-    thresholdValue.min = '-5';
-    thresholdValue.max = '5';
-    thresholdValue.step = '1';
-    thresholdValue.value = '0';
-  } else if (thresholdArray.value === 'z') {
-    thresholdValue.min = '-2';
-    thresholdValue.max = '2';
-    thresholdValue.step = '0.1';
-    thresholdValue.value = '0';
+  if (params.thresholdArray === 'x' || params.thresholdArray === 'y') {
+    params.thresholdValue = 0;
+  } else if (params.thresholdArray === 'z') {
+    params.thresholdValue = 0;
   } else {
-    thresholdValue.min = 0;
-    thresholdValue.max = 256;
-    thresholdValue.step = 10;
-    thresholdValue.value = 30;
+    params.thresholdValue = 30;
   }
   onCriteriaChanged(event);
 }
-thresholdArray.addEventListener('change', onArrayChanged);
-thresholdOperation.addEventListener('change', onCriteriaChanged);
-thresholdValue.addEventListener('input', onCriteriaChanged);
+
+gui
+  .add(params, 'thresholdArray', ['sine wave', 'x', 'y', 'z'])
+  .name('Array')
+  .onChange((value) => {
+    params.thresholdArray = value;
+    onArrayChanged(true);
+  });
+
+gui
+  .add(params, 'thresholdOperation', ['Above', 'Below'])
+  .name('Operation')
+  .onChange(() => onCriteriaChanged(true));
+
+gui
+  .add(params, 'thresholdValue')
+  .name('Threshold value')
+  .onChange(() => onCriteriaChanged(true));
+
+onCriteriaChanged(true);
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

@@ -14,7 +14,7 @@ import vtkGlyph3DMapper from '@kitware/vtk.js/Rendering/Core/Glyph3DMapper';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkPolyDataNormals from '@kitware/vtk.js/Filters/Core/PolyDataNormals';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 const { ColorMode, ScalarMode } = vtkMapper;
 
@@ -80,20 +80,25 @@ renderWindow.render();
 // UI control handling
 // ----------------------------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  computePointNormals: true,
+  computeCellNormals: false,
+};
 
-// Checkbox
-document
-  .querySelector('.computePointNormals')
-  .addEventListener('change', (e) => {
-    polyDataNormals.setComputePointNormals(!!e.target.checked);
+gui
+  .add(params, 'computePointNormals')
+  .name('Compute point normals')
+  .onChange((value) => {
+    polyDataNormals.setComputePointNormals(!!value);
     renderWindow.render();
   });
 
-document
-  .querySelector('.computeCellNormals')
-  .addEventListener('change', (e) => {
-    polyDataNormals.setComputeCellNormals(!!e.target.checked);
+gui
+  .add(params, 'computeCellNormals')
+  .name('Compute cell normals')
+  .onChange((value) => {
+    polyDataNormals.setComputeCellNormals(!!value);
     renderWindow.render();
   });
 

@@ -8,7 +8,7 @@ import vtkResourceLoader from '@kitware/vtk.js/IO/Core/ResourceLoader';
 import vtkIFCImporter from '@kitware/vtk.js/IO/Geometry/IFCImporter';
 import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -19,16 +19,20 @@ const url =
   userParams.fileURL ||
   'https://raw.githubusercontent.com/ThatOpen/engine_web-ifc/refs/heads/main/tests/ifcfiles/public/duplex.ifc';
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
-fullScreenRenderer.addController(controlPanel);
 
 if (userParams.mergeGeometries === undefined) {
   userParams.mergeGeometries = true;
 }
-const mergeGeometriesCheckbox = document.querySelector('#mergeGeometries');
-mergeGeometriesCheckbox.checked = Boolean(userParams.mergeGeometries);
+const gui = new GUI();
+gui
+  .add(userParams, 'mergeGeometries')
+  .name('Merge geometries')
+  .onChange((v) => {
+    window.location = `?mergeGeometries=${Boolean(v)}`;
+  });
 
 const importer = vtkIFCImporter.newInstance({
-  mergeGeometries: mergeGeometriesCheckbox.checked,
+  mergeGeometries: Boolean(userParams.mergeGeometries),
 });
 
 // ----------------------------------------------------------------------------
@@ -58,7 +62,3 @@ vtkResourceLoader
     // Trigger data download
     importer.setUrl(url).then(update);
   });
-
-mergeGeometriesCheckbox.addEventListener('change', (evt) => {
-  window.location = `?mergeGeometries=${evt.target.checked}`;
-});

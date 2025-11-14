@@ -14,43 +14,15 @@ import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
 import vtkImageCropFilter from '@kitware/vtk.js/Filters/General/ImageCropFilter';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
-  background: [0, 0, 0],
-});
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
-
-fullScreenRenderer.addController(controlPanel);
-
-function setupControlPanel(data, cropFilter) {
-  const axes = ['I', 'J', 'K'];
-  const minmax = ['min', 'max'];
-
-  const extent = data.getExtent();
-
-  axes.forEach((ax, axi) => {
-    minmax.forEach((m, mi) => {
-      const el = document.querySelector(`.${ax}${m}`);
-      el.setAttribute('min', extent[axi * 2]);
-      el.setAttribute('max', extent[axi * 2 + 1]);
-      el.setAttribute('value', extent[axi * 2 + mi]);
-
-      el.addEventListener('input', () => {
-        const planes = cropFilter.getCroppingPlanes().slice();
-        planes[axi * 2 + mi] = Number(el.value);
-        cropFilter.setCroppingPlanes(...planes);
-        console.log(planes);
-        renderWindow.render();
-      });
-    });
-  });
-}
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -103,7 +75,81 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
     const data = reader.getOutputData();
     cropFilter.setCroppingPlanes(...data.getExtent());
 
-    setupControlPanel(data, cropFilter);
+    const extent = data.getExtent();
+    const gui = new GUI();
+    const params = {
+      Imin: extent[0],
+      Imax: extent[1],
+      Jmin: extent[2],
+      Jmax: extent[3],
+      Kmin: extent[4],
+      Kmax: extent[5],
+    };
+
+    function updateCropping() {
+      const planes = [
+        params.Imin,
+        params.Imax,
+        params.Jmin,
+        params.Jmax,
+        params.Kmin,
+        params.Kmax,
+      ];
+      cropFilter.setCroppingPlanes(...planes);
+      renderWindow.render();
+    }
+
+    const iFolder = gui.addFolder('I');
+    iFolder
+      .add(params, 'Imin', extent[0], extent[1], 1)
+      .name('Min')
+      .onChange((value) => {
+        params.Imin = Number(value);
+        updateCropping();
+      });
+    iFolder
+      .add(params, 'Imax', extent[0], extent[1], 1)
+      .name('Max')
+      .onChange((value) => {
+        params.Imax = Number(value);
+        updateCropping();
+      });
+
+    const jFolder = gui.addFolder('J');
+    jFolder
+      .add(params, 'Jmin', extent[2], extent[3], 1)
+      .name('Min')
+      .onChange((value) => {
+        params.Jmin = Number(value);
+        updateCropping();
+      });
+    jFolder
+      .add(params, 'Jmax', extent[2], extent[3], 1)
+      .name('Max')
+      .onChange((value) => {
+        params.Jmax = Number(value);
+        updateCropping();
+      });
+
+    const kFolder = gui.addFolder('K');
+    kFolder
+      .add(params, 'Kmin', extent[4], extent[5], 1)
+      .name('Min')
+      .onChange((value) => {
+        params.Kmin = Number(value);
+        updateCropping();
+      });
+    kFolder
+      .add(params, 'Kmax', extent[4], extent[5], 1)
+      .name('Max')
+      .onChange((value) => {
+        params.Kmax = Number(value);
+        updateCropping();
+      });
+
+    iFolder.open();
+    jFolder.open();
+    kFolder.open();
 
     const interactor = renderWindow.getInteractor();
     interactor.setDesiredUpdateRate(15.0);

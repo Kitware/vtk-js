@@ -9,9 +9,9 @@ import vtkProxyManager from '@kitware/vtk.js/Proxy/Core/ProxyManager';
 import vtkHttpSceneLoader from '@kitware/vtk.js/IO/Core/HttpSceneLoader';
 import DataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper';
 
-import proxyConfiguration from './proxyConfiguration';
+import GUI from 'lil-gui';
 
-import controlPanel from './controller.html';
+import proxyConfiguration from './proxyConfiguration';
 
 const STYLE_CONTAINER = {
   margin: '0',
@@ -49,34 +49,27 @@ function applyStyle(el, style) {
 }
 
 function initializePanel(animationManager, viewProxy) {
-  const play = document.getElementById('play');
-  play.addEventListener('click', () =>
-    animationManager.play(() => viewProxy.render())
-  );
-
-  const pause = document.getElementById('pause');
-  pause.addEventListener('click', () => animationManager.pause());
-
-  const nextFrame = document.getElementById('nextFrame');
-  nextFrame.addEventListener('click', () => animationManager.nextFrame());
-
-  const previousFrame = document.getElementById('previousFrame');
-  previousFrame.addEventListener('click', () =>
-    animationManager.previousFrame()
-  );
-
-  const firstFrame = document.getElementById('firstFrame');
-  firstFrame.addEventListener('click', () => animationManager.firstFrame());
-
-  const lastFrame = document.getElementById('lastFrame');
-  lastFrame.addEventListener('click', () => animationManager.lastFrame());
-
-  const currentFrame = document.getElementById('currentFrame');
-  currentFrame.innerHTML = `${animationManager.getCurrentFrame()}`;
-
+  const gui = new GUI();
+  const api = {
+    Play: () => animationManager.play(() => viewProxy.render()),
+    Pause: () => animationManager.pause(),
+    NextFrame: () => animationManager.nextFrame(),
+    PreviousFrame: () => animationManager.previousFrame(),
+    FirstFrame: () => animationManager.firstFrame(),
+    LastFrame: () => animationManager.lastFrame(),
+    CurrentFrame: animationManager.getCurrentFrame(),
+  };
+  gui.add(api, 'Play');
+  gui.add(api, 'Pause');
+  gui.add(api, 'NextFrame');
+  gui.add(api, 'PreviousFrame');
+  gui.add(api, 'FirstFrame');
+  gui.add(api, 'LastFrame');
+  const frameCtrl = gui.add(api, 'CurrentFrame').name('Frame').listen();
   animationManager.onCurrentFrameChanged(() => {
     viewProxy.render();
-    currentFrame.innerHTML = `${animationManager.getCurrentFrame()}`;
+    api.CurrentFrame = animationManager.getCurrentFrame();
+    frameCtrl.updateDisplay?.();
   });
 }
 
@@ -98,10 +91,9 @@ document.body.appendChild(container);
 viewProxy.setContainer(container);
 viewProxy.resize();
 
-// Add the control panel to the page
+// Create GUI in place of control panel
 const annotation = viewProxy.getCornerAnnotation().getNorthWestContainer();
 applyStyle(annotation, STYLE_CONTROL_PANEL);
-annotation.innerHTML = controlPanel;
 
 viewProxy.resetCamera();
 

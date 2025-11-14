@@ -18,7 +18,7 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkSphereSource from '@kitware/vtk.js/Filters/Sources/SphereSource';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Show loading progress bar
@@ -58,7 +58,8 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
     rootContainer,
     controlPanelStyle,
   });
-  fullScreenRenderer.addController(controlPanel);
+
+  const gui = new GUI();
 
   const renderer = fullScreenRenderer.getRenderer();
   renderer.setTwoSidedLighting(false);
@@ -174,56 +175,60 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
   });
 
   // Add sliders to tune volume shadow effect
-  function updateVSB(e) {
-    const vsb = Number(e.target.value);
+  function updateVSB(val) {
+    const vsb = Number(val);
     actorProperty.setVolumetricScatteringBlending(vsb);
     renderWindow.render();
   }
-  function updateGlobalReach(e) {
-    const gir = Number(e.target.value);
+  function updateGlobalReach(val) {
+    const gir = Number(val);
     actorProperty.setGlobalIlluminationReach(gir);
     renderWindow.render();
   }
-  function updateSD(e) {
-    const sd = Number(e.target.value);
-    mapper.setVolumeShadowSamplingDistFactor(sd);
+  function updateSD(val) {
+    const v = Number(val);
+    mapper.setVolumeShadowSamplingDistFactor(v);
     renderWindow.render();
   }
-  function updateAT(e) {
-    const at = Number(e.target.value);
+  function updateAT(val) {
+    const at = Number(val);
     actorProperty.setAnisotropy(at);
     renderWindow.render();
   }
-  const el = document.querySelector('.volumeBlending');
-  el.setAttribute('min', 0);
-  el.setAttribute('max', 1);
-  el.setAttribute('value', 0.0);
-  el.addEventListener('input', updateVSB);
-  const gr = document.querySelector('.globalReach');
-  gr.setAttribute('min', 0);
-  gr.setAttribute('max', 1);
-  gr.setAttribute('value', 0);
-  gr.addEventListener('input', updateGlobalReach);
-  const sd = document.querySelector('.samplingDist');
-  sd.setAttribute('min', 1);
-  sd.setAttribute('max', 10);
-  sd.setAttribute('value', 5);
-  sd.addEventListener('input', updateSD);
-  const at = document.querySelector('.anisotropy');
-  at.setAttribute('min', -1.0);
-  at.setAttribute('max', 1.0);
-  at.setAttribute('value', 0.0);
-  at.addEventListener('input', updateAT);
-
   // Add toggle for density gradient versus scalar gradient
   let isDensity = false;
-  const buttonID = document.querySelector('.text2');
   function toggleDensityNormal() {
     isDensity = !isDensity;
     actorProperty.setComputeNormalFromOpacity(isDensity);
-    buttonID.innerText = `(${isDensity ? 'on' : 'off'})`;
     renderWindow.render();
   }
+  const params = {
+    DensityNormal: isDensity,
+    VolumeBlending: 0.0,
+    GlobalReach: 0.0,
+    SampleDist: 5.0,
+    Anisotropy: 0.0,
+  };
+  gui
+    .add(params, 'DensityNormal')
+    .name('Density Normal')
+    .onChange(() => toggleDensityNormal());
+  gui
+    .add(params, 'VolumeBlending', 0.0, 1.0, 0.05)
+    .name('Surface to Volume Blending')
+    .onChange(updateVSB);
+  gui
+    .add(params, 'GlobalReach', 0.0, 1.0, 0.05)
+    .name('G Illumination Reach')
+    .onChange(updateGlobalReach);
+  gui
+    .add(params, 'SampleDist', 1.0, 10.0, 1.0)
+    .name('VS Sample Dist')
+    .onChange(updateSD);
+  gui
+    .add(params, 'Anisotropy', -1.0, 1.0, 0.05)
+    .name('Anisotropy')
+    .onChange(updateAT);
 
   // Render a sphere to represent light position, if light is positional
   if (light.getPositional()) {

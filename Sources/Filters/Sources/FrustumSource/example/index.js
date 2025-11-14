@@ -11,7 +11,7 @@ import vtkCamera from '@kitware/vtk.js/Rendering/Core/Camera';
 import vtkPlanes from '@kitware/vtk.js/Common/DataModel/Planes';
 import vtkFrustumSource from '@kitware/vtk.js/Filters/Sources/FrustumSource';
 import vtkShrinkPolyData from '@kitware/vtk.js/Filters/General/ShrinkPolyData';
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -66,20 +66,24 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  shrinkFactor: 0.9,
+  showLines: false,
+};
 
-['showLines'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = e.target.checked;
-    frustum.set({ [propertyName]: value });
+gui
+  .add(params, 'shrinkFactor', 0.1, 1.0, 0.1)
+  .name('Shrink factor')
+  .onChange((value) => {
+    shrink.set({ shrinkFactor: Number(value) });
     renderWindow.render();
   });
-});
 
-['shrinkFactor'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    shrink.set({ [propertyName]: value });
+gui
+  .add(params, 'showLines')
+  .name('Show lines')
+  .onChange((value) => {
+    frustum.set({ showLines: !!value });
     renderWindow.render();
   });
-});

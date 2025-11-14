@@ -10,7 +10,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
 import vtkWindowedSincPolyDataFilter from '@kitware/vtk.js/Filters/General/WindowedSincPolyDataFilter';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // Force DataAccessHelper to have access to various data source
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
@@ -19,9 +19,7 @@ import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
-  background: [0, 0, 0],
-});
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -61,38 +59,66 @@ mapper.setInputConnection(smoothFilter.getOutputPort());
 // UI control handling
 // ----------------------------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-
-// Warp setup
-[
-  'numberOfIterations',
-  'passBand',
-  'featureAngle',
-  'edgeAngle',
-  'nonManifoldSmoothing',
-  'featureEdgeSmoothing',
-  'boundarySmoothing',
-].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    let value;
-    if (Number.isNaN(e.target.valueAsNumber)) {
-      value = e.target.checked ? 1 : 0;
-    } else {
-      value = e.target.valueAsNumber;
-    }
-    if (propertyName === 'passBand') {
-      // This formula maps:
-      // 0.0  -> 1.0   (almost no smoothing)
-      // 0.25 -> 0.1   (average smoothing)
-      // 0.5  -> 0.01  (more smoothing)
-      // 1.0  -> 0.001 (very strong smoothing)
-      value = 10.0 ** (-4.0 * value);
-    }
-    smoothFilter.set({ [propertyName]: value });
+const gui = new GUI();
+const params = {
+  numberOfIterations: 20,
+  passBand: 0.25,
+  featureAngle: 45,
+  edgeAngle: 15,
+  nonManifoldSmoothing: 0,
+  featureEdgeSmoothing: 0,
+  boundarySmoothing: 1,
+};
+gui
+  .add(params, 'numberOfIterations', 0, 100, 1)
+  .name('Iterations')
+  .onChange((v) => {
+    smoothFilter.set({ numberOfIterations: Number(v) });
     renderWindow.render();
-    console.log({ [propertyName]: value });
   });
-});
+gui
+  .add(params, 'passBand', 0, 2, 0.001)
+  .name('Pass band')
+  .onChange((v) => {
+    const value = 10.0 ** (-4.0 * Number(v));
+    smoothFilter.set({ passBand: value });
+    renderWindow.render();
+  });
+gui
+  .add(params, 'featureAngle', 1, 180, 1)
+  .name('Feature Angle')
+  .onChange((v) => {
+    smoothFilter.set({ featureAngle: Number(v) });
+    renderWindow.render();
+  });
+gui
+  .add(params, 'edgeAngle', 1, 180, 1)
+  .name('Edge Angle')
+  .onChange((v) => {
+    smoothFilter.set({ edgeAngle: Number(v) });
+    renderWindow.render();
+  });
+gui
+  .add(params, 'featureEdgeSmoothing')
+  .name('Feature Edge Smoothing')
+  .onChange((v) => {
+    smoothFilter.set({ featureEdgeSmoothing: v ? 1 : 0 });
+    renderWindow.render();
+  });
+gui
+  .add(params, 'boundarySmoothing')
+  .name('Boundary Smoothing')
+  .onChange((v) => {
+    smoothFilter.set({ boundarySmoothing: v ? 1 : 0 });
+    renderWindow.render();
+  });
+gui
+  .add(params, 'nonManifoldSmoothing')
+  .name('Non Manifold Smoothing')
+  .onChange((v) => {
+    smoothFilter.set({ nonManifoldSmoothing: v ? 1 : 0 });
+    renderWindow.render();
+  });
 
 // -----------------------------------------------------------
 

@@ -8,15 +8,13 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkCircleSource from '@kitware/vtk.js/Filters/Sources/CircleSource';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
-  background: [0, 0, 0],
-});
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -49,37 +47,74 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  radius: 1.0,
+  resolution: 6,
+  lines: true,
+  face: true,
+  centerX: 0,
+  centerY: 0,
+  centerZ: 0,
+};
 
-['radius', 'resolution'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    pipelines[0].cylinderSource.set({ [propertyName]: value });
-    renderWindow.render();
+function updateCircle() {
+  pipelines[0].cylinderSource.set({
+    radius: params.radius,
+    resolution: params.resolution,
+    lines: params.lines,
+    face: params.face,
+    center: [params.centerX, params.centerY, params.centerZ],
   });
-});
-
-['lines', 'face'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    pipelines[0].cylinderSource.set({ [propertyName]: e.target.checked });
-    renderWindow.render();
-  });
-});
-
-const centerElems = document.querySelectorAll('.center');
-
-function updateTransformedCircle() {
-  const center = [0, 0, 0];
-  for (let i = 0; i < 3; i++) {
-    center[Number(centerElems[i].dataset.index)] = Number(centerElems[i].value);
-  }
-  pipelines[0].cylinderSource.set({ center });
   renderWindow.render();
 }
 
-for (let i = 0; i < 3; i++) {
-  centerElems[i].addEventListener('input', updateTransformedCircle);
-}
+gui
+  .add(params, 'radius', 0.5, 2.0, 0.1)
+  .name('Radius')
+  .onChange((value) => {
+    params.radius = Number(value);
+    updateCircle();
+  });
+
+gui
+  .add(params, 'resolution', 4, 100, 1)
+  .name('Resolution')
+  .onChange((value) => {
+    params.resolution = Number(value);
+    updateCircle();
+  });
+
+gui
+  .add(params, 'lines')
+  .name('Show edges')
+  .onChange((value) => {
+    params.lines = !!value;
+    updateCircle();
+  });
+
+gui
+  .add(params, 'face')
+  .name('Show face')
+  .onChange((value) => {
+    params.face = !!value;
+    updateCircle();
+  });
+
+gui
+  .add(params, 'centerX', -1.0, 1.0, 0.1)
+  .name('Center X')
+  .onChange(updateCircle);
+gui
+  .add(params, 'centerY', -1.0, 1.0, 0.1)
+  .name('Center Y')
+  .onChange(updateCircle);
+gui
+  .add(params, 'centerZ', -1.0, 1.0, 0.1)
+  .name('Center Z')
+  .onChange(updateCircle);
+
+updateCircle();
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

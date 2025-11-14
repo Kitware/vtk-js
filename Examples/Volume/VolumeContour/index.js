@@ -14,7 +14,7 @@ import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
 import vtkImageMarchingCubes from '@kitware/vtk.js/Filters/General/ImageMarchingCubes';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 const fullScreenRenderWindow = vtkFullScreenRenderWindow.newInstance({
   background: [0, 0, 0],
@@ -22,7 +22,7 @@ const fullScreenRenderWindow = vtkFullScreenRenderWindow.newInstance({
 const renderWindow = fullScreenRenderWindow.getRenderWindow();
 const renderer = fullScreenRenderWindow.getRenderer();
 
-fullScreenRenderWindow.addController(controlPanel);
+const gui = new GUI();
 
 const actor = vtkActor.newInstance();
 const mapper = vtkMapper.newInstance();
@@ -35,11 +35,15 @@ const marchingCube = vtkImageMarchingCubes.newInstance({
 actor.setMapper(mapper);
 mapper.setInputConnection(marchingCube.getOutputPort());
 
-function updateIsoValue(e) {
-  const isoValue = Number(e.target.value);
-  marchingCube.setContourValue(isoValue);
-  renderWindow.render();
-}
+const params = { IsoValue: 0.0 };
+const isoCtrl = gui
+  .add(params, 'IsoValue', 0.0, 1.0, 0.05)
+  .name('Iso value')
+  .onChange((v) => {
+    const isoValue = Number(v);
+    marchingCube.setContourValue(isoValue);
+    renderWindow.render();
+  });
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 marchingCube.setInputConnection(reader.getOutputPort());
@@ -51,11 +55,9 @@ reader
     const dataRange = data.getPointData().getScalars().getRange();
     const firstIsoValue = (dataRange[0] + dataRange[1]) / 3;
 
-    const el = document.querySelector('.isoValue');
-    el.setAttribute('min', dataRange[0]);
-    el.setAttribute('max', dataRange[1]);
-    el.setAttribute('value', firstIsoValue);
-    el.addEventListener('input', updateIsoValue);
+    isoCtrl.min(dataRange[0]);
+    isoCtrl.max(dataRange[1]);
+    params.IsoValue = firstIsoValue;
 
     marchingCube.setContourValue(firstIsoValue);
     renderer.addActor(actor);

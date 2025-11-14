@@ -16,7 +16,7 @@ import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
 import vtkForwardPass from '@kitware/vtk.js/Rendering/OpenGL/ForwardPass';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
 import vtkConvolution2DPass from '@kitware/vtk.js/Rendering/OpenGL/Convolution2DPass';
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -30,7 +30,7 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 
 const view = renderWindow.getViews()[0];
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -132,33 +132,87 @@ mapper.setInputConnection(reader.getOutputPort());
 // ----------------------------------------------------------------------------
 // Update render-pipeline with chain of enabled render passes
 // ----------------------------------------------------------------------------
-function updatePostProcessing(event) {
+const params = {
+  Gaussian: false,
+  Mode: 'None',
+  Edge1: 3,
+  Edge2: 3,
+  Edge3: 3,
+};
+
+function updatePostProcessing() {
   let renderPass = vtkForwardPass.newInstance();
-  if (document.querySelector('.gaussPass').checked) {
+  if (params.Gaussian) {
     renderPass = getGaussianBlurPass([renderPass]);
   }
-  if (document.querySelector('.edge1Pass').checked) {
-    const k = document.querySelector('.edge1PassValue').value;
-    renderPass = getEdgeEnhancement1Pass(k, [renderPass]);
+  switch (params.Mode) {
+    case 'Edge1':
+      renderPass = getEdgeEnhancement1Pass(params.Edge1, [renderPass]);
+      break;
+    case 'Edge2':
+      renderPass = getEdgeEnhancement2Pass(params.Edge2, [renderPass]);
+      break;
+    case 'Edge3':
+      renderPass = getEdgeEnhancement3Pass(params.Edge3, [renderPass]);
+      break;
+    case 'EdgeDetect':
+      renderPass = getEdgeDetectPass([renderPass]);
+      break;
+    case 'UnsharpMask':
+      renderPass = getUnsharpMaskPass([renderPass]);
+      break;
+    default:
+      break;
   }
-  if (document.querySelector('.edge2Pass').checked) {
-    const k = document.querySelector('.edge2PassValue').value;
-    renderPass = getEdgeEnhancement2Pass(k, [renderPass]);
-  }
-  if (document.querySelector('.edge3Pass').checked) {
-    const k = document.querySelector('.edge3PassValue').value;
-    renderPass = getEdgeEnhancement3Pass(k, [renderPass]);
-  }
-  if (document.querySelector('.edgeDetect').checked) {
-    renderPass = getEdgeDetectPass([renderPass]);
-  }
-  if (document.querySelector('.unsharpMask').checked) {
-    renderPass = getUnsharpMaskPass([renderPass]);
-  }
-
   view.setRenderPasses([renderPass]);
   renderWindow.render();
 }
+
+let edge1Ctrl;
+let edge2Ctrl;
+let edge3Ctrl;
+
+gui
+  .add(params, 'Gaussian')
+  .name('Gaussian Blur')
+  .onChange(updatePostProcessing);
+
+gui
+  .add(params, 'Mode', [
+    'None',
+    'Edge1',
+    'Edge2',
+    'Edge3',
+    'EdgeDetect',
+    'UnsharpMask',
+  ])
+  .name('Edge Mode')
+  .onChange(() => {
+    updatePostProcessing();
+    edge1Ctrl.disable();
+    edge2Ctrl.disable();
+    edge3Ctrl.disable();
+    if (params.Mode === 'Edge1') edge1Ctrl.enable();
+    if (params.Mode === 'Edge2') edge2Ctrl.enable();
+    if (params.Mode === 'Edge3') edge3Ctrl.enable();
+  });
+
+edge1Ctrl = gui
+  .add(params, 'Edge1', 0, 10, 0.1)
+  .name('Edge1 Strength')
+  .onChange(updatePostProcessing);
+edge2Ctrl = gui
+  .add(params, 'Edge2', 0, 10, 0.1)
+  .name('Edge2 Strength')
+  .onChange(updatePostProcessing);
+edge3Ctrl = gui
+  .add(params, 'Edge3', 0, 10, 0.1)
+  .name('Edge3 Strength')
+  .onChange(updatePostProcessing);
+
+edge1Ctrl.disable();
+edge2Ctrl.disable();
+edge3Ctrl.disable();
 
 reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
   reader.loadData().then(() => {
@@ -169,33 +223,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
     renderer.getActiveCamera().elevation(80);
     renderWindow.render();
 
-    document
-      .querySelector('.gaussPass')
-      .addEventListener('change', updatePostProcessing);
-    document
-      .querySelector('.edgeDetect')
-      .addEventListener('change', updatePostProcessing);
-    document
-      .querySelector('.edge1PassValue')
-      .addEventListener('input', updatePostProcessing);
-    document
-      .querySelector('.edge1Pass')
-      .addEventListener('change', updatePostProcessing);
-    document
-      .querySelector('.edge2PassValue')
-      .addEventListener('input', updatePostProcessing);
-    document
-      .querySelector('.edge2Pass')
-      .addEventListener('change', updatePostProcessing);
-    document
-      .querySelector('.edge3PassValue')
-      .addEventListener('input', updatePostProcessing);
-    document
-      .querySelector('.edge3Pass')
-      .addEventListener('change', updatePostProcessing);
-    document
-      .querySelector('.unsharpMask')
-      .addEventListener('change', updatePostProcessing);
+    updatePostProcessing();
   });
 });
 

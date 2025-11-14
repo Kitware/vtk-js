@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
@@ -18,7 +19,7 @@ import {
   makeListenableSVGNode,
 } from 'vtk.js/Examples/Widgets/Utilities/SVGHelpers';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 const { computeWorldToDisplay } = vtkInteractorObserver;
 
@@ -138,77 +139,103 @@ function setupSVG(viewWidget) {
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+let guiParams;
+const guiControllers = [];
+const gui = new GUI();
 
 let currentHandle = null;
 const svgCleanupCallbacks = new Map();
 
-// Add a new label
-document.querySelector('#addLabel').addEventListener('click', () => {
-  const widget = vtkLabelWidget.newInstance();
-  const handle = widgetManager.addWidget(widget);
-  widgetManager.grabFocus(widget);
-
-  const textProps = {
-    fontSize: 32,
-    fontColor: 'white',
-  };
-  handleTextProps.set(handle, textProps);
-  svgCleanupCallbacks.set(handle, setupSVG(handle));
-
-  // Update control panel when a label is selected
-  handle.onStartInteractionEvent(() => {
-    currentHandle = handle;
-    document.getElementById('txtIpt').value = currentHandle.getText() || '';
-    document.getElementById('fontSize').value = textProps.fontSize;
-    document.getElementById('color').value = textProps.fontColor;
-  });
-});
-
-// Delete a label
-document.querySelector('#deleteLabel').addEventListener('click', () => {
-  if (currentHandle) {
-    currentHandle.reset();
-    widgetManager.removeWidget(currentHandle);
-    svgCleanupCallbacks.get(currentHandle)();
-    svgCleanupCallbacks.delete(currentHandle);
-    handleTextProps.delete(currentHandle);
-    currentHandle = null;
-  }
-});
-
-// Update text
-function updateText() {
-  const input = document.getElementById('txtIpt').value;
-  if (currentHandle) {
-    currentHandle.setText(input);
-    renderWindow.render();
-  }
+function selectHandle(handle, textProps) {
+  currentHandle = handle;
+  guiParams.Text = currentHandle.getText() || '';
+  guiParams.FontSize = textProps.fontSize;
+  guiParams.FontColor = textProps.fontColor;
+  guiControllers.forEach((c) => c.updateDisplay?.());
 }
-document.querySelector('#txtIpt').addEventListener('keyup', updateText);
 
-// Update font size
-function updateFontSize() {
-  const input = document.getElementById('fontSize').value;
-  if (currentHandle) {
-    handleTextProps.set(currentHandle, {
-      ...handleTextProps.get(currentHandle),
-      fontSize: input,
+guiParams = {
+  Text: '',
+  FontSize: 32,
+  FontColor: '#ffffff',
+  AddLabel() {
+    const widget = vtkLabelWidget.newInstance();
+    const handle = widgetManager.addWidget(widget);
+    widgetManager.grabFocus(widget);
+
+    const textProps = {
+      fontSize: 32,
+      fontColor: '#ffffff',
+    };
+    handleTextProps.set(handle, textProps);
+    svgCleanupCallbacks.set(handle, setupSVG(handle));
+
+    handle.onStartInteractionEvent(() => {
+      selectHandle(handle, handleTextProps.get(handle));
     });
-    currentHandle.getWidgetState().modified(); // render svg
-  }
-}
-document.querySelector('#fontSize').addEventListener('input', updateFontSize);
 
-// Update color
-function updateColor() {
-  const input = document.getElementById('color').value;
-  if (currentHandle) {
-    handleTextProps.set(currentHandle, {
-      ...handleTextProps.get(currentHandle),
-      fontColor: input,
-    });
-    currentHandle.getWidgetState().modified(); // render svg
-  }
-}
-document.querySelector('#color').addEventListener('input', updateColor);
+    selectHandle(handle, textProps);
+  },
+  DeleteLabel() {
+    if (currentHandle) {
+      currentHandle.reset();
+      widgetManager.removeWidget(currentHandle);
+      const cleanup = svgCleanupCallbacks.get(currentHandle);
+      cleanup && cleanup();
+      svgCleanupCallbacks.delete(currentHandle);
+      handleTextProps.delete(currentHandle);
+      currentHandle = null;
+    }
+  },
+};
+
+guiControllers.push(
+  gui
+    .add(guiParams, 'Text')
+    .name('Text')
+    .onChange((value) => {
+      if (currentHandle) {
+        currentHandle.setText(value);
+        renderWindow.render();
+      }
+    })
+);
+
+guiControllers.push(
+  gui
+    .add(guiParams, 'FontSize', 8, 128, 1)
+    .name('Font size')
+    .onChange((value) => {
+      if (currentHandle) {
+        const props = handleTextProps.get(currentHandle) || {
+          fontColor: guiParams.FontColor,
+        };
+        handleTextProps.set(currentHandle, {
+          ...props,
+          fontSize: value,
+        });
+        currentHandle.getWidgetState().modified(); // render svg
+      }
+    })
+);
+
+guiControllers.push(
+  gui
+    .addColor(guiParams, 'FontColor')
+    .name('Font color')
+    .onChange((value) => {
+      if (currentHandle) {
+        const props = handleTextProps.get(currentHandle) || {
+          fontSize: guiParams.FontSize,
+        };
+        handleTextProps.set(currentHandle, {
+          ...props,
+          fontColor: value,
+        });
+        currentHandle.getWidgetState().modified(); // render svg
+      }
+    })
+);
+
+gui.add(guiParams, 'AddLabel').name('Add label');
+gui.add(guiParams, 'DeleteLabel').name('Delete label');

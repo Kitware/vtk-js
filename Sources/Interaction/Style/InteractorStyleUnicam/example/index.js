@@ -12,7 +12,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkMouseCameraTrackballZoomToMouseManipulator from '@kitware/vtk.js/Interaction/Manipulators/MouseCameraTrackballZoomToMouseManipulator';
 import vtkOrientationMarkerWidget from '@kitware/vtk.js/Interaction/Widgets/OrientationMarkerWidget';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Renderer setup
@@ -23,7 +23,6 @@ const fullScreenRenderWindow = vtkFullScreenRenderWindow.newInstance({
 });
 const renderWindow = fullScreenRenderWindow.getRenderWindow();
 const renderer = fullScreenRenderWindow.getRenderer();
-fullScreenRenderWindow.addController(controlPanel);
 
 // ----------------------------------------------------------------------------
 // Interactor style setup
@@ -72,50 +71,65 @@ orientationWidget.setMinPixelSize(100);
 orientationWidget.setMaxPixelSize(300);
 
 // ----------------------------------------------------------------------------
-// UI setup
+// UI setup (lil-gui)
 // ----------------------------------------------------------------------------
 
-function updateWorldUpVec() {
-  let useWorldUpVec = document.querySelector('.useWorldUpVec').checked;
+const gui = new GUI();
+const params = {
+  UseWorldUpVec: false,
+  WorldUpX: 0,
+  WorldUpY: 1,
+  WorldUpZ: 0,
+  OrientationMarker: false,
+  ParallelCamera: false,
+};
 
-  const coordinateElements = Array.from(
-    document.querySelector('.coordinates').children
+function applyWorldUpVec() {
+  let useWorldUpVec = params.UseWorldUpVec;
+  const coordinates = [params.WorldUpX, params.WorldUpY, params.WorldUpZ].map(
+    (v) => Number.parseFloat(v)
   );
-  coordinateElements.forEach((element) => {
-    element.disabled = !useWorldUpVec;
-  });
+  const validCoordinates = !coordinates.some(Number.isNaN);
 
-  if (useWorldUpVec) {
-    const coordinates = coordinateElements.map((item) =>
-      Number.parseFloat(item.value)
-    );
-    const validCoordinates = !coordinates.some(Number.isNaN);
-
-    if (validCoordinates) {
-      interactorStyle.setWorldUpVec(...coordinates);
-    } else {
-      useWorldUpVec = false;
-    }
+  if (useWorldUpVec && validCoordinates) {
+    interactorStyle.setWorldUpVec(...coordinates);
+  } else if (useWorldUpVec && !validCoordinates) {
+    useWorldUpVec = false;
   }
 
   interactorStyle.setUseWorldUpVec(useWorldUpVec);
   renderWindow.render();
 }
 
-document.querySelector('.useWorldUpVec').oninput = updateWorldUpVec;
-document.querySelector('.coordinates').oninput = updateWorldUpVec;
+gui
+  .add(params, 'UseWorldUpVec')
+  .name('Use World Up Vector')
+  .onChange(() => applyWorldUpVec());
 
-document.querySelector('.useOrientationMarker').oninput = (ev) => {
-  orientationWidget.setEnabled(ev.target.checked);
-};
+['WorldUpX', 'WorldUpY', 'WorldUpZ'].forEach((key, index) => {
+  gui
+    .add(params, key, -1, 1, 0.1)
+    .name(['Up X', 'Up Y', 'Up Z'][index])
+    .onChange(() => applyWorldUpVec());
+});
 
-document.querySelector('.useParallelCamera').oninput = (ev) => {
-  renderer.getActiveCamera().setParallelProjection(ev.target.checked);
-  renderWindow.render();
-};
+gui
+  .add(params, 'OrientationMarker')
+  .name('Orientation Marker')
+  .onChange((value) => {
+    orientationWidget.setEnabled(!!value);
+  });
+
+gui
+  .add(params, 'ParallelCamera')
+  .name('Parallel Projection')
+  .onChange((value) => {
+    renderer.getActiveCamera().setParallelProjection(!!value);
+    renderWindow.render();
+  });
 
 renderer
   .getActiveCamera()
   .onModified(orientationWidget.updateMarkerOrientation);
 
-updateWorldUpVec();
+applyWorldUpVec();

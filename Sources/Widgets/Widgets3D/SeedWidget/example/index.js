@@ -12,7 +12,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkSeedWidget from '@kitware/vtk.js/Widgets/Widgets3D/SeedWidget';
 import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -56,35 +56,40 @@ renderer.resetCamera();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  AddWidget: () => {
+    widgetManager.releaseFocus(widget);
+    widget = vtkSeedWidget.newInstance();
 
-document.querySelector('#addWidget').addEventListener('click', () => {
-  widgetManager.releaseFocus(widget);
-  widget = vtkSeedWidget.newInstance();
+    // Important: set the manipulator of the widget to constrain movement to the actor
+    widget.setManipulator(manipulator);
+    // Set the color of the seed (random color)
+    widget
+      .getWidgetState()
+      .getMoveHandle()
+      .setColor3(
+        Math.round(Math.random() * 255),
+        Math.round(Math.random() * 255),
+        Math.round(Math.random() * 255)
+      );
 
-  // Important: set the manipulator of the widget to constrain movement to the actor
-  widget.setManipulator(manipulator);
-  // Set the color of the seed (random color)
-  widget
-    .getWidgetState()
-    .getMoveHandle()
-    .setColor3(
-      Math.round(Math.random() * 255),
-      Math.round(Math.random() * 255),
-      Math.round(Math.random() * 255)
-    );
+    // Start placement interaction
+    widget.placeWidget(cone.getOutputData().getBounds());
+    widgetHandle = widgetManager.addWidget(widget);
+    widgetManager.grabFocus(widget);
+    renderWindow.render();
+  },
+  RemoveWidget: () => {
+    const widgets = widgetManager.getWidgets();
+    if (!widgets.length) return;
+    widgetManager.removeWidget(widgets[widgets.length - 1]);
+    renderWindow.render();
+  },
+};
 
-  // Start placement interaction
-  widget.placeWidget(cone.getOutputData().getBounds());
-  widgetHandle = widgetManager.addWidget(widget);
-  widgetManager.grabFocus(widget);
-});
-
-document.querySelector('#removeWidget').addEventListener('click', () => {
-  const widgets = widgetManager.getWidgets();
-  if (!widgets.length) return;
-  widgetManager.removeWidget(widgets[widgets.length - 1]);
-});
+gui.add(params, 'AddWidget').name('Add widget');
+gui.add(params, 'RemoveWidget').name('Remove widget');
 
 // -----------------------------------------------------------
 // globals

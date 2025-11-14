@@ -7,21 +7,38 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource';
 import vtkGenericRenderWindow from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
-
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
 const container = document.querySelector('body');
-const controlContainer = document.createElement('div');
-controlContainer.innerHTML = controlPanel;
-container.appendChild(controlContainer);
+const logs = document.createElement('pre');
+logs.style.padding = '4px';
+
+// lil-gui panel for controls
+const gui = new GUI();
+const guiParams = {
+  translation: true,
+  slider: 255,
+  select: 'Three',
+  reset: () => {
+    // Placeholder for reset action
+    logs.textContent += 'Reset button clicked\n';
+    logs.scrollTop = logs.scrollHeight;
+  },
+};
+gui.add(guiParams, 'translation').name('Click with mouse then press space key');
+gui.add(guiParams, 'slider', 0, 255, 1).name('Click then key up and down');
+gui
+  .add(guiParams, 'select', ['One', 'Two', 'Three', 'Four'])
+  .name('Browse with up/down');
+gui.add(guiParams, 'reset').name('Click and press space key');
+
+gui.domElement.appendChild(logs);
 
 global.RWIs = [];
-
-const logs = document.createElement('pre');
 
 const cone = vtkConeSource.newInstance();
 
@@ -57,9 +74,17 @@ for (let i = 0; i < 3; ++i) {
   grw.resize();
 
   global.RWIs.push(grw.getInteractor());
-  // Pick on mouse right click
   grw.getInteractor().onKeyDown((callData) => {
     logs.textContent += `Pressed ${callData.key} on RWI #${i}\n`;
+    logs.scrollTop = logs.scrollHeight;
   });
 }
-container.appendChild(logs);
+
+// Move the GUI to the top of the body
+container.insertBefore(gui.domElement, container.firstChild);
+
+// Optionally, add a heading as in the original HTML
+const heading = document.createElement('h3');
+heading.textContent =
+  'Click or press tab until you "focus" a render window, then type keys (e.g. r, w, s)';
+container.insertBefore(heading, gui.domElement);

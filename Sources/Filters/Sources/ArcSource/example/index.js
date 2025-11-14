@@ -8,7 +8,7 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkArcSource from '@kitware/vtk.js/Filters/Sources/ArcSource';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -37,20 +37,36 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  angle: 90.0,
+  resolution: 6,
+  useNormalAndAngle: false,
+};
 
-['angle', 'resolution'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    arcSource.set({ [propertyName]: value });
+gui
+  .add(params, 'angle', 0.5, 360.0, 0.1)
+  .name('Angle')
+  .onChange((value) => {
+    arcSource.set({ angle: Number(value) });
     renderer.resetCamera();
     renderWindow.render();
   });
-});
 
-document.querySelector('.useNormalAndAngle').addEventListener('change', (e) => {
-  const value = e.target.checked;
-  arcSource.set({ useNormalAndAngle: value });
-  renderer.resetCamera();
-  renderWindow.render();
-});
+gui
+  .add(params, 'resolution', 1, 100, 1)
+  .name('Resolution')
+  .onChange((value) => {
+    arcSource.set({ resolution: Number(value) });
+    renderer.resetCamera();
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'useNormalAndAngle')
+  .name('Use normal and angle')
+  .onChange((value) => {
+    arcSource.set({ useNormalAndAngle: !!value });
+    renderer.resetCamera();
+    renderWindow.render();
+  });

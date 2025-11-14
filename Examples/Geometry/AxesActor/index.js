@@ -7,11 +7,7 @@ import macro from '@kitware/vtk.js/macros';
 import vtkAxesActor from '@kitware/vtk.js/Rendering/Core/AxesActor';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 
-import controlPanel from './controlPanel.html';
-
-console.warn(
-  'Click on index.ts to open source code for this example --------->'
-);
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -33,7 +29,13 @@ renderWindow.render();
 // UI control handling
 // ----------------------------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  recenter: true,
+  xAxisInvert: false,
+  yAxisInvert: false,
+  zAxisInvert: false,
+};
 
 function updateRendering() {
   axesActor.update();
@@ -41,33 +43,45 @@ function updateRendering() {
   renderWindow.render();
 }
 
-document.querySelector('.recenter').addEventListener('change', (e) => {
-  const config = axesActor.getConfig();
-  config.recenter = !!e.target.checked;
-  axesActor.setConfig(config);
-  updateRendering();
-});
+gui
+  .add(params, 'recenter')
+  .name('Center axis')
+  .onChange((value) => {
+    const config = axesActor.getConfig();
+    config.recenter = !!value;
+    axesActor.setConfig(config);
+    updateRendering();
+  });
 
-document.querySelector('.xAxisInvert').addEventListener('change', (e) => {
-  const config = axesActor.getXConfig();
-  config.invert = !!e.target.checked;
-  axesActor.setXConfig(config);
-  updateRendering();
-});
+gui
+  .add(params, 'xAxisInvert')
+  .name('X axis inversion')
+  .onChange((value) => {
+    const config = axesActor.getXConfig();
+    config.invert = !!value;
+    axesActor.setXConfig(config);
+    updateRendering();
+  });
 
-document.querySelector('.yAxisInvert').addEventListener('change', (e) => {
-  const config = axesActor.getYConfig();
-  config.invert = !!e.target.checked;
-  axesActor.setYConfig(config);
-  updateRendering();
-});
+gui
+  .add(params, 'yAxisInvert')
+  .name('Y axis inversion')
+  .onChange((value) => {
+    const config = axesActor.getYConfig();
+    config.invert = !!value;
+    axesActor.setYConfig(config);
+    updateRendering();
+  });
 
-document.querySelector('.zAxisInvert').addEventListener('change', (e) => {
-  const config = axesActor.getZConfig();
-  config.invert = !!e.target.checked;
-  axesActor.setZConfig(config);
-  updateRendering();
-});
+gui
+  .add(params, 'zAxisInvert')
+  .name('Z axis inversion')
+  .onChange((value) => {
+    const config = axesActor.getZConfig();
+    config.invert = !!value;
+    axesActor.setZConfig(config);
+    updateRendering();
+  });
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

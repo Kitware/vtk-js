@@ -9,7 +9,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkInteractorStyleTrackballCamera from '@kitware/vtk.js/Interaction/Style/InteractorStyleTrackballCamera';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
@@ -52,16 +52,13 @@ interactor.setInteractorStyle(trackballCamera);
 //  Add control panel and listen for changes
 // ----------------------------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-
-document.querySelector('.motionFactor').addEventListener('change', (e) => {
-  const newMotionFactor = Number(e.target.value);
-  trackballCamera.setMotionFactor(newMotionFactor);
+const gui = new GUI();
+const params = { Motion: 10, Zoom: 10 };
+gui.add(params, 'Motion', 1, 100, 1).onChange((v) => {
+  trackballCamera.setMotionFactor(Number(v));
   renderWindow.render();
 });
-
-document.querySelector('.zoomFactor').addEventListener('change', (e) => {
-  const newZoomFactor = Number(e.target.value);
-  trackballCamera.setZoomFactor(newZoomFactor);
+gui.add(params, 'Zoom', 1, 100, 1).onChange((v) => {
+  trackballCamera.setZoomFactor(Number(v));
   renderWindow.render();
 });

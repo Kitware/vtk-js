@@ -11,7 +11,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkAngleWidget from '@kitware/vtk.js/Widgets/Widgets3D/AngleWidget';
 import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -52,16 +52,25 @@ fullScreenRenderer.getInteractor().render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  Angle: 0,
+  GrabFocus: () => {
+    widgetManager.grabFocus(widget);
+    widgetManager.enablePicking();
+    renderer.resetCameraClippingRange();
+    fullScreenRenderer.getInteractor().render();
+  },
+};
+
+gui.add(params, 'Angle').name('Angle').listen();
+gui.add(params, 'GrabFocus').name('Grab focus');
 
 widgetInView.onEndInteractionEvent(() => renderer.resetCameraClippingRange());
 
 widget.getWidgetState().onModified(() => {
-  document.querySelector('#angle').innerText = widget.getAngle();
-});
-
-document.querySelector('button').addEventListener('click', () => {
-  widgetManager.grabFocus(widget);
+  params.Angle = widget.getAngle();
+  gui.controllers.forEach((c) => c.updateDisplay?.());
 });
 
 // -----------------------------------------------------------
