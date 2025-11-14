@@ -9,7 +9,7 @@ import vtkSphereSource from '@kitware/vtk.js/Filters/Sources/SphereSource';
 import vtkCursor3D from '@kitware/vtk.js/Filters/Sources/Cursor3D';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -47,59 +47,181 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-const focalPointRanges = ['focalPointX', 'focalPointY', 'focalPointZ'].map(
-  (id) => document.getElementById(id)
-);
-const handleFocalPointInput = (e) => {
+const gui = new GUI();
+const params = {
+  focalPointX: 0,
+  focalPointY: 0,
+  focalPointZ: 0,
+  modelBoundsXMin: -10,
+  modelBoundsXMax: 10,
+  modelBoundsYMin: -10,
+  modelBoundsYMax: 10,
+  modelBoundsZMin: -10,
+  modelBoundsZMax: 10,
+  outline: true,
+  axes: true,
+  xShadows: true,
+  yShadows: true,
+  zShadows: true,
+  wrap: false,
+  translationMode: false,
+};
+
+function applyFocalPoint() {
   cursor3D.setFocalPoint([
-    focalPointRanges[0].value,
-    focalPointRanges[1].value,
-    focalPointRanges[2].value,
+    params.focalPointX,
+    params.focalPointY,
+    params.focalPointZ,
   ]);
   renderer.resetCameraClippingRange();
   renderWindow.render();
-};
-focalPointRanges.forEach((input) =>
-  input.addEventListener('input', handleFocalPointInput)
-);
-const modelBoundsRanges = [
-  'modelBoundsXMin',
-  'modelBoundsXMax',
-  'modelBoundsYMin',
-  'modelBoundsYMax',
-  'modelBoundsZMin',
-  'modelBoundsZMax',
-].map((id) => document.getElementById(id));
-const handleModelBoundsInput = (e) => {
+}
+
+function applyModelBounds() {
   cursor3D.setModelBounds([
-    modelBoundsRanges[0].value,
-    modelBoundsRanges[1].value,
-    modelBoundsRanges[2].value,
-    modelBoundsRanges[3].value,
-    modelBoundsRanges[4].value,
-    modelBoundsRanges[5].value,
+    params.modelBoundsXMin,
+    params.modelBoundsXMax,
+    params.modelBoundsYMin,
+    params.modelBoundsYMax,
+    params.modelBoundsZMin,
+    params.modelBoundsZMax,
   ]);
   renderer.resetCameraClippingRange();
   renderWindow.render();
-};
-modelBoundsRanges.forEach((input) =>
-  input.addEventListener('input', handleModelBoundsInput)
-);
-const checkBoxes = [
-  'outline',
-  'axes',
-  'xShadows',
-  'yShadows',
-  'zShadows',
-  'wrap',
-  'translationMode',
-].map((id) => document.getElementById(id));
-const handleCheckBoxInput = (e) => {
-  cursor3D.set({ [e.target.id]: e.target.checked });
+}
+
+function applyFlags() {
+  cursor3D.set({
+    outline: params.outline,
+    axes: params.axes,
+    xShadows: params.xShadows,
+    yShadows: params.yShadows,
+    zShadows: params.zShadows,
+    wrap: params.wrap,
+    translationMode: params.translationMode,
+  });
   renderer.resetCameraClippingRange();
   renderWindow.render();
-};
-checkBoxes.forEach((checkBox) =>
-  checkBox.addEventListener('input', handleCheckBoxInput)
-);
+}
+
+const focalFolder = gui.addFolder('Focal point');
+focalFolder
+  .add(params, 'focalPointX', -10, 10, 1)
+  .name('X')
+  .onChange((value) => {
+    params.focalPointX = Number(value);
+    applyFocalPoint();
+  });
+focalFolder
+  .add(params, 'focalPointY', -10, 10, 1)
+  .name('Y')
+  .onChange((value) => {
+    params.focalPointY = Number(value);
+    applyFocalPoint();
+  });
+focalFolder
+  .add(params, 'focalPointZ', -10, 10, 1)
+  .name('Z')
+  .onChange((value) => {
+    params.focalPointZ = Number(value);
+    applyFocalPoint();
+  });
+
+const boundsFolder = gui.addFolder('Model bounds');
+boundsFolder
+  .add(params, 'modelBoundsXMin', -10, 10, 1)
+  .name('X min')
+  .onChange((value) => {
+    params.modelBoundsXMin = Number(value);
+    applyModelBounds();
+  });
+boundsFolder
+  .add(params, 'modelBoundsXMax', -10, 10, 1)
+  .name('X max')
+  .onChange((value) => {
+    params.modelBoundsXMax = Number(value);
+    applyModelBounds();
+  });
+boundsFolder
+  .add(params, 'modelBoundsYMin', -10, 10, 1)
+  .name('Y min')
+  .onChange((value) => {
+    params.modelBoundsYMin = Number(value);
+    applyModelBounds();
+  });
+boundsFolder
+  .add(params, 'modelBoundsYMax', -10, 10, 1)
+  .name('Y max')
+  .onChange((value) => {
+    params.modelBoundsYMax = Number(value);
+    applyModelBounds();
+  });
+boundsFolder
+  .add(params, 'modelBoundsZMin', -10, 10, 1)
+  .name('Z min')
+  .onChange((value) => {
+    params.modelBoundsZMin = Number(value);
+    applyModelBounds();
+  });
+boundsFolder
+  .add(params, 'modelBoundsZMax', -10, 10, 1)
+  .name('Z max')
+  .onChange((value) => {
+    params.modelBoundsZMax = Number(value);
+    applyModelBounds();
+  });
+
+const flagsFolder = gui.addFolder('Display');
+flagsFolder
+  .add(params, 'outline')
+  .name('Outline')
+  .onChange((value) => {
+    params.outline = !!value;
+    applyFlags();
+  });
+flagsFolder
+  .add(params, 'axes')
+  .name('Axes')
+  .onChange((value) => {
+    params.axes = !!value;
+    applyFlags();
+  });
+flagsFolder
+  .add(params, 'xShadows')
+  .name('X shadows')
+  .onChange((value) => {
+    params.xShadows = !!value;
+    applyFlags();
+  });
+flagsFolder
+  .add(params, 'yShadows')
+  .name('Y shadows')
+  .onChange((value) => {
+    params.yShadows = !!value;
+    applyFlags();
+  });
+flagsFolder
+  .add(params, 'zShadows')
+  .name('Z shadows')
+  .onChange((value) => {
+    params.zShadows = !!value;
+    applyFlags();
+  });
+flagsFolder
+  .add(params, 'wrap')
+  .name('Wrap')
+  .onChange((value) => {
+    params.wrap = !!value;
+    applyFlags();
+  });
+flagsFolder
+  .add(params, 'translationMode')
+  .name('Translation mode')
+  .onChange((value) => {
+    params.translationMode = !!value;
+    applyFlags();
+  });
+
+applyFocalPoint();
+applyModelBounds();
+applyFlags();

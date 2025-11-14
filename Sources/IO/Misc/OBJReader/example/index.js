@@ -8,6 +8,7 @@ import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreen
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkMTLReader from '@kitware/vtk.js/IO/Misc/MTLReader';
 import vtkOBJReader from '@kitware/vtk.js/IO/Misc/OBJReader';
+import GUI from 'lil-gui';
 
 // const objs = ['ferrari-f1-race-car', 'mini-cooper', 'space-shuttle-orbiter', 'blskes-plane'];
 const fileName = 'space-shuttle-orbiter';
@@ -16,9 +17,7 @@ const fileName = 'space-shuttle-orbiter';
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
-  background: [0.5, 0.5, 0.5],
-});
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -33,18 +32,11 @@ const reader = vtkOBJReader.newInstance({ splitMode: 'usemtl' });
 const materialsReader = vtkMTLReader.newInstance();
 const scene = [];
 
-function onClick(event) {
-  const el = event.target;
-  const index = Number(el.dataset.index);
-  const actor = scene[index].actor;
-  const visibility = actor.getVisibility();
+const gui = new GUI();
 
-  actor.setVisibility(!visibility);
-  if (visibility) {
-    el.classList.remove('visible');
-  } else {
-    el.classList.add('visible');
-  }
+function updateVisibility(idx, value) {
+  const actor = scene[idx].actor;
+  actor.setVisibility(value);
   render();
 }
 
@@ -72,22 +64,13 @@ materialsReader
         resetCamera();
         render();
 
-        // Build control ui
-        const htmlBuffer = [
-          '<style>.visible { font-weight: bold; } .click { cursor: pointer; min-width: 150px;}</style>',
-        ];
         scene.forEach((item, idx) => {
-          htmlBuffer.push(
-            `<div class="click visible" data-index="${idx}">${item.name}</div>`
-          );
+          const param = { visible: true };
+          gui
+            .add(param, 'visible')
+            .name(item.name)
+            .onChange((value) => updateVisibility(idx, value));
         });
-
-        fullScreenRenderer.addController(htmlBuffer.join('\n'));
-        const nodes = document.querySelectorAll('.click');
-        for (let i = 0; i < nodes.length; i++) {
-          const el = nodes[i];
-          el.onclick = onClick;
-        }
       });
   });
 

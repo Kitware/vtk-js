@@ -8,7 +8,7 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkDiskSource from '@kitware/vtk.js/Filters/Sources/DiskSource';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -39,17 +39,42 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  innerRadius: 0.25,
+  outerRadius: 0.5,
+  radialResolution: 1,
+  circumferentialResolution: 6,
+};
 
-[
-  'innerRadius',
-  'outerRadius',
-  'radialResolution',
-  'circumferentialResolution',
-].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    diskSource.set({ [propertyName]: value });
+gui
+  .add(params, 'innerRadius', 0.0, 2.0, 0.1)
+  .name('Inner radius')
+  .onChange((value) => {
+    diskSource.set({ innerRadius: Number(value) });
     renderWindow.render();
   });
-});
+
+gui
+  .add(params, 'outerRadius', 0.5, 2.0, 0.1)
+  .name('Outer radius')
+  .onChange((value) => {
+    diskSource.set({ outerRadius: Number(value) });
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'radialResolution', 1, 5, 1)
+  .name('Radial resolution')
+  .onChange((value) => {
+    diskSource.set({ radialResolution: Number(value) });
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'circumferentialResolution', 6, 100, 1)
+  .name('Circumferential resolution')
+  .onChange((value) => {
+    diskSource.set({ circumferentialResolution: Number(value) });
+    renderWindow.render();
+  });

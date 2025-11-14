@@ -10,7 +10,7 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkGCodeReader from '@kitware/vtk.js/IO/Misc/GCodeReader';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -18,10 +18,13 @@ import controlPanel from './controller.html';
 
 let renderer = null;
 let renderWindow = null;
-let layersSelector = null;
-let layersLabel = null;
+let gui = null;
+let guiParams = null;
+let actors = [];
+let numLayers = 0;
 
 const reader = vtkGCodeReader.newInstance();
+let fileInputEl = null;
 
 // ----------------------------------------------------------------------------
 
@@ -32,21 +35,69 @@ function refresh() {
   }
 }
 
+function updateActors(visibleLayers) {
+  actors.forEach((actor, index) => {
+    actor.setVisibility(index < visibleLayers);
+  });
+  renderWindow.render();
+}
+
+function handleFileInput(file) {
+  if (file) {
+    const fileReader = new FileReader();
+    fileReader.onload = function onLoad(e) {
+      reader.parse(fileReader.result);
+      // eslint-disable-next-line no-use-before-define
+      update();
+    };
+    fileReader.readAsArrayBuffer(file);
+  }
+}
+
+function createFileInput() {
+  if (fileInputEl) {
+    fileInputEl.remove();
+  }
+  fileInputEl = document.createElement('input');
+  fileInputEl.type = 'file';
+  fileInputEl.accept = '.gcode,.txt';
+  fileInputEl.style.display = 'none';
+  fileInputEl.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileInput(e.target.files[0]);
+    }
+    fileInputEl.value = '';
+  });
+  document.body.appendChild(fileInputEl);
+}
+
+function updateGUI() {
+  if (gui) {
+    gui.destroy();
+  }
+  gui = new GUI();
+  guiParams = {
+    numLayers,
+    visibleLayers: numLayers,
+    selectFile: () => {
+      fileInputEl.click();
+    },
+  };
+  gui.add(guiParams, 'numLayers').name('Number of Layers').listen().disable();
+  gui
+    .add(guiParams, 'visibleLayers', 1, numLayers, 1)
+    .name('Show Layers')
+    .onChange((value) => updateActors(value));
+  gui.add(guiParams, 'selectFile').name('Select GCode File');
+}
+
 function update() {
   const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
-  fullScreenRenderer.addController(controlPanel);
-  layersSelector = document.querySelector('.layers');
-  layersLabel = document.querySelector('.label');
   renderer = fullScreenRenderer.getRenderer();
   renderWindow = fullScreenRenderer.getRenderWindow();
-  const numLayers = reader.getNumberOfOutputPorts();
+  numLayers = reader.getNumberOfOutputPorts();
 
-  layersLabel.innerHTML = `Layers(${numLayers}):`;
-  layersSelector.max = numLayers.toString();
-  layersSelector.value = numLayers.toString();
-
-  const actors = [];
-
+  actors = [];
   for (let idx = 1; idx < numLayers; idx++) {
     const polyData = reader.getOutputData(idx);
     if (polyData) {
@@ -69,44 +120,35 @@ function update() {
     }
   }
 
-  layersSelector.addEventListener('input', (event) => {
-    const visibleLayers = parseInt(event.target.value, 10);
-    actors.forEach((actor, index) => {
-      actor.setVisibility(index < visibleLayers);
-    });
-    renderWindow.render();
-  });
-
   actors.forEach((actor) => renderer.addActor(actor));
+  updateGUI();
+  updateActors(numLayers);
   refresh();
 }
 
 // ----------------------------------------------------------------------------
-// Use a file reader to load a local file
+// Setup GUI for file selection
 // ----------------------------------------------------------------------------
 
-const myContainer = document.querySelector('body');
-const fileContainer = document.createElement('div');
-fileContainer.innerHTML =
-  '<div>Select a gcode file.<br/><input type="file" class="file"/></div>';
-myContainer.appendChild(fileContainer);
-
-const fileInput = fileContainer.querySelector('input');
-
-function handleFile(event) {
-  event.preventDefault();
-  const dataTransfer = event.dataTransfer;
-  const files = event.target.files || dataTransfer.files;
-  myContainer.removeChild(fileContainer);
-  const fileReader = new FileReader();
-  fileReader.onload = function onLoad(e) {
-    reader.parse(fileReader.result);
-    update();
+function setupInitialGUI() {
+  if (gui) {
+    gui.destroy();
+  }
+  createFileInput();
+  gui = new GUI();
+  guiParams = {
+    numLayers: 0,
+    visibleLayers: 0,
+    selectFile: () => {
+      fileInputEl.click();
+    },
   };
-  fileReader.readAsArrayBuffer(files[0]);
+  gui.add(guiParams, 'numLayers').name('Number of Layers').listen().disable();
+  gui.add(guiParams, 'visibleLayers').name('Show Layers').listen().disable();
+  gui.add(guiParams, 'selectFile').name('Select GCode File');
 }
 
-fileInput.addEventListener('change', handleFile);
+setupInitialGUI();
 
 // ----------------------------------------------------------------------------
 // Use the reader to download a file

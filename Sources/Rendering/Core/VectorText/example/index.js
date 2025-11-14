@@ -11,7 +11,7 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -19,11 +19,7 @@ import controlPanel from './controller.html';
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
-fullScreenRenderer.addController(controlPanel);
-const textInput = document.getElementById('text');
-const fontSelect = document.getElementById('font');
-const fontSize = document.getElementById('fontSize');
-const bevelInput = document.getElementById('bevel');
+const gui = new GUI();
 
 const actor = vtkActor.newInstance();
 const mapper = vtkMapper.newInstance();
@@ -39,16 +35,46 @@ const userParms = vtkURLExtract.extractURLParameters();
 const selectedFont = userParms.font || 'Roboto';
 
 const fontKeys = Object.keys(fonts);
-fontKeys.forEach((key) => {
-  const option = document.createElement('option');
-  option.value = key;
-  option.innerHTML = key;
-  fontSelect.appendChild(option);
-});
-fontSelect.value = selectedFont;
-
 let text = 'I love VTK.js!';
 let size = 16;
+const params = { Text: text, Font: selectedFont, FontSize: size, Bevel: true };
+gui
+  .add(params, 'Text')
+  .name('Text')
+  .onChange((v) => {
+    text = v;
+    if (pd) {
+      pd.setText(text);
+      renderer.resetCamera();
+      renderWindow.render();
+    }
+  });
+gui
+  .add(params, 'Font', fontKeys)
+  .name('Font')
+  .onChange((font) => {
+    window.location.search = `?font=${font}`;
+  });
+gui
+  .add(params, 'FontSize', 1, 50, 1)
+  .name('Font Size')
+  .onChange((v) => {
+    size = v;
+    if (pd) {
+      pd.setFontSize(size);
+      renderer.resetCamera();
+      renderWindow.render();
+    }
+  });
+gui
+  .add(params, 'Bevel')
+  .name('Bevel')
+  .onChange((v) => {
+    if (pd) {
+      pd.setBevelEnabled(Boolean(v));
+      renderWindow.render();
+    }
+  });
 
 // ----------------------------------------------------------------------------
 // Add a cone source
@@ -74,7 +100,7 @@ async function load() {
       }
       pd = vtkVectorText.newInstance({
         font,
-        bevelEnabled: bevelInput.checked,
+        bevelEnabled: params.Bevel,
         text,
         size,
         perLetterFaceColors,
@@ -87,30 +113,7 @@ async function load() {
       renderWindow.render();
     });
 
-  textInput.addEventListener('input', (event) => {
-    text = event.target.value;
-    pd.setText(text);
-    renderer.resetCamera();
-    renderWindow.render();
-  });
-
-  fontSize.addEventListener('input', (event) => {
-    size = event.target.value;
-    pd.setFontSize(size);
-    renderer.resetCamera();
-    renderWindow.render();
-  });
-
-  bevelInput.addEventListener('change', (event) => {
-    const bevel = event.target.checked;
-    pd.setBevelEnabled(bevel);
-    renderWindow.render();
-  });
+  // events are handled by GUI controllers above
 }
-
-fontSelect.addEventListener('change', (event) => {
-  const font = event.target.value;
-  window.location.search = `?font=${font}`;
-});
 
 load();

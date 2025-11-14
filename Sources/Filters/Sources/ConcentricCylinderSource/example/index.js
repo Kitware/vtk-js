@@ -10,7 +10,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
 // import { ColorMode, ScalarMode }    from '@kitware/vtk.js/Rendering/Core/Mapper/Constants';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -51,31 +51,91 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  skipInnerFaces: true,
+  startTheta: 0,
+  endTheta: 360,
+  resolution: 60,
+  hideLayer0: false,
+  hideLayer1: false,
+  hideLayer2: false,
+  hideLayer3: false,
+  hideLayer4: false,
+  hideLayer5: false,
+  hideLayer6: false,
+  hideLayer7: false,
+};
 
-document.querySelector('.skipInnerFaces').addEventListener('change', (e) => {
-  const skipInnerFaces = !!e.target.checked;
-  cylinder.setSkipInnerFaces(skipInnerFaces);
+gui
+  .add(params, 'skipInnerFaces')
+  .name('Skip inner cells')
+  .onChange((value) => {
+    cylinder.setSkipInnerFaces(!!value);
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'startTheta', 0, 360, 1)
+  .name('Start theta')
+  .onChange((value) => {
+    cylinder.set({ startTheta: Number(value) });
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'endTheta', 0, 360, 1)
+  .name('End theta')
+  .onChange((value) => {
+    cylinder.set({ endTheta: Number(value) });
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'resolution', 3, 120, 1)
+  .name('Resolution')
+  .onChange((value) => {
+    cylinder.set({ resolution: Number(value) });
+    renderWindow.render();
+  });
+
+function updateLayerMask(layerIndex, hidden) {
+  cylinder.setMaskLayer(layerIndex, !!hidden);
   renderWindow.render();
-});
-
-const masksButtons = document.querySelectorAll('.mask');
-let count = masksButtons.length;
-while (count--) {
-  masksButtons[count].addEventListener('change', (e) => {
-    const mask = !!e.target.checked;
-    const index = Number(e.target.dataset.layer);
-    cylinder.setMaskLayer(index, mask);
-    renderWindow.render();
-  });
 }
-['startTheta', 'endTheta', 'resolution'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    cylinder.set({ [propertyName]: value });
-    renderWindow.render();
-  });
-});
+
+gui
+  .add(params, 'hideLayer0')
+  .name('Hide layer 0')
+  .onChange((value) => updateLayerMask(0, value));
+gui
+  .add(params, 'hideLayer1')
+  .name('Hide layer 1')
+  .onChange((value) => updateLayerMask(1, value));
+gui
+  .add(params, 'hideLayer2')
+  .name('Hide layer 2')
+  .onChange((value) => updateLayerMask(2, value));
+gui
+  .add(params, 'hideLayer3')
+  .name('Hide layer 3')
+  .onChange((value) => updateLayerMask(3, value));
+gui
+  .add(params, 'hideLayer4')
+  .name('Hide layer 4')
+  .onChange((value) => updateLayerMask(4, value));
+gui
+  .add(params, 'hideLayer5')
+  .name('Hide layer 5')
+  .onChange((value) => updateLayerMask(5, value));
+gui
+  .add(params, 'hideLayer6')
+  .name('Hide layer 6')
+  .onChange((value) => updateLayerMask(6, value));
+gui
+  .add(params, 'hideLayer7')
+  .name('Hide layer 7')
+  .onChange((value) => updateLayerMask(7, value));
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

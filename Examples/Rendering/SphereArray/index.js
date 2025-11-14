@@ -11,8 +11,6 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
 import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
 
-// import controlPanel from './controller.html';
-
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------

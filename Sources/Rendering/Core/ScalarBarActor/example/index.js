@@ -16,7 +16,7 @@ import vtkLookupTable from '@kitware/vtk.js/Common/Core/LookupTable';
 import vtkAppendPolyData from '@kitware/vtk.js/Filters/General/AppendPolyData';
 import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
 import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -25,13 +25,25 @@ import controlPanel from './controlPanel.html';
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
-fullScreenRenderer.addController(controlPanel);
 
 // ----------------------------------------------------------------------------
 // Add a cone sources: one for linear, one for log
 // ----------------------------------------------------------------------------
-const minInput = document.querySelector('#min');
-const maxInput = document.querySelector('#max');
+const gui = new GUI();
+const params = {
+  min: 0.1,
+  max: 1000,
+  automated: true,
+  axisLabel: 'Scalar Value',
+  drawNanAnnotation: true,
+  drawBelowRangeSwatch: true,
+  drawAboveRangeSwatch: true,
+  interpolateScalars: false,
+  useColorTransferFunction: false,
+  discretize: false,
+  numberOfColors: 256,
+  log: false,
+};
 
 const linSteps = 40;
 const linearCone = vtkConeSource.newInstance({ resolution: linSteps });
@@ -40,8 +52,8 @@ const npts = linearCone.getOutputData().getPoints().getNumberOfPoints();
 
 const minValue = 0.1;
 const maxValue = 1000;
-minInput.value = minValue;
-maxInput.value = maxValue;
+params.min = minValue;
+params.max = maxValue;
 
 // Linearly spaced points
 const linStep = (maxValue - minValue) / (linSteps - 1);
@@ -131,78 +143,27 @@ function generateTicks(numberOfTicks, useLogScale = false) {
 
 scalarBarActor.setGenerateTicks(generateTicks(10, false));
 
-const logInput = document.querySelector('#log');
-const updateMinInputColor = () => {
-  minInput.style.color =
-    logInput.checked && parseFloat(minInput.value) === 0 ? 'red' : null;
-};
-
 const onMinChanged = () => {
   mapper.setUseLookupTableScalarRange(true);
-  lut.setRange(parseFloat(minInput.value), lut.getRange()[1]);
-  updateMinInputColor();
+  lut.setRange(parseFloat(params.min), lut.getRange()[1]);
   renderWindow.render();
 };
-minInput.addEventListener('input', onMinChanged);
-onMinChanged();
 
 const onMaxChanged = () => {
   mapper.setUseLookupTableScalarRange(true);
-  lut.setRange(lut.getRange()[0], parseFloat(maxInput.value));
+  lut.setRange(lut.getRange()[0], parseFloat(params.max));
   renderWindow.render();
 };
-maxInput.addEventListener('input', onMaxChanged);
+onMinChanged();
 onMaxChanged();
 
-document.querySelector('#automated').addEventListener('change', (event) => {
-  scalarBarActor.setAutomated(event.target.checked);
-  renderWindow.render();
-});
-document.querySelector('#axisLabel').addEventListener('change', (event) => {
-  scalarBarActor.setAxisLabel(event.target.value);
-  renderWindow.render();
-});
-document
-  .querySelector('#drawNanAnnotation')
-  .addEventListener('change', (event) => {
-    scalarBarActor.setDrawNanAnnotation(event.target.checked);
-    renderWindow.render();
-  });
-document
-  .querySelector('#drawBelowRangeSwatch')
-  .addEventListener('change', (event) => {
-    scalarBarActor.setDrawBelowRangeSwatch(event.target.checked);
-    renderWindow.render();
-  });
-document
-  .querySelector('#drawAboveRangeSwatch')
-  .addEventListener('change', (event) => {
-    scalarBarActor.setDrawAboveRangeSwatch(event.target.checked);
-    renderWindow.render();
-  });
-document
-  .querySelector('#interpolateScalars')
-  .addEventListener('change', (event) => {
-    mapper.setInterpolateScalarsBeforeMapping(event.target.checked);
-    renderWindow.render();
-  });
-
-const useColorTransferFunctionInput = document.querySelector(
-  '#useColorTransferFunction'
-);
-
 function updateScalarBarActor() {
-  const useColorTransferFunction = useColorTransferFunctionInput.checked;
+  const useColorTransferFunction = params.useColorTransferFunction;
+  const discretize = params.discretize;
+  const numberOfColors = params.numberOfColors;
 
-  const discretizeInput = document.querySelector('#discretize');
-  discretizeInput.disabled = !useColorTransferFunction;
-  logInput.disabled = !useColorTransferFunction;
-  const numberOfColorsInput = document.querySelector('#numberOfColors');
-  const numberOfColors = parseInt(numberOfColorsInput.value, 10);
-
-  const scale = logInput.checked ? Scale.LOG10 : Scale.LINEAR;
+  const scale = params.log ? Scale.LOG10 : Scale.LINEAR;
   if (useColorTransferFunction) {
-    const discretize = discretizeInput.checked;
     console.log(
       `Create colorTransferFunction with, scale: ${scale}, discretize: ${discretize}, numberOfColors: ${numberOfColors}`
     );
@@ -222,51 +183,95 @@ function updateScalarBarActor() {
   }
   lut = mapper.getLookupTable();
 
-  lut.setRange(parseFloat(minInput.value), parseFloat(maxInput.value));
+  lut.setRange(parseFloat(params.min), parseFloat(params.max));
 
   scalarBarActor.setScalarsToColors(lut);
   scalarBarActor.modified();
   renderWindow.render();
 }
 
-useColorTransferFunctionInput.addEventListener('change', () => {
-  updateScalarBarActor();
-});
+gui.add(params, 'min').name('Min').onFinishChange(onMinChanged);
 
-document.querySelector('#discretize').addEventListener('change', (event) => {
-  if (lut.isA('vtkColorTransferFunction')) {
-    lut.setDiscretize(event.target.checked);
+gui.add(params, 'max').name('Max').onFinishChange(onMaxChanged);
+
+gui
+  .add(params, 'automated')
+  .name('Automated')
+  .onChange((value) => {
+    scalarBarActor.setAutomated(value);
     renderWindow.render();
-  }
-});
+  });
 
-logInput.addEventListener('change', (event) => {
-  const useLog = event.target.checked;
-  if (useLog && parseFloat(minInput.value) === 0) {
-    minInput.value = minValue || 0.0001;
-  }
-  if (useLog && parseFloat(maxInput.value) < 1) {
-    maxInput.value = maxValue;
-  }
+gui
+  .add(params, 'axisLabel')
+  .name('Axis label')
+  .onChange((value) => {
+    scalarBarActor.setAxisLabel(value);
+    renderWindow.render();
+  });
 
-  scalarBarActor.setGenerateTicks(generateTicks(10, useLog));
+gui
+  .add(params, 'drawNanAnnotation')
+  .name('Draw NaN annotation')
+  .onChange((value) => {
+    scalarBarActor.setDrawNanAnnotation(value);
+    renderWindow.render();
+  });
 
-  updateMinInputColor();
-  updateScalarBarActor();
-});
+gui
+  .add(params, 'drawBelowRangeSwatch')
+  .name('Draw below swatch')
+  .onChange((value) => {
+    scalarBarActor.setDrawBelowRangeSwatch(value);
+    renderWindow.render();
+  });
 
-document
-  .querySelector('#numberOfColors')
-  .addEventListener('change', (event) => {
-    if (lut.isA('vtkLookupTable')) {
-      lut.setNumberOfColors(parseInt(event.target.value, 10));
-      lut.modified();
-      lut.build();
+gui
+  .add(params, 'drawAboveRangeSwatch')
+  .name('Draw above swatch')
+  .onChange((value) => {
+    scalarBarActor.setDrawAboveRangeSwatch(value);
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'interpolateScalars')
+  .name('Interpolate scalars')
+  .onChange((value) => {
+    mapper.setInterpolateScalarsBeforeMapping(value);
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'useColorTransferFunction')
+  .name('Use ColorTransferFunction')
+  .onChange(updateScalarBarActor);
+
+gui
+  .add(params, 'discretize')
+  .name('Discretize')
+  .onChange((value) => {
+    params.discretize = value;
+    if (lut.isA('vtkColorTransferFunction')) {
+      lut.setDiscretize(value);
+      renderWindow.render();
     } else {
-      lut.setNumberOfValues(parseInt(event.target.value, 10));
+      updateScalarBarActor();
     }
-    lut.modified();
-    scalarBarActor.setScalarsToColors(lut);
-    scalarBarActor.modified();
-    renderWindow.render();
+  });
+
+gui
+  .add(params, 'numberOfColors', 1, 512, 1)
+  .name('Number of colors')
+  .onChange((value) => {
+    params.numberOfColors = Number(value);
+    updateScalarBarActor();
+  });
+
+gui
+  .add(params, 'log')
+  .name('Log')
+  .onChange((useLog) => {
+    scalarBarActor.setGenerateTicks(generateTicks(10, useLog));
+    updateScalarBarActor();
   });

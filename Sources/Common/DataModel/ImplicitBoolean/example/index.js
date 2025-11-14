@@ -12,7 +12,7 @@ import vtkPlane from '@kitware/vtk.js/Common/DataModel/Plane';
 import vtkCylinder from '@kitware/vtk.js/Common/DataModel/Cylinder';
 import vtkImplicitBoolean from '@kitware/vtk.js/Common/DataModel/ImplicitBoolean';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 const { Operation } = vtkImplicitBoolean;
 
@@ -65,11 +65,10 @@ mapper.setInputConnection(mCubes.getOutputPort());
 // ----------------------------------------------------------------------------
 // UI control handling
 // ----------------------------------------------------------------------------
-fullScreenRenderer.addController(controlPanel);
-
-// Define the volume resolution
-document.querySelector('.volumeResolution').addEventListener('input', (e) => {
-  const value = Number(e.target.value);
+const gui = new GUI();
+const params = { VolumeResolution: 50 };
+gui.add(params, 'VolumeResolution', 10, 100, 1).onChange((v) => {
+  const value = Number(v);
   sample.setSampleDimensions(value, value, value);
   renderWindow.render();
 });

@@ -16,10 +16,11 @@ import vtkContourLoopExtraction from '@kitware/vtk.js/Filters/General/ContourLoo
 import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
 import vtkPoints from '@kitware/vtk.js/Common/Core/Points';
 import vtkCellArray from '@kitware/vtk.js/Common/Core/CellArray';
-import controlPanel from './controlPanel.html';
 
 // Force DataAccessHelper to have access to various data source
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
+
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -33,9 +34,7 @@ const colors = [
   [0, 1, 1], // Cyan
 ];
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
-  background: [0, 0, 0],
-});
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -62,8 +61,7 @@ renderer.addActor(dragonActor);
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-
+const gui = new GUI();
 const state = {
   originX: 0,
   originY: 0,
@@ -167,17 +165,54 @@ const updatePlaneAndGenerateLoops = () => {
   renderWindow.render();
 };
 
-// Update when changing UI
-['originX', 'originY', 'originZ', 'normalX', 'normalY', 'normalZ'].forEach(
-  (propertyName) => {
-    const elem = document.querySelector(`.${propertyName}`);
-    elem.addEventListener('input', (e) => {
-      const value = Number(e.target.value);
-      state[propertyName] = value;
-      updatePlaneAndGenerateLoops();
-    });
-  }
-);
+const originFolder = gui.addFolder('Origin');
+originFolder
+  .add(state, 'originX', -6, 6, 0.01)
+  .name('X')
+  .onChange((value) => {
+    state.originX = Number(value);
+    updatePlaneAndGenerateLoops();
+  });
+originFolder
+  .add(state, 'originY', -0.5, 0.5, 0.01)
+  .name('Y')
+  .onChange((value) => {
+    state.originY = Number(value);
+    updatePlaneAndGenerateLoops();
+  });
+originFolder
+  .add(state, 'originZ', -0.5, 0.5, 0.01)
+  .name('Z')
+  .onChange((value) => {
+    state.originZ = Number(value);
+    updatePlaneAndGenerateLoops();
+  });
+
+const normalFolder = gui.addFolder('Normal');
+normalFolder
+  .add(state, 'normalX', -1, 1, 0.01)
+  .name('X')
+  .onChange((value) => {
+    state.normalX = Number(value);
+    updatePlaneAndGenerateLoops();
+  });
+normalFolder
+  .add(state, 'normalY', -1, 1, 0.01)
+  .name('Y')
+  .onChange((value) => {
+    state.normalY = Number(value);
+    updatePlaneAndGenerateLoops();
+  });
+normalFolder
+  .add(state, 'normalZ', -1, 1, 0.01)
+  .name('Z')
+  .onChange((value) => {
+    state.normalZ = Number(value);
+    updatePlaneAndGenerateLoops();
+  });
+
+originFolder.open();
+normalFolder.open();
 
 HttpDataAccessHelper.fetchBinary(
   `${__BASE_PATH__}/data/StanfordDragon.vtkjs`,

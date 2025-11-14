@@ -10,7 +10,7 @@ import vtkOutlineFilter from '@kitware/vtk.js/Filters/General/OutlineFilter';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import * as vtkMath from '@kitware/vtk.js/Common/Core/Math';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -61,15 +61,27 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  numberOfPoints: 25,
+  radius: 0.25,
+};
 
-['numberOfPoints', 'radius'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    pointSource.set({ [propertyName]: value });
+gui
+  .add(params, 'numberOfPoints', 1, 500, 1)
+  .name('Number of points')
+  .onChange((value) => {
+    pointSource.set({ numberOfPoints: Number(value) });
     renderWindow.render();
   });
-});
+
+gui
+  .add(params, 'radius', 0.1, 0.5, 0.01)
+  .name('Radius')
+  .onChange((value) => {
+    pointSource.set({ radius: Number(value) });
+    renderWindow.render();
+  });
 
 // ----- Console play ground -----
 global.pointSource = pointSource;

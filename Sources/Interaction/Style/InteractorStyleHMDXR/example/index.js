@@ -24,7 +24,7 @@ import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 import vtkResourceLoader from '@kitware/vtk.js/IO/Core/ResourceLoader';
 
 // Custom UI controls, including button to start XR session
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // Dynamically load WebXR polyfill from CDN for WebVR and Cardboard API backwards compatibility
 if (navigator.xr === undefined) {
@@ -103,18 +103,24 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-const vrbutton = document.querySelector('.vrbutton');
+const gui = new GUI();
+let button;
+const params = {
+  toggleVR: () => {
+    if (!XRHelper.isXRSessionActive()) {
+      XRHelper.startXR(XrSessionTypes.HmdVR);
+      button.name('Exit VR');
+    } else {
+      XRHelper.stopXR();
+      button.name('Start VR');
+    }
+  },
+};
 
-vrbutton.addEventListener('click', (e) => {
-  if (vrbutton.textContent === 'Send To VR') {
-    XRHelper.startXR(XrSessionTypes.HmdVR);
-    vrbutton.textContent = 'Return From VR';
-  } else {
-    XRHelper.stopXR();
-    vrbutton.textContent = 'Send To VR';
-  }
-});
+button = gui.add(params, 'toggleVR').name('Start VR');
+
+XRHelper.onSessionStarted(() => button.name('Exit VR'));
+XRHelper.onSessionEnded(() => button.name('Start VR'));
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

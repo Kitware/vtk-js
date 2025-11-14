@@ -31,7 +31,7 @@ import {
   xyzToViewType,
   InteractionMethodsName,
 } from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCursorWidget/Constants';
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // Force the loading of HttpDataAccessHelper to support gzip decompression
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
@@ -70,13 +70,19 @@ const appCursorStyles = {
 // ----------------------------------------------------------------------------
 
 const container = document.querySelector('body');
-const controlContainer = document.createElement('div');
-controlContainer.innerHTML = controlPanel;
-container.appendChild(controlContainer);
-const checkboxTranslation = document.getElementById('checkboxTranslation');
-const checkboxShowRotation = document.getElementById('checkboxShowRotation');
-const checkboxRotation = document.getElementById('checkboxRotation');
-const checkboxOrthogonality = document.getElementById('checkboxOrthogonality');
+
+const guiParams = {
+  Translation: true,
+  ShowRotation: true,
+  Rotation: true,
+  KeepOrthogonality: true,
+  ScaleInPixels: true,
+  Opacity: 255,
+  SlabMode: 'MEAN',
+  SlabNumberOfSlices: 1,
+  Interpolation: 'Nearest',
+  WindowLevel: true,
+};
 
 // ----------------------------------------------------------------------------
 // Setup rendering code
@@ -126,12 +132,11 @@ function createRGBStringFromRGBValues(rgb) {
 const initialPlanesState = { ...widgetState.getPlanes() };
 
 let view3D = null;
-
 for (let i = 0; i < 4; i++) {
   const elementParent = document.createElement('div');
   elementParent.setAttribute('class', 'view');
   elementParent.style.width = '50%';
-  elementParent.style.height = '300px';
+  elementParent.style.height = '50vh';
   elementParent.style.display = 'inline-block';
 
   const element = document.createElement('div');
@@ -175,7 +180,7 @@ for (let i = 0; i < 4; i++) {
     widgetState
       .getStatesWithLabel('center')
       .forEach((state) => state.setOpacity(128));
-    obj.widgetInstance.setKeepOrthogonality(checkboxOrthogonality.checked);
+    obj.widgetInstance.setKeepOrthogonality(guiParams.KeepOrthogonality);
     obj.widgetInstance.setCursorStyles(appCursorStyles);
     obj.widgetManager.enablePicking();
     // Use to update all renderers buffer when actors are moved
@@ -484,109 +489,144 @@ function updateViews() {
   view3D.renderer.resetCameraClippingRange();
 }
 
-checkboxTranslation.addEventListener('change', (ev) => {
-  viewAttributes.forEach((obj) =>
-    obj.widgetInstance.setEnableTranslation(checkboxTranslation.checked)
-  );
-});
+// ----------------------------------------------------------------------------
+// Panel interactions (lil-gui)
+// ----------------------------------------------------------------------------
 
-checkboxShowRotation.addEventListener('change', (ev) => {
-  widgetState
-    .getStatesWithLabel('rotation')
-    .forEach((handle) => handle.setVisible(checkboxShowRotation.checked));
-  viewAttributes.forEach((obj) => {
-    obj.interactor.render();
+const gui = new GUI();
+
+const slabModeOptions = {
+  MIN: SlabMode.MIN,
+  MAX: SlabMode.MAX,
+  MEAN: SlabMode.MEAN,
+  SUM: SlabMode.SUM,
+};
+
+const interactionFolder = gui.addFolder('Interaction');
+interactionFolder
+  .add(guiParams, 'Translation')
+  .name('Allow translation')
+  .onChange((value) => {
+    viewAttributes.forEach((obj) => {
+      obj.widgetInstance?.setEnableTranslation(!!value);
+    });
   });
-  checkboxRotation.checked = checkboxShowRotation.checked;
-  checkboxRotation.disabled = !checkboxShowRotation.checked;
-  checkboxRotation.dispatchEvent(new Event('change'));
-});
 
-checkboxRotation.addEventListener('change', (ev) => {
-  viewAttributes.forEach((obj) =>
-    obj.widgetInstance.setEnableRotation(checkboxRotation.checked)
-  );
-  checkboxOrthogonality.disabled = !checkboxRotation.checked;
-  checkboxOrthogonality.dispatchEvent(new Event('change'));
-});
-
-checkboxOrthogonality.addEventListener('change', (ev) => {
-  viewAttributes.forEach((obj) =>
-    obj.widgetInstance.setKeepOrthogonality(checkboxOrthogonality.checked)
-  );
-});
-
-const checkboxScaleInPixels = document.getElementById('checkboxScaleInPixels');
-checkboxScaleInPixels.addEventListener('change', (ev) => {
-  widget.setScaleInPixels(checkboxScaleInPixels.checked);
-  viewAttributes.forEach((obj) => {
-    obj.interactor.render();
+interactionFolder
+  .add(guiParams, 'ShowRotation')
+  .name('Show rotation')
+  .onChange((value) => {
+    widgetState
+      .getStatesWithLabel('rotation')
+      .forEach((handle) => handle.setVisible(!!value));
+    viewAttributes.forEach((obj) => {
+      obj.interactor.render();
+    });
   });
-});
 
-const opacity = document.getElementById('opacity');
-opacity.addEventListener('input', (ev) => {
-  const opacityValue = document.getElementById('opacityValue');
-  opacityValue.innerHTML = ev.target.value;
-  widget
-    .getWidgetState()
-    .getStatesWithLabel('handles')
-    .forEach((handle) => handle.setOpacity(ev.target.value));
-  viewAttributes.forEach((obj) => {
-    obj.interactor.render();
+interactionFolder
+  .add(guiParams, 'Rotation')
+  .name('Allow rotation')
+  .onChange((value) => {
+    viewAttributes.forEach((obj) => {
+      obj.widgetInstance?.setEnableRotation(!!value);
+    });
   });
-});
 
-const optionSlabModeMin = document.getElementById('slabModeMin');
-optionSlabModeMin.value = SlabMode.MIN;
-const optionSlabModeMax = document.getElementById('slabModeMax');
-optionSlabModeMax.value = SlabMode.MAX;
-const optionSlabModeMean = document.getElementById('slabModeMean');
-optionSlabModeMean.value = SlabMode.MEAN;
-const optionSlabModeSum = document.getElementById('slabModeSum');
-optionSlabModeSum.value = SlabMode.SUM;
-const selectSlabMode = document.getElementById('slabMode');
-selectSlabMode.addEventListener('change', (ev) => {
-  viewAttributes.forEach((obj) => {
-    obj.reslice.setSlabMode(Number(ev.target.value));
+interactionFolder
+  .add(guiParams, 'KeepOrthogonality')
+  .name('Keep orthogonality')
+  .onChange((value) => {
+    viewAttributes.forEach((obj) => {
+      obj.widgetInstance?.setKeepOrthogonality(!!value);
+    });
   });
-  updateViews();
-});
 
-const sliderSlabNumberofSlices = document.getElementById('slabNumber');
-sliderSlabNumberofSlices.addEventListener('change', (ev) => {
-  const trSlabNumberValue = document.getElementById('slabNumberValue');
-  trSlabNumberValue.innerHTML = ev.target.value;
-  viewAttributes.forEach((obj) => {
-    obj.reslice.setSlabNumberOfSlices(ev.target.value);
+interactionFolder
+  .add(guiParams, 'ScaleInPixels')
+  .name('Scale in pixels')
+  .onChange((value) => {
+    widget.setScaleInPixels(!!value);
+    viewAttributes.forEach((obj) => {
+      obj.interactor.render();
+    });
   });
-  updateViews();
-});
 
-const buttonReset = document.getElementById('buttonReset');
-buttonReset.addEventListener('click', () => {
-  widgetState.setPlanes({ ...initialPlanesState });
-  widget.setCenter(widget.getWidgetState().getImage().getCenter());
-  updateViews();
-});
-
-const selectInterpolationMode = document.getElementById('selectInterpolation');
-selectInterpolationMode.addEventListener('change', (ev) => {
-  viewAttributes.forEach((obj) => {
-    obj.reslice.setInterpolationMode(Number(ev.target.selectedIndex));
+const appearanceFolder = gui.addFolder('Appearance');
+appearanceFolder
+  .add(guiParams, 'Opacity', 0, 255, 1)
+  .name('Handles opacity')
+  .onChange((value) => {
+    widgetState
+      .getStatesWithLabel('handles')
+      .forEach((handle) => handle.setOpacity(value));
+    viewAttributes.forEach((obj) => {
+      obj.interactor.render();
+    });
   });
-  updateViews();
-});
 
-const checkboxWindowLevel = document.getElementById('checkboxWindowLevel');
-checkboxWindowLevel.addEventListener('change', (ev) => {
-  viewAttributes.forEach((obj, index) => {
-    if (index < 3) {
-      obj.interactor.setInteractorStyle(
-        checkboxWindowLevel.checked
-          ? vtkInteractorStyleImage.newInstance()
-          : vtkInteractorStyleTrackballCamera.newInstance()
-      );
-    }
+const slabFolder = gui.addFolder('Slab');
+slabFolder
+  .add(guiParams, 'SlabMode', ['MIN', 'MAX', 'MEAN', 'SUM'])
+  .name('Slab mode')
+  .onChange((mode) => {
+    const slabValue = slabModeOptions[mode];
+    viewAttributes.forEach((obj) => {
+      obj.reslice.setSlabMode(slabValue);
+    });
+    updateViews();
   });
-});
+
+slabFolder
+  .add(guiParams, 'SlabNumberOfSlices', 1, 100, 1)
+  .name('Slab slices')
+  .onChange((value) => {
+    viewAttributes.forEach((obj) => {
+      obj.reslice.setSlabNumberOfSlices(value);
+    });
+    updateViews();
+  });
+
+const interpolationFolder = gui.addFolder('Interpolation');
+interpolationFolder
+  .add(guiParams, 'Interpolation', ['Nearest', 'Linear'])
+  .name('Interpolation mode')
+  .onChange((value) => {
+    const index = value === 'Nearest' ? 0 : 1;
+    viewAttributes.forEach((obj) => {
+      obj.reslice.setInterpolationMode(index);
+    });
+    updateViews();
+  });
+
+const miscFolder = gui.addFolder('Misc');
+miscFolder
+  .add(guiParams, 'WindowLevel')
+  .name('Window level')
+  .onChange((value) => {
+    viewAttributes.forEach((obj, index) => {
+      if (index < 3) {
+        obj.interactor.setInteractorStyle(
+          value
+            ? vtkInteractorStyleImage.newInstance()
+            : vtkInteractorStyleTrackballCamera.newInstance()
+        );
+      }
+    });
+  });
+
+miscFolder
+  .add(
+    {
+      ResetViews: () => {
+        widgetState.setPlanes({ ...initialPlanesState });
+        const image = widget.getWidgetState().getImage();
+        if (image) {
+          widget.setCenter(image.getCenter());
+        }
+        updateViews();
+      },
+    },
+    'ResetViews'
+  )
+  .name('Reset views');

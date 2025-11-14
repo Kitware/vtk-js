@@ -27,7 +27,7 @@ import vtkResliceCursorWidget from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCur
 import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 import widgetBehavior from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCursorWidget/cprBehavior';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 import aortaJSON from './aorta_centerline.json';
 import spineJSON from './spine_centerline.json';
 
@@ -42,15 +42,18 @@ const centerlineKeys = Object.keys(centerlineJsons);
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const stretchRenderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
-
-fullScreenRenderer.addController(controlPanel);
-const angleEl = document.getElementById('angle');
-const animateEl = document.getElementById('animate');
-const centerlineEl = document.getElementById('centerline');
-const modeEl = document.getElementById('mode');
-const projectionModeEl = document.getElementById('projectionMode');
-const projectionThicknessEl = document.getElementById('projectionThickness');
-const projectionSamplesEl = document.getElementById('projectionSamples');
+const gui = new GUI();
+const params = {
+  Angle: 0,
+  Animate: false,
+  Centerline: centerlineKeys[0],
+  Mode: 'straightened',
+  ProjectionMode: 'MAXIMUM',
+  ProjectionThickness: 0.1,
+  ProjectionSamples: 1,
+};
+let angleCtrl;
+let animationId;
 
 const interactor = renderWindow.getInteractor();
 interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
@@ -174,7 +177,9 @@ function updateDistanceAndDirection() {
   const signedRadAngle = Math.atan2(baseDirections[1], baseDirections[0]);
   const signedDegAngle = (signedRadAngle * 180) / Math.PI;
   const degAngle = signedDegAngle > 0 ? signedDegAngle : 360 + signedDegAngle;
-  angleEl.value = degAngle;
+  params.Angle = degAngle;
+  // eslint-disable-next-line no-unused-expressions
+  angleCtrl && angleCtrl.updateDisplay?.();
   updateState(
     widgetState,
     widget.getScaleInPixels(),
@@ -286,16 +291,10 @@ function setCenterlineKey(centerlineKey) {
 }
 
 // Create an option for each centerline
-for (let i = 0; i < centerlineKeys.length; ++i) {
-  const name = centerlineKeys[i];
-  const optionEl = document.createElement('option');
-  optionEl.innerText = name;
-  optionEl.value = name;
-  centerlineEl.appendChild(optionEl);
-}
-centerlineEl.addEventListener('input', () =>
-  setCenterlineKey(centerlineEl.value)
-);
+gui
+  .add(params, 'Centerline', centerlineKeys)
+  .name('Centerline')
+  .onChange((v) => setCenterlineKey(v));
 
 // Read image
 reader.setUrl(volumePath).then(() => {
@@ -349,20 +348,17 @@ function setAngleFromSlider(radAngle) {
   updateDistanceAndDirection();
 }
 
-angleEl.addEventListener('input', () =>
-  setAngleFromSlider(radiansFromDegrees(Number.parseFloat(angleEl.value, 10)))
-);
-
-let animationId;
-animateEl.addEventListener('change', () => {
-  if (animateEl.checked) {
+angleCtrl = gui
+  .add(params, 'Angle', 0, 360, 1)
+  .name('Angle (deg)')
+  .onChange((deg) => setAngleFromSlider(radiansFromDegrees(Number(deg))));
+gui.add(params, 'Animate').onChange((on) => {
+  if (on) {
     animationId = setInterval(() => {
-      const currentAngle = radiansFromDegrees(
-        Number.parseFloat(angleEl.value, 10)
-      );
+      const currentAngle = radiansFromDegrees(Number(params.Angle));
       setAngleFromSlider(currentAngle + 0.1);
     }, 60);
-  } else {
+  } else if (animationId) {
     clearInterval(animationId);
   }
 });
@@ -389,52 +385,34 @@ function setUseStretched(value) {
       break;
   }
 }
+gui
+  .add(params, 'Mode', { Straightened: 'straightened', Stretched: 'stretched' })
+  .name('Mode')
+  .onChange((v) => setUseStretched(v));
 
-const stretchEl = document.createElement('option');
-stretchEl.innerText = 'Stretched Mode';
-stretchEl.value = 'stretched';
-modeEl.appendChild(stretchEl);
-const straightEl = document.createElement('option');
-straightEl.innerText = 'Straightened Mode';
-straightEl.value = 'straightened';
-modeEl.appendChild(straightEl);
-modeEl.addEventListener('input', () => setUseStretched(modeEl.value));
-modeEl.value = 'straightened';
-
-Object.keys(ProjectionMode).forEach((projectionMode) => {
-  const optionEl = document.createElement('option');
-  optionEl.innerText =
-    projectionMode.charAt(0) + projectionMode.substring(1).toLowerCase();
-  optionEl.value = projectionMode;
-  projectionModeEl.appendChild(optionEl);
-});
-
-projectionModeEl.addEventListener('input', (ev) => {
-  mapper.setProjectionMode(ProjectionMode[projectionModeEl.value]);
-  renderWindow.render();
-});
-
-projectionThicknessEl.addEventListener('input', (ev) => {
-  const thicknessRatio = Number.parseFloat(projectionThicknessEl.value, 10);
-  const image = mapper.getInputData();
-  if (image) {
-    const spacing = image.getSpacing();
-    const dimensions = image.getDimensions();
-    const diagonal = vec3.len(vec3.mul([], spacing, dimensions));
-    const thickness = diagonal * thicknessRatio;
-    mapper.setProjectionSlabThickness(thickness);
-  }
-  renderWindow.render();
-});
-mapper.setProjectionSlabThickness(0.1);
-projectionThicknessEl.value = mapper.getProjectionSlabThickness();
-
-projectionSamplesEl.addEventListener('input', (ev) => {
-  const samples = Number.parseInt(projectionSamplesEl.value, 10);
-  mapper.setProjectionSlabNumberOfSamples(samples);
-  renderWindow.render();
-});
-projectionSamplesEl.value = mapper.getProjectionSlabNumberOfSamples();
+gui
+  .add(params, 'ProjectionMode', Object.keys(ProjectionMode))
+  .name('Projection Mode')
+  .onChange((m) => {
+    mapper.setProjectionMode(ProjectionMode[m]);
+    renderWindow.render();
+  });
+params.ProjectionThickness = mapper.getProjectionSlabThickness();
+gui
+  .add(params, 'ProjectionThickness', 0.0, 500.0, 0.1)
+  .name('Projection Thickness')
+  .onChange((t) => {
+    mapper.setProjectionSlabThickness(Number(t));
+    renderWindow.render();
+  });
+params.ProjectionSamples = mapper.getProjectionSlabNumberOfSamples();
+gui
+  .add(params, 'ProjectionSamples', 1, 1024, 1)
+  .name('Projection Samples')
+  .onChange((s) => {
+    mapper.setProjectionSlabNumberOfSamples(Number(s));
+    renderWindow.render();
+  });
 
 stretchViewWidgetInstance.onInteractionEvent(updateDistanceAndDirection);
 crossViewWidgetInstance.onInteractionEvent(updateDistanceAndDirection);

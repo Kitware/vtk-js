@@ -16,7 +16,7 @@ import vtkTubeFilter from '@kitware/vtk.js/Filters/General/TubeFilter';
 import { DesiredOutputPrecision } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
 import { VtkDataTypes } from '@kitware/vtk.js/Common/Core/DataArray/Constants';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 const { VaryRadius } = Constants;
 
@@ -113,33 +113,68 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  tubing: true,
+  numberOfSides: 50,
+  radius: 0.1,
+  varyRadius: 'VARY_RADIUS_OFF',
+  capping: false,
+  onRatio: 1,
+};
 
-['numberOfSides', 'radius', 'onRatio'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    tubeFilter.set({ [propertyName]: value });
+gui
+  .add(params, 'tubing')
+  .name('Tubing')
+  .onChange((value) => {
+    global.tubeFilterActor.setVisibility(!!value);
     renderWindow.render();
   });
-});
 
-document.querySelector('.varyRadius').addEventListener('change', (e) => {
-  const value = e.target.value;
-  tubeFilter.set({ varyRadius: VaryRadius[value] });
-  renderWindow.render();
-});
+gui
+  .add(params, 'numberOfSides', 3, 100, 1)
+  .name('Number of sides')
+  .onChange((value) => {
+    tubeFilter.set({ numberOfSides: Number(value) });
+    renderWindow.render();
+  });
 
-document.querySelector('.capping').addEventListener('change', (e) => {
-  const capping = !!e.target.checked;
-  tubeFilter.set({ capping });
-  renderWindow.render();
-});
+gui
+  .add(params, 'radius', 0.01, 1.0, 0.01)
+  .name('Radius')
+  .onChange((value) => {
+    tubeFilter.set({ radius: Number(value) });
+    renderWindow.render();
+  });
 
-document.querySelector('.tubing').addEventListener('change', (e) => {
-  const tubing = !!e.target.checked;
-  global.tubeFilterActor.setVisibility(tubing);
-  renderWindow.render();
-});
+gui
+  .add(params, 'varyRadius', [
+    'VARY_RADIUS_OFF',
+    'VARY_RADIUS_BY_SCALAR',
+    'VARY_RADIUS_BY_VECTOR',
+    'VARY_RADIUS_BY_ABSOLUTE_SCALAR',
+  ])
+  .name('Vary radius')
+  .onChange((value) => {
+    tubeFilter.set({ varyRadius: VaryRadius[value] });
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'capping')
+  .name('Capping')
+  .onChange((value) => {
+    tubeFilter.set({ capping: !!value });
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'onRatio', 1, 4, 1)
+  .name('OnRatio')
+  .onChange((value) => {
+    tubeFilter.set({ onRatio: Number(value) });
+    renderWindow.render();
+  });
 
 // // ----- Console play ground -----
 // global.pointSource = pointSource;

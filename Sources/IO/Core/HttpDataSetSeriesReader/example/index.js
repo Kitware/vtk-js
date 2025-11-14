@@ -12,8 +12,7 @@ import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreen
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkHttpDataSetSeriesReader from '@kitware/vtk.js/IO/Core/HttpDataSetSeriesReader';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
-
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -37,31 +36,46 @@ const reader = vtkHttpDataSetSeriesReader.newInstance({ fetchGzip: true });
 reader
   .setUrl('https://kitware.github.io/vtk-js-datasets/data/temporal')
   .then(() => {
-    fullScreenRenderer.addController(controlPanel);
-
+    const gui = new GUI();
     const timeSteps = reader.getTimeSteps();
-    const timeStepLabel = document.querySelector('#timeStep');
+    const params = { Index: 0, TimeStep: timeSteps[0] };
 
     const updateTimeStep = (index) => {
       const newTimeStep = timeSteps[index];
-      timeStepLabel.textContent = `Current time step: ${newTimeStep}`;
+      params.TimeStep = newTimeStep;
       reader.setUpdateTimeStep(newTimeStep);
       renderer.resetCameraClippingRange();
       renderWindow.render();
     };
 
-    let index = 0;
-    updateTimeStep(index);
+    const idxCtrl = gui
+      .add(params, 'Index', 0, timeSteps.length - 1, 1)
+      .name('Index')
+      .onChange((i) => updateTimeStep(Number(i)));
+    gui.add(params, 'TimeStep').name('Current time step').listen();
+    gui.add(
+      {
+        Previous: () => {
+          params.Index =
+            (params.Index - 1 + timeSteps.length) % timeSteps.length;
+          idxCtrl.updateDisplay?.();
+          updateTimeStep(params.Index);
+        },
+      },
+      'Previous'
+    );
+    gui.add(
+      {
+        Next: () => {
+          params.Index = (params.Index + 1) % timeSteps.length;
+          idxCtrl.updateDisplay?.();
+          updateTimeStep(params.Index);
+        },
+      },
+      'Next'
+    );
 
-    document.querySelector('#previous').onclick = () => {
-      index = (index - 1 + timeSteps.length) % timeSteps.length;
-      updateTimeStep(index);
-    };
-
-    document.querySelector('#next').onclick = () => {
-      index = (index + 1) % timeSteps.length;
-      updateTimeStep(index);
-    };
+    updateTimeStep(0);
   });
 
 const mapper = vtkMapper.newInstance();

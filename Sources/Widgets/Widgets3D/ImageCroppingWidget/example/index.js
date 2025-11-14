@@ -20,7 +20,7 @@ import vtkPlane from '@kitware/vtk.js/Common/DataModel/Plane';
 // Force the loading of HttpDataAccessHelper to support gzip decompression
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -188,23 +188,55 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  FaceHandlesEnabled: widget.getFaceHandlesEnabled(),
+  EdgeHandlesEnabled: widget.getEdgeHandlesEnabled(),
+  CornerHandlesEnabled: widget.getCornerHandlesEnabled(),
+  VolumeFeedback: widget.getVolumeMapper() !== null,
+  AddWidget: () =>
+    widgetRegistration({ currentTarget: { dataset: { action: 'addWidget' } } }),
+  RemoveWidget: () =>
+    widgetRegistration({
+      currentTarget: { dataset: { action: 'removeWidget' } },
+    }),
+};
 
-function updateFlag(e) {
-  const value = !!e.target.checked;
-  const name = e.currentTarget.dataset.name;
-  widget.set({ [name]: value }); // can be called on either viewWidget or parentWidget
+gui
+  .add(params, 'FaceHandlesEnabled')
+  .name('Face handles')
+  .onChange((value) => {
+    widget.set({ faceHandlesEnabled: !!value });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
 
-  widgetManager.enablePicking();
-  renderWindow.render();
-}
+gui
+  .add(params, 'EdgeHandlesEnabled')
+  .name('Edge handles')
+  .onChange((value) => {
+    widget.set({ edgeHandlesEnabled: !!value });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
 
-const elems = document.querySelectorAll('.flag');
-for (let i = 0; i < elems.length; i++) {
-  elems[i].addEventListener('change', updateFlag);
-}
+gui
+  .add(params, 'CornerHandlesEnabled')
+  .name('Corner handles')
+  .onChange((value) => {
+    widget.set({ cornerHandlesEnabled: !!value });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
 
-const buttons = document.querySelectorAll('button');
-for (let i = 0; i < buttons.length; i++) {
-  buttons[i].addEventListener('click', widgetRegistration);
-}
+gui
+  .add(params, 'VolumeFeedback')
+  .name('Volume feedback')
+  .onChange((value) => {
+    widget.set({ volumeMapper: value ? mapper : null });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
+
+gui.add(params, 'AddWidget').name('Add widget');
+gui.add(params, 'RemoveWidget').name('Remove widget');

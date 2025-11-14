@@ -14,7 +14,7 @@ import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunc
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -26,16 +26,22 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
 
 // ----------------------------------------------------------------------------
 // Example code
 // ----------------------------------------------------------------------------
-const minHounsfieldLabel = document.querySelector('#minHounsfieldLabel');
-const maxHounsfieldLabel = document.querySelector('#maxHounsfieldLabel');
-const maxAbsorptionLabel = document.querySelector('#maxAbsorptionLabel');
-const minAbsorptionLabel = document.querySelector('#minAbsorptionLabel');
-const sampleDistanceLabel = document.querySelector('#sampleDistanceLabel');
+// UI params
+const params = {
+  BlendMode: 5,
+  IpScalarMin: 0.0,
+  IpScalarMax: 1.0,
+  MinHounsfield: 1000,
+  MinAbsorption: 0.01,
+  MaxHounsfield: 2500,
+  MaxAbsorption: 0.03,
+  SampleDistance: 1.3,
+};
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 const initialSampleDistance = 1.3;
 
@@ -50,20 +56,21 @@ actorProperty.setPreferSizeOverAccuracy(true);
 actor.setMapper(mapper);
 
 const radonParameters = {
-  minHounsfield: 1000, // water HU for headsq (normally 0)
-  minAbsorption: 0.01,
-  maxHounsfield: 2500, // bone HU for headsq
-  maxAbsorption: 0.03,
+  get minHounsfield() {
+    return params.MinHounsfield;
+  },
+  get minAbsorption() {
+    return params.MinAbsorption;
+  },
+  get maxHounsfield() {
+    return params.MaxHounsfield;
+  },
+  get maxAbsorption() {
+    return params.MaxAbsorption;
+  },
 };
-let sampleDistance = initialSampleDistance;
-sampleDistanceLabel.innerHTML = sampleDistance.toFixed(1);
 
 function updatePiecewiseFunction() {
-  minHounsfieldLabel.innerHTML = radonParameters.minHounsfield.toFixed(0);
-  minAbsorptionLabel.innerHTML = radonParameters.minAbsorption.toFixed(3);
-  maxHounsfieldLabel.innerHTML = radonParameters.maxHounsfield.toFixed(0);
-  maxAbsorptionLabel.innerHTML = radonParameters.maxAbsorption.toFixed(3);
-
   const currentBlendMode = mapper.getBlendMode();
   let opacityFunction;
 
@@ -94,74 +101,30 @@ actor.getProperty().setSpecularPower(10.0);
 
 mapper.setInputConnection(reader.getOutputPort());
 
-function updateMin(event) {
-  radonParameters.minHounsfield = event.target.valueAsNumber;
-  updatePiecewiseFunction();
+function updateSampleDistance(val) {
+  mapper.setSampleDistance(Number(val));
   renderWindow.render();
 }
 
-function updateMax(event) {
-  radonParameters.maxHounsfield = event.target.valueAsNumber;
-  updatePiecewiseFunction();
-  renderWindow.render();
-}
-
-function updateScalarValue(event) {
-  radonParameters.maxAbsorption = event.target.valueAsNumber;
-  updatePiecewiseFunction();
-  renderWindow.render();
-}
-
-function updateScalarValue2(event) {
-  radonParameters.minAbsorption = event.target.valueAsNumber;
-  updatePiecewiseFunction();
-  renderWindow.render();
-}
-
-function updateSampleDistance(event) {
-  sampleDistance = event.target.valueAsNumber;
-  sampleDistanceLabel.innerHTML = sampleDistance.toFixed(3);
-  mapper.setSampleDistance(sampleDistance);
-  renderWindow.render();
-}
-
-function updateScalarMin(event) {
+function updateScalarMin(val) {
   actorProperty.setIpScalarRange(
-    event.target.valueAsNumber,
+    Number(val),
     actorProperty.getIpScalarRange()[1]
   );
   renderWindow.render();
 }
 
-function updateScalarMax(event) {
+function updateScalarMax(val) {
   actorProperty.setIpScalarRange(
     actorProperty.getIpScalarRange()[0],
-    event.target.valueAsNumber
+    Number(val)
   );
   renderWindow.render();
 }
 
-function updateBlendMode(event) {
-  const currentBlendMode = parseInt(event.target.value, 10);
-  const ipScalarEls = document.querySelectorAll('.ipScalar');
-  const radonScalars = document.querySelectorAll('.radonScalar');
-
+function applyBlendMode(currentBlendMode) {
   mapper.setBlendMode(currentBlendMode);
-  actorProperty.setIpScalarRange(0.0, 1.0);
-
-  // if average or additive blend mode
-  for (let i = 0; i < ipScalarEls.length; i += 1) {
-    const el = ipScalarEls[i];
-    el.style.display =
-      currentBlendMode === 3 || currentBlendMode === 4 ? 'table-row' : 'none';
-  }
-
-  // Radon
-  for (let i = 0; i < radonScalars.length; i += 1) {
-    const el = radonScalars[i];
-    el.style.display = currentBlendMode === 5 ? 'table-row' : 'none';
-  }
-
+  actorProperty.setIpScalarRange(params.IpScalarMin, params.IpScalarMax);
   const colorTransferFunction = vtkColorTransferFunction.newInstance();
   if (currentBlendMode === 5) {
     colorTransferFunction.addRGBPoint(0, 0, 0, 0);
@@ -174,7 +137,6 @@ function updateBlendMode(event) {
   }
   actor.getProperty().setRGBTransferFunction(0, colorTransferFunction);
   updatePiecewiseFunction();
-
   renderWindow.render();
 }
 
@@ -187,35 +149,82 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
     renderer.getActiveCamera().elevation(-70);
     updatePiecewiseFunction();
 
-    const el = document.querySelector('.blendMode');
-    el.addEventListener('change', updateBlendMode);
+    let radonFolder;
 
-    const scalarMinEl = document.querySelector('.scalarMin');
-    scalarMinEl.addEventListener('input', updateScalarMin);
-    const scalarMaxEl = document.querySelector('.scalarMax');
-    scalarMaxEl.addEventListener('input', updateScalarMax);
+    // Build GUI controls
+    gui
+      .add(params, 'BlendMode', {
+        Composite: 0,
+        'Maximum Intensity': 1,
+        'Minimum Intensity': 2,
+        'Average Intensity': 3,
+        'Additive Intensity': 4,
+        'Radon transform': 5,
+      })
+      .name('Blend Mode')
+      .onChange((v) => {
+        applyBlendMode(Number(v));
+        // Show/hide Radon folder based on blend mode
+        if (Number(v) === 5) {
+          radonFolder.domElement.style.display = '';
+        } else {
+          radonFolder.domElement.style.display = 'none';
+        }
+      });
+    gui
+      .add(params, 'SampleDistance', 0.1, 2.5, 0.1)
+      .name('Sample distance')
+      .onChange(updateSampleDistance);
 
-    const minInput = document.querySelector('.minHounsfield');
-    minInput.addEventListener('input', updateMin);
-    const maxInput = document.querySelector('.maxHounsfield');
-    maxInput.addEventListener('input', updateMax);
-    const maxAbsorptionInput = document.querySelector('.maxAbsorption');
-    maxAbsorptionInput.addEventListener('input', updateScalarValue);
-    const minAbsorptionInput = document.querySelector('.minAbsorption');
-    minAbsorptionInput.addEventListener('input', updateScalarValue2);
-    const unitV = document.querySelector('.sampleDistance');
-    unitV.addEventListener('input', updateSampleDistance);
+    gui
+      .add(params, 'IpScalarMin', 0, 1, 0.01)
+      .name('IP Scalar Min')
+      .onChange(updateScalarMin);
+    gui
+      .add(params, 'IpScalarMax', 0, 1, 0.01)
+      .name('IP Scalar Max')
+      .onChange(updateScalarMax);
 
-    minInput.value = radonParameters.minHounsfield;
-    maxInput.value = radonParameters.maxHounsfield;
-    maxAbsorptionInput.value = radonParameters.maxAbsorption;
-    minAbsorptionInput.value = radonParameters.minAbsorption;
-    unitV.value = sampleDistance;
+    radonFolder = gui.addFolder('Radon');
+    radonFolder
+      .add(params, 'MinHounsfield', -1024, 3071, 5)
+      .name('First hounsfield')
+      .onChange(() => {
+        updatePiecewiseFunction();
+        renderWindow.render();
+      });
+    radonFolder
+      .add(params, 'MinAbsorption', 0.0, 0.1, 0.001)
+      .name('Min absorption')
+      .onChange(() => {
+        updatePiecewiseFunction();
+        renderWindow.render();
+      });
+    radonFolder
+      .add(params, 'MaxHounsfield', -1024, 3071, 5)
+      .name('Max hounsfield')
+      .onChange(() => {
+        updatePiecewiseFunction();
+        renderWindow.render();
+      });
+    radonFolder
+      .add(params, 'MaxAbsorption', 0.0, 0.1, 0.001)
+      .name('Max absorption')
+      .onChange(() => {
+        updatePiecewiseFunction();
+        renderWindow.render();
+      });
 
-    el.value = 5;
-    const evt = document.createEvent('HTMLEvents');
-    evt.initEvent('change', false, true);
-    el.dispatchEvent(evt);
+    // Hide Radon folder initially if not Radon transform
+    radonFolder.domElement.style.display = params.BlendMode === 5 ? '' : 'none';
+
+    // Initialize state
+    params.MinHounsfield = radonParameters.minHounsfield;
+    params.MaxHounsfield = radonParameters.maxHounsfield;
+    params.MinAbsorption = radonParameters.minAbsorption;
+    params.MaxAbsorption = radonParameters.maxAbsorption;
+    params.SampleDistance = initialSampleDistance;
+    applyBlendMode(5);
   });
 });
 

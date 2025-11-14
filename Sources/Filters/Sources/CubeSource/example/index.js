@@ -8,15 +8,13 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkCubeSource from '@kitware/vtk.js/Filters/Sources/CubeSource';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
-  background: [0, 0, 0],
-});
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -50,66 +48,98 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-
-['xLength', 'yLength', 'zLength'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    pipelines[0].cubeSource.set({ [propertyName]: value });
-    pipelines[1].cubeSource.set({ [propertyName]: value });
+const gui = new GUI();
+const params = {
+  xLength: 1,
+  yLength: 1,
+  zLength: 1,
+  centerX: 0,
+  centerY: 0,
+  centerZ: 0,
+  rotationX: 0,
+  rotationY: 0,
+  rotationZ: 0,
+  reset: () => {
+    params.xLength = 1;
+    params.yLength = 1;
+    params.zLength = 1;
+    params.centerX = 0;
+    params.centerY = 0;
+    params.centerZ = 0;
+    params.rotationX = 0;
+    params.rotationY = 0;
+    params.rotationZ = 0;
+    gui.controllers.forEach((c) => c.updateDisplay?.());
+    // eslint-disable-next-line no-use-before-define
+    updateLengths();
+    // eslint-disable-next-line no-use-before-define
+    updateTransformedCube();
+    renderer.resetCamera();
     renderer.resetCameraClippingRange();
     renderWindow.render();
-  });
-});
+  },
+};
 
-const centerElems = document.querySelectorAll('.center');
-const rotationsElems = document.querySelectorAll('.rotations');
+function updateLengths() {
+  pipelines.forEach(({ cubeSource }) => {
+    cubeSource.set({
+      xLength: params.xLength,
+      yLength: params.yLength,
+      zLength: params.zLength,
+    });
+  });
+  renderer.resetCameraClippingRange();
+  renderWindow.render();
+}
 
 function updateTransformedCube() {
-  const center = [0, 0, 0];
-  const rotations = [0, 0, 0];
-  for (let i = 0; i < 3; i++) {
-    center[Number(centerElems[i].dataset.index)] = Number(centerElems[i].value);
-    rotations[Number(rotationsElems[i].dataset.index)] = Number(
-      rotationsElems[i].value
-    );
-  }
+  const center = [params.centerX, params.centerY, params.centerZ];
+  const rotations = [params.rotationX, params.rotationY, params.rotationZ];
   pipelines[1].cubeSource.set({ center, rotations });
   renderer.resetCameraClippingRange();
   renderWindow.render();
 }
 
-for (let i = 0; i < 3; i++) {
-  centerElems[i].addEventListener('input', updateTransformedCube);
-  rotationsElems[i].addEventListener('input', updateTransformedCube);
-}
+gui
+  .add(params, 'xLength', 1.0, 5.0, 0.5)
+  .name('X length')
+  .onChange(updateLengths);
+gui
+  .add(params, 'yLength', 1.0, 5.0, 0.5)
+  .name('Y length')
+  .onChange(updateLengths);
+gui
+  .add(params, 'zLength', 1.0, 5.0, 0.5)
+  .name('Z length')
+  .onChange(updateLengths);
 
-const lengthElems = document.querySelectorAll('.length');
+gui
+  .add(params, 'centerX', -1.0, 1.0, 0.1)
+  .name('Center X')
+  .onChange(updateTransformedCube);
+gui
+  .add(params, 'centerY', -1.0, 1.0, 0.1)
+  .name('Center Y')
+  .onChange(updateTransformedCube);
+gui
+  .add(params, 'centerZ', -1.0, 1.0, 0.1)
+  .name('Center Z')
+  .onChange(updateTransformedCube);
 
-function resetUI() {
-  const length = [1, 1, 1];
-  const center = [0, 0, 0];
-  const rotations = [0, 0, 0];
-  for (let i = 0; i < 3; i++) {
-    centerElems[i].value = Number(center[i]);
-    rotationsElems[i].value = Number(rotations[i]);
-    lengthElems[i].value = Number(length[i]);
-  }
+gui
+  .add(params, 'rotationX', 0.0, 90.0, 5.0)
+  .name('Rotation X')
+  .onChange(updateTransformedCube);
+gui
+  .add(params, 'rotationY', 0.0, 90.0, 5.0)
+  .name('Rotation Y')
+  .onChange(updateTransformedCube);
+gui
+  .add(params, 'rotationZ', 0.0, 90.0, 5.0)
+  .name('Rotation Z')
+  .onChange(updateTransformedCube);
 
-  for (let i = 0; i < 2; i++) {
-    pipelines[i].cubeSource.set({ xLength: Number(length[0]) });
-    pipelines[i].cubeSource.set({ yLength: Number(length[1]) });
-    pipelines[i].cubeSource.set({ zLength: Number(length[2]) });
-  }
-  pipelines[1].cubeSource.set({ center, rotations });
-
-  renderer.resetCamera();
-  renderer.resetCameraClippingRange();
-  renderWindow.render();
-}
-
-const resetButton = document.querySelector('.reset');
-resetButton.addEventListener('click', resetUI);
+gui.add(params, 'reset').name('Reset');
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

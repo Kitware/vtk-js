@@ -9,7 +9,7 @@ import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreen
 import vtkHttpSceneLoader from '@kitware/vtk.js/IO/Core/HttpSceneLoader';
 import DataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -23,18 +23,15 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // Example code
 // ----------------------------------------------------------------------------
 
+const gui = new GUI();
+const params = { TimeIndex: 0 };
+let timeCtrl;
 function initialiseSelector(steps, applyStep) {
-  const select = document.querySelector('#timeselect');
-  select.addEventListener('change', () => {
-    applyStep(select.selectedIndex);
-  });
-  select.innerHTML = '';
-  steps.forEach((time) => {
-    const option = document.createElement('option');
-    option.setAttribute('value', time);
-    option.innerText = `${time}`;
-    select.appendChild(option);
-  });
+  if (timeCtrl) gui.remove(timeCtrl);
+  timeCtrl = gui
+    .add(params, 'TimeIndex', 0, steps.length - 1, 1)
+    .name('Time step index')
+    .onChange((idx) => applyStep(Number(idx)));
 }
 
 function downloadZipFile(url) {
@@ -100,6 +97,6 @@ downloadZipFile(
 // UI control handling
 // ----------------------------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+// controls created via lil-gui
 
 global.renderWindow = renderWindow;

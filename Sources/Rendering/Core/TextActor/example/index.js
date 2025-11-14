@@ -6,7 +6,7 @@ import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkTextActor from '@kitware/vtk.js/Rendering/Core/TextActor';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -32,19 +32,18 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  text: 'Hello World!',
+};
 
-// -----------------------------------------------------------
-// Make some variables global so that you can inspect and
-// modify objects in your browser's developer console:
-// -----------------------------------------------------------
-
-const textInput = document.getElementById('text');
-textInput.addEventListener('input', (event) => {
-  const value = event.target.value;
-  actor.setInput(value);
-  renderWindow.render();
-});
+gui
+  .add(params, 'text')
+  .name('Text')
+  .onChange((value) => {
+    actor.setInput(value);
+    renderWindow.render();
+  });
 global.actor = actor;
 global.renderer = renderer;
 global.renderWindow = renderWindow;

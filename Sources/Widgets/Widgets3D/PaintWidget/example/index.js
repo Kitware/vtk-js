@@ -29,7 +29,7 @@ import { ViewTypes } from '@kitware/vtk.js/Widgets/Core/WidgetManager/Constants'
 
 import { vec3 } from 'gl-matrix';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -55,7 +55,6 @@ scene.camera.setParallelProjection(true);
 scene.iStyle = vtkInteractorStyleImage.newInstance();
 scene.iStyle.setInteractionMode('IMAGE_SLICING');
 scene.renderWindow.getInteractor().setInteractorStyle(scene.iStyle);
-scene.fullScreenRenderer.addController(controlPanel);
 
 function setCamera(sliceMode, renderer, data) {
   const ijk = [0, 0, 0];
@@ -159,15 +158,6 @@ function readyAll() {
   ready(scene, true);
 }
 
-function updateControlPanel(im, ds) {
-  const slicingMode = im.getSlicingMode();
-  const extent = ds.getExtent();
-  document.querySelector('.slice').setAttribute('min', extent[slicingMode * 2]);
-  document
-    .querySelector('.slice')
-    .setAttribute('max', extent[slicingMode * 2 + 1]);
-}
-
 // ----------------------------------------------------------------------------
 // Load image
 // ----------------------------------------------------------------------------
@@ -201,6 +191,8 @@ labelMap.actor.getProperty().setPiecewiseFunction(labelMap.ofun);
 // opacity is applied to entire labelmap
 labelMap.actor.getProperty().setOpacity(0.5);
 
+let sliceCtrl;
+
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 reader
   .setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`, { loadData: true })
@@ -230,8 +222,6 @@ reader
 
     // set 2D camera position
     setCamera(sliceMode, scene.renderer, image.data);
-
-    updateControlPanel(image.imageMapper, data);
 
     // set text display callback
     scene.circleHandle.onInteractionEvent(() => {
@@ -290,10 +280,8 @@ reader
         // update labelMap layer
         labelMap.imageMapper.set(image.imageMapper.get('slice', 'slicingMode'));
 
-        // update UI
-        document
-          .querySelector('.slice')
-          .setAttribute('max', data.getDimensions()[slicingMode] - 1);
+        // update UI (slice control max)
+        sliceCtrl.max(data.getDimensions()[slicingMode] - 1);
       }
     };
     image.imageMapper.onModified(update);
@@ -306,60 +294,103 @@ window.addEventListener('resize', readyAll);
 readyAll();
 
 // ----------------------------------------------------------------------------
-// UI logic
+// UI logic (lil-gui)
 // ----------------------------------------------------------------------------
 
-document.querySelector('.radius').addEventListener('input', (ev) => {
-  const r = Number(ev.target.value);
+const guiParams = {
+  radius: widgets.paintWidget.getRadius ? widgets.paintWidget.getRadius() : 10,
+  slice: 0,
+  axis: 'K',
+  widget: 'paintWidget',
+  operation: 'draw',
+};
 
-  widgets.paintWidget.setRadius(r);
-  painter.setRadius(r);
-});
+const gui = new GUI();
 
-document.querySelector('.slice').addEventListener('input', (ev) => {
-  image.imageMapper.setSlice(Number(ev.target.value));
-});
+gui
+  .add(guiParams, 'radius', 1, 50, 1)
+  .name('Radius')
+  .onChange((r) => {
+    widgets.paintWidget.setRadius(r);
+    painter.setRadius(r);
+  });
 
-document.querySelector('.axis').addEventListener('input', (ev) => {
-  const sliceMode = 'IJKXYZ'.indexOf(ev.target.value) % 3;
-  image.imageMapper.setSlicingMode(sliceMode);
-  painter.setSlicingMode(sliceMode);
+sliceCtrl = gui
+  .add(guiParams, 'slice', 0, 0, 1)
+  .name('Slice')
+  .onChange((value) => {
+    image.imageMapper.setSlice(Number(value));
+  });
 
-  const direction = [0, 0, 0];
-  direction[sliceMode] = 1;
-  scene.paintHandle.getWidgetState().getHandle().setDirection(direction);
+gui
+  .add(guiParams, 'axis', ['I', 'J', 'K'])
+  .name('Axis')
+  .onChange((value) => {
+    const sliceMode = 'IJK'.indexOf(value);
+    image.imageMapper.setSlicingMode(sliceMode);
+    painter.setSlicingMode(sliceMode);
 
-  setCamera(sliceMode, scene.renderer, image.data);
-  scene.renderWindow.render();
-});
+    const direction = [0, 0, 0];
+    direction[sliceMode] = 1;
+    scene.paintHandle.getWidgetState().getHandle().setDirection(direction);
 
-document.querySelector('.widget').addEventListener('input', (ev) => {
-  activeWidget = ev.target.value;
-  scene.widgetManager.grabFocus(widgets[activeWidget]);
+    setCamera(sliceMode, scene.renderer, image.data);
+    scene.renderWindow.render();
+  });
 
-  scene.paintHandle.setVisibility(activeWidget === 'paintWidget');
-  scene.paintHandle.updateRepresentationForRender();
+gui
+  .add(guiParams, 'widget', ['paintWidget', 'splineWidget', 'polygonWidget'])
+  .name('Widget')
+  .onChange((value) => {
+    activeWidget = value;
+    scene.widgetManager.grabFocus(widgets[activeWidget]);
 
-  scene.splineHandle.reset();
-  scene.splineHandle.setVisibility(activeWidget === 'splineWidget');
-  scene.splineHandle.updateRepresentationForRender();
+    scene.paintHandle.setVisibility(activeWidget === 'paintWidget');
+    scene.paintHandle.updateRepresentationForRender();
 
-  scene.polygonHandle.reset();
-  scene.polygonHandle.setVisibility(activeWidget === 'polygonWidget');
-  scene.polygonHandle.updateRepresentationForRender();
-});
+    scene.splineHandle.reset();
+    scene.splineHandle.setVisibility(activeWidget === 'splineWidget');
+    scene.splineHandle.updateRepresentationForRender();
 
-document.querySelector('.focus').addEventListener('click', () => {
-  scene.widgetManager.grabFocus(widgets[activeWidget]);
-});
+    scene.polygonHandle.reset();
+    scene.polygonHandle.setVisibility(activeWidget === 'polygonWidget');
+    scene.polygonHandle.updateRepresentationForRender();
+  });
 
-document.querySelector('.undo').addEventListener('click', () => {
-  painter.undo();
-});
+gui
+  .add(guiParams, 'operation', ['draw', 'erase'])
+  .name('Operation')
+  .onChange((mode) => {
+    painter.setDrawStencil(mode === 'draw');
+    painter.setErase(mode === 'erase');
+  });
 
-document.querySelector('.redo').addEventListener('click', () => {
-  painter.redo();
-});
+gui
+  .add(
+    {
+      focus: () => scene.widgetManager.grabFocus(widgets[activeWidget]),
+    },
+    'focus'
+  )
+  .name('Grab focus');
+
+gui
+  .add(
+    {
+      undo: () => painter.undo(),
+    },
+    'undo'
+  )
+  .name('Undo');
+
+gui
+  .add(
+    {
+      redo: () => painter.redo(),
+    },
+    'redo'
+  )
+  .name('Redo');
 
 // ----------------------------------------------------------------------------
 // Painting

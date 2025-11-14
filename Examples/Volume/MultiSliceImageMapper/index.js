@@ -13,14 +13,13 @@ import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
 import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper';
 import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 const fullScreenRenderWindow = vtkFullScreenRenderWindow.newInstance({
   background: [0, 0, 0],
 });
 const renderWindow = fullScreenRenderWindow.getRenderWindow();
 const renderer = fullScreenRenderWindow.getRenderer();
-fullScreenRenderWindow.addController(controlPanel);
 
 const imageActorI = vtkImageSlice.newInstance();
 const imageActorJ = vtkImageSlice.newInstance();
@@ -30,23 +29,34 @@ renderer.addActor(imageActorK);
 renderer.addActor(imageActorJ);
 renderer.addActor(imageActorI);
 
-function updateColorLevel(e) {
-  const colorLevel = Number(
-    (e ? e.target : document.querySelector('.colorLevel')).value
-  );
+const gui = new GUI();
+const params = {
+  sliceI: 30,
+  sliceJ: 30,
+  sliceK: 30,
+  colorLevel: 0,
+  colorWindow: 0,
+};
+
+let sliceICtrl;
+let sliceJCtrl;
+let sliceKCtrl;
+let colorLevelCtrl;
+let colorWindowCtrl;
+
+function updateColorLevel(value) {
+  const colorLevel = Number(value);
   imageActorI.getProperty().setColorLevel(colorLevel);
   imageActorJ.getProperty().setColorLevel(colorLevel);
   imageActorK.getProperty().setColorLevel(colorLevel);
   renderWindow.render();
 }
 
-function updateColorWindow(e) {
-  const colorLevel = Number(
-    (e ? e.target : document.querySelector('.colorWindow')).value
-  );
-  imageActorI.getProperty().setColorWindow(colorLevel);
-  imageActorJ.getProperty().setColorWindow(colorLevel);
-  imageActorK.getProperty().setColorWindow(colorLevel);
+function updateColorWindow(value) {
+  const colorWindow = Number(value);
+  imageActorI.getProperty().setColorWindow(colorWindow);
+  imageActorJ.getProperty().setColorWindow(colorWindow);
+  imageActorK.getProperty().setColorWindow(colorWindow);
   renderWindow.render();
 }
 
@@ -62,62 +72,100 @@ reader
 
     const imageMapperK = vtkImageMapper.newInstance();
     imageMapperK.setInputData(data);
-    imageMapperK.setKSlice(30);
+    imageMapperK.setKSlice(params.sliceK);
     imageActorK.setMapper(imageMapperK);
 
     const imageMapperJ = vtkImageMapper.newInstance();
     imageMapperJ.setInputData(data);
-    imageMapperJ.setJSlice(30);
+    imageMapperJ.setJSlice(params.sliceJ);
     imageActorJ.setMapper(imageMapperJ);
 
     const imageMapperI = vtkImageMapper.newInstance();
     imageMapperI.setInputData(data);
-    imageMapperI.setISlice(30);
+    imageMapperI.setISlice(params.sliceI);
     imageActorI.setMapper(imageMapperI);
 
     renderer.resetCamera();
     renderer.resetCameraClippingRange();
     renderWindow.render();
 
-    ['.sliceI', '.sliceJ', '.sliceK'].forEach((selector, idx) => {
-      const el = document.querySelector(selector);
-      el.setAttribute('min', extent[idx * 2 + 0]);
-      el.setAttribute('max', extent[idx * 2 + 1]);
-      el.setAttribute('value', 30);
-    });
+    sliceICtrl.min(extent[0]);
+    sliceICtrl.max(extent[1]);
+    sliceICtrl.setValue(params.sliceI);
+    sliceICtrl.updateDisplay?.();
 
-    ['.colorLevel', '.colorWindow'].forEach((selector) => {
-      document.querySelector(selector).setAttribute('max', dataRange[1]);
-      document.querySelector(selector).setAttribute('value', dataRange[1]);
-    });
-    document
-      .querySelector('.colorLevel')
-      .setAttribute('value', (dataRange[0] + dataRange[1]) / 2);
-    updateColorLevel();
-    updateColorWindow();
+    sliceJCtrl.min(extent[2]);
+    sliceJCtrl.max(extent[3]);
+    sliceJCtrl.setValue(params.sliceJ);
+    sliceJCtrl.updateDisplay?.();
+
+    sliceKCtrl.min(extent[4]);
+    sliceKCtrl.max(extent[5]);
+    sliceKCtrl.setValue(params.sliceK);
+    sliceKCtrl.updateDisplay?.();
+
+    colorLevelCtrl.min(dataRange[0]);
+    colorLevelCtrl.max(dataRange[1]);
+    params.colorLevel = (dataRange[0] + dataRange[1]) / 2;
+    colorLevelCtrl.setValue(params.colorLevel);
+    colorLevelCtrl.updateDisplay?.();
+
+    colorWindowCtrl.min(0);
+    colorWindowCtrl.max(dataRange[1]);
+    params.colorWindow = dataRange[1];
+    colorWindowCtrl.setValue(params.colorWindow);
+    colorWindowCtrl.updateDisplay?.();
+
+    updateColorLevel(params.colorLevel);
+    updateColorWindow(params.colorWindow);
   });
 
-document.querySelector('.sliceI').addEventListener('input', (e) => {
-  imageActorI.getMapper().setISlice(Number(e.target.value));
-  renderWindow.render();
-});
+sliceICtrl = gui
+  .add(params, 'sliceI')
+  .name('Slice I')
+  .onChange((value) => {
+    const mapper = imageActorI.getMapper();
+    if (mapper) {
+      mapper.setISlice(Number(value));
+      renderWindow.render();
+    }
+  });
 
-document.querySelector('.sliceJ').addEventListener('input', (e) => {
-  imageActorJ.getMapper().setJSlice(Number(e.target.value));
-  renderWindow.render();
-});
+sliceJCtrl = gui
+  .add(params, 'sliceJ')
+  .name('Slice J')
+  .onChange((value) => {
+    const mapper = imageActorJ.getMapper();
+    if (mapper) {
+      mapper.setJSlice(Number(value));
+      renderWindow.render();
+    }
+  });
 
-document.querySelector('.sliceK').addEventListener('input', (e) => {
-  imageActorK.getMapper().setKSlice(Number(e.target.value));
-  renderWindow.render();
-});
+sliceKCtrl = gui
+  .add(params, 'sliceK')
+  .name('Slice K')
+  .onChange((value) => {
+    const mapper = imageActorK.getMapper();
+    if (mapper) {
+      mapper.setKSlice(Number(value));
+      renderWindow.render();
+    }
+  });
 
-document
-  .querySelector('.colorLevel')
-  .addEventListener('input', updateColorLevel);
-document
-  .querySelector('.colorWindow')
-  .addEventListener('input', updateColorWindow);
+colorLevelCtrl = gui
+  .add(params, 'colorLevel')
+  .name('Color level')
+  .onChange((value) => {
+    updateColorLevel(value);
+  });
+
+colorWindowCtrl = gui
+  .add(params, 'colorWindow')
+  .name('Color window')
+  .onChange((value) => {
+    updateColorWindow(value);
+  });
 
 global.fullScreen = fullScreenRenderWindow;
 global.imageActorI = imageActorI;

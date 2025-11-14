@@ -10,7 +10,7 @@ import vtkXMLPolyDataReader from '@kitware/vtk.js/IO/XML/XMLPolyDataReader';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkHttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 const { fetchBinary } = vtkHttpDataAccessHelper;
 
@@ -84,45 +84,40 @@ function setVisibleDataset(ds) {
 // UI control handling
 // -----------------------------------------------------------
 
-function uiUpdateSlider(max) {
-  const timeslider = document.querySelector('#timeslider');
-  timeslider.min = 0;
-  timeslider.max = max - 1;
-  timeslider.step = 1;
-}
+const gui = new GUI();
+let timeSeriesData = [];
 
-fullScreenRenderer.addController(controlPanel);
+const params = { TimeStep: 0, TimeValue: 'DOWNLOADING...' };
+const timeCtrl = gui
+  .add(params, 'TimeStep', 0, 1, 1)
+  .name('Time step')
+  .onChange((val) => {
+    const activeDataset = timeSeriesData[Number(val)];
+    if (activeDataset) {
+      setVisibleDataset(activeDataset);
+      params.TimeValue = getDataTimeStep(activeDataset);
+    }
+  });
+gui.add(params, 'TimeValue').name('Time value').listen().disable();
 
 // -----------------------------------------------------------
 // example code logic
 // -----------------------------------------------------------
-
-let timeSeriesData = [];
-
-const timeslider = document.querySelector('#timeslider');
-const timevalue = document.querySelector('#timevalue');
-
-timeslider.addEventListener('input', (e) => {
-  const activeDataset = timeSeriesData[Number(e.target.value)];
-  if (activeDataset) {
-    setVisibleDataset(activeDataset);
-    timevalue.innerText = getDataTimeStep(activeDataset);
-  }
-});
-
 downloadTimeSeries().then((downloadedData) => {
   timeSeriesData = downloadedData.filter((ds) => getDataTimeStep(ds) !== null);
   timeSeriesData.sort((a, b) => getDataTimeStep(a) - getDataTimeStep(b));
 
-  uiUpdateSlider(timeSeriesData.length);
-  timeslider.value = 0;
+  timeCtrl.min(0);
+  timeCtrl.max(timeSeriesData.length - 1);
+  timeCtrl.step(1);
+  params.TimeStep = 0;
 
   // set up camera
   renderer.getActiveCamera().setPosition(0, 55, -22);
   renderer.getActiveCamera().setViewUp(0, 0, -1);
 
   setVisibleDataset(timeSeriesData[0]);
-  timevalue.innerText = getDataTimeStep(timeSeriesData[0]);
+  params.TimeValue = getDataTimeStep(timeSeriesData[0]);
 });
 
 // -----------------------------------------------------------

@@ -14,7 +14,7 @@ import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 import vtkInteractorObserver from '@kitware/vtk.js/Rendering/Core/InteractorObserver';
 
 import { bindSVGRepresentation } from 'vtk.js/Examples/Widgets/Utilities/SVGHelpers';
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 const { computeWorldToDisplay } = vtkInteractorObserver;
 
@@ -54,11 +54,22 @@ let getHandle = {};
 
 renderer.resetCamera();
 
+const gui = new GUI();
+const guiParams = {
+  addWidget() {
+    document.querySelector('#addWidget')?.click();
+  },
+  removeWidget() {
+    document.querySelector('#removeWidget')?.click();
+  },
+};
+
+gui.add(guiParams, 'addWidget').name('Add widget');
+gui.add(guiParams, 'removeWidget').name('Remove widget');
+
 // -----------------------------------------------------------
 // UI control handling
 // -----------------------------------------------------------
-
-fullScreenRenderer.addController(controlPanel);
 
 // -----------------------------------------------------------
 // SVG handling
@@ -110,7 +121,7 @@ function setupSVG(w) {
 // Text Modifiers ------------------------------------------
 
 function updateLinePos() {
-  const input = document.getElementById('linePos').value;
+  const input = document.getElementById('linePos')?.value ?? 0;
   const subState = lineWidget.getWidgetState().getPositionOnLine();
   subState.setPosOnLine(input / 100);
   renderWindow.render();
@@ -123,7 +134,9 @@ function updateText() {
     renderWindow.render();
   }
 }
-document.querySelector('#txtIpt').addEventListener('keyup', updateText);
+
+// Keep text input support when present in DOM
+document.querySelector('#txtIpt')?.addEventListener('keyup', updateText);
 // updateText();
 
 function observeDistance() {
@@ -204,8 +217,8 @@ function selectWidget(index) {
 const inputHandle1 = document.getElementById('idh1');
 const inputHandle2 = document.getElementById('idh2');
 
-inputHandle1.addEventListener('input', updateHandleShape.bind(null, 1));
-inputHandle2.addEventListener('input', updateHandleShape.bind(null, 2));
+inputHandle1?.addEventListener('input', updateHandleShape.bind(null, 1));
+inputHandle2?.addEventListener('input', updateHandleShape.bind(null, 2));
 // inputHandle1.value =
 //   getHandle[1].getShape() === '' ? 'sphere' : getHandle[1].getShape();
 // inputHandle2.value =
@@ -239,10 +252,10 @@ const handleCheckBoxInput = (e) => {
   renderWindow.render();
 };
 checkBoxes.forEach((checkBox) =>
-  checkBox.addEventListener('input', handleCheckBoxInput)
+  checkBox?.addEventListener('input', handleCheckBoxInput)
 );
 
-document.querySelector('#addWidget').addEventListener('click', () => {
+document.querySelector('#addWidget')?.addEventListener('click', () => {
   let currentHandle = null;
   widgetManager.releaseFocus(widget);
   widget = vtkLineWidget.newInstance();
@@ -296,7 +309,7 @@ document.querySelector('#addWidget').addEventListener('click', () => {
   });
 });
 
-document.querySelector('#removeWidget').addEventListener('click', () => {
+document.querySelector('#removeWidget')?.addEventListener('click', () => {
   unselectWidget(selectedWidgetIndex);
   widgetManager.removeWidget(widgetManager.getWidgets()[selectedWidgetIndex]);
   if (svgCleanupCallbacks.length) svgCleanupCallbacks.pop()();

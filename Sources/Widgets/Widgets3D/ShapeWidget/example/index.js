@@ -42,9 +42,11 @@ import { ViewTypes } from '@kitware/vtk.js/Widgets/Core/WidgetManager/Constants'
 
 import { vec3, mat3 } from 'gl-matrix';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 const { computeWorldToDisplay } = vtkInteractorObserver;
+
+let sliceCtrl;
 
 const scene = {};
 
@@ -88,7 +90,6 @@ scene.camera.setParallelProjection(true);
 scene.iStyle = vtkInteractorStyleImage.newInstance();
 scene.iStyle.setInteractionMode('IMAGE_SLICING');
 scene.renderWindow.getInteractor().setInteractorStyle(scene.iStyle);
-scene.fullScreenRenderer.addController(controlPanel);
 
 // ----------------------------------------------------------------------------
 // Widget manager
@@ -176,10 +177,11 @@ function readyAll() {
 
 function updateControlPanel(slicingMode, ds) {
   const bounds = ds.getBounds();
-  document.querySelector('.slice').setAttribute('min', bounds[slicingMode * 2]);
-  document
-    .querySelector('.slice')
-    .setAttribute('max', bounds[slicingMode * 2 + 1]);
+  if (sliceCtrl) {
+    sliceCtrl.min(bounds[slicingMode * 2]);
+    sliceCtrl.max(bounds[slicingMode * 2 + 1]);
+    sliceCtrl.updateDisplay();
+  }
 }
 
 function updateWidgetVisibility(widget, slicePos, i, handle) {
@@ -244,9 +246,11 @@ function updateReslice(
     interactionContext.resetFocalPoint,
     interactionContext.computeFocalPointOffset
   );
-  document.querySelector('.slice').value = scene.rcw
-    .getWidgetState()
-    .getCenter()[slicingMode];
+
+  if (sliceCtrl) {
+    sliceCtrl.setValue(scene.rcw.getWidgetState().getCenter()[slicingMode]);
+  }
+
   scene.renderWindow.render();
   return modified;
 }
@@ -437,9 +441,10 @@ reader
         scene.renderWindow.render();
 
         // update UI
-        document
-          .querySelector('.slice')
-          .setAttribute('max', imageData.getDimensions()[slicingMode] - 1);
+        if (sliceCtrl) {
+          sliceCtrl.max(imageData.getDimensions()[slicingMode] - 1);
+          sliceCtrl.updateDisplay();
+        }
       }
     };
 
@@ -456,7 +461,7 @@ window.addEventListener('resize', readyAll);
 readyAll();
 
 // ----------------------------------------------------------------------------
-// UI logic
+// UI logic (lil-gui)
 // ----------------------------------------------------------------------------
 
 function resetWidgets() {
@@ -467,97 +472,128 @@ function resetWidgets() {
   scene.widgetManager.grabFocus(widgets[activeWidget]);
 }
 
-document.querySelector('.slice').addEventListener('input', (ev) => {
-  const pos = [...scene.rcw.getWidgetState().getCenter()];
-  pos[slicingMode] = Number(ev.target.value);
-  scene.rcw.setCenter(pos);
-  updateReslice({
-    viewType: ViewTypes.XY_PLANE,
-    reslice: scene.reslice,
-    actor: scene.resliceActor,
-    renderer: scene.renderer,
-    resetFocalPoint: true,
-    computeFocalPointOffset: true,
-  });
-  scene.renderWindow.render();
-});
+const gui = new GUI();
+const guiParams = {
+  Slice: 0,
+  Axis: 'K',
+  Widget: 'ellipseWidget',
+};
 
-document.querySelector('.axis').addEventListener('input', (ev) => {
-  const sliceMode = 'IJKO'.indexOf(ev.target.value);
-  const normal = [0, 0, 0];
-  if (sliceMode === 3) {
-    // Oblique mode
-    slicingMode = 2;
-    normal[0] = Math.sqrt(3);
-    normal[1] = Math.sqrt(3);
-    normal[2] = Math.sqrt(3);
-  } else {
-    slicingMode = sliceMode;
-    normal[sliceMode] = 1;
-  }
-  scene.rcwInstance.setViewPlane(ViewTypes.XY_PLANE, normal);
-
-  updateControlPanel(slicingMode, imageData);
-  document.querySelector('.slice').value = scene.rcw
-    .getWidgetState()
-    .getCenter()[slicingMode];
-
-  resetWidgets();
-  updateReslice({
-    viewType: ViewTypes.XY_PLANE,
-    reslice: scene.reslice,
-    actor: scene.resliceActor,
-    renderer: scene.renderer,
-    resetFocalPoint: true,
-    computeFocalPointOffset: true,
-  });
-  scene.renderWindow.render();
-});
-
-document.querySelector('.widget').addEventListener('input', (ev) => {
-  // For demo purpose, hide ellipse handles when the widget loses focus
-  if (activeWidget === 'ellipseWidget') {
-    widgets.ellipseWidget.setHandleVisibility(false);
-  }
-  scene.widgetManager.grabFocus(widgets[ev.target.value]);
-  activeWidget = ev.target.value;
-  if (activeWidget === 'ellipseWidget') {
-    widgets.ellipseWidget.setHandleVisibility(true);
-    scene.ellipseHandle.updateRepresentationForRender();
-  }
-});
-
-document.querySelector('.place').addEventListener('click', () => {
-  if (activeWidget !== 'rectangleWidget') {
-    const widget = widgets[activeWidget];
-    const widgetIndex = activeWidget === 'ellipseWidget' ? 1 : 2;
-    const handle =
-      activeWidget === 'ellipseWidget'
-        ? scene.ellipseHandle
-        : scene.circleHandle;
-    const coord1 = [0, 0, 0];
-    const coord2 = [100, 100, 100];
-    const center = scene.rcw.getWidgetState().getCenter();
-    coord1[slicingMode] = center[slicingMode];
-    coord2[slicingMode] = center[slicingMode];
-    handle.grabFocus();
-    handle.placePoint1(coord1);
-    handle.placePoint2(coord2);
-    // Place circle
-    handle.setCorners(coord1, coord2);
-    // Recompute text position
-    handle.invokeInteractionEvent();
-    handle.loseFocus();
-    // updateWidgetVisibility(widget, coord1, axis, widgetIndex);
-    updateWidgetVisibility(widget, coord1, slicingMode, widgetIndex);
+sliceCtrl = gui
+  .add(guiParams, 'Slice', 0, 0, 1)
+  .name('Slice #')
+  .onChange((value) => {
+    const pos = [...scene.rcw.getWidgetState().getCenter()];
+    pos[slicingMode] = Number(value);
+    scene.rcw.setCenter(pos);
+    updateReslice({
+      viewType: ViewTypes.XY_PLANE,
+      reslice: scene.reslice,
+      actor: scene.resliceActor,
+      renderer: scene.renderer,
+      resetFocalPoint: true,
+      computeFocalPointOffset: true,
+    });
     scene.renderWindow.render();
-  }
-});
+  });
 
-document.querySelector('.reset').addEventListener('click', () => {
-  resetWidgets();
-  scene.renderWindow.render();
-});
+gui
+  .add(guiParams, 'Axis', ['I', 'J', 'K', 'O'])
+  .name('Slice Axis')
+  .onChange((axis) => {
+    const sliceMode = 'IJKO'.indexOf(axis);
+    const normal = [0, 0, 0];
+    if (sliceMode === 3) {
+      // Oblique mode
+      slicingMode = 2;
+      normal[0] = Math.sqrt(3);
+      normal[1] = Math.sqrt(3);
+      normal[2] = Math.sqrt(3);
+    } else {
+      slicingMode = sliceMode;
+      normal[sliceMode] = 1;
+    }
+    scene.rcwInstance.setViewPlane(ViewTypes.XY_PLANE, normal);
+
+    guiParams.Slice = scene.rcw.getWidgetState().getCenter()[slicingMode];
+    sliceCtrl.updateDisplay();
+
+    resetWidgets();
+    updateReslice({
+      viewType: ViewTypes.XY_PLANE,
+      reslice: scene.reslice,
+      actor: scene.resliceActor,
+      renderer: scene.renderer,
+      resetFocalPoint: true,
+      computeFocalPointOffset: true,
+    });
+    scene.renderWindow.render();
+  });
+
+gui
+  .add(guiParams, 'Widget', [
+    'rectangleWidget',
+    'ellipseWidget',
+    'circleWidget',
+  ])
+  .name('Widget')
+  .onChange((value) => {
+    // For demo purpose, hide ellipse handles when the widget loses focus
+    if (activeWidget === 'ellipseWidget') {
+      widgets.ellipseWidget.setHandleVisibility(false);
+    }
+    scene.widgetManager.grabFocus(widgets[value]);
+    activeWidget = value;
+    if (activeWidget === 'ellipseWidget') {
+      widgets.ellipseWidget.setHandleVisibility(true);
+      scene.ellipseHandle.updateRepresentationForRender();
+    }
+  });
+
+gui
+  .add(
+    {
+      place: () => {
+        if (activeWidget !== 'rectangleWidget') {
+          const widget = widgets[activeWidget];
+          const widgetIndex = activeWidget === 'ellipseWidget' ? 1 : 2;
+          const handle =
+            activeWidget === 'ellipseWidget'
+              ? scene.ellipseHandle
+              : scene.circleHandle;
+          const coord1 = [0, 0, 0];
+          const coord2 = [100, 100, 100];
+          const center = scene.rcw.getWidgetState().getCenter();
+          coord1[slicingMode] = center[slicingMode];
+          coord2[slicingMode] = center[slicingMode];
+          handle.grabFocus();
+          handle.placePoint1(coord1);
+          handle.placePoint2(coord2);
+          // Place circle
+          handle.setCorners(coord1, coord2);
+          // Recompute text position
+          handle.invokeInteractionEvent();
+          handle.loseFocus();
+          updateWidgetVisibility(widget, coord1, slicingMode, widgetIndex);
+          scene.renderWindow.render();
+        }
+      },
+    },
+    'place'
+  )
+  .name('Place');
+
+gui
+  .add(
+    {
+      reset: () => {
+        resetWidgets();
+        scene.renderWindow.render();
+      },
+    },
+    'reset'
+  )
+  .name('Reset');
 
 // ----------------------------------------------------------------------------
 // SVG

@@ -13,7 +13,7 @@ import vtkPolyDataNormals from '@kitware/vtk.js/Filters/Core/PolyDataNormals';
 
 import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -158,88 +158,73 @@ fpsMonitor.update();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-// Alert if WebGPU is not being used
-const pipelineNotification = document.querySelector('.device_notification');
+const gui = new GUI();
+const params = {
+  Color: '#ffffff',
+  Roughness: 1.0,
+  Metallic: 1.0,
+  Normal: 0.5,
+  IOR: 1.33,
+  UseBackground: true,
+  SpecularStrength: 1.0,
+  DiffuseStrength: 1.0,
+  FOV: 30,
+};
 if (!('gpu' in navigator)) {
-  pipelineNotification.innerHTML =
-    'This browser does not support WebGPU, falling<br>' +
-    'back to WebGL. Functionality will suffer.';
+  gui.add({ Warning: 'WebGPU not supported (fallback WebGL)' }, 'Warning');
 }
-const colorChange = document.querySelector('.color');
-const roughnessChange = document.querySelector('.roughness');
-const metallicChange = document.querySelector('.metallic');
-const normalChange = document.querySelector('.normal');
-const iorChange = document.querySelector('.ior');
-const eSpecularChange = document.querySelector('.e_specular');
-const eDiffuseChange = document.querySelector('.e_diffuse');
-const angleChange = document.querySelector('.angle');
-const useTextureBackgroundChange = document.querySelector('.use_background');
-
-useTextureBackgroundChange.addEventListener('input', (e) => {
-  const useTexturedBackground = Boolean(e.target.checked);
-  renderer.setUseEnvironmentTextureAsBackground(useTexturedBackground);
-  renderWindow.render();
-  fpsMonitor.update();
-});
-
-angleChange.addEventListener('input', (e) => {
-  const angle = Number(e.target.value);
-  renderer.getActiveCamera().setViewAngle(angle);
-  renderWindow.render();
-  fpsMonitor.update();
-});
-
-eSpecularChange.addEventListener('input', (e) => {
-  const specular = Number(e.target.value);
-  renderer.setEnvironmentTextureSpecularStrength(specular);
-  renderWindow.render();
-  fpsMonitor.update();
-});
-
-eDiffuseChange.addEventListener('input', (e) => {
-  const diffuse = Number(e.target.value);
-  renderer.setEnvironmentTextureDiffuseStrength(diffuse);
-  renderWindow.render();
-  fpsMonitor.update();
-});
-
-roughnessChange.addEventListener('input', (e) => {
-  const roughness = Number(e.target.value);
-  actor.getProperty().setRoughness(roughness);
-  renderWindow.render();
-  fpsMonitor.update();
-});
-
-metallicChange.addEventListener('input', (e) => {
-  const metallic = Number(e.target.value);
-  actor.getProperty().setMetallic(metallic);
-  renderWindow.render();
-  fpsMonitor.update();
-});
-
-normalChange.addEventListener('input', (e) => {
-  const normal = Number(e.target.value);
-  actor.getProperty().setNormalStrength(normal);
-  renderWindow.render();
-  fpsMonitor.update();
-});
-
-iorChange.addEventListener('input', (e) => {
-  const ior = Number(e.target.value);
-  actor.getProperty().setBaseIOR(ior);
-  renderWindow.render();
-  fpsMonitor.update();
-});
-
-colorChange.addEventListener('input', (e) => {
-  const color = hexToRGB(e.target.value);
+gui.addColor(params, 'Color').onChange((val) => {
+  const color = hexToRGB(val);
+  if (!color) return;
   actor
     .getProperty()
     .setDiffuseColor(color.r / 255.0, color.g / 255.0, color.b / 255.0);
   actor
     .getProperty()
     .setAmbientColor(color.r / 255.0, color.g / 255.0, color.b / 255.0);
+  renderWindow.render();
+  fpsMonitor.update();
+});
+gui.add(params, 'Roughness', 0.0, 1.0, 0.01).onChange((v) => {
+  actor.getProperty().setRoughness(Number(v));
+  renderWindow.render();
+  fpsMonitor.update();
+});
+gui.add(params, 'Metallic', 0.0, 1.0, 0.01).onChange((v) => {
+  actor.getProperty().setMetallic(Number(v));
+  renderWindow.render();
+  fpsMonitor.update();
+});
+gui.add(params, 'Normal', 0.0, 1.0, 0.01).onChange((v) => {
+  actor.getProperty().setNormalStrength(Number(v));
+  renderWindow.render();
+  fpsMonitor.update();
+});
+gui.add(params, 'IOR', 0.0, 3.0, 0.01).onChange((v) => {
+  actor.getProperty().setBaseIOR(Number(v));
+  renderWindow.render();
+  fpsMonitor.update();
+});
+gui
+  .add(params, 'UseBackground')
+  .name('Use Textured Background')
+  .onChange((v) => {
+    renderer.setUseEnvironmentTextureAsBackground(Boolean(v));
+    renderWindow.render();
+    fpsMonitor.update();
+  });
+gui.add(params, 'SpecularStrength', 0.0, 2.0, 0.01).onChange((v) => {
+  renderer.setEnvironmentTextureSpecularStrength(Number(v));
+  renderWindow.render();
+  fpsMonitor.update();
+});
+gui.add(params, 'DiffuseStrength', 0.0, 2.0, 0.01).onChange((v) => {
+  renderer.setEnvironmentTextureDiffuseStrength(Number(v));
+  renderWindow.render();
+  fpsMonitor.update();
+});
+gui.add(params, 'FOV', 30, 120, 1).onChange((v) => {
+  renderer.getActiveCamera().setViewAngle(Number(v));
   renderWindow.render();
   fpsMonitor.update();
 });

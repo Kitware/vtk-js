@@ -19,7 +19,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 // import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
 // import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
 // import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -29,7 +29,7 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0.3, 0.3, 0.3],
 });
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -94,19 +94,23 @@ renderer.getActiveCamera().setViewUp(0, 1, 0);
 // TEST PARALLEL ==============
 
 let isParallel = false;
-const button = document.querySelector('.text');
-
 function toggleParallel() {
   isParallel = !isParallel;
   const camera = renderer.getActiveCamera();
   camera.setParallelProjection(isParallel);
-
   renderer.resetCamera();
-
-  button.innerText = `(${isParallel ? 'on' : 'off'})`;
-
   renderWindow.render();
 }
+gui
+  .add({ ParallelProjection: isParallel }, 'ParallelProjection')
+  .name('Parallel projection')
+  .onChange((val) => {
+    isParallel = Boolean(val);
+    const camera = renderer.getActiveCamera();
+    camera.setParallelProjection(isParallel);
+    renderer.resetCamera();
+    renderWindow.render();
+  });
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

@@ -9,7 +9,7 @@ import vtkLineSource from '@kitware/vtk.js/Filters/Sources/LineSource';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import { Representation } from '@kitware/vtk.js/Rendering/Core/Property/Constants';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -43,29 +43,43 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  resolution: 10,
+  x1: -1,
+  y1: 0,
+  z1: 0,
+  x2: 1,
+  y2: 0,
+  z2: 0,
+};
 
-['resolution'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    lineSource.set({ [propertyName]: value });
-    renderWindow.render();
+function updateLine() {
+  lineSource.set({
+    resolution: Number(params.resolution),
+    point1: [params.x1, params.y1, params.z1],
+    point2: [params.x2, params.y2, params.z2],
   });
-});
-const mapping = 'xyz';
-const points = [
-  [0, 0, 0],
-  [0, 0, 0],
-];
-['x1', 'y1', 'z1', 'x2', 'y2', 'z2'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    const pointIdx = Number(propertyName[1]);
-    points[pointIdx - 1][mapping.indexOf(propertyName[0])] = value;
-    lineSource.set({ [`point${pointIdx}`]: points[pointIdx - 1] });
-    renderWindow.render();
+  renderWindow.render();
+}
+
+gui
+  .add(params, 'resolution')
+  .name('Resolution')
+  .onChange((value) => {
+    params.resolution = Number(value);
+    updateLine();
   });
-});
+
+gui.add(params, 'x1').name('Point 1 X').onChange(updateLine);
+gui.add(params, 'y1').name('Point 1 Y').onChange(updateLine);
+gui.add(params, 'z1').name('Point 1 Z').onChange(updateLine);
+
+gui.add(params, 'x2').name('Point 2 X').onChange(updateLine);
+gui.add(params, 'y2').name('Point 2 Y').onChange(updateLine);
+gui.add(params, 'z2').name('Point 2 Z').onChange(updateLine);
+
+updateLine();
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

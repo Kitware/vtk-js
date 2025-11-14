@@ -13,7 +13,7 @@ import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 import vtkInteractorObserver from '@kitware/vtk.js/Rendering/Core/InteractorObserver';
 
 import { bindSVGRepresentation } from 'vtk.js/Examples/Widgets/Utilities/SVGHelpers';
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 const { computeWorldToDisplay } = vtkInteractorObserver;
 
@@ -87,14 +87,19 @@ bindSVGRepresentation(renderer, widget.getWidgetState(), {
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  UseSVGLayer: false,
+  GrabFocus: () => {
+    widgetManager.grabFocus(widget);
+  },
+};
 
-document.querySelector('button').addEventListener('click', () => {
-  widgetManager.grabFocus(widget);
-});
-
-document
-  .querySelector('input[type=checkbox]')
-  .addEventListener('change', (ev) => {
-    widgetManager.setUseSvgLayer(ev.target.checked);
+gui
+  .add(params, 'UseSVGLayer')
+  .name('Use SVG layer')
+  .onChange((value) => {
+    widgetManager.setUseSvgLayer(!!value);
   });
+
+gui.add(params, 'GrabFocus').name('Grab focus');

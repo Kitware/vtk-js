@@ -13,7 +13,7 @@ import vtkSphere from '@kitware/vtk.js/Common/DataModel/Sphere';
 // import vtkPlane                   from '@kitware/vtk.js/Common/DataModel/Plane';
 import vtkImplicitBoolean from '@kitware/vtk.js/Common/DataModel/ImplicitBoolean';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 const { Operation } = vtkImplicitBoolean;
 
@@ -81,37 +81,46 @@ renderer.addActor(outlineActor);
 // ----------------------------------------------------------------------------
 // UI control handling
 // ----------------------------------------------------------------------------
-fullScreenRenderer.addController(controlPanel);
-
-// Define the slicing mode
-document.querySelector('.slicingMode').addEventListener('input', (e) => {
-  const value = Number(e.target.value);
-  mSquares.setSlicingMode(value);
-  renderWindow.render();
-});
-
-// Define the volume resolution
-document.querySelector('.volumeResolution').addEventListener('input', (e) => {
-  const value = Number(e.target.value);
-  sample.setSampleDimensions(value, value, value);
-  mSquares.setSlice(value / 2.0);
-  renderWindow.render();
-});
-
-// Define the sphere radius
-document.querySelector('.sphereRadius').addEventListener('input', (e) => {
-  const value = Number(e.target.value);
-  sphere.setRadius(value);
-  sphere2.setRadius(value);
-  sample.modified();
-  renderWindow.render();
-});
-
-// Indicate whether to merge conincident points or not
-document.querySelector('.mergePoints').addEventListener('change', (e) => {
-  mSquares.setMergePoints(!!e.target.checked);
-  renderWindow.render();
-});
+const gui = new GUI();
+const params = {
+  SlicingMode: 2,
+  VolumeResolution: 50,
+  Radius: 0.025,
+  MergePoints: false,
+};
+gui
+  .add(params, 'SlicingMode', { I: 0, J: 1, K: 2 })
+  .name('Slicing mode')
+  .onChange((v) => {
+    mSquares.setSlicingMode(Number(v));
+    renderWindow.render();
+  });
+gui
+  .add(params, 'VolumeResolution', 10, 100, 1)
+  .name('Volume resolution')
+  .onChange((v) => {
+    const value = Number(v);
+    sample.setSampleDimensions(value, value, value);
+    mSquares.setSlice(value / 2.0);
+    renderWindow.render();
+  });
+gui
+  .add(params, 'Radius', 0.01, 1.0, 0.01)
+  .name('Radius')
+  .onChange((v) => {
+    const value = Number(v);
+    sphere.setRadius(value);
+    sphere2.setRadius(value);
+    sample.modified();
+    renderWindow.render();
+  });
+gui
+  .add(params, 'MergePoints')
+  .name('Merge Points')
+  .onChange((v) => {
+    mSquares.setMergePoints(Boolean(v));
+    renderWindow.render();
+  });
 
 // -----------------------------------------------------------
 const cam = renderer.getActiveCamera();

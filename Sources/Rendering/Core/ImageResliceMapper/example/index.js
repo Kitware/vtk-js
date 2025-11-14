@@ -24,7 +24,7 @@ import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper';
 // to unzip data file
 import { unzipSync } from 'fflate';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 // ----------------------------------------------------------------------------
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0.3, 0.3, 0.34],
@@ -167,73 +167,100 @@ ppty.setColorWindow(1400);
 ppty.setColorLevel(-500);
 actor.setProperty(ppty);
 
-// -----------------------------------------------------------
-// UI control handling
-// -----------------------------------------------------------
-fullScreenRenderer.addController(controlPanel);
-const slabThicknessSlider = document.querySelector('.slabThickness');
-const enableSlab = document.querySelector('.enableSlab');
-enableSlab.addEventListener('click', () => {
-  const slabFieldSet = document.querySelector('.slab');
-  if (slabFieldSet.disabled) {
-    slabFieldSet.disabled = false;
-    enableSlab.innerHTML = 'Disable slab mode';
-    mapper.setSlabThickness(Number(slabThicknessSlider.value));
-    renderWindow.render();
-  } else {
-    slabFieldSet.disabled = true;
-    enableSlab.innerHTML = 'Enable slab mode';
-    mapper.setSlabThickness(0);
-    renderWindow.render();
-  }
-});
+const gui = new GUI();
+const params = {
+  slabEnabled: false,
+  slabType: 'MAX',
+  slabThickness: 20,
+  sliceFunction: 'plane',
+  interpolation: 'linear',
+};
 
-const slabTypes = document.querySelectorAll('.slabType');
-for (let idx = 0; idx < slabTypes.length; ++idx) {
-  const st = slabTypes[idx];
-  st.onchange = (e) => {
-    if (e.target.value === 'min') {
-      mapper.setSlabType(SlabTypes.MIN);
-    } else if (e.target.value === 'max') {
-      mapper.setSlabType(SlabTypes.MAX);
-    } else if (e.target.value === 'sum') {
-      mapper.setSlabType(SlabTypes.SUM);
-    } else {
-      mapper.setSlabType(SlabTypes.MEAN);
-    }
-    renderWindow.render();
-  };
-}
-const sliceFunction = document.querySelectorAll('.spd');
-for (let idx = 0; idx < sliceFunction.length; ++idx) {
-  const st = sliceFunction[idx];
-  st.onchange = (e) => {
-    if (e.target.value === 'plane') {
-      mapper.setSlicePolyData(null);
-    } else {
-      slicePolyDataSource.update();
-      mapper.setSlicePolyData(slicePolyDataSource.getOutputData());
-    }
-    renderWindow.render();
-  };
-}
-const interpTypes = document.querySelectorAll('.interp');
-for (let idx = 0; idx < interpTypes.length; ++idx) {
-  const st = interpTypes[idx];
-  st.onchange = (e) => {
-    if (e.target.value === 'linear') {
-      actor.getProperty().setInterpolationType(InterpolationType.LINEAR);
-    } else {
-      actor.getProperty().setInterpolationType(InterpolationType.NEAREST);
-    }
-    renderWindow.render();
-  };
-}
-document.querySelector('.slabThickness').addEventListener('change', (e) => {
-  const value = Number(e.target.value);
-  mapper.setSlabThickness(value);
+function applySlabEnabled() {
+  if (params.slabEnabled) {
+    mapper.setSlabThickness(Number(params.slabThickness));
+  } else {
+    mapper.setSlabThickness(0);
+  }
   renderWindow.render();
-});
+}
+
+function applySlabType() {
+  if (params.slabType === 'MIN') {
+    mapper.setSlabType(SlabTypes.MIN);
+  } else if (params.slabType === 'SUM') {
+    mapper.setSlabType(SlabTypes.SUM);
+  } else if (params.slabType === 'MEAN') {
+    mapper.setSlabType(SlabTypes.MEAN);
+  } else {
+    mapper.setSlabType(SlabTypes.MAX);
+  }
+  renderWindow.render();
+}
+
+function applySliceFunction() {
+  if (params.sliceFunction === 'plane') {
+    mapper.setSlicePolyData(null);
+  } else {
+    slicePolyDataSource.update();
+    mapper.setSlicePolyData(slicePolyDataSource.getOutputData());
+  }
+  renderWindow.render();
+}
+
+function applyInterpolation() {
+  if (params.interpolation === 'linear') {
+    actor.getProperty().setInterpolationType(InterpolationType.LINEAR);
+  } else {
+    actor.getProperty().setInterpolationType(InterpolationType.NEAREST);
+  }
+  renderWindow.render();
+}
+
+gui
+  .add(params, 'sliceFunction', ['plane', 'cylinder'])
+  .name('Slice function')
+  .onChange((value) => {
+    params.sliceFunction = value;
+    applySliceFunction();
+  });
+
+gui
+  .add(params, 'interpolation', ['linear', 'nearest'])
+  .name('Interpolation')
+  .onChange((value) => {
+    params.interpolation = value;
+    applyInterpolation();
+  });
+
+const slabModeCtrl = gui
+  .add(params, 'slabEnabled')
+  .name('Slab mode')
+  .onChange((value) => {
+    params.slabEnabled = value;
+    applySlabEnabled();
+  });
+
+gui
+  .add(params, 'slabType', ['MIN', 'MAX', 'MEAN', 'SUM'])
+  .name('Slab type')
+  .onChange((value) => {
+    params.slabType = value;
+    applySlabType();
+  });
+
+gui
+  .add(params, 'slabThickness', 1, 40, 1)
+  .name('Slab thickness')
+  .onChange((value) => {
+    params.slabThickness = Number(value);
+    applySlabEnabled();
+  });
+
+applySliceFunction();
+applyInterpolation();
+applySlabType();
+applySlabEnabled();
 
 // After the itk-wasm UMD script has been loaded, `window.itk` provides the itk-wasm API.
 vtkResourceLoader
@@ -241,7 +268,7 @@ vtkResourceLoader
     'https://cdn.jsdelivr.net/npm/itk-wasm@1.0.0-b.8/dist/umd/itk-wasm.js'
   )
   .then(update)
-  .then(enableSlab.click());
+  .then(() => slabModeCtrl.setValue(true));
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

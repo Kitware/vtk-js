@@ -21,7 +21,7 @@ import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransf
 import vtkPlane from '@kitware/vtk.js/Common/DataModel/Plane';
 
 // import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -31,7 +31,9 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0.3, 0.3, 0.3],
 });
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+let plane1Ctrl;
+let plane2Ctrl;
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -168,59 +170,65 @@ reader
 
       renderWindow.render();
 
-      let el = document.querySelector('.plane1Position');
-      el.setAttribute('min', -sizeX);
-      el.setAttribute('max', sizeX);
-      el.setAttribute('value', clipPlane1Position);
-
-      el = document.querySelector('.plane2Position');
-      el.setAttribute('min', -sizeY);
-      el.setAttribute('max', sizeY);
-      el.setAttribute('value', clipPlane2Position);
+      plane1Ctrl.min(-sizeX);
+      plane1Ctrl.max(sizeX);
+      plane2Ctrl.min(-sizeY);
+      plane2Ctrl.max(sizeY);
     });
   });
 
 // TEST PARALLEL ==============
 
 let isParallel = false;
-const button = document.querySelector('.text');
-
 function toggleParallel() {
   isParallel = !isParallel;
   const camera = renderer.getActiveCamera();
   camera.setParallelProjection(isParallel);
-
   renderer.resetCamera();
-
-  button.innerText = `(${isParallel ? 'on' : 'off'})`;
-
   renderWindow.render();
 }
+const params = {
+  ParallelProjection: isParallel,
+  Plane1Position: 0,
+  Plane2Position: 0,
+};
 
-document.querySelector('.plane1Position').addEventListener('input', (e) => {
-  clipPlane1Position = Number(e.target.value);
-  const clipPlane1Origin = [
-    clipPlane1Position * clipPlane1Normal[0],
-    clipPlane1Position * clipPlane1Normal[1],
-    clipPlane1Position * clipPlane1Normal[2],
-  ];
-
-  clipPlane1.setOrigin(clipPlane1Origin);
-  renderWindow.render();
-});
-
-document.querySelector('.plane2Position').addEventListener('input', (e) => {
-  clipPlane2Position = Number(e.target.value);
-
-  const clipPlane2Origin = [
-    clipPlane2Position * clipPlane2Normal[0],
-    clipPlane2Position * clipPlane2Normal[1],
-    clipPlane2Position * clipPlane2Normal[2],
-  ];
-
-  clipPlane2.setOrigin(clipPlane2Origin);
-  renderWindow.render();
-});
+gui
+  .add(params, 'ParallelProjection')
+  .name('Parallel projection')
+  .onChange((val) => {
+    isParallel = Boolean(val);
+    const camera = renderer.getActiveCamera();
+    camera.setParallelProjection(isParallel);
+    renderer.resetCamera();
+    renderWindow.render();
+  });
+plane1Ctrl = gui
+  .add(params, 'Plane1Position', -200, 200, 1)
+  .name('Clip Plane 1')
+  .onChange((v) => {
+    clipPlane1Position = Number(v);
+    const clipPlane1Origin = [
+      clipPlane1Position * clipPlane1Normal[0],
+      clipPlane1Position * clipPlane1Normal[1],
+      clipPlane1Position * clipPlane1Normal[2],
+    ];
+    clipPlane1.setOrigin(clipPlane1Origin);
+    renderWindow.render();
+  });
+plane2Ctrl = gui
+  .add(params, 'Plane2Position', -200, 200, 1)
+  .name('Clip Plane 2')
+  .onChange((v) => {
+    clipPlane2Position = Number(v);
+    const clipPlane2Origin = [
+      clipPlane2Position * clipPlane2Normal[0],
+      clipPlane2Position * clipPlane2Normal[1],
+      clipPlane2Position * clipPlane2Normal[2],
+    ];
+    clipPlane2.setOrigin(clipPlane2Origin);
+    renderWindow.render();
+  });
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

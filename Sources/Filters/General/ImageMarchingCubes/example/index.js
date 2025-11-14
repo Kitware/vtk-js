@@ -10,7 +10,7 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkSampleFunction from '@kitware/vtk.js/Imaging/Hybrid/SampleFunction';
 import vtkSphere from '@kitware/vtk.js/Common/DataModel/Sphere';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -45,40 +45,50 @@ mapper.setInputConnection(mCubes.getOutputPort());
 // ----------------------------------------------------------------------------
 // UI control handling
 // ----------------------------------------------------------------------------
-fullScreenRenderer.addController(controlPanel);
-
-// Define the isosurface value
-document.querySelector('.isoValue').addEventListener('input', (e) => {
-  const value = Number(e.target.value);
-  mCubes.setContourValue(value);
-  renderWindow.render();
-});
-
-// Define the volume resolution
-document.querySelector('.volumeResolution').addEventListener('input', (e) => {
-  const value = Number(e.target.value);
-  sample.setSampleDimensions(value, value, value);
-  renderWindow.render();
-});
-
-// Define the sphere radius
-document.querySelector('.sphereRadius').addEventListener('input', (e) => {
-  const value = Number(e.target.value);
-  sphere.setRadius(value);
-  renderWindow.render();
-});
-
-// Indicate whether to compute normals or not
-document.querySelector('.computeNormals').addEventListener('change', (e) => {
-  mCubes.setComputeNormals(!!e.target.checked);
-  renderWindow.render();
-});
-
-// Indicate whether to merge conincident points or not
-document.querySelector('.mergePoints').addEventListener('change', (e) => {
-  mCubes.setMergePoints(!!e.target.checked);
-  renderWindow.render();
-});
+const gui = new GUI();
+const params = {
+  VolumeResolution: 50,
+  Radius: 0.025,
+  IsoValue: 0.0,
+  ComputeNormals: false,
+  MergePoints: false,
+};
+gui
+  .add(params, 'VolumeResolution', 10, 100, 1)
+  .name('Volume resolution')
+  .onChange((v) => {
+    const value = Number(v);
+    sample.setSampleDimensions(value, value, value);
+    renderWindow.render();
+  });
+gui
+  .add(params, 'Radius', 0.01, 1.0, 0.01)
+  .name('Radius')
+  .onChange((v) => {
+    sphere.setRadius(Number(v));
+    renderWindow.render();
+  });
+gui
+  .add(params, 'IsoValue', 0.0, 1.0, 0.05)
+  .name('Iso value')
+  .onChange((v) => {
+    mCubes.setContourValue(Number(v));
+    renderWindow.render();
+  });
+gui
+  .add(params, 'ComputeNormals')
+  .name('Compute Normals')
+  .onChange((v) => {
+    mCubes.setComputeNormals(Boolean(v));
+    renderWindow.render();
+  });
+gui
+  .add(params, 'MergePoints')
+  .name('Merge Points')
+  .onChange((v) => {
+    mCubes.setMergePoints(Boolean(v));
+    renderWindow.render();
+  });
 
 // -----------------------------------------------------------
 

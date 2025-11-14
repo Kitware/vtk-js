@@ -20,9 +20,9 @@ import vtkMatrixBuilder from '@kitware/vtk.js/Common/Core/MatrixBuilder';
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkSphereSource from '@kitware/vtk.js/Filters/Sources/SphereSource';
+import vtkCellPicker from '@kitware/vtk.js/Rendering/Core/CellPicker/index';
 
-import controlPanel from './controlPanel.html';
-import vtkCellPicker from '../../../Sources/Rendering/Core/CellPicker/index';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -31,8 +31,6 @@ import vtkCellPicker from '../../../Sources/Rendering/Core/CellPicker/index';
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
-
-fullScreenRenderer.addController(controlPanel);
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -57,6 +55,20 @@ let clipPlane2RotationAngle = 0;
 const clipPlane1Normal = [-1, 1, 0];
 const clipPlane2Normal = [0, 0, 1];
 const rotationNormal = [0, 1, 0];
+
+const gui = new GUI();
+const params = {
+  plane1Position: 0,
+  plane1Rotation: 0,
+  plane2Position: 0,
+  plane2Rotation: 0,
+  opacityThreshold: 0.001,
+};
+
+let plane1PositionCtrl;
+let plane1RotationCtrl;
+let plane2PositionCtrl;
+let plane2RotationCtrl;
 
 // create color and opacity transfer functions
 const ctfun = vtkColorTransferFunction.newInstance();
@@ -119,71 +131,83 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
     renderer.getActiveCamera().elevation(70);
     renderWindow.render();
 
-    let el = document.querySelector('.plane1Position');
-    el.setAttribute('min', -sizeX);
-    el.setAttribute('max', sizeX);
-    el.setAttribute('value', clipPlane1Position);
+    plane1PositionCtrl.min(-sizeX);
+    plane1PositionCtrl.max(sizeX);
+    plane1PositionCtrl.setValue(clipPlane1Position);
+    plane1PositionCtrl.updateDisplay?.();
 
-    el = document.querySelector('.plane2Position');
-    el.setAttribute('min', -sizeY);
-    el.setAttribute('max', sizeY);
-    el.setAttribute('value', clipPlane2Position);
+    plane2PositionCtrl.min(-sizeY);
+    plane2PositionCtrl.max(sizeY);
+    plane2PositionCtrl.setValue(clipPlane2Position);
+    plane2PositionCtrl.updateDisplay?.();
 
-    el = document.querySelector('.plane1Rotation');
-    el.setAttribute('min', 0);
-    el.setAttribute('max', 180);
-    el.setAttribute('value', clipPlane1RotationAngle);
+    plane1RotationCtrl.min(0);
+    plane1RotationCtrl.max(180);
+    plane1RotationCtrl.setValue(clipPlane1RotationAngle);
+    plane1RotationCtrl.updateDisplay?.();
 
-    el = document.querySelector('.plane2Rotation');
-    el.setAttribute('min', 0);
-    el.setAttribute('max', 180);
-    el.setAttribute('value', clipPlane2RotationAngle);
+    plane2RotationCtrl.min(0);
+    plane2RotationCtrl.max(180);
+    plane2RotationCtrl.setValue(clipPlane2RotationAngle);
+    plane2RotationCtrl.updateDisplay?.();
   });
 });
 
-document.querySelector('.plane1Position').addEventListener('input', (e) => {
-  clipPlane1Position = Number(e.target.value);
-  const clipPlane1Origin = [
-    clipPlane1Position * clipPlane1Normal[0],
-    clipPlane1Position * clipPlane1Normal[1],
-    clipPlane1Position * clipPlane1Normal[2],
-  ];
-  clipPlane1.setOrigin(clipPlane1Origin);
-  renderWindow.render();
-});
+plane1PositionCtrl = gui
+  .add(params, 'plane1Position')
+  .name('Plane 1 position')
+  .onChange((value) => {
+    clipPlane1Position = Number(value);
+    const clipPlane1Origin = [
+      clipPlane1Position * clipPlane1Normal[0],
+      clipPlane1Position * clipPlane1Normal[1],
+      clipPlane1Position * clipPlane1Normal[2],
+    ];
+    clipPlane1.setOrigin(clipPlane1Origin);
+    renderWindow.render();
+  });
 
-document.querySelector('.plane1Rotation').addEventListener('input', (e) => {
-  const changedDegree = Number(e.target.value) - clipPlane1RotationAngle;
-  clipPlane1RotationAngle = Number(e.target.value);
-  vtkMatrixBuilder
-    .buildFromDegree()
-    .rotate(changedDegree, rotationNormal)
-    .apply(clipPlane1Normal);
-  clipPlane1.setNormal(clipPlane1Normal);
-  renderWindow.render();
-});
+plane1RotationCtrl = gui
+  .add(params, 'plane1Rotation', 0, 180, 1)
+  .name('Plane 1 rotation')
+  .onChange((value) => {
+    const changedDegree = Number(value) - clipPlane1RotationAngle;
+    clipPlane1RotationAngle = Number(value);
+    vtkMatrixBuilder
+      .buildFromDegree()
+      .rotate(changedDegree, rotationNormal)
+      .apply(clipPlane1Normal);
+    clipPlane1.setNormal(clipPlane1Normal);
+    renderWindow.render();
+  });
 
-document.querySelector('.plane2Position').addEventListener('input', (e) => {
-  clipPlane2Position = Number(e.target.value);
-  const clipPlane2Origin = [
-    clipPlane2Position * clipPlane2Normal[0],
-    clipPlane2Position * clipPlane2Normal[1],
-    clipPlane2Position * clipPlane2Normal[2],
-  ];
-  clipPlane2.setOrigin(clipPlane2Origin);
-  renderWindow.render();
-});
+plane2PositionCtrl = gui
+  .add(params, 'plane2Position')
+  .name('Plane 2 position')
+  .onChange((value) => {
+    clipPlane2Position = Number(value);
+    const clipPlane2Origin = [
+      clipPlane2Position * clipPlane2Normal[0],
+      clipPlane2Position * clipPlane2Normal[1],
+      clipPlane2Position * clipPlane2Normal[2],
+    ];
+    clipPlane2.setOrigin(clipPlane2Origin);
+    renderWindow.render();
+  });
 
-document.querySelector('.plane2Rotation').addEventListener('input', (e) => {
-  const changedDegree = Number(e.target.value) - clipPlane2RotationAngle;
-  clipPlane2RotationAngle = Number(e.target.value);
-  vtkMatrixBuilder
-    .buildFromDegree()
-    .rotate(changedDegree, rotationNormal)
-    .apply(clipPlane2Normal);
-  clipPlane2.setNormal(clipPlane2Normal);
-  renderWindow.render();
-});
+plane2RotationCtrl = gui
+  .add(params, 'plane2Rotation', 0, 180, 1)
+  .name('Plane 2 rotation')
+  .onChange((value) => {
+    const changedDegree = Number(value) - clipPlane2RotationAngle;
+    clipPlane2RotationAngle = Number(value);
+    vtkMatrixBuilder
+      .buildFromDegree()
+      .rotate(changedDegree, rotationNormal)
+      .apply(clipPlane2Normal);
+    clipPlane2.setNormal(clipPlane2Normal);
+    renderWindow.render();
+  });
 
 const picker = vtkCellPicker.newInstance({ opacityThreshold: 0.0001 });
 picker.setPickFromList(1);
@@ -223,13 +247,15 @@ function setOpacityFromSlider(opacityValue) {
   picker.setOpacityThreshold(opacityValue);
 }
 
-const opacity = document.getElementById('opacity');
-const opacityLabel = document.getElementById('opacityLabel');
+// eslint-disable-next-line no-unused-vars
+const opacityCtrl = gui
+  .add(params, 'opacityThreshold', 0.001, 0.8, 0.005)
+  .name('Opacity threshold')
+  .onChange((value) => {
+    setOpacityFromSlider(Number(value));
+  });
 
-opacity.addEventListener('input', () => {
-  setOpacityFromSlider(Number.parseFloat(opacity.value, 10));
-  opacityLabel.innerHTML = `Opacity ( ${opacity.value} )`;
-});
+setOpacityFromSlider(params.opacityThreshold);
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

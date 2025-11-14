@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
@@ -10,7 +11,7 @@ import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 
 import { splineKind } from '@kitware/vtk.js/Common/DataModel/Spline3D/Constants';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -41,144 +42,207 @@ renderer.resetCamera();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-
-const borderCheckBox = document.querySelector('.border');
-const onBorderChanged = () => {
-  widgetRepresentation.setOutputBorder(borderCheckBox.checked);
-  renderWindow.render();
+const gui = new GUI();
+const params = {
+  Kind: 'Kochanek',
+  Tension: 0,
+  Bias: 0,
+  Continuity: 0,
+  Resolution: 20,
+  HandleSize: 20,
+  AllowFreehand: true,
+  FreehandDistance: 0.2,
+  Closed: true,
+  BoundaryCondition: 0,
+  BoundaryConditionValueX: 0,
+  BoundaryConditionValueY: 0,
+  Border: true,
+  PlaceWidget: () => {
+    widgetRepresentation.reset();
+    widgetManager.grabFocus(widget);
+  },
 };
-borderCheckBox.addEventListener('click', onBorderChanged);
-onBorderChanged();
 
-const boundaryConditionValueXInput = document.querySelector(
-  '.boundaryConditionValueX'
-);
-const boundaryConditionValueYInput = document.querySelector(
-  '.boundaryConditionValueY'
-);
-const onBoundaryConditionValueChanged = () => {
-  const valX = boundaryConditionValueXInput.value;
-  const valY = boundaryConditionValueYInput.value;
-  widget
-    .getWidgetState()
-    .setSplineBoundaryConditionValues([parseFloat(valX), parseFloat(valY), 0]);
-  renderWindow.render();
+// Helper to enable/disable GUI controllers
+const guiControllers = [];
+function updateGuiControllers() {
+  // Find controllers by name
+  const tensionController = guiControllers.find((c) => c._name === 'Tension');
+  const biasController = guiControllers.find((c) => c._name === 'Bias');
+  const continuityController = guiControllers.find(
+    (c) => c._name === 'Continuity'
+  );
+  const bcController = guiControllers.find(
+    (c) => c._name === 'Boundary condition'
+  );
+  const bcValueXController = guiControllers.find(
+    (c) => c._name === 'BC value X'
+  );
+  const bcValueYController = guiControllers.find(
+    (c) => c._name === 'BC value Y'
+  );
+
+  // Disable Tension, Bias, Continuity if Kind is Cardinal
+  const isCardinal = params.Kind === 'Cardinal';
+  tensionController && tensionController.enable(!isCardinal);
+  biasController && biasController.enable(!isCardinal);
+  continuityController && continuityController.enable(!isCardinal);
+
+  // Disable BC value X/Y if Closed or BC is default
+  const isClosed = params.Closed;
+  const isDefaultBC = params.BoundaryCondition === 0;
+  const disableBCValues = isClosed || isDefaultBC;
+
+  bcController && bcController.enable(!isClosed);
+  bcValueXController && bcValueXController.enable(!disableBCValues);
+  bcValueYController && bcValueYController.enable(!disableBCValues);
+}
+
+// Patch GUI add to track controllers
+const origAdd = gui.add.bind(gui);
+gui.add = function add(...args) {
+  const controller = origAdd(...args);
+  guiControllers.push(controller);
+  return controller;
 };
-boundaryConditionValueXInput.addEventListener(
-  'input',
-  onBoundaryConditionValueChanged
-);
-onBoundaryConditionValueChanged();
 
-boundaryConditionValueYInput.addEventListener(
-  'input',
-  onBoundaryConditionValueChanged
-);
-onBoundaryConditionValueChanged();
-
-const boundaryCondition = document.querySelector('.boundaryCondition');
-const onBoundaryCondition = () => {
-  const isDefault = boundaryCondition.selectedIndex === 0;
-  boundaryConditionValueXInput.disabled =
-    widget.getWidgetState().getSplineClosed() || isDefault;
-  boundaryConditionValueYInput.disabled =
-    widget.getWidgetState().getSplineClosed() || isDefault;
-  widget
-    .getWidgetState()
-    .setSplineBoundaryCondition(boundaryCondition.selectedIndex);
-  renderWindow.render();
-};
-boundaryCondition.addEventListener('change', onBoundaryCondition);
-onBoundaryCondition();
-
-const isClosed = document.querySelector('.close');
-const onClosedChange = () => {
-  boundaryCondition.disabled = isClosed.checked;
-  boundaryConditionValueXInput.disabled =
-    isClosed.checked || boundaryCondition.selectedIndex === 0;
-  boundaryConditionValueYInput.disabled =
-    isClosed.checked || boundaryCondition.selectedIndex === 0;
-  widget.getWidgetState().setSplineClosed(isClosed.checked);
-  renderWindow.render();
-};
-isClosed.addEventListener('click', onClosedChange);
-onClosedChange();
-
-const tensionInput = document.querySelector('.tension');
-const onTensionChanged = () => {
-  widget.getWidgetState().setSplineTension(parseFloat(tensionInput.value));
-  renderWindow.render();
-};
-tensionInput.addEventListener('input', onTensionChanged);
-onTensionChanged();
-
-const biasInput = document.querySelector('.bias');
-const onBiasChanged = () => {
-  widget.getWidgetState().setSplineBias(parseFloat(biasInput.value));
-  renderWindow.render();
-};
-biasInput.addEventListener('input', onBiasChanged);
-onBiasChanged();
-
-const continuityInput = document.querySelector('.continuity');
-const onContinuityChanged = () => {
-  widget
-    .getWidgetState()
-    .setSplineContinuity(parseFloat(continuityInput.value));
-  renderWindow.render();
-};
-continuityInput.addEventListener('input', onContinuityChanged);
-onContinuityChanged();
-
-const splineKindSelector = document.querySelector('.kind');
-const onSplineKindSelected = () => {
-  const isKochanek = splineKindSelector.selectedIndex === 0;
-  tensionInput.disabled = !isKochanek;
-  biasInput.disabled = !isKochanek;
-  continuityInput.disabled = !isKochanek;
+function applyKind() {
+  const isKochanek = params.Kind === 'Kochanek';
   const kind = isKochanek
     ? splineKind.KOCHANEK_SPLINE
     : splineKind.CARDINAL_SPLINE;
   widget.getWidgetState().setSplineKind(kind);
   renderWindow.render();
-};
-splineKindSelector.addEventListener('change', onSplineKindSelected);
-onSplineKindSelected();
+}
 
-const resolutionInput = document.querySelector('.resolution');
-const onResolutionChanged = () => {
-  widgetRepresentation.setResolution(resolutionInput.value);
+function applyClosedAndBoundary() {
+  const widgetState = widget.getWidgetState();
+  const isClosed = params.Closed;
+  widgetState.setSplineClosed(isClosed);
+
+  const isDefault = params.BoundaryCondition === 0;
+  const disableValues = isClosed || isDefault;
+
+  // Update boundary condition type
+  widgetState.setSplineBoundaryCondition(params.BoundaryCondition);
+
+  // Apply boundary condition values when enabled
+  if (!disableValues) {
+    widgetState.setSplineBoundaryConditionValues([
+      params.BoundaryConditionValueX,
+      params.BoundaryConditionValueY,
+      0,
+    ]);
+  }
+
   renderWindow.render();
-};
-resolutionInput.addEventListener('input', onResolutionChanged);
-onResolutionChanged();
+}
 
-const handleSizeInput = document.querySelector('.handleSize');
-const onHandleSizeChanged = () => {
-  widgetRepresentation.setHandleSizeInPixels(handleSizeInput.value);
-  renderWindow.render();
-};
-handleSizeInput.addEventListener('input', onHandleSizeChanged);
-onHandleSizeChanged();
+gui
+  .add(params, 'Kind', ['Kochanek', 'Cardinal'])
+  .name('Kind')
+  .onChange(() => {
+    applyKind();
+    updateGuiControllers();
+  });
 
-const allowFreehandCheckBox = document.querySelector('.allowFreehand');
-const onFreehandEnabledChanged = () => {
-  widgetRepresentation.setAllowFreehand(allowFreehandCheckBox.checked);
-};
-allowFreehandCheckBox.addEventListener('click', onFreehandEnabledChanged);
-onFreehandEnabledChanged();
+gui
+  .add(params, 'Tension', -1, 1, 0.1)
+  .name('Tension')
+  .onChange((value) => {
+    widget.getWidgetState().setSplineTension(parseFloat(value));
+    renderWindow.render();
+  });
 
-const freehandDistanceInput = document.querySelector('.freehandDistance');
-const onFreehandDistanceChanged = () => {
-  widgetRepresentation.setFreehandMinDistance(freehandDistanceInput.value);
-};
-freehandDistanceInput.addEventListener('input', onFreehandDistanceChanged);
-onFreehandDistanceChanged();
+gui
+  .add(params, 'Bias', -1, 1, 0.1)
+  .name('Bias')
+  .onChange((value) => {
+    widget.getWidgetState().setSplineBias(parseFloat(value));
+    renderWindow.render();
+  });
 
-const placeWidgetButton = document.querySelector('.placeWidget');
-placeWidgetButton.addEventListener('click', () => {
-  widgetRepresentation.reset();
-  widgetManager.grabFocus(widget);
-  placeWidgetButton.blur();
-});
+gui
+  .add(params, 'Continuity', -1, 1, 0.1)
+  .name('Continuity')
+  .onChange((value) => {
+    widget.getWidgetState().setSplineContinuity(parseFloat(value));
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'Resolution', 1, 32, 1)
+  .name('Resolution')
+  .onChange((value) => {
+    widgetRepresentation.setResolution(value);
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'HandleSize', 10, 50, 1)
+  .name('Handle size')
+  .onChange((value) => {
+    widgetRepresentation.setHandleSizeInPixels(value);
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'AllowFreehand')
+  .name('Drag (freehand)')
+  .onChange((value) => {
+    widgetRepresentation.setAllowFreehand(!!value);
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'FreehandDistance', 0.05, 1.0, 0.05)
+  .name('Freehand distance')
+  .onChange((value) => {
+    widgetRepresentation.setFreehandMinDistance(value);
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'Closed')
+  .name('Closed spline')
+  .onChange(() => {
+    applyClosedAndBoundary();
+    updateGuiControllers();
+  });
+
+gui
+  .add(params, 'BoundaryCondition', {
+    default: 0,
+    derivative: 1,
+    '2nd derivative': 2,
+    '2nd derivative interior point': 3,
+  })
+  .name('Boundary condition')
+  .onChange(() => {
+    applyClosedAndBoundary();
+    updateGuiControllers();
+  });
+
+gui
+  .add(params, 'BoundaryConditionValueX', -2, 2, 0.1)
+  .name('BC value X')
+  .onChange(() => applyClosedAndBoundary());
+
+gui
+  .add(params, 'BoundaryConditionValueY', -2, 2, 0.1)
+  .name('BC value Y')
+  .onChange(() => applyClosedAndBoundary());
+
+gui
+  .add(params, 'Border')
+  .name('Border')
+  .onChange((value) => {
+    widgetRepresentation.setOutputBorder(!!value);
+    renderWindow.render();
+  });
+
+gui.add(params, 'PlaceWidget').name('Place widget');
+
+applyKind();
+applyClosedAndBoundary();
+updateGuiControllers();

@@ -22,7 +22,7 @@ import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
 // Force the loading of HttpDataAccessHelper to support gzip decompression
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 const { Representation, Shading } = vtkProperty;
 
@@ -33,9 +33,9 @@ const { Representation, Shading } = vtkProperty;
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0, 0, 0],
 });
-fullScreenRenderer.addController(controlPanel);
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
+const gui = new GUI();
 renderer.setTwoSidedLighting(false);
 
 // ----------------------------------------------------------------------------
@@ -47,9 +47,17 @@ renderer.setTwoSidedLighting(false);
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 const volumeOptions = {};
-const volumeSelectElem = document.getElementById('volume');
-const presetSelectElem = document.getElementById('preset');
-const forceNearestElem = document.getElementById('forceNearest');
+let volumeController;
+let presetController;
+let forceNearestControllers = [];
+const params = {
+  ParallelProjection: false,
+  Lighting: true,
+  LAO: false,
+  Scattering: 0.0,
+  Volume: '',
+  Preset: 'DEFAULT',
+};
 
 const actor = vtkVolume.newInstance();
 const mapper = vtkVolumeMapper.newInstance();
@@ -145,66 +153,31 @@ if (light.getPositional()) {
   renderer.addActor(lca);
 }
 
-Object.keys(ColorMixPreset).forEach((key) => {
-  if (key === 'CUSTOM') {
-    // Don't enable custom mode
-    // This requires adding a shader replacement as in testColorMix.js
-    return;
-  }
-  const name = key.at(0).toUpperCase() + key.slice(1).toLowerCase();
-  const optionElem = document.createElement('option');
-  optionElem.label = name;
-  optionElem.value = key;
-  presetSelectElem.appendChild(optionElem);
-});
+const presetKeys = Object.keys(ColorMixPreset).filter((k) => k !== 'CUSTOM');
 
 const setColorMixPreset = (presetKey) => {
   const preset = ColorMixPreset[presetKey];
   actor.getProperty().setColorMixPreset(preset);
-  presetSelectElem.value = presetKey;
+  params.Preset = presetKey;
 };
 
-function updateForceNearestElem(comp) {
-  forceNearestElem.replaceChildren();
-  for (let c = 0; c < comp; ++c) {
-    const checkboxElem = document.createElement('input');
-    checkboxElem.type = 'checkbox';
-    checkboxElem.checked = actor.getProperty().getForceNearestInterpolation(c);
-    checkboxElem.addEventListener('change', () => {
-      actor.getProperty().setForceNearestInterpolation(c, checkboxElem.checked);
-      renderWindow.render();
-    });
-    forceNearestElem.appendChild(checkboxElem);
-    const labelElem = document.createElement('label');
-    labelElem.innerText = `Force nearest interpolation for component ${c}`;
-    forceNearestElem.appendChild(labelElem);
-    forceNearestElem.appendChild(document.createElement('br'));
+function rebuildForceNearestControllers(comp) {
+  forceNearestControllers.forEach((c) => gui.remove(c));
+  forceNearestControllers = [];
+  for (let i = 0; i < comp; ++i) {
+    const obj = {
+      [`ForceNearest${i}`]: actor.getProperty().getForceNearestInterpolation(i),
+    };
+    const ctrl = gui
+      .add(obj, `ForceNearest${i}`)
+      .name(`Force nearest interpolation for component ${i}`)
+      .onChange((v) => {
+        actor.getProperty().setForceNearestInterpolation(i, Boolean(v));
+        renderWindow.render();
+      });
+    forceNearestControllers.push(ctrl);
   }
 }
-
-updateForceNearestElem(1);
-
-volumeSelectElem.addEventListener('change', () => {
-  const { comp, data } = volumeOptions[volumeSelectElem.value];
-  if (comp === 1) {
-    setColorMixPreset('DEFAULT');
-    presetSelectElem.style.display = 'none';
-  } else {
-    presetSelectElem.style.display = 'block';
-  }
-  updateForceNearestElem(comp);
-  const array = mapper.getInputData().getPointData().getArray(0);
-  array.setData(data);
-  array.setNumberOfComponents(comp);
-  mapper.modified();
-  renderWindow.render();
-});
-
-presetSelectElem.addEventListener('change', () => {
-  const presetKey = presetSelectElem.value;
-  setColorMixPreset(presetKey);
-  renderWindow.render();
-});
 
 reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
   reader.loadData().then(() => {
@@ -255,12 +228,23 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
       data: cubeData,
     };
 
-    Object.keys(volumeOptions).forEach((key) => {
-      const optionElem = document.createElement('option');
-      optionElem.value = key;
-      optionElem.label = key;
-      volumeSelectElem.appendChild(optionElem);
-    });
+    const volumeKeys = Object.keys(volumeOptions);
+    params.Volume = volumeKeys[0];
+    if (volumeController) gui.remove(volumeController);
+    volumeController = gui
+      .add(params, 'Volume', volumeKeys)
+      .name('Volume')
+      .onChange((value) => {
+        const { comp, data } = volumeOptions[value];
+        if (comp === 1) {
+          setColorMixPreset('DEFAULT');
+        }
+        rebuildForceNearestControllers(comp);
+        array.setData(data);
+        array.setNumberOfComponents(comp);
+        mapper.modified();
+        renderWindow.render();
+      });
 
     const maskCtfun = vtkColorTransferFunction.newInstance();
     maskCtfun.addRGBPoint(0, 0, 0, 0);
@@ -287,46 +271,44 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
 
 // TEST  ==============
 
-let isLAO = false;
-const button = document.querySelector('.text');
-
-const lao = document.querySelector('.lao');
-lao.addEventListener('click', (e) => {
-  isLAO = !isLAO;
-  actor.getProperty().setLocalAmbientOcclusion(isLAO);
-  button.innerText = `(${isLAO ? 'on' : 'off'})`;
-  renderWindow.render();
-});
-
-const vs = document.querySelector('.scattering');
-vs.addEventListener('input', (e) => {
-  const b = (0.1 * Number(e.target.value)).toPrecision(1);
-  const sbutton = document.querySelector('.stext');
-  sbutton.innerText = `(${b > 0 ? b : 'off'})`;
-  actor.getProperty().setVolumetricScatteringBlending(b);
-  renderWindow.render();
-});
-
-const toggleShade = document.querySelector('.toggleShade');
-toggleShade.addEventListener('click', () => {
-  const shadeFieldSet = document.querySelector('.shade');
-  if (shadeFieldSet.disabled) {
-    shadeFieldSet.disabled = false;
-    actor.getProperty().setShade(true);
+gui
+  .add(params, 'ParallelProjection')
+  .name('Parallel Projection')
+  .onChange((v) => {
+    const cam = renderer.getActiveCamera();
+    cam.setParallelProjection(Boolean(v));
     renderWindow.render();
-  } else {
-    shadeFieldSet.disabled = true;
-    actor.getProperty().setShade(false);
+  });
+gui
+  .add(params, 'Lighting')
+  .name('Lighting')
+  .onChange((v) => {
+    actor.getProperty().setShade(Boolean(v));
     renderWindow.render();
-  }
-});
+  });
+gui
+  .add(params, 'LAO')
+  .name('Toggle LAO')
+  .onChange((v) => {
+    actor.getProperty().setLocalAmbientOcclusion(Boolean(v));
+    renderWindow.render();
+  });
+gui
+  .add(params, 'Scattering', 0.0, 1.0, 0.1)
+  .name('Volumetric Scattering')
+  .onChange((v) => {
+    actor.getProperty().setVolumetricScatteringBlending(Number(v));
+    renderWindow.render();
+  });
 
-const toggleParallel = document.querySelector('.toggleParallel');
-toggleParallel.addEventListener('click', () => {
-  const cam = renderer.getActiveCamera();
-  cam.setParallelProjection(!cam.getParallelProjection());
-  renderWindow.render();
-});
+if (presetController) gui.remove(presetController);
+presetController = gui
+  .add(params, 'Preset', presetKeys)
+  .name('Preset')
+  .onChange((key) => {
+    setColorMixPreset(key);
+    renderWindow.render();
+  });
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

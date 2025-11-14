@@ -19,7 +19,7 @@ import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Parse URL parameters
@@ -89,19 +89,24 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-const arbutton = document.querySelector('.arbutton');
-arbutton.disabled = !xrRenderWindowHelper.getXrSupported();
-
-arbutton.addEventListener('click', (e) => {
-  if (arbutton.textContent === 'Start AR') {
-    xrRenderWindowHelper.startXR(requestedXrSessionType);
-    arbutton.textContent = 'Exit AR';
-  } else {
-    xrRenderWindowHelper.stopXR();
-    arbutton.textContent = 'Start AR';
-  }
-});
+const gui = new GUI();
+let arControlController;
+if (!xrRenderWindowHelper.getXrSupported()) {
+  gui.add({ Info: 'WebXR not supported' }, 'Info');
+} else {
+  const arControl = {
+    startOrExitAR: () => {
+      if (!xrRenderWindowHelper.isXrSessionActive()) {
+        xrRenderWindowHelper.startXR(requestedXrSessionType);
+        arControlController.name('Exit AR');
+      } else {
+        xrRenderWindowHelper.stopXR();
+        arControlController.name('Start AR');
+      }
+    },
+  };
+  arControlController = gui.add(arControl, 'startOrExitAR').name('Start AR');
+}
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

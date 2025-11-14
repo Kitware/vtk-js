@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
@@ -15,7 +16,7 @@ import vtkBoxWidget from 'vtk.js/Examples/Widgets/Box/BoxWidget';
 import vtkImplicitPlaneWidget from '@kitware/vtk.js/Widgets/Widgets3D/ImplicitPlaneWidget';
 import vtkPolyLineWidget from '@kitware/vtk.js/Widgets/Widgets3D/PolyLineWidget';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 const { CaptureOn } = WidgetManagerConstants;
 
@@ -119,141 +120,152 @@ widgetManager.setRenderer(renderer);
 // -----------------------------------------------------------
 // UI control handling
 // -----------------------------------------------------------
-/* eslint-disable */
-fullScreenRenderer.addController(controlPanel);
 
-const widgetListElem = document.querySelector('.widgetList');
-const selectElem = document.querySelector('select');
-const buttonCreate = document.querySelector('button.create');
+const gui = new GUI();
+let selectedCtrl;
+const params = {
+  WidgetType: 'Box',
+  SelectedIndex: 0,
+  Pickable: true,
+  Visibility: true,
+  ContextVisibility: true,
+  HandleVisibility: true,
+  Focus: false,
+  Create: () => {
+    const w = WIDGET_BUILDERS[params.WidgetType](widgetManager);
+    w.placeWidget(cone.getOutputData().getBounds());
+    w.setPlaceFactor(2);
+    widgetManager.enablePicking();
+    renderWindow.render();
+    updateFromActive();
+  },
+  Delete: () => {
+    const widgets = widgetManager.getWidgets();
+    const index = params.SelectedIndex;
+    if (!widgets.length || index < 0 || index >= widgets.length) {
+      return;
+    }
+    const w = widgets[index];
+    widgetManager.removeWidget(w);
+    widgetManager.enablePicking();
+    renderWindow.render();
+    params.SelectedIndex = Math.max(0, params.SelectedIndex - 1);
+    selectedCtrl.max(Math.max(0, widgetManager.getWidgets().length - 1));
+    selectedCtrl.updateDisplay?.();
+    updateFromActive();
+  },
+};
 
-// Create Widget
-buttonCreate.addEventListener('click', () => {
-  const w = WIDGET_BUILDERS[selectElem.value](widgetManager);
-  w.placeWidget(cone.getOutputData().getBounds());
-  w.setPlaceFactor(2);
+gui.add(params, 'WidgetType', Object.keys(WIDGET_BUILDERS)).name('Widget type');
 
-  // w.onWidgetChange((state) =>
-  //   console.log(JSON.stringify(state.get(), null, 2))
-  // );
+selectedCtrl = gui
+  .add(params, 'SelectedIndex', 0, 0, 1)
+  .name('Selected widget')
+  .onChange(() => updateFromActive());
 
-  widgetManager.enablePicking();
-  renderWindow.render();
-  updateUI();
-});
+gui.add(params, 'Create').name('Create widget');
+gui.add(params, 'Delete').name('Delete widget');
 
-// Toggle flag
-function toggle(e) {
-  const value = !!e.target.checked;
-  const name = e.currentTarget.dataset.name;
-  const index = Number(
-    e.currentTarget.parentElement.parentElement.dataset.index
-  );
-  if (name === 'focus') {
+gui
+  .add(params, 'Focus')
+  .name('Grab focus')
+  .onChange((value) => {
+    const widgets = widgetManager.getWidgets();
+    const index = params.SelectedIndex;
+    if (!widgets.length || index < 0 || index >= widgets.length) {
+      return;
+    }
+    const w = widgets[index];
     if (value) {
-      widgetManager.grabFocus(widgetManager.getWidgets()[index]);
+      widgetManager.grabFocus(w);
     } else {
       widgetManager.releaseFocus();
     }
-  } else {
-    const w = widgetManager.getWidgets()[index];
-    w.set({ [name]: value });
-  }
-  widgetManager.enablePicking();
-  renderWindow.render();
-}
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
 
-function grabFocus(e) {
-  const index = Number(
-    e.currentTarget.parentElement.parentElement.dataset.index
-  );
-  const w = widgetManager.getWidgets()[index];
+gui
+  .add(params, 'Pickable')
+  .name('Pickable')
+  .onChange((value) => {
+    const widgets = widgetManager.getWidgets();
+    const index = params.SelectedIndex;
+    if (!widgets.length || index < 0 || index >= widgets.length) {
+      return;
+    }
+    const w = widgets[index];
+    w.set({ pickable: !!value });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
 
-  if (!w.hasFocus()) {
-    widgetManager.grabFocus(w);
-  } else {
-    widgetManager.releaseFocus();
-  }
-  widgetManager.enablePicking();
-  renderWindow.render();
-  updateUI();
-}
+gui
+  .add(params, 'Visibility')
+  .name('Visibility')
+  .onChange((value) => {
+    const widgets = widgetManager.getWidgets();
+    const index = params.SelectedIndex;
+    if (!widgets.length || index < 0 || index >= widgets.length) {
+      return;
+    }
+    const w = widgets[index];
+    w.set({ visibility: !!value });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
 
-// Delete widget
-function deleteWidget(e) {
-  const index = Number(
-    e.currentTarget.parentElement.parentElement.dataset.index
-  );
-  const w = widgetManager.getWidgets()[index];
-  widgetManager.removeWidget(w);
-  updateUI();
-  widgetManager.enablePicking();
-  renderWindow.render();
-}
+gui
+  .add(params, 'ContextVisibility')
+  .name('Context visibility')
+  .onChange((value) => {
+    const widgets = widgetManager.getWidgets();
+    const index = params.SelectedIndex;
+    if (!widgets.length || index < 0 || index >= widgets.length) {
+      return;
+    }
+    const w = widgets[index];
+    w.set({ contextVisibility: !!value });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
 
-// UI generation -------------------
-function toHTML(w, index) {
-  return `<tr data-index="${index}">
-    <td>
-      <button class="focus">${!w.focus ? 'Grab' : 'Release'}</button>
-    </td>
-    <td>${w.name}</td>
-    <td>
-      <input
-        type="checkbox"
-        data-name="pickable"
-        ${w.pickable ? 'checked' : ''}
-      />
-    </td>
-    <td>
-      <input
-        type="checkbox"
-        data-name="visibility"
-        ${w.visibility ? 'checked' : ''}
-      />
-    </td>
-    <td>
-      <input
-        type="checkbox"
-        data-name="contextVisibility"
-        ${w.contextVisibility ? 'checked' : ''}
-      />
-    </td>
-    <td>
-      <input
-        type="checkbox"
-        data-name="handleVisibility"
-        ${w.handleVisibility ? 'checked' : ''}
-      />
-    </td>
-    <td>
-      <button class='delete'>x</button>
-    </td>
-  </tr>`;
-}
+gui
+  .add(params, 'HandleVisibility')
+  .name('Handle visibility')
+  .onChange((value) => {
+    const widgets = widgetManager.getWidgets();
+    const index = params.SelectedIndex;
+    if (!widgets.length || index < 0 || index >= widgets.length) {
+      return;
+    }
+    const w = widgets[index];
+    w.set({ handleVisibility: !!value });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
 
-function updateUI() {
+function updateFromActive() {
   const widgets = widgetManager.getWidgets();
-  widgetListElem.innerHTML = widgets
-    .map((w) => ({
-      name: w.getReferenceByName('label'),
-      focus: w.hasFocus(),
-      pickable: w.getPickable(),
-      visibility: w.getVisibility(),
-      contextVisibility: w.getContextVisibility(),
-      handleVisibility: w.getHandleVisibility(),
-    }))
-    .map(toHTML)
-    .join('\n');
-  const toggleElems = document.querySelectorAll('input[type="checkbox"]');
-  for (let i = 0; i < toggleElems.length; i++) {
-    toggleElems[i].addEventListener('change', toggle);
+  const count = widgets.length;
+  selectedCtrl.max(Math.max(0, count - 1));
+  if (!count) {
+    params.Focus = false;
+    params.Pickable = false;
+    params.Visibility = false;
+    params.ContextVisibility = false;
+    params.HandleVisibility = false;
+  } else {
+    const index = Math.min(params.SelectedIndex, count - 1);
+    params.SelectedIndex = index;
+    const w = widgets[index];
+    params.Focus = w.hasFocus();
+    params.Pickable = w.getPickable();
+    params.Visibility = w.getVisibility();
+    params.ContextVisibility = w.getContextVisibility();
+    params.HandleVisibility = w.getHandleVisibility();
   }
-  const deleteElems = document.querySelectorAll('button.delete');
-  for (let i = 0; i < deleteElems.length; i++) {
-    deleteElems[i].addEventListener('click', deleteWidget);
-  }
-  const grabElems = document.querySelectorAll('button.focus');
-  for (let i = 0; i < grabElems.length; i++) {
-    grabElems[i].addEventListener('click', grabFocus);
-  }
+  gui.controllers.forEach((c) => c.updateDisplay?.());
 }
+
+updateFromActive();

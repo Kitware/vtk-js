@@ -24,7 +24,7 @@ import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 import vtkResourceLoader from '@kitware/vtk.js/IO/Core/ResourceLoader';
 
 // Custom UI controls, including button to start XR session
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // Dynamically load WebXR polyfill from CDN for WebVR and Cardboard API backwards compatibility
 if (navigator.xr === undefined) {
@@ -99,32 +99,33 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-const representationSelector = document.querySelector('.representations');
-const resolutionChange = document.querySelector('.resolution');
-const vrbutton = document.querySelector('.vrbutton');
-
-representationSelector.addEventListener('change', (e) => {
-  const newRepValue = Number(e.target.value);
-  actor.getProperty().setRepresentation(newRepValue);
+const gui = new GUI();
+const params = { Representation: 2, Resolution: 6, VR: false };
+gui
+  .add(params, 'Representation', { Points: 0, Wireframe: 1, Surface: 2 })
+  .onChange((val) => {
+    actor.getProperty().setRepresentation(Number(val));
+    renderWindow.render();
+  });
+gui.add(params, 'Resolution', 4, 80, 1).onChange((val) => {
+  coneSource.setResolution(Number(val));
   renderWindow.render();
 });
-
-resolutionChange.addEventListener('input', (e) => {
-  const resolution = Number(e.target.value);
-  coneSource.setResolution(resolution);
-  renderWindow.render();
-});
-
-vrbutton.addEventListener('click', (e) => {
-  if (vrbutton.textContent === 'Send To VR') {
-    XRHelper.startXR(XrSessionTypes.HmdVR);
-    vrbutton.textContent = 'Return From VR';
-  } else {
-    XRHelper.stopXR();
-    vrbutton.textContent = 'Send To VR';
-  }
-});
+gui
+  .add(
+    {
+      'Start VR Session': () => {
+        XRHelper.startXR(XrSessionTypes.HmdVR);
+        params.VR = true; // Update the VR parameter
+      },
+      'Exit VR Session': () => {
+        XRHelper.endXR();
+        params.VR = false; // Update the VR parameter
+      },
+    },
+    'Start VR Session'
+  )
+  .name('Sent to VR');
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

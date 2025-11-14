@@ -11,7 +11,7 @@ import vtkInteractorStyleManipulator from '@kitware/vtk.js/Interaction/Style/Int
 
 import Manipulators from '@kitware/vtk.js/Interaction/Manipulators';
 
-import controlPanel from './controlPanel.html';
+import GUI from 'lil-gui';
 
 const { SlicingMode } = vtkImageMapper;
 
@@ -87,24 +87,78 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
+const gui = new GUI();
+const params = {
+  sliceNumber: kGet(),
+  wWidth: wGet(),
+  wLevel: lGet(),
+  slicingScale: 1.0,
+  wWidthScale: 1.0,
+  wLevelScale: 1.0,
+};
 
-document.querySelector('.wWidth').textContent = wGet();
-document.querySelector('.wLevel').textContent = lGet();
-document.querySelector('.sliceNumber').textContent = kGet();
+gui
+  .add(params, 'sliceNumber', kMin, kMax, 1)
+  .name('Slice number')
+  .onChange((value) => {
+    kSet(Number(value));
+  });
 
-document.querySelector('.slicingScale').addEventListener('input', (e) => {
-  const scale = Number(e.target.value);
-  rangeManipulator.setScrollListener(kMin, kMax, 1, kGet, kSet, scale);
-});
-document.querySelector('.wWidthScale').addEventListener('input', (e) => {
-  const scale = Number(e.target.value);
-  rangeManipulator.setVerticalListener(wMin, wMax, 1, wGet, wSet, scale);
-});
-document.querySelector('.wLevelScale').addEventListener('input', (e) => {
-  const scale = Number(e.target.value);
-  rangeManipulator.setHorizontalListener(lMin, lMax, 1, lGet, lSet, scale);
-});
+gui
+  .add(params, 'wWidth', wMin, wMax, 1)
+  .name('Window width')
+  .onChange((value) => {
+    wSet(Number(value));
+  });
+
+gui
+  .add(params, 'wLevel', lMin, lMax, 1)
+  .name('Window level')
+  .onChange((value) => {
+    lSet(Number(value));
+  });
+
+gui
+  .add(params, 'slicingScale', 0.1, 5.0, 0.1)
+  .name('Slicing scale')
+  .onChange((value) => {
+    rangeManipulator.setScrollListener(
+      kMin,
+      kMax,
+      1,
+      kGet,
+      kSet,
+      Number(value)
+    );
+  });
+
+gui
+  .add(params, 'wWidthScale', 0.1, 5.0, 0.1)
+  .name('Width scale')
+  .onChange((value) => {
+    rangeManipulator.setVerticalListener(
+      wMin,
+      wMax,
+      1,
+      wGet,
+      wSet,
+      Number(value)
+    );
+  });
+
+gui
+  .add(params, 'wLevelScale', 0.1, 5.0, 0.1)
+  .name('Level scale')
+  .onChange((value) => {
+    rangeManipulator.setHorizontalListener(
+      lMin,
+      lMax,
+      1,
+      lGet,
+      lSet,
+      Number(value)
+    );
+  });
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
 // Enable data soure for DataAccessHelper
@@ -12,8 +13,7 @@ import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 import vtkResourceLoader from '@kitware/vtk.js/IO/Core/ResourceLoader';
 
 import vtkGLTFImporter from '@kitware/vtk.js/IO/Geometry/GLTFImporter';
-
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -47,7 +47,6 @@ function createTextureWithMipmap(src, level) {
 }
 
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
-fullScreenRenderer.addController(controlPanel);
 
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
@@ -76,17 +75,21 @@ const reader = vtkGLTFImporter.newInstance({
 });
 
 const rootContainer = document.querySelector('body');
-const modelSelector = document.querySelector('.models');
-const flavorSelector = document.querySelector('.flavor');
-const scenesSelector = document.querySelector('.scenes');
-const camerasSelector = document.querySelector('.cameras');
-const animationsSelector = document.querySelector('.animations');
-const variantsSelector = document.querySelector('.variants');
-
-const eSpecularChange = document.querySelector('.e-specular');
-const eDiffuseChange = document.querySelector('.e-diffuse');
-const angleChange = document.querySelector('.angle');
-const useTextureBackgroundChange = document.querySelector('.use-background');
+const gui = new GUI();
+const params = {
+  viewAPI,
+  Model: '',
+  Flavor: '',
+  Scene: selectedScene,
+  Camera: '',
+  Animation: '',
+  Variant: 0,
+  UseBackground: false,
+  Specular: renderer.getEnvironmentTextureSpecularStrength?.() ?? 1.0,
+  Diffuse: renderer.getEnvironmentTextureDiffuseStrength?.() ?? 1.0,
+  FOV: renderer.getActiveCamera().getViewAngle(),
+};
+const controllers = {};
 
 // add a loading svg to the container and remove once the reader is ready
 const loading = document.createElement('div');
@@ -161,57 +164,58 @@ function ready() {
   renderer.resetCamera();
   renderWindow.render();
 
-  // Play animations
+  // Play animations and expose GUI selectors
   const animations = reader.getAnimations();
   if (animations.length > 0) {
-    animations.forEach((animation, name) => {
-      const option = document.createElement('option');
-      option.value = animation.id;
-      option.textContent = animation.id;
-      animationsSelector.appendChild(option);
-    });
-
-    // Play the first animation by default
-    const defaultAnimation = animations[0];
     mixer = reader.getAnimationMixer();
-    mixer.play(defaultAnimation.id);
+    const names = animations.map((a) => a.id);
+    params.Animation = names[0];
+    controllers.Animation && gui.remove(controllers.Animation);
+    controllers.Animation = gui
+      .add(params, 'Animation', names)
+      .name('Animation')
+      .onChange((id) => {
+        mixer.play(id);
+        animateScene();
+      });
+    mixer.play(names[0]);
     animateScene();
-    document.querySelector('.animations-container').style.display = 'table-row';
   }
 
   const cameras = reader.getCameras();
-  cameras.forEach((camera, name) => {
-    const option = document.createElement('option');
-    option.value = name;
-    option.textContent = name;
-    camerasSelector.appendChild(option);
-  });
+  if (cameras.length) {
+    params.Camera = cameras[0];
+    controllers.Camera && gui.remove(controllers.Camera);
+    controllers.Camera = gui
+      .add(params, 'Camera', cameras)
+      .name('Camera')
+      .onChange((name) => {
+        reader.setCamera(name);
+        renderWindow.render();
+      });
+  }
 
   const scenes = reader.getScenes();
   if (scenes.length > 1) {
-    scenesSelector.innerHTML = '';
-    scenes.forEach((scene, index) => {
-      const option = document.createElement('option');
-      option.value = index;
-      option.textContent = `Scene ${index}`;
-      if (index === selectedScene) {
-        option.selected = true;
-      }
-      scenesSelector.appendChild(option);
-    });
+    controllers.Scene && gui.remove(controllers.Scene);
+    controllers.Scene = gui
+      .add(params, 'Scene', [...Array(scenes.length).keys()])
+      .name('Scene')
+      .onChange((idx) => {
+        window.location = `?model=${selectedModel}&flavor=${selectedFlavor}&scene=${idx}&viewAPI=${params.viewAPI}`;
+      });
   }
 
   const variants = reader.getVariants();
   if (variants.length > 1) {
-    variantsSelector.innerHTML = '';
-    variants.forEach((variant, index) => {
-      console.log('Adding variant', variant);
-      const option = document.createElement('option');
-      option.value = index;
-      option.textContent = variant;
-      variantsSelector.appendChild(option);
-    });
-    document.querySelector('.variants-container').style.display = 'table-row';
+    controllers.Variant && gui.remove(controllers.Variant);
+    controllers.Variant = gui
+      .add(params, 'Variant', [...Array(variants.length).keys()])
+      .name('Variant')
+      .onChange(async (i) => {
+        await reader.switchToVariant(Number(i));
+        renderWindow.render();
+      });
   }
 }
 
@@ -237,28 +241,26 @@ fetch(`${baseUrl}/${modelsFolder}/model-index.json`)
     const modelsNames = Object.keys(modelsDictionary);
     const dhModelIdx = modelsNames.indexOf('DamagedHelmet');
     selectedModel = userParms.model || modelsNames[dhModelIdx];
-    modelsNames.forEach((modelName) => {
-      const option = document.createElement('option');
-      option.value = modelName;
-      option.textContent = modelName;
-      if (selectedModel === modelName) {
-        option.selected = true;
-      }
-      modelSelector.appendChild(option);
-    });
+    params.Model = selectedModel;
+    controllers.Model && gui.remove(controllers.Model);
+    controllers.Model = gui
+      .add(params, 'Model', modelsNames)
+      .name('Model')
+      .onChange((modelName) => {
+        window.location = `?model=${modelName}&viewAPI=${params.viewAPI}`;
+      });
 
     const variants = Object.keys(modelsDictionary[selectedModel]).sort();
 
     selectedFlavor = userParms.flavor || variants[0];
-    variants.forEach((variant) => {
-      const option = document.createElement('option');
-      option.value = variant;
-      option.textContent = variant;
-      if (variant === selectedFlavor) {
-        option.selected = true;
-      }
-      flavorSelector.appendChild(option);
-    });
+    params.Flavor = selectedFlavor;
+    controllers.Flavor && gui.remove(controllers.Flavor);
+    controllers.Flavor = gui
+      .add(params, 'Flavor', variants)
+      .name('Flavor')
+      .onChange((variant) => {
+        window.location = `?model=${selectedModel}&flavor=${variant}&scene=${selectedScene}&viewAPI=${params.viewAPI}`;
+      });
 
     const path = modelsDictionary[selectedModel][selectedFlavor];
     const url = `${baseUrl}/${path}`;
@@ -293,61 +295,42 @@ fetch(`${baseUrl}/${modelsFolder}/model-index.json`)
 // Use a file reader to load a local file
 // ----------------------------------------------------------------------------
 
-// Get the value of the radio button named 'renderer' and set the view API accordingly
-document.querySelectorAll("input[name='viewAPI']").forEach((input) => {
-  if (input.value === viewAPI) {
-    input.checked = true;
-  }
-  input.addEventListener('change', (evt) => {
-    window.location = `?model=${selectedModel}&viewAPI=${evt.target.value}`;
+// View API dropdown
+gui
+  .add(params, 'viewAPI', ['WebGL', 'WebGPU'])
+  .name('Renderer')
+  .onChange((api) => {
+    window.location = `?model=${selectedModel || ''}&viewAPI=${api}`;
   });
-});
 
-modelSelector.onchange = (evt) => {
-  window.location = `?model=${evt.target.value}&viewAPI=${viewAPI}`;
-};
-
-flavorSelector.onchange = (evt) => {
-  window.location = `?model=${selectedModel}&flavor=${evt.target.value}&scene=${selectedScene}&viewAPI=${viewAPI}`;
-};
-
-scenesSelector.onchange = (evt) => {
-  window.location = `?model=${selectedModel}&flavor=${selectedFlavor}&scene=${evt.target.value}&viewAPI=${viewAPI}`;
-};
-
-camerasSelector.onchange = (evt) => {
-  reader.setCamera(evt.target.value);
-  renderWindow.render();
-};
-
-variantsSelector.onchange = async (evt) => {
-  console.log('Switching to variant', evt.target.value);
-  await reader.switchToVariant(Number(evt.target.value));
-  renderWindow.render();
-};
-
-useTextureBackgroundChange.addEventListener('input', (e) => {
-  const useTexturedBackground = Boolean(e.target.checked);
-  renderer.setUseEnvironmentTextureAsBackground(useTexturedBackground);
-  renderWindow.render();
-});
-
-angleChange.addEventListener('input', (e) => {
-  const angle = Number(e.target.value);
-  renderer.getActiveCamera().setViewAngle(angle);
-  renderWindow.render();
-});
-
-eSpecularChange.addEventListener('input', (e) => {
-  const specular = Number(e.target.value);
-  renderer.setEnvironmentTextureSpecularStrength(specular);
-  renderWindow.render();
-});
-
-eDiffuseChange.addEventListener('input', (e) => {
-  const diffuse = Number(e.target.value);
-  renderer.setEnvironmentTextureDiffuseStrength(diffuse);
-  renderWindow.render();
-});
+// Environment controls
+gui
+  .add(params, 'UseBackground')
+  .name('Use Textured Background')
+  .onChange((v) => {
+    renderer.setUseEnvironmentTextureAsBackground(Boolean(v));
+    renderWindow.render();
+  });
+gui
+  .add(params, 'Specular', 0.0, 2.0, 0.01)
+  .name('Specular Strength')
+  .onChange((v) => {
+    renderer.setEnvironmentTextureSpecularStrength(Number(v));
+    renderWindow.render();
+  });
+gui
+  .add(params, 'Diffuse', 0.0, 2.0, 0.01)
+  .name('Diffuse Strength')
+  .onChange((v) => {
+    renderer.setEnvironmentTextureDiffuseStrength(Number(v));
+    renderWindow.render();
+  });
+gui
+  .add(params, 'FOV', 30, 120, 1)
+  .name('FOV')
+  .onChange((v) => {
+    renderer.getActiveCamera().setViewAngle(Number(v));
+    renderWindow.render();
+  });
 
 rootContainer.appendChild(loading);

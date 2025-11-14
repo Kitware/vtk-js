@@ -21,7 +21,7 @@ import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
-import controlPanel from './controller.html';
+import GUI from 'lil-gui';
 
 // Import the Looking Glass WebXR Polyfill override
 // Assumes that the Looking Glass Bridge native application is already running.
@@ -95,32 +95,28 @@ renderWindow.render();
 // UI control handling
 // -----------------------------------------------------------
 
-fullScreenRenderer.addController(controlPanel);
-const representationSelector = document.querySelector('.representations');
-const resolutionChange = document.querySelector('.resolution');
-const vrbutton = document.querySelector('.vrbutton');
-
-representationSelector.addEventListener('change', (e) => {
-  const newRepValue = Number(e.target.value);
-  actor.getProperty().setRepresentation(newRepValue);
+const gui = new GUI();
+const params = { Representation: 2, Resolution: 6, LookingGlass: false };
+gui
+  .add(params, 'Representation', { Points: 0, Wireframe: 1, Surface: 2 })
+  .onChange((val) => {
+    actor.getProperty().setRepresentation(Number(val));
+    renderWindow.render();
+  });
+gui.add(params, 'Resolution', 4, 80, 1).onChange((val) => {
+  coneSource.setResolution(Number(val));
   renderWindow.render();
 });
-
-resolutionChange.addEventListener('input', (e) => {
-  const resolution = Number(e.target.value);
-  coneSource.setResolution(resolution);
-  renderWindow.render();
-});
-
-vrbutton.addEventListener('click', (e) => {
-  if (vrbutton.textContent === 'Send To Looking Glass') {
-    xrRenderWindowHelper.startXR(XrSessionTypes.LookingGlassVR);
-    vrbutton.textContent = 'Return From Looking Glass';
-  } else {
-    xrRenderWindowHelper.stopXR();
-    vrbutton.textContent = 'Send To Looking Glass';
-  }
-});
+gui
+  .add(params, 'LookingGlass')
+  .name('Looking Glass Session')
+  .onChange((val) => {
+    if (val) {
+      xrRenderWindowHelper.startXR(XrSessionTypes.LookingGlassVR);
+    } else {
+      xrRenderWindowHelper.stopXR();
+    }
+  });
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
