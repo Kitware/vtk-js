@@ -201,8 +201,8 @@ function getScreenEventPositionFor(source) {
   const scaleX = canvasWidth / bounds.width;
   const scaleY = canvasHeight / bounds.height;
   const position = {
-    x: scaleX * (source.clientX - bounds.left),
-    y: scaleY * (bounds.height - source.clientY + bounds.top),
+    x: Math.round(scaleX * (source.clientX - bounds.left)),
+    y: Math.round(scaleY * (bounds.height - source.clientY + bounds.top)),
     z: 0,
   };
   return position;
