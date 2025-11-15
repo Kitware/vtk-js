@@ -58,8 +58,10 @@ renderer.resetCamera();
 
 fullScreenRenderer.addController(controlPanel);
 
-document.querySelector('#addWidget').addEventListener('click', () => {
-  widgetManager.releaseFocus(widget);
+function createWidget(eventOrCenter = null) {
+  if (widgetHandle) {
+    widgetHandle.endInteract();
+  }
   widget = vtkSeedWidget.newInstance();
 
   // Important: set the manipulator of the widget to constrain movement to the actor
@@ -77,14 +79,22 @@ document.querySelector('#addWidget').addEventListener('click', () => {
   // Start placement interaction
   widget.placeWidget(cone.getOutputData().getBounds());
   widgetHandle = widgetManager.addWidget(widget);
-  widgetManager.grabFocus(widget);
-});
+  if (Array.isArray(eventOrCenter)) {
+    widgetHandle.setCenter(eventOrCenter);
+  } else {
+    widgetHandle.startInteract();
+  }
+}
+
+document.querySelector('#addWidget').addEventListener('click', createWidget);
 
 document.querySelector('#removeWidget').addEventListener('click', () => {
   const widgets = widgetManager.getWidgets();
   if (!widgets.length) return;
   widgetManager.removeWidget(widgets[widgets.length - 1]);
 });
+
+createWidget([0.5, 0, 0]);
 
 // -----------------------------------------------------------
 // globals
