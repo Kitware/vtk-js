@@ -39,6 +39,11 @@ function vtkPolyData(publicAPI, model) {
       .replace(/\s+/g, '');
   }
 
+  function clearCells() {
+    model.cells = undefined;
+    model.links = undefined;
+  }
+
   // build empty cell arrays and set methods
   POLYDATA_FIELDS.forEach((type) => {
     publicAPI[`getNumberOf${camelize(type)}`] = () =>
@@ -48,6 +53,7 @@ function vtkPolyData(publicAPI, model) {
     } else {
       model[type] = vtk(model[type]);
     }
+    model[`_on${camelize(type)}Changed`] = clearCells;
   });
 
   publicAPI.getNumberOfCells = () =>
@@ -75,6 +81,7 @@ function vtkPolyData(publicAPI, model) {
   const superInitialize = publicAPI.initialize;
   publicAPI.initialize = () => {
     POLYDATA_FIELDS.forEach((type) => model[type]?.initialize());
+    clearCells();
     return superInitialize();
   };
 
@@ -180,7 +187,7 @@ function vtkPolyData(publicAPI, model) {
    * topologically complex queries.
    */
   publicAPI.buildLinks = (initialSize = 0) => {
-    if (model.cells === undefined) {
+    if (model.cells == null) {
       publicAPI.buildCells();
     }
 
