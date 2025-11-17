@@ -122,6 +122,7 @@ function vtkImageMarchingSquares(publicAPI, model) {
    * @param {Vector3} increments IJK slice increments
    * @param {number} kernelX index of the X element
    * @param {number} kernelY index of the Y element
+   * @param {Function} indexToWorld function to convert index to world coordinates
    */
   publicAPI.produceLines = (
     cVal,
@@ -134,11 +135,11 @@ function vtkImageMarchingSquares(publicAPI, model) {
     lines,
     increments,
     kernelX,
-    kernelY
+    kernelY,
+    indexToWorld
   ) => {
     const k = ijk[model.slicingMode];
     const CASE_MASK = [1, 2, 8, 4]; // case table is actually for quad
-    const xyz = [];
     let pId;
 
     publicAPI.getPixelScalars(ijk, dims, scalars, increments, kernelX, kernelY);
@@ -157,7 +158,6 @@ function vtkImageMarchingSquares(publicAPI, model) {
 
     publicAPI.getPixelPoints(ijk, origin, spacing, kernelX, kernelY);
 
-    const z = origin[model.slicingMode] + k * spacing[model.slicingMode];
     for (let idx = 0; pixelLines[idx] >= 0; idx += 2) {
       lines.push(2);
       for (let eid = 0; eid < 2; eid++) {
@@ -170,14 +170,7 @@ function vtkImageMarchingSquares(publicAPI, model) {
           )?.value;
         }
         if (pId === undefined) {
-          const t =
-            (cVal - pixelScalars[edgeVerts[0]]) /
-            (pixelScalars[edgeVerts[1]] - pixelScalars[edgeVerts[0]]);
-          const x0 = pixelPts.slice(edgeVerts[0] * 2, (edgeVerts[0] + 1) * 2);
-          const x1 = pixelPts.slice(edgeVerts[1] * 2, (edgeVerts[1] + 1) * 2);
-          xyz[kernelX] = x0[0] + t * (x1[0] - x0[0]);
-          xyz[kernelY] = x0[1] + t * (x1[1] - x0[1]);
-          xyz[model.slicingMode] = z;
+          const xyz = indexToWorld(ijk);
           pId = points.length / 3;
           points.push(xyz[0], xyz[1], xyz[2]);
 
@@ -218,6 +211,7 @@ function vtkImageMarchingSquares(publicAPI, model) {
     const increments = input.computeIncrements(extent);
     const scalars = input.getPointData().getScalars().getData();
     const [kernelX, kernelY] = getKernels();
+    const indexToWorld = input.indexToWorld;
 
     // Points - dynamic array
     const points = [];
@@ -251,7 +245,8 @@ function vtkImageMarchingSquares(publicAPI, model) {
             lines,
             increments,
             kernelX,
-            kernelY
+            kernelY,
+            indexToWorld
           );
         }
       }
