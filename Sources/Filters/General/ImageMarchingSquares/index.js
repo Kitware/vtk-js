@@ -138,7 +138,6 @@ function vtkImageMarchingSquares(publicAPI, model) {
     kernelY,
     indexToWorld
   ) => {
-    const k = ijk[model.slicingMode];
     const CASE_MASK = [1, 2, 8, 4]; // case table is actually for quad
     let pId;
 
