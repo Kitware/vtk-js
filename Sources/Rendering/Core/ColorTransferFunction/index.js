@@ -3,7 +3,7 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';
 import Constants from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/Constants';
 
-const { ColorSpace, Scale } = Constants;
+const { ColorSpace, Scale, ScalarMappingMode } = Constants;
 const { ScalarMappingTarget } = vtkScalarsToColors;
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
 
@@ -493,6 +493,8 @@ function vtkColorTransferFunction(publicAPI, model) {
       ];
     }
 
+    const useSigmoid =
+      publicAPI.getScalarMappingMode() === ScalarMappingMode.SIGMOID;
     // For each table entry
     for (let i = 0; i < size; i++) {
       // Find our location in the table
@@ -501,10 +503,22 @@ function vtkColorTransferFunction(publicAPI, model) {
       // Find our X location. If we are taking only 1 sample, make
       // it halfway between start and end (usually start and end will
       // be the same in this case)
+      let c = 0;
+      let w = 0;
       if (size > 1) {
+        c = (xEnd + xStart) / 2.0;
+        w = xEnd - xStart;
         x = xStart + (i / (size - 1.0)) * (xEnd - xStart);
       } else {
+        c = (scaledMappingRange[0] + scaledMappingRange[1]) / 2.0;
+        w = scaledMappingRange[1] - scaledMappingRange[0];
         x = 0.5 * (xStart + xEnd);
+      }
+      if (useSigmoid) {
+        // Apply the sigmoid function to x,
+        const y = 1 / (1 + Math.exp((model.sigmoidGrowthRate * (x - c)) / w));
+        // and re-interpret it as a linear parameter.
+        x = y * w + (c - w / 2);
       }
 
       // Linearly map x from mappingRange to [0, numberOfValues-1],
@@ -1246,6 +1260,21 @@ function vtkColorTransferFunction(publicAPI, model) {
     }
     isModified = isModified || oldNanColor !== JSON.stringify(model.nanColor);
 
+    if (colorMap.BelowRangeColor) {
+      if (colorMap.BelowRangeColor.length === 3) {
+        publicAPI.setBelowRangeColor([...colorMap.BelowRangeColor, 1]);
+      } else {
+        publicAPI.setBelowRangeColor(colorMap.BelowRangeColor);
+      }
+    }
+    if (colorMap.AboveRangeColor) {
+      if (colorMap.AboveRangeColor.length === 3) {
+        publicAPI.setAboveRangeColor([...colorMap.AboveRangeColor, 1]);
+      } else {
+        publicAPI.setAboveRangeColor(colorMap.AboveRangeColor);
+      }
+    }
+
     const oldNodes = isModified || JSON.stringify(model.nodes);
     if (colorMap.RGBPoints) {
       const size = colorMap.RGBPoints.length;
@@ -1273,6 +1302,12 @@ function vtkColorTransferFunction(publicAPI, model) {
 
     return modifiedInvoked || callModified;
   };
+
+  publicAPI.setScalarMappingModeToLinear = () =>
+    publicAPI.setScalarMappingMode(ScalarMappingMode.LINEAR);
+
+  publicAPI.setScalarMappingModeToSigmoid = () =>
+    publicAPI.setScalarMappingMode(ScalarMappingMode.SIGMOID);
 }
 
 // ----------------------------------------------------------------------------
@@ -1284,6 +1319,7 @@ const DEFAULT_VALUES = {
   colorSpace: ColorSpace.RGB,
   hSVWrap: true,
   scale: Scale.LINEAR,
+  scalarMappingMode: ScalarMappingMode.LINEAR,
 
   nanColor: null,
   belowRangeColor: null,
@@ -1301,6 +1337,7 @@ const DEFAULT_VALUES = {
 
   discretize: false,
   numberOfValues: 256,
+  sigmoidGrowthRate: -4,
 };
 
 // ----------------------------------------------------------------------------
@@ -1331,8 +1368,10 @@ export function extend(publicAPI, model, initialValues = {}) {
     'useBelowRangeColor',
     'discretize',
     'numberOfValues',
+    'sigmoidGrowthRate',
     { type: 'enum', name: 'colorSpace', enum: ColorSpace },
     { type: 'enum', name: 'scale', enum: Scale },
+    { type: 'enum', name: 'scalarMappingMode', enum: ScalarMappingMode },
   ]);
 
   macro.setArray(

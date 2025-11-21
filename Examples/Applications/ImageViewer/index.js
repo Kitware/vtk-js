@@ -117,6 +117,7 @@ function createUI(renderWindow, interactorStyle, imageSlice) {
 
   function applyPreset() {
     const preset = vtkColorMaps.getPresetByName(presetSelector.value);
+    lookupTable.setSigmoidGrowthRate(-4.0);
     lookupTable.applyColorMap(preset);
     lookupTable.setMappingRange(...scalars.getRange());
     lookupTable.updateRange();
@@ -194,12 +195,35 @@ function createUI(renderWindow, interactorStyle, imageSlice) {
   }
   interpolationSelector.addEventListener('input', updateInterpolation);
 
+  const mappingModeLabel = document.createElement('label');
+  mappingModeLabel.for = 'mappingMode';
+  mappingModeLabel.innerText = 'Mapping Sigmoid:';
+  const mappingModeSelector = document.createElement('input');
+  mappingModeSelector.setAttribute('class', selectorClass);
+  mappingModeSelector.setAttribute('id', 'mappingMode');
+  mappingModeSelector.type = 'checkbox';
+  mappingModeSelector.checked = false;
+  const mappingMode = document.createElement('div');
+  mappingMode.appendChild(mappingModeLabel);
+  mappingMode.appendChild(mappingModeSelector);
+
+  function updateMappingMode() {
+    if (mappingModeSelector.checked) {
+      lookupTable.setScalarMappingModeToSigmoid();
+    } else {
+      lookupTable.setScalarMappingModeToLinear();
+    }
+    renderWindow.getInteractor().render();
+  }
+  mappingModeSelector.addEventListener('input', updateMappingMode);
+
   const controlContainer = document.createElement('div');
   controlContainer.setAttribute('class', style.control);
   controlContainer.appendChild(info);
   controlContainer.appendChild(presetSelector);
   controlContainer.appendChild(windowLevel);
   controlContainer.appendChild(interpolation);
+  controlContainer.appendChild(mappingMode);
   rootControllerContainer.appendChild(controlContainer);
 }
 // ----------------------------------------------------------------------------

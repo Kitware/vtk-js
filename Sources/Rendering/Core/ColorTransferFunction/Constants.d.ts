@@ -10,8 +10,14 @@ export declare enum Scale {
   LOG10 = 1,
 }
 
+export declare enum ScalarMappingMode {
+  LINEAR = 0,
+  SIGMOID = 1,
+}
+
 declare const _default: {
   ColorSpace: typeof ColorSpace;
   Scale: typeof Scale;
+  ScalarMappingMode: typeof ScalarMappingMode;
 };
 export default _default;

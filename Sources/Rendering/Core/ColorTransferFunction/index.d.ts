@@ -1,6 +1,6 @@
 import vtkDataArray from '../../../Common/Core/DataArray';
 import vtkScalarsToColors from '../../../Common/Core/ScalarsToColors';
-import { ColorSpace, Scale } from './Constants';
+import { ColorSpace, ScalarMappingMode, Scale } from './Constants';
 
 export interface vtkColorTransferFunction extends vtkScalarsToColors {
   /**
@@ -336,6 +336,48 @@ export interface vtkColorTransferFunction extends vtkScalarsToColors {
    * @param {Scale} scale
    */
   setScale(scale: Scale): void;
+
+  /**
+   * Get the scalar mapping mode of the color transfer function.
+   * @returns {ScalarMappingMode}
+   */
+  getScalarMappingMode(): ScalarMappingMode;
+
+  /**
+   * Set the scalar mapping mode of the color transfer function.
+   * @param {ScalarMappingMode} mode
+   */
+  setScalarMappingMode(mode: ScalarMappingMode): void;
+
+  /**
+   * Set the scalar mapping mode to a linear.
+   * Scalar values will be mapped linearly to
+   * colormap using the set mappingRange.
+   */
+  setScalarMappingModeToLinear(): void;
+
+  /**
+   * Set the scalar mapping mode to a sigmoid curve.
+   * Scalar values will be mapped to colormap using
+   * a sigmoid function using the set mappingRange.
+   */
+  setScalarMappingModeToSigmoid(): void;
+
+  /**
+   * Get sigmoid growth rate. This controls the
+   * steepness of the sigmoid function used for
+   * scalar mapping.
+   * @returns {number}
+   */
+  getSigmoidGrowthRate(): number;
+
+  /**
+   * Set sigmoid growth rate. This controls the
+   * steepness of the sigmoid function used for
+   * scalar mapping.
+   * @param {number} growthRate
+   */
+  setSigmoidGrowthRate(growthRate: number): void;
 }
 
 /**
