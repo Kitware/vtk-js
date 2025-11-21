@@ -12,6 +12,25 @@ function vtkViewNode(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkViewNode');
 
+  /**
+   * Convenient method to move a child to a specific index.
+   * @param {*} child the child to move
+   * @param {*} toIndex the index to move the child to
+   * @returns true if the child was moved, false otherwise
+   */
+  function moveChild(child, toIndex) {
+    for (let i = 0; i < model.children.length; ++i) {
+      // Start browsing from toIndex + 1
+      const childIndex = (toIndex + 1 + i) % model.children.length;
+      if (model.children[childIndex] === child) {
+        model.children[childIndex] = model.children[toIndex];
+        model.children[toIndex] = child;
+        return true;
+      }
+    }
+    return false;
+  }
+
   // Builds myself.
   publicAPI.build = (prepass) => {};
 
@@ -122,21 +141,19 @@ function vtkViewNode(publicAPI, model) {
       return;
     }
 
+    let nextIndex;
     for (let index = 0; index < dataObjs.length; ++index) {
       const dobj = dataObjs[index];
       const node = publicAPI.addMissingNode(dobj);
-      if (
-        enforceOrder &&
-        node !== undefined &&
-        model.children[index] !== node
-      ) {
-        for (let i = index + 1; i < model.children.length; ++i) {
-          if (model.children[i] === node) {
-            model.children.splice(i, 1);
-            model.children.splice(index, 0, node);
-            break;
-          }
+      if (enforceOrder && node !== undefined) {
+        if (nextIndex === undefined) {
+          // First node can be anywhere
+          nextIndex = model.children.lastIndexOf(node); // node is likely the list child
+        } else if (model.children[nextIndex] !== node) {
+          moveChild(model.children, node, nextIndex);
         }
+        // Next node must follow current node
+        nextIndex++;
       }
     }
   };
