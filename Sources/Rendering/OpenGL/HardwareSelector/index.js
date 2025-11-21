@@ -350,7 +350,8 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.beginSelection = () => {
     model._openGLRenderer = model._openGLRenderWindow.getViewNodeFor(
-      model._renderer
+      model._renderer,
+      model._openGLRenderer
     );
     model.maxAttributeId = 0;
 
@@ -468,7 +469,8 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     }
 
     model._openGLRenderer = model._openGLRenderWindow.getViewNodeFor(
-      model._renderer
+      model._renderer,
+      model._openGLRenderer
     );
 
     // todo revisit making selection part of core

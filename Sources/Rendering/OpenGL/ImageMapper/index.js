@@ -91,7 +91,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.tris.setOpenGLRenderWindow(model._openGLRenderWindow);
       const ren = model._openGLRenderer.getRenderable();
       model.openGLCamera = model._openGLRenderer.getViewNodeFor(
-        ren.getActiveCamera()
+        ren.getActiveCamera(),
+        model.openGLCamera
       );
       // is slice set by the camera
       if (

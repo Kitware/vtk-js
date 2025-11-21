@@ -45,7 +45,11 @@ function vtkViewNode(publicAPI, model) {
     }
   };
 
-  publicAPI.getViewNodeFor = (dataObject) => {
+  publicAPI.getViewNodeFor = (dataObject, hint = null) => {
+    if (hint && hint.renderable === dataObject) {
+      return hint;
+    }
+
     if (model.renderable === dataObject) {
       return publicAPI;
     }

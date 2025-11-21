@@ -60,7 +60,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         'vtkOpenGLRenderWindow'
       );
       model.openGLCamera = model._openGLRenderer.getViewNodeFor(
-        model._openGLRenderer.getRenderable().getActiveCamera()
+        model._openGLRenderer.getRenderable().getActiveCamera(),
+        model.openGLCamera
       );
     }
   };

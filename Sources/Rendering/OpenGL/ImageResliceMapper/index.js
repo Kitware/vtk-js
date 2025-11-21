@@ -113,7 +113,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       const ren = model._openGLRenderer.getRenderable();
       model._openGLCamera = model._openGLRenderer.getViewNodeFor(
-        ren.getActiveCamera()
+        ren.getActiveCamera(),
+        model.openGLCamera
       );
       const oldOglRenderWindow = model._openGLRenderWindow;
       model._openGLRenderWindow = model._openGLRenderer.getLastAncestorOfType(
