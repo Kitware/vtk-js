@@ -61,7 +61,8 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       }
       model.context = model._openGLRenderWindow.getContext();
       model.openGLCamera = model._openGLRenderer.getViewNodeFor(
-        model._openGLRenderer.getRenderable().getActiveCamera()
+        model._openGLRenderer.getRenderable().getActiveCamera(),
+        model.openGLCamera
       );
 
       model.tris.setOpenGLRenderWindow(model._openGLRenderWindow);

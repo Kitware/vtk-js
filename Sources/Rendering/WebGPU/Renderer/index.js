@@ -127,7 +127,10 @@ function vtkWebGPURenderer(publicAPI, model) {
       publicAPI.addMissingNodes(model.renderable.getViewPropsWithNestedProps());
       publicAPI.removeUnusedNodes();
 
-      model.webgpuCamera = publicAPI.getViewNodeFor(model.camera);
+      model.webgpuCamera = publicAPI.getViewNodeFor(
+        model.camera,
+        model.webgpuCamera
+      );
       publicAPI.updateStabilizedMatrix();
     }
   };

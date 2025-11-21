@@ -100,8 +100,9 @@ export interface vtkViewNode extends vtkObject {
    * Returns the view node that corresponding to the provided object
    * Will return NULL if a match is not found in self or descendents
    * @param dataObject
+   * @param [hint] the previously found node (for optimization)
    */
-  getViewNodeFor(dataObject: any): any;
+  getViewNodeFor(dataObject: any, hint?: any): any;
 
   /**
    *

@@ -162,7 +162,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       const ren = model._openGLRenderer.getRenderable();
       model.openGLCamera = model._openGLRenderer.getViewNodeFor(
-        ren.getActiveCamera()
+        ren.getActiveCamera(),
+        model.openGLCamera
       );
       publicAPI.renderPiece(ren, actor);
     }
