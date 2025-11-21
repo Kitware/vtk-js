@@ -48,19 +48,23 @@ function vtkViewport(publicAPI, model) {
 
   publicAPI.getViewPropsWithNestedProps = () => {
     let allPropsArray = [];
-    // Handle actor2D instances separately so that they can be overlayed and layered
-    const actors2D = publicAPI.getActors2D();
-    // Sort the actor2D list using its layer number
-    actors2D.sort((a, b) => a.getLayerNumber() - b.getLayerNumber());
-    // Filter out all the actor2D instances
-    const newPropList = model.props.filter((item) => !actors2D.includes(item));
-    for (let i = 0; i < newPropList.length; i++) {
-      gatherProps(newPropList[i], allPropsArray);
+    // Repopulate the actor2D list to minimize browsing operations.
+    model.actors2D = [];
+    for (let i = 0; i < model.props.length; i++) {
+      // Handle actor2D instances separately so that they can be overlayed and layered
+      const isActor2D = model.props[i].getActors2D();
+      if (isActor2D && (!Array.isArray(isActor2D) || isActor2D.length > 0)) {
+        model.actors2D = model.actors2D.concat(isActor2D);
+      } else {
+        gatherProps(model.props[i], allPropsArray);
+      }
     }
+    // Actor2D must be rendered by layer number order
+    model.actors2D.sort((a, b) => a.getLayerNumber() - b.getLayerNumber());
     // Finally, add the actor2D props at the end of the list
     // This works because, when traversing the render pass in vtkOpenGLRenderer, the children are
     // traversed in the order that they are added to the list
-    allPropsArray = allPropsArray.concat(actors2D);
+    allPropsArray = allPropsArray.concat(model.actors2D);
     return allPropsArray;
   };
 
