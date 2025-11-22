@@ -1,7 +1,7 @@
-import * as vtkMath from '@kitware/vtk.js/Common/Core/Math';
-import vtkOrientationMarkerWidget from '@kitware/vtk.js/Interaction/Widgets/OrientationMarkerWidget';
-import vtkAxesActor from '@kitware/vtk.js/Rendering/Core/AxesActor';
-import vtkInteractiveOrientationWidget from '@kitware/vtk.js/Widgets/Widgets3D/InteractiveOrientationWidget';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
+import vtkAxesActor from 'vtk.js/Sources/Rendering/Core/AxesActor';
+import vtkInteractiveOrientationWidget from 'vtk.js/Sources/Widgets/Widgets3D/InteractiveOrientationWidget';
 
 export function majorAxis(vec3, idxA, idxB) {
   const axis = [0, 0, 0];
