@@ -1,3 +1,5 @@
+import { mat4, quat, vec3 } from 'gl-matrix';
+
 export function computeCoordShiftAndScale(points) {
   // Find out if shift scale should be used
   // Compute squares of diagonal size and distance from the origin
@@ -41,4 +43,19 @@ export function computeCoordShiftAndScale(points) {
   };
 }
 
-export default { computeCoordShiftAndScale };
+export function computeInverseShiftAndScaleMatrix(coordShift, coordScale) {
+  const inverseScale = new Float64Array(3);
+  vec3.inverse(inverseScale, coordScale);
+
+  const matrix = new Float64Array(16);
+  mat4.fromRotationTranslationScale(
+    matrix,
+    quat.create(),
+    coordShift,
+    inverseScale
+  );
+
+  return matrix;
+}
+
+export default { computeCoordShiftAndScale, computeInverseShiftAndScaleMatrix };
