@@ -45,14 +45,14 @@ function vtkIFCImporter(publicAPI, model) {
     const pointValues = new Float32Array(vertices.length / 2);
     const normalsArray = new Float32Array(vertices.length / 2);
 
-    for (let i = 0; i < vertices.length; i += 6) {
-      pointValues[i / 2] = vertices[i];
-      pointValues[i / 2 + 1] = vertices[i + 1];
-      pointValues[i / 2 + 2] = vertices[i + 2];
+    for (let i = 0, p = 0; i < vertices.length; p += 3) {
+      pointValues[p] = vertices[i++];
+      pointValues[p + 1] = vertices[i++];
+      pointValues[p + 2] = vertices[i++];
 
-      normalsArray[i / 2] = vertices[i + 3];
-      normalsArray[i / 2 + 1] = vertices[i + 4];
-      normalsArray[i / 2 + 2] = vertices[i + 5];
+      normalsArray[p] = vertices[i++];
+      normalsArray[p + 1] = vertices[i++];
+      normalsArray[p + 2] = vertices[i++];
     }
 
     const nCells = indices.length;
@@ -91,48 +91,42 @@ function vtkIFCImporter(publicAPI, model) {
     const colorArray = new Float32Array(vertices.length / 2);
 
     if (userMatrix) {
-      const transformMatrix = vtkMatrixBuilder
-        .buildFromRadian()
-        .setMatrix(userMatrix);
+      for (let i = 0, p = 0; i < vertices.length; p += 3) {
+        pointValues[p] = vertices[i++];
+        pointValues[p + 1] = vertices[i++];
+        pointValues[p + 2] = vertices[i++];
 
-      const normalMatrix = vtkMatrixBuilder
-        .buildFromRadian()
-        .multiply3x3(mat3.fromMat4(mat3.create(), userMatrix));
+        normalsArray[p] = vertices[i++];
+        normalsArray[p + 1] = vertices[i++];
+        normalsArray[p + 2] = vertices[i++];
 
-      for (let i = 0; i < vertices.length; i += 6) {
-        const point = [vertices[i], vertices[i + 1], vertices[i + 2]];
-        const normal = [vertices[i + 3], vertices[i + 4], vertices[i + 5]];
-
-        transformMatrix.apply(point);
-        normalMatrix.apply(normal);
-
-        pointValues[i / 2] = point[0];
-        pointValues[i / 2 + 1] = point[1];
-        pointValues[i / 2 + 2] = point[2];
-
-        normalsArray[i / 2] = normal[0];
-        normalsArray[i / 2 + 1] = normal[1];
-        normalsArray[i / 2 + 2] = normal[2];
-
-        const colorIndex = i / 2;
-        colorArray[colorIndex] = color.x;
-        colorArray[colorIndex + 1] = color.y;
-        colorArray[colorIndex + 2] = color.z;
+        colorArray[p] = color.x;
+        colorArray[p + 1] = color.y;
+        colorArray[p + 2] = color.z;
       }
+
+      vtkMatrixBuilder
+        .buildFromRadian()
+        .setMatrix(userMatrix)
+        .apply(pointValues);
+
+      vtkMatrixBuilder
+        .buildFromRadian()
+        .multiply3x3(mat3.fromMat4(mat3.create(), userMatrix))
+        .apply(normalsArray);
     } else {
-      for (let i = 0; i < vertices.length; i += 6) {
-        pointValues[i / 2] = vertices[i];
-        pointValues[i / 2 + 1] = vertices[i + 1];
-        pointValues[i / 2 + 2] = vertices[i + 2];
+      for (let i = 0, p = 0; i < vertices.length; p += 3) {
+        pointValues[p] = vertices[i++];
+        pointValues[p + 1] = vertices[i++];
+        pointValues[p + 2] = vertices[i++];
 
-        normalsArray[i / 2] = vertices[i + 3];
-        normalsArray[i / 2 + 1] = vertices[i + 4];
-        normalsArray[i / 2 + 2] = vertices[i + 5];
+        normalsArray[p] = vertices[i++];
+        normalsArray[p + 1] = vertices[i++];
+        normalsArray[p + 2] = vertices[i++];
 
-        const colorIndex = i / 2;
-        colorArray[colorIndex] = color.x;
-        colorArray[colorIndex + 1] = color.y;
-        colorArray[colorIndex + 2] = color.z;
+        colorArray[p] = color.x;
+        colorArray[p + 1] = color.y;
+        colorArray[p + 2] = color.z;
       }
     }
 
