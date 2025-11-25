@@ -534,6 +534,8 @@
       "Name" : "Grayscale-DICOM-sigmoid",
       "Notes": "This is a 16 point sample of a sigmoid grayscale colormap described in the DICOM standard. See equation C.11-1 in section C.11.2",
       "NanColor" : [ 1, 0, 0 ],
+      "BelowRangeColor" : [ 0, 0, 0 ],
+      "AboveRangeColor" : [ 1, 1, 1 ],
       "RGBPoints" : [
          -1,
          0.01798620996209156,
