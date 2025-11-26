@@ -208,7 +208,6 @@ function vtkImageMarchingSquares(publicAPI, model) {
     console.time('msquares');
 
     // Retrieve output and volume data
-    const origin = input.getOrigin();
     const spacing = input.getSpacing();
     const dims = input.getDimensions();
     const extent = input.getExtent();
