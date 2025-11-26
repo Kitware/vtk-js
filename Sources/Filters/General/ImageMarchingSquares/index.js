@@ -85,28 +85,25 @@ function vtkImageMarchingSquares(publicAPI, model) {
 
   /**
    * Retrieve pixel coordinates.
-   * @param {Vector3} ijk origin of the pixel
-   * @param {Vector3} origin origin of the image
+   * @param {Vector3} worldPos world coordinates of the pixel
    * @param {Vector3} spacing spacing of the image
    * @param {number} kernelX index of the X element
    * @param {number} kernelY index of the Y element
    */
-  publicAPI.getPixelPoints = (ijk, origin, spacing, kernelX, kernelY) => {
-    const i = ijk[kernelX];
-    const j = ijk[kernelY];
+  publicAPI.getPixelPoints = (worldPos, spacing, kernelX, kernelY) => {
 
-    // (i,i+1),(j,j+1),(k,k+1) - i varies fastest; then j; then k
-    pixelPts[0] = origin[kernelX] + i * spacing[kernelX]; // 0
-    pixelPts[1] = origin[kernelY] + j * spacing[kernelY];
+    // pixelPts = a flattened world coordinates array of [ (i,j), (i+1, j), (i, j+1), (i+1, j+1)]
+    pixelPts[0] = worldPos[kernelX] // 0,i
+    pixelPts[1] = worldPos[kernelY]; //j
 
-    pixelPts[2] = pixelPts[0] + spacing[kernelX]; // 1
-    pixelPts[3] = pixelPts[1];
+    pixelPts[2] = pixelPts[0] + spacing[kernelX]; // 1, i+1
+    pixelPts[3] = pixelPts[1]; // j
 
-    pixelPts[4] = pixelPts[0]; // 2
-    pixelPts[5] = pixelPts[1] + spacing[kernelY];
+    pixelPts[4] = pixelPts[0]; // 2, i
+    pixelPts[5] = pixelPts[1] + spacing[kernelY]; // j+1
 
-    pixelPts[6] = pixelPts[2]; // 3
-    pixelPts[7] = pixelPts[5];
+    pixelPts[6] = pixelPts[2]; // 3, i+1
+    pixelPts[7] = pixelPts[5]; // j+1
   };
 
   /**
@@ -114,7 +111,6 @@ function vtkImageMarchingSquares(publicAPI, model) {
    * @param {number[]} cVal list of contour values
    * @param {Vector3} ijk origin of the pixel
    * @param {Vector3} dims dimensions of the image
-   * @param {Vector3} origin origin of the image
    * @param {Vector3} spacing sapcing of the image
    * @param {TypedArray} scalars list of scalar values
    * @param {number[]} points list of points
@@ -128,7 +124,6 @@ function vtkImageMarchingSquares(publicAPI, model) {
     cVal,
     ijk,
     dims,
-    origin,
     spacing,
     scalars,
     points,
@@ -139,6 +134,8 @@ function vtkImageMarchingSquares(publicAPI, model) {
     indexToWorld
   ) => {
     const CASE_MASK = [1, 2, 8, 4]; // case table is actually for quad
+    const xyz = [];
+    const worldPos = indexToWorld(ijk);
     let pId;
 
     publicAPI.getPixelScalars(ijk, dims, scalars, increments, kernelX, kernelY);
@@ -155,8 +152,9 @@ function vtkImageMarchingSquares(publicAPI, model) {
       return; // don't get the pixel coordinates, nothing to do
     }
 
-    publicAPI.getPixelPoints(ijk, origin, spacing, kernelX, kernelY);
+    publicAPI.getPixelPoints(worldPos, spacing, kernelX, kernelY);
 
+    const z = worldPos[model.slicingMode];
     for (let idx = 0; pixelLines[idx] >= 0; idx += 2) {
       lines.push(2);
       for (let eid = 0; eid < 2; eid++) {
@@ -169,7 +167,14 @@ function vtkImageMarchingSquares(publicAPI, model) {
           )?.value;
         }
         if (pId === undefined) {
-          const xyz = indexToWorld(ijk);
+          const t =
+          (cVal - pixelScalars[edgeVerts[0]]) /
+          (pixelScalars[edgeVerts[1]] - pixelScalars[edgeVerts[0]]);
+          const x0 = pixelPts.slice(edgeVerts[0] * 2, (edgeVerts[0] + 1) * 2);
+          const x1 = pixelPts.slice(edgeVerts[1] * 2, (edgeVerts[1] + 1) * 2);
+          xyz[kernelX] = x0[0] + t * (x1[0] - x0[0]);
+          xyz[kernelY] = x0[1] + t * (x1[1] - x0[1]);
+          xyz[model.slicingMode] = z
           pId = points.length / 3;
           points.push(xyz[0], xyz[1], xyz[2]);
 
@@ -237,7 +242,6 @@ function vtkImageMarchingSquares(publicAPI, model) {
             model.contourValues[cv],
             ijk,
             dims,
-            origin,
             spacing,
             scalars,
             points,
