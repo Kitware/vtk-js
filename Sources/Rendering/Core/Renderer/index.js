@@ -464,6 +464,149 @@ function vtkRenderer(publicAPI, model) {
     return true;
   };
 
+  publicAPI.resetCameraScreenSpace = (offsetRatio = 0.9) => {
+    const boundsToUse = publicAPI.computeVisiblePropBounds();
+    const center = [0, 0, 0];
+
+    if (!vtkMath.areBoundsInitialized(boundsToUse)) {
+      vtkDebugMacro('Cannot reset camera!');
+      return false;
+    }
+
+    let vn = null;
+
+    if (publicAPI.getActiveCamera()) {
+      vn = model.activeCamera.getViewPlaneNormal();
+    } else {
+      vtkErrorMacro('Trying to reset non-existent camera');
+      return false;
+    }
+
+    // Reset the perspective zoom factors, otherwise subsequent zooms will cause
+    // the view angle to become very small and cause bad depth sorting.
+    model.activeCamera.setViewAngle(30.0);
+
+    center[0] = (boundsToUse[0] + boundsToUse[1]) / 2.0;
+    center[1] = (boundsToUse[2] + boundsToUse[3]) / 2.0;
+    center[2] = (boundsToUse[4] + boundsToUse[5]) / 2.0;
+
+    let w1 = boundsToUse[1] - boundsToUse[0];
+    let w2 = boundsToUse[3] - boundsToUse[2];
+    let w3 = boundsToUse[5] - boundsToUse[4];
+    w1 *= w1;
+    w2 *= w2;
+    w3 *= w3;
+    let radius = w1 + w2 + w3;
+
+    // If we have just a single point, pick a radius of 1.0
+    radius = radius === 0 ? 1.0 : radius;
+
+    // compute the radius of the enclosing sphere
+    radius = Math.sqrt(radius) * 0.5;
+
+    const angle = vtkMath.radiansFromDegrees(model.activeCamera.getViewAngle());
+    const distance = radius / Math.sin(angle * 0.5);
+
+    // check view-up vector against view plane normal
+    const vup = model.activeCamera.getViewUp();
+    if (Math.abs(vtkMath.dot(vup, vn)) > 0.999) {
+      vtkWarningMacro('Resetting view-up since view plane normal is parallel');
+      model.activeCamera.setViewUp(-vup[2], vup[0], vup[1]);
+    }
+
+    // Set up camera position and focal point first (needed for view matrix)
+    model.activeCamera.setFocalPoint(center[0], center[1], center[2]);
+    model.activeCamera.setPosition(
+      center[0] + distance * vn[0],
+      center[1] + distance * vn[1],
+      center[2] + distance * vn[2]
+    );
+
+    // Calculate parallel scale accounting for viewport aspect ratio
+    // This mirrors C++ VTK behavior by transforming bounds to view space
+    // and computing the parallel scale from view space dimensions.
+    // This fixes the issue where narrow viewports crop significantly (issue #1285)
+    let parallelScale = radius;
+
+    // For parallel projection, compute parallel scale from view space bounds
+    if (model._renderWindow && model.activeCamera.getParallelProjection()) {
+      try {
+        // Get the view from render window to access viewport size
+        const views = model._renderWindow.getViews
+          ? model._renderWindow.getViews()
+          : [];
+        if (views.length > 0) {
+          const view = views[0];
+          const dims = view.getViewportSize
+            ? view.getViewportSize(publicAPI)
+            : null;
+          if (dims && dims[0] > 0 && dims[1] > 0) {
+            const aspect = dims[0] / dims[1];
+
+            // Get corner points of the bounds in world space
+            const visiblePoints = [];
+            vtkBoundingBox.getCorners(boundsToUse, visiblePoints);
+
+            // Transform bounds to view space using the view matrix
+            // The view matrix is now valid since we've set up the camera
+            const viewBounds = vtkBoundingBox.reset([]);
+            const viewMatrix = model.activeCamera.getViewMatrix();
+            const viewMatrixTransposed = new Float64Array(16);
+            mat4.copy(viewMatrixTransposed, viewMatrix);
+            mat4.transpose(viewMatrixTransposed, viewMatrixTransposed);
+
+            for (let i = 0; i < visiblePoints.length; ++i) {
+              const point = visiblePoints[i];
+              const viewPoint = new Float64Array(3);
+              vec3.transformMat4(viewPoint, point, viewMatrixTransposed);
+              vtkBoundingBox.addPoint(viewBounds, ...viewPoint);
+            }
+
+            // Get lengths in view space
+            const xLength = vtkBoundingBox.getLength(viewBounds, 0);
+            const yLength = vtkBoundingBox.getLength(viewBounds, 1);
+
+            // Apply offset ratio to add white space buffer
+            // offsetRatio is the fraction of space to use (default 0.9 = 90%, leaving 10% margin)
+            const marginMultiplier = 1.0 / offsetRatio;
+            const xLengthWithMargin = marginMultiplier * xLength;
+            const yLengthWithMargin = marginMultiplier * yLength;
+
+            // Use max of height and width/aspect to ensure everything fits
+            // This accounts for viewport aspect ratio to prevent cropping
+            // This mirrors C++ VTK behavior
+            parallelScale =
+              0.5 * Math.max(yLengthWithMargin, xLengthWithMargin / aspect);
+          }
+        }
+      } catch (e) {
+        // If we can't get aspect ratio, fall back to using radius
+        vtkDebugMacro(
+          'ResetCameraScreenSpace could not get aspect ratio, using radius for parallel scale'
+        );
+      }
+    }
+
+    publicAPI.resetCameraClippingRange(boundsToUse);
+
+    // setup parallel scale (computed from view space for parallel projection)
+    model.activeCamera.setParallelScale(parallelScale);
+
+    // update reasonable world to physical values
+    model.activeCamera.setPhysicalScale(radius);
+    model.activeCamera.setPhysicalTranslation(
+      -center[0],
+      -center[1],
+      -center[2]
+    );
+
+    // Here to let parallel/distributed compositing intercept
+    // and do the right thing.
+    publicAPI.invokeEvent(RESET_CAMERA_EVENT);
+
+    return true;
+  };
+
   publicAPI.resetCameraClippingRange = (bounds = null) => {
     const boundsToUse = bounds || publicAPI.computeVisiblePropBounds();
 
