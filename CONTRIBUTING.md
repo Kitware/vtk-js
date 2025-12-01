@@ -33,7 +33,7 @@ Please follow the coding style:
     $ git checkout -b new_feature
     ```
 
-4. Start hacking. Additional information on how to create class/test/example can be found
+6. Start hacking. Additional information on how to create class/test/example can be found
    [here](https://kitware.github.io/vtk-js/docs/) in the __Development__ section.
 
     ```sh
@@ -41,19 +41,26 @@ Please follow the coding style:
     $ git add file1 file2 file3
     ```
 
-5. Use Commitizen to create commits
+7. Verify you have correctly formatted code, and that all tests pass:
+
+    ```sh
+    $ npm run reformat
+    $ npm run test
+    ```
+
+8. Use Commitizen to create commits
 
     ```sh
     $ npm run commit
     ```
 
-6. Push commits in your feature branch to your fork in GitHub:
+9. Push commits in your feature branch to your fork in GitHub:
 
     ```sh
     $ git push origin new_feature
     ```
 
-7. Visit your fork in Github, browse to the "**Pull Requests**" link on the left, and use the 
+10. Visit your fork in Github, browse to the "**Pull Requests**" link on the left, and use the 
    "**New Pull Request**" button in the upper right to create a Pull Request.
 
     For more information see: 
@@ -62,7 +69,7 @@ Please follow the coding style:
 If committing changes to `vtk.js@next` or `vtk.js@next-major`, then set your base branch to be `next`
 or `next-major`, respectively. For more info see the section on release channels below.
 
-8. vtk.js uses GitHub for code review and Github Actions to validate proposed patches before they are merged.
+11. vtk.js uses GitHub for code review and Github Actions to validate proposed patches before they are merged.
 
 ## Release Channels
 
