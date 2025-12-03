@@ -94,35 +94,29 @@ function vtkImageMarchingSquares(publicAPI, model) {
     // pixelPts = a flattened world coordinates array of [ (i,j,k), (i+1,j,k), (i,j+1,k), (i+1,j+1,k)]
 
     // 0: i, j, k
-    let worldPos = indexToWorld(ijk);
-    pixelPts[0] = worldPos[0];
-    pixelPts[1] = worldPos[1];
-    pixelPts[2] = worldPos[2];
+    const neighborIJK = [...ijk];
+    indexToWorld(neighborIJK, pixelPts);
 
     // 1: i+1, j, k
-    const ijk1 = [...ijk];
-    ijk1[kernelX] += 1;
-    worldPos = indexToWorld(ijk1);
-    pixelPts[3] = worldPos[0];
-    pixelPts[4] = worldPos[1];
-    pixelPts[5] = worldPos[2];
+    neighborIJK[kernelX] += 1;
+    const temp = indexToWorld(neighborIJK, []);
+    pixelPts[3] = temp[0];
+    pixelPts[4] = temp[1];
+    pixelPts[5] = temp[2];
 
-    // 2: i, j+1, k
-    const ijk2 = [...ijk];
-    ijk2[kernelY] += 1;
-    worldPos = indexToWorld(ijk2);
-    pixelPts[6] = worldPos[0];
-    pixelPts[7] = worldPos[1];
-    pixelPts[8] = worldPos[2];
+    // 2: i+1, j+1, k
+    neighborIJK[kernelY] += 1;
+    indexToWorld(neighborIJK, temp);
+    pixelPts[9] = temp[0];
+    pixelPts[10] = temp[1];
+    pixelPts[11] = temp[2];
 
-    // 3: i+1, j+1, k
-    const ijk3 = [...ijk];
-    ijk3[kernelX] += 1;
-    ijk3[kernelY] += 1;
-    worldPos = indexToWorld(ijk3);
-    pixelPts[9] = worldPos[0];
-    pixelPts[10] = worldPos[1];
-    pixelPts[11] = worldPos[2];
+    // 3: i, j+1, k
+    neighborIJK[kernelX] -= 1;
+    indexToWorld(neighborIJK, temp);
+    pixelPts[6] = temp[0];
+    pixelPts[7] = temp[1];
+    pixelPts[8] = temp[2];
   };
 
   /**
