@@ -178,8 +178,8 @@ function vtkImageMarchingSquares(publicAPI, model) {
         }
         if (pId === undefined) {
           const t =
-          (cVal - pixelScalars[edgeVerts[0]]) /
-          (pixelScalars[edgeVerts[1]] - pixelScalars[edgeVerts[0]]);
+            (cVal - pixelScalars[edgeVerts[0]]) /
+            (pixelScalars[edgeVerts[1]] - pixelScalars[edgeVerts[0]]);
           const x0 = pixelPts.slice(edgeVerts[0] * 3, (edgeVerts[0] + 1) * 3);
           const x1 = pixelPts.slice(edgeVerts[1] * 3, (edgeVerts[1] + 1) * 3);
           xyz[0] = x0[0] + t * (x1[0] - x0[0]);
