@@ -10,7 +10,13 @@ export const Scale = {
   LOG10: 1,
 };
 
+export const ScalarMappingMode = {
+  LINEAR: 0,
+  SIGMOID: 1,
+};
+
 export default {
   ColorSpace,
   Scale,
+  ScalarMappingMode,
 };
