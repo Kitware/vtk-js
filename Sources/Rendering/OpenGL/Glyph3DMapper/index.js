@@ -7,7 +7,10 @@ import vtkHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelecto
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkOpenGLPolyDataMapper from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
-import { computeCoordShiftAndScale } from 'vtk.js/Sources/Rendering/OpenGL/CellArrayBufferObject/helpers';
+import {
+  computeCoordShiftAndScale,
+  computeInverseShiftAndScaleMatrix,
+} from 'vtk.js/Sources/Rendering/OpenGL/CellArrayBufferObject/helpers';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 import { primTypes } from '../Helper';
@@ -22,16 +25,6 @@ const EndEvent = { type: 'EndEvent' };
 
 const MAT4_BYTE_SIZE = 64;
 const MAT4_ELEMENT_COUNT = 16;
-
-function applyShiftScaleToMat(mat, shift, scale) {
-  // the translation component of a 4x4 column-major matrix
-  mat[12] = (mat[12] - shift[0]) * scale[0];
-  mat[13] = (mat[13] - shift[1]) * scale[1];
-  mat[14] = (mat[14] - shift[2]) * scale[2];
-  mat[0] *= scale[0];
-  mat[5] *= scale[1];
-  mat[10] *= scale[2];
-}
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLSphereMapper methods
@@ -714,13 +707,18 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
 
       if (useShiftAndScale) {
         const buf = garray.buffer;
+        const shiftScaleMat = computeInverseShiftAndScaleMatrix(
+          coordShift,
+          coordScale
+        );
+        mat4.invert(shiftScaleMat, shiftScaleMat);
         for (
           let ptIdx = 0;
           ptIdx < garray.byteLength;
           ptIdx += MAT4_BYTE_SIZE
         ) {
           const mat = new Float32Array(buf, ptIdx, MAT4_ELEMENT_COUNT);
-          applyShiftScaleToMat(mat, coordShift, coordScale);
+          mat4.multiply(mat, shiftScaleMat, mat);
         }
       }
 

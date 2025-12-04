@@ -371,6 +371,7 @@ function updateReslice(
   return modified;
 }
 
+let slabNumberOfSlices = null;
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
   reader.loadData().then(() => {
@@ -464,7 +465,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
 
     // set max number of slices to slider.
     const maxNumberOfSlices = vec3.length(image.getDimensions());
-    document.getElementById('slabNumber').max = maxNumberOfSlices;
+    slabNumberOfSlices?.max(maxNumberOfSlices);
   });
 });
 
@@ -577,7 +578,7 @@ slabFolder
     updateViews();
   });
 
-slabFolder
+slabNumberOfSlices = slabFolder
   .add(guiParams, 'SlabNumberOfSlices', 1, 100, 1)
   .name('Slab slices')
   .onChange((value) => {
