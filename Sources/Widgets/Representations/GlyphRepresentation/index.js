@@ -261,6 +261,7 @@ function defaultValues(publicAPI, model, initialValues) {
         initialValues._pipeline?.mapper ?? // in case mapper was provided
         vtkGlyph3DMapper.newInstance({
           scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
+          coordShiftScaleEnabled: false, // disable shift scale by default for widgets using glyphs
         }),
       actor:
         initialValues._pipeline?.actor ?? // in case actor was provided

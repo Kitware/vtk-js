@@ -794,6 +794,8 @@ const DEFAULT_VALUES = {
   invertibleScalars: null,
 
   customShaderAttributes: [],
+
+  coordShiftScaleEnabled: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -825,6 +827,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'scalarVisibility',
     'static',
     'useLookupTableScalarRange',
+    'coordShiftScaleEnabled',
     'customShaderAttributes', // point data array names that will be transferred to the VBO
   ]);
   macro.setGetArray(publicAPI, model, ['scalarRange'], 2);
