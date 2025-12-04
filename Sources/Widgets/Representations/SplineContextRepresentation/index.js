@@ -142,15 +142,19 @@ function vtkSplineContextRepresentation(publicAPI, model) {
 
   publicAPI.getSelectedState = (prop, compositeID) => model.state;
 
-  function updateAreaVisibility() {
-    model._pipelines.area.actor.setVisibility(model.fill);
-  }
+  const superSetFill = publicAPI.setFill;
+  publicAPI.setFill = (fill) => {
+    const res = superSetFill(fill);
+    model._pipelines.area.actor.setVisibility(fill);
+    return res;
+  };
 
-  publicAPI.setFill = macro.chain(publicAPI.setFill, updateAreaVisibility);
-
-  publicAPI.setOutputBorder = macro.chain(publicAPI.setOutputBorder, (v) =>
-    model._pipelines.border.actor.setVisibility(v)
-  );
+  const superSetOutputBorder = publicAPI.setOutputBorder;
+  publicAPI.setOutputBorder = (v) => {
+    const res = superSetOutputBorder(v);
+    model._pipelines.border.actor.setVisibility(v);
+    return res;
+  };
 }
 
 // ----------------------------------------------------------------------------
