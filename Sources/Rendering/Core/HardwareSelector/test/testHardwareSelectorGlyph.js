@@ -108,14 +108,16 @@ test('Test HardwareSelectorGlyph', (tapeContext) => {
   sel.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_POINTS);
 
   return sel.selectAsync(renderer, 200, 200, 250, 300).then((res) => {
-    const allGood = res.length === 7 && res[0].getProperties().prop === actor;
-
-    tapeContext.ok(res.length === 7, 'Seven glyphs selected');
+    tapeContext.equal(res.length, 7, 'Seven glyphs selected');
     tapeContext.ok(
       res[0].getProperties().compositeID === 71,
       'glyph 71 was the first selected'
     );
-    tapeContext.ok(allGood, 'Correct prop was selected');
+    tapeContext.equal(
+      res[0].getProperties().prop,
+      actor,
+      'Correct prop was selected'
+    );
 
     gc.releaseResources();
   });
