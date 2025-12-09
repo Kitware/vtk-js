@@ -1,31 +1,19 @@
-import { mat4, quat, vec3 } from 'gl-matrix';
+import { vec3 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macros';
 import vtkBufferObject from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
 import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
-import { computeCoordShiftAndScale } from 'vtk.js/Sources/Rendering/OpenGL/CellArrayBufferObject/helpers';
+import {
+  computeCoordShiftAndScale,
+  computeInverseShiftAndScaleMatrix,
+} from 'vtk.js/Sources/Rendering/OpenGL/CellArrayBufferObject/helpers';
 
 const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // Static functions
 // ----------------------------------------------------------------------------
-
-function computeInverseShiftAndScaleMatrix(coordShift, coordScale) {
-  const inverseScale = new Float64Array(3);
-  vec3.inverse(inverseScale, coordScale);
-
-  const matrix = new Float64Array(16);
-  mat4.fromRotationTranslationScale(
-    matrix,
-    quat.create(),
-    coordShift,
-    inverseScale
-  );
-
-  return matrix;
-}
 
 function shouldApplyCoordShiftAndScale(coordShift, coordScale) {
   if (coordShift === null || coordScale === null) {
