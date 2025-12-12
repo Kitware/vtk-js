@@ -256,8 +256,9 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     // we don't interfere with other events such as doubleClick,
     // for this reason we don't call this from `onButtonDown`
     if (model.usePointerLock && !interactor.isPointerLocked()) {
-      interactor.requestPointerLock();
-      publicAPI.startPointerLockEvent(interactor, renderer);
+      Promise.resolve(interactor.requestPointerLock()).then(() => {
+        publicAPI.startPointerLockEvent(interactor, renderer);
+      });
     }
 
     if (!position) {
