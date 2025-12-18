@@ -206,8 +206,10 @@ export function newInstance(
 /**
  * vtkImageMapper provides 2D image display support for vtk.
  * It can be associated with a vtkImageSlice prop and placed within a Renderer.
+ * Only axis-aligned slices are supported.
  *
  * This class resolves coincident topology with the same methods as vtkMapper.
+ * @see vtkImageResliceMapper
  */
 export declare const vtkImageMapper: {
   newInstance: typeof newInstance;
