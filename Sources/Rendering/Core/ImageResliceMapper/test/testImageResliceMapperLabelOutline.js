@@ -35,6 +35,7 @@ test.onlyIfWebGL('Test ImageResliceMapper LabelOutline', async (t) => {
   renderer.setBackground(0.3, 0.3, 0.3);
 
   const imageDimension = 20;
+  const labelmapDimension = 10; // Half resolution for labelmap
 
   // Background image property
   const bgPpty = gc.registerResource(vtkImageProperty.newInstance());
@@ -58,7 +59,7 @@ test.onlyIfWebGL('Test ImageResliceMapper LabelOutline', async (t) => {
   labelPpty.setUseLookupTableScalarRange(true);
   labelPpty.setInterpolationTypeToNearest();
   labelPpty.setUseLabelOutline(true);
-  labelPpty.setLabelOutlineThickness([3, 3, 3, 3]);
+  labelPpty.setLabelOutlineThickness([1, 1, 1, 1]);
   labelPpty.setLabelOutlineOpacity(1.0);
 
   const labelRgb = gc.registerResource(vtkColorTransferFunction.newInstance());
@@ -109,23 +110,28 @@ test.onlyIfWebGL('Test ImageResliceMapper LabelOutline', async (t) => {
   );
   bgImage.getPointData().setScalars(bgScalars);
 
-  // Create labelmap with two rectangular segments
+  // Create labelmap with two rectangular segments at HALF resolution
   const labelImage = gc.registerResource(vtkImageData.newInstance());
-  labelImage.setDimensions(imageDimension, imageDimension, imageDimension);
-  labelImage.setSpacing(1, 1, 1);
+  labelImage.setDimensions(
+    labelmapDimension,
+    labelmapDimension,
+    labelmapDimension
+  );
+  // Spacing is 2x to cover the same physical extent as the background image
+  labelImage.setSpacing(2, 2, 2);
   labelImage.setOrigin(0, 0, 0);
 
-  const labelValues = new Uint8Array(imageDimension ** 3);
-  for (let k = 0; k < imageDimension; k++) {
-    for (let j = 0; j < imageDimension; j++) {
-      for (let i = 0; i < imageDimension; i++) {
-        const idx = i + imageDimension * (j + imageDimension * k);
-        // Segment 1: left rectangle
-        if (i >= 2 && i < 8 && j >= 5 && j < 15) {
+  const labelValues = new Uint8Array(labelmapDimension ** 3);
+  for (let k = 0; k < labelmapDimension; k++) {
+    for (let j = 0; j < labelmapDimension; j++) {
+      for (let i = 0; i < labelmapDimension; i++) {
+        const idx = i + labelmapDimension * (j + labelmapDimension * k);
+        // Segment 1: left rectangle (scaled coordinates for half resolution)
+        if (i >= 1 && i < 4 && j >= 2 && j < 8) {
           labelValues[idx] = 1;
         }
-        // Segment 2: right rectangle
-        else if (i >= 12 && i < 18 && j >= 5 && j < 15) {
+        // Segment 2: right rectangle (scaled coordinates for half resolution)
+        else if (i >= 6 && i < 9 && j >= 2 && j < 8) {
           labelValues[idx] = 2;
         } else {
           labelValues[idx] = 0;
