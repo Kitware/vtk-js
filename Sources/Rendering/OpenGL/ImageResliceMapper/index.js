@@ -765,17 +765,25 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         ? cellBO.getCABO().getInverseShiftAndScaleMatrix()
         : null;
 
-      // Set the world->texture matrix
-      if (program.isUniformUsed('WCTCMatrix')) {
-        const dim = firstImageData.getDimensions();
-        mat4.copy(model.tmpMat4, firstImageData.getIndexToWorld());
-        mat4.translate(model.tmpMat4, model.tmpMat4, [-0.5, -0.5, -0.5]);
-        mat4.scale(model.tmpMat4, model.tmpMat4, dim);
-        mat4.invert(model.tmpMat4, model.tmpMat4);
-        if (inverseShiftScaleMatrix) {
-          mat4.multiply(model.tmpMat4, model.tmpMat4, inverseShiftScaleMatrix);
+      // Set per-input world->texture matrices
+      for (let i = 0; i < model.currentValidInputs.length; i++) {
+        const uniformName = `WCTCMatrix${i}`;
+        if (program.isUniformUsed(uniformName)) {
+          const imageData = model.currentValidInputs[i].imageData;
+          const dim = imageData.getDimensions();
+          mat4.copy(model.tmpMat4, imageData.getIndexToWorld());
+          mat4.translate(model.tmpMat4, model.tmpMat4, [-0.5, -0.5, -0.5]);
+          mat4.scale(model.tmpMat4, model.tmpMat4, dim);
+          mat4.invert(model.tmpMat4, model.tmpMat4);
+          if (inverseShiftScaleMatrix) {
+            mat4.multiply(
+              model.tmpMat4,
+              model.tmpMat4,
+              inverseShiftScaleMatrix
+            );
+          }
+          program.setUniformMatrix(uniformName, model.tmpMat4);
         }
-        program.setUniformMatrix('WCTCMatrix', model.tmpMat4);
       }
 
       if (program.isUniformUsed('vboScaling')) {
@@ -931,28 +939,32 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         model.labelOutlineOpacityTexture.getTextureUnit();
       program.setUniformi('labelOutlineOpacityTexture', outlineOpacityUnit);
 
-      // Calculate tangent vectors for the slice plane in texture space
-      const firstImageData = model.currentValidInputs[0].imageData;
-      const dims = firstImageData.getDimensions();
+      // Calculate tangent vectors for the slice plane in each input's texture space
       const slicePlane = model.renderable.getSlicePlane();
+
+      // Create orthogonal tangent vectors on the slice plane (in world space)
+      const tangent1 = [0, 0, 0];
+      const tangent2 = [0, 0, 0];
 
       if (slicePlane) {
         const normal = slicePlane.getNormal();
-
-        // Create orthogonal tangent vectors on the slice plane
-        const tangent1 = [0, 0, 0];
-        const tangent2 = [0, 0, 0];
-
         // Find a vector not parallel to normal
         const up = Math.abs(normal[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
         vtkMath.cross(normal, up, tangent1);
         vtkMath.normalize(tangent1);
         vtkMath.cross(normal, tangent1, tangent2);
         vtkMath.normalize(tangent2);
+      } else {
+        // Default tangents for axis-aligned slicing
+        tangent1[0] = 1;
+        tangent2[1] = 1;
+      }
 
-        // Transform tangents to texture space
+      // Set per-input tangent vectors (transformed to each input's texture space)
+      for (let i = 0; i < model.currentValidInputs.length; i++) {
+        const imageData = model.currentValidInputs[i].imageData;
         const w2io = mat3.create();
-        mat3.set(w2io, ...firstImageData.getDirection());
+        mat3.set(w2io, ...imageData.getDirection());
         mat3.invert(w2io, w2io);
 
         const t1TC = [0, 0, 0];
@@ -960,20 +972,29 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         vec3.transformMat3(t1TC, tangent1, w2io);
         vec3.transformMat3(t2TC, tangent2, w2io);
 
-        program.setUniform3fv('outlineTangent1', t1TC);
-        program.setUniform3fv('outlineTangent2', t2TC);
-      } else {
-        // Default tangents for axis-aligned slicing
-        program.setUniform3fv('outlineTangent1', [1, 0, 0]);
-        program.setUniform3fv('outlineTangent2', [0, 1, 0]);
+        const t1Name = `outlineTangent1_${i}`;
+        const t2Name = `outlineTangent2_${i}`;
+        if (program.isUniformUsed(t1Name)) {
+          program.setUniform3fv(t1Name, t1TC);
+        }
+        if (program.isUniformUsed(t2Name)) {
+          program.setUniform3fv(t2Name, t2TC);
+        }
       }
 
-      // Texel size in texture coordinates
-      program.setUniform3fv('texelSize', [
-        1.0 / dims[0],
-        1.0 / dims[1],
-        1.0 / dims[2],
-      ]);
+      // Set per-input texel sizes in texture coordinates
+      for (let i = 0; i < model.currentValidInputs.length; i++) {
+        const uniformName = `texelSize${i}`;
+        if (program.isUniformUsed(uniformName)) {
+          const imageData = model.currentValidInputs[i].imageData;
+          const inputDims = imageData.getDimensions();
+          program.setUniform3fv(uniformName, [
+            1.0 / inputDims[0],
+            1.0 / inputDims[1],
+            1.0 / inputDims[2],
+          ]);
+        }
+      }
     }
   };
 
@@ -1004,6 +1025,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       needRebuild = true;
     }
 
+    const numValidInputs = model.currentValidInputs?.length ?? 0;
+
     if (
       needRebuild ||
       model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
@@ -1013,6 +1036,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       cellBO.getProgram()?.getHandle() === 0 ||
       model.lastIndependentComponents !== iComp ||
       model.lastUseLabelOutline !== useLabelOutline ||
+      model.lastNumValidInputs !== numValidInputs ||
       model.lastSlabThickness !== slabTh ||
       model.lastSlabType !== slabType ||
       model.lastSlabTrapezoidIntegration !== slabTrap
@@ -1023,6 +1047,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         model.multiTexturePerVolumeEnabled;
       model.lastIndependentComponents = iComp;
       model.lastUseLabelOutline = useLabelOutline;
+      model.lastNumValidInputs = numValidInputs;
       model.lastSlabThickness = slabTh;
       model.lastSlabType = slabType;
       model.lastSlabTrapezoidIntegration = slabTrap;
@@ -1068,18 +1093,16 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
 
     const useLabelOutline = model.labelOutlineProperty !== null;
 
-    const tcoordVSDec = ['uniform mat4 WCTCMatrix;', 'out vec3 fragTexCoord;'];
     const slabThickness = model.renderable.getSlabThickness();
     VSSource = vtkShaderProgram.substitute(
       VSSource,
       '//VTK::TCoord::Dec',
-      tcoordVSDec
+      []
     ).result;
-    const tcoordVSImpl = ['fragTexCoord = (WCTCMatrix * vertexWC).xyz;'];
     VSSource = vtkShaderProgram.substitute(
       VSSource,
       '//VTK::TCoord::Impl',
-      tcoordVSImpl
+      []
     ).result;
 
     const tNumComp = model.numberOfComponents;
@@ -1088,10 +1111,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     );
     const iComps = firstActorPropertyForIComps.getIndependentComponents();
 
+    const numInputs = model.scalarTextures.length;
     let tcoordFSDec = [
-      'in vec3 fragTexCoord;',
-      `uniform highp sampler3D volumeTexture[${model.scalarTextures.length}];`,
-      'uniform mat4 WCTCMatrix;',
+      `uniform highp sampler3D volumeTexture[${numInputs}];`,
       // color shift and scale
       'uniform float cshift0;',
       'uniform float cscale0;',
@@ -1107,30 +1129,39 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       'uniform vec4 backgroundColor;',
     ];
 
+    // Add per-input WCTCMatrix uniforms
+    for (let i = 0; i < numInputs; i++) {
+      tcoordFSDec.push(`uniform mat4 WCTCMatrix${i};`);
+    }
+
     // Add label outline uniforms if enabled
     if (useLabelOutline) {
       tcoordFSDec = tcoordFSDec.concat([
         'uniform sampler2D labelOutlineThicknessTexture;',
         'uniform sampler2D labelOutlineOpacityTexture;',
-        'uniform vec3 outlineTangent1;',
-        'uniform vec3 outlineTangent2;',
-        'uniform vec3 texelSize;',
       ]);
+      // Add per-input tangent vectors and texelSize
+      for (let i = 0; i < numInputs; i++) {
+        tcoordFSDec.push(`uniform vec3 outlineTangent1_${i};`);
+        tcoordFSDec.push(`uniform vec3 outlineTangent2_${i};`);
+        tcoordFSDec.push(`uniform vec3 texelSize${i};`);
+      }
     }
 
-    // Function to sample texture
-    tcoordFSDec.push('vec4 rawSampleTexture(vec3 pos) {');
+    // Function to sample texture - takes world position, computes per-input texture coords
+    tcoordFSDec.push('vec4 rawSampleTexture(vec3 worldPos) {');
     if (!model.multiTexturePerVolumeEnabled) {
-      tcoordFSDec.push('return texture(volumeTexture[0], pos);', '}');
+      tcoordFSDec.push(
+        'vec3 tc0 = (WCTCMatrix0 * vec4(worldPos, 1.0)).xyz;',
+        'return texture(volumeTexture[0], tc0);',
+        '}'
+      );
     } else {
       tcoordFSDec.push('vec4 rawSample;');
-      for (
-        let component = 0;
-        component < model.scalarTextures.length;
-        ++component
-      ) {
+      for (let component = 0; component < numInputs; ++component) {
         tcoordFSDec.push(
-          `rawSample[${component}] = texture(volumeTexture[${component}], pos)[0];`
+          `vec3 tc${component} = (WCTCMatrix${component} * vec4(worldPos, 1.0)).xyz;`,
+          `rawSample[${component}] = texture(volumeTexture[${component}], tc${component})[0];`
         );
       }
       tcoordFSDec.push('return rawSample;', '}');
@@ -1232,13 +1263,15 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     ).result;
 
     let tcoordFSImpl = [
+      'vec3 fragWorldPos = vertexWCVSOutput.xyz;',
+      'vec3 fragTexCoord = (WCTCMatrix0 * vec4(fragWorldPos, 1.0)).xyz;',
       'if (any(greaterThan(fragTexCoord, vec3(1.0))) || any(lessThan(fragTexCoord, vec3(0.0))))',
       '{',
       '  // set the background color and exit',
       '  gl_FragData[0] = backgroundColor;',
       '  return;',
       '}',
-      'vec4 tvalue = rawSampleTexture(fragTexCoord);',
+      'vec4 tvalue = rawSampleTexture(fragWorldPos);',
     ];
     if (slabThickness > 0.0) {
       tcoordFSImpl = tcoordFSImpl.concat([
@@ -1258,17 +1291,19 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         '    normalxspacing = normalWCVSOutput * slabThickness * 0.5 / fnumSlices;',
         '    trapezoid = slabTrapezoid;',
         '  }',
-        '  vec3 fragTCoordNeg = (WCTCMatrix * vec4(vertexWCVSOutput.xyz - fnumSlices * normalxspacing * vboScaling, 1.0)).xyz;',
+        '  vec3 worldPosNeg = vertexWCVSOutput.xyz - fnumSlices * normalxspacing * vboScaling;',
+        '  vec3 fragTCoordNeg = (WCTCMatrix0 * vec4(worldPosNeg, 1.0)).xyz;',
         '  if (!any(greaterThan(fragTCoordNeg, vec3(1.0))) && !any(lessThan(fragTCoordNeg, vec3(0.0))))',
         '  {',
-        '    vec4 newVal = rawSampleTexture(fragTCoordNeg);',
+        '    vec4 newVal = rawSampleTexture(worldPosNeg);',
         '    tvalue = compositeValue(tvalue, newVal, trapezoid);',
         '    numSlices += 1;',
         '  }',
-        '  vec3 fragTCoordPos = (WCTCMatrix * vec4(vertexWCVSOutput.xyz + fnumSlices * normalxspacing * vboScaling, 1.0)).xyz;',
-        '  if (!any(greaterThan(fragTCoordNeg, vec3(1.0))) && !any(lessThan(fragTCoordNeg, vec3(0.0))))',
+        '  vec3 worldPosPos = vertexWCVSOutput.xyz + fnumSlices * normalxspacing * vboScaling;',
+        '  vec3 fragTCoordPos = (WCTCMatrix0 * vec4(worldPosPos, 1.0)).xyz;',
+        '  if (!any(greaterThan(fragTCoordPos, vec3(1.0))) && !any(lessThan(fragTCoordPos, vec3(0.0))))',
         '  {',
-        '    vec4 newVal = rawSampleTexture(fragTCoordPos);',
+        '    vec4 newVal = rawSampleTexture(worldPosPos);',
         '    tvalue = compositeValue(tvalue, newVal, trapezoid);',
         '    numSlices += 1;',
         '  }',
@@ -1302,6 +1337,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                 // First render the background (component 0)
                 vec4 convergentColor = vec4(tcolor0.rgb, compWeight0 * opacity);
 
+                // Compute labelmap texture coordinates using its own transform
+                vec3 labelTexCoord1 = (WCTCMatrix1 * vec4(fragWorldPos, 1.0)).xyz;
+
                 // Get labelmap value from component 1
                 float labelValue = tvalue.g;
                 int segmentIndex = int(labelValue * 255.0);
@@ -1314,14 +1352,14 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                   float labelOutlineOpacityValue = texture2D(labelOutlineOpacityTexture, vec2(textureCoordinate, 0.5)).r;
                   int actualThickness = int(thicknessValue * 255.0);
 
-                  // Check neighbors for border detection
+                  // Check neighbors for border detection using labelmap's texel size
                   bool pixelOnBorder = false;
                   for (int i = -actualThickness; i <= actualThickness; i++) {
                     for (int j = -actualThickness; j <= actualThickness; j++) {
                       if (i == 0 && j == 0) {
                         continue;
                       }
-                      vec3 neighborTexCoord = fragTexCoord + float(i) * outlineTangent1 * texelSize + float(j) * outlineTangent2 * texelSize;
+                      vec3 neighborTexCoord = labelTexCoord1 + float(i) * outlineTangent1_1 * texelSize1 + float(j) * outlineTangent2_1 * texelSize1;
 
                       if (any(greaterThan(neighborTexCoord, vec3(1.0))) || any(lessThan(neighborTexCoord, vec3(0.0)))) {
                         pixelOnBorder = true;
@@ -1370,6 +1408,10 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                 // Multi-texture mode: component 0 is background, components 1-2 are labelmaps with outline
                 vec4 convergentColor = vec4(tcolor0.rgb, compWeight0 * opacity);
 
+                // Compute labelmap texture coordinates using their own transforms
+                vec3 labelTexCoord1 = (WCTCMatrix1 * vec4(fragWorldPos, 1.0)).xyz;
+                vec3 labelTexCoord2 = (WCTCMatrix2 * vec4(fragWorldPos, 1.0)).xyz;
+
                 // Process labelmap components 1 and 2
                 float labelValues[2];
                 labelValues[0] = tvalue.g;
@@ -1380,6 +1422,18 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                 float labelWeights[2];
                 labelWeights[0] = compWeight1;
                 labelWeights[1] = compWeight2;
+                vec3 labelTexCoords[2];
+                labelTexCoords[0] = labelTexCoord1;
+                labelTexCoords[1] = labelTexCoord2;
+                vec3 labelTexelSizes[2];
+                labelTexelSizes[0] = texelSize1;
+                labelTexelSizes[1] = texelSize2;
+                vec3 labelTangent1s[2];
+                labelTangent1s[0] = outlineTangent1_1;
+                labelTangent1s[1] = outlineTangent1_2;
+                vec3 labelTangent2s[2];
+                labelTangent2s[0] = outlineTangent2_1;
+                labelTangent2s[1] = outlineTangent2_2;
 
                 for (int comp = 0; comp < 2; comp++) {
                   float labelValue = labelValues[comp];
@@ -1391,11 +1445,16 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                     float labelOutlineOpacityValue = texture2D(labelOutlineOpacityTexture, vec2(textureCoordinate, 0.5)).r;
                     int actualThickness = int(thicknessValue * 255.0);
 
+                    vec3 currentLabelTC = labelTexCoords[comp];
+                    vec3 currentTexelSize = labelTexelSizes[comp];
+                    vec3 currentTangent1 = labelTangent1s[comp];
+                    vec3 currentTangent2 = labelTangent2s[comp];
+
                     bool pixelOnBorder = false;
                     for (int i = -actualThickness; i <= actualThickness; i++) {
                       for (int j = -actualThickness; j <= actualThickness; j++) {
                         if (i == 0 && j == 0) continue;
-                        vec3 neighborTexCoord = fragTexCoord + float(i) * outlineTangent1 * texelSize + float(j) * outlineTangent2 * texelSize;
+                        vec3 neighborTexCoord = currentLabelTC + float(i) * currentTangent1 * currentTexelSize + float(j) * currentTangent2 * currentTexelSize;
                         if (any(greaterThan(neighborTexCoord, vec3(1.0))) || any(lessThan(neighborTexCoord, vec3(0.0)))) {
                           pixelOnBorder = true;
                           break;
@@ -1437,6 +1496,11 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                 // Multi-texture mode: component 0 is background, components 1-3 are labelmaps with outline
                 vec4 convergentColor = vec4(tcolor0.rgb, compWeight0 * opacity);
 
+                // Compute labelmap texture coordinates using their own transforms
+                vec3 labelTexCoord1 = (WCTCMatrix1 * vec4(fragWorldPos, 1.0)).xyz;
+                vec3 labelTexCoord2 = (WCTCMatrix2 * vec4(fragWorldPos, 1.0)).xyz;
+                vec3 labelTexCoord3 = (WCTCMatrix3 * vec4(fragWorldPos, 1.0)).xyz;
+
                 // Process labelmap components 1, 2, and 3
                 float labelValues[3];
                 labelValues[0] = tvalue.g;
@@ -1450,6 +1514,22 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                 labelWeights[0] = compWeight1;
                 labelWeights[1] = compWeight2;
                 labelWeights[2] = compWeight3;
+                vec3 labelTexCoords[3];
+                labelTexCoords[0] = labelTexCoord1;
+                labelTexCoords[1] = labelTexCoord2;
+                labelTexCoords[2] = labelTexCoord3;
+                vec3 labelTexelSizes[3];
+                labelTexelSizes[0] = texelSize1;
+                labelTexelSizes[1] = texelSize2;
+                labelTexelSizes[2] = texelSize3;
+                vec3 labelTangent1s[3];
+                labelTangent1s[0] = outlineTangent1_1;
+                labelTangent1s[1] = outlineTangent1_2;
+                labelTangent1s[2] = outlineTangent1_3;
+                vec3 labelTangent2s[3];
+                labelTangent2s[0] = outlineTangent2_1;
+                labelTangent2s[1] = outlineTangent2_2;
+                labelTangent2s[2] = outlineTangent2_3;
 
                 for (int comp = 0; comp < 3; comp++) {
                   float labelValue = labelValues[comp];
@@ -1461,11 +1541,16 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                     float labelOutlineOpacityValue = texture2D(labelOutlineOpacityTexture, vec2(textureCoordinate, 0.5)).r;
                     int actualThickness = int(thicknessValue * 255.0);
 
+                    vec3 currentLabelTC = labelTexCoords[comp];
+                    vec3 currentTexelSize = labelTexelSizes[comp];
+                    vec3 currentTangent1 = labelTangent1s[comp];
+                    vec3 currentTangent2 = labelTangent2s[comp];
+
                     bool pixelOnBorder = false;
                     for (int i = -actualThickness; i <= actualThickness; i++) {
                       for (int j = -actualThickness; j <= actualThickness; j++) {
                         if (i == 0 && j == 0) continue;
-                        vec3 neighborTexCoord = fragTexCoord + float(i) * outlineTangent1 * texelSize + float(j) * outlineTangent2 * texelSize;
+                        vec3 neighborTexCoord = currentLabelTC + float(i) * currentTangent1 * currentTexelSize + float(j) * currentTangent2 * currentTexelSize;
                         if (any(greaterThan(neighborTexCoord, vec3(1.0))) || any(lessThan(neighborTexCoord, vec3(0.0)))) {
                           pixelOnBorder = true;
                           break;
@@ -1539,7 +1624,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                       continue;
                     }
                     // Sample neighbor using tangent vectors in texture space
-                    vec3 neighborTexCoord = fragTexCoord + float(i) * outlineTangent1 * texelSize + float(j) * outlineTangent2 * texelSize;
+                    vec3 neighborTexCoord = fragTexCoord + float(i) * outlineTangent1_0 * texelSize0 + float(j) * outlineTangent2_0 * texelSize0;
 
                     // Skip if outside texture bounds
                     if (any(greaterThan(neighborTexCoord, vec3(1.0))) || any(lessThan(neighborTexCoord, vec3(0.0)))) {
@@ -1547,7 +1632,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                       break;
                     }
 
-                    float neighborValue = rawSampleTexture(neighborTexCoord).r;
+                    float neighborValue = texture(volumeTexture[0], neighborTexCoord).r;
                     if (neighborValue != centerValue) {
                       pixelOnBorder = true;
                       break;
@@ -1615,7 +1700,10 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     let FSSource = shaders.Fragment;
 
     const slabThickness = model.renderable.getSlabThickness();
-    let posVCVSDec = ['attribute vec4 vertexWC;'];
+    let posVCVSDec = [
+      'attribute vec4 vertexWC;',
+      'varying vec4 vertexWCVSOutput;',
+    ];
     // Add a unique hash to the shader to ensure that the shader program is unique to this mapper.
     posVCVSDec = posVCVSDec.concat([
       `//${publicAPI.getMTime()}${model.resliceGeomUpdateString}`,
@@ -1624,7 +1712,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       posVCVSDec = posVCVSDec.concat([
         'attribute vec3 normalWC;',
         'varying vec3 normalWCVSOutput;',
-        'varying vec4 vertexWCVSOutput;',
       ]);
     }
     VSSource = vtkShaderProgram.substitute(
@@ -1632,12 +1719,12 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       '//VTK::PositionVC::Dec',
       posVCVSDec
     ).result;
-    let posVCVSImpl = ['gl_Position = MCPCMatrix * vertexWC;'];
+    let posVCVSImpl = [
+      'gl_Position = MCPCMatrix * vertexWC;',
+      'vertexWCVSOutput = vertexWC;',
+    ];
     if (slabThickness > 0.0) {
-      posVCVSImpl = posVCVSImpl.concat([
-        'normalWCVSOutput = normalWC;',
-        'vertexWCVSOutput = vertexWC;',
-      ]);
+      posVCVSImpl = posVCVSImpl.concat(['normalWCVSOutput = normalWC;']);
     }
     VSSource = vtkShaderProgram.substitute(
       VSSource,
@@ -1648,12 +1735,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       'uniform mat4 MCPCMatrix;',
       'uniform mat4 MCVCMatrix;',
     ]).result;
-    let posVCFSDec = [];
+    let posVCFSDec = ['varying vec4 vertexWCVSOutput;'];
     if (slabThickness > 0.0) {
-      posVCFSDec = posVCFSDec.concat([
-        'varying vec3 normalWCVSOutput;',
-        'varying vec4 vertexWCVSOutput;',
-      ]);
+      posVCFSDec = posVCFSDec.concat(['varying vec3 normalWCVSOutput;']);
     }
     FSSource = vtkShaderProgram.substitute(
       FSSource,
@@ -1947,6 +2031,7 @@ const DEFAULT_VALUES = {
   lastHaveSeenDepthRequest: false,
   lastIndependentComponents: false,
   lastUseLabelOutline: false,
+  lastNumValidInputs: 0,
   lastNumberOfComponents: 0,
   lastMultiTexturePerVolumeEnabled: false,
   lastSlabThickness: 0,

@@ -108,12 +108,25 @@ w.setRepresentationStyle(repStyle);
 
 // Store references for later
 let labelMapImage = null;
+let sourceImage = null;
 
-function createLabelMapFromImage(sourceImage) {
-  const dims = sourceImage.getDimensions();
-  const spacing = sourceImage.getSpacing();
-  const origin = sourceImage.getOrigin();
-  const direction = sourceImage.getDirection();
+function createLabelMapFromImage(srcImage, resolutionFactor = 1) {
+  const srcDims = srcImage.getDimensions();
+  const srcSpacing = srcImage.getSpacing();
+  const origin = srcImage.getOrigin();
+  const direction = srcImage.getDirection();
+
+  // Create labelmap with different resolution
+  const dims = [
+    Math.max(1, Math.floor(srcDims[0] / resolutionFactor)),
+    Math.max(1, Math.floor(srcDims[1] / resolutionFactor)),
+    Math.max(1, Math.floor(srcDims[2] / resolutionFactor)),
+  ];
+  const spacing = [
+    srcSpacing[0] * resolutionFactor,
+    srcSpacing[1] * resolutionFactor,
+    srcSpacing[2] * resolutionFactor,
+  ];
 
   const labelMap = vtkImageData.newInstance();
   labelMap.setDimensions(dims);
@@ -203,16 +216,39 @@ function createLabelMapFromImage(sourceImage) {
   return labelMap;
 }
 
-function setImage(im) {
+function updateLabelmap(resolutionFactor = 2) {
+  if (!sourceImage) return;
+
+  // Create labelmap with specified resolution factor
+  labelMapImage = createLabelMapFromImage(sourceImage, resolutionFactor);
+
+  // Update mapper input at port 1
+  mapper.setInputData(labelMapImage, 1);
+
+  console.log(
+    `Labelmap resolution: ${labelMapImage.getDimensions().join('x')} ` +
+      `(${resolutionFactor}x downsampled from source)`
+  );
+
+  renderWindow.render();
+}
+
+function setImage(im, resolutionFactor = 2) {
+  sourceImage = im;
   const bds = im.getBounds();
   const imc = im.getCenter();
 
   // Set background image as input 0
   mapper.setInputData(im);
 
-  // Create and add labelmap as input 1
-  labelMapImage = createLabelMapFromImage(im);
+  // Create and add labelmap as input 1 with different resolution
+  labelMapImage = createLabelMapFromImage(im, resolutionFactor);
   mapper.addInputData(labelMapImage);
+
+  console.log(
+    `Source image resolution: ${im.getDimensions().join('x')}, ` +
+      `Labelmap resolution: ${labelMapImage.getDimensions().join('x')}`
+  );
 
   slicePlane.setOrigin(imc);
   slicePolyDataSource.setCenter(imc);
@@ -319,6 +355,7 @@ const params = {
   outlineThickness: 3,
   outlineOpacity: 1.0,
   fillOpacity: 0.2,
+  labelmapResolution: 2,
 };
 
 function applySlabEnabled() {
@@ -458,6 +495,13 @@ labelmapFolder
   .onChange((value) => {
     labelPpty.setLabelOutlineOpacity(value);
     renderWindow.render();
+  });
+
+labelmapFolder
+  .add(params, 'labelmapResolution', 1, 4, 1)
+  .name('Resolution Factor')
+  .onChange((value) => {
+    updateLabelmap(value);
   });
 
 applySliceFunction();
