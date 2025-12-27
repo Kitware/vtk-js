@@ -1100,91 +1100,124 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     publicAPI.replaceShaderCoincidentOffset(shaders, ren, actor);
   };
 
-  // Helper to generate labelmap shader code (handles both outline and fill rendering)
-  function generateLabelmapShader(numLabelmaps) {
-    const rgba = ['g', 'b', 'a'];
-    const indices = Array.from({ length: numLabelmaps }, (_, i) => i + 1);
+  // Helper to generate shader code for compositing multiple inputs
+  // Some inputs may be labelmaps (with outline), others may be background images
+  // labelmapInputs: array of input indices that are labelmaps (e.g., [0, 2])
+  // totalInputs: total number of inputs (1-4)
+  function generateMultiInputCompositeShader(labelmapInputs, totalInputs) {
+    const rgba = ['r', 'g', 'b', 'a'];
+    const allInputs = Array.from({ length: totalInputs }, (_, i) => i);
+    const backgroundInputs = allInputs.filter(
+      (i) => !labelmapInputs.includes(i)
+    );
 
-    const texCoordLines = indices.map(i =>
-      `vec3 labelTexCoord${i} = (WCTCMatrix${i} * vec4(fragWorldPos, 1.0)).xyz;`
-    ).join('\n                ');
+    // Generate texture coordinate lines for labelmap inputs
+    const texCoordLines = labelmapInputs
+      .map(
+        (i) =>
+          `vec3 labelTexCoord${i} = (WCTCMatrix${i} * vec4(fragWorldPos, 1.0)).xyz;`
+      )
+      .join('\n                ');
 
-    const arrayInitLines = [
-      `float labelValues[${numLabelmaps}];`,
-      ...indices.map((i, idx) => `labelValues[${idx}] = tvalue.${rgba[idx]};`),
-      `vec3 labelColors[${numLabelmaps}];`,
-      ...indices.map((i, idx) => `labelColors[${idx}] = tcolor${i}.rgb;`),
-      `float labelWeights[${numLabelmaps}];`,
-      ...indices.map((i, idx) => `labelWeights[${idx}] = compWeight${i};`),
-      `vec3 labelTexCoords[${numLabelmaps}];`,
-      ...indices.map((i, idx) => `labelTexCoords[${idx}] = labelTexCoord${i};`),
-      `vec3 labelTexelSizes[${numLabelmaps}];`,
-      ...indices.map((i, idx) => `labelTexelSizes[${idx}] = texelSize${i};`),
-      `vec3 labelTangent1s[${numLabelmaps}];`,
-      ...indices.map((i, idx) => `labelTangent1s[${idx}] = outlineTangent1_${i};`),
-      `vec3 labelTangent2s[${numLabelmaps}];`,
-      ...indices.map((i, idx) => `labelTangent2s[${idx}] = outlineTangent2_${i};`),
-    ].join('\n                ');
+    // Build texture sampling conditional for neighbor checking
+    const textureSampling = (() => {
+      if (labelmapInputs.length === 0) return '';
 
-    const textureSampling = numLabelmaps === 1
-      ? 'float neighborLabel = texture(volumeTexture[1], neighborTexCoord).r;'
-      : numLabelmaps === 2
-      ? 'float neighborLabel = (comp == 0) ? texture(volumeTexture[1], neighborTexCoord).r : texture(volumeTexture[2], neighborTexCoord).r;'
-      : 'float neighborLabel = (comp == 0) ? texture(volumeTexture[1], neighborTexCoord).r : (comp == 1) ? texture(volumeTexture[2], neighborTexCoord).r : texture(volumeTexture[3], neighborTexCoord).r;';
+      const conditions = labelmapInputs.map((inputIdx, arrayIdx) => {
+        if (arrayIdx === 0) {
+          return `(labelInputIdx == ${arrayIdx}) ? texture(volumeTexture[${inputIdx}], neighborTexCoord).r`;
+        }
+        return ` : (labelInputIdx == ${arrayIdx}) ? texture(volumeTexture[${inputIdx}], neighborTexCoord).r`;
+      });
+      return `float neighborLabel = ${conditions.join('')} : 0.0;`;
+    })();
+
+    // Process each input in order, compositing onto convergentColor
+    const processInputs = allInputs
+      .map((inputIdx) => {
+        const isLabelmap = labelmapInputs.includes(inputIdx);
+        const labelArrayIdx = labelmapInputs.indexOf(inputIdx);
+
+        if (isLabelmap) {
+          return `
+        // Process input ${inputIdx} as labelmap
+        {
+          float labelValue = tvalue.${rgba[inputIdx]};
+          int segmentIndex = int(labelValue * 255.0);
+
+          if (segmentIndex > 0) {
+            float textureCoordinate = float(segmentIndex - 1) / labelOutlineTextureWidth;
+            float thicknessValue = texture2D(labelOutlineThicknessTexture, vec2(textureCoordinate, 0.5)).r;
+            float labelOutlineOpacityValue = texture2D(labelOutlineOpacityTexture, vec2(textureCoordinate, 0.5)).r;
+            int actualThickness = int(thicknessValue * 255.0);
+
+            vec3 currentLabelTC = labelTexCoord${inputIdx};
+            vec3 currentTexelSize = texelSize${inputIdx};
+            vec3 currentTangent1 = outlineTangent1_${inputIdx};
+            vec3 currentTangent2 = outlineTangent2_${inputIdx};
+
+            bool pixelOnBorder = false;
+            int labelInputIdx = ${labelArrayIdx};
+            for (int i = -actualThickness; i <= actualThickness; i++) {
+              for (int j = -actualThickness; j <= actualThickness; j++) {
+                if (i == 0 && j == 0) continue;
+                vec3 neighborTexCoord = currentLabelTC + float(i) * currentTangent1 * currentTexelSize + float(j) * currentTangent2 * currentTexelSize;
+                if (any(greaterThan(neighborTexCoord, vec3(1.0))) || any(lessThan(neighborTexCoord, vec3(0.0)))) {
+                  pixelOnBorder = true;
+                  break;
+                }
+                ${textureSampling}
+                if (neighborLabel != labelValue) {
+                  pixelOnBorder = true;
+                  break;
+                }
+              }
+              if (pixelOnBorder) break;
+            }
+
+            if (pixelOnBorder) {
+              convergentColor.rgb = mix(convergentColor.rgb, tcolor${inputIdx}.rgb, labelOutlineOpacityValue);
+              convergentColor.a = max(convergentColor.a, labelOutlineOpacityValue);
+            } else if (compWeight${inputIdx} > 0.0) {
+              float fillAlpha = compWeight${inputIdx} * opacity;
+              convergentColor.rgb = mix(convergentColor.rgb, tcolor${inputIdx}.rgb, fillAlpha);
+              convergentColor.a = max(convergentColor.a, fillAlpha);
+            }
+          }
+        }`;
+        }
+        return `
+        // Process input ${inputIdx} as background image
+        {
+          float bgAlpha = compWeight${inputIdx} * opacity;
+          convergentColor.rgb = mix(convergentColor.rgb, tcolor${inputIdx}.rgb, bgAlpha);
+          convergentColor.a = max(convergentColor.a, bgAlpha);
+        }`;
+      })
+      .join('\n        ');
+
+    const labelDesc =
+      labelmapInputs.length > 0
+        ? `labelmaps at input${
+            labelmapInputs.length > 1 ? 's' : ''
+          } ${labelmapInputs.join(', ')}`
+        : 'no labelmaps';
+    const bgDesc =
+      backgroundInputs.length > 0
+        ? `background at input${
+            backgroundInputs.length > 1 ? 's' : ''
+          } ${backgroundInputs.join(', ')}`
+        : 'no background';
 
     return splitStringOnEnter(`
-      // Multi-texture mode: component 0 is background, component${numLabelmaps > 1 ? 's' : ''} ${indices.join('-')} ${numLabelmaps > 1 ? 'are' : 'is'} labelmap${numLabelmaps > 1 ? 's' : ''} with outline
-      vec4 convergentColor = vec4(tcolor0.rgb, compWeight0 * opacity);
+      // Multi-texture mode: ${labelDesc}, ${bgDesc}
+      vec4 convergentColor = vec4(0.0, 0.0, 0.0, 0.0);
 
-      // Compute labelmap texture coordinates using ${numLabelmaps > 1 ? 'their own transforms' : 'its own transform'}
+      // Compute labelmap texture coordinates
       ${texCoordLines}
 
-      // Process labelmap component${numLabelmaps > 1 ? 's' : ''} ${indices.join(', ')}
-      ${arrayInitLines}
-
-      for (int comp = 0; comp < ${numLabelmaps}; comp++) {
-        float labelValue = labelValues[comp];
-        int segmentIndex = int(labelValue * 255.0);
-
-        if (segmentIndex > 0) {
-          float textureCoordinate = float(segmentIndex - 1) / labelOutlineTextureWidth;
-          float thicknessValue = texture2D(labelOutlineThicknessTexture, vec2(textureCoordinate, 0.5)).r;
-          float labelOutlineOpacityValue = texture2D(labelOutlineOpacityTexture, vec2(textureCoordinate, 0.5)).r;
-          int actualThickness = int(thicknessValue * 255.0);
-
-          vec3 currentLabelTC = labelTexCoords[comp];
-          vec3 currentTexelSize = labelTexelSizes[comp];
-          vec3 currentTangent1 = labelTangent1s[comp];
-          vec3 currentTangent2 = labelTangent2s[comp];
-
-          bool pixelOnBorder = false;
-          for (int i = -actualThickness; i <= actualThickness; i++) {
-            for (int j = -actualThickness; j <= actualThickness; j++) {
-              if (i == 0 && j == 0) continue;
-              vec3 neighborTexCoord = currentLabelTC + float(i) * currentTangent1 * currentTexelSize + float(j) * currentTangent2 * currentTexelSize;
-              if (any(greaterThan(neighborTexCoord, vec3(1.0))) || any(lessThan(neighborTexCoord, vec3(0.0)))) {
-                pixelOnBorder = true;
-                break;
-              }
-              ${textureSampling}
-              if (neighborLabel != labelValue) {
-                pixelOnBorder = true;
-                break;
-              }
-            }
-            if (pixelOnBorder) break;
-          }
-
-          if (pixelOnBorder) {
-            convergentColor.rgb = mix(convergentColor.rgb, labelColors[comp], labelOutlineOpacityValue);
-            convergentColor.a = max(convergentColor.a, labelOutlineOpacityValue);
-          } else if (labelWeights[comp] > 0.0) {
-            float fillAlpha = labelWeights[comp] * opacity;
-            convergentColor.rgb = mix(convergentColor.rgb, labelColors[comp], fillAlpha);
-            convergentColor.a = max(convergentColor.a, fillAlpha);
-          }
-        }
-      }
+      // Process each input in order
+      ${processInputs}
 
       gl_FragData[0] = convergentColor;
     `);
@@ -1428,44 +1461,42 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           `float compWeight${comp} = mix${comp} * texture2D(pwfTexture1, vec2(tvalue.${rgba[comp]} * pwfscale${comp} + pwfshift${comp}, height${comp})).r;`,
         ]);
       }
-      switch (tNumComp) {
-        case 1:
-          tcoordFSImpl = tcoordFSImpl.concat([
-            'gl_FragData[0] = vec4(tcolor0.rgb, compWeight0 * opacity);',
-          ]);
-          break;
-        case 2:
-          if (useLabelOutline) {
-            tcoordFSImpl = tcoordFSImpl.concat(generateLabelmapShader(1));
-          } else {
-            tcoordFSImpl = tcoordFSImpl.concat([
-              'float weightSum = compWeight0 + compWeight1;',
-              'gl_FragData[0] = vec4(vec3((tcolor0.rgb * (compWeight0 / weightSum)) + (tcolor1.rgb * (compWeight1 / weightSum))), opacity);',
-            ]);
+
+      // Determine which inputs are labelmaps
+      const labelmapInputs = [];
+      if (useLabelOutline) {
+        for (let i = 0; i < tNumComp; i++) {
+          const inputProperty = actor.getProperty(
+            model.currentValidInputs[i].inputIndex
+          );
+          if (inputProperty?.getUseLabelOutline()) {
+            labelmapInputs.push(i);
           }
-          break;
-        case 3:
-          if (useLabelOutline) {
-            tcoordFSImpl = tcoordFSImpl.concat(generateLabelmapShader(2));
-          } else {
-            tcoordFSImpl = tcoordFSImpl.concat([
-              'float weightSum = compWeight0 + compWeight1 + compWeight2;',
-              'gl_FragData[0] = vec4(vec3((tcolor0.rgb * (compWeight0 / weightSum)) + (tcolor1.rgb * (compWeight1 / weightSum)) + (tcolor2.rgb * (compWeight2 / weightSum))), opacity);',
-            ]);
-          }
-          break;
-        case 4:
-          if (useLabelOutline) {
-            tcoordFSImpl = tcoordFSImpl.concat(generateLabelmapShader(3));
-          } else {
-            tcoordFSImpl = tcoordFSImpl.concat([
-              'float weightSum = compWeight0 + compWeight1 + compWeight2 + compWeight3;',
-              'gl_FragData[0] = vec4(vec3((tcolor0.rgb * (compWeight0 / weightSum)) + (tcolor1.rgb * (compWeight1 / weightSum)) + (tcolor2.rgb * (compWeight2 / weightSum)) + (tcolor3.rgb * (compWeight3 / weightSum))), opacity);',
-            ]);
-          }
-          break;
-        default:
-          vtkErrorMacro('Unsupported number of independent coordinates.');
+        }
+      }
+
+      // Generate weighted sum shader for non-labelmap cases
+      const generateWeightedSumShader = (inputCount) => {
+        if (inputCount === 1) {
+          return ['gl_FragData[0] = vec4(tcolor0.rgb, compWeight0 * opacity);'];
+        }
+        const inputs = Array.from({ length: inputCount }, (_, i) => i);
+        const weightSum = inputs.map((i) => `compWeight${i}`).join(' + ');
+        const colorSum = inputs
+          .map((i) => `(tcolor${i}.rgb * (compWeight${i} / weightSum))`)
+          .join(' + ');
+        return [
+          `float weightSum = ${weightSum};`,
+          `gl_FragData[0] = vec4(vec3(${colorSum}), opacity);`,
+        ];
+      };
+
+      if (labelmapInputs.length > 0) {
+        tcoordFSImpl = tcoordFSImpl.concat(
+          generateMultiInputCompositeShader(labelmapInputs, tNumComp)
+        );
+      } else {
+        tcoordFSImpl = tcoordFSImpl.concat(generateWeightedSumShader(tNumComp));
       }
     } else {
       // dependent components
