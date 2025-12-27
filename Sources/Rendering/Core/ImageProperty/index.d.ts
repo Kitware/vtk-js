@@ -21,6 +21,7 @@ export interface IImagePropertyInitialValues {
   useLookupTableScalarRange?: boolean;
   useLabelOutline?: boolean;
   labelOutlineThickness?: number | number[];
+  labelOutlineOpacity?: number | number[];
 }
 
 export interface vtkImageProperty extends vtkObject {
@@ -126,6 +127,12 @@ export interface vtkImageProperty extends vtkObject {
    * gets the label outline thickness
    */
   getLabelOutlineThickness(): number;
+
+  /**
+   * Get the label outline thickness array by reference.
+   * This returns the actual internal array, not a copy.
+   */
+  getLabelOutlineThicknessByReference(): number[];
 
   /**
    * It will set the label outline thickness for the labelmaps. It can accept

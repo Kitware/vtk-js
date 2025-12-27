@@ -35,25 +35,9 @@ test.onlyIfWebGL('Test ImageResliceMapper LabelOutline', async (t) => {
   renderer.setBackground(0.3, 0.3, 0.3);
 
   const imageDimension = 20;
-  const labelmapDimension = 10; // Half resolution for labelmap
+  const labelmapDimension = 10;
 
-  // Background image property
-  const bgPpty = gc.registerResource(vtkImageProperty.newInstance());
-  bgPpty.setColorWindow(255);
-  bgPpty.setColorLevel(127);
-  bgPpty.setIndependentComponents(true);
-
-  const bgRgb = gc.registerResource(vtkColorTransferFunction.newInstance());
-  bgRgb.addRGBPoint(0, 0, 0, 0);
-  bgRgb.addRGBPoint(255, 1, 1, 1);
-  bgPpty.setRGBTransferFunction(bgRgb);
-
-  const bgOfun = gc.registerResource(vtkPiecewiseFunction.newInstance());
-  bgOfun.addPoint(0, 1);
-  bgOfun.addPoint(255, 1);
-  bgPpty.setPiecewiseFunction(bgOfun);
-
-  // Labelmap property with outline
+  // Labelmap property with outline (for input 0)
   const labelPpty = gc.registerResource(vtkImageProperty.newInstance());
   labelPpty.setIndependentComponents(true);
   labelPpty.setUseLookupTableScalarRange(true);
@@ -74,6 +58,22 @@ test.onlyIfWebGL('Test ImageResliceMapper LabelOutline', async (t) => {
   labelOfun.addPoint(2, 0.3);
   labelPpty.setPiecewiseFunction(labelOfun);
 
+  // Background image property (for input 1)
+  const bgPpty = gc.registerResource(vtkImageProperty.newInstance());
+  bgPpty.setColorWindow(255);
+  bgPpty.setColorLevel(127);
+  bgPpty.setIndependentComponents(true);
+
+  const bgRgb = gc.registerResource(vtkColorTransferFunction.newInstance());
+  bgRgb.addRGBPoint(0, 0, 0, 0);
+  bgRgb.addRGBPoint(255, 1, 1, 1);
+  bgPpty.setRGBTransferFunction(bgRgb);
+
+  const bgOfun = gc.registerResource(vtkPiecewiseFunction.newInstance());
+  bgOfun.addPoint(0, 1);
+  bgOfun.addPoint(255, 1);
+  bgPpty.setPiecewiseFunction(bgOfun);
+
   // Create mapper and actor
   const mapper = gc.registerResource(vtkImageResliceMapper.newInstance());
   const slicePlane = gc.registerResource(vtkPlane.newInstance());
@@ -82,8 +82,8 @@ test.onlyIfWebGL('Test ImageResliceMapper LabelOutline', async (t) => {
 
   const actor = gc.registerResource(vtkImageSlice.newInstance());
   actor.setMapper(mapper);
-  actor.setProperty(0, bgPpty);
-  actor.setProperty(1, labelPpty);
+  actor.setProperty(0, labelPpty);
+  actor.setProperty(1, bgPpty);
   renderer.addActor(actor);
 
   // Create background image with gradient
@@ -110,7 +110,7 @@ test.onlyIfWebGL('Test ImageResliceMapper LabelOutline', async (t) => {
   );
   bgImage.getPointData().setScalars(bgScalars);
 
-  // Create labelmap with two rectangular segments at HALF resolution
+  // Create labelmap with two rectangular segments at half resolution
   const labelImage = gc.registerResource(vtkImageData.newInstance());
   labelImage.setDimensions(
     labelmapDimension,
@@ -148,9 +148,9 @@ test.onlyIfWebGL('Test ImageResliceMapper LabelOutline', async (t) => {
   );
   labelImage.getPointData().setScalars(labelScalars);
 
-  // Set inputs: background as input 0, labelmap as input 1
-  mapper.setInputData(bgImage, 0);
-  mapper.addInputData(labelImage);
+  // Set labelmap as input 0, background as input 1
+  mapper.setInputData(labelImage, 0);
+  mapper.addInputData(bgImage);
 
   slicePlane.setOrigin(bgImage.getCenter());
 
