@@ -398,6 +398,10 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
 
     const firstValidInput = model.currentValidInputs[0];
     const firstActorProperty = actorProperties[firstValidInput.inputIndex];
+    if (!firstActorProperty) {
+      vtkErrorMacro('Missing property for first input');
+      return;
+    }
     const iComps = firstActorProperty.getIndependentComponents();
     const numIComps = iComps ? model.numberOfComponents : 1;
     const textureHeight = iComps ? 2 * numIComps : 1;
@@ -939,6 +943,14 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         model.labelOutlineOpacityTexture.getTextureUnit();
       program.setUniformi('labelOutlineOpacityTexture', outlineOpacityUnit);
 
+      let textureWidth = model.renderable.getLabelOutlineTextureWidth();
+      if (textureWidth <= 0) {
+        textureWidth = model.context.getParameter(
+          model.context.MAX_TEXTURE_SIZE
+        );
+      }
+      program.setUniformf('labelOutlineTextureWidth', textureWidth);
+
       // Calculate tangent vectors for the slice plane in each input's texture space
       const slicePlane = model.renderable.getSlicePlane();
 
@@ -948,8 +960,10 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
 
       if (slicePlane) {
         const normal = slicePlane.getNormal();
-        // Find a vector not parallel to normal
-        const up = Math.abs(normal[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+        const absNormal = normal.map(Math.abs);
+        const minIdx = absNormal.indexOf(Math.min(...absNormal));
+        const up = [0, 0, 0];
+        up[minIdx] = 1;
         vtkMath.cross(normal, up, tangent1);
         vtkMath.normalize(tangent1);
         vtkMath.cross(normal, tangent1, tangent2);
@@ -1139,6 +1153,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       tcoordFSDec = tcoordFSDec.concat([
         'uniform sampler2D labelOutlineThicknessTexture;',
         'uniform sampler2D labelOutlineOpacityTexture;',
+        'uniform float labelOutlineTextureWidth;',
       ]);
       // Add per-input tangent vectors and texelSize
       for (let i = 0; i < numInputs; i++) {
@@ -1347,7 +1362,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                 // If not background segment, check for outline
                 if (segmentIndex > 0) {
                   // Get outline parameters for this segment
-                  float textureCoordinate = float(segmentIndex - 1) / 1024.0;
+                  float textureCoordinate = float(segmentIndex - 1) / labelOutlineTextureWidth;
                   float thicknessValue = texture2D(labelOutlineThicknessTexture, vec2(textureCoordinate, 0.5)).r;
                   float labelOutlineOpacityValue = texture2D(labelOutlineOpacityTexture, vec2(textureCoordinate, 0.5)).r;
                   int actualThickness = int(thicknessValue * 255.0);
@@ -1440,7 +1455,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                   int segmentIndex = int(labelValue * 255.0);
 
                   if (segmentIndex > 0) {
-                    float textureCoordinate = float(segmentIndex - 1) / 1024.0;
+                    float textureCoordinate = float(segmentIndex - 1) / labelOutlineTextureWidth;
                     float thicknessValue = texture2D(labelOutlineThicknessTexture, vec2(textureCoordinate, 0.5)).r;
                     float labelOutlineOpacityValue = texture2D(labelOutlineOpacityTexture, vec2(textureCoordinate, 0.5)).r;
                     int actualThickness = int(thicknessValue * 255.0);
@@ -1459,7 +1474,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                           pixelOnBorder = true;
                           break;
                         }
-                        float neighborLabel = texture(volumeTexture[comp + 1], neighborTexCoord).r;
+                        // Use constant texture indices instead of comp + 1
+                        float neighborLabel = (comp == 0) ? texture(volumeTexture[1], neighborTexCoord).r : texture(volumeTexture[2], neighborTexCoord).r;
                         if (neighborLabel != labelValue) {
                           pixelOnBorder = true;
                           break;
@@ -1536,7 +1552,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                   int segmentIndex = int(labelValue * 255.0);
 
                   if (segmentIndex > 0) {
-                    float textureCoordinate = float(segmentIndex - 1) / 1024.0;
+                    float textureCoordinate = float(segmentIndex - 1) / labelOutlineTextureWidth;
                     float thicknessValue = texture2D(labelOutlineThicknessTexture, vec2(textureCoordinate, 0.5)).r;
                     float labelOutlineOpacityValue = texture2D(labelOutlineOpacityTexture, vec2(textureCoordinate, 0.5)).r;
                     int actualThickness = int(thicknessValue * 255.0);
@@ -1555,7 +1571,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                           pixelOnBorder = true;
                           break;
                         }
-                        float neighborLabel = texture(volumeTexture[comp + 1], neighborTexCoord).r;
+                        // Use constant texture indices instead of comp + 1
+                        float neighborLabel = (comp == 0) ? texture(volumeTexture[1], neighborTexCoord).r : (comp == 1) ? texture(volumeTexture[2], neighborTexCoord).r : texture(volumeTexture[3], neighborTexCoord).r;
                         if (neighborLabel != labelValue) {
                           pixelOnBorder = true;
                           break;
@@ -1606,7 +1623,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                 }
 
                 // Get outline parameters for this segment
-                float textureCoordinate = float(segmentIndex - 1) / 1024.0;
+                float textureCoordinate = float(segmentIndex - 1) / labelOutlineTextureWidth;
                 float thicknessValue = texture2D(labelOutlineThicknessTexture, vec2(textureCoordinate, 0.5)).r;
                 float outlineOpacity = texture2D(labelOutlineOpacityTexture, vec2(textureCoordinate, 0.5)).r;
                 int actualThickness = int(thicknessValue * 255.0);
