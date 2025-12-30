@@ -10,6 +10,10 @@ export interface IAbstractImageMapperInitialValues
   customDisplayExtent?: number[];
   useCustomExtents?: boolean;
   slice?: number;
+  backgroundColor?: RGBAColor;
+  colorTextureWidth?: number;
+  opacityTextureWidth?: number;
+  labelOutlineTextureWidth?: number;
 }
 
 export interface vtkAbstractImageMapper extends vtkAbstractMapper3D {
