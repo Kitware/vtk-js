@@ -1,20 +1,30 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkAbstractMapper from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
-import { createUninitializedBounds } from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
 // vtkAbstractMapper methods
 // ----------------------------------------------------------------------------
 
 function vtkAbstractMapper3D(publicAPI, model) {
+  publicAPI.computeBounds = () => {
+    macro.vtkErrorMacro(`vtkAbstractMapper3D.computeBounds - NOT IMPLEMENTED`);
+  };
+
+  const superGetBounds = publicAPI.getBounds;
   publicAPI.getBounds = () => {
-    macro.vtkErrorMacro(`vtkAbstractMapper3D.getBounds - NOT IMPLEMENTED`);
-    return createUninitializedBounds();
+    publicAPI.computeBounds();
+    return superGetBounds();
+  };
+
+  const superGetBoundsByReference = publicAPI.getBoundsByReference;
+  publicAPI.getBoundsByReference = () => {
+    publicAPI.computeBounds();
+    return superGetBoundsByReference();
   };
 
   publicAPI.getCenter = () => {
-    const bounds = publicAPI.getBounds();
+    const bounds = publicAPI.getBoundsByReference();
     model.center = vtkBoundingBox.isValid(bounds)
       ? vtkBoundingBox.getCenter(bounds)
       : null;
@@ -22,7 +32,7 @@ function vtkAbstractMapper3D(publicAPI, model) {
   };
 
   publicAPI.getLength = () => {
-    const bounds = publicAPI.getBounds();
+    const bounds = publicAPI.getBoundsByReference();
     return vtkBoundingBox.getDiagonalLength(bounds);
   };
 }
@@ -46,6 +56,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkAbstractMapper.extend(publicAPI, model, initialValues);
 
   macro.setGet(publicAPI, model, ['viewSpecificProperties']);
+  macro.getArray(publicAPI, model, ['bounds'], 6);
 
   vtkAbstractMapper3D(publicAPI, model);
 }
