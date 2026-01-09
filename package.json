@@ -46,7 +46,7 @@
     "utif": "3.1.0",
     "webworker-promise": "0.5.0",
     "worker-loader": "3.0.8",
-    "xmlbuilder2": "3.0.2"
+    "xmlbuilder2": "4.0.0"
   },
   "devDependencies": {
     "@babel/core": "7.22.11",
