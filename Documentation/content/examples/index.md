@@ -110,6 +110,8 @@ This will allow you to see the some live code running in your browser. Just pick
 [![ThresholdPoints Example][ThresholdPoints]](./ThresholdPoints.html "Cut/Treshold points with point data criteria")
 [![ShrinkPolyData Example][ShrinkPolyData]](./ShrinkPolyData.html "ShrinkPolyData")
 [![CleanPolyData Example][CleanPolyData]](./CleanPolyData.html "CleanPolyData")
+[![RibbonFilter Example][RibbonFilter]](./RibbonFilter.html "RibbonFilter")
+
 
 </div>
 
@@ -131,6 +133,7 @@ This will allow you to see the some live code running in your browser. Just pick
 [ThresholdPoints]: ../docs/gallery/ThresholdPoints.jpg
 [ShrinkPolyData]: ../docs/gallery/ShrinkPolyData.jpg
 [CleanPolyData]: ../docs/gallery/CleanPolyData.jpg
+[RibbonFilter]: ../docs/gallery/RibbonFilter.jpg
 
 # Sources
 
