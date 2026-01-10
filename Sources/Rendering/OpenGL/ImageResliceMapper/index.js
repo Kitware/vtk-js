@@ -870,16 +870,19 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     //    - 4 comps => RGBA
     const numComp = model.numberOfComponents;
     const iComps = firstPpty.getIndependentComponents();
+    const useMultiTexture = model.multiTexturePerVolumeEnabled;
+    const actorProperties = actor.getProperties();
     if (iComps) {
       for (let i = 0; i < numComp; ++i) {
-        program.setUniformf(`mix${i}`, firstPpty.getComponentWeight(i));
+        const ppty = useMultiTexture
+          ? actorProperties[model.currentValidInputs[i].inputIndex]
+          : firstPpty;
+        program.setUniformf(`mix${i}`, ppty.getComponentWeight(0));
       }
     }
 
     // three levels of shift scale combined into one
     // for performance in the fragment shader
-    const useMultiTexture = model.multiTexturePerVolumeEnabled;
-    const actorProperties = actor.getProperties();
     for (let component = 0; component < numComp; component++) {
       const textureIndex = useMultiTexture ? component : 0;
       const volInfoIndex = useMultiTexture ? 0 : component;
@@ -1132,8 +1135,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       return `float neighborLabel = ${conditions.join('')} : 0.0;`;
     })();
 
-    // Process each input in order, compositing onto convergentColor
-    const processInputs = allInputs
+    // Process backgrounds first, then labelmaps on top
+    const orderedInputs = [...backgroundInputs, ...labelmapInputs];
+    const processInputs = orderedInputs
       .map((inputIdx) => {
         const isLabelmap = labelmapInputs.includes(inputIdx);
         const labelArrayIdx = labelmapInputs.indexOf(inputIdx);
