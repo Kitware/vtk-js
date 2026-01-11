@@ -757,9 +757,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       if (program.isUniformUsed('slabType')) {
         program.setUniformi('slabType', model.renderable.getSlabType());
       }
-      if (program.isUniformUsed('slabType')) {
-        program.setUniformi('slabType', model.renderable.getSlabType());
-      }
       if (program.isUniformUsed('slabTrapezoid')) {
         program.setUniformi(
           'slabTrapezoid',
