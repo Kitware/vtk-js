@@ -39,14 +39,15 @@ const splitStringOnEnter = (str) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-function findLabelOutlineProperty(actor, currentValidInputs) {
+function findLabelOutlineProperties(actor, currentValidInputs) {
+  const labelmapProperties = [];
   for (let i = 0; i < currentValidInputs.length; i++) {
     const ppty = actor.getProperty(currentValidInputs[i].inputIndex);
     if (ppty?.getUseLabelOutline()) {
-      return ppty;
+      labelmapProperties.push({ property: ppty, arrayIndex: i });
     }
   }
-  return null;
+  return labelmapProperties;
 }
 
 // ----------------------------------------------------------------------------
@@ -209,8 +210,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       return;
     }
 
-    // Cache label outline property for this render pass
-    model.labelOutlineProperty = findLabelOutlineProperty(
+    // Cache label outline properties for this render pass
+    model.labelOutlineProperties = findLabelOutlineProperties(
       actor,
       model.currentValidInputs
     );
@@ -274,7 +275,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
   publicAPI.renderPieceDraw = (ren, actor) => {
     const gl = model.context;
 
-    const useLabelOutline = model.labelOutlineProperty !== null;
+    const useLabelOutline = model.labelOutlineProperties.length > 0;
 
     // render the texture
     const allTextures = [
@@ -311,7 +312,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     const firstActorProperty = actor.getProperty(
       model.currentValidInputs[0].inputIndex
     );
-    const useLabelOutline = model.labelOutlineProperty !== null;
+    const useLabelOutline = model.labelOutlineProperties.length > 0;
     return (
       model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
       model.VBOBuildTime.getMTime() < actor.getMTime() ||
@@ -605,10 +606,12 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     );
     model._pwfTextureCore = firstPwFunc;
 
-    // Build label outline textures if needed
-    if (model.labelOutlineProperty) {
-      publicAPI.updateLabelOutlineThicknessTexture(model.labelOutlineProperty);
-      publicAPI.updateLabelOutlineOpacityTexture(model.labelOutlineProperty);
+    // Build label outline textures if needed (2D textures for per-labelmap settings)
+    if (model.labelOutlineProperties.length > 0) {
+      publicAPI.updateLabelOutlineThicknessTexture(
+        model.labelOutlineProperties
+      );
+      publicAPI.updateLabelOutlineOpacityTexture(model.labelOutlineProperties);
     }
 
     const vboString = `${model.resliceGeom.getMTime()}A${model.renderable.getSlabThickness()}`;
@@ -859,7 +862,12 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
 
     const firstPpty = actor.getProperty(model.currentValidInputs[0].inputIndex);
 
-    const opacity = firstPpty.getOpacity();
+    // In multi-texture mode, use 1.0 for global opacity since each input's
+    // piecewise function controls its own opacity through component weights.
+    // This prevents a labelmap's opacity setting from affecting all inputs.
+    const opacity = model.multiTexturePerVolumeEnabled
+      ? 1.0
+      : firstPpty.getOpacity();
     program.setUniformf('opacity', opacity);
 
     // Component mix
@@ -937,7 +945,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     );
 
     // Label outline uniforms
-    if (model.labelOutlineProperty) {
+    if (model.labelOutlineProperties.length > 0) {
       const outlineThicknessUnit =
         model.labelOutlineThicknessTexture.getTextureUnit();
       program.setUniformi('labelOutlineThicknessTexture', outlineThicknessUnit);
@@ -953,6 +961,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         );
       }
       program.setUniformf('labelOutlineTextureWidth', textureWidth);
+      program.setUniformf('numLabelmaps', model.labelOutlineProperties.length);
 
       // Calculate tangent vectors for the slice plane in each input's texture space
       const slicePlane = model.renderable.getSlicePlane();
@@ -1026,7 +1035,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       model.currentValidInputs[0].inputIndex
     );
     const iComp = firstActorProperty.getIndependentComponents();
-    const useLabelOutline = model.labelOutlineProperty !== null;
+    const useLabelOutline = model.labelOutlineProperties.length > 0;
     const slabTh = model.renderable.getSlabThickness();
     const slabType = model.renderable.getSlabType();
     const slabTrap = model.renderable.getSlabTrapezoidIntegration();
@@ -1151,8 +1160,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
 
           if (segmentIndex > 0) {
             float textureCoordinate = float(segmentIndex - 1) / labelOutlineTextureWidth;
-            float thicknessValue = texture2D(labelOutlineThicknessTexture, vec2(textureCoordinate, 0.5)).r;
-            float labelOutlineOpacityValue = texture2D(labelOutlineOpacityTexture, vec2(textureCoordinate, 0.5)).r;
+            float labelmapRow = (float(${labelArrayIdx}) + 0.5) / numLabelmaps;
+            float thicknessValue = texture2D(labelOutlineThicknessTexture, vec2(textureCoordinate, labelmapRow)).r;
+            float labelOutlineOpacityValue = texture2D(labelOutlineOpacityTexture, vec2(textureCoordinate, labelmapRow)).r;
             int actualThickness = int(thicknessValue * 255.0);
 
             vec3 currentLabelTC = labelTexCoord${inputIdx};
@@ -1232,7 +1242,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     const GSSource = shaders.Geometry;
     let FSSource = shaders.Fragment;
 
-    const useLabelOutline = model.labelOutlineProperty !== null;
+    const useLabelOutline = model.labelOutlineProperties.length > 0;
 
     const slabThickness = model.renderable.getSlabThickness();
     VSSource = vtkShaderProgram.substitute(
@@ -1281,6 +1291,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         'uniform sampler2D labelOutlineThicknessTexture;',
         'uniform sampler2D labelOutlineOpacityTexture;',
         'uniform float labelOutlineTextureWidth;',
+        'uniform float numLabelmaps;',
       ]);
       // Add per-input tangent vectors and texelSize
       for (let i = 0; i < numInputs; i++) {
@@ -1519,10 +1530,11 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                   return;
                 }
 
-                // Get outline parameters for this segment
+                // Get outline parameters for this segment (row 0 for single labelmap)
                 float textureCoordinate = float(segmentIndex - 1) / labelOutlineTextureWidth;
-                float thicknessValue = texture2D(labelOutlineThicknessTexture, vec2(textureCoordinate, 0.5)).r;
-                float outlineOpacity = texture2D(labelOutlineOpacityTexture, vec2(textureCoordinate, 0.5)).r;
+                float labelmapRow = 0.5 / numLabelmaps;
+                float thicknessValue = texture2D(labelOutlineThicknessTexture, vec2(textureCoordinate, labelmapRow)).r;
+                float outlineOpacity = texture2D(labelOutlineOpacityTexture, vec2(textureCoordinate, labelmapRow)).r;
                 int actualThickness = int(thicknessValue * 255.0);
 
                 // Get color for this segment
@@ -1840,12 +1852,14 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     }
   };
 
-  function buildLabelOutlineTexture(dataArray, ArrayType, vtkDataType) {
-    const lTex =
-      model._openGLRenderWindow.getGraphicsResourceForObject(dataArray);
-    const hash = `${dataArray.join('-')}`;
-    if (lTex?.oglObject?.getHandle() && lTex?.hash === hash) {
-      return lTex.oglObject;
+  // Build a 2D texture for label outline settings (one row per labelmap)
+  function buildLabelOutline2DTexture(dataArrays, ArrayType, vtkDataType) {
+    const hash = dataArrays.map((arr) => arr.join('-')).join('|');
+    const cacheKey = { type: 'labelOutline2D', hash };
+    const cached =
+      model._openGLRenderWindow.getGraphicsResourceForObject(cacheKey);
+    if (cached?.oglObject?.getHandle() && cached?.hash === hash) {
+      return cached.oglObject;
     }
 
     let width = model.renderable.getLabelOutlineTextureWidth();
@@ -1853,9 +1867,14 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       width = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
     }
 
-    const table = new ArrayType(width);
-    for (let i = 0; i < width; ++i) {
-      table[i] = dataArray[i] ?? dataArray[0];
+    const height = dataArrays.length;
+    const table = new ArrayType(width * height);
+
+    for (let row = 0; row < height; row++) {
+      const dataArray = dataArrays[row];
+      for (let col = 0; col < width; col++) {
+        table[row * width + col] = dataArray[col] ?? dataArray[0];
+      }
     }
 
     const newTexture = vtkOpenGLTexture.newInstance({ resizable: false });
@@ -1865,24 +1884,26 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     newTexture.setMagnificationFilter(Filter.NEAREST);
     newTexture.create2DFromRaw({
       width,
-      height: 1,
+      height,
       numComps: 1,
       dataType: vtkDataType,
       data: table,
     });
 
     model._openGLRenderWindow.setGraphicsResourceForObject(
-      dataArray,
+      cacheKey,
       newTexture,
       hash
     );
     return newTexture;
   }
 
-  publicAPI.updateLabelOutlineThicknessTexture = (labelOutlinePpty) => {
-    const dataArray = labelOutlinePpty.getLabelOutlineThicknessByReference();
-    const newTexture = buildLabelOutlineTexture(
-      dataArray,
+  publicAPI.updateLabelOutlineThicknessTexture = (labelOutlineProperties) => {
+    const dataArrays = labelOutlineProperties.map(({ property }) =>
+      property.getLabelOutlineThicknessByReference()
+    );
+    const newTexture = buildLabelOutline2DTexture(
+      dataArrays,
       Uint8Array,
       VtkDataTypes.UNSIGNED_CHAR
     );
@@ -1890,24 +1911,24 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       replaceGraphicsResource(
         model._openGLRenderWindow,
         model._labelOutlineThicknessCore,
-        dataArray
+        dataArrays
       );
-      model._labelOutlineThicknessCore = dataArray;
+      model._labelOutlineThicknessCore = dataArrays;
       model.labelOutlineThicknessTexture = newTexture;
     }
   };
 
-  publicAPI.updateLabelOutlineOpacityTexture = (labelOutlinePpty) => {
-    let dataArray = labelOutlinePpty.getLabelOutlineOpacity();
-    if (typeof dataArray === 'number') {
-      if (model._cachedLabelOutlineOpacityObj?.[0] !== dataArray) {
-        model._cachedLabelOutlineOpacityObj = [dataArray];
+  publicAPI.updateLabelOutlineOpacityTexture = (labelOutlineProperties) => {
+    const dataArrays = labelOutlineProperties.map(({ property }) => {
+      let dataArray = property.getLabelOutlineOpacity();
+      if (typeof dataArray === 'number') {
+        dataArray = [dataArray];
       }
-      dataArray = model._cachedLabelOutlineOpacityObj;
-    }
+      return dataArray;
+    });
 
-    const newTexture = buildLabelOutlineTexture(
-      dataArray,
+    const newTexture = buildLabelOutline2DTexture(
+      dataArrays,
       Float32Array,
       VtkDataTypes.FLOAT
     );
@@ -1915,9 +1936,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       replaceGraphicsResource(
         model._openGLRenderWindow,
         model._labelOutlineOpacityCore,
-        dataArray
+        dataArrays
       );
-      model._labelOutlineOpacityCore = dataArray;
+      model._labelOutlineOpacityCore = dataArrays;
       model.labelOutlineOpacityTexture = newTexture;
     }
   };
@@ -1957,7 +1978,7 @@ const DEFAULT_VALUES = {
   _colorTextureCore: null,
   pwfTexture: null,
   _pwfTextureCore: null,
-  labelOutlineProperty: null,
+  labelOutlineProperties: [],
   labelOutlineThicknessTexture: null,
   _labelOutlineThicknessCore: null,
   labelOutlineOpacityTexture: null,
