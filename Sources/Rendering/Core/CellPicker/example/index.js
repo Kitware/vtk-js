@@ -27,6 +27,7 @@ mapper.setInputData(cone.getOutputData());
 const actor = vtkActor.newInstance();
 actor.setMapper(mapper);
 actor.getProperty().setColor(0.0, 0.0, 1.0);
+actor.setObjectName('ConeActor');
 
 renderer.addActor(actor);
 renderer.resetCamera();
@@ -64,8 +65,10 @@ renderWindow.getInteractor().onRightButtonPress((callData) => {
     const sphereActor = vtkActor.newInstance();
     sphereActor.setMapper(sphereMapper);
     sphereActor.getProperty().setColor(1.0, 0.0, 0.0);
+    sphereActor.setObjectName('PickedPoint');
     renderer.addActor(sphereActor);
   } else {
+    console.log('picked objectName: ', picker.getActors()[0].getObjectName());
     const pickedCellId = picker.getCellId();
     console.log('Picked cell: ', pickedCellId);
 
@@ -81,6 +84,7 @@ renderWindow.getInteractor().onRightButtonPress((callData) => {
       const sphereActor = vtkActor.newInstance();
       sphereActor.setMapper(sphereMapper);
       sphereActor.getProperty().setColor(0.0, 1.0, 0.0);
+      sphereActor.setObjectName('PickedPoint');
       renderer.addActor(sphereActor);
     }
   }
