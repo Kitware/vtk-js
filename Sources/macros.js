@@ -443,6 +443,12 @@ export function obj(publicAPI = {}, model = {}) {
     return publicAPI.getState();
   };
 
+  publicAPI.setObjectName = (name) => {
+    model.objectName = name;
+  };
+
+  publicAPI.getObjectName = () => model.objectName;
+
   // Allow usage as decorator
   return publicAPI;
 }

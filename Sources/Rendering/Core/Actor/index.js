@@ -101,7 +101,6 @@ const DEFAULT_VALUES = {
 
   forceOpaque: false,
   forceTranslucent: false,
-  objectName: '',
 };
 
 // ----------------------------------------------------------------------------
@@ -122,7 +121,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'forceOpaque',
     'forceTranslucent',
     'mapper',
-    'objectName',
   ]);
 
   // Object methods
