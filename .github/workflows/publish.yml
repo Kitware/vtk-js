@@ -80,6 +80,8 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build:release
+      - name: Build examples
+        run: npm run build:examples
       - name: Build API docs
         run: npm run doc:generate-api
       - name: Build docs
