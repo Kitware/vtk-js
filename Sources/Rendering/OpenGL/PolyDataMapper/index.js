@@ -1856,11 +1856,21 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       tex.deactivate();
     }
 
+    const customAttributes = model.renderable.getCustomShaderAttributes();
+    const customAttributesArrays = customAttributes.map((arrayName) =>
+      poly.getPointData().getArrayByName(arrayName)
+    );
     const toString =
-      `${poly.getMTime()}A${representation}B${poly.getMTime()}` +
-      `C${n ? n.getMTime() : 1}D${c ? c.getMTime() : 1}` +
+      `${poly.getMTime()}` +
+      `A${representation}` +
+      `B${poly.getMTime()}` +
+      `C${n ? n.getMTime() : 1}` +
+      `D${c ? c.getMTime() : 1}` +
       `E${actor.getProperty().getEdgeVisibility()}` +
-      `F${tcoords ? tcoords.getMTime() : 1}`;
+      `F${tcoords ? tcoords.getMTime() : 1}` +
+      `G${customAttributesArrays
+        .map((attributeArray) => attributeArray.getMTime())
+        .join(',')}`;
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
       const points = poly.getPoints();
@@ -1874,9 +1884,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         useTCoordsPerCell,
         haveCellScalars: model.haveCellScalars,
         haveCellNormals: model.haveCellNormals,
-        customAttributes: model.renderable
-          .getCustomShaderAttributes()
-          .map((arrayName) => poly.getPointData().getArrayByName(arrayName)),
+        customAttributes: customAttributesArrays,
       };
 
       if (model.renderable.getPopulateSelectionSettings()) {
