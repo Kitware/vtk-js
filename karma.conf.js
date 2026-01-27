@@ -84,6 +84,10 @@ module.exports = function init(config) {
     },
 
     customLaunchers: {
+      ChromeSwiftShader: {
+        base: 'ChromeHeadless',
+        flags: ['--enable-unsafe-swiftshader'],
+      },
       ChromeHeadlessNoSandbox: {
         base: 'ChromeHeadless',
         flags: ['--no-sandbox', '--ignore-gpu-blacklist'],

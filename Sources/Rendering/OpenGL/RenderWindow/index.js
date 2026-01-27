@@ -323,6 +323,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         model.canvas.getContext('webgl', options) ||
         model.canvas.getContext('experimental-webgl', options);
     }
+    if (!result) {
+      vtkErrorMacro('no webgl context');
+    }
 
     return new Proxy(result, getCachingContextHandler());
   };
