@@ -42,7 +42,7 @@ jobs:
           npx tsc -p tsconfig.esm-check.json
           npx tsc -p tsconfig.umd-check.json
       - name: Chrome and Firefox tests
-        run: xvfb-run --auto-servernum npm run test -- --browsers Chrome,Firefox
+        run: xvfb-run --auto-servernum npm run test -- --browsers ChromeSwiftShader,Firefox
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v4
