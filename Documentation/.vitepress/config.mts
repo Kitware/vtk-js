@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitepress';
-import llmstxt from "vitepress-plugin-llms";
-import { copyOrDownloadAsMarkdownButtons } from 'vitepress-plugin-llms'
+import llmstxt from 'vitepress-plugin-llms';
+import { copyOrDownloadAsMarkdownButtons } from 'vitepress-plugin-llms';
 
 import { sidebar } from './sidebar';
 
@@ -8,7 +8,7 @@ import { sidebar } from './sidebar';
 const isProd = process.env.NODE_ENV === 'production';
 
 export default defineConfig({
-  base: isProd ? '/vtk-js/' : '/',
+  base: '/vtk-js',
   lang: 'en-US',
   title: 'VTK.js ',
   description: 'VTK.js a Visualization Toolkit for the Web',
@@ -16,12 +16,11 @@ export default defineConfig({
   lastUpdated: true,
   ignoreDeadLinks: true,
   vite: {
-    plugins: [llmstxt({
-      ignoreFiles: [
-        'examples/*',
-        'coverage/*',
-      ]
-    })],
+    plugins: [
+      llmstxt({
+        ignoreFiles: ['examples/*', 'coverage/*'],
+      }),
+    ],
   },
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
@@ -43,11 +42,11 @@ export default defineConfig({
     },
     footer: {
       copyright: `© ${new Date().getFullYear()} Kitware Inc.`,
-    }
+    },
   },
-   markdown: {
+  markdown: {
     config(md) {
-      md.use(copyOrDownloadAsMarkdownButtons)
-    }
-  }
+      md.use(copyOrDownloadAsMarkdownButtons);
+    },
+  },
 });
