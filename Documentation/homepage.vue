@@ -5,8 +5,8 @@
       Visualize Your Data With VTK.js
     </div>
     <div class="actions">
-      <a href="/docs/" class="btn-primary">Get Started</a>
-      <a href="/examples/">Examples</a>
+      <a :href="withBase('/docs/')" class="btn-primary">Get Started</a>
+      <a :href="withBase('/examples/')">Examples</a>
     </div>
     <div class="install">
       <svg class="install-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
@@ -22,6 +22,7 @@
 </template>
 
 <script setup>
+import { withBase } from "vitepress";
 import { ref } from "vue";
 
 const installCommand = "npm install @kitware/vtk.js";
@@ -51,7 +52,7 @@ async function copyInstall() {
 
 
 <style lang="css">
-@import "../.vitepress/theme/styles/index.css";
+@import "./.vitepress/theme/styles/index.css";
 
 .banner {
   display: flex;

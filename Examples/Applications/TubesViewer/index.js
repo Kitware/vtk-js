@@ -22,7 +22,7 @@ import {
 import { VaryRadius } from '@kitware/vtk.js/Filters/General/TubeFilter/Constants';
 
 import style from './TubesViewer.module.css';
-import icon from '../../../Documentation/content/icon/favicon-96x96.png';
+import icon from '../../../Documentation/public/icons/favicon-96x96.png';
 
 let autoInit = true;
 let background = [0, 0, 0];

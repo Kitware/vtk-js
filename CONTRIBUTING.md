@@ -60,10 +60,10 @@ Please follow the coding style:
     $ git push origin new_feature
     ```
 
-10. Visit your fork in Github, browse to the "**Pull Requests**" link on the left, and use the 
+10. Visit your fork in Github, browse to the "**Pull Requests**" link on the left, and use the
    "**New Pull Request**" button in the upper right to create a Pull Request.
 
-    For more information see: 
+    For more information see:
     [Create a Pull Request](https://help.github.com/articles/creating-a-pull-request/)
 
 If committing changes to `vtk.js@next` or `vtk.js@next-major`, then set your base branch to be `next`
@@ -106,7 +106,7 @@ you are satisfied with the staging branch changes, you can then merge into eithe
 ## Notice
 
 - Don't modify the version number in `package.json`.
-- Your pull request will only get merged when tests passed. Don't forget to run tests before 
+- Your pull request will only get merged when tests passed. Don't forget to run tests before
   submission.
 
     ```
@@ -123,18 +123,18 @@ To create and debug a test:
 
 ## Updating Documentation
 
-The vtk.js documentation is part of the code repository and is entirely written in 
+The vtk.js documentation is part of the code repository and is entirely written in
 [markdown](https://daringfireball.net/projects/markdown/).
 
 If you create an example, please list it in the [examples landing page](Documentation/content/examples/index.md).
 
-Images and GIF videos added to the [gallery](Documentation/content/docs/gallery) must be compressed as much as possible (e.g. 432px by 300px with 50% JPEG compression). You may want to use [ezgif.com](https://ezgif.com/).
+Images and GIF videos added to the [gallery](Documentation/public/gallery) must be compressed as much as possible (e.g. 432px by 300px with 50% JPEG compression). You may want to use [ezgif.com](https://ezgif.com/).
 
 ## Reporting Issues
 
 If you encounter problems using vtk.js you may be able to find the solutions in the
-[troubleshooting docs](https://kitware.github.io/vtk-js/docs/misc_troubleshooting.html), in an 
-existing [GitHub issue](https://github.com/kitware/vtk-js/issues), or via the 
+[troubleshooting docs](https://kitware.github.io/vtk-js/docs/misc_troubleshooting.html), in an
+existing [GitHub issue](https://github.com/kitware/vtk-js/issues), or via the
 [mailing list](http://www.vtk.org/VTK/help/mailing.html).
-If you can't find the answer, please 
+If you can't find the answer, please
 [report a new issue on GitHub](https://github.com/Kitware/vtk-js/issues/new).

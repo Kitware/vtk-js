@@ -80,15 +80,13 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build:release
-      - name: Build examples
-        run: npm run build:examples
-      - name: Build API docs
+      - name: Generate API docs
         run: npm run docs:generate-api
-      - name: Build docs examples
+      - name: Generate docs examples
         run: npm run docs:generate-examples
-      - name: Build docs sidebar
+      - name: Generate docs sidebar
         run: npm run docs:generate-sidebar
-      - name: Build docs gallery
+      - name: Generate docs gallery
         run: npm run docs:generate-gallery
       - name: Build docs
         run: npm run docs:build

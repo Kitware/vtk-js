@@ -31,7 +31,7 @@ import {
 } from '@kitware/vtk.js/Rendering/Core/Mapper/Constants';
 
 import style from './GeometryViewer.module.css';
-import icon from '../../../Documentation/content/icon/favicon-96x96.png';
+import icon from '../../../Documentation/public/icons/favicon-96x96.png';
 
 let autoInit = true;
 let background = [0, 0, 0];

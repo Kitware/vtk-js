@@ -160,4 +160,4 @@ representations, check out the above `SVGHelpers.js`, which requires `snabbdom`
 to be installed. An example usage can be found in the `vtkPolyLineWidget`
 example.
 
-[WidgetsDiagram]: ./gallery/widgets_diagram.png
+[WidgetsDiagram]: /gallery/widgets_diagram.png

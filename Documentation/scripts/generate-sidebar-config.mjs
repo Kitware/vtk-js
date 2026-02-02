@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const cwd = path.join(__dirname, '..', 'content', 'api');
+const cwd = path.join(__dirname, '..', 'api');
 
 const docsMenu = [
   {

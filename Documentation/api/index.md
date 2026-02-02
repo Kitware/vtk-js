@@ -11,4 +11,4 @@ If you are looking for general information on VTK pipelines, data structures, an
 [![VTK Book][Book]](https://www.vtk.org/vtk-textbook/)
 [Download the book in PDF for free](https://www.vtk.org/vtk-textbook/)
 
-[Book]: ./books_VTK_textbook.png
+[Book]: /books_VTK_textbook.png
