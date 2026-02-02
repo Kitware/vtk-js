@@ -6,7 +6,7 @@ title: Importing VTK.js as an external script
 
 This guide illustrates how to build a VTK.js application by leveraging import maps. While this approach may require a modern browser that supports import maps, it offers a cleaner setup and gives you fine-grained control over which modules are imported.
 
-Below you can find an [HTML](https://raw.githubusercontent.com/Kitware/vtk-js/master/Documentation/content/docs/vtk-js-demo.html) file example that demonstrates how to use VTK.js with import maps to create a visualization.
+Below you can find an [HTML](https://raw.githubusercontent.com/Kitware/vtk-js/master/Documentation/docs/vtk-js-demo.html) file example that demonstrates how to use VTK.js with import maps to create a visualization.
 
 ```html vtk-js-demo.html
 <!DOCTYPE html>

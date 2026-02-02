@@ -192,15 +192,15 @@ VTK.js currently relies on WebGL to support WebXR rendering. See [GitHub discuss
 The roadmap for VTK.js WebXR feature development and support is maintained in the [VTK.js GitHub issue tracker](https://github.com/Kitware/vtk-js/issues/2571).
 
 
-[ArCone]: ../docs/gallery/ArCone.jpg
-[GeometryViewer]: ../docs/gallery/GeometryViewer.jpg
-[GeometryViewerBrainBloodVessels]: ../docs/gallery/GeometryViewerBrainBloodVessels.jpg
-[GeometryViewerChestCT]: ../docs/gallery/GeometryViewerChestCT.jpg
-[SkyboxViewerVR]: ../docs/gallery/SkyboxViewerVR.jpg
-[VrCone]: ../docs/gallery/VrCone.jpg
-[WebXRVolume]: ../docs/gallery/WebXRVolume.png
-[WebXRVolumeHeadAndNeck]: ../docs/gallery/WebXRVolumeHeadAndNeck.png
-[HeadFullVolume]: ../docs/gallery/HeadFullVolume.png
-[ChestCTHybrid]: ../docs/gallery/ChestCTHybrid.png
-[HeadGradient]: ../docs/gallery/HeadGradient.png
-[LookingGlassCone]: ../docs/gallery/LookingGlassCone.png
+[ArCone]: /gallery/ArCone.jpg
+[GeometryViewer]: /gallery/GeometryViewer.jpg
+[GeometryViewerBrainBloodVessels]: /gallery/GeometryViewerBrainBloodVessels.jpg
+[GeometryViewerChestCT]: /gallery/GeometryViewerChestCT.jpg
+[SkyboxViewerVR]: /gallery/SkyboxViewerVR.jpg
+[VrCone]: /gallery/VrCone.jpg
+[WebXRVolume]: /gallery/WebXRVolume.png
+[WebXRVolumeHeadAndNeck]: /gallery/WebXRVolumeHeadAndNeck.png
+[HeadFullVolume]: /gallery/HeadFullVolume.png
+[ChestCTHybrid]: /gallery/ChestCTHybrid.png
+[HeadGradient]: /gallery/HeadGradient.png
+[LookingGlassCone]: /gallery/LookingGlassCone.png

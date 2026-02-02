@@ -3,22 +3,21 @@ import llmstxt from 'vitepress-plugin-llms';
 import { copyOrDownloadAsMarkdownButtons } from 'vitepress-plugin-llms';
 
 import { sidebar } from './sidebar';
+import { BASE_URL, withBase } from './utils';
 
 // https://vitepress.dev/reference/site-config
-const isProd = process.env.NODE_ENV === 'production';
-
 export default defineConfig({
-  base: '/vtk-js',
+  base: BASE_URL,
   lang: 'en-US',
   title: 'VTK.js ',
   description: 'VTK.js a Visualization Toolkit for the Web',
-  srcDir: './content',
   lastUpdated: true,
   ignoreDeadLinks: true,
+  srcExclude: ['**/scripts/**',],
   vite: {
     plugins: [
       llmstxt({
-        ignoreFiles: ['examples/*', 'coverage/*'],
+        ignoreFiles: ['examples/*', 'coverage/*', 'scripts/*'],
       }),
     ],
   },

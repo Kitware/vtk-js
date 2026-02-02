@@ -132,10 +132,7 @@ async function main() {
         seeAlso: seeAlso || null,
         elements,
       });
-      await fs.writeFile(
-        path.join(__dirname, '..', 'content', 'api', mdFile),
-        markdown
-      );
+      await fs.writeFile(path.join(__dirname, '..', 'api', mdFile), markdown);
       console.log(mdFile, 'has been generated!');
     })
   );

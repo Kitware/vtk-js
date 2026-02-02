@@ -11,8 +11,8 @@
     </div>
     <div class="examples-list">
       <div v-for="ex in filteredExamples" :key="ex.title" class="example-card">
-        <a :href="ex.link" :title="ex.title">
-          <img :src="`/docs/${ex.image}`" :alt="ex.title" />
+        <a :href="withBase(`/examples/${ex.link}`)" :title="ex.title">
+          <img :src="withBase(`/${ex.image}`)" :alt="ex.title" />
           <h3>{{ ex.title }}</h3>
           <p class="category">{{ ex.category }}</p>
         </a>
@@ -22,8 +22,9 @@
 </template>
 
 <script setup>
+import { withBase } from 'vitepress'
 import { ref, computed } from 'vue'
-import examples from '../../../content/examples/gallery.js'
+import examples from '../../../examples/gallery.js'
 
 const search = ref('')
 const selectedCategory = ref('')
@@ -84,6 +85,8 @@ const filteredExamples = computed(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  align-content: center;
+  justify-content: center;
 }
 
 .category-buttons button {
@@ -136,8 +139,8 @@ const filteredExamples = computed(() => {
   margin: 0.5rem;
   font-size: 1.1rem;
   text-overflow: ellipsis;
-  overflow:hidden;
-  white-space:nowrap;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .example-card .category {

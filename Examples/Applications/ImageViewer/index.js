@@ -28,7 +28,7 @@ import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
 import style from './ImageViewer.module.css';
-import icon from '../../../Documentation/content/icon/favicon-96x96.png';
+import icon from '../../../Documentation/public/icons/favicon-96x96.png';
 
 const { SlicingMode } = Constants;
 

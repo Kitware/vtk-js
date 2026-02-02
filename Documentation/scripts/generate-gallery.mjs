@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 // Adjust these paths as needed
 const SOURCES_ROOT = path.resolve(__dirname, '../../Sources/');
 const EXAMPLES_ROOT = path.resolve(__dirname, '../../Examples/');
-const OUTPUT_FILE = path.join(__dirname, '../content/examples/gallery.js');
+const OUTPUT_FILE = path.join(__dirname, '../examples/gallery.js');
 
 const EXAMPLE_SOURCES = [
   {
@@ -64,8 +64,7 @@ async function walkExamples(
         if (!config.isExampleFile(relPath)) return;
         const exampleName = config.getExampleName(fullPath, relPath);
         const exampleCategory = category || 'Uncategorized';
-        // Screenshot convention: check for /gallery/${exampleName}.{png,jpg,gif} or /gallery/${exampleName}WithIcon.{png,jpg,gif} in public/gallery
-        const galleryDir = path.resolve(__dirname, '../content/docs/gallery');
+        const galleryDir = path.resolve(__dirname, '../public/gallery');
         let image = null;
         const exts = ['png', 'jpg', 'gif'];
         const candidates = exts.flatMap((ext) => [
@@ -86,9 +85,11 @@ async function walkExamples(
         const foundIdx = existsArr.findIndex(Boolean);
         if (foundIdx !== -1) {
           image = candidates[foundIdx];
+        } else {
+          image = 'gallery/no-preview.png';
         }
         // Link convention
-        const link = `/examples/${exampleName}.html`;
+        const link = `${exampleName}.html`;
         results.push({
           title: exampleName,
           category: exampleCategory,
