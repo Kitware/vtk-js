@@ -215,7 +215,7 @@ async function build() {
         plugins: [autoprefixer],
       }),
       assetLoader(),
-      replaceBasePath(''),
+      replaceBasePath('/vtk-js'),
     ],
   });
 
@@ -248,6 +248,17 @@ async function build() {
   console.log(
     `Wrote ${Object.keys(entries).length} example pages to ${distDir}`
   );
+
+  const dataSrc = path.resolve(REPO_ROOT, 'Data');
+  const dataDest = path.resolve(DOCS_ROOT, '.vitepress', 'dist', 'Data');
+  try {
+    await fs.access(dataSrc);
+    await fs.mkdir(dataDest, { recursive: true });
+    await fs.cp(dataSrc, dataDest, { recursive: true, force: true });
+    console.log(`Copied Data assets to ${dataDest}`);
+  } catch (err) {
+    console.warn(`Skipping Data copy: ${err.message}`);
+  }
 }
 
 build().catch((err) => {
