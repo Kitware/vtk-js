@@ -250,7 +250,7 @@ async function build() {
   );
 
   const dataSrc = path.resolve(REPO_ROOT, 'Data');
-  const dataDest = path.resolve(DOCS_ROOT, '.vitepress', 'dist', 'Data');
+  const dataDest = path.resolve(DOCS_ROOT, '.vitepress', 'dist', 'data');
   try {
     await fs.access(dataSrc);
     await fs.mkdir(dataDest, { recursive: true });
