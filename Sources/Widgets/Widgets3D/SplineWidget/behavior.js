@@ -346,6 +346,7 @@ export default function widgetBehavior(publicAPI, model) {
       if (model.freeHand && model.activeState === model.moveHandle) {
         addPoint();
       }
+      return macro.EVENT_ABORT;
     }
 
     return model.hasFocus ? macro.EVENT_ABORT : macro.VOID;
