@@ -612,6 +612,14 @@ export interface vtkRenderer extends vtkViewport {
   resetCamera(bounds?: Bounds): boolean;
 
   /**
+   * Reset the camera accounting for viewport aspect ratio to prevent cropping.
+   * This is similar to resetCamera but computes the parallel scale from view space
+   * dimensions, which fixes issues where narrow viewports crop significantly.
+   * @param {Number} [offsetRatio=0.9] The fraction of space to use (default 0.9 = 90%, leaving 10% margin)
+   */
+  resetCameraScreenSpace(offsetRatio?: number): boolean;
+
+  /**
    * Reset the camera clipping range based on a bounding box.
    * @param {Bounds} [bounds]
    */
