@@ -419,6 +419,7 @@ export default function widgetBehavior(publicAPI, model) {
     model.widgetState.deactivate();
     model.moveHandle.deactivate();
     model.moveHandle.setVisible(false);
+    model.moveHandle.setOrigin(null);
     model.activeState = null;
     model._interactor.render();
 
