@@ -415,7 +415,7 @@ export default function widgetBehavior(publicAPI, model) {
     if (model.hasFocus) {
       model._interactor.cancelAnimation(publicAPI);
     }
-
+    model.lastHandle?.setVisible(true);
     model.widgetState.deactivate();
     model.moveHandle.deactivate();
     model.moveHandle.setVisible(false);
