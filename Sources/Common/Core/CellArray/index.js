@@ -9,13 +9,15 @@ const { isVtkObject } = macro;
 
 function extractCellSizes(cellArray) {
   let currentIdx = 0;
-  return cellArray.filter((value, index) => {
-    if (index === currentIdx) {
-      currentIdx += value + 1;
-      return true;
-    }
-    return false;
-  });
+  return Array.from(
+    cellArray.filter((value, index) => {
+      if (index === currentIdx) {
+        currentIdx += value + 1;
+        return true;
+      }
+      return false;
+    })
+  );
 }
 
 function getNumberOfCells(cellArray) {
