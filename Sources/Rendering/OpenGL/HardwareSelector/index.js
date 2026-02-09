@@ -8,7 +8,7 @@ import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 const { PassTypes } = Constants;
 const { SelectionContent, SelectionField } = vtkSelectionNode;
 const { FieldAssociations } = vtkDataSet;
-const { vtkErrorMacro } = macro;
+const { vtkErrorMacro, vtkDebugMacro } = macro;
 
 const idOffset = 1;
 
@@ -682,7 +682,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   ) => {
     // Base case
     const maxDist = maxDistance < 0 ? 0 : maxDistance;
-    console.log('getPixelInformation called', maxDist);
+    vtkDebugMacro('getPixelInformation called', maxDist);
     if (maxDist === 0) {
       outSelectedPosition[0] = inDisplayPosition[0];
       outSelectedPosition[1] = inDisplayPosition[1];
@@ -695,15 +695,15 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
         return null;
       }
 
-      console.log(inDisplayPosition);
-      console.log(model.area);
+      vtkDebugMacro(inDisplayPosition);
+      vtkDebugMacro(model.area);
       // offset inDisplayPosition based on the lower-left-corner of the Area.
       const displayPosition = [
         inDisplayPosition[0] - model.area[0],
         inDisplayPosition[1] - model.area[1],
       ];
 
-      console.log('adjusted displayPosition', displayPosition);
+      vtkDebugMacro('adjusted displayPosition', displayPosition);
 
       const actorid = convert(
         displayPosition[0],
@@ -713,7 +713,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
         'getPixelInformation'
       );
 
-      console.log('actorid', actorid);
+      vtkDebugMacro('actorid', actorid);
       if (actorid <= 0 || actorid - idOffset >= model.props.length) {
         // the pixel did not hit any actor.
         return null;
