@@ -8,7 +8,6 @@ on:
       - beta
       - '[0-9]+.x'
       - '[0-9]+.[0-9]+.x'
-  workflow_dispatch:
 
 jobs:
   publish:
@@ -29,8 +28,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 24
-      - run: npm update -g npm
+          node-version: 22
       - name: Install dependencies
         run: |
           npm ci
@@ -55,6 +53,7 @@ jobs:
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # No need to set NPM_TOKEN because of OIDC
           NPM_CONFIG_PROVENANCE: true
         run: |
           git config --global user.name "Github Actions"
