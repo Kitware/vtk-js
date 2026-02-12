@@ -8,6 +8,7 @@ on:
       - beta
       - '[0-9]+.x'
       - '[0-9]+.[0-9]+.x'
+  workflow_dispatch:
 
 jobs:
   publish:
@@ -53,7 +54,6 @@ jobs:
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           git config --global user.name "Github Actions"
           git config --global user.email "sebastien.jourdain@kitware.com"
