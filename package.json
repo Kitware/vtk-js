@@ -227,12 +227,6 @@
       [
         "@semantic-release/npm",
         {
-          "pkgRoot": "./dist/umd"
-        }
-      ],
-      [
-        "@semantic-release/npm",
-        {
           "pkgRoot": "./dist/esm"
         }
       ],
