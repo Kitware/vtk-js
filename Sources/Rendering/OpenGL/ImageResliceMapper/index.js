@@ -33,6 +33,23 @@ import { Resolve } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopology
 
 const { vtkErrorMacro } = macro;
 
+const splitStringOnEnter = (str) =>
+  str
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+function findLabelOutlineProperties(actor, currentValidInputs) {
+  const labelmapProperties = [];
+  for (let i = 0; i < currentValidInputs.length; i++) {
+    const ppty = actor.getProperty(currentValidInputs[i].inputIndex);
+    if (ppty?.getUseLabelOutline()) {
+      labelmapProperties.push({ property: ppty, arrayIndex: i });
+    }
+  }
+  return labelmapProperties;
+}
+
 // ----------------------------------------------------------------------------
 // helper methods
 // ----------------------------------------------------------------------------
@@ -193,6 +210,12 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       return;
     }
 
+    // Cache label outline properties for this render pass
+    model.labelOutlineProperties = findLabelOutlineProperties(
+      actor,
+      model.currentValidInputs
+    );
+
     // Number of components
     const firstImageData = model.currentValidInputs[0].imageData;
     const firstScalars = firstImageData.getPointData().getScalars();
@@ -215,10 +238,11 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
 
     // Update filters for scalar textures
     const actorProperties = actor.getProperties();
-    model.currentValidInputs.forEach(({ inputIndex }) => {
+    model.currentValidInputs.forEach(({ inputIndex }, component) => {
       const actorProperty = actorProperties[inputIndex];
+      const scalarTexture = model.scalarTextures[component];
+      if (!actorProperty || !scalarTexture) return;
       const interpolationType = actorProperty.getInterpolationType();
-      const scalarTexture = model.scalarTextures[inputIndex];
       if (interpolationType === InterpolationType.NEAREST) {
         scalarTexture.setMinificationFilter(Filter.NEAREST);
         scalarTexture.setMagnificationFilter(Filter.NEAREST);
@@ -231,7 +255,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     // Update color and opacity texture filters
     const firstValidInput = model.currentValidInputs[0];
     const firstProperty = actorProperties[firstValidInput.inputIndex];
-    const iType = firstProperty.getInterpolationType();
+    const iType = firstProperty?.getInterpolationType();
     if (iType === InterpolationType.NEAREST) {
       model.colorTexture.setMinificationFilter(Filter.NEAREST);
       model.colorTexture.setMagnificationFilter(Filter.NEAREST);
@@ -251,12 +275,18 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
   publicAPI.renderPieceDraw = (ren, actor) => {
     const gl = model.context;
 
+    const useLabelOutline = model.labelOutlineProperties.length > 0;
+
     // render the texture
     const allTextures = [
       ...model.scalarTextures,
       model.colorTexture,
       model.pwfTexture,
     ];
+    if (useLabelOutline) {
+      allTextures.push(model.labelOutlineThicknessTexture);
+      allTextures.push(model.labelOutlineOpacityTexture);
+    }
     allTextures.forEach((texture) => texture.activate());
 
     // update shaders if required
@@ -278,25 +308,34 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     }
   };
 
-  publicAPI.getNeedToRebuildBufferObjects = (ren, actor) =>
-    model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
-    model.VBOBuildTime.getMTime() < actor.getMTime() ||
-    model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
-    model.VBOBuildTime.getMTime() <
-      actor.getProperty(model.currentValidInputs[0].inputIndex)?.getMTime() ||
-    model.currentValidInputs.some(
-      ({ imageData }) => model.VBOBuildTime.getMTime() < imageData.getMTime()
-    ) ||
-    model.VBOBuildTime.getMTime() < model.resliceGeom.getMTime() ||
-    model.scalarTextures.length !== model.currentValidInputs.length ||
-    !model.scalarTextures.every((texture) => !!texture?.getHandle()) ||
-    !model.colorTexture?.getHandle() ||
-    !model.pwfTexture?.getHandle();
+  publicAPI.getNeedToRebuildBufferObjects = (ren, actor) => {
+    const firstActorProperty = actor.getProperty(
+      model.currentValidInputs[0].inputIndex
+    );
+    const useLabelOutline = model.labelOutlineProperties.length > 0;
+    return (
+      model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
+      model.VBOBuildTime.getMTime() < actor.getMTime() ||
+      model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
+      model.VBOBuildTime.getMTime() < firstActorProperty?.getMTime() ||
+      model.currentValidInputs.some(
+        ({ imageData }) => model.VBOBuildTime.getMTime() < imageData.getMTime()
+      ) ||
+      model.VBOBuildTime.getMTime() < model.resliceGeom.getMTime() ||
+      model.scalarTextures.length !== model.currentValidInputs.length ||
+      !model.scalarTextures.every((texture) => !!texture?.getHandle()) ||
+      !model.colorTexture?.getHandle() ||
+      !model.pwfTexture?.getHandle() ||
+      (useLabelOutline &&
+        (!model.labelOutlineThicknessTexture?.getHandle() ||
+          !model.labelOutlineOpacityTexture?.getHandle()))
+    );
+  };
 
   publicAPI.buildBufferObjects = (ren, actor) => {
     const actorProperties = actor.getProperties();
 
-    model.currentValidInputs.forEach(({ imageData }, component) => {
+    model.currentValidInputs.forEach(({ imageData, inputIndex }, component) => {
       // rebuild the scalarTexture if the data has changed
       const scalars = imageData.getPointData().getScalars();
       const tex =
@@ -305,8 +344,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       const reBuildTex =
         !tex?.oglObject?.getHandle() || tex?.hash !== scalarsHash;
 
-      const actorProperty = actorProperties[component];
-      const updatedExtents = actorProperty.getUpdatedExtents();
+      const actorProperty = actorProperties[inputIndex];
+      const updatedExtents = actorProperty?.getUpdatedExtents() ?? [];
       const hasUpdatedExtents = !!updatedExtents.length;
 
       if (reBuildTex && !hasUpdatedExtents) {
@@ -360,15 +399,26 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
 
     const firstValidInput = model.currentValidInputs[0];
     const firstActorProperty = actorProperties[firstValidInput.inputIndex];
+    if (!firstActorProperty) {
+      vtkErrorMacro('Missing property for first input');
+      return;
+    }
     const iComps = firstActorProperty.getIndependentComponents();
     const numIComps = iComps ? model.numberOfComponents : 1;
     const textureHeight = iComps ? 2 * numIComps : 1;
 
+    // Collect color transfer functions - in multi-texture mode, get from each input's property
     const colorTransferFunctions = [];
     for (let component = 0; component < numIComps; ++component) {
-      colorTransferFunctions.push(
-        firstActorProperty.getRGBTransferFunction(component)
-      );
+      if (model.multiTexturePerVolumeEnabled) {
+        const validInput = model.currentValidInputs[component];
+        const prop = validInput ? actorProperties[validInput.inputIndex] : null;
+        colorTransferFunctions.push(prop?.getRGBTransferFunction() || null);
+      } else {
+        colorTransferFunctions.push(
+          firstActorProperty.getRGBTransferFunction(component)
+        );
+      }
     }
     const colorFuncHash = getTransferFunctionsHash(
       colorTransferFunctions,
@@ -394,17 +444,20 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         const tmpTable = new Float32Array(cWidth * 3);
 
         for (let c = 0; c < numIComps; c++) {
-          const cfun = firstActorProperty.getRGBTransferFunction(c);
-          const cRange = cfun.getRange();
-          cfun.getTable(cRange[0], cRange[1], cWidth, tmpTable, 1);
-          if (iComps) {
-            for (let i = 0; i < cWidth * 3; i++) {
-              cTable[c * cWidth * 6 + i] = 255.0 * tmpTable[i];
-              cTable[c * cWidth * 6 + i + cWidth * 3] = 255.0 * tmpTable[i];
-            }
-          } else {
-            for (let i = 0; i < cWidth * 3; i++) {
-              cTable[c * cWidth * 3 + i] = 255.0 * tmpTable[i];
+          // Use pre-collected color transfer functions (handles both single and multi-texture modes)
+          const cfun = colorTransferFunctions[c];
+          if (cfun) {
+            const cRange = cfun.getRange();
+            cfun.getTable(cRange[0], cRange[1], cWidth, tmpTable, 1);
+            if (iComps) {
+              for (let i = 0; i < cWidth * 3; i++) {
+                cTable[c * cWidth * 6 + i] = 255.0 * tmpTable[i];
+                cTable[c * cWidth * 6 + i + cWidth * 3] = 255.0 * tmpTable[i];
+              }
+            } else {
+              for (let i = 0; i < cWidth * 3; i++) {
+                cTable[c * cWidth * 3 + i] = 255.0 * tmpTable[i];
+              }
             }
           }
         }
@@ -457,9 +510,18 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     // Build piecewise function buffer.  This buffer is used either
     // for component weighting or opacity, depending on whether we're
     // rendering components independently or not.
+    // In multi-texture mode, get from each input's property
     const opacityFunctions = [];
     for (let component = 0; component < numIComps; ++component) {
-      opacityFunctions.push(firstActorProperty.getPiecewiseFunction(component));
+      if (model.multiTexturePerVolumeEnabled) {
+        const validInput = model.currentValidInputs[component];
+        const prop = validInput ? actorProperties[validInput.inputIndex] : null;
+        opacityFunctions.push(prop?.getPiecewiseFunction() || null);
+      } else {
+        opacityFunctions.push(
+          firstActorProperty.getPiecewiseFunction(component)
+        );
+      }
     }
     const opacityFuncHash = getTransferFunctionsHash(
       opacityFunctions,
@@ -485,7 +547,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         const tmpTable = new Float32Array(pwfWidth);
 
         for (let c = 0; c < numIComps; ++c) {
-          const pwfun = firstActorProperty.getPiecewiseFunction(c);
+          // Use pre-collected opacity functions (handles both single and multi-texture modes)
+          const pwfun = opacityFunctions[c];
           if (pwfun === null) {
             // Piecewise constant max if no function supplied for this component
             pwfFloatTable.fill(1.0);
@@ -542,6 +605,14 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       firstPwFunc
     );
     model._pwfTextureCore = firstPwFunc;
+
+    // Build label outline textures if needed (2D textures for per-labelmap settings)
+    if (model.labelOutlineProperties.length > 0) {
+      publicAPI.updateLabelOutlineThicknessTexture(
+        model.labelOutlineProperties
+      );
+      publicAPI.updateLabelOutlineOpacityTexture(model.labelOutlineProperties);
+    }
 
     const vboString = `${model.resliceGeom.getMTime()}A${model.renderable.getSlabThickness()}`;
     if (
@@ -686,9 +757,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       if (program.isUniformUsed('slabType')) {
         program.setUniformi('slabType', model.renderable.getSlabType());
       }
-      if (program.isUniformUsed('slabType')) {
-        program.setUniformi('slabType', model.renderable.getSlabType());
-      }
       if (program.isUniformUsed('slabTrapezoid')) {
         program.setUniformi(
           'slabTrapezoid',
@@ -701,17 +769,25 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         ? cellBO.getCABO().getInverseShiftAndScaleMatrix()
         : null;
 
-      // Set the world->texture matrix
-      if (program.isUniformUsed('WCTCMatrix')) {
-        const dim = firstImageData.getDimensions();
-        mat4.copy(model.tmpMat4, firstImageData.getIndexToWorld());
-        mat4.translate(model.tmpMat4, model.tmpMat4, [-0.5, -0.5, -0.5]);
-        mat4.scale(model.tmpMat4, model.tmpMat4, dim);
-        mat4.invert(model.tmpMat4, model.tmpMat4);
-        if (inverseShiftScaleMatrix) {
-          mat4.multiply(model.tmpMat4, model.tmpMat4, inverseShiftScaleMatrix);
+      // Set per-input world->texture matrices
+      for (let i = 0; i < model.currentValidInputs.length; i++) {
+        const uniformName = `WCTCMatrix${i}`;
+        if (program.isUniformUsed(uniformName)) {
+          const imageData = model.currentValidInputs[i].imageData;
+          const dim = imageData.getDimensions();
+          mat4.copy(model.tmpMat4, imageData.getIndexToWorld());
+          mat4.translate(model.tmpMat4, model.tmpMat4, [-0.5, -0.5, -0.5]);
+          mat4.scale(model.tmpMat4, model.tmpMat4, dim);
+          mat4.invert(model.tmpMat4, model.tmpMat4);
+          if (inverseShiftScaleMatrix) {
+            mat4.multiply(
+              model.tmpMat4,
+              model.tmpMat4,
+              inverseShiftScaleMatrix
+            );
+          }
+          program.setUniformMatrix(uniformName, model.tmpMat4);
         }
-        program.setUniformMatrix('WCTCMatrix', model.tmpMat4);
       }
 
       if (program.isUniformUsed('vboScaling')) {
@@ -783,7 +859,12 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
 
     const firstPpty = actor.getProperty(model.currentValidInputs[0].inputIndex);
 
-    const opacity = firstPpty.getOpacity();
+    // In multi-texture mode, use 1.0 for global opacity since each input's
+    // piecewise function controls its own opacity through component weights.
+    // This prevents a labelmap's opacity setting from affecting all inputs.
+    const opacity = model.multiTexturePerVolumeEnabled
+      ? 1.0
+      : firstPpty.getOpacity();
     program.setUniformf('opacity', opacity);
 
     // Component mix
@@ -794,16 +875,20 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     //    - 4 comps => RGBA
     const numComp = model.numberOfComponents;
     const iComps = firstPpty.getIndependentComponents();
+    const useMultiTexture = model.multiTexturePerVolumeEnabled;
+    const actorProperties = actor.getProperties();
     if (iComps) {
       for (let i = 0; i < numComp; ++i) {
-        program.setUniformf(`mix${i}`, firstPpty.getComponentWeight(i));
+        const ppty = useMultiTexture
+          ? actorProperties[model.currentValidInputs[i].inputIndex]
+          : firstPpty;
+        program.setUniformf(`mix${i}`, ppty.getComponentWeight(0));
       }
     }
 
     // three levels of shift scale combined into one
     // for performance in the fragment shader
     for (let component = 0; component < numComp; component++) {
-      const useMultiTexture = model.multiTexturePerVolumeEnabled;
       const textureIndex = useMultiTexture ? component : 0;
       const volInfoIndex = useMultiTexture ? 0 : component;
       const scalarTexture = model.scalarTextures[textureIndex];
@@ -812,11 +897,15 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       const volOffset = volInfo.offset[volInfoIndex];
       const target = iComps ? component : 0;
 
+      const ppty = useMultiTexture
+        ? actorProperties[model.currentValidInputs[component].inputIndex]
+        : firstPpty;
+
       // color shift/scale
-      let cw = firstPpty.getColorWindow();
-      let cl = firstPpty.getColorLevel();
-      const cfun = firstPpty.getRGBTransferFunction(target);
-      if (cfun && firstPpty.getUseLookupTableScalarRange()) {
+      let cw = ppty.getColorWindow();
+      let cl = ppty.getColorLevel();
+      const cfun = ppty.getRGBTransferFunction(useMultiTexture ? 0 : target);
+      if (cfun && ppty.getUseLookupTableScalarRange()) {
         const cRange = cfun.getRange();
         cw = cRange[1] - cRange[0];
         cl = 0.5 * (cRange[1] + cRange[0]);
@@ -829,7 +918,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       // pwf shift/scale
       let pwfScale = 1.0;
       let pwfShift = 0.0;
-      const pwfun = firstPpty.getPiecewiseFunction(target);
+      const pwfun = ppty.getPiecewiseFunction(useMultiTexture ? 0 : target);
       if (pwfun) {
         const pwfRange = pwfun.getRange();
         const length = pwfRange[1] - pwfRange[0];
@@ -851,6 +940,85 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       'backgroundColor',
       model.renderable.getBackgroundColor()
     );
+
+    // Label outline uniforms
+    if (model.labelOutlineProperties.length > 0) {
+      const outlineThicknessUnit =
+        model.labelOutlineThicknessTexture.getTextureUnit();
+      program.setUniformi('labelOutlineThicknessTexture', outlineThicknessUnit);
+
+      const outlineOpacityUnit =
+        model.labelOutlineOpacityTexture.getTextureUnit();
+      program.setUniformi('labelOutlineOpacityTexture', outlineOpacityUnit);
+
+      let textureWidth = model.renderable.getLabelOutlineTextureWidth();
+      if (textureWidth <= 0) {
+        textureWidth = model.context.getParameter(
+          model.context.MAX_TEXTURE_SIZE
+        );
+      }
+      program.setUniformf('labelOutlineTextureWidth', textureWidth);
+      program.setUniformf('numLabelmaps', model.labelOutlineProperties.length);
+
+      // Calculate tangent vectors for the slice plane in each input's texture space
+      const slicePlane = model.renderable.getSlicePlane();
+
+      // Create orthogonal tangent vectors on the slice plane (in world space)
+      const tangent1 = [0, 0, 0];
+      const tangent2 = [0, 0, 0];
+
+      if (slicePlane) {
+        const normal = slicePlane.getNormal();
+        const absNormal = normal.map(Math.abs);
+        const minIdx = absNormal.indexOf(Math.min(...absNormal));
+        const up = [0, 0, 0];
+        up[minIdx] = 1;
+        vtkMath.cross(normal, up, tangent1);
+        vtkMath.normalize(tangent1);
+        vtkMath.cross(normal, tangent1, tangent2);
+        vtkMath.normalize(tangent2);
+      } else {
+        // Default tangents for axis-aligned slicing
+        tangent1[0] = 1;
+        tangent2[1] = 1;
+      }
+
+      // Set per-input tangent vectors (transformed to each input's texture space)
+      for (let i = 0; i < model.currentValidInputs.length; i++) {
+        const imageData = model.currentValidInputs[i].imageData;
+        const w2io = mat3.create();
+        mat3.set(w2io, ...imageData.getDirection());
+        mat3.invert(w2io, w2io);
+
+        const t1TC = [0, 0, 0];
+        const t2TC = [0, 0, 0];
+        vec3.transformMat3(t1TC, tangent1, w2io);
+        vec3.transformMat3(t2TC, tangent2, w2io);
+
+        const t1Name = `outlineTangent1_${i}`;
+        const t2Name = `outlineTangent2_${i}`;
+        if (program.isUniformUsed(t1Name)) {
+          program.setUniform3fv(t1Name, t1TC);
+        }
+        if (program.isUniformUsed(t2Name)) {
+          program.setUniform3fv(t2Name, t2TC);
+        }
+      }
+
+      // Set per-input texel sizes in texture coordinates
+      for (let i = 0; i < model.currentValidInputs.length; i++) {
+        const uniformName = `texelSize${i}`;
+        if (program.isUniformUsed(uniformName)) {
+          const imageData = model.currentValidInputs[i].imageData;
+          const inputDims = imageData.getDimensions();
+          program.setUniform3fv(uniformName, [
+            1.0 / inputDims[0],
+            1.0 / inputDims[1],
+            1.0 / inputDims[2],
+          ]);
+        }
+      }
+    }
   };
 
   publicAPI.getNeedToRebuildShaders = (cellBO, ren, actor) => {
@@ -860,9 +1028,11 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     // input modified
     // light complexity changed
     // render pass shader replacement changed
-    const iComp = actor
-      .getProperty(model.currentValidInputs[0].inputIndex)
-      .getIndependentComponents();
+    const firstActorProperty = actor.getProperty(
+      model.currentValidInputs[0].inputIndex
+    );
+    const iComp = firstActorProperty.getIndependentComponents();
+    const useLabelOutline = model.labelOutlineProperties.length > 0;
     const slabTh = model.renderable.getSlabThickness();
     const slabType = model.renderable.getSlabType();
     const slabTrap = model.renderable.getSlabTrapezoidIntegration();
@@ -878,6 +1048,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       needRebuild = true;
     }
 
+    const numValidInputs = model.currentValidInputs?.length ?? 0;
+
     if (
       needRebuild ||
       model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
@@ -886,6 +1058,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         model.multiTexturePerVolumeEnabled ||
       cellBO.getProgram()?.getHandle() === 0 ||
       model.lastIndependentComponents !== iComp ||
+      model.lastUseLabelOutline !== useLabelOutline ||
+      model.lastNumValidInputs !== numValidInputs ||
       model.lastSlabThickness !== slabTh ||
       model.lastSlabType !== slabType ||
       model.lastSlabTrapezoidIntegration !== slabTrap
@@ -895,6 +1069,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       model.lastMultiTexturePerVolumeEnabled =
         model.multiTexturePerVolumeEnabled;
       model.lastIndependentComponents = iComp;
+      model.lastUseLabelOutline = useLabelOutline;
+      model.lastNumValidInputs = numValidInputs;
       model.lastSlabThickness = slabTh;
       model.lastSlabType = slabType;
       model.lastSlabTrapezoidIntegration = slabTrap;
@@ -933,34 +1109,159 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     publicAPI.replaceShaderCoincidentOffset(shaders, ren, actor);
   };
 
+  // Helper to generate shader code for compositing multiple inputs
+  // Some inputs may be labelmaps (with outline), others may be background images
+  // labelmapInputs: array of input indices that are labelmaps (e.g., [0, 2])
+  // totalInputs: total number of inputs (1-4)
+  function generateMultiInputCompositeShader(labelmapInputs, totalInputs) {
+    const rgba = ['r', 'g', 'b', 'a'];
+    const allInputs = Array.from({ length: totalInputs }, (_, i) => i);
+    const backgroundInputs = allInputs.filter(
+      (i) => !labelmapInputs.includes(i)
+    );
+
+    // Generate texture coordinate lines for labelmap inputs
+    const texCoordLines = labelmapInputs
+      .map(
+        (i) =>
+          `vec3 labelTexCoord${i} = (WCTCMatrix${i} * vec4(fragWorldPos, 1.0)).xyz;`
+      )
+      .join('\n                ');
+
+    // Build texture sampling conditional for neighbor checking
+    const textureSampling = (() => {
+      if (labelmapInputs.length === 0) return '';
+
+      const conditions = labelmapInputs.map((inputIdx, arrayIdx) => {
+        if (arrayIdx === 0) {
+          return `(labelInputIdx == ${arrayIdx}) ? texture(volumeTexture[${inputIdx}], neighborTexCoord).r`;
+        }
+        return ` : (labelInputIdx == ${arrayIdx}) ? texture(volumeTexture[${inputIdx}], neighborTexCoord).r`;
+      });
+      return `float neighborLabel = ${conditions.join('')} : 0.0;`;
+    })();
+
+    // Process backgrounds first, then labelmaps on top
+    const orderedInputs = [...backgroundInputs, ...labelmapInputs];
+    const processInputs = orderedInputs
+      .map((inputIdx) => {
+        const isLabelmap = labelmapInputs.includes(inputIdx);
+        const labelArrayIdx = labelmapInputs.indexOf(inputIdx);
+
+        if (isLabelmap) {
+          return `
+        // Process input ${inputIdx} as labelmap
+        {
+          float labelValue = tvalue.${rgba[inputIdx]};
+          int segmentIndex = int(labelValue * 255.0);
+
+          if (segmentIndex > 0) {
+            float textureCoordinate = float(segmentIndex - 1) / labelOutlineTextureWidth;
+            float labelmapRow = (float(${labelArrayIdx}) + 0.5) / numLabelmaps;
+            float thicknessValue = texture2D(labelOutlineThicknessTexture, vec2(textureCoordinate, labelmapRow)).r;
+            float labelOutlineOpacityValue = texture2D(labelOutlineOpacityTexture, vec2(textureCoordinate, labelmapRow)).r;
+            int actualThickness = int(thicknessValue * 255.0);
+
+            vec3 currentLabelTC = labelTexCoord${inputIdx};
+            vec3 currentTexelSize = texelSize${inputIdx};
+            vec3 currentTangent1 = outlineTangent1_${inputIdx};
+            vec3 currentTangent2 = outlineTangent2_${inputIdx};
+
+            bool pixelOnBorder = false;
+            int labelInputIdx = ${labelArrayIdx};
+            for (int i = -actualThickness; i <= actualThickness; i++) {
+              for (int j = -actualThickness; j <= actualThickness; j++) {
+                if (i == 0 && j == 0) continue;
+                vec3 neighborTexCoord = currentLabelTC + float(i) * currentTangent1 * currentTexelSize + float(j) * currentTangent2 * currentTexelSize;
+                if (any(greaterThan(neighborTexCoord, vec3(1.0))) || any(lessThan(neighborTexCoord, vec3(0.0)))) {
+                  pixelOnBorder = true;
+                  break;
+                }
+                ${textureSampling}
+                if (neighborLabel != labelValue) {
+                  pixelOnBorder = true;
+                  break;
+                }
+              }
+              if (pixelOnBorder) break;
+            }
+
+            if (pixelOnBorder) {
+              convergentColor.rgb = mix(convergentColor.rgb, tcolor${inputIdx}.rgb, labelOutlineOpacityValue);
+              convergentColor.a = max(convergentColor.a, labelOutlineOpacityValue);
+            } else if (compWeight${inputIdx} > 0.0) {
+              float fillAlpha = compWeight${inputIdx} * opacity;
+              convergentColor.rgb = mix(convergentColor.rgb, tcolor${inputIdx}.rgb, fillAlpha);
+              convergentColor.a = max(convergentColor.a, fillAlpha);
+            }
+          }
+        }`;
+        }
+        return `
+        // Process input ${inputIdx} as background image
+        {
+          float bgAlpha = compWeight${inputIdx} * opacity;
+          convergentColor.rgb = mix(convergentColor.rgb, tcolor${inputIdx}.rgb, bgAlpha);
+          convergentColor.a = max(convergentColor.a, bgAlpha);
+        }`;
+      })
+      .join('\n        ');
+
+    const labelDesc =
+      labelmapInputs.length > 0
+        ? `labelmaps at input${
+            labelmapInputs.length > 1 ? 's' : ''
+          } ${labelmapInputs.join(', ')}`
+        : 'no labelmaps';
+    const bgDesc =
+      backgroundInputs.length > 0
+        ? `background at input${
+            backgroundInputs.length > 1 ? 's' : ''
+          } ${backgroundInputs.join(', ')}`
+        : 'no background';
+
+    return splitStringOnEnter(`
+      // Multi-texture mode: ${labelDesc}, ${bgDesc}
+      vec4 convergentColor = vec4(0.0, 0.0, 0.0, 0.0);
+
+      // Compute labelmap texture coordinates
+      ${texCoordLines}
+
+      // Process each input in order
+      ${processInputs}
+
+      gl_FragData[0] = convergentColor;
+    `);
+  }
+
   publicAPI.replaceShaderTCoord = (shaders, ren, actor) => {
     let VSSource = shaders.Vertex;
     const GSSource = shaders.Geometry;
     let FSSource = shaders.Fragment;
 
-    const tcoordVSDec = ['uniform mat4 WCTCMatrix;', 'out vec3 fragTexCoord;'];
+    const useLabelOutline = model.labelOutlineProperties.length > 0;
+
     const slabThickness = model.renderable.getSlabThickness();
     VSSource = vtkShaderProgram.substitute(
       VSSource,
       '//VTK::TCoord::Dec',
-      tcoordVSDec
+      []
     ).result;
-    const tcoordVSImpl = ['fragTexCoord = (WCTCMatrix * vertexWC).xyz;'];
     VSSource = vtkShaderProgram.substitute(
       VSSource,
       '//VTK::TCoord::Impl',
-      tcoordVSImpl
+      []
     ).result;
 
     const tNumComp = model.numberOfComponents;
-    const iComps = actor
-      .getProperty(model.currentValidInputs[0].inputIndex)
-      .getIndependentComponents();
+    const firstActorPropertyForIComps = actor.getProperty(
+      model.currentValidInputs[0].inputIndex
+    );
+    const iComps = firstActorPropertyForIComps.getIndependentComponents();
 
+    const numInputs = model.scalarTextures.length;
     let tcoordFSDec = [
-      'in vec3 fragTexCoord;',
-      `uniform highp sampler3D volumeTexture[${model.scalarTextures.length}];`,
-      'uniform mat4 WCTCMatrix;',
+      `uniform highp sampler3D volumeTexture[${numInputs}];`,
       // color shift and scale
       'uniform float cshift0;',
       'uniform float cscale0;',
@@ -976,19 +1277,41 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       'uniform vec4 backgroundColor;',
     ];
 
-    // Function to sample texture
-    tcoordFSDec.push('vec4 rawSampleTexture(vec3 pos) {');
+    // Add per-input WCTCMatrix uniforms
+    for (let i = 0; i < numInputs; i++) {
+      tcoordFSDec.push(`uniform mat4 WCTCMatrix${i};`);
+    }
+
+    // Add label outline uniforms if enabled
+    if (useLabelOutline) {
+      tcoordFSDec = tcoordFSDec.concat([
+        'uniform sampler2D labelOutlineThicknessTexture;',
+        'uniform sampler2D labelOutlineOpacityTexture;',
+        'uniform float labelOutlineTextureWidth;',
+        'uniform float numLabelmaps;',
+      ]);
+      // Add per-input tangent vectors and texelSize
+      for (let i = 0; i < numInputs; i++) {
+        tcoordFSDec.push(`uniform vec3 outlineTangent1_${i};`);
+        tcoordFSDec.push(`uniform vec3 outlineTangent2_${i};`);
+        tcoordFSDec.push(`uniform vec3 texelSize${i};`);
+      }
+    }
+
+    // Function to sample texture - takes world position, computes per-input texture coords
+    tcoordFSDec.push('vec4 rawSampleTexture(vec3 worldPos) {');
     if (!model.multiTexturePerVolumeEnabled) {
-      tcoordFSDec.push('return texture(volumeTexture[0], pos);', '}');
+      tcoordFSDec.push(
+        'vec3 tc0 = (WCTCMatrix0 * vec4(worldPos, 1.0)).xyz;',
+        'return texture(volumeTexture[0], tc0);',
+        '}'
+      );
     } else {
       tcoordFSDec.push('vec4 rawSample;');
-      for (
-        let component = 0;
-        component < model.scalarTextures.length;
-        ++component
-      ) {
+      for (let component = 0; component < numInputs; ++component) {
         tcoordFSDec.push(
-          `rawSample[${component}] = texture(volumeTexture[${component}], pos)[0];`
+          `vec3 tc${component} = (WCTCMatrix${component} * vec4(worldPos, 1.0)).xyz;`,
+          `rawSample[${component}] = texture(volumeTexture[${component}], tc${component})[0];`
         );
       }
       tcoordFSDec.push('return rawSample;', '}');
@@ -1090,13 +1413,15 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     ).result;
 
     let tcoordFSImpl = [
+      'vec3 fragWorldPos = vertexWCVSOutput.xyz;',
+      'vec3 fragTexCoord = (WCTCMatrix0 * vec4(fragWorldPos, 1.0)).xyz;',
       'if (any(greaterThan(fragTexCoord, vec3(1.0))) || any(lessThan(fragTexCoord, vec3(0.0))))',
       '{',
       '  // set the background color and exit',
       '  gl_FragData[0] = backgroundColor;',
       '  return;',
       '}',
-      'vec4 tvalue = rawSampleTexture(fragTexCoord);',
+      'vec4 tvalue = rawSampleTexture(fragWorldPos);',
     ];
     if (slabThickness > 0.0) {
       tcoordFSImpl = tcoordFSImpl.concat([
@@ -1116,17 +1441,19 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         '    normalxspacing = normalWCVSOutput * slabThickness * 0.5 / fnumSlices;',
         '    trapezoid = slabTrapezoid;',
         '  }',
-        '  vec3 fragTCoordNeg = (WCTCMatrix * vec4(vertexWCVSOutput.xyz - fnumSlices * normalxspacing * vboScaling, 1.0)).xyz;',
+        '  vec3 worldPosNeg = vertexWCVSOutput.xyz - fnumSlices * normalxspacing * vboScaling;',
+        '  vec3 fragTCoordNeg = (WCTCMatrix0 * vec4(worldPosNeg, 1.0)).xyz;',
         '  if (!any(greaterThan(fragTCoordNeg, vec3(1.0))) && !any(lessThan(fragTCoordNeg, vec3(0.0))))',
         '  {',
-        '    vec4 newVal = rawSampleTexture(fragTCoordNeg);',
+        '    vec4 newVal = rawSampleTexture(worldPosNeg);',
         '    tvalue = compositeValue(tvalue, newVal, trapezoid);',
         '    numSlices += 1;',
         '  }',
-        '  vec3 fragTCoordPos = (WCTCMatrix * vec4(vertexWCVSOutput.xyz + fnumSlices * normalxspacing * vboScaling, 1.0)).xyz;',
-        '  if (!any(greaterThan(fragTCoordNeg, vec3(1.0))) && !any(lessThan(fragTCoordNeg, vec3(0.0))))',
+        '  vec3 worldPosPos = vertexWCVSOutput.xyz + fnumSlices * normalxspacing * vboScaling;',
+        '  vec3 fragTCoordPos = (WCTCMatrix0 * vec4(worldPosPos, 1.0)).xyz;',
+        '  if (!any(greaterThan(fragTCoordPos, vec3(1.0))) && !any(lessThan(fragTCoordPos, vec3(0.0))))',
         '  {',
-        '    vec4 newVal = rawSampleTexture(fragTCoordPos);',
+        '    vec4 newVal = rawSampleTexture(worldPosPos);',
         '    tvalue = compositeValue(tvalue, newVal, trapezoid);',
         '    numSlices += 1;',
         '  }',
@@ -1146,44 +1473,115 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           `float compWeight${comp} = mix${comp} * texture2D(pwfTexture1, vec2(tvalue.${rgba[comp]} * pwfscale${comp} + pwfshift${comp}, height${comp})).r;`,
         ]);
       }
-      switch (tNumComp) {
-        case 1:
-          tcoordFSImpl = tcoordFSImpl.concat([
-            'gl_FragData[0] = vec4(tcolor0.rgb, compWeight0 * opacity);',
-          ]);
-          break;
-        case 2:
-          tcoordFSImpl = tcoordFSImpl.concat([
-            'float weightSum = compWeight0 + compWeight1;',
-            'gl_FragData[0] = vec4(vec3((tcolor0.rgb * (compWeight0 / weightSum)) + (tcolor1.rgb * (compWeight1 / weightSum))), opacity);',
-          ]);
-          break;
-        case 3:
-          tcoordFSImpl = tcoordFSImpl.concat([
-            'float weightSum = compWeight0 + compWeight1 + compWeight2;',
-            'gl_FragData[0] = vec4(vec3((tcolor0.rgb * (compWeight0 / weightSum)) + (tcolor1.rgb * (compWeight1 / weightSum)) + (tcolor2.rgb * (compWeight2 / weightSum))), opacity);',
-          ]);
-          break;
-        case 4:
-          tcoordFSImpl = tcoordFSImpl.concat([
-            'float weightSum = compWeight0 + compWeight1 + compWeight2 + compWeight3;',
-            'gl_FragData[0] = vec4(vec3((tcolor0.rgb * (compWeight0 / weightSum)) + (tcolor1.rgb * (compWeight1 / weightSum)) + (tcolor2.rgb * (compWeight2 / weightSum)) + (tcolor3.rgb * (compWeight3 / weightSum))), opacity);',
-          ]);
-          break;
-        default:
-          vtkErrorMacro('Unsupported number of independent coordinates.');
+
+      // Determine which inputs are labelmaps
+      const labelmapInputs = [];
+      if (useLabelOutline) {
+        for (let i = 0; i < tNumComp; i++) {
+          const inputProperty = actor.getProperty(
+            model.currentValidInputs[i].inputIndex
+          );
+          if (inputProperty?.getUseLabelOutline()) {
+            labelmapInputs.push(i);
+          }
+        }
+      }
+
+      // Generate weighted sum shader for non-labelmap cases
+      const generateWeightedSumShader = (inputCount) => {
+        if (inputCount === 1) {
+          return ['gl_FragData[0] = vec4(tcolor0.rgb, compWeight0 * opacity);'];
+        }
+        const inputs = Array.from({ length: inputCount }, (_, i) => i);
+        const weightSum = inputs.map((i) => `compWeight${i}`).join(' + ');
+        const colorSum = inputs
+          .map((i) => `(tcolor${i}.rgb * (compWeight${i} / weightSum))`)
+          .join(' + ');
+        return [
+          `float weightSum = ${weightSum};`,
+          `gl_FragData[0] = vec4(vec3(${colorSum}), opacity);`,
+        ];
+      };
+
+      if (labelmapInputs.length > 0) {
+        tcoordFSImpl = tcoordFSImpl.concat(
+          generateMultiInputCompositeShader(labelmapInputs, tNumComp)
+        );
+      } else {
+        tcoordFSImpl = tcoordFSImpl.concat(generateWeightedSumShader(tNumComp));
       }
     } else {
       // dependent components
       switch (tNumComp) {
         case 1:
-          tcoordFSImpl = tcoordFSImpl.concat([
-            '// Dependent components',
-            'float intensity = tvalue.r;',
-            'vec3 tcolor = texture2D(colorTexture1, vec2(intensity * cscale0 + cshift0, 0.5)).rgb;',
-            'float scalarOpacity = texture2D(pwfTexture1, vec2(intensity * pwfscale0 + pwfshift0, 0.5)).r;',
-            'gl_FragData[0] = vec4(tcolor, scalarOpacity * opacity);',
-          ]);
+          if (useLabelOutline) {
+            tcoordFSImpl = tcoordFSImpl.concat([
+              ...splitStringOnEnter(`
+                // Label outline mode for single component
+                float centerValue = tvalue.r;
+                int segmentIndex = int(centerValue * 255.0);
+
+                // Skip background (segment 0)
+                if (segmentIndex == 0) {
+                  gl_FragData[0] = vec4(0.0, 0.0, 0.0, 0.0);
+                  return;
+                }
+
+                // Get outline parameters for this segment (row 0 for single labelmap)
+                float textureCoordinate = float(segmentIndex - 1) / labelOutlineTextureWidth;
+                float labelmapRow = 0.5 / numLabelmaps;
+                float thicknessValue = texture2D(labelOutlineThicknessTexture, vec2(textureCoordinate, labelmapRow)).r;
+                float outlineOpacity = texture2D(labelOutlineOpacityTexture, vec2(textureCoordinate, labelmapRow)).r;
+                int actualThickness = int(thicknessValue * 255.0);
+
+                // Get color for this segment
+                vec3 tColor = texture2D(colorTexture1, vec2(centerValue * cscale0 + cshift0, 0.5)).rgb;
+                float scalarOpacity = texture2D(pwfTexture1, vec2(centerValue * pwfscale0 + pwfshift0, 0.5)).r;
+                float opacityToUse = scalarOpacity * opacity;
+
+                // Check neighbors for border detection
+                bool pixelOnBorder = false;
+                for (int i = -actualThickness; i <= actualThickness; i++) {
+                  for (int j = -actualThickness; j <= actualThickness; j++) {
+                    if (i == 0 && j == 0) {
+                      continue;
+                    }
+                    // Sample neighbor using tangent vectors in texture space
+                    vec3 neighborTexCoord = fragTexCoord + float(i) * outlineTangent1_0 * texelSize0 + float(j) * outlineTangent2_0 * texelSize0;
+
+                    // Skip if outside texture bounds
+                    if (any(greaterThan(neighborTexCoord, vec3(1.0))) || any(lessThan(neighborTexCoord, vec3(0.0)))) {
+                      pixelOnBorder = true;
+                      break;
+                    }
+
+                    float neighborValue = texture(volumeTexture[0], neighborTexCoord).r;
+                    if (neighborValue != centerValue) {
+                      pixelOnBorder = true;
+                      break;
+                    }
+                  }
+                  if (pixelOnBorder) {
+                    break;
+                  }
+                }
+
+                if (pixelOnBorder) {
+                  gl_FragData[0] = vec4(tColor, outlineOpacity);
+                } else {
+                  gl_FragData[0] = vec4(tColor, opacityToUse);
+                }
+              `),
+            ]);
+          } else {
+            tcoordFSImpl = tcoordFSImpl.concat([
+              '// Dependent components',
+              'float intensity = tvalue.r;',
+              'vec3 tcolor = texture2D(colorTexture1, vec2(intensity * cscale0 + cshift0, 0.5)).rgb;',
+              'float scalarOpacity = texture2D(pwfTexture1, vec2(intensity * pwfscale0 + pwfshift0, 0.5)).r;',
+              'gl_FragData[0] = vec4(tcolor, scalarOpacity * opacity);',
+            ]);
+          }
           break;
         case 2:
           tcoordFSImpl = tcoordFSImpl.concat([
@@ -1225,7 +1623,10 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     let FSSource = shaders.Fragment;
 
     const slabThickness = model.renderable.getSlabThickness();
-    let posVCVSDec = ['attribute vec4 vertexWC;'];
+    let posVCVSDec = [
+      'attribute vec4 vertexWC;',
+      'varying vec4 vertexWCVSOutput;',
+    ];
     // Add a unique hash to the shader to ensure that the shader program is unique to this mapper.
     posVCVSDec = posVCVSDec.concat([
       `//${publicAPI.getMTime()}${model.resliceGeomUpdateString}`,
@@ -1234,7 +1635,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       posVCVSDec = posVCVSDec.concat([
         'attribute vec3 normalWC;',
         'varying vec3 normalWCVSOutput;',
-        'varying vec4 vertexWCVSOutput;',
       ]);
     }
     VSSource = vtkShaderProgram.substitute(
@@ -1242,12 +1642,12 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       '//VTK::PositionVC::Dec',
       posVCVSDec
     ).result;
-    let posVCVSImpl = ['gl_Position = MCPCMatrix * vertexWC;'];
+    let posVCVSImpl = [
+      'gl_Position = MCPCMatrix * vertexWC;',
+      'vertexWCVSOutput = vertexWC;',
+    ];
     if (slabThickness > 0.0) {
-      posVCVSImpl = posVCVSImpl.concat([
-        'normalWCVSOutput = normalWC;',
-        'vertexWCVSOutput = vertexWC;',
-      ]);
+      posVCVSImpl = posVCVSImpl.concat(['normalWCVSOutput = normalWC;']);
     }
     VSSource = vtkShaderProgram.substitute(
       VSSource,
@@ -1258,12 +1658,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       'uniform mat4 MCPCMatrix;',
       'uniform mat4 MCVCMatrix;',
     ]).result;
-    let posVCFSDec = [];
+    let posVCFSDec = ['varying vec4 vertexWCVSOutput;'];
     if (slabThickness > 0.0) {
-      posVCFSDec = posVCFSDec.concat([
-        'varying vec3 normalWCVSOutput;',
-        'varying vec4 vertexWCVSOutput;',
-      ]);
+      posVCFSDec = posVCFSDec.concat(['varying vec3 normalWCVSOutput;']);
     }
     FSSource = vtkShaderProgram.substitute(
       FSSource,
@@ -1452,6 +1849,97 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     }
   };
 
+  // Build a 2D texture for label outline settings (one row per labelmap)
+  function buildLabelOutline2DTexture(dataArrays, ArrayType, vtkDataType) {
+    const hash = dataArrays.map((arr) => arr.join('-')).join('|');
+    const cacheKey = { type: 'labelOutline2D', hash };
+    const cached =
+      model._openGLRenderWindow.getGraphicsResourceForObject(cacheKey);
+    if (cached?.oglObject?.getHandle() && cached?.hash === hash) {
+      return cached.oglObject;
+    }
+
+    let width = model.renderable.getLabelOutlineTextureWidth();
+    if (width <= 0) {
+      width = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+    }
+
+    const height = dataArrays.length;
+    const table = new ArrayType(width * height);
+
+    for (let row = 0; row < height; row++) {
+      const dataArray = dataArrays[row];
+      for (let col = 0; col < width; col++) {
+        table[row * width + col] = dataArray[col] ?? dataArray[0];
+      }
+    }
+
+    const newTexture = vtkOpenGLTexture.newInstance({ resizable: false });
+    newTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
+    newTexture.resetFormatAndType();
+    newTexture.setMinificationFilter(Filter.NEAREST);
+    newTexture.setMagnificationFilter(Filter.NEAREST);
+    newTexture.create2DFromRaw({
+      width,
+      height,
+      numComps: 1,
+      dataType: vtkDataType,
+      data: table,
+    });
+
+    model._openGLRenderWindow.setGraphicsResourceForObject(
+      cacheKey,
+      newTexture,
+      hash
+    );
+    return newTexture;
+  }
+
+  publicAPI.updateLabelOutlineThicknessTexture = (labelOutlineProperties) => {
+    const dataArrays = labelOutlineProperties.map(({ property }) =>
+      property.getLabelOutlineThicknessByReference()
+    );
+    const newTexture = buildLabelOutline2DTexture(
+      dataArrays,
+      Uint8Array,
+      VtkDataTypes.UNSIGNED_CHAR
+    );
+    if (newTexture !== model.labelOutlineThicknessTexture) {
+      replaceGraphicsResource(
+        model._openGLRenderWindow,
+        model._labelOutlineThicknessCore,
+        dataArrays
+      );
+      model._labelOutlineThicknessCore = dataArrays;
+      model.labelOutlineThicknessTexture = newTexture;
+    }
+  };
+
+  publicAPI.updateLabelOutlineOpacityTexture = (labelOutlineProperties) => {
+    const dataArrays = labelOutlineProperties.map(({ property }) => {
+      let dataArray = property.getLabelOutlineOpacity();
+      if (typeof dataArray === 'number') {
+        dataArray = [dataArray];
+      }
+      return dataArray;
+    });
+
+    const newTexture = buildLabelOutline2DTexture(
+      dataArrays,
+      Float32Array,
+      VtkDataTypes.FLOAT
+    );
+    if (newTexture !== model.labelOutlineOpacityTexture) {
+      replaceGraphicsResource(
+        model._openGLRenderWindow,
+        model._labelOutlineOpacityCore,
+        dataArrays
+      );
+      model._labelOutlineOpacityCore = dataArrays;
+      model.labelOutlineOpacityTexture = newTexture;
+    }
+  };
+
   publicAPI.setScalarTextures = (scalarTextures) => {
     model.scalarTextures = [...scalarTextures];
     model._externalOpenGLTexture = true;
@@ -1474,6 +1962,8 @@ const DEFAULT_VALUES = {
   haveSeenDepthRequest: false,
   lastHaveSeenDepthRequest: false,
   lastIndependentComponents: false,
+  lastUseLabelOutline: false,
+  lastNumValidInputs: 0,
   lastNumberOfComponents: 0,
   lastMultiTexturePerVolumeEnabled: false,
   lastSlabThickness: 0,
@@ -1485,6 +1975,11 @@ const DEFAULT_VALUES = {
   _colorTextureCore: null,
   pwfTexture: null,
   _pwfTextureCore: null,
+  labelOutlineProperties: [],
+  labelOutlineThicknessTexture: null,
+  _labelOutlineThicknessCore: null,
+  labelOutlineOpacityTexture: null,
+  _labelOutlineOpacityCore: null,
   _externalOpenGLTexture: false,
   resliceGeom: null,
   resliceGeomUpdateString: null,
