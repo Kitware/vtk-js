@@ -22,50 +22,94 @@ function vtkWebGPUOpaquePass(publicAPI, model) {
     model._currentParent = viewNode;
 
     const device = viewNode.getDevice();
+    const sampleCount = viewNode.getSampleCount ? viewNode.getSampleCount() : 1;
+
+    // If sampleCount changed since last render, tear down and recreate
+    if (model.renderEncoder && model._currentSampleCount !== sampleCount) {
+      model.renderEncoder = null;
+      model.colorTexture = null;
+      model.depthTexture = null;
+      model.resolveColorTexture = null;
+      model._resolveColorTextureView = null;
+    }
 
     if (!model.renderEncoder) {
-      publicAPI.createRenderEncoder();
+      publicAPI.createRenderEncoder(sampleCount);
+      model._currentSampleCount = sampleCount;
+
+      const width = viewNode.getCanvas().width;
+      const height = viewNode.getCanvas().height;
+
+      // Color texture — multisampled when sampleCount > 1
       model.colorTexture = vtkWebGPUTexture.newInstance({
         label: 'opaquePassColor',
       });
+      /* eslint-disable no-undef */
+      /* eslint-disable no-bitwise */
       model.colorTexture.create(device, {
-        width: viewNode.getCanvas().width,
-        height: viewNode.getCanvas().height,
+        width,
+        height,
         format: 'rgba16float',
-        /* eslint-disable no-undef */
-        /* eslint-disable no-bitwise */
+        sampleCount,
         usage:
           GPUTextureUsage.RENDER_ATTACHMENT |
-          GPUTextureUsage.TEXTURE_BINDING |
-          GPUTextureUsage.COPY_SRC,
+          (sampleCount === 1
+            ? GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC
+            : 0),
       });
       const ctView = model.colorTexture.createView('opaquePassColorTexture');
       model.renderEncoder.setColorTextureView(0, ctView);
 
+      // When MSAA is active, create a resolve target (1-sample) for
+      // downstream passes that need to sample the color result
+      if (sampleCount > 1) {
+        model.resolveColorTexture = vtkWebGPUTexture.newInstance({
+          label: 'opaquePassResolveColor',
+        });
+        model.resolveColorTexture.create(device, {
+          width,
+          height,
+          format: 'rgba16float',
+          usage:
+            GPUTextureUsage.RENDER_ATTACHMENT |
+            GPUTextureUsage.TEXTURE_BINDING |
+            GPUTextureUsage.COPY_SRC,
+        });
+        model._resolveColorTextureView = model.resolveColorTexture.createView(
+          'opaquePassColorTexture'
+        );
+        const resolveView = model._resolveColorTextureView;
+        model.renderEncoder.setResolveTextureView(0, resolveView);
+      }
+
+      // Depth texture — also multisampled
       model.depthFormat = 'depth32float';
       model.depthTexture = vtkWebGPUTexture.newInstance({
         label: 'opaquePassDepth',
       });
       model.depthTexture.create(device, {
-        width: viewNode.getCanvas().width,
-        height: viewNode.getCanvas().height,
+        width,
+        height,
         format: model.depthFormat,
+        sampleCount,
         usage:
           GPUTextureUsage.RENDER_ATTACHMENT |
-          GPUTextureUsage.TEXTURE_BINDING |
-          GPUTextureUsage.COPY_SRC,
+          (sampleCount === 1
+            ? GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC
+            : 0),
       });
+      /* eslint-enable no-undef */
+      /* eslint-enable no-bitwise */
       const dView = model.depthTexture.createView('opaquePassDepthTexture');
       model.renderEncoder.setDepthTextureView(dView);
     } else {
-      model.colorTexture.resize(
-        viewNode.getCanvas().width,
-        viewNode.getCanvas().height
-      );
-      model.depthTexture.resize(
-        viewNode.getCanvas().width,
-        viewNode.getCanvas().height
-      );
+      const width = viewNode.getCanvas().width;
+      const height = viewNode.getCanvas().height;
+      model.colorTexture.resize(width, height);
+      model.depthTexture.resize(width, height);
+      if (model.resolveColorTexture) {
+        model.resolveColorTexture.resize(width, height);
+      }
     }
 
     model.renderEncoder.attachTextureViews();
@@ -74,18 +118,30 @@ function vtkWebGPUOpaquePass(publicAPI, model) {
     renNode.traverse(publicAPI);
   };
 
-  publicAPI.getColorTextureView = () =>
-    model.renderEncoder.getColorTextureViews()[0];
+  // When MSAA is active, downstream passes must sample from the resolved
+  // (1-sample) texture, not the multisampled one
+  publicAPI.getColorTextureView = () => {
+    if (model._resolveColorTextureView) {
+      return model._resolveColorTextureView;
+    }
+    return model.renderEncoder.getColorTextureViews()[0];
+  };
 
   publicAPI.getDepthTextureView = () =>
     model.renderEncoder.getDepthTextureView();
 
-  publicAPI.createRenderEncoder = () => {
+  publicAPI.createRenderEncoder = (sampleCount = 1) => {
     model.renderEncoder = vtkWebGPURenderEncoder.newInstance({
       label: 'OpaquePass',
     });
     // default settings are fine for this
     model.renderEncoder.setPipelineHash('op');
+    // Set multisample state in pipeline settings when MSAA is active
+    if (sampleCount > 1) {
+      const settings = model.renderEncoder.getPipelineSettings();
+      settings.multisample = { count: sampleCount };
+      model.renderEncoder.setPipelineSettings(settings);
+    }
   };
 }
 
@@ -97,6 +153,7 @@ const DEFAULT_VALUES = {
   renderEncoder: null,
   colorTexture: null,
   depthTexture: null,
+  resolveColorTexture: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -107,7 +164,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   vtkRenderPass.extend(publicAPI, model, initialValues);
 
-  macro.get(publicAPI, model, ['colorTexture', 'depthTexture']);
+  macro.get(publicAPI, model, [
+    'colorTexture',
+    'depthTexture',
+    'resolveColorTexture',
+  ]);
 
   // Object methods
   vtkWebGPUOpaquePass(publicAPI, model);
