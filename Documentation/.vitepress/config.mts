@@ -40,7 +40,7 @@ export default defineConfig({
       provider: 'local',
     },
     footer: {
-      copyright: `© ${new Date().getFullYear()} Kitware Inc.`,
+      copyright: `© ${new Date().getFullYear()} <a href="https://www.kitware.com/" target="_blank">Kitware Inc</a>.`,
     },
   },
   markdown: {
