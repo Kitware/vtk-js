@@ -641,16 +641,16 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     return modified;
   };
 
-  // Validate sampleCount — WebGPU only supports 1 or 4
-  const superSetSampleCount = publicAPI.setSampleCount;
-  publicAPI.setSampleCount = (count) => {
+  // Validate multiSample — WebGPU only supports 1 or 4
+  const superSetMultiSample = publicAPI.setMultiSample;
+  publicAPI.setMultiSample = (count) => {
     if (count !== 1 && count !== 4) {
       vtkErrorMacro(
-        `Invalid sampleCount ${count}. WebGPU only supports sampleCount of 1 or 4. Ignoring.`
+        `Invalid multiSample ${count}. WebGPU only supports multiSample of 1 or 4. Ignoring.`
       );
       return false;
     }
-    return superSetSampleCount(count);
+    return superSetMultiSample(count);
   };
 
   publicAPI.delete = macro.chain(publicAPI.delete, publicAPI.setViewStream);
@@ -681,7 +681,7 @@ const DEFAULT_VALUES = {
   nextPropID: 1,
   xrSupported: false,
   presentationFormat: null,
-  sampleCount: 1,
+  multiSample: 1,
 };
 
 // ----------------------------------------------------------------------------
@@ -727,7 +727,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'presentationFormat',
     'useBackgroundImage',
     'xrSupported',
-    'sampleCount',
+    'multiSample',
   ]);
 
   macro.setGet(publicAPI, model, [
@@ -739,7 +739,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'notifyStartCaptureImage',
     'cursor',
     'useOffScreen',
-    'sampleCount',
+    'multiSample',
   ]);
 
   macro.setGetArray(publicAPI, model, ['size'], 2);

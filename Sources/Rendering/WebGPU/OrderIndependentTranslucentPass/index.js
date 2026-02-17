@@ -54,7 +54,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
     model._currentParent = viewNode;
 
     const device = viewNode.getDevice();
-    const sampleCount = viewNode.getSampleCount ? viewNode.getSampleCount() : 1;
+    const sampleCount = viewNode.getMultiSample ? viewNode.getMultiSample() : 1;
 
     // If sampleCount changed, tear down
     if (
