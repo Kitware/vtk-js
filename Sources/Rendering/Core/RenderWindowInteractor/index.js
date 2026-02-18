@@ -104,6 +104,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   // Factor to apply on wheel spin.
   let wheelCoefficient = 1;
 
+  // Track mouse button bitmask for detecting chorded button interactions.
+  // Per W3C Pointer Events spec §10, pointerdown/pointerup only fire for the
+  // first press / last release. Chorded (additional) button changes while
+  // another button is held are signaled via pointermove with updated `buttons`.
+  let previousMouseButtons = 0;
+
   // Public API methods
 
   //----------------------------------------------------------------------
@@ -321,6 +327,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       publicAPI.handlePointerLockChange
     );
     pointerCache.clear();
+    previousMouseButtons = 0;
   };
 
   publicAPI.unbindEvents = () => {
@@ -398,6 +405,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       case 'mouse':
       default:
         publicAPI.handleMouseDown(event);
+        previousMouseButtons = event.buttons;
         break;
     }
   };
@@ -417,9 +425,36 @@ function vtkRenderWindowInteractor(publicAPI, model) {
           publicAPI.handleTouchEnd(event);
           break;
         case 'mouse':
-        default:
+        default: {
+          // Detect chorded button releases: when pointerup fires, additional
+          // buttons may have been released simultaneously. Fire release events
+          // for those chorded buttons before handling the primary button.
+          const currentButtons = event.buttons;
+          if (currentButtons !== previousMouseButtons) {
+            const callData = {
+              ...getModifierKeysFor(event),
+              position: getScreenEventPositionFor(event),
+              deviceType: getDeviceTypeFor(event),
+            };
+            const wasLeft = (previousMouseButtons & 1) !== 0; // eslint-disable-line no-bitwise
+            const wasRight = (previousMouseButtons & 2) !== 0; // eslint-disable-line no-bitwise
+            const wasMiddle = (previousMouseButtons & 4) !== 0; // eslint-disable-line no-bitwise
+            const isLeft = (currentButtons & 1) !== 0; // eslint-disable-line no-bitwise
+            const isRight = (currentButtons & 2) !== 0; // eslint-disable-line no-bitwise
+            const isMiddle = (currentButtons & 4) !== 0; // eslint-disable-line no-bitwise
+            // Only fire for chorded buttons; the primary button (event.button)
+            // is handled by handleMouseUp below.
+            if (!isLeft && wasLeft && event.button !== 0)
+              publicAPI.leftButtonReleaseEvent(callData);
+            if (!isMiddle && wasMiddle && event.button !== 1)
+              publicAPI.middleButtonReleaseEvent(callData);
+            if (!isRight && wasRight && event.button !== 2)
+              publicAPI.rightButtonReleaseEvent(callData);
+          }
           publicAPI.handleMouseUp(event);
+          previousMouseButtons = currentButtons;
           break;
+        }
       }
     }
   };
@@ -434,9 +469,26 @@ function vtkRenderWindowInteractor(publicAPI, model) {
           publicAPI.handleTouchEnd(event);
           break;
         case 'mouse':
-        default:
-          publicAPI.handleMouseUp(event);
+        default: {
+          // Fire release events for all buttons that were held when the
+          // pointer interaction was cancelled.
+          const callData = {
+            ...getModifierKeysFor(event),
+            position: getScreenEventPositionFor(event),
+            deviceType: getDeviceTypeFor(event),
+          };
+          // eslint-disable-next-line no-bitwise
+          if ((previousMouseButtons & 1) !== 0)
+            publicAPI.leftButtonReleaseEvent(callData);
+          // eslint-disable-next-line no-bitwise
+          if ((previousMouseButtons & 4) !== 0)
+            publicAPI.middleButtonReleaseEvent(callData);
+          // eslint-disable-next-line no-bitwise
+          if ((previousMouseButtons & 2) !== 0)
+            publicAPI.rightButtonReleaseEvent(callData);
+          previousMouseButtons = 0;
           break;
+        }
       }
     }
   };
@@ -453,9 +505,38 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         publicAPI.handleTouchMove(event);
         break;
       case 'mouse':
-      default:
+      default: {
+        // Detect chorded button state changes (W3C Pointer Events spec §10).
+        // pointerdown/pointerup only fire for the first/last button; additional
+        // button presses/releases while another is held arrive as pointermove
+        // events with updated `buttons` bitmask.
+        const currentButtons = event.buttons;
+        if (currentButtons !== previousMouseButtons) {
+          const callData = {
+            ...getModifierKeysFor(event),
+            position: getScreenEventPositionFor(event),
+            deviceType: getDeviceTypeFor(event),
+          };
+          // buttons bitmask: 1=left, 2=right, 4=middle
+          const wasLeft = (previousMouseButtons & 1) !== 0; // eslint-disable-line no-bitwise
+          const wasRight = (previousMouseButtons & 2) !== 0; // eslint-disable-line no-bitwise
+          const wasMiddle = (previousMouseButtons & 4) !== 0; // eslint-disable-line no-bitwise
+          const isLeft = (currentButtons & 1) !== 0; // eslint-disable-line no-bitwise
+          const isRight = (currentButtons & 2) !== 0; // eslint-disable-line no-bitwise
+          const isMiddle = (currentButtons & 4) !== 0; // eslint-disable-line no-bitwise
+          if (isLeft && !wasLeft) publicAPI.leftButtonPressEvent(callData);
+          if (isMiddle && !wasMiddle)
+            publicAPI.middleButtonPressEvent(callData);
+          if (isRight && !wasRight) publicAPI.rightButtonPressEvent(callData);
+          if (!isLeft && wasLeft) publicAPI.leftButtonReleaseEvent(callData);
+          if (!isMiddle && wasMiddle)
+            publicAPI.middleButtonReleaseEvent(callData);
+          if (!isRight && wasRight) publicAPI.rightButtonReleaseEvent(callData);
+          previousMouseButtons = currentButtons;
+        }
         publicAPI.handleMouseMove(event);
         break;
+      }
     }
   };
 
