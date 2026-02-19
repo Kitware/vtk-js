@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix';
-import { Bounds, Vector2, Vector3 } from '../../../types';
+import { Bounds, TypedArray, Vector2, Vector3 } from '../../../types';
 import vtkPoints from '../../Core/Points';
 import { Nullable } from '../../../types';
 
@@ -394,11 +394,16 @@ declare class BoundingBox {
   /**
    * Adds points to a bounding box.
    * @param {Bounds} bounds
-   * @param {number} x
+   * @param {number|Number[]|TypedArray} xOrPoint
    * @param {number} y
    * @param {number} z
    */
-  addPoint(bounds: Bounds, x: number, y: number, z: number): Bounds;
+  addPoint(
+    bounds: Bounds,
+    xOrPoint: number | number[] | TypedArray,
+    y?: number,
+    z?: number
+  ): Bounds;
 
   /**
    * Adds points to a bounding box.
