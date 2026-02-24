@@ -210,7 +210,6 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       return;
     }
 
-    // Cache label outline properties for this render pass
     model.labelOutlineProperties = findLabelOutlineProperties(
       actor,
       model.currentValidInputs
@@ -963,38 +962,38 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       // Calculate tangent vectors for the slice plane in each input's texture space
       const slicePlane = model.renderable.getSlicePlane();
 
-      // Create orthogonal tangent vectors on the slice plane (in world space)
-      const tangent1 = [0, 0, 0];
-      const tangent2 = [0, 0, 0];
+      model._tmpTangent1.fill(0);
+      model._tmpTangent2.fill(0);
 
       if (slicePlane) {
         const normal = slicePlane.getNormal();
-        vtkMath.perpendiculars(normal, tangent1, tangent2, 0);
+        vtkMath.perpendiculars(
+          normal,
+          model._tmpTangent1,
+          model._tmpTangent2,
+          0
+        );
       } else {
-        // Default tangents for axis-aligned slicing
-        tangent1[0] = 1;
-        tangent2[1] = 1;
+        model._tmpTangent1[0] = 1;
+        model._tmpTangent2[1] = 1;
       }
 
       // Set per-input tangent vectors (transformed to each input's texture space)
       for (let i = 0; i < model.currentValidInputs.length; i++) {
         const imageData = model.currentValidInputs[i].imageData;
-        const w2io = mat3.create();
-        mat3.set(w2io, ...imageData.getDirection());
-        mat3.invert(w2io, w2io);
+        mat3.set(model._tmpMat3, ...imageData.getDirection());
+        mat3.invert(model._tmpMat3, model._tmpMat3);
 
-        const t1TC = [0, 0, 0];
-        const t2TC = [0, 0, 0];
-        vec3.transformMat3(t1TC, tangent1, w2io);
-        vec3.transformMat3(t2TC, tangent2, w2io);
+        vec3.transformMat3(model._tmpVec3a, model._tmpTangent1, model._tmpMat3);
+        vec3.transformMat3(model._tmpVec3b, model._tmpTangent2, model._tmpMat3);
 
         const t1Name = `outlineTangent1_${i}`;
         const t2Name = `outlineTangent2_${i}`;
         if (program.isUniformUsed(t1Name)) {
-          program.setUniform3fv(t1Name, t1TC);
+          program.setUniform3fv(t1Name, model._tmpVec3a);
         }
         if (program.isUniformUsed(t2Name)) {
-          program.setUniform3fv(t2Name, t2TC);
+          program.setUniform3fv(t2Name, model._tmpVec3b);
         }
       }
 
@@ -1004,11 +1003,10 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         if (program.isUniformUsed(uniformName)) {
           const imageData = model.currentValidInputs[i].imageData;
           const inputDims = imageData.getDimensions();
-          program.setUniform3fv(uniformName, [
-            1.0 / inputDims[0],
-            1.0 / inputDims[1],
-            1.0 / inputDims[2],
-          ]);
+          model._tmpTexelSize[0] = 1.0 / inputDims[0];
+          model._tmpTexelSize[1] = 1.0 / inputDims[1];
+          model._tmpTexelSize[2] = 1.0 / inputDims[2];
+          program.setUniform3fv(uniformName, model._tmpTexelSize);
         }
       }
     }
@@ -1842,24 +1840,13 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     }
   };
 
-  // Build a 2D texture for label outline settings (one row per labelmap)
   function buildLabelOutline2DTexture(dataArrays, ArrayType, vtkDataType) {
-    const hash = dataArrays.map((arr) => arr.join('-')).join('|');
-    const cacheKey = { type: 'labelOutline2D', hash };
-    const cached =
-      model._openGLRenderWindow.getGraphicsResourceForObject(cacheKey);
-    if (cached?.oglObject?.getHandle() && cached?.hash === hash) {
-      return cached.oglObject;
-    }
-
     let width = model.renderable.getLabelOutlineTextureWidth();
     if (width <= 0) {
       width = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
     }
-
     const height = dataArrays.length;
     const table = new ArrayType(width * height);
-
     for (let row = 0; row < height; row++) {
       const dataArray = dataArrays[row];
       for (let col = 0; col < width; col++) {
@@ -1879,33 +1866,43 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       dataType: vtkDataType,
       data: table,
     });
-
-    model._openGLRenderWindow.setGraphicsResourceForObject(
-      cacheKey,
-      newTexture,
-      hash
-    );
     return newTexture;
+  }
+
+  function updateLabelOutlineTexture(
+    dataArrays,
+    ArrayType,
+    vtkDataType,
+    hashKey,
+    textureKey
+  ) {
+    const hash = dataArrays.map((arr) => arr.join('-')).join('|');
+    if (hash === model[hashKey]) {
+      return;
+    }
+    model[hashKey] = hash;
+
+    if (model[textureKey]) {
+      model[textureKey].releaseGraphicsResources();
+    }
+    model[textureKey] = buildLabelOutline2DTexture(
+      dataArrays,
+      ArrayType,
+      vtkDataType
+    );
   }
 
   publicAPI.updateLabelOutlineThicknessTexture = (labelOutlineProperties) => {
     const dataArrays = labelOutlineProperties.map(({ property }) =>
       property.getLabelOutlineThicknessByReference()
     );
-    const newTexture = buildLabelOutline2DTexture(
+    updateLabelOutlineTexture(
       dataArrays,
       Uint8Array,
-      VtkDataTypes.UNSIGNED_CHAR
+      VtkDataTypes.UNSIGNED_CHAR,
+      '_labelOutlineThicknessHash',
+      'labelOutlineThicknessTexture'
     );
-    if (newTexture !== model.labelOutlineThicknessTexture) {
-      replaceGraphicsResource(
-        model._openGLRenderWindow,
-        model._labelOutlineThicknessCore,
-        dataArrays
-      );
-      model._labelOutlineThicknessCore = dataArrays;
-      model.labelOutlineThicknessTexture = newTexture;
-    }
   };
 
   publicAPI.updateLabelOutlineOpacityTexture = (labelOutlineProperties) => {
@@ -1916,21 +1913,13 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       }
       return dataArray;
     });
-
-    const newTexture = buildLabelOutline2DTexture(
+    updateLabelOutlineTexture(
       dataArrays,
       Float32Array,
-      VtkDataTypes.FLOAT
+      VtkDataTypes.FLOAT,
+      '_labelOutlineOpacityHash',
+      'labelOutlineOpacityTexture'
     );
-    if (newTexture !== model.labelOutlineOpacityTexture) {
-      replaceGraphicsResource(
-        model._openGLRenderWindow,
-        model._labelOutlineOpacityCore,
-        dataArrays
-      );
-      model._labelOutlineOpacityCore = dataArrays;
-      model.labelOutlineOpacityTexture = newTexture;
-    }
   };
 
   publicAPI.setScalarTextures = (scalarTextures) => {
@@ -1941,6 +1930,14 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
   publicAPI.delete = macro.chain(() => {
     if (model._openGLRenderWindow) {
       unregisterGraphicsResources(model._openGLRenderWindow);
+    }
+    if (model.labelOutlineThicknessTexture) {
+      model.labelOutlineThicknessTexture.releaseGraphicsResources();
+      model.labelOutlineThicknessTexture = null;
+    }
+    if (model.labelOutlineOpacityTexture) {
+      model.labelOutlineOpacityTexture.releaseGraphicsResources();
+      model.labelOutlineOpacityTexture = null;
     }
   }, publicAPI.delete);
 }
@@ -1970,9 +1967,9 @@ const DEFAULT_VALUES = {
   _pwfTextureCore: null,
   labelOutlineProperties: [],
   labelOutlineThicknessTexture: null,
-  _labelOutlineThicknessCore: null,
+  _labelOutlineThicknessHash: null,
   labelOutlineOpacityTexture: null,
-  _labelOutlineOpacityCore: null,
+  _labelOutlineOpacityHash: null,
   _externalOpenGLTexture: false,
   resliceGeom: null,
   resliceGeomUpdateString: null,
@@ -2005,6 +2002,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(model.VBOBuildTime);
 
   model.tmpMat4 = mat4.identity(new Float64Array(16));
+  model._tmpMat3 = mat3.create();
+  model._tmpVec3a = vec3.create();
+  model._tmpVec3b = vec3.create();
+  model._tmpTangent1 = [0, 0, 0];
+  model._tmpTangent2 = [0, 0, 0];
+  model._tmpTexelSize = [0, 0, 0];
 
   // Implicit plane to polydata related cache:
   model.outlineFilter = vtkImageDataOutlineFilter.newInstance();
