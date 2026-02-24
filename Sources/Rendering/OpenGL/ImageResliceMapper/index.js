@@ -969,14 +969,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
 
       if (slicePlane) {
         const normal = slicePlane.getNormal();
-        const absNormal = normal.map(Math.abs);
-        const minIdx = absNormal.indexOf(Math.min(...absNormal));
-        const up = [0, 0, 0];
-        up[minIdx] = 1;
-        vtkMath.cross(normal, up, tangent1);
-        vtkMath.normalize(tangent1);
-        vtkMath.cross(normal, tangent1, tangent2);
-        vtkMath.normalize(tangent2);
+        vtkMath.perpendiculars(normal, tangent1, tangent2, 0);
       } else {
         // Default tangents for axis-aligned slicing
         tangent1[0] = 1;

@@ -776,6 +776,14 @@ test('Test singularValueDecomposition', (t) => {
   t.end();
 });
 
+test('Test getMajorAxisIndex / getMinorAxisIndex', (t) => {
+  t.equal(vtkMath.getMajorAxisIndex([-1, 3, -0.2]), 1);
+  t.equal(vtkMath.getMinorAxisIndex([-1, 3, -0.2]), 2);
+  t.equal(vtkMath.getMinorAxisIndex([0.5, -0.5, 2]), 0);
+  t.equal(vtkMath.getMinorAxisIndex([]), -1);
+  t.end();
+});
+
 test('Test getSparseOrthogonalMatrix', (t) => {
   const successMsg = 'Row/column association is correct';
   const tests = [
