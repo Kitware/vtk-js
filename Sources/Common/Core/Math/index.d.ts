@@ -1075,6 +1075,12 @@ export function createUninitializedBounds(): Bounds;
 export function getMajorAxisIndex(vector: number[]): number;
 
 /**
+ *
+ * @param {Number[]} vector
+ */
+export function getMinorAxisIndex(vector: number[]): number;
+
+/**
  * Return the closest orthogonal matrix of 1, -1 and 0
  * It works for both column major and row major matrices
  * This function iteratively associate a column with a row by choosing
@@ -1244,6 +1250,7 @@ export declare const vtkMath: {
   isInf: typeof isInf;
   createUninitializedBounds: typeof createUninitializedBounds;
   getMajorAxisIndex: typeof getMajorAxisIndex;
+  getMinorAxisIndex: typeof getMinorAxisIndex;
   getSparseOrthogonalMatrix: typeof getSparseOrthogonalMatrix;
   floatToHex2: typeof floatToHex2;
   floatRGB2HexCode: typeof floatRGB2HexCode;
