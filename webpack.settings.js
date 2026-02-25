@@ -34,4 +34,5 @@ module.exports = {
   options: {
     openAnalyzer: () => process.env.BUNDLE_ANALYZER || false,
   },
+  examples: [{ path: '../Examples', regexp: 'index.js' }, '../Sources']
 };

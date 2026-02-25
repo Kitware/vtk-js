@@ -11,16 +11,14 @@ var webpackConfigPath = path.join(__dirname, 'webpack.config.js');
 var distDir = path.join(__dirname, 'dist');
 var buildConfig = require('./template-config.js');
 const rootPath = path.resolve(path.join(__dirname, '../..'));
+var webpackSettings = require(path.join(rootPath, 'webpack.settings.js'));
 
 program
-  .option('-c, --config [file.js]', 'Configuration file')
   .option('--no-browser', 'Do not open the browser')
   .option('--server-type <type>', 'Specify http (default) or self-signed https for serving examples', 'http')
   .parse(process.argv);
 
 const options = program.opts();
-var configFilePath = path.join(process.cwd(), options.config.replace(/\//g, path.sep));
-var configuration = require(configFilePath);
 
 function getSplitedPath(filePath) {
   var a = filePath.split('/');
@@ -36,13 +34,13 @@ function validPath(str) {
 // Find examples
 // ----------------------------------------------------------------------------
 
-if (configuration.examples) {
+if (webpackSettings.examples) {
   var filterExamples = [].concat(program.args).filter(i => !!i);
   var buildExample = filterExamples.length === 1;
   var exampleCount = 0;
 
   console.log('\n=> Extract examples\n');
-  configuration.examples.forEach(function (entry) {
+  webpackSettings.examples.forEach(function (entry) {
     const regexp = entry.regexp ? new RegExp(entry.regexp) : /example\/index.js$/;
     var fullPath = path.join(basePath, entry.path ? entry.path : entry);
 
