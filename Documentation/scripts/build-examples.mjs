@@ -47,7 +47,11 @@ const EXAMPLE_SOURCES = [
   },
 ];
 
-function buildHtml(exampleName, bundleFile) {
+function buildHtml(exampleName, bundleFile, isModule = false) {
+  const exampleScript = isModule
+    ? `<script type="module" src="${bundleFile}"></script>`
+    : `<script src="${bundleFile}"></script>`;
+
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -61,11 +65,10 @@ function buildHtml(exampleName, bundleFile) {
   </head>
   <body>
     <div id="vtk-root" style="height:100%; width:100%;"></div>
-    <script type="module">
+    <script>
       window.global = window.global || {};
-      const exampleFile = "${bundleFile}";
-      import(exampleFile);
     </script>
+    ${exampleScript}
   </body>
 </html>
 `;
@@ -150,9 +153,43 @@ function replaceBasePath(basePath) {
   };
 }
 
+async function walkFiles(dir, results = []) {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  await Promise.all(
+    entries.map(async (entry) => {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await walkFiles(fullPath, results);
+      } else {
+        results.push(fullPath);
+      }
+    })
+  );
+  return results;
+}
+
+async function copyApplicationStaticAssets(entryPath, outDir) {
+  const appDir = path.dirname(entryPath);
+  const assetRegex = /\.(png|jpe?g|gif|svg|webp)$/i;
+  const files = await walkFiles(appDir);
+
+  await Promise.all(
+    files
+      .filter((filePath) => assetRegex.test(filePath))
+      .map(async (filePath) => {
+        const relPath = path.relative(appDir, filePath);
+        const destPath = path.resolve(outDir, relPath);
+        await fs.mkdir(path.dirname(destPath), { recursive: true });
+        await fs.copyFile(filePath, destPath);
+      })
+  );
+}
+
 async function build() {
   const entries = await collectEntries();
   const distDir = path.resolve(DOCS_ROOT, '.vitepress', 'dist', 'examples');
+
+  await fs.mkdir(distDir, { recursive: true });
 
   const aliasPlugin = alias.default ? alias.default : alias;
   const commonjsPlugin = commonjs.default ? commonjs.default : commonjs;
@@ -168,9 +205,8 @@ async function build() {
   const stringPlugin = string.default ? string.default : string;
   const ignorePlugin = ignore.default ? ignore.default : ignore;
 
-  const bundle = await rollup({
-    input: entries,
-    plugins: [
+  function createPlugins() {
+    return [
       aliasPlugin({
         entries: [
           {
@@ -216,38 +252,78 @@ async function build() {
       }),
       assetLoader(),
       replaceBasePath('/vtk-js'),
-    ],
+    ];
+  }
+
+  const applicationEntries = {};
+  const esEntries = {};
+
+  Object.entries(entries).forEach(([chunkName, entryPath]) => {
+    const relPath = path.relative(REPO_ROOT, entryPath).replace(/\\/g, '/');
+    console.log(`Processing example: ${chunkName} (${relPath})`);
+    if (relPath.startsWith('Examples/Applications/')) {
+      applicationEntries[chunkName] = entryPath;
+    } else {
+      esEntries[chunkName] = entryPath;
+    }
   });
 
-  await bundle.write({
-    dir: distDir,
-    format: 'es',
-    entryFileNames: '[name]/index.js',
-    chunkFileNames: '_shared/[name]-[hash].js',
-    assetFileNames: '_assets/[name]-[hash][extname]',
-  });
+  if (Object.keys(esEntries).length) {
+    const esBundle = await rollup({
+      input: esEntries,
+      plugins: createPlugins(),
+    });
 
-  await bundle.close();
+    await esBundle.write({
+      dir: distDir,
+      format: 'es',
+      entryFileNames: '[name]/index.js',
+      chunkFileNames: '_shared/[name]-[hash].js',
+      assetFileNames: '_assets/[name]-[hash][extname]',
+    });
+    await esBundle.close();
+  }
 
-  await fs.mkdir(distDir, { recursive: true });
+  await Object.entries(applicationEntries).reduce(
+    (chain, [chunkName, entryPath]) =>
+      chain.then(async () => {
+        const outDir = path.resolve(distDir, chunkName);
+
+        await fs.mkdir(outDir, { recursive: true });
+        const bundle = await rollup({
+          input: entryPath,
+          plugins: createPlugins(),
+        });
+        await bundle.write({
+          file: path.resolve(outDir, 'index.js'),
+          format: 'iife',
+          name: `${chunkName.replace(/[^\w$]/g, '_')}`,
+          inlineDynamicImports: true,
+          assetFileNames: '_assets/[name]-[hash][extname]',
+        });
+        await bundle.close();
+
+        await copyApplicationStaticAssets(entryPath, outDir);
+      }),
+    Promise.resolve()
+  );
 
   await Promise.all(
     Object.keys(entries).map(async (chunkName) => {
       const outDir = path.resolve(distDir, chunkName);
       const bundleFile = './index.js';
+      const isModule = !Object.hasOwn(applicationEntries, chunkName);
 
       await fs.mkdir(outDir, { recursive: true });
       await fs.writeFile(
         path.resolve(outDir, 'index.html'),
-        buildHtml(chunkName, bundleFile),
+        buildHtml(chunkName, bundleFile, isModule),
         'utf8'
       );
     })
   );
 
-  console.log(
-    `Wrote ${Object.keys(entries).length} example pages to ${distDir}`
-  );
+  console.log(`Built ${Object.keys(entries).length} example(s) in ${distDir}`);
 
   const dataSrc = path.resolve(REPO_ROOT, 'Data');
   const dataDest = path.resolve(DOCS_ROOT, '.vitepress', 'dist', 'data');
