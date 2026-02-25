@@ -47,10 +47,19 @@ const EXAMPLE_SOURCES = [
   },
 ];
 
-function buildHtml(exampleName, bundleFile, isModule = false) {
-  const exampleScript = isModule
-    ? `<script type="module" src="${bundleFile}"></script>`
-    : `<script src="${bundleFile}"></script>`;
+function buildHtml(
+  exampleName,
+  bundleFile,
+  isModule = false,
+  inlineScript = null
+) {
+  let exampleScript = `<script src="${bundleFile}"></script>`;
+  if (isModule) {
+    exampleScript = `<script type="module" src="${bundleFile}"></script>`;
+  }
+  if (inlineScript) {
+    exampleScript = `<script>${inlineScript}</script>`;
+  }
 
   return `<!doctype html>
 <html lang="en">
@@ -112,16 +121,37 @@ async function collectEntries() {
   return entries;
 }
 
-function assetLoader() {
+function getMimeType(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  const mimeByExt = {
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.svg': 'image/svg+xml',
+    '.webp': 'image/webp',
+  };
+  return mimeByExt[ext] || 'application/octet-stream';
+}
+
+function toDataUri(filePath, source) {
+  return `data:${getMimeType(filePath)};base64,${source.toString('base64')}`;
+}
+
+function assetLoader({ inline = false } = {}) {
   const assetRegex = /\.(png|jpe?g)$/i;
+
   return {
-    name: 'asset-loader',
+    name: inline ? 'asset-loader-inline' : 'asset-loader',
     async load(id) {
       if (!assetRegex.test(id)) {
         return null;
       }
 
       const source = await fs.readFile(id);
+      if (inline) {
+        return `export default ${JSON.stringify(toDataUri(id, source))};`;
+      }
       const refId = this.emitFile({
         type: 'asset',
         name: path.basename(id),
@@ -153,6 +183,60 @@ function replaceBasePath(basePath) {
   };
 }
 
+function inlineCssUrls() {
+  const cssFileRegex = /\.css$/i;
+  const urlRegex = /url\((['"]?)([^'")]+)\1\)/g;
+  return {
+    name: 'inline-css-urls',
+    async transform(code, id) {
+      if (!cssFileRegex.test(id)) {
+        return null;
+      }
+
+      const matches = Array.from(code.matchAll(urlRegex));
+      if (!matches.length) {
+        return null;
+      }
+
+      const replacements = await Promise.all(
+        matches.map(async ([fullMatch, quote, rawUrl]) => {
+          const assetUrl = rawUrl.trim();
+          if (
+            assetUrl.startsWith('data:') ||
+            assetUrl.startsWith('http://') ||
+            assetUrl.startsWith('https://') ||
+            assetUrl.startsWith('//')
+          ) {
+            return { fullMatch, replacement: fullMatch };
+          }
+
+          const assetPath = path.resolve(path.dirname(id), assetUrl);
+          try {
+            const source = await fs.readFile(assetPath);
+            const dataUrl = toDataUri(assetPath, source);
+            return {
+              fullMatch,
+              replacement: `url(${quote}${dataUrl}${quote})`,
+            };
+          } catch (err) {
+            return { fullMatch, replacement: fullMatch };
+          }
+        })
+      );
+
+      let transformed = code;
+      replacements.forEach(({ fullMatch, replacement }) => {
+        transformed = transformed.replace(fullMatch, replacement);
+      });
+
+      return {
+        code: transformed,
+        map: null,
+      };
+    },
+  };
+}
+
 async function walkFiles(dir, results = []) {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   await Promise.all(
@@ -169,15 +253,15 @@ async function walkFiles(dir, results = []) {
 }
 
 async function copyApplicationStaticAssets(entryPath, outDir) {
-  const appDir = path.dirname(entryPath);
+  const sourceDir = path.dirname(entryPath);
   const assetRegex = /\.(png|jpe?g|gif|svg|webp)$/i;
-  const files = await walkFiles(appDir);
+  const files = await walkFiles(sourceDir);
 
   await Promise.all(
     files
       .filter((filePath) => assetRegex.test(filePath))
       .map(async (filePath) => {
-        const relPath = path.relative(appDir, filePath);
+        const relPath = path.relative(sourceDir, filePath);
         const destPath = path.resolve(outDir, relPath);
         await fs.mkdir(path.dirname(destPath), { recursive: true });
         await fs.copyFile(filePath, destPath);
@@ -205,7 +289,7 @@ async function build() {
   const stringPlugin = string.default ? string.default : string;
   const ignorePlugin = ignore.default ? ignore.default : ignore;
 
-  function createPlugins() {
+  function createPlugins({ forInlineIife = false } = {}) {
     return [
       aliasPlugin({
         entries: [
@@ -217,6 +301,7 @@ async function build() {
         ],
       }),
       ignorePlugin(['crypto']),
+      ...(forInlineIife ? [inlineCssUrls()] : []),
       webworkerPlugin({
         targetPlatform: 'browser',
         pattern: /^.+\.worker(?:\.js)?$/,
@@ -250,7 +335,7 @@ async function build() {
         },
         plugins: [autoprefixer],
       }),
-      assetLoader(),
+      assetLoader({ inline: forInlineIife }),
       replaceBasePath('/vtk-js'),
     ];
   }
@@ -282,6 +367,14 @@ async function build() {
       assetFileNames: '_assets/[name]-[hash][extname]',
     });
     await esBundle.close();
+
+    await Promise.all(
+      Object.entries(esEntries).map(async ([chunkName, entryPath]) => {
+        const outDir = path.resolve(distDir, chunkName);
+        await fs.mkdir(outDir, { recursive: true });
+        await copyApplicationStaticAssets(entryPath, outDir);
+      })
+    );
   }
 
   await Object.entries(applicationEntries).reduce(
@@ -292,18 +385,28 @@ async function build() {
         await fs.mkdir(outDir, { recursive: true });
         const bundle = await rollup({
           input: entryPath,
-          plugins: createPlugins(),
+          plugins: createPlugins({ forInlineIife: true }),
         });
-        await bundle.write({
-          file: path.resolve(outDir, 'index.js'),
+        const { output } = await bundle.generate({
           format: 'iife',
           name: `${chunkName.replace(/[^\w$]/g, '_')}`,
           inlineDynamicImports: true,
-          assetFileNames: '_assets/[name]-[hash][extname]',
         });
         await bundle.close();
 
-        await copyApplicationStaticAssets(entryPath, outDir);
+        const appChunk = output.find((item) => item.type === 'chunk');
+        if (!appChunk) {
+          throw new Error(`Failed to generate inline IIFE for ${chunkName}`);
+        }
+        const inlineScript = appChunk.code.replace(
+          /<\/script>/gi,
+          '<\\/script>'
+        );
+        await fs.writeFile(
+          path.resolve(outDir, 'index.html'),
+          buildHtml(chunkName, './index.js', false, inlineScript),
+          'utf8'
+        );
       }),
     Promise.resolve()
   );
@@ -313,6 +416,9 @@ async function build() {
       const outDir = path.resolve(distDir, chunkName);
       const bundleFile = './index.js';
       const isModule = !Object.hasOwn(applicationEntries, chunkName);
+      if (!isModule) {
+        return;
+      }
 
       await fs.mkdir(outDir, { recursive: true });
       await fs.writeFile(
