@@ -22,7 +22,7 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 
 const actor = vtkTextActor.newInstance();
 actor.setInput('Hello World!');
-actor.setDisplayPosition(20, 30);
+actor.setDisplayPosition(window.innerWidth / 4, window.innerHeight / 4);
 
 renderer.addActor2D(actor);
 renderer.resetCamera();
@@ -35,6 +35,8 @@ renderWindow.render();
 const gui = new GUI();
 const params = {
   text: 'Hello World!',
+  x: window.innerWidth / 4,
+  y: window.innerHeight / 4,
 };
 
 gui
@@ -44,6 +46,21 @@ gui
     actor.setInput(value);
     renderWindow.render();
   });
+gui
+  .add(params, 'x')
+  .name('X Position')
+  .onChange((value) => {
+    actor.setDisplayPosition(value, params.y);
+    renderWindow.render();
+  });
+gui
+  .add(params, 'y')
+  .name('Y Position')
+  .onChange((value) => {
+    actor.setDisplayPosition(params.x, value);
+    renderWindow.render();
+  });
+
 global.actor = actor;
 global.renderer = renderer;
 global.renderWindow = renderWindow;
