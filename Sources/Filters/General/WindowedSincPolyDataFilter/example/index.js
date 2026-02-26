@@ -65,9 +65,9 @@ const params = {
   passBand: 0.25,
   featureAngle: 45,
   edgeAngle: 15,
-  nonManifoldSmoothing: 0,
-  featureEdgeSmoothing: 0,
-  boundarySmoothing: 1,
+  nonManifoldSmoothing: false,
+  featureEdgeSmoothing: false,
+  boundarySmoothing: true,
 };
 gui
   .add(params, 'numberOfIterations', 0, 100, 1)
