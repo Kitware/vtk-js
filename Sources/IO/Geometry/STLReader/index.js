@@ -1,8 +1,10 @@
+import macro from 'vtk.js/Sources/macros';
 import BinaryHelper from 'vtk.js/Sources/IO/Core/BinaryHelper';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
-import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkMergePoints from 'vtk.js/Sources/Common/DataModel/MergePoints';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 // Enable data soure for DataAccessHelper
@@ -11,7 +13,7 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper'; // Ju
 // import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper'; // html + base64 + zip
 // import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper'; // zip
 
-const { vtkErrorMacro } = macro;
+const { vtkErrorMacro, vtkWarningMacro } = macro;
 
 function parseHeader(headerString) {
   const headerSubStr = headerString.split(' ');
@@ -122,62 +124,106 @@ function vtkSTLReader(publicAPI, model) {
     });
   }
 
-  function removeDuplicateVertices(tolerance) {
+  function removeDuplicateVertices(tolerancePower) {
     const polydata = model.output[0];
 
     const points = polydata.getPoints().getData();
     const faces = polydata.getPolys().getData();
 
     if (!points || !faces) {
-      console.warn('No valid polydata.');
+      vtkWarningMacro('No valid polydata.');
       return;
     }
 
-    const vMap = new Map();
-    const vIndexMap = new Map();
-    let vInc = 0;
-    let pointsChanged = false;
-    for (let i = 0; i < points.length; i += 3) {
-      const k1 = (points[i] * 10 ** tolerance).toFixed(0);
-      const k2 = (points[i + 1] * 10 ** tolerance).toFixed(0);
-      const k3 = (points[i + 2] * 10 ** tolerance).toFixed(0);
-      const key = `${k1},${k2},${k3}`;
-      if (vMap.get(key) !== undefined) {
-        vIndexMap.set(i / 3, vMap.get(key));
-        pointsChanged = true;
-      } else {
-        vIndexMap.set(i / 3, vInc);
-        vMap.set(key, vInc);
-        vInc++;
+    const inCellNormals = polydata.getCellData().getNormals();
+    const inCellScalars = polydata.getCellData().getScalars();
+
+    const mergedPoints = vtkPoints.newInstance({
+      dataType: points.constructor,
+    });
+    mergedPoints.allocate(points.length / 6, 3);
+
+    let locator = model.locator;
+    if (!locator) {
+      locator = vtkMergePoints.newInstance();
+    }
+    if (tolerancePower >= 0) {
+      locator.setTolerance(10 ** -tolerancePower);
+    }
+    locator.initPointInsertion(
+      mergedPoints,
+      polydata.getBounds(),
+      Math.floor(points.length / 3 / 2)
+    );
+
+    const mergedCells = [];
+    const keptCellIds = [];
+    for (let i = 0, cellId = 0; i < faces.length; i += 4, cellId++) {
+      if (faces[i] === 3) {
+        const nodeIds = [0, 0, 0];
+        for (let j = 0; j < 3; j++) {
+          const pid = faces[i + 1 + j];
+          const x = [points[pid * 3], points[pid * 3 + 1], points[pid * 3 + 2]];
+          nodeIds[j] = locator.insertUniquePoint(x).id;
+        }
+
+        if (
+          nodeIds[0] !== nodeIds[1] &&
+          nodeIds[0] !== nodeIds[2] &&
+          nodeIds[1] !== nodeIds[2]
+        ) {
+          mergedCells.push(3, nodeIds[0], nodeIds[1], nodeIds[2]);
+          keptCellIds.push(cellId);
+        }
       }
     }
 
-    if (pointsChanged) {
-      const outVerts = new Float32Array(vMap.size * 3);
-      const keys = Array.from(vMap.keys());
+    const outCellArray = new faces.constructor(mergedCells);
+    polydata.getPoints().setData(mergedPoints.getData(), 3);
+    polydata.getPolys().setData(outCellArray);
 
-      for (let i = 0; i < keys.length; i++) {
-        const k = keys[i];
-        const j = vMap.get(k) * 3;
-        const coords = k.split(',').map((e) => +e * 10 ** -tolerance);
-        outVerts[j] = coords[0];
-        outVerts[j + 1] = coords[1];
-        outVerts[j + 2] = coords[2];
+    if (inCellNormals && inCellNormals.getData()) {
+      const inData = inCellNormals.getData();
+      const numComp = inCellNormals.getNumberOfComponents();
+      const outData = new inData.constructor(keptCellIds.length * numComp);
+      for (let i = 0; i < keptCellIds.length; i++) {
+        const srcOffset = keptCellIds[i] * numComp;
+        const dstOffset = i * numComp;
+        for (let c = 0; c < numComp; c++) {
+          outData[dstOffset + c] = inData[srcOffset + c];
+        }
       }
-
-      const outFaces = new Int32Array(faces.length);
-      for (let i = 0; i < faces.length; i += 4) {
-        outFaces[i] = 3;
-        outFaces[i + 1] = vIndexMap.get(faces[i + 1]);
-        outFaces[i + 2] = vIndexMap.get(faces[i + 2]);
-        outFaces[i + 3] = vIndexMap.get(faces[i + 3]);
-      }
-
-      polydata.getPoints().setData(outVerts);
-      polydata.getPolys().setData(outFaces);
-
-      polydata.modified();
+      polydata.getCellData().setNormals(
+        vtkDataArray.newInstance({
+          name: inCellNormals.getName() || 'Normals',
+          values: outData,
+          numberOfComponents: numComp,
+        })
+      );
     }
+
+    if (inCellScalars && inCellScalars.getData()) {
+      const inData = inCellScalars.getData();
+      const numComp = inCellScalars.getNumberOfComponents();
+      const outData = new inData.constructor(keptCellIds.length * numComp);
+      for (let i = 0; i < keptCellIds.length; i++) {
+        const srcOffset = keptCellIds[i] * numComp;
+        const dstOffset = i * numComp;
+        for (let c = 0; c < numComp; c++) {
+          outData[dstOffset + c] = inData[srcOffset + c];
+        }
+      }
+      polydata.getCellData().setScalars(
+        vtkDataArray.newInstance({
+          name: inCellScalars.getName() || 'Attribute',
+          values: outData,
+          numberOfComponents: numComp,
+        })
+      );
+    }
+
+    locator.initialize();
+    polydata.modified();
   }
 
   // Set DataSet url
@@ -348,7 +394,7 @@ function vtkSTLReader(publicAPI, model) {
     // Add new output
     model.output[0] = polydata;
 
-    if (model.removeDuplicateVertices >= 0) {
+    if (model.merging && model.removeDuplicateVertices >= 0) {
       removeDuplicateVertices(model.removeDuplicateVertices);
     }
   };
@@ -389,7 +435,7 @@ function vtkSTLReader(publicAPI, model) {
     // Add new output
     model.output[0] = polydata;
 
-    if (model.removeDuplicateVertices >= 0) {
+    if (model.merging && model.removeDuplicateVertices >= 0) {
       removeDuplicateVertices(model.removeDuplicateVertices);
     }
   };
@@ -406,7 +452,9 @@ function vtkSTLReader(publicAPI, model) {
 const DEFAULT_VALUES = {
   // baseURL: null,
   // dataAccessHelper: null,
+  // locator: null,
   // url: null,
+  merging: true,
   removeDuplicateVertices: -1,
 };
 
@@ -420,6 +468,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['url', 'baseURL']);
   macro.setGet(publicAPI, model, [
     'dataAccessHelper',
+    'locator',
+    'merging',
     'removeDuplicateVertices',
   ]);
   macro.algo(publicAPI, model, 0, 1);

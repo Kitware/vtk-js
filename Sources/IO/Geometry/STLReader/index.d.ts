@@ -13,7 +13,34 @@ interface ISTLReaderOptions {
 /**
  *
  */
-export interface ISTLReaderInitialValues {}
+export interface ISTLReaderInitialValues {
+  /**
+   * Data access helper used for loading remote resources.
+   */
+  dataAccessHelper?:
+    | HtmlDataAccessHelper
+    | HttpDataAccessHelper
+    | JSZipDataAccessHelper
+    | LiteHttpDataAccessHelper;
+
+  /**
+   * Point locator used for vertex merging.
+   */
+  locator?: any;
+
+  /**
+   * Enable/disable point merging.
+   * Default is true.
+   */
+  merging?: boolean;
+
+  /**
+   * Merge tolerance power.
+   * If >= 0, points within 10^-tolerance are merged.
+   * Default is -1 (disabled).
+   */
+  removeDuplicateVertices?: number;
+}
 
 type vtkSTLReaderBase = vtkObject &
   Omit<
@@ -40,6 +67,16 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
     | HttpDataAccessHelper
     | JSZipDataAccessHelper
     | LiteHttpDataAccessHelper;
+
+  /**
+   * Get the point locator used for vertex merging.
+   */
+  getLocator(): any;
+
+  /**
+   * Get whether point merging is enabled.
+   */
+  getMerging(): boolean;
 
   /**
    * Get the url of the object to load.
@@ -74,6 +111,7 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
    * @param {String} content The content to parse.
    */
   parseAsText(content: string): void;
+
   /**
    *
    * @param inData
@@ -92,6 +130,16 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
       | JSZipDataAccessHelper
       | LiteHttpDataAccessHelper
   ): boolean;
+
+  /**
+   * Set a point locator used for vertex merging.
+   */
+  setLocator(locator: any): boolean;
+
+  /**
+   * Enable/disable point merging.
+   */
+  setMerging(merging: boolean): boolean;
 
   /**
    * Set the url of the object to load.
