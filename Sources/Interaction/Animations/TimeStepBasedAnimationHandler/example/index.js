@@ -27,7 +27,7 @@ const gui = new GUI();
 const params = { TimeIndex: 0 };
 let timeCtrl;
 function initialiseSelector(steps, applyStep) {
-  if (timeCtrl) gui.remove(timeCtrl);
+  if (timeCtrl) timeCtrl.destroy();
   timeCtrl = gui
     .add(params, 'TimeIndex', 0, steps.length - 1, 1)
     .name('Time step index')
