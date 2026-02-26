@@ -81,12 +81,16 @@ function vtkVolumeMapper(publicAPI, model) {
 
   const superClass = { ...publicAPI };
 
-  publicAPI.getBounds = () => {
+  publicAPI.computeBounds = () => {
+    const input = publicAPI.getInputData();
+    if (!input) {
+      vtkBoundingBox.reset(model.bounds);
+      return;
+    }
     if (!model.static) {
       publicAPI.update();
     }
-    model.bounds = [...publicAPI.getInputData().getBounds()];
-    return model.bounds;
+    vtkBoundingBox.setBounds(model.bounds, input.getBounds());
   };
 
   publicAPI.setBlendModeToComposite = () => {
