@@ -30,7 +30,6 @@
   "main": "./dist/umd/vtk.js",
   "module": "./dist/esm/index.js",
   "dependencies": {
-    "@babel/runtime": "^7.28.2",
     "@types/webxr": "^0.5.5",
     "commander": "9.2.0",
     "d3-scale": "4.0.2",
@@ -39,13 +38,10 @@
     "gl-matrix": "3.4.3",
     "globalthis": "1.0.3",
     "seedrandom": "3.0.5",
-    "shader-loader": "1.3.1",
     "shelljs": "0.8.5",
     "spark-md5": "3.0.2",
-    "stream-browserify": "3.0.0",
     "utif": "3.1.0",
     "webworker-promise": "0.5.0",
-    "worker-loader": "3.0.8",
     "xmlbuilder2": "3.0.2"
   },
   "devDependencies": {
@@ -53,6 +49,7 @@
     "@babel/eslint-parser": "7.22.11",
     "@babel/plugin-transform-runtime": "7.22.10",
     "@babel/preset-env": "7.22.10",
+    "@babel/runtime": "^7.28.2",
     "@commitlint/cli": "19.7.1",
     "@commitlint/config-conventional": "19.7.1",
     "@mapbox/node-pre-gyp": "1.0.9",
@@ -117,7 +114,9 @@
     "rollup-plugin-svgo": "2.0.0",
     "rollup-plugin-web-worker-loader": "1.6.1",
     "semantic-release": "25.0.2",
+    "shader-loader": "1.3.1",
     "snabbdom": "^3.5.1",
+    "stream-browserify": "3.0.0",
     "string-replace-loader": "3.1.0",
     "style-loader": "3.3.1",
     "tape": "5.5.3",
@@ -132,6 +131,7 @@
     "webpack-dev-server": "^4.9.0",
     "webpack-merge": "5.8.0",
     "webpack-notifier": "1.15.0",
+    "worker-loader": "3.0.8",
     "wslink": "1.12.4",
     "xml2js": "0.5.0"
   },
