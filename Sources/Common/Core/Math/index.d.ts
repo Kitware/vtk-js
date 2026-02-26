@@ -1075,7 +1075,8 @@ export function createUninitializedBounds(): Bounds;
 export function getMajorAxisIndex(vector: number[]): number;
 
 /**
- *
+ * Return the index of the component with the smallest absolute value.
+ * Returns -1 for empty arrays.
  * @param {Number[]} vector
  */
 export function getMinorAxisIndex(vector: number[]): number;

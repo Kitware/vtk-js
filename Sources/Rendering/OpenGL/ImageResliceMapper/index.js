@@ -42,9 +42,9 @@ const splitStringOnEnter = (str) =>
 function findLabelOutlineProperties(actor, currentValidInputs) {
   const labelmapProperties = [];
   for (let i = 0; i < currentValidInputs.length; i++) {
-    const ppty = actor.getProperty(currentValidInputs[i].inputIndex);
-    if (ppty?.getUseLabelOutline()) {
-      labelmapProperties.push({ property: ppty, arrayIndex: i });
+    const property = actor.getProperty(currentValidInputs[i].inputIndex);
+    if (property?.getUseLabelOutline()) {
+      labelmapProperties.push({ property, arrayIndex: i });
     }
   }
   return labelmapProperties;
@@ -878,10 +878,10 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     const actorProperties = actor.getProperties();
     if (iComps) {
       for (let i = 0; i < numComp; ++i) {
-        const ppty = useMultiTexture
+        const property = useMultiTexture
           ? actorProperties[model.currentValidInputs[i].inputIndex]
           : firstPpty;
-        program.setUniformf(`mix${i}`, ppty.getComponentWeight(0));
+        program.setUniformf(`mix${i}`, property.getComponentWeight(0));
       }
     }
 
@@ -896,15 +896,17 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       const volOffset = volInfo.offset[volInfoIndex];
       const target = iComps ? component : 0;
 
-      const ppty = useMultiTexture
+      const property = useMultiTexture
         ? actorProperties[model.currentValidInputs[component].inputIndex]
         : firstPpty;
 
       // color shift/scale
-      let cw = ppty.getColorWindow();
-      let cl = ppty.getColorLevel();
-      const cfun = ppty.getRGBTransferFunction(useMultiTexture ? 0 : target);
-      if (cfun && ppty.getUseLookupTableScalarRange()) {
+      let cw = property.getColorWindow();
+      let cl = property.getColorLevel();
+      const cfun = property.getRGBTransferFunction(
+        useMultiTexture ? 0 : target
+      );
+      if (cfun && property.getUseLookupTableScalarRange()) {
         const cRange = cfun.getRange();
         cw = cRange[1] - cRange[0];
         cl = 0.5 * (cRange[1] + cRange[0]);
@@ -917,7 +919,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       // pwf shift/scale
       let pwfScale = 1.0;
       let pwfShift = 0.0;
-      const pwfun = ppty.getPiecewiseFunction(useMultiTexture ? 0 : target);
+      const pwfun = property.getPiecewiseFunction(useMultiTexture ? 0 : target);
       if (pwfun) {
         const pwfRange = pwfun.getRange();
         const length = pwfRange[1] - pwfRange[0];
