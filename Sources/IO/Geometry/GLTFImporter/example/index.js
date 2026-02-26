@@ -170,7 +170,7 @@ function ready() {
     mixer = reader.getAnimationMixer();
     const names = animations.map((a) => a.id);
     params.Animation = names[0];
-    controllers.Animation && gui.remove(controllers.Animation);
+    controllers.Animation && controllers.Animation.destroy();
     controllers.Animation = gui
       .add(params, 'Animation', names)
       .name('Animation')
@@ -185,7 +185,7 @@ function ready() {
   const cameras = reader.getCameras();
   if (cameras.length) {
     params.Camera = cameras[0];
-    controllers.Camera && gui.remove(controllers.Camera);
+    controllers.Camera && controllers.Camera.destroy();
     controllers.Camera = gui
       .add(params, 'Camera', cameras)
       .name('Camera')
@@ -197,7 +197,7 @@ function ready() {
 
   const scenes = reader.getScenes();
   if (scenes.length > 1) {
-    controllers.Scene && gui.remove(controllers.Scene);
+    controllers.Scene && controllers.Scene.destroy();
     controllers.Scene = gui
       .add(params, 'Scene', [...Array(scenes.length).keys()])
       .name('Scene')
@@ -208,7 +208,7 @@ function ready() {
 
   const variants = reader.getVariants();
   if (variants.length > 1) {
-    controllers.Variant && gui.remove(controllers.Variant);
+    controllers.Variant && controllers.Variant.destroy();
     controllers.Variant = gui
       .add(params, 'Variant', [...Array(variants.length).keys()])
       .name('Variant')
@@ -242,7 +242,7 @@ fetch(`${baseUrl}/${modelsFolder}/model-index.json`)
     const dhModelIdx = modelsNames.indexOf('DamagedHelmet');
     selectedModel = userParms.model || modelsNames[dhModelIdx];
     params.Model = selectedModel;
-    controllers.Model && gui.remove(controllers.Model);
+    controllers.Model && controllers.Model.destroy();
     controllers.Model = gui
       .add(params, 'Model', modelsNames)
       .name('Model')
@@ -254,7 +254,7 @@ fetch(`${baseUrl}/${modelsFolder}/model-index.json`)
 
     selectedFlavor = userParms.flavor || variants[0];
     params.Flavor = selectedFlavor;
-    controllers.Flavor && gui.remove(controllers.Flavor);
+    controllers.Flavor && controllers.Flavor.destroy();
     controllers.Flavor = gui
       .add(params, 'Flavor', variants)
       .name('Flavor')

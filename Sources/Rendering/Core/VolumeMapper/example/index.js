@@ -162,7 +162,7 @@ const setColorMixPreset = (presetKey) => {
 };
 
 function rebuildForceNearestControllers(comp) {
-  forceNearestControllers.forEach((c) => gui.remove(c));
+  forceNearestControllers.forEach((c) => c.destroy());
   forceNearestControllers = [];
   for (let i = 0; i < comp; ++i) {
     const obj = {
@@ -230,7 +230,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
 
     const volumeKeys = Object.keys(volumeOptions);
     params.Volume = volumeKeys[0];
-    if (volumeController) gui.remove(volumeController);
+    if (volumeController) volumeController.destroy();
     volumeController = gui
       .add(params, 'Volume', volumeKeys)
       .name('Volume')
@@ -301,7 +301,7 @@ gui
     renderWindow.render();
   });
 
-if (presetController) gui.remove(presetController);
+if (presetController) presetController.destroy();
 presetController = gui
   .add(params, 'Preset', presetKeys)
   .name('Preset')
