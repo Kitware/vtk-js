@@ -38,12 +38,6 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 const lookupTable = vtkLookupTable.newInstance({ hueRange: [0.666, 0] });
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
-reader.setUrl(`${__BASE_PATH__}/data/cow.vtp`).then(() => {
-  reader.loadData().then(() => {
-    renderer.resetCamera();
-    renderWindow.render();
-  });
-});
 
 const calc = vtkCalculator.newInstance();
 calc.setInputConnection(reader.getOutputPort());
@@ -99,6 +93,16 @@ const actor = vtkActor.newInstance();
 actor.getProperty().setEdgeVisibility(true);
 
 const scalarBarActor = vtkScalarBarActor.newInstance();
+const defaultAutoLayout = scalarBarActor.getAutoLayout();
+scalarBarActor.setAutoLayout((helper) => {
+  defaultAutoLayout({
+    ...helper,
+    recomputeBarSegments: (textSizes) => {
+      helper.getBoxSizeByReference()[1] = 1;
+      helper.recomputeBarSegments(textSizes);
+    },
+  });
+});
 scalarBarActor.setScalarsToColors(lookupTable);
 renderer.addActor(scalarBarActor);
 
@@ -168,8 +172,13 @@ gui
   .name('Threshold value')
   .onChange(() => onCriteriaChanged(true));
 
-onCriteriaChanged(true);
-
+reader.setUrl(`${__BASE_PATH__}/data/cow.vtp`).then(() => {
+  reader.loadData().then(() => {
+    renderer.resetCamera();
+    onCriteriaChanged(true);
+    renderWindow.render();
+  });
+});
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
 // modify objects in your browser's developer console:
