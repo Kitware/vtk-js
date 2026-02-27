@@ -91,6 +91,34 @@ export function newInstance(initialValues?: ISphereInitialValues): vtkSphere;
 declare function evaluate(radius: number, center: Vector3, x: Vector3): number;
 
 /**
+ * Approximate bounding sphere for a point set represented as a flat xyz array.
+ * Returns `[cx, cy, cz, r]`.
+ *
+ * @param {Array<number>|TypedArray} pts flat xyz point coordinates
+ * @param {number} [numPts] number of points to process
+ * @param {number[]} [hints] two point ids expected to be far apart
+ */
+declare function computeBoundingSphere(
+  pts: Array<number> | ArrayLike<number>,
+  numPts?: number,
+  hints?: number[]
+): [number, number, number, number];
+
+/**
+ * Approximate bounding sphere for an array of spheres `[x, y, z, r]`.
+ * Returns `[cx, cy, cz, r]`.
+ *
+ * @param {Array<Vector4>} spheres list of spheres
+ * @param {number} [numSpheres] number of spheres to process
+ * @param {number[]} [hints] two sphere ids expected to be far apart
+ */
+declare function computeBoundingSphereFromSpheres(
+  spheres: Array<[number, number, number, number]>,
+  numSpheres?: number,
+  hints?: number[]
+): [number, number, number, number];
+
+/**
  * vtkSphere provides methods for creating a 1D cubic spline object from given
  * parameters, and allows for the calculation of the spline value and derivative
  * at any given point inside the spline intervals.
@@ -99,5 +127,7 @@ export declare const vtkSphere: {
   newInstance: typeof newInstance;
   extend: typeof extend;
   evaluate: typeof evaluate;
+  computeBoundingSphere: typeof computeBoundingSphere;
+  computeBoundingSphereFromSpheres: typeof computeBoundingSphereFromSpheres;
 };
 export default vtkSphere;
