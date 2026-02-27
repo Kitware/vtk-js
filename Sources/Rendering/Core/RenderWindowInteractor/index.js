@@ -484,8 +484,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   //----------------------------------------------------------------------
   publicAPI.requestPointerLock = () => {
     if (model.container) {
-      model.container.requestPointerLock();
+      return model.container.requestPointerLock();
     }
+    return undefined;
   };
 
   //----------------------------------------------------------------------
