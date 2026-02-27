@@ -1,4 +1,4 @@
-import { CellType, Vector3 } from '../../../types';
+import { CellType } from '../../../types';
 import vtkCellArray from '../../Core/CellArray';
 import vtkPointSet, { IPointSetInitialValues } from '../PointSet';
 
@@ -36,10 +36,11 @@ export interface vtkPolyData extends vtkPointSet {
   /**
    * Get the neighbors at an edge.
    * @param {Number} cellId The Id of the cell.
-   * @param {Vector3} point1 The first point coordinate.
-   * @param {Vector3} point2 The second point coordinate.
+   * @param {Number} point1 The first point id.
+   * @param {Number} point2 The second point id.
+   * @returns {Number[]} Neighbor cell ids.
    */
-  getCellEdgeNeighbors(cellId: number, point1: Vector3, point2: Vector3): void;
+  getCellEdgeNeighbors(cellId: number, point1: number, point2: number): number[];
 
   /**
    * Get a list of point ids that define a cell.
