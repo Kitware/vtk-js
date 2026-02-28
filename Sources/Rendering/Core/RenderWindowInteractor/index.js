@@ -104,6 +104,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   // Factor to apply on wheel spin.
   let wheelCoefficient = 1;
 
+  // Track mouse button bitmask for detecting chorded button interactions.
+  // Per W3C Pointer Events spec §10, pointerdown/pointerup only fire for the
+  // first press / last release. Chorded (additional) button changes while
+  // another button is held are signaled via pointermove with updated `buttons`.
+  let previousMouseButtons = 0;
+
   // Public API methods
 
   //----------------------------------------------------------------------
@@ -321,6 +327,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       publicAPI.handlePointerLockChange
     );
     pointerCache.clear();
+    previousMouseButtons = 0;
   };
 
   publicAPI.unbindEvents = () => {
@@ -398,9 +405,27 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       case 'mouse':
       default:
         publicAPI.handleMouseDown(event);
+        previousMouseButtons = event.buttons;
         break;
     }
   };
+
+  function handleChordedButtons(callData, previous, current) {
+    /* eslint-disable no-bitwise */
+    if ((previous & ~current & 1) !== 0)
+      publicAPI.leftButtonReleaseEvent(callData);
+    if ((previous & ~current & 4) !== 0)
+      publicAPI.middleButtonReleaseEvent(callData);
+    if ((previous & ~current & 2) !== 0)
+      publicAPI.rightButtonReleaseEvent(callData);
+    if ((~previous & current & 1) !== 0)
+      publicAPI.leftButtonPressEvent(callData);
+    if ((~previous & current & 4) !== 0)
+      publicAPI.middleButtonPressEvent(callData);
+    if ((~previous & current & 2) !== 0)
+      publicAPI.rightButtonPressEvent(callData);
+    /* eslint-enable no-bitwise */
+  }
 
   publicAPI.handlePointerUp = (event) => {
     if (pointerCache.has(event.pointerId)) {
@@ -417,9 +442,29 @@ function vtkRenderWindowInteractor(publicAPI, model) {
           publicAPI.handleTouchEnd(event);
           break;
         case 'mouse':
-        default:
+        default: {
+          // buttons bitmask: 1=left, 4=middle, 2=right
+          // eslint-disable-next-line no-bitwise
+          const buttonBitMap = [1, 4, 2];
+          // eslint-disable-next-line no-bitwise
+          const buttonBit = buttonBitMap[event.button] ?? 0;
+          const callData = {
+            ...getModifierKeysFor(event),
+            position: getScreenEventPositionFor(event),
+            deviceType: getDeviceTypeFor(event),
+          };
+          // Mask out the primary button — handleMouseUp handles it below.
+          /* eslint-disable no-bitwise */
+          handleChordedButtons(
+            callData,
+            previousMouseButtons & ~buttonBit,
+            event.buttons & ~buttonBit
+          );
+          /* eslint-enable no-bitwise */
           publicAPI.handleMouseUp(event);
+          previousMouseButtons = event.buttons;
           break;
+        }
       }
     }
   };
@@ -434,9 +479,16 @@ function vtkRenderWindowInteractor(publicAPI, model) {
           publicAPI.handleTouchEnd(event);
           break;
         case 'mouse':
-        default:
-          publicAPI.handleMouseUp(event);
+        default: {
+          const callData = {
+            ...getModifierKeysFor(event),
+            position: getScreenEventPositionFor(event),
+            deviceType: getDeviceTypeFor(event),
+          };
+          handleChordedButtons(callData, previousMouseButtons, 0);
+          previousMouseButtons = 0;
           break;
+        }
       }
     }
   };
@@ -453,9 +505,24 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         publicAPI.handleTouchMove(event);
         break;
       case 'mouse':
-      default:
+      default: {
+        // Detect chorded button state changes (W3C Pointer Events spec §10).
+        // pointerdown/pointerup only fire for the first/last button; additional
+        // button presses/releases while another is held arrive as pointermove
+        // events with updated `buttons` bitmask.
+        const currentButtons = event.buttons;
+        if (currentButtons !== previousMouseButtons) {
+          const callData = {
+            ...getModifierKeysFor(event),
+            position: getScreenEventPositionFor(event),
+            deviceType: getDeviceTypeFor(event),
+          };
+          handleChordedButtons(callData, previousMouseButtons, currentButtons);
+          previousMouseButtons = currentButtons;
+        }
         publicAPI.handleMouseMove(event);
         break;
+      }
     }
   };
 
