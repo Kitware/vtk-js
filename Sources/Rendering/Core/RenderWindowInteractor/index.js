@@ -410,6 +410,23 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
+  function handleChordedButtons(callData, previous, current) {
+    /* eslint-disable no-bitwise */
+    if ((previous & ~current & 1) !== 0)
+      publicAPI.leftButtonReleaseEvent(callData);
+    if ((previous & ~current & 4) !== 0)
+      publicAPI.middleButtonReleaseEvent(callData);
+    if ((previous & ~current & 2) !== 0)
+      publicAPI.rightButtonReleaseEvent(callData);
+    if ((~previous & current & 1) !== 0)
+      publicAPI.leftButtonPressEvent(callData);
+    if ((~previous & current & 4) !== 0)
+      publicAPI.middleButtonPressEvent(callData);
+    if ((~previous & current & 2) !== 0)
+      publicAPI.rightButtonPressEvent(callData);
+    /* eslint-enable no-bitwise */
+  }
+
   publicAPI.handlePointerUp = (event) => {
     if (pointerCache.has(event.pointerId)) {
       if (model.preventDefaultOnPointerUp) {
@@ -426,33 +443,26 @@ function vtkRenderWindowInteractor(publicAPI, model) {
           break;
         case 'mouse':
         default: {
-          // Detect chorded button releases: when pointerup fires, additional
-          // buttons may have been released simultaneously. Fire release events
-          // for those chorded buttons before handling the primary button.
-          const currentButtons = event.buttons;
-          if (currentButtons !== previousMouseButtons) {
-            const callData = {
-              ...getModifierKeysFor(event),
-              position: getScreenEventPositionFor(event),
-              deviceType: getDeviceTypeFor(event),
-            };
-            const wasLeft = (previousMouseButtons & 1) !== 0; // eslint-disable-line no-bitwise
-            const wasRight = (previousMouseButtons & 2) !== 0; // eslint-disable-line no-bitwise
-            const wasMiddle = (previousMouseButtons & 4) !== 0; // eslint-disable-line no-bitwise
-            const isLeft = (currentButtons & 1) !== 0; // eslint-disable-line no-bitwise
-            const isRight = (currentButtons & 2) !== 0; // eslint-disable-line no-bitwise
-            const isMiddle = (currentButtons & 4) !== 0; // eslint-disable-line no-bitwise
-            // Only fire for chorded buttons; the primary button (event.button)
-            // is handled by handleMouseUp below.
-            if (!isLeft && wasLeft && event.button !== 0)
-              publicAPI.leftButtonReleaseEvent(callData);
-            if (!isMiddle && wasMiddle && event.button !== 1)
-              publicAPI.middleButtonReleaseEvent(callData);
-            if (!isRight && wasRight && event.button !== 2)
-              publicAPI.rightButtonReleaseEvent(callData);
-          }
+          // buttons bitmask: 1=left, 4=middle, 2=right
+          // eslint-disable-next-line no-bitwise
+          const buttonBitMap = [1, 4, 2];
+          // eslint-disable-next-line no-bitwise
+          const buttonBit = buttonBitMap[event.button] ?? 0;
+          const callData = {
+            ...getModifierKeysFor(event),
+            position: getScreenEventPositionFor(event),
+            deviceType: getDeviceTypeFor(event),
+          };
+          // Mask out the primary button — handleMouseUp handles it below.
+          /* eslint-disable no-bitwise */
+          handleChordedButtons(
+            callData,
+            previousMouseButtons & ~buttonBit,
+            event.buttons & ~buttonBit
+          );
+          /* eslint-enable no-bitwise */
           publicAPI.handleMouseUp(event);
-          previousMouseButtons = currentButtons;
+          previousMouseButtons = event.buttons;
           break;
         }
       }
@@ -470,22 +480,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
           break;
         case 'mouse':
         default: {
-          // Fire release events for all buttons that were held when the
-          // pointer interaction was cancelled.
           const callData = {
             ...getModifierKeysFor(event),
             position: getScreenEventPositionFor(event),
             deviceType: getDeviceTypeFor(event),
           };
-          // eslint-disable-next-line no-bitwise
-          if ((previousMouseButtons & 1) !== 0)
-            publicAPI.leftButtonReleaseEvent(callData);
-          // eslint-disable-next-line no-bitwise
-          if ((previousMouseButtons & 4) !== 0)
-            publicAPI.middleButtonReleaseEvent(callData);
-          // eslint-disable-next-line no-bitwise
-          if ((previousMouseButtons & 2) !== 0)
-            publicAPI.rightButtonReleaseEvent(callData);
+          handleChordedButtons(callData, previousMouseButtons, 0);
           previousMouseButtons = 0;
           break;
         }
@@ -517,21 +517,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
             position: getScreenEventPositionFor(event),
             deviceType: getDeviceTypeFor(event),
           };
-          // buttons bitmask: 1=left, 2=right, 4=middle
-          const wasLeft = (previousMouseButtons & 1) !== 0; // eslint-disable-line no-bitwise
-          const wasRight = (previousMouseButtons & 2) !== 0; // eslint-disable-line no-bitwise
-          const wasMiddle = (previousMouseButtons & 4) !== 0; // eslint-disable-line no-bitwise
-          const isLeft = (currentButtons & 1) !== 0; // eslint-disable-line no-bitwise
-          const isRight = (currentButtons & 2) !== 0; // eslint-disable-line no-bitwise
-          const isMiddle = (currentButtons & 4) !== 0; // eslint-disable-line no-bitwise
-          if (isLeft && !wasLeft) publicAPI.leftButtonPressEvent(callData);
-          if (isMiddle && !wasMiddle)
-            publicAPI.middleButtonPressEvent(callData);
-          if (isRight && !wasRight) publicAPI.rightButtonPressEvent(callData);
-          if (!isLeft && wasLeft) publicAPI.leftButtonReleaseEvent(callData);
-          if (!isMiddle && wasMiddle)
-            publicAPI.middleButtonReleaseEvent(callData);
-          if (!isRight && wasRight) publicAPI.rightButtonReleaseEvent(callData);
+          handleChordedButtons(callData, previousMouseButtons, currentButtons);
           previousMouseButtons = currentButtons;
         }
         publicAPI.handleMouseMove(event);
