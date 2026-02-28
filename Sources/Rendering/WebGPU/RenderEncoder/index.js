@@ -96,6 +96,13 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
     model.colorTextureViews[idx] = view;
   };
 
+  publicAPI.setResolveTextureView = (idx, view) => {
+    if (model.resolveTextureViews[idx] === view) {
+      return;
+    }
+    model.resolveTextureViews[idx] = view;
+  };
+
   publicAPI.activateBindGroup = (bg) => {
     const device = model.boundPipeline.getDevice();
     const midx = model.boundPipeline.getBindGroupLayoutCount(bg.getLabel());
@@ -125,6 +132,14 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
       } else {
         model.description.colorAttachments[i].view =
           model.colorTextureViews[i].getHandle();
+      }
+      // MSAA: set resolveTarget if a resolve texture view is provided
+      if (model.resolveTextureViews[i]) {
+        model.description.colorAttachments[i].resolveTarget =
+          model.resolveTextureViews[i].getHandle();
+        // When using MSAA, the multisampled texture is transient;
+        // store only into the resolve target
+        model.description.colorAttachments[i].storeOp = 'discard';
       }
     }
     if (model.depthTextureView) {
@@ -225,6 +240,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   };
 
   model.colorTextureViews = [];
+  model.resolveTextureViews = [];
 
   macro.get(publicAPI, model, ['boundPipeline', 'colorTextureViews']);
 
