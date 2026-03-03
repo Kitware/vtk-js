@@ -1,43 +1,33 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import { substitute } from '../index';
 
-test('substitute', (t) => {
-  t.deepEqual(
-    substitute('this is source source', 'source', 'target'),
-    { replace: true, result: 'this is target target' },
-    'works with string as search argument'
-  );
+it('substitute', () => {
+  expect(substitute('this is source source', 'source', 'target')).toEqual({
+    replace: true,
+    result: 'this is target target',
+  });
 
-  t.deepEqual(
-    substitute('this is source source', /source/, 'target'),
-    { replace: true, result: 'this is target target' },
-    'works with regexp as search argument'
-  );
+  expect(substitute('this is source source', /source/, 'target')).toEqual({
+    replace: true,
+    result: 'this is target target',
+  });
 
-  t.deepEqual(
-    substitute('this is source source', 'source', ['target', 'target2']),
-    { replace: true, result: 'this is target\ntarget2 target\ntarget2' },
-    'works with array as replace argument'
-  );
+  expect(
+    substitute('this is source source', 'source', ['target', 'target2'])
+  ).toEqual({
+    replace: true,
+    result: 'this is target\ntarget2 target\ntarget2',
+  });
 
-  t.deepEqual(
-    substitute('this is source source', 'source', 'target', false),
-    { replace: true, result: 'this is target source' },
-    'works with string as search argument and global replacement set to false'
-  );
+  expect(
+    substitute('this is source source', 'source', 'target', false)
+  ).toEqual({ replace: true, result: 'this is target source' });
 
-  t.deepEqual(
-    substitute('this is source source', /source/, 'target', false),
-    { replace: true, result: 'this is target source' },
-    'works with regexp as search argument and global replacement set to false'
-  );
+  expect(
+    substitute('this is source source', /source/, 'target', false)
+  ).toEqual({ replace: true, result: 'this is target source' });
 
-  t.deepEqual(
-    substitute('this is source source', 'source', ['target', 'target2'], false),
-    { replace: true, result: 'this is target\ntarget2 source' },
-    'works with array as replace argument and global replacement set to false'
-  );
-
-  t.end();
+  expect(
+    substitute('this is source source', 'source', ['target', 'target2'], false)
+  ).toEqual({ replace: true, result: 'this is target\ntarget2 source' });
 });

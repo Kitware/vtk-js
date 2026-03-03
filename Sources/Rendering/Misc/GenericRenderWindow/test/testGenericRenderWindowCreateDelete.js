@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -11,8 +11,8 @@ import {
   popMonitorGLContextCount,
 } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 
-test('Test vtkGenericRenderWindow create/delete', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+it('Test vtkGenericRenderWindow create/delete', () => {
+  const gc = testUtils.createGarbageCollector();
   // testUtils.keepDOM();
 
   const actor = gc.registerResource(vtkActor.newInstance());
@@ -23,7 +23,7 @@ test('Test vtkGenericRenderWindow create/delete', (t) => {
 
   pushMonitorGLContextCount((count) => {
     if (count > 16) {
-      t.fail('Too much WebGL context have been created');
+      expect.fail('Too much WebGL context have been created');
     }
   });
 

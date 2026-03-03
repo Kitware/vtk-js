@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -15,9 +15,9 @@ import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 
 const { SlicingMode } = vtkImageMapper;
 
-test('Test vtkCellPicker image mapper', (t) => {
+it('Test vtkCellPicker image mapper', () => {
   // Create some control UI
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   const container = document.querySelector('body');
   const renderWindowContainer = gc.registerDOMElement(
     document.createElement('div')
@@ -62,36 +62,32 @@ test('Test vtkCellPicker image mapper', (t) => {
   picker.pick(p, renderer);
 
   const actors = picker.getActors();
-  t.equal(actors.length, 1);
-  t.equal(actors[0], actor);
+  expect(actors.length).toBe(1);
+  expect(actors[0]).toBe(actor);
 
   const positions = picker.getPickedPositions();
-  t.equal(positions.length, 1);
+  expect(positions.length).toBe(1);
   const xyz = positions[0];
   const expectedPosition = [64.33654020304944, 75.54505613923392, 12.0];
-  t.assert(
-    areEquals(xyz, expectedPosition),
-    'Float-compare picked position to expected.'
-  );
+  expect(areEquals(xyz, expectedPosition)).toBeTruthy();
 
   const ijk = picker.getCellIJK();
-  t.equal(ijk[0], 64);
-  t.equal(ijk[1], 75);
-  t.equal(ijk[2], 12);
+  expect(ijk[0]).toBe(64);
+  expect(ijk[1]).toBe(75);
+  expect(ijk[2]).toBe(12);
 
   gc.releaseResources();
 });
 
-test('Test vtkCellPicker instance', (t) => {
-  t.ok(vtkCellPicker, 'Make sure the class definition exists');
+it('Test vtkCellPicker instance', () => {
+  expect(vtkCellPicker).toBeTruthy();
   const instance = vtkCellPicker.newInstance();
-  t.ok(instance);
-  t.end();
+  expect(instance).toBeTruthy();
 });
 
-test('Test vtkCellPicker on triangles', (t) => {
+it('Test vtkCellPicker on triangles', () => {
   // Create some control UI
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   const container = document.querySelector('body');
   const renderWindowContainer = gc.registerDOMElement(
     document.createElement('div')
@@ -134,24 +130,21 @@ test('Test vtkCellPicker on triangles', (t) => {
 
   const actors = picker.getActors();
 
-  t.equal(actors.length, 1);
-  t.equal(actors[0], actor);
+  expect(actors.length).toBe(1);
+  expect(actors[0]).toBe(actor);
 
   const positions = picker.getPickedPositions();
-  t.equal(positions.length, 1);
+  expect(positions.length).toBe(1);
   const xyz = positions[0];
   const expectedPosition = [0.22548094716167097, 0.5, 0];
-  t.assert(
-    areEquals(xyz, expectedPosition),
-    'Float-compare picked position to expected.'
-  );
+  expect(areEquals(xyz, expectedPosition)).toBeTruthy();
 
   gc.releaseResources();
 });
 
-test('Test vtkCellPicker on quads', (t) => {
+it('Test vtkCellPicker on quads', () => {
   // Create some control UI
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   const container = document.querySelector('body');
   const renderWindowContainer = gc.registerDOMElement(
     document.createElement('div')
@@ -193,17 +186,14 @@ test('Test vtkCellPicker on quads', (t) => {
   picker.pick(p, renderer);
   const actors = picker.getActors();
 
-  t.equal(actors.length, 1);
-  t.equal(actors[0], actor);
+  expect(actors.length).toBe(1);
+  expect(actors[0]).toBe(actor);
 
   const positions = picker.getPickedPositions();
-  t.equal(positions.length, 1);
+  expect(positions.length).toBe(1);
   const xyz = positions[0];
   const expectedPosition = [0.22548094716167097, 0.5, 0];
-  t.assert(
-    areEquals(xyz, expectedPosition),
-    'Float-compare picked position to expected.'
-  );
+  expect(areEquals(xyz, expectedPosition)).toBeTruthy();
 
   gc.releaseResources();
 });

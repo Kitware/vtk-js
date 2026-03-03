@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -11,9 +11,9 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import basepoint from './testPointSource.png';
 
-test.onlyIfWebGL('Test vtkPointSource Rendering', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkPointSource Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkPointSource Rendering');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -55,7 +55,6 @@ test.onlyIfWebGL('Test vtkPointSource Rendering', (t) => {
         image,
         [basepoint],
         'Filters/Sources/PointSource/testPointSource',
-        t,
         1.0
       )
     )

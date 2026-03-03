@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -16,9 +16,9 @@ import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants
 
 import baseline from './testActor2D.png';
 
-test.onlyIfWebGL('Test Actor2D', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Actor2D', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkActor2D');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -114,7 +114,6 @@ test.onlyIfWebGL('Test Actor2D', (t) => {
         image,
         [baseline],
         'Rendering/Core/Actor2D/testActor2D.js',
-        t,
         1
       )
     )

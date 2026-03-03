@@ -1,8 +1,7 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import vtkMouseRangeManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseRangeManipulator';
 
-test('Test MouseRangeManipulator addition/removal', (t) => {
+it('Test MouseRangeManipulator addition/removal', () => {
   const manip = vtkMouseRangeManipulator.newInstance();
 
   manip.setHorizontalListener(
@@ -12,10 +11,7 @@ test('Test MouseRangeManipulator addition/removal', (t) => {
     () => 5,
     () => {}
   );
-  t.ok(
-    manip.get('horizontalListener').horizontalListener,
-    'Has horizontal listener after setting'
-  );
+  expect(manip.get('horizontalListener').horizontalListener).toBeTruthy();
 
   manip.setVerticalListener(
     0,
@@ -24,22 +20,13 @@ test('Test MouseRangeManipulator addition/removal', (t) => {
     () => 5,
     () => {}
   );
-  t.ok(
-    manip.get('verticalListener').verticalListener,
-    'Has vertical listener after setting'
-  );
+  expect(manip.get('verticalListener').verticalListener).toBeTruthy();
 
   manip.removeHorizontalListener();
-  t.notOk(
-    manip.get('horizontalListener').horizontalListener,
-    'Horizontal listener removed'
-  );
+  expect(manip.get('horizontalListener').horizontalListener).toBeFalsy();
 
   manip.removeVerticalListener();
-  t.notOk(
-    manip.get('verticalListener').verticalListener,
-    'Vertical listener removed'
-  );
+  expect(manip.get('verticalListener').verticalListener).toBeFalsy();
 
   let sliceValue = 5;
   manip.setScrollListener(
@@ -54,16 +41,16 @@ test('Test MouseRangeManipulator addition/removal', (t) => {
   );
 
   manip.onScroll(null, null, 1);
-  t.isEqual(sliceValue, 5, 'Scrolling to larger value, attempt-1.');
+  expect(sliceValue).toBe(5);
 
   manip.onScroll(null, null, 1);
-  t.isEqual(sliceValue, 6, 'Scrolling to larger value, attempt-2.');
+  expect(sliceValue).toBe(6);
 
   manip.onScroll(null, null, -1);
-  t.isEqual(sliceValue, 6, 'Scrolling to smaller value, attempt-1.');
+  expect(sliceValue).toBe(6);
 
   manip.onScroll(null, null, -1);
-  t.isEqual(sliceValue, 5, 'Scrolling to smaller value, attempt-2.');
+  expect(sliceValue).toBe(5);
 
   manip.removeScrollListener();
   sliceValue = 0;
@@ -79,21 +66,11 @@ test('Test MouseRangeManipulator addition/removal', (t) => {
   );
 
   manip.onScroll(null, null, 1);
-  t.isEqual(sliceValue, 2, 'Scrolling to larger value with step=2.');
+  expect(sliceValue).toBe(2);
 
   manip.onScroll(null, null, -1);
-  t.isEqual(
-    sliceValue,
-    0,
-    'Scrolling to smaller value with step=2, attempt-1.'
-  );
+  expect(sliceValue).toBe(0);
 
   manip.onScroll(null, null, -1);
-  t.isEqual(
-    sliceValue,
-    -2,
-    'Scrolling to smaller value with step=2, attempt-2.'
-  );
-
-  t.end();
+  expect(sliceValue).toBe(-2);
 });

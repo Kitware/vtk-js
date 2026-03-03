@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkFollower from 'vtk.js/Sources/Rendering/Core/Follower';
@@ -10,9 +10,9 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 
 import baseline from './testFollower.png';
 
-test.onlyIfWebGL('Test Follower class', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Follower class', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkFollower');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -65,7 +65,6 @@ test.onlyIfWebGL('Test Follower class', (t) => {
             image,
             [baseline],
             'Rendering/Core/Follower/testFollower',
-            t,
             1.5
           )
         )

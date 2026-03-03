@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -14,9 +14,9 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import baseline1 from './testComposite16Bit.png';
 import baseline2 from './testComposite16Bit_2.png';
 
-test('Test Composite Volume Rendering', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkVolumeMapper Composite16Bit');
+it('Test Composite Volume Rendering', async () => {
+  const gc = testUtils.createGarbageCollector();
+  expect('rendering').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI
@@ -81,7 +81,6 @@ test('Test Composite Volume Rendering', async (t) => {
         image,
         [baseline1, baseline2],
         'Rendering/Core/VolumeMapper/testComposite16Bit',
-        t,
         1.5,
         gc.releaseResources
       )

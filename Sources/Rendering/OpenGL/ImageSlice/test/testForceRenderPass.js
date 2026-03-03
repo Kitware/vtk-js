@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkImageGridSource from 'vtk.js/Sources/Filters/Sources/ImageGridSource';
@@ -13,9 +13,9 @@ import forceOpaqueBaseline from './testForceOpaque.png';
 import forceTranslucentBaseline from './testForceTranslucent.png';
 import { SlicingMode } from '../../../Core/ImageMapper/Constants';
 
-const setupSlices = (t) => {
+const setupSlices = () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkOpenGLImageMapper testImage');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -85,8 +85,8 @@ const setupSlices = (t) => {
   return { glWindow, renderWindow, actorAbove, actorBelow, gc };
 };
 
-test.onlyIfWebGL('Test ImageMapper forceOpaque', (t) => {
-  const { glWindow, renderWindow, actorBelow, gc } = setupSlices(t);
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ImageMapper forceOpaque', () => {
+  const { glWindow, renderWindow, actorBelow, gc } = setupSlices();
 
   // If this actor is simply just made transparent, then it will show above the actorAbove
   actorBelow.getProperty().setOpacity(0.5);
@@ -100,7 +100,6 @@ test.onlyIfWebGL('Test ImageMapper forceOpaque', (t) => {
         image,
         [forceOpaqueBaseline],
         'Rendering/OpenGL/ImageSlice',
-        t,
         0.5
       )
     )
@@ -109,8 +108,8 @@ test.onlyIfWebGL('Test ImageMapper forceOpaque', (t) => {
   return promise;
 });
 
-test.onlyIfWebGL('Test ImageMapper forceTranslucent', (t) => {
-  const { glWindow, renderWindow, actorAbove, actorBelow, gc } = setupSlices(t);
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ImageMapper forceTranslucent', () => {
+  const { glWindow, renderWindow, actorAbove, actorBelow, gc } = setupSlices();
 
   actorBelow.getProperty().setOpacity(0.9);
   actorAbove.getProperty().setOpacity(1);
@@ -124,7 +123,6 @@ test.onlyIfWebGL('Test ImageMapper forceTranslucent', (t) => {
         image,
         [forceTranslucentBaseline],
         'Rendering/OpenGL/ImageSlice',
-        t,
         0.5
       )
     )

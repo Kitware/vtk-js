@@ -1,13 +1,12 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
 import { getCellTriangles } from 'vtk.js/Sources/Filters/General/OBBTree/helper';
 
-test('Test getCellTriangles', (t) => {
+it('Test getCellTriangles', () => {
   function compareObjects(comparedObject, expectedObject) {
-    t.equal(comparedObject.ptId0, expectedObject.ptId0);
-    t.equal(comparedObject.ptId1, expectedObject.ptId1);
-    t.equal(comparedObject.ptId2, expectedObject.ptId2);
+    expect(comparedObject.ptId0).toBe(expectedObject.ptId0);
+    expect(comparedObject.ptId1).toBe(expectedObject.ptId1);
+    expect(comparedObject.ptId2).toBe(expectedObject.ptId2);
   }
 
   const array = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -35,6 +34,4 @@ test('Test getCellTriangles', (t) => {
     3
   );
   compareObjects(objTriangleStrip, { ptId0: 3, ptId1: 5, ptId2: 4 });
-
-  t.end();
 });

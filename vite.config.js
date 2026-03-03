@@ -2,6 +2,14 @@ import { defineConfig } from 'vite';
 import * as path from 'path';
 import * as fs from 'fs';
 import glob from 'glob';
+import {
+  glslPlugin,
+  svgRawPlugin,
+  workerInlinePlugin,
+  ignorePlugin,
+} from './Utilities/rollup/plugins.js';
+
+import rewriteImports from './Utilities/build/rewrite-imports.js';
 
 const pkgJSON = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
 
@@ -37,90 +45,9 @@ const dependencies = Object.keys(pkgJSON.dependencies || {});
 const peerDependencies = Object.keys(pkgJSON.peerDependencies || {});
 
 // ---------------------------------------------------------------------------
-// Plugin: load .glsl files as raw strings
-// ---------------------------------------------------------------------------
-function glslPlugin() {
-  return {
-    name: 'vtk-glsl',
-    load(id) {
-      if (id.endsWith('.glsl')) {
-        const content = fs.readFileSync(id, 'utf-8');
-        return {
-          code: `export default ${JSON.stringify(content)};`,
-          moduleType: 'js',
-        };
-      }
-    },
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Plugin: load .svg files as raw strings
-// ---------------------------------------------------------------------------
-function svgRawPlugin() {
-  return {
-    name: 'vtk-svg-raw',
-    load(id) {
-      if (id.endsWith('.svg')) {
-        const content = fs.readFileSync(id, 'utf-8');
-        return {
-          code: `export default ${JSON.stringify(content)};`,
-          moduleType: 'js',
-        };
-      }
-    },
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Plugin: resolve .worker imports using Vite native inline workers
-// ---------------------------------------------------------------------------
-function workerInlinePlugin() {
-  return {
-    name: 'vtk-worker-inline',
-    enforce: 'pre',
-    async resolveId(source, importer, options) {
-      if (/\.worker(?:\.js)?$/.test(source) && !source.includes('?')) {
-        const actualSource = source.endsWith('.js') ? source : `${source}.js`;
-        const resolved = await this.resolve(actualSource, importer, {
-          ...options,
-          skipSelf: true,
-        });
-        if (resolved) {
-          return `${resolved.id}?worker&inline`;
-        }
-      }
-    },
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Plugin: ignore specific modules (e.g. crypto)
-// ---------------------------------------------------------------------------
-function ignorePlugin(modules) {
-  return {
-    name: 'vtk-ignore',
-    resolveId(source) {
-      if (modules.includes(source)) {
-        return { id: `\0ignore:${source}`, moduleSideEffects: false };
-      }
-    },
-    load(id) {
-      if (id.startsWith('\0ignore:')) {
-        return { code: 'export default {};', moduleType: 'js' };
-      }
-    },
-  };
-}
-
-// ---------------------------------------------------------------------------
 // Plugin: copy assets (.d.ts, package.json, utilities) to dist/esm
 // ---------------------------------------------------------------------------
 function copyAssetsPlugin() {
-  const relatifyImports =
-    typeof require !== 'undefined'
-      ? require('./Utilities/build/rewrite-imports')
-      : null;
 
   function copyDir(src, dest) {
     fs.mkdirSync(dest, { recursive: true });
@@ -146,10 +73,7 @@ function copyAssetsPlugin() {
         const filename = path.basename(file);
         const dirname = path.dirname(file);
 
-        if (
-          filename === 'index.d.ts' &&
-          dirname !== 'Sources'
-        ) {
+        if (filename === 'index.d.ts' && dirname !== 'Sources') {
           const moduleName = path.basename(dirname);
           const destPath = path.join(
             outputDir,
@@ -158,34 +82,32 @@ function copyAssetsPlugin() {
           );
 
           let content = fs.readFileSync(file, 'utf-8');
-          if (relatifyImports) {
-            content = relatifyImports(content, (relImport) => {
-              let importPath = relImport;
-              const baseDir = dirname;
+          content = rewriteImports(content, (relImport) => {
+            const baseDir = dirname;
 
-              if (importPath === '..') {
-                return `../${path.basename(path.dirname(baseDir))}`;
-              }
+            if (relImport === '..') {
+              return `../${path.basename(path.dirname(baseDir))}`;
+            }
 
-              if (
-                importPath.startsWith('../') ||
-                importPath.startsWith('./')
-              ) {
-                const resolvedImportPath = path.resolve(
-                  `${baseDir}/${importPath}`
-                );
-                importPath = `./${path
-                  .relative(`${baseDir}/..`, resolvedImportPath)
-                  .replace(/\\/g, '/')}`;
-              }
+            if (
+              relImport.startsWith('../') ||
+              relImport.startsWith('./')
+            ) {
+              const resolvedImportPath = path.resolve(
+                `${baseDir}/${relImport}`
+              );
+              return `./${path
+                .relative(`${baseDir}/..`, resolvedImportPath)
+                .replace(/\\/g, '/')}`;
+            }
 
-              return importPath;
-            });
-          }
+            return relImport;
+          });
 
           fs.mkdirSync(path.dirname(destPath), { recursive: true });
           fs.writeFileSync(destPath, content);
         } else {
+          // Non-index d.ts files: copy preserving structure
           const destPath = path.join(
             outputDir,
             path.relative('Sources', file)
@@ -206,7 +128,6 @@ function copyAssetsPlugin() {
         'Utilities/prepare.js',
         `${outputDir}/Utilities/prepare.js`
       );
-      copyDir('Utilities/config', `${outputDir}/Utilities/config`);
 
       // --- Copy macro shims ---
       fs.copyFileSync(
@@ -262,10 +183,23 @@ function generateDtsReferencesPlugin() {
       for (const file of jsFiles) {
         const dtsFile = file.replace(/\.js$/, '.d.ts');
         const dtsPath = path.join(outputDir, dtsFile);
+
+        // Also check flattened path: Module/index.js → Module.d.ts
+        const flatMatch = /^(.*[/\\])([A-Z]\w+)[/\\]index\.js$/.exec(file);
+        const flatDtsFile = flatMatch
+          ? `${flatMatch[1]}${flatMatch[2]}.d.ts`
+          : null;
+        const flatDtsPath = flatDtsFile
+          ? path.join(outputDir, flatDtsFile)
+          : null;
+
         if (fs.existsSync(dtsPath) && dtsFile !== 'index.d.ts') {
           dtsReferences.push(
             `/// <reference path="./${dtsFile.replace(/\\/g, '/')}" />`
           );
+        } else if (flatDtsPath && fs.existsSync(flatDtsPath)) {
+          const ref = flatDtsFile.replace(/\\/g, '/');
+          dtsReferences.push(`/// <reference path="./${ref}" />`);
         }
       }
 
@@ -307,7 +241,7 @@ export default defineConfig({
     },
   },
   worker: {
-    rolldownOptions: {
+    rollupOptions: {
       output: {
         sourcemap: false,
       },
@@ -316,61 +250,31 @@ export default defineConfig({
   build: {
     outDir: outputDir,
     emptyOutDir: true,
-    sourcemap: true,
+    sourcemap: false,
     cssCodeSplit: true,
-    lib: {
-      entry: entries,
-      formats: ['es'],
-    },
-    rolldownOptions: {
+    rollupOptions: {
+      input: entries,
+      preserveEntrySignatures: 'strict',
       external: [
         ...dependencies.map((name) => new RegExp(`^${name}`)),
         ...peerDependencies.map((name) => new RegExp(`^${name}`)),
       ],
       output: {
+        format: 'es',
+        preserveModules: true,
+        preserveModulesRoot: 'Sources',
         entryFileNames(chunkInfo) {
-          const name = chunkInfo.name;
-          // rewrite Sources/.../<NAME>/index.js to .../<NAME>.js
-          const sourcesMatch = /^(.*?)[/\\]([A-Z]\w+)[/\\]index\.js$/.exec(
-            name
-          );
-          if (sourcesMatch) {
-            return path.join(sourcesMatch[1], `${sourcesMatch[2]}.js`);
-          }
-          return name;
-        },
-        // Force each module into its own chunk named after its file path,
-        // preserving the directory structure in the output (like preserveModules).
-        manualChunks(id) {
-          if (id.includes('\0')) return undefined;
-          const projectRoot =
-            path.resolve(import.meta.dirname).replace(/\\/g, '/') + '/';
-          const normalizedId = id.replace(/\\/g, '/');
-          if (normalizedId.startsWith(projectRoot)) {
-            return normalizedId.slice(projectRoot.length);
-          }
-          return undefined;
-        },
-        chunkFileNames(chunkInfo) {
           let name = chunkInfo.name;
-          // Rolldown runtime goes in _virtual/
-          if (name === 'rolldown-runtime') {
-            return '_virtual/rolldown-runtime.js';
+          if (name.endsWith('.js')) name = name.slice(0, -3);
+          // Flatten Module/index → Module.js to match old Rollup output
+          const match = /^((?:.*\/)?)([A-Z]\w+)\/index$/.exec(name);
+          if (match) {
+            return `${match[1]}${match[2]}.js`;
           }
-          if (!name.endsWith('.js')) {
-            name += '.js';
-          }
-          if (name.includes('node_modules')) {
-            return name.replace(/node_modules/g, 'vendor');
-          }
-          if (name.startsWith('_')) {
-            return name.replace(/^_/, '_virtual/');
-          }
-          return name.replace(/^Sources\//, '');
+          return `${name}.js`;
         },
         assetFileNames(assetInfo) {
           const name = assetInfo.names?.[0] || assetInfo.name || '';
-          // Strip Sources/ prefix from CSS and other assets
           return name.replace(/^Sources\//, '');
         },
       },

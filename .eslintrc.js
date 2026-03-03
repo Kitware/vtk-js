@@ -1,12 +1,9 @@
-const path = require('path');
 const prettierConf = require('./prettier.config.js');
 
 module.exports = {
-  parser: '@babel/eslint-parser',
   parserOptions: {
-    babelOptions: {
-      configFile: path.resolve(__dirname, '.babelrc.json'),
-    },
+    ecmaVersion: 2022,
+    sourceType: 'module',
   },
   extends: ['airbnb/base', 'prettier'],
   rules: {
@@ -36,27 +33,22 @@ module.exports = {
   plugins: ['prettier'],
   globals: {
     __BASE_PATH__: false,
+    __VTK_TEST_NO_WEBGL__: false,
+    __VTK_TEST_WEBGPU__: false,
     VRFrameData: true,
   },
   settings: {
     'import/resolver': {
-      webpack: {
-        config: {
-          resolve: {
-            alias: {
-              // Since vtk.js examples are written as if the vtk.js package is a dependency,
-              // we need to resolve example imports as if they were referencing vtk.js/Sources.
-              // the Examples/Utilities hack allows for imports from those folders, since our
-              // last alias overrides vtk.js/* paths to point to vtk.js/Sources/*.
-              'vtk.js/Data': path.resolve(__dirname, 'Data'),
-              'vtk.js/Examples': path.resolve(__dirname, 'Examples'),
-              'vtk.js/Utilities': path.resolve(__dirname, 'Utilities'),
-              'vtk.js/Sources': path.resolve(__dirname, 'Sources'),
-              'vtk.js': path.resolve(__dirname, 'Sources'),
-              '@kitware/vtk.js': path.resolve(__dirname, 'Sources'),
-            },
-          },
-        },
+      alias: {
+        map: [
+          ['vtk.js/Data', './Data'],
+          ['vtk.js/Examples', './Examples'],
+          ['vtk.js/Utilities', './Utilities'],
+          ['vtk.js/Sources', './Sources'],
+          ['vtk.js', './Sources'],
+          ['@kitware/vtk.js', './Sources'],
+        ],
+        extensions: ['.js', '.json'],
       },
     },
   },
@@ -71,8 +63,8 @@ module.exports = {
     // ignore js files in utilities
     'Utilities/**/*.js',
     // ignore configs
-    'karma.conf.js',
-    'webpack.*.js',
+    'vite.config.js',
+    'vitest.config.js',
     '.eslintrc.js',
   ],
 };

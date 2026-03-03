@@ -1,9 +1,8 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 import { boundPlane } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
-test('Test boundPlane natural basis simple', (t) => {
+it('Test boundPlane natural basis simple', () => {
   const origin = [-1, -1, 0];
   const point1 = [2, -1, 0];
   const point2 = [-1, 2, 0];
@@ -12,14 +11,12 @@ test('Test boundPlane natural basis simple', (t) => {
 
   boundPlane(bounds, origin, point1, point2);
 
-  t.ok(areEquals(origin, [0, 0, 0]));
-  t.ok(areEquals(point1, [1, 0, 0]));
-  t.ok(areEquals(point2, [0, 1, 0]));
-
-  t.end();
+  expect(areEquals(origin, [0, 0, 0])).toBeTruthy();
+  expect(areEquals(point1, [1, 0, 0])).toBeTruthy();
+  expect(areEquals(point2, [0, 1, 0])).toBeTruthy();
 });
 
-test('Test boundPlane natural basis with offset', (t) => {
+it('Test boundPlane natural basis with offset', () => {
   const origin = [-1, -1, -1.5];
   const point1 = [2, -1, -1.5];
   const point2 = [-1, 2, -1.5];
@@ -28,14 +25,12 @@ test('Test boundPlane natural basis with offset', (t) => {
 
   boundPlane(bounds, origin, point1, point2);
 
-  t.ok(areEquals(origin, [0, 1, -1.5]));
-  t.ok(areEquals(point1, [1, 1, -1.5]));
-  t.ok(areEquals(point2, [0, 2, -1.5]));
-
-  t.end();
+  expect(areEquals(origin, [0, 1, -1.5])).toBeTruthy();
+  expect(areEquals(point1, [1, 1, -1.5])).toBeTruthy();
+  expect(areEquals(point2, [0, 2, -1.5])).toBeTruthy();
 });
 
-test('Test boundPlane oriented', (t) => {
+it('Test boundPlane oriented', () => {
   const origin = [0, 0, 0];
   const point1 = [1, 1, 0];
   const point2 = [0, 0, 1];
@@ -44,30 +39,26 @@ test('Test boundPlane oriented', (t) => {
 
   boundPlane(bounds, origin, point1, point2);
 
-  t.ok(areEquals(origin, [0, 0, 0]));
-  t.ok(areEquals(point1, [1, 1, 0]));
-  t.ok(areEquals(point2, [0, 0, 1]));
-
-  t.end();
+  expect(areEquals(origin, [0, 0, 0])).toBeTruthy();
+  expect(areEquals(point1, [1, 1, 0])).toBeTruthy();
+  expect(areEquals(point2, [0, 0, 1])).toBeTruthy();
 });
 
-test('Test boundPlane no intersection', (t) => {
+it('Test boundPlane no intersection', () => {
   const origin = [0, 0, 0];
   const point1 = [2, 0, 0];
   const point2 = [0, 2, 0];
 
   const bounds = [0, 1, 0, 1, 1, 2];
 
-  t.notok(boundPlane(bounds, origin, point1, point2));
+  expect(boundPlane(bounds, origin, point1, point2)).toBeFalsy();
 
-  t.ok(areEquals(origin, [0, 0, 0]));
-  t.ok(areEquals(point1, [2, 0, 0]));
-  t.ok(areEquals(point2, [0, 2, 0]));
-
-  t.end();
+  expect(areEquals(origin, [0, 0, 0])).toBeTruthy();
+  expect(areEquals(point1, [2, 0, 0])).toBeTruthy();
+  expect(areEquals(point2, [0, 2, 0])).toBeTruthy();
 });
 
-test('Test boundPlane with point closed to bounds limits', (t) => {
+it('Test boundPlane with point closed to bounds limits', () => {
   const origin = [-146.45421827279782, -101.95882636683, -64.91712337082552];
   const p1 = [147.22047922902922, -101.95882636683, -64.91712337082552];
   const p2 = [-146.45421827279782, -101.95882636683, 194.58407789818668];
@@ -77,7 +68,5 @@ test('Test boundPlane with point closed to bounds limits', (t) => {
     -63.819600831429966, 191.29151028,
   ];
 
-  t.ok(boundPlane(bounds, origin, p1, p2));
-
-  t.end();
+  expect(boundPlane(bounds, origin, p1, p2)).toBeTruthy();
 });

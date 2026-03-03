@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
@@ -15,9 +15,9 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import { SlicingMode } from '../../../Core/ImageMapper/Constants';
 import baseline from './testImageWindowLevel.png';
 
-test('Test ImageMapper window level', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkOpenGLImageMapper testImage windowlevel');
+it('Test ImageMapper window level', async () => {
+  const gc = testUtils.createGarbageCollector();
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -94,12 +94,12 @@ test('Test ImageMapper window level', async (t) => {
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
-  t.ok('rendering', 'vtkOpenGLImageMapper mapper set up');
+  expect('rendering').toBeTruthy();
 
   await reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`);
   await reader.loadData();
 
-  t.ok('rendering', 'vtkOpenGLImageMapper data loaded');
+  expect('rendering').toBeTruthy();
   ren1.addActor(actor1);
   ren2.addActor(actor2);
   mapper2.setSlicingMode(SlicingMode.I);
@@ -116,7 +116,6 @@ test('Test ImageMapper window level', async (t) => {
         image,
         [baseline],
         'Rendering/OpenGL/ImageMapperWindowLevel',
-        t,
         0.05,
         gc.releaseResources
       )

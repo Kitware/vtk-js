@@ -1,5 +1,4 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import MockDataAccessHelper from 'vtk.js/Sources/IO/Core/HttpDataSetReader/test/MockDataAccessHelper';
 
@@ -14,16 +13,11 @@ function runTests(testCases) {
   return promise;
 }
 
-function equals(t, actual, expected, description) {
-  let testDescription = description;
-  if (actual !== expected) {
-    testDescription += ` (Expected "${expected}" but got "${actual}")`;
-  }
-  t.equals(actual, expected, testDescription);
+function equals(actual, expected, description) {
+  expect(actual).toBe(expected);
 }
 
 function fetchArrayTest(
-  t,
   reader,
   callTracker,
   url,
@@ -53,13 +47,11 @@ function fetchArrayTest(
           : 'not cached';
         const prefix = `[${url} (${cachedDescription})]`;
         equals(
-          t,
           callTracker.fetchJSON.length,
           expectedFetchJSONCallCount,
           `${prefix} Method "fetchJSON()" is called ${expectedFetchJSONCallCount} time(s).`
         );
         equals(
-          t,
           callTracker.fetchArray.length,
           expectedFetchArrayCallCount,
           `${prefix} Method "fetchArray()" is called ${expectedFetchArrayCallCount} time(s).`
@@ -69,12 +61,8 @@ function fetchArrayTest(
         if (finalExpectedCacheItems && Array.isArray(finalExpectedCacheItems)) {
           const cachedArrayIds = reader.getCachedArrayIds().sort().join(',');
           const expectedArrayIds = finalExpectedCacheItems.sort().join(',');
-          if (expectedArrayIds === cachedArrayIds) {
-            t.pass(
-              `${prefix} Cache contains expected elements: ${cachedArrayIds}`
-            );
-          } else {
-            t.fail(
+          if (expectedArrayIds !== cachedArrayIds) {
+            expect.fail(
               `${prefix} Cache does not contain expected elements: Expected "${expectedArrayIds}" but got "${cachedArrayIds}"`
             );
           }
@@ -88,7 +76,7 @@ function fetchArrayTest(
   };
 }
 
-test('Caching capabilities of vtkHttpDataSetReader with unlimited cache.', async (t) => {
+it('Caching capabilities of vtkHttpDataSetReader with unlimited cache.', async () => {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
   const originalAccessHelper = reader.getDataAccessHelper();
   reader.setDataAccessHelper(MockDataAccessHelper);
@@ -100,39 +88,34 @@ test('Caching capabilities of vtkHttpDataSetReader with unlimited cache.', async
     // set cache to unlimited size
     (resolve, _) => {
       reader.setMaxCacheSize(-1);
-      t.equals(
-        reader.getMaxCacheSize(),
-        -1,
-        'Cache was set to "-1" for unlimited caching'
-      );
+      expect(reader.getMaxCacheSize()).toBe(-1);
       resolve();
     },
 
     // load non-cached array 1
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test01', false),
+    fetchArrayTest(reader, callTracker, 'http://mockData/test01', false),
 
     // load non-cached array 2
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test02', false),
+    fetchArrayTest(reader, callTracker, 'http://mockData/test02', false),
 
     // load cached array
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test01', true),
+    fetchArrayTest(reader, callTracker, 'http://mockData/test01', true),
 
     // load non-cached array 3
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test03', false),
+    fetchArrayTest(reader, callTracker, 'http://mockData/test03', false),
 
     // load cached array
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test02', true),
+    fetchArrayTest(reader, callTracker, 'http://mockData/test02', true),
 
     // load cached array
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test03', true),
+    fetchArrayTest(reader, callTracker, 'http://mockData/test03', true),
   ]);
-  t.end();
 
   reader.setDataAccessHelper(originalAccessHelper);
   // clearTimeout(timeout);
 });
 
-test('Caching capabilities of vtkHttpDataSetReader with limited cache.', async (t) => {
+it('Caching capabilities of vtkHttpDataSetReader with limited cache.', async () => {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
   const originalAccessHelper = reader.getDataAccessHelper();
   reader.setDataAccessHelper(MockDataAccessHelper);
@@ -146,49 +129,48 @@ test('Caching capabilities of vtkHttpDataSetReader with limited cache.', async (
     // set cache to 30 MiB -> Forces to dispose items accessed furthest in the past
     (resolve, _) => {
       reader.setMaxCacheSize(30);
-      t.equals(reader.getMaxCacheSize(), 30, 'Cache was set to "300 MiB"');
+      expect(reader.getMaxCacheSize()).toBe(30);
       resolve();
     },
 
     // load non-cached array 1
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test01', false, [
+    fetchArrayTest(reader, callTracker, 'http://mockData/test01', false, [
       'test01|vtkDataArray',
     ]),
 
     // load non-cached array 2
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test02', false, [
+    fetchArrayTest(reader, callTracker, 'http://mockData/test02', false, [
       'test01|vtkDataArray',
       'test02|vtkDataArray',
     ]),
 
     // load cached array -> Prioritizes this array to be kept in cache over previous
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test01', true, [
+    fetchArrayTest(reader, callTracker, 'http://mockData/test01', true, [
       'test01|vtkDataArray',
       'test02|vtkDataArray',
     ]),
 
     // load non-cached array 3 -> Forces array 2 to be disposed
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test03', false, [
+    fetchArrayTest(reader, callTracker, 'http://mockData/test03', false, [
       'test01|vtkDataArray',
       'test03|vtkDataArray',
     ]),
 
     // load cached array
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test03', true, [
+    fetchArrayTest(reader, callTracker, 'http://mockData/test03', true, [
       'test01|vtkDataArray',
       'test03|vtkDataArray',
     ]),
 
     // load array that is too big for cache -> Cache will become empty
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test04', false, []),
+    fetchArrayTest(reader, callTracker, 'http://mockData/test04', false, []),
   ]);
-  t.end();
 
   reader.setDataAccessHelper(originalAccessHelper);
   // clearTimeout(timeout);
 });
 
-test('Disabled cache on vtkHttpDataSetReader.', async (t) => {
+it('Disabled cache on vtkHttpDataSetReader.', async () => {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
   const originalAccessHelper = reader.getDataAccessHelper();
   reader.setDataAccessHelper(MockDataAccessHelper);
@@ -200,31 +182,27 @@ test('Disabled cache on vtkHttpDataSetReader.', async (t) => {
     // disable caching
     (resolve, _) => {
       reader.setMaxCacheSize(disable);
-      t.equals(
-        reader.getMaxCacheSize(),
-        disable,
-        `Cache was disabled through setting maxCacheSize to "${disable}"`
-      );
+      expect(reader.getMaxCacheSize()).toBe(disable);
       resolve();
     },
 
     // load non-cached array 1
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test01', false, []),
+    fetchArrayTest(reader, callTracker, 'http://mockData/test01', false, []),
 
     // load non-cached array 2
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test02', false, []),
+    fetchArrayTest(reader, callTracker, 'http://mockData/test02', false, []),
 
     // load array for the second time and it is still not cached
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test01', false, []),
+    fetchArrayTest(reader, callTracker, 'http://mockData/test01', false, []),
 
     // load non-cached array 3
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test03', false, []),
+    fetchArrayTest(reader, callTracker, 'http://mockData/test03', false, []),
 
     // load array for the second time and it is still not cached
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test02', false, []),
+    fetchArrayTest(reader, callTracker, 'http://mockData/test02', false, []),
 
     // load array for the second time and it is still not cached
-    fetchArrayTest(t, reader, callTracker, 'http://mockData/test03', false, []),
+    fetchArrayTest(reader, callTracker, 'http://mockData/test03', false, []),
   ];
 
   // verify that cache can be disable by setting maxCacheSize to "0", "null" and "undefined"
@@ -233,12 +211,11 @@ test('Disabled cache on vtkHttpDataSetReader.', async (t) => {
     ...createDisabledCacheTests(null),
     ...createDisabledCacheTests(undefined),
   ]);
-  t.end();
 
   reader.setDataAccessHelper(originalAccessHelper);
 });
 
-test('Disabled cache does not raise error on concurrent access.', async (t) => {
+it('Disabled cache does not raise error on concurrent access.', async () => {
   const readers = [
     vtkHttpDataSetReader.newInstance({ fetchGzip: true }),
     vtkHttpDataSetReader.newInstance({ fetchGzip: true }),
@@ -257,11 +234,7 @@ test('Disabled cache does not raise error on concurrent access.', async (t) => {
     (resolve, _) => {
       readers.forEach((reader) => {
         reader.setMaxCacheSize(disableOption);
-        t.equals(
-          reader.getMaxCacheSize(),
-          disableOption,
-          `Cache was disabled through setting maxCacheSize to "${disableOption}"`
-        );
+        expect(reader.getMaxCacheSize()).toBe(disableOption);
         resolve();
       });
     },

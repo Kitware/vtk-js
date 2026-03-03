@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
@@ -7,8 +7,8 @@ import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
-test('Test vtkCoordinate publicAPI', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+it('Test vtkCoordinate publicAPI', () => {
+  const gc = testUtils.createGarbageCollector();
 
   const testGetters = (
     coords,
@@ -30,16 +30,16 @@ test('Test vtkCoordinate publicAPI', (t) => {
     const v2 = Number(
       parseFloat(Math.round(currWorld[2] * 100) / 100).toFixed(2)
     );
-    t.deepEqual([v0, v1, v2], world);
+    expect([v0, v1, v2]).toEqual(world);
 
     const currDisplay = coords.getComputedDisplayValue(ren);
-    t.deepEqual(currDisplay, display);
+    expect(currDisplay).toEqual(display);
 
     const currLocalDisplay = coords.getComputedLocalDisplayValue(ren);
-    t.deepEqual(currLocalDisplay, localDisplay);
+    expect(currLocalDisplay).toEqual(localDisplay);
 
     const currViewPort = coords.getComputedViewportValue(ren);
-    t.deepEqual(currViewPort, viewPort);
+    expect(currViewPort).toEqual(viewPort);
   };
 
   // Create some control UI

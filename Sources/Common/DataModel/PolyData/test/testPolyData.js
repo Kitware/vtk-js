@@ -1,16 +1,15 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
-test('Test vtkPolyData instance', (t) => {
-  t.ok(vtkPolyData, 'Make sure the class definition exists');
+it('Test vtkPolyData instance', () => {
+  expect(vtkPolyData).toBeTruthy();
   const instance = vtkPolyData.newInstance();
-  t.ok(instance);
-  t.end();
+  expect(instance).toBeTruthy();
 });
 
-test('Test vtkPolyData cells', (t) => {
+it('Test vtkPolyData cells', () => {
   const polyData = vtkPolyData.newInstance();
 
   const pointCount = 3 * 200; // Must be a multiple of 3
@@ -50,14 +49,12 @@ test('Test vtkPolyData cells', (t) => {
   const firstLineCell = 0;
   const firstPolyCell = firstLineCell + polyData.getNumberOfLines();
 
-  t.ok(
-    polyData.getCell(firstLineCell).getNumberOfPoints() === pointCount + 1,
-    'Line cell should be made of the number of points plus 1'
-  );
-  t.ok(
-    polyData.getCell(firstPolyCell).getNumberOfPoints() === 3,
-    'Triangle cells should be made of 3 points'
-  );
+  expect(
+    polyData.getCell(firstLineCell).getNumberOfPoints() === pointCount + 1
+  ).toBeTruthy();
+  expect(
+    polyData.getCell(firstPolyCell).getNumberOfPoints() === 3
+  ).toBeTruthy();
 
   // Test performance on getCells with or without hint:
 
@@ -90,7 +87,5 @@ test('Test vtkPolyData cells', (t) => {
   console.timeEnd('getCells without Hint');
 
   // Test consistent results
-  t.deepEqual(polyData.getCell(firstPolyCell, triangle), triangle);
-
-  t.end();
+  expect(polyData.getCell(firstPolyCell, triangle)).toEqual(triangle);
 });

@@ -1,20 +1,17 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
 import vtkImageGridSource from 'vtk.js/Sources/Filters/Sources/ImageGridSource';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
-test('Test vtkCalculator instance', (t) => {
-  t.ok(vtkCalculator, 'Make sure the class definition exists.');
+it('Test vtkCalculator instance', () => {
+  expect(vtkCalculator).toBeTruthy();
   const instance = vtkCalculator.newInstance();
-  t.ok(instance, 'Make sure an instance can be created.');
-
-  t.end();
+  expect(instance).toBeTruthy();
 });
 
-test('Test vtkCalculator execution', (t) => {
+it('Test vtkCalculator execution', () => {
   const source = vtkPlaneSource.newInstance({
     xResolution: 5,
     yResolution: 10,
@@ -58,44 +55,19 @@ test('Test vtkCalculator execution', (t) => {
   const input = source.getOutputData();
   const output = filter.getOutputData();
 
-  t.ok(output, 'Output dataset exists');
-  t.equal(
-    output.isA('vtkPolyData'),
-    true,
-    'The output dataset should be a vtkPolydata'
+  expect(output).toBeTruthy();
+  expect(output.isA('vtkPolyData')).toBe(true);
+  expect(input.getPoints().getNumberOfPoints()).toBe(
+    output.getPoints().getNumberOfPoints()
   );
-  t.equal(
-    input.getPoints().getNumberOfPoints(),
-    output.getPoints().getNumberOfPoints(),
-    `The number of points did not change between input ${input
-      .getPoints()
-      .getNumberOfPoints()} and output ${output
-      .getPoints()
-      .getNumberOfPoints()}`
-  );
-  t.ok(
-    output.getPointData().getScalars(),
-    'Output point-scalars array exists.'
-  );
-  t.equal(
-    output.getPointData().getScalars().getName(),
-    'sine wave',
-    'Output point-scalars is "sine wave".'
-  );
-  t.ok(
-    output.getFieldData().getArray('global'),
-    'Output field-data array exists.'
-  );
+  expect(output.getPointData().getScalars()).toBeTruthy();
+  expect(output.getPointData().getScalars().getName()).toBe('sine wave');
+  expect(output.getFieldData().getArray('global')).toBeTruthy();
   const uniform = output.getFieldData().getArray('global').getData();
-  t.ok(
-    Math.abs(uniform[0] - 22.55) < 1e-6,
-    `The uniform result variable should be 22.55; got ${uniform[0]}.`
-  );
-
-  t.end();
+  expect(Math.abs(uniform[0] - 22.55) < 1e-6).toBeTruthy();
 });
 
-test('make sure vtkCalculator does not crash with a vtkImageData input', (t) => {
+it('make sure vtkCalculator does not crash with a vtkImageData input', () => {
   const source = vtkImageGridSource.newInstance();
   const filter = vtkCalculator.newInstance();
 
@@ -110,26 +82,9 @@ test('make sure vtkCalculator does not crash with a vtkImageData input', (t) => 
   const input = source.getOutputData();
   const output = filter.getOutputData();
 
-  t.ok(output, 'Output dataset exists');
-  t.equal(
-    output.isA('vtkImageData'),
-    true,
-    'The output dataset should be a vtkImagedata'
-  );
-  t.equal(
-    input.getNumberOfPoints(),
-    output.getNumberOfPoints(),
-    `The number of points did not change between input ${input.getNumberOfPoints()} and output ${output.getNumberOfPoints()}`
-  );
-  t.ok(
-    output.getPointData().getScalars(),
-    'Output point-scalars array exists.'
-  );
-  t.equal(
-    output.getPointData().getScalars().getName(),
-    'mask',
-    'Output point-scalars is "mask".'
-  );
-
-  t.end();
+  expect(output).toBeTruthy();
+  expect(output.isA('vtkImageData')).toBe(true);
+  expect(input.getNumberOfPoints()).toBe(output.getNumberOfPoints());
+  expect(output.getPointData().getScalars()).toBeTruthy();
+  expect(output.getPointData().getScalars().getName()).toBe('mask');
 });

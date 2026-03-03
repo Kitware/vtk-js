@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
@@ -16,9 +16,9 @@ import {
   FieldDataTypes,
 } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
-test('Test HardwareSelectorGlyph', (tapeContext) => {
-  const gc = testUtils.createGarbageCollector(tapeContext);
-  tapeContext.ok('rendering', 'TestHardwareSelectorGlyph');
+it('Test HardwareSelectorGlyph', () => {
+  const gc = testUtils.createGarbageCollector();
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -108,16 +108,9 @@ test('Test HardwareSelectorGlyph', (tapeContext) => {
   sel.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_POINTS);
 
   return sel.selectAsync(renderer, 200, 200, 250, 300).then((res) => {
-    tapeContext.equal(res.length, 7, 'Seven glyphs selected');
-    tapeContext.ok(
-      res[0].getProperties().compositeID === 71,
-      'glyph 71 was the first selected'
-    );
-    tapeContext.equal(
-      res[0].getProperties().prop,
-      actor,
-      'Correct prop was selected'
-    );
+    expect(res.length).toBe(7);
+    expect(res[0].getProperties().compositeID === 71).toBeTruthy();
+    expect(res[0].getProperties().prop).toBe(actor);
 
     gc.releaseResources();
   });

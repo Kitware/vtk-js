@@ -1,15 +1,14 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkTextureMapToPlane from 'vtk.js/Sources/Filters/Texture/TextureMapToPlane';
 
-test('Test vtkTextureMapToPlane instance', (t) => {
-  t.ok(vtkTextureMapToPlane, 'Make sure the class definition exists');
+it('Test vtkTextureMapToPlane instance', () => {
+  expect(vtkTextureMapToPlane).toBeTruthy();
   const instance = vtkTextureMapToPlane.newInstance();
-  t.ok(instance);
-  t.end();
+  expect(instance).toBeTruthy();
 });
 
-test('Test vtkTextureMapToPlane TCoords generation', (t) => {
+it('Test vtkTextureMapToPlane TCoords generation', () => {
   const cubeSource = vtkCubeSource.newInstance();
   const cube = cubeSource.getOutputData();
   cube.getPointData().setTCoords(null);
@@ -33,13 +32,11 @@ test('Test vtkTextureMapToPlane TCoords generation', (t) => {
   ];
 
   for (let i = 0; i < generatedTCoords.length; i++) {
-    t.equal(generatedTCoords[i], expectedData[i]);
+    expect(generatedTCoords[i]).toBe(expectedData[i]);
   }
-
-  t.end();
 });
 
-test('Test vtkTextureMapToPlane TCoords generation automatic', (t) => {
+it('Test vtkTextureMapToPlane TCoords generation automatic', () => {
   const cubeSource = vtkCubeSource.newInstance();
   const cube = cubeSource.getOutputData();
   cube.getPointData().setTCoords(null);
@@ -60,8 +57,6 @@ test('Test vtkTextureMapToPlane TCoords generation automatic', (t) => {
   ];
 
   for (let i = 0; i < generatedTCoords.length; i++) {
-    t.equal(generatedTCoords[i], expectedData[i]);
+    expect(generatedTCoords[i]).toBe(expectedData[i]);
   }
-
-  t.end();
 });

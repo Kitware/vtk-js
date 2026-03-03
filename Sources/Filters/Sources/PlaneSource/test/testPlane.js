@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -11,9 +11,9 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import baseline from './testPlane.png';
 
-test.onlyIfWebGL('Test vtkPlaneSource Rendering', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkPlaneSource Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkPlaneSource Rendering');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -66,7 +66,6 @@ test.onlyIfWebGL('Test vtkPlaneSource Rendering', (t) => {
         image,
         [baseline],
         'Filters/Sources/PlaneSource/testPlane',
-        t,
         1
       )
     )

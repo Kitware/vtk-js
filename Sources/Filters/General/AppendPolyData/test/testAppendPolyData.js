@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkAppendPolyData from 'vtk.js/Sources/Filters/General/AppendPolyData';
@@ -23,15 +23,13 @@ import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 import baseline from './testAppendPolyData.png';
 
-test('Test vtkAppendPolyData instance', (t) => {
-  t.ok(vtkAppendPolyData, 'Make sure the class definition exists.');
+it('Test vtkAppendPolyData instance', () => {
+  expect(vtkAppendPolyData).toBeTruthy();
   const instance = vtkAppendPolyData.newInstance();
-  t.ok(instance, 'Make sure an instance can be created.');
-
-  t.end();
+  expect(instance).toBeTruthy();
 });
 
-test('Test vtkAppendPolyData execution', (t) => {
+it('Test vtkAppendPolyData execution', () => {
   const cone = vtkConeSource.newInstance({ resolution: 6, capping: true });
   const cylinder = vtkCylinderSource.newInstance({
     resolution: 6,
@@ -44,54 +42,38 @@ test('Test vtkAppendPolyData execution', (t) => {
 
   const outPD = filter.getOutputData();
 
-  t.ok(
-    outPD.getPoints().getNumberOfPoints() === 31,
-    'Make sure the number of points is correct.'
-  );
-  t.ok(
-    outPD.getPoints().getDataType() === VtkDataTypes.DOUBLE,
-    'Make sure the output data type is correct.'
-  );
+  expect(outPD.getPoints().getNumberOfPoints() === 31).toBeTruthy();
+  expect(outPD.getPoints().getDataType() === VtkDataTypes.DOUBLE).toBeTruthy();
   const expNumPolys = [cone, cylinder].reduce(
     (count, c) => count + c.getOutputData().getPolys().getNumberOfCells(),
     0
   );
   const outNumPolys = outPD.getPolys().getNumberOfCells();
-  t.ok(
-    outNumPolys === expNumPolys,
-    'Make sure the number of polys is correct.'
-  );
-
-  t.end();
+  expect(outNumPolys === expNumPolys).toBeTruthy();
 });
 
-test('Test addInputData edge case', (t) => {
+it('Test addInputData edge case', () => {
   const appender = vtkAppendPolyData.newInstance();
   const input = vtkPolyData.newInstance();
 
   appender.addInputData(input);
   const output = appender.getOutputData();
 
-  t.ok(input === output, 'Single add input matches output');
-  t.ok(appender.getNumberOfInputPorts() === 1, 'Expect 1 port after 1 add');
+  expect(input === output).toBeTruthy();
+  expect(appender.getNumberOfInputPorts() === 1).toBeTruthy();
 
   const input2 = vtkPolyData.newInstance();
   appender.addInputData(input2);
   const output2 = appender.getOutputData();
 
-  t.ok(
-    output2 !== input && output2 !== input2,
-    'Multiple input distinct from output'
-  );
+  expect(output2 !== input && output2 !== input2).toBeTruthy();
 
-  t.ok(appender.getNumberOfInputPorts() === 2, 'Expect 2 ports after 2 adds');
-
-  t.end();
+  expect(appender.getNumberOfInputPorts() === 2).toBeTruthy();
 });
 
-test.onlyIfWebGL('Test vtkAppendPolyData rendering', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkAppendPolyData rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkAppendPolyData Rendering');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -170,7 +152,6 @@ test.onlyIfWebGL('Test vtkAppendPolyData rendering', (t) => {
         image,
         [baseline],
         'Filters/General/AppendPolyData/testAppendPolyData',
-        t,
         2.5
       )
     )

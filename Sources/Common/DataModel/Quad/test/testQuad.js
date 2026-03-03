@@ -1,16 +1,15 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkQuad from 'vtk.js/Sources/Common/DataModel/Quad';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import { QuadWithLineIntersectionState } from 'vtk.js/Sources/Common/DataModel/Quad/Constants';
 
-test('Test vtkQuad instance', (t) => {
-  t.ok(vtkQuad, 'Make sure the class definition exists');
+it('Test vtkQuad instance', () => {
+  expect(vtkQuad).toBeTruthy();
   const instance = vtkQuad.newInstance();
-  t.ok(instance);
-  t.end();
+  expect(instance).toBeTruthy();
 });
 
-test('Test vtkQuad intersectWithLine flat', (t) => {
+it('Test vtkQuad intersectWithLine flat', () => {
   const points = vtkPoints.newInstance();
   points.setNumberOfPoints(4);
   points.setData(Float32Array.from([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0]));
@@ -26,8 +25,7 @@ test('Test vtkQuad intersectWithLine flat', (t) => {
   const pcoords = [];
   let intersection;
   intersection = quad.intersectWithLine(p1, p2, tol, x, pcoords);
-  t.equal(
-    intersection.intersect,
+  expect(intersection.intersect).toBe(
     QuadWithLineIntersectionState.NO_INTERSECTION
   );
 
@@ -35,32 +33,29 @@ test('Test vtkQuad intersectWithLine flat', (t) => {
   p1 = [0, 0, 0];
   p2 = [0, 0, 1];
   intersection = quad.intersectWithLine(p1, p2, tol, x, pcoords);
-  t.equal(
-    intersection.intersect,
+  expect(intersection.intersect).toBe(
     QuadWithLineIntersectionState.YES_INTERSECTION
   );
-  t.equal(intersection.t, 0);
-  t.deepEqual(x, p1);
-  t.deepEqual(pcoords, [0, 0, 0]);
+  expect(intersection.t).toBe(0);
+  expect(x).toEqual(p1);
+  expect(pcoords).toEqual([0, 0, 0]);
 
   // Intersect on v3
   p1 = [1, 1, 1];
   p2 = [1, 1, 0];
   intersection = quad.intersectWithLine(p1, p2, tol, x, pcoords);
-  t.equal(
-    intersection.intersect,
+  expect(intersection.intersect).toBe(
     QuadWithLineIntersectionState.YES_INTERSECTION
   );
-  t.equal(intersection.t, 1);
-  t.deepEqual(x, p2);
-  t.deepEqual(pcoords, [1, 1, 0]);
+  expect(intersection.t).toBe(1);
+  expect(x).toEqual(p2);
+  expect(pcoords).toEqual([1, 1, 0]);
 
   // No intersection if finite line
   p1 = [-2, 0, 0];
   p2 = [-1, 0, 0];
   intersection = quad.intersectWithLine(p1, p2, tol, x, pcoords);
-  t.equal(
-    intersection.intersect,
+  expect(intersection.intersect).toBe(
     QuadWithLineIntersectionState.NO_INTERSECTION
   );
 
@@ -68,8 +63,7 @@ test('Test vtkQuad intersectWithLine flat', (t) => {
   p1 = [2, 0, 0];
   p2 = [2, 1, 0];
   intersection = quad.intersectWithLine(p1, p2, tol, x, pcoords);
-  t.equal(
-    intersection.intersect,
+  expect(intersection.intersect).toBe(
     QuadWithLineIntersectionState.NO_INTERSECTION
   );
 
@@ -77,9 +71,7 @@ test('Test vtkQuad intersectWithLine flat', (t) => {
   p1 = [0.5, -1, 0];
   p2 = [0.5, 1, 0];
   intersection = quad.intersectWithLine(p1, p2, tol, x, pcoords);
-  t.equal(
-    intersection.intersect,
+  expect(intersection.intersect).toBe(
     QuadWithLineIntersectionState.NO_INTERSECTION
   );
-  t.end();
 });

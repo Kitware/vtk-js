@@ -22,7 +22,7 @@ jobs:
       name: npm
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Setup node
@@ -30,9 +30,9 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: |
-          npm ci
-          sudo apt-get install xvfb
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox
       - name: Build
         run: npm run build:release
       - name: Validate code style
@@ -40,15 +40,14 @@ jobs:
       - name: Validate generated typescript definitions
         run: |
           npx tsc -p tsconfig.esm-check.json
-          npx tsc -p tsconfig.umd-check.json
       - name: Chrome and Firefox tests
-        run: xvfb-run --auto-servernum npm run test -- --browsers ChromeSwiftShader,Firefox
+        run: xvfb-run --auto-servernum npm run test:reporter
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: Utilities/TestResults/Test-Report.html
+          path: Utilities/TestResults/
           retention-days: 15
       - name: Release
         env:
@@ -70,11 +69,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
       - name: Setup node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Install dependencies

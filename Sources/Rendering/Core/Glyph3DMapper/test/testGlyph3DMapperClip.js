@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -15,9 +15,9 @@ import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 
 import baseline from './testGlyph3DMapperClip.png';
 
-test.onlyIfWebGL('Test vtkGlyph3DMapper Clipping', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkGlyph3DMapper Clipping', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkGlyph3DMapper Clipping');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -105,7 +105,6 @@ test.onlyIfWebGL('Test vtkGlyph3DMapper Clipping', (t) => {
         image,
         [baseline],
         'Rendering/Core/Glyph3DMapper/testGlyph3DMapperClip',
-        t,
         1.0
       )
     )

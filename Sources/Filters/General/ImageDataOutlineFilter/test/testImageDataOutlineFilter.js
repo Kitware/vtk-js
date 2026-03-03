@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -21,7 +21,7 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import baselineFaces from './testImageDataOutlineFilter_Faces.png';
 import baselineLines from './testImageDataOutlineFilter_Lines.png';
 
-test.onlyIfWebGL('Test ImageDataOutlineFilter', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ImageDataOutlineFilter', () => {
   const gc = testUtils.createGarbageCollector();
 
   // Create some control UI
@@ -133,10 +133,6 @@ test.onlyIfWebGL('Test ImageDataOutlineFilter', (t) => {
   glwindow.setSize(400, 400);
 
   function testImageDataOutlineAsLines() {
-    t.comment(
-      'testImageDataOutlineAsLines(): generateLines=true, generateFaces=false'
-    );
-
     idoline.setGenerateLines(true);
     idoline.setGenerateFaces(false);
 
@@ -147,7 +143,6 @@ test.onlyIfWebGL('Test ImageDataOutlineFilter', (t) => {
           image,
           [baselineLines],
           'Filters/General/ImageDataOutlineFilter_Lines',
-          t,
           1
         )
       );
@@ -157,10 +152,6 @@ test.onlyIfWebGL('Test ImageDataOutlineFilter', (t) => {
   }
 
   function testImageDataOutlineAsFaces() {
-    t.comment(
-      'testImageDataOutlineAsFaces(): generateLines=false, generateFaces=true'
-    );
-
     // now test face generation
     idoline.setGenerateLines(false);
     idoline.setGenerateFaces(true);
@@ -172,7 +163,6 @@ test.onlyIfWebGL('Test ImageDataOutlineFilter', (t) => {
           image,
           [baselineFaces],
           'Filters/General/ImageDataOutlineFilter_Faces',
-          t,
           1
         )
       );

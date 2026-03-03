@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -20,155 +20,154 @@ import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
 import baseline from './testImageResliceMapperShareOpenGLTexture.png';
 
-test.onlyIfWebGL('Test ImageResliceMapperShareOpenGLTexture', async (t) => {
-  const gc = testUtils.createGarbageCollector();
-  t.ok(
-    'rendering',
-    'vtkImageResliceMapper testImageResliceMapperShareOpenGLTexture'
-  );
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'Test ImageResliceMapperShareOpenGLTexture',
+  async () => {
+    const gc = testUtils.createGarbageCollector();
+    expect('rendering').toBeTruthy();
 
-  // Create some control UI
-  const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(
-    document.createElement('div')
-  );
-  container.appendChild(renderWindowContainer);
+    // Create some control UI
+    const container = document.querySelector('body');
+    const renderWindowContainer = gc.registerDOMElement(
+      document.createElement('div')
+    );
+    container.appendChild(renderWindowContainer);
 
-  // create what we will view
-  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
-  const renderer = gc.registerResource(vtkRenderer.newInstance());
-  renderWindow.addRenderer(renderer);
-  renderer.setBackground(0.32, 0.34, 0.43);
+    // create what we will view
+    const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+    const renderer = gc.registerResource(vtkRenderer.newInstance());
+    renderWindow.addRenderer(renderer);
+    renderer.setBackground(0.32, 0.34, 0.43);
 
-  // ----------------------------------------------------------------------------
-  // Test code
-  // ----------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------
+    // Test code
+    // ----------------------------------------------------------------------------
 
-  const reader = gc.registerResource(
-    vtkHttpDataSetReader.newInstance({ fetchGzip: true })
-  );
+    const reader = gc.registerResource(
+      vtkHttpDataSetReader.newInstance({ fetchGzip: true })
+    );
 
-  const amapper = gc.registerResource(vtkImageResliceMapper.newInstance());
-  const cmapper = gc.registerResource(vtkImageResliceMapper.newInstance());
-  const smapper = gc.registerResource(vtkImageResliceMapper.newInstance());
-  const aslicePlane = gc.registerResource(vtkPlane.newInstance());
-  aslicePlane.setNormal(0, 0, 1);
-  amapper.setSlicePlane(aslicePlane);
-  const cslicePlane = gc.registerResource(vtkPlane.newInstance());
-  cslicePlane.setNormal(0, 1, 0);
-  cmapper.setSlicePlane(cslicePlane);
-  const sslicePlane = gc.registerResource(vtkPlane.newInstance());
-  sslicePlane.setNormal(1, 0, 0);
-  smapper.setSlicePlane(sslicePlane);
+    const amapper = gc.registerResource(vtkImageResliceMapper.newInstance());
+    const cmapper = gc.registerResource(vtkImageResliceMapper.newInstance());
+    const smapper = gc.registerResource(vtkImageResliceMapper.newInstance());
+    const aslicePlane = gc.registerResource(vtkPlane.newInstance());
+    aslicePlane.setNormal(0, 0, 1);
+    amapper.setSlicePlane(aslicePlane);
+    const cslicePlane = gc.registerResource(vtkPlane.newInstance());
+    cslicePlane.setNormal(0, 1, 0);
+    cmapper.setSlicePlane(cslicePlane);
+    const sslicePlane = gc.registerResource(vtkPlane.newInstance());
+    sslicePlane.setNormal(1, 0, 0);
+    smapper.setSlicePlane(sslicePlane);
 
-  const aactor = gc.registerResource(vtkImageSlice.newInstance());
-  aactor.setMapper(amapper);
-  renderer.addActor(aactor);
-  const cactor = gc.registerResource(vtkImageSlice.newInstance());
-  cactor.setMapper(cmapper);
-  renderer.addActor(cactor);
-  const sactor = gc.registerResource(vtkImageSlice.newInstance());
-  sactor.setMapper(smapper);
-  renderer.addActor(sactor);
+    const aactor = gc.registerResource(vtkImageSlice.newInstance());
+    aactor.setMapper(amapper);
+    renderer.addActor(aactor);
+    const cactor = gc.registerResource(vtkImageSlice.newInstance());
+    cactor.setMapper(cmapper);
+    renderer.addActor(cactor);
+    const sactor = gc.registerResource(vtkImageSlice.newInstance());
+    sactor.setMapper(smapper);
+    renderer.addActor(sactor);
 
-  // Do a first pass render to create the API specific view nodes
-  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
-  renderWindow.addView(glwindow);
-  glwindow.setContainer(renderWindowContainer);
-  glwindow.setSize(400, 400);
-  renderWindow.render();
+    // Do a first pass render to create the API specific view nodes
+    const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
+    renderWindow.addView(glwindow);
+    glwindow.setContainer(renderWindowContainer);
+    glwindow.setSize(400, 400);
+    renderWindow.render();
 
-  const oglrenderer = glwindow.getViewNodeFor(renderer);
-  const oglamapper = oglrenderer.getViewNodeFor(amapper);
-  const oglcmapper = oglrenderer.getViewNodeFor(cmapper);
-  oglcmapper.setScalarTextures(oglamapper.getScalarTextures());
-  const oglsmapper = oglrenderer.getViewNodeFor(smapper);
-  oglsmapper.setScalarTextures(oglamapper.getScalarTextures());
+    const oglrenderer = glwindow.getViewNodeFor(renderer);
+    const oglamapper = oglrenderer.getViewNodeFor(amapper);
+    const oglcmapper = oglrenderer.getViewNodeFor(cmapper);
+    oglcmapper.setScalarTextures(oglamapper.getScalarTextures());
+    const oglsmapper = oglrenderer.getViewNodeFor(smapper);
+    oglsmapper.setScalarTextures(oglamapper.getScalarTextures());
 
-  const promise = reader
-    .setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`)
-    .then(() =>
-      reader.loadData().then(() => {
-        reader.update();
-        const im = reader.getOutputData();
-        amapper.setInputData(im);
-        cmapper.setInputData(im);
-        const center = im.getCenter();
-        aslicePlane.setOrigin(center);
-        cslicePlane.setOrigin(center);
-        sslicePlane.setOrigin(center);
-        const mat = mat3.identity(new Float64Array(9));
-        mat3.copy(mat, im.getDirection());
+    const promise = reader
+      .setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`)
+      .then(() =>
+        reader.loadData().then(() => {
+          reader.update();
+          const im = reader.getOutputData();
+          amapper.setInputData(im);
+          cmapper.setInputData(im);
+          const center = im.getCenter();
+          aslicePlane.setOrigin(center);
+          cslicePlane.setOrigin(center);
+          sslicePlane.setOrigin(center);
+          const mat = mat3.identity(new Float64Array(9));
+          mat3.copy(mat, im.getDirection());
 
-        const an = aslicePlane.getNormal();
-        vec3.transformMat3(an, an, mat);
-        aslicePlane.setNormal(an);
+          const an = aslicePlane.getNormal();
+          vec3.transformMat3(an, an, mat);
+          aslicePlane.setNormal(an);
 
-        const cn = cslicePlane.getNormal();
-        vec3.transformMat3(cn, cn, mat);
-        cslicePlane.setNormal(cn);
+          const cn = cslicePlane.getNormal();
+          vec3.transformMat3(cn, cn, mat);
+          cslicePlane.setNormal(cn);
 
-        const sn = sslicePlane.getNormal();
-        vec3.transformMat3(sn, sn, mat);
-        sslicePlane.setNormal(sn);
+          const sn = sslicePlane.getNormal();
+          vec3.transformMat3(sn, sn, mat);
+          sslicePlane.setNormal(sn);
 
-        smapper.setInputData(im);
+          smapper.setInputData(im);
 
-        renderer.getActiveCamera().azimuth(-45);
-        renderer.resetCamera();
-        renderer.getActiveCamera().zoom(1.5);
-        renderWindow.render();
+          renderer.getActiveCamera().azimuth(-45);
+          renderer.resetCamera();
+          renderer.getActiveCamera().zoom(1.5);
+          renderWindow.render();
 
-        const p = glwindow
-          .captureNextImage()
-          .then((image) =>
-            testUtils.compareImages(
-              image,
-              [baseline],
-              'Rendering/Core/ImageResliceMapper',
-              t,
-              1
-            )
-          );
-        renderWindow.render();
-        return p;
-      })
-    )
-    .finally(gc.releaseResources);
+          const p = glwindow
+            .captureNextImage()
+            .then((image) =>
+              testUtils.compareImages(
+                image,
+                [baseline],
+                'Rendering/Core/ImageResliceMapper',
+                1
+              )
+            );
+          renderWindow.render();
+          return p;
+        })
+      )
+      .finally(gc.releaseResources);
 
-  const property = gc.registerResource(vtkImageProperty.newInstance());
+    const property = gc.registerResource(vtkImageProperty.newInstance());
 
-  const rgb = gc.registerResource(vtkColorTransferFunction.newInstance());
-  rgb.addRGBPoint(0, 0, 0, 0);
-  rgb.addRGBPoint(3926, 1, 1, 1);
-  property.setRGBTransferFunction(rgb);
+    const rgb = gc.registerResource(vtkColorTransferFunction.newInstance());
+    rgb.addRGBPoint(0, 0, 0, 0);
+    rgb.addRGBPoint(3926, 1, 1, 1);
+    property.setRGBTransferFunction(rgb);
 
-  const ofun = gc.registerResource(vtkPiecewiseFunction.newInstance());
-  ofun.addPoint(0, 1);
-  ofun.addPoint(3926, 1);
-  property.setPiecewiseFunction(ofun);
+    const ofun = gc.registerResource(vtkPiecewiseFunction.newInstance());
+    ofun.addPoint(0, 1);
+    ofun.addPoint(3926, 1);
+    property.setPiecewiseFunction(ofun);
 
-  property.setColorWindow(3926);
-  property.setColorLevel(1863);
+    property.setColorWindow(3926);
+    property.setColorLevel(1863);
 
-  aactor.setProperty(property);
-  cactor.setProperty(property);
-  sactor.setProperty(property);
+    aactor.setProperty(property);
+    cactor.setProperty(property);
+    sactor.setProperty(property);
 
-  // -----------------------------------------------------------
-  // Make some variables global so that you can inspect and
-  // modify objects in your browser's developer console:
-  // -----------------------------------------------------------
-  global.aactor = aactor;
-  global.cactor = cactor;
-  global.sactor = sactor;
-  global.amapper = amapper;
-  global.cmapper = cmapper;
-  global.smapper = smapper;
-  global.rgb = rgb;
-  global.ofun = ofun;
-  global.renderer = renderer;
-  global.renderWindow = renderWindow;
+    // -----------------------------------------------------------
+    // Make some variables global so that you can inspect and
+    // modify objects in your browser's developer console:
+    // -----------------------------------------------------------
+    global.aactor = aactor;
+    global.cactor = cactor;
+    global.sactor = sactor;
+    global.amapper = amapper;
+    global.cmapper = cmapper;
+    global.smapper = smapper;
+    global.rgb = rgb;
+    global.ofun = ofun;
+    global.renderer = renderer;
+    global.renderWindow = renderWindow;
 
-  return promise;
-});
+    return promise;
+  }
+);

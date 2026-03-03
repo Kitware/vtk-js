@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
@@ -14,9 +14,9 @@ import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
 import baseline from './testAverageIntensityProjection.png';
 
-test.skip('Test Average Intensity Projection Volume Rendering', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkVolumeMapper AverageIP');
+it.skip('Test Average Intensity Projection Volume Rendering', async () => {
+  const gc = testUtils.createGarbageCollector();
+  expect('rendering').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI
@@ -87,7 +87,6 @@ test.skip('Test Average Intensity Projection Volume Rendering', async (t) => {
       image,
       [baseline],
       'Rendering/Core/VolumeMapper/testAverageIntensityProjection',
-      t,
       {
         // be stricter here
         pixelThreshold: 0.01,

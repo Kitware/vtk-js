@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
@@ -45,8 +45,8 @@ function createRenderingPipeline(filter) {
   return actor;
 }
 
-test.onlyIfWebGL('vtkPicker.pick3DPoint - cone picking', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+it.skipIf(__VTK_TEST_NO_WEBGL__)('vtkPicker.pick3DPoint - cone picking', () => {
+  const gc = testUtils.createGarbageCollector();
   const renderer = setupRenderingComponents(gc);
 
   const coneSource = vtkConeSource.newInstance({
@@ -66,15 +66,15 @@ test.onlyIfWebGL('vtkPicker.pick3DPoint - cone picking', (t) => {
   picker.pick3DPoint(selectionPoint, focalPoint, renderer);
 
   const pickedActors = picker.getActors();
-  t.equal(pickedActors[0], coneActor);
+  expect(pickedActors[0]).toBe(coneActor);
 
   gc.releaseResources();
 });
 
-test.onlyIfWebGL(
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'vtkPicker.pick3DPoint - non pickable actor is not picked',
-  (t) => {
-    const gc = testUtils.createGarbageCollector(t);
+  () => {
+    const gc = testUtils.createGarbageCollector();
     const renderer = setupRenderingComponents(gc);
 
     const coneSource = vtkConeSource.newInstance({
@@ -94,56 +94,59 @@ test.onlyIfWebGL(
     picker.pick3DPoint(selectionPoint, focalPoint, renderer);
 
     let pickedActors = picker.getActors();
-    t.equal(pickedActors[0], coneActor);
+    expect(pickedActors[0]).toBe(coneActor);
 
     coneActor.setPickable(false);
     picker.pick3DPoint(selectionPoint, focalPoint, renderer);
     pickedActors = picker.getActors();
-    t.equal(pickedActors.length, 0);
+    expect(pickedActors.length).toBe(0);
 
     gc.releaseResources();
   }
 );
 
-test.onlyIfWebGL('vtkPicker.pick3DPoint - multiple actors', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
-  const renderer = setupRenderingComponents(gc);
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'vtkPicker.pick3DPoint - multiple actors',
+  () => {
+    const gc = testUtils.createGarbageCollector();
+    const renderer = setupRenderingComponents(gc);
 
-  // create what we will view
-  const coneSource1 = vtkConeSource.newInstance({
-    center: [0, 0, 0],
-    radius: 1,
-    height: 2,
-    direction: [1, 0, 0],
-  });
+    // create what we will view
+    const coneSource1 = vtkConeSource.newInstance({
+      center: [0, 0, 0],
+      radius: 1,
+      height: 2,
+      direction: [1, 0, 0],
+    });
 
-  const coneSource2 = vtkConeSource.newInstance({
-    center: [0, 1, 0],
-    radius: 1,
-    height: 2,
-    direction: [0, 1, 0],
-  });
+    const coneSource2 = vtkConeSource.newInstance({
+      center: [0, 1, 0],
+      radius: 1,
+      height: 2,
+      direction: [0, 1, 0],
+    });
 
-  const coneActor1 = createRenderingPipeline(coneSource1);
-  renderer.addActor(coneActor1);
+    const coneActor1 = createRenderingPipeline(coneSource1);
+    renderer.addActor(coneActor1);
 
-  const coneActor2 = createRenderingPipeline(coneSource2);
-  renderer.addActor(coneActor2);
+    const coneActor2 = createRenderingPipeline(coneSource2);
+    renderer.addActor(coneActor2);
 
-  const picker = vtkPicker.newInstance();
+    const picker = vtkPicker.newInstance();
 
-  const selectionPoint = [-1, 0, 0, 1.0];
-  const focalPoint = [2, 0, 0, 1.0];
-  picker.pick3DPoint(selectionPoint, focalPoint, renderer);
+    const selectionPoint = [-1, 0, 0, 1.0];
+    const focalPoint = [2, 0, 0, 1.0];
+    picker.pick3DPoint(selectionPoint, focalPoint, renderer);
 
-  const pickedActors = picker.getActors();
-  t.equal(pickedActors.length, 2);
+    const pickedActors = picker.getActors();
+    expect(pickedActors.length).toBe(2);
 
-  gc.releaseResources();
-});
+    gc.releaseResources();
+  }
+);
 
-test.onlyIfWebGL('vtkPicker.pick - volume', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+it.skipIf(__VTK_TEST_NO_WEBGL__)('vtkPicker.pick - volume', () => {
+  const gc = testUtils.createGarbageCollector();
   const renderer = setupRenderingComponents(gc);
 
   const source = vtkRTAnalyticSource.newInstance();
@@ -166,15 +169,14 @@ test.onlyIfWebGL('vtkPicker.pick - volume', (t) => {
   picker.pick([200, 200, 1.0], renderer);
 
   const pickedActors = picker.getActors();
-  t.equal(pickedActors.length, 1);
-  t.ok(pickedActors[0] === volume);
+  expect(pickedActors.length).toBe(1);
+  expect(pickedActors[0] === volume).toBeTruthy();
 
   gc.releaseResources();
 });
 
-test('Test vtkPicker instance', (t) => {
-  t.ok(vtkPicker, 'Make sure the class definition exists');
+it('Test vtkPicker instance', () => {
+  expect(vtkPicker).toBeTruthy();
   const instance = vtkPicker.newInstance();
-  t.ok(instance);
-  t.end();
+  expect(instance).toBeTruthy();
 });
