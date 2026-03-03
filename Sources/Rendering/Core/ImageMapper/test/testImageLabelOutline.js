@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 
@@ -16,9 +16,9 @@ import baselineI from './testImageLabelOutline_I.png';
 import baselineJ from './testImageLabelOutline_J.png';
 import baselineK from './testImageLabelOutline_K.png';
 
-test.onlyIfWebGL('Test ImageMapper label outline', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ImageMapper label outline', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkImageMapper label outline');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -218,8 +218,6 @@ test.onlyIfWebGL('Test ImageMapper label outline', (t) => {
     const params = PARAMS[slicingMode];
 
     return function testSlicingLabelOutline() {
-      t.comment(`testImageLabelOutline: ${slicingMode} slicing`);
-
       mapper.setSlicingMode(params.mode);
       mapper.setSlice(params.slice);
       labelMap.mapper.setSlicingMode(params.mode);
@@ -238,7 +236,6 @@ test.onlyIfWebGL('Test ImageMapper label outline', (t) => {
             image,
             [baseline],
             `Rendering/Core/ImageMapperLabelOutline_${slicingMode}`,
-            t,
             1
           )
         );

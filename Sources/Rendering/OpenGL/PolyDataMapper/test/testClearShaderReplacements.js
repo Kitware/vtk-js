@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
@@ -10,9 +10,9 @@ import vtkOBJReader from 'vtk.js/Sources/IO/Misc/OBJReader';
 
 import baseline from './testClearShaderReplacement.png';
 
-test.onlyIfWebGL('Test Clear Shader Replacements', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Clear Shader Replacements', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkOpenGLPolyDataMapper ClearShaderReplacements');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -118,7 +118,6 @@ test.onlyIfWebGL('Test Clear Shader Replacements', (t) => {
             image,
             [baseline],
             'Rendering/OpenGL/PolyDataMapper/testShaderReplacementsClear',
-            t,
             1.5
           )
         )

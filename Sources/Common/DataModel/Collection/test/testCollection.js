@@ -1,15 +1,14 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import vtkCollection from 'vtk.js/Sources/Common/DataModel/Collection';
 
-test('Test vtkCollection instance', (t) => {
-  t.ok(vtkCollection, 'Make sure the class definition exists');
+it('Test vtkCollection instance', () => {
+  expect(vtkCollection).toBeTruthy();
   const instance = vtkCollection.newInstance();
-  t.ok(instance);
-  t.end();
+  expect(instance).toBeTruthy();
 });
 
-test('Test vtkCollection functions', (t) => {
+it('Test vtkCollection functions', () => {
   // const spacing = 0.7;
   const spacing = [0.7, 0.7, 0.7];
   const size = 4;
@@ -26,14 +25,13 @@ test('Test vtkCollection functions', (t) => {
     inArray.push(image);
   }
 
-  t.ok(
+  expect(
     collection.getItem(0) === inArray[0] &&
       collection.getItem(1) === inArray[1] &&
       collection.getItem(2) === inArray[2] &&
       collection.getItem(3) === inArray[3] &&
-      collection.getItem(4) === inArray[4],
-    'Check for addItem.'
-  );
+      collection.getItem(4) === inArray[4]
+  ).toBeTruthy();
 
   const insertItems = [];
   insertItems[0] = testUtils.createImage([8, 8, 1], spacing);
@@ -46,53 +44,38 @@ test('Test vtkCollection functions', (t) => {
   collection.removeItem(5);
   collection.removeItem(inArray[4]);
 
-  t.ok(
+  expect(
     collection.getNumberOfItems() === 5 &&
       collection.getItem(0) === inArray[0] &&
       collection.getItem(1) === inArray[1] &&
       collection.getItem(2) === insertItems[0] &&
       collection.getItem(3) === insertItems[1] &&
       collection.isItemPresent(insertItems[1]) &&
-      collection.getItem(4) === insertItems[2],
-    'Check inserted items and number of inserted items.'
-  );
+      collection.getItem(4) === insertItems[2]
+  ).toBeTruthy();
 
-  t.ok(
-    !collection.isItemPresent(inArray[4]),
-    'Check if deleted item is still present.'
-  );
+  expect(!collection.isItemPresent(inArray[4])).toBeTruthy();
 
   collection.forEach((img) => img.setSpacing(0.1, 0.2, 0.3));
 
-  t.ok(
+  expect(
     collection.getItem(0).getSpacing()[0] === 0.1 &&
       collection.getItem(0).getSpacing()[1] === 0.2 &&
-      collection.getItem(0).getSpacing()[2] === 0.3,
-    'Check if spacing was set thru forEach() call.'
-  );
+      collection.getItem(0).getSpacing()[2] === 0.3
+  ).toBeTruthy();
 
-  t.ok(
-    collection.reduce((acc, img) => acc + img.getSpacing()[0], 0) === 0.5,
-    'Check reduce call.'
-  );
+  expect(
+    collection.reduce((acc, img) => acc + img.getSpacing()[0], 0) === 0.5
+  ).toBeTruthy();
 
   insertItems[0].modified();
-  t.ok(
-    collection.getMTime() < insertItems[0].getMTime(),
-    'MTime before update call.'
-  );
+  expect(collection.getMTime() < insertItems[0].getMTime()).toBeTruthy();
 
   collection.updateMTimeWithElements();
-  t.ok(
-    collection.getMTime() > insertItems[0].getMTime(),
-    'MTime after update call.'
-  );
+  expect(collection.getMTime() > insertItems[0].getMTime()).toBeTruthy();
 
   collection.removeAllItems();
-  t.ok(
-    collection.getNumberOfItems() === 0 && collection.empty(),
-    'Check if all items were removed.'
-  );
-
-  t.end();
+  expect(
+    collection.getNumberOfItems() === 0 && collection.empty()
+  ).toBeTruthy();
 });

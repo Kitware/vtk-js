@@ -1,17 +1,16 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkClipClosedSurface from 'vtk.js/Sources/Filters/General/ClipClosedSurface';
 import vtkLineSource from 'vtk.js/Sources/Filters/Sources/LineSource';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
-test('Test vtkClipClosedSurface instance', (t) => {
-  t.ok(vtkClipClosedSurface, 'Make sure the class definition exists');
+it('Test vtkClipClosedSurface instance', () => {
+  expect(vtkClipClosedSurface).toBeTruthy();
   const instance = vtkClipClosedSurface.newInstance();
-  t.ok(instance);
-  t.end();
+  expect(instance).toBeTruthy();
 });
 
-test('Test clip a vtkLineSource', (t) => {
+it('Test clip a vtkLineSource', () => {
   const resolution = 10;
   const point1 = [-1, 0, 0];
   const point2 = [1, 0, 0];
@@ -49,18 +48,12 @@ test('Test clip a vtkLineSource', (t) => {
   clipper.update();
   const outputData = clipper.getOutputData();
 
-  t.equal(
-    outputData.getNumberOfLines(),
-    resolution / 2,
-    'Number of lines is half the resolution'
-  );
+  expect(outputData.getNumberOfLines()).toBe(resolution / 2);
 
-  t.ok(
+  expect(
     vtkMath.areEquals(
       outputData.getPoints().getData(),
       halfLine.getOutputData().getPoints().getData()
-    ),
-    'Compare points with halfLine'
-  );
-  t.end();
+    )
+  ).toBeTruthy();
 });

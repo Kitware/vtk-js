@@ -1,14 +1,13 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
-test('Test vtkPlane instance', (t) => {
-  t.ok(vtkPlane, 'Make sure the class definition exists');
+it('Test vtkPlane instance', () => {
+  expect(vtkPlane).toBeTruthy();
   const instance = vtkPlane.newInstance();
-  t.ok(instance);
-  t.end();
+  expect(instance).toBeTruthy();
 });
 
-test('Test vtkPlane projectVector', (t) => {
+it('Test vtkPlane projectVector', () => {
   const plane = vtkPlane.newInstance();
   plane.setOrigin(0.0, 0.0, 0.0);
   plane.setNormal(0.0, 0.0, 1.0);
@@ -20,7 +19,7 @@ test('Test vtkPlane projectVector', (t) => {
 
   const correct = [1.0, 2.0, 0.0];
   for (let i = 0; i < 3; i++) {
-    t.equal(vProj[i], correct[i]);
+    expect(vProj[i]).toBe(correct[i]);
   }
 
   // test where vector is in plane
@@ -28,7 +27,7 @@ test('Test vtkPlane projectVector', (t) => {
   const v2Proj = [];
   plane.projectVector(v2, v2Proj);
   for (let i = 0; i < 3; i++) {
-    t.equal(v2Proj[i], correct[i]);
+    expect(v2Proj[i]).toBe(correct[i]);
   }
 
   // test where vector is orthogonal to plane
@@ -37,12 +36,11 @@ test('Test vtkPlane projectVector', (t) => {
   plane.projectVector(v3, v3Proj);
   const correct3 = [0.0, 0.0, 0.0];
   for (let i = 0; i < 3; i++) {
-    t.equal(v3Proj[i], correct3[i]);
+    expect(v3Proj[i]).toBe(correct3[i]);
   }
-  t.end();
 });
 
-test('Test vtkPlane projectPoint', (t) => {
+it('Test vtkPlane projectPoint', () => {
   const plane = vtkPlane.newInstance();
   plane.setOrigin(0.0, 0.0, 0.0);
   plane.setNormal(0.0, 0.0, 1.0);
@@ -53,13 +51,11 @@ test('Test vtkPlane projectPoint', (t) => {
 
   const correct = [1.0, 2.0, 0.0];
   for (let i = 0; i < 3; i++) {
-    t.equal(xProj[i], correct[i]);
+    expect(xProj[i]).toBe(correct[i]);
   }
-
-  t.end();
 });
 
-test('Test vtkPlane DistanceToPlane', (t) => {
+it('Test vtkPlane DistanceToPlane', () => {
   const plane = vtkPlane.newInstance();
   plane.setOrigin(0.0, 0.0, 0.0);
   plane.setNormal(0.0, 0.0, 1.0);
@@ -68,18 +64,16 @@ test('Test vtkPlane DistanceToPlane', (t) => {
   const distance = plane.distanceToPlane(pt);
 
   const correct = 3.0;
-  t.equal(distance, correct);
+  expect(distance).toBe(correct);
 
   const pt2 = [1.0, 2.0, -3.0];
   const distance2 = plane.distanceToPlane(pt2);
 
   const correct2 = 3.0;
-  t.equal(distance2, correct2);
-
-  t.end();
+  expect(distance2).toBe(correct2);
 });
 
-test('Test vtkPlane Push', (t) => {
+it('Test vtkPlane Push', () => {
   const plane = vtkPlane.newInstance();
   plane.setOrigin(0.0, 0.0, 0.0);
   plane.setNormal(0.0, 0.0, 1.0);
@@ -90,13 +84,11 @@ test('Test vtkPlane Push', (t) => {
   const correct = [0.0, 0.0, 3.0];
 
   for (let i = 0; i < 3; i++) {
-    t.equal(newOrigin[i], correct[i]);
+    expect(newOrigin[i]).toBe(correct[i]);
   }
-
-  t.end();
 });
 
-test('Test vtkPlane intersectWithLine', (t) => {
+it('Test vtkPlane intersectWithLine', () => {
   const plane = vtkPlane.newInstance();
   plane.setOrigin(0.0, 0.0, 0.0);
   plane.setNormal(0.0, 0.0, 1.0);
@@ -105,40 +97,38 @@ test('Test vtkPlane intersectWithLine', (t) => {
   let p1 = [-1.0, 0.0, 3.0];
   let p2 = [2.0, 0.0, 3.0];
   let res = plane.intersectWithLine(p1, p2);
-  t.equal(res.intersection, false);
-  t.equal(res.t, Number.MAX_VALUE);
-  t.equal(res.x.length, 0);
+  expect(res.intersection).toBe(false);
+  expect(res.t).toBe(Number.MAX_VALUE);
+  expect(res.x.length).toBe(0);
 
   // test where line intersects plane
   p1 = [-1.0, 0.0, 1.0];
   p2 = [-1.0, 0.0, -1.0];
   res = plane.intersectWithLine(p1, p2);
-  t.equal(res.intersection, true);
-  t.equal(res.betweenPoints, true);
-  t.equal(res.t, 0.5);
-  t.equal(res.x.length, 3);
+  expect(res.intersection).toBe(true);
+  expect(res.betweenPoints).toBe(true);
+  expect(res.t).toBe(0.5);
+  expect(res.x.length).toBe(3);
   let correct = [-1.0, 0.0, 0.0];
   for (let i = 0; i < 3; i++) {
-    t.equal(res.x[i], correct[i]);
+    expect(res.x[i]).toBe(correct[i]);
   }
 
   // test where line intersects the plane outside of the provided points
   p1 = [-2.0, 0.0, -2.0];
   p2 = [2.0, 0.0, -1.0];
   res = plane.intersectWithLine(p1, p2);
-  t.equal(res.intersection, true);
-  t.equal(res.betweenPoints, false);
-  t.equal(res.t, 2);
-  t.equal(res.x.length, 3);
+  expect(res.intersection).toBe(true);
+  expect(res.betweenPoints).toBe(false);
+  expect(res.t).toBe(2);
+  expect(res.x.length).toBe(3);
   correct = [6.0, 0.0, 0.0];
   for (let i = 0; i < 3; i++) {
-    t.equal(res.x[i], correct[i]);
+    expect(res.x[i]).toBe(correct[i]);
   }
-
-  t.end();
 });
 
-test('Test vtkPlane intersectWithPlane', (t) => {
+it('Test vtkPlane intersectWithPlane', () => {
   const plane = vtkPlane.newInstance();
   plane.setOrigin(0.0, 0.0, 0.0);
   plane.setNormal(0.0, 0.0, 1.0);
@@ -147,50 +137,47 @@ test('Test vtkPlane intersectWithPlane', (t) => {
   let origin = [2.0, 2.0, 2.0];
   let normal = [0.0, 0.0, 1.0];
   let res = plane.intersectWithPlane(origin, normal);
-  t.equal(res.intersection, false);
-  t.equal(res.error, vtkPlane.DISJOINT);
-  t.equal(res.l0.length, 0);
-  t.equal(res.l1.length, 0);
+  expect(res.intersection).toBe(false);
+  expect(res.error).toBe(vtkPlane.DISJOINT);
+  expect(res.l0.length).toBe(0);
+  expect(res.l1.length).toBe(0);
 
   // test where a plane is coplaner with plane
   origin = [1.0, 0.0, 0.0];
   normal = [0.0, 0.0, 1.0];
   res = plane.intersectWithPlane(origin, normal);
-  t.equal(res.intersection, false);
-  t.equal(res.error, vtkPlane.COINCIDE);
+  expect(res.intersection).toBe(false);
+  expect(res.error).toBe(vtkPlane.COINCIDE);
 
   // test where plane does intersect plane
   origin = [2.0, 0.0, 0.0];
   normal = [1.0, 0.0, 0.0];
   res = plane.intersectWithPlane(origin, normal);
-  t.equal(res.intersection, true);
-  t.equal(res.l0.length, 3);
-  t.equal(res.l1.length, 3);
+  expect(res.intersection).toBe(true);
+  expect(res.l0.length).toBe(3);
+  expect(res.l1.length).toBe(3);
   const l0 = [2, 0, -0];
   const l1 = [2, -1, 0];
   for (let i = 0; i < 3; i++) {
-    t.equal(res.l0[i], l0[i]);
+    expect(res.l0[i]).toBe(l0[i]);
   }
   for (let i = 0; i < 3; i++) {
-    t.equal(res.l1[i], l1[i]);
+    expect(res.l1[i]).toBe(l1[i]);
   }
-  t.end();
 });
 
-test('Test vtkPlane evaluateFunction', (t) => {
+it('Test vtkPlane evaluateFunction', () => {
   const plane = vtkPlane.newInstance();
   plane.setOrigin(0.0, 0.0, 0.0);
   plane.setNormal(1.0, 1.0, 1.0);
 
   const point = [1.0, 1.0, 1.0];
   let res = plane.evaluateFunction(point);
-  t.equal(res, 3);
+  expect(res).toBe(3);
 
   res = plane.evaluateFunction(...point);
-  t.equal(res, 3);
+  expect(res).toBe(3);
 
   res = plane.evaluateFunction(...point, 1.0); // ignore last value
-  t.equal(res, 3);
-
-  t.end();
+  expect(res).toBe(3);
 });

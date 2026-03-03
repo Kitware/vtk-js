@@ -1,9 +1,8 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
-test('Test vtkMatrixBuilder rotateFromDirections', (t) => {
+it('Test vtkMatrixBuilder rotateFromDirections', () => {
   let v1 = [];
 
   v1 = [1, 0, 0];
@@ -12,7 +11,7 @@ test('Test vtkMatrixBuilder rotateFromDirections', (t) => {
     .identity()
     .rotateFromDirections(v1, [-1, 0, 0])
     .apply(v1);
-  t.ok(areEquals(v1, [-1, 0, 0]));
+  expect(areEquals(v1, [-1, 0, 0])).toBeTruthy();
 
   v1 = [1, 0, 0];
   vtkMatrixBuilder
@@ -20,7 +19,7 @@ test('Test vtkMatrixBuilder rotateFromDirections', (t) => {
     .identity()
     .rotateFromDirections(v1, [1, 0, 0])
     .apply(v1);
-  t.ok(areEquals(v1, [1, 0, 0]));
+  expect(areEquals(v1, [1, 0, 0])).toBeTruthy();
 
   v1 = [Math.PI / 2, 0, Math.PI / 2];
   vtkMatrixBuilder
@@ -31,7 +30,5 @@ test('Test vtkMatrixBuilder rotateFromDirections', (t) => {
       [Math.PI / 2, 0, Math.PI / 2]
     )
     .apply(v1);
-  t.ok(areEquals(v1, [0, -Math.PI / 2, Math.PI / 2]));
-
-  t.end();
+  expect(areEquals(v1, [0, -Math.PI / 2, Math.PI / 2])).toBeTruthy();
 });

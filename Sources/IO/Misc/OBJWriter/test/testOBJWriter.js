@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkPLYReader from 'vtk.js/Sources/IO/Geometry/PLYReader';
 import vtkOBJWriter from 'vtk.js/Sources/IO/Misc/OBJWriter';
 
@@ -73,7 +73,7 @@ f 3/3//3 7/7//7 6/6//6 4/4//4
 f 5/5//5 1/1//1 4/4//4 6/6//6
 `;
 
-test('OBJWriter: Check conversion from PLY to OBJ', (t) => {
+it('OBJWriter: Check conversion from PLY to OBJ', () => {
   const reader = vtkPLYReader.newInstance();
   reader.parseAsText(plyFile);
   const output = reader.getOutputData();
@@ -82,17 +82,7 @@ test('OBJWriter: Check conversion from PLY to OBJ', (t) => {
 
   const objContent = writer.getOutputData();
 
-  t.equal(
-    objContent,
-    expectedObjContent,
-    'OBJ content should match expected output'
-  );
+  expect(objContent).toBe(expectedObjContent);
 
-  t.equal(
-    writer.getMtl(),
-    expectedMtlContent,
-    'MTL content should match expected texture declaration'
-  );
-
-  t.end();
+  expect(writer.getMtl()).toBe(expectedMtlContent);
 });

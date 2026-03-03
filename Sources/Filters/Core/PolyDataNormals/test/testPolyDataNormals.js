@@ -1,5 +1,4 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPolyDataNormals from 'vtk.js/Sources/Filters/Core/PolyDataNormals';
@@ -7,7 +6,7 @@ import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 
 const PRECISION = 4;
 
-test('Test vtkPolyDataNormals passData', (t) => {
+it('Test vtkPolyDataNormals passData', () => {
   const cube = vtkCubeSource.newInstance();
   const input = cube.getOutputData();
   input.getPointData().setNormals(null);
@@ -17,19 +16,16 @@ test('Test vtkPolyDataNormals passData', (t) => {
   normals.update();
   const output = normals.getOutputData();
 
-  t.equal(input.getPointData().getNormals(), null);
-  t.ok(input.getPointData().getTCoords() != null);
+  expect(input.getPointData().getNormals()).toBe(null);
+  expect(input.getPointData().getTCoords() != null).toBeTruthy();
 
-  t.ok(output.getPointData().getNormals() != null);
-  t.equal(
-    output.getPointData().getTCoords(),
+  expect(output.getPointData().getNormals() != null).toBeTruthy();
+  expect(output.getPointData().getTCoords()).toBe(
     input.getPointData().getTCoords()
   );
-
-  t.end();
 });
 
-test('Test vtkPolyDataNormals normals', (t) => {
+it('Test vtkPolyDataNormals normals', () => {
   const cube = vtkCubeSource.newInstance();
   const input = cube.getOutputData();
   const pointNormalsData = input.getPointData().getNormals().getData();
@@ -43,16 +39,12 @@ test('Test vtkPolyDataNormals normals', (t) => {
   normals.update();
   const output = normals.getOutputData();
 
-  console.log(pointNormalsData);
-  console.log(output.getPointData().getNormals().getData());
-  t.deepEqual(
-    vtkMath.roundVector(pointNormalsData, [], PRECISION),
+  expect(vtkMath.roundVector(pointNormalsData, [], PRECISION)).toEqual(
     vtkMath.roundVector(
       output.getPointData().getNormals().getData(),
       [],
       PRECISION
-    ),
-    'Same point normals'
+    )
   );
 
   const pointsData = output.getPoints().getData();
@@ -77,8 +69,7 @@ test('Test vtkPolyDataNormals normals', (t) => {
       cellNormal
     );
 
-    t.deepEqual(
-      vtkMath.roundVector(cellNormal, [], PRECISION),
+    expect(vtkMath.roundVector(cellNormal, [], PRECISION)).toEqual(
       vtkMath.roundVector(
         output
           .getCellData()
@@ -87,11 +78,8 @@ test('Test vtkPolyDataNormals normals', (t) => {
           .slice(3 * polysId, 3 * polysId + 3),
         [],
         PRECISION
-      ),
-      `Same cell normal #${polysId}`
+      )
     );
     ++polysId;
   }
-
-  t.end();
 });

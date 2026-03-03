@@ -12,35 +12,34 @@ jobs:
         node: [22]
     name: ${{ matrix.os }} and node ${{ matrix.node }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
       - name: Install dependencies
-        run: |
-          npm ci
-          sudo apt-get install xvfb
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox
       - name: Build
         run: npm run build:release
       - name: Archive build output
         if: github.event_name != 'merge_group'
         uses: actions/upload-artifact@v4
         with:
-          name: build-results-${{ matrix.runs_on }}-node_${{ matrix.node }}
+          name: build-results-${{ matrix.os }}-node_${{ matrix.node }}
           path: dist
           retention-days: 15
       - name: Validate generated typescript definitions
         run: |
           npx tsc -p tsconfig.esm-check.json
-          npx tsc -p tsconfig.umd-check.json
       - name: Chrome and Firefox tests
-        run: xvfb-run --auto-servernum npm run test -- --browsers ChromeSwiftShader,Firefox
+        run: xvfb-run --auto-servernum npm run test:reporter
       - name: Archive test results
         if: github.event_name != 'merge_group' && (success() || failure())
         uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
-          name: test-results-${{ matrix.runs_on }}-node_${{ matrix.node }}
-          path: Utilities/TestResults/Test-Report.html
+          name: test-results-${{ matrix.os }}-node_${{ matrix.node }}
+          path: Utilities/TestResults/
           retention-days: 15

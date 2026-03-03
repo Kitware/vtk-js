@@ -1,14 +1,13 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
 
-test('Test vtkBox instance', (t) => {
-  t.ok(vtkBox, 'Make sure the class definition exists');
+it('Test vtkBox instance', () => {
+  expect(vtkBox).toBeTruthy();
   const instance = vtkBox.newInstance();
-  t.ok(instance);
-  t.end();
+  expect(instance).toBeTruthy();
 });
 
-test('Test vtkBox bounds', (t) => {
+it('Test vtkBox bounds', () => {
   const box = vtkBox.newInstance();
 
   // Test setting of bounds
@@ -16,31 +15,27 @@ test('Test vtkBox bounds', (t) => {
   box.setBounds(bounds);
   const newBounds = box.getBounds();
   for (let i = 0; i < bounds.length; i++) {
-    t.equal(newBounds[i], bounds[i]);
+    expect(newBounds[i]).toBe(bounds[i]);
   }
-
-  t.end();
 });
 
-test('Test vtkBox evaluateFunction', (t) => {
+it('Test vtkBox evaluateFunction', () => {
   const bounds = [-50, 50, -50, 50, -50, 50];
   const box = vtkBox.newInstance();
   box.setBounds(bounds);
 
   let point = [0.0, 0.0, 0.0];
   let res = box.evaluateFunction(point);
-  t.equal(res, -50);
+  expect(res).toBe(-50);
 
   point = [100.0, 0.0, 0.0];
   res = box.evaluateFunction(point);
-  t.equal(res, 50);
+  expect(res).toBe(50);
 
   point = [50.0, 0.0, 0.0];
   res = box.evaluateFunction(point);
-  t.equal(res, 0);
+  expect(res).toBe(0);
 
   res = box.evaluateFunction(...point);
-  t.equal(res, 0);
-
-  t.end();
+  expect(res).toBe(0);
 });

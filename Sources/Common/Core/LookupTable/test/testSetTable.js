@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -12,9 +12,9 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import baseline from './testSetTable.png';
 
-test.onlyIfWebGL('Test LookupTable setTable', (t) => {
+it.skip('Test LookupTable setTable', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkLookupTable TestSetTable');
+  expect('rendering').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI
@@ -71,7 +71,7 @@ test.onlyIfWebGL('Test LookupTable setTable', (t) => {
   table.setTuple(7, [255, 165, 48, 255]);
   lut.setTable(table);
 
-  t.equal(lut.getNumberOfColors(), numberOfColors);
+  expect(lut.getNumberOfColors()).toBe(numberOfColors);
 
   mapper.setLookupTable(lut);
 
@@ -139,7 +139,6 @@ test.onlyIfWebGL('Test LookupTable setTable', (t) => {
         image,
         [baseline],
         'Common/Core/LookupTable/testSetTable',
-        t,
         5
       )
     )

@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -13,9 +13,9 @@ import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import testMolecule from 'vtk.js/Data/molecule/test-multiple-bonds.cjson';
 import baseline from './testMolecule_multiple_bonds.png';
 
-test.onlyIfWebGL('Test MultipleBonds', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test MultipleBonds', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('Filter: MoleculeToRepresentation');
+  expect('Filter: MoleculeToRepresentation').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -78,7 +78,6 @@ test.onlyIfWebGL('Test MultipleBonds', (t) => {
         image,
         [baseline],
         'Filters/General/MoleculeToRepresentation/testMultipleBonds',
-        t,
         1
       )
     )

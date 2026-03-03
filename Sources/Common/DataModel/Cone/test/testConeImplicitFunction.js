@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -12,9 +12,9 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 
 import baseline from './testConeImplicitFunction.png';
 
-test.onlyIfWebGL('Test Cone Implicit Function', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Cone Implicit Function', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'Cone Implicit Function');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -66,7 +66,6 @@ test.onlyIfWebGL('Test Cone Implicit Function', (t) => {
         image,
         [baseline],
         'Common/DataModel/Cone/testConeImplicitFunction',
-        t,
         1.0
       )
     )

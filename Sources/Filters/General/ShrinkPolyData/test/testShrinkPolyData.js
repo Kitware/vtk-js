@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -11,9 +11,9 @@ import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 
 import baseline from './testShrinkPolyData.png';
 
-test.onlyIfWebGL('Test vtkShrinkPolyData Rendering', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkShrinkPolyData Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkShrinkPolyData Rendering');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -63,7 +63,6 @@ test.onlyIfWebGL('Test vtkShrinkPolyData Rendering', (t) => {
         image,
         [baseline],
         'Filters/General/ShrinkPolyData/testShrinkPolyData',
-        t,
         2.5
       )
     )

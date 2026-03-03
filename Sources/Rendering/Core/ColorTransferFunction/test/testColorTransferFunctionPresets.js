@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -14,9 +14,9 @@ import baseline2 from './testColorTransferFunctionPresets2.png';
 const MAX_NUMBER_OF_PRESETS = 200;
 const NUMBER_PER_LINE = 20;
 
-test.onlyIfWebGL('Test ColorTransferFunction Presets', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ColorTransferFunction Presets', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkMapper ColorTransferFunction Presets');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -65,7 +65,6 @@ test.onlyIfWebGL('Test ColorTransferFunction Presets', (t) => {
         image,
         [baseline, baseline2],
         'Rendering/Core/ColorTransferFunction/testColorTransferFunctionPresets',
-        t,
         4.8
       )
     )

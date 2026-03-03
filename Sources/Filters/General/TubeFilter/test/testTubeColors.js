@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
@@ -80,93 +80,82 @@ function populateTubeMapper(tubeMapper, tubeFilter) {
   });
 }
 
-test('Test vtkTubeFilter colorMapping', (t) => {
+it('Test vtkTubeFilter colorMapping', () => {
   const polyData = initializePolyData();
 
   const tubeFilter = getTubeFilter(polyData);
 
   const tubeOutput = tubeFilter.getOutputData();
 
-  t.ok(
-    tubeOutput.getPoints().getNumberOfPoints() === 80,
-    'Make sure the output number of points is correct without capping.'
-  );
-  t.ok(
-    tubeOutput.getPointData().getArrayByName('Radius').getData().length === 80,
-    'Make sure the length of the radius array is correct.'
-  );
-  t.ok(
-    tubeOutput.getPointData().getArrayByName('Colors').getData().length === 240,
-    'Make sure the length of the color array is correct.'
-  );
+  expect(tubeOutput.getPoints().getNumberOfPoints() === 80).toBeTruthy();
+  expect(
+    tubeOutput.getPointData().getArrayByName('Radius').getData().length === 80
+  ).toBeTruthy();
+  expect(
+    tubeOutput.getPointData().getArrayByName('Colors').getData().length === 240
+  ).toBeTruthy();
   const tubeMapper = vtkMapper.newInstance();
   populateTubeMapper(tubeMapper, tubeFilter);
 
-  t.ok(
-    tubeMapper.getColorByArrayName() === 'Colors',
-    'Make sure the array name to color by is correct.'
-  );
-  t.ok(
-    tubeMapper.getScalarModeAsString() === 'USE_POINT_FIELD_DATA',
-    'Make sure the scalar mode is correct.'
-  );
-  t.ok(
-    tubeMapper.getColorModeAsString() === 'DIRECT_SCALARS',
-    'Make sure the color mode is correct.'
-  );
-  t.end();
+  expect(tubeMapper.getColorByArrayName() === 'Colors').toBeTruthy();
+  expect(
+    tubeMapper.getScalarModeAsString() === 'USE_POINT_FIELD_DATA'
+  ).toBeTruthy();
+  expect(tubeMapper.getColorModeAsString() === 'DIRECT_SCALARS').toBeTruthy();
 });
 
-test.onlyIfWebGL('Test vtkTubeFilter color map rendering', (t) => {
-  const gc = testUtils.createGarbageCollector();
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'Test vtkTubeFilter color map rendering',
+  () => {
+    const gc = testUtils.createGarbageCollector();
 
-  // Create some control UI
-  const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(
-    document.createElement('div')
-  );
-  container.appendChild(renderWindowContainer);
+    // Create some control UI
+    const container = document.querySelector('body');
+    const renderWindowContainer = gc.registerDOMElement(
+      document.createElement('div')
+    );
+    container.appendChild(renderWindowContainer);
 
-  // create what we will view
-  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
-  const renderer = gc.registerResource(vtkRenderer.newInstance());
-  renderWindow.addRenderer(renderer);
-  renderer.setBackground(0.32, 0.34, 0.43);
+    // create what we will view
+    const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+    const renderer = gc.registerResource(vtkRenderer.newInstance());
+    renderWindow.addRenderer(renderer);
+    renderer.setBackground(0.32, 0.34, 0.43);
 
-  const polyData = initializePolyData();
-  const tubeFilter = getTubeFilter(polyData);
+    const polyData = initializePolyData();
+    const tubeFilter = getTubeFilter(polyData);
 
-  const tubeMapper = gc.registerResource(vtkMapper.newInstance());
-  populateTubeMapper(tubeMapper, tubeFilter);
+    const tubeMapper = gc.registerResource(vtkMapper.newInstance());
+    populateTubeMapper(tubeMapper, tubeFilter);
 
-  const tubeActor = gc.registerResource(vtkActor.newInstance());
-  tubeActor.setMapper(tubeMapper);
-  renderer.addActor(tubeActor);
+    const tubeActor = gc.registerResource(vtkActor.newInstance());
+    tubeActor.setMapper(tubeMapper);
+    renderer.addActor(tubeActor);
 
-  // Create the renderer and display the colored tube
-  // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
-  glwindow.setContainer(renderWindowContainer);
-  renderWindow.addView(glwindow);
-  glwindow.setSize(400, 400);
+    // Create the renderer and display the colored tube
+    // now create something to view it, in this case webgl
+    const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
+    glwindow.setContainer(renderWindowContainer);
+    renderWindow.addView(glwindow);
+    glwindow.setSize(400, 400);
 
-  const camera = renderer.getActiveCamera();
-  camera.yaw(40);
-  renderer.resetCamera();
+    const camera = renderer.getActiveCamera();
+    camera.yaw(40);
+    renderer.resetCamera();
 
-  const promise = glwindow
-    .captureNextImage()
-    .then((image) =>
-      testUtils.compareImages(
-        image,
-        [baseline],
-        'Filters/General/TubeFilter/testTubeColors',
-        t,
-        2.5
+    const promise = glwindow
+      .captureNextImage()
+      .then((image) =>
+        testUtils.compareImages(
+          image,
+          [baseline],
+          'Filters/General/TubeFilter/testTubeColors',
+          2.5
+        )
       )
-    )
-    .finally(gc.releaseResources);
+      .finally(gc.releaseResources);
 
-  renderWindow.render();
-  return promise;
-});
+    renderWindow.render();
+    return promise;
+  }
+);

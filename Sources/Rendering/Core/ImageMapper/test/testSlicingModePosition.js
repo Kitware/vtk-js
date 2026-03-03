@@ -1,11 +1,10 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import { SlicingMode } from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkRTAnalyticSource from 'vtk.js/Sources/Filters/Sources/RTAnalyticSource';
 
-test('Test slice position differences between XYZ and IJK modes', (t) => {
+it('Test slice position differences between XYZ and IJK modes', () => {
   const source = vtkRTAnalyticSource.newInstance({
     wholeExtent: [0, 10, 0, 10, 0, 10],
   });
@@ -21,14 +20,12 @@ test('Test slice position differences between XYZ and IJK modes', (t) => {
 
   mapper.setSlicingMode(SlicingMode.Z);
 
-  t.equal(3, mapper.getSliceAtPosition(30));
-  t.equal(3.5, mapper.getSliceAtPosition(35));
+  expect(3).toBe(mapper.getSliceAtPosition(30));
+  expect(3.5).toBe(mapper.getSliceAtPosition(35));
 
-  t.equal(5, mapper.getSliceAtPosition([0, 0, 50]));
-  t.equal(5.5, mapper.getSliceAtPosition([0, 0, 55]));
+  expect(5).toBe(mapper.getSliceAtPosition([0, 0, 50]));
+  expect(5.5).toBe(mapper.getSliceAtPosition([0, 0, 55]));
 
-  t.equal(0, mapper.getSliceAtPosition(-1));
-  t.equal(10, mapper.getSliceAtPosition(110));
-
-  t.end();
+  expect(0).toBe(mapper.getSliceAtPosition(-1));
+  expect(10).toBe(mapper.getSliceAtPosition(110));
 });

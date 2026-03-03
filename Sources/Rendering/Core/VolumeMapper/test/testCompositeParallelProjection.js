@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -13,9 +13,9 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
 import baseline1 from './testCompositeParallelProjection.png';
 
-test('Test Composite Volume Rendering with parallel projection', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkOpenGLVolumeMapper CompositeParallelProjection');
+it('Test Composite Volume Rendering with parallel projection', async () => {
+  const gc = testUtils.createGarbageCollector();
+  expect('rendering').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI
@@ -81,7 +81,6 @@ test('Test Composite Volume Rendering with parallel projection', async (t) => {
         image,
         [baseline1],
         'Rendering/Core/VolumeMapper/testCompositeParallelProjection',
-        t,
         1.5,
         gc.releaseResources
       )

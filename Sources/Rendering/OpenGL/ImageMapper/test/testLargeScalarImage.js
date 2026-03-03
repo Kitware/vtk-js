@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
@@ -17,103 +17,105 @@ import baseline1 from './testLargeScalarImage.png';
 
 const { SlicingMode } = Constants;
 
-test.onlyIfWebGL('Test Volume Rendering of Large Scalar Values', (t) => {
-  const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkOpenGLVolumeMapper LargeScalars');
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'Test Volume Rendering of Large Scalar Values',
+  () => {
+    const gc = testUtils.createGarbageCollector();
+    expect('rendering').toBeTruthy();
 
-  // DOM elements
-  const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(
-    document.createElement('div')
-  );
-  container.appendChild(renderWindowContainer);
+    // DOM elements
+    const container = document.querySelector('body');
+    const renderWindowContainer = gc.registerDOMElement(
+      document.createElement('div')
+    );
+    container.appendChild(renderWindowContainer);
 
-  // create what we will view
-  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
-  const renderer = gc.registerResource(vtkRenderer.newInstance());
-  renderWindow.addRenderer(renderer);
-  renderer.setBackground(0.32, 0.34, 0.43);
+    // create what we will view
+    const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+    const renderer = gc.registerResource(vtkRenderer.newInstance());
+    renderWindow.addRenderer(renderer);
+    renderer.setBackground(0.32, 0.34, 0.43);
 
-  const actor = gc.registerResource(vtkImageSlice.newInstance());
+    const actor = gc.registerResource(vtkImageSlice.newInstance());
 
-  const mapper = gc.registerResource(vtkImageMapper.newInstance());
-  actor.setMapper(mapper);
+    const mapper = gc.registerResource(vtkImageMapper.newInstance());
+    actor.setMapper(mapper);
 
-  // create a synthetic slice
-  const id = vtkImageData.newInstance();
-  id.setExtent(0, 9, 0, 9, 0, 0);
+    // create a synthetic slice
+    const id = vtkImageData.newInstance();
+    id.setExtent(0, 9, 0, 9, 0, 0);
 
-  // some (u)int16 values that exceed half float precision
-  const largeScalarData = new Uint16Array(10 * 10);
-  let max = -Infinity;
-  let min = Infinity;
-  for (
-    let i = 0, value = 2 ** 16 - 1;
-    i < largeScalarData.length;
-    i++, value--
-  ) {
-    largeScalarData[i] = value;
-    max = Math.max(max, value);
-    min = Math.min(min, value);
-  }
+    // some (u)int16 values that exceed half float precision
+    const largeScalarData = new Uint16Array(10 * 10);
+    let max = -Infinity;
+    let min = Infinity;
+    for (
+      let i = 0, value = 2 ** 16 - 1;
+      i < largeScalarData.length;
+      i++, value--
+    ) {
+      largeScalarData[i] = value;
+      max = Math.max(max, value);
+      min = Math.min(min, value);
+    }
 
-  const da = vtkDataArray.newInstance({
-    numberOfComponents: 1,
-    values: largeScalarData,
-  });
-  da.setName('scalars');
+    const da = vtkDataArray.newInstance({
+      numberOfComponents: 1,
+      values: largeScalarData,
+    });
+    da.setName('scalars');
 
-  const cpd = id.getPointData();
-  cpd.setScalars(da);
+    const cpd = id.getPointData();
+    cpd.setScalars(da);
 
-  mapper.setInputData(id);
-  mapper.setSliceAtFocalPoint(true);
-  mapper.setSlicingMode(SlicingMode.Z);
+    mapper.setInputData(id);
+    mapper.setSliceAtFocalPoint(true);
+    mapper.setSlicingMode(SlicingMode.Z);
 
-  // create transfer function, and piecewise function
-  const rgb = vtkColorTransferFunction.newInstance();
-  rgb.addRGBPoint(min, 0, 0, 0);
-  rgb.addRGBPoint(max, 1, 1, 1);
+    // create transfer function, and piecewise function
+    const rgb = vtkColorTransferFunction.newInstance();
+    rgb.addRGBPoint(min, 0, 0, 0);
+    rgb.addRGBPoint(max, 1, 1, 1);
 
-  const ofun = vtkPiecewiseFunction.newInstance();
-  ofun.addPoint(0, 1);
-  ofun.addPoint(max, 1);
+    const ofun = vtkPiecewiseFunction.newInstance();
+    ofun.addPoint(0, 1);
+    ofun.addPoint(max, 1);
 
-  actor.getProperty().setRGBTransferFunction(rgb);
-  actor.getProperty().setPiecewiseFunction(ofun);
-  actor.getProperty().setUseLookupTableScalarRange(true);
-  actor.setMapper(mapper);
+    actor.getProperty().setRGBTransferFunction(rgb);
+    actor.getProperty().setPiecewiseFunction(ofun);
+    actor.getProperty().setUseLookupTableScalarRange(true);
+    actor.setMapper(mapper);
 
-  // create renderwindow
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
-  glwindow.setContainer(renderWindowContainer);
-  renderWindow.addView(glwindow);
-  glwindow.setSize(400, 400);
+    // create renderwindow
+    const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+    glwindow.setContainer(renderWindowContainer);
+    renderWindow.addView(glwindow);
+    glwindow.setSize(400, 400);
 
-  // Interactor
-  const interactor = vtkRenderWindowInteractor.newInstance();
-  interactor.setStillUpdateRate(0.01);
-  interactor.setView(glwindow);
-  interactor.initialize();
-  interactor.bindEvents(renderWindowContainer);
+    // Interactor
+    const interactor = vtkRenderWindowInteractor.newInstance();
+    interactor.setStillUpdateRate(0.01);
+    interactor.setView(glwindow);
+    interactor.initialize();
+    interactor.bindEvents(renderWindowContainer);
 
-  renderer.addActor(actor);
-  renderer.resetCamera();
-  renderer.resetCameraClippingRange();
-  renderer.getActiveCamera().setParallelProjection(true);
+    renderer.addActor(actor);
+    renderer.resetCamera();
+    renderer.resetCameraClippingRange();
+    renderer.getActiveCamera().setParallelProjection(true);
 
-  const promise = glwindow
-    .captureNextImage()
-    .then((image) =>
-      testUtils.compareImages(
-        image,
-        [baseline1],
-        'Rendering/OpenGL/ImageMapper/testLargeScalarsImage',
-        t,
-        1.5
+    const promise = glwindow
+      .captureNextImage()
+      .then((image) =>
+        testUtils.compareImages(
+          image,
+          [baseline1],
+          'Rendering/OpenGL/ImageMapper/testLargeScalarsImage',
+          1.5
+        )
       )
-    )
-    .finally(gc.releaseResources);
-  renderWindow.render();
-  return promise;
-});
+      .finally(gc.releaseResources);
+    renderWindow.render();
+    return promise;
+  }
+);

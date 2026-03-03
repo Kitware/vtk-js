@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -19,9 +19,9 @@ import baseline from './testVolumeMapperShadowClip.png';
 
 // Test the volume mapper with clipping combined with volumetric scattering
 // This tests that the rays cast for volumetric shadow calculation ignore clipped voxels.
-test.onlyIfWebGL('Test Volume Mapper Shadow Clip', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Volume Mapper Shadow Clip', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkVolumeMapper Shadow Clip');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -134,7 +134,6 @@ test.onlyIfWebGL('Test Volume Mapper Shadow Clip', (t) => {
         image,
         [baseline],
         'Rendering/Core/VolumeMapper/testVolumeMapperClip',
-        t,
         1.5
       )
     )

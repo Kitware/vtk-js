@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
@@ -14,9 +14,9 @@ import baseline2 from './testVectorComponent2.png';
 
 const { GetArray } = vtkMapper;
 
-test.onlyIfWebGL('Test VectorComponent', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test VectorComponent', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkMapper Vector Component');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -67,7 +67,6 @@ test.onlyIfWebGL('Test VectorComponent', (t) => {
         image,
         [baseline, baseline2],
         'Rendering/Core/Mapper/testVectorComponent.js',
-        t,
         5
       )
     )

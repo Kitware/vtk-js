@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkGenericRenderWindow from 'vtk.js/Sources/Rendering/Misc/GenericRenderWindow';
@@ -11,7 +11,7 @@ import noScaleInPixelsWithParallelBaseline from './testNoScaleInPixelsWithParall
 import scaleInPixelsWithPerspectiveBaseline from './testScaleInPixelsWithPerspectiveBaseline.png';
 import scaleInPixelsWithParallelBaseline from './testScaleInPixelsWithParallelBaseline.png';
 
-test('Test vtkWidgetManager', (t) => {
+it('Test vtkWidgetManager', () => {
   const container = document.querySelector('body');
   const rwContainer = document.createElement('div');
   container.appendChild(rwContainer);
@@ -24,12 +24,11 @@ test('Test vtkWidgetManager', (t) => {
   const widget = vtkPolyLineWidget.newInstance();
   widgetManager.addWidget(widget);
   widgetManager.getState();
-  t.end();
 
   container.removeChild(rwContainer);
 });
 
-test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test getPixelWorldHeightAtCoord', () => {
   const gc = testUtils.createGarbageCollector();
 
   const container = document.querySelector('body');
@@ -60,9 +59,6 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
   grw.getInteractor().render();
 
   function testNoScaleInPixelsWithPerspective() {
-    t.comment(
-      'testNoScaleInPixelsWithPerspective(): scaleInPixels=false, parallelProjection=false'
-    );
     viewWidget.setScaleInPixels(false);
     camera.setParallelProjection(false);
     camera.setParallelScale(1);
@@ -75,7 +71,6 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
           image,
           [noScaleInPixelsWithPerspectiveBaseline],
           'Widgets/Core/WidgetManager/test/testNoScaleInPixelsWithPerspective',
-          t,
           0.5
         )
       );
@@ -85,9 +80,6 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
   }
 
   function testNoScaleInPixelsWithParallel() {
-    t.comment(
-      'testNoScaleInPixelsWithParallel(): scaleInPixels=false, parallelProjection=true'
-    );
     viewWidget.setScaleInPixels(false);
     camera.setParallelProjection(true);
     camera.setParallelScale(100);
@@ -100,7 +92,6 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
           image,
           [noScaleInPixelsWithParallelBaseline],
           'Widgets/Core/WidgetManager/test/testNoScaleInPixelsWithParallel',
-          t,
           0.5
         )
       );
@@ -110,9 +101,6 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
   }
 
   function testScaleInPixelsWithPerspective() {
-    t.comment(
-      'testScaleInPixelsWithPerspective(): scaleInPixels=true, parallelProjection=false'
-    );
     viewWidget.setScaleInPixels(true);
     camera.setParallelProjection(false);
     camera.setParallelScale(1);
@@ -125,7 +113,6 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
           image,
           [scaleInPixelsWithPerspectiveBaseline],
           'Widgets/Core/WidgetManager/test/testScaleInPixelsWithPerspective',
-          t,
           0.5
         )
       );
@@ -147,7 +134,6 @@ test.onlyIfWebGL('Test getPixelWorldHeightAtCoord', (t) => {
           image,
           [scaleInPixelsWithParallelBaseline],
           'Widgets/Core/WidgetManager/test/scaleInPixelsWithParallel',
-          t,
           0.5
         )
       );

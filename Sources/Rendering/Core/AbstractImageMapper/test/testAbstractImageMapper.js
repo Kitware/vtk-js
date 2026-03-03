@@ -1,10 +1,8 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import vtkImageArrayMapper from 'vtk.js/Sources/Rendering/Core/ImageArrayMapper';
 
-test('Test vtkAbstractImageMapper publicAPI', (t) => {
+it('Test vtkAbstractImageMapper publicAPI', () => {
   const mapper = vtkImageArrayMapper.newInstance();
-  t.equal(mapper.getIsOpaque(), true);
-  t.equal(mapper.getCurrentImage(), null);
-  t.end();
+  expect(mapper.getIsOpaque()).toBe(true);
+  expect(mapper.getCurrentImage()).toBe(null);
 });

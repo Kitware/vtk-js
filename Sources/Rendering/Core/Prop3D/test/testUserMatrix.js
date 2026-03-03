@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -12,9 +12,9 @@ import { mat4 } from 'gl-matrix';
 
 import baseline from './testUserMatrix.png';
 
-test.onlyIfWebGL('Test Set Actor User Matrix', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Set Actor User Matrix', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkActor SetUserMatrix');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -69,7 +69,6 @@ test.onlyIfWebGL('Test Set Actor User Matrix', (t) => {
             image,
             [baseline],
             'Rendering/Core/Prop3D/testUserMatrix',
-            t,
             1.5
           )
         )

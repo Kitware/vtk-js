@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
@@ -92,9 +92,8 @@ function createView(gc, viewType, widget) {
  * If you don't, the viewUp computation will fail because it uses the previous viewUp value.
  * The manipulations I did in the example, have to be exactly reported in the test (one click = one rotation step = update all views)
  */
-test('Test rendering when several rotations plane', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
-  t.comment('ResliceCursorWidgets rendering');
+it('Test rendering when several rotations plane', async () => {
+  const gc = testUtils.createGarbageCollector();
 
   // --------------------------------------------------------------------------
   // Create constants
@@ -257,15 +256,11 @@ test('Test rendering when several rotations plane', async (t) => {
   function updateAndCompareView(viewType, expectedValues) {
     const comparedValues = updateView(viewType);
 
-    t.deepEqual(
-      vtkMath.roundVector(comparedValues.focalPoint, [], PRECISION),
-      vtkMath.roundVector(expectedValues.focalPoint, [], PRECISION),
-      `Camera focal point on ${viewType}`
-    );
-    t.deepEqual(
-      vtkMath.roundVector(comparedValues.viewUp, [], PRECISION),
-      vtkMath.roundVector(expectedValues.viewUp, [], PRECISION),
-      `Camera view up on ${viewType}`
+    expect(
+      vtkMath.roundVector(comparedValues.focalPoint, [], PRECISION)
+    ).toEqual(vtkMath.roundVector(expectedValues.focalPoint, [], PRECISION));
+    expect(vtkMath.roundVector(comparedValues.viewUp, [], PRECISION)).toEqual(
+      vtkMath.roundVector(expectedValues.viewUp, [], PRECISION)
     );
     return comparedValues;
   }
@@ -273,7 +268,6 @@ test('Test rendering when several rotations plane', async (t) => {
   // ----------------------------------------------------------------------
   // Check initialization
   // Check X view
-  t.comment('Initialization');
   updateAndCompareView(ViewTypes.YZ_PLANE, {
     focalPoint: [179.296875, 179.296875, 165],
     viewUp: [0, 0, 1],
@@ -299,7 +293,6 @@ test('Test rendering when several rotations plane', async (t) => {
   });
 
   // ----------------------------------------------------------------------
-  t.comment('Rotate Z by 45 degrees around Y');
   const xzWidget = viewAttributes[viewTypeToXYZ[ViewTypes.XZ_PLANE]];
   xzWidget.widgetInstance.rotateLineInView(
     'XinY',
@@ -331,7 +324,6 @@ test('Test rendering when several rotations plane', async (t) => {
   });
 
   // ----------------------------------------------------------------------
-  t.comment('Rotate 7 times Y by 5 degrees around Z (35°)');
   // Simulate increment of 5, seven times to have 35°
   for (let i = 0; i < 7; i++) {
     xzWidget.widgetInstance.rotateLineInView(
@@ -348,7 +340,6 @@ test('Test rendering when several rotations plane', async (t) => {
   updateView(ViewTypes.XY_PLANE);
 
   // ----------------------------------------------------------------------
-  t.comment('Rotate Z by -35 degrees around Y');
   xzWidget.widgetInstance.rotateLineInView(
     'YinZ',
     vtkMath.radiansFromDegrees(-35)

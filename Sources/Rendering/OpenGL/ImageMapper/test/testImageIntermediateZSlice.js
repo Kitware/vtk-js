@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkImageGridSource from 'vtk.js/Sources/Filters/Sources/ImageGridSource';
@@ -12,9 +12,9 @@ import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransfe
 import baseline from './testImageIntermediateZSlice.png';
 import { SlicingMode } from '../../../Core/ImageMapper/Constants';
 
-test.onlyIfWebGL('Test ImageMapper intermediate slices', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ImageMapper intermediate slices', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkOpenGLImageMapper testImage');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -101,7 +101,6 @@ test.onlyIfWebGL('Test ImageMapper intermediate slices', (t) => {
         image,
         [baseline],
         'Rendering/OpenGL/ImageMapper',
-        t,
         0.5
       )
     )

@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -11,9 +11,9 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import baseline from './testCone.png';
 
-test.onlyIfWebGL('Test vtkConeSource Rendering', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkConeSource Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkConeSource Rendering');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -62,7 +62,6 @@ test.onlyIfWebGL('Test vtkConeSource Rendering', (t) => {
         image,
         [baseline],
         'Filters/Sources/ConeSource/testCone',
-        t,
         2.5
       )
     )

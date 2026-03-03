@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -13,7 +13,7 @@ import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import baseline from './testMultipleRenderers.png';
 import baseline2 from './testMultipleRenderers2.png';
 
-test.onlyIfWebGL('Test multiple renderers', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test multiple renderers', () => {
   const gc = testUtils.createGarbageCollector();
 
   // Create some control UI
@@ -89,7 +89,6 @@ test.onlyIfWebGL('Test multiple renderers', (t) => {
         image,
         [baseline, baseline2],
         'Rendering/Core/RenderWindow/testMultipleRenderers',
-        t,
         5
       )
     )

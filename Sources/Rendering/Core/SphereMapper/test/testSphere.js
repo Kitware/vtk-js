@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -15,9 +15,9 @@ import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constant
 import baseline from './testSphere.png';
 import baseline2 from './testSphere2.png';
 
-test.onlyIfWebGL('Test SphereMapper', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test SphereMapper', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkSphereMapper testSphere');
+  expect('rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -112,7 +112,6 @@ test.onlyIfWebGL('Test SphereMapper', (t) => {
         image,
         [baseline, baseline2],
         'Rendering/Core/SphereMapper',
-        t,
         1
       )
     )

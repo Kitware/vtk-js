@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/OpenGL/Profiles/All';
@@ -18,12 +18,9 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import baselineOrtho from './testImageResliceMapperBorderRenderingOrtho.png';
 import baselineOblique from './testImageResliceMapperBorderRenderingOblique.png';
 
-test.onlyIfWebGL('Test ImageResliceMapper', async (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ImageResliceMapper', async () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok(
-    'rendering',
-    'vtkImageResliceMapper testImageResliceMapperBorderRendering'
-  );
+  expect('rendering').toBeTruthy();
 
   // Create container
   const bodyElem = document.querySelector('body');
@@ -119,7 +116,6 @@ test.onlyIfWebGL('Test ImageResliceMapper', async (t) => {
         image,
         [baseline],
         'Rendering/Core/ImageResliceMapper',
-        t,
         {
           pixelThreshold: 0.001, // 0.1% (range is [0, 1])
           mismatchTolerance: 1, // 1% (raw percentage)

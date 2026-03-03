@@ -1,5 +1,4 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
@@ -43,33 +42,19 @@ const vecSource = macro.newInstance((publicAPI, model) => {
   };
 })();
 
-test('Test vtkImageStreamline instance', (t) => {
-  t.ok(vtkImageStreamline, 'Make sure the class definition exist');
+it('Test vtkImageStreamline instance', () => {
+  expect(vtkImageStreamline).toBeTruthy();
   const instance = vtkImageStreamline.newInstance();
-  t.ok(instance, 'Make sure the instance exist');
+  expect(instance).toBeTruthy();
 
-  t.equal(
-    instance.getIntegrationStep(),
-    1,
-    'Default integrationStep should be 1'
-  );
-  t.equal(
-    instance.getMaximumNumberOfSteps(),
-    1000,
-    'Default MaximumNumberOfSteps should be 1000'
-  );
+  expect(instance.getIntegrationStep()).toBe(1);
+  expect(instance.getMaximumNumberOfSteps()).toBe(1000);
 
   instance.setIntegrationStep(0.1);
-  t.equal(
-    instance.getIntegrationStep(),
-    0.1,
-    'Updated value of integrationStep should be 0.1'
-  );
-
-  t.end();
+  expect(instance.getIntegrationStep()).toBe(0.1);
 });
 
-test('Test vtkImageStreamline execution', (t) => {
+it('Test vtkImageStreamline execution', () => {
   const planeSource = vtkPlaneSource.newInstance();
   planeSource.setOrigin(0.05, 0.05, 0.05);
   planeSource.setPoint1(0.05, 0.85, 0.05);
@@ -86,17 +71,7 @@ test('Test vtkImageStreamline execution', (t) => {
 
   const output = filter.getOutputData();
 
-  t.ok(output, 'Output dataset exist');
-  t.equal(
-    output.isA('vtkPolyData'),
-    true,
-    'The output dataset should be a vtkPolydata'
-  );
-  t.equal(
-    output.getPoints().getNumberOfPoints(),
-    2324,
-    'The number of points should be 2324'
-  );
-
-  t.end();
+  expect(output).toBeTruthy();
+  expect(output.isA('vtkPolyData')).toBe(true);
+  expect(output.getPoints().getNumberOfPoints()).toBe(2324);
 });

@@ -1,10 +1,10 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
-test('Test calling CoincidentTopologyHelper static functions', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+it('Test calling CoincidentTopologyHelper static functions', async () => {
+  const gc = testUtils.createGarbageCollector();
 
   // set back to starting/default values to avoid side effects for other tests
   const startingParameters =
@@ -18,11 +18,7 @@ test('Test calling CoincidentTopologyHelper static functions', async (t) => {
   );
   const endingParameters =
     vtkMapper.getResolveCoincidentTopologyPolygonOffsetParameters();
-  t.deepEqual(
-    startingParameters,
-    endingParameters,
-    'Initial PolygonOffset parameters after get and set are matching'
-  );
+  expect(startingParameters).toEqual(endingParameters);
 
   const startingLineParameters =
     vtkMapper.getResolveCoincidentTopologyLineOffsetParameters();
@@ -31,7 +27,7 @@ test('Test calling CoincidentTopologyHelper static functions', async (t) => {
     startingLineParameters
   );
 
-  t.ok('rendering', 'CoincidentTopologyHelper functions called without error');
+  expect('rendering').toBeTruthy();
 
   // Free memory, end the test
   gc.releaseResources();

@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -90,7 +90,7 @@ function createTestPolyData() {
 }
 
 // Test identity transform (no change)
-test('Test vtkTransformPolyDataFilter with Identity transform', (t) => {
+it('Test vtkTransformPolyDataFilter with Identity transform', () => {
   const filter = vtkTransformPolyDataFilter.newInstance();
   const inputData = createTestPolyData();
 
@@ -105,42 +105,23 @@ test('Test vtkTransformPolyDataFilter with Identity transform', (t) => {
   const inputPoints = inputData.getPoints().getData();
   const outputPoints = output.getPoints().getData();
 
-  t.ok(
-    vtkMath.areEquals(inputPoints, outputPoints),
-    'Points should be unchanged with identity transform'
-  );
-  t.equal(
-    output.getNumberOfPoints(),
-    inputData.getNumberOfPoints(),
-    'Number of points should be preserved'
-  );
-  t.equal(
-    output.getNumberOfCells(),
-    inputData.getNumberOfCells(),
-    'Number of cells should be preserved'
-  );
+  expect(vtkMath.areEquals(inputPoints, outputPoints)).toBeTruthy();
+  expect(output.getNumberOfPoints()).toBe(inputData.getNumberOfPoints());
+  expect(output.getNumberOfCells()).toBe(inputData.getNumberOfCells());
 
   // Check that vectors are correctly preserved
   const inputVectors = inputData.getPointData().getVectors().getData();
   const outputVectors = output.getPointData().getVectors().getData();
-  t.ok(
-    vtkMath.areEquals(inputVectors, outputVectors),
-    'Vectors should be unchanged with identity transform'
-  );
+  expect(vtkMath.areEquals(inputVectors, outputVectors)).toBeTruthy();
 
   // Check that normals are correctly preserved
   const inputNormals = inputData.getPointData().getNormals().getData();
   const outputNormals = output.getPointData().getNormals().getData();
-  t.ok(
-    vtkMath.areEquals(inputNormals, outputNormals),
-    'Normals should be unchanged with identity transform'
-  );
-
-  t.end();
+  expect(vtkMath.areEquals(inputNormals, outputNormals)).toBeTruthy();
 });
 
 // Test translation transform
-test('Test vtkTransformPolyDataFilter with translation transform', (t) => {
+it('Test vtkTransformPolyDataFilter with translation transform', () => {
   const filter = vtkTransformPolyDataFilter.newInstance();
   const inputData = createTestPolyData();
 
@@ -168,31 +149,25 @@ test('Test vtkTransformPolyDataFilter with translation transform', (t) => {
     3.0, // (0.5,1,0) + (1,2,3)
   ];
 
-  t.ok(
-    vtkMath.areEquals(outputPoints, expectedPoints),
-    'Points should be translated correctly'
-  );
+  expect(vtkMath.areEquals(outputPoints, expectedPoints)).toBeTruthy();
 
   // Check that vectors remain unchanged after translation
   const outputVectors = output.getPointData().getVectors().getData();
   const expectedVector = [0.0, 0.0, 1.0];
-  t.ok(
-    vtkMath.areEquals(outputVectors.slice(0, 3), expectedVector),
-    'First vector should remain unchanged after translation'
-  );
+  expect(
+    vtkMath.areEquals(outputVectors.slice(0, 3), expectedVector)
+  ).toBeTruthy();
 
   // Check that normals remain unchanged after translation
   const outputNormals = output.getPointData().getNormals().getData();
   const expectedNormal = [0.0, 0.0, 1.0];
-  t.ok(
-    vtkMath.areEquals(outputNormals.slice(0, 3), expectedNormal),
-    'First normal should remain unchanged after translation'
-  );
-  t.end();
+  expect(
+    vtkMath.areEquals(outputNormals.slice(0, 3), expectedNormal)
+  ).toBeTruthy();
 });
 
 // Test rotation transform
-test('Test vtkTransformPolyDataFilter with rotation transform', (t) => {
+it('Test vtkTransformPolyDataFilter with rotation transform', () => {
   const filter = vtkTransformPolyDataFilter.newInstance();
   const inputData = createTestPolyData();
 
@@ -220,10 +195,7 @@ test('Test vtkTransformPolyDataFilter with rotation transform', (t) => {
     0.0, // (0.5,1,0) -> (-1,0.5,0)
   ];
 
-  t.ok(
-    vtkMath.areEquals(outputPoints, expectedPoints),
-    'Points should be rotated correctly'
-  );
+  expect(vtkMath.areEquals(outputPoints, expectedPoints)).toBeTruthy();
 
   // Check one vector and one normal after rotation
   const outputVectors = output.getPointData().getVectors().getData();
@@ -233,19 +205,16 @@ test('Test vtkTransformPolyDataFilter with rotation transform', (t) => {
   const expectedVector = [0.0, 0.0, 1.0];
   const expectedNormal = [0.0, 0.0, 1.0];
 
-  t.ok(
-    vtkMath.areEquals(outputVectors.slice(0, 3), expectedVector),
-    'First vector should remain unchanged after Z rotation'
-  );
-  t.ok(
-    vtkMath.areEquals(outputNormals.slice(0, 3), expectedNormal),
-    'First normal should remain unchanged after Z rotation'
-  );
-  t.end();
+  expect(
+    vtkMath.areEquals(outputVectors.slice(0, 3), expectedVector)
+  ).toBeTruthy();
+  expect(
+    vtkMath.areEquals(outputNormals.slice(0, 3), expectedNormal)
+  ).toBeTruthy();
 });
 
 // Test scaling transform
-test('Test vtkTransformPolyDataFilter with scaling transform', (t) => {
+it('Test vtkTransformPolyDataFilter with scaling transform', () => {
   const filter = vtkTransformPolyDataFilter.newInstance();
   const inputData = createTestPolyData();
 
@@ -272,34 +241,23 @@ test('Test vtkTransformPolyDataFilter with scaling transform', (t) => {
     3.0,
     0.0, // (0.5,1,0) scaled
   ];
-  t.ok(
-    vtkMath.areEquals(outputPoints, expectedPoints),
-    'Points should be scaled correctly'
-  );
+  expect(vtkMath.areEquals(outputPoints, expectedPoints)).toBeTruthy();
 
   // Check transformed vectors
   const outputVectors = output.getPointData().getVectors().getData();
   const actualVector = outputVectors.slice(0, 3);
   const expectedVector = [0.0, 0.0, 4.0]; // Z component scaled by 4
-  t.ok(
-    vtkMath.areEquals(actualVector, expectedVector),
-    `First vector should be scaled correctly: expected [${expectedVector}], got [${actualVector}]`
-  );
+  expect(vtkMath.areEquals(actualVector, expectedVector)).toBeTruthy();
 
   // Check transformed normals
   const outputNormals = output.getPointData().getNormals().getData();
   const actualNormal = outputNormals.slice(0, 3);
   const expectedNormal = [0.0, 0.0, 1];
-  t.ok(
-    vtkMath.areEquals(actualNormal, expectedNormal),
-    `First normal should be transformed via inverse-transpose: expected [${expectedNormal}], got [${actualNormal}]`
-  );
-
-  t.end();
+  expect(vtkMath.areEquals(actualNormal, expectedNormal)).toBeTruthy();
 });
 
 // Test output precision settings
-test('Test vtkTransformPolyDataFilter with output precision', (t) => {
+it('Test vtkTransformPolyDataFilter with output precision', () => {
   const filter = vtkTransformPolyDataFilter.newInstance();
   const inputData = createTestPolyData();
 
@@ -310,27 +268,17 @@ test('Test vtkTransformPolyDataFilter with output precision', (t) => {
   filter.setInputData(inputData);
   filter.update();
   let output = filter.getOutputData();
-  t.equal(
-    output.getPoints().getDataType(),
-    VtkDataTypes.FLOAT,
-    'Single precision should use FLOAT'
-  );
+  expect(output.getPoints().getDataType()).toBe(VtkDataTypes.FLOAT);
 
   // Test double precision
   filter.setOutputPointsPrecision(DesiredOutputPrecision.DOUBLE);
   filter.update();
   output = filter.getOutputData();
-  t.equal(
-    output.getPoints().getDataType(),
-    VtkDataTypes.DOUBLE,
-    'Double precision should use DOUBLE'
-  );
-
-  t.end();
+  expect(output.getPoints().getDataType()).toBe(VtkDataTypes.DOUBLE);
 });
 
 // Test empty input handling
-test('Test vtkTransformPolyDataFilter with empty input', (t) => {
+it('Test vtkTransformPolyDataFilter with empty input', () => {
   const filter = vtkTransformPolyDataFilter.newInstance();
   const emptyData = vtkPolyData.newInstance();
 
@@ -340,17 +288,11 @@ test('Test vtkTransformPolyDataFilter with empty input', (t) => {
   filter.update();
 
   const output = filter.getOutputData();
-  t.equal(
-    output.getNumberOfPoints(),
-    0,
-    'Empty input should produce empty output'
-  );
-
-  t.end();
+  expect(output.getNumberOfPoints()).toBe(0);
 });
 
 // Test topology preservation
-test('Test vtkTransformPolyDataFilter with topology preservation', (t) => {
+it('Test vtkTransformPolyDataFilter with topology preservation', () => {
   const filter = vtkTransformPolyDataFilter.newInstance();
   const inputData = createTestPolyData();
 
@@ -367,15 +309,11 @@ test('Test vtkTransformPolyDataFilter with topology preservation', (t) => {
   const inputPolys = inputData.getPolys().getData();
   const outputPolys = output.getPolys().getData();
 
-  t.ok(
-    vtkMath.areEquals(inputPolys, outputPolys),
-    'Polygon topology should be preserved'
-  );
-  t.end();
+  expect(vtkMath.areEquals(inputPolys, outputPolys)).toBeTruthy();
 });
 
 // Test transform with vectors and normals
-test('Test vtkTransformPolyDataFilter with vectors and normals transformation', (t) => {
+it('Test vtkTransformPolyDataFilter with vectors and normals transformation', () => {
   const filter = vtkTransformPolyDataFilter.newInstance();
   const inputData = createTestPolyData();
 
@@ -391,32 +329,24 @@ test('Test vtkTransformPolyDataFilter with vectors and normals transformation', 
   const outputPointData = output.getPointData();
 
   // Check that vectors and normals are present
-  t.ok(outputPointData.getVectors(), 'Output should have vectors');
-  t.ok(outputPointData.getNormals(), 'Output should have normals');
+  expect(outputPointData.getVectors()).toBeTruthy();
+  expect(outputPointData.getNormals()).toBeTruthy();
 
   // After 90-degree rotation around X: (x,y,z) -> (x,-z,y)
   // So (0,0,1) -> (0,-1,0)
   const outputVectors = outputPointData.getVectors().getData();
   const expectedVectors = [0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0];
 
-  t.ok(
-    vtkMath.areEquals(outputVectors, expectedVectors),
-    'Vectors should be transformed correctly'
-  );
+  expect(vtkMath.areEquals(outputVectors, expectedVectors)).toBeTruthy();
 
   const outputNormals = outputPointData.getNormals().getData();
 
   const expectedNormals = [0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0];
-  t.ok(
-    vtkMath.areEquals(outputNormals, expectedNormals),
-    'Normals should be transformed correctly'
-  );
-
-  t.end();
+  expect(vtkMath.areEquals(outputNormals, expectedNormals)).toBeTruthy();
 });
 
 // Test transform with cell vectors and cell normals
-test('Test vtkTransformPolyDataFilter with cell normals and vectors transformation', (t) => {
+it('Test vtkTransformPolyDataFilter with cell normals and vectors transformation', () => {
   const filter = vtkTransformPolyDataFilter.newInstance();
   const inputData = createTestPolyData();
 
@@ -471,26 +401,22 @@ test('Test vtkTransformPolyDataFilter with cell normals and vectors transformati
   const outputCellData = output.getCellData();
 
   // Verify cell vectors and normals exist
-  t.ok(outputCellData.getVectors(), 'Output should have cell vectors');
-  t.ok(outputCellData.getNormals(), 'Output should have cell normals');
+  expect(outputCellData.getVectors()).toBeTruthy();
+  expect(outputCellData.getNormals()).toBeTruthy();
 
   // After 90-degree X rotation: (x,y,z) -> (x,-z,y)
   // So (0,0,1) -> (0,-1,0)
   const outputCellVectors = outputCellData.getVectors().getData();
   const expectedCellVectors = [0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0];
 
-  t.ok(
-    vtkMath.areEquals(outputCellVectors, expectedCellVectors),
-    'Cell vectors should be transformed correctly'
-  );
+  expect(
+    vtkMath.areEquals(outputCellVectors, expectedCellVectors)
+  ).toBeTruthy();
 
   const outputCellNormals = outputCellData.getNormals().getData();
   const expectedCellNormals = [0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0];
 
-  t.ok(
-    vtkMath.areEquals(outputCellNormals, expectedCellNormals),
-    'Cell normals should be transformed correctly'
-  );
-
-  t.end();
+  expect(
+    vtkMath.areEquals(outputCellNormals, expectedCellNormals)
+  ).toBeTruthy();
 });

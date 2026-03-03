@@ -1,11 +1,10 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
-test('Test vtkAbstractMapper publicAPI', (t) => {
+it('Test vtkAbstractMapper publicAPI', () => {
   const mapper = vtkMapper.newInstance();
-  t.equal(mapper.getClippingPlanes().length, 0);
+  expect(mapper.getClippingPlanes().length).toBe(0);
 
   const normals = [
     [1.0, 0.0, 0.0],
@@ -15,28 +14,27 @@ test('Test vtkAbstractMapper publicAPI', (t) => {
 
   const plane = vtkPlane.newInstance({ normal: normals[0] });
   mapper.addClippingPlane(plane);
-  t.equal(mapper.getClippingPlanes().length, 1);
+  expect(mapper.getClippingPlanes().length).toBe(1);
   mapper.removeClippingPlane(plane);
-  t.equal(mapper.getClippingPlanes().length, 0);
+  expect(mapper.getClippingPlanes().length).toBe(0);
   mapper.setClippingPlanes(plane);
-  t.equal(mapper.getClippingPlanes().length, 1);
+  expect(mapper.getClippingPlanes().length).toBe(1);
   mapper.removeAllClippingPlanes();
-  t.equal(mapper.getClippingPlanes().length, 0);
+  expect(mapper.getClippingPlanes().length).toBe(0);
   mapper.removeClippingPlane(plane);
 
   const plane2 = vtkPlane.newInstance({ normal: normals[1] });
   const plane3 = vtkPlane.newInstance({ normal: normals[2] });
 
   mapper.setClippingPlanes([plane, plane2, plane3]);
-  t.equal(mapper.getClippingPlanes().length, 3);
+  expect(mapper.getClippingPlanes().length).toBe(3);
   mapper.removeClippingPlane(plane);
-  t.equal(mapper.getClippingPlanes().length, 2);
+  expect(mapper.getClippingPlanes().length).toBe(2);
   for (let i = 0; i < mapper.getClippingPlanes().length; i++) {
     const normal = mapper.getClippingPlanes()[i].getNormal();
     const refNormal = normals[i + 1];
     for (let j = 0; j < 3; j++) {
-      t.equal(normal[j], refNormal[j]);
+      expect(normal[j]).toBe(refNormal[j]);
     }
   }
-  t.end();
 });

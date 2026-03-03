@@ -1,5 +1,4 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import vtkPiecewiseFunctionProxy from 'vtk.js/Sources/Proxy/Core/PiecewiseFunctionProxy';
 import Constants from 'vtk.js/Sources/Proxy/Core/PiecewiseFunctionProxy/Constants';
 
@@ -48,7 +47,7 @@ function normalize(points, range) {
   return points.map(([x, y]) => [(x - range[0]) / width, y]);
 }
 
-test('Test vtkPiecewiseFunctionProxy', (t) => {
+it('Test vtkPiecewiseFunctionProxy', () => {
   const pwfProxy = vtkPiecewiseFunctionProxy.newInstance();
   const pwf = pwfProxy.getPiecewiseFunction();
 
@@ -65,34 +64,23 @@ test('Test vtkPiecewiseFunctionProxy', (t) => {
   pwfProxy.setPoints(normalize(points, range));
   pwfProxy.setDataRange(...range);
 
-  t.ok(
-    !validatePwf(pwf, expected),
-    'Custom points should not be active in Gaussian mode'
-  );
+  expect(!validatePwf(pwf, expected)).toBeTruthy();
 
   pwfProxy.setMode(Mode.Points);
-  t.ok(
-    validatePwf(pwf, expected),
-    'Custom points should be active in Points mode'
-  );
+  expect(validatePwf(pwf, expected)).toBeTruthy();
 
   pwfProxy.setGaussians(null);
-  t.ok(
-    listEquals(pwfProxy.getGaussians(), Defaults.Gaussians, 'object'),
-    'Default nodes'
-  );
+  expect(
+    listEquals(pwfProxy.getGaussians(), Defaults.Gaussians, 'object')
+  ).toBeTruthy();
 
   pwfProxy.setPoints(null);
-  t.ok(
-    listEquals(pwfProxy.getPoints(), Defaults.Points, 'array'),
-    'Default points'
-  );
+  expect(
+    listEquals(pwfProxy.getPoints(), Defaults.Points, 'array')
+  ).toBeTruthy();
 
   pwfProxy.setNodes(null);
-  t.ok(
-    listEquals(pwfProxy.getNodes(), Defaults.Nodes, 'object'),
-    'Default nodes'
-  );
-
-  t.end();
+  expect(
+    listEquals(pwfProxy.getNodes(), Defaults.Nodes, 'object')
+  ).toBeTruthy();
 });

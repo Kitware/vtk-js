@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtk from 'vtk.js/Sources/vtk';
 import macro from 'vtk.js/Sources/macros';
 
@@ -64,12 +64,8 @@ function ignoreMTime(json) {
   return JSON.stringify(json).replace(/"mtime":[0-9]+/g, '"mtime":0');
 }
 
-function assertSameSerializedContent(t, state, state2) {
-  t.deepEqual(
-    ignoreMTime(state),
-    ignoreMTime(state2),
-    'But same serialized content'
-  );
+function assertSameSerializedContent(state, state2) {
+  expect(ignoreMTime(state)).toEqual(ignoreMTime(state2));
 }
 
 classToTest.forEach((testName) => {
@@ -78,54 +74,47 @@ classToTest.forEach((testName) => {
   const initData = SERIALIZABLE_CLASSES[testName].data;
   const debug = SERIALIZABLE_CLASSES[testName].debug;
 
-  test(`Test ${testName} serialization/deserialization`, (t) => {
-    t.ok(klass, 'Make sure the class definition exist');
+  it(`Test ${testName} serialization/deserialization`, () => {
+    expect(klass).toBeTruthy();
     const instance = klass.newInstance(initData);
-    t.ok(instance, 'Make sure the instance exist');
+    expect(instance).toBeTruthy();
 
     const state = instance.getState();
-    t.ok(instance, 'Make sure we can get serialize data');
+    expect(instance).toBeTruthy();
 
     const instance2 = vtk(state);
-    t.ok(instance, 'Make sure we can get deserialize data');
+    expect(instance).toBeTruthy();
     const state2 = instance2.getState();
 
     if (debug) {
       vtkDebugMacro(state);
     }
 
-    t.notEqual(instance, instance2, 'We have two different instances');
-    assertSameSerializedContent(t, state, state2);
+    expect(instance).not.toBe(instance2);
+    assertSameSerializedContent(state, state2);
 
     // Test JSON.stringify and JSON.parse behavior
     const jsonFromStringify = JSON.stringify(instance);
     const jsonFromGetState = JSON.stringify(state);
 
-    t.equal(
-      jsonFromStringify,
-      jsonFromGetState,
-      'We have the same json string.'
-    );
+    expect(jsonFromStringify).toBe(jsonFromGetState);
 
     const state3 = JSON.parse(jsonFromStringify);
     const instance3 = vtk(state3);
     const state4 = JSON.parse(jsonFromGetState);
     const instance4 = vtk(state4);
 
-    t.ok(instance3, 'Make sure we get a valid instance');
-    t.notEqual(instance3, instance4, 'We have two different instances');
-    assertSameSerializedContent(t, state3, state4);
-
-    t.end();
+    expect(instance3).toBeTruthy();
+    expect(instance3).not.toBe(instance4);
+    assertSameSerializedContent(state3, state4);
   });
 
-  test(`Test ${testName} serialization on deleted object`, (t) => {
-    t.ok(klass, 'Make sure the class definition exist');
+  it(`Test ${testName} serialization on deleted object`, () => {
+    expect(klass).toBeTruthy();
     const instance = klass.newInstance(initData);
-    t.ok(instance, 'Make sure the instance exist');
+    expect(instance).toBeTruthy();
     instance.delete();
-    t.equal(JSON.stringify(instance), 'null');
-    t.end();
+    expect(JSON.stringify(instance)).toBe('null');
   });
 });
 
@@ -144,7 +133,7 @@ function findVTKObjects(objects) {
 }
 
 // If this test is hanging, it is due to a problem in `getState()`.
-test(`Test serialization of`, (t) => {
+it(`Test serialization of`, () => {
   const VTK = {
     Common,
     Filters,
@@ -173,7 +162,6 @@ test(`Test serialization of`, (t) => {
       !classesToIgnore.includes(className) &&
       (onlyClasses.length === 0 || onlyClasses.includes(className))
     ) {
-      t.comment(`${className}.newInstance()`);
       const instance = factory.newInstance();
       // If an error occurs here, you may have a cyclical dependency in the JSON
       // returned by getState(). This is typically fixed by making some model
@@ -181,5 +169,4 @@ test(`Test serialization of`, (t) => {
       JSON.stringify(instance);
     }
   });
-  t.end();
 });

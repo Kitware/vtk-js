@@ -63,33 +63,29 @@ function createComplexTriangleStrip() {
   return triangleStrip;
 }
 
-test('vtkTriangleStrip - Initialization with points', (t) => {
+it('vtkTriangleStrip - Initialization with points', () => {
   const triangleStrip = createSimpleTriangleStrip();
 
-  t.equal(triangleStrip.getNumberOfPoints(), 4, 'Should have 4 points');
-  t.equal(triangleStrip.getNumberOfEdges(), 4, 'Should have 4 edges');
-  t.equal(triangleStrip.getNumberOfFaces(), 0, 'Should have 0 faces');
-
-  t.end();
+  expect(triangleStrip.getNumberOfPoints()).toBe(4);
+  expect(triangleStrip.getNumberOfEdges()).toBe(4);
+  expect(triangleStrip.getNumberOfFaces()).toBe(0);
 });
 
-test('vtkTriangleStrip - complex triangle strip', (t) => {
+it('vtkTriangleStrip - complex triangle strip', () => {
   const triangleStrip = createComplexTriangleStrip();
 
-  t.equal(triangleStrip.getNumberOfPoints(), 5, 'Should have 5 points');
-  t.equal(triangleStrip.getNumberOfEdges(), 5, 'Should have 5 edges');
+  expect(triangleStrip.getNumberOfPoints()).toBe(5);
+  expect(triangleStrip.getNumberOfEdges()).toBe(5);
 
   // Test triangulation of complex strip
   const result = triangleStrip.triangulate();
   const pts = triangleStrip.getPointArray();
 
-  t.ok(result, 'Complex triangulation should succeed');
-  t.equal(pts.length, 9, 'Should have 9 point IDs (3 triangles * 3 points)');
-
-  t.end();
+  expect(result).toBeTruthy();
+  expect(pts.length).toBe(9);
 });
 
-test('vtkTriangleStrip - edge cases', (t) => {
+it('vtkTriangleStrip - edge cases', () => {
   const triangleStrip = vtkTriangleStrip.newInstance();
   const points = vtkPoints.newInstance();
 
@@ -98,53 +94,43 @@ test('vtkTriangleStrip - edge cases', (t) => {
 
   triangleStrip.initialize(points, [0, 1, 2]);
 
-  t.equal(triangleStrip.getNumberOfPoints(), 3, 'Should handle minimum case');
+  expect(triangleStrip.getNumberOfPoints()).toBe(3);
 
   const result = triangleStrip.triangulate();
   const pts = triangleStrip.getPointArray();
 
-  t.ok(result, 'Should triangulate single triangle');
-  t.equal(pts.length, 3, 'Should have 3 point IDs for single triangle');
-
-  t.end();
+  expect(result).toBeTruthy();
+  expect(pts.length).toBe(3);
 });
 
-test('vtkTriangleStrip - getCellBoundary', (t) => {
+it('vtkTriangleStrip - getCellBoundary', () => {
   const triangleStrip = createSimpleTriangleStrip();
   const pts = [];
   const pcoords = [0.5, 0.5, 0];
 
   const result = triangleStrip.cellBoundary(0, pcoords, pts);
 
-  t.ok(result, 'Should return valid boundary result');
-  t.ok(pts.length === 2, 'Should return 2 points for boundary');
-
-  t.end();
+  expect(result).toBeTruthy();
+  expect(pts.length === 2).toBeTruthy();
 });
 
-test('vtkTriangleStrip - triangulate', (t) => {
+it('vtkTriangleStrip - triangulate', () => {
   const triangleStrip = createSimpleTriangleStrip();
   const result = triangleStrip.triangulate();
   const ptIds = triangleStrip.getPointArray();
 
-  t.ok(result, 'Triangulation should succeed');
-  t.equal(ptIds.length, 6, 'Should have 6 point IDs (2 triangles * 3 points)');
+  expect(result).toBeTruthy();
+  expect(ptIds.length).toBe(6);
 
   // Check triangle winding order
   const tri1 = [ptIds[0], ptIds[1], ptIds[2]];
   const tri2 = [ptIds[3], ptIds[4], ptIds[5]];
 
-  t.deepEqual(tri1, [0, 1, 2], 'First triangle should have correct winding');
-  t.deepEqual(
-    tri2,
-    [2, 1, 3],
-    'Second triangle should have correct winding (flipped)'
-  );
-
-  t.end();
+  expect(tri1).toEqual([0, 1, 2]);
+  expect(tri2).toEqual([2, 1, 3]);
 });
 
-test('vtkTriangleStrip - derivatives', (t) => {
+it('vtkTriangleStrip - derivatives', () => {
   const triangleStrip = createSimpleTriangleStrip();
 
   const subId = 0;
@@ -153,26 +139,24 @@ test('vtkTriangleStrip - derivatives', (t) => {
   // Constant field
   let derivs = [];
   triangleStrip.derivatives(subId, pcoords, [7, 7, 7, 7], dim, derivs);
-  t.deepEqual(derivs, [0, 0, 0], 'Constant field should have zero gradient');
+  expect(derivs).toEqual([0, 0, 0]);
 
   // Linear in x
   derivs = [];
   triangleStrip.derivatives(subId, pcoords, [0, 1, 0, 1], dim, derivs);
-  t.ok(Math.abs(derivs[0] - 1) < 1e-6, 'dV/dx should be 1 for linear x field');
-  t.ok(Math.abs(derivs[1]) < 1e-6, 'dV/dy should be 0 for linear x field');
-  t.ok(Math.abs(derivs[2]) < 1e-6, 'dV/dz should be 0 for planar triangle');
+  expect(Math.abs(derivs[0] - 1) < 1e-6).toBeTruthy();
+  expect(Math.abs(derivs[1]) < 1e-6).toBeTruthy();
+  expect(Math.abs(derivs[2]) < 1e-6).toBeTruthy();
 
   // Linear in y
   derivs = [];
   triangleStrip.derivatives(subId, pcoords, [0, 0, 1, 1], dim, derivs);
-  t.ok(Math.abs(derivs[0]) < 1e-6, 'dV/dx should be 0 for linear y field');
-  t.ok(Math.abs(derivs[1] - 1) < 1e-6, 'dV/dy should be 1 for linear y field');
-  t.ok(Math.abs(derivs[2]) < 1e-6, 'dV/dz should be 0 for planar triangle');
-
-  t.end();
+  expect(Math.abs(derivs[0]) < 1e-6).toBeTruthy();
+  expect(Math.abs(derivs[1] - 1) < 1e-6).toBeTruthy();
+  expect(Math.abs(derivs[2]) < 1e-6).toBeTruthy();
 });
 
-test('vtkTriangleStrip - evaluatePosition', (t) => {
+it('vtkTriangleStrip - evaluatePosition', () => {
   const points = vtkPoints.newInstance();
   points.setNumberOfPoints(3);
   points.setData(Float32Array.from([0, 0, 0, 2, 0, 0, 2, 2, 0]));
@@ -196,17 +180,15 @@ test('vtkTriangleStrip - evaluatePosition', (t) => {
     weights
   );
 
-  t.ok(result.evaluation, 'Should return valid status');
-  t.ok(dist2[0] >= 0, 'Distance should be non-negative');
+  expect(result.evaluation).toBeTruthy();
+  expect(dist2[0] >= 0).toBeTruthy();
 
   // Check that weights sum to 1 for the relevant triangle
   const weightSum = weights.reduce((sum, w) => sum + w, 0);
-  t.ok(Math.abs(weightSum - 1.0) < 1e-10, 'Weights should sum to 1');
-
-  t.end();
+  expect(Math.abs(weightSum - 1.0) < 1e-10).toBeTruthy();
 });
 
-test('vtkTriangleStrip - evaluateLocation', (t) => {
+it('vtkTriangleStrip - evaluateLocation', () => {
   const triangleStrip = createSimpleTriangleStrip();
 
   const subId = 0;
@@ -216,37 +198,33 @@ test('vtkTriangleStrip - evaluateLocation', (t) => {
 
   triangleStrip.evaluateLocation(subId, pcoords, x, weights);
 
-  t.ok(x[0] >= 0 && x[0] <= 1, 'X coordinate should be in valid range');
-  t.ok(x[1] >= 0 && x[1] <= 1, 'Y coordinate should be in valid range');
-  t.equal(x[2], 0, 'Z coordinate should be 0');
+  expect(x[0] >= 0 && x[0] <= 1).toBeTruthy();
+  expect(x[1] >= 0 && x[1] <= 1).toBeTruthy();
+  expect(x[2]).toBe(0);
 
   // Check that weights sum to 1
   const weightSum = weights.reduce((sum, w) => sum + w, 0);
-  t.ok(Math.abs(weightSum - 1.0) < 1e-10, 'Weights should sum to 1');
-
-  t.end();
+  expect(Math.abs(weightSum - 1.0) < 1e-10).toBeTruthy();
 });
 
-test('vtkTriangleStrip - getEdge', (t) => {
+it('vtkTriangleStrip - getEdge', () => {
   const triangleStrip = createSimpleTriangleStrip();
 
   // Test first edge
   const edge0 = triangleStrip.getEdge(0);
-  t.ok(edge0, 'Should return valid edge');
-  t.equal(edge0.getClassName(), 'vtkLine', 'Edge should be a line');
+  expect(edge0).toBeTruthy();
+  expect(edge0.getClassName()).toBe('vtkLine');
 
   // Test middle edge
   const edge1 = triangleStrip.getEdge(1);
-  t.ok(edge1, 'Should return valid edge');
+  expect(edge1).toBeTruthy();
 
   // Test last edge
   const lastEdge = triangleStrip.getEdge(3);
-  t.ok(lastEdge, 'Should return valid edge');
-
-  t.end();
+  expect(lastEdge).toBeTruthy();
 });
 
-test('vtkTriangleStrip - intersectWithLine', (tc) => {
+it('vtkTriangleStrip - intersectWithLine', () => {
   const triangleStrip = createSimpleTriangleStrip();
 
   // Line that intersects the triangle strip
@@ -258,8 +236,7 @@ test('vtkTriangleStrip - intersectWithLine', (tc) => {
   // const subId = [0];
 
   const result = triangleStrip.intersectWithLine(p1, p2, tol, x, pcoords);
-  tc.ok(result.intersect, 'Should intersect with line');
-  // tc.ok(subId[0] >= 0, 'SubId should be valid');
+  expect(result.intersect).toBeTruthy();
 
   // Line that doesn't intersect
   const p3 = [-2, 0, 0];
@@ -315,32 +292,26 @@ test('vtkTriangleStrip - clip', (t) => {
   t.end();
 });
 
-test('vtkTriangleStrip - getParametricCenter', (t) => {
+it('vtkTriangleStrip - getParametricCenter', () => {
   const triangleStrip = createSimpleTriangleStrip();
   const pcoords = [0, 0, 0];
 
   const subId = triangleStrip.getParametricCenter(pcoords);
 
-  t.ok(subId >= 0, 'SubId should be valid');
-  t.ok(Math.abs(pcoords[0] - 0.333333) < 1e-5, 'Parametric U should be ~1/3');
-  t.ok(Math.abs(pcoords[1] - 0.333333) < 1e-5, 'Parametric V should be ~1/3');
-  t.equal(pcoords[2], 0, 'Parametric W should be 0');
-
-  t.end();
+  expect(subId >= 0).toBeTruthy();
+  expect(Math.abs(pcoords[0] - 0.333333) < 1e-5).toBeTruthy();
+  expect(Math.abs(pcoords[1] - 0.333333) < 1e-5).toBeTruthy();
+  expect(pcoords[2]).toBe(0);
 });
 
-test('vtkTriangleStrip - decomposeStrip static method', (t) => {
+it('vtkTriangleStrip - decomposeStrip static method', () => {
   const polys = vtkCellArray.newInstance();
   const pts = [0, 1, 2, 3, 4];
 
   // Create a triangle strip instance to call the method
   vtkTriangleStrip.decomposeStrip(pts, polys);
 
-  t.equal(
-    polys.getNumberOfCells(),
-    3,
-    'Should create 3 triangles from 5 points'
-  );
+  expect(polys.getNumberOfCells()).toBe(3);
 
   const expectedTris = [
     Uint32Array.from([0, 1, 2]),
@@ -353,17 +324,7 @@ test('vtkTriangleStrip - decomposeStrip static method', (t) => {
   const tri2 = data.subarray(5, 8);
   const tri3 = data.subarray(9, 12);
 
-  t.deepEqual(
-    tri1,
-    expectedTris[0],
-    'First triangle should have correct order'
-  );
-  t.deepEqual(tri2, expectedTris[1], 'Second triangle should be flipped');
-  t.deepEqual(
-    tri3,
-    expectedTris[2],
-    'Third triangle should have correct order'
-  );
-
-  t.end();
+  expect(tri1).toEqual(expectedTris[0]);
+  expect(tri2).toEqual(expectedTris[1]);
+  expect(tri3).toEqual(expectedTris[2]);
 });

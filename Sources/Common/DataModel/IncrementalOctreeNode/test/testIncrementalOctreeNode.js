@@ -1,9 +1,8 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkIncrementalOctreeNode from 'vtk.js/Sources/Common/DataModel/IncrementalOctreeNode';
 
-test('Test vtkIncrementalOctreeNode instance', (t) => {
-  t.ok(vtkIncrementalOctreeNode, 'Make sure the class definition exists');
+it('Test vtkIncrementalOctreeNode instance', () => {
+  expect(vtkIncrementalOctreeNode).toBeTruthy();
   const instance = vtkIncrementalOctreeNode.newInstance();
-  t.ok(instance);
-  t.end();
+  expect(instance).toBeTruthy();
 });
