@@ -444,9 +444,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         case 'mouse':
         default: {
           // buttons bitmask: 1=left, 4=middle, 2=right
-          // eslint-disable-next-line no-bitwise
           const buttonBitMap = [1, 4, 2];
-          // eslint-disable-next-line no-bitwise
           const buttonBit = buttonBitMap[event.button] ?? 0;
           const callData = {
             ...getModifierKeysFor(event),
