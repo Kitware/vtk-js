@@ -132,19 +132,19 @@ VTK.js supports rendering to most devices that support the WebXR API. Rendering 
 
 ### Building and Running Examples
 
-Webpack can be used to run examples on local XR hardware. The following command will
+Vite can be used to run examples on local XR hardware. The following command will
 serve the "AR" example over a self-signed HTTPS connection:
 
 ```
 path/to/vtk-js> npm run example:https -- AR
 ...
-<i> [webpack-dev-server] Project is running at:
-<i> [webpack-dev-server] Loopback: https://localhost:9999/
-<i> [webpack-dev-server] On Your Network (IPv4): https://xxx.xxx.xxx.xxx:9999/
+VITE vX.Y.Z  ready in XXX ms
+➜  Local:   https://localhost:3000/
+➜  Network: https://xxx.xxx.xxx.xxx:3000/
 ```
 
 The example can then be launched on the WebXR device by navigating in a compatible browser to the
-address given at `https://xxx.xxx.xxx.xxx:9999` in the output.
+address given at `https://xxx.xxx.xxx.xxx:3000` in the output.
 
 ### Emulating XR Hardware
 
