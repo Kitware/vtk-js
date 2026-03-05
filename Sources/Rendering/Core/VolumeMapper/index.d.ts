@@ -9,8 +9,7 @@ import { BlendMode } from './Constants';
 /**
  *
  */
-export interface IVolumeMapperInitialValues
-  extends IAbstractMapper3DInitialValues {
+export interface IVolumeMapperInitialValues extends IAbstractMapper3DInitialValues {
   autoAdjustSampleDistances?: boolean;
   blendMode?: BlendMode;
   bounds?: Bounds;

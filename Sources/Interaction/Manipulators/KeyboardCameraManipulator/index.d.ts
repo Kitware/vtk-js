@@ -6,8 +6,7 @@ import vtkCamera from '../../../Rendering/Core/Camera';
 import vtkRenderer from '../../../Rendering/Core/Renderer';
 
 export interface vtkKeyboardCameraManipulator
-  extends vtkObject,
-    vtkCompositeKeyboardManipulator {
+  extends vtkObject, vtkCompositeKeyboardManipulator {
   /**
    * Returns whether a movement is ongoing.
    */

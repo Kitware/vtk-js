@@ -8,8 +8,7 @@ import vtkPolyData from '../PolyData';
 /**
  *
  */
-export interface IPointLocatorInitialValues
-  extends IAbstractPointLocatorInitialValues {
+export interface IPointLocatorInitialValues extends IAbstractPointLocatorInitialValues {
   numberOfPointsPerBucket?: number;
   bucketSize?: number;
 }

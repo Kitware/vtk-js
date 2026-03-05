@@ -6,8 +6,7 @@ import { IAbstractPointLocatorInitialValues } from '../AbstractPointLocator';
 /**
  *
  */
-export interface IIncrementalOctreePointLocatorInitialValues
-  extends IAbstractPointLocatorInitialValues {
+export interface IIncrementalOctreePointLocatorInitialValues extends IAbstractPointLocatorInitialValues {
   fudgeFactor: number;
   octreeMaxDimSize: number;
   buildCubicOctree: boolean;
@@ -20,8 +19,7 @@ export interface IIncrementalOctreePointLocatorInitialValues
 
 type vtkIncrementalOctreePointLocatorBase = vtkObject;
 
-export interface vtkIncrementalOctreePointLocator
-  extends vtkIncrementalOctreePointLocatorBase {}
+export interface vtkIncrementalOctreePointLocator extends vtkIncrementalOctreePointLocatorBase {}
 
 // ----------------------------------------------------------------------------
 // Static API

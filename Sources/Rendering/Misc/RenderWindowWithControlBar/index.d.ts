@@ -6,8 +6,7 @@ import vtkGenericRenderWindow, {
 /**
  *
  */
-export interface IRenderWindowWithControlBarInitialValues
-  extends IGenericRenderWindowInitialValues {
+export interface IRenderWindowWithControlBarInitialValues extends IGenericRenderWindowInitialValues {
   rootContainer?: HTMLElement;
   controlPosition?: Placement;
   controlSize?: number;

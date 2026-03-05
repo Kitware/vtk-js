@@ -17,15 +17,13 @@ interface ISliceToSubSlice {
   subSlice: number;
 }
 
-export interface IImageArrayMapperInitialValues
-  extends IAbstractImageMapperInitialValues {
+export interface IImageArrayMapperInitialValues extends IAbstractImageMapperInitialValues {
   slicingMode: SlicingMode.K;
   sliceToSubSliceMap: ISliceToSubSlice[];
 }
 
 export interface vtkImageArrayMapper
-  extends vtkAbstractImageMapper,
-    CoincidentTopologyHelper {
+  extends vtkAbstractImageMapper, CoincidentTopologyHelper {
   /**
    *
    * @param inputData set input as a vtkCollection of vtkImageData objects.

@@ -16,16 +16,14 @@ export interface IClosestIJKAxis {
   flip: boolean;
 }
 
-export interface IImageMapperInitialValues
-  extends IAbstractImageMapperInitialValues {
+export interface IImageMapperInitialValues extends IAbstractImageMapperInitialValues {
   closestIJKAxis?: IClosestIJKAxis;
   renderToRectangle?: boolean;
   sliceAtFocalPoint?: boolean;
 }
 
 export interface vtkImageMapper
-  extends vtkAbstractImageMapper,
-    CoincidentTopologyHelper {
+  extends vtkAbstractImageMapper, CoincidentTopologyHelper {
   /**
    * Returns the IJK slice value from a world position or XYZ slice value
    * @param {Vector3 | number} [pos] World point or XYZ slice value
