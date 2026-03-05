@@ -3,8 +3,7 @@ import { vtkPlane } from '../../../Common/DataModel/Plane';
 import { vtkAbstractRepresentationProxy } from '../../Core/AbstractRepresentationProxy';
 import { RGBColor } from '../../../types';
 
-export interface vtkResliceRepresentationProxy
-  extends vtkAbstractRepresentationProxy {
+export interface vtkResliceRepresentationProxy extends vtkAbstractRepresentationProxy {
   // proxy property mappings
 
   setVisibility(visible: boolean): boolean;

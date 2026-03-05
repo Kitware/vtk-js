@@ -88,8 +88,7 @@ export enum DesiredOutputPrecision {
 /**
  *
  */
-export interface IDataSetAttributesInitialValues
-  extends IFieldDataInitialValues {
+export interface IDataSetAttributesInitialValues extends IFieldDataInitialValues {
   activeScalars?: number;
   activeVectors?: number;
   activeTensors?: number;

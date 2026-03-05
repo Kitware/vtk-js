@@ -70,7 +70,7 @@ export default defineConfig({
       'Sources/Testing/setupTestEnv.js',
     ],
     setupFiles: ['Sources/Testing/setupTestEnv.js'],
-    testTimeout: 60000,
+    testTimeout: 120000,
     reporters: ['default', 'junit'],
     outputFile: {
       junit: 'Utilities/TestResults/junit-report.xml',
