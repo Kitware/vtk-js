@@ -5,11 +5,14 @@ import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkImageMarchingCubes from '@kitware/vtk.js/Filters/General/ImageMarchingCubes';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
-import vtkConnectivityFilter from '@kitware/vtk.js/Filters/General/ConnectivityFilter';
 import vtkImageData from '@kitware/vtk.js/Common/DataModel/ImageData';
 import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
+import vtkBFSConnectivityFilter from '@kitware/vtk.js/Filters/General/BFSConnectivityFilter';
+import Constants from '@kitware/vtk.js/Filters/General/BFSConnectivityFilter/Constants';
 
 import GUI from 'lil-gui';
+
+const { ExtractionMode } = Constants;
 
 function createVTKImageData(typedArray, dims, dataType, spacing) {
   const data = vtkImageData.newInstance();
@@ -83,10 +86,15 @@ function generateTestVolumeData(size) {
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const connectivityOptions = ['All Regions', 'Largest', 'Smallest', 'Custom'];
+const extractionModeOptions = [
+  'ExtractionMode_ALL',
+  'ExtractionMode_LARGEST',
+  'ExtractionMode_SMALLEST',
+  'ExtractionMode_CUSTOM',
+];
 const params = {
   IsoValue: 100.0,
-  ExtractionMode: connectivityOptions[0],
+  ExtractionMode: extractionModeOptions[0],
   CustomRegionIndex: 0,
 };
 
@@ -120,16 +128,16 @@ const mCubes = vtkImageMarchingCubes.newInstance({
 });
 mCubes.setInputData(imageData);
 
-const connectivityFilter = vtkConnectivityFilter.newInstance();
-connectivityFilter.setInputConnection(mCubes.getOutputPort());
-connectivityFilter.setExtractionModeToAll();
+const bfsFilter = vtkBFSConnectivityFilter.newInstance();
+bfsFilter.setInputConnection(mCubes.getOutputPort());
+bfsFilter.setExtractionModeToAll();
 
-mapper.setInputConnection(connectivityFilter.getOutputPort());
+mapper.setInputConnection(bfsFilter.getOutputPort());
 
 // ----------------------------------------------------------------------------
 // UI control handling
 // ----------------------------------------------------------------------------
-const gui = new GUI();
+const gui = new GUI({ width: 300 });
 
 gui
   .add(params, 'IsoValue', 0, 255, 1)
@@ -142,14 +150,14 @@ gui
 let customIndexController;
 
 gui
-  .add(params, 'ExtractionMode', connectivityOptions)
-  .name('Connectivity Extraction Mode')
-  .onChange((v) => {
-    const index = connectivityOptions.indexOf(v);
-    if (connectivityFilter) {
-      connectivityFilter.setExtractionMode(index);
-      if (index === 3) {
-        const count = connectivityFilter.getRegionsCount();
+  .add(params, 'ExtractionMode', extractionModeOptions)
+  .name('Mode')
+  .onChange((value) => {
+    if (bfsFilter) {
+      const mode = ExtractionMode[value];
+      bfsFilter.set({ extractionMode: mode });
+      if (mode === ExtractionMode.ExtractionMode_CUSTOM) {
+        const count = bfsFilter.getRegionsCount();
         console.log(`Total regions count: ${count}`);
         customIndexController.max(count - 1);
         customIndexController.show(true);
@@ -164,8 +172,8 @@ customIndexController = gui
   .add(params, 'CustomRegionIndex', 0, 1, 1)
   .name('Custom Region Index')
   .onChange((v) => {
-    if (connectivityFilter) {
-      connectivityFilter.setExtractionIndex(Number(v));
+    if (bfsFilter) {
+      bfsFilter.setExtractionIndex(Number(v));
       renderWindow.render();
     }
   });
@@ -185,6 +193,6 @@ renderWindow.render();
 // modify objects in your browser's developer console:
 // -----------------------------------------------------------
 
-global.filter = connectivityFilter;
+global.filter = bfsFilter;
 global.mapper = mapper;
 global.actor = actor;
