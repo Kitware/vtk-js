@@ -2,30 +2,23 @@ import macro from 'vtk.js/Sources/macros';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import Constants from './Constants';
+
+const { ExtractionMode } = Constants;
 
 function runBFS(polyData) {
+  if (!polyData.getLinks()) {
+    polyData.buildLinks();
+  }
   const polys = polyData.getPolys().getData();
   const numCells = polyData.getNumberOfCells();
-  const numPoints = polyData.getNumberOfPoints();
 
-  // CellToPoints mapping
-  const cellToPoints = new Array(numCells);
   const cellOffsets = new Uint32Array(numCells);
   let offset = 0;
   for (let i = 0; i < numCells; i++) {
     cellOffsets[i] = offset;
     const n = polys[offset];
-    cellToPoints[i] = polys.subarray(offset + 1, offset + 1 + n);
     offset += n + 1;
-  }
-
-  // PointToCells mapping
-  const pointToCells = Array.from({ length: numPoints }, () => []);
-  for (let i = 0; i < numCells; i++) {
-    const pts = cellToPoints[i];
-    for (let j = 0; j < pts.length; j++) {
-      pointToCells[pts[j]].push(i);
-    }
   }
 
   const visited = new Uint8Array(numCells);
@@ -40,9 +33,9 @@ function runBFS(polyData) {
       while (head < queue.length) {
         const cellId = queue[head++];
         component.push(cellId);
-        const pts = cellToPoints[cellId];
+        const pts = polyData.getCellPoints(cellId).cellPointIds;
         for (let j = 0; j < pts.length; j++) {
-          const neighborCells = pointToCells[pts[j]];
+          const neighborCells = polyData.getPointCells(pts[j]);
           for (let k = 0; k < neighborCells.length; k++) {
             const neighborId = neighborCells[k];
             if (!visited[neighborId]) {
@@ -58,15 +51,8 @@ function runBFS(polyData) {
   return { regions, cellOffsets };
 }
 
-const ExtractionMode = {
-  All: 0,
-  Largest: 1,
-  Smallest: 2,
-  Custom: 3,
-};
-
-function vtkConnectivityFilter(publicAPI, model) {
-  model.classHierarchy.push('vtkConnectivityFilter');
+function vtkBFSConnectivityFilter(publicAPI, model) {
+  model.classHierarchy.push('vtkBFSConnectivityFilter');
 
   publicAPI.requestData = (inData, outData) => {
     const input = inData[0];
@@ -75,7 +61,7 @@ function vtkConnectivityFilter(publicAPI, model) {
       return;
     }
 
-    console.time(`ConnectivityFilter`);
+    console.time(`BFSConnectivityFilter`);
 
     const output = outData[0] || vtkPolyData.newInstance();
 
@@ -89,11 +75,13 @@ function vtkConnectivityFilter(publicAPI, model) {
 
     // 3. select region
     let cells = null;
-    if (model.extractionMode === ExtractionMode.All) {
+    if (model.extractionMode === ExtractionMode.ExtractionMode_ALL) {
       cells = sortRegions.flatMap((arr) => Array.from(arr));
-    } else if (model.extractionMode === ExtractionMode.Smallest) {
+    } else if (
+      model.extractionMode === ExtractionMode.ExtractionMode_SMALLEST
+    ) {
       cells = sortRegions[sortRegions.length - 1];
-    } else if (model.extractionMode === ExtractionMode.Custom) {
+    } else if (model.extractionMode === ExtractionMode.ExtractionMode_CUSTOM) {
       if (
         model.extractionIndex >= 0 &&
         model.extractionIndex < model.regionsCount
@@ -153,30 +141,34 @@ function vtkConnectivityFilter(publicAPI, model) {
 
     outData[0] = output;
 
-    console.timeEnd(`ConnectivityFilter`);
+    console.timeEnd(`BFSConnectivityFilter`);
   };
 
   publicAPI.setExtractionModeToAll = () => {
-    publicAPI.setExtractionMode(ExtractionMode.All);
+    publicAPI.setExtractionMode(ExtractionMode.ExtractionMode_ALL);
   };
 
   publicAPI.setExtractionModeToLargest = () => {
-    publicAPI.setExtractionMode(ExtractionMode.Largest);
+    publicAPI.setExtractionMode(ExtractionMode.ExtractionMode_LARGEST);
   };
 
   publicAPI.setExtractionModeToSmallest = () => {
-    publicAPI.setExtractionMode(ExtractionMode.Smallest);
+    publicAPI.setExtractionMode(ExtractionMode.ExtractionMode_SMALLEST);
   };
 
   publicAPI.setExtractionModeToCustom = () => {
-    publicAPI.setExtractionMode(ExtractionMode.Custom);
+    publicAPI.setExtractionMode(ExtractionMode.ExtractionMode_CUSTOM);
   };
 
   publicAPI.getRegionsCount = () => model.regionsCount;
+
+  publicAPI.setRegionsCount = () => {
+    console.log('can not set RegionsCount');
+  };
 }
 
 const DEFAULT_VALUES = {
-  extractionMode: ExtractionMode.All,
+  extractionMode: ExtractionMode.ExtractionMode_ALL,
   extractionIndex: 0,
   regionsCount: 0,
 };
@@ -193,9 +185,12 @@ export function extend(publicAPI, model, initialValues = {}) {
     'regionsCount',
   ]);
 
-  vtkConnectivityFilter(publicAPI, model);
+  vtkBFSConnectivityFilter(publicAPI, model);
 }
 
-export const newInstance = macro.newInstance(extend, 'vtkConnectivityFilter');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkBFSConnectivityFilter'
+);
 
 export default { newInstance, extend };
