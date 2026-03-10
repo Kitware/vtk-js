@@ -15,7 +15,10 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test ColorTransferFunction Interpolation',
   () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect(
+      'rendering',
+      'vtkMapper ColorTransferFunction Interpolaiton'
+    ).toBeTruthy();
 
     // testUtils.keepDOM();
 

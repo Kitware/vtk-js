@@ -3,7 +3,10 @@ import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkTextureMapToSphere from 'vtk.js/Sources/Filters/Texture/TextureMapToSphere';
 
 it('Test vtkTextureMapToSphere instance', () => {
-  expect(vtkTextureMapToSphere).toBeTruthy();
+  expect(
+    vtkTextureMapToSphere,
+    'Make sure the class definition exists'
+  ).toBeTruthy();
   const instance = vtkTextureMapToSphere.newInstance();
   expect(instance).toBeTruthy();
 });

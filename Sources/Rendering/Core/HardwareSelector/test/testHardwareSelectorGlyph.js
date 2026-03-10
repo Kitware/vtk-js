@@ -18,7 +18,7 @@ import {
 
 it('Test HardwareSelectorGlyph', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'TestHardwareSelectorGlyph').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -108,9 +108,14 @@ it('Test HardwareSelectorGlyph', () => {
   sel.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_POINTS);
 
   return sel.selectAsync(renderer, 200, 200, 250, 300).then((res) => {
-    expect(res.length).toBe(7);
-    expect(res[0].getProperties().compositeID === 71).toBeTruthy();
-    expect(res[0].getProperties().prop).toBe(actor);
+    expect(res.length, 'Seven glyphs selected').toBe(7);
+    expect(
+      res[0].getProperties().compositeID === 71,
+      'glyph 71 was the first selected'
+    ).toBeTruthy();
+    expect(res[0].getProperties().prop, 'Correct prop was selected').toBe(
+      actor
+    );
 
     gc.releaseResources();
   });

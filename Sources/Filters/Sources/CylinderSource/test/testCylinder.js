@@ -13,7 +13,7 @@ import baseline from './testCylinder.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkCylinderSource Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkCylinderSource Rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

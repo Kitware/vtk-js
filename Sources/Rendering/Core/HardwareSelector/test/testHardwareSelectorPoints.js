@@ -13,7 +13,10 @@ import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Const
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test HardwareSelector Points', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect(
+    'rendering',
+    'vtkHardwareSelector TestHardwareSelectorPoints'
+  ).toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

@@ -20,7 +20,10 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test HardwareSelector',
   () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect(
+      'rendering',
+      'vtkHardwareSelector TestHardwareSelector'
+    ).toBeTruthy();
 
     // Create some control UI
     const container = document.querySelector('body');
@@ -78,10 +81,10 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
     selector.setArea(200, 200, 200, 200);
 
     const bufferCaptured = selector.captureBuffers();
-    expect(bufferCaptured).toBeTruthy();
+    expect(bufferCaptured, 'Selector captured buffer').toBeTruthy();
 
     const info = selector.getPixelInformation([200, 200], 0, [0, 0]);
-    expect(info?.attributeID).toBe(numberOfVerts);
+    expect(info?.attributeID, 'Last triangle picked').toBe(numberOfVerts);
 
     gc.releaseResources();
   },

@@ -13,7 +13,7 @@ import baseline from './testPlane.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkPlaneSource Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkPlaneSource Rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

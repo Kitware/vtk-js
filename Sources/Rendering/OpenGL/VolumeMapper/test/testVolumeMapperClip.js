@@ -20,7 +20,7 @@ import baseline from './testVolumeMapperClip.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Volume Mapper Clip', async () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkVolumeMapper Clip').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI

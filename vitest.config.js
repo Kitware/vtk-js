@@ -12,7 +12,7 @@ import {
 
 const noWebGL = !!process.env.NO_WEBGL;
 const webGPU = !!process.env.WEBGPU;
-const testBrowser = process.env.TEST_BROWSER || 'chrome';
+const testBrowser = process.env.TEST_BROWSER || 'chromium';
 const ci = !!process.env.CI;
 
 function buildBrowserInstances() {

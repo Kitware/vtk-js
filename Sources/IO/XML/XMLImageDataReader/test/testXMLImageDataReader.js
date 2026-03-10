@@ -32,14 +32,19 @@ it('Test XML data is read correctly', () => {
   reader.parseAsArrayBuffer(arrayBuffer);
   const imageData = reader.getOutputData();
 
-  expect(vtkMath.areEquals(imageData.getOrigin(), expectedOrigin)).toBeTruthy();
-
   expect(
-    vtkMath.areEquals(imageData.getSpacing(), expectedSpacing)
+    vtkMath.areEquals(imageData.getOrigin(), expectedOrigin),
+    'Make sure the origin is correct.'
   ).toBeTruthy();
 
   expect(
-    vtkMath.areEquals(imageData.getDirection(), expectedDirection)
+    vtkMath.areEquals(imageData.getSpacing(), expectedSpacing),
+    'Make sure the spacing is correct.'
+  ).toBeTruthy();
+
+  expect(
+    vtkMath.areEquals(imageData.getDirection(), expectedDirection),
+    'Make sure the direction is correct.'
   ).toBeTruthy();
 });
 
@@ -72,9 +77,13 @@ it('Test XML data is read when Direction attribute not present', () => {
   reader.parseAsArrayBuffer(arrayBuffer);
   const imageData = reader.getOutputData();
 
-  expect(vtkMath.areEquals(imageData.getOrigin(), expectedOrigin)).toBeTruthy();
+  expect(
+    vtkMath.areEquals(imageData.getOrigin(), expectedOrigin),
+    'Make sure the origin is correct.'
+  ).toBeTruthy();
 
   expect(
-    vtkMath.areEquals(imageData.getSpacing(), expectedSpacing)
+    vtkMath.areEquals(imageData.getSpacing(), expectedSpacing),
+    'Make sure the spacing is correct.'
   ).toBeTruthy();
 });

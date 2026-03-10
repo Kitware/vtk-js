@@ -23,7 +23,10 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test ImageResliceMapper Dynamic Inputs',
   async () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect(
+      'rendering',
+      'vtkImageResliceMapper testImageResliceMapperDynamicInputs'
+    ).toBeTruthy();
 
     const bodyElem = document.querySelector('body');
     const container = gc.registerDOMElement(document.createElement('div'));

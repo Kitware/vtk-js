@@ -12,7 +12,7 @@ import baseline from './testImage.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ImageMapper', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkImageMapper testImage').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

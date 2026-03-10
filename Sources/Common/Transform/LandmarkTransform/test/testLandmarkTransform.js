@@ -23,7 +23,8 @@ it('Test update in LandmarkTransform', () => {
     vtkMath.areEquals(
       transformMatrix,
       [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3, 3, 3, 1]
-    )
+    ),
+    'Test for one point'
   ).toBeTruthy();
   source.setNumberOfPoints(3);
   target.setNumberOfPoints(3);
@@ -41,6 +42,7 @@ it('Test update in LandmarkTransform', () => {
     vtkMath.areEquals(
       transformMatrix,
       [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3, 3, 3, 1]
-    )
+    ),
+    'Test for one known transform matrix'
   ).toBeTruthy();
 });

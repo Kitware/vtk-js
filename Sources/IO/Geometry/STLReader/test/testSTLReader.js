@@ -31,9 +31,9 @@ it('STLReader: parses ASCII STL', () => {
   reader.parseAsText(asciiStl);
 
   const output = reader.getOutputData();
-  expect(output).toBeTruthy();
-  expect(output.getNumberOfPoints()).toBe(9);
-  expect(output.getNumberOfPolys()).toBe(3);
+  expect(output, 'reader produces an output dataset').toBeTruthy();
+  expect(output.getNumberOfPoints(), 'parsed points are present').toBe(9);
+  expect(output.getNumberOfPolys(), 'parsed triangles are present').toBe(3);
 });
 
 it('STLReader: keeps raw duplicated vertices when merge is disabled', () => {
@@ -42,9 +42,12 @@ it('STLReader: keeps raw duplicated vertices when merge is disabled', () => {
   reader.parseAsText(asciiStl);
 
   const output = reader.getOutputData();
-  expect(output.getNumberOfPoints()).toBe(9);
-  expect(output.getNumberOfPolys()).toBe(3);
-  expect(output.getCellData().getNormals().getNumberOfTuples()).toBe(3);
+  expect(output.getNumberOfPoints(), 'raw STL has 9 point entries').toBe(9);
+  expect(output.getNumberOfPolys(), 'raw STL has 3 triangles').toBe(3);
+  expect(
+    output.getCellData().getNormals().getNumberOfTuples(),
+    'raw normals are defined per triangle'
+  ).toBe(3);
 });
 
 it('STLReader: merges with vtkMergePoints and removes degenerate triangles', () => {
@@ -54,9 +57,17 @@ it('STLReader: merges with vtkMergePoints and removes degenerate triangles', () 
   reader.parseAsText(asciiStl);
 
   const output = reader.getOutputData();
-  expect(output.getNumberOfPoints()).toBe(4);
-  expect(output.getNumberOfPolys()).toBe(2);
-  expect(output.getCellData().getNormals().getNumberOfTuples()).toBe(2);
+  expect(output.getNumberOfPoints(), 'merged output has 4 unique points').toBe(
+    4
+  );
+  expect(
+    output.getNumberOfPolys(),
+    'degenerate triangle removed after merge'
+  ).toBe(2);
+  expect(
+    output.getCellData().getNormals().getNumberOfTuples(),
+    'normals are remapped to kept triangles'
+  ).toBe(2);
 });
 
 it('STLReader: does not merge points when merging option is false', () => {
@@ -67,6 +78,12 @@ it('STLReader: does not merge points when merging option is false', () => {
   reader.parseAsText(asciiStl);
 
   const output = reader.getOutputData();
-  expect(output.getNumberOfPoints()).toBe(9);
-  expect(output.getNumberOfPolys()).toBe(3);
+  expect(
+    output.getNumberOfPoints(),
+    'points are not merged when merging is disabled'
+  ).toBe(9);
+  expect(
+    output.getNumberOfPolys(),
+    'triangles are kept when merging is disabled'
+  ).toBe(3);
 });

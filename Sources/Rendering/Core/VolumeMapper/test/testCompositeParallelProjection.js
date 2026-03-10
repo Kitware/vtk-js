@@ -15,7 +15,10 @@ import baseline1 from './testCompositeParallelProjection.png';
 
 it('Test Composite Volume Rendering with parallel projection', async () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect(
+    'rendering',
+    'vtkOpenGLVolumeMapper CompositeParallelProjection'
+  ).toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI

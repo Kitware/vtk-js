@@ -8,7 +8,7 @@ import vtkMergePoints from 'vtk.js/Sources/Common/DataModel/MergePoints';
 import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 
 it('Test vtkTriangle instance', () => {
-  expect(vtkTriangle).toBeTruthy();
+  expect(vtkTriangle, 'Make sure the class definition exists').toBeTruthy();
   const instance = vtkTriangle.newInstance();
   expect(instance).toBeTruthy();
 });
@@ -171,8 +171,14 @@ it('Test vtkTriangle intersectWithTriangle with intersection', () => {
   );
   expect(intersection.intersect).toBe(true);
   expect(intersection.coplanar).toBe(false);
-  expect(vtkMath.areEquals(intersection.pt1, [0.5, 0.5, 0.5])).toBeTruthy();
-  expect(vtkMath.areEquals(intersection.pt2, [0.5, 0.5, 0])).toBeTruthy();
+  expect(
+    vtkMath.areEquals(intersection.pt1, [0.5, 0.5, 0.5]),
+    `p1: ${intersection.pt1}`
+  ).toBeTruthy();
+  expect(
+    vtkMath.areEquals(intersection.pt2, [0.5, 0.5, 0]),
+    `p2: ${intersection.pt2}`
+  ).toBeTruthy();
 });
 
 it('Test vtkTriangle intersectWithTriangle no intersection', () => {

@@ -12,7 +12,7 @@ import baseline from './testFollower.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Follower class', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkFollower').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

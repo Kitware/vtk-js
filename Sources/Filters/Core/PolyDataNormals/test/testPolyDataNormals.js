@@ -39,7 +39,10 @@ it('Test vtkPolyDataNormals normals', () => {
   normals.update();
   const output = normals.getOutputData();
 
-  expect(vtkMath.roundVector(pointNormalsData, [], PRECISION)).toEqual(
+  expect(
+    vtkMath.roundVector(pointNormalsData, [], PRECISION),
+    'Same point normals'
+  ).toEqual(
     vtkMath.roundVector(
       output.getPointData().getNormals().getData(),
       [],
@@ -69,7 +72,10 @@ it('Test vtkPolyDataNormals normals', () => {
       cellNormal
     );
 
-    expect(vtkMath.roundVector(cellNormal, [], PRECISION)).toEqual(
+    expect(
+      vtkMath.roundVector(cellNormal, [], PRECISION),
+      `Same cell normal #${polysId}`
+    ).toEqual(
       vtkMath.roundVector(
         output
           .getCellData()

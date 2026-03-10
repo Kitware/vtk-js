@@ -57,10 +57,15 @@ function newProxyManager(proxyConfiguration = defaultConfig) {
 
 it('Proxy activation via config', () => {
   const proxyManager = newProxyManager();
-  expect(proxyManager.getActiveSource()).toBe(undefined);
+  expect(proxyManager.getActiveSource(), 'No initial active source').toBe(
+    undefined
+  );
 
   const proxy = proxyManager.createProxy('Sources', 'TrivialProducer');
-  expect(proxyManager.getActiveSource()).toBe(proxy);
+  expect(
+    proxyManager.getActiveSource(),
+    'Active source set after proxy creation'
+  ).toBe(proxy);
 
   proxyManager.onModified(() => {
     expect.fail(
@@ -74,16 +79,24 @@ it('Proxy activation via config', () => {
 
 it('Proxy activation via .activate()', () => {
   const proxyManager = newProxyManager();
-  expect(proxyManager.getActiveSource()).toBe(undefined);
+  expect(
+    proxyManager.getActiveSource(),
+    'Proxy manager should not be modified when activating proxy twice'
+  ).toBe(undefined);
 
   const proxy = proxyManager.createProxy('Sources', 'TrivialProducer', {
     // Inhibit the default { activateOnCreate: true }
     activateOnCreate: false,
   });
-  expect(proxyManager.getActiveSource()).toBe(undefined);
+  expect(proxyManager.getActiveSource(), 'No initial active source').toBe(
+    undefined
+  );
 
   proxyManager.onModified(() => {});
 
   proxy.activate();
-  expect(proxyManager.getActiveSource()).toBe(proxy);
+  expect(
+    proxyManager.getActiveSource(),
+    'No active source after proxy creation'
+  ).toBe(proxy);
 });

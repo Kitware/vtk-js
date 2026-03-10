@@ -17,7 +17,7 @@ import baseline from './testGlyph3DMapperClip.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkGlyph3DMapper Clipping', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkGlyph3DMapper Clipping').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

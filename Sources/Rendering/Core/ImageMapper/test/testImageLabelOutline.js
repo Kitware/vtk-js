@@ -18,7 +18,7 @@ import baselineK from './testImageLabelOutline_K.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ImageMapper label outline', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkImageMapper label outline').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

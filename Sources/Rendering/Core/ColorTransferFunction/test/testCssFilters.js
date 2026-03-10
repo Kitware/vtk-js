@@ -6,14 +6,14 @@ it('Test CssFilters identity', () => {
   const identity = CssFilters.createIdentityFilter();
   const output = CssFilters.applyFilter(identity, ...color);
   const expectedOutput = [color[0], color[1], 0, 1];
-  expect(output).toEqual(expectedOutput);
+  expect(output, 'Apply identity filter').toEqual(expectedOutput);
 });
 
 it('Test CssFilters brightness', () => {
   const color = [0.1, 0.5, 0.9, 0.2];
   const halfBright = CssFilters.createBrightnessFilter(0.5);
   const output = CssFilters.applyFilter(halfBright, ...color);
-  expect([0.05, 0.25, 0.45, 0.2]).toEqual(output);
+  expect([0.05, 0.25, 0.45, 0.2], 'Apply brightness filter').toEqual(output);
 });
 
 it('Fuzzy test all CssFilters', () => {

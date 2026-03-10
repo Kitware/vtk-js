@@ -15,7 +15,7 @@ const VITE_CONFIG_PATH = path.join(
   'vite.example.config.mjs'
 );
 const DEFAULT_HOST = '0.0.0.0';
-const DEFAULT_PORT = '3000';
+const DEFAULT_PORT = '9999';
 
 program
   .option('--no-browser', 'Do not open the browser')

@@ -16,7 +16,7 @@ import baseline from './testMinimumIntensityProjection.png';
 
 it('Test Minimum Intensity Projection Volume Rendering', async () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkVolumeMapper MinIP').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI

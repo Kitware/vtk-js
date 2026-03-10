@@ -24,9 +24,12 @@ import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import baseline from './testAppendPolyData.png';
 
 it('Test vtkAppendPolyData instance', () => {
-  expect(vtkAppendPolyData).toBeTruthy();
+  expect(
+    vtkAppendPolyData,
+    'Make sure the class definition exists.'
+  ).toBeTruthy();
   const instance = vtkAppendPolyData.newInstance();
-  expect(instance).toBeTruthy();
+  expect(instance, 'Make sure an instance can be created.').toBeTruthy();
 });
 
 it('Test vtkAppendPolyData execution', () => {
@@ -42,14 +45,23 @@ it('Test vtkAppendPolyData execution', () => {
 
   const outPD = filter.getOutputData();
 
-  expect(outPD.getPoints().getNumberOfPoints() === 31).toBeTruthy();
-  expect(outPD.getPoints().getDataType() === VtkDataTypes.DOUBLE).toBeTruthy();
+  expect(
+    outPD.getPoints().getNumberOfPoints() === 31,
+    'Make sure the number of points is correct.'
+  ).toBeTruthy();
+  expect(
+    outPD.getPoints().getDataType() === VtkDataTypes.DOUBLE,
+    'Make sure the output data type is correct.'
+  ).toBeTruthy();
   const expNumPolys = [cone, cylinder].reduce(
     (count, c) => count + c.getOutputData().getPolys().getNumberOfCells(),
     0
   );
   const outNumPolys = outPD.getPolys().getNumberOfCells();
-  expect(outNumPolys === expNumPolys).toBeTruthy();
+  expect(
+    outNumPolys === expNumPolys,
+    'Make sure the number of polys is correct.'
+  ).toBeTruthy();
 });
 
 it('Test addInputData edge case', () => {
@@ -59,21 +71,30 @@ it('Test addInputData edge case', () => {
   appender.addInputData(input);
   const output = appender.getOutputData();
 
-  expect(input === output).toBeTruthy();
-  expect(appender.getNumberOfInputPorts() === 1).toBeTruthy();
+  expect(input === output, 'Single add input matches output').toBeTruthy();
+  expect(
+    appender.getNumberOfInputPorts() === 1,
+    'Expect 1 port after 1 add'
+  ).toBeTruthy();
 
   const input2 = vtkPolyData.newInstance();
   appender.addInputData(input2);
   const output2 = appender.getOutputData();
 
-  expect(output2 !== input && output2 !== input2).toBeTruthy();
+  expect(
+    output2 !== input && output2 !== input2,
+    'Multiple input distinct from output'
+  ).toBeTruthy();
 
-  expect(appender.getNumberOfInputPorts() === 2).toBeTruthy();
+  expect(
+    appender.getNumberOfInputPorts() === 2,
+    'Expect 2 ports after 2 adds'
+  ).toBeTruthy();
 });
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkAppendPolyData rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkAppendPolyData Rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

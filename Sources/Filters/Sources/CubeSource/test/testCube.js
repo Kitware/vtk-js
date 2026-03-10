@@ -13,7 +13,7 @@ import baseline2 from './testCube_2.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkCubeSource Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkCubeSource Rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

@@ -67,9 +67,12 @@ it('Test OBB tree transform', () => {
   const allCorners = getAllCorners(corner, min, mid, max);
 
   allCorners.forEach((actual, index) => {
-    expect(hasMatchingPoint(actual, expectedCorners, epsilon)).toBeTruthy();
+    expect(
+      hasMatchingPoint(actual, expectedCorners, epsilon),
+      `Corner ${index}`
+    ).toBeTruthy();
   });
-  expect(vtkMath.areEquals(size, expectedSize, epsilon)).toBeTruthy();
+  expect(vtkMath.areEquals(size, expectedSize, epsilon), 'size').toBeTruthy();
 
   const translation = [10, 0, 0];
   const transform = vtkMatrixBuilder
@@ -85,7 +88,8 @@ it('Test OBB tree transform', () => {
 
   translatedCorners.forEach((actual, index) => {
     expect(
-      hasMatchingPoint(actual, expectedTranslatedCorners, epsilon)
+      hasMatchingPoint(actual, expectedTranslatedCorners, epsilon),
+      `Corner ${index}`
     ).toBeTruthy();
   });
 });
@@ -114,14 +118,18 @@ it('Test OBB tree deep copy', () => {
   obbTreeTarget.deepCopy(obbTreeSource);
   const copiedTree = obbTreeTarget.getTree();
 
-  expect(copiedTree.getCorner()).toEqual(sourceNode.getCorner());
-  expect(copiedTree.getAxes()).toEqual(sourceNode.getAxes());
-  expect(copiedTree.getKids()).toEqual(sourceNode.getKids());
-  expect(copiedTree.getParent()).toEqual(sourceNode.getParent());
-  expect(obbTreeTarget.getLevel()).toEqual(obbTreeSource.getLevel());
-  expect(obbTreeTarget.getDataset()).toEqual(obbTreeSource.getDataset());
-  expect(obbTreeTarget.getAutomatic()).toEqual(obbTreeSource.getAutomatic());
-  expect(obbTreeTarget.getNumberOfCellsPerNode()).toEqual(
+  expect(copiedTree.getCorner(), 'Corner').toEqual(sourceNode.getCorner());
+  expect(copiedTree.getAxes(), 'Axes').toEqual(sourceNode.getAxes());
+  expect(copiedTree.getKids(), 'Kids').toEqual(sourceNode.getKids());
+  expect(copiedTree.getParent(), 'Parent').toEqual(sourceNode.getParent());
+  expect(obbTreeTarget.getLevel(), 'Level').toEqual(obbTreeSource.getLevel());
+  expect(obbTreeTarget.getDataset(), 'Dataset').toEqual(
+    obbTreeSource.getDataset()
+  );
+  expect(obbTreeTarget.getAutomatic(), 'Automatic').toEqual(
+    obbTreeSource.getAutomatic()
+  );
+  expect(obbTreeTarget.getNumberOfCellsPerNode(), 'Cells per node').toEqual(
     obbTreeSource.getNumberOfCellsPerNode()
   );
 

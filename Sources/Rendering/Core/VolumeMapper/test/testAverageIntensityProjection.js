@@ -16,7 +16,7 @@ import baseline from './testAverageIntensityProjection.png';
 
 it.skip('Test Average Intensity Projection Volume Rendering', async () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkVolumeMapper AverageIP').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI

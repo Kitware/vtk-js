@@ -14,7 +14,7 @@ import baseline from './testCategoricalColors.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Categorical Colors', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkLookupTable TestCategoricalColors').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI

@@ -29,7 +29,7 @@ function addActor(gc, renderer, size) {
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test HardwareSelector', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkHardwareSelector TestHardwareSelector').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -58,6 +58,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)('Test HardwareSelector', () => {
   console.time('first normal render');
   let previousTime = Date.now();
   const p1 = glwindow.captureNextImage().then(() => {
+    const taTime = Date.now() - previousTime;
     console.timeEnd('first normal render');
 
     console.time('second normal render');
@@ -77,7 +78,8 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)('Test HardwareSelector', () => {
 
         expect(
           // should take about 5 normal renders but we give it some wiggle room
-          tcTime < tbTime * 10
+          tcTime < tbTime * 10,
+          `Hardware selector takes less than ten normal renders (${taTime}, ${tbTime}, ${tcTime})`
         ).toBeTruthy();
 
         gc.releaseResources();

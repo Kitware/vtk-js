@@ -18,7 +18,7 @@ import {
 
 it('Test HardwareSelector', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkHardwareSelector TestHardwareSelector').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -124,8 +124,8 @@ it('Test HardwareSelector', () => {
         Math.abs(res[2].getProperties().worldPosition[1] - 1.0) < 0.02 &&
         Math.abs(res[2].getProperties().worldPosition[2] - 1.5) < 0.02;
 
-      expect(res.length === 3).toBeTruthy();
-      expect(allGood).toBeTruthy();
+      expect(res.length === 3, 'Three props selected').toBeTruthy();
+      expect(allGood, 'Correct props were selected').toBeTruthy();
     })
   );
 

@@ -48,21 +48,40 @@ it('Test signedAngleBetweenVector', () => {
 });
 
 it('Test roundNumber', () => {
-  expect(vtkMath.roundNumber(1)).toBe(1);
-  expect(vtkMath.roundNumber(1, 1)).toBe(1);
-  expect(vtkMath.roundNumber(1.4)).toBe(1);
-  expect(vtkMath.roundNumber(1.4, 0)).toBe(1);
-  expect(vtkMath.roundNumber(1.4, 1)).toBe(1.4);
-  expect(vtkMath.roundNumber(1.4, 2)).toBe(1.4);
-  expect(vtkMath.roundNumber(1.46, 0)).toBe(1);
-  expect(vtkMath.roundNumber(1.46, 1)).toBe(1.5);
-  expect(vtkMath.roundNumber(1.46, 2)).toBe(1.46);
-  expect(vtkMath.roundNumber(123.46, 0)).toBe(123);
-  expect(vtkMath.roundNumber(123.46, 1)).toBe(123.5);
-  expect(vtkMath.roundNumber(123.46, 2)).toBe(123.46);
-  expect(vtkMath.roundNumber(6.06627640054528e-14, 6)).toBe(0);
-  expect(vtkMath.roundNumber(-6.06627640054528e-14, 6)).toBe(0);
-  expect(vtkMath.roundNumber(1.23456e3, 2)).toBe(1234.56);
+  expect(vtkMath.roundNumber(1), 'vtkMath.roundNumber(1)').toBe(1);
+  expect(vtkMath.roundNumber(1, 1), 'vtkMath.roundNumber(1, 1)').toBe(1);
+  expect(vtkMath.roundNumber(1.4), 'vtkMath.roundNumber(1.4)').toBe(1);
+  expect(vtkMath.roundNumber(1.4, 0), 'vtkMath.roundNumber(1.4, 0)').toBe(1);
+  expect(vtkMath.roundNumber(1.4, 1), 'vtkMath.roundNumber(1.4, 1)').toBe(1.4);
+  expect(vtkMath.roundNumber(1.4, 2), 'vtkMath.roundNumber(1.4, 2)').toBe(1.4);
+  expect(vtkMath.roundNumber(1.46, 0), 'vtkMath.roundNumber(1.46, 0)').toBe(1);
+  expect(vtkMath.roundNumber(1.46, 1), 'vtkMath.roundNumber(1.46, 1)').toBe(
+    1.5
+  );
+  expect(vtkMath.roundNumber(1.46, 2), 'vtkMath.roundNumber(1.46, 2)').toBe(
+    1.46
+  );
+  expect(vtkMath.roundNumber(123.46, 0), 'vtkMath.roundNumber(123.46, 0)').toBe(
+    123
+  );
+  expect(vtkMath.roundNumber(123.46, 1), 'vtkMath.roundNumber(123.46, 1)').toBe(
+    123.5
+  );
+  expect(vtkMath.roundNumber(123.46, 2), 'vtkMath.roundNumber(123.46, 2)').toBe(
+    123.46
+  );
+  expect(
+    vtkMath.roundNumber(6.06627640054528e-14, 6),
+    'vtkMath.roundNumber(6.06627640054528e-14, 6)'
+  ).toBe(0);
+  expect(
+    vtkMath.roundNumber(-6.06627640054528e-14, 6),
+    'vtkMath.roundNumber(-6.06627640054528e-14, 6)'
+  ).toBe(0);
+  expect(
+    vtkMath.roundNumber(1.23456e3, 2),
+    'vtkMath.roundNumber(1.23456e4, 2)'
+  ).toBe(1234.56);
 });
 
 it('Test areEquals', () => {
@@ -70,16 +89,31 @@ it('Test areEquals', () => {
   const a2 = [1, 0];
   const a3 = [1, 0, 0];
   const b3 = [1 + 1e-7, 0, 0];
-  expect(vtkMath.areEquals(a1, a1)).toBeTruthy();
-  expect(vtkMath.areEquals(a2, a2)).toBeTruthy();
-  expect(vtkMath.areEquals(a3, a3)).toBeTruthy();
-  expect(vtkMath.areEquals(a1, a2)).toBeFalsy();
-  expect(vtkMath.areEquals(a3, a2)).toBeFalsy();
-  expect(vtkMath.areEquals(a3, a3, 0)).toBeTruthy();
-  expect(vtkMath.areEquals(a3, b3, 0)).toBeFalsy();
-  expect(vtkMath.areEquals(a3, b3, 1e-8)).toBeFalsy();
-  expect(vtkMath.areEquals(a3, b3, 2e-7)).toBeTruthy();
-  expect(vtkMath.areEquals(a3, b3, 1e-6)).toBeTruthy();
+  expect(vtkMath.areEquals(a1, a1), 'same vec1').toBeTruthy();
+  expect(vtkMath.areEquals(a2, a2), 'same vec2').toBeTruthy();
+  expect(vtkMath.areEquals(a3, a3), 'same vec2').toBeTruthy();
+  expect(vtkMath.areEquals(a1, a2), 'larger vec').toBeFalsy();
+  expect(vtkMath.areEquals(a3, a2), 'smaller vec').toBeFalsy();
+  expect(
+    vtkMath.areEquals(a3, a3, 0),
+    'exact comparison for same vec'
+  ).toBeTruthy();
+  expect(
+    vtkMath.areEquals(a3, b3, 0),
+    'exact(0) comparison for diff vec'
+  ).toBeFalsy();
+  expect(
+    vtkMath.areEquals(a3, b3, 1e-8),
+    'approx(1e-8) comparison for diff vec'
+  ).toBeFalsy();
+  expect(
+    vtkMath.areEquals(a3, b3, 2e-7),
+    'approx (2e-7) comparison for diff vec'
+  ).toBeTruthy();
+  expect(
+    vtkMath.areEquals(a3, b3, 1e-6),
+    'approx (1e-6) comparison for diff vec'
+  ).toBeTruthy();
 });
 
 it('Test outer2D', () => {
@@ -89,9 +123,15 @@ it('Test outer2D', () => {
   const zeroMatrix = [0, 0, 0, 0];
   const res = [0, 0, 0, 0];
   vtkMath.outer2D(zeroVect, zeroMatrix, res);
-  expect(vtkMath.areEquals(res, zeroMatrix)).toBeTruthy();
+  expect(
+    vtkMath.areEquals(res, zeroMatrix),
+    `Expected zero matrix, result : [${res}]`
+  ).toBeTruthy();
   vtkMath.outer2D(x, y, res);
-  expect(vtkMath.areEquals(res, [2, 3, 4, 6])).toBeTruthy();
+  expect(
+    vtkMath.areEquals(res, [2, 3, 4, 6]),
+    `Expected [2, 3, 4, 6], result : [${res}]`
+  ).toBeTruthy();
 });
 
 it('Test outer', () => {
@@ -101,9 +141,15 @@ it('Test outer', () => {
   const zeroMatrix = [0, 0, 0, 0, 0, 0, 0, 0, 0];
   const res = [0, 0, 0, 0, 0, 0, 0, 0, 0];
   vtkMath.outer(zeroVect, zeroMatrix, res);
-  expect(vtkMath.areEquals(res, zeroMatrix)).toBeTruthy();
+  expect(
+    vtkMath.areEquals(res, zeroMatrix),
+    `Expected zero matrix, result : [${res}]`
+  ).toBeTruthy();
   vtkMath.outer(x, y, res);
-  expect(vtkMath.areEquals(res, [2, 2, 3, 4, 4, 6, 6, 6, 9])).toBeTruthy();
+  expect(
+    vtkMath.areEquals(res, [2, 2, 3, 4, 4, 6, 6, 6, 9]),
+    `Expected [2, 2, 3, 4, 4, 6, 6, 6, 9], result : [${res}]`
+  ).toBeTruthy();
 });
 
 it('Test Identity3x3', () => {
@@ -138,28 +184,31 @@ it('Test transpose3x3', () => {
   const id = [1, 0, 0, 0, 1, 0, 0, 0, 1];
   const m1 = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   vtkMath.transpose3x3(id, m);
-  expect(vtkMath.areEquals(m, id)).toBeTruthy();
+  expect(vtkMath.areEquals(m, id), 'identity').toBeTruthy();
   vtkMath.transpose3x3(m1, m);
-  expect(vtkMath.areEquals(m, [1, 4, 7, 2, 5, 8, 3, 6, 9])).toBeTruthy();
+  expect(
+    vtkMath.areEquals(m, [1, 4, 7, 2, 5, 8, 3, 6, 9]),
+    'general case'
+  ).toBeTruthy();
 });
 
 it('Test normalize', () => {
   const x = [1, 2, 3];
   const res1 = vtkMath.normalize(x);
-  expect(res1 === Math.sqrt(14)).toBeTruthy();
-  expect(x[0] === 1 / Math.sqrt(14)).toBeTruthy();
-  expect(x[1] === 2 / Math.sqrt(14)).toBeTruthy();
-  expect(x[2] === 3 / Math.sqrt(14)).toBeTruthy();
+  expect(res1 === Math.sqrt(14), 'normalize x').toBeTruthy();
+  expect(x[0] === 1 / Math.sqrt(14), 'normalize x[0]').toBeTruthy();
+  expect(x[1] === 2 / Math.sqrt(14), 'normalize x[1]').toBeTruthy();
+  expect(x[2] === 3 / Math.sqrt(14), 'normalize x[2]').toBeTruthy();
 });
 
 it('Test normalize4D', () => {
   const x = [2, 3, 4, 5];
   const res1 = vtkMath.normalize4D(x);
-  expect(res1 === Math.sqrt(29)).toBeTruthy();
-  expect(x[0] === 2 / Math.sqrt(29)).toBeTruthy();
-  expect(x[1] === 3 / Math.sqrt(29)).toBeTruthy();
-  expect(x[2] === 4 / Math.sqrt(29)).toBeTruthy();
-  expect(x[3] === 5 / Math.sqrt(29)).toBeTruthy();
+  expect(res1 === Math.sqrt(29), 'normalize x').toBeTruthy();
+  expect(x[0] === 2 / Math.sqrt(29), 'normalize4D x[0]').toBeTruthy();
+  expect(x[1] === 3 / Math.sqrt(29), 'normalize4D x[1]').toBeTruthy();
+  expect(x[2] === 4 / Math.sqrt(29), 'normalize4D x[2]').toBeTruthy();
+  expect(x[3] === 5 / Math.sqrt(29), 'normalize4D x[3]').toBeTruthy();
 });
 
 it('Test Multiply Matrix', () => {
@@ -171,18 +220,33 @@ it('Test Multiply Matrix', () => {
   const resMat = [0, 0, 0];
 
   vtkMath.multiplyMatrix(m2x2, nullMatrix, 2, 2, 2, 2, resMat);
-  expect(vtkMath.areEquals(resMat, nullMatrix)).toBeTruthy();
+  expect(
+    vtkMath.areEquals(resMat, nullMatrix),
+    'multiplication by zero matrix'
+  ).toBeTruthy();
 
   vtkMath.multiplyMatrix(m1, m2, 1, 2, 2, 4, resMat);
-  expect(vtkMath.areEquals(resMat, [3, 5, 4, 3])).toBeTruthy();
+  expect(
+    vtkMath.areEquals(resMat, [3, 5, 4, 3]),
+    'multiplication by one row matrix'
+  ).toBeTruthy();
 
   vtkMath.multiplyMatrix(m2x2, m2, 2, 2, 2, 4, resMat);
-  expect(vtkMath.areEquals(resMat, [3, 5, 4, 3, 8, 14, 10, 10])).toBeTruthy();
+  expect(
+    vtkMath.areEquals(resMat, [3, 5, 4, 3, 8, 14, 10, 10]),
+    'multiplication of two matrices of compatible sizes'
+  ).toBeTruthy();
 
   vtkMath.multiplyMatrix(m2x2, m3, 2, 2, 2, 4, resMat);
-  expect(vtkMath.areEquals(resMat, [1, -1, 2, 0, 0, 2, 2, -2])).toBeTruthy();
+  expect(
+    vtkMath.areEquals(resMat, [1, -1, 2, 0, 0, 2, 2, -2]),
+    'multiplication of two matrices of compatible sizes, negative values'
+  ).toBeTruthy();
 
-  expect(vtkMath.multiplyMatrix(m2, m2x2, 2, 4, 2, 2, resMat)).toBeFalsy();
+  expect(
+    vtkMath.multiplyMatrix(m2, m2x2, 2, 4, 2, 2, resMat),
+    'multiplication of two matrices of incompatible sizes'
+  ).toBeFalsy();
 });
 it('Test multiplyMatrix3x3', () => {
   const nullMatrix = [0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -192,16 +256,21 @@ it('Test multiplyMatrix3x3', () => {
   const resMat = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 
   vtkMath.multiply3x3_mat3(m1, nullMatrix, resMat);
-  expect(vtkMath.areEquals(resMat, nullMatrix)).toBeTruthy();
+  expect(
+    vtkMath.areEquals(resMat, nullMatrix),
+    'multiplication by zero matrix'
+  ).toBeTruthy();
 
   vtkMath.multiply3x3_mat3(m1, m2, resMat);
   expect(
-    vtkMath.areEquals(resMat, [5, 7, 8, 8, 11, 13, 8, 13, 11])
+    vtkMath.areEquals(resMat, [5, 7, 8, 8, 11, 13, 8, 13, 11]),
+    'multiplication of two matrices'
   ).toBeTruthy();
 
   vtkMath.multiply3x3_mat3(m1, m3, resMat);
   expect(
-    vtkMath.areEquals(resMat, [3, -3, 6, 6, -7, 11, 2, -1, 5])
+    vtkMath.areEquals(resMat, [3, -3, 6, 6, -7, 11, 2, -1, 5]),
+    'multiplication of two matrices with negative values'
   ).toBeTruthy();
 });
 
@@ -213,30 +282,57 @@ it('Test multiply 3x3 matrix with vect3', () => {
   const resMat = [0, 0, 0];
 
   vtkMath.multiply3x3_vect3(m1, zeroVector, resMat);
-  expect(vtkMath.areEquals(resMat, zeroVector)).toBeTruthy();
+  expect(
+    vtkMath.areEquals(resMat, zeroVector),
+    'multiplication by zero vector'
+  ).toBeTruthy();
 
   vtkMath.multiply3x3_vect3(m1, v1, resMat);
-  expect(vtkMath.areEquals(resMat, [9, 13, 14])).toBeTruthy();
+  expect(
+    vtkMath.areEquals(resMat, [9, 13, 14]),
+    'multiplication of matrix and vector of positive values'
+  ).toBeTruthy();
 
   vtkMath.multiply3x3_vect3(m2, v1, resMat);
-  expect(vtkMath.areEquals(resMat, [1, 5, -2])).toBeTruthy();
+  expect(
+    vtkMath.areEquals(resMat, [1, 5, -2]),
+    'multiplication of matrix and vector of negative values'
+  ).toBeTruthy();
 });
 
 it('Test determinant 2x2', () => {
   const p1 = [2, 3];
   const p2 = [1, 2];
-  expect(vtkMath.determinant2x2(0, 0, 0, 0) === 0).toBeTruthy();
-  expect(vtkMath.determinant2x2(2, 3, 1, 2) === 1).toBeTruthy();
-  expect(vtkMath.determinant2x2(p1, p2) === 1).toBeTruthy();
+  expect(
+    vtkMath.determinant2x2(0, 0, 0, 0) === 0,
+    'determinant zero matrix with 4 args '
+  ).toBeTruthy();
+  expect(
+    vtkMath.determinant2x2(2, 3, 1, 2) === 1,
+    'determinant general case with 4 args '
+  ).toBeTruthy();
+  expect(
+    vtkMath.determinant2x2(p1, p2) === 1,
+    'determinant general case with 2 points '
+  ).toBeTruthy();
 });
 
 it('Test determinant 3x3', () => {
   const m0 = [0, 0, 0, 0, 0, 0, 0, 0, 0];
   const m1 = [1, 2, 1, 2, 3, 1, 2, 2, 3];
   const d = [1, 0, 0, 0, 2, 0, 0, 0, 3];
-  expect(vtkMath.determinant3x3(m0) === 0).toBeTruthy();
-  expect(vtkMath.determinant3x3(m1) === -3).toBeTruthy();
-  expect(vtkMath.determinant3x3(d) === 6).toBeTruthy();
+  expect(
+    vtkMath.determinant3x3(m0) === 0,
+    'determinant (zero matrix) '
+  ).toBeTruthy();
+  expect(
+    vtkMath.determinant3x3(m1) === -3,
+    'determinant (general case) '
+  ).toBeTruthy();
+  expect(
+    vtkMath.determinant3x3(d) === 6,
+    'determinant (diagonal matrix) '
+  ).toBeTruthy();
 });
 
 it('Test invert3x3', () => {
@@ -245,7 +341,8 @@ it('Test invert3x3', () => {
   const d = [1, 0, 0, 0, 2, 0, 0, 0, 3];
   vtkMath.invert3x3(d, mInverse);
   expect(
-    vtkMath.areEquals(mInverse, [1, 0, 0, 0, 0.5, 0, 0, 0, 1 / 3])
+    vtkMath.areEquals(mInverse, [1, 0, 0, 0, 0.5, 0, 0, 0, 1 / 3]),
+    'invert (diagonal matrix)'
   ).toBeTruthy();
   vtkMath.invert3x3(m1, mInverse);
   expect(
@@ -255,7 +352,8 @@ it('Test invert3x3', () => {
         -2.333333, 1.333333, 0.333333, 1.333333, -0.333333, -0.333333, 0.666667,
         -0.666667, 0.333333,
       ]
-    )
+    ),
+    'invert (general case) '
   ).toBeTruthy();
 });
 
@@ -265,7 +363,8 @@ it('Test invertMatrix', () => {
   const d = [1, 0, 0, 0, 2, 0, 0, 0, 3];
   vtkMath.invertMatrix(d, mInverse, 3);
   expect(
-    vtkMath.areEquals(mInverse, [1, 0, 0, 0, 0.5, 0, 0, 0, 1 / 3])
+    vtkMath.areEquals(mInverse, [1, 0, 0, 0, 0.5, 0, 0, 0, 1 / 3]),
+    'invert (diagonal matrix)'
   ).toBeTruthy();
   mInverse = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   vtkMath.invertMatrix(m1, mInverse, 4);
@@ -276,7 +375,8 @@ it('Test invertMatrix', () => {
         -2.333333, 0.666667, 0.333333, 0.666666, 1.333333, 0.333333, -0.333333,
         -0.666667, 0.666667, -0.333333, 0.333333, -0.333333, 0, -1, 0, 1,
       ]
-    )
+    ),
+    'invert (general case)'
   ).toBeTruthy();
 });
 
@@ -367,7 +467,10 @@ it('Test diagonalize', () => {
     expected[0] = vtkMath.roundNumber(eigen[0], 6);
     expected[4] = vtkMath.roundNumber(eigen[1], 6);
     expected[8] = vtkMath.roundNumber(eigen[2], 6);
-    expect(vtkMath.areEquals(result, expected)).toBeTruthy();
+    expect(
+      vtkMath.areEquals(result, expected),
+      `Expected : ${expected} ; Result : ${result}`
+    ).toBeTruthy();
   }
   // Now test for 2 and 3 equal eigenvalues
   vtkMath.identity3x3(mat);
@@ -378,7 +481,10 @@ it('Test diagonalize', () => {
   eigenVector = vtkMath.createArray(9);
   eigen = vtkMath.createArray(3);
   vtkMath.diagonalize3x3(mat, eigen, eigenVector);
-  expect(vtkMath.areEquals(mat, [5, 0, 0, 0, 5, 0, 0, 0, 1])).toBeTruthy();
+  expect(
+    vtkMath.areEquals(mat, [5, 0, 0, 0, 5, 0, 0, 0, 1]),
+    `Mat : ${mat} ; Eigen : ${eigen}`
+  ).toBeTruthy();
 
   vtkMath.identity3x3(mat);
   mat[0] = 2.0;
@@ -389,7 +495,8 @@ it('Test diagonalize', () => {
   eigen = vtkMath.createArray(3);
   vtkMath.diagonalize3x3(mat, eigen, eigenVector);
   expect(
-    vtkMath.areEquals(eigenVector, [1, 0, 0, 0, 1, 0, 0, 0, 1])
+    vtkMath.areEquals(eigenVector, [1, 0, 0, 0, 1, 0, 0, 0, 1]),
+    `P : ${eigenVector} ; Eigen : ${eigen}`
   ).toBeTruthy();
 });
 
@@ -415,9 +522,15 @@ it('Test matrix3x3ToQuaternion', () => {
   const m1 = [1, 1, 0, 1, -1, 0, 0, 0, 1];
   const quat4 = [0, 0, 0, 0];
   vtkMath.matrix3x3ToQuaternion(m0, quat4);
-  expect(vtkMath.areEquals(quat4, [0, 0, 0, 1])).toBeTruthy();
+  expect(
+    vtkMath.areEquals(quat4, [0, 0, 0, 1]),
+    'Test for integer values for quaternion.'
+  ).toBeTruthy();
   vtkMath.matrix3x3ToQuaternion(m1, quat4);
-  expect(vtkMath.areEquals(quat4, [0.0, 0.92388, 0.382683, 0.0])).toBeTruthy();
+  expect(
+    vtkMath.areEquals(quat4, [0.0, 0.92388, 0.382683, 0.0]),
+    'Test for non integer values for quaternion coordinates.'
+  ).toBeTruthy();
 });
 
 it('Test quaternionToMatrix3x3', () => {
@@ -425,7 +538,10 @@ it('Test quaternionToMatrix3x3', () => {
   const quat1 = [0, 0, 0, 1];
   const quat2 = [0.0, 0.5, 0.5, 0.5];
   vtkMath.quaternionToMatrix3x3(quat1, matRes);
-  expect(vtkMath.areEquals(matRes, [-1, 0, 0, 0, -1, 0, 0, 0, 1])).toBeTruthy();
+  expect(
+    vtkMath.areEquals(matRes, [-1, 0, 0, 0, -1, 0, 0, 0, 1]),
+    'Test for integer values of quat'
+  ).toBeTruthy();
   vtkMath.quaternionToMatrix3x3(quat2, matRes);
   expect(
     vtkMath.areEquals(
@@ -434,7 +550,8 @@ it('Test quaternionToMatrix3x3', () => {
         -0.333333, 0.666667, 0.666667, 0.666667, -0.333333, 0.666667, 0.666667,
         0.666667, -0.333333,
       ]
-    )
+    ),
+    'Test for non integer values of quat'
   ).toBeTruthy();
 });
 
@@ -443,16 +560,22 @@ it('Test multiplyQuaternion', () => {
   const quat2 = [0, 0.5, 0.5, 0.5];
   const quatRes = [0, 0, 0, 0];
   vtkMath.multiplyQuaternion(quat1, quat2, quatRes);
-  expect(vtkMath.areEquals(quatRes, [-0.5, -0.5, 0.5, 0.0])).toBeTruthy();
+  expect(
+    vtkMath.areEquals(quatRes, [-0.5, -0.5, 0.5, 0.0]),
+    'Test multiply two quaternions'
+  ).toBeTruthy();
 });
 
 it('Test EstimateMatrixCondition', () => {
   let res = vtkMath.estimateMatrixCondition([0, 0, 0, 0], 2);
-  expect(res === Number.MAX_VALUE).toBeTruthy();
+  expect(
+    res === Number.MAX_VALUE,
+    `Expected ${Number.MAX_VALUE} returned ${res}`
+  ).toBeTruthy();
   res = vtkMath.estimateMatrixCondition([2, 2, 0, 2], 2);
-  expect(res === 1).toBeTruthy();
+  expect(res === 1, `Expected 1 returned ${res}`).toBeTruthy();
   res = vtkMath.estimateMatrixCondition([2, 4, 0, -2], 2);
-  expect(res === 2).toBeTruthy();
+  expect(res === 2, `Expected 2 returned ${res}`).toBeTruthy();
 });
 
 it('Test solveHomogeneousLeastSquares', () => {
@@ -469,8 +592,14 @@ it('Test solveHomogeneousLeastSquares', () => {
   const eigenvecs = [];
   vtkMath.jacobiN(XXt, 2, eigenvals, eigenvecs);
   const expected = [eigenvecs[1], eigenvecs[3]];
-  expect(vtkMath.areEquals(expected, m)).toBeTruthy();
-  expect(vtkMath.solveHomogeneousLeastSquares(3, x, 4, m) === 0).toBeTruthy();
+  expect(
+    vtkMath.areEquals(expected, m),
+    'solve with order lower than number of samples'
+  ).toBeTruthy();
+  expect(
+    vtkMath.solveHomogeneousLeastSquares(3, x, 4, m) === 0,
+    'solve with order upper than number of samples (underdetermined system)'
+  ).toBeTruthy();
 });
 
 it('Test solveLeastSquares', () => {
@@ -501,7 +630,10 @@ it('Test solveLeastSquares', () => {
   y[2] = 0.0;
   vtkMath.solveLeastSquares(3, x, 2, y, 1, m);
   expecteds = [3.0, -2.0];
-  expect(vtkMath.areEquals(expecteds, m)).toBeTruthy();
+  expect(
+    vtkMath.areEquals(expecteds, m),
+    'One solution homogenous'
+  ).toBeTruthy();
 
   // Now make all homogenous
   y[0] = 0.0;
@@ -510,10 +642,13 @@ it('Test solveLeastSquares', () => {
   vtkMath.solveLeastSquares(3, x, 2, y, 1, m);
   const mHomogenous = vtkMath.createArray(2);
   vtkMath.solveHomogeneousLeastSquares(3, x, 2, mHomogenous);
-  expect(vtkMath.areEquals(m, mHomogenous)).toBeTruthy();
+  expect(vtkMath.areEquals(m, mHomogenous), 'All homogenous').toBeTruthy();
 
   // Insufficient number of samples. Underdetermined.
-  expect(vtkMath.solveLeastSquares(1, x, 2, y, 1, m) !== 0).toBeFalsy();
+  expect(
+    vtkMath.solveLeastSquares(1, x, 2, y, 1, m) !== 0,
+    'Underdetermined system'
+  ).toBeFalsy();
 });
 
 it('Test solveLinearSystem', () => {
@@ -548,7 +683,8 @@ it('Test solveLinearSystem', () => {
           }
         }
         expect(
-          vtkMath.solveLinearSystem(mat, rhs, NDimension) === 0.0
+          vtkMath.solveLinearSystem(mat, rhs, NDimension) === 0.0,
+          'Should give zero matrix when dim = 1 or 2'
         ).toBeTruthy();
       }
     }

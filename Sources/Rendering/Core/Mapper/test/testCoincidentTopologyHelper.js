@@ -18,7 +18,10 @@ it('Test calling CoincidentTopologyHelper static functions', async () => {
   );
   const endingParameters =
     vtkMapper.getResolveCoincidentTopologyPolygonOffsetParameters();
-  expect(startingParameters).toEqual(endingParameters);
+  expect(
+    startingParameters,
+    'Initial PolygonOffset parameters after get and set are matching'
+  ).toEqual(endingParameters);
 
   const startingLineParameters =
     vtkMapper.getResolveCoincidentTopologyLineOffsetParameters();
@@ -27,7 +30,10 @@ it('Test calling CoincidentTopologyHelper static functions', async () => {
     startingLineParameters
   );
 
-  expect('rendering').toBeTruthy();
+  expect(
+    'rendering',
+    'CoincidentTopologyHelper functions called without error'
+  ).toBeTruthy();
 
   // Free memory, end the test
   gc.releaseResources();

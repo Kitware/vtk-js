@@ -14,7 +14,7 @@ import { SlicingMode } from '../../../Core/ImageMapper/Constants';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ImageMapper intermediate slices', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkOpenGLImageMapper testImage').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

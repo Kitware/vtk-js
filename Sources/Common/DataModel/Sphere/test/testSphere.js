@@ -2,10 +2,22 @@ import { it, expect } from 'vitest';
 import vtkSphere from 'vtk.js/Sources/Common/DataModel/Sphere';
 
 function assertSphereClose(actual, expected, eps = 1e-6) {
-  expect(Math.abs(actual[0] - expected[0]) < eps).toBeTruthy();
-  expect(Math.abs(actual[1] - expected[1]) < eps).toBeTruthy();
-  expect(Math.abs(actual[2] - expected[2]) < eps).toBeTruthy();
-  expect(Math.abs(actual[3] - expected[3]) < eps).toBeTruthy();
+  expect(
+    Math.abs(actual[0] - expected[0]) < eps,
+    `center x should be ${expected[0]}`
+  ).toBeTruthy();
+  expect(
+    Math.abs(actual[1] - expected[1]) < eps,
+    `center y should be ${expected[1]}`
+  ).toBeTruthy();
+  expect(
+    Math.abs(actual[2] - expected[2]) < eps,
+    `center z should be ${expected[2]}`
+  ).toBeTruthy();
+  expect(
+    Math.abs(actual[3] - expected[3]) < eps,
+    `radius should be ${expected[3]}`
+  ).toBeTruthy();
 }
 
 it('Test Sphere computeBoundingSphere', () => {

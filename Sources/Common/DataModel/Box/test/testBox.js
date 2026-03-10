@@ -2,7 +2,7 @@ import { it, expect } from 'vitest';
 import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
 
 it('Test vtkBox instance', () => {
-  expect(vtkBox).toBeTruthy();
+  expect(vtkBox, 'Make sure the class definition exists').toBeTruthy();
   const instance = vtkBox.newInstance();
   expect(instance).toBeTruthy();
 });

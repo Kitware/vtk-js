@@ -16,7 +16,7 @@ import baseline from './testStick.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test StickMapper', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkStickMapper testStick').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

@@ -16,7 +16,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test vtkSphereMapper large coordinates',
   async () => {
     const gc = testUtils.createGarbageCollector();
-    expect('Rendering').toBeTruthy();
+    expect('Rendering', 'vtkSphereMapper: large coordinates').toBeTruthy();
 
     // Create come control UI
     const container = document.querySelector('body');

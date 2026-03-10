@@ -11,7 +11,10 @@ it('Test MouseRangeManipulator addition/removal', () => {
     () => 5,
     () => {}
   );
-  expect(manip.get('horizontalListener').horizontalListener).toBeTruthy();
+  expect(
+    manip.get('horizontalListener').horizontalListener,
+    'Has horizontal listener after setting'
+  ).toBeTruthy();
 
   manip.setVerticalListener(
     0,
@@ -20,13 +23,22 @@ it('Test MouseRangeManipulator addition/removal', () => {
     () => 5,
     () => {}
   );
-  expect(manip.get('verticalListener').verticalListener).toBeTruthy();
+  expect(
+    manip.get('verticalListener').verticalListener,
+    'Has vertical listener after setting'
+  ).toBeTruthy();
 
   manip.removeHorizontalListener();
-  expect(manip.get('horizontalListener').horizontalListener).toBeFalsy();
+  expect(
+    manip.get('horizontalListener').horizontalListener,
+    'Horizontal listener removed'
+  ).toBeFalsy();
 
   manip.removeVerticalListener();
-  expect(manip.get('verticalListener').verticalListener).toBeFalsy();
+  expect(
+    manip.get('verticalListener').verticalListener,
+    'Vertical listener removed'
+  ).toBeFalsy();
 
   let sliceValue = 5;
   manip.setScrollListener(

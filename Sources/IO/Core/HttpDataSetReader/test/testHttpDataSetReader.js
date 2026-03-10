@@ -14,7 +14,7 @@ function runTests(testCases) {
 }
 
 function equals(actual, expected, description) {
-  expect(actual).toBe(expected);
+  expect(actual, description).toBe(expected);
 }
 
 function fetchArrayTest(
@@ -88,7 +88,10 @@ it('Caching capabilities of vtkHttpDataSetReader with unlimited cache.', async (
     // set cache to unlimited size
     (resolve, _) => {
       reader.setMaxCacheSize(-1);
-      expect(reader.getMaxCacheSize()).toBe(-1);
+      expect(
+        reader.getMaxCacheSize(),
+        'Max cache size should be set to unlimited (-1).'
+      ).toBe(-1);
       resolve();
     },
 

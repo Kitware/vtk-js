@@ -16,7 +16,7 @@ import baseline2 from './testComposite_2.png';
 
 it('Test Composite Volume Rendering', async () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkVolumeMapper Composite').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI

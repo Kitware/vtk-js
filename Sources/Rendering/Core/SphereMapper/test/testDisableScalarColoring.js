@@ -16,7 +16,7 @@ import baseline from './testDisableScalarColoring.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkSphereMapper Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkSphereMapper Rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

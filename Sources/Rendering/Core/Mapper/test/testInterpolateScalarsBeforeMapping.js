@@ -16,7 +16,10 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test Interpolate Scalars Before Mapping',
   () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect(
+      'rendering',
+      'vtkMapper InterpolateScalarsBeforeColors'
+    ).toBeTruthy();
 
     // Create some control UI
     const container = document.querySelector('body');

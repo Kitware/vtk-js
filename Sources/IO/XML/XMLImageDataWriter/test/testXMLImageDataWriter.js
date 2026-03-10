@@ -14,5 +14,8 @@ it('Test XML writer file content', () => {
   const writer = vtkImageDataWriter.newInstance();
   const fileContents = writer.write(imageData);
 
-  expect(fileContents.includes(expectedSubstring)).toBeTruthy();
+  expect(
+    fileContents.includes(expectedSubstring),
+    'Make sure the XML file generated is correct.'
+  ).toBeTruthy();
 });

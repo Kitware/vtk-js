@@ -64,23 +64,32 @@ it('Test vtkPiecewiseFunctionProxy', () => {
   pwfProxy.setPoints(normalize(points, range));
   pwfProxy.setDataRange(...range);
 
-  expect(!validatePwf(pwf, expected)).toBeTruthy();
+  expect(
+    !validatePwf(pwf, expected),
+    'Custom points should not be active in Gaussian mode'
+  ).toBeTruthy();
 
   pwfProxy.setMode(Mode.Points);
-  expect(validatePwf(pwf, expected)).toBeTruthy();
+  expect(
+    validatePwf(pwf, expected),
+    'Custom points should be active in Points mode'
+  ).toBeTruthy();
 
   pwfProxy.setGaussians(null);
   expect(
-    listEquals(pwfProxy.getGaussians(), Defaults.Gaussians, 'object')
+    listEquals(pwfProxy.getGaussians(), Defaults.Gaussians, 'object'),
+    'Default nodes'
   ).toBeTruthy();
 
   pwfProxy.setPoints(null);
   expect(
-    listEquals(pwfProxy.getPoints(), Defaults.Points, 'array')
+    listEquals(pwfProxy.getPoints(), Defaults.Points, 'array'),
+    'Default points'
   ).toBeTruthy();
 
   pwfProxy.setNodes(null);
   expect(
-    listEquals(pwfProxy.getNodes(), Defaults.Nodes, 'object')
+    listEquals(pwfProxy.getNodes(), Defaults.Nodes, 'object'),
+    'Default nodes'
   ).toBeTruthy();
 });

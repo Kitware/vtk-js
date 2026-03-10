@@ -17,7 +17,10 @@ import baseline from './testImageWindowLevel.png';
 
 it('Test ImageMapper window level', async () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect(
+    'rendering',
+    'vtkOpenGLImageMapper testImage windowlevel'
+  ).toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -94,12 +97,12 @@ it('Test ImageMapper window level', async () => {
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkOpenGLImageMapper mapper set up').toBeTruthy();
 
   await reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`);
   await reader.loadData();
 
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkOpenGLImageMapper data loaded').toBeTruthy();
   ren1.addActor(actor1);
   ren2.addActor(actor2);
   mapper2.setSlicingMode(SlicingMode.I);

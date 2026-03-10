@@ -21,7 +21,7 @@ import baseline from './testVolumeMapperShadowClip.png';
 // This tests that the rays cast for volumetric shadow calculation ignore clipped voxels.
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Volume Mapper Shadow Clip', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkVolumeMapper Shadow Clip').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

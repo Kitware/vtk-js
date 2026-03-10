@@ -15,7 +15,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test ImageArrayMapper with Nearest Neighbor interpolation',
   () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect('rendering', 'vtkImageArrayMapper testImage').toBeTruthy();
 
     // Create some control UI
     const container = document.querySelector('body');

@@ -19,7 +19,10 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test Volume Rendering with Proportional Component',
   () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect(
+      'rendering',
+      'vtkOpenGLVolumeMapper ProportionalComponent'
+    ).toBeTruthy();
     // testUtils.keepDOM();
 
     // Create some control UI

@@ -12,7 +12,7 @@ import baseline from './testDisk.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkDiskSource Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkDiskSource Rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

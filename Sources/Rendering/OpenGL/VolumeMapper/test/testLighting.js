@@ -17,7 +17,7 @@ import baseline2 from './testLighting_2.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Lighted Volume Rendering', async () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkOpenGLVolumeMapper Lighting').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI

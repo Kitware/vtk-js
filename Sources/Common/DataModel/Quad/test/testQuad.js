@@ -4,7 +4,7 @@ import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import { QuadWithLineIntersectionState } from 'vtk.js/Sources/Common/DataModel/Quad/Constants';
 
 it('Test vtkQuad instance', () => {
-  expect(vtkQuad).toBeTruthy();
+  expect(vtkQuad, 'Make sure the class definition exists').toBeTruthy();
   const instance = vtkQuad.newInstance();
   expect(instance).toBeTruthy();
 });
