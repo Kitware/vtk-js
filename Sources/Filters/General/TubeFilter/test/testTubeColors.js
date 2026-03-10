@@ -87,21 +87,33 @@ it('Test vtkTubeFilter colorMapping', () => {
 
   const tubeOutput = tubeFilter.getOutputData();
 
-  expect(tubeOutput.getPoints().getNumberOfPoints() === 80).toBeTruthy();
   expect(
-    tubeOutput.getPointData().getArrayByName('Radius').getData().length === 80
+    tubeOutput.getPoints().getNumberOfPoints() === 80,
+    'Make sure the output number of points is correct without capping.'
   ).toBeTruthy();
   expect(
-    tubeOutput.getPointData().getArrayByName('Colors').getData().length === 240
+    tubeOutput.getPointData().getArrayByName('Radius').getData().length === 80,
+    'Make sure the length of the radius array is correct.'
+  ).toBeTruthy();
+  expect(
+    tubeOutput.getPointData().getArrayByName('Colors').getData().length === 240,
+    'Make sure the length of the color array is correct.'
   ).toBeTruthy();
   const tubeMapper = vtkMapper.newInstance();
   populateTubeMapper(tubeMapper, tubeFilter);
 
-  expect(tubeMapper.getColorByArrayName() === 'Colors').toBeTruthy();
   expect(
-    tubeMapper.getScalarModeAsString() === 'USE_POINT_FIELD_DATA'
+    tubeMapper.getColorByArrayName() === 'Colors',
+    'Make sure the array name to color by is correct.'
   ).toBeTruthy();
-  expect(tubeMapper.getColorModeAsString() === 'DIRECT_SCALARS').toBeTruthy();
+  expect(
+    tubeMapper.getScalarModeAsString() === 'USE_POINT_FIELD_DATA',
+    'Make sure the scalar mode is correct.'
+  ).toBeTruthy();
+  expect(
+    tubeMapper.getColorModeAsString() === 'DIRECT_SCALARS',
+    'Make sure the color mode is correct.'
+  ).toBeTruthy();
 });
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)(

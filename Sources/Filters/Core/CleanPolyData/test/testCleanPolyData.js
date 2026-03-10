@@ -81,11 +81,26 @@ function runTest(clean, inputPD, expected) {
   // clean.update();
   const out = clean.getOutputData();
 
-  expect(out.getNumberOfPoints()).toBe(expected.points);
-  expect(out.getNumberOfVerts()).toBe(expected.verts);
-  expect(out.getNumberOfLines()).toBe(expected.lines);
-  expect(out.getNumberOfPolys()).toBe(expected.polys);
-  expect(out.getNumberOfStrips()).toBe(expected.strips);
+  expect(
+    out.getNumberOfPoints(),
+    `expected ${expected.points} points but got ${out.getNumberOfPoints()}`
+  ).toBe(expected.points);
+  expect(
+    out.getNumberOfVerts(),
+    `expected ${expected.verts} verts but got ${out.getNumberOfVerts()}`
+  ).toBe(expected.verts);
+  expect(
+    out.getNumberOfLines(),
+    `expected ${expected.lines} lines but got ${out.getNumberOfLines()}`
+  ).toBe(expected.lines);
+  expect(
+    out.getNumberOfPolys(),
+    `expected ${expected.polys} polys but got ${out.getNumberOfPolys()}`
+  ).toBe(expected.polys);
+  expect(
+    out.getNumberOfStrips(),
+    `expected ${expected.strips} strips but got ${out.getNumberOfStrips()}`
+  ).toBe(expected.strips);
 }
 
 it('vtkCleanPolyData: degenerate conversions without merging', () => {

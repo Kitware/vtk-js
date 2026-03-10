@@ -6,9 +6,9 @@ import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttribute
 import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
 it('Test vtkCalculator instance', () => {
-  expect(vtkCalculator).toBeTruthy();
+  expect(vtkCalculator, 'Make sure the class definition exists.').toBeTruthy();
   const instance = vtkCalculator.newInstance();
-  expect(instance).toBeTruthy();
+  expect(instance, 'Make sure an instance can be created.').toBeTruthy();
 });
 
 it('Test vtkCalculator execution', () => {
@@ -55,16 +55,36 @@ it('Test vtkCalculator execution', () => {
   const input = source.getOutputData();
   const output = filter.getOutputData();
 
-  expect(output).toBeTruthy();
-  expect(output.isA('vtkPolyData')).toBe(true);
-  expect(input.getPoints().getNumberOfPoints()).toBe(
-    output.getPoints().getNumberOfPoints()
-  );
-  expect(output.getPointData().getScalars()).toBeTruthy();
-  expect(output.getPointData().getScalars().getName()).toBe('sine wave');
-  expect(output.getFieldData().getArray('global')).toBeTruthy();
+  expect(output, 'Output dataset exists').toBeTruthy();
+  expect(
+    output.isA('vtkPolyData'),
+    'The output dataset should be a vtkPolydata'
+  ).toBe(true);
+  expect(
+    input.getPoints().getNumberOfPoints(),
+    `The number of points did not change between input ${input
+      .getPoints()
+      .getNumberOfPoints()} and output ${output
+      .getPoints()
+      .getNumberOfPoints()}`
+  ).toBe(output.getPoints().getNumberOfPoints());
+  expect(
+    output.getPointData().getScalars(),
+    'Output point-scalars array exists.'
+  ).toBeTruthy();
+  expect(
+    output.getPointData().getScalars().getName(),
+    'Output point-scalars is "sine wave".'
+  ).toBe('sine wave');
+  expect(
+    output.getFieldData().getArray('global'),
+    'Output field-data array exists.'
+  ).toBeTruthy();
   const uniform = output.getFieldData().getArray('global').getData();
-  expect(Math.abs(uniform[0] - 22.55) < 1e-6).toBeTruthy();
+  expect(
+    Math.abs(uniform[0] - 22.55) < 1e-6,
+    `The uniform result variable should be 22.55; got ${uniform[0]}.`
+  ).toBeTruthy();
 });
 
 it('make sure vtkCalculator does not crash with a vtkImageData input', () => {
@@ -82,9 +102,21 @@ it('make sure vtkCalculator does not crash with a vtkImageData input', () => {
   const input = source.getOutputData();
   const output = filter.getOutputData();
 
-  expect(output).toBeTruthy();
-  expect(output.isA('vtkImageData')).toBe(true);
-  expect(input.getNumberOfPoints()).toBe(output.getNumberOfPoints());
-  expect(output.getPointData().getScalars()).toBeTruthy();
-  expect(output.getPointData().getScalars().getName()).toBe('mask');
+  expect(output, 'Output dataset exists').toBeTruthy();
+  expect(
+    output.isA('vtkImageData'),
+    'The output dataset should be a vtkImagedata'
+  ).toBe(true);
+  expect(
+    input.getNumberOfPoints(),
+    `The number of points did not change between input ${input.getNumberOfPoints()} and output ${output.getNumberOfPoints()}`
+  ).toBe(output.getNumberOfPoints());
+  expect(
+    output.getPointData().getScalars(),
+    'Output point-scalars array exists.'
+  ).toBeTruthy();
+  expect(
+    output.getPointData().getScalars().getName(),
+    'Output point-scalars is "mask".'
+  ).toBe('mask');
 });

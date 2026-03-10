@@ -14,7 +14,7 @@ import baseline from './testMolecule_with_bonds.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test MoleculeMapper', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('IO: PDBReader').toBeTruthy();
+  expect('IO: PDBReader', 'Filter: MoleculeToRepresentation').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -71,11 +71,11 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)('Test MoleculeMapper', () => {
   glwindow.setSize(400, 400);
 
   // fetch caffeine.pdb file from Girder
-  expect('waiting for download').toBeTruthy();
+  expect('waiting for download', 'waiting for download').toBeTruthy();
   return reader
     .setUrl(`${__BASE_PATH__}/Data/molecule/pdb/caffeine.pdb`)
     .then(() => {
-      expect('download complete').toBeTruthy();
+      expect('download complete', 'download complete').toBeTruthy();
 
       // once data upload, render
       renderer.resetCamera();

@@ -27,7 +27,10 @@ it('vtkPointLocator - buildLocator', () => {
     -0.9749279022216797, 0.9749279022216797, -0.9749279022216797,
     0.9749279022216797, -1, 1,
   ]);
-  expect(vtkMath.areEquals(bounds, expectedBounds)).toBeTruthy();
+  expect(
+    vtkMath.areEquals(bounds, expectedBounds),
+    'Bounds should be calculated correctly'
+  ).toBeTruthy();
 });
 
 it('vtkPointLocator - insertUniquePoint - new point', () => {
@@ -42,9 +45,11 @@ it('vtkPointLocator - insertUniquePoint - new point', () => {
 
   const result = locator.insertUniquePoint([1, 2, 3]);
 
-  expect(result.inserted).toBe(true);
-  expect(result.id).toBe(id);
-  expect(locator.getPoints().getNumberOfPoints()).toBe(1);
+  expect(result.inserted, 'Should insert new point').toBe(true);
+  expect(result.id, 'First point should have ID 0').toBe(id);
+  expect(locator.getPoints().getNumberOfPoints(), 'Should have 1 point').toBe(
+    1
+  );
 });
 
 it('vtkPointLocator - insertUniquePoint - duplicate point', () => {
@@ -60,11 +65,14 @@ it('vtkPointLocator - insertUniquePoint - duplicate point', () => {
 
   const id = 0;
 
-  expect(result1.inserted).toBe(true);
-  expect(result1.id).toBe(id);
-  expect(result2.inserted).toBe(false);
-  expect(result2.id).toBe(id);
-  expect(locator.getPoints().getNumberOfPoints()).toBe(1);
+  expect(result1.inserted, 'First point should be inserted').toBe(true);
+  expect(result1.id, 'First point should have ID 0').toBe(id);
+  expect(result2.inserted, 'Second point should not be inserted').toBe(false);
+  expect(result2.id, 'Second point should return existing ID').toBe(id);
+  expect(
+    locator.getPoints().getNumberOfPoints(),
+    'Should still have 1 point'
+  ).toBe(1);
 });
 
 it('vtkPointLocator - isInsertedPoint', () => {
@@ -89,10 +97,10 @@ it('vtkPointLocator - isInsertedPoint', () => {
   const id3 = locator.isInsertedPoint(p3);
   const id4 = locator.isInsertedPoint(p4);
 
-  expect(id1).toBe(0);
-  expect(id2).toBe(1);
-  expect(id3).toBe(2);
-  expect(id4).toBe(-1);
+  expect(id1, `Should find existing point at ${p1}`).toBe(0);
+  expect(id2, `Should find existing point at ${p2}`).toBe(1);
+  expect(id3, `Should find existing point at ${p3}`).toBe(2);
+  expect(id4, `Should not find point ${p4}`).toBe(-1);
 });
 
 it('vtkPointLocator - insertNextPoint', () => {
@@ -104,14 +112,18 @@ it('vtkPointLocator - insertNextPoint', () => {
   locator.buildLocator();
 
   const result = locator.insertNextPoint([1, 2, 3]);
-  expect(result.id).toBe(0);
-  expect(locator.getPoints().getNumberOfPoints()).toBe(1);
-  expect(result.inserted).toBe(true);
+  expect(result.id, 'First point should have ID 0').toBe(0);
+  expect(locator.getPoints().getNumberOfPoints(), 'Should have 1 point').toBe(
+    1
+  );
+  expect(result.inserted, 'Should insert new point').toBe(true);
 
   const result2 = locator.insertNextPoint([1, 2, 3]);
-  expect(result2.id).toBe(1);
-  expect(locator.getPoints().getNumberOfPoints()).toBe(2);
-  expect(result2.inserted).toBe(true);
+  expect(result2.id, 'Second point should have ID 1').toBe(1);
+  expect(locator.getPoints().getNumberOfPoints(), 'Should have 2 points').toBe(
+    2
+  );
+  expect(result2.inserted, 'Should insert second point').toBe(true);
 });
 
 it('vtkPointLocator - findClosestPoint', () => {
@@ -130,7 +142,10 @@ it('vtkPointLocator - findClosestPoint', () => {
     .getPoints()
     .getPoint(closestPointId);
 
-  expect(closestPoint).toEqual(expectedPoint);
+  expect(
+    closestPoint,
+    `Closest to [${lookupPoint}] should be point ${closestPoint}`
+  ).toEqual(expectedPoint);
 });
 
 it('vtkPointLocator - findClosestPointWithinRadius - point found', () => {
@@ -144,9 +159,12 @@ it('vtkPointLocator - findClosestPointWithinRadius - point found', () => {
   const result1 = locator.findClosestPointWithinRadius(0.5, [0.2, 1.0, 1.0]);
   const result2 = locator.findClosestPointWithinRadius(2.0, [1.5, 1.5, 1.5]);
 
-  expect(result1.id).toBe(15);
-  expect(result1.dist2 < 0.5 * 0.5).toBeTruthy();
-  expect(result2.id).toBe(9);
+  expect(result1.id, 'Should find closest point within radius').toBe(15);
+  expect(
+    result1.dist2 < 0.5 * 0.5,
+    'Distance should be within radius'
+  ).toBeTruthy();
+  expect(result2.id, 'Should find closest point within larger radius').toBe(9);
 });
 
 it('vtkPointLocator - findClosestPointWithinRadius - no point found', () => {
@@ -159,7 +177,7 @@ it('vtkPointLocator - findClosestPointWithinRadius - no point found', () => {
 
   const result = locator.findClosestPointWithinRadius(0.1, [5, 5, 5]);
 
-  expect(result.id).toBe(-1);
+  expect(result.id, 'Should not find point outside radius').toBe(-1);
 });
 
 it('vtkPointLocator - findClosestInsertedPoint', () => {
@@ -175,5 +193,7 @@ it('vtkPointLocator - findClosestInsertedPoint', () => {
   const p1 = [0.6, 0.5, 0.4];
   const ptId = locator.findClosestInsertedPoint(p1);
   const closestPoint = sphereSource.getOutputData().getPoints().getPoint(ptId);
-  expect(closestPoint).toEqual(expectedPoint);
+  expect(closestPoint, 'Closest point should match expected point').toEqual(
+    expectedPoint
+  );
 });

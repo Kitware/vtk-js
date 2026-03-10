@@ -5,7 +5,10 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 it('Test vtkClipClosedSurface instance', () => {
-  expect(vtkClipClosedSurface).toBeTruthy();
+  expect(
+    vtkClipClosedSurface,
+    'Make sure the class definition exists'
+  ).toBeTruthy();
   const instance = vtkClipClosedSurface.newInstance();
   expect(instance).toBeTruthy();
 });
@@ -48,12 +51,16 @@ it('Test clip a vtkLineSource', () => {
   clipper.update();
   const outputData = clipper.getOutputData();
 
-  expect(outputData.getNumberOfLines()).toBe(resolution / 2);
+  expect(
+    outputData.getNumberOfLines(),
+    'Number of lines is half the resolution'
+  ).toBe(resolution / 2);
 
   expect(
     vtkMath.areEquals(
       outputData.getPoints().getData(),
       halfLine.getOutputData().getPoints().getData()
-    )
+    ),
+    'Compare points with halfLine'
   ).toBeTruthy();
 });

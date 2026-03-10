@@ -14,7 +14,10 @@ import baseline from '../../ImageMapper/test/testImageColorTransferFunction.png'
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ImageArrayMapper Color TFun', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect(
+    'rendering',
+    'vtkImageArrayMapper Color Transfer Function testImage'
+  ).toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

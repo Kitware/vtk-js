@@ -3,7 +3,7 @@ import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 
 it('Test vtkLine instance', () => {
-  expect(vtkLine).toBeTruthy();
+  expect(vtkLine, 'Make sure the class definition exists').toBeTruthy();
   const instance = vtkLine.newInstance();
   expect(instance).toBeTruthy();
 });
@@ -20,7 +20,7 @@ it('Test vtkLine static::intersection', () => {
   const u = [];
   const v = [];
   let result = vtkLine.intersection(a1, a2, b1, b2, u, v);
-  expect(result).toBe(onLine);
+  expect(result, 'Points on line').toBe(onLine);
   // u and v do not matter
 
   // SAME LINE
@@ -29,21 +29,21 @@ it('Test vtkLine static::intersection', () => {
   b1 = [2, 0, 0];
   b2 = [1, 0, 0];
   result = vtkLine.intersection(a1, a2, b1, b2, u, v);
-  expect(result).toBe(onLine);
+  expect(result, 'Points on line').toBe(onLine);
   // u and v do not matter
 
   // PARALLEL LINE
   b1 = [2, 1, 0];
   b2 = [1, 1, 0];
   result = vtkLine.intersection(a1, a2, b1, b2, u, v);
-  expect(result).toBe(onLine);
+  expect(result, 'Points on line').toBe(onLine);
   // u and v do not matter
 
   // INTERSECTED LINE
   b1 = [0.5, 1, 0];
   b2 = [0.5, 0, 0];
   result = vtkLine.intersection(a1, a2, b1, b2, u, v);
-  expect(result).toBe(yesIntersection);
+  expect(result, 'Intersection').toBe(yesIntersection);
   expect(u[0]).toBe(0.5);
   expect(v[0]).toBe(1);
 
@@ -51,7 +51,7 @@ it('Test vtkLine static::intersection', () => {
   b1 = [2, 1, 0];
   b2 = [2, 0, 0];
   result = vtkLine.intersection(a1, a2, b1, b2, u, v);
-  expect(result).toBe(noIntersection);
+  expect(result, 'No intersection').toBe(noIntersection);
   // u and v do not matter
 });
 
@@ -62,14 +62,14 @@ it('Test vtkLine static::distanceToLine', () => {
   let p2 = [0, 0, 0];
   const closestPoint = [];
   let ret = vtkLine.distanceToLine(x, p1, p2, closestPoint);
-  expect(Math.sqrt(ret.distance)).toBe(10);
+  expect(Math.sqrt(ret.distance), 'Invalid line').toBe(10);
   expect(ret.t).toBe(Number.MIN_VALUE);
   expect(closestPoint).toEqual(p1);
 
   // ON LINE : computes distance with p2
   p2 = [1, 0, 0];
   ret = vtkLine.distanceToLine(x, p1, p2, closestPoint);
-  expect(Math.sqrt(ret.distance)).toBe(9);
+  expect(Math.sqrt(ret.distance), 'On line').toBe(9);
   expect(ret.t).toBe(10);
   expect(closestPoint).toEqual(p2);
 

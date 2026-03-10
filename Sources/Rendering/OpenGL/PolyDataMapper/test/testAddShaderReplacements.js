@@ -12,7 +12,10 @@ import baseline from './testAddShaderReplacement.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Add Shader Replacements', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect(
+    'rendering',
+    'vtkOpenGLPolyDataMapper AddShaderReplacements'
+  ).toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

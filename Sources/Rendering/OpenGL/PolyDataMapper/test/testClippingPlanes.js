@@ -13,7 +13,7 @@ import baseline from './testClippingPlanes.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Clipping planes', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkOpenGLPolyDataMapper setClippingPlanes').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

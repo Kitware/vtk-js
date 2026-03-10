@@ -43,15 +43,27 @@ const vecSource = macro.newInstance((publicAPI, model) => {
 })();
 
 it('Test vtkImageStreamline instance', () => {
-  expect(vtkImageStreamline).toBeTruthy();
+  expect(
+    vtkImageStreamline,
+    'Make sure the class definition exist'
+  ).toBeTruthy();
   const instance = vtkImageStreamline.newInstance();
-  expect(instance).toBeTruthy();
+  expect(instance, 'Make sure the instance exist').toBeTruthy();
 
-  expect(instance.getIntegrationStep()).toBe(1);
-  expect(instance.getMaximumNumberOfSteps()).toBe(1000);
+  expect(
+    instance.getIntegrationStep(),
+    'Default integrationStep should be 1'
+  ).toBe(1);
+  expect(
+    instance.getMaximumNumberOfSteps(),
+    'Default MaximumNumberOfSteps should be 1000'
+  ).toBe(1000);
 
   instance.setIntegrationStep(0.1);
-  expect(instance.getIntegrationStep()).toBe(0.1);
+  expect(
+    instance.getIntegrationStep(),
+    'Updated value of integrationStep should be 0.1'
+  ).toBe(0.1);
 });
 
 it('Test vtkImageStreamline execution', () => {
@@ -71,7 +83,13 @@ it('Test vtkImageStreamline execution', () => {
 
   const output = filter.getOutputData();
 
-  expect(output).toBeTruthy();
-  expect(output.isA('vtkPolyData')).toBe(true);
-  expect(output.getPoints().getNumberOfPoints()).toBe(2324);
+  expect(output, 'Output dataset exist').toBeTruthy();
+  expect(
+    output.isA('vtkPolyData'),
+    'The output dataset should be a vtkPolydata'
+  ).toBe(true);
+  expect(
+    output.getPoints().getNumberOfPoints(),
+    'The number of points should be 2324'
+  ).toBe(2324);
 });

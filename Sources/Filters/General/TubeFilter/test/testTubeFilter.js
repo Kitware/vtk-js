@@ -24,9 +24,9 @@ import { VaryRadius } from 'vtk.js/Sources/Filters/General/TubeFilter/Constants'
 import baseline from './testTubeFilter.png';
 
 it('Test vtkTubeFilter instance', () => {
-  expect(vtkTubeFilter).toBeTruthy();
+  expect(vtkTubeFilter, 'Make sure the class definition exists.').toBeTruthy();
   const instance = vtkTubeFilter.newInstance();
-  expect(instance).toBeTruthy();
+  expect(instance, 'Make sure an instance can be created.').toBeTruthy();
 });
 
 const numSegments = 3;
@@ -84,11 +84,16 @@ it('Test vtkTubeFilter execution', () => {
   tubeFilter1.setInputData(polyData);
   const tubeOutput1 = tubeFilter1.getOutputData();
   expect(
-    tubeOutput1.getPoints().getDataType() === VtkDataTypes.DOUBLE
+    tubeOutput1.getPoints().getDataType() === VtkDataTypes.DOUBLE,
+    'Make sure the output data type is double.'
   ).toBeTruthy();
-  expect(tubeOutput1.getPoints().getNumberOfPoints() === 12).toBeTruthy();
   expect(
-    tubeOutput1.getPointData().getNormals().getNumberOfTuples() === 12
+    tubeOutput1.getPoints().getNumberOfPoints() === 12,
+    'Make sure the output number of points is correct without capping.'
+  ).toBeTruthy();
+  expect(
+    tubeOutput1.getPointData().getNormals().getNumberOfTuples() === 12,
+    'Make sure the output number of normals is correct without capping.'
   ).toBeTruthy();
 
   const tubeFilter2 = vtkTubeFilter.newInstance({
@@ -99,17 +104,22 @@ it('Test vtkTubeFilter execution', () => {
   tubeFilter2.setInputData(polyData);
   const tubeOutput2 = tubeFilter2.getOutputData();
   expect(
-    tubeOutput2.getPoints().getDataType() === VtkDataTypes.FLOAT
+    tubeOutput2.getPoints().getDataType() === VtkDataTypes.FLOAT,
+    'Make sure the output data type is float.'
   ).toBeTruthy();
-  expect(tubeOutput2.getPoints().getNumberOfPoints() === 18).toBeTruthy();
   expect(
-    tubeOutput2.getPointData().getNormals().getNumberOfTuples() === 18
+    tubeOutput2.getPoints().getNumberOfPoints() === 18,
+    'Make sure the output number of points is correct with capping.'
+  ).toBeTruthy();
+  expect(
+    tubeOutput2.getPointData().getNormals().getNumberOfTuples() === 18,
+    'Make sure the output number of normals is correct with capping.'
   ).toBeTruthy();
 });
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkTubeFilter rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkTubeFilter Rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -203,7 +213,8 @@ it('Test vtkTubeFilter numberOfPoints', () => {
   expect(
     tubeOutput.getPoints().getNumberOfPoints() ===
       2 * sidesShareVertices * numberOfSides +
-        4 * sidesShareVertices * numberOfSides
+        4 * sidesShareVertices * numberOfSides,
+    'Make sure the output number of points is correct.'
   ).toBeTruthy();
 
   tubeFilter.setCapping(true);
@@ -221,7 +232,8 @@ it('Test vtkTubeFilter numberOfPoints', () => {
     tubeOutputCapping.getPoints().getNumberOfPoints() ===
       2 * sidesShareVertices * numberOfSides +
         4 * sidesShareVertices * numberOfSides +
-        numberOfLines * numberOfSides * 2
+        numberOfLines * numberOfSides * 2,
+    'Make sure the output number of points is correct with capping.'
   ).toBeTruthy();
 });
 
@@ -300,31 +312,40 @@ it('Test vtkTubeFilter celldata/pointdata copying', () => {
   const output = filter.getOutputData();
 
   ['head', 'elevation', 'pressure'].forEach((name, i) => {
-    expect(output.getPointData().getArray(i).getName() === name).toBeTruthy();
+    expect(
+      output.getPointData().getArray(i).getName() === name,
+      `Point array ${i} is the ${name} array`
+    ).toBeTruthy();
   });
 
   ['diameter', 'flow'].forEach((name, i) => {
-    expect(output.getCellData().getArray(i).getName() === name).toBeTruthy();
+    expect(
+      output.getCellData().getArray(i).getName() === name,
+      `Cell array ${i} is the ${name} array`
+    ).toBeTruthy();
   });
 
   expect(
     testUtils.arrayEquals(
       output.getPointData().getArrayByName('elevation').getData(),
       [1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4]
-    )
+    ),
+    'elevation point data is copied correctly'
   ).toBeTruthy();
 
   expect(
     testUtils.arrayEquals(
       output.getCellData().getArrayByName('flow').getData(),
       [2, 2, 2, 1, 1, 1, 2, 2, 2]
-    )
+    ),
+    'flow cell data is copied correctly'
   ).toBeTruthy();
 
   expect(
     testUtils.arrayEquals(
       output.getCellData().getArrayByName('diameter').getData(),
       [1, 1, 1, 2, 2, 2, 3, 3, 3]
-    )
+    ),
+    'diameter cell data is copied correctly'
   ).toBeTruthy();
 });

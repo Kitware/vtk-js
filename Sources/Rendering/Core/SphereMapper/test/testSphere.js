@@ -17,7 +17,7 @@ import baseline2 from './testSphere2.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test SphereMapper', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkSphereMapper testSphere').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

@@ -13,7 +13,7 @@ import baseline from './testCone.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkConeSource Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkConeSource Rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

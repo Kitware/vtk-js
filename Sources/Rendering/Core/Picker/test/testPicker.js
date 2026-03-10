@@ -176,7 +176,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)('vtkPicker.pick - volume', () => {
 });
 
 it('Test vtkPicker instance', () => {
-  expect(vtkPicker).toBeTruthy();
+  expect(vtkPicker, 'Make sure the class definition exists').toBeTruthy();
   const instance = vtkPicker.newInstance();
   expect(instance).toBeTruthy();
 });

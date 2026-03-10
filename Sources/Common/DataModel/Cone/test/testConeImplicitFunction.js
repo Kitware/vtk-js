@@ -14,7 +14,7 @@ import baseline from './testConeImplicitFunction.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Cone Implicit Function', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'Cone Implicit Function').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

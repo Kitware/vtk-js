@@ -12,7 +12,7 @@ import baseline from './testEllipseArc.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test testArc Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'testArc Rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

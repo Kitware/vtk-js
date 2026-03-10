@@ -2,7 +2,7 @@ import { it, expect } from 'vitest';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 
 it('Test vtkPoints instance', () => {
-  expect(vtkPoints).toBeTruthy();
+  expect(vtkPoints, 'Make sure the class definition exists').toBeTruthy();
   const instance = vtkPoints.newInstance({ size: 256 });
   expect(instance).toBeTruthy();
 });
@@ -14,7 +14,7 @@ it('Test setPoint', () => {
 
   points.setPoint(0, p[0], p[1], p[2]);
   points.getPoint(0, q);
-  expect(p).toEqual(q);
+  expect(p, 'setPoint with coords').toEqual(q);
 
   // NOTE: This does not work!
   // points.setPoint(1, p);

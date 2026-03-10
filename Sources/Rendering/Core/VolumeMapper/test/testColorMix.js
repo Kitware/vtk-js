@@ -21,7 +21,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test Volume Rendering: custom shader code',
   async () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect('rendering', 'vtkVolumeMapper Custom shader code').toBeTruthy();
 
     // Create some control UI
     const container = document.querySelector('body');

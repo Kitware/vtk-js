@@ -12,7 +12,10 @@ import baseline from './testClearShaderReplacement.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Clear Shader Replacements', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect(
+    'rendering',
+    'vtkOpenGLPolyDataMapper ClearShaderReplacements'
+  ).toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

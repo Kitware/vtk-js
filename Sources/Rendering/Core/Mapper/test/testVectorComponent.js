@@ -16,7 +16,7 @@ const { GetArray } = vtkMapper;
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test VectorComponent', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkMapper Vector Component').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

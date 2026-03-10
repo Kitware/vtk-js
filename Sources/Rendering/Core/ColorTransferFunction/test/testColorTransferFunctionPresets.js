@@ -16,7 +16,7 @@ const NUMBER_PER_LINE = 20;
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ColorTransferFunction Presets', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkMapper ColorTransferFunction Presets').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

@@ -147,7 +147,7 @@ function fillBlobForThreshold(imageData, backgroundImageData) {
 
 it.skip('Test Labelmap Outline with many renderers', async () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'LabelmapOutline manyRenderers').toBeTruthy();
 
   const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
   const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());

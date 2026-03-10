@@ -65,7 +65,10 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
       renderer,
       interactor
     );
-    expect(camera.getPosition()).toEqual(baseline);
+    expect(
+      camera.getPosition(),
+      'Factor=0.5, right positioned renderer'
+    ).toEqual(baseline);
 
     resetCamera();
     renderer.setViewport(0, 0, 0.5, 0.5);

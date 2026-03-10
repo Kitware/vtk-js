@@ -18,7 +18,7 @@ import baseline from './testActor2D.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Actor2D', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkActor2D').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

@@ -74,7 +74,7 @@ it('Test vtkPointPicker image mapper', () => {
   const ijk = picker.getPointIJK();
   expect(ijk[0]).toBe(64);
   expect(ijk[1]).toBe(76);
-  expect(ijk[2]).toBe(12);
+  expect(ijk[2], 'pick at (380.5, 200)').toBe(12);
 
   gc.releaseResources();
 });
@@ -130,20 +130,20 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkPointPicker line source', () => {
 
   const actorsFirstPoint = picker.getActors();
   expect(actorsFirstPoint.length).toBe(1);
-  expect(actorsFirstPoint[0]).toBe(actor);
+  expect(actorsFirstPoint[0], 'point id').toBe(actor);
 
   const idFirstPoint = picker.getPointId();
-  expect(idFirstPoint).toBe(10);
+  expect(idFirstPoint, 'pick at (20, 200.5)').toBe(10);
 
   const pLast = [20, 200 + 0.5, 0];
   picker.pick(pLast, renderer);
 
   const actorsLastPoint = picker.getActors();
   expect(actorsLastPoint.length).toBe(1);
-  expect(actorsLastPoint[0]).toBe(actor);
+  expect(actorsLastPoint[0], 'point id').toBe(actor);
 
   const idLastPoint = picker.getPointId();
-  expect(idLastPoint).toBe(0);
+  expect(idLastPoint, 'Make sure the class definition exists').toBe(0);
 
   gc.releaseResources();
 });

@@ -16,7 +16,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test vtkProxy2D Rendering with vtkImageSlice representation',
   () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect('rendering', 'vtkView2DProxy Rendering').toBeTruthy();
 
     const source = gc.registerResource(vtkRTAnalyticSource.newInstance());
     const size = 50;

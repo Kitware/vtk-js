@@ -74,7 +74,7 @@ it('Test vtkCellPicker image mapper', () => {
   const ijk = picker.getCellIJK();
   expect(ijk[0]).toBe(64);
   expect(ijk[1]).toBe(75);
-  expect(ijk[2]).toBe(12);
+  expect(ijk[2], 'Make sure the class definition exists').toBe(12);
 
   gc.releaseResources();
 });

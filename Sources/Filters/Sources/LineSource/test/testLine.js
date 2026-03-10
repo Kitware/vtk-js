@@ -12,7 +12,7 @@ import baseline from './baseline.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkLineSource Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkLineSource Rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

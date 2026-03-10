@@ -257,11 +257,13 @@ it('Test rendering when several rotations plane', async () => {
     const comparedValues = updateView(viewType);
 
     expect(
-      vtkMath.roundVector(comparedValues.focalPoint, [], PRECISION)
+      vtkMath.roundVector(comparedValues.focalPoint, [], PRECISION),
+      `Camera focal point on ${viewType}`
     ).toEqual(vtkMath.roundVector(expectedValues.focalPoint, [], PRECISION));
-    expect(vtkMath.roundVector(comparedValues.viewUp, [], PRECISION)).toEqual(
-      vtkMath.roundVector(expectedValues.viewUp, [], PRECISION)
-    );
+    expect(
+      vtkMath.roundVector(comparedValues.viewUp, [], PRECISION),
+      `Camera view up on ${viewType}`
+    ).toEqual(vtkMath.roundVector(expectedValues.viewUp, [], PRECISION));
     return comparedValues;
   }
 

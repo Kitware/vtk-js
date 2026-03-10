@@ -82,7 +82,12 @@ it('OBJWriter: Check conversion from PLY to OBJ', () => {
 
   const objContent = writer.getOutputData();
 
-  expect(objContent).toBe(expectedObjContent);
+  expect(objContent, 'OBJ content should match expected output').toBe(
+    expectedObjContent
+  );
 
-  expect(writer.getMtl()).toBe(expectedMtlContent);
+  expect(
+    writer.getMtl(),
+    'MTL content should match expected texture declaration'
+  ).toBe(expectedMtlContent);
 });

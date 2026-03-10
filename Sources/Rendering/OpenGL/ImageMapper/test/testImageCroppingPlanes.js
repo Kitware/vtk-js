@@ -24,7 +24,7 @@ function testClippingPlanes(
   description
 ) {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkOpenGLImageMapper testImage').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

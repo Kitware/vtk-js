@@ -14,7 +14,7 @@ import baseline from './testSetTable.png';
 
 it.skip('Test LookupTable setTable', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkLookupTable TestSetTable').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI

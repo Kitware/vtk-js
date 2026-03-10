@@ -13,25 +13,46 @@ const attrTypes = [
 ];
 
 it('Test vtkDataSetAttributes instance', () => {
-  expect(vtkDataSetAttributes).toBeTruthy();
+  expect(
+    vtkDataSetAttributes,
+    'Make sure the class definition exists'
+  ).toBeTruthy();
   const instance = vtkDataSetAttributes.newInstance();
-  expect(instance).toBeTruthy();
-  expect(instance.getNumberOfArrays()).toBe(0);
+  expect(instance, 'Make sure the newInstance method exists.').toBeTruthy();
+  expect(
+    instance.getNumberOfArrays(),
+    'Default number of arrays should be 0'
+  ).toBe(0);
 
   // Test that all the default active attributes are null (with -1 index)
   const ntuples = 10;
   let numArrs = 0;
   attrTypes.forEach((attType) => {
-    expect(instance[`get${attType}`]()).toBe(null);
+    expect(
+      instance[`get${attType}`](),
+      `Default ${attType} should be null`
+    ).toBe(null);
     const testArray = vtkDataArray.newInstance({
       name: `Foo${attType}`,
       numberOfComponents: 1,
       values: new Float32Array(ntuples),
     });
-    expect(instance.addArray(testArray)).toBe(numArrs);
-    expect(instance[`setActive${attType}`](`Foo${attType}`)).toBe(numArrs);
-    expect(instance[`setActive${attType}`]('xxx')).toBe(-1);
-    expect(instance[`get${attType}`]()).toBe(null);
+    expect(
+      instance.addArray(testArray),
+      `Adding ${attType.toLowerCase()} empty DSA should return index of ${numArrs}`
+    ).toBe(numArrs);
+    expect(
+      instance[`setActive${attType}`](`Foo${attType}`),
+      `Setting ${attType.toLowerCase()} should return ${numArrs} (the index of the array).`
+    ).toBe(numArrs);
+    expect(
+      instance[`setActive${attType}`]('xxx'),
+      `Setting ${attType.toLowerCase()} with an invalid name should return -1.`
+    ).toBe(-1);
+    expect(
+      instance[`get${attType}`](),
+      `Setting ${attType.toLowerCase()} with an invalid name should reset the attribute.`
+    ).toBe(null);
     ++numArrs;
   });
 

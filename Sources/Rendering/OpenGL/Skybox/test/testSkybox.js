@@ -15,7 +15,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test vtkOpenGLSkybox Rendering',
   async () => {
     const gc = testUtils.createGarbageCollector();
-    expect('Rendering').toBeTruthy();
+    expect('Rendering', 'Filter: OpenGLTexture').toBeTruthy();
 
     function onLoadedTextures(loadedTextures) {
       // Create come control UI

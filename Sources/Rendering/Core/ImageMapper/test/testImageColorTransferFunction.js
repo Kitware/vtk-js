@@ -15,7 +15,10 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test ImageMapper Color TFun',
   () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect(
+      'rendering',
+      'vtkImageMapper Color Transfer Function testImage'
+    ).toBeTruthy();
 
     // Create some control UI
     const container = document.querySelector('body');

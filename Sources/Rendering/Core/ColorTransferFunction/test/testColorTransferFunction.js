@@ -17,7 +17,7 @@ import baseline2 from './testColorTransferFunction2.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Color Transfer Function', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkMapper ColorTransferFunction').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -153,7 +153,10 @@ it('Test discretized color transfer function', () => {
 
   testValues.forEach((value, idx) => {
     ctf.getColor(value, rgb);
-    expect(areEquals(rgb, expectedRGB[idx])).toBeTruthy();
+    expect(
+      areEquals(rgb, expectedRGB[idx]),
+      `Test discretized ctf value for ${value}, expect ${expectedRGB[idx]}`
+    ).toBeTruthy();
   });
 });
 
@@ -177,23 +180,38 @@ it('Test applyColorMap calls modified', () => {
   });
 
   ctf.applyColorMap(colorMapA);
-  expect(isModified).toBeFalsy();
+  expect(
+    isModified,
+    `Expect applyColorMap does not call modified with same color map`
+  ).toBeFalsy();
 
   ctf.applyColorMap(colorMapB);
-  expect(isModified).toBeTruthy();
+  expect(
+    isModified,
+    `Expect applyColorMap calls modified with different color map`
+  ).toBeTruthy();
 
   colorMapB.ColorSpace = 'LAB';
   isModified = false;
   let modifiedReturn = ctf.applyColorMap(colorMapB);
-  expect(isModified && modifiedReturn).toBeTruthy();
+  expect(
+    isModified && modifiedReturn,
+    `Expect applyColorMap calls modified with different ColorSpace`
+  ).toBeTruthy();
 
   colorMapB.NanColor = [0, 0, 0, 1];
   isModified = false;
   modifiedReturn = ctf.applyColorMap(colorMapB);
-  expect(isModified && modifiedReturn).toBeTruthy();
+  expect(
+    isModified && modifiedReturn,
+    `Expect applyColorMap calls modified with different NanColor`
+  ).toBeTruthy();
 
   colorMapB.RGBPoints = [0, 0, 0, 0, 0.5, 1, 1, 1, 1, 1, 1, 1];
   isModified = false;
   modifiedReturn = ctf.applyColorMap(colorMapB);
-  expect(isModified && modifiedReturn).toBeTruthy();
+  expect(
+    isModified && modifiedReturn,
+    `Expect applyColorMap calls modified with different RGBPoints`
+  ).toBeTruthy();
 });

@@ -20,7 +20,10 @@ import baselineOblique from './testImageResliceMapperBorderRenderingOblique.png'
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ImageResliceMapper', async () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect(
+    'rendering',
+    'vtkImageResliceMapper testImageResliceMapperBorderRendering'
+  ).toBeTruthy();
 
   // Create container
   const bodyElem = document.querySelector('body');

@@ -19,7 +19,7 @@ import baseline2 from './testIntermixed_2.png';
 
 it('Test Composite Volume Rendering: intermixed geometry', async () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkVolumeMapper Intermixed').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI

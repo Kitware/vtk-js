@@ -39,24 +39,30 @@ it('Macro methods algo tests', () => {
   // Override shouldUpdate to prevent the need of getMTime()
   publicAPI.shouldUpdate = () => true;
 
-  expect(publicAPI.setInputData).toBeTruthy();
+  expect(publicAPI.setInputData, 'populate publicAPI').toBeTruthy();
 
   publicAPI.setInputData(inLeft, 0);
   publicAPI.setInputData(inRight, 1);
-  expect(publicAPI.getInputData(0)).toBe(inLeft);
+  expect(publicAPI.getInputData(0), 'return input data').toBe(inLeft);
 
   publicAPI.update();
   let output = publicAPI.getOutputData(0);
-  expect(output).toEqual(new Float32Array([3, 5, 7]));
+  expect(output, 'Add two input arrays').toEqual(new Float32Array([3, 5, 7]));
 
   output = publicAPI.getOutputData(1);
-  expect(output).toEqual(new Float32Array([3, 3, 3]));
+  expect(output, 'Subtract two input arrays').toEqual(
+    new Float32Array([3, 3, 3])
+  );
 
   output = publicAPI.getOutputData(2);
-  expect(output).toEqual(new Float32Array([0, 4, 10]));
+  expect(output, 'Multiply two input arrays').toEqual(
+    new Float32Array([0, 4, 10])
+  );
 
   const outputPort = publicAPI.getOutputPort(3);
-  expect(outputPort()).toEqual(new Float32Array([Infinity, 4, 2.5]));
+  expect(outputPort(), 'Divide two input arrays, using outputPort').toEqual(
+    new Float32Array([Infinity, 4, 2.5])
+  );
 });
 
 it('Macro shouldUpdate returns true if output is deleted', () => {
@@ -86,12 +92,16 @@ it('Macro shouldUpdate returns true if output is deleted', () => {
   };
 
   algo.publicAPI.setInputData(input1.publicAPI, 0);
-  expect(input1.publicAPI).toBe(algo.publicAPI.getOutputData());
+  expect(input1.publicAPI, 'Trivial producer outputs first input data').toBe(
+    algo.publicAPI.getOutputData()
+  );
 
   // delete output data
   algo.publicAPI.getOutputData().delete();
 
   // set new data
   algo.publicAPI.setInputData(input2.publicAPI, 0);
-  expect(input2.publicAPI).toBe(algo.publicAPI.getOutputData());
+  expect(input2.publicAPI, 'Trivial producer outputs second input data').toBe(
+    algo.publicAPI.getOutputData()
+  );
 });

@@ -15,7 +15,7 @@ import baseline1 from './testVolumeMapperBounds.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Volume Mapper Bounds', async () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkVolumeMapper Bounds').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI

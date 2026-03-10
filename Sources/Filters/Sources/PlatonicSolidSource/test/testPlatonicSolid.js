@@ -19,7 +19,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test vtkPlatonicSolidSource Tetrahedron Rendering',
   () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect('rendering', 'vtkPlatonicSolidSource Rendering').toBeTruthy();
 
     // Create some control UI
     const container = document.querySelector('body');
@@ -73,7 +73,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test vtkPlatonicSolidSource Cube Rendering',
   () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect('rendering', 'vtkPlatonicSolidSource Rendering').toBeTruthy();
 
     // Create some control UI
     const container = document.querySelector('body');
@@ -129,7 +129,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test vtkPlatonicSolidSource Octahedron Rendering',
   () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect('rendering', 'vtkPlatonicSolidSource Rendering').toBeTruthy();
 
     // Create some control UI
     const container = document.querySelector('body');
@@ -185,7 +185,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test vtkPlatonicSolidSource Icosahedron Rendering',
   () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect('rendering', 'vtkPlatonicSolidSource Rendering').toBeTruthy();
 
     // Create some control UI
     const container = document.querySelector('body');
@@ -241,7 +241,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test vtkPlatonicSolidSource Dodecahedron Rendering',
   () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect('rendering', 'vtkPlatonicSolidSource Rendering').toBeTruthy();
 
     // Create some control UI
     const container = document.querySelector('body');

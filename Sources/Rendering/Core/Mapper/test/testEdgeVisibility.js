@@ -12,7 +12,7 @@ import baseline from './testEdgeVisibility.png';
 
 it.skip('Test Edge Visibility', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkMapper EdgeVisibility').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

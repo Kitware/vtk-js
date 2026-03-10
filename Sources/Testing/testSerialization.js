@@ -65,7 +65,9 @@ function ignoreMTime(json) {
 }
 
 function assertSameSerializedContent(state, state2) {
-  expect(ignoreMTime(state)).toEqual(ignoreMTime(state2));
+  expect(ignoreMTime(state), 'But same serialized content').toEqual(
+    ignoreMTime(state2)
+  );
 }
 
 classToTest.forEach((testName) => {
@@ -75,46 +77,48 @@ classToTest.forEach((testName) => {
   const debug = SERIALIZABLE_CLASSES[testName].debug;
 
   it(`Test ${testName} serialization/deserialization`, () => {
-    expect(klass).toBeTruthy();
+    expect(klass, 'Make sure the class definition exist').toBeTruthy();
     const instance = klass.newInstance(initData);
-    expect(instance).toBeTruthy();
+    expect(instance, 'Make sure the instance exist').toBeTruthy();
 
     const state = instance.getState();
-    expect(instance).toBeTruthy();
+    expect(instance, 'Make sure we can get serialize data').toBeTruthy();
 
     const instance2 = vtk(state);
-    expect(instance).toBeTruthy();
+    expect(instance, 'Make sure we can get deserialize data').toBeTruthy();
     const state2 = instance2.getState();
 
     if (debug) {
       vtkDebugMacro(state);
     }
 
-    expect(instance).not.toBe(instance2);
+    expect(instance, 'We have two different instances').not.toBe(instance2);
     assertSameSerializedContent(state, state2);
 
     // Test JSON.stringify and JSON.parse behavior
     const jsonFromStringify = JSON.stringify(instance);
     const jsonFromGetState = JSON.stringify(state);
 
-    expect(jsonFromStringify).toBe(jsonFromGetState);
+    expect(jsonFromStringify, 'We have the same json string.').toBe(
+      jsonFromGetState
+    );
 
     const state3 = JSON.parse(jsonFromStringify);
     const instance3 = vtk(state3);
     const state4 = JSON.parse(jsonFromGetState);
     const instance4 = vtk(state4);
 
-    expect(instance3).toBeTruthy();
-    expect(instance3).not.toBe(instance4);
+    expect(instance3, 'Make sure we get a valid instance').toBeTruthy();
+    expect(instance3, 'We have two different instances').not.toBe(instance4);
     assertSameSerializedContent(state3, state4);
   });
 
   it(`Test ${testName} serialization on deleted object`, () => {
-    expect(klass).toBeTruthy();
+    expect(klass, 'Make sure the class definition exist').toBeTruthy();
     const instance = klass.newInstance(initData);
-    expect(instance).toBeTruthy();
+    expect(instance, 'Make sure the instance exist').toBeTruthy();
     instance.delete();
-    expect(JSON.stringify(instance)).toBe('null');
+    expect(JSON.stringify(instance), 'null').toBe('null');
   });
 });
 

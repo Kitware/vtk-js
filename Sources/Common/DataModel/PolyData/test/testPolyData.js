@@ -4,7 +4,7 @@ import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 it('Test vtkPolyData instance', () => {
-  expect(vtkPolyData).toBeTruthy();
+  expect(vtkPolyData, 'Make sure the class definition exists').toBeTruthy();
   const instance = vtkPolyData.newInstance();
   expect(instance).toBeTruthy();
 });
@@ -50,10 +50,12 @@ it('Test vtkPolyData cells', () => {
   const firstPolyCell = firstLineCell + polyData.getNumberOfLines();
 
   expect(
-    polyData.getCell(firstLineCell).getNumberOfPoints() === pointCount + 1
+    polyData.getCell(firstLineCell).getNumberOfPoints() === pointCount + 1,
+    'Line cell should be made of the number of points plus 1'
   ).toBeTruthy();
   expect(
-    polyData.getCell(firstPolyCell).getNumberOfPoints() === 3
+    polyData.getCell(firstPolyCell).getNumberOfPoints() === 3,
+    'Triangle cells should be made of 3 points'
   ).toBeTruthy();
 
   // Test performance on getCells with or without hint:

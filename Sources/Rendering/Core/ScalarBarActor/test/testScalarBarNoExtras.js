@@ -14,7 +14,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test vtkScalarBarActor Rendering without extra colors"',
   () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect('rendering', 'vtkScalarBarActor Rendering').toBeTruthy();
 
     // Create some control UI
     const container = document.querySelector('body');

@@ -3,7 +3,7 @@ import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkCell from 'vtk.js/Sources/Common/DataModel/Cell';
 
 it('Test vtkCell instance', () => {
-  expect(vtkCell).toBeTruthy();
+  expect(vtkCell, 'Make sure the class definition exists').toBeTruthy();
   const instance = vtkCell.newInstance();
   expect(instance).toBeTruthy();
 });

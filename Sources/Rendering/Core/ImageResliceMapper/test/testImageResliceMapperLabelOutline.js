@@ -20,7 +20,10 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test ImageResliceMapper LabelOutline',
   async () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect(
+      'rendering',
+      'vtkImageResliceMapper testImageResliceMapperLabelOutline'
+    ).toBeTruthy();
 
     const bodyElem = document.querySelector('body');
     const container = gc.registerDOMElement(document.createElement('div'));

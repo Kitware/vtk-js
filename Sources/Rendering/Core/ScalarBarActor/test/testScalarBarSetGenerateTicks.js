@@ -15,7 +15,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test vtkScalarBarActor setGenerateTicks',
   () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect('rendering', 'vtkScalarBarActor setGenerateTicks').toBeTruthy();
 
     // Create some control UI
     const container = document.querySelector('body');

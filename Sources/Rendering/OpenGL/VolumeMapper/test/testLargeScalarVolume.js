@@ -18,7 +18,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test Volume Rendering of Large Scalar Values',
   () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect('rendering', 'vtkOpenGLVolumeMapper LargeScalars').toBeTruthy();
     // testUtils.keepDOM();
 
     // Create some control UI

@@ -24,7 +24,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test Color Mapping With Cell Data',
   async () => {
     const gc = testUtils.createGarbageCollector();
-    expect('rendering').toBeTruthy();
+    expect('rendering', 'vtkMapper CellData').toBeTruthy();
 
     // Create some control UI
     const container = document.querySelector('body');

@@ -14,7 +14,7 @@ import baseline from './testUserMatrix.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Set Actor User Matrix', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect('rendering', 'vtkActor SetUserMatrix').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

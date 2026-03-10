@@ -3,17 +3,24 @@ import vtkWarpScalar from 'vtk.js/Sources/Filters/General/WarpScalar';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 
 it('Test vtkWarpScalar instance', () => {
-  expect(vtkWarpScalar).toBeTruthy();
+  expect(vtkWarpScalar, 'Make sure the class definition exist').toBeTruthy();
   const instance = vtkWarpScalar.newInstance();
-  expect(instance).toBeTruthy();
+  expect(instance, 'Make sure the instance exist').toBeTruthy();
 
-  expect(instance.getScaleFactor()).toBe(1);
-  expect(instance.getUseNormal()).toBe(false);
-  expect(instance.getXyPlane()).toBe(false);
-  expect(instance.getNormal()).toEqual([0, 0, 1]);
+  expect(instance.getScaleFactor(), 'Default ScaleFactor should be 1').toBe(1);
+  expect(instance.getUseNormal(), 'Default UseNormal should be false').toBe(
+    false
+  );
+  expect(instance.getXyPlane(), 'Default xyPlane should be false').toBe(false);
+  expect(instance.getNormal(), 'Default normal should be [0, 0, 1]').toEqual([
+    0, 0, 1,
+  ]);
 
   instance.setScaleFactor(2.5);
-  expect(instance.getScaleFactor()).toBe(2.5);
+  expect(
+    instance.getScaleFactor(),
+    'Updated value of ScaleFactor should be 2.5'
+  ).toBe(2.5);
 });
 
 it('Test vtkWarpScalar execution', () => {
@@ -25,9 +32,17 @@ it('Test vtkWarpScalar execution', () => {
   const input = source.getOutputData();
   const output = filter.getOutputData();
 
-  expect(output).toBeTruthy();
-  expect(output.isA('vtkPolyData')).toBe(true);
-  expect(input.getPoints().getNumberOfPoints()).toBe(
-    output.getPoints().getNumberOfPoints()
-  );
+  expect(output, 'Output dataset exist').toBeTruthy();
+  expect(
+    output.isA('vtkPolyData'),
+    'The output dataset should be a vtkPolydata'
+  ).toBe(true);
+  expect(
+    input.getPoints().getNumberOfPoints(),
+    `The number of points do not change between input ${input
+      .getPoints()
+      .getNumberOfPoints()} and output ${output
+      .getPoints()
+      .getNumberOfPoints()}`
+  ).toBe(output.getPoints().getNumberOfPoints());
 });

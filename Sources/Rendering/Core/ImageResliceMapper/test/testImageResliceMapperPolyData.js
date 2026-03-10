@@ -19,7 +19,10 @@ import baseline from './testImageResliceMapperPolyData.png';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ImageResliceMapperPolyData', () => {
   const gc = testUtils.createGarbageCollector();
-  expect('rendering').toBeTruthy();
+  expect(
+    'rendering',
+    'vtkImageResliceMapper testImageResliceMapperPolyData'
+  ).toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');

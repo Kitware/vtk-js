@@ -2,7 +2,7 @@ import { it, expect } from 'vitest';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
 it('Test vtkPlane instance', () => {
-  expect(vtkPlane).toBeTruthy();
+  expect(vtkPlane, 'Make sure the class definition exists').toBeTruthy();
   const instance = vtkPlane.newInstance();
   expect(instance).toBeTruthy();
 });
