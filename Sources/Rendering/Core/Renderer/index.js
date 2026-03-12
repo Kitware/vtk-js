@@ -464,6 +464,149 @@ function vtkRenderer(publicAPI, model) {
     return true;
   };
 
+  // Port of VTK C++ vtkRenderer::ZoomToBoxUsingViewAngle.
+  publicAPI.zoomToBoxUsingViewAngle = (box, ratioOrOffsetRatio = 1.0) => {
+    let view = null;
+    if (model._renderWindow && model._renderWindow.getViews) {
+      const views = model._renderWindow.getViews();
+      if (views.length > 0) {
+        view = views[0];
+      }
+    }
+
+    if (!view || !view.getViewportSize) {
+      return;
+    }
+
+    const size = view.getViewportSize(publicAPI);
+    if (!size || size[0] <= 0 || size[1] <= 0) {
+      return;
+    }
+
+    const zf1 = size[0] / box.width;
+    const zf2 = size[1] / box.height;
+    const zoomFactor = Math.min(zf1, zf2);
+    publicAPI.getActiveCamera().zoom(zoomFactor * ratioOrOffsetRatio);
+  };
+
+  // Port of VTK C++ vtkRenderer::ResetCameraScreenSpace.
+  // Uses a screen-space bounding box to zoom closer to the data.
+  publicAPI.resetCameraScreenSpace = (bounds = null, offsetRatio = 0.9) => {
+    let effectiveBounds = bounds;
+    let effectiveOffsetRatio = offsetRatio;
+    if (typeof bounds === 'number') {
+      effectiveOffsetRatio = bounds;
+      effectiveBounds = null;
+    }
+
+    const boundsToUse = effectiveBounds || publicAPI.computeVisiblePropBounds();
+
+    if (!vtkMath.areBoundsInitialized(boundsToUse)) {
+      vtkDebugMacro('Cannot reset camera!');
+      return false;
+    }
+
+    // Make sure all bounds are visible to project into screen space
+    publicAPI.resetCamera(boundsToUse);
+
+    // Expand bounds by camera model transform matrix
+    const expandedBounds = [...boundsToUse];
+    const modelTransformMatrix = publicAPI
+      .getActiveCamera()
+      .getModelTransformMatrix();
+    if (modelTransformMatrix) {
+      vtkBoundingBox.transformBounds(
+        boundsToUse,
+        modelTransformMatrix,
+        expandedBounds
+      );
+    }
+
+    // Get the view from the render window to access viewport size
+    let view = null;
+    if (model._renderWindow && model._renderWindow.getViews) {
+      const views = model._renderWindow.getViews();
+      if (views.length > 0) {
+        view = views[0];
+      }
+    }
+
+    if (!view || !view.getViewportSize) {
+      return true;
+    }
+
+    const size = view.getViewportSize(publicAPI);
+    if (!size || size[0] <= 0 || size[1] <= 0) {
+      return true;
+    }
+
+    const aspect = size[0] / size[1];
+
+    // Compute the screen-space bounding box by projecting all 8 corners
+    let xmin = Number.MAX_VALUE;
+    let ymin = Number.MAX_VALUE;
+    let xmax = -Number.MAX_VALUE;
+    let ymax = -Number.MAX_VALUE;
+
+    for (let i = 0; i < 2; ++i) {
+      for (let j = 0; j < 2; ++j) {
+        for (let k = 0; k < 2; ++k) {
+          const nd = publicAPI.worldToNormalizedDisplay(
+            expandedBounds[i],
+            expandedBounds[2 + j],
+            expandedBounds[4 + k],
+            aspect
+          );
+          const dx = nd[0] * size[0];
+          const dy = nd[1] * size[1];
+          xmin = Math.min(dx, xmin);
+          xmax = Math.max(dx, xmax);
+          ymin = Math.min(dy, ymin);
+          ymax = Math.max(dy, ymax);
+        }
+      }
+    }
+
+    // Project the focal point in screen space
+    const fp = model.activeCamera.getFocalPoint();
+    const fpNd = publicAPI.worldToNormalizedDisplay(
+      fp[0],
+      fp[1],
+      fp[2],
+      aspect
+    );
+    const fpDisplayX = fpNd[0] * size[0];
+    const fpDisplayY = fpNd[1] * size[1];
+
+    // The focal point must be at the center of the box
+    const xCenterFocalPoint = Math.trunc(fpDisplayX);
+    const yCenterFocalPoint = Math.trunc(fpDisplayY);
+    const xCenterBox = Math.trunc((xmin + xmax) / 2);
+    const yCenterBox = Math.trunc((ymin + ymax) / 2);
+
+    const xDiff = 2 * (xCenterFocalPoint - xCenterBox);
+    const yDiff = 2 * (yCenterFocalPoint - yCenterBox);
+
+    xmin += Math.min(xDiff, 0);
+    xmax += Math.max(xDiff, 0);
+    ymin += Math.min(yDiff, 0);
+    ymax += Math.max(yDiff, 0);
+
+    const boxWidth = xmax - xmin;
+    const boxHeight = ymax - ymin;
+
+    if (boxWidth > 0 && boxHeight > 0) {
+      publicAPI.zoomToBoxUsingViewAngle(
+        { x: xmin, y: ymin, width: boxWidth, height: boxHeight },
+        effectiveOffsetRatio
+      );
+    }
+
+    publicAPI.invokeEvent(RESET_CAMERA_EVENT);
+
+    return true;
+  };
+
   publicAPI.resetCameraClippingRange = (bounds = null) => {
     const boundsToUse = bounds || publicAPI.computeVisiblePropBounds();
 
