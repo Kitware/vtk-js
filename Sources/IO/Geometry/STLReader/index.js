@@ -240,11 +240,8 @@ function vtkSTLReader(publicAPI, model) {
   };
 
   // Fetch the actual data arrays
-  publicAPI.loadData = (option = {}) => {
-    const promise = fetchData(model.url, option);
-    promise.then(publicAPI.parse);
-    return promise;
-  };
+  publicAPI.loadData = (option = {}) =>
+    fetchData(model.url, option).then(publicAPI.parse);
 
   publicAPI.parse = (content) => {
     if (typeof content === 'string') {
