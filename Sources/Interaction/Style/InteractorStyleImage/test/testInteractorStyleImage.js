@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -9,8 +9,8 @@ import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/Interactor
 import vtkSplineWidget from 'vtk.js/Sources/Widgets/Widgets3D/SplineWidget';
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 
-test('Test vtkInteractorStyleImage.setCurrentImageNumber', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+it('Test vtkInteractorStyleImage.setCurrentImageNumber', () => {
+  const gc = testUtils.createGarbageCollector();
   const container = document.querySelector('body');
   const renderWindowContainer = gc.registerDOMElement(
     document.createElement('div')
@@ -63,28 +63,23 @@ test('Test vtkInteractorStyleImage.setCurrentImageNumber', (t) => {
 
   // Test setCurrentImageNumber()
   interactorStyle.setCurrentImageNumber(0);
-  t.equal(
-    interactorStyle.getCurrentImageProperty(),
+  expect(interactorStyle.getCurrentImageProperty()).toBe(
     imageSlices[0].getProperty()
   );
   interactorStyle.setCurrentImageNumber(1);
-  t.equal(
-    interactorStyle.getCurrentImageProperty(),
+  expect(interactorStyle.getCurrentImageProperty()).toBe(
     imageSlices[1].getProperty()
   );
   interactorStyle.setCurrentImageNumber(4);
-  t.equal(
-    interactorStyle.getCurrentImageProperty(),
+  expect(interactorStyle.getCurrentImageProperty()).toBe(
     imageSlices[4].getProperty()
   );
   interactorStyle.setCurrentImageNumber(-1);
-  t.equal(
-    interactorStyle.getCurrentImageProperty(),
+  expect(interactorStyle.getCurrentImageProperty()).toBe(
     imageSlices[4].getProperty()
   );
   interactorStyle.setCurrentImageNumber(-2);
-  t.equal(
-    interactorStyle.getCurrentImageProperty(),
+  expect(interactorStyle.getCurrentImageProperty()).toBe(
     imageSlices[3].getProperty()
   );
 

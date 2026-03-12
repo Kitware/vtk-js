@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import macro from 'vtk.js/Sources/macros';
 
 const MY_ENUM = {
@@ -110,249 +110,252 @@ function extend(publicAPI, model, initialValues = {}) {
 
 const newInstance = macro.newInstance(extend, 'vtkMyClass');
 
-test('Macro methods scalar tests', (t) => {
-  t.ok('macros', 'macro setget');
+it('Macro methods scalar tests', () => {
+  expect('macros', 'macro setget').toBeTruthy();
 
   const myTestClass = newInstance();
 
-  t.equal(
-    myTestClass.getMyProp3(),
-    DEFAULT_VALUES.myProp3,
-    'Initial gets should match defaults'
+  expect(myTestClass.getMyProp3(), 'Initial gets should match defaults').toBe(
+    DEFAULT_VALUES.myProp3
   );
   myTestClass.setMyProp3(false);
-  t.equal(myTestClass.getMyProp3(), false, 'Bool get should match set');
+  expect(myTestClass.getMyProp3(), 'Bool get should match set').toBe(false);
 
   const mtime1 = myTestClass.getMTime();
-  t.equal(
-    myTestClass.getMyProp4(),
-    DEFAULT_VALUES.myProp4,
-    'Initial gets should match defaults'
+  expect(myTestClass.getMyProp4(), 'Initial gets should match defaults').toBe(
+    DEFAULT_VALUES.myProp4
   );
   myTestClass.setMyProp4(42);
   const mtime2 = myTestClass.getMTime();
-  t.equal(myTestClass.getMyProp4(), 42, 'Int get should match set');
-  t.ok(mtime2 > mtime1, 'mtime should increase after set');
+  expect(myTestClass.getMyProp4(), 'Int get should match set').toBe(42);
+  expect(mtime2 > mtime1, 'mtime should increase after set').toBeTruthy();
   myTestClass.setMyProp4(42);
   const mtime3 = myTestClass.getMTime();
-  t.ok(mtime3 === mtime2, 'mtime should not increase after idempotent set');
-
-  t.end();
+  expect(
+    mtime3 === mtime2,
+    'mtime should not increase after idempotent set'
+  ).toBeTruthy();
 });
 
-test('Macro methods array tests', (t) => {
+it('Macro methods array tests', () => {
   const myTestClass = newInstance();
 
-  t.deepEqual(
+  expect(
     myTestClass.getMyProp1(),
-    DEFAULT_VALUES.myProp1,
     'Initial gets should match defaults'
-  );
+  ).toEqual(DEFAULT_VALUES.myProp1);
   // we must wrap the non-existent call inside another function to avoid test program exiting, and tape generating error.
-  t.throws(
+  expect(
     () => myTestClass.setMyProp1(1, 1, 1),
-    /TypeError/,
     'Throw if no set method declared'
-  );
+  ).toThrow(TypeError);
 
   const myArray = [10, 20, 30, 40];
-  t.ok(myTestClass.setMyProp5(...myArray), 'Array spread set OK');
-  t.deepEqual(
-    myTestClass.getMyProp5(),
-    myArray,
-    'Array spread set should match get'
+  expect(
+    myTestClass.setMyProp5(...myArray),
+    'Array spread set OK'
+  ).toBeTruthy();
+  expect(myTestClass.getMyProp5(), 'Array spread set should match get').toEqual(
+    myArray
   );
 
   const mtime1 = myTestClass.getMTime();
   myArray[0] = 99.9;
-  t.ok(myTestClass.setMyProp5(myArray), 'OK to set a single array argument');
+  expect(
+    myTestClass.setMyProp5(myArray),
+    'OK to set a single array argument'
+  ).toBeTruthy();
   const mtime2 = myTestClass.getMTime();
-  t.deepEqual(myTestClass.getMyProp5(), myArray, 'Array set should match get');
+  expect(myTestClass.getMyProp5(), 'Array set should match get').toEqual(
+    myArray
+  );
 
-  t.ok(mtime2 > mtime1, 'mtime should increase after set');
+  expect(mtime2 > mtime1, 'mtime should increase after set').toBeTruthy();
 
   // set a too-short array, separate args
-  t.throws(
+  expect(
     () => myTestClass.setMyProp6(1, 2, 3),
-    /RangeError/,
     'Invalid number of values should throw'
-  );
-  t.deepEqual(
+  ).toThrow(RangeError);
+  expect(
     myTestClass.getMyProp6(),
-    DEFAULT_VALUES.myProp6,
     'Keep default value after illegal set'
-  );
+  ).toEqual(DEFAULT_VALUES.myProp6);
 
   const mtime3 = myTestClass.getMTime();
-  t.ok(mtime3 === mtime2, 'mtime should not increase after idempotent set');
-  t.ok(!myTestClass.setMyProp5(myArray), 'False if set same array');
-  t.ok(!myTestClass.setMyProp5(...myArray), 'False if set same array');
-  t.ok(!myTestClass.setMyProp5([...myArray]), 'False if set same array');
-  t.ok(
+  expect(
+    mtime3 === mtime2,
+    'mtime should not increase after idempotent set'
+  ).toBeTruthy();
+  expect(
+    !myTestClass.setMyProp5(myArray),
+    'False if set same array'
+  ).toBeTruthy();
+  expect(
+    !myTestClass.setMyProp5(...myArray),
+    'False if set same array'
+  ).toBeTruthy();
+  expect(
+    !myTestClass.setMyProp5([...myArray]),
+    'False if set same array'
+  ).toBeTruthy();
+  expect(
     !myTestClass.setMyProp5(new Float64Array(myArray)),
     'False if set same array'
-  );
+  ).toBeTruthy();
   const mtime4 = myTestClass.getMTime();
-  t.ok(mtime4 === mtime3, 'mtime should not increase after same set');
+  expect(
+    mtime4 === mtime3,
+    'mtime should not increase after same set'
+  ).toBeTruthy();
 
   // set a too-long array, single array arg
-  t.throws(
+  expect(
     () => myTestClass.setMyProp5([].concat(myArray, 555)),
-    /RangeError/,
     'Invalid number of values should throw'
-  );
-  t.deepEqual(
-    myTestClass.getMyProp5(),
-    myArray,
-    'Keep value after illegal set'
+  ).toThrow(RangeError);
+  expect(myTestClass.getMyProp5(), 'Keep value after illegal set').toEqual(
+    myArray
   );
 
   // set an string
-  t.throws(
+  expect(
     () => myTestClass.setMyProp5('a string, really'),
-    /RangeError/,
     'Invalid set with string should throw'
-  );
-  t.deepEqual(
-    myTestClass.getMyProp5(),
-    myArray,
-    'Keep value after illegal set'
+  ).toThrow(RangeError);
+  expect(myTestClass.getMyProp5(), 'Keep value after illegal set').toEqual(
+    myArray
   );
 
   const typedArray = new Float64Array(5);
-  t.ok(myTestClass.setMyProp6(typedArray), 'OK to set a typed array argument');
+  expect(
+    myTestClass.setMyProp6(typedArray),
+    'OK to set a typed array argument'
+  ).toBeTruthy();
   typedArray[0] = 1;
-  t.equal(
+  expect(
     myTestClass.getMyProp6()[0],
-    0,
     'setArray should copy input argument'
-  );
+  ).toBe(0);
 
   // Test default values
-  t.ok(myTestClass.setMyProp8(), 'OK to set no argument');
-  t.equal(
+  expect(myTestClass.setMyProp8(), 'OK to set no argument').toBeTruthy();
+  expect(
     myTestClass.setMyProp8([]),
-    false,
     'OK to set same empty array as argument'
-  );
-  t.equal(
+  ).toBe(false);
+  expect(
     myTestClass.setMyProp8(new Uint8Array()),
-    false,
     'OK to set same empty typedarray as argument'
-  );
-  t.ok(myTestClass.setMyProp8(10), 'OK to set not enough argument');
-  t.equal(
+  ).toBe(false);
+  expect(
+    myTestClass.setMyProp8(10),
+    'OK to set not enough argument'
+  ).toBeTruthy();
+  expect(
     myTestClass.setMyProp8(new Float64Array([10])),
-    false,
     'OK to set too short typed array argument'
-  );
-  t.ok(myTestClass.setMyProp8([2, 3]), 'OK to set too-short array argument');
+  ).toBe(false);
+  expect(
+    myTestClass.setMyProp8([2, 3]),
+    'OK to set too-short array argument'
+  ).toBeTruthy();
 
-  t.throws(
+  expect(
     () => myTestClass.setMyProp8(1, 2, 3, 4),
-    /RangeError/,
     'Invalid number of values should throw'
-  );
-  t.throws(
+  ).toThrow(RangeError);
+  expect(
     () => myTestClass.setMyProp8([1, 2, 3, 4]),
-    /RangeError/,
     'Too large array should throw'
-  );
-  t.throws(
+  ).toThrow(RangeError);
+  expect(
     () => myTestClass.setMyProp8(new Float32Array(4)),
-    /RangeError/,
     'Too large array should throw'
-  );
+  ).toThrow(RangeError);
 
-  t.throws(
+  expect(
     () => newInstance({ myProp9: [] }),
-    /RangeError/,
     'Empty array should throw'
+  ).toThrow(RangeError);
+
+  expect(myTestClass.setMyProp9(null)).toBe(false);
+  expect(myTestClass.setMyProp9([0, 1, 2])).toBe(true);
+  expect(() => myTestClass.setMyProp9(), 'Empty array should throw').toThrow(
+    RangeError
+  );
+  expect(() => myTestClass.setMyProp9([]), 'Empty array should throw').toThrow(
+    RangeError
   );
 
-  t.equal(myTestClass.setMyProp9(null), false);
-  t.equal(myTestClass.setMyProp9([0, 1, 2]), true);
-  t.throws(
-    () => myTestClass.setMyProp9(),
-    /RangeError/,
-    'Empty array should throw'
-  );
-  t.throws(
-    () => myTestClass.setMyProp9([]),
-    /RangeError/,
-    'Empty array should throw'
-  );
-
-  t.ok(
+  expect(
     myTestClass.setMyProp10([0, 1, 2]),
     'Test setting array from undefined to unlimited size'
-  );
-  t.ok(
+  ).toBeTruthy();
+  expect(
     myTestClass.setMyProp10([0, 1, 2, 3]),
     'Test setting larger array for unlimited size array'
-  );
-  t.ok(
+  ).toBeTruthy();
+  expect(
     myTestClass.setMyProp10([0, 1, 2]),
     'Test setting smaller array for unlimited size array'
-  );
+  ).toBeTruthy();
 
   const a = [2, 3, 4];
   myTestClass.setMyProp10(a);
-  t.ok(
+  expect(
     myTestClass.getReferenceByName('myProp10') !== a,
     'Test setting array make a copy'
-  );
+  ).toBeTruthy();
   a[0] = 3;
-  t.ok(
+  expect(
     myTestClass.getMyProp10()[0] === 2,
     'Test setting array do not hold reference'
-  );
-
-  t.end();
+  ).toBeTruthy();
 });
 
-test('Macro protected variables tests', (t) => {
+it('Macro protected variables tests', () => {
   const defaultInstance = newInstance();
-  t.deepEqual(defaultInstance.get('_myProp11', '_myProp12', '_myProp13'), {
+  expect(defaultInstance.get('_myProp11', '_myProp12', '_myProp13')).toEqual({
     _myProp11: DEFAULT_VALUES.myProp11,
     _myProp12: DEFAULT_VALUES._myProp12,
     _myProp13: DEFAULT_VALUES._myProp13,
   });
   // getter must have been renamed
-  t.notOk(defaultInstance.get_myProp11);
-  t.notOk(defaultInstance.get_myProp12);
-  t.notOk(defaultInstance.get_myProp13);
+  expect(defaultInstance.get_myProp11).toBeFalsy();
+  expect(defaultInstance.get_myProp12).toBeFalsy();
+  expect(defaultInstance.get_myProp13).toBeFalsy();
 
   // setter must have been renamed
-  t.notOk(defaultInstance.set_myProp11);
-  t.notOk(defaultInstance.set_myProp12);
-  t.notOk(defaultInstance.set_myProp13);
+  expect(defaultInstance.set_myProp11).toBeFalsy();
+  expect(defaultInstance.set_myProp12).toBeFalsy();
+  expect(defaultInstance.set_myProp13).toBeFalsy();
 
-  t.equal(defaultInstance.getMyProp11(), DEFAULT_VALUES.myProp11);
-  t.deepEqual(defaultInstance.getMyProp12(), DEFAULT_VALUES._myProp12);
-  t.notOk(defaultInstance.getMyProp13);
+  expect(defaultInstance.getMyProp11()).toBe(DEFAULT_VALUES.myProp11);
+  expect(defaultInstance.getMyProp12()).toEqual(DEFAULT_VALUES._myProp12);
+  expect(defaultInstance.getMyProp13).toBeFalsy();
 
-  t.notOk(defaultInstance.getMyProp11ByReference);
-  t.ok(defaultInstance.getMyProp12ByReference);
-  t.notOk(defaultInstance.getMyProp11ByReference);
+  expect(defaultInstance.getMyProp11ByReference).toBeFalsy();
+  expect(defaultInstance.getMyProp12ByReference).toBeTruthy();
+  expect(defaultInstance.getMyProp11ByReference).toBeFalsy();
 
-  t.ok(defaultInstance.setMyProp11(111));
-  t.ok(defaultInstance.setMyProp12([112]));
-  t.notOk(defaultInstance.setMyProp13);
+  expect(defaultInstance.setMyProp11(111)).toBeTruthy();
+  expect(defaultInstance.setMyProp12([112])).toBeTruthy();
+  expect(defaultInstance.setMyProp13).toBeFalsy();
 
-  t.notOk(defaultInstance.setMyProp11From);
-  t.ok(defaultInstance.setMyProp12From);
-  t.notOk(defaultInstance.setMyProp13From);
+  expect(defaultInstance.setMyProp11From).toBeFalsy();
+  expect(defaultInstance.setMyProp12From).toBeTruthy();
+  expect(defaultInstance.setMyProp13From).toBeFalsy();
 
-  t.equal(defaultInstance.getMyProp11(), 111);
-  t.deepEqual(defaultInstance.getMyProp12(), [112]);
+  expect(defaultInstance.getMyProp11()).toBe(111);
+  expect(defaultInstance.getMyProp12()).toEqual([112]);
 
   const overridenInstance = newInstance({
     myProp11: 111,
     myProp12: [112],
     myProp13: 113,
   });
-  t.deepEqual(overridenInstance.get('_myProp11', '_myProp12', '_myProp13'), {
+  expect(overridenInstance.get('_myProp11', '_myProp12', '_myProp13')).toEqual({
     _myProp11: 111,
     _myProp12: [112],
     _myProp13: 113,
@@ -362,218 +365,209 @@ test('Macro protected variables tests', (t) => {
     _myProp12: [112],
     _myProp13: 113,
   });
-  t.deepEqual(overridenInstance2.get('_myProp11', '_myProp12', '_myProp13'), {
-    _myProp11: DEFAULT_VALUES.myProp11, // TBD
-    _myProp12: [112],
-    _myProp13: 113,
-  });
-  t.end();
+  expect(overridenInstance2.get('_myProp11', '_myProp12', '_myProp13')).toEqual(
+    {
+      _myProp11: DEFAULT_VALUES.myProp11, // TBD
+      _myProp12: [112],
+      _myProp13: 113,
+    }
+  );
 });
 
-test('Macro methods enum tests', (t) => {
+it('Macro methods enum tests', () => {
   const myTestClass = newInstance();
 
-  t.equal(
-    myTestClass.getMyProp7(),
-    DEFAULT_VALUES.myProp7,
-    'Initial gets should match defaults'
+  expect(myTestClass.getMyProp7(), 'Initial gets should match defaults').toBe(
+    DEFAULT_VALUES.myProp7
   );
   myTestClass.setMyProp7(MY_ENUM.THIRD);
-  t.equal(myTestClass.getMyProp7(), MY_ENUM.THIRD, 'Enum set should match get');
-
-  t.ok(myTestClass.setMyProp7(2));
-  t.equal(
-    myTestClass.getMyProp7(),
-    MY_ENUM.SECOND,
-    'Enum set by index should get matching enum value'
+  expect(myTestClass.getMyProp7(), 'Enum set should match get').toBe(
+    MY_ENUM.THIRD
   );
 
-  t.notOk(
+  expect(myTestClass.setMyProp7(2)).toBeTruthy();
+  expect(
+    myTestClass.getMyProp7(),
+    'Enum set by index should get matching enum value'
+  ).toBe(MY_ENUM.SECOND);
+
+  expect(
     myTestClass.setMyProp7(2),
     'Setting idempotent value should return false'
-  );
+  ).toBeFalsy();
 
-  t.throws(
+  expect(
     () => myTestClass.setMyProp7(42),
-    /RangeError/,
     'Invalid enum index should throw'
-  );
-  t.equal(
+  ).toThrow(RangeError);
+  expect(
     myTestClass.getMyProp7(),
-    MY_ENUM.SECOND,
     'Enum set out of range should be rejected'
-  );
+  ).toBe(MY_ENUM.SECOND);
 
-  t.throws(
+  expect(
     () => myTestClass.setMyProp7('FORTH'),
-    /RangeError/,
     'Invalid enum string should throw'
-  );
-  t.equal(
+  ).toThrow(RangeError);
+  expect(
     myTestClass.getMyProp7(),
-    MY_ENUM.SECOND,
     'Enum set string out of range should be rejected'
-  );
+  ).toBe(MY_ENUM.SECOND);
 
-  t.throws(
+  expect(
     () => myTestClass.setMyProp7([2]),
-    /TypeError/,
     'Invalid enum set with array/object should throw'
-  );
-  t.equal(
+  ).toThrow(TypeError);
+  expect(
     myTestClass.getMyProp7(),
-    MY_ENUM.SECOND,
     'Enum set string out of range should be rejected'
-  );
-
-  t.end();
+  ).toBe(MY_ENUM.SECOND);
 });
 
-test('Macro methods object tests', (t) => {
+it('Macro methods object tests', () => {
   const myTestClass = newInstance();
 
   const mtime = myTestClass.getMTime();
-  t.equal(
+  expect(
     myTestClass.setMyObjectProp({ foo: 1 }),
-    false,
     'No change on same object'
+  ).toBe(false);
+  expect(myTestClass.getMTime(), 'No change when setting same object').toBe(
+    mtime
   );
-  t.equal(myTestClass.getMTime(), mtime, 'No change when setting same object');
 
-  t.equal(
+  expect(
     myTestClass.setMyObjectProp({ foo: 2 }),
-    true,
     'Change on different object'
+  ).toBe(true);
+  expect(myTestClass.getMTime(), 'Change when setting same object').not.toBe(
+    mtime
   );
-  t.notEqual(myTestClass.getMTime(), mtime, 'Change when setting same object');
-  t.deepEqual(
-    myTestClass.getMyObjectProp(),
-    { foo: 2 },
-    'Change on different object'
-  );
+  expect(myTestClass.getMyObjectProp(), 'Change on different object').toEqual({
+    foo: 2,
+  });
 
   myTestClass.getMyObjectProp().foo = 3;
-  t.deepEqual(
-    myTestClass.getMyObjectProp(),
-    { foo: 2 },
-    'Getter shall return a copy'
-  );
+  expect(myTestClass.getMyObjectProp(), 'Getter shall return a copy').toEqual({
+    foo: 2,
+  });
 
   myTestClass.setMyParameterizedObjectProp({ foo: 12, bar: 89, baz: 13 });
-  t.deepEqual(
+  expect(
     myTestClass.getMyParameterizedObjectProp(),
-    { foo: 12, bar: 89, baz: 13 },
     'Setter changes on a different object'
-  );
+  ).toEqual({
+    foo: 12,
+    bar: 89,
+    baz: 13,
+  });
 
   myTestClass.setMyParameterizedObjectProp(16, 52);
-  t.deepEqual(
+  expect(
     myTestClass.getMyParameterizedObjectProp(),
-    { foo: 16, bar: 52 },
     'Object setter with multiple arguments'
-  );
+  ).toEqual({
+    foo: 16,
+    bar: 52,
+  });
 
   myTestClass.setMyParameterizedObjectProp(1, 2, 3);
-  t.deepEqual(
+  expect(
     myTestClass.getMyParameterizedObjectProp(),
-    { foo: 1, bar: 2 },
     'Object setter ignores extraneous arguments'
-  );
-
-  t.end();
+  ).toEqual({
+    foo: 1,
+    bar: 2,
+  });
 });
 
-test('Macro methods object tests', (t) => {
+it('Macro methods object tests', () => {
   const myTestClass = newInstance();
 
   const defaultValues = { ...DEFAULT_VALUES };
   defaultValues._myProp11 = defaultValues.myProp11;
   delete defaultValues.myProp11;
 
-  t.ok(myTestClass.get(), 'Get entire model');
-  t.deepEqual(
+  expect(myTestClass.get(), 'Get entire model').toBeTruthy();
+  expect(
     myTestClass.get(...Object.keys(defaultValues)),
-    defaultValues,
     'Get defaults back test'
-  );
+  ).toEqual(defaultValues);
 
-  t.throws(
-    () => {
-      myTestClass.getMyProp1 = () => '42';
-    },
-    /TypeError/,
-    'Object should be frozen'
-  );
+  expect(() => {
+    myTestClass.getMyProp1 = () => '42';
+  }, 'Object should be frozen').toThrow(TypeError);
 
-  t.ok(myTestClass.set({ changeWhenModified: 'foo' }));
+  expect(myTestClass.set({ changeWhenModified: 'foo' })).toBeTruthy();
   const off = myTestClass.onModified((publicAPI) => {
     publicAPI.set({ changeWhenModified: 'bar' });
   });
-  t.ok(myTestClass.setMyProp3(false));
-  t.deepEqual(
+  expect(myTestClass.setMyProp3(false)).toBeTruthy();
+  expect(
     myTestClass.get('changeWhenModified'),
-    { changeWhenModified: 'bar' },
     'Object modified fires'
-  );
+  ).toEqual({
+    changeWhenModified: 'bar',
+  });
   off.unsubscribe();
   myTestClass.set({ changeWhenModified: 'foobaz' });
   myTestClass.setMyProp3(true);
-  t.deepEqual(
+  expect(
     myTestClass.get('changeWhenModified'),
-    { changeWhenModified: 'foobaz' },
     'Object modified does not fire after unsubscribe'
-  );
+  ).toEqual({
+    changeWhenModified: 'foobaz',
+  });
 
-  t.ok(
+  expect(
     myTestClass.set({ myProp4: 99.9, myProp5: [1, 1, 1, 1] }),
     'Test mult-set'
+  ).toBeTruthy();
+  expect(myTestClass.getMyProp4(), 'Float get should match multi-set').toBe(
+    99.9
   );
-  t.equal(myTestClass.getMyProp4(), 99.9, 'Float get should match multi-set');
-  t.deepEqual(
-    myTestClass.getMyProp5(),
-    [1, 1, 1, 1],
-    'Array multi-set should match get'
-  );
+  expect(myTestClass.getMyProp5(), 'Array multi-set should match get').toEqual([
+    1, 1, 1, 1,
+  ]);
 
-  t.ok(myTestClass.isA('vtkMyClass'));
-  t.ok(myTestClass.isA('vtkObject'));
-  t.notOk(myTestClass.isA('vtkPoint'));
-  t.equal(myTestClass.getClassName(), 'vtkMyClass');
+  expect(myTestClass.isA('vtkMyClass')).toBeTruthy();
+  expect(myTestClass.isA('vtkObject')).toBeTruthy();
+  expect(myTestClass.isA('vtkPoint')).toBeFalsy();
+  expect(myTestClass.getClassName(), 'vtkMyClass').toBe('vtkMyClass');
 
-  t.doesNotThrow(() => myTestClass.delete());
-  t.notOk(myTestClass.getMyProp4(), 'All calls should do nothing after delete');
-
-  t.end();
+  expect(() => myTestClass.delete()).not.toThrow();
+  expect(
+    myTestClass.getMyProp4(),
+    'All calls should do nothing after delete'
+  ).toBeFalsy();
 });
 
-test('Macro methods _onPropChanged tests', (t) => {
+it('Macro methods _onPropChanged tests', () => {
   const myTestClass = newInstance();
 
   myTestClass.setMyProp8([3, 2, 1]);
-  t.equal(myTestClass.get()._onMyProp8ChangedCallsCount, 1);
+  expect(myTestClass.get()._onMyProp8ChangedCallsCount).toBe(1);
   myTestClass.setMyProp8([3, 2, 1]);
-  t.equal(myTestClass.get()._onMyProp8ChangedCallsCount, 1);
+  expect(myTestClass.get()._onMyProp8ChangedCallsCount).toBe(1);
   myTestClass.setMyProp8([2, 3, 1]);
-  t.equal(myTestClass.get()._onMyProp8ChangedCallsCount, 2);
+  expect(myTestClass.get()._onMyProp8ChangedCallsCount).toBe(2);
 
   myTestClass.setMyProp11(42);
-  t.equal(myTestClass.get()._onMyProp11ChangedCallsCount, 1);
+  expect(myTestClass.get()._onMyProp11ChangedCallsCount).toBe(1);
   myTestClass.setMyProp11(42);
-  t.equal(myTestClass.get()._onMyProp11ChangedCallsCount, 1);
+  expect(myTestClass.get()._onMyProp11ChangedCallsCount).toBe(1);
   myTestClass.setMyProp11(43);
-  t.equal(myTestClass.get()._onMyProp11ChangedCallsCount, 2);
+  expect(myTestClass.get()._onMyProp11ChangedCallsCount).toBe(2);
 
   myTestClass.setMyObjectProp({ foo: 10 });
-  t.equal(myTestClass.get()._onMyObjectPropChangedCallsCount, 1);
+  expect(myTestClass.get()._onMyObjectPropChangedCallsCount).toBe(1);
   myTestClass.setMyObjectProp({ foo: 10 });
-  t.equal(myTestClass.get()._onMyObjectPropChangedCallsCount, 1);
+  expect(myTestClass.get()._onMyObjectPropChangedCallsCount).toBe(1);
   myTestClass.setMyObjectProp({ bar: 10 });
-  t.equal(myTestClass.get()._onMyObjectPropChangedCallsCount, 2);
-
-  t.end();
+  expect(myTestClass.get()._onMyObjectPropChangedCallsCount).toBe(2);
 });
 
-test('Macro methods event tests', (t) => {
+it('Macro methods event tests', () => {
   const myTestClass = newInstance();
 
   //
@@ -584,12 +578,12 @@ test('Macro methods event tests', (t) => {
 
   const cbAbort1 = () => {
     ++callCount;
-    t.equal(callCount, 1, 'cbAbort1 should be called first');
+    expect(callCount, 'cbAbort1 should be called first').toBe(1);
   };
 
   const cbAbort2 = () => {
     ++callCount;
-    t.equal(callCount, 2, 'cbAbort2 should be called second');
+    expect(callCount, 'cbAbort2 should be called second').toBe(2);
 
     // this is a demonstration of the VOID and EVENT_ABORT return symbols.
     if (callCount !== 2) {
@@ -601,7 +595,7 @@ test('Macro methods event tests', (t) => {
 
   const cbAbort3 = () => {
     ++callCount;
-    t.fail('cbAbort3 should not be called');
+    expect.fail('cbAbort3 should not be called');
   };
 
   myTestClass.onTestAbort(cbAbort1);
@@ -609,7 +603,7 @@ test('Macro methods event tests', (t) => {
   myTestClass.onTestAbort(cbAbort3);
 
   myTestClass.invokeTestAbort();
-  t.equal(callCount, 2, 'Only 2 callbacks should be invoked, not 3');
+  expect(callCount, 'cbAbort3 should not be called').toBe(2);
 
   //
   // Test callback priority and subscription
@@ -617,30 +611,39 @@ test('Macro methods event tests', (t) => {
   const called = Array(3).fill(0);
 
   const cbPriorityLast = () => {
-    t.ok(
+    expect(
       called[0] && called[1] && called[2],
-      'cbPriorityLast should be called last after 101ms'
-    );
+      'Only 2 callbacks should be invoked, not 3'
+    ).toBeTruthy();
 
     // ensure callback2 was only invoked twice
-    t.equal(called[2], 2, 'cbPriority2 should be called exactly twice');
-
-    t.end();
+    expect(called[2], 'cbPriorityLast should be called last after 101ms').toBe(
+      2
+    );
   };
 
   const cbPriority0 = () => {
     called[0]++;
-    t.ok(called[1] && called[2], 'cbPriority0 should be called third');
+    expect(
+      called[1] && called[2],
+      'cbPriority2 should be called exactly twice'
+    ).toBeTruthy();
   };
 
   const cbPriority1 = () => {
     called[1]++;
-    t.ok(!called[0] && called[2], 'cbPriority1 should be called second');
+    expect(
+      !called[0] && called[2],
+      'cbPriority0 should be called third'
+    ).toBeTruthy();
   };
 
   const cbPriority2 = () => {
     called[2]++;
-    t.ok(!called[0] && !called[1], 'cbPriority2 should be called first');
+    expect(
+      !called[0] && !called[1],
+      'cbPriority1 should be called second'
+    ).toBeTruthy();
   };
 
   myTestClass.onTestPriority(cbPriorityLast, -100);
@@ -657,77 +660,71 @@ test('Macro methods event tests', (t) => {
   myTestClass.invokeTestPriority();
 });
 
-test('Macro methods keystore tests', (t) => {
+it('Macro methods keystore tests', () => {
   const testClass = newInstance();
 
   testClass.setKey('key3', 'value3');
 
-  t.equal(testClass.getKey('key1'), 'value1', 'key1 should exist in keystore');
-  t.equal(testClass.getKey('key2'), 'value2', 'key2 should exist in keystore');
-  t.equal(testClass.getKey('key3'), 'value3', 'key3 should exist in keystore');
+  expect(testClass.getKey('key1'), 'cbPriority2 should be called first').toBe(
+    'value1'
+  );
+  expect(testClass.getKey('key2'), 'key1 should exist in keystore').toBe(
+    'value2'
+  );
+  expect(testClass.getKey('key3'), 'key2 should exist in keystore').toBe(
+    'value3'
+  );
 
-  t.ok(testClass.deleteKey('key2'), 'Delete key2 should succeed');
+  expect(
+    testClass.deleteKey('key2'),
+    'key3 should exist in keystore'
+  ).toBeTruthy();
 
   testClass.clearKeystore();
 
-  t.equal(
-    testClass.getAllKeys().length,
-    0,
-    'There should be no keys after clearing'
-  );
-
-  t.end();
+  expect(testClass.getAllKeys().length, 'Delete key2 should succeed').toBe(0);
 });
 
-test('Macro methods normalizeWheel tests', (t) => {
+it('Macro methods normalizeWheel tests', () => {
   const wheelEvent = { wheelDeltaX: 120 };
 
   let normalizeWheelReturn = macro.normalizeWheel(wheelEvent);
-  t.equal(
+  expect(
     normalizeWheelReturn.spinY,
-    -1,
+    'There should be no keys after clearing'
+  ).toBe(-1);
+  expect(
+    normalizeWheelReturn.spinY,
     'spinY should be set when only wheelDeltaX is defined'
-  );
-  t.equal(
-    normalizeWheelReturn.spinY,
-    normalizeWheelReturn.spinX,
+  ).toBe(normalizeWheelReturn.spinX);
+  expect(
+    normalizeWheelReturn.pixelY,
     'spinY should equal spinX when only wheelDeltaX is defined'
-  );
-  t.equal(
+  ).toBe(-10);
+  expect(
     normalizeWheelReturn.pixelY,
-    -10,
     'pixelY should be set when only wheelDeltaX is defined'
-  );
-  t.equal(
-    normalizeWheelReturn.pixelY,
-    normalizeWheelReturn.pixelX,
-    'pixelY should equal pixelX when only wheelDeltaX is defined'
-  );
+  ).toBe(normalizeWheelReturn.pixelX);
 
   wheelEvent.wheelDeltaY = 240;
   normalizeWheelReturn = macro.normalizeWheel(wheelEvent);
-  t.equal(
+  expect(
     normalizeWheelReturn.spinY,
-    -2,
-    'spinY should be set using wheelDeltaY when defined'
-  );
-  t.equal(
+    'pixelY should equal pixelX when only wheelDeltaX is defined'
+  ).toBe(-2);
+  expect(
     normalizeWheelReturn.pixelY,
-    -20,
-    'pixelY should be set using wheelDeltaY when defined'
-  );
-
-  t.end();
+    'spinY should be set using wheelDeltaY when defined'
+  ).toBe(-20);
 });
 
-test('Macro debounce can be cancelled', (t) => {
+it('Macro debounce can be cancelled', () => {
   const func = () => {
-    t.fail('Should not call cancelled debounce function');
+    expect.fail('Should not call cancelled debounce function');
   };
   const debFunc = macro.debounce(func, 5);
   debFunc();
   debFunc.cancel();
 
   // end the test after the debounce phase
-  setTimeout(() => t.end(), 10);
 });

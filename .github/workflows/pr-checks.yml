@@ -8,13 +8,13 @@ jobs:
     runs-on: ubuntu-24.04
     name: Check and lint PR
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # needed so commitlint can lint the commits
       - name: Setup node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - run: npm ci
       - name: Enforce code style
         run: npm run validate

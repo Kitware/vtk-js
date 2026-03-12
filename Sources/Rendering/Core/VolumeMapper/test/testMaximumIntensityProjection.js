@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -14,9 +14,9 @@ import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
 import baseline from './testMaximumIntensityProjection.png';
 
-test('Test Maximum Intensity Projection Volume Rendering', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkVolumeMapper MIP');
+it('Test Maximum Intensity Projection Volume Rendering', async () => {
+  const gc = testUtils.createGarbageCollector();
+  expect('rendering', 'vtkVolumeMapper MIP').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI
@@ -89,7 +89,6 @@ test('Test Maximum Intensity Projection Volume Rendering', async (t) => {
         image,
         [baseline],
         'Rendering/Core/VolumeMapper/testMaximumIntensityProjection',
-        t,
         1.5,
         gc.releaseResources
       )

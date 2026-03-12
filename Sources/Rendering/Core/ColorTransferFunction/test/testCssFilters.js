@@ -1,25 +1,22 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import * as CssFilters from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/CssFilters';
 
-test('Test CssFilters identity', (t) => {
+it('Test CssFilters identity', () => {
   const color = [Math.random(), Math.random(), -1, 2];
   const identity = CssFilters.createIdentityFilter();
   const output = CssFilters.applyFilter(identity, ...color);
   const expectedOutput = [color[0], color[1], 0, 1];
-  t.deepEqual(output, expectedOutput, 'Apply identity filter');
-  t.end();
+  expect(output, 'Apply identity filter').toEqual(expectedOutput);
 });
 
-test('Test CssFilters brightness', (t) => {
+it('Test CssFilters brightness', () => {
   const color = [0.1, 0.5, 0.9, 0.2];
   const halfBright = CssFilters.createBrightnessFilter(0.5);
   const output = CssFilters.applyFilter(halfBright, ...color);
-  t.deepEqual([0.05, 0.25, 0.45, 0.2], output, 'Apply brightness filter');
-  t.end();
+  expect([0.05, 0.25, 0.45, 0.2], 'Apply brightness filter').toEqual(output);
 });
 
-test('Fuzzy test all CssFilters', (t) => {
+it('Fuzzy test all CssFilters', () => {
   const canvas = document.createElement('canvas');
   canvas.width = 1;
   canvas.height = 1;
@@ -61,9 +58,8 @@ test('Fuzzy test all CssFilters', (t) => {
       // For example, using a color of [127.5, 127.5, 128.49] with a saturate of 1000 creates big errors
       // This is because the CSS filters use uint8 instead of floating point numbers
       if (Math.abs(error) > 7 / 255) {
-        t.fail('Error is too big');
+        expect.fail('Error is too big');
       }
     }
   }
-  t.end();
 });

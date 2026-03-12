@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import"],
+  "env": {
+    "es2020": true,
+    "es6": true,
+    "browser": true
+  },
+  "globals": {
+    "__BASE_PATH__": "readonly",
+    "__VTK_TEST_NO_WEBGL__": "readonly",
+    "__VTK_TEST_WEBGPU__": "readonly",
+    "VRFrameData": "readonly"
+  },
+  "rules": {
+    "linebreak-style": "off",
+    "no-console": "off",
+    "no-param-reassign": [
+      "warn",
+      {
+        "props": false
+      }
+    ],
+    "no-plusplus": "off",
+    "no-underscore-dangle": "off",
+    "no-unused-vars": [
+      "warn",
+      {
+        "args": "none"
+      }
+    ],
+    "prefer-destructuring": "off"
+  },
+  "ignorePatterns": [
+    "**/example_/*.js",
+    "Utilities/**/*.js",
+    "vite.config.js",
+    "vitest.config.js",
+    ".eslintrc.js"
+  ]
+}

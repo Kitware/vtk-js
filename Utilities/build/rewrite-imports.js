@@ -1,4 +1,4 @@
-module.exports = (code, replaceFunc) => {
+export default function rewriteImports(code, replaceFunc) {
   const importRegex = /(?:import|from)\s+['"]([^'"]*)['"]/g;
   let m;
   while ((m = importRegex.exec(code)) != null) {
@@ -16,4 +16,4 @@ module.exports = (code, replaceFunc) => {
     }
   }
   return code;
-};
+}

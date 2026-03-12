@@ -3,8 +3,7 @@ import vtkXMLReader, { IXMLReaderInitialValues } from '../XMLReader';
 /**
  *
  */
-export interface IXMLImageDataReaderInitialValues
-  extends IXMLReaderInitialValues {
+export interface IXMLImageDataReaderInitialValues extends IXMLReaderInitialValues {
   dataType?: string;
 }
 

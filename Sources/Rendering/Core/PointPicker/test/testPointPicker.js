@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -16,9 +16,9 @@ import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 
 const { SlicingMode } = vtkImageMapper;
 
-test('Test vtkPointPicker image mapper', (t) => {
+it('Test vtkPointPicker image mapper', () => {
   // Create some control UI
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   const container = document.querySelector('body');
   const renderWindowContainer = gc.registerDOMElement(
     document.createElement('div')
@@ -62,29 +62,26 @@ test('Test vtkPointPicker image mapper', (t) => {
   picker.pick(p, renderer);
 
   const actors = picker.getActors();
-  t.equal(actors.length, 1);
-  t.equal(actors[0], actor);
+  expect(actors.length).toBe(1);
+  expect(actors[0]).toBe(actor);
 
   const positions = picker.getPickedPositions();
-  t.equal(positions.length, 1);
+  expect(positions.length).toBe(1);
   const xyz = positions[0];
   const expectedPosition = [64.33654020304944, 75.54505613923392, 12.0];
-  t.assert(
-    areEquals(xyz, expectedPosition),
-    'Float-compare picked position to expected.'
-  );
+  expect(areEquals(xyz, expectedPosition)).toBeTruthy();
 
   const ijk = picker.getPointIJK();
-  t.equal(ijk[0], 64);
-  t.equal(ijk[1], 76);
-  t.equal(ijk[2], 12);
+  expect(ijk[0]).toBe(64);
+  expect(ijk[1]).toBe(76);
+  expect(ijk[2], 'pick at (380.5, 200)').toBe(12);
 
   gc.releaseResources();
 });
 
-test.onlyIfWebGL('Test vtkPointPicker line source', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkPointPicker line source', () => {
   // Create some control UI
-  const gc = testUtils.createGarbageCollector(t);
+  const gc = testUtils.createGarbageCollector();
   const container = document.querySelector('body');
   const renderWindowContainer = gc.registerDOMElement(
     document.createElement('div')
@@ -132,28 +129,27 @@ test.onlyIfWebGL('Test vtkPointPicker line source', (t) => {
   picker.pick(pFirst, renderer);
 
   const actorsFirstPoint = picker.getActors();
-  t.equal(actorsFirstPoint.length, 1, 'pick at (380.5, 200)');
-  t.equal(actorsFirstPoint[0], actor);
+  expect(actorsFirstPoint.length).toBe(1);
+  expect(actorsFirstPoint[0], 'point id').toBe(actor);
 
   const idFirstPoint = picker.getPointId();
-  t.equal(idFirstPoint, 10, 'point id');
+  expect(idFirstPoint, 'pick at (20, 200.5)').toBe(10);
 
   const pLast = [20, 200 + 0.5, 0];
   picker.pick(pLast, renderer);
 
   const actorsLastPoint = picker.getActors();
-  t.equal(actorsLastPoint.length, 1, 'pick at (20, 200.5)');
-  t.equal(actorsLastPoint[0], actor);
+  expect(actorsLastPoint.length).toBe(1);
+  expect(actorsLastPoint[0], 'point id').toBe(actor);
 
   const idLastPoint = picker.getPointId();
-  t.equal(idLastPoint, 0, 'point id');
+  expect(idLastPoint, 'Make sure the class definition exists').toBe(0);
 
   gc.releaseResources();
 });
 
-test('Test vtkPointPicker instance', (t) => {
-  t.ok(vtkPointPicker, 'Make sure the class definition exists');
+it('Test vtkPointPicker instance', () => {
+  expect(vtkPointPicker).toBeTruthy();
   const instance = vtkPointPicker.newInstance();
-  t.ok(instance);
-  t.end();
+  expect(instance).toBeTruthy();
 });

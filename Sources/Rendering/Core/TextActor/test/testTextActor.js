@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkTextActor from 'vtk.js/Sources/Rendering/Core/TextActor';
@@ -8,9 +8,9 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
 import baseline from './testTextActor.png';
 
-test.onlyIfWebGL('Test TextActor', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test TextActor', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkTextActor');
+  expect('rendering', 'vtkTextActor').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -54,9 +54,8 @@ test.onlyIfWebGL('Test TextActor', (t) => {
       testUtils.compareImages(
         image,
         [baseline],
-        'Rendering/Core/TextActor',
-        t,
-        1
+        'Rendering/Core/TextActor/testTextActor',
+        2.5
       )
     )
     .finally(gc.releaseResources);

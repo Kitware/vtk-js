@@ -85,7 +85,7 @@ export function extend(
  */
 export function newInstance(initialValues?: IVolumeInitialValues): vtkVolume;
 
-/** 
+/**
  * vtk-js includes support for volume rendering using hardware GPU acceleration. The
  * capabilities may change over time but as of this writing it includes support
  * for :

@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -17,9 +17,12 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
 import baseline from './testImageResliceMapper.png';
 
-test.onlyIfWebGL('Test ImageResliceMapper', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ImageResliceMapper', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkImageResliceMapper testImageResliceMapper');
+  expect(
+    'rendering',
+    'vtkImageResliceMapper testImageResliceMapper'
+  ).toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -106,7 +109,6 @@ test.onlyIfWebGL('Test ImageResliceMapper', (t) => {
         image,
         [baseline],
         'Rendering/Core/ImageResliceMapper',
-        t,
         1
       )
     )

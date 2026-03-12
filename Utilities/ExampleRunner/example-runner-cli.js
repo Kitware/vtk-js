@@ -1,101 +1,161 @@
 #! /usr/bin/env node
 
-/* eslint-disable */
-var { program } = require('commander');
-var path = require('path');
-var shell = require('shelljs');
-var fs = require('fs');
-var examples = {};
-var basePath = path.resolve('./Documentation');
-var webpackConfigPath = path.join(__dirname, 'webpack.config.js');
-var distDir = path.join(__dirname, 'dist');
-var buildConfig = require('./template-config.js');
-const rootPath = path.resolve(path.join(__dirname, '../..'));
-var webpackSettings = require(path.join(rootPath, 'webpack.settings.js'));
+/* eslint-disable no-console */
+const { program } = require('commander');
+const path = require('path');
+const fs = require('fs');
+
+const REPO_ROOT = path.resolve(__dirname, '../..');
+const SOURCES_ROOT = path.join(REPO_ROOT, 'Sources');
+const EXAMPLES_ROOT = path.join(REPO_ROOT, 'Examples');
+const VITE_CONFIG_PATH = path.join(
+  REPO_ROOT,
+  'Utilities',
+  'ExampleRunner',
+  'vite.example.config.mjs'
+);
+const DEFAULT_HOST = '0.0.0.0';
+const DEFAULT_PORT = '9999';
 
 program
   .option('--no-browser', 'Do not open the browser')
-  .option('--server-type <type>', 'Specify http (default) or self-signed https for serving examples', 'http')
+  .option(
+    '--server-type <type>',
+    'Specify http (default) or self-signed https for serving examples',
+    'http'
+  )
   .parse(process.argv);
 
 const options = program.opts();
 
-function getSplitedPath(filePath) {
-  var a = filePath.split('/');
-  var b = filePath.split('\\');
-  return a.length > b.length ? a : b;
+function normalizePath(filePath) {
+  return filePath.replace(/\\/g, '/');
 }
 
-function validPath(str) {
-  return str.replace(/\//g, path.sep);
+function isClassExample(relPath) {
+  return /\/example\/index\.js$/.test(relPath);
 }
 
-// ----------------------------------------------------------------------------
-// Find examples
-// ----------------------------------------------------------------------------
+function isStandaloneExample(relPath) {
+  const parts = relPath.split('/');
+  return parts.length === 3 && parts[2] === 'index.js';
+}
 
-if (webpackSettings.examples) {
-  var filterExamples = [].concat(program.args).filter(i => !!i);
-  var buildExample = filterExamples.length === 1;
-  var exampleCount = 0;
-
-  console.log('\n=> Extract examples\n');
-  webpackSettings.examples.forEach(function (entry) {
-    const regexp = entry.regexp ? new RegExp(entry.regexp) : /example\/index.js$/;
-    var fullPath = path.join(basePath, entry.path ? entry.path : entry);
-
-    // Single example use case
-    examples[fullPath] = {};
-    var currentExamples = examples[fullPath];
-    shell.cd(fullPath);
-    shell.find('.')
-      .filter( function(file) {
-        return file.match(regexp);
-      })
-      .forEach( function(file) {
-        var fullPath = getSplitedPath(file),
-          exampleName = fullPath.pop();
-
-        while (['index.js', 'example'].indexOf(exampleName) !== -1) {
-          exampleName = fullPath.pop();
-        }
-
-        if (!buildExample || filterExamples.indexOf(exampleName) !== -1) {
-          currentExamples[exampleName] = './' + file;
-          console.log(' -', exampleName, ':', file);
-          exampleCount++;
-        } else {
-          console.log(' -', exampleName, ': SKIPPED');
-        }
-      });
-  });
-  console.log();
-
-  if (exampleCount === 0) {
-    examples = null;
-    if (buildExample) {
-      console.error(`=> Error: Did not find any examples matching ${filterExamples[0]}`);
-      process.exit(1);
+function walkFiles(dirPath, onFile) {
+  if (!fs.existsSync(dirPath)) {
+    return;
+  }
+  const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+  entries.forEach((entry) => {
+    const fullPath = path.join(dirPath, entry.name);
+    if (entry.isDirectory()) {
+      walkFiles(fullPath, onFile);
+      return;
     }
-  }
-
-  if (buildExample) {
-    var exBasePath = null;
-    const exampleName = filterExamples[0];
-    Object.keys(examples).forEach((exampleBasePath) => {
-      if (examples[exampleBasePath][exampleName]) {
-        exBasePath = exampleBasePath;
-      }
-    });
-
-    // console.log(exampleName, ' => ', exBasePath, examples[exBasePath][exampleName]);
-    const conf = buildConfig(exampleName, validPath(examples[exBasePath][exampleName]), distDir, validPath(rootPath), validPath(exBasePath));
-    shell.ShellString(conf).to(webpackConfigPath);
-    shell.cd(exBasePath);
-    shell.exec(`webpack serve --server-type ${options.serverType} --progress --config ${webpackConfigPath}`)
-  } else {
-    console.log('=> To run an example:')
-    console.log('  $ npm run example -- PUT_YOUR_EXAMPLE_NAME_HERE\n');
-  }
-
+    onFile(fullPath);
+  });
 }
+
+function collectExamples() {
+  const examples = {};
+
+  walkFiles(SOURCES_ROOT, (fullPath) => {
+    if (!fullPath.endsWith('index.js')) {
+      return;
+    }
+    const relPath = normalizePath(path.relative(SOURCES_ROOT, fullPath));
+    if (
+      relPath.startsWith('Testing/') ||
+      relPath === 'Testing' ||
+      !isClassExample(relPath)
+    ) {
+      return;
+    }
+    const exampleName = path.basename(path.dirname(path.dirname(fullPath)));
+    examples[exampleName] = fullPath;
+  });
+
+  walkFiles(EXAMPLES_ROOT, (fullPath) => {
+    if (!fullPath.endsWith('index.js')) {
+      return;
+    }
+    const relPath = normalizePath(path.relative(EXAMPLES_ROOT, fullPath));
+    if (!isStandaloneExample(relPath)) {
+      return;
+    }
+    const exampleName = path.basename(path.dirname(fullPath));
+    examples[exampleName] = fullPath;
+  });
+
+  return examples;
+}
+
+function printExamples(examples) {
+  const names = Object.keys(examples).sort((a, b) => a.localeCompare(b));
+  if (!names.length) {
+    console.log('=> No examples found');
+    return;
+  }
+
+  console.log('\n=> Available examples\n');
+  names.forEach((name) => {
+    const relPath = normalizePath(path.relative(REPO_ROOT, examples[name]));
+    console.log(` - ${name}: ${relPath}`);
+  });
+  console.log('\n=> To run an example:');
+  console.log('  $ npm run example -- PUT_YOUR_EXAMPLE_NAME_HERE\n');
+}
+
+async function runExample(exampleName, entryPath) {
+  const env = { ...process.env };
+  env.EXAMPLE_ENTRY = entryPath;
+  env.EXAMPLE_NAME = exampleName;
+  env.EXAMPLE_REPO_ROOT = REPO_ROOT;
+  env.EXAMPLE_HOST = env.EXAMPLE_HOST || DEFAULT_HOST;
+  env.EXAMPLE_PORT = env.EXAMPLE_PORT || DEFAULT_PORT;
+  env.EXAMPLE_OPEN = options.browser ? '1' : '0';
+  env.EXAMPLE_HTTPS = options.serverType === 'https' ? '1' : '0';
+
+  console.log(`\n=> Running example "${exampleName}"`);
+  console.log(
+    `=> Entry: ${normalizePath(path.relative(REPO_ROOT, entryPath))}\n`
+  );
+
+  Object.assign(process.env, env);
+
+  const { createServer } = await import('vite');
+  const server = await createServer({
+    configFile: VITE_CONFIG_PATH,
+  });
+  await server.listen();
+  server.printUrls();
+
+  const closeServer = async () => {
+    await server.close();
+    process.exit(0);
+  };
+
+  process.on('SIGINT', closeServer);
+  process.on('SIGTERM', closeServer);
+}
+
+const examples = collectExamples();
+const requestedExample = (program.args || []).find((arg) => !!arg);
+
+if (!requestedExample) {
+  printExamples(examples);
+  process.exit(0);
+}
+
+const entryPath = examples[requestedExample];
+if (!entryPath) {
+  console.error(
+    `=> Error: Did not find any examples matching ${requestedExample}`
+  );
+  process.exit(1);
+}
+
+runExample(requestedExample, entryPath).catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

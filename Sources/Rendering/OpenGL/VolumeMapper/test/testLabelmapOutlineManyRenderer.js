@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
@@ -145,9 +145,9 @@ function fillBlobForThreshold(imageData, backgroundImageData) {
   imageData.getPointData().getScalars().setData(values);
 }
 
-test.skip('Test Labelmap Outline with many renderers', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'LabelmapOutline manyRenderers');
+it.skip('Test Labelmap Outline with many renderers', async () => {
+  const gc = testUtils.createGarbageCollector();
+  expect('rendering', 'LabelmapOutline manyRenderers').toBeTruthy();
 
   const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
   const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
@@ -296,7 +296,6 @@ test.skip('Test Labelmap Outline with many renderers', async (t) => {
         image,
         [baseline1],
         'Rendering/OpenGL/VolumeMapper/testLabelmapOutlineManyRenderer',
-        t,
         1.5,
         gc.releaseResources
       )

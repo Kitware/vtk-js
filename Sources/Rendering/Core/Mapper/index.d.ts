@@ -39,8 +39,7 @@ export interface IMapperInitialValues extends IAbstractMapper3DInitialValues {
 }
 
 export interface vtkMapper
-  extends vtkAbstractMapper3D,
-    CoincidentTopologyHelper {
+  extends vtkAbstractMapper3D, CoincidentTopologyHelper {
   /**
    *
    */

@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkImageGridSource from 'vtk.js/Sources/Filters/Sources/ImageGridSource';
@@ -10,11 +10,11 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
 import baseline from './testImageNearestNeighbor.png';
 
-test.onlyIfWebGL(
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test ImageMapper with Nearest Neighbor interpolation',
-  (t) => {
+  () => {
     const gc = testUtils.createGarbageCollector();
-    t.ok('rendering', 'vtkImageMapper testImage');
+    expect('rendering', 'vtkImageMapper testImage').toBeTruthy();
 
     // Create some control UI
     const container = document.querySelector('body');
@@ -70,7 +70,6 @@ test.onlyIfWebGL(
           image,
           [baseline],
           'Rendering/Core/ImageMapperNearestNeighbor',
-          t,
           1
         )
       )

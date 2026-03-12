@@ -1,11 +1,9 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 
-test.onlyIfWebGL('onlyIfWebGL', (t) => {
-  t.ok(1, 'onlyIfWebGL enabled');
-  t.end();
+it.skipIf(__VTK_TEST_NO_WEBGL__)('onlyIfWebGL', () => {
+  expect(1, 'onlyIfWebGL enabled').toBeTruthy();
 });
 
-test.onlyIfWebGPU('onlyIfWebGPU', (t) => {
-  t.ok(1, 'onlyIfWebGPU enabled');
-  t.end();
+it.skipIf(!__VTK_TEST_WEBGPU__)('onlyIfWebGPU', () => {
+  expect(1, 'onlyIfWebGPU enabled').toBeTruthy();
 });

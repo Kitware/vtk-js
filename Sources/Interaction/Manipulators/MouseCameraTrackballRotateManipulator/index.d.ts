@@ -8,7 +8,8 @@ import { vtkObject } from '../../../interfaces';
 import { Vector3 } from '../../../types';
 
 export interface vtkMouseCameraTrackballRotateManipulator
-  extends vtkObject,
+  extends
+    vtkObject,
     vtkCompositeCameraManipulator,
     vtkCompositeMouseManipulator {
   /**
@@ -42,7 +43,8 @@ export interface vtkMouseCameraTrackballRotateManipulator
 }
 
 export interface IMouseCameraTrackballRotateManipulatorInitialValues
-  extends ICompositeCameraManipulatorInitialValues,
+  extends
+    ICompositeCameraManipulatorInitialValues,
     ICompositeMouseManipulatorInitialValues {
   useWorldUpVec?: boolean;
   worldUpVec?: Vector3;

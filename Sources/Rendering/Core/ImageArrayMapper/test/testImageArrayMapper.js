@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkCollection from 'vtk.js/Sources/Common/DataModel/Collection';
@@ -11,9 +11,9 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
 import baseline from '../../ImageMapper/test/testImage.png';
 
-test.onlyIfWebGL('Test ImageArrayMapper', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ImageArrayMapper', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkImageArrayMapper testImage');
+  expect('rendering', 'vtkImageArrayMapper testImage').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -72,7 +72,6 @@ test.onlyIfWebGL('Test ImageArrayMapper', (t) => {
         image,
         [baseline],
         'Rendering/Core/ImageArrayMapper',
-        t,
         1
       )
     )

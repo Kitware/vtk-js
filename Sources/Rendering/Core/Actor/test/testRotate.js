@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -11,9 +11,9 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import baseline from './testRotate.png';
 import baseline2 from './testRotate2.png';
 
-test.onlyIfWebGL('Test Actor', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Actor', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkActor testRotate');
+  expect('rendering', 'vtkActor testRotate').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -62,7 +62,6 @@ test.onlyIfWebGL('Test Actor', (t) => {
         image,
         [baseline, baseline2],
         'Rendering/Core/Actor',
-        t,
         1
       )
     )

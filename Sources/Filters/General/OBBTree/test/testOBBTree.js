@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
@@ -35,7 +35,7 @@ function hasMatchingPoint(point, points, eps) {
   return !!points.find((pt) => vtkMath.areEquals(point, pt, eps));
 }
 
-test('Test OBB tree transform', (t) => {
+it('Test OBB tree transform', () => {
   const source = vtkCubeSource.newInstance();
   source.update();
   const mesh = source.getOutputData();
@@ -67,9 +67,12 @@ test('Test OBB tree transform', (t) => {
   const allCorners = getAllCorners(corner, min, mid, max);
 
   allCorners.forEach((actual, index) => {
-    t.ok(hasMatchingPoint(actual, expectedCorners, epsilon), `Corner ${index}`);
+    expect(
+      hasMatchingPoint(actual, expectedCorners, epsilon),
+      `Corner ${index}`
+    ).toBeTruthy();
   });
-  t.ok(vtkMath.areEquals(size, expectedSize, epsilon), 'size');
+  expect(vtkMath.areEquals(size, expectedSize, epsilon), 'size').toBeTruthy();
 
   const translation = [10, 0, 0];
   const transform = vtkMatrixBuilder
@@ -84,16 +87,15 @@ test('Test OBB tree transform', (t) => {
   );
 
   translatedCorners.forEach((actual, index) => {
-    t.ok(
+    expect(
       hasMatchingPoint(actual, expectedTranslatedCorners, epsilon),
       `Corner ${index}`
-    );
+    ).toBeTruthy();
   });
-  t.end();
 });
 
-test('Test OBB tree deep copy', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+it('Test OBB tree deep copy', () => {
+  const gc = testUtils.createGarbageCollector();
   const source = gc.registerResource(vtkCubeSource.newInstance());
   source.update();
   const mesh = gc.registerResource(source.getOutputData());
@@ -116,31 +118,25 @@ test('Test OBB tree deep copy', (t) => {
   obbTreeTarget.deepCopy(obbTreeSource);
   const copiedTree = obbTreeTarget.getTree();
 
-  t.deepEqual(copiedTree.getCorner(), sourceNode.getCorner(), 'Corner');
-  t.deepEqual(copiedTree.getAxes(), sourceNode.getAxes(), 'Axes');
-  t.deepEqual(copiedTree.getKids(), sourceNode.getKids(), 'Kids');
-  t.deepEqual(copiedTree.getParent(), sourceNode.getParent(), 'Parent');
-  t.deepEqual(obbTreeTarget.getLevel(), obbTreeSource.getLevel(), 'Level');
-  t.deepEqual(
-    obbTreeTarget.getDataset(),
-    obbTreeSource.getDataset(),
-    'Dataset'
+  expect(copiedTree.getCorner(), 'Corner').toEqual(sourceNode.getCorner());
+  expect(copiedTree.getAxes(), 'Axes').toEqual(sourceNode.getAxes());
+  expect(copiedTree.getKids(), 'Kids').toEqual(sourceNode.getKids());
+  expect(copiedTree.getParent(), 'Parent').toEqual(sourceNode.getParent());
+  expect(obbTreeTarget.getLevel(), 'Level').toEqual(obbTreeSource.getLevel());
+  expect(obbTreeTarget.getDataset(), 'Dataset').toEqual(
+    obbTreeSource.getDataset()
   );
-  t.deepEqual(
-    obbTreeTarget.getAutomatic(),
-    obbTreeSource.getAutomatic(),
-    'Automatic'
+  expect(obbTreeTarget.getAutomatic(), 'Automatic').toEqual(
+    obbTreeSource.getAutomatic()
   );
-  t.deepEqual(
-    obbTreeTarget.getNumberOfCellsPerNode(),
-    obbTreeSource.getNumberOfCellsPerNode(),
-    'Cells per node'
+  expect(obbTreeTarget.getNumberOfCellsPerNode(), 'Cells per node').toEqual(
+    obbTreeSource.getNumberOfCellsPerNode()
   );
 
   gc.releaseResources();
 });
 
-test('Test OBB tree collision', (t) => {
+it('Test OBB tree collision', () => {
   const source1 = vtkCubeSource.newInstance();
   source1.setCenter(0.8, 0, 0);
   const triangleFilter1 = vtkTriangleFilter.newInstance();
@@ -171,7 +167,6 @@ test('Test OBB tree collision', (t) => {
     null,
     obbTree1.findTriangleIntersections.bind(null, intersection)
   );
-  t.equal(intersect, 40);
-  t.equal(intersection.intersectionLines.getLines().getNumberOfCells(), 40);
-  t.end();
+  expect(intersect).toBe(40);
+  expect(intersection.intersectionLines.getLines().getNumberOfCells()).toBe(40);
 });

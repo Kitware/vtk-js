@@ -1,8 +1,7 @@
 import { vtkAbstractRepresentationProxy } from '../../Core/AbstractRepresentationProxy';
 import { vtkImageCropFilter } from '../../../Filters/General/ImageCropFilter';
 
-export interface vtkVolumeRepresentationProxy
-  extends vtkAbstractRepresentationProxy {
+export interface vtkVolumeRepresentationProxy extends vtkAbstractRepresentationProxy {
   setIs2DVolume(is2D: boolean): void;
   getIs2DVolume(): boolean;
   isVisible(): boolean;

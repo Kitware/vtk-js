@@ -1,8 +1,8 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkXMLImageDataReader from '../index';
 import vtkMath from '../../../../Common/Core/Math';
 
-test('Test XML data is read correctly', (t) => {
+it('Test XML data is read correctly', () => {
   const expectedOrigin = [10, 20, 30];
   const expectedSpacing = [0.5, 1.5, 2.0];
   const expectedDirection = [-1, 0, 0, 0, 1, 0, 0, 0, -1];
@@ -32,25 +32,23 @@ test('Test XML data is read correctly', (t) => {
   reader.parseAsArrayBuffer(arrayBuffer);
   const imageData = reader.getOutputData();
 
-  t.ok(
+  expect(
     vtkMath.areEquals(imageData.getOrigin(), expectedOrigin),
     'Make sure the origin is correct.'
-  );
+  ).toBeTruthy();
 
-  t.ok(
+  expect(
     vtkMath.areEquals(imageData.getSpacing(), expectedSpacing),
     'Make sure the spacing is correct.'
-  );
+  ).toBeTruthy();
 
-  t.ok(
+  expect(
     vtkMath.areEquals(imageData.getDirection(), expectedDirection),
     'Make sure the direction is correct.'
-  );
-
-  t.end();
+  ).toBeTruthy();
 });
 
-test('Test XML data is read when Direction attribute not present', (t) => {
+it('Test XML data is read when Direction attribute not present', () => {
   const expectedOrigin = [10, 20, 30];
   const expectedSpacing = [1, 2, 3];
 
@@ -79,15 +77,13 @@ test('Test XML data is read when Direction attribute not present', (t) => {
   reader.parseAsArrayBuffer(arrayBuffer);
   const imageData = reader.getOutputData();
 
-  t.ok(
+  expect(
     vtkMath.areEquals(imageData.getOrigin(), expectedOrigin),
     'Make sure the origin is correct.'
-  );
+  ).toBeTruthy();
 
-  t.ok(
+  expect(
     vtkMath.areEquals(imageData.getSpacing(), expectedSpacing),
     'Make sure the spacing is correct.'
-  );
-
-  t.end();
+  ).toBeTruthy();
 });
