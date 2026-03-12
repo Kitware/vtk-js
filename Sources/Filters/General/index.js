@@ -1,4 +1,5 @@
 import vtkAppendPolyData from './AppendPolyData';
+import vtkBFSConnectivityFilter from './BFSConnectivityFilter';
 import vtkCalculator from './Calculator';
 import vtkClipClosedSurface from './ClipClosedSurface';
 import vtkClosedPolyLineToSurfaceFilter from './ClosedPolyLineToSurfaceFilter';
@@ -24,6 +25,7 @@ import vtkWindowedSincPolyDataFilter from './WindowedSincPolyDataFilter';
 
 export default {
   vtkAppendPolyData,
+  vtkBFSConnectivityFilter,
   vtkCalculator,
   vtkClipClosedSurface,
   vtkClosedPolyLineToSurfaceFilter,
