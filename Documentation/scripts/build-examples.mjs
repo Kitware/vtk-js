@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 
 import { rollup } from 'rollup';
 
+import terser from '@rollup/plugin-terser';
 import alias from '@rollup/plugin-alias';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
@@ -301,7 +302,7 @@ async function build() {
         ],
       }),
       ignorePlugin(['crypto']),
-      ...(forInlineIife ? [inlineCssUrls()] : []),
+      ...(forInlineIife ? [inlineCssUrls(), terser()] : []),
       webworkerPlugin({
         targetPlatform: 'browser',
         pattern: /^.+\.worker(?:\.js)?$/,
