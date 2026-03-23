@@ -19,7 +19,6 @@ export interface IBFSConnectivityFilterInitialValues {
 type vtkBFSConnectivityFilterBase = vtkObject & vtkAlgorithm;
 
 export interface vtkBFSConnectivityFilter extends vtkBFSConnectivityFilterBase {
-  
   /**
    * Get the ExtractionMode.
    */
@@ -46,19 +45,18 @@ export interface vtkBFSConnectivityFilter extends vtkBFSConnectivityFilterBase {
    * Set the extractionMode to extract the required connected regions
    * @param {ExtractionMode} extractionMode
    */
-  setExtractionMode(extractionMode: ExtractionMode): boolean;
+  setExtractionMode(extractionMode: ExtractionMode): void;
 
   /**
    * Set the index to extract regions. should be 0 ~ regionsCount-1.
    * @param {Number} extractionIndex
    */
-  setExtractionIndex(extractionIndex: number): boolean;
+  setExtractionIndex(extractionIndex: number): void;
 
   /**
    * @param {Number} regionsCount
    */
-  setRegionsCount(regionsCount: number): boolean;
-
+  setRegionsCount(regionsCount: number): void;
 }
 
 /**
@@ -84,7 +82,7 @@ export function newInstance(
 
 /**
  * vtkBFSConnectivityFilter - Use BFS to find connected regions and extract regions
- * After searching for connected regions, set extractionMode(All, Largest, smallest) 
+ * After searching for connected regions, set extractionMode(All, Largest, smallest)
  * or (Custom) and extractionIndex to extract the required connected regions.
  * The input output of the filter is polygonal data.
  */
