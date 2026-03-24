@@ -37,6 +37,16 @@ const params = {
   text: 'Hello World!',
   x: window.innerWidth / 4,
   y: window.innerHeight / 4,
+  color: [0, 0, 0],
+  fontFamily: 'Arial',
+  fontSize: actor.getProperty().getResolution(),
+};
+
+const fonts = {
+  Arial: 'Arial',
+  Verdana: 'Verdana',
+  Tahoma: 'Tahoma',
+  Times: 'Times New Roman',
 };
 
 gui
@@ -44,6 +54,27 @@ gui
   .name('Text')
   .onChange((value) => {
     actor.setInput(value);
+    renderWindow.render();
+  });
+gui
+  .add(params, 'fontFamily', fonts)
+  .name('Font')
+  .onChange((value) => {
+    actor.getProperty().setFontFamily(value);
+    renderWindow.render();
+  });
+gui
+  .add(params, 'fontSize', 50, 400, 1)
+  .name('Font Size')
+  .onChange((value) => {
+    actor.getProperty().setResolution(value);
+    renderWindow.render();
+  });
+gui
+  .addColor(params, 'color')
+  .name('Font Color')
+  .onChange((value) => {
+    actor.getProperty().setFontColor(value[0], value[1], value[2]);
     renderWindow.render();
   });
 gui
