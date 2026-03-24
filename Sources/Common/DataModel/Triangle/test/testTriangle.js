@@ -1,6 +1,10 @@
 import test from 'tape';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkDataSetAttributes from 'vtk.js/Sources/Common/DataModel/DataSetAttributes';
+import vtkMergePoints from 'vtk.js/Sources/Common/DataModel/MergePoints';
 import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 
 test('Test vtkTriangle instance', (t) => {
@@ -208,6 +212,51 @@ test('Test vtkTriangle intersectWithTriangle coplanar', (t) => {
   );
   t.equal(intersection3.intersect, false);
   t.equal(intersection3.coplanar, true);
+
+  t.end();
+});
+
+test('Test vtkTriangle clip', (t) => {
+  const points = vtkPoints.newInstance();
+  points.setData(Float32Array.from([-1, 0, 0, 1, 0, 0, 1, 1, 0]), 3);
+
+  const triangle = vtkTriangle.newInstance();
+  triangle.initialize(points, [0, 1, 2]);
+
+  const cellScalars = vtkDataArray.newInstance({
+    numberOfComponents: 1,
+    values: new Float32Array([-1, 1, 1]),
+  });
+
+  const locatorPoints = vtkPoints.newInstance();
+  const locator = vtkMergePoints.newInstance();
+  locator.initPointInsertion(locatorPoints, [-1, 1, 0, 1, 0, 0]);
+
+  const tris = vtkCellArray.newInstance();
+  const inPd = vtkDataSetAttributes.newInstance();
+  const outPd = vtkDataSetAttributes.newInstance();
+  const inCd = vtkDataSetAttributes.newInstance();
+  const outCd = vtkDataSetAttributes.newInstance();
+
+  triangle.clip(
+    0,
+    cellScalars,
+    locator,
+    tris,
+    inPd,
+    outPd,
+    inCd,
+    0,
+    outCd,
+    false
+  );
+
+  t.equal(tris.getNumberOfCells(), 2, 'Should clip triangle into 2 triangles');
+  t.equal(
+    locatorPoints.getNumberOfPoints(),
+    4,
+    'Should create 4 unique kept points'
+  );
 
   t.end();
 });

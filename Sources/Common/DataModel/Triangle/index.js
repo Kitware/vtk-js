@@ -234,6 +234,25 @@ function intersectWithTriangle(p1, q1, r1, p2, q2, r2, tolerance = 1e-6) {
   return { intersect: true, coplanar, pt1, pt2, surfaceId };
 }
 
+const TRIANGLE_EDGES = [
+  [0, 1],
+  [1, 2],
+  [2, 0],
+];
+
+const TRIANGLE_CASE_MASK = [1, 2, 4];
+
+const TRIANGLE_CASES = [
+  [-1, -1, -1, -1, -1, -1, -1],
+  [0, 2, 100, -1, -1, -1, -1],
+  [1, 0, 101, -1, -1, -1, -1],
+  [1, 2, 100, 1, 100, 101, -1],
+  [2, 1, 102, -1, -1, -1, -1],
+  [0, 1, 102, 102, 100, 0, -1],
+  [0, 101, 2, 2, 101, 102, -1],
+  [100, 101, 102, -1, -1, -1, -1],
+];
+
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
@@ -710,6 +729,94 @@ function vtkTriangle(publicAPI, model) {
     }
 
     return true; // inside triangle
+  };
+
+  publicAPI.clip = (
+    value,
+    cellScalars,
+    locator,
+    tris,
+    inPd,
+    outPd,
+    inCd,
+    cellId,
+    outCd,
+    insideOut
+  ) => {
+    let index = 0;
+    for (let i = 0; i < 3; i++) {
+      const scalar = cellScalars.getComponent(i, 0);
+      if ((insideOut && scalar <= value) || (!insideOut && scalar > value)) {
+        index += TRIANGLE_CASE_MASK[i];
+      }
+    }
+
+    const triangleCase = TRIANGLE_CASES[index];
+    const x = [0, 0, 0];
+    const x1 = [0, 0, 0];
+    const x2 = [0, 0, 0];
+
+    const pts = [0, 0, 0];
+
+    for (let edgeIdx = 0; triangleCase[edgeIdx] > -1; edgeIdx += 3) {
+      pts[0] = 0;
+      pts[1] = 0;
+      pts[2] = 0;
+
+      for (let i = 0; i < 3; i++) {
+        const edgeValue = triangleCase[edgeIdx + i];
+        if (edgeValue >= 100) {
+          const vertexId = edgeValue - 100;
+          model.points.getPoint(vertexId, x);
+          const { inserted, id } = locator.insertUniquePoint(x);
+          pts[i] = id;
+          if (inserted) {
+            outPd.passData(inPd, model.pointsIds[vertexId], id);
+          }
+        } else {
+          const vert = TRIANGLE_EDGES[edgeValue];
+          let e1 = vert[0];
+          let e2 = vert[1];
+          let deltaScalar =
+            cellScalars.getComponent(vert[1], 0) -
+            cellScalars.getComponent(vert[0], 0);
+
+          if (deltaScalar <= 0) {
+            e1 = vert[1];
+            e2 = vert[0];
+            deltaScalar = -deltaScalar;
+          }
+
+          const t =
+            deltaScalar === 0
+              ? 0
+              : (value - cellScalars.getComponent(e1, 0)) / deltaScalar;
+
+          model.points.getPoint(e1, x1);
+          model.points.getPoint(e2, x2);
+          for (let j = 0; j < 3; j++) {
+            x[j] = x1[j] + t * (x2[j] - x1[j]);
+          }
+
+          const { inserted, id } = locator.insertUniquePoint(x);
+          pts[i] = id;
+          if (inserted) {
+            outPd.interpolateData(
+              inPd,
+              model.pointsIds[e1],
+              model.pointsIds[e2],
+              id,
+              t
+            );
+          }
+        }
+      }
+
+      if (!(pts[0] === pts[1] || pts[0] === pts[2] || pts[1] === pts[2])) {
+        const newCellId = tris.insertNextCell(pts);
+        outCd.passData(inCd, cellId, newCellId);
+      }
+    }
   };
 }
 

@@ -1,6 +1,9 @@
 import test from 'tape';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
+import vtkDataSetAttributes from 'vtk.js/Sources/Common/DataModel/DataSetAttributes';
+import vtkMergePoints from 'vtk.js/Sources/Common/DataModel/MergePoints';
 import vtkTriangleStrip from 'vtk.js/Sources/Common/DataModel/TriangleStrip';
 
 // Helper function to create a simple triangle strip
@@ -266,6 +269,50 @@ test('vtkTriangleStrip - intersectWithLine', (tc) => {
   tc.notOk(result2.intersect, 'Should not intersect with line outside strip');
 
   tc.end();
+});
+
+test('vtkTriangleStrip - clip', (t) => {
+  const triangleStrip = vtkTriangleStrip.newInstance();
+  const points = vtkPoints.newInstance();
+  points.setData(Float32Array.from([-1, 0, 0, 1, 0, 0, -1, 1, 0, 1, 1, 0]), 3);
+  triangleStrip.initialize(points, [0, 1, 2, 3]);
+
+  const cellScalars = vtkDataArray.newInstance({
+    numberOfComponents: 1,
+    values: new Float32Array([-1, 1, -1, 1]),
+  });
+
+  const locatorPoints = vtkPoints.newInstance();
+  const locator = vtkMergePoints.newInstance();
+  locator.initPointInsertion(locatorPoints, [-1, 1, 0, 1, 0, 0]);
+
+  const tris = vtkCellArray.newInstance();
+  const inPd = vtkDataSetAttributes.newInstance();
+  const outPd = vtkDataSetAttributes.newInstance();
+  const inCd = vtkDataSetAttributes.newInstance();
+  const outCd = vtkDataSetAttributes.newInstance();
+
+  triangleStrip.clip(
+    0,
+    cellScalars,
+    locator,
+    tris,
+    inPd,
+    outPd,
+    inCd,
+    0,
+    outCd,
+    false
+  );
+
+  t.equal(tris.getNumberOfCells(), 3, 'Should clip strip into 3 triangles');
+  t.equal(
+    locatorPoints.getNumberOfPoints(),
+    5,
+    'Should create 5 unique kept points'
+  );
+
+  t.end();
 });
 
 test('vtkTriangleStrip - getParametricCenter', (t) => {
