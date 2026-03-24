@@ -121,6 +121,11 @@ To create and debug a test:
 - Run `npm run test:debug`
 - In the opened window, click the Debug button and place breakpoints in browser debugger.
 
+To run a subset of tests matching a pattern:
+```sh
+$ VTKJS_TEST_PATTERN=ConeSource npm test
+```
+
 ## Updating Documentation
 
 The vtk.js documentation is part of the code repository and is entirely written in
