@@ -1168,21 +1168,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     }
   };
 
-  // unsubscribe from our listeners
-  publicAPI.delete = macro.chain(
-    () => {
-      if (model._animationRateSubscription) {
-        model._animationRateSubscription.unsubscribe();
-        model._animationRateSubscription = null;
-      }
-    },
-    () => {
-      if (model._openGLRenderWindow) {
-        unregisterGraphicsResources(model._openGLRenderWindow);
-      }
-    },
-    publicAPI.delete
-  );
+  publicAPI.delete = macro.chain(() => {
+    if (model._openGLRenderWindow) {
+      unregisterGraphicsResources(model._openGLRenderWindow);
+    }
+  }, publicAPI.delete);
 
   publicAPI.getRenderTargetSize = () => {
     if (model._useSmallViewport) {
@@ -1201,59 +1191,19 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     return [lowerLeftU, lowerLeftV];
   };
 
-  publicAPI.getCurrentSampleDistance = (ren) => {
-    const rwi = ren.getVTKWindow().getInteractor();
-    const baseSampleDistance = model.renderable.getSampleDistance();
-    if (rwi.isAnimating()) {
-      const factor = model.renderable.getInteractionSampleDistanceFactor();
-      return baseSampleDistance * factor;
-    }
-    return baseSampleDistance;
-  };
+  publicAPI.getCurrentSampleDistance = () =>
+    model.renderable.getCurrentSampleDistance();
 
   publicAPI.renderPieceStart = (ren, actor) => {
     const rwi = ren.getVTKWindow().getInteractor();
-
-    if (!model._lastScale) {
-      model._lastScale = model.renderable.getInitialInteractionScale();
-    }
-    model._useSmallViewport = false;
-    if (rwi.isAnimating() && model._lastScale > 1.5) {
-      model._useSmallViewport = true;
-    }
-
-    if (!model._animationRateSubscription) {
-      // when the animation frame rate changes recompute the scale factor
-      model._animationRateSubscription = rwi.onAnimationFrameRateUpdate(() => {
-        if (model.renderable.getAutoAdjustSampleDistances()) {
-          const frate = rwi.getRecentAnimationFrameRate();
-          const adjustment = rwi.getDesiredUpdateRate() / frate;
-
-          // only change if we are off by 15%
-          if (adjustment > 1.15 || adjustment < 0.85) {
-            model._lastScale *= adjustment;
-          }
-          // clamp scale to some reasonable values.
-          // Below 1.5 we will just be using full resolution as that is close enough
-          // Above 400 seems like a lot so we limit to that 1/20th per axis
-          if (model._lastScale > 400) {
-            model._lastScale = 400;
-          }
-          if (model._lastScale < 1.5) {
-            model._lastScale = 1.5;
-          }
-        } else {
-          model._lastScale =
-            model.renderable.getImageSampleDistance() *
-            model.renderable.getImageSampleDistance();
-        }
-      });
-    }
+    model.renderable.setAutoAdjustSampleDistancesSource(rwi);
+    model._useSmallViewport = model.renderable.getUseSmallViewport();
 
     // use/create/resize framebuffer if needed
     if (model._useSmallViewport) {
       const size = model._openGLRenderWindow.getFramebufferSize();
-      const scaleFactor = 1 / Math.sqrt(model._lastScale);
+      const scaleFactor =
+        1 / Math.sqrt(model.renderable.getCurrentImageSampleDistanceScale());
       model._smallViewportWidth = Math.ceil(scaleFactor * size[0]);
       model._smallViewportHeight = Math.ceil(scaleFactor * size[1]);
 

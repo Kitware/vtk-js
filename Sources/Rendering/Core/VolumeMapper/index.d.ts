@@ -1,5 +1,5 @@
 import { vtkPiecewiseFunction } from '../../../Common/DataModel/PiecewiseFunction';
-import { Bounds } from '../../../types';
+import { Bounds, Nullable } from '../../../types';
 import {
   vtkAbstractMapper3D,
   IAbstractMapper3DInitialValues,
@@ -12,11 +12,22 @@ import { BlendMode } from './Constants';
 export interface IVolumeMapperInitialValues
   extends IAbstractMapper3DInitialValues {
   autoAdjustSampleDistances?: boolean;
+  autoAdjustSampleDistancesSource?: Nullable<vtkVolumeMapperAutoAdjustSource>;
   blendMode?: BlendMode;
   bounds?: Bounds;
   maximumSamplesPerRay?: number;
   sampleDistance?: number;
   volumeShadowSamplingDistFactor?: number;
+}
+
+export interface vtkVolumeMapperAutoAdjustSource {
+  getDesiredUpdateRate?: () => number;
+  getFrameRate?: () => number;
+  getRecentAnimationFrameRate?: () => number;
+  isAnimating?: () => boolean;
+  onAnimationFrameRateUpdate?: (callback: () => void) => {
+    unsubscribe: () => void;
+  };
 }
 
 export interface vtkVolumeMapper extends vtkAbstractMapper3D {
@@ -69,6 +80,11 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
   getAutoAdjustSampleDistances(): boolean;
 
   /**
+   * Get the external timing/interaction source used to drive automatic sample distance adjustment.
+   */
+  getAutoAdjustSampleDistancesSource(): Nullable<vtkVolumeMapperAutoAdjustSource>;
+
+  /**
    * Get at what scale the quality is reduced when interacting for the first time with the volume
    * It should should be set before any call to render for this volume
    * The higher the scale is, the lower the quality of rendering is during interaction
@@ -82,6 +98,21 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
    * @default 1
    */
   getInteractionSampleDistanceFactor(): number;
+
+  /**
+   * Get the current area scale used to reduce the image sampling rate during interaction.
+   */
+  getCurrentImageSampleDistanceScale(): number;
+
+  /**
+   * Get the current sample distance, including any interaction adjustment.
+   */
+  getCurrentSampleDistance(): number;
+
+  /**
+   * Returns whether the mapper should render through a reduced viewport for the current interaction state.
+   */
+  getUseSmallViewport(): boolean;
 
   /**
    * Set blend mode to COMPOSITE_BLEND
@@ -146,6 +177,15 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
   setAutoAdjustSampleDistances(autoAdjustSampleDistances: boolean): boolean;
 
   /**
+   * Set the source used to drive automatic sample distance adjustment.
+   * This can be a vtkRenderWindowInteractor or any external controller that exposes
+   * compatible timing and animation methods.
+   */
+  setAutoAdjustSampleDistancesSource(
+    autoAdjustSampleDistancesSource: vtkVolumeMapperAutoAdjustSource | null
+  ): boolean;
+
+  /**
    *
    * @param initialInteractionScale
    */
@@ -158,6 +198,14 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
   setInteractionSampleDistanceFactor(
     interactionSampleDistanceFactor: number
   ): boolean;
+
+  /**
+   * Update the current interaction scale using externally measured timing data.
+   */
+  updateAutoAdjustSampleDistances(
+    frameRate: number,
+    desiredUpdateRate: number
+  ): number;
 
   /**
    *
