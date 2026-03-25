@@ -5,8 +5,7 @@ import vtkAbstractPointLocator, {
 /**
  * Initial values for vtkIncrementalPointLocator.
  */
-export interface IIncrementalPointLocatorInitialValues
-  extends IAbstractPointLocatorInitialValues {}
+export interface IIncrementalPointLocatorInitialValues extends IAbstractPointLocatorInitialValues {}
 
 export interface vtkIncrementalPointLocator extends vtkAbstractPointLocator {}
 

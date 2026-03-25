@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
@@ -280,13 +280,13 @@ it('vtkTriangleStrip - intersectWithLine', () => {
   const p3 = [-2, 0, 0];
   const p4 = [-1, 0, 0];
   const result2 = triangleStrip.intersectWithLine(p3, p4, tol, x, pcoords);
-
-  tc.notOk(result2.intersect, 'Should not intersect with line outside strip');
-
-  tc.end();
+  expect(
+    result2.intersect,
+    'Should not intersect with line outside strip'
+  ).toBe(false);
 });
 
-test('vtkTriangleStrip - clip', (t) => {
+it('vtkTriangleStrip - clip', () => {
   const triangleStrip = vtkTriangleStrip.newInstance();
   const points = vtkPoints.newInstance();
   points.setData(Float32Array.from([-1, 0, 0, 1, 0, 0, -1, 1, 0, 1, 1, 0]), 3);
@@ -320,14 +320,12 @@ test('vtkTriangleStrip - clip', (t) => {
     false
   );
 
-  t.equal(tris.getNumberOfCells(), 3, 'Should clip strip into 3 triangles');
-  t.equal(
+  expect(tris.getNumberOfCells(), 'Should clip strip into 3 triangles').toBe(3);
+  expect(
     locatorPoints.getNumberOfPoints(),
     5,
     'Should create 5 unique kept points'
-  );
-
-  t.end();
+  ).toBe(5);
 });
 
 it('vtkTriangleStrip - getParametricCenter', () => {
