@@ -1,5 +1,28 @@
 import macro from 'vtk.js/Sources/macros';
 
+function listClassHierarchy(dataObject) {
+  const classNames = [];
+  let depth = 0;
+  let className = dataObject.getClassName(depth++);
+  while (className) {
+    classNames.push(className);
+    className = dataObject.getClassName(depth++);
+  }
+  return classNames;
+}
+
+function buildMissingImplementationMessage(factoryName, classNames) {
+  const classList = classNames.join(' → ');
+  return [
+    `No ${factoryName} implementation found for ${classNames[0]}.`,
+    `Class hierarchy: ${classList}.`,
+    `A rendering Profile is likely missing for ${classNames[0]}.`,
+    "Try importing '@kitware/vtk.js/Rendering/Profiles/All' or 'vtk.js/Sources/Rendering/Profiles/All',",
+    'or import the specific rendering profile needed by this renderable if known.',
+    'See https://kitware.github.io/vtk-js/docs/concepts_profile.html for details.',
+  ].join('\n');
+}
+
 // ----------------------------------------------------------------------------
 // vtkViewNodeFactory methods
 // ----------------------------------------------------------------------------
@@ -18,8 +41,9 @@ function vtkViewNodeFactory(publicAPI, model) {
       return null;
     }
 
+    const classNames = listClassHierarchy(dataObject);
     let cpt = 0;
-    let className = dataObject.getClassName(cpt++);
+    let className = classNames[cpt++];
     let isObject = false;
     const keys = Object.keys(model.overrides);
     while (className && !isObject) {
@@ -31,7 +55,9 @@ function vtkViewNodeFactory(publicAPI, model) {
     }
 
     if (!isObject) {
-      return null;
+      throw new Error(
+        buildMissingImplementationMessage(publicAPI.getClassName(), classNames)
+      );
     }
     const vn = model.overrides[className]();
     vn.setMyFactory(publicAPI);
