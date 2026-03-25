@@ -58,7 +58,7 @@ module.exports = function init(config) {
         new ESLintPlugin(),
         new webpack.DefinePlugin({
           __BASE_PATH__: "'/base'",
-          __TEST_PATTERN__: JSON.stringify(process.env.VTKJS_TEST_PATTERN || ''),
+          __VTKJS_TEST_PATTERN__: JSON.stringify(process.env.VTKJS_TEST_PATTERN || ''),
         }),
         new webpack.ProvidePlugin({ process: ['process/browser'] }),
       ],
