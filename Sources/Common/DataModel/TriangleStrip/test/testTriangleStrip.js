@@ -283,7 +283,7 @@ it('vtkTriangleStrip - intersectWithLine', () => {
   expect(
     result2.intersect,
     'Should not intersect with line outside strip'
-  ).toBe(false);
+  ).toBeFalsy();
 });
 
 it('vtkTriangleStrip - clip', () => {
