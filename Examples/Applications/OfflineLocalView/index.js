@@ -139,7 +139,8 @@ export function load(container, options) {
 
 export function initLocalFileLoader(container) {
   autoInit = false;
-  const exampleContainer = document.querySelector('.content');
+  const exampleContainer =
+    document.querySelector('.content') || document.querySelector('#vtk-root');
   const rootBody = document.querySelector('body');
   const myContainer = container || exampleContainer || rootBody;
 
@@ -178,7 +179,8 @@ export function initLocalFileLoader(container) {
 const userParams = vtkURLExtract.extractURLParameters();
 
 if (userParams.url || userParams.fileURL) {
-  const exampleContainer = document.querySelector('.content');
+  const exampleContainer =
+    document.querySelector('.content') || document.querySelector('#vtk-root');
   const rootBody = document.querySelector('body');
   const myContainer = exampleContainer || rootBody;
   if (myContainer) {
