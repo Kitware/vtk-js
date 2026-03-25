@@ -36,7 +36,10 @@ const docsMenu = [
   },
   {
     text: 'Concepts',
-    items: [{ text: 'Widgets', link: 'concepts_widgets.html' }],
+    items: [
+      { text: 'Widgets', link: 'concepts_widgets.html' },
+      { text: 'Profiles', link: 'concepts_profile.html' },
+    ],
   },
   {
     text: 'Miscellaneous',
