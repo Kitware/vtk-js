@@ -27,6 +27,7 @@
     "url": "https://github.com/kitware/vtk-js/issues"
   },
   "homepage": "https://github.com/kitware/vtk-js#readme",
+  "main": "./dist/umd/vtk.js",
   "module": "./dist/esm/index.js",
   "dependencies": {
     "@types/webxr": "0.5.5",
@@ -99,9 +100,12 @@
     "example:https": "node ./Utilities/ExampleRunner/example-runner-cli.js --server-type https",
     "example:webgpu": "cross-env WEBGPU=1 NO_WEBGL=1 node ./Utilities/ExampleRunner/example-runner-cli.js --server-type https",
     "build:pre": "patch-package",
-    "dev:esm": "vite build --watch",
-    "build": "npm run build:pre && vite build",
-    "build:release": "npm run lint && npm run build:pre && cross-env NOLINT=1 npm run build",
+    "dev:esm": "cross-env BUILD_TARGET=esm vite build --watch",
+    "dev:umd": "cross-env BUILD_TARGET=umd vite build --watch",
+    "build": "npm run build:esm && npm run build:umd",
+    "build:esm": "npm run build:pre && cross-env BUILD_TARGET=esm vite build",
+    "build:umd": "npm run build:pre && cross-env BUILD_TARGET=umd vite build",
+    "build:release": "npm run lint && cross-env NOLINT=1 npm run build",
     "release:create-packages": "node ./Utilities/ci/build-npm-package.js",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -156,6 +160,12 @@
         "@semantic-release/npm",
         {
           "pkgRoot": "./dist/esm"
+        }
+      ],
+      [
+        "@semantic-release/npm",
+        {
+          "pkgRoot": "./dist/umd"
         }
       ],
       [
