@@ -207,7 +207,7 @@ it('Test vtkTriangle intersectWithTriangle coplanar', () => {
   expect(intersection3.coplanar).toBe(true);
 });
 
-test('Test vtkTriangle clip', (t) => {
+it('Test vtkTriangle clip', () => {
   const points = vtkPoints.newInstance();
   points.setData(Float32Array.from([-1, 0, 0, 1, 0, 0, 1, 1, 0]), 3);
 
@@ -242,12 +242,12 @@ test('Test vtkTriangle clip', (t) => {
     false
   );
 
-  t.equal(tris.getNumberOfCells(), 2, 'Should clip triangle into 2 triangles');
-  t.equal(
+  expect(tris.getNumberOfCells(), 'Should clip triangle into 2 triangles').toBe(
+    2
+  );
+  expect(
     locatorPoints.getNumberOfPoints(),
     4,
     'Should create 4 unique kept points'
-  );
-
-  t.end();
+  ).toBe(4);
 });
