@@ -198,7 +198,17 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     }
     // console.log([...model.adapter.features]);
     model.device = vtkWebGPUDevice.newInstance();
-    model.device.initialize(await model.adapter.requestDevice());
+    model.device.initialize(
+      await model.adapter.requestDevice({
+        requiredLimits: {
+          maxBufferSize: model.adapter.limits.maxBufferSize,
+          maxStorageBufferBindingSize:
+            model.adapter.limits.maxStorageBufferBindingSize,
+          maxUniformBufferBindingSize:
+            model.adapter.limits.maxUniformBufferBindingSize,
+        },
+      })
+    );
     if (model.deleted) {
       model.device = null;
       return;
