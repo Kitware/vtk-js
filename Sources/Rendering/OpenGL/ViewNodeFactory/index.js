@@ -27,11 +27,16 @@ const DEFAULT_VALUES = {};
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  // Static class mapping shared across instances
-  model.overrides = CLASS_MAPPING;
+  // Each factory inherits the shared OpenGL mappings while still allowing
+  // instance-local overrides such as vtkSharedRenderer.
+  model.overrides = Object.create(CLASS_MAPPING);
 
   // Inheritance
   vtkViewNodeFactory.extend(publicAPI, model, initialValues);
+
+  publicAPI.registerOverride = (className, fn) => {
+    model.overrides[className] = fn;
+  };
 
   // Object methods
   vtkOpenGLViewNodeFactory(publicAPI, model);
