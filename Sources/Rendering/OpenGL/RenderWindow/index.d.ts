@@ -37,7 +37,7 @@ export interface IOpenGLRenderWindowInitialValues {
 }
 
 export interface ICaptureOptions {
-  resetCamera?: boolean;
+  resetCamera?: boolean | (({ renderer: vtkRenderer }) => void);
   size?: Size;
   scale?: number;
 }
