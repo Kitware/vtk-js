@@ -21,6 +21,7 @@ export interface IOpenGLRenderWindowInitialValues {
   context?: WebGLRenderingContext | WebGL2RenderingContext;
   context2D?: CanvasRenderingContext2D;
   canvas?: HTMLCanvasElement;
+  manageCanvas?: boolean;
   cursorVisibility?: boolean;
   cursor?: string;
   textureUnitManager?: null;
@@ -92,6 +93,10 @@ export interface vtkOpenGLRenderWindow extends vtkViewNode {
    * Set the webgl canvas.
    */
   setCanvas(canvas: Nullable<HTMLCanvasElement>): boolean;
+
+  getManageCanvas(): boolean;
+
+  setManageCanvas(manageCanvas: boolean): boolean;
 
   /**
    * Check if a point is in the viewport.
