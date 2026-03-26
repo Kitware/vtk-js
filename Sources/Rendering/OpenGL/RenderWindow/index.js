@@ -142,7 +142,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   const previousSize = [0, 0];
   function updateWindow() {
     // Canvas size
-    if (model.renderable) {
+    if (model.renderable && model.manageCanvas) {
       if (
         model.size[0] !== previousSize[0] ||
         model.size[1] !== previousSize[1]
@@ -161,7 +161,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     }
 
     // Offscreen ?
-    model.canvas.style.display = model.useOffScreen ? 'none' : 'block';
+    if (model.manageCanvas) {
+      model.canvas.style.display = model.useOffScreen ? 'none' : 'block';
+    }
 
     // Cursor type
     if (model.el) {
@@ -550,15 +552,28 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     if (model.deleted) {
       return null;
     }
+    const requestedSize =
+      !!size || scale !== 1
+        ? size || model.size.map((val) => val * scale)
+        : null;
+    const requiresCanvasResize =
+      requestedSize !== null &&
+      (requestedSize[0] !== model.size[0] ||
+        requestedSize[1] !== model.size[1]);
+    const screenshotSize = requiresCanvasResize ? requestedSize : null;
+
+    if (!model.manageCanvas && requiresCanvasResize) {
+      throw new Error(
+        'Resizing screenshot capture requires manageCanvas=true on vtkOpenGLRenderWindow'
+      );
+    }
+
     model.imageFormat = format;
     const previous = model.notifyStartCaptureImage;
     model.notifyStartCaptureImage = true;
 
     model._screenshot = {
-      size:
-        !!size || scale !== 1
-          ? size || model.size.map((val) => val * scale)
-          : null,
+      size: screenshotSize,
     };
 
     return new Promise((resolve, reject) => {
@@ -1316,6 +1331,7 @@ const DEFAULT_VALUES = {
   context: null,
   context2D: null,
   canvas: null,
+  manageCanvas: true,
   cursorVisibility: true,
   cursor: 'pointer',
   textureUnitManager: null,
@@ -1386,6 +1402,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'context',
     'context2D',
     'canvas',
+    'manageCanvas',
     'renderPasses',
     'notifyStartCaptureImage',
     'defaultToWebgl2',
