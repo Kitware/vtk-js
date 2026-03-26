@@ -1129,7 +1129,8 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     // --- Texture Coordinates ---
     let tcoords = null;
     if (
-      model.renderable.getInterpolateScalarsBeforeMapping?.() &&
+      (model.renderable.getAreScalarsMappedFromCells() ||
+        model.renderable.getInterpolateScalarsBeforeMapping?.()) &&
       model.renderable.getColorCoordinates()
     ) {
       tcoords = model.renderable.getColorCoordinates();
