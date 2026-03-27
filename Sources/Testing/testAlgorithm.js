@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import macro from 'vtk.js/Sources/macros';
 
 const model = {};
@@ -32,44 +32,40 @@ publicAPI.requestData = (inData, outData) => {
   );
 };
 
-test('Macro methods algo tests', (t) => {
+it('Macro methods algo tests', () => {
   macro.obj(publicAPI, model);
   macro.algo(publicAPI, model, numInputs, numOutputs);
 
   // Override shouldUpdate to prevent the need of getMTime()
   publicAPI.shouldUpdate = () => true;
 
-  t.ok(publicAPI.setInputData, 'populate publicAPI');
+  expect(publicAPI.setInputData, 'populate publicAPI').toBeTruthy();
 
   publicAPI.setInputData(inLeft, 0);
   publicAPI.setInputData(inRight, 1);
-  t.equal(publicAPI.getInputData(0), inLeft, 'return input data');
+  expect(publicAPI.getInputData(0), 'return input data').toBe(inLeft);
 
   publicAPI.update();
   let output = publicAPI.getOutputData(0);
-  t.deepEqual(output, new Float32Array([3, 5, 7]), 'Add two input arrays');
+  expect(output, 'Add two input arrays').toEqual(new Float32Array([3, 5, 7]));
 
   output = publicAPI.getOutputData(1);
-  t.deepEqual(output, new Float32Array([3, 3, 3]), 'Subtract two input arrays');
+  expect(output, 'Subtract two input arrays').toEqual(
+    new Float32Array([3, 3, 3])
+  );
 
   output = publicAPI.getOutputData(2);
-  t.deepEqual(
-    output,
-    new Float32Array([0, 4, 10]),
-    'Multiply two input arrays'
+  expect(output, 'Multiply two input arrays').toEqual(
+    new Float32Array([0, 4, 10])
   );
 
   const outputPort = publicAPI.getOutputPort(3);
-  t.deepEqual(
-    outputPort(),
-    new Float32Array([Infinity, 4, 2.5]),
-    'Divide two input arrays, using outputPort'
+  expect(outputPort(), 'Divide two input arrays, using outputPort').toEqual(
+    new Float32Array([Infinity, 4, 2.5])
   );
-
-  t.end();
 });
 
-test('Macro shouldUpdate returns true if output is deleted', (t) => {
+it('Macro shouldUpdate returns true if output is deleted', () => {
   const algo = {
     publicAPI: {},
     model: {},
@@ -96,10 +92,8 @@ test('Macro shouldUpdate returns true if output is deleted', (t) => {
   };
 
   algo.publicAPI.setInputData(input1.publicAPI, 0);
-  t.equal(
-    input1.publicAPI,
-    algo.publicAPI.getOutputData(),
-    'Trivial producer outputs first input data'
+  expect(input1.publicAPI, 'Trivial producer outputs first input data').toBe(
+    algo.publicAPI.getOutputData()
   );
 
   // delete output data
@@ -107,11 +101,7 @@ test('Macro shouldUpdate returns true if output is deleted', (t) => {
 
   // set new data
   algo.publicAPI.setInputData(input2.publicAPI, 0);
-  t.equal(
-    input2.publicAPI,
-    algo.publicAPI.getOutputData(),
-    'Trivial producer outputs second input data'
+  expect(input2.publicAPI, 'Trivial producer outputs second input data').toBe(
+    algo.publicAPI.getOutputData()
   );
-
-  t.end();
 });

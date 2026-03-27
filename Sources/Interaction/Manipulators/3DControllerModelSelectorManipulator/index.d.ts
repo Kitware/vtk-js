@@ -1,10 +1,8 @@
 import vtkCompositeVRManipulator from '../CompositeVRManipulator';
 
-export interface vtk3DControllerModelSelectorManipulator
-  extends vtkCompositeVRManipulator {}
+export interface vtk3DControllerModelSelectorManipulator extends vtkCompositeVRManipulator {}
 
-export interface I3DControllerModelSelectorManipulatorInitialValues
-  extends vtkCompositeVRManipulator {}
+export interface I3DControllerModelSelectorManipulatorInitialValues extends vtkCompositeVRManipulator {}
 
 export function extend(
   publicAPI: object,

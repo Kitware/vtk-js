@@ -7,8 +7,7 @@ import { Vector3 } from '../../../types';
 /**
  *
  */
-export interface ILineManipulatorInitialValues
-  extends IAbstractManipulatorInitialValues {}
+export interface ILineManipulatorInitialValues extends IAbstractManipulatorInitialValues {}
 
 export interface vtkLineManipulator extends vtkAbstractManipulator {}
 

@@ -35,7 +35,7 @@ export declare const defaultViewUpFromViewType: {
 export declare const xyzToViewType: [
   PlaneViewType,
   PlaneViewType,
-  PlaneViewType
+  PlaneViewType,
 ];
 
 export declare const viewTypeToXYZ: { [plane in PlaneViewType]: AxisIndex };
@@ -56,7 +56,7 @@ export declare const lineNames: [
   'XinY',
   'ZinY',
   'XinZ',
-  'YinZ'
+  'YinZ',
 ];
 
 declare const _default: {

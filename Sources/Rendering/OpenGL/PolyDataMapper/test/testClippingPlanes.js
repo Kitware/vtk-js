@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -11,9 +11,9 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
 import baseline from './testClippingPlanes.png';
 
-test.onlyIfWebGL('Test Clipping planes', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Clipping planes', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkOpenGLPolyDataMapper setClippingPlanes');
+  expect('rendering', 'vtkOpenGLPolyDataMapper setClippingPlanes').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -86,7 +86,7 @@ test.onlyIfWebGL('Test Clipping planes', (t) => {
   const promise = glwindow
     .captureNextImage()
     .then((image) =>
-      testUtils.compareImages(image, [baseline], 'TestClippingPlanes', t, 2.5)
+      testUtils.compareImages(image, [baseline], 'TestClippingPlanes', 2.5)
     )
     .finally(gc.releaseResources);
   renderWindow.render();

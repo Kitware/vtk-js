@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -10,9 +10,9 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import baseline from './testEllipseArc.png';
 
-test.onlyIfWebGL('Test testArc Rendering', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test testArc Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'testArc Rendering');
+  expect('rendering', 'testArc Rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -55,7 +55,6 @@ test.onlyIfWebGL('Test testArc Rendering', (t) => {
         image,
         [baseline],
         'Filters/Sources/EllipseArcSource/testEllipseArc',
-        t,
         2.5
       )
     )

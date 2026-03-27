@@ -1,7 +1,6 @@
 import { vtkAbstractRepresentationProxy } from '../../Core/AbstractRepresentationProxy';
 
-export interface vtkSliceRepresentationProxy
-  extends vtkAbstractRepresentationProxy {
+export interface vtkSliceRepresentationProxy extends vtkAbstractRepresentationProxy {
   /**
    * @param mode XYZIJK
    */

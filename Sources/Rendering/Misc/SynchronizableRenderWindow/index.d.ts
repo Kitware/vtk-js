@@ -34,8 +34,7 @@ export interface ISynchronizerContext {
   // TODO: fill progresshandler
 }
 
-export interface ISynchronizableRenderWindowInitialValues
-  extends IRenderWindowInitialValues {
+export interface ISynchronizableRenderWindowInitialValues extends IRenderWindowInitialValues {
   synchronizerContextName?: string; // default: 'default':
   synchronizerContext?: Nullable<ISynchronizerContext>;
   synchronizedViewId?: Nullable<string>;

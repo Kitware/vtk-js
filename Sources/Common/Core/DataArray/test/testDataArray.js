@@ -1,16 +1,15 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
-test('Test vtkDataArray instance', (t) => {
-  t.ok(vtkDataArray, 'Make sure the class definition exists');
+it('Test vtkDataArray instance', () => {
+  expect(vtkDataArray, 'Make sure the class definition exists').toBeTruthy();
   const instance = vtkDataArray.newInstance({ size: 256 });
-  t.ok(instance);
-  t.end();
+  expect(instance, 'newInstance should create an instance').toBeTruthy();
 });
 
-test('Test vtkDataArray getRange function with single-channel data.', (t) => {
+it('Test vtkDataArray getRange function with single-channel data.', () => {
   // create a data array with a single channel.
   const newArray = new Uint16Array(256 * 3);
 
@@ -24,21 +23,25 @@ test('Test vtkDataArray getRange function with single-channel data.', (t) => {
     values: newArray,
   });
 
-  t.ok(da.getRange(0)[0] === 0, 'getRange minimum value should be 0');
-  t.ok(da.getRange(0)[1] === 767, 'getRange maximum value should be 767');
-
-  t.end();
+  expect(
+    da.getRange(0)[0] === 0,
+    'getRange minimum value should be 0'
+  ).toBeTruthy();
+  expect(
+    da.getRange(0)[1] === 767,
+    'getRange maximum value should be 767'
+  ).toBeTruthy();
 });
 
-test('Test vtkDataArray getRange function with NaN values.', (t) => {
+it('Test vtkDataArray getRange function with NaN values.', () => {
   // a data array with a NaN value and max as first value
   const da = vtkDataArray.newInstance({
     numberOfComponents: 1,
     values: new Float64Array([4.0, 0, NaN, 3.0, 2.0, 1.0]),
   });
 
-  t.equal(da.getRange(0)[0], 0.0, 'getRange minimum value should be 0');
-  t.equal(da.getRange(0)[1], 4.0, 'getRange maximum value should be 4');
+  expect(da.getRange(0)[0], 'getRange minimum value should be 0').toBe(0.0);
+  expect(da.getRange(0)[1], 'getRange maximum value should be 4').toBe(4.0);
 
   // a data array with NaN as first value
   const da2 = vtkDataArray.newInstance({
@@ -46,8 +49,8 @@ test('Test vtkDataArray getRange function with NaN values.', (t) => {
     values: new Float64Array([NaN, 0.0, 2.0, 3.0, 4.0, 1.0]),
   });
 
-  t.equal(da2.getRange(0)[0], 0.0, 'getRange minimum value should be 0');
-  t.equal(da2.getRange(0)[1], 4.0, 'getRange maximum value should be 4');
+  expect(da2.getRange(0)[0], 'getRange minimum value should be 0').toBe(0.0);
+  expect(da2.getRange(0)[1], 'getRange maximum value should be 4').toBe(4.0);
 
   // an empty data array
   const da3 = vtkDataArray.newInstance({
@@ -55,16 +58,13 @@ test('Test vtkDataArray getRange function with NaN values.', (t) => {
     values: new Float64Array([]),
   });
 
-  t.equal(
-    da3.getRange(0)[0],
-    Number.MAX_VALUE,
-    'getRange minimum value should be MAX_VALUE'
+  expect(da3.getRange(0)[0], 'getRange minimum value should be MAX_VALUE').toBe(
+    Number.MAX_VALUE
   );
-  t.equal(
+  expect(
     da3.getRange(0)[1],
-    -Number.MAX_VALUE,
     'getRange maximum value should be -MAX_VALUE'
-  );
+  ).toBe(-Number.MAX_VALUE);
 
   // a data array with all NaN values except one in the middle
   const da4 = vtkDataArray.newInstance({
@@ -72,8 +72,8 @@ test('Test vtkDataArray getRange function with NaN values.', (t) => {
     values: new Float64Array([NaN, NaN, 2.0, NaN]),
   });
 
-  t.equal(da4.getRange(0)[0], 2.0, 'getRange minimum value should be 2');
-  t.equal(da4.getRange(0)[1], 2.0, 'getRange maximum value should be 2');
+  expect(da4.getRange(0)[0], 'getRange minimum value should be 2').toBe(2.0);
+  expect(da4.getRange(0)[1], 'getRange maximum value should be 2').toBe(2.0);
 
   // a data array with all NaN values except one at the end
   const da5 = vtkDataArray.newInstance({
@@ -81,8 +81,8 @@ test('Test vtkDataArray getRange function with NaN values.', (t) => {
     values: new Float64Array([NaN, NaN, 2.0]),
   });
 
-  t.equal(da5.getRange(0)[0], 2.0, 'getRange minimum value should be 2');
-  t.equal(da5.getRange(0)[1], 2.0, 'getRange maximum value should be 2');
+  expect(da5.getRange(0)[0], 'getRange minimum value should be 2').toBe(2.0);
+  expect(da5.getRange(0)[1], 'getRange maximum value should be 2').toBe(2.0);
 
   // a data array with all NaN values
   const da6 = vtkDataArray.newInstance({
@@ -90,16 +90,13 @@ test('Test vtkDataArray getRange function with NaN values.', (t) => {
     values: new Float64Array([NaN, NaN, NaN]),
   });
 
-  t.equal(
-    da6.getRange(0)[0],
-    Number.MAX_VALUE,
-    'getRange minimum value should be MAX_VALUE'
+  expect(da6.getRange(0)[0], 'getRange minimum value should be MAX_VALUE').toBe(
+    Number.MAX_VALUE
   );
-  t.equal(
+  expect(
     da6.getRange(0)[1],
-    -Number.MAX_VALUE,
     'getRange maximum value should be -MAX_VALUE'
-  );
+  ).toBe(-Number.MAX_VALUE);
 
   // a data array with multiple components
   const da7 = vtkDataArray.newInstance({
@@ -107,31 +104,25 @@ test('Test vtkDataArray getRange function with NaN values.', (t) => {
     values: new Float64Array([NaN, 1.0, 2.0, 3.0, 5.0, NaN]),
   });
 
-  t.equal(
+  expect(
     da7.getRange(0)[0],
-    2.0,
     'component:0 getRange minimum value should be 2'
-  );
-  t.equal(
+  ).toBe(2.0);
+  expect(
     da7.getRange(0)[1],
-    5.0,
     'component:0 getRange maximum value should be 5'
-  );
-  t.equal(
+  ).toBe(5.0);
+  expect(
     da7.getRange(1)[0],
-    1.0,
     'component:1 getRange minimum value should be 1'
-  );
-  t.equal(
+  ).toBe(1.0);
+  expect(
     da7.getRange(1)[1],
-    3.0,
     'component:1 getRange maximum value should be 3'
-  );
-
-  t.end();
+  ).toBe(3.0);
 });
 
-test('Test vtkDataArray getRanges function with single-channel data.', (t) => {
+it('Test vtkDataArray getRanges function with single-channel data.', () => {
   // create a data array with a single channel.
   const newArray = new Uint16Array(256 * 3);
 
@@ -145,23 +136,21 @@ test('Test vtkDataArray getRanges function with single-channel data.', (t) => {
     values: newArray,
   });
 
-  t.ok(
+  expect(
     da.getRanges().length === 1,
     'getRanges should return an array of 1 vtkRange objects'
-  );
-  t.ok(
+  ).toBeTruthy();
+  expect(
     da.getRanges()[0].min === 0,
     'the first component returned by getRanges minimum value should be 0'
-  );
-  t.ok(
+  ).toBeTruthy();
+  expect(
     da.getRanges()[0].max === 767,
     'the first component returned by getRanges maximum value should be 767'
-  );
-
-  t.end();
+  ).toBeTruthy();
 });
 
-test('Test vtkDataArray getTuple', (t) => {
+it('Test vtkDataArray getTuple', () => {
   const da = vtkDataArray.newInstance({
     numberOfComponents: 3,
     values: new Uint8Array([0, 1, 2, 3, 4, 5]),
@@ -171,24 +160,33 @@ test('Test vtkDataArray getTuple', (t) => {
     values: new Uint8Array([0, 1, 2, 3, 4, 5]),
   });
 
-  t.ok(vtkMath.areEquals(da.getTuple(0), [0, 1, 2]), 'get first tuple');
-  t.ok(vtkMath.areEquals(da.getTuple(1), [3, 4, 5]), 'get 2nd tuple');
-  t.ok(da.getTuple(0) !== da.getTuple(1), 'getTuple twice');
-  t.ok(da.getTuple(0) !== da2.getTuple(0), 'getTuple twice');
+  expect(
+    vtkMath.areEquals(da.getTuple(0), [0, 1, 2]),
+    'get first tuple'
+  ).toBeTruthy();
+  expect(
+    vtkMath.areEquals(da.getTuple(1), [3, 4, 5]),
+    'get 2nd tuple'
+  ).toBeTruthy();
+  expect(da.getTuple(0) !== da.getTuple(1), 'getTuple twice').toBeTruthy();
+  expect(
+    da.getTuple(0) !== da2.getTuple(0),
+    'getTuple returns a new array for each instance'
+  ).toBeTruthy();
   const tuple = [];
-  t.equal(da.getTuple(0, tuple), tuple, 'getTuple with tupleToFill');
-  t.equal(tuple.length, 3, 'getTuple length');
+  expect(da.getTuple(0, tuple), 'getTuple with tupleToFill').toBe(tuple);
+  expect(tuple.length, 'getTuple length').toBe(3);
   const typedArray = new Uint8Array(3);
-  t.equal(
-    da.getTuple(0, typedArray),
-    typedArray,
-    'getTuple with typed tupleToFill'
+  expect(da.getTuple(0, typedArray), 'getTuple with typed tupleToFill').toBe(
+    typedArray
   );
-  t.ok(vtkMath.areEquals(typedArray, [0, 1, 2]), 'get typed first tuple');
-  t.end();
+  expect(
+    vtkMath.areEquals(typedArray, [0, 1, 2]),
+    'get typed first tuple'
+  ).toBeTruthy();
 });
 
-test('Test vtkDataArray getRange function with multi-channel data.', (t) => {
+it('Test vtkDataArray getRange function with multi-channel data.', () => {
   // create a data array with 3 channel data.
   const newArray = new Uint16Array(256 * 3);
 
@@ -205,12 +203,30 @@ test('Test vtkDataArray getRange function with multi-channel data.', (t) => {
     values: newArray,
   });
 
-  t.ok(da.getRange(0)[0] === 0, 'component:0 minimum value should be 0');
-  t.ok(da.getRange(0)[1] === 255, 'component:0 maximum value should be 255');
-  t.ok(da.getRange(1)[0] === 0, 'component:1 minimum value should be 0');
-  t.ok(da.getRange(1)[1] === 510, 'component:1 maximum value should be 510');
-  t.ok(da.getRange(2)[0] === 0, 'component:2 minimum value should be 0');
-  t.ok(da.getRange(2)[1] === 765, 'component:2 maximum value should be 765');
+  expect(
+    da.getRange(0)[0] === 0,
+    'component:0 minimum value should be 0'
+  ).toBeTruthy();
+  expect(
+    da.getRange(0)[1] === 255,
+    'component:0 maximum value should be 255'
+  ).toBeTruthy();
+  expect(
+    da.getRange(1)[0] === 0,
+    'component:1 minimum value should be 0'
+  ).toBeTruthy();
+  expect(
+    da.getRange(1)[1] === 510,
+    'component:1 maximum value should be 510'
+  ).toBeTruthy();
+  expect(
+    da.getRange(2)[0] === 0,
+    'component:2 minimum value should be 0'
+  ).toBeTruthy();
+  expect(
+    da.getRange(2)[1] === 765,
+    'component:2 maximum value should be 765'
+  ).toBeTruthy();
 
   // re-fill the array with the pattern 0,0,0, 1,1,1 2,2,2 as 3d vector values
   for (let i = 0; i < 256; ++i) {
@@ -221,18 +237,17 @@ test('Test vtkDataArray getRange function with multi-channel data.', (t) => {
 
   const compareFloat = (a, b) => Math.abs(a - b) < Number.EPSILON;
   const vecRange = da.getRange(-1);
-  t.ok(
+  expect(
     compareFloat(vecRange[0].toFixed(2), 0.0),
     'vector magnitude min value should be be 0.0'
-  );
-  t.ok(
+  ).toBeTruthy();
+  expect(
     compareFloat(vecRange[1].toFixed(3), 441.673),
     'vector magnitude max value should be 441.673'
-  );
-  t.end();
+  ).toBeTruthy();
 });
 
-test('Test vtkDataArray getRanges function with multi-channel data.', (t) => {
+it('Test vtkDataArray getRanges function with multi-channel data.', () => {
   // create a data array with 3 channel data.
   const numberOfPixels = 10;
   const numberOfComponents = 4;
@@ -254,29 +269,45 @@ test('Test vtkDataArray getRanges function with multi-channel data.', (t) => {
 
   const ranges = da.getRanges();
 
-  t.ok(
+  expect(
     ranges.length === numberOfComponents + 1,
     'getRanges should return an array of 5 vtkRange objects'
-  );
-  t.ok(ranges[0].min === 0, 'component:0 minimum value should be 0');
-  t.ok(ranges[0].max === 9, 'component:0 maximum value should be 9');
-  t.ok(ranges[1].min === 0, 'component:1 minimum value should be 0');
-  t.ok(ranges[1].max === 18, 'component:1 maximum value should be 18');
-  t.ok(ranges[2].min === 0, 'component:2 minimum value should be 0');
-  t.ok(ranges[2].max === 27, 'component:2 maximum value should be 27 ');
-  t.ok(
+  ).toBeTruthy();
+  expect(
+    ranges[0].min === 0,
+    'component:0 minimum value should be 0'
+  ).toBeTruthy();
+  expect(
+    ranges[0].max === 9,
+    'component:0 maximum value should be 9'
+  ).toBeTruthy();
+  expect(
+    ranges[1].min === 0,
+    'component:1 minimum value should be 0'
+  ).toBeTruthy();
+  expect(
+    ranges[1].max === 18,
+    'component:1 maximum value should be 18'
+  ).toBeTruthy();
+  expect(
     ranges[2].min === 0,
+    'component:2 minimum value should be 0'
+  ).toBeTruthy();
+  expect(
+    ranges[2].max === 27,
+    'component:2 maximum value should be 27'
+  ).toBeTruthy();
+  expect(
+    ranges[3].min === 0,
     'component:-1 vector magnitude minimum should be 0'
-  );
-  t.ok(
+  ).toBeTruthy();
+  expect(
     ranges[3].max === 36,
     'component:-1 vector magnitude maximum should be 36'
-  );
-
-  t.end();
+  ).toBeTruthy();
 });
 
-test('Test vtkDataArray getRanges(false) (`computeRanges=false`) function with multi-channel data', (t) => {
+it('Test vtkDataArray getRanges(false) (`computeRanges=false`) function with multi-channel data', () => {
   // create a data array with 3 channel data.
   const numberOfPixels = 10;
   const numberOfComponents = 4;
@@ -300,7 +331,10 @@ test('Test vtkDataArray getRanges(false) (`computeRanges=false`) function with m
   // computed and will return only the ranges previously computer (if any).
   const ranges = da.getRanges(false);
 
-  t.ok(ranges === undefined, `getRanges should return undefined`);
+  expect(
+    ranges === undefined,
+    'getRanges should return undefined'
+  ).toBeTruthy();
 
   // now fetch the range for component 0.
   da.getRange(0);
@@ -310,55 +344,59 @@ test('Test vtkDataArray getRanges(false) (`computeRanges=false`) function with m
 
   // `updatedRanges` should now be only the range for component 0. because if
   // was computed in `da.getRange(0)`
-  t.ok(
+  expect(
     updatedRanges.length === numberOfComponents + 1,
     'getRanges should return an array of 5 vtkRange objects'
-  );
-  t.ok(updatedRanges[0].min === 0, 'component:0 minimum value should be 0');
-  t.ok(updatedRanges[0].max === 9, 'component:0 maximum value should be 9');
-  t.ok(updatedRanges[1] === null, 'component:1 should be null');
-  t.ok(updatedRanges[2] === null, 'component:2 should be null');
-  t.ok(updatedRanges[3] === null, 'component:3 should be null');
-  t.ok(updatedRanges[4] === null, 'component:-1 should be null');
-
-  t.end();
+  ).toBeTruthy();
+  expect(
+    updatedRanges[0].min === 0,
+    'component:0 minimum value should be 0'
+  ).toBeTruthy();
+  expect(
+    updatedRanges[0].max === 9,
+    'component:0 maximum value should be 9'
+  ).toBeTruthy();
+  expect(updatedRanges[1] === null, 'component:1 should be null').toBeTruthy();
+  expect(updatedRanges[2] === null, 'component:2 should be null').toBeTruthy();
+  expect(updatedRanges[3] === null, 'component:3 should be null').toBeTruthy();
+  expect(updatedRanges[4] === null, 'component:-1 should be null').toBeTruthy();
 });
 
-test('Test vtkDataArray insertNextTuple', (t) => {
+it('Test vtkDataArray insertNextTuple', () => {
   const dataArray = vtkDataArray.newInstance({
     dataType: VtkDataTypes.UNSIGNED_CHAR,
     empty: true,
     numberOfComponents: 3,
   });
-  t.equal(dataArray.getData().length, 0, 'dataArray.getData() starts empty');
+  expect(dataArray.getData().length, 'dataArray.getData() starts empty').toBe(
+    0
+  );
 
   let idx = dataArray.insertNextTuple([1, 2, 3]);
 
-  t.equal(dataArray.getData().length, 3, 'dataArray after first insert');
-  t.equal(idx, 0, 'idx after first insert');
+  expect(dataArray.getData().length, 'dataArray after first insert').toBe(3);
+  expect(idx, 'idx after first insert').toBe(0);
 
   idx = dataArray.insertNextTuple([4, 5, 6]);
 
-  t.equal(dataArray.getData().length, 6, 'dataArray after second insert');
-  t.equal(idx, 1, 'idx after second insert');
+  expect(dataArray.getData().length, 'dataArray after second insert').toBe(6);
+  expect(idx, 'idx after second insert').toBe(1);
 
   // numberOfComponents forces the length of the inserted tuple to be 3
   idx = dataArray.insertNextTuple([7, 8, 9, 10]);
 
-  t.equal(dataArray.getData().length, 9, 'dataArray after long insert');
-  t.equal(dataArray.getData()[8], 9, 'dataArray last value is 9');
-  t.equal(idx, 2, 'idx after third insert');
+  expect(dataArray.getData().length, 'dataArray after long insert').toBe(9);
+  expect(dataArray.getData()[8], 'dataArray last value is 9').toBe(9);
+  expect(idx, 'idx after third insert').toBe(2);
 
   idx = dataArray.insertNextTuple([10]);
 
-  t.equal(dataArray.getData().length, 12, 'dataArray after short insert');
-  t.equal(dataArray.getData()[11], 0, 'dataArray has default value');
-  t.equal(idx, 3, 'idx after fourth insert');
-
-  t.end();
+  expect(dataArray.getData().length, 'dataArray after short insert').toBe(12);
+  expect(dataArray.getData()[11], 'dataArray has default value').toBe(0);
+  expect(idx, 'idx after fourth insert').toBe(3);
 });
 
-test('Test vtkDataArray getTuples and insertTuples', (t) => {
+it('Test vtkDataArray getTuples and insertTuples', () => {
   const values = Uint8Array.from([
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
   ]);
@@ -369,31 +407,26 @@ test('Test vtkDataArray getTuples and insertTuples', (t) => {
     numberOfComponents: 3,
   });
 
-  t.deepEqual(
+  expect(
     dataArray.getTuples(),
-    values,
     'getTuples without parameters returns the whole array'
+  ).toEqual(values);
+
+  expect(dataArray.getTuples(1, 4), 'check tuples between two indices').toEqual(
+    Uint8Array.from([3, 4, 5, 6, 7, 8, 9, 10, 11])
   );
 
-  t.deepEqual(
-    dataArray.getTuples(1, 4),
-    Uint8Array.from([3, 4, 5, 6, 7, 8, 9, 10, 11]),
-    'check tuples between two indices'
-  );
-
-  t.deepEqual(
+  expect(
     dataArray.getTuples(-3, -1),
-    Uint8Array.from([6, 7, 8, 9, 10, 11]),
     'check tuples between two negative indices'
-  );
+  ).toEqual(Uint8Array.from([6, 7, 8, 9, 10, 11]));
 
-  t.equal(dataArray.getTuples(1, 0), null, 'invalid range returns null');
+  expect(dataArray.getTuples(1, 0), 'invalid range returns null').toBe(null);
 
-  t.deepEqual(
+  expect(
     dataArray.getTuples(1, 10),
-    Uint8Array.from([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]),
     'to > numberOfTuples returns array until numberOfTuples'
-  );
+  ).toEqual(Uint8Array.from([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]));
 
   const emptyDataArray = vtkDataArray.newInstance({
     dataType: VtkDataTypes.UNSIGNED_CHAR,
@@ -403,16 +436,13 @@ test('Test vtkDataArray getTuples and insertTuples', (t) => {
 
   emptyDataArray.insertNextTuples(dataArray.getTuples());
 
-  t.deepEqual(
+  expect(
     emptyDataArray.getTuples(),
-    values,
     'to.insertTuples(from.getTuples()) copies all the values'
-  );
-
-  t.end();
+  ).toEqual(values);
 });
 
-test('Test vtkDataArray findTuple', (t) => {
+it('Test vtkDataArray findTuple', () => {
   const values = Uint8Array.from([
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
   ]);
@@ -423,88 +453,102 @@ test('Test vtkDataArray findTuple', (t) => {
     numberOfComponents: 3,
   });
 
-  t.equal(dataArray.findTuple([9, 10, 11]), 3);
-  t.equal(dataArray.findTuple([3, 4, 4], 1), 1);
-  t.equal(dataArray.findTuple(Float32Array.from([12, 13, 14])), 4);
-  t.end();
+  expect(
+    dataArray.findTuple([9, 10, 11]),
+    'findTuple should find tuple [9, 10, 11] at index 3'
+  ).toBe(3);
+  expect(
+    dataArray.findTuple([3, 4, 4], 1),
+    'findTuple should find tuple [3, 4, 4] from offset 1 at index 1'
+  ).toBe(1);
+  expect(
+    dataArray.findTuple(Float32Array.from([12, 13, 14])),
+    'findTuple should accept typed arrays'
+  ).toBe(4);
 });
 
-test('Test vtkDataArray allocate function', (t) => {
+it('Test vtkDataArray allocate function', () => {
   // create an empty data array with 3 channel data.
   const da = vtkDataArray.newInstance({
     numberOfComponents: 3,
     empty: true,
   });
 
-  t.equal(da.getNumberOfTuples(), 0, 'empty');
+  expect(da.getNumberOfTuples(), 'empty').toBe(0);
 
   da.allocate(2);
   let oldData = da.getData();
 
-  t.equal(
+  expect(
     da.getNumberOfTuples(),
-    0,
     'allocate does not change number of tuples'
+  ).toBe(0);
+
+  da.insertNextTuple([1, 2, 3]);
+  da.insertNextTuple([1, 2, 3]);
+
+  expect(da.getNumberOfTuples(), 'inserted 2 tuples').toBe(2);
+  expect(da.getData().buffer, 'no array allocation on insert').toBe(
+    oldData.buffer
   );
-
-  da.insertNextTuple([1, 2, 3]);
-  da.insertNextTuple([1, 2, 3]);
-
-  t.equal(da.getNumberOfTuples(), 2, 'inserted 2 tuples');
-  t.equal(da.getData().buffer, oldData.buffer, 'no array allocation on insert');
 
   da.allocate(2);
 
-  t.equal(
+  expect(
     da.getNumberOfTuples(),
-    2,
     'allocate does not change number of tuples'
-  );
-  t.notEqual(
-    da.getData().buffer,
-    oldData.buffer,
-    'reallocate array on allocate'
+  ).toBe(2);
+  expect(da.getData().buffer, 'reallocate array on allocate').not.toBe(
+    oldData.buffer
   );
   oldData = da.getData();
 
   da.insertNextTuple([1, 2, 3]);
   da.insertNextTuple([1, 2, 3]);
 
-  t.ok(da.getNumberOfTuples() === 4, '2 more tuples');
-  t.equal(da.getData().buffer, oldData.buffer, 'no array allocation on insert');
-
-  t.end();
+  expect(da.getNumberOfTuples() === 4, '2 more tuples').toBeTruthy();
+  expect(da.getData().buffer, 'no array allocation on insert').toBe(
+    oldData.buffer
+  );
 });
 
-test('Test vtkDataArray resize function', (t) => {
+it('Test vtkDataArray resize function', () => {
   // create an empty data array with 3 channel data.
   const da = vtkDataArray.newInstance({
     numberOfComponents: 3,
     empty: true,
   });
 
-  t.ok(da.getNumberOfTuples() === 0, 'empty');
+  expect(da.getNumberOfTuples() === 0, 'empty').toBeTruthy();
 
   da.resize(2);
 
-  t.ok(da.getNumberOfTuples() === 2, 'resize does change the number of tuples');
+  expect(
+    da.getNumberOfTuples() === 2,
+    'resize does change the number of tuples'
+  ).toBeTruthy();
 
   da.insertNextTuple([1, 2, 3]);
   da.insertNextTuple([1, 2, 3]);
 
-  t.ok(da.getNumberOfTuples() === 4, 'inserted 2 tuples');
+  expect(da.getNumberOfTuples() === 4, 'inserted 2 tuples').toBeTruthy();
 
   const oldData = da.getData();
   da.resize(2);
 
-  t.ok(da.getNumberOfTuples() === 2, 'resize reduces the number of tuples');
-  t.equal(da.getData().buffer, oldData.buffer, 'no array allocation on shrink');
+  expect(
+    da.getNumberOfTuples() === 2,
+    'resize reduces the number of tuples'
+  ).toBeTruthy();
+  expect(da.getData().buffer, 'no array allocation on shrink').toBe(
+    oldData.buffer
+  );
 
   da.insertNextTuple([1, 2, 3]);
   da.insertNextTuple([1, 2, 3]);
 
-  t.ok(da.getNumberOfTuples() === 4, '2 more tuples');
-  t.equal(da.getData().buffer, oldData.buffer, 'no array allocation on shrink');
-
-  t.end();
+  expect(da.getNumberOfTuples() === 4, '2 more tuples').toBeTruthy();
+  expect(da.getData().buffer, 'no array allocation on shrink').toBe(
+    oldData.buffer
+  );
 });

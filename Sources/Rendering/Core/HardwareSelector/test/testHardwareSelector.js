@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -16,9 +16,9 @@ import {
   FieldAssociations,
 } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
-test('Test HardwareSelector', (tapeContext) => {
-  const gc = testUtils.createGarbageCollector(tapeContext);
-  tapeContext.ok('rendering', 'vtkHardwareSelector TestHardwareSelector');
+it('Test HardwareSelector', () => {
+  const gc = testUtils.createGarbageCollector();
+  expect('rendering', 'vtkHardwareSelector TestHardwareSelector').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -124,8 +124,8 @@ test('Test HardwareSelector', (tapeContext) => {
         Math.abs(res[2].getProperties().worldPosition[1] - 1.0) < 0.02 &&
         Math.abs(res[2].getProperties().worldPosition[2] - 1.5) < 0.02;
 
-      tapeContext.ok(res.length === 3, 'Three props selected');
-      tapeContext.ok(allGood, 'Correct props were selected');
+      expect(res.length === 3, 'Three props selected').toBeTruthy();
+      expect(allGood, 'Correct props were selected').toBeTruthy();
     })
   );
 

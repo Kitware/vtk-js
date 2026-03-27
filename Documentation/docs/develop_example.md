@@ -47,7 +47,7 @@ Which means the sub-directory of the __Examples__ directory correspond to a grou
 
 ## Running an example
 
-To simplify the development and execution of examples we have a script that let you list all the examples and run a given one using the webpack dev server which will automatically rebuild the code while running when you are editing any file that get involved in it.
+To simplify the development and execution of examples we have a script that lets you list all the examples and run a given one using the Vite dev server, which automatically rebuilds while you edit relevant files.
 
 To list the examples you can run the following command:
 
@@ -64,5 +64,5 @@ $ npm run example -- ConeSource
 Then the example could be seen at the following URL where standard debug tools could be used within your browser:
 
 ```sh
-http://localhost:9999/
+http://localhost:3000/
 ```

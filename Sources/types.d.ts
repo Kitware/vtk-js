@@ -53,7 +53,7 @@ declare type Matrix3x3 = [
   number,
   number,
   number,
-  number
+  number,
 ];
 /**
  * @deprecated The `Point` type is deprecated, please use `Vector3` instead.

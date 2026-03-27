@@ -229,9 +229,8 @@ fetch(`${baseUrl}/${modelsFolder}/model-index.json`)
 
         Object.keys(entry.variants).forEach((variant) => {
           const fileName = entry.variants[variant];
-          variants[
-            variant
-          ] = `${modelsFolder}/${entry.name}/${variant}/${fileName}`;
+          variants[variant] =
+            `${modelsFolder}/${entry.name}/${variant}/${fileName}`;
         });
 
         modelsDictionary[entry.name] = variants;

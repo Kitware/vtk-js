@@ -13,7 +13,7 @@ export interface IGetWidgetForViewParams {
 }
 
 export interface vtkAbstractWidgetFactory<
-  WidgetInstance extends vtkAbstractWidget
+  WidgetInstance extends vtkAbstractWidget,
 > extends vtkObject {
   /**
    * Will return the widget associated with the view with Id id `locator.viewId`.
@@ -134,7 +134,7 @@ export type ExtendWidgetBehavior<WidgetInstance> = ((
 ) => void) & { [ExtendSymbol]: WidgetInstance };
 
 export interface IAbstractWidgetFactoryInitialValues<
-  WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget
+  WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget,
 > {
   behavior?: ExtendWidgetBehavior<WidgetInstance>;
 }
@@ -147,7 +147,7 @@ export interface IAbstractWidgetFactoryInitialValues<
  * @param initialValues (default: {})
  */
 export function extend<
-  WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget
+  WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget,
 >(
   publicAPI: object,
   model: object,
@@ -160,7 +160,7 @@ export function extend<
  * @param initialValues for pre-setting some of its content
  */
 export function newInstance<
-  WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget
+  WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget,
 >(
   initialValues?: IAbstractWidgetFactoryInitialValues<WidgetInstance>
 ): vtkAbstractWidgetFactory<WidgetInstance>;

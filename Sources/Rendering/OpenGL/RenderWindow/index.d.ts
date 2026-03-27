@@ -450,7 +450,7 @@ export interface vtkOpenGLRenderWindow extends vtkViewNode {
    * @return {Object} Dictionary with the graphics resource and string hash
    */
   getGraphicsResourceForObject<
-    T extends vtkCellArray | vtkDataArray | vtkPoints
+    T extends vtkCellArray | vtkDataArray | vtkPoints,
   >(
     vtkObj: T
   ):

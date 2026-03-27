@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
@@ -76,39 +76,34 @@ function constructStrips() {
   return pd;
 }
 
-function runTest(clean, inputPD, expected, t) {
+function runTest(clean, inputPD, expected) {
   clean.setInputData(inputPD);
   // clean.update();
   const out = clean.getOutputData();
 
-  t.equal(
+  expect(
     out.getNumberOfPoints(),
-    expected.points,
     `expected ${expected.points} points but got ${out.getNumberOfPoints()}`
-  );
-  t.equal(
+  ).toBe(expected.points);
+  expect(
     out.getNumberOfVerts(),
-    expected.verts,
     `expected ${expected.verts} verts but got ${out.getNumberOfVerts()}`
-  );
-  t.equal(
+  ).toBe(expected.verts);
+  expect(
     out.getNumberOfLines(),
-    expected.lines,
     `expected ${expected.lines} lines but got ${out.getNumberOfLines()}`
-  );
-  t.equal(
+  ).toBe(expected.lines);
+  expect(
     out.getNumberOfPolys(),
-    expected.polys,
     `expected ${expected.polys} polys but got ${out.getNumberOfPolys()}`
-  );
-  t.equal(
+  ).toBe(expected.polys);
+  expect(
     out.getNumberOfStrips(),
-    expected.strips,
     `expected ${expected.strips} strips but got ${out.getNumberOfStrips()}`
-  );
+  ).toBe(expected.strips);
 }
 
-test('vtkCleanPolyData: degenerate conversions without merging', (t) => {
+it('vtkCleanPolyData: degenerate conversions without merging', () => {
   const clean = vtkCleanPolyData.newInstance({
     pointMerging: false,
     convertLinesToPoints: true,
@@ -116,29 +111,30 @@ test('vtkCleanPolyData: degenerate conversions without merging', (t) => {
     convertStripsToPolys: true,
   });
 
-  runTest(
-    clean,
-    constructLines(),
-    { points: 4, verts: 1, lines: 5, polys: 0, strips: 0 },
-    t
-  );
-  runTest(
-    clean,
-    constructPolys(),
-    { points: 5, verts: 2, lines: 3, polys: 2, strips: 0 },
-    t
-  );
-  runTest(
-    clean,
-    constructStrips(),
-    { points: 7, verts: 1, lines: 2, polys: 2, strips: 2 },
-    t
-  );
-
-  t.end();
+  runTest(clean, constructLines(), {
+    points: 4,
+    verts: 1,
+    lines: 5,
+    polys: 0,
+    strips: 0,
+  });
+  runTest(clean, constructPolys(), {
+    points: 5,
+    verts: 2,
+    lines: 3,
+    polys: 2,
+    strips: 0,
+  });
+  runTest(clean, constructStrips(), {
+    points: 7,
+    verts: 1,
+    lines: 2,
+    polys: 2,
+    strips: 2,
+  });
 });
 
-test('vtkCleanPolyData: degenerate elimination without merging', (t) => {
+it('vtkCleanPolyData: degenerate elimination without merging', () => {
   const clean = vtkCleanPolyData.newInstance({
     pointMerging: false,
     convertLinesToPoints: false,
@@ -146,29 +142,30 @@ test('vtkCleanPolyData: degenerate elimination without merging', (t) => {
     convertStripsToPolys: false,
   });
 
-  runTest(
-    clean,
-    constructLines(),
-    { points: 4, verts: 0, lines: 5, polys: 0, strips: 0 },
-    t
-  );
-  runTest(
-    clean,
-    constructPolys(),
-    { points: 5, verts: 0, lines: 0, polys: 2, strips: 0 },
-    t
-  );
-  runTest(
-    clean,
-    constructStrips(),
-    { points: 7, verts: 0, lines: 0, polys: 0, strips: 2 },
-    t
-  );
-
-  t.end();
+  runTest(clean, constructLines(), {
+    points: 4,
+    verts: 0,
+    lines: 5,
+    polys: 0,
+    strips: 0,
+  });
+  runTest(clean, constructPolys(), {
+    points: 5,
+    verts: 0,
+    lines: 0,
+    polys: 2,
+    strips: 0,
+  });
+  runTest(clean, constructStrips(), {
+    points: 7,
+    verts: 0,
+    lines: 0,
+    polys: 0,
+    strips: 2,
+  });
 });
 
-test('vtkCleanPolyData: degenerate conversions with merging', (t) => {
+it('vtkCleanPolyData: degenerate conversions with merging', () => {
   const clean = vtkCleanPolyData.newInstance({
     pointMerging: true,
     convertLinesToPoints: true,
@@ -176,29 +173,30 @@ test('vtkCleanPolyData: degenerate conversions with merging', (t) => {
     convertStripsToPolys: true,
   });
 
-  runTest(
-    clean,
-    constructLines(),
-    { points: 3, verts: 3, lines: 3, polys: 0, strips: 0 },
-    t
-  );
-  runTest(
-    clean,
-    constructPolys(),
-    { points: 3, verts: 3, lines: 3, polys: 1, strips: 0 },
-    t
-  );
-  runTest(
-    clean,
-    constructStrips(),
-    { points: 4, verts: 2, lines: 2, polys: 2, strips: 1 },
-    t
-  );
-
-  t.end();
+  runTest(clean, constructLines(), {
+    points: 3,
+    verts: 3,
+    lines: 3,
+    polys: 0,
+    strips: 0,
+  });
+  runTest(clean, constructPolys(), {
+    points: 3,
+    verts: 3,
+    lines: 3,
+    polys: 1,
+    strips: 0,
+  });
+  runTest(clean, constructStrips(), {
+    points: 4,
+    verts: 2,
+    lines: 2,
+    polys: 2,
+    strips: 1,
+  });
 });
 
-test('vtkCleanPolyData: degenerate elimination with merging', (t) => {
+it('vtkCleanPolyData: degenerate elimination with merging', () => {
   const clean = vtkCleanPolyData.newInstance({
     pointMerging: true,
     convertLinesToPoints: false,
@@ -206,24 +204,25 @@ test('vtkCleanPolyData: degenerate elimination with merging', (t) => {
     convertStripsToPolys: false,
   });
 
-  runTest(
-    clean,
-    constructLines(),
-    { points: 3, verts: 0, lines: 3, polys: 0, strips: 0 },
-    t
-  );
-  runTest(
-    clean,
-    constructPolys(),
-    { points: 3, verts: 0, lines: 0, polys: 1, strips: 0 },
-    t
-  );
-  runTest(
-    clean,
-    constructStrips(),
-    { points: 4, verts: 0, lines: 0, polys: 0, strips: 1 },
-    t
-  );
-
-  t.end();
+  runTest(clean, constructLines(), {
+    points: 3,
+    verts: 0,
+    lines: 3,
+    polys: 0,
+    strips: 0,
+  });
+  runTest(clean, constructPolys(), {
+    points: 3,
+    verts: 0,
+    lines: 0,
+    polys: 1,
+    strips: 0,
+  });
+  runTest(clean, constructStrips(), {
+    points: 4,
+    verts: 0,
+    lines: 0,
+    polys: 0,
+    strips: 1,
+  });
 });
