@@ -3,6 +3,7 @@ import './Actor';
 import './Actor2D';
 import './Camera';
 import './CubeAxesActor';
+import './CutterMapper';
 import './ForwardPass';
 import './Glyph3DMapper';
 import './HardwareSelector';

@@ -13,6 +13,7 @@ import vtkCamera from './Camera';
 import vtkCellPicker from './CellPicker';
 import vtkColorTransferFunction from './ColorTransferFunction';
 import vtkCoordinate from './Coordinate';
+import vtkCutterMapper from './CutterMapper';
 import vtkCubeAxesActor from './CubeAxesActor';
 import vtkFollower from './Follower';
 import vtkGlyph3DMapper from './Glyph3DMapper';
@@ -61,6 +62,7 @@ export default {
   vtkCellPicker,
   vtkColorTransferFunction: { vtkColorMaps, ...vtkColorTransferFunction },
   vtkCoordinate,
+  vtkCutterMapper,
   vtkCubeAxesActor,
   vtkFollower,
   vtkGlyph3DMapper,
