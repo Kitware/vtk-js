@@ -44,7 +44,7 @@ function triangulateContours(
   const newPolys = [];
   const incompletePolys = [];
 
-  const oriented = normal?.length < 3;
+  const oriented = normal?.length >= 3;
   vtkCCSMakePolysFromLines(
     polyData,
     firstLine,
