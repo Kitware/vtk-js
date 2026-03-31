@@ -1,8 +1,30 @@
+import { mat4, vec4 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macros';
+
+const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkAbstractMapper methods
 // ----------------------------------------------------------------------------
+
+const tmpClipMatrix = new Float64Array(16);
+const tmpClipWorldPlane = new Float64Array(4);
+
+function getClipPlaneEquation(plane, out) {
+  const normal = plane.getNormalByReference();
+  const origin = plane.getOriginByReference();
+
+  out[0] = normal[0];
+  out[1] = normal[1];
+  out[2] = normal[2];
+  out[3] = -(
+    normal[0] * origin[0] +
+    normal[1] * origin[1] +
+    normal[2] * origin[2]
+  );
+
+  return out;
+}
 
 function vtkAbstractMapper(publicAPI, model) {
   model.classHierarchy.push('vtkAbstractMapper');
@@ -45,6 +67,14 @@ function vtkAbstractMapper(publicAPI, model) {
 
   publicAPI.getClippingPlanes = () => model.clippingPlanes;
 
+  publicAPI.getClippingPlanesMTime = () => {
+    let mtime = 0;
+    for (let i = 0; i < model.clippingPlanes.length; i++) {
+      mtime = Math.max(mtime, model.clippingPlanes[i].getMTime());
+    }
+    return mtime;
+  };
+
   publicAPI.setClippingPlanes = (planes) => {
     if (!planes) {
       return;
@@ -59,34 +89,32 @@ function vtkAbstractMapper(publicAPI, model) {
     }
   };
 
-  publicAPI.getClippingPlaneInDataCoords = (propMatrix, i, hnormal) => {
+  publicAPI.getClippingPlaneInCoords = (worldToCoords, i, hnormal) => {
+    if (i < 0 || i >= model.clippingPlanes?.length) {
+      vtkErrorMacro(`Clipping plane index ${i} is out of range.`);
+      return undefined;
+    }
+    const outHNormal = hnormal || new Float64Array(4);
+    getClipPlaneEquation(model.clippingPlanes[i], tmpClipWorldPlane);
+    mat4.invert(tmpClipMatrix, worldToCoords);
+    mat4.transpose(tmpClipMatrix, tmpClipMatrix);
+    vec4.transformMat4(outHNormal, tmpClipWorldPlane, tmpClipMatrix);
+    return outHNormal;
+  };
+
+  publicAPI.getClippingPlaneInDataCoords = (coordsToWorld, i, hnormal) => {
     const clipPlanes = model.clippingPlanes;
-    const mat = propMatrix;
 
     if (clipPlanes) {
       const n = clipPlanes.length;
       if (i >= 0 && i < n) {
-        // Get the plane
-        const plane = clipPlanes[i];
-        const normal = plane.getNormal();
-        const origin = plane.getOrigin();
-
-        // Compute the plane equation
-        const v1 = normal[0];
-        const v2 = normal[1];
-        const v3 = normal[2];
-        const v4 = -(v1 * origin[0] + v2 * origin[1] + v3 * origin[2]);
-
-        // Transform normal from world to data coords
-        hnormal[0] = v1 * mat[0] + v2 * mat[4] + v3 * mat[8] + v4 * mat[12];
-        hnormal[1] = v1 * mat[1] + v2 * mat[5] + v3 * mat[9] + v4 * mat[13];
-        hnormal[2] = v1 * mat[2] + v2 * mat[6] + v3 * mat[10] + v4 * mat[14];
-        hnormal[3] = v1 * mat[3] + v2 * mat[7] + v3 * mat[11] + v4 * mat[15];
+        getClipPlaneEquation(clipPlanes[i], tmpClipWorldPlane);
+        vec4.transformMat4(hnormal, tmpClipWorldPlane, coordsToWorld);
 
         return;
       }
     }
-    macro.vtkErrorMacro(`Clipping plane index ${i} is out of range.`);
+    vtkErrorMacro(`Clipping plane index ${i} is out of range.`);
   };
 }
 

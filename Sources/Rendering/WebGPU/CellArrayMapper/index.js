@@ -13,6 +13,12 @@ import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 import vtkWebGPUSimpleMapper from 'vtk.js/Sources/Rendering/WebGPU/SimpleMapper';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
+import {
+  addClipPlaneEntries,
+  getClippingPlaneEquationsInCoords,
+  getClipPlaneShaderChecks,
+  MAX_CLIPPING_PLANES,
+} from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
 
 const { Resolve } = CoincidentTopologyHelper;
 const { FieldAssociations } = vtkDataSet;
@@ -21,7 +27,6 @@ const { Representation } = vtkProperty;
 const { ScalarMode } = vtkMapper;
 const { CoordinateSystem } = vtkProp;
 const { DisplayLocation } = vtkProperty2D;
-
 const vtkWebGPUPolyDataVS = `
 //VTK::Renderer::Dec
 
@@ -384,6 +389,8 @@ fn main(
 }
 `;
 
+const tmp2Mat4 = new Float64Array(16);
+
 function isEdges(hash) {
   // edge pipelines have "edge" in them
   return hash.indexOf('edge') >= 0;
@@ -436,13 +443,15 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
   publicAPI.updateUBO = () => {
     const actor = model.WebGPUActor.getRenderable();
     const ppty = actor.getProperty();
+    const clippingPlanesMTime = model.renderable.getClippingPlanesMTime();
     const backfaceProperty = actor.getBackfaceProperty?.() ?? ppty;
     const utime = model.UBO.getSendTime();
     if (
       publicAPI.getMTime() <= utime &&
       ppty.getMTime() <= utime &&
       backfaceProperty.getMTime() <= utime &&
-      model.renderable.getMTime() <= utime
+      model.renderable.getMTime() <= utime &&
+      clippingPlanesMTime <= utime
     ) {
       return;
     }
@@ -555,6 +564,24 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     const cp = publicAPI.getCoincidentParameters();
     model.UBO.setValue('CoincidentFactor', cp.factor);
     model.UBO.setValue('CoincidentOffset', cp.offset);
+    model.UBO.setValue('NumClipPlanes', 0);
+
+    if (!model.is2D && model.useRendererMatrix) {
+      const center = model.WebGPURenderer.getStabilizedCenterByReference();
+      mat4.fromTranslation(tmp2Mat4, [-center[0], -center[1], -center[2]]);
+      const numClipPlanes = getClippingPlaneEquationsInCoords(
+        model.renderable,
+        tmp2Mat4,
+        model.clipPlanes
+      );
+      model.UBO.setValue('NumClipPlanes', numClipPlanes);
+
+      if (numClipPlanes > 0) {
+        for (let i = 0; i < numClipPlanes; i++) {
+          model.UBO.setArray(`ClipPlane${i}`, model.clipPlanes[i]);
+        }
+      }
+    }
 
     // Only send if needed
     model.UBO.sendIfNeeded(model.WebGPURenderWindow.getDevice());
@@ -661,9 +688,11 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     const vDesc = pipeline.getShaderDescription('vertex');
     vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
     if (!vDesc.hasOutput('vertexVC')) vDesc.addOutput('vec4<f32>', 'vertexVC');
+    if (!vDesc.hasOutput('vertexSC')) vDesc.addOutput('vec4<f32>', 'vertexSC');
     let code = vDesc.getCode();
     if (model.useRendererMatrix) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
+        '    output.vertexSC = mapperUBO.BCSCMatrix * vec4<f32>(vertexBC.xyz, 1.0);',
         '    var pCoord: vec4<f32> = rendererUBO.SCPCMatrix*mapperUBO.BCSCMatrix*vertexBC;',
         '    output.vertexVC = rendererUBO.SCVCMatrix * mapperUBO.BCSCMatrix * vec4<f32>(vertexBC.xyz, 1.0);',
         '//VTK::Position::Impl',
@@ -711,6 +740,19 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       '    output.Position = pCoord;',
     ]).result;
     vDesc.setCode(code);
+
+    const fDesc = pipeline.getShaderDescription('fragment');
+    code = fDesc.getCode();
+    const clipPlaneChecks = getClipPlaneShaderChecks({
+      countName: 'mapperUBO.NumClipPlanes',
+      planePrefix: 'mapperUBO.ClipPlane',
+      positionName: 'input.vertexSC',
+    });
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
+      ...clipPlaneChecks,
+      '//VTK::Position::Impl',
+    ]).result;
+    fDesc.setCode(code);
   };
   model.shaderReplacements.set(
     'replaceShaderPosition',
@@ -1560,7 +1602,6 @@ export function extend(publicAPI, model, initiaLalues = {}) {
   model.vertexShaderTemplate = vtkWebGPUPolyDataVS;
 
   model._tmpMat3 = mat3.identity(new Float64Array(9));
-  model._tmpMat4 = mat4.identity(new Float64Array(16));
 
   // UBO
   model.UBO = vtkWebGPUUniformBuffer.newInstance({ label: 'mapperUBO' });
@@ -1602,6 +1643,8 @@ export function extend(publicAPI, model, initiaLalues = {}) {
   model.UBO.addEntry('ClipNear', 'f32');
   model.UBO.addEntry('ClipFar', 'f32');
   model.UBO.addEntry('Time', 'u32');
+  addClipPlaneEntries(model.UBO, 'ClipPlane');
+  model.UBO.addEntry('NumClipPlanes', 'u32');
 
   // Build VTK API
   macro.setGet(publicAPI, model, [
@@ -1614,6 +1657,9 @@ export function extend(publicAPI, model, initiaLalues = {}) {
   ]);
 
   model.textures = [];
+  model.clipPlanes = Array.from({ length: MAX_CLIPPING_PLANES }, () => [
+    0.0, 0.0, 0.0, 0.0,
+  ]);
 
   // Object methods
   vtkWebGPUCellArrayMapper(publicAPI, model);
