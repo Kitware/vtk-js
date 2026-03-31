@@ -6,6 +6,11 @@ import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUStorageBuffer from 'vtk.js/Sources/Rendering/WebGPU/StorageBuffer';
 import vtkWebGPUSampler from 'vtk.js/Sources/Rendering/WebGPU/Sampler';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
+import {
+  addClipPlaneEntries,
+  getClippingPlaneEquationsInCoords,
+  MAX_CLIPPING_PLANES,
+} from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
 
 import { BlendMode } from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
@@ -26,6 +31,46 @@ fn getTextureValue(vTex: texture_3d<f32>, tpos: vec4<f32>) -> f32
 {
   // todo multicomponent support
   return textureSampleLevel(vTex, clampSampler, tpos.xyz, 0.0).r;
+}
+
+fn intersectRayBoundsWithClipPlanes(vNum: i32, minPosSC: vec4<f32>, rayStepSC: vec4<f32>, rayBounds: vec2<f32>) -> vec2<f32>
+{
+  var result: vec2<f32> = rayBounds;
+  let clipCount: i32 = i32(volumeSSBO.values[vNum].clipPlaneStates.x);
+  if (clipCount <= 0)
+  {
+    return result;
+  }
+
+  ${Array.from(
+    { length: MAX_CLIPPING_PLANES },
+    (_, idx) => `
+  if (clipCount > ${idx})
+  {
+    let clipPlane${idx}: vec4<f32> = volumeSSBO.values[vNum].clipPlane${idx};
+    let rayDirRatio${idx}: f32 = dot(rayStepSC, clipPlane${idx});
+    let equationResult${idx}: f32 = dot(minPosSC, clipPlane${idx});
+
+    let absRayDirRatio${idx}: f32 = abs(rayDirRatio${idx});
+    if (absRayDirRatio${idx} > 1e-6)
+    {
+      let intersection${idx}: f32 = -equationResult${idx} / rayDirRatio${idx};
+      result.x = select(result.x, max(result.x, intersection${idx}), rayDirRatio${idx} > 0.0);
+      result.y = select(result.y, min(result.y, intersection${idx}), rayDirRatio${idx} < 0.0);
+    }
+    else if (equationResult${idx} < 0.0)
+    {
+      result.x = result.y;
+    }
+
+    if (result.x >= result.y)
+    {
+      return result;
+    }
+  }`
+  ).join('\n')}
+
+  return result;
 }
 
 fn getGradient(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32, scalar: f32) -> vec4<f32>
@@ -159,7 +204,11 @@ fn traverseMax(vTex: texture_3d<f32>, vNum: i32, cNum: i32, rayLengthSC: f32, mi
   var tpos2: vec4<f32> = volumeSSBO.values[vNum].SCTCMatrix*(minPosSC + rayStepSC);
   var tstep: vec4<f32> = tpos2 - tpos;
 
-  var rayBounds: vec2<f32> = adjustBounds(tpos, tstep, numSteps);
+  var rayBounds: vec2<f32> = intersectRayBoundsWithClipPlanes(
+    vNum,
+    minPosSC,
+    rayStepSC,
+    adjustBounds(tpos, tstep, numSteps));
 
   // did we hit anything
   if (rayBounds.x >= rayBounds.y)
@@ -199,7 +248,11 @@ fn traverseMin(vTex: texture_3d<f32>, vNum: i32, cNum: i32, rayLengthSC: f32, mi
   var tpos2: vec4<f32> = volumeSSBO.values[vNum].SCTCMatrix*(minPosSC + rayStepSC);
   var tstep: vec4<f32> = tpos2 - tpos;
 
-  var rayBounds: vec2<f32> = adjustBounds(tpos, tstep, numSteps);
+  var rayBounds: vec2<f32> = intersectRayBoundsWithClipPlanes(
+    vNum,
+    minPosSC,
+    rayStepSC,
+    adjustBounds(tpos, tstep, numSteps));
 
   // did we hit anything
   if (rayBounds.x >= rayBounds.y)
@@ -239,7 +292,11 @@ fn traverseAverage(vTex: texture_3d<f32>, vNum: i32, cNum: i32, rayLengthSC: f32
   var tpos2: vec4<f32> = volumeSSBO.values[vNum].SCTCMatrix*(minPosSC + rayStepSC);
   var tstep: vec4<f32> = tpos2 - tpos;
 
-  var rayBounds: vec2<f32> = adjustBounds(tpos, tstep, numSteps);
+  var rayBounds: vec2<f32> = intersectRayBoundsWithClipPlanes(
+    vNum,
+    minPosSC,
+    rayStepSC,
+    adjustBounds(tpos, tstep, numSteps));
 
   // did we hit anything
   if (rayBounds.x >= rayBounds.y)
@@ -274,6 +331,7 @@ fn traverseAverage(vTex: texture_3d<f32>, vNum: i32, cNum: i32, rayLengthSC: f32
   if (sampleCount <= 0.0)
   {
     traverseVals[vNum] = vec4<f32>(0.0,0.0,0.0,0.0);
+    return;
   }
 
   // process to get the color and opacity
@@ -288,7 +346,11 @@ fn traverseAdditive(vTex: texture_3d<f32>, vNum: i32, cNum: i32, rayLengthSC: f3
   var tpos2: vec4<f32> = volumeSSBO.values[vNum].SCTCMatrix*(minPosSC + rayStepSC);
   var tstep: vec4<f32> = tpos2 - tpos;
 
-  var rayBounds: vec2<f32> = adjustBounds(tpos, tstep, numSteps);
+  var rayBounds: vec2<f32> = intersectRayBoundsWithClipPlanes(
+    vNum,
+    minPosSC,
+    rayStepSC,
+    adjustBounds(tpos, tstep, numSteps));
 
   // did we hit anything
   if (rayBounds.x >= rayBounds.y)
@@ -309,7 +371,6 @@ fn traverseAdditive(vTex: texture_3d<f32>, vNum: i32, cNum: i32, rayLengthSC: f3
     // {
       sumVal = sumVal + sample;
     // }
-
     // increment position
     curDist = curDist + 1.0;
     tpos = tpos + tstep;
@@ -333,7 +394,9 @@ fn composite(rayLengthSC: f32, minPosSC: vec4<f32>, rayStepSC: vec4<f32>) -> vec
   var curDist: f32 = 0.0;
   var computedColor: vec4<f32> = vec4<f32>(0.0, 0.0, 0.0, 0.0);
   var sampleColor: vec4<f32>;
+  var numSteps: f32 = rayLengthSC/mapperUBO.SampleDistance;
 //VTK::Volume::TraverseCalls
+//VTK::Volume::TraverseInit
 
   loop
   {
@@ -389,7 +452,6 @@ fn main(
 
 const tmpMat4 = new Float64Array(16);
 const tmp2Mat4 = new Float64Array(16);
-
 // ----------------------------------------------------------------------------
 // vtkWebGPUVolumePassFSQ methods
 // ----------------------------------------------------------------------------
@@ -419,6 +481,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     const fDesc = pipeline.getShaderDescription('fragment');
     let code = fDesc.getCode();
     const compositeCalls = [];
+    const clipInit = [];
     const traverseCalls = [];
     for (let i = 0; i < model.volumes.length; i++) {
       // todo pass rowPos
@@ -427,12 +490,26 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         .getMapper()
         .getBlendMode();
       if (blendMode === BlendMode.COMPOSITE_BLEND) {
+        clipInit.push(
+          `  var tpos${i}: vec4<f32> = volumeSSBO.values[${i}].SCTCMatrix*minPosSC;`
+        );
+        clipInit.push(
+          `  var tpos2_${i}: vec4<f32> = volumeSSBO.values[${i}].SCTCMatrix*(minPosSC + rayStepSC);`
+        );
+        clipInit.push(`  var tstep${i}: vec4<f32> = tpos2_${i} - tpos${i};`);
+        clipInit.push(
+          `  var rayBounds${i}: vec2<f32> = intersectRayBoundsWithClipPlanes(${i}, minPosSC, rayStepSC, adjustBounds(tpos${i}, tstep${i}, numSteps));`
+        );
         compositeCalls.push(
-          `    sampleColor = processVolume(volTexture${i}, ${i}, ${model.rowStarts[i]}, rayPosSC, tfunRows);`
+          `    if (curDist >= rayBounds${i}.x * mapperUBO.SampleDistance && curDist <= rayBounds${i}.y * mapperUBO.SampleDistance) {`
+        );
+        compositeCalls.push(
+          `      sampleColor = processVolume(volTexture${i}, ${i}, ${model.rowStarts[i]}, rayPosSC, tfunRows);`
         );
         compositeCalls.push(`    computedColor = vec4<f32>(
           sampleColor.a * sampleColor.rgb * (1.0 - computedColor.a) + computedColor.rgb,
           (1.0 - computedColor.a)*sampleColor.a + computedColor.a);`);
+        compositeCalls.push('    }');
       } else {
         traverseCalls.push(`  sampleColor = traverseVals[${i}];`);
         traverseCalls.push(`  computedColor = vec4<f32>(
@@ -449,6 +526,11 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       code,
       '//VTK::Volume::TraverseCalls',
       traverseCalls
+    ).result;
+    code = vtkWebGPUShaderCache.substitute(
+      code,
+      '//VTK::Volume::TraverseInit',
+      clipInit
     ).result;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Volume::TraverseDec', [
       `var<private> traverseVals: array<vec4<f32>,${model.volumes.length}>;`,
@@ -637,7 +719,8 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         mtime,
         vol.getMTime(),
         image.getMTime(),
-        volMapr.getMTime()
+        volMapr.getMTime(),
+        volMapr.getClippingPlanesMTime()
       );
     }
     if (mtime < model.SSBO.getSendTime()) {
@@ -656,6 +739,11 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     //
     const marray = new Float64Array(model.volumes.length * 16);
     const vPlaneArray = new Float64Array(model.volumes.length * 16);
+    const clipPlaneArrays = Array.from(
+      { length: MAX_CLIPPING_PLANES },
+      () => new Float64Array(model.volumes.length * 4)
+    );
+    const clipPlaneStates = new Float64Array(model.volumes.length * 4);
     const tstepArray = new Float64Array(model.volumes.length * 4);
     const shadeArray = new Float64Array(model.volumes.length * 4);
     const spacingArray = new Float64Array(model.volumes.length * 4);
@@ -727,6 +815,21 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       ipScalarRangeArray[vidx * 4] = ipScalarRange[0] / tScale;
       ipScalarRangeArray[vidx * 4 + 1] = ipScalarRange[1] / tScale;
       ipScalarRangeArray[vidx * 4 + 2] = actor.getProperty().getFilterMode();
+
+      mat4.fromTranslation(tmp2Mat4, [-center[0], -center[1], -center[2]]);
+      const clipPlaneCount = getClippingPlaneEquationsInCoords(
+        volMapr,
+        tmp2Mat4,
+        model.clipPlanes
+      );
+      clipPlaneStates[vidx * 4] = clipPlaneCount;
+      for (let i = 0; i < clipPlaneCount; i++) {
+        const clipOffset = vidx * 4;
+        clipPlaneArrays[i][clipOffset] = model.clipPlanes[i][0];
+        clipPlaneArrays[i][clipOffset + 1] = model.clipPlanes[i][1];
+        clipPlaneArrays[i][clipOffset + 2] = model.clipPlanes[i][2];
+        clipPlaneArrays[i][clipOffset + 3] = model.clipPlanes[i][3];
+      }
     }
     model.SSBO.addEntry('SCTCMatrix', 'mat4x4<f32>');
     model.SSBO.addEntry('planeNormals', 'mat4x4<f32>');
@@ -734,12 +837,18 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     model.SSBO.addEntry('tstep', 'vec4<f32>');
     model.SSBO.addEntry('spacing', 'vec4<f32>');
     model.SSBO.addEntry('ipScalarRange', 'vec4<f32>');
+    addClipPlaneEntries(model.SSBO, 'clipPlane');
+    model.SSBO.addEntry('clipPlaneStates', 'vec4<f32>');
     model.SSBO.setAllInstancesFromArray('SCTCMatrix', marray);
     model.SSBO.setAllInstancesFromArray('planeNormals', vPlaneArray);
     model.SSBO.setAllInstancesFromArray('shade', shadeArray);
     model.SSBO.setAllInstancesFromArray('tstep', tstepArray);
     model.SSBO.setAllInstancesFromArray('spacing', spacingArray);
     model.SSBO.setAllInstancesFromArray('ipScalarRange', ipScalarRangeArray);
+    for (let i = 0; i < MAX_CLIPPING_PLANES; i++) {
+      model.SSBO.setAllInstancesFromArray(`clipPlane${i}`, clipPlaneArrays[i]);
+    }
+    model.SSBO.setAllInstancesFromArray('clipPlaneStates', clipPlaneStates);
     model.SSBO.send(device);
 
     // now create the componentSSBO
@@ -975,6 +1084,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.lutBuildTime = {};
   macro.obj(model.lutBuildTime, { mtime: 0 });
+  model.clipPlanes = Array.from({ length: MAX_CLIPPING_PLANES }, () => [
+    0.0, 0.0, 0.0, 0.0,
+  ]);
 
   // Object methods
   vtkWebGPUVolumePassFSQ(publicAPI, model);
