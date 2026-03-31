@@ -999,15 +999,17 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         }
       }
 
-      // Set per-input texel sizes in texture coordinates
+      // Set per-input texture-coordinate steps normalized by spacing so label
+      // outline thickness stays visually consistent on anisotropic reformats.
       for (let i = 0; i < model.currentValidInputs.length; i++) {
         const uniformName = `texelSize${i}`;
         if (program.isUniformUsed(uniformName)) {
           const imageData = model.currentValidInputs[i].imageData;
           const inputDims = imageData.getDimensions();
-          model._tmpTexelSize[0] = 1.0 / inputDims[0];
-          model._tmpTexelSize[1] = 1.0 / inputDims[1];
-          model._tmpTexelSize[2] = 1.0 / inputDims[2];
+          const inputSpacing = imageData.getSpacing();
+          model._tmpTexelSize[0] = 1.0 / (inputDims[0] * inputSpacing[0]);
+          model._tmpTexelSize[1] = 1.0 / (inputDims[1] * inputSpacing[1]);
+          model._tmpTexelSize[2] = 1.0 / (inputDims[2] * inputSpacing[2]);
           program.setUniform3fv(uniformName, model._tmpTexelSize);
         }
       }
