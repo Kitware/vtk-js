@@ -1529,7 +1529,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     let ppty = actor.getProperty();
 
-    let opacity = ppty.getOpacity();
+    const edgeLikeRepresentation =
+      model.drawingEdges ||
+      ppty.getRepresentation() === Representation.WIREFRAME;
+    let opacity = edgeLikeRepresentation
+      ? ppty.getEdgeOpacity()
+      : ppty.getOpacity();
 
     let aColor = model.drawingEdges
       ? ppty.getEdgeColorByReference()
