@@ -17,6 +17,7 @@ export interface IPropertyInitialValues {
   RMTexture?: vtkTexture;
   ORMTexture?: vtkTexture;
   edgeColor?: RGBColor;
+  edgeOpacity?: number;
   ambient?: number;
   diffuse?: number;
   metallic?: number;
@@ -102,6 +103,11 @@ export interface vtkProperty extends vtkObject {
    *
    */
   getEdgeColorByReference(): RGBColor;
+
+  /**
+   *
+   */
+  getEdgeOpacity(): number;
 
   /**
    *
@@ -359,6 +365,13 @@ export interface vtkProperty extends vtkObject {
    * @param {RGBColor} edgeColor An Array of the RGB color.
    */
   setEdgeColorFrom(edgeColor: RGBColor): boolean;
+
+  /**
+   * Set the opacity of primitive edges. If not set explicitly, edge opacity
+   * follows the regular property opacity.
+   * @param {Number} edgeOpacity The opacity of primitive edges.
+   */
+  setEdgeOpacity(edgeOpacity: number): boolean;
 
   /**
    * Turn on/off the visibility of edges. On some renderers it is

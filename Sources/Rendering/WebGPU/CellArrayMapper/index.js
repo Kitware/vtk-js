@@ -472,7 +472,14 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     const edgeColor = ppty.getEdgeColorByReference?.();
     if (edgeColor) model.UBO.setArray('EdgeColor', [...edgeColor, 1.0]);
     model.UBO.setValue('LineWidth', ppty.getLineWidth());
-    model.UBO.setValue('Opacity', ppty.getOpacity());
+    const edgeLikeRepresentation =
+      model.primitiveType === PrimitiveTypes.TriangleEdges ||
+      model.primitiveType === PrimitiveTypes.TriangleStripEdges ||
+      ppty.getRepresentation() === Representation.WIREFRAME;
+    model.UBO.setValue(
+      'Opacity',
+      edgeLikeRepresentation ? ppty.getEdgeOpacity() : ppty.getOpacity()
+    );
     model.UBO.setValue('PropID', model.WebGPUActor.getPropID());
 
     // Only send if needed
@@ -646,13 +653,14 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     let code = fDesc.getCode();
 
     // Code that runs if the fragment shader includes normals
-    if (
-      code.includes('var normal:') &&
+    const hasNormal = code.includes('var normal:');
+    const needLighting =
+      hasNormal &&
       model.useRendererMatrix &&
       !isEdges(hash) &&
       !model.is2D &&
-      !hash.includes('sel')
-    ) {
+      !hash.includes('sel');
+    if (needLighting) {
       const lightingCode = [
         // Vectors needed for light calculations
         '  let fragPos = vec3<f32>(input.vertexVC.xyz);',
@@ -1056,9 +1064,16 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     // --- Normals ---
     const usage = publicAPI.getUsage(representation, primType);
     model._usesCellNormals = false;
+    // Add normals for triangles/strips, AND for lines in wireframe mode (converted from triangles)
+    const isWireframeFromTriangles =
+      representation === Representation.WIREFRAME &&
+      (primType === PrimitiveTypes.Triangles ||
+        primType === PrimitiveTypes.TriangleStrips);
     if (
       !model.is2D && // no lighting on Property2D
-      (usage === BufferUsage.Triangles || usage === BufferUsage.Strips)
+      (usage === BufferUsage.Triangles ||
+        usage === BufferUsage.Strips ||
+        isWireframeFromTriangles)
     ) {
       const normals = pd.getPointData().getNormals();
       // https://vtk.org/doc/nightly/html/classvtkPolyDataTangents.html
