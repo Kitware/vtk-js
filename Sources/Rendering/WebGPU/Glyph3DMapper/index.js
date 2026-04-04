@@ -20,6 +20,13 @@ function vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model) {
     publicAPI.setNumberOfInstances(model.glyphInstances);
   };
 
+  publicAPI.computePipelineHash = () => {
+    superClass.computePipelineHash();
+    if (model.renderable.getColorArray()) {
+      model.pipelineHash += 'gc';
+    }
+  };
+
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
     vDesc.addBuiltinInput('u32', '@builtin(instance_index) instanceIndex');
