@@ -24,6 +24,7 @@ import vtkPlaneManipulator from '@kitware/vtk.js/Widgets/Manipulators/PlaneManip
 import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer';
 import vtkResliceCursorWidget from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCursorWidget';
+import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 import widgetBehavior from '@kitware/vtk.js/Widgets/Widgets3D/ResliceCursorWidget/cprBehavior';
 
@@ -34,16 +35,21 @@ import spineJSON from './spine_centerline.json';
 const volumePath = `${__BASE_PATH__}/data/volume/LIDC2.vti`;
 const centerlineJsons = { Aorta: aortaJSON, Spine: spineJSON };
 const centerlineKeys = Object.keys(centerlineJsons);
+const userParams = vtkURLExtract.extractURLParameters();
+const viewAPI = userParams.viewAPI || 'WebGL';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  defaultViewAPI: viewAPI,
+});
 const stretchRenderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 const gui = new GUI();
 const params = {
+  viewAPI,
   Angle: 0,
   Animate: false,
   Centerline: centerlineKeys[0],
@@ -58,6 +64,15 @@ let animationId;
 const interactor = renderWindow.getInteractor();
 interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
 interactor.setDesiredUpdateRate(15.0);
+
+gui
+  .add(params, 'viewAPI', ['WebGL', 'WebGPU'])
+  .name('Renderer')
+  .onChange((api) => {
+    const query = new URLSearchParams(window.location.search);
+    query.set('viewAPI', api);
+    window.location.search = query.toString();
+  });
 
 // Reslice Cursor Widget
 const stretchPlane = 'Y';
