@@ -182,21 +182,38 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
       );
       const device = model.WebGPURenderWindow.getDevice();
 
+      const ssboInstances = Math.max(model.numInstances, 1);
       model.SSBO.clearData();
-      model.SSBO.setNumberOfInstances(model.numInstances);
+      model.SSBO.setNumberOfInstances(ssboInstances);
       model.SSBO.addEntry('matrix', 'mat4x4<f32>');
       model.SSBO.addEntry('normal', 'mat4x4<f32>');
       if (model.carray) {
         model.SSBO.addEntry('color', 'vec4<f32>');
       }
 
-      model.SSBO.setAllInstancesFromArray('matrix', garray);
-      model.SSBO.setAllInstancesFromArray3x3To4x4('normal', narray);
-      if (model.carray) {
-        model.SSBO.setAllInstancesFromArrayColorToFloat(
-          'color',
-          model.carray.getData()
+      if (model.numInstances > 0) {
+        model.SSBO.setAllInstancesFromArray('matrix', garray);
+        model.SSBO.setAllInstancesFromArray3x3To4x4('normal', narray);
+        if (model.carray) {
+          model.SSBO.setAllInstancesFromArrayColorToFloat(
+            'color',
+            model.carray.getData()
+          );
+        }
+      } else {
+        model.SSBO.setArray(
+          'matrix',
+          0,
+          [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
         );
+        model.SSBO.setArray(
+          'normal',
+          0,
+          [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+        );
+        if (model.carray) {
+          model.SSBO.setArray('color', 0, [1, 1, 1, 1]);
+        }
       }
 
       model.SSBO.send(device);
