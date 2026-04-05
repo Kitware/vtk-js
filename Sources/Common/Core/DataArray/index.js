@@ -450,14 +450,15 @@ function vtkDataArray(publicAPI, model) {
   };
 
   // Override serialization support
-  publicAPI.getState = () => {
+  publicAPI.getState = ({ preserveTypedArrays = false } = {}) => {
     if (model.deleted) {
       return null;
     }
     const jsonArchive = { ...model, vtkClass: publicAPI.getClassName() };
 
-    // Convert typed array to regular array
-    jsonArchive.values = Array.from(jsonArchive.values);
+    if (!preserveTypedArrays) {
+      jsonArchive.values = Array.from(jsonArchive.values);
+    }
     delete jsonArchive.buffer;
 
     // Clean any empty data
