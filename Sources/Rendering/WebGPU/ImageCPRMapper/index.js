@@ -7,11 +7,16 @@ import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffe
 import vtkWebGPUSampler from 'vtk.js/Sources/Rendering/WebGPU/Sampler';
 import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/ImageProperty/Constants';
 import { ProjectionMode } from 'vtk.js/Sources/Rendering/Core/ImageCPRMapper/Constants';
+import { Resolve } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
+import {
+  addClipPlaneEntries,
+  getClipPlaneShaderChecks,
+  MAX_CLIPPING_PLANES,
+} from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
+import { computeFnToString } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ImageSampling';
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
 const { BufferUsage } = vtkWebGPUBufferManager;
-
-const MAX_CLIPPING_PLANES = 6;
 
 const cprVertTemplate = `
 //VTK::Renderer::Dec
@@ -40,6 +45,8 @@ const cprFragTemplate = `
 //VTK::Mapper::Dec
 
 //VTK::Clip::Dec
+
+//VTK::Coincident::Dec
 
 //VTK::RenderEncoder::Dec
 
@@ -152,11 +159,15 @@ fn main(
 {
   var output : fragmentOutput;
 
-  let interpolatedOrientation = quaternionLerpOrSlerp(
-    input.centerlineBotOrientationVS,
-    input.centerlineTopOrientationVS,
-    input.quadOffsetVS.y
-  );
+  var interpolatedOrientation = mapperUBO.UniformOrientation;
+  if (mapperUBO.UseUniformOrientation == 0u)
+  {
+    interpolatedOrientation = quaternionLerpOrSlerp(
+      input.centerlineBottomOrientationVS,
+      input.centerlineTopOrientationVS,
+      input.quadOffsetVS.y
+    );
+  }
   let samplingDirection = applyQuaternionToVec(
     interpolatedOrientation,
     mapperUBO.TangentDirection.xyz
@@ -264,6 +275,7 @@ fn main(
   }
 
   //VTK::Select::Impl
+  //VTK::Coincident::Impl
   //VTK::RenderEncoder::Impl
   return output;
 }
@@ -271,18 +283,20 @@ fn main(
 
 const tmpMat4 = new Float64Array(16);
 const tmp2Mat4 = new Float64Array(16);
-
-function computeFnToString(property, fn, numberOfComponents) {
-  const pwfun = fn.apply(property);
-  if (pwfun) {
-    const iComps = property.getIndependentComponents();
-    return `${property.getMTime()}-${iComps}-${numberOfComponents}`;
-  }
-  return '0';
-}
+const DEFAULT_ORIENTATION = [0, 0, 0, 1];
+const QUAD_VERTEX_ORDER = [0, 1, 3, 0, 3, 2];
 
 function vtkWebGPUImageCPRMapper(publicAPI, model) {
   model.classHierarchy.push('vtkWebGPUImageCPRMapper');
+
+  publicAPI.getCoincidentParameters = () => {
+    if (
+      model.renderable.getResolveCoincidentTopology() === Resolve.PolygonOffset
+    ) {
+      return model.renderable.getCoincidentTopologyPolygonOffsetParameters();
+    }
+    return null;
+  };
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
@@ -309,6 +323,14 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
     }
   };
 
+  publicAPI.zBufferPass = (prepass) => {
+    if (prepass) {
+      publicAPI.render();
+    }
+  };
+
+  publicAPI.opaqueZBufferPass = (prepass) => publicAPI.zBufferPass(prepass);
+
   publicAPI.render = () => {
     model.renderable.update();
     if (!model.renderable.preRenderCheck()) {
@@ -327,7 +349,8 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
       model.renderable.getNumberOfClippingPlanes(),
       MAX_CLIPPING_PLANES
     );
-    model.pipelineHash = `cprcp${numClipPlanes}${model.renderEncoder.getPipelineHash()}`;
+    const useCoincident = publicAPI.getCoincidentParameters() ? 1 : 0;
+    model.pipelineHash = `cprcp${numClipPlanes}co${useCoincident}${model.renderEncoder.getPipelineHash()}`;
   };
 
   publicAPI.updateGeometry = () => {
@@ -351,35 +374,46 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
     const centerlinePositions = new Float32Array(numVerts * 3);
     const quadIndices = new Float32Array(numVerts);
     const topOrientations = new Float32Array(numVerts * 4);
-    const botOrientations = new Float32Array(numVerts * 4);
+    const bottomOrientations = new Float32Array(numVerts * 4);
 
     const pa = [0, 0, 0];
     const pb = [0, 0, 0];
-    const vertexOrder = [0, 1, 3, 0, 3, 2];
 
     for (let lineIdx = 0; lineIdx < nLines; ++lineIdx) {
       pointsDataArray.getPoint(lineIdx, pa);
       pointsDataArray.getPoint(lineIdx + 1, pb);
 
-      const quadPoints = [
-        [0, height - distances[lineIdx], 0],
-        [widthMC, height - distances[lineIdx], 0],
-        [0, height - distances[lineIdx + 1], 0],
-        [widthMC, height - distances[lineIdx + 1], 0],
-      ];
-      const quadCenterline = [pa, pa, pb, pb];
-      const topQuat = orientationQuats[lineIdx] ?? [0, 0, 0, 1];
-      const botQuat = orientationQuats[lineIdx + 1] ?? topQuat;
+      const topY = height - distances[lineIdx];
+      const bottomY = height - distances[lineIdx + 1];
+      const topQuat = orientationQuats[lineIdx] ?? DEFAULT_ORIENTATION;
+      const bottomQuat = orientationQuats[lineIdx + 1] ?? topQuat;
 
       for (let localIdx = 0; localIdx < 6; ++localIdx) {
-        const quadIdx = vertexOrder[localIdx];
+        const quadIdx = QUAD_VERTEX_ORDER[localIdx];
         const vertIdx = lineIdx * 6 + localIdx;
+        const posOffset = vertIdx * 3;
+        const orientationOffset = vertIdx * 4;
 
-        positions.set(quadPoints[quadIdx], vertIdx * 3);
-        centerlinePositions.set(quadCenterline[quadIdx], vertIdx * 3);
+        positions[posOffset] = quadIdx === 1 || quadIdx === 3 ? widthMC : 0.0;
+        positions[posOffset + 1] = quadIdx > 1 ? bottomY : topY;
+        positions[posOffset + 2] = 0.0;
+
+        const centerPoint = quadIdx > 1 ? pb : pa;
+        centerlinePositions[posOffset] = centerPoint[0];
+        centerlinePositions[posOffset + 1] = centerPoint[1];
+        centerlinePositions[posOffset + 2] = centerPoint[2];
+
         quadIndices[vertIdx] = quadIdx;
-        topOrientations.set(topQuat, vertIdx * 4);
-        botOrientations.set(botQuat, vertIdx * 4);
+
+        topOrientations[orientationOffset] = topQuat[0];
+        topOrientations[orientationOffset + 1] = topQuat[1];
+        topOrientations[orientationOffset + 2] = topQuat[2];
+        topOrientations[orientationOffset + 3] = topQuat[3];
+
+        bottomOrientations[orientationOffset] = bottomQuat[0];
+        bottomOrientations[orientationOffset + 1] = bottomQuat[1];
+        bottomOrientations[orientationOffset + 2] = bottomQuat[2];
+        bottomOrientations[orientationOffset + 3] = bottomQuat[3];
       }
     }
 
@@ -394,7 +428,7 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
     const centerlineHash = `cpr-centerline-${mtime}`;
     const quadHash = `cpr-quad-${mtime}`;
     const topHash = `cpr-top-${mtime}`;
-    const botHash = `cpr-bot-${mtime}`;
+    const bottomHash = `cpr-bottom-${mtime}`;
 
     const requests = [
       [vertexHash, positions, 'float32x3', ['vertexMC']],
@@ -406,7 +440,12 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
       ],
       [quadHash, quadIndices, 'float32', ['quadIndex']],
       [topHash, topOrientations, 'float32x4', ['centerlineTopOrientation']],
-      [botHash, botOrientations, 'float32x4', ['centerlineBotOrientation']],
+      [
+        bottomHash,
+        bottomOrientations,
+        'float32x4',
+        ['centerlineBottomOrientation'],
+      ],
     ];
 
     requests.forEach(([hash, nativeArray, format, names]) => {
@@ -612,6 +651,14 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
       ...model.renderable.getBitangentDirection(),
       0.0,
     ]);
+    model.UBO.setArray(
+      'UniformOrientation',
+      model.renderable.getUniformOrientation()
+    );
+    model.UBO.setValue(
+      'UseUniformOrientation',
+      model.renderable.getUseUniformOrientation() ? 1 : 0
+    );
     model.UBO.setValue('Width', model.renderable.getWidth());
     model.UBO.setValue('Opacity', property.getOpacity());
     model.UBO.setValue('PropID', model.WebGPUImageSlice.getPropID());
@@ -633,6 +680,13 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
       }
       model.UBO.setArray(`ClipPlane${i}`, clipPlane);
     }
+
+    const coincidentParameters = publicAPI.getCoincidentParameters();
+    model.UBO.setValue('CoincidentFactor', coincidentParameters?.factor ?? 0.0);
+    model.UBO.setValue(
+      'CoincidentOffset',
+      0.000016 * (coincidentParameters?.offset ?? 0.0)
+    );
 
     const projectionSamples =
       model.renderable.getProjectionSlabNumberOfSamples();
@@ -730,7 +784,7 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
     vDesc.addOutput('vec2<f32>', 'quadOffsetVS');
     vDesc.addOutput('vec3<f32>', 'centerlinePosVS');
     vDesc.addOutput('vec4<f32>', 'centerlineTopOrientationVS');
-    vDesc.addOutput('vec4<f32>', 'centerlineBotOrientationVS');
+    vDesc.addOutput('vec4<f32>', 'centerlineBottomOrientationVS');
 
     let code = vDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::ImageCPR::Impl', [
@@ -742,7 +796,7 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
       ');',
       'output.centerlinePosVS = centerlinePosition;',
       'output.centerlineTopOrientationVS = centerlineTopOrientation;',
-      'output.centerlineBotOrientationVS = centerlineBotOrientation;',
+      'output.centerlineBottomOrientationVS = centerlineBottomOrientation;',
       'let posSC = mapperUBO.BCSCMatrix * vec4<f32>(vertexMC, 1.0);',
       'output.Position = rendererUBO.SCPCMatrix * posSC;',
     ]).result;
@@ -757,8 +811,6 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
     const fDesc = pipeline.getShaderDescription('fragment');
     let code = fDesc.getCode();
 
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Clip::Dec', []).result;
-
     if (!model.renderable.getNumberOfClippingPlanes()) {
       code = vtkWebGPUShaderCache.substitute(
         code,
@@ -769,17 +821,14 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
       return;
     }
 
+    const clipPlaneChecks = getClipPlaneShaderChecks({
+      countName: 'mapperUBO.NumClipPlanes',
+      planePrefix: 'mapperUBO.ClipPlane',
+      positionName: 'vec4<f32>(volumePosMC, 1.0)',
+    });
+
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Clip::Impl', [
-      'for (var planeNum: u32 = 0u; planeNum < mapperUBO.NumClipPlanes; planeNum = planeNum + 1u)',
-      '{',
-      '  var plane = mapperUBO.ClipPlane0;',
-      '  if (planeNum == 1u) { plane = mapperUBO.ClipPlane1; }',
-      '  else if (planeNum == 2u) { plane = mapperUBO.ClipPlane2; }',
-      '  else if (planeNum == 3u) { plane = mapperUBO.ClipPlane3; }',
-      '  else if (planeNum == 4u) { plane = mapperUBO.ClipPlane4; }',
-      '  else if (planeNum == 5u) { plane = mapperUBO.ClipPlane5; }',
-      '  if (dot(plane, vec4<f32>(volumePosMC, 1.0)) < 0.0) { discard; }',
-      '}',
+      ...clipPlaneChecks,
     ]).result;
 
     fDesc.setCode(code);
@@ -787,6 +836,51 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
   model.shaderReplacements.set(
     'replaceShaderClip',
     publicAPI.replaceShaderClip
+  );
+
+  publicAPI.replaceShaderCoincident = (hash, pipeline) => {
+    const fDesc = pipeline.getShaderDescription('fragment');
+    let code = fDesc.getCode();
+    const coincidentParameters = publicAPI.getCoincidentParameters();
+
+    if (
+      !coincidentParameters ||
+      (coincidentParameters.factor === 0.0 &&
+        coincidentParameters.offset === 0.0)
+    ) {
+      code = vtkWebGPUShaderCache.substitute(
+        code,
+        '//VTK::Coincident::Dec',
+        []
+      ).result;
+      code = vtkWebGPUShaderCache.substitute(
+        code,
+        '//VTK::Coincident::Impl',
+        []
+      ).result;
+      fDesc.setCode(code);
+      return;
+    }
+
+    fDesc.addBuiltinInput('vec4<f32>', '@builtin(position) fragPos');
+    fDesc.addBuiltinOutput('f32', '@builtin(frag_depth) fragDepth');
+    code = vtkWebGPUShaderCache.substitute(
+      code,
+      '//VTK::Coincident::Dec',
+      []
+    ).result;
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Coincident::Impl', [
+      'output.fragDepth = clamp(',
+      '  input.fragPos.z + mapperUBO.CoincidentOffset,',
+      '  0.0,',
+      '  1.0',
+      ');',
+    ]).result;
+    fDesc.setCode(code);
+  };
+  model.shaderReplacements.set(
+    'replaceShaderCoincident',
+    publicAPI.replaceShaderCoincident
   );
 
   publicAPI.replaceShaderRenderEncoder = (hash, pipeline) => {
@@ -833,6 +927,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('BackgroundColor', 'vec4<f32>');
   model.UBO.addEntry('VolumeSizeMC', 'vec4<f32>');
   model.UBO.addEntry('GlobalCenterPoint', 'vec4<f32>');
+  model.UBO.addEntry('UniformOrientation', 'vec4<f32>');
   model.UBO.addEntry('TangentDirection', 'vec4<f32>');
   model.UBO.addEntry('BitangentDirection', 'vec4<f32>');
   model.UBO.addEntry('ComponentMix', 'vec4<f32>');
@@ -841,20 +936,18 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('PWFScale', 'vec4<f32>');
   model.UBO.addEntry('PWFShift', 'vec4<f32>');
   model.UBO.addEntry('ProjectionParams', 'vec4<f32>');
-  model.UBO.addEntry('ClipPlane0', 'vec4<f32>');
-  model.UBO.addEntry('ClipPlane1', 'vec4<f32>');
-  model.UBO.addEntry('ClipPlane2', 'vec4<f32>');
-  model.UBO.addEntry('ClipPlane3', 'vec4<f32>');
-  model.UBO.addEntry('ClipPlane4', 'vec4<f32>');
-  model.UBO.addEntry('ClipPlane5', 'vec4<f32>');
+  addClipPlaneEntries(model.UBO, 'ClipPlane');
   model.UBO.addEntry('Width', 'f32');
   model.UBO.addEntry('Opacity', 'f32');
+  model.UBO.addEntry('CoincidentFactor', 'f32');
+  model.UBO.addEntry('CoincidentOffset', 'f32');
   model.UBO.addEntry('PropID', 'u32');
   model.UBO.addEntry('NumClipPlanes', 'u32');
   model.UBO.addEntry('ProjectionSamples', 'u32');
   model.UBO.addEntry('ProjectionMode', 'u32');
   model.UBO.addEntry('NumComponents', 'u32');
   model.UBO.addEntry('IndependentComponents', 'u32');
+  model.UBO.addEntry('UseUniformOrientation', 'u32');
   model.UBO.addEntry('UseCenterPoint', 'u32');
 
   vtkWebGPUImageCPRMapper(publicAPI, model);
