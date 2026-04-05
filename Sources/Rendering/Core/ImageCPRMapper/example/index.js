@@ -54,7 +54,7 @@ const params = {
   Animate: false,
   Centerline: centerlineKeys[0],
   Mode: 'straightened',
-  ProjectionMode: 'MAXIMUM',
+  ProjectionMode: 'MAX',
   ProjectionThickness: 0.1,
   ProjectionSamples: 1,
 };
@@ -410,6 +410,10 @@ gui
   .name('Projection Mode')
   .onChange((m) => {
     mapper.setProjectionMode(ProjectionMode[m]);
+    if (mapper.getProjectionSlabNumberOfSamples() <= 1) {
+      mapper.setProjectionSlabNumberOfSamples(16);
+      params.ProjectionSamples = 16;
+    }
     renderWindow.render();
   });
 params.ProjectionThickness = mapper.getProjectionSlabThickness();
