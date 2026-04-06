@@ -43,6 +43,22 @@ function vtkWebGPUTextureManager(publicAPI, model) {
           break;
       }
 
+      if (numComp === 3) {
+        const source = req.nativeArray;
+        const padded = macro.newTypedArray(
+          source.constructor.name,
+          (source.length / 3) * 4
+        );
+        const alpha = source.BYTES_PER_ELEMENT === 1 ? 255 : 1;
+        for (let i = 0, j = 0; i < source.length; i += 3, j += 4) {
+          padded[j] = source[i];
+          padded[j + 1] = source[i + 1];
+          padded[j + 2] = source[i + 2];
+          padded[j + 3] = alpha;
+        }
+        req.nativeArray = padded;
+      }
+
       const dataType = req.dataArray.getDataType();
       switch (dataType) {
         case VtkDataTypes.UNSIGNED_CHAR:
