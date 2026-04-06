@@ -10,6 +10,7 @@ import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
+import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
@@ -19,6 +20,9 @@ import GUI from 'lil-gui';
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
+
+const userParms = vtkURLExtract.extractURLParameters();
+const viewAPI = userParms.viewAPI || 'WebGL';
 
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0.3, 0.3, 0.3],
@@ -33,6 +37,7 @@ const gui = new GUI();
 // ----------------------------------------------------------------------------
 // UI params
 const params = {
+  viewAPI,
   BlendMode: 5,
   IpScalarMin: 0.0,
   IpScalarMax: 1.0,
@@ -44,6 +49,13 @@ const params = {
 };
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 const initialSampleDistance = 1.3;
+
+gui
+  .add(params, 'viewAPI', ['WebGL', 'WebGPU'])
+  .name('Renderer')
+  .onChange((api) => {
+    window.location = `?viewAPI=${api}`;
+  });
 
 const actor = vtkVolume.newInstance();
 const actorProperty = actor.getProperty();
