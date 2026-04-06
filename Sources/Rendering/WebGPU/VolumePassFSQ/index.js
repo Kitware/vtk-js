@@ -348,6 +348,25 @@ fn getSimpleColor(scalar: f32, rowIdx: i32, tfunRows: f32) -> vec4<f32>
   return vec4<f32>(color.rgb, opacity);
 }
 
+fn getOpacity(scalar: f32, rowIdx: i32, tfunRows: f32) -> f32
+{
+  let coord = vec2<f32>(
+    scalar * componentSSBO.values[rowIdx].oScale + componentSSBO.values[rowIdx].oShift,
+    getTFunRowCoord(rowIdx, tfunRows)
+  );
+  return textureSampleLevel(ofunTexture, clampSampler, coord, 0.0).r;
+}
+
+fn getRadonColor(scalar: f32, rowIdx: i32, tfunRows: f32) -> vec4<f32>
+{
+  let coord = vec2<f32>(
+    scalar * componentSSBO.values[rowIdx].cScale + componentSSBO.values[rowIdx].cShift,
+    getTFunRowCoord(rowIdx, tfunRows)
+  );
+  let color = textureSampleLevel(tfunTexture, clampSampler, coord, 0.0).rgb;
+  return vec4<f32>(color, 1.0);
+}
+
 fn traverseMax(vTex: texture_3d<f32>, vNum: i32, rowIdx: i32, rayLengthSC: f32, minPosSC: vec4<f32>, rayStepSC: vec4<f32>)
 {
   // convert to tcoords and reject if outside the volume
@@ -539,6 +558,55 @@ fn traverseAdditive(vTex: texture_3d<f32>, vNum: i32, rowIdx: i32, rayLengthSC: 
   traverseVals[vNum] = getSimpleColor(sumVal, rowIdx, tfunRows);
 }
 
+fn traverseRadon(vTex: texture_3d<f32>, vNum: i32, rowIdx: i32, rayLengthSC: f32, minPosSC: vec4<f32>, rayStepSC: vec4<f32>)
+{
+  // convert to tcoords and reject if outside the volume
+  var numSteps: f32 = rayLengthSC/mapperUBO.SampleDistance;
+  var tpos: vec4<f32> = volumeSSBO.values[vNum].SCTCMatrix*minPosSC;
+  var tpos2: vec4<f32> = volumeSSBO.values[vNum].SCTCMatrix*(minPosSC + rayStepSC);
+  var tstep: vec4<f32> = tpos2 - tpos;
+
+  var rayBounds: vec2<f32> = adjustBounds(tpos, tstep, numSteps);
+
+  // did we hit anything
+  if (rayBounds.x >= rayBounds.y)
+  {
+    traverseVals[vNum] = vec4<f32>(0.0,0.0,0.0,0.0);
+    return;
+  }
+
+  let tfunRows: f32 = f32(textureDimensions(tfunTexture).y);
+  let raySpan: f32 = rayBounds.y - rayBounds.x;
+
+  // Thin volumes can intersect the ray across less than a full sample step.
+  if (raySpan <= 1.0)
+  {
+    let scalar: f32 = getTraverseValue(getTextureValue(vTex, tpos + tstep*rayBounds.x), vNum);
+    let intensity = 1.0 - raySpan * mapperUBO.SampleDistance * getOpacity(scalar, rowIdx, tfunRows);
+    traverseVals[vNum] = getRadonColor(intensity, rowIdx, tfunRows);
+    return;
+  }
+
+  tpos = tpos + tstep*rayBounds.x;
+  var curDist: f32 = rayBounds.x;
+  var normalizedRayIntensity: f32 = 1.0;
+  loop
+  {
+    let scalar: f32 = getTraverseValue(getTextureValue(vTex, tpos), vNum);
+    normalizedRayIntensity = normalizedRayIntensity -
+      mapperUBO.SampleDistance * getOpacity(scalar, rowIdx, tfunRows);
+
+    // increment position
+    curDist = curDist + 1.0;
+    tpos = tpos + tstep;
+
+    // check if we have reached a terminating condition
+    if (curDist > rayBounds.y) { break; }
+  }
+
+  traverseVals[vNum] = getRadonColor(normalizedRayIntensity, rowIdx, tfunRows);
+}
+
 fn composite(rayLengthSC: f32, minPosSC: vec4<f32>, rayStepSC: vec4<f32>) -> vec4<f32>
 {
   // initial ray position is at the beginning
@@ -722,6 +790,12 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       } else if (blendMode === BlendMode.ADDITIVE_INTENSITY_BLEND) {
         code = vtkWebGPUShaderCache.substitute(code, '//VTK::Volume::Loop', [
           `    traverseAdditive(volTexture${vidx}, ${vidx}, ${model.rowStarts[vidx]}, rayLengthSC, minPosSC, rayStepSC);`,
+          `    computedColor = traverseVals[${vidx}];`,
+          '//VTK::Volume::Loop',
+        ]).result;
+      } else if (blendMode === BlendMode.RADON_TRANSFORM_BLEND) {
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Volume::Loop', [
+          `    traverseRadon(volTexture${vidx}, ${vidx}, ${model.rowStarts[vidx]}, rayLengthSC, minPosSC, rayStepSC);`,
           `    computedColor = traverseVals[${vidx}];`,
           '//VTK::Volume::Loop',
         ]).result;
