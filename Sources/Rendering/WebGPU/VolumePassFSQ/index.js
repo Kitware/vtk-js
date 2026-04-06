@@ -164,6 +164,117 @@ fn getDependentGradient(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32, numCo
   return result;
 }
 
+fn getViewVector(posVC: vec3<f32>) -> vec3<f32>
+{
+  if (rendererUBO.cameraParallel != 0u)
+  {
+    return vec3<f32>(0.0, 0.0, 1.0);
+  }
+  return normalize(-posVC);
+}
+
+fn applyLighting(tColor: vec3<f32>, posVC: vec3<f32>, normalVC: vec3<f32>, vNum: i32) -> vec3<f32>
+{
+  if (rendererUBO.LightCount <= 0)
+  {
+    return tColor;
+  }
+
+  let lighting = volumeSSBO.values[vNum].lighting;
+  let ambient = lighting.x;
+  let diffuseCoeff = lighting.y;
+  let specularCoeff = lighting.z;
+  let specularPower = lighting.w;
+  let viewDir = getViewVector(posVC);
+
+  var diffuse = vec3<f32>(0.0);
+  var specular = vec3<f32>(0.0);
+
+  var i: i32 = 0;
+  loop
+  {
+    if (i >= rendererUBO.LightCount) { break; }
+
+    let lightColor =
+      rendererLightSSBO.values[i].LightColor.rgb *
+      (rendererLightSSBO.values[i].LightColor.w * 0.2);
+    let lightType = i32(rendererLightSSBO.values[i].LightData.x);
+
+    var lightDirection = vec3<f32>(0.0);
+    var attenuation = 1.0;
+
+    if (lightType == 0)
+    {
+      let lightPosVC = rendererLightSSBO.values[i].LightPos.xyz;
+      let lightOffset = posVC - lightPosVC;
+      let lightDistance = length(lightOffset);
+      if (lightDistance <= 0.0)
+      {
+        i++;
+        continue;
+      }
+      lightDirection = lightOffset / lightDistance;
+    }
+    else if (lightType == 1)
+    {
+      lightDirection = -normalize(
+        (rendererUBO.WCVCNormals *
+          vec4<f32>(normalize(rendererLightSSBO.values[i].LightDir.xyz), 0.0)).xyz
+      );
+    }
+    else if (lightType == 2)
+    {
+      let lightPosVC = rendererLightSSBO.values[i].LightPos.xyz;
+      let lightOffset = posVC - lightPosVC;
+      let lightDistance = length(lightOffset);
+      if (lightDistance <= 0.0)
+      {
+        i++;
+        continue;
+      }
+      lightDirection = lightOffset / lightDistance;
+
+      let spotDirVC = -normalize(
+        (rendererUBO.WCVCNormals *
+          vec4<f32>(normalize(rendererLightSSBO.values[i].LightDir.xyz), 0.0)).xyz
+      );
+      let theta = dot(spotDirVC, lightDirection);
+      let innerCone = rendererLightSSBO.values[i].LightData.y;
+      let outerCone = rendererLightSSBO.values[i].LightData.z;
+      let coneRange = max(0.000001, innerCone - outerCone);
+      attenuation = clamp((theta - outerCone) / coneRange, 0.0, 1.0);
+      if (attenuation <= 0.0)
+      {
+        i++;
+        continue;
+      }
+    }
+    else
+    {
+      i++;
+      continue;
+    }
+
+    let ndotL = max(dot(normalVC, lightDirection), 0.0);
+    if (ndotL > 0.0)
+    {
+      diffuse += ndotL * attenuation * lightColor;
+
+      let reflectDir = normalize(lightDirection - 2.0 * ndotL * normalVC);
+      let vdotR = max(dot(viewDir, reflectDir), 0.0);
+      if (vdotR > 0.0)
+      {
+        specular += pow(vdotR, specularPower) * attenuation * lightColor;
+      }
+    }
+
+    i++;
+  }
+
+  return tColor * (ambient + diffuseCoeff * diffuse) +
+    specularCoeff * specular;
+}
+
 fn processVolume(vTex: texture_3d<f32>, vNum: i32, rowStart: i32, posSC: vec4<f32>, tfunRows: f32) -> vec4<f32>
 {
   var outColor: vec4<f32> = vec4<f32>(0.0, 0.0, 0.0, 0.0);
@@ -176,6 +287,7 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, rowStart: i32, posSC: vec4<f3
   let numComp: u32 = u32(volumeSSBO.values[vNum].componentInfo.x);
   let independent = volumeSSBO.values[vNum].componentInfo.y > 0.5;
   let sample: vec4<f32> = getTextureValue(vTex, tpos);
+  let posVC = (rendererUBO.SCVCMatrix * posSC).xyz;
 
   if (independent)
   {
@@ -208,7 +320,7 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, rowStart: i32, posSC: vec4<f3
 
       if (volumeSSBO.values[vNum].shade[0] > 0.0)
       {
-        color = color*abs(normal.z);
+        color = applyLighting(color, posVC, normal.xyz, vNum);
       }
 
       let mixWeight = componentSSBO.values[rowIdx].mixWeight;
@@ -290,7 +402,7 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, rowStart: i32, posSC: vec4<f3
 
   if (volumeSSBO.values[vNum].shade[0] > 0.0)
   {
-    color = color*abs(normal.z);
+    color = applyLighting(color, posVC, normal.xyz, vNum);
   }
 
   outColor = vec4<f32>(color, gofactor * opacity);
@@ -978,6 +1090,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     const clipPlaneStates = new Float64Array(model.volumes.length * 4);
     const tstepArray = new Float64Array(model.volumes.length * 4);
     const shadeArray = new Float64Array(model.volumes.length * 4);
+    const lightingArray = new Float64Array(model.volumes.length * 4);
     const spacingArray = new Float64Array(model.volumes.length * 4);
     const ipScalarRangeArray = new Float64Array(model.volumes.length * 4);
     const componentInfoArray = new Float64Array(model.volumes.length * 4);
@@ -1042,6 +1155,11 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       tstepArray[vidx * 4 + 3] = 1.0;
 
       shadeArray[vidx * 4] = actor.getProperty().getShade() ? 1.0 : 0.0;
+      lightingArray[vidx * 4] = vprop.getAmbient();
+      lightingArray[vidx * 4 + 1] = vprop.getDiffuse();
+      lightingArray[vidx * 4 + 2] = vprop.getSpecular();
+      lightingArray[vidx * 4 + 3] =
+        vprop.getSpecularPower() === 0 ? 1.0 : vprop.getSpecularPower();
 
       const spacing = image.getSpacing();
       spacingArray[vidx * 4] = spacing[0];
@@ -1102,6 +1220,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     model.SSBO.addEntry('SCTCMatrix', 'mat4x4<f32>');
     model.SSBO.addEntry('planeNormals', 'mat4x4<f32>');
     model.SSBO.addEntry('shade', 'vec4<f32>');
+    model.SSBO.addEntry('lighting', 'vec4<f32>');
     model.SSBO.addEntry('tstep', 'vec4<f32>');
     model.SSBO.addEntry('spacing', 'vec4<f32>');
     model.SSBO.addEntry('ipScalarRange', 'vec4<f32>');
@@ -1115,6 +1234,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     model.SSBO.setAllInstancesFromArray('SCTCMatrix', marray);
     model.SSBO.setAllInstancesFromArray('planeNormals', vPlaneArray);
     model.SSBO.setAllInstancesFromArray('shade', shadeArray);
+    model.SSBO.setAllInstancesFromArray('lighting', lightingArray);
     model.SSBO.setAllInstancesFromArray('tstep', tstepArray);
     model.SSBO.setAllInstancesFromArray('spacing', spacingArray);
     model.SSBO.setAllInstancesFromArray('ipScalarRange', ipScalarRangeArray);
