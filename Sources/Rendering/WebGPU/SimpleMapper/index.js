@@ -269,6 +269,8 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
 
   publicAPI.computePipelineHash = () => {};
 
+  publicAPI.getPipelineSettings = () => null;
+
   publicAPI.registerDrawCallback = (encoder) => {
     encoder.registerDrawCallback(model.pipeline, publicAPI.draw);
   };
@@ -350,6 +352,7 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
         model.pipeline,
         model.vertexInput
       );
+      model.pipeline.setExtraPipelineSettings(publicAPI.getPipelineSettings());
       model.pipeline.setTopology(model.topology);
       model.pipeline.setRenderEncoder(model.renderEncoder);
       model.pipeline.setVertexState(

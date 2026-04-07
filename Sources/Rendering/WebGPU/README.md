@@ -167,6 +167,45 @@ updatePipeline()
 
 We set the render encoder on the pipeline because the renderEncoder used may add shader code to the fragment shader to direct the computed fragment data to specific outputs/textureViews.
 
+### extraPipelineSettings
+
+`vtkWebGPUPipeline` can take `extraPipelineSettings` to override parts of the
+base pipeline settings coming from the active render encoder. In normal mapper
+code this is typically provided indirectly from `vtkWebGPUSimpleMapper` via
+`publicAPI.getPipelineSettings()`.
+
+The merge is:
+
+- top-level keys are shallow-merged onto the encoder pipeline settings
+- `primitive`, `depthStencil`, and `fragment` are also shallow-merged one level deeper
+- other nested objects are replaced rather than recursively merged
+
+The flow looks like:
+
+```
+renderEncoder.getPipelineSettings()
+-> pipeline.applyPipelineSettings(baseSettings, extraPipelineSettings)
+-> device.createRenderPipeline(...)
+```
+
+This is useful when a mapper wants to keep the renderer/pass defaults but
+override a few pipeline fields such as `primitive.cullMode`.
+
+Example:
+
+```js
+publicAPI.getPipelineSettings = () => ({
+  primitive: {
+    cullMode: 'back',
+  },
+});
+```
+
+That example keeps the encoder's other settings intact while changing only the
+primitive culling mode for that mapper's pipeline. For backface-property style
+handling, the mapper can switch between values such as `'none'`, `'back'`, or
+`'front'` based on actor/property state before returning the settings object.
+
 The simple mapper is a viewnode subclass so it can handle render passes. The FullScreenQuad is a small subclass of SimpleMapper designed to render a quad. CellArrayMapper is a large subclass of SimpleMapper designed to render a CellArray from a PolyData suchs as verts, lines, polys, strips. PolyDataMapper is a simple class that instantiates CellArrayMappers as needed to do the actual work.
 
 ## IndexBuffers
