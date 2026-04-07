@@ -139,7 +139,11 @@ function vtkWebGPURenderer(publicAPI, model) {
       model.UBO.setArray('SCVCMatrix', keyMats.scvc);
       model.UBO.setArray('VCPCMatrix', keyMats.vcpc);
       model.UBO.setArray('WCVCNormals', keyMats.normalMatrix);
-      model.UBO.setValue('LightCount', model.renderable.getLights().length);
+      model.UBO.setValue(
+        'LightCount',
+        model.renderable.getLights().filter((light) => light.getSwitch() > 0)
+          .length
+      );
       model.UBO.setValue(
         'MaxEnvironmentMipLevel',
         model.renderable.getEnvironmentTexture()?.getMipLevel()
@@ -166,7 +170,9 @@ function vtkWebGPURenderer(publicAPI, model) {
   };
 
   publicAPI.updateSSBO = () => {
-    const lights = model.renderable.getLights();
+    const lights = model.renderable
+      .getLights()
+      .filter((light) => light.getSwitch() > 0);
     const keyMats = model.webgpuCamera.getKeyMatrices(publicAPI);
 
     let lightTimeString = `${model.renderable.getMTime()}`;
