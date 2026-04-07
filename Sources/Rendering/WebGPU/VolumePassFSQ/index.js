@@ -275,7 +275,103 @@ fn getVolumeLightDirection(posVC: vec3<f32>, lightIdx: i32) -> vec3<f32>
   return lightOffset / lightDistance;
 }
 
-fn applySurfaceLighting(tColor: vec3<f32>, posVC: vec3<f32>, normalVC: vec3<f32>, vNum: i32) -> vec3<f32>
+fn getFragmentSeed(fragPos: vec4<f32>) -> f32
+{
+  let firstNoise =
+    fract(sin(dot(fragPos.xy, vec2<f32>(12.9898, 78.233))) * 43758.5453);
+  let x = (i32(floor(fragPos.x)) % 32 + 32) % 32;
+  let y = (i32(floor(fragPos.y)) % 32 + 32) % 32;
+  let secondNoise = jitterSSBO.values[y * 32 + x].value;
+  let noiseSum = firstNoise + secondNoise;
+  return select(noiseSum - 1.0, noiseSum, noiseSum < 1.0);
+}
+
+fn sampleDirectionUniform(fragmentSeed: f32, rayIndex: i32) -> vec3<f32>
+{
+  let rayRandomness = kernelSampleSSBO.values[rayIndex].value;
+  var mergedRandom = rayRandomness + vec2<f32>(fragmentSeed, fragmentSeed);
+  if (mergedRandom.x >= 1.0) { mergedRandom.x = mergedRandom.x - 1.0; }
+  if (mergedRandom.y >= 1.0) { mergedRandom.y = mergedRandom.y - 1.0; }
+  let u = mergedRandom.x;
+  let v = mergedRandom.y;
+  let theta = u * 6.28318530718;
+  let phi = acos(2.0 * v - 1.0);
+  let sinTheta = sin(theta);
+  let cosTheta = cos(theta);
+  let sinPhi = sin(phi);
+  let cosPhi = cos(phi);
+  return vec3<f32>(sinPhi * cosTheta, sinPhi * sinTheta, cosPhi);
+}
+
+fn computeLAO(vTex: texture_3d<f32>, fragPos: vec4<f32>, posVC: vec3<f32>, normalVC: vec4<f32>, originalOpacity: f32, vNum: i32, rowStart: i32) -> f32
+{
+  if (normalVC.w <= 0.0 || originalOpacity <= 0.05)
+  {
+    return 1.0;
+  }
+
+  let kernelSize = i32(volumeSSBO.values[vNum].lao.x);
+  if (kernelSize <= 0)
+  {
+    return 1.0;
+  }
+  let kernelRadius = i32(volumeSSBO.values[vNum].lao.y);
+  let fragmentSeed = getFragmentSeed(fragPos);
+
+  var visibilitySum = 0.0;
+  var weightSum = 0.0;
+  var i: i32 = 0;
+  loop
+  {
+    if (i >= kernelSize) { break; }
+    var rayDirectionVC = sampleDirectionUniform(fragmentSeed, i);
+    var normalDotRay = dot(normalVC.xyz, rayDirectionVC);
+    if (normalDotRay > 0.0)
+    {
+      rayDirectionVC = -rayDirectionVC;
+      normalDotRay = -normalDotRay;
+    }
+
+    var currTC = (volumeSSBO.values[vNum].VCTCMatrix * vec4<f32>(posVC, 1.0)).xyz;
+    let rayStepTC = (volumeSSBO.values[vNum].VCTCMatrix *
+      vec4<f32>(rayDirectionVC * mapperUBO.SampleDistance, 0.0)).xyz;
+    var visibility = 1.0;
+
+    var j: i32 = 0;
+    loop
+    {
+      if (j >= kernelRadius) { break; }
+      currTC = currTC + rayStepTC;
+      if (any(currTC < vec3<f32>(0.0)) || any(currTC > vec3<f32>(1.0)))
+      {
+        break;
+      }
+      let sampleTC = vec4<f32>(currTC, 1.0);
+      let opacity = getSampleOpacity(vTex, getTextureValue(vTex, sampleTC), sampleTC, vNum, rowStart);
+      visibility = visibility * (1.0 - opacity);
+      if (visibility <= 0.000001)
+      {
+        visibility = 0.0;
+        break;
+      }
+      j++;
+    }
+
+    let rayWeight = -normalDotRay;
+    visibilitySum = visibilitySum + visibility * rayWeight;
+    weightSum = weightSum + rayWeight;
+    i++;
+  }
+
+  if (weightSum == 0.0)
+  {
+    return 1.0;
+  }
+
+  return clamp(visibilitySum / weightSum, 0.3, 1.0);
+}
+
+fn applySurfaceLighting(vTex: texture_3d<f32>, fragPos: vec4<f32>, tColor: vec3<f32>, alpha: f32, posVC: vec3<f32>, normalVC: vec4<f32>, vNum: i32, rowStart: i32) -> vec3<f32>
 {
   if (rendererUBO.LightCount <= 0)
   {
@@ -288,6 +384,7 @@ fn applySurfaceLighting(tColor: vec3<f32>, posVC: vec3<f32>, normalVC: vec3<f32>
   let specularCoeff = lighting.z;
   let specularPower = lighting.w;
   let viewDir = getViewVector(posVC);
+  let laoFactor = computeLAO(vTex, fragPos, posVC, normalVC, alpha, vNum, rowStart);
 
   var diffuse = vec3<f32>(0.0);
   var specular = vec3<f32>(0.0);
@@ -357,12 +454,12 @@ fn applySurfaceLighting(tColor: vec3<f32>, posVC: vec3<f32>, normalVC: vec3<f32>
       continue;
     }
 
-    let ndotL = max(dot(normalVC, lightDirection), 0.0);
+    let ndotL = max(dot(normalVC.xyz, lightDirection), 0.0);
     if (ndotL > 0.0)
     {
       diffuse += ndotL * attenuation * lightColor;
 
-      let reflectDir = normalize(lightDirection - 2.0 * ndotL * normalVC);
+      let reflectDir = normalize(lightDirection - 2.0 * ndotL * normalVC.xyz);
       let vdotR = max(dot(viewDir, reflectDir), 0.0);
       if (vdotR > 0.0)
       {
@@ -373,7 +470,7 @@ fn applySurfaceLighting(tColor: vec3<f32>, posVC: vec3<f32>, normalVC: vec3<f32>
     i++;
   }
 
-  return tColor * (ambient + diffuseCoeff * diffuse) +
+  return tColor * (ambient * laoFactor + diffuseCoeff * diffuse) +
     specularCoeff * specular;
 }
 
@@ -484,7 +581,7 @@ fn computeVolumeShadow(vTex: texture_3d<f32>, posVC: vec3<f32>, lightDirVC: vec3
   return shadow;
 }
 
-fn applyAllLighting(vTex: texture_3d<f32>, tColor: vec3<f32>, alpha: f32, posVC: vec3<f32>, normalVC: vec4<f32>, vNum: i32, rowStart: i32) -> vec3<f32>
+fn applyAllLighting(vTex: texture_3d<f32>, fragPos: vec4<f32>, tColor: vec3<f32>, alpha: f32, posVC: vec3<f32>, normalVC: vec4<f32>, vNum: i32, rowStart: i32) -> vec3<f32>
 {
   if (rendererUBO.LightCount <= 0)
   {
@@ -497,7 +594,7 @@ fn applyAllLighting(vTex: texture_3d<f32>, tColor: vec3<f32>, alpha: f32, posVC:
 
   if (volCoeff <= 0.000001)
   {
-    return applySurfaceLighting(tColor, posVC, normalVC.xyz, vNum);
+    return applySurfaceLighting(vTex, fragPos, tColor, alpha, posVC, normalVC, vNum, rowStart);
   }
 
   let volumeShadedColor = applyVolumeLighting(vTex, tColor, posVC, vNum, rowStart);
@@ -506,11 +603,12 @@ fn applyAllLighting(vTex: texture_3d<f32>, tColor: vec3<f32>, alpha: f32, posVC:
     return volumeShadedColor;
   }
 
-  let surfaceShadedColor = applySurfaceLighting(tColor, posVC, normalVC.xyz, vNum);
+  let surfaceShadedColor =
+    applySurfaceLighting(vTex, fragPos, tColor, alpha, posVC, normalVC, vNum, rowStart);
   return mix(surfaceShadedColor, volumeShadedColor, volCoeff);
 }
 
-fn processVolume(vTex: texture_3d<f32>, vNum: i32, rowStart: i32, posSC: vec4<f32>, tfunRows: f32) -> vec4<f32>
+fn processVolume(vTex: texture_3d<f32>, fragPos: vec4<f32>, vNum: i32, rowStart: i32, posSC: vec4<f32>, tfunRows: f32) -> vec4<f32>
 {
   var outColor: vec4<f32> = vec4<f32>(0.0, 0.0, 0.0, 0.0);
 
@@ -557,7 +655,7 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, rowStart: i32, posSC: vec4<f3
 
       if (volumeSSBO.values[vNum].shade[0] > 0.0)
       {
-        color = applyAllLighting(vTex, color, sampleAlpha, posVC, normal, vNum, rowIdx);
+        color = applyAllLighting(vTex, fragPos, color, sampleAlpha, posVC, normal, vNum, rowIdx);
       }
 
       let mixWeight = componentSSBO.values[rowIdx].mixWeight;
@@ -640,7 +738,7 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, rowStart: i32, posSC: vec4<f3
   let alpha = gofactor * opacity;
   if (volumeSSBO.values[vNum].shade[0] > 0.0)
   {
-    color = applyAllLighting(vTex, color, alpha, posVC, normal, vNum, rowStart);
+    color = applyAllLighting(vTex, fragPos, color, alpha, posVC, normal, vNum, rowStart);
   }
 
   outColor = vec4<f32>(color, alpha);
@@ -957,7 +1055,7 @@ fn traverseRadon(vTex: texture_3d<f32>, vNum: i32, rowIdx: i32, rayLengthSC: f32
   traverseVals[vNum] = getRadonColor(normalizedRayIntensity, rowIdx, tfunRows);
 }
 
-fn composite(rayLengthSC: f32, minPosSC: vec4<f32>, rayStepSC: vec4<f32>) -> vec4<f32>
+fn composite(fragPos: vec4<f32>, rayLengthSC: f32, minPosSC: vec4<f32>, rayStepSC: vec4<f32>) -> vec4<f32>
 {
   // initial ray position is at the beginning
   var rayPosSC: vec4<f32> = minPosSC;
@@ -1166,7 +1264,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     }
     if (compositeWhileTraversing) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Volume::Loop', [
-        '    computedColor = composite(rayLengthSC, minPosSC, rayStepSC);',
+        '    computedColor = composite(input.fragPos, rayLengthSC, minPosSC, rayStepSC);',
       ]).result;
     }
     fDesc.setCode(code);
@@ -1353,6 +1451,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     const lightingArray = new Float64Array(model.volumes.length * 4);
     const scatteringArray = new Float64Array(model.volumes.length * 4);
     const shadowArray = new Float64Array(model.volumes.length * 4);
+    const laoArray = new Float64Array(model.volumes.length * 4);
     const spacingArray = new Float64Array(model.volumes.length * 4);
     const ipScalarRangeArray = new Float64Array(model.volumes.length * 4);
     const componentInfoArray = new Float64Array(model.volumes.length * 4);
@@ -1443,6 +1542,11 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       );
       shadowArray[vidx * 4 + 1] =
         volMapr.getSampleDistance() * volMapr.getVolumeShadowSamplingDistFactor();
+      laoArray[vidx * 4] =
+        vprop.getLocalAmbientOcclusion() && vprop.getAmbient() > 0.0
+          ? vprop.getLAOKernelSize()
+          : 0.0;
+      laoArray[vidx * 4 + 1] = vprop.getLAOKernelRadius();
 
       const spacing = image.getSpacing();
       spacingArray[vidx * 4] = spacing[0];
@@ -1507,6 +1611,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     model.SSBO.addEntry('lighting', 'vec4<f32>');
     model.SSBO.addEntry('scattering', 'vec4<f32>');
     model.SSBO.addEntry('shadow', 'vec4<f32>');
+    model.SSBO.addEntry('lao', 'vec4<f32>');
     model.SSBO.addEntry('tstep', 'vec4<f32>');
     model.SSBO.addEntry('spacing', 'vec4<f32>');
     model.SSBO.addEntry('ipScalarRange', 'vec4<f32>');
@@ -1524,6 +1629,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     model.SSBO.setAllInstancesFromArray('lighting', lightingArray);
     model.SSBO.setAllInstancesFromArray('scattering', scatteringArray);
     model.SSBO.setAllInstancesFromArray('shadow', shadowArray);
+    model.SSBO.setAllInstancesFromArray('lao', laoArray);
     model.SSBO.setAllInstancesFromArray('tstep', tstepArray);
     model.SSBO.setAllInstancesFromArray('spacing', spacingArray);
     model.SSBO.setAllInstancesFromArray('ipScalarRange', ipScalarRangeArray);
@@ -1645,6 +1751,33 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
   const superClassUpdateBuffers = publicAPI.updateBuffers;
   publicAPI.updateBuffers = () => {
     superClassUpdateBuffers();
+    if (!model.jitterSSBOSent) {
+      model.jitterSSBO.clearData();
+      model.jitterSSBO.setNumberOfInstances(32 * 32);
+      model.jitterSSBO.addEntry('value', 'f32');
+      const jitterArray = new Float32Array(32 * 32);
+      for (let i = 0; i < jitterArray.length; i++) {
+        jitterArray[i] = Math.random();
+      }
+      model.jitterSSBO.setAllInstancesFromArray('value', jitterArray);
+      model.jitterSSBO.send(model.device);
+      model.jitterSSBOSent = true;
+    }
+
+    if (!model.kernelSampleSSBOSent) {
+      model.kernelSampleSSBO.clearData();
+      model.kernelSampleSSBO.setNumberOfInstances(32);
+      model.kernelSampleSSBO.addEntry('value', 'vec2<f32>');
+      const kernelArray = new Float32Array(32 * 2);
+      for (let i = 0; i < 32; i++) {
+        kernelArray[i * 2] = Math.random();
+        kernelArray[i * 2 + 1] = Math.random();
+      }
+      model.kernelSampleSSBO.setAllInstancesFromArray('value', kernelArray);
+      model.kernelSampleSSBO.send(model.device);
+      model.kernelSampleSSBOSent = true;
+    }
+
     // compute the min step size
     let sampleDist = model.volumes[0]
       .getRenderable()
@@ -1738,6 +1871,8 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
   publicAPI.getBindables = () => {
     const bindables = superclassGetBindables();
     bindables.push(model.componentSSBO);
+    bindables.push(model.jitterSSBO);
+    bindables.push(model.kernelSampleSSBO);
     bindables.push(model.clampSampler);
     return bindables;
   };
@@ -1751,6 +1886,8 @@ const DEFAULT_VALUES = {
   volumes: null,
   rowLength: 1024,
   lastVolumeLength: 0,
+  jitterSSBOSent: false,
+  kernelSampleSSBOSent: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -1770,6 +1907,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.componentSSBO = vtkWebGPUStorageBuffer.newInstance({
     label: 'componentSSBO',
+  });
+  model.jitterSSBO = vtkWebGPUStorageBuffer.newInstance({
+    label: 'jitterSSBO',
+  });
+  model.kernelSampleSSBO = vtkWebGPUStorageBuffer.newInstance({
+    label: 'kernelSampleSSBO',
   });
 
   model.lutBuildTime = {};
