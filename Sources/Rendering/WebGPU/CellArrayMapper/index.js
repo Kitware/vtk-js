@@ -322,8 +322,31 @@ fn main(
   // Temporary ambient, diffuse, and opacity
   var ambientColor: vec4<f32> = mapperUBO.AmbientColor;
   var diffuseColor: vec4<f32> = mapperUBO.DiffuseColor;
+  var ambientIntensity: f32 = mapperUBO.AmbientIntensity;
+  var diffuseIntensity: f32 = mapperUBO.DiffuseIntensity;
+  var specularColor: vec4<f32> = mapperUBO.SpecularColor;
+  var specularIntensity: f32 = mapperUBO.SpecularIntensity;
   var opacity: f32 = mapperUBO.Opacity;
   var ior: f32 = mapperUBO.BaseIOR;
+  var normalStrengthUniform: f32 = mapperUBO.NormalStrength;
+  var roughnessUniform: f32 = mapperUBO.Roughness;
+  var metallicUniform: f32 = mapperUBO.Metallic;
+  var emissionUniform: f32 = mapperUBO.Emission;
+
+  if (!input.frontFacing) {
+    ambientColor = mapperUBO.AmbientColorBF;
+    diffuseColor = mapperUBO.DiffuseColorBF;
+    ambientIntensity = mapperUBO.AmbientIntensityBF;
+    diffuseIntensity = mapperUBO.DiffuseIntensityBF;
+    specularColor = mapperUBO.SpecularColorBF;
+    specularIntensity = mapperUBO.SpecularIntensityBF;
+    opacity = mapperUBO.OpacityBF;
+    ior = mapperUBO.BaseIORBF;
+    normalStrengthUniform = mapperUBO.NormalStrengthBF;
+    roughnessUniform = mapperUBO.RoughnessBF;
+    metallicUniform = mapperUBO.MetallicBF;
+    emissionUniform = mapperUBO.EmissionBF;
+  }
 
   // This should be declared somewhere else
   var _diffuseMap: vec4<f32> = vec4<f32>(1.0);
@@ -346,7 +369,7 @@ fn main(
   //VTK::Select::Impl
 
   // Use texture alpha for transparency
-  computedColor.a = mapperUBO.Opacity * _diffuseMap.a;
+  computedColor.a = opacity * _diffuseMap.a;
   if (computedColor.a == 0.0) { discard; };
 
   //VTK::Position::Impl
@@ -409,10 +432,12 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
   publicAPI.updateUBO = () => {
     const actor = model.WebGPUActor.getRenderable();
     const ppty = actor.getProperty();
+    const backfaceProperty = actor.getBackfaceProperty?.() ?? ppty;
     const utime = model.UBO.getSendTime();
     if (
       publicAPI.getMTime() <= utime &&
       ppty.getMTime() <= utime &&
+      backfaceProperty.getMTime() <= utime &&
       model.renderable.getMTime() <= utime
     ) {
       return;
@@ -434,9 +459,28 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       );
       const aColor = ppty.getColorByReference();
       model.UBO.setValue('AmbientIntensity', 1.0);
+      model.UBO.setArray('AmbientColor', [...aColor, 1.0]);
       model.UBO.setArray('DiffuseColor', [...aColor, 1.0]);
       model.UBO.setValue('DiffuseIntensity', 0.0);
+      model.UBO.setArray('SpecularColor', [1.0, 1.0, 1.0, 1.0]);
       model.UBO.setValue('SpecularIntensity', 0.0);
+      model.UBO.setValue('Roughness', 1.0);
+      model.UBO.setValue('BaseIOR', 1.45);
+      model.UBO.setValue('Metallic', 0.0);
+      model.UBO.setValue('Emission', 1.0);
+      model.UBO.setValue('NormalStrength', 1.0);
+      model.UBO.setValue('AmbientIntensityBF', 1.0);
+      model.UBO.setArray('AmbientColorBF', [...aColor, 1.0]);
+      model.UBO.setValue('DiffuseIntensityBF', 0.0);
+      model.UBO.setArray('DiffuseColorBF', [...aColor, 1.0]);
+      model.UBO.setArray('SpecularColorBF', [1.0, 1.0, 1.0, 1.0]);
+      model.UBO.setValue('SpecularIntensityBF', 0.0);
+      model.UBO.setValue('RoughnessBF', 1.0);
+      model.UBO.setValue('BaseIORBF', 1.45);
+      model.UBO.setValue('MetallicBF', 0.0);
+      model.UBO.setValue('EmissionBF', 1.0);
+      model.UBO.setValue('NormalStrengthBF', 1.0);
+      model.UBO.setValue('OpacityBF', ppty.getOpacity());
     } else {
       // Base Colors
       model.UBO.setValue('AmbientIntensity', ppty.getAmbient());
@@ -460,12 +504,35 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       model.UBO.setValue('Emission', ppty.getEmission());
       // Specular
       model.UBO.setValue('SpecularIntensity', ppty.getSpecular());
-      if (ppty.getSpecularColorByReference()) {
-        model.UBO.setArray('SpecularColor', [
-          ...ppty.getSpecularColorByReference(),
-          1.0,
-        ]);
-      }
+      model.UBO.setArray('SpecularColor', [
+        ...ppty.getSpecularColorByReference(),
+        1.0,
+      ]);
+
+      model.UBO.setValue('AmbientIntensityBF', backfaceProperty.getAmbient());
+      model.UBO.setArray('AmbientColorBF', [
+        ...backfaceProperty.getAmbientColorByReference(),
+        1.0,
+      ]);
+      model.UBO.setValue('DiffuseIntensityBF', backfaceProperty.getDiffuse());
+      model.UBO.setArray('DiffuseColorBF', [
+        ...backfaceProperty.getDiffuseColorByReference(),
+        1.0,
+      ]);
+      model.UBO.setValue('RoughnessBF', backfaceProperty.getRoughness());
+      model.UBO.setValue('BaseIORBF', backfaceProperty.getBaseIOR());
+      model.UBO.setValue('MetallicBF', backfaceProperty.getMetallic());
+      model.UBO.setValue('EmissionBF', backfaceProperty.getEmission());
+      model.UBO.setValue(
+        'NormalStrengthBF',
+        backfaceProperty.getNormalStrength()
+      );
+      model.UBO.setValue('SpecularIntensityBF', backfaceProperty.getSpecular());
+      model.UBO.setArray('SpecularColorBF', [
+        ...backfaceProperty.getSpecularColorByReference(),
+        1.0,
+      ]);
+      model.UBO.setValue('OpacityBF', backfaceProperty.getOpacity());
     }
 
     // --- Edge and Misc ---
@@ -496,6 +563,24 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     }
     return true;
   };
+
+  publicAPI.getCullMode = () => {
+    const actor = model.WebGPUActor.getRenderable();
+    const property = actor.getProperty();
+    if (property.getFrontfaceCulling()) {
+      return 'front';
+    }
+    if (property.getBackfaceCulling()) {
+      return 'back';
+    }
+    return 'none';
+  };
+
+  publicAPI.getPipelineSettings = () => ({
+    primitive: {
+      cullMode: publicAPI.getCullMode(),
+    },
+  });
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
@@ -615,7 +700,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
           '    tangent.z, bitangent.z, normal.z,',
           '  );',
           '  var mappedNormal: vec3<f32> = TCVCMatrix * (_normalMap.xyz * 2 - 1);',
-          '  normal = mix(normal, mappedNormal, mapperUBO.NormalStrength);',
+          '  normal = mix(normal, mappedNormal, normalStrengthUniform);',
           '  normal = normalize(normal);',
         ]).result;
       } else {
@@ -659,14 +744,14 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         '  let V = mix(normalize(-fragPos), vec3<f32>(0, 0, 1), f32(rendererUBO.cameraParallel)); // View Vector',
         // Values needed for light calculations
         '  let baseColor = _diffuseMap.rgb * diffuseColor.rgb;',
-        '  let roughness = max(0.000001, mapperUBO.Roughness * _roughnessMap.r);', // Need to have a different way of sampling greyscale values aside from .r
-        '  let metallic = mapperUBO.Metallic * _metallicMap.r;',
+        '  let roughness = max(0.000001, roughnessUniform * _roughnessMap.r);', // Need to have a different way of sampling greyscale values aside from .r
+        '  let metallic = metallicUniform * _metallicMap.r;',
         '  let alpha = roughness * roughness;',
         '  let k = alpha * alpha / 2.0;',
         // Split diffuse and specular components
         '  var diffuse = vec3<f32>(0.);',
         '  var specular = vec3<f32>(0.);',
-        '  let emission = _emissionMap.rgb * mapperUBO.Emission;',
+        '  let emission = _emissionMap.rgb * emissionUniform;',
         '',
         '  // Material struct',
         '  let mat = Material(ior, roughness, metallic, baseColor);',
@@ -717,8 +802,9 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         '  let fresnelMetallic = schlickFresnelRGB(V, normal, baseColor); // Fresnel for metal, takes color into account',
         '  let kS = min(vec3<f32>(1.0), mix(vec3<f32>(fresnel), fresnelMetallic, metallic));',
         '  let kD = (1.0 - kS) * (1.0 - metallic);',
-        '  let PBR = mapperUBO.DiffuseIntensity * kD * diffuse + kS * specular;',
-        '  computedColor = vec4<f32>(PBR + emission, mapperUBO.Opacity);',
+        '  let specularMaterial = specularColor.rgb * specularColor.a;',
+        '  let PBR = diffuseIntensity * kD * diffuse + kS * specularIntensity * specular * specularMaterial;',
+        '  computedColor = vec4<f32>(PBR + emission, opacity);',
       ];
       if (renderer.getEnvironmentTexture()?.getImageLoaded()) {
         lightingCode.push(
@@ -750,8 +836,8 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     } else {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Light::Impl', [
         '  let diffuse = diffuseColor.rgb;',
-        '  let specular = mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
-        '  computedColor = vec4<f32>(diffuse * _diffuseMap.rgb, mapperUBO.Opacity);',
+        '  let specular = specularColor.rgb * specularColor.a;',
+        '  computedColor = vec4<f32>(diffuse * _diffuseMap.rgb, opacity);',
       ]).result;
       fDesc.setCode(code);
     }
@@ -797,7 +883,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
       'ambientColor = input.color;',
       'diffuseColor = input.color;',
-      'opacity = mapperUBO.Opacity * input.color.a;',
+      'opacity = opacity * input.color.a;',
     ]).result;
     fDesc.setCode(code);
   };
@@ -1301,6 +1387,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
     const uhash = publicAPI.getHashFromUsage(model.usage);
     pipelineHash += uhash;
+    pipelineHash += `cm${publicAPI.getCullMode()}`;
     pipelineHash += model.renderEncoder.getPipelineHash();
 
     model.pipelineHash = pipelineHash;
@@ -1372,21 +1459,33 @@ export function extend(publicAPI, model, initiaLalues = {}) {
   model.UBO.addEntry('BCSCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('MCWCNormals', 'mat4x4<f32>');
   model.UBO.addEntry('AmbientColor', 'vec4<f32>');
+  model.UBO.addEntry('AmbientColorBF', 'vec4<f32>');
   model.UBO.addEntry('DiffuseColor', 'vec4<f32>');
+  model.UBO.addEntry('DiffuseColorBF', 'vec4<f32>');
   model.UBO.addEntry('EdgeColor', 'vec4<f32>');
   model.UBO.addEntry('SpecularColor', 'vec4<f32>');
+  model.UBO.addEntry('SpecularColorBF', 'vec4<f32>');
   model.UBO.addEntry('AmbientIntensity', 'f32');
+  model.UBO.addEntry('AmbientIntensityBF', 'f32');
   model.UBO.addEntry('DiffuseIntensity', 'f32');
+  model.UBO.addEntry('DiffuseIntensityBF', 'f32');
   model.UBO.addEntry('Roughness', 'f32');
+  model.UBO.addEntry('RoughnessBF', 'f32');
   model.UBO.addEntry('Metallic', 'f32');
+  model.UBO.addEntry('MetallicBF', 'f32');
   model.UBO.addEntry('Ambient', 'f32');
   model.UBO.addEntry('Normal', 'f32');
   model.UBO.addEntry('Emission', 'f32');
+  model.UBO.addEntry('EmissionBF', 'f32');
   model.UBO.addEntry('NormalStrength', 'f32');
+  model.UBO.addEntry('NormalStrengthBF', 'f32');
   model.UBO.addEntry('BaseIOR', 'f32');
+  model.UBO.addEntry('BaseIORBF', 'f32');
   model.UBO.addEntry('SpecularIntensity', 'f32');
+  model.UBO.addEntry('SpecularIntensityBF', 'f32');
   model.UBO.addEntry('LineWidth', 'f32');
   model.UBO.addEntry('Opacity', 'f32');
+  model.UBO.addEntry('OpacityBF', 'f32');
   model.UBO.addEntry('ZValue', 'f32');
   model.UBO.addEntry('PropID', 'u32');
   model.UBO.addEntry('ClipNear', 'f32');

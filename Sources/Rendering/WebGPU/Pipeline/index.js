@@ -9,9 +9,37 @@ function vtkWebGPUPipeline(publicAPI, model) {
 
   publicAPI.getShaderDescriptions = () => model.shaderDescriptions;
 
+  publicAPI.applyPipelineSettings = (baseSettings, extraSettings) => {
+    if (!extraSettings) {
+      return baseSettings;
+    }
+
+    const result = {
+      ...baseSettings,
+      ...extraSettings,
+      primitive: {
+        ...(baseSettings.primitive || {}),
+        ...(extraSettings.primitive || {}),
+      },
+      depthStencil: {
+        ...(baseSettings.depthStencil || {}),
+        ...(extraSettings.depthStencil || {}),
+      },
+      fragment: {
+        ...(baseSettings.fragment || {}),
+        ...(extraSettings.fragment || {}),
+      },
+    };
+
+    return result;
+  };
+
   publicAPI.initialize = (device, hash) => {
     // start with the renderencoder settings
-    model.pipelineDescription = model.renderEncoder.getPipelineSettings();
+    model.pipelineDescription = publicAPI.applyPipelineSettings(
+      model.renderEncoder.getPipelineSettings(),
+      model.extraPipelineSettings
+    );
 
     model.pipelineDescription.primitive.topology = model.topology;
 
@@ -85,6 +113,7 @@ function vtkWebGPUPipeline(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 const DEFAULT_VALUES = {
+  extraPipelineSettings: null,
   handle: null,
   layouts: null,
   renderEncoder: null,
@@ -107,6 +136,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['handle', 'pipelineDescription']);
   macro.setGet(publicAPI, model, [
     'device',
+    'extraPipelineSettings',
     'renderEncoder',
     'topology',
     'vertexState',
