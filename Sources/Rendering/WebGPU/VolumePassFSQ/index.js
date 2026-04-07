@@ -164,6 +164,68 @@ fn getDependentGradient(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32, numCo
   return result;
 }
 
+fn getSampleOpacity(vTex: texture_3d<f32>, sample: vec4<f32>, tpos: vec4<f32>, vNum: i32, rowStart: i32) -> f32
+{
+  let numComp: u32 = u32(volumeSSBO.values[vNum].componentInfo.x);
+  let independent = volumeSSBO.values[vNum].componentInfo.y > 0.5;
+  let tfunRows = f32(textureDimensions(tfunTexture).y);
+
+  if (independent)
+  {
+    var alpha: f32 = 0.0;
+    for (var c: u32 = 0u; c < numComp; c = c + 1u)
+    {
+      let rowIdx: i32 = rowStart + i32(c);
+      let scalar = getComponent(sample, c);
+      var opacity = getOpacity(scalar, rowIdx, tfunRows);
+      if (componentSSBO.values[rowIdx].gomin < 1.0)
+      {
+        let normal = getGradient(vTex, tpos, vNum, c, scalar);
+        let gofactor = clamp(
+          normal.a * componentSSBO.values[rowIdx].goScale + componentSSBO.values[rowIdx].goShift,
+          componentSSBO.values[rowIdx].gomin,
+          componentSSBO.values[rowIdx].gomax
+        );
+        opacity = opacity * gofactor;
+      }
+      alpha = alpha + componentSSBO.values[rowIdx].mixWeight * opacity;
+    }
+    return min(alpha, 1.0);
+  }
+
+  let opacityScalar = getDependentOpacityValue(sample, numComp);
+  var opacity: f32;
+  if (numComp == 1u)
+  {
+    opacity = getOpacity(sample.r, rowStart, tfunRows);
+  }
+  else if (numComp == 2u)
+  {
+    opacity = getOpacity(sample.g, rowStart, tfunRows);
+  }
+  else if (numComp == 3u)
+  {
+    opacity = getOpacity(opacityScalar, rowStart, tfunRows);
+  }
+  else
+  {
+    opacity = getOpacity(sample.a, rowStart, tfunRows);
+  }
+
+  if (componentSSBO.values[rowStart].gomin < 1.0)
+  {
+    let normal = getDependentGradient(vTex, tpos, vNum, numComp, opacityScalar);
+    let gofactor = clamp(
+      normal.a * componentSSBO.values[rowStart].goScale + componentSSBO.values[rowStart].goShift,
+      componentSSBO.values[rowStart].gomin,
+      componentSSBO.values[rowStart].gomax
+    );
+    opacity = opacity * gofactor;
+  }
+
+  return opacity;
+}
+
 fn getViewVector(posVC: vec3<f32>) -> vec3<f32>
 {
   if (rendererUBO.cameraParallel != 0u)
@@ -173,7 +235,47 @@ fn getViewVector(posVC: vec3<f32>) -> vec3<f32>
   return normalize(-posVC);
 }
 
-fn applyLighting(tColor: vec3<f32>, posVC: vec3<f32>, normalVC: vec3<f32>, vNum: i32) -> vec3<f32>
+fn getRayDirection(posVC: vec3<f32>) -> vec3<f32>
+{
+  return -getViewVector(posVC);
+}
+
+fn phaseFunction(cosAngle: f32, vNum: i32) -> f32
+{
+  let anisotropy = volumeSSBO.values[vNum].scattering.z;
+  if (abs(anisotropy) <= 0.000001)
+  {
+    return 0.5;
+  }
+
+  let anisotropy2 = volumeSSBO.values[vNum].scattering.w;
+  return ((1.0 - anisotropy2) /
+    pow(1.0 + anisotropy2 - 2.0 * anisotropy * cosAngle, 1.5)) *
+    0.5;
+}
+
+fn getVolumeLightDirection(posVC: vec3<f32>, lightIdx: i32) -> vec3<f32>
+{
+  let lightType = i32(rendererLightSSBO.values[lightIdx].LightData.x);
+  if (lightType == 1)
+  {
+    return -normalize(
+      (rendererUBO.WCVCNormals *
+        vec4<f32>(normalize(rendererLightSSBO.values[lightIdx].LightDir.xyz), 0.0)).xyz
+    );
+  }
+
+  let lightPosVC = rendererLightSSBO.values[lightIdx].LightPos.xyz;
+  let lightOffset = lightPosVC - posVC;
+  let lightDistance = length(lightOffset);
+  if (lightDistance <= 0.0)
+  {
+    return vec3<f32>(0.0, 0.0, 0.0);
+  }
+  return lightOffset / lightDistance;
+}
+
+fn applySurfaceLighting(tColor: vec3<f32>, posVC: vec3<f32>, normalVC: vec3<f32>, vNum: i32) -> vec3<f32>
 {
   if (rendererUBO.LightCount <= 0)
   {
@@ -275,6 +377,139 @@ fn applyLighting(tColor: vec3<f32>, posVC: vec3<f32>, normalVC: vec3<f32>, vNum:
     specularCoeff * specular;
 }
 
+fn applyVolumeLighting(vTex: texture_3d<f32>, tColor: vec3<f32>, posVC: vec3<f32>, vNum: i32, rowStart: i32) -> vec3<f32>
+{
+  if (rendererUBO.LightCount <= 0)
+  {
+    return tColor;
+  }
+
+  let lighting = volumeSSBO.values[vNum].lighting;
+  let ambient = lighting.x;
+  let diffuseCoeff = lighting.y;
+  let rayDir = getRayDirection(posVC);
+  var diffuse = vec3<f32>(0.0);
+
+  var i: i32 = 0;
+  loop
+  {
+    if (i >= rendererUBO.LightCount) { break; }
+
+    let lightDir = getVolumeLightDirection(posVC, i);
+    if (dot(lightDir, lightDir) > 0.0)
+    {
+      let lightColor =
+        rendererLightSSBO.values[i].LightColor.rgb *
+        (rendererLightSSBO.values[i].LightColor.w * 0.2);
+      let shadowCoeff = computeVolumeShadow(vTex, posVC, lightDir, vNum, rowStart);
+      let phaseAttenuation = phaseFunction(dot(rayDir, lightDir), vNum);
+      diffuse += phaseAttenuation * shadowCoeff * lightColor;
+    }
+
+    i++;
+  }
+
+  return tColor * (ambient + diffuseCoeff * diffuse);
+}
+
+fn rayIntersectTextureDistances(rayOriginTC: vec3<f32>, rayDirTC: vec3<f32>) -> vec2<f32>
+{
+  let invDir = 1.0 / rayDirTC;
+  let distancesTo0 = invDir * (vec3<f32>(0.0) - rayOriginTC);
+  let distancesTo1 = invDir * (vec3<f32>(1.0) - rayOriginTC);
+  let dMinPerAxis = min(distancesTo0, distancesTo1);
+  let dMaxPerAxis = max(distancesTo0, distancesTo1);
+  let distanceMin = max(dMinPerAxis.x, max(dMinPerAxis.y, dMinPerAxis.z));
+  let distanceMax = min(dMaxPerAxis.x, min(dMaxPerAxis.y, dMaxPerAxis.z));
+  return vec2<f32>(distanceMin, distanceMax);
+}
+
+fn computeVolumeShadow(vTex: texture_3d<f32>, posVC: vec3<f32>, lightDirVC: vec3<f32>, vNum: i32, rowStart: i32) -> f32
+{
+  let shadowStepLength = volumeSSBO.values[vNum].shadow.y * 2.25;
+  if (shadowStepLength <= 0.0)
+  {
+    return 1.0;
+  }
+
+  let initialPosVC = posVC + shadowStepLength * lightDirVC;
+  let rayOriginTC = (volumeSSBO.values[vNum].VCTCMatrix * vec4<f32>(initialPosVC, 1.0)).xyz;
+  let lightReach = volumeSSBO.values[vNum].scattering.y * volumeSSBO.values[vNum].shadow.x;
+  if (lightReach <= 0.0)
+  {
+    return 1.0;
+  }
+
+  let lightDirTC = (volumeSSBO.values[vNum].VCTCMatrix * vec4<f32>(lightDirVC, 0.0)).xyz;
+  if (dot(lightDirTC, lightDirTC) <= 0.0)
+  {
+    return 1.0;
+  }
+
+  let intersectionDistances = rayIntersectTextureDistances(rayOriginTC, lightDirTC);
+  if (intersectionDistances.y <= intersectionDistances.x || intersectionDistances.y <= 0.0)
+  {
+    return 1.0;
+  }
+
+  let startDistance = max(intersectionDistances.x, 0.0);
+  let endDistance = min(intersectionDistances.y, startDistance + lightReach);
+  if (endDistance <= startDistance)
+  {
+    return 1.0;
+  }
+
+  var currentDistance = startDistance;
+  var shadow = 1.0;
+  loop
+  {
+    if (currentDistance > endDistance) { break; }
+    let sampleTC = rayOriginTC + currentDistance * lightDirTC;
+    let sample = getTextureValue(vTex, vec4<f32>(sampleTC, 1.0));
+    let opacity = getSampleOpacity(
+      vTex,
+      sample,
+      vec4<f32>(sampleTC, 1.0),
+      vNum,
+      rowStart
+    );
+    shadow = shadow * (1.0 - opacity);
+    if (shadow <= 0.000001)
+    {
+      return 0.0;
+    }
+    currentDistance = currentDistance + shadowStepLength;
+  }
+
+  return shadow;
+}
+
+fn applyAllLighting(vTex: texture_3d<f32>, tColor: vec3<f32>, alpha: f32, posVC: vec3<f32>, normalVC: vec4<f32>, vNum: i32, rowStart: i32) -> vec3<f32>
+{
+  if (rendererUBO.LightCount <= 0)
+  {
+    return tColor;
+  }
+
+  let volCoeff = volumeSSBO.values[vNum].scattering.x *
+    (1.0 - alpha * 0.5) *
+    (1.0 - atan(normalVC.w) * 0.0795774715);
+
+  if (volCoeff <= 0.000001)
+  {
+    return applySurfaceLighting(tColor, posVC, normalVC.xyz, vNum);
+  }
+
+  let volumeShadedColor = applyVolumeLighting(vTex, tColor, posVC, vNum, rowStart);
+  if (volCoeff >= 0.999999)
+  {
+    return volumeShadedColor;
+  }
+
+  let surfaceShadedColor = applySurfaceLighting(tColor, posVC, normalVC.xyz, vNum);
+  return mix(surfaceShadedColor, volumeShadedColor, volCoeff);
+}
+
 fn processVolume(vTex: texture_3d<f32>, vNum: i32, rowStart: i32, posSC: vec4<f32>, tfunRows: f32) -> vec4<f32>
 {
   var outColor: vec4<f32> = vec4<f32>(0.0, 0.0, 0.0, 0.0);
@@ -292,7 +527,7 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, rowStart: i32, posSC: vec4<f3
   if (independent)
   {
     var mixedColor: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
-    var alpha: f32 = 0.0;
+    var mixedAlpha: f32 = 0.0;
     for (var c: u32 = 0u; c < numComp; c = c + 1u)
     {
       let rowIdx: i32 = rowStart + i32(c);
@@ -307,6 +542,7 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, rowStart: i32, posSC: vec4<f3
       var opacity: f32 = textureSampleLevel(ofunTexture, clampSampler, coord, 0.0).r;
 
       var gofactor: f32 = 1.0;
+      var sampleAlpha = opacity;
       var normal: vec4<f32> = vec4<f32>(0.0,0.0,0.0,0.0);
       if (componentSSBO.values[rowIdx].gomin <  1.0 || volumeSSBO.values[vNum].shade[0] > 0.0)
       {
@@ -317,18 +553,19 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, rowStart: i32, posSC: vec4<f3
             componentSSBO.values[rowIdx].gomin, componentSSBO.values[rowIdx].gomax);
         }
       }
+      sampleAlpha = gofactor * opacity;
 
       if (volumeSSBO.values[vNum].shade[0] > 0.0)
       {
-        color = applyLighting(color, posVC, normal.xyz, vNum);
+        color = applyAllLighting(vTex, color, sampleAlpha, posVC, normal, vNum, rowIdx);
       }
 
       let mixWeight = componentSSBO.values[rowIdx].mixWeight;
       mixedColor = mixedColor + mixWeight * color;
-      alpha = alpha + mixWeight * gofactor * opacity;
+      mixedAlpha = mixedAlpha + mixWeight * sampleAlpha;
     }
 
-    outColor = vec4<f32>(mixedColor, min(alpha, 1.0));
+    outColor = vec4<f32>(mixedColor, min(mixedAlpha, 1.0));
     return outColor;
   }
 
@@ -400,12 +637,13 @@ fn processVolume(vTex: texture_3d<f32>, vNum: i32, rowStart: i32, posSC: vec4<f3
     }
   }
 
+  let alpha = gofactor * opacity;
   if (volumeSSBO.values[vNum].shade[0] > 0.0)
   {
-    color = applyLighting(color, posVC, normal.xyz, vNum);
+    color = applyAllLighting(vTex, color, alpha, posVC, normal, vNum, rowStart);
   }
 
-  outColor = vec4<f32>(color, gofactor * opacity);
+  outColor = vec4<f32>(color, alpha);
 
   return outColor;
 }
@@ -788,6 +1026,19 @@ fn main(
 
 const tmpMat4 = new Float64Array(16);
 const tmp2Mat4 = new Float64Array(16);
+const tmp3Mat4 = new Float64Array(16);
+const tmp4Mat4 = new Float64Array(16);
+
+function transformPoint(mat, x, y, z) {
+  const w = mat[3] * x + mat[7] * y + mat[11] * z + mat[15];
+  const iw = w && w !== 1.0 ? 1.0 / w : 1.0;
+  return [
+    (mat[0] * x + mat[4] * y + mat[8] * z + mat[12]) * iw,
+    (mat[1] * x + mat[5] * y + mat[9] * z + mat[13]) * iw,
+    (mat[2] * x + mat[6] * y + mat[10] * z + mat[14]) * iw,
+  ];
+}
+
 // ----------------------------------------------------------------------------
 // vtkWebGPUVolumePassFSQ methods
 // ----------------------------------------------------------------------------
@@ -1051,9 +1302,17 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     // - stabilized center changed - ren.stabilizedMTime
     // - any volume's input data worldtoindex or dimensions changed - input's mtime
     //
+    const renderer = model.WebGPURenderer.getRenderable();
+    const camera = renderer.getActiveCamera();
+    const webgpuCamera = model.WebGPURenderer.getViewNodeFor(camera);
+    const keyMats = webgpuCamera.getKeyMatrices(model.WebGPURenderer);
+
     let mtime = Math.max(
       publicAPI.getMTime(),
-      model.WebGPURenderer.getStabilizedTime()
+      model.WebGPURenderer.getStabilizedTime(),
+      renderer.getMTime(),
+      camera.getMTime(),
+      webgpuCamera.getMTime()
     );
     for (let i = 0; i < model.volumes.length; i++) {
       const vol = model.volumes[i].getRenderable();
@@ -1082,6 +1341,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     // the order is mat4.mult(AtoC, BtoC, AtoB);
     //
     const marray = new Float64Array(model.volumes.length * 16);
+    const vctcArray = new Float64Array(model.volumes.length * 16);
     const vPlaneArray = new Float64Array(model.volumes.length * 16);
     const clipPlaneArrays = Array.from(
       { length: MAX_CLIPPING_PLANES },
@@ -1091,6 +1351,8 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     const tstepArray = new Float64Array(model.volumes.length * 4);
     const shadeArray = new Float64Array(model.volumes.length * 4);
     const lightingArray = new Float64Array(model.volumes.length * 4);
+    const scatteringArray = new Float64Array(model.volumes.length * 4);
+    const shadowArray = new Float64Array(model.volumes.length * 4);
     const spacingArray = new Float64Array(model.volumes.length * 4);
     const ipScalarRangeArray = new Float64Array(model.volumes.length * 4);
     const componentInfoArray = new Float64Array(model.volumes.length * 4);
@@ -1139,6 +1401,12 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         marray[vidx * 16 + j] = tmpMat4[j];
       }
 
+      mat4.invert(tmp3Mat4, keyMats.scvc);
+      mat4.multiply(tmp2Mat4, tmpMat4, tmp3Mat4);
+      for (let j = 0; j < 16; j++) {
+        vctcArray[vidx * 16 + j] = tmp2Mat4[j];
+      }
+
       mat4.invert(tmpMat4, tmpMat4);
       // now it is Tcoord To SC
 
@@ -1160,6 +1428,21 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       lightingArray[vidx * 4 + 2] = vprop.getSpecular();
       lightingArray[vidx * 4 + 3] =
         vprop.getSpecularPower() === 0 ? 1.0 : vprop.getSpecularPower();
+      scatteringArray[vidx * 4] = vprop.getVolumetricScatteringBlending();
+      scatteringArray[vidx * 4 + 1] = vprop.getGlobalIlluminationReach();
+      scatteringArray[vidx * 4 + 2] = vprop.getAnisotropy();
+      scatteringArray[vidx * 4 + 3] =
+        vprop.getAnisotropy() * vprop.getAnisotropy();
+      mat4.multiply(tmp4Mat4, keyMats.scvc, tmpMat4);
+      const vcMin = transformPoint(tmp4Mat4, 0.0, 0.0, 0.0);
+      const vcMax = transformPoint(tmp4Mat4, 1.0, 1.0, 1.0);
+      shadowArray[vidx * 4] = Math.hypot(
+        vcMax[0] - vcMin[0],
+        vcMax[1] - vcMin[1],
+        vcMax[2] - vcMin[2]
+      );
+      shadowArray[vidx * 4 + 1] =
+        volMapr.getSampleDistance() * volMapr.getVolumeShadowSamplingDistFactor();
 
       const spacing = image.getSpacing();
       spacingArray[vidx * 4] = spacing[0];
@@ -1218,9 +1501,12 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       }
     }
     model.SSBO.addEntry('SCTCMatrix', 'mat4x4<f32>');
+    model.SSBO.addEntry('VCTCMatrix', 'mat4x4<f32>');
     model.SSBO.addEntry('planeNormals', 'mat4x4<f32>');
     model.SSBO.addEntry('shade', 'vec4<f32>');
     model.SSBO.addEntry('lighting', 'vec4<f32>');
+    model.SSBO.addEntry('scattering', 'vec4<f32>');
+    model.SSBO.addEntry('shadow', 'vec4<f32>');
     model.SSBO.addEntry('tstep', 'vec4<f32>');
     model.SSBO.addEntry('spacing', 'vec4<f32>');
     model.SSBO.addEntry('ipScalarRange', 'vec4<f32>');
@@ -1232,9 +1518,12 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     addClipPlaneEntries(model.SSBO, 'clipPlane');
     model.SSBO.addEntry('clipPlaneStates', 'vec4<f32>');
     model.SSBO.setAllInstancesFromArray('SCTCMatrix', marray);
+    model.SSBO.setAllInstancesFromArray('VCTCMatrix', vctcArray);
     model.SSBO.setAllInstancesFromArray('planeNormals', vPlaneArray);
     model.SSBO.setAllInstancesFromArray('shade', shadeArray);
     model.SSBO.setAllInstancesFromArray('lighting', lightingArray);
+    model.SSBO.setAllInstancesFromArray('scattering', scatteringArray);
+    model.SSBO.setAllInstancesFromArray('shadow', shadowArray);
     model.SSBO.setAllInstancesFromArray('tstep', tstepArray);
     model.SSBO.setAllInstancesFromArray('spacing', spacingArray);
     model.SSBO.setAllInstancesFromArray('ipScalarRange', ipScalarRangeArray);
