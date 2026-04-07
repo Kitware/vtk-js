@@ -619,13 +619,128 @@ fn processVolume(vTex: texture_3d<f32>, fragPos: vec4<f32>, vNum: i32, rowStart:
 
   let numComp: u32 = u32(volumeSSBO.values[vNum].componentInfo.x);
   let independent = volumeSSBO.values[vNum].componentInfo.y > 0.5;
+  let colorMixPreset = i32(volumeSSBO.values[vNum].componentInfo.z);
   let sample: vec4<f32> = getTextureValue(vTex, tpos);
   let posVC = (rendererUBO.SCVCMatrix * posSC).xyz;
 
   if (independent)
   {
+    if (colorMixPreset == 1 && numComp >= 2u)
+    {
+      let scalar0 = getComponent(sample, 0u);
+      let scalar1 = getComponent(sample, 1u);
+      let rowIdx0 = rowStart;
+      let rowIdx1 = rowStart + 1;
+
+      let coord0 = vec2<f32>(
+        scalar0 * componentSSBO.values[rowIdx0].cScale + componentSSBO.values[rowIdx0].cShift,
+        getTFunRowCoord(rowIdx0, tfunRows)
+      );
+      let coord1 = vec2<f32>(
+        scalar1 * componentSSBO.values[rowIdx1].cScale + componentSSBO.values[rowIdx1].cShift,
+        getTFunRowCoord(rowIdx1, tfunRows)
+      );
+      var color0 = textureSampleLevel(tfunTexture, clampSampler, coord0, 0.0).rgb;
+      var color1 = textureSampleLevel(tfunTexture, clampSampler, coord1, 0.0).rgb;
+      var opacity0 = getOpacity(scalar0, rowIdx0, tfunRows);
+      var opacity1 = getOpacity(scalar1, rowIdx1, tfunRows);
+
+      var normal0 = vec4<f32>(0.0);
+      var normal1 = vec4<f32>(0.0);
+      if (componentSSBO.values[rowIdx0].gomin < 1.0 || volumeSSBO.values[vNum].shade[0] > 0.0)
+      {
+        normal0 = getGradient(vTex, tpos, vNum, 0u, scalar0);
+        if (componentSSBO.values[rowIdx0].gomin < 1.0)
+        {
+          opacity0 = opacity0 * clamp(
+            normal0.a * componentSSBO.values[rowIdx0].goScale + componentSSBO.values[rowIdx0].goShift,
+            componentSSBO.values[rowIdx0].gomin,
+            componentSSBO.values[rowIdx0].gomax
+          );
+        }
+      }
+      if (componentSSBO.values[rowIdx1].gomin < 1.0 || volumeSSBO.values[vNum].shade[0] > 0.0)
+      {
+        normal1 = getGradient(vTex, tpos, vNum, 1u, scalar1);
+        if (componentSSBO.values[rowIdx1].gomin < 1.0)
+        {
+          opacity1 = opacity1 * clamp(
+            normal1.a * componentSSBO.values[rowIdx1].goScale + componentSSBO.values[rowIdx1].goShift,
+            componentSSBO.values[rowIdx1].gomin,
+            componentSSBO.values[rowIdx1].gomax
+          );
+        }
+      }
+
+      let opacitySum = opacity0 + opacity1;
+      if (opacitySum <= 0.0)
+      {
+        return outColor;
+      }
+
+      if (volumeSSBO.values[vNum].shade[0] > 0.0)
+      {
+        color0 = applyAllLighting(vTex, fragPos, color0, opacity0, posVC, normal0, vNum, rowIdx0);
+        color1 = applyAllLighting(vTex, fragPos, color1, opacity1, posVC, normal1, vNum, rowIdx1);
+      }
+
+      outColor = vec4<f32>(
+        (opacity0 * color0 + opacity1 * color1) / opacitySum,
+        min(1.0, opacitySum)
+      );
+      return outColor;
+    }
+
+    if (colorMixPreset == 2 && numComp >= 2u)
+    {
+      let scalar0 = getComponent(sample, 0u);
+      let scalar1 = getComponent(sample, 1u);
+      let rowIdx0 = rowStart;
+      let rowIdx1 = rowStart + 1;
+
+      let coord0 = vec2<f32>(
+        scalar0 * componentSSBO.values[rowIdx0].cScale + componentSSBO.values[rowIdx0].cShift,
+        getTFunRowCoord(rowIdx0, tfunRows)
+      );
+      let coord1 = vec2<f32>(
+        scalar1 * componentSSBO.values[rowIdx1].cScale + componentSSBO.values[rowIdx1].cShift,
+        getTFunRowCoord(rowIdx1, tfunRows)
+      );
+      var color0 = textureSampleLevel(tfunTexture, clampSampler, coord0, 0.0).rgb;
+      let colorizingColor = textureSampleLevel(tfunTexture, clampSampler, coord1, 0.0).rgb;
+      var opacity0 = getOpacity(scalar0, rowIdx0, tfunRows);
+      let colorizingOpacity = getOpacity(scalar1, rowIdx1, tfunRows);
+
+      var normal0 = vec4<f32>(0.0);
+      if (componentSSBO.values[rowIdx0].gomin < 1.0 || volumeSSBO.values[vNum].shade[0] > 0.0)
+      {
+        normal0 = getGradient(vTex, tpos, vNum, 0u, scalar0);
+        if (componentSSBO.values[rowIdx0].gomin < 1.0)
+        {
+          opacity0 = opacity0 * clamp(
+            normal0.a * componentSSBO.values[rowIdx0].goScale + componentSSBO.values[rowIdx0].goShift,
+            componentSSBO.values[rowIdx0].gomin,
+            componentSSBO.values[rowIdx0].gomax
+          );
+        }
+      }
+
+      var color = color0 * mix(vec3<f32>(1.0), colorizingColor, colorizingOpacity);
+      if (volumeSSBO.values[vNum].shade[0] > 0.0)
+      {
+        color = applyAllLighting(vTex, fragPos, color, opacity0, posVC, normal0, vNum, rowIdx0);
+      }
+
+      outColor = vec4<f32>(color, opacity0);
+      return outColor;
+    }
+
     var mixedColor: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
     var mixedAlpha: f32 = 0.0;
+    if (i32(componentSSBO.values[rowStart].opacityMode) == 1)
+    {
+      mixedAlpha = 1.0;
+    }
     for (var c: u32 = 0u; c < numComp; c = c + 1u)
     {
       let rowIdx: i32 = rowStart + i32(c);
@@ -659,8 +774,17 @@ fn processVolume(vTex: texture_3d<f32>, fragPos: vec4<f32>, vNum: i32, rowStart:
       }
 
       let mixWeight = componentSSBO.values[rowIdx].mixWeight;
+      let opacityMode = i32(componentSSBO.values[rowIdx].opacityMode);
+      if (opacityMode == 1)
+      {
+        color = color * sampleAlpha;
+        mixedAlpha = mixedAlpha * mix(sampleAlpha, 1.0, 1.0 - mixWeight);
+      }
+      else
+      {
+        mixedAlpha = mixedAlpha + mixWeight * sampleAlpha;
+      }
       mixedColor = mixedColor + mixWeight * color;
-      mixedAlpha = mixedAlpha + mixWeight * sampleAlpha;
     }
 
     outColor = vec4<f32>(mixedColor, min(mixedAlpha, 1.0));
@@ -1567,7 +1691,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         .getIndependentComponents()
         ? 1.0
         : 0.0;
-      componentInfoArray[vidx * 4 + 2] = 0.0;
+      componentInfoArray[vidx * 4 + 2] = vprop.getColorMixPreset();
       componentInfoArray[vidx * 4 + 3] = 0.0;
 
       for (let component = 0; component < numComp; component++) {
@@ -1656,6 +1780,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     const goshiftArray = new Float64Array(model.numRows);
     const goscaleArray = new Float64Array(model.numRows);
     const mixWeightArray = new Float64Array(model.numRows);
+    const opacityModeArray = new Float64Array(model.numRows);
 
     let rowIdx = 0;
     for (let vidx = 0; vidx < model.volumes.length; vidx++) {
@@ -1701,6 +1826,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         mixWeightArray[rowIdx] = iComps
           ? vprop.getComponentWeight?.(compIdx) ?? 1.0
           : 1.0;
+        opacityModeArray[rowIdx] = vprop.getOpacityMode(goTarget);
 
         const useGO = vprop.getUseGradientOpacity(goTarget);
         if (useGO) {
@@ -1736,6 +1862,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     model.componentSSBO.addEntry('gomin', 'f32');
     model.componentSSBO.addEntry('gomax', 'f32');
     model.componentSSBO.addEntry('mixWeight', 'f32');
+    model.componentSSBO.addEntry('opacityMode', 'f32');
     model.componentSSBO.setAllInstancesFromArray('cScale', cScaleArray);
     model.componentSSBO.setAllInstancesFromArray('cShift', cShiftArray);
     model.componentSSBO.setAllInstancesFromArray('oScale', oScaleArray);
@@ -1745,6 +1872,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     model.componentSSBO.setAllInstancesFromArray('gomin', gominArray);
     model.componentSSBO.setAllInstancesFromArray('gomax', gomaxArray);
     model.componentSSBO.setAllInstancesFromArray('mixWeight', mixWeightArray);
+    model.componentSSBO.setAllInstancesFromArray('opacityMode', opacityModeArray);
     model.componentSSBO.send(device);
   };
 
