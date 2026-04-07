@@ -27,9 +27,30 @@ const volFragTemplate = `
 
 //VTK::IOStructs::Dec
 
-fn getTextureValue(vTex: texture_3d<f32>, tpos: vec4<f32>) -> vec4<f32>
+fn getTextureValue(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32) -> vec4<f32>
 {
-  return textureSampleLevel(vTex, clampSampler, tpos.xyz, 0.0);
+  var value = textureSampleLevel(vTex, clampSampler, tpos.xyz, 0.0);
+  let forceNearestMask = i32(volumeSSBO.values[vNum].componentInfo.w);
+  if (forceNearestMask == 0)
+  {
+    return value;
+  }
+
+  let dims = textureDimensions(vTex, 0);
+  let maxCoord = vec3<i32>(dims) - vec3<i32>(1);
+  let nearestCoord = clamp(
+    vec3<i32>(floor(tpos.xyz * vec3<f32>(dims))),
+    vec3<i32>(0),
+    maxCoord
+  );
+  let nearestValue = textureLoad(vTex, nearestCoord, 0);
+
+  if ((forceNearestMask & 1) != 0) { value.x = nearestValue.x; }
+  if ((forceNearestMask & 2) != 0) { value.y = nearestValue.y; }
+  if ((forceNearestMask & 4) != 0) { value.z = nearestValue.z; }
+  if ((forceNearestMask & 8) != 0) { value.w = nearestValue.w; }
+
+  return value;
 }
 
 fn getComponent(v: vec4<f32>, idx: u32) -> f32
@@ -40,9 +61,9 @@ fn getComponent(v: vec4<f32>, idx: u32) -> f32
   return v.w;
 }
 
-fn getComponentValue(vTex: texture_3d<f32>, tpos: vec4<f32>, component: u32) -> f32
+fn getComponentValue(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32, component: u32) -> f32
 {
-  return getComponent(getTextureValue(vTex, tpos), component);
+  return getComponent(getTextureValue(vTex, tpos, vNum), component);
 }
 
 fn getDependentOpacityValue(sample: vec4<f32>, numComp: u32) -> f32
@@ -53,9 +74,9 @@ fn getDependentOpacityValue(sample: vec4<f32>, numComp: u32) -> f32
   return sample.w;
 }
 
-fn getDependentValue(vTex: texture_3d<f32>, tpos: vec4<f32>, numComp: u32) -> f32
+fn getDependentValue(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32, numComp: u32) -> f32
 {
-  return getDependentOpacityValue(getTextureValue(vTex, tpos), numComp);
+  return getDependentOpacityValue(getTextureValue(vTex, tpos, vNum), numComp);
 }
 
 fn getTraverseValue(sample: vec4<f32>, vNum: i32) -> f32
@@ -115,9 +136,9 @@ fn getGradient(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32, component: u32
   var result: vec4<f32>;
 
   var tstep: vec4<f32> = volumeSSBO.values[vNum].tstep;
-  result.x = getComponentValue(vTex, tpos + vec4<f32>(tstep.x, 0.0, 0.0, 1.0), component) - scalar;
-  result.y = getComponentValue(vTex, tpos + vec4<f32>(0.0, tstep.y, 0.0, 1.0), component) - scalar;
-  result.z = getComponentValue(vTex, tpos + vec4<f32>(0.0, 0.0, tstep.z, 1.0), component) - scalar;
+  result.x = getComponentValue(vTex, tpos + vec4<f32>(tstep.x, 0.0, 0.0, 1.0), vNum, component) - scalar;
+  result.y = getComponentValue(vTex, tpos + vec4<f32>(0.0, tstep.y, 0.0, 1.0), vNum, component) - scalar;
+  result.z = getComponentValue(vTex, tpos + vec4<f32>(0.0, 0.0, tstep.z, 1.0), vNum, component) - scalar;
   result.w = 0.0;
 
   // divide by spacing as that is our delta
@@ -144,9 +165,9 @@ fn getDependentGradient(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32, numCo
   var result: vec4<f32>;
 
   var tstep: vec4<f32> = volumeSSBO.values[vNum].tstep;
-  result.x = getDependentValue(vTex, tpos + vec4<f32>(tstep.x, 0.0, 0.0, 1.0), numComp) - scalar;
-  result.y = getDependentValue(vTex, tpos + vec4<f32>(0.0, tstep.y, 0.0, 1.0), numComp) - scalar;
-  result.z = getDependentValue(vTex, tpos + vec4<f32>(0.0, 0.0, tstep.z, 1.0), numComp) - scalar;
+  result.x = getDependentValue(vTex, tpos + vec4<f32>(tstep.x, 0.0, 0.0, 1.0), vNum, numComp) - scalar;
+  result.y = getDependentValue(vTex, tpos + vec4<f32>(0.0, tstep.y, 0.0, 1.0), vNum, numComp) - scalar;
+  result.z = getDependentValue(vTex, tpos + vec4<f32>(0.0, 0.0, tstep.z, 1.0), vNum, numComp) - scalar;
   result.w = 0.0;
 
   result = result / volumeSSBO.values[vNum].spacing;
@@ -347,7 +368,7 @@ fn computeLAO(vTex: texture_3d<f32>, fragPos: vec4<f32>, posVC: vec3<f32>, norma
         break;
       }
       let sampleTC = vec4<f32>(currTC, 1.0);
-      let opacity = getSampleOpacity(vTex, getTextureValue(vTex, sampleTC), sampleTC, vNum, rowStart);
+      let opacity = getSampleOpacity(vTex, getTextureValue(vTex, sampleTC, vNum), sampleTC, vNum, rowStart);
       visibility = visibility * (1.0 - opacity);
       if (visibility <= 0.000001)
       {
@@ -562,7 +583,7 @@ fn computeVolumeShadow(vTex: texture_3d<f32>, posVC: vec3<f32>, lightDirVC: vec3
   {
     if (currentDistance > endDistance) { break; }
     let sampleTC = rayOriginTC + currentDistance * lightDirTC;
-    let sample = getTextureValue(vTex, vec4<f32>(sampleTC, 1.0));
+    let sample = getTextureValue(vTex, vec4<f32>(sampleTC, 1.0), vNum);
     let opacity = getSampleOpacity(
       vTex,
       sample,
@@ -620,7 +641,7 @@ fn processVolume(vTex: texture_3d<f32>, fragPos: vec4<f32>, vNum: i32, rowStart:
   let numComp: u32 = u32(volumeSSBO.values[vNum].componentInfo.x);
   let independent = volumeSSBO.values[vNum].componentInfo.y > 0.5;
   let colorMixPreset = i32(volumeSSBO.values[vNum].componentInfo.z);
-  let sample: vec4<f32> = getTextureValue(vTex, tpos);
+  let sample: vec4<f32> = getTextureValue(vTex, tpos, vNum);
   let posVC = (rendererUBO.SCVCMatrix * posSC).xyz;
 
   if (independent)
@@ -966,7 +987,7 @@ fn traverseMax(vTex: texture_3d<f32>, vNum: i32, rowIdx: i32, rayLengthSC: f32, 
   let tfunRows: f32 = f32(textureDimensions(tfunTexture).y);
   loop
   {
-    var scalar: f32 = getTraverseValue(getTextureValue(vTex, tpos), vNum);
+    var scalar: f32 = getTraverseValue(getTextureValue(vTex, tpos, vNum), vNum);
     if (scalar > maxVal)
     {
       maxVal = scalar;
@@ -1011,7 +1032,7 @@ fn traverseMin(vTex: texture_3d<f32>, vNum: i32, rowIdx: i32, rayLengthSC: f32, 
   let tfunRows: f32 = f32(textureDimensions(tfunTexture).y);
   loop
   {
-    var scalar: f32 = getTraverseValue(getTextureValue(vTex, tpos), vNum);
+    var scalar: f32 = getTraverseValue(getTextureValue(vTex, tpos, vNum), vNum);
     if (scalar < minVal)
     {
       minVal = scalar;
@@ -1058,7 +1079,7 @@ fn traverseAverage(vTex: texture_3d<f32>, vNum: i32, rowIdx: i32, rayLengthSC: f
   let tfunRows: f32 = f32(textureDimensions(tfunTexture).y);
   loop
   {
-    var sample: f32 = getTraverseValue(getTextureValue(vTex, tpos), vNum);
+    var sample: f32 = getTraverseValue(getTextureValue(vTex, tpos, vNum), vNum);
     // right now leave filtering off until WebGL changes get merged
     // if (ipRange.z == 0.0 || sample >= ipRange.x && sample <= ipRange.y)
     // {
@@ -1112,7 +1133,7 @@ fn traverseAdditive(vTex: texture_3d<f32>, vNum: i32, rowIdx: i32, rayLengthSC: 
   let tfunRows: f32 = f32(textureDimensions(tfunTexture).y);
   loop
   {
-    var sample: f32 = getTraverseValue(getTextureValue(vTex, tpos), vNum);
+    var sample: f32 = getTraverseValue(getTextureValue(vTex, tpos, vNum), vNum);
     // right now leave filtering off until WebGL changes get merged
     // if (ipRange.z == 0.0 || sample >= ipRange.x && sample <= ipRange.y)
     // {
@@ -1153,7 +1174,7 @@ fn traverseRadon(vTex: texture_3d<f32>, vNum: i32, rowIdx: i32, rayLengthSC: f32
   // Thin volumes can intersect the ray across less than a full sample step.
   if (raySpan <= 1.0)
   {
-    let scalar: f32 = getTraverseValue(getTextureValue(vTex, tpos + tstep*rayBounds.x), vNum);
+    let scalar: f32 = getTraverseValue(getTextureValue(vTex, tpos + tstep*rayBounds.x, vNum), vNum);
     let intensity = 1.0 - raySpan * mapperUBO.SampleDistance * getOpacity(scalar, rowIdx, tfunRows);
     traverseVals[vNum] = getRadonColor(intensity, rowIdx, tfunRows);
     return;
@@ -1164,7 +1185,7 @@ fn traverseRadon(vTex: texture_3d<f32>, vNum: i32, rowIdx: i32, rayLengthSC: f32
   var normalizedRayIntensity: f32 = 1.0;
   loop
   {
-    let scalar: f32 = getTraverseValue(getTextureValue(vTex, tpos), vNum);
+    let scalar: f32 = getTraverseValue(getTextureValue(vTex, tpos, vNum), vNum);
     normalizedRayIntensity = normalizedRayIntensity -
       mapperUBO.SampleDistance * getOpacity(scalar, rowIdx, tfunRows);
 
@@ -1313,7 +1334,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
           `    if (curDist >= rayBounds${i}.x * mapperUBO.SampleDistance && curDist <= rayBounds${i}.y * mapperUBO.SampleDistance) {`
         );
         compositeCalls.push(
-          `      sampleColor = processVolume(volTexture${i}, ${i}, ${model.rowStarts[i]}, rayPosSC, tfunRows);`
+          `      sampleColor = processVolume(volTexture${i}, fragPos, ${i}, ${model.rowStarts[i]}, rayPosSC, tfunRows);`
         );
         compositeCalls.push(`    computedColor = vec4<f32>(
           sampleColor.a * sampleColor.rgb * (1.0 - computedColor.a) + computedColor.rgb,
@@ -1665,7 +1686,8 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         vcMax[2] - vcMin[2]
       );
       shadowArray[vidx * 4 + 1] =
-        volMapr.getSampleDistance() * volMapr.getVolumeShadowSamplingDistFactor();
+        volMapr.getSampleDistance() *
+        volMapr.getVolumeShadowSamplingDistFactor();
       laoArray[vidx * 4] =
         vprop.getLocalAmbientOcclusion() && vprop.getAmbient() > 0.0
           ? vprop.getLAOKernelSize()
@@ -1692,7 +1714,13 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         ? 1.0
         : 0.0;
       componentInfoArray[vidx * 4 + 2] = vprop.getColorMixPreset();
-      componentInfoArray[vidx * 4 + 3] = 0.0;
+      let forceNearestMask = 0;
+      for (let component = 0; component < numComp; component++) {
+        if (vprop.getForceNearestInterpolation(component)) {
+          forceNearestMask |= 1 << component;
+        }
+      }
+      componentInfoArray[vidx * 4 + 3] = forceNearestMask;
 
       for (let component = 0; component < numComp; component++) {
         const sscale = tScale;
@@ -1700,8 +1728,10 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
           vprop.getIndependentComponents() ? component : 0
         );
         const cRange = cfun.getRange();
-        colorScaleArray[vidx * 4 + component] = sscale / (cRange[1] - cRange[0]);
-        colorShiftArray[vidx * 4 + component] = -cRange[0] / (cRange[1] - cRange[0]);
+        colorScaleArray[vidx * 4 + component] =
+          sscale / (cRange[1] - cRange[0]);
+        colorShiftArray[vidx * 4 + component] =
+          -cRange[0] / (cRange[1] - cRange[0]);
 
         const ofun = vprop.getScalarOpacity(
           vprop.getIndependentComponents() ? component : 0
@@ -1807,14 +1837,19 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       // for performance in the fragment shader
       for (let compIdx = 0; compIdx < numRowsForVolume; compIdx++) {
         const cTarget = iComps ? compIdx : 0;
-        const oTarget = iComps ? compIdx : numComp === 2 ? 1 : numComp === 4 ? 3 : 0;
+        const oTarget = iComps
+          ? compIdx
+          : numComp === 2
+            ? 1
+            : numComp === 4
+              ? 3
+              : 0;
         const goTarget = iComps ? compIdx : 0;
         const sscale = volInfo.scale;
         const ofun = vprop.getScalarOpacity(oTarget);
         const oRange = ofun.getRange();
         const oscale = sscale / (oRange[1] - oRange[0]);
-        const oshift =
-          (volInfo.offset - oRange[0]) / (oRange[1] - oRange[0]);
+        const oshift = (volInfo.offset - oRange[0]) / (oRange[1] - oRange[0]);
         oShiftArray[rowIdx] = oshift;
         oScaleArray[rowIdx] = oscale;
 
@@ -1824,7 +1859,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
           (volInfo.offset - cRange[0]) / (cRange[1] - cRange[0]);
         cScaleArray[rowIdx] = sscale / (cRange[1] - cRange[0]);
         mixWeightArray[rowIdx] = iComps
-          ? vprop.getComponentWeight?.(compIdx) ?? 1.0
+          ? (vprop.getComponentWeight?.(compIdx) ?? 1.0)
           : 1.0;
         opacityModeArray[rowIdx] = vprop.getOpacityMode(goTarget);
 
@@ -1872,7 +1907,10 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     model.componentSSBO.setAllInstancesFromArray('gomin', gominArray);
     model.componentSSBO.setAllInstancesFromArray('gomax', gomaxArray);
     model.componentSSBO.setAllInstancesFromArray('mixWeight', mixWeightArray);
-    model.componentSSBO.setAllInstancesFromArray('opacityMode', opacityModeArray);
+    model.componentSSBO.setAllInstancesFromArray(
+      'opacityMode',
+      opacityModeArray
+    );
     model.componentSSBO.send(device);
   };
 
