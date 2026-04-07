@@ -270,7 +270,7 @@ function processDataArray(
   if (format === 'ascii') {
     values = new TYPED_ARRAY[dataType](size * numberOfComponents);
     let offset = 0;
-    dataArrayElem.firstChild.nodeValue.split(/[\\t \\n]+/).forEach((token) => {
+    dataArrayElem.firstChild.nodeValue.split(/[\s]+/).forEach((token) => {
       if (token.trim().length) {
         values[offset++] = Number(token);
       }
