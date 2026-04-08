@@ -100,6 +100,11 @@ function resetGLState(gl, shaderCache) {
 
 function vtkSharedRenderWindow(publicAPI, model) {
   model.classHierarchy.push('vtkSharedRenderWindow');
+
+  publicAPI
+    .getViewNodeFactory()
+    .registerOverride('vtkRenderer', vtkSharedRenderer.newInstance);
+
   let renderEventSubscription = null;
   let renderCallback = null;
   let suppressRenderEvent = false;
@@ -237,9 +242,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'autoClearDepth',
   ]);
   vtkSharedRenderWindow(publicAPI, model);
-  publicAPI
-    .getViewNodeFactory()
-    .registerOverride('vtkRenderer', vtkSharedRenderer.newInstance);
 }
 
 export const newInstance = macro.newInstance(extend, 'vtkSharedRenderWindow');
