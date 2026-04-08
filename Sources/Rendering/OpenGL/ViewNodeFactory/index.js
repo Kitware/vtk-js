@@ -14,6 +14,10 @@ export function registerOverride(className, fn) {
 function vtkOpenGLViewNodeFactory(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLViewNodeFactory');
+
+  publicAPI.registerOverride = (className, fn) => {
+    model.overrides[className] = fn;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -33,10 +37,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkViewNodeFactory.extend(publicAPI, model, initialValues);
-
-  publicAPI.registerOverride = (className, fn) => {
-    model.overrides[className] = fn;
-  };
 
   // Object methods
   vtkOpenGLViewNodeFactory(publicAPI, model);
