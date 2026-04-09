@@ -58,6 +58,12 @@ export interface vtkViewport extends vtkObject {
   getBackgroundByReference(): number[];
 
   /**
+   * Get the gradient background flag.
+   * @returns {Boolean}
+   */
+  getGradientBackground(): boolean;
+
+  /**
    *
    */
   getSize(): Size;
@@ -176,6 +182,12 @@ export interface vtkViewport extends vtkObject {
    * @param {Number[]} background
    */
   setBackgroundFrom(background: number[]): boolean;
+
+  /**
+   * Set the gradient background flag.
+   * @param {Boolean} gradientBackground
+   */
+  setGradientBackground(gradientBackground: boolean): boolean;
 
   /**
    * Specify the viewport for the Viewport to draw in the rendering window.
