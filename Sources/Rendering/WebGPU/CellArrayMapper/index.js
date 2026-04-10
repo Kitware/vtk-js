@@ -1,6 +1,8 @@
 import { mat3, mat4 } from 'gl-matrix';
 
 import * as macro from 'vtk.js/Sources/macros';
+import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
+import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
@@ -12,6 +14,8 @@ import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffe
 import vtkWebGPUSimpleMapper from 'vtk.js/Sources/Rendering/WebGPU/SimpleMapper';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 
+const { Resolve } = CoincidentTopologyHelper;
+const { FieldAssociations } = vtkDataSet;
 const { BufferUsage, PrimitiveTypes } = vtkWebGPUBufferManager;
 const { Representation } = vtkProperty;
 const { ScalarMode } = vtkMapper;
@@ -541,6 +545,9 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     model.UBO.setValue('LineWidth', ppty.getLineWidth());
     model.UBO.setValue('Opacity', ppty.getOpacity());
     model.UBO.setValue('PropID', model.WebGPUActor.getPropID());
+    const cp = publicAPI.getCoincidentParameters();
+    model.UBO.setValue('CoincidentFactor', cp.factor);
+    model.UBO.setValue('CoincidentOffset', cp.offset);
 
     // Only send if needed
     model.UBO.sendIfNeeded(model.WebGPURenderWindow.getDevice());
@@ -581,6 +588,67 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       cullMode: publicAPI.getCullMode(),
     },
   });
+
+  publicAPI.getCoincidentParameters = () => {
+    let cp = {
+      factor: 0.0,
+      offset: 0.0,
+    };
+
+    const actor = model.WebGPUActor?.getRenderable();
+    const prop = actor?.getProperty?.();
+    if (!prop) {
+      return cp;
+    }
+
+    if (
+      // backwards compat with code that (errorneously) set this to boolean
+      // eslint-disable-next-line eqeqeq
+      model.renderable.getResolveCoincidentTopology() ==
+        Resolve.PolygonOffset ||
+      (prop.getEdgeVisibility() &&
+        prop.getRepresentation() === Representation.SURFACE)
+    ) {
+      const primType = model.primitiveType;
+      if (
+        primType === PrimitiveTypes.Verts ||
+        prop.getRepresentation() === Representation.POINTS
+      ) {
+        cp = model.renderable.getCoincidentTopologyPointOffsetParameter();
+      } else if (
+        primType === PrimitiveTypes.Lines ||
+        prop.getRepresentation() === Representation.WIREFRAME
+      ) {
+        cp = model.renderable.getCoincidentTopologyLineOffsetParameters();
+      } else if (
+        primType === PrimitiveTypes.Triangles ||
+        primType === PrimitiveTypes.TriangleStrips
+      ) {
+        cp = model.renderable.getCoincidentTopologyPolygonOffsetParameters();
+      }
+
+      if (
+        primType === PrimitiveTypes.TriangleEdges ||
+        primType === PrimitiveTypes.TriangleStripEdges
+      ) {
+        cp = model.renderable.getCoincidentTopologyPolygonOffsetParameters();
+        cp.factor /= 2.0;
+        cp.offset /= 2.0;
+      }
+    }
+
+    // Hardware point picking always offsets due to the saved depth buffer.
+    const selector = model.WebGPURenderer?.getSelector?.();
+    if (
+      selector &&
+      selector.getFieldAssociation() ===
+        FieldAssociations.FIELD_ASSOCIATION_POINTS
+    ) {
+      cp.offset -= 2.0;
+    }
+
+    return cp;
+  };
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
@@ -631,14 +699,40 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       ]).result;
     }
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
+      // Match the OpenGL coincident-topology constant offset scale (~1 / 2^16 = 0.000016)
+      '    pCoord.z = clamp(pCoord.z - 0.000016 * mapperUBO.CoincidentOffset * pCoord.w, 0.0, pCoord.w);',
       '    output.Position = pCoord;',
     ]).result;
-
     vDesc.setCode(code);
   };
   model.shaderReplacements.set(
     'replaceShaderPosition',
     publicAPI.replaceShaderPosition
+  );
+
+  publicAPI.replaceShaderCoincidentOffset = (hash, pipeline, vertexInput) => {
+    const fDesc = pipeline.getShaderDescription('fragment');
+    if (!fDesc) {
+      return;
+    }
+
+    fDesc.addBuiltinInput('vec4<f32>', '@builtin(position) fragPos');
+    fDesc.addBuiltinOutput('f32', '@builtin(frag_depth) fragDepth');
+
+    let code = fDesc.getCode();
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
+      '  var coincidentDepth: f32 = input.fragPos.z;',
+      '  if (mapperUBO.CoincidentFactor != 0.0) {',
+      '    let cscale = length(vec2<f32>(dpdx(input.fragPos.z), dpdy(input.fragPos.z)));',
+      '    coincidentDepth = coincidentDepth - mapperUBO.CoincidentFactor * cscale;',
+      '  }',
+      '  output.fragDepth = clamp(coincidentDepth, 0.0, 1.0);',
+    ]).result;
+    fDesc.setCode(code);
+  };
+  model.shaderReplacements.set(
+    'replaceShaderCoincidentOffset',
+    publicAPI.replaceShaderCoincidentOffset
   );
 
   publicAPI.replaceShaderNormal = (hash, pipeline, vertexInput) => {
@@ -1487,6 +1581,8 @@ export function extend(publicAPI, model, initiaLalues = {}) {
   model.UBO.addEntry('Opacity', 'f32');
   model.UBO.addEntry('OpacityBF', 'f32');
   model.UBO.addEntry('ZValue', 'f32');
+  model.UBO.addEntry('CoincidentFactor', 'f32');
+  model.UBO.addEntry('CoincidentOffset', 'f32');
   model.UBO.addEntry('PropID', 'u32');
   model.UBO.addEntry('ClipNear', 'f32');
   model.UBO.addEntry('ClipFar', 'f32');
