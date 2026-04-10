@@ -14,6 +14,8 @@ function vtkTextActor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkTextActor');
 
+  const superClass = { ...publicAPI };
+
   publicAPI.makeProperty = vtkTextProperty.newInstance;
 
   const texture = vtkTexture.newInstance({
@@ -38,7 +40,7 @@ function vtkTextActor(publicAPI, model) {
     const backgroundColor = publicAPI.getProperty().getBackgroundColor();
 
     const dpr = Math.max(window.devicePixelRatio || 1, 1);
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
     // Set the text properties to measure
     const textSize = fontSizeScale(resolution) * dpr;
@@ -110,21 +112,39 @@ function vtkTextActor(publicAPI, model) {
     return ImageHelper.canvasToImageData(canvas);
   }
 
+  function updateTexture() {
+    const image = createImageData(model.input);
+    texture.setInputData(image, 0);
+    model.textureBuildTime.modified();
+  }
+
+  function updateTextureIfNeeded() {
+    if (model.input === undefined) {
+      return;
+    }
+
+    if (
+      model.textureBuildTime.getMTime() < model.mtime ||
+      model.textureBuildTime.getMTime() < publicAPI.getProperty().getMTime()
+    ) {
+      updateTexture();
+    }
+  }
+
   mapper.setInputConnection(plane.getOutputPort());
 
   publicAPI.setMapper(mapper);
   publicAPI.addTexture(texture);
 
-  model._onInputChanged = (_publicAPI, _model, value) => {
-    const image = createImageData(value);
-    texture.setInputData(image, 0);
+  publicAPI.getTextures = () => {
+    updateTextureIfNeeded();
+    return superClass.getTextures();
   };
 }
 
 // Default property values
 const DEFAULT_VALUES = {
-  mapper: null,
-  property: null,
+  textureBuildTime: null,
 };
 
 export function extend(publicAPI, model, initialValues = {}) {
@@ -135,6 +155,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['input']);
+  model.textureBuildTime = {};
+  macro.obj(model.textureBuildTime, { mtime: 0 });
 
   // Object methods
   vtkTextActor(publicAPI, model);
