@@ -11,6 +11,7 @@ import vtkWebGPUSampler from 'vtk.js/Sources/Rendering/WebGPU/Sampler';
 // import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 
 // import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import { Resolve } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/ImageProperty/Constants';
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
@@ -41,6 +42,8 @@ fn main(
   //VTK::Image::Sample
 
   // var computedColor: vec4<f32> = vec4<f32>(1.0,0.7, 0.5, 1.0);
+
+  //VTK::Position::Impl
 
 //VTK::RenderEncoder::Impl
 
@@ -115,6 +118,21 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     model.renderEncoder.registerDrawCallback(model.pipeline, publicAPI.draw);
   };
 
+  publicAPI.getCoincidentParameters = () => {
+    if (
+      // backwards compat with code that (errorneously) set this to boolean
+      // eslint-disable-next-line eqeqeq
+      model.renderable.getResolveCoincidentTopology() == Resolve.PolygonOffset
+    ) {
+      return model.renderable.getCoincidentTopologyPolygonOffsetParameters();
+    }
+
+    return {
+      factor: 0.0,
+      offset: 0.0,
+    };
+  };
+
   publicAPI.computePipelineHash = () => {
     const ext = model.currentInput.getExtent();
     if (ext[0] === ext[1] || ext[2] === ext[3] || ext[4] === ext[5]) {
@@ -124,6 +142,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       model.dimensions = 3;
       model.pipelineHash = 'img3';
     }
+    model.pipelineHash += model.renderEncoder.getPipelineHash();
   };
 
   publicAPI.updateUBO = () => {
@@ -251,6 +270,9 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       }
       model.UBO.setArray('cScale', cScale);
       model.UBO.setArray('cShift', cShift);
+      const cp = publicAPI.getCoincidentParameters();
+      model.UBO.setValue('CoincidentFactor', cp.factor);
+      model.UBO.setValue('CoincidentOffset', cp.offset);
       model.UBO.sendIfNeeded(model.device);
     }
   };
@@ -392,8 +414,11 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       lines.push('var tcoord : vec3<f32> = (mapperUBO.SCTCMatrix * pos).xyz;');
     }
     lines.push(
+      'pos = rendererUBO.SCPCMatrix * pos;',
+      // Match the OpenGL coincident-topology constant offset scale (~1 / 2^16 = 0.000016)
+      'pos.z = clamp(pos.z - 0.000016 * mapperUBO.CoincidentOffset * pos.w, 0.0, pos.w);',
       'output.tcoordVS = tcoord;',
-      'output.Position = rendererUBO.SCPCMatrix * pos;'
+      'output.Position = pos;'
     );
     code = vtkWebGPUShaderCache.substitute(
       code,
@@ -441,6 +466,31 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     fDesc.setCode(code);
   };
   sr.set('replaceShaderImage', publicAPI.replaceShaderImage);
+
+  publicAPI.replaceShaderCoincidentOffset = (hash, pipeline, vertexInput) => {
+    const fDesc = pipeline.getShaderDescription('fragment');
+    if (!fDesc) {
+      return;
+    }
+
+    fDesc.addBuiltinInput('vec4<f32>', '@builtin(position) fragPos');
+    fDesc.addBuiltinOutput('f32', '@builtin(frag_depth) fragDepth');
+
+    let code = fDesc.getCode();
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
+      '  var coincidentDepth: f32 = input.fragPos.z;',
+      '  if (mapperUBO.CoincidentFactor != 0.0) {',
+      '    let cscale = length(vec2<f32>(dpdx(input.fragPos.z), dpdy(input.fragPos.z)));',
+      '    coincidentDepth = coincidentDepth - mapperUBO.CoincidentFactor * cscale;',
+      '  }',
+      '  output.fragDepth = clamp(coincidentDepth, 0.0, 1.0);',
+    ]).result;
+    fDesc.setCode(code);
+  };
+  sr.set(
+    'replaceShaderCoincidentOffset',
+    publicAPI.replaceShaderCoincidentOffset
+  );
 }
 
 // ----------------------------------------------------------------------------
@@ -468,6 +518,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('Axis1', 'vec4<f32>');
   model.UBO.addEntry('cScale', 'vec4<f32>');
   model.UBO.addEntry('cShift', 'vec4<f32>');
+  model.UBO.addEntry('CoincidentFactor', 'f32');
+  model.UBO.addEntry('CoincidentOffset', 'f32');
 
   model.lutBuildTime = {};
   macro.obj(model.lutBuildTime, { mtime: 0 });
