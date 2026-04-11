@@ -96,6 +96,14 @@ function getImageRenderMode(independentComponents, numberOfComponents) {
   }
 }
 
+function getUseLabelOutline(actorProperty, independentComponents, numberOfComponents) {
+  return (
+    actorProperty.getUseLabelOutline() &&
+    !independentComponents &&
+    numberOfComponents === 1
+  );
+}
+
 function computeFnToString(property, fn, numberOfComponents) {
   const pwfun = fn.apply(property);
   if (pwfun) {
@@ -134,6 +142,11 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       numberOfComponents,
       independentComponents,
       numberOfIComponents,
+      useLabelOutline: getUseLabelOutline(
+        actorProperty,
+        independentComponents,
+        numberOfComponents
+      ),
       renderMode: getImageRenderMode(
         independentComponents,
         numberOfComponents
@@ -215,6 +228,9 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       model.pipelineHash = 'img3';
     }
     model.pipelineHash += imageState.renderMode;
+    if (imageState.useLabelOutline) {
+      model.pipelineHash += 'outline';
+    }
     model.pipelineHash += model.renderEncoder.getPipelineHash();
   };
 
@@ -498,6 +514,68 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     }
   };
 
+  publicAPI.updateLabelOutlineThicknessTexture = () => {
+    const actorProperty = model.WebGPUImageSlice.getRenderable().getProperty();
+    const labelOutlineThicknessArray =
+      actorProperty.getLabelOutlineThicknessByReference();
+    const lWidth = Math.max(1, model.renderable.getLabelOutlineTextureWidth());
+    const outlineHash = `${labelOutlineThicknessArray.join('-')}-${lWidth}`;
+
+    if (model.labelOutlineThicknessString !== outlineHash) {
+      const outlineArray = new Uint8Array(lWidth);
+
+      for (let i = 0; i < lWidth; ++i) {
+        // Undefined entries fall back to segment 0, matching the WebGL path.
+        const thickness =
+          typeof labelOutlineThicknessArray[i] !== 'undefined'
+            ? labelOutlineThicknessArray[i]
+            : labelOutlineThicknessArray[0];
+        outlineArray[i] = thickness;
+      }
+
+      const treq = {
+        nativeArray: outlineArray,
+        width: lWidth,
+        height: 1,
+        depth: 1,
+        format: 'r8unorm',
+      };
+      const newTex = model.device.getTextureManager().getTexture(treq);
+      model.textureViews[3] = newTex.createView('labelOutlineTexture');
+      model.labelOutlineThicknessString = outlineHash;
+    }
+  };
+
+  publicAPI.updateLabelOutlineOpacityTexture = () => {
+    const actorProperty = model.WebGPUImageSlice.getRenderable().getProperty();
+    const labelOutlineOpacity = actorProperty.getLabelOutlineOpacity();
+    const values = Array.isArray(labelOutlineOpacity)
+      ? labelOutlineOpacity
+      : [labelOutlineOpacity];
+    const lWidth = Math.max(1, model.renderable.getLabelOutlineTextureWidth());
+    const outlineHash = `${values.join('-')}-${lWidth}`;
+
+    if (model.labelOutlineOpacityString !== outlineHash) {
+      const outlineArray = new Float32Array(lWidth);
+
+      for (let i = 0; i < lWidth; ++i) {
+        // Undefined entries fall back to segment 0, matching the WebGL path.
+        outlineArray[i] = values[i] ?? values[0];
+      }
+
+      const treq = {
+        nativeArray: outlineArray,
+        width: lWidth,
+        height: 1,
+        depth: 1,
+        format: 'r16float',
+      };
+      const newTex = model.device.getTextureManager().getTexture(treq);
+      model.textureViews[4] = newTex.createView('labelOutlineOpacityTexture');
+      model.labelOutlineOpacityString = outlineHash;
+    }
+  };
+
   const superClassUpdateBuffers = publicAPI.updateBuffers;
   publicAPI.updateBuffers = () => {
     superClassUpdateBuffers();
@@ -513,6 +591,12 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 
     publicAPI.updateLUTImage();
     publicAPI.updateOpacityLUTImage();
+    if (publicAPI.getImageState().useLabelOutline) {
+      publicAPI.updateLabelOutlineThicknessTexture();
+      publicAPI.updateLabelOutlineOpacityTexture();
+    } else {
+      model.textureViews.length = Math.min(model.textureViews.length, 3);
+    }
     publicAPI.updateUBO();
 
     // set interpolation on the texture based on property setting
@@ -600,18 +684,107 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 
     switch (imageState.renderMode) {
       case ImageRenderMode.SINGLE:
-        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
-          '    let scalar: f32 = computedColor.r;',
-          '    var colorCoord: vec2<f32> =',
-          '      vec2<f32>(scalar * mapperUBO.cScale.r + mapperUBO.cShift.r, 0.5);',
-          '    let tColor: vec4<f32> =',
-          '      textureSampleLevel(tfunTexture, clampSampler, colorCoord, 0.0);',
-          '    var opacityCoord: vec2<f32> =',
-          '      vec2<f32>(scalar * mapperUBO.oScale.r + mapperUBO.oShift.r, 0.5);',
-          '    let scalarOpacity: f32 =',
-          '      textureSampleLevel(ofunTexture, clampSampler, opacityCoord, 0.0).r;',
-          '    computedColor = vec4<f32>(tColor.rgb, scalarOpacity * mapperUBO.Opacity);',
-        ]).result;
+        if (imageState.useLabelOutline) {
+          const outlineLines =
+            model.dimensions === 3
+              ? [
+                  '    let centerCoord: vec3<f32> = input.tcoordVS;',
+                  '    let stepX: vec3<f32> = dpdx(input.tcoordVS);',
+                  '    let stepY: vec3<f32> = dpdy(input.tcoordVS);',
+                  '    let clampMin: vec3<f32> = vec3<f32>(0.0);',
+                  '    let clampMax: vec3<f32> = vec3<f32>(1.0);',
+                ]
+              : [
+                  '    let centerCoord: vec2<f32> = input.tcoordVS;',
+                  '    let stepX: vec2<f32> = dpdx(input.tcoordVS);',
+                  '    let stepY: vec2<f32> = dpdy(input.tcoordVS);',
+                  '    let clampMin: vec2<f32> = vec2<f32>(0.0);',
+                  '    let clampMax: vec2<f32> = vec2<f32>(1.0);',
+                ];
+          code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
+            ...outlineLines,
+            '    let centerValue: f32 = textureSampleLevel(',
+            '      imgTexture,',
+            '      clampSampler,',
+            '      centerCoord,',
+            '      0.0).r;',
+            '    let segmentIndex: i32 = i32(round(centerValue * 255.0));',
+            '    if (segmentIndex == 0) {',
+            '      computedColor = vec4<f32>(0.0);',
+            '    } else {',
+            '      let colorCoord: vec2<f32> = vec2<f32>(',
+            '        centerValue * mapperUBO.cScale.r + mapperUBO.cShift.r,',
+            '        0.5);',
+            '      let tColor: vec4<f32> =',
+            '        textureSampleLevel(tfunTexture, clampSampler, colorCoord, 0.0);',
+            '      let opacityCoord: vec2<f32> = vec2<f32>(',
+            '        centerValue * mapperUBO.oScale.r + mapperUBO.oShift.r,',
+            '        0.5);',
+            '      let scalarOpacity: f32 =',
+            '        textureSampleLevel(ofunTexture, clampSampler, opacityCoord, 0.0).r;',
+            '      let outlineWidth: i32 = i32(textureDimensions(labelOutlineTexture).x);',
+            '      let outlineIndex: i32 = clamp(segmentIndex - 1, 0, outlineWidth - 1);',
+            '      let outlineCoord: vec2<f32> = vec2<f32>(',
+            '        (f32(outlineIndex) + 0.5) / f32(outlineWidth),',
+            '        0.5);',
+            '      let thicknessValue: f32 = textureSampleLevel(',
+            '        labelOutlineTexture,',
+            '        clampSampler,',
+            '        outlineCoord,',
+            '        0.0).r;',
+            '      let outlineOpacity: f32 = textureSampleLevel(',
+            '        labelOutlineOpacityTexture,',
+            '        clampSampler,',
+            '        outlineCoord,',
+            '        0.0).r;',
+            '      let actualThickness: i32 = i32(round(thicknessValue * 255.0));',
+            '      var pixelOnBorder: bool = false;',
+            '      for (var i: i32 = -actualThickness; i <= actualThickness; i++) {',
+            '        for (var j: i32 = -actualThickness; j <= actualThickness; j++) {',
+            '          if (i == 0 || j == 0) {',
+            '            continue;',
+            '          }',
+            '          let neighborCoord = clamp(',
+            '            centerCoord + f32(i) * stepX + f32(j) * stepY,',
+            '            clampMin,',
+            '            clampMax);',
+            '          let neighborValue: f32 = textureSampleLevel(',
+            '            imgTexture,',
+            '            clampSampler,',
+            '            neighborCoord,',
+            '            0.0).r;',
+            '          if (neighborValue != centerValue) {',
+            '            pixelOnBorder = true;',
+            '            break;',
+            '          }',
+            '        }',
+            '        if (pixelOnBorder) {',
+            '          break;',
+            '        }',
+            '      }',
+            '      if (pixelOnBorder) {',
+            '        computedColor = vec4<f32>(tColor.rgb, outlineOpacity);',
+            '      } else {',
+            '        computedColor = vec4<f32>(',
+            '          tColor.rgb,',
+            '          scalarOpacity * mapperUBO.Opacity);',
+            '      }',
+            '    }',
+          ]).result;
+        } else {
+          code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
+            '    let scalar: f32 = computedColor.r;',
+            '    var colorCoord: vec2<f32> =',
+            '      vec2<f32>(scalar * mapperUBO.cScale.r + mapperUBO.cShift.r, 0.5);',
+            '    let tColor: vec4<f32> =',
+            '      textureSampleLevel(tfunTexture, clampSampler, colorCoord, 0.0);',
+            '    var opacityCoord: vec2<f32> =',
+            '      vec2<f32>(scalar * mapperUBO.oScale.r + mapperUBO.oShift.r, 0.5);',
+            '    let scalarOpacity: f32 =',
+            '      textureSampleLevel(ofunTexture, clampSampler, opacityCoord, 0.0).r;',
+            '    computedColor = vec4<f32>(tColor.rgb, scalarOpacity * mapperUBO.Opacity);',
+          ]).result;
+        }
         break;
       case ImageRenderMode.INDEPENDENT_1:
         code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
