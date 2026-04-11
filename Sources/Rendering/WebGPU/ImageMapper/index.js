@@ -7,7 +7,6 @@ import * as macro from 'vtk.js/Sources/macros';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQuad';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
-import vtkWebGPUSampler from 'vtk.js/Sources/Rendering/WebGPU/Sampler';
 // import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 
 // import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
@@ -55,7 +54,7 @@ fn main(
 // helper methods
 // ----------------------------------------------------------------------------
 
-const ImageRenderMode = {
+const TextureChannelMode = {
   SINGLE: 'single',
   DEPENDENT_LA: 'dependent-la',
   DEPENDENT_RGB: 'dependent-rgb',
@@ -66,37 +65,73 @@ const ImageRenderMode = {
   INDEPENDENT_4: 'independent-4',
 };
 
-function getIndependentComponentCount(independentComponents, numberOfComponents) {
+const TextureSlot = {
+  IMAGE: 0,
+  COLOR_LUT: 1,
+  OPACITY_LUT: 2,
+  LABEL_OUTLINE_THICKNESS: 3,
+  LABEL_OUTLINE_OPACITY: 4,
+};
+
+function textureSamplerMatches(textureView, options) {
+  const sampler = textureView?.getSampler?.();
+  if (!sampler) {
+    return false;
+  }
+  const current = sampler.getOptions();
+  return (
+    current.minFilter === options.minFilter &&
+    current.magFilter === options.magFilter &&
+    current.addressModeU === (options.addressModeU ?? 'clamp-to-edge') &&
+    current.addressModeV === (options.addressModeV ?? 'clamp-to-edge') &&
+    current.addressModeW === (options.addressModeW ?? 'clamp-to-edge')
+  );
+}
+
+function getIndependentComponentCount(
+  independentComponents,
+  numberOfComponents
+) {
   return independentComponents ? numberOfComponents : 1;
 }
 
-function getImageRenderMode(independentComponents, numberOfComponents) {
+function getTextureChannelMode(independentComponents, numberOfComponents) {
   if (independentComponents) {
     switch (numberOfComponents) {
       case 1:
-        return ImageRenderMode.INDEPENDENT_1;
+        return TextureChannelMode.INDEPENDENT_1;
       case 2:
-        return ImageRenderMode.INDEPENDENT_2;
+        return TextureChannelMode.INDEPENDENT_2;
       case 3:
-        return ImageRenderMode.INDEPENDENT_3;
+        return TextureChannelMode.INDEPENDENT_3;
       default:
-        return ImageRenderMode.INDEPENDENT_4;
+        return TextureChannelMode.INDEPENDENT_4;
     }
   }
 
   switch (numberOfComponents) {
     case 1:
-      return ImageRenderMode.SINGLE;
+      return TextureChannelMode.SINGLE;
     case 2:
-      return ImageRenderMode.DEPENDENT_LA;
+      return TextureChannelMode.DEPENDENT_LA;
     case 3:
-      return ImageRenderMode.DEPENDENT_RGB;
+      return TextureChannelMode.DEPENDENT_RGB;
     default:
-      return ImageRenderMode.DEPENDENT_RGBA;
+      return TextureChannelMode.DEPENDENT_RGBA;
   }
 }
 
-function getUseLabelOutline(actorProperty, independentComponents, numberOfComponents) {
+function getLUTRowCenterExpression(componentIndex, rowsVar = 'tfunRows') {
+  // Each component row is duplicated in the LUT texture to avoid bleeding when
+  // linearly sampling near row centers, so component N lives at row 2 * N.
+  return `${2 * componentIndex + 0.5} / ${rowsVar}`;
+}
+
+function getUseLabelOutline(
+  actorProperty,
+  independentComponents,
+  numberOfComponents
+) {
   return (
     actorProperty.getUseLabelOutline() &&
     !independentComponents &&
@@ -127,9 +162,15 @@ function vtkWebGPUImageMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUImageMapper');
 
-  publicAPI.getImageState = () => {
+  publicAPI.ensureTextureSampler = (textureView, options) => {
+    if (textureView && !textureSamplerMatches(textureView, options)) {
+      textureView.addSampler(model.device, options);
+    }
+  };
+
+  publicAPI.computeImageState = () => {
     const actorProperty = model.WebGPUImageSlice.getRenderable().getProperty();
-    const tView = publicAPI.getTextureViews()[0];
+    const tView = publicAPI.getTextureViews()[TextureSlot.IMAGE];
     const numberOfComponents = tView?.getTexture().getNumberOfComponents() ?? 1;
     const independentComponents = actorProperty.getIndependentComponents();
     const numberOfIComponents = getIndependentComponentCount(
@@ -147,12 +188,15 @@ function vtkWebGPUImageMapper(publicAPI, model) {
         independentComponents,
         numberOfComponents
       ),
-      renderMode: getImageRenderMode(
+      renderMode: getTextureChannelMode(
         independentComponents,
         numberOfComponents
       ),
     };
   };
+
+  publicAPI.getImageState = () =>
+    model.imageState ?? publicAPI.computeImageState();
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
@@ -390,7 +434,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 
   publicAPI.updateLUTImage = () => {
     const imageState = publicAPI.getImageState();
-    const { actorProperty, independentComponents: iComps } = imageState;
+    const { actorProperty } = imageState;
     const numIComps = imageState.numberOfIComponents;
 
     const cfunToString = computeFnToString(
@@ -413,27 +457,16 @@ function vtkWebGPUImageMapper(publicAPI, model) {
           cfun = actorProperty.getRGBTransferFunction(c);
           const cRange = cfun.getRange();
           cfun.getTable(cRange[0], cRange[1], model.rowLength, tmpTable, 1);
-          if (iComps) {
-            for (let i = 0; i < model.rowLength; i++) {
-              const idx = c * model.rowLength * 8 + i * 4;
-              colorArray[idx] = 255.0 * tmpTable[i * 3];
-              colorArray[idx + 1] = 255.0 * tmpTable[i * 3 + 1];
-              colorArray[idx + 2] = 255.0 * tmpTable[i * 3 + 2];
-              colorArray[idx + 3] = 255.0;
-              for (let j = 0; j < 4; j++) {
-                colorArray[idx + model.rowLength * 4 + j] = colorArray[idx + j];
-              }
-            }
-          } else {
-            for (let i = 0; i < model.rowLength; i++) {
-              const idx = c * model.rowLength * 8 + i * 4;
-              colorArray[idx] = 255.0 * tmpTable[i * 3];
-              colorArray[idx + 1] = 255.0 * tmpTable[i * 3 + 1];
-              colorArray[idx + 2] = 255.0 * tmpTable[i * 3 + 2];
-              colorArray[idx + 3] = 255.0;
-              for (let j = 0; j < 4; j++) {
-                colorArray[idx + model.rowLength * 4 + j] = colorArray[idx + j];
-              }
+          for (let i = 0; i < model.rowLength; i++) {
+            const idx = c * model.rowLength * 8 + i * 4;
+            colorArray[idx] = 255.0 * tmpTable[i * 3];
+            colorArray[idx + 1] = 255.0 * tmpTable[i * 3 + 1];
+            colorArray[idx + 2] = 255.0 * tmpTable[i * 3 + 2];
+            colorArray[idx + 3] = 255.0;
+            // Duplicate each LUT row so the shader can address its center
+            // with linear sampling without bleeding into the next component row.
+            for (let j = 0; j < 4; j++) {
+              colorArray[idx + model.rowLength * 4 + j] = colorArray[idx + j];
             }
           }
         }
@@ -460,7 +493,11 @@ function vtkWebGPUImageMapper(publicAPI, model) {
         };
         const newTex = model.device.getTextureManager().getTexture(treq);
         const tview = newTex.createView('tfunTexture');
-        model.textureViews[1] = tview;
+        publicAPI.ensureTextureSampler(tview, {
+          minFilter: 'linear',
+          magFilter: 'linear',
+        });
+        model.textureViews[TextureSlot.COLOR_LUT] = tview;
       }
 
       model.colorTextureString = cfunToString;
@@ -469,7 +506,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 
   publicAPI.updateOpacityLUTImage = () => {
     const imageState = publicAPI.getImageState();
-    const { actorProperty, independentComponents: iComps } = imageState;
+    const { actorProperty } = imageState;
     const numIComps = imageState.numberOfIComponents;
     model.numRows = numIComps;
     const pwfunToString = computeFnToString(
@@ -479,7 +516,9 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     );
 
     if (model.opacityTextureString !== pwfunToString) {
-      const opacityArray = new Float32Array(model.numRows * 2 * model.rowLength);
+      const opacityArray = new Float32Array(
+        model.numRows * 2 * model.rowLength
+      );
       const tmpTable = new Float32Array(model.rowLength);
 
       for (let c = 0; c < numIComps; c++) {
@@ -495,6 +534,8 @@ function vtkWebGPUImageMapper(publicAPI, model) {
         const offset = c * model.rowLength * 2;
         for (let i = 0; i < model.rowLength; i++) {
           opacityArray[offset + i] = tmpTable[i];
+          // Duplicate each LUT row so the shader can address its center
+          // with linear sampling without bleeding into the next component row.
           opacityArray[offset + model.rowLength + i] = tmpTable[i];
         }
       }
@@ -508,7 +549,11 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       };
       const newTex = model.device.getTextureManager().getTexture(treq);
       const tview = newTex.createView('ofunTexture');
-      model.textureViews[2] = tview;
+      publicAPI.ensureTextureSampler(tview, {
+        minFilter: 'linear',
+        magFilter: 'linear',
+      });
+      model.textureViews[TextureSlot.OPACITY_LUT] = tview;
 
       model.opacityTextureString = pwfunToString;
     }
@@ -541,7 +586,12 @@ function vtkWebGPUImageMapper(publicAPI, model) {
         format: 'r8unorm',
       };
       const newTex = model.device.getTextureManager().getTexture(treq);
-      model.textureViews[3] = newTex.createView('labelOutlineTexture');
+      const tview = newTex.createView('labelOutlineTexture');
+      publicAPI.ensureTextureSampler(tview, {
+        minFilter: 'nearest',
+        magFilter: 'nearest',
+      });
+      model.textureViews[TextureSlot.LABEL_OUTLINE_THICKNESS] = tview;
       model.labelOutlineThicknessString = outlineHash;
     }
   };
@@ -571,7 +621,12 @@ function vtkWebGPUImageMapper(publicAPI, model) {
         format: 'r16float',
       };
       const newTex = model.device.getTextureManager().getTexture(treq);
-      model.textureViews[4] = newTex.createView('labelOutlineOpacityTexture');
+      const tview = newTex.createView('labelOutlineOpacityTexture');
+      publicAPI.ensureTextureSampler(tview, {
+        minFilter: 'nearest',
+        magFilter: 'nearest',
+      });
+      model.textureViews[TextureSlot.LABEL_OUTLINE_OPACITY] = tview;
       model.labelOutlineOpacityString = outlineHash;
     }
   };
@@ -584,18 +639,30 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       .getTextureForImageData(model.currentInput);
     const tViews = model.textureViews;
 
-    if (!tViews[0] || tViews[0].getTexture() !== newTex) {
+    if (
+      !tViews[TextureSlot.IMAGE] ||
+      tViews[TextureSlot.IMAGE].getTexture() !== newTex
+    ) {
       const tview = newTex.createView('imgTexture');
-      tViews[0] = tview;
+      publicAPI.ensureTextureSampler(tview, {
+        minFilter: 'linear',
+        magFilter: 'linear',
+      });
+      tViews[TextureSlot.IMAGE] = tview;
     }
+
+    model.imageState = publicAPI.computeImageState();
 
     publicAPI.updateLUTImage();
     publicAPI.updateOpacityLUTImage();
-    if (publicAPI.getImageState().useLabelOutline) {
+    if (model.imageState.useLabelOutline) {
       publicAPI.updateLabelOutlineThicknessTexture();
       publicAPI.updateLabelOutlineOpacityTexture();
     } else {
-      model.textureViews.length = Math.min(model.textureViews.length, 3);
+      model.textureViews.length = Math.min(
+        model.textureViews.length,
+        TextureSlot.OPACITY_LUT + 1
+      );
     }
     publicAPI.updateUBO();
 
@@ -606,19 +673,10 @@ function vtkWebGPUImageMapper(publicAPI, model) {
         ? 'nearest'
         : 'linear';
 
-    if (
-      !model.clampSampler ||
-      iType !== model.clampSampler.getOptions().minFilter
-    ) {
-      model.clampSampler = vtkWebGPUSampler.newInstance({
-        label: 'clampSampler',
-      });
-      model.clampSampler.create(model.device, {
-        minFilter: iType,
-        magFilter: iType,
-      });
-      model.additionalBindables = [model.clampSampler];
-    }
+    publicAPI.ensureTextureSampler(tViews[TextureSlot.IMAGE], {
+      minFilter: iType,
+      magFilter: iType,
+    });
   };
 
   const sr = publicAPI.getShaderReplacements();
@@ -671,19 +729,19 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     if (model.dimensions === 3) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
         `    var computedColor: vec4<f32> =`,
-        `      textureSampleLevel(imgTexture, clampSampler, input.tcoordVS, 0.0);`,
+        `      textureSampleLevel(imgTexture, imgTextureSampler, input.tcoordVS, 0.0);`,
         `//VTK::Image::Sample`,
       ]).result;
     } else {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
         `    var computedColor: vec4<f32> =`,
-        `      textureSampleLevel(imgTexture, clampSampler, input.tcoordVS, 0.0);`,
+        `      textureSampleLevel(imgTexture, imgTextureSampler, input.tcoordVS, 0.0);`,
         `//VTK::Image::Sample`,
       ]).result;
     }
 
     switch (imageState.renderMode) {
-      case ImageRenderMode.SINGLE:
+      case TextureChannelMode.SINGLE:
         if (imageState.useLabelOutline) {
           const outlineLines =
             model.dimensions === 3
@@ -705,7 +763,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
             ...outlineLines,
             '    let centerValue: f32 = textureSampleLevel(',
             '      imgTexture,',
-            '      clampSampler,',
+            '      imgTextureSampler,',
             '      centerCoord,',
             '      0.0).r;',
             '    let segmentIndex: i32 = i32(round(centerValue * 255.0));',
@@ -716,12 +774,12 @@ function vtkWebGPUImageMapper(publicAPI, model) {
             '        centerValue * mapperUBO.cScale.r + mapperUBO.cShift.r,',
             '        0.5);',
             '      let tColor: vec4<f32> =',
-            '        textureSampleLevel(tfunTexture, clampSampler, colorCoord, 0.0);',
+            '        textureSampleLevel(tfunTexture, tfunTextureSampler, colorCoord, 0.0);',
             '      let opacityCoord: vec2<f32> = vec2<f32>(',
             '        centerValue * mapperUBO.oScale.r + mapperUBO.oShift.r,',
             '        0.5);',
             '      let scalarOpacity: f32 =',
-            '        textureSampleLevel(ofunTexture, clampSampler, opacityCoord, 0.0).r;',
+            '        textureSampleLevel(ofunTexture, ofunTextureSampler, opacityCoord, 0.0).r;',
             '      let outlineWidth: i32 = i32(textureDimensions(labelOutlineTexture).x);',
             '      let outlineIndex: i32 = clamp(segmentIndex - 1, 0, outlineWidth - 1);',
             '      let outlineCoord: vec2<f32> = vec2<f32>(',
@@ -729,19 +787,19 @@ function vtkWebGPUImageMapper(publicAPI, model) {
             '        0.5);',
             '      let thicknessValue: f32 = textureSampleLevel(',
             '        labelOutlineTexture,',
-            '        clampSampler,',
+            '        labelOutlineTextureSampler,',
             '        outlineCoord,',
             '        0.0).r;',
             '      let outlineOpacity: f32 = textureSampleLevel(',
             '        labelOutlineOpacityTexture,',
-            '        clampSampler,',
+            '        labelOutlineOpacityTextureSampler,',
             '        outlineCoord,',
             '        0.0).r;',
             '      let actualThickness: i32 = i32(round(thicknessValue * 255.0));',
             '      var pixelOnBorder: bool = false;',
             '      for (var i: i32 = -actualThickness; i <= actualThickness; i++) {',
             '        for (var j: i32 = -actualThickness; j <= actualThickness; j++) {',
-            '          if (i == 0 || j == 0) {',
+            '          if (i == 0 && j == 0) {',
             '            continue;',
             '          }',
             '          let neighborCoord = clamp(',
@@ -750,7 +808,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
             '            clampMax);',
             '          let neighborValue: f32 = textureSampleLevel(',
             '            imgTexture,',
-            '            clampSampler,',
+            '            imgTextureSampler,',
             '            neighborCoord,',
             '            0.0).r;',
             '          if (neighborValue != centerValue) {',
@@ -777,59 +835,61 @@ function vtkWebGPUImageMapper(publicAPI, model) {
             '    var colorCoord: vec2<f32> =',
             '      vec2<f32>(scalar * mapperUBO.cScale.r + mapperUBO.cShift.r, 0.5);',
             '    let tColor: vec4<f32> =',
-            '      textureSampleLevel(tfunTexture, clampSampler, colorCoord, 0.0);',
+            '      textureSampleLevel(tfunTexture, tfunTextureSampler, colorCoord, 0.0);',
             '    var opacityCoord: vec2<f32> =',
             '      vec2<f32>(scalar * mapperUBO.oScale.r + mapperUBO.oShift.r, 0.5);',
             '    let scalarOpacity: f32 =',
-            '      textureSampleLevel(ofunTexture, clampSampler, opacityCoord, 0.0).r;',
+            '      textureSampleLevel(ofunTexture, ofunTextureSampler, opacityCoord, 0.0).r;',
             '    computedColor = vec4<f32>(tColor.rgb, scalarOpacity * mapperUBO.Opacity);',
           ]).result;
         }
         break;
-      case ImageRenderMode.INDEPENDENT_1:
+      case TextureChannelMode.INDEPENDENT_1:
         code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
           '    let tfunRows: f32 = f32(textureDimensions(tfunTexture).y);',
           '    let scalar: f32 = computedColor.r;',
-          '    let rowCoord: f32 = 0.5 / tfunRows;',
+          `    let rowCoord: f32 = ${getLUTRowCenterExpression(0)};`,
           '    let colorCoord: vec2<f32> =',
           '      vec2<f32>(scalar * mapperUBO.cScale.r + mapperUBO.cShift.r, rowCoord);',
           '    let tColor: vec4<f32> =',
-          '      textureSampleLevel(tfunTexture, clampSampler, colorCoord, 0.0);',
+          '      textureSampleLevel(tfunTexture, tfunTextureSampler, colorCoord, 0.0);',
           '    computedColor = vec4<f32>(',
           '      tColor.rgb * mapperUBO.componentWeight.r,',
           '      mapperUBO.Opacity);',
         ]).result;
         break;
-      case ImageRenderMode.INDEPENDENT_2:
+      case TextureChannelMode.INDEPENDENT_2:
         code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
           '    let tfunRows: f32 = f32(textureDimensions(tfunTexture).y);',
+          '    // Independent component LUT rows are duplicated, so sample the',
+          '    // center of row 2 * componentIndex for each component.',
           '    let rawColor: vec4<f32> = computedColor;',
-          '    let rowCoord0: f32 = 0.5 / tfunRows;',
-          '    let rowCoord1: f32 = 2.5 / tfunRows;',
+          `    let rowCoord0: f32 = ${getLUTRowCenterExpression(0)};`,
+          `    let rowCoord1: f32 = ${getLUTRowCenterExpression(1)};`,
           '    let scalar0: f32 = rawColor.r;',
           '    let scalar1: f32 = rawColor.g;',
           '    let color0: vec3<f32> = mapperUBO.componentWeight.r *',
           '      textureSampleLevel(',
           '        tfunTexture,',
-          '        clampSampler,',
+          '        tfunTextureSampler,',
           '        vec2<f32>(scalar0 * mapperUBO.cScale.r + mapperUBO.cShift.r, rowCoord0),',
           '        0.0).rgb;',
           '    let color1: vec3<f32> = mapperUBO.componentWeight.g *',
           '      textureSampleLevel(',
           '        tfunTexture,',
-          '        clampSampler,',
+          '        tfunTextureSampler,',
           '        vec2<f32>(scalar1 * mapperUBO.cScale.g + mapperUBO.cShift.g, rowCoord1),',
           '        0.0).rgb;',
           '    let weight0: f32 = mapperUBO.componentWeight.r *',
           '      textureSampleLevel(',
           '        ofunTexture,',
-          '        clampSampler,',
+          '        ofunTextureSampler,',
           '        vec2<f32>(scalar0 * mapperUBO.oScale.r + mapperUBO.oShift.r, rowCoord0),',
           '        0.0).r;',
           '    let weight1: f32 = mapperUBO.componentWeight.g *',
           '      textureSampleLevel(',
           '        ofunTexture,',
-          '        clampSampler,',
+          '        ofunTextureSampler,',
           '        vec2<f32>(scalar1 * mapperUBO.oScale.g + mapperUBO.oShift.g, rowCoord1),',
           '        0.0).r;',
           '    let weightSum: f32 = max(weight0 + weight1, 1.0e-6);',
@@ -838,84 +898,154 @@ function vtkWebGPUImageMapper(publicAPI, model) {
           '      mapperUBO.Opacity);',
         ]).result;
         break;
-      case ImageRenderMode.INDEPENDENT_3:
+      case TextureChannelMode.INDEPENDENT_3:
         code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
           '    let tfunRows: f32 = f32(textureDimensions(tfunTexture).y);',
           '    let rawColor: vec4<f32> = computedColor;',
-          '    let rowCoord0: f32 = 0.5 / tfunRows;',
-          '    let rowCoord1: f32 = 2.5 / tfunRows;',
-          '    let rowCoord2: f32 = 4.5 / tfunRows;',
+          `    let rowCoord0: f32 = ${getLUTRowCenterExpression(0)};`,
+          `    let rowCoord1: f32 = ${getLUTRowCenterExpression(1)};`,
+          `    let rowCoord2: f32 = ${getLUTRowCenterExpression(2)};`,
           '    let scalar0: f32 = rawColor.r;',
           '    let scalar1: f32 = rawColor.g;',
           '    let scalar2: f32 = rawColor.b;',
-          '    let color0: vec3<f32> = mapperUBO.componentWeight.r * textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(scalar0 * mapperUBO.cScale.r + mapperUBO.cShift.r, rowCoord0), 0.0).rgb;',
-          '    let color1: vec3<f32> = mapperUBO.componentWeight.g * textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(scalar1 * mapperUBO.cScale.g + mapperUBO.cShift.g, rowCoord1), 0.0).rgb;',
-          '    let color2: vec3<f32> = mapperUBO.componentWeight.b * textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(scalar2 * mapperUBO.cScale.b + mapperUBO.cShift.b, rowCoord2), 0.0).rgb;',
-          '    let weight0: f32 = mapperUBO.componentWeight.r * textureSampleLevel(ofunTexture, clampSampler, vec2<f32>(scalar0 * mapperUBO.oScale.r + mapperUBO.oShift.r, rowCoord0), 0.0).r;',
-          '    let weight1: f32 = mapperUBO.componentWeight.g * textureSampleLevel(ofunTexture, clampSampler, vec2<f32>(scalar1 * mapperUBO.oScale.g + mapperUBO.oShift.g, rowCoord1), 0.0).r;',
-          '    let weight2: f32 = mapperUBO.componentWeight.b * textureSampleLevel(ofunTexture, clampSampler, vec2<f32>(scalar2 * mapperUBO.oScale.b + mapperUBO.oShift.b, rowCoord2), 0.0).r;',
+          '    let color0: vec3<f32> = mapperUBO.componentWeight.r *',
+          '      textureSampleLevel(',
+          '        tfunTexture,',
+          '        tfunTextureSampler,',
+          '        vec2<f32>(scalar0 * mapperUBO.cScale.r + mapperUBO.cShift.r, rowCoord0),',
+          '        0.0).rgb;',
+          '    let color1: vec3<f32> = mapperUBO.componentWeight.g *',
+          '      textureSampleLevel(',
+          '        tfunTexture,',
+          '        tfunTextureSampler,',
+          '        vec2<f32>(scalar1 * mapperUBO.cScale.g + mapperUBO.cShift.g, rowCoord1),',
+          '        0.0).rgb;',
+          '    let color2: vec3<f32> = mapperUBO.componentWeight.b *',
+          '      textureSampleLevel(',
+          '        tfunTexture,',
+          '        tfunTextureSampler,',
+          '        vec2<f32>(scalar2 * mapperUBO.cScale.b + mapperUBO.cShift.b, rowCoord2),',
+          '        0.0).rgb;',
+          '    let weight0: f32 = mapperUBO.componentWeight.r *',
+          '      textureSampleLevel(',
+          '        ofunTexture,',
+          '        ofunTextureSampler,',
+          '        vec2<f32>(scalar0 * mapperUBO.oScale.r + mapperUBO.oShift.r, rowCoord0),',
+          '        0.0).r;',
+          '    let weight1: f32 = mapperUBO.componentWeight.g *',
+          '      textureSampleLevel(',
+          '        ofunTexture,',
+          '        ofunTextureSampler,',
+          '        vec2<f32>(scalar1 * mapperUBO.oScale.g + mapperUBO.oShift.g, rowCoord1),',
+          '        0.0).r;',
+          '    let weight2: f32 = mapperUBO.componentWeight.b *',
+          '      textureSampleLevel(',
+          '        ofunTexture,',
+          '        ofunTextureSampler,',
+          '        vec2<f32>(scalar2 * mapperUBO.oScale.b + mapperUBO.oShift.b, rowCoord2),',
+          '        0.0).r;',
           '    let weightSum: f32 = max(weight0 + weight1 + weight2, 1.0e-6);',
           '    computedColor = vec4<f32>(',
           '      color0 * (weight0 / weightSum) + color1 * (weight1 / weightSum) + color2 * (weight2 / weightSum),',
           '      mapperUBO.Opacity);',
         ]).result;
         break;
-      case ImageRenderMode.INDEPENDENT_4:
+      case TextureChannelMode.INDEPENDENT_4:
         code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
           '    let tfunRows: f32 = f32(textureDimensions(tfunTexture).y);',
           '    let rawColor: vec4<f32> = computedColor;',
-          '    let rowCoord0: f32 = 0.5 / tfunRows;',
-          '    let rowCoord1: f32 = 2.5 / tfunRows;',
-          '    let rowCoord2: f32 = 4.5 / tfunRows;',
-          '    let rowCoord3: f32 = 6.5 / tfunRows;',
+          `    let rowCoord0: f32 = ${getLUTRowCenterExpression(0)};`,
+          `    let rowCoord1: f32 = ${getLUTRowCenterExpression(1)};`,
+          `    let rowCoord2: f32 = ${getLUTRowCenterExpression(2)};`,
+          `    let rowCoord3: f32 = ${getLUTRowCenterExpression(3)};`,
           '    let scalar0: f32 = rawColor.r;',
           '    let scalar1: f32 = rawColor.g;',
           '    let scalar2: f32 = rawColor.b;',
           '    let scalar3: f32 = rawColor.a;',
-          '    let color0: vec3<f32> = mapperUBO.componentWeight.r * textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(scalar0 * mapperUBO.cScale.r + mapperUBO.cShift.r, rowCoord0), 0.0).rgb;',
-          '    let color1: vec3<f32> = mapperUBO.componentWeight.g * textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(scalar1 * mapperUBO.cScale.g + mapperUBO.cShift.g, rowCoord1), 0.0).rgb;',
-          '    let color2: vec3<f32> = mapperUBO.componentWeight.b * textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(scalar2 * mapperUBO.cScale.b + mapperUBO.cShift.b, rowCoord2), 0.0).rgb;',
-          '    let color3: vec3<f32> = mapperUBO.componentWeight.a * textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(scalar3 * mapperUBO.cScale.a + mapperUBO.cShift.a, rowCoord3), 0.0).rgb;',
-          '    let weight0: f32 = mapperUBO.componentWeight.r * textureSampleLevel(ofunTexture, clampSampler, vec2<f32>(scalar0 * mapperUBO.oScale.r + mapperUBO.oShift.r, rowCoord0), 0.0).r;',
-          '    let weight1: f32 = mapperUBO.componentWeight.g * textureSampleLevel(ofunTexture, clampSampler, vec2<f32>(scalar1 * mapperUBO.oScale.g + mapperUBO.oShift.g, rowCoord1), 0.0).r;',
-          '    let weight2: f32 = mapperUBO.componentWeight.b * textureSampleLevel(ofunTexture, clampSampler, vec2<f32>(scalar2 * mapperUBO.oScale.b + mapperUBO.oShift.b, rowCoord2), 0.0).r;',
-          '    let weight3: f32 = mapperUBO.componentWeight.a * textureSampleLevel(ofunTexture, clampSampler, vec2<f32>(scalar3 * mapperUBO.oScale.a + mapperUBO.oShift.a, rowCoord3), 0.0).r;',
+          '    let color0: vec3<f32> = mapperUBO.componentWeight.r *',
+          '      textureSampleLevel(',
+          '        tfunTexture,',
+          '        tfunTextureSampler,',
+          '        vec2<f32>(scalar0 * mapperUBO.cScale.r + mapperUBO.cShift.r, rowCoord0),',
+          '        0.0).rgb;',
+          '    let color1: vec3<f32> = mapperUBO.componentWeight.g *',
+          '      textureSampleLevel(',
+          '        tfunTexture,',
+          '        tfunTextureSampler,',
+          '        vec2<f32>(scalar1 * mapperUBO.cScale.g + mapperUBO.cShift.g, rowCoord1),',
+          '        0.0).rgb;',
+          '    let color2: vec3<f32> = mapperUBO.componentWeight.b *',
+          '      textureSampleLevel(',
+          '        tfunTexture,',
+          '        tfunTextureSampler,',
+          '        vec2<f32>(scalar2 * mapperUBO.cScale.b + mapperUBO.cShift.b, rowCoord2),',
+          '        0.0).rgb;',
+          '    let color3: vec3<f32> = mapperUBO.componentWeight.a *',
+          '      textureSampleLevel(',
+          '        tfunTexture,',
+          '        tfunTextureSampler,',
+          '        vec2<f32>(scalar3 * mapperUBO.cScale.a + mapperUBO.cShift.a, rowCoord3),',
+          '        0.0).rgb;',
+          '    let weight0: f32 = mapperUBO.componentWeight.r *',
+          '      textureSampleLevel(',
+          '        ofunTexture,',
+          '        ofunTextureSampler,',
+          '        vec2<f32>(scalar0 * mapperUBO.oScale.r + mapperUBO.oShift.r, rowCoord0),',
+          '        0.0).r;',
+          '    let weight1: f32 = mapperUBO.componentWeight.g *',
+          '      textureSampleLevel(',
+          '        ofunTexture,',
+          '        ofunTextureSampler,',
+          '        vec2<f32>(scalar1 * mapperUBO.oScale.g + mapperUBO.oShift.g, rowCoord1),',
+          '        0.0).r;',
+          '    let weight2: f32 = mapperUBO.componentWeight.b *',
+          '      textureSampleLevel(',
+          '        ofunTexture,',
+          '        ofunTextureSampler,',
+          '        vec2<f32>(scalar2 * mapperUBO.oScale.b + mapperUBO.oShift.b, rowCoord2),',
+          '        0.0).r;',
+          '    let weight3: f32 = mapperUBO.componentWeight.a *',
+          '      textureSampleLevel(',
+          '        ofunTexture,',
+          '        ofunTextureSampler,',
+          '        vec2<f32>(scalar3 * mapperUBO.oScale.a + mapperUBO.oShift.a, rowCoord3),',
+          '        0.0).r;',
           '    let weightSum: f32 = max(weight0 + weight1 + weight2 + weight3, 1.0e-6);',
           '    computedColor = vec4<f32>(',
           '      color0 * (weight0 / weightSum) + color1 * (weight1 / weightSum) + color2 * (weight2 / weightSum) + color3 * (weight3 / weightSum),',
           '      mapperUBO.Opacity);',
         ]).result;
         break;
-      case ImageRenderMode.DEPENDENT_LA:
+      case TextureChannelMode.DEPENDENT_LA:
         code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
           '    let rawColor: vec4<f32> = computedColor;',
           '    let intensity: f32 = rawColor.r * mapperUBO.cScale.r + mapperUBO.cShift.r;',
           '    let tColor: vec4<f32> =',
-          '      textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(intensity, 0.5), 0.0);',
+          '      textureSampleLevel(tfunTexture, tfunTextureSampler, vec2<f32>(intensity, 0.5), 0.0);',
           '    computedColor = vec4<f32>(',
           '      tColor.rgb,',
           '      rawColor.g * mapperUBO.oScale.r + mapperUBO.oShift.r);',
         ]).result;
         break;
-      case ImageRenderMode.DEPENDENT_RGB:
+      case TextureChannelMode.DEPENDENT_RGB:
         code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
           '    let rawColor: vec4<f32> =',
           '      computedColor * vec4<f32>(mapperUBO.cScale.x) + vec4<f32>(mapperUBO.cShift.x);',
           '    computedColor = vec4<f32>(',
-          '      textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(rawColor.r, 0.5), 0.0).r,',
-          '      textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(rawColor.g, 0.5), 0.0).r,',
-          '      textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(rawColor.b, 0.5), 0.0).r,',
+          '      textureSampleLevel(tfunTexture, tfunTextureSampler, vec2<f32>(rawColor.r, 0.5), 0.0).r,',
+          '      textureSampleLevel(tfunTexture, tfunTextureSampler, vec2<f32>(rawColor.g, 0.5), 0.0).r,',
+          '      textureSampleLevel(tfunTexture, tfunTextureSampler, vec2<f32>(rawColor.b, 0.5), 0.0).r,',
           '      mapperUBO.Opacity);',
         ]).result;
         break;
-      case ImageRenderMode.DEPENDENT_RGBA:
+      case TextureChannelMode.DEPENDENT_RGBA:
         code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
           '    let rawColor: vec4<f32> =',
           '      computedColor * vec4<f32>(mapperUBO.cScale.x) + vec4<f32>(mapperUBO.cShift.x);',
           '    computedColor = vec4<f32>(',
-          '      textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(rawColor.r, 0.5), 0.0).r,',
-          '      textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(rawColor.g, 0.5), 0.0).r,',
-          '      textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(rawColor.b, 0.5), 0.0).r,',
+          '      textureSampleLevel(tfunTexture, tfunTextureSampler, vec2<f32>(rawColor.r, 0.5), 0.0).r,',
+          '      textureSampleLevel(tfunTexture, tfunTextureSampler, vec2<f32>(rawColor.g, 0.5), 0.0).r,',
+          '      textureSampleLevel(tfunTexture, tfunTextureSampler, vec2<f32>(rawColor.b, 0.5), 0.0).r,',
           '      rawColor.a);',
         ]).result;
         break;
@@ -924,7 +1054,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
           '    let scalar: f32 = computedColor.r;',
           '    var colorCoord: vec2<f32> =',
           '      vec2<f32>(scalar * mapperUBO.cScale.r + mapperUBO.cShift.r, 0.5);',
-          '    computedColor = textureSampleLevel(tfunTexture, clampSampler, colorCoord, 0.0);',
+          '    computedColor = textureSampleLevel(tfunTexture, tfunTextureSampler, colorCoord, 0.0);',
         ]).result;
         break;
     }
@@ -964,6 +1094,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  imageState: null,
   rowLength: 1024,
 };
 
