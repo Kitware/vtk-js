@@ -1,17 +1,16 @@
 import { mat4, vec4 } from 'gl-matrix';
 import Constants from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
 import * as macro from 'vtk.js/Sources/macros';
-// import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-// import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-// import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQuad';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
-// import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 
-// import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 import { Resolve } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/ImageProperty/Constants';
+import {
+  TextureChannelMode,
+  TextureSlot,
+} from 'vtk.js/Sources/Rendering/WebGPU/ImageMapper/Constants';
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
 // const { vtkErrorMacro } = macro;
@@ -54,25 +53,6 @@ fn main(
 // helper methods
 // ----------------------------------------------------------------------------
 
-const TextureChannelMode = {
-  SINGLE: 'single',
-  DEPENDENT_LA: 'dependent-la',
-  DEPENDENT_RGB: 'dependent-rgb',
-  DEPENDENT_RGBA: 'dependent-rgba',
-  INDEPENDENT_1: 'independent-1',
-  INDEPENDENT_2: 'independent-2',
-  INDEPENDENT_3: 'independent-3',
-  INDEPENDENT_4: 'independent-4',
-};
-
-const TextureSlot = {
-  IMAGE: 0,
-  COLOR_LUT: 1,
-  OPACITY_LUT: 2,
-  LABEL_OUTLINE_THICKNESS: 3,
-  LABEL_OUTLINE_OPACITY: 4,
-};
-
 function textureSamplerMatches(textureView, options) {
   const sampler = textureView?.getSampler?.();
   if (!sampler) {
@@ -88,14 +68,10 @@ function textureSamplerMatches(textureView, options) {
   );
 }
 
-function getIndependentComponentCount(
+export function getTextureChannelMode(
   independentComponents,
   numberOfComponents
 ) {
-  return independentComponents ? numberOfComponents : 1;
-}
-
-function getTextureChannelMode(independentComponents, numberOfComponents) {
   if (independentComponents) {
     switch (numberOfComponents) {
       case 1:
@@ -128,12 +104,12 @@ function getLUTRowCenterExpression(componentIndex, rowsVar = 'tfunRows') {
 }
 
 function getUseLabelOutline(
-  actorProperty,
+  property,
   independentComponents,
   numberOfComponents
 ) {
   return (
-    actorProperty.getUseLabelOutline() &&
+    property.getUseLabelOutline() &&
     !independentComponents &&
     numberOfComponents === 1
   );
@@ -155,6 +131,8 @@ function computeFnToString(property, fn, numberOfComponents) {
 const tmpMat4 = new Float64Array(16);
 const tmp2Mat4 = new Float64Array(16);
 const tmp3Mat4 = new Float64Array(16);
+const tmpTranslate3 = new Float64Array(3);
+const tmpScale3 = new Float64Array(3);
 const ptsArray1 = new Float64Array(4);
 const ptsArray2 = new Float64Array(4);
 
@@ -173,10 +151,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     const tView = publicAPI.getTextureViews()[TextureSlot.IMAGE];
     const numberOfComponents = tView?.getTexture().getNumberOfComponents() ?? 1;
     const independentComponents = actorProperty.getIndependentComponents();
-    const numberOfIComponents = getIndependentComponentCount(
-      independentComponents,
-      numberOfComponents
-    );
+    const numberOfIComponents = independentComponents ? numberOfComponents : 1;
 
     return {
       actorProperty,
@@ -188,7 +163,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
         independentComponents,
         numberOfComponents
       ),
-      renderMode: getTextureChannelMode(
+      textureChannelMode: getTextureChannelMode(
         independentComponents,
         numberOfComponents
       ),
@@ -271,7 +246,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       model.dimensions = 3;
       model.pipelineHash = 'img3';
     }
-    model.pipelineHash += imageState.renderMode;
+    model.pipelineHash += imageState.textureChannelMode;
     if (imageState.useLabelOutline) {
       model.pipelineHash += 'outline';
     }
@@ -311,16 +286,18 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       mat4.invert(tmp3Mat4, tmpMat4);
 
       // need translation and scale
-      mat4.fromTranslation(tmp2Mat4, [0.5, 0.5, 0.5]);
+      tmpTranslate3[0] = 0.5;
+      tmpTranslate3[1] = 0.5;
+      tmpTranslate3[2] = 0.5;
+      mat4.fromTranslation(tmp2Mat4, tmpTranslate3);
       mat4.multiply(tmpMat4, tmp2Mat4, tmpMat4);
 
       const dims = image.getDimensions();
       mat4.identity(tmp2Mat4);
-      mat4.scale(tmp2Mat4, tmp2Mat4, [
-        1.0 / dims[0],
-        1.0 / dims[1],
-        1.0 / dims[2],
-      ]);
+      tmpScale3[0] = 1.0 / dims[0];
+      tmpScale3[1] = 1.0 / dims[1];
+      tmpScale3[2] = 1.0 / dims[2];
+      mat4.scale(tmp2Mat4, tmp2Mat4, tmpScale3);
       mat4.multiply(tmpMat4, tmp2Mat4, tmpMat4);
       // tmpMat4 is now SC -> Tcoord
 
@@ -380,23 +357,40 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 
       // three levels of shift scale combined into one
       // for performance in the fragment shader
-      const cScale = [1, 1, 1, 1];
-      const cShift = [0, 0, 0, 0];
-      const oScale = [1, 1, 1, 1];
-      const oShift = [0, 0, 0, 0];
-      const componentWeight = [1, 1, 1, 1];
+      const { cScale, cShift, oScale, oShift, componentWeight } = model;
+      cScale[0] = 1.0;
+      cScale[1] = 1.0;
+      cScale[2] = 1.0;
+      cScale[3] = 1.0;
+      cShift[0] = 0.0;
+      cShift[1] = 0.0;
+      cShift[2] = 0.0;
+      cShift[3] = 0.0;
+      oScale[0] = 1.0;
+      oScale[1] = 1.0;
+      oScale[2] = 1.0;
+      oScale[3] = 1.0;
+      oShift[0] = 0.0;
+      oShift[1] = 0.0;
+      oShift[2] = 0.0;
+      oShift[3] = 0.0;
+      componentWeight[0] = 1.0;
+      componentWeight[1] = 1.0;
+      componentWeight[2] = 1.0;
+      componentWeight[3] = 1.0;
       const tView = model.textureViews[0];
       const tScale = tView.getTexture().getScale();
       const imageState = publicAPI.getImageState();
       const { numberOfComponents: numComp, independentComponents: iComps } =
         imageState;
+      const ppty = actor.getProperty();
       for (let i = 0; i < numComp; i++) {
-        let cw = actor.getProperty().getColorWindow();
-        let cl = actor.getProperty().getColorLevel();
+        let cw = ppty.getColorWindow();
+        let cl = ppty.getColorLevel();
 
         const target = iComps ? i : 0;
-        const cfun = actor.getProperty().getRGBTransferFunction(target);
-        if (cfun && actor.getProperty().getUseLookupTableScalarRange()) {
+        const cfun = ppty.getRGBTransferFunction(target);
+        if (cfun && ppty.getUseLookupTableScalarRange()) {
           const cRange = cfun.getRange();
           cw = cRange[1] - cRange[0];
           cl = 0.5 * (cRange[1] + cRange[0]);
@@ -407,7 +401,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 
         let opacityScale = 1.0;
         let opacityShift = 0.0;
-        const pwfun = actor.getProperty().getPiecewiseFunction(target);
+        const pwfun = ppty.getPiecewiseFunction(target);
         if (pwfun) {
           const pwfRange = pwfun.getRange();
           const length = pwfRange[1] - pwfRange[0];
@@ -417,14 +411,14 @@ function vtkWebGPUImageMapper(publicAPI, model) {
         }
         oScale[i] = opacityScale;
         oShift[i] = opacityShift;
-        componentWeight[i] = actor.getProperty().getComponentWeight(i);
+        componentWeight[i] = ppty.getComponentWeight(i);
       }
       model.UBO.setArray('cScale', cScale);
       model.UBO.setArray('cShift', cShift);
       model.UBO.setArray('oScale', oScale);
       model.UBO.setArray('oShift', oShift);
       model.UBO.setArray('componentWeight', componentWeight);
-      model.UBO.setValue('Opacity', actor.getProperty().getOpacity());
+      model.UBO.setValue('Opacity', ppty.getOpacity());
       const cp = publicAPI.getCoincidentParameters();
       model.UBO.setValue('CoincidentFactor', cp.factor);
       model.UBO.setValue('CoincidentOffset', cp.offset);
@@ -445,13 +439,15 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 
     if (model.colorTextureString !== cfunToString) {
       model.numRows = numIComps;
-      const colorArray = new Uint8ClampedArray(
-        model.numRows * 2 * model.rowLength * 4
-      );
+      const colorSize = model.numRows * 2 * model.rowLength * 4;
+      if (!model.colorLUTArray || model.colorLUTArray.length !== colorSize) {
+        model.colorLUTArray = new Uint8ClampedArray(colorSize);
+      }
+      const colorArray = model.colorLUTArray;
 
       let cfun = actorProperty.getRGBTransferFunction();
       if (cfun) {
-        const tmpTable = new Float32Array(model.rowLength * 3);
+        const tmpTable = model.colorTmpTable;
 
         for (let c = 0; c < numIComps; c++) {
           cfun = actorProperty.getRGBTransferFunction(c);
@@ -516,16 +512,22 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     );
 
     if (model.opacityTextureString !== pwfunToString) {
-      const opacityArray = new Float32Array(
-        model.numRows * 2 * model.rowLength
-      );
-      const tmpTable = new Float32Array(model.rowLength);
+      const opacitySize = model.numRows * 2 * model.rowLength;
+      if (
+        !model.opacityLUTArray ||
+        model.opacityLUTArray.length !== opacitySize
+      ) {
+        model.opacityLUTArray = new Float32Array(opacitySize);
+      }
+      const opacityArray = model.opacityLUTArray;
+      const tmpTable = model.opacityTmpTable;
 
       for (let c = 0; c < numIComps; c++) {
         const pwfun = actorProperty.getPiecewiseFunction(c);
         if (!pwfun) {
           const offset = c * model.rowLength * 2;
           opacityArray.fill(1.0, offset, offset + model.rowLength * 2);
+          // eslint-disable-next-line no-continue
           continue;
         }
 
@@ -570,7 +572,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       const outlineArray = new Uint8Array(lWidth);
 
       for (let i = 0; i < lWidth; ++i) {
-        // Undefined entries fall back to segment 0, matching the WebGL path.
+        // Undefined entries fall back to segment 0, matching the OpenGL path.
         const thickness =
           typeof labelOutlineThicknessArray[i] !== 'undefined'
             ? labelOutlineThicknessArray[i]
@@ -609,7 +611,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       const outlineArray = new Float32Array(lWidth);
 
       for (let i = 0; i < lWidth; ++i) {
-        // Undefined entries fall back to segment 0, matching the WebGL path.
+        // Undefined entries fall back to segment 0, matching the OpenGL path.
         outlineArray[i] = values[i] ?? values[0];
       }
 
@@ -667,9 +669,9 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     publicAPI.updateUBO();
 
     // set interpolation on the texture based on property setting
-    const actorProperty = model.WebGPUImageSlice.getRenderable().getProperty();
+    const ppty = model.WebGPUImageSlice.getRenderable().getProperty();
     const iType =
-      actorProperty.getInterpolationType() === InterpolationType.NEAREST
+      ppty.getInterpolationType() === InterpolationType.NEAREST
         ? 'nearest'
         : 'linear';
 
@@ -697,7 +699,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     }
     lines.push(
       'pos = rendererUBO.SCPCMatrix * pos;',
-      // Match the OpenGL coincident-topology constant offset scale (~1 / 2^16 = 0.000016)
+      // Match the OpenGL coincident topology constant offset scale (~1 / 2^16 = 0.000016)
       'pos.z = clamp(pos.z - 0.000016 * mapperUBO.CoincidentOffset * pos.w, 0.0, pos.w);',
       'output.tcoordVS = tcoord;',
       'output.Position = pos;'
@@ -726,21 +728,13 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     let code = fDesc.getCode();
     const imageState = publicAPI.getImageState();
 
-    if (model.dimensions === 3) {
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
-        `    var computedColor: vec4<f32> =`,
-        `      textureSampleLevel(imgTexture, imgTextureSampler, input.tcoordVS, 0.0);`,
-        `//VTK::Image::Sample`,
-      ]).result;
-    } else {
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
-        `    var computedColor: vec4<f32> =`,
-        `      textureSampleLevel(imgTexture, imgTextureSampler, input.tcoordVS, 0.0);`,
-        `//VTK::Image::Sample`,
-      ]).result;
-    }
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
+      `    var computedColor: vec4<f32> =`,
+      `      textureSampleLevel(imgTexture, imgTextureSampler, input.tcoordVS, 0.0);`,
+      `//VTK::Image::Sample`,
+    ]).result;
 
-    switch (imageState.renderMode) {
+    switch (imageState.textureChannelMode) {
       case TextureChannelMode.SINGLE:
         if (imageState.useLabelOutline) {
           const outlineLines =
@@ -797,27 +791,29 @@ function vtkWebGPUImageMapper(publicAPI, model) {
             '        0.0).r;',
             '      let actualThickness: i32 = i32(round(thicknessValue * 255.0));',
             '      var pixelOnBorder: bool = false;',
-            '      for (var i: i32 = -actualThickness; i <= actualThickness; i++) {',
-            '        for (var j: i32 = -actualThickness; j <= actualThickness; j++) {',
-            '          if (i == 0 && j == 0) {',
-            '            continue;',
+            '      if (actualThickness > 0) {',
+            '        for (var i: i32 = -actualThickness; i <= actualThickness; i++) {',
+            '          for (var j: i32 = -actualThickness; j <= actualThickness; j++) {',
+            '            if (i == 0 && j == 0) {',
+            '              continue;',
+            '            }',
+            '            let neighborCoord = clamp(',
+            '              centerCoord + f32(i) * stepX + f32(j) * stepY,',
+            '              clampMin,',
+            '              clampMax);',
+            '            let neighborValue: f32 = textureSampleLevel(',
+            '              imgTexture,',
+            '              imgTextureSampler,',
+            '              neighborCoord,',
+            '              0.0).r;',
+            '            if (neighborValue != centerValue) {',
+            '              pixelOnBorder = true;',
+            '              break;',
+            '            }',
             '          }',
-            '          let neighborCoord = clamp(',
-            '            centerCoord + f32(i) * stepX + f32(j) * stepY,',
-            '            clampMin,',
-            '            clampMax);',
-            '          let neighborValue: f32 = textureSampleLevel(',
-            '            imgTexture,',
-            '            imgTextureSampler,',
-            '            neighborCoord,',
-            '            0.0).r;',
-            '          if (neighborValue != centerValue) {',
-            '            pixelOnBorder = true;',
+            '          if (pixelOnBorder) {',
             '            break;',
             '          }',
-            '        }',
-            '        if (pixelOnBorder) {',
-            '          break;',
             '        }',
             '      }',
             '      if (pixelOnBorder) {',
@@ -1127,6 +1123,15 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.imagemat = mat4.identity(new Float64Array(16));
   model.imagematinv = mat4.identity(new Float64Array(16));
+  model.cScale = new Float32Array(4);
+  model.cShift = new Float32Array(4);
+  model.oScale = new Float32Array(4);
+  model.oShift = new Float32Array(4);
+  model.componentWeight = new Float32Array(4);
+  model.colorTmpTable = new Float32Array(model.rowLength * 3);
+  model.opacityTmpTable = new Float32Array(model.rowLength);
+  model.colorLUTArray = null;
+  model.opacityLUTArray = null;
 
   model.VBOBuildTime = {};
   macro.obj(model.VBOBuildTime);
