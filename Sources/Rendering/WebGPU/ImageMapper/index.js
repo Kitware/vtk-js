@@ -55,6 +55,47 @@ fn main(
 // helper methods
 // ----------------------------------------------------------------------------
 
+const ImageRenderMode = {
+  SINGLE: 'single',
+  DEPENDENT_LA: 'dependent-la',
+  DEPENDENT_RGB: 'dependent-rgb',
+  DEPENDENT_RGBA: 'dependent-rgba',
+  INDEPENDENT_1: 'independent-1',
+  INDEPENDENT_2: 'independent-2',
+  INDEPENDENT_3: 'independent-3',
+  INDEPENDENT_4: 'independent-4',
+};
+
+function getIndependentComponentCount(independentComponents, numberOfComponents) {
+  return independentComponents ? numberOfComponents : 1;
+}
+
+function getImageRenderMode(independentComponents, numberOfComponents) {
+  if (independentComponents) {
+    switch (numberOfComponents) {
+      case 1:
+        return ImageRenderMode.INDEPENDENT_1;
+      case 2:
+        return ImageRenderMode.INDEPENDENT_2;
+      case 3:
+        return ImageRenderMode.INDEPENDENT_3;
+      default:
+        return ImageRenderMode.INDEPENDENT_4;
+    }
+  }
+
+  switch (numberOfComponents) {
+    case 1:
+      return ImageRenderMode.SINGLE;
+    case 2:
+      return ImageRenderMode.DEPENDENT_LA;
+    case 3:
+      return ImageRenderMode.DEPENDENT_RGB;
+    default:
+      return ImageRenderMode.DEPENDENT_RGBA;
+  }
+}
+
 function computeFnToString(property, fn, numberOfComponents) {
   const pwfun = fn.apply(property);
   if (pwfun) {
@@ -77,6 +118,28 @@ const ptsArray2 = new Float64Array(4);
 function vtkWebGPUImageMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUImageMapper');
+
+  publicAPI.getImageState = () => {
+    const actorProperty = model.WebGPUImageSlice.getRenderable().getProperty();
+    const tView = publicAPI.getTextureViews()[0];
+    const numberOfComponents = tView?.getTexture().getNumberOfComponents() ?? 1;
+    const independentComponents = actorProperty.getIndependentComponents();
+    const numberOfIComponents = getIndependentComponentCount(
+      independentComponents,
+      numberOfComponents
+    );
+
+    return {
+      actorProperty,
+      numberOfComponents,
+      independentComponents,
+      numberOfIComponents,
+      renderMode: getImageRenderMode(
+        independentComponents,
+        numberOfComponents
+      ),
+    };
+  };
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
@@ -135,6 +198,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 
   publicAPI.computePipelineHash = () => {
     const ext = model.currentInput.getExtent();
+    const imageState = publicAPI.getImageState();
     if (ext[0] === ext[1] || ext[2] === ext[3] || ext[4] === ext[5]) {
       model.dimensions = 2;
       model.pipelineHash = 'img2';
@@ -142,6 +206,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       model.dimensions = 3;
       model.pipelineHash = 'img3';
     }
+    model.pipelineHash += imageState.renderMode;
     model.pipelineHash += model.renderEncoder.getPipelineHash();
   };
 
@@ -249,17 +314,20 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       // for performance in the fragment shader
       const cScale = [1, 1, 1, 1];
       const cShift = [0, 0, 0, 0];
+      const oScale = [1, 1, 1, 1];
+      const oShift = [0, 0, 0, 0];
       const tView = model.textureViews[0];
       const tScale = tView.getTexture().getScale();
-      const numComp = tView.getTexture().getNumberOfComponents();
-      const iComps = false; // todo handle independent?
+      const imageState = publicAPI.getImageState();
+      const { numberOfComponents: numComp, independentComponents: iComps } =
+        imageState;
       for (let i = 0; i < numComp; i++) {
         let cw = actor.getProperty().getColorWindow();
         let cl = actor.getProperty().getColorLevel();
 
         const target = iComps ? i : 0;
         const cfun = actor.getProperty().getRGBTransferFunction(target);
-        if (cfun) {
+        if (cfun && actor.getProperty().getUseLookupTableScalarRange()) {
           const cRange = cfun.getRange();
           cw = cRange[1] - cRange[0];
           cl = 0.5 * (cRange[1] + cRange[0]);
@@ -267,9 +335,25 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 
         cScale[i] = tScale / cw;
         cShift[i] = -cl / cw + 0.5;
+
+        let opacityScale = 1.0;
+        let opacityShift = 0.0;
+        const pwfun = actor.getProperty().getPiecewiseFunction(target);
+        if (pwfun) {
+          const pwfRange = pwfun.getRange();
+          const length = pwfRange[1] - pwfRange[0];
+          const mid = 0.5 * (pwfRange[0] + pwfRange[1]);
+          opacityScale = tScale / length;
+          opacityShift = -mid / length + 0.5;
+        }
+        oScale[i] = opacityScale;
+        oShift[i] = opacityShift;
       }
       model.UBO.setArray('cScale', cScale);
       model.UBO.setArray('cShift', cShift);
+      model.UBO.setArray('oScale', oScale);
+      model.UBO.setArray('oShift', oShift);
+      model.UBO.setValue('Opacity', actor.getProperty().getOpacity());
       const cp = publicAPI.getCoincidentParameters();
       model.UBO.setValue('CoincidentFactor', cp.factor);
       model.UBO.setValue('CoincidentOffset', cp.offset);
@@ -278,12 +362,9 @@ function vtkWebGPUImageMapper(publicAPI, model) {
   };
 
   publicAPI.updateLUTImage = () => {
-    const actorProperty = model.WebGPUImageSlice.getRenderable().getProperty();
-
-    const tView = publicAPI.getTextureViews()[0];
-    const numComp = tView.getTexture().getNumberOfComponents();
-    const iComps = false; // todo support indepenedent comps?
-    const numIComps = iComps ? numComp : 1;
+    const imageState = publicAPI.getImageState();
+    const { actorProperty, independentComponents: iComps } = imageState;
+    const numIComps = imageState.numberOfIComponents;
 
     const cfunToString = computeFnToString(
       actorProperty,
@@ -359,6 +440,53 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     }
   };
 
+  publicAPI.updateOpacityLUTImage = () => {
+    const imageState = publicAPI.getImageState();
+    const { actorProperty, independentComponents: iComps } = imageState;
+    const numIComps = imageState.numberOfIComponents;
+    model.numRows = numIComps;
+    const pwfunToString = computeFnToString(
+      actorProperty,
+      actorProperty.getPiecewiseFunction,
+      numIComps
+    );
+
+    if (model.opacityTextureString !== pwfunToString) {
+      const opacityArray = new Float32Array(model.numRows * 2 * model.rowLength);
+      const tmpTable = new Float32Array(model.rowLength);
+
+      for (let c = 0; c < numIComps; c++) {
+        const pwfun = actorProperty.getPiecewiseFunction(c);
+        if (!pwfun) {
+          const offset = c * model.rowLength * 2;
+          opacityArray.fill(1.0, offset, offset + model.rowLength * 2);
+          continue;
+        }
+
+        const pwfRange = pwfun.getRange();
+        pwfun.getTable(pwfRange[0], pwfRange[1], model.rowLength, tmpTable, 1);
+        const offset = c * model.rowLength * 2;
+        for (let i = 0; i < model.rowLength; i++) {
+          opacityArray[offset + i] = tmpTable[i];
+          opacityArray[offset + model.rowLength + i] = tmpTable[i];
+        }
+      }
+
+      const treq = {
+        nativeArray: opacityArray,
+        width: model.rowLength,
+        height: model.numRows * 2,
+        depth: 1,
+        format: 'r16float',
+      };
+      const newTex = model.device.getTextureManager().getTexture(treq);
+      const tview = newTex.createView('ofunTexture');
+      model.textureViews[2] = tview;
+
+      model.opacityTextureString = pwfunToString;
+    }
+  };
+
   const superClassUpdateBuffers = publicAPI.updateBuffers;
   publicAPI.updateBuffers = () => {
     superClassUpdateBuffers();
@@ -373,6 +501,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     }
 
     publicAPI.updateLUTImage();
+    publicAPI.updateOpacityLUTImage();
     publicAPI.updateUBO();
 
     // set interpolation on the texture based on property setting
@@ -442,6 +571,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
   publicAPI.replaceShaderImage = (hash, pipeline, vertexInput) => {
     const fDesc = pipeline.getShaderDescription('fragment');
     let code = fDesc.getCode();
+    const imageState = publicAPI.getImageState();
 
     if (model.dimensions === 3) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
@@ -457,11 +587,64 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       ]).result;
     }
 
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
-      `    var coord: vec2<f32> =`,
-      `      vec2<f32>(computedColor.r * mapperUBO.cScale.r + mapperUBO.cShift.r, 0.5);`,
-      `    computedColor = textureSampleLevel(tfunTexture, clampSampler, coord, 0.0);`,
-    ]).result;
+    switch (imageState.renderMode) {
+      case ImageRenderMode.SINGLE:
+      case ImageRenderMode.INDEPENDENT_1:
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
+          '    let scalar: f32 = computedColor.r;',
+          '    var colorCoord: vec2<f32> =',
+          '      vec2<f32>(scalar * mapperUBO.cScale.r + mapperUBO.cShift.r, 0.5);',
+          '    let tColor: vec4<f32> =',
+          '      textureSampleLevel(tfunTexture, clampSampler, colorCoord, 0.0);',
+          '    var opacityCoord: vec2<f32> =',
+          '      vec2<f32>(scalar * mapperUBO.oScale.r + mapperUBO.oShift.r, 0.5);',
+          '    let scalarOpacity: f32 =',
+          '      textureSampleLevel(ofunTexture, clampSampler, opacityCoord, 0.0).r;',
+          '    computedColor = vec4<f32>(tColor.rgb, scalarOpacity * mapperUBO.Opacity);',
+        ]).result;
+        break;
+      case ImageRenderMode.DEPENDENT_LA:
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
+          '    let rawColor: vec4<f32> = computedColor;',
+          '    let intensity: f32 = rawColor.r * mapperUBO.cScale.r + mapperUBO.cShift.r;',
+          '    let tColor: vec4<f32> =',
+          '      textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(intensity, 0.5), 0.0);',
+          '    computedColor = vec4<f32>(',
+          '      tColor.rgb,',
+          '      rawColor.g * mapperUBO.oScale.r + mapperUBO.oShift.r);',
+        ]).result;
+        break;
+      case ImageRenderMode.DEPENDENT_RGB:
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
+          '    let rawColor: vec4<f32> =',
+          '      computedColor * vec4<f32>(mapperUBO.cScale.x) + vec4<f32>(mapperUBO.cShift.x);',
+          '    computedColor = vec4<f32>(',
+          '      textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(rawColor.r, 0.5), 0.0).r,',
+          '      textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(rawColor.g, 0.5), 0.0).r,',
+          '      textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(rawColor.b, 0.5), 0.0).r,',
+          '      mapperUBO.Opacity);',
+        ]).result;
+        break;
+      case ImageRenderMode.DEPENDENT_RGBA:
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
+          '    let rawColor: vec4<f32> =',
+          '      computedColor * vec4<f32>(mapperUBO.cScale.x) + vec4<f32>(mapperUBO.cShift.x);',
+          '    computedColor = vec4<f32>(',
+          '      textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(rawColor.r, 0.5), 0.0).r,',
+          '      textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(rawColor.g, 0.5), 0.0).r,',
+          '      textureSampleLevel(tfunTexture, clampSampler, vec2<f32>(rawColor.b, 0.5), 0.0).r,',
+          '      rawColor.a);',
+        ]).result;
+        break;
+      default:
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
+          '    let scalar: f32 = computedColor.r;',
+          '    var colorCoord: vec2<f32> =',
+          '      vec2<f32>(scalar * mapperUBO.cScale.r + mapperUBO.cShift.r, 0.5);',
+          '    computedColor = textureSampleLevel(tfunTexture, clampSampler, colorCoord, 0.0);',
+        ]).result;
+        break;
+    }
 
     fDesc.setCode(code);
   };
@@ -518,6 +701,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('Axis1', 'vec4<f32>');
   model.UBO.addEntry('cScale', 'vec4<f32>');
   model.UBO.addEntry('cShift', 'vec4<f32>');
+  model.UBO.addEntry('oScale', 'vec4<f32>');
+  model.UBO.addEntry('oShift', 'vec4<f32>');
+  model.UBO.addEntry('Opacity', 'f32');
   model.UBO.addEntry('CoincidentFactor', 'f32');
   model.UBO.addEntry('CoincidentOffset', 'f32');
 
