@@ -166,6 +166,14 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     }
   };
 
+  publicAPI.zBufferPass = (prepass) => {
+    if (prepass) {
+      publicAPI.render();
+    }
+  };
+
+  publicAPI.opaqueZBufferPass = (prepass) => publicAPI.zBufferPass(prepass);
+
   publicAPI.opaquePass = (prepass) => {
     if (prepass) {
       publicAPI.render();
