@@ -946,7 +946,7 @@ vec4 getColorForLabelOutline() {
   // TODO define epsilon when building shader?
   for (int i = -actualThickness; i <= actualThickness; i++) {
     for (int j = -actualThickness; j <= actualThickness; j++) {
-      if (i == 0 || j == 0) {
+      if (i == 0 && j == 0) {
         continue;
       }
 
