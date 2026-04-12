@@ -389,7 +389,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
                   for (int i = -actualThickness; i <= actualThickness; i++) {
                     for (int j = -actualThickness; j <= actualThickness; j++) {
-                      if (i == 0 || j == 0) {
+                      if (i == 0 && j == 0) {
                         continue;
                       }
                       vec4 neighborPixelCoord = vec4(gl_FragCoord.x + float(i),
