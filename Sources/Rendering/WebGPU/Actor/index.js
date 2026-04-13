@@ -33,6 +33,30 @@ function vtkWebGPUActor(publicAPI, model) {
     }
   };
 
+  // render both opaque and translucent actors
+  publicAPI.traverseZBufferPass = (renderPass) => {
+    if (
+      !model.renderable ||
+      !model.renderable.getNestedVisibility() ||
+      (model.WebGPURenderer.getSelector() &&
+        !model.renderable.getNestedPickable())
+    ) {
+      return;
+    }
+
+    publicAPI.apply(renderPass, true);
+
+    if (model.children[0]) {
+      model.children[0].traverse(renderPass);
+    }
+
+    publicAPI.apply(renderPass, false);
+  };
+
+  // only render opaque actors
+  publicAPI.traverseOpaqueZBufferPass = (renderPass) =>
+    publicAPI.traverseOpaquePass(renderPass);
+
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverseOpaquePass = (renderPass) => {
     if (
