@@ -4,6 +4,12 @@ import * as macro from 'vtk.js/Sources/macros';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQuad';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
+import {
+  addClipPlaneEntries,
+  getClippingPlaneEquationsInCoords,
+  getClipPlaneShaderChecks,
+  MAX_CLIPPING_PLANES,
+} from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
 
 import { Resolve } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/ImageProperty/Constants';
@@ -13,9 +19,8 @@ import {
 } from 'vtk.js/Sources/Rendering/WebGPU/ImageMapper/Constants';
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
-// const { vtkErrorMacro } = macro;
+const { vtkErrorMacro } = macro;
 const { SlicingMode } = Constants;
-
 const imgFragTemplate = `
 //VTK::Renderer::Dec
 
@@ -24,6 +29,8 @@ const imgFragTemplate = `
 //VTK::TCoord::Dec
 
 //VTK::Image::Dec
+
+//VTK::Clip::Dec
 
 //VTK::RenderEncoder::Dec
 
@@ -36,6 +43,8 @@ fn main(
 //VTK::IOStructs::Output
 {
   var output: fragmentOutput;
+
+  //VTK::Clip::Impl
 
   //VTK::Image::Sample
 
@@ -215,7 +224,11 @@ function vtkWebGPUImageMapper(publicAPI, model) {
   publicAPI.render = () => {
     model.renderable.update();
 
-    model.currentInput = model.renderable.getInputData();
+    model.currentInput = model.renderable.getCurrentImage();
+    if (!model.currentInput) {
+      vtkErrorMacro('No input!');
+      return;
+    }
 
     publicAPI.prepareToDraw(model.WebGPURenderer.getRenderEncoder());
     model.renderEncoder.registerDrawCallback(model.pipeline, publicAPI.draw);
@@ -257,13 +270,15 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     const utime = model.UBO.getSendTime();
     const actor = model.WebGPUImageSlice.getRenderable();
     const volMapr = actor.getMapper();
+    const clippingPlanesMTime = model.renderable.getClippingPlanesMTime();
     if (
       publicAPI.getMTime() > utime ||
       model.renderable.getMTime() > utime ||
-      actor.getProperty().getMTime() > utime
+      actor.getProperty().getMTime() > utime ||
+      clippingPlanesMTime > utime
     ) {
       // compute the SCTCMatrix
-      const image = volMapr.getInputData();
+      const image = volMapr.getCurrentImage();
       const center = model.WebGPURenderer.getStabilizedCenterByReference();
 
       mat4.identity(tmpMat4);
@@ -422,6 +437,23 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       const cp = publicAPI.getCoincidentParameters();
       model.UBO.setValue('CoincidentFactor', cp.factor);
       model.UBO.setValue('CoincidentOffset', cp.offset);
+      model.UBO.setValue('NumClipPlanes', 0);
+
+      const numClipPlanes = model.renderable.getClippingPlanes().length;
+      model.UBO.setValue('NumClipPlanes', numClipPlanes);
+
+      if (numClipPlanes > 0) {
+        mat4.fromTranslation(tmp2Mat4, [-center[0], -center[1], -center[2]]);
+        getClippingPlaneEquationsInCoords(
+          model.renderable,
+          tmp2Mat4,
+          model.clipPlanes
+        );
+        for (let i = 0; i < numClipPlanes; i++) {
+          model.UBO.setArray(`ClipPlane${i}`, model.clipPlanes[i]);
+        }
+      }
+
       model.UBO.sendIfNeeded(model.device);
     }
   };
@@ -686,6 +718,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
     vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
+    vDesc.addOutput('vec4<f32>', 'vertexSC');
     let code = vDesc.getCode();
     const lines = [
       'var pos: vec4<f32> = mapperUBO.Origin +',
@@ -702,7 +735,8 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       // Match the OpenGL coincident topology constant offset scale (~1 / 2^16 = 0.000016)
       'pos.z = clamp(pos.z - 0.000016 * mapperUBO.CoincidentOffset * pos.w, 0.0, pos.w);',
       'output.tcoordVS = tcoord;',
-      'output.Position = pos;'
+      'output.vertexSC = pos;',
+      'output.Position = rendererUBO.SCPCMatrix * pos;'
     );
     code = vtkWebGPUShaderCache.substitute(
       code,
@@ -1059,6 +1093,24 @@ function vtkWebGPUImageMapper(publicAPI, model) {
   };
   sr.set('replaceShaderImage', publicAPI.replaceShaderImage);
 
+  publicAPI.replaceShaderClip = (hash, pipeline, vertexInput) => {
+    const fDesc = pipeline.getShaderDescription('fragment');
+    let code = fDesc.getCode();
+    const clipPlaneChecks = getClipPlaneShaderChecks({
+      countName: 'mapperUBO.NumClipPlanes',
+      planePrefix: 'mapperUBO.ClipPlane',
+      positionName: 'input.vertexSC',
+    });
+
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Clip::Impl', [
+      ...clipPlaneChecks,
+      '//VTK::Clip::Impl',
+    ]).result;
+
+    fDesc.setCode(code);
+  };
+  sr.set('replaceShaderClip', publicAPI.replaceShaderClip);
+
   publicAPI.replaceShaderCoincidentOffset = (hash, pipeline, vertexInput) => {
     const fDesc = pipeline.getShaderDescription('fragment');
     if (!fDesc) {
@@ -1117,6 +1169,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('Opacity', 'f32');
   model.UBO.addEntry('CoincidentFactor', 'f32');
   model.UBO.addEntry('CoincidentOffset', 'f32');
+  addClipPlaneEntries(model.UBO, 'ClipPlane');
+  model.UBO.addEntry('NumClipPlanes', 'u32');
 
   model.lutBuildTime = {};
   macro.obj(model.lutBuildTime, { mtime: 0 });
@@ -1132,6 +1186,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.opacityTmpTable = new Float32Array(model.rowLength);
   model.colorLUTArray = null;
   model.opacityLUTArray = null;
+  model.clipPlanes = Array.from({ length: MAX_CLIPPING_PLANES }, () => [
+    0.0, 0.0, 0.0, 0.0,
+  ]);
 
   model.VBOBuildTime = {};
   macro.obj(model.VBOBuildTime);
@@ -1149,4 +1206,4 @@ export const newInstance = macro.newInstance(extend, 'vtkWebGPUImageMapper');
 export default { newInstance, extend };
 
 // Register ourself to WebGPU backend if imported
-registerOverride('vtkImageMapper', newInstance);
+registerOverride('vtkAbstractImageMapper', newInstance);
