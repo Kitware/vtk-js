@@ -479,7 +479,11 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 
   publicAPI.getPixelsAsync = async () => {
     const device = model.device;
-    const texture = model.renderPasses[0].getOpaquePass().getColorTexture();
+    const opaquePass = model.renderPasses[0].getOpaquePass();
+    // When MSAA is active, use the resolved (1-sample) texture for readback
+    const texture = opaquePass.getResolveColorTexture()
+      ? opaquePass.getResolveColorTexture()
+      : opaquePass.getColorTexture();
 
     // as this is async we really don't want to store things in
     // the class as multiple calls may start before resolving
@@ -564,6 +568,18 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     return modified;
   };
 
+  // Validate multiSample — WebGPU only supports 1 or 4
+  const superSetMultiSample = publicAPI.setMultiSample;
+  publicAPI.setMultiSample = (count) => {
+    if (count !== 1 && count !== 4) {
+      vtkErrorMacro(
+        `Invalid multiSample ${count}. WebGPU only supports multiSample of 1 or 4. Ignoring.`
+      );
+      return false;
+    }
+    return superSetMultiSample(count);
+  };
+
   publicAPI.delete = macro.chain(publicAPI.delete, publicAPI.setViewStream);
 }
 
@@ -588,6 +604,7 @@ const DEFAULT_VALUES = {
   nextPropID: 1,
   xrSupported: false,
   presentationFormat: null,
+  multiSample: 1,
 };
 
 // ----------------------------------------------------------------------------
@@ -631,6 +648,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'presentationFormat',
     'useBackgroundImage',
     'xrSupported',
+    'multiSample',
   ]);
 
   macro.setGet(publicAPI, model, [
@@ -642,6 +660,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'notifyStartCaptureImage',
     'cursor',
     'useOffScreen',
+    'multiSample',
   ]);
 
   macro.setGetArray(publicAPI, model, ['size'], 2);
