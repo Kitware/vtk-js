@@ -1,4 +1,5 @@
 import test from 'tape';
+import vtk from 'vtk.js/Sources/vtk';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -505,6 +506,34 @@ test('Test vtkDataArray resize function', (t) => {
 
   t.ok(da.getNumberOfTuples() === 4, '2 more tuples');
   t.equal(da.getData().buffer, oldData.buffer, 'no array allocation on shrink');
+
+  t.end();
+});
+
+test('Test vtkDataArray getState preserveTypedArrays option', (t) => {
+  const values = new Uint8Array([1, 2, 3, 4, 5]);
+  const da = vtkDataArray.newInstance({ values });
+
+  // Default: values converted to plain Array
+  const state = da.getState();
+  t.ok(Array.isArray(state.values), 'default getState returns plain Array');
+
+  // With option: values preserved as TypedArray
+  const transferable = da.getState({ preserveTypedArrays: true });
+  t.ok(
+    transferable.values instanceof Uint8Array,
+    'TypedArray type is preserved'
+  );
+
+  // Round-trip via vtk() works with TypedArray values
+  const da2 = vtk(transferable);
+  t.ok(da2, 'Can reconstruct from state with TypedArray values');
+  t.deepEqual(
+    Array.from(da2.getData()),
+    Array.from(values),
+    'Values preserved after round-trip'
+  );
+  t.equal(da2.getDataType(), 'Uint8Array', 'Data type preserved');
 
   t.end();
 });
