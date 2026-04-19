@@ -1,5 +1,6 @@
 import pixelmatch from 'pixelmatch';
 import vtkRTAnalyticSource from 'vtk.js/Sources/Filters/Sources/RTAnalyticSource';
+import vtkWebGPUDevice from 'vtk.js/Sources/Rendering/WebGPU/Device';
 
 let REMOVE_DOM_ELEMENTS = true;
 
@@ -204,11 +205,84 @@ function objEquals(a, b) {
   return true;
 }
 
+function alignTo256(value) {
+  return Math.ceil(value / 256) * 256;
+}
+
+async function createWebGPUTestDevice() {
+  const adapter = await navigator.gpu.requestAdapter({
+    powerPreference: 'high-performance',
+  });
+  if (!adapter) {
+    throw new Error('Failed to acquire a WebGPU adapter.');
+  }
+
+  const handle = await adapter.requestDevice();
+  const device = vtkWebGPUDevice.newInstance();
+  device.initialize(handle);
+  return device;
+}
+
+async function readWebGPUTexture2D(device, texture, width, height) {
+  const bytesPerPixel = 4;
+  const unpaddedBytesPerRow = width * bytesPerPixel;
+  const bytesPerRow = alignTo256(unpaddedBytesPerRow);
+  const bufferSize = bytesPerRow * height;
+
+  const readBuffer = device.getHandle().createBuffer({
+    size: bufferSize,
+    /* eslint-disable no-undef */
+    /* eslint-disable no-bitwise */
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+  });
+
+  const commandEncoder = device.getHandle().createCommandEncoder();
+  commandEncoder.copyTextureToBuffer(
+    {
+      texture: texture.getHandle(),
+      mipLevel: 0,
+      origin: { x: 0, y: 0, z: 0 },
+    },
+    {
+      buffer: readBuffer,
+      bytesPerRow,
+      rowsPerImage: height,
+    },
+    {
+      width,
+      height,
+      depthOrArrayLayers: 1,
+    }
+  );
+  device.getHandle().queue.submit([commandEncoder.finish()]);
+  await device.getHandle().queue.onSubmittedWorkDone();
+
+  /* eslint-disable no-undef */
+  await readBuffer.mapAsync(GPUMapMode.READ);
+  const mapped = new Uint8Array(readBuffer.getMappedRange());
+  const result = new Uint8Array(unpaddedBytesPerRow * height);
+
+  for (let row = 0; row < height; row++) {
+    const srcStart = row * bytesPerRow;
+    const dstStart = row * unpaddedBytesPerRow;
+    result.set(
+      mapped.subarray(srcStart, srcStart + unpaddedBytesPerRow),
+      dstStart
+    );
+  }
+
+  readBuffer.unmap();
+  readBuffer.destroy();
+  return result;
+}
+
 export default {
   arrayEquals,
   compareImages,
   createGarbageCollector,
   createImage,
+  createWebGPUTestDevice,
+  readWebGPUTexture2D,
   keepDOM,
   objEquals,
   removeDOM,
