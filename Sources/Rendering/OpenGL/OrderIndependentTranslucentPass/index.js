@@ -296,6 +296,12 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
       publicAPI.createVBO(viewNode);
     }
 
+    const cullFaceEnabled = gl.isEnabled(gl.CULL_FACE);
+    const cullFaceMode = cullFaceEnabled
+      ? gl.getParameter(gl.CULL_FACE_MODE)
+      : null;
+    viewNode.disableCullFace();
+
     gl.blendFuncSeparate(
       gl.SRC_ALPHA,
       gl.ONE_MINUS_SRC_ALPHA,
@@ -325,6 +331,10 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
 
     gl.depthMask(true);
     gl.depthFunc(gl.LEQUAL);
+    if (cullFaceEnabled) {
+      viewNode.enableCullFace();
+      gl.cullFace(cullFaceMode);
+    }
     model.translucentRGBATexture.deactivate();
     model.translucentRTexture.deactivate();
 
