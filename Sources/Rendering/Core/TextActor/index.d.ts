@@ -56,6 +56,8 @@ export function newInstance(
 
 /**
  * vtkTextActor can be used to place text annotation into a window.
+ * Windows line endings (`\r\n`), Unix line endings (`\n`), and classic Mac
+ * line endings (`\r`) are all treated as multiline breaks.
  */
 export declare const vtkTextActor: {
   newInstance: typeof newInstance;

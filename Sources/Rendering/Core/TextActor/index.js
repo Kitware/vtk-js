@@ -28,6 +28,19 @@ function vtkTextActor(publicAPI, model) {
     yResolution: 1,
   });
 
+  /**
+   * Normalize escaped and platform specific line endings, then split into lines.
+   */
+  function splitLines(text) {
+    return text
+      .replace(/\\r\\n/g, '\n')
+      .replace(/\\n/g, '\n')
+      .replace(/\\r/g, '\n')
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split('\n');
+  }
+
   function createImageData(text) {
     const fontSizeScale = publicAPI.getProperty().getFontSizeScale();
     const fontStyle = publicAPI.getProperty().getFontStyle();
@@ -43,27 +56,44 @@ function vtkTextActor(publicAPI, model) {
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
     // Set the text properties to measure
-    const textSize = fontSizeScale(resolution) * dpr;
+    const textSize = fontSizeScale(resolution);
+    const lines = splitLines(text);
 
     ctx.font = `${fontStyle} ${textSize}px "${fontFamily}"`;
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
 
-    // Measure the text
-    const metrics = ctx.measureText(text);
-    const textWidth = metrics.width / dpr;
-
-    const {
-      actualBoundingBoxLeft,
-      actualBoundingBoxRight,
-      actualBoundingBoxAscent,
-      actualBoundingBoxDescent,
-    } = metrics;
-    const hAdjustment = (actualBoundingBoxLeft - actualBoundingBoxRight) / 2;
-    const vAdjustment =
-      (actualBoundingBoxAscent - actualBoundingBoxDescent) / 2;
-
-    const textHeight = textSize / dpr - vAdjustment;
+    const lineMetrics = lines.map((line) => {
+      const metrics = ctx.measureText(line);
+      return {
+        left: metrics.actualBoundingBoxLeft || 0,
+        right: metrics.actualBoundingBoxRight || metrics.width || 0,
+        actualAscent: metrics.actualBoundingBoxAscent || 0,
+        actualDescent: metrics.actualBoundingBoxDescent || 0,
+      };
+    });
+    const maxActualAscent = lineMetrics.reduce(
+      (value, metrics) => Math.max(value, metrics.actualAscent),
+      0
+    );
+    const maxActualDescent = lineMetrics.reduce(
+      (value, metrics) => Math.max(value, metrics.actualDescent),
+      0
+    );
+    const maxLeft = lineMetrics.reduce(
+      (value, metrics) => Math.max(value, metrics.left),
+      0
+    );
+    const maxRight = lineMetrics.reduce(
+      (value, metrics) => Math.max(value, metrics.right),
+      0
+    );
+    const lineAscent = maxActualAscent;
+    const lineDescent = maxActualDescent;
+    const baselineOffset = lineAscent;
+    const lineHeight = Math.max(lineAscent + lineDescent, 1);
+    const textWidth = maxLeft + maxRight;
+    const textHeight = Math.max(lines.length * lineHeight, lineHeight);
 
     // Update canvas size to fit text and ensure it is at least 1x1 pixel
     const width = Math.max(Math.round(textWidth * dpr), 1);
@@ -72,9 +102,7 @@ function vtkTextActor(publicAPI, model) {
     canvas.width = width;
     canvas.height = height;
 
-    // Vertical flip
-    ctx.translate(0, height);
-    ctx.scale(1, -1);
+    ctx.setTransform(dpr, 0, 0, -dpr, 0, height);
 
     // Clear the canvas
     ctx.clearRect(0, 0, width, height);
@@ -89,8 +117,8 @@ function vtkTextActor(publicAPI, model) {
     ctx.imageSmoothingQuality = 'high';
     ctx.font = `${fontStyle} ${textSize}px "${fontFamily}"`;
     ctx.fillStyle = vtkMath.floatRGB2HexCode(fontColor);
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
 
     // Set shadow
     if (shadowColor) {
@@ -100,8 +128,12 @@ function vtkTextActor(publicAPI, model) {
       ctx.shadowBlur = shadowBlur;
     }
 
-    // Draw the text
-    ctx.fillText(text, width / 2 + hAdjustment, height / 2 + vAdjustment);
+    const x = maxLeft;
+    const baseline = baselineOffset;
+    const lineHeightPx = lineHeight;
+    lines.forEach((line, index) => {
+      ctx.fillText(line, x, baseline + index * lineHeightPx);
+    });
 
     // Update plane dimensions to match text size
     plane.set({
