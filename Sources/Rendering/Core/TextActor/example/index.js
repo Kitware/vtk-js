@@ -21,7 +21,7 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // ----------------------------------------------------------------------------
 
 const actor = vtkTextActor.newInstance();
-actor.setInput('Hello World!');
+actor.setInput('Hello World!\nfrom vtk.js');
 actor.setDisplayPosition(window.innerWidth / 4, window.innerHeight / 4);
 
 renderer.addActor2D(actor);
@@ -34,7 +34,7 @@ renderWindow.render();
 
 const gui = new GUI();
 const params = {
-  text: 'Hello World!',
+  text: 'Hello World\\nfrom vtk.js',
   x: window.innerWidth / 4,
   y: window.innerHeight / 4,
   color: [0, 0, 0],
