@@ -87,6 +87,12 @@ function vtkWebGPUOpaquePass(publicAPI, model) {
     // default settings are fine for this
     model.renderEncoder.setPipelineHash('op');
   };
+
+  publicAPI.releaseGraphicsResources = () => {
+    model.renderEncoder = null;
+    model.colorTexture = null;
+    model.depthTexture = null;
+  };
 }
 
 // ----------------------------------------------------------------------------

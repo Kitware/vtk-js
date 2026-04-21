@@ -95,13 +95,13 @@ function vtkWebGPUPipeline(publicAPI, model) {
 
   publicAPI.getBindGroupLayout = (idx) => model.layouts[idx].layout;
 
-  publicAPI.getBindGroupLayoutCount = (llabel) => {
+  publicAPI.getBindGroupLayoutIndex = (llabel) => {
     for (let i = 0; i < model.layouts.length; i++) {
       if (model.layouts[i].label === llabel) {
         return i;
       }
     }
-    return 0;
+    return -1; // Not found
   };
 
   publicAPI.bindVertexInput = (renderEncoder, vInput) => {

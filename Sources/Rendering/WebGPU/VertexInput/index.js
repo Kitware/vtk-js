@@ -6,8 +6,9 @@ function arraysEqual(a, b) {
   if (a == null || b == null) return false;
   if (a.length !== b.length) return false;
 
+  const values = new Set(b);
   for (let i = 0; i < a.length; ++i) {
-    if (!b.includes(a[i])) return false;
+    if (!values.has(a[i])) return false;
   }
   return true;
 }

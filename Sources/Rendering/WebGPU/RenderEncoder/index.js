@@ -1,6 +1,8 @@
 import * as macro from 'vtk.js/Sources/macros';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 
+const { vtkErrorMacro } = macro;
+
 // methods we forward to the handle
 const forwarded = [
   'setBindGroup',
@@ -70,7 +72,9 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
     }
 
     // check depth buffer
-    if (!model.depthTextureView !== !('depthStencil' in pd)) {
+    const hasDepthAttachment = !!model.depthTextureView;
+    const pipelineUsesDepth = 'depthStencil' in pd;
+    if (hasDepthAttachment !== pipelineUsesDepth) {
       console.log('mismatched depth attachments');
       console.trace();
     } else if (model.depthTextureView) {
@@ -98,7 +102,13 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
 
   publicAPI.activateBindGroup = (bg) => {
     const device = model.boundPipeline.getDevice();
-    const midx = model.boundPipeline.getBindGroupLayoutCount(bg.getLabel());
+    const midx = model.boundPipeline.getBindGroupLayoutIndex(bg.getLabel());
+    if (midx < 0) {
+      vtkErrorMacro(
+        `vtkWebGPURenderEncoder: could not find bind group layout ${bg.getLabel()}`
+      );
+      return;
+    }
     model.handle.setBindGroup(midx, bg.getBindGroup(device));
     // verify bind group layout matches
     const bgl1 = device.getBindGroupLayoutDescription(

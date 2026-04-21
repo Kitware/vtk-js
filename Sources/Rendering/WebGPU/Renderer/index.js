@@ -527,6 +527,13 @@ function vtkWebGPURenderer(publicAPI, model) {
     if (model.selector !== null) {
       model.selector.releaseGraphicsResources();
     }
+    model.clearFSQ?.releaseGraphicsResources?.();
+    model.clearFSQ = null;
+    model.bindGroup.releaseGraphicsResources?.();
+    model.UBO.releaseGraphicsResources?.();
+    model.SSBO.releaseGraphicsResources?.();
+    model.renderEncoder = null;
+    model.backgroundTexLoaded = false;
   };
 }
 

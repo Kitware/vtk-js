@@ -361,6 +361,16 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
       model.device.createPipeline(model.pipelineHash, model.pipeline);
     }
   };
+
+  publicAPI.releaseGraphicsResources = () => {
+    model.vertexInput?.releaseGraphicsResources?.();
+    model.bindGroup?.releaseGraphicsResources?.();
+    model.UBO?.releaseGraphicsResources?.();
+    model.SSBO?.releaseGraphicsResources?.();
+    model.pipeline = null;
+    model.renderEncoder = null;
+    model.textureViews.length = 0;
+  };
 }
 
 // ----------------------------------------------------------------------------
