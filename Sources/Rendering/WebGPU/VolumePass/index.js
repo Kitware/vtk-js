@@ -696,6 +696,27 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       }
     }
   };
+
+  publicAPI.releaseGraphicsResources = () => {
+    if (model._animationRateSubscription) {
+      model._animationRateSubscription.unsubscribe();
+      model._animationRateSubscription = null;
+    }
+
+    model._clearEncoder = null;
+    model._mergeEncoder = null;
+    model._copyEncoder = null;
+    model._depthRangeEncoder = null;
+    model._colorTexture = null;
+    model._colorTextureView = null;
+    model._depthRangeTexture = null;
+    model._depthRangeTexture2 = null;
+    model._volumeCopyQuad = null;
+    model.fullScreenQuad = null;
+    model._copyUBO = null;
+    model.colorTextureView = null;
+    model.depthTextureView = null;
+  };
 }
 
 // ----------------------------------------------------------------------------

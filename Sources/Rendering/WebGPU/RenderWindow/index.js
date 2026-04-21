@@ -11,7 +11,7 @@ import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderWindowViewNode';
 import HalfFloat from 'vtk.js/Sources/Common/Core/HalfFloat';
 
-const { vtkErrorMacro } = macro;
+const { vtkErrorMacro, vtkWarningMacro } = macro;
 // const IS_CHROME = navigator.userAgent.indexOf('Chrome') !== -1;
 const SCREENSHOT_PLACEHOLDER = {
   position: 'absolute',
@@ -30,6 +30,66 @@ function vtkWebGPURenderWindow(publicAPI, model) {
   model.classHierarchy.push('vtkWebGPURenderWindow');
 
   publicAPI.getViewNodeFactory = () => model.myFactory;
+
+  function releaseViewNodeResources(viewNode, visited = new Set()) {
+    if (!viewNode || visited.has(viewNode)) {
+      return;
+    }
+    visited.add(viewNode);
+
+    const children = viewNode.getChildren?.() || [];
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      child?.releaseGraphicsResources?.();
+      releaseViewNodeResources(child, visited);
+    }
+  }
+
+  function queueRenderAfterInitialization() {
+    const subscription = publicAPI.onInitialized(() => {
+      subscription.unsubscribe();
+      if (!model.deleted) {
+        publicAPI.traverseAllPasses();
+      }
+    });
+  }
+
+  function handleDeviceLost(info, deviceGeneration) {
+    if (
+      model.deleted ||
+      deviceGeneration !== model.deviceGeneration ||
+      model.handlingDeviceLost
+    ) {
+      return;
+    }
+
+    model.handlingDeviceLost = true;
+    model.deviceLostInfo = info;
+
+    const reason = info?.reason ?? 'unknown';
+    const message = info?.message || 'WebGPU device was lost.';
+    vtkWarningMacro(`WebGPU device lost (${reason}): ${message}`);
+
+    publicAPI.releaseGraphicsResources();
+    publicAPI.invokeDeviceLost({
+      reason,
+      message,
+      recoverable: reason !== 'destroyed',
+    });
+
+    if (reason !== 'destroyed') {
+      queueRenderAfterInitialization();
+      publicAPI.initialize();
+    }
+
+    model.handlingDeviceLost = false;
+  }
+
+  function watchForDeviceLoss(deviceHandle, deviceGeneration) {
+    deviceHandle.lost.then((info) => {
+      handleDeviceLost(info, deviceGeneration);
+    });
+  }
 
   // Auto update style
   const previousSize = [0, 0];
@@ -128,6 +188,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
   publicAPI.initialize = () => {
     if (!model.initializing) {
       model.initializing = true;
+      model.deviceLostInfo = null;
       if (!navigator.gpu) {
         vtkErrorMacro('WebGPU is not enabled.');
         return;
@@ -213,20 +274,29 @@ function vtkWebGPURenderWindow(publicAPI, model) {
       model.device = null;
       return;
     }
-    // model.device.getHandle().lost.then((info) => {
-    //   console.log(`${info.message}`);
-    //   publicAPI.releaseGraphicsResources();
-    // });
+    model.deviceGeneration += 1;
+    watchForDeviceLoss(model.device.getHandle(), model.deviceGeneration);
     model.context = model.canvas.getContext('webgpu');
   };
 
   publicAPI.releaseGraphicsResources = () => {
+    if (model.renderPasses) {
+      for (let i = 0; i < model.renderPasses.length; i++) {
+        model.renderPasses[i]?.releaseGraphicsResources?.();
+      }
+    }
+    releaseViewNodeResources(publicAPI);
     const rp = vtkRenderPass.newInstance();
     rp.setCurrentOperation('Release');
     rp.traverse(publicAPI, null);
+    if (model.context) {
+      model.context.unconfigure();
+    }
     model.adapter = null;
     model.device = null;
     model.context = null;
+    model.commandEncoder = null;
+    model._configured = false;
     model.initialized = false;
     model.initializing = false;
   };
@@ -573,6 +643,10 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   initialized: false,
+  initializing: false,
+  handlingDeviceLost: false,
+  deviceGeneration: 0,
+  deviceLostInfo: null,
   context: null,
   adapter: null,
   device: null,
@@ -623,10 +697,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.event(publicAPI, model, 'imageReady');
   macro.event(publicAPI, model, 'initialized');
+  macro.event(publicAPI, model, 'deviceLost');
 
   // Build VTK API
   macro.get(publicAPI, model, [
     'commandEncoder',
+    'deviceLostInfo',
     'device',
     'presentationFormat',
     'useBackgroundImage',

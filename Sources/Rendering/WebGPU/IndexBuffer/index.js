@@ -5,6 +5,7 @@ import vtkWebGPUBuffer from 'vtk.js/Sources/Rendering/WebGPU/Buffer';
 
 const { Representation } = vtkProperty;
 const { PrimitiveTypes } = Constants;
+const { vtkWarningMacro } = macro;
 
 // Simulate a small map of pointId to flatId for a cell. The original code
 // used a map and was 2.6x slower (4.7 to 1.9 seconds). Using two fixed
@@ -34,7 +35,7 @@ class _LimitedMap {
         return true;
       }
     }
-    return undefined;
+    return false;
   }
 
   get(key) {
@@ -50,6 +51,7 @@ class _LimitedMap {
     if (this.count < 9) {
       this.keys[this.count] = key;
       this.values[this.count++] = value;
+      return;
     }
   }
 }
@@ -300,7 +302,7 @@ function vtkWebGPUIndexBuffer(publicAPI, model) {
     } else {
       state.flatIdToPointId = new Uint32Array(numPts + state.extraPoints);
     }
-    if (numPts + state.extraPoints < 0x8fff) {
+    if (numPts + state.extraPoints <= 0x7fff) {
       state.pointIdToFlatId = new Int16Array(numPts);
     } else {
       state.pointIdToFlatId = new Int32Array(numPts);
