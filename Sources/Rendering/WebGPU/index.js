@@ -13,6 +13,7 @@ import './PolyDataMapper';
 import './PolyDataMapper2D';
 import './Renderer';
 import './ScalarBarActor';
+import './Skybox';
 import './SphereMapper';
 import './StickMapper';
 import './Texture';

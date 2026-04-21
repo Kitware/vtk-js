@@ -159,7 +159,11 @@ function vtkWebGPUTexture(publicAPI, model) {
     model.width = options.width;
     model.height = options.height;
     model.depth = options.depth ? options.depth : 1;
-    const dimension = model.depth === 1 ? '2d' : '3d';
+    if (options.dimension) {
+      model.dimension = options.dimension;
+    } else {
+      model.dimension = model.depth === 1 ? '2d' : '3d';
+    }
     model.format = options.format ? options.format : 'rgba8unorm';
     model.mipLevel = options.mipLevel ? options.mipLevel : 0;
     /* eslint-disable no-undef */
@@ -174,7 +178,7 @@ function vtkWebGPUTexture(publicAPI, model) {
       format: model.format, // 'rgba8unorm',
       usage: model.usage,
       label: model.label,
-      dimension,
+      dimension: model.dimension,
       mipLevelCount: model.mipLevel + 1,
     });
   };
@@ -185,6 +189,11 @@ function vtkWebGPUTexture(publicAPI, model) {
     model.width = options.width;
     model.height = options.height;
     model.depth = options.depth ? options.depth : 1;
+    if (options.dimension) {
+      model.dimension = options.dimension;
+    } else {
+      model.dimension = model.depth === 1 ? '2d' : '3d';
+    }
     model.format = options.format ? options.format : 'rgba8unorm';
     /* eslint-disable no-undef */
     /* eslint-disable no-bitwise */
@@ -198,6 +207,8 @@ function vtkWebGPUTexture(publicAPI, model) {
   publicAPI.writeImageData = (req) => {
     let nativeArray = [];
     const _copyImageToTexture = (source) => {
+      const originZ = req.originZ ?? 0;
+      const depth = req.depth ?? 1;
       model.device.getHandle().queue.copyExternalImageToTexture(
         {
           source,
@@ -207,13 +218,13 @@ function vtkWebGPUTexture(publicAPI, model) {
           texture: model.handle,
           premultipliedAlpha: true,
           mipLevel: 0,
-          origin: { x: 0, y: 0, z: 0 },
+          origin: { x: 0, y: 0, z: originZ },
         },
-        [source.width, source.height, model.depth]
+        [source.width, source.height, depth]
       );
 
       // Generate mipmaps on GPU if needed
-      if (publicAPI.getDimensionality() !== 3 && model.mipLevel > 0) {
+      if (model.dimension === '2d' && depth === 1 && model.mipLevel > 0) {
         vtkTexture.generateMipmaps(
           model.device.getHandle(),
           model.handle,
@@ -263,12 +274,14 @@ function vtkWebGPUTexture(publicAPI, model) {
       nativeArray = req.nativeArray;
     }
 
-    const is3D = publicAPI.getDimensionality() === 3;
+    const width = req.width ?? model.width;
+    const height = req.height ?? model.height;
+    const depth = req.depth ?? 1;
     const preparedData = prepareTextureUploadData(
       nativeArray,
-      model.width,
-      model.height,
-      is3D ? model.depth : 1
+      width,
+      height,
+      depth
     );
     if (!preparedData) {
       return;
@@ -279,22 +292,22 @@ function vtkWebGPUTexture(publicAPI, model) {
       {
         texture: model.handle,
         mipLevel: 0,
-        origin: { x: 0, y: 0, z: 0 },
+        origin: { x: 0, y: 0, z: req.originZ ?? 0 },
       },
       data,
       {
         offset: 0,
         bytesPerRow: preparedData.bytesPerRow,
-        rowsPerImage: model.height,
+        rowsPerImage: height,
       },
       {
-        width: model.width,
-        height: model.height,
-        depthOrArrayLayers: is3D ? model.depth : 1,
+        width,
+        height,
+        depthOrArrayLayers: depth,
       }
     );
 
-    if (!is3D && model.mipLevel > 0) {
+    if (model.dimension === '2d' && depth === 1 && model.mipLevel > 0) {
       vtkTexture.generateMipmaps(
         model.device.getHandle(),
         model.handle,
@@ -393,6 +406,7 @@ function vtkWebGPUTexture(publicAPI, model) {
       model.depth = tex.getDepth();
       model.handle = model.device.getHandle().createTexture({
         size: [model.width, model.height, model.depth],
+        dimension: model.dimension,
         format: model.format,
         usage: model.usage,
         label: model.label,
@@ -411,6 +425,7 @@ function vtkWebGPUTexture(publicAPI, model) {
       model.depth = depth;
       model.handle = model.device.getHandle().createTexture({
         size: [model.width, model.height, model.depth],
+        dimension: model.dimension,
         format: model.format,
         usage: model.usage,
         label: model.label,
@@ -421,7 +436,13 @@ function vtkWebGPUTexture(publicAPI, model) {
   publicAPI.createView = (label, options = {}) => {
     // if options is missing values try to add them in
     if (!options.dimension) {
-      options.dimension = model.depth === 1 ? '2d' : '3d';
+      if (model.dimension === '3d') {
+        options.dimension = '3d';
+      } else if (model.depth === 1) {
+        options.dimension = '2d';
+      } else {
+        options.dimension = '2d-array';
+      }
     }
     const view = vtkWebGPUTextureView.newInstance({ label });
     view.create(publicAPI, options);
@@ -435,6 +456,7 @@ function vtkWebGPUTexture(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   device: null,
+  dimension: '2d',
   handle: null,
   buffer: null,
   ready: false,
@@ -450,6 +472,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   macro.get(publicAPI, model, [
+    'dimension',
     'handle',
     'ready',
     'width',
