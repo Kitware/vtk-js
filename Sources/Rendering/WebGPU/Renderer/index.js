@@ -356,6 +356,19 @@ function vtkWebGPURenderer(publicAPI, model) {
     }
   };
 
+  publicAPI.zBufferPass = (prepass) => {
+    if (prepass) {
+      model.renderEncoder.begin(model._parent.getCommandEncoder());
+      publicAPI.updateUBO();
+      publicAPI.updateSSBO();
+    } else {
+      publicAPI.scissorAndViewport(model.renderEncoder);
+      model.renderEncoder.end();
+    }
+  };
+
+  publicAPI.opaqueZBufferPass = (prepass) => publicAPI.zBufferPass(prepass);
+
   publicAPI.clear = () => {
     if (model.renderable.getTransparent() || model.suppressClear) {
       return;

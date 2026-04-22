@@ -426,19 +426,32 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
   };
 
   // Renders myself
+  publicAPI.renderForPass = (renderEncoder, depthOnly = false) => {
+    model.depthOnlyPass = depthOnly;
+    publicAPI.prepareToDraw(renderEncoder);
+    model.renderEncoder.registerDrawCallback(model.pipeline, publicAPI.draw);
+    model.depthOnlyPass = false;
+  };
+
   publicAPI.translucentPass = (prepass) => {
     if (prepass) {
-      publicAPI.prepareToDraw(model.WebGPURenderer.getRenderEncoder());
-      model.renderEncoder.registerDrawCallback(model.pipeline, publicAPI.draw);
+      publicAPI.renderForPass(model.WebGPURenderer.getRenderEncoder());
     }
   };
 
   publicAPI.opaquePass = (prepass) => {
     if (prepass) {
-      publicAPI.prepareToDraw(model.WebGPURenderer.getRenderEncoder());
-      model.renderEncoder.registerDrawCallback(model.pipeline, publicAPI.draw);
+      publicAPI.renderForPass(model.WebGPURenderer.getRenderEncoder());
     }
   };
+
+  publicAPI.zBufferPass = (prepass) => {
+    if (prepass) {
+      publicAPI.renderForPass(model.WebGPURenderer.getRenderEncoder(), true);
+    }
+  };
+
+  publicAPI.opaqueZBufferPass = (prepass) => publicAPI.zBufferPass(prepass);
 
   publicAPI.updateUBO = () => {
     const actor = model.WebGPUActor.getRenderable();
@@ -621,6 +634,18 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     primitive: {
       cullMode: publicAPI.getCullMode(),
     },
+    ...(model.depthOnlyPass
+      ? {
+          fragment: {
+            targets: [
+              {
+                format: 'rgba16float',
+                writeMask: 0,
+              },
+            ],
+          },
+        }
+      : {}),
   });
 
   publicAPI.getCoincidentParameters = () => {
@@ -1545,6 +1570,9 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     let pipelineHash = `pd${model.useRendererMatrix ? 'r' : ''}${
       model.forceZValue ? 'z' : ''
     }`;
+    if (model.depthOnlyPass) {
+      pipelineHash += 'd';
+    }
 
     if (
       model.primitiveType === PrimitiveTypes.TriangleEdges ||
@@ -1622,6 +1650,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  depthOnlyPass: false,
   is2D: false,
   cellArray: null,
   currentInput: null,
