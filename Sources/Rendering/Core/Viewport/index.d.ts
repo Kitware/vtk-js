@@ -38,27 +38,37 @@ export interface vtkViewport extends vtkObject {
   getActors2D(): vtkActor2D[];
 
   /**
-   *
+   * Get the viewport background.
+   * @returns {RGBColor}
    */
-  getBackground2(): number[];
+  getBackground2(): RGBColor;
 
   /**
-   *
+   * Get the viewport background.
+   * @returns {RGBColor}
    */
-  getBackground2ByReference(): number[];
+  getBackground2ByReference(): RGBColor;
 
   /**
-   *
+   * Get the viewport background.
+   * @returns {RGBColor}
    */
-  getBackground(): number[];
+  getBackground(): RGBColor;
 
   /**
-   *
+   * Get the viewport background.
+   * @returns {RGBColor}
    */
-  getBackgroundByReference(): number[];
+  getBackgroundByReference(): RGBColor;
 
   /**
-   *
+   * Get the gradient background flag.
+   * @returns {Boolean}
+   */
+  getGradientBackground(): boolean;
+
+  /**
+   * Get the size and origin of the viewport in display coordinates.
    */
   getSize(): Size;
 
@@ -152,7 +162,7 @@ export interface vtkViewport extends vtkObject {
   setBackground(background: number[]): boolean;
 
   /**
-   *
+   * Set the viewport secondary background.
    * @param {Number} r Defines the red component (between 0 and 1).
    * @param {Number} g Defines the green component (between 0 and 1).
    * @param {Number} b Defines the blue component (between 0 and 1).
@@ -160,22 +170,28 @@ export interface vtkViewport extends vtkObject {
   setBackground2(r: number, g: number, b: number): boolean;
 
   /**
-   *
-   * @param {Number[]} background
+   * Set the viewport secondary background.
+   * @param {RGBColor} background
    */
-  setBackground2(background: number[]): boolean;
+  setBackground2(background: RGBColor): boolean;
 
   /**
-   *
-   * @param {Number[]} background
+   * Set the viewport secondary background.
+   * @param {RGBColor} background
    */
-  setBackground2From(background: number[]): boolean;
+  setBackground2From(background: RGBColor): boolean;
 
   /**
-   *
-   * @param {Number[]} background
+   * Set the viewport background.
+   * @param {RGBColor} background
    */
-  setBackgroundFrom(background: number[]): boolean;
+  setBackgroundFrom(background: RGBColor): boolean;
+
+  /**
+   * Set the gradient background flag.
+   * @param {Boolean} gradientBackground
+   */
+  setGradientBackground(gradientBackground: boolean): boolean;
 
   /**
    * Specify the viewport for the Viewport to draw in the rendering window.

@@ -8,7 +8,7 @@ import 'vtk.js/Sources/Rendering/WebGPU/Actor2D';
 import 'vtk.js/Sources/Rendering/WebGPU/CubeAxesActor';
 import 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper';
 import 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper2D';
-// import 'vtk.js/Sources/Rendering/WebGPU/Skybox';
+import 'vtk.js/Sources/Rendering/WebGPU/Skybox';
 import 'vtk.js/Sources/Rendering/WebGPU/ScalarBarActor';
 import 'vtk.js/Sources/Rendering/WebGPU/Texture';
 

@@ -172,6 +172,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   macro.event(publicAPI, model, 'event');
 
+  macro.setGet(publicAPI, model, ['gradientBackground']);
   macro.setGetArray(publicAPI, model, ['viewport'], 4);
 
   macro.setGetArray(publicAPI, model, ['background', 'background2'], 3);
