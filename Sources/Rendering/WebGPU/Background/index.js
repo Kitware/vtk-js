@@ -159,10 +159,9 @@ function vtkWebGPUBackground(publicAPI, model) {
     }
 
     const isGradientBackground = renderer.getGradientBackground?.();
-    const background = renderer.getBackgroundByReference?.() ?? [0, 0, 0, 1];
+    const background = renderer.getBackgroundByReference?.() ?? [0, 0, 0];
     const background2 = renderer.getBackground2ByReference?.() ?? [0, 0, 0];
-    const background2rgba = [...background2, 1.0];
-    if (isGradientBackground && !areEquals(background, background2rgba)) {
+    if (isGradientBackground && !areEquals(background, background2)) {
       return {
         mode: 'gradient',
         texture: null,
@@ -243,10 +242,20 @@ function vtkWebGPUBackground(publicAPI, model) {
   };
 
   publicAPI.updateUBO = (device, rendererNode, renderer) => {
-    const background = renderer.getBackgroundByReference?.() ?? [0, 0, 0, 1];
+    const background = renderer.getBackgroundByReference?.() ?? [0, 0, 0];
     const background2 = renderer.getBackground2ByReference?.() ?? [0, 0, 0];
-    model.UBO.setArray('BackgroundColor', background);
-    model.UBO.setArray('BackgroundColor2', [...background2, 1.0]);
+    model.UBO.setArray('BackgroundColor', [
+      background[0],
+      background[1],
+      background[2],
+      1.0,
+    ]);
+    model.UBO.setArray('BackgroundColor2', [
+      background2[0],
+      background2[1],
+      background2[2],
+      1.0,
+    ]);
 
     const keyMats = model.webgpuCamera.getKeyMatrices(rendererNode);
     mat4.transpose(_tNormalMat4, keyMats.normalMatrix);
