@@ -317,7 +317,13 @@ function vtkWebGPUBufferManager(publicAPI, model) {
       buffer.setStrideInBytes(
         vtkWebGPUTypes.getByteStrideFromBufferFormat(req.format)
       );
-      buffer.setArrayInformation([{ offset: 0, format: req.format }]);
+      buffer.setArrayInformation([
+        {
+          offset: 0,
+          format: req.format,
+          interpolation: req.interpolation,
+        },
+      ]);
     }
 
     buffer.setSourceTime(req.time);

@@ -46,14 +46,15 @@ function getPixelInformationWithData(
       0
     );
 
-    if (actorid <= 0) {
+    if (actorid <= 0 || actorid - 1 >= (buffdata.props?.length ?? 0)) {
       // the pixel did not hit any actor.
       return null;
     }
 
     const info = {};
 
-    info.propID = actorid;
+    info.propID = actorid - 1;
+    info.prop = buffdata.props?.[info.propID];
 
     let compositeID = convert(
       inDisplayPosition[0],
@@ -64,7 +65,21 @@ function getPixelInformationWithData(
     if (compositeID < 0 || compositeID > 0xffffff) {
       compositeID = 0;
     }
-    info.compositeID = compositeID;
+    info.compositeID = compositeID - 1;
+    // attributeID is stored with a +1 offset in the selection buffer so that
+    // 0 means "no data" while 0 remains a valid decoded attribute index.
+    // A buffer value < 1 means no attribute was written, fall back to compositeID.
+    // After fallback, subtract 1 to recover the original 0 based index.
+    let attributeID = convert(
+      inDisplayPosition[0],
+      inDisplayPosition[1],
+      buffdata,
+      2
+    );
+    if (attributeID < 1) {
+      attributeID = compositeID;
+    }
+    info.attributeID = attributeID - 1;
 
     if (buffdata.captureZValues) {
       const offset =
@@ -179,9 +194,9 @@ function convertSelection(fieldassociation, dataMap, buffdata) {
         vtkErrorMacro('Unknown field association');
     }
     child.getProperties().propID = value.info.propID;
-    const wprop = buffdata.webGPURenderer.getPropFromID(value.info.propID);
-    child.getProperties().prop = wprop.getRenderable();
+    child.getProperties().prop = value.info.prop;
     child.getProperties().compositeID = value.info.compositeID;
+    child.getProperties().attributeID = value.info.attributeID;
     child.getProperties().pixelCount = value.pixelCount;
     if (buffdata.captureZValues) {
       child.getProperties().displayPosition = [
@@ -260,6 +275,17 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUHardwareSelector');
 
+  publicAPI.getPropIDForSelection = (runtimePropID, prop = null) => {
+    if (model._selectionPropMap.has(runtimePropID)) {
+      return model._selectionPropMap.get(runtimePropID);
+    }
+
+    const selectionPropID = model._selectionProps.length;
+    model._selectionPropMap.set(runtimePropID, selectionPropID);
+    model._selectionProps.push(prop);
+    return selectionPropID;
+  };
+
   //----------------------------------------------------------------------------
   publicAPI.endSelection = () => {
     model.WebGPURenderer.setSelector(null);
@@ -296,12 +322,19 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
     // Initialize renderer for selection.
     // change the renderer's background to black, which will indicate a miss
     const originalSuppress = webGPURenderer.getSuppressClear();
+    const originalSelector = webGPURenderer.getSelector();
+    model._selectionPropMap.clear();
+    model._selectionProps = [];
     webGPURenderer.setSuppressClear(true);
+    webGPURenderer.setSelector(publicAPI);
 
-    model._selectionPass.traverse(model._WebGPURenderWindow, webGPURenderer);
-
-    // restore original background
-    webGPURenderer.setSuppressClear(originalSuppress);
+    try {
+      model._selectionPass.traverse(model._WebGPURenderWindow, webGPURenderer);
+    } finally {
+      // restore original renderer state
+      webGPURenderer.setSelector(originalSelector);
+      webGPURenderer.setSuppressClear(originalSuppress);
+    }
 
     const device = model._WebGPURenderWindow.getDevice();
     const texture = model._selectionPass.getColorTexture();
@@ -315,6 +348,7 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
       area: [0, 0, texture.getWidth() - 1, texture.getHeight() - 1],
       captureZValues: model.captureZValues,
       fieldAssociation: model.fieldAssociation,
+      props: [...model._selectionProps],
       renderer,
       webGPURenderer,
       webGPURenderWindow: model._WebGPURenderWindow,
@@ -419,6 +453,8 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   // WebGPURenderWindow: null,
+  _selectionPropMap: null,
+  _selectionProps: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -430,6 +466,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkHardwareSelector.extend(publicAPI, model, initialValues);
 
   model._selectionPass = vtkWebGPUHardwareSelectionPass.newInstance();
+  model._selectionPropMap = new Map();
+  model._selectionProps = [];
 
   macro.setGet(publicAPI, model, ['_WebGPURenderWindow']);
   macro.moveToProtected(publicAPI, model, ['WebGPURenderWindow']);

@@ -425,12 +425,26 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     }
   };
 
+  publicAPI.isEdgePrimitive = () =>
+    model.primitiveType === PrimitiveTypes.TriangleEdges ||
+    model.primitiveType === PrimitiveTypes.TriangleStripEdges;
+
+  publicAPI.shouldSkipPass = () =>
+    publicAPI.isEdgePrimitive() && (model.depthOnlyPass || model.selectionPass);
+
   // Renders myself
   publicAPI.renderForPass = (renderEncoder, depthOnly = false) => {
     model.depthOnlyPass = depthOnly;
+    model.selectionPass = renderEncoder?.getPipelineHash?.() === 'sel';
+    if (publicAPI.shouldSkipPass()) {
+      model.depthOnlyPass = false;
+      model.selectionPass = false;
+      return;
+    }
     publicAPI.prepareToDraw(renderEncoder);
     model.renderEncoder.registerDrawCallback(model.pipeline, publicAPI.draw);
     model.depthOnlyPass = false;
+    model.selectionPass = false;
   };
 
   publicAPI.translucentPass = (prepass) => {
@@ -458,8 +472,10 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     const ppty = actor.getProperty();
     const clippingPlanesMTime = model.renderable.getClippingPlanesMTime();
     const backfaceProperty = actor.getBackfaceProperty?.() ?? ppty;
+    const selector = model.WebGPURenderer?.getSelector?.();
     const utime = model.UBO.getSendTime();
     if (
+      !selector &&
       publicAPI.getMTime() <= utime &&
       ppty.getMTime() <= utime &&
       backfaceProperty.getMTime() <= utime &&
@@ -573,7 +589,13 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       'Opacity',
       edgeLikeRepresentation ? ppty.getEdgeOpacity() : ppty.getOpacity()
     );
-    model.UBO.setValue('PropID', model.WebGPUActor.getPropID());
+    const runtimePropID = model.WebGPUActor.getPropID();
+    model.UBO.setValue(
+      'PropID',
+      selector?.getPropIDForSelection
+        ? selector.getPropIDForSelection(runtimePropID, actor) + 1
+        : runtimePropID
+    );
     const cp = publicAPI.getCoincidentParameters();
     model.UBO.setValue('CoincidentFactor', cp.factor);
     model.UBO.setValue('CoincidentOffset', cp.offset);
@@ -1210,12 +1232,40 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
   publicAPI.replaceShaderSelect = (hash, pipeline, vertexInput) => {
     if (hash.includes('sel')) {
+      const selectBuffer = vertexInput.getBuffer('selectId');
+      if (selectBuffer) {
+        const vDesc = pipeline.getShaderDescription('vertex');
+        vDesc.addOutput(
+          'u32',
+          'attributeID',
+          selectBuffer.getArrayInformation()[0].interpolation
+        );
+        vDesc.addOutput(
+          'u32',
+          'compositeID',
+          selectBuffer.getArrayInformation()[0].interpolation
+        );
+        let code = vDesc.getCode();
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Select::Impl', [
+          '  output.compositeID = 1u;',
+          '  output.attributeID = selectId + 1u;',
+        ]).result;
+        vDesc.setCode(code);
+      }
+
       const fDesc = pipeline.getShaderDescription('fragment');
       let code = fDesc.getCode();
-      // by default there are no composites, so just 0
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Select::Impl', [
-        '  var compositeID: u32 = 0u;',
-      ]).result;
+      const selectImpl = selectBuffer
+        ? [
+            '  var compositeID: u32 = input.compositeID;',
+            '  var attributeID: u32 = input.attributeID;',
+          ]
+        : ['  var compositeID: u32 = 0u;', '  var attributeID: u32 = 0u;'];
+      code = vtkWebGPUShaderCache.substitute(
+        code,
+        '//VTK::Select::Impl',
+        selectImpl
+      ).result;
       fDesc.setCode(code);
     }
   };
@@ -1451,6 +1501,43 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     } else {
       vertexInput.removeBufferIfPresent('tcoord');
     }
+
+    // --- Selection IDs ---
+    const selector = model.WebGPURenderer?.getSelector?.();
+    if (selector && !edges && indexBuffer) {
+      let selectIds = null;
+      if (
+        selector.getFieldAssociation() ===
+        FieldAssociations.FIELD_ASSOCIATION_POINTS
+      ) {
+        selectIds = indexBuffer.getFlatIdToPointId();
+      } else if (
+        selector.getFieldAssociation() ===
+        FieldAssociations.FIELD_ASSOCIATION_CELLS
+      ) {
+        selectIds = indexBuffer.getFlatIdToCellId();
+      }
+
+      if (selectIds) {
+        vertexInput.addBuffer(
+          device.getBufferManager().getBuffer({
+            hash: `sel${selector.getFieldAssociation()}I${indexBuffer.getMTime()}`,
+            usage: BufferUsage.RawVertex,
+            format: 'uint32',
+            interpolation: 'flat',
+            nativeArray:
+              selectIds instanceof Uint32Array
+                ? selectIds
+                : Uint32Array.from(selectIds),
+          }),
+          ['selectId']
+        );
+      } else {
+        vertexInput.removeBufferIfPresent('selectId');
+      }
+    } else {
+      vertexInput.removeBufferIfPresent('selectId');
+    }
   };
 
   publicAPI.updateTextures = () => {
@@ -1573,6 +1660,9 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     if (model.depthOnlyPass) {
       pipelineHash += 'd';
     }
+    if (model.selectionPass) {
+      pipelineHash += 's';
+    }
 
     if (
       model.primitiveType === PrimitiveTypes.TriangleEdges ||
@@ -1651,6 +1741,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   depthOnlyPass: false,
+  selectionPass: false,
   is2D: false,
   cellArray: null,
   currentInput: null,
