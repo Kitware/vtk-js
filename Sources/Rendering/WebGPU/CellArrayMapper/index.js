@@ -1119,16 +1119,18 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     if (ormTexture?.getImageLoaded()) {
       if (checkDims(ormTexture)) {
         usedTextures.push(
-          '_ambientOcclusionMap = textureSample(ORMTexture, ORMTextureSampler, input.tcoordVS).rrra;',
-          '_roughnessMap = textureSample(ORMTexture, ORMTextureSampler, input.tcoordVS).ggga;',
-          '_metallicMap = textureSample(ORMTexture, ORMTextureSampler, input.tcoordVS).bbba;'
+          'let ormSample = textureSample(ORMTexture, ORMTextureSampler, input.tcoordVS);',
+          '_ambientOcclusionMap = ormSample.rrra;',
+          '_roughnessMap = ormSample.ggga;',
+          '_metallicMap = ormSample.bbba;'
         );
       }
     } else if (rmTexture?.getImageLoaded()) {
       if (checkDims(rmTexture)) {
         usedTextures.push(
-          '_roughnessMap = textureSample(RMTexture, RMTextureSampler, input.tcoordVS).ggga;',
-          '_metallicMap = textureSample(RMTexture, RMTextureSampler, input.tcoordVS).bbba;'
+          'let rmSample = textureSample(RMTexture, RMTextureSampler, input.tcoordVS);',
+          '_roughnessMap = rmSample.ggga;',
+          '_metallicMap = rmSample.bbba;'
         );
       }
     } else {
