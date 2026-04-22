@@ -1004,6 +1004,28 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       return;
     }
 
+    // Check if using texture based coloring (color coordinates from mapper)
+    const useTextureColoring =
+      (model.renderable.getAreScalarsMappedFromCells() ||
+        model.renderable.getInterpolateScalarsBeforeMapping?.()) &&
+      model.renderable.getColorCoordinates() &&
+      vertexInput.hasAttribute('tcoord') &&
+      model.colorTexture;
+
+    if (useTextureColoring) {
+      // Use texture sampling for colors (cell scalars or interpolated point scalars)
+      const fDesc = pipeline.getShaderDescription('fragment');
+      let code = fDesc.getCode();
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
+        'var texColor = textureSample(DiffuseTexture, DiffuseTextureSampler, input.tcoordVS);',
+        'diffuseColor = vec4<f32>(texColor.rgb, 1.0);',
+        'ambientColor = vec4<f32>(texColor.rgb, 1.0);',
+        'opacity = opacity * texColor.a;',
+      ]).result;
+      fDesc.setCode(code);
+      return;
+    }
+
     // If there's no vertex color buffer return the shader as is
     const colorBuffer = vertexInput.getBuffer('colorVI');
     if (!colorBuffer) return;
@@ -1041,11 +1063,13 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
     const vDesc = pipeline.getShaderDescription('vertex');
     const tcoords = vertexInput.getBuffer('tcoord');
+    const arrayInfo = tcoords.getArrayInformation()[0];
     const numComp = vtkWebGPUTypes.getNumberOfComponentsFromBufferFormat(
-      tcoords.getArrayInformation()[0].format
+      arrayInfo.format
     );
+    const interpolation = arrayInfo.interpolation;
     let code = vDesc.getCode();
-    vDesc.addOutput(`vec${numComp}<f32>`, 'tcoordVS');
+    vDesc.addOutput(`vec${numComp}<f32>`, 'tcoordVS', interpolation);
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Impl', [
       '  output.tcoordVS = tcoord;',
     ]).result;
@@ -1241,12 +1265,15 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     let indexBuffer = null;
     if (cells) {
       indexBuffer = device.getBufferManager().getBuffer({
-        hash: `R${representation}P${primType}${cells.getMTime()}`,
+        hash: `R${representation}P${primType}O${
+          model.cellOffset
+        }${cells.getMTime()}`,
         usage: BufferUsage.Index,
         cells,
         numberOfPoints: points.getNumberOfPoints(),
         primitiveType: primType,
         representation,
+        cellOffset: model.cellOffset,
       });
       vertexInput.setIndexBuffer(indexBuffer);
     } else {
@@ -1321,6 +1348,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         buffRequest.dataArray = points;
         buffRequest.cells = cells;
         buffRequest.usage = BufferUsage.NormalsFromPoints;
+        buffRequest.cellOffset = model.cellOffset;
         vertexInput.addBuffer(
           device.getBufferManager().getBuffer(buffRequest),
           ['normalMC']
@@ -1350,11 +1378,13 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
           device.getBufferManager().getBuffer({
             usage: BufferUsage.PointArray,
             format: 'unorm8x4',
-            hash: `${haveCellScalars}${c.getMTime()}I${indexBuffer.getMTime()}unorm8x4`,
+            hash: `${haveCellScalars}${c.getMTime()}I${indexBuffer.getMTime()}O${
+              model.cellOffset
+            }unorm8x4`,
             dataArray: c,
             indexBuffer,
             cellData: haveCellScalars,
-            cellOffset: 0,
+            cellOffset: model.cellOffset,
           }),
           ['colorVI']
         );
@@ -1365,20 +1395,30 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
     // --- Texture Coordinates ---
     let tcoords = null;
+    let useCellTCoords = false;
     if (
       (model.renderable.getAreScalarsMappedFromCells() ||
         model.renderable.getInterpolateScalarsBeforeMapping?.()) &&
       model.renderable.getColorCoordinates()
     ) {
       tcoords = model.renderable.getColorCoordinates();
+      useCellTCoords = model.renderable.getAreScalarsMappedFromCells();
     } else {
       tcoords = pd.getPointData().getTCoords();
     }
     if (tcoords && !edges) {
       vertexInput.addBuffer(
-        device
-          .getBufferManager()
-          .getBufferForPointArray(tcoords, vertexInput.getIndexBuffer()),
+        useCellTCoords
+          ? device
+              .getBufferManager()
+              .getBufferForCellArray(
+                tcoords,
+                vertexInput.getIndexBuffer(),
+                model.cellOffset
+              )
+          : device
+              .getBufferManager()
+              .getBufferForPointArray(tcoords, vertexInput.getIndexBuffer()),
         ['tcoord']
       );
     } else {

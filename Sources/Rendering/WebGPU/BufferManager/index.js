@@ -103,8 +103,10 @@ function packArray(indexBuffer, inArrayData, numComp, outputType, options) {
 
   // pick the right function based on point versus cell data
   let flatIdMap = indexBuffer.getFlatIdToPointId();
+  let flatIdOffset = 0;
   if (options.cellData) {
     flatIdMap = indexBuffer.getFlatIdToCellId();
+    flatIdOffset = options.cellOffset || 0;
   }
 
   // add data based on number of components
@@ -141,7 +143,7 @@ function packArray(indexBuffer, inArrayData, numComp, outputType, options) {
 
   // for each entry in the flat array process it
   for (let index = 0; index < flatSize; index++) {
-    const inArrayId = numComp * flatIdMap[index];
+    const inArrayId = numComp * (flatIdMap[index] - flatIdOffset);
     addAPoint(inArrayId);
   }
 
@@ -298,6 +300,7 @@ function vtkWebGPUBufferManager(publicAPI, model) {
       const normals = generateNormals(req.cells, req.dataArray);
       const result = packArray(req.indexBuffer, normals, 4, arrayType, {
         cellData: true,
+        cellOffset: req.cellOffset,
       });
       buffer.createAndWrite(result.nativeArray, gpuUsage);
       buffer.setStrideInBytes(
@@ -342,6 +345,24 @@ function vtkWebGPUBufferManager(publicAPI, model) {
       format,
       dataArray,
       indexBuffer,
+    };
+    return publicAPI.getBuffer(buffRequest);
+  };
+
+  publicAPI.getBufferForCellArray = (
+    dataArray,
+    indexBuffer,
+    cellOffset = 0
+  ) => {
+    const format = _getFormatForDataArray(dataArray);
+    const buffRequest = {
+      hash: `cell${dataArray.getMTime()}I${indexBuffer.getMTime()}O${cellOffset}${format}`,
+      usage: BufferUsage.PointArray,
+      format,
+      dataArray,
+      indexBuffer,
+      cellData: true,
+      cellOffset,
     };
     return publicAPI.getBuffer(buffRequest);
   };
