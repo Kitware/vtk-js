@@ -141,13 +141,6 @@ declare function safeArrays(model: object): void;
 declare function enumToString(e: object, value: any): string;
 
 /**
- * If item is a VtkObject, return its getState() otherwise return itself.
- *
- * @param item object to extract its state from
- */
-declare function getStateArrayMapFunc(item: any): any;
-
-/**
  * Call provided function on the next EDT pass
  *
  * @param fn function to execute
@@ -725,7 +718,6 @@ declare const Macro: {
   get: typeof get;
   getArray: typeof getArray;
   getCurrentGlobalMTime(): Number;
-  getStateArrayMapFunc: typeof getStateArrayMapFunc;
   isVtkObject: typeof isVtkObject;
   keystore: typeof keystore;
   measurePromiseExecution: typeof measurePromiseExecution;

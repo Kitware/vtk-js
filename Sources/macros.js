@@ -212,13 +212,6 @@ function enumToString(e, value) {
   return Object.keys(e).find((key) => e[key] === value);
 }
 
-function getStateArrayMapFunc(item) {
-  if (item && item.isA) {
-    return item.getState();
-  }
-  return item;
-}
-
 // ----------------------------------------------------------------------------
 // setImmediate
 // ----------------------------------------------------------------------------
@@ -1797,7 +1790,6 @@ export default {
   get,
   getArray,
   getCurrentGlobalMTime,
-  getStateArrayMapFunc,
   isVtkObject,
   keystore,
   measurePromiseExecution,
