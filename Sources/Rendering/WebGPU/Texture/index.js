@@ -162,6 +162,7 @@ function vtkWebGPUTexture(publicAPI, model) {
     const dimension = model.depth === 1 ? '2d' : '3d';
     model.format = options.format ? options.format : 'rgba8unorm';
     model.mipLevel = options.mipLevel ? options.mipLevel : 0;
+    model.sampleCount = options.sampleCount ? options.sampleCount : 1;
     /* eslint-disable no-undef */
     /* eslint-disable no-bitwise */
     model.usage = options.usage
@@ -175,6 +176,7 @@ function vtkWebGPUTexture(publicAPI, model) {
       usage: model.usage,
       label: model.label,
       dimension,
+      sampleCount: model.sampleCount,
       mipLevelCount: model.mipLevel + 1,
     });
   };
@@ -396,6 +398,7 @@ function vtkWebGPUTexture(publicAPI, model) {
         format: model.format,
         usage: model.usage,
         label: model.label,
+        sampleCount: model.sampleCount,
       });
     }
   };
@@ -414,6 +417,7 @@ function vtkWebGPUTexture(publicAPI, model) {
         format: model.format,
         usage: model.usage,
         label: model.label,
+        sampleCount: model.sampleCount,
       });
     }
   };
@@ -439,6 +443,7 @@ const DEFAULT_VALUES = {
   buffer: null,
   ready: false,
   label: null,
+  sampleCount: 1,
 };
 
 // ----------------------------------------------------------------------------
@@ -457,6 +462,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'depth',
     'format',
     'usage',
+    'sampleCount',
   ]);
   macro.setGet(publicAPI, model, ['device', 'label']);
 
