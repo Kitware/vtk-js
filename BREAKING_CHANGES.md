@@ -1,3 +1,8 @@
+## From 35.x to 36
+
+- **macros**: `getStateArrayMapFunc` has been removed. Inline the equivalent where needed, e.g. `arr.map((item) => (item && item.isA ? item.getState() : item))`.
+
+
 ## From 34.x to 35
 
 - **vtkMapper**: mappers should overwrite `computeBounds()` instead of `getBounds` that now calls `computeBounds()` before returning a copy of the mapper bounds.
