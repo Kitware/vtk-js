@@ -425,28 +425,57 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     }
   };
 
+  publicAPI.isEdgePrimitive = () =>
+    model.primitiveType === PrimitiveTypes.TriangleEdges ||
+    model.primitiveType === PrimitiveTypes.TriangleStripEdges;
+
+  publicAPI.shouldSkipPass = () =>
+    publicAPI.isEdgePrimitive() && (model.depthOnlyPass || model.selectionPass);
+
   // Renders myself
+  publicAPI.renderForPass = (renderEncoder, depthOnly = false) => {
+    model.depthOnlyPass = depthOnly;
+    model.selectionPass = renderEncoder?.getPipelineHash?.() === 'sel';
+    if (publicAPI.shouldSkipPass()) {
+      model.depthOnlyPass = false;
+      model.selectionPass = false;
+      return;
+    }
+    publicAPI.prepareToDraw(renderEncoder);
+    model.renderEncoder.registerDrawCallback(model.pipeline, publicAPI.draw);
+    model.depthOnlyPass = false;
+    model.selectionPass = false;
+  };
+
   publicAPI.translucentPass = (prepass) => {
     if (prepass) {
-      publicAPI.prepareToDraw(model.WebGPURenderer.getRenderEncoder());
-      model.renderEncoder.registerDrawCallback(model.pipeline, publicAPI.draw);
+      publicAPI.renderForPass(model.WebGPURenderer.getRenderEncoder());
     }
   };
 
   publicAPI.opaquePass = (prepass) => {
     if (prepass) {
-      publicAPI.prepareToDraw(model.WebGPURenderer.getRenderEncoder());
-      model.renderEncoder.registerDrawCallback(model.pipeline, publicAPI.draw);
+      publicAPI.renderForPass(model.WebGPURenderer.getRenderEncoder());
     }
   };
+
+  publicAPI.zBufferPass = (prepass) => {
+    if (prepass) {
+      publicAPI.renderForPass(model.WebGPURenderer.getRenderEncoder(), true);
+    }
+  };
+
+  publicAPI.opaqueZBufferPass = (prepass) => publicAPI.zBufferPass(prepass);
 
   publicAPI.updateUBO = () => {
     const actor = model.WebGPUActor.getRenderable();
     const ppty = actor.getProperty();
     const clippingPlanesMTime = model.renderable.getClippingPlanesMTime();
     const backfaceProperty = actor.getBackfaceProperty?.() ?? ppty;
+    const selector = model.WebGPURenderer?.getSelector?.();
     const utime = model.UBO.getSendTime();
     if (
+      !selector &&
       publicAPI.getMTime() <= utime &&
       ppty.getMTime() <= utime &&
       backfaceProperty.getMTime() <= utime &&
@@ -560,7 +589,13 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       'Opacity',
       edgeLikeRepresentation ? ppty.getEdgeOpacity() : ppty.getOpacity()
     );
-    model.UBO.setValue('PropID', model.WebGPUActor.getPropID());
+    const runtimePropID = model.WebGPUActor.getPropID();
+    model.UBO.setValue(
+      'PropID',
+      selector?.getPropIDForSelection
+        ? selector.getPropIDForSelection(runtimePropID, actor) + 1
+        : runtimePropID
+    );
     const cp = publicAPI.getCoincidentParameters();
     model.UBO.setValue('CoincidentFactor', cp.factor);
     model.UBO.setValue('CoincidentOffset', cp.offset);
@@ -621,6 +656,18 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     primitive: {
       cullMode: publicAPI.getCullMode(),
     },
+    ...(model.depthOnlyPass
+      ? {
+          fragment: {
+            targets: [
+              {
+                format: 'rgba16float',
+                writeMask: 0,
+              },
+            ],
+          },
+        }
+      : {}),
   });
 
   publicAPI.getCoincidentParameters = () => {
@@ -1004,6 +1051,28 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       return;
     }
 
+    // Check if using texture based coloring (color coordinates from mapper)
+    const useTextureColoring =
+      (model.renderable.getAreScalarsMappedFromCells() ||
+        model.renderable.getInterpolateScalarsBeforeMapping?.()) &&
+      model.renderable.getColorCoordinates() &&
+      vertexInput.hasAttribute('tcoord') &&
+      model.colorTexture;
+
+    if (useTextureColoring) {
+      // Use texture sampling for colors (cell scalars or interpolated point scalars)
+      const fDesc = pipeline.getShaderDescription('fragment');
+      let code = fDesc.getCode();
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
+        'var texColor = textureSample(DiffuseTexture, DiffuseTextureSampler, input.tcoordVS);',
+        'diffuseColor = vec4<f32>(texColor.rgb, 1.0);',
+        'ambientColor = vec4<f32>(texColor.rgb, 1.0);',
+        'opacity = opacity * texColor.a;',
+      ]).result;
+      fDesc.setCode(code);
+      return;
+    }
+
     // If there's no vertex color buffer return the shader as is
     const colorBuffer = vertexInput.getBuffer('colorVI');
     if (!colorBuffer) return;
@@ -1041,11 +1110,13 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
     const vDesc = pipeline.getShaderDescription('vertex');
     const tcoords = vertexInput.getBuffer('tcoord');
+    const arrayInfo = tcoords.getArrayInformation()[0];
     const numComp = vtkWebGPUTypes.getNumberOfComponentsFromBufferFormat(
-      tcoords.getArrayInformation()[0].format
+      arrayInfo.format
     );
+    const interpolation = arrayInfo.interpolation;
     let code = vDesc.getCode();
-    vDesc.addOutput(`vec${numComp}<f32>`, 'tcoordVS');
+    vDesc.addOutput(`vec${numComp}<f32>`, 'tcoordVS', interpolation);
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Impl', [
       '  output.tcoordVS = tcoord;',
     ]).result;
@@ -1095,16 +1166,18 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     if (ormTexture?.getImageLoaded()) {
       if (checkDims(ormTexture)) {
         usedTextures.push(
-          '_ambientOcclusionMap = textureSample(ORMTexture, ORMTextureSampler, input.tcoordVS).rrra;',
-          '_roughnessMap = textureSample(ORMTexture, ORMTextureSampler, input.tcoordVS).ggga;',
-          '_metallicMap = textureSample(ORMTexture, ORMTextureSampler, input.tcoordVS).bbba;'
+          'let ormSample = textureSample(ORMTexture, ORMTextureSampler, input.tcoordVS);',
+          '_ambientOcclusionMap = ormSample.rrra;',
+          '_roughnessMap = ormSample.ggga;',
+          '_metallicMap = ormSample.bbba;'
         );
       }
     } else if (rmTexture?.getImageLoaded()) {
       if (checkDims(rmTexture)) {
         usedTextures.push(
-          '_roughnessMap = textureSample(RMTexture, RMTextureSampler, input.tcoordVS).ggga;',
-          '_metallicMap = textureSample(RMTexture, RMTextureSampler, input.tcoordVS).bbba;'
+          'let rmSample = textureSample(RMTexture, RMTextureSampler, input.tcoordVS);',
+          '_roughnessMap = rmSample.ggga;',
+          '_metallicMap = rmSample.bbba;'
         );
       }
     } else {
@@ -1159,12 +1232,40 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
   publicAPI.replaceShaderSelect = (hash, pipeline, vertexInput) => {
     if (hash.includes('sel')) {
+      const selectBuffer = vertexInput.getBuffer('selectId');
+      if (selectBuffer) {
+        const vDesc = pipeline.getShaderDescription('vertex');
+        vDesc.addOutput(
+          'u32',
+          'attributeID',
+          selectBuffer.getArrayInformation()[0].interpolation
+        );
+        vDesc.addOutput(
+          'u32',
+          'compositeID',
+          selectBuffer.getArrayInformation()[0].interpolation
+        );
+        let code = vDesc.getCode();
+        code = vtkWebGPUShaderCache.substitute(code, '//VTK::Select::Impl', [
+          '  output.compositeID = mapperUBO.PropID;',
+          '  output.attributeID = selectId;',
+        ]).result;
+        vDesc.setCode(code);
+      }
+
       const fDesc = pipeline.getShaderDescription('fragment');
       let code = fDesc.getCode();
-      // by default there are no composites, so just 0
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Select::Impl', [
-        '  var compositeID: u32 = 0u;',
-      ]).result;
+      const selectImpl = selectBuffer
+        ? [
+            '  var compositeID: u32 = input.compositeID;',
+            '  var attributeID: u32 = input.attributeID;',
+          ]
+        : ['  var compositeID: u32 = 0u;', '  var attributeID: u32 = 0u;'];
+      code = vtkWebGPUShaderCache.substitute(
+        code,
+        '//VTK::Select::Impl',
+        selectImpl
+      ).result;
       fDesc.setCode(code);
     }
   };
@@ -1241,12 +1342,15 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     let indexBuffer = null;
     if (cells) {
       indexBuffer = device.getBufferManager().getBuffer({
-        hash: `R${representation}P${primType}${cells.getMTime()}`,
+        hash: `R${representation}P${primType}O${
+          model.cellOffset
+        }${cells.getMTime()}`,
         usage: BufferUsage.Index,
         cells,
         numberOfPoints: points.getNumberOfPoints(),
         primitiveType: primType,
         representation,
+        cellOffset: model.cellOffset,
       });
       vertexInput.setIndexBuffer(indexBuffer);
     } else {
@@ -1321,6 +1425,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         buffRequest.dataArray = points;
         buffRequest.cells = cells;
         buffRequest.usage = BufferUsage.NormalsFromPoints;
+        buffRequest.cellOffset = model.cellOffset;
         vertexInput.addBuffer(
           device.getBufferManager().getBuffer(buffRequest),
           ['normalMC']
@@ -1350,11 +1455,13 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
           device.getBufferManager().getBuffer({
             usage: BufferUsage.PointArray,
             format: 'unorm8x4',
-            hash: `${haveCellScalars}${c.getMTime()}I${indexBuffer.getMTime()}unorm8x4`,
+            hash: `${haveCellScalars}${c.getMTime()}I${indexBuffer.getMTime()}O${
+              model.cellOffset
+            }unorm8x4`,
             dataArray: c,
             indexBuffer,
             cellData: haveCellScalars,
-            cellOffset: 0,
+            cellOffset: model.cellOffset,
           }),
           ['colorVI']
         );
@@ -1365,24 +1472,71 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
     // --- Texture Coordinates ---
     let tcoords = null;
+    let useCellTCoords = false;
     if (
       (model.renderable.getAreScalarsMappedFromCells() ||
         model.renderable.getInterpolateScalarsBeforeMapping?.()) &&
       model.renderable.getColorCoordinates()
     ) {
       tcoords = model.renderable.getColorCoordinates();
+      useCellTCoords = model.renderable.getAreScalarsMappedFromCells();
     } else {
       tcoords = pd.getPointData().getTCoords();
     }
     if (tcoords && !edges) {
       vertexInput.addBuffer(
-        device
-          .getBufferManager()
-          .getBufferForPointArray(tcoords, vertexInput.getIndexBuffer()),
+        useCellTCoords
+          ? device
+              .getBufferManager()
+              .getBufferForCellArray(
+                tcoords,
+                vertexInput.getIndexBuffer(),
+                model.cellOffset
+              )
+          : device
+              .getBufferManager()
+              .getBufferForPointArray(tcoords, vertexInput.getIndexBuffer()),
         ['tcoord']
       );
     } else {
       vertexInput.removeBufferIfPresent('tcoord');
+    }
+
+    // --- Selection IDs ---
+    const selector = model.WebGPURenderer?.getSelector?.();
+    if (selector && !edges && indexBuffer) {
+      let selectIds = null;
+      if (
+        selector.getFieldAssociation() ===
+        FieldAssociations.FIELD_ASSOCIATION_POINTS
+      ) {
+        selectIds = indexBuffer.getFlatIdToPointId();
+      } else if (
+        selector.getFieldAssociation() ===
+        FieldAssociations.FIELD_ASSOCIATION_CELLS
+      ) {
+        selectIds = indexBuffer.getFlatIdToCellId();
+      }
+
+      if (selectIds) {
+        vertexInput.addBuffer(
+          device.getBufferManager().getBuffer({
+            hash: `sel${selector.getFieldAssociation()}I${indexBuffer.getMTime()}`,
+            usage: BufferUsage.RawVertex,
+            format: 'uint32',
+            interpolation: 'flat',
+            nativeArray:
+              selectIds instanceof Uint32Array
+                ? selectIds
+                : Uint32Array.from(selectIds),
+          }),
+          ['selectId']
+        );
+      } else {
+        vertexInput.removeBufferIfPresent('selectId');
+      }
+    } else {
+      vertexInput.removeBufferIfPresent('selectId');
     }
   };
 
@@ -1503,6 +1657,12 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     let pipelineHash = `pd${model.useRendererMatrix ? 'r' : ''}${
       model.forceZValue ? 'z' : ''
     }`;
+    if (model.depthOnlyPass) {
+      pipelineHash += 'd';
+    }
+    if (model.selectionPass) {
+      pipelineHash += 's';
+    }
 
     if (
       model.primitiveType === PrimitiveTypes.TriangleEdges ||
@@ -1580,6 +1740,8 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  depthOnlyPass: false,
+  selectionPass: false,
   is2D: false,
   cellArray: null,
   currentInput: null,

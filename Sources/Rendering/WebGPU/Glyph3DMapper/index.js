@@ -86,10 +86,12 @@ function vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model) {
   publicAPI.replaceShaderSelect = (hash, pipeline, vertexInput) => {
     if (hash.includes('sel')) {
       const vDesc = pipeline.getShaderDescription('vertex');
+      vDesc.addOutput('u32', 'attributeID', 'flat');
       vDesc.addOutput('u32', 'compositeID', 'flat');
       let code = vDesc.getCode();
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Select::Impl', [
-        '  output.compositeID = input.instanceIndex;',
+        '  output.compositeID = input.instanceIndex + 1u;',
+        '  output.attributeID = input.instanceIndex;',
       ]).result;
       vDesc.setCode(code);
 
@@ -97,6 +99,7 @@ function vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model) {
       code = fDesc.getCode();
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Select::Impl', [
         'var compositeID: u32 = input.compositeID;',
+        'var attributeID: u32 = input.attributeID;',
       ]).result;
       fDesc.setCode(code);
     }

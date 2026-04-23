@@ -87,10 +87,16 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
       const fDesc = pipeline.getShaderDescription('fragment');
       fDesc.addOutput('vec4<u32>', 'outColor');
       let code = fDesc.getCode();
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Select::Impl', [
+        '  var compositeID: u32 = 0u;',
+        '  var attributeID: u32 = compositeID;',
+      ]).result;
       code = vtkWebGPUShaderCache.substitute(
         code,
         '//VTK::RenderEncoder::Impl',
-        ['output.outColor = vec4<u32>(mapperUBO.PropID, compositeID, 0u, 0u);']
+        [
+          'output.outColor = vec4<u32>(mapperUBO.PropID, compositeID, attributeID, 0u);',
+        ]
       ).result;
       fDesc.setCode(code);
     });

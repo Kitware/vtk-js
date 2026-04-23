@@ -50,19 +50,20 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
     }
     model.handle.setPipeline(pl.getHandle());
     const pd = pl.getPipelineDescription();
+    const fragmentTargets = pd.fragment?.targets;
 
     // check attachment state
-    if (model.colorTextureViews.length !== pd.fragment.targets.length) {
+    if (model.colorTextureViews.length !== fragmentTargets.length) {
       console.log(
-        `mismatched attachment counts on pipeline ${pd.fragment.targets.length} while encoder has ${model.colorTextureViews.length}`
+        `mismatched attachment counts on pipeline ${fragmentTargets.length} while encoder has ${model.colorTextureViews.length}`
       );
       console.trace();
     } else {
       for (let i = 0; i < model.colorTextureViews.length; i++) {
         const fmt = model.colorTextureViews[i].getTexture()?.getFormat();
-        if (fmt && fmt !== pd.fragment.targets[i].format) {
+        if (fmt && fmt !== fragmentTargets[i].format) {
           console.log(
-            `mismatched attachments for attachment ${i} on pipeline ${pd.fragment.targets[i].format} while encoder has ${fmt}`
+            `mismatched attachments for attachment ${i} on pipeline ${fragmentTargets[i].format} while encoder has ${fmt}`
           );
           console.trace();
         }
