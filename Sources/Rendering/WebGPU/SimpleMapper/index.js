@@ -285,6 +285,10 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
   // at this point the command encouder and pipeline are
   // created and bound
   publicAPI.draw = (renderEncoder) => {
+    if (model.numberOfVertices === 0 || model.numberOfInstances === 0) {
+      return;
+    }
+
     const pipeline = renderEncoder.getBoundPipeline();
 
     // bind the mapper bind group

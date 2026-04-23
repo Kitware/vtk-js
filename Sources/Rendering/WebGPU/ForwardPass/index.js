@@ -25,7 +25,13 @@ fn main(
 {
   var output: fragmentOutput;
 
-  var computedColor: vec4<f32> = clamp(textureSampleLevel(opaquePassColorTexture, finalPassSampler, input.tcoordVS, 0.0),vec4<f32>(0.0),vec4<f32>(1.0));
+  var texCoord: vec2<i32> =
+    vec2<i32>(i32(input.fragPos.x), i32(input.fragPos.y));
+  var computedColor: vec4<f32> = clamp(
+    textureLoad(opaquePassColorTexture, texCoord, 0),
+    vec4<f32>(0.0),
+    vec4<f32>(1.0)
+  );
 
   //VTK::RenderEncoder::Impl
   return output;
@@ -181,6 +187,16 @@ function vtkForwardPass(publicAPI, model) {
     ]);
     model._fullScreenQuad.setAdditionalBindables([model._fsqSampler]);
     model._fullScreenQuad.setFragmentShaderTemplate(finalBlitFragTemplate);
+    model._fullScreenQuad
+      .getShaderReplacements()
+      .set('replaceShaderTCoord', (hash, pipeline) => {
+        const vDesc = pipeline.getShaderDescription('vertex');
+        if (!vDesc.hasOutput('tcoordVS')) {
+          vDesc.addOutput('vec2<f32>', 'tcoordVS');
+        }
+        const fDesc = pipeline.getShaderDescription('fragment');
+        fDesc.addBuiltinInput('vec4<f32>', '@builtin(position) fragPos');
+      });
     model._finalBlitOutputTextureView = vtkWebGPUTextureView.newInstance();
     model._finalBlitEncoder.setColorTextureView(
       0,
