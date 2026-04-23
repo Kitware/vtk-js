@@ -309,6 +309,30 @@ vec3 getColorFromTexture(float scalar, int component, float height) {
   return texture2D(colorTexture, vec2(scaledScalar, height)).rgb;
 }
 
+float getRadonOpacity(vec4 tValue) {
+  #ifdef EnabledIndependentComponents
+    return getOpacityFromTexture(tValue.r, 0, 0.5);
+  #else
+    #if vtkNumberOfComponents == 1
+      return getOpacityFromTexture(tValue.r, 0, 0.5);
+    #endif
+    #if vtkNumberOfComponents == 2
+      return getOpacityFromTexture(tValue.a, 1, 0.5);
+    #endif
+    #if vtkNumberOfComponents == 3
+      return getOpacityFromTexture(tValue.a, 0, 0.5);
+    #endif
+    #if vtkNumberOfComponents == 4
+      return getOpacityFromTexture(tValue.a, 3, 0.5);
+    #endif
+  #endif
+}
+
+vec3 getRadonColor(float normalizedRayIntensity) {
+  float colorCoord = clamp(normalizedRayIntensity, 0.0, 1.0);
+  return texture2D(colorTexture, vec2(colorCoord, 0.5)).rgb;
+}
+
 //=======================================================================
 // transformation between VC and IS space
 
@@ -1554,7 +1578,8 @@ void applyBlend(vec3 rayOriginVC, vec3 rayDirVC, float minDistance,
 
   #if vtkBlendMode == RADON_TRANSFORM_BLEND
     float normalizedRayIntensity = 1.0;
-    vec3 posVC = rayOriginVC + minDistance * rayDirVC;
+    vec3 firstPosVC = rayOriginVC + minDistance * rayDirVC;
+    vec3 posVC = firstPosVC;
     float stepsTraveled = 0.0;
 
     // handle very thin volumes
@@ -1562,11 +1587,16 @@ void applyBlend(vec3 rayOriginVC, vec3 rayDirVC, float minDistance,
       vec3 posIS = posVCtoIS(posVC);
       vec4 tValue = getTextureValue(posIS);
       normalizedRayIntensity -= raySteps * sampleDistance *
-                                getOpacityFromTexture(tValue.r, 0, 0.5);
+                                getRadonOpacity(tValue);
       gl_FragData[0] =
-          vec4(getColorFromTexture(normalizedRayIntensity, 0, 0.5), 1.0);
+          vec4(getRadonColor(normalizedRayIntensity), 1.0);
       return;
     }
+
+    vec3 firstPosIS = posVCtoIS(firstPosVC);
+    vec4 firstValue = getTextureValue(firstPosIS);
+    normalizedRayIntensity -=
+        jitter * sampleDistance * getRadonOpacity(firstValue);
 
     posVC += jitter * stepVC;
     stepsTraveled += jitter;
@@ -1581,15 +1611,24 @@ void applyBlend(vec3 rayOriginVC, vec3 rayDirVC, float minDistance,
       // Convert scalar value to normalizedRayIntensity coefficient and
       // accumulate normalizedRayIntensity
       normalizedRayIntensity -=
-          sampleDistance * getOpacityFromTexture(value.r, 0, 0.5);
+          sampleDistance * getRadonOpacity(value);
 
       posVC += stepVC;
       stepsTraveled++;
     }
 
+    if ((raySteps - stepsTraveled) > 0.0) {
+      vec3 endPosIS = clamp(
+        posVCtoIS(rayOriginVC + maxDistance * rayDirVC),
+        vec3(0.0), vec3(1.0));
+      vec4 endValue = getTextureValue(endPosIS);
+      normalizedRayIntensity -=
+          (raySteps - stepsTraveled) * sampleDistance * getRadonOpacity(endValue);
+    }
+
     // map normalizedRayIntensity to color
     gl_FragData[0] =
-        vec4(getColorFromTexture(normalizedRayIntensity, 0, 0.5), 1.0);
+        vec4(getRadonColor(normalizedRayIntensity), 1.0);
   #endif
 
   #if vtkBlendMode == LABELMAP_EDGE_PROJECTION_BLEND
