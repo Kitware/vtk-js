@@ -252,6 +252,14 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       },
     });
   };
+
+  publicAPI.releaseGraphicsResources = () => {
+    model.translucentRenderEncoder = null;
+    model.translucentFinalEncoder = null;
+    model.translucentColorTexture = null;
+    model.translucentAccumulateTexture = null;
+    model.fullScreenQuad = null;
+  };
 }
 
 // ----------------------------------------------------------------------------

@@ -1,5 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
 
+const { vtkErrorMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkWebGPUBindGroup methods
 // ----------------------------------------------------------------------------
@@ -30,6 +32,7 @@ function vtkWebGPUBindGroup(publicAPI, model) {
   publicAPI.getBindGroupLayout = (device) => {
     const entries = [];
     for (let i = 0; i < model.bindables.length; i++) {
+      model.bindables[i].setDevice?.(device);
       const entry = model.bindables[i].getBindGroupLayoutEntry();
       entry.binding = i;
       entries.push(entry);
@@ -38,13 +41,19 @@ function vtkWebGPUBindGroup(publicAPI, model) {
   };
 
   publicAPI.getBindGroup = (device) => {
+    const deviceChanged = model.bindGroupDevice !== device;
+
+    for (let i = 0; i < model.bindables.length; i++) {
+      model.bindables[i].setDevice?.(device);
+    }
+
     // check mtime
     let mtime = publicAPI.getMTime();
     for (let i = 0; i < model.bindables.length; i++) {
       const tm = model.bindables[i].getBindGroupTime().getMTime();
       mtime = tm > mtime ? tm : mtime;
     }
-    if (mtime < model.bindGroupTime.getMTime()) {
+    if (!deviceChanged && mtime < model.bindGroupTime.getMTime()) {
       return model.bindGroup;
     }
 
@@ -60,6 +69,7 @@ function vtkWebGPUBindGroup(publicAPI, model) {
       entries,
       label: model.label,
     });
+    model.bindGroupDevice = device;
     model.bindGroupTime.modified();
 
     return model.bindGroup;
@@ -67,11 +77,24 @@ function vtkWebGPUBindGroup(publicAPI, model) {
 
   publicAPI.getShaderCode = (pipeline) => {
     const lines = [];
-    const bgroup = pipeline.getBindGroupLayoutCount(model.label);
+    const bgroup = pipeline.getBindGroupLayoutIndex(model.label);
+    if (bgroup < 0) {
+      vtkErrorMacro(
+        `vtkWebGPUBindGroup: bind group layout ${model.label} was not found in pipeline`
+      );
+      return '';
+    }
     for (let i = 0; i < model.bindables.length; i++) {
       lines.push(model.bindables[i].getShaderCode(i, bgroup));
     }
     return lines.join('\n');
+  };
+
+  publicAPI.releaseGraphicsResources = () => {
+    model.bindGroup = null;
+    model.bindGroupDevice = null;
+    model.bindGroupTime.modified();
+    publicAPI.modified();
   };
 }
 
@@ -82,6 +105,7 @@ function vtkWebGPUBindGroup(publicAPI, model) {
 const DEFAULT_VALUES = {
   device: null,
   handle: null,
+  bindGroupDevice: null,
   label: null,
 };
 

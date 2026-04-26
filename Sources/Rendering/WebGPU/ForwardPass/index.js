@@ -194,6 +194,20 @@ function vtkForwardPass(publicAPI, model) {
   publicAPI.addVolume = (volume) => {
     model.volumes.push(volume);
   };
+
+  publicAPI.releaseGraphicsResources = () => {
+    model.opaquePass?.releaseGraphicsResources?.();
+    model.translucentPass?.releaseGraphicsResources?.();
+    model.volumePass?.releaseGraphicsResources?.();
+
+    model.opaquePass = null;
+    model.translucentPass = null;
+    model.volumePass = null;
+    model._finalBlitEncoder = null;
+    model._finalBlitOutputTextureView = null;
+    model._fullScreenQuad = null;
+    model._fsqSampler = null;
+  };
 }
 
 // ----------------------------------------------------------------------------

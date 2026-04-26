@@ -14,6 +14,24 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUUniformBuffer');
 
+  function ensureGPUBuffer(device) {
+    if (model.UBO) {
+      return;
+    }
+
+    publicAPI.sortBufferEntries();
+    publicAPI.createView('Float32Array');
+
+    const req = {
+      nativeArray: model.Float32Array,
+      usage: BufferUsage.UniformArray,
+      label: model.label,
+    };
+    model.UBO = device.getBufferManager().getBuffer(req);
+    model.bindGroupTime.modified();
+    model.sendDirty = false;
+  }
+
   publicAPI.addEntry = (name, type) => {
     if (model._bufferEntryNames.has(name)) {
       vtkErrorMacro(`entry named ${name} already exists`);
@@ -188,16 +206,8 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
   };
 
   publicAPI.sendIfNeeded = (device) => {
-    if (!model.UBO) {
-      const req = {
-        nativeArray: model.Float32Array,
-        usage: BufferUsage.UniformArray,
-        label: model.label,
-      };
-      model.UBO = device.getBufferManager().getBuffer(req);
-      model.bindGroupTime.modified();
-      model.sendDirty = false;
-    }
+    model.device = device;
+    ensureGPUBuffer(device);
 
     // send data down if needed
     if (model.sendDirty) {
@@ -268,6 +278,9 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
   };
 
   publicAPI.getBindGroupEntry = () => {
+    if (!model.UBO && model.device) {
+      ensureGPUBuffer(model.device);
+    }
     const foo = {
       resource: {
         buffer: model.UBO.getHandle(),
@@ -290,6 +303,12 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
       `};\n@binding(${binding}) @group(${group}) var<uniform> ${model.label}: ${model.label}Struct;`
     );
     return lines.join('\n');
+  };
+
+  publicAPI.releaseGraphicsResources = () => {
+    model.UBO = null;
+    model.bindGroupTime.modified();
+    model.sendDirty = true;
   };
 }
 
