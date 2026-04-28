@@ -53,6 +53,8 @@ fn main(
 
   //VTK::Clip::Impl
 
+  //VTK::Select::Impl
+
   //VTK::Image::Sample
 
   // var computedColor: vec4<f32> = vec4<f32>(1.0,0.7, 0.5, 1.0);
@@ -1067,6 +1069,20 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     'replaceShaderCoincidentOffset',
     publicAPI.replaceShaderCoincidentOffset
   );
+
+  publicAPI.replaceShaderSelect = (hash, pipeline, vertexInput) => {
+    const fDesc = pipeline.getShaderDescription('fragment');
+    if (!fDesc) {
+      return;
+    }
+    let code = fDesc.getCode();
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Select::Impl', [
+      '  var compositeID: u32 = 0u;',
+      '  var attributeID: u32 = 0u;',
+    ]).result;
+    fDesc.setCode(code);
+  };
+  sr.set('replaceShaderSelect', publicAPI.replaceShaderSelect);
 }
 
 // ----------------------------------------------------------------------------

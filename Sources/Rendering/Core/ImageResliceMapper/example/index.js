@@ -12,6 +12,7 @@ import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
 import vtkInteractorStyleImage from '@kitware/vtk.js/Interaction/Style/InteractorStyleImage';
 import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
 import vtkPlane from '@kitware/vtk.js/Common/DataModel/Plane';
+import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 import vtkPlaneWidget from '@kitware/vtk.js/Widgets/Widgets3D/ImplicitPlaneWidget';
 import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 import { InterpolationType } from '@kitware/vtk.js/Rendering/Core/ImageProperty/Constants';
@@ -26,6 +27,9 @@ import { unzipSync } from 'fflate';
 
 import GUI from 'lil-gui';
 // ----------------------------------------------------------------------------
+const userParams = vtkURLExtract.extractURLParameters();
+const viewAPI = userParams.viewAPI || 'WebGL';
+
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0.3, 0.3, 0.34],
 });
@@ -53,7 +57,6 @@ const slicePolyDataSource = vtkCylinderSource.newInstance({
 
 const actor = vtkImageSlice.newInstance();
 actor.setMapper(mapper);
-renderer.addActor(actor);
 
 const iStyle = vtkInteractorStyleImage.newInstance();
 iStyle.setInteractionMode('IMAGE3D');
@@ -124,6 +127,7 @@ function setImage(im) {
       mapper.setSlicePolyData(slicePolyDataSource.getOutputData());
     }
   });
+  renderer.addActor(actor);
   renderWindow.render();
 }
 
@@ -169,6 +173,7 @@ actor.setProperty(ppty);
 
 const gui = new GUI();
 const params = {
+  viewAPI,
   slabEnabled: false,
   slabType: 'MAX',
   slabThickness: 20,
@@ -218,6 +223,13 @@ function applyInterpolation() {
 }
 
 gui
+  .add(params, 'viewAPI', ['WebGL', 'WebGPU'])
+  .name('Renderer')
+  .onChange((api) => {
+    window.location = `?viewAPI=${api}`;
+  });
+
+gui
   .add(params, 'sliceFunction', ['plane', 'cylinder'])
   .name('Slice function')
   .onChange((value) => {
@@ -257,16 +269,19 @@ gui
     applySlabEnabled();
   });
 
-applySliceFunction();
-applyInterpolation();
-applySlabType();
-applySlabEnabled();
-
 // After the itk-wasm UMD script has been loaded, `window.itk` provides the itk-wasm API.
 vtkResourceLoader
-  .loadScript('https://esm.sh/itk-wasm@1.0.0-b.8/dist/umd/itk-wasm.js')
+  .loadScript(
+    'https://cdn.jsdelivr.net/npm/itk-wasm@1.0.0-b.8/dist/umd/itk-wasm.js'
+  )
   .then(update)
-  .then(() => slabModeCtrl.setValue(true));
+  .then(() => {
+    applySliceFunction();
+    applyInterpolation();
+    applySlabType();
+    applySlabEnabled();
+    slabModeCtrl.setValue(true);
+  });
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
