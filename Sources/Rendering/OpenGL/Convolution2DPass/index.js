@@ -15,7 +15,7 @@ function vtkConvolution2DPass(publicAPI, model) {
   model.classHierarchy.push('vtkConvolution2DPass');
 
   publicAPI.computeKernelWeight = function computeKernelWeight(kernel) {
-    const weight = kernel.reduce((prev, curr) => prev + curr);
+    const weight = kernel.reduce((prev, curr) => prev + curr, 0);
     return weight <= 0 ? 1 : weight;
   };
 
@@ -34,12 +34,11 @@ function vtkConvolution2DPass(publicAPI, model) {
     }
 
     // if no kernel is set, use the default kernel (no post-processing)
-    if (model.kernel === null) {
-      model.kernel = new Float32Array(model.kernelDimension);
-      model.kernel[Math.floor(model.kernelDimension / 2)] = 1;
-    }
-
     const kernelLength = model.kernelDimension * model.kernelDimension;
+    if (model.kernel === null) {
+      model.kernel = new Float32Array(kernelLength);
+      model.kernel[Math.floor(kernelLength / 2)] = 1;
+    }
     if (model.kernel.length !== kernelLength) {
       vtkErrorMacro(
         `The given kernel is invalid. 2D convolution kernels have to be 1D arrays with ${kernelLength} components representing the ${model.kernelDimension}x${model.kernelDimension} kernel in row-major form.`
