@@ -154,6 +154,11 @@ function vtkCylinderSource(publicAPI, model) {
       .translate(...model.center.map((c) => c * -1))
       .apply(points);
 
+    vtkMatrixBuilder
+      .buildFromRadian()
+      .rotateFromDirections([0, 1, 0], model.direction)
+      .apply(normalsData);
+
     const dataset = outData[0]?.initialize() || vtkPolyData.newInstance();
     dataset.getPoints().setData(points, 3);
     dataset.getPolys().setData(polys, 1);
