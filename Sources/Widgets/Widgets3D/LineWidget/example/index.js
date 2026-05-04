@@ -38,6 +38,9 @@ actor.getProperty().setOpacity(0.5);
 
 renderer.addActor(actor);
 
+// Store GUI controllers for updating display
+const guiControllers = {};
+
 // ----------------------------------------------------------------------------
 // Widget manager
 // ----------------------------------------------------------------------------
@@ -56,20 +59,137 @@ renderer.resetCamera();
 
 const gui = new GUI();
 const guiParams = {
-  addWidget() {
-    document.querySelector('#addWidget')?.click();
-  },
-  removeWidget() {
-    document.querySelector('#removeWidget')?.click();
-  },
+  addWidget: () => {},
+  removeWidget: () => {},
+  handle1Shape: 'sphere',
+  handle2Shape: 'sphere',
+  linePosition: 50,
+  textContent: '',
+  distance: 0,
 };
 
 gui.add(guiParams, 'addWidget').name('Add widget');
 gui.add(guiParams, 'removeWidget').name('Remove widget');
 
-// -----------------------------------------------------------
-// UI control handling
-// -----------------------------------------------------------
+// Distance display
+guiControllers.distance = gui
+  .add(guiParams, 'distance')
+  .name('Distance')
+  .disable();
+
+// Text input
+guiControllers.textContent = gui
+  .add(guiParams, 'textContent')
+  .name('Text')
+  .onChange((value) => {
+    if (lineWidget) {
+      lineWidget.setText(value);
+      renderWindow.render();
+    }
+  });
+
+// Line position slider
+guiControllers.linePosition = gui
+  .add(guiParams, 'linePosition', 0, 100, 1)
+  .name('Line position')
+  .onChange((value) => {
+    const subState = lineWidget?.getWidgetState().getPositionOnLine();
+    if (subState) {
+      subState.setPosOnLine(value / 100);
+      renderWindow.render();
+    }
+  });
+
+const shapeOptions = {
+  Sphere: 'sphere',
+  Cone: 'cone',
+  Cube: 'cube',
+  Triangle: 'triangle',
+  '4 points arrow head': '4pointsArrowHead',
+  '6 points arrow head': '6pointsArrowHead',
+  Star: 'star',
+  Disk: 'disk',
+  Circle: 'circle',
+  'View Finder': 'viewFinder',
+  None: 'voidSphere',
+};
+
+// Handle Sources ------------------------------------------
+
+function observeDistance() {
+  if (!lineWidget) return;
+
+  lineWidget.onInteractionEvent(() => {
+    guiParams.distance = widget.getDistance().toFixed(2);
+    guiControllers.distance?.updateDisplay?.();
+  });
+
+  lineWidget.onEndInteractionEvent(() => {
+    guiParams.distance = widget.getDistance().toFixed(2);
+    guiControllers.distance?.updateDisplay?.();
+  });
+}
+
+function updateHandleShape(handleId) {
+  let shape;
+  if (handleId === 1) {
+    shape = guiParams.handle1Shape;
+  } else {
+    shape = guiParams.handle2Shape;
+  }
+
+  const visible = shape !== 'voidSphere';
+  const handle = getHandle[handleId];
+  if (handle) {
+    if (visible) {
+      handle.setShape(shape);
+    }
+    handle.setVisible(visible);
+    lineWidget.updateHandleVisibility(handleId - 1);
+    lineWidget.getInteractor().render();
+  }
+}
+
+function setWidgetColor(currentWidget, color) {
+  currentWidget.getWidgetState().getHandle1().setColor(color);
+  currentWidget.getWidgetState().getHandle2().setColor(color);
+
+  currentWidget.setUseActiveColor(false);
+  currentWidget.getWidgetState().getMoveHandle().setColor(0.3);
+}
+
+function unselectWidget(index) {
+  if (index != null) {
+    const widgetToUnselect = widgetManager.getWidgets()[selectedWidgetIndex];
+    setWidgetColor(widgetToUnselect, 0.5); // green
+  }
+  if (index === selectedWidgetIndex) {
+    selectedWidgetIndex = null;
+  }
+}
+
+function selectWidget(index) {
+  if (index !== selectedWidgetIndex) {
+    unselectWidget(selectedWidgetIndex);
+  }
+  if (index != null) {
+    const widgetToSelect = widgetManager.getWidgets()[index];
+    setWidgetColor(widgetToSelect, 0.2); // yellow
+  }
+  selectedWidgetIndex = index;
+}
+
+// Handle 1 controls
+guiControllers.handle1Shape = gui
+  .add(guiParams, 'handle1Shape', shapeOptions)
+  .name('Handle1 shape')
+  .onChange(() => updateHandleShape(1));
+
+// Handle 2 controls
+guiControllers.handle2Shape = gui
+  .add(guiParams, 'handle2Shape', shapeOptions)
+  .name('Handle2 shape')
+  .onChange(() => updateHandleShape(2));
 
 // -----------------------------------------------------------
 // SVG handling
@@ -118,149 +238,15 @@ function setupSVG(w) {
   );
 }
 
-// Text Modifiers ------------------------------------------
-
-function updateLinePos() {
-  const input = document.getElementById('linePos')?.value ?? 0;
-  const subState = lineWidget.getWidgetState().getPositionOnLine();
-  subState.setPosOnLine(input / 100);
-  renderWindow.render();
-}
-
-function updateText() {
-  const input = document.getElementById('txtIpt').value;
-  if (lineWidget) {
-    lineWidget.setText(input);
-    renderWindow.render();
-  }
-}
-
-// Keep text input support when present in DOM
-document.querySelector('#txtIpt')?.addEventListener('keyup', updateText);
-// updateText();
-
-function observeDistance() {
-  lineWidget.onInteractionEvent(() => {
-    document.getElementById('distance').innerHTML = widget
-      .getDistance()
-      .toFixed(2);
-  });
-
-  lineWidget.onEndInteractionEvent(() => {
-    document.getElementById('distance').innerHTML = widget
-      .getDistance()
-      .toFixed(2);
-  });
-}
-
-// setDistance();
-document.querySelector('#linePos').addEventListener('input', updateLinePos);
-// updateLinePos();
-
-// Handle Sources ------------------------------------------
-
-function updateCheckBoxes(handleId, shape) {
-  if (shape === 'voidSphere') {
-    document
-      .getElementById(`visiH${handleId}`)
-      .setAttribute('disabled', 'disabled');
-  } else if (
-    shape !== 'voidSphere' &&
-    document.getElementById(`visiH${handleId}`).getAttribute('disabled') ===
-      'disabled'
-  ) {
-    document.getElementById(`visiH${handleId}`).removeAttribute('disabled');
-  }
-}
-
-function updateHandleShape(handleId) {
-  const e = document.getElementById(`idh${handleId}`);
-  const shape = e.options[e.selectedIndex].value;
-  const handle = getHandle[handleId];
-  if (handle) {
-    handle.setShape(shape);
-    lineWidget.updateHandleVisibility(handleId - 1);
-    lineWidget.getInteractor().render();
-    updateCheckBoxes(handleId, shape);
-    observeDistance();
-  }
-}
-
-function setWidgetColor(currentWidget, color) {
-  currentWidget.getWidgetState().getHandle1().setColor(color);
-  currentWidget.getWidgetState().getHandle2().setColor(color);
-
-  currentWidget.setUseActiveColor(false);
-  currentWidget.getWidgetState().getMoveHandle().setColor(0.3);
-}
-
-// Restore color
-function unselectWidget(index) {
-  if (index != null) {
-    const widgetToUnselect = widgetManager.getWidgets()[selectedWidgetIndex];
-    setWidgetColor(widgetToUnselect, 0.5); // green
-  }
-  if (index === selectedWidgetIndex) {
-    selectedWidgetIndex = null;
-  }
-}
-
-function selectWidget(index) {
-  unselectWidget(selectedWidgetIndex);
-  if (index != null) {
-    const widgetToSelect = widgetManager.getWidgets()[index];
-    setWidgetColor(widgetToSelect, 0.2); // yellow
-  }
-  selectedWidgetIndex = index;
-}
-
-const inputHandle1 = document.getElementById('idh1');
-const inputHandle2 = document.getElementById('idh2');
-
-inputHandle1?.addEventListener('input', updateHandleShape.bind(null, 1));
-inputHandle2?.addEventListener('input', updateHandleShape.bind(null, 2));
-// inputHandle1.value =
-//   getHandle[1].getShape() === '' ? 'sphere' : getHandle[1].getShape();
-// inputHandle2.value =
-//   getHandle[2].getShape() === '' ? 'sphere' : getHandle[2].getShape();
-// updateCheckBoxes(1, getHandles[1].getShape());
-// updateCheckBoxes(2, getHandles[2].getShape());
-
-// document.getElementById(
-//   'visiH1'
-// ).checked = lineWidget.getWidgetState().getHandle1().getVisible();
-// document.getElementById(
-//   'visiH2'
-// ).checked = lineWidget.getWidgetState().getHandle2().getVisible();
-
-const checkBoxes = ['visiH1', 'visiH2'].map((id) =>
-  document.getElementById(id)
-);
-
-const handleCheckBoxInput = (e) => {
-  if (lineWidget == null) {
-    return;
-  }
-  if (e.target.id === 'visiH1') {
-    lineWidget.getWidgetState().getHandle1().setVisible(e.target.checked);
-    lineWidget.updateHandleVisibility(0);
-  } else {
-    lineWidget.getWidgetState().getHandle2().setVisible(e.target.checked);
-    lineWidget.updateHandleVisibility(1);
-  }
-  lineWidget.getInteractor().render();
-  renderWindow.render();
-};
-checkBoxes.forEach((checkBox) =>
-  checkBox?.addEventListener('input', handleCheckBoxInput)
-);
-
-document.querySelector('#addWidget')?.addEventListener('click', () => {
-  let currentHandle = null;
+// -----------------------------------------------------------
+// UI control handling
+// -----------------------------------------------------------
+guiParams.addWidget = () => {
   widgetManager.releaseFocus(widget);
-  widget = vtkLineWidget.newInstance();
-  // widget.placeWidget(cube.getOutputData().getBounds());
-  currentHandle = widgetManager.addWidget(widget);
+  const currentWidget = vtkLineWidget.newInstance();
+  widget = currentWidget;
+
+  const currentHandle = widgetManager.addWidget(widget);
   lineWidget = currentHandle;
 
   selectWidget(widgetManager.getWidgets().length - 1);
@@ -289,35 +275,28 @@ document.querySelector('#addWidget')?.addEventListener('click', () => {
       2: currentHandle.getWidgetState().getHandle2(),
     };
     selectWidget(index);
+    widget = currentWidget;
     lineWidget = currentHandle;
-    document.getElementById('idh1').value =
-      getHandle[1].getShape() === '' ? 'sphere' : getHandle[1].getShape();
-    document.getElementById('idh2').value =
-      getHandle[1].getShape() === '' ? 'sphere' : getHandle[2].getShape();
-    document.getElementById('visiH1').checked = lineWidget
-      .getWidgetState()
-      .getHandle1()
-      .getVisible();
-    document.getElementById('visiH2').checked = lineWidget
-      .getWidgetState()
-      .getHandle2()
-      .getVisible();
-    document.getElementById('txtIpt').value = lineWidget
-      .getWidgetState()
-      .getText()
-      .getText();
+    guiParams.handle1Shape = getHandle[1].getShape() || 'sphere';
+    guiParams.handle2Shape = getHandle[2].getShape() || 'sphere';
+    guiParams.textContent = lineWidget.getWidgetState().getText().getText();
+    // Update GUI controllers to reflect current widget
+    Object.values(guiControllers).forEach((controller) =>
+      controller.updateDisplay?.()
+    );
   });
-});
-
-document.querySelector('#removeWidget')?.addEventListener('click', () => {
+};
+guiParams.removeWidget = () => {
+  const widgetIndexToRemove = selectedWidgetIndex;
   unselectWidget(selectedWidgetIndex);
-  widgetManager.removeWidget(widgetManager.getWidgets()[selectedWidgetIndex]);
-  if (svgCleanupCallbacks.length) svgCleanupCallbacks.pop()();
+  widgetManager.removeWidget(widgetManager.getWidgets()[widgetIndexToRemove]);
+  if (svgCleanupCallbacks.length) {
+    svgCleanupCallbacks.splice(widgetIndexToRemove, 1)[0]();
+  }
   if (widgetManager.getWidgets().length !== 0) {
     selectWidget(widgetManager.getWidgets().length - 1);
-    setWidgetColor(widgetManager.getWidgets()[selectedWidgetIndex], 0.2);
   }
-});
+};
 
 // -----------------------------------------------------------
 // globals
