@@ -204,6 +204,11 @@ export interface vtkGLTFImporter extends vtkGLTFImporterBase {
    * @param variantIndex The index of the variant to switch to.
    */
   switchToVariant(variantIndex: number): void;
+
+  /**
+   * Clear the importer to initial state, clearing all internal data structures.
+   */
+  clear(): void;
 }
 
 /**

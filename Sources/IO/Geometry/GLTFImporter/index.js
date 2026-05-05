@@ -13,6 +13,7 @@ import {
 import parseGLB from 'vtk.js/Sources/IO/Geometry/GLTFImporter/Decoder';
 import { createAnimationMixer } from 'vtk.js/Sources/IO/Geometry/GLTFImporter/Animations';
 import { BINARY_HEADER_MAGIC } from 'vtk.js/Sources/IO/Geometry/GLTFImporter/Constants';
+import { clearImageCaches } from 'vtk.js/Sources/IO/Geometry/GLTFImporter/Utils';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
 
@@ -221,6 +222,30 @@ function vtkGLTFImporter(publicAPI, model) {
 
     await Promise.all(promises);
   };
+
+  publicAPI.clear = () => {
+    model.actors?.clear?.();
+    model.cameras?.clear?.();
+    model.lights?.clear?.();
+    model.nodeLights?.clear?.();
+    model.variantMappings?.clear?.();
+    model.nodeTransforms?.clear?.();
+    model.nodeChildren?.clear?.();
+    model.skins?.clear?.();
+    model.morphTargets?.clear?.();
+    model.materialProperties?.clear?.();
+    model.pointerAnimations = [];
+    model.nodeAnimations = [];
+    model.animationClips = [];
+    model.skeletons = [];
+    model.animations = [];
+    model.scenes = [];
+    model.glTFTree = null;
+    model.parseData = null;
+    clearImageCaches();
+  };
+
+  publicAPI.delete = macro.chain(() => publicAPI.clear(), publicAPI.delete);
 }
 
 // ----------------------------------------------------------------------------

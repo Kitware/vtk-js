@@ -186,6 +186,22 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
   const emissiveFactor = material.emissiveFactor;
 
   const property = actor.getProperty();
+  const texturePromises = {
+    diffuse: null,
+    rm: null,
+    ao: null,
+    emissive: null,
+    normal: null,
+  };
+
+  const loadTextureRef = async (texRef) => {
+    if (!texRef?.texture) return null;
+    const tex = texRef.texture;
+    const sampler = tex.sampler;
+    const img = await loadImage(tex.source);
+    return createVTKTextureFromGLTFTexture(img, sampler, texRef.extensions);
+  };
+
   const pbr = material.pbrMetallicRoughness;
 
   if (pbr != null) {
@@ -220,7 +236,7 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
     property.setEmission(emissiveFactor);
 
     if (pbr.baseColorTexture) {
-      const extensions = pbr.baseColorTexture.extensions;
+      // const extensions = pbr.baseColorTexture.extensions;
       const tex = pbr.baseColorTexture.texture;
 
       if (tex.extensions != null) {
@@ -235,57 +251,23 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
         });
       }
 
-      const sampler = tex.sampler;
-      const image = await loadImage(tex.source);
-      const diffuseTex = createVTKTextureFromGLTFTexture(
-        image,
-        sampler,
-        extensions
-      );
-
-      property.setDiffuseTexture(diffuseTex);
+      texturePromises.diffuse = loadTextureRef(pbr.baseColorTexture);
     }
 
     // Handle metallic-roughness texture (metallicRoughnessTexture)
     if (pbr.metallicRoughnessTexture) {
-      const extensions = pbr.metallicRoughnessTexture.extensions;
-      const tex = pbr.metallicRoughnessTexture.texture;
-      const sampler = tex.sampler;
-      const rmImage = await loadImage(tex.source);
-      const rmTex = createVTKTextureFromGLTFTexture(
-        rmImage,
-        sampler,
-        extensions
-      );
-      property.setRMTexture(rmTex);
+      texturePromises.rm = loadTextureRef(pbr.metallicRoughnessTexture);
     }
 
     // Handle ambient occlusion texture (occlusionTexture)
     if (material.occlusionTexture) {
-      const extensions = material.occlusionTexture.extensions;
-      const tex = material.occlusionTexture.texture;
-      const sampler = tex.sampler;
-      const aoImage = await loadImage(tex.source);
-      const aoTex = createVTKTextureFromGLTFTexture(
-        aoImage,
-        sampler,
-        extensions
-      );
-      property.setAmbientOcclusionTexture(aoTex);
+      texturePromises.ao = loadTextureRef(material.occlusionTexture);
+      // TODO: Handle occlusionTexture.strength
     }
 
     // Handle emissive texture (emissiveTexture)
     if (material.emissiveTexture) {
-      const extensions = material.emissiveTexture.extensions;
-      const tex = material.emissiveTexture.texture;
-      const sampler = tex.sampler;
-      const emissiveImage = await loadImage(tex.source);
-      const emissiveTex = createVTKTextureFromGLTFTexture(
-        emissiveImage,
-        sampler,
-        extensions
-      );
-      property.setEmissionTexture(emissiveTex);
+      texturePromises.emissive = loadTextureRef(material.emissiveTexture);
 
       // Handle mutiple Uvs
       if (material.emissiveTexture.texCoord != null) {
@@ -296,20 +278,36 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
 
     // Handle normal texture (normalTexture)
     if (material.normalTexture) {
-      const extensions = material.normalTexture.extensions;
-      const tex = material.normalTexture.texture;
-      const sampler = tex.sampler;
-      const normalImage = await loadImage(tex.source);
-      const normalTex = createVTKTextureFromGLTFTexture(
-        normalImage,
-        sampler,
-        extensions
-      );
-      property.setNormalTexture(normalTex);
+      texturePromises.normal = loadTextureRef(material.normalTexture);
 
       if (material.normalTexture.scale != null) {
         property.setNormalStrength(material.normalTexture.scale);
       }
+    }
+
+    const [diffuseTex, rmTex, aoTex, emissiveTex, normalTex] =
+      await Promise.all([
+        texturePromises.diffuse,
+        texturePromises.rm,
+        texturePromises.ao,
+        texturePromises.emissive,
+        texturePromises.normal,
+      ]);
+
+    if (diffuseTex) {
+      property.setDiffuseTexture(diffuseTex);
+    }
+    if (rmTex) {
+      property.setRMTexture(rmTex);
+    }
+    if (aoTex) {
+      property.setAmbientOcclusionTexture(aoTex);
+    }
+    if (emissiveTex) {
+      property.setEmissionTexture(emissiveTex);
+    }
+    if (normalTex) {
+      property.setNormalTexture(normalTex);
     }
   }
 
