@@ -1,3 +1,4 @@
+import { mat4 } from 'gl-matrix';
 import { Bounds, Nullable } from '../../../types';
 
 import vtkCamera from '../Camera';
@@ -600,6 +601,13 @@ export interface vtkRenderer extends vtkViewport {
    * @param {Number} aspect
    */
   viewToProjection(x: number, y: number, z: number, aspect: number): number[];
+
+  /**
+   * Expand the given bounds in place using the provided transform matrix.
+   * @param {Bounds} bounds Bounds to expand.
+   * @param {mat4} [matrix] Transform matrix.
+   */
+  expandBounds(bounds: Bounds, matrix?: Nullable<mat4>): Bounds;
 
   /**
    * Automatically set up the camera based on the visible actors.

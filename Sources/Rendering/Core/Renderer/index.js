@@ -370,6 +370,19 @@ function vtkRenderer(publicAPI, model) {
     return model.allBounds;
   };
 
+  publicAPI.expandBounds = (bounds, matrix) => {
+    if (!bounds) {
+      vtkErrorMacro('ERROR: Invalid bounds');
+      return bounds;
+    }
+
+    if (matrix) {
+      vtkBoundingBox.transformBounds(bounds, matrix, bounds);
+    }
+
+    return bounds;
+  };
+
   publicAPI.resetCamera = (bounds = null) => {
     const boundsToUse = bounds || publicAPI.computeVisiblePropBounds();
     const center = [0, 0, 0];
@@ -392,13 +405,19 @@ function vtkRenderer(publicAPI, model) {
     // the view angle to become very small and cause bad depth sorting.
     model.activeCamera.setViewAngle(30.0);
 
-    center[0] = (boundsToUse[0] + boundsToUse[1]) / 2.0;
-    center[1] = (boundsToUse[2] + boundsToUse[3]) / 2.0;
-    center[2] = (boundsToUse[4] + boundsToUse[5]) / 2.0;
+    const expandedBounds = [...boundsToUse];
+    publicAPI.expandBounds(
+      expandedBounds,
+      model.activeCamera.getModelTransformMatrix()
+    );
 
-    let w1 = boundsToUse[1] - boundsToUse[0];
-    let w2 = boundsToUse[3] - boundsToUse[2];
-    let w3 = boundsToUse[5] - boundsToUse[4];
+    center[0] = (expandedBounds[0] + expandedBounds[1]) / 2.0;
+    center[1] = (expandedBounds[2] + expandedBounds[3]) / 2.0;
+    center[2] = (expandedBounds[4] + expandedBounds[5]) / 2.0;
+
+    let w1 = expandedBounds[1] - expandedBounds[0];
+    let w2 = expandedBounds[3] - expandedBounds[2];
+    let w3 = expandedBounds[5] - expandedBounds[4];
     w1 *= w1;
     w2 *= w2;
     w3 *= w3;
@@ -417,7 +436,9 @@ function vtkRenderer(publicAPI, model) {
     // Then, draw a horizontal line going out from the center of the circle.
     // The camera is somewhere on this line.
     // Picture the view frustrum, moving through the circle.
-    // Draw a line from the intersection of the view frustrum and the bounding sphere to line the camera is on, ensuring that the line is tangent to the circle.
+    // Draw a line from the intersection of the view frustrum and the bounding
+    // sphere to line the camera is on, ensuring that the line is tangent to the
+    // circle.
     // Draw the radius from the tangent point to the center of the circle.
     // You will note that this forms a right triangle with sides:
     // - radius
@@ -444,7 +465,7 @@ function vtkRenderer(publicAPI, model) {
       center[2] + distance * vn[2]
     );
 
-    publicAPI.resetCameraClippingRange(boundsToUse);
+    publicAPI.resetCameraClippingRange(expandedBounds);
 
     // setup default parallel scale
     model.activeCamera.setParallelScale(parallelScale);
@@ -464,16 +485,135 @@ function vtkRenderer(publicAPI, model) {
     return true;
   };
 
-  // Port of VTK C++ vtkRenderer::ZoomToBoxUsingViewAngle.
-  publicAPI.zoomToBoxUsingViewAngle = (box, ratioOrOffsetRatio = 1.0) => {
-    let view = null;
-    if (model._renderWindow && model._renderWindow.getViews) {
-      const views = model._renderWindow.getViews();
-      if (views.length > 0) {
-        view = views[0];
-      }
+  // ----------------------------------------------------------------------------
+  // Port of VTK C++ vtkRenderer::ResetCameraScreenSpace.
+  //
+  // Automatically set up the camera based on the visible actors. Use a screen
+  // space bounding box to zoom closer to the data. OffsetRatio can be used to
+  // add a zoom offset, with a default of 0.9 (the camera will be 10% further
+  // from the data).
+  //
+  // For convenience this method also accepts a single number argument, which
+  // mirrors the C++ ResetCameraScreenSpace(double offsetRatio) overload.
+  //
+  // Returns true if the camera position was actually reset (i.e. the bounds
+  // were initialized).
+  // ----------------------------------------------------------------------------
+  publicAPI.resetCameraScreenSpace = (bounds = null, offsetRatio = 0.9) => {
+    // Mirror the C++ ResetCameraScreenSpace(double offsetRatio) overload by
+    // treating a single numeric argument as offsetRatio.
+    let boundsArg = bounds;
+    let offsetRatioArg = offsetRatio;
+    if (typeof bounds === 'number') {
+      offsetRatioArg = bounds;
+      boundsArg = null;
     }
 
+    const boundsToUse = boundsArg || publicAPI.computeVisiblePropBounds();
+
+    let areBoundsInitialized = false;
+    if (vtkMath.areBoundsInitialized(boundsToUse)) {
+      // Make sure all bounds are visible to project into screen space
+      publicAPI.resetCamera(boundsToUse);
+
+      const expandedBounds = [...boundsToUse];
+      publicAPI.expandBounds(
+        expandedBounds,
+        publicAPI.getActiveCamera().getModelTransformMatrix()
+      );
+
+      const renderWindow = publicAPI.getRenderWindow();
+      const view =
+        renderWindow && renderWindow.getViews
+          ? renderWindow.getViews()[0]
+          : null;
+      const size =
+        view && view.getViewportSize ? view.getViewportSize(publicAPI) : null;
+
+      if (view && view.worldToDisplay && size && size[0] > 0 && size[1] > 0) {
+        // 1) Compute the screen space bounding box
+        let xmin = Number.MAX_VALUE;
+        let ymin = Number.MAX_VALUE;
+        let xmax = -Number.MAX_VALUE;
+        let ymax = -Number.MAX_VALUE;
+
+        for (let i = 0; i < 2; ++i) {
+          for (let j = 0; j < 2; ++j) {
+            for (let k = 0; k < 2; ++k) {
+              const display = view.worldToDisplay(
+                expandedBounds[i],
+                expandedBounds[j + 2],
+                expandedBounds[k + 4],
+                publicAPI
+              );
+
+              xmin = Math.min(display[0], xmin);
+              xmax = Math.max(display[0], xmax);
+              ymin = Math.min(display[1], ymin);
+              ymax = Math.max(display[1], ymax);
+            }
+          }
+        }
+
+        // Project the focal point in screen space
+        const fp = publicAPI.getActiveCamera().getFocalPoint();
+        const fpDisplay = view.worldToDisplay(fp[0], fp[1], fp[2], publicAPI);
+
+        // The focal point must be at the center of the box
+        // So construct a box with fpDisplay at the center
+        const xCenterFocalPoint = Math.trunc(fpDisplay[0]);
+        const yCenterFocalPoint = Math.trunc(fpDisplay[1]);
+
+        const xCenterBox = Math.trunc((xmin + xmax) / 2);
+        const yCenterBox = Math.trunc((ymin + ymax) / 2);
+
+        const xDiff = 2 * (xCenterFocalPoint - xCenterBox);
+        const yDiff = 2 * (yCenterFocalPoint - yCenterBox);
+
+        const xMaxOffset = Math.max(xDiff, 0);
+        const xMinOffset = Math.min(xDiff, 0);
+        const yMaxOffset = Math.max(yDiff, 0);
+        const yMinOffset = Math.min(yDiff, 0);
+
+        xmin += xMinOffset;
+        xmax += xMaxOffset;
+        ymin += yMinOffset;
+        ymax += yMaxOffset;
+        // Now the focal point is at the center of the box
+
+        const box = {
+          x: xmin,
+          y: ymin,
+          width: xmax - xmin,
+          height: ymax - ymin,
+        };
+        if (box.width > 0 && box.height > 0) {
+          publicAPI.zoomToBoxUsingViewAngle(box, offsetRatioArg);
+        }
+      }
+
+      areBoundsInitialized = true;
+    } else {
+      vtkDebugMacro('Cannot reset camera!');
+    }
+
+    // Here to let parallel/distributed compositing intercept
+    // and do the right thing.
+    publicAPI.invokeEvent(RESET_CAMERA_EVENT);
+
+    return areBoundsInitialized;
+  };
+
+  // ----------------------------------------------------------------------------
+  // Port of VTK C++ vtkRenderer::ZoomToBoxUsingViewAngle.
+  //
+  // Zoom the camera so that observe the box in display coordinates.
+  // OffsetRatio can be used to add a zoom offset.
+  // ----------------------------------------------------------------------------
+  publicAPI.zoomToBoxUsingViewAngle = (box, offsetRatio = 1.0) => {
+    const renderWindow = publicAPI.getRenderWindow();
+    const view =
+      renderWindow && renderWindow.getViews ? renderWindow.getViews()[0] : null;
     if (!view || !view.getViewportSize) {
       return;
     }
@@ -486,125 +626,10 @@ function vtkRenderer(publicAPI, model) {
     const zf1 = size[0] / box.width;
     const zf2 = size[1] / box.height;
     const zoomFactor = Math.min(zf1, zf2);
-    publicAPI.getActiveCamera().zoom(zoomFactor * ratioOrOffsetRatio);
-  };
 
-  // Port of VTK C++ vtkRenderer::ResetCameraScreenSpace.
-  // Uses a screen-space bounding box to zoom closer to the data.
-  publicAPI.resetCameraScreenSpace = (bounds = null, offsetRatio = 0.9) => {
-    let effectiveBounds = bounds;
-    let effectiveOffsetRatio = offsetRatio;
-    if (typeof bounds === 'number') {
-      effectiveOffsetRatio = bounds;
-      effectiveBounds = null;
-    }
-
-    const boundsToUse = effectiveBounds || publicAPI.computeVisiblePropBounds();
-
-    if (!vtkMath.areBoundsInitialized(boundsToUse)) {
-      vtkDebugMacro('Cannot reset camera!');
-      return false;
-    }
-
-    // Make sure all bounds are visible to project into screen space
-    publicAPI.resetCamera(boundsToUse);
-
-    // Expand bounds by camera model transform matrix
-    const expandedBounds = [...boundsToUse];
-    const modelTransformMatrix = publicAPI
-      .getActiveCamera()
-      .getModelTransformMatrix();
-    if (modelTransformMatrix) {
-      vtkBoundingBox.transformBounds(
-        boundsToUse,
-        modelTransformMatrix,
-        expandedBounds
-      );
-    }
-
-    // Get the view from the render window to access viewport size
-    let view = null;
-    if (model._renderWindow && model._renderWindow.getViews) {
-      const views = model._renderWindow.getViews();
-      if (views.length > 0) {
-        view = views[0];
-      }
-    }
-
-    if (!view || !view.getViewportSize) {
-      return true;
-    }
-
-    const size = view.getViewportSize(publicAPI);
-    if (!size || size[0] <= 0 || size[1] <= 0) {
-      return true;
-    }
-
-    const aspect = size[0] / size[1];
-
-    // Compute the screen-space bounding box by projecting all 8 corners
-    let xmin = Number.MAX_VALUE;
-    let ymin = Number.MAX_VALUE;
-    let xmax = -Number.MAX_VALUE;
-    let ymax = -Number.MAX_VALUE;
-
-    for (let i = 0; i < 2; ++i) {
-      for (let j = 0; j < 2; ++j) {
-        for (let k = 0; k < 2; ++k) {
-          const nd = publicAPI.worldToNormalizedDisplay(
-            expandedBounds[i],
-            expandedBounds[2 + j],
-            expandedBounds[4 + k],
-            aspect
-          );
-          const dx = nd[0] * size[0];
-          const dy = nd[1] * size[1];
-          xmin = Math.min(dx, xmin);
-          xmax = Math.max(dx, xmax);
-          ymin = Math.min(dy, ymin);
-          ymax = Math.max(dy, ymax);
-        }
-      }
-    }
-
-    // Project the focal point in screen space
-    const fp = model.activeCamera.getFocalPoint();
-    const fpNd = publicAPI.worldToNormalizedDisplay(
-      fp[0],
-      fp[1],
-      fp[2],
-      aspect
-    );
-    const fpDisplayX = fpNd[0] * size[0];
-    const fpDisplayY = fpNd[1] * size[1];
-
-    // The focal point must be at the center of the box
-    const xCenterFocalPoint = Math.trunc(fpDisplayX);
-    const yCenterFocalPoint = Math.trunc(fpDisplayY);
-    const xCenterBox = Math.trunc((xmin + xmax) / 2);
-    const yCenterBox = Math.trunc((ymin + ymax) / 2);
-
-    const xDiff = 2 * (xCenterFocalPoint - xCenterBox);
-    const yDiff = 2 * (yCenterFocalPoint - yCenterBox);
-
-    xmin += Math.min(xDiff, 0);
-    xmax += Math.max(xDiff, 0);
-    ymin += Math.min(yDiff, 0);
-    ymax += Math.max(yDiff, 0);
-
-    const boxWidth = xmax - xmin;
-    const boxHeight = ymax - ymin;
-
-    if (boxWidth > 0 && boxHeight > 0) {
-      publicAPI.zoomToBoxUsingViewAngle(
-        { x: xmin, y: ymin, width: boxWidth, height: boxHeight },
-        effectiveOffsetRatio
-      );
-    }
-
-    publicAPI.invokeEvent(RESET_CAMERA_EVENT);
-
-    return true;
+    // OffsetRatio will let a free space between the zoomed data
+    // And the edges of the window
+    publicAPI.getActiveCamera().zoom(zoomFactor * offsetRatio);
   };
 
   publicAPI.resetCameraClippingRange = (bounds = null) => {
@@ -622,8 +647,14 @@ function vtkRenderer(publicAPI, model) {
       return false;
     }
 
+    const expandedBounds = [...boundsToUse];
+    publicAPI.expandBounds(
+      expandedBounds,
+      model.activeCamera.getModelTransformMatrix()
+    );
+
     // Get the exact range for the bounds
-    const range = model.activeCamera.computeClippingRange(boundsToUse);
+    const range = model.activeCamera.computeClippingRange(expandedBounds);
 
     // do not let far - near be less than 0.1 of the window height
     // this is for cases such as 2D images which may have zero range
