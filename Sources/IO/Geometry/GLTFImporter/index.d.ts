@@ -7,26 +7,13 @@ import { LiteHttpDataAccessHelper } from '../../Core/DataAccessHelper/LiteHttpDa
 import { vtkActor } from '../../../Rendering/Core/Actor';
 import { vtkRenderer } from '../../../Rendering/Core/Renderer';
 import { vtkCamera } from '../../../Rendering/Core/Camera';
+import { vtkArmature } from '../../../Common/DataModel/Armature';
+import { vtkAnimationClip } from '../../../Common/DataModel/AnimationClip';
 
 interface IGLTFImporterOptions {
   binary?: boolean;
   compression?: string;
   progressCallback?: any;
-}
-
-export interface IGLTFAnimation {
-  id: string;
-  name: string;
-  channels: any[];
-  samplers: any[];
-}
-
-export interface IGLTFAnimationMixer {
-  addAnimation: (glTFAnimation: object) => void;
-  play: (name: string, weight?: number) => void;
-  stop: (name: string) => void;
-  stopAll: () => void;
-  update: (deltaTime: number) => void;
 }
 
 export interface IGLTFMaterialVariant {
@@ -55,16 +42,6 @@ export interface vtkGLTFImporter extends vtkGLTFImporterBase {
    * Get the actors.
    */
   getActors(): Map<string, vtkActor>;
-
-  /**
-   * Get the animation mixer.
-   */
-  getAnimationMixer(): IGLTFAnimationMixer;
-
-  /**
-   * Get the animations.
-   */
-  getAnimations(): IGLTFAnimation[];
 
   /**
    * Get the base url.
@@ -106,7 +83,7 @@ export interface vtkGLTFImporter extends vtkGLTFImporterBase {
   importActors(): void;
 
   /**
-   * Import the animations.
+   * Import the animations (DEPRECATED - use getSkeletons() and getAnimationClips()).
    */
   importAnimations(): void;
 
@@ -206,9 +183,74 @@ export interface vtkGLTFImporter extends vtkGLTFImporterBase {
   switchToVariant(variantIndex: number): void;
 
   /**
-   * Clear the importer to initial state, clearing all internal data structures.
+   * Get all parsed skeletons from glTF skins
+   * @return Array of skeletons with metadata
    */
-  clear(): void;
+  getSkeletons(): Array<{ skeleton: vtkArmature; gltfSkinIndex: number }>;
+
+  /**
+   * Get skin data for all skinned mesh nodes.
+   * Map from node ID to skin info (skinId, jointNodeIds, inverseBindMatrices).
+   */
+  getSkins(): Map<
+    string,
+    {
+      skinId: string;
+      jointNodeIds: string[];
+      inverseBindMatrices: Float32Array[];
+      skeletonRoot: string | null;
+    }
+  >;
+
+  /**
+   * Get all parsed animation clips from glTF animations
+   * @return Array of animation clips
+   */
+  getAnimationClips(): vtkAnimationClip[];
+
+  /**
+   * Get animation clip by name
+   * @param name The clip name
+   * @return The animation clip or null
+   */
+  getAnimationClipByName(name: string): vtkAnimationClip | null;
+
+  /**
+   * Get all animation clip names
+   * @return Array of clip names
+   */
+  getAnimationClipNames(): string[];
+
+  /**
+   * Invoke the skeletonLoaded event
+   * @param event Event data with { skeleton, gltfSkinIndex }
+   */
+  invokeSkeletonLoaded(event: {
+    skeleton: vtkArmature;
+    gltfSkinIndex: number;
+  }): void;
+
+  /**
+   * Listen for skeleton loaded events
+   * @param callback Function to call when skeleton is loaded
+   */
+  onSkeletonLoaded(
+    callback: (event: { skeleton: vtkArmature; gltfSkinIndex: number }) => void
+  ): void;
+
+  /**
+   * Invoke the animationClipLoaded event
+   * @param event Event data with { clip }
+   */
+  invokeAnimationClipLoaded(event: { clip: vtkAnimationClip }): void;
+
+  /**
+   * Listen for animation clip loaded events
+   * @param callback Function to call when animation clip is loaded
+   */
+  onAnimationClipLoaded(
+    callback: (event: { clip: vtkAnimationClip }) => void
+  ): void;
 }
 
 /**
@@ -255,12 +297,24 @@ export function setWasmBinary(
  * * Image files (.jpg, .png) for textures
  *
  * Supported extensions:
+ * * KHR_animation_pointer
  * * KHR_draco_mesh_compression
  * * KHR_lights_punctual
- * * KHR_materials_unlit
+ * * KHR_materials_anisotropy
+ * * KHR_materials_clearcoat
+ * * KHR_materials_diffuse_transmission
+ * * KHR_materials_dispersion
+ * * KHR_materials_emissive_strength
  * * KHR_materials_ior
+ * * KHR_materials_iridescence
+ * * KHR_materials_pbrSpecularGlossiness
+ * * KHR_materials_sheen
  * * KHR_materials_specular
+ * * KHR_materials_transmission
+ * * KHR_materials_unlit
  * * KHR_materials_variants
+ * * KHR_materials_volume
+ * * KHR_texture_transform
  * * EXT_texture_webp
  * * EXT_texture_avif
  */

@@ -92,34 +92,31 @@ export function resolveUrl(url, originalPath) {
  * @returns
  */
 export async function loadImage(image) {
-  if (!image) return null;
+  if (!image) {
+    return null;
+  }
 
-  const cacheKey = image.bufferView || image.uri;
-  const cache = image.bufferView ? imageBufferViewCache : imageUriCache;
-
+  const cacheKey = image.bufferView || image.uri || null;
   if (cacheKey) {
-    const cached = cache.get(cacheKey);
-
-    if (cached) {
-      // In flight promise
-      if (typeof cached?.then === 'function') {
-        return cached;
+    const cache = image.bufferView ? imageBufferViewCache : imageUriCache;
+    if (cache.has(cacheKey)) {
+      const cachedValue = cache.get(cacheKey);
+      if (cachedValue && typeof cachedValue.then === 'function') {
+        return cachedValue;
       }
-
-      // WeakRef
-      const value = cached?.deref?.();
-      if (value) return value;
-
-      // Stale WeakRef
-      cache.delete(cacheKey);
+      if (cachedValue && typeof cachedValue.deref === 'function') {
+        const cachedImage = cachedValue.deref();
+        if (cachedImage) {
+          return cachedImage;
+        }
+        cache.delete(cacheKey);
+      }
     }
   }
 
   const loadPromise = (async () => {
     if (image.bufferView) {
-      const blob = new Blob([image.bufferView.data], {
-        type: image.mimeType,
-      });
+      const blob = new Blob([image.bufferView.data], { type: image.mimeType });
       return createImageBitmap(blob, {
         premultiplyAlpha: 'none',
         colorSpaceConversion: 'none',
@@ -128,19 +125,18 @@ export async function loadImage(image) {
     }
 
     if (image.uri) {
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
-
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => {
+          createImageBitmap(img, {
+            premultiplyAlpha: 'none',
+            colorSpaceConversion: 'none',
+            imageOrientation: 'flipY',
+          }).then(resolve, reject);
+        };
         img.onerror = reject;
         img.src = image.uri;
-      });
-
-      return createImageBitmap(img, {
-        premultiplyAlpha: 'none',
-        colorSpaceConversion: 'none',
-        imageOrientation: 'flipY',
       });
     }
 
@@ -148,29 +144,32 @@ export async function loadImage(image) {
   })();
 
   if (cacheKey) {
+    const cache = image.bufferView ? imageBufferViewCache : imageUriCache;
     cache.set(cacheKey, loadPromise);
   }
 
   try {
-    const result = await loadPromise;
-
-    if (cacheKey && result) {
-      // eslint-disable-next-line no-undef
-      cache.set(cacheKey, new WeakRef(result));
+    const loadedImage = await loadPromise;
+    if (cacheKey && loadedImage) {
+      const cache = image.bufferView ? imageBufferViewCache : imageUriCache;
+      if (typeof WeakRef === 'function') {
+        cache.set(cacheKey, new WeakRef(loadedImage));
+      } else {
+        cache.delete(cacheKey);
+      }
     }
-
-    return result;
-  } catch (err) {
+    return loadedImage;
+  } catch (error) {
     if (cacheKey) {
+      const cache = image.bufferView ? imageBufferViewCache : imageUriCache;
       cache.delete(cacheKey);
     }
-    throw err;
+    throw error;
   }
 }
 
 export function clearImageCaches() {
   imageUriCache.clear();
-  imageBufferViewCache.clear();
 }
 
 /**
@@ -188,21 +187,27 @@ export function createVTKTextureFromGLTFTexture(image, sampler, extensions) {
       ('wrapS' in sampler && 'wrapT' in sampler) ||
       ('minFilter' in sampler && 'magFilter' in sampler)
     ) {
-      if (
-        sampler.wrapS === GL_SAMPLER.CLAMP_TO_EDGE ||
-        sampler.wrapT === GL_SAMPLER.CLAMP_TO_EDGE
-      ) {
-        texture.setRepeat(false);
-        texture.setEdgeClamp(true);
-      } else if (
-        sampler.wrapS === GL_SAMPLER.REPEAT ||
-        sampler.wrapT === GL_SAMPLER.REPEAT
-      ) {
-        texture.setRepeat(true);
-        texture.setEdgeClamp(false);
-      } else {
-        vtkWarningMacro('Mirrored texture wrapping is not supported!');
-      }
+      // Per-axis wrap mode: default to REPEAT per glTF spec when not specified
+      const wrapS = sampler.wrapS ?? GL_SAMPLER.REPEAT;
+      const wrapT = sampler.wrapT ?? GL_SAMPLER.REPEAT;
+
+      // Map glTF wrap constants to WebGPU address mode strings
+      const glWrapToAddressMode = (w) => {
+        if (w === GL_SAMPLER.CLAMP_TO_EDGE) return 'clamp-to-edge';
+        if (w === GL_SAMPLER.MIRRORED_REPEAT) return 'mirror-repeat';
+        return 'repeat';
+      };
+      texture.setWrapS(glWrapToAddressMode(wrapS));
+      texture.setWrapT(glWrapToAddressMode(wrapT));
+
+      // Legacy flags for backward compatibility with OpenGL backend
+      const hasClamp =
+        wrapS === GL_SAMPLER.CLAMP_TO_EDGE ||
+        wrapT === GL_SAMPLER.CLAMP_TO_EDGE;
+      const hasRepeat =
+        wrapS === GL_SAMPLER.REPEAT || wrapT === GL_SAMPLER.REPEAT;
+      texture.setEdgeClamp(hasClamp);
+      texture.setRepeat(hasRepeat && !hasClamp);
 
       const linearFilters = [
         GL_SAMPLER.LINEAR,
@@ -217,10 +222,25 @@ export function createVTKTextureFromGLTFTexture(image, sampler, extensions) {
       ) {
         texture.setInterpolate(true);
       }
+
+      // Enable mipmaps when sampler minFilter uses mipmap variants
+      const mipmapFilters = [
+        GL_SAMPLER.NEAREST_MIPMAP_NEAREST,
+        GL_SAMPLER.LINEAR_MIPMAP_NEAREST,
+        GL_SAMPLER.NEAREST_MIPMAP_LINEAR,
+        GL_SAMPLER.LINEAR_MIPMAP_LINEAR,
+      ];
+      if (mipmapFilters.includes(sampler.minFilter)) {
+        texture.setMipLevel(8);
+      }
     } else {
+      // Empty sampler: glTF defaults → REPEAT wrap, LINEAR filter
       texture.setMipLevel(8);
       texture.setInterpolate(true);
-      texture.setEdgeClamp(true);
+      texture.setRepeat(true);
+      texture.setEdgeClamp(false);
+      texture.setWrapS('repeat');
+      texture.setWrapT('repeat');
     }
   }
   texture.setImageBitmap(image);
