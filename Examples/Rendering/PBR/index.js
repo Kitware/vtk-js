@@ -23,7 +23,7 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0.08, 0.08, 0.08],
 });
 const renderer = fullScreenRenderer.getRenderer();
-renderer.setUseEnvironmentTextureAsBackground(true);
+renderer.setUseEnvironmentTextureAsBackground(false);
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
 const fpsMonitor = vtkFPSMonitor.newInstance();
@@ -96,6 +96,7 @@ const actor = vtkActor.newInstance();
 
 reader.setSplitMode('usemtl');
 reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(async () => {
+reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(async () => {
   const polydata = reader.getOutputData(0);
   // Normals
   const normals = vtkPolyDataNormals.newInstance();
@@ -131,6 +132,23 @@ reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(async () => {
     createTexture(`${__BASE_PATH__}/data/pbr/normal.jpg`),
     createTextureWithMipmap(`${__BASE_PATH__}/data/pbr/kiara_dawn_4k.jpg`, 8),
   ]);
+  const [
+    diffuseTex,
+    aoTex,
+    roughnessTex,
+    metallicTex,
+    emissionTex,
+    normalTex,
+    environmentTex,
+  ] = await Promise.all([
+    createTexture(`${__BASE_PATH__}/data/pbr/diffuse.jpg`),
+    createTexture(`${__BASE_PATH__}/data/pbr/ao.jpg`),
+    createTexture(`${__BASE_PATH__}/data/pbr/roughness.jpg`),
+    createTexture(`${__BASE_PATH__}/data/pbr/metallic.jpg`),
+    createTexture(`${__BASE_PATH__}/data/pbr/emission.jpg`),
+    createTexture(`${__BASE_PATH__}/data/pbr/normal.jpg`),
+    createTextureWithMipmap(`${__BASE_PATH__}/data/pbr/kiara_dawn_4k.jpg`, 8),
+  ]);
   actor.getProperty().setDiffuseTexture(diffuseTex);
   actor.getProperty().setAmbientOcclusionTexture(aoTex);
   actor.getProperty().setRoughnessTexture(roughnessTex);
@@ -140,13 +158,16 @@ reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(async () => {
   renderer.setEnvironmentTexture(environmentTex);
   renderer.setEnvironmentTextureDiffuseStrength(1);
   renderer.setEnvironmentTextureSpecularStrength(1);
+  renderer.setUseEnvironmentTextureAsBackground(true);
 
   actor.setMapper(mapper);
-  mapper.setInputData(polydata);
+  mapper.setInputConnection(normals.getOutputPort());
 
   renderer.addActor(actor);
   renderer.resetCamera();
+  renderer.resetCamera();
   renderWindow.render();
+  fpsMonitor.update();
   fpsMonitor.update();
 });
 
@@ -161,8 +182,6 @@ const redLight = vtkLight.newInstance({
 });
 redLight.setDirection([0.8, 1, -1]); // setDirection allows for direct setting instead of through a focal point
 renderer.addLight(redLight);
-
-renderer.resetCamera();
 renderWindow.render();
 fpsMonitor.update();
 
