@@ -41,7 +41,7 @@ function _getFormatForDataArray(dataArray) {
       format = 'uint16';
       break;
     case VtkDataTypes.SHORT:
-      format = 'sin16';
+      format = 'sint16';
       break;
     default:
       format = 'float32';

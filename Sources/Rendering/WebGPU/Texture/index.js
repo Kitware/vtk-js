@@ -18,6 +18,9 @@ function vtkWebGPUTexture(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUTexture');
 
+  const getMaxMipLevel = (width, height, depth) =>
+    Math.floor(Math.log2(Math.max(width, height, depth)));
+
   const getUploadArrayType = (tDetails, fallbackType) => {
     if (tDetails.elementSize === 2 && tDetails.sampleType === 'float') {
       return 'Uint16Array';
@@ -165,7 +168,12 @@ function vtkWebGPUTexture(publicAPI, model) {
       model.dimension = model.depth === 1 ? '2d' : '3d';
     }
     model.format = options.format ? options.format : 'rgba8unorm';
-    model.mipLevel = options.mipLevel ? options.mipLevel : 0;
+    model.mipLevel = options.mipLevel
+      ? Math.min(
+          options.mipLevel,
+          getMaxMipLevel(model.width, model.height, model.depth)
+        )
+      : 0;
     /* eslint-disable no-undef */
     /* eslint-disable no-bitwise */
     model.usage = options.usage
@@ -216,7 +224,7 @@ function vtkWebGPUTexture(publicAPI, model) {
         },
         {
           texture: model.handle,
-          premultipliedAlpha: true,
+          premultipliedAlpha: false,
           mipLevel: 0,
           origin: { x: 0, y: 0, z: originZ },
         },
