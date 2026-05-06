@@ -21,10 +21,21 @@ import {
 import {
   handleKHRDracoMeshCompression,
   handleKHRLightsPunctual,
+  handleKHRMaterialsAnisotropy,
+  handleKHRMaterialsClearcoat,
+  handleKHRMaterialsEmissiveStrength,
   handleKHRMaterialsIor,
+  handleKHRMaterialsIridescence,
+  handleKHRMaterialsPbrSpecularGlossiness,
+  handleKHRMaterialsSheen,
+  handleKHRMaterialsDiffuseTransmission,
+  handleKHRMaterialsDispersion,
   handleKHRMaterialsSpecular,
+  handleKHRMaterialsTransmission,
   handleKHRMaterialsUnlit,
   handleKHRMaterialsVariants,
+  handleKHRMaterialsVolume,
+  handleKHRTextureTransform,
 } from 'vtk.js/Sources/IO/Geometry/GLTFImporter/Extensions';
 
 import { mat4, quat, vec3 } from 'gl-matrix';
@@ -64,7 +75,7 @@ async function createPolyDataFromGLTFMesh(primitive) {
   const pointData = polyData.getPointData();
 
   const attrs = Object.entries(primitive.attributes);
-  attrs.forEach(async ([attributeName, accessor]) => {
+  for (const [attributeName] of attrs) {
     switch (attributeName) {
       case SEMANTIC_ATTRIBUTE_MAP.POSITION: {
         const position = primitive.attributes.position.value;
@@ -126,33 +137,212 @@ async function createPolyDataFromGLTFMesh(primitive) {
         pointData.addArray(dat);
         break;
       }
+      case SEMANTIC_ATTRIBUTE_MAP.JOINTS_0: {
+        const joints = primitive.attributes.joint.value;
+        pointData.addArray(
+          vtkDataArray.newInstance({
+            name: 'JOINTS_0',
+            values: joints,
+            numberOfComponents: primitive.attributes.joint.components,
+          })
+        );
+        break;
+      }
+      case SEMANTIC_ATTRIBUTE_MAP.WEIGHTS_0: {
+        const weights = primitive.attributes.weight.value;
+        pointData.addArray(
+          vtkDataArray.newInstance({
+            name: 'WEIGHTS_0',
+            values: weights,
+            numberOfComponents: primitive.attributes.weight.components,
+          })
+        );
+        break;
+      }
       default:
         vtkWarningMacro(`Unhandled attribute: ${attributeName}`);
     }
-  });
-
-  // Handle indices if available
-  if (primitive.indices != null) {
-    const indices = primitive.indices.value;
-    const nCells = indices.length - 2;
-    switch (primitive.mode) {
-      case MODES.GL_LINE_STRIP:
-      case MODES.GL_TRIANGLE_STRIP:
-      case MODES.GL_LINE_LOOP:
-        vtkWarningMacro('GL_LINE_LOOP not implemented');
-        break;
-      default:
-        cells.allocate((4 * indices.length) / 3);
-        for (let cellId = 0; cellId < nCells; cellId += 3) {
-          const cell = indices.slice(cellId, cellId + 3);
-          cells.insertNextCell(cell);
-        }
-    }
   }
 
-  switch (primitive.mode) {
+  const buildConnectivityFromIndices = (indices, mode) => {
+    switch (mode) {
+      case MODES.GL_POINTS: {
+        const out = new Uint32Array(indices.length * 2);
+        for (let i = 0, j = 0; i < indices.length; i++, j += 2) {
+          out[j] = 1;
+          out[j + 1] = indices[i];
+        }
+        return out;
+      }
+      case MODES.GL_LINES: {
+        const pairCount = Math.floor(indices.length / 2);
+        const out = new Uint32Array(pairCount * 3);
+        for (let i = 0, j = 0; i + 1 < indices.length; i += 2, j += 3) {
+          out[j] = 2;
+          out[j + 1] = indices[i];
+          out[j + 2] = indices[i + 1];
+        }
+        return out;
+      }
+      case MODES.GL_LINE_STRIP: {
+        const segCount = Math.max(0, indices.length - 1);
+        const out = new Uint32Array(segCount * 3);
+        for (let i = 0, j = 0; i + 1 < indices.length; i++, j += 3) {
+          out[j] = 2;
+          out[j + 1] = indices[i];
+          out[j + 2] = indices[i + 1];
+        }
+        return out;
+      }
+      case MODES.GL_LINE_LOOP: {
+        const segCount = indices.length;
+        const out = new Uint32Array(segCount * 3);
+        for (let i = 0, j = 0; i < indices.length; i++, j += 3) {
+          out[j] = 2;
+          out[j + 1] = indices[i];
+          out[j + 2] = indices[(i + 1) % indices.length];
+        }
+        return out;
+      }
+      case MODES.GL_TRIANGLE_STRIP: {
+        const triCount = Math.max(0, indices.length - 2);
+        const out = new Uint32Array(triCount * 4);
+        for (let i = 0, j = 0; i + 2 < indices.length; i++, j += 4) {
+          out[j] = 3;
+          if (i % 2 === 0) {
+            out[j + 1] = indices[i];
+            out[j + 2] = indices[i + 1];
+          } else {
+            out[j + 1] = indices[i + 1];
+            out[j + 2] = indices[i];
+          }
+          out[j + 3] = indices[i + 2];
+        }
+        return out;
+      }
+      case MODES.GL_TRIANGLE_FAN: {
+        const triCount = Math.max(0, indices.length - 2);
+        const out = new Uint32Array(triCount * 4);
+        for (let i = 1, j = 0; i + 1 < indices.length; i++, j += 4) {
+          out[j] = 3;
+          out[j + 1] = indices[0];
+          out[j + 2] = indices[i];
+          out[j + 3] = indices[i + 1];
+        }
+        return out;
+      }
+      case MODES.GL_TRIANGLES:
+      default: {
+        const triCount = Math.floor(indices.length / 3);
+        const out = new Uint32Array(triCount * 4);
+        for (let i = 0, j = 0; i + 2 < indices.length; i += 3, j += 4) {
+          out[j] = 3;
+          out[j + 1] = indices[i];
+          out[j + 2] = indices[i + 1];
+          out[j + 3] = indices[i + 2];
+        }
+        return out;
+      }
+    }
+  };
+
+  const buildConnectivityFromPointCount = (numPoints, mode) => {
+    switch (mode) {
+      case MODES.GL_POINTS: {
+        const out = new Uint32Array(numPoints * 2);
+        for (let i = 0, j = 0; i < numPoints; i++, j += 2) {
+          out[j] = 1;
+          out[j + 1] = i;
+        }
+        return out;
+      }
+      case MODES.GL_LINES: {
+        const pairCount = Math.floor(numPoints / 2);
+        const out = new Uint32Array(pairCount * 3);
+        for (let i = 0, j = 0; i + 1 < numPoints; i += 2, j += 3) {
+          out[j] = 2;
+          out[j + 1] = i;
+          out[j + 2] = i + 1;
+        }
+        return out;
+      }
+      case MODES.GL_LINE_STRIP: {
+        const segCount = Math.max(0, numPoints - 1);
+        const out = new Uint32Array(segCount * 3);
+        for (let i = 0, j = 0; i + 1 < numPoints; i++, j += 3) {
+          out[j] = 2;
+          out[j + 1] = i;
+          out[j + 2] = i + 1;
+        }
+        return out;
+      }
+      case MODES.GL_LINE_LOOP: {
+        const out = new Uint32Array(numPoints * 3);
+        for (let i = 0, j = 0; i < numPoints; i++, j += 3) {
+          out[j] = 2;
+          out[j + 1] = i;
+          out[j + 2] = (i + 1) % numPoints;
+        }
+        return out;
+      }
+      case MODES.GL_TRIANGLE_STRIP: {
+        const triCount = Math.max(0, numPoints - 2);
+        const out = new Uint32Array(triCount * 4);
+        for (let i = 0, j = 0; i + 2 < numPoints; i++, j += 4) {
+          out[j] = 3;
+          if (i % 2 === 0) {
+            out[j + 1] = i;
+            out[j + 2] = i + 1;
+          } else {
+            out[j + 1] = i + 1;
+            out[j + 2] = i;
+          }
+          out[j + 3] = i + 2;
+        }
+        return out;
+      }
+      case MODES.GL_TRIANGLE_FAN: {
+        const triCount = Math.max(0, numPoints - 2);
+        const out = new Uint32Array(triCount * 4);
+        for (let i = 1, j = 0; i + 1 < numPoints; i++, j += 4) {
+          out[j] = 3;
+          out[j + 1] = 0;
+          out[j + 2] = i;
+          out[j + 3] = i + 1;
+        }
+        return out;
+      }
+      case MODES.GL_TRIANGLES:
+      default: {
+        const triCount = Math.floor(numPoints / 3);
+        const out = new Uint32Array(triCount * 4);
+        for (let i = 0, j = 0; i + 2 < numPoints; i += 3, j += 4) {
+          out[j] = 3;
+          out[j + 1] = i;
+          out[j + 2] = i + 1;
+          out[j + 3] = i + 2;
+        }
+        return out;
+      }
+    }
+  };
+
+  // Handle indices if available
+  const mode = primitive.mode ?? MODES.GL_TRIANGLES;
+  const connectivity =
+    primitive.indices != null
+      ? buildConnectivityFromIndices(primitive.indices.value, mode)
+      : buildConnectivityFromPointCount(
+          polyData.getPoints().getNumberOfPoints(),
+          mode
+        );
+  cells.setData(connectivity);
+
+  const effectiveMode = primitive.mode ?? MODES.GL_TRIANGLES;
+  switch (effectiveMode) {
     case MODES.GL_TRIANGLES:
     case MODES.GL_TRIANGLE_FAN:
+    case MODES.GL_TRIANGLE_STRIP:
       polyData.setPolys(cells);
       break;
     case MODES.GL_LINES:
@@ -162,9 +352,6 @@ async function createPolyDataFromGLTFMesh(primitive) {
       break;
     case MODES.GL_POINTS:
       polyData.setVerts(cells);
-      break;
-    case MODES.GL_TRIANGLE_STRIP:
-      polyData.setStrips(cells);
       break;
     default:
       cells.delete();
@@ -180,7 +367,13 @@ async function createPolyDataFromGLTFMesh(primitive) {
  * @param {GLTFMaterial} material - The GLTF material
  * @param {vtkActor} actor - The VTK actor
  */
-async function createPropertyFromGLTFMaterial(model, material, actor) {
+async function createPropertyFromGLTFMaterial(
+  model,
+  material,
+  actor,
+  options = {}
+) {
+  const { resetToDefaults = true } = options;
   let metallicFactor = 1.0;
   let roughnessFactor = 1.0;
   const emissiveFactor = material.emissiveFactor;
@@ -202,27 +395,73 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
     return createVTKTextureFromGLTFTexture(img, sampler, texRef.extensions);
   };
 
+  if (resetToDefaults) {
+    // Reset PBR properties to defaults (critical for variant switching)
+    property.setMetallic(0);
+    property.setRoughness(0.6);
+    property.setEmission(1);
+    property.setBaseIOR(1.45);
+    property.setNormalStrength(1);
+    property.setDiffuseColor(1, 1, 1);
+    property.setOpacity(1);
+    property.setAnisotropy(0);
+    property.setAnisotropyRotation(0);
+    property.setCoatStrength(0);
+    property.setCoatRoughness(0);
+    property.setCoatColor(1, 1, 1);
+    property.setCoatF0(0.04);
+    property.setCoatNormalStrength(1);
+    property.setEmissiveStrength(1);
+    property.setTransmissionFactor(0);
+    property.setAlphaCutoff(0);
+    property.setThicknessFactor(0);
+    property.setAttenuationDistance(Infinity);
+    property.setAttenuationColor(1, 1, 1);
+    property.setIridescenceFactor(0);
+    property.setIridescenceIOR(1.3);
+    property.setIridescenceThicknessMinimum(100);
+    property.setIridescenceThicknessMaximum(400);
+    property.setSheenColorFactor(0, 0, 0);
+    property.setSheenRoughnessFactor(0);
+    property.setDiffuseTransmissionFactor(0);
+    property.setDiffuseTransmissionColorFactor(1, 1, 1);
+    property.setDispersion(0);
+    property.setSpecularFactor(1.0);
+    property.setSpecularColorFactor(1, 1, 1);
+    property.setTextureTransforms({});
+    // Clear textures
+    property.setDiffuseTexture(null);
+    property.setORMTexture(null);
+    property.setRMTexture(null);
+    property.setAmbientOcclusionTexture(null);
+    property.setEmissionTexture(null);
+    property.setNormalTexture(null);
+    property.setAnisotropyTexture(null);
+    property.setCoatTexture(null);
+    property.setCoatRoughnessTexture(null);
+    property.setCoatNormalTexture(null);
+    property.setTransmissionTexture(null);
+    property.setThicknessTexture(null);
+    property.setIridescenceTexture(null);
+    property.setIridescenceThicknessTexture(null);
+    property.setSheenColorTexture(null);
+    property.setSheenRoughnessTexture(null);
+    property.setDiffuseTransmissionTexture(null);
+    property.setDiffuseTransmissionColorTexture(null);
+    property.setSpecularTexture(null);
+    property.setSpecularColorTexture(null);
+    property.setBackfaceCulling(false);
+  }
+
   const pbr = material.pbrMetallicRoughness;
 
   if (pbr != null) {
-    if (
-      !pbr?.metallicFactor ||
-      pbr?.metallicFactor <= 0 ||
-      pbr?.metallicFactor >= 1
-    ) {
-      vtkDebugMacro(
-        'Invalid material.pbrMetallicRoughness.metallicFactor value. Using default value instead.'
-      );
-    } else metallicFactor = pbr.metallicFactor;
-    if (
-      !pbr?.roughnessFactor ||
-      pbr?.roughnessFactor <= 0 ||
-      pbr?.roughnessFactor >= 1
-    ) {
-      vtkDebugMacro(
-        'Invalid material.pbrMetallicRoughness.roughnessFactor value. Using default value instead.'
-      );
-    } else roughnessFactor = pbr.roughnessFactor;
+    if (pbr.metallicFactor != null) {
+      metallicFactor = pbr.metallicFactor;
+    }
+    if (pbr.roughnessFactor != null) {
+      roughnessFactor = pbr.roughnessFactor;
+    }
 
     const color = pbr.baseColorFactor;
 
@@ -236,8 +475,21 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
     property.setEmission(emissiveFactor);
 
     if (pbr.baseColorTexture) {
-      // const extensions = pbr.baseColorTexture.extensions;
+      const extensions = pbr.baseColorTexture.extensions;
       const tex = pbr.baseColorTexture.texture;
+
+      // Apply texture transform from KHR_texture_transform
+      if (extensions?.KHR_texture_transform) {
+        handleKHRTextureTransform(
+          extensions.KHR_texture_transform,
+          property,
+          'diffuse'
+        );
+      } else if (pbr.baseColorTexture.texCoord != null) {
+        property.setTextureTransform('diffuse', {
+          texCoord: pbr.baseColorTexture.texCoord,
+        });
+      }
 
       if (tex.extensions != null) {
         const extensionsNames = Object.keys(tex.extensions);
@@ -256,17 +508,56 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
 
     // Handle metallic-roughness texture (metallicRoughnessTexture)
     if (pbr.metallicRoughnessTexture) {
+      const extensions = pbr.metallicRoughnessTexture.extensions;
+      const tex = pbr.metallicRoughnessTexture.texture;
+      if (extensions?.KHR_texture_transform) {
+        handleKHRTextureTransform(
+          extensions.KHR_texture_transform,
+          property,
+          'rm'
+        );
+      } else if (pbr.metallicRoughnessTexture.texCoord != null) {
+        property.setTextureTransform('rm', {
+          texCoord: pbr.metallicRoughnessTexture.texCoord,
+        });
+      }
       texturePromises.rm = loadTextureRef(pbr.metallicRoughnessTexture);
     }
 
     // Handle ambient occlusion texture (occlusionTexture)
     if (material.occlusionTexture) {
+      const extensions = material.occlusionTexture.extensions;
+      const tex = material.occlusionTexture.texture;
+      if (extensions?.KHR_texture_transform) {
+        handleKHRTextureTransform(
+          extensions.KHR_texture_transform,
+          property,
+          'ao'
+        );
+      } else if (material.occlusionTexture.texCoord != null) {
+        property.setTextureTransform('ao', {
+          texCoord: material.occlusionTexture.texCoord,
+        });
+      }
       texturePromises.ao = loadTextureRef(material.occlusionTexture);
-      // TODO: Handle occlusionTexture.strength
+      property.setOcclusionStrength(material.occlusionTexture.strength ?? 1.0);
     }
 
     // Handle emissive texture (emissiveTexture)
     if (material.emissiveTexture) {
+      const extensions = material.emissiveTexture.extensions;
+      const tex = material.emissiveTexture.texture;
+      if (extensions?.KHR_texture_transform) {
+        handleKHRTextureTransform(
+          extensions.KHR_texture_transform,
+          property,
+          'emission'
+        );
+      } else if (material.emissiveTexture.texCoord != null) {
+        property.setTextureTransform('emission', {
+          texCoord: material.emissiveTexture.texCoord,
+        });
+      }
       texturePromises.emissive = loadTextureRef(material.emissiveTexture);
 
       // Handle mutiple Uvs
@@ -278,6 +569,19 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
 
     // Handle normal texture (normalTexture)
     if (material.normalTexture) {
+      const extensions = material.normalTexture.extensions;
+      const tex = material.normalTexture.texture;
+      if (extensions?.KHR_texture_transform) {
+        handleKHRTextureTransform(
+          extensions.KHR_texture_transform,
+          property,
+          'normal'
+        );
+      } else if (material.normalTexture.texCoord != null) {
+        property.setTextureTransform('normal', {
+          texCoord: material.normalTexture.texCoord,
+        });
+      }
       texturePromises.normal = loadTextureRef(material.normalTexture);
 
       if (material.normalTexture.scale != null) {
@@ -311,10 +615,21 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
     }
   }
 
+  // Alpha mode
+  if (material.alphaMode === ALPHA_MODE.MASK) {
+    property.setAlphaCutoff(material.alphaCutoff ?? 0.5);
+    property.setAlphaMode(1); // MASK
+  } else if (material.alphaMode === ALPHA_MODE.BLEND) {
+    property.setAlphaMode(2); // BLEND
+  } else {
+    property.setAlphaMode(0); // OPAQUE (default)
+  }
+
   // Material extensions
   if (material.extensions != null) {
     const extensionsNames = Object.keys(material.extensions);
-    extensionsNames.forEach((extensionName) => {
+    const extensionPromises = [];
+    for (const extensionName of extensionsNames) {
       const extension = material.extensions[extensionName];
       switch (extensionName) {
         case 'KHR_materials_unlit':
@@ -324,19 +639,86 @@ async function createPropertyFromGLTFMaterial(model, material, actor) {
           handleKHRMaterialsIor(extension, property);
           break;
         case 'KHR_materials_specular':
-          handleKHRMaterialsSpecular(extension, property);
+          extensionPromises.push(
+            handleKHRMaterialsSpecular(extension, property, loadTextureRef)
+          );
+          break;
+        case 'KHR_materials_pbrSpecularGlossiness':
+          extensionPromises.push(
+            handleKHRMaterialsPbrSpecularGlossiness(
+              extension,
+              property,
+              loadTextureRef
+            )
+          );
+          break;
+        case 'KHR_materials_clearcoat':
+          extensionPromises.push(
+            handleKHRMaterialsClearcoat(extension, property, loadTextureRef)
+          );
+          break;
+        case 'KHR_materials_anisotropy':
+          extensionPromises.push(
+            handleKHRMaterialsAnisotropy(extension, property, loadTextureRef)
+          );
+          break;
+        case 'KHR_materials_emissive_strength':
+          handleKHRMaterialsEmissiveStrength(extension, property);
+          break;
+        case 'KHR_materials_transmission':
+          extensionPromises.push(
+            handleKHRMaterialsTransmission(extension, property, loadTextureRef)
+          );
+          break;
+        case 'KHR_materials_volume':
+          extensionPromises.push(
+            handleKHRMaterialsVolume(extension, property, loadTextureRef)
+          );
+          break;
+        case 'KHR_materials_iridescence':
+          extensionPromises.push(
+            handleKHRMaterialsIridescence(extension, property, loadTextureRef)
+          );
+          break;
+        case 'KHR_materials_sheen':
+          extensionPromises.push(
+            handleKHRMaterialsSheen(extension, property, loadTextureRef)
+          );
+          break;
+        case 'KHR_materials_diffuse_transmission':
+          extensionPromises.push(
+            handleKHRMaterialsDiffuseTransmission(
+              extension,
+              property,
+              loadTextureRef
+            )
+          );
+          break;
+        case 'KHR_materials_dispersion':
+          handleKHRMaterialsDispersion(extension, property);
           break;
         default:
           vtkWarningMacro(`Unhandled extension: ${extensionName}`);
       }
-    });
+    }
+    await Promise.all(extensionPromises);
   }
 
-  if (material.alphaMode !== ALPHA_MODE.OPAQUE) {
+  // Reset translucency (may be re-enabled below for BLEND/transmission)
+  actor.setForceTranslucent(false);
+
+  // BLEND mode uses translucent pass; MASK stays opaque with alpha cutoff
+  if (material.alphaMode === ALPHA_MODE.BLEND) {
+    actor.setForceTranslucent(true);
+  }
+
+  // Transmission requires translucent rendering
+  if (material.extensions?.KHR_materials_transmission?.transmissionFactor > 0) {
     actor.setForceTranslucent(true);
   }
 
   property.setBackfaceCulling(!material.doubleSided);
+
 }
 
 /**
@@ -384,7 +766,12 @@ async function createActorFromGTLFNode(worldMatrix) {
  * @param {GLTFMesh} mesh - The GLTF mesh
  * @returns {vtkActor} The created VTK actor
  */
-async function createActorFromGTLFPrimitive(model, primitive, worldMatrix) {
+async function createActorFromGTLFPrimitive(
+  model,
+  primitive,
+  worldMatrix,
+  nodeId
+) {
   const actor = vtkActor.newInstance();
   const mapper = vtkMapper.newInstance();
   mapper.setColorModeToDirectScalars();
@@ -396,13 +783,46 @@ async function createActorFromGTLFPrimitive(model, primitive, worldMatrix) {
   const polydata = await createPolyDataFromGLTFMesh(primitive);
   mapper.setInputData(polydata);
 
+  // Store morph target data for animation
+  if (primitive.targets && primitive.targets.length > 0 && model.morphTargets) {
+    const basePositions = polydata.getPoints().getData().slice();
+    const targets = primitive.targets.map((target) => ({
+      position: target.POSITION ? target.POSITION.value : null,
+      normal: target.NORMAL ? target.NORMAL.value : null,
+    }));
+    model.morphTargets.set(`${nodeId}_${primitive.name}`, {
+      basePositions,
+      targets,
+      polydata,
+      numVertices: basePositions.length / 3,
+    });
+  }
+
   // Support for materials
   if (primitive.material != null) {
     await createPropertyFromGLTFMaterial(model, primitive.material, actor);
+
+    // Track material index → property for animation pointer support
+    if (model.materialProperties) {
+      const matId = primitive.material.id || '';
+      const match = matId.match(/material-(\d+)/);
+      if (match) {
+        const matIdx = parseInt(match[1], 10);
+        const key = `mat_${matIdx}`;
+        if (!model.materialProperties.has(key)) {
+          model.materialProperties.set(key, []);
+        }
+        model.materialProperties.get(key).push(actor.getProperty());
+      }
+    }
   }
 
   if (primitive.extensions != null) {
-    handlePrimitiveExtensions(`${primitive.name}`, primitive.extensions, model);
+    handlePrimitiveExtensions(
+      `${nodeId}_${primitive.name}`,
+      primitive.extensions,
+      model
+    );
   }
 
   return actor;
@@ -470,9 +890,30 @@ async function processNode(
     node.transform
   );
 
+  // Store per-node transform metadata for animation & hierarchy propagation
+  if (model.nodeTransforms) {
+    model.nodeTransforms.set(node.id, {
+      localMatrix: mat4.clone(node.transform),
+      worldMatrix: mat4.clone(worldMatrix),
+      parentMatrix: mat4.clone(parentMatrix),
+      translation: node.translation ? [...node.translation] : [0, 0, 0],
+      rotation: node.rotation ? [...node.rotation] : [0, 0, 0, 1],
+      scale: node.scale ? [...node.scale] : [1, 1, 1],
+    });
+  }
+
+  // Store node hierarchy (parent → children) for animation propagation
+  if (model.nodeChildren) {
+    const childIds = (node.children || []).map((c) => c.id);
+    model.nodeChildren.set(node.id, childIds);
+  }
+
   // Create actor for the current node
   if (node.mesh != null) {
     const nodeActor = await createActorFromGTLFNode(worldMatrix);
+    if (node.skin) {
+      nodeActor.setUserMatrix(mat4.create());
+    }
     if (parentActor) {
       nodeActor.setParentProp(parentActor);
     }
@@ -483,21 +924,58 @@ async function processNode(
         const actor = await createActorFromGTLFPrimitive(
           model,
           primitive,
-          worldMatrix
+          worldMatrix,
+          node.id
         );
+        if (node.skin) {
+          actor.setUserMatrix(mat4.create());
+        }
         actor.setParentProp(nodeActor);
         model.actors.set(`${node.id}_${primitive.name}`, actor);
       })
     );
+
+    // Store skin data for skinned meshes
+    if (node.skin && model.skins) {
+      const skin = node.skin;
+      const jointNodeIds = (skin.joints || []).map((j) => j.id);
+      // Parse inverseBindMatrices into array of mat4
+      const ibmData = skin.inverseBindMatrices?.value;
+      const inverseBindMatrices = [];
+      if (ibmData) {
+        for (let j = 0; j < jointNodeIds.length; j++) {
+          const m = new Float32Array(16);
+          for (let k = 0; k < 16; k++) {
+            m[k] = ibmData[j * 16 + k];
+          }
+          inverseBindMatrices.push(m);
+        }
+      } else {
+        // Default to identity if no inverseBindMatrices
+        for (let j = 0; j < jointNodeIds.length; j++) {
+          inverseBindMatrices.push(mat4.create());
+        }
+      }
+      model.skins.set(node.id, {
+        skinId: skin.id,
+        jointNodeIds,
+        inverseBindMatrices,
+        skeletonRoot: skin.skeleton?.id || null,
+      });
+    }
   }
 
   // Handle KHRLightsPunctual extension
   if (node.extensions?.KHR_lights_punctual) {
-    handleKHRLightsPunctual(
+    const light = handleKHRLightsPunctual(
       node.extensions.KHR_lights_punctual,
       node.transform,
       model
     );
+    if (light && node.id) {
+      if (!model.nodeLights) model.nodeLights = new Map();
+      model.nodeLights.set(node.id, light);
+    }
   }
 
   if (
@@ -531,6 +1009,7 @@ async function createVTKObjects(model) {
         handleKHRMaterialsVariants(extension, model);
         break;
       case 'KHR_draco_mesh_compression':
+      case 'KHR_lights_punctual':
         break;
       default:
         vtkWarningMacro(`Unhandled extension: ${extensionName}`);

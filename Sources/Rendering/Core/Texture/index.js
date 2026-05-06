@@ -327,6 +327,8 @@ const DEFAULT_VALUES = {
   interpolate: false,
   edgeClamp: false,
   mipLevel: 0,
+  wrapS: null, // per-axis wrap: 'repeat', 'clamp-to-edge', or 'mirror-repeat'
+  wrapT: null,
   resizable: false, // must be set at construction time if the texture can be resizable
 };
 
@@ -353,6 +355,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'edgeClamp',
     'interpolate',
     'mipLevel',
+    'wrapS',
+    'wrapT',
   ]);
 
   vtkTexture(publicAPI, model);
