@@ -612,7 +612,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           model._screenshot.placeHolder = model.el.appendChild(tmpImg);
 
           // hide the main canvas
-          model.canvas.style.display = 'none';
+          if (model.manageCanvas) {
+            model.canvas.style.display = 'none';
+          }
 
           // remember the main canvas original size, then resize it
           model._screenshot.originalSize = model.size;

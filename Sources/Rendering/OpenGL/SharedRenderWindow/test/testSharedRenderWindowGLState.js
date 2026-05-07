@@ -10,6 +10,8 @@ function createDirtyHostResources(gl) {
     elementArrayBuffer: gl.createBuffer(),
     renderbuffer: gl.createRenderbuffer(),
     texture: gl.createTexture(),
+    pixelPackBuffer: gl.createBuffer(),
+    pixelUnpackBuffer: gl.createBuffer(),
   };
 }
 
@@ -18,6 +20,8 @@ function deleteDirtyHostResources(gl, resources) {
   gl.deleteBuffer(resources.elementArrayBuffer);
   gl.deleteRenderbuffer(resources.renderbuffer);
   gl.deleteTexture(resources.texture);
+  gl.deleteBuffer(resources.pixelPackBuffer);
+  gl.deleteBuffer(resources.pixelUnpackBuffer);
 }
 
 function dirtyHostGLState(gl, resources) {
@@ -40,6 +44,14 @@ function dirtyHostGLState(gl, resources) {
 
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, 2);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+  // States resetGLState must normalize for vtk to render correctly.
+  gl.enable(gl.RASTERIZER_DISCARD);
+  gl.depthRange(0.2, 0.8);
+  gl.enable(gl.SAMPLE_COVERAGE);
+  gl.sampleCoverage(0.25, true);
+  gl.bindBuffer(gl.PIXEL_PACK_BUFFER, resources.pixelPackBuffer);
+  gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, resources.pixelUnpackBuffer);
 
   // Defaults that applyVTKRenderDefaults should restore.
   gl.disable(gl.BLEND);
@@ -117,6 +129,31 @@ test.onlyIfWebGL(
       gl.getParameter(gl.DEPTH_FUNC),
       gl.LEQUAL,
       'Depth function matches vtk.js default'
+    );
+    t.equal(
+      gl.isEnabled(gl.RASTERIZER_DISCARD),
+      false,
+      'RASTERIZER_DISCARD disabled'
+    );
+    t.deepEqual(
+      Array.from(gl.getParameter(gl.DEPTH_RANGE)),
+      [0, 1],
+      'DEPTH_RANGE reset to default'
+    );
+    t.equal(
+      gl.isEnabled(gl.SAMPLE_COVERAGE),
+      false,
+      'SAMPLE_COVERAGE disabled'
+    );
+    t.equal(
+      gl.getParameter(gl.PIXEL_PACK_BUFFER_BINDING),
+      null,
+      'PIXEL_PACK_BUFFER unbound'
+    );
+    t.equal(
+      gl.getParameter(gl.PIXEL_UNPACK_BUFFER_BINDING),
+      null,
+      'PIXEL_UNPACK_BUFFER unbound'
     );
 
     sharedWindow.renderShared();

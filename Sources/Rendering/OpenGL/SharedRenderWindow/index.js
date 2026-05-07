@@ -35,7 +35,19 @@ function isWebGL2Context(gl) {
 
 function getDefaultDrawBuffers(gl) {
   const framebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
-  return framebuffer ? [gl.COLOR_ATTACHMENT0] : [gl.BACK];
+  if (!framebuffer) return [gl.BACK];
+  const max = gl.getParameter(gl.MAX_DRAW_BUFFERS);
+  const buffers = [];
+  for (let i = 0; i < max; i += 1) {
+    buffers.push(gl.getParameter(gl.DRAW_BUFFER0 + i));
+  }
+  // gl.drawBuffers requires bufs[i] to be NONE or COLOR_ATTACHMENTi, so
+  // dropping a NONE in the middle of the array would shift later attachments
+  // to the wrong slots. Trim trailing NONEs only.
+  while (buffers.length > 1 && buffers[buffers.length - 1] === gl.NONE) {
+    buffers.pop();
+  }
+  return buffers[0] === gl.NONE ? [gl.COLOR_ATTACHMENT0] : buffers;
 }
 
 function applyVTKRenderDefaults(gl) {
@@ -61,6 +73,13 @@ function resetGLState(gl, shaderCache, options = {}) {
   if (gl.SAMPLE_ALPHA_TO_COVERAGE) {
     gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);
   }
+  // Hosts using transform feedback can leave RASTERIZER_DISCARD enabled,
+  // which silently produces blank vtk frames. Force-clear it.
+  gl.disable(gl.RASTERIZER_DISCARD);
+  // Reset SAMPLE_COVERAGE — a non-default value would cull vtk fragments in
+  // multisampled contexts.
+  gl.disable(gl.SAMPLE_COVERAGE);
+  gl.sampleCoverage(1, false);
 
   gl.blendEquation(gl.FUNC_ADD);
   gl.blendFunc(gl.ONE, gl.ZERO);
@@ -73,6 +92,7 @@ function resetGLState(gl, shaderCache, options = {}) {
   gl.depthMask(true);
   gl.depthFunc(gl.LESS);
   gl.clearDepth(1);
+  gl.depthRange(0, 1);
 
   gl.stencilMask(0xffffffff);
   gl.stencilFunc(gl.ALWAYS, 0, 0xffffffff);
@@ -95,6 +115,17 @@ function resetGLState(gl, shaderCache, options = {}) {
   if (gl.bindRenderbuffer) {
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
   }
+
+  // Unbind PBOs. A bound PIXEL_UNPACK_BUFFER turns texImage2D's data argument
+  // into a buffer offset (silent corruption); a bound PIXEL_PACK_BUFFER
+  // routes readPixels into the buffer instead of returning data.
+  gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+  gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+
+  // Reset readBuffer to the default for the bound framebuffer.
+  gl.readBuffer(
+    gl.getParameter(gl.FRAMEBUFFER_BINDING) ? gl.COLOR_ATTACHMENT0 : gl.BACK
+  );
 
   gl.useProgram(null);
 
