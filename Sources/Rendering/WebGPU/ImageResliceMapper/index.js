@@ -1,17 +1,34 @@
-import { mat3, mat4, vec3 } from 'gl-matrix';
+import { mat4 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macros';
 import vtkClosedPolyLineToSurfaceFilter from 'vtk.js/Sources/Filters/General/ClosedPolyLineToSurfaceFilter';
 import vtkCutter from 'vtk.js/Sources/Filters/Core/Cutter';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkImageDataOutlineFilter from 'vtk.js/Sources/Filters/General/ImageDataOutlineFilter';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkTransform from 'vtk.js/Sources/Common/Transform/Transform';
 import vtkWebGPUImageMapper from 'vtk.js/Sources/Rendering/WebGPU/ImageMapper';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import { getTextureChannelMode } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ImageSampling';
+import {
+  getInputProperty,
+  getLabelOutlineTextureParameters,
+  fillLabelOutlineTextureTable,
+} from 'vtk.js/Sources/Rendering/Core/ImageResliceMapper/LabelOutlineHelper';
+import {
+  computeResliceGeometryState,
+  computeObliqueSliceGeometryData,
+  computeOrthoSliceGeometryData,
+} from 'vtk.js/Sources/Rendering/Core/ImageResliceMapper/ResliceGeometryHelper';
+import {
+  computeColorShiftScale,
+  computeOpacityShiftScale,
+  getTransferFunctionHash,
+} from 'vtk.js/Sources/Rendering/Core/ImageResliceMapper/TransferFunctionHelper';
+import {
+  computeSliceTangents,
+  computeInputOutlineBasis,
+} from 'vtk.js/Sources/Rendering/Core/ImageResliceMapper/OutlineBasisHelper';
 
 import {
   TextureChannelMode,
@@ -26,26 +43,20 @@ import {
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
-const { vtkErrorMacro, vtkWarningMacro } = macro;
+const { vtkErrorMacro } = macro;
 
 const tmpMat4 = new Float64Array(16);
-const tmpMat3 = new Float64Array(9);
 const tmpColorScale = new Float32Array(4);
 const tmpColorShift = new Float32Array(4);
 const tmpOpacityScale = new Float32Array(4);
 const tmpOpacityShift = new Float32Array(4);
 const tmpComponentWeight = new Float32Array(4);
-const COMPONENT_NAMES = ['r', 'g', 'b', 'a'];
-const tmpOutlineTangent1 = [0, 0, 0];
-const tmpOutlineTangent2 = [0, 0, 0];
-const tmpOutlineTexelSize = [0, 0, 0];
-const tmpOutlineVec3a = vec3.create();
-const tmpOutlineVec3b = vec3.create();
-const tmpAxisAlignedN = [0, 0, 0];
 const tmpPlaneNormal = [0, 0, 1];
+const tmpOutlineTexelSize = [0, 0, 0];
 const tmpOutlineVec4 = new Float32Array(4);
 const tmpVec4 = new Float32Array(4);
 const ZERO_OUTLINE_VEC4 = new Float32Array(4);
+const COMPONENT_NAMES = ['r', 'g', 'b', 'a'];
 const MAX_TEXTURE_INPUTS = 4;
 
 function getOutlineTangent1Name(index) {
@@ -60,9 +71,8 @@ function getOutlineTexelSizeName(index) {
   return `OutlineTexelSize_${index}`;
 }
 
-function getInputProperty(actor, inputIndex) {
-  if (!actor) return null;
-  return actor.getProperty(inputIndex) || actor.getProperty();
+function getTextureSlotForInput(index) {
+  return index;
 }
 
 function collectValidInputs(actor, renderable) {
@@ -84,10 +94,6 @@ function collectValidInputs(actor, renderable) {
   }
 
   return { currentValidInputs, labelOutlineProperties };
-}
-
-function getTextureSlotForInput(index) {
-  return index;
 }
 
 function getTextureLabelForInput(index) {
@@ -124,81 +130,12 @@ function getOutlineFlagString(actor, currentValidInputs) {
     .join('');
 }
 
-function getTransferFunctionHash(
-  actor,
-  currentValidInputs,
-  independentComponents,
-  numberOfRows,
-  kind
-) {
-  if (!currentValidInputs.length) {
-    return '0';
-  }
-  const fnName =
-    kind === 'color' ? 'getRGBTransferFunction' : 'getPiecewiseFunction';
-  const rows = [];
-  for (let i = 0; i < numberOfRows; i++) {
-    const property = independentComponents
-      ? getInputProperty(actor, currentValidInputs[i].inputIndex)
-      : getInputProperty(actor, currentValidInputs[0].inputIndex);
-    const fn = property?.[fnName]?.(independentComponents ? 0 : i);
-    rows.push(`${property?.getMTime?.() ?? 0}:${fn?.getMTime?.() ?? 0}`);
-  }
-  return rows.join('|');
-}
-
-function isVectorAxisAligned(n) {
-  vtkMath.normalize(n);
-  for (let i = 0; i < 3; ++i) {
-    vec3.zero(tmpAxisAlignedN);
-    tmpAxisAlignedN[i] = 1.0;
-    const dotP = vtkMath.dot(n, tmpAxisAlignedN);
-    if (dotP < -0.999999 || dotP > 0.999999) {
-      return [true, i];
-    }
-  }
-  return [false, 2];
-}
-
-function buildOrderedInputIndices(numberOfComponents, labelRows) {
-  const orderedInputs = [];
-  for (let i = 0; i < numberOfComponents; i++) {
-    if (!labelRows.has(i)) {
-      orderedInputs.push(i);
-    }
-  }
-  for (let i = 0; i < numberOfComponents; i++) {
-    if (labelRows.has(i)) {
-      orderedInputs.push(i);
-    }
-  }
-  return orderedInputs;
-}
-
 function setTmpVec4(vec4Array, x, y, z, w = 0) {
   vec4Array[0] = x;
   vec4Array[1] = y;
   vec4Array[2] = z;
   vec4Array[3] = w;
   return vec4Array;
-}
-
-function copyVec3(out, values) {
-  out[0] = values[0];
-  out[1] = values[1];
-  out[2] = values[2];
-  return out;
-}
-
-/**
- * Fill a packed xyz normal array with one plane normal.
- */
-function fillPackedNormals(values, normal, numberOfPoints) {
-  for (let i = 0; i < numberOfPoints; ++i) {
-    values[3 * i] = normal[0];
-    values[3 * i + 1] = normal[1];
-    values[3 * i + 2] = normal[2];
-  }
 }
 
 /**
@@ -270,46 +207,6 @@ function getTextureBindingUsage() {
   /* eslint-enable no-undef */
   /* eslint-enable no-bitwise */
   return textureUsage;
-}
-
-/**
- * Build the LabelOutline texture hash.
- */
-function getLabelOutlineTextureParameters(
-  labelOutlineProperties,
-  getDataArray
-) {
-  const dataArrays = [];
-  const hashParts = [];
-  let width = 0;
-
-  for (let row = 0; row < labelOutlineProperties.length; row++) {
-    const dataArray = getDataArray(labelOutlineProperties[row].property);
-    dataArrays.push(dataArray);
-    hashParts.push(dataArray.join('-'));
-    width = Math.max(width, dataArray.length);
-  }
-
-  return {
-    dataArrays,
-    hash: hashParts.join('|'),
-    width,
-    height: dataArrays.length,
-  };
-}
-
-/**
- * Pack ragged per input label outline rows into a rectangular texture table.
- */
-function fillLabelOutlineTextureTable(table, dataArrays, width) {
-  for (let row = 0; row < dataArrays.length; row++) {
-    const dataArray = dataArrays[row];
-    const rowOffset = row * width;
-    for (let col = 0; col < width; col++) {
-      table[rowOffset + col] = dataArray[col] ?? dataArray[0];
-    }
-  }
-  return table;
 }
 
 function getSampleCoordSuffix(dimensions) {
@@ -447,6 +344,27 @@ function buildInitialImageSampleLines(
   return lines;
 }
 
+function buildOrderedInputIndices(numberOfComponents, labelRows) {
+  const orderedInputs = [];
+  for (let i = 0; i < numberOfComponents; i++) {
+    if (!labelRows.has(i)) {
+      orderedInputs.push(i);
+    }
+  }
+  for (let i = 0; i < numberOfComponents; i++) {
+    if (labelRows.has(i)) {
+      orderedInputs.push(i);
+    }
+  }
+  return orderedInputs;
+}
+
+function createLabelRowsMap(labelOutlineProperties) {
+  return new Map(
+    labelOutlineProperties.map(({ arrayIndex }, row) => [arrayIndex, row])
+  );
+}
+
 function buildSingleComponentSampleLines(model, samplingCtx, useLabelOutline) {
   const coordSuffix = getSampleCoordSuffix(model.dimensions);
   if (useLabelOutline) {
@@ -506,9 +424,7 @@ function buildSingleComponentSampleLines(model, samplingCtx, useLabelOutline) {
 }
 
 function buildIndependentComponentSampleLines(model, samplingCtx) {
-  const labelRows = new Map(
-    model.labelOutlineProperties.map(({ arrayIndex }, row) => [arrayIndex, row])
-  );
+  const labelRows = createLabelRowsMap(model.labelOutlineProperties);
   const orderedInputs = buildOrderedInputIndices(
     model.numberOfComponents,
     labelRows
@@ -649,101 +565,50 @@ function updateResliceMatrixUBO(model) {
 }
 
 function updateOutlineBasisUBO(model, slicePlane) {
-  tmpPlaneNormal[0] = 0;
-  tmpPlaneNormal[1] = 0;
-  tmpPlaneNormal[2] = 1;
-  if (slicePlane) {
-    const slicePlaneNormal = slicePlane.getNormal();
-    tmpPlaneNormal[0] = slicePlaneNormal[0];
-    tmpPlaneNormal[1] = slicePlaneNormal[1];
-    tmpPlaneNormal[2] = slicePlaneNormal[2];
-  }
-  vtkMath.normalize(tmpPlaneNormal);
+  const { planeNormal, tangent1, tangent2 } = computeSliceTangents(
+    slicePlane,
+    tmpPlaneNormal
+  );
   model.UBO.setArray(
     'PlaneNormalWC',
-    setTmpVec4(tmpVec4, tmpPlaneNormal[0], tmpPlaneNormal[1], tmpPlaneNormal[2])
+    setTmpVec4(tmpVec4, planeNormal[0], planeNormal[1], planeNormal[2])
   );
-
-  tmpOutlineTangent1[0] = 0;
-  tmpOutlineTangent1[1] = 0;
-  tmpOutlineTangent1[2] = 0;
-  tmpOutlineTangent2[0] = 0;
-  tmpOutlineTangent2[1] = 0;
-  tmpOutlineTangent2[2] = 0;
-
-  if (slicePlane) {
-    vtkMath.perpendiculars(
-      tmpPlaneNormal,
-      tmpOutlineTangent1,
-      tmpOutlineTangent2,
-      0
-    );
-    // Validate tangents are non-zero
-    const t1Len = vtkMath.norm(tmpOutlineTangent1);
-    const t2Len = vtkMath.norm(tmpOutlineTangent2);
-    if (t1Len < 1e-6 || t2Len < 1e-6) {
-      vtkWarningMacro('Invalid tangent vectors, using defaults');
-      tmpOutlineTangent1[0] = 1;
-      tmpOutlineTangent1[1] = 0;
-      tmpOutlineTangent1[2] = 0;
-      tmpOutlineTangent2[0] = 0;
-      tmpOutlineTangent2[1] = 1;
-      tmpOutlineTangent2[2] = 0;
-    }
-  } else {
-    tmpOutlineTangent1[0] = 1;
-    tmpOutlineTangent2[1] = 1;
-  }
 
   for (let i = 0; i < MAX_TEXTURE_INPUTS; i++) {
     const imageData = model.currentValidInputs[i]?.imageData;
     if (imageData) {
-      mat3.set(tmpMat3, ...imageData.getDirection());
-      mat3.invert(tmpMat3, tmpMat3);
-
-      vec3.transformMat3(tmpOutlineVec3a, tmpOutlineTangent1, tmpMat3);
-      vec3.transformMat3(tmpOutlineVec3b, tmpOutlineTangent2, tmpMat3);
-
-      const inputDims = imageData.getDimensions();
-      const inputSpacing = imageData.getSpacing();
-      const minSpacing = Math.min(
-        Math.abs(inputSpacing[0]),
-        Math.abs(inputSpacing[1]),
-        Math.abs(inputSpacing[2])
+      const {
+        tangent1: inputTangent1,
+        tangent2: inputTangent2,
+        texelSize,
+      } = computeInputOutlineBasis(
+        imageData,
+        tangent1,
+        tangent2,
+        tmpOutlineTexelSize
       );
-      tmpOutlineTexelSize[0] =
-        minSpacing / (inputDims[0] * Math.abs(inputSpacing[0]));
-      tmpOutlineTexelSize[1] =
-        minSpacing / (inputDims[1] * Math.abs(inputSpacing[1]));
-      tmpOutlineTexelSize[2] =
-        minSpacing / (inputDims[2] * Math.abs(inputSpacing[2]));
 
       model.UBO.setArray(
         getOutlineTangent1Name(i),
         setTmpVec4(
           tmpOutlineVec4,
-          tmpOutlineVec3a[0],
-          tmpOutlineVec3a[1],
-          tmpOutlineVec3a[2]
+          inputTangent1[0],
+          inputTangent1[1],
+          inputTangent1[2]
         )
       );
       model.UBO.setArray(
         getOutlineTangent2Name(i),
         setTmpVec4(
           tmpOutlineVec4,
-          tmpOutlineVec3b[0],
-          tmpOutlineVec3b[1],
-          tmpOutlineVec3b[2]
+          inputTangent2[0],
+          inputTangent2[1],
+          inputTangent2[2]
         )
       );
       model.UBO.setArray(
         getOutlineTexelSizeName(i),
-        setTmpVec4(
-          tmpOutlineVec4,
-          tmpOutlineTexelSize[0],
-          tmpOutlineTexelSize[1],
-          tmpOutlineTexelSize[2]
-        )
+        setTmpVec4(tmpOutlineVec4, texelSize[0], texelSize[1], texelSize[2])
       );
     } else {
       model.UBO.setArray(getOutlineTangent1Name(i), ZERO_OUTLINE_VEC4);
@@ -775,34 +640,31 @@ function updateTransferFunctionUBO(model, actor, ppty, imageState) {
         model.currentValidInputs[i].inputIndex
       );
     }
-    let cw = inputProperty.getColorWindow();
-    let cl = inputProperty.getColorLevel();
+    const cw = inputProperty.getColorWindow();
+    const cl = inputProperty.getColorLevel();
     let target = 0;
     if (!model.multiTexturePerVolumeEnabled && iComps) {
       target = i;
     }
     const cfun = inputProperty.getRGBTransferFunction(target);
-    if (cfun && inputProperty.getUseLookupTableScalarRange()) {
-      const cRange = cfun.getRange();
-      cw = cRange[1] - cRange[0];
-      cl = 0.5 * (cRange[1] + cRange[0]);
-    }
-
-    tmpColorScale[i] = tScale / cw;
-    tmpColorShift[i] = -cl / cw + 0.5;
-
-    let opacityScale = 1.0;
-    let opacityShift = 0.0;
+    const colorParams = computeColorShiftScale({
+      colorWindow: cw,
+      colorLevel: cl,
+      useLookupTableScalarRange: inputProperty.getUseLookupTableScalarRange(),
+      colorRange: cfun?.getRange?.(),
+      volumeScale: tScale,
+      volumeOffset: 0.0,
+    });
     const pwfun = inputProperty.getPiecewiseFunction(target);
-    if (pwfun) {
-      const pwfRange = pwfun.getRange();
-      const length = pwfRange[1] - pwfRange[0];
-      const mid = 0.5 * (pwfRange[0] + pwfRange[1]);
-      opacityScale = tScale / length;
-      opacityShift = -mid / length + 0.5;
-    }
-    tmpOpacityScale[i] = opacityScale;
-    tmpOpacityShift[i] = opacityShift;
+    const opacityParams = computeOpacityShiftScale({
+      pwfRange: pwfun?.getRange?.(),
+      volumeScale: tScale,
+      volumeOffset: 0.0,
+    });
+    tmpColorScale[i] = colorParams.colorScale;
+    tmpColorShift[i] = colorParams.colorShift;
+    tmpOpacityScale[i] = opacityParams.opacityScale;
+    tmpOpacityShift[i] = opacityParams.opacityShift;
     tmpComponentWeight[i] = inputProperty.getComponentWeight(target);
   }
 
@@ -900,39 +762,9 @@ function vtkWebGPUImageResliceMapper(publicAPI, model) {
   };
 
   publicAPI.updateResliceGeometry = () => {
-    let resGeomString = '';
     const firstImageData = model.currentInput;
-    const imageBounds = firstImageData?.getBounds();
-    let orthoSlicing = true;
-    let orthoAxis = 2;
-    const slicePD = model.renderable.getSlicePolyData();
-    let slicePlane = model.renderable.getSlicePlane();
-
-    if (slicePD) {
-      resGeomString = `PolyData${slicePD.getMTime()}`;
-    } else if (slicePlane) {
-      resGeomString = `Plane${slicePlane.getMTime()}`;
-      if (firstImageData) {
-        resGeomString = `${resGeomString}Image${firstImageData.getMTime()}`;
-        mat3.set(tmpMat3, ...firstImageData.getDirection());
-        mat3.invert(tmpMat3, tmpMat3);
-        copyVec3(tmpOutlineVec3a, slicePlane.getNormal());
-        vec3.transformMat3(tmpOutlineVec3a, tmpOutlineVec3a, tmpMat3);
-        [orthoSlicing, orthoAxis] = isVectorAxisAligned(tmpOutlineVec3a);
-      }
-    } else {
-      slicePlane = vtkPlane.newInstance();
-      slicePlane.setNormal(0, 0, 1);
-      let bds = [0, 1, 0, 1, 0, 1];
-      if (firstImageData) {
-        bds = imageBounds;
-      }
-      slicePlane.setOrigin(bds[0], bds[2], 0.5 * (bds[4] + bds[5]));
-      model.renderable.setSlicePlane(slicePlane);
-      resGeomString = `Plane${slicePlane.getMTime()}Image${
-        firstImageData?.getMTime?.() ?? 0
-      }`;
-    }
+    const { resGeomString, slicePD, slicePlane, orthoSlicing, orthoAxis } =
+      computeResliceGeometryState(model.renderable, firstImageData);
 
     if (model.resliceGeom && model.resliceGeomUpdateString === resGeomString) {
       return;
@@ -948,26 +780,19 @@ function vtkWebGPUImageResliceMapper(publicAPI, model) {
         .getPointData()
         .setNormals(slicePD.getPointData().getNormals());
     } else if (slicePlane && firstImageData) {
+      if (!model.resliceGeom) {
+        model.resliceGeom = vtkPolyData.newInstance();
+      }
       if (!orthoSlicing) {
-        model.outlineFilter.setInputData(firstImageData);
-        model.cutter.setInputConnection(model.outlineFilter.getOutputPort());
-        model.cutter.setCutFunction(slicePlane);
-        model.lineToSurfaceFilter.setInputConnection(
-          model.cutter.getOutputPort()
+        const { points, polys, normalsData } = computeObliqueSliceGeometryData(
+          firstImageData,
+          slicePlane,
+          model.outlineFilter,
+          model.cutter,
+          model.lineToSurfaceFilter
         );
-        model.lineToSurfaceFilter.update();
-        const planePD = model.lineToSurfaceFilter.getOutputData();
-        if (!model.resliceGeom) {
-          model.resliceGeom = vtkPolyData.newInstance();
-        }
-        model.resliceGeom.getPoints().setData(planePD.getPoints().getData(), 3);
-        model.resliceGeom.getPolys().setData(planePD.getPolys().getData(), 1);
-
-        copyVec3(tmpPlaneNormal, slicePlane.getNormal());
-        vtkMath.normalize(tmpPlaneNormal);
-        const npts = model.resliceGeom.getNumberOfPoints();
-        const normalsData = new Float32Array(npts * 3);
-        fillPackedNormals(normalsData, tmpPlaneNormal, npts);
+        model.resliceGeom.getPoints().setData(points, 3);
+        model.resliceGeom.getPolys().setData(polys, 1);
         const normals = vtkDataArray.newInstance({
           numberOfComponents: 3,
           values: normalsData,
@@ -975,36 +800,14 @@ function vtkWebGPUImageResliceMapper(publicAPI, model) {
         });
         model.resliceGeom.getPointData().setNormals(normals);
       } else {
-        const ptsArray = new Float32Array(12);
-        const indexSpacePlaneOrigin = firstImageData.worldToIndex(
-          slicePlane.getOrigin(),
-          [0, 0, 0]
+        const { points, polys, normalsData } = computeOrthoSliceGeometryData(
+          firstImageData,
+          slicePlane,
+          orthoAxis,
+          model.transform
         );
-        const otherAxes = [(orthoAxis + 1) % 3, (orthoAxis + 2) % 3].sort();
-        const ext = firstImageData.getSpatialExtent();
-        let ptIdx = 0;
-        for (let i = 0; i < 2; ++i) {
-          for (let j = 0; j < 2; ++j) {
-            ptsArray[ptIdx + orthoAxis] = indexSpacePlaneOrigin[orthoAxis];
-            ptsArray[ptIdx + otherAxes[0]] = ext[2 * otherAxes[0] + j];
-            ptsArray[ptIdx + otherAxes[1]] = ext[2 * otherAxes[1] + i];
-            ptIdx += 3;
-          }
-        }
-        model.transform.setMatrix(firstImageData.getIndexToWorld());
-        model.transform.transformPoints(ptsArray, ptsArray);
-
-        const cellArray = new Uint16Array([3, 0, 1, 3, 3, 0, 3, 2]);
-        copyVec3(tmpPlaneNormal, slicePlane.getNormal());
-        vtkMath.normalize(tmpPlaneNormal);
-        const normalsData = new Float32Array(12);
-        fillPackedNormals(normalsData, tmpPlaneNormal, 4);
-
-        if (!model.resliceGeom) {
-          model.resliceGeom = vtkPolyData.newInstance();
-        }
-        model.resliceGeom.getPoints().setData(ptsArray, 3);
-        model.resliceGeom.getPolys().setData(cellArray, 1);
+        model.resliceGeom.getPoints().setData(points, 3);
+        model.resliceGeom.getPolys().setData(polys, 1);
         model.resliceGeom.getPointData().setNormals(
           vtkDataArray.newInstance({
             numberOfComponents: 3,
@@ -1419,13 +1222,13 @@ export function extend(publicAPI, model, initialValues = {}) {
     const imageState = publicAPI.getImageState();
     const actor = model.WebGPUImageSlice.getRenderable();
     const numIComps = imageState.numberOfIComponents;
-    const colorHash = getTransferFunctionHash(
-      actor,
-      model.currentValidInputs,
-      true,
-      numIComps,
-      'color'
-    );
+    const colorHash = getTransferFunctionHash({
+      currentValidInputs: model.currentValidInputs,
+      independentComponents: true,
+      numberOfRows: numIComps,
+      kind: 'color',
+      getInputProperty: (inputIndex) => getInputProperty(actor, inputIndex),
+    });
     if (model.colorTextureString === colorHash) {
       return;
     }
@@ -1491,13 +1294,13 @@ export function extend(publicAPI, model, initialValues = {}) {
     const imageState = publicAPI.getImageState();
     const actor = model.WebGPUImageSlice.getRenderable();
     const numIComps = imageState.numberOfIComponents;
-    const opacityHash = getTransferFunctionHash(
-      actor,
-      model.currentValidInputs,
-      true,
-      numIComps,
-      'opacity'
-    );
+    const opacityHash = getTransferFunctionHash({
+      currentValidInputs: model.currentValidInputs,
+      independentComponents: true,
+      numberOfRows: numIComps,
+      kind: 'opacity',
+      getInputProperty: (inputIndex) => getInputProperty(actor, inputIndex),
+    });
     if (model.opacityTextureString === opacityHash) {
       return;
     }

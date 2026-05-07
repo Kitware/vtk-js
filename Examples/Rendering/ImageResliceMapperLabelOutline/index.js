@@ -14,6 +14,7 @@ import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
 import vtkInteractorStyleImage from '@kitware/vtk.js/Interaction/Style/InteractorStyleImage';
 import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
 import vtkPlane from '@kitware/vtk.js/Common/DataModel/Plane';
+import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 import vtkPlaneWidget from '@kitware/vtk.js/Widgets/Widgets3D/ImplicitPlaneWidget';
 import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
 import { InterpolationType } from '@kitware/vtk.js/Rendering/Core/ImageProperty/Constants';
@@ -28,8 +29,12 @@ import { unzipSync } from 'fflate';
 
 import GUI from 'lil-gui';
 // ----------------------------------------------------------------------------
+const userParams = vtkURLExtract.extractURLParameters();
+const viewAPI = userParams.viewAPI || 'WebGL';
+
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0.3, 0.3, 0.34],
+  defaultViewAPI: viewAPI,
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
@@ -345,6 +350,7 @@ actor.setProperty(1, labelPpty);
 
 const gui = new GUI();
 const params = {
+  viewAPI,
   slabEnabled: false,
   slabType: 'MAX',
   slabThickness: 20,
@@ -357,6 +363,15 @@ const params = {
   fillOpacity: 0.2,
   labelmapResolution: 2,
 };
+
+gui
+  .add(params, 'viewAPI', ['WebGL', 'WebGPU'])
+  .name('Renderer')
+  .onChange((api) => {
+    const query = new URLSearchParams(window.location.search);
+    query.set('viewAPI', api);
+    window.location.search = query.toString();
+  });
 
 function applySlabEnabled() {
   if (params.slabEnabled) {

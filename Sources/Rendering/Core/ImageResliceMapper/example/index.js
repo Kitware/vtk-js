@@ -32,6 +32,7 @@ const viewAPI = userParams.viewAPI || 'WebGL';
 
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0.3, 0.3, 0.34],
+  defaultViewAPI: viewAPI,
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
@@ -226,7 +227,9 @@ gui
   .add(params, 'viewAPI', ['WebGL', 'WebGPU'])
   .name('Renderer')
   .onChange((api) => {
-    window.location = `?viewAPI=${api}`;
+    const query = new URLSearchParams(window.location.search);
+    query.set('viewAPI', api);
+    window.location.search = query.toString();
   });
 
 gui
