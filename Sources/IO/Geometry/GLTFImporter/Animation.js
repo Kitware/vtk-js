@@ -33,7 +33,9 @@ function getNodeTRS(node) {
         node.rotation[3]
       )
     : quat.create();
-  const scale = node.scale ? vec3.fromValues(...node.scale) : vec3.fromValues(1, 1, 1);
+  const scale = node.scale
+    ? vec3.fromValues(...node.scale)
+    : vec3.fromValues(1, 1, 1);
   return { translation, rotation, scale };
 }
 
@@ -73,7 +75,7 @@ function getRootJointNode(rootIndices, jointNodes) {
 }
 
 /**
- * Animation Parser - Converts resolved glTF 2.0 tree to vtk.js skeletal animation objects
+ * Animation Parser - Converts resolved glTF 2.0 tree to VTK.js skeletal animation objects
  *
  * Works with the **resolved** tree produced by GLTFParser.parse():
  * - skins[].joints is an array of node objects (not indices)
@@ -94,10 +96,6 @@ function getRootJointNode(rootIndices, jointNodes) {
  *       └─ channels[].target.node (int) → bone index mapping
  * ```
  */
-
-// ---------------------------------------------------------------------------
-// Create vtkArmature from resolved glTF skin
-// ---------------------------------------------------------------------------
 
 /**
  * Converts a resolved glTF skin to a vtkArmature with bone hierarchy.
@@ -198,10 +196,6 @@ export function createSkeletonFromGLTFSkin(gltfSkin, allNodes) {
 
   return skeleton;
 }
-
-// ---------------------------------------------------------------------------
-// Create vtkAnimationClip from resolved glTF animation
-// ---------------------------------------------------------------------------
 
 /**
  * Converts a resolved glTF animation to a vtkAnimationClip.
@@ -322,10 +316,6 @@ export function createAnimationClipFromGLTFAnimation(
   return clip;
 }
 
-// ---------------------------------------------------------------------------
-// Main entry point: parse all skeletal animation data from resolved tree
-// ---------------------------------------------------------------------------
-
 /**
  * Parses all skeletal animation data from the resolved glTF tree.
  *
@@ -342,7 +332,8 @@ export function parseSkeletalAnimationFromGLTF(tree) {
 
   const allNodes = tree.nodes || [];
 
-  // Parse skins → skeletons
+  // Parse skins → skeletons (for debug/armature visualization only;
+  // runtime skinning is node driven via world matrices + inverse bind matrices)
   if (tree.skins && tree.skins.length > 0) {
     for (let si = 0; si < tree.skins.length; si++) {
       const gltfSkin = tree.skins[si];
@@ -364,80 +355,9 @@ export function parseSkeletalAnimationFromGLTF(tree) {
         result.skeletons.push({ skeleton, gltfSkin, gltfSkinIndex: si });
       }
     }
-
-    // Build cross skeleton parent relationships.
-    // When a skeleton's root bone is a child of a bone in another skeleton,
-    // record { parentSkeletonIdx, parentBoneIdx } so root transforms can be
-    // updated each frame from the parent skeleton's animated world matrices.
-    const nodeIdxToBone = new Map(); // nodeIndex → { skelIdx, boneIdx }
-    for (let si = 0; si < result.skeletons.length; si++) {
-      const skel = result.skeletons[si].skeleton;
-      for (let bi = 0; bi < skel.getNumberOfBones(); bi++) {
-        nodeIdxToBone.set(skel.getBone(bi).nodeId, {
-          skelIdx: si,
-          boneIdx: bi,
-        });
-      }
-    }
-    // Build node parent map
-    const parentNodeMap = new Map(); // nodeIndex → parentNodeIndex
-    for (let i = 0; i < allNodes.length; i++) {
-      if (allNodes[i].children) {
-        for (const child of allNodes[i].children) {
-          const childIdx = allNodes.indexOf(child);
-          if (childIdx >= 0) parentNodeMap.set(childIdx, i);
-        }
-      }
-    }
-    for (let si = 0; si < result.skeletons.length; si++) {
-      const skel = result.skeletons[si].skeleton;
-      const rootIndices = skel.getRootBoneIndices();
-      if (rootIndices.length === 0) continue;
-
-      const rootBone = skel.getBone(rootIndices[0]);
-      const rootNodeIdx = rootBone.nodeId;
-      let parentNodeIdx = parentNodeMap.get(rootNodeIdx);
-
-      // Walk up the hierarchy past non joint ancestors
-      while (parentNodeIdx !== undefined) {
-        const parentBone = nodeIdxToBone.get(parentNodeIdx);
-        if (parentBone && parentBone.skelIdx !== si) {
-          // Found parent bone in another skeleton
-          result.skeletons[si].parentSkeletonIdx = parentBone.skelIdx;
-          result.skeletons[si].parentBoneIdx = parentBone.boneIdx;
-          break;
-        }
-        parentNodeIdx = parentNodeMap.get(parentNodeIdx);
-      }
-    }
-
-    // Recompute rest pose world/skinning matrices in topological order
-    // (parents before children) so root transforms include parent bone chains.
-    const processed = new Set();
-    function recomputeRestPose(si) {
-      if (processed.has(si)) return;
-      const entry = result.skeletons[si];
-      // Process parent first
-      if (entry.parentSkeletonIdx !== undefined) {
-        recomputeRestPose(entry.parentSkeletonIdx);
-        // Set root transform from parent skeleton's bone world matrix
-        const parentSkel = result.skeletons[entry.parentSkeletonIdx].skeleton;
-        const parentBoneWorld = parentSkel.getWorldMatrix(entry.parentBoneIdx);
-        entry.skeleton.setRootTransform(mat4.clone(parentBoneWorld));
-      }
-      const skel = entry.skeleton;
-      skel.computeWorldMatrices();
-      skel.computeSkinningMatrices();
-      processed.add(si);
-    }
-    for (let si = 0; si < result.skeletons.length; si++) {
-      recomputeRestPose(si);
-    }
   }
 
-  // Parse animations → per skeleton clips
-  // Each skeleton has its own joints (different nodes), so each needs its own
-  // clip with tracks mapped to its own bone indices.
+  // Parse animations → per skeleton clips (kept for backward compat / debug)
   if (
     tree.animations &&
     tree.animations.length > 0 &&
@@ -454,7 +374,6 @@ export function parseSkeletalAnimationFromGLTF(tree) {
           if (!entry.clips) entry.clips = [];
           entry.clips.push(clip);
 
-          // Primary skeleton's clips go to the shared animationClips array
           if (entry === result.skeletons[0]) {
             result.animationClips.push(clip);
           }
@@ -465,11 +384,6 @@ export function parseSkeletalAnimationFromGLTF(tree) {
 
   return result;
 }
-
-// ---------------------------------------------------------------------------
-// Node Transform Animations (non skeletal)
-// For animations that target node TRS directly (e.g., door opening)
-// ---------------------------------------------------------------------------
 
 /**
  * Interpolates between keyframes using linear or step interpolation.
@@ -524,13 +438,22 @@ function interpolateKeyframes(
 
   const t0 = times[k];
   const t1 = times[k + 1];
-  const alpha = (t - t0) / (t1 - t0);
+  const dt01 = t1 - t0;
+  if (dt01 <= 0) {
+    const off = k * stride + valueOffset;
+    for (let i = 0; i < components; i++) result[i] = values[off + i];
+    if (isRotation && components === 4) {
+      quat.normalize(result, result);
+    }
+    return result;
+  }
+  const alpha = (t - t0) / dt01;
 
   if (interpolation === 'CUBICSPLINE') {
     // glTF CUBICSPLINE stores 3 values per keyframe: [in tangent, value, out tangent] per keyframe
     const off0 = k * stride;
     const off1 = (k + 1) * stride;
-    const dt = t1 - t0;
+    const dt = dt01;
     const alpha2 = alpha * alpha;
     const alpha3 = alpha2 * alpha;
 
@@ -675,10 +598,6 @@ export function parseNodeAnimationsFromGLTF(tree) {
 
   return result;
 }
-
-// ---------------------------------------------------------------------------
-// KHR_animation_pointer: animates material/texture properties via JSON pointers
-// ---------------------------------------------------------------------------
 
 /**
  * Parses a KHR_animation_pointer JSON pointer targeting a texture transform.

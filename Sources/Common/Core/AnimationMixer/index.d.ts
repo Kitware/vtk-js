@@ -140,9 +140,8 @@ export interface vtkAnimationMixer extends vtkObject {
 
   /**
    * Bind an actor to this mixer so skinning matrices are pushed to it each tick.
-   * Optionally associate it with a specific skeleton for per-actor skinning.
    * @param {object} actor The actor to bind.
-   * @param {object} [skeleton] Per-actor skeleton (falls back to global).
+   * @param {object} [skeleton] Optional skeleton source for this actor.
    */
   bindActor(actor: object, skeleton?: object): void;
 
@@ -151,13 +150,6 @@ export interface vtkAnimationMixer extends vtkObject {
    * @param {object} actor The actor to unbind.
    */
   unbindActor(actor: object): void;
-
-  /**
-   * Register per-skeleton animation clips for multi-skeleton animation.
-   * @param {object} skeleton The skeleton to register clips for.
-   * @param {object[]} clips Array of animation clips for this skeleton.
-   */
-  setSkeletonClips(skeleton: object, clips: object[]): void;
 
   /**
    * Get all bound actors.
@@ -173,8 +165,8 @@ export interface vtkAnimationMixer extends vtkObject {
    */
   setAnimationBinding(
     name: string,
-    animations: object[],
     apply: (updates: unknown, context: AnimationBindingContext) => void,
+    animations?: object[],
     options?: { enabled?: boolean; time?: number }
   ): boolean;
 
