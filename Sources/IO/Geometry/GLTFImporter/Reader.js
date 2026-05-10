@@ -718,7 +718,6 @@ async function createPropertyFromGLTFMaterial(
   }
 
   property.setBackfaceCulling(!material.doubleSided);
-
 }
 
 /**

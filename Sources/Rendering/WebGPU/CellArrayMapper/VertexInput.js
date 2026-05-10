@@ -151,10 +151,9 @@ export function buildVertexInput(publicAPI, model) {
       buffRequest.hash = `${normals.getMTime()}I${indexBuffer.getMTime()}snorm8x4`;
       buffRequest.dataArray = normals;
       buffRequest.usage = BufferUsage.PointArray;
-      vertexInput.addBuffer(
-        device.getBufferManager().getBuffer(buffRequest),
-        ['normalMC']
-      );
+      vertexInput.addBuffer(device.getBufferManager().getBuffer(buffRequest), [
+        'normalMC',
+      ]);
     } else if (primType === PrimitiveTypes.Triangles) {
       model._usesCellNormals = true;
       buffRequest.hash = `PFN${points.getMTime()}I${indexBuffer.getMTime()}snorm8x4`;
@@ -162,10 +161,9 @@ export function buildVertexInput(publicAPI, model) {
       buffRequest.cells = cells;
       buffRequest.usage = BufferUsage.NormalsFromPoints;
       buffRequest.cellOffset = model.cellOffset;
-      vertexInput.addBuffer(
-        device.getBufferManager().getBuffer(buffRequest),
-        ['normalMC']
-      );
+      vertexInput.addBuffer(device.getBufferManager().getBuffer(buffRequest), [
+        'normalMC',
+      ]);
     } else {
       vertexInput.removeBufferIfPresent('normalMC');
     }

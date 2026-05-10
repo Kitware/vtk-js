@@ -352,26 +352,6 @@ fn main(
   var metallicUniform: f32 = mapperUBO.Metallic;
   var emissionUniform: f32 = mapperUBO.Emission;
 
-  // Resolve actual front facing (accounts for negative scale transforms)
-  var isFront: bool = input.frontFacing;
-  if (mapperUBO.FlipFrontFacing > 0.5) { isFront = !isFront; }
-
-  if (!isFront) {
-    ambientColor = mapperUBO.AmbientColorBF;
-    diffuseColor = mapperUBO.DiffuseColorBF;
-    ambientIntensity = mapperUBO.AmbientIntensityBF;
-    diffuseIntensity = mapperUBO.DiffuseIntensityBF;
-    specularColor = mapperUBO.SpecularColorBF;
-    specularIntensity = mapperUBO.SpecularIntensityBF;
-    opacity = mapperUBO.OpacityBF;
-    ior = mapperUBO.BaseIORBF;
-    normalStrengthUniform = mapperUBO.NormalStrengthBF;
-    roughnessUniform = mapperUBO.RoughnessBF;
-    metallicUniform = mapperUBO.MetallicBF;
-    emissionUniform = mapperUBO.EmissionBF;
-  }
-
-  // This should be declared somewhere else
   var _diffuseMap: vec4<f32> = vec4<f32>(1.0);
   var _roughnessMap: vec4<f32> = vec4<f32>(1.0);
   var _metallicMap: vec4<f32> = vec4<f32>(1.0);

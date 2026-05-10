@@ -1,12 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
-import * as glMatrix from 'gl-matrix';
+import { mat4, quat, vec3 } from 'gl-matrix';
 
-const { mat4, quat, vec3 } = glMatrix;
-
-// ---------------------------------------------------------------------------
-// Internal helper: lazily allocate matrix arrays sized to current bone count.
-// Called on first access rather than on every addBone.
-// ---------------------------------------------------------------------------
+const { vtkWarningMacro } = macro;
 
 function ensureMatrices(model) {
   const needed = model.bones.length * 16;
@@ -71,8 +66,7 @@ function vtkArmature(publicAPI, model) {
         boneData.localRestTranslation || vec3.fromValues(0, 0, 0),
       localRestRotation:
         boneData.localRestRotation || quat.fromValues(0, 0, 0, 1),
-      localRestScale:
-        boneData.localRestScale || vec3.fromValues(1, 1, 1),
+      localRestScale: boneData.localRestScale || vec3.fromValues(1, 1, 1),
       nodeId: boneData.nodeId !== undefined ? boneData.nodeId : null,
     };
   }
@@ -106,7 +100,7 @@ function vtkArmature(publicAPI, model) {
    */
   publicAPI.insertBone = (index, boneData) => {
     if (index < 0 || index > model.bones.length) {
-      console.error(
+      vtkWarningMacro(
         `Invalid index ${index} for skeleton with ${model.bones.length} bones`
       );
       return;
@@ -168,7 +162,7 @@ function vtkArmature(publicAPI, model) {
    */
   publicAPI.removeBone = (index) => {
     if (index < 0 || index >= model.bones.length) {
-      console.error(
+      vtkWarningMacro(
         `Invalid index ${index} for skeleton with ${model.bones.length} bones`
       );
       return;
@@ -244,11 +238,10 @@ function vtkArmature(publicAPI, model) {
    * @param {string} name
    * @return {number} Index or -1 if not found.
    */
-  publicAPI.getBoneIndexByName = (name) => {
-    return model.nameToIndex.get(name) !== undefined
+  publicAPI.getBoneIndexByName = (name) =>
+    model.nameToIndex.get(name) !== undefined
       ? model.nameToIndex.get(name)
       : -1;
-  };
 
   /**
    * Get parent index of a bone.
@@ -408,7 +401,7 @@ function vtkArmature(publicAPI, model) {
    */
   publicAPI.setLocalMatrix = (boneIndex, matrix) => {
     if (boneIndex < 0 || boneIndex >= model.bones.length) {
-      console.error(`Invalid bone index ${boneIndex}`);
+      vtkWarningMacro(`Invalid bone index ${boneIndex}`);
       return;
     }
     ensureMatrices(model);
@@ -426,7 +419,7 @@ function vtkArmature(publicAPI, model) {
    */
   publicAPI.getLocalMatrix = (boneIndex) => {
     if (boneIndex < 0 || boneIndex >= model.bones.length) {
-      console.error(`Invalid bone index ${boneIndex}`);
+      vtkWarningMacro(`Invalid bone index ${boneIndex}`);
       return mat4.create();
     }
     ensureMatrices(model);
@@ -445,7 +438,7 @@ function vtkArmature(publicAPI, model) {
    */
   publicAPI.setWorldMatrix = (boneIndex, matrix) => {
     if (boneIndex < 0 || boneIndex >= model.bones.length) {
-      console.error(`Invalid bone index ${boneIndex}`);
+      vtkWarningMacro(`Invalid bone index ${boneIndex}`);
       return;
     }
     ensureMatrices(model);
@@ -463,7 +456,7 @@ function vtkArmature(publicAPI, model) {
    */
   publicAPI.getWorldMatrix = (boneIndex) => {
     if (boneIndex < 0 || boneIndex >= model.bones.length) {
-      console.error(`Invalid bone index ${boneIndex}`);
+      vtkWarningMacro(`Invalid bone index ${boneIndex}`);
       return mat4.create();
     }
     ensureMatrices(model);
@@ -482,7 +475,7 @@ function vtkArmature(publicAPI, model) {
    */
   publicAPI.setSkinningMatrix = (boneIndex, matrix) => {
     if (boneIndex < 0 || boneIndex >= model.bones.length) {
-      console.error(`Invalid bone index ${boneIndex}`);
+      vtkWarningMacro(`Invalid bone index ${boneIndex}`);
       return;
     }
     ensureMatrices(model);
@@ -500,7 +493,7 @@ function vtkArmature(publicAPI, model) {
    */
   publicAPI.getSkinningMatrix = (boneIndex) => {
     if (boneIndex < 0 || boneIndex >= model.bones.length) {
-      console.error(`Invalid bone index ${boneIndex}`);
+      vtkWarningMacro(`Invalid bone index ${boneIndex}`);
       return mat4.create();
     }
     ensureMatrices(model);
@@ -665,7 +658,6 @@ function vtkArmature(publicAPI, model) {
 
     publicAPI.modified();
   };
-
 }
 
 // ---------------------------------------------------------------------------
@@ -711,9 +703,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   // Getters and setters
-  macro.setGet(publicAPI, model, [
-    'rootTransform',
-  ]);
+  macro.setGet(publicAPI, model, ['rootTransform']);
 
   // Object specific methods
   vtkArmature(publicAPI, model);

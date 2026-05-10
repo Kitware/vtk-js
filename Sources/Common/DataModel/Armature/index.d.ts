@@ -28,7 +28,6 @@ export interface IArmatureInitialValues {
    * @default null
    */
   rootTransform?: Nullable<Float32Array>;
-
 }
 
 export interface vtkArmature extends vtkObject {
@@ -128,7 +127,10 @@ export interface vtkArmature extends vtkObject {
    * @param {number} boneIndex The bone index.
    * @param {Float32Array | number[]} matrix The 4x4 inverse bind matrix.
    */
-  setInverseBindMatrix(boneIndex: number, matrix: Float32Array | number[]): void;
+  setInverseBindMatrix(
+    boneIndex: number,
+    matrix: Float32Array | number[]
+  ): void;
 
   /**
    * Get the local rest translation for a bone.
@@ -236,7 +238,6 @@ export interface vtkArmature extends vtkObject {
    * Uses internal worldMatrices and writes to internal skinningMatrices.
    */
   computeSkinningMatrices(): void;
-
 }
 
 /**
@@ -262,7 +263,7 @@ export function newInstance(
 
 /**
  * vtkArmature manages a hierarchical collection of bones that define a skeletal
- * rig for animation. It stores per-bone local, world, and skinning matrices
+ * rig for animation. It stores per bone local, world, and skinning matrices
  * directly, provides methods for traversing the bone hierarchy, computing
  * world-space transforms from local matrices, and producing skinning matrices
  * used by GPU rendering backends.

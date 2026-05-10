@@ -1,11 +1,11 @@
 import test from 'tape';
-import vtkArmature from '../index';
-import vtkAnimationTrack from '../../AnimationTrack/index';
-import vtkAnimationClip from '../../AnimationClip/index';
+import vtkArmature from 'vtk.js/Sources/Common/DataModel/Armature';
+import vtkAnimationTrack from 'vtk.js/Sources/Common/DataModel/AnimationTrack';
+import vtkAnimationClip from 'vtk.js/Sources/Common/DataModel/AnimationClip';
 import {
   TrackType,
   InterpolationMode,
-} from '../../AnimationTrack/Constants';
+} from 'vtk.js/Sources/Common/DataModel/AnimationTrack/Constants';
 
 test('vtkArmature: Basic instantiation', (t) => {
   const skeleton = vtkArmature.newInstance();
