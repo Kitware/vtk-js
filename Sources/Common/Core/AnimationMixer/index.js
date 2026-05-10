@@ -145,13 +145,13 @@ function vtkAnimationMixer(publicAPI, model) {
     }
 
     // Add cue to all registered scenes
-    for (const scene of model.scenes) {
+    model.scenes.forEach((scene) => {
       scene.stop();
       scene.addCue(cue);
       scene.setEndTime(clip.getDuration());
       scene.setLoop(loop);
       scene.play();
-    }
+    });
 
     publicAPI.modified();
   };
@@ -160,30 +160,26 @@ function vtkAnimationMixer(publicAPI, model) {
    * Pause the current clip
    */
   publicAPI.pauseClip = () => {
-    for (const scene of model.scenes) {
-      scene.pause();
-    }
+    model.scenes.forEach((scene) => scene.pause());
   };
 
   /**
    * Resume the current clip
    */
   publicAPI.resumeClip = () => {
-    for (const scene of model.scenes) {
-      scene.play();
-    }
+    model.scenes.forEach((scene) => scene.play());
   };
 
   /**
    * Stop all playback and reset
    */
   publicAPI.stop = () => {
-    for (const scene of model.scenes) {
+    model.scenes.forEach((scene) => {
       scene.stop();
       if (model.currentCue) {
         scene.removeCue(model.currentCue);
       }
-    }
+    });
 
     if (model.currentCue) {
       model.currentCue.stop();
@@ -221,9 +217,7 @@ function vtkAnimationMixer(publicAPI, model) {
 
   /**
    * Bind an actor to this mixer so skinning matrices are pushed to it each tick.
-   * Optionally associate it with a specific skeleton for per-actor skinning.
    * @param {vtkActor} actor
-   * @param {vtkArmature} [skeleton] - Per-actor skeleton (falls back to global)
    */
   publicAPI.bindActor = (actor, skeleton) => {
     if (!model.boundActors.includes(actor)) {
@@ -244,36 +238,7 @@ function vtkAnimationMixer(publicAPI, model) {
       model.boundActors.splice(idx, 1);
     }
     model.actorSkeletonBindings.delete(actor);
-  };
-
-  /**
-   * Register per-skeleton animation clips.
-   * Each skeleton gets its own clips with tracks mapped to its own bone indices.
-   * Used by propagateAnimationToSecondarySkeletons to evaluate the correct clip.
-   * @param {object} skeleton
-   * @param {vtkAnimationClip[]} clips
-   */
-  publicAPI.setSkeletonClips = (skeleton, clips) => {
-    model.skeletonClips.set(skeleton, clips);
-  };
-
-  /**
-   * Register a parent-child relationship between skeletons.
-   * During animation, the child skeleton's root transform is updated
-   * from the parent skeleton's animated bone world matrix.
-   * @param {object} childSkeleton
-   * @param {object} parentSkeleton
-   * @param {number} parentBoneIndex Bone index in parent skeleton
-   */
-  publicAPI.setSkeletonParent = (
-    childSkeleton,
-    parentSkeleton,
-    parentBoneIndex
-  ) => {
-    model.skeletonParents.set(childSkeleton, {
-      parent: parentSkeleton,
-      boneIndex: parentBoneIndex,
-    });
+    actorSkinningMap.delete(actor);
   };
 
   /**
@@ -286,111 +251,99 @@ function vtkAnimationMixer(publicAPI, model) {
    * Seek to a specific time in the current clip (0-1 normalized)
    * @param {number} t Normalized time [0, 1]
    */
-  publicAPI.setClipTime = (t) => {
-    if (!model.currentCue) return;
-    const duration = model.currentCue.getEndTime();
-    const time = Math.max(0, Math.min(t * duration, duration));
-    for (const scene of model.scenes) {
-      scene.seek(time);
-    }
-    propagateAnimationToSecondarySkeletons();
-    pushSkinningDataToActors();
-  };
-
-  /**
-   * Get current time in clip (0-1 normalized)
-   * @return {number}
-   */
-  publicAPI.getClipTime = () => {
-    if (!model.currentCue) return 0;
-    const time = model.currentCue.getTime();
-    const duration = model.currentCue.getEndTime();
-    return duration > 0 ? time / duration : 0;
-  };
-
-  // -------------------------------------------------------------------------
-  // Internal: propagate the current animation to all non-primary skeletons.
-  // Each skeleton has its OWN clip (with tracks mapped to its own bone
-  // indices from the glTF animation channels targeting its joint nodes).
-  // Processes skeletons in topological order (parents before children) so
-  // child skeleton root transforms are updated from parent bone matrices.
-  // -------------------------------------------------------------------------
-  function propagateAnimationToSecondarySkeletons() {
-    if (!model.skeleton || !model.currentCue) return;
-    if (!model.currentClip) return;
-
-    const currentTime = model.currentCue.getTime();
-    const clipName = model.currentClipName;
-
-    // Collect unique non-primary skeletons
-    const secondarySkeletons = [];
-    const seen = new Set();
-    seen.add(model.skeleton);
-
-    for (const skeleton of model.actorSkeletonBindings.values()) {
-      if (seen.has(skeleton)) continue;
-      seen.add(skeleton);
-      secondarySkeletons.push(skeleton);
+  function computeNodeWorldMatrices() {
+    const worldByNodeId = new Map();
+    if (!model.nodeTransforms) {
+      return worldByNodeId;
     }
 
-    // Sort in topological order: process parent skeletons before children
-    const processed = new Set();
-    processed.add(model.skeleton);
+    const allChildIds = new Set();
+    if (model.nodeChildren) {
+      model.nodeChildren.forEach((children) => {
+        children.forEach((childId) => allChildIds.add(childId));
+      });
+    }
 
-    function evaluateSkeleton(skeleton) {
-      if (processed.has(skeleton)) return;
-
-      // Process parent first
-      const parentInfo = model.skeletonParents.get(skeleton);
-      if (parentInfo && !processed.has(parentInfo.parent)) {
-        evaluateSkeleton(parentInfo.parent);
+    const rootNodeIds = [];
+    model.nodeTransforms.forEach((_, nodeId) => {
+      if (!allChildIds.has(nodeId)) {
+        rootNodeIds.push(nodeId);
       }
+    });
 
-      // Update root transform from parent skeleton's animated bone
-      if (parentInfo) {
-        const parentBoneWorld = parentInfo.parent.getWorldMatrix(
-          parentInfo.boneIndex
-        );
-        skeleton.setRootTransform(mat4.clone(parentBoneWorld));
+    const walkNode = (nodeId, parentWorld) => {
+      const transformData = model.nodeTransforms.get(nodeId);
+      const localMatrix =
+        (transformData && transformData.localMatrix) || mat4.create();
+      const world = mat4.multiply(mat4.create(), parentWorld, localMatrix);
+      worldByNodeId.set(nodeId, world);
+      const children = model.nodeChildren
+        ? model.nodeChildren.get(nodeId)
+        : null;
+      if (children) {
+        children.forEach((childId) => walkNode(childId, world));
       }
+    };
 
-      const boneCount = skeleton.getNumberOfBones();
-      if (boneCount === 0) {
-        processed.add(skeleton);
+    rootNodeIds.forEach((rootId) => walkNode(rootId, mat4.create()));
+    return worldByNodeId;
+  }
+
+  function pushSkinningFromWorldMatrices(worldByNodeId) {
+    if (!model.skins || !model.actorNodeIds || worldByNodeId.size === 0) {
+      return;
+    }
+
+    model.boundActors.forEach((actor) => {
+      const nodeId = model.actorNodeIds.get(actor);
+      const skinInfo = nodeId ? model.skins.get(nodeId) : null;
+      if (
+        !skinInfo ||
+        !skinInfo.jointNodeIds ||
+        !skinInfo.inverseBindMatrices
+      ) {
         return;
       }
 
-      // Find this skeleton's matching clip by name
-      const clips = model.skeletonClips.get(skeleton);
-      const clip = clips
-        ? clips.find((c) => c.getName() === clipName) || model.currentClip
-        : model.currentClip;
+      const jointCount = skinInfo.jointNodeIds.length;
+      const jointMatrices = new Float32Array(jointCount * 16);
 
-      skeleton.evaluatePose(clip, currentTime);
-      processed.add(skeleton);
-    }
+      skinInfo.jointNodeIds.forEach((jointNodeId, ji) => {
+        const jointWorld = worldByNodeId.get(jointNodeId) || mat4.create();
+        const ibm = skinInfo.inverseBindMatrices[ji] || mat4.create();
+        // jointMat = jointWorld * ibm  (positions vertices in world space;
+        // actor userMatrix is identity for skinned meshes)
+        const jointMat = mat4.multiply(mat4.create(), jointWorld, ibm);
+        for (let k = 0; k < 16; k++) {
+          jointMatrices[ji * 16 + k] = jointMat[k];
+        }
+      });
 
-    for (const skeleton of secondarySkeletons) {
-      evaluateSkeleton(skeleton);
-    }
+      actorSkinningMap.set(actor, { jointMatrices, jointCount });
+    });
   }
 
-  // -------------------------------------------------------------------------
-  // Internal: push computed skinning matrices to all bound actors.
-  // Uses per-actor skeleton binding if available, otherwise falls back
-  // to the global model.skeleton.
-  // -------------------------------------------------------------------------
-  function pushSkinningDataToActors() {
-    for (const actor of model.boundActors) {
-      const skeleton = model.actorSkeletonBindings.get(actor) || model.skeleton;
-      if (!skeleton) continue;
+  /**
+   * Sync skeleton bone world matrices from node driven world matrices.
+   * Keeps the vtkArmature in sync for debug visualization (ArmatureSource).
+   */
+  function syncSkeletonFromNodes(worldByNodeId) {
+    if (!model.skeleton || worldByNodeId.size === 0) return;
 
-      const skinningMatrices = skeleton.getSkinningMatrices();
-      const jointCount = skeleton.getNumberOfBones();
-      actorSkinningMap.set(actor, {
-        jointMatrices: skinningMatrices,
-        jointCount,
-      });
+    const skeleton = model.skeleton;
+    const boneCount = skeleton.getNumberOfBones();
+    if (boneCount === 0) return;
+
+    const worldMatrices = skeleton.getWorldMatrices();
+    for (let i = 0; i < boneCount; i++) {
+      const bone = skeleton.getBone(i);
+      const nodeId = `node-${bone.nodeId}`;
+      const nodeWorld = worldByNodeId.get(nodeId);
+      if (nodeWorld) {
+        for (let j = 0; j < 16; j++) {
+          worldMatrices[i * 16 + j] = nodeWorld[j];
+        }
+      }
     }
   }
 
@@ -450,6 +403,11 @@ function vtkAnimationMixer(publicAPI, model) {
         localMatrix
       );
 
+      // Store animated local matrix so computeNodeWorldMatrices sees it
+      if (transformData) {
+        transformData.localMatrix = localMatrix;
+      }
+
       // Apply world matrix to this node's actor and its primitive actors
       const actor = model.actors.get(nodeId);
       if (actor && !model.boundActors.includes(actor)) {
@@ -497,10 +455,11 @@ function vtkAnimationMixer(publicAPI, model) {
 
             for (let ti = 0; ti < targets.length && ti < weights.length; ti++) {
               const w = weights[ti];
-              if (w === 0 || !targets[ti].position) continue;
-              points[idx] += w * targets[ti].position[idx];
-              points[idx + 1] += w * targets[ti].position[idx + 1];
-              points[idx + 2] += w * targets[ti].position[idx + 2];
+              if (w !== 0 && targets[ti].position) {
+                points[idx] += w * targets[ti].position[idx];
+                points[idx + 1] += w * targets[ti].position[idx + 1];
+                points[idx + 2] += w * targets[ti].position[idx + 2];
+              }
             }
           }
 
@@ -514,16 +473,12 @@ function vtkAnimationMixer(publicAPI, model) {
         ? model.nodeChildren.get(nodeId)
         : null;
       if (children) {
-        for (const childId of children) {
-          walkNode(childId, worldMatrix);
-        }
+        children.forEach((childId) => walkNode(childId, worldMatrix));
       }
     }
 
     // Walk from each root node
-    for (const rootId of rootNodeIds) {
-      walkNode(rootId, mat4.create());
-    }
+    rootNodeIds.forEach((rootId) => walkNode(rootId, mat4.create()));
   }
 
   // -------------------------------------------------------------------------
@@ -537,7 +492,7 @@ function vtkAnimationMixer(publicAPI, model) {
       if (!properties || properties.length === 0) return;
 
       matUpdate.textureTransforms.forEach((transform, textureKey) => {
-        for (const property of properties) {
+        properties.forEach((property) => {
           // Get existing transform to merge animated properties
           const existing = property.getTextureTransform(textureKey) || {};
           const merged = { ...existing };
@@ -548,7 +503,7 @@ function vtkAnimationMixer(publicAPI, model) {
             merged.rotation = transform.rotation;
 
           property.setTextureTransform(textureKey, merged);
-        }
+        });
       });
     });
   }
@@ -557,10 +512,10 @@ function vtkAnimationMixer(publicAPI, model) {
   // Internal: apply registered non skeletal animation bindings
   // -------------------------------------------------------------------------
   function applyAnimationBindings(deltaTime) {
-    for (const binding of model.animationBindings.values()) {
+    Array.from(model.animationBindings.values()).forEach((binding) => {
       const { animations } = binding;
       if (!binding.enabled || animations.length === 0) {
-        continue;
+        return;
       }
 
       binding.time += deltaTime;
@@ -568,12 +523,12 @@ function vtkAnimationMixer(publicAPI, model) {
 
       const animation = animations[0];
       if (!animation || typeof animation.evaluate !== 'function') {
-        continue;
+        return;
       }
 
       const updates = animation.evaluate(time);
       if (!updates) {
-        continue;
+        return;
       }
 
       if (updates instanceof Map) {
@@ -590,7 +545,7 @@ function vtkAnimationMixer(publicAPI, model) {
           time,
         });
       }
-    }
+    });
   }
 
   // -------------------------------------------------------------------------
@@ -609,8 +564,8 @@ function vtkAnimationMixer(publicAPI, model) {
    */
   publicAPI.setAnimationBinding = (
     name,
-    animations = [],
     apply,
+    animations = [],
     options = {}
   ) => {
     if (!name || typeof apply !== 'function') {
@@ -665,6 +620,14 @@ function vtkAnimationMixer(publicAPI, model) {
     model.morphTargets = sceneData.morphTargets || null;
     model.materialProperties = sceneData.materialProperties || null;
     model.nodeLights = sceneData.nodeLights || null;
+    model.skins = sceneData.skins || null;
+    model.actorNodeIds = new Map();
+    if (model.actors && model.actorNodeIds) {
+      model.actors.forEach((actor, actorKey) => {
+        const nodeId = actorKey.split('_')[0];
+        model.actorNodeIds.set(actor, nodeId);
+      });
+    }
     publicAPI.modified();
   };
 
@@ -676,14 +639,14 @@ function vtkAnimationMixer(publicAPI, model) {
     model.nodeAnimations = animations || [];
     publicAPI.setAnimationBinding(
       NODE_ANIMATION_BINDING,
-      model.nodeAnimations,
       (updates) => {
         const animatedUpdates = new Map();
         updates.forEach((update, nodeIndex) => {
           animatedUpdates.set(`node-${nodeIndex}`, update);
         });
         applyNodeAnimationUpdates(animatedUpdates);
-      }
+      },
+      model.nodeAnimations
     );
   };
 
@@ -706,14 +669,14 @@ function vtkAnimationMixer(publicAPI, model) {
     if (!name) {
       const anim = model.nodeAnimations[0];
       if (anim) {
-        publicAPI.setAnimationBinding(NODE_ANIMATION_BINDING, [anim], applyFn);
+        publicAPI.setAnimationBinding(NODE_ANIMATION_BINDING, applyFn, [anim]);
       }
       return;
     }
 
     const anim = model.nodeAnimations.find((a) => a.name === name);
     if (anim) {
-      publicAPI.setAnimationBinding(NODE_ANIMATION_BINDING, [anim], applyFn);
+      publicAPI.setAnimationBinding(NODE_ANIMATION_BINDING, applyFn, [anim]);
     }
   };
 
@@ -731,8 +694,8 @@ function vtkAnimationMixer(publicAPI, model) {
       if (anim) {
         publicAPI.setAnimationBinding(
           POINTER_ANIMATION_BINDING,
-          [anim],
-          applyPointerAnimationUpdates
+          applyPointerAnimationUpdates,
+          [anim]
         );
       }
       return;
@@ -742,8 +705,8 @@ function vtkAnimationMixer(publicAPI, model) {
     if (anim) {
       publicAPI.setAnimationBinding(
         POINTER_ANIMATION_BINDING,
-        [anim],
-        applyPointerAnimationUpdates
+        applyPointerAnimationUpdates,
+        [anim]
       );
     }
   };
@@ -770,8 +733,8 @@ function vtkAnimationMixer(publicAPI, model) {
     model.pointerAnimations = animations || [];
     publicAPI.setAnimationBinding(
       POINTER_ANIMATION_BINDING,
-      model.pointerAnimations,
-      applyPointerAnimationUpdates
+      applyPointerAnimationUpdates,
+      model.pointerAnimations
     );
   };
 
@@ -802,19 +765,49 @@ function vtkAnimationMixer(publicAPI, model) {
 
   /**
    * Advance animation by deltaTime (called each frame by the render loop).
-   * Handles skeletal, node-transform, morph-target, and pointer animations.
+   * Node driven pipeline:
+   *   1. Evaluate animation bindings → update node TRS
+   *   2. Recompute world matrices for full node graph
+   *   3. Build joint matrices from world matrices + inverse bind matrices
+   *   4. Push to actors
+   *   5. Sync skeleton world matrices (for armature debug visualization)
    * @param {number} deltaTime Seconds since last frame
    */
   publicAPI.tick = (deltaTime) => {
-    // Skeletal animation
-    for (const scene of model.scenes) {
-      scene.tick(deltaTime);
-    }
-    propagateAnimationToSecondarySkeletons();
-    pushSkinningDataToActors();
-
-    // Non skeletal animation bindings
+    // 1. Evaluate all animation bindings (node TRS, morph, pointer)
     applyAnimationBindings(deltaTime);
+
+    // 2-4. Recompute world matrices and push skinning data to actors
+    const worldByNodeId = computeNodeWorldMatrices();
+    pushSkinningFromWorldMatrices(worldByNodeId);
+
+    // 5. Sync skeleton bone world matrices from node graph (for armature viz)
+    syncSkeletonFromNodes(worldByNodeId);
+  };
+
+  /**
+   * Seek to a specific time in the current clip (0-1 normalized)
+   * @param {number} t Normalized time [0, 1]
+   */
+  publicAPI.setClipTime = (t) => {
+    if (!model.currentCue) return;
+    const duration = model.currentCue.getEndTime();
+    const time = Math.max(0, Math.min(t * duration, duration));
+    model.scenes.forEach((scene) => scene.seek(time));
+    const worldByNodeId = computeNodeWorldMatrices();
+    pushSkinningFromWorldMatrices(worldByNodeId);
+    syncSkeletonFromNodes(worldByNodeId);
+  };
+
+  /**
+   * Get current time in clip (0-1 normalized)
+   * @return {number}
+   */
+  publicAPI.getClipTime = () => {
+    if (!model.currentCue) return 0;
+    const time = model.currentCue.getTime();
+    const duration = model.currentCue.getEndTime();
+    return duration > 0 ? time / duration : 0;
   };
 }
 
@@ -828,8 +821,6 @@ const DEFAULT_VALUES = {
   clips: null,
   boundActors: null,
   actorSkeletonBindings: null,
-  skeletonClips: null,
-  skeletonParents: null,
   animationBindings: null,
   currentClipName: null,
   currentClip: null,
@@ -844,6 +835,8 @@ const DEFAULT_VALUES = {
   // Pointer animation state
   pointerAnimations: null,
   materialProperties: null,
+  skins: null,
+  actorNodeIds: null,
 };
 
 // ---------------------------------------------------------------------------
@@ -863,12 +856,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   }
   if (!model.actorSkeletonBindings) {
     model.actorSkeletonBindings = new Map();
-  }
-  if (!model.skeletonClips) {
-    model.skeletonClips = new Map();
-  }
-  if (!model.skeletonParents) {
-    model.skeletonParents = new Map();
   }
   if (!model.animationBindings) {
     model.animationBindings = new Map();

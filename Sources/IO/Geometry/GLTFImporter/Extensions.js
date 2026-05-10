@@ -28,7 +28,7 @@ function parseTexTransform(texInfo, property, key) {
  * @param {vtkProperty} property - The vtkProperty instance to update.
  */
 export function handleKHRMaterialsUnlit(extension, property) {
-  property.setLighting(true);
+  property.setLighting(false);
 }
 
 /**
@@ -192,7 +192,7 @@ export function handleKHRLightsPunctual(extension, transformMatrix, model) {
       break;
     case 'spot':
       l.setPositional(true);
-      l.setConeAngle(vtkMath.radiansFromDegrees(spot.outerConeAngle));
+      l.setConeAngle(vtkMath.degreesFromRadians(spot.outerConeAngle));
       break;
     default:
       vtkWarningMacro(`Unsupported light type: ${type}`);

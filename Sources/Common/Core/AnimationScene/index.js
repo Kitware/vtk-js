@@ -62,9 +62,7 @@ function vtkAnimationScene(publicAPI, model) {
     model.globalTime = model.startTime;
 
     // Start all cues
-    for (const cue of model.cues) {
-      cue.play();
-    }
+    model.cues.forEach((cue) => cue.play());
 
     publicAPI.modified();
   };
@@ -77,9 +75,7 @@ function vtkAnimationScene(publicAPI, model) {
       model.state = SceneState.PAUSED;
 
       // Pause all cues
-      for (const cue of model.cues) {
-        cue.pause();
-      }
+      model.cues.forEach((cue) => cue.pause());
 
       publicAPI.modified();
     }
@@ -93,9 +89,7 @@ function vtkAnimationScene(publicAPI, model) {
     model.globalTime = model.startTime;
 
     // Stop all cues
-    for (const cue of model.cues) {
-      cue.stop();
-    }
+    model.cues.forEach((cue) => cue.stop());
 
     publicAPI.modified();
   };
@@ -108,7 +102,7 @@ function vtkAnimationScene(publicAPI, model) {
     model.globalTime = Math.max(model.startTime, Math.min(time, model.endTime));
 
     // Update all cues to match global time
-    for (const cue of model.cues) {
+    model.cues.forEach((cue) => {
       if (time >= cue.getStartTime() && time <= cue.getEndTime()) {
         if (!cue.isActive()) {
           cue.play();
@@ -119,7 +113,7 @@ function vtkAnimationScene(publicAPI, model) {
       } else {
         cue.stop();
       }
-    }
+    });
 
     publicAPI.modified();
   };
@@ -159,9 +153,9 @@ function vtkAnimationScene(publicAPI, model) {
       }
 
       // Update all cues
-      for (const cue of model.cues) {
-        cue.tick(previousTime, model.globalTime - previousTime);
-      }
+      model.cues.forEach((cue) =>
+        cue.tick(previousTime, model.globalTime - previousTime)
+      );
 
       publicAPI.modified();
     }

@@ -55,7 +55,7 @@ function vtkGLTFImporter(publicAPI, model) {
     model.url = url;
 
     // Remove the file in the URL
-    const path = url.split('/');
+    const path = `${url}`.replace(/\\/g, '/').split('/');
     path.pop();
     model.baseURL = path.join('/');
 
@@ -109,7 +109,8 @@ function vtkGLTFImporter(publicAPI, model) {
       glTF.glbBuffers = buffers;
       glTF.json = json;
     } else {
-      glTF.json = JSON.parse(BinaryHelper.arrayBufferToString(content));
+      const jsonText = new TextDecoder('utf-8').decode(new Uint8Array(content));
+      glTF.json = JSON.parse(jsonText);
     }
 
     if (glTF.json.asset === undefined || glTF.json.asset.version[0] < 2) {
@@ -267,20 +268,16 @@ function vtkGLTFImporter(publicAPI, model) {
    * @param {string} name
    * @return {vtkAnimationClip}
    */
-  publicAPI.getAnimationClipByName = (name) => {
-    return (
-      (model.animationClips || []).find((clip) => clip.getName() === name) ||
-      null
-    );
-  };
+  publicAPI.getAnimationClipByName = (name) =>
+    (model.animationClips || []).find((clip) => clip.getName() === name) ||
+    null;
 
   /**
    * Get all animation clip names
    * @return {Array<string>}
    */
-  publicAPI.getAnimationClipNames = () => {
-    return (model.animationClips || []).map((clip) => clip.getName());
-  };
+  publicAPI.getAnimationClipNames = () =>
+    (model.animationClips || []).map((clip) => clip.getName());
 
   /**
    * Get parsed node transform animations (non-skeletal)
@@ -458,7 +455,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // vtkGLTFImporter methods
   vtkGLTFImporter(publicAPI, model);
-  publicAPI.delete = macro.chain(() => publicAPI.releaseGraphicsResources(), publicAPI.delete);
+  publicAPI.delete = macro.chain(
+    () => publicAPI.releaseGraphicsResources(),
+    publicAPI.delete
+  );
 
   // To support destructuring
   if (!model.compression) {
