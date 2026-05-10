@@ -18,6 +18,8 @@ import vtkResourceLoader from '@kitware/vtk.js/IO/Core/ResourceLoader';
 import vtkGLTFImporter from '@kitware/vtk.js/IO/Geometry/GLTFImporter';
 import vtkAnimationMixer from '@kitware/vtk.js/Common/Core/AnimationMixer';
 import vtkArmatureSource from '@kitware/vtk.js/Filters/Sources/ArmatureSource';
+import { DebugChannel } from '@kitware/vtk.js/Rendering/Core/Mapper/Constants';
+
 import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
@@ -215,23 +217,16 @@ function ready() {
     actors: reader.getActors(),
     nodeTransforms: reader.getNodeTransforms(),
     nodeChildren: reader.getNodeChildren(),
+    skins: reader.getSkins(),
     morphTargets: reader.getMorphTargets(),
     materialProperties: reader.getMaterialProperties(),
     nodeLights: reader.getNodeLights(),
   });
 
-  // Skeletal animation setup
+  // Skeletal setup: armature debug visualization
   const skeletons = reader.getSkeletons();
-  const animationClips = reader.getAnimationClips();
 
   if (skeletons.length > 0) {
-    // Build skin index → skeleton lookup
-    const skinIndexToSkeleton = new Map();
-    skeletons.forEach((entry) => {
-      skinIndexToSkeleton.set(entry.gltfSkinIndex, entry.skeleton);
-    });
-
-    // Use the first skeleton as the default for animation playback
     const primarySkeleton = skeletons[0].skeleton;
     mixer.setSkeleton(primarySkeleton);
 
@@ -242,88 +237,45 @@ function ready() {
     armatureMapper.setInputConnection(armatureSource.getOutputPort());
     armatureActor = vtkActor.newInstance();
     armatureActor.setMapper(armatureMapper);
-    armatureActor.getProperty().setColor(1.0, 1.0, 1.0);
+    armatureActor.getProperty().setColor(1, 1, 0);
     armatureActor.getProperty().setPointSize(8);
     armatureActor.getProperty().setLineWidth(3);
     armatureActor.setVisibility(params.ShowArmature);
     armatureRenderer.addActor(armatureActor);
-
-    // Register per skeleton animation clips so each skeleton
-    // can be evaluated with tracks mapped to its own bone indices
-    skeletons.forEach((entry) => {
-      if (entry.clips && entry.clips.length > 0) {
-        mixer.setSkeletonClips(entry.skeleton, entry.clips);
-      }
-      // Register parent child skeleton relationships for root transform updates
-      if (entry.parentSkeletonIdx !== undefined) {
-        const parentEntry = skeletons[entry.parentSkeletonIdx];
-        mixer.setSkeletonParent(
-          entry.skeleton,
-          parentEntry.skeleton,
-          entry.parentBoneIdx
-        );
-      }
-    });
-
-    // Bind each actor to its specific skeleton based on glTF skin mapping
-    const actorMap = reader.getActors();
-    const skinsMap = reader.getSkins();
-    if (actorMap) {
-      actorMap.forEach((actor, actorKey) => {
-        // Actor keys are either "node-X" (node actor) or "node-X_primitive-Y"
-        const nodeId = actorKey.split('_')[0];
-        const skinInfo = skinsMap ? skinsMap.get(nodeId) : null;
-        if (skinInfo) {
-          // Extract the numeric skin index from skinId (e.g., "skin-0" → 0)
-          const match = skinInfo.skinId.match(/(\d+)/);
-          const skinIdx = match ? parseInt(match[1], 10) : -1;
-          const actorSkeleton = skinIndexToSkeleton.get(skinIdx);
-          mixer.bindActor(actor, actorSkeleton || primarySkeleton);
-        }
-      });
-    }
-
-    // Push rest pose skinning data even if no animation clips
-    mixer.tick(0);
-
-    if (animationClips.length > 0) {
-      animationClips.forEach((clip) => mixer.addClip(clip));
-
-      const clipNames = mixer.getClipNames();
-      if (clipNames.length > 0) {
-        params.Animation = clipNames[0];
-        controllers.Animation && controllers.Animation.destroy();
-        controllers.Animation = gui
-          .add(params, 'Animation', clipNames)
-          .name('Animation')
-          .onChange((name) => {
-            mixer.stop();
-            mixer.playClip(name);
-            animateScene();
-          });
-        mixer.playClip(clipNames[0]);
-        mixer.tick(0);
-      }
-    }
   }
 
-  // Node transform + morph target animations
+  // Bind skinned actors for joint matrix updates
+  const actorMap = reader.getActors();
+  const skinsMap = reader.getSkins();
+  if (actorMap) {
+    actorMap.forEach((actor, actorKey) => {
+      const nodeId = actorKey.split('_')[0];
+      if (skinsMap && skinsMap.get(nodeId)) {
+        mixer.bindActor(actor);
+      }
+    });
+  }
+
+  // Push rest pose skinning data
+  mixer.tick(0);
+
+  // Node transform + morph target + skeletal animations (all node driven)
   const nodeAnims = reader.getNodeAnimations();
   if (nodeAnims.length > 0) {
     mixer.setNodeAnimations(nodeAnims);
 
-    if (!params.Animation) {
-      const animNames = nodeAnims.map((a) => a.name);
-      params.Animation = animNames[0];
-      controllers.Animation && controllers.Animation.destroy();
-      controllers.Animation = gui
-        .add(params, 'Animation', animNames)
-        .name('Animation')
-        .onChange((name) => {
-          mixer.playNodeAnimation(name);
-          animateScene();
-        });
-    }
+    const animNames = nodeAnims.map((a) => a.name);
+    params.Animation = animNames[0];
+    controllers.Animation && controllers.Animation.destroy();
+    controllers.Animation = gui
+      .add(params, 'Animation', animNames)
+      .name('Animation')
+      .onChange((name) => {
+        mixer.playNodeAnimation(name);
+        animateScene();
+      });
+
+    animateScene();
   }
 
   // KHR_animation_pointer animations (texture transform animations)
@@ -417,7 +369,6 @@ function ready() {
   }
 }
 
-// Convert the await fetch to a promise chain
 fetch(`${baseUrl}/${modelsFolder}/model-index.json`)
   .then((response) => response.json())
   .then((modelsJson) => {
@@ -533,6 +484,28 @@ gui
   .name('FOV')
   .onChange((v) => {
     renderer.getActiveCamera().setViewAngle(Number(v));
+    renderWindow.render();
+  });
+
+// Debug channel selector
+const debugChannelNames = {};
+Object.entries(DebugChannel).forEach(([key, value]) => {
+  const label = key
+    .split('_')
+    .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
+    .join(' ');
+  debugChannelNames[label] = value;
+});
+params.DebugChannel = 0;
+gui
+  .add(params, 'DebugChannel', debugChannelNames)
+  .name('Debug Channel')
+  .onChange((val) => {
+    const actors = renderer.getActors();
+    actors.forEach((actor) => {
+      const mapper = actor.getMapper?.();
+      mapper?.setDebugChannel?.(val);
+    });
     renderWindow.render();
   });
 

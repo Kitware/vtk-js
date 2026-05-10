@@ -46,10 +46,7 @@ export function updateTextures(publicAPI, model) {
       actor.getProperty().getIridescenceThicknessTexture?.(),
     ],
     ['SheenColorTexture', actor.getProperty().getSheenColorTexture?.()],
-    [
-      'SheenRoughnessTexture',
-      actor.getProperty().getSheenRoughnessTexture?.(),
-    ],
+    ['SheenRoughnessTexture', actor.getProperty().getSheenRoughnessTexture?.()],
     [
       'DiffuseTransmissionTexture',
       actor.getProperty().getDiffuseTransmissionTexture?.(),
@@ -162,8 +159,7 @@ export function updateTextures(publicAPI, model) {
   }
 
   // Bind opaque pass color buffer for transmission (screen-space background sampling)
-  const transmissionFactor =
-    actor.getProperty().getTransmissionFactor?.() ?? 0;
+  const transmissionFactor = actor.getProperty().getTransmissionFactor?.() ?? 0;
   const opaqueView =
     model.WebGPURenderer?.getOpaqueColorTextureView?.() ?? null;
   // Remove any previously bound opaque texture

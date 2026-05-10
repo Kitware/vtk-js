@@ -1,7 +1,10 @@
 import test from 'tape';
-import vtkAnimationTrack from '../../AnimationTrack/index';
-import vtkAnimationClip from '../index';
-import { TrackType, InterpolationMode } from '../../AnimationTrack/Constants';
+import vtkAnimationTrack from 'vtk.js/Sources/Common/DataModel/AnimationTrack';
+import vtkAnimationClip from 'vtk.js/Sources/Common/DataModel/AnimationClip';
+import {
+  TrackType,
+  InterpolationMode,
+} from 'vtk.js/Sources/Common/DataModel/AnimationTrack/Constants';
 
 test('vtkAnimationClip: Basic instantiation', (t) => {
   const clip = vtkAnimationClip.newInstance();

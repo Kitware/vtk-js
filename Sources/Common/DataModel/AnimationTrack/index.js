@@ -1,8 +1,6 @@
 import macro from 'vtk.js/Sources/macros';
-import * as glMatrix from 'gl-matrix';
+import { quat } from 'gl-matrix';
 import { InterpolationMode, TrackType } from './Constants';
-
-const { quat, vec3 } = glMatrix;
 
 // ---------------------------------------------------------------------------
 // vtkAnimationTrack methods

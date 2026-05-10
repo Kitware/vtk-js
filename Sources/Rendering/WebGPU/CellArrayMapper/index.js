@@ -8,15 +8,12 @@ import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkProperty2D from 'vtk.js/Sources/Rendering/Core/Property2D';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
-import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 import vtkWebGPUSimpleMapper from 'vtk.js/Sources/Rendering/WebGPU/SimpleMapper';
 import vtkWebGPUStorageBuffer from 'vtk.js/Sources/Rendering/WebGPU/StorageBuffer';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 import { getSkinningData } from 'vtk.js/Sources/Common/Core/AnimationMixer';
-import {
-  UV_TRANSFORM_KEYS,
-} from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Constants';
+import { UV_TRANSFORM_KEYS } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Constants';
 import { getMaterialFeatureFlags } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Helpers';
 import {
   vtkWebGPUPolyDataVS,
@@ -32,17 +29,16 @@ import {
 import {
   addClipPlaneEntries,
   getClippingPlaneEquationsInCoords,
-  getClipPlaneShaderChecks,
   MAX_CLIPPING_PLANES,
 } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
-import { replaceShaderPosition as replaceShaderPositionHelper } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Position';
-import { replaceShaderCoincidentOffset as replaceShaderCoincidentOffsetHelper } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/CoincidentOffset';
-import { replaceShaderNormal as replaceShaderNormalHelper } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Normal';
-import { replaceShaderLight as replaceShaderLightHelper } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Lighting';
-import { replaceShaderColor as replaceShaderColorHelper } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Color';
-import { replaceShaderTCoord as replaceShaderTCoordHelper } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/TCoord';
-import { replaceShaderSelect as replaceShaderSelectHelper } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Select';
-import { replaceShaderAlpha as replaceShaderAlphaHelper } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Alpha';
+import replaceShaderPositionHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Position';
+import replaceShaderCoincidentOffsetHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/CoincidentOffset';
+import replaceShaderNormalHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Normal';
+import replaceShaderLightHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Lighting';
+import replaceShaderColorHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Color';
+import replaceShaderTCoordHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/TCoord';
+import replaceShaderSelectHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Select';
+import replaceShaderAlphaHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Alpha';
 
 const { Resolve } = CoincidentTopologyHelper;
 const { FieldAssociations } = vtkDataSet;
@@ -53,7 +49,6 @@ const { CoordinateSystem } = vtkProp;
 const { DisplayLocation } = vtkProperty2D;
 
 const tmp2Mat4 = new Float64Array(16);
-
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUCellArrayMapper methods
@@ -157,6 +152,11 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     model.UBO.setValue(
       'FlipFrontFacing',
       mat3.determinant(upper3x3) < 0 ? 1.0 : 0.0
+    );
+
+    model.UBO.setValue(
+      'DebugChannel',
+      model.renderable?.getDebugChannel?.() ?? 0
     );
 
     // 2D or 3D
@@ -562,7 +562,13 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
   );
 
   publicAPI.replaceShaderCoincidentOffset = (hash, pipeline, vertexInput) => {
-    replaceShaderCoincidentOffsetHelper(publicAPI, model, hash, pipeline, vertexInput);
+    replaceShaderCoincidentOffsetHelper(
+      publicAPI,
+      model,
+      hash,
+      pipeline,
+      vertexInput
+    );
   };
   model.shaderReplacements.set(
     'replaceShaderCoincidentOffset',
@@ -900,6 +906,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   // fragment shader so normals and material properties are correct when
   // the model matrix contains an odd number of reflections (negative scale).
   model.UBO.addEntry('FlipFrontFacing', 'f32');
+  // Debug channel selector (0 = normal rendering, see DebugChannel enum)
+  model.UBO.addEntry('DebugChannel', 'u32');
   addClipPlaneEntries(model.UBO, 'ClipPlane');
   model.UBO.addEntry('NumClipPlanes', 'u32');
 
