@@ -110,8 +110,8 @@ fn sampleOpacityRow(value: f32, row: f32) -> f32
 
 fn getProjectedValue(volumePosTC: vec3<f32>, projectionDirection: vec3<f32>) -> vec4<f32>
 {
-  let volumeSize = max(mapperUBO.VolumeSizeMC.xyz, vec3<f32>(0.000001));
-  let scaledDirection = projectionDirection / volumeSize;
+  let scaledDirection =
+    (mapperUBO.MCTCMatrix * vec4<f32>(projectionDirection, 0.0)).xyz;
   let projectionStep = mapperUBO.ProjectionParams.z * scaledDirection;
   let projectionStart = volumePosTC + mapperUBO.ProjectionParams.y * scaledDirection;
 
@@ -627,14 +627,6 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
     mat4.multiply(tmpMat4, tmp2Mat4, modelToIndex);
     model.UBO.setArray('MCTCMatrix', tmpMat4);
 
-    const spacing = image.getSpacing();
-    model.UBO.setArray('VolumeSizeMC', [
-      spacing[0] * dims[0],
-      spacing[1] * dims[1],
-      spacing[2] * dims[2],
-      1.0,
-    ]);
-
     const centerPoint = model.renderable.getCenterPoint();
     model.UBO.setArray('GlobalCenterPoint', [
       ...(centerPoint ?? [0.0, 0.0, 0.0]),
@@ -939,7 +931,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('BCSCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('MCTCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('BackgroundColor', 'vec4<f32>');
-  model.UBO.addEntry('VolumeSizeMC', 'vec4<f32>');
   model.UBO.addEntry('GlobalCenterPoint', 'vec4<f32>');
   model.UBO.addEntry('UniformOrientation', 'vec4<f32>');
   model.UBO.addEntry('TangentDirection', 'vec4<f32>');
