@@ -8,7 +8,7 @@ import {
 } from 'vtk.js/Sources/Common/DataModel/AnimationTrack/Constants';
 import { mat4, quat, vec3 } from 'gl-matrix';
 
-const { vtkWarningMacro, vtkDebugMacro } = macro;
+const { vtkWarningMacro } = macro;
 
 function getNodeTRS(node) {
   if (node.matrix) {
@@ -134,34 +134,33 @@ export function createSkeletonFromGLTFSkin(gltfSkin, allNodes) {
     const node = jointNodes[i];
     if (!node) {
       vtkWarningMacro(`Null joint node at index ${i}`);
-      continue;
+    } else {
+      const boneData = createBoneData(node, i, allNodes);
+
+      // Set inverse bind matrix from resolved accessor
+      if (gltfSkin.inverseBindMatrices && gltfSkin.inverseBindMatrices.value) {
+        const ibmData = gltfSkin.inverseBindMatrices.value;
+        const offset = i * 16;
+        boneData.inverseBindMatrix = mat4.clone(
+          ibmData.subarray(offset, offset + 16)
+        );
+      }
+
+      skeleton.addBone(boneData);
+      nodeToJointIndex.set(node, i);
     }
-
-    const boneData = createBoneData(node, i, allNodes);
-
-    // Set inverse bind matrix from resolved accessor
-    if (gltfSkin.inverseBindMatrices && gltfSkin.inverseBindMatrices.value) {
-      const ibmData = gltfSkin.inverseBindMatrices.value;
-      const offset = i * 16;
-      boneData.inverseBindMatrix = mat4.clone(
-        ibmData.subarray(offset, offset + 16)
-      );
-    }
-
-    skeleton.addBone(boneData);
-    nodeToJointIndex.set(node, i);
   }
 
   // Set parent indices by checking node children relationships
   for (let i = 0; i < jointNodes.length; i++) {
     const node = jointNodes[i];
     if (node.children) {
-      for (const child of node.children) {
+      node.children.forEach((child) => {
         const childBoneIdx = nodeToJointIndex.get(child);
         if (childBoneIdx !== undefined) {
           skeleton.setParentIndex(childBoneIdx, i);
         }
-      }
+      });
     }
   }
 
@@ -226,9 +225,11 @@ export function createAnimationClipFromGLTFAnimation(
   }
 
   // Process each animation channel
-  for (const channel of gltfAnim.channels) {
+  gltfAnim.channels.forEach((channel) => {
     const sampler = gltfAnim.samplers[channel.sampler];
-    if (!sampler) continue;
+    if (!sampler) {
+      return;
+    }
 
     const nodeIdx = channel.target.node; // Raw integer index
     const path = channel.target.path;
@@ -242,13 +243,13 @@ export function createAnimationClipFromGLTFAnimation(
       trackType = TrackType.SCALE;
     } else {
       // Skip unsupported paths (weights/morph targets)
-      continue;
+      return;
     }
 
     const boneIdx = nodeIndexToBone.get(nodeIdx);
     if (boneIdx === undefined) {
       // Node not in this skeleton, skip
-      continue;
+      return;
     }
 
     // sampler.input and sampler.output are already TypedArrays
@@ -257,7 +258,7 @@ export function createAnimationClipFromGLTFAnimation(
 
     if (!times || !values) {
       vtkWarningMacro('Missing sampler data for animation channel');
-      continue;
+      return;
     }
 
     // Determine interpolation mode
@@ -311,7 +312,7 @@ export function createAnimationClipFromGLTFAnimation(
     }
 
     clip.addTrack(track);
-  }
+  });
 
   return clip;
 }
@@ -363,8 +364,8 @@ export function parseSkeletalAnimationFromGLTF(tree) {
     tree.animations.length > 0 &&
     result.skeletons.length > 0
   ) {
-    for (const gltfAnim of tree.animations) {
-      for (const entry of result.skeletons) {
+    tree.animations.forEach((gltfAnim) => {
+      result.skeletons.forEach((entry) => {
         const clip = createAnimationClipFromGLTFAnimation(
           gltfAnim,
           entry.skeleton,
@@ -378,8 +379,8 @@ export function parseSkeletalAnimationFromGLTF(tree) {
             result.animationClips.push(clip);
           }
         }
-      }
-    }
+      });
+    });
   }
 
   return result;
@@ -508,17 +509,19 @@ export function parseNodeAnimationsFromGLTF(tree) {
 
   if (!tree || !tree.animations) return result;
 
-  const allNodes = tree.nodes || [];
-
-  for (const gltfAnim of tree.animations) {
-    if (!gltfAnim.channels || !gltfAnim.samplers) continue;
+  tree.animations.forEach((gltfAnim) => {
+    if (!gltfAnim.channels || !gltfAnim.samplers) {
+      return;
+    }
 
     const channels = [];
     let duration = 0;
 
-    for (const channel of gltfAnim.channels) {
+    gltfAnim.channels.forEach((channel) => {
       const sampler = gltfAnim.samplers[channel.sampler];
-      if (!sampler) continue;
+      if (!sampler) {
+        return;
+      }
 
       const nodeIdx = channel.target.node;
       const path = channel.target.path;
@@ -529,12 +532,14 @@ export function parseNodeAnimationsFromGLTF(tree) {
         path !== 'scale' &&
         path !== 'weights'
       ) {
-        continue;
+        return;
       }
 
       const times = sampler.input;
       const values = sampler.output;
-      if (!times || !values) continue;
+      if (!times || !values) {
+        return;
+      }
 
       const maxTime = times[times.length - 1];
       if (maxTime > duration) duration = maxTime;
@@ -557,9 +562,11 @@ export function parseNodeAnimationsFromGLTF(tree) {
         interpolation: sampler.interpolation || 'LINEAR',
         components,
       });
-    }
+    });
 
-    if (channels.length === 0) continue;
+    if (channels.length === 0) {
+      return;
+    }
 
     const nodeAnim = {
       name: gltfAnim.name || gltfAnim.id || `node_animation_${result.length}`,
@@ -574,7 +581,7 @@ export function parseNodeAnimationsFromGLTF(tree) {
         const loopedT = duration > 0 ? t % duration : 0;
         const nodeUpdates = new Map();
 
-        for (const ch of channels) {
+        channels.forEach((ch) => {
           if (!nodeUpdates.has(ch.nodeIndex)) {
             nodeUpdates.set(ch.nodeIndex, {});
           }
@@ -587,14 +594,14 @@ export function parseNodeAnimationsFromGLTF(tree) {
             ch.interpolation,
             ch.path === 'rotation'
           );
-        }
+        });
 
         return nodeUpdates;
       },
     };
 
     result.push(nodeAnim);
-  }
+  });
 
   return result;
 }
@@ -674,27 +681,39 @@ export function parsePointerAnimationsFromGLTF(tree) {
 
   if (!tree || !tree.animations) return result;
 
-  for (const gltfAnim of tree.animations) {
-    if (!gltfAnim.channels || !gltfAnim.samplers) continue;
+  tree.animations.forEach((gltfAnim) => {
+    if (!gltfAnim.channels || !gltfAnim.samplers) {
+      return;
+    }
 
     const channels = [];
     let duration = 0;
 
-    for (const channel of gltfAnim.channels) {
-      if (channel.target.path !== 'pointer') continue;
+    gltfAnim.channels.forEach((channel) => {
+      if (channel.target.path !== 'pointer') {
+        return;
+      }
 
       const ext = channel.target.extensions?.KHR_animation_pointer;
-      if (!ext || !ext.pointer) continue;
+      if (!ext || !ext.pointer) {
+        return;
+      }
 
       const parsed = parseTextureTransformPointer(ext.pointer);
-      if (!parsed) continue;
+      if (!parsed) {
+        return;
+      }
 
       const sampler = gltfAnim.samplers[channel.sampler];
-      if (!sampler) continue;
+      if (!sampler) {
+        return;
+      }
 
       const times = sampler.input;
       const values = sampler.output;
-      if (!times || !values) continue;
+      if (!times || !values) {
+        return;
+      }
 
       const maxTime = times[times.length - 1];
       if (maxTime > duration) duration = maxTime;
@@ -711,9 +730,11 @@ export function parsePointerAnimationsFromGLTF(tree) {
         interpolation: sampler.interpolation || 'LINEAR',
         components,
       });
-    }
+    });
 
-    if (channels.length === 0) continue;
+    if (channels.length === 0) {
+      return;
+    }
 
     const pointerAnim = {
       name:
@@ -730,7 +751,7 @@ export function parsePointerAnimationsFromGLTF(tree) {
         const loopedT = duration > 0 ? t % duration : 0;
         const materialUpdates = new Map();
 
-        for (const ch of channels) {
+        channels.forEach((ch) => {
           const key = `mat_${ch.materialIndex}`;
           if (!materialUpdates.has(key)) {
             materialUpdates.set(key, { textureTransforms: new Map() });
@@ -758,14 +779,14 @@ export function parsePointerAnimationsFromGLTF(tree) {
           } else if (ch.transformProperty === 'rotation') {
             texTransform.rotation = val[0];
           }
-        }
+        });
 
         return materialUpdates;
       },
     };
 
     result.push(pointerAnim);
-  }
+  });
 
   return result;
 }

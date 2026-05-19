@@ -1,6 +1,6 @@
 import test from 'tape';
-import vtkAnimationCue from '../../AnimationCue/index';
-import vtkAnimationScene from '../index';
+import vtkAnimationCue from 'vtk.js/Sources/Common/Core/AnimationCue';
+import vtkAnimationScene from 'vtk.js/Sources/Common/Core/AnimationScene';
 
 test('vtkAnimationScene: Basic instantiation', (t) => {
   const scene = vtkAnimationScene.newInstance();

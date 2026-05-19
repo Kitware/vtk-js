@@ -1,6 +1,5 @@
 import test from 'tape';
-import vtkAnimationCue from '../index';
-import { CueState } from '../Constants';
+import vtkAnimationCue from 'vtk.js/Sources/Common/Core/AnimationCue';
 
 test('vtkAnimationCue: Basic instantiation', (t) => {
   const cue = vtkAnimationCue.newInstance();

@@ -1,5 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
-import { CueState } from './Constants';
+import { CueState } from 'vtk.js/Sources/Common/Core/AnimationCue/Constants';
 
 // ---------------------------------------------------------------------------
 // vtkAnimationCue methods

@@ -150,16 +150,16 @@ function vtkGLTFImporter(publicAPI, model) {
     model.pointerAnimations = parsePointerAnimationsFromGLTF(model.glTFTree);
 
     // Emit skeletal data events
-    for (const skeletalInfo of model.skeletons) {
+    model.skeletons.forEach((skeletalInfo) => {
       publicAPI.invokeSkeletonLoaded({
         skeleton: skeletalInfo.skeleton,
         gltfSkinIndex: skeletalInfo.gltfSkinIndex,
       });
-    }
+    });
 
-    for (const clip of model.animationClips) {
+    model.animationClips.forEach((clip) => {
       publicAPI.invokeAnimationClipLoaded({ clip });
-    }
+    });
 
     model.scenes = model.glTFTree.scenes;
 
@@ -327,9 +327,11 @@ function vtkGLTFImporter(publicAPI, model) {
 
       // If node has a mesh, compute bounds from primitive accessors
       if (node.mesh && node.mesh.primitives) {
-        for (const primitive of node.mesh.primitives) {
+        node.mesh.primitives.forEach((primitive) => {
           const posAccessor = primitive.attributes?.position;
-          if (!posAccessor || !posAccessor.min || !posAccessor.max) continue;
+          if (!posAccessor || !posAccessor.min || !posAccessor.max) {
+            return;
+          }
 
           const aMin = posAccessor.min;
           const aMax = posAccessor.max;
@@ -347,28 +349,28 @@ function vtkGLTFImporter(publicAPI, model) {
           ];
 
           // Transform corners by world matrix
-          for (const corner of corners) {
+          corners.forEach((corner) => {
             vec3.transformMat4(corner, corner, worldMatrix);
             for (let c = 0; c < 3; c++) {
               outMin[c] = Math.min(outMin[c], corner[c]);
               outMax[c] = Math.max(outMax[c], corner[c]);
             }
-          }
-        }
+          });
+        });
       }
 
       // Recurse into children
       if (node.children) {
-        for (const child of node.children) {
+        node.children.forEach((child) => {
           traverseNode(child, worldMatrix);
-        }
+        });
       }
     };
 
     if (scene.nodes) {
-      for (const node of scene.nodes) {
+      scene.nodes.forEach((node) => {
         traverseNode(node, mat4.create());
-      }
+      });
     }
 
     // Check if we found any valid bounds

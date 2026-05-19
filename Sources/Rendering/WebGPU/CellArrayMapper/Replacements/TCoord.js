@@ -1,6 +1,9 @@
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
+import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import { getUV } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Helpers';
+
+const { Shading } = vtkProperty;
 
 function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
   if (!vertexInput.hasAttribute('tcoord')) return;
@@ -15,6 +18,7 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
 
   const actor = model.WebGPUActor.getRenderable();
   const ppty = actor.getProperty();
+  const isPBR = ppty.getInterpolation?.() === Shading.PBR;
 
   const hasTcoord1 = vertexInput.hasAttribute('tcoord1');
   const tcoordImpl = ['  output.tcoordVS = tcoord;'];
@@ -56,10 +60,7 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
 
   const diffuseTexture = ppty.getDiffuseTexture?.();
 
-  const diffuseSources = [
-    diffuseTexture,
-    actor.getTextures()[0],
-  ];
+  const diffuseSources = [diffuseTexture, actor.getTextures()[0]];
   if (diffuseSources.some(isSampleableTexture)) {
     usedTextures.push(
       `_diffuseMap = textureSample(DiffuseTexture, DiffuseTextureSampler, ${uv(
@@ -68,13 +69,15 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
     );
   }
 
-  const ormTexture = ppty.getORMTexture?.();
-  const rmTexture = ppty.getRMTexture?.();
-  const roughnessTexture = ppty.getRoughnessTexture?.();
-  const metallicTexture = ppty.getMetallicTexture?.();
-  const ambientOcclusionTexture = ppty.getAmbientOcclusionTexture?.();
-  const emissionTexture = ppty.getEmissionTexture?.();
-  const normalTexture = ppty.getNormalTexture?.();
+  const ormTexture = isPBR ? ppty.getORMTexture?.() : null;
+  const rmTexture = isPBR ? ppty.getRMTexture?.() : null;
+  const roughnessTexture = isPBR ? ppty.getRoughnessTexture?.() : null;
+  const metallicTexture = isPBR ? ppty.getMetallicTexture?.() : null;
+  const ambientOcclusionTexture = isPBR
+    ? ppty.getAmbientOcclusionTexture?.()
+    : null;
+  const emissionTexture = isPBR ? ppty.getEmissionTexture?.() : null;
+  const normalTexture = isPBR ? ppty.getNormalTexture?.() : null;
 
   // ORM texture support: if present, sample R/G/B for AO/Roughness/Metallic
   if (isSampleableTexture(ormTexture)) {
@@ -133,7 +136,7 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
     )});`
   );
 
-  const anisotropyTexture = ppty.getAnisotropyTexture?.();
+  const anisotropyTexture = isPBR ? ppty.getAnisotropyTexture?.() : null;
   addTextureSample(
     anisotropyTexture,
     `_anisotropyMap = textureSample(AnisotropyTexture, AnisotropyTextureSampler, ${uv(
@@ -141,13 +144,13 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
     )});`
   );
 
-  const coatTexture = ppty.getCoatTexture?.();
+  const coatTexture = isPBR ? ppty.getCoatTexture?.() : null;
   addTextureSample(
     coatTexture,
     `_coatMap = textureSample(CoatTexture, CoatTextureSampler, ${uv('coat')});`
   );
 
-  const coatRoughnessTexture = ppty.getCoatRoughnessTexture?.();
+  const coatRoughnessTexture = isPBR ? ppty.getCoatRoughnessTexture?.() : null;
   addTextureSample(
     coatRoughnessTexture,
     `_coatRoughnessMap = textureSample(CoatRoughnessTexture, CoatRoughnessTextureSampler, ${uv(
@@ -155,7 +158,7 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
     )});`
   );
 
-  const coatNormalTexture = ppty.getCoatNormalTexture?.();
+  const coatNormalTexture = isPBR ? ppty.getCoatNormalTexture?.() : null;
   addTextureSample(
     coatNormalTexture,
     `_coatNormalMap = textureSample(CoatNormalTexture, CoatNormalTextureSampler, ${uv(
@@ -171,7 +174,7 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
     )});`
   );
 
-  const transmissionTexture = ppty.getTransmissionTexture?.();
+  const transmissionTexture = isPBR ? ppty.getTransmissionTexture?.() : null;
   addTextureSample(
     transmissionTexture,
     `_transmissionMap = textureSample(TransmissionTexture, TransmissionTextureSampler, ${uv(
@@ -179,7 +182,7 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
     )});`
   );
 
-  const thicknessTexture = ppty.getThicknessTexture?.();
+  const thicknessTexture = isPBR ? ppty.getThicknessTexture?.() : null;
   addTextureSample(
     thicknessTexture,
     `_thicknessMap = textureSample(ThicknessTexture, ThicknessTextureSampler, ${uv(
@@ -187,7 +190,7 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
     )});`
   );
 
-  const iridescenceTexture = ppty.getIridescenceTexture?.();
+  const iridescenceTexture = isPBR ? ppty.getIridescenceTexture?.() : null;
   addTextureSample(
     iridescenceTexture,
     `_iridescenceMap = textureSample(IridescenceTexture, IridescenceTextureSampler, ${uv(
@@ -195,7 +198,9 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
     )});`
   );
 
-  const iridescenceThicknessTexture = ppty.getIridescenceThicknessTexture?.();
+  const iridescenceThicknessTexture = isPBR
+    ? ppty.getIridescenceThicknessTexture?.()
+    : null;
   addTextureSample(
     iridescenceThicknessTexture,
     `_iridescenceThicknessMap = textureSample(IridescenceThicknessTexture, IridescenceThicknessTextureSampler, ${uv(
@@ -204,14 +209,16 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
   );
 
   // Sheen textures
-  const sheenColorTexture = ppty.getSheenColorTexture?.();
+  const sheenColorTexture = isPBR ? ppty.getSheenColorTexture?.() : null;
   addTextureSample(
     sheenColorTexture,
     `_sheenColorMap = textureSample(SheenColorTexture, SheenColorTextureSampler, ${uv(
       'sheenColor'
     )});`
   );
-  const sheenRoughnessTexture = ppty.getSheenRoughnessTexture?.();
+  const sheenRoughnessTexture = isPBR
+    ? ppty.getSheenRoughnessTexture?.()
+    : null;
   addTextureSample(
     sheenRoughnessTexture,
     `_sheenRoughnessMap = textureSample(SheenRoughnessTexture, SheenRoughnessTextureSampler, ${uv(
@@ -220,14 +227,18 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
   );
 
   // Diffuse transmission textures
-  const diffTransTexture = ppty.getDiffuseTransmissionTexture?.();
+  const diffTransTexture = isPBR
+    ? ppty.getDiffuseTransmissionTexture?.()
+    : null;
   addTextureSample(
     diffTransTexture,
     `_diffuseTransmissionMap = textureSample(DiffuseTransmissionTexture, DiffuseTransmissionTextureSampler, ${uv(
       'diffuseTransmission'
     )});`
   );
-  const diffTransColorTexture = ppty.getDiffuseTransmissionColorTexture?.();
+  const diffTransColorTexture = isPBR
+    ? ppty.getDiffuseTransmissionColorTexture?.()
+    : null;
   addTextureSample(
     diffTransColorTexture,
     `_diffuseTransmissionColorMap = textureSample(DiffuseTransmissionColorTexture, DiffuseTransmissionColorTextureSampler, ${uv(
@@ -236,14 +247,14 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
   );
 
   // KHR_materials_specular textures
-  const specularTexture = ppty.getSpecularTexture?.();
+  const specularTexture = isPBR ? ppty.getSpecularTexture?.() : null;
   addTextureSample(
     specularTexture,
     `_specularMap = textureSample(SpecularTexture, SpecularTextureSampler, ${uv(
       'specular'
     )});`
   );
-  const specularColorTexture = ppty.getSpecularColorTexture?.();
+  const specularColorTexture = isPBR ? ppty.getSpecularColorTexture?.() : null;
   addTextureSample(
     specularColorTexture,
     `_specularColorMap = textureSample(SpecularColorTexture, SpecularColorTextureSampler, ${uv(
