@@ -6,7 +6,7 @@ import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManage
 const { FieldAssociations } = vtkDataSet;
 const { BufferUsage, PrimitiveTypes } = vtkWebGPUBufferManager;
 const { Representation } = vtkProperty;
-const { ScalarMode } = vtkMapper;
+const { ScalarMode, ColorMode } = vtkMapper;
 
 export function getUsage(rep, i) {
   if (rep === Representation.POINTS || i === PrimitiveTypes.Points) {
@@ -78,9 +78,8 @@ export function buildVertexInput(publicAPI, model) {
   let indexBuffer = null;
   if (cells) {
     indexBuffer = device.getBufferManager().getBuffer({
-      hash: `R${representation}P${primType}O${
-        model.cellOffset
-      }${cells.getMTime()}`,
+      hash: `R${representation}P${primType}O${model.cellOffset
+        }${cells.getMTime()}`,
       usage: BufferUsage.Index,
       cells,
       numberOfPoints: points.getNumberOfPoints(),
@@ -107,9 +106,8 @@ export function buildVertexInput(publicAPI, model) {
     const shift = model.WebGPUActor.getBufferShift(model.WebGPURenderer);
     vertexInput.addBuffer(
       device.getBufferManager().getBuffer({
-        hash: `${points.getMTime()}I${
-          indexBuffer?.getMTime?.() ?? 0
-        }${shift.join()}float32x4`,
+        hash: `${points.getMTime()}I${indexBuffer?.getMTime?.() ?? 0
+          }${shift.join()}float32x4`,
         usage: BufferUsage.PointArray,
         format: 'float32x4',
         dataArray: points,
@@ -198,12 +196,59 @@ export function buildVertexInput(publicAPI, model) {
     vertexInput.removeBufferIfPresent('tangentMC');
   }
 
+  const scalarMode = model.renderable.getScalarMode();
+  const hasScalarSource =
+    !!model.renderable.getColorMapColors?.() ||
+    !!model.renderable.getColorCoordinates?.() ||
+    !!model.renderable.getColorTextureMap?.();
+  const scalarModeUsesCells =
+    scalarMode === ScalarMode.USE_CELL_DATA ||
+    scalarMode === ScalarMode.USE_CELL_FIELD_DATA ||
+    scalarMode === ScalarMode.USE_FIELD_DATA ||
+    model.renderable.getAreScalarsMappedFromCells?.() ||
+    !pd.getPointData().getScalars();
+
   // Colors
   let haveColors = false;
+  model._usesCellScalars =
+    !!model.renderable.getScalarVisibility() &&
+    hasScalarSource &&
+    scalarModeUsesCells &&
+    scalarMode !== ScalarMode.USE_POINT_FIELD_DATA &&
+    !edges;
   if (model.renderable.getScalarVisibility()) {
-    const c = model.renderable.getColorMapColors();
-    if (c && !edges) {
-      const scalarMode = model.renderable.getScalarMode();
+    let c = model.renderable.getColorMapColors();
+    const indexedLookup =
+      model.renderable.getLookupTable?.()?.getIndexedLookup?.() ?? false;
+    if (!c && indexedLookup && model._usesCellScalars) {
+      let scalars = null;
+      const colorByName = model.renderable.getColorByArrayName?.();
+      if (scalarMode === ScalarMode.USE_CELL_DATA && colorByName) {
+        scalars = pd.getCellData()?.getArrayByName?.(colorByName) ?? null;
+      }
+      if (!scalars) {
+        const resolved = model.renderable.getAbstractScalars(
+          pd,
+          scalarMode,
+          model.renderable.getArrayAccessMode(),
+          0,
+          colorByName
+        );
+        scalars = resolved?.scalars ?? null;
+      }
+      if (scalars) {
+        const lut = model.renderable.getLookupTable?.();
+        if (lut) {
+          lut.build?.();
+          c = lut.mapScalars(
+            scalars,
+            model.renderable.getColorMode?.() ?? ColorMode.MAP_SCALARS,
+            model.renderable.getFieldDataTupleId?.() ?? -1
+          );
+        }
+      }
+    }
+    if (c && !edges && !model._usesCellScalars) {
       // We must figure out how the scalars should be mapped to the polydata.
       const haveCellScalars =
         (scalarMode === ScalarMode.USE_CELL_DATA ||
@@ -216,9 +261,8 @@ export function buildVertexInput(publicAPI, model) {
         device.getBufferManager().getBuffer({
           usage: BufferUsage.PointArray,
           format: 'unorm8x4',
-          hash: `${haveCellScalars}${c.getMTime()}I${indexBuffer.getMTime()}O${
-            model.cellOffset
-          }unorm8x4`,
+          hash: `${haveCellScalars}${c.getMTime()}I${indexBuffer.getMTime()}O${model.cellOffset
+            }unorm8x4`,
           dataArray: c,
           indexBuffer,
           cellData: haveCellScalars,
@@ -248,15 +292,15 @@ export function buildVertexInput(publicAPI, model) {
     vertexInput.addBuffer(
       useCellTCoords
         ? device
-            .getBufferManager()
-            .getBufferForCellArray(
-              tcoords,
-              vertexInput.getIndexBuffer(),
-              model.cellOffset
-            )
+          .getBufferManager()
+          .getBufferForCellArray(
+            tcoords,
+            vertexInput.getIndexBuffer(),
+            model.cellOffset
+          )
         : device
-            .getBufferManager()
-            .getBufferForPointArray(tcoords, vertexInput.getIndexBuffer()),
+          .getBufferManager()
+          .getBufferForPointArray(tcoords, vertexInput.getIndexBuffer()),
       ['tcoord']
     );
 
@@ -314,6 +358,28 @@ export function buildVertexInput(publicAPI, model) {
     vertexInput.removeBufferIfPresent('selectId');
   }
 
+  // Cell scalar IDs for fragment cell color fetch
+  if (model._usesCellScalars && !edges && indexBuffer) {
+    const cellIds = indexBuffer.getFlatIdToCellId();
+    if (cellIds) {
+      vertexInput.addBuffer(
+        device.getBufferManager().getBuffer({
+          hash: `cellScalarIdI${indexBuffer.getMTime()}`,
+          usage: BufferUsage.RawVertex,
+          format: 'uint32',
+          interpolation: 'flat',
+          nativeArray:
+            cellIds instanceof Uint32Array ? cellIds : Uint32Array.from(cellIds),
+        }),
+        ['cellScalarId']
+      );
+    } else {
+      vertexInput.removeBufferIfPresent('cellScalarId');
+    }
+  } else {
+    vertexInput.removeBufferIfPresent('cellScalarId');
+  }
+
   // Skinning Attributes (JOINTS_0 / WEIGHTS_0)
   const jointsArray = pd.getPointData().getArrayByName('JOINTS_0');
   const weightsArray = pd.getPointData().getArrayByName('WEIGHTS_0');
@@ -323,9 +389,8 @@ export function buildVertexInput(publicAPI, model) {
       jointsArray.getDataType() === 'Uint8Array' ? 'uint8x4' : 'uint16x4';
     vertexInput.addBuffer(
       device.getBufferManager().getBuffer({
-        hash: `${jointsArray.getMTime()}I${
-          indexBuffer?.getMTime?.() ?? 0
-        }${jointsFormat}`,
+        hash: `${jointsArray.getMTime()}I${indexBuffer?.getMTime?.() ?? 0
+          }${jointsFormat}`,
         usage: BufferUsage.PointArray,
         format: jointsFormat,
         dataArray: jointsArray,
@@ -336,9 +401,8 @@ export function buildVertexInput(publicAPI, model) {
     // WEIGHTS_0: float32x4
     vertexInput.addBuffer(
       device.getBufferManager().getBuffer({
-        hash: `${weightsArray.getMTime()}I${
-          indexBuffer?.getMTime?.() ?? 0
-        }float32x4`,
+        hash: `${weightsArray.getMTime()}I${indexBuffer?.getMTime?.() ?? 0
+          }float32x4`,
         usage: BufferUsage.PointArray,
         format: 'float32x4',
         dataArray: weightsArray,
