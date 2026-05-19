@@ -11,7 +11,6 @@ import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManage
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 import vtkWebGPUSimpleMapper from 'vtk.js/Sources/Rendering/WebGPU/SimpleMapper';
 import vtkWebGPUStorageBuffer from 'vtk.js/Sources/Rendering/WebGPU/StorageBuffer';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 import { getSkinningData } from 'vtk.js/Sources/Common/Core/AnimationMixer';
@@ -45,8 +44,7 @@ import replaceShaderAlphaHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayM
 const { Resolve } = CoincidentTopologyHelper;
 const { FieldAssociations } = vtkDataSet;
 const { PrimitiveTypes } = vtkWebGPUBufferManager;
-const { Representation } = vtkProperty;
-const { ColorMode } = vtkMapper;
+const { Representation, Shading } = vtkProperty;
 
 const { CoordinateSystem } = vtkProp;
 const { DisplayLocation } = vtkProperty2D;
@@ -571,27 +569,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       return;
     }
 
-    let c = model.renderable.getColorMapColors();
-    if (!c) {
-      const { scalars } = model.renderable.getAbstractScalars(
-        model.currentInput,
-        model.renderable.getScalarMode(),
-        model.renderable.getArrayAccessMode(),
-        0,
-        model.renderable.getColorByArrayName()
-      );
-      if (scalars) {
-        const lut = model.renderable.getLookupTable?.();
-        if (lut) {
-          lut.build?.();
-          c = lut.mapScalars(
-            scalars,
-            model.renderable.getColorMode?.() ?? ColorMode.MAP_SCALARS,
-            model.renderable.getFieldDataTupleId?.() ?? -1
-          );
-        }
-      }
-    }
+    const c = model.renderable.getColorMapColors();
 
     if (!c) {
       model._cellColorSSBO = null;
@@ -765,6 +743,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       const actor = model.WebGPUActor?.getRenderable?.();
       const ppty = actor?.getProperty?.();
       if (ppty) {
+        const isPBR = ppty.getInterpolation?.() === Shading.PBR;
         const isEnabled = (value) => (value ? 1 : 0);
         const tcoordBuffer = model.vertexInput.getBuffer('tcoord');
         const tcoordComponents = tcoordBuffer
@@ -789,7 +768,20 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
           hasSheen,
           hasTransmission,
           hasVolume,
-        } = getMaterialFeatureFlags(ppty);
+        } = isPBR
+          ? getMaterialFeatureFlags(ppty)
+          : {
+              hasAnisotropy: false,
+              hasClearCoat: false,
+              hasCoatNormalTexture: false,
+              hasDiffuseTransmission: false,
+              hasDispersion: false,
+              hasIridescence: false,
+              hasKHRSpecular: false,
+              hasSheen: false,
+              hasTransmission: false,
+              hasVolume: false,
+            };
         const textureTransforms = ppty.getTextureTransforms?.() || {};
         pipelineHash += [
           `an${isEnabled(hasAnisotropy)}`,

@@ -26,10 +26,10 @@ test('vtkAnimationMixer: Non-skeletal animation bindings', (t) => {
 
   const registered = mixer.setAnimationBinding(
     'custom',
-    [animation],
     (updates, context) => {
       applied.push({ updates, context });
-    }
+    },
+    [animation]
   );
 
   t.ok(registered);
@@ -67,10 +67,10 @@ test('vtkAnimationMixer: Uses the first animation only', (t) => {
 
   const registered = mixer.setAnimationBinding(
     'selected',
-    [animation1, animation2],
     (updates, context) => {
       applied.push({ updates, context });
-    }
+    },
+    [animation1, animation2]
   );
 
   t.ok(registered);

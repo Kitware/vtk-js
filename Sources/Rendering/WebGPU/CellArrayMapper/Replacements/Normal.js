@@ -44,6 +44,7 @@ function replaceShaderNormal(publicAPI, model, hash, pipeline, vertexInput) {
     vDesc.setCode(code);
 
     const fDesc = pipeline.getShaderDescription('fragment');
+    fDesc.addBuiltinInput('bool', '@builtin(front_facing) frontFacing');
     code = fDesc.getCode();
 
     const ppty = actor.getProperty();
@@ -94,13 +95,13 @@ function replaceShaderNormal(publicAPI, model, hash, pipeline, vertexInput) {
           '  var normalTS: vec3<f32> = _normalMap.xyz * 2.0 - 1.0;',
           '  normalTS.x = normalTS.x * normalStrengthUniform;',
           '  normalTS.y = normalTS.y * normalStrengthUniform;',
-          '  let geometricNormal = normalize(normal);',
+          '  var geometricNormal = normalize(normal);',
           '  normal = normalize(tbn * normalTS);'
         );
       } else {
         normalImpl.push(
           '  normal = normalize(normal);',
-          '  let geometricNormal = normal;'
+          '  var geometricNormal = normal;'
         );
       }
 
@@ -116,6 +117,16 @@ function replaceShaderNormal(publicAPI, model, hash, pipeline, vertexInput) {
         normalImpl.push('  var coatNormal: vec3<f32> = geometricNormal;');
       }
 
+      normalImpl.push(
+        '  let isFrontFace = select(!input.frontFacing, input.frontFacing, mapperUBO.FlipFrontFacing < 0.5);',
+        '  let faceSign = select(-1.0, 1.0, isFrontFace);',
+        '  normal = normal * faceSign;',
+        '  geometricNormal = geometricNormal * faceSign;'
+      );
+      if (hasCoatNormalTexture || (ppty.getCoatStrength?.() ?? 0) > 0) {
+        normalImpl.push('  coatNormal = coatNormal * faceSign;');
+      }
+
       code = vtkWebGPUShaderCache.substitute(
         code,
         '//VTK::Normal::Impl',
@@ -125,7 +136,11 @@ function replaceShaderNormal(publicAPI, model, hash, pipeline, vertexInput) {
       const elseNormalImpl = [
         '  var normal: vec3<f32> = input.normalVC;',
         '  normal = normalize(normal);',
-        '  let geometricNormal = normal;',
+        '  var geometricNormal = normal;',
+        '  let isFrontFace = select(!input.frontFacing, input.frontFacing, mapperUBO.FlipFrontFacing < 0.5);',
+        '  let faceSign = select(-1.0, 1.0, isFrontFace);',
+        '  normal = normal * faceSign;',
+        '  geometricNormal = geometricNormal * faceSign;',
       ];
       if ((ppty.getCoatStrength?.() ?? 0) > 0) {
         elseNormalImpl.push('  var coatNormal: vec3<f32> = normalize(normal);');

@@ -562,14 +562,14 @@ function vtkArmature(publicAPI, model) {
 
       for (let ti = 0; ti < tracks.length; ti++) {
         const track = tracks[ti];
-        if (track.getBoneIndex() !== i) continue;
+        if (track.getBoneIndex() === i) {
+          const trackType = track.getTrackType();
+          const value = track.evaluate(time);
 
-        const trackType = track.getTrackType();
-        const value = track.evaluate(time);
-
-        if (trackType === 0) t = value;
-        else if (trackType === 1) r = value;
-        else if (trackType === 2) s = value;
+          if (trackType === 0) t = value;
+          else if (trackType === 1) r = value;
+          else if (trackType === 2) s = value;
+        }
       }
 
       const offset = i * 16;

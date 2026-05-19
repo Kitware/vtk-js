@@ -47,7 +47,6 @@ function vtkArmatureSource(publicAPI, model) {
     const lines = vtkCellArray.newInstance();
 
     // Generate joint points and bone links
-    let lineCount = 0;
     for (let i = 0; i < boneCount; i++) {
       const bone = skeleton.getBone(i);
       const parentIdx = bone.parentIndex;
@@ -62,7 +61,6 @@ function vtkArmatureSource(publicAPI, model) {
       // If has parent, draw line from parent to this bone
       if (parentIdx !== -1) {
         lines.insertNextCell([parentIdx, i]);
-        lineCount++;
       }
     }
 

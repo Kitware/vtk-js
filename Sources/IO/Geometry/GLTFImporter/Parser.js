@@ -172,11 +172,12 @@ class GLTFParser {
         primitive.attributes = {};
         for (const attribute in attributes) {
           const attr = SEMANTIC_ATTRIBUTE_MAP[attribute];
-          if (attr === undefined) continue;
-          primitive.attributes[attr] = this.get(
-            'accessors',
-            attributes[attribute]
-          );
+          if (attr !== undefined) {
+            primitive.attributes[attr] = this.get(
+              'accessors',
+              attributes[attribute]
+            );
+          }
         }
         if (primitive.indices !== undefined) {
           primitive.indices = this.get('accessors', primitive.indices);

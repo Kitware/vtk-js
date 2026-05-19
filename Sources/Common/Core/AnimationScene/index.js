@@ -1,5 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
-import { SceneState } from './Constants';
+import { SceneState } from 'vtk.js/Sources/Common/Core/AnimationScene/Constants';
 
 // ---------------------------------------------------------------------------
 // vtkAnimationScene methods

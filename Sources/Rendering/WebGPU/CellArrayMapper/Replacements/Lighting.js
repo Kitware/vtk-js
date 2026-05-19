@@ -1,9 +1,12 @@
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
+import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import {
   getMaterialFeatureFlags,
   isEdges,
 } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Helpers';
 import { getDebugChannelCode } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Debug';
+
+const { Shading } = vtkProperty;
 
 function replaceShaderLight(publicAPI, model, hash, pipeline, vertexInput) {
   if (hash.includes('sel')) return;
@@ -26,6 +29,16 @@ function replaceShaderLight(publicAPI, model, hash, pipeline, vertexInput) {
   if (needLighting) {
     const actor = model.WebGPUActor.getRenderable();
     const ppty = actor.getProperty();
+    const isPBR = ppty.getInterpolation?.() === Shading.PBR;
+    if (!isPBR) {
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Light::Impl', [
+        '  let diffuse = diffuseColor.rgb;',
+        '  let specular = specularColor.rgb * specularColor.a;',
+        '  computedColor = vec4<f32>(diffuse * _diffuseMap.rgb, opacity);',
+      ]).result;
+      fDesc.setCode(code);
+      return;
+    }
     const {
       hasAnisotropy,
       hasClearCoat,
@@ -44,8 +57,9 @@ function replaceShaderLight(publicAPI, model, hash, pipeline, vertexInput) {
       '  let V = mix(normalize(-fragPos), vec3<f32>(0, 0, 1), f32(rendererUBO.cameraParallel)); // View Vector',
       // Values needed for light calculations
       '  let baseColor = _diffuseMap.rgb * diffuseColor.rgb;',
-      '  let roughness = max(epsilon, roughnessUniform * _roughnessMap.r);',
-      '  let metallic = metallicUniform * _metallicMap.r;',
+      // glTF metallicRoughness semantics: roughness in G, metallic in B.
+      '  let roughness = max(epsilon, roughnessUniform * _roughnessMap.g);',
+      '  let metallic = metallicUniform * _metallicMap.b;',
       '  let alphaRoughness = roughness * roughness;',
       // Accumulated per light color
       '  var color = vec3<f32>(0.);',
@@ -111,7 +125,9 @@ function replaceShaderLight(publicAPI, model, hash, pipeline, vertexInput) {
         '  // Sheen parameters (Charlie BRDF)',
         '  let sheenColor = mapperUBO.SheenColor.rgb * _sheenColorMap.rgb;',
         '  let sheenRoughness = max(epsilon, mapperUBO.SheenRoughness * _sheenRoughnessMap.a);',
-        '  let albedoSheenScaling = 1.0 - max(max(sheenColor.r, sheenColor.g), sheenColor.b);'
+        '  let maxSheen = max(max(sheenColor.r, sheenColor.g), sheenColor.b);',
+        '  let sheenEnergyComp = maxSheen * (1.0 - sheenRoughness) * pow(1.0 - NdV, 5.0);',
+        '  let albedoSheenScaling = clamp(1.0 - sheenEnergyComp, 0.0, 1.0);'
       );
     }
 
@@ -129,7 +145,7 @@ function replaceShaderLight(publicAPI, model, hash, pipeline, vertexInput) {
       lightingCode.push(
         '',
         '  // Volume parameters',
-        '  let thickness = mapperUBO.ThicknessFactor * _thicknessMap.r;',
+        '  let thickness = mapperUBO.ThicknessFactor * _thicknessMap.g;',
         '  let attDist = mapperUBO.AttenuationDistance;',
         '  let attColor = mapperUBO.AttenuationColor.rgb;'
       );
