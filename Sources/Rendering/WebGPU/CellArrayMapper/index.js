@@ -11,6 +11,7 @@ import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManage
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 import vtkWebGPUSimpleMapper from 'vtk.js/Sources/Rendering/WebGPU/SimpleMapper';
 import vtkWebGPUStorageBuffer from 'vtk.js/Sources/Rendering/WebGPU/StorageBuffer';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 import { getSkinningData } from 'vtk.js/Sources/Common/Core/AnimationMixer';
 import { UV_TRANSFORM_KEYS } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Constants';
@@ -44,6 +45,7 @@ const { Resolve } = CoincidentTopologyHelper;
 const { FieldAssociations } = vtkDataSet;
 const { PrimitiveTypes } = vtkWebGPUBufferManager;
 const { Representation } = vtkProperty;
+const { ColorMode } = vtkMapper;
 
 const { CoordinateSystem } = vtkProp;
 const { DisplayLocation } = vtkProperty2D;
@@ -380,6 +382,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     const cp = publicAPI.getCoincidentParameters();
     model.UBO.setValue('CoincidentFactor', cp.factor);
     model.UBO.setValue('CoincidentOffset', cp.offset);
+    model.UBO.setValue('CellScalarOffset', model.cellOffset);
     model.UBO.setValue('NumClipPlanes', 0);
 
     if (!model.is2D && model.useRendererMatrix) {
@@ -551,6 +554,69 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     // Send to GPU
     const device = model.WebGPURenderWindow.getDevice();
     model._skinSSBO.send(device);
+  };
+
+  publicAPI.updateCellScalarSSBO = () => {
+    if (publicAPI.isEdgePrimitive()) {
+      model._cellColorSSBO = null;
+      return;
+    }
+
+    if (!model._usesCellScalars) {
+      model._cellColorSSBO = null;
+      return;
+    }
+
+    let c = model.renderable.getColorMapColors();
+    if (!c) {
+      const { scalars } = model.renderable.getAbstractScalars(
+        model.currentInput,
+        model.renderable.getScalarMode(),
+        model.renderable.getArrayAccessMode(),
+        0,
+        model.renderable.getColorByArrayName()
+      );
+      if (scalars) {
+        const lut = model.renderable.getLookupTable?.();
+        if (lut) {
+          lut.build?.();
+          c = lut.mapScalars(
+            scalars,
+            model.renderable.getColorMode?.() ?? ColorMode.MAP_SCALARS,
+            model.renderable.getFieldDataTupleId?.() ?? -1
+          );
+        }
+      }
+    }
+
+    if (!c) {
+      model._cellColorSSBO = null;
+      return;
+    }
+
+    const cdata = c.getData();
+    const numTuples = c.getNumberOfTuples();
+    if (!cdata || !numTuples) {
+      model._cellColorSSBO = null;
+      return;
+    }
+
+    if (!model._cellColorSSBO) {
+      model._cellColorSSBO = vtkWebGPUStorageBuffer.newInstance({
+        label: 'cellColorSSBO',
+      });
+    } else {
+      model._cellColorSSBO.clearData();
+      model._cellColorSSBO.setLabel('cellColorSSBO');
+    }
+
+    model._cellColorSSBO.addEntry('CellColor', 'vec4<f32>');
+    model._cellColorSSBO.setNumberOfInstances(numTuples);
+    model._cellColorSSBO.setAllInstancesFromArrayColorToFloat(
+      'CellColor',
+      cdata
+    );
+    model._cellColorSSBO.send(model.device);
   };
 
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
@@ -776,6 +842,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     // handle per primitive type
     model.usage = publicAPI.getUsage(rep, model.primitiveType);
     publicAPI.buildVertexInput();
+    publicAPI.updateCellScalarSSBO();
 
     const vbo = model.vertexInput.getBuffer('vertexBC');
     publicAPI.setNumberOfVertices(
@@ -784,6 +851,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     publicAPI.setTopology(publicAPI.getTopologyFromUsage(model.usage));
     publicAPI.updateUBO();
     publicAPI.updateSkinSSBO();
+    model.SSBO = model._skinSSBO || model._cellColorSSBO || null;
     if (publicAPI.haveWideLines()) {
       const ppty = actor.getProperty();
       publicAPI.setNumberOfInstances(Math.ceil(ppty.getLineWidth() * 2.0));
@@ -806,6 +874,8 @@ const DEFAULT_VALUES = {
   cellOffset: 0,
   primitiveType: 0,
   colorTexture: null,
+  _usesCellScalars: false,
+  _cellColorSSBO: null,
   renderEncoder: null,
   textures: null,
 };
@@ -859,6 +929,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('ZValue', 'f32');
   model.UBO.addEntry('CoincidentFactor', 'f32');
   model.UBO.addEntry('CoincidentOffset', 'f32');
+  model.UBO.addEntry('CellScalarOffset', 'u32');
   model.UBO.addEntry('PropID', 'u32');
   model.UBO.addEntry('ClipNear', 'f32');
   model.UBO.addEntry('ClipFar', 'f32');
