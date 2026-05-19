@@ -14,16 +14,39 @@ function replaceShaderColor(publicAPI, model, hash, pipeline, vertexInput) {
     return;
   }
 
-  // Check if using texture based coloring (color coordinates from mapper)
+  // If there's a vertex color buffer, use it first.
+  const colorBuffer = vertexInput.getBuffer('colorVI');
+  if (colorBuffer) {
+    const vDesc = pipeline.getShaderDescription('vertex');
+    vDesc.addOutput(
+      'vec4<f32>',
+      'color',
+      colorBuffer.getArrayInformation()[0].interpolation
+    );
+    let code = vDesc.getCode();
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
+      '  output.color = colorVI;',
+    ]).result;
+    vDesc.setCode(code);
+
+    let fcode = fDesc.getCode();
+    fcode = vtkWebGPUShaderCache.substitute(fcode, '//VTK::Color::Impl', [
+      'ambientColor = input.color;',
+      'diffuseColor = input.color;',
+      'opacity = opacity * input.color.a;',
+    ]).result;
+    fDesc.setCode(fcode);
+    return;
+  }
+
+  // Check if using texture based coloring (interpolated point scalars or cell texture path).
   const useTextureColoring =
     (model.renderable.getAreScalarsMappedFromCells() ||
       model.renderable.getInterpolateScalarsBeforeMapping?.()) &&
     model.renderable.getColorCoordinates() &&
     vertexInput.hasAttribute('tcoord') &&
     model.colorTexture;
-
   if (useTextureColoring) {
-    // Use texture sampling for colors (cell scalars or interpolated point scalars)
     const fDesc = pipeline.getShaderDescription('fragment');
     let code = fDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
@@ -35,31 +58,11 @@ function replaceShaderColor(publicAPI, model, hash, pipeline, vertexInput) {
     fDesc.setCode(code);
     return;
   }
-  // If there's no vertex color buffer return the shader as is
-  const colorBuffer = vertexInput.getBuffer('colorVI');
-  if (!colorBuffer) return;
 
-  // Modifies the vertex shader to include the vertex colors and interpolation in the outputs
-  const vDesc = pipeline.getShaderDescription('vertex');
-  vDesc.addOutput(
-    'vec4<f32>',
-    'color',
-    colorBuffer.getArrayInformation()[0].interpolation
-  );
-  let code = vDesc.getCode();
-  code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
-    '  output.color = colorVI;',
-  ]).result;
-  vDesc.setCode(code);
-
-  // Sets the fragment shader to accept the color inputs from the vertex shader
+  // No scalar color contribution path.
   const fDesc = pipeline.getShaderDescription('fragment');
-  code = fDesc.getCode();
-  code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
-    'ambientColor = input.color;',
-    'diffuseColor = input.color;',
-    'opacity = opacity * input.color.a;',
-  ]).result;
+  let code = fDesc.getCode();
+  code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', []).result;
   fDesc.setCode(code);
 }
 
