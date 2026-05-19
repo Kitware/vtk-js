@@ -14,6 +14,32 @@ function replaceShaderColor(publicAPI, model, hash, pipeline, vertexInput) {
     return;
   }
 
+  if (
+    model._usesCellScalars &&
+    model.SSBO === model._cellColorSSBO &&
+    vertexInput.hasAttribute('cellScalarId')
+  ) {
+    const vDesc = pipeline.getShaderDescription('vertex');
+    vDesc.addOutput('u32', 'cellScalarId', 'flat');
+    let code = vDesc.getCode();
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
+      '  output.cellScalarId = cellScalarId;',
+    ]).result;
+    vDesc.setCode(code);
+
+    const fDesc = pipeline.getShaderDescription('fragment');
+    let fcode = fDesc.getCode();
+    fcode = vtkWebGPUShaderCache.substitute(fcode, '//VTK::Color::Impl', [
+      'let colorIdx: u32 = input.cellScalarId;',
+      'let cellColor = cellColorSSBO.values[colorIdx].CellColor;',
+      'ambientColor = cellColor;',
+      'diffuseColor = cellColor;',
+      'opacity = opacity * cellColor.a;',
+    ]).result;
+    fDesc.setCode(fcode);
+    return;
+  }
+
   // If there's a vertex color buffer, use it first.
   const colorBuffer = vertexInput.getBuffer('colorVI');
   if (colorBuffer) {
@@ -29,6 +55,7 @@ function replaceShaderColor(publicAPI, model, hash, pipeline, vertexInput) {
     ]).result;
     vDesc.setCode(code);
 
+    const fDesc = pipeline.getShaderDescription('fragment');
     let fcode = fDesc.getCode();
     fcode = vtkWebGPUShaderCache.substitute(fcode, '//VTK::Color::Impl', [
       'ambientColor = input.color;',
@@ -40,10 +67,13 @@ function replaceShaderColor(publicAPI, model, hash, pipeline, vertexInput) {
   }
 
   // Check if using texture based coloring (interpolated point scalars or cell texture path).
+  const indexedLookup =
+    model.renderable.getLookupTable?.()?.getIndexedLookup?.() ?? false;
   const useTextureColoring =
     (model.renderable.getAreScalarsMappedFromCells() ||
       model.renderable.getInterpolateScalarsBeforeMapping?.()) &&
     model.renderable.getColorCoordinates() &&
+    !(indexedLookup && model._usesCellScalars) &&
     vertexInput.hasAttribute('tcoord') &&
     model.colorTexture;
   if (useTextureColoring) {
