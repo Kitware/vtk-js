@@ -59,7 +59,6 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
   const diffuseSources = [
     diffuseTexture,
     actor.getTextures()[0],
-    model.colorTexture,
   ];
   if (diffuseSources.some(isSampleableTexture)) {
     usedTextures.push(
