@@ -1,4 +1,5 @@
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
+import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 import { isEdges } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Helpers';
 
 function replaceShaderColor(publicAPI, model, hash, pipeline, vertexInput) {
@@ -74,13 +75,31 @@ function replaceShaderColor(publicAPI, model, hash, pipeline, vertexInput) {
       model.renderable.getInterpolateScalarsBeforeMapping?.()) &&
     model.renderable.getColorCoordinates() &&
     !(indexedLookup && model._usesCellScalars) &&
-    vertexInput.hasAttribute('tcoord') &&
+    vertexInput.hasAttribute('colorTCoord') &&
     model.colorTexture;
   if (useTextureColoring) {
+    const vDesc = pipeline.getShaderDescription('vertex');
+    const colorTCoords = vertexInput.getBuffer('colorTCoord');
+    const colorArrayInfo = colorTCoords.getArrayInformation()[0];
+    const colorNumComp = vtkWebGPUTypes.getNumberOfComponentsFromBufferFormat(
+      colorArrayInfo.format
+    );
+    const colorInterpolation = colorArrayInfo.interpolation;
+    let vCode = vDesc.getCode();
+    vDesc.addOutput(
+      `vec${colorNumComp}<f32>`,
+      'colorTCoordVS',
+      colorInterpolation
+    );
+    vCode = vtkWebGPUShaderCache.substitute(vCode, '//VTK::Color::Impl', [
+      '  output.colorTCoordVS = colorTCoord;',
+    ]).result;
+    vDesc.setCode(vCode);
+
     const fDesc = pipeline.getShaderDescription('fragment');
     let code = fDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
-      'var texColor = textureSample(DiffuseTexture, DiffuseTextureSampler, input.tcoordVS);',
+      'var texColor = textureSample(ColorTexture, ColorTextureSampler, input.colorTCoordVS);',
       'diffuseColor = vec4<f32>(texColor.rgb, 1.0);',
       'ambientColor = vec4<f32>(texColor.rgb, 1.0);',
       'opacity = opacity * texColor.a;',

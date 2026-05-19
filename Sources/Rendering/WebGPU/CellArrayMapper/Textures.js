@@ -14,7 +14,7 @@ export function updateTextures(publicAPI, model) {
   }
   if (idata) {
     model.colorTexture.setInputData(idata);
-    newTextures.push(['DiffuseTexture', model.colorTexture]);
+    newTextures.push(['ColorTexture', model.colorTexture]);
   }
 
   const actor = model.WebGPUActor.getRenderable();
@@ -22,7 +22,7 @@ export function updateTextures(publicAPI, model) {
   const textures = [
     ['DiffuseTexture', actor.getProperty().getDiffuseTexture?.()],
     ['DiffuseTexture', actor.getTextures()[0]],
-    ['DiffuseTexture', model.colorTexture],
+    ['ColorTexture', model.colorTexture],
     ['ORMTexture', actor.getProperty().getORMTexture?.()],
     ['RMTexture', actor.getProperty().getRMTexture?.()],
     ['RoughnessTexture', actor.getProperty().getRoughnessTexture?.()],
