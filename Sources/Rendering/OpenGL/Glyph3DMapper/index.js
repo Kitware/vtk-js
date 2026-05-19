@@ -77,10 +77,10 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
       model._openGLRenderWindow.disableCullFace();
     } else if (frontfaceCulling) {
       model._openGLRenderWindow.enableCullFace();
-      gl.cullFace(gl.FRONT);
+      model._openGLRenderWindow.setCullFaceMode(gl.FRONT);
     } else {
       model._openGLRenderWindow.enableCullFace();
-      gl.cullFace(gl.BACK);
+      model._openGLRenderWindow.setCullFaceMode(gl.BACK);
     }
 
     publicAPI.renderPieceStart(ren, actor);

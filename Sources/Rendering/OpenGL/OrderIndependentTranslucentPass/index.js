@@ -333,7 +333,7 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
     gl.depthFunc(gl.LEQUAL);
     if (cullFaceEnabled) {
       viewNode.enableCullFace();
-      gl.cullFace(cullFaceMode);
+      viewNode.setCullFaceMode(cullFaceMode);
     }
     model.translucentRGBATexture.deactivate();
     model.translucentRTexture.deactivate();

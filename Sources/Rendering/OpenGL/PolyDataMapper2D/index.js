@@ -96,7 +96,7 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
     // cull back face to avoid double drawing
     const gl = model.context;
     model._openGLRenderWindow.enableCullFace();
-    gl.cullFace(gl.BACK);
+    model._openGLRenderWindow.setCullFaceMode(gl.BACK);
 
     publicAPI.renderPieceStart(ren, actor);
     publicAPI.renderPieceDraw(ren, actor);

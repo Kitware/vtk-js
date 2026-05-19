@@ -27,6 +27,7 @@ const parentMethodsToProxy = [
   'deactivateTexture',
   'disableCullFace',
   'enableCullFace',
+  'setCullFaceMode',
   'get3DContext',
   'getActiveFramebuffer',
   'getContext',
@@ -1143,6 +1144,13 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     }
   };
 
+  publicAPI.setCullFaceMode = (mode) => {
+    if (model.cullFaceMode !== mode) {
+      model.context.cullFace(mode);
+      model.cullFaceMode = mode;
+    }
+  };
+
   publicAPI.setViewStream = (stream) => {
     if (model.viewStream === stream) {
       return false;
@@ -1302,6 +1310,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   cullFaceEnabled: false,
+  cullFaceMode: null,
   shaderCache: null,
   initialized: false,
   context: null,
