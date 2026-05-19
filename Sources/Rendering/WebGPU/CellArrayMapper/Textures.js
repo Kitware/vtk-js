@@ -14,6 +14,9 @@ export function updateTextures(publicAPI, model) {
   }
   if (idata) {
     model.colorTexture.setInputData(idata);
+    // Scalar lookup table textures should use nearest sampling with clamped edges.
+    model.colorTexture.setInterpolate(false);
+    model.colorTexture.setEdgeClamp(true);
     newTextures.push(['ColorTexture', model.colorTexture]);
   }
 
