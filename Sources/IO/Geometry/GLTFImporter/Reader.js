@@ -75,7 +75,7 @@ async function createPolyDataFromGLTFMesh(primitive) {
   const pointData = polyData.getPointData();
 
   const attrs = Object.entries(primitive.attributes);
-  for (const [attributeName] of attrs) {
+  attrs.forEach(([attributeName]) => {
     switch (attributeName) {
       case SEMANTIC_ATTRIBUTE_MAP.POSITION: {
         const position = primitive.attributes.position.value;
@@ -162,7 +162,7 @@ async function createPolyDataFromGLTFMesh(primitive) {
       default:
         vtkWarningMacro(`Unhandled attribute: ${attributeName}`);
     }
-  }
+  });
 
   const buildConnectivityFromIndices = (indices, mode) => {
     switch (mode) {
@@ -379,6 +379,7 @@ async function createPropertyFromGLTFMaterial(
   const emissiveFactor = material.emissiveFactor;
 
   const property = actor.getProperty();
+  property.setInterpolationToPBR();
   const texturePromises = {
     diffuse: null,
     rm: null,
@@ -509,7 +510,6 @@ async function createPropertyFromGLTFMaterial(
     // Handle metallic-roughness texture (metallicRoughnessTexture)
     if (pbr.metallicRoughnessTexture) {
       const extensions = pbr.metallicRoughnessTexture.extensions;
-      const tex = pbr.metallicRoughnessTexture.texture;
       if (extensions?.KHR_texture_transform) {
         handleKHRTextureTransform(
           extensions.KHR_texture_transform,
@@ -527,7 +527,6 @@ async function createPropertyFromGLTFMaterial(
     // Handle ambient occlusion texture (occlusionTexture)
     if (material.occlusionTexture) {
       const extensions = material.occlusionTexture.extensions;
-      const tex = material.occlusionTexture.texture;
       if (extensions?.KHR_texture_transform) {
         handleKHRTextureTransform(
           extensions.KHR_texture_transform,
@@ -546,7 +545,6 @@ async function createPropertyFromGLTFMaterial(
     // Handle emissive texture (emissiveTexture)
     if (material.emissiveTexture) {
       const extensions = material.emissiveTexture.extensions;
-      const tex = material.emissiveTexture.texture;
       if (extensions?.KHR_texture_transform) {
         handleKHRTextureTransform(
           extensions.KHR_texture_transform,
@@ -570,7 +568,6 @@ async function createPropertyFromGLTFMaterial(
     // Handle normal texture (normalTexture)
     if (material.normalTexture) {
       const extensions = material.normalTexture.extensions;
-      const tex = material.normalTexture.texture;
       if (extensions?.KHR_texture_transform) {
         handleKHRTextureTransform(
           extensions.KHR_texture_transform,
@@ -629,7 +626,7 @@ async function createPropertyFromGLTFMaterial(
   if (material.extensions != null) {
     const extensionsNames = Object.keys(material.extensions);
     const extensionPromises = [];
-    for (const extensionName of extensionsNames) {
+    extensionsNames.forEach((extensionName) => {
       const extension = material.extensions[extensionName];
       switch (extensionName) {
         case 'KHR_materials_unlit':
@@ -700,7 +697,7 @@ async function createPropertyFromGLTFMaterial(
         default:
           vtkWarningMacro(`Unhandled extension: ${extensionName}`);
       }
-    }
+    });
     await Promise.all(extensionPromises);
   }
 

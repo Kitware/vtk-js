@@ -10,10 +10,11 @@ import vtkOBJReader from '@kitware/vtk.js/IO/Misc/OBJReader';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkTexture from '@kitware/vtk.js/Rendering/Core/Texture';
 import vtkPolyDataNormals from '@kitware/vtk.js/Filters/Core/PolyDataNormals';
-
+import vtkProperty from '@kitware/vtk.js/Rendering/Core/Property';
 import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
-
 import GUI from 'lil-gui';
+
+const { Shading } = vtkProperty;
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -108,6 +109,7 @@ reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(async () => {
 
   // Setting default values
   actor.setPosition(0.0, 0.0, 0.0);
+  actor.getProperty().setInterpolation(Shading.PBR);
   actor.getProperty().setRoughness(1.0);
   actor.getProperty().setEmission(0.6);
   actor.getProperty().setMetallic(1.0);

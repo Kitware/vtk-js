@@ -7,7 +7,7 @@ import {
   GL_SAMPLER,
 } from 'vtk.js/Sources/IO/Geometry/GLTFImporter/Constants';
 
-const { vtkWarningMacro, vtkErrorMacro } = macro;
+const { vtkErrorMacro } = macro;
 const imageBufferViewCache = new WeakMap();
 const imageUriCache = new Map();
 
@@ -153,6 +153,7 @@ export async function loadImage(image) {
     if (cacheKey && loadedImage) {
       const cache = image.bufferView ? imageBufferViewCache : imageUriCache;
       if (typeof WeakRef === 'function') {
+        /* eslint-disable no-undef */
         cache.set(cacheKey, new WeakRef(loadedImage));
       } else {
         cache.delete(cacheKey);
