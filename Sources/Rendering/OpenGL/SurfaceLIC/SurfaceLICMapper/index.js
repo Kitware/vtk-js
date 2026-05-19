@@ -134,7 +134,11 @@ function vtkOpenGLSurfaceLICMapper(publicAPI, model) {
     apply(gl.BLEND);
     apply(gl.DEPTH_TEST);
     apply(gl.SCISSOR_TEST);
-    apply(gl.CULL_FACE);
+    if (model.stateCache[gl.CULL_FACE]) {
+      model._openGLRenderWindow.enableCullFace();
+    } else {
+      model._openGLRenderWindow.disableCullFace();
+    }
   };
 
   publicAPI.renderPiece = (ren, actor) => {
@@ -211,10 +215,10 @@ function vtkOpenGLSurfaceLICMapper(publicAPI, model) {
       model._openGLRenderWindow.disableCullFace();
     } else if (frontfaceCulling) {
       model._openGLRenderWindow.enableCullFace();
-      gl.cullFace(gl.FRONT);
+      model._openGLRenderWindow.setCullFaceMode(gl.FRONT);
     } else {
       model._openGLRenderWindow.enableCullFace();
-      gl.cullFace(gl.BACK);
+      model._openGLRenderWindow.setCullFaceMode(gl.BACK);
     }
 
     const windowSize = model._openGLRenderWindow.getSize();
@@ -241,7 +245,7 @@ function vtkOpenGLSurfaceLICMapper(publicAPI, model) {
     publicAPI.pushState(model.context);
     model.VBOBuildTime.modified();
     model.openGLLicInterface.completedGeometry();
-    model.context.disable(model.context.CULL_FACE);
+    model._openGLRenderWindow.disableCullFace();
     model.openGLLicInterface.applyLIC();
     model.openGLLicInterface.combineColorsAndLIC();
     model.openGLLicInterface.copyToScreen(windowSize);
