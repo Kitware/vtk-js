@@ -1,5 +1,5 @@
 import { Nullable } from '../../../types';
-import { vtkObject, vtkSubscription } from '../../../interfaces';
+import { vtkObject } from '../../../interfaces';
 import vtkAnimationCue from '../AnimationCue';
 
 export interface IAnimationSceneInitialValues {

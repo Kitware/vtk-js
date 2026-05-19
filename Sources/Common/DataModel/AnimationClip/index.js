@@ -34,11 +34,11 @@ function vtkAnimationClip(publicAPI, model) {
 
       // Recalculate duration
       model.duration = 0;
-      for (const track of model.tracks) {
+      model.tracks.forEach((track) => {
         if (track.getDuration() > model.duration) {
           model.duration = track.getDuration();
         }
-      }
+      });
 
       publicAPI.modified();
     }
@@ -74,7 +74,8 @@ function vtkAnimationClip(publicAPI, model) {
    * @return {vtkAnimationTrack | null}
    */
   publicAPI.getTrackByName = (name) => {
-    for (const track of model.tracks) {
+    for (let i = 0; i < model.tracks.length; i++) {
+      const track = model.tracks[i];
       if (track.getName() === name) {
         return track;
       }

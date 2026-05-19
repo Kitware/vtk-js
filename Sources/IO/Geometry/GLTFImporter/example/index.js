@@ -205,6 +205,9 @@ function ready() {
   loading.remove();
 
   reader.importActors();
+  reader
+    .getActors()
+    ?.forEach((actor) => actor.getProperty().setInterpolationToPBR());
   reader.importCameras();
   reader.importLights();
   setModelVisibility(params.ShowModel);
