@@ -744,6 +744,13 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
           pipelineHash += 'tc1';
         }
       }
+      if (model.vertexInput.hasAttribute(`colorTCoord`)) {
+        const colorTCoords = model.vertexInput.getBuffer('colorTCoord');
+        const numComp = vtkWebGPUTypes.getNumberOfComponentsFromBufferFormat(
+          colorTCoords.getArrayInformation()[0].format
+        );
+        pipelineHash += `ct${numComp}`;
+      }
       if (model.textures.length) {
         const textureLabels = model.textureViews
           .map((view) => view.getLabel?.() ?? '')
