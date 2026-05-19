@@ -277,30 +277,22 @@ export function buildVertexInput(publicAPI, model) {
 
   // Texture Coordinates
   let tcoords = null;
+  let colorTCoords = null;
   let useCellTCoords = false;
   if (
     (model.renderable.getAreScalarsMappedFromCells() ||
       model.renderable.getInterpolateScalarsBeforeMapping?.()) &&
     model.renderable.getColorCoordinates()
   ) {
-    tcoords = model.renderable.getColorCoordinates();
+    colorTCoords = model.renderable.getColorCoordinates();
     useCellTCoords = model.renderable.getAreScalarsMappedFromCells();
-  } else {
-    tcoords = pd.getPointData().getTCoords();
   }
+  tcoords = pd.getPointData().getTCoords();
   if (tcoords && !edges) {
     vertexInput.addBuffer(
-      useCellTCoords
-        ? device
-          .getBufferManager()
-          .getBufferForCellArray(
-            tcoords,
-            vertexInput.getIndexBuffer(),
-            model.cellOffset
-          )
-        : device
-          .getBufferManager()
-          .getBufferForPointArray(tcoords, vertexInput.getIndexBuffer()),
+      device
+        .getBufferManager()
+        .getBufferForPointArray(tcoords, vertexInput.getIndexBuffer()),
       ['tcoord']
     );
 
@@ -319,6 +311,30 @@ export function buildVertexInput(publicAPI, model) {
   } else {
     vertexInput.removeBufferIfPresent('tcoord');
     vertexInput.removeBufferIfPresent('tcoord1');
+  }
+
+  const indexedLookup =
+    model.renderable.getLookupTable?.()?.getIndexedLookup?.() ?? false;
+  if (colorTCoords && !edges && !(indexedLookup && model._usesCellScalars)) {
+    vertexInput.addBuffer(
+      useCellTCoords
+        ? device
+            .getBufferManager()
+            .getBufferForCellArray(
+              colorTCoords,
+              vertexInput.getIndexBuffer(),
+              model.cellOffset
+            )
+        : device
+            .getBufferManager()
+            .getBufferForPointArray(
+              colorTCoords,
+              vertexInput.getIndexBuffer()
+            ),
+      ['colorTCoord']
+    );
+  } else {
+    vertexInput.removeBufferIfPresent('colorTCoord');
   }
 
   // Selection IDs
