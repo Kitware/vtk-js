@@ -8,7 +8,7 @@
     ],
     "baseUrl": "dist/umd",
     "paths": {
-        "vtk.js/*": ["./*"]
+      "vtk.js/*": ["./*"]
     }
   }
 }

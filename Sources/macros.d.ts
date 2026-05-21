@@ -259,7 +259,7 @@ export function setArray(
   publicAPI: object,
   model: object,
   fieldNames: Array<string>,
-  size: Number,
+  size: number,
   defaultVal?: any
 ): void;
 
@@ -275,7 +275,7 @@ export function setGetArray(
   publicAPI: object,
   model: object,
   fieldNames: Array<string>,
-  size: Number,
+  size: number,
   defaultVal?: any
 ): void;
 
@@ -315,13 +315,13 @@ export function algo(
 /**
  * Symbols used as return value for callback
  */
-export const VOID: Symbol;
+export const VOID: symbol;
 
 /**
  * Symbols used as return value for callback when you want to stop
  * any further callback calls after yours.
  */
-export const EVENT_ABORT: Symbol;
+export const EVENT_ABORT: symbol;
 
 export function event(
   publicAPI: object,
@@ -724,7 +724,7 @@ declare const Macro: {
   formatNumbersWithThousandSeparator: typeof formatNumbersWithThousandSeparator;
   get: typeof get;
   getArray: typeof getArray;
-  getCurrentGlobalMTime(): Number;
+  getCurrentGlobalMTime(): number;
   getStateArrayMapFunc: typeof getStateArrayMapFunc;
   isVtkObject: typeof isVtkObject;
   keystore: typeof keystore;

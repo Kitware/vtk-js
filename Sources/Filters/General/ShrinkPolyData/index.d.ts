@@ -42,8 +42,8 @@ export interface vtkShrinkPolyData extends vtkShrinkPolyDataBase {
     p1: Vector3,
     p2: Vector3,
     shrinkFactor: number,
-    shrunkPoints?: Number[]
-  ): Number[];
+    shrunkPoints?: number[]
+  ): number[];
 }
 
 /**

@@ -5,8 +5,7 @@ import {
 import { vtkImageData } from '../../../Common/DataModel/ImageData';
 import { Bounds, Extent, Nullable, RGBAColor } from '../../../types';
 
-export interface IAbstractImageMapperInitialValues
-  extends IAbstractMapper3DInitialValues {
+export interface IAbstractImageMapperInitialValues extends IAbstractMapper3DInitialValues {
   customDisplayExtent?: number[];
   useCustomExtents?: boolean;
   slice?: number;

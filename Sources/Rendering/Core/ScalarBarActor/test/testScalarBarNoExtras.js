@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -10,11 +10,11 @@ import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransfe
 
 import baselineNoExtras from './testScalarBarNoExtras.png';
 
-test.onlyIfWebGL(
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test vtkScalarBarActor Rendering without extra colors"',
-  (t) => {
+  () => {
     const gc = testUtils.createGarbageCollector();
-    t.ok('rendering', 'vtkScalarBarActor Rendering');
+    expect('rendering', 'vtkScalarBarActor Rendering').toBeTruthy();
 
     // Create some control UI
     const container = document.querySelector('body');
@@ -62,7 +62,6 @@ test.onlyIfWebGL(
           image,
           [baselineNoExtras],
           'Rendering/Core/ScalarBarActor/testScalarBarActorNoExtras',
-          t,
           0.5
         )
       )

@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -11,9 +11,12 @@ import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
-test.onlyIfWebGL('Test HardwareSelector Points', (tapeContext) => {
-  const gc = testUtils.createGarbageCollector(tapeContext);
-  tapeContext.ok('rendering', 'vtkHardwareSelector TestHardwareSelectorPoints');
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test HardwareSelector Points', () => {
+  const gc = testUtils.createGarbageCollector();
+  expect(
+    'rendering',
+    'vtkHardwareSelector TestHardwareSelectorPoints'
+  ).toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -106,22 +109,22 @@ test.onlyIfWebGL('Test HardwareSelector Points', (tapeContext) => {
   // On a point of the plane
   promises.push(
     sel.selectAsync(renderer, 210, 199, 211, 200).then((res) => {
-      tapeContext.ok(res[0].getProperties().propID === 4);
-      tapeContext.ok(res[0].getProperties().attributeID === 33);
+      expect(res[0].getProperties().propID === 4).toBeTruthy();
+      expect(res[0].getProperties().attributeID === 33).toBeTruthy();
     })
   );
   // On a point of the lower sphere
   promises.push(
     sel.selectAsync(renderer, 145, 140, 146, 141).then((res) => {
-      tapeContext.ok(res[0].getProperties().propID === 5);
-      tapeContext.ok(res[0].getProperties().attributeID === 0);
+      expect(res[0].getProperties().propID === 5).toBeTruthy();
+      expect(res[0].getProperties().attributeID === 0).toBeTruthy();
     })
   );
   // On a point of the upper sphere covered by an edge
   promises.push(
     sel.selectAsync(renderer, 294, 264, 295, 265).then((res) => {
-      tapeContext.ok(res[0].getProperties().propID === 6);
-      tapeContext.ok(res[0].getProperties().attributeID === 2);
+      expect(res[0].getProperties().propID === 6).toBeTruthy();
+      expect(res[0].getProperties().attributeID === 2).toBeTruthy();
     })
   );
 
@@ -131,45 +134,45 @@ test.onlyIfWebGL('Test HardwareSelector Points', (tapeContext) => {
   // In the middle of the plane
   promises.push(
     sel.selectAsync(renderer, 200, 200, 201, 201).then((res) => {
-      tapeContext.ok(res[0].getProperties().propID === 4);
-      tapeContext.ok(res[0].getProperties().attributeID === 27);
+      expect(res[0].getProperties().propID === 4).toBeTruthy();
+      expect(res[0].getProperties().attributeID === 27).toBeTruthy();
     })
   );
   // On a point of the upper sphere covered by some edges
   promises.push(
     sel.selectAsync(renderer, 265, 265, 266, 266).then((res) => {
-      tapeContext.ok(res[0].getProperties().propID === 6);
+      expect(res[0].getProperties().propID === 6).toBeTruthy();
       const attribID = res[0].getProperties().attributeID;
-      tapeContext.ok(attribID >= 0 && attribID <= 7);
+      expect(attribID >= 0 && attribID <= 7).toBeTruthy();
     })
   );
   // On an edge of the upper sphere
   promises.push(
     sel.selectAsync(renderer, 250, 265, 250, 265).then((res) => {
-      tapeContext.ok(res[0].getProperties().propID === 6);
+      expect(res[0].getProperties().propID === 6).toBeTruthy();
       const attribID = res[0].getProperties().attributeID;
-      tapeContext.ok(attribID === 3 || attribID === 4);
+      expect(attribID === 3 || attribID === 4).toBeTruthy();
     })
   );
   // On a edge of the polyline square
   promises.push(
     sel.selectAsync(renderer, 133, 278, 133, 278).then((res) => {
-      tapeContext.ok(res[0].getProperties().propID === 7);
-      tapeContext.ok(res[0].getProperties().attributeID === 0);
+      expect(res[0].getProperties().propID === 7).toBeTruthy();
+      expect(res[0].getProperties().attributeID === 0).toBeTruthy();
     })
   );
   // On an edge of the polyline triangle
   promises.push(
     sel.selectAsync(renderer, 265, 128, 265, 128).then((res) => {
-      tapeContext.ok(res[0].getProperties().propID === 7);
-      tapeContext.ok(res[0].getProperties().attributeID === 1);
+      expect(res[0].getProperties().propID === 7).toBeTruthy();
+      expect(res[0].getProperties().attributeID === 1).toBeTruthy();
     })
   );
   // On the triangle of the actor 4 inside the square
   promises.push(
     sel.selectAsync(renderer, 134, 265, 134, 265).then((res) => {
-      tapeContext.ok(res[0].getProperties().propID === 7);
-      tapeContext.ok(res[0].getProperties().attributeID === 2);
+      expect(res[0].getProperties().propID === 7).toBeTruthy();
+      expect(res[0].getProperties().attributeID === 2).toBeTruthy();
     })
   );
   return Promise.all(promises).then(() => {

@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -28,10 +28,10 @@ function getActivePrimitiveCABOs(openGLRenderWindow, mapper) {
     .filter((cabo) => cabo.getElementCount() > 0);
 }
 
-test.onlyIfWebGL(
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test vtkSphereMapper clears VBO shift/scale after shifted points',
-  (t) => {
-    const gc = testUtils.createGarbageCollector(t);
+  () => {
+    const gc = testUtils.createGarbageCollector();
 
     const container = document.querySelector('body');
     const renderWindowContainer = gc.registerDOMElement(
@@ -65,20 +65,20 @@ test.onlyIfWebGL(
     renderWindow.render();
 
     const shiftedCABOs = getActivePrimitiveCABOs(openGLRenderWindow, mapper);
-    t.ok(shiftedCABOs.length > 0, 'sphere VBOs were built');
-    t.ok(
+    expect(shiftedCABOs.length > 0, 'sphere VBOs were built').toBeTruthy();
+    expect(
       shiftedCABOs.some((cabo) => cabo.getCoordShiftAndScaleEnabled()),
       'far points enable shift/scale on VBOs'
-    );
+    ).toBeTruthy();
 
     updatePoints(polyData, [-0.5, 0, 0, 0.5, 0, 0]);
     renderWindow.render();
 
     const unshiftedCABOs = getActivePrimitiveCABOs(openGLRenderWindow, mapper);
-    t.ok(
+    expect(
       unshiftedCABOs.every((cabo) => !cabo.getCoordShiftAndScaleEnabled()),
       'VBO shift/scale is cleared once points no longer use it'
-    );
+    ).toBeTruthy();
 
     gc.releaseResources();
   }

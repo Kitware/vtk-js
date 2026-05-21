@@ -6,8 +6,7 @@ import vtkAbstractMapper, {
 /**
  *
  */
-export interface IAbstractMapper3DInitialValues
-  extends IAbstractMapperInitialValues {
+export interface IAbstractMapper3DInitialValues extends IAbstractMapperInitialValues {
   bounds?: Bounds;
   center?: Vector3;
 }

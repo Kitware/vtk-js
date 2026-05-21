@@ -18,16 +18,16 @@ function vtkWebGPUPipeline(publicAPI, model) {
       ...baseSettings,
       ...extraSettings,
       primitive: {
-        ...(baseSettings.primitive || {}),
-        ...(extraSettings.primitive || {}),
+        ...baseSettings.primitive,
+        ...extraSettings.primitive,
       },
       depthStencil: {
-        ...(baseSettings.depthStencil || {}),
-        ...(extraSettings.depthStencil || {}),
+        ...baseSettings.depthStencil,
+        ...extraSettings.depthStencil,
       },
       fragment: {
-        ...(baseSettings.fragment || {}),
-        ...(extraSettings.fragment || {}),
+        ...baseSettings.fragment,
+        ...extraSettings.fragment,
       },
     };
 

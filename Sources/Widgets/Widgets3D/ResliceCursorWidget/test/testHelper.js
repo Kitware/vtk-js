@@ -1,12 +1,11 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import {
   getOtherLineName,
   getLinePlaneName,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 import generateState from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/state';
 
-test('Test getOtherLineName', (t) => {
+it('Test getOtherLineName', () => {
   const data = [
     { lineName: 'YinX', expected: 'ZinX' },
     { lineName: 'ZinX', expected: 'YinX' },
@@ -19,13 +18,11 @@ test('Test getOtherLineName', (t) => {
 
   data.forEach((testData) => {
     const associatedPlane = getOtherLineName(widgetState, testData.lineName);
-    t.equal(associatedPlane, testData.expected);
+    expect(associatedPlane).toBe(testData.expected);
   });
-
-  t.end();
 });
 
-test('Test getLinePlaneName', (t) => {
+it('Test getLinePlaneName', () => {
   const data = [
     { lineName: 'YinX', expected: 'Y' },
     { lineName: 'ZinX', expected: 'Z' },
@@ -37,8 +34,6 @@ test('Test getLinePlaneName', (t) => {
 
   data.forEach((testData) => {
     const planeName = getLinePlaneName(testData.lineName);
-    t.equal(planeName, testData.expected);
+    expect(planeName).toBe(testData.expected);
   });
-
-  t.end();
 });

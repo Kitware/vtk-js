@@ -45,7 +45,7 @@ export interface vtkKochanekSpline1D extends vtkSpline1D {
       leftConstraint: BoundaryCondition;
       leftValue: number;
       rightConstraint: BoundaryCondition;
-      rightValue: Number;
+      rightValue: number;
     }
   ): void;
 

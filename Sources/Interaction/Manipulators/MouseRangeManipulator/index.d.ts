@@ -3,12 +3,10 @@ import vtkCompositeMouseManipulator, {
 } from '../../../Interaction/Manipulators/CompositeMouseManipulator';
 import { vtkObject } from '../../../interfaces';
 
-export interface IMouseRangeManipulatorInitialValues
-  extends ICompositeMouseManipulatorInitialValues {}
+export interface IMouseRangeManipulatorInitialValues extends ICompositeMouseManipulatorInitialValues {}
 
 export interface vtkMouseRangeManipulator
-  extends vtkCompositeMouseManipulator,
-    vtkObject {
+  extends vtkCompositeMouseManipulator, vtkObject {
   setHorizontalListener(
     min: number,
     max: number,

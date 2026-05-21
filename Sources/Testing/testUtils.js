@@ -1,3 +1,4 @@
+import { expect } from 'vitest';
 import pixelmatch from 'pixelmatch';
 import vtkRTAnalyticSource from 'vtk.js/Sources/Filters/Sources/RTAnalyticSource';
 import vtkWebGPUDevice from 'vtk.js/Sources/Rendering/WebGPU/Device';
@@ -29,10 +30,10 @@ function getImageDataFromURI(imageDataURI) {
  * Compares two images
  * @param image the image under test
  * @param baselines an array of baseline images
- * @param tapeContext tape testing context
+ * @param testName name used in assertion messages
  * @param opts if number: mismatch tolerance. if object: tolerance and pixel threshold
  */
-async function compareImages(image, baselines, testName, tapeContext, opts) {
+async function compareImages(image, baselines, testName, opts) {
   // defaults
   let pixelThreshold = 0.1;
   let mismatchTolerance = 5; // percent
@@ -46,7 +47,6 @@ async function compareImages(image, baselines, testName, tapeContext, opts) {
 
   let minDelta = 100;
   let minRawCount = 0;
-  let minDiff = '';
   let minIndex = 0;
   let isSameDimensions = false;
 
@@ -79,33 +79,23 @@ async function compareImages(image, baselines, testName, tapeContext, opts) {
     if (percentage < minDelta) {
       minDelta = percentage;
       minRawCount = mismatched;
-      diff.context.putImageData(diffImage, 0, 0);
-      minDiff = diff.canvas.toDataURL();
       minIndex = idx;
       isSameDimensions =
         width === imageUnderTest.width && height === imageUnderTest.height;
     }
   });
 
-  tapeContext.ok(isSameDimensions, 'Image match resolution');
-  tapeContext.ok(
-    minDelta < mismatchTolerance,
-    `[${testName}]` +
-      ` Matching image - delta ${minDelta.toFixed(2)}%` +
-      ` (count: ${minRawCount})`,
-    {
-      operator: 'imagediff',
-      actual: {
-        outputImage: image,
-        expectedImage: baselines[minIndex],
-        diffImage: minDiff,
-      },
-      expected: mismatchTolerance,
-    }
-  );
+  expect(
+    isSameDimensions,
+    `[${testName}] image dimensions match baseline`
+  ).toBe(true);
+  const summary = `[${testName}] delta ${minDelta.toFixed(
+    2
+  )}% (count: ${minRawCount}, baseline: ${minIndex})`;
+  expect(minDelta, summary).toBeLessThan(mismatchTolerance);
 }
 
-function createGarbageCollector(testContext) {
+function createGarbageCollector() {
   const resources = [];
   const domElements = [];
 
@@ -141,11 +131,6 @@ function createGarbageCollector(testContext) {
     });
     while (resources.length) {
       resources.pop();
-    }
-
-    // Test end handling
-    if (testContext) {
-      testContext.end();
     }
   }
 

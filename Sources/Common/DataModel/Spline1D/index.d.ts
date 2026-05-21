@@ -51,7 +51,7 @@ export interface vtkSpline1D extends vtkObject {
       leftConstraint: BoundaryCondition;
       leftValue: number;
       rightConstraint: BoundaryCondition;
-      rightValue: Number;
+      rightValue: number;
     }
   ): void;
 

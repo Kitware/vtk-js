@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
@@ -49,7 +49,7 @@ function createPolyData() {
   return polyData;
 }
 
-test('vtkReverseSense reverses cell connectivity and normals', (t) => {
+it('vtkReverseSense reverses cell connectivity and normals', () => {
   const reverseSense = vtkReverseSense.newInstance({
     reverseCells: true,
     reverseNormals: true,
@@ -58,41 +58,29 @@ test('vtkReverseSense reverses cell connectivity and normals', (t) => {
 
   const output = reverseSense.getOutputData();
 
-  t.deepEqual(
-    Array.from(output.getVerts().getData()),
-    [2, 4, 0],
-    'reversed verts'
-  );
-  t.deepEqual(
-    Array.from(output.getLines().getData()),
-    [3, 2, 1, 0],
-    'reversed lines'
-  );
-  t.deepEqual(
-    Array.from(output.getPolys().getData()),
-    [4, 3, 2, 1, 0],
-    'reversed polys'
-  );
-  t.deepEqual(
-    Array.from(output.getStrips().getData()),
-    [5, 4, 3, 2, 1, 0],
-    'reversed strips'
-  );
-  t.deepEqual(
+  expect(Array.from(output.getVerts().getData()), 'reversed verts').toEqual([
+    2, 4, 0,
+  ]);
+  expect(Array.from(output.getLines().getData()), 'reversed lines').toEqual([
+    3, 2, 1, 0,
+  ]);
+  expect(Array.from(output.getPolys().getData()), 'reversed polys').toEqual([
+    4, 3, 2, 1, 0,
+  ]);
+  expect(Array.from(output.getStrips().getData()), 'reversed strips').toEqual([
+    5, 4, 3, 2, 1, 0,
+  ]);
+  expect(
     Array.from(output.getPointData().getNormals().getData()),
-    [-1, 0, 0, 0, -1, 0, 0, 0, -1, -1, -1, 0, 0, -1, -1],
     'reversed point normals'
-  );
-  t.deepEqual(
+  ).toEqual([-1, 0, 0, 0, -1, 0, 0, 0, -1, -1, -1, 0, 0, -1, -1]);
+  expect(
     Array.from(output.getCellData().getNormals().getData()),
-    [-1, 0, 0, 0, -1, 0, 0, 0, -1, -1, -1, -1],
     'reversed cell normals'
-  );
-
-  t.end();
+  ).toEqual([-1, 0, 0, 0, -1, 0, 0, 0, -1, -1, -1, -1]);
 });
 
-test('vtkReverseSense leaves normals unchanged when disabled', (t) => {
+it('vtkReverseSense leaves normals unchanged when disabled', () => {
   const reverseSense = vtkReverseSense.newInstance({
     reverseCells: true,
     reverseNormals: false,
@@ -102,16 +90,12 @@ test('vtkReverseSense leaves normals unchanged when disabled', (t) => {
 
   const output = reverseSense.getOutputData();
 
-  t.deepEqual(
+  expect(
     Array.from(output.getPointData().getNormals().getData()),
-    Array.from(input.getPointData().getNormals().getData()),
     'point normals are unchanged'
-  );
-  t.deepEqual(
+  ).toEqual(Array.from(input.getPointData().getNormals().getData()));
+  expect(
     Array.from(output.getCellData().getNormals().getData()),
-    Array.from(input.getCellData().getNormals().getData()),
     'cell normals are unchanged'
-  );
-
-  t.end();
+  ).toEqual(Array.from(input.getCellData().getNormals().getData()));
 });

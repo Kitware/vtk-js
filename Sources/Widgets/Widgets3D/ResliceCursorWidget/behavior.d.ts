@@ -2,7 +2,7 @@ import { Nullable } from '../../../types';
 import { InteractionMethodsName, lineNames } from './Constants';
 import { vtkAbstractWidget } from '../../Core/AbstractWidget';
 
-type TLineName = typeof lineNames[number];
+type TLineName = (typeof lineNames)[number];
 
 type TCursorStyles = {
   [key in InteractionMethodsName]?: string;
@@ -10,8 +10,7 @@ type TCursorStyles = {
   default?: string;
 };
 
-export interface vtkResliceCursorWidgetDefaultInstance
-  extends vtkAbstractWidget {
+export interface vtkResliceCursorWidgetDefaultInstance extends vtkAbstractWidget {
   getActiveInteraction(): Nullable<InteractionMethodsName>;
 
   getScaleInPixels(): boolean;

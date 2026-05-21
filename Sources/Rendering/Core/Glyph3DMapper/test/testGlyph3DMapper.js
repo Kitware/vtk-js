@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
@@ -16,9 +16,9 @@ import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constant
 import baseline from './testGlyph3DMapper.png';
 import baseline2 from './testGlyph3DMapper2.png';
 
-test.onlyIfWebGL('Test vtkGlyph3DMapper Rendering', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkGlyph3DMapper Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkGlyph3DMapper Rendering');
+  expect('rendering', 'vtkGlyph3DMapper Rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -113,7 +113,6 @@ test.onlyIfWebGL('Test vtkGlyph3DMapper Rendering', (t) => {
         image,
         [baseline, baseline2],
         'Rendering/Core/Glyph3DMapper/testGlyph3DMapper',
-        t,
         1.0
       )
     )

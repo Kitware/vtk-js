@@ -1,8 +1,10 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkLocator from 'vtk.js/Sources/Common/DataModel/Locator';
 
-test('Test vtkLocator instance', (t) => {
-  t.ok(vtkLocator, 'Make sure the class definition exists');
-  t.ok(vtkLocator.newInstance === undefined, 'Make sure class is abstract');
-  t.end();
+it('Test vtkLocator instance', () => {
+  expect(vtkLocator, 'Make sure the class definition exists').toBeTruthy();
+  expect(
+    vtkLocator.newInstance === undefined,
+    'Make sure class is abstract'
+  ).toBeTruthy();
 });

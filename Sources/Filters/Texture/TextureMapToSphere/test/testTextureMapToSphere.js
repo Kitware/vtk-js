@@ -1,15 +1,17 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkTextureMapToSphere from 'vtk.js/Sources/Filters/Texture/TextureMapToSphere';
 
-test('Test vtkTextureMapToSphere instance', (t) => {
-  t.ok(vtkTextureMapToSphere, 'Make sure the class definition exists');
+it('Test vtkTextureMapToSphere instance', () => {
+  expect(
+    vtkTextureMapToSphere,
+    'Make sure the class definition exists'
+  ).toBeTruthy();
   const instance = vtkTextureMapToSphere.newInstance();
-  t.ok(instance);
-  t.end();
+  expect(instance).toBeTruthy();
 });
 
-test('Test vtkTextureMapToSphere TCoords generation', (t) => {
+it('Test vtkTextureMapToSphere TCoords generation', () => {
   const cubeSource = vtkCubeSource.newInstance();
   const cube = cubeSource.getOutputData();
   cube.getPointData().setTCoords(null);
@@ -53,8 +55,6 @@ test('Test vtkTextureMapToSphere TCoords generation', (t) => {
 
   for (let i = 0; i < generatedTCoords.length; i++) {
     const val = Math.round(generatedTCoords[i] * 1000000) / 1000000;
-    t.equal(val, expectedData[i]);
+    expect(val).toBe(expectedData[i]);
   }
-
-  t.end();
 });

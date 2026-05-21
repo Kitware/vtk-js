@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -13,9 +13,9 @@ import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindo
 
 import baseline1 from './testVolumeMapperBounds.png';
 
-test.onlyIfWebGL('Test Volume Mapper Bounds', async (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Volume Mapper Bounds', async () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkVolumeMapper Bounds');
+  expect('rendering', 'vtkVolumeMapper Bounds').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI
@@ -81,7 +81,6 @@ test.onlyIfWebGL('Test Volume Mapper Bounds', async (t) => {
         image,
         [baseline1],
         'Rendering/Core/VolumeMapper/testVolumeMapperBounds',
-        t,
         1.5
       )
     )

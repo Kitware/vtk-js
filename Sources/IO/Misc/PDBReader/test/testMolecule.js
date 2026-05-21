@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -12,9 +12,9 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
 import baseline from './testMolecule_with_bonds.png';
 
-test.onlyIfWebGL('Test MoleculeMapper', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test MoleculeMapper', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('IO: PDBReader', 'Filter: MoleculeToRepresentation');
+  expect('IO: PDBReader', 'Filter: MoleculeToRepresentation').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -71,11 +71,11 @@ test.onlyIfWebGL('Test MoleculeMapper', (t) => {
   glwindow.setSize(400, 400);
 
   // fetch caffeine.pdb file from Girder
-  t.ok('waiting for download');
+  expect('waiting for download', 'waiting for download').toBeTruthy();
   return reader
     .setUrl(`${__BASE_PATH__}/Data/molecule/pdb/caffeine.pdb`)
     .then(() => {
-      t.ok('download complete');
+      expect('download complete', 'download complete').toBeTruthy();
 
       // once data upload, render
       renderer.resetCamera();
@@ -85,7 +85,7 @@ test.onlyIfWebGL('Test MoleculeMapper', (t) => {
       const promise = glwindow
         .captureNextImage()
         .then((image) =>
-          testUtils.compareImages(image, [baseline], 'IO/Misc/PDBReader', t, 1)
+          testUtils.compareImages(image, [baseline], 'IO/Misc/PDBReader', 1)
         )
         .finally(gc.releaseResources);
       renderWindow.render();

@@ -6,7 +6,8 @@ import vtkCompositeMouseManipulator, {
 } from '../CompositeMouseManipulator';
 import { vtkObject } from '../../../interfaces';
 export interface vtkMouseCameraTrackballZoomManipulator
-  extends vtkObject,
+  extends
+    vtkObject,
     vtkCompositeCameraManipulator,
     vtkCompositeMouseManipulator {
   /**
@@ -22,7 +23,8 @@ export interface vtkMouseCameraTrackballZoomManipulator
 }
 
 export interface IMouseCameraTrackballZoomManipulatorInitialValues
-  extends ICompositeCameraManipulatorInitialValues,
+  extends
+    ICompositeCameraManipulatorInitialValues,
     ICompositeMouseManipulatorInitialValues {
   flipDirection?: boolean;
 }

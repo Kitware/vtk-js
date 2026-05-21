@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -17,9 +17,9 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import baseline1 from './testIntermixed.png';
 import baseline2 from './testIntermixed_2.png';
 
-test('Test Composite Volume Rendering: intermixed geometry', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkVolumeMapper Intermixed');
+it('Test Composite Volume Rendering: intermixed geometry', async () => {
+  const gc = testUtils.createGarbageCollector();
+  expect('rendering', 'vtkVolumeMapper Intermixed').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI
@@ -104,7 +104,6 @@ test('Test Composite Volume Rendering: intermixed geometry', async (t) => {
         image,
         [baseline1, baseline2],
         'Rendering/Core/VolumeMapper/testIntermixed',
-        t,
         5.0,
         gc.releaseResources
       )

@@ -4,7 +4,7 @@ import '@kitware/vtk.js/favicon';
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 import '@kitware/vtk.js/Rendering/Profiles/Glyph';
 
-import DeepEqual from 'deep-equal';
+import DeepEqual from 'fast-deep-equal';
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkCubeSource from '@kitware/vtk.js/Filters/Sources/CubeSource';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';

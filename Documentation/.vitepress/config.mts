@@ -3,7 +3,7 @@ import llmstxt from 'vitepress-plugin-llms';
 import { copyOrDownloadAsMarkdownButtons } from 'vitepress-plugin-llms';
 
 import { sidebar } from './sidebar';
-import { BASE_URL, withBase } from './utils';
+import { BASE_URL } from './utils';
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -13,7 +13,7 @@ export default defineConfig({
   description: 'VTK.js a Visualization Toolkit for the Web',
   lastUpdated: true,
   ignoreDeadLinks: true,
-  srcExclude: ['**/scripts/**',],
+  srcExclude: ['**/scripts/**'],
   vite: {
     plugins: [
       llmstxt({

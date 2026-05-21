@@ -77,7 +77,7 @@ export interface IDatasetManifest {
     number,
     number,
     number,
-    number
+    number,
   ];
   metadata?: Record<string, unknown>;
 }

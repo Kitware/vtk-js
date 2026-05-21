@@ -4,8 +4,7 @@ import vtkSpline1D, {
   BoundaryCondition,
 } from '../Spline1D';
 
-export interface ICardinalSpline1DInitialValues
-  extends ISpline1DInitialValues {}
+export interface ICardinalSpline1DInitialValues extends ISpline1DInitialValues {}
 
 export interface vtkCardinalSpline1D extends vtkSpline1D {
   /**
@@ -43,7 +42,7 @@ export interface vtkCardinalSpline1D extends vtkSpline1D {
       leftConstraint: BoundaryCondition;
       leftValue: number;
       rightConstraint: BoundaryCondition;
-      rightValue: Number;
+      rightValue: number;
     }
   ): void;
 

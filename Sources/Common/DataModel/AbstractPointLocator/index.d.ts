@@ -5,8 +5,7 @@ import vtkLocator, { ILocatorInitialValues } from '../Locator';
 /**
  *
  */
-export interface IAbstractPointLocatorInitialValues
-  extends ILocatorInitialValues {
+export interface IAbstractPointLocatorInitialValues extends ILocatorInitialValues {
   bounds?: Bounds;
   numberOfBuckets: number;
 }

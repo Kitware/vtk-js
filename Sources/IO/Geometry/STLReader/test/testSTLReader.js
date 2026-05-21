@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkMergePoints from 'vtk.js/Sources/Common/DataModel/MergePoints';
 import vtkSTLReader from 'vtk.js/Sources/IO/Geometry/STLReader';
 
@@ -26,55 +26,51 @@ facet normal 0 0 1
 endfacet
 endsolid stlreader_test`;
 
-test('STLReader: parses ASCII STL', (t) => {
+it('STLReader: parses ASCII STL', () => {
   const reader = vtkSTLReader.newInstance();
   reader.parseAsText(asciiStl);
 
   const output = reader.getOutputData();
-  t.ok(output, 'reader produces an output dataset');
-  t.equal(output.getNumberOfPoints(), 9, 'parsed points are present');
-  t.equal(output.getNumberOfPolys(), 3, 'parsed triangles are present');
-  t.end();
+  expect(output, 'reader produces an output dataset').toBeTruthy();
+  expect(output.getNumberOfPoints(), 'parsed points are present').toBe(9);
+  expect(output.getNumberOfPolys(), 'parsed triangles are present').toBe(3);
 });
 
-test('STLReader: keeps raw duplicated vertices when merge is disabled', (t) => {
+it('STLReader: keeps raw duplicated vertices when merge is disabled', () => {
   const reader = vtkSTLReader.newInstance();
   reader.setRemoveDuplicateVertices(-1);
   reader.parseAsText(asciiStl);
 
   const output = reader.getOutputData();
-  t.equal(output.getNumberOfPoints(), 9, 'raw STL has 9 point entries');
-  t.equal(output.getNumberOfPolys(), 3, 'raw STL has 3 triangles');
-  t.equal(
+  expect(output.getNumberOfPoints(), 'raw STL has 9 point entries').toBe(9);
+  expect(output.getNumberOfPolys(), 'raw STL has 3 triangles').toBe(3);
+  expect(
     output.getCellData().getNormals().getNumberOfTuples(),
-    3,
     'raw normals are defined per triangle'
-  );
-  t.end();
+  ).toBe(3);
 });
 
-test('STLReader: merges with vtkMergePoints and removes degenerate triangles', (t) => {
+it('STLReader: merges with vtkMergePoints and removes degenerate triangles', () => {
   const reader = vtkSTLReader.newInstance();
   reader.setLocator(vtkMergePoints.newInstance());
   reader.setRemoveDuplicateVertices(6);
   reader.parseAsText(asciiStl);
 
   const output = reader.getOutputData();
-  t.equal(output.getNumberOfPoints(), 4, 'merged output has 4 unique points');
-  t.equal(
+  expect(output.getNumberOfPoints(), 'merged output has 4 unique points').toBe(
+    4
+  );
+  expect(
     output.getNumberOfPolys(),
-    2,
     'degenerate triangle removed after merge'
-  );
-  t.equal(
+  ).toBe(2);
+  expect(
     output.getCellData().getNormals().getNumberOfTuples(),
-    2,
     'normals are remapped to kept triangles'
-  );
-  t.end();
+  ).toBe(2);
 });
 
-test('STLReader: does not merge points when merging option is false', (t) => {
+it('STLReader: does not merge points when merging option is false', () => {
   const reader = vtkSTLReader.newInstance();
   reader.setLocator(vtkMergePoints.newInstance());
   reader.setMerging(false);
@@ -82,15 +78,12 @@ test('STLReader: does not merge points when merging option is false', (t) => {
   reader.parseAsText(asciiStl);
 
   const output = reader.getOutputData();
-  t.equal(
+  expect(
     output.getNumberOfPoints(),
-    9,
     'points are not merged when merging is disabled'
-  );
-  t.equal(
+  ).toBe(9);
+  expect(
     output.getNumberOfPolys(),
-    3,
     'triangles are kept when merging is disabled'
-  );
-  t.end();
+  ).toBe(3);
 });

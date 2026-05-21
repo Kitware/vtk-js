@@ -47,7 +47,7 @@ export interface vtkProxyManager extends vtkObject {
   createProxy<T extends VtkProxy>(
     group: string,
     name: string,
-    options?: Object
+    options?: object
   ): T;
 
   getRepresentation<T extends vtkAbstractRepresentationProxy>(

@@ -314,8 +314,7 @@ export interface vtkOpenGLHardwareSelector extends vtkHardwareSelector {
   onEvent(cb: EventHandler, priority?: number): Readonly<vtkSubscription>;
 }
 
-export interface IOpenGLHardwareSelectorInitialValues
-  extends IHardwareSelectorInitialValues {
+export interface IOpenGLHardwareSelectorInitialValues extends IHardwareSelectorInitialValues {
   maximumPointId?: number;
   maximumCellId?: number;
   idOffset?: number;

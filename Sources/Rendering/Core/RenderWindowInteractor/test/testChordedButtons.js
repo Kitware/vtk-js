@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 
@@ -55,7 +55,7 @@ function teardown({ container, interactor }) {
 
 // Tests ------------------------------------------------------------------
 
-test('Test RenderWindowInteractor chorded button press', (t) => {
+it('Test RenderWindowInteractor chorded button press', () => {
   const env = setupInteractor();
   const { container, interactor } = env;
 
@@ -77,44 +77,36 @@ test('Test RenderWindowInteractor chorded button press', (t) => {
   container.dispatchEvent(
     makePointerEvent('pointerdown', { button: 0, buttons: 1 })
   );
-  t.deepEqual(events, ['LeftButtonPress'], 'Left press registered');
+  expect(events).toEqual(['LeftButtonPress']);
 
   // 2. Press right while left held (pointermove with button change per spec §10)
   container.dispatchEvent(
     makePointerEvent('pointermove', { button: 2, buttons: 3 })
   );
-  t.ok(
-    events.includes('RightButtonPress'),
-    'Chorded right press detected via pointermove'
-  );
+  expect(events.includes('RightButtonPress')).toBeTruthy();
 
   // 3. Release left while right held (pointermove with button change)
   events.length = 0;
   container.dispatchEvent(
     makePointerEvent('pointermove', { button: 0, buttons: 2 })
   );
-  t.deepEqual(
-    events,
-    ['LeftButtonRelease'],
-    'Chorded left release detected via pointermove'
-  );
+  expect(events).toEqual(['LeftButtonRelease']);
 
   // 4. Release right - last button (pointerup fires)
   events.length = 0;
   container.dispatchEvent(
     makePointerEvent('pointerup', { button: 2, buttons: 0 })
   );
-  t.deepEqual(events, ['RightButtonRelease'], 'Right release registered');
+  expect(events).toEqual(['RightButtonRelease']);
 
   sub1.unsubscribe();
   sub2.unsubscribe();
   sub3.unsubscribe();
   sub4.unsubscribe();
   teardown(env);
-  t.end();
 });
 
-test('Test RenderWindowInteractor single button (no false chorded events)', (t) => {
+it('Test RenderWindowInteractor single button (no false chorded events)', () => {
   const env = setupInteractor();
   const { container, interactor } = env;
 
@@ -143,21 +135,16 @@ test('Test RenderWindowInteractor single button (no false chorded events)', (t) 
     makePointerEvent('pointerup', { button: 0, buttons: 0 })
   );
 
-  t.deepEqual(
-    events,
-    ['LeftButtonPress', 'LeftButtonRelease'],
-    'Simple left click produces no spurious chorded events'
-  );
+  expect(events).toEqual(['LeftButtonPress', 'LeftButtonRelease']);
 
   sub1.unsubscribe();
   sub2.unsubscribe();
   sub3.unsubscribe();
   sub4.unsubscribe();
   teardown(env);
-  t.end();
 });
 
-test('Test RenderWindowInteractor three-button chord', (t) => {
+it('Test RenderWindowInteractor three-button chord', () => {
   const env = setupInteractor();
   const { container, interactor } = env;
 
@@ -190,18 +177,13 @@ test('Test RenderWindowInteractor three-button chord', (t) => {
 
   // Chorded releases (middle, right) fire before the primary button release
   // (left) which is handled by handleMouseUp.
-  t.deepEqual(
-    events,
-    ['LP', 'MP', 'RP', 'MR', 'RR', 'LR'],
-    'All presses and releases detected in deterministic order'
-  );
+  expect(events).toEqual(['LP', 'MP', 'RP', 'MR', 'RR', 'LR']);
 
   subs.forEach((s) => s.unsubscribe());
   teardown(env);
-  t.end();
 });
 
-test('Test RenderWindowInteractor pointercancel releases all held buttons', (t) => {
+it('Test RenderWindowInteractor pointercancel releases all held buttons', () => {
   const env = setupInteractor();
   const { container, interactor } = env;
 
@@ -231,13 +213,8 @@ test('Test RenderWindowInteractor pointercancel releases all held buttons', (t) 
     makePointerEvent('pointercancel', { button: 0, buttons: 0 })
   );
 
-  t.deepEqual(
-    events,
-    ['LR', 'MR'],
-    'pointercancel fires release events for all held buttons'
-  );
+  expect(events).toEqual(['LR', 'MR']);
 
   subs.forEach((s) => s.unsubscribe());
   teardown(env);
-  t.end();
 });
