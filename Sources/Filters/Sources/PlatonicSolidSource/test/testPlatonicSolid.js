@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -15,270 +15,280 @@ import baseline3 from './testOctahedron.png';
 import baseline4 from './testIcosahedron.png';
 import baseline5 from './testDodecahedron.png';
 
-test.onlyIfWebGL('Test vtkPlatonicSolidSource Tetrahedron Rendering', (t) => {
-  const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkPlatonicSolidSource Rendering');
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'Test vtkPlatonicSolidSource Tetrahedron Rendering',
+  () => {
+    const gc = testUtils.createGarbageCollector();
+    expect('rendering', 'vtkPlatonicSolidSource Rendering').toBeTruthy();
 
-  // Create some control UI
-  const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(
-    document.createElement('div')
-  );
-  container.appendChild(renderWindowContainer);
+    // Create some control UI
+    const container = document.querySelector('body');
+    const renderWindowContainer = gc.registerDOMElement(
+      document.createElement('div')
+    );
+    container.appendChild(renderWindowContainer);
 
-  // create what we will view
-  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
-  const renderer = gc.registerResource(vtkRenderer.newInstance());
-  renderWindow.addRenderer(renderer);
-  renderer.setBackground(0.32, 0.34, 0.43);
+    // create what we will view
+    const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+    const renderer = gc.registerResource(vtkRenderer.newInstance());
+    renderWindow.addRenderer(renderer);
+    renderer.setBackground(0.32, 0.34, 0.43);
 
-  const actor = gc.registerResource(vtkActor.newInstance());
+    const actor = gc.registerResource(vtkActor.newInstance());
 
-  renderer.addActor(actor);
+    renderer.addActor(actor);
 
-  const mapper = gc.registerResource(vtkMapper.newInstance());
-  actor.setMapper(mapper);
+    const mapper = gc.registerResource(vtkMapper.newInstance());
+    actor.setMapper(mapper);
 
-  const regularPolygonSource = gc.registerResource(
-    vtkPlatonicSolidSource.newInstance()
-  );
-  mapper.setInputConnection(regularPolygonSource.getOutputPort());
-  actor.rotateX(-30);
+    const regularPolygonSource = gc.registerResource(
+      vtkPlatonicSolidSource.newInstance()
+    );
+    mapper.setInputConnection(regularPolygonSource.getOutputPort());
+    actor.rotateX(-30);
 
-  // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
-  glwindow.setContainer(renderWindowContainer);
-  renderWindow.addView(glwindow);
-  glwindow.setSize(400, 400);
+    // now create something to view it, in this case webgl
+    const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
+    glwindow.setContainer(renderWindowContainer);
+    renderWindow.addView(glwindow);
+    glwindow.setSize(400, 400);
 
-  const promise = glwindow
-    .captureNextImage()
-    .then((image) =>
-      testUtils.compareImages(
-        image,
-        [baseline1],
-        'Filters/Sources/platonicSolidSource/testTetrahedron',
-        t,
-        2.5
+    const promise = glwindow
+      .captureNextImage()
+      .then((image) =>
+        testUtils.compareImages(
+          image,
+          [baseline1],
+          'Filters/Sources/platonicSolidSource/testTetrahedron',
+          2.5
+        )
       )
-    )
-    .finally(gc.releaseResources);
-  renderWindow.render();
-  return promise;
-});
+      .finally(gc.releaseResources);
+    renderWindow.render();
+    return promise;
+  }
+);
 
-test.onlyIfWebGL('Test vtkPlatonicSolidSource Cube Rendering', (t) => {
-  const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkPlatonicSolidSource Rendering');
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'Test vtkPlatonicSolidSource Cube Rendering',
+  () => {
+    const gc = testUtils.createGarbageCollector();
+    expect('rendering', 'vtkPlatonicSolidSource Rendering').toBeTruthy();
 
-  // Create some control UI
-  const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(
-    document.createElement('div')
-  );
-  container.appendChild(renderWindowContainer);
+    // Create some control UI
+    const container = document.querySelector('body');
+    const renderWindowContainer = gc.registerDOMElement(
+      document.createElement('div')
+    );
+    container.appendChild(renderWindowContainer);
 
-  // create what we will view
-  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
-  const renderer = gc.registerResource(vtkRenderer.newInstance());
-  renderWindow.addRenderer(renderer);
-  renderer.setBackground(0.32, 0.34, 0.43);
+    // create what we will view
+    const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+    const renderer = gc.registerResource(vtkRenderer.newInstance());
+    renderWindow.addRenderer(renderer);
+    renderer.setBackground(0.32, 0.34, 0.43);
 
-  const actor = gc.registerResource(vtkActor.newInstance());
+    const actor = gc.registerResource(vtkActor.newInstance());
 
-  renderer.addActor(actor);
+    renderer.addActor(actor);
 
-  const mapper = gc.registerResource(vtkMapper.newInstance());
-  actor.setMapper(mapper);
+    const mapper = gc.registerResource(vtkMapper.newInstance());
+    actor.setMapper(mapper);
 
-  const regularPolygonSource = gc.registerResource(
-    vtkPlatonicSolidSource.newInstance({
-      solidType: SolidType.VTK_SOLID_CUBE,
-    })
-  );
-  mapper.setInputConnection(regularPolygonSource.getOutputPort());
-  actor.rotateX(-30);
+    const regularPolygonSource = gc.registerResource(
+      vtkPlatonicSolidSource.newInstance({
+        solidType: SolidType.VTK_SOLID_CUBE,
+      })
+    );
+    mapper.setInputConnection(regularPolygonSource.getOutputPort());
+    actor.rotateX(-30);
 
-  // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
-  glwindow.setContainer(renderWindowContainer);
-  renderWindow.addView(glwindow);
-  glwindow.setSize(400, 400);
+    // now create something to view it, in this case webgl
+    const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
+    glwindow.setContainer(renderWindowContainer);
+    renderWindow.addView(glwindow);
+    glwindow.setSize(400, 400);
 
-  const promise = glwindow
-    .captureNextImage()
-    .then((image) =>
-      testUtils.compareImages(
-        image,
-        [baseline2],
-        'Filters/Sources/platonicSolidSource/testCube',
-        t,
-        2.5
+    const promise = glwindow
+      .captureNextImage()
+      .then((image) =>
+        testUtils.compareImages(
+          image,
+          [baseline2],
+          'Filters/Sources/platonicSolidSource/testCube',
+          2.5
+        )
       )
-    )
-    .finally(gc.releaseResources);
-  renderWindow.render();
-  return promise;
-});
+      .finally(gc.releaseResources);
+    renderWindow.render();
+    return promise;
+  }
+);
 
-test.onlyIfWebGL('Test vtkPlatonicSolidSource Octahedron Rendering', (t) => {
-  const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkPlatonicSolidSource Rendering');
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'Test vtkPlatonicSolidSource Octahedron Rendering',
+  () => {
+    const gc = testUtils.createGarbageCollector();
+    expect('rendering', 'vtkPlatonicSolidSource Rendering').toBeTruthy();
 
-  // Create some control UI
-  const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(
-    document.createElement('div')
-  );
-  container.appendChild(renderWindowContainer);
+    // Create some control UI
+    const container = document.querySelector('body');
+    const renderWindowContainer = gc.registerDOMElement(
+      document.createElement('div')
+    );
+    container.appendChild(renderWindowContainer);
 
-  // create what we will view
-  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
-  const renderer = gc.registerResource(vtkRenderer.newInstance());
-  renderWindow.addRenderer(renderer);
-  renderer.setBackground(0.32, 0.34, 0.43);
+    // create what we will view
+    const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+    const renderer = gc.registerResource(vtkRenderer.newInstance());
+    renderWindow.addRenderer(renderer);
+    renderer.setBackground(0.32, 0.34, 0.43);
 
-  const actor = gc.registerResource(vtkActor.newInstance());
+    const actor = gc.registerResource(vtkActor.newInstance());
 
-  renderer.addActor(actor);
+    renderer.addActor(actor);
 
-  const mapper = gc.registerResource(vtkMapper.newInstance());
-  actor.setMapper(mapper);
+    const mapper = gc.registerResource(vtkMapper.newInstance());
+    actor.setMapper(mapper);
 
-  const regularPolygonSource = gc.registerResource(
-    vtkPlatonicSolidSource.newInstance({
-      solidType: SolidType.VTK_SOLID_OCTAHEDRON,
-    })
-  );
-  mapper.setInputConnection(regularPolygonSource.getOutputPort());
-  actor.rotateX(-30);
+    const regularPolygonSource = gc.registerResource(
+      vtkPlatonicSolidSource.newInstance({
+        solidType: SolidType.VTK_SOLID_OCTAHEDRON,
+      })
+    );
+    mapper.setInputConnection(regularPolygonSource.getOutputPort());
+    actor.rotateX(-30);
 
-  // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
-  glwindow.setContainer(renderWindowContainer);
-  renderWindow.addView(glwindow);
-  glwindow.setSize(400, 400);
+    // now create something to view it, in this case webgl
+    const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
+    glwindow.setContainer(renderWindowContainer);
+    renderWindow.addView(glwindow);
+    glwindow.setSize(400, 400);
 
-  const promise = glwindow
-    .captureNextImage()
-    .then((image) =>
-      testUtils.compareImages(
-        image,
-        [baseline3],
-        'Filters/Sources/platonicSolidSource/testOctahedron',
-        t,
-        2.5
+    const promise = glwindow
+      .captureNextImage()
+      .then((image) =>
+        testUtils.compareImages(
+          image,
+          [baseline3],
+          'Filters/Sources/platonicSolidSource/testOctahedron',
+          2.5
+        )
       )
-    )
-    .finally(gc.releaseResources);
-  renderWindow.render();
-  return promise;
-});
+      .finally(gc.releaseResources);
+    renderWindow.render();
+    return promise;
+  }
+);
 
-test.onlyIfWebGL('Test vtkPlatonicSolidSource Icosahedron Rendering', (t) => {
-  const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkPlatonicSolidSource Rendering');
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'Test vtkPlatonicSolidSource Icosahedron Rendering',
+  () => {
+    const gc = testUtils.createGarbageCollector();
+    expect('rendering', 'vtkPlatonicSolidSource Rendering').toBeTruthy();
 
-  // Create some control UI
-  const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(
-    document.createElement('div')
-  );
-  container.appendChild(renderWindowContainer);
+    // Create some control UI
+    const container = document.querySelector('body');
+    const renderWindowContainer = gc.registerDOMElement(
+      document.createElement('div')
+    );
+    container.appendChild(renderWindowContainer);
 
-  // create what we will view
-  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
-  const renderer = gc.registerResource(vtkRenderer.newInstance());
-  renderWindow.addRenderer(renderer);
-  renderer.setBackground(0.32, 0.34, 0.43);
+    // create what we will view
+    const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+    const renderer = gc.registerResource(vtkRenderer.newInstance());
+    renderWindow.addRenderer(renderer);
+    renderer.setBackground(0.32, 0.34, 0.43);
 
-  const actor = gc.registerResource(vtkActor.newInstance());
+    const actor = gc.registerResource(vtkActor.newInstance());
 
-  renderer.addActor(actor);
+    renderer.addActor(actor);
 
-  const mapper = gc.registerResource(vtkMapper.newInstance());
-  actor.setMapper(mapper);
+    const mapper = gc.registerResource(vtkMapper.newInstance());
+    actor.setMapper(mapper);
 
-  const regularPolygonSource = gc.registerResource(
-    vtkPlatonicSolidSource.newInstance({
-      solidType: SolidType.VTK_SOLID_ICOSAHEDRON,
-    })
-  );
-  mapper.setInputConnection(regularPolygonSource.getOutputPort());
-  actor.rotateX(-30);
+    const regularPolygonSource = gc.registerResource(
+      vtkPlatonicSolidSource.newInstance({
+        solidType: SolidType.VTK_SOLID_ICOSAHEDRON,
+      })
+    );
+    mapper.setInputConnection(regularPolygonSource.getOutputPort());
+    actor.rotateX(-30);
 
-  // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
-  glwindow.setContainer(renderWindowContainer);
-  renderWindow.addView(glwindow);
-  glwindow.setSize(400, 400);
+    // now create something to view it, in this case webgl
+    const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
+    glwindow.setContainer(renderWindowContainer);
+    renderWindow.addView(glwindow);
+    glwindow.setSize(400, 400);
 
-  const promise = glwindow
-    .captureNextImage()
-    .then((image) =>
-      testUtils.compareImages(
-        image,
-        [baseline4],
-        'Filters/Sources/platonicSolidSource/testIcosahedron',
-        t,
-        2.5
+    const promise = glwindow
+      .captureNextImage()
+      .then((image) =>
+        testUtils.compareImages(
+          image,
+          [baseline4],
+          'Filters/Sources/platonicSolidSource/testIcosahedron',
+          2.5
+        )
       )
-    )
-    .finally(gc.releaseResources);
-  renderWindow.render();
-  return promise;
-});
+      .finally(gc.releaseResources);
+    renderWindow.render();
+    return promise;
+  }
+);
 
-test.onlyIfWebGL('Test vtkPlatonicSolidSource Dodecahedron Rendering', (t) => {
-  const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkPlatonicSolidSource Rendering');
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'Test vtkPlatonicSolidSource Dodecahedron Rendering',
+  () => {
+    const gc = testUtils.createGarbageCollector();
+    expect('rendering', 'vtkPlatonicSolidSource Rendering').toBeTruthy();
 
-  // Create some control UI
-  const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(
-    document.createElement('div')
-  );
-  container.appendChild(renderWindowContainer);
+    // Create some control UI
+    const container = document.querySelector('body');
+    const renderWindowContainer = gc.registerDOMElement(
+      document.createElement('div')
+    );
+    container.appendChild(renderWindowContainer);
 
-  // create what we will view
-  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
-  const renderer = gc.registerResource(vtkRenderer.newInstance());
-  renderWindow.addRenderer(renderer);
-  renderer.setBackground(0.32, 0.34, 0.43);
+    // create what we will view
+    const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+    const renderer = gc.registerResource(vtkRenderer.newInstance());
+    renderWindow.addRenderer(renderer);
+    renderer.setBackground(0.32, 0.34, 0.43);
 
-  const actor = gc.registerResource(vtkActor.newInstance());
+    const actor = gc.registerResource(vtkActor.newInstance());
 
-  renderer.addActor(actor);
+    renderer.addActor(actor);
 
-  const mapper = gc.registerResource(vtkMapper.newInstance());
-  actor.setMapper(mapper);
+    const mapper = gc.registerResource(vtkMapper.newInstance());
+    actor.setMapper(mapper);
 
-  const regularPolygonSource = gc.registerResource(
-    vtkPlatonicSolidSource.newInstance({
-      solidType: SolidType.VTK_SOLID_DODECAHEDRON,
-    })
-  );
-  mapper.setInputConnection(regularPolygonSource.getOutputPort());
-  actor.rotateX(-30);
+    const regularPolygonSource = gc.registerResource(
+      vtkPlatonicSolidSource.newInstance({
+        solidType: SolidType.VTK_SOLID_DODECAHEDRON,
+      })
+    );
+    mapper.setInputConnection(regularPolygonSource.getOutputPort());
+    actor.rotateX(-30);
 
-  // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
-  glwindow.setContainer(renderWindowContainer);
-  renderWindow.addView(glwindow);
-  glwindow.setSize(400, 400);
+    // now create something to view it, in this case webgl
+    const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
+    glwindow.setContainer(renderWindowContainer);
+    renderWindow.addView(glwindow);
+    glwindow.setSize(400, 400);
 
-  const promise = glwindow
-    .captureNextImage()
-    .then((image) =>
-      testUtils.compareImages(
-        image,
-        [baseline5],
-        'Filters/Sources/platonicSolidSource/testDodecahedron',
-        t,
-        2.5
+    const promise = glwindow
+      .captureNextImage()
+      .then((image) =>
+        testUtils.compareImages(
+          image,
+          [baseline5],
+          'Filters/Sources/platonicSolidSource/testDodecahedron',
+          2.5
+        )
       )
-    )
-    .finally(gc.releaseResources);
-  renderWindow.render();
-  return promise;
-});
+      .finally(gc.releaseResources);
+    renderWindow.render();
+    return promise;
+  }
+);

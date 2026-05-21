@@ -45,9 +45,9 @@ to select the desired VR, AR, or holographic session type.
 <div class="gallery">
 
 [![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer.html)
-[![GeometryViewer Chest CT][GeometryViewerChestCT]](../examples/GeometryViewer/GeometryViewer.html?fileURL=[https://data.kitware.com/api/v1/file/61f044354acac99f42c30276/download,https://data.kitware.com/api/v1/file/61f0440f4acac99f42c30191/download,https://data.kitware.com/api/v1/file/61f044204acac99f42c30267/download])
+[![GeometryViewer Chest CT][GeometryViewerChestCT]](../examples/GeometryViewer.html?fileURL=[https://data.kitware.com/api/v1/file/61f044354acac99f42c30276/download,https://data.kitware.com/api/v1/file/61f0440f4acac99f42c30191/download,https://data.kitware.com/api/v1/file/61f044204acac99f42c30267/download])
 [![XR Volume Example][WebXRVolume]](../examples/WebXRVolume.html)
-[![XR Volume Example][WebXRVolumeHeadAndNeck]](../examples/WebXRVolume/WebXRVolume.html?fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
+[![XR Volume Example][WebXRVolumeHeadAndNeck]](../examples/WebXRVolume.html?fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
 
 </div>
 
@@ -74,8 +74,8 @@ The following examples target a head-mounted virtual reality device, such as the
 
 [![VR Cone Example][VrCone]](../examples/VR.html)
 [![SkyboxViewer Example][SkyboxViewerVR]](../examples/SkyboxViewer.html?fileURL=https://data.kitware.com/api/v1/file/5ae8a89c8d777f0685796bae/download)
-[![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer/GeometryViewer.html?xrSessionType=0&fileURL=[https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html?xrSessionType=0&fileURL=%5Bhttps://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download%5D])
-[![XR Volume Example][WebXRVolumeHeadAndNeck]](../examples/WebXRVolume/WebXRVolume.html?xrSessionType=0&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
+[![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer.html?xrSessionType=0&fileURL=[https://kitware.github.io/vtk-js/examples/GeometryViewer.html?xrSessionType=0&fileURL=%5Bhttps://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download%5D])
+[![XR Volume Example][WebXRVolumeHeadAndNeck]](../examples/WebXRVolume.html?xrSessionType=0&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
 
 </div>
 
@@ -86,8 +86,8 @@ The following examples target a handheld or head-mounted mobile augmented realit
 <div class="gallery">
 
 [![AR Cone Example][ArCone]](../examples/AR.html)
-[![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer/GeometryViewer.html?xrSessionType=1&fileURL=[https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html?xrSessionType=0&fileURL=%5Bhttps://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download%5D])
-[![XR Volume Example][WebXRVolumeHeadAndNeck]](../examples/WebXRVolume/WebXRVolume.html?xrSessionType=1&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
+[![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer.html?xrSessionType=1&fileURL=[https://kitware.github.io/vtk-js/examples/GeometryViewer.html?xrSessionType=0&fileURL=%5Bhttps://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download%5D])
+[![XR Volume Example][WebXRVolumeHeadAndNeck]](../examples/WebXRVolume.html?xrSessionType=1&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
 
 </div>
 
@@ -100,8 +100,8 @@ Microsoft HoloLens 2 users should run the [virtual reality examples](#Virtual-Re
 <div class="gallery">
 
 [![AR Cone Example][ArCone]](../examples/AR/index.html?xrSessionType=3)
-[![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer/GeometryViewer.html?xrSessionType=3&fileURL=[https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html?xrSessionType=0&fileURL=%5Bhttps://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download%5D])
-[![XR Volume Example][WebXRVolumeHeadAndNeck]](../examples/WebXRVolume/WebXRVolume.html?xrSessionType=3&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
+[![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer.html?xrSessionType=3&fileURL=[https://kitware.github.io/vtk-js/examples/GeometryViewer.html?xrSessionType=0&fileURL=%5Bhttps://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download%5D])
+[![XR Volume Example][WebXRVolumeHeadAndNeck]](../examples/WebXRVolume.html?xrSessionType=3&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
 
 </div>
 
@@ -112,8 +112,8 @@ The following examples target holographic displays from Looking Glass Factory. M
 <div class="gallery">
 
 [![Looking Glass Cone Example][LookingGlassCone]](../examples/LookingGlass.html)
-[![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer/GeometryViewer.html?xrSessionType=2&fileURL=[https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html?xrSessionType=0&fileURL=%5Bhttps://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download%5D])
-[![XR Volume Example][WebXRVolumeHeadAndNeck]](../examples/WebXRVolume/WebXRVolume.html?xrSessionType=2&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
+[![GeometryViewer Brain Blood Vessels][GeometryViewerBrainBloodVessels]](../examples/GeometryViewer.html?xrSessionType=2&fileURL=[https://kitware.github.io/vtk-js/examples/GeometryViewer.html?xrSessionType=0&fileURL=%5Bhttps://data.kitware.com/api/v1/file/61f041f14acac99f42c2ff9a/download,https://data.kitware.com/api/v1/file/61f042024acac99f42c2ffa6/download,https://data.kitware.com/api/v1/file/61f042b74acac99f42c30079/download%5D])
+[![XR Volume Example][WebXRVolumeHeadAndNeck]](../examples/WebXRVolume.html?xrSessionType=2&fileURL=https://data.kitware.com/api/v1/file/63fe3f237b0dfcc98f66a857/download&colorPreset=CT-AAA&rotateX=90&rotateY=180)
 
 </div>
 
@@ -132,15 +132,15 @@ VTK.js supports rendering to most devices that support the WebXR API. Rendering 
 
 ### Building and Running Examples
 
-Webpack can be used to run examples on local XR hardware. The following command will
+Vite can be used to run examples on local XR hardware. The following command will
 serve the "AR" example over a self-signed HTTPS connection:
 
 ```
 path/to/vtk-js> npm run example:https -- AR
 ...
-<i> [webpack-dev-server] Project is running at:
-<i> [webpack-dev-server] Loopback: https://localhost:9999/
-<i> [webpack-dev-server] On Your Network (IPv4): https://xxx.xxx.xxx.xxx:9999/
+VITE vX.Y.Z  ready in XXX ms
+➜  Local:   https://localhost:9999/
+➜  Network: https://xxx.xxx.xxx.xxx:9999/
 ```
 
 The example can then be launched on the WebXR device by navigating in a compatible browser to the

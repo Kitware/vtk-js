@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
@@ -31,7 +31,7 @@ function createSquareAsTriangles() {
   return polydata;
 }
 
-test('vtkClipPolyData clips a triangle mesh and produces clipped output', (t) => {
+it('vtkClipPolyData clips a triangle mesh and produces clipped output', () => {
   const plane = vtkPlane.newInstance({
     origin: [0, 0, 0],
     normal: [1, 0, 0],
@@ -48,25 +48,28 @@ test('vtkClipPolyData clips a triangle mesh and produces clipped output', (t) =>
   const kept = clipper.getOutputData();
   const clipped = clipper.getOutputData(1);
 
-  t.equal(kept.getNumberOfPolys(), 3, 'kept side is triangulated into 3 polys');
-  t.equal(
+  expect(
+    kept.getNumberOfPolys(),
+    'kept side is triangulated into 3 polys'
+  ).toBe(3);
+  expect(
     clipped.getNumberOfPolys(),
     3,
     'clipped side is triangulated into 3 polys'
-  );
-  t.equal(
+  ).toBe(3);
+  expect(
     kept.getNumberOfPoints(),
     7,
     'shared point set contains originals and intersections'
+  ).toBe(7);
+  expect(clipped.getNumberOfPoints(), 'clipped output shares point set').toBe(
+    7
   );
-  t.equal(clipped.getNumberOfPoints(), 7, 'clipped output shares point set');
 
   const keptScalars = kept.getPointData().getScalars().getData();
-  t.equal(keptScalars.length, 7, 'generated clip scalars were attached');
-  t.ok(
+  expect(keptScalars.length, 'generated clip scalars were attached').toBe(7);
+  expect(
     Array.from(keptScalars).includes(0),
     'intersection points carry the clip value'
-  );
-
-  t.end();
+  ).toBeTruthy();
 });

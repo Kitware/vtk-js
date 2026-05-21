@@ -15,7 +15,8 @@ import { Vector2, Vector3 } from '../../../types';
 import { IDisplayScaleParams } from '../../../Widgets/Core/WidgetManager';
 
 export interface vtkResliceCursorWidget<
-  WidgetInstance extends vtkAbstractWidget = vtkResliceCursorWidgetDefaultInstance
+  WidgetInstance extends vtkAbstractWidget =
+    vtkResliceCursorWidgetDefaultInstance,
 > extends vtkAbstractWidgetFactory<WidgetInstance> {
   /**
    * @param {ViewTypes} viewType
@@ -97,7 +98,7 @@ export interface vtkResliceCursorWidget<
 }
 
 export interface IResliceCursorWidgetInitialValues<
-  WidgetInstance extends vtkAbstractWidget
+  WidgetInstance extends vtkAbstractWidget,
 > extends IAbstractWidgetFactoryInitialValues<WidgetInstance> {}
 
 /**
@@ -119,7 +120,8 @@ export function extend<WidgetInstance extends vtkAbstractWidget>(
  * @param initialValues for pre-setting some of its content
  */
 export function newInstance<
-  WidgetInstance extends vtkAbstractWidget = vtkResliceCursorWidgetDefaultInstance
+  WidgetInstance extends vtkAbstractWidget =
+    vtkResliceCursorWidgetDefaultInstance,
 >(
   initialValues?: IResliceCursorWidgetInitialValues<WidgetInstance>
 ): vtkResliceCursorWidget<WidgetInstance>;

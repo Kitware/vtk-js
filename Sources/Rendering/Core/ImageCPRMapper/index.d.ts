@@ -17,8 +17,7 @@ import {
 
 type TOrientation = mat4 | mat3 | quat | vec3;
 
-export interface IImageCPRMapperInitialValues
-  extends IAbstractMapper3DInitialValues {
+export interface IImageCPRMapperInitialValues extends IAbstractMapper3DInitialValues {
   width: number;
   uniformOrientation: TOrientation; // Don't use vec3 if possible
   useUniformOrientation: boolean;
@@ -30,8 +29,7 @@ export interface IImageCPRMapperInitialValues
 }
 
 export interface vtkImageCPRMapper
-  extends vtkAbstractMapper3D,
-    CoincidentTopologyHelper {
+  extends vtkAbstractMapper3D, CoincidentTopologyHelper {
   /**
    * @returns the width of the image in model coordinates of the input volume
    */

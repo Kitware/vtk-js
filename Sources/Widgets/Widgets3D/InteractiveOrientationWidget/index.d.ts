@@ -7,7 +7,7 @@ import { Bounds } from '../../../types';
 import { ViewTypes } from '../../Core/WidgetManager/Constants';
 
 export interface vtkInteractiveOrientationWidget<
-  WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget
+  WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget,
 > extends vtkAbstractWidgetFactory<WidgetInstance> {
   /**
    * Set the widget bounds
@@ -23,7 +23,7 @@ export interface vtkInteractiveOrientationWidget<
 }
 
 export interface IInteractiveOrientationWidgetInitialValues<
-  WidgetInstance extends vtkAbstractWidget
+  WidgetInstance extends vtkAbstractWidget,
 > extends IAbstractWidgetFactoryInitialValues<WidgetInstance> {}
 
 /**
@@ -45,7 +45,7 @@ export function extend<WidgetInstance extends vtkAbstractWidget>(
  * @param {object} [initialValues] for pre-setting some of its content
  */
 export function newInstance<
-  WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget
+  WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget,
 >(
   initialValues?: IInteractiveOrientationWidgetInitialValues<WidgetInstance>
 ): vtkInteractiveOrientationWidget<WidgetInstance>;

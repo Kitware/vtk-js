@@ -6,12 +6,14 @@ import vtkCompositeGestureManipulator, {
 } from '../CompositeGestureManipulator';
 import { vtkObject } from '../../../interfaces';
 export interface vtkGestureCameraManipulator
-  extends vtkObject,
+  extends
+    vtkObject,
     vtkCompositeCameraManipulator,
     vtkCompositeGestureManipulator {}
 
 export interface IGestureCameraManipulatorInitialValues
-  extends ICompositeCameraManipulatorInitialValues,
+  extends
+    ICompositeCameraManipulatorInitialValues,
     ICompositeGestureManipulatorInitialValues {
   flipDirection?: boolean;
 }

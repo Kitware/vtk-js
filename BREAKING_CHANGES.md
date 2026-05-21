@@ -1,3 +1,8 @@
+## From 35.x to 36
+
+- **`vtk-lite.js` deprecated.** The UMD build previously produced a slimmed-down companion bundle `dist/umd/vtk-lite.js` (curated ColorMaps subset; `PDBReader`, `MoleculeToRepresentation`, `MobileVR`, and `webvr-polyfill` stubbed out). The Vite build pipeline no longer produces a distinct lite bundle; `vtk-lite.js` now ships as a byte-identical alias of `vtk.js` so existing `<script src=…/vtk-lite.js>` and CDN consumers continue to load. Consumers should migrate to `vtk.js` directly — the alias will be removed in a future major. Note that anything that indexed into the `ColorMaps` array by position will now see the full preset set, not the lite subset.
+
+
 ## From 34.x to 35
 
 - **vtkMapper**: mappers should overwrite `computeBounds()` instead of `getBounds` that now calls `computeBounds()` before returning a copy of the mapper bounds.

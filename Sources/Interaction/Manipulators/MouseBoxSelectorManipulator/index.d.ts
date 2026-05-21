@@ -5,8 +5,7 @@ import { EventHandler, vtkObject, vtkSubscription } from '../../../interfaces';
 import { Nullable } from '../../../types';
 
 export interface vtkMouseBoxSelectorManipulator
-  extends vtkObject,
-    vtkCompositeMouseManipulator {
+  extends vtkObject, vtkCompositeMouseManipulator {
   /**
    * Invokes a box select change event.
    */
@@ -63,8 +62,7 @@ export interface vtkMouseBoxSelectorManipulator
   getContainer(): Nullable<Element>;
 }
 
-export interface IMouseBoxSelectorManipulatorInitialValues
-  extends ICompositeMouseManipulatorInitialValues {
+export interface IMouseBoxSelectorManipulatorInitialValues extends ICompositeMouseManipulatorInitialValues {
   renderSelection?: boolean;
   selectionStyle?: Record<string, string>;
   container?: Element;

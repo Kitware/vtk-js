@@ -8,8 +8,7 @@ export interface IImageDataOutlineFilterInitialValues {}
 
 type vtkImageDataOutlineFilterBase = vtkObject & vtkAlgorithm;
 
-export interface vtkImageDataOutlineFilter
-  extends vtkImageDataOutlineFilterBase {
+export interface vtkImageDataOutlineFilter extends vtkImageDataOutlineFilterBase {
   /**
    *
    * @param inData

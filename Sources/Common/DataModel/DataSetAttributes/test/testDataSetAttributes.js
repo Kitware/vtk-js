@@ -1,5 +1,4 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import vtkDataSetAttributes from 'vtk.js/Sources/Common/DataModel/DataSetAttributes';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
@@ -13,61 +12,56 @@ const attrTypes = [
   'PedigreeIds',
 ];
 
-test('Test vtkDataSetAttributes instance', (t) => {
-  t.ok(vtkDataSetAttributes, 'Make sure the class definition exists');
+it('Test vtkDataSetAttributes instance', () => {
+  expect(
+    vtkDataSetAttributes,
+    'Make sure the class definition exists'
+  ).toBeTruthy();
   const instance = vtkDataSetAttributes.newInstance();
-  t.ok(instance, 'Make sure the newInstance method exists.');
-  t.equal(
+  expect(instance, 'Make sure the newInstance method exists.').toBeTruthy();
+  expect(
     instance.getNumberOfArrays(),
-    0,
     'Default number of arrays should be 0'
-  );
+  ).toBe(0);
 
   // Test that all the default active attributes are null (with -1 index)
   const ntuples = 10;
   let numArrs = 0;
   attrTypes.forEach((attType) => {
-    t.equal(
+    expect(
       instance[`get${attType}`](),
-      null,
       `Default ${attType} should be null`
-    );
+    ).toBe(null);
     const testArray = vtkDataArray.newInstance({
       name: `Foo${attType}`,
       numberOfComponents: 1,
       values: new Float32Array(ntuples),
     });
-    t.equal(
+    expect(
       instance.addArray(testArray),
-      numArrs,
       `Adding ${attType.toLowerCase()} empty DSA should return index of ${numArrs}`
-    );
-    t.equal(
+    ).toBe(numArrs);
+    expect(
       instance[`setActive${attType}`](`Foo${attType}`),
-      numArrs,
       `Setting ${attType.toLowerCase()} should return ${numArrs} (the index of the array).`
-    );
-    t.equal(
+    ).toBe(numArrs);
+    expect(
       instance[`setActive${attType}`]('xxx'),
-      -1,
       `Setting ${attType.toLowerCase()} with an invalid name should return -1.`
-    );
-    t.equal(
+    ).toBe(-1);
+    expect(
       instance[`get${attType}`](),
-      null,
       `Setting ${attType.toLowerCase()} with an invalid name should reset the attribute.`
-    );
+    ).toBe(null);
     ++numArrs;
   });
 
   // const foo = vtkDataArray.newInstance({ name: 'Foo', numberOfComponents: 1, values: new Float32Array(ntuples) });
-  // t.equal(instance.addArray(foo), 0, `Adding ${attType.toLowerCase()} empty DSA should return index of 0`);
-  // t.equal(instance.setScalars('Foo'), 0, 'Setting scalars should return index of array');
+  // expect(instance.addArray(foo)).toBe(0);
+  // expect(instance.setScalars('Foo')).toBe(0);
   // instance.addArray(vtkDataArray.newInstance({ name: 'Bar', numberOfComponents: 3, values: new Float32Array(3 * ntuples) }));
 
-  t.equal(instance.getNumberOfArrays(), numArrs);
+  expect(instance.getNumberOfArrays()).toBe(numArrs);
   instance.removeArray('FooScalars');
-  t.equal(instance.getNumberOfArrays(), numArrs - 1);
-
-  t.end();
+  expect(instance.getNumberOfArrays()).toBe(numArrs - 1);
 });

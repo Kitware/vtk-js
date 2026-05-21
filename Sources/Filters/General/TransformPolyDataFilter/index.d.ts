@@ -9,8 +9,7 @@ export interface ITransformPolyDataFilterInitialValues {
 
 type vtkTransformPolyDataFilterBase = vtkObject & vtkAlgorithm;
 
-export interface vtkTransformPolyDataFilter
-  extends vtkTransformPolyDataFilterBase {
+export interface vtkTransformPolyDataFilter extends vtkTransformPolyDataFilterBase {
   /**
    * Get the transform used by this filter.
    */

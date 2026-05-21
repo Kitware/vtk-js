@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
@@ -143,8 +143,8 @@ function isBright(pixel) {
 // child1 shows an image only. child2 shows an image plus a leaking actor.
 // Both children share one WebGL context. If the leaking actor's cull state
 // is not cleaned up, child1's back-facing image quad is culled on re-render.
-function runLeakTest(t, leakingCase) {
-  const gc = testUtils.createGarbageCollector(t);
+function runLeakTest(leakingCase) {
+  const gc = testUtils.createGarbageCollector();
   const root = document.querySelector('body');
   const childContainer1 = gc.registerDOMElement(document.createElement('div'));
   const childContainer2 = gc.registerDOMElement(document.createElement('div'));
@@ -190,27 +190,27 @@ function runLeakTest(t, leakingCase) {
 
   parentRenderWindow.render();
   const firstRenderPixel = getCenterPixel(child1.view.getCanvas());
-  t.ok(
+  expect(
     isBright(firstRenderPixel),
     `first child slice is visible on initial render (${firstRenderPixel})`
-  );
+  ).toBe(true);
 
   parentRenderWindow.render();
   const secondRenderPixel = getCenterPixel(child1.view.getCanvas());
-  t.ok(
+  expect(
     isBright(secondRenderPixel),
     `first child slice remains visible after leaking actor render (${secondRenderPixel})`
-  );
+  ).toBe(true);
 
   gc.releaseResources();
 }
 
-test.onlyIfWebGL(
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test PolyDataMapper2D cull face does not leak between child render windows',
-  (t) => runLeakTest(t, makeLineActor2DCase())
+  () => runLeakTest(makeLineActor2DCase())
 );
 
-test.onlyIfWebGL(
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test 3D actor backface culling does not leak between child render windows',
-  (t) => runLeakTest(t, makeBackfaceCulledSphereCase())
+  () => runLeakTest(makeBackfaceCulledSphereCase())
 );

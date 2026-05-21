@@ -236,14 +236,12 @@ function updatePlane() {
   );
   const normal = [nx, ny, nz];
   const tangentSeed = Math.abs(nz) < 0.9 ? [0.0, 0.0, 1.0] : [0.0, 1.0, 0.0];
-  const tangent1 = normalizeVector3(
-    ...cross(normal, tangentSeed),
-    [1.0, 0.0, 0.0]
-  );
-  const tangent2 = normalizeVector3(
-    ...cross(normal, tangent1),
-    [0.0, 1.0, 0.0]
-  );
+  const tangent1 = normalizeVector3(...cross(normal, tangentSeed), [
+    1.0, 0.0, 0.0,
+  ]);
+  const tangent2 = normalizeVector3(...cross(normal, tangent1), [
+    0.0, 1.0, 0.0,
+  ]);
   const halfSize = modelLength * 0.3;
   plane.setOrigin(origin[0], origin[1], origin[2]);
   plane.setNormal(nx, ny, nz);

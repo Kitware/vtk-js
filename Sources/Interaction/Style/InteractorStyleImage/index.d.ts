@@ -3,8 +3,7 @@ import vtkRenderer from '../../../Rendering/Core/Renderer';
 import vtkImageProperty from '../../../Rendering/Core/ImageProperty';
 import vtkInteractorStyleTrackballCamera from '../../../Interaction/Style/InteractorStyleTrackballCamera';
 
-export interface vtkInteractorStyleImage
-  extends vtkInteractorStyleTrackballCamera {
+export interface vtkInteractorStyleImage extends vtkInteractorStyleTrackballCamera {
   /**
    * Handles a mouse move.
    * @param callData event data

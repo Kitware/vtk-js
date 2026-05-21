@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -15,9 +15,9 @@ import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 import baseline from './testColorTransferFunction.png';
 import baseline2 from './testColorTransferFunction2.png';
 
-test.onlyIfWebGL('Test Color Transfer Function', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Color Transfer Function', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkMapper ColorTransferFunction');
+  expect('rendering', 'vtkMapper ColorTransferFunction').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -116,7 +116,6 @@ test.onlyIfWebGL('Test Color Transfer Function', (t) => {
         image,
         [baseline, baseline2],
         'Rendering/Core/ColorTransferFunction/testColorTransferFunction',
-        t,
         5
       )
     )
@@ -125,7 +124,7 @@ test.onlyIfWebGL('Test Color Transfer Function', (t) => {
   return promise;
 });
 
-test('Test discretized color transfer function', (t) => {
+it('Test discretized color transfer function', () => {
   const ctf = vtkColorTransferFunction.newInstance({
     discretize: true,
     numberOfValues: 5,
@@ -154,16 +153,14 @@ test('Test discretized color transfer function', (t) => {
 
   testValues.forEach((value, idx) => {
     ctf.getColor(value, rgb);
-    t.ok(
+    expect(
       areEquals(rgb, expectedRGB[idx]),
       `Test discretized ctf value for ${value}, expect ${expectedRGB[idx]}`
-    );
+    ).toBeTruthy();
   });
-
-  t.end();
 });
 
-test('Test applyColorMap calls modified', (t) => {
+it('Test applyColorMap calls modified', () => {
   const ctf = vtkColorTransferFunction.newInstance();
 
   const colorMapA = {
@@ -183,40 +180,38 @@ test('Test applyColorMap calls modified', (t) => {
   });
 
   ctf.applyColorMap(colorMapA);
-  t.notOk(
+  expect(
     isModified,
     `Expect applyColorMap does not call modified with same color map`
-  );
+  ).toBeFalsy();
 
   ctf.applyColorMap(colorMapB);
-  t.ok(
+  expect(
     isModified,
     `Expect applyColorMap calls modified with different color map`
-  );
+  ).toBeTruthy();
 
   colorMapB.ColorSpace = 'LAB';
   isModified = false;
   let modifiedReturn = ctf.applyColorMap(colorMapB);
-  t.ok(
+  expect(
     isModified && modifiedReturn,
     `Expect applyColorMap calls modified with different ColorSpace`
-  );
+  ).toBeTruthy();
 
   colorMapB.NanColor = [0, 0, 0, 1];
   isModified = false;
   modifiedReturn = ctf.applyColorMap(colorMapB);
-  t.ok(
+  expect(
     isModified && modifiedReturn,
     `Expect applyColorMap calls modified with different NanColor`
-  );
+  ).toBeTruthy();
 
   colorMapB.RGBPoints = [0, 0, 0, 0, 0.5, 1, 1, 1, 1, 1, 1, 1];
   isModified = false;
   modifiedReturn = ctf.applyColorMap(colorMapB);
-  t.ok(
+  expect(
     isModified && modifiedReturn,
     `Expect applyColorMap calls modified with different RGBPoints`
-  );
-
-  t.end();
+  ).toBeTruthy();
 });

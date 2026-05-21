@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import macro from 'vtk.js/Sources/macros';
 import vtkProxyManager from 'vtk.js/Sources/Proxy/Core/ProxyManager';
 
@@ -55,54 +55,48 @@ function newProxyManager(proxyConfiguration = defaultConfig) {
 // Tests
 // ----------------------------------------------------------------------------
 
-test('Proxy activation via config', (t) => {
+it('Proxy activation via config', () => {
   const proxyManager = newProxyManager();
-  t.equal(
-    proxyManager.getActiveSource(),
-    undefined,
-    'No initial active source'
+  expect(proxyManager.getActiveSource(), 'No initial active source').toBe(
+    undefined
   );
 
   const proxy = proxyManager.createProxy('Sources', 'TrivialProducer');
-  t.equal(
+  expect(
     proxyManager.getActiveSource(),
-    proxy,
     'Active source set after proxy creation'
-  );
+  ).toBe(proxy);
 
   proxyManager.onModified(() => {
-    t.fail('Proxy manager should not be modified when activating proxy twice');
+    expect.fail(
+      'Proxy manager should not be modified when activating proxy twice'
+    );
   });
   proxy.activate();
 
   proxy.getState();
-  t.end();
 });
 
-test('Proxy activation via .activate()', (t) => {
+it('Proxy activation via .activate()', () => {
   const proxyManager = newProxyManager();
-  t.equal(
+  expect(
     proxyManager.getActiveSource(),
-    undefined,
-    'No initial active source'
-  );
+    'Proxy manager should not be modified when activating proxy twice'
+  ).toBe(undefined);
 
   const proxy = proxyManager.createProxy('Sources', 'TrivialProducer', {
     // Inhibit the default { activateOnCreate: true }
     activateOnCreate: false,
   });
-  t.equal(
-    proxyManager.getActiveSource(),
-    undefined,
-    'No active source after proxy creation'
+  expect(proxyManager.getActiveSource(), 'No initial active source').toBe(
+    undefined
   );
 
-  proxyManager.onModified(() => {
-    t.pass('Proxy manager should be modified after proxy activation');
-  });
+  proxyManager.onModified(() => {});
 
   proxy.activate();
-  t.equal(proxyManager.getActiveSource(), proxy, 'Active source set');
-
-  t.end();
+  expect(
+    proxyManager.getActiveSource(),
+    'No active source after proxy creation'
+  ).toBe(proxy);
 });

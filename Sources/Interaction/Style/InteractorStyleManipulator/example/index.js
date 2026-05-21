@@ -135,10 +135,10 @@ const altFolder = gui.addFolder('Alt +');
     name === 'leftButton'
       ? 'Rotate'
       : name === 'middleButton'
-      ? 'Pan'
-      : name === 'rightButton'
-      ? 'Zoom'
-      : 'None';
+        ? 'Pan'
+        : name === 'rightButton'
+          ? 'Zoom'
+          : 'None';
   uiComponents[name] = { manipName: defaultValue };
   noneFolder
     .add(uiComponents[name], 'manipName', manipulatorOptions)

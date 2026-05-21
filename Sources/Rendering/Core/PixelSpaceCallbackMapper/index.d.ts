@@ -5,8 +5,7 @@ import vtkMapper, { IMapperInitialValues } from '../Mapper';
 /**
  *
  */
-export interface IPixelSpaceCallbackMapperInitialValues
-  extends IMapperInitialValues {
+export interface IPixelSpaceCallbackMapperInitialValues extends IMapperInitialValues {
   callback?: any;
   useZValues?: boolean;
 }

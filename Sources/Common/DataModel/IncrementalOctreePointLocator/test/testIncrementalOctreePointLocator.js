@@ -1,12 +1,11 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkIncrementalOctreePointLocator from 'vtk.js/Sources/Common/DataModel/IncrementalOctreePointLocator';
 
-test('Test vtkIncrementalOctreePointLocator instance', (t) => {
-  t.ok(
+it('Test vtkIncrementalOctreePointLocator instance', () => {
+  expect(
     vtkIncrementalOctreePointLocator,
     'Make sure the class definition exists'
-  );
+  ).toBeTruthy();
   const instance = vtkIncrementalOctreePointLocator.newInstance();
-  t.ok(instance);
-  t.end();
+  expect(instance).toBeTruthy();
 });

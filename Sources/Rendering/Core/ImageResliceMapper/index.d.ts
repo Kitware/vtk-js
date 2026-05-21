@@ -11,8 +11,7 @@ import {
   StaticCoincidentTopologyMethods,
 } from '../Mapper/CoincidentTopologyHelper';
 
-export interface IImageResliceMapperInitialValues
-  extends IAbstractImageMapperInitialValues {
+export interface IImageResliceMapperInitialValues extends IAbstractImageMapperInitialValues {
   slabThickness?: number;
   slabTrapezoidIntegration?: number;
   slabType?: SlabTypes;
@@ -21,8 +20,7 @@ export interface IImageResliceMapperInitialValues
 }
 
 export interface vtkImageResliceMapper
-  extends vtkAbstractImageMapper,
-    CoincidentTopologyHelper {
+  extends vtkAbstractImageMapper, CoincidentTopologyHelper {
   /**
    * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
    * @return {Bounds} The bounds for the mapper.

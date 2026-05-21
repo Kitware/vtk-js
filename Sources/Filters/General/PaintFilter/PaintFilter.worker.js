@@ -192,9 +192,8 @@ function handlePaintTriangles({ triangleList }) {
           point[2] >= 0 &&
           point[2] < globals.dimensions[2]
         ) {
-          globals.buffer[
-            point[0] + jStride * point[1] + kStride * point[2]
-          ] = 1;
+          globals.buffer[point[0] + jStride * point[1] + kStride * point[2]] =
+            1;
         }
       }
     }

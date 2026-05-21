@@ -7,8 +7,7 @@ import vtkPicker from '../../../Rendering/Core/Picker';
 /**
  *
  */
-export interface IPickerManipulatorInitialValues
-  extends IAbstractManipulatorInitialValues {}
+export interface IPickerManipulatorInitialValues extends IAbstractManipulatorInitialValues {}
 
 export interface vtkPickerManipulator extends vtkAbstractManipulator {
   /**

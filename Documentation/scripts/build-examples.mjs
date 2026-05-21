@@ -3,22 +3,9 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { build as viteBuild } from 'vite';
 
-import { rollup } from 'rollup';
-
-import terser from '@rollup/plugin-terser';
-import alias from '@rollup/plugin-alias';
-import commonjs from '@rollup/plugin-commonjs';
-import json from '@rollup/plugin-json';
-import { nodeResolve } from '@rollup/plugin-node-resolve';
-import { babel } from '@rollup/plugin-babel';
-import ignore from 'rollup-plugin-ignore';
-import nodePolyfills from 'rollup-plugin-polyfill-node';
-import postcss from 'rollup-plugin-postcss';
-import svgo from 'rollup-plugin-svgo';
-import webworkerLoader from 'rollup-plugin-web-worker-loader';
-import { string } from 'rollup-plugin-string';
-import autoprefixer from 'autoprefixer';
+import { createVtkPlugins } from '../../Utilities/build/plugins.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,7 +46,9 @@ function buildHtml(
     exampleScript = `<script type="module" src="${bundleFile}"></script>`;
   }
   if (inlineScript) {
-    exampleScript = `<script>${inlineScript}</script>`;
+    exampleScript = isModule
+      ? `<script type="module">${inlineScript}</script>`
+      : `<script>${inlineScript}</script>`;
   }
 
   return `<!doctype html>
@@ -90,7 +79,9 @@ async function walkExamples(config, dir = config.root, results = []) {
     entries.map(async (entry) => {
       const fullPath = path.join(dir, entry.name);
       if (entry.isDirectory()) {
-        const relDir = path.relative(config.root, fullPath).replace(/\\/g, '/');
+        const relDir = path
+          .relative(config.root, fullPath)
+          .replace(/\\/g, '/');
         if (relDir && config.shouldSkipDir(relDir)) {
           return;
         }
@@ -122,118 +113,39 @@ async function collectEntries() {
   return entries;
 }
 
-function getMimeType(filePath) {
-  const ext = path.extname(filePath).toLowerCase();
-  const mimeByExt = {
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.gif': 'image/gif',
-    '.svg': 'image/svg+xml',
-    '.webp': 'image/webp',
-  };
-  return mimeByExt[ext] || 'application/octet-stream';
-}
-
-function toDataUri(filePath, source) {
-  return `data:${getMimeType(filePath)};base64,${source.toString('base64')}`;
-}
-
-function assetLoader({ inline = false } = {}) {
-  const assetRegex = /\.(png|jpe?g)$/i;
-
+// Standalone example HTML files have a single inline script (no <link>
+// to a separate CSS asset), so any CSS Vite extracts must be inlined into
+// the JS chunk. This plugin takes Vite's normal CSS Modules output and
+// prepends a <style> injection IIFE per chunk, then drops the orphan asset.
+function inlineExtractedCssPlugin() {
   return {
-    name: inline ? 'asset-loader-inline' : 'asset-loader',
-    async load(id) {
-      if (!assetRegex.test(id)) {
-        return null;
-      }
+    name: 'vtk-inline-extracted-css',
+    enforce: 'post',
+    generateBundle(_, bundle) {
+      for (const item of Object.values(bundle)) {
+        if (item.type !== 'chunk') continue;
+        const importedCss = item.viteMetadata?.importedCss;
+        if (!importedCss || importedCss.size === 0) continue;
 
-      const source = await fs.readFile(id);
-      if (inline) {
-        return `export default ${JSON.stringify(toDataUri(id, source))};`;
-      }
-      const refId = this.emitFile({
-        type: 'asset',
-        name: path.basename(id),
-        source,
-      });
-
-      return `export default import.meta.ROLLUP_FILE_URL_${refId};`;
-    },
-  };
-}
-
-function replaceBasePath(basePath) {
-  return {
-    name: 'replace-base-path',
-    transform(code, id) {
-      if (!id.endsWith('.js')) {
-        return null;
-      }
-
-      if (!code.includes('__BASE_PATH__')) {
-        return null;
-      }
-
-      return {
-        code: code.replace(/\b__BASE_PATH__\b/g, JSON.stringify(basePath)),
-        map: null,
-      };
-    },
-  };
-}
-
-function inlineCssUrls() {
-  const cssFileRegex = /\.css$/i;
-  const urlRegex = /url\((['"]?)([^'")]+)\1\)/g;
-  return {
-    name: 'inline-css-urls',
-    async transform(code, id) {
-      if (!cssFileRegex.test(id)) {
-        return null;
-      }
-
-      const matches = Array.from(code.matchAll(urlRegex));
-      if (!matches.length) {
-        return null;
-      }
-
-      const replacements = await Promise.all(
-        matches.map(async ([fullMatch, quote, rawUrl]) => {
-          const assetUrl = rawUrl.trim();
-          if (
-            assetUrl.startsWith('data:') ||
-            assetUrl.startsWith('http://') ||
-            assetUrl.startsWith('https://') ||
-            assetUrl.startsWith('//')
-          ) {
-            return { fullMatch, replacement: fullMatch };
+        const cssTexts = [];
+        for (const cssFile of importedCss) {
+          const cssAsset = bundle[cssFile];
+          if (cssAsset?.type === 'asset') {
+            cssTexts.push(String(cssAsset.source));
+            delete bundle[cssFile];
           }
+        }
+        if (cssTexts.length === 0) continue;
 
-          const assetPath = path.resolve(path.dirname(id), assetUrl);
-          try {
-            const source = await fs.readFile(assetPath);
-            const dataUrl = toDataUri(assetPath, source);
-            return {
-              fullMatch,
-              replacement: `url(${quote}${dataUrl}${quote})`,
-            };
-          } catch (err) {
-            return { fullMatch, replacement: fullMatch };
-          }
-        })
-      );
-
-      let transformed = code;
-      replacements.forEach(({ fullMatch, replacement }) => {
-        transformed = transformed.replace(fullMatch, replacement);
-      });
-
-      return {
-        code: transformed,
-        map: null,
-      };
+        const cssPayload = JSON.stringify(cssTexts.join('\n'));
+        item.code =
+          `if (typeof document !== 'undefined') {\n` +
+          `  var __vtkStyle = document.createElement('style');\n` +
+          `  __vtkStyle.textContent = ${cssPayload};\n` +
+          `  (document.head || document.getElementsByTagName('head')[0]).appendChild(__vtkStyle);\n` +
+          `}\n` +
+          item.code;
+      }
     },
   };
 }
@@ -270,76 +182,43 @@ async function copyApplicationStaticAssets(entryPath, outDir) {
   );
 }
 
+/**
+ * Shared Vite config for building doc examples.
+ */
+function createSharedViteConfig() {
+  return {
+    configFile: false,
+    root: REPO_ROOT,
+    logLevel: 'warn',
+    resolve: {
+      alias: {
+        '@kitware/vtk.js': path.resolve(REPO_ROOT, 'Sources'),
+        'vtk.js': REPO_ROOT,
+      },
+    },
+    define: {
+      __BASE_PATH__: JSON.stringify('/vtk-js'),
+    },
+    css: {
+      modules: {
+        localsConvention: 'camelCaseOnly',
+      },
+    },
+  };
+}
+
+function createExamplePlugins() {
+  return [
+    ...createVtkPlugins({ includeCjson: true }),
+    inlineExtractedCssPlugin(),
+  ];
+}
+
 async function build() {
   const entries = await collectEntries();
   const distDir = path.resolve(DOCS_ROOT, '.vitepress', 'dist', 'examples');
 
   await fs.mkdir(distDir, { recursive: true });
-
-  const aliasPlugin = alias.default ? alias.default : alias;
-  const commonjsPlugin = commonjs.default ? commonjs.default : commonjs;
-  const jsonPlugin = json.default ? json.default : json;
-  const nodePolyfillsPlugin = nodePolyfills.default
-    ? nodePolyfills.default
-    : nodePolyfills;
-  const postcssPlugin = postcss.default ? postcss.default : postcss;
-  const svgoPlugin = svgo.default ? svgo.default : svgo;
-  const webworkerPlugin = webworkerLoader.default
-    ? webworkerLoader.default
-    : webworkerLoader;
-  const stringPlugin = string.default ? string.default : string;
-  const ignorePlugin = ignore.default ? ignore.default : ignore;
-
-  function createPlugins({ forInlineIife = false } = {}) {
-    return [
-      aliasPlugin({
-        entries: [
-          {
-            find: '@kitware/vtk.js',
-            replacement: path.resolve(REPO_ROOT, 'Sources'),
-          },
-          { find: 'vtk.js', replacement: REPO_ROOT },
-        ],
-      }),
-      ignorePlugin(['crypto']),
-      ...(forInlineIife ? [inlineCssUrls(), terser()] : []),
-      webworkerPlugin({
-        targetPlatform: 'browser',
-        pattern: /^.+\.worker(?:\.js)?$/,
-        external: [],
-        inline: true,
-        preserveSource: true,
-      }),
-      nodeResolve({
-        preferBuiltins: false,
-        browser: true,
-      }),
-      commonjsPlugin({
-        transformMixedEsModules: true,
-      }),
-      nodePolyfillsPlugin(),
-      babel({
-        include: ['Sources/**', 'Examples/**'],
-        exclude: 'node_modules/**',
-        extensions: ['.js'],
-        babelHelpers: 'runtime',
-      }),
-      stringPlugin({
-        include: ['**/*.glsl', '**/*.svg'],
-      }),
-      jsonPlugin(),
-      svgoPlugin(),
-      postcssPlugin({
-        inject: true,
-        modules: {
-          auto: /\.module\.css$/i,
-        },
-        plugins: [autoprefixer],
-      }),
-      assetLoader({ inline: forInlineIife }),
-      replaceBasePath('/vtk-js'),
-    ];
-  }
 
   const applicationEntries = {};
   const esEntries = {};
@@ -354,20 +233,32 @@ async function build() {
     }
   });
 
+  // Build ES module examples
   if (Object.keys(esEntries).length) {
-    const esBundle = await rollup({
-      input: esEntries,
-      plugins: createPlugins(),
+    await viteBuild({
+      ...createSharedViteConfig(),
+      plugins: createExamplePlugins(),
+      build: {
+        outDir: distDir,
+        emptyOutDir: false,
+        minify: false,
+        // Inline CSS-referenced assets as data URIs. The CSS itself is
+        // inlined into the JS chunk by inlineExtractedCssPlugin; any
+        // extracted asset (e.g. background-image url()) would otherwise
+        // be served from an absolute path that doesn't resolve under
+        // VitePress's base prefix.
+        assetsInlineLimit: Infinity,
+        rollupOptions: {
+          input: esEntries,
+          output: {
+            format: 'es',
+            entryFileNames: '[name]/index.js',
+            chunkFileNames: '_shared/[name]-[hash].js',
+            assetFileNames: '_assets/[name]-[hash][extname]',
+          },
+        },
+      },
     });
-
-    await esBundle.write({
-      dir: distDir,
-      format: 'es',
-      entryFileNames: '[name]/index.js',
-      chunkFileNames: '_shared/[name]-[hash].js',
-      assetFileNames: '_assets/[name]-[hash][extname]',
-    });
-    await esBundle.close();
 
     await Promise.all(
       Object.entries(esEntries).map(async ([chunkName, entryPath]) => {
@@ -378,53 +269,54 @@ async function build() {
     );
   }
 
-  await Object.entries(applicationEntries).reduce(
-    (chain, [chunkName, entryPath]) =>
-      chain.then(async () => {
-        const outDir = path.resolve(distDir, chunkName);
+  // Build Application examples (single file inline bundles)
+  for (const [chunkName, entryPath] of Object.entries(applicationEntries)) {
+    const outDir = path.resolve(distDir, chunkName);
+    await fs.mkdir(outDir, { recursive: true });
 
-        await fs.mkdir(outDir, { recursive: true });
-        const bundle = await rollup({
+    const result = await viteBuild({
+      ...createSharedViteConfig(),
+      plugins: createExamplePlugins(),
+      build: {
+        write: false,
+        minify: 'esbuild',
+        assetsInlineLimit: Infinity,
+        rollupOptions: {
           input: entryPath,
-          plugins: createPlugins({ forInlineIife: true }),
-        });
-        const { output } = await bundle.generate({
-          format: 'iife',
-          name: `${chunkName.replace(/[^\w$]/g, '_')}`,
-          inlineDynamicImports: true,
-        });
-        await bundle.close();
+          output: {
+            format: 'es',
+            codeSplitting: false,
+          },
+        },
+      },
+    });
 
-        const appChunk = output.find((item) => item.type === 'chunk');
-        if (!appChunk) {
-          throw new Error(`Failed to generate inline IIFE for ${chunkName}`);
-        }
-        const inlineScript = appChunk.code.replace(
-          /<\/script>/gi,
-          '<\\/script>'
-        );
-        await fs.writeFile(
-          path.resolve(outDir, 'index.html'),
-          buildHtml(chunkName, './index.js', false, inlineScript),
-          'utf8'
-        );
-      }),
-    Promise.resolve()
-  );
+    const output = Array.isArray(result) ? result[0].output : result.output;
+    const appChunk = output.find((item) => item.type === 'chunk');
+    if (!appChunk) {
+      throw new Error(`Failed to generate inline module for ${chunkName}`);
+    }
 
+    const inlineScript = appChunk.code.replace(/<\/script>/gi, '<\\/script>');
+    await fs.writeFile(
+      path.resolve(outDir, 'index.html'),
+      buildHtml(chunkName, './index.js', true, inlineScript),
+      'utf8'
+    );
+  }
+
+  // Write HTML wrappers for ES module examples
   await Promise.all(
     Object.keys(entries).map(async (chunkName) => {
-      const outDir = path.resolve(distDir, chunkName);
-      const bundleFile = './index.js';
-      const isModule = !Object.hasOwn(applicationEntries, chunkName);
-      if (!isModule) {
+      if (Object.hasOwn(applicationEntries, chunkName)) {
         return;
       }
 
+      const outDir = path.resolve(distDir, chunkName);
       await fs.mkdir(outDir, { recursive: true });
       await fs.writeFile(
         path.resolve(outDir, 'index.html'),
-        buildHtml(chunkName, bundleFile, isModule),
+        buildHtml(chunkName, './index.js', true),
         'utf8'
       );
     })

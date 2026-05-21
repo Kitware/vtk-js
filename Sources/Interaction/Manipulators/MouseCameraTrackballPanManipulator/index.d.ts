@@ -7,12 +7,14 @@ import vtkCompositeMouseManipulator, {
 import { vtkObject } from '../../../interfaces';
 
 export interface vtkMouseCameraTrackballPanManipulator
-  extends vtkObject,
+  extends
+    vtkObject,
     vtkCompositeCameraManipulator,
     vtkCompositeMouseManipulator {}
 
 export interface IMouseCameraTrackballPanManipulatorInitialValues
-  extends ICompositeCameraManipulatorInitialValues,
+  extends
+    ICompositeCameraManipulatorInitialValues,
     ICompositeMouseManipulatorInitialValues {}
 
 export function newInstance(

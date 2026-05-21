@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
@@ -14,9 +14,9 @@ import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constant
 
 import baseline from './testDisableScalarColoring.png';
 
-test.onlyIfWebGL('Test vtkSphereMapper Rendering', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkSphereMapper Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkSphereMapper Rendering');
+  expect('rendering', 'vtkSphereMapper Rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -81,9 +81,6 @@ test.onlyIfWebGL('Test vtkSphereMapper Rendering', (t) => {
 
   mapper.setInputConnection(filter.getOutputPort());
 
-  console.log(
-    `Setting mapper scalar range to [${scalarRange[0]}, ${scalarRange[1]}]`
-  );
   mapper.setScalarRange(scalarRange);
   mapper.setColorByArrayName('distance magnitude');
   mapper.setColorModeToMapScalars();
@@ -108,7 +105,6 @@ test.onlyIfWebGL('Test vtkSphereMapper Rendering', (t) => {
         image,
         [baseline],
         'Rendering/Core/SphereMapper/testDisableScalarColoring',
-        t,
         1.0
       )
     )

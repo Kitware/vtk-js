@@ -27,8 +27,10 @@ export type Orientation = 'horizontal' | 'vertical' | 'auto' | null;
 /**
  *
  */
-export interface IScalarBarActorInitialValues
-  extends Omit<IActorInitialValues, 'orientation'> {
+export interface IScalarBarActorInitialValues extends Omit<
+  IActorInitialValues,
+  'orientation'
+> {
   automated?: boolean;
   autoLayout?: (publicAPI: object, model: object) => void;
   axisLabel?: string;
@@ -48,8 +50,10 @@ export interface IScalarBarActorInitialValues
   orientation?: Orientation;
 }
 
-export interface vtkScalarBarActor
-  extends Omit<vtkActor, 'getOrientation' | 'setOrientation'> {
+export interface vtkScalarBarActor extends Omit<
+  vtkActor,
+  'getOrientation' | 'setOrientation'
+> {
   /**
    *
    * @param {Boolean} doUpdate

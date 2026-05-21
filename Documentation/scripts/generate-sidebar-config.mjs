@@ -58,8 +58,8 @@ const docsMenu = [
   {
     text: 'Testing',
     items: [
-      { text: 'Tests', link: '/vtk-js/coverage/tests.html' },
-      { text: 'Coverage', link: '/vtk-js/coverage/home.html' },
+      { text: 'Tests', link: '/coverage/tests.html' },
+      { text: 'Coverage', link: '/coverage/home.html' },
     ],
   },
 ];
@@ -90,7 +90,6 @@ function generateSidebarConfig() {
       const part = parts[i];
       if (i === parts.length - 1) {
         // Leaf node: store filename for link
-        console.log(`Adding ${filename} to sidebar structure`);
         current[part] = `${filename}`;
       } else {
         // If current[part] exists and is a string, convert it to an object
@@ -145,10 +144,8 @@ export const sidebar: DefaultTheme.Sidebar = ${JSON.stringify(
     2
   )}`;
 
-  fs.writeFileSync(
-    path.join(__dirname, '..', '.vitepress', 'sidebar.ts'),
-    sidebarConfig
-  );
+  const sidebarPath = path.join(__dirname, '..', '.vitepress', 'sidebar.ts');
+  fs.writeFileSync(sidebarPath, sidebarConfig);
   console.log('Sidebar configuration has been generated!');
 }
 

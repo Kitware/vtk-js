@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import Constants from 'vtk.js/Sources/Common/Transform/LandmarkTransform/Constants';
 import LandmarkTransform from 'vtk.js/Sources/Common/Transform/LandmarkTransform';
@@ -6,7 +6,7 @@ import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 
 const { Mode } = Constants;
 
-test('Test update in LandmarkTransform', (t) => {
+it('Test update in LandmarkTransform', () => {
   const transform = LandmarkTransform.newInstance();
   transform.setMode(Mode.SIMILARITY);
   const source = vtkPoints.newInstance();
@@ -19,13 +19,13 @@ test('Test update in LandmarkTransform', (t) => {
   transform.setTargetLandmark(target);
   transform.update();
   let transformMatrix = transform.getMatrix();
-  t.ok(
+  expect(
     vtkMath.areEquals(
       transformMatrix,
       [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3, 3, 3, 1]
     ),
     'Test for one point'
-  );
+  ).toBeTruthy();
   source.setNumberOfPoints(3);
   target.setNumberOfPoints(3);
   source.setPoint(0, 1, 2, 3);
@@ -38,12 +38,11 @@ test('Test update in LandmarkTransform', (t) => {
   transform.setTargetLandmark(target);
   transform.update();
   transformMatrix = transform.getMatrix();
-  t.ok(
+  expect(
     vtkMath.areEquals(
       transformMatrix,
       [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3, 3, 3, 1]
     ),
     'Test for one known transform matrix'
-  );
-  t.end();
+  ).toBeTruthy();
 });

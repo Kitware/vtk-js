@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -12,9 +12,9 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import baseline from './testCategoricalColors.png';
 
-test.onlyIfWebGL('Test Categorical Colors', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Categorical Colors', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkLookupTable TestCategoricalColors');
+  expect('rendering', 'vtkLookupTable TestCategoricalColors').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI
@@ -115,7 +115,6 @@ test.onlyIfWebGL('Test Categorical Colors', (t) => {
         image,
         [baseline],
         'Common/Core/LookupTable/testCategoricalColors',
-        t,
         5
       )
     )

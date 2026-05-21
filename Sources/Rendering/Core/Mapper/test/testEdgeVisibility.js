@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -10,9 +10,9 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import baseline from './testEdgeVisibility.png';
 
-test.skip('Test Edge Visibility', (t) => {
+it.skip('Test Edge Visibility', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkMapper EdgeVisibility');
+  expect('rendering', 'vtkMapper EdgeVisibility').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -51,7 +51,6 @@ test.skip('Test Edge Visibility', (t) => {
         image,
         [baseline],
         'Rendering/Core/Mapper/testEdgeVisibility.js',
-        t,
         1
       )
     )
