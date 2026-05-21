@@ -370,7 +370,7 @@ function rendererUpdater(instance, state, context) {
         extractInstanceIds(call[1]).forEach((vpId) => {
           const deps = context
             .getInstance(vpId)
-            .get('flattenedDepIds').flattenedDepIds;
+            ?.get('flattenedDepIds').flattenedDepIds;
           if (deps) {
             // Consider each dependency for un-registering
             deps.forEach((depId) => unregisterCandidates.add(depId));
