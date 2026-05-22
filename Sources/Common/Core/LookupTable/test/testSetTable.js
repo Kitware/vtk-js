@@ -12,7 +12,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import baseline from './testSetTable.png';
 
-it.skip('Test LookupTable setTable', () => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test LookupTable setTable', () => {
   const gc = testUtils.createGarbageCollector();
   expect('rendering', 'vtkLookupTable TestSetTable').toBeTruthy();
   // testUtils.keepDOM();

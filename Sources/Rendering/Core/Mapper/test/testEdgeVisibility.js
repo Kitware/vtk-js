@@ -10,7 +10,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import baseline from './testEdgeVisibility.png';
 
-it.skip('Test Edge Visibility', () => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Edge Visibility', () => {
   const gc = testUtils.createGarbageCollector();
   expect('rendering', 'vtkMapper EdgeVisibility').toBeTruthy();
 
@@ -50,7 +50,7 @@ it.skip('Test Edge Visibility', () => {
       testUtils.compareImages(
         image,
         [baseline],
-        'Rendering/Core/Mapper/testEdgeVisibility.js',
+        'Rendering/Core/Mapper/testEdgeVisibility',
         1
       )
     )
