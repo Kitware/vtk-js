@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -68,11 +68,11 @@ function hostDraw(gl, prog) {
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
-test.onlyIfWebGL(
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test host raw WebGL rendering can resume after renderShared when state is rebound',
-  (t) => {
+  () => {
     const gc = testUtils.createGarbageCollector();
-    const { gl, sharedWindow } = createSharedWindow(gc, t, {
+    const { gl, sharedWindow } = createSharedWindow(gc, {
       background: [0.1, 0.1, 0.2],
     });
 
@@ -92,22 +92,21 @@ test.onlyIfWebGL(
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     const px = new Uint8Array(4);
     gl.readPixels(300, 200, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
-    t.ok(
+    expect(
       px[1] > 150 && px[0] < 50 && px[2] < 50,
       `Right half center should be green, got rgba(${px[0]},${px[1]},${px[2]},${px[3]})`
-    );
+    ).toBeTruthy();
 
     gl.readPixels(100, 200, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
     const isHostGreen = px[1] > 150 && px[0] < 50 && px[2] < 50;
-    t.notOk(
+    expect(
       isHostGreen,
       `Left half should not be host green, got rgba(${px[0]},${px[1]},${px[2]},${px[3]})`
-    );
+    ).toBeFalsy();
 
     gl.deleteProgram(hostProg);
     gl.deleteVertexArray(hostVAO);
     gl.deleteBuffer(hostBuf);
     gc.releaseResources();
-    t.end();
   }
 );

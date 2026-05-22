@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -108,83 +108,73 @@ function deleteHostFramebuffer(gl, fbo) {
   gl.deleteRenderbuffer(fbo.depthRenderbuffer);
 }
 
-test.onlyIfWebGL(
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test renderShared resets host GL state and applies vtk.js defaults',
-  (t) => {
+  () => {
     const gc = testUtils.createGarbageCollector();
-    const { gl, sharedWindow } = createSharedWindow(gc, t);
+    const { gl, sharedWindow } = createSharedWindow(gc);
 
     const hostResources = createDirtyHostResources(gl);
     dirtyHostGLState(gl, hostResources);
 
     sharedWindow.prepareSharedRender();
 
-    t.equal(gl.isEnabled(gl.BLEND), true, 'Blending is enabled');
-    t.equal(
+    expect(gl.isEnabled(gl.BLEND), 'Blending is enabled').toBe(true);
+    expect(
       gl.getParameter(gl.BLEND_SRC_RGB),
-      gl.SRC_ALPHA,
       'RGB blend source matches vtk.js default'
-    );
-    t.equal(
+    ).toBe(gl.SRC_ALPHA);
+    expect(
       gl.getParameter(gl.DEPTH_FUNC),
-      gl.LEQUAL,
       'Depth function matches vtk.js default'
-    );
-    t.equal(
+    ).toBe(gl.LEQUAL);
+    expect(
       gl.isEnabled(gl.RASTERIZER_DISCARD),
-      false,
       'RASTERIZER_DISCARD disabled'
-    );
-    t.deepEqual(
+    ).toBe(false);
+    expect(
       Array.from(gl.getParameter(gl.DEPTH_RANGE)),
-      [0, 1],
       'DEPTH_RANGE reset to default'
+    ).toEqual([0, 1]);
+    expect(gl.isEnabled(gl.SAMPLE_COVERAGE), 'SAMPLE_COVERAGE disabled').toBe(
+      false
     );
-    t.equal(
-      gl.isEnabled(gl.SAMPLE_COVERAGE),
-      false,
-      'SAMPLE_COVERAGE disabled'
-    );
-    t.equal(
+    expect(
       gl.getParameter(gl.PIXEL_PACK_BUFFER_BINDING),
-      null,
       'PIXEL_PACK_BUFFER unbound'
-    );
-    t.equal(
+    ).toBe(null);
+    expect(
       gl.getParameter(gl.PIXEL_UNPACK_BUFFER_BINDING),
-      null,
       'PIXEL_UNPACK_BUFFER unbound'
-    );
+    ).toBe(null);
 
     sharedWindow.renderShared();
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     const px = new Uint8Array(4);
     gl.readPixels(5, 5, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
-    t.ok(
+    expect(
       px[0] > 20 && px[1] > 40 && px[2] > 60,
       `Shared render cleared the full framebuffer despite host state, got rgba(${px[0]},${px[1]},${px[2]},${px[3]})`
-    );
+    ).toBeTruthy();
 
     deleteDirtyHostResources(gl, hostResources);
     gc.releaseResources();
-    t.end();
   }
 );
 
-test.onlyIfWebGL(
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test renderShared draws into the currently bound host framebuffer',
-  (t) => {
+  () => {
     const gc = testUtils.createGarbageCollector();
-    const { gl, sharedWindow } = createSharedWindow(gc, t);
+    const { gl, sharedWindow } = createSharedWindow(gc);
 
     const hostFramebuffer = createHostFramebuffer(gl, 400, 400);
     gl.bindFramebuffer(gl.FRAMEBUFFER, hostFramebuffer.framebuffer);
-    t.equal(
+    expect(
       gl.checkFramebufferStatus(gl.FRAMEBUFFER),
-      gl.FRAMEBUFFER_COMPLETE,
       'Host framebuffer is complete'
-    );
+    ).toBe(gl.FRAMEBUFFER_COMPLETE);
     gl.drawBuffers([gl.NONE]);
 
     sharedWindow.renderShared();
@@ -192,14 +182,13 @@ test.onlyIfWebGL(
     gl.bindFramebuffer(gl.FRAMEBUFFER, hostFramebuffer.framebuffer);
     const px = new Uint8Array(4);
     gl.readPixels(200, 200, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
-    t.ok(
+    expect(
       px[0] > 0 || px[1] > 0 || px[2] > 0,
       `Shared render wrote into the host framebuffer, got rgba(${px[0]},${px[1]},${px[2]},${px[3]})`
-    );
+    ).toBeTruthy();
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     deleteHostFramebuffer(gl, hostFramebuffer);
     gc.releaseResources();
-    t.end();
   }
 );

@@ -2,8 +2,7 @@ import vtkOpenGLRenderWindow, {
   IOpenGLRenderWindowInitialValues,
 } from '../RenderWindow';
 
-export interface ISharedRenderWindowInitialValues
-  extends IOpenGLRenderWindowInitialValues {
+export interface ISharedRenderWindowInitialValues extends IOpenGLRenderWindowInitialValues {
   autoClear?: boolean;
   autoClearColor?: boolean;
   autoClearDepth?: boolean;

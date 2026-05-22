@@ -1,3 +1,5 @@
+import { expect } from 'vitest';
+
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
@@ -8,7 +10,6 @@ import { GET_UNDERLYING_CONTEXT } from 'vtk.js/Sources/Rendering/OpenGL/RenderWi
 
 export default function createSharedWindow(
   gc,
-  t,
   { width = 400, height = 400, background = [0.2, 0.3, 0.4] } = {}
 ) {
   const container = document.querySelector('body');
@@ -36,7 +37,7 @@ export default function createSharedWindow(
 
   const glProxy = glWindow.get3DContext();
   const gl = glProxy?.[GET_UNDERLYING_CONTEXT]?.();
-  t.ok(gl, 'WebGL context created');
+  expect(gl, 'WebGL context created').toBeTruthy();
 
   const sharedWindow = gc.registerResource(
     vtkSharedRenderWindow.createFromContext(glWindow.getCanvas(), gl)
