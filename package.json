@@ -108,7 +108,6 @@
     "build:esm": "npm run build:pre && cross-env BUILD_TARGET=esm vite build",
     "build:umd": "npm run build:pre && cross-env BUILD_TARGET=umd vite build",
     "build:release": "npm run lint && npm run build",
-    "release:create-packages": "node ./Utilities/ci/build-npm-package.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:debug": "vitest run --reporter=verbose",
