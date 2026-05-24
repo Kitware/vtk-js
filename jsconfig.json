@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0",
+    "checkJs": false,
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "vtk.js/Sources/*": ["Sources/*/index.js", "Sources/*.js", "Sources/*"],
+      "vtk.js/*": ["./*"]
+    }
+  },
+  "include": ["Sources/**/*.js", "Examples/**/*.js", "Utilities/**/*.js"]
+}
