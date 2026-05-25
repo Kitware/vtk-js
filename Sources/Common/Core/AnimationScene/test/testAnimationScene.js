@@ -1,16 +1,15 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkAnimationCue from 'vtk.js/Sources/Common/Core/AnimationCue';
 import vtkAnimationScene from 'vtk.js/Sources/Common/Core/AnimationScene';
 
-test('vtkAnimationScene: Basic instantiation', (t) => {
+it('vtkAnimationScene: Basic instantiation', () => {
   const scene = vtkAnimationScene.newInstance();
-  t.ok(scene);
-  t.equal(scene.getNumberOfCues(), 0);
-  t.equal(scene.getTime(), 0);
-  t.end();
+  expect(scene).toBeTruthy();
+  expect(scene.getNumberOfCues()).toBe(0);
+  expect(scene.getTime()).toBe(0);
 });
 
-test('vtkAnimationScene: Add and remove cues', (t) => {
+it('vtkAnimationScene: Add and remove cues', () => {
   const scene = vtkAnimationScene.newInstance();
 
   const cue1 = vtkAnimationCue.newInstance({ startTime: 0, endTime: 1 });
@@ -18,51 +17,48 @@ test('vtkAnimationScene: Add and remove cues', (t) => {
 
   scene.addCue(cue1);
   scene.addCue(cue2);
-  t.equal(scene.getNumberOfCues(), 2);
+  expect(scene.getNumberOfCues()).toBe(2);
 
   scene.removeCue(cue1);
-  t.equal(scene.getNumberOfCues(), 1);
-  t.equal(scene.getCue(0), cue2);
-  t.end();
+  expect(scene.getNumberOfCues()).toBe(1);
+  expect(scene.getCue(0)).toBe(cue2);
 });
 
-test('vtkAnimationScene: Play and stop', (t) => {
+it('vtkAnimationScene: Play and stop', () => {
   const scene = vtkAnimationScene.newInstance({ startTime: 0, endTime: 2 });
 
   const cue = vtkAnimationCue.newInstance({ startTime: 0, endTime: 2 });
   scene.addCue(cue);
 
-  t.notOk(scene.isPlaying());
+  expect(scene.isPlaying()).toBeFalsy();
 
   scene.play();
-  t.ok(scene.isPlaying());
-  t.ok(cue.isPlaying());
-  t.equal(scene.getTime(), 0);
+  expect(scene.isPlaying()).toBeTruthy();
+  expect(cue.isPlaying()).toBeTruthy();
+  expect(scene.getTime()).toBe(0);
 
   scene.stop();
-  t.notOk(scene.isPlaying());
-  t.notOk(cue.isPlaying());
-  t.equal(scene.getTime(), 0);
-  t.end();
+  expect(scene.isPlaying()).toBeFalsy();
+  expect(cue.isPlaying()).toBeFalsy();
+  expect(scene.getTime()).toBe(0);
 });
 
-test('vtkAnimationScene: Pause and resume', (t) => {
+it('vtkAnimationScene: Pause and resume', () => {
   const scene = vtkAnimationScene.newInstance();
   const cue = vtkAnimationCue.newInstance({ startTime: 0, endTime: 2 });
 
   scene.addCue(cue);
   scene.play();
-  t.ok(cue.isPlaying());
+  expect(cue.isPlaying()).toBeTruthy();
 
   scene.pause();
-  t.notOk(cue.isPlaying());
+  expect(cue.isPlaying()).toBeFalsy();
 
   scene.play();
-  t.ok(cue.isPlaying());
-  t.end();
+  expect(cue.isPlaying()).toBeTruthy();
 });
 
-test('vtkAnimationScene: Tick advances cues', (t) => {
+it('vtkAnimationScene: Tick advances cues', () => {
   const scene = vtkAnimationScene.newInstance({ startTime: 0, endTime: 2 });
   const cue = vtkAnimationCue.newInstance({ startTime: 0, endTime: 2 });
 
@@ -70,16 +66,15 @@ test('vtkAnimationScene: Tick advances cues', (t) => {
   scene.play();
 
   scene.tick(0.5);
-  t.equal(scene.getTime(), 0.5);
-  t.equal(cue.getTime(), 0.5);
+  expect(scene.getTime()).toBe(0.5);
+  expect(cue.getTime()).toBe(0.5);
 
   scene.tick(0.5);
-  t.equal(scene.getTime(), 1.0);
-  t.equal(cue.getTime(), 1.0);
-  t.end();
+  expect(scene.getTime()).toBe(1.0);
+  expect(cue.getTime()).toBe(1.0);
 });
 
-test('vtkAnimationScene: Seek to time', (t) => {
+it('vtkAnimationScene: Seek to time', () => {
   const scene = vtkAnimationScene.newInstance({ startTime: 0, endTime: 3 });
   const cue1 = vtkAnimationCue.newInstance({ startTime: 0, endTime: 1 });
   const cue2 = vtkAnimationCue.newInstance({ startTime: 1, endTime: 2 });
@@ -88,29 +83,27 @@ test('vtkAnimationScene: Seek to time', (t) => {
   scene.addCue(cue2);
 
   scene.seek(0.5);
-  t.equal(scene.getTime(), 0.5);
+  expect(scene.getTime()).toBe(0.5);
 
   scene.seek(1.5);
-  t.equal(scene.getTime(), 1.5);
-  t.ok(cue2.isPlaying());
+  expect(scene.getTime()).toBe(1.5);
+  expect(cue2.isPlaying()).toBeTruthy();
 
   scene.seek(3);
-  t.equal(scene.getTime(), 3);
-  t.end();
+  expect(scene.getTime()).toBe(3);
 });
 
-test('vtkAnimationScene: Clamp time to range', (t) => {
+it('vtkAnimationScene: Clamp time to range', () => {
   const scene = vtkAnimationScene.newInstance({ startTime: 1, endTime: 5 });
 
   scene.play();
   scene.tick(10);
 
-  t.equal(scene.getTime(), 5);
-  t.notOk(scene.isPlaying());
-  t.end();
+  expect(scene.getTime()).toBe(5);
+  expect(scene.isPlaying()).toBeFalsy();
 });
 
-test('vtkAnimationScene: Multiple cues', (t) => {
+it('vtkAnimationScene: Multiple cues', () => {
   const scene = vtkAnimationScene.newInstance({ startTime: 0, endTime: 2 });
 
   const cue1 = vtkAnimationCue.newInstance({ startTime: 0, endTime: 1 });
@@ -128,7 +121,6 @@ test('vtkAnimationScene: Multiple cues', (t) => {
   scene.play();
   scene.tick(0.5);
 
-  t.ok(cue1Ticks > 0);
-  t.ok(cue2Ticks > 0);
-  t.end();
+  expect(cue1Ticks > 0).toBeTruthy();
+  expect(cue2Ticks > 0).toBeTruthy();
 });
