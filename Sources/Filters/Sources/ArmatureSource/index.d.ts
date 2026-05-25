@@ -53,8 +53,7 @@ export interface vtkArmatureSource extends vtkArmatureSourceBase {
   getJointRadius(): number;
 }
 
-export interface IvtkArmatureSourceInitialValues
-  extends IArmatureSourceInitialValues {}
+export interface IvtkArmatureSourceInitialValues extends IArmatureSourceInitialValues {}
 
 export function newInstance(
   initialValues?: IvtkArmatureSourceInitialValues

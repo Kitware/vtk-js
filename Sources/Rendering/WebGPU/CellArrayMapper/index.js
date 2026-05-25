@@ -265,6 +265,13 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
       // Volume
       model.UBO.setValue('ThicknessFactor', ppty.getThicknessFactor?.() ?? 0);
+      // glTF KHR_materials_volume thickness is affected by node transforms.
+      // Approximate object-space scale in view/world by geometric mean of basis lengths.
+      const sx = Math.hypot(mcwc[0], mcwc[1], mcwc[2]);
+      const sy = Math.hypot(mcwc[4], mcwc[5], mcwc[6]);
+      const sz = Math.hypot(mcwc[8], mcwc[9], mcwc[10]);
+      const thicknessScale = Math.cbrt(Math.max(sx * sy * sz, 0));
+      model.UBO.setValue('ThicknessScale', thicknessScale);
       const attDist = ppty.getAttenuationDistance?.() ?? Infinity;
       model.UBO.setValue(
         'AttenuationDistance',
@@ -954,6 +961,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('AlphaCutoff', 'f32');
   // Volume
   model.UBO.addEntry('ThicknessFactor', 'f32');
+  model.UBO.addEntry('ThicknessScale', 'f32');
   model.UBO.addEntry('AttenuationDistance', 'f32');
   model.UBO.addEntry('AttenuationColor', 'vec4<f32>');
   // Iridescence

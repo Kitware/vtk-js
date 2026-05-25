@@ -1,17 +1,16 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkAnimationTrack from 'vtk.js/Sources/Common/DataModel/AnimationTrack';
 import vtkAnimationClip from 'vtk.js/Sources/Common/DataModel/AnimationClip';
 import { TrackType } from 'vtk.js/Sources/Common/DataModel/AnimationTrack/Constants';
 
-test('vtkAnimationClip: Basic instantiation', (t) => {
+it('vtkAnimationClip: Basic instantiation', () => {
   const clip = vtkAnimationClip.newInstance();
-  t.ok(clip);
-  t.equal(clip.getNumberOfTracks(), 0);
-  t.equal(clip.getDuration(), 0);
-  t.end();
+  expect(clip).toBeTruthy();
+  expect(clip.getNumberOfTracks()).toBe(0);
+  expect(clip.getDuration()).toBe(0);
 });
 
-test('vtkAnimationClip: Add tracks', (t) => {
+it('vtkAnimationClip: Add tracks', () => {
   const clip = vtkAnimationClip.newInstance({ name: 'Walk' });
 
   const track1 = vtkAnimationTrack.newInstance({
@@ -31,12 +30,11 @@ test('vtkAnimationClip: Add tracks', (t) => {
   clip.addTrack(track1);
   clip.addTrack(track2);
 
-  t.equal(clip.getNumberOfTracks(), 2);
-  t.equal(clip.getDuration(), 2); // Longest track duration
-  t.end();
+  expect(clip.getNumberOfTracks()).toBe(2);
+  expect(clip.getDuration()).toBe(2); // Longest track duration
 });
 
-test('vtkAnimationClip: Get tracks', (t) => {
+it('vtkAnimationClip: Get tracks', () => {
   const clip = vtkAnimationClip.newInstance();
 
   const track1 = vtkAnimationTrack.newInstance({ name: 'Track1' });
@@ -48,12 +46,11 @@ test('vtkAnimationClip: Get tracks', (t) => {
   const retrieved1 = clip.getTrack(0);
   const retrieved2 = clip.getTrack(1);
 
-  t.equal(retrieved1.getName(), 'Track1');
-  t.equal(retrieved2.getName(), 'Track2');
-  t.end();
+  expect(retrieved1.getName()).toBe('Track1');
+  expect(retrieved2.getName()).toBe('Track2');
 });
 
-test('vtkAnimationClip: Get track by name', (t) => {
+it('vtkAnimationClip: Get track by name', () => {
   const clip = vtkAnimationClip.newInstance();
 
   const track1 = vtkAnimationTrack.newInstance({ name: 'Rotation' });
@@ -66,13 +63,12 @@ test('vtkAnimationClip: Get track by name', (t) => {
   const found2 = clip.getTrackByName('Translation');
   const notFound = clip.getTrackByName('NotExists');
 
-  t.equal(found1.getName(), 'Rotation');
-  t.equal(found2.getName(), 'Translation');
-  t.equal(notFound, null);
-  t.end();
+  expect(found1.getName()).toBe('Rotation');
+  expect(found2.getName()).toBe('Translation');
+  expect(notFound).toBe(null);
 });
 
-test('vtkAnimationClip: Remove track', (t) => {
+it('vtkAnimationClip: Remove track', () => {
   const clip = vtkAnimationClip.newInstance();
 
   const track1 = vtkAnimationTrack.newInstance({ name: 'Track1' });
@@ -80,15 +76,14 @@ test('vtkAnimationClip: Remove track', (t) => {
 
   clip.addTrack(track1);
   clip.addTrack(track2);
-  t.equal(clip.getNumberOfTracks(), 2);
+  expect(clip.getNumberOfTracks()).toBe(2);
 
   clip.removeTrack(0);
-  t.equal(clip.getNumberOfTracks(), 1);
-  t.equal(clip.getTrack(0).getName(), 'Track2');
-  t.end();
+  expect(clip.getNumberOfTracks()).toBe(1);
+  expect(clip.getTrack(0).getName()).toBe('Track2');
 });
 
-test('vtkAnimationClip: Duration calculation', (t) => {
+it('vtkAnimationClip: Duration calculation', () => {
   const clip = vtkAnimationClip.newInstance();
 
   const track1 = vtkAnimationTrack.newInstance();
@@ -100,17 +95,16 @@ test('vtkAnimationClip: Duration calculation', (t) => {
   track2.addKeyframe(5, [1, 1, 1]);
 
   clip.addTrack(track1);
-  t.equal(clip.getDuration(), 3);
+  expect(clip.getDuration()).toBe(3);
 
   clip.addTrack(track2);
-  t.equal(clip.getDuration(), 5); // Updated to longest
+  expect(clip.getDuration()).toBe(5); // Updated to longest
 
   clip.removeTrack(1);
-  t.equal(clip.getDuration(), 3); // Back to first track's duration
-  t.end();
+  expect(clip.getDuration()).toBe(3); // Back to first track's duration
 });
 
-test('vtkAnimationClip: Clear tracks', (t) => {
+it('vtkAnimationClip: Clear tracks', () => {
   const clip = vtkAnimationClip.newInstance();
 
   const track = vtkAnimationTrack.newInstance();
@@ -118,16 +112,15 @@ test('vtkAnimationClip: Clear tracks', (t) => {
   track.addKeyframe(2, [1, 1, 1]);
 
   clip.addTrack(track);
-  t.equal(clip.getNumberOfTracks(), 1);
-  t.equal(clip.getDuration(), 2);
+  expect(clip.getNumberOfTracks()).toBe(1);
+  expect(clip.getDuration()).toBe(2);
 
   clip.clear();
-  t.equal(clip.getNumberOfTracks(), 0);
-  t.equal(clip.getDuration(), 0);
-  t.end();
+  expect(clip.getNumberOfTracks()).toBe(0);
+  expect(clip.getDuration()).toBe(0);
 });
 
-test('vtkAnimationClip: Get all tracks', (t) => {
+it('vtkAnimationClip: Get all tracks', () => {
   const clip = vtkAnimationClip.newInstance();
 
   const track1 = vtkAnimationTrack.newInstance({ name: 'Track1' });
@@ -137,8 +130,7 @@ test('vtkAnimationClip: Get all tracks', (t) => {
   clip.addTrack(track2);
 
   const all = clip.getTracks();
-  t.equal(all.length, 2);
-  t.equal(all[0].getName(), 'Track1');
-  t.equal(all[1].getName(), 'Track2');
-  t.end();
+  expect(all.length).toBe(2);
+  expect(all[0].getName()).toBe('Track1');
+  expect(all[1].getName()).toBe('Track2');
 });
