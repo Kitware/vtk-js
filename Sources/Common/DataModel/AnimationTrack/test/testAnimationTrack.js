@@ -1,19 +1,18 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkAnimationTrack from 'vtk.js/Sources/Common/DataModel/AnimationTrack';
 import {
   InterpolationMode,
   TrackType,
 } from 'vtk.js/Sources/Common/DataModel/AnimationTrack/Constants';
 
-test('vtkAnimationTrack: Basic instantiation', (t) => {
+it('vtkAnimationTrack: Basic instantiation', () => {
   const track = vtkAnimationTrack.newInstance();
-  t.ok(track);
-  t.equal(track.getNumberOfKeyframes(), 0);
-  t.equal(track.getDuration(), 0);
-  t.end();
+  expect(track).toBeTruthy();
+  expect(track.getNumberOfKeyframes()).toBe(0);
+  expect(track.getDuration()).toBe(0);
 });
 
-test('vtkAnimationTrack: Add keyframes', (t) => {
+it('vtkAnimationTrack: Add keyframes', () => {
   const track = vtkAnimationTrack.newInstance({
     trackType: TrackType.TRANSLATION,
   });
@@ -22,29 +21,27 @@ test('vtkAnimationTrack: Add keyframes', (t) => {
   track.addKeyframe(1, [1, 0, 0]);
   track.addKeyframe(2, [2, 0, 0]);
 
-  t.equal(track.getNumberOfKeyframes(), 3);
-  t.equal(track.getDuration(), 2);
-  t.end();
+  expect(track.getNumberOfKeyframes()).toBe(3);
+  expect(track.getDuration()).toBe(2);
 });
 
-test('vtkAnimationTrack: Get keyframe by index', (t) => {
+it('vtkAnimationTrack: Get keyframe by index', () => {
   const track = vtkAnimationTrack.newInstance();
 
   track.addKeyframe(0, [0, 0, 0]);
   track.addKeyframe(1, [1, 1, 1]);
 
-  t.equal(track.getKeyframeTime(0), 0);
-  t.equal(track.getKeyframeTime(1), 1);
+  expect(track.getKeyframeTime(0)).toBe(0);
+  expect(track.getKeyframeTime(1)).toBe(1);
 
   const val0 = track.getKeyframeValue(0);
-  t.equal(val0[0], 0);
+  expect(val0[0]).toBe(0);
 
   const val1 = track.getKeyframeValue(1);
-  t.equal(val1[0], 1);
-  t.end();
+  expect(val1[0]).toBe(1);
 });
 
-test('vtkAnimationTrack: STEP interpolation', (t) => {
+it('vtkAnimationTrack: STEP interpolation', () => {
   const track = vtkAnimationTrack.newInstance({
     trackType: TrackType.TRANSLATION,
     interpolationMode: InterpolationMode.STEP,
@@ -54,17 +51,16 @@ test('vtkAnimationTrack: STEP interpolation', (t) => {
   track.addKeyframe(2, [2, 2, 2]);
 
   const val0 = track.evaluate(0);
-  t.equal(val0[0], 0);
+  expect(val0[0]).toBe(0);
 
   const val1 = track.evaluate(1); // Between keyframes, should be step (first value)
-  t.equal(val1[0], 0);
+  expect(val1[0]).toBe(0);
 
   const val2 = track.evaluate(2);
-  t.equal(val2[0], 2);
-  t.end();
+  expect(val2[0]).toBe(2);
 });
 
-test('vtkAnimationTrack: LINEAR interpolation (translation)', (t) => {
+it('vtkAnimationTrack: LINEAR interpolation (translation)', () => {
   const track = vtkAnimationTrack.newInstance({
     trackType: TrackType.TRANSLATION,
     interpolationMode: InterpolationMode.LINEAR,
@@ -74,17 +70,16 @@ test('vtkAnimationTrack: LINEAR interpolation (translation)', (t) => {
   track.addKeyframe(2, [2, 0, 0]);
 
   const val0 = track.evaluate(0);
-  t.equal(val0[0], 0);
+  expect(val0[0]).toBe(0);
 
   const val1 = track.evaluate(1); // Midpoint
-  t.equal(val1[0], 1); // Linear interpolation
+  expect(val1[0]).toBe(1); // Linear interpolation
 
   const val2 = track.evaluate(2);
-  t.equal(val2[0], 2);
-  t.end();
+  expect(val2[0]).toBe(2);
 });
 
-test('vtkAnimationTrack: Quaternion SLERP (rotation)', (t) => {
+it('vtkAnimationTrack: Quaternion SLERP (rotation)', () => {
   const track = vtkAnimationTrack.newInstance({
     trackType: TrackType.ROTATION,
     interpolationMode: InterpolationMode.LINEAR,
@@ -96,18 +91,17 @@ test('vtkAnimationTrack: Quaternion SLERP (rotation)', (t) => {
   track.addKeyframe(2, [0, 0, 1, 0]);
 
   const val0 = track.evaluate(0);
-  t.equal(val0[3], 1); // Identity w
+  expect(val0[3]).toBe(1); // Identity w
 
   const val2 = track.evaluate(2);
-  t.equal(val2[2], 1); // Rotated Z
+  expect(val2[2]).toBe(1); // Rotated Z
 
   // Midpoint should interpolate (SLERP)
   const val1 = track.evaluate(1);
-  t.ok(val1.length === 4);
-  t.end();
+  expect(val1.length === 4).toBeTruthy();
 });
 
-test('vtkAnimationTrack: Clamp outside range', (t) => {
+it('vtkAnimationTrack: Clamp outside range', () => {
   const track = vtkAnimationTrack.newInstance({
     trackType: TrackType.TRANSLATION,
     interpolationMode: InterpolationMode.LINEAR,
@@ -118,28 +112,26 @@ test('vtkAnimationTrack: Clamp outside range', (t) => {
 
   // Before first keyframe
   const valBefore = track.evaluate(0);
-  t.equal(valBefore[0], 1);
+  expect(valBefore[0]).toBe(1);
 
   // After last keyframe
   const valAfter = track.evaluate(5);
-  t.equal(valAfter[0], 3);
-  t.end();
+  expect(valAfter[0]).toBe(3);
 });
 
-test('vtkAnimationTrack: Clear keyframes', (t) => {
+it('vtkAnimationTrack: Clear keyframes', () => {
   const track = vtkAnimationTrack.newInstance();
 
   track.addKeyframe(0, [0, 0, 0]);
   track.addKeyframe(1, [1, 1, 1]);
-  t.equal(track.getNumberOfKeyframes(), 2);
+  expect(track.getNumberOfKeyframes()).toBe(2);
 
   track.clear();
-  t.equal(track.getNumberOfKeyframes(), 0);
-  t.equal(track.getDuration(), 0);
-  t.end();
+  expect(track.getNumberOfKeyframes()).toBe(0);
+  expect(track.getDuration()).toBe(0);
 });
 
-test('vtkAnimationTrack: Track properties', (t) => {
+it('vtkAnimationTrack: Track properties', () => {
   const track = vtkAnimationTrack.newInstance();
 
   track.setName('LeftArmRotation');
@@ -147,9 +139,8 @@ test('vtkAnimationTrack: Track properties', (t) => {
   track.setTrackType(TrackType.ROTATION);
   track.setInterpolationMode(InterpolationMode.STEP);
 
-  t.equal(track.getName(), 'LeftArmRotation');
-  t.equal(track.getBoneIndex(), 5);
-  t.equal(track.getTrackType(), TrackType.ROTATION);
-  t.equal(track.getInterpolationMode(), InterpolationMode.STEP);
-  t.end();
+  expect(track.getName()).toBe('LeftArmRotation');
+  expect(track.getBoneIndex()).toBe(5);
+  expect(track.getTrackType()).toBe(TrackType.ROTATION);
+  expect(track.getInterpolationMode()).toBe(InterpolationMode.STEP);
 });

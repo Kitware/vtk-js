@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkArmature from 'vtk.js/Sources/Common/DataModel/Armature';
 import vtkAnimationTrack from 'vtk.js/Sources/Common/DataModel/AnimationTrack';
 import vtkAnimationClip from 'vtk.js/Sources/Common/DataModel/AnimationClip';
@@ -7,38 +7,35 @@ import {
   InterpolationMode,
 } from 'vtk.js/Sources/Common/DataModel/AnimationTrack/Constants';
 
-test('vtkArmature: Basic instantiation', (t) => {
+it('vtkArmature: Basic instantiation', () => {
   const skeleton = vtkArmature.newInstance();
-  t.ok(skeleton);
-  t.equal(skeleton.getNumberOfBones(), 0);
-  t.end();
+  expect(skeleton).toBeTruthy();
+  expect(skeleton.getNumberOfBones()).toBe(0);
 });
 
-test('vtkArmature: Add bones', (t) => {
+it('vtkArmature: Add bones', () => {
   const skeleton = vtkArmature.newInstance();
 
   const idx1 = skeleton.addBone({ name: 'Root' });
   const idx2 = skeleton.addBone({ name: 'Child', parentIndex: 0 });
 
-  t.equal(idx1, 0);
-  t.equal(idx2, 1);
-  t.equal(skeleton.getNumberOfBones(), 2);
-  t.end();
+  expect(idx1).toBe(0);
+  expect(idx2).toBe(1);
+  expect(skeleton.getNumberOfBones()).toBe(2);
 });
 
-test('vtkArmature: Get bones by name', (t) => {
+it('vtkArmature: Get bones by name', () => {
   const skeleton = vtkArmature.newInstance();
 
   skeleton.addBone({ name: 'Root' });
   skeleton.addBone({ name: 'LeftArm', parentIndex: 0 });
 
-  t.equal(skeleton.getBoneIndexByName('Root'), 0);
-  t.equal(skeleton.getBoneIndexByName('LeftArm'), 1);
-  t.equal(skeleton.getBoneIndexByName('NotFound'), -1);
-  t.end();
+  expect(skeleton.getBoneIndexByName('Root')).toBe(0);
+  expect(skeleton.getBoneIndexByName('LeftArm')).toBe(1);
+  expect(skeleton.getBoneIndexByName('NotFound')).toBe(-1);
 });
 
-test('vtkArmature: Get children indices', (t) => {
+it('vtkArmature: Get children indices', () => {
   const skeleton = vtkArmature.newInstance();
 
   skeleton.addBone({ name: 'Root' });
@@ -47,17 +44,16 @@ test('vtkArmature: Get children indices', (t) => {
   skeleton.addBone({ name: 'GrandChild', parentIndex: 1 });
 
   const rootChildren = skeleton.getChildrenIndices(0);
-  t.ok(rootChildren.includes(1));
-  t.ok(rootChildren.includes(2));
-  t.equal(rootChildren.length, 2);
+  expect(rootChildren.includes(1)).toBeTruthy();
+  expect(rootChildren.includes(2)).toBeTruthy();
+  expect(rootChildren.length).toBe(2);
 
   const child1Children = skeleton.getChildrenIndices(1);
-  t.ok(child1Children.includes(3));
-  t.equal(child1Children.length, 1);
-  t.end();
+  expect(child1Children.includes(3)).toBeTruthy();
+  expect(child1Children.length).toBe(1);
 });
 
-test('vtkArmature: Get root bone indices', (t) => {
+it('vtkArmature: Get root bone indices', () => {
   const skeleton = vtkArmature.newInstance();
 
   skeleton.addBone({ name: 'Root1' });
@@ -65,26 +61,24 @@ test('vtkArmature: Get root bone indices', (t) => {
   skeleton.addBone({ name: 'Child', parentIndex: 0 });
 
   const roots = skeleton.getRootBoneIndices();
-  t.ok(roots.includes(0));
-  t.ok(roots.includes(1));
-  t.notOk(roots.includes(2));
-  t.end();
+  expect(roots.includes(0)).toBeTruthy();
+  expect(roots.includes(1)).toBeTruthy();
+  expect(roots.includes(2)).toBeFalsy();
 });
 
-test('vtkArmature: Remove bone', (t) => {
+it('vtkArmature: Remove bone', () => {
   const skeleton = vtkArmature.newInstance();
 
   skeleton.addBone({ name: 'Bone1' });
   skeleton.addBone({ name: 'Bone2' });
-  t.equal(skeleton.getNumberOfBones(), 2);
+  expect(skeleton.getNumberOfBones()).toBe(2);
 
   skeleton.removeBone(0);
-  t.equal(skeleton.getNumberOfBones(), 1);
-  t.equal(skeleton.getBone(0).name, 'Bone2');
-  t.end();
+  expect(skeleton.getNumberOfBones()).toBe(1);
+  expect(skeleton.getBone(0).name).toBe('Bone2');
 });
 
-test('vtkArmature: Compute world matrices', (t) => {
+it('vtkArmature: Compute world matrices', () => {
   const skeleton = vtkArmature.newInstance();
   skeleton.addBone({ name: 'Root' });
 
@@ -99,13 +93,12 @@ test('vtkArmature: Compute world matrices', (t) => {
   skeleton.computeWorldMatrices();
   const worldMatrix = skeleton.getWorldMatrix(0);
 
-  t.ok(worldMatrix);
-  t.equal(worldMatrix[0], 1);
-  t.equal(worldMatrix[15], 1);
-  t.end();
+  expect(worldMatrix).toBeTruthy();
+  expect(worldMatrix[0]).toBe(1);
+  expect(worldMatrix[15]).toBe(1);
 });
 
-test('vtkArmature: Per-bone matrix accessors', (t) => {
+it('vtkArmature: Per-bone matrix accessors', () => {
   const skeleton = vtkArmature.newInstance();
   skeleton.addBone({ name: 'Root' });
   skeleton.addBone({ name: 'Child', parentIndex: 0 });
@@ -119,19 +112,18 @@ test('vtkArmature: Per-bone matrix accessors', (t) => {
   skeleton.setLocalMatrix(0, testMatrix);
   const retrieved = skeleton.getLocalMatrix(0);
 
-  t.equal(retrieved[0], 2);
-  t.equal(retrieved[5], 3);
-  t.equal(retrieved[10], 4);
-  t.equal(retrieved[15], 1);
+  expect(retrieved[0]).toBe(2);
+  expect(retrieved[5]).toBe(3);
+  expect(retrieved[10]).toBe(4);
+  expect(retrieved[15]).toBe(1);
 
   // Matrix arrays are sized correctly
-  t.equal(skeleton.getLocalMatrices().length, 2 * 16);
-  t.equal(skeleton.getWorldMatrices().length, 2 * 16);
-  t.equal(skeleton.getSkinningMatrices().length, 2 * 16);
-  t.end();
+  expect(skeleton.getLocalMatrices().length).toBe(2 * 16);
+  expect(skeleton.getWorldMatrices().length).toBe(2 * 16);
+  expect(skeleton.getSkinningMatrices().length).toBe(2 * 16);
 });
 
-test('vtkArmature: evaluatePose with translation track', (t) => {
+it('vtkArmature: evaluatePose with translation track', () => {
   const skeleton = vtkArmature.newInstance();
   skeleton.addBone({
     name: 'Root',
@@ -154,11 +146,10 @@ test('vtkArmature: evaluatePose with translation track', (t) => {
   skeleton.evaluatePose(clip, 1);
   const matrix = skeleton.getLocalMatrix(0);
 
-  t.ok(matrix[12] > 0, 'X translation should be > 0');
-  t.end();
+  expect(matrix[12] > 0).toBeTruthy();
 });
 
-test('vtkArmature: evaluatePose with rotation track', (t) => {
+it('vtkArmature: evaluatePose with rotation track', () => {
   const skeleton = vtkArmature.newInstance();
   skeleton.addBone({ name: 'Root' });
 
@@ -175,6 +166,5 @@ test('vtkArmature: evaluatePose with rotation track', (t) => {
   clip.addTrack(track);
 
   skeleton.evaluatePose(clip, 0.5);
-  t.ok(skeleton.getNumberOfBones() > 0);
-  t.end();
+  expect(skeleton.getNumberOfBones() > 0).toBeTruthy();
 });

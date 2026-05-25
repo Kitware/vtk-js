@@ -1,69 +1,65 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkAnimationCue from 'vtk.js/Sources/Common/Core/AnimationCue';
 
-test('vtkAnimationCue: Basic instantiation', (t) => {
+it('vtkAnimationCue: Basic instantiation', () => {
   const cue = vtkAnimationCue.newInstance();
-  t.ok(cue);
-  t.equal(cue.getStartTime(), 0);
-  t.equal(cue.getEndTime(), 1);
-  t.equal(cue.getTime(), 0);
-  t.end();
+  expect(cue).toBeTruthy();
+  expect(cue.getStartTime()).toBe(0);
+  expect(cue.getEndTime()).toBe(1);
+  expect(cue.getTime()).toBe(0);
 });
 
-test('vtkAnimationCue: Start and end times', (t) => {
+it('vtkAnimationCue: Start and end times', () => {
   const cue = vtkAnimationCue.newInstance({ startTime: 1, endTime: 5 });
-  t.equal(cue.getStartTime(), 1);
-  t.equal(cue.getEndTime(), 5);
+  expect(cue.getStartTime()).toBe(1);
+  expect(cue.getEndTime()).toBe(5);
 
   cue.setStartTime(2);
   cue.setEndTime(8);
-  t.equal(cue.getStartTime(), 2);
-  t.equal(cue.getEndTime(), 8);
-  t.end();
+  expect(cue.getStartTime()).toBe(2);
+  expect(cue.getEndTime()).toBe(8);
 });
 
-test('vtkAnimationCue: Play, pause, stop', (t) => {
+it('vtkAnimationCue: Play, pause, stop', () => {
   const cue = vtkAnimationCue.newInstance({ startTime: 0, endTime: 2 });
 
-  t.notOk(cue.isActive());
-  t.notOk(cue.isPlaying());
+  expect(cue.isActive()).toBeFalsy();
+  expect(cue.isPlaying()).toBeFalsy();
 
   cue.play();
-  t.ok(cue.isActive());
-  t.ok(cue.isPlaying());
-  t.equal(cue.getTime(), 0);
+  expect(cue.isActive()).toBeTruthy();
+  expect(cue.isPlaying()).toBeTruthy();
+  expect(cue.getTime()).toBe(0);
 
   cue.pause();
-  t.ok(cue.isActive());
-  t.notOk(cue.isPlaying());
+  expect(cue.isActive()).toBeTruthy();
+  expect(cue.isPlaying()).toBeFalsy();
 
   cue.play();
-  t.ok(cue.isPlaying());
+  expect(cue.isPlaying()).toBeTruthy();
 
   cue.stop();
-  t.notOk(cue.isActive());
-  t.equal(cue.getTime(), 0);
-  t.end();
+  expect(cue.isActive()).toBeFalsy();
+  expect(cue.getTime()).toBe(0);
 });
 
-test('vtkAnimationCue: Tick updates time while playing', (t) => {
+it('vtkAnimationCue: Tick updates time while playing', () => {
   const cue = vtkAnimationCue.newInstance({ startTime: 0, endTime: 5 });
 
   cue.play();
   cue.tick(0, 0.5);
-  t.equal(cue.getTime(), 0.5);
+  expect(cue.getTime()).toBe(0.5);
 
   cue.tick(0.5, 0.5);
-  t.equal(cue.getTime(), 1.0);
+  expect(cue.getTime()).toBe(1.0);
 
   // Not playing, tick should not update
   cue.pause();
   cue.tick(1.0, 0.5);
-  t.equal(cue.getTime(), 1.0);
-  t.end();
+  expect(cue.getTime()).toBe(1.0);
 });
 
-test('vtkAnimationCue: Tick clamps to end time', (t) => {
+it('vtkAnimationCue: Tick clamps to end time', () => {
   const cue = vtkAnimationCue.newInstance({ startTime: 0, endTime: 2 });
 
   let tickEventCalled = false;
@@ -79,14 +75,13 @@ test('vtkAnimationCue: Tick clamps to end time', (t) => {
   // Tick that goes beyond end time
   cue.tick(0, 2.5);
 
-  t.equal(cue.getTime(), 2); // Clamped to end time
-  t.notOk(cue.isPlaying()); // Should stop after reaching end
-  t.ok(tickEventCalled);
-  t.equal(finalTime, 2);
-  t.end();
+  expect(cue.getTime()).toBe(2); // Clamped to end time
+  expect(cue.isPlaying()).toBeFalsy(); // Should stop after reaching end
+  expect(tickEventCalled).toBeTruthy();
+  expect(finalTime).toBe(2);
 });
 
-test('vtkAnimationCue: Tick event callback', (t) => {
+it('vtkAnimationCue: Tick event callback', () => {
   const cue = vtkAnimationCue.newInstance({ startTime: 0, endTime: 2 });
 
   let eventData = null;
@@ -97,14 +92,13 @@ test('vtkAnimationCue: Tick event callback', (t) => {
   cue.play();
   cue.tick(0, 0.5);
 
-  t.ok(eventData);
-  t.equal(eventData.time, 0.5);
-  t.equal(eventData.deltaTime, 0.5);
-  t.equal(eventData.cue, cue);
-  t.end();
+  expect(eventData).toBeTruthy();
+  expect(eventData.time).toBe(0.5);
+  expect(eventData.deltaTime).toBe(0.5);
+  expect(eventData.cue).toBe(cue);
 });
 
-test('vtkAnimationCue: Multiple tick events', (t) => {
+it('vtkAnimationCue: Multiple tick events', () => {
   const cue = vtkAnimationCue.newInstance({ startTime: 0, endTime: 2 });
 
   let tickCount = 0;
@@ -117,7 +111,6 @@ test('vtkAnimationCue: Multiple tick events', (t) => {
   cue.tick(0.3, 0.3);
   cue.tick(0.6, 0.3);
 
-  t.equal(tickCount, 3);
-  t.ok(cue.isPlaying());
-  t.end();
+  expect(tickCount).toBe(3);
+  expect(cue.isPlaying()).toBeTruthy();
 });

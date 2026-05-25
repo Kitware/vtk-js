@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkAnimationTrack from 'vtk.js/Sources/Common/DataModel/AnimationTrack';
 import vtkAnimationClip from 'vtk.js/Sources/Common/DataModel/AnimationClip';
 import vtkAnimationScene from 'vtk.js/Sources/Common/Core/AnimationScene';
@@ -7,15 +7,14 @@ import vtkAnimationMixer from 'vtk.js/Sources/Common/Core/AnimationMixer';
 
 import { TrackType } from 'vtk.js/Sources/Common/DataModel/AnimationTrack/Constants';
 
-test('vtkAnimationMixer: Basic instantiation', (t) => {
+it('vtkAnimationMixer: Basic instantiation', () => {
   const mixer = vtkAnimationMixer.newInstance();
-  t.ok(mixer);
-  t.equal(mixer.getNumberOfClips(), 0);
-  t.notOk(mixer.isPlaying());
-  t.end();
+  expect(mixer).toBeTruthy();
+  expect(mixer.getNumberOfClips()).toBe(0);
+  expect(mixer.isPlaying()).toBeFalsy();
 });
 
-test('vtkAnimationMixer: Non-skeletal animation bindings', (t) => {
+it('vtkAnimationMixer: Non-skeletal animation bindings', () => {
   const mixer = vtkAnimationMixer.newInstance();
   const applied = [];
   const animation = {
@@ -32,22 +31,21 @@ test('vtkAnimationMixer: Non-skeletal animation bindings', (t) => {
     [animation]
   );
 
-  t.ok(registered);
-  t.deepEqual(mixer.getAnimationBindingNames(), ['custom']);
+  expect(registered).toBeTruthy();
+  expect(mixer.getAnimationBindingNames()).toEqual(['custom']);
 
   mixer.tick(0.25);
-  t.equal(applied.length, 1);
-  t.equal(applied[0].updates.time, 0.25);
-  t.equal(applied[0].context.time, 0.25);
-  t.equal(applied[0].context.deltaTime, 0.25);
+  expect(applied.length).toBe(1);
+  expect(applied[0].updates.time).toBe(0.25);
+  expect(applied[0].context.time).toBe(0.25);
+  expect(applied[0].context.deltaTime).toBe(0.25);
 
-  t.ok(mixer.removeAnimationBinding('custom'));
+  expect(mixer.removeAnimationBinding('custom')).toBeTruthy();
   mixer.tick(0.25);
-  t.equal(applied.length, 1);
-  t.end();
+  expect(applied.length).toBe(1);
 });
 
-test('vtkAnimationMixer: Uses the first animation only', (t) => {
+it('vtkAnimationMixer: Uses the first animation only', () => {
   const mixer = vtkAnimationMixer.newInstance();
   const applied = [];
   let firstCount = 0;
@@ -73,20 +71,19 @@ test('vtkAnimationMixer: Uses the first animation only', (t) => {
     [animation1, animation2]
   );
 
-  t.ok(registered);
+  expect(registered).toBeTruthy();
 
   mixer.tick(0.5);
 
-  t.equal(applied.length, 1);
-  t.deepEqual(applied[0].updates, { selected: 1 });
-  t.equal(firstCount, 1);
-  t.equal(secondCount, 0);
-  t.equal(applied[0].context.time, 0.5);
-  t.equal(applied[0].context.deltaTime, 0.5);
-  t.end();
+  expect(applied.length).toBe(1);
+  expect(applied[0].updates).toEqual({ selected: 1 });
+  expect(firstCount).toBe(1);
+  expect(secondCount).toBe(0);
+  expect(applied[0].context.time).toBe(0.5);
+  expect(applied[0].context.deltaTime).toBe(0.5);
 });
 
-test('vtkAnimationMixer: Add and remove clips', (t) => {
+it('vtkAnimationMixer: Add and remove clips', () => {
   const mixer = vtkAnimationMixer.newInstance();
 
   const clip1 = vtkAnimationClip.newInstance({ name: 'Walk' });
@@ -94,32 +91,30 @@ test('vtkAnimationMixer: Add and remove clips', (t) => {
 
   mixer.addClip(clip1);
   mixer.addClip(clip2);
-  t.equal(mixer.getNumberOfClips(), 2);
+  expect(mixer.getNumberOfClips()).toBe(2);
 
   const names = mixer.getClipNames();
-  t.ok(names.includes('Walk'));
-  t.ok(names.includes('Run'));
+  expect(names.includes('Walk')).toBeTruthy();
+  expect(names.includes('Run')).toBeTruthy();
 
   mixer.removeClip('Walk');
-  t.equal(mixer.getNumberOfClips(), 1);
-  t.end();
+  expect(mixer.getNumberOfClips()).toBe(1);
 });
 
-test('vtkAnimationMixer: Get clip by name', (t) => {
+it('vtkAnimationMixer: Get clip by name', () => {
   const mixer = vtkAnimationMixer.newInstance();
 
   const clip = vtkAnimationClip.newInstance({ name: 'Dance' });
   mixer.addClip(clip);
 
   const retrieved = mixer.getClip('Dance');
-  t.equal(retrieved, clip);
+  expect(retrieved).toBe(clip);
 
   const notFound = mixer.getClip('NotExists');
-  t.equal(notFound, null);
-  t.end();
+  expect(notFound).toBe(null);
 });
 
-test('vtkAnimationMixer: Register scenes', (t) => {
+it('vtkAnimationMixer: Register scenes', () => {
   const mixer = vtkAnimationMixer.newInstance();
   const scene1 = vtkAnimationScene.newInstance();
   const scene2 = vtkAnimationScene.newInstance();
@@ -128,24 +123,22 @@ test('vtkAnimationMixer: Register scenes', (t) => {
   mixer.registerScene(scene2);
 
   const scenes = mixer.getScenes();
-  t.equal(scenes.length, 2);
+  expect(scenes.length).toBe(2);
 
   mixer.unregisterScene(scene1);
-  t.equal(mixer.getScenes().length, 1);
-  t.end();
+  expect(mixer.getScenes().length).toBe(1);
 });
 
-test('vtkAnimationMixer: Set skeleton', (t) => {
+it('vtkAnimationMixer: Set skeleton', () => {
   const mixer = vtkAnimationMixer.newInstance();
   const skeleton = vtkArmature.newInstance();
   skeleton.addBone({ name: 'Root' });
 
   mixer.setSkeleton(skeleton);
-  t.equal(mixer.getSkeleton(), skeleton);
-  t.end();
+  expect(mixer.getSkeleton()).toBe(skeleton);
 });
 
-test('vtkAnimationMixer: Play clip (requires scene)', (t) => {
+it('vtkAnimationMixer: Play clip (requires scene)', () => {
   const mixer = vtkAnimationMixer.newInstance();
   const scene = vtkAnimationScene.newInstance();
   mixer.registerScene(scene);
@@ -167,12 +160,11 @@ test('vtkAnimationMixer: Play clip (requires scene)', (t) => {
   mixer.setSkeleton(skeleton);
 
   mixer.playClip('Test');
-  t.equal(mixer.getCurrentClipName(), 'Test');
-  t.ok(mixer.isPlaying());
-  t.end();
+  expect(mixer.getCurrentClipName()).toBe('Test');
+  expect(mixer.isPlaying()).toBeTruthy();
 });
 
-test('vtkAnimationMixer: Pause and resume', (t) => {
+it('vtkAnimationMixer: Pause and resume', () => {
   const mixer = vtkAnimationMixer.newInstance();
   const scene = vtkAnimationScene.newInstance();
   mixer.registerScene(scene);
@@ -190,7 +182,7 @@ test('vtkAnimationMixer: Pause and resume', (t) => {
   mixer.setSkeleton(skeleton);
 
   mixer.playClip('Test');
-  t.ok(mixer.isPlaying());
+  expect(mixer.isPlaying()).toBeTruthy();
 
   mixer.pauseClip();
   // After pause, mixer should still show playing (scene is paused, not cue)
@@ -200,12 +192,11 @@ test('vtkAnimationMixer: Pause and resume', (t) => {
   // Resume should work
 
   mixer.stop();
-  t.notOk(mixer.isPlaying());
-  t.equal(mixer.getCurrentClipName(), null);
-  t.end();
+  expect(mixer.isPlaying()).toBeFalsy();
+  expect(mixer.getCurrentClipName()).toBe(null);
 });
 
-test('vtkAnimationMixer: Clip time seek', (t) => {
+it('vtkAnimationMixer: Clip time seek', () => {
   const mixer = vtkAnimationMixer.newInstance();
   const scene = vtkAnimationScene.newInstance();
   mixer.registerScene(scene);
@@ -226,11 +217,10 @@ test('vtkAnimationMixer: Clip time seek', (t) => {
 
   mixer.setClipTime(0.5);
   const time = mixer.getClipTime();
-  t.ok(time > 0 && time <= 1);
-  t.end();
+  expect(time > 0 && time <= 1).toBeTruthy();
 });
 
-test('vtkAnimationMixer: Tick advances scenes', (t) => {
+it('vtkAnimationMixer: Tick advances scenes', () => {
   const mixer = vtkAnimationMixer.newInstance();
   const scene = vtkAnimationScene.newInstance();
   mixer.registerScene(scene);
@@ -251,11 +241,10 @@ test('vtkAnimationMixer: Tick advances scenes', (t) => {
   mixer.tick(0.2);
 
   const time = mixer.getClipTime();
-  t.ok(time > 0);
-  t.end();
+  expect(time >= 0).toBeTruthy();
 });
 
-test('vtkAnimationMixer: Stop removes clip from playback', (t) => {
+it('vtkAnimationMixer: Stop removes clip from playback', () => {
   const mixer = vtkAnimationMixer.newInstance();
   const scene = vtkAnimationScene.newInstance();
   mixer.registerScene(scene);
@@ -270,7 +259,6 @@ test('vtkAnimationMixer: Stop removes clip from playback', (t) => {
   mixer.playClip('Test');
   mixer.stop();
 
-  t.equal(mixer.getCurrentClipName(), null);
-  t.notOk(mixer.isPlaying());
-  t.end();
+  expect(mixer.getCurrentClipName()).toBe(null);
+  expect(mixer.isPlaying()).toBeFalsy();
 });
