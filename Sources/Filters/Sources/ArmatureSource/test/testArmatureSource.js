@@ -1,38 +1,35 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkArmature from '../../../../Common/DataModel/Armature/index';
 import vtkArmatureSource from '../index';
 
-test('vtkArmatureSource: Basic instantiation', (t) => {
+it('vtkArmatureSource: Basic instantiation', () => {
   const source = vtkArmatureSource.newInstance();
-  t.ok(source);
-  t.equal(source.getSkeleton(), null);
-  t.equal(source.getBoneRadius(), 0.1);
-  t.equal(source.getJointRadius(), 0.15);
-  t.end();
+  expect(source).toBeTruthy();
+  expect(source.getSkeleton()).toBe(null);
+  expect(source.getBoneRadius()).toBe(0.1);
+  expect(source.getJointRadius()).toBe(0.15);
 });
 
-test('vtkArmatureSource: Set skeleton', (t) => {
+it('vtkArmatureSource: Set skeleton', () => {
   const source = vtkArmatureSource.newInstance();
   const skeleton = vtkArmature.newInstance();
   skeleton.addBone({ name: 'Root' });
 
   source.setSkeleton(skeleton);
-  t.equal(source.getSkeleton(), skeleton);
-  t.end();
+  expect(source.getSkeleton()).toBe(skeleton);
 });
 
-test('vtkArmatureSource: Set radii', (t) => {
+it('vtkArmatureSource: Set radii', () => {
   const source = vtkArmatureSource.newInstance();
 
   source.setBoneRadius(0.2);
   source.setJointRadius(0.25);
 
-  t.equal(source.getBoneRadius(), 0.2);
-  t.equal(source.getJointRadius(), 0.25);
-  t.end();
+  expect(source.getBoneRadius()).toBe(0.2);
+  expect(source.getJointRadius()).toBe(0.25);
 });
 
-test('vtkArmatureSource: Generate PolyData', (t) => {
+it('vtkArmatureSource: Generate PolyData', () => {
   const source = vtkArmatureSource.newInstance();
   const skeleton = vtkArmature.newInstance();
 
@@ -50,7 +47,6 @@ test('vtkArmatureSource: Generate PolyData', (t) => {
   source.update();
 
   const output = source.getOutputData(0);
-  t.ok(output);
-  t.ok(output.getPoints());
-  t.end();
+  expect(output).toBeTruthy();
+  expect(output.getPoints()).toBeTruthy();
 });
