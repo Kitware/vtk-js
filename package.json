@@ -42,7 +42,7 @@
     "spark-md5": "3.0.2",
     "utif": "3.1.0",
     "webworker-promise": "0.5.0",
-    "xmlbuilder2": "3.1.1"
+    "xmlbuilder2": "^4.0.3"
   },
   "devDependencies": {
     "@commitlint/cli": "19.7.1",
