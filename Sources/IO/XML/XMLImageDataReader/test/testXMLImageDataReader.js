@@ -1,6 +1,6 @@
 import { it, expect } from 'vitest';
-import vtkXMLImageDataReader from '../index';
-import vtkMath from '../../../../Common/Core/Math';
+import vtkXMLImageDataReader from 'vtk.js/Sources/IO/XML/XMLImageDataReader';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 it('Test XML data is read correctly', () => {
   const expectedOrigin = [10, 20, 30];
