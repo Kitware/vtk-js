@@ -1,6 +1,6 @@
 import { it, expect } from 'vitest';
-import vtkImageDataWriter from '../index';
-import vtkImageData from '../../../../Common/DataModel/ImageData';
+import vtkImageDataWriter from 'vtk.js/Sources/IO/XML/XMLImageDataWriter';
+import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 
 it('Test XML writer file content', () => {
   const expectedSubstring =

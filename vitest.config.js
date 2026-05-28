@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import path from 'path';
+import nodePolyfills from '@rolldown/plugin-node-polyfills';
 import { createVtkPlugins } from './Utilities/build/plugins.mjs';
 
 const noWebGL = !!process.env.NO_WEBGL;
@@ -41,6 +42,9 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['webworker-promise/lib/register'],
+    rolldownOptions: {
+      plugins: [nodePolyfills()],
+    },
   },
   css: {
     modules: {
