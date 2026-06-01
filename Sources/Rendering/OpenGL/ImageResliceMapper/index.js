@@ -1,6 +1,7 @@
 import * as macro from 'vtk.js/Sources/macros';
 
 import { mat4 } from 'gl-matrix';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 
 import vtkClosedPolyLineToSurfaceFilter from 'vtk.js/Sources/Filters/General/ClosedPolyLineToSurfaceFilter';
 import vtkCutter from 'vtk.js/Sources/Filters/Core/Cutter';
@@ -628,14 +629,16 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         values: model.resliceGeom.getPoints().getData(),
       });
       points.setName('points');
-      const cells = vtkDataArray.newInstance({
-        numberOfComponents: 1,
+      const cells = vtkCellArray.newInstance({
         values: model.resliceGeom.getPolys().getData(),
       });
 
       const options = {
         points,
         cellOffset: 0,
+        // This mapper draws with gl.drawArrays, so it needs the flattened
+        // (non indexed) vertex layout where elementCount matches the vertices.
+        forceFlatten: true,
       };
       if (model.renderable.getSlabThickness() > 0.0) {
         const n = model.resliceGeom.getPointData().getNormals();

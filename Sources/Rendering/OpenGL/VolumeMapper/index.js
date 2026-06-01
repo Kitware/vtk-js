@@ -1,6 +1,7 @@
 import * as macro from 'vtk.js/Sources/macros';
 import DeepEqual from 'fast-deep-equal';
 import { vec3, mat3, mat4 } from 'gl-matrix';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
@@ -1602,11 +1603,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // for this table. Errors in low values of opacity accumulate to
       // visible artifacts. High values of opacity quickly terminate without
       // artifacts.
-      if (
-        model._openGLRenderWindow.getWebgl2() ||
-        (model.context.getExtension('OES_texture_float') &&
-          model.context.getExtension('OES_texture_float_linear'))
-      ) {
+      // Float textures are core in WebGL2; only linear filtering of 32F
+      // formats still requires an extension.
+      if (model.context.getExtension('OES_texture_float_linear')) {
         newOpacityTexture.create2DFromRaw({
           width: oWidth,
           height: 2 * numIComps,
@@ -1864,13 +1863,15 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         values: ptsArray,
       });
       points.setName('points');
-      const cells = vtkDataArray.newInstance({
-        numberOfComponents: 1,
+      const cells = vtkCellArray.newInstance({
         values: cellArray,
       });
       model.tris.getCABO().createVBO(cells, 'polys', Representation.SURFACE, {
         points,
         cellOffset: 0,
+        // This mapper draws with gl.drawArrays, so it needs the flattened
+        // (non indexed) vertex layout where elementCount matches the vertices.
+        forceFlatten: true,
       });
     }
 

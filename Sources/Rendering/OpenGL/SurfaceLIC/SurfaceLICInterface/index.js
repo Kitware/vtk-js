@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
@@ -53,8 +54,7 @@ function getQuadPoly(openGLRenderWindow) {
     values: ptsArray,
   });
   points.setName('points');
-  const cells = vtkDataArray.newInstance({
-    numberOfComponents: 1,
+  const cells = vtkCellArray.newInstance({
     values: cellArray,
   });
   const tArray = vtkDataArray.newInstance({
@@ -66,6 +66,9 @@ function getQuadPoly(openGLRenderWindow) {
     points,
     cellOffset: 0,
     tcoords: tArray,
+    // This quad is drawn with gl.drawArrays, so it needs the flattened
+    // (non indexed) vertex layout where elementCount matches the vertices.
+    forceFlatten: true,
   });
   return quad;
 }

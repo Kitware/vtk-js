@@ -1,6 +1,7 @@
 import { mat3, mat4 } from 'gl-matrix';
 
 import * as macro from 'vtk.js/Sources/macros';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
@@ -113,14 +114,16 @@ function vtkOpenGLSkybox(publicAPI, model) {
       cellArray[5] = 0;
       cellArray[6] = 3;
       cellArray[7] = 2;
-      const cells = vtkDataArray.newInstance({
-        numberOfComponents: 1,
+      const cells = vtkCellArray.newInstance({
         values: cellArray,
       });
 
       model.tris.getCABO().createVBO(cells, 'polys', Representation.SURFACE, {
         points,
         cellOffset: 0,
+        // This mapper draws with gl.drawArrays, so it needs the flattened
+        // (non indexed) vertex layout where elementCount matches the vertices.
+        forceFlatten: true,
       });
     }
 

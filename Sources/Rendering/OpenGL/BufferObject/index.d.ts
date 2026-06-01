@@ -6,7 +6,7 @@ import { vtkAlgorithm, vtkObject } from '../../../interfaces';
  */
 export interface IBufferObjectInitialValues {
   objectType?: ObjectType;
-  context?: WebGLRenderingContext | WebGL2RenderingContext;
+  context?: WebGL2RenderingContext;
   allocatedGPUMemoryInBytes?: number;
 }
 

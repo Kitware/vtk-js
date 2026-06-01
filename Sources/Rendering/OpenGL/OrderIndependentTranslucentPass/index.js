@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
 import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
@@ -75,14 +76,16 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
       values: tcoordArray,
     });
     tcoords.setName('tcoords');
-    const cells = vtkDataArray.newInstance({
-      numberOfComponents: 1,
+    const cells = vtkCellArray.newInstance({
       values: cellArray,
     });
     model.tris.getCABO().createVBO(cells, 'polys', Representation.SURFACE, {
       points,
       tcoords,
       cellOffset: 0,
+      // This pass draws with gl.drawArrays, so it needs the flattened
+      // (non indexed) vertex layout where elementCount matches the vertices.
+      forceFlatten: true,
     });
 
     model.VBOBuildTime.modified();
@@ -201,13 +204,11 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
     const size = viewNode.getSize();
     const gl = viewNode.getContext();
 
-    // if we lack the webgl2 and half floatsupport just do
-    // basic alpha blending
+    // If required float color buffer support is missing, fall back to basic alpha blending.
     model._supported = false;
     if (
       renNode.getSelector() ||
       !gl ||
-      !viewNode.getWebgl2() ||
       (!gl.getExtension('EXT_color_buffer_half_float') &&
         !gl.getExtension('EXT_color_buffer_float'))
     ) {
@@ -242,9 +243,7 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
 
     gl.colorMask(false, false, false, false);
 
-    // rerender the opaque pass to set the depth buffer
-    // TODO remove when webgl1 is deprecated and instead
-    // have the forward pass use a texture backed zbuffer
+    // Re-render the opaque pass to set the depth buffer.
     if (forwardPass.getOpaqueActorCount() > 0) {
       // Don't use zBufferPass as it will also render the depth of translucent actors
       forwardPass.setCurrentOperation('opaqueZBufferPass');
