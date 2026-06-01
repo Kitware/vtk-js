@@ -5,6 +5,7 @@ import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/ImageProperty/C
 import { ProjectionMode } from 'vtk.js/Sources/Rendering/Core/ImageCPRMapper/Constants';
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
@@ -501,8 +502,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
         offset += 5;
         ptIdx += 4;
       }
-      const cells = vtkDataArray.newInstance({
-        numberOfComponents: 1,
+      const cells = vtkCellArray.newInstance({
         values: cellArray,
       });
 
@@ -599,6 +599,9 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       model.tris.getCABO().createVBO(cells, 'polys', Representation.SURFACE, {
         points,
         customAttributes,
+        // This mapper draws with gl.drawArrays, so it needs the flattened
+        // (non indexed) vertex layout where elementCount matches the vertices.
+        forceFlatten: true,
       });
       model.VBOBuildTime.modified();
     }

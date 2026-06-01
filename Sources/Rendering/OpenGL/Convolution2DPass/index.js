@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macros';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
@@ -245,14 +246,16 @@ function vtkConvolution2DPass(publicAPI, model) {
       values: tcoordArray,
     });
     tcoords.setName('tcoords');
-    const cells = vtkDataArray.newInstance({
-      numberOfComponents: 1,
+    const cells = vtkCellArray.newInstance({
       values: cellArray,
     });
     model.tris.getCABO().createVBO(cells, 'polys', Representation.SURFACE, {
       points,
       tcoords,
       cellOffset: 0,
+      // This pass draws with gl.drawArrays, so it needs the flattened
+      // (non indexed) vertex layout where elementCount matches the vertices.
+      forceFlatten: true,
     });
 
     model.VBOBuildTime.modified();

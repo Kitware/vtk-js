@@ -9,139 +9,29 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLVertexArrayObject');
 
-  // Public API methods
-  publicAPI.exposedMethod = () => {
-    // This is a publicly exposed method of this object
-  };
-
   publicAPI.initialize = () => {
-    model.instancingExtension = null;
-    if (!model._openGLRenderWindow.getWebgl2()) {
-      model.instancingExtension = model.context.getExtension(
-        'ANGLE_instanced_arrays'
-      );
-    }
-    if (
-      !model.forceEmulation &&
-      model._openGLRenderWindow &&
-      model._openGLRenderWindow.getWebgl2()
-    ) {
-      model.extension = null;
-      model.supported = true;
-      model.handleVAO = model.context.createVertexArray();
-    } else {
-      model.extension = model.context.getExtension('OES_vertex_array_object');
-      // Start setting up VAO
-      if (!model.forceEmulation && model.extension) {
-        model.supported = true;
-        model.handleVAO = model.extension.createVertexArrayOES();
-      } else {
-        model.supported = false;
-      }
-    }
+    model.handleVAO = model.context.createVertexArray();
   };
 
-  publicAPI.isReady = () =>
-    // We either probed and allocated a VAO, or are falling back as the current
-    // hardware does not support VAOs.
-    model.handleVAO !== 0 || model.supported === false;
+  publicAPI.isReady = () => model.handleVAO !== 0;
 
   publicAPI.bind = () => {
-    // Either simply bind the VAO, or emulate behavior by binding all attributes.
     if (!publicAPI.isReady()) {
       publicAPI.initialize();
     }
-    if (publicAPI.isReady() && model.supported) {
-      if (model.extension) {
-        model.extension.bindVertexArrayOES(model.handleVAO);
-      } else {
-        model.context.bindVertexArray(model.handleVAO);
-      }
-    } else if (publicAPI.isReady()) {
-      const gl = model.context;
-      for (let ibuff = 0; ibuff < model.buffers.length; ++ibuff) {
-        const buff = model.buffers[ibuff];
-        model.context.bindBuffer(gl.ARRAY_BUFFER, buff.buffer);
-        for (let iatt = 0; iatt < buff.attributes.length; ++iatt) {
-          const attrIt = buff.attributes[iatt];
-          const matrixCount = attrIt.isMatrix ? attrIt.size : 1;
-          for (let i = 0; i < matrixCount; ++i) {
-            gl.enableVertexAttribArray(attrIt.index + i);
-            gl.vertexAttribPointer(
-              attrIt.index + i,
-              attrIt.size,
-              attrIt.type,
-              attrIt.normalize,
-              attrIt.stride,
-              attrIt.offset + (attrIt.stride * i) / attrIt.size
-            );
-            if (attrIt.divisor > 0) {
-              if (model.instancingExtension) {
-                model.instancingExtension.vertexAttribDivisorANGLE(
-                  attrIt.index + i,
-                  1
-                );
-              } else {
-                gl.vertexAttribDivisor(attrIt.index + i, 1);
-              }
-            }
-          }
-        }
-      }
-    }
+    model.context.bindVertexArray(model.handleVAO);
   };
 
   publicAPI.release = () => {
-    // Either simply release the VAO, or emulate behavior by releasing all attributes.
-    if (publicAPI.isReady() && model.supported) {
-      if (model.extension) {
-        model.extension.bindVertexArrayOES(null);
-      } else {
-        model.context.bindVertexArray(null);
-      }
-    } else if (publicAPI.isReady()) {
-      const gl = model.context;
-      for (let ibuff = 0; ibuff < model.buffers.length; ++ibuff) {
-        const buff = model.buffers[ibuff];
-        model.context.bindBuffer(gl.ARRAY_BUFFER, buff.buffer);
-        for (let iatt = 0; iatt < buff.attributes.length; ++iatt) {
-          const attrIt = buff.attributes[iatt];
-          const matrixCount = attrIt.isMatrix ? attrIt.size : 1;
-          for (let i = 0; i < matrixCount; ++i) {
-            gl.enableVertexAttribArray(attrIt.index + i);
-            gl.vertexAttribPointer(
-              attrIt.index + i,
-              attrIt.size,
-              attrIt.type,
-              attrIt.normalize,
-              attrIt.stride,
-              attrIt.offset + (attrIt.stride * i) / attrIt.size
-            );
-            if (attrIt.divisor > 0) {
-              if (model.instancingExtension) {
-                model.instancingExtension.vertexAttribDivisorANGLE(
-                  attrIt.index + i,
-                  0
-                );
-              } else {
-                gl.vertexAttribDivisor(attrIt.index + i, 0);
-              }
-            }
-            gl.disableVertexAttribArray(attrIt.index + i);
-          }
-        }
-      }
+    if (model.context) {
+      model.context.bindVertexArray(null);
     }
   };
 
   publicAPI.shaderProgramChanged = () => {
     publicAPI.release();
-    if (model.handleVAO) {
-      if (model.extension) {
-        model.extension.deleteVertexArrayOES(model.handleVAO);
-      } else {
-        model.context.deleteVertexArray(model.handleVAO);
-      }
+    if (model.handleVAO && model.context) {
+      model.context.deleteVertexArray(model.handleVAO);
     }
     model.handleVAO = 0;
     model.handleProgram = 0;
@@ -149,15 +39,10 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
 
   publicAPI.releaseGraphicsResources = () => {
     publicAPI.shaderProgramChanged();
-    if (model.handleVAO) {
-      if (model.extension) {
-        model.extension.deleteVertexArrayOES(model.handleVAO);
-      } else {
-        model.context.deleteVertexArray(model.handleVAO);
-      }
+    if (model.handleVAO && model.context) {
+      model.context.deleteVertexArray(model.handleVAO);
     }
     model.handleVAO = 0;
-    model.supported = true;
     model.handleProgram = 0;
   };
 
@@ -222,69 +107,26 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
 
     const gl = model.context;
 
-    const attribs = {};
-    attribs.name = name;
-    attribs.index = gl.getAttribLocation(model.handleProgram, name);
-    attribs.offset = offset;
-    attribs.stride = stride;
-    attribs.type = elementType;
-    attribs.size = elementTupleSize;
-    attribs.normalize = normalize;
-    attribs.isMatrix = isMatrix;
-    attribs.divisor = divisor;
-
-    if (attribs.Index === -1) {
+    const index = gl.getAttribLocation(model.handleProgram, name);
+    if (index === -1) {
       return false;
     }
 
-    // Always make the call as even the first use wants the attrib pointer setting
-    // up when we are emulating.
     buffer.bind();
-    gl.enableVertexAttribArray(attribs.index);
+    gl.enableVertexAttribArray(index);
     gl.vertexAttribPointer(
-      attribs.index,
-      attribs.size,
-      attribs.type,
-      attribs.normalize,
-      attribs.stride,
-      attribs.offset
+      index,
+      elementTupleSize,
+      elementType,
+      normalize,
+      stride,
+      offset
     );
 
     if (divisor > 0) {
-      if (model.instancingExtension) {
-        model.instancingExtension.vertexAttribDivisorANGLE(attribs.index, 1);
-      } else {
-        gl.vertexAttribDivisor(attribs.index, 1);
-      }
+      gl.vertexAttribDivisor(index, 1);
     }
 
-    attribs.buffer = buffer.getHandle();
-
-    // If vertex array objects are not supported then build up our list.
-    if (!model.supported) {
-      // find the buffer
-      let buffFound = false;
-      for (let ibuff = 0; ibuff < model.buffers.length; ++ibuff) {
-        const buff = model.buffers[ibuff];
-        if (buff.buffer === attribs.buffer) {
-          buffFound = true;
-          let found = false;
-          for (let iatt = 0; iatt < buff.attributes.length; ++iatt) {
-            const attrIt = buff.attributes[iatt];
-            if (attrIt.name === name) {
-              found = true;
-              buff.attributes[iatt] = attribs;
-            }
-          }
-          if (!found) {
-            buff.attributes.push(attribs);
-          }
-        }
-      }
-      if (!buffFound) {
-        model.buffers.push({ buffer: attribs.buffer, attributes: [attribs] });
-      }
-    }
     return true;
   };
 
@@ -332,11 +174,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
         offset + (stride * i) / elementTupleSize
       );
       if (divisor > 0) {
-        if (model.instancingExtension) {
-          model.instancingExtension.vertexAttribDivisorANGLE(index + i, 1);
-        } else {
-          gl.vertexAttribDivisor(index + i, 1);
-        }
+        gl.vertexAttribDivisor(index + i, 1);
       }
     }
 
@@ -347,24 +185,8 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
     if (!publicAPI.isReady() || model.handleProgram === 0) {
       return false;
     }
-
-    // If we don't have real VAOs find the entry and remove it too.
-    if (!model.supported) {
-      for (let ibuff = 0; ibuff < model.buffers.length; ++ibuff) {
-        const buff = model.buffers[ibuff];
-        for (let iatt = 0; iatt < buff.attributes.length; ++iatt) {
-          const attrIt = buff.attributes[iatt];
-          if (attrIt.name === name) {
-            buff.attributes.splice(iatt, 1);
-            if (!buff.attributes.length) {
-              model.buffers.splice(ibuff, 1);
-            }
-            return true;
-          }
-        }
-      }
-    }
-
+    // With core vertex array objects, the attribute state lives inside the VAO
+    // and is overwritten on the next bind, so there is nothing to do here.
     return true;
   };
 
@@ -386,11 +208,8 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  forceEmulation: false,
   handleVAO: 0,
   handleProgram: 0,
-  supported: true,
-  buffers: null,
   context: null,
   // _openGLRenderWindow: null,
 };
@@ -400,17 +219,8 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  // Internal objects initialization
-  model.buffers = [];
-
   // Object methods
   macro.obj(publicAPI, model);
-
-  // Create get-only macros
-  macro.get(publicAPI, model, ['supported']);
-
-  // Create get-set macros
-  macro.setGet(publicAPI, model, ['forceEmulation']);
 
   // For more macro methods, see "Sources/macros.js"
 

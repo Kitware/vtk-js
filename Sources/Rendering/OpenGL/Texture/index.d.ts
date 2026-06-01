@@ -11,7 +11,7 @@ import { vtkObject, vtkRange } from '../../../interfaces';
 export interface ITextureInitialValues {
   _openGLRenderWindow?: Nullable<vtkOpenGLRenderWindow>;
   _forceInternalFormat?: boolean;
-  context?: WebGLRenderingContext | WebGL2RenderingContext;
+  context?: WebGL2RenderingContext;
   handle?: number;
   sendParametersTime?: vtkObject;
   textureBuildTime?: vtkObject;
@@ -307,7 +307,7 @@ export interface vtkOpenGLTexture extends vtkViewNode {
   /**
    * Creates a 3D texture from raw data.
    *
-   * updatedExtents is currently incompatible with webgl1, since there's no extent scaling.
+   * `updatedExtents` support assumes WebGL2 3D texture uploads.
    *
    * @param width The width of the texture.
    * @param height The height of the texture.
@@ -339,7 +339,7 @@ export interface vtkOpenGLTexture extends vtkViewNode {
   /**
    * Creates a 3D filterable texture from raw data, with a preference for size over accuracy if necessary.
    *
-   * updatedExtents is currently incompatible with webgl1, since there's no extent scaling.
+   * `updatedExtents` support assumes WebGL2 3D texture uploads.
    *
    * @param width The width of the texture.
    * @param height The height of the texture.
@@ -379,7 +379,7 @@ export interface vtkOpenGLTexture extends vtkViewNode {
   /**
    * Creates a 3D filterable texture from a data array, with a preference for size over accuracy if necessary.
    *
-   * updatedExtents is currently incompatible with webgl1, since there's no extent scaling.
+   * `updatedExtents` support assumes WebGL2 3D texture uploads.
    *
    * @param width The width of the texture.
    * @param height The height of the texture.

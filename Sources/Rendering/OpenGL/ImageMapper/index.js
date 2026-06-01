@@ -1,6 +1,7 @@
 import { mat3, mat4 } from 'gl-matrix';
 import Constants from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
 import * as macro from 'vtk.js/Sources/macros';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
@@ -1401,8 +1402,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       cellArray[5] = 0;
       cellArray[6] = 3;
       cellArray[7] = 2;
-      const cells = vtkDataArray.newInstance({
-        numberOfComponents: 1,
+      const cells = vtkCellArray.newInstance({
         values: cellArray,
       });
 
@@ -1410,6 +1410,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         points,
         tcoords,
         cellOffset: 0,
+        // This mapper draws with gl.drawArrays, so it needs the flattened
+        // (non indexed) vertex layout where elementCount matches the vertices.
+        forceFlatten: true,
       });
       model.VBOBuildTime.modified();
       model.VBOBuildString = toString;
