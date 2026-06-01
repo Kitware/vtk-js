@@ -29,8 +29,6 @@ export interface IOpenGLRenderWindowInitialValues {
   containerSize?: Size;
   renderPasses?: any[];
   notifyStartCaptureImage?: boolean;
-  webgl2?: boolean;
-  defaultToWebgl2?: boolean;
   activeFramebuffer?: any;
   imageFormat?: 'image/png';
   useOffScreen?: boolean;
@@ -249,7 +247,7 @@ export interface vtkOpenGLRenderWindow extends vtkViewNode {
    */
   get3DContext(
     options: WebGLContextAttributes
-  ): Nullable<WebGLRenderingContext>;
+  ): Nullable<WebGL2RenderingContext>;
 
   /**
    *

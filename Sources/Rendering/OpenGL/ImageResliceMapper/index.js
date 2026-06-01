@@ -636,6 +636,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       const options = {
         points,
         cellOffset: 0,
+        // This mapper draws with gl.drawArrays, so it needs the flattened
+        // (non indexed) vertex layout where elementCount matches the vertices.
+        forceFlatten: true,
       };
       if (model.renderable.getSlabThickness() > 0.0) {
         const n = model.resliceGeom.getPointData().getNormals();

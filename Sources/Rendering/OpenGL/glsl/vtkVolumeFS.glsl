@@ -179,10 +179,6 @@ bool isLabelOutlineBitSet(int segmentIndex) {
   return ((labelOutlineBitmasks[arrayIndex] & (1u << bitIndex)) != 0u);
 }
 
-// if you want to see the raw tiled
-// data in webgl1 uncomment the following line
-// #define debugtile
-
 // camera values
 uniform float camThick;
 uniform float camNear;

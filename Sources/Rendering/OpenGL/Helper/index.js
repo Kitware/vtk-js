@@ -51,21 +51,46 @@ function vtkOpenGLHelper(publicAPI, model) {
       const drawingLines = mode === gl.LINES;
       if (drawingLines && wideLines) {
         publicAPI.updateShaders(ren, actor, oglMapper);
-        gl.drawArraysInstanced(
-          mode,
-          0,
-          model.CABO.getElementCount(),
-          2 * Math.ceil(actor.getProperty().getLineWidth())
-        );
+        if (model.CABO.getIndexed()) {
+          model.CABO.getIndexBO().bind();
+          gl.drawElementsInstanced(
+            mode,
+            model.CABO.getElementCount(),
+            model.CABO.getIndexElementType(),
+            0,
+            2 * Math.ceil(actor.getProperty().getLineWidth())
+          );
+        } else {
+          gl.drawArraysInstanced(
+            mode,
+            0,
+            model.CABO.getElementCount(),
+            2 * Math.ceil(actor.getProperty().getLineWidth())
+          );
+        }
       } else {
         gl.lineWidth(actor.getProperty().getLineWidth());
         publicAPI.updateShaders(ren, actor, oglMapper);
-        gl.drawArrays(mode, 0, model.CABO.getElementCount());
+        if (model.CABO.getIndexed()) {
+          model.CABO.getIndexBO().bind();
+          gl.drawElements(
+            mode,
+            model.CABO.getElementCount(),
+            model.CABO.getIndexElementType(),
+            0
+          );
+        } else {
+          gl.drawArrays(mode, 0, model.CABO.getElementCount());
+        }
         // reset the line width
         gl.lineWidth(1);
       }
-      const stride =
-        (mode === gl.POINTS ? 1 : 0) || (mode === gl.LINES ? 2 : 3);
+      let stride = 3;
+      if (mode === gl.POINTS) {
+        stride = 1;
+      } else if (mode === gl.LINES) {
+        stride = 2;
+      }
       if (model.pointPicking) {
         gl.depthMask(depthMask);
       }

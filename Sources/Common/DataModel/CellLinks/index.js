@@ -105,12 +105,13 @@ function vtkCellLinks(publicAPI, model) {
    * will be built.
    */
   publicAPI.allocate = (numLinks, ext = 1000) => {
-    model.array = Array(numLinks)
-      .fill()
-      .map(() => ({
-        ncells: 0,
-        cells: null,
-      }));
+    // Populate in a single pass. Array(n).fill().map() walks the array three
+    // times (allocate sparse, fill, map) before producing the link objects.
+    const array = new Array(numLinks);
+    for (let i = 0; i < numLinks; ++i) {
+      array[i] = { ncells: 0, cells: null };
+    }
+    model.array = array;
     model.extend = ext;
     model.maxId = -1;
   };

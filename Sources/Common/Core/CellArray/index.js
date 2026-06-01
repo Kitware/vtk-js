@@ -106,7 +106,16 @@ function vtkCellArray(publicAPI, model) {
       cellPointIds = cell;
     }
     const cellId = publicAPI.getNumberOfCells();
-    publicAPI.insertNextTuples([cellPointIds.length, ...cellPointIds]);
+    // Build the [count, ...pointIds] record without the spread operator, which
+    // would walk the iterator protocol and allocate an extra intermediate for
+    // every inserted cell.
+    const numberOfPoints = cellPointIds.length;
+    const cellRecord = new Array(numberOfPoints + 1);
+    cellRecord[0] = numberOfPoints;
+    for (let i = 0; i < numberOfPoints; ++i) {
+      cellRecord[i + 1] = cellPointIds[i];
+    }
+    publicAPI.insertNextTuples(cellRecord);
     // By computing the number of cells earlier, we made sure that numberOfCells is defined
     ++model.numberOfCells;
     if (model.cellSizes != null) {

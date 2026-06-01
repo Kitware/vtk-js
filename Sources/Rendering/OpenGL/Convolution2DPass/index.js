@@ -253,6 +253,9 @@ function vtkConvolution2DPass(publicAPI, model) {
       points,
       tcoords,
       cellOffset: 0,
+      // This pass draws with gl.drawArrays, so it needs the flattened
+      // (non indexed) vertex layout where elementCount matches the vertices.
+      forceFlatten: true,
     });
 
     model.VBOBuildTime.modified();
