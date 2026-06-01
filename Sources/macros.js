@@ -3,7 +3,7 @@
  * The name change is so we do not get eaten by babel-plugin-macros.
  */
 import DeepEqual from 'fast-deep-equal';
-import vtk, { vtkGlobal } from './vtk';
+import vtk from './vtk';
 import ClassHierarchy from './Common/Core/ClassHierarchy';
 
 let globalMTime = 0;
@@ -42,14 +42,17 @@ consoleMethods.forEach((methodName) => {
   fakeConsole[methodName] = noOp;
 });
 
-vtkGlobal.console = console.hasOwnProperty('log') ? console : fakeConsole;
+const resolvedConsole =
+  globalThis.console && globalThis.console.hasOwnProperty('log')
+    ? globalThis.console
+    : fakeConsole;
 
 const loggerFunctions = {
   debug: noOp, // Don't print debug by default
-  error: vtkGlobal.console.error || noOp,
-  info: vtkGlobal.console.info || noOp,
-  log: vtkGlobal.console.log || noOp,
-  warn: vtkGlobal.console.warn || noOp,
+  error: resolvedConsole.error || noOp,
+  info: resolvedConsole.info || noOp,
+  log: resolvedConsole.log || noOp,
+  warn: resolvedConsole.warn || noOp,
 };
 
 export function setLoggerFunction(name, fn) {
