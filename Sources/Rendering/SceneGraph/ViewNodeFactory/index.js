@@ -25,6 +25,13 @@ function buildMissingImplementationMessage(factoryName, classNames) {
   ].join('\n');
 }
 
+function isWidgetContainer(classNames) {
+  return (
+    classNames.includes('vtkAbstractWidget') ||
+    classNames.includes('vtkWidgetRepresentation')
+  );
+}
+
 // ----------------------------------------------------------------------------
 // vtkViewNodeFactory methods
 // ----------------------------------------------------------------------------
@@ -57,6 +64,11 @@ function vtkViewNodeFactory(publicAPI, model) {
     }
 
     if (!isObject) {
+      // Widgets and widget representations are prop containers. They do not have a
+      // direct backend view node and are rendered through their nested props.
+      if (isWidgetContainer(classNames)) {
+        return null;
+      }
       vtkWarningMacro(
         buildMissingImplementationMessage(publicAPI.getClassName(), classNames)
       );
