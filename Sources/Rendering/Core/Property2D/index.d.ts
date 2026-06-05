@@ -8,6 +8,8 @@ export interface IProperty2DInitialValues {
   pointSize?: number;
   lineWidth?: number;
   displayLocation?: DisplayLocation;
+  backfaceCulling?: boolean;
+  frontfaceCulling?: boolean;
 }
 
 export interface vtkProperty2D extends vtkObject {
@@ -20,6 +22,16 @@ export interface vtkProperty2D extends vtkObject {
    * Get the color of the object.
    */
   getColorByReference(): RGBColor;
+
+  /**
+   * Get the status of backface culling.
+   */
+  getBackfaceCulling(): boolean;
+
+  /**
+   * Get the status of frontface culling.
+   */
+  getFrontfaceCulling(): boolean;
 
   /**
    * Get the display location of the object.
@@ -81,6 +93,22 @@ export interface vtkProperty2D extends vtkObject {
   setColorFrom(color: RGBColor): boolean;
 
   /**
+   * Turn on/off fast culling of polygons based on orientation of normal
+   * with respect to camera. If backface culling is on, polygons facing
+   * away from camera are not drawn.
+   * @param {Boolean} backfaceCulling
+   */
+  setBackfaceCulling(backfaceCulling: boolean): boolean;
+
+  /**
+   * Turn on/off fast culling of polygons based on orientation of normal
+   * with respect to camera. If frontface culling is on, polygons facing
+   * towards camera are not drawn.
+   * @param {Boolean} frontfaceCulling
+   */
+  setFrontfaceCulling(frontfaceCulling: boolean): boolean;
+
+  /**
    * Set the display location of the object.
    * @param {String} displayLocation
    */
@@ -127,7 +155,7 @@ export function extend(
  * Method use to create a new instance of vtkProperty2D with object color, ambient color, diffuse color,
  * specular color, and edge color white; ambient coefficient=0; diffuse
  * coefficient=0; specular coefficient=0; specular power=1; Gouraud shading;
- * and surface representation. Backface and frontface culling are off.
+ * and surface representation. Backface culling is on and frontface culling is off.
  * @param {IProperty2DInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(
