@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import * as path from 'path';
 import * as fs from 'fs';
 import glob from 'glob';
+import nodePolyfills from '@rolldown/plugin-node-polyfills';
 import { createVtkPlugins } from './Utilities/build/plugins.mjs';
 import {
   ignoreSourceFile,
@@ -92,6 +93,7 @@ function createEsmConfig() {
       },
     },
     plugins: [
+      { ...nodePolyfills(), enforce: 'pre' },
       ...createVtkPlugins(),
       injectEsmCssPlugin(),
       copyEsmAssetsPlugin({ esmOutputDir }),
@@ -125,6 +127,7 @@ function createUmdConfig() {
       },
     },
     plugins: [
+      { ...nodePolyfills(), enforce: 'pre' },
       ...createVtkPlugins(),
       inlineUmdCssPlugin(),
       copyUmdAssetsPlugin({ umdOutputDir, projectRoot }),
