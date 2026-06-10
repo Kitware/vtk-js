@@ -23,7 +23,7 @@ it('Test compose with an identity transform passes colorFn through unchanged', (
   colorFn.addRGBPoint(100, 0, 0, 1);
 
   const outputFn = vtkColorTransferFunction.newInstance();
-  compose([0, 100], [identityFn], colorFn, outputFn);
+  compose([identityFn], colorFn, outputFn);
 
   expect(getNodeXs(outputFn)).toEqual([0, 100]);
   expect(outputFn.getRange()).toEqual([0, 100]);
@@ -49,7 +49,7 @@ it('Test compose maps a color function breakpoint back to its source domain', ()
   colorFn.addRGBPoint(110, 0, 0, 1);
 
   const outputFn = vtkColorTransferFunction.newInstance();
-  compose([0, 100], [fn], colorFn, outputFn);
+  compose([fn], colorFn, outputFn);
 
   const xs = getNodeXs(outputFn);
   expect(xs.length).toBe(3);
@@ -84,7 +84,7 @@ it('Test compose chains multiple transform functions and propagates breakpoints 
   colorFn.addRGBPoint(100, 0, 0, 1);
 
   const outputFn = vtkColorTransferFunction.newInstance();
-  compose([0, 100], [fn1, fn2], colorFn, outputFn);
+  compose([fn1, fn2], colorFn, outputFn);
 
   const xs = getNodeXs(outputFn);
   expect(xs.length).toBe(3);
@@ -115,12 +115,12 @@ it('Test compose clears previously composed points on subsequent calls', () => {
   colorFn.addRGBPoint(100, 0, 0, 1);
 
   const outputFn = vtkColorTransferFunction.newInstance();
-  compose([0, 100], [fn], colorFn, outputFn);
+  compose([fn], colorFn, outputFn);
   expect(outputFn.getSize()).toBe(3);
 
   colorFn.removeAllPoints();
   colorFn.addRGBPoint(0, 1, 1, 1);
   colorFn.addRGBPoint(100, 0, 0, 0);
-  compose([0, 100], [fn], colorFn, outputFn);
+  compose([fn], colorFn, outputFn);
   expect(outputFn.getSize()).toBe(2);
 });

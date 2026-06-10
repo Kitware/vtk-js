@@ -19,12 +19,11 @@ function getColorFunctionXValues(cfun) {
  * and must be pulled back through f-inverse; h's x-values need g-inverse then
  * f-inverse, and so on.
  *
- * @param {Range} dataRange input data range to apply to the output function
  * @param {vtkPiecewiseFunction[]} fnList ordered list of value transform functions, e.g. [modalityFn, voiFn, userFn]
  * @param {vtkColorTransferFunction} colorFn final-stage color transfer function
  * @param {vtkColorTransferFunction} outputFn function to populate with the composed result
  */
-export function compose(dataRange, fnList, colorFn, outputFn) {
+export function compose(fnList, colorFn, outputFn) {
   const xSet = new Set();
 
   // Each function's breakpoint x-values live in that function's input domain.
@@ -54,6 +53,9 @@ export function compose(dataRange, fnList, colorFn, outputFn) {
     if (t != null) xSet.add(t);
   });
 
+  // Now use the gathered x values to propogate through the entire set of
+  // functions to determine the final color values for each, and add them
+  // as nodes to our new color transfer function.
   const xs = Array.from(xSet).sort((a, b) => a - b);
   outputFn.removeAllPoints();
   xs.forEach((x) => {
@@ -62,9 +64,4 @@ export function compose(dataRange, fnList, colorFn, outputFn) {
     colorFn.getColor(finalScalar, rgb);
     outputFn.addRGBPoint(x, rgb[0], rgb[1], rgb[2]);
   });
-
-  outputFn.setRange(...dataRange);
-  outputFn.setMappingRange(...dataRange);
-  outputFn.updateRange();
-  outputFn.modified();
 }

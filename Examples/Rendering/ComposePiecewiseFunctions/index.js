@@ -121,9 +121,9 @@ function buildColorFunction(presetName) {
   colorFn.applyColorMap(vtkColorMaps.getPresetByName(presetName));
 }
 
-function example_recompose(dataRange) {
+function example_recompose() {
   const fnList = [modalityFn, voiFn, userFn];
-  compose(dataRange, fnList, colorFn, resultFn);
+  compose(fnList, colorFn, resultFn);
   actor.getProperty().setUseLookupTableScalarRange(true);
   actor.getProperty().setRGBTransferFunction(0, resultFn);
 }
@@ -303,7 +303,7 @@ function renderDicom(file) {
     // User interactive adjustment (window/level)
     buildUserFn(getOutputRange(voiFn), colorWindow, colorLevel);
     // Compose into a single transferfunction to feed into the mapper.
-    example_recompose(dataRange);
+    example_recompose();
 
     if (!renderer.getActors().length) {
       renderer.addActor(actor);
@@ -354,7 +354,7 @@ function renderDicom(file) {
       (val) => {
         modalityShift = val;
         buildModalityFunction(dataRange, modalityShift, modalityScale);
-        example_recompose(dataRange);
+        example_recompose();
         renderWindow.render();
       }
     );
@@ -369,7 +369,7 @@ function renderDicom(file) {
       (val) => {
         modalityScale = val;
         buildModalityFunction(dataRange, modalityShift, modalityScale);
-        example_recompose(dataRange);
+        example_recompose();
         renderWindow.render();
       },
       scaleFormat
@@ -422,7 +422,7 @@ function renderDicom(file) {
           Number(windowInput.value),
           Number(levelInput.value)
         );
-        example_recompose(dataRange);
+        example_recompose();
         renderWindow.render();
       }
     );
@@ -443,7 +443,7 @@ function renderDicom(file) {
           Number(windowInput.value),
           Number(levelInput.value)
         );
-        example_recompose(dataRange);
+        example_recompose();
         renderWindow.render();
       },
       scaleFormat
@@ -468,7 +468,7 @@ function renderDicom(file) {
       1,
       (val) => {
         buildUserFn(getOutputRange(voiFn), val, Number(levelInput.value));
-        example_recompose(dataRange);
+        example_recompose();
         renderWindow.render();
       }
     ));
@@ -482,7 +482,7 @@ function renderDicom(file) {
       1,
       (val) => {
         buildUserFn(getOutputRange(voiFn), Number(windowInput.value), val);
-        example_recompose(dataRange);
+        example_recompose();
         renderWindow.render();
       }
     ));
@@ -519,7 +519,7 @@ function renderDicom(file) {
     presetSelector.addEventListener('change', () => {
       currentPreset = presetSelector.value;
       buildColorFunction(currentPreset);
-      example_recompose(dataRange);
+      example_recompose();
       renderWindow.render();
     });
     controlPanel.appendChild(presetSelector);
