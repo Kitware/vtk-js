@@ -10,6 +10,7 @@ import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
 import vtkInteractorStyleImage from '@kitware/vtk.js/Interaction/Style/InteractorStyleImage';
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
 import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
+import { compose } from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction/helpers';
 import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper';
 import vtkResourceLoader from '@kitware/vtk.js/IO/Core/ResourceLoader';
 import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
@@ -89,56 +90,6 @@ function buildShiftScaleFunction(dataRange, shift, scale) {
   return fn;
 }
 
-function getColorFunctionXValues(cfun) {
-  const ret = [];
-  const v = [0, 0, 0, 0, 0, 0];
-  for (let i = 0; i < cfun.getSize(); i++) {
-    if (cfun.getNodeValue(i, v) === 1) {
-      ret.push(v[0]);
-    }
-  }
-  return ret;
-}
-
-// Given a piecewise linear fn and a y value, return the x such that fn(x) = y.
-// Walks each segment and linearly interpolates within the first matching one.
-// Returns null if y is outside the function's output range.
-// TODO: This function can become a public member of vtkPiecewiseFunction
-function invertFn(fn, y) {
-  const data = fn.getDataPointer();
-  if (!data || data.length < 4) return null;
-  for (let i = 0; i < data.length - 2; i += 2) {
-    const x0 = data[i];
-    const y0 = data[i + 1];
-    const x1 = data[i + 2];
-    const y1 = data[i + 3];
-    /* eslint-disable no-continue */
-    if (y0 === y1) {
-      continue;
-    }
-    const minY = Math.min(y0, y1);
-    const maxY = Math.max(y0, y1);
-    if (y >= minY && y <= maxY) {
-      return x0 + ((y - y0) / (y1 - y0)) * (x1 - x0);
-    }
-  }
-
-  // below range case
-  if (fn.getClamping()) {
-    if (y <= data[1]) {
-      // x-position of first node
-      return data[0];
-    }
-    if (y >= data[data.length - 1]) {
-      // x-position of last node
-      return data[data.length - 2];
-    }
-  }
-
-  console.warn(`invertFn: null returned for: ${fn.getState()}, ${y}`);
-  return null;
-}
-
 function buildModalityFunction(dataRange, shift, scale) {
   modalityFn = buildShiftScaleFunction(dataRange, shift, scale);
   printFnRange(modalityFn, 'modalityFn');
@@ -172,67 +123,9 @@ function buildColorFunction(presetName) {
 
 function example_recompose(dataRange) {
   const fnList = [modalityFn, voiFn, userFn];
-  recompose(dataRange, fnList, resultFn);
+  compose(dataRange, fnList, colorFn, resultFn);
   actor.getProperty().setUseLookupTableScalarRange(true);
   actor.getProperty().setRGBTransferFunction(0, resultFn);
-}
-
-// Collect all x-positions across all transform functions and chain their outputs.
-// getDataPointer() returns a flat [x0,y0,x1,y1,...] array.
-// Make sure the texture size doesn't get exceeded.
-function recompose(dataRange, fnList, outputFn) {
-  // const fnList = [modalityFn, voiFn, userFn];
-  const xSet = new Set();
-
-  // Each function's breakpoint x-values live in that function's input domain.
-  // For h(g(f(x))), g's x-values are in f's output domain and must be pulled
-  // back through f-inverse; h's x-values need g-inverse then f-inverse.
-  fnList.forEach((fn, idx) => {
-    const data = fn.getDataPointer();
-    if (!data) return;
-    for (let i = 0; i < data.length; i += 2) {
-      let x = data[i];
-      for (let j = idx - 1; j >= 0; j--) {
-        x = invertFn(fnList[j], x);
-        if (x == null) break;
-      }
-      if (x != null) xSet.add(x);
-    }
-  });
-
-  // Also reverse compute from x-values of the final-stage color transfer function,
-  // and add those to our xSet so that we don't miss any break points defined
-  // within the color transfer function.
-  const colorXs = getColorFunctionXValues(colorFn);
-  colorXs.forEach((x) => {
-    let t = x;
-    for (let j = fnList.length - 1; j >= 0; j--) {
-      t = invertFn(fnList[j], t);
-      if (t == null) break;
-    }
-    if (t != null) xSet.add(t);
-  });
-
-  // Also add range endpoints so the composed function spans the full range
-  // xSet.add(dataRange[0]);
-  // xSet.add(dataRange[1]);
-
-  const xs = Array.from(xSet).sort((a, b) => a - b);
-  console.log(`xs: ${xs}`);
-  outputFn.removeAllPoints();
-  xs.forEach((x) => {
-    const finalScalar = fnList.reduce((val, fn) => fn.getValue(val), x);
-    const rgb = [0, 0, 0];
-    colorFn.getColor(finalScalar, rgb);
-    outputFn.addRGBPoint(x, rgb[0], rgb[1], rgb[2]);
-    console.log(`nodes: x:${x}, y:${finalScalar} --> rgb: ${rgb}`);
-  });
-
-  outputFn.setRange(...dataRange);
-  outputFn.setMappingRange(...dataRange);
-  outputFn.updateRange();
-  outputFn.modified();
-  console.log(`final func: ${outputFn.getState()}`);
 }
 
 // ----------------------------------------------------------------------------
