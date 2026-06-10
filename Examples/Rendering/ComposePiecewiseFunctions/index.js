@@ -293,13 +293,15 @@ function renderDicom(file) {
     let voiScale = 0.9;
     let currentPreset = vtkColorMaps.rgbPresetNames[2];
 
+    // Initial build of the color transfer function.
+    buildColorFunction(currentPreset);
+
     // Modality transform
     buildModalityFunction(dataRange, modalityShift, modalityScale);
     // Values of interest transform
     buildVoiFn(dataRange, voiShift, voiScale);
     // User interactive adjustment (window/level)
     buildUserFn(getOutputRange(voiFn), colorWindow, colorLevel);
-    buildColorFunction(currentPreset);
     // Compose into a single transferfunction to feed into the mapper.
     example_recompose(dataRange);
 
@@ -466,7 +468,6 @@ function renderDicom(file) {
       1,
       (val) => {
         buildUserFn(getOutputRange(voiFn), val, Number(levelInput.value));
-        buildColorFunction(currentPreset);
         example_recompose(dataRange);
         renderWindow.render();
       }
@@ -481,7 +482,6 @@ function renderDicom(file) {
       1,
       (val) => {
         buildUserFn(getOutputRange(voiFn), Number(windowInput.value), val);
-        buildColorFunction(currentPreset);
         example_recompose(dataRange);
         renderWindow.render();
       }
