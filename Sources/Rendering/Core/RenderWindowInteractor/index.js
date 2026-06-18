@@ -798,7 +798,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleWheel = (event) => {
-    preventDefault(event);
+    if (model.preventDefaultOnWheel) {
+      preventDefault(event);
+    }
 
     /**
      * wheel event values can vary significantly across browsers, platforms
@@ -1326,6 +1328,7 @@ const DEFAULT_VALUES = {
   wheelTimeoutID: 0,
   moveTimeoutID: 0,
   lastGamepadValues: {},
+  preventDefaultOnWheel: true, // to prevent scrolling
   preventDefaultOnPointerDown: false,
   preventDefaultOnPointerUp: false,
   mouseScrollDebounceByPass: false,
@@ -1366,6 +1369,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'desiredUpdateRate',
     'stillUpdateRate',
     'picker',
+    'preventDefaultOnWheel',
     'preventDefaultOnPointerDown',
     'preventDefaultOnPointerUp',
     'mouseScrollDebounceByPass',
