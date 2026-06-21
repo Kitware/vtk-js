@@ -338,6 +338,41 @@ function vtkPiecewiseFunction(publicAPI, model) {
     return table[0];
   };
 
+  // Inverse of getValue(): given a value y, return an x such that
+  // getValue(x) === y, walking each segment and linearly interpolating
+  // within the first matching one. Returns null if y is outside the
+  // function's output range and clamping is off.
+  publicAPI.findX = (y) => {
+    const { nodes } = model;
+    /* eslint-disable no-continue */
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const { x: x0, y: y0 } = nodes[i];
+      const { x: x1, y: y1 } = nodes[i + 1];
+      if (y0 === y1) {
+        continue;
+      }
+      const minY = Math.min(y0, y1);
+      const maxY = Math.max(y0, y1);
+      if (y >= minY && y <= maxY) {
+        return x0 + ((y - y0) / (y1 - y0)) * (x1 - x0);
+      }
+    }
+    /* eslint-enable no-continue */
+
+    if (model.clamping && nodes.length > 0) {
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      if (y <= first.y) {
+        return first.x;
+      }
+      if (y >= last.y) {
+        return last.x;
+      }
+    }
+
+    return null;
+  };
+
   // Remove all points outside the range, and make sure a point
   // exists at each end of the range. Used as a convenience method
   // for transfer function editors

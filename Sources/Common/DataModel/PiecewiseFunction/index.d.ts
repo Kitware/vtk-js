@@ -85,6 +85,14 @@ export interface vtkPiecewiseFunction extends vtkObject {
   getFirstNonZeroValue(): number;
 
   /**
+   * Inverse of getValue(): given a value y, returns an x such that
+   * getValue(x) === y, linearly interpolating between nodes. Returns null
+   * if y is outside the function's output range and clamping is off.
+   * @param {Number} y
+   */
+  findX(y: number): number | null;
+
+  /**
    * For the node specified by index, set/get the location (X), value (Y),
    * midpoint, and sharpness values at the node.
    * @param {Number} index
