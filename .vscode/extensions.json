@@ -1,0 +1,6 @@
+{
+  "recommendations": [
+      "EditorConfig.EditorConfig",
+      "yoavbls.pretty-ts-errors"
+  ]
+}

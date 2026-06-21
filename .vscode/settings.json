@@ -1,0 +1,16 @@
+{
+  "diffEditor.diffAlgorithm": "advanced",
+  "diffEditor.experimental.showMoves": true,
+  "editor.rulers": [80, 120],
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
+  "editor.trimAutoWhitespace": true,
+  "files.trimTrailingWhitespace": true,
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "js/ts.inlayHints.parameterNames.enabled": "all",
+  "js/ts.inlayHints.variableTypes.enabled": true,
+  "js/ts.preferGoToSourceDefinition": true,
+  "workbench.editor.labelFormat": "short"
+}
