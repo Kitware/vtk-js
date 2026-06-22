@@ -22,7 +22,7 @@ function vtkWebGPUOpaquePass(publicAPI, model) {
     model._currentParent = viewNode;
 
     const device = viewNode.getDevice();
-    const sampleCount = viewNode.getMultiSample ? viewNode.getMultiSample() : 1;
+    const sampleCount = Math.max(1, viewNode.getMultiSample?.() ?? 1);
 
     // If sampleCount changed since last render, tear down and recreate
     if (model.renderEncoder && model._currentSampleCount !== sampleCount) {
