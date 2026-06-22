@@ -1,8 +1,7 @@
 import { RGBColor } from '../../../types';
 import { vtkAbstractRepresentationProxy } from '../../Core/AbstractRepresentationProxy';
 
-export interface vtkGeometryRepresentationProxy
-  extends vtkAbstractRepresentationProxy {
+export interface vtkGeometryRepresentationProxy extends vtkAbstractRepresentationProxy {
   /**
    *
    * @param representation a string that describes what representation to use for the explicit geometry.

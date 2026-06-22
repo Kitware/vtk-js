@@ -46,11 +46,8 @@ function vtkPolyDataReader(publicAPI, model) {
   };
 
   // Fetch the actual data arrays
-  publicAPI.loadData = (option = {}) => {
-    const promise = fetchData(model.url, option);
-    promise.then(publicAPI.parseAsText);
-    return promise;
-  };
+  publicAPI.loadData = (option = {}) =>
+    fetchData(model.url, option).then(publicAPI.parseAsText);
 
   publicAPI.parseAsText = (content) => {
     if (!content) {

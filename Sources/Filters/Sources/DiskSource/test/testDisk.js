@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -10,9 +10,9 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import baseline from './testDisk.png';
 
-test.onlyIfWebGL('Test vtkDiskSource Rendering', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkDiskSource Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkDiskSource Rendering');
+  expect('rendering', 'vtkDiskSource Rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -55,7 +55,6 @@ test.onlyIfWebGL('Test vtkDiskSource Rendering', (t) => {
         image,
         [baseline],
         'Filters/Sources/DiskSource/testDisk',
-        t,
         2.5
       )
     )

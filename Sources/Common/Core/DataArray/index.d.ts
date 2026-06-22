@@ -1,4 +1,4 @@
-import { vtkObject, vtkRange } from '../../../interfaces';
+import { vtkObject, vtkRange, GetStateOptions } from '../../../interfaces';
 import { float, int, Nullable, Range, TypedArray } from '../../../types';
 
 /**
@@ -274,9 +274,12 @@ export interface vtkDataArray extends vtkObject {
 
   /**
    * Get the state of this array.
+   *
+   * Pass `{ preserveTypedArrays: true }` to keep TypedArray values
+   * without converting and copying to a plain Array.
    * @returns {object}
    */
-  getState(): object;
+  getState(options?: GetStateOptions): object;
 
   /**
    * Deep copy of another vtkDataArray into this one.

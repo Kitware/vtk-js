@@ -47,9 +47,7 @@ renderer.addActor(actor);
 const widgetManager = vtkWidgetManager.newInstance();
 widgetManager.setRenderer(renderer);
 
-let widget = null;
-let widgetHandle = null;
-
+let previousWidgetHandle = null;
 renderer.resetCamera();
 
 // -----------------------------------------------------------
@@ -59,10 +57,10 @@ renderer.resetCamera();
 const gui = new GUI();
 const params = {
   AddWidget: (eventOrCenter = null) => {
-    if (widgetHandle) {
-      widgetHandle.endInteract();
+    if (previousWidgetHandle) {
+      previousWidgetHandle.endInteract();
     }
-    widget = vtkSeedWidget.newInstance();
+    const widget = vtkSeedWidget.newInstance();
 
     // Important: set the manipulator of the widget to constrain movement to the actor
     widget.setManipulator(manipulator);
@@ -78,17 +76,24 @@ const params = {
 
     // Start placement interaction
     widget.placeWidget(cone.getOutputData().getBounds());
-    widgetHandle = widgetManager.addWidget(widget);
+    const widgetHandle = widgetManager.addWidget(widget);
     if (Array.isArray(eventOrCenter)) {
       widgetHandle.setCenter(eventOrCenter);
     } else {
       widgetHandle.startInteract();
     }
+    global.widget = widget;
+    global.widgetHandle = widgetHandle;
+    previousWidgetHandle = widgetHandle;
   },
   RemoveWidget: () => {
+    if (previousWidgetHandle) {
+      previousWidgetHandle.endInteract();
+    }
     const widgets = widgetManager.getWidgets();
     if (!widgets.length) return;
     widgetManager.removeWidget(widgets[widgets.length - 1]);
+    previousWidgetHandle = null;
     renderWindow.render();
   },
 };
@@ -102,9 +107,7 @@ params.AddWidget([0.5, 0, 0]);
 // globals
 // -----------------------------------------------------------
 
-global.widget = widget;
 global.renderer = renderer;
 global.fullScreenRenderer = fullScreenRenderer;
 global.renderWindow = renderWindow;
 global.widgetManager = widgetManager;
-global.widgetHandle = widgetHandle;

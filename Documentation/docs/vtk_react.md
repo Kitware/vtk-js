@@ -157,7 +157,7 @@ You can run the app using the project's built-in dev server.
 $ yarn start
 ```
 
-Navigate to `http://localhost:3000`, and you should have an interactive 3D visualization of a cone, similar to the [SimpleCone](../examples/SimpleCone.html) example.
+Navigate to `http://localhost:9999`, and you should have an interactive 3D visualization of a cone, similar to the [SimpleCone](../examples/SimpleCone.html) example.
 
 ## Where to go next
 

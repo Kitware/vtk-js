@@ -1,7 +1,7 @@
 import { vtkObject } from '../../../interfaces';
 import { RGBAColor, RGBColor } from '../../../types';
 import vtkRenderer from '../../Core/Renderer';
-import vtkRenderWindow from '../../Core/RenderWindow';
+import vtkRenderWindow, { DEFAULT_VIEW_API } from '../../Core/RenderWindow';
 import vtkRenderWindowInteractor from '../../Core/RenderWindowInteractor';
 
 // import vtkOpenGLRenderWindow from "../../../OpenGL/RenderWindow";
@@ -16,7 +16,7 @@ export interface IFullScreenRenderWindowInitialValues {
   containerStyle?: object;
   controlPanelStyle?: object;
   controllerVisibility?: boolean;
-  defaultViewAPI?: boolean;
+  defaultViewAPI?: DEFAULT_VIEW_API;
   listenWindowResize?: boolean;
   resizeCallback?: any;
 }
@@ -41,7 +41,7 @@ export interface vtkFullScreenRenderWindow extends vtkObject {
 
   /**
    * Returns vtkWebGPURenderWindow if ?viewAPI='WebGPU' is in URL, or if
-   * vtkFullScreenRenderWindow has been created with "defaultViewAPI: 'WebGPU",
+   * vtkFullScreenRenderWindow has been created with "defaultViewAPI: 'WebGPU'",
    * otherwise vtkOpenGLRenderWindow is returned.
    */
   getApiSpecificRenderWindow(): any; // vtkOpenGLRenderWindow || vtkWebGPURenderWindow

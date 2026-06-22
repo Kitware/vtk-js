@@ -143,6 +143,12 @@ function vtkWebGPUOpaquePass(publicAPI, model) {
       model.renderEncoder.setPipelineSettings(settings);
     }
   };
+
+  publicAPI.releaseGraphicsResources = () => {
+    model.renderEncoder = null;
+    model.colorTexture = null;
+    model.depthTexture = null;
+  };
 }
 
 // ----------------------------------------------------------------------------

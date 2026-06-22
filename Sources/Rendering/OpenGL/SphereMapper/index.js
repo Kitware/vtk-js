@@ -296,9 +296,10 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
 
     const { useShiftAndScale, coordShift, coordScale } =
       computeCoordShiftAndScale(points);
-    if (useShiftAndScale) {
-      vbo.setCoordShiftAndScale(coordShift, coordScale);
-    }
+    vbo.setCoordShiftAndScale(
+      useShiftAndScale ? coordShift : null,
+      useShiftAndScale ? coordScale : null
+    );
 
     //
     // Generate points and point data for sides

@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
@@ -15,9 +15,9 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import baseline1 from './testLighting.png';
 import baseline2 from './testLighting_2.png';
 
-test.onlyIfWebGL('Test Lighted Volume Rendering', async (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test Lighted Volume Rendering', async () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkOpenGLVolumeMapper Lighting');
+  expect('rendering', 'vtkOpenGLVolumeMapper Lighting').toBeTruthy();
   // testUtils.keepDOM();
 
   // Create some control UI
@@ -104,7 +104,6 @@ test.onlyIfWebGL('Test Lighted Volume Rendering', async (t) => {
         image,
         [baseline1, baseline2],
         'Rendering/OpenGL/VolumeMapper/testLighting',
-        t,
         0.05
       )
     )

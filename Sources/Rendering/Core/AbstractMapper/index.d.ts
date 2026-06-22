@@ -1,6 +1,7 @@
+import { mat4 } from 'gl-matrix';
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import vtkPlane from '../../../Common/DataModel/Plane';
-import { mat4 } from 'gl-matrix';
+import { Vector4 } from '../../../types';
 
 /**
  *
@@ -32,6 +33,12 @@ export interface vtkAbstractMapper extends vtkAbstractMapperBase {
   getClippingPlanes(): vtkPlane[];
 
   /**
+   * Get the modified time of the clipping planes list.
+   * @return {Number} The modified time.
+   */
+  getClippingPlanesMTime(): number;
+
+  /**
    * Remove all clipping planes.
    * @return true if there were planes, false otherwise.
    */
@@ -51,8 +58,24 @@ export interface vtkAbstractMapper extends vtkAbstractMapperBase {
   setClippingPlanes(planes: vtkPlane[]): void;
 
   /**
+   * Get the ith clipping plane transformed from world coordinates into the
+   * target coordinate system defined by the provided world-to-coordinates
+   * matrix.
+   * @param {mat4} worldToCoords
+   * @param {Number} i
+   * @param {Number[]} [hnormal]
+   */
+  getClippingPlaneInCoords(
+    worldToCoords: mat4,
+    i: number,
+    hnormal?: Vector4 | Float64Array
+  ): Vector4 | Float64Array | undefined;
+
+  /**
    * Get the ith clipping plane as a homogeneous plane equation.
    * Use getNumberOfClippingPlanes() to get the number of planes.
+   * This API expects a coordinates-to-world matrix and preserves the legacy
+   * behavior used by existing data-coordinate callers.
    * @param {mat4} propMatrix
    * @param {Number} i
    * @param {Number[]} hnormal

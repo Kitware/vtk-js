@@ -62,22 +62,22 @@ function vtkImageSlice(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   // Get the minimum X bound
-  publicAPI.getMinXBound = () => publicAPI.getBounds()[0];
+  publicAPI.getMinXBound = () => publicAPI.getBoundsByReference()[0];
 
   // Get the maximum X bound
-  publicAPI.getMaxXBound = () => publicAPI.getBounds()[1];
+  publicAPI.getMaxXBound = () => publicAPI.getBoundsByReference()[1];
 
   // Get the minimum Y bound
-  publicAPI.getMinYBound = () => publicAPI.getBounds()[2];
+  publicAPI.getMinYBound = () => publicAPI.getBoundsByReference()[2];
 
   // Get the maximum Y bound
-  publicAPI.getMaxYBound = () => publicAPI.getBounds()[3];
+  publicAPI.getMaxYBound = () => publicAPI.getBoundsByReference()[3];
 
   // Get the minimum Z bound
-  publicAPI.getMinZBound = () => publicAPI.getBounds()[4];
+  publicAPI.getMinZBound = () => publicAPI.getBoundsByReference()[4];
 
   // Get the maximum Z bound
-  publicAPI.getMaxZBound = () => publicAPI.getBounds()[5];
+  publicAPI.getMaxZBound = () => publicAPI.getBoundsByReference()[5];
 
   publicAPI.getRedrawMTime = () => {
     let mt = model.mtime;

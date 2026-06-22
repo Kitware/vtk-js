@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -27,9 +27,9 @@ function addActor(gc, renderer, size) {
   mapper.setInputConnection(source.getOutputPort());
 }
 
-test.onlyIfWebGL('Test HardwareSelector', (tapeContext) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test HardwareSelector', () => {
   const gc = testUtils.createGarbageCollector();
-  tapeContext.ok('rendering', 'vtkHardwareSelector TestHardwareSelector');
+  expect('rendering', 'vtkHardwareSelector TestHardwareSelector').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -76,11 +76,11 @@ test.onlyIfWebGL('Test HardwareSelector', (tapeContext) => {
         const tcTime = Date.now() - previousTime;
         console.timeEnd('hardware render');
 
-        tapeContext.ok(
+        expect(
           // should take about 5 normal renders but we give it some wiggle room
           tcTime < tbTime * 10,
           `Hardware selector takes less than ten normal renders (${taTime}, ${tbTime}, ${tcTime})`
-        );
+        ).toBeTruthy();
 
         gc.releaseResources();
       });

@@ -12,15 +12,15 @@ import { vtkWebGPURenderWindow } from '../../../Rendering/WebGPU/RenderWindow';
 import { VtkProxy } from '../../../macros';
 
 export interface vtkViewProxy extends VtkProxy {
-  setPresetToInteractor3D(nameOrDefinitions: string | Object): boolean;
-  setPresetToInteractor2D(nameOrDefinitions: string | Object): boolean;
+  setPresetToInteractor3D(nameOrDefinitions: string | object): boolean;
+  setPresetToInteractor2D(nameOrDefinitions: string | object): boolean;
 
   setOrientationAxesType(type: string): void;
   setOrientationAxesVisibility(visible: boolean): boolean;
   registerOrientationAxis(name: string, actor: vtkActor): void;
   unregisterOrientationAxis(name: string): void;
   listOrientationAxis(): string[];
-  setPresetToOrientationAxes(nameOrDefinitions: string | Object): boolean;
+  setPresetToOrientationAxes(nameOrDefinitions: string | object): boolean;
 
   setContainer(container: HTMLElement | null): void;
   resize(): void;
@@ -32,7 +32,7 @@ export interface vtkViewProxy extends VtkProxy {
   removeRepresentation(representation: vtkAbstractRepresentationProxy): void;
 
   // TODO correct?
-  captureImage(opts: { format: string } & Object): Array<Promise<string>>;
+  captureImage(opts: { format: string } & object): Array<Promise<string>>;
   openCaptureImage(target: string): void;
 
   // TODO corner annotations

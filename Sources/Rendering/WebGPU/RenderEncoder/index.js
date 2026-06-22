@@ -1,6 +1,8 @@
 import * as macro from 'vtk.js/Sources/macros';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 
+const { vtkErrorMacro } = macro;
+
 // methods we forward to the handle
 const forwarded = [
   'setBindGroup',
@@ -50,19 +52,20 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
     }
     model.handle.setPipeline(pl.getHandle());
     const pd = pl.getPipelineDescription();
+    const fragmentTargets = pd.fragment?.targets;
 
     // check attachment state
-    if (model.colorTextureViews.length !== pd.fragment.targets.length) {
+    if (model.colorTextureViews.length !== fragmentTargets.length) {
       console.log(
-        `mismatched attachment counts on pipeline ${pd.fragment.targets.length} while encoder has ${model.colorTextureViews.length}`
+        `mismatched attachment counts on pipeline ${fragmentTargets.length} while encoder has ${model.colorTextureViews.length}`
       );
       console.trace();
     } else {
       for (let i = 0; i < model.colorTextureViews.length; i++) {
         const fmt = model.colorTextureViews[i].getTexture()?.getFormat();
-        if (fmt && fmt !== pd.fragment.targets[i].format) {
+        if (fmt && fmt !== fragmentTargets[i].format) {
           console.log(
-            `mismatched attachments for attachment ${i} on pipeline ${pd.fragment.targets[i].format} while encoder has ${fmt}`
+            `mismatched attachments for attachment ${i} on pipeline ${fragmentTargets[i].format} while encoder has ${fmt}`
           );
           console.trace();
         }
@@ -70,7 +73,9 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
     }
 
     // check depth buffer
-    if (!model.depthTextureView !== !('depthStencil' in pd)) {
+    const hasDepthAttachment = !!model.depthTextureView;
+    const pipelineUsesDepth = 'depthStencil' in pd;
+    if (hasDepthAttachment !== pipelineUsesDepth) {
       console.log('mismatched depth attachments');
       console.trace();
     } else if (model.depthTextureView) {
@@ -105,7 +110,13 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
 
   publicAPI.activateBindGroup = (bg) => {
     const device = model.boundPipeline.getDevice();
-    const midx = model.boundPipeline.getBindGroupLayoutCount(bg.getLabel());
+    const midx = model.boundPipeline.getBindGroupLayoutIndex(bg.getLabel());
+    if (midx < 0) {
+      vtkErrorMacro(
+        `vtkWebGPURenderEncoder: could not find bind group layout ${bg.getLabel()}`
+      );
+      return;
+    }
     model.handle.setBindGroup(midx, bg.getBindGroup(device));
     // verify bind group layout matches
     const bgl1 = device.getBindGroupLayoutDescription(

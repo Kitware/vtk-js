@@ -1,25 +1,23 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
-test('Test vtkBoundingBox inflate', (t) => {
+it('Test vtkBoundingBox inflate', () => {
   const bounds = [0, 10, 10, 20, -10, 10];
   const inflated = [-0.5, 10.5, 9.5, 20.5, -10.5, 10.5];
 
   const bbox = vtkBoundingBox.newInstance();
   bbox.setBounds(bounds);
   let inflatedBounds = bbox.inflate(0.5);
-  t.ok(vtkMath.areEquals(inflatedBounds, inflated));
-  t.ok(vtkMath.areEquals(bbox.getBounds(), inflated));
+  expect(vtkMath.areEquals(inflatedBounds, inflated)).toBeTruthy();
+  expect(vtkMath.areEquals(bbox.getBounds(), inflated)).toBeTruthy();
 
   inflatedBounds = vtkBoundingBox.inflate(bounds, 0.5);
-  t.ok(vtkMath.areEquals(inflatedBounds, inflated));
-  t.ok(vtkMath.areEquals(bounds, inflated));
-
-  t.end();
+  expect(vtkMath.areEquals(inflatedBounds, inflated)).toBeTruthy();
+  expect(vtkMath.areEquals(bounds, inflated)).toBeTruthy();
 });
 
-test('Test vtkBoundingBox intersectBox', (t) => {
+it('Test vtkBoundingBox intersectBox', () => {
   const bounds = [-50, 50, -50, 50, -50, 50];
   const orig = [100, 0, 0];
   const dir = [-100, 0, 0];
@@ -28,17 +26,17 @@ test('Test vtkBoundingBox intersectBox', (t) => {
 
   // Orig outside and intersect with dir
   const hit = vtkBoundingBox.intersectBox(bounds, orig, dir, coord, tol);
-  t.equal(hit, 1);
-  t.equal(coord[0], 50);
-  t.equal(coord[1], 0);
-  t.equal(coord[2], 0);
-  t.equal(tol[0], 0.5);
+  expect(hit).toBe(1);
+  expect(coord[0]).toBe(50);
+  expect(coord[1]).toBe(0);
+  expect(coord[2]).toBe(0);
+  expect(tol[0]).toBe(0.5);
 
   // Orig outside and doesn't intersect with dir
   dir[0] = 100;
   coord = [];
   const hit2 = vtkBoundingBox.intersectBox(bounds, orig, dir, coord, tol);
-  t.equal(hit2, 0);
+  expect(hit2).toBe(0);
 
   // Orig inside bounds
   orig[0] = 0.0;
@@ -46,16 +44,14 @@ test('Test vtkBoundingBox intersectBox', (t) => {
   orig[2] = 0.0;
   coord = [];
   const hit3 = vtkBoundingBox.intersectBox(bounds, orig, dir, coord, tol);
-  t.equal(hit3, 1);
-  t.equal(coord[0], orig[0]);
-  t.equal(coord[1], orig[1]);
-  t.equal(coord[2], orig[2]);
-  t.equal(tol[0], 0);
-
-  t.end();
+  expect(hit3).toBe(1);
+  expect(coord[0]).toBe(orig[0]);
+  expect(coord[1]).toBe(orig[1]);
+  expect(coord[2]).toBe(orig[2]);
+  expect(tol[0]).toBe(0);
 });
 
-test('Test vtkBoundingBox intersectPlane', (t) => {
+it('Test vtkBoundingBox intersectPlane', () => {
   const bounds = [-1, 1, -1, 1, -1, 1];
   const origin = [];
   const normal = [];
@@ -70,7 +66,7 @@ test('Test vtkBoundingBox intersectPlane', (t) => {
   normal[2] = 1;
 
   const res1 = vtkBoundingBox.intersectPlane(bounds, origin, normal);
-  t.equal(res1, 1);
+  expect(res1).toBe(1);
 
   // origin outside,parallel with nearest plane
   origin[0] = -2;
@@ -82,7 +78,7 @@ test('Test vtkBoundingBox intersectPlane', (t) => {
   normal[2] = 0;
 
   const res2 = vtkBoundingBox.intersectPlane(bounds, origin, normal);
-  t.equal(res2, 0);
+  expect(res2).toBe(0);
 
   // origin outside, not parallel with nearest plane
   origin[0] = -2;
@@ -94,7 +90,5 @@ test('Test vtkBoundingBox intersectPlane', (t) => {
   normal[2] = 0;
 
   const res3 = vtkBoundingBox.intersectPlane(bounds, origin, normal);
-  t.equal(res3, 1);
-
-  t.end();
+  expect(res3).toBe(1);
 });

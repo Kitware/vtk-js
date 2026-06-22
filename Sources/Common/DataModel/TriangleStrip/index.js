@@ -419,7 +419,55 @@ function vtkTriangleStrip(publicAPI, model) {
     cellId,
     outCd,
     insideOut
-  ) => notImplemented('clip')();
+  ) => {
+    const numTris = model.points.getNumberOfPoints() - 2;
+    const triScalarsValues = new Float32Array(3);
+    const triScalars = cellScalars.newClone();
+    triScalars.setNumberOfComponents(cellScalars.getNumberOfComponents());
+    triScalars.setData(triScalarsValues, cellScalars.getNumberOfComponents());
+
+    const trianglePoints = model.triangle.getPoints();
+    trianglePoints.setNumberOfPoints(3);
+    const trianglePointIds = model.triangle.getPointsIds();
+    const tmp = [0, 0, 0];
+
+    for (let i = 0; i < numTris; i++) {
+      let id1 = i;
+      let id2 = i + 1;
+      let id3 = i + 2;
+
+      if (i % 2) {
+        id1 = i + 2;
+        id2 = i + 1;
+        id3 = i;
+      }
+
+      trianglePoints.setPoint(0, ...model.points.getPoint(id1, tmp));
+      trianglePoints.setPoint(1, ...model.points.getPoint(id2, tmp));
+      trianglePoints.setPoint(2, ...model.points.getPoint(id3, tmp));
+
+      trianglePointIds[0] = model.pointsIds[id1];
+      trianglePointIds[1] = model.pointsIds[id2];
+      trianglePointIds[2] = model.pointsIds[id3];
+
+      triScalarsValues[0] = cellScalars.getComponent(id1, 0);
+      triScalarsValues[1] = cellScalars.getComponent(id2, 0);
+      triScalarsValues[2] = cellScalars.getComponent(id3, 0);
+
+      model.triangle.clip(
+        value,
+        triScalars,
+        locator,
+        tris,
+        inPd,
+        outPd,
+        inCd,
+        cellId,
+        outCd,
+        insideOut
+      );
+    }
+  };
 }
 
 // ----------------------------------------------------------------------------

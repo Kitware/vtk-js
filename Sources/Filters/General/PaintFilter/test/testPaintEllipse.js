@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -13,9 +13,9 @@ import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunct
 
 import baseline from './baseline.png';
 
-test.onlyIfWebGL(
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'Test vtkPaintFilter ellipse on images with large spacing',
-  (t) => {
+  () => {
     const spacing = 1000;
     const zSlice = 400;
     const radius = 10;
@@ -107,7 +107,6 @@ test.onlyIfWebGL(
             image,
             [baseline],
             'Filters/General/PaintFilter/test/testPaintEllipse',
-            t,
             1
           )
         )

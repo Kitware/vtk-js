@@ -6,9 +6,10 @@ import 'vtk.js/Sources/Rendering/WebGPU/Renderer';
 import 'vtk.js/Sources/Rendering/WebGPU/Actor';
 import 'vtk.js/Sources/Rendering/WebGPU/Actor2D';
 import 'vtk.js/Sources/Rendering/WebGPU/CubeAxesActor';
+import 'vtk.js/Sources/Rendering/WebGPU/CutterMapper';
 import 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper';
 import 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper2D';
-// import 'vtk.js/Sources/Rendering/WebGPU/Skybox';
+import 'vtk.js/Sources/Rendering/WebGPU/Skybox';
 import 'vtk.js/Sources/Rendering/WebGPU/ScalarBarActor';
 import 'vtk.js/Sources/Rendering/WebGPU/Texture';
 
@@ -17,6 +18,8 @@ import 'vtk.js/Sources/Rendering/WebGPU/Glyph3DMapper';
 
 // Volume
 import 'vtk.js/Sources/Rendering/WebGPU/ImageMapper';
+import 'vtk.js/Sources/Rendering/WebGPU/ImageCPRMapper';
+import 'vtk.js/Sources/Rendering/WebGPU/ImageResliceMapper';
 import 'vtk.js/Sources/Rendering/WebGPU/ImageSlice';
 import 'vtk.js/Sources/Rendering/WebGPU/Volume';
 // import 'vtk.js/Sources/Rendering/WebGPU/VolumeMapper';

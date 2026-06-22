@@ -1,43 +1,43 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import { substitute } from '../index';
 
-test('substitute', (t) => {
-  t.deepEqual(
+it('substitute', () => {
+  expect(
     substitute('this is source source', 'source', 'target'),
-    { replace: true, result: 'this is target target' },
     'works with string as search argument'
-  );
+  ).toEqual({
+    replace: true,
+    result: 'this is target target',
+  });
 
-  t.deepEqual(
+  expect(
     substitute('this is source source', /source/, 'target'),
-    { replace: true, result: 'this is target target' },
     'works with regexp as search argument'
-  );
+  ).toEqual({
+    replace: true,
+    result: 'this is target target',
+  });
 
-  t.deepEqual(
+  expect(
     substitute('this is source source', 'source', ['target', 'target2']),
-    { replace: true, result: 'this is target\ntarget2 target\ntarget2' },
     'works with array as replace argument'
-  );
+  ).toEqual({
+    replace: true,
+    result: 'this is target\ntarget2 target\ntarget2',
+  });
 
-  t.deepEqual(
+  expect(
     substitute('this is source source', 'source', 'target', false),
-    { replace: true, result: 'this is target source' },
     'works with string as search argument and global replacement set to false'
-  );
+  ).toEqual({ replace: true, result: 'this is target source' });
 
-  t.deepEqual(
+  expect(
     substitute('this is source source', /source/, 'target', false),
-    { replace: true, result: 'this is target source' },
     'works with regexp as search argument and global replacement set to false'
-  );
+  ).toEqual({ replace: true, result: 'this is target source' });
 
-  t.deepEqual(
+  expect(
     substitute('this is source source', 'source', ['target', 'target2'], false),
-    { replace: true, result: 'this is target\ntarget2 source' },
     'works with array as replace argument and global replacement set to false'
-  );
-
-  t.end();
+  ).toEqual({ replace: true, result: 'this is target\ntarget2 source' });
 });

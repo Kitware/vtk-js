@@ -77,7 +77,10 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
       ).result;
     }
 
-    if (model.outputNames.length + model.builtinOutputNames.length) {
+    if (
+      model.outputNames.length + model.builtinOutputNames.length ||
+      model.code.includes('//VTK::IOStructs::Output')
+    ) {
       const outputStruct = [`struct ${model.type}Output\n{`];
       for (let i = 0; i < model.outputNames.length; i++) {
         if (model.outputInterpolations[i] !== undefined) {

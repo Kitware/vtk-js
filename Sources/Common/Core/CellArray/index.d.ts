@@ -75,10 +75,14 @@ export function newInstance(
 ): vtkCellArray;
 
 /**
+ * Extracts cell sizes from a flattened cell array.
+ * The input cellArray follows the format: [size1, id11, id12, ..., size2, id21, id22, ...].
+ * This function iterates through the array to collect only the size values, which is [size1, size2, ...].
  * @static
  * @param cellArray
+ * @returns {number[]} An array of cell sizes.
  */
-export function extractCellSizes(cellArray: any): any;
+export function extractCellSizes(cellArray: any): number[];
 
 /**
  * @static

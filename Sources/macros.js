@@ -212,13 +212,6 @@ function enumToString(e, value) {
   return Object.keys(e).find((key) => e[key] === value);
 }
 
-function getStateArrayMapFunc(item) {
-  if (item && item.isA) {
-    return item.getState();
-  }
-  return item;
-}
-
 // ----------------------------------------------------------------------------
 // setImmediate
 // ----------------------------------------------------------------------------
@@ -368,10 +361,11 @@ export function obj(publicAPI = {}, model = {}) {
   };
 
   // Add serialization support
-  publicAPI.getState = () => {
+  publicAPI.getState = ({ preserveTypedArrays = false } = {}) => {
     if (model.deleted) {
       return null;
     }
+    const options = { preserveTypedArrays };
     const jsonArchive = { ...model, vtkClass: publicAPI.getClassName() };
 
     // Convert every vtkObject to its serializable form
@@ -383,11 +377,16 @@ export function obj(publicAPI = {}, model = {}) {
       ) {
         delete jsonArchive[keyName];
       } else if (jsonArchive[keyName].isA) {
-        jsonArchive[keyName] = jsonArchive[keyName].getState();
+        jsonArchive[keyName] = jsonArchive[keyName].getState(options);
       } else if (Array.isArray(jsonArchive[keyName])) {
-        jsonArchive[keyName] = jsonArchive[keyName].map(getStateArrayMapFunc);
+        jsonArchive[keyName] = jsonArchive[keyName].map((item) =>
+          item && item.isA ? item.getState(options) : item
+        );
       } else if (isTypedArray(jsonArchive[keyName])) {
-        jsonArchive[keyName] = Array.from(jsonArchive[keyName]);
+        if (!preserveTypedArrays) {
+          jsonArchive[keyName] = Array.from(jsonArchive[keyName]);
+        }
+        // else: keep TypedArray as-is for structured clone / postMessage
       }
     });
 
@@ -1791,7 +1790,6 @@ export default {
   get,
   getArray,
   getCurrentGlobalMTime,
-  getStateArrayMapFunc,
   isVtkObject,
   keystore,
   measurePromiseExecution,

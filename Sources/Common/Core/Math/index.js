@@ -2167,6 +2167,20 @@ export function getMajorAxisIndex(vector) {
   return axisIndex;
 }
 
+export function getMinorAxisIndex(vector) {
+  let minValue = Infinity;
+  let axisIndex = -1;
+  for (let i = 0; i < vector.length; i++) {
+    const value = Math.abs(vector[i]);
+    if (value < minValue) {
+      axisIndex = i;
+      minValue = value;
+    }
+  }
+
+  return axisIndex;
+}
+
 // Return the closest orthogonal matrix of 1, -1 and 0
 // It works for both column major and row major matrices
 // This function iteratively associate a column with a row by choosing
@@ -2356,6 +2370,7 @@ export default {
   // JS add-on
   createUninitializedBounds,
   getMajorAxisIndex,
+  getMinorAxisIndex,
   getSparseOrthogonalMatrix,
   floatToHex2,
   floatRGB2HexCode,

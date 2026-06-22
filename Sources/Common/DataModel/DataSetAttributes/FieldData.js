@@ -252,11 +252,11 @@ function vtkFieldData(publicAPI, model) {
   publicAPI.getNumberOfTuples = () =>
     model.arrays.length > 0 ? model.arrays[0].getNumberOfTuples() : 0;
 
-  publicAPI.getState = () => {
-    const result = superGetState();
+  publicAPI.getState = (options) => {
+    const result = superGetState(options);
     if (result) {
       result.arrays = model.arrays.map((item) => ({
-        data: item.data.getState(),
+        data: item.data.getState(options),
       }));
     }
     return result;

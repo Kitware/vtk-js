@@ -21,6 +21,21 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUStorageBuffer');
 
+  function ensureGPUBuffer(device) {
+    if (model._buffer) {
+      return;
+    }
+
+    publicAPI.createView('Float32Array');
+    const req = {
+      nativeArray: model.Float32Array,
+      usage: BufferUsage.Storage,
+      label: model.label,
+    };
+    model._buffer = device.getBufferManager().getBuffer(req);
+    model.bindGroupTime.modified();
+  }
+
   publicAPI.addEntry = (name, type) => {
     if (model._bufferEntryNames.has(name)) {
       vtkErrorMacro(`entry named ${name} already exists`);
@@ -39,14 +54,9 @@ function vtkWebGPUStorageBuffer(publicAPI, model) {
   };
 
   publicAPI.send = (device) => {
+    model.device = device;
     if (!model._buffer) {
-      const req = {
-        nativeArray: model.Float32Array,
-        usage: BufferUsage.Storage,
-        label: model.label,
-      };
-      model._buffer = device.getBufferManager().getBuffer(req);
-      model.bindGroupTime.modified();
+      ensureGPUBuffer(device);
       model._sendTime.modified();
       return;
     }
@@ -183,6 +193,9 @@ struct ${model.label}Struct
   };
 
   publicAPI.getBindGroupEntry = () => {
+    if (!model._buffer && model.device) {
+      ensureGPUBuffer(model.device);
+    }
     const foo = {
       resource: {
         buffer: model._buffer.getHandle(),
@@ -199,6 +212,11 @@ struct ${model.label}Struct
     model._buffer = null;
     delete model.arrayBuffer;
     delete model.Float32Array;
+  };
+
+  publicAPI.releaseGraphicsResources = () => {
+    model._buffer = null;
+    model.bindGroupTime.modified();
   };
 }
 

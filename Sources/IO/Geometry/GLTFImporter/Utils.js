@@ -8,6 +8,8 @@ import {
 } from 'vtk.js/Sources/IO/Geometry/GLTFImporter/Constants';
 
 const { vtkWarningMacro, vtkErrorMacro } = macro;
+const imageBufferViewCache = new WeakMap();
+const imageUriCache = new Map();
 
 /**
  * Get GL enum from sampler parameter
@@ -90,29 +92,85 @@ export function resolveUrl(url, originalPath) {
  * @returns
  */
 export async function loadImage(image) {
-  if (image.bufferView) {
-    const blob = new Blob([image.bufferView.data], { type: image.mimeType });
-    const bitmap = await createImageBitmap(blob, {
-      colorSpaceConversion: 'none',
-      imageOrientation: 'flipY',
-    });
-    return bitmap;
+  if (!image) return null;
+
+  const cacheKey = image.bufferView || image.uri;
+  const cache = image.bufferView ? imageBufferViewCache : imageUriCache;
+
+  if (cacheKey) {
+    const cached = cache.get(cacheKey);
+
+    if (cached) {
+      // In flight promise
+      if (typeof cached?.then === 'function') {
+        return cached;
+      }
+
+      // WeakRef
+      const value = cached?.deref?.();
+      if (value) return value;
+
+      // Stale WeakRef
+      cache.delete(cacheKey);
+    }
   }
 
-  if (image.uri) {
-    vtkWarningMacro('Falling back to image uri', image.uri);
-    return new Promise((resolve, reject) => {
+  const loadPromise = (async () => {
+    if (image.bufferView) {
+      const blob = new Blob([image.bufferView.data], {
+        type: image.mimeType,
+      });
+      return createImageBitmap(blob, {
+        premultiplyAlpha: 'none',
+        colorSpaceConversion: 'none',
+        imageOrientation: 'flipY',
+      });
+    }
+
+    if (image.uri) {
       const img = new Image();
       img.crossOrigin = 'Anonymous';
-      img.onload = () => {
-        resolve(img);
-      };
-      img.onerror = reject;
-      img.src = image.uri;
-    });
+
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = image.uri;
+      });
+
+      return createImageBitmap(img, {
+        premultiplyAlpha: 'none',
+        colorSpaceConversion: 'none',
+        imageOrientation: 'flipY',
+      });
+    }
+
+    return null;
+  })();
+
+  if (cacheKey) {
+    cache.set(cacheKey, loadPromise);
   }
 
-  return null;
+  try {
+    const result = await loadPromise;
+
+    if (cacheKey && result) {
+      // eslint-disable-next-line no-undef
+      cache.set(cacheKey, new WeakRef(result));
+    }
+
+    return result;
+  } catch (err) {
+    if (cacheKey) {
+      cache.delete(cacheKey);
+    }
+    throw err;
+  }
+}
+
+export function clearImageCaches() {
+  imageUriCache.clear();
+  imageBufferViewCache.clear();
 }
 
 /**

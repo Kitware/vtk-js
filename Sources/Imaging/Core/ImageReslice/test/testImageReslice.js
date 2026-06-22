@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import { mat4 } from 'gl-matrix';
@@ -49,9 +49,8 @@ function createSyntheticImageData(
   return imageData;
 }
 
-test.onlyIfWebGL('Test vtkImageReslice rendering', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkImageReslice rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  t.comment('vtkImageReslice rendering');
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -118,7 +117,6 @@ test.onlyIfWebGL('Test vtkImageReslice rendering', (t) => {
         image,
         [baseline1],
         'Imaging/Core/ImageReslice/testImageReslice',
-        t,
         2.5
       )
     )
@@ -127,90 +125,91 @@ test.onlyIfWebGL('Test vtkImageReslice rendering', (t) => {
   return promise;
 });
 
-test.onlyIfWebGL('Test vtkImageReslice reslice transform', (t) => {
-  const gc = testUtils.createGarbageCollector();
-  t.comment('vtkImageReslice reslice transform');
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'Test vtkImageReslice reslice transform',
+  () => {
+    const gc = testUtils.createGarbageCollector();
 
-  // Create some control UI
-  const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(
-    document.createElement('div')
-  );
-  container.appendChild(renderWindowContainer);
+    // Create some control UI
+    const container = document.querySelector('body');
+    const renderWindowContainer = gc.registerDOMElement(
+      document.createElement('div')
+    );
+    container.appendChild(renderWindowContainer);
 
-  // create what we will view
-  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
-  const renderer = gc.registerResource(vtkRenderer.newInstance());
-  renderWindow.addRenderer(renderer);
-  renderer.setBackground(0.32, 0.34, 0.43);
+    // create what we will view
+    const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+    const renderer = gc.registerResource(vtkRenderer.newInstance());
+    renderWindow.addRenderer(renderer);
+    renderer.setBackground(0.32, 0.34, 0.43);
 
-  const dims = [128, 128, 128];
-  const spacing = [0.1, 0.1, 0.1];
-  const direction = [1, 0, 0, 0, 1, 0, 0, 0, -1];
-  const origin = [0, 0, spacing[2] * dims[2]];
-  const imageData = gc.registerResource(
-    createSyntheticImageData(dims, origin, spacing, direction)
-  );
-  // Move reslice cursor to the center of the volume
-  const center = [
-    origin[0] + 0.5 * spacing[0] * dims[0] * direction[0],
-    origin[1] + 0.5 * spacing[1] * dims[1] * direction[4],
-    origin[2] + 0.5 * spacing[2] * dims[2] * direction[8],
-  ];
+    const dims = [128, 128, 128];
+    const spacing = [0.1, 0.1, 0.1];
+    const direction = [1, 0, 0, 0, 1, 0, 0, 0, -1];
+    const origin = [0, 0, spacing[2] * dims[2]];
+    const imageData = gc.registerResource(
+      createSyntheticImageData(dims, origin, spacing, direction)
+    );
+    // Move reslice cursor to the center of the volume
+    const center = [
+      origin[0] + 0.5 * spacing[0] * dims[0] * direction[0],
+      origin[1] + 0.5 * spacing[1] * dims[1] * direction[4],
+      origin[2] + 0.5 * spacing[2] * dims[2] * direction[8],
+    ];
 
-  const imageMapper = gc.registerResource(vtkImageMapper.newInstance());
-  imageMapper.setInputData(imageData);
-  const imageActor = gc.registerResource(vtkImageSlice.newInstance());
-  imageActor.setMapper(imageMapper);
+    const imageMapper = gc.registerResource(vtkImageMapper.newInstance());
+    imageMapper.setInputData(imageData);
+    const imageActor = gc.registerResource(vtkImageSlice.newInstance());
+    imageActor.setMapper(imageMapper);
 
-  const imageReslice = gc.registerResource(vtkImageReslice.newInstance());
-  imageReslice.setInputData(imageData);
-  imageReslice.setOutputDimensionality(2);
-  const axesBuilder = vtkMatrixBuilder
-    .buildFromRadian()
-    .translate(...center)
-    .rotateZ((45 * Math.PI) / 180);
-  const axes = axesBuilder.getMatrix();
-  imageReslice.setResliceAxes(axes);
-  imageReslice.setBorder(true);
-  imageReslice.setOutputScalarType('Uint16Array');
-  imageReslice.setScalarScale(65535 / 255);
-  imageReslice.setAutoCropOutput(true);
-  imageReslice.setBackgroundColor(255, 0, 0, 255);
-  imageReslice.setOutputDirection(direction);
-  // imageReslice.setOutputOrigin([0, 0, center[2]]);
+    const imageReslice = gc.registerResource(vtkImageReslice.newInstance());
+    imageReslice.setInputData(imageData);
+    imageReslice.setOutputDimensionality(2);
+    const axesBuilder = vtkMatrixBuilder
+      .buildFromRadian()
+      .translate(...center)
+      .rotateZ((45 * Math.PI) / 180);
+    const axes = axesBuilder.getMatrix();
+    imageReslice.setResliceAxes(axes);
+    imageReslice.setBorder(true);
+    imageReslice.setOutputScalarType('Uint16Array');
+    imageReslice.setScalarScale(65535 / 255);
+    imageReslice.setAutoCropOutput(true);
+    imageReslice.setBackgroundColor(255, 0, 0, 255);
+    imageReslice.setOutputDirection(direction);
+    // imageReslice.setOutputOrigin([0, 0, center[2]]);
 
-  const resliceMapper = gc.registerResource(vtkImageMapper.newInstance());
-  resliceMapper.setInputConnection(imageReslice.getOutputPort());
-  const resliceActor = gc.registerResource(vtkImageSlice.newInstance());
-  resliceActor.setMapper(resliceMapper);
-  resliceActor.setUserMatrix(axes);
-  resliceActor.getProperty().setColorLevel(65535 / 2);
-  resliceActor.getProperty().setColorWindow(65535);
-  resliceActor.getProperty().setInterpolationTypeToNearest();
-  renderer.addActor(resliceActor);
+    const resliceMapper = gc.registerResource(vtkImageMapper.newInstance());
+    resliceMapper.setInputConnection(imageReslice.getOutputPort());
+    const resliceActor = gc.registerResource(vtkImageSlice.newInstance());
+    resliceActor.setMapper(resliceMapper);
+    resliceActor.setUserMatrix(axes);
+    resliceActor.getProperty().setColorLevel(65535 / 2);
+    resliceActor.getProperty().setColorWindow(65535);
+    resliceActor.getProperty().setInterpolationTypeToNearest();
+    renderer.addActor(resliceActor);
 
-  // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
-  glwindow.setContainer(renderWindowContainer);
-  renderWindow.addView(glwindow);
-  glwindow.setSize(400, 400);
+    // now create something to view it, in this case webgl
+    const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
+    glwindow.setContainer(renderWindowContainer);
+    renderWindow.addView(glwindow);
+    glwindow.setSize(400, 400);
 
-  const promise = glwindow
-    .captureNextImage()
-    .then((image) =>
-      testUtils.compareImages(
-        image,
-        [baseline1],
-        'Imaging/Core/ImageReslice/testImageReslice',
-        t,
-        2.5
+    const promise = glwindow
+      .captureNextImage()
+      .then((image) =>
+        testUtils.compareImages(
+          image,
+          [baseline1],
+          'Imaging/Core/ImageReslice/testImageReslice',
+          2.5
+        )
       )
-    )
-    .finally(gc.releaseResources);
-  renderWindow.render();
-  return promise;
-});
+      .finally(gc.releaseResources);
+    renderWindow.render();
+    return promise;
+  }
+);
 
 // For comparison purpose, see below the same test in VTK/Python:
 // import vtk;

@@ -93,10 +93,20 @@ function vtkOpenGLPolyDataMapper2D(publicAPI, model) {
       return;
     }
 
-    // cull back face to avoid double drawing
     const gl = model.context;
-    model._openGLRenderWindow.enableCullFace();
-    gl.cullFace(gl.BACK);
+    const prop = actor.getProperty();
+    if (prop.getBackfaceCulling() || prop.getFrontfaceCulling()) {
+      model._openGLRenderWindow.enableCullFace();
+      if (prop.getBackfaceCulling() && prop.getFrontfaceCulling()) {
+        model._openGLRenderWindow.setCullFaceMode(gl.FRONT_AND_BACK);
+      } else if (prop.getBackfaceCulling()) {
+        model._openGLRenderWindow.setCullFaceMode(gl.BACK);
+      } else {
+        model._openGLRenderWindow.setCullFaceMode(gl.FRONT);
+      }
+    } else {
+      model._openGLRenderWindow.disableCullFace();
+    }
 
     publicAPI.renderPieceStart(ren, actor);
     publicAPI.renderPieceDraw(ren, actor);

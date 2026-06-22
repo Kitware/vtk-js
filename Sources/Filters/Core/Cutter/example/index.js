@@ -5,6 +5,7 @@ import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkCutter from '@kitware/vtk.js/Filters/Core/Cutter';
+import vtkCutterMapper from '@kitware/vtk.js/Rendering/Core/CutterMapper';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
 import HttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import DataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper';
@@ -23,9 +24,7 @@ import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
-  background: [0, 0, 0],
-});
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -48,6 +47,17 @@ cutProperty.setLighting(false);
 cutProperty.setColor(0, 1, 0);
 renderer.addActor(cutActor);
 
+const gpuCutMapper = vtkCutterMapper.newInstance({
+  cutFunction: plane,
+  cutWidth: 2.0,
+});
+const gpuCutActor = vtkActor.newInstance();
+gpuCutActor.setMapper(gpuCutMapper);
+const gpuCutProperty = gpuCutActor.getProperty();
+gpuCutProperty.setLighting(false);
+gpuCutProperty.setColor(1.0, 0.55, 0.15);
+renderer.addActor(gpuCutActor);
+
 const cubeMapper = vtkMapper.newInstance();
 cubeMapper.setScalarVisibility(false);
 const cubeActor = vtkActor.newInstance();
@@ -63,6 +73,9 @@ renderer.addActor(cubeActor);
 // -----------------------------------------------------------
 
 const state = {
+  showCPU: true,
+  showGPU: true,
+  gpuWidth: 2.0,
   originX: 0,
   originY: 0,
   originZ: 0,
@@ -74,10 +87,37 @@ const state = {
 const updatePlaneFunction = () => {
   plane.setOrigin(state.originX, state.originY, state.originZ);
   plane.setNormal(state.normalX, state.normalY, state.normalZ);
+  cutActor.setVisibility(state.showCPU);
+  gpuCutActor.setVisibility(state.showGPU);
+  gpuCutMapper.setCutWidth(state.gpuWidth);
   renderWindow.render();
 };
 
 const gui = new GUI();
+
+gui
+  .add(state, 'showCPU')
+  .name('CPU vtkCutter')
+  .onChange((value) => {
+    state.showCPU = value;
+    updatePlaneFunction();
+  });
+
+gui
+  .add(state, 'showGPU')
+  .name('GPU vtkCutterMapper')
+  .onChange((value) => {
+    state.showGPU = value;
+    updatePlaneFunction();
+  });
+
+gui
+  .add(state, 'gpuWidth', 0.5, 5.0, 0.1)
+  .name('GPU vtkCutterMapper width')
+  .onChange((value) => {
+    state.gpuWidth = Number(value);
+    updatePlaneFunction();
+  });
 
 const originFolder = gui.addFolder('Origin');
 originFolder
@@ -144,6 +184,7 @@ HttpDataAccessHelper.fetchBinary(
         const source = sceneImporter.getScene()[0].source;
         cutter.setInputConnection(source.getOutputPort());
         cubeMapper.setInputConnection(source.getOutputPort());
+        gpuCutMapper.setInputConnection(source.getOutputPort());
         renderer.resetCamera();
         updatePlaneFunction();
       });

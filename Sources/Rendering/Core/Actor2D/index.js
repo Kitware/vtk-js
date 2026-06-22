@@ -45,12 +45,14 @@ function vtkActor2D(publicAPI, model) {
 
   publicAPI.makeProperty = vtkProperty2D.newInstance;
 
-  publicAPI.getProperty = () => {
+  publicAPI.ensureProperty = () => {
     if (model.property === null) {
-      model.property = publicAPI.makeProperty();
+      publicAPI.setProperty(publicAPI.makeProperty());
     }
     return model.property;
   };
+
+  publicAPI.getProperty = () => publicAPI.ensureProperty();
 
   //----------------------------------------------------------------------------
   // Set the Prop2D's position in display coordinates.

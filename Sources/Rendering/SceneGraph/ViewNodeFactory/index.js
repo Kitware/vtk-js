@@ -1,5 +1,37 @@
 import macro from 'vtk.js/Sources/macros';
 
+const { vtkWarningMacro } = macro;
+
+function listClassHierarchy(dataObject) {
+  const classNames = [];
+  let depth = 0;
+  let className = dataObject.getClassName(depth++);
+  while (className) {
+    classNames.push(className);
+    className = dataObject.getClassName(depth++);
+  }
+  return classNames;
+}
+
+function buildMissingImplementationMessage(factoryName, classNames) {
+  const classList = classNames.join(' → ');
+  return [
+    `No ${factoryName} implementation found for ${classNames[0]}.`,
+    `Class hierarchy: ${classList}.`,
+    `A rendering Profile is likely missing for ${classNames[0]}.`,
+    "Try importing '@kitware/vtk.js/Rendering/Profiles/All' or 'vtk.js/Sources/Rendering/Profiles/All',",
+    'or import the specific rendering profile needed by this renderable if known.',
+    'See https://kitware.github.io/vtk-js/docs/concepts_profile.html for details.',
+  ].join('\n');
+}
+
+function isWidgetContainer(classNames) {
+  return (
+    classNames.includes('vtkAbstractWidget') ||
+    classNames.includes('vtkWidgetRepresentation')
+  );
+}
+
 // ----------------------------------------------------------------------------
 // vtkViewNodeFactory methods
 // ----------------------------------------------------------------------------
@@ -18,8 +50,9 @@ function vtkViewNodeFactory(publicAPI, model) {
       return null;
     }
 
+    const classNames = listClassHierarchy(dataObject);
     let cpt = 0;
-    let className = dataObject.getClassName(cpt++);
+    let className = classNames[cpt++];
     let isObject = false;
     const keys = Object.keys(model.overrides);
     while (className && !isObject) {
@@ -31,6 +64,14 @@ function vtkViewNodeFactory(publicAPI, model) {
     }
 
     if (!isObject) {
+      // Widgets and widget representations are prop containers. They do not have a
+      // direct backend view node and are rendered through their nested props.
+      if (isWidgetContainer(classNames)) {
+        return null;
+      }
+      vtkWarningMacro(
+        buildMissingImplementationMessage(publicAPI.getClassName(), classNames)
+      );
       return null;
     }
     const vn = model.overrides[className]();

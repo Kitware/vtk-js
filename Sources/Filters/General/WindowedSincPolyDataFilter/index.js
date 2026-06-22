@@ -3,7 +3,6 @@ import macro from 'vtk.js/Sources/macros';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math/index';
-import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
@@ -587,8 +586,7 @@ function vtkWindowedSincPolyDataFilter(publicAPI, model) {
         values: newScalars,
       });
 
-      const idx = output.getPointData().addArray(newScalarsArray);
-      output.getPointData().setActiveAttribute(idx, AttributeTypes.SCALARS);
+      output.getPointData().setScalars(newScalarsArray);
     }
 
     if (model.generateErrorVectors) {
@@ -624,7 +622,7 @@ function vtkWindowedSincPolyDataFilter(publicAPI, model) {
     if (!input) {
       return;
     }
-    const output = outData[0]?.initialize() || vtkPolyData.newInstance();
+    const output = outData[0] || vtkPolyData.newInstance();
 
     const outputPoints = publicAPI.vtkWindowedSincPolyDataFilterExecute(
       input.getPoints(),

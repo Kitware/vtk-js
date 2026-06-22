@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkPointLocator from 'vtk.js/Sources/Common/DataModel/PointLocator';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -15,7 +15,7 @@ function createSphereSource() {
   return sphereSource;
 }
 
-test('vtkPointLocator - buildLocator', (t) => {
+it('vtkPointLocator - buildLocator', () => {
   const points = vtkPoints.newInstance();
   const locator = vtkPointLocator.newInstance();
   const sphereSource = createSphereSource();
@@ -27,14 +27,13 @@ test('vtkPointLocator - buildLocator', (t) => {
     -0.9749279022216797, 0.9749279022216797, -0.9749279022216797,
     0.9749279022216797, -1, 1,
   ]);
-  t.ok(
+  expect(
     vtkMath.areEquals(bounds, expectedBounds),
     'Bounds should be calculated correctly'
-  );
-  t.end();
+  ).toBeTruthy();
 });
 
-test('vtkPointLocator - insertUniquePoint - new point', (t) => {
+it('vtkPointLocator - insertUniquePoint - new point', () => {
   const points = vtkPoints.newInstance();
   const locator = vtkPointLocator.newInstance();
   const sphereSource = createSphereSource();
@@ -46,14 +45,14 @@ test('vtkPointLocator - insertUniquePoint - new point', (t) => {
 
   const result = locator.insertUniquePoint([1, 2, 3]);
 
-  t.equal(result.inserted, true, 'Should insert new point');
-  t.equal(result.id, id, 'First point should have ID 0');
-  t.equal(locator.getPoints().getNumberOfPoints(), 1, 'Should have 1 point');
-
-  t.end();
+  expect(result.inserted, 'Should insert new point').toBe(true);
+  expect(result.id, 'First point should have ID 0').toBe(id);
+  expect(locator.getPoints().getNumberOfPoints(), 'Should have 1 point').toBe(
+    1
+  );
 });
 
-test('vtkPointLocator - insertUniquePoint - duplicate point', (t) => {
+it('vtkPointLocator - insertUniquePoint - duplicate point', () => {
   const points = vtkPoints.newInstance();
   const locator = vtkPointLocator.newInstance();
   const sphereSource = createSphereSource();
@@ -66,20 +65,17 @@ test('vtkPointLocator - insertUniquePoint - duplicate point', (t) => {
 
   const id = 0;
 
-  t.equal(result1.inserted, true, 'First point should be inserted');
-  t.equal(result1.id, id, 'First point should have ID 0');
-  t.equal(result2.inserted, false, 'Second point should not be inserted');
-  t.equal(result2.id, id, 'Second point should return existing ID');
-  t.equal(
+  expect(result1.inserted, 'First point should be inserted').toBe(true);
+  expect(result1.id, 'First point should have ID 0').toBe(id);
+  expect(result2.inserted, 'Second point should not be inserted').toBe(false);
+  expect(result2.id, 'Second point should return existing ID').toBe(id);
+  expect(
     locator.getPoints().getNumberOfPoints(),
-    1,
     'Should still have 1 point'
-  );
-
-  t.end();
+  ).toBe(1);
 });
 
-test('vtkPointLocator - isInsertedPoint', (t) => {
+it('vtkPointLocator - isInsertedPoint', () => {
   const points = vtkPoints.newInstance();
   const locator = vtkPointLocator.newInstance();
   const sphereSource = createSphereSource();
@@ -101,15 +97,13 @@ test('vtkPointLocator - isInsertedPoint', (t) => {
   const id3 = locator.isInsertedPoint(p3);
   const id4 = locator.isInsertedPoint(p4);
 
-  t.equal(id1, 0, `Should find existing point at ${p1}`);
-  t.equal(id2, 1, `Should find existing point at ${p2}`);
-  t.equal(id3, 2, `Should find existing point at ${p3}`);
-  t.equal(id4, -1, `Should not find point ${p4}`);
-
-  t.end();
+  expect(id1, `Should find existing point at ${p1}`).toBe(0);
+  expect(id2, `Should find existing point at ${p2}`).toBe(1);
+  expect(id3, `Should find existing point at ${p3}`).toBe(2);
+  expect(id4, `Should not find point ${p4}`).toBe(-1);
 });
 
-test('vtkPointLocator - insertNextPoint', (t) => {
+it('vtkPointLocator - insertNextPoint', () => {
   const points = vtkPoints.newInstance();
   const locator = vtkPointLocator.newInstance();
   const sphereSource = createSphereSource();
@@ -118,18 +112,21 @@ test('vtkPointLocator - insertNextPoint', (t) => {
   locator.buildLocator();
 
   const result = locator.insertNextPoint([1, 2, 3]);
-  t.equal(result.id, 0, 'First point should have ID 0');
-  t.equal(locator.getPoints().getNumberOfPoints(), 1, 'Should have 1 point');
-  t.equal(result.inserted, true, 'Should insert new point');
+  expect(result.id, 'First point should have ID 0').toBe(0);
+  expect(locator.getPoints().getNumberOfPoints(), 'Should have 1 point').toBe(
+    1
+  );
+  expect(result.inserted, 'Should insert new point').toBe(true);
 
   const result2 = locator.insertNextPoint([1, 2, 3]);
-  t.equal(result2.id, 1, 'Second point should have ID 1');
-  t.equal(locator.getPoints().getNumberOfPoints(), 2, 'Should have 2 points');
-  t.equal(result2.inserted, true, 'Should insert second point');
-  t.end();
+  expect(result2.id, 'Second point should have ID 1').toBe(1);
+  expect(locator.getPoints().getNumberOfPoints(), 'Should have 2 points').toBe(
+    2
+  );
+  expect(result2.inserted, 'Should insert second point').toBe(true);
 });
 
-test('vtkPointLocator - findClosestPoint', (t) => {
+it('vtkPointLocator - findClosestPoint', () => {
   const points = vtkPoints.newInstance();
   const locator = vtkPointLocator.newInstance();
   const sphereSource = createSphereSource();
@@ -145,16 +142,13 @@ test('vtkPointLocator - findClosestPoint', (t) => {
     .getPoints()
     .getPoint(closestPointId);
 
-  t.deepEqual(
+  expect(
     closestPoint,
-    expectedPoint,
     `Closest to [${lookupPoint}] should be point ${closestPoint}`
-  );
-
-  t.end();
+  ).toEqual(expectedPoint);
 });
 
-test('vtkPointLocator - findClosestPointWithinRadius - point found', (t) => {
+it('vtkPointLocator - findClosestPointWithinRadius - point found', () => {
   const points = vtkPoints.newInstance();
   const locator = vtkPointLocator.newInstance();
   const sphereSource = createSphereSource();
@@ -165,14 +159,15 @@ test('vtkPointLocator - findClosestPointWithinRadius - point found', (t) => {
   const result1 = locator.findClosestPointWithinRadius(0.5, [0.2, 1.0, 1.0]);
   const result2 = locator.findClosestPointWithinRadius(2.0, [1.5, 1.5, 1.5]);
 
-  t.equal(result1.id, 15, 'Should find closest point within radius');
-  t.ok(result1.dist2 < 0.5 * 0.5, 'Distance should be within radius');
-  t.equal(result2.id, 9, 'Should find closest point within larger radius');
-
-  t.end();
+  expect(result1.id, 'Should find closest point within radius').toBe(15);
+  expect(
+    result1.dist2 < 0.5 * 0.5,
+    'Distance should be within radius'
+  ).toBeTruthy();
+  expect(result2.id, 'Should find closest point within larger radius').toBe(9);
 });
 
-test('vtkPointLocator - findClosestPointWithinRadius - no point found', (t) => {
+it('vtkPointLocator - findClosestPointWithinRadius - no point found', () => {
   const points = vtkPoints.newInstance();
   const locator = vtkPointLocator.newInstance();
   const sphereSource = createSphereSource();
@@ -182,12 +177,10 @@ test('vtkPointLocator - findClosestPointWithinRadius - no point found', (t) => {
 
   const result = locator.findClosestPointWithinRadius(0.1, [5, 5, 5]);
 
-  t.equal(result.id, -1, 'Should not find point outside radius');
-
-  t.end();
+  expect(result.id, 'Should not find point outside radius').toBe(-1);
 });
 
-test('vtkPointLocator - findClosestInsertedPoint', (t) => {
+it('vtkPointLocator - findClosestInsertedPoint', () => {
   const points = vtkPoints.newInstance();
   const locator = vtkPointLocator.newInstance();
   const sphereSource = createSphereSource();
@@ -200,10 +193,7 @@ test('vtkPointLocator - findClosestInsertedPoint', (t) => {
   const p1 = [0.6, 0.5, 0.4];
   const ptId = locator.findClosestInsertedPoint(p1);
   const closestPoint = sphereSource.getOutputData().getPoints().getPoint(ptId);
-  t.deepEqual(
-    closestPoint,
-    expectedPoint,
-    'Closest point should match expected point'
+  expect(closestPoint, 'Closest point should match expected point').toEqual(
+    expectedPoint
   );
-  t.end();
 });

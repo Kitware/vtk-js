@@ -1,3 +1,15 @@
+## From 35.x to 36
+
+- **`vtk-lite.js` deprecated.** The UMD build previously produced a slimmed-down companion bundle `dist/umd/vtk-lite.js` (curated ColorMaps subset; `PDBReader`, `MoleculeToRepresentation`, `MobileVR`, and `webvr-polyfill` stubbed out). The Vite build pipeline no longer produces a distinct lite bundle; `vtk-lite.js` now ships as a byte-identical alias of `vtk.js` so existing `<script src=…/vtk-lite.js>` and CDN consumers continue to load. Consumers should migrate to `vtk.js` directly — the alias will be removed in a future major. Note that anything that indexed into the `ColorMaps` array by position will now see the full preset set, not the lite subset.
+- **macros**: `getStateArrayMapFunc` has been removed. Inline the equivalent where needed, e.g. `arr.map((item) => (item && item.isA ? item.getState() : item))`.
+- **Standalone example/viewer bundles now load as ES modules.** The Vite build emits `<script type="module">` for standalone apps (e.g. `OfflineLocalView`, `GeometryViewer`). Module scripts are deferred, so consumers that embed a bundle and synchronously call into the global the app exposes (e.g. `window.OfflineLocalView`) at parse time run before the module executes, when that global is not yet defined. Defer your init (await the module, or wait for `DOMContentLoaded`). See [Kitware/trame-vtk#120](https://github.com/Kitware/trame-vtk/issues/120).
+
+
+## From 34.x to 35
+
+- **vtkMapper**: mappers should overwrite `computeBounds()` instead of `getBounds` that now calls `computeBounds()` before returning a copy of the mapper bounds.
+
+
 ## From 33.x to 34
 
 - **vtkMapper**: many properties have moved to `vtkVolumeProperty`. The full list of changed methods is: `getAnisotropy`, `getComputeNormalFromOpacity`, `getFilterMode`, `getFilterModeAsString`, `getGlobalIlluminationReach`, `getIpScalarRange`, `getIpScalarRangeByReference`, `getLAOKernelRadius`, `getLAOKernelSize`, `getLocalAmbientOcclusion`, `getPreferSizeOverAccuracy`, `getVolumetricScatteringBlending`, `setAnisotropy`, `setAverageIPScalarRange`, `setComputeNormalFromOpacity`, `setFilterMode`, `setFilterModeToNormalized`, `setFilterModeToOff`, `setFilterModeToRaw`, `setGlobalIlluminationReach`, `setIpScalarRange`, `setIpScalarRangeFrom`, `setLAOKernelRadius`, `setLAOKernelSize`, `setLocalAmbientOcclusion`, `setPreferSizeOverAccuracy`, `setVolumetricScatteringBlending`.

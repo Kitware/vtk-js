@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -11,8 +11,8 @@ import {
   popMonitorGLContextCount,
 } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 
-test('Test vtkGenericRenderWindow create/delete', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+it('Test vtkGenericRenderWindow create/delete', () => {
+  const gc = testUtils.createGarbageCollector();
   // testUtils.keepDOM();
 
   const actor = gc.registerResource(vtkActor.newInstance());
@@ -23,7 +23,7 @@ test('Test vtkGenericRenderWindow create/delete', (t) => {
 
   pushMonitorGLContextCount((count) => {
     if (count > 16) {
-      t.fail('Too much WebGL context have been created');
+      expect.fail('Too much WebGL context have been created');
     }
   });
 
@@ -31,26 +31,33 @@ test('Test vtkGenericRenderWindow create/delete', (t) => {
   const container = document.querySelector('body');
   const images = [];
 
-  function createRW() {
-    const rwContainer = gc.registerDOMElement(document.createElement('div'));
-    container.appendChild(rwContainer);
+  return new Promise((resolve, reject) => {
+    function createRW() {
+      const rwContainer = gc.registerDOMElement(document.createElement('div'));
+      container.appendChild(rwContainer);
 
-    const grw = vtkGenericRenderWindow.newInstance();
-    grw.setContainer(rwContainer);
-    grw.getRenderer().addActor(actor);
+      const grw = vtkGenericRenderWindow.newInstance();
+      grw.setContainer(rwContainer);
+      grw.getRenderer().addActor(actor);
 
-    images.push(grw.getApiSpecificRenderWindow().captureNextImage());
-    grw.getRenderWindow().render();
+      images.push(grw.getApiSpecificRenderWindow().captureNextImage());
+      grw.getRenderWindow().render();
 
-    grw.delete();
+      grw.delete();
 
-    if (images.length < 100) {
-      setTimeout(createRW, 100);
-    } else {
-      popMonitorGLContextCount();
-      Promise.all(images).then(gc.releaseResources);
+      if (images.length < 100) {
+        setTimeout(createRW, 100);
+      } else {
+        popMonitorGLContextCount();
+        Promise.all(images)
+          .then(() => {
+            gc.releaseResources();
+            resolve();
+          })
+          .catch(reject);
+      }
     }
-  }
 
-  createRW();
+    createRW();
+  });
 });

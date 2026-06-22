@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkOBJReader from 'vtk.js/Sources/IO/Misc/OBJReader';
 import vtkPolyDataNormals from 'vtk.js/Sources/Filters/Core/PolyDataNormals';
@@ -43,31 +43,30 @@ f 1/1 2/2 3/3
 f -1/-1 -2/-2 -3/-3
 `;
 
-test('Test trackDuplicates', (t) => {
+it('Test trackDuplicates', () => {
   const objReader = vtkOBJReader.newInstance({
     splitMode: 'useMtl',
     trackDuplicates: true,
   });
   objReader.parseAsText(sampleOBJ);
   const polyData = objReader.getOutputData();
-  t.deepEqual(vtkOBJReader.getPointDuplicateIds(polyData, 0), [0], '(0, 0)');
-  t.deepEqual(vtkOBJReader.getPointDuplicateIds(polyData, 1), [1], '(1, 0)');
-  t.deepEqual(vtkOBJReader.getPointDuplicateIds(polyData, 2), [2, 5], '(1, 1)');
-  t.deepEqual(vtkOBJReader.getPointDuplicateIds(polyData, 3), [3, 6], '(0, 1)');
-  t.deepEqual(
-    vtkOBJReader.getPointDuplicateIds(polyData, 5),
-    [2, 5],
-    "(1, 1)'"
+  expect(vtkOBJReader.getPointDuplicateIds(polyData, 0), '(0, 0)').toEqual([0]);
+  expect(vtkOBJReader.getPointDuplicateIds(polyData, 1), '(1, 0)').toEqual([1]);
+  expect(vtkOBJReader.getPointDuplicateIds(polyData, 2), '(1, 1)').toEqual([
+    2, 5,
+  ]);
+  expect(vtkOBJReader.getPointDuplicateIds(polyData, 3), '(0, 1)').toEqual([
+    3, 6,
+  ]);
+  expect(vtkOBJReader.getPointDuplicateIds(polyData, 5), "(1, 1)'").toEqual([
+    2, 5,
+  ]);
+  expect(polyData.getPointData().getTCoords().getData()[2], 'tc(1, 1)[0]').toBe(
+    1.0
   );
-  t.equal(
-    polyData.getPointData().getTCoords().getData()[2],
-    1.0,
-    'tc(1, 1)[0]'
-  );
-  t.end();
 });
 
-test('Test normals with trackDuplicates', (t) => {
+it('Test normals with trackDuplicates', () => {
   const objReader = vtkOBJReader.newInstance({
     splitMode: 'useMtl',
     trackDuplicates: true,
@@ -107,32 +106,27 @@ test('Test normals with trackDuplicates', (t) => {
     .getNormals();
   polyData.getPointData().setNormals(pointNormals);
 
-  t.deepEqual(
+  expect(
     Array.from(pointNormals.getData().slice(0, 3)),
-    [0, 0, 1],
     'normal(0, 0) = (0, 0, 1)'
-  );
-  t.deepEqual(
+  ).toEqual([0, 0, 1]);
+  expect(
     Array.from(pointNormals.getData().slice(3, 6)),
-    [0, 0, 1],
     'normal(1, 0) = (0, 0, 1)'
-  );
-  t.deepEqual(
+  ).toEqual([0, 0, 1]);
+  expect(
     Array.from(pointNormals.getData().slice(6, 9)),
-    [0, -0.4472135901451111, 0.8944271802902222],
     'normal(1, 1) = (0, -0.4472135901451111, 0.8944271802902222)'
-  );
-  t.end();
+  ).toEqual([0, -0.4472135901451111, 0.8944271802902222]);
 });
 
-test('Test negative indices', (t) => {
+it('Test negative indices', () => {
   const objReader = vtkOBJReader.newInstance({
     splitMode: 'useMtl',
   });
   objReader.parseAsText(sampleOBJ2);
   const polyData = objReader.getOutputData();
   const polys = Array.from(polyData.getPolys().getData());
-  t.deepEqual(polys.slice(0, 4), [3, 0, 1, 2], 'poly(0) = (0, 1, 2)');
-  t.deepEqual(polys.slice(4, 8), [3, 2, 1, 0], 'poly(1) = (2, 1, 0)');
-  t.end();
+  expect(polys.slice(0, 4), 'poly(0) = (0, 1, 2)').toEqual([3, 0, 1, 2]);
+  expect(polys.slice(4, 8), 'poly(1) = (2, 1, 0)').toEqual([3, 2, 1, 0]);
 });

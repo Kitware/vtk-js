@@ -269,6 +269,8 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
 
   publicAPI.computePipelineHash = () => {};
 
+  publicAPI.getPipelineSettings = () => null;
+
   publicAPI.registerDrawCallback = (encoder) => {
     encoder.registerDrawCallback(model.pipeline, publicAPI.draw);
   };
@@ -283,6 +285,10 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
   // at this point the command encouder and pipeline are
   // created and bound
   publicAPI.draw = (renderEncoder) => {
+    if (model.numberOfVertices === 0 || model.numberOfInstances === 0) {
+      return;
+    }
+
     const pipeline = renderEncoder.getBoundPipeline();
 
     // bind the mapper bind group
@@ -350,6 +356,7 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
         model.pipeline,
         model.vertexInput
       );
+      model.pipeline.setExtraPipelineSettings(publicAPI.getPipelineSettings());
       model.pipeline.setTopology(model.topology);
       model.pipeline.setRenderEncoder(model.renderEncoder);
       model.pipeline.setVertexState(
@@ -357,6 +364,16 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
       );
       model.device.createPipeline(model.pipelineHash, model.pipeline);
     }
+  };
+
+  publicAPI.releaseGraphicsResources = () => {
+    model.vertexInput?.releaseGraphicsResources?.();
+    model.bindGroup?.releaseGraphicsResources?.();
+    model.UBO?.releaseGraphicsResources?.();
+    model.SSBO?.releaseGraphicsResources?.();
+    model.pipeline = null;
+    model.renderEncoder = null;
+    model.textureViews.length = 0;
   };
 }
 

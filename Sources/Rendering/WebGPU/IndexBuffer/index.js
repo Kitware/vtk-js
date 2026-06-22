@@ -34,7 +34,7 @@ class _LimitedMap {
         return true;
       }
     }
-    return undefined;
+    return false;
   }
 
   get(key) {
@@ -300,7 +300,7 @@ function vtkWebGPUIndexBuffer(publicAPI, model) {
     } else {
       state.flatIdToPointId = new Uint32Array(numPts + state.extraPoints);
     }
-    if (numPts + state.extraPoints < 0x8fff) {
+    if (numPts + state.extraPoints <= 0x7fff) {
       state.pointIdToFlatId = new Int16Array(numPts);
     } else {
       state.pointIdToFlatId = new Int32Array(numPts);

@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -11,9 +11,9 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import baseline1 from './testCube.png';
 import baseline2 from './testCube_2.png';
 
-test.onlyIfWebGL('Test vtkCubeSource Rendering', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkCubeSource Rendering', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkCubeSource Rendering');
+  expect('rendering', 'vtkCubeSource Rendering').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -80,7 +80,6 @@ test.onlyIfWebGL('Test vtkCubeSource Rendering', (t) => {
         image,
         [baseline1, baseline2],
         'Filters/Sources/CubeSource/testCube',
-        t,
         2.5
       )
     )

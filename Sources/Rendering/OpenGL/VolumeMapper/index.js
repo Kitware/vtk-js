@@ -507,6 +507,12 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           shaders.Geometry
         );
 
+      if (!newShader) {
+        vtkErrorMacro('Error compiling volume mapper shader program.');
+        cellBO.setProgram(null);
+        return false;
+      }
+
       // if the shader changed reinitialize the VAO
       if (newShader !== cellBO.getProgram()) {
         cellBO.setProgram(newShader);
@@ -516,9 +522,14 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
       cellBO.getShaderSourceTime().modified();
     } else {
-      model._openGLRenderWindow
+      const shaderProgram = model._openGLRenderWindow
         .getShaderCache()
         .readyShaderProgram(cellBO.getProgram());
+
+      if (!shaderProgram) {
+        cellBO.setProgram(null);
+        return false;
+      }
     }
 
     cellBO.getVAO().bind();
@@ -526,11 +537,15 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     publicAPI.setCameraShaderParameters(cellBO, ren, actor);
     publicAPI.setPropertyShaderParameters(cellBO, ren, actor);
     publicAPI.getClippingPlaneShaderParameters(cellBO, ren, actor);
+    return true;
   };
 
   publicAPI.setMapperShaderParameters = (cellBO, ren, actor) => {
     // Now to update the VAO too, if necessary.
     const program = cellBO.getProgram();
+    if (!program) {
+      return;
+    }
 
     if (
       cellBO.getCABO().getElementCount() &&
@@ -1326,7 +1341,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     ];
     allTextures.forEach((texture) => texture.activate());
 
-    publicAPI.updateShaders(model.tris, ren, actor);
+    if (!publicAPI.updateShaders(model.tris, ren, actor)) {
+      allTextures.forEach((texture) => texture.deactivate());
+      return;
+    }
 
     // First we do the triangles, update the shader, set uniforms, etc.
     gl.drawArrays(gl.TRIANGLES, 0, model.tris.getCABO().getElementCount());

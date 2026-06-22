@@ -141,13 +141,6 @@ declare function safeArrays(model: object): void;
 declare function enumToString(e: object, value: any): string;
 
 /**
- * If item is a VtkObject, return its getState() otherwise return itself.
- *
- * @param item object to extract its state from
- */
-declare function getStateArrayMapFunc(item: any): any;
-
-/**
  * Call provided function on the next EDT pass
  *
  * @param fn function to execute
@@ -259,7 +252,7 @@ export function setArray(
   publicAPI: object,
   model: object,
   fieldNames: Array<string>,
-  size: Number,
+  size: number,
   defaultVal?: any
 ): void;
 
@@ -275,7 +268,7 @@ export function setGetArray(
   publicAPI: object,
   model: object,
   fieldNames: Array<string>,
-  size: Number,
+  size: number,
   defaultVal?: any
 ): void;
 
@@ -315,13 +308,13 @@ export function algo(
 /**
  * Symbols used as return value for callback
  */
-export const VOID: Symbol;
+export const VOID: symbol;
 
 /**
  * Symbols used as return value for callback when you want to stop
  * any further callback calls after yours.
  */
-export const EVENT_ABORT: Symbol;
+export const EVENT_ABORT: symbol;
 
 export function event(
   publicAPI: object,
@@ -724,8 +717,7 @@ declare const Macro: {
   formatNumbersWithThousandSeparator: typeof formatNumbersWithThousandSeparator;
   get: typeof get;
   getArray: typeof getArray;
-  getCurrentGlobalMTime(): Number;
-  getStateArrayMapFunc: typeof getStateArrayMapFunc;
+  getCurrentGlobalMTime(): number;
   isVtkObject: typeof isVtkObject;
   keystore: typeof keystore;
   measurePromiseExecution: typeof measurePromiseExecution;

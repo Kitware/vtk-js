@@ -36,8 +36,12 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
         break;
 
       case States.IS_DOLLY:
-        publicAPI.handleMouseDolly(renderer, pos);
-        publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
+        // Wheel zoom uses the dolly state too, we should ignore pointer movement
+        // so the mouse position does not amplify wheel zoom while scrolling.
+        if (!model.wheelDolly) {
+          publicAPI.handleMouseDolly(renderer, pos);
+          publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
+        }
         break;
 
       case States.IS_SPIN:
@@ -154,12 +158,14 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.handleStartMouseWheel = () => {
+    model.wheelDolly = true;
     publicAPI.startDolly();
   };
 
   //--------------------------------------------------------------------------
   publicAPI.handleEndMouseWheel = () => {
     publicAPI.endDolly();
+    model.wheelDolly = false;
   };
 
   //----------------------------------------------------------------------------
@@ -448,6 +454,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 const DEFAULT_VALUES = {
   motionFactor: 10.0,
   zoomFactor: 10.0,
+  wheelDolly: false,
 };
 
 // ----------------------------------------------------------------------------

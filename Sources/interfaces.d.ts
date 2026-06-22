@@ -2,6 +2,18 @@ import vtkDataArray from './Common/Core/DataArray';
 import { vtkPipelineConnection } from './types';
 import { EVENT_ABORT, VOID } from './macros';
 
+export interface GetStateOptions {
+  /**
+   * When true, TypedArrays are preserved without converting and
+   * copying to plain Arrays. Use for structured clone / postMessage.
+   *
+   * Note: the resulting state is not JSON-safe. TypedArrays serialize
+   * as `{"0":v,"1":v,...}` via `JSON.stringify`, not as arrays.
+   * @default false
+   */
+  preserveTypedArrays?: boolean;
+}
+
 /**
  * Object returned on any subscription call
  */
@@ -241,15 +253,20 @@ export interface vtkObject {
    * Such state can then be reused to clone or rebuild a full
    * vtkObject tree using the root vtk() function.
    *
-   * The following example will grab mapper and dataset that are
-   * beneath the vtkActor instance as well.
-   *
    * ```
    * const actorStr = JSON.stringify(actor.getState());
    * const newActor = vtk(JSON.parse(actorStr));
    * ```
+   *
+   * Pass `{ preserveTypedArrays: true }` to keep TypedArrays
+   * without converting and copying to plain Arrays. Useful for
+   * structured clone / postMessage transfers.
+   *
+   * ```
+   * worker.postMessage(dataset.getState({ preserveTypedArrays: true }));
+   * ```
    */
-  getState(): object;
+  getState(options?: GetStateOptions): object;
 
   /**
    * Used internally by JSON.stringify to get the content to serialize.

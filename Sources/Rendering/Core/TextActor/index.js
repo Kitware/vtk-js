@@ -14,6 +14,8 @@ function vtkTextActor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkTextActor');
 
+  const superClass = { ...publicAPI };
+
   publicAPI.makeProperty = vtkTextProperty.newInstance;
 
   const texture = vtkTexture.newInstance({
@@ -25,6 +27,19 @@ function vtkTextActor(publicAPI, model) {
     xResolution: 1,
     yResolution: 1,
   });
+
+  /**
+   * Normalize escaped and platform specific line endings, then split into lines.
+   */
+  function splitLines(text) {
+    return text
+      .replace(/\\r\\n/g, '\n')
+      .replace(/\\n/g, '\n')
+      .replace(/\\r/g, '\n')
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split('\n');
+  }
 
   function createImageData(text) {
     const fontSizeScale = publicAPI.getProperty().getFontSizeScale();
@@ -38,30 +53,47 @@ function vtkTextActor(publicAPI, model) {
     const backgroundColor = publicAPI.getProperty().getBackgroundColor();
 
     const dpr = Math.max(window.devicePixelRatio || 1, 1);
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
     // Set the text properties to measure
-    const textSize = fontSizeScale(resolution) * dpr;
+    const textSize = fontSizeScale(resolution);
+    const lines = splitLines(text);
 
     ctx.font = `${fontStyle} ${textSize}px "${fontFamily}"`;
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
 
-    // Measure the text
-    const metrics = ctx.measureText(text);
-    const textWidth = metrics.width / dpr;
-
-    const {
-      actualBoundingBoxLeft,
-      actualBoundingBoxRight,
-      actualBoundingBoxAscent,
-      actualBoundingBoxDescent,
-    } = metrics;
-    const hAdjustment = (actualBoundingBoxLeft - actualBoundingBoxRight) / 2;
-    const vAdjustment =
-      (actualBoundingBoxAscent - actualBoundingBoxDescent) / 2;
-
-    const textHeight = textSize / dpr - vAdjustment;
+    const lineMetrics = lines.map((line) => {
+      const metrics = ctx.measureText(line);
+      return {
+        left: metrics.actualBoundingBoxLeft || 0,
+        right: metrics.actualBoundingBoxRight || metrics.width || 0,
+        actualAscent: metrics.actualBoundingBoxAscent || 0,
+        actualDescent: metrics.actualBoundingBoxDescent || 0,
+      };
+    });
+    const maxActualAscent = lineMetrics.reduce(
+      (value, metrics) => Math.max(value, metrics.actualAscent),
+      0
+    );
+    const maxActualDescent = lineMetrics.reduce(
+      (value, metrics) => Math.max(value, metrics.actualDescent),
+      0
+    );
+    const maxLeft = lineMetrics.reduce(
+      (value, metrics) => Math.max(value, metrics.left),
+      0
+    );
+    const maxRight = lineMetrics.reduce(
+      (value, metrics) => Math.max(value, metrics.right),
+      0
+    );
+    const lineAscent = maxActualAscent;
+    const lineDescent = maxActualDescent;
+    const baselineOffset = lineAscent;
+    const lineHeight = Math.max(lineAscent + lineDescent, 1);
+    const textWidth = maxLeft + maxRight;
+    const textHeight = Math.max(lines.length * lineHeight, lineHeight);
 
     // Update canvas size to fit text and ensure it is at least 1x1 pixel
     const width = Math.max(Math.round(textWidth * dpr), 1);
@@ -70,9 +102,7 @@ function vtkTextActor(publicAPI, model) {
     canvas.width = width;
     canvas.height = height;
 
-    // Vertical flip
-    ctx.translate(0, height);
-    ctx.scale(1, -1);
+    ctx.setTransform(dpr, 0, 0, -dpr, 0, height);
 
     // Clear the canvas
     ctx.clearRect(0, 0, width, height);
@@ -87,8 +117,8 @@ function vtkTextActor(publicAPI, model) {
     ctx.imageSmoothingQuality = 'high';
     ctx.font = `${fontStyle} ${textSize}px "${fontFamily}"`;
     ctx.fillStyle = vtkMath.floatRGB2HexCode(fontColor);
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
 
     // Set shadow
     if (shadowColor) {
@@ -98,8 +128,12 @@ function vtkTextActor(publicAPI, model) {
       ctx.shadowBlur = shadowBlur;
     }
 
-    // Draw the text
-    ctx.fillText(text, width / 2 + hAdjustment, height / 2 + vAdjustment);
+    const x = maxLeft;
+    const baseline = baselineOffset;
+    const lineHeightPx = lineHeight;
+    lines.forEach((line, index) => {
+      ctx.fillText(line, x, baseline + index * lineHeightPx);
+    });
 
     // Update plane dimensions to match text size
     plane.set({
@@ -110,21 +144,39 @@ function vtkTextActor(publicAPI, model) {
     return ImageHelper.canvasToImageData(canvas);
   }
 
+  function updateTexture() {
+    const image = createImageData(model.input);
+    texture.setInputData(image, 0);
+    model.textureBuildTime.modified();
+  }
+
+  function updateTextureIfNeeded() {
+    if (model.input === undefined) {
+      return;
+    }
+
+    if (
+      model.textureBuildTime.getMTime() < model.mtime ||
+      model.textureBuildTime.getMTime() < publicAPI.getProperty().getMTime()
+    ) {
+      updateTexture();
+    }
+  }
+
   mapper.setInputConnection(plane.getOutputPort());
 
   publicAPI.setMapper(mapper);
   publicAPI.addTexture(texture);
 
-  model._onInputChanged = (_publicAPI, _model, value) => {
-    const image = createImageData(value);
-    texture.setInputData(image, 0);
+  publicAPI.getTextures = () => {
+    updateTextureIfNeeded();
+    return superClass.getTextures();
   };
 }
 
 // Default property values
 const DEFAULT_VALUES = {
-  mapper: null,
-  property: null,
+  textureBuildTime: null,
 };
 
 export function extend(publicAPI, model, initialValues = {}) {
@@ -135,6 +187,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['input']);
+  model.textureBuildTime = {};
+  macro.obj(model.textureBuildTime, { mtime: 0 });
 
   // Object methods
   vtkTextActor(publicAPI, model);

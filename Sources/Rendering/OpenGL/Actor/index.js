@@ -142,10 +142,16 @@ function vtkOpenGLActor(publicAPI, model) {
     if (prepass) {
       model.context.depthMask(true);
       publicAPI.activateTextures();
-    } else if (model.activeTextures) {
-      for (let index = 0; index < model.activeTextures.length; index++) {
-        model.activeTextures[index].deactivate();
+    } else {
+      if (model.activeTextures) {
+        for (let index = 0; index < model.activeTextures.length; index++) {
+          model.activeTextures[index].deactivate();
+        }
       }
+      // Restore baseline cull state so a mapper that enabled culling
+      // cannot leak into later actors or the next renderer's clear().
+      // Mirrors C++ vtkOpenGLProperty::PostRender.
+      model._openGLRenderWindow.disableCullFace();
     }
   };
 
@@ -157,10 +163,13 @@ function vtkOpenGLActor(publicAPI, model) {
           model.renderable.getNestedPickable()
       );
       publicAPI.activateTextures();
-    } else if (model.activeTextures) {
-      for (let index = 0; index < model.activeTextures.length; index++) {
-        model.activeTextures[index].deactivate();
+    } else {
+      if (model.activeTextures) {
+        for (let index = 0; index < model.activeTextures.length; index++) {
+          model.activeTextures[index].deactivate();
+        }
       }
+      model._openGLRenderWindow.disableCullFace();
     }
   };
 

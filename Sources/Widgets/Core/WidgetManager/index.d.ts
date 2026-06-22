@@ -56,7 +56,7 @@ export function extractRenderingComponents(
 export function getPixelWorldHeightAtCoord(
   coord: [],
   displayScaleParams: IDisplayScaleParams
-): Number;
+): number;
 
 export interface vtkWidgetManager extends vtkObject {
   /**

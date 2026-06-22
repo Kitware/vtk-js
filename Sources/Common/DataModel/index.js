@@ -8,6 +8,7 @@ import vtkDataSetAttributes from './DataSetAttributes';
 import vtkITKHelper from './ITKHelper';
 import vtkImageData from './ImageData';
 import vtkImplicitBoolean from './ImplicitBoolean';
+import vtkIncrementalPointLocator from './IncrementalPointLocator';
 import vtkLine from './Line';
 import vtkMolecule from './Molecule';
 import vtkPiecewiseFunction from './PiecewiseFunction';
@@ -32,6 +33,7 @@ export default {
   vtkITKHelper,
   vtkImageData,
   vtkImplicitBoolean,
+  vtkIncrementalPointLocator,
   vtkLine,
   vtkMolecule,
   vtkPiecewiseFunction,

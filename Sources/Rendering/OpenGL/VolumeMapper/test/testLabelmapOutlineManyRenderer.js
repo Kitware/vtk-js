@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
@@ -74,7 +74,7 @@ function createLabelPipeline(backgroundImageData, gc) {
   );
   labelMapData.getPointData().setScalars(dataArray);
 
-  labelMapData.setDimensions(backgroundImageData.getDimensionsByReference());
+  labelMapData.setDimensions(backgroundImageData.getDimensions());
   labelMapData.setSpacing(backgroundImageData.getSpacingByReference());
   labelMapData.setOrigin(backgroundImageData.getOriginByReference());
   labelMapData.setDirection(backgroundImageData.getDirectionByReference());
@@ -145,163 +145,165 @@ function fillBlobForThreshold(imageData, backgroundImageData) {
   imageData.getPointData().getScalars().setData(values);
 }
 
-test.skip('Test Labelmap Outline with many renderers', async (t) => {
-  const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'LabelmapOutline manyRenderers');
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'Test Labelmap Outline with many renderers',
+  async () => {
+    const gc = testUtils.createGarbageCollector();
+    expect('rendering', 'LabelmapOutline manyRenderers').toBeTruthy();
 
-  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
-  renderWindow.addView(glwindow);
+    const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+    const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+    renderWindow.addView(glwindow);
 
-  // Create some control UI
-  const bodyElement = document.querySelector('body');
-  bodyElement.style.margin = 0;
+    // Create some control UI
+    const bodyElement = document.querySelector('body');
+    bodyElement.style.margin = 0;
 
-  const rootContainer = gc.registerDOMElement(document.createElement('div'));
-  rootContainer.style.position = 'fixed';
-  rootContainer.style.zIndex = -1;
-  rootContainer.style.left = 0;
-  rootContainer.style.top = 0;
-  rootContainer.style.pointerEvents = 'none';
+    const rootContainer = gc.registerDOMElement(document.createElement('div'));
+    rootContainer.style.position = 'fixed';
+    rootContainer.style.zIndex = -1;
+    rootContainer.style.left = 0;
+    rootContainer.style.top = 0;
+    rootContainer.style.pointerEvents = 'none';
 
-  bodyElement.appendChild(rootContainer);
-  glwindow.setContainer(rootContainer);
+    bodyElement.appendChild(rootContainer);
+    glwindow.setContainer(rootContainer);
 
-  const interactor = gc.registerResource(
-    vtkRenderWindowInteractor.newInstance()
-  );
-  interactor.setView(glwindow);
-  interactor.initialize();
-
-  resize(renderWindow, glwindow);
-
-  // ----------------------------------------------------------------------------
-  // Renderers
-  // ----------------------------------------------------------------------------
-  let rendererId = 1;
-
-  const reader = vtkHttpDataSetReader.newInstance({
-    fetchGzip: true,
-  });
-
-  await reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`, {
-    loadData: true,
-  });
-
-  const data = reader.getOutputData();
-  const labelMap = createLabelPipeline(data, gc);
-  fillBlobForThreshold(labelMap.imageData, data);
-
-  for (let i = 0; i < 2; i++) {
-    const mapper = gc.registerResource(vtkVolumeMapper.newInstance());
-    mapper.setInputData(data);
-    const el = gc.registerDOMElement(document.createElement('div'));
-    el.classList.add('renderer');
-    el.style.width = '400px';
-    el.style.height = '400px';
-
-    el.id = rendererId++;
-    bodyElement.appendChild(el);
-
-    const actor = gc.registerResource(vtkVolume.newInstance());
-    actor.getProperty().setInterpolationTypeToNearest();
-
-    actor.setMapper(mapper);
-
-    const ofun = vtkPiecewiseFunction.newInstance();
-    ofun.addPoint(0, 0);
-    ofun.addPoint(1, 1.0);
-    actor.getProperty().setScalarOpacity(0, ofun);
-
-    const sourceDataRGBTransferFunction = actor
-      .getProperty()
-      .getRGBTransferFunction(0);
-    sourceDataRGBTransferFunction.setMappingRange(324, 2324);
-
-    const renderer = gc.registerResource(vtkRenderer.newInstance());
-    renderer.addVolume(actor);
-    renderer.addVolume(labelMap.actor);
-
-    renderWindow.addRenderer(renderer);
-    renderer.resetCamera();
-
-    // MPR slice custom, for some reason doesn't work if we set it as interactorStyle
-    const camera = renderer.getActiveCamera();
-    const normal = camera.getDirectionOfProjection();
-    // prevent zoom manipulator from messing with our focal point
-    camera.setFreezeFocalPoint(true);
-    vtkMath.normalize(normal);
-
-    const bounds = mapper.getBounds();
-
-    // diagonal will be used as "width" of camera scene
-    const diagonal = Math.sqrt(
-      vtkMath.distance2BetweenPoints(
-        [bounds[0], bounds[2], bounds[4]],
-        [bounds[1], bounds[3], bounds[5]]
-      )
+    const interactor = gc.registerResource(
+      vtkRenderWindowInteractor.newInstance()
     );
+    interactor.setView(glwindow);
+    interactor.initialize();
 
-    // center will be used as initial focal point
-    const center = [
-      (bounds[0] + bounds[1]) / 2.0,
-      (bounds[2] + bounds[3]) / 2.0,
-      (bounds[4] + bounds[5]) / 2.0,
-    ];
+    resize(renderWindow, glwindow);
 
-    const angle = 90;
-    // distance from camera to focal point
-    const dist = diagonal / (2 * Math.tan((angle / 360) * Math.PI));
+    // ----------------------------------------------------------------------------
+    // Renderers
+    // ----------------------------------------------------------------------------
+    let rendererId = 1;
 
-    const cameraPos = [
-      center[0] - normal[0] * dist,
-      center[1] - normal[1] * dist,
-      center[2] - normal[2] * dist,
-    ];
+    const reader = vtkHttpDataSetReader.newInstance({
+      fetchGzip: true,
+    });
 
-    // set viewUp based on DOP rotation
-    const oldDop = camera.getDirectionOfProjection();
-    const transform = vtkMatrixBuilder
-      .buildFromDegree()
-      .identity()
-      .rotateFromDirections(oldDop, normal);
+    await reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`, {
+      loadData: true,
+    });
 
-    const viewUp = [0, 1, 0];
-    transform.apply(viewUp);
+    const data = reader.getOutputData();
+    const labelMap = createLabelPipeline(data, gc);
+    fillBlobForThreshold(labelMap.imageData, data);
 
-    camera.setParallelProjection(true);
+    for (let i = 0; i < 2; i++) {
+      const mapper = gc.registerResource(vtkVolumeMapper.newInstance());
+      mapper.setInputData(data);
+      const el = gc.registerDOMElement(document.createElement('div'));
+      el.classList.add('renderer');
+      el.style.width = '400px';
+      el.style.height = '400px';
 
-    camera.setPosition(...cameraPos);
-    camera.setDistance(dist);
-    // camera.setFocalPoint(center)
-    // should be set after pos and distance
-    camera.setDirectionOfProjection(...normal);
-    camera.setViewUp(...viewUp);
-    camera.setViewAngle(angle);
-    camera.setClippingRange(dist, dist + 0.1);
-    camera.setParallelScale(20);
+      el.id = rendererId++;
+      bodyElement.appendChild(el);
 
-    updateViewPort(el, renderer);
-    renderer.getActiveCamera().setViewUp(1, 0, 0);
-    renderWindow.render();
+      const actor = gc.registerResource(vtkVolume.newInstance());
+      actor.getProperty().setInterpolationTypeToNearest();
 
-    // Keep track of renderer
-    RENDERERS[el.id] = renderer;
+      actor.setMapper(mapper);
+
+      const ofun = vtkPiecewiseFunction.newInstance();
+      ofun.addPoint(0, 0);
+      ofun.addPoint(1, 1.0);
+      actor.getProperty().setScalarOpacity(0, ofun);
+
+      const sourceDataRGBTransferFunction = actor
+        .getProperty()
+        .getRGBTransferFunction(0);
+      sourceDataRGBTransferFunction.setMappingRange(324, 2324);
+
+      const renderer = gc.registerResource(vtkRenderer.newInstance());
+      renderer.addVolume(actor);
+      renderer.addVolume(labelMap.actor);
+
+      renderWindow.addRenderer(renderer);
+      renderer.resetCamera();
+
+      // MPR slice custom, for some reason doesn't work if we set it as interactorStyle
+      const camera = renderer.getActiveCamera();
+      const normal = camera.getDirectionOfProjection();
+      // prevent zoom manipulator from messing with our focal point
+      camera.setFreezeFocalPoint(true);
+      vtkMath.normalize(normal);
+
+      const bounds = mapper.getBounds();
+
+      // diagonal will be used as "width" of camera scene
+      const diagonal = Math.sqrt(
+        vtkMath.distance2BetweenPoints(
+          [bounds[0], bounds[2], bounds[4]],
+          [bounds[1], bounds[3], bounds[5]]
+        )
+      );
+
+      // center will be used as initial focal point
+      const center = [
+        (bounds[0] + bounds[1]) / 2.0,
+        (bounds[2] + bounds[3]) / 2.0,
+        (bounds[4] + bounds[5]) / 2.0,
+      ];
+
+      const angle = 90;
+      // distance from camera to focal point
+      const dist = diagonal / (2 * Math.tan((angle / 360) * Math.PI));
+
+      const cameraPos = [
+        center[0] - normal[0] * dist,
+        center[1] - normal[1] * dist,
+        center[2] - normal[2] * dist,
+      ];
+
+      // set viewUp based on DOP rotation
+      const oldDop = camera.getDirectionOfProjection();
+      const transform = vtkMatrixBuilder
+        .buildFromDegree()
+        .identity()
+        .rotateFromDirections(oldDop, normal);
+
+      const viewUp = [0, 1, 0];
+      transform.apply(viewUp);
+
+      camera.setParallelProjection(true);
+
+      camera.setPosition(...cameraPos);
+      camera.setDistance(dist);
+      // camera.setFocalPoint(center)
+      // should be set after pos and distance
+      camera.setDirectionOfProjection(...normal);
+      camera.setViewUp(...viewUp);
+      camera.setViewAngle(angle);
+      camera.setClippingRange(dist, dist + 0.1);
+      camera.setParallelScale(20);
+
+      updateViewPort(el, renderer);
+      renderer.getActiveCamera().setViewUp(1, 0, 0);
+      renderWindow.render();
+
+      // Keep track of renderer
+      RENDERERS[el.id] = renderer;
+    }
+
+    const promise = glwindow
+      .captureNextImage()
+      .then((image) =>
+        testUtils.compareImages(
+          image,
+          [baseline1],
+          'Rendering/OpenGL/VolumeMapper/testLabelmapOutlineManyRenderer',
+          1.5,
+          gc.releaseResources
+        )
+      );
+
+    recomputeViewports(renderWindow);
+    return promise;
   }
-
-  const promise = glwindow
-    .captureNextImage()
-    .then((image) =>
-      testUtils.compareImages(
-        image,
-        [baseline1],
-        'Rendering/OpenGL/VolumeMapper/testLabelmapOutlineManyRenderer',
-        t,
-        1.5,
-        gc.releaseResources
-      )
-    );
-
-  recomputeViewports(renderWindow);
-  return promise;
-});
+);

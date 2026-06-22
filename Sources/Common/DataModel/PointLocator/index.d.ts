@@ -1,15 +1,14 @@
 import { Bounds, Nullable, Vector3 } from '../../../types';
 import vtkPoints from '../../Core/Points';
-import vtkAbstractPointLocator, {
-  IAbstractPointLocatorInitialValues,
-} from '../AbstractPointLocator';
+import vtkIncrementalPointLocator, {
+  IIncrementalPointLocatorInitialValues,
+} from '../IncrementalPointLocator';
 import vtkPolyData from '../PolyData';
 
 /**
  *
  */
-export interface IPointLocatorInitialValues
-  extends IAbstractPointLocatorInitialValues {
+export interface IPointLocatorInitialValues extends IIncrementalPointLocatorInitialValues {
   numberOfPointsPerBucket?: number;
   bucketSize?: number;
 }
@@ -24,7 +23,7 @@ interface IFindClosestPointResult {
   dist2: number;
 }
 
-export interface vtkPointLocator extends vtkAbstractPointLocator {
+export interface vtkPointLocator extends vtkIncrementalPointLocator {
   /**
    * Find the closest inserted point to the given coordinates.
    *

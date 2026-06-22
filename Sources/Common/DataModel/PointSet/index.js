@@ -24,10 +24,10 @@ function vtkPointSet(publicAPI, model) {
 
   publicAPI.getNumberOfPoints = () => model.points.getNumberOfPoints();
 
-  publicAPI.getBounds = () => model.points.getBounds();
+  publicAPI.getBounds = () => model.points?.getBounds();
 
   publicAPI.computeBounds = () => {
-    publicAPI.getBounds();
+    model.points?.computeBounds();
   };
 
   const superShallowCopy = publicAPI.shallowCopy;

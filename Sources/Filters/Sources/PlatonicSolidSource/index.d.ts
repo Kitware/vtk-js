@@ -96,10 +96,10 @@ export function newInstance(
  *
  * @example
  * ```js
- * import vtkPlatonicSolidSource from '@kitware/vtk.js/Filters/Sources/RegularPolygonSource';
+ * import vtkPlatonicSolidSource from '@kitware/vtk.js/Filters/Sources/PlatonicSolidSource';
  *
- * const regularPolygonSource = vtkPlatonicSolidSource.newInstance();
- * const polydata = regularPolygonSource.getOutputData();
+ * const platonicSolidSource = vtkPlatonicSolidSource.newInstance();
+ * const polydata = platonicSolidSource.getOutputData();
  * ```
  */
 export declare const vtkPlatonicSolidSource: {

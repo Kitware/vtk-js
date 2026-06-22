@@ -1,5 +1,7 @@
+import { expect } from 'vitest';
 import pixelmatch from 'pixelmatch';
 import vtkRTAnalyticSource from 'vtk.js/Sources/Filters/Sources/RTAnalyticSource';
+import vtkWebGPUDevice from 'vtk.js/Sources/Rendering/WebGPU/Device';
 
 let REMOVE_DOM_ELEMENTS = true;
 
@@ -28,10 +30,10 @@ function getImageDataFromURI(imageDataURI) {
  * Compares two images
  * @param image the image under test
  * @param baselines an array of baseline images
- * @param tapeContext tape testing context
+ * @param testName name used in assertion messages
  * @param opts if number: mismatch tolerance. if object: tolerance and pixel threshold
  */
-async function compareImages(image, baselines, testName, tapeContext, opts) {
+async function compareImages(image, baselines, testName, opts) {
   // defaults
   let pixelThreshold = 0.1;
   let mismatchTolerance = 5; // percent
@@ -45,7 +47,6 @@ async function compareImages(image, baselines, testName, tapeContext, opts) {
 
   let minDelta = 100;
   let minRawCount = 0;
-  let minDiff = '';
   let minIndex = 0;
   let isSameDimensions = false;
 
@@ -78,33 +79,23 @@ async function compareImages(image, baselines, testName, tapeContext, opts) {
     if (percentage < minDelta) {
       minDelta = percentage;
       minRawCount = mismatched;
-      diff.context.putImageData(diffImage, 0, 0);
-      minDiff = diff.canvas.toDataURL();
       minIndex = idx;
       isSameDimensions =
         width === imageUnderTest.width && height === imageUnderTest.height;
     }
   });
 
-  tapeContext.ok(isSameDimensions, 'Image match resolution');
-  tapeContext.ok(
-    minDelta < mismatchTolerance,
-    `[${testName}]` +
-      ` Matching image - delta ${minDelta.toFixed(2)}%` +
-      ` (count: ${minRawCount})`,
-    {
-      operator: 'imagediff',
-      actual: {
-        outputImage: image,
-        expectedImage: baselines[minIndex],
-        diffImage: minDiff,
-      },
-      expected: mismatchTolerance,
-    }
-  );
+  expect(
+    isSameDimensions,
+    `[${testName}] image dimensions match baseline`
+  ).toBe(true);
+  const summary = `[${testName}] delta ${minDelta.toFixed(
+    2
+  )}% (count: ${minRawCount}, baseline: ${minIndex})`;
+  expect(minDelta, summary).toBeLessThan(mismatchTolerance);
 }
 
-function createGarbageCollector(testContext) {
+function createGarbageCollector() {
   const resources = [];
   const domElements = [];
 
@@ -140,11 +131,6 @@ function createGarbageCollector(testContext) {
     });
     while (resources.length) {
       resources.pop();
-    }
-
-    // Test end handling
-    if (testContext) {
-      testContext.end();
     }
   }
 
@@ -204,11 +190,84 @@ function objEquals(a, b) {
   return true;
 }
 
+function alignTo256(value) {
+  return Math.ceil(value / 256) * 256;
+}
+
+async function createWebGPUTestDevice() {
+  const adapter = await navigator.gpu.requestAdapter({
+    powerPreference: 'high-performance',
+  });
+  if (!adapter) {
+    throw new Error('Failed to acquire a WebGPU adapter.');
+  }
+
+  const handle = await adapter.requestDevice();
+  const device = vtkWebGPUDevice.newInstance();
+  device.initialize(handle);
+  return device;
+}
+
+async function readWebGPUTexture2D(device, texture, width, height) {
+  const bytesPerPixel = 4;
+  const unpaddedBytesPerRow = width * bytesPerPixel;
+  const bytesPerRow = alignTo256(unpaddedBytesPerRow);
+  const bufferSize = bytesPerRow * height;
+
+  const readBuffer = device.getHandle().createBuffer({
+    size: bufferSize,
+    /* eslint-disable no-undef */
+    /* eslint-disable no-bitwise */
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+  });
+
+  const commandEncoder = device.getHandle().createCommandEncoder();
+  commandEncoder.copyTextureToBuffer(
+    {
+      texture: texture.getHandle(),
+      mipLevel: 0,
+      origin: { x: 0, y: 0, z: 0 },
+    },
+    {
+      buffer: readBuffer,
+      bytesPerRow,
+      rowsPerImage: height,
+    },
+    {
+      width,
+      height,
+      depthOrArrayLayers: 1,
+    }
+  );
+  device.getHandle().queue.submit([commandEncoder.finish()]);
+  await device.getHandle().queue.onSubmittedWorkDone();
+
+  /* eslint-disable no-undef */
+  await readBuffer.mapAsync(GPUMapMode.READ);
+  const mapped = new Uint8Array(readBuffer.getMappedRange());
+  const result = new Uint8Array(unpaddedBytesPerRow * height);
+
+  for (let row = 0; row < height; row++) {
+    const srcStart = row * bytesPerRow;
+    const dstStart = row * unpaddedBytesPerRow;
+    result.set(
+      mapped.subarray(srcStart, srcStart + unpaddedBytesPerRow),
+      dstStart
+    );
+  }
+
+  readBuffer.unmap();
+  readBuffer.destroy();
+  return result;
+}
+
 export default {
   arrayEquals,
   compareImages,
   createGarbageCollector,
   createImage,
+  createWebGPUTestDevice,
+  readWebGPUTexture2D,
   keepDOM,
   objEquals,
   removeDOM,

@@ -87,10 +87,22 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
       const fDesc = pipeline.getShaderDescription('fragment');
       fDesc.addOutput('vec4<u32>', 'outColor');
       let code = fDesc.getCode();
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Select::Impl', [
+        '  var compositeID: u32 = 0u;',
+        '  var attributeID: u32 = compositeID;',
+      ]).result;
       code = vtkWebGPUShaderCache.substitute(
         code,
         '//VTK::RenderEncoder::Impl',
-        ['output.outColor = vec4<u32>(mapperUBO.PropID, compositeID, 0u, 0u);']
+        [
+          // Selection buffer layout: [propID, compositeID, attributeID, unused]
+          // propID and compositeID are already encoded with a +1 offset by the
+          // mappers (0 = no data). attributeID is offset here (+1u) so that
+          // a buffer value of 0 unambiguously means "no attribute data written",
+          // since attributeID === 0 is a valid attribute index. The reader
+          // (HardwareSelector) subtracts 1 when decoding.
+          'output.outColor = vec4<u32>(mapperUBO.PropID, compositeID, attributeID + 1u, 0u);',
+        ]
       ).result;
       fDesc.setCode(code);
     });

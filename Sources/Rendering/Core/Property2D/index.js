@@ -38,6 +38,8 @@ const DEFAULT_VALUES = {
   lineWidth: 1,
   representation: Representation.SURFACE,
   displayLocation: DisplayLocation.FOREGROUND,
+  backfaceCulling: true,
+  frontfaceCulling: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -53,6 +55,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'pointSize',
     'displayLocation',
     'representation',
+    'backfaceCulling',
+    'frontfaceCulling',
   ]);
   macro.setGetArray(publicAPI, model, ['color'], 3);
 

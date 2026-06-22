@@ -7,40 +7,65 @@ jobs:
   build-test:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-24.04]
         node: [22]
-    name: ${{ matrix.os }} and node ${{ matrix.node }}
+        browser: [chromium, firefox]
+    name: ${{ matrix.os }} / node ${{ matrix.node }} / ${{ matrix.browser }}
     steps:
-      - uses: actions/checkout@v2
-      - name: Setup node
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v6
+      - name: Setup project
+        uses: ./.github/actions/setup-node-project
         with:
-          node-version: ${{ matrix.node }}
-      - name: Install dependencies
-        run: |
-          npm ci
-          sudo apt-get install xvfb
+          node-version: '${{ matrix.node }}'
+      - name: Resolve Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ matrix.os }}-${{ matrix.browser }}-${{ steps.playwright.outputs.version }}
+      - name: Install Playwright browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install ${{ matrix.browser }}
+      - name: Install Playwright system deps
+        run: sudo npx playwright install-deps ${{ matrix.browser }}
       - name: Build
         run: npm run build:release
       - name: Archive build output
-        if: github.event_name != 'merge_group'
-        uses: actions/upload-artifact@v4
+        if: github.event_name != 'merge_group' && matrix.browser == 'chromium'
+        uses: actions/upload-artifact@v7
         with:
-          name: build-results-${{ matrix.runs_on }}-node_${{ matrix.node }}
+          name: build-results-${{ matrix.os }}-node_${{ matrix.node }}
           path: dist
           retention-days: 15
       - name: Validate generated typescript definitions
         run: |
           npx tsc -p tsconfig.esm-check.json
           npx tsc -p tsconfig.umd-check.json
-      - name: Chrome and Firefox tests
-        run: xvfb-run --auto-servernum npm run test -- --browsers ChromeSwiftShader,Firefox
+      - name: Smoke-test packed ESM tarball
+        if: matrix.browser == 'chromium'
+        run: |
+          tarball=$(npm pack ./dist/esm --silent)
+          mkdir -p /tmp/vtk-smoke
+          cd /tmp/vtk-smoke
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund "$GITHUB_WORKSPACE/$tarball"
+          node -e "require('@kitware/vtk.js/Utilities/config/rules-vtk')"
+          node -e "require('@kitware/vtk.js/Utilities/config/chainWebpack')"
+          npx --no-install vtkDataConverter --help
+      - name: Tests
+        env:
+          TEST_BROWSER: ${{ matrix.browser }}
+        run: xvfb-run --auto-servernum npm test
       - name: Archive test results
         if: github.event_name != 'merge_group' && (success() || failure())
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         continue-on-error: true
         with:
-          name: test-results-${{ matrix.runs_on }}-node_${{ matrix.node }}
-          path: Utilities/TestResults/Test-Report.html
+          name: test-results-${{ matrix.os }}-node_${{ matrix.node }}-${{ matrix.browser }}
+          path: Utilities/TestResults/
           retention-days: 15

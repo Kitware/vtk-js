@@ -16,22 +16,25 @@ function vtkImageResliceMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageResliceMapper');
 
-  publicAPI.getBounds = () => {
-    let bds = [...vtkBoundingBox.INIT_BOUNDS];
+  publicAPI.computeBounds = () => {
     const image = publicAPI.getInputData();
     if (publicAPI.getSlicePolyData()) {
-      bds = publicAPI.getSlicePolyData().getBounds();
+      vtkBoundingBox.setBounds(
+        model.bounds,
+        publicAPI.getSlicePolyData().getBounds()
+      );
     } else if (image) {
-      bds = image.getBounds();
+      vtkBoundingBox.setBounds(model.bounds, image.getBounds());
       if (publicAPI.getSlicePlane()) {
         vtkBoundingBox.cutWithPlane(
-          bds,
+          model.bounds,
           publicAPI.getSlicePlane().getOrigin(),
           publicAPI.getSlicePlane().getNormal()
         );
       }
+    } else {
+      vtkBoundingBox.reset(model.bounds);
     }
-    return bds;
   };
 }
 

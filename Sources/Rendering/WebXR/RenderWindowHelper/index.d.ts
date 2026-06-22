@@ -25,7 +25,7 @@ export interface vtkWebXRRenderWindowHelper extends vtkObject {
    * Request an XR session on the user device with WebXR,
    * typically in response to a user request such as a button press.
    */
-  startXR(xrSessionType: Number): void;
+  startXR(xrSessionType: number): void;
 
   /**
    * When an XR session is available, set up the XRWebGLLayer

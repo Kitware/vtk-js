@@ -29,10 +29,7 @@ interface IStatistics {
   str: string;
 }
 
-export const enum DEFAULT_VIEW_API {
-  'WebGL',
-  'WebGPU',
-}
+export type DEFAULT_VIEW_API = 'WebGL' | 'WebGPU';
 
 export interface vtkRenderWindow extends vtkObject {
   /**

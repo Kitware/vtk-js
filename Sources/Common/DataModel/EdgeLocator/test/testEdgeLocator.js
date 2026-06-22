@@ -1,44 +1,39 @@
-import test from 'tape';
-
+import { it, expect } from 'vitest';
 import vtkEdgeLocator from 'vtk.js/Sources/Common/DataModel/EdgeLocator';
 
-test('Test unique edge', (t) => {
+it('Test unique edge', () => {
   const edgeLocator = vtkEdgeLocator.newInstance();
   const edge = edgeLocator.insertUniqueEdge(10, 13);
-  t.ok(edge != null, 'First edge');
-  t.equal(edge.edgeId, 0, 'Edge id');
+  expect(edge != null, 'First edge').toBeTruthy();
+  expect(edge.edgeId, 'Edge id').toBe(0);
 
   const sameEdge = edgeLocator.insertUniqueEdge(10, 13);
-  t.ok(sameEdge === edge, 'Same edge');
+  expect(sameEdge === edge, 'Same edge').toBeTruthy();
   const oppositeEdge = edgeLocator.insertUniqueEdge(13, 10);
-  t.ok(oppositeEdge === edge, 'Opposite edge');
-  t.equal(oppositeEdge.edgeId, 0, 'Opposite edge id');
+  expect(oppositeEdge === edge, 'Opposite edge').toBeTruthy();
+  expect(oppositeEdge.edgeId, 'Opposite edge id').toBe(0);
 
   const otherEdge = edgeLocator.insertUniqueEdge(11, 13);
-  t.ok(otherEdge != null);
-  t.ok(otherEdge !== edge);
-  t.equal(otherEdge.edgeId, 1);
+  expect(otherEdge != null).toBeTruthy();
+  expect(otherEdge !== edge).toBeTruthy();
+  expect(otherEdge.edgeId).toBe(1);
 
   const edgeWithValue = edgeLocator.insertUniqueEdge(12, 13, 42);
-  t.equal(edgeWithValue.value, 42, 'edge with value 42');
+  expect(edgeWithValue.value, 'edge with value 42').toBe(42);
 
   edgeWithValue.value = 54;
   const sameEdgeWithValue = edgeLocator.insertUniqueEdge(12, 13);
-  t.equal(sameEdgeWithValue.value, 54, 'same edge with value 54');
-
-  t.end();
+  expect(sameEdgeWithValue.value, 'same edge with value 54').toBe(54);
 });
 
-test('Test oriented edge', (t) => {
+it('Test oriented edge', () => {
   const edgeLocator = vtkEdgeLocator.newInstance({ oriented: true });
   const edge = edgeLocator.insertUniqueEdge(10, 13);
-  t.ok(edge != null, 'First oriented edge');
-  t.equal(edge.edgeId, 0, 'Oriented edge Id');
+  expect(edge != null, 'First oriented edge').toBeTruthy();
+  expect(edge.edgeId, 'Oriented edge Id').toBe(0);
   const sameEdge = edgeLocator.insertUniqueEdge(10, 13);
-  t.ok(sameEdge === edge, 'Same oriented edge');
+  expect(sameEdge === edge, 'Same oriented edge').toBeTruthy();
   const oppositeEdge = edgeLocator.insertUniqueEdge(13, 10);
-  t.ok(oppositeEdge !== edge, 'Opposite edge');
-  t.equal(oppositeEdge.edgeId, 1, 'Opposite edge id');
-
-  t.end();
+  expect(oppositeEdge !== edge, 'Opposite edge').toBeTruthy();
+  expect(oppositeEdge.edgeId, 'Opposite edge id').toBe(1);
 });

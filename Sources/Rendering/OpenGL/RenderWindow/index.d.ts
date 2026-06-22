@@ -16,6 +16,7 @@ import vtkViewStream from '../../../IO/Core/ImageStream/ViewStream';
  */
 export interface IOpenGLRenderWindowInitialValues {
   cullFaceEnabled?: boolean;
+  cullFaceMode?: number | null;
   shaderCache?: null;
   initialized?: boolean;
   context?: WebGLRenderingContext | WebGL2RenderingContext;
@@ -37,7 +38,7 @@ export interface IOpenGLRenderWindowInitialValues {
 }
 
 export interface ICaptureOptions {
-  resetCamera?: boolean;
+  resetCamera?: boolean | (({ renderer: vtkRenderer }) => void);
   size?: Size;
   scale?: number;
 }
@@ -377,6 +378,13 @@ export interface vtkOpenGLRenderWindow extends vtkViewNode {
   enableCullFace(): void;
 
   /**
+   * Set the cull face mode (gl.FRONT, gl.BACK, or gl.FRONT_AND_BACK).
+   * Caches the value to avoid redundant gl.cullFace() calls.
+   * @param mode A WebGL cull face mode constant.
+   */
+  setCullFaceMode(mode: number): void;
+
+  /**
    *
    * @param {vtkViewStream} stream The vtkViewStream instance.
    */
@@ -450,7 +458,7 @@ export interface vtkOpenGLRenderWindow extends vtkViewNode {
    * @return {Object} Dictionary with the graphics resource and string hash
    */
   getGraphicsResourceForObject<
-    T extends vtkCellArray | vtkDataArray | vtkPoints
+    T extends vtkCellArray | vtkDataArray | vtkPoints,
   >(
     vtkObj: T
   ):

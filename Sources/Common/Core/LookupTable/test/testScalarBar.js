@@ -1,4 +1,4 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
@@ -11,9 +11,9 @@ import vtkScalarBarActor from 'vtk.js/Sources/Rendering/Core/ScalarBarActor';
 import baseline from './testScalarBar.png';
 import baseline2 from './testScalarBar2.png';
 
-test.onlyIfWebGL('Test ScalarBar', (t) => {
+it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ScalarBar', () => {
   const gc = testUtils.createGarbageCollector();
-  t.ok('rendering', 'vtkLookupTable TestScalarBar');
+  expect('rendering', 'vtkLookupTable TestScalarBar').toBeTruthy();
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -94,7 +94,6 @@ test.onlyIfWebGL('Test ScalarBar', (t) => {
         image,
         [baseline, baseline2],
         'Common/Core/LookupTable/testScalarBar',
-        t,
         5
       )
     )

@@ -20,6 +20,13 @@ function vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model) {
     publicAPI.setNumberOfInstances(model.glyphInstances);
   };
 
+  publicAPI.computePipelineHash = () => {
+    superClass.computePipelineHash();
+    if (model.renderable.getColorArray()) {
+      model.pipelineHash += 'gc';
+    }
+  };
+
   publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
     vDesc.addBuiltinInput('u32', '@builtin(instance_index) instanceIndex');
@@ -86,10 +93,12 @@ function vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model) {
   publicAPI.replaceShaderSelect = (hash, pipeline, vertexInput) => {
     if (hash.includes('sel')) {
       const vDesc = pipeline.getShaderDescription('vertex');
+      vDesc.addOutput('u32', 'attributeID', 'flat');
       vDesc.addOutput('u32', 'compositeID', 'flat');
       let code = vDesc.getCode();
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Select::Impl', [
-        '  output.compositeID = input.instanceIndex;',
+        '  output.compositeID = input.instanceIndex + 1u;',
+        '  output.attributeID = input.instanceIndex + 1u;',
       ]).result;
       vDesc.setCode(code);
 
@@ -97,6 +106,7 @@ function vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model) {
       code = fDesc.getCode();
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Select::Impl', [
         'var compositeID: u32 = input.compositeID;',
+        'var attributeID: u32 = input.attributeID;',
       ]).result;
       fDesc.setCode(code);
     }
@@ -182,21 +192,38 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
       );
       const device = model.WebGPURenderWindow.getDevice();
 
+      const ssboInstances = Math.max(model.numInstances, 1);
       model.SSBO.clearData();
-      model.SSBO.setNumberOfInstances(model.numInstances);
+      model.SSBO.setNumberOfInstances(ssboInstances);
       model.SSBO.addEntry('matrix', 'mat4x4<f32>');
       model.SSBO.addEntry('normal', 'mat4x4<f32>');
       if (model.carray) {
         model.SSBO.addEntry('color', 'vec4<f32>');
       }
 
-      model.SSBO.setAllInstancesFromArray('matrix', garray);
-      model.SSBO.setAllInstancesFromArray3x3To4x4('normal', narray);
-      if (model.carray) {
-        model.SSBO.setAllInstancesFromArrayColorToFloat(
-          'color',
-          model.carray.getData()
+      if (model.numInstances > 0) {
+        model.SSBO.setAllInstancesFromArray('matrix', garray);
+        model.SSBO.setAllInstancesFromArray3x3To4x4('normal', narray);
+        if (model.carray) {
+          model.SSBO.setAllInstancesFromArrayColorToFloat(
+            'color',
+            model.carray.getData()
+          );
+        }
+      } else {
+        model.SSBO.setArray(
+          'matrix',
+          0,
+          [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
         );
+        model.SSBO.setArray(
+          'normal',
+          0,
+          [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+        );
+        if (model.carray) {
+          model.SSBO.setArray('color', 0, [1, 1, 1, 1]);
+        }
       }
 
       model.SSBO.send(device);
