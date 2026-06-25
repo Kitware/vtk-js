@@ -516,7 +516,7 @@ function vtkCamera(publicAPI, model) {
   publicAPI.getViewMatrix = () => {
     if (model.viewMatrix) {
       if (model.modelTransformMatrix) {
-        mat4.multiply(tmpMatrix, model.viewMatrix, model.modelTransformMatrix);
+        mat4.multiply(tmpMatrix, model.modelTransformMatrix, model.viewMatrix);
         return tmpMatrix;
       }
       return model.viewMatrix;
@@ -533,7 +533,7 @@ function vtkCamera(publicAPI, model) {
 
     const result = new Float64Array(16);
     if (model.modelTransformMatrix) {
-      mat4.multiply(result, tmpMatrix, model.modelTransformMatrix);
+      mat4.multiply(result, model.modelTransformMatrix, tmpMatrix);
     } else {
       mat4.copy(result, tmpMatrix);
     }
