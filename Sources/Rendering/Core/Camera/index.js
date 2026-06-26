@@ -498,12 +498,6 @@ function vtkCamera(publicAPI, model) {
     publicAPI.computeViewParametersFromViewMatrix(tmpMatrix);
   };
 
-  publicAPI.setModelTransformMatrix = (mat) => {
-    model.modelTransformMatrix = mat;
-  };
-
-  publicAPI.getModelTransformMatrix = () => model.modelTransformMatrix;
-
   publicAPI.setViewMatrix = (mat) => {
     model.viewMatrix = mat;
     if (model.viewMatrix) {
@@ -806,6 +800,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'useOffAxisProjection',
     'freezeFocalPoint',
     'physicalScale',
+    'modelTransformMatrix',
   ]);
 
   macro.getArray(publicAPI, model, [
