@@ -498,12 +498,6 @@ function vtkCamera(publicAPI, model) {
     publicAPI.computeViewParametersFromViewMatrix(tmpMatrix);
   };
 
-  publicAPI.setModelTransformMatrix = (mat) => {
-    model.modelTransformMatrix = mat;
-  };
-
-  publicAPI.getModelTransformMatrix = () => model.modelTransformMatrix;
-
   publicAPI.setViewMatrix = (mat) => {
     model.viewMatrix = mat;
     if (model.viewMatrix) {
@@ -516,7 +510,7 @@ function vtkCamera(publicAPI, model) {
   publicAPI.getViewMatrix = () => {
     if (model.viewMatrix) {
       if (model.modelTransformMatrix) {
-        mat4.multiply(tmpMatrix, model.viewMatrix, model.modelTransformMatrix);
+        mat4.multiply(tmpMatrix, model.modelTransformMatrix, model.viewMatrix);
         return tmpMatrix;
       }
       return model.viewMatrix;
@@ -531,13 +525,10 @@ function vtkCamera(publicAPI, model) {
 
     mat4.transpose(tmpMatrix, tmpMatrix);
 
-    const result = new Float64Array(16);
     if (model.modelTransformMatrix) {
-      mat4.multiply(result, tmpMatrix, model.modelTransformMatrix);
-    } else {
-      mat4.copy(result, tmpMatrix);
+      mat4.multiply(tmpMatrix, model.modelTransformMatrix, tmpMatrix);
     }
-    return result;
+    return tmpMatrix;
   };
 
   publicAPI.setProjectionMatrix = (mat) => {
@@ -809,6 +800,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'useOffAxisProjection',
     'freezeFocalPoint',
     'physicalScale',
+    'modelTransformMatrix',
   ]);
 
   macro.getArray(publicAPI, model, [
