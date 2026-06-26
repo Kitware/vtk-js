@@ -531,13 +531,10 @@ function vtkCamera(publicAPI, model) {
 
     mat4.transpose(tmpMatrix, tmpMatrix);
 
-    const result = new Float64Array(16);
     if (model.modelTransformMatrix) {
-      mat4.multiply(result, model.modelTransformMatrix, tmpMatrix);
-    } else {
-      mat4.copy(result, tmpMatrix);
+      mat4.multiply(tmpMatrix, model.modelTransformMatrix, tmpMatrix);
     }
-    return result;
+    return tmpMatrix;
   };
 
   publicAPI.setProjectionMatrix = (mat) => {
