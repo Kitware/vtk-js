@@ -33,7 +33,6 @@ const parentMethodsToProxy = [
   'getContext',
   'getDefaultTextureByteSize',
   'getDefaultTextureInternalFormat',
-  'getDefaultToWebgl2',
   'getGLInformations',
   'getGraphicsMemoryInfo',
   'getGraphicsResourceForObject',
@@ -42,7 +41,6 @@ const parentMethodsToProxy = [
   'getShaderCache',
   'getTextureUnitForTexture',
   'getTextureUnitManager',
-  'getWebgl2',
   'makeCurrent',
   'releaseGraphicsResources',
   'registerGraphicsResourceUser',
@@ -50,7 +48,6 @@ const parentMethodsToProxy = [
   'restoreContext',
   'setActiveFramebuffer',
   'setContext',
-  'setDefaultToWebgl2',
   'setGraphicsResourceForObject',
 ];
 
@@ -307,25 +304,15 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       powerPreference: 'high-performance',
     }
   ) => {
-    let result = null;
-
     const webgl2Supported = typeof WebGL2RenderingContext !== 'undefined';
-    model.webgl2 = false;
-    if (model.defaultToWebgl2 && webgl2Supported) {
-      result = model.canvas.getContext('webgl2', options);
-      if (result) {
-        model.webgl2 = true;
-        vtkDebugMacro('using webgl2');
-      }
+    const result = webgl2Supported
+      ? model.canvas.getContext('webgl2', options)
+      : null;
+    if (result) {
+      vtkDebugMacro('using webgl2');
     }
     if (!result) {
-      vtkDebugMacro('using webgl1');
-      result =
-        model.canvas.getContext('webgl', options) ||
-        model.canvas.getContext('experimental-webgl', options);
-    }
-    if (!result) {
-      vtkErrorMacro('no webgl context');
+      vtkErrorMacro('no webgl2 context');
     }
 
     return new Proxy(result, getCachingContextHandler());
@@ -382,25 +369,20 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     oglNorm16Ext = null,
     useHalfFloat = false
   ) => {
-    if (model.webgl2) {
-      switch (vtkType) {
-        case VtkDataTypes.CHAR:
-        case VtkDataTypes.SIGNED_CHAR:
-        case VtkDataTypes.UNSIGNED_CHAR:
-          return 1;
-        case oglNorm16Ext:
-        case useHalfFloat:
-        case VtkDataTypes.UNSIGNED_SHORT:
-        case VtkDataTypes.SHORT:
-        case VtkDataTypes.VOID: // Used for unsigned int depth
-          return 2;
-        default: // For all other cases, assume float
-          return 4;
-      }
+    switch (vtkType) {
+      case VtkDataTypes.CHAR:
+      case VtkDataTypes.SIGNED_CHAR:
+      case VtkDataTypes.UNSIGNED_CHAR:
+        return 1;
+      case oglNorm16Ext:
+      case useHalfFloat:
+      case VtkDataTypes.UNSIGNED_SHORT:
+      case VtkDataTypes.SHORT:
+      case VtkDataTypes.VOID: // Used for unsigned int depth
+        return 2;
+      default: // For all other cases, assume float
+        return 4;
     }
-
-    // webgl1 type support is limited to 1 byte
-    return 1;
   };
 
   publicAPI.getDefaultTextureInternalFormat = (
@@ -409,78 +391,61 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     oglNorm16Ext = null,
     useHalfFloat = false
   ) => {
-    if (model.webgl2) {
-      switch (vtktype) {
-        case VtkDataTypes.UNSIGNED_CHAR:
-          switch (numComps) {
-            case 1:
-              return model.context.R8;
-            case 2:
-              return model.context.RG8;
-            case 3:
-              return model.context.RGB8;
-            case 4:
-            default:
-              return model.context.RGBA8;
-          }
-        case oglNorm16Ext && !useHalfFloat && VtkDataTypes.UNSIGNED_SHORT:
-          switch (numComps) {
-            case 1:
-              return oglNorm16Ext.R16_EXT;
-            case 2:
-              return oglNorm16Ext.RG16_EXT;
-            case 3:
-              return oglNorm16Ext.RGB16_EXT;
-            case 4:
-            default:
-              return oglNorm16Ext.RGBA16_EXT;
-          }
-        // prioritize norm16 over float
-        case oglNorm16Ext && !useHalfFloat && VtkDataTypes.SHORT:
-          switch (numComps) {
-            case 1:
-              return oglNorm16Ext.R16_SNORM_EXT;
-            case 2:
-              return oglNorm16Ext.RG16_SNORM_EXT;
-            case 3:
-              return oglNorm16Ext.RGB16_SNORM_EXT;
-            case 4:
-            default:
-              return oglNorm16Ext.RGBA16_SNORM_EXT;
-          }
-        case VtkDataTypes.UNSIGNED_SHORT:
-        case VtkDataTypes.SHORT:
-        case VtkDataTypes.FLOAT:
-        default:
-          // useHalfFloat tells us if the texture can be accurately
-          // rendered with 16 bits or not.
-          switch (numComps) {
-            case 1:
-              return useHalfFloat ? model.context.R16F : model.context.R32F;
-            case 2:
-              return useHalfFloat ? model.context.RG16F : model.context.RG32F;
-            case 3:
-              return useHalfFloat ? model.context.RGB16F : model.context.RGB32F;
-            case 4:
-            default:
-              return useHalfFloat
-                ? model.context.RGBA16F
-                : model.context.RGBA32F;
-          }
-      }
-    }
-
-    // webgl1 only supports four types
-    switch (numComps) {
-      case 1:
-        return model.context.LUMINANCE;
-      case 2:
-        return model.context.LUMINANCE_ALPHA;
-      case 3:
-        return model.context.RGB;
-      case 4:
+    switch (vtktype) {
+      case VtkDataTypes.UNSIGNED_CHAR:
+        switch (numComps) {
+          case 1:
+            return model.context.R8;
+          case 2:
+            return model.context.RG8;
+          case 3:
+            return model.context.RGB8;
+          case 4:
+          default:
+            return model.context.RGBA8;
+        }
+      case oglNorm16Ext && !useHalfFloat && VtkDataTypes.UNSIGNED_SHORT:
+        switch (numComps) {
+          case 1:
+            return oglNorm16Ext.R16_EXT;
+          case 2:
+            return oglNorm16Ext.RG16_EXT;
+          case 3:
+            return oglNorm16Ext.RGB16_EXT;
+          case 4:
+          default:
+            return oglNorm16Ext.RGBA16_EXT;
+        }
+      // prioritize norm16 over float
+      case oglNorm16Ext && !useHalfFloat && VtkDataTypes.SHORT:
+        switch (numComps) {
+          case 1:
+            return oglNorm16Ext.R16_SNORM_EXT;
+          case 2:
+            return oglNorm16Ext.RG16_SNORM_EXT;
+          case 3:
+            return oglNorm16Ext.RGB16_SNORM_EXT;
+          case 4:
+          default:
+            return oglNorm16Ext.RGBA16_SNORM_EXT;
+        }
+      case VtkDataTypes.UNSIGNED_SHORT:
+      case VtkDataTypes.SHORT:
+      case VtkDataTypes.FLOAT:
       default:
-        return model.context.RGBA;
+        // useHalfFloat tells us if the texture can be accurately
+        // rendered with 16 bits or not.
+        switch (numComps) {
+          case 1:
+            return useHalfFloat ? model.context.R16F : model.context.R32F;
+          case 2:
+            return useHalfFloat ? model.context.RG16F : model.context.RG32F;
+          case 3:
+            return useHalfFloat ? model.context.RGB16F : model.context.RGB32F;
+          case 4:
+          default:
+            return useHalfFloat ? model.context.RGBA16F : model.context.RGBA32F;
+        }
     }
   };
 
@@ -1060,7 +1025,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         glDebugRendererInfo &&
           gl.getParameter(glDebugRendererInfo.UNMASKED_VENDOR_WEBGL),
       ],
-      ['WebGL Version', 'WEBGL_VERSION', model.webgl2 ? 2 : 1],
+      ['WebGL Version', 'WEBGL_VERSION', 2],
     ];
 
     const result = {};
@@ -1323,8 +1288,6 @@ const DEFAULT_VALUES = {
   containerSize: null,
   renderPasses: [],
   notifyStartCaptureImage: false,
-  webgl2: false,
-  defaultToWebgl2: true, // attempt webgl2 on by default
   activeFramebuffer: null,
   imageFormat: 'image/png',
   useOffScreen: false,
@@ -1375,7 +1338,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, [
     'shaderCache',
     'textureUnitManager',
-    'webgl2',
     'useBackgroundImage',
     'activeFramebuffer',
     'rootOpenGLRenderWindow',
@@ -1388,7 +1350,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'canvas',
     'renderPasses',
     'notifyStartCaptureImage',
-    'defaultToWebgl2',
     'cursor',
     'useOffScreen',
   ]);

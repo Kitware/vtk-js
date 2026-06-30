@@ -1603,9 +1603,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // visible artifacts. High values of opacity quickly terminate without
       // artifacts.
       if (
-        model._openGLRenderWindow.getWebgl2() ||
-        (model.context.getExtension('OES_texture_float') &&
-          model.context.getExtension('OES_texture_float_linear'))
+        model.context.getExtension('OES_texture_float') &&
+        model.context.getExtension('OES_texture_float_linear')
       ) {
         newOpacityTexture.create2DFromRaw({
           width: oWidth,
@@ -1871,6 +1870,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.tris.getCABO().createVBO(cells, 'polys', Representation.SURFACE, {
         points,
         cellOffset: 0,
+        // This mapper draws with gl.drawArrays, so it needs the flattened
+        // (non indexed) vertex layout where elementCount matches the vertices.
+        forceFlatten: true,
       });
     }
 

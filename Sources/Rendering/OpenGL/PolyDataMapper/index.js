@@ -1612,6 +1612,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (model.selectionWebGLIdsToVTKIds?.points?.length) {
       const length = model.selectionWebGLIdsToVTKIds.points.length;
       selector.setMaximumPointId(length - 1);
+    } else if (model.currentInput && model.currentInput.getPoints()) {
+      // Indexed layout: gl_VertexID is the vtk point id directly, so the max
+      // id is simply the number of points.
+      selector.setMaximumPointId(
+        model.currentInput.getPoints().getNumberOfPoints() - 1
+      );
     }
 
     if (model.selectionWebGLIdsToVTKIds?.cells?.length) {
@@ -1692,9 +1698,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
             representation,
             publicAPI
           );
-          model.vertexIDOffset += model.primitives[i]
-            .getCABO()
-            .getElementCount();
+          // For indexed VBOs gl_VertexID is already the point id (shared across
+          // primitives), so the offset stays 0. The flattened layout assigns
+          // each primitive a contiguous range of expanded vertex ids.
+          if (!cabo.getIndexed()) {
+            model.vertexIDOffset += cabo.getElementCount();
+          }
         }
       }
     }
@@ -1763,6 +1772,25 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     publicAPI.updateMaximumPointCellIds();
   };
 
+  // The VBO layout depends on whether a cell id selection pass is active: cell
+  // accurate hardware selection needs the flattened per vertex layout (see
+  // buildBufferObjects), while everything else renders with the indexed layout.
+  // The selector's field association can change between renders without bumping
+  // any mtime, so the coarse mtime check in getNeedToRebuildBufferObjects would
+  // miss the transition and leave a stale (indexed) VBO in place, making cell
+  // picking return point ids. Detect that transition explicitly.
+  function computeForceFlatten() {
+    const selector = model._openGLRenderer
+      ? model._openGLRenderer.getSelector()
+      : null;
+    return (
+      !!selector &&
+      model.renderable.getPopulateSelectionSettings() &&
+      selector.getFieldAssociation() ===
+        FieldAssociations.FIELD_ASSOCIATION_CELLS
+    );
+  }
+
   publicAPI.getNeedToRebuildBufferObjects = (ren, actor) => {
     // first do a coarse check
     // Note that the actor's mtime includes it's properties mtime
@@ -1771,7 +1799,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       vmtime < publicAPI.getMTime() ||
       vmtime < model.renderable.getMTime() ||
       vmtime < actor.getMTime() ||
-      vmtime < model.currentInput.getMTime()
+      vmtime < model.currentInput.getMTime() ||
+      computeForceFlatten() !== model.lastForceFlatten
     ) {
       return true;
     }
@@ -1865,6 +1894,17 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const customAttributesArrays = customAttributes.map((arrayName) =>
       poly.getPointData().getArrayByName(arrayName)
     );
+
+    // Rendering uses indexed (shared point) VBOs by default. Cell accurate
+    // hardware selection still needs the flattened per vertex layout because
+    // WebGL2 has no gl_PrimitiveID to recover the cell from a shared vertex.
+    // Point selection works with the indexed layout (gl_VertexID is the point
+    // id), so we only flatten while a cell id selection pass is active.
+    const forceFlatten = computeForceFlatten();
+    // Remember the layout we built so getNeedToRebuildBufferObjects can detect
+    // a field association change (which carries no mtime) and rebuild.
+    model.lastForceFlatten = forceFlatten;
+
     const toString =
       `${poly.getMTime()}` +
       `A${representation}` +
@@ -1875,7 +1915,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       `F${tcoords ? tcoords.getMTime() : 1}` +
       `G${customAttributesArrays
         .map((attributeArray) => attributeArray.getMTime())
-        .join(',')}`;
+        .join(',')}` +
+      `H${forceFlatten}`;
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
       const points = poly.getPoints();
@@ -1890,13 +1931,19 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         haveCellScalars: model.haveCellScalars,
         haveCellNormals: model.haveCellNormals,
         customAttributes: customAttributesArrays,
+        forceFlatten,
       };
 
-      if (model.renderable.getPopulateSelectionSettings()) {
+      // Per vertex id maps are only meaningful for the flattened layout. When
+      // rendering indexed, point picking reads gl_VertexID directly, so no map
+      // is built and selectionWebGLIdsToVTKIds is left null.
+      if (forceFlatten) {
         model.selectionWebGLIdsToVTKIds = {
           points: null,
           cells: null,
         };
+      } else {
+        model.selectionWebGLIdsToVTKIds = null;
       }
 
       const primitives = [
@@ -1996,6 +2043,7 @@ const DEFAULT_VALUES = {
   selectionStateChanged: null,
   selectionWebGLIdsToVTKIds: null,
   pointPicking: false,
+  lastForceFlatten: false,
 };
 
 // ----------------------------------------------------------------------------

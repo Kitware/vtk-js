@@ -599,6 +599,9 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       model.tris.getCABO().createVBO(cells, 'polys', Representation.SURFACE, {
         points,
         customAttributes,
+        // This mapper draws with gl.drawArrays, so it needs the flattened
+        // (non indexed) vertex layout where elementCount matches the vertices.
+        forceFlatten: true,
       });
       model.VBOBuildTime.modified();
     }

@@ -66,6 +66,9 @@ function getQuadPoly(openGLRenderWindow) {
     points,
     cellOffset: 0,
     tcoords: tArray,
+    // This quad is drawn with gl.drawArrays, so it needs the flattened
+    // (non indexed) vertex layout where elementCount matches the vertices.
+    forceFlatten: true,
   });
   return quad;
 }
