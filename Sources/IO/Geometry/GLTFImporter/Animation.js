@@ -6,6 +6,10 @@ import {
   InterpolationMode,
   TrackType,
 } from 'vtk.js/Sources/Common/DataModel/AnimationTrack/Constants';
+import {
+  findKeyframeInterval,
+  hermite,
+} from 'vtk.js/Sources/Common/DataModel/AnimationTrack/Interpolation';
 import { mat4, quat, vec3 } from 'gl-matrix';
 
 const { vtkWarningMacro } = macro;
@@ -64,14 +68,6 @@ function createBoneData(node, boneIndex, allNodes) {
     localRestScale: scale,
     nodeId: allNodes.indexOf(node),
   };
-}
-
-function getRootJointNode(rootIndices, jointNodes) {
-  const rootBoneIndex = rootIndices[0];
-  if (rootBoneIndex === undefined) {
-    return null;
-  }
-  return jointNodes[rootBoneIndex];
 }
 
 /**
@@ -146,19 +142,26 @@ export function createSkeletonFromGLTFSkin(gltfSkin, allNodes) {
         );
       }
 
-      skeleton.addBone(boneData);
-      nodeToJointIndex.set(node, i);
+      // addBone returns the actual bone index, which can differ from the
+      // joint loop index when a joint node was null and skipped above. The
+      // inverse bind matrix is still keyed by the joint index i, since the
+      // glTF accessor stores one matrix per joint in joints order.
+      const boneIndex = skeleton.addBone(boneData);
+      nodeToJointIndex.set(node, boneIndex);
     }
   }
 
-  // Set parent indices by checking node children relationships
+  // Set parent indices by checking node children relationships. Both parent
+  // and child are resolved through nodeToJointIndex so the bone indices stay
+  // correct even when some joint nodes were skipped.
   for (let i = 0; i < jointNodes.length; i++) {
     const node = jointNodes[i];
-    if (node.children) {
+    const parentBoneIdx = node ? nodeToJointIndex.get(node) : undefined;
+    if (node && node.children && parentBoneIdx !== undefined) {
       node.children.forEach((child) => {
         const childBoneIdx = nodeToJointIndex.get(child);
         if (childBoneIdx !== undefined) {
-          skeleton.setParentIndex(childBoneIdx, i);
+          skeleton.setParentIndex(childBoneIdx, parentBoneIdx);
         }
       });
     }
@@ -174,7 +177,13 @@ export function createSkeletonFromGLTFSkin(gltfSkin, allNodes) {
     }
   }
 
-  const rootJointNode = getRootJointNode(rootIndices, jointNodes);
+  // Resolve the root joint node through the root bone's nodeId so it stays
+  // correct regardless of how joint indices map onto bone indices.
+  const rootBoneIndex = rootIndices[0];
+  const rootJointNode =
+    rootBoneIndex === undefined
+      ? null
+      : allNodes[skeleton.getBone(rootBoneIndex).nodeId];
   if (rootJointNode) {
     const chain = [];
     let parentNode = parentNodeMap.get(rootJointNode);
@@ -387,14 +396,19 @@ export function parseSkeletalAnimationFromGLTF(tree) {
 }
 
 /**
- * Interpolates between keyframes using linear or step interpolation.
+ * Interpolates between keyframes using step, linear or cubic spline modes.
+ * Delegates the interval search and the Hermite evaluation to the shared
+ * helpers in AnimationTrack/Interpolation so the math lives in one place.
+ *
  * @param {Float32Array} times - Keyframe times
  * @param {Float32Array} values - Keyframe values (packed)
  * @param {number} t - Current time
  * @param {number} components - Number of components per value (3 for vec3, 4 for quat)
  * @param {string} interpolation - 'LINEAR', 'STEP', or 'CUBICSPLINE'
  * @param {boolean} isRotation - Whether this is a rotation (quaternion slerp)
- * @returns {Float32Array} Interpolated value
+ * @param {number} hint - Last resolved interval, used to keep monotonic playback O(1)
+ * @returns {{ value: Float32Array, index: number }} Interpolated value and the
+ *   resolved interval index, which the caller can feed back as the next hint.
  */
 function interpolateKeyframes(
   times,
@@ -402,99 +416,87 @@ function interpolateKeyframes(
   t,
   components,
   interpolation,
-  isRotation = false
+  isRotation = false,
+  hint = 0
 ) {
-  const result = new Float32Array(components);
+  const value = new Float32Array(components);
+  const count = times.length;
 
-  if (times.length === 0) return result;
+  if (count === 0) {
+    return { value, index: 0 };
+  }
 
-  // Clamp to range
-  // For CUBICSPLINE, values are packed as [inTangent, value, outTangent] per keyframe
+  // For CUBICSPLINE, values are packed as [in tangent, value, out tangent] per
+  // keyframe, so the stride is tripled and the value block is offset past the
+  // leading in tangent.
   const isCubic = interpolation === 'CUBICSPLINE';
   const stride = isCubic ? 3 * components : components;
-  const valueOffset = isCubic ? components : 0; // skip inTangent for the value
+  const valueOffset = isCubic ? components : 0;
 
+  // Clamp to range. The caller loops time, so both ends can occur.
   if (t <= times[0]) {
-    const off = valueOffset;
-    for (let i = 0; i < components; i++) result[i] = values[off + i];
-    return result;
+    for (let i = 0; i < components; i++) value[i] = values[valueOffset + i];
+    return { value, index: 0 };
   }
-  if (t >= times[times.length - 1]) {
-    const off = (times.length - 1) * stride + valueOffset;
-    for (let i = 0; i < components; i++) result[i] = values[off + i];
-    return result;
+  if (t >= times[count - 1]) {
+    const off = (count - 1) * stride + valueOffset;
+    for (let i = 0; i < components; i++) value[i] = values[off + i];
+    return { value, index: Math.max(0, count - 2) };
   }
 
-  // Find surrounding keyframes
-  let k = 0;
-  for (k = 0; k < times.length - 1; k++) {
-    if (t < times[k + 1]) break;
-  }
+  const k = findKeyframeInterval(times, t, hint);
 
   if (interpolation === 'STEP') {
-    const offset = k * components;
-    for (let i = 0; i < components; i++) result[i] = values[offset + i];
-    return result;
+    const off = k * stride + valueOffset;
+    for (let i = 0; i < components; i++) value[i] = values[off + i];
+    return { value, index: k };
   }
 
   const t0 = times[k];
   const t1 = times[k + 1];
-  const dt01 = t1 - t0;
-  if (dt01 <= 0) {
+  const dt = t1 - t0;
+  if (dt <= 0) {
     const off = k * stride + valueOffset;
-    for (let i = 0; i < components; i++) result[i] = values[off + i];
+    for (let i = 0; i < components; i++) value[i] = values[off + i];
     if (isRotation && components === 4) {
-      quat.normalize(result, result);
+      quat.normalize(value, value);
     }
-    return result;
+    return { value, index: k };
   }
-  const alpha = (t - t0) / dt01;
+  const alpha = (t - t0) / dt;
 
-  if (interpolation === 'CUBICSPLINE') {
-    // glTF CUBICSPLINE stores 3 values per keyframe: [in tangent, value, out tangent] per keyframe
+  if (isCubic) {
     const off0 = k * stride;
     const off1 = (k + 1) * stride;
-    const dt = dt01;
-    const alpha2 = alpha * alpha;
-    const alpha3 = alpha2 * alpha;
-
     for (let i = 0; i < components; i++) {
       const p0 = values[off0 + components + i]; // value at k
       const m0 = values[off0 + 2 * components + i]; // out tangent at k
       const p1 = values[off1 + components + i]; // value at k+1
       const m1 = values[off1 + i]; // in tangent at k+1
-      result[i] =
-        (2 * alpha3 - 3 * alpha2 + 1) * p0 +
-        (alpha3 - 2 * alpha2 + alpha) * dt * m0 +
-        (-2 * alpha3 + 3 * alpha2) * p1 +
-        (alpha3 - alpha2) * dt * m1;
+      value[i] = hermite(p0, p1, m0, m1, alpha, dt);
     }
-
     if (isRotation && components === 4) {
-      quat.normalize(result, result);
+      quat.normalize(value, value);
     }
-
-    return result;
+    return { value, index: k };
   }
 
   // Linear interpolation
-  const offset0 = k * components;
-  const offset1 = (k + 1) * components;
-
+  const off0 = k * components;
+  const off1 = (k + 1) * components;
   if (isRotation && components === 4) {
     // Quaternion slerp
-    const q0 = values.subarray(offset0, offset0 + 4);
-    const q1 = values.subarray(offset1, offset1 + 4);
-    quat.slerp(result, q0, q1, alpha);
+    const q0 = values.subarray(off0, off0 + 4);
+    const q1 = values.subarray(off1, off1 + 4);
+    quat.slerp(value, q0, q1, alpha);
   } else {
     // Linear lerp for vec3
     for (let i = 0; i < components; i++) {
-      result[i] =
-        values[offset0 + i] * (1 - alpha) + values[offset1 + i] * alpha;
+      value[i] = values[off0 + i] * (1 - alpha) + values[off1 + i] * alpha;
     }
   }
 
-  return result;
+  return { value, index: k };
 }
 
 /**
@@ -548,8 +550,14 @@ export function parseNodeAnimationsFromGLTF(tree) {
       if (path === 'rotation') {
         components = 4;
       } else if (path === 'weights') {
-        // Number of morph targets = total values / number of keyframes
-        components = values.length / times.length;
+        // Number of morph targets = values per keyframe. CUBICSPLINE packs an
+        // in tangent, the value and an out tangent per keyframe, so divide the
+        // per keyframe count by 3 to recover the real morph target count.
+        const perKeyframe = values.length / times.length;
+        components =
+          sampler.interpolation === 'CUBICSPLINE'
+            ? perKeyframe / 3
+            : perKeyframe;
       } else {
         components = 3;
       }
@@ -561,6 +569,7 @@ export function parseNodeAnimationsFromGLTF(tree) {
         values,
         interpolation: sampler.interpolation || 'LINEAR',
         components,
+        hint: 0,
       });
     });
 
@@ -586,14 +595,17 @@ export function parseNodeAnimationsFromGLTF(tree) {
             nodeUpdates.set(ch.nodeIndex, {});
           }
           const update = nodeUpdates.get(ch.nodeIndex);
-          update[ch.path] = interpolateKeyframes(
+          const { value, index } = interpolateKeyframes(
             ch.times,
             ch.values,
             loopedT,
             ch.components,
             ch.interpolation,
-            ch.path === 'rotation'
+            ch.path === 'rotation',
+            ch.hint
           );
+          ch.hint = index;
+          update[ch.path] = value;
         });
 
         return nodeUpdates;
@@ -729,6 +741,7 @@ export function parsePointerAnimationsFromGLTF(tree) {
         values,
         interpolation: sampler.interpolation || 'LINEAR',
         components,
+        hint: 0,
       });
     });
 
@@ -763,14 +776,16 @@ export function parsePointerAnimationsFromGLTF(tree) {
           }
           const texTransform = matUpdate.textureTransforms.get(ch.textureKey);
 
-          const val = interpolateKeyframes(
+          const { value: val, index } = interpolateKeyframes(
             ch.times,
             ch.values,
             loopedT,
             ch.components,
             ch.interpolation,
-            false
+            false,
+            ch.hint
           );
+          ch.hint = index;
 
           if (ch.transformProperty === 'offset') {
             texTransform.offset = [val[0], val[1]];
