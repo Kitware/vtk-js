@@ -152,15 +152,9 @@ export function handleKHRLightsPunctual(extension, transformMatrix, model) {
 
   const { color, intensity, range, spot, type } = light;
 
-  // glTF uses physically-based light units. The WebGPU renderer multiplies intensity by PI
-  // for energy conservation. To pass through the raw glTF value to the PBR shader correctly,
-  // we divide by PI here (renderer will multiply it back).
-  const rawIntensity = intensity || 1.0;
-  const normIntensity = rawIntensity / Math.PI;
-
   const l = vtkLight.newInstance({
     color: color || [1, 1, 1],
-    intensity: normIntensity,
+    intensity: intensity ?? 1.0,
   });
 
   // Extract position from the transform matrix (column 3)
