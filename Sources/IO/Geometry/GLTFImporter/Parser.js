@@ -177,6 +177,8 @@ class GLTFParser {
               'accessors',
               attributes[attribute]
             );
+          } else {
+            vtkWarningMacro(`Unhandled attribute: ${attribute}`);
           }
         }
         if (primitive.indices !== undefined) {
@@ -410,10 +412,34 @@ class GLTFParser {
           accessor.count * accessor.components
         );
       }
+      // Normalized integer accessors (colors, weights, quantized animation
+      // outputs) map to floats in [0, 1] / [-1, 1] per the glTF spec.
+      if (accessor.normalized && !(arrayBufferView instanceof Float32Array)) {
+        arrayBufferView = this.dequantizeArray(
+          arrayBufferView,
+          accessor.componentType
+        );
+      }
       accessor.value = arrayBufferView;
     }
 
     return accessor;
+  }
+
+  dequantizeArray(array, componentType) {
+    // glTF 2.0 normalized component decoding (spec section 3.6.2.2)
+    const SCALE = { 5120: 127, 5121: 255, 5122: 32767, 5123: 65535 };
+    const scale = SCALE[componentType];
+    if (!scale) {
+      return array;
+    }
+    const signed = componentType === 5120 || componentType === 5122;
+    const out = new Float32Array(array.length);
+    for (let i = 0; i < array.length; i++) {
+      const v = array[i] / scale;
+      out[i] = signed ? Math.max(v, -1) : v;
+    }
+    return out;
   }
 
   resolveTexture(texture, index) {

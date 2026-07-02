@@ -599,7 +599,7 @@ function vtkArmature(publicAPI, model) {
     const boneCount = model.bones.length;
     const hasRootTransform = model.rootTransform != null;
 
-    for (let i = 0; i < boneCount; i++) {
+    const computeBone = (i) => {
       const parentIdx = model.bones[i].parentIndex;
       const localMatrix = mat4.create();
 
@@ -626,6 +626,43 @@ function vtkArmature(publicAPI, model) {
 
       for (let j = 0; j < 16; j++) {
         model.worldMatrices[i * 16 + j] = worldMatrix[j];
+      }
+    };
+
+    // Bone order is arbitrary (glTF joints impose no parent-before-child
+    // ordering), so traverse parents before children explicitly.
+    const children = [];
+    const roots = [];
+    for (let i = 0; i < boneCount; i++) {
+      children.push([]);
+    }
+    for (let i = 0; i < boneCount; i++) {
+      const parentIdx = model.bones[i].parentIndex;
+      if (parentIdx >= 0 && parentIdx < boneCount) {
+        children[parentIdx].push(i);
+      } else {
+        roots.push(i);
+      }
+    }
+
+    const visited = new Uint8Array(boneCount);
+    const stack = roots.reverse();
+    while (stack.length > 0) {
+      const i = stack.pop();
+      if (!visited[i]) {
+        visited[i] = 1;
+        computeBone(i);
+        for (let c = children[i].length - 1; c >= 0; c--) {
+          stack.push(children[i][c]);
+        }
+      }
+    }
+
+    // Fallback for bones unreachable from a root (malformed hierarchy):
+    // process them in index order so every bone still gets a world matrix.
+    for (let i = 0; i < boneCount; i++) {
+      if (!visited[i]) {
+        computeBone(i);
       }
     }
 
