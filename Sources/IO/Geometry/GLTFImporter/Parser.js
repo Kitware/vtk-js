@@ -152,6 +152,14 @@ class GLTFParser {
   resolveSkin(skin, index) {
     skin.id = skin.id || `skin-${index}`;
     skin.inverseBindMatrices = this.get('accessors', skin.inverseBindMatrices);
+    // Resolve joint node indices to node objects
+    if (skin.joints) {
+      skin.joints = skin.joints.map((joint) => this.get('nodes', joint));
+    }
+    // Resolve skeleton root node
+    if (skin.skeleton !== undefined) {
+      skin.skeleton = this.get('nodes', skin.skeleton);
+    }
     return skin;
   }
 
@@ -164,10 +172,14 @@ class GLTFParser {
         primitive.attributes = {};
         for (const attribute in attributes) {
           const attr = SEMANTIC_ATTRIBUTE_MAP[attribute];
-          primitive.attributes[attr] = this.get(
-            'accessors',
-            attributes[attribute]
-          );
+          if (attr !== undefined) {
+            primitive.attributes[attr] = this.get(
+              'accessors',
+              attributes[attribute]
+            );
+          } else {
+            vtkWarningMacro(`Unhandled attribute: ${attribute}`);
+          }
         }
         if (primitive.indices !== undefined) {
           primitive.indices = this.get('accessors', primitive.indices);
@@ -189,6 +201,17 @@ class GLTFParser {
             bufferView.data;
         }
 
+        // Resolve morph targets
+        if (primitive.targets) {
+          primitive.targets = primitive.targets.map((target) => {
+            const resolved = {};
+            for (const attr in target) {
+              resolved[attr] = this.get('accessors', target[attr]);
+            }
+            return resolved;
+          });
+        }
+
         return primitive;
       });
     }
@@ -198,31 +221,37 @@ class GLTFParser {
   resolveMaterial(material, index) {
     material.id = material.id || `material-${index}`;
 
+    const resolveTextureInfo = (textureInfo) => {
+      if (!textureInfo) {
+        return textureInfo;
+      }
+
+      const resolvedTextureInfo = { ...textureInfo };
+      if (
+        resolvedTextureInfo.texture === undefined &&
+        resolvedTextureInfo.index !== undefined
+      ) {
+        resolvedTextureInfo.texture = this.get(
+          'textures',
+          resolvedTextureInfo.index
+        );
+      }
+      return resolvedTextureInfo;
+    };
+
     if (material.alphaMode === undefined)
       material.alphaMode = ALPHA_MODE.OPAQUE;
     if (material.doubleSided === undefined) material.doubleSided = false;
     if (material.alphaCutoff === undefined) material.alphaCutoff = 0.5;
 
     if (material.normalTexture) {
-      material.normalTexture = { ...material.normalTexture };
-      material.normalTexture.texture = this.get(
-        'textures',
-        material.normalTexture.index
-      );
+      material.normalTexture = resolveTextureInfo(material.normalTexture);
     }
     if (material.occlusionTexture) {
-      material.occlusionTexture = { ...material.occlusionTexture };
-      material.occlusionTexture.texture = this.get(
-        'textures',
-        material.occlusionTexture.index
-      );
+      material.occlusionTexture = resolveTextureInfo(material.occlusionTexture);
     }
     if (material.emissiveTexture) {
-      material.emissiveTexture = { ...material.emissiveTexture };
-      material.emissiveTexture.texture = this.get(
-        'textures',
-        material.emissiveTexture.index
-      );
+      material.emissiveTexture = resolveTextureInfo(material.emissiveTexture);
     }
     if (!material.emissiveFactor) {
       material.emissiveFactor = material.emissiveTexture ? 1 : 0;
@@ -232,17 +261,11 @@ class GLTFParser {
       material.pbrMetallicRoughness = { ...material.pbrMetallicRoughness };
       const mr = material.pbrMetallicRoughness;
       if (mr.baseColorTexture) {
-        mr.baseColorTexture = { ...mr.baseColorTexture };
-        mr.baseColorTexture.texture = this.get(
-          'textures',
-          mr.baseColorTexture.index
-        );
+        mr.baseColorTexture = resolveTextureInfo(mr.baseColorTexture);
       }
       if (mr.metallicRoughnessTexture) {
-        mr.metallicRoughnessTexture = { ...mr.metallicRoughnessTexture };
-        mr.metallicRoughnessTexture.texture = this.get(
-          'textures',
-          mr.metallicRoughnessTexture.index
+        mr.metallicRoughnessTexture = resolveTextureInfo(
+          mr.metallicRoughnessTexture
         );
       }
     } else {
@@ -251,6 +274,61 @@ class GLTFParser {
         metallicFactor: 1.0,
         roughnessFactor: 1.0,
       };
+    }
+    if (material.extensions) {
+      material.extensions = { ...material.extensions };
+      const resolveExtensionTextures = (extensionName, textureNames) => {
+        const extension = material.extensions[extensionName];
+        if (!extension) {
+          return;
+        }
+        const resolvedExtension = { ...extension };
+        textureNames.forEach((textureName) => {
+          if (resolvedExtension[textureName]) {
+            resolvedExtension[textureName] = resolveTextureInfo(
+              resolvedExtension[textureName]
+            );
+          }
+        });
+        material.extensions[extensionName] = resolvedExtension;
+      };
+
+      resolveExtensionTextures('KHR_materials_clearcoat', [
+        'clearcoatTexture',
+        'clearcoatRoughnessTexture',
+        'clearcoatNormalTexture',
+      ]);
+      resolveExtensionTextures('KHR_materials_anisotropy', [
+        'anisotropyTexture',
+      ]);
+      resolveExtensionTextures('KHR_materials_transmission', [
+        'transmissionTexture',
+      ]);
+      resolveExtensionTextures('KHR_materials_volume', ['thicknessTexture']);
+
+      resolveExtensionTextures('KHR_materials_ior', ['iorTexture']);
+      resolveExtensionTextures('KHR_materials_specular', [
+        'specularTexture',
+        'specularColorTexture',
+      ]);
+      resolveExtensionTextures('KHR_materials_pbrSpecularGlossiness', [
+        'diffuseTexture',
+        'specularGlossinessTexture',
+      ]);
+      resolveExtensionTextures('KHR_materials_iridescence', [
+        'iridescenceTexture',
+        'iridescenceThicknessTexture',
+      ]);
+
+      resolveExtensionTextures('KHR_materials_sheen', [
+        'sheenColorTexture',
+        'sheenRoughnessTexture',
+      ]);
+
+      resolveExtensionTextures('KHR_materials_diffuse_transmission', [
+        'diffuseTransmissionTexture',
+        'diffuseTransmissionColorTexture',
+      ]);
     }
     return material;
   }
@@ -334,10 +412,34 @@ class GLTFParser {
           accessor.count * accessor.components
         );
       }
+      // Normalized integer accessors (colors, weights, quantized animation
+      // outputs) map to floats in [0, 1] / [-1, 1] per the glTF spec.
+      if (accessor.normalized && !(arrayBufferView instanceof Float32Array)) {
+        arrayBufferView = this.dequantizeArray(
+          arrayBufferView,
+          accessor.componentType
+        );
+      }
       accessor.value = arrayBufferView;
     }
 
     return accessor;
+  }
+
+  dequantizeArray(array, componentType) {
+    // glTF 2.0 normalized component decoding (spec section 3.6.2.2)
+    const SCALE = { 5120: 127, 5121: 255, 5122: 32767, 5123: 65535 };
+    const scale = SCALE[componentType];
+    if (!scale) {
+      return array;
+    }
+    const signed = componentType === 5120 || componentType === 5122;
+    const out = new Float32Array(array.length);
+    for (let i = 0; i < array.length; i++) {
+      const v = array[i] / scale;
+      out[i] = signed ? Math.max(v, -1) : v;
+    }
+    return out;
   }
 
   resolveTexture(texture, index) {
