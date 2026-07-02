@@ -125,35 +125,45 @@ export function createSkeletonFromGLTFSkin(gltfSkin, allNodes) {
     }
   }
 
-  // Create bones for each joint node
+  // Create bones for each joint node. Bone indices must stay aligned with
+  // the glTF joints order because the mesh JOINTS_0 attribute and the
+  // inverse bind matrices accessor both index into that order, so a null
+  // joint gets a placeholder bone instead of being skipped.
   for (let i = 0; i < jointNodes.length; i++) {
     const node = jointNodes[i];
+    let boneData;
     if (!node) {
-      vtkWarningMacro(`Null joint node at index ${i}`);
+      vtkWarningMacro(
+        `Null joint node at index ${i}, inserting placeholder bone`
+      );
+      boneData = {
+        name: `bone_${i}`,
+        localRestTranslation: vec3.create(),
+        localRestRotation: quat.create(),
+        localRestScale: vec3.fromValues(1, 1, 1),
+        nodeId: -1,
+      };
     } else {
-      const boneData = createBoneData(node, i, allNodes);
+      boneData = createBoneData(node, i, allNodes);
+    }
 
-      // Set inverse bind matrix from resolved accessor
-      if (gltfSkin.inverseBindMatrices && gltfSkin.inverseBindMatrices.value) {
-        const ibmData = gltfSkin.inverseBindMatrices.value;
-        const offset = i * 16;
-        boneData.inverseBindMatrix = mat4.clone(
-          ibmData.subarray(offset, offset + 16)
-        );
-      }
+    // Set inverse bind matrix from resolved accessor
+    if (gltfSkin.inverseBindMatrices && gltfSkin.inverseBindMatrices.value) {
+      const ibmData = gltfSkin.inverseBindMatrices.value;
+      const offset = i * 16;
+      boneData.inverseBindMatrix = mat4.clone(
+        ibmData.subarray(offset, offset + 16)
+      );
+    }
 
-      // addBone returns the actual bone index, which can differ from the
-      // joint loop index when a joint node was null and skipped above. The
-      // inverse bind matrix is still keyed by the joint index i, since the
-      // glTF accessor stores one matrix per joint in joints order.
-      const boneIndex = skeleton.addBone(boneData);
+    const boneIndex = skeleton.addBone(boneData);
+    if (node) {
       nodeToJointIndex.set(node, boneIndex);
     }
   }
 
   // Set parent indices by checking node children relationships. Both parent
-  // and child are resolved through nodeToJointIndex so the bone indices stay
-  // correct even when some joint nodes were skipped.
+  // and child are resolved through nodeToJointIndex.
   for (let i = 0; i < jointNodes.length; i++) {
     const node = jointNodes[i];
     const parentBoneIdx = node ? nodeToJointIndex.get(node) : undefined;
@@ -383,10 +393,7 @@ export function parseSkeletalAnimationFromGLTF(tree) {
         if (clip && clip.getNumberOfTracks() > 0) {
           if (!entry.clips) entry.clips = [];
           entry.clips.push(clip);
-
-          if (entry === result.skeletons[0]) {
-            result.animationClips.push(clip);
-          }
+          result.animationClips.push(clip);
         }
       });
     });

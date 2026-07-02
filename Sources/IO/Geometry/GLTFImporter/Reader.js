@@ -401,7 +401,8 @@ async function createPropertyFromGLTFMaterial(
     property.setMetallic(0);
     property.setRoughness(0.6);
     property.setEmission(1);
-    property.setBaseIOR(1.45);
+    // glTF default IOR is 1.5 (KHR_materials_ior spec)
+    property.setBaseIOR(1.5);
     property.setNormalStrength(1);
     property.setDiffuseColor(1, 1, 1);
     property.setOpacity(1);
@@ -484,7 +485,8 @@ async function createPropertyFromGLTFMaterial(
         handleKHRTextureTransform(
           extensions.KHR_texture_transform,
           property,
-          'diffuse'
+          'diffuse',
+          pbr.baseColorTexture.texCoord
         );
       } else if (pbr.baseColorTexture.texCoord != null) {
         property.setTextureTransform('diffuse', {
@@ -514,7 +516,8 @@ async function createPropertyFromGLTFMaterial(
         handleKHRTextureTransform(
           extensions.KHR_texture_transform,
           property,
-          'rm'
+          'rm',
+          pbr.metallicRoughnessTexture.texCoord
         );
       } else if (pbr.metallicRoughnessTexture.texCoord != null) {
         property.setTextureTransform('rm', {
@@ -531,7 +534,8 @@ async function createPropertyFromGLTFMaterial(
         handleKHRTextureTransform(
           extensions.KHR_texture_transform,
           property,
-          'ao'
+          'ao',
+          material.occlusionTexture.texCoord
         );
       } else if (material.occlusionTexture.texCoord != null) {
         property.setTextureTransform('ao', {
@@ -549,7 +553,8 @@ async function createPropertyFromGLTFMaterial(
         handleKHRTextureTransform(
           extensions.KHR_texture_transform,
           property,
-          'emission'
+          'emission',
+          material.emissiveTexture.texCoord
         );
       } else if (material.emissiveTexture.texCoord != null) {
         property.setTextureTransform('emission', {
@@ -557,12 +562,6 @@ async function createPropertyFromGLTFMaterial(
         });
       }
       texturePromises.emissive = loadTextureRef(material.emissiveTexture);
-
-      // Handle mutiple Uvs
-      if (material.emissiveTexture.texCoord != null) {
-        const pd = actor.getMapper().getInputData().getPointData();
-        pd.setActiveTCoords(`TEXCOORD_${material.emissiveTexture.texCoord}`);
-      }
     }
 
     // Handle normal texture (normalTexture)
@@ -572,7 +571,8 @@ async function createPropertyFromGLTFMaterial(
         handleKHRTextureTransform(
           extensions.KHR_texture_transform,
           property,
-          'normal'
+          'normal',
+          material.normalTexture.texCoord
         );
       } else if (material.normalTexture.texCoord != null) {
         property.setTextureTransform('normal', {
@@ -888,13 +888,25 @@ async function processNode(
 
   // Store per-node transform metadata for animation & hierarchy propagation
   if (model.nodeTransforms) {
+    // Matrix-based nodes carry their transform in node.matrix, so decompose
+    // it to get a usable rest TRS for partially-animated nodes.
+    let translation = node.translation ? [...node.translation] : [0, 0, 0];
+    let rotation = node.rotation ? [...node.rotation] : [0, 0, 0, 1];
+    let scale = node.scale ? [...node.scale] : [1, 1, 1];
+    if (node.matrix) {
+      translation = Array.from(
+        mat4.getTranslation(vec3.create(), node.transform)
+      );
+      rotation = Array.from(mat4.getRotation(quat.create(), node.transform));
+      scale = Array.from(mat4.getScaling(vec3.create(), node.transform));
+    }
     model.nodeTransforms.set(node.id, {
       localMatrix: mat4.clone(node.transform),
       worldMatrix: mat4.clone(worldMatrix),
       parentMatrix: mat4.clone(parentMatrix),
-      translation: node.translation ? [...node.translation] : [0, 0, 0],
-      rotation: node.rotation ? [...node.rotation] : [0, 0, 0, 1],
-      scale: node.scale ? [...node.scale] : [1, 1, 1],
+      translation,
+      rotation,
+      scale,
     });
   }
 
@@ -965,7 +977,7 @@ async function processNode(
   if (node.extensions?.KHR_lights_punctual) {
     const light = handleKHRLightsPunctual(
       node.extensions.KHR_lights_punctual,
-      node.transform,
+      worldMatrix,
       model
     );
     if (light && node.id) {
