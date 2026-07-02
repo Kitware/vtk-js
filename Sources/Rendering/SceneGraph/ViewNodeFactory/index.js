@@ -54,9 +54,8 @@ function vtkViewNodeFactory(publicAPI, model) {
     let cpt = 0;
     let className = classNames[cpt++];
     let isObject = false;
-    const keys = Object.keys(model.overrides);
     while (className && !isObject) {
-      if (keys.indexOf(className) !== -1) {
+      if (className in model.overrides) {
         isObject = true;
       } else {
         className = dataObject.getClassName(cpt++);
