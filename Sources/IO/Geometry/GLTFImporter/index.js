@@ -93,6 +93,7 @@ function vtkGLTFImporter(publicAPI, model) {
     } else {
       return;
     }
+    model.parseData = content;
 
     const glTF = {};
     const options = {

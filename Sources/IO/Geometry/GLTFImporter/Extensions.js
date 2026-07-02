@@ -16,8 +16,11 @@ function parseTexTransform(texInfo, property, key) {
     handleKHRTextureTransform(
       texInfo.extensions.KHR_texture_transform,
       property,
-      key
+      key,
+      texInfo.texCoord
     );
+  } else if (texInfo?.texCoord != null) {
+    property.setTextureTransform(key, { texCoord: texInfo.texCoord });
   }
 }
 
@@ -38,7 +41,8 @@ export function handleKHRMaterialsUnlit(extension, property) {
  * @param {vtkProperty} property - The vtkProperty instance to update.
  */
 export function handleKHRMaterialsIor(extension, property) {
-  property.setBaseIOR(extension.ior);
+  // Spec default is 1.5 when the extension omits ior
+  property.setBaseIOR(extension.ior ?? 1.5);
 }
 
 /**
@@ -198,7 +202,13 @@ export function handleKHRLightsPunctual(extension, transformMatrix, model) {
       vtkWarningMacro(`Unsupported light type: ${type}`);
   }
 
-  model.lights.set(light.name, l);
+  // Key by a unique name: several lights may share a name or have none,
+  // and colliding keys would silently drop lights from the map.
+  let key = light.name || 'light';
+  if (model.lights.has(key)) {
+    key = `${key}-${model.lights.size}`;
+  }
+  model.lights.set(key, l);
   return l;
 }
 
@@ -432,13 +442,24 @@ export async function handleKHRMaterialsIridescence(
  * @param {object} transform - The KHR_texture_transform extension object.
  * @param {vtkProperty} property - The vtkProperty instance to update.
  * @param {string} textureKey - Key identifying which texture this transform applies to.
+ * @param {number} [fallbackTexCoord] - texCoord from the textureInfo, used when
+ *   the extension does not override it (per spec).
  */
-export function handleKHRTextureTransform(transform, property, textureKey) {
+export function handleKHRTextureTransform(
+  transform,
+  property,
+  textureKey,
+  fallbackTexCoord
+) {
   const t = {};
   if (transform.offset != null) t.offset = [...transform.offset];
   if (transform.rotation != null) t.rotation = transform.rotation;
   if (transform.scale != null) t.scale = [...transform.scale];
-  if (transform.texCoord != null) t.texCoord = transform.texCoord;
+  if (transform.texCoord != null) {
+    t.texCoord = transform.texCoord;
+  } else if (fallbackTexCoord != null) {
+    t.texCoord = fallbackTexCoord;
+  }
   property.setTextureTransform(textureKey, t);
 }
 
