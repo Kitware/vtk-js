@@ -187,29 +187,41 @@ export function createSkeletonFromGLTFSkin(gltfSkin, allNodes) {
     }
   }
 
-  // Resolve the root joint node through the root bone's nodeId so it stays
-  // correct regardless of how joint indices map onto bone indices.
-  const rootBoneIndex = rootIndices[0];
-  const rootJointNode =
-    rootBoneIndex === undefined
-      ? null
-      : allNodes[skeleton.getBone(rootBoneIndex).nodeId];
-  if (rootJointNode) {
+  // Accumulate the world transform of a joint node's non joint ancestors.
+  const ancestorTransformForNode = (jointNode) => {
     const chain = [];
-    let parentNode = parentNodeMap.get(rootJointNode);
+    let parentNode = parentNodeMap.get(jointNode);
     while (parentNode) {
       chain.unshift(parentNode);
       parentNode = parentNodeMap.get(parentNode);
     }
-
-    if (chain.length > 0) {
-      const rootTransform = mat4.create();
-      for (let i = 0; i < chain.length; i++) {
-        const node = chain[i];
-        mat4.multiply(rootTransform, rootTransform, getNodeLocalMatrix(node));
-      }
-      skeleton.setRootTransform(rootTransform);
+    const transform = mat4.create();
+    for (let i = 0; i < chain.length; i++) {
+      mat4.multiply(transform, transform, getNodeLocalMatrix(chain[i]));
     }
+    return transform;
+  };
+
+  // The skeleton supports a single root transform, so derive it from the
+  // first root bone and warn when other roots would need a different one.
+  let rootTransform = null;
+  for (let r = 0; r < rootIndices.length; r++) {
+    const rootJointNode = allNodes[skeleton.getBone(rootIndices[r]).nodeId];
+    if (rootJointNode) {
+      const transform = ancestorTransformForNode(rootJointNode);
+      if (rootTransform === null) {
+        rootTransform = transform;
+      } else if (!mat4.equals(rootTransform, transform)) {
+        vtkWarningMacro(
+          'glTF skin has multiple root joints with different ancestor ' +
+            'transforms; only the first root transform is applied'
+        );
+        break;
+      }
+    }
+  }
+  if (rootTransform !== null && !mat4.equals(rootTransform, mat4.create())) {
+    skeleton.setRootTransform(rootTransform);
   }
 
   return skeleton;
