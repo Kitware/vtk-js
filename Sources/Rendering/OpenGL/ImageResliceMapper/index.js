@@ -1291,6 +1291,158 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     ];
   }
 
+  function getSlabLabelMaskDecLines() {
+    return [
+      '// Returns a bitmask of the labels (1..31) present along the slab',
+      '// centered at startTC. Marches in texture space and exits as soon as',
+      '// the ray leaves the unit cube, so only the in-volume portion of the',
+      '// slab is sampled regardless of how large the slab thickness is.',
+      'int labelSlabMask(vec3 startTC, vec3 stepTC, float halfSlab, float stepLen)',
+      '{',
+      '  int mask = 0;',
+      '  vec3 tc = startTC;',
+      '  float dist = 0.0;',
+      '  for (int i = 0; i < 4096; ++i)',
+      '  {',
+      '    if (dist > halfSlab) { break; }',
+      '    if (any(greaterThan(tc, vec3(1.0))) || any(lessThan(tc, vec3(0.0)))) { break; }',
+      '    int label = int(texture(volumeTexture[0], tc).r * 255.0 + 0.5);',
+      '    if (label > 0 && label < 32) { mask |= (1 << label); }',
+      '    tc += stepTC;',
+      '    dist += stepLen;',
+      '  }',
+      '  tc = startTC - stepTC;',
+      '  dist = stepLen;',
+      '  for (int i = 0; i < 4096; ++i)',
+      '  {',
+      '    if (dist > halfSlab) { break; }',
+      '    if (any(greaterThan(tc, vec3(1.0))) || any(lessThan(tc, vec3(0.0)))) { break; }',
+      '    int label = int(texture(volumeTexture[0], tc).r * 255.0 + 0.5);',
+      '    if (label > 0 && label < 32) { mask |= (1 << label); }',
+      '    tc -= stepTC;',
+      '    dist += stepLen;',
+      '  }',
+      '  return mask;',
+      '}',
+      '',
+      '// Number of stepTC-sized steps from p that stay inside the unit cube',
+      'float labelSlabBoxSteps(vec3 p, vec3 stepTC)',
+      '{',
+      '  vec3 limit = vec3(65536.0);',
+      '  if (stepTC.x > 1e-8) { limit.x = (1.0 - p.x) / stepTC.x; }',
+      '  else if (stepTC.x < -1e-8) { limit.x = -p.x / stepTC.x; }',
+      '  if (stepTC.y > 1e-8) { limit.y = (1.0 - p.y) / stepTC.y; }',
+      '  else if (stepTC.y < -1e-8) { limit.y = -p.y / stepTC.y; }',
+      '  if (stepTC.z > 1e-8) { limit.z = (1.0 - p.z) / stepTC.z; }',
+      '  else if (stepTC.z < -1e-8) { limit.z = -p.z / stepTC.z; }',
+      '  return min(limit.x, min(limit.y, limit.z));',
+      '}',
+      '',
+      '// First label of labelMask found when marching the slab from its',
+      '// viewer-side end toward the back, so overlapping labels resolve in',
+      '// depth order; returns 0 when none of the mask labels is found',
+      'int labelSlabFrontLabel(vec3 startTC, vec3 towardCameraTC, float halfSlab, float stepLen, int labelMask)',
+      '{',
+      '  float slabSteps = halfSlab / stepLen;',
+      '  float nFront = min(slabSteps, labelSlabBoxSteps(startTC, towardCameraTC));',
+      '  float nBack = min(slabSteps, labelSlabBoxSteps(startTC, -towardCameraTC));',
+      '  vec3 tc = startTC + towardCameraTC * nFront;',
+      '  int totalSteps = int(nFront + nBack) + 1;',
+      '  for (int i = 0; i < 8192; ++i)',
+      '  {',
+      '    if (i >= totalSteps) { break; }',
+      '    int label = int(texture(volumeTexture[0], tc).r * 255.0 + 0.5);',
+      '    if (label > 0 && label < 32 && (labelMask & (1 << label)) != 0) { return label; }',
+      '    tc -= towardCameraTC;',
+      '  }',
+      '  return 0;',
+      '}',
+    ];
+  }
+
+  // Slab-projected label outline for a single-component labelmap: labels are
+  // projected across the slab and the outline is drawn where a label's
+  // projected footprint ends. The single-slice border detection cannot be
+  // used here since comparing the slab-composited center value against
+  // single-slice neighbors classifies the entire projected footprint as
+  // border. Expects the locals declared by getSlabSampleLoopLines()
+  // (scaling, slabNormal) and the helpers from getSlabLabelMaskDecLines().
+  function getSlabLabelOutlineImplLines() {
+    return splitStringOnEnter(`
+      // Slab-projected label outline for single component
+      if (slabType == 1 && tvalue.r < 0.5 / 255.0) {
+        // MAX projection saw no label anywhere along the slab
+        gl_FragData[0] = vec4(0.0, 0.0, 0.0, 0.0);
+        return;
+      }
+
+      vec3 outlineStepTC = (WCTCMatrix0 * vec4(scaling * slabNormal * vboScaling, 0.0)).xyz;
+      float halfSlab = slabThickness * 0.5;
+      int centerMask = labelSlabMask(fragTexCoord, outlineStepTC, halfSlab, scaling);
+
+      if (centerMask == 0) {
+        gl_FragData[0] = vec4(0.0, 0.0, 0.0, 0.0);
+        return;
+      }
+
+      // A label is on its projected edge when present here but missing in
+      // some neighbor probed at that label's own outline thickness. Labels
+      // sharing a thickness reuse the same neighbor masks, so the common
+      // case still costs four neighbor marches.
+      float labelmapRow = 0.5 / numLabelmaps;
+      int edgeLabels = 0;
+      int prevThickness = -1;
+      int neighborMask = 0;
+      for (int s = 1; s < 32; ++s) {
+        if ((centerMask & (1 << s)) == 0) { continue; }
+        float thicknessCoordinate = (float(s) - 1.0) / labelOutlineTextureWidth;
+        int segmentThickness = max(1, int(texture2D(labelOutlineThicknessTexture, vec2(thicknessCoordinate, labelmapRow)).r * 255.0));
+        if (segmentThickness != prevThickness) {
+          vec3 outlineOffset1 = outlineTangent1_0 * texelSize0 * float(segmentThickness);
+          vec3 outlineOffset2 = outlineTangent2_0 * texelSize0 * float(segmentThickness);
+          neighborMask =
+            labelSlabMask(fragTexCoord + outlineOffset1, outlineStepTC, halfSlab, scaling) &
+            labelSlabMask(fragTexCoord - outlineOffset1, outlineStepTC, halfSlab, scaling) &
+            labelSlabMask(fragTexCoord + outlineOffset2, outlineStepTC, halfSlab, scaling) &
+            labelSlabMask(fragTexCoord - outlineOffset2, outlineStepTC, halfSlab, scaling);
+          prevThickness = segmentThickness;
+        }
+        if ((neighborMask & (1 << s)) == 0) { edgeLabels |= (1 << s); }
+      }
+
+      // When several edge labels compete for this fragment, the one nearest
+      // the viewer along the slab wins. The camera looks down -z in view
+      // coordinates, so the slab normal points toward the viewer when its
+      // view-space z component is positive.
+      float slabNormalTowardCamera = (MCVCMatrix * vec4(slabNormal, 0.0)).z;
+      vec3 towardCameraTC = slabNormalTowardCamera > 0.0 ? outlineStepTC : -outlineStepTC;
+
+      if (edgeLabels != 0) {
+        int edgeLabel = labelSlabFrontLabel(fragTexCoord, towardCameraTC, halfSlab, scaling, edgeLabels);
+        if (edgeLabel == 0) {
+          // numeric fallback: smallest edge label
+          for (int s = 1; s < 32; ++s) {
+            if ((edgeLabels & (1 << s)) != 0) { edgeLabel = s; break; }
+          }
+        }
+        float labelValue = float(edgeLabel) / 255.0;
+        vec3 edgeColor = texture2D(colorTexture1, vec2(labelValue * cscale0 + cshift0, 0.5)).rgb;
+        float opacityCoordinate = (float(edgeLabel) - 1.0) / labelOutlineTextureWidth;
+        float edgeOpacity = texture2D(labelOutlineOpacityTexture, vec2(opacityCoordinate, labelmapRow)).r;
+        gl_FragData[0] = vec4(edgeColor, edgeOpacity);
+        return;
+      }
+
+      // Interior of the projected labels: regular fill through the transfer
+      // functions using the label nearest the viewer
+      int fillLabel = labelSlabFrontLabel(fragTexCoord, towardCameraTC, halfSlab, scaling, centerMask);
+      float fillValue = fillLabel != 0 ? float(fillLabel) / 255.0 : tvalue.r;
+      vec3 fillColor = texture2D(colorTexture1, vec2(fillValue * cscale0 + cshift0, 0.5)).rgb;
+      float fillOpacity = texture2D(pwfTexture1, vec2(fillValue * pwfscale0 + pwfshift0, 0.5)).r;
+      gl_FragData[0] = vec4(fillColor, fillOpacity * opacity);
+    `);
+  }
+
   function collectLabelmapInputIndices(numberOfComponents, isLabelmap) {
     const labelmapInputs = [];
     for (let i = 0; i < numberOfComponents; i++) {
@@ -1450,6 +1602,11 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         'uniform vec3 vboScaling;',
       ]);
       tcoordFSDec = tcoordFSDec.concat(getSlabCompositeDecLines());
+      if (useLabelOutline && !iComps && tNumComp === 1) {
+        // view matrix used to resolve which slab end faces the camera
+        tcoordFSDec = tcoordFSDec.concat(['uniform mat4 MCVCMatrix;']);
+        tcoordFSDec = tcoordFSDec.concat(getSlabLabelMaskDecLines());
+      }
     }
     FSSource = vtkShaderProgram.substitute(
       FSSource,
@@ -1516,7 +1673,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       // dependent components
       switch (tNumComp) {
         case 1:
-          if (useLabelOutline) {
+          if (useLabelOutline && slabThickness > 0.0) {
+            tcoordFSImpl = tcoordFSImpl.concat(getSlabLabelOutlineImplLines());
+          } else if (useLabelOutline) {
             tcoordFSImpl = tcoordFSImpl.concat([
               ...splitStringOnEnter(`
                 // Label outline mode for single component
