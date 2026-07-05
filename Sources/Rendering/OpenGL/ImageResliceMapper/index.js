@@ -1385,79 +1385,82 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
   // single-slice neighbors classifies the entire projected footprint as
   // border. Expects the locals declared by getSlabSampleLoopLines()
   // (scaling, slabNormal) and the helpers from getSlabLabelMaskDecLines().
+  //
+  // The block assigns gl_FragData[0] exactly once and never returns early:
+  // render passes append code after the mapper's fragment block (e.g. the
+  // order-independent translucency pass premultiplies gl_FragData[0] by a
+  // depth weight and writes that weight to a second render target), so an
+  // early return would leave those outputs unwritten and corrupt the pass's
+  // resolve step. Transparent fragments fall through with alpha 0 instead.
   function getSlabLabelOutlineImplLines() {
     return splitStringOnEnter(`
       // Slab-projected label outline for single component
-      if (slabType == 1 && tvalue.r < 0.5 / 255.0) {
-        // MAX projection saw no label anywhere along the slab
-        gl_FragData[0] = vec4(0.0, 0.0, 0.0, 0.0);
-        return;
-      }
+      vec4 slabOutlineResult = vec4(0.0, 0.0, 0.0, 0.0);
+      // For MAX slabs, a composited value of 0 means no label anywhere
+      // along the slab, so the expensive mask marches can be skipped.
+      if (slabType != 1 || tvalue.r >= 0.5 / 255.0) {
+        vec3 outlineStepTC = (WCTCMatrix0 * vec4(scaling * slabNormal * vboScaling, 0.0)).xyz;
+        float halfSlab = slabThickness * 0.5;
+        int centerMask = labelSlabMask(fragTexCoord, outlineStepTC, halfSlab, scaling);
 
-      vec3 outlineStepTC = (WCTCMatrix0 * vec4(scaling * slabNormal * vboScaling, 0.0)).xyz;
-      float halfSlab = slabThickness * 0.5;
-      int centerMask = labelSlabMask(fragTexCoord, outlineStepTC, halfSlab, scaling);
-
-      if (centerMask == 0) {
-        gl_FragData[0] = vec4(0.0, 0.0, 0.0, 0.0);
-        return;
-      }
-
-      // A label is on its projected edge when present here but missing in
-      // some neighbor probed at that label's own outline thickness. Labels
-      // sharing a thickness reuse the same neighbor masks, so the common
-      // case still costs four neighbor marches.
-      float labelmapRow = 0.5 / numLabelmaps;
-      int edgeLabels = 0;
-      int prevThickness = -1;
-      int neighborMask = 0;
-      for (int s = 1; s < 32; ++s) {
-        if ((centerMask & (1 << s)) == 0) { continue; }
-        float thicknessCoordinate = (float(s) - 1.0) / labelOutlineTextureWidth;
-        int segmentThickness = max(1, int(texture2D(labelOutlineThicknessTexture, vec2(thicknessCoordinate, labelmapRow)).r * 255.0));
-        if (segmentThickness != prevThickness) {
-          vec3 outlineOffset1 = outlineTangent1_0 * texelSize0 * float(segmentThickness);
-          vec3 outlineOffset2 = outlineTangent2_0 * texelSize0 * float(segmentThickness);
-          neighborMask =
-            labelSlabMask(fragTexCoord + outlineOffset1, outlineStepTC, halfSlab, scaling) &
-            labelSlabMask(fragTexCoord - outlineOffset1, outlineStepTC, halfSlab, scaling) &
-            labelSlabMask(fragTexCoord + outlineOffset2, outlineStepTC, halfSlab, scaling) &
-            labelSlabMask(fragTexCoord - outlineOffset2, outlineStepTC, halfSlab, scaling);
-          prevThickness = segmentThickness;
-        }
-        if ((neighborMask & (1 << s)) == 0) { edgeLabels |= (1 << s); }
-      }
-
-      // When several edge labels compete for this fragment, the one nearest
-      // the viewer along the slab wins. The camera looks down -z in view
-      // coordinates, so the slab normal points toward the viewer when its
-      // view-space z component is positive.
-      float slabNormalTowardCamera = (MCVCMatrix * vec4(slabNormal, 0.0)).z;
-      vec3 towardCameraTC = slabNormalTowardCamera > 0.0 ? outlineStepTC : -outlineStepTC;
-
-      if (edgeLabels != 0) {
-        int edgeLabel = labelSlabFrontLabel(fragTexCoord, towardCameraTC, halfSlab, scaling, edgeLabels);
-        if (edgeLabel == 0) {
-          // numeric fallback: smallest edge label
+        if (centerMask != 0) {
+          // A label is on its projected edge when present here but missing in
+          // some neighbor probed at that label's own outline thickness. Labels
+          // sharing a thickness reuse the same neighbor masks, so the common
+          // case still costs four neighbor marches.
+          float labelmapRow = 0.5 / numLabelmaps;
+          int edgeLabels = 0;
+          int prevThickness = -1;
+          int neighborMask = 0;
           for (int s = 1; s < 32; ++s) {
-            if ((edgeLabels & (1 << s)) != 0) { edgeLabel = s; break; }
+            if ((centerMask & (1 << s)) == 0) { continue; }
+            float thicknessCoordinate = (float(s) - 1.0) / labelOutlineTextureWidth;
+            int segmentThickness = max(1, int(texture2D(labelOutlineThicknessTexture, vec2(thicknessCoordinate, labelmapRow)).r * 255.0));
+            if (segmentThickness != prevThickness) {
+              vec3 outlineOffset1 = outlineTangent1_0 * texelSize0 * float(segmentThickness);
+              vec3 outlineOffset2 = outlineTangent2_0 * texelSize0 * float(segmentThickness);
+              neighborMask =
+                labelSlabMask(fragTexCoord + outlineOffset1, outlineStepTC, halfSlab, scaling) &
+                labelSlabMask(fragTexCoord - outlineOffset1, outlineStepTC, halfSlab, scaling) &
+                labelSlabMask(fragTexCoord + outlineOffset2, outlineStepTC, halfSlab, scaling) &
+                labelSlabMask(fragTexCoord - outlineOffset2, outlineStepTC, halfSlab, scaling);
+              prevThickness = segmentThickness;
+            }
+            if ((neighborMask & (1 << s)) == 0) { edgeLabels |= (1 << s); }
+          }
+
+          // When several edge labels compete for this fragment, the one nearest
+          // the viewer along the slab wins. The camera looks down -z in view
+          // coordinates, so the slab normal points toward the viewer when its
+          // view-space z component is positive.
+          float slabNormalTowardCamera = (MCVCMatrix * vec4(slabNormal, 0.0)).z;
+          vec3 towardCameraTC = slabNormalTowardCamera > 0.0 ? outlineStepTC : -outlineStepTC;
+
+          if (edgeLabels != 0) {
+            int edgeLabel = labelSlabFrontLabel(fragTexCoord, towardCameraTC, halfSlab, scaling, edgeLabels);
+            if (edgeLabel == 0) {
+              // numeric fallback: smallest edge label
+              for (int s = 1; s < 32; ++s) {
+                if ((edgeLabels & (1 << s)) != 0) { edgeLabel = s; break; }
+              }
+            }
+            float labelValue = float(edgeLabel) / 255.0;
+            vec3 edgeColor = texture2D(colorTexture1, vec2(labelValue * cscale0 + cshift0, 0.5)).rgb;
+            float opacityCoordinate = (float(edgeLabel) - 1.0) / labelOutlineTextureWidth;
+            float edgeOpacity = texture2D(labelOutlineOpacityTexture, vec2(opacityCoordinate, labelmapRow)).r;
+            slabOutlineResult = vec4(edgeColor, edgeOpacity);
+          } else {
+            // Interior of the projected labels: regular fill through the
+            // transfer functions using the label nearest the viewer
+            int fillLabel = labelSlabFrontLabel(fragTexCoord, towardCameraTC, halfSlab, scaling, centerMask);
+            float fillValue = fillLabel != 0 ? float(fillLabel) / 255.0 : tvalue.r;
+            vec3 fillColor = texture2D(colorTexture1, vec2(fillValue * cscale0 + cshift0, 0.5)).rgb;
+            float fillOpacity = texture2D(pwfTexture1, vec2(fillValue * pwfscale0 + pwfshift0, 0.5)).r;
+            slabOutlineResult = vec4(fillColor, fillOpacity * opacity);
           }
         }
-        float labelValue = float(edgeLabel) / 255.0;
-        vec3 edgeColor = texture2D(colorTexture1, vec2(labelValue * cscale0 + cshift0, 0.5)).rgb;
-        float opacityCoordinate = (float(edgeLabel) - 1.0) / labelOutlineTextureWidth;
-        float edgeOpacity = texture2D(labelOutlineOpacityTexture, vec2(opacityCoordinate, labelmapRow)).r;
-        gl_FragData[0] = vec4(edgeColor, edgeOpacity);
-        return;
       }
-
-      // Interior of the projected labels: regular fill through the transfer
-      // functions using the label nearest the viewer
-      int fillLabel = labelSlabFrontLabel(fragTexCoord, towardCameraTC, halfSlab, scaling, centerMask);
-      float fillValue = fillLabel != 0 ? float(fillLabel) / 255.0 : tvalue.r;
-      vec3 fillColor = texture2D(colorTexture1, vec2(fillValue * cscale0 + cshift0, 0.5)).rgb;
-      float fillOpacity = texture2D(pwfTexture1, vec2(fillValue * pwfscale0 + pwfshift0, 0.5)).r;
-      gl_FragData[0] = vec4(fillColor, fillOpacity * opacity);
+      gl_FragData[0] = slabOutlineResult;
     `);
   }
 
