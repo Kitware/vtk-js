@@ -41,6 +41,9 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['webworker-promise/lib/register'],
+    rolldownOptions: {
+      plugins: [nodePolyfills()],
+    },
   },
   css: {
     modules: {
