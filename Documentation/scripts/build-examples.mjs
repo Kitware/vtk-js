@@ -63,7 +63,6 @@ function buildHtml(
     </style>
   </head>
   <body>
-    <div id="vtk-root" style="height:100%; width:100%;"></div>
     <script>
       window.global = window.global || {};
     </script>
