@@ -506,8 +506,8 @@ function vtkCamera(publicAPI, model) {
     }
   };
 
-  publicAPI.getViewMatrix = () => {
-    const result = new Float64Array(16);
+  publicAPI.getViewMatrix = (out = undefined) => {
+    const result = out ?? new Float64Array(16);
 
     if (model.viewMatrix) {
       if (model.modelTransformMatrix) {
