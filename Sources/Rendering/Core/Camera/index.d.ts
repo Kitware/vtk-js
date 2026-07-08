@@ -303,7 +303,7 @@ export interface vtkCamera extends vtkObject {
   /**
    * Get the view transform
    */
-  getViewMatrix(): mat4;
+  getViewMatrix(out?: mat4): mat4;
 
   /**
    * Get the model transform matrix for the camera.

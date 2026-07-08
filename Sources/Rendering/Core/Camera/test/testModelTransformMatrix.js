@@ -109,5 +109,14 @@ describe('Camera Model Transform Matrix', () => {
 
       expect(camera.getViewMatrix()[0]).toBe(1);
     });
+
+    it('writes the view matrix into a caller-provided output buffer', () => {
+      const out = new Float64Array(16);
+
+      const view = camera.getViewMatrix(out);
+
+      expect(view).toBe(out);
+      expect(areEquals(view, camera.getViewMatrix())).toBe(true);
+    });
   });
 });
