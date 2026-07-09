@@ -190,17 +190,50 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
 
 const gui = new GUI();
 const params = {
-  FaceHandlesEnabled: widget.getFaceHandlesEnabled(),
-  EdgeHandlesEnabled: widget.getEdgeHandlesEnabled(),
-  CornerHandlesEnabled: widget.getCornerHandlesEnabled(),
-  VolumeFeedback: widget.getVolumeMapper() !== null,
-  AddWidget: () =>
-    widgetRegistration({ currentTarget: { dataset: { action: 'addWidget' } } }),
-  RemoveWidget: () =>
-    widgetRegistration({
-      currentTarget: { dataset: { action: 'removeWidget' } },
-    }),
+  FaceHandlesEnabled: true,
+  EdgeHandlesEnabled: true,
+  CornerHandlesEnabled: true,
+  Visibility: true,
+  Pickable: true,
+  ContextVisibility: true,
+  HandleVisibility: true,
 };
+
+gui
+  .add(params, 'Visibility')
+  .name('Visibility')
+  .onChange((value) => {
+    widget.set({ visibility: !!value });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'ContextVisibility')
+  .name('Context Visibility')
+  .onChange((value) => {
+    widget.set({ contextVisibility: !!value });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'HandleVisibility')
+  .name('Handles Visibility')
+  .onChange((value) => {
+    widget.set({ handleVisibility: !!value });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
+
+gui
+  .add(params, 'Pickable')
+  .name('Pickable')
+  .onChange((value) => {
+    widget.set({ pickable: !!value });
+    widgetManager.enablePicking();
+    renderWindow.render();
+  });
 
 gui
   .add(params, 'FaceHandlesEnabled')
@@ -228,15 +261,3 @@ gui
     widgetManager.enablePicking();
     renderWindow.render();
   });
-
-gui
-  .add(params, 'VolumeFeedback')
-  .name('Volume feedback')
-  .onChange((value) => {
-    widget.set({ volumeMapper: value ? mapper : null });
-    widgetManager.enablePicking();
-    renderWindow.render();
-  });
-
-gui.add(params, 'AddWidget').name('Add widget');
-gui.add(params, 'RemoveWidget').name('Remove widget');
