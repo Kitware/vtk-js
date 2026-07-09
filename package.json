@@ -48,7 +48,7 @@
     "@commitlint/config-conventional": "19.7.1",
     "@emnapi/core": "1.10.0",
     "@emnapi/runtime": "1.10.0",
-    "@mapbox/node-pre-gyp": "1.0.9",
+    "@mapbox/node-pre-gyp": "2.0.3",
     "@rolldown/plugin-node-polyfills": "1.0.3",
     "@types/node": "22.13.1",
     "@vitest/browser": "4.1.7",
