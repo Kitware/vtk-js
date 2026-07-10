@@ -12,7 +12,7 @@ import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderWindowViewNode';
 import { createContextProxyHandler } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow/ContextProxy';
 
-const { vtkDebugMacro, vtkErrorMacro } = macro;
+const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
 
 const SCREENSHOT_PLACEHOLDER = {
   position: 'absolute',
@@ -129,20 +129,23 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.getViewNodeFactory = () => model.myFactory;
 
-  // prevent default context lost handler
-  model.canvas.addEventListener('webglcontextlost', _preventDefault, false);
+  // prevent default context lost handler; an externally owned canvas
+  // (manageCanvas=false) keeps its host's context-loss handling
+  if (model.manageCanvas) {
+    model.canvas.addEventListener('webglcontextlost', _preventDefault, false);
 
-  model.canvas.addEventListener(
-    'webglcontextrestored',
-    publicAPI.restoreContext,
-    false
-  );
+    model.canvas.addEventListener(
+      'webglcontextrestored',
+      publicAPI.restoreContext,
+      false
+    );
+  }
 
   // Auto update style
   const previousSize = [0, 0];
   function updateWindow() {
     // Canvas size
-    if (model.renderable) {
+    if (model.renderable && model.manageCanvas) {
       if (
         model.size[0] !== previousSize[0] ||
         model.size[1] !== previousSize[1]
@@ -161,7 +164,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     }
 
     // Offscreen ?
-    model.canvas.style.display = model.useOffScreen ? 'none' : 'block';
+    if (model.manageCanvas) {
+      model.canvas.style.display = model.useOffScreen ? 'none' : 'block';
+    }
 
     // Cursor type
     if (model.el) {
@@ -550,15 +555,26 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     if (model.deleted) {
       return null;
     }
+    // Captures with an explicit size or scale take the two-pass path below
+    // (placeholder image + canvas resize), which needs vtk.js to own the
+    // canvas. Fall back to a current-size capture otherwise.
+    let screenshotSize =
+      !!size || scale !== 1
+        ? size || model.size.map((val) => val * scale)
+        : null;
+    if (screenshotSize !== null && !model.manageCanvas) {
+      vtkWarningMacro(
+        'Ignoring the requested screenshot size/scale: resizing the canvas requires manageCanvas=true on vtkOpenGLRenderWindow. Capturing at the current size instead.'
+      );
+      screenshotSize = null;
+    }
+
     model.imageFormat = format;
     const previous = model.notifyStartCaptureImage;
     model.notifyStartCaptureImage = true;
 
     model._screenshot = {
-      size:
-        !!size || scale !== 1
-          ? size || model.size.map((val) => val * scale)
-          : null,
+      size: screenshotSize,
     };
 
     return new Promise((resolve, reject) => {
@@ -1316,6 +1332,7 @@ const DEFAULT_VALUES = {
   context: null,
   context2D: null,
   canvas: null,
+  manageCanvas: true,
   cursorVisibility: true,
   cursor: 'pointer',
   textureUnitManager: null,
@@ -1386,6 +1403,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'context',
     'context2D',
     'canvas',
+    'manageCanvas',
     'renderPasses',
     'notifyStartCaptureImage',
     'defaultToWebgl2',
