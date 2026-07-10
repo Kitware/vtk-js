@@ -9,6 +9,7 @@ import vtkWebGPUTexture from 'vtk.js/Sources/Rendering/WebGPU/Texture';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 
 const { VtkDataTypes } = vtkDataArray;
 const { vtkErrorMacro } = macro;
@@ -176,11 +177,9 @@ function vtkWebGPUSkybox(publicAPI, model) {
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.WebGPURenderer =
-        publicAPI.getFirstAncestorOfType('vtkWebGPURenderer');
-      model.WebGPURenderWindow = model.WebGPURenderer?.getFirstAncestorOfType(
-        'vtkWebGPURenderWindow'
-      );
+      const { renderer, renderWindow } = getWebGPUContext(publicAPI);
+      model.WebGPURenderer = renderer;
+      model.WebGPURenderWindow = renderWindow;
 
       if (model.WebGPURenderer) {
         const renderer = model.WebGPURenderer.getRenderable();

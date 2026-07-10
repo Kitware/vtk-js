@@ -5,6 +5,7 @@ import vtkWebGPUStorageBuffer from 'vtk.js/Sources/Rendering/WebGPU/StorageBuffe
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import { getClipPlaneShaderChecks } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 
 function vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model) {
   // Set our className
@@ -109,7 +110,7 @@ function vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model) {
   );
 
   publicAPI.replaceShaderSelect = (hash, pipeline, vertexInput) => {
-    if (hash.includes('sel')) {
+    if (model.selectionPass) {
       const vDesc = pipeline.getShaderDescription('vertex');
       vDesc.addOutput('u32', 'attributeID', 'flat');
       vDesc.addOutput('u32', 'compositeID', 'flat');
@@ -205,10 +206,8 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
     ) {
       // In Core class all arrays are rebuilt when this happens
       // but these arrays can be shared between all primType
-      model.WebGPURenderWindow = publicAPI.getFirstAncestorOfType(
-        'vtkWebGPURenderWindow'
-      );
-      const device = model.WebGPURenderWindow.getDevice();
+      const { renderWindow, device } = getWebGPUContext(publicAPI);
+      model.WebGPURenderWindow = renderWindow;
 
       const ssboInstances = Math.max(model.numInstances, 1);
       model.SSBO.clearData();

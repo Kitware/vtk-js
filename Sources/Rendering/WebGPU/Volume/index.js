@@ -4,6 +4,7 @@ import macro from 'vtk.js/Sources/macros';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUVolume methods
@@ -19,11 +20,9 @@ function vtkWebGPUVolume(publicAPI, model) {
       return;
     }
     if (prepass) {
-      model.WebGPURenderer =
-        publicAPI.getFirstAncestorOfType('vtkWebGPURenderer');
-      model.WebGPURenderWindow = model.WebGPURenderer.getFirstAncestorOfType(
-        'vtkWebGPURenderWindow'
-      );
+      const { renderer, renderWindow } = getWebGPUContext(publicAPI);
+      model.WebGPURenderer = renderer;
+      model.WebGPURenderWindow = renderWindow;
       // for the future if we support hardware selection of volumes
       if (model.propID === undefined) {
         model.propID = model.WebGPURenderWindow.getUniquePropID();

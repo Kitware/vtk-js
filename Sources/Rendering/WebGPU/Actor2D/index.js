@@ -5,6 +5,7 @@ import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 
 const { CoordinateSystem } = vtkProp;
 
@@ -19,11 +20,9 @@ function vtkWebGPUActor2D(publicAPI, model) {
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.WebGPURenderer =
-        publicAPI.getFirstAncestorOfType('vtkWebGPURenderer');
-      model.WebGPURenderWindow = model.WebGPURenderer.getFirstAncestorOfType(
-        'vtkWebGPURenderWindow'
-      );
+      const { renderer, renderWindow } = getWebGPUContext(publicAPI);
+      model.WebGPURenderer = renderer;
+      model.WebGPURenderWindow = renderWindow;
       if (model.propID === undefined) {
         model.propID = model.WebGPURenderWindow.getUniquePropID();
       }
