@@ -2,6 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUPixelSpaceCallbackMapper methods
@@ -11,9 +12,9 @@ function vtkWebGPUPixelSpaceCallbackMapper(publicAPI, model) {
   model.classHierarchy.push('vtkWebGPUPixelSpaceCallbackMapper');
 
   publicAPI.opaquePass = (prepass, renderPass) => {
-    model.WebGPURenderer =
-      publicAPI.getFirstAncestorOfType('vtkWebGPURenderer');
-    model.WebGPURenderWindow = model.WebGPURenderer.getParent();
+    const { renderer, renderWindow } = getWebGPUContext(publicAPI);
+    model.WebGPURenderer = renderer;
+    model.WebGPURenderWindow = renderWindow;
     const aspectRatio = model.WebGPURenderer.getAspectRatio();
     const camera = model.WebGPURenderer
       ? model.WebGPURenderer.getRenderable().getActiveCamera()

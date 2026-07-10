@@ -3,6 +3,7 @@ import vtkCubeAxesActor from 'vtk.js/Sources/Rendering/Core/CubeAxesActor';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUCubeAxesActor methods
@@ -14,9 +15,9 @@ function vtkWebGPUCubeAxesActor(publicAPI, model) {
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.WebGPURenderer =
-        publicAPI.getFirstAncestorOfType('vtkWebGPURenderer');
-      model.WebGPURenderWindow = model.WebGPURenderer.getParent();
+      const { renderer, renderWindow } = getWebGPUContext(publicAPI);
+      model.WebGPURenderer = renderer;
+      model.WebGPURenderWindow = renderWindow;
 
       if (!model.CubeAxesActorHelper.getRenderable()) {
         model.CubeAxesActorHelper.setRenderable(model.renderable);

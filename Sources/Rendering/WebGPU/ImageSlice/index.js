@@ -4,6 +4,7 @@ import * as macro from 'vtk.js/Sources/macros';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUImageSlice methods
@@ -23,11 +24,9 @@ function vtkWebGPUImageSlice(publicAPI, model) {
         return;
       }
 
-      model.WebGPURenderer =
-        publicAPI.getFirstAncestorOfType('vtkWebGPURenderer');
-      model.WebGPURenderWindow = model.WebGPURenderer.getFirstAncestorOfType(
-        'vtkWebGPURenderWindow'
-      );
+      const { renderer, renderWindow } = getWebGPUContext(publicAPI);
+      model.WebGPURenderer = renderer;
+      model.WebGPURenderWindow = renderWindow;
       if (model.propID === undefined) {
         model.propID = model.WebGPURenderWindow.getUniquePropID();
       }
