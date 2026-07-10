@@ -19,6 +19,15 @@ const chromiumArgs = ci
   ? ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-angle=swiftshader']
   : [];
 
+if (webGPU) {
+  // Headless Chromium does not expose a WebGPU adapter by default.
+  chromiumArgs.push('--enable-unsafe-webgpu');
+  if (ci) {
+    // No real GPU on CI: use Dawn's software (SwiftShader) WebGPU adapter.
+    chromiumArgs.push('--use-webgpu-adapter=swiftshader');
+  }
+}
+
 const firefox = {
   browser: 'firefox',
   headless: false, // supported Vitest Browser option; xvfb-run supplies the display on CI

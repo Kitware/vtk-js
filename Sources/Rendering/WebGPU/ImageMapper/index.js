@@ -665,12 +665,14 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       lines.push('var tcoord : vec3<f32> = (mapperUBO.SCTCMatrix * pos).xyz;');
     }
     lines.push(
+      // Clip planes are evaluated in stabilized coordinates, so capture the
+      // position before it is projected.
+      'output.vertexSC = pos;',
       'pos = rendererUBO.SCPCMatrix * pos;',
       // Match the OpenGL coincident topology constant offset scale (~1 / 2^16 = 0.000016)
       'pos.z = clamp(pos.z - 0.000016 * mapperUBO.CoincidentOffset * pos.w, 0.0, pos.w);',
       'output.tcoordVS = tcoord;',
-      'output.vertexSC = pos;',
-      'output.Position = rendererUBO.SCPCMatrix * pos;'
+      'output.Position = pos;'
     );
     code = vtkWebGPUShaderCache.substitute(
       code,
