@@ -197,6 +197,40 @@ function generateNormals(cellArray, pointArray) {
   return packedVBO;
 }
 
+// Build a cache key from the request fields that determine buffer contents, so
+// callers cannot forget a content affecting field (e.g. shift or scale, which
+// _createBuffer bakes into the packed data). Returns null for usages whose
+// contents are not fully described by these fields (RawVertex / UniformArray /
+// Storage / Texture carry a raw nativeArray); those callers must supply
+// req.hash themselves.
+function _computeBufferHash(req) {
+  switch (req.usage) {
+    case BufferUsage.Index:
+    case BufferUsage.PointArray:
+    case BufferUsage.NormalsFromPoints:
+      break;
+    default:
+      return null;
+  }
+  const parts = [`u${req.usage}`];
+  if (req.format) parts.push(`f${req.format}`);
+  if (req.dataArray) parts.push(`d${req.dataArray.getMTime()}`);
+  if (req.cells) parts.push(`c${req.cells.getMTime()}`);
+  if (req.indexBuffer) parts.push(`i${req.indexBuffer.getMTime?.() ?? 0}`);
+  if (req.representation !== undefined) parts.push(`R${req.representation}`);
+  if (req.primitiveType !== undefined) parts.push(`P${req.primitiveType}`);
+  if (req.cellOffset !== undefined) parts.push(`O${req.cellOffset}`);
+  if (req.cellData) parts.push('cd');
+  if (req.packExtra) parts.push('pe');
+  if (req.shift !== undefined) {
+    parts.push(`s${Array.isArray(req.shift) ? req.shift.join() : req.shift}`);
+  }
+  if (req.scale !== undefined) {
+    parts.push(`S${Array.isArray(req.scale) ? req.scale.join() : req.scale}`);
+  }
+  return parts.join('');
+}
+
 // ----------------------------------------------------------------------------
 // vtkWebGPUBufferManager methods
 // ----------------------------------------------------------------------------
@@ -335,9 +369,12 @@ function vtkWebGPUBufferManager(publicAPI, model) {
   publicAPI.hasBuffer = (hash) => model.device.hasCachedObject(hash);
 
   publicAPI.getBuffer = (req) => {
-    // if we have a source the get/create/cache the buffer
-    if (req.hash) {
-      return model.device.getCachedObject(req.hash, _createBuffer, req);
+    // Prefer an explicit caller hash, otherwise derive one from the request
+    // fields that determine the buffer contents so shift/scale/etc. cannot be
+    // silently dropped from the cache key.
+    const hash = req.hash ?? _computeBufferHash(req);
+    if (hash) {
+      return model.device.getCachedObject(hash, _createBuffer, req);
     }
 
     return _createBuffer(req);

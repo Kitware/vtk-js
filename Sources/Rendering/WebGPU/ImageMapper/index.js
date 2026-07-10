@@ -4,6 +4,7 @@ import * as macro from 'vtk.js/Sources/macros';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQuad';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
+import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 import {
   addClipPlaneEntries,
   getClippingPlaneEquationsInCoords,
@@ -118,13 +119,14 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.WebGPUImageSlice = publicAPI.getFirstAncestorOfType(
+      const { parent, renderer, renderWindow, device } = getWebGPUContext(
+        publicAPI,
         'vtkWebGPUImageSlice'
       );
-      model.WebGPURenderer =
-        model.WebGPUImageSlice.getFirstAncestorOfType('vtkWebGPURenderer');
-      model.WebGPURenderWindow = model.WebGPURenderer.getParent();
-      model.device = model.WebGPURenderWindow.getDevice();
+      model.WebGPUImageSlice = parent;
+      model.WebGPURenderer = renderer;
+      model.WebGPURenderWindow = renderWindow;
+      model.device = device;
 
       const ren = model.WebGPURenderer.getRenderable();
       // is slice set by the camera
