@@ -178,7 +178,11 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       primitive: { cullMode: 'none' },
       depthStencil: {
         depthWriteEnabled: false,
-        depthCompare: 'greater',
+        // greater-equal (not greater): translucent geometry that is exactly
+        // coplanar with already-rendered opaque geometry (e.g. a labelmap
+        // overlay on an image slice) must not be depth-rejected. Matches the
+        // OpenGL backend, where equal depths pass in the translucent pass.
+        depthCompare: 'greater-equal',
         format: 'depth32float',
       },
       fragment: {
