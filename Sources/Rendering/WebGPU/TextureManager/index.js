@@ -171,6 +171,11 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     treq.imageData = imgData;
     // fill out the req time and format based on imageData/image
     _fillRequest(treq);
+    // _fillRequest keys the request time on the scalar array mtime alone.
+    // Consumers that write scalars in place and only call
+    // imageData.modified() must still invalidate the cached texture, so key
+    // on the newest of the imageData and scalar array mtimes.
+    treq.time = Math.max(treq.time, imgData.getMTime());
     treq.hash = treq.time + treq.format + treq.mipLevel;
     return model.device.getTextureManager().getTexture(treq);
   };
