@@ -49,10 +49,10 @@ function vtkCamera(publicAPI, model) {
   }
 
   publicAPI.orthogonalizeViewUp = () => {
-    const vt = publicAPI.getViewMatrix();
-    model.viewUp[0] = vt[4];
-    model.viewUp[1] = vt[5];
-    model.viewUp[2] = vt[6];
+    publicAPI.getViewMatrix(tmpMatrix);
+    model.viewUp[0] = tmpMatrix[4];
+    model.viewUp[1] = tmpMatrix[5];
+    model.viewUp[2] = tmpMatrix[6];
 
     publicAPI.modified();
   };
@@ -231,8 +231,8 @@ function vtkCamera(publicAPI, model) {
     const fp = model.focalPoint;
 
     // get the eye / camera position from the viewMatrix
-    const vt = publicAPI.getViewMatrix();
-    const axis = [-vt[0], -vt[1], -vt[2]];
+    publicAPI.getViewMatrix(tmpMatrix);
+    const axis = [-tmpMatrix[0], -tmpMatrix[1], -tmpMatrix[2]];
 
     mat4.identity(trans);
 
@@ -251,8 +251,8 @@ function vtkCamera(publicAPI, model) {
   publicAPI.pitch = (angle) => {
     const position = model.position;
 
-    const vt = publicAPI.getViewMatrix();
-    const axis = [vt[0], vt[1], vt[2]];
+    publicAPI.getViewMatrix(tmpMatrix);
+    const axis = [tmpMatrix[0], tmpMatrix[1], tmpMatrix[2]];
 
     mat4.identity(trans);
 
@@ -388,7 +388,7 @@ function vtkCamera(publicAPI, model) {
 
   publicAPI.computeCameraLightTransform = () => {
     // not sure if this is the correct transformation, based on the same funciton in VTK
-    mat4.copy(tmpMatrix, publicAPI.getViewMatrix());
+    publicAPI.getViewMatrix(tmpMatrix);
     mat4.invert(tmpMatrix, tmpMatrix);
 
     mat4.fromScaling(tmpMatrix2, [
@@ -507,6 +507,7 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.getViewMatrix = (out = undefined) => {
+    // Note that out can be tmpMatrix
     const result = out ?? new Float64Array(16);
 
     if (model.viewMatrix) {
@@ -529,7 +530,7 @@ function vtkCamera(publicAPI, model) {
 
     if (model.modelTransformMatrix) {
       mat4.multiply(result, model.modelTransformMatrix, tmpMatrix);
-    } else {
+    } else if (result != tmpMatrix) {
       mat4.copy(result, tmpMatrix);
     }
     return result;

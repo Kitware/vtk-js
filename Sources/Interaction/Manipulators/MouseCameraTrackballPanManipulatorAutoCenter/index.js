@@ -71,8 +71,7 @@ function computeNewCenterOfRotation(
 function getCameraMatrix(renderer, tempMatrix) {
   const cam = renderer.getActiveCamera();
   if (cam) {
-    mat4.copy(tempMatrix, cam.getViewMatrix());
-    return tempMatrix;
+    return cam.getViewMatrix(tempMatrix);
   }
   return null;
 }

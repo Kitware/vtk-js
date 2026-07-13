@@ -131,10 +131,10 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.rotateHandlesToFaceCamera = () => {
     model.representations[0].setViewMatrix(
-      Array.from(model._camera.getViewMatrix())
+      model._camera.getViewMatrix()
     );
     model.representations[1].setViewMatrix(
-      Array.from(model._camera.getViewMatrix())
+      model._camera.getViewMatrix()
     );
   };
 
