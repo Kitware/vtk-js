@@ -506,34 +506,29 @@ function vtkCamera(publicAPI, model) {
     }
   };
 
-  publicAPI.getViewMatrix = (out = undefined) => {
-    // Note that out can be tmpMatrix
-    const result = out ?? new Float64Array(16);
-
+  publicAPI.getViewMatrix = (out = new Float64Array(16)) => {
     if (model.viewMatrix) {
       if (model.modelTransformMatrix) {
-        mat4.multiply(result, model.modelTransformMatrix, model.viewMatrix);
+        mat4.multiply(out, model.modelTransformMatrix, model.viewMatrix);
       } else {
-        mat4.copy(result, model.viewMatrix);
+        mat4.copy(out, model.viewMatrix);
       }
-      return result;
+      return out;
     }
 
     mat4.lookAt(
-      tmpMatrix,
+      out,
       model.position, // eye
       model.focalPoint, // at
       model.viewUp // up
     );
 
-    mat4.transpose(tmpMatrix, tmpMatrix);
+    mat4.transpose(out, out);
 
     if (model.modelTransformMatrix) {
-      mat4.multiply(result, model.modelTransformMatrix, tmpMatrix);
-    } else if (result != tmpMatrix) {
-      mat4.copy(result, tmpMatrix);
+      mat4.multiply(out, model.modelTransformMatrix, out);
     }
-    return result;
+    return out;
   };
 
   publicAPI.setProjectionMatrix = (mat) => {
