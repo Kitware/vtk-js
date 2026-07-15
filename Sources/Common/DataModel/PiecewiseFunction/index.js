@@ -19,8 +19,9 @@ function vtkPiecewiseFunction(publicAPI, model) {
   //    1 : NonDecreasing   (Always increasing or zero slope)
   //    2 : NonIncreasing   (Always decreasing or zero slope)
   //    3 : Varied          (Contains both decreasing and increasing slopes)
-  //    4 : Unknown         (Error condition)
   //
+  // Unlike VTK/C++ there is no 'Unknown' error state: functionType can
+  // only ever be one of the four values above.
   publicAPI.getType = () => {
     let value;
     let prevValue = 0.0;
