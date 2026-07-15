@@ -60,7 +60,9 @@ async function update() {
 
 // After the itk-wasm UMD script has been loaded, `window.itk` provides the itk-wasm API.
 vtkResourceLoader
-  .loadScript('https://esm.sh/itk-wasm@1.0.0-b.70/dist/umd/itk-wasm.min.js')
+  .loadScript(
+    'https://cdn.jsdelivr.net/npm/itk-wasm@1.0.0-b.8/dist/umd/itk-wasm.js'
+  )
   .then(update);
 
 global.mapper = mapper;
