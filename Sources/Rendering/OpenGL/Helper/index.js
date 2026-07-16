@@ -44,8 +44,12 @@ function vtkOpenGLHelper(publicAPI, model) {
       const mode = publicAPI.getOpenGLMode(rep);
       const wideLines = publicAPI.haveWideLines(ren, actor);
       const gl = model.context;
-      const depthMask = gl.getParameter(gl.DEPTH_WRITEMASK);
+      // Point picking temporarily disables depth writes. Save and restore the
+      // depth mask only for that case because gl.getParameter synchronizes the
+      // CPU and GPU, and that synchronization is slow.
+      let depthMask;
       if (model.pointPicking) {
+        depthMask = gl.getParameter(gl.DEPTH_WRITEMASK);
         gl.depthMask(false);
       }
       const drawingLines = mode === gl.LINES;
