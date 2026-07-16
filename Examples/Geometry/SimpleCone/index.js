@@ -35,4 +35,4 @@ actor.setMapper(mapper);
 
 renderer.addActor(actor);
 renderer.resetCamera();
-renderWindow.render();
+renderWindow.getRenderWindow().render();
