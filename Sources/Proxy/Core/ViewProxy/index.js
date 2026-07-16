@@ -37,11 +37,11 @@ function vtkViewProxy(publicAPI, model) {
   model.renderer = vtkRenderer.newInstance({ background: [0, 0, 0] });
   model.renderWindow.addRenderer(model.renderer);
 
-  model._openGLRenderWindow = model.renderWindow.newAPISpecificView();
-  model.renderWindow.addView(model._openGLRenderWindow);
+  model._apiSpecificRenderWindow = model.renderWindow.newAPISpecificView();
+  model.renderWindow.addView(model._apiSpecificRenderWindow);
 
   model.interactor = vtkRenderWindowInteractor.newInstance();
-  model.interactor.setView(model._openGLRenderWindow);
+  model.interactor.setView(model._apiSpecificRenderWindow);
 
   model.interactorStyle3D = vtkInteractorStyleManipulator.newInstance();
   model.interactorStyle2D = vtkInteractorStyleManipulator.newInstance();
@@ -176,14 +176,14 @@ function vtkViewProxy(publicAPI, model) {
     if (model.container) {
       model.orientationWidget.setEnabled(false);
       model.interactor.unbindEvents(model.container);
-      model._openGLRenderWindow.setContainer(null);
+      model._apiSpecificRenderWindow.setContainer(null);
       model.cornerAnnotation.setContainer(null);
     }
 
     model.container = container;
 
     if (container) {
-      model._openGLRenderWindow.setContainer(container);
+      model._apiSpecificRenderWindow.setContainer(container);
       model.cornerAnnotation.setContainer(container);
       model.interactor.initialize();
       model.interactor.bindEvents(container);
@@ -202,7 +202,7 @@ function vtkViewProxy(publicAPI, model) {
       const devicePixelRatio = window.devicePixelRatio || 1;
       const width = Math.max(10, Math.floor(devicePixelRatio * dims.width));
       const height = Math.max(10, Math.floor(devicePixelRatio * dims.height));
-      model._openGLRenderWindow.setSize(width, height);
+      model._apiSpecificRenderWindow.setSize(width, height);
       publicAPI.invokeResize({ width, height });
       publicAPI.renderLater();
     }
@@ -626,7 +626,7 @@ function vtkViewProxy(publicAPI, model) {
     // in reverse order
     model.interactor.delete();
     model.renderer.delete();
-    model._openGLRenderWindow.delete();
+    model._apiSpecificRenderWindow.delete();
     model.renderWindow.delete();
   }, publicAPI.delete);
 
@@ -674,7 +674,7 @@ function extend(publicAPI, model, initialValues = {}) {
     'interactor',
     'interactorStyle2D',
     'interactorStyle3D',
-    '_openGLRenderWindow', // todo breaking? convert to apiSpecificWindow
+    '_apiSpecificRenderWindow',
     'orientationAxesType',
     'presetToOrientationAxes',
     'renderer',
@@ -682,7 +682,7 @@ function extend(publicAPI, model, initialValues = {}) {
     'representations',
     'useParallelRendering',
   ]);
-  macro.moveToProtected(publicAPI, model, ['openGLRenderWindow']);
+  macro.moveToProtected(publicAPI, model, ['apiSpecificRenderWindow']);
   macro.event(publicAPI, model, 'Resize');
 
   // Object specific methods
