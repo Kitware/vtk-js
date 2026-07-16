@@ -107,6 +107,17 @@ export interface vtkColorTransferFunction extends vtkScalarsToColors {
   getSize(): number;
 
   /**
+   * Returns the nodes stored in the function, as an array of
+   * `{ x, r, g, b, midpoint, sharpness }` objects.
+   * This is intended as a read-only reference to internally stored nodes
+   * that should not be modified outside the vtkColorTransferFunction
+   * object: direct writes bypass sortAndUpdateRange() and modified(), so
+   * the nodes can end up unsorted, the cached range stale, and the change
+   * will not propagate through the pipeline.
+   */
+  getDataPointer(): any[];
+
+  /**
    * Set nodes directly
    * @param nodes
    *
