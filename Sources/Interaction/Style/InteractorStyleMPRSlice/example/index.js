@@ -27,35 +27,6 @@ global.fullScreen = fullScreenRenderWindow;
 global.renderWindow = renderWindow;
 
 // ----------------------------------------------------------------------------
-// Volume rendering
-// ----------------------------------------------------------------------------
-
-const actor = vtkVolume.newInstance();
-const mapper = vtkVolumeMapper.newInstance();
-actor.setMapper(mapper);
-
-const reader = vtkHttpDataSetReader.newInstance({
-  fetchGzip: true,
-});
-reader
-  .setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`, { loadData: true })
-  .then(() => {
-    const data = reader.getOutputData();
-
-    mapper.setInputData(data);
-
-    // set interactor style volume mapper after mapper sets input data
-    istyle.setVolumeMapper(mapper);
-    istyle.setSliceNormal(0, 0, 1);
-
-    const range = istyle.getSliceRange();
-    istyle.setSlice((range[0] + range[1]) / 2);
-
-    renderer.addVolume(actor);
-    renderWindow.render();
-  });
-
-// ----------------------------------------------------------------------------
 // UI (lil-gui)
 // ----------------------------------------------------------------------------
 
@@ -95,5 +66,33 @@ function updateUI() {
   sliceCtrl.updateDisplay?.();
 }
 
-istyle.onModified(updateUI);
-updateUI();
+// ----------------------------------------------------------------------------
+// Volume rendering
+// ----------------------------------------------------------------------------
+
+const actor = vtkVolume.newInstance();
+const mapper = vtkVolumeMapper.newInstance();
+actor.setMapper(mapper);
+
+const reader = vtkHttpDataSetReader.newInstance({
+  fetchGzip: true,
+});
+reader
+  .setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`, { loadData: true })
+  .then(() => {
+    const data = reader.getOutputData();
+
+    mapper.setInputData(data);
+
+    // set interactor style volume mapper after mapper sets input data
+    istyle.setVolumeMapper(mapper);
+    istyle.setSliceNormal(0, 0, 1);
+
+    const range = istyle.getSliceRange();
+    istyle.setSlice((range[0] + range[1]) / 2);
+
+    renderer.addVolume(actor);
+    renderWindow.render();
+    istyle.onModified(updateUI);
+    updateUI();
+  });
