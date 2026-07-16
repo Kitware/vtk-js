@@ -14,6 +14,16 @@ function vtkFramebuffer(publicAPI, model) {
   // publicAPI.getDrawMode = () => model.context.DRAW_FRAMEBUFFER;
   // publicAPI.getReadMode = () => model.context.READ_FRAMEBUFFER;
 
+  // Keep the render window's JS-side binding mirror in step with binds made
+  // through this class. Inert until someone seeds the tracker (see
+  // OpenGLRenderWindow.setFramebufferBinding).
+  function syncTrackedBinding(binding) {
+    const renderWindow = model._openGLRenderWindow;
+    if (renderWindow && renderWindow.getFramebufferBinding() !== undefined) {
+      renderWindow.setFramebufferBinding(binding);
+    }
+  }
+
   publicAPI.saveCurrentBindingsAndBuffers = (modeIn) => {
     const mode =
       typeof modeIn !== 'undefined' ? modeIn : publicAPI.getBothMode();
@@ -29,10 +39,12 @@ function vtkFramebuffer(publicAPI, model) {
       return;
     }
 
+    // gl.getParameter(FRAMEBUFFER_BINDING) is a synchronous CPU/GPU sync
+    // point; prefer the render window's JS-side mirror when it is seeded.
     const gl = model.context;
-    model.previousDrawBinding = gl.getParameter(
-      model.context.FRAMEBUFFER_BINDING
-    );
+    const tracked = model._openGLRenderWindow.getFramebufferBinding();
+    model.previousDrawBinding =
+      tracked !== undefined ? tracked : gl.getParameter(gl.FRAMEBUFFER_BINDING);
     model.previousActiveFramebuffer =
       model._openGLRenderWindow.getActiveFramebuffer();
   };
@@ -58,6 +70,7 @@ function vtkFramebuffer(publicAPI, model) {
 
     const gl = model.context;
     gl.bindFramebuffer(gl.FRAMEBUFFER, model.previousDrawBinding);
+    syncTrackedBinding(model.previousDrawBinding);
     model._openGLRenderWindow.setActiveFramebuffer(
       model.previousActiveFramebuffer
     );
@@ -73,6 +86,10 @@ function vtkFramebuffer(publicAPI, model) {
       mode = model.context.FRAMEBUFFER;
     }
     model.context.bindFramebuffer(mode, model.glFramebuffer);
+    if (mode !== model.context.READ_FRAMEBUFFER) {
+      // READ_FRAMEBUFFER binds do not change FRAMEBUFFER_BINDING.
+      syncTrackedBinding(model.glFramebuffer);
+    }
     for (let i = 0; i < model.colorBuffers.length; i++) {
       model.colorBuffers[i].bind();
     }

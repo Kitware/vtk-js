@@ -252,6 +252,22 @@ export interface vtkOpenGLRenderWindow extends vtkViewNode {
   ): Nullable<WebGLRenderingContext>;
 
   /**
+   * Seed/update the JS-side mirror of the raw WebGLFramebuffer binding
+   * (null = default framebuffer) so framebuffer save/restore can avoid
+   * gl.getParameter(FRAMEBUFFER_BINDING) readbacks. Tracking is inert until
+   * first seeded; once seeded, callers binding framebuffers directly on the
+   * context must keep it in sync.
+   * @param binding
+   */
+  setFramebufferBinding(binding: Nullable<WebGLFramebuffer>): void;
+
+  /**
+   * The tracked raw framebuffer binding, or undefined when tracking has not
+   * been seeded.
+   */
+  getFramebufferBinding(): Nullable<WebGLFramebuffer> | undefined;
+
+  /**
    *
    * @param {CanvasRenderingContext2DSettings} options
    */
