@@ -1273,6 +1273,11 @@ function vtkColorTransferFunction(publicAPI, model) {
 
     return modifiedInvoked || callModified;
   };
+
+  //----------------------------------------------------------------------------
+  publicAPI.getDataPointer = () => {
+    return model.nodes;
+  };
 }
 
 // ----------------------------------------------------------------------------
