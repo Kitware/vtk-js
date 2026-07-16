@@ -195,6 +195,14 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     }
     // fill out the req time and format based on imageData/image
     _fillRequest(treq);
+    // _fillRequest derives the cache hash from the scalar array mtime alone,
+    // discarding the texture mtime seeded above. A texture rebuild must also
+    // be triggered by srcTexture.modified() or imageData.modified() alone, so
+    // hash on the newest of the texture, imageData, and scalar array mtimes.
+    treq.time = Math.max(treq.time, srcTexture.getMTime());
+    if (treq.imageData) {
+      treq.time = Math.max(treq.time, treq.imageData.getMTime());
+    }
     treq.mipLevel = srcTexture.getMipLevel();
     treq.hash = treq.time + treq.format + treq.mipLevel;
     return model.device.getTextureManager().getTexture(treq);
