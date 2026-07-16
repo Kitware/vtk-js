@@ -1159,6 +1159,17 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     model.activeFramebuffer = newActiveFramebuffer;
   };
 
+  // JS-side mirror of the raw WebGLFramebuffer binding (null = default
+  // framebuffer), so FBO save/restore can avoid the CPU/GPU sync stall of a
+  // gl.getParameter(FRAMEBUFFER_BINDING) readback. Inert while
+  // framebufferBindingKnown is false (the readback fallback); once a caller
+  // seeds it, vtkFramebuffer keeps it in sync, and callers binding
+  // framebuffers directly on the context must do the same.
+  publicAPI.setFramebufferBinding = (binding) => {
+    model.framebufferBinding = binding;
+    model.framebufferBindingKnown = true;
+  };
+
   const superSetSize = publicAPI.setSize;
   publicAPI.setSize = (...args) => {
     const modified = superSetSize(...args);
@@ -1275,6 +1286,8 @@ const DEFAULT_VALUES = {
   renderPasses: [],
   notifyStartCaptureImage: false,
   activeFramebuffer: null,
+  framebufferBinding: null,
+  framebufferBindingKnown: false,
   imageFormat: 'image/png',
   useOffScreen: false,
   useBackgroundImage: false,
@@ -1326,6 +1339,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'textureUnitManager',
     'useBackgroundImage',
     'activeFramebuffer',
+    'framebufferBinding',
+    'framebufferBindingKnown',
     'rootOpenGLRenderWindow',
   ]);
 
