@@ -1020,6 +1020,9 @@ export function event(publicAPI, model, eventName) {
 
   publicAPI[`invoke${_capitalize(eventName)}`] = invoke;
 
+  /**
+   * High priority callbacks are executed first
+   */
   publicAPI[`on${_capitalize(eventName)}`] = (callback, priority = 0.0) => {
     if (!callback.apply) {
       console.error(`Invalid callback for event ${eventName}`);
@@ -1033,6 +1036,7 @@ export function event(publicAPI, model, eventName) {
 
     const callbackID = curCallbackID++;
     callbacks.push([callbackID, callback, priority]);
+    // sort in descending order of priority
     callbacks.sort((cb1, cb2) => cb2[2] - cb1[2]);
     return on(callbackID);
   };
