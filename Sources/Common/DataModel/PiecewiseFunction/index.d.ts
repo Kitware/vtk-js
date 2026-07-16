@@ -100,12 +100,13 @@ export interface vtkPiecewiseFunction extends vtkObject {
   findX(y: number): number | null;
 
   /**
-   * For the node specified by index, set/get the location (X), value (Y),
+   * For the node specified by index, get the location (X), value (Y),
    * midpoint, and sharpness values at the node.
    * @param {Number} index
    * @param val
+   * @returns -1 if index is out of range, returns 1 otherwise.
    */
-  getNodeValue(index: number, val: any[]): void;
+  getNodeValue(index: number, val: number[]): -1 | 1;
 
   /**
    * Returns the min and max node locations of the function.
@@ -184,11 +185,13 @@ export interface vtkPiecewiseFunction extends vtkObject {
   setClamping(clamping: boolean): boolean;
 
   /**
-   *
+   * For the node specified by index, set the location (X), value (Y),
+   * midpoint, and sharpness values at the node.
    * @param {Number} index
    * @param val
+   * @returns -1 if index is out of range, returns 1 otherwise.
    */
-  setNodeValue(index: number, val: any[]): number;
+  setNodeValue(index: number, val: number[]): -1 | 1;
 
   /**
    *
