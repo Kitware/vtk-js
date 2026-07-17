@@ -457,22 +457,6 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     });
     model._depthRangeEncoder.setPipelineHash('volr');
     model._depthRangeEncoder.setReplaceShaderCodeFunction((pipeline) => {
-      // Clamp vertex z to [0, w] so cube faces outside the camera frustum
-      // are NOT clipped by the GPU. Instead they contribute depth values at
-      // the near/far planes, ensuring every pixel covered by the volume has
-      // valid depth range values (fixes gaps at the silhouette when the
-      // near plane cuts into the volume).
-      const vDesc = pipeline.getShaderDescription('vertex');
-      let vCode = vDesc.getCode();
-      vCode = vCode.replace(
-        'output.Position = rendererUBO.SCPCMatrix*vertexBC;',
-        [
-          'output.Position = rendererUBO.SCPCMatrix*vertexBC;',
-          'output.Position.z = clamp(output.Position.z, 0.0, output.Position.w);',
-        ].join('\n')
-      );
-      vDesc.setCode(vCode);
-
       const fDesc = pipeline.getShaderDescription('fragment');
       fDesc.addOutput('vec4<f32>', 'outColor1');
       fDesc.addOutput('vec4<f32>', 'outColor2');

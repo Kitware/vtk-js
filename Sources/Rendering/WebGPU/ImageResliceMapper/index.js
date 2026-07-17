@@ -199,6 +199,14 @@ function updateInputTextureView(
   });
 }
 
+// the outline textures hold one texel per segment index, not just one per
+// entry of the property arrays, so that segments past the end of an array
+// still resolve to the array's first entry
+function getOutlineTextureWidth(model, dataWidth) {
+  const configuredWidth = model.renderable.getLabelOutlineTextureWidth();
+  return Math.max(1, dataWidth, configuredWidth > 0 ? configuredWidth : 0);
+}
+
 function getTextureBindingUsage() {
   /* eslint-disable no-undef */
   /* eslint-disable no-bitwise */
@@ -267,6 +275,149 @@ function getSlabCompositeDecLines() {
     '  if (trapezoid > 0) { return currVal + 0.5 * valToComp; }',
     '  return currVal + valToComp;',
     '}',
+  ];
+}
+
+// A slab composites many slices into one fragment, so comparing the
+// composited center value against single slice neighbors reports the whole
+// projected footprint as border. These helpers instead collect the set of
+// labels present along the slab, which is what the outline test compares.
+// the slab projected outline path only covers a single component labelmap
+// sampled from a 3D texture
+function usesSlabLabelOutline(model) {
+  return model.renderable.getSlabThickness() > 0.0 && model.dimensions === 3;
+}
+
+function getSlabLabelOutlineDecLines() {
+  return [
+    // bitmask of the labels (1..31) present along the slab centered at
+    // startTC; marching stops as soon as the ray leaves the unit cube, so only
+    // the in volume part of the slab is sampled however thick the slab is
+    'fn labelSlabMask(startTC: vec3<f32>, stepTC: vec3<f32>, halfSlab: f32, stepLen: f32) -> u32 {',
+    '  var mask: u32 = 0u;',
+    '  var tc: vec3<f32> = startTC;',
+    '  var dist: f32 = 0.0;',
+    '  for (var i: i32 = 0; i < 4096; i = i + 1) {',
+    '    if (dist > halfSlab) { break; }',
+    '    if (any(tc > vec3<f32>(1.0)) || any(tc < vec3<f32>(0.0))) { break; }',
+    '    let label: i32 = i32(textureSampleLevel(imgTexture, imgTextureSampler, tc, 0.0).r * 255.0 + 0.5);',
+    '    if (label > 0 && label < 32) { mask = mask | (1u << u32(label)); }',
+    '    tc = tc + stepTC;',
+    '    dist = dist + stepLen;',
+    '  }',
+    '  tc = startTC - stepTC;',
+    '  dist = stepLen;',
+    '  for (var i: i32 = 0; i < 4096; i = i + 1) {',
+    '    if (dist > halfSlab) { break; }',
+    '    if (any(tc > vec3<f32>(1.0)) || any(tc < vec3<f32>(0.0))) { break; }',
+    '    let label: i32 = i32(textureSampleLevel(imgTexture, imgTextureSampler, tc, 0.0).r * 255.0 + 0.5);',
+    '    if (label > 0 && label < 32) { mask = mask | (1u << u32(label)); }',
+    '    tc = tc - stepTC;',
+    '    dist = dist + stepLen;',
+    '  }',
+    '  return mask;',
+    '}',
+    '',
+    // number of stepTC sized steps from p that stay inside the unit cube
+    'fn labelSlabBoxSteps(p: vec3<f32>, stepTC: vec3<f32>) -> f32 {',
+    '  var limit: vec3<f32> = vec3<f32>(65536.0);',
+    '  if (stepTC.x > 1e-8) { limit.x = (1.0 - p.x) / stepTC.x; }',
+    '  else if (stepTC.x < -1e-8) { limit.x = -p.x / stepTC.x; }',
+    '  if (stepTC.y > 1e-8) { limit.y = (1.0 - p.y) / stepTC.y; }',
+    '  else if (stepTC.y < -1e-8) { limit.y = -p.y / stepTC.y; }',
+    '  if (stepTC.z > 1e-8) { limit.z = (1.0 - p.z) / stepTC.z; }',
+    '  else if (stepTC.z < -1e-8) { limit.z = -p.z / stepTC.z; }',
+    '  return min(limit.x, min(limit.y, limit.z));',
+    '}',
+    '',
+    // first label of labelMask found when marching the slab from its viewer
+    // side end toward the back, so overlapping labels resolve in depth order;
+    // returns 0 when none of the mask labels is found
+    'fn labelSlabFrontLabel(startTC: vec3<f32>, towardCameraTC: vec3<f32>, halfSlab: f32, stepLen: f32, labelMask: u32) -> i32 {',
+    '  let slabSteps: f32 = halfSlab / stepLen;',
+    '  let nFront: f32 = min(slabSteps, labelSlabBoxSteps(startTC, towardCameraTC));',
+    '  let nBack: f32 = min(slabSteps, labelSlabBoxSteps(startTC, -towardCameraTC));',
+    '  var tc: vec3<f32> = startTC + towardCameraTC * nFront;',
+    '  let totalSteps: i32 = i32(nFront + nBack) + 1;',
+    '  for (var i: i32 = 0; i < 8192; i = i + 1) {',
+    '    if (i >= totalSteps) { break; }',
+    '    let label: i32 = i32(textureSampleLevel(imgTexture, imgTextureSampler, tc, 0.0).r * 255.0 + 0.5);',
+    '    if (label > 0 && label < 32 && (labelMask & (1u << u32(label))) != 0u) { return label; }',
+    '    tc = tc - towardCameraTC;',
+    '  }',
+    '  return 0;',
+    '}',
+  ];
+}
+
+// Slab projected label outline for a single component labelmap: labels are
+// projected across the slab and the outline is drawn where a label's projected
+// footprint ends. computedColor holds the slab composited value on entry and
+// the outline or fill color on exit.
+function buildSlabLabelOutlineSampleLines() {
+  return [
+    '      var slabOutline: vec4<f32> = vec4<f32>(0.0);',
+    // for MAX slabs a composited value of 0 means no label anywhere along the
+    // slab, so the expensive mask marches can be skipped
+    '      if (i32(mapperUBO.SlabType) != 1 || computedColor.r >= 0.5 / 255.0) {',
+    '        let slabNormal: vec3<f32> = normalize(input.normalWC);',
+    '        let outlineStepTC: vec3<f32> = (mapperUBO.SCTCMatrix * vec4<f32>(slabNormal * mapperUBO.SlabSampleStep, 0.0)).xyz;',
+    '        let halfSlab: f32 = mapperUBO.SlabThickness * 0.5;',
+    '        let centerMask: u32 = labelSlabMask(sampleCoord, outlineStepTC, halfSlab, mapperUBO.SlabSampleStep);',
+    '        if (centerMask != 0u) {',
+    '          let outlineDims: vec2<i32> = vec2<i32>(textureDimensions(labelOutlineThickness, 0));',
+    '          let labelmapRow: f32 = 0.5 / f32(outlineDims.y);',
+    // a label is on its projected edge when present here but missing in some
+    // neighbor probed at that label's own outline thickness; labels sharing a
+    // thickness reuse the neighbor masks, so the common case costs four marches
+    '          var edgeLabels: u32 = 0u;',
+    '          var prevThickness: i32 = -1;',
+    '          var neighborMask: u32 = 0u;',
+    '          for (var s: i32 = 1; s < 32; s = s + 1) {',
+    '            if ((centerMask & (1u << u32(s))) == 0u) { continue; }',
+    '            let thicknessCoord: vec2<f32> = vec2<f32>((f32(s) - 0.5) / f32(outlineDims.x), labelmapRow);',
+    '            let segmentThickness: i32 = max(1, i32(textureSampleLevel(labelOutlineThickness, labelOutlineThicknessSampler, thicknessCoord, 0.0).r * 255.0));',
+    '            if (segmentThickness != prevThickness) {',
+    '              let outlineOffset1: vec3<f32> = mapperUBO.OutlineTangent1_0.xyz * mapperUBO.OutlineTexelSize_0.xyz * f32(segmentThickness);',
+    '              let outlineOffset2: vec3<f32> = mapperUBO.OutlineTangent2_0.xyz * mapperUBO.OutlineTexelSize_0.xyz * f32(segmentThickness);',
+    '              neighborMask =',
+    '                labelSlabMask(sampleCoord + outlineOffset1, outlineStepTC, halfSlab, mapperUBO.SlabSampleStep) &',
+    '                labelSlabMask(sampleCoord - outlineOffset1, outlineStepTC, halfSlab, mapperUBO.SlabSampleStep) &',
+    '                labelSlabMask(sampleCoord + outlineOffset2, outlineStepTC, halfSlab, mapperUBO.SlabSampleStep) &',
+    '                labelSlabMask(sampleCoord - outlineOffset2, outlineStepTC, halfSlab, mapperUBO.SlabSampleStep);',
+    '              prevThickness = segmentThickness;',
+    '            }',
+    '            if ((neighborMask & (1u << u32(s))) == 0u) { edgeLabels = edgeLabels | (1u << u32(s)); }',
+    '          }',
+    // when several labels compete for this fragment the one nearest the viewer
+    // wins; the camera looks down -z in view coordinates, so the slab normal
+    // points toward the viewer when its view space z component is positive
+    '          let slabNormalTowardCamera: f32 = (rendererUBO.SCVCMatrix * vec4<f32>(slabNormal, 0.0)).z;',
+    '          let towardCameraTC: vec3<f32> = select(-outlineStepTC, outlineStepTC, slabNormalTowardCamera > 0.0);',
+    '          if (edgeLabels != 0u) {',
+    '            var edgeLabel: i32 = labelSlabFrontLabel(sampleCoord, towardCameraTC, halfSlab, mapperUBO.SlabSampleStep, edgeLabels);',
+    '            if (edgeLabel == 0) {',
+    '              for (var s: i32 = 1; s < 32; s = s + 1) {',
+    '                if ((edgeLabels & (1u << u32(s))) != 0u) { edgeLabel = s; break; }',
+    '              }',
+    '            }',
+    '            let labelValue: f32 = f32(edgeLabel) / 255.0;',
+    '            let edgeColor: vec3<f32> = textureSampleLevel(tfunTexture, tfunTextureSampler, vec2<f32>(labelValue * mapperUBO.cScale.r + mapperUBO.cShift.r, 0.5), 0.0).rgb;',
+    '            let opacityCoord: vec2<f32> = vec2<f32>((f32(edgeLabel) - 0.5) / f32(outlineDims.x), labelmapRow);',
+    '            let edgeOpacity: f32 = textureSampleLevel(labelOutlineOpacity, labelOutlineOpacitySampler, opacityCoord, 0.0).r;',
+    '            slabOutline = vec4<f32>(edgeColor, edgeOpacity);',
+    '          } else {',
+    // interior of the projected labels: regular fill through the transfer
+    // functions using the label nearest the viewer
+    '            let fillLabel: i32 = labelSlabFrontLabel(sampleCoord, towardCameraTC, halfSlab, mapperUBO.SlabSampleStep, centerMask);',
+    '            let fillValue: f32 = select(computedColor.r, f32(fillLabel) / 255.0, fillLabel != 0);',
+    '            let fillColor: vec3<f32> = textureSampleLevel(tfunTexture, tfunTextureSampler, vec2<f32>(fillValue * mapperUBO.cScale.r + mapperUBO.cShift.r, 0.5), 0.0).rgb;',
+    '            let fillOpacity: f32 = textureSampleLevel(ofunTexture, ofunTextureSampler, vec2<f32>(fillValue * mapperUBO.oScale.r + mapperUBO.oShift.r, 0.5), 0.0).r;',
+    '            slabOutline = vec4<f32>(fillColor, fillOpacity * mapperUBO.Opacity);',
+    '          }',
+    '        }',
+    '      }',
+    '      computedColor = slabOutline;',
   ];
 }
 
@@ -368,14 +519,18 @@ function createLabelRowsMap(labelOutlineProperties) {
 function buildSingleComponentSampleLines(model, samplingCtx, useLabelOutline) {
   const coordSuffix = getSampleCoordSuffix(model.dimensions);
   if (useLabelOutline) {
+    if (usesSlabLabelOutline(model)) {
+      return buildSlabLabelOutlineSampleLines();
+    }
     return [
       '      let centerValue: f32 = computedColor.r;',
       '      let segmentIndex: u32 = u32(centerValue * 255.0);',
       '      if (segmentIndex == 0u) {',
       '        computedColor = vec4<f32>(0.0, 0.0, 0.0, 0.0);',
       '      } else {',
-      '        let textureCoordinate: f32 = f32(segmentIndex - 1u) / 255.0;',
-      '        let labelmapRow: f32 = 0.5 / f32(textureDimensions(labelOutlineThickness, 0).y);',
+      '        let outlineDims: vec2<i32> = vec2<i32>(textureDimensions(labelOutlineThickness, 0));',
+      '        let textureCoordinate: f32 = (f32(segmentIndex) - 0.5) / f32(outlineDims.x);',
+      '        let labelmapRow: f32 = 0.5 / f32(outlineDims.y);',
       '        let thicknessValue: f32 = textureSampleLevel(labelOutlineThickness, labelOutlineThicknessSampler, vec2<f32>(textureCoordinate, labelmapRow), 0.0).r;',
       '        let outlineOpacity: f32 = textureSampleLevel(labelOutlineOpacity, labelOutlineOpacitySampler, vec2<f32>(textureCoordinate, labelmapRow), 0.0).r;',
       '        let actualThickness: i32 = i32(thicknessValue * 255.0);',
@@ -451,15 +606,18 @@ function buildIndependentComponentSampleLines(model, samplingCtx) {
       const texName = getTextureLabelForInput(i);
       const row = labelRows.get(i);
       lines.push(
-        `      if (scalar${i} > 0.0) {`,
+        // a value that rounds down to segment 0 carries no label, which
+        // happens for a MEAN slab over mostly empty labelmap voxels
+        `      let segmentIndex${i}: u32 = u32(scalar${i} * 255.0);`,
+        `      if (segmentIndex${i} > 0u) {`,
         `        let sampleCoord${i}: ${
           samplingCtx.sampleCoordType
         } = (mapperUBO.${getWCTCMatrixName(
           i
         )} * vec4<f32>(input.worldPosVS, 1.0)).${coordSuffix};`,
-        `        let segmentIndex${i}: u32 = u32(scalar${i} * 255.0);`,
-        `        let textureCoordinate${i}: f32 = f32(segmentIndex${i} - 1u) / 255.0;`,
-        `        let labelmapRow${i}: f32 = (${row}.0 + 0.5) / f32(textureDimensions(labelOutlineThickness, 0).y);`,
+        `        let outlineDims${i}: vec2<i32> = vec2<i32>(textureDimensions(labelOutlineThickness, 0));`,
+        `        let textureCoordinate${i}: f32 = (f32(segmentIndex${i}) - 0.5) / f32(outlineDims${i}.x);`,
+        `        let labelmapRow${i}: f32 = (${row}.0 + 0.5) / f32(outlineDims${i}.y);`,
         `        let thickness${i}: i32 = i32(textureSampleLevel(labelOutlineThickness, labelOutlineThicknessSampler, vec2<f32>(textureCoordinate${i}, labelmapRow${i}), 0.0).r * 255.0);`,
         `        let outlineOpacity${i}: f32 = textureSampleLevel(labelOutlineOpacity, labelOutlineOpacitySampler, vec2<f32>(textureCoordinate${i}, labelmapRow${i}), 0.0).r;`,
         `        var pixelOnBorder${i}: bool = false;`,
@@ -1043,10 +1201,14 @@ function vtkWebGPUImageResliceMapper(publicAPI, model) {
     const multiInputSampleExpr = (worldPosExpr) =>
       buildMultiInputSampleExpr(model, numInputs, worldPosExpr);
 
+    const decLines = getSlabCompositeDecLines();
+    if (imageState.useLabelOutline && usesSlabLabelOutline(model)) {
+      decLines.push(...getSlabLabelOutlineDecLines());
+    }
     code = vtkWebGPUShaderCache.substitute(
       code,
       '//VTK::Image::Dec',
-      getSlabCompositeDecLines()
+      decLines
     ).result;
 
     code = vtkWebGPUShaderCache.substitute(
@@ -1096,11 +1258,17 @@ function vtkWebGPUImageResliceMapper(publicAPI, model) {
     if (!model.labelOutlineProperties.length) {
       return;
     }
-    const { dataArrays, hash, width, height } =
-      getLabelOutlineTextureParameters(
-        model.labelOutlineProperties,
-        (property) => property.getLabelOutlineThicknessByReference()
-      );
+    const {
+      dataArrays,
+      hash: dataHash,
+      width: dataWidth,
+      height,
+    } = getLabelOutlineTextureParameters(
+      model.labelOutlineProperties,
+      (property) => property.getLabelOutlineThicknessByReference()
+    );
+    const width = getOutlineTextureWidth(model, dataWidth);
+    const hash = `${dataHash}-${width}`;
 
     if (hash === model._labelOutlineThicknessHash) {
       return;
@@ -1131,14 +1299,20 @@ function vtkWebGPUImageResliceMapper(publicAPI, model) {
     if (!model.labelOutlineProperties.length) {
       return;
     }
-    const { dataArrays, hash, width, height } =
-      getLabelOutlineTextureParameters(
-        model.labelOutlineProperties,
-        (property) => {
-          const dataArray = property.getLabelOutlineOpacity();
-          return typeof dataArray === 'number' ? [dataArray] : dataArray;
-        }
-      );
+    const {
+      dataArrays,
+      hash: dataHash,
+      width: dataWidth,
+      height,
+    } = getLabelOutlineTextureParameters(
+      model.labelOutlineProperties,
+      (property) => {
+        const dataArray = property.getLabelOutlineOpacity();
+        return typeof dataArray === 'number' ? [dataArray] : dataArray;
+      }
+    );
+    const width = getOutlineTextureWidth(model, dataWidth);
+    const hash = `${dataHash}-${width}`;
 
     if (hash === model._labelOutlineOpacityHash) {
       return;

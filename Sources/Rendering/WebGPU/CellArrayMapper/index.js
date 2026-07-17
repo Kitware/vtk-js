@@ -490,6 +490,12 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     model.UBO.setArray('BCWCMatrix', keyMats.bcwc);
     model.UBO.setArray('BCSCMatrix', keyMats.bcsc);
     model.UBO.setArray('MCWCNormals', keyMats.normalMatrix);
+    const bufferShift = model.WebGPUActor.getBufferShift(model.WebGPURenderer);
+    model.UBO.setArray('BufferShift', [
+      bufferShift[0],
+      bufferShift[1],
+      bufferShift[2],
+    ]);
 
     // --- 2D or 3D ---
     if (model.is2D) {
@@ -1807,6 +1813,10 @@ export function extend(publicAPI, model, initiaLalues = {}) {
   model.UBO.addEntry('Time', 'u32');
   addClipPlaneEntries(model.UBO, 'ClipPlane');
   model.UBO.addEntry('NumClipPlanes', 'u32');
+  // Coordinate shift baked into the point buffer (vertexBC = modelCoord +
+  // BufferShift). Exposed so mappers that transform vertices before BCSCMatrix
+  // (e.g. the glyph mapper's per instance matrix) can recover raw model coords.
+  model.UBO.addEntry('BufferShift', 'vec3<f32>');
 
   // Build VTK API
   macro.setGet(publicAPI, model, [
