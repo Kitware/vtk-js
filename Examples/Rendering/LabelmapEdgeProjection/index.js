@@ -37,8 +37,12 @@ const { BlendMode } = Constants;
  * New Blend Mode: [LABELMAP_EDGE_PROJECTION_BLEND]
  *
  */
+const viewAPI =
+  new URLSearchParams(window.location.search).get('viewAPI') || 'WebGL';
+
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0, 0, 0],
+  defaultViewAPI: viewAPI,
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
@@ -53,10 +57,20 @@ actor.setMapper(mapper);
 // ----------------------------------------------------------------------------
 const gui = new GUI();
 const guiParams = {
+  viewAPI,
   blendMode: 'regular',
   thickness1: 3,
   thickness2: 3,
 };
+
+gui
+  .add(guiParams, 'viewAPI', ['WebGL', 'WebGPU'])
+  .name('Renderer')
+  .onChange((api) => {
+    const query = new URLSearchParams(window.location.search);
+    query.set('viewAPI', api);
+    window.location.search = query.toString();
+  });
 
 let imageData;
 let dims;
@@ -65,6 +79,9 @@ let radius1;
 let radius2;
 let edgeLabelmapActor = null;
 let regularLabelmapActor = null;
+// Pristine single component scalars of the base image; both blend modes
+// rebuild their scalar array from this deep copy so switching stays repeatable.
+let baseScalarData = null;
 
 // ----------------------------------------------------------------------------
 // Common functions
@@ -164,8 +181,7 @@ function createRegularLabelmap(imgData, d, c, r1, r2) {
 }
 
 function createAdvancedMIPLabelmap(imgData, d, c, r1, r2) {
-  const array = imgData.getPointData().getArray(0);
-  const baseData = array.getData();
+  const baseData = baseScalarData.getData();
 
   const numberOfComponents = 2;
   const cubeData = new Float32Array(numberOfComponents * baseData.length);
@@ -216,6 +232,13 @@ function createAdvancedMIPLabelmap(imgData, d, c, r1, r2) {
 function createBasePipeline() {
   renderer.removeVolume(actor);
   mapper.setInputData(imageData);
+
+  // restore the pristine single component scalars and the default color mix
+  // (edge mode replaces them with a two component image + labels array and
+  // the additive preset)
+  const array = imageData.getPointData().getArray(0);
+  array.deepCopy(baseScalarData);
+  actor.getProperty().setColorMixPreset(ColorMixPreset.DEFAULT);
 
   renderer.addVolume(actor);
   setupTransferFunctions();
@@ -296,6 +319,9 @@ const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
   reader.loadData().then(() => {
     imageData = reader.getOutputData();
+    const scalars = imageData.getPointData().getArray(0);
+    baseScalarData = scalars.newClone();
+    baseScalarData.deepCopy(scalars);
 
     dims = imageData.getDimensions();
     center = dims.map((d) => Math.floor(d / 2));

@@ -5,7 +5,7 @@ import '@kitware/vtk.js/favicon';
 
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
-import '@kitware/vtk.js/Rendering/OpenGL/Glyph3DMapper';
+import '@kitware/vtk.js/Rendering/Profiles/Glyph';
 
 import { throttle } from '@kitware/vtk.js/macros';
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
@@ -340,7 +340,7 @@ function processSelections(selections) {
       // Selecting cells
       const cellPoints = input.getCellPoints(attributeID);
       updateAssociationTooltip('Cell', attributeID);
-      if (cellPoints) {
+      if (cellPoints?.cellPointIds) {
         const pointIds = cellPoints.cellPointIds;
         // Find the closest cell point, and use that as cursor position
         const points = Array.from(pointIds).map((pointId) =>

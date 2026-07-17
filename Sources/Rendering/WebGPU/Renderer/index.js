@@ -185,6 +185,7 @@ function vtkWebGPURenderer(publicAPI, model) {
       const lightDirArray = new Float32Array(lights.length * 4);
       const lightColorArray = new Float32Array(lights.length * 4);
       const lightTypeArray = new Float32Array(lights.length * 4);
+      const lightAttenuationArray = new Float32Array(lights.length * 4);
 
       for (let i = 0; i < lights.length; i++) {
         const offset = i * 4;
@@ -225,6 +226,12 @@ function vtkWebGPURenderer(publicAPI, model) {
           )
         ); // Outer Phi
         lightTypeArray[offset + 3] = 0;
+
+        const attenuation = lights[i].getAttenuationValues();
+        lightAttenuationArray[offset] = attenuation[0];
+        lightAttenuationArray[offset + 1] = attenuation[1];
+        lightAttenuationArray[offset + 2] = attenuation[2];
+        lightAttenuationArray[offset + 3] = lights[i].getExponent();
       }
 
       // Im not sure how correct this is, but this is what the example does
@@ -236,11 +243,16 @@ function vtkWebGPURenderer(publicAPI, model) {
       model.SSBO.addEntry('LightDir', 'vec4<f32>'); // Direction
       model.SSBO.addEntry('LightColor', 'vec4<f32>'); // Color (r, g, b, intensity)
       model.SSBO.addEntry('LightData', 'vec4<f32>'); // Other data (type, etc, etc, etc)
+      model.SSBO.addEntry('LightAttenuation', 'vec4<f32>');
 
       model.SSBO.setAllInstancesFromArray('LightPos', lightPosArray);
       model.SSBO.setAllInstancesFromArray('LightDir', lightDirArray);
       model.SSBO.setAllInstancesFromArray('LightColor', lightColorArray);
       model.SSBO.setAllInstancesFromArray('LightData', lightTypeArray);
+      model.SSBO.setAllInstancesFromArray(
+        'LightAttenuation',
+        lightAttenuationArray
+      );
 
       const device = model._parent.getDevice();
       model.SSBO.send(device);

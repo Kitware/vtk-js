@@ -3,6 +3,7 @@ import vtkWebGPUCellArrayMapper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayM
 import vtkWebGPUPolyDataMapper from 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper';
 import vtkWebGPUStorageBuffer from 'vtk.js/Sources/Rendering/WebGPU/StorageBuffer';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
+import { getClipPlaneShaderChecks } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
 function vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model) {
@@ -32,13 +33,30 @@ function vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model) {
     vDesc.addBuiltinInput('u32', '@builtin(instance_index) instanceIndex');
     vDesc.addBuiltinOutput('vec4<f32>', '@builtin(position) Position');
     if (!vDesc.hasOutput('vertexVC')) vDesc.addOutput('vec3<f32>', 'vertexVC');
+    if (!vDesc.hasOutput('vertexSC')) vDesc.addOutput('vec4<f32>', 'vertexSC');
     let code = vDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
-      '    var vertexSC: vec4<f32> = mapperUBO.BCSCMatrix*glyphSSBO.values[input.instanceIndex].matrix*vertexBC;',
-      '    output.vertexVC = (rendererUBO.SCVCMatrix*vertexSC).xyz;',
-      '    output.Position = rendererUBO.SCPCMatrix*vertexSC;',
+      '    var glyphMC: vec4<f32> = vec4<f32>(vertexBC.xyz - mapperUBO.BufferShift, 1.0);',
+      '    var glyphModel: vec4<f32> = glyphSSBO.values[input.instanceIndex].matrix*glyphMC;',
+      '    var glyphBC: vec4<f32> = vec4<f32>(glyphModel.xyz + mapperUBO.BufferShift, 1.0);',
+      '    output.vertexSC = mapperUBO.BCSCMatrix*glyphBC;',
+      '    output.vertexVC = (rendererUBO.SCVCMatrix*output.vertexSC).xyz;',
+      '    output.Position = rendererUBO.SCPCMatrix*output.vertexSC;',
     ]).result;
     vDesc.setCode(code);
+
+    const fDesc = pipeline.getShaderDescription('fragment');
+    let fcode = fDesc.getCode();
+    const clipPlaneChecks = getClipPlaneShaderChecks({
+      countName: 'mapperUBO.NumClipPlanes',
+      planePrefix: 'mapperUBO.ClipPlane',
+      positionName: 'input.vertexSC',
+    });
+    fcode = vtkWebGPUShaderCache.substitute(fcode, '//VTK::Position::Impl', [
+      ...clipPlaneChecks,
+      '//VTK::Position::Impl',
+    ]).result;
+    fDesc.setCode(fcode);
   };
   model.shaderReplacements.set(
     'replaceShaderPosition',

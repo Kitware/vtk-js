@@ -57,7 +57,10 @@ function vtkWebGPUVolume(publicAPI, model) {
     if (!input) {
       return;
     }
-    const extent = input.getExtent();
+    // Volume textures occupy voxel cells, whose outer faces are half a voxel
+    // beyond the point extent. Match ImageData.getBounds() and the OpenGL
+    // volume mapper by building the depth-bounds cube from that spatial extent.
+    const extent = input.getSpatialExtent();
     const m = model.renderable.getMatrix();
 
     let count = 0;
