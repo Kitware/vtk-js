@@ -20,13 +20,17 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
   };
 
   publicAPI.addBuiltinOutput = (type, name) => {
-    model.builtinOutputTypes.push(type);
-    model.builtinOutputNames.push(name);
+    if (!model.builtinOutputNames.includes(name)) {
+      model.builtinOutputTypes.push(type);
+      model.builtinOutputNames.push(name);
+    }
   };
 
   publicAPI.addBuiltinInput = (type, name) => {
-    model.builtinInputTypes.push(type);
-    model.builtinInputNames.push(name);
+    if (!model.builtinInputNames.includes(name)) {
+      model.builtinInputTypes.push(type);
+      model.builtinInputNames.push(name);
+    }
   };
 
   // perform shader replacements for the input and outputs

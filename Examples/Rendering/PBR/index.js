@@ -10,10 +10,11 @@ import vtkOBJReader from '@kitware/vtk.js/IO/Misc/OBJReader';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkTexture from '@kitware/vtk.js/Rendering/Core/Texture';
 import vtkPolyDataNormals from '@kitware/vtk.js/Filters/Core/PolyDataNormals';
-
+import vtkProperty from '@kitware/vtk.js/Rendering/Core/Property';
 import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
-
 import GUI from 'lil-gui';
+
+const { Shading } = vtkProperty;
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -23,7 +24,7 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0.08, 0.08, 0.08],
 });
 const renderer = fullScreenRenderer.getRenderer();
-renderer.setUseEnvironmentTextureAsBackground(true);
+renderer.setUseEnvironmentTextureAsBackground(false);
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
 const fpsMonitor = vtkFPSMonitor.newInstance();
@@ -56,31 +57,37 @@ function hexToRGB(hex) {
 }
 // Texture loading helper function
 function createTexture(src) {
-  const _img = new Image();
-  _img.crossOrigin = 'Anonymous';
-  _img.src = src;
-  const _tex = vtkTexture.newInstance();
-  _img.onload = () => {
-    _tex.setInterpolate(true);
-    _tex.setEdgeClamp(true);
-    _tex.setImage(_img);
-  };
-  return _tex;
+  const tex = vtkTexture.newInstance();
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      tex.setInterpolate(true);
+      tex.setEdgeClamp(true);
+      tex.setImage(img);
+      resolve(tex);
+    };
+    img.onerror = reject;
+    img.src = src;
+  });
 }
 
 // Texture loading helper function
 function createTextureWithMipmap(src, level) {
-  const _img = new Image();
-  _img.crossOrigin = 'Anonymous';
-  _img.src = src;
-  const _tex = vtkTexture.newInstance();
-  _tex.setMipLevel(level);
-  _img.onload = () => {
-    _tex.setInterpolate(true);
-    _tex.setEdgeClamp(true);
-    _tex.setImage(_img);
-  };
-  return _tex;
+  const tex = vtkTexture.newInstance();
+  tex.setMipLevel(level);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      tex.setInterpolate(true);
+      tex.setEdgeClamp(true);
+      tex.setImage(img);
+      resolve(tex);
+    };
+    img.onerror = reject;
+    img.src = src;
+  });
 }
 
 // ---------------------------------
@@ -92,7 +99,7 @@ const mapper = vtkMapper.newInstance();
 const actor = vtkActor.newInstance();
 
 reader.setSplitMode('usemtl');
-reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(() => {
+reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(async () => {
   const polydata = reader.getOutputData(0);
   // Normals
   const normals = vtkPolyDataNormals.newInstance();
@@ -102,6 +109,7 @@ reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(() => {
 
   // Setting default values
   actor.setPosition(0.0, 0.0, 0.0);
+  actor.getProperty().setInterpolation(Shading.PBR);
   actor.getProperty().setRoughness(1.0);
   actor.getProperty().setEmission(0.6);
   actor.getProperty().setMetallic(1.0);
@@ -111,16 +119,23 @@ reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(() => {
   actor.getProperty().setAmbientColor(1.0, 1.0, 1.0);
 
   // Texture loading
-  const diffuseTex = createTexture(`${__BASE_PATH__}/data/pbr/diffuse.jpg`);
-  const aoTex = createTexture(`${__BASE_PATH__}/data/pbr/ao.jpg`);
-  const roughnessTex = createTexture(`${__BASE_PATH__}/data/pbr/roughness.jpg`);
-  const metallicTex = createTexture(`${__BASE_PATH__}/data/pbr/metallic.jpg`);
-  const emissionTex = createTexture(`${__BASE_PATH__}/data/pbr/emission.jpg`);
-  const normalTex = createTexture(`${__BASE_PATH__}/data/pbr/normal.jpg`);
-  const environmentTex = createTextureWithMipmap(
-    `${__BASE_PATH__}/data/pbr/kiara_dawn_4k.jpg`,
-    8
-  );
+  const [
+    diffuseTex,
+    aoTex,
+    roughnessTex,
+    metallicTex,
+    emissionTex,
+    normalTex,
+    environmentTex,
+  ] = await Promise.all([
+    createTexture(`${__BASE_PATH__}/data/pbr/diffuse.jpg`),
+    createTexture(`${__BASE_PATH__}/data/pbr/ao.jpg`),
+    createTexture(`${__BASE_PATH__}/data/pbr/roughness.jpg`),
+    createTexture(`${__BASE_PATH__}/data/pbr/metallic.jpg`),
+    createTexture(`${__BASE_PATH__}/data/pbr/emission.jpg`),
+    createTexture(`${__BASE_PATH__}/data/pbr/normal.jpg`),
+    createTextureWithMipmap(`${__BASE_PATH__}/data/pbr/kiara_dawn_4k.jpg`, 8),
+  ]);
   actor.getProperty().setDiffuseTexture(diffuseTex);
   actor.getProperty().setAmbientOcclusionTexture(aoTex);
   actor.getProperty().setRoughnessTexture(roughnessTex);
@@ -130,12 +145,15 @@ reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(() => {
   renderer.setEnvironmentTexture(environmentTex);
   renderer.setEnvironmentTextureDiffuseStrength(1);
   renderer.setEnvironmentTextureSpecularStrength(1);
+  renderer.setUseEnvironmentTextureAsBackground(true);
 
   actor.setMapper(mapper);
-  mapper.setInputData(polydata);
+  mapper.setInputConnection(normals.getOutputPort());
 
   renderer.addActor(actor);
+  renderer.resetCamera();
   renderWindow.render();
+  fpsMonitor.update();
 });
 
 // ----------------------------------------------
@@ -149,8 +167,6 @@ const redLight = vtkLight.newInstance({
 });
 redLight.setDirection([0.8, 1, -1]); // setDirection allows for direct setting instead of through a focal point
 renderer.addLight(redLight);
-
-renderer.resetCamera();
 renderWindow.render();
 fpsMonitor.update();
 

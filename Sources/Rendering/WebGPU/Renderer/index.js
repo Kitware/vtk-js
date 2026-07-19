@@ -413,6 +413,7 @@ const DEFAULT_VALUES = {
   bindGroup: null,
   selector: null,
   renderEncoder: null,
+  opaqueColorTextureView: null,
   recenterThreshold: 20.0,
   suppressClear: false,
   stabilizedCenter: [0.0, 0.0, 0.0],
@@ -461,6 +462,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.getArray(publicAPI, model, ['stabilizedCenter']);
   macro.setGet(publicAPI, model, [
     'renderEncoder',
+    'opaqueColorTextureView',
     'selector',
     'suppressClear',
     'UBO',
