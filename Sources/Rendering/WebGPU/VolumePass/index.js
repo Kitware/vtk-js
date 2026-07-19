@@ -253,57 +253,17 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     model._copyEncoder.end();
   };
 
-  // unsubscribe from our listeners
-  publicAPI.delete = macro.chain(() => {
-    if (model._animationRateSubscription) {
-      model._animationRateSubscription.unsubscribe();
-      model._animationRateSubscription = null;
-    }
-  }, publicAPI.delete);
-
   publicAPI.computeTiming = (viewNode) => {
     const rwi = viewNode.getRenderable().getInteractor();
+    const firstMapper = model.volumes[0].getRenderable().getMapper();
 
-    if (model._lastScale == null) {
-      const firstMapper = model.volumes[0].getRenderable().getMapper();
-      model._lastScale = firstMapper.getInitialInteractionScale() || 1.0;
-    }
-    model._useSmallViewport = false;
-    if (rwi.isAnimating() && model._lastScale > 1.5) {
-      model._useSmallViewport = true;
-    }
+    firstMapper.setAutoAdjustSampleDistancesSource(rwi);
+    model._useSmallViewport = firstMapper.getUseSmallViewport();
 
     model._colorTexture.resize(
       viewNode.getCanvas().width,
       viewNode.getCanvas().height
     );
-
-    if (!model._animationRateSubscription) {
-      // when the animation frame rate changes recompute the scale factor
-      model._animationRateSubscription = rwi.onAnimationFrameRateUpdate(() => {
-        const firstMapper = model.volumes[0].getRenderable().getMapper();
-        if (firstMapper.getAutoAdjustSampleDistances()) {
-          const frate = rwi.getRecentAnimationFrameRate();
-          const targetScale =
-            (model._lastScale * rwi.getDesiredUpdateRate()) / frate;
-
-          model._lastScale = targetScale;
-          // clamp scale to some reasonable values.
-          // Below 1.5 we will just be using full resolution as that is close enough
-          // Above 400 seems like a lot so we limit to that 1/20th per axis
-          if (model._lastScale > 400) {
-            model._lastScale = 400;
-          }
-        } else {
-          model._lastScale =
-            firstMapper.getImageSampleDistance() *
-            firstMapper.getImageSampleDistance();
-        }
-        if (model._lastScale < 1.5) {
-          model._lastScale = 1.5;
-        }
-      });
-    }
   };
 
   publicAPI.rayCastPass = (viewNode, renNode, volumes) => {
@@ -316,7 +276,14 @@ function vtkWebGPUVolumePass(publicAPI, model) {
     let height = model._colorTextureView.getTexture().getHeight();
     if (model._useSmallViewport) {
       const canvas = viewNode.getCanvas();
-      const scaleFactor = 1 / Math.sqrt(model._lastScale);
+      const scaleFactor =
+        1 /
+        Math.sqrt(
+          model.volumes[0]
+            .getRenderable()
+            .getMapper()
+            .getCurrentImageSampleDistanceScale()
+        );
       model._smallViewportWidth = Math.ceil(scaleFactor * canvas.width);
       model._smallViewportHeight = Math.ceil(scaleFactor * canvas.height);
       width = model._smallViewportWidth;
