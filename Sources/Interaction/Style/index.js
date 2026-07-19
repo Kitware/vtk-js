@@ -2,6 +2,7 @@ import vtkInteractorStyleImage from './InteractorStyleImage';
 import vtkInteractorStyleManipulator from './InteractorStyleManipulator';
 import vtkInteractorStyleMPRSlice from './InteractorStyleMPRSlice';
 import vtkInteractorStyleRemoteMouse from './InteractorStyleRemoteMouse';
+import vtkInteractorStyleTrackballActor from './InteractorStyleTrackballActor';
 import vtkInteractorStyleTrackballCamera from './InteractorStyleTrackballCamera';
 
 export default {
@@ -9,5 +10,6 @@ export default {
   vtkInteractorStyleManipulator,
   vtkInteractorStyleMPRSlice,
   vtkInteractorStyleRemoteMouse,
+  vtkInteractorStyleTrackballActor,
   vtkInteractorStyleTrackballCamera,
 };
