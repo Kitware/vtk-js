@@ -1,10 +1,10 @@
 import path from 'path';
+import nodePolyfills from '@rolldown/plugin-node-polyfills';
 import {
   glslPlugin,
   svgRawPlugin,
   cjsonPlugin,
   workerInlinePlugin,
-  ignorePlugin,
   serveStaticDataPlugin,
 } from '../build/plugins.mjs';
 
@@ -44,6 +44,11 @@ export function createExampleConfig({
       __BASE_PATH__: JSON.stringify(''),
       global: 'globalThis',
     },
+    optimizeDeps: {
+      rolldownOptions: {
+        plugins: [nodePolyfills()],
+      },
+    },
     css: {
       modules: {
         localsConvention: 'camelCaseOnly',
@@ -63,7 +68,6 @@ export function createExampleConfig({
       glslPlugin(),
       svgRawPlugin(),
       cjsonPlugin(),
-      ignorePlugin(['crypto']),
       serveStaticDataPlugin(repoRoot),
       {
         name: 'vtk-example-runner-entry',
