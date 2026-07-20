@@ -29,7 +29,9 @@ import GUI from 'lil-gui';
 // Dynamically load WebXR polyfill from CDN for WebVR and Cardboard API backwards compatibility
 if (navigator.xr === undefined) {
   vtkResourceLoader
-    .loadScript('https://esm.sh/webxr-polyfill@latest/build/webxr-polyfill.js')
+    .loadScript(
+      'https://cdn.jsdelivr.net/npm/webxr-polyfill@latest/build/webxr-polyfill.js'
+    )
     .then(() => {
       // eslint-disable-next-line no-new, no-undef
       new WebXRPolyfill();
@@ -105,7 +107,7 @@ const gui = new GUI();
 let button;
 const params = {
   toggleVR: () => {
-    if (!XRHelper.isXRSessionActive()) {
+    if (XRHelper.getXrSession() === null) {
       XRHelper.startXR(XrSessionTypes.HmdVR);
       button.name('Exit VR');
     } else {
@@ -116,9 +118,6 @@ const params = {
 };
 
 button = gui.add(params, 'toggleVR').name('Start VR');
-
-XRHelper.onSessionStarted(() => button.name('Exit VR'));
-XRHelper.onSessionEnded(() => button.name('Start VR'));
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
