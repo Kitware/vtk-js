@@ -1213,10 +1213,13 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   const superSetSize = publicAPI.setSize;
-  publicAPI.setSize = (width, height) => {
-    const modified = superSetSize(width, height);
+  publicAPI.setSize = (...args) => {
+    const modified = superSetSize(...args);
     if (modified) {
-      publicAPI.invokeWindowResizeEvent({ width, height });
+      publicAPI.invokeWindowResizeEvent({
+        width: model.size[0],
+        height: model.size[1],
+      });
     }
     return modified;
   };
