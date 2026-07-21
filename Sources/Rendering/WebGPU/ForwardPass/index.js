@@ -56,6 +56,8 @@ function vtkForwardPass(publicAPI, model) {
     // we just render our delegates in order
     model._currentParent = parent;
 
+    const parentCaptures = !!parent?.getCaptureDelegateOutput?.();
+
     // build
     publicAPI.setCurrentOperation('buildPass');
     viewNode.traverse(publicAPI);
@@ -118,8 +120,11 @@ function vtkForwardPass(publicAPI, model) {
             model.volumePass.traverse(renNode, viewNode);
           }
 
-          // blit the result into the swap chain
-          publicAPI.finalPass(viewNode, renNode);
+          // blit the result into the swap chain, unless a parent pass reads
+          // our color texture and writes the final image itself
+          if (!parentCaptures) {
+            publicAPI.finalPass(viewNode, renNode);
+          }
         }
       }
     }
