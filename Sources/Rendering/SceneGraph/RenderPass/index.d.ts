@@ -17,6 +17,13 @@ export interface vtkRenderPass extends vtkObject {
   getCurrentOperation(): string;
 
   /**
+   * True when this pass captures the color texture of its delegates and
+   * writes the final image itself, which lets those delegates skip their
+   * own blit.
+   */
+  getCaptureDelegateOutput(): boolean;
+
+  /**
    *
    */
   getCurrentParent(): any;
