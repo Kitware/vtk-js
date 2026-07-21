@@ -3,6 +3,8 @@
 The RemoteView can be used with either the VTK-Web or ParaView-Web servers.
 The current example will not work until you start one of the servers below on
 your local machine.
+Both vtk and pv servers require wslink==1.12.4 installed in your python environment.
+For the vtk server, you need to install vtk[web] as well.
 
 ## Using VTK as server
 
