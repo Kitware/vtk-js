@@ -16,6 +16,7 @@ import vtkMath from '@kitware/vtk.js/Common/Core/Math';
 import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
 import vtkProperty from '@kitware/vtk.js/Rendering/Core/Property';
 import vtkSphereSource from '@kitware/vtk.js/Filters/Sources/SphereSource';
+import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
 
@@ -30,8 +31,12 @@ const { Representation, Shading } = vtkProperty;
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
+const userParams = vtkURLExtract.extractURLParameters();
+const viewAPI = userParams.viewAPI || 'WebGL';
+
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0, 0, 0],
+  defaultViewAPI: viewAPI,
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
@@ -51,6 +56,7 @@ let volumeController;
 let presetController;
 let forceNearestControllers = [];
 const params = {
+  viewAPI,
   ParallelProjection: false,
   Lighting: true,
   LAO: false,
@@ -271,6 +277,14 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
 
 // TEST  ==============
 
+gui
+  .add(params, 'viewAPI', ['WebGL', 'WebGPU'])
+  .name('Renderer')
+  .onChange((api) => {
+    const query = new URLSearchParams(window.location.search);
+    query.set('viewAPI', api);
+    window.location.search = query.toString();
+  });
 gui
   .add(params, 'ParallelProjection')
   .name('Parallel Projection')
