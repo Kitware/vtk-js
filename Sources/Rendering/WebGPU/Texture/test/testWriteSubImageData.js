@@ -10,61 +10,56 @@ it.skipIf(!__VTK_TEST_WEBGPU__)(
     const device = await testUtils.createWebGPUTestDevice();
     const texture = vtkWebGPUTexture.newInstance({ label: 'subImageTexture' });
 
-    try {
-      texture.create(device, {
-        width: 4,
-        height: 4,
-        format: 'rgba8unorm',
-        usage:
-          /* eslint-disable no-undef */
-          /* eslint-disable no-bitwise */
-          GPUTextureUsage.TEXTURE_BINDING |
-          /* eslint-disable no-undef */
-          /* eslint-disable no-bitwise */
-          GPUTextureUsage.COPY_DST |
-          /* eslint-disable no-undef */
-          /* eslint-disable no-bitwise */
-          GPUTextureUsage.COPY_SRC,
-      });
+    texture.create(device, {
+      width: 4,
+      height: 4,
+      format: 'rgba8unorm',
+      usage:
+        /* eslint-disable no-undef */
+        /* eslint-disable no-bitwise */
+        GPUTextureUsage.TEXTURE_BINDING |
+        /* eslint-disable no-undef */
+        /* eslint-disable no-bitwise */
+        GPUTextureUsage.COPY_DST |
+        /* eslint-disable no-undef */
+        /* eslint-disable no-bitwise */
+        GPUTextureUsage.COPY_SRC,
+    });
 
-      const basePixels = new Uint8Array(4 * 4 * 4);
-      for (let i = 0; i < 16; i++) {
-        basePixels[i * 4 + 3] = 255;
-      }
-      texture.writeImageData({ nativeArray: basePixels });
+    const basePixels = new Uint8Array(4 * 4 * 4);
+    for (let i = 0; i < 16; i++) {
+      basePixels[i * 4 + 3] = 255;
+    }
+    texture.writeImageData({ nativeArray: basePixels });
 
-      const patch = new Uint8Array([
-        255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 0, 255,
-      ]);
-      texture.writeSubImageData({
-        x: 1,
-        y: 1,
-        width: 2,
-        height: 2,
-        nativeArray: patch,
-      });
+    const patch = new Uint8Array([
+      255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 0, 255,
+    ]);
+    texture.writeSubImageData({
+      x: 1,
+      y: 1,
+      width: 2,
+      height: 2,
+      nativeArray: patch,
+    });
 
-      const actual = await testUtils.readWebGPUTexture2D(device, texture, 4, 4);
+    const actual = await testUtils.readWebGPUTexture2D(device, texture, 4, 4);
 
-      const expected = new Uint8Array(basePixels);
-      const setPixel = (x, y, rgba) => {
-        expected.set(rgba, (y * 4 + x) * 4);
-      };
-      setPixel(1, 1, [255, 0, 0, 255]);
-      setPixel(2, 1, [0, 255, 0, 255]);
-      setPixel(1, 2, [0, 0, 255, 255]);
-      setPixel(2, 2, [255, 255, 0, 255]);
+    const expected = new Uint8Array(basePixels);
+    const setPixel = (x, y, rgba) => {
+      expected.set(rgba, (y * 4 + x) * 4);
+    };
+    setPixel(1, 1, [255, 0, 0, 255]);
+    setPixel(2, 1, [0, 255, 0, 255]);
+    setPixel(1, 2, [0, 0, 255, 255]);
+    setPixel(2, 2, [255, 255, 0, 255]);
 
-      expect(actual.length, 'readback size matches texture size').toBe(
-        expected.length
-      );
+    expect(actual.length, 'readback size matches texture size').toBe(
+      expected.length
+    );
 
-      for (let i = 0; i < expected.length; i++) {
-        expect(actual[i], `byte ${i} matches expected value`).toBe(expected[i]);
-      }
-    } finally {
-      texture.getHandle().destroy();
-      device.getHandle().destroy();
+    for (let i = 0; i < expected.length; i++) {
+      expect(actual[i], `byte ${i} matches expected value`).toBe(expected[i]);
     }
   }
 );
@@ -131,8 +126,6 @@ it.skipIf(!__VTK_TEST_WEBGPU__)(
       ).toEqual(Array.from(basePixels));
     } finally {
       macro.setLoggerFunction('error', previousErrorLogger);
-      texture.getHandle().destroy();
-      device.getHandle().destroy();
     }
   }
 );

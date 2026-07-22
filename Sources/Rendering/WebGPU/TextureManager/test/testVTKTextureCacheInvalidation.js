@@ -3,9 +3,10 @@ import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
+import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 
 it.skipIf(!__VTK_TEST_WEBGPU__)(
-  'Test vtkWebGPUTextureManager invalidates cached imageData textures',
+  'Test vtkWebGPUTextureManager invalidates cached vtkTexture textures',
   async () => {
     const device = await testUtils.createWebGPUTestDevice();
 
@@ -19,37 +20,44 @@ it.skipIf(!__VTK_TEST_WEBGPU__)(
     imageData.setDimensions(4, 4, 1);
     imageData.getPointData().setScalars(scalars);
 
+    const srcTexture = vtkTexture.newInstance();
+    srcTexture.setInputData(imageData);
+
     const textureManager = device.getTextureManager();
 
-    // Identities are compared as booleans: passing the textures themselves
-    // to expect() makes a failure serialize them through
-    // toJSON()/getState(), which recurses the circular device–texture
-    // graph and masks the assertion message with a stack overflow.
-    const texture = textureManager.getTextureForImageData(imageData);
+    const texture = textureManager.getTextureForVTKTexture(srcTexture);
     expect(
-      textureManager.getTextureForImageData(imageData) === texture,
-      'an unchanged imageData reuses the cached texture'
+      textureManager.getTextureForVTKTexture(srcTexture) === texture,
+      'an unchanged vtkTexture reuses the cached texture'
     ).toBe(true);
 
     // Write the scalars in place and signal the change through
     // imageData.modified() alone — the pattern used by consumers that
-    // stream new frames into an existing array (the OpenGL backend keys
-    // its texture rebuilds on the imageData mtime, so this must also
-    // refresh the WebGPU texture cache).
+    // stream new frames into an existing array.
     values.fill(200);
     imageData.modified();
-    const textureAfterImageDataModified =
-      textureManager.getTextureForImageData(imageData);
+    const afterImageDataModified =
+      textureManager.getTextureForVTKTexture(srcTexture);
     expect(
-      textureAfterImageDataModified === texture,
+      afterImageDataModified === texture,
       'imageData.modified() alone must invalidate the cached texture'
+    ).toBe(false);
+
+    // The mtime seeded from the source texture must also keep counting:
+    // srcTexture.modified() alone refreshes the cache entry.
+    srcTexture.modified();
+    const afterTextureModified =
+      textureManager.getTextureForVTKTexture(srcTexture);
+    expect(
+      afterTextureModified === afterImageDataModified,
+      'srcTexture.modified() alone must invalidate the cached texture'
     ).toBe(false);
 
     // Direct scalar-array modification keeps invalidating as before.
     scalars.modified();
     expect(
-      textureManager.getTextureForImageData(imageData) ===
-        textureAfterImageDataModified,
+      textureManager.getTextureForVTKTexture(srcTexture) ===
+        afterTextureModified,
       'scalars.modified() must invalidate the cached texture'
     ).toBe(false);
   }
