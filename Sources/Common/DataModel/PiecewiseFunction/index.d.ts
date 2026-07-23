@@ -85,12 +85,28 @@ export interface vtkPiecewiseFunction extends vtkObject {
   getFirstNonZeroValue(): number;
 
   /**
-   * For the node specified by index, set/get the location (X), value (Y),
+   * Inverse of getValue(): given a value y, returns an x such that
+   * getValue(x) === y, bisecting the first segment whose endpoint values
+   * bracket y using forward evaluation, so midpoint and sharpness are
+   * honored. When several x within that segment attain y — a plateau, or
+   * the constant run after the jump of a discontinuous segment
+   * (sharpness ~1) — the leftmost one is returned, so a step yields its
+   * jump location. When y is outside the function's output range: with
+   * clamping on, returns the endpoint x whose node holds the nearest
+   * extremum; returns null if that extremum is only attained at an
+   * interior node (no x clamps to y) or if clamping is off.
+   * @param {Number} y
+   */
+  findX(y: number): number | null;
+
+  /**
+   * For the node specified by index, get the location (X), value (Y),
    * midpoint, and sharpness values at the node.
    * @param {Number} index
    * @param val
+   * @returns -1 if index is out of range, returns 1 otherwise.
    */
-  getNodeValue(index: number, val: any[]): void;
+  getNodeValue(index: number, val: number[]): -1 | 1;
 
   /**
    * Returns the min and max node locations of the function.
@@ -169,11 +185,13 @@ export interface vtkPiecewiseFunction extends vtkObject {
   setClamping(clamping: boolean): boolean;
 
   /**
-   *
+   * For the node specified by index, set the location (X), value (Y),
+   * midpoint, and sharpness values at the node.
    * @param {Number} index
    * @param val
+   * @returns -1 if index is out of range, returns 1 otherwise.
    */
-  setNodeValue(index: number, val: any[]): number;
+  setNodeValue(index: number, val: number[]): -1 | 1;
 
   /**
    *
