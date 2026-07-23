@@ -338,6 +338,89 @@ function vtkPiecewiseFunction(publicAPI, model) {
     return table[0];
   };
 
+  // Inverse of getValue(). See index.d.ts for the full contract.
+  publicAPI.findX = (y) => {
+    const { nodes } = model;
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const { x: x0, y: y0, sharpness } = nodes[i];
+      const { x: x1, y: y1 } = nodes[i + 1];
+      if (y === y0) {
+        return x0;
+      }
+      // getTable renders a segment whose leading node has sharpness > 0.99
+      // as piecewise constant, so its whole run after the jump maps to y1
+      // and an exact y1 hit has to resolve to the jump, which the search
+      // below finds. Any other segment reaches y1 only at x1.
+      if (y === y1 && sharpness <= 0.99) {
+        return x1;
+      }
+      const minY = Math.min(y0, y1);
+      const maxY = Math.max(y0, y1);
+      if (y >= minY && y <= maxY) {
+        // Forward evaluation is monotonic from y0 to y1 within a
+        // segment regardless of midpoint and sharpness, so bisect it.
+        const increasing = y1 >= y0;
+        let lo = x0;
+        let hi = x1;
+        let mid = 0.5 * (lo + hi);
+        // Runs until mid collapses onto lo or hi, leaving them adjacent
+        // floats. That is the termination guarantee: an exact hit on y
+        // is not reachable for every y, so it cannot end the loop.
+        // A degenerate segment (x0 === x1, from duplicate scalars)
+        // fails the condition at once and returns x1.
+        while (lo < mid && mid < hi) {
+          const value = publicAPI.getValue(mid);
+          // We update lo = mid when value is either less or more than y,
+          // but if value === y, then we move hi to mid value.
+          // This means whenever the loop terminates, hi
+          if (increasing ? value < y : value > y) {
+            lo = mid;
+          } else {
+            hi = mid;
+          }
+          mid = 0.5 * (lo + hi);
+        }
+        // When the above while loop terminates:
+        // lo never attains y and hi always does, so hi is the leftmost x
+        // attaining it.
+        // mid is whichever of the two (lo or hi) the last
+        // rounding produced, and on a step those two evaluate to
+        // opposite sides of the jump.
+        return hi;
+      }
+    }
+    if (model.clamping && nodes.length > 0) {
+      let minY = Infinity;
+      let maxY = -Infinity;
+      nodes.forEach((node) => {
+        minY = Math.min(minY, node.y);
+        maxY = Math.max(maxY, node.y);
+      });
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      if (y >= maxY) {
+        if (first.y === maxY) {
+          return first.x;
+        }
+        if (last.y === maxY) {
+          return last.x;
+        }
+        return null;
+      }
+      if (y <= minY) {
+        if (first.y === minY) {
+          return first.x;
+        }
+        if (last.y === minY) {
+          return last.x;
+        }
+        return null;
+      }
+    }
+
+    return null;
+  };
+
   // Remove all points outside the range, and make sure a point
   // exists at each end of the range. Used as a convenience method
   // for transfer function editors
