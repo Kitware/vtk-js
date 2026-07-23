@@ -37,7 +37,6 @@
     "fflate": "0.7.3",
     "gl-matrix": "3.4.3",
     "seedrandom": "3.0.5",
-    "shelljs": "0.8.5",
     "spark-md5": "3.0.2",
     "utif": "3.1.0",
     "webworker-promise": "0.5.0",
@@ -48,14 +47,14 @@
     "@commitlint/config-conventional": "19.7.1",
     "@emnapi/core": "1.10.0",
     "@emnapi/runtime": "1.10.0",
-    "@mapbox/node-pre-gyp": "1.0.9",
+    "@commitlint/prompt-cli": "19.7.1",
+    "@mapbox/node-pre-gyp": "2.0.0",
     "@rolldown/plugin-node-polyfills": "1.0.3",
     "@types/node": "22.13.1",
     "@vitest/browser": "4.1.7",
     "@vitest/browser-playwright": "4.1.7",
     "@vitest/ui": "4.1.7",
     "autoprefixer": "10.4.7",
-    "commitizen": "4.3.1",
     "cross-env": "7.0.3",
     "dotenv": "16.0.1",
     "dox": "1.0.0",
@@ -65,7 +64,7 @@
     "lil-gui": "0.21.0",
     "oxfmt": "0.51.0",
     "oxlint": "1.66.0",
-    "patch-package": "6.4.7",
+    "patch-package": "8.0.1",
     "pixelmatch": "5.3.0",
     "playwright": "1.60.0",
     "semantic-release": "25.0.2",
@@ -116,14 +115,9 @@
     "test:debug": "vitest run --reporter=verbose",
     "test:firefox": "cross-env TEST_BROWSER=firefox vitest run",
     "test:webgpu": "cross-env WEBGPU=1 NO_WEBGL=1 vitest run",
-    "commit": "git cz",
+    "commit": "commit",
     "semantic-release": "semantic-release",
     "prepare": "node ./Utilities/prepare.js"
-  },
-  "config": {
-    "commitizen": {
-      "path": "cz-conventional-changelog"
-    }
   },
   "bin": {
     "vtkDataConverter": "Utilities/DataGenerator/convert-cli.js",
