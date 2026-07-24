@@ -339,7 +339,13 @@ gui
   });
 
 gui
-  .add(guiParams, 'widget', ['paintWidget', 'splineWidget', 'polygonWidget'])
+  .add(guiParams, 'widget', [
+    'paintWidget',
+    'splineWidget',
+    'polygonWidget',
+    'ellipseWidget',
+    'circleWidget',
+  ])
   .name('Widget')
   .onChange((value) => {
     activeWidget = value;
@@ -355,14 +361,25 @@ gui
     scene.polygonHandle.reset();
     scene.polygonHandle.setVisibility(activeWidget === 'polygonWidget');
     scene.polygonHandle.updateRepresentationForRender();
+
+    scene.ellipseHandle.reset();
+    scene.ellipseHandle.setVisibility(activeWidget === 'ellipseWidget');
+    scene.ellipseHandle.updateRepresentationForRender();
+
+    scene.circleHandle.reset();
+    scene.circleHandle.setVisibility(activeWidget === 'circleWidget');
+    scene.circleHandle.updateRepresentationForRender();
   });
 
 gui
   .add(guiParams, 'operation', ['draw', 'erase'])
   .name('Operation')
   .onChange((mode) => {
-    painter.setDrawStencil(mode === 'draw');
-    painter.setErase(mode === 'erase');
+    if (mode === 'draw') {
+      painter.setLabel(1);
+    } else {
+      painter.setLabel(0);
+    }
   });
 
 gui
