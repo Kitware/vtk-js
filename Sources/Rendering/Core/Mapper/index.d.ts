@@ -1,70 +1,45 @@
-import { Bounds, Nullable, Range } from '../../../types';
+import { Bounds, Nullable } from '../../../types';
 import {
   vtkAbstractMapper3D,
   IAbstractMapper3DInitialValues,
 } from '../AbstractMapper3D';
 import { ColorMode, GetArray, ScalarMode } from './Constants';
-import { vtkDataArray } from '../../../Common/Core/DataArray';
 import {
   CoincidentTopologyHelper,
   StaticCoincidentTopologyMethods,
 } from './CoincidentTopologyHelper';
+import {
+  IScalarColoring,
+  IScalarColoringInitialValues,
+} from './ScalarColoringHelper';
 
-interface IPrimitiveCount {
+export interface IPrimitiveCount {
   points: number;
   verts: number;
   lines: number;
   triangles: number;
 }
 
-interface IAbstractScalars {
-  cellFlag: boolean;
-  scalars: Nullable<vtkDataArray>;
+export interface ISelectionWebGLIdsToVTKIds {
+  points: Int32Array | null;
+  cells: Int32Array | null;
 }
 
-export interface IMapperInitialValues extends IAbstractMapper3DInitialValues {
+export interface IMapperInitialValues
+  extends IAbstractMapper3DInitialValues, IScalarColoringInitialValues {
   static?: boolean;
-  scalarVisibility?: boolean;
-  scalarRange?: Range;
-  useLookupTableScalarRange?: boolean;
-  colorMode?: number;
-  scalarMode?: number;
-  arrayAccessMode?: number;
   renderTime?: number;
-  fieldDataTupleId?: number;
-  interpolateScalarsBeforeMapping?: boolean;
   forceCompileOnly?: number;
   useInvertibleColors?: boolean;
   customShaderAttributes?: any;
 }
 
 export interface vtkMapper
-  extends vtkAbstractMapper3D, CoincidentTopologyHelper {
+  extends vtkAbstractMapper3D, CoincidentTopologyHelper, IScalarColoring {
   /**
    *
    */
   acquireInvertibleLookupTable(): void;
-
-  /**
-   * Returns if we can use texture maps for scalar coloring. Note this doesn’t
-   * say we “will” use scalar coloring. It says, if we do use scalar coloring,
-   * we will use a texture.
-   * When rendering multiblock datasets, if any 2 blocks provide different
-   * lookup tables for the scalars, then also we cannot use textures. This case
-   * can be handled if required.
-   * @param scalars
-   * @param cellFlag True when the scalars are per cell instead of per point
-   */
-  canUseTextureMapForColoring(
-    scalars: vtkDataArray,
-    cellFlag: boolean
-  ): boolean;
-
-  /**
-   * Call to force a rebuild of color result arrays on next MapScalars.
-   * Necessary when using arrays in the case of multiblock data.
-   */
-  clearColorArrays(): void;
 
   /**
    *
@@ -77,100 +52,16 @@ export interface vtkMapper
   colorToValue(): void;
 
   /**
-   * Create default lookup table. Generally used to create one when
-   * none is available with the scalar data.
-   */
-  createDefaultLookupTable(): void;
-
-  /**
-   *
-   * @param input
-   * @param {ScalarMode} scalarMode
-   * @param arrayAccessMode
-   * @param arrayId
-   * @param arrayName
-   */
-  getAbstractScalars(
-    input: any,
-    scalarMode: ScalarMode,
-    arrayAccessMode: number,
-    arrayId: any,
-    arrayName: any
-  ): IAbstractScalars;
-
-  /**
-   * When scalars are mapped from cells,
-   * there is one color coordinate per cell instead of one per point
-   * in the vtkDataArray getColorCoordinates().
-   * It means that when getAreScalarsMappedFromCells() is true,
-   * the number of tuples in getColorCoordinates() is the number of points,
-   * and when getAreScalarsMappedFromCells() is false,
-   * the number of tuples in getColorCoordinates() is the number of cells.
-   */
-  getAreScalarsMappedFromCells(): boolean;
-
-  /**
-   *
-   */
-  getArrayAccessMode(): number;
-
-  /**
    * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
    * @return {Bounds} The bounds for the mapper.
    */
   getBounds(): Bounds;
 
   /**
-   * Get the array name to color by.
-   */
-  getColorByArrayName(): Nullable<string>;
-
-  /**
-   * Provide read access to the color texture coordinate array
-   */
-  getColorCoordinates(): Nullable<Float32Array>;
-
-  /**
-   * Provide read access to the color array.
-   */
-  getColorMapColors(): Nullable<Uint8Array>;
-
-  /**
-   * Return the method of coloring scalar data.
-   */
-  getColorMode(): ColorMode;
-
-  /**
-   * Return the method of coloring scalar data.
-   */
-  getColorModeAsString(): string;
-
-  /**
-   * Provide read access to the color texture array
-   * @todo Check the retun type
-   */
-  getColorTextureMap(): any;
-
-  /**
    *
    * @default []
    */
   getCustomShaderAttributes(): any;
-
-  /**
-   *
-   * @default -1
-   */
-  getFieldDataTupleId(): any;
-
-  /**
-   * By default, vertex color is used to map colors to a surface.
-   * Colors are interpolated after being mapped.
-   * This option avoids color interpolation by using a one dimensional
-   * texture map for the colors.
-   * @default false
-   */
-  getInterpolateScalarsBeforeMapping(): boolean;
 
   /**
    * Check if the mapper does not expect to have translucent geometry. This
@@ -183,42 +74,24 @@ export interface vtkMapper
   getIsOpaque(): boolean;
 
   /**
-   * Get a lookup table for the mapper to use.
-   */
-  getLookupTable(): any;
-
-  /**
    *
    */
   getPrimitiveCount(): IPrimitiveCount;
 
   /**
-   * Return the method for obtaining scalar data.
+   * Get whether selection ID mappings should be populated.
    */
-  getScalarMode(): number;
+  getPopulateSelectionSettings(): boolean;
 
   /**
-   * Return the method for obtaining scalar data.
+   * Get the time required for the last render.
    */
-  getScalarModeAsString(): string;
+  getRenderTime(): number;
 
   /**
-   *
-   * @default [0, 1]
+   * Get the mapping from WebGL selection IDs to VTK point and cell IDs.
    */
-  getScalarRange(): number[];
-
-  /**
-   *
-   * @default [0, 1]
-   */
-  getScalarRangeByReference(): number[];
-
-  /**
-   * Check whether scalar data is used to color objects.
-   * @default true
-   */
-  getScalarVisibility(): boolean;
+  getSelectionWebGLIdsToVTKIds(): ISelectionWebGLIdsToVTKIds | null;
 
   /**
    * Check whether the mapper’s data is static.
@@ -228,86 +101,20 @@ export interface vtkMapper
 
   /**
    *
-   * @default false
-   */
-  getUseLookupTableScalarRange(): boolean;
-
-  /**
-   *
    * @default null
    */
   getViewSpecificProperties(): object;
 
   /**
-   * The number of mapped colors in range
+   * Convert selector pixel buffers from WebGL IDs to VTK IDs.
    */
-  getNumberOfColorsInRange(): number;
-
-  /**
-   * Map the scalars (if there are any scalars and ScalarVisibility is on)
-   * through the lookup table, returning an unsigned char RGBA array. This is
-   * typically done as part of the rendering process. The alpha parameter
-   * allows the blending of the scalars with an additional alpha (typically
-   * which comes from a vtkActor, etc.)
-   * {
-   *     rgba: Uint8Array(),
-   *     location: 0/1/2, // Points/Cells/Fields
-   * }
-   * @param input
-   * @param {Number} alpha
-   */
-  mapScalars(input: any, alpha: number): void;
-
-  /**
-   *
-   * @param {Number} arrayAccessMode
-   */
-  setArrayAccessMode(arrayAccessMode: number): boolean;
-
-  /**
-   * Set the array name to color by.
-   * @param {String} colorByArrayName
-   */
-  setColorByArrayName(colorByArrayName: string): boolean;
-
-  /**
-   *
-   * @param {Number} colorMode
-   */
-  setColorMode(colorMode: number): boolean;
-
-  /**
-   * Sets colorMode to `DEFAULT`
-   */
-  setColorModeToDefault(): boolean;
-
-  /**
-   * Sets colorMode to `MAP_SCALARS`
-   */
-  setColorModeToMapScalars(): boolean;
-
-  /**
-   * Sets colorMode to `DIRECT_SCALARS`
-   */
-  setColorModeToDirectScalars(): boolean;
+  processSelectorPixelBuffers(selector: any, pixelOffsets: number[]): void;
 
   /**
    * Sets point data array names that will be transferred to the VBO
    * @param {String[]} customShaderAttributes
    */
   setCustomShaderAttributes(customShaderAttributes: string[]): boolean;
-
-  /**
-   * When ScalarMode is set to UseFieldData, set the index of the
-   * tuple by which to color the entire data set. By default, the
-   * index is -1, which means to treat the field data array selected
-   * with SelectColorArray as having a scalar value for each cell.
-   * Indices of 0 or higher mean to use the tuple at the given index
-   * for coloring the entire data set.
-   * @param {Number} fieldDataTupleI
-   * @default -1
-   */
-  setFieldDataTupleId(fieldDataTupleI: number): boolean;
 
   /**
    *
@@ -317,102 +124,21 @@ export interface vtkMapper
   setForceCompileOnly(forceCompileOnly: number): boolean;
 
   /**
-   * Set a lookup table for the mapper to use.
+   * Set whether selection ID mappings should be populated.
    */
-  setLookupTable(lookupTable: any): boolean;
+  setPopulateSelectionSettings(populateSelectionSettings: boolean): boolean;
 
   /**
-   * Control how the filter works with scalar point data and cell attribute
-   * data. By default (ScalarModeToDefault), the filter will use point data,
-   * and if no point data is available, then cell data is used. Alternatively
-   * you can explicitly set the filter to use point data
-   * (ScalarModeToUsePointData) or cell data (ScalarModeToUseCellData).
-   * You can also choose to get the scalars from an array in point field
-   * data (ScalarModeToUsePointFieldData) or cell field data
-   * (ScalarModeToUseCellFieldData). If scalars are coming from a field
-   * data array, you must call SelectColorArray before you call GetColors.
-   *
-   * When ScalarMode is set to use Field Data (ScalarModeToFieldData),
-   * you must call SelectColorArray to choose the field data array to
-   * be used to color cells. In this mode, the default behavior is to
-   * treat the field data tuples as being associated with cells. If
-   * the poly data contains triangle strips, the array is expected to
-   * contain the cell data for each mini-cell formed by any triangle
-   * strips in the poly data as opposed to treating them as a single
-   * tuple that applies to the entire strip. This mode can also be
-   * used to color the entire poly data by a single color obtained by
-   * mapping the tuple at a given index in the field data array
-   * through the color map. Use SetFieldDataTupleId() to specify
-   * the tuple index.
-   *
-   * @param scalarMode
+   * Set the time required for the last render.
    */
-  setScalarMode(scalarMode: number): boolean;
+  setRenderTime(renderTime: number): boolean;
 
   /**
-   * Sets scalarMode to DEFAULT
+   * Set the mapping from WebGL selection IDs to VTK point and cell IDs.
    */
-  setScalarModeToDefault(): boolean;
-
-  /**
-   * Sets scalarMode to USE_CELL_DATA
-   */
-  setScalarModeToUseCellData(): boolean;
-
-  /**
-   * Sets scalarMode to USE_CELL_FIELD_DATA
-   */
-  setScalarModeToUseCellFieldData(): boolean;
-
-  /**
-   * Sets scalarMode to USE_FIELD_DATA
-   */
-  setScalarModeToUseFieldData(): boolean;
-
-  /**
-   * Sets scalarMode to USE_POINT_DATA
-   */
-  setScalarModeToUsePointData(): boolean;
-
-  /**
-   * Sets scalarMode to USE_POINT_FIELD_DATA
-   */
-  setScalarModeToUsePointFieldData(): boolean;
-
-  /**
-   * Specify range in terms of scalar minimum and maximum (smin,smax). These
-   * values are used to map scalars into lookup table. Has no effect when
-   * UseLookupTableScalarRange is true.
-   *
-   * @param min
-   * @param max
-   * @default [0, 1]
-   */
-  setScalarRange(min: number, max: number): boolean;
-
-  /**
-   * Specify range in terms of scalar minimum and maximum (smin,smax). These
-   * values are used to map scalars into lookup table. Has no effect when
-   * UseLookupTableScalarRange is true.
-   *
-   * @param scalarRange
-   * @default [0, 1]
-   */
-  setScalarRange(scalarRange: number[]): boolean;
-
-  /**
-   *
-   * @param scalarRange
-   * @default [0, 1]
-   */
-  setScalarRangeFrom(scalarRange: number[]): boolean;
-
-  /**
-   * Turn on/off flag to control whether scalar data is used to color objects.
-   * @param {Boolean} scalarVisibility
-   * @default true
-   */
-  setScalarVisibility(scalarVisibility: boolean): boolean;
+  setSelectionWebGLIdsToVTKIds(
+    selectionWebGLIdsToVTKIds: Nullable<ISelectionWebGLIdsToVTKIds>
+  ): void;
 
   /**
    * Turn on/off flag to control whether the mapper’s data is static. Static data
@@ -424,19 +150,6 @@ export interface vtkMapper
    * @default false
    */
   setStatic(static: boolean): boolean;
-
-  /**
-   * Control whether the mapper sets the lookuptable range based on its
-   * own ScalarRange, or whether it will use the LookupTable ScalarRange
-   * regardless of it’s own setting. By default the Mapper is allowed to set
-   * the LookupTable range, but users who are sharing LookupTables between
-   * mappers/actors will probably wish to force the mapper to use the
-   * LookupTable unchanged.
-   *
-   * @param {Boolean} useLookupTableScalarRange
-   * @default false
-   */
-  setUseLookupTableScalarRange(useLookupTableScalarRange: boolean): boolean;
 
   /**
    * If you want to provide specific properties for rendering engines you can use
@@ -459,13 +172,6 @@ export interface vtkMapper
    *
    */
   valueToColor(): void;
-
-  /**
-   *
-   */
-  setInterpolateScalarsBeforeMapping(
-    interpolateScalarsBeforeMapping: boolean
-  ): boolean;
 }
 
 /**
