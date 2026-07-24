@@ -137,6 +137,9 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
   };
 
   publicAPI.setSlice = (slice) => {
+    if (publicAPI.getSlice() === slice) {
+      return false;
+    }
     const renderer = model._interactor.getCurrentRenderer();
     const camera = renderer.getActiveCamera();
 
@@ -171,6 +174,7 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
       camera.setPosition(...newPos);
       camera.setFocalPoint(...slicePoint);
     }
+    return true;
   };
 
   publicAPI.getSliceRange = () => {
