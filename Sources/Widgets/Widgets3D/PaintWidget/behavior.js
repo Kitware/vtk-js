@@ -76,7 +76,7 @@ export default function widgetBehavior(publicAPI, model) {
         model.activeState.get('origin', 'up', 'right', 'direction', 'scale1')
       );
     } else {
-      return macro.VOID;
+      return macro.EVENT_ABORT;
     }
 
     publicAPI.invokeInteractionEvent();
