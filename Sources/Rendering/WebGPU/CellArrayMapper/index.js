@@ -12,6 +12,7 @@ import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManage
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 import vtkWebGPUSimpleMapper from 'vtk.js/Sources/Rendering/WebGPU/SimpleMapper';
+import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 import {
   addClipPlaneEntries,
@@ -391,11 +392,6 @@ fn main(
 
 const tmp2Mat4 = new Float64Array(16);
 
-function isEdges(hash) {
-  // edge pipelines have "edge" in them
-  return hash.indexOf('edge') >= 0;
-}
-
 // ----------------------------------------------------------------------------
 // vtkWebGPUCellArrayMapper methods
 // ----------------------------------------------------------------------------
@@ -406,22 +402,19 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      if (model.is2D) {
-        model.WebGPUActor =
-          publicAPI.getFirstAncestorOfType('vtkWebGPUActor2D');
-        model.forceZValue = true;
-      } else {
-        model.WebGPUActor = publicAPI.getFirstAncestorOfType('vtkWebGPUActor');
-        model.forceZValue = false;
-      }
+      model.forceZValue = model.is2D;
+      const { parent, renderer, renderWindow, device } = getWebGPUContext(
+        publicAPI,
+        model.is2D ? 'vtkWebGPUActor2D' : 'vtkWebGPUActor'
+      );
+      model.WebGPUActor = parent;
       model.coordinateSystem =
         model.WebGPUActor.getRenderable().getCoordinateSystem();
       model.useRendererMatrix =
         model.coordinateSystem !== CoordinateSystem.DISPLAY;
-      model.WebGPURenderer =
-        model.WebGPUActor.getFirstAncestorOfType('vtkWebGPURenderer');
-      model.WebGPURenderWindow = model.WebGPURenderer.getParent();
-      model.device = model.WebGPURenderWindow.getDevice();
+      model.WebGPURenderer = renderer;
+      model.WebGPURenderWindow = renderWindow;
+      model.device = device;
     }
   };
 
@@ -911,7 +904,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
   // we only apply lighting when there is a "var normal" declaration in the
   // fragment shader code. That is the lighting trigger.
   publicAPI.replaceShaderLight = (hash, pipeline, vertexInput) => {
-    if (hash.includes('sel')) return;
+    if (model.selectionPass) return;
     const vDesc = pipeline.getShaderDescription('vertex');
     if (!vDesc.hasOutput('vertexVC')) vDesc.addOutput('vec4<f32>', 'vertexVC');
 
@@ -925,9 +918,9 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     const needLighting =
       hasNormal &&
       model.useRendererMatrix &&
-      !isEdges(hash) &&
+      !publicAPI.isEdgePrimitive() &&
       !model.is2D &&
-      !hash.includes('sel');
+      !model.selectionPass;
     if (needLighting) {
       const lightingCode = [
         // Vectors needed for light calculations
@@ -1040,7 +1033,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
   publicAPI.replaceShaderColor = (hash, pipeline, vertexInput) => {
     // By default, set the colors to be flat
-    if (isEdges(hash)) {
+    if (publicAPI.isEdgePrimitive()) {
       const fDesc = pipeline.getShaderDescription('fragment');
       let code = fDesc.getCode();
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
@@ -1231,7 +1224,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
   );
 
   publicAPI.replaceShaderSelect = (hash, pipeline, vertexInput) => {
-    if (hash.includes('sel')) {
+    if (model.selectionPass) {
       const selectBuffer = vertexInput.getBuffer('selectId');
       if (selectBuffer) {
         const vDesc = pipeline.getShaderDescription('vertex');
@@ -1342,9 +1335,6 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     let indexBuffer = null;
     if (cells) {
       indexBuffer = device.getBufferManager().getBuffer({
-        hash: `R${representation}P${primType}O${
-          model.cellOffset
-        }${cells.getMTime()}`,
         usage: BufferUsage.Index,
         cells,
         numberOfPoints: points.getNumberOfPoints(),
@@ -1357,23 +1347,15 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       vertexInput.setIndexBuffer(null);
     }
 
-    // hash = all things that can change the values on the buffer
-    // since mtimes are unique we can use
-    // - indexBuffer mtime - because cells drive how we pack
-    // - relevant dataArray mtime - the source data
-    // - shift - not currently captured
-    // - scale - not currently captured
-    // - format
-    // - usage
-    // - packExtra - covered by format
+    // The buffer cache key is derived by BufferManager.getBuffer from the
+    // request fields (dataArray/indexBuffer mtimes, shift, scale, format, usage,
+    // packExtra, cellOffset), so callers pass inputs rather than a hand built
+    // hash and cannot silently drop a content affecting field.
     // --- Points Buffer ---
     if (points) {
       const shift = model.WebGPUActor.getBufferShift(model.WebGPURenderer);
       vertexInput.addBuffer(
         device.getBufferManager().getBuffer({
-          hash: `${points.getMTime()}I${
-            indexBuffer?.getMTime?.() ?? 0
-          }${shift.join()}float32x4`,
           usage: BufferUsage.PointArray,
           format: 'float32x4',
           dataArray: points,
@@ -1412,7 +1394,6 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         scale: 127,
       };
       if (normals) {
-        buffRequest.hash = `${normals.getMTime()}I${indexBuffer.getMTime()}snorm8x4`;
         buffRequest.dataArray = normals;
         buffRequest.usage = BufferUsage.PointArray;
         vertexInput.addBuffer(
@@ -1421,7 +1402,6 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         );
       } else if (primType === PrimitiveTypes.Triangles) {
         model._usesCellNormals = true;
-        buffRequest.hash = `PFN${points.getMTime()}I${indexBuffer.getMTime()}snorm8x4`;
         buffRequest.dataArray = points;
         buffRequest.cells = cells;
         buffRequest.usage = BufferUsage.NormalsFromPoints;
@@ -1455,9 +1435,6 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
           device.getBufferManager().getBuffer({
             usage: BufferUsage.PointArray,
             format: 'unorm8x4',
-            hash: `${haveCellScalars}${c.getMTime()}I${indexBuffer.getMTime()}O${
-              model.cellOffset
-            }unorm8x4`,
             dataArray: c,
             indexBuffer,
             cellData: haveCellScalars,

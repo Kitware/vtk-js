@@ -10,6 +10,7 @@ import vtkTransform from 'vtk.js/Sources/Common/Transform/Transform';
 import vtkWebGPUImageMapper from 'vtk.js/Sources/Rendering/WebGPU/ImageMapper';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import { getTextureChannelMode } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ImageSampling';
+import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 import {
   getInputProperty,
   getLabelOutlineTextureParameters,
@@ -683,13 +684,14 @@ function vtkWebGPUImageResliceMapper(publicAPI, model) {
     if (!prepass) {
       return;
     }
-    model.WebGPUImageSlice = publicAPI.getFirstAncestorOfType(
+    const { parent, renderer, renderWindow, device } = getWebGPUContext(
+      publicAPI,
       'vtkWebGPUImageSlice'
     );
-    model.WebGPURenderer =
-      model.WebGPUImageSlice.getFirstAncestorOfType('vtkWebGPURenderer');
-    model.WebGPURenderWindow = model.WebGPURenderer.getParent();
-    model.device = model.WebGPURenderWindow.getDevice();
+    model.WebGPUImageSlice = parent;
+    model.WebGPURenderer = renderer;
+    model.WebGPURenderWindow = renderWindow;
+    model.device = device;
   };
 
   publicAPI.render = () => {

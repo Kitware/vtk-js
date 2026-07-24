@@ -14,6 +14,7 @@ import {
   MAX_CLIPPING_PLANES,
 } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
 import { computeFnToString } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ImageSampling';
+import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
 const { BufferUsage } = vtkWebGPUBufferManager;
@@ -300,13 +301,14 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.WebGPUImageSlice = publicAPI.getFirstAncestorOfType(
+      const { parent, renderer, renderWindow, device } = getWebGPUContext(
+        publicAPI,
         'vtkWebGPUImageSlice'
       );
-      model.WebGPURenderer =
-        model.WebGPUImageSlice.getFirstAncestorOfType('vtkWebGPURenderer');
-      model.WebGPURenderWindow = model.WebGPURenderer.getParent();
-      model.device = model.WebGPURenderWindow.getDevice();
+      model.WebGPUImageSlice = parent;
+      model.WebGPURenderer = renderer;
+      model.WebGPURenderWindow = renderWindow;
+      model.device = device;
       publicAPI.setWebGPURenderer(model.WebGPURenderer);
     }
   };
@@ -340,7 +342,9 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
     model.currentImageDataInput = model.renderable.getInputData(0);
     model.currentCenterlineInput = model.renderable.getOrientedCenterline();
 
-    publicAPI.prepareToDraw(model.WebGPURenderer.getRenderEncoder());
+    const renderEncoder = model.WebGPURenderer.getRenderEncoder();
+    model.selectionPass = renderEncoder?.getPipelineHash?.() === 'sel';
+    publicAPI.prepareToDraw(renderEncoder);
     model.renderEncoder.registerDrawCallback(model.pipeline, publicAPI.draw);
   };
 
@@ -890,7 +894,7 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
   );
 
   publicAPI.replaceShaderRenderEncoder = (hash, pipeline) => {
-    if (hash.includes('sel')) {
+    if (model.selectionPass) {
       const fDesc = pipeline.getShaderDescription('fragment');
       fDesc.addOutput('vec4<u32>', 'outColor');
       let code = fDesc.getCode();
