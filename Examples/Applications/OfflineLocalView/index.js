@@ -193,6 +193,13 @@ if (userParams.url || userParams.fileURL) {
 
 // Auto setup if no method get called within 100ms
 setTimeout(() => {
+  if (!autoInit) {
+    return;
+  }
+
+  // Load dataset if available
+  window?.loadDataSet?.();
+
   if (autoInit) {
     initLocalFileLoader();
   }
@@ -202,3 +209,6 @@ window.OfflineLocalView = {
   initLocalFileLoader,
   load,
 };
+
+// Load dataset if available right away
+window?.loadDataSet?.();
