@@ -35,22 +35,17 @@ function vtkRenderer(publicAPI, model) {
     renderer: publicAPI,
   };
 
-  // Scratch matrix for expandBounds
-  const tmpExpandBounds = new Float64Array(16);
-
   // Counterpart of vtkRenderer::ExpandBounds: transform the 8 corners of bounds
   // by matrix and take the axis-aligned bounds of the result.
-  // The matrix is row-major, matching the vtkMatrix4x4 convention used by the
-  // C++ version and by the camera's modelTransformMatrix, whereas
-  // vtkBoundingBox.transformBounds expects gl-matrix column-major.
+  // matrix is in gl-matrix column-major order, matching the camera's
+  // modelTransformMatrix and what vtkBoundingBox.transformBounds expects.
   // Unlike C++, where ModelTransformMatrix is always allocated, vtk-js leaves it
   // null by default, so a null matrix is a no-op rather than an error.
   function expandBounds(bounds, matrix) {
     if (!matrix) {
       return bounds;
     }
-    mat4.transpose(tmpExpandBounds, matrix);
-    return vtkBoundingBox.transformBounds(bounds, tmpExpandBounds, []);
+    return vtkBoundingBox.transformBounds(bounds, matrix, []);
   }
 
   publicAPI.updateCamera = () => {

@@ -31,6 +31,7 @@ function vtkCamera(publicAPI, model) {
   const upbasis = new Float64Array([0.0, 1.0, 0.0]);
   const tmpMatrix = mat4.identity(new Float64Array(16));
   const tmpMatrix2 = mat4.identity(new Float64Array(16));
+  const tmpModelTransform = mat4.identity(new Float64Array(16));
   const tmpvec1 = new Float64Array(3);
   const tmpvec2 = new Float64Array(3);
   const tmpvec3 = new Float64Array(3);
@@ -506,14 +507,24 @@ function vtkCamera(publicAPI, model) {
     }
   };
 
+  // Compose the model transform into a row-major view matrix so that the
+  // resulting transform is view * modelTransform, i.e. the model transform is
+  // applied to world coordinates before the camera transform.
+  // modelTransformMatrix is supplied by the caller in gl-matrix column-major
+  // order (like userMatrix on vtkProp3D), while `out` is in vtk's row-major
+  // order, so the model transform has to be transposed before multiplying.
+  const applyModelTransform = (out) => {
+    if (model.modelTransformMatrix) {
+      mat4.transpose(tmpModelTransform, model.modelTransformMatrix);
+      mat4.multiply(out, tmpModelTransform, out);
+    }
+    return out;
+  };
+
   publicAPI.getViewMatrix = (out = new Float64Array(16)) => {
     if (model.viewMatrix) {
-      if (model.modelTransformMatrix) {
-        mat4.multiply(out, model.modelTransformMatrix, model.viewMatrix);
-      } else {
-        mat4.copy(out, model.viewMatrix);
-      }
-      return out;
+      mat4.copy(out, model.viewMatrix);
+      return applyModelTransform(out);
     }
 
     mat4.lookAt(
@@ -525,10 +536,7 @@ function vtkCamera(publicAPI, model) {
 
     mat4.transpose(out, out);
 
-    if (model.modelTransformMatrix) {
-      mat4.multiply(out, model.modelTransformMatrix, out);
-    }
-    return out;
+    return applyModelTransform(out);
   };
 
   publicAPI.setProjectionMatrix = (mat) => {
