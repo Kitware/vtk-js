@@ -221,11 +221,13 @@ const rangeFolder = gui.addFolder('Scalar range');
 rangeFolder
   .add(params, 'min')
   .name('Min')
-  .onFinishChange(() => updateScalarRange());
+  .onFinishChange(() => updateScalarRange())
+  .listen();
 rangeFolder
   .add(params, 'max')
   .name('Max')
-  .onFinishChange(() => updateScalarRange());
+  .onFinishChange(() => updateScalarRange())
+  .listen();
 
 gui
   .add(
@@ -242,7 +244,7 @@ gui
   )
   .name('Next formula');
 
-// Eecompute scalar range
+// Recompute scalar range
 applyFormula();
 
 // -----------------------------------------------------------
