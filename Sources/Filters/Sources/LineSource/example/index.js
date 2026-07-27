@@ -66,6 +66,7 @@ function updateLine() {
 gui
   .add(params, 'resolution')
   .name('Resolution')
+  .min(0)
   .onChange((value) => {
     params.resolution = Number(value);
     updateLine();
