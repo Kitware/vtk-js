@@ -35,6 +35,7 @@ const actor = vtkActor.newInstance();
 renderer.addActor(actor);
 
 const mapper = vtkMapper.newInstance({ interpolateScalarBeforeMapping: true });
+mapper.setColorModeToDirectScalars();
 actor.setMapper(mapper);
 
 const cam = vtkCamera.newInstance();
