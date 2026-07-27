@@ -158,6 +158,8 @@ gui
 
 updateDimensions();
 updateTransformedCone();
+renderer.resetCamera();
+renderWindow.render();
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
