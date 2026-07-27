@@ -335,3 +335,6 @@ bodyElement.addEventListener('keypress', (e) => {
     resetCameraPosition(true);
   }
 });
+
+renderer.resetCamera();
+renderWindow.render();
