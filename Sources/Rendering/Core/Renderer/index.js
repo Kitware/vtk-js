@@ -35,18 +35,13 @@ function vtkRenderer(publicAPI, model) {
     renderer: publicAPI,
   };
 
-  // Scratch matrix for expandBounds
-  const tmpExpandBounds = new Float64Array(16);
-
   // Counterpart of vtkRenderer::ExpandBounds: the axis-aligned bounds of the 8
-  // corners of `bounds` transformed by the row-major `matrix`, which
-  // vtkBoundingBox.transformBounds needs column-major. Null is a no-op.
+  // corners of `bounds` transformed by `matrix`. A null matrix is a no-op.
   function expandBounds(bounds, matrix) {
     if (!matrix) {
       return bounds;
     }
-    mat4.transpose(tmpExpandBounds, matrix);
-    return vtkBoundingBox.transformBounds(bounds, tmpExpandBounds, []);
+    return vtkBoundingBox.transformBounds(bounds, matrix, []);
   }
 
   publicAPI.updateCamera = () => {
