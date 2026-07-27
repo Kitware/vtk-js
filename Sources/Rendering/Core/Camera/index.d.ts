@@ -711,6 +711,17 @@ export interface vtkCamera extends vtkObject {
   /**
    * Set the model transform matrix for the camera.
    * This matrix could be used for model related transformations such as scale, shear, rotations and translations.
+   * It is applied to world coordinates before the camera transform, so the
+   * resulting view matrix is `view * modelTransform`. A common use is a global
+   * vertical exaggeration, e.g. a scale of (1, 1, 10) on world Z.
+   *
+   * The matrix is in gl-matrix column-major order, like `userMatrix` on
+   * vtkProp3D, so a matrix from vtkTransform or vtkMatrixBuilder can be passed
+   * directly.
+   *
+   * Note the camera pose (position, focalPoint, viewUp, clippingRange) is
+   * interpreted after this transform is applied, so it is expressed in
+   * transformed space rather than world space.
    * @param {mat4} mat The value of the model transform matrix.
    */
   setModelTransformMatrix(mat: mat4): void;
