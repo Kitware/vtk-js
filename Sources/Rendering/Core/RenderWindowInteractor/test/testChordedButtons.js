@@ -144,6 +144,31 @@ it('Test RenderWindowInteractor single button (no false chorded events)', () => 
   teardown(env);
 });
 
+it('Test RenderWindowInteractor reports the first move of a burst', () => {
+  const env = setupInteractor();
+  const { container, interactor } = env;
+
+  const events = [];
+  const subs = [
+    interactor.onStartMouseMove(() => events.push('StartMouseMove')),
+    interactor.onMouseMove(() => events.push('MouseMove')),
+  ];
+
+  container.dispatchEvent(
+    makePointerEvent('pointermove', { button: -1, buttons: 0 })
+  );
+  expect(events).toEqual(['StartMouseMove', 'MouseMove']);
+
+  events.length = 0;
+  container.dispatchEvent(
+    makePointerEvent('pointermove', { button: -1, buttons: 0 })
+  );
+  expect(events).toEqual(['MouseMove']);
+
+  subs.forEach((subscription) => subscription.unsubscribe());
+  teardown(env);
+});
+
 it('Test RenderWindowInteractor three-button chord', () => {
   const env = setupInteractor();
   const { container, interactor } = env;
