@@ -44,6 +44,7 @@ let widget = null;
 let widgetHandle = null;
 
 renderer.resetCamera();
+renderWindow.render();
 
 // -----------------------------------------------------------
 // UI control handling
