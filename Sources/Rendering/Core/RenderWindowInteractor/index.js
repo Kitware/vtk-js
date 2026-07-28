@@ -756,9 +756,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     if (model.moveTimeoutID === 0) {
       publicAPI.startMouseMoveEvent(callData);
     } else {
-      publicAPI.mouseMoveEvent(callData);
       clearTimeout(model.moveTimeoutID);
     }
+    // StartMouseMove is only a burst marker; every move must also fire
+    // MouseMove or subscribers lose the first move of the burst.
+    publicAPI.mouseMoveEvent(callData);
 
     // start a timer to keep us animating while we get mouse move events
     model.moveTimeoutID = setTimeout(() => {
