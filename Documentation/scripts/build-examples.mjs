@@ -2,6 +2,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import nodePolyfills from '@rolldown/plugin-node-polyfills';
 import { fileURLToPath } from 'url';
 import { build as viteBuild } from 'vite';
 
@@ -210,6 +211,7 @@ function createExamplePlugins() {
   return [
     ...createVtkPlugins({ includeCjson: true }),
     inlineExtractedCssPlugin(),
+    { ...nodePolyfills(), enforce: 'pre' },
   ];
 }
 
