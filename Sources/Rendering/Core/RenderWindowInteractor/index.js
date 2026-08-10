@@ -57,6 +57,8 @@ const handledEvents = [
   'StartPan',
   'Pan',
   'EndPan',
+  'Tap',
+  'LongTap',
   'StartRotate',
   'Rotate',
   'EndRotate',
@@ -84,6 +86,10 @@ function pointerCacheToPositions(cache) {
   return positions;
 }
 
+function distanceBetweenPositions(a, b) {
+  return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+}
+
 // ----------------------------------------------------------------------------
 // vtkRenderWindowInteractor methods
 // ----------------------------------------------------------------------------
@@ -109,6 +115,40 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   // first press / last release. Chorded (additional) button changes while
   // another button is held are signaled via pointermove with updated `buttons`.
   let previousMouseButtons = 0;
+
+  // Tap / LongTap gesture tracking for touch and pen pointers.
+  let tapInformation = { timer: null, pointerId: null };
+
+  function cancelTapGesture() {
+    if (tapInformation.timer != null) clearTimeout(tapInformation.timer);
+    tapInformation.timer = null;
+  }
+
+  function startTapTimer(pointerId) {
+    cancelTapGesture();
+    tapInformation.pointerId = pointerId;
+    tapInformation.timer = setTimeout(() => {
+      const callData = {
+        ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
+        position: model.startingEventPositions[pointerId],
+        deviceType: 'touch',
+      };
+      publicAPI.longTapEvent(callData);
+      cancelTapGesture();
+    }, model.longTapDuration);
+  }
+
+  function finalizeTapGesture(event) {
+    if (tapInformation.timer != null) {
+      const callData = {
+        ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
+        position: model.startingEventPositions[tapInformation.pointerId],
+        deviceType: getDeviceTypeFor(event),
+      };
+      publicAPI.tapEvent(callData);
+      cancelTapGesture();
+    }
+  }
 
   // Public API methods
 
@@ -328,6 +368,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     );
     pointerCache.clear();
     previousMouseButtons = 0;
+    cancelTapGesture();
   };
 
   publicAPI.unbindEvents = () => {
@@ -474,6 +515,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       switch (event.pointerType) {
         case 'pen':
         case 'touch':
+          cancelTapGesture();
           publicAPI.handleTouchEnd(event);
           break;
         case 'mouse':
@@ -891,21 +933,35 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.handleTouchStart = (event) => {
     const pointers = [...pointerCache.values()];
-    // If multitouch
-    if (model.recognizeGestures && pointers.length > 1) {
+    if (model.recognizeGestures) {
       const positions = pointerCacheToPositions(pointerCache);
-      // did we just transition to multitouch?
-      if (pointers.length === 2) {
-        const callData = {
-          ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
-          position: pointers[0].position,
-          deviceType: getDeviceTypeFor(event),
-        };
-        publicAPI.leftButtonReleaseEvent(callData);
+
+      if (!model.startingEventPositions) {
+        model.startingEventPositions = {};
       }
-      // handle the gesture
-      publicAPI.recognizeGesture('TouchStart', positions);
-    } else if (pointers.length === 1) {
+      Object.keys(positions).forEach((key) => {
+        model.startingEventPositions[key] = positions[key];
+      });
+      // If multitouch
+      if (pointers.length > 1) {
+        cancelTapGesture();
+        // did we just transition to multitouch?
+        if (pointers.length === 2) {
+          const callData = {
+            ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
+            position: pointers[0].position,
+            deviceType: getDeviceTypeFor(event),
+          };
+          publicAPI.leftButtonReleaseEvent(callData);
+        }
+        // handle the gesture
+        publicAPI.recognizeGesture('TouchStart', positions);
+      } else if (pointers.length === 1) {
+        preventDefault(event);
+        startTapTimer(event.pointerId);
+      }
+    }
+    if (pointers.length === 1) {
       const callData = {
         ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
         position: getScreenEventPositionFor(event),
@@ -921,6 +977,14 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       const positions = pointerCacheToPositions(pointerCache);
       publicAPI.recognizeGesture('TouchMove', positions);
     } else if (pointers.length === 1) {
+      if (
+        distanceBetweenPositions(
+          pointers[0].position,
+          model.startingEventPositions[pointers[0].pointerId]
+        ) > model.longTapMaximumDistance
+      ) {
+        cancelTapGesture();
+      }
       const callData = {
         ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
         position: pointers[0].position,
@@ -936,6 +1000,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     if (model.recognizeGestures) {
       // No more fingers down
       if (pointers.length === 0) {
+        finalizeTapGesture(event);
         const callData = {
           ...getModifierKeysFor(EMPTY_MOUSE_EVENT),
           position: getScreenEventPositionFor(event),
@@ -1084,15 +1149,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       return;
     }
 
-    if (!model.startingEventPositions) {
-      model.startingEventPositions = {};
-    }
-
     // store the initial positions
     if (event === 'TouchStart') {
-      Object.keys(positions).forEach((key) => {
-        model.startingEventPositions[key] = positions[key];
-      });
       // we do not know what the gesture is yet
       model.currentGesture = 'Start';
       return;
@@ -1331,6 +1389,8 @@ const DEFAULT_VALUES = {
   preventDefaultOnPointerDown: false,
   preventDefaultOnPointerUp: false,
   mouseScrollDebounceByPass: false,
+  longTapDuration: 500,
+  longTapMaximumDistance: 30,
 };
 
 // ----------------------------------------------------------------------------
@@ -1371,6 +1431,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'preventDefaultOnPointerDown',
     'preventDefaultOnPointerUp',
     'mouseScrollDebounceByPass',
+    'longTapDuration',
+    'longTapMaximumDistance',
   ]);
   macro.moveToProtected(publicAPI, model, ['view']);
 
