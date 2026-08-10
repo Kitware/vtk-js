@@ -30,6 +30,8 @@ declare enum handledEvents {
   'StartPan',
   'Pan',
   'EndPan',
+  'Tap',
+  'LongTap',
   'StartRotate',
   'Rotate',
   'EndRotate',
@@ -61,6 +63,8 @@ export interface IRenderWindowInteractorInitialValues {
   preventDefaultOnPointerDown?: boolean;
   preventDefaultOnPointerUp?: boolean;
   mouseScrollDebounceByPass?: boolean;
+  longTapDuration?: number;
+  longTapDistance?: number;
 }
 
 export interface IPosition {
@@ -185,6 +189,16 @@ export interface vtkRenderWindowInteractor extends vtkObject {
    * @default false
    */
   getMouseScrollDebounceByPass(): boolean;
+
+  /**
+   * @default 500
+   */
+  getLongTapDuration(): number;
+
+  /**
+   * @default 30
+   */
+  getLongTapDistance(): number;
 
   /**
    *
@@ -393,6 +407,18 @@ export interface vtkRenderWindowInteractor extends vtkObject {
    * @param {IRenderWindowInteractorEvent} callData
    */
   invokeEndPointerLock(callData: IRenderWindowInteractorEvent): void;
+
+  /**
+   *
+   * @param {IRenderWindowInteractorEvent} callData
+   */
+  invokeTap(callData: IRenderWindowInteractorEvent): void;
+
+  /**
+   *
+   * @param {IRenderWindowInteractorEvent} callData
+   */
+  invokeLongTap(callData: IRenderWindowInteractorEvent): void;
 
   /**
    *
@@ -699,6 +725,26 @@ export interface vtkRenderWindowInteractor extends vtkObject {
    * @param {InteractorEventCallback} cb The callback to be called.
    * @param {Number} [priority] The priority of the event.
    */
+  onTap(
+    cb: InteractorEventCallback,
+    priority?: number
+  ): Readonly<vtkSubscription>;
+
+  /**
+   *
+   * @param {InteractorEventCallback} cb The callback to be called.
+   * @param {Number} [priority] The priority of the event.
+   */
+  onLongTap(
+    cb: InteractorEventCallback,
+    priority?: number
+  ): Readonly<vtkSubscription>;
+
+  /**
+   *
+   * @param {InteractorEventCallback} cb The callback to be called.
+   * @param {Number} [priority] The priority of the event.
+   */
   onStartRotate(
     cb: InteractorEventCallback,
     priority?: number
@@ -902,6 +948,12 @@ export interface vtkRenderWindowInteractor extends vtkObject {
    *
    * @param args
    */
+  longTapEvent(args: any): any;
+
+  /**
+   *
+   * @param args
+   */
   middleButtonPressEvent(args: any): any;
 
   /**
@@ -1026,6 +1078,19 @@ export interface vtkRenderWindowInteractor extends vtkObject {
   setRecognizeGestures(recognizeGestures: boolean): boolean;
 
   /**
+   * Set the minimum duration (in ms) of a press for a long-press.
+   * @param longTapDuration
+   */
+  setLongTapDuration(longTapDuration: number): boolean;
+
+  /**
+   * Set the maximum distance (in pixels) a press may move before the
+   * long-press is canceled.
+   * @param longTapDistance
+   */
+  setLongTapDistance(longTapDistance: number): boolean;
+
+  /**
    * Set the desired update rate.
    * @param desiredUpdateRate
    */
@@ -1091,6 +1156,12 @@ export interface vtkRenderWindowInteractor extends vtkObject {
    * @param args
    */
   startRotateEvent(args: any): any;
+
+  /**
+   *
+   * @param args
+   */
+  tapEvent(args: any): any;
 
   /**
    * Set/Get the rendering window being controlled by this object.
