@@ -155,7 +155,7 @@ function vtkWebGPUTexture(publicAPI, model) {
   };
 
   publicAPI.create = (device, options) => {
-    model.device = device;
+    model._device = device;
     model.width = options.width;
     model.height = options.height;
     model.depth = options.depth ? options.depth : 1;
@@ -173,7 +173,7 @@ function vtkWebGPUTexture(publicAPI, model) {
       : GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST;
     /* eslint-enable no-undef */
     /* eslint-enable no-bitwise */
-    model.handle = model.device.getHandle().createTexture({
+    model.handle = model._device.getHandle().createTexture({
       size: [model.width, model.height, model.depth],
       format: model.format, // 'rgba8unorm',
       usage: model.usage,
@@ -184,7 +184,7 @@ function vtkWebGPUTexture(publicAPI, model) {
   };
 
   publicAPI.assignFromHandle = (device, handle, options) => {
-    model.device = device;
+    model._device = device;
     model.handle = handle;
     model.width = options.width;
     model.height = options.height;
@@ -209,7 +209,7 @@ function vtkWebGPUTexture(publicAPI, model) {
     const _copyImageToTexture = (source) => {
       const originZ = req.originZ ?? 0;
       const depth = req.depth ?? 1;
-      model.device.getHandle().queue.copyExternalImageToTexture(
+      model._device.getHandle().queue.copyExternalImageToTexture(
         {
           source,
           flipY: req.flip,
@@ -226,7 +226,7 @@ function vtkWebGPUTexture(publicAPI, model) {
       // Generate mipmaps on GPU if needed
       if (model.dimension === '2d' && depth === 1 && model.mipLevel > 0) {
         vtkTexture.generateMipmaps(
-          model.device.getHandle(),
+          model._device.getHandle(),
           model.handle,
           model.mipLevel + 1
         );
@@ -288,7 +288,7 @@ function vtkWebGPUTexture(publicAPI, model) {
     }
     const data = preparedData.data;
 
-    model.device.getHandle().queue.writeTexture(
+    model._device.getHandle().queue.writeTexture(
       {
         texture: model.handle,
         mipLevel: 0,
@@ -309,7 +309,7 @@ function vtkWebGPUTexture(publicAPI, model) {
 
     if (model.dimension === '2d' && depth === 1 && model.mipLevel > 0) {
       vtkTexture.generateMipmaps(
-        model.device.getHandle(),
+        model._device.getHandle(),
         model.handle,
         model.mipLevel + 1
       );
@@ -338,7 +338,7 @@ function vtkWebGPUTexture(publicAPI, model) {
       return;
     }
 
-    model.device.getHandle().queue.writeTexture(
+    model._device.getHandle().queue.writeTexture(
       {
         texture: model.handle,
         mipLevel: 0,
@@ -363,7 +363,7 @@ function vtkWebGPUTexture(publicAPI, model) {
 
     if (publicAPI.getDimensionality() !== 3 && model.mipLevel > 0) {
       vtkTexture.generateMipmaps(
-        model.device.getHandle(),
+        model._device.getHandle(),
         model.handle,
         model.mipLevel + 1
       );
@@ -404,7 +404,7 @@ function vtkWebGPUTexture(publicAPI, model) {
       model.width = tex.getWidth();
       model.height = tex.getHeight();
       model.depth = tex.getDepth();
-      model.handle = model.device.getHandle().createTexture({
+      model.handle = model._device.getHandle().createTexture({
         size: [model.width, model.height, model.depth],
         dimension: model.dimension,
         format: model.format,
@@ -423,7 +423,7 @@ function vtkWebGPUTexture(publicAPI, model) {
       model.width = width;
       model.height = height;
       model.depth = depth;
-      model.handle = model.device.getHandle().createTexture({
+      model.handle = model._device.getHandle().createTexture({
         size: [model.width, model.height, model.depth],
         dimension: model.dimension,
         format: model.format,
@@ -455,7 +455,7 @@ function vtkWebGPUTexture(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  device: null,
+  _device: null,
   dimension: '2d',
   handle: null,
   buffer: null,
@@ -481,7 +481,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'format',
     'usage',
   ]);
-  macro.setGet(publicAPI, model, ['device', 'label']);
+  macro.setGet(publicAPI, model, ['_device', 'label']);
 
   vtkWebGPUTexture(publicAPI, model);
 }
