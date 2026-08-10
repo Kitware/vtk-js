@@ -1,4 +1,4 @@
-import { expect } from 'vitest';
+import { expect, onTestFinished } from 'vitest';
 import pixelmatch from 'pixelmatch';
 import vtkRTAnalyticSource from 'vtk.js/Sources/Filters/Sources/RTAnalyticSource';
 import vtkWebGPUDevice from 'vtk.js/Sources/Rendering/WebGPU/Device';
@@ -203,6 +203,7 @@ async function createWebGPUTestDevice() {
   }
 
   const handle = await adapter.requestDevice();
+  onTestFinished(() => handle.destroy());
   const device = vtkWebGPUDevice.newInstance();
   device.initialize(handle);
   return device;
