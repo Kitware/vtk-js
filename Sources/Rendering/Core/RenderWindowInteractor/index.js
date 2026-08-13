@@ -86,8 +86,8 @@ function pointerCacheToPositions(cache) {
   return positions;
 }
 
-function distanceBetweenPositions(a, b) {
-  return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+function distance2BetweenPositions(a, b) {
+  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
 
 // ----------------------------------------------------------------------------
@@ -978,10 +978,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       publicAPI.recognizeGesture('TouchMove', positions);
     } else if (pointers.length === 1) {
       if (
-        distanceBetweenPositions(
+        distance2BetweenPositions(
           pointers[0].position,
           model.startingEventPositions[pointers[0].pointerId]
-        ) > model.longTapMaximumDistance
+        ) >
+        model.longTapMaximumDistance * model.longTapMaximumDistance
       ) {
         cancelTapGesture();
       }
@@ -1190,12 +1191,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // of movement it is and then deal with it.
     // calculate the distances
     const originalDistance = Math.sqrt(
-      (startVals[0].x - startVals[1].x) * (startVals[0].x - startVals[1].x) +
-        (startVals[0].y - startVals[1].y) * (startVals[0].y - startVals[1].y)
+      distance2BetweenPositions(startVals[0], startVals[1])
     );
     const newDistance = Math.sqrt(
-      (posVals[0].x - posVals[1].x) * (posVals[0].x - posVals[1].x) +
-        (posVals[0].y - posVals[1].y) * (posVals[0].y - posVals[1].y)
+      distance2BetweenPositions(posVals[0], posVals[1])
     );
 
     // calculate rotations
@@ -1241,25 +1240,23 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         // pan is a move of the center point
         // compute the distance along each of these axes in pixels
         // the first to break thresh wins
-        let thresh =
-          0.01 *
-          Math.sqrt(
-            model.container.clientWidth * model.container.clientWidth +
-              model.container.clientHeight * model.container.clientHeight
-          );
-        if (thresh < 15.0) {
-          thresh = 15.0;
+        let thresh2 =
+          0.0001 *
+          (model.container.clientWidth * model.container.clientWidth +
+            model.container.clientHeight * model.container.clientHeight);
+        if (thresh2 < 225.0) {
+          thresh2 = 225.0;
         }
         const pinchDistance = Math.abs(newDistance - originalDistance);
+        const pinchDistance2 = pinchDistance * pinchDistance;
         const rotateDistance =
           (newDistance * 3.1415926 * Math.abs(angleDeviation)) / 360.0;
-        const panDistance = Math.sqrt(
-          trans[0] * trans[0] + trans[1] * trans[1]
-        );
+        const rotateDistance2 = rotateDistance * rotateDistance;
+        const panDistance2 = trans[0] * trans[0] + trans[1] * trans[1];
         if (
-          pinchDistance > thresh &&
+          pinchDistance2 > thresh2 &&
           pinchDistance > rotateDistance &&
-          pinchDistance > panDistance
+          pinchDistance2 > panDistance2
         ) {
           model.currentGesture = 'Pinch';
           const callData = {
@@ -1267,14 +1264,17 @@ function vtkRenderWindowInteractor(publicAPI, model) {
             touches: positions,
           };
           publicAPI.startPinchEvent(callData);
-        } else if (rotateDistance > thresh && rotateDistance > panDistance) {
+        } else if (
+          rotateDistance2 > thresh2 &&
+          rotateDistance2 > panDistance2
+        ) {
           model.currentGesture = 'Rotate';
           const callData = {
             rotation: 0.0,
             touches: positions,
           };
           publicAPI.startRotateEvent(callData);
-        } else if (panDistance > thresh) {
+        } else if (panDistance2 > thresh2) {
           model.currentGesture = 'Pan';
           const callData = {
             translation: [0, 0],
