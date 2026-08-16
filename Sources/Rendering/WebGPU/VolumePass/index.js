@@ -184,10 +184,11 @@ function vtkWebGPUVolumePass(publicAPI, model) {
 
     const device = viewNode.getDevice();
 
-    // determine how many volumes we can render at a time. We subtract
-    // 4 because we use know we use textures for min, max, ofun and tfun
+    // Determine how many volumes we can render at a time. Reserve bindings
+    // for min/max depth, color/opacity transfer functions, and labeloutline
+    // thickness.
     const maxVolumes =
-      device.getHandle().limits.maxSampledTexturesPerShaderStage - 4;
+      device.getHandle().limits.maxSampledTexturesPerShaderStage - 5;
 
     // if we have to make multiple passes then break the volumes up into groups
     // rendered from farthest to closest
@@ -214,6 +215,9 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       // start with smallest chunk so that the last (closest) chunk
       // has a full maxVolumes;
       let chunkSize = volumeOrder.length % maxVolumes;
+      if (chunkSize === 0) {
+        chunkSize = maxVolumes;
+      }
       for (let v = 0; v < volumeOrder.length; v++) {
         volumesToRender.push(model.volumes[volumeOrder[v]]);
         if (volumesToRender.length >= chunkSize) {
@@ -373,10 +377,19 @@ function vtkWebGPUVolumePass(publicAPI, model) {
 
   publicAPI.updateDepthPolyData = (renNode) => {
     // check mtimes first
-    let update = false;
+    let update = model._lastMTimes.length !== model.volumes.length + 1;
     for (let i = 0; i < model.volumes.length; i++) {
-      const mtime = model.volumes[i].getMTime();
-      if (!model._lastMTimes[i] || mtime !== model._lastMTimes[i]) {
+      const volumeNode = model.volumes[i];
+      const volume = volumeNode.getRenderable();
+      const mapper = volume.getMapper();
+      const input = mapper.getInputData();
+      const mtime = Math.max(
+        volumeNode.getMTime(),
+        volume.getMTime(),
+        mapper.getMTime(),
+        input?.getMTime() ?? 0
+      );
+      if (mtime !== model._lastMTimes[i]) {
         update = true;
         model._lastMTimes[i] = mtime;
       }
@@ -391,6 +404,7 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       update = true;
       model._lastMTimes[model.volumes.length] = stime;
     }
+    model._lastMTimes.length = model.volumes.length + 1;
 
     // if no need to update then return
     if (!update) {
@@ -693,12 +707,16 @@ function vtkWebGPUVolumePass(publicAPI, model) {
   // marks modified when needed
   publicAPI.setVolumes = (val) => {
     if (!model.volumes || model.volumes.length !== val.length) {
+      model._lastScale = null;
+      model._lastMTimes.length = 0;
       model.volumes = [...val];
       publicAPI.modified();
       return;
     }
     for (let i = 0; i < val.length; i++) {
       if (val[i] !== model.volumes[i]) {
+        model._lastScale = null;
+        model._lastMTimes.length = 0;
         model.volumes = [...val];
         publicAPI.modified();
         return;
@@ -711,6 +729,10 @@ function vtkWebGPUVolumePass(publicAPI, model) {
       model._animationRateSubscription.unsubscribe();
       model._animationRateSubscription = null;
     }
+
+    model._mapper.releaseGraphicsResources?.();
+    model._volumeCopyQuad?.releaseGraphicsResources?.();
+    model.fullScreenQuad?.releaseGraphicsResources?.();
 
     model._clearEncoder = null;
     model._mergeEncoder = null;

@@ -37,11 +37,10 @@ const volFragTemplate = `
 
 fn getTextureValue(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32) -> vec4<f32>
 {
-  var value = textureSampleLevel(vTex, clampSampler, tpos.xyz, 0.0);
   let forceNearestMask = i32(volumeSSBO.values[vNum].componentInfo.w);
   if (forceNearestMask == 0)
   {
-    return value;
+    return textureSampleLevel(vTex, clampSampler, tpos.xyz, 0.0);
   }
 
   // Match the OpenGL mapper's nearest-interpolation convention: re-sample at
@@ -50,6 +49,12 @@ fn getTextureValue(vTex: texture_3d<f32>, tpos: vec4<f32>, vNum: i32) -> vec4<f3
   let dims = vec3<f32>(textureDimensions(vTex, 0));
   let nearestPos = (floor(tpos.xyz * dims) + vec3<f32>(0.5)) / dims;
   let nearestValue = textureSampleLevel(vTex, clampSampler, nearestPos, 0.0);
+  if (forceNearestMask == 15)
+  {
+    return nearestValue;
+  }
+
+  var value = textureSampleLevel(vTex, clampSampler, tpos.xyz, 0.0);
 
   if ((forceNearestMask & 1) != 0) { value.x = nearestValue.x; }
   if ((forceNearestMask & 2) != 0) { value.y = nearestValue.y; }
@@ -2259,6 +2264,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       mtime = Math.max(
         mtime,
         vol.getMTime(),
+        vol.getMapper().getMTime(),
         image.getMTime(),
         vprop.getMTime()
       );
@@ -2274,7 +2280,10 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       }
     }
 
-    if (mtime < model.lutBuildTime.getMTime()) {
+    if (
+      mtime < model.lutBuildTime.getMTime() &&
+      model.lutSampleDist === model.sampleDist
+    ) {
       return;
     }
 
@@ -2403,6 +2412,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       model.textureViews[3] = tview;
     }
 
+    model.lutSampleDist = model.sampleDist;
     model.lutBuildTime.modified();
   };
 
@@ -2458,8 +2468,13 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
 
     // create the volumeSBBO
     const center = model.WebGPURenderer.getStabilizedCenterByReference();
-    model.SSBO.clearData();
-    model.SSBO.setNumberOfInstances(model.volumes.length);
+    const rebuildVolumeSSBO =
+      model.SSBO.getSizeInBytes() === 0 ||
+      model.SSBO.getNumberOfInstances() !== model.volumes.length;
+    if (rebuildVolumeSSBO) {
+      model.SSBO.clearData();
+      model.SSBO.setNumberOfInstances(model.volumes.length);
+    }
 
     // create SCTC matrices  SC -> world -> model -> index -> tcoord
     //
@@ -2684,26 +2699,28 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         clipPlaneArrays[i][clipOffset + 3] = model.clipPlanes[i][3];
       }
     }
-    model.SSBO.addEntry('SCTCMatrix', 'mat4x4<f32>');
-    model.SSBO.addEntry('VCTCMatrix', 'mat4x4<f32>');
-    model.SSBO.addEntry('planeNormals', 'mat4x4<f32>');
-    model.SSBO.addEntry('shade', 'vec4<f32>');
-    model.SSBO.addEntry('lighting', 'vec4<f32>');
-    model.SSBO.addEntry('scattering', 'vec4<f32>');
-    model.SSBO.addEntry('shadow', 'vec4<f32>');
-    model.SSBO.addEntry('lao', 'vec4<f32>');
-    model.SSBO.addEntry('tstep', 'vec4<f32>');
-    model.SSBO.addEntry('spacing', 'vec4<f32>');
-    model.SSBO.addEntry('ipScalarRangeMin', 'vec4<f32>');
-    model.SSBO.addEntry('ipScalarRangeMax', 'vec4<f32>');
-    model.SSBO.addEntry('componentInfo', 'vec4<f32>');
-    model.SSBO.addEntry('labelOutline', 'vec4<f32>');
-    model.SSBO.addEntry('colorScale', 'vec4<f32>');
-    model.SSBO.addEntry('colorShift', 'vec4<f32>');
-    model.SSBO.addEntry('opacityScale', 'vec4<f32>');
-    model.SSBO.addEntry('opacityShift', 'vec4<f32>');
-    addClipPlaneEntries(model.SSBO, 'clipPlane');
-    model.SSBO.addEntry('clipPlaneStates', 'vec4<f32>');
+    if (rebuildVolumeSSBO) {
+      model.SSBO.addEntry('SCTCMatrix', 'mat4x4<f32>');
+      model.SSBO.addEntry('VCTCMatrix', 'mat4x4<f32>');
+      model.SSBO.addEntry('planeNormals', 'mat4x4<f32>');
+      model.SSBO.addEntry('shade', 'vec4<f32>');
+      model.SSBO.addEntry('lighting', 'vec4<f32>');
+      model.SSBO.addEntry('scattering', 'vec4<f32>');
+      model.SSBO.addEntry('shadow', 'vec4<f32>');
+      model.SSBO.addEntry('lao', 'vec4<f32>');
+      model.SSBO.addEntry('tstep', 'vec4<f32>');
+      model.SSBO.addEntry('spacing', 'vec4<f32>');
+      model.SSBO.addEntry('ipScalarRangeMin', 'vec4<f32>');
+      model.SSBO.addEntry('ipScalarRangeMax', 'vec4<f32>');
+      model.SSBO.addEntry('componentInfo', 'vec4<f32>');
+      model.SSBO.addEntry('labelOutline', 'vec4<f32>');
+      model.SSBO.addEntry('colorScale', 'vec4<f32>');
+      model.SSBO.addEntry('colorShift', 'vec4<f32>');
+      model.SSBO.addEntry('opacityScale', 'vec4<f32>');
+      model.SSBO.addEntry('opacityShift', 'vec4<f32>');
+      addClipPlaneEntries(model.SSBO, 'clipPlane');
+      model.SSBO.addEntry('clipPlaneStates', 'vec4<f32>');
+    }
     model.SSBO.setAllInstancesFromArray('SCTCMatrix', marray);
     model.SSBO.setAllInstancesFromArray('VCTCMatrix', vctcArray);
     model.SSBO.setAllInstancesFromArray('planeNormals', vPlaneArray);
@@ -2735,8 +2752,13 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     model.SSBO.send(device);
 
     // now create the componentSSBO
-    model.componentSSBO.clearData();
-    model.componentSSBO.setNumberOfInstances(model.numRows);
+    const rebuildComponentSSBO =
+      model.componentSSBO.getSizeInBytes() === 0 ||
+      model.componentSSBO.getNumberOfInstances() !== model.numRows;
+    if (rebuildComponentSSBO) {
+      model.componentSSBO.clearData();
+      model.componentSSBO.setNumberOfInstances(model.numRows);
+    }
     const cScaleArray = new Float64Array(model.numRows);
     const cShiftArray = new Float64Array(model.numRows);
     const oScaleArray = new Float64Array(model.numRows);
@@ -2830,16 +2852,18 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       }
     }
 
-    model.componentSSBO.addEntry('cScale', 'f32');
-    model.componentSSBO.addEntry('cShift', 'f32');
-    model.componentSSBO.addEntry('oScale', 'f32');
-    model.componentSSBO.addEntry('oShift', 'f32');
-    model.componentSSBO.addEntry('goShift', 'f32');
-    model.componentSSBO.addEntry('goScale', 'f32');
-    model.componentSSBO.addEntry('gomin', 'f32');
-    model.componentSSBO.addEntry('gomax', 'f32');
-    model.componentSSBO.addEntry('mixWeight', 'f32');
-    model.componentSSBO.addEntry('opacityMode', 'f32');
+    if (rebuildComponentSSBO) {
+      model.componentSSBO.addEntry('cScale', 'f32');
+      model.componentSSBO.addEntry('cShift', 'f32');
+      model.componentSSBO.addEntry('oScale', 'f32');
+      model.componentSSBO.addEntry('oShift', 'f32');
+      model.componentSSBO.addEntry('goShift', 'f32');
+      model.componentSSBO.addEntry('goScale', 'f32');
+      model.componentSSBO.addEntry('gomin', 'f32');
+      model.componentSSBO.addEntry('gomax', 'f32');
+      model.componentSSBO.addEntry('mixWeight', 'f32');
+      model.componentSSBO.addEntry('opacityMode', 'f32');
+    }
     model.componentSSBO.setAllInstancesFromArray('cScale', cScaleArray);
     model.componentSSBO.setAllInstancesFromArray('cShift', cShiftArray);
     model.componentSSBO.setAllInstancesFromArray('oScale', oScaleArray);
@@ -3056,16 +3080,28 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     model.pipelineHash = 'volfsq';
     for (let vidx = 0; vidx < model.volumes.length; vidx++) {
       const actor = model.volumes[vidx].getRenderable();
-      const blendMode = actor.getMapper().getBlendMode();
+      const mapper = actor.getMapper();
+      const property = actor.getProperty();
+      const blendMode = mapper.getBlendMode();
+      const numComp =
+        mapper
+          .getInputData()
+          ?.getPointData()
+          ?.getScalars()
+          ?.getNumberOfComponents?.() ?? 0;
+      const independentComponents = Number(property.getIndependentComponents());
       // label outline changes the generated composite code, so it must be
       // part of the hash
-      const useLabelOutline = actor.getProperty().getUseLabelOutline() ? 1 : 0;
-      model.pipelineHash += `${blendMode}L${useLabelOutline}`;
-      if (blendMode === BlendMode.LABELMAP_EDGE_PROJECTION_BLEND) {
-        // the generated segment row index depends on independent components
-        const iComps = actor.getProperty().getIndependentComponents() ? 1 : 0;
-        model.pipelineHash += `E${iComps}`;
-      }
+      const useLabelOutline = Number(
+        blendMode === BlendMode.COMPOSITE_BLEND &&
+          property.getUseLabelOutline() &&
+          numComp === 1
+      );
+      // Component count and independence determine rowStarts, which are
+      // embedded directly in the generated shader for every blend mode.
+      model.pipelineHash +=
+        `${blendMode}C${numComp}I${independentComponents}` +
+        `L${useLabelOutline}`;
     }
   };
 
