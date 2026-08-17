@@ -1,10 +1,9 @@
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
-import { isEdges } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Helpers';
 
 function replaceShaderColor(publicAPI, model, hash, pipeline, vertexInput) {
   // By default, set the colors to be flat
-  if (isEdges(hash)) {
+  if (publicAPI.isEdgePrimitive()) {
     const fDesc = pipeline.getShaderDescription('fragment');
     let code = fDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [

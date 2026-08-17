@@ -16,7 +16,6 @@ import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
 import vtkResourceLoader from '@kitware/vtk.js/IO/Core/ResourceLoader';
 
 import vtkGLTFImporter from '@kitware/vtk.js/IO/Geometry/GLTFImporter';
-import vtkAnimationMixer from '@kitware/vtk.js/Common/Core/AnimationMixer';
 import vtkArmatureSource from '@kitware/vtk.js/Filters/Sources/ArmatureSource';
 import { DebugChannel } from '@kitware/vtk.js/Rendering/Core/Mapper/Constants';
 
@@ -212,27 +211,13 @@ function ready() {
   reader.importLights();
   setModelVisibility(params.ShowModel);
 
-  // Create animation mixer (handles skeletal, node-transform, and morph animations)
-  mixer = vtkAnimationMixer.newInstance();
-
-  // Provide scene graph data to mixer for node/morph/pointer animations
-  mixer.setScene({
-    actors: reader.getActors(),
-    nodeTransforms: reader.getNodeTransforms(),
-    nodeChildren: reader.getNodeChildren(),
-    skins: reader.getSkins(),
-    morphTargets: reader.getMorphTargets(),
-    materialProperties: reader.getMaterialProperties(),
-    nodeLights: reader.getNodeLights(),
-  });
+  mixer = reader.createAnimationMixer();
 
   // Skeletal setup: armature debug visualization
   const skeletons = reader.getSkeletons();
 
   if (skeletons.length > 0) {
     const primarySkeleton = skeletons[0].skeleton;
-    mixer.setSkeleton(primarySkeleton);
-
     armatureSource = vtkArmatureSource.newInstance({
       skeleton: primarySkeleton,
     });
@@ -247,57 +232,18 @@ function ready() {
     armatureRenderer.addActor(armatureActor);
   }
 
-  // Bind skinned actors for joint matrix updates
-  const actorMap = reader.getActors();
-  const skinsMap = reader.getSkins();
-  if (actorMap) {
-    actorMap.forEach((actor, actorKey) => {
-      const nodeId = actorKey.split('_')[0];
-      if (skinsMap && skinsMap.get(nodeId)) {
-        mixer.bindActor(actor);
-      }
-    });
-  }
-
-  // Push rest pose skinning data
-  mixer.tick(0);
-
-  // Node transform + morph target + skeletal animations (all node driven)
-  const nodeAnims = reader.getNodeAnimations();
-  if (nodeAnims.length > 0) {
-    mixer.setNodeAnimations(nodeAnims);
-
-    const animNames = nodeAnims.map((a) => a.name);
-    params.Animation = animNames[0];
+  const animationNames = mixer.getAnimationNames();
+  if (animationNames.length > 0) {
+    params.Animation = animationNames[0];
+    mixer.playAnimation(params.Animation);
     controllers.Animation && controllers.Animation.destroy();
     controllers.Animation = gui
-      .add(params, 'Animation', animNames)
+      .add(params, 'Animation', animationNames)
       .name('Animation')
       .onChange((name) => {
-        mixer.playNodeAnimation(name);
+        mixer.playAnimation(name);
         animateScene();
       });
-
-    animateScene();
-  }
-
-  // KHR_animation_pointer animations (texture transform animations)
-  const pointerAnims = reader.getPointerAnimations();
-  if (pointerAnims.length > 0) {
-    mixer.setPointerAnimations(pointerAnims);
-
-    if (!params.Animation) {
-      const animNames = pointerAnims.map((a) => a.name);
-      params.Animation = animNames[0];
-      controllers.Animation && controllers.Animation.destroy();
-      controllers.Animation = gui
-        .add(params, 'Animation', animNames)
-        .name('Animation')
-        .onChange((name) => {
-          mixer.playPointerAnimation(name);
-          animateScene();
-        });
-    }
   }
 
   requestAnimationFrame(() => {

@@ -1,15 +1,12 @@
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
-import {
-  getMaterialFeatureFlags,
-  isEdges,
-} from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Helpers';
+import { getMaterialFeatureFlags } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Helpers';
 import { getDebugChannelCode } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Debug';
 
 const { Shading } = vtkProperty;
 
 function replaceShaderLight(publicAPI, model, hash, pipeline, vertexInput) {
-  if (hash.includes('sel')) return;
+  if (model.selectionPass) return;
   const vDesc = pipeline.getShaderDescription('vertex');
   if (!vDesc.hasOutput('vertexVC')) vDesc.addOutput('vec4<f32>', 'vertexVC');
 
@@ -23,9 +20,9 @@ function replaceShaderLight(publicAPI, model, hash, pipeline, vertexInput) {
   const needLighting =
     hasNormal &&
     model.useRendererMatrix &&
-    !isEdges(hash) &&
+    !publicAPI.isEdgePrimitive() &&
     !model.is2D &&
-    !hash.includes('sel');
+    !model.selectionPass;
   if (needLighting) {
     const actor = model.WebGPUActor.getRenderable();
     const ppty = actor.getProperty();

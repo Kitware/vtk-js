@@ -2,6 +2,7 @@ export declare enum Shading {
   FLAT = 0,
   GOURAUD = 1,
   PHONG = 2,
+  PBR = 3,
 }
 
 export declare enum Representation {

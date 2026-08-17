@@ -41,12 +41,10 @@ export const vtkWebGPUPolyDataFS = `
 const pi: f32 = 3.14159265359;
 const epsilon: f32 = 0.000001;
 
-// Khronos reference: Lambertian diffuse BRDF
 fn BRDF_lambertian(diffuseColor: vec3<f32>) -> vec3<f32> {
   return diffuseColor / pi;
 }
 
-// Khronos D_GGX_anisotropic
 fn D_GGX_anisotropic(NdH: f32, TdH: f32, BdH: f32, at: f32, ab: f32) -> f32 {
   var a2: f32 = at * ab;
   var v: vec3<f32> = vec3<f32>(ab * TdH, at * BdH, a2 * NdH);
@@ -54,7 +52,6 @@ fn D_GGX_anisotropic(NdH: f32, TdH: f32, BdH: f32, at: f32, ab: f32) -> f32 {
   return a2 * a2 / max(pi * v2 * v2, epsilon);
 }
 
-// Khronos V_GGX_anisotropic
 fn V_GGX_anisotropic(at: f32, ab: f32, TdV: f32, BdV: f32, TdL: f32, BdL: f32, NdV: f32, NdL: f32) -> f32 {
   var lambdaV: f32 = NdL * length(vec3<f32>(at * TdV, ab * BdV, NdV));
   var lambdaL: f32 = NdV * length(vec3<f32>(at * TdL, ab * BdL, NdL));
@@ -86,12 +83,10 @@ fn D_GGX(NdH: f32, alphaRoughness: f32) -> f32 {
   return a2 / max(pi * f * f, epsilon);
 }
 
-// Khronos reference: BRDF_specularGGX = V_GGX * D_GGX (no Fresnel)
 fn BRDF_specularGGX(alphaRoughness: f32, NdL: f32, NdV: f32, NdH: f32) -> f32 {
   return V_GGX(NdL, NdV, alphaRoughness) * D_GGX(NdH, alphaRoughness);
 }
 
-// Khronos BRDF_specularGGXAnisotropy (brdf.glsl) — V*D only, no Fresnel
 fn specularAnisotropicBRDF(
   at: f32, ab: f32, L: vec3<f32>, T: vec3<f32>, B: vec3<f32>,
   H: vec3<f32>, TdV: f32, BdV: f32, NdH: f32, NdV: f32, NdL: f32
@@ -242,7 +237,7 @@ fn distributionCharlie(sheenRoughness: f32, NdotH: f32) -> f32 {
   return (2.0 + invAlpha) * pow(sin2h, invAlpha * 0.5) / (2.0 * pi);
 }
 
-// Sheen visibility (Khronos reference: V_Sheen from brdf.glsl)
+// Sheen visibility
 fn lambdaSheenNumericHelper(x: f32, alphaG: f32) -> f32 {
   let oneMinusAlphaSq = (1.0 - alphaG) * (1.0 - alphaG);
   let a = mix(21.5473, 25.3245, oneMinusAlphaSq);

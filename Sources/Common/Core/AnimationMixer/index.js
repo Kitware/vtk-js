@@ -28,58 +28,89 @@ function vtkAnimationMixer(publicAPI, model) {
   model.classHierarchy.push('vtkAnimationMixer');
 
   /**
-   * Register an animation scene to manage
-   * @param {vtkAnimationScene} scene
+   * Take the current clip out of every scene and drop the playback state.
+   * @return {boolean} true when there was something to stop
    */
-  publicAPI.registerScene = (scene) => {
-    if (!model.scenes.includes(scene)) {
-      model.scenes.push(scene);
+  function stopPlayback() {
+    const wasActive = !!model.currentCue || !!model.currentClipName;
+
+    model.scenes.forEach((scene) => {
+      scene.stop();
+      if (model.currentCue) {
+        scene.removeCue(model.currentCue);
+      }
+    });
+
+    if (model.currentCue) {
+      model.currentCue.stop();
+      model.currentCue = null;
     }
+
+    model.currentClipName = null;
+    model.currentClip = null;
+    return wasActive;
+  }
+
+  /**
+   * Add an animation scene to manage
+   * @param {vtkAnimationScene} scene
+   * @return {boolean} true when the scene was added
+   */
+  publicAPI.addScene = (scene) => {
+    if (model.scenes.includes(scene)) {
+      return false;
+    }
+    model.scenes.push(scene);
     publicAPI.modified();
+    return true;
   };
 
   /**
-   * Unregister an animation scene
+   * Remove an animation scene
    * @param {vtkAnimationScene} scene
+   * @return {boolean} true when the scene was removed
    */
-  publicAPI.unregisterScene = (scene) => {
+  publicAPI.removeScene = (scene) => {
     const idx = model.scenes.indexOf(scene);
-    if (idx !== -1) {
-      model.scenes.splice(idx, 1);
+    if (idx === -1) {
+      return false;
     }
+    model.scenes.splice(idx, 1);
     publicAPI.modified();
+    return true;
   };
-
-  /**
-   * Get all registered scenes
-   * @return {vtkAnimationScene[]}
-   */
-  publicAPI.getScenes = () => [...model.scenes];
 
   /**
    * Add an animation clip
    * @param {vtkAnimationClip} clip
+   * @return {boolean} true when the clip was added
    */
   publicAPI.addClip = (clip) => {
     const name = clip.getName();
-    if (name && !model.clips.has(name)) {
-      model.clips.set(name, clip);
-      publicAPI.modified();
+    if (!name || model.clips.has(name)) {
+      return false;
     }
+    model.clips.set(name, clip);
+    publicAPI.modified();
+    return true;
   };
 
   /**
-   * Remove a clip by name
+   * Remove a clip by name. A clip that plays stops first.
    * @param {string} name
+   * @return {boolean} true when the clip was removed
    */
   publicAPI.removeClip = (name) => {
-    if (model.clips.has(name)) {
-      model.clips.delete(name);
-      if (model.currentClipName === name) {
-        publicAPI.stop();
-      }
-      publicAPI.modified();
+    if (!model.clips.has(name)) {
+      return false;
     }
+    // the clip has to stop while the mixer still holds it
+    if (model.currentClipName === name) {
+      stopPlayback();
+    }
+    model.clips.delete(name);
+    publicAPI.modified();
+    return true;
   };
 
   /**
@@ -102,16 +133,22 @@ function vtkAnimationMixer(publicAPI, model) {
   publicAPI.getNumberOfClips = () => model.clips.size;
 
   /**
-   * Play a clip by name
+   * Play a clip by name. Does nothing while that same clip plays, so a caller
+   * that wants to hear it again from the start calls stop() first.
    * @param {string} clipName
    * @param {Object} [options]
    * @param {boolean} [options.loop=true] Whether to loop the animation
+   * @return {boolean} true when playback started
    */
   publicAPI.playClip = (clipName, options = {}) => {
     const clip = model.clips.get(clipName);
     if (!clip) {
       console.error(`vtkAnimationMixer: Clip "${clipName}" not found`);
-      return;
+      return false;
+    }
+
+    if (clipName === model.currentClipName && publicAPI.isPlaying()) {
+      return false;
     }
 
     // Stop current playback
@@ -128,8 +165,12 @@ function vtkAnimationMixer(publicAPI, model) {
     // Wire tick to evaluate pose on armature
     cue.onTickEvent(() => {
       if (model.skeleton) {
-        model.skeleton.evaluatePose(model.currentClip, cue.getTime());
+        model.skeleton.evaluatePose(model.currentClip, cue.getAnimationTime());
       }
+    });
+
+    cue.onEndCueEvent(() => {
+      publicAPI.invokeAnimationEnd({ name: clipName, clip });
     });
 
     model.currentClipName = clipName;
@@ -140,8 +181,7 @@ function vtkAnimationMixer(publicAPI, model) {
 
     // Auto-create a default scene if none registered (convenience)
     if (model.scenes.length === 0) {
-      const scene = vtkAnimationScene.newInstance();
-      model.scenes.push(scene);
+      publicAPI.addScene(vtkAnimationScene.newInstance());
     }
 
     // Add cue to all registered scenes
@@ -154,6 +194,7 @@ function vtkAnimationMixer(publicAPI, model) {
     });
 
     publicAPI.modified();
+    return true;
   };
 
   /**
@@ -174,21 +215,9 @@ function vtkAnimationMixer(publicAPI, model) {
    * Stop all playback and reset
    */
   publicAPI.stop = () => {
-    model.scenes.forEach((scene) => {
-      scene.stop();
-      if (model.currentCue) {
-        scene.removeCue(model.currentCue);
-      }
-    });
-
-    if (model.currentCue) {
-      model.currentCue.stop();
-      model.currentCue = null;
+    if (stopPlayback()) {
+      publicAPI.modified();
     }
-
-    model.currentClipName = null;
-    model.currentClip = null;
-    publicAPI.modified();
   };
 
   /** Alias for stop() */
@@ -205,15 +234,6 @@ function vtkAnimationMixer(publicAPI, model) {
    * @return {boolean}
    */
   publicAPI.isPlaying = () => model.currentCue && model.currentCue.isPlaying();
-
-  /**
-   * Set the skeleton to animate (custom: updates current cue)
-   * @param {vtkArmature} skeleton
-   */
-  publicAPI.setSkeleton = (skeleton) => {
-    model.skeleton = skeleton;
-    publicAPI.modified();
-  };
 
   /**
    * Bind an actor to this mixer so skinning matrices are pushed to it each tick.
@@ -246,6 +266,8 @@ function vtkAnimationMixer(publicAPI, model) {
    * @return {vtkActor[]}
    */
   publicAPI.getBoundActors = () => [...model.boundActors];
+
+  macro.event(publicAPI, model, 'animationEnd');
 
   /**
    * Seek to a specific time in the current clip (0-1 normalized)
@@ -332,8 +354,6 @@ function vtkAnimationMixer(publicAPI, model) {
 
     const skeleton = model.skeleton;
     const boneCount = skeleton.getNumberOfBones();
-    if (boneCount === 0) return;
-
     const worldMatrices = skeleton.getWorldMatrices();
     for (let i = 0; i < boneCount; i++) {
       const bone = skeleton.getBone(i);
@@ -511,35 +531,132 @@ function vtkAnimationMixer(publicAPI, model) {
   // -------------------------------------------------------------------------
   // Internal: apply registered non skeletal animation bindings
   // -------------------------------------------------------------------------
+  /**
+   * Weight of an animation inside a binding. An animation that carries no
+   * weight counts as a full one.
+   */
+  function weightOf(animation) {
+    const weight = animation.weight ?? 1;
+    return weight > 0 ? weight : 0;
+  }
+
+  /**
+   * Blend one set of updates into the ones already gathered this frame.
+   * Translation, scale and morph weights average by weight, a rotation walks
+   * toward the new one, and anything else keeps the last value.
+   */
+  function blendUpdates(gathered, weightSums, updates, weight) {
+    updates.forEach((update, key) => {
+      let entry = gathered.get(key);
+      if (!entry) {
+        entry = {};
+        gathered.set(key, entry);
+        weightSums.set(key, {});
+      }
+      const sums = weightSums.get(key);
+
+      Object.keys(update).forEach((property) => {
+        const value = update[property];
+        const gatheredSoFar = sums[property] ?? 0;
+
+        // an animation reuses its own buffer between frames, so the first
+        // value of a property has to be copied before anything blends into it
+        if (gatheredSoFar === 0 || !ArrayBuffer.isView(value)) {
+          entry[property] = ArrayBuffer.isView(value)
+            ? Float32Array.from(value)
+            : value;
+          sums[property] = weight;
+          return;
+        }
+
+        const total = gatheredSoFar + weight;
+        const ratio = weight / total;
+        const target = entry[property];
+        if (property === 'rotation' && value.length === 4) {
+          quat.slerp(target, target, value, ratio);
+          quat.normalize(target, target);
+        } else {
+          for (let i = 0; i < value.length && i < target.length; i++) {
+            target[i] = target[i] * (1 - ratio) + value[i] * ratio;
+          }
+        }
+        sums[property] = total;
+      });
+    });
+  }
+
   function applyAnimationBindings(deltaTime) {
-    Array.from(model.animationBindings.values()).forEach((binding) => {
+    Array.from(model.animationBindings.entries()).forEach(([name, binding]) => {
       const { animations } = binding;
       if (!binding.enabled || animations.length === 0) {
         return;
       }
 
-      binding.time += deltaTime;
+      const playable = animations.filter(
+        (animation) => animation && typeof animation.evaluate === 'function'
+      );
+      if (playable.length === 0) {
+        return;
+      }
+
+      binding.time += deltaTime * binding.timeScale;
+
+      // every animation wraps by its own duration, so the binding only has to
+      // hold a run that does not loop at the end of the longest one
+      const duration = playable.reduce(
+        (longest, animation) => Math.max(longest, animation.duration ?? 0),
+        0
+      );
+      if (!binding.loop && duration > 0 && binding.time >= duration) {
+        binding.time = duration;
+        if (!binding.ended) {
+          binding.ended = true;
+          publicAPI.invokeAnimationEnd({ name, binding });
+        }
+      }
       const time = binding.time;
 
-      const animation = animations[0];
-      if (!animation || typeof animation.evaluate !== 'function') {
+      // one animation is the common case, and it needs no copy at all
+      if (playable.length === 1) {
+        const updates = playable[0].evaluate(time, binding.loop);
+        if (updates) {
+          binding.apply(updates, {
+            animation: playable[0],
+            deltaTime,
+            mixer: publicAPI,
+            time,
+          });
+        }
         return;
       }
 
-      const updates = animation.evaluate(time);
-      if (!updates) {
-        return;
-      }
+      const gathered = new Map();
+      const weightSums = new Map();
+      playable.forEach((animation) => {
+        const weight = weightOf(animation);
+        if (weight === 0) {
+          return;
+        }
+        const updates = animation.evaluate(time, binding.loop);
+        if (!updates) {
+          return;
+        }
+        if (updates instanceof Map) {
+          blendUpdates(gathered, weightSums, updates, weight);
+        } else {
+          // a shape the mixer cannot blend goes straight through
+          binding.apply(updates, {
+            animation,
+            deltaTime,
+            mixer: publicAPI,
+            time,
+          });
+        }
+      });
 
-      if (updates instanceof Map) {
-        binding.apply(updates, {
-          deltaTime,
-          mixer: publicAPI,
-          time,
-        });
-      } else {
-        binding.apply(updates, {
-          animation,
+      if (gathered.size > 0) {
+        binding.apply(gathered, {
+          animations: playable,
           deltaTime,
           mixer: publicAPI,
           time,
@@ -553,16 +670,39 @@ function vtkAnimationMixer(publicAPI, model) {
   // -------------------------------------------------------------------------
 
   /**
-   * Register a non skeletal animation binding.
+   * Write a binding into the map, replacing whatever the name held. The node
+   * and the pointer bindings go through here, because selecting another
+   * animation reconfigures the binding that the previous selection left.
+   */
+  function storeAnimationBinding(name, apply, animations, options = {}) {
+    model.animationBindings.set(name, {
+      animations,
+      apply,
+      enabled: options.enabled !== false,
+      loop: options.loop !== false,
+      timeScale: options.timeScale ?? 1,
+      time: options.time || 0,
+      ended: false,
+    });
+    publicAPI.modified();
+  }
+
+  /**
+   * Add a non skeletal animation binding.
    * A binding owns its local time and applies evaluated animation updates.
    * @param {string} name Unique binding name
    * @param {Array} animations Array of objects with evaluate(time)
    * @param {Function} apply Function called with (updates, context)
    * @param {Object} [options]
    * @param {boolean} [options.enabled=true] Whether binding is ticked
-   * @return {boolean} true if the binding was registered
+   * @param {boolean} [options.loop=true] Whether the binding time wraps at the
+   * animation duration, or holds at the end
+   * @param {number} [options.timeScale=1] Rate the binding time advances at.
+   * A negative value runs the animation backwards
+   * @return {boolean} true if the binding was added, false when the name is
+   * already taken
    */
-  publicAPI.setAnimationBinding = (
+  publicAPI.addAnimationBinding = (
     name,
     apply,
     animations = [],
@@ -571,14 +711,11 @@ function vtkAnimationMixer(publicAPI, model) {
     if (!name || typeof apply !== 'function') {
       return false;
     }
+    if (model.animationBindings.has(name)) {
+      return false;
+    }
 
-    model.animationBindings.set(name, {
-      animations,
-      apply,
-      enabled: options.enabled !== false,
-      time: options.time || 0,
-    });
-    publicAPI.modified();
+    storeAnimationBinding(name, apply, animations, options);
     return true;
   };
 
@@ -607,6 +744,7 @@ function vtkAnimationMixer(publicAPI, model) {
    * Call once after importing actors.
    * @param {Object} sceneData
    * @param {Map} sceneData.actors - Map of nodeId → vtkActor
+   * @param {Map} [sceneData.actorNodeIds] - Map of vtkActor → nodeId
    * @param {Map} sceneData.nodeTransforms - Map of nodeId → { parentMatrix, localMatrix, translation, rotation, scale }
    * @param {Map} sceneData.nodeChildren - Map of nodeId → [childId, ...]
    * @param {Map} [sceneData.morphTargets] - Map of actorKey → { basePositions, targets, polydata, numVertices }
@@ -621,8 +759,10 @@ function vtkAnimationMixer(publicAPI, model) {
     model.materialProperties = sceneData.materialProperties || null;
     model.nodeLights = sceneData.nodeLights || null;
     model.skins = sceneData.skins || null;
-    model.actorNodeIds = new Map();
-    if (model.actors && model.actorNodeIds) {
+    model.actorNodeIds = sceneData.actorNodeIds
+      ? new Map(sceneData.actorNodeIds)
+      : new Map();
+    if (model.actors && !sceneData.actorNodeIds) {
       model.actors.forEach((actor, actorKey) => {
         const nodeId = actorKey.split('_')[0];
         model.actorNodeIds.set(actor, nodeId);
@@ -637,7 +777,7 @@ function vtkAnimationMixer(publicAPI, model) {
    */
   publicAPI.setNodeAnimations = (animations) => {
     model.nodeAnimations = animations || [];
-    publicAPI.setAnimationBinding(
+    storeAnimationBinding(
       NODE_ANIMATION_BINDING,
       (updates) => {
         const animatedUpdates = new Map();
@@ -654,8 +794,11 @@ function vtkAnimationMixer(publicAPI, model) {
    * Play a single node animation by name.
    * Pass null or omit to play the first registered node animation.
    * @param {string} [name] - Animation name to play
+   * @param {Object} [options]
+   * @param {boolean} [options.loop=true] Whether the time wraps at the
+   * animation duration, or holds at the end
    */
-  publicAPI.playNodeAnimation = (name) => {
+  publicAPI.playNodeAnimation = (name, options = {}) => {
     if (!model.nodeAnimations || model.nodeAnimations.length === 0) return;
 
     const applyFn = (updates) => {
@@ -666,17 +809,12 @@ function vtkAnimationMixer(publicAPI, model) {
       applyNodeAnimationUpdates(animatedUpdates);
     };
 
-    if (!name) {
-      const anim = model.nodeAnimations[0];
-      if (anim) {
-        publicAPI.setAnimationBinding(NODE_ANIMATION_BINDING, applyFn, [anim]);
-      }
-      return;
+    let anim = model.nodeAnimations[0];
+    if (name) {
+      anim = model.nodeAnimations.find((a) => a.name === name);
     }
-
-    const anim = model.nodeAnimations.find((a) => a.name === name);
     if (anim) {
-      publicAPI.setAnimationBinding(NODE_ANIMATION_BINDING, applyFn, [anim]);
+      storeAnimationBinding(NODE_ANIMATION_BINDING, applyFn, [anim], options);
     }
   };
 
@@ -684,31 +822,71 @@ function vtkAnimationMixer(publicAPI, model) {
    * Play a single pointer animation by name.
    * Pass null or omit to play the first registered pointer animation.
    * @param {string} [name] - Animation name to play
+   * @param {Object} [options]
+   * @param {boolean} [options.loop=true] Whether the time wraps at the
+   * animation duration, or holds at the end
    */
-  publicAPI.playPointerAnimation = (name) => {
+  publicAPI.playPointerAnimation = (name, options = {}) => {
     if (!model.pointerAnimations || model.pointerAnimations.length === 0)
       return;
 
-    if (!name) {
-      const anim = model.pointerAnimations[0];
-      if (anim) {
-        publicAPI.setAnimationBinding(
-          POINTER_ANIMATION_BINDING,
-          applyPointerAnimationUpdates,
-          [anim]
-        );
-      }
-      return;
+    let anim = model.pointerAnimations[0];
+    if (name) {
+      anim = model.pointerAnimations.find((a) => a.name === name);
     }
-
-    const anim = model.pointerAnimations.find((a) => a.name === name);
     if (anim) {
-      publicAPI.setAnimationBinding(
+      storeAnimationBinding(
         POINTER_ANIMATION_BINDING,
         applyPointerAnimationUpdates,
-        [anim]
+        [anim],
+        options
       );
     }
+  };
+
+  /**
+   * Get all imported animation names, without duplicating animations that
+   * contain both node and pointer channels.
+   * @return {string[]}
+   */
+  publicAPI.getAnimationNames = () =>
+    Array.from(
+      new Set([
+        ...publicAPI.getNodeAnimationNames(),
+        ...publicAPI.getPointerAnimationNames(),
+      ])
+    );
+
+  /**
+   * Play all imported animation channels with the given name.
+   * @param {string} name - Animation name to play
+   * @return {boolean} true when at least one matching channel was found
+   */
+  publicAPI.playAnimation = (name, options = {}) => {
+    const nodeAnimation = (model.nodeAnimations || []).find(
+      (animation) => animation.name === name
+    );
+    const pointerAnimation = (model.pointerAnimations || []).find(
+      (animation) => animation.name === name
+    );
+
+    if (!nodeAnimation && !pointerAnimation) {
+      return false;
+    }
+
+    if (nodeAnimation) {
+      publicAPI.playNodeAnimation(name, options);
+    } else {
+      publicAPI.removeAnimationBinding(NODE_ANIMATION_BINDING);
+    }
+
+    if (pointerAnimation) {
+      publicAPI.playPointerAnimation(name, options);
+    } else {
+      publicAPI.removeAnimationBinding(POINTER_ANIMATION_BINDING);
+    }
+
+    return true;
   };
 
   /**
@@ -731,7 +909,7 @@ function vtkAnimationMixer(publicAPI, model) {
    */
   publicAPI.setPointerAnimations = (animations) => {
     model.pointerAnimations = animations || [];
-    publicAPI.setAnimationBinding(
+    storeAnimationBinding(
       POINTER_ANIMATION_BINDING,
       applyPointerAnimationUpdates,
       model.pointerAnimations
@@ -765,23 +943,20 @@ function vtkAnimationMixer(publicAPI, model) {
 
   /**
    * Advance animation by deltaTime (called each frame by the render loop).
-   * Node driven pipeline:
-   *   1. Evaluate animation bindings → update node TRS
-   *   2. Recompute world matrices for full node graph
-   *   3. Build joint matrices from world matrices + inverse bind matrices
-   *   4. Push to actors
-   *   5. Sync skeleton world matrices (for armature debug visualization)
+   * Pipeline:
+   *   1. Advance the scenes, so a clip played with playClip poses the skeleton
+   *   2. Evaluate animation bindings → update node TRS
+   *   3. Recompute world matrices for full node graph
+   *   4. Build joint matrices from world matrices + inverse bind matrices
+   *   5. Push to actors
+   *   6. Sync skeleton world matrices (for armature debug visualization)
    * @param {number} deltaTime Seconds since last frame
    */
   publicAPI.tick = (deltaTime) => {
-    // 1. Evaluate all animation bindings (node TRS, morph, pointer)
+    model.scenes.forEach((scene) => scene.tick(0, deltaTime));
     applyAnimationBindings(deltaTime);
-
-    // 2-4. Recompute world matrices and push skinning data to actors
     const worldByNodeId = computeNodeWorldMatrices();
     pushSkinningFromWorldMatrices(worldByNodeId);
-
-    // 5. Sync skeleton bone world matrices from node graph (for armature viz)
     syncSkeletonFromNodes(worldByNodeId);
   };
 
@@ -866,6 +1041,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Getters and setters
   macro.setGet(publicAPI, model, ['skeleton']);
+  macro.getArray(publicAPI, model, ['scenes']);
 
   // Object specific methods
   vtkAnimationMixer(publicAPI, model);

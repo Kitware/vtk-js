@@ -1,17 +1,11 @@
-import { CueState } from 'vtk.js/Sources/Common/Core/AnimationCue/Constants';
-
-/**
- * AnimationScene constants
- */
-
 /**
  * A scene is a cue, so it holds the cue states.
  */
-export const SceneState = {
-  STOPPED: CueState.STOPPED,
-  PLAYING: CueState.PLAYING,
-  PAUSED: CueState.PAUSED,
-};
+export declare enum SceneState {
+  STOPPED = 0,
+  PLAYING = 1,
+  PAUSED = 2,
+}
 
 /**
  * How a scene turns a tick into a time step.
@@ -21,12 +15,13 @@ export const SceneState = {
  * REALTIME: every tick advances by the delta the caller reports, which is what
  * a render loop supplies.
  */
-export const PlayMode = {
-  SEQUENCE: 0,
-  REALTIME: 1,
-};
+export declare enum PlayMode {
+  SEQUENCE = 0,
+  REALTIME = 1,
+}
 
-export default {
-  SceneState,
-  PlayMode,
+declare const _default: {
+  SceneState: typeof SceneState;
+  PlayMode: typeof PlayMode;
 };
+export default _default;

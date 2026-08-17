@@ -1,3 +1,4 @@
+import { Nullable } from '../../../types';
 import { vtkObject } from '../../../interfaces';
 import { InterpolationMode, TrackType } from './Constants';
 
@@ -7,12 +8,6 @@ export interface IAnimationTrackInitialValues {
    * @default ''
    */
   name?: string;
-
-  /**
-   * The index of the bone this track animates.
-   * @default 0
-   */
-  boneIndex?: number;
 
   /**
    * The type of transform this track controls (TRANSLATION, ROTATION, SCALE).
@@ -46,19 +41,6 @@ export interface vtkAnimationTrack extends vtkObject {
    * @default ''
    */
   getName(): string;
-
-  /**
-   * Set the bone index this track animates.
-   * @param {number} boneIndex The bone index.
-   * @return {boolean} true if the value was changed.
-   */
-  setBoneIndex(boneIndex: number): boolean;
-
-  /**
-   * Get the bone index this track animates.
-   * @default 0
-   */
-  getBoneIndex(): number;
 
   /**
    * Set the track type (TRANSLATION, ROTATION, SCALE).
@@ -113,15 +95,17 @@ export interface vtkAnimationTrack extends vtkObject {
 
   /**
    * Get the time of a keyframe by index.
-   * @param {number} index The keyframe index.
+   * @param {number} index The keyframe index, a whole number, zero or more.
+   * @return {Nullable<number>} null when no keyframe holds that index.
    */
-  getKeyframeTime(index: number): number;
+  getKeyframeTime(index: number): Nullable<number>;
 
   /**
    * Get the value of a keyframe by index.
-   * @param {number} index The keyframe index.
+   * @param {number} index The keyframe index, a whole number, zero or more.
+   * @return {Nullable<Float32Array>} null when no keyframe holds that index.
    */
-  getKeyframeValue(index: number): Float32Array;
+  getKeyframeValue(index: number): Nullable<Float32Array>;
 
   /**
    * Evaluate the track at a given time.
@@ -134,8 +118,9 @@ export interface vtkAnimationTrack extends vtkObject {
 
   /**
    * Clear all keyframes from the track.
+   * @return {boolean} true when the track held something to clear.
    */
-  clear(): void;
+  clear(): boolean;
 }
 
 /**

@@ -1,39 +1,46 @@
 import { Nullable } from '../../../types';
-import { vtkObject } from '../../../interfaces';
-import vtkAnimationCue from '../AnimationCue';
+import vtkAnimationCue, { IAnimationCueInitialValues } from '../AnimationCue';
 
-export interface IAnimationSceneInitialValues {
-  /**
-   * The start time of the scene.
-   * @default 0
-   */
-  startTime?: number;
-
-  /**
-   * The end time of the scene.
-   * @default 1
-   */
-  endTime?: number;
-
+export interface IAnimationSceneInitialValues extends IAnimationCueInitialValues {
   /**
    * Whether the scene loops back to startTime when it reaches endTime.
-   * @default true
+   * @default false
    */
   loop?: boolean;
+
+  /**
+   * How the scene turns a tick into a time step.
+   * @default PlayMode.REALTIME
+   */
+  playMode?: number;
+
+  /**
+   * Frames per second used in PlayMode.SEQUENCE.
+   * @default 60
+   */
+  frameRate?: number;
 }
 
-export interface vtkAnimationScene extends vtkObject {
+/**
+ * A scene is itself a cue, so it inherits the start and end times, the state,
+ * the current time, isActive, isPlaying and the tick event, and one scene can
+ * be held by another scene.
+ */
+export interface vtkAnimationScene extends vtkAnimationCue {
   /**
    * Add a cue to this scene.
    * @param {vtkAnimationCue} cue The animation cue to add.
+   * @return {boolean} true when the cue was added, false when the scene
+   * already holds it.
    */
-  addCue(cue: vtkAnimationCue): void;
+  addCue(cue: vtkAnimationCue): boolean;
 
   /**
    * Remove a cue from this scene.
    * @param {vtkAnimationCue} cue The animation cue to remove.
+   * @return {boolean} true when the cue was removed.
    */
-  removeCue(cue: vtkAnimationCue): void;
+  removeCue(cue: vtkAnimationCue): boolean;
 
   /**
    * Get the number of cues in this scene.
@@ -48,35 +55,20 @@ export interface vtkAnimationScene extends vtkObject {
   getCue(index: number): Nullable<vtkAnimationCue>;
 
   /**
-   * Get all cues in this scene.
+   * Remove every cue from this scene.
+   * @return {boolean} true when the scene held at least one cue.
+   */
+  removeAllCues(): boolean;
+
+  /**
+   * Get a copy of the list of cues in this scene.
    */
   getCues(): vtkAnimationCue[];
 
   /**
-   * Set the start time of the scene.
-   * @param {number} startTime The start time.
-   * @return {boolean} true if the value was changed.
+   * Get the list of cues without copying it.
    */
-  setStartTime(startTime: number): boolean;
-
-  /**
-   * Get the start time of the scene.
-   * @default 0
-   */
-  getStartTime(): number;
-
-  /**
-   * Set the end time of the scene.
-   * @param {number} endTime The end time.
-   * @return {boolean} true if the value was changed.
-   */
-  setEndTime(endTime: number): boolean;
-
-  /**
-   * Get the end time of the scene.
-   * @default 1
-   */
-  getEndTime(): number;
+  getCuesByReference(): vtkAnimationCue[];
 
   /**
    * Set whether the scene should loop.
@@ -87,46 +79,115 @@ export interface vtkAnimationScene extends vtkObject {
 
   /**
    * Get whether the scene loops.
-   * @default true
+   * @default false
    */
   getLoop(): boolean;
 
   /**
-   * Get the current global time of the scene.
+   * Set how the scene turns a tick into a time step. In PlayMode.SEQUENCE
+   * every tick advances by one frame of the frame rate, whatever the caller
+   * reports, so a run is repeatable. In PlayMode.REALTIME every tick advances
+   * by the delta the caller reports, which is what a render loop supplies.
+   * @param {number} playMode One of PlayMode.
+   * @return {boolean} true if the value was changed.
    */
-  getTime(): number;
+  setPlayMode(playMode: number): boolean;
 
   /**
-   * Start playing all cues in this scene.
+   * Get how the scene turns a tick into a time step.
+   * @default PlayMode.REALTIME
    */
-  play(): void;
+  getPlayMode(): number;
 
   /**
-   * Pause all cues in this scene.
+   * Play by steps of one frame, the same on every run.
    */
-  pause(): void;
+  setPlayModeToSequence(): boolean;
 
   /**
-   * Stop all cues and reset to start time.
+   * Play by the time step the caller reports.
    */
-  stop(): void;
+  setPlayModeToRealTime(): boolean;
 
   /**
-   * Seek to a specific time and update all cues.
-   * @param {number} time The time to seek to.
+   * Set the frames per second used in PlayMode.SEQUENCE.
+   * @param {number} frameRate
+   * @return {boolean} true if the value was changed.
+   */
+  setFrameRate(frameRate: number): boolean;
+
+  /**
+   * Get the frames per second used in PlayMode.SEQUENCE.
+   * @default 60
+   */
+  getFrameRate(): number;
+
+  /**
+   * Move the scene to a state and carry that state into every cue. Does
+   * nothing when the scene already holds that state. Read it back with the
+   * inherited getCueState().
+   * @param {number} state One of SceneState.
+   * @return {boolean} true when the state changed.
+   */
+  setCueState(state: number): boolean;
+
+  /**
+   * Play the scene and every cue it holds. A playing scene ignores the call, a
+   * paused scene continues from the time it holds, and a stopped scene plays
+   * again from the start time.
+   * @return {boolean} true when the state changed.
+   */
+  play(): boolean;
+
+  /**
+   * Alias of play().
+   * @return {boolean} true when the state changed.
+   */
+  start(): boolean;
+
+  /**
+   * Pause the scene and every cue it holds. Does nothing unless the scene
+   * plays. A caller that drives the scene itself can stop ticking it instead.
+   * @return {boolean} true when the state changed.
+   */
+  pause(): boolean;
+
+  /**
+   * Alias of isPlaying().
+   */
+  isInPlay(): boolean;
+
+  /**
+   * Stop the scene, reset it to the start time and stop every cue. Does
+   * nothing when the scene is already stopped, so a scene that ran to its end
+   * time keeps reporting that end time until it starts again.
+   * @return {boolean} true when the state changed.
+   */
+  stop(): boolean;
+
+  /**
+   * Move to a time without changing the state, so a paused scene stays
+   * paused. A cue outside the time stops, and a cue inside it moves to that
+   * same time and reports it through its own tick event.
+   * @param {number} time The time to move to, clamped to the scene bounds.
+   */
+  setAnimationTime(time: number): void;
+
+  /**
+   * Alias of setAnimationTime().
+   * @param {number} time The time to move to, clamped to the scene bounds.
    */
   seek(time: number): void;
 
   /**
-   * Check if the scene is currently playing.
-   */
-  isPlaying(): boolean;
-
-  /**
-   * Called by the render loop to advance animation each frame.
+   * Advance the scene and every cue it holds. The scene owns its clock, so it
+   * moves by deltaTime and ignores the time the caller reports. The unused
+   * first argument keeps the signature of the cue this class derives from.
+   * @param {number} currentTime Unused.
    * @param {number} deltaTime The time delta since last frame.
+   * @param {number} [clockTime] Wall clock time, handed down to the cues.
    */
-  tick(deltaTime: number): void;
+  tick(currentTime: number, deltaTime: number, clockTime?: number): void;
 }
 
 /**

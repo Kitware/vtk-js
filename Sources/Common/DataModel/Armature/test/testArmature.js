@@ -134,14 +134,13 @@ it('vtkArmature: evaluatePose with translation track', () => {
   const clip = vtkAnimationClip.newInstance();
   const track = vtkAnimationTrack.newInstance({
     name: 'RootTranslation',
-    boneIndex: 0,
     trackType: TrackType.TRANSLATION,
     interpolationMode: InterpolationMode.LINEAR,
   });
 
   track.addKeyframe(0, [0, 0, 0]);
   track.addKeyframe(2, [2, 0, 0]);
-  clip.addTrack(track);
+  clip.addTrack(track, 0);
 
   skeleton.evaluatePose(clip, 1);
   const matrix = skeleton.getLocalMatrix(0);
@@ -156,14 +155,13 @@ it('vtkArmature: evaluatePose with rotation track', () => {
   const clip = vtkAnimationClip.newInstance();
   const track = vtkAnimationTrack.newInstance({
     name: 'RootRotation',
-    boneIndex: 0,
     trackType: TrackType.ROTATION,
     interpolationMode: InterpolationMode.LINEAR,
   });
 
   track.addKeyframe(0, [0, 0, 0, 1]);
   track.addKeyframe(1, [0, 0, 1, 0]);
-  clip.addTrack(track);
+  clip.addTrack(track, 0);
 
   skeleton.evaluatePose(clip, 0.5);
   expect(skeleton.getNumberOfBones() > 0).toBeTruthy();
