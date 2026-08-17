@@ -220,14 +220,6 @@ fn getColorForLabelOutline(vTex: texture_3d<f32>, tcoord: vec2<f32>, fragZ: f32,
 
       let neighborTcoord = tcoord + vec2<f32>(f32(i), f32(j)) * fragStep;
       let neighborTPos = labelFragToTPos(vNum, neighborTcoord, fragZ);
-      if (
-        neighborTPos.x < 0.0 || neighborTPos.y < 0.0 || neighborTPos.z < 0.0 ||
-        neighborTPos.x > 1.0 || neighborTPos.y > 1.0 || neighborTPos.z > 1.0
-      )
-      {
-        return vec4<f32>(color, volumeSSBO.values[vNum].labelOutline.y);
-      }
-
       let neighborValue = getTextureValue(vTex, neighborTPos, vNum);
       if (any(neighborValue != centerValue))
       {
