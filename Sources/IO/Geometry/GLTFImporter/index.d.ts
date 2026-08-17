@@ -9,6 +9,7 @@ import { vtkRenderer } from '../../../Rendering/Core/Renderer';
 import { vtkCamera } from '../../../Rendering/Core/Camera';
 import { vtkArmature } from '../../../Common/DataModel/Armature';
 import { vtkAnimationClip } from '../../../Common/DataModel/AnimationClip';
+import { vtkAnimationMixer } from '../../../Common/Core/AnimationMixer';
 
 interface IGLTFImporterOptions {
   binary?: boolean;
@@ -38,6 +39,12 @@ type vtkGLTFImporterBase = vtkObject &
   >;
 
 export interface vtkGLTFImporter extends vtkGLTFImporterBase {
+  /**
+   * Create an animation mixer configured for this imported scene.
+   * Call after the importer is ready and actors have been imported.
+   */
+  createAnimationMixer(): vtkAnimationMixer;
+
   /**
    * Get the actors.
    */

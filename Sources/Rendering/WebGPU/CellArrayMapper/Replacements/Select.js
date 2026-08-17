@@ -1,7 +1,7 @@
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 
 function replaceShaderSelect(publicAPI, model, hash, pipeline, vertexInput) {
-  if (hash.includes('sel')) {
+  if (model.selectionPass) {
     const selectBuffer = vertexInput.getBuffer('selectId');
     if (selectBuffer) {
       const vDesc = pipeline.getShaderDescription('vertex');

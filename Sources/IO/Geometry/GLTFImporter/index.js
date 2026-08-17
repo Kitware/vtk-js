@@ -1,6 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
 import { mat4, vec3 } from 'gl-matrix';
 
+import vtkAnimationMixer from 'vtk.js/Sources/Common/Core/AnimationMixer';
 import BinaryHelper from 'vtk.js/Sources/IO/Core/BinaryHelper';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import vtkDracoReader from 'vtk.js/Sources/IO/Geometry/DracoReader';
@@ -17,7 +18,7 @@ import {
   parseSkeletalAnimationFromGLTF,
   parseNodeAnimationsFromGLTF,
   parsePointerAnimationsFromGLTF,
-} from 'vtk.js/Sources/IO/Geometry/GLTFImporter/Animation';
+} from 'vtk.js/Sources/IO/Geometry/GLTFImporter/Animations';
 import { clearImageCaches } from 'vtk.js/Sources/IO/Geometry/GLTFImporter/Utils';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
@@ -291,6 +292,46 @@ function vtkGLTFImporter(publicAPI, model) {
    * @return {Array} Array of pointer animation objects with evaluate(time) method
    */
   publicAPI.getPointerAnimations = () => model.pointerAnimations || [];
+
+  /**
+   * Create a mixer configured with this importer's scene and animations.
+   * @return {vtkAnimationMixer}
+   */
+  publicAPI.createAnimationMixer = () => {
+    const mixer = vtkAnimationMixer.newInstance();
+    const actorNodeIds = new Map();
+
+    model.actors?.forEach((actor, actorKey) => {
+      actorNodeIds.set(actor, actorKey.split('_')[0]);
+    });
+
+    mixer.setScene({
+      actors: model.actors,
+      actorNodeIds,
+      nodeTransforms: model.nodeTransforms,
+      nodeChildren: model.nodeChildren,
+      skins: model.skins,
+      morphTargets: model.morphTargets,
+      materialProperties: model.materialProperties,
+      nodeLights: model.nodeLights,
+    });
+    mixer.setNodeAnimations(model.nodeAnimations);
+    mixer.setPointerAnimations(model.pointerAnimations);
+
+    const primarySkeleton = model.skeletons?.[0]?.skeleton;
+    if (primarySkeleton) {
+      mixer.setSkeleton(primarySkeleton);
+    }
+
+    actorNodeIds.forEach((nodeId, actor) => {
+      if (model.skins?.has(nodeId)) {
+        mixer.bindActor(actor);
+      }
+    });
+
+    mixer.tick(0);
+    return mixer;
+  };
 
   /**
    * Compute axis-aligned bounding box for the scene using glTF accessor

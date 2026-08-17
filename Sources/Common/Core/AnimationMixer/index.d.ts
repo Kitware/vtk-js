@@ -19,6 +19,22 @@ export interface AnimationBindingContext {
   time: number;
 }
 
+export interface AnimationSource {
+  name: string;
+  evaluate(time: number): unknown;
+}
+
+export interface AnimationSceneData {
+  actors?: Map<string, object>;
+  actorNodeIds?: Map<object, string>;
+  nodeTransforms?: Map<string, object>;
+  nodeChildren?: Map<string, string[]>;
+  skins?: Map<string, object>;
+  morphTargets?: Map<string, object>;
+  materialProperties?: Map<string, object[]>;
+  nodeLights?: Map<string, object>;
+}
+
 export interface IAnimationMixerInitialValues {
   /**
    * The skeleton to animate.
@@ -29,33 +45,45 @@ export interface IAnimationMixerInitialValues {
 
 export interface vtkAnimationMixer extends vtkObject {
   /**
-   * Register an animation scene to manage.
-   * @param {vtkAnimationScene} scene The scene to register.
+   * Add an animation scene to manage.
+   * @param {vtkAnimationScene} scene The scene to add.
+   * @return {boolean} true when the scene was added, false when the mixer
+   * already holds it.
    */
-  registerScene(scene: vtkAnimationScene): void;
+  addScene(scene: vtkAnimationScene): boolean;
 
   /**
-   * Unregister a previously registered scene.
-   * @param {vtkAnimationScene} scene The scene to unregister.
+   * Remove a scene.
+   * @param {vtkAnimationScene} scene The scene to remove.
+   * @return {boolean} true when the scene was removed, false when the mixer
+   * does not hold it.
    */
-  unregisterScene(scene: vtkAnimationScene): void;
+  removeScene(scene: vtkAnimationScene): boolean;
 
   /**
-   * Get all registered scenes.
+   * Get a copy of the list of scenes.
    */
   getScenes(): vtkAnimationScene[];
 
   /**
-   * Add an animation clip to the mixer.
-   * @param {vtkAnimationClip} clip The clip to add.
+   * Get the list of scenes without copying it.
    */
-  addClip(clip: vtkAnimationClip): void;
+  getScenesByReference(): vtkAnimationScene[];
 
   /**
-   * Remove a clip by name.
-   * @param {string} name The clip name.
+   * Add an animation clip to the mixer.
+   * @param {vtkAnimationClip} clip The clip to add.
+   * @return {boolean} true when the clip was added, false when it has no name
+   * or the name is already taken.
    */
-  removeClip(name: string): void;
+  addClip(clip: vtkAnimationClip): boolean;
+
+  /**
+   * Remove a clip by name. A clip that plays stops first.
+   * @param {string} name The clip name.
+   * @return {boolean} true when the clip was removed.
+   */
+  removeClip(name: string): boolean;
 
   /**
    * Get a clip by name.
@@ -80,7 +108,7 @@ export interface vtkAnimationMixer extends vtkObject {
    * @param {object} [options] Playback options.
    * @param {boolean} [options.loop] Whether to loop the animation.
    */
-  playClip(clipName: string, options?: { loop?: boolean }): void;
+  playClip(clipName: string, options?: { loop?: boolean }): boolean;
 
   /**
    * Pause the currently playing clip.
@@ -157,13 +185,15 @@ export interface vtkAnimationMixer extends vtkObject {
   getBoundActors(): object[];
 
   /**
-   * Register a non-skeletal animation binding.
+   * Add a non-skeletal animation binding.
    * @param {string} name Unique binding name.
    * @param {object[]} animations Array of objects with evaluate(time).
    * @param {Function} apply Function called with evaluated updates and context.
    * @param {object} [options] Binding options.
+   * @return {boolean} true when the binding was added, false when the name is
+   * already taken. Remove the binding first to replace it.
    */
-  setAnimationBinding(
+  addAnimationBinding(
     name: string,
     apply: (updates: unknown, context: AnimationBindingContext) => void,
     animations?: object[],
@@ -180,6 +210,45 @@ export interface vtkAnimationMixer extends vtkObject {
    * Get registered non-skeletal animation binding names.
    */
   getAnimationBindingNames(): string[];
+
+  /**
+   * Configure scene graph data used by node, morph, and pointer animations.
+   * Importers should normally expose a factory that performs this wiring.
+   */
+  setScene(sceneData: AnimationSceneData): void;
+
+  /** Set parsed node animations. */
+  setNodeAnimations(animations: AnimationSource[]): void;
+
+  /** Set parsed pointer animations. */
+  setPointerAnimations(animations: AnimationSource[]): void;
+
+  /** Get parsed node animations. */
+  getNodeAnimations(): AnimationSource[];
+
+  /** Get parsed pointer animations. */
+  getPointerAnimations(): AnimationSource[];
+
+  /** Get node animation names. */
+  getNodeAnimationNames(): string[];
+
+  /** Get pointer animation names. */
+  getPointerAnimationNames(): string[];
+
+  /** Get unique imported animation names across all channel types. */
+  getAnimationNames(): string[];
+
+  /** Play every imported animation channel with the given name. */
+  playAnimation(name: string): boolean;
+
+  /** Play a node animation by name, or the first one when omitted. */
+  playNodeAnimation(name?: string): void;
+
+  /** Play a pointer animation by name, or the first one when omitted. */
+  playPointerAnimation(name?: string): void;
+
+  /** Return true when the mixer contains any animation. */
+  hasAnimations(): boolean;
 }
 
 /**

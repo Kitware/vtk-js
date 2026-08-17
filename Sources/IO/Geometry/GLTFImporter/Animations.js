@@ -14,6 +14,29 @@ import { mat4, quat, vec3 } from 'gl-matrix';
 
 const { vtkWarningMacro } = macro;
 
+/**
+ * Animation Parser - Converts resolved glTF 2.0 tree to VTK.js skeletal animation objects
+ *
+ * Works with the **resolved** tree produced by GLTFParser.parse():
+ * - skins[].joints is an array of node objects (not indices)
+ * - skins[].inverseBindMatrices is a resolved accessor object with .value
+ * - animations[].samplers[].input/output are TypedArrays (already .value)
+ * - animations[].channels[].target.node is a raw integer index
+ *
+ * Architecture:
+ * ```
+ * Resolved glTF Tree
+ *   ├─ skins[] → createSkeletonFromGLTFSkin() → vtkArmature
+ *   │   ├─ joints[] (node objects) → bone data objects
+ *   │   └─ inverseBindMatrices.value → boneData.inverseBindMatrix
+ *   │
+ *   └─ animations[] → createAnimationClipFromGLTFAnimation() → vtkAnimationClip
+ *       ├─ samplers[].input (Float32Array) → keyframe times
+ *       ├─ samplers[].output (Float32Array) → keyframe values
+ *       └─ channels[].target.node (int) → bone index mapping
+ * ```
+ */
+
 function getNodeTRS(node) {
   if (node.matrix) {
     const m = mat4.clone(node.matrix);
@@ -21,8 +44,25 @@ function getNodeTRS(node) {
     const rotation = quat.create();
     const scale = vec3.create();
     mat4.getTranslation(translation, m);
-    mat4.getRotation(rotation, m);
     mat4.getScaling(scale, m);
+
+    // getScaling reports lengths, so a mirrored matrix needs one axis negated
+    // to keep the rotation a rotation
+    if (mat4.determinant(m) < 0) {
+      scale[0] = -scale[0];
+    }
+
+    // getRotation needs an orthonormal basis, and a scaled matrix would skew
+    // the quaternion, so divide each basis column by its scale first
+    for (let col = 0; col < 3; col++) {
+      const k = scale[col] === 0 ? 0 : 1 / scale[col];
+      m[col * 4] *= k;
+      m[col * 4 + 1] *= k;
+      m[col * 4 + 2] *= k;
+    }
+    mat4.getRotation(rotation, m);
+    quat.normalize(rotation, rotation);
+
     return { translation, rotation, scale };
   }
 
@@ -59,39 +99,16 @@ function getNodeLocalMatrix(node) {
   );
 }
 
-function createBoneData(node, boneIndex, allNodes) {
+function createBoneData(node, boneIndex, nodeIndexByNode) {
   const { translation, rotation, scale } = getNodeTRS(node);
   return {
     name: node.name || node.id || `bone_${boneIndex}`,
     localRestTranslation: translation,
     localRestRotation: rotation,
     localRestScale: scale,
-    nodeId: allNodes.indexOf(node),
+    nodeId: nodeIndexByNode.get(node) ?? -1,
   };
 }
-
-/**
- * Animation Parser - Converts resolved glTF 2.0 tree to VTK.js skeletal animation objects
- *
- * Works with the **resolved** tree produced by GLTFParser.parse():
- * - skins[].joints is an array of node objects (not indices)
- * - skins[].inverseBindMatrices is a resolved accessor object with .value
- * - animations[].samplers[].input/output are TypedArrays (already .value)
- * - animations[].channels[].target.node is a raw integer index
- *
- * Architecture:
- * ```
- * Resolved glTF Tree
- *   ├─ skins[] → createSkeletonFromGLTFSkin() → vtkArmature
- *   │   ├─ joints[] (node objects) → bone data objects
- *   │   └─ inverseBindMatrices.value → boneData.inverseBindMatrix
- *   │
- *   └─ animations[] → createAnimationClipFromGLTFAnimation() → vtkAnimationClip
- *       ├─ samplers[].input (Float32Array) → keyframe times
- *       ├─ samplers[].output (Float32Array) → keyframe values
- *       └─ channels[].target.node (int) → bone index mapping
- * ```
- */
 
 /**
  * Converts a resolved glTF skin to a vtkArmature with bone hierarchy.
@@ -110,9 +127,11 @@ export function createSkeletonFromGLTFSkin(gltfSkin, allNodes) {
   const jointNodes = gltfSkin.joints; // Already resolved node objects
   const nodeToJointIndex = new Map(); // node object → bone index
   const parentNodeMap = new Map(); // node object → parent node object
+  const nodeIndexByNode = new Map(); // node object → index in allNodes
 
   for (let nodeIndex = 0; nodeIndex < allNodes.length; nodeIndex++) {
     const node = allNodes[nodeIndex];
+    nodeIndexByNode.set(node, nodeIndex);
     if (node.children) {
       for (
         let childIndex = 0;
@@ -144,7 +163,7 @@ export function createSkeletonFromGLTFSkin(gltfSkin, allNodes) {
         nodeId: -1,
       };
     } else {
-      boneData = createBoneData(node, i, allNodes);
+      boneData = createBoneData(node, i, nodeIndexByNode);
     }
 
     // Set inverse bind matrix from resolved accessor
@@ -273,7 +292,12 @@ export function createAnimationClipFromGLTFAnimation(
     } else if (path === 'scale') {
       trackType = TrackType.SCALE;
     } else {
-      // Skip unsupported paths (weights/morph targets)
+      // a bone holds a transform, so a morph weight channel belongs to the
+      // node animations instead, where parseNodeAnimationsFromGLTF takes it
+      vtkWarningMacro(
+        `Animation channel path "${path}" is not part of a skeletal clip, ` +
+          'so it stays with the node animations'
+      );
       return;
     }
 
@@ -305,7 +329,6 @@ export function createAnimationClipFromGLTFAnimation(
     // Create track
     const track = vtkAnimationTrack.newInstance({
       name: `${path}_bone${boneIdx}`,
-      boneIndex: boneIdx,
       trackType,
       interpolationMode,
     });
@@ -320,29 +343,26 @@ export function createAnimationClipFromGLTFAnimation(
     for (let i = 0; i < times.length; i++) {
       if (isCubic) {
         const base = i * stride;
-        const inTangent = values.slice(base, base + componentCount);
-        const value = values.slice(
-          base + componentCount,
-          base + 2 * componentCount
+        track.addKeyframe(
+          times[i],
+          values.subarray(base + componentCount, base + 2 * componentCount),
+          {
+            inTangent: values.subarray(base, base + componentCount),
+            outTangent: values.subarray(
+              base + 2 * componentCount,
+              base + 3 * componentCount
+            ),
+          }
         );
-        const outTangent = values.slice(
-          base + 2 * componentCount,
-          base + 3 * componentCount
-        );
-        track.addKeyframe(times[i], new Float32Array(value), {
-          inTangent: new Float32Array(inTangent),
-          outTangent: new Float32Array(outTangent),
-        });
       } else {
-        const value = values.slice(
-          i * componentCount,
-          (i + 1) * componentCount
+        track.addKeyframe(
+          times[i],
+          values.subarray(i * componentCount, (i + 1) * componentCount)
         );
-        track.addKeyframe(times[i], new Float32Array(value));
       }
     }
 
-    clip.addTrack(track);
+    clip.addTrack(track, boneIdx);
   });
 
   return clip;
@@ -403,6 +423,11 @@ export function parseSkeletalAnimationFromGLTF(tree) {
           allNodes
         );
         if (clip && clip.getNumberOfTracks() > 0) {
+          // one clip per animation per skin, so the name has to say which skin
+          // it came from, or a consumer that keys clips by name keeps one
+          if (result.skeletons.length > 1) {
+            clip.setName(`${clip.getName()}_skin${entry.gltfSkinIndex}`);
+          }
           if (!entry.clips) entry.clips = [];
           entry.clips.push(clip);
           result.animationClips.push(clip);
@@ -426,6 +451,8 @@ export function parseSkeletalAnimationFromGLTF(tree) {
  * @param {string} interpolation - 'LINEAR', 'STEP', or 'CUBICSPLINE'
  * @param {boolean} isRotation - Whether this is a rotation (quaternion slerp)
  * @param {number} hint - Last resolved interval, used to keep monotonic playback O(1)
+ * @param {Float32Array} [out] - Buffer to write into. A caller that reads the
+ *   result before it calls again can pass the same buffer every frame.
  * @returns {{ value: Float32Array, index: number }} Interpolated value and the
  *   resolved interval index, which the caller can feed back as the next hint.
  */
@@ -436,9 +463,10 @@ function interpolateKeyframes(
   components,
   interpolation,
   isRotation = false,
-  hint = 0
+  hint = 0,
+  out = null
 ) {
-  const value = new Float32Array(components);
+  const value = out ?? new Float32Array(components);
   const count = times.length;
 
   if (count === 0) {
@@ -589,6 +617,7 @@ export function parseNodeAnimationsFromGLTF(tree) {
         interpolation: sampler.interpolation || 'LINEAR',
         components,
         hint: 0,
+        out: new Float32Array(components),
       });
     });
 
@@ -604,9 +633,15 @@ export function parseNodeAnimationsFromGLTF(tree) {
       /**
        * Evaluate animation at given time.
        * Returns map of nodeIndex → { translation, rotation, scale } with only animated properties.
+       * @param {number} t Time in seconds since the animation started.
+       * @param {boolean} [loop=true] Whether a time past the duration wraps to
+       *   the start, or holds the last keyframe.
        */
-      evaluate(t) {
-        const loopedT = duration > 0 ? t % duration : 0;
+      evaluate(t, loop = true) {
+        let time = t;
+        if (loop && duration > 0) {
+          time %= duration;
+        }
         const nodeUpdates = new Map();
 
         channels.forEach((ch) => {
@@ -617,11 +652,12 @@ export function parseNodeAnimationsFromGLTF(tree) {
           const { value, index } = interpolateKeyframes(
             ch.times,
             ch.values,
-            loopedT,
+            time,
             ch.components,
             ch.interpolation,
             ch.path === 'rotation',
-            ch.hint
+            ch.hint,
+            ch.out
           );
           ch.hint = index;
           update[ch.path] = value;
@@ -761,6 +797,7 @@ export function parsePointerAnimationsFromGLTF(tree) {
         interpolation: sampler.interpolation || 'LINEAR',
         components,
         hint: 0,
+        out: new Float32Array(components),
       });
     });
 
@@ -778,9 +815,15 @@ export function parsePointerAnimationsFromGLTF(tree) {
        * Evaluate pointer animation at given time.
        * Returns Map of "mat_{materialIndex}" →
        *   { textureTransforms: Map of textureKey → { offset?, scale?, rotation? } }
+       * @param {number} t Time in seconds since the animation started.
+       * @param {boolean} [loop=true] Whether a time past the duration wraps to
+       *   the start, or holds the last keyframe.
        */
-      evaluate(t) {
-        const loopedT = duration > 0 ? t % duration : 0;
+      evaluate(t, loop = true) {
+        let time = t;
+        if (loop && duration > 0) {
+          time %= duration;
+        }
         const materialUpdates = new Map();
 
         channels.forEach((ch) => {
@@ -798,11 +841,12 @@ export function parsePointerAnimationsFromGLTF(tree) {
           const { value: val, index } = interpolateKeyframes(
             ch.times,
             ch.values,
-            loopedT,
+            time,
             ch.components,
             ch.interpolation,
             false,
-            ch.hint
+            ch.hint,
+            ch.out
           );
           ch.hint = index;
 

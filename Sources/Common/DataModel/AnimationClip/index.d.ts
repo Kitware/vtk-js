@@ -46,14 +46,26 @@ export interface vtkAnimationClip extends vtkObject {
   /**
    * Add a track to this clip.
    * @param {vtkAnimationTrack} track The animation track to add.
+   * @param {number} [boneIndex] The bone the track animates, for a skeletal
+   * clip. Read the tracks of a bone back with getTracksForBone().
    */
-  addTrack(track: vtkAnimationTrack): void;
+  addTrack(track: vtkAnimationTrack, boneIndex?: number): void;
 
   /**
-   * Remove a track by index.
-   * @param {number} index The track index.
+   * Get the tracks that animate a bone, in the order they were added. The clip
+   * owns this association, so a track carries keyframes only.
+   * @param {number} boneIndex The bone index.
+   * @return {vtkAnimationTrack[]} the tracks of that bone, empty when none.
    */
-  removeTrack(index: number): void;
+  getTracksForBone(boneIndex: number): vtkAnimationTrack[];
+
+  /**
+   * Remove a track by index. The duration shortens only when the track that
+   * set it goes away.
+   * @param {number} index The track index, a whole number, zero or more.
+   * @return {boolean} true when a track was removed.
+   */
+  removeTrack(index: number): boolean;
 
   /**
    * Get the number of tracks in this clip.
@@ -81,8 +93,9 @@ export interface vtkAnimationClip extends vtkObject {
 
   /**
    * Clear all tracks from the clip.
+   * @return {boolean} true when the clip held something to clear.
    */
-  clear(): void;
+  clear(): boolean;
 }
 
 /**

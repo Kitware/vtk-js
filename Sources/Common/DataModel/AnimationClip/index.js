@@ -11,9 +11,20 @@ function vtkAnimationClip(publicAPI, model) {
   /**
    * Add an animation track to this clip
    * @param {vtkAnimationTrack} track
+   * @param {number} [boneIndex] The bone the track animates, for a skeletal
+   * clip. Read the tracks of a bone back with getTracksForBone().
    */
-  publicAPI.addTrack = (track) => {
+  publicAPI.addTrack = (track, boneIndex) => {
     model.tracks.push(track);
+
+    if (Number.isInteger(boneIndex) && boneIndex >= 0) {
+      const boneTracks = model.boneTracks.get(boneIndex);
+      if (boneTracks) {
+        boneTracks.push(track);
+      } else {
+        model.boneTracks.set(boneIndex, [track]);
+      }
+    }
 
     // Update duration if this track extends beyond current
     const trackDuration = track.getDuration();
@@ -26,22 +37,35 @@ function vtkAnimationClip(publicAPI, model) {
 
   /**
    * Remove a track by index
-   * @param {number} index
+   * @param {number} index A whole number, zero or more
+   * @return {boolean} true when a track was removed
    */
   publicAPI.removeTrack = (index) => {
-    if (index >= 0 && index < model.tracks.length) {
-      model.tracks.splice(index, 1);
-
-      // Recalculate duration
-      model.duration = 0;
-      model.tracks.forEach((track) => {
-        if (track.getDuration() > model.duration) {
-          model.duration = track.getDuration();
-        }
-      });
-
-      publicAPI.modified();
+    if (!Number.isInteger(index) || index < 0 || index >= model.tracks.length) {
+      return false;
     }
+
+    const [removed] = model.tracks.splice(index, 1);
+
+    model.boneTracks.forEach((boneTracks, boneIndex) => {
+      const at = boneTracks.indexOf(removed);
+      if (at !== -1) {
+        boneTracks.splice(at, 1);
+      }
+      if (boneTracks.length === 0) {
+        model.boneTracks.delete(boneIndex);
+      }
+    });
+
+    if (removed.getDuration() === model.duration) {
+      model.duration = model.tracks.reduce(
+        (longest, track) => Math.max(longest, track.getDuration()),
+        0
+      );
+    }
+
+    publicAPI.modified();
+    return true;
   };
 
   /**
@@ -69,6 +93,14 @@ function vtkAnimationClip(publicAPI, model) {
   publicAPI.getTracks = () => [...model.tracks];
 
   /**
+   * Get the tracks that animate a bone, in the order they were added
+   * @param {number} boneIndex
+   * @return {vtkAnimationTrack[]}
+   */
+  publicAPI.getTracksForBone = (boneIndex) =>
+    model.boneTracks.get(boneIndex) ?? [];
+
+  /**
    * Find a track by name
    * @param {string} name
    * @return {vtkAnimationTrack | null}
@@ -85,11 +117,17 @@ function vtkAnimationClip(publicAPI, model) {
 
   /**
    * Clear all tracks
+   * @return {boolean} true when the clip held something to clear
    */
   publicAPI.clear = () => {
+    if (model.tracks.length === 0 && model.duration === 0) {
+      return false;
+    }
     model.tracks = [];
+    model.boneTracks.clear();
     model.duration = 0;
     publicAPI.modified();
+    return true;
   };
 }
 
@@ -103,6 +141,7 @@ const DEFAULT_VALUES = {
   name: '',
   duration: 0,
   tracks: null,
+  boneTracks: null,
 };
 
 // ---------------------------------------------------------------------------
@@ -113,6 +152,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Initialize arrays
   if (!model.tracks) {
     model.tracks = [];
+  }
+  if (!model.boneTracks) {
+    model.boneTracks = new Map();
   }
 
   // Object methods
