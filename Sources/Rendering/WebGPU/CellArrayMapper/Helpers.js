@@ -1,7 +1,6 @@
 export function getMaterialFeatureFlags(property) {
   const sheenColor = property.getSheenColorFactor?.() ?? [0, 0, 0];
   const specularColor = property.getSpecularColorFactor?.() ?? [1, 1, 1];
-
   const hasClearCoat = (property.getCoatStrength?.() ?? 0) > 0;
 
   return {
@@ -25,10 +24,6 @@ export function getMaterialFeatureFlags(property) {
   };
 }
 
-export function isEdges(hash) {
-  return hash.indexOf('edge') >= 0;
-}
-
 /**
  * Build the UV expression for a given texture transform key.
  * When a transform is present, references UBO uniforms so that
@@ -48,6 +43,5 @@ export function getUV(transformKey, transforms, hasTcoord1) {
 
 export default {
   getMaterialFeatureFlags,
-  isEdges,
   getUV,
 };

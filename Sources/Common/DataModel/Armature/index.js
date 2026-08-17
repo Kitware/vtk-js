@@ -551,7 +551,12 @@ function vtkArmature(publicAPI, model) {
 
     ensureMatrices(model);
     const localMatrices = model.localMatrices;
-    const tracks = clip.getTracks();
+    // every bone writes through the same scratch, so a pose allocates nothing
+    const poseMatrix = mat4.create();
+    const poseRotation = quat.create();
+    const trackTranslation = new Float32Array(3);
+    const trackRotation = new Float32Array(4);
+    const trackScale = new Float32Array(3);
 
     for (let i = 0; i < boneCount; i++) {
       const bone = model.bones[i];
@@ -560,26 +565,19 @@ function vtkArmature(publicAPI, model) {
       let r = bone.localRestRotation;
       let s = bone.localRestScale;
 
+      const tracks = clip.getTracksForBone(i);
       for (let ti = 0; ti < tracks.length; ti++) {
         const track = tracks[ti];
-        if (track.getBoneIndex() === i) {
-          const trackType = track.getTrackType();
-          const value = track.evaluate(time);
+        const trackType = track.getTrackType();
 
-          if (trackType === 0) t = value;
-          else if (trackType === 1) r = value;
-          else if (trackType === 2) s = value;
-        }
+        if (trackType === 0) t = track.evaluate(time, trackTranslation);
+        else if (trackType === 1) r = track.evaluate(time, trackRotation);
+        else if (trackType === 2) s = track.evaluate(time, trackScale);
       }
 
-      const offset = i * 16;
-      const m = mat4.create();
-      const q = quat.fromValues(r[0], r[1], r[2], r[3]);
-      mat4.fromRotationTranslationScale(m, q, t, s);
-
-      for (let j = 0; j < 16; j++) {
-        localMatrices[offset + j] = m[j];
-      }
+      quat.set(poseRotation, r[0], r[1], r[2], r[3]);
+      mat4.fromRotationTranslationScale(poseMatrix, poseRotation, t, s);
+      localMatrices.set(poseMatrix, i * 16);
     }
 
     publicAPI.computeWorldMatrices();

@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macros';
-import vtkPolyData from '../../../Common/DataModel/PolyData';
-import vtkPoints from '../../../Common/Core/Points';
-import vtkCellArray from '../../../Common/Core/CellArray';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 
 // ---------------------------------------------------------------------------
 // vtkArmatureSource methods
@@ -25,21 +25,9 @@ function vtkArmatureSource(publicAPI, model) {
       return;
     }
 
-    // Get pose or use rest pose
-    let worldMatrices = null;
-    if (boneCount > 0 && skeleton.getWorldMatrices().length >= boneCount * 16) {
-      worldMatrices = skeleton.getWorldMatrices();
-    } else {
-      // Use inverse bind matrices as fallback
-      worldMatrices = new Float32Array(boneCount * 16);
-      for (let i = 0; i < boneCount; i++) {
-        const bone = skeleton.getBone(i);
-        const m = bone.inverseBindMatrix;
-        for (let j = 0; j < 16; j++) {
-          worldMatrices[i * 16 + j] = m[j];
-        }
-      }
-    }
+    // the armature sizes this array to hold one matrix per bone, and fills
+    // the matrix of a bone that was never posed with the identity
+    const worldMatrices = skeleton.getWorldMatrices();
 
     const totalPoints = boneCount;
     const pointsArray = new Float32Array(totalPoints * 3);

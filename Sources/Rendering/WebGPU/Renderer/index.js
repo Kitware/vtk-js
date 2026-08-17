@@ -431,6 +431,16 @@ const DEFAULT_VALUES = {
   bindGroup: null,
   selector: null,
   renderEncoder: null,
+  // The view on the color texture that the opaque pass writes.
+  // The translucent pass sets this view before it processes this renderer.
+  // The view then stays available for the remainder of the frame.
+  // Transmissive actors read this view to get the color behind them.
+  // Refraction needs the color that is already on the screen.
+  // A fragment cannot read the attachment that it writes to.
+  // The value is null while the opaque pass runs.
+  // Thus a value that is not null also tells a mapper two things.
+  // The background is available, and the mapper can build the transmission
+  // code path.
   opaqueColorTextureView: null,
   recenterThreshold: 20.0,
   suppressClear: false,

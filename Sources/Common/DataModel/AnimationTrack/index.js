@@ -1,6 +1,13 @@
 import macro from 'vtk.js/Sources/macros';
 import { quat } from 'gl-matrix';
-import { InterpolationMode, TrackType } from './Constants';
+import {
+  InterpolationMode,
+  TrackType,
+} from 'vtk.js/Sources/Common/DataModel/AnimationTrack/Constants';
+import {
+  findKeyframeInterval,
+  hermite,
+} from 'vtk.js/Sources/Common/DataModel/AnimationTrack/Interpolation';
 
 // ---------------------------------------------------------------------------
 // vtkAnimationTrack methods
@@ -11,6 +18,29 @@ function vtkAnimationTrack(publicAPI, model) {
   model.classHierarchy.push('vtkAnimationTrack');
 
   /**
+   * Index of the last keyframe at or before the given time, or -1 when every
+   * keyframe comes later. Used to place a new keyframe; evaluate() goes
+   * through findKeyframeInterval, which also holds a hint.
+   * @param {number} time
+   * @return {number}
+   */
+  function findKeyframeBefore(time) {
+    let low = 0;
+    let high = model.times.length - 1;
+    let found = -1;
+    while (low <= high) {
+      const mid = (low + high) >>> 1;
+      if (model.times[mid] <= time) {
+        found = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    return found;
+  }
+
+  /**
    * Add a keyframe at a specific time with a value
    * @param {number} time
    * @param {Float32Array | number[]} value
@@ -19,15 +49,9 @@ function vtkAnimationTrack(publicAPI, model) {
    * @param {Float32Array} [tangents.outTangent]
    */
   publicAPI.addKeyframe = (time, value, tangents) => {
-    // Find insertion point (keep sorted by time)
-    let insertIdx = 0;
-    for (let i = 0; i < model.times.length; i++) {
-      if (time < model.times[i]) {
-        insertIdx = i;
-        break;
-      }
-      insertIdx = i + 1;
-    }
+    // the times stay ascending, and a keyframe lands after the ones that hold
+    // the same time
+    const insertIdx = findKeyframeBefore(time) + 1;
 
     model.times.splice(insertIdx, 0, time);
 
@@ -65,27 +89,36 @@ function vtkAnimationTrack(publicAPI, model) {
   publicAPI.getNumberOfKeyframes = () => model.times.length;
 
   /**
-   * Get keyframe time by index
+   * True for an index that can address a keyframe
    * @param {number} index
-   * @return {number}
+   * @return {boolean}
+   */
+  function isKeyframeIndex(index) {
+    return Number.isInteger(index) && index >= 0;
+  }
+
+  /**
+   * Get keyframe time by index
+   * @param {number} index A whole number, zero or more
+   * @return {number | null} null when no keyframe holds that index
    */
   publicAPI.getKeyframeTime = (index) => {
-    if (index >= 0 && index < model.times.length) {
+    if (isKeyframeIndex(index) && index < model.times.length) {
       return model.times[index];
     }
-    return 0;
+    return null;
   };
 
   /**
    * Get keyframe value by index
-   * @param {number} index
-   * @return {Float32Array}
+   * @param {number} index A whole number, zero or more
+   * @return {Float32Array | null} null when no keyframe holds that index
    */
   publicAPI.getKeyframeValue = (index) => {
-    if (index >= 0 && index < model.values.length) {
+    if (isKeyframeIndex(index) && index < model.values.length) {
       return model.values[index];
     }
-    return new Float32Array(0);
+    return null;
   };
 
   /**
@@ -93,13 +126,31 @@ function vtkAnimationTrack(publicAPI, model) {
    * Supports STEP and LINEAR interpolation
    * For rotation tracks (quaternions), uses SLERP
    * @param {number} time
+   * @param {Float32Array} [out] Buffer to write into, of the same length as a
+   * keyframe of this track. A caller that reads the result before it calls
+   * again can pass the same buffer every frame and spare the allocation
    * @return {Float32Array} Interpolated value
    */
-  publicAPI.evaluate = (time) => {
+  publicAPI.evaluate = (time, out = null) => {
     const numKeyframes = model.times.length;
 
+    // the buffer of the caller serves when it has the length that is wanted
+    const buffer = (length) => {
+      if (out && out.length === length) {
+        return out;
+      }
+      return new Float32Array(length);
+    };
+    const copyOf = (source) => {
+      const result = buffer(source.length);
+      result.set(source);
+      return result;
+    };
+
     if (numKeyframes === 0) {
-      return new Float32Array([0, 0, 0, 1]); // Default quat or vec3
+      const result = buffer(4);
+      result.set([0, 0, 0, 1]); // Default quat or vec3
+      return result;
     }
 
     // Clamp time to first-last keyframe range
@@ -107,22 +158,17 @@ function vtkAnimationTrack(publicAPI, model) {
     const endTime = model.times[numKeyframes - 1];
 
     if (time <= startTime) {
-      return new Float32Array(model.values[0]);
+      return copyOf(model.values[0]);
     }
     if (time >= endTime) {
-      return new Float32Array(model.values[numKeyframes - 1]);
+      return copyOf(model.values[numKeyframes - 1]);
     }
 
-    // Find surrounding keyframes
-    let idx0 = 0;
-    let idx1 = 1;
-    for (let i = 0; i < numKeyframes - 1; i++) {
-      if (time >= model.times[i] && time <= model.times[i + 1]) {
-        idx0 = i;
-        idx1 = i + 1;
-        break;
-      }
-    }
+    // the time sits inside the track, so the search gives the left keyframe
+    // of the segment that holds it. the hint keeps playback in order O(1)
+    const idx0 = findKeyframeInterval(model.times, time, model._intervalHint);
+    model._intervalHint = idx0;
+    const idx1 = idx0 + 1;
 
     const time0 = model.times[idx0];
     const time1 = model.times[idx1];
@@ -131,7 +177,7 @@ function vtkAnimationTrack(publicAPI, model) {
 
     // STEP interpolation: return value0
     if (model.interpolationMode === InterpolationMode.STEP) {
-      return new Float32Array(value0);
+      return copyOf(value0);
     }
 
     // LINEAR interpolation
@@ -140,15 +186,13 @@ function vtkAnimationTrack(publicAPI, model) {
 
       // Special handling for rotation tracks (quaternion SLERP)
       if (model.trackType === TrackType.ROTATION && value0.length === 4) {
-        const q0 = quat.fromValues(value0[0], value0[1], value0[2], value0[3]);
-        const q1 = quat.fromValues(value1[0], value1[1], value1[2], value1[3]);
-        const result = quat.create();
-        quat.slerp(result, q0, q1, t);
-        return new Float32Array(result);
+        const result = buffer(4);
+        quat.slerp(result, value0, value1, t);
+        return result;
       }
 
       // Linear interpolation for translation/scale
-      const result = new Float32Array(value0.length);
+      const result = buffer(value0.length);
       for (let i = 0; i < value0.length; i++) {
         result[i] = value0[i] * (1 - t) + value1[i] * t;
       }
@@ -159,23 +203,20 @@ function vtkAnimationTrack(publicAPI, model) {
     if (model.interpolationMode === InterpolationMode.CUBIC) {
       const dt = time1 - time0;
       const alpha = (time - time0) / dt;
-      const alpha2 = alpha * alpha;
-      const alpha3 = alpha2 * alpha;
 
       const m0 = model.outTangents[idx0]; // out-tangent at start keyframe
       const m1 = model.inTangents[idx1]; // in-tangent at end keyframe
 
-      const result = new Float32Array(value0.length);
+      const result = buffer(value0.length);
       for (let i = 0; i < value0.length; i++) {
-        const p0 = value0[i];
-        const p1 = value1[i];
-        const t0Out = m0 ? m0[i] : 0;
-        const t1In = m1 ? m1[i] : 0;
-        result[i] =
-          (2 * alpha3 - 3 * alpha2 + 1) * p0 +
-          (alpha3 - 2 * alpha2 + alpha) * dt * t0Out +
-          (-2 * alpha3 + 3 * alpha2) * p1 +
-          (alpha3 - alpha2) * dt * t1In;
+        result[i] = hermite(
+          value0[i],
+          value1[i],
+          m0 ? m0[i] : 0,
+          m1 ? m1[i] : 0,
+          alpha,
+          dt
+        );
       }
 
       // Normalize quaternion result
@@ -195,19 +236,24 @@ function vtkAnimationTrack(publicAPI, model) {
     }
 
     // Fallback
-    return new Float32Array(value0);
+    return copyOf(value0);
   };
 
   /**
    * Clear all keyframes
+   * @return {boolean} true when the track held something to clear
    */
   publicAPI.clear = () => {
+    if (model.times.length === 0 && model.duration === 0) {
+      return false;
+    }
     model.times = [];
     model.values = [];
     model.inTangents = [];
     model.outTangents = [];
     model.duration = 0;
     publicAPI.modified();
+    return true;
   };
 }
 
@@ -215,17 +261,10 @@ function vtkAnimationTrack(publicAPI, model) {
 // Object factory
 // ---------------------------------------------------------------------------
 
-const TRACK_FIELDS = [
-  'name',
-  'boneIndex',
-  'trackType',
-  'interpolationMode',
-  'duration',
-];
+const TRACK_FIELDS = ['name', 'trackType', 'interpolationMode', 'duration'];
 
 const DEFAULT_VALUES = {
   name: '',
-  boneIndex: 0,
   trackType: TrackType.TRANSLATION,
   interpolationMode: InterpolationMode.LINEAR,
   duration: 0,
@@ -233,6 +272,7 @@ const DEFAULT_VALUES = {
   values: null,
   inTangents: null,
   outTangents: null,
+  _intervalHint: 0,
 };
 
 // ---------------------------------------------------------------------------

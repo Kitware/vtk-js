@@ -1,8 +1,7 @@
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
-import { isEdges } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Helpers';
 
 function replaceShaderAlpha(publicAPI, model, hash, pipeline, vertexInput) {
-  if (isEdges(hash)) return;
+  if (publicAPI.isEdgePrimitive()) return;
   const fDesc = pipeline.getShaderDescription('fragment');
   let code = fDesc.getCode();
 
