@@ -2262,7 +2262,9 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       );
       const scalars = image.getPointData() && image.getPointData().getScalars();
       const numComp = scalars ? scalars.getNumberOfComponents() : 1;
-      const numIComps = vprop.getIndependentComponents() ? numComp : 1;
+      const numIComps = vprop.getUseIndependentComponents(numComp)
+        ? numComp
+        : 1;
       for (let c = 0; c < numIComps; c++) {
         mtime = Math.max(
           mtime,
@@ -2307,7 +2309,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       const scalars = image.getPointData() && image.getPointData().getScalars();
 
       const numComp = scalars.getNumberOfComponents();
-      const iComps = vprop.getIndependentComponents();
+      const iComps = vprop.getUseIndependentComponents(numComp);
       const numIComps = iComps ? numComp : 1;
       model.numRows += numIComps;
     }
@@ -2333,7 +2335,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       const scalars = image.getPointData() && image.getPointData().getScalars();
 
       const numComp = scalars.getNumberOfComponents();
-      const iComps = vprop.getIndependentComponents();
+      const iComps = vprop.getUseIndependentComponents(numComp);
       const numIComps = iComps ? numComp : 1;
 
       for (let c = 0; c < numIComps; ++c) {
@@ -2445,7 +2447,9 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       );
       const scalars = image.getPointData() && image.getPointData().getScalars();
       const numComp = scalars ? scalars.getNumberOfComponents() : 1;
-      const numIComps = vprop.getIndependentComponents() ? numComp : 1;
+      const numIComps = vprop.getUseIndependentComponents(numComp)
+        ? numComp
+        : 1;
       for (let c = 0; c < numIComps; c++) {
         mtime = Math.max(
           mtime,
@@ -2617,11 +2621,8 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         ipScalarRangeMaxArray[vidx * 4 + component] = rangeMax / tScale;
       }
       componentInfoArray[vidx * 4] = scalars.getNumberOfComponents();
-      componentInfoArray[vidx * 4 + 1] = actor
-        .getProperty()
-        .getIndependentComponents()
-        ? 1.0
-        : 0.0;
+      const iComps = vprop.getUseIndependentComponents(numComp);
+      componentInfoArray[vidx * 4 + 1] = iComps ? 1.0 : 0.0;
       componentInfoArray[vidx * 4 + 2] = vprop.getColorMixPreset();
       // Pack the per component ForceNearestInterpolation flags into a bitmask
       // (bit N = component N). The shader unpacks this in getTextureValue to
@@ -2654,9 +2655,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
 
       for (let component = 0; component < numComp; component++) {
         const sscale = tScale;
-        const cfun = vprop.getRGBTransferFunction(
-          vprop.getIndependentComponents() ? component : 0
-        );
+        const cfun = vprop.getRGBTransferFunction(iComps ? component : 0);
         const cRange = cfun.getRange();
         // Guard against degenerate (zero width) tf ranges, which
         // would otherwise produce Inf/NaN scale and shift values. A zero inverse
@@ -2666,9 +2665,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
         colorScaleArray[vidx * 4 + component] = sscale * cInvWidth;
         colorShiftArray[vidx * 4 + component] = -cRange[0] * cInvWidth;
 
-        const ofun = vprop.getScalarOpacity(
-          vprop.getIndependentComponents() ? component : 0
-        );
+        const ofun = vprop.getScalarOpacity(iComps ? component : 0);
         const oRange = ofun.getRange();
         const oWidth = oRange[1] - oRange[0];
         const oInvWidth = Math.abs(oWidth) > EPSILON ? 1.0 / oWidth : 0.0;
@@ -2772,7 +2769,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       const scalars = image.getPointData() && image.getPointData().getScalars();
 
       const numComp = scalars.getNumberOfComponents();
-      const iComps = vprop.getIndependentComponents();
+      const iComps = vprop.getUseIndependentComponents(numComp);
       const numRowsForVolume = iComps ? numComp : 1;
 
       // half float?
@@ -3081,7 +3078,9 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
           ?.getPointData()
           ?.getScalars()
           ?.getNumberOfComponents?.() ?? 0;
-      const independentComponents = Number(property.getIndependentComponents());
+      const independentComponents = Number(
+        property.getUseIndependentComponents(numComp)
+      );
       // label outline changes the generated composite code, so it must be
       // part of the hash
       const useLabelOutline = Number(
