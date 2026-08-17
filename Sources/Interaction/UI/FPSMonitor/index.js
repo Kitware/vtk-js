@@ -3,18 +3,8 @@ import style from 'vtk.js/Sources/Interaction/UI/FPSMonitor/FPSMonitor.module.cs
 
 const noOp = Function.prototype;
 
-function formatNumbers(n) {
-  const sections = [];
-  let size = n;
-  while (size > 1000) {
-    sections.push(`000${size % 1000}`.slice(-3));
-    size = Math.floor(size / 1000);
-  }
-  if (size > 0) {
-    sections.push(size);
-  }
-  sections.reverse();
-  return sections.join("'");
+function formatNumber(n) {
+  return n.toLocaleString();
 }
 
 // ----------------------------------------------------------------------------
@@ -89,7 +79,7 @@ function vtkFPSMonitor(publicAPI, model) {
           infoItems.push(
             `<label class="${style.label}">${keys[i]}</label><span class="${
               style.value
-            }">${formatNumbers(stats[keys[i]])}</span>`
+            }">${formatNumber(stats[keys[i]])}</span>`
           );
         }
       }
