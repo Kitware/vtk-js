@@ -559,6 +559,13 @@ export interface vtkCamera extends vtkObject {
   setPosition(x: number, y: number, z: number): boolean;
 
   /**
+   * Set the camera's position and focal point in world coordinates.
+   * @param {Number[]} position The position.
+   * @param {Number[]} focalPoint The focal point.
+   */
+  setPositionAndFocalPoint(position: number[], focalPoint: number[]): boolean;
+
+  /**
    *
    * @param {mat4} mat
    */
