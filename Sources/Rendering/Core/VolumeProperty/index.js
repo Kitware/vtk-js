@@ -68,6 +68,10 @@ function vtkVolumeProperty(publicAPI, model) {
     return model.componentData[index].colorChannels;
   };
 
+  publicAPI.getUseIndependentComponents = (numberOfComponents) =>
+    (model.independentComponents && numberOfComponents >= 2) ||
+    !!model.colorMixPreset;
+
   // Set the color of a volume to a gray transfer function
   publicAPI.setGrayTransferFunction = (index = 0, func = null) => {
     let modified = false;

@@ -80,6 +80,13 @@ export interface vtkVolumeProperty extends vtkObject {
   getIndependentComponents(): boolean;
 
   /**
+   * Get whether components should be treated independently for the given data.
+   *
+   * @param {Number} numberOfComponents The number of components in the data.
+   */
+  getUseIndependentComponents(numberOfComponents: number): boolean;
+
+  /**
    * Get the unit distance on which the scalar opacity transfer function is defined.
    * @param {Number} index
    */

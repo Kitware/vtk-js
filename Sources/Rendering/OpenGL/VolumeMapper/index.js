@@ -57,12 +57,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLVolumeMapper');
 
-  function getUseIndependentComponents(actorProperty, numComp) {
-    const iComps = actorProperty.getIndependentComponents();
-    const colorMixPreset = actorProperty.getColorMixPreset();
-    return (iComps && numComp >= 2) || !!colorMixPreset;
-  }
-
   function isLabelmapOutlineRequired(actorProperty) {
     return (
       actorProperty.getUseLabelOutline() ||
@@ -1484,10 +1478,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.numberOfComponents = multiTexturePerVolumeEnabled
         ? numberOfValidInputs
         : firstScalars.getNumberOfComponents();
-      model.useIndependentComponents = getUseIndependentComponents(
-        firstVolumeProperty,
-        model.numberOfComponents
-      );
+      model.useIndependentComponents =
+        firstVolumeProperty.getUseIndependentComponents(
+          model.numberOfComponents
+        );
     }
     if (newNumberOfLights !== model.numberOfLights) {
       model.numberOfLights = newNumberOfLights;
