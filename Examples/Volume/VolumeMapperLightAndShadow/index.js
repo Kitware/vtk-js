@@ -1,5 +1,6 @@
 import '@kitware/vtk.js/favicon';
 
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
@@ -8,11 +9,10 @@ import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunc
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
 import vtkLight from '@kitware/vtk.js/Rendering/Core/Light';
-import vtkXMLImageDataReader from '@kitware/vtk.js/IO/XML/XMLImageDataReader';
-import HttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkVolumeController from '@kitware/vtk.js/Interaction/UI/VolumeController';
 import vtkBoundingBox from '@kitware/vtk.js/Common/DataModel/BoundingBox';
 import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
+import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
 
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkSphereSource from '@kitware/vtk.js/Filters/Sources/SphereSource';
@@ -33,7 +33,7 @@ myContainer.appendChild(progressContainer);
 // ----------------------------------------------------------------------------
 // Main function to set up and render volume
 // ----------------------------------------------------------------------------
-function createVolumeShadowViewer(rootContainer, fileContents) {
+function createVolumeShadowViewer(rootContainer, reader, imageData) {
   // Container content and style
   const background = [0, 0, 0];
   const containerStyle = { height: '100%', width: '100%' };
@@ -76,9 +76,7 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
   fpsMonitor.setRenderWindow(renderWindow);
 
   // Actor and mapper pipeline
-  const vtiReader = vtkXMLImageDataReader.newInstance();
-  vtiReader.parseAsArrayBuffer(fileContents);
-  const source = vtiReader.getOutputData(0);
+  const source = imageData;
 
   const actor = vtkVolume.newInstance();
   const actorProperty = actor.getProperty(0);
@@ -112,7 +110,7 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
         .reduce((a, b) => a + b, 0)
     );
   mapper.setSampleDistance(sampleDistance / 2.5);
-  mapper.setVolumeShadowSamplingDistFactor(5.0);
+  mapper.setVolumeShadowSamplingDistFactor(3.0);
 
   // Add transfer function
   const lookupTable = vtkColorTransferFunction.newInstance();
@@ -122,8 +120,9 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
 
   // Set actor properties
   actorProperty.setComputeNormalFromOpacity(false);
-  actorProperty.setGlobalIlluminationReach(0.0);
-  actorProperty.setVolumetricScatteringBlending(0.0);
+  actorProperty.setGlobalIlluminationReach(0.5);
+  actorProperty.setVolumetricScatteringBlending(0.7);
+  actorProperty.setAnisotropy(0.4);
   actorProperty.setInterpolationTypeToLinear();
   actorProperty.setScalarOpacityUnitDistance(
     0,
@@ -204,10 +203,10 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
   }
   const params = {
     DensityNormal: isDensity,
-    VolumeBlending: 0.0,
-    GlobalReach: 0.0,
-    SampleDist: 5.0,
-    Anisotropy: 0.0,
+    VolumeBlending: actorProperty.getVolumetricScatteringBlending(),
+    GlobalReach: actorProperty.getGlobalIlluminationReach(),
+    SampleDist: mapper.getVolumeShadowSamplingDistFactor(),
+    Anisotropy: actorProperty.getAnisotropy(),
   };
   gui
     .add(params, 'DensityNormal')
@@ -256,7 +255,7 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
 
   // Make some variables global so that you can inspect and
   // modify objects in your browser's developer console:
-  global.source = vtiReader;
+  global.source = reader;
   global.mapper = mapper;
   global.actor = actor;
   global.renderer = renderer;
@@ -271,8 +270,11 @@ function createVolumeShadowViewer(rootContainer, fileContents) {
 // ----------------------------------------------------------------------------
 // Read volume and render
 // ----------------------------------------------------------------------------
-HttpDataAccessHelper.fetchBinary(
-  `${__BASE_PATH__}/data/volume/head-binary.vti`
-).then((binary) => {
-  createVolumeShadowViewer(myContainer, binary);
+
+const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
+reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
+  reader.loadData().then(() => {
+    const imageData = reader.getOutputData();
+    createVolumeShadowViewer(myContainer, reader, imageData);
+  });
 });
