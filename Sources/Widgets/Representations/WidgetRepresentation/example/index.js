@@ -71,11 +71,13 @@ const compositeState = vtkStateBuilder
 const widgetSphereRep = vtkSphereHandleRepresentation.newInstance();
 widgetSphereRep.setInputData(compositeState);
 widgetSphereRep.setLabels(['all']);
+widgetSphereRep.setScaleInPixels(false);
 widgetSphereRep.getActors().forEach(renderer.addActor);
 
 const widgetCubeRep = vtkCubeHandleRepresentation.newInstance();
 widgetCubeRep.setInputData(compositeState);
 widgetCubeRep.setLabels('all');
+widgetCubeRep.setScaleInPixels(false);
 widgetCubeRep.getActors().forEach(renderer.addActor);
 
 const reps = { sphere: widgetSphereRep, cube: widgetCubeRep };
@@ -291,3 +293,7 @@ groupC
   .add(stateParams, 'COriginZ', -1, 1, 0.1)
   .name('Origin Z')
   .onChange(() => applyStateField('c', 'C'));
+
+applyStateField('a', 'A');
+applyStateField('b', 'B');
+applyStateField('c', 'C');
