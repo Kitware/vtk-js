@@ -57,40 +57,64 @@ function vtkCamera(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.setPosition = (x, y, z) => {
+  const setPosition = (x, y, z) => {
     if (
       x === model.position[0] &&
       y === model.position[1] &&
       z === model.position[2]
     ) {
-      return;
+      return false;
     }
 
     model.position[0] = x;
     model.position[1] = y;
     model.position[2] = z;
-
-    // recompute the focal distance
-    publicAPI.computeDistance();
-    publicAPI.modified();
+    return true;
   };
 
-  publicAPI.setFocalPoint = (x, y, z) => {
+  publicAPI.setPosition = (x, y, z) => {
+    if (setPosition(x, y, z)) {
+      // recompute the focal distance
+      publicAPI.computeDistance();
+      publicAPI.modified();
+      return true;
+    }
+    return false;
+  };
+
+  const setFocalPoint = (x, y, z) => {
     if (
       x === model.focalPoint[0] &&
       y === model.focalPoint[1] &&
       z === model.focalPoint[2]
     ) {
-      return;
+      return false;
     }
 
     model.focalPoint[0] = x;
     model.focalPoint[1] = y;
     model.focalPoint[2] = z;
+    return true;
+  };
 
-    // recompute the focal distance
-    publicAPI.computeDistance();
-    publicAPI.modified();
+  publicAPI.setFocalPoint = (x, y, z) => {
+    if (setFocalPoint(x, y, z)) {
+      // recompute the focal distance
+      publicAPI.computeDistance();
+      publicAPI.modified();
+      return true;
+    }
+    return false;
+  };
+
+  publicAPI.setPositionAndFocalPoint = (position, focalPoint) => {
+    if (setPosition(...position) || setFocalPoint(...focalPoint)) {
+      // recompute the focal distance
+      publicAPI.computeDistance();
+      publicAPI.modified();
+      return true;
+    }
+    return false;
   };
 
   publicAPI.setDistance = (d) => {
