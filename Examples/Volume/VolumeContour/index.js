@@ -39,6 +39,7 @@ const params = { IsoValue: 0.0 };
 const isoCtrl = gui
   .add(params, 'IsoValue', 0.0, 1.0, 0.05)
   .name('Iso value')
+  .listen()
   .onChange((v) => {
     const isoValue = Number(v);
     marchingCube.setContourValue(isoValue);
