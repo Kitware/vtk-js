@@ -646,7 +646,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
   publicAPI.setMultiSample = (count) => {
     if (count !== 1 && count !== 4) {
       vtkErrorMacro(
-        `Invalid multiSample ${count}. WebGPU only supports multiSample of 1 or 4. Ignoring.`
+        `Invalid multiSample value: ${count}. Supported values are 1 and 4. Ignoring.`
       );
       return false;
     }
