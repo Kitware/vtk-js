@@ -44,6 +44,8 @@ const { vtkWarningMacro, vtkErrorMacro } = macro;
 const preAllocatedMatrices = {
   idxToView: mat4.identity(new Float64Array(16)),
   vecISToVCMatrix: mat3.identity(new Float64Array(9)),
+  normalISToVCMatrix: mat3.identity(new Float64Array(9)),
+  linearModelToViewMatrix: mat3.identity(new Float64Array(9)),
   modelToView: mat4.identity(new Float64Array(16)),
   projectionToView: mat4.identity(new Float64Array(16)),
   projectionToWorld: mat4.identity(new Float64Array(16)),
@@ -349,8 +351,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const multiTexturePerVolumeEnabled = numberOfValidInputs > 1;
 
     // Get maximum number of samples
-    const boundsMC = firstValidInput.imageData.getBounds();
-    const maximumRayLength = vtkBoundingBox.getDiagonalLength(boundsMC);
+    // The actor bounds include the actor matrix, so a scaled volume gets the
+    // number of samples that its rendered size needs
+    const maximumRayLength = vtkBoundingBox.getDiagonalLength(
+      actor.getBounds()
+    );
     const maximumNumberOfSamples = Math.ceil(
       maximumRayLength / publicAPI.getCurrentSampleDistance(ren)
     );
@@ -662,6 +667,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const {
       idxToView,
       vecISToVCMatrix,
+      normalISToVCMatrix,
+      linearModelToViewMatrix,
       modelToView,
       projectionToView,
       projectionToWorld,
@@ -830,10 +837,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     vecISToVCMatrix[8] = sizeVC[2];
     // Then apply the image direction matrix
     mat3.multiply(vecISToVCMatrix, imageDirection, vecISToVCMatrix);
-    // Then apply the actor matrix
-    mat3.multiply(vecISToVCMatrix, actMats.normalMatrix, vecISToVCMatrix);
-    // Then apply the camera matrix
-    mat3.multiply(vecISToVCMatrix, keyMats.normalMatrix, vecISToVCMatrix);
+    // Then apply the actor and the camera matrices
+    // Position vectors use the linear part of the model to view transform. A
+    // normal matrix is an inverse transpose, so it gives the same result only
+    // for rigid transforms, and it inversely scales or shears the texture
+    // coordinates of non rigid actors.
+    mat3.fromMat4(linearModelToViewMatrix, modelToView);
+    mat3.multiply(vecISToVCMatrix, linearModelToViewMatrix, vecISToVCMatrix);
     program.setUniformMatrix3x3(
       `${uniformPrefix}.vecISToVCMatrix`,
       vecISToVCMatrix
@@ -841,6 +851,21 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     program.setUniformMatrix3x3(
       `${uniformPrefix}.vecVCToISMatrix`,
       mat3.invert(new Float32Array(9), vecISToVCMatrix)
+    );
+
+    // Create the normalISToVCMatrix, that transforms a normal from texture
+    // coordinates (IS in the shader) to VC coordinates. Normals need the
+    // inverse transpose transform, so they cannot use vecISToVCMatrix.
+    normalISToVCMatrix.fill(0);
+    normalISToVCMatrix[0] = sizeVC[0];
+    normalISToVCMatrix[4] = sizeVC[1];
+    normalISToVCMatrix[8] = sizeVC[2];
+    mat3.multiply(normalISToVCMatrix, imageDirection, normalISToVCMatrix);
+    mat3.multiply(normalISToVCMatrix, actMats.normalMatrix, normalISToVCMatrix);
+    mat3.multiply(normalISToVCMatrix, keyMats.normalMatrix, normalISToVCMatrix);
+    program.setUniformMatrix3x3(
+      `${uniformPrefix}.normalISToVCMatrix`,
+      normalISToVCMatrix
     );
 
     // Set originVC uniform that will be used to convert points from IS to VC
@@ -858,7 +883,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     );
     program.setUniform3fv(`${uniformPrefix}.originVC`, originVC);
 
-    const diagonalLength = vec3.length(sizeVC);
+    const diagonalLength = vtkBoundingBox.getDiagonalLength(actor.getBounds());
     program.setUniformf(`${uniformPrefix}.diagonalLength`, diagonalLength);
 
     if (isLabelmapOutlineRequired(firstVolumeProperty)) {
