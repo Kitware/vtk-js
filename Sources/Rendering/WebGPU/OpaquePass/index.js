@@ -134,8 +134,9 @@ function vtkWebGPUOpaquePass(publicAPI, model) {
     model.renderEncoder = vtkWebGPURenderEncoder.newInstance({
       label: 'OpaquePass',
     });
-    // default settings are fine for this
-    model.renderEncoder.setPipelineHash('op');
+    // default settings are fine for this pass, but we need to set
+    // the sample count in the pipeline hash
+    model.renderEncoder.setPipelineHash(`op${sampleCount}`);
     // Set multisample state in pipeline settings when MSAA is active
     if (sampleCount > 1) {
       const settings = model.renderEncoder.getPipelineSettings();
