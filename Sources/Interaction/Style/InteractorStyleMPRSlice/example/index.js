@@ -84,6 +84,7 @@ function updateUI() {
 
   sliceCtrl.min(range[0]);
   sliceCtrl.max(range[1]);
+  sliceCtrl.step((range[1] - range[0]) / 1000);
   sliceCtrl.setValue(slice);
 
   function toFixed(n) {

@@ -137,40 +137,44 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
   };
 
   publicAPI.setSlice = (slice) => {
+    if (publicAPI.getSlice() === slice) {
+      return false;
+    }
+
+    if (!model.volumeMapper) {
+      return false;
+    }
+
+    const range = publicAPI.getSliceRange();
+
+    const clampedSlice = clamp(slice, ...range);
+    const center = model.volumeMapper.getCenter();
+
     const renderer = model._interactor.getCurrentRenderer();
     const camera = renderer.getActiveCamera();
+    const distance = camera.getDistance();
+    const dop = camera.getDirectionOfProjection();
+    vtkMath.normalize(dop);
 
-    if (model.volumeMapper) {
-      const range = publicAPI.getSliceRange();
+    const midPoint = (range[1] + range[0]) / 2.0;
+    const zeroPoint = [
+      center[0] - dop[0] * midPoint,
+      center[1] - dop[1] * midPoint,
+      center[2] - dop[2] * midPoint,
+    ];
+    const slicePoint = [
+      zeroPoint[0] + dop[0] * clampedSlice,
+      zeroPoint[1] + dop[1] * clampedSlice,
+      zeroPoint[2] + dop[2] * clampedSlice,
+    ];
 
-      const clampedSlice = clamp(slice, ...range);
-      const center = model.volumeMapper.getCenter();
+    const newPos = [
+      slicePoint[0] - dop[0] * distance,
+      slicePoint[1] - dop[1] * distance,
+      slicePoint[2] - dop[2] * distance,
+    ];
 
-      const distance = camera.getDistance();
-      const dop = camera.getDirectionOfProjection();
-      vtkMath.normalize(dop);
-
-      const midPoint = (range[1] + range[0]) / 2.0;
-      const zeroPoint = [
-        center[0] - dop[0] * midPoint,
-        center[1] - dop[1] * midPoint,
-        center[2] - dop[2] * midPoint,
-      ];
-      const slicePoint = [
-        zeroPoint[0] + dop[0] * clampedSlice,
-        zeroPoint[1] + dop[1] * clampedSlice,
-        zeroPoint[2] + dop[2] * clampedSlice,
-      ];
-
-      const newPos = [
-        slicePoint[0] - dop[0] * distance,
-        slicePoint[1] - dop[1] * distance,
-        slicePoint[2] - dop[2] * distance,
-      ];
-
-      camera.setPosition(...newPos);
-      camera.setFocalPoint(...slicePoint);
-    }
+    return camera.setPositionAndFocalPoint(newPos, slicePoint);
   };
 
   publicAPI.getSliceRange = () => {
