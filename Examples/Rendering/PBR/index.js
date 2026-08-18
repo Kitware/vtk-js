@@ -54,32 +54,35 @@ function hexToRGB(hex) {
       }
     : null;
 }
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
 // Texture loading helper function
-function createTexture(src) {
-  const _img = new Image();
-  _img.crossOrigin = 'Anonymous';
-  _img.src = src;
+async function createTexture(src) {
+  const _img = await loadImage(src);
   const _tex = vtkTexture.newInstance();
-  _img.onload = () => {
-    _tex.setInterpolate(true);
-    _tex.setEdgeClamp(true);
-    _tex.setImage(_img);
-  };
+  _tex.setInterpolate(true);
+  _tex.setEdgeClamp(true);
+  _tex.setImage(_img);
   return _tex;
 }
 
 // Texture loading helper function
-function createTextureWithMipmap(src, level) {
-  const _img = new Image();
-  _img.crossOrigin = 'Anonymous';
-  _img.src = src;
+async function createTextureWithMipmap(src, level) {
+  const _img = await loadImage(src);
   const _tex = vtkTexture.newInstance();
   _tex.setMipLevel(level);
-  _img.onload = () => {
-    _tex.setInterpolate(true);
-    _tex.setEdgeClamp(true);
-    _tex.setImage(_img);
-  };
+  _tex.setInterpolate(true);
+  _tex.setEdgeClamp(true);
+  _tex.setImage(_img);
   return _tex;
 }
 
@@ -92,7 +95,7 @@ const mapper = vtkMapper.newInstance();
 const actor = vtkActor.newInstance();
 
 reader.setSplitMode('usemtl');
-reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(() => {
+reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(async () => {
   const polydata = reader.getOutputData(0);
   // Normals
   const normals = vtkPolyDataNormals.newInstance();
@@ -111,16 +114,23 @@ reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(() => {
   actor.getProperty().setAmbientColor(1.0, 1.0, 1.0);
 
   // Texture loading
-  const diffuseTex = createTexture(`${__BASE_PATH__}/data/pbr/diffuse.jpg`);
-  const aoTex = createTexture(`${__BASE_PATH__}/data/pbr/ao.jpg`);
-  const roughnessTex = createTexture(`${__BASE_PATH__}/data/pbr/roughness.jpg`);
-  const metallicTex = createTexture(`${__BASE_PATH__}/data/pbr/metallic.jpg`);
-  const emissionTex = createTexture(`${__BASE_PATH__}/data/pbr/emission.jpg`);
-  const normalTex = createTexture(`${__BASE_PATH__}/data/pbr/normal.jpg`);
-  const environmentTex = createTextureWithMipmap(
-    `${__BASE_PATH__}/data/pbr/kiara_dawn_4k.jpg`,
-    8
-  );
+  const [
+    diffuseTex,
+    aoTex,
+    roughnessTex,
+    metallicTex,
+    emissionTex,
+    normalTex,
+    environmentTex,
+  ] = await Promise.all([
+    createTexture(`${__BASE_PATH__}/data/pbr/diffuse.jpg`),
+    createTexture(`${__BASE_PATH__}/data/pbr/ao.jpg`),
+    createTexture(`${__BASE_PATH__}/data/pbr/roughness.jpg`),
+    createTexture(`${__BASE_PATH__}/data/pbr/metallic.jpg`),
+    createTexture(`${__BASE_PATH__}/data/pbr/emission.jpg`),
+    createTexture(`${__BASE_PATH__}/data/pbr/normal.jpg`),
+    createTextureWithMipmap(`${__BASE_PATH__}/data/pbr/kiara_dawn_4k.jpg`, 8),
+  ]);
   actor.getProperty().setDiffuseTexture(diffuseTex);
   actor.getProperty().setAmbientOcclusionTexture(aoTex);
   actor.getProperty().setRoughnessTexture(roughnessTex);
@@ -135,7 +145,9 @@ reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(() => {
   mapper.setInputData(polydata);
 
   renderer.addActor(actor);
+  renderer.resetCamera();
   renderWindow.render();
+  fpsMonitor.update();
 });
 
 // ----------------------------------------------
