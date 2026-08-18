@@ -1,29 +1,48 @@
-import test from 'tape';
+import { it, expect } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Test: multiSample validation
 // ---------------------------------------------------------------------------
 
-// Detect whether the current runtime actually supports WebGPU.
-function isWebGPUAvailable() {
-  return typeof navigator !== 'undefined' && !!navigator.gpu;
-}
+it.skipIf(!__VTK_TEST_WEBGPU__)(
+  'Test WebGPU multiSample only accepts 1 and 4',
+  () => {
+    const gc = testUtils.createGarbageCollector();
+    const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+    const apiView = gc.registerResource(
+      renderWindow.newAPISpecificView('WebGPU')
+    );
+
+    try {
+      expect(apiView.getMultiSample(), 'MSAA is off by default').toBe(1);
+      expect(apiView.setMultiSample(2), 'multiSample 2 rejected').toBe(false);
+      expect(apiView.setMultiSample(3), 'multiSample 3 rejected').toBe(false);
+      expect(apiView.getMultiSample(), 'rejected values are ignored').toBe(1);
+      expect(apiView.setMultiSample(4), 'multiSample 4 accepted').not.toBe(
+        false
+      );
+      expect(apiView.getMultiSample(), 'multiSample updated to 4').toBe(4);
+    } finally {
+      gc.releaseResources();
+    }
+  }
+);
 
 // ---------------------------------------------------------------------------
-// Test: MSAA opaque + translucent rendering (WebGPU)
+// Test: MSAA opaque + translucent rendering
 // ---------------------------------------------------------------------------
 
-test.onlyIfWebGPU('Test WebGPU MSAA rendering', (t) => {
-  const gc = testUtils.createGarbageCollector(t);
+it.skipIf(!__VTK_TEST_WEBGPU__)('Test WebGPU MSAA rendering', async () => {
+  const gc = testUtils.createGarbageCollector();
 
   const container = document.querySelector('body');
   const renderWindowContainer = gc.registerDOMElement(
@@ -66,42 +85,23 @@ test.onlyIfWebGPU('Test WebGPU MSAA rendering', (t) => {
   apiView.setContainer(renderWindowContainer);
   renderWindow.addView(apiView);
   apiView.setSize(400, 400);
-
-  // ------ MSAA configuration ------
-  const webgpuAvailable = isWebGPUAvailable();
-  const desiredSampleCount = webgpuAvailable ? 4 : 1;
-
-  if (apiView.setMultiSample) {
-    // Validate that invalid sample counts are rejected
-    t.notOk(
-      apiView.setMultiSample(2),
-      'setMultiSample(2) should return false (invalid)'
-    );
-
-    // Set the desired sample count
-    apiView.setMultiSample(desiredSampleCount);
-  }
-
-  t.equal(
-    apiView.getMultiSample ? apiView.getMultiSample() : 1,
-    desiredSampleCount,
-    `multiSample should be ${desiredSampleCount}`
-  );
+  apiView.setMultiSample(4);
 
   renderer.resetCamera();
 
-  // ------ Capture and verify ------
-  const promise = apiView
-    .captureNextImage()
-    .then((image) => {
-      // The rendering completed without errors — this is the primary
-      // regression check.  MSAA misconfiguration (sample count mismatches,
-      // missing resolve targets, etc.) would cause a GPU validation error
-      // before we reach this point.
-      t.ok(image, 'MSAA render produced an image without GPU errors');
-    })
-    .finally(gc.releaseResources);
+  try {
+    const promise = apiView.captureNextImage();
+    renderWindow.render();
+    const image = await promise;
 
-  renderWindow.render();
-  return promise;
+    // The rendering completed without errors — this is the primary regression
+    // check. MSAA misconfiguration (sample count mismatches, missing resolve
+    // targets, etc.) would cause a GPU validation error before we get here.
+    expect(
+      image,
+      'MSAA render produced an image without GPU errors'
+    ).toBeTruthy();
+  } finally {
+    gc.releaseResources();
+  }
 });
