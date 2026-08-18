@@ -80,9 +80,10 @@ struct Volume {
   vec3 inverseDimensions; // 1/vec3(dimensions)
   mat3 vecISToVCMatrix;   // convert from IS to VC without translation
   mat3 vecVCToISMatrix;   // convert from VC to IS without translation
+  mat3 normalISToVCMatrix; // convert a normal from IS to VC
   mat4 PCWCMatrix;
   mat4 worldToIndex;
-  float diagonalLength; // in VC, this is: length(size)
+  float diagonalLength; // in VC, this is the length of the actor bounds diagonal
 
   // ---- Texture settings ----
 
@@ -347,6 +348,13 @@ vec3 vecISToVC(vec3 dirIS) {
   return volume.vecISToVCMatrix * dirIS;
 }
 
+// Rotate a normal to view coordinate
+// Normals use the inverse transpose transform, which is different from
+// vecISToVCMatrix when the actor matrix scales or shears the volume
+vec3 normalISToVC(vec3 normalIS) {
+  return volume.normalISToVCMatrix * normalIS;
+}
+
 // Rotate vector to idx coordinate
 vec3 vecVCToIS(vec3 dirVC) {
   return volume.vecVCToISMatrix * dirVC;
@@ -403,7 +411,7 @@ vec4 computeDensityNormal(vec3 opacityUCoords[2], float opacityTextureHeight,
   }
 
   // Normalize
-  opacityG.xyz = normalize(vecISToVC(opacityG.xyz));
+  opacityG.xyz = normalize(normalISToVC(opacityG.xyz));
 
   return opacityG;
 }
@@ -442,7 +450,7 @@ vec4 computeNormalForDensity(vec3 posIS, out vec3 scalarInterp[2],
   if (result.w == 0.0) {
     return vec4(0.0);
   }
-  result.xyz = normalize(vecISToVC(result.xyz));
+  result.xyz = normalize(normalISToVC(result.xyz));
   return result;
 }
 
@@ -499,7 +507,7 @@ mat4 computeMat4Normal(vec3 posIS, vec4 tValue) {
       vec3 normal = vec3(distX[component], distY[component], distZ[component]);
       float normalLength = length(normal);
       if (normalLength > 0.0) {
-        normal = normalize(vecISToVC(normal));
+        normal = normalize(normalISToVC(normal));
       }
       result[component] = vec4(normal, normalLength);
     }
@@ -512,7 +520,7 @@ mat4 computeMat4Normal(vec3 posIS, vec4 tValue) {
       vec3 normal = vec3(distX[component], distY[component], distZ[component]);
       float normalLength = length(normal);
       if (normalLength > 0.0) {
-        normal = normalize(vecISToVC(normal));
+        normal = normalize(normalISToVC(normal));
       }
       result[component] = vec4(normal, normalLength);
     }
@@ -525,7 +533,7 @@ mat4 computeMat4Normal(vec3 posIS, vec4 tValue) {
       vec3 normal = vec3(distX[component], distY[component], distZ[component]);
       float normalLength = length(normal);
       if (normalLength > 0.0) {
-        normal = normalize(vecISToVC(normal));
+        normal = normalize(normalISToVC(normal));
       }
       result[component] = vec4(normal, normalLength);
     }
@@ -538,7 +546,7 @@ mat4 computeMat4Normal(vec3 posIS, vec4 tValue) {
       vec3 normal = vec3(distX[component], distY[component], distZ[component]);
       float normalLength = length(normal);
       if (normalLength > 0.0) {
-        normal = normalize(vecISToVC(normal));
+        normal = normalize(normalISToVC(normal));
       }
       result[component] = vec4(normal, normalLength);
     }
