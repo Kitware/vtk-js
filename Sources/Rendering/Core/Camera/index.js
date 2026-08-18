@@ -108,8 +108,9 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.setPositionAndFocalPoint = (position, focalPoint) => {
-    if (setPosition(...position) || setFocalPoint(...focalPoint)) {
-      // recompute the focal distance
+    const modifiedPosition = setPosition(...position);
+    const modifiedFocalPoint = setFocalPoint(...focalPoint);
+    if (modifiedPosition || modifiedFocalPoint) {
       publicAPI.computeDistance();
       publicAPI.modified();
       return true;
