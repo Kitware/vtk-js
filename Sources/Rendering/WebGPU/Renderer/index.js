@@ -48,6 +48,7 @@ function vtkWebGPURenderer(publicAPI, model) {
 
       model.camera = model.renderable.getActiveCamera();
 
+      model.renderable.updateLightGeometry();
       publicAPI.updateLights();
       publicAPI.prepareNodes();
       publicAPI.addMissingNode(model.camera);
