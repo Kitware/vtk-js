@@ -656,6 +656,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
 
     view3D.renderer.resetCamera();
     view3D.renderer.resetCameraClippingRange();
+    view3D.renderWindow.render();
   });
 });
 
