@@ -338,7 +338,17 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
 
   publicAPI.updatePipeline = () => {
     publicAPI.computePipelineHash();
-    model.pipeline = model.device.getPipeline(model.pipelineHash);
+
+    // A pipeline bakes in the attachment state of the encoder it was built
+    // for -- including the sample count -- so it can only be reused with an
+    // encoder that matches. Key the cache on the encoder as well, otherwise
+    // changing the sample count hands back an incompatible cached pipeline.
+    // The shader cache stays keyed on the mapper hash alone; shaders do not
+    // depend on the encoder.
+    const cacheHash = `${model.pipelineHash}${
+      model.renderEncoder?.getPipelineHash() ?? ''
+    }`;
+    model.pipeline = model.device.getPipeline(cacheHash);
 
     // build the pipeline if needed
     if (!model.pipeline) {
@@ -362,7 +372,7 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
       model.pipeline.setVertexState(
         model.vertexInput.getVertexInputInformation()
       );
-      model.device.createPipeline(model.pipelineHash, model.pipeline);
+      model.device.createPipeline(cacheHash, model.pipeline);
     }
   };
 

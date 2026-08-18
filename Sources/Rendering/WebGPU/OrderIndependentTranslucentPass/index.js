@@ -208,12 +208,6 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
     model.translucentRenderEncoder = vtkWebGPURenderEncoder.newInstance({
       label: 'translucentRender',
     });
-    // Set multisample state if needed
-    if (sampleCount > 1) {
-      const settings = model.translucentRenderEncoder.getPipelineSettings();
-      settings.multisample = { count: sampleCount };
-      model.translucentRenderEncoder.setPipelineSettings(settings);
-    }
     const rDesc = model.translucentRenderEncoder.getDescription();
     rDesc.colorAttachments = [
       {
@@ -254,9 +248,10 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       ).result;
       fDesc.setCode(code);
     });
-    model.translucentRenderEncoder.setPipelineHash('oitpr');
+    model.translucentRenderEncoder.setPipelineHash(`oitpr${sampleCount}`);
     model.translucentRenderEncoder.setPipelineSettings({
       primitive: { cullMode: 'none' },
+      ...(sampleCount > 1 ? { multisample: { count: sampleCount } } : {}),
       depthStencil: {
         depthWriteEnabled: false,
         // greater-equal (not greater): translucent geometry that is exactly
@@ -354,6 +349,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
 const DEFAULT_VALUES = {
   colorTextureView: null,
   depthTextureView: null,
+  fullScreenQuad: null,
   translucentResolveColorTexture: null,
   translucentResolveAccumulateTexture: null,
 };
@@ -367,6 +363,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkRenderPass.extend(publicAPI, model, initialValues);
 
   macro.setGet(publicAPI, model, ['colorTextureView', 'depthTextureView']);
+
+  // Read-only access to the MSAA resolve targets and the compositing quad so
+  // that the resolved-view wiring can be inspected (and tested).
+  macro.get(publicAPI, model, [
+    'fullScreenQuad',
+    'translucentResolveAccumulateTexture',
+    'translucentResolveColorTexture',
+  ]);
 
   // Object methods
   vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model);
