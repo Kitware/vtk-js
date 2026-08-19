@@ -170,6 +170,8 @@ ppty.setPiecewiseFunction(ofun);
 ppty.setColorWindow(1400);
 ppty.setColorLevel(-500);
 actor.setProperty(ppty);
+renderer.resetCamera();
+renderWindow.render();
 
 const gui = new GUI();
 const params = {
