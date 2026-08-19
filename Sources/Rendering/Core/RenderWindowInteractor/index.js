@@ -1244,8 +1244,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
           0.0001 *
           (model.container.clientWidth * model.container.clientWidth +
             model.container.clientHeight * model.container.clientHeight);
-        if (thresh2 < 15*15) {
-          thresh2 = 15*15;
+        if (thresh2 < 15 * 15) {
+          thresh2 = 15 * 15;
         }
         const pinchDistance = Math.abs(newDistance - originalDistance);
         const pinchDistance2 = pinchDistance * pinchDistance;
