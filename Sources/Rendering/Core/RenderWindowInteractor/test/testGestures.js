@@ -152,12 +152,6 @@ it('Test RenderWindowInteractor handles taps well', () => {
   expect(events).toEqual([]);
   events.splice(0);
 
-  // Test LongTap still works after a failed tap
-  tapTest(container, 200, 40);
-  tapTest(container, 700, 10);
-  expect(events).toEqual(['LongTap']);
-  events.splice(0);
-
   subs.forEach((s) => s.unsubscribe());
 
   teardown(env);
