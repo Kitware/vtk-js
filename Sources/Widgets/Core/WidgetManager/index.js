@@ -195,17 +195,16 @@ function vtkWidgetManager(publicAPI, model) {
   };
 
   const handleEvent = async (callData, fromTouchEvent = false) => {
-    if (
-      !model.isAnimating &&
-      model.pickingEnabled &&
-      callData.pokedRenderer === model._renderer
-    ) {
+    if (callData.pokedRenderer !== model._renderer) {
+      deactivateAllWidgets();
+      return macro.VOID;
+    }
+    if (!model.isAnimating && model.pickingEnabled) {
       const callID = Symbol('UpdateSelection');
       model._currentUpdateSelectionCallID = callID;
       await updateSelection(callData, fromTouchEvent, callID);
-    } else {
-      deactivateAllWidgets();
     }
+    return macro.VOID;
   };
 
   function updateWidgetForRender(w) {
