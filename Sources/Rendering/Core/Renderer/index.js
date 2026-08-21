@@ -13,6 +13,26 @@ function notImplemented(method) {
   return () => vtkErrorMacro(`vtkRenderer::${method} - NOT IMPLEMENTED`);
 }
 
+// Props may return an array or a single object (e.g. vtkImageSlice).
+// Append array elements individually; append other values as one element.
+function collectFromProps(props, getFromProp) {
+  const collected = [];
+  props.forEach((prop) => {
+    const items = getFromProp(prop);
+    if (Array.isArray(items)) {
+      for (let j = 0; j < items.length; j++) {
+        collected.push(items[j]);
+      }
+    } else {
+      collected.push(items);
+    }
+  });
+  return collected;
+}
+
+const getPropActors = (prop) => prop.getActors();
+const getPropVolumes = (prop) => prop.getVolumes();
+
 // ----------------------------------------------------------------------------
 // vtkRenderer methods
 // ----------------------------------------------------------------------------
@@ -138,10 +158,7 @@ function vtkRenderer(publicAPI, model) {
   };
 
   publicAPI.getActors = () => {
-    model.actors = [];
-    model.props.forEach((prop) => {
-      model.actors = model.actors.concat(prop.getActors());
-    });
+    model.actors = collectFromProps(model.props, getPropActors);
     return model.actors;
   };
   publicAPI.addActor = publicAPI.addViewProp;
@@ -160,10 +177,7 @@ function vtkRenderer(publicAPI, model) {
   };
 
   publicAPI.getVolumes = () => {
-    model.volumes = [];
-    model.props.forEach((prop) => {
-      model.volumes = model.volumes.concat(prop.getVolumes());
-    });
+    model.volumes = collectFromProps(model.props, getPropVolumes);
     return model.volumes;
   };
   publicAPI.addVolume = publicAPI.addViewProp;
