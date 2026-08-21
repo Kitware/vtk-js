@@ -36,14 +36,15 @@ fn main(
 }
 `;
 
+// ----------------------------------------------------------------------------
+
 function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUOrderIndependentTranslucentPass');
 
-  // this pass implements a forward rendering pipeline
-  // if both volumes and opaque geometry are present
-  // it will mix the two together by capturing a zbuffer
-  // first
+  // This pass implements a forward rendering pipeline for translucent geometry.
+  // It uses order-independent transparency (OIT) with weighted blended
+  // compositing, reading the opaque depth buffer for depth testing.
   publicAPI.traverse = (renNode, viewNode) => {
     if (model.deleted) {
       return;
@@ -53,10 +54,26 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
     model._currentParent = viewNode;
 
     const device = viewNode.getDevice();
+    const sampleCount = Math.max(1, viewNode.getMultiSample?.() ?? 1);
+
+    // If sampleCount changed, tear down
+    if (
+      model.translucentRenderEncoder &&
+      model._currentSampleCount !== sampleCount
+    ) {
+      model.translucentRenderEncoder = null;
+      model.translucentColorTexture = null;
+      model.translucentAccumulateTexture = null;
+      model.translucentResolveColorTexture = null;
+      model.translucentResolveAccumulateTexture = null;
+      model._resolveColorView = null;
+      model._resolveAccumulateView = null;
+    }
 
     if (!model.translucentRenderEncoder) {
-      publicAPI.createRenderEncoder();
+      publicAPI.createRenderEncoder(sampleCount);
       publicAPI.createFinalEncoder();
+      model._currentSampleCount = sampleCount;
       model.translucentColorTexture = vtkWebGPUTexture.newInstance({
         label: 'translucentPassColor',
       });
@@ -64,13 +81,35 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
         width: viewNode.getCanvas().width,
         height: viewNode.getCanvas().height,
         format: 'rgba16float',
+        sampleCount,
         /* eslint-disable no-undef */
         /* eslint-disable no-bitwise */
         usage:
-          GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+          GPUTextureUsage.RENDER_ATTACHMENT |
+          (sampleCount === 1 ? GPUTextureUsage.TEXTURE_BINDING : 0),
       });
       const v1 = model.translucentColorTexture.createView('oitpColorTexture');
       model.translucentRenderEncoder.setColorTextureView(0, v1);
+
+      // Resolve color texture for MSAA
+      if (sampleCount > 1) {
+        model.translucentResolveColorTexture = vtkWebGPUTexture.newInstance({
+          label: 'translucentPassResolveColor',
+        });
+        model.translucentResolveColorTexture.create(device, {
+          width: viewNode.getCanvas().width,
+          height: viewNode.getCanvas().height,
+          format: 'rgba16float',
+          usage:
+            GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+        });
+        model._resolveColorView =
+          model.translucentResolveColorTexture.createView('oitpColorTexture');
+        model.translucentRenderEncoder.setResolveTextureView(
+          0,
+          model._resolveColorView
+        );
+      }
 
       model.translucentAccumulateTexture = vtkWebGPUTexture.newInstance({
         label: 'translucentPassAccumulate',
@@ -79,20 +118,48 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
         width: viewNode.getCanvas().width,
         height: viewNode.getCanvas().height,
         format: 'r16float',
+        sampleCount,
         /* eslint-disable no-undef */
         /* eslint-disable no-bitwise */
         usage:
-          GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+          GPUTextureUsage.RENDER_ATTACHMENT |
+          (sampleCount === 1 ? GPUTextureUsage.TEXTURE_BINDING : 0),
       });
       const v2 =
         model.translucentAccumulateTexture.createView('oitpAccumTexture');
       model.translucentRenderEncoder.setColorTextureView(1, v2);
+
+      // Resolve accumulate texture for MSAA
+      if (sampleCount > 1) {
+        model.translucentResolveAccumulateTexture =
+          vtkWebGPUTexture.newInstance({
+            label: 'translucentPassResolveAccumulate',
+          });
+        model.translucentResolveAccumulateTexture.create(device, {
+          width: viewNode.getCanvas().width,
+          height: viewNode.getCanvas().height,
+          format: 'r16float',
+          usage:
+            GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+        });
+        model._resolveAccumulateView =
+          model.translucentResolveAccumulateTexture.createView(
+            'oitpAccumTexture'
+          );
+        model.translucentRenderEncoder.setResolveTextureView(
+          1,
+          model._resolveAccumulateView
+        );
+      }
       model.fullScreenQuad = vtkWebGPUFullScreenQuad.newInstance();
       model.fullScreenQuad.setDevice(viewNode.getDevice());
       model.fullScreenQuad.setPipelineHash('oitpfsq');
-      model.fullScreenQuad.setTextureViews(
-        model.translucentRenderEncoder.getColorTextureViews()
-      );
+      // Use resolved textures for the full screen quad if MSAA is on
+      const views =
+        sampleCount > 1
+          ? [model._resolveColorView, model._resolveAccumulateView]
+          : model.translucentRenderEncoder.getColorTextureViews();
+      model.fullScreenQuad.setTextureViews(views);
       model.fullScreenQuad.setFragmentShaderTemplate(oitpFragTemplate);
     } else {
       model.translucentColorTexture.resizeToMatch(
@@ -101,6 +168,14 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       model.translucentAccumulateTexture.resizeToMatch(
         model.colorTextureView.getTexture()
       );
+      if (model.translucentResolveColorTexture) {
+        model.translucentResolveColorTexture.resizeToMatch(
+          model.colorTextureView.getTexture()
+        );
+        model.translucentResolveAccumulateTexture.resizeToMatch(
+          model.colorTextureView.getTexture()
+        );
+      }
     }
 
     model.translucentRenderEncoder.setDepthTextureView(model.depthTextureView);
@@ -129,7 +204,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
     model.translucentAccumulateTexture,
   ];
 
-  publicAPI.createRenderEncoder = () => {
+  publicAPI.createRenderEncoder = (sampleCount = 1) => {
     model.translucentRenderEncoder = vtkWebGPURenderEncoder.newInstance({
       label: 'translucentRender',
     });
@@ -173,9 +248,10 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
       ).result;
       fDesc.setCode(code);
     });
-    model.translucentRenderEncoder.setPipelineHash('oitpr');
+    model.translucentRenderEncoder.setPipelineHash(`oitpr${sampleCount}`);
     model.translucentRenderEncoder.setPipelineSettings({
       primitive: { cullMode: 'none' },
+      ...(sampleCount > 1 ? { multisample: { count: sampleCount } } : {}),
       depthStencil: {
         depthWriteEnabled: false,
         // greater-equal (not greater): translucent geometry that is exactly
@@ -273,6 +349,9 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
 const DEFAULT_VALUES = {
   colorTextureView: null,
   depthTextureView: null,
+  fullScreenQuad: null,
+  translucentResolveColorTexture: null,
+  translucentResolveAccumulateTexture: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -284,6 +363,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkRenderPass.extend(publicAPI, model, initialValues);
 
   macro.setGet(publicAPI, model, ['colorTextureView', 'depthTextureView']);
+
+  // Read-only access to the MSAA resolve targets and the compositing quad so
+  // that the resolved-view wiring can be inspected (and tested).
+  macro.get(publicAPI, model, [
+    'fullScreenQuad',
+    'translucentResolveAccumulateTexture',
+    'translucentResolveColorTexture',
+  ]);
 
   // Object methods
   vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model);

@@ -268,6 +268,7 @@ export default {
   createGarbageCollector,
   createImage,
   createWebGPUTestDevice,
+  getImageDataFromURI,
   readWebGPUTexture2D,
   keepDOM,
   objEquals,
