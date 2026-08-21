@@ -1,7 +1,7 @@
 import '@kitware/vtk.js/favicon';
 
-// Load the rendering pieces we want to use (for WebGL only)
-import '@kitware/vtk.js/Rendering/OpenGL/Profiles/Volume';
+// Load the rendering pieces we want to use (registers both WebGL and WebGPU)
+import '@kitware/vtk.js/Rendering/Profiles/Volume';
 
 // Force DataAccessHelper to have access to various data source
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
@@ -13,10 +13,28 @@ import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
 import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
-import vtkForwardPass from '@kitware/vtk.js/Rendering/OpenGL/ForwardPass';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
-import vtkConvolution2DPass from '@kitware/vtk.js/Rendering/OpenGL/Convolution2DPass';
+import vtkOpenGLForwardPass from '@kitware/vtk.js/Rendering/OpenGL/ForwardPass';
+import vtkOpenGLConvolution2DPass from '@kitware/vtk.js/Rendering/OpenGL/Convolution2DPass';
+import vtkWebGPUForwardPass from '@kitware/vtk.js/Rendering/WebGPU/ForwardPass';
+import vtkWebGPUConvolution2DPass from '@kitware/vtk.js/Rendering/WebGPU/Convolution2DPass';
 import GUI from 'lil-gui';
+
+// ----------------------------------------------------------------------------
+// Renderer selection (WebGL or WebGPU)
+// ----------------------------------------------------------------------------
+
+const rendererSelectorParams = {
+  viewAPI:
+    new URLSearchParams(window.location.search).get('viewAPI') || 'WebGL',
+};
+const useWebGPU = rendererSelectorParams.viewAPI === 'WebGPU';
+
+// Pick the render passes matching the active rendering backend
+const vtkForwardPass = useWebGPU ? vtkWebGPUForwardPass : vtkOpenGLForwardPass;
+const vtkConvolution2DPass = useWebGPU
+  ? vtkWebGPUConvolution2DPass
+  : vtkOpenGLConvolution2DPass;
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -24,6 +42,7 @@ import GUI from 'lil-gui';
 
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0, 0, 0],
+  viewAPI: rendererSelectorParams.viewAPI,
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
@@ -31,6 +50,15 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 const view = renderWindow.getViews()[0];
 
 const gui = new GUI();
+
+gui
+  .add(rendererSelectorParams, 'viewAPI', ['WebGL', 'WebGPU'])
+  .name('Renderer')
+  .onChange((api) => {
+    const query = new URLSearchParams(window.location.search);
+    query.set('viewAPI', api);
+    window.location.search = query.toString();
+  });
 
 // ----------------------------------------------------------------------------
 // Example code

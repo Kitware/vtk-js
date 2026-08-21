@@ -17,6 +17,11 @@ function vtkRenderPass(publicAPI, model) {
 
   publicAPI.getTraverseOperation = () => model.currentTraverseOperation;
 
+  // a pass that captures the output of its delegates reads their color
+  // texture and writes the final image itself, so those delegates skip their
+  // own blit. such a pass overrides this to return true
+  publicAPI.getCaptureDelegateOutput = () => false;
+
   // by default this class will traverse all of its
   // preDelegateOperations, then call its delegate render passes
   // the traverse all of its postDelegateOperations
