@@ -483,12 +483,11 @@ function vtkTriangle(publicAPI, model) {
       }
       outObj.evaluation = 1;
     } else {
-      let t;
       if (closestPoint) {
         if (weights[1] < 0.0 && weights[2] < 0.0) {
           dist2Point = vtkMath.distance2BetweenPoints(x, pt3);
-          dist2Line1 = vtkLine.distanceToLine(x, pt1, pt3, t, closestPoint1);
-          dist2Line2 = vtkLine.distanceToLine(x, pt3, pt2, t, closestPoint2);
+          dist2Line1 = vtkLine.distanceToLine(x, pt1, pt3, closestPoint1);
+          dist2Line2 = vtkLine.distanceToLine(x, pt3, pt2, closestPoint2);
           if (dist2Point < dist2Line1) {
             outObj.dist2 = dist2Point;
             closest = pt3;
@@ -505,8 +504,8 @@ function vtkTriangle(publicAPI, model) {
           }
         } else if (weights[2] < 0.0 && weights[0] < 0.0) {
           dist2Point = vtkMath.distance2BetweenPoints(x, pt1);
-          dist2Line1 = vtkLine.distanceToLine(x, pt1, pt3, t, closestPoint1);
-          dist2Line2 = vtkLine.distanceToLine(x, pt1, pt2, t, closestPoint2);
+          dist2Line1 = vtkLine.distanceToLine(x, pt1, pt3, closestPoint1);
+          dist2Line2 = vtkLine.distanceToLine(x, pt1, pt2, closestPoint2);
           if (dist2Point < dist2Line1) {
             outObj.dist2 = dist2Point;
             closest = pt1;
@@ -523,8 +522,8 @@ function vtkTriangle(publicAPI, model) {
           }
         } else if (weights[1] < 0.0 && weights[0] < 0.0) {
           dist2Point = vtkMath.distance2BetweenPoints(x, pt2);
-          dist2Line1 = vtkLine.distanceToLine(x, pt2, pt3, t, closestPoint1);
-          dist2Line2 = vtkLine.distanceToLine(x, pt1, pt2, t, closestPoint2);
+          dist2Line1 = vtkLine.distanceToLine(x, pt2, pt3, closestPoint1);
+          dist2Line2 = vtkLine.distanceToLine(x, pt1, pt2, closestPoint2);
           if (dist2Point < dist2Line1) {
             outObj.dist2 = dist2Point;
             closest = pt2;
