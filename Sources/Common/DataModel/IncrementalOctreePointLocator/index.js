@@ -63,9 +63,14 @@ function vtkIncrementalOctreePointLocator(publicAPI, model) {
     return [pntIdx, dist2];
   };
 
-  publicAPI.findClosestPointInSphere = (point, radius2, maskNode, refDist2) => {
+  publicAPI.findClosestPointInSphere = (
+    point,
+    radius2,
+    maskNode,
+    minDist2,
+    refDist2
+  ) => {
     let pointIndx = -1;
-    let minDist2 = Number.MAX_VALUE;
 
     const nodesBase = [];
     nodesBase.push(model.octreeRootNode);
@@ -346,7 +351,6 @@ function vtkIncrementalOctreePointLocator(publicAPI, model) {
   publicAPI.isInsertedPointForNonZeroTolerance = (x) => {
     // minDist2 // min distance to ALL existing points
     // elseDst2 // min distance to other nodes (inner boundaries)
-    let dist2Ext; // min distance to an EXTended set of nodes
     let pntIdExt;
 
     // the target leaf node always exists there since the root node of the
@@ -371,13 +375,12 @@ function vtkIncrementalOctreePointLocator(publicAPI, model) {
 
     if (elseDst2 < model.insertTolerance2) {
       // one or multiple closer points might exist in the neighboring nodes
-      // TODO: dist2Ext
-      pntIdExt = publicAPI.findClosestPointInSphereWithTolerance(
-        x,
-        model.insertTolerance2,
-        leafContainer,
-        dist2Ext
-      );
+      const [pntIdExt, dist2Ext] =
+        publicAPI.findClosestPointInSphereWithTolerance(
+          x,
+          model.insertTolerance2,
+          leafContainer
+        );
 
       if (dist2Ext < minDist2) {
         minDist2 = dist2Ext;

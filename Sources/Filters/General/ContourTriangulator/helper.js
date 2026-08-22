@@ -1822,8 +1822,8 @@ export function vtkCCSFindCuts(
           points.getPoint(outerPoly[k], q1);
           points.getPoint(innerPoly[j], q2);
 
-          let u;
-          let v;
+          let u = [];
+          let v = [];
           if (
             vtkLine.intersection(p1, p2, q1, q2, u, v) ===
             vtkLine.IntersectionState.YES_INTERSECTION

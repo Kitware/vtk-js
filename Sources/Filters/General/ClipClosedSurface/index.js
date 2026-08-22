@@ -27,9 +27,9 @@ function vtkClipClosedSurface(publicAPI, model) {
   /**
    * Take three colors as doubles, and convert to unsigned char.
    *
-   * @param {Number} color1
-   * @param {Number} color2
-   * @param {Number} color3
+   * @param {Number[3]} color1
+   * @param {Number[3]} color2
+   * @param {Number[3]} color3
    * @param {Number[3][3]} colors
    */
   function createColorValues(color1, color2, color3, colors) {

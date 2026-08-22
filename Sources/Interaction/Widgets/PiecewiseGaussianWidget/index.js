@@ -3,6 +3,7 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import WebworkerPromise from 'webworker-promise';
 
+// eslint-disable-next-line import/no-unresolved, import/default
 import ComputeHistogramWorker from './ComputeHistogram.worker';
 
 /* eslint-disable no-continue */

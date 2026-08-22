@@ -2,7 +2,6 @@ import { vec3 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macros';
 import vtkBufferObject from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
-import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 import {

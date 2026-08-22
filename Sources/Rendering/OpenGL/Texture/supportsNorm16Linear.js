@@ -107,7 +107,7 @@ function supportsNorm16Linear() {
     }
 
     return r === g && g === b && r !== 0;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
