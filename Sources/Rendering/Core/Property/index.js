@@ -70,6 +70,8 @@ function vtkProperty(publicAPI, model) {
     publicAPI.setInterpolation(Interpolation.GOURAUD);
   publicAPI.setInterpolationToPhong = () =>
     publicAPI.setInterpolation(Interpolation.PHONG);
+  publicAPI.setInterpolationToPBR = () =>
+    publicAPI.setInterpolation(Interpolation.PBR);
   publicAPI.getInterpolationAsString = () =>
     macro.enumToString(Interpolation, model.interpolation);
 
@@ -114,11 +116,67 @@ const DEFAULT_VALUES = {
   lineWidth: 1,
   lighting: true,
 
+  anisotropy: 0,
+  anisotropyRotation: 0,
+  coatStrength: 0,
+  coatRoughness: 0,
+  coatColor: [1, 1, 1],
+  coatF0: 0.04,
+  coatNormalStrength: 1,
+  displacementFactor: 1,
+  emissiveStrength: 1,
+  occlusionStrength: 1,
+  transmissionFactor: 0,
+  alphaCutoff: 0,
+  alphaMode: 0, // 0=OPAQUE, 1=MASK, 2=BLEND
+  thicknessFactor: 0,
+  attenuationDistance: Infinity,
+  attenuationColor: [1, 1, 1],
+
+  // Iridescence (KHR_materials_iridescence)
+  iridescenceFactor: 0,
+  iridescenceIOR: 1.3,
+  iridescenceThicknessMinimum: 100,
+  iridescenceThicknessMaximum: 400,
+
+  // Sheen (KHR_materials_sheen)
+  sheenColorFactor: [0, 0, 0],
+  sheenRoughnessFactor: 0,
+
+  // Diffuse Transmission (KHR_materials_diffuse_transmission)
+  diffuseTransmissionFactor: 0,
+  diffuseTransmissionColorFactor: [1, 1, 1],
+
+  // Dispersion (KHR_materials_dispersion)
+  dispersion: 0,
+
+  // Specular (KHR_materials_specular)
+  specularFactor: 1.0,
+  specularColorFactor: [1, 1, 1],
+
+  // Texture transforms (KHR_texture_transform) — per-texture map
+  textureTransforms: {},
+
   shading: false,
   materialName: null,
 
   ORMTexture: null,
   RMTexture: null,
+  anisotropyTexture: null,
+  coatTexture: null,
+  coatRoughnessTexture: null,
+  coatNormalTexture: null,
+  displacementTexture: null,
+  transmissionTexture: null,
+  thicknessTexture: null,
+  iridescenceTexture: null,
+  iridescenceThicknessTexture: null,
+  sheenColorTexture: null,
+  sheenRoughnessTexture: null,
+  diffuseTransmissionTexture: null,
+  diffuseTransmissionColorTexture: null,
+  specularTexture: null,
+  specularColorTexture: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -155,15 +213,76 @@ export function extend(publicAPI, model, initialValues = {}) {
     'normalTexture',
     'ambientOcclusionTexture',
     'emissionTexture',
+    'anisotropy',
+    'anisotropyRotation',
+    'coatStrength',
+    'coatRoughness',
+    'coatF0',
+    'coatNormalStrength',
+    'displacementFactor',
+    'emissiveStrength',
+    'occlusionStrength',
+    'transmissionFactor',
+    'alphaCutoff',
+    'alphaMode',
+    'thicknessFactor',
+    'attenuationDistance',
+    'iridescenceFactor',
+    'iridescenceIOR',
+    'iridescenceThicknessMinimum',
+    'iridescenceThicknessMaximum',
+    'sheenRoughnessFactor',
+    'diffuseTransmissionFactor',
+    'dispersion',
     'ORMTexture',
     'RMTexture',
+    'anisotropyTexture',
+    'coatTexture',
+    'coatRoughnessTexture',
+    'coatNormalTexture',
+    'displacementTexture',
+    'transmissionTexture',
+    'thicknessTexture',
+    'iridescenceTexture',
+    'iridescenceThicknessTexture',
+    'sheenColorTexture',
+    'sheenRoughnessTexture',
+    'diffuseTransmissionTexture',
+    'diffuseTransmissionColorTexture',
+    'specularFactor',
+    'specularTexture',
+    'specularColorTexture',
   ]);
   macro.setGetArray(
     publicAPI,
     model,
-    ['ambientColor', 'specularColor', 'diffuseColor', 'edgeColor'],
+    [
+      'ambientColor',
+      'specularColor',
+      'diffuseColor',
+      'edgeColor',
+      'coatColor',
+      'attenuationColor',
+      'sheenColorFactor',
+      'diffuseTransmissionColorFactor',
+      'specularColorFactor',
+    ],
     3
   );
+
+  // Per-texture transform methods
+  publicAPI.setTextureTransform = (key, transform) => {
+    if (!model.textureTransforms) model.textureTransforms = {};
+    model.textureTransforms[key] = { ...transform };
+    publicAPI.modified();
+  };
+  publicAPI.setTextureTransforms = (transforms) => {
+    model.textureTransforms = transforms || {};
+    publicAPI.modified();
+  };
+  publicAPI.getTextureTransform = (key) =>
+    model.textureTransforms?.[key] || null;
+  publicAPI.getTextureTransforms = () => model.textureTransforms || {};
 
   // Object methods
   vtkProperty(publicAPI, model);

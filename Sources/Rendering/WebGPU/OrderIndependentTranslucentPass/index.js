@@ -106,6 +106,8 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
     model.translucentRenderEncoder.setDepthTextureView(model.depthTextureView);
     model.translucentRenderEncoder.attachTextureViews();
     publicAPI.setCurrentOperation('translucentPass');
+    // Make the opaque pass color buffer available to transmissive objects
+    renNode.setOpaqueColorTextureView(model.colorTextureView);
     renNode.setRenderEncoder(model.translucentRenderEncoder);
     renNode.traverse(publicAPI);
     publicAPI.finalPass(viewNode, renNode);
