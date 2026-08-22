@@ -76,6 +76,7 @@ export default function widgetBehavior(publicAPI, model) {
         model.activeState.get('origin', 'up', 'right', 'direction', 'scale1')
       );
     } else {
+      // Mouse cursor is just hovering, the circle representation was updated above
       return macro.VOID;
     }
 
