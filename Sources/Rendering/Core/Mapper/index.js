@@ -614,17 +614,17 @@ function vtkMapper(publicAPI, model) {
   };
 
   publicAPI.canUseTextureMapForColoring = (scalars, cellFlag) => {
+    // index color does not use textures
+    if (model.lookupTable && model.lookupTable.getIndexedLookup()) {
+      return false;
+    }
+
     if (cellFlag && !(model.colorMode === ColorMode.DIRECT_SCALARS)) {
       return true; // cell data always use textures.
     }
 
     if (!model.interpolateScalarsBeforeMapping) {
       return false; // user doesn't want us to use texture maps at all.
-    }
-
-    // index color does not use textures
-    if (model.lookupTable && model.lookupTable.getIndexedLookup()) {
-      return false;
     }
 
     if (!scalars) {
