@@ -54,6 +54,8 @@ function vtkWebGPUDevice(publicAPI, model) {
     model.handle = handle;
   };
 
+  publicAPI.hasFeature = (name) => !!model.handle?.features?.has(name);
+
   publicAPI.createCommandEncoder = () => model.handle.createCommandEncoder();
 
   publicAPI.submitCommandEncoder = (commandEncoder) => {

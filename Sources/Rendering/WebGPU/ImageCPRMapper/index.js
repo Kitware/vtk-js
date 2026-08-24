@@ -468,9 +468,23 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
   };
 
   publicAPI.updateVolumeTexture = () => {
+    // Updated extents are valid for one upload. Reuse the current texture and
+    // then clear the extents to prevent repeated writes.
+    const property = model.WebGPUImageSlice.getRenderable().getProperty();
+    const updatedExtents = property?.getUpdatedExtents?.() ?? [];
+    const existingTexture = model.textureViews[0]?.getTexture();
+    const preferSizeOverAccuracy =
+      !!model.renderable.getPreferSizeOverAccuracy?.();
     const newTex = model.device
       .getTextureManager()
-      .getTextureForImageData(model.currentImageDataInput);
+      .getTextureForImageData(model.currentImageDataInput, {
+        updatedExtents,
+        existingTexture,
+        preferSizeOverAccuracy,
+      });
+    if (updatedExtents.length) {
+      property.setUpdatedExtents([]);
+    }
     if (
       !model.textureViews[0] ||
       model.textureViews[0].getTexture() !== newTex
@@ -493,7 +507,8 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
     const colorTextureString = computeFnToString(
       property,
       property.getRGBTransferFunction,
-      numRows
+      numRows,
+      { label: 'cprColorLUT', rowLength: model.rowLength }
     );
 
     if (model.colorTextureString === colorTextureString) {
@@ -529,6 +544,7 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
     }
 
     const newTex = model.device.getTextureManager().getTexture({
+      hash: colorTextureString,
       nativeArray: colorArray,
       width: model.rowLength,
       height: numRows,
@@ -553,7 +569,8 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
     const pwfTextureString = computeFnToString(
       property,
       property.getPiecewiseFunction,
-      numRows
+      numRows,
+      { label: 'cprOpacityLUT', rowLength: model.rowLength }
     );
 
     if (model.pwfTextureString === pwfTextureString) {
@@ -589,6 +606,7 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
     }
 
     const newTex = model.device.getTextureManager().getTexture({
+      hash: pwfTextureString,
       nativeArray: opacityArray,
       width: model.rowLength,
       height: numRows,
@@ -604,6 +622,13 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
     const actor = model.WebGPUImageSlice.getRenderable();
     const property = actor.getProperty();
     const image = model.currentImageDataInput;
+    const runtimePropID = model.WebGPUImageSlice.getPropID();
+    const selector = model.WebGPURenderer.getSelector();
+    let propID = runtimePropID;
+    if (selector?.getPropIDForSelection) {
+      propID = selector.getPropIDForSelection(runtimePropID, actor) + 1;
+    }
+    model.UBO.setValue('PropID', propID);
     if (
       publicAPI.getMTime() <= utime &&
       model.renderable.getMTime() <= utime &&
@@ -612,6 +637,7 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
       image.getMTime() <= utime &&
       model.WebGPURenderer.getStabilizedTime() <= utime
     ) {
+      model.UBO.sendIfNeeded(model.device);
       return;
     }
 
@@ -660,7 +686,6 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
     );
     model.UBO.setValue('Width', model.renderable.getWidth());
     model.UBO.setValue('Opacity', property.getOpacity());
-    model.UBO.setValue('PropID', model.WebGPUImageSlice.getPropID());
     const numClipPlanes = Math.min(
       model.renderable.getNumberOfClippingPlanes(),
       MAX_CLIPPING_PLANES

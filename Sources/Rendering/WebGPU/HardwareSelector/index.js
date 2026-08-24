@@ -275,6 +275,11 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUHardwareSelector');
 
+  publicAPI.attach = (webGPURenderWindow, renderer) => {
+    model._WebGPURenderWindow = webGPURenderWindow;
+    model._renderer = renderer;
+  };
+
   publicAPI.getPropIDForSelection = (runtimePropID, prop = null) => {
     if (model._selectionPropMap.has(runtimePropID)) {
       return model._selectionPropMap.get(runtimePropID);
@@ -296,7 +301,7 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
   // of the entire depth bufer. We could realloc hardware selection textures
   // based on the passed in size etc but it gets messy so for now we always
   // render the full size window and copy it to the buffers.
-  publicAPI.getSourceDataAsync = async (renderer) => {
+  publicAPI.getSourceDataAsync = async (renderer = model._renderer) => {
     if (!renderer || !model._WebGPURenderWindow) {
       vtkErrorMacro('Renderer and view must be set before calling Select.');
       return false;

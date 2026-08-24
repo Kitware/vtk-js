@@ -1,5 +1,6 @@
 import { mat4, vec4 } from 'gl-matrix';
 import Constants from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import * as macro from 'vtk.js/Sources/macros';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQuad';
@@ -28,6 +29,7 @@ import {
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
 const { vtkErrorMacro } = macro;
+const { VtkDataTypes } = vtkDataArray;
 const { SlicingMode } = Constants;
 const imgFragTemplate = `
 //VTK::Renderer::Dec
@@ -117,6 +119,22 @@ function vtkWebGPUImageMapper(publicAPI, model) {
   publicAPI.getImageState = () =>
     model.imageState ?? publicAPI.computeImageState();
 
+  // The compute pipeline supports mipmaps only for 2D rgba8unorm textures.
+  publicAPI.useImageMipmaps = () => {
+    const scalars = model.currentInput?.getPointData?.()?.getScalars?.();
+    if (!scalars) {
+      return false;
+    }
+    const actorProperty = model.WebGPUImageSlice.getRenderable().getProperty();
+    return (
+      model.currentInput.getDimensions()[2] === 1 &&
+      scalars.getNumberOfComponents() === 4 &&
+      scalars.getDataType() === VtkDataTypes.UNSIGNED_CHAR &&
+      !actorProperty.getIndependentComponents() &&
+      actorProperty.getInterpolationType() !== InterpolationType.NEAREST
+    );
+  };
+
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
       const { parent, renderer, renderWindow, device } = getWebGPUContext(
@@ -129,8 +147,12 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       model.device = device;
 
       const ren = model.WebGPURenderer.getRenderable();
-      // is slice set by the camera
-      if (model.renderable.getSliceAtFocalPoint()) {
+      // Only vtkImageMapper has the getSliceAtFocalPoint API. This view node
+      // also supports mapper types that do not have this API.
+      if (
+        model.renderable.isA('vtkImageMapper') &&
+        model.renderable.getSliceAtFocalPoint()
+      ) {
         model.renderable.setSliceFromCamera(ren.getActiveCamera());
       }
     }
@@ -199,6 +221,9 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     if (imageState.useLabelOutline) {
       model.pipelineHash += 'outline';
     }
+    if (publicAPI.useImageMipmaps()) {
+      model.pipelineHash += 'mip';
+    }
     model.pipelineHash += model.renderEncoder.getPipelineHash();
   };
 
@@ -206,6 +231,13 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     const utime = model.UBO.getSendTime();
     const actor = model.WebGPUImageSlice.getRenderable();
     const volMapr = actor.getMapper();
+    const runtimePropID = model.WebGPUImageSlice.getPropID();
+    const selector = model.WebGPURenderer.getSelector();
+    let propID = runtimePropID;
+    if (selector?.getPropIDForSelection) {
+      propID = selector.getPropIDForSelection(runtimePropID, actor) + 1;
+    }
+    model.UBO.setValue('PropID', propID);
     const clippingPlanesMTime = model.renderable.getClippingPlanesMTime();
     if (
       publicAPI.getMTime() > utime ||
@@ -261,11 +293,16 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       // Find what IJK axis and what direction to slice along
       const { ijkMode } = model.renderable.getClosestIJKAxis();
 
-      // Find the IJK slice
-      let nSlice = model.renderable.getSlice();
-      if (ijkMode !== model.renderable.getSlicingMode()) {
-        // If not IJK slicing, get the IJK slice from the XYZ position/slice
-        nSlice = model.renderable.getSliceAtPosition(nSlice);
+      // vtkImageArrayMapper numbers slices across its image collection. The
+      // shader plane index is local to the selected image.
+      let nSlice;
+      if (model.renderable.isA('vtkImageArrayMapper')) {
+        nSlice = model.renderable.getSubSlice() ?? 0;
+      } else {
+        nSlice = model.renderable.getSlice();
+        if (ijkMode !== model.renderable.getSlicingMode()) {
+          nSlice = model.renderable.getSliceAtPosition(nSlice);
+        }
       }
 
       let axis0 = 2;
@@ -389,9 +426,8 @@ function vtkWebGPUImageMapper(publicAPI, model) {
           model.UBO.setArray(`ClipPlane${i}`, model.clipPlanes[i]);
         }
       }
-
-      model.UBO.sendIfNeeded(model.device);
     }
+    model.UBO.sendIfNeeded(model.device);
   };
 
   publicAPI.updateLUTImage = () => {
@@ -402,7 +438,8 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     const cfunToString = computeFnToString(
       actorProperty,
       actorProperty.getRGBTransferFunction,
-      numIComps
+      numIComps,
+      { label: 'imageColorLUT', rowLength: model.rowLength }
     );
 
     if (model.colorTextureString !== cfunToString) {
@@ -435,20 +472,25 @@ function vtkWebGPUImageMapper(publicAPI, model) {
           }
         }
       } else {
-        for (let i = 0; i < model.rowLength; ++i) {
-          const grey = (255.0 * i) / (model.rowLength - 1);
-          colorArray[i * 4] = grey;
-          colorArray[i * 4 + 1] = grey;
-          colorArray[i * 4 + 2] = grey;
-          colorArray[i * 4 + 3] = 255.0;
-          for (let j = 0; j < 4; j++) {
-            colorArray[i * 4 + model.rowLength * 4 + j] = colorArray[i * 4 + j];
+        for (let c = 0; c < numIComps; c++) {
+          const rowOffset = c * model.rowLength * 8;
+          for (let i = 0; i < model.rowLength; ++i) {
+            const grey = (255.0 * i) / (model.rowLength - 1);
+            const idx = rowOffset + i * 4;
+            colorArray[idx] = grey;
+            colorArray[idx + 1] = grey;
+            colorArray[idx + 2] = grey;
+            colorArray[idx + 3] = 255.0;
+            for (let j = 0; j < 4; j++) {
+              colorArray[idx + model.rowLength * 4 + j] = colorArray[idx + j];
+            }
           }
         }
       }
 
       {
         const treq = {
+          hash: cfunToString,
           nativeArray: colorArray,
           width: model.rowLength,
           height: model.numRows * 2,
@@ -476,7 +518,8 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     const pwfunToString = computeFnToString(
       actorProperty,
       actorProperty.getPiecewiseFunction,
-      numIComps
+      numIComps,
+      { label: 'imageOpacityLUT', rowLength: model.rowLength }
     );
 
     if (model.opacityTextureString !== pwfunToString) {
@@ -511,6 +554,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       }
 
       const treq = {
+        hash: pwfunToString,
         nativeArray: opacityArray,
         width: model.rowLength,
         height: model.numRows * 2,
@@ -549,6 +593,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       }
 
       const treq = {
+        hash: `imageOutlineThickness-${outlineHash}`,
         nativeArray: outlineArray,
         width: lWidth,
         height: 1,
@@ -584,6 +629,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       }
 
       const treq = {
+        hash: `imageOutlineOpacity-${outlineHash}`,
         nativeArray: outlineArray,
         width: lWidth,
         height: 1,
@@ -604,10 +650,26 @@ function vtkWebGPUImageMapper(publicAPI, model) {
   const superClassUpdateBuffers = publicAPI.updateBuffers;
   publicAPI.updateBuffers = () => {
     superClassUpdateBuffers();
+    const tViews = model.textureViews;
+
+    // Updated extents are valid for one upload. Reuse the current texture and
+    // then clear the extents to prevent repeated writes.
+    const imageProperty = model.WebGPUImageSlice.getRenderable().getProperty();
+    const updatedExtents = imageProperty?.getUpdatedExtents?.() ?? [];
+    const existingTexture = tViews[TextureSlot.IMAGE]?.getTexture();
+    const preferSizeOverAccuracy =
+      !!model.renderable.getPreferSizeOverAccuracy?.();
     const newTex = model.device
       .getTextureManager()
-      .getTextureForImageData(model.currentInput);
-    const tViews = model.textureViews;
+      .getTextureForImageData(model.currentInput, {
+        updatedExtents,
+        existingTexture,
+        preferSizeOverAccuracy,
+        generateMipmaps: publicAPI.useImageMipmaps(),
+      });
+    if (updatedExtents.length) {
+      imageProperty.setUpdatedExtents([]);
+    }
 
     if (
       !tViews[TextureSlot.IMAGE] ||
@@ -646,6 +708,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     publicAPI.ensureTextureSampler(tViews[TextureSlot.IMAGE], {
       minFilter: iType,
       magFilter: iType,
+      mipmapFilter: publicAPI.useImageMipmaps() ? 'linear' : 'nearest',
     });
   };
 
@@ -687,11 +750,8 @@ function vtkWebGPUImageMapper(publicAPI, model) {
 
   publicAPI.replaceShaderTCoord = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    if (model.dimensions === 2) {
-      vDesc.addOutput('vec2<f32>', 'tcoordVS');
-    } else {
-      vDesc.addOutput('vec3<f32>', 'tcoordVS');
-    }
+    const tcoordType = model.dimensions === 2 ? 'vec2<f32>' : 'vec3<f32>';
+    vDesc.addOutput(tcoordType, 'tcoordVS');
   };
   sr.set('replaceShaderTCoord', publicAPI.replaceShaderTCoord);
 
@@ -700,31 +760,30 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     let code = fDesc.getCode();
     const imageState = publicAPI.getImageState();
 
+    // Implicit derivatives select a mip level that reduces aliasing. Textures
+    // without mipmaps sample the base level explicitly.
+    const sampleExpr = publicAPI.useImageMipmaps()
+      ? 'textureSample(imgTexture, imgTextureSampler, input.tcoordVS)'
+      : 'textureSampleLevel(imgTexture, imgTextureSampler, input.tcoordVS, 0.0)';
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
       `    var computedColor: vec4<f32> =`,
-      `      textureSampleLevel(imgTexture, imgTextureSampler, input.tcoordVS, 0.0);`,
+      `      ${sampleExpr};`,
       `//VTK::Image::Sample`,
     ]).result;
 
     switch (imageState.textureChannelMode) {
       case TextureChannelMode.SINGLE:
         if (imageState.useLabelOutline) {
-          const outlineLines =
-            model.dimensions === 3
-              ? [
-                  '    let centerCoord: vec3<f32> = input.tcoordVS;',
-                  '    let stepX: vec3<f32> = dpdx(input.tcoordVS);',
-                  '    let stepY: vec3<f32> = dpdy(input.tcoordVS);',
-                  '    let clampMin: vec3<f32> = vec3<f32>(0.0);',
-                  '    let clampMax: vec3<f32> = vec3<f32>(1.0);',
-                ]
-              : [
-                  '    let centerCoord: vec2<f32> = input.tcoordVS;',
-                  '    let stepX: vec2<f32> = dpdx(input.tcoordVS);',
-                  '    let stepY: vec2<f32> = dpdy(input.tcoordVS);',
-                  '    let clampMin: vec2<f32> = vec2<f32>(0.0);',
-                  '    let clampMax: vec2<f32> = vec2<f32>(1.0);',
-                ];
+          // Derivatives in screen space align outline neighbors with the
+          // displayed texel area.
+          const tcoordType = model.dimensions === 3 ? 'vec3<f32>' : 'vec2<f32>';
+          const outlineLines = [
+            `    let centerCoord: ${tcoordType} = input.tcoordVS;`,
+            `    let stepX: ${tcoordType} = dpdx(input.tcoordVS);`,
+            `    let stepY: ${tcoordType} = dpdy(input.tcoordVS);`,
+            `    let clampMin: ${tcoordType} = ${tcoordType}(0.0);`,
+            `    let clampMax: ${tcoordType} = ${tcoordType}(1.0);`,
+          ];
           code = vtkWebGPUShaderCache.substitute(code, '//VTK::Image::Sample', [
             ...outlineLines,
             '    let centerValue: f32 = textureSampleLevel(',
@@ -1121,6 +1180,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('Opacity', 'f32');
   model.UBO.addEntry('CoincidentFactor', 'f32');
   model.UBO.addEntry('CoincidentOffset', 'f32');
+  model.UBO.addEntry('PropID', 'u32');
   addClipPlaneEntries(model.UBO, 'ClipPlane');
   model.UBO.addEntry('NumClipPlanes', 'u32');
 

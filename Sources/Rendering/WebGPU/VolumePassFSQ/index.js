@@ -5,7 +5,6 @@ import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffe
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUStorageBuffer from 'vtk.js/Sources/Rendering/WebGPU/StorageBuffer';
 import vtkWebGPUSampler from 'vtk.js/Sources/Rendering/WebGPU/Sampler';
-import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 import {
   addClipPlaneEntries,
   getClippingPlaneEquationsInCoords,
@@ -2033,7 +2032,6 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     const compositeCalls = [];
     const clipInit = [];
     for (let i = 0; i < model.volumes.length; i++) {
-      // todo pass rowPos
       const actor = model.volumes[i].getRenderable();
       const mapper = actor.getMapper();
       const blendMode = mapper.getBlendMode();
@@ -2246,6 +2244,9 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     // - tfun arrays - renderable/property mtime
 
     let mtime = publicAPI.getMTime();
+    // The LUT row order is part of the texture identity. The key contains each
+    // source function in pass order so that compatible passes share textures.
+    const volumeKeys = [];
     for (let i = 0; i < model.volumes.length; i++) {
       const vol = model.volumes[i].getRenderable();
       const image = vol.getMapper().getInputData();
@@ -2253,25 +2254,25 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       // vtkVolume.getMTime() does not include the property, and the property
       // does not include the transfer functions, so check them explicitly
       // (the OpenGL mapper does this through transfer function hashes).
-      mtime = Math.max(
-        mtime,
+      const volumeKey = [
         vol.getMTime(),
         vol.getMapper().getMTime(),
         image.getMTime(),
-        vprop.getMTime()
-      );
+        vprop.getMTime(),
+      ];
       const scalars = image.getPointData() && image.getPointData().getScalars();
       const numComp = scalars ? scalars.getNumberOfComponents() : 1;
       const numIComps = vprop.getUseIndependentComponents(numComp)
         ? numComp
         : 1;
       for (let c = 0; c < numIComps; c++) {
-        mtime = Math.max(
-          mtime,
+        volumeKey.push(
           vprop.getRGBTransferFunction(c).getMTime(),
           vprop.getScalarOpacity(c).getMTime()
         );
       }
+      volumeKeys.push(volumeKey.join('.'));
+      mtime = Math.max(mtime, ...volumeKey);
     }
 
     if (
@@ -2380,8 +2381,13 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       }
     }
 
+    // The sample distance is part of the opacity texture identity. Opacity
+    // depends on the ray step length.
+    const lutKey = `${volumeKeys.join('|')}-${model.numRows}`;
+
     {
       const treq = {
+        hash: `volumeColorLUT-${model.colorRowLength}-${lutKey}`,
         nativeArray: colorArray,
         width: model.colorRowLength,
         height: model.numRows * 2,
@@ -2395,6 +2401,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
 
     {
       const treq = {
+        hash: `volumeOpacityLUT-${model.opacityRowLength}-${model.sampleDist}-${lutKey}`,
         nativeArray: opacityArray,
         width: model.opacityRowLength,
         height: model.numRows * 2,
@@ -2772,13 +2779,11 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       const iComps = vprop.getUseIndependentComponents(numComp);
       const numRowsForVolume = iComps ? numComp : 1;
 
-      // half float?
-      const tformat = model.textureViews[vidx + 4].getTexture().getFormat();
-      const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(tformat);
-      const halfFloat =
-        tDetails.elementSize === 2 && tDetails.sampleType === 'float';
-
-      const volInfo = { scale: halfFloat ? 1.0 : 255.0, offset: 0.0 };
+      // Each texture format supplies the conversion scale for source values.
+      const volInfo = {
+        scale: model.textureViews[vidx + 4].getTexture().getScale(),
+        offset: 0.0,
+      };
 
       // three levels of shift scale combined into one
       // for performance in the fragment shader
@@ -2978,9 +2983,22 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       const volMapr = actor.getMapper();
       const image = volMapr.getInputData();
 
+      // Updated extents are valid for one upload. Reuse the current texture and
+      // then clear the extents to prevent repeated writes.
+      const vprop = actor.getProperty();
+      const updatedExtents = vprop?.getUpdatedExtents?.() ?? [];
+      const existingTexture = model.textureViews[vidx + 4]?.getTexture();
+      const preferSizeOverAccuracy = !!vprop?.getPreferSizeOverAccuracy?.();
       const newTex = model.device
         .getTextureManager()
-        .getTextureForImageData(image);
+        .getTextureForImageData(image, {
+          updatedExtents,
+          existingTexture,
+          preferSizeOverAccuracy,
+        });
+      if (updatedExtents.length) {
+        vprop.setUpdatedExtents([]);
+      }
       if (
         !model.textureViews[vidx + 4] ||
         model.textureViews[vidx + 4].getTexture() !== newTex
