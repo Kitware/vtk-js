@@ -9,6 +9,7 @@ function textureSamplerMatches(textureView, options) {
   return (
     current.minFilter === options.minFilter &&
     current.magFilter === options.magFilter &&
+    current.mipmapFilter === (options.mipmapFilter ?? 'nearest') &&
     current.addressModeU === (options.addressModeU ?? 'clamp-to-edge') &&
     current.addressModeV === (options.addressModeV ?? 'clamp-to-edge') &&
     current.addressModeW === (options.addressModeW ?? 'clamp-to-edge')
@@ -57,13 +58,32 @@ function getUseLabelOutline(
   );
 }
 
-function computeFnToString(property, fn, numberOfComponents) {
-  const pwfun = fn.apply(property);
-  if (pwfun) {
-    const iComps = property.getIndependentComponents();
-    return `${property.getMTime()}-${iComps}-${numberOfComponents}`;
+/**
+ * Compute a string that uniquely identifies the texture sampling function for a given property.
+ * This is used to determine if a cached texture can be reused or if a new texture needs to be generated.
+ * @param {*} property
+ * @param {*} fn
+ * @param {*} numberOfComponents
+ * @param {*} options
+ * @returns
+ */
+function computeFnToString(property, fn, numberOfComponents, options = {}) {
+  // Shared textures must have the same layout and source functions. The cache
+  // key contains both items to prevent an incorrect texture match.
+  const parts = [
+    options.label ?? 'tfun',
+    options.rowLength ?? 0,
+    numberOfComponents,
+  ];
+  for (let c = 0; c < numberOfComponents; c++) {
+    const tf = fn.call(property, c);
+    if (tf) {
+      parts.push(`${tf.getMTime()}:${tf.getRange().join(',')}`);
+    } else {
+      parts.push('none');
+    }
   }
-  return '0';
+  return parts.join('-');
 }
 
 export {

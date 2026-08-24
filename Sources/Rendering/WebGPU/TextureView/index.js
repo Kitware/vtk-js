@@ -8,6 +8,20 @@ import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 
 /* eslint-disable no-bitwise */
 
+// Bind group validation requires `float` for an r32float texture when the
+// optional float32 filtering feature permits a filter sampler.
+function getLayoutSampleType(sampleType, device) {
+  if (
+    sampleType === 'unfilterable-float' &&
+    device?.hasFeature('float32-filterable')
+  ) {
+    return 'float';
+  }
+  return sampleType;
+}
+
+// ----------------------------------------------------------------------------
+
 function vtkWebGPUTextureView(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUTextureView');
@@ -23,7 +37,10 @@ function vtkWebGPUTextureView(publicAPI, model) {
     const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(
       model.texture.getFormat()
     );
-    model.bindGroupLayoutEntry.texture.sampleType = tDetails.sampleType;
+    model.bindGroupLayoutEntry.texture.sampleType = getLayoutSampleType(
+      tDetails.sampleType,
+      model.texture.getDevice()
+    );
   };
 
   publicAPI.createFromTextureHandle = (textureHandle, options) => {

@@ -149,17 +149,35 @@ function clearGeometryBuffers(publicAPI, model) {
   publicAPI.setNumberOfVertices(0);
 }
 
-function getCachedInputTexture(model, imageData, index) {
+function getCachedInputTexture(model, imageData, index, property) {
   const scalars = imageData.getPointData().getScalars();
   const currentMTime = scalars.getMTime();
   const cachedInfo = model.scalarTextures[index];
-  if (cachedInfo && cachedInfo.mtime === currentMTime) {
+  const updatedExtents = property?.getUpdatedExtents?.() ?? [];
+  if (
+    cachedInfo &&
+    cachedInfo.mtime === currentMTime &&
+    !updatedExtents.length
+  ) {
     return cachedInfo.texture;
   }
 
+  // Updated extents are valid for one upload. Reuse the current texture and
+  // then clear the extents to prevent repeated writes.
+  const existingTexture = cachedInfo?.texture;
+  const preferSizeOverAccuracy =
+    !!model.renderable.getPreferSizeOverAccuracy?.();
+
   const texture = model.device
     .getTextureManager()
-    .getTextureForImageData(imageData);
+    .getTextureForImageData(imageData, {
+      updatedExtents,
+      existingTexture,
+      preferSizeOverAccuracy,
+    });
+  if (updatedExtents.length) {
+    property.setUpdatedExtents([]);
+  }
   model.scalarTextures[index] = {
     texture,
     mtime: currentMTime,
@@ -183,7 +201,8 @@ function updateInputTextureView(
 ) {
   const textureSlot = getTextureSlotForInput(index);
   const textureName = getTextureLabelForInput(index);
-  const texture = getCachedInputTexture(model, imageData, index);
+  const ppty = getInputProperty(actor, inputIndex);
+  const texture = getCachedInputTexture(model, imageData, index, ppty);
 
   if (
     !model.textureViews[textureSlot] ||
@@ -192,7 +211,6 @@ function updateInputTextureView(
     model.textureViews[textureSlot] = texture.createView(textureName);
   }
 
-  const ppty = getInputProperty(actor, inputIndex);
   const iType = getInterpolationFilter(ppty);
   publicAPI.ensureTextureSampler(model.textureViews[textureSlot], {
     minFilter: iType,
@@ -1078,7 +1096,13 @@ function vtkWebGPUImageResliceMapper(publicAPI, model) {
 
     updateOutlineBasisUBO(model, slicePlane);
     updateTransferFunctionUBO(model, actor, ppty, imageState);
-    model.UBO.setValue('PropID', model.WebGPUImageSlice.getPropID());
+    const runtimePropID = model.WebGPUImageSlice.getPropID();
+    const selector = model.WebGPURenderer.getSelector();
+    let propID = runtimePropID;
+    if (selector?.getPropIDForSelection) {
+      propID = selector.getPropIDForSelection(runtimePropID, actor) + 1;
+    }
+    model.UBO.setValue('PropID', propID);
     const cp = publicAPI.getCoincidentParameters();
     model.UBO.setValue('CoincidentFactor', cp.factor);
     model.UBO.setValue('CoincidentOffset', cp.offset);
@@ -1445,7 +1469,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     }
 
     const newTex = model.device.getTextureManager().getTexture({
-      hash: `irm-color-${colorHash}`,
+      hash: `irm-color-${model.rowLength}-${colorHash}`,
       nativeArray: colorArray,
       width: model.rowLength,
       height: model.numRows * 2,
@@ -1512,7 +1536,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     }
 
     const newTex = model.device.getTextureManager().getTexture({
-      hash: `irm-opacity-${opacityHash}`,
+      hash: `irm-opacity-${model.rowLength}-${opacityHash}`,
       nativeArray: opacityArray,
       width: model.rowLength,
       height: model.numRows * 2,

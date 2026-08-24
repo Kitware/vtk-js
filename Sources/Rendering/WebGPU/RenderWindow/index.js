@@ -257,10 +257,16 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     if (model.deleted) {
       return;
     }
-    // console.log([...model.adapter.features]);
+    // Exact storage of 16 bit integers uses r32float. Request filter support
+    // so that these textures can use linear interpolation.
+    const optionalFeatures = ['float32-filterable'];
+    const requiredFeatures = optionalFeatures.filter((feature) =>
+      model.adapter.features.has(feature)
+    );
     model.device = vtkWebGPUDevice.newInstance();
     model.device.initialize(
       await model.adapter.requestDevice({
+        requiredFeatures,
         requiredLimits: {
           maxBufferSize: model.adapter.limits.maxBufferSize,
           maxStorageBufferBindingSize:

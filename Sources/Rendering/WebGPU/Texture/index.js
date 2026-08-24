@@ -38,7 +38,13 @@ function vtkWebGPUTexture(publicAPI, model) {
     return fallbackType;
   };
 
-  const prepareTextureUploadData = (arr, width, height, depth) => {
+  const prepareTextureUploadData = (
+    arr,
+    width,
+    height,
+    depth,
+    sourceLayout = null
+  ) => {
     const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(model.format);
     const expectedRowElements = width * tDetails.numComponents;
     const expectedElementCount = expectedRowElements * height * depth;
@@ -50,17 +56,43 @@ function vtkWebGPUTexture(publicAPI, model) {
       return null;
     }
 
-    if (arr.length < expectedElementCount) {
+    const sourceWidth = sourceLayout?.width ?? width;
+    const sourceHeight = sourceLayout?.height ?? height;
+    const sourceDepth = sourceLayout?.depth ?? depth;
+    const sourceX = sourceLayout?.x ?? 0;
+    const sourceY = sourceLayout?.y ?? 0;
+    const sourceZ = sourceLayout?.z ?? 0;
+
+    if (
+      sourceX < 0 ||
+      sourceY < 0 ||
+      sourceZ < 0 ||
+      sourceX + width > sourceWidth ||
+      sourceY + height > sourceHeight ||
+      sourceZ + depth > sourceDepth
+    ) {
+      vtkErrorMacro('Texture upload failed: invalid source layout.');
+      return null;
+    }
+
+    const requiredElementCount =
+      (((sourceZ + depth - 1) * sourceHeight + sourceY + height - 1) *
+        sourceWidth +
+        sourceX +
+        width) *
+      tDetails.numComponents;
+
+    if (arr.length < requiredElementCount) {
       vtkErrorMacro(
-        `Texture upload failed: expected ${expectedElementCount} values but received ${arr.length}.`
+        `Texture upload failed: expected ${requiredElementCount} values but received ${arr.length}.`
       );
       return null;
     }
 
-    const inputArray =
-      arr.length > expectedElementCount
-        ? arr.subarray(0, expectedElementCount)
-        : arr;
+    let inputArray = arr;
+    if (!sourceLayout && arr.length > expectedElementCount) {
+      inputArray = arr.subarray(0, expectedElementCount);
+    }
 
     const sourceBytesPerElement =
       inputArray.BYTES_PER_ELEMENT || tDetails.elementSize;
@@ -77,6 +109,7 @@ function vtkWebGPUTexture(publicAPI, model) {
     const alignedRowElements = alignedBytesPerRow / outputBytesPerElement;
     const inputRowBytes = expectedRowElements * sourceBytesPerElement;
     const requiresRepack =
+      !!sourceLayout ||
       halfFloat ||
       inputArray.constructor.name !== outputArrayType ||
       inputRowBytes !== alignedBytesPerRow;
@@ -96,27 +129,44 @@ function vtkWebGPUTexture(publicAPI, model) {
       alignedRowElements * totalRows
     );
 
-    // Copy and convert data when needed
+    const sourceRowElements = sourceWidth * tDetails.numComponents;
+    const sourceSliceElements = sourceHeight * sourceRowElements;
+
+    // Select, convert, and pad each source row in one pass.
     if (halfFloat) {
-      for (let row = 0; row < totalRows; row++) {
-        const inOffset = row * expectedRowElements;
-        const outOffset = row * alignedRowElements;
-        for (let i = 0; i < expectedRowElements; i++) {
-          outArray[outOffset + i] = HalfFloat.toHalf(inputArray[inOffset + i]);
+      for (let z = 0; z < depth; z++) {
+        const sourceSliceOffset = (sourceZ + z) * sourceSliceElements;
+        for (let y = 0; y < height; y++) {
+          const row = z * height + y;
+          const inOffset =
+            sourceSliceOffset +
+            (sourceY + y) * sourceRowElements +
+            sourceX * tDetails.numComponents;
+          const outOffset = row * alignedRowElements;
+          for (let i = 0; i < expectedRowElements; i++) {
+            outArray[outOffset + i] = HalfFloat.toHalf(
+              inputArray[inOffset + i]
+            );
+          }
         }
       }
-    } else if (alignedRowElements === expectedRowElements) {
-      // If the output width is the same as input, just copy
+    } else if (!sourceLayout && alignedRowElements === expectedRowElements) {
       outArray.set(inputArray);
     } else {
-      for (let row = 0; row < totalRows; row++) {
-        outArray.set(
-          inputArray.subarray(
-            row * expectedRowElements,
-            (row + 1) * expectedRowElements
-          ),
-          row * alignedRowElements
-        );
+      for (let z = 0; z < depth; z++) {
+        const sourceSliceOffset = (sourceZ + z) * sourceSliceElements;
+        for (let y = 0; y < height; y++) {
+          const row = z * height + y;
+          const inOffset =
+            sourceSliceOffset +
+            (sourceY + y) * sourceRowElements +
+            sourceX * tDetails.numComponents;
+          const outOffset = row * alignedRowElements;
+          outArray.set(
+            inputArray.subarray(inOffset, inOffset + expectedRowElements),
+            outOffset
+          );
+        }
       }
     }
 
@@ -328,16 +378,17 @@ function vtkWebGPUTexture(publicAPI, model) {
     const depth = req.depth ?? model.depth - z;
     const nativeArray = req.nativeArray || [];
     if (!validateTextureWriteBounds(x, y, z, width, height, depth)) {
-      return;
+      return false;
     }
     const preparedData = prepareTextureUploadData(
       nativeArray,
       width,
       height,
-      depth
+      depth,
+      req.sourceLayout
     );
     if (!preparedData) {
-      return;
+      return false;
     }
 
     model._device.getHandle().queue.writeTexture(
@@ -363,6 +414,15 @@ function vtkWebGPUTexture(publicAPI, model) {
       }
     );
 
+    if (!req.deferMipmaps) {
+      publicAPI.generateMipmaps();
+    }
+
+    model.ready = true;
+    return true;
+  };
+
+  publicAPI.generateMipmaps = () => {
     if (publicAPI.getDimensionality() !== 3 && model.mipLevel > 0) {
       vtkTexture.generateMipmaps(
         model._device.getHandle(),
@@ -370,18 +430,18 @@ function vtkWebGPUTexture(publicAPI, model) {
         model.mipLevel + 1
       );
     }
-
-    model.ready = true;
   };
 
-  // when data is pulled out of this texture what scale must be applied to
-  // get back to the original source data. For formats such as r8unorm we
-  // have to multiply by 255.0, for formats such as r16float it is 1.0
+  // This scale converts a sampled texture value to the source scalar range.
   publicAPI.getScale = () => {
     const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(model.format);
-    const halfFloat =
-      tDetails.elementSize === 2 && tDetails.sampleType === 'float';
-    return halfFloat ? 1.0 : 255.0;
+    const isFloat =
+      tDetails.sampleType === 'float' ||
+      tDetails.sampleType === 'unfilterable-float';
+    if (isFloat && tDetails.elementSize >= 2) {
+      return 1.0;
+    }
+    return 255.0;
   };
 
   publicAPI.getNumberOfComponents = () => {
@@ -484,6 +544,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'height',
     'depth',
     'format',
+    'mipLevel',
     'usage',
     'sampleCount',
   ]);
