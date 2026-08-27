@@ -1,12 +1,11 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import { Vector3 } from '../../../types';
+import { ShapeType } from './Constants';
 
-export enum ShapeType {
-  TRIANGLE,
-  STAR,
-  ARROW_4,
-  ARROW_6,
-}
+/**
+ * The type is public; the value is reached through the Constants module.
+ */
+export type { ShapeType };
 
 /**
  *
@@ -18,7 +17,7 @@ export interface IArrow2DSourceInitialValues {
   thickness?: number;
   center?: Vector3;
   pointType?: string;
-  origin?: Vector3;
+  shape?: ShapeType;
   direction?: Vector3;
 }
 
@@ -113,7 +112,17 @@ export interface vtkArrow2DSource extends vtkArrow2DSourceBase {
    * @param {Vector3} center The center of the cone coordinates.
    * @default [0, 0, 0]
    */
-  setCenterFrom(center: Vector3): boolean;
+  setCenter(center: Vector3): boolean;
+
+  /**
+   * Set the center of the cone.
+   * It is located at the middle of the axis of the cone.
+   * !!! warning
+   *     This is not the center of the base of the cone!
+   * @param {Vector3} center The center of the cone coordinates.
+   * @default [0, 0, 0]
+   */
+  setCenterFrom(center: Vector3): void;
 
   /**
    * Set the direction for the arrow.
@@ -133,7 +142,7 @@ export interface vtkArrow2DSource extends vtkArrow2DSourceBase {
    * Set the direction for the arrow 2D.
    * @param {Vector3} direction The direction coordinates.
    */
-  setDirectionFrom(direction: Vector3): boolean;
+  setDirectionFrom(direction: Vector3): void;
 
   /**
    * Set the height of the cone.

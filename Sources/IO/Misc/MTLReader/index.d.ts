@@ -33,7 +33,7 @@ export interface vtkMTLReader extends vtkObject {
   /**
    *
    */
-  getBaseURL(): string;
+  getBaseURL(): string | undefined;
 
   /**
    *
@@ -53,22 +53,22 @@ export interface vtkMTLReader extends vtkObject {
    *
    * @param {String} name The name of the material.
    */
-  getMaterial(name: string): object;
+  getMaterial(name: string): object | undefined;
 
   /**
    *
    */
-  getMaterialNames(): object;
+  getMaterialNames(): string[];
 
   /**
    *
    */
-  getSplitGroup(): boolean;
+  getSplitGroup(): boolean | undefined;
 
   /**
    * Get the url of the object to load.
    */
-  getUrl(): string;
+  getUrl(): string | undefined;
 
   /**
    *
@@ -79,7 +79,7 @@ export interface vtkMTLReader extends vtkObject {
   /**
    *
    */
-  isBusy(): number;
+  isBusy(): boolean;
 
   /**
    *
@@ -103,12 +103,6 @@ export interface vtkMTLReader extends vtkObject {
    * @param {String} content The content to parse.
    */
   parseAsText(content: string): void;
-  /**
-   *
-   * @param inData
-   * @param outData
-   */
-  requestData(inData: any, outData: any): void;
 
   /**
    *
@@ -146,7 +140,7 @@ export interface vtkMTLReader extends vtkObject {
    * @param {String} url the url of the object to load.
    * @param {IMTLReaderOptions} [option] The MTL reader options.
    */
-  setUrl(url: string, option?: IMTLReaderOptions): Promise<string>;
+  setUrl(url: string, option?: IMTLReaderOptions): Promise<void>;
 }
 
 /**

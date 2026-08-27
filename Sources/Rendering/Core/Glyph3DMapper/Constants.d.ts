@@ -1,14 +1,19 @@
-export declare enum OrientationModes {
-  DIRECTION = 0,
-  ROTATION = 1,
-  MATRIX = 2,
-}
+export declare const OrientationModes: {
+  readonly DIRECTION: 0;
+  readonly ROTATION: 1;
+  readonly MATRIX: 2;
+};
 
-export declare enum ScaleModes {
-  SCALE_BY_CONSTANT = 0,
-  SCALE_BY_MAGNITUDE = 1,
-  SCALE_BY_COMPONENTS = 2,
-}
+export type OrientationModes =
+  (typeof OrientationModes)[keyof typeof OrientationModes];
+
+export declare const ScaleModes: {
+  readonly SCALE_BY_CONSTANT: 0;
+  readonly SCALE_BY_MAGNITUDE: 1;
+  readonly SCALE_BY_COMPONENTS: 2;
+};
+
+export type ScaleModes = (typeof ScaleModes)[keyof typeof ScaleModes];
 
 declare const _default: {
   OrientationModes: typeof OrientationModes;

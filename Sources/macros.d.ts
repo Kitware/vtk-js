@@ -5,6 +5,14 @@ import {
   vtkPropertyDomain,
   vtkObject,
 } from './interfaces';
+import { TypedArray } from './types';
+
+/**
+ * Default parameter sentinel that throws when a required named parameter is
+ * missing.
+ * @param name of the missing parameter
+ */
+export function requiredParam(name: string): never;
 
 /**
  * Allow user to redefine vtkXXXMacro method call.
@@ -56,16 +64,55 @@ export function vtkOnceErrorMacro(str: string): void;
 /**
  * A way to create typed array based on its name without using the window namespace
  */
-export enum TYPED_ARRAYS {
-  Float32Array,
-  Float64Array,
-  Uint8Array,
-  Int8Array,
-  Uint16Array,
-  Int16Array,
-  Uint32Array,
-  Int32Array,
-}
+export const TYPED_ARRAYS: {
+  Float32Array: typeof Float32Array;
+  Float64Array: typeof Float64Array;
+  Uint8Array: typeof Uint8Array;
+  Int8Array: typeof Int8Array;
+  Uint16Array: typeof Uint16Array;
+  Int16Array: typeof Int16Array;
+  Uint32Array: typeof Uint32Array;
+  Int32Array: typeof Int32Array;
+  Uint8ClampedArray: typeof Uint8ClampedArray;
+  BigInt64Array?: typeof BigInt64Array;
+  BigUint64Array?: typeof BigUint64Array;
+};
+
+/**
+ * Create a new typed array based on its name without using the window namespace
+ * @param type name of the typed array constructor (e.g. 'Float32Array')
+ * @param args arguments forwarded to the typed array constructor
+ */
+export function newTypedArray(
+  type: 'BigInt64Array',
+  ...args: any[]
+): BigInt64Array;
+export function newTypedArray(
+  type: 'BigUint64Array',
+  ...args: any[]
+): BigUint64Array;
+export function newTypedArray(
+  type: string,
+  ...args: any[]
+): TypedArray | BigInt64Array | BigUint64Array;
+
+/**
+ * Create a new typed array from an array-like or iterable object
+ * @param type name of the typed array constructor (e.g. 'Float32Array')
+ * @param args arguments forwarded to the typed array's `from()` method
+ */
+export function newTypedArrayFrom(
+  type: 'BigInt64Array',
+  ...args: any[]
+): BigInt64Array;
+export function newTypedArrayFrom(
+  type: 'BigUint64Array',
+  ...args: any[]
+): BigUint64Array;
+export function newTypedArrayFrom(
+  type: string,
+  ...args: any[]
+): TypedArray | BigInt64Array | BigUint64Array;
 
 /**
  * Capitalize provided string.
@@ -327,7 +374,7 @@ export function event(
  * @param args
  * @returns symbol to either keep going or interrupt existing callback call stack
  */
-export function VtkCallback(...args: any): void | symbol;
+export type VtkCallback = (...args: any) => void | symbol;
 
 // Example of event(,, 'change')
 export interface VtkChangeEvent {
@@ -359,7 +406,7 @@ export type VtkExtend = (
   initialValues: object
 ) => void;
 
-export function newInstance(extend: VtkExtend, className: string): any;
+export function newInstance(extend: VtkExtend, className?: string): any;
 
 // ----------------------------------------------------------------------------
 // Chain function calls
@@ -498,7 +545,6 @@ export interface VtkProxy extends VtkKeyStore, vtkObject {
   getProxyManager: () => VtkProxyManager;
 
   updateUI: (ui: object) => void;
-  listProxyProperties: (groupName: string) => Array<vtkProperty>;
   updateProxyProperty: (propertyName: string, propUI: object) => void;
   activate: () => void;
   registerPropertyLinkForGC: (otherLink: VtkLink, type: string) => void;
@@ -511,11 +557,6 @@ export interface VtkProxy extends VtkKeyStore, vtkObject {
    */
   getPropertyLink(id: string, persistent?: boolean): VtkLink;
 
-  /**
-   *
-   * @param groupName (default: ROOT_GROUP_NAME)
-   */
-  getProperties(groupName?: string): Array<any>;
   listPropertyNames: () => Array<string>;
   getPropertyByName: (name: string) => vtkProperty;
   getPropertyDomainByName: (name: string) => vtkPropertyDomain;
@@ -702,6 +743,27 @@ export interface VtkNormalizedWheelEvent {
 export function normalizeWheel(wheelEvent: object): VtkNormalizedWheelEvent;
 
 // ----------------------------------------------------------------------------
+// vtk.js internal use
+// ----------------------------------------------------------------------------
+
+/**
+ * Setter factories keyed by the `type` of an object field descriptor passed to
+ * `set`/`setGet`. Each factory returns the setter bound to `publicAPI`/`model`.
+ */
+declare const objectSetterMap: {
+  enum(
+    publicAPI: object,
+    model: object,
+    field: { name: string; enum: Record<string, number> }
+  ): (value: string | number) => boolean;
+  object(
+    publicAPI: object,
+    model: object,
+    field: { name: string; params?: string[] }
+  ): (...args: any[]) => boolean;
+};
+
+// ----------------------------------------------------------------------------
 // Default export
 // ----------------------------------------------------------------------------
 
@@ -723,11 +785,15 @@ declare const Macro: {
   measurePromiseExecution: typeof measurePromiseExecution;
   moveToProtected: typeof moveToProtected;
   newInstance: typeof newInstance;
+  newTypedArray: typeof newTypedArray;
+  newTypedArrayFrom: typeof newTypedArrayFrom;
   normalizeWheel: typeof normalizeWheel;
   obj: typeof obj;
+  objectSetterMap: typeof objectSetterMap;
   proxy: typeof proxy;
   proxyPropertyMapping: typeof proxyPropertyMapping;
   proxyPropertyState: typeof proxyPropertyState;
+  requiredParam: typeof requiredParam;
   safeArrays: typeof safeArrays;
   set: typeof set;
   setArray: typeof setArray;

@@ -1,8 +1,6 @@
 import { Vector3 } from '../../../types';
-import vtkSpline1D, {
-  ISpline1DInitialValues,
-  BoundaryCondition,
-} from '../Spline1D';
+import vtkSpline1D, { ISpline1DInitialValues } from '../Spline1D';
+import { BoundaryCondition } from '../Spline1D/Constants';
 
 export interface ICardinalSpline1DInitialValues extends ISpline1DInitialValues {}
 
@@ -38,7 +36,7 @@ export interface vtkCardinalSpline1D extends vtkSpline1D {
     work: Float32Array,
     x: Vector3,
     y: Vector3,
-    options: {
+    options?: {
       leftConstraint: BoundaryCondition;
       leftValue: number;
       rightConstraint: BoundaryCondition;

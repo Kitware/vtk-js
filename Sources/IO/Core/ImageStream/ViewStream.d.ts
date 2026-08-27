@@ -1,5 +1,5 @@
-import { vtkObject } from '../../../interfaces';
-import { Size } from '../../../types';
+import { vtkObject, vtkSubscription } from '../../../interfaces';
+import { Nullable, Size } from '../../../types';
 import vtkCamera from '../../../Rendering/Core/Camera';
 import DefaultProtocol from './DefaultProtocol';
 /**
@@ -38,14 +38,23 @@ interface IEvent {
 export interface vtkViewStream extends vtkObject {
   /**
    *
+   * @param event
+   */
+  invokeImageReady(event: IEvent): void;
+
+  /**
+   *
    * @param callback
    */
-  onImageReady(callback: () => void): any;
+  onImageReady(
+    callback: (event: IEvent) => void,
+    priority?: number
+  ): vtkSubscription;
 
   /**
    *
    */
-  getViewId(): string;
+  getViewId(): Nullable<string>;
 
   /**
    *
@@ -60,12 +69,12 @@ export interface vtkViewStream extends vtkObject {
   /**
    *
    */
-  getLastImageEvent(): IEvent;
+  getLastImageEvent(): Nullable<IEvent>;
 
   /**
    *
    */
-  getCamera(): vtkCamera;
+  getCamera(): vtkCamera | undefined;
 
   /**
    *

@@ -1,5 +1,7 @@
 import { Nullable, Range } from '../../../types';
 import { vtkDataArray } from '../../../Common/Core/DataArray';
+import { vtkScalarsToColors } from '../../../Common/Core/ScalarsToColors';
+import { vtkImageData } from '../../../Common/DataModel/ImageData';
 import { ColorMode, ScalarMode } from './Constants';
 
 /**
@@ -131,14 +133,14 @@ export interface IScalarColoring {
   /**
    * Return the generated color texture, or null if none exists.
    */
-  getColorTextureMap(): any;
+  getColorTextureMap(): Nullable<vtkImageData>;
 
   /**
    * Return the field-data tuple that colors the data set.
    *
    * @default -1
    */
-  getFieldDataTupleId(): any;
+  getFieldDataTupleId(): number;
 
   /**
    * Return true if the mapper maps point scalars before interpolation.
@@ -153,7 +155,7 @@ export interface IScalarColoring {
   /**
    * Return the lookup table. Create a default table if no table exists.
    */
-  getLookupTable(): any;
+  getLookupTable(): Nullable<vtkScalarsToColors>;
 
   /**
    * Return the number of colors that map values in the scalar range.
@@ -280,7 +282,7 @@ export interface IScalarColoring {
    * @param lookupTable - The lookup table to use.
    * @returns True if the value changed.
    */
-  setLookupTable(lookupTable: any): boolean;
+  setLookupTable(lookupTable: Nullable<vtkScalarsToColors>): boolean;
 
   /**
    * Set the source of the scalar data.

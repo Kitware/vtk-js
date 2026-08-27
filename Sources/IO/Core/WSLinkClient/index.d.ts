@@ -14,7 +14,12 @@ import vtkImageStream from '../ImageStream';
  *
  * @param smartConnectClass
  */
-export function setSmartConnectClass(smartConnectClass: object): void;
+declare function setSmartConnectClass(smartConnectClass: object): void;
+
+export interface IWSLinkClientInitialValues {
+  notBusyList?: string[];
+  createImageStream?: boolean;
+}
 
 export interface vtkWSLinkClient extends vtkObject {
   /**
@@ -47,7 +52,7 @@ export interface vtkWSLinkClient extends vtkObject {
    * @param {Function} [configDecorator] (default: null)
    */
   connect(
-    config: object,
+    config?: object,
     configDecorator?: (config: object) => object
   ): Promise<vtkWSLinkClient>;
 
@@ -55,7 +60,7 @@ export interface vtkWSLinkClient extends vtkObject {
    * Disconnect from server
    * @param {Number} timeout amount of second to wait before the server exit as well. If we want to avoid the server from quitting, `-1` should be provided. (default=60)
    */
-  disconnect(timeout: number): void;
+  disconnect(timeout?: number): void;
 
   /**
    * Register dynamically a protocol after being connected
@@ -83,18 +88,18 @@ export interface vtkWSLinkClient extends vtkObject {
   /**
    * Get protocols that were either provided in `newInstance` or via its set
    */
-  getProtocols(): Record<string, any>;
+  getProtocols(): Record<string, any> | undefined;
 
   /**
    * Update the list of methods that should be ignore from the busy state monitoring
    * @returns {Boolean} true if the set method modified the object
    */
-  setNotBusyList(methodList: [string]): boolean;
+  setNotBusyList(methodList: string[]): boolean;
 
   /**
-   * @returns {object} the current set of methods to ignore from busy state
+   * @returns {String[]} the current set of methods to ignore from busy state
    */
-  getNotBusyList(): object;
+  getNotBusyList(): string[];
 
   /**
    * Should the client auto listen to image stream topic by creating its imageStream object
@@ -117,7 +122,7 @@ export interface vtkWSLinkClient extends vtkObject {
   /**
    * @returns {Function} configDecorator function if any was provided
    */
-  getConfigDecorator(): (config: object) => object;
+  getConfigDecorator(): ((config: object) => object) | undefined;
 
   /**
    *
@@ -127,17 +132,17 @@ export interface vtkWSLinkClient extends vtkObject {
   /**
    *
    */
-  getConfig(): object;
+  getConfig(): object | undefined;
 
   /**
    *
    */
-  getRemote(): Record<string, any>;
+  getRemote(): Record<string, any> | undefined;
 
   /**
    *
    */
-  getImageStream(): vtkImageStream;
+  getImageStream(): vtkImageStream | undefined;
 
   /**
    *
@@ -152,13 +157,13 @@ export interface vtkWSLinkClient extends vtkObject {
   invokeBusyChange(): void;
 
   onConnectionReady(callback: (httpReq: any) => void): vtkSubscription;
-  // invokeConnectionReady(): void
+  invokeConnectionReady(client: vtkWSLinkClient): void;
 
   onConnectionError(callback: (httpReq: any) => void): vtkSubscription;
-  // invokeConnectionError(): void
+  invokeConnectionError(error: any): void;
 
   onConnectionClose(callback: (httpReq: any) => void): vtkSubscription;
-  // invokeConnectionClose(): void
+  invokeConnectionClose(close: any): void;
 }
 
 /**
@@ -166,21 +171,23 @@ export interface vtkWSLinkClient extends vtkObject {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param {object} [initialValues] (default: {})
+ * @param {IWSLinkClientInitialValues} [initialValues] (default: {})
  */
 export function extend(
   publicAPI: object,
   model: object,
-  initialValues?: object
+  initialValues?: IWSLinkClientInitialValues
 ): void;
 
 // ----------------------------------------------------------------------------
 
 /**
  * Method use to create a new instance of vtkWSLinkClient
- * @param {object} [initialValues] for pre-setting some of its content
+ * @param {IWSLinkClientInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: object): vtkWSLinkClient;
+export function newInstance(
+  initialValues?: IWSLinkClientInitialValues
+): vtkWSLinkClient;
 
 /**
  * vtkWSLinkClient is a WSLink client for talking to a server over WebSocket

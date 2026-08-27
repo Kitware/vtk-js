@@ -1,7 +1,7 @@
 import { Wrap, Filter } from './Constants';
 import vtkOpenGLRenderWindow from '../RenderWindow';
 import { Extent, Nullable } from '../../../types';
-import { VtkDataTypes } from '../../../Common/Core/DataArray';
+import { VtkDataTypes } from '../../../Common/Core/DataArray/Constants';
 import { vtkViewNode } from '../../../Rendering/SceneGraph/ViewNode';
 import { vtkObject, vtkRange } from '../../../interfaces';
 
@@ -37,6 +37,32 @@ export interface ITextureInitialValues {
   useHalfFloat?: boolean;
   oglNorm16Ext?: any;
   allocatedGPUMemoryInBytes?: number;
+}
+
+/**
+ * Scale and offset needed to map texture values back to data values, as
+ * `data = texture * scale + offset`.
+ *
+ * The dimensions and the data-computed scale/offset are only recorded when the
+ * texture is built from a data array.
+ */
+export interface ITextureVolumeInfo {
+  scale: number[];
+  offset: number[];
+  dataComputedScale?: number[];
+  dataComputedOffset?: number[];
+  width?: number;
+  height?: number;
+  depth?: number;
+}
+
+/**
+ * Scale and shift needed to map normalized OpenGL data type values back to
+ * data values, as `data = value * scale + shift`.
+ */
+export interface ITextureShiftAndScale {
+  shift: number;
+  scale: number;
 }
 
 /**
@@ -103,7 +129,7 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param numComps The number of components in the texture.
    * @returns The internal format.
    */
-  getInternalFormat(vtktype: VtkDataTypes, numComps: number): any;
+  getInternalFormat(vtktype: VtkDataTypes, numComps: number): number;
 
   /**
    * Gets the default internal format for the texture based on the VTK data type and number of components.
@@ -111,13 +137,13 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param numComps The number of components in the texture.
    * @returns The default internal format.
    */
-  getDefaultInternalFormat(vtktype: VtkDataTypes, numComps: number): any;
+  getDefaultInternalFormat(vtktype: VtkDataTypes, numComps: number): number;
 
   /**
    * Sets the internal format for the texture.
    * @param iformat The internal format to set.
    */
-  setInternalFormat(iformat: any): void;
+  setInternalFormat(iformat: number): void;
 
   /**
    * Gets the format for the texture based on the VTK data type and number of components.
@@ -125,7 +151,7 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param numComps The number of components in the texture.
    * @returns The format.
    */
-  getFormat(vtktype: VtkDataTypes, numComps: number): any;
+  getFormat(vtktype: VtkDataTypes, numComps: number): number;
 
   /**
    * Gets the default format for the texture based on the VTK data type and number of components.
@@ -133,7 +159,7 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param numComps The number of components in the texture.
    * @returns The default format.
    */
-  getDefaultFormat(vtktype: VtkDataTypes, numComps: number): any;
+  getDefaultFormat(vtktype: VtkDataTypes, numComps: number): number;
 
   /**
    * Resets the texture format and type to their default values.
@@ -145,7 +171,7 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param vtkScalarType The VTK scalar type.
    * @returns The default data type.
    */
-  getDefaultDataType(vtkScalarType: VtkDataTypes): any;
+  getDefaultDataType(vtkScalarType: VtkDataTypes): number;
 
   /**
    * Gets the OpenGL data type for the texture based on the VTK scalar type and whether to force an update.
@@ -153,27 +179,27 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param forceUpdate Whether to force the update of the data type.
    * @returns The OpenGL data type.
    */
-  getOpenGLDataType(vtkScalarType: VtkDataTypes, forceUpdate: boolean): any;
+  getOpenGLDataType(vtkScalarType: VtkDataTypes, forceUpdate: boolean): number;
 
   /**
    * Gets the shift and scale values for the texture.
    * @returns The shift and scale values.
    */
-  getShiftAndScale(): any;
+  getShiftAndScale(): ITextureShiftAndScale;
 
   /**
    * Gets the OpenGL filter mode for the texture.
    * @param emode The filter mode.
    * @returns The OpenGL filter mode.
    */
-  getOpenGLFilterMode(emode: Filter): any;
+  getOpenGLFilterMode(emode: Filter): number;
 
   /**
    * Gets the OpenGL wrap mode for the texture.
    * @param vtktype The wrap type.
    * @returns The OpenGL wrap mode.
    */
-  getOpenGLWrapMode(vtktype: Wrap): any;
+  getOpenGLWrapMode(vtktype: Wrap): number;
 
   /**
    * Updates the data array to match the required data type for OpenGL.
@@ -184,13 +210,15 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param {string} dataType - The original data type of the input data.
    * @param {Array} data - The input data array that needs to be updated.
    * @param {boolean} [depth=false] - Indicates whether the data is a 3D array.
+   * @param {Array<Extent>} imageExtents only consider these image extents (default: [])
    * @returns {Array} The updated data array that matches the OpenGL data type.
    */
   updateArrayDataTypeForGL(
     dataType: VtkDataTypes,
     data: any,
-    depth?: boolean
-  ): void;
+    depth?: boolean,
+    imageExtents?: Extent[]
+  ): any[];
 
   /**
    * Creates a 2D texture from raw data.
@@ -237,6 +265,26 @@ export interface vtkOpenGLTexture extends vtkViewNode {
     width: number;
     height: number;
     numComps: number;
+    dataType: VtkDataTypes;
+    data: any;
+  }): boolean;
+
+  /**
+   * Creates a 2D depth texture from raw data.
+   * @param width The width of the texture.
+   * @param height The height of the texture.
+   * @param dataType The data type of the texture.
+   * @param data The raw data for the texture.
+   * @returns {boolean} True if the texture was successfully created, false otherwise.
+   */
+  createDepthFromRaw({
+    width,
+    height,
+    dataType,
+    data,
+  }: {
+    width: number;
+    height: number;
     dataType: VtkDataTypes;
     data: any;
   }): boolean;
@@ -302,7 +350,7 @@ export interface vtkOpenGLTexture extends vtkViewNode {
     height: number;
     dataArray: any;
     preferSizeOverAccuracy?: boolean;
-  }): boolean;
+  }): void;
 
   /**
    * Creates a 3D texture from raw data.
@@ -425,6 +473,156 @@ export interface vtkOpenGLTexture extends vtkViewNode {
    * @param useHalfFloat - whether to use half float
    */
   enableUseHalfFloat(useHalfFloat: boolean): void;
+
+  /**
+   * Whether half float is both enabled and usable for the current data range.
+   * @returns {boolean} True when half float is in use.
+   */
+  useHalfFloat(): boolean;
+
+  /**
+   * Recomputes the scale and offset stored in the volume info for the given
+   * data type and number of components.
+   * @param dataType The VTK data type of the texture data.
+   * @param numComps The number of components in the texture.
+   * @returns {boolean} True if a scaling was applied for that data type.
+   */
+  updateVolumeInfoForGL(dataType: VtkDataTypes, numComps: number): boolean;
+
+  /**
+   * Gets the scale and offset mapping texture values back to data values.
+   */
+  getVolumeInfo(): ITextureVolumeInfo;
+
+  /**
+   * Gets the width of the texture.
+   */
+  getWidth(): number;
+
+  /**
+   * Gets the height of the texture.
+   */
+  getHeight(): number;
+
+  /**
+   * Gets the number of components of the texture.
+   */
+  getComponents(): number;
+
+  /**
+   * Gets the underlying WebGL texture object, or 0 when no texture is allocated.
+   */
+  getHandle(): WebGLTexture | number;
+
+  /**
+   * Gets the OpenGL texture target.
+   */
+  getTarget(): number;
+
+  /**
+   * Gets the amount of GPU memory allocated for this texture, in bytes.
+   */
+  getAllocatedGPUMemoryInBytes(): number;
+
+  /**
+   * Sets the format for the texture.
+   * @param format The format to set.
+   */
+  setFormat(format: number): boolean;
+
+  /**
+   * Sets the OpenGL data type for the texture.
+   * @param openGLDataType The OpenGL data type to set.
+   */
+  setOpenGLDataType(openGLDataType: number): boolean;
+
+  /**
+   * Gets the time stamp used to track matrix updates.
+   */
+  getKeyMatrixTime(): vtkObject;
+
+  /**
+   * Sets the time stamp used to track matrix updates.
+   * @param keyMatrixTime The time stamp to set.
+   */
+  setKeyMatrixTime(keyMatrixTime: vtkObject): boolean;
+
+  /**
+   * Gets the minification filter.
+   */
+  getMinificationFilter(): Filter;
+
+  /**
+   * Sets the minification filter.
+   * @param minificationFilter The filter to set.
+   */
+  setMinificationFilter(minificationFilter: Filter): boolean;
+
+  /**
+   * Gets the magnification filter.
+   */
+  getMagnificationFilter(): Filter;
+
+  /**
+   * Sets the magnification filter.
+   * @param magnificationFilter The filter to set.
+   */
+  setMagnificationFilter(magnificationFilter: Filter): boolean;
+
+  /**
+   * Gets the wrap mode along S.
+   */
+  getWrapS(): Wrap;
+
+  /**
+   * Sets the wrap mode along S.
+   * @param wrapS The wrap mode to set.
+   */
+  setWrapS(wrapS: Wrap): boolean;
+
+  /**
+   * Gets the wrap mode along T.
+   */
+  getWrapT(): Wrap;
+
+  /**
+   * Sets the wrap mode along T.
+   * @param wrapT The wrap mode to set.
+   */
+  setWrapT(wrapT: Wrap): boolean;
+
+  /**
+   * Gets the wrap mode along R.
+   */
+  getWrapR(): Wrap;
+
+  /**
+   * Sets the wrap mode along R.
+   * @param wrapR The wrap mode to set.
+   */
+  setWrapR(wrapR: Wrap): boolean;
+
+  /**
+   * Gets whether mipmaps are generated for the texture.
+   */
+  getGenerateMipmap(): boolean;
+
+  /**
+   * Sets whether mipmaps are generated for the texture.
+   * @param generateMipmap Whether to generate mipmaps.
+   */
+  setGenerateMipmap(generateMipmap: boolean): boolean;
+
+  /**
+   * Gets the EXT_texture_norm16 extension object, if available.
+   */
+  getOglNorm16Ext(): Nullable<EXT_texture_norm16>;
+
+  /**
+   * Sets the EXT_texture_norm16 extension object.
+   * @param oglNorm16Ext The extension object.
+   */
+  setOglNorm16Ext(oglNorm16Ext: Nullable<EXT_texture_norm16>): boolean;
 }
 
 /**
@@ -454,6 +652,8 @@ export function newInstance(
 export declare const vtkOpenGLTexture: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  Filter: typeof Filter;
+  Wrap: typeof Wrap;
 };
 
 export default vtkOpenGLTexture;

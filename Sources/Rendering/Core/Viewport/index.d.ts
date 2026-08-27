@@ -1,5 +1,5 @@
-import { vtkObject } from '../../../interfaces';
-import { RGBColor, Size } from '../../../types';
+import { EventHandler, vtkObject, vtkSubscription } from '../../../interfaces';
+import { RGBColor } from '../../../types';
 import vtkActor2D from '../Actor2D';
 import vtkProp from '../Prop';
 
@@ -70,7 +70,7 @@ export interface vtkViewport extends vtkObject {
   /**
    * Get the size and origin of the viewport in display coordinates.
    */
-  getSize(): Size;
+  getSize(): void;
 
   /**
    * Viewport for the Viewport to draw in the rendering window.
@@ -90,7 +90,7 @@ export interface vtkViewport extends vtkObject {
   /**
    *
    */
-  getViewPropsWithNestedProps(): any;
+  getViewPropsWithNestedProps(): vtkProp[];
 
   /**
    *
@@ -179,13 +179,13 @@ export interface vtkViewport extends vtkObject {
    * Set the viewport secondary background.
    * @param {RGBColor} background
    */
-  setBackground2From(background: RGBColor): boolean;
+  setBackground2From(background: RGBColor): void;
 
   /**
    * Set the viewport background.
    * @param {RGBColor} background
    */
-  setBackgroundFrom(background: RGBColor): boolean;
+  setBackgroundFrom(background: RGBColor): void;
 
   /**
    * Set the gradient background flag.
@@ -208,7 +208,7 @@ export interface vtkViewport extends vtkObject {
    * Coordinates are expressed as [xmin, ymin, xmax, ymax], where each coordinate is 0 <= coordinate <= 1.0.
    * @param {Number[]} viewport
    */
-  setViewportFrom(viewport: number[]): boolean;
+  setViewportFrom(viewport: number[]): void;
 
   /**
    *
@@ -244,6 +244,16 @@ export interface vtkViewport extends vtkObject {
    * Not Implemented yet
    */
   PickPropFrom(): any;
+
+  /**
+   * Adds an event listener.
+   */
+  onEvent(cb: EventHandler, priority?: number): Readonly<vtkSubscription>;
+
+  /**
+   *
+   */
+  invokeEvent(...args: unknown[]): void;
 }
 
 /**

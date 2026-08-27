@@ -1,5 +1,5 @@
 import { vtkObject } from '../../../interfaces';
-import { Range } from '../../../types';
+import { Nullable, Range } from '../../../types';
 
 export interface IPiecewiseFunctionInitialValues {
   range?: Range;
@@ -13,7 +13,7 @@ export interface vtkPiecewiseFunction extends vtkObject {
    * @param {Number} x The x coordinate.
    * @param {Number} y The y coordinate.
    */
-  addPoint(x: number, y: number): void;
+  addPoint(x: number, y: number): number;
 
   /**
    * Add points to the function.
@@ -49,7 +49,7 @@ export interface vtkPiecewiseFunction extends vtkObject {
    * Estimates the minimum size of a table such that it would correctly sample
    * this function.
    */
-  estimateMinNumberOfSamples(): number;
+  estimateMinNumberOfSamples(x1: number, x2: number): number;
 
   /**
    * Traverses the nodes to find the minimum distance.
@@ -76,7 +76,7 @@ export interface vtkPiecewiseFunction extends vtkObject {
   /**
    * Returns a pointer to the data stored in the table.
    */
-  getDataPointer(): any[];
+  getDataPointer(): Nullable<number[]>;
 
   /**
    * Returns the first point location which precedes a non-zero segment of the
@@ -151,8 +151,9 @@ export interface vtkPiecewiseFunction extends vtkObject {
   /**
    * Returns the value of the function at the specified location using the
    * specified interpolation.
+   * @param x The position to evaluate.
    */
-  getValue(): any;
+  getValue(x: number): number;
 
   /**
    * Removes all points from the function.
@@ -216,7 +217,7 @@ export interface vtkPiecewiseFunction extends vtkObject {
    *
    * @param {Range} range
    */
-  setRangeFrom(range: Range): boolean;
+  setRangeFrom(range: Range): void;
 
   /**
 	 * Internal method to sort the vector and update the Range whenever a node

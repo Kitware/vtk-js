@@ -5,6 +5,7 @@ import {
 import vtkAbstractWidget from '../../Core/AbstractWidget';
 import { Bounds } from '../../../types';
 import { ViewTypes } from '../../Core/WidgetManager/Constants';
+import { EventHandler, vtkSubscription } from '../../../interfaces';
 
 export interface vtkInteractiveOrientationWidget<
   WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget,
@@ -19,7 +20,18 @@ export interface vtkInteractiveOrientationWidget<
   /**
    * @param {ViewTypes} viewType
    */
-  getRepresentationForViewType(viewType: ViewTypes): unknown;
+  getRepresentationsForViewType(viewType: ViewTypes): unknown;
+
+  /**
+   * Registers a callback when an orientation change event occurs.
+   * @param cb EventHandler
+   */
+  onOrientationChange(cb: EventHandler): vtkSubscription;
+
+  /**
+   * Invokes an orientation change event.
+   */
+  invokeOrientationChange(data: unknown): void;
 }
 
 export interface IInteractiveOrientationWidgetInitialValues<

@@ -1,13 +1,6 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import { Vector3 } from '../../../types';
 
-export enum ShapeType {
-  TRIANGLE,
-  STAR,
-  ARROW_4,
-  ARROW_6,
-}
-
 /**
  *
  */
@@ -106,7 +99,7 @@ export interface vtkArrowSource extends vtkArrowSourceBase {
    * Set the direction for the arrow.
    * @param {Vector3} direction The direction coordinates.
    */
-  setDirectionFrom(direction: Vector3): boolean;
+  setDirectionFrom(direction: Vector3): void;
 
   /**
    * Inverts the arrow direction.

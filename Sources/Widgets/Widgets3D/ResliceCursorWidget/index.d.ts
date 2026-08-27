@@ -11,13 +11,76 @@ import { vtkPlaneSource } from '../../../Filters/Sources/PlaneSource';
 import { vtkRenderer } from '../../../Rendering/Core/Renderer';
 import { vtkPlaneManipulator } from '../../Manipulators/PlaneManipulator';
 import { ViewTypes } from '../../../Widgets/Core/WidgetManager/Constants';
-import { Vector2, Vector3 } from '../../../types';
+import { Nullable, Vector2, Vector3 } from '../../../types';
 import { IDisplayScaleParams } from '../../../Widgets/Core/WidgetManager';
+import { vtkWidgetState } from '../../Core/WidgetState';
+import { vtkBoundsMixinState } from '../../Core/StateBuilder/boundsMixin';
+import { PlaneName, PlaneViewType, ScrollingMethods } from './Constants';
+
+/**
+ * The orientation of one of the three reslice planes.
+ */
+export interface IResliceCursorPlane {
+  normal: Vector3;
+  viewUp: Vector3;
+}
+
+export interface vtkResliceCursorWidgetState
+  extends vtkWidgetState, vtkBoundsMixinState {
+  /**
+   * The world-space point the three planes intersect at.
+   */
+  getCenter(): Vector3;
+  getCenterByReference(): Vector3;
+  setCenter(center: Vector3): boolean;
+  setCenter(x: number, y: number, z: number): boolean;
+  setCenterFrom(center: Vector3): void;
+
+  /**
+   * The image the widget reslices.
+   */
+  getImage(): Nullable<vtkImageData>;
+  setImage(image: vtkImageData): boolean;
+
+  /**
+   * The orientation of each reslice plane, keyed by view type.
+   */
+  getPlanes(): Partial<Record<PlaneViewType, IResliceCursorPlane>>;
+  setPlanes(
+    planes: Partial<Record<PlaneViewType, IResliceCursorPlane>>
+  ): boolean;
+
+  /**
+   * Which mouse button scrolls through the slices.
+   */
+  getScrollingMethod(): ScrollingMethods;
+  setScrollingMethod(method: ScrollingMethods): boolean;
+
+  /**
+   * The view type currently being interacted with, if any.
+   */
+  getActiveViewType(): Nullable<ViewTypes>;
+  setActiveViewType(viewType: Nullable<ViewTypes>): boolean;
+
+  getCameraOffsets(): Record<string, unknown>;
+  setCameraOffsets(offsets: Record<string, unknown>): boolean;
+
+  getViewUpFromViewType(): Record<string, Vector3>;
+  setViewUpFromViewType(viewUps: Record<string, Vector3>): boolean;
+
+  /**
+   * The handle sitting at the intersection of the three planes.
+   */
+  getCenterHandle(): vtkWidgetState;
+  setCenterHandle(centerHandle: vtkWidgetState): boolean;
+}
 
 export interface vtkResliceCursorWidget<
   WidgetInstance extends vtkAbstractWidget =
     vtkResliceCursorWidgetDefaultInstance,
 > extends vtkAbstractWidgetFactory<WidgetInstance> {
+  getWidgetState(): vtkResliceCursorWidgetState;
+
   /**
    * @param {ViewTypes} viewType
    */
@@ -58,27 +121,23 @@ export interface vtkResliceCursorWidget<
 
   getResliceMatrix(): mat4;
 
-  getDisplayScaleParams(): IDisplayScaleParams;
+  /**
+   * The display scale params of the first representation of each reslice view
+   * type. A view type with no representation, or whose representation predates
+   * the display-scale API, maps to undefined.
+   */
+  getDisplayScaleParams(): Record<
+    PlaneViewType,
+    IDisplayScaleParams | undefined
+  >;
 
   setScaleInPixels(scale: boolean): boolean;
 
   getScaleInPixels(): boolean;
 
-  setHoleWidth(holeWidth: number): boolean;
-
-  getHoleWidth(): number;
-
-  /**
-   * Defines the length of the line
-   * The scaling of each line representation always define the dimensions of the circle / elipse (X and Y axes)
-   * The unit of this scaling is either in world coordinates or in pixels depending in scaleInPixels
-   * When the line is finite, this scaling on the Z axis also defines the length of the line
-   * When the line is infinite, the scaling on the Z axis is automatically huge
-   * @param infiniteLine
-   */
-  setInfiniteLine(infiniteLine: boolean): boolean;
-
-  getInfiniteLine(): boolean;
+  // holeWidth and infiniteLine are not on the factory: they are forwarded to
+  // the per-view widgets through model.methodsToLink, so they live on
+  // vtkResliceCursorWidgetDefaultInstance instead.
 
   setRotationHandlePosition(position: number): boolean;
 
@@ -99,7 +158,31 @@ export interface vtkResliceCursorWidget<
 
 export interface IResliceCursorWidgetInitialValues<
   WidgetInstance extends vtkAbstractWidget,
-> extends IAbstractWidgetFactoryInitialValues<WidgetInstance> {}
+> extends IAbstractWidgetFactoryInitialValues<WidgetInstance> {
+  /**
+   * Which planes the widget state is generated for.
+   * @default ['X', 'Y', 'Z']
+   */
+  planes?: PlaneName[];
+
+  /**
+   * Whether handle sizes are expressed in pixels rather than world units.
+   * @default true
+   */
+  scaleInPixels?: boolean;
+
+  /**
+   * Where the rotation handles sit along their axis, in [0, 1].
+   * @default 0.5
+   */
+  rotationHandlePosition?: number;
+
+  /**
+   * The manipulator the view widgets interact through.
+   * @default vtkPlaneManipulator.newInstance()
+   */
+  manipulator?: vtkPlaneManipulator;
+}
 
 /**
  * Method used to decorate a given object (publicAPI+model) with vtkResliceCursorWidget characteristics.

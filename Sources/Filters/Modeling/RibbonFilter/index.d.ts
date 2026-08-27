@@ -1,6 +1,18 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import { Vector3 } from '../../../types';
 
+declare enum GenerateTCoords {
+  TCOORDS_OFF,
+  TCOORDS_FROM_SCALARS,
+  TCOORDS_FROM_LENGTH,
+  TCOORDS_FROM_NORMALIZED_LENGTH,
+}
+
+/**
+ * The type is public; the value is reached through the module default export.
+ */
+export type { GenerateTCoords };
+
 export type IGenerateTCoords =
   | 'TCOORDS_OFF'
   | 'TCOORDS_FROM_SCALARS'
@@ -107,9 +119,8 @@ export interface vtkRibbonFilter extends vtkRibbonFilterBase {
    * Set the default normal used to orient the ribbon when no normals are provided in the input.
    * The default normal is a vector defined by three components (x,y,z). The
    * default is (0,0,1).
-   * @returns true if the default normal is set successfully.
    */
-  setDefaultNormalFrom(defaultNormal: Vector3): boolean;
+  setDefaultNormalFrom(defaultNormal: Vector3): void;
 
   /**
    * Set the method used to generate texture coordinates. By default, texture
@@ -192,5 +203,6 @@ export function newInstance(
 export declare const vtkRibbonFilter: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  GenerateTCoords: typeof GenerateTCoords;
 };
 export default vtkRibbonFilter;

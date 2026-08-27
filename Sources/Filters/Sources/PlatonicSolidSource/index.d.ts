@@ -1,5 +1,5 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
-import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes';
+import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes/Constants';
 import { SolidType } from './Constants';
 
 /**
@@ -105,5 +105,6 @@ export function newInstance(
 export declare const vtkPlatonicSolidSource: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  SolidType: typeof SolidType;
 };
 export default vtkPlatonicSolidSource;

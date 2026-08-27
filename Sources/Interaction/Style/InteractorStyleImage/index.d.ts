@@ -23,6 +23,23 @@ export interface vtkInteractorStyleImage extends vtkInteractorStyleTrackballCame
   handleLeftButtonRelease(callData: unknown): void;
 
   /**
+   * The inherited `handleMouseMove`, captured before it is overridden.
+   * @param callData event data
+   */
+  superHandleMouseMove(callData: unknown): void;
+
+  /**
+   * The inherited `handleLeftButtonPress`, captured before it is overridden.
+   * @param callData event data
+   */
+  superHandleLeftButtonPress(callData: unknown): void;
+
+  /**
+   * The inherited `handleLeftButtonRelease`, captured before it is overridden.
+   */
+  superHandleLeftButtonRelease(): void;
+
+  /**
    * Handles the start of a wheel event.
    * @param callData event data
    */
@@ -64,29 +81,45 @@ export interface vtkInteractorStyleImage extends vtkInteractorStyleTrackballCame
    * -2 will return the second-to-last image, etc.
    * @param i image number
    */
-  setCurrentImageNumber(i: number): boolean;
+  setCurrentImageNumber(i: number): void;
+
+  /**
+   * Gets the current image property.
+   */
+  getCurrentImageProperty(): vtkImageProperty | undefined;
 
   /**
    * Sets the current image property.
    * @param imageProperty image property
    */
-  setCurrentImageProperty(imageProperty: vtkImageProperty): boolean;
+  setCurrentImageProperty(imageProperty: vtkImageProperty): void;
+
+  /**
+   * Gets the interaction mode.
+   */
+  getInteractionMode(): 'IMAGE2D' | 'IMAGE3D' | 'IMAGE_SLICING';
+
+  /**
+   * Sets the interaction mode.
+   * @param mode interaction mode
+   */
+  setInteractionMode(mode: 'IMAGE2D' | 'IMAGE3D' | 'IMAGE_SLICING'): boolean;
 }
 
 export interface IInteractorStyleImageInitialValues {
-  windowLevelStartPosition: Vector2;
-  windowLevelCurrentPosition: Vector2;
-  lastSlicePosition: number;
-  windowLevelInitial: Vector2;
+  windowLevelStartPosition?: Vector2;
+  windowLevelCurrentPosition?: Vector2;
+  lastSlicePosition?: number;
+  windowLevelInitial?: Vector2;
   // currentImageProperty: null;
-  currentImageNumber: number;
-  interactionMode: 'IMAGE2D' | 'IMAGE3D' | 'IMAGE_SLICING';
-  xViewRightVector: Vector3;
-  xViewUpVector: Vector3;
-  yViewRightVector: Vector3;
-  yViewUpVector: Vector3;
-  zViewRightVector: Vector3;
-  zViewUpVector: Vector3;
+  currentImageNumber?: number;
+  interactionMode?: 'IMAGE2D' | 'IMAGE3D' | 'IMAGE_SLICING';
+  xViewRightVector?: Vector3;
+  xViewUpVector?: Vector3;
+  yViewRightVector?: Vector3;
+  yViewUpVector?: Vector3;
+  zViewRightVector?: Vector3;
+  zViewUpVector?: Vector3;
 }
 
 export function newInstance(

@@ -55,7 +55,7 @@ export interface vtkAlgorithm {
   /**
    * @param {Number} [port] The port number (default 0).
    */
-  getInputData(port?: number): any;
+  getInputData<T = any>(port?: number): T;
 
   /**
    * @param outputPort
@@ -85,7 +85,7 @@ export interface vtkAlgorithm {
    * port.
    * @param {Number} [port] The port number (default 0).
    */
-  getOutputData(port?: number): any;
+  getOutputData<T = any>(port?: number): T;
 
   /**
    *
@@ -118,7 +118,7 @@ export interface vtkAlgorithm {
    * Get the actual data array for the input array sepcified by idx.
    * @param {Number} port (default 0)
    */
-  getInputArrayToProcess(inputPort?: number): vtkDataArray;
+  getInputArrayToProcess(inputPort?: number): vtkDataArray | null;
 
   /**
    * Set the input data arrays that this algorithm will process.
@@ -158,7 +158,7 @@ export interface vtkObject {
    * @param callback function
    * @returns subscription object so you can easily unsubscribe later on
    */
-  onModified(callback: (instance: vtkObject) => any): vtkSubscription;
+  onModified(callback: (instance: vtkObject) => any): vtkSubscription | null;
 
   /**
    * Return the `Modified Time` which is a monotonic increasing integer
@@ -236,7 +236,7 @@ export interface vtkObject {
    * @param name of the field to extract from the instance model
    * @returns model[name]
    */
-  getReferenceByName(name: string): any;
+  getReferenceByName<T = any>(name: string): T;
 
   /**
    * Dereference any internal object and remove any subscription.
@@ -266,7 +266,7 @@ export interface vtkObject {
    * worker.postMessage(dataset.getState({ preserveTypedArrays: true }));
    * ```
    */
-  getState(options?: GetStateOptions): object;
+  getState(options?: GetStateOptions): object | null;
 
   /**
    * Used internally by JSON.stringify to get the content to serialize.

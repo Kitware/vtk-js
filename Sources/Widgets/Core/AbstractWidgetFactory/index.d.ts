@@ -6,7 +6,7 @@ import { Bounds, Nullable } from '../../../types';
 import { EventHandler, vtkSubscription, vtkObject } from '../../../interfaces';
 
 export interface IGetWidgetForViewParams {
-  viewId: number;
+  viewId: string;
   renderer?: vtkRenderer;
   viewType?: ViewTypes;
   initialValues?: object;
@@ -67,7 +67,7 @@ export interface vtkAbstractWidgetFactory<
    *
    * @param {Boolean} visible
    */
-  setHandleVisiblity(visible: boolean): void;
+  setHandleVisibility(visible: boolean): void;
 
   /**
    * Place a new widget at the given bounds.
@@ -99,7 +99,7 @@ export interface vtkAbstractWidgetFactory<
    * @param {EventHandler} cb The callback to be invoked.
    * @param {Number} [priority] The priority of this subscription
    */
-  onWidgetChangeEvent(
+  onWidgetChange(
     cb: EventHandler,
     priority?: number
   ): Readonly<vtkSubscription>;
@@ -109,7 +109,7 @@ export interface vtkAbstractWidgetFactory<
    *
    * @param args The event payload
    */
-  invokeWidgetChangeEvent(...args: unknown[]): void;
+  invokeWidgetChange(...args: unknown[]): void;
 }
 
 /**

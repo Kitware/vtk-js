@@ -113,7 +113,7 @@ export interface vtkSphereSource extends vtkSphereSourceBase {
    * Set the center of the sphere.
    * @param {Vector3} center The center point's coordinates.
    */
-  setCenterFrom(center: Vector3): boolean;
+  setCenterFrom(center: Vector3): void;
 
   /**
    * Set the ending latitude angle.

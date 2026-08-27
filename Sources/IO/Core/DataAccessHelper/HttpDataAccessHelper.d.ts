@@ -2,16 +2,12 @@ export interface HttpDataAccessHelper {
   fetchArray(
     instance: any,
     baseURL: string,
-    array: object[],
+    array: object,
     options?: object
-  ): Promise<object[]>;
+  ): Promise<object>;
   fetchJSON(instance: any, url: string, options?: object): Promise<object>;
   fetchText(instance: any, url: string, options?: object): Promise<string>;
-  fetchBinary(
-    instance: any,
-    url: string,
-    options?: object
-  ): Promise<ArrayBuffer>;
+  fetchBinary(url: string, options?: object): Promise<ArrayBuffer>;
   fetchImage(
     instance: any,
     url: string,

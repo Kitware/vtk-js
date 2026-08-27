@@ -23,7 +23,7 @@ export interface vtkOrientationMarkerWidget extends vtkObject {
    * Get the computed viewport size.
    * The format is `[left, bottom, right, top]`.
    */
-  computeViewport(): [number, number, number, number];
+  computeViewport(): Nullable<[number, number, number, number]>;
 
   /**
    * Dereference any internal object and remove any subscription.
@@ -36,7 +36,7 @@ export interface vtkOrientationMarkerWidget extends vtkObject {
   /**
    *
    */
-  getActor(): vtkActor;
+  getActor(): vtkActor | undefined;
 
   /**
    * Gets the parent renderer, if any.
@@ -51,7 +51,7 @@ export interface vtkOrientationMarkerWidget extends vtkObject {
   /**
    * Get the render window interactor associated with the widget.
    */
-  getInteractor(): vtkRenderWindowInteractor;
+  getInteractor(): vtkRenderWindowInteractor | undefined;
 
   /**
    * Get the maximum side length, in pixels, for the orientation marker widget
@@ -125,7 +125,7 @@ export interface vtkOrientationMarkerWidget extends vtkObject {
    * @param {Corners} viewportCorner
    * @default BOTTOM_LEFT
    */
-  setViewportCorner(viewportCorner: Corners): boolean;
+  setViewportCorner(viewportCorner: Corners): void;
 
   /**
    * Set the viewport size.
@@ -178,6 +178,15 @@ export function newInstance(
 /**
  * vtkOrientationMarkerWidget is a 2D widget for manipulating a marker prop
  */
+export declare const DEFAULT_VALUES: Readonly<{
+  viewportCorner: Corners;
+  viewportSize: number;
+  minPixelSize: number;
+  maxPixelSize: number;
+  parentRenderer: null;
+  interactiveRenderer: boolean;
+}>;
+
 export declare const vtkOrientationMarkerWidget: {
   newInstance: typeof newInstance;
   extend: typeof extend;
