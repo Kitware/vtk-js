@@ -3,7 +3,7 @@ import {
   vtkAbstractMapper3D,
   IAbstractMapper3DInitialValues,
 } from '../AbstractMapper3D';
-import { ColorMode, GetArray, ScalarMode } from './Constants';
+import { ColorMode, DebugChannel, GetArray, ScalarMode } from './Constants';
 import {
   CoincidentTopologyHelper,
   StaticCoincidentTopologyMethods,
@@ -31,7 +31,10 @@ export interface IMapperInitialValues
   renderTime?: number;
   forceCompileOnly?: number;
   useInvertibleColors?: boolean;
-  customShaderAttributes?: any;
+  customShaderAttributes?: string[];
+  debugChannel?: DebugChannel;
+  populateSelectionSettings?: boolean;
+  selectionWebGLIdsToVTKIds?: Nullable<ISelectionWebGLIdsToVTKIds>;
 }
 
 export interface vtkMapper
@@ -61,7 +64,13 @@ export interface vtkMapper
    *
    * @default []
    */
-  getCustomShaderAttributes(): any;
+  getCustomShaderAttributes(): string[];
+
+  /** Get the material channel shown for debugging. */
+  getDebugChannel(): DebugChannel;
+
+  /** Select the material channel shown for debugging. */
+  setDebugChannel(debugChannel: DebugChannel): boolean;
 
   /**
    * Check if the mapper does not expect to have translucent geometry. This
@@ -121,7 +130,7 @@ export interface vtkMapper
    * @param {Number} forceCompileOnly
    * @default 0
    */
-  setForceCompileOnly(forceCompileOnly: number): boolean;
+  setForceCompileOnly(forceCompileOnly: number): void;
 
   /**
    * Set whether selection ID mappings should be populated.
@@ -232,5 +241,6 @@ export declare const vtkMapper: {
   ColorMode: typeof ColorMode;
   ScalarMode: typeof ScalarMode;
   GetArray: typeof GetArray;
+  DebugChannel: typeof DebugChannel;
 } & StaticCoincidentTopologyMethods;
 export default vtkMapper;

@@ -34,7 +34,7 @@ export interface vtkSelectionNode extends vtkObject {
   /**
    * This functions is called internally by VTK.js and is not intended for public use.
    */
-  setContentType(contentType: SelectionContent): void;
+  setContentType(contentType: SelectionContent): boolean;
 
   /**
    * Returns -1 if not initialized.
@@ -44,7 +44,7 @@ export interface vtkSelectionNode extends vtkObject {
   /**
    * This functions is called internally by VTK.js and is not intended for public use.
    */
-  setFieldType(fieldType: SelectionField): void;
+  setFieldType(fieldType: SelectionField): boolean;
 
   /**
    * Get the selection properties.
@@ -64,7 +64,7 @@ export interface vtkSelectionNode extends vtkObject {
   /**
    * This functions is called internally by VTK.js and is not intended for public use.
    */
-  setSelectionList(selectionAttributeIDs: ISelectionNodeProperties): boolean;
+  setSelectionList(selectionAttributeIDs: number[]): boolean;
 }
 
 /**

@@ -71,7 +71,7 @@ export interface vtkPointSource extends vtkPointSourceBase {
    * Set the center of the point cloud.
    * @param {Vector3} center The center point's coordinates.
    */
-  setCenterFrom(center: Vector3): boolean;
+  setCenterFrom(center: Vector3): void;
 
   /**
    * Set the number of points to generate.

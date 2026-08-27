@@ -101,4 +101,5 @@ export declare const vtkBox: {
   extend: typeof extend;
   intersectWithLine: typeof intersectWithLine;
 };
+export declare const STATIC: Readonly<Record<never, never>>;
 export default vtkBox;

@@ -18,12 +18,12 @@ interface ISliceToSubSlice {
 }
 
 export interface IImageArrayMapperInitialValues extends IAbstractImageMapperInitialValues {
-  slicingMode: SlicingMode.K;
-  sliceToSubSliceMap: ISliceToSubSlice[];
+  slicingMode?: SlicingMode;
+  sliceToSubSliceMap?: ISliceToSubSlice[];
 }
 
 export interface vtkImageArrayMapper
-  extends vtkAbstractImageMapper, CoincidentTopologyHelper {
+  extends Omit<vtkAbstractImageMapper, 'setSlice'>, CoincidentTopologyHelper {
   /**
    *
    * @param inputData set input as a vtkCollection of vtkImageData objects.
@@ -74,10 +74,16 @@ export interface vtkImageArrayMapper
   getTotalSlices(): number;
 
   /**
+   * Get the slicing mode used to index into each image of the collection.
+   * @default SlicingMode.K
+   */
+  getSlicingMode(): SlicingMode;
+
+  /**
    *
    * @param {Number} slice The slice index.
    */
-  setSlice(slice: number): boolean;
+  setSlice(slice: number): void;
 
   /**
    * Calculate the global slice number that corresponds to the provided image and subSlice number.
@@ -100,12 +106,6 @@ export interface vtkImageArrayMapper
    * the function uses the current slice number (i.e. the output of getSlice()).
    */
   getSubSlice(slice?: number): number;
-
-  /**
-   * Set the slicing mode.
-   * @param {Number} mode The slicing mode.
-   */
-  setSlicingMode(mode: number): boolean;
 
   /**
    *
@@ -154,6 +154,5 @@ export function newInstance(
 export declare const vtkImageArrayMapper: {
   newInstance: typeof newInstance;
   extend: typeof extend;
-  SlicingMode: typeof SlicingMode;
 } & StaticCoincidentTopologyMethods;
 export default vtkImageArrayMapper;

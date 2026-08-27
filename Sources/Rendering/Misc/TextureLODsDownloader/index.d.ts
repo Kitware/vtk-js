@@ -25,7 +25,7 @@ export interface vtkTextureLODsDownloader extends vtkObject {
   /**
    * Get the crossorigin attribute
    */
-  getCrossOrigin(): Nullable<CrossOrigin>;
+  getCrossOrigin(): CrossOrigin | undefined;
 
   /**
    * Get the list of files to download
@@ -40,12 +40,12 @@ export interface vtkTextureLODsDownloader extends vtkObject {
   /**
    *
    */
-  getStepFinishedCallback(): any;
+  getStepFinishedCallback(): Nullable<() => void>;
 
   /**
    * Get the vtkTexture object
    */
-  getTexture(): vtkTexture;
+  getTexture(): Nullable<vtkTexture>;
 
   /**
    * Get the delay between downloads
@@ -85,7 +85,7 @@ export interface vtkTextureLODsDownloader extends vtkObject {
    *
    * @param stepFinishedCallback
    */
-  setStepFinishedCallback(stepFinishedCallback: any): boolean;
+  setStepFinishedCallback(stepFinishedCallback: Nullable<() => void>): boolean;
 
   /**
    * Set the vtkTexture object

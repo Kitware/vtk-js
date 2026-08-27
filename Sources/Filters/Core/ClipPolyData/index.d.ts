@@ -1,8 +1,9 @@
-import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes';
+import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes/Constants';
 import vtkImplicitFunction from '../../../Common/DataModel/ImplicitFunction';
 import vtkIncrementalPointLocator from '../../../Common/DataModel/IncrementalPointLocator';
 import vtkPolyData from '../../../Common/DataModel/PolyData';
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
+import { Nullable } from '../../../types';
 
 export interface IClipPolyDataInitialValues {
   clipFunction?: vtkImplicitFunction;
@@ -26,7 +27,7 @@ export interface vtkClipPolyData extends vtkClipPolyDataBase {
   /**
    * Get the implicit function used to perform the clipping.
    */
-  getClipFunction(): vtkImplicitFunction;
+  getClipFunction(): Nullable<vtkImplicitFunction>;
 
   /**
    * Get the output of the filter that contains the clipped pieces. (The output of the filter is the part that is not clipped.)
@@ -66,7 +67,7 @@ export interface vtkClipPolyData extends vtkClipPolyDataBase {
    * To use a different locator, set it with the SetLocator() method.
    * To turn off merging of coincident points, set the locator to null.
    */
-  getLocator(): vtkIncrementalPointLocator;
+  getLocator(): Nullable<vtkIncrementalPointLocator>;
 
   /**
    * Get the output points precision.

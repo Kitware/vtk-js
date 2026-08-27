@@ -1,21 +1,30 @@
 import { vtkObject } from '../../../interfaces';
-import { Nullable, RGBColor } from '../../../types';
+import { Nullable, RGBColor, Vector2 } from '../../../types';
 import { Interpolation, Representation, Shading } from './Constants';
 import { vtkTexture } from '../../Core/Texture';
 
+export type TextureTransform = {
+  offset?: Vector2;
+  scale?: Vector2;
+  rotation?: number;
+  texCoord?: number;
+};
+
 export interface IPropertyInitialValues {
+  interpolation?: Interpolation;
+  representation?: Representation;
   color?: RGBColor;
   ambientColor?: RGBColor;
   diffuseColor?: RGBColor;
   specularColor?: RGBColor;
-  diffuseTexture?: vtkTexture;
-  metallicTexture?: vtkTexture;
-  roughnessTexture?: vtkTexture;
-  normalTexture?: vtkTexture;
-  ambientOcclusionTexture?: vtkTexture;
-  emissionTexture?: vtkTexture;
-  RMTexture?: vtkTexture;
-  ORMTexture?: vtkTexture;
+  diffuseTexture?: Nullable<vtkTexture>;
+  metallicTexture?: Nullable<vtkTexture>;
+  roughnessTexture?: Nullable<vtkTexture>;
+  normalTexture?: Nullable<vtkTexture>;
+  ambientOcclusionTexture?: Nullable<vtkTexture>;
+  emissionTexture?: Nullable<vtkTexture>;
+  RMTexture?: Nullable<vtkTexture>;
+  ORMTexture?: Nullable<vtkTexture>;
   edgeColor?: RGBColor;
   edgeOpacity?: number;
   ambient?: number;
@@ -35,9 +44,170 @@ export interface IPropertyInitialValues {
   lineWidth?: number;
   lighting?: boolean;
   shading?: boolean;
+  anisotropy?: number;
+  anisotropyRotation?: number;
+  coatStrength?: number;
+  coatRoughness?: number;
+  coatF0?: number;
+  coatNormalStrength?: number;
+  displacementFactor?: number;
+  emissiveStrength?: number;
+  occlusionStrength?: number;
+  transmissionFactor?: number;
+  alphaCutoff?: number;
+  alphaMode?: number;
+  thicknessFactor?: number;
+  attenuationDistance?: number;
+  iridescenceFactor?: number;
+  iridescenceIOR?: number;
+  iridescenceThicknessMinimum?: number;
+  iridescenceThicknessMaximum?: number;
+  sheenRoughnessFactor?: number;
+  diffuseTransmissionFactor?: number;
+  dispersion?: number;
+  specularFactor?: number;
+  anisotropyTexture?: Nullable<vtkTexture>;
+  coatTexture?: Nullable<vtkTexture>;
+  coatRoughnessTexture?: Nullable<vtkTexture>;
+  coatNormalTexture?: Nullable<vtkTexture>;
+  displacementTexture?: Nullable<vtkTexture>;
+  transmissionTexture?: Nullable<vtkTexture>;
+  thicknessTexture?: Nullable<vtkTexture>;
+  iridescenceTexture?: Nullable<vtkTexture>;
+  iridescenceThicknessTexture?: Nullable<vtkTexture>;
+  sheenColorTexture?: Nullable<vtkTexture>;
+  sheenRoughnessTexture?: Nullable<vtkTexture>;
+  diffuseTransmissionTexture?: Nullable<vtkTexture>;
+  diffuseTransmissionColorTexture?: Nullable<vtkTexture>;
+  specularTexture?: Nullable<vtkTexture>;
+  specularColorTexture?: Nullable<vtkTexture>;
+  coatColor?: RGBColor;
+  attenuationColor?: RGBColor;
+  sheenColorFactor?: RGBColor;
+  diffuseTransmissionColorFactor?: RGBColor;
+  specularColorFactor?: RGBColor;
+  textureTransforms?: Nullable<Record<string, TextureTransform>>;
 }
 
 export interface vtkProperty extends vtkObject {
+  getAnisotropy(): number;
+  setAnisotropy(anisotropy: number): boolean;
+  getAnisotropyRotation(): number;
+  setAnisotropyRotation(anisotropyRotation: number): boolean;
+  getCoatStrength(): number;
+  setCoatStrength(coatStrength: number): boolean;
+  getCoatRoughness(): number;
+  setCoatRoughness(coatRoughness: number): boolean;
+  getCoatF0(): number;
+  setCoatF0(coatF0: number): boolean;
+  getCoatNormalStrength(): number;
+  setCoatNormalStrength(coatNormalStrength: number): boolean;
+  getDisplacementFactor(): number;
+  setDisplacementFactor(displacementFactor: number): boolean;
+  getEmissiveStrength(): number;
+  setEmissiveStrength(emissiveStrength: number): boolean;
+  getOcclusionStrength(): number;
+  setOcclusionStrength(occlusionStrength: number): boolean;
+  getTransmissionFactor(): number;
+  setTransmissionFactor(transmissionFactor: number): boolean;
+  getAlphaCutoff(): number;
+  setAlphaCutoff(alphaCutoff: number): boolean;
+  getAlphaMode(): number;
+  setAlphaMode(alphaMode: number): boolean;
+  getThicknessFactor(): number;
+  setThicknessFactor(thicknessFactor: number): boolean;
+  getAttenuationDistance(): number;
+  setAttenuationDistance(attenuationDistance: number): boolean;
+  getIridescenceFactor(): number;
+  setIridescenceFactor(iridescenceFactor: number): boolean;
+  getIridescenceIOR(): number;
+  setIridescenceIOR(iridescenceIOR: number): boolean;
+  getIridescenceThicknessMinimum(): number;
+  setIridescenceThicknessMinimum(iridescenceThicknessMinimum: number): boolean;
+  getIridescenceThicknessMaximum(): number;
+  setIridescenceThicknessMaximum(iridescenceThicknessMaximum: number): boolean;
+  getSheenRoughnessFactor(): number;
+  setSheenRoughnessFactor(sheenRoughnessFactor: number): boolean;
+  getDiffuseTransmissionFactor(): number;
+  setDiffuseTransmissionFactor(diffuseTransmissionFactor: number): boolean;
+  getDispersion(): number;
+  setDispersion(dispersion: number): boolean;
+  getSpecularFactor(): number;
+  setSpecularFactor(specularFactor: number): boolean;
+  getAnisotropyTexture(): Nullable<vtkTexture>;
+  setAnisotropyTexture(anisotropyTexture: Nullable<vtkTexture>): boolean;
+  getCoatTexture(): Nullable<vtkTexture>;
+  setCoatTexture(coatTexture: Nullable<vtkTexture>): boolean;
+  getCoatRoughnessTexture(): Nullable<vtkTexture>;
+  setCoatRoughnessTexture(coatRoughnessTexture: Nullable<vtkTexture>): boolean;
+  getCoatNormalTexture(): Nullable<vtkTexture>;
+  setCoatNormalTexture(coatNormalTexture: Nullable<vtkTexture>): boolean;
+  getDisplacementTexture(): Nullable<vtkTexture>;
+  setDisplacementTexture(displacementTexture: Nullable<vtkTexture>): boolean;
+  getTransmissionTexture(): Nullable<vtkTexture>;
+  setTransmissionTexture(transmissionTexture: Nullable<vtkTexture>): boolean;
+  getThicknessTexture(): Nullable<vtkTexture>;
+  setThicknessTexture(thicknessTexture: Nullable<vtkTexture>): boolean;
+  getIridescenceTexture(): Nullable<vtkTexture>;
+  setIridescenceTexture(iridescenceTexture: Nullable<vtkTexture>): boolean;
+  getIridescenceThicknessTexture(): Nullable<vtkTexture>;
+  setIridescenceThicknessTexture(
+    iridescenceThicknessTexture: Nullable<vtkTexture>
+  ): boolean;
+  getSheenColorTexture(): Nullable<vtkTexture>;
+  setSheenColorTexture(sheenColorTexture: Nullable<vtkTexture>): boolean;
+  getSheenRoughnessTexture(): Nullable<vtkTexture>;
+  setSheenRoughnessTexture(
+    sheenRoughnessTexture: Nullable<vtkTexture>
+  ): boolean;
+  getDiffuseTransmissionTexture(): Nullable<vtkTexture>;
+  setDiffuseTransmissionTexture(
+    diffuseTransmissionTexture: Nullable<vtkTexture>
+  ): boolean;
+  getDiffuseTransmissionColorTexture(): Nullable<vtkTexture>;
+  setDiffuseTransmissionColorTexture(
+    diffuseTransmissionColorTexture: Nullable<vtkTexture>
+  ): boolean;
+  getSpecularTexture(): Nullable<vtkTexture>;
+  setSpecularTexture(specularTexture: Nullable<vtkTexture>): boolean;
+  getSpecularColorTexture(): Nullable<vtkTexture>;
+  setSpecularColorTexture(specularColorTexture: Nullable<vtkTexture>): boolean;
+  getCoatColor(): RGBColor;
+  getCoatColorByReference(): RGBColor;
+  setCoatColor(r: number, g: number, b: number): boolean;
+  setCoatColor(coatColor: RGBColor): boolean;
+  setCoatColorFrom(coatColor: RGBColor): void;
+  getAttenuationColor(): RGBColor;
+  getAttenuationColorByReference(): RGBColor;
+  setAttenuationColor(r: number, g: number, b: number): boolean;
+  setAttenuationColor(attenuationColor: RGBColor): boolean;
+  setAttenuationColorFrom(attenuationColor: RGBColor): void;
+  getSheenColorFactor(): RGBColor;
+  getSheenColorFactorByReference(): RGBColor;
+  setSheenColorFactor(r: number, g: number, b: number): boolean;
+  setSheenColorFactor(sheenColorFactor: RGBColor): boolean;
+  setSheenColorFactorFrom(sheenColorFactor: RGBColor): void;
+  getDiffuseTransmissionColorFactor(): RGBColor;
+  getDiffuseTransmissionColorFactorByReference(): RGBColor;
+  setDiffuseTransmissionColorFactor(r: number, g: number, b: number): boolean;
+  setDiffuseTransmissionColorFactor(
+    diffuseTransmissionColorFactor: RGBColor
+  ): boolean;
+  setDiffuseTransmissionColorFactorFrom(
+    diffuseTransmissionColorFactor: RGBColor
+  ): void;
+  getSpecularColorFactor(): RGBColor;
+  getSpecularColorFactorByReference(): RGBColor;
+  setSpecularColorFactor(r: number, g: number, b: number): boolean;
+  setSpecularColorFactor(specularColorFactor: RGBColor): boolean;
+  setSpecularColorFactorFrom(specularColorFactor: RGBColor): void;
+  getTextureTransform(key: string): Nullable<TextureTransform>;
+  getTextureTransforms(): Record<string, TextureTransform>;
+  setTextureTransform(key: string, transform: TextureTransform): void;
+  setTextureTransforms(
+    transforms: Nullable<Record<string, TextureTransform>>
+  ): void;
+
   /**
    * Not Implemented yet
    */
@@ -224,12 +394,12 @@ export interface vtkProperty extends vtkObject {
   /**
    * Get the diffuse texture.
    */
-  getDiffuseTexture(): Nullable<vtkTexture>;
+  getDiffuseTexture(): Nullable<vtkTexture> | undefined;
 
   /**
    * Get the metallic texture.
    */
-  getMetallicTexture(): Nullable<vtkTexture>;
+  getMetallicTexture(): Nullable<vtkTexture> | undefined;
 
   /**
    * Get the roughness & metallic texture.
@@ -244,22 +414,22 @@ export interface vtkProperty extends vtkObject {
   /**
    * Get the roughness texture.
    */
-  getRoughnessTexture(): Nullable<vtkTexture>;
+  getRoughnessTexture(): Nullable<vtkTexture> | undefined;
 
   /**
    * Get the normal texture.
    */
-  getNormalTexture(): Nullable<vtkTexture>;
+  getNormalTexture(): Nullable<vtkTexture> | undefined;
 
   /**
    * Get the ambient occlusion texture.
    */
-  getAmbientOcclusionTexture(): Nullable<vtkTexture>;
+  getAmbientOcclusionTexture(): Nullable<vtkTexture> | undefined;
 
   /**
    * Get the emission texture.
    */
-  getEmissionTexture(): Nullable<vtkTexture>;
+  getEmissionTexture(): Nullable<vtkTexture> | undefined;
 
   /**
    * Set the ambient lighting coefficient.
@@ -292,7 +462,7 @@ export interface vtkProperty extends vtkObject {
    * Set the ambient surface color from an RGB array
    * @param {RGBColor} ambientColor An Array of the RGB color.
    */
-  setAmbientColorFrom(ambientColor: RGBColor): boolean;
+  setAmbientColorFrom(ambientColor: RGBColor): void;
 
   /**
    * Turn on/off fast culling of polygons based on orientation of normal
@@ -310,7 +480,7 @@ export interface vtkProperty extends vtkObject {
    * @param {Number} g Defines the green component (between 0 and 1)
    * @param {Number} b Defines the blue component (between 0 and 1)
    */
-  setColor(r: number, g: number, b: number): boolean;
+  setColor(r: number, g: number, b: number): void;
 
   /**
    * Set the color of the object. Has the side effect of setting the
@@ -318,7 +488,7 @@ export interface vtkProperty extends vtkObject {
    * a quick overall color setting method.
    * @param {RGBColor} color An Array of the RGB color.
    */
-  setColor(color: RGBColor): boolean;
+  setColor(color: RGBColor): void;
 
   /**
    * Set the diffuse lighting coefficient.
@@ -344,7 +514,7 @@ export interface vtkProperty extends vtkObject {
    * Set the diffuse surface color from an RGB array
    * @param {RGBColor} diffuseColor An Array of the RGB color.
    */
-  setDiffuseColorFrom(diffuseColor: RGBColor): boolean;
+  setDiffuseColorFrom(diffuseColor: RGBColor): void;
 
   /**
    * Set the color of primitive edges (if edge visibility is enabled).
@@ -364,7 +534,7 @@ export interface vtkProperty extends vtkObject {
    * Set the color of primitive edges from an RGB array.
    * @param {RGBColor} edgeColor An Array of the RGB color.
    */
-  setEdgeColorFrom(edgeColor: RGBColor): boolean;
+  setEdgeColorFrom(edgeColor: RGBColor): void;
 
   /**
    * Set the opacity of primitive edges. If not set explicitly, edge opacity
@@ -409,6 +579,11 @@ export interface vtkProperty extends vtkObject {
    * Set interpolation to 2 means `PHONG`.
    */
   setInterpolationToPhong(): boolean;
+
+  /**
+   * Set interpolation to 3 for physically based rendering.
+   */
+  setInterpolationToPBR(): boolean;
 
   /**
    * Set lighting flag for an object.
@@ -470,6 +645,24 @@ export interface vtkProperty extends vtkObject {
   setSpecular(specular: number): boolean;
 
   /**
+   * Set the roughness coefficient.
+   * @param {Number} roughness
+   */
+  setRoughness(roughness: number): boolean;
+
+  /**
+   * Set the metallic coefficient.
+   * @param {Number} metallic
+   */
+  setMetallic(metallic: number): boolean;
+
+  /**
+   * Set the index of refraction of the base layer.
+   * @param {Number} baseIOR
+   */
+  setBaseIOR(baseIOR: number): boolean;
+
+  /**
    * Set the normal map strength.
    * @param {Boolean} normal
    */
@@ -499,7 +692,7 @@ export interface vtkProperty extends vtkObject {
    * Set the specular surface color from an RGB array
    * @param {RGBColor} specularColor An Array of the RGB color.
    */
-  setSpecularColorFrom(specularColor: RGBColor): boolean;
+  setSpecularColorFrom(specularColor: RGBColor): void;
 
   /**
    * Set the specular power.
@@ -511,49 +704,51 @@ export interface vtkProperty extends vtkObject {
    * Set the diffuse texture.
    * @param {vtkTexture} diffuseTexture
    */
-  setDiffuseTexture(diffuseTexture: vtkTexture): boolean;
+  setDiffuseTexture(diffuseTexture: Nullable<vtkTexture>): boolean;
 
   /**
    * Set the metallic texture.
    * @param {vtkTexture} metallicTexture
    */
-  setMetallicTexture(metallicTexture: vtkTexture): boolean;
+  setMetallicTexture(metallicTexture: Nullable<vtkTexture>): boolean;
 
   /**
    * Set the roughness texture.
    * @param {vtkTexture} roughnessTexture
    */
-  setRoughnessTexture(roughnessTexture: vtkTexture): boolean;
+  setRoughnessTexture(roughnessTexture: Nullable<vtkTexture>): boolean;
 
   /**
    * Set the roughness & metallic texture.
    * @param {vtkTexture} RMTexture
    */
-  setRMTexture(RMTexture: vtkTexture): boolean;
+  setRMTexture(RMTexture: Nullable<vtkTexture>): boolean;
 
   /**
    * Set the occlusion, roughness & metallic texture.
    * @param {vtkTexture} ORMTexture
    */
-  setORMTexture(ORMTexture: vtkTexture): boolean;
+  setORMTexture(ORMTexture: Nullable<vtkTexture>): boolean;
 
   /**
    * Set the normal texture.
    * @param {vtkTexture} normalTexture
    */
-  setNormalTexture(normalTexture: vtkTexture): boolean;
+  setNormalTexture(normalTexture: Nullable<vtkTexture>): boolean;
 
   /**
    * Set the ambient occlusion texture.
    * @param {vtkTexture} ambientOcclusionTexture
    */
-  setAmbientOcclusionTexture(ambientOcclusionTexture: vtkTexture): boolean;
+  setAmbientOcclusionTexture(
+    ambientOcclusionTexture: Nullable<vtkTexture>
+  ): boolean;
 
   /**
    * Set the emission texture.
    * @param {vtkTexture} emissionTexture
    */
-  setEmissionTexture(emissionTexture: vtkTexture): boolean;
+  setEmissionTexture(emissionTexture: Nullable<vtkTexture>): boolean;
 }
 
 /**

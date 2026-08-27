@@ -17,30 +17,30 @@ import { mat3, mat4, vec3, vec4 } from 'gl-matrix';
  *
  */
 export interface IImageResliceInitialValues {
-  transformInputSampling: boolean;
-  autoCropOutput: boolean;
-  outputDimensionality: number;
-  outputSpacing: Nullable<vec3>; // automatically computed if null
-  outputOrigin: Nullable<vec3>; // automatically computed if null
-  outputDirection: Nullable<mat3>; // identity if null
-  outputExtent: Nullable<Extent>; // automatically computed if null
-  outputScalarType: Nullable<string>;
-  wrap: boolean; // don't wrap
-  mirror: boolean; // don't mirror
-  border: boolean; // apply a border
-  interpolationMode: InterpolationMode; // only NEAREST supported so far
-  slabMode: SlabMode;
-  slabTrapezoidIntegration: boolean;
-  slabNumberOfSlices: number;
-  slabSliceSpacingFraction: number;
-  optimization: boolean; // not supported yet
-  scalarShift: number; // for rescaling the data
-  scalarScale: number;
-  backgroundColor: RGBAColor;
-  resliceAxes: Nullable<mat4>;
+  transformInputSampling?: boolean;
+  autoCropOutput?: boolean;
+  outputDimensionality?: number;
+  outputSpacing?: Nullable<vec3>; // automatically computed if null
+  outputOrigin?: Nullable<vec3>; // automatically computed if null
+  outputDirection?: Nullable<mat3>; // identity if null
+  outputExtent?: Nullable<Extent>; // automatically computed if null
+  outputScalarType?: Nullable<string>;
+  wrap?: boolean; // don't wrap
+  mirror?: boolean; // don't mirror
+  border?: boolean; // apply a border
+  interpolationMode?: InterpolationMode; // only NEAREST supported so far
+  slabMode?: SlabMode;
+  slabTrapezoidIntegration?: boolean;
+  slabNumberOfSlices?: number;
+  slabSliceSpacingFraction?: number;
+  optimization?: boolean; // not supported yet
+  scalarShift?: number; // for rescaling the data
+  scalarScale?: number;
+  backgroundColor?: RGBAColor;
+  resliceAxes?: Nullable<mat4>;
   resliceTransform?: vtkTransform;
-  interpolator: any; // A vtkImageInterpolator (missing typescript header)
-  usePermuteExecute: boolean; // no supported yet
+  interpolator?: any; // A vtkImageInterpolator (missing typescript header)
+  usePermuteExecute?: boolean; // no supported yet
 }
 
 type vtkImageResliceBase = Omit<vtkObject, 'set'> & vtkAlgorithm;
@@ -359,6 +359,18 @@ export interface vtkImageReslice extends vtkImageResliceBase {
   getOutputSpacing: () => vec3 | null;
 
   /**
+   * @see getOutputSpacing
+   * @returns
+   */
+  getOutputSpacingByReference: () => vec3 | null;
+
+  /**
+   * @see setOutputSpacing
+   * @param outputSpacing
+   */
+  setOutputSpacingFrom: (outputSpacing: vec3) => void;
+
+  /**
    * Set the origin for the output data.
    * The default output origin is the input origin permuted through the
    * ResliceAxes.
@@ -375,6 +387,18 @@ export interface vtkImageReslice extends vtkImageResliceBase {
   getOutputOrigin: () => vec3 | null;
 
   /**
+   * @see getOutputOrigin
+   * @returns
+   */
+  getOutputOriginByReference: () => vec3 | null;
+
+  /**
+   * @see setOutputOrigin
+   * @param outputOrigin
+   */
+  setOutputOriginFrom: (outputOrigin: vec3) => void;
+
+  /**
    * Set the extent for the output data.
    * The default output extent is the input extent permuted through the
    * ResliceAxes.
@@ -389,6 +413,18 @@ export interface vtkImageReslice extends vtkImageResliceBase {
    * @returns
    */
   getOutputExtent: () => Extent | null;
+
+  /**
+   * @see getOutputExtent
+   * @returns
+   */
+  getOutputExtentByReference: () => Extent | null;
+
+  /**
+   * @see setOutputExtent
+   * @param outputExtent
+   */
+  setOutputExtentFrom: (outputExtent: Extent) => void;
 
   /**
    * Set the direction for the output data.
@@ -411,6 +447,18 @@ export interface vtkImageReslice extends vtkImageResliceBase {
   getOutputDirection: () => mat3 | null;
 
   /**
+   * @see getOutputDirection
+   * @returns
+   */
+  getOutputDirectionByReference: () => mat3 | null;
+
+  /**
+   * @see setOutputDirection
+   * @param outputDirection
+   */
+  setOutputDirectionFrom: (outputDirection: mat3) => void;
+
+  /**
    * Set the background color (for multi-component images).
    * Defaults to full opaque black.
    * @param backgroundColor
@@ -423,6 +471,18 @@ export interface vtkImageReslice extends vtkImageResliceBase {
    * @returns
    */
   getBackgroundColor: () => RGBAColor;
+
+  /**
+   * @see getBackgroundColor
+   * @returns
+   */
+  getBackgroundColorByReference: () => RGBAColor;
+
+  /**
+   * @see setBackgroundColor
+   * @param backgroundColor
+   */
+  setBackgroundColorFrom: (backgroundColor: RGBAColor) => void;
 
   /**
    * This method is used to set up the axes for the output voxels.
@@ -444,7 +504,7 @@ export interface vtkImageReslice extends vtkImageResliceBase {
    * @see setResliceAxes
    * @returns
    */
-  getResliceAxes: () => mat4;
+  getResliceAxes: () => Nullable<mat4>;
 
   /**
    * Set the scalar type of the output to be different from the input.
@@ -671,5 +731,6 @@ export function newInstance(
 export declare const vtkImageReslice: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  SlabMode: typeof SlabMode;
 };
 export default vtkImageReslice;

@@ -149,6 +149,12 @@ export interface vtkImageProperty extends vtkObject {
   setLabelOutlineThickness(labelOutlineThickness: number | number[]): boolean;
 
   /**
+   * Set the label outline thickness from an array.
+   * @param {Number[]} labelOutlineThickness
+   */
+  setLabelOutlineThicknessFrom(labelOutlineThickness: number[]): void;
+
+  /**
    * Set the ambient lighting coefficient.
    * @param {Number} ambient The ambient lighting coefficient.
    */
@@ -244,6 +250,13 @@ export interface vtkImageProperty extends vtkObject {
    * @param {Boolean} useLookupTableScalarRange
    */
   setUseLookupTableScalarRange(useLookupTableScalarRange: boolean): boolean;
+
+  /**
+   * Check whether the range set on the lookup table is used instead of the
+   * range derived from the ColorWindow/ColorLevel settings.
+   * @default false
+   */
+  getUseLookupTableScalarRange(): boolean;
 
   /**
    * Informs the mapper to only update the specified extents at the next render.
