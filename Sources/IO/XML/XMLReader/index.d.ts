@@ -36,7 +36,7 @@ export interface vtkXMLReader extends vtkXMLReaderBase {
   /**
    *
    */
-  getBaseURL(): string;
+  getBaseURL(): string | undefined;
 
   /**
    *
@@ -50,7 +50,7 @@ export interface vtkXMLReader extends vtkXMLReaderBase {
   /**
    * Get the url of the object to load.
    */
-  getUrl(): string;
+  getUrl(): string | undefined;
 
   /**
    * Load the object data.
@@ -59,22 +59,11 @@ export interface vtkXMLReader extends vtkXMLReaderBase {
   loadData(options?: IXMLReaderOptions): Promise<any>;
 
   /**
-   * Parse data.
-   * @param {String | ArrayBuffer} content The content to parse.
-   */
-  parse(content: string | ArrayBuffer): void;
-
-  /**
    * Parse data as ArrayBuffer.
    * @param {ArrayBuffer} content The content to parse.
    */
-  parseAsArrayBuffer(content: ArrayBuffer): void;
+  parseAsArrayBuffer(content: ArrayBuffer): boolean;
 
-  /**
-   * Parse data as text.
-   * @param {String} content The content to parse.
-   */
-  parseAsText(content: string): void;
   /**
    *
    * @param inData
@@ -103,6 +92,29 @@ export interface vtkXMLReader extends vtkXMLReaderBase {
 }
 
 /**
+ * Collect every descendant element carrying the given tag name.
+ *
+ * @param {Element | Document} node The node to search under
+ * @param {String} tagName The tag name to match
+ */
+export function findAllTags(
+  node: Element | Document,
+  tagName: string
+): Element[];
+
+/**
+ * Collect the first descendant element carrying the given tag name, or
+ * undefined when the node has none.
+ *
+ * @param {Element | Document} node The node to search under
+ * @param {String} tagName The tag name to match
+ */
+export function findFirstTag(
+  node: Element | Document,
+  tagName: string
+): Element | undefined;
+
+/**
  * Method used to decorate a given object (publicAPI+model) with vtkXMLReader characteristics.
  *
  * @param publicAPI object on which methods will be bounds (public)
@@ -123,7 +135,7 @@ export function extend(
  * @param {String} headerType
  * @param {ArrayBuffer} binaryBuffer
  */
-export function processDataArray(
+declare function processDataArray(
   size: number,
   dataArrayElem: HTMLElement,
   compressor: string,
@@ -140,7 +152,7 @@ export function processDataArray(
  * @param {String} headerType
  * @param {ArrayBuffer} binaryBuffer
  */
-export function processCells(
+declare function processCells(
   size: number,
   containerElem: HTMLElement,
   compressor: string,
@@ -158,7 +170,7 @@ export function processCells(
  * @param {String} headerType
  * @param {ArrayBuffer} binaryBuffer
  */
-export function processFieldData(
+declare function processFieldData(
   size: number,
   fieldElem: HTMLElement,
   fieldContainer: HTMLElement,

@@ -2,8 +2,6 @@ import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import vtkImageData from '../../../Common/DataModel/ImageData';
 import vtkPolyData from '../../../Common/DataModel/PolyData';
 
-export const LINE_ARRAY: number[];
-
 export interface IImageDataOutlineFilterInitialValues {}
 
 type vtkImageDataOutlineFilterBase = vtkObject & vtkAlgorithm;
@@ -14,7 +12,7 @@ export interface vtkImageDataOutlineFilter extends vtkImageDataOutlineFilterBase
    * @param inData
    * @param outData
    */
-  requestData(inData: vtkImageData, outData: vtkPolyData): void;
+  requestData(inData: vtkImageData[], outData: vtkPolyData[]): void;
 
   /**
    * Flag that indicates whether the output will generate faces of the outline.

@@ -74,7 +74,7 @@ export interface vtkTextureMapToSphere extends vtkTextureMapToSphereBase {
    * Set the point defining the center of the sphere.
    * @param {Number[]} center The center point coordinates.
    */
-  setCenterFrom(center: number[]): boolean;
+  setCenterFrom(center: number[]): void;
 }
 
 /**

@@ -1,6 +1,7 @@
 import { vtkObject, vtkProperty } from '../../../interfaces';
 import vtkRenderer from '../Renderer';
 import { Coordinate } from './Constants';
+import { Nullable } from '../../../types';
 
 /**
  *
@@ -76,14 +77,19 @@ export interface vtkCoordinate extends vtkObject {
   getValue(): number[];
 
   /**
+   * Get the value of this coordinate.
+   */
+  getValueByReference(): number[];
+
+  /**
    *
    */
-  getReferenceCoordinate(): vtkCoordinate;
+  getReferenceCoordinate(): Nullable<vtkCoordinate>;
 
   /**
    * Get mapper that was picked (if any)
    */
-  getRenderer(): vtkRenderer;
+  getRenderer(): Nullable<vtkRenderer>;
 
   /**
    * Set the coordinate system which this coordinate is defined in. The

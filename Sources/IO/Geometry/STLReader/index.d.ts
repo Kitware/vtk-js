@@ -1,4 +1,6 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
+import { Nullable } from '../../../types';
+import vtkPointLocator from '../../../Common/DataModel/PointLocator';
 import { HtmlDataAccessHelper } from '../../Core/DataAccessHelper/HtmlDataAccessHelper';
 import { HttpDataAccessHelper } from '../../Core/DataAccessHelper/HttpDataAccessHelper';
 import { JSZipDataAccessHelper } from '../../Core/DataAccessHelper/JSZipDataAccessHelper';
@@ -57,7 +59,7 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
   /**
    *
    */
-  getBaseURL(): string;
+  getBaseURL(): string | undefined;
 
   /**
    *
@@ -71,7 +73,7 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
   /**
    * Get the point locator used for vertex merging.
    */
-  getLocator(): any;
+  getLocator(): Nullable<vtkPointLocator>;
 
   /**
    * Get whether point merging is enabled.
@@ -81,7 +83,7 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
   /**
    * Get the url of the object to load.
    */
-  getUrl(): string;
+  getUrl(): string | undefined;
 
   /**
    * Get tolerance when removeDuplicateVertices is set
@@ -134,7 +136,7 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
   /**
    * Set a point locator used for vertex merging.
    */
-  setLocator(locator: any): boolean;
+  setLocator(locator: Nullable<vtkPointLocator>): boolean;
 
   /**
    * Enable/disable point merging.

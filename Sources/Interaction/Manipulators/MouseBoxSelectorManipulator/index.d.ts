@@ -2,7 +2,6 @@ import vtkCompositeMouseManipulator, {
   ICompositeMouseManipulatorInitialValues,
 } from '../CompositeMouseManipulator';
 import { EventHandler, vtkObject, vtkSubscription } from '../../../interfaces';
-import { Nullable } from '../../../types';
 
 export interface vtkMouseBoxSelectorManipulator
   extends vtkObject, vtkCompositeMouseManipulator {
@@ -59,11 +58,23 @@ export interface vtkMouseBoxSelectorManipulator
   /**
    * Gets the box container.
    */
-  getContainer(): Nullable<Element>;
+  getContainer(): Element | undefined;
+
+  /**
+   * Sets whether the box changes on click.
+   * @param boxChangeOnClick
+   */
+  setBoxChangeOnClick(boxChangeOnClick: boolean): boolean;
+
+  /**
+   * Gets whether the box changes on click.
+   */
+  getBoxChangeOnClick(): boolean;
 }
 
 export interface IMouseBoxSelectorManipulatorInitialValues extends ICompositeMouseManipulatorInitialValues {
   renderSelection?: boolean;
+  boxChangeOnClick?: boolean;
   selectionStyle?: Record<string, string>;
   container?: Element;
 }

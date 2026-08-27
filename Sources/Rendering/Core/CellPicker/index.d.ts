@@ -5,6 +5,7 @@ import vtkPicker, { IPickerInitialValues } from '../Picker';
 import vtkProp3D from '../Prop3D';
 import vtkRenderer from '../Renderer';
 import { Nullable } from '../../../types';
+import { mat4 } from 'gl-matrix';
 
 /**
  *
@@ -55,6 +56,16 @@ export interface vtkCellPicker extends vtkPicker {
   setOpacityThreshold(value: number);
 
   /**
+   * Get the normal of the surface at the PickPosition, in world coordinates.
+   */
+  getPickNormal(): number[];
+
+  /**
+   * Get the normal of the surface at the PickPosition, in world coordinates.
+   */
+  getPickNormalByReference(): number[];
+
+  /**
    * Get the parametric coordinates of the picked cell.
    */
   getPCoords(): number[];
@@ -91,6 +102,20 @@ export interface vtkCellPicker extends vtkPicker {
   pick(selection: any, renderer: vtkRenderer): void;
 }
 
+interface IClipLineWithPlaneResult {
+  planeId: number;
+  t1: number;
+  t2: number;
+  intersect: 0 | 1;
+}
+
+declare function clipLineWithPlane(
+  mapper: vtkMapper,
+  matrix: mat4,
+  p1: Vector3,
+  p2: Vector3
+): IClipLineWithPlaneResult | 0;
+
 /**
  * Method use to decorate a given object (publicAPI+model) with vtkCellPicker characteristics.
  *
@@ -115,5 +140,9 @@ export function newInstance(
 export declare const vtkCellPicker: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  clipLineWithPlane: typeof clipLineWithPlane;
 };
+export declare const STATIC: Readonly<{
+  clipLineWithPlane: typeof clipLineWithPlane;
+}>;
 export default vtkCellPicker;

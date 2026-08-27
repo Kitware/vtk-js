@@ -1,4 +1,4 @@
-import { vtkAlgorithm, vtkObject } from '../../../interfaces';
+import { vtkAlgorithm, vtkObject, vtkSubscription } from '../../../interfaces';
 import { HtmlDataAccessHelper } from '../../Core/DataAccessHelper/HtmlDataAccessHelper';
 import { HttpDataAccessHelper } from '../../Core/DataAccessHelper/HttpDataAccessHelper';
 import { JSZipDataAccessHelper } from '../../Core/DataAccessHelper/JSZipDataAccessHelper';
@@ -30,7 +30,7 @@ export interface vtkGCodeReader extends vtkGCodeReaderBase {
   /**
    *
    */
-  getBaseURL(): string;
+  getBaseURL(): string | undefined;
 
   /**
    *
@@ -44,13 +44,23 @@ export interface vtkGCodeReader extends vtkGCodeReaderBase {
   /**
    * Get the url of the object to load.
    */
-  getUrl(): string;
+  getUrl(): string | undefined;
+
+  /**
+   *
+   */
+  invokeReady(): void;
 
   /**
    * Load the object data.
    * @param {IGCodeReaderOptions} [options]
    */
   loadData(options?: IGCodeReaderOptions): Promise<any>;
+
+  /**
+   *
+   */
+  onReady(callback: () => void, priority?: number): vtkSubscription;
 
   /**
    * Parse data.

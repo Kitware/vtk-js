@@ -32,6 +32,11 @@ export interface vtkDiskSource extends vtkDiskSourceBase {
   getCenter(): Vector3;
 
   /**
+   * Get the center of the disk.
+   */
+  getCenterByReference(): Vector3;
+
+  /**
    * Get the circumferential resolution of the disk.
    */
   getCircumferentialResolution(): number;
@@ -45,6 +50,11 @@ export interface vtkDiskSource extends vtkDiskSourceBase {
    * Get the normal of the disk.
    */
   getNormal(): Vector3;
+
+  /**
+   * Get the normal of the disk.
+   */
+  getNormalByReference(): Vector3;
 
   /**
    * Get the outer radius of the disk.
@@ -75,6 +85,12 @@ export interface vtkDiskSource extends vtkDiskSourceBase {
   setCenter(center: Vector3): boolean;
 
   /**
+   * Set the center of the disk.
+   * @param {Vector3} center
+   */
+  setCenterFrom(center: Vector3): void;
+
+  /**
    * Set the circumferential resolution of the disk.
    * @param {number} resolution
    */
@@ -91,6 +107,12 @@ export interface vtkDiskSource extends vtkDiskSourceBase {
    * @param {Vector3} normal
    */
   setNormal(normal: Vector3): boolean;
+
+  /**
+   * Set the normal of the disk.
+   * @param {Vector3} normal
+   */
+  setNormalFrom(normal: Vector3): void;
 
   /**
    * Set the outer radius of the disk.

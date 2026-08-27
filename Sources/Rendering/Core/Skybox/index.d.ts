@@ -8,7 +8,7 @@ export interface vtkSkybox extends vtkActor {
   /**
    *
    */
-  getFromat(): string;
+  getFormat(): string;
 
   /**
    *
@@ -29,7 +29,7 @@ export interface vtkSkybox extends vtkActor {
    *
    * @param format
    */
-  setFromat(format: string): boolean;
+  setFormat(format: string): boolean;
 }
 
 /**

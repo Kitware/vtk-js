@@ -1,6 +1,6 @@
 import { Nullable, Size, Vector2, Vector3 } from '../../../types';
-import { vtkAlgorithm } from '../../../interfaces';
-import { VtkDataTypes } from '../../../Common/Core/DataArray';
+import { vtkAlgorithm, vtkSubscription } from '../../../interfaces';
+import { VtkDataTypes } from '../../../Common/Core/DataArray/Constants';
 import vtkBufferObject from '../../OpenGL/BufferObject';
 import vtkCellArray from '../../../Common/Core/CellArray';
 import vtkDataArray from '../../../Common/Core/DataArray';
@@ -40,6 +40,14 @@ export interface ICaptureOptions {
   resetCamera?: boolean | (({ renderer: vtkRenderer }) => void);
   size?: Size;
   scale?: number;
+}
+
+/**
+ * The payload of the windowResize event.
+ */
+export interface IWindowResizeEvent {
+  width: number;
+  height: number;
 }
 
 export interface vtkOpenGLRenderWindow extends vtkViewNode {
@@ -260,7 +268,7 @@ export interface vtkOpenGLRenderWindow extends vtkViewNode {
    * @param {WebGLContextAttributes} options
    */
   get3DContext(
-    options: WebGLContextAttributes
+    options?: WebGLContextAttributes
   ): Nullable<WebGL2RenderingContext>;
 
   /**
@@ -268,7 +276,7 @@ export interface vtkOpenGLRenderWindow extends vtkViewNode {
    * @param {CanvasRenderingContext2DSettings} options
    */
   get2DContext(
-    options: CanvasRenderingContext2DSettings
+    options?: CanvasRenderingContext2DSettings
   ): Nullable<CanvasRenderingContext2D>;
 
   /**
@@ -285,20 +293,20 @@ export interface vtkOpenGLRenderWindow extends vtkViewNode {
 
   /**
    * Returns the last ancestor of type vtkOpenGLRenderWindow if there is one
-   * If there is no parent vtkOpenGLRenderWindow, returns undefined
+   * If there is no parent vtkOpenGLRenderWindow, returns null or undefined
    */
-  getRootOpenGLRenderWindow(): vtkOpenGLRenderWindow | undefined;
+  getRootOpenGLRenderWindow(): vtkOpenGLRenderWindow | null | undefined;
 
   /**
    * The context 2D is created during initialization instead of the WebGL context
    * when there is a parent render window
    */
-  getContext2D(): CanvasRenderingContext2D | undefined;
+  getContext2D(): Nullable<CanvasRenderingContext2D>;
 
   /**
    *
    */
-  setContext2D(context2D: CanvasRenderingContext2D | undefined): boolean;
+  setContext2D(context2D: Nullable<CanvasRenderingContext2D>): boolean;
 
   /**
    *
@@ -336,7 +344,7 @@ export interface vtkOpenGLRenderWindow extends vtkViewNode {
     numComps: number,
     oglNorm16Ext?: unknown,
     useHalfFloat?: boolean
-  ): void;
+  ): number;
 
   /**
    *
@@ -368,9 +376,21 @@ export interface vtkOpenGLRenderWindow extends vtkViewNode {
    * @param {ICaptureOptions} options
    */
   captureNextImage(
-    format: string,
+    format?: string,
     options?: ICaptureOptions
   ): Nullable<Promise<string>>;
+
+  /**
+   * Call any registered callbacks with the captured image URL.
+   * @param {String} imageURL
+   */
+  invokeImageReady(imageURL: string): void;
+
+  /**
+   * Register a callback to be called whenever a captured image becomes ready.
+   * @param callback
+   */
+  onImageReady(callback: (imageURL: string) => any): vtkSubscription;
 
   /**
    *
@@ -406,6 +426,20 @@ export interface vtkOpenGLRenderWindow extends vtkViewNode {
   setViewStream(stream: vtkViewStream): boolean;
 
   /**
+   * Call any registered callbacks whenever setSize() changes the size.
+   * @param {IWindowResizeEvent} size
+   */
+  invokeWindowResizeEvent(size: IWindowResizeEvent): void;
+
+  /**
+   * Register a callback to be called whenever setSize() changes the size.
+   * @param callback
+   */
+  onWindowResizeEvent(
+    callback: (size: IWindowResizeEvent) => any
+  ): vtkSubscription;
+
+  /**
    * Sets the pixel width and height of the rendered image.
    *
    * WebGL and WebGPU render windows apply these values to
@@ -420,19 +454,30 @@ export interface vtkOpenGLRenderWindow extends vtkViewNode {
    *
    * @param {Vector2} size
    */
-  setSize(size: Vector2): void;
+  setSize(size: Vector2): boolean;
 
   /**
    *
    * @param {Number} x
    * @param {Number} y
    */
-  setSize(x: number, y: number): void;
+  setSize(x: number, y: number): boolean;
 
   /**
    *
    */
   getSize(): Vector2;
+
+  /**
+   *
+   */
+  getSizeByReference(): Vector2;
+
+  /**
+   *
+   * @param {Vector2} size
+   */
+  setSizeFrom(size: Vector2): void;
 
   /**
    * Scales the size of a browser CSS pixel to a rendered canvas pixel.

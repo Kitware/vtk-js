@@ -1,17 +1,21 @@
-export declare enum Wrap {
-  CLAMP_TO_EDGE = 0,
-  REPEAT = 1,
-  MIRRORED_REPEAT = 2,
-}
+export declare const Wrap: {
+  readonly CLAMP_TO_EDGE: 0;
+  readonly REPEAT: 1;
+  readonly MIRRORED_REPEAT: 2;
+};
 
-export declare enum Filter {
-  NEAREST = 0,
-  LINEAR = 1,
-  NEAREST_MIPMAP_NEAREST = 2,
-  NEAREST_MIPMAP_LINEAR = 3,
-  LINEAR_MIPMAP_NEAREST = 4,
-  LINEAR_MIPMAP_LINEAR = 5,
-}
+export type Wrap = (typeof Wrap)[keyof typeof Wrap];
+
+export declare const Filter: {
+  readonly NEAREST: 0;
+  readonly LINEAR: 1;
+  readonly NEAREST_MIPMAP_NEAREST: 2;
+  readonly NEAREST_MIPMAP_LINEAR: 3;
+  readonly LINEAR_MIPMAP_NEAREST: 4;
+  readonly LINEAR_MIPMAP_LINEAR: 5;
+};
+
+export type Filter = (typeof Filter)[keyof typeof Filter];
 
 declare const _default: {
   Wrap: typeof Wrap;

@@ -76,7 +76,7 @@ export interface vtkLineSource extends vtkLineSourceBase {
    * Set the starting point of the line.
    * @param {Vector3} point1 The starting point's coordinates.
    */
-  setPoint1From(point1: Vector3): boolean;
+  setPoint1From(point1: Vector3): void;
 
   /**
    * Set the ending point of the line.
@@ -90,7 +90,7 @@ export interface vtkLineSource extends vtkLineSourceBase {
    * Set the ending point of the line.
    * @param {Vector3} point2 The ending point's coordinates.
    */
-  setPoint2From(point2: Vector3): boolean;
+  setPoint2From(point2: Vector3): void;
 
   /**
    * Set the number of segments used to represent the line.

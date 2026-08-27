@@ -1,4 +1,4 @@
-import { vtkObject } from '../../../interfaces';
+import { vtkObject, vtkSubscription } from '../../../interfaces';
 
 /**
  *
@@ -27,6 +27,19 @@ export interface vtkProgressHandler extends vtkObject {
    *
    */
   isWorking(): boolean;
+
+  /**
+   *
+   * @param cb
+   * @param priority
+   */
+  onChange(cb: (working: boolean) => void, priority?: number): vtkSubscription;
+
+  /**
+   *
+   * @param working
+   */
+  invokeChange(working: boolean): void;
 
   /**
    *

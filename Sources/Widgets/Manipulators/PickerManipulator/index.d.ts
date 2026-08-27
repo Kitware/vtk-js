@@ -18,7 +18,7 @@ export interface vtkPickerManipulator extends vtkAbstractManipulator {
   /**
    *
    */
-  setPicker(picker: vtkPicker): void;
+  setPicker(picker: vtkPicker): boolean;
 }
 
 /**

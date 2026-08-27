@@ -1,4 +1,4 @@
-import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes';
+import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes/Constants';
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import { Bounds, Vector3 } from '../../../types';
 
@@ -53,7 +53,7 @@ export interface vtkCleanPolyData extends vtkCleanPolyDataBase {
   /**
    * Create default locator.
    */
-  createDefaultLocator(): void;
+  createDefaultLocator(input?: any): void;
 
   /**
    * Get the absolute tolerance value.
@@ -106,9 +106,10 @@ export interface vtkCleanPolyData extends vtkCleanPolyDataBase {
   /**
    * Operate on a point by applying a transformation.
    *
-   * @param {Vector3} point The point to operate on.
+   * @param {Vector3} inPoint The point to operate on.
+   * @param {Vector3} outPoint The point to write the result into.
    */
-  operateOnPoint(point: Vector3): void;
+  operateOnPoint(inPoint: Vector3, outPoint: Vector3): void;
 
   /**
    *
