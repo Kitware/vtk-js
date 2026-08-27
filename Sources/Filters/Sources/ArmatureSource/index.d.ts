@@ -79,6 +79,11 @@ export interface vtkArmatureSource extends vtkArmatureSourceBase {
    * Get the intended joint radius. Default 0.15.
    */
   getJointRadius(): number;
+
+  /**
+   * Generate the joint points and bone links from the skeleton's world matrices.
+   */
+  requestData(inData: any, outData: any): void;
 }
 
 export interface IvtkArmatureSourceInitialValues extends IArmatureSourceInitialValues {}

@@ -1,15 +1,12 @@
 import { quat } from 'gl-matrix';
 import { Vector3, Vector2, Nullable } from '../../../types';
 import vtkCell from '../Cell';
+import { IntersectionState } from './Constants';
 
-export enum IntersectionState {
-  NO_INTERSECTION,
-  YES_INTERSECTION,
-  ON_LINE,
-}
+export type { IntersectionState };
 
 export interface ILineInitialValues {
-  orientations: Nullable<quat[]>;
+  orientations?: Nullable<quat[]>;
 }
 
 export interface IIntersectWithLine {
@@ -120,7 +117,7 @@ export function newInstance(initialValues?: ILineInitialValues): vtkLine;
  * @param {Vector3} p2
  * @param {Vector3} [closestPoint]
  */
-export function distanceToLine(
+declare function distanceToLine(
   x: Vector3,
   p1: Vector3,
   p2: Vector3,
@@ -151,7 +148,7 @@ export function distanceToLine(
  * @param {Vector3} u
  * @param {Vector3} v
  */
-export function intersection(
+declare function intersection(
   a1: Vector3,
   a2: Vector3,
   b1: Vector3,
@@ -171,5 +168,10 @@ export declare const vtkLine: {
   extend: typeof extend;
   distanceToLine: typeof distanceToLine;
   intersection: typeof intersection;
+  IntersectionState: typeof IntersectionState;
 };
+export declare const STATIC: Readonly<{
+  distanceToLine: typeof distanceToLine;
+  intersection: typeof intersection;
+}>;
 export default vtkLine;

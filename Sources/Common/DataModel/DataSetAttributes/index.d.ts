@@ -1,89 +1,16 @@
 import { vtkObject } from '../../../interfaces';
+import { Nullable } from '../../../types';
 import { IFieldDataInitialValues, vtkFieldData } from './FieldData';
 import vtkDataArray from '../../Core/DataArray';
-
-export enum AttributeTypes {
-  SCALARS,
-  VECTORS,
-  NORMALS,
-  TCOORDS,
-  TENSORS,
-  GLOBALIDS,
-  PEDIGREEIDS,
-  EDGEFLAG,
-  NUM_ATTRIBUTES,
-}
-
-export enum AttributeLimitTypes {
-  MAX,
-  EXACT,
-  NOLIMIT,
-}
-
-export enum CellGhostTypes {
-  /**
-   * The cell is present on multiple processors
-   */
-  DUPLICATECELL,
-  /**
-   * The cell has more neighbors than in a regular mesh
-   */
-  HIGHCONNECTIVITYCELL,
-  /**
-   * The cell has less neighbors than in a regular mesh
-   */
-  LOWCONNECTIVITYCELL,
-  /**
-   * Tther cells are present that refines it.
-   */
-  REFINEDCELL,
-  /**
-   * The cell is on the exterior of the data set
-   */
-  EXTERIORCELL,
-  /**
-   * The cell is needed to maintain connectivity, but the data values should be ignored.
-   */
-  HIDDENCELL,
-}
-
-export enum PointGhostTypes {
-  /**
-   * The cell is present on multiple processors
-   */
-  DUPLICATEPOINT,
-  /**
-   * The point is needed to maintain connectivity, but the data values should be ignored.
-   */
-  HIDDENPOINT,
-}
-
-export enum AttributeCopyOperations {
-  COPYTUPLE,
-  INTERPOLATE,
-  PASSDATA,
-  /**
-   * All of the above
-   */
-  ALLCOPY,
-}
-
-export const ghostArrayName: string;
-
-export enum DesiredOutputPrecision {
-  /**
-   * Use the point type that does not truncate any data
-   */
-  DEFAULT,
-  /**
-   * Use Float32Array
-   */
-  SINGLE,
-  /**
-   * Use Float64Array
-   */
-  DOUBLE,
-}
+import {
+  AttributeCopyOperations,
+  AttributeLimitTypes,
+  AttributeTypes,
+  CellGhostTypes,
+  DesiredOutputPrecision,
+  PointGhostTypes,
+  ghostArrayName,
+} from './Constants';
 
 /**
  *
@@ -109,7 +36,7 @@ export interface vtkDataSetAttributes extends vtkFieldData {
    *
    * @param {string} attType
    */
-  getActiveAttribute(attType: string): any;
+  getActiveAttribute(attType: string): Nullable<vtkDataArray>;
 
   /**
    * Get a list of attribute names that the given array
@@ -225,55 +152,13 @@ export interface vtkDataSetAttributes extends vtkFieldData {
    * Override to allow proper handling of active attributes
    * @param {Number} arrayIdx The index of the array.
    */
-  removeArrayByIndex(arrayIdx: number): void;
+  removeArrayByIndex(arrayIdx: number): boolean;
 
   /**
    * Called when initialize() is called.
    * @see initialize
    */
   initializeAttributeCopyFlags(): void;
-
-  /**
-   *
-   * @param {Number} activeScalars
-   */
-  setActiveScalars(activeScalars: number): boolean;
-
-  /**
-   *
-   * @param {Number} activeVectors
-   */
-  setActiveVectors(activeVectors: number): boolean;
-
-  /**
-   *
-   * @param {Number} activeTensors
-   */
-  setActiveTensors(activeTensors: number): boolean;
-
-  /**
-   *
-   * @param {Number} activeNormals
-   */
-  setActiveNormals(activeNormals: number): boolean;
-
-  /**
-   *
-   * @param {Number} activeTCoords
-   */
-  setActiveTCoords(activeTCoords: number): boolean;
-
-  /**
-   *
-   * @param {Number} activeGlobalIds
-   */
-  setActiveGlobalIds(activeGlobalIds: number): boolean;
-
-  /**
-   *
-   * @param {Number} activePedigreeIds
-   */
-  setActivePedigreeIds(activePedigreeIds: number): boolean;
 
   /**
    * Try to copy the state of the other to ourselves by just using references.
@@ -330,43 +215,43 @@ export interface vtkDataSetAttributes extends vtkFieldData {
    * Set the scalar data.
    * @param {vtkDataArray} scalars The scalar data.
    */
-  setScalars(scalars: vtkDataArray): boolean;
+  setScalars(scalars: vtkDataArray): number;
 
   /**
    * Set the vector data.
    * @param {vtkDataArray} vectors The vector data.
    */
-  setVectors(vectors: vtkDataArray): boolean;
+  setVectors(vectors: vtkDataArray): number;
 
   /**
    * Set the normal data.
    * @param {vtkDataArray} normals The normal data.
    */
-  setNormals(normals: vtkDataArray): boolean;
+  setNormals(normals: vtkDataArray): number;
 
   /**
    * Set the texture coordinate data.
    * @param {vtkDataArray} tcoords The texture coordinate data.
    */
-  setTCoords(tcoords: vtkDataArray): boolean;
+  setTCoords(tcoords: vtkDataArray): number;
 
   /**
    * Set the tensor data.
    * @param {vtkDataArray} tensors The tensor data.
    */
-  setTensors(tensors: vtkDataArray): boolean;
+  setTensors(tensors: vtkDataArray): number;
 
   /**
    * Set the global id data.
    * @param {vtkDataArray} globalIds The global id data.
    */
-  setGlobalIds(globalIds: vtkDataArray): boolean;
+  setGlobalIds(globalIds: vtkDataArray): number;
 
   /**
    * Set the pedigree id data.
    * @param {vtkDataArray} pedigreeids The pedigree id data.
    */
-  setPedigreeIds(pedigreeIds: vtkDataArray): boolean;
+  setPedigreeIds(pedigreeIds: vtkDataArray): number;
 
   /**
    *
@@ -488,5 +373,13 @@ export function newInstance(
 export declare const vtkDataSetAttributes: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  // constants
+  AttributeCopyOperations: typeof AttributeCopyOperations;
+  AttributeLimitTypes: typeof AttributeLimitTypes;
+  AttributeTypes: typeof AttributeTypes;
+  CellGhostTypes: typeof CellGhostTypes;
+  DesiredOutputPrecision: typeof DesiredOutputPrecision;
+  PointGhostTypes: typeof PointGhostTypes;
+  ghostArrayName: typeof ghostArrayName;
 };
 export default vtkDataSetAttributes;

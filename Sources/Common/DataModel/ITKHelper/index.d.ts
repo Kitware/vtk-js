@@ -16,7 +16,7 @@ export interface IOptions {
 export function convertItkToVtkImage(
   itkImage: any,
   options?: IOptions
-): vtkImageData;
+): vtkImageData | null;
 
 /**
  * Converts a vtk.js vtkImageData to an itk-wasm Image.
@@ -38,7 +38,7 @@ export function convertVtkToItkImage(
 export function convertItkToVtkPolyData(
   itkPolyData: any,
   options?: IOptions
-): vtkPolyData;
+): vtkPolyData | null;
 
 /**
  * Converts a vtk.js vtkPolyData to an itk-wasm PolyData.
@@ -56,7 +56,7 @@ export function convertVtkToItkPolyData(
  * vtkITKHelper is a helper which provides a set of functions to work with
  * itk-wasm module.
  */
-export declare const vtkITKHelper: {
+declare const vtkITKHelper: {
   convertItkToVtkImage: typeof convertItkToVtkImage;
   convertVtkToItkImage: typeof convertVtkToItkImage;
   convertItkToVtkPolyData: typeof convertItkToVtkPolyData;

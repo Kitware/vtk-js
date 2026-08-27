@@ -47,7 +47,7 @@ export interface vtkElevationReader extends vtkElevationReaderBase {
   /**
    * Get the url of the object to load.
    */
-  getUrl(): string;
+  getUrl(): string | undefined;
 
   /**
    *
@@ -83,7 +83,7 @@ export interface vtkElevationReader extends vtkElevationReaderBase {
   /**
    *
    */
-  isBusy(): number;
+  isBusy(): boolean;
 
   /**
    * Load the object data.

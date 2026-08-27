@@ -14,7 +14,7 @@ interface ITransform {
  * @param {HTMLCanvasElement} canvas The HTML canvas to convert.
  * @param {Number[]} [boundingBox] A bounding box array.
  */
-export function canvasToImageData(
+declare function canvasToImageData(
   canvas: HTMLCanvasElement,
   boundingBox?: number[]
 ): vtkImageData;
@@ -24,7 +24,13 @@ export function canvasToImageData(
  * @param {HTMLImageElement} image The HTML image to convert.
  * @param {ITransform} [transform] The transform object to apply to the image.
  */
-export function imageToImageData(
+declare function imageToImageData(
   image: HTMLImageElement,
   transform?: ITransform
 ): vtkImageData;
+
+declare const _default: {
+  canvasToImageData: typeof canvasToImageData;
+  imageToImageData: typeof imageToImageData;
+};
+export default _default;

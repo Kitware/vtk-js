@@ -1,5 +1,8 @@
-import { CellType } from '../../../types';
+import { CellType, Nullable } from '../../../types';
 import vtkCellArray from '../../Core/CellArray';
+import vtkCell from '../Cell';
+import vtkCellLinks from '../CellLinks';
+import vtkCellTypes from '../CellTypes';
 import vtkPointSet, { IPointSetInitialValues } from '../PointSet';
 
 /**
@@ -12,7 +15,7 @@ export interface vtkPolyData extends vtkPointSet {
    * Empty the cells and initialize the point set.
    * @see vtkPointSet::initialize()
    */
-  initialize(): void;
+  initialize(): vtkPolyData;
 
   /**
    * Create data structure that allows random access of cells.
@@ -31,7 +34,7 @@ export interface vtkPolyData extends vtkPointSet {
    * @param {Number} cellId
    * @param cellHint
    */
-  getCell(cellId: number, cellHint: any): void;
+  getCell(cellId: number, cellHint?: any): vtkCell;
 
   /**
    * Get the neighbors at an edge.
@@ -63,7 +66,7 @@ export interface vtkPolyData extends vtkPointSet {
   /**
    * Get the cell array defining cells.
    */
-  getCells(): vtkCellArray;
+  getCells(): Nullable<vtkCellTypes>;
 
   /**
    * Get the cell array defining lines.
@@ -73,7 +76,7 @@ export interface vtkPolyData extends vtkPointSet {
   /**
    * Get the links between points and cells.
    */
-  getLinks(): any; // vtkCellLinks
+  getLinks(): Nullable<vtkCellLinks>;
 
   /**
    * Get the maximum cell size.
@@ -115,7 +118,7 @@ export interface vtkPolyData extends vtkPointSet {
    * Topological inquiry to get cells using point.
    * @param ptId
    */
-  getPointCells(ptId: number): void;
+  getPointCells(ptId: number): number[];
 
   /**
    * Get the cell array defining polys.
@@ -158,6 +161,11 @@ export interface vtkPolyData extends vtkPointSet {
    */
   setVerts(verts: vtkCellArray): boolean;
 }
+
+/**
+ * Maps CellType enum values to the vtkCell subclass used to represent that cell type.
+ */
+export const CELL_FACTORY: Record<number, unknown>;
 
 /**
  * Method used to decorate a given object (publicAPI+model) with vtkPolyData characteristics.
