@@ -23,5 +23,19 @@ export interface vtkSliceRepresentationProxy extends vtkAbstractRepresentationPr
   getSlice(): number;
 }
 
-declare const _default: vtkSliceRepresentationProxy;
-export default _default;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: object
+): void;
+
+export function newInstance(
+  initialValues?: object
+): vtkSliceRepresentationProxy;
+
+declare const vtkSliceRepresentationProxy: {
+  newInstance: typeof newInstance;
+  extend: typeof extend;
+};
+
+export default vtkSliceRepresentationProxy;

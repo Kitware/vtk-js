@@ -1,5 +1,6 @@
 import { EventHandler, vtkSubscription } from '../../../interfaces';
 import { Nullable } from '../../../types';
+import { States } from './Constants';
 import { vtkInteractorObserver } from '../InteractorObserver';
 import { vtkRenderer } from '../Renderer';
 
@@ -237,8 +238,18 @@ export function extend(
   initialValues?: IInteractorStyleInitialValues
 ): void;
 
+/**
+ * Method used to create a new instance of vtkInteractorStyle
+ * @param {IInteractorStyleInitialValues} [initialValues] for pre-setting some of its content
+ */
+export function newInstance(
+  initialValues?: IInteractorStyleInitialValues
+): vtkInteractorStyle;
+
 export const vtkInteractorStyle: {
+  newInstance: typeof newInstance;
   extend: typeof extend;
+  States: typeof States;
 };
 
 export default vtkInteractorStyle;

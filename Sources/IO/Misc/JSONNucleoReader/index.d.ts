@@ -30,11 +30,6 @@ export interface vtkJSONNucleoReader extends vtkJSONNucleoReaderBase {
   /**
    *
    */
-  getBaseURL(): string;
-
-  /**
-   *
-   */
   getDataAccessHelper():
     | HtmlDataAccessHelper
     | HttpDataAccessHelper
@@ -44,7 +39,7 @@ export interface vtkJSONNucleoReader extends vtkJSONNucleoReaderBase {
   /**
    * Get the url of the object to load.
    */
-  getUrl(): string;
+  getUrl(): string | undefined;
 
   /**
    * Load the object data.
@@ -81,7 +76,7 @@ export interface vtkJSONNucleoReader extends vtkJSONNucleoReaderBase {
    * @param {String} url the url of the object to load.
    * @param {IJSONNucleoReaderOptions} [option] The JSONNucleo reader options.
    */
-  setUrl(url: string, option: IJSONNucleoReaderOptions): Promise<string>;
+  setUrl(url: string, option: IJSONNucleoReaderOptions): Promise<boolean>;
 }
 
 /**

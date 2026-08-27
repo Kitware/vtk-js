@@ -1,20 +1,43 @@
-import { vtkAlgorithm } from '../../../interfaces';
+import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import { Nullable } from '../../../types';
+
+export type TextureWrap = 'repeat' | 'clamp-to-edge' | 'mirror-repeat';
 
 /**
  *
  * @param {boolean} [resizable] Must be set to true if texture can be resized at run time (default: false)
  */
 export interface ITextureInitialValues {
+  canvas?: HTMLCanvasElement;
+  image?: HTMLImageElement;
+  imageBitmap?: ImageBitmap;
+  jsImageData?: ImageData;
   repeat?: boolean;
   interpolate?: boolean;
   edgeClamp?: boolean;
   imageLoaded?: boolean;
   mipLevel?: number;
   resizable?: boolean;
+  wrapS?: Nullable<TextureWrap>;
+  wrapT?: Nullable<TextureWrap>;
 }
 
-export interface vtkTexture extends vtkAlgorithm {
+type vtkTextureBase = vtkObject &
+  Omit<vtkAlgorithm, 'getOutputData' | 'getOutputPort'>;
+
+export interface vtkTexture extends vtkTextureBase {
+  /** Get the horizontal wrap mode, or null to use repeat and edgeClamp. */
+  getWrapS(): Nullable<TextureWrap>;
+  /** Set the horizontal wrap mode, or null to use repeat and edgeClamp. */
+  setWrapS(wrapS: Nullable<TextureWrap>): boolean;
+  /** Get the vertical wrap mode, or null to use repeat and edgeClamp. */
+  getWrapT(): Nullable<TextureWrap>;
+  /** Set the vertical wrap mode, or null to use repeat and edgeClamp. */
+  setWrapT(wrapT: Nullable<TextureWrap>): boolean;
+
+  /** Return the number of non-singleton dimensions in the texture input. */
+  getDimensionality(): number;
+
   /**
    * Returns the canvas used by the texture.
    */
@@ -51,6 +74,11 @@ export interface vtkTexture extends vtkAlgorithm {
   getImageLoaded(): boolean;
 
   /**
+   * Returns the input image data as a JavaScript ImageData object.
+   */
+  getJsImageData(): Nullable<ImageData>;
+
+  /**
    * Returns the input image data object.
    */
   getInputAsJsImageData(): Nullable<
@@ -68,6 +96,12 @@ export interface vtkTexture extends vtkAlgorithm {
    * interaction or other factors.
    */
   getResizable(): boolean;
+
+  /**
+   * Marks the image as loaded and notifies listeners.
+   * Called automatically once the image set with setImage() has loaded.
+   */
+  imageLoaded(): void;
 
   /**
    * Returns the canvas used by the texture.
@@ -153,7 +187,7 @@ export function newInstance(initialValues?: ITextureInitialValues): vtkTexture;
  * @param {GPUTexture} texture - The GPU texture for which mipmaps will be generated.
  * @param {number} mipLevelCount - The total number of mip levels to generate (including the base level).
  */
-export function generateMipmaps(
+declare function generateMipmaps(
   device: any,
   texture: any,
   mipLevelCount: number
@@ -174,5 +208,9 @@ export function generateMipmaps(
 export declare const vtkTexture: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  generateMipmaps: typeof generateMipmaps;
 };
+export declare const STATIC: Readonly<{
+  generateMipmaps: typeof generateMipmaps;
+}>;
 export default vtkTexture;

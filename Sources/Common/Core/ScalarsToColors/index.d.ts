@@ -2,12 +2,13 @@ import { vtkObject } from '../../../interfaces';
 import { ColorMode } from '../../../Rendering/Core/Mapper/Constants';
 import { Range } from '../../../types';
 import vtkDataArray from '../DataArray';
-import { ScalarMappingTarget, VectorMode } from './Constants';
+import { ScalarMappingTarget, Scale, VectorMode } from './Constants';
 
 /**
  *
  */
 export interface IScalarsToColorsInitialValues {
+  vectorMode?: VectorMode;
   alpha?: number;
   vectorComponent?: number;
   vectorSize?: number;
@@ -32,7 +33,11 @@ export interface vtkScalarsToColors extends vtkObject {
    * @param numComp
    * @param numTuples
    */
-  convertToRGBA(colors: any, numComp: number, numTuples: number): void;
+  convertToRGBA(
+    colors: any,
+    numComp: number,
+    numTuples: number
+  ): vtkDataArray | null;
 
   /**
    * Specify an additional opacity (alpha) value to blend with.
@@ -43,7 +48,7 @@ export interface vtkScalarsToColors extends vtkObject {
    *
    * @param {Number} idx
    */
-  getAnnotatedValue(idx: number): void;
+  getAnnotatedValue(idx: number): any;
 
   /**
    *
@@ -62,7 +67,7 @@ export interface vtkScalarsToColors extends vtkObject {
    *
    * @param {Number} idx
    */
-  getAnnotation(idx: number): string;
+  getAnnotation(idx: number): string | null;
 
   /**
    *
@@ -192,7 +197,11 @@ export interface vtkScalarsToColors extends vtkObject {
    * @param {ColorMode} colorMode
    * @param {Number} componentIn
    */
-  mapScalars(scalars: any, colorMode: ColorMode, componentIn: number): void;
+  mapScalars(
+    scalars: any,
+    colorMode: ColorMode,
+    componentIn: number
+  ): vtkDataArray | null;
 
   /**
    * Map a set of vector values through the table
@@ -290,7 +299,7 @@ export interface vtkScalarsToColors extends vtkObject {
    *
    * @param {Range} mappingRange
    */
-  setMappingRangeFrom(mappingRange: Range): boolean;
+  setMappingRangeFrom(mappingRange: Range): void;
 
   /**
    *
@@ -343,7 +352,7 @@ export interface vtkScalarsToColors extends vtkObject {
   /**
    * Update the map from annotated values to indices in the array of annotations.
    */
-  updateAnnotatedValueMap(): boolean;
+  updateAnnotatedValueMap(): void;
 
   /**
    *
@@ -396,7 +405,8 @@ export function newInstance(
 export declare const vtkScalarsToColors: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  Scale: typeof Scale;
   VectorMode: typeof VectorMode;
-  ScalarMappingTarget: typeof VectorMode;
+  ScalarMappingTarget: typeof ScalarMappingTarget;
 };
 export default vtkScalarsToColors;

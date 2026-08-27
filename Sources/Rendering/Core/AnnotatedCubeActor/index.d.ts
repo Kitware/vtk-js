@@ -1,4 +1,5 @@
 import vtkActor, { IActorInitialValues } from '../Actor';
+import Presets from './Presets';
 
 export interface IStyle {
   text?: string;
@@ -21,50 +22,57 @@ export interface IFaceProperty extends IStyle {
 /**
  *
  */
-export interface IAnnotatedCubeActorInitialValues extends IActorInitialValues {}
+export interface IAnnotatedCubeActorInitialValues extends IActorInitialValues {
+  defaultStyle?: IStyle;
+}
 
 export interface vtkAnnotatedCubeActor extends vtkActor {
+  /**
+   *
+   */
+  getDefaultStyle(): Readonly<Required<IStyle>>;
+
   /**
    * Set the default style.
    * @param {IStyle} style
    */
-  setDefaultStyle(style: IStyle): boolean;
+  setDefaultStyle(style: IStyle): void;
 
   /**
    * The +X face property.
    * @param {IFaceProperty} prop +X face property
    */
-  setXPlusFaceProperty(prop: IFaceProperty): boolean;
+  setXPlusFaceProperty(prop: IFaceProperty): void;
 
   /**
    * The -X face property.
    * @param {IFaceProperty} prop The -X face property.
    */
-  setXMinusFaceProperty(prop: IFaceProperty): boolean;
+  setXMinusFaceProperty(prop: IFaceProperty): void;
 
   /**
    * The +Y face property.
    * @param {IFaceProperty} prop The +Y face property.
    */
-  setYPlusFaceProperty(prop: IFaceProperty): boolean;
+  setYPlusFaceProperty(prop: IFaceProperty): void;
 
   /**
    * The -Y face property.
    * @param {IFaceProperty} prop The -Y ace property.
    */
-  setYMinusFaceProperty(prop: IFaceProperty): boolean;
+  setYMinusFaceProperty(prop: IFaceProperty): void;
 
   /**
    * The +Z face property.
    * @param {IFaceProperty} prop The +Z face property.
    */
-  setZPlusFaceProperty(prop: IFaceProperty): boolean;
+  setZPlusFaceProperty(prop: IFaceProperty): void;
 
   /**
    * The -Z face property.
    * @param {IFaceProperty} prop The -Z face property.
    */
-  setZMinusFaceProperty(prop: IFaceProperty): boolean;
+  setZMinusFaceProperty(prop: IFaceProperty): void;
 }
 
 /**
@@ -104,8 +112,13 @@ export function newInstance(
  * resolution: the pixel resolution of a face, i.e. pixel side length (default 200)
  * If a key is not specified, then the default value is used.
  */
+export declare const DEFAULT_VALUES: Readonly<{
+  defaultStyle: Readonly<Required<IStyle>>;
+}>;
+
 export declare const vtkAnnotatedCubeActor: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  Presets: typeof Presets;
 };
 export default vtkAnnotatedCubeActor;
